@@ -1056,6 +1056,12 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 ;;; or
 ;;; MRS -> [ INDEX LISZT ]
     (setf *already-read-vars* nil)
+    ;;
+    ;; first of all, skip over any initial line-oriented (`;') comments ...
+    ;;
+    (loop
+        for c = (peek-char t istream nil nil)
+        while (and c (char= c #\;)) do (read-line istream))
     (mrs-check-for #\[ istream)
     (let* ((ltop (if *rel-handel-path* (read-mrs-ltop istream)))
            (index (read-mrs-index istream))
