@@ -914,7 +914,7 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
   Tsdb_key_list  *list;
   Tsdb_tuple **new_tuples;
   int *relation, *field;
-  int n_conditions,i,j,k;
+  int n_conditions,i,j,k,vm_result;
   char *attribut;
   BOOL kaerb,match;
   BYTE *results;
@@ -997,14 +997,22 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
                             results[i] == TSDB_EQUAL);
           break;
         case TSDB_SUBSTRING:
-          match = match ||
+          vm_result = 
             tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
                              conditions[i]->right->node,NULL);
+          if (vm_result==3) {
+            return(NULL);
+          }
+          match = match || vm_result;
           break;
         case TSDB_NOT_SUBSTRING:
-          match = match || 
-            !(tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
-                                   conditions[i]->right->node,NULL));
+          vm_result = 
+            tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
+                               conditions[i]->right->node,NULL);
+          if (vm_result==3) {
+            return NULL;
+          } 
+          match = match || !(vm_result); 
           break;
         } /* switch */
       } /* if */
@@ -1031,14 +1039,20 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
                             results[i] == TSDB_EQUAL);
           break;
         case TSDB_SUBSTRING:
-          match = match &&
+          vm_result = 
             tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
                              conditions[i]->right->node,NULL);
+          if (vm_result==3)
+            return NULL;
+          match = match && vm_result;
           break;
         case TSDB_NOT_SUBSTRING:
-          match = match && 
-            !(tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
-                               conditions[i]->right->node,NULL));
+           vm_result = 
+             tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
+                              conditions[i]->right->node,NULL);
+          if (vm_result==3)
+            return NULL;
+          match = match && !(vm_result);
           break;
         } /* switch */
       } /* if */
