@@ -1,4 +1,4 @@
-;;; Copyright Ann Copestake 1991-1997 All Rights Reserved.
+;;; Copyright Ann Copestake 1991-1999 All Rights Reserved.
 ;;; No use or redistribution without permission.
 ;;;
 ;;; course grammar specific globals file

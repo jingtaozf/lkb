@@ -14,14 +14,6 @@ sleeps := lexeme &
 [ ORTH "sleeps",
   CATEGORY vp ].
 
-snore := lexeme &
-[ ORTH "snore",
-  CATEGORY vp ].
-
-snores := lexeme &
-[ ORTH "snores",
-  CATEGORY vp ].
-
 dog := lexeme &
 [ ORTH "dog",
   CATEGORY n ].

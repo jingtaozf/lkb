@@ -1,33 +1,4 @@
-synsem-struc := *top* &
-[ CATEGORY cat ].
-
-cat := *top*.
-
-s := cat.
-
-nomcat := cat.
-
-np := nomcat.
-
-n := nomcat.
-
-vp := cat.
-
-det := cat.
-
-phrase := synsem-struc &
-[ ARGS *list* ].
-
 string := *top*.
-
-lexeme := synsem-struc &
-[ ORTH string ].
-
-nominal := synsem-struc &
-[ CATEGORY nomcat ].
-
-nominal_lexeme := nominal & lexeme &
-[ CATEGORY n ].
 
 *list* := *top*.
 
@@ -36,3 +7,40 @@ nominal_lexeme := nominal & lexeme &
    REST *list* ].
 
 *null* := *list*.
+
+synsem-struc := *top* &
+[ CATEGORY cat,
+  NUMAGR agr ].
+
+cat := *top*.
+
+s := cat.
+
+np := cat.
+
+vp := cat.
+
+det := cat.
+
+n := cat.
+
+agr := *top*.
+
+sg := agr.
+
+pl := agr.
+
+phrase := synsem-struc &
+[ ARGS *list* ].
+
+lexeme := synsem-struc &
+[ ORTH string ].
+
+sg-lexeme := lexeme &
+[ NUMAGR sg ].
+
+pl-lexeme := lexeme &
+[ NUMAGR pl ].
+
+root := phrase &
+[ CATEGORY s ].
