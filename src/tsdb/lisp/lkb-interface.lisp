@@ -148,7 +148,7 @@
                                                (length *parse-record*)))
                                           (if (and (equal output "")
                                                    (> readings 0))
-                                            (length *parse-record*)
+                                            readings
                                             -1)))
                           (:ERROR .
                            ,(substitute #\; #\newline
