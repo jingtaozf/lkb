@@ -7,17 +7,23 @@
 ;; files copied from `patches/mrsfns.lisp' from the grammar (24-aug-98  -  dpf)
 ;;
 
+;; DPF (16-Apr-99) - Changed GET-MRS-STRINGS to work properly with TSDB++
+;; machinery.
+
 (defun get-mrs-strings (parse-list)
   (loop for parse in parse-list
         collecting
-        (let* ((fs (get-parse-fs parse))
-               (sem-fs (path-value fs *initial-semantics-path*)))
-          (if (is-valid-fs sem-fs)
-              (let ((mrs-struct (sort-mrs-struct (construct-mrs sem-fs))))
-                (with-output-to-string (stream) 
-		  (format stream "~%~S" mrs-struct)
-                  ;(output-mrs1 mrs-struct 'simple stream)
-		  ))))))
+	(get-mrs-string parse)))
+
+(defun get-mrs-string (parse)
+  (let* ((fs (get-parse-fs parse))
+	 (sem-fs (path-value fs *initial-semantics-path*)))
+    (if (is-valid-fs sem-fs)
+	(let ((mrs-struct (sort-mrs-struct (construct-mrs sem-fs))))
+	  (with-output-to-string (stream) 
+	    (format stream "~%~S" mrs-struct)
+	;(output-mrs1 mrs-struct 'simple stream)
+	    )))))
 
 (defun get-mrs-resolved-strings (parse-list)
   (loop for parse in parse-list

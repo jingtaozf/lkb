@@ -69,8 +69,13 @@
 (defstruct (leq-sc (:include hcons))
   relation)
 
+;; DPF 16-Apr-99 - Removed specialized print operation for WHG-ID, since it
+;; introduced comma-separated elements into a raw MRS structure, which prevents
+;; the Lisp reader from reading the structure back in from a stored string
+;; representation of the structure.
+
 ;;; for VM-wordgraph identifiers
-(defstruct (whg-id (:print-function print-whg-id))
+(defstruct (whg-id)
   id
   word
   handel)
@@ -83,6 +88,8 @@
 ;        (format stream "~([~A~@[~{,~A~}~]]~)" (first elements) (rest elements))
 ;      (format stream "[]"))))
 
+;; DPF (16-Apr-99) - See remarks for WHD-ID structure definition above.
+#|
 (defun print-whg-id (whg stream level)
   (declare (ignore level))
   (let ((handels (whg-id-handel whg)))
@@ -93,6 +100,7 @@
         (format stream "~([~A~@[~{,~A~}~]])~)" (first handels) 
                 (rest handels))
       (format stream "[])"))))
+|#
           
 
          

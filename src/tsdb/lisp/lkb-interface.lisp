@@ -83,11 +83,14 @@
 ;;; funcall()s .semantix-hook. and .trees-hook. to obtain MRS and tree
 ;;; representations (strings); all times in hundredths of secs
 
+;; DPF (16-Apr-99) - Modified PARSE-ITEM to also allow parse trees and MRS
+;; structures to be captured.
+
 (defun parse-item (string 
                    &key exhaustive
                         edges trace derivations semantix-hook trees-hook
                         burst)
-  (declare (ignore derivations semantix-hook trees-hook))
+  (declare (ignore derivations))
   
   (multiple-value-bind (return condition)
     (ignore-errors
@@ -187,16 +190,25 @@
                       for r-redges = (length 
                                       (parse-tsdb-distinct-edges parse nil))
                       for size = (parse-tsdb-count-nodes parse)
+                      for trees = (or (and trees-hook
+					   (ignore-errors 
+					    (funcall trees-hook parse)))
+				      "")
+                      for mrs = (or (and semantix-hook
+					   (ignore-errors 
+					    (funcall semantix-hook parse)))
+				      "")
                       collect
                         (pairlis '(:result-id :mrs :tree
                                    :derivation :r-redges :size
                                    :r-stasks :r-etasks 
                                    :r-ftasks :r-ctasks
                                    :time)
-                                 (list i "" ""
+                                 (list i mrs trees
                                        derivation r-redges size
                                        -1 -1 
                                        -1 -1 
+
                                        time))))))))))
     (append
      (when condition
@@ -306,6 +318,10 @@
    (t
     -1)))
     
+;; For use with TSDB machinery, which needs a string as input
+(defun get-labeled-bracketings (parse)
+  (format nil "~s" (parse-tree-structure parse)))
+
 ;;;
 
 (eval-when (:load-toplevel :compile-toplevel :execute)
