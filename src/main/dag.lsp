@@ -31,8 +31,8 @@
 ;;; generation counter.  That way, we can invalidate all values set by an
 ;;; computation simply by incrementing the counter.
 
-(defvar *unify-generation* 1)
-(defvar *unify-generation-max* 1)
+(defvar *unify-generation* 2)
+(defvar *unify-generation-max* 2)
 (defvar *visit-generation* 1)
 (defvar *visit-generation-max* 1)
 
@@ -42,7 +42,9 @@
 
 (defun invalidate-marks ()
    (setq *unify-generation*
-      (1+ (max *unify-generation-max* *unify-generation*)))
+      (+ (max *unify-generation-max* *unify-generation*) 2))
+   (when (oddp *unify-generation*)
+      (error "unify generation has unexpectedly become odd"))
    (setq *unify-generation-max* *unify-generation*))
 
 (defun invalidate-visit-marks ()
@@ -82,14 +84,14 @@
    (arcs nil)
    ;; generation counter for all temporary slots
    (x-generation 0 :type fixnum)
+   ;; pointer to representative for this fs's equivalence class
+   (x-forward nil)
    ;; new type computed during a unification
    (x-new-type nil)
    ;; new arcs computed during a unification
    (x-comp-arcs nil)
    ;; pointer to a copy of this fs
    (x-copy nil)
-   ;; pointer to representative for this fs's equivalence class
-   (x-forward nil)
    ;; flag used when traversing a fs doing interleaved unifications
    (x-visit-slot nil))
 
@@ -102,6 +104,16 @@
    ;; waste 4 bytes
    )
 )
+
+
+(defmacro current-generation-strict-p (dag)
+   `(= (the fixnum (dag-x-generation ,dag)) (the fixnum *unify-generation*)))
+
+(defmacro current-generation-p (dag)
+   ;; ignore least significant bit of dag generation wrt global generation
+   `(<= (the fixnum
+          (logxor (the fixnum (dag-x-generation ,dag)) (the fixnum *unify-generation*)))
+        1))
 
 
 (defmacro with-dag-optimize ((dag) &body body)
@@ -297,14 +309,30 @@
       #+mcl (eq (car (uvref ,dag 0)) 'safe-dag))) ; safe, and much quicker
 
 
+(defmacro dag-forward (dag)
+  `(with-dag-optimize (,dag)
+     (when (current-generation-p ,dag)
+        (with-verified-dag (,dag) (dag-x-forward ,dag)))))
+
+(defsetf dag-forward (dag) (new)
+  `(with-dag-optimize (,dag)
+     (unless (current-generation-p ,dag)
+       (with-verified-dag (,dag) 
+         (setf (dag-x-generation ,dag) *unify-generation*)
+         (setf (dag-x-new-type ,dag) nil)
+         (setf (dag-x-comp-arcs ,dag) nil)
+         (setf (dag-x-copy ,dag) nil)))
+     (with-verified-dag (,dag) (setf (dag-x-forward ,dag) ,new))))
+
+
 (defmacro dag-new-type (dag)
   `(with-dag-optimize (,dag)
-     (when (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+     (when (current-generation-p ,dag)
         (with-verified-dag (,dag) (dag-x-new-type ,dag)))))
 
 (defsetf dag-new-type (dag) (new)
   `(with-dag-optimize (,dag)
-     (unless (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+     (unless (current-generation-p ,dag)
        (with-verified-dag (,dag) 
          (setf (dag-x-generation ,dag) *unify-generation*)
          (setf (dag-x-comp-arcs ,dag) nil)
@@ -315,12 +343,12 @@
 
 (defmacro dag-comp-arcs (dag)
   `(with-dag-optimize (,dag)
-     (when (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+     (when (current-generation-p ,dag)
         (with-verified-dag (,dag) (dag-x-comp-arcs ,dag)))))
 
 (defsetf dag-comp-arcs (dag) (new)
   `(with-dag-optimize (,dag)
-     (unless (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+     (unless (current-generation-p ,dag)
        (with-verified-dag (,dag) 
          (setf (dag-x-generation ,dag) *unify-generation*)
          (setf (dag-x-new-type ,dag) nil)
@@ -331,34 +359,18 @@
 
 (defmacro dag-copy (dag)
   `(with-dag-optimize (,dag)
-     (when (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+     (when (current-generation-strict-p ,dag)
         (with-verified-dag (,dag) (dag-x-copy ,dag)))))
 
 (defsetf dag-copy (dag) (new)
   `(with-dag-optimize (,dag)
-     (unless (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+     (unless (current-generation-strict-p ,dag)
        (with-verified-dag (,dag) 
          (setf (dag-x-generation ,dag) *unify-generation*)
          (setf (dag-x-new-type ,dag) nil)
          (setf (dag-x-comp-arcs ,dag) nil)
          (setf (dag-x-forward ,dag) nil)))
      (with-verified-dag (,dag) (setf (dag-x-copy ,dag) ,new))))
-
-
-(defmacro dag-forward (dag)
-  `(with-dag-optimize (,dag)
-     (when (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
-        (with-verified-dag (,dag) (dag-x-forward ,dag)))))
-
-(defsetf dag-forward (dag) (new)
-  `(with-dag-optimize (,dag)
-     (unless (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
-       (with-verified-dag (,dag) 
-         (setf (dag-x-generation ,dag) *unify-generation*)
-         (setf (dag-x-new-type ,dag) nil)
-         (setf (dag-x-comp-arcs ,dag) nil)
-         (setf (dag-x-copy ,dag) nil)))
-     (with-verified-dag (,dag) (setf (dag-x-forward ,dag) ,new))))
 
 
 (defmacro dag-visit (dag)
