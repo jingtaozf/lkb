@@ -745,7 +745,7 @@
                                       collect (derivation child t)))))
                  (format 
                   nil
-                  "~:[~2*~;[~a:~a] ~]~(~a~)~@[ -> ~{~a~^ ~}~]"
+                  "~:[~2*~;[~a:~a] ~]~(~a~)~@[ : ~{~a~^ ~}~]"
                   (and (numberp from) (numberp to)) from to root children))
                ""))
            (index (tree cache row column)
