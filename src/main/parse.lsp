@@ -825,7 +825,7 @@
       (if (cdr rule-restricted-list)
 	  (let ((entry (aref (the (simple-array t (* *)) *chart*) 
 			     left-vertex 0)))
-	    (when entry
+	    (if entry
 	      (dolist (config (chart-entry-configurations entry) t)
 		(unless
 		  ;; inner recusive call returns nil in cases when first
@@ -846,8 +846,13 @@
                    (rule-id rule) (length rule-restricted-list)
                    (loop for e in  child-edge-list collect (edge-id e))
                    left-vertex right-vertex)
-                  #-:vanilla
-                  (return-from try-grammar-rule-left nil)))))
+                  #-:vanilla (return-from try-grammar-rule-left nil)
+                  ;; nil returned from the inner call is a signal
+                  ;; that unification of the edge we're triggering off
+                  ;; failed, so success with any combination is impossible
+                  #+:vanilla t))
+              t)) ;; must return t, because we don't want an outer
+                  ;; loop to throw 
 	;; we've got all the bits
 	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex
@@ -866,8 +871,8 @@
       (if (cdr rule-restricted-list)
 	  (let ((entry (aref (the (simple-array t (* *)) *chart*)
                              right-vertex 1)))
-	    (when entry
-	      (dolist (config (chart-entry-configurations entry))
+	    (if entry
+	      (dolist (config (chart-entry-configurations entry) t)
 		(unless
                   (try-grammar-rule-right
                    rule
@@ -877,12 +882,14 @@
                    (cons (chart-configuration-edge config) child-edge-list)
                    f (1+ n))
                   #-:vanilla
-                  (return-from try-grammar-rule-right nil)))))
+                  (return-from try-grammar-rule-right nil)
+                  #+:vanilla t))
+                t))
 	;; we've got all the bits
 	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex 
 					child-edge-list f nil)))
-    (incf *filtered-tasks*)))
+    (progn (incf *filtered-tasks*) t)))
 
 
 (defparameter *debugging* nil)
@@ -1409,3 +1416,10 @@
    lexemes ; non-ordered set of found-lex structures
    mod-index ; 0-based index to modifier under an intersective rule instantiation
    )
+
+;;; utility - display parse tree in bracketed form
+
+(defun print-parse-tty (stream)
+  (loop for edge in *parse-record*
+      do
+        (pprint (parse-tree-structure edge) stream)))
