@@ -115,6 +115,7 @@
 
 (defmethod mwe-read-roots ((lexicon psql-lex-database))
   ;;(initialise-psort-file file-name :root)
+  (format  t "~%Loading MWE roots from lexical database ~a" (dbname lexicon))
   (let ((*readtable* (make-tdl-break-table)))
     (mapcar 
      #'(lambda (x)
@@ -127,3 +128,8 @@
   (let ((*readtable* (make-tdl-break-table)))
     (with-input-from-string (istream (mwe-to-tdl lexicon mwe-id))
       (read-tdl-psort-stream istream :root))))
+
+(defmethod reload-roots-mwe ((lexicon psql-lex-database))
+    (mwe-read-roots lexicon)
+    (format  t "~%MWE roots reloaded from lexical database ~a" (dbname lexicon)))
+

@@ -34,6 +34,7 @@
 (defvar *lexicon-in*)
 (defvar *verbose-lex-lookup-word* nil)
 (defvar *psql-lexicon*)
+(defvar *postgres-mwe-enable*)
 
 (defclass lex-database () 
   ((lexical-entries :initform (make-hash-table :test #'equal))
@@ -639,3 +640,9 @@
      (t
       (format t "~%WARNING: ignoring *psql-lexicon-parameters* (distribution is not :psql-enabled)")
       nil))))
+
+;; this can't go in psqllex
+(defun mwe-lexicon-enabled-p nil
+  (and
+   (psql-lexicon-enabled-p)
+   *postgres-mwe-enable*))

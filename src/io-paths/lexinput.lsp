@@ -62,6 +62,10 @@
           (reload-template-file))
 	(when (and allp *root-file*)
           (reload-root-file))
+	#+:psql
+	(when (and allp 
+		   (mwe-lexicon-enabled-p))
+	      (reload-roots-mwe *lexicon*))
         (when (and allp *idiom-file*)
 	  (reload-idiom-file))
 	)
