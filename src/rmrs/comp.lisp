@@ -77,8 +77,7 @@
 ;;; constructing this will be formalism specific
 
 (defstruct word-info
-  lemma ;; preserves case in this structure
-        ;; currently always downcased before use
+  lemma ;; downcase this systematically
   pos
   from
   to)
@@ -142,8 +141,8 @@
   (let* ((semstruct
           (construct-sem-for-tree-aux tree))
          (canonical-bindings 
-          (close-bindings (semstruct-bindings semstruct))))
-    (output-rmrs1 (make-rmrs
+          (close-bindings (semstruct-bindings semstruct)))
+         (rmrs (make-rmrs
 		   :top-h (indices-label (semstruct-hook semstruct))
                    :liszt (semstruct-liszt semstruct)
                    :rmrs-args (semstruct-rmrs-args semstruct)
@@ -152,8 +151,14 @@
 		   :cfrom (semstruct-cfrom semstruct)
 		   :cto (semstruct-cto semstruct)
 		   :bindings canonical-bindings
-		   :origin origin)
-		  *rmrs-output-type* ostream)))
+		   :origin origin)))
+    (canonicalise-rmrs rmrs) 
+    ;; destructively modifies rmrs
+    ;; so variables are replaced by the canonical variable
+    (if (eql ostream :quiet)
+        rmrs
+      (output-rmrs1 rmrs
+                    *rmrs-output-type* ostream))))
 
 ;;; **********************************************************
 ;;; Code for computing transitive closure of variable equalities
@@ -226,6 +231,70 @@
         (push second-var (binding-equivs main-var-entry))))))
 
 ;;; end transitive closure code
+
+;;; ******** Code to reset variables to canonical ids *********
+
+(defun canonicalise-rmrs (rmrs)
+  ;;; destructively modifies an rmrs by replacing the 
+  ;;; bindings with the canonical binding
+  ;;; Must be called after bindings have been closed
+  (when (semstruct-p rmrs)
+    (error "Not intended for semstructs"))
+  (let ((top-h (rmrs-top-h rmrs))
+        (eps (rmrs-liszt rmrs))
+        (rmrs-args (rmrs-rmrs-args rmrs))
+        (rmrs-h-cons (rmrs-h-cons rmrs))
+        (rmrs-in-groups (rmrs-in-groups rmrs))
+        (bindings (rmrs-bindings rmrs)))
+    (when top-h
+      (canonicalise-rmrs-variable top-h bindings))
+    (loop for ep in eps
+        do
+        (canonicalise-rmrs-ep ep bindings))
+    (loop for arg in rmrs-args
+	do
+	  (canonicalise-rmrs-arg arg bindings))
+    (loop for ing in rmrs-in-groups
+	do
+	  (canonicalise-rmrs-in-group ing bindings))
+    (loop for hcons in rmrs-h-cons
+	do
+	  (canonicalise-rmrs-hcons hcons bindings))
+    (setf (rmrs-bindings rmrs) nil)
+    rmrs))
+
+(defun canonicalise-rmrs-variable (var bindings)
+  (let ((id
+         (find-rmrs-var-id var bindings)))
+    (setf (var-id var) id)))
+
+(defun canonicalise-rmrs-ep (ep bindings)
+  (let ((value (car (rel-flist ep))))
+    (unless (var-p value) (error "Unexpected value ~A" value))
+    (canonicalise-rmrs-variable value bindings)))
+
+(defun canonicalise-rmrs-arg (arg bindings)
+  (let ((label (rmrs-arg-label arg))
+        (value (rmrs-arg-val arg)))
+    (canonicalise-rmrs-variable label bindings)
+    (if (var-p value)
+        (canonicalise-rmrs-variable value bindings))))
+
+(defun canonicalise-rmrs-in-group (ing bindings)
+  (canonicalise-rmrs-variable
+   (in-group-label-a ing)
+   bindings)
+  (canonicalise-rmrs-variable
+   (in-group-label-b ing)
+   bindings))
+
+(defun canonicalise-rmrs-hcons (hcons bindings)
+  (canonicalise-rmrs-variable
+   (hcons-scarg hcons) bindings)
+  (canonicalise-rmrs-variable
+   (hcons-outscpd hcons) bindings))
+  
+        
 
 ;;; ******** Main composition code ************
 
