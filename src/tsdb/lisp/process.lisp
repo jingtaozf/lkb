@@ -628,9 +628,9 @@
                         interactive (protocol *pvm-protocol*)
                         verbose)
   
-  (let* ((environment (initialize-test-run :interactive interactive 
-                                           :exhaustive exhaustive
-                                           :nanalyses nanalyses))
+  (let* ((context (initialize-test-run :interactive interactive 
+                                       :exhaustive exhaustive
+                                       :nanalyses nanalyses))
          (start (current-time :long :tsdb))
          (gc-strategy (unless interactive 
                         (install-gc-strategy 
@@ -645,11 +645,11 @@
          (run (pairlis (list :data :run-id :comment
                              :platform :grammar
                              :user :host :os :protocol :start
-                             :environment :gc-strategy :gc)
+                             :context :gc-strategy :gc)
                        (list data run-id comment
                              platform grammar
                              user host os protocol start
-                             environment gc-strategy gc))))
+                             context gc-strategy gc))))
     (gc-statistics-reset :all)
     (append run (get-test-run-information))))
 
@@ -1211,7 +1211,7 @@
 
 (defun complete-run (run &optional stream interrupt)
   (when (get-field :run-id run)
-    (let ((environment (get-field :environment run))
+    (let ((context (get-field :context run))
           (gc-strategy (get-field :gc-strategy run))
           (client (get-field :client run)))
       (cond
@@ -1223,8 +1223,8 @@
                          (revaluate 
                           tid 
                           `(complete-run
-                            (quote ,(pairlis '(:environment :gc-strategy)
-                                             (list environment gc-strategy))))
+                            (quote ,(pairlis '(:context :gc-strategy)
+                                             (list context gc-strategy))))
                           1
                           :key :complete-run
                           :verbose nil
@@ -1247,7 +1247,7 @@
             (setf (client-status client) :error)
             (acons :end (current-time :long :tsdb) nil)))))
        (t
-        (let ((finalization (finalize-test-run environment)))
+        (let ((finalization (finalize-test-run context)))
           (when gc-strategy (restore-gc-strategy gc-strategy))
           (cons (cons :end (current-time :long :tsdb)) finalization)))))))
 
