@@ -30,7 +30,8 @@
          ;; have removed synlabel - aac
          (sem-fs (path-value fs *initial-semantics-path*)))
     (if (is-valid-fs sem-fs)
-        (construct-mrs sem-fs nil generator-p))))
+        (construct-mrs sem-fs
+                       nil generator-p))))
 
 (defun is-fragment-fs (fs)
   (and *root-path* *false-type*
@@ -57,7 +58,9 @@
         (liszt-fs (path-value fs *psoa-liszt-path*))
 	(mode-fs (if *psoa-mode-path* (path-value fs *psoa-mode-path*)))
         (h-cons-fs (if *psoa-rh-cons-path*
-                       (path-value fs *psoa-rh-cons-path*))))
+                       (path-value fs *psoa-rh-cons-path*)))
+        (info-s-fs (if *psoa-info-s-path*
+                       (path-value fs *psoa-info-s-path*))))
     (make-psoa
      :top-h (create-variable top-h-fs
                              *variable-generator*)
@@ -72,12 +75,21 @@
                                        *variable-generator*))
      :h-cons (nreverse (construct-h-cons h-cons-fs
                                          nil
-                                         *variable-generator*)))))
+                                         *variable-generator*))
+     :info-s (if (is-valid-fs info-s-fs)
+                 (construct-info-s info-s-fs nil)))))
+
 
 ;; Allow NIL argument to get-var-num
 (defun get-var-num (var-struct)
   (when (var-p var-struct)
     (var-id var-struct)))
+
+(defun get-existing-variable (fs)
+  (when (is-valid-fs fs)
+    (let ((existing-variable (assoc fs *named-nodes*)))
+      (if existing-variable (cdr existing-variable)
+        nil))))
 
 (defun create-variable (fs gen &optional type)
   ;; optional type argument allows for

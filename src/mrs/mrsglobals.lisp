@@ -209,3 +209,12 @@ set in the code")
 (defparameter *alex-mode* nil
   "if t, allows scope to have specified relations")
 
+;;; for information structure experiments
+
+(defparameter *psoa-info-s-path* NIL)
+
+(defparameter *istruct-var-path* NIL)
+
+(defparameter *istruct-focus-path* NIL)
+
+

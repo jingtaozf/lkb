@@ -15,7 +15,8 @@
   mode
   index
   liszt
-  h-cons)
+  h-cons
+  info-s) ; information structure
 
 (defstruct (rel)
   sort  ; relation name
@@ -52,6 +53,13 @@
   relation
   scarg
   outscpd)
+
+;;; information structure is a list of variables together
+;;; with values for focus
+
+(defstruct (info-struct)
+  variable
+  focus)
 
 ;;; variable generator - moved from mrsoutput because it could
 ;;; potentially be called without that code having been read in
@@ -199,6 +207,21 @@
   (with-slots (stream indentation) mrsout
     (format stream "~VT>" indentation)))
 
+(defmethod mrs-output-start-info-s ((mrsout simple))
+  (with-slots (stream) mrsout
+    (format stream "~%  INFO-S: <")))
+
+(defmethod mrs-output-info-s ((mrsout simple) focus var first-p)
+  (with-slots (stream indentation) mrsout
+    (unless first-p
+      (format stream "~%"))
+    (format stream "~VT~A ~A" 
+            (+ indentation 2) var focus)))
+
+(defmethod mrs-output-end-info-s ((mrsout simple))
+  (with-slots (stream indentation) mrsout
+    (format stream "~VT>" indentation)))
+
 (defmethod mrs-output-end-psoa ((mrsout simple))
   (with-slots (stream indentation) mrsout
     (format stream " ]~%" indentation)))
@@ -324,6 +347,22 @@
 (defmethod mrs-output-end-h-cons ((mrsout indexed))
   (with-slots (stream) mrsout
     (format stream "}")))
+
+(defmethod mrs-output-start-info-s ((mrsout indexed))
+  (with-slots (stream) mrsout
+    (format stream "~%{")))
+
+(defmethod mrs-output-info-s ((mrsout indexed) focus var first-p)
+  (with-slots (stream) mrsout
+    (unless first-p
+      (format stream ",~%"))
+    (format stream "~A ~A" 
+            var focus)))
+
+(defmethod mrs-output-end-info-s ((mrsout indexed))
+  (with-slots (stream) mrsout
+    (format stream "}")))
+
 
 (defmethod mrs-output-end-psoa ((mrsout indexed))
   (with-slots (stream) mrsout
@@ -568,7 +607,20 @@ higher and lower are handle-variables
     ;; extra info can be ignored here because all handels
     ;; will have appeared elsewhere
     (mrs-output-end-h-cons *mrs-display-structure*))
-    (mrs-output-end-psoa *mrs-display-structure*))
+  (when *psoa-info-s-path*
+    (mrs-output-start-info-s *mrs-display-structure*)
+    (let ((first-info-s t))
+      (loop for info-s in (psoa-info-s psoa)
+          do
+            (mrs-output-info-s 
+             *mrs-display-structure*
+             (info-struct-focus info-s)
+             (find-var-name 
+              (info-struct-variable info-s) connected-p)
+             first-info-s)
+            (setf first-info-s nil)))
+    (mrs-output-end-info-s *mrs-display-structure*))
+  (mrs-output-end-psoa *mrs-display-structure*))
 
 (defun print-mrs-extra (var)
   (when (and (var-p var) (var-type var) (var-extra var))
