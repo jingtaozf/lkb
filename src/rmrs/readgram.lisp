@@ -70,7 +70,7 @@
 (defun read-rmrs-rule-dtrs (content)
   (loop for dtr in content
       when (eql (car dtr) '|dtr|)
-      unless (string-equal (cadr dtr) "OPT")
+;      unless (string-equal (cadr dtr) "OPT")
       collect (cadr dtr)))
       
 (defun read-rmrs-semstruct (content)
@@ -247,7 +247,10 @@
     (format ostream "~%<rule>")
     (format ostream "~%<name>~A</name>" (rmrs-rule-name rule))
     (format ostream "~%<dtrs>~{<dtr>~A</dtr>~}</dtrs>" dtrs)
-    (when head (format ostream "~%<head>~A</head>" (elt dtrs head)))
+    (when head 
+      (if (eql head -1)
+          (format ostream "~%<head>RULE</head>")
+        (format ostream "~%<head>~A</head>" (elt dtrs head))))
     (when semstruct
       (output-rmrs-semstruct semstruct ostream))
     (loop for eq in (rmrs-rule-eqs rule)
