@@ -24,6 +24,8 @@
 
 (defparameter *redwoods-record-void-discriminants-p* nil)
 
+(defparameter *redwoods-reconstruct-mode* :word)
+
 (defparameter %redwoods-items-increment% 100)
 
 (defparameter %redwoods-items-percentile% 20)
@@ -272,7 +274,7 @@
                         with edges
                         with mode = 
                           (if (eq (lkb::compare-frame-mode frame) :modern)
-                            t :word)
+                            t *redwoods-reconstruct-mode*)
                         for result in results
                         for id = (get-field :result-id result)
                         for derivation = (get-field :derivation result)
