@@ -63,22 +63,24 @@
      (setf *batch-mode* nil)))
 
 (defun get-compatible-rels (reltype)
-  (let* ((type-entry (get-type-entry reltype))
-         (return-types (list type-entry)))
-    (for desc in (type-descendants type-entry)
-         do
-         (pushnew desc return-types :test #'eq)
-         (for desc-anc in (type-ancestors desc)
-              do
-              (when (member mrs::*top-semantics-entry*
-                            (type-ancestors desc-anc) :test #'eq)
-                (pushnew desc-anc return-types :test #'eq))))
-    (for anc in (type-ancestors type-entry)
-          do
-          (when (member mrs::*top-semantics-entry*
-                        (type-ancestors anc) :test #'eq)
-            (pushnew anc return-types :test #'eq)))
-    (mapcar #'type-name return-types)))
+  (let ((type-entry (get-type-entry reltype)))
+    (if type-entry
+        (let ((return-types (list type-entry)))
+          (for desc in (type-descendants type-entry)
+               do
+               (pushnew desc return-types :test #'eq)
+               (for desc-anc in (type-ancestors desc)
+                    do
+                    (when (member mrs::*top-semantics-entry*
+                                  (type-ancestors desc-anc) :test #'eq)
+                      (pushnew desc-anc return-types :test #'eq))))
+          (for anc in (type-ancestors type-entry)
+               do
+               (when (member mrs::*top-semantics-entry*
+                             (type-ancestors anc) :test #'eq)
+                 (pushnew anc return-types :test #'eq)))
+          (mapcar #'type-name return-types))
+      (list reltype))))
          
 
 
