@@ -99,8 +99,8 @@
    ((member pos '("``" "''" "," "\"") :test #'string=) "")
    #+:null
    ((string-equal pos "cd") "TwoDigitErsatz")
-   ((string-equal token "-lrb-") "(")
-   ((string-equal token "-rrb-") ")")
+   ((string-equal pos "-lrb-") "(")
+   ((string-equal pos "-rrb-") ")")
    (t (if lkb::*preprocessor*
         (lkb::preprocess token :globalp nil :format :lkb :verbose nil)
         token))))
