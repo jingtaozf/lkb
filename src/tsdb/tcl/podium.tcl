@@ -148,8 +148,9 @@ set globals(evolution,all) {
 }; # globals(evolution,all)
 set globals(evolution,coverage) 1;
 
-set globals(tree,beam) 1;
+set globals(tree,model) :mem;
 set globals(tree,nfold) 10;
+set globals(tree,beam) 1;
 set globals(tree,scorep) true;
 set globals(tree,comparison) :id;
 
@@ -710,6 +711,8 @@ proc main {} {
   .menu.trees.menu add command \
     -label "Rank" -command {tsdb_trees rank};
   .menu.trees.menu add command \
+    -label "Score" -command {tsdb_trees score};
+  .menu.trees.menu add command \
     -label "Reset" -command {tsdb_file purge score};
   .menu.trees.menu add cascade \
     -label "Switches" -menu .menu.trees.menu.switches;
@@ -727,11 +730,19 @@ proc main {} {
   .menu.trees.menu.summarize add command \
     -label "Annotations" -command {analyze_trees};
   .menu.trees.menu.summarize add command \
-    -label "Scores" -command {tsdb_trees score};
-  .menu.trees.menu.summarize add command \
     -label "Update" -state disabled -command {};
 
   menu .menu.trees.menu.switches -tearoff 0;
+  .menu.trees.menu.switches add radiobutton \
+    -label "Maximum Entropy" \
+    -variable globals(tree,model) -value :mem;
+  .menu.trees.menu.switches add radiobutton \
+    -label "Simple PCFG" \
+    -variable globals(tree,model) -value :pcfg;
+  .menu.trees.menu.switches add radiobutton \
+    -label "Random Chance" \
+    -variable globals(tree,model) -value :chance;
+  .menu.trees.menu.switches add separator;
   .menu.trees.menu.switches add radiobutton \
     -label "Explicit Ranks" \
     -variable globals(tree,scorep) -value true;

@@ -383,6 +383,7 @@
         (loop
             for decision in decisions
             do (write-decision strip decision :cache cache))
+        (purge-profile-cache data)
         (return-from browse-tree (acons :status :save nil)))
 
       (when (null edges)
@@ -460,7 +461,7 @@
                 for edge in edges
                 for id = (when (lkb::edge-p edge) (lkb::edge-foo edge))
                 do
-                  (write-preference (or strip data)
+                  (write-preference data
                                     (pairlis '(:parse-id 
                                                :t-version :result-id)
                                              (list parse-id
@@ -1368,7 +1369,7 @@
 (defun rank-profile (source 
                      &optional (target source)
                      &key (condition *statistics-select-condition*)
-                          (nfold 10) 
+                          (nfold 10) (type :mem)
                           (stream *tsdb-io*) (cache :raw) (verbose t)
                           interrupt meter)
   
@@ -1384,6 +1385,9 @@
       with gc = (install-gc-strategy 
                  nil :tenure *tsdb-tenure-p* :burst t :verbose t)
       with cache = (create-cache target :verbose verbose :protocol cache)
+      with condition = (if (and condition (not (equal condition "")))
+                         (format nil "t-active >= 1 && (~a)" condition)
+                         condition)
       with data = (analyze source 
                            :thorough '(:derivation)
                            :condition condition :gold source)
@@ -1407,7 +1411,7 @@
              "~&[~a] rank-profile:() iteration # ~d (~d against ~d)~%"
              (current-time :long :short) i (length test) (length train))
             (loop
-                with items =  (train-and-rank train test)
+                with items =  (train-and-rank train test :type type)
                 for item in items
                 for parse-id = (get-field :parse-id item)
                 for ranks = (get-field :ranks item)
@@ -1441,7 +1445,8 @@
   (loop
       with model = (case type
                      (:pcfg (estimate-cfg train))
-                     (:mem (estimate-mem train)))
+                     (:mem (estimate-mem train))
+                     (:chance "chance"))
       for item in test
       for iid = (get-field :i-id item)
       for readings = (get-field :readings item)
@@ -1451,7 +1456,7 @@
         (format
          stream
          "~&[~a] train-and-rank(): using ~a;~%"
-         (current-time :long :short) model)
+         (current-time :long :short)  model)
         #+:debug (setf %model% model)
       when (and (integerp readings) (> readings 1)) do
         (format 
@@ -1463,18 +1468,19 @@
             for result in results
             for id = (get-field :result-id result)
             for derivation = (get-field :derivation result)
-            for edge = (reconstruct derivation nil)
-            for score = (and edge 
+            for edge = (unless (eq type :chance) (reconstruct derivation nil))
+            for score = (and (or edge (eq type :chance))
                              (case type
                                (:pcfg (pcfg-score-edge edge model))
-                               (:mem (mem-score-edge edge model))))
-            when (null edge) do 
+                               (:mem (mem-score-edge edge model))
+                               (:chance 0.0)))
+            when (and (null edge) (not (eq type :chance))) do 
               (format 
                stream
                "~&[~a] train-and-rank(): ignoring this item (no edge);~%"
                (current-time :long :short))
               (setf ranks nil) (return)
-            do 
+            else do 
               (push (nconc (pairlis '(:result-id :score)
                                     (list id score))
                            result)

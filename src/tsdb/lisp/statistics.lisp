@@ -434,30 +434,30 @@
     result))
 
 (defun rank-items (items &key gold score condition)
+  
+  (declare (ignore condition))
 
   (loop
       with scores = (when (and (null gold) (stringp score))
                       (select '("parse-id" "result-id" "rank")
                               '(:integer :integer :integer)
-                              "score" condition score :sort :parse-id))
+                              "score" nil score :sort :parse-id))
       with golds = (when gold
                      (select '("parse-id" "t-version" "result-id")
                              '(:integer :integer :integer)
-                             "preference" 
-                             condition gold :sort :parse-id))
+                             "preference" nil gold :sort :parse-id))
       for item in items
-      for parse-id = (get-field :parse-id item)
+      for id = (get-field :parse-id item)
       for results = (get-field :results item)
-      for matches = ;;
-                    ;; _fix_me_
-                    ;; for increased robustness, we should read over leading
-                    ;; items as long as their parse id is less than .id.
-                    ;;                                           (3-nov-02; oe)
-                    (if golds
+      for matches = (cond
+                     (golds
+                      (loop
+                          for gid = (get-field :parse-id (first golds))
+                          while (and gid (< gid id)) do (pop golds))
                       (let* ((matches (loop
                                           for foo = (first golds)
-                                          for id = (get-field :parse-id foo)
-                                          while (and id (= parse-id id)) 
+                                          for gid = (get-field :parse-id foo)
+                                          while (and gid (= gid id)) 
                                           collect (pop golds)))
                              (version (loop
                                           for foo in matches
@@ -466,14 +466,18 @@
                         (loop
                             for foo in matches
                             when (= (get-field :t-version foo) version)
-                            collect (nconc (acons :rank 1 nil) foo)))
+                            collect (nconc (acons :rank 1 nil) foo))))
+                     (scores
+                      (loop
+                          for sid = (get-field :parse-id (first scores))
+                          while (and sid (< sid id)) do (pop scores))
                       (let ((matches (loop
                                          for score = (first scores)
-                                         for id = (get-field :parse-id score)
-                                         while (and id (= parse-id id)) 
+                                         for sid = (get-field :parse-id score)
+                                         while (and sid (= sid id)) 
                                          collect (pop scores))))
                         (sort matches #'< :key (lambda (foo) 
-                                                 (get-field :rank foo)))))
+                                                 (get-field :rank foo))))))
       when matches do
         (loop
             for match in matches 

@@ -219,6 +219,16 @@
       when (and (not (zerop n)) (zerop (mod j n))) do (incf i)
       finally (return (values result complement))))
 
+(defun ith-n (list ith n)
+  (when (> ith 0)
+    (loop
+        with list = (loop
+                        for foo on list 
+                        for i from 1 to (* n (- ith 1))
+                        finally (return foo))
+        for foo in list
+        while (> n 0) collect foo do (decf n))))
+
 (defun complement! (fn)
   #'(lambda (&rest args) (not (apply fn args))))
 

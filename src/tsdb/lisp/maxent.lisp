@@ -8,7 +8,7 @@
 
 (defparameter *maxent-ngram-size* 3)
 
-(defparameter *maxent-ngram-values* '(:type))
+(defparameter *maxent-ngram-tag* :type)
 
 (defparameter *maxent-ngram-back-off-p* nil)
 
@@ -242,29 +242,28 @@
       with table = (mem-table model)
       with forms = (lkb::edge-leaves edge)
       with ids = (lkb::edge-lex-ids edge)
-      with types = (when (smember :type *maxent-ngram-values*)
-                     (loop
-                         for id in ids
-                         collect (type-of-lexical-entry id)))
+      with tags = (if (eq *maxent-ngram-tag* :type)
+                    (loop
+                        for id in ids
+                        collect (type-of-lexical-entry id))
+                    ids)
       initially
         (if (and (eq (lkb::edge-foo edge) model)
                  (consp (lkb::edge-baz edge)))
           (return (lkb::edge-baz edge))
-          (when (or (null *maxent-ngram-values*)
-                  (not (= (length forms) (length ids)))
-                  (and types (not (= (length forms) (length types)))))
+          (when (or (zerop *maxent-ngram-size*)
+                    (not (= (length forms) (length tags))))
             (return)))
-      for (form1 form2 form3) on (append (cons '^ forms) '($))
-      for (id1 id2 id3) on (append (cons '^ ids) '($))
-      for (type1 type2 type3) on (append (cons '^ types) '($))
-      while form3 do
-        (let* ((feature (nconc (when (smember :form *maxent-ngram-values*)
-                                 (list form1 form2 form3))
-                               (when (smember :id *maxent-ngram-values*)
-                                 (list id1 id2 id3))
-                               (when (smember :type *maxent-ngram-values*)
-                                 (list type1 type2 type3)))))
-          (push (symbol-to-code feature table) result))
+      for forms on (append (cons '^ forms) '($))
+      for tags on (append (cons '^ tags) '($))
+      while (first forms) do
+        (loop
+            for i from (if *maxent-ngram-back-off-p* 1 *maxent-ngram-size*)
+            to *maxent-ngram-size*
+            for form = (nth (- i 1) forms)
+            for feature = (cons form (ith-n tags 1 i) )
+            when form do
+              (push (symbol-to-code feature table) result))
       finally 
         (setf (lkb::edge-foo edge) model)
         (setf (lkb::edge-baz edge) result)

@@ -989,8 +989,8 @@ proc tsdb_trees {action} {
     if {$action == "rank"} {
       set command \
         [format \
-         "(rank-profile \"%s\" \"%s\" :nfold %d)" \
-         $source $target $globals(tree,nfold)];
+         "(rank-profile \"%s\" \"%s\" :nfold %d :type %s)" \
+         $source $target $globals(tree,nfold) $globals(tree,model)];
     }; # if
   }; # else
 
