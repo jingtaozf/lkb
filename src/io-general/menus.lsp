@@ -49,7 +49,6 @@
 		      lkb::output-type-file 
                       lkb::output-display-settings
                       lkb::load-display-settings
-		      lkb::*lkb-system-version*
                       ;; debug
                       lkb::print-chart-toplevel
                       lkb::print-gen-chart-toplevel

@@ -43,17 +43,7 @@
 
 (defun display-unexpanded-lex-entry-tty (lex lex-entry)
   (declare (ignore lex))
-  (if (eql *lkb-system-version* :laurel)
-      (display-fs-and-paths-tty
-       (lex-or-psort-local-fs lex-entry) 
-       (remove-if-not 
-        #'(lambda (unif) 
-            (or (c-identity-p unif)
-                (equality-p unif)
-                (inheritance-p unif)
-                (default-inheritance-p unif)))
-        (lex-or-psort-unifs lex-entry)))
-    (display-fs-tty (lex-or-psort-local-fs lex-entry))))
+  (display-fs-tty (lex-or-psort-local-fs lex-entry)))
                    
 ;;;                     (make-menu-item :name "Lex or psort entry"
 ;;;                        :value #'show-lex)

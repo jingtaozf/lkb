@@ -124,26 +124,11 @@
          (display-unexpanded-lex-entry lex lex-entry))))
 
 (defun display-unexpanded-lex-entry (lex lex-entry &optional id)
-  (if (eql *lkb-system-version* :laurel)
-   (display-fs-and-paths 
-    (lex-or-psort-local-fs lex-entry) 
-    (if id
-        (format nil "~(~A~) - ~A - definition" lex
-                id)
-      (format nil "~(~A~) - definition" lex))
-    (remove-if-not 
-     #'(lambda (unif) 
-         (or (c-identity-p unif)
-             (equality-p unif)
-             (inheritance-p unif)
-             (default-inheritance-p unif)))
-     (lex-or-psort-unifs lex-entry))
-    lex)
    (display-fs (lex-or-psort-local-fs lex-entry) 
                (if id
                    (format nil "~(~A~) - ~A - definition (indef)" lex
                                  id)
-                 (format nil "~(~A~) - definition (indef)" lex)))))
+                 (format nil "~(~A~) - definition (indef)" lex))))
 
          
 (defun show-grammar-rule nil
