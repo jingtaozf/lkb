@@ -25,7 +25,6 @@ ne-list (list)
 verb (top)
 < PAST > = top
 < PASTP > = < PASSP >
-
 / lex
 < PASSP > = < PAST >
 < PASTP > = < PAST > .

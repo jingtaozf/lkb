@@ -81,7 +81,8 @@
                                                  (car value)) nil t)))
           (for path in (yadu-pp-paths path-rep)
                do
-               (output-tail-features stream path)))
+               (output-tail-features stream                        
+                     (path-typed-feature-list path))))
         (current-position-x stream))))
           
           

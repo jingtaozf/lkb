@@ -1,4 +1,8 @@
 boolean := *top*.
+ 
+true := boolean.
+
+false := boolean.
 
 string := *top*.
 
@@ -18,18 +22,116 @@ ne-list := list &
 ;;; L+C section 2.
 
 verb := *top* &
-[ PAST *top* /lex #pp,
-  PASTP #p /lex #pp,
-  PASSP #p /lex #pp ].
+[ PAST *top* /l #pp,
+  PASTP #p /l #pp,
+  PASSP #p /l #pp ].
 
 regverb := verb &
-[ PAST /lex "ed" ] .
+[ PAST /l "ed" ] .
 
-;;; slash position before or after feature -
-;;; the effect should be basically the same
+;;; note that the contrast between regverb and pst-t-verb
+;;; with slash position before or after feature is for testing 
+;;; purposes - the effect should be basically the same
 ;;; given that PAST is an appropriate feature
+;;; In following examples, the slash is at the latest possible 
+;;; point
 
 pst-t-vb := regverb &
-/lex
+/l
 [ PAST "t" ] .
+
+;;; L+C 3.6.1
+
+c := *top*.
+
+a := c.
+
+b := c.
+
+fgtype := *top* &
+[ F  *top*,
+  G  *top* ] .
+
+t1 := fgtype &
+[ F /l #1, 
+  G /l #1 ] .
+
+t := t1 &
+[ F /l a,
+  G /l b ] .
+
+;;; L+C 3.6.2
+
+
+t-a := fgtype &
+[ F /l a,
+  G /l b ] .
+
+
+t1-a := fgtype &
+[ F /l #1, 
+  G /l #1 ] .
+
+t2-a := t-a & t1-a.
+
+;;; L+C 3.6.3
+
+fftype := *top* &
+[ FF *top* ].
+
+u := *top* &
+[ GG b ].
+
+t1-b := fftype &
+[ FF /l u ].
+
+t-b := t1-b &
+[ FF /l a ] .
+
+;;; L+C section 3.7 
+
+ac := *top*.
+bc := *top*. 
+cc := *top*.
+
+tc3 := fgtype &
+[ F /l cc ].
+
+tc2 := tc3 &
+[ F /l ac,
+  G /l bc ].
+
+tc1 := tc2 &
+[ F /l #1, 
+  G /l #1 ] .
+
+;;; L+C 4.1 modals
+
+sign := *top* &
+[ SYNSEM synsem ].
+
+synsem := *top* &
+[ HEAD head,
+  VAL val ].
+
+head := *top* &
+[ AUX boolean,
+  VFORM vform ] .
+
+vform := *top*.
+
+bse := vform.
+
+inf := vform.
+
+val := *top* &
+[ COMPS list ].
+
+modal := sign &
+[ SYNSEM [ HEAD.AUX true,
+           VAL.COMPS [ HD [ VAL.COMPS e-list,
+                            HEAD.VFORM /l bse ],
+                       TL e-list ]]].
+
+
 
