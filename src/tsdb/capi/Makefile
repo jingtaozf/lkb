@@ -4,7 +4,7 @@ SOLARIS_LIBS = \
    5lib/getloadavg.o -L5lib -lpvm3 -lsocket -lnsl -lkstat -lc
 
 LINUX_LIBS = \
-   llib/getloadavg.o -Lllib -lpvm3 -lc
+   llib/getloadavg.o -Lllib -lpvm3
 
 OSF_LIBS = \
     olib/getloadavg.o -Lolib -lpvm3 -lc
@@ -28,13 +28,13 @@ linux:
 	make clean;
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) acl.c
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) mfile.c
-	$(LD) -o ../../pvm/linux/pvm.so acl.o $(LINUX_LIBS)
+	gcc -shared -o ../../pvm/linux/pvm.so acl.o $(LINUX_LIBS)
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) gc.c
-	$(LD) -o ../linux/gc.so gc.o
+	gcc -shared -o ../linux/gc.so gc.o
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) capi.c
-	$(LD) -o ../linux/capi.so capi.o acl.o $(LINUX_LIBS)
+	gcc -shared -o ../linux/capi.so capi.o acl.o $(LINUX_LIBS)
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) client.c
-	$(LD) -o ../../../lib/linux/libitsdb.so \
+	gcc -shared -o ../../../lib/linux/libitsdb.so \
 	  client.o acl.o mfile.o $(LINUX_LIBS)
 	$(AR) ../../../lib/linux/libitsdb.a \
 	  client.o acl.o mfile.o llib/getloadavg.o
