@@ -1,8 +1,22 @@
 cvs update: Updating .
+U README
+U Version.lisp
+U constructions.tdl
+U english.tdl
+U fundamentals.tdl
+U lexicon.tdl
+U lextypes.tdl
+U ranklex.tdl
+U robustlex.tdl
+U syntax.tdl
 cvs update: Updating data
 cvs update: Updating lkb
+U lkb/script
 cvs update: Updating patches
 cvs update: Updating pet
+U pet/english.set
+U pet/k2y.set
+cvs update: pet/lexrank.set is no longer in the repository
 cvs update: Updating tsdb
 cvs update: Updating tsdb/csli
 cvs update: Updating tsdb/csli0
@@ -16,7 +30,6 @@ cvs update: Updating lkb
 ? lkb/mrs-globals.lisp.fasl
 ? lkb/user-fns.lsp.fasl
 cvs update: Updating .
-M Makefile
 ? doc
 ? etc
 ? linux
@@ -158,6 +171,9 @@ cvs update: Updating src/.nasl/tty
 cvs update: Updating src/.nasl/www
 cvs update: Updating src/ACL-CG_specific
 cvs update: Updating src/ACL_specific
+U src/ACL_specific/build.lsp
+U src/ACL_specific/compare.lsp
+U src/ACL_specific/deliver.lsp
 cvs update: Updating src/MCL_specific
 cvs update: Updating src/data
 cvs update: Updating src/data/Dikran
@@ -258,22 +274,18 @@ cvs update: Updating src/fasl/mrs
 cvs update: Updating src/general
 ? src/general/itsdb.lisp
 cvs update: Updating src/io-general
+U src/io-general/outputsrc.lsp
 cvs update: Updating src/io-lilfes
 cvs update: Updating src/io-paths
-U src/io-paths/lexinput.lsp
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-U src/main/clex.lsp
-U src/main/lex.lsp
-U src/main/lexport.lsp
-U src/main/plex.lsp
-U src/main/psqllex.lsp
+U src/main/globals.lsp
+U src/main/initializations.lsp
 cvs update: Updating src/mrs
 cvs update: Updating src/mrs/data
 cvs update: Updating src/non-core
 cvs update: Updating src/psql
-U src/psql/import.sql
 cvs update: Updating src/psql/linux
 cvs update: Updating src/psql/solaris
 cvs update: Updating src/pvm
@@ -283,6 +295,7 @@ cvs update: Updating src/rmrs
 cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
+U src/systems/tsdb.system
 cvs update: Updating src/tproving
 cvs update: Updating src/tsdb
 cvs update: Updating src/tsdb/TeX
@@ -304,13 +317,19 @@ cvs update: Updating src/tsdb/home/lingo/oct-97/csli
 cvs update: Updating src/tsdb/home/lingo/oct-97/csli/97-11-26
 cvs update: Updating src/tsdb/home/lingo/oct-97/csli/97-11-26/page
 cvs update: Updating src/tsdb/home/trees
-? src/tsdb/home/trees/vm13
 cvs update: Updating src/tsdb/home/trees/vm32
 cvs update: Updating src/tsdb/home/trees/vm32/ezra
-? src/tsdb/home/trees/vm32/ezra/01-07-16
 cvs update: Updating src/tsdb/home/trees/vm32/ezra/01-07-17
 cvs update: Updating src/tsdb/linux
 cvs update: Updating src/tsdb/lisp
+U src/tsdb/lisp/capi.lisp
+U src/tsdb/lisp/globals.lisp
+U src/tsdb/lisp/lkb-interface.lisp
+U src/tsdb/lisp/podium.lisp
+U src/tsdb/lisp/process.lisp
+U src/tsdb/lisp/ptb.lisp
+U src/tsdb/lisp/redwoods.lisp
+U src/tsdb/lisp/utilities.lisp
 cvs update: Updating src/tsdb/lisp/RCS
 cvs update: Updating src/tsdb/skeletons
 cvs update: Updating src/tsdb/skeletons/csli
@@ -321,14 +340,20 @@ cvs update: Updating src/tsdb/skeletons/deutsch/tub
 cvs update: Updating src/tsdb/skeletons/deutsch/vm
 cvs update: Updating src/tsdb/skeletons/deutsch/vmd
 cvs update: Updating src/tsdb/skeletons/english
+U src/tsdb/skeletons/english/Index.lisp
 cvs update: Updating src/tsdb/skeletons/english/aged
 cvs update: Updating src/tsdb/skeletons/english/blend
 cvs update: Updating src/tsdb/skeletons/english/csli
+cvs update: Updating src/tsdb/skeletons/english/demo
+U src/tsdb/skeletons/english/demo/item
+U src/tsdb/skeletons/english/demo/relations
 cvs update: Updating src/tsdb/skeletons/english/ec
 cvs update: Updating src/tsdb/skeletons/english/english
 cvs update: Updating src/tsdb/skeletons/english/fuse
 cvs update: Updating src/tsdb/skeletons/english/s+w
 cvs update: Updating src/tsdb/skeletons/english/toy
+cvs update: src/tsdb/skeletons/english/toy/item is no longer in the repository
+cvs update: src/tsdb/skeletons/english/toy/relations is no longer in the repository
 cvs update: Updating src/tsdb/skeletons/english/vm
 cvs update: Updating src/tsdb/skeletons/english/vm13
 cvs update: Updating src/tsdb/skeletons/english/vm31
@@ -349,6 +374,10 @@ cvs update: Updating src/tsdb/skeletons/s+w
 cvs update: Updating src/tsdb/skeletons/toy
 cvs update: Updating src/tsdb/solaris
 cvs update: Updating src/tsdb/tcl
+U src/tsdb/tcl/commands.tcl
+U src/tsdb/tcl/input.tcl
+U src/tsdb/tcl/podium.tcl
+U src/tsdb/tcl/utilities.tcl
 cvs update: Updating src/tty
 cvs update: Updating src/www
 **********
@@ -360,7 +389,7 @@ cvs update: Updating src/www
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.179; previous revision: 1.178
+new revision: 1.181; previous revision: 1.180
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1196,6 +1225,7 @@ rsh lineara "cd /eo/e7/apache/htdocs/src/lkb && make lkb_linux_om@lineara";
 ( \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp\")"; \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp\")"; \
+  echo "(pushnew :lkb *features*)"; \
   echo "(pushnew :mrs *features*)"; \
   echo "(setf make::*building-image-p* t)"; \
   echo "(setf (system:getenv \"DISPLAY\") nil)"; \
@@ -1265,14 +1295,14 @@ area area  address(bytes)        cons         other bytes
      Top #x41f06000
      New #x41c86000(2621440)    -----            -----
      New #x41a06000(2621440)  1019:1019     2551696:872
-   0 Old #x41003970(10495632)    1:45854    8914520:1207176
+   0 Old #x41003970(10495632)    1:45854    8914504:1207192
 Root pages: 2
  Lisp heap: #x41000000  pos: #x41f06000 resrve: 586153984
  C heap:    #x64000000  pos: #x64006000 resrve: 1024000
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Oct 7, 2002 18:39)
+6.0 [Linux (x86)] (Oct 11, 2002 16:05)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -2064,7 +2094,7 @@ CL-USER(47):
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 [Current process: Initial Lisp Listener]
-CL-USER(48): #<EQUAL hash-table with 0 entries @ #x4143e9ca>
+CL-USER(48): #<EQUAL hash-table with 0 entries @ #x4143e9da>
 [Current process: Initial Lisp Listener]
 CL-USER(49): ; Libfasl from bundle code/who.fasl.
 
@@ -2081,7 +2111,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/nacl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-26453704 bytes have been tenured, next gc will be global.
+25798544 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -2223,11 +2253,13 @@ CL-USER(81):
 [Current process: Initial Lisp Listener]
 CL-USER(82): ; Exiting Lisp
 T
-CL-USER(3): (:MRS :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM
+CL-USER(3): (:LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM
  :CLTL2 :CLIM-MOTIF :ANSI-90 :SILICA :CLIM-2.1 ...)
-CL-USER(4): T
-CL-USER(5): NIL
-CL-USER(6): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
+CL-USER(4): (:MRS :LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM
+ :CLTL2 :CLIM-MOTIF :ANSI-90 :SILICA ...)
+CL-USER(5): T
+CL-USER(6): NIL
+CL-USER(7): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/pvm.system
 ; Foreign loading /eo/e7/apache/htdocs/src/lkb/src/pvm/linux/pvm.so.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/pvm/pvm-package.lisp
@@ -2382,7 +2414,7 @@ CL-USER(6): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/rules.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/parse.lsp
-8937152 bytes have been tenured, next gc will be global.
+8940552 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/parse.fasl
@@ -2732,6 +2764,13 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/macros.fasl
 ;;; Compiling file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/lkb-interface.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/lkb-interface.fasl
+;;; Fasl write complete
+; Fast loading
+;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/lkb-interface.fasl
+;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/globals.lisp
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/globals.fasl
@@ -2814,9 +2853,6 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/gc.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/yy.lisp
-; While compiling COMPUTE-PARSE-TREE:
-Warning: Free reference to undeclared variable LKB::*LKB-PACKAGE*
-         assumed special.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Fasl write complete
@@ -2830,40 +2866,26 @@ Warning: Free reference to undeclared variable LKB::*LKB-PACKAGE*
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/derivations.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/tnt-interface.lisp
-; While compiling EXPORT-TREES-FOR-TNT:
-Warning: Free reference to undeclared variable LKB::*LKB-PACKAGE*
-         assumed special.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Fasl write complete
 ; Fast loading
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tnt-interface.fasl
+;;; Compiling file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
+; While compiling BROWSE-TREES:
+Warning: Free reference to undeclared variable *FRAME* assumed special.
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/ptb.lisp
+gc-after-hook(): local; new: 1549816; old: 466768; pending: 128; efficiency: 96.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/ptb.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/ptb.fasl
 Warning: While compiling these undefined functions were referenced:
-         TSDB::INSTANTIATE-RULE from position 6545 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/derivations.lisp
-         TSDB::FIND-RULE from position 6545 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/derivations.lisp
-         TSDB::INSTANTIATE-PRETERMINAL from position 6545 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/derivations.lisp
-         TSDB::FIND-AFFIX from position 6545 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/derivations.lisp
-         TSDB::FIND-LEXICAL-ENTRY from position 6545 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/derivations.lisp
-         TSDB::PARSE-WORD from position 2950 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/commands.lisp
-         TSDB::FINALIZE-TEST-RUN from position 45568 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/process.lisp
-         TSDB::PARSE-ITEM from position 30604 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/process.lisp
-         TSDB::GET-TEST-RUN-INFORMATION from position 26833 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/process.lisp
-         TSDB::INITIALIZE-TEST-RUN from position 26833 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/process.lisp
          MRS::OUTPUT-RMRS1 from position 1098 in
            /eo/e7/apache/htdocs/src/lkb/src/mrs/interface.lisp
          MRS::SIMPLE-MRS-TO-RMRS from position 1098 in
@@ -2871,7 +2893,7 @@ Warning: While compiling these undefined functions were referenced:
          LKB::EXPAND-IDIOMS-PHRASES from position 4248 in
            /eo/e7/apache/htdocs/src/lkb/src/io-tdl/tdllexinput.lsp
 (#<MODULE: tsdb>)
-CL-USER(7): ; killing "scheduler work-out [spr19158]"
+CL-USER(8): ; killing "scheduler work-out [spr19158]"
 ; killing "Initial Lisp Listener"
 ; Exiting Lisp
 ( \
@@ -2958,14 +2980,14 @@ area area  address(bytes)        cons         other bytes
      Top #x41f06000
      New #x41c86000(2621440)    -----            -----
      New #x41a06000(2621440)  1019:1019     2551696:872
-   0 Old #x41003970(10495632)    1:45854    8914520:1207176
+   0 Old #x41003970(10495632)    1:45854    8914504:1207192
 Root pages: 2
  Lisp heap: #x41000000  pos: #x41f06000 resrve: 586153984
  C heap:    #x64000000  pos: #x64006000 resrve: 1024000
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Oct 7, 2002 18:44)
+6.0 [Linux (x86)] (Oct 11, 2002 16:10)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -3757,7 +3779,7 @@ CL-USER(47):
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 [Current process: Initial Lisp Listener]
-CL-USER(48): #<EQUAL hash-table with 0 entries @ #x4143e9ca>
+CL-USER(48): #<EQUAL hash-table with 0 entries @ #x4143e9da>
 [Current process: Initial Lisp Listener]
 CL-USER(49): ; Libfasl from bundle code/who.fasl.
 
@@ -3774,7 +3796,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/macl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-26453704 bytes have been tenured, next gc will be global.
+25669864 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -3939,6 +3961,7 @@ rm -f /eo/e7/apache/htdocs/src/.yes;
 ( \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp\")"; \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp\")"; \
+  echo "(pushnew :lkb *features*)"; \
   echo "(pushnew :mrs *features*)"; \
   echo "(setf make::*building-image-p* t)"; \
   echo "(setf (system:getenv \"DISPLAY\") nil)"; \
@@ -4011,7 +4034,7 @@ Root pages: 12
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (10/7/2 18:43)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (10/11/2 16:08)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -4166,8 +4189,8 @@ USER(21): ; Libfasl from bundle code/eli.fasl.
 ;      /eo/e7/apache/htdocs/src/lkb/src/.sacl/ACL_specific/dialog.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/types.lsp
 ; While compiling TYPES-TO-XML:
-Warning: Variable #:G13601 is never used.
-Warning: Variable #:G13602 is never used.
+Warning: Variable #:G13603 is never used.
+Warning: Variable #:G13604 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/types.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/types.fasl
@@ -4222,10 +4245,10 @@ Warning: Variable #:G13602 is never used.
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/clex.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/rules.lsp
 ; While compiling RULES-TO-XML:
-Warning: Variable #:G18134 is never used.
-Warning: Variable #:G18135 is never used.
-Warning: Variable #:G18120 is never used.
-Warning: Variable #:G18121 is never used.
+Warning: Variable #:G18136 is never used.
+Warning: Variable #:G18137 is never used.
+Warning: Variable #:G18122 is never used.
+Warning: Variable #:G18123 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
@@ -4276,9 +4299,9 @@ Warning: Variable #:G18121 is never used.
 ;      /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputtdfs.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/io-general/outputsrc.lsp
 ; While compiling (LABELS OUTPUT-RULES-FOR-EBL OUTPUT-RULES):
-Warning: Variable #:G22401 is never used.
-Warning: Variable #:G22397 is never used.
-Warning: Variable #:G22398 is never used.
+Warning: Variable #:G22403 is never used.
+Warning: Variable #:G22399 is never used.
+Warning: Variable #:G22400 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputsrc.fasl
 ;;; Fasl write complete
@@ -4525,14 +4548,14 @@ NIL
 [Current process: Initial Lisp Listener]
 USER(22): NIL
 [Current process: Initial Lisp Listener]
-USER(23): #<EQUAL hash-table with 0 entries @ #x4310d8a>
+USER(23): #<EQUAL hash-table with 0 entries @ #x4310cea>
 [Current process: Initial Lisp Listener]
 USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 ; Libfasl from bundle code/who.fasl.
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-22667736 bytes have been tenured, next gc will be global.
+22111712 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4576,11 +4599,13 @@ NIL
 USER(40): [Current process: Initial Lisp Listener]
 USER(40): ; Exiting Lisp
 T
-USER(3): (:MRS :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM :CLTL2
+USER(3): (:LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM :CLTL2
  :CLIM-MOTIF :ANSI-90 :SILICA :CLIM-2.1 ...)
-USER(4): T
-USER(5): NIL
-USER(6): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
+USER(4): (:MRS :LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM :CLTL2
+ :CLIM-MOTIF :ANSI-90 :SILICA ...)
+USER(5): T
+USER(6): NIL
+USER(7): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/pvm.system
 ; Foreign loading /eo/e7/apache/htdocs/src/lkb/src/pvm/solaris/pvm.so.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/pvm/pvm-package.lisp
@@ -4630,8 +4655,8 @@ USER(6): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/ACL_specific/dialog.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/types.lsp
 ; While compiling TYPES-TO-XML:
-Warning: Variable #:G17530 is never used.
-Warning: Variable #:G17531 is never used.
+Warning: Variable #:G17750 is never used.
+Warning: Variable #:G17751 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/types.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/types.fasl
@@ -4639,7 +4664,7 @@ Warning: Variable #:G17531 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
-7162536 bytes have been tenured, next gc will be global.
+7167856 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/yadu.fasl
@@ -4688,10 +4713,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/clex.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/rules.lsp
 ; While compiling RULES-TO-XML:
-Warning: Variable #:G22076 is never used.
-Warning: Variable #:G22077 is never used.
-Warning: Variable #:G22062 is never used.
-Warning: Variable #:G22063 is never used.
+Warning: Variable #:G22296 is never used.
+Warning: Variable #:G22297 is never used.
+Warning: Variable #:G22282 is never used.
+Warning: Variable #:G22283 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
@@ -4739,9 +4764,9 @@ Warning: Variable #:G22063 is never used.
 ;    /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputtdfs.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/io-general/outputsrc.lsp
 ; While compiling (LABELS OUTPUT-RULES-FOR-EBL OUTPUT-RULES):
-Warning: Variable #:G26353 is never used.
-Warning: Variable #:G26349 is never used.
-Warning: Variable #:G26350 is never used.
+Warning: Variable #:G26573 is never used.
+Warning: Variable #:G26569 is never used.
+Warning: Variable #:G26570 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputsrc.fasl
 ;;; Fasl write complete
@@ -4971,6 +4996,12 @@ Warning: Variable #:G26350 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/macros.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/macros.fasl
+;;; Compiling file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/lkb-interface.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/lkb-interface.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/lkb-interface.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/globals.lisp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/globals.fasl
 ;;; Fasl write complete
@@ -5031,9 +5062,6 @@ Warning: Variable #:G26350 is never used.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/gc.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/yy.lisp
-; While compiling COMPUTE-PARSE-TREE:
-Warning: Free reference to undeclared variable LKB::*LKB-PACKAGE* assumed
-         special.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/yy.fasl
@@ -5044,26 +5072,25 @@ Warning: Free reference to undeclared variable LKB::*LKB-PACKAGE* assumed
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/derivations.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/tnt-interface.lisp
-; While compiling EXPORT-TREES-FOR-TNT:
-Warning: Free reference to undeclared variable LKB::*LKB-PACKAGE* assumed
-         special.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tnt-interface.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tnt-interface.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
+; While compiling BROWSE-TREES:
+Warning: Free reference to undeclared variable *FRAME* assumed special.
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/ptb.lisp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/ptb.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/ptb.fasl
 Warning: While compiling these undefined functions were referenced:
-         TSDB::INSTANTIATE-RULE, TSDB::FIND-RULE,
-         TSDB::INSTANTIATE-PRETERMINAL, TSDB::FIND-AFFIX,
-         TSDB::FIND-LEXICAL-ENTRY, TSDB::PARSE-WORD, TSDB::FINALIZE-TEST-RUN,
-         TSDB::PARSE-ITEM, TSDB::GET-TEST-RUN-INFORMATION,
-         TSDB::INITIALIZE-TEST-RUN, MRS::OUTPUT-RMRS1,
-         MRS::SIMPLE-MRS-TO-RMRS, LKB::EXPAND-IDIOMS-PHRASES.
+         MRS::OUTPUT-RMRS1, MRS::SIMPLE-MRS-TO-RMRS,
+         LKB::EXPAND-IDIOMS-PHRASES.
 (#<MODULE: tsdb>)
-USER(7): ; killing "scheduler work-out [spr19158]"
+USER(8): ; killing "scheduler work-out [spr19158]"
 ; killing "Initial Lisp Listener"
 ; Exiting Lisp
 ( \
@@ -5127,11 +5154,13 @@ erg/lkb/user-fns.lsp
 erg/pet/
 erg/pet/english.set
 erg/pet/l2global.set
-erg/pet/lexrank.set
 erg/pet/qc-set.tdl
 erg/pet/qc-traditional.tdl
 erg/pet/flop.set
+erg/pet/k2y.set
 erg/gen-lex.tdl
+erg/ranklex.tdl
+erg/robustlex.tdl
 ( \
   cd /eo/e7/apache/htdocs/src; \
   tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/matrix.tgz \
@@ -7336,14 +7365,14 @@ src/tsdb/skeletons/english/fuse/
 src/tsdb/skeletons/english/fuse/item
 src/tsdb/skeletons/english/fuse/output
 src/tsdb/skeletons/english/fuse/relations
-src/tsdb/skeletons/english/toy/
-src/tsdb/skeletons/english/toy/item
-src/tsdb/skeletons/english/toy/relations
 src/tsdb/skeletons/english/ec/
 src/tsdb/skeletons/english/ec/item
 src/tsdb/skeletons/english/ec/item-phenomenon
 src/tsdb/skeletons/english/ec/phenomenon
 src/tsdb/skeletons/english/ec/relations
+src/tsdb/skeletons/english/demo/
+src/tsdb/skeletons/english/demo/item
+src/tsdb/skeletons/english/demo/relations
 src/tsdb/skeletons/francaise/
 src/tsdb/skeletons/francaise/Relations
 src/tsdb/skeletons/francaise/french/
