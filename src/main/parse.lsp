@@ -88,7 +88,7 @@
    (incf *edge-id*)
    *edge-id*)
 
-(defvar *morphs* (make-array (list *chart-limit*)))
+(defvar *morphs* (make-array (list *chart-limit*) :initial-element nil))
 
 ;;; *morphs* is added, paralleling *chart* to allow for
 ;;; multi-word entries (and eventually idioms perhaps).
