@@ -41,7 +41,7 @@
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   (pushnew :preprocessor *features*)
-  #+:allegro
+  #+(and :allegro (version>= 6 0))
   (pushnew :xml *features*)
   (pushnew :pooling *features*)
   (pushnew :packing *features*))
@@ -92,7 +92,8 @@
       :binary-pathname "main"
       :components
 	      ((:file "initializations" :load-only t)
-               (:file "globals")))   
+               (:file "globals")
+               (:file "ssp")))   
   ;; variables for grammar parameterization
   ;; mostly user-settable, usually reset by a globals file associated
   ;; with a particular grammar and loaded by the script file

@@ -53,6 +53,8 @@
 
 (setq excl:*restart-init-function* 
   #'(lambda ()
-      (tpl:setq-default *package* (find-package :lkb))
+      (if (system:getenv "SSP")
+        (tpl:setq-default *package* (find-package :ssp))
+        (tpl:setq-default *package* (find-package :lkb)))
       (let ((*package* (find-package "CLIM-USER")))
 	(clim-user::set-up-lkb-interaction :core))))
