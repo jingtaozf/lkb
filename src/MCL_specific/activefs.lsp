@@ -551,7 +551,7 @@
                      (progn (format stream "~%% Indef dag~%")
                         (display-dag1 (tdfs-indef fs) 'tex stream)
                         (format stream "~%% Def dag~%")
-                        (display-dag1 (tdfs-def fs) 'tex stream))
+                        (display-dag1 (yadu-winner fs) 'tex stream))
                      (display-dag1 fs 'tex stream))))))))
 
 
