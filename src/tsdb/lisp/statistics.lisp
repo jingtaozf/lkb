@@ -131,7 +131,7 @@
 
 (defparameter *statistics-extra* 
   #+:oe
-  '(:trees :utcpu :uspace 
+  '(:tree :utcpu :uspace 
     :subsumptions :equivalence :proactive :retroactive
     :frozen :failures)
   #-:oe
@@ -571,7 +571,7 @@
                        (threshold (or *statistics-aggregate-threshold* 1))
                        (lower (or *statistics-aggregate-lower* 0))
                        (upper *statistics-aggregate-upper*)
-                       extras
+                       extras trees
                        (format :latex)
                        meter)
   (when meter (meter :value (get-field :start meter)))
