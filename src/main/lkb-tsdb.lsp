@@ -138,7 +138,7 @@ e.g.
                         (with-open-file (ostream result-file :direction :output
                                            :if-exists :append :if-does-not-exist :create)
                            (dolist (parse *parse-record*)
-                              (format ostream "~A@~A@~A@~A@@@-1@-1@@~S@~%"
+                              (format ostream "~A@~A@~A@~A@-1@-1@-1@-1@@~S@~%"
                                  id n time *edge-id* (parse-tree-structure parse))
                               (setq time 0) ; zero time for all parses after first
                               (incf n)))))))))
