@@ -14,7 +14,8 @@
                   :window-title
                   (show-mrs-window-title edge
                      (if *show-mrs-prolog-p* "Prolog MRS" "Simple MRS"))
-                  :scratch-p t)))
+                  :scratch-p t
+                  :wrap-p t)))
     (if mrsstruct
         (mrs::output-mrs1 mrsstruct
            (if *show-mrs-prolog-p* 'mrs::prolog 'mrs::simple) stream)
@@ -25,7 +26,8 @@
   (let ((mrsstruct (mrs::extract-mrs edge))
         (stream (make-instance 'fred-window
                   :window-title (show-mrs-window-title edge "Indexed MRS")
-                  :scratch-p t)))
+                  :scratch-p t
+                  :wrap-p t)))
     (if mrsstruct
         (mrs::output-mrs1 mrsstruct 'mrs::indexed stream)
         (format stream "~%::: MRS structure could not be extracted~%"))
@@ -36,7 +38,8 @@
          (binding-sets (mrs::make-scoped-mrs mrsstruct))
          (stream (make-instance 'fred-window
                    :window-title (show-mrs-window-title edge "Scoped MRS")
-                   :scratch-p t)))
+                   :scratch-p t
+                   :wrap-p t)))
     (if binding-sets
         (for binding in binding-sets
            do
