@@ -100,7 +100,8 @@
     ()
   (clim:with-application-frame (frame)
     (let ((command (clim:menu-choose
-                    '(("Scope" :value :scope :active t)
+                    '(("Test" :value :test :active t)
+                      ("Scope" :value :scope :active t)
                       ("Indexed" :value :indexed :active t)
                       ("Dependencies" :value :dependencies :active t)
                       ("Sort" :value :sort :active t)
@@ -121,6 +122,15 @@
                       ("Untrace" :value :untrace :active t)))))
       (case command
 
+        (:test
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+                (mrs (mrs::produce-one-scope mrs))
+                (title (format nil "~a - Cheap Scope" (transfer-title frame))))
+           (browse-mrss (list mrs) title)))
+
         (:scope
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
@@ -128,7 +138,7 @@
                 (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
                 (title (format nil "~a - Scopes" (transfer-title frame))))
            (lkb::show-mrs-scoped-window nil mrs title)))
-
+        
         (:indexed
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
