@@ -4,7 +4,7 @@ DELETE FROM public.meta WHERE var='user';
 --- sql queries embedded in db
 ---
 
-CREATE TABLE qry (
+CREATE TABLE public.qry (
   fn VARCHAR(50),
   arity int,
   sql_code VARCHAR(4096),
@@ -12,12 +12,15 @@ PRIMARY KEY (fn)
 );
 
 -- arities
-CREATE TABLE qrya (
+CREATE TABLE public.qrya (
   fn VARCHAR(50),
   arg int,
   type VARCHAR(50),
 PRIMARY KEY (fn,arg)
 );
+
+DELETE FROM qry;
+DELETE FROM qrya;
 
 INSERT INTO qrya VALUES ( 'test', 0, 'select-list' );
 INSERT INTO qry VALUES 
@@ -79,25 +82,25 @@ INSERT INTO qrya VALUES ( 'initialize-current-grammar', 0, 'where-subcls' );
 INSERT INTO qry VALUES 
        ( 'initialize-current-grammar', 1, 
 '
-DROP VIEW active;
-DROP VIEW filtered;
+-- DROP VIEW active;
+-- DROP VIEW filtered;
 -- DROP VIEW revision_all;
 
-CREATE VIEW filtered
+CREATE OR REPLACE VIEW filtered
 AS SELECT * 
      FROM revision_all
      WHERE flags = 1
       AND $0;
 
-CREATE VIEW active
- AS SELECT fil.*
- FROM 
-  (filtered AS fil
-  NATURAL JOIN 
-   (SELECT name, max(modstamp) AS modstamp 
-     FROM filtered
-     GROUP BY name) AS t1
-); 
+--CREATE VIEW active
+-- AS SELECT fil.*
+-- FROM 
+--  (filtered AS fil
+--  NATURAL JOIN 
+--   (SELECT name, max(modstamp) AS modstamp 
+--     FROM filtered
+--     GROUP BY name) AS t1
+--); 
 
 UPDATE meta SET val=$0:text WHERE var=''filter'';
 
@@ -252,14 +255,11 @@ CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=''filter'';
 
 CREATE TABLE revision AS (SELECT * FROM public.revision);
 
-CREATE TABLE multi AS (SELECT * FROM public.multi);
-
 ---
 --- temp tables
 ---
 
 CREATE TABLE temp AS SELECT * FROM public.revision WHERE NULL;
-CREATE TABLE temp_multi AS SELECT * FROM public.multi WHERE NULL;
 
 ---
 --- table on which queries executed
@@ -274,74 +274,26 @@ CREATE INDEX current_grammar_orthkey
 ON current_grammar (orthkey); 
 
 ---
---- MWE views
----
-
-CREATE VIEW revision_all_non_multi
-AS SELECT * FROM public.revision 
-   UNION 
-   SELECT * FROM revision;
-
-CREATE VIEW multi_all AS 
-	SELECT * FROM public.multi
-	UNION
-	SELECT * FROM multi;
-
-CREATE VIEW revision_multi AS
-	SELECT 
-  multi.name,
-  rev.userid,
-  rev.version,
-  rev.modstamp,
-  COALESCE(multi.type,rev.type) AS type,
-  rev.orthography,
-  rev.orthkey,
-  rev.pronunciation,
-  COALESCE(multi.keyrel,rev.keyrel) AS keyrel,
-  rev.altkey,
-  rev.alt2key,
-  rev.keytag,
-  rev.altkeytag,
-  COALESCE(multi.particle,rev.compkey) AS compkey,
-  rev.ocompkey,
-  rev.complete,
-  rev.semclasses,
-  rev.preferences,
-
-  rev.classifier,
-  rev.selectrest,
-  rev.jlink,
-  rev.comments,
-  rev.exemplars,
-  rev.usages,
-  rev.lang,
-  rev.country,
-  rev.dialect,
-  rev.domains,
-  rev.genres,
-  rev.register,
-  rev.confidence,
-
-  rev.source,
-  rev.flags
-
-	FROM multi_all AS multi LEFT JOIN revision_all_non_multi AS rev 
-		ON rev.name = multi.verb_id;
-
----
 --- views
 ---
 
-CREATE VIEW active AS SELECT * FROM public.revision WHERE NULL;
+--CREATE VIEW active AS SELECT * FROM public.revision WHERE NULL;
 CREATE VIEW filtered AS SELECT * FROM public.revision WHERE NULL;
--- CREATE VIEW revision_all AS SELECT * FROM public.revision WHERE NULL;
+
+CREATE VIEW active
+ AS SELECT fil.*
+ FROM 
+  (filtered AS fil
+  NATURAL JOIN 
+   (SELECT name, max(modstamp) AS modstamp 
+     FROM filtered
+     GROUP BY name) AS t1
+); 
 
 CREATE VIEW revision_all
 AS SELECT * FROM public.revision 
    UNION 
-   SELECT * FROM revision
-   	UNION 
-	SELECT * FROM revision_multi;
+   SELECT * FROM revision;
 
 ---
 --- FUNCTIONS
@@ -360,18 +312,6 @@ CLUSTER current_grammar_name ON current_grammar;
 SELECT true;'' 
 LANGUAGE SQL;
 
-
---CREATE OR REPLACE FUNCTION build_current_grammar() RETURNS boolean AS
---''
---BEGIN; 
---DELETE FROM current_grammar; 
---INSERT INTO current_grammar 
---	SELECT * FROM active
---	; 
---
---COMMIT; 
---SELECT true;'' 
---LANGUAGE SQL;
 ' );
 
 INSERT INTO qrya VALUES ( 'remove-schema', 0, 'select-list' );

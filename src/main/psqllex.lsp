@@ -8,6 +8,7 @@
 ;;;
 
 ;;; bmw (oct-03)
+;;; - MWE support
 ;;; - public and private database schemas
 ;;; - 'mixed' type to handle mix of string/symbol values in field mapping
 
@@ -61,7 +62,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "2.9")
+(defvar *psql-db-version* "3.00")
 (defvar *psql-port-default* nil)
 (defvar *psql-lexicon-parameters*)
 
@@ -79,6 +80,8 @@
 (defvar *postgres-user-temp-dir*)
 
 (defvar *postgres-debug-stream* t)
+
+(defvar *postgres-mwe-enable* nil)
 
 (defun initialize-psql-lexicon (&key
                                 (db (extract-param :db *psql-lexicon-parameters*))
@@ -898,10 +901,6 @@
 (defmethod show-scratch ((lexicon psql-lex-database))
   (fn-get-records lexicon ''show-scratch))
 
-(defmethod dump-multi-db ((lexicon psql-lex-database) filename)  
-  (setf filename (namestring (pathname filename)))
-  (fn-get-records lexicon ''dump-multi-db filename))
-
 (defmethod merge-into-db ((lexicon psql-lex-database) filename)  
   (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''merge-into-db filename))
@@ -912,10 +911,6 @@
 	(fn-get-records lexicon ''add-to-db filename))
       (error "cannot update lexical database ~a. Check that ~~/tmp/lexdb.new_entries does not contain attempts to redefine existing entries. No tuple of the form <name,userid,version,...> should correspond to an existing entry. [In particular, the TIMESTAMP of a tuple cannot change.]" (dbname lexicon))))
       
-(defmethod merge-multi-into-db ((lexicon psql-lex-database) filename)  
-  (setf filename (namestring (pathname filename)))
-  (fn-get-records lexicon ''merge-multi-into-db filename))
-
 (defun dump-psql-lexicon (filename)
   (get-postgres-temp-filename)
   (setf filename (namestring (pathname filename)))
@@ -940,15 +935,6 @@
   (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
 					       *postgres-temp-filename*
 					       filename-out)))
-
-(defun dump-multi-psql-lexicon (filename)
-  (get-postgres-temp-filename)
-  (setf filename (namestring (pathname filename)))
-  (dump-multi-db *psql-lexicon* *postgres-temp-filename*)
-  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-					       *postgres-temp-filename*
-					       filename)))
-
 
 (defun merge-into-psql-lexicon (filename)
   (setf filename (namestring (pathname filename)))
@@ -980,19 +966,14 @@
     (format *postgres-debug-stream* "~%(building current_grammar)")
     (build-current-grammar *psql-lexicon*)))
 
-(defun merge-multi-into-psql-lexicon (filename)
-  (setf filename (namestring (pathname filename)))
-  (unless
-      (and *psql-lexicon* (connection *psql-lexicon*))
-    (initialize-psql-lexicon))
-  (merge-multi-into-db *psql-lexicon* filename)
-  (initialize-psql-lexicon))
-
 (defmethod initialize-userschema ((lexicon psql-database))
   (unless
       (fn-get-val lexicon ''test-user *postgres-current-user*)
     (format *postgres-debug-stream* "~%(initializing schema ~a)" *postgres-current-user*)
-    (fn-get-val lexicon ''create-schema *postgres-current-user*)))
+    (fn-get-val lexicon ''create-schema *postgres-current-user*)
+    (if *postgres-mwe-enable*
+	(mwe-initialize-userschema lexicon))
+    ))
 
 (defmethod retrieve-fn-defns ((lexicon psql-lex-database))
   (let* ((sql-str (format nil "SELECT * FROM qry;"))
@@ -1021,7 +1002,7 @@
 		       (str-2-symb (get-val :type record))))
 		  ergqa-records)))
     (unless (= arity (length type-list))
-      (error "wrong number of argument defns"))
+      (error "wrong number of argument defns for embedded SQL fn ~a in lexical database ~a" fn (dbname lexicon)))
     (push (cons (str-2-symb fn) 
 		(make-db-access-fn fn sql-code type-list))
 	  (fns lexicon))))
