@@ -26,7 +26,7 @@
 ;;; while playing with various strategies, some of the extra functionality
 ;;; over vanilla active parsing is conditionalized with features, so that we
 ;;; can obtain precise profiles without interference.  the conditionals make
-;;; the code awkword to read, though, and should ultimately disappear.
+;;; the code awkward to read, though, and should ultimately disappear.
 ;;;
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
