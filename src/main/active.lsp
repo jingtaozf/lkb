@@ -245,14 +245,14 @@
     ;; non-local exit when the maximal number of readings (to compute) has
     ;; been reached.
     ;;
-    (when (and (= begin *minimal-vertex*) (= end *maximal-vertex*))
+    (when (and *maximal-number-of-readings*
+               (= begin *minimal-vertex*) (= end *maximal-vertex*))
       (let ((result (find-spanning-edge passive begin end)))
         (when result
           (push (get-internal-run-time) *parse-times*)
           (setf *parse-record* (nconc result *parse-record*))
-          (when *maximal-number-of-readings*
-            (when (zerop (decf *maximal-number-of-readings*))
-              (throw :best-first t))))))
+          (when (zerop (decf *maximal-number-of-readings*))
+            (throw :best-first t)))))
     ;;
     ;; create new tasks through postulation of rules over .passive.
     ;;

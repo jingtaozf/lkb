@@ -485,6 +485,13 @@
 (defvar *type-constraint-list* nil)
 
 (defun unify2 (dag1 dag2 path)
+  (declare (special *chart-packing-p*))
+  ;;
+  ;; _hack_
+  ;; simulate effect of ignoring `CONT' inside the packing parser
+  ;;
+  (if (and *chart-packing-p* (eq (first path) 'cont))
+    (setf (dag-forward dag1) dag2)
   (multiple-value-bind (new-type constraintp)
       (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
     (if new-type
@@ -561,7 +568,7 @@
              "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
              (unify-get-type dag1) (unify-get-type dag2) 
              (reverse path))))
-	(throw '*fail* nil)))))
+	(throw '*fail* nil))))))
 
 (defmacro unify-arcs-find-arc (attribute arcs comp-arcs)
   ;; find arc in arcs or comp-arcs with given attribute - also used in

@@ -307,9 +307,9 @@ Setting *first-only-p* to nil")
                 until (empty-heap *agenda*)
                 do (funcall (heap-extract-max *agenda*)))
             (when *active-parsing-p* (complete-chart 0 (length user-input))))
-          (unless (or first-only-p *active-parsing-p*)
+          (unless first-only-p
             ;;
-            ;; best-first (passive or active mode) have already done this
+            ;; best-first (passive or active mode) has already done this
             ;; incrementally in the parse loop
             ;;
             (setf *parse-record* 
@@ -332,7 +332,7 @@ Setting *first-only-p* to nil")
                              ;; filter is in rules.lsp
                              (find-irregular-morphs word) :test #'equalp)
                           #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
-          (unless #+:oe (template-p word) #-:oe nil
+          (unless #+:ltemplates (template-p word) #-:ltemplates nil
             (unless morph-poss (format t "~%Word ~A is not in lexicon" word)
                     (return)))
            (setf (aref *morphs* current)
@@ -378,8 +378,8 @@ Setting *first-only-p* to nil")
   ;; word senses - the type of the dag is used to do the indexing
   (let* ((multi-results (add-multi-words morph-poss right-vertex f))
          (word-senses 
-          (if #+:oe (template-p local-word) #-:oe nil
-            #+:oe
+          (if #+:ltemplates (template-p local-word) #-:ltemplates nil
+            #+:ltemplates
             (let* ((template (retrieve-template local-word))
                    (surface (or (get-template-surface template) local-word))
                    (tdfs (when template (instantiate-template template))))
@@ -388,7 +388,7 @@ Setting *first-only-p* to nil")
                 (list (make-mrecord :lex-ids (list (intern local-word))
                                     :fs tdfs
                                     :rules nil))))
-            #-:oe nil
+            #-:ltemplates nil
             (loop for morph-res in morph-poss
                 append
                   (loop for sense in (get-senses (car morph-res))
