@@ -50,6 +50,8 @@
 (defvar *rel-handel-store* nil)
 (defvar *unbound-vars-store* nil)
 
+(defparameter *scoping-partial-results-p* t)
+(defparameter *scoping-intermediate-scopes* nil)
 
 (defun clear-scope-memos nil
   (setf *rel-handel-store* nil)
@@ -178,6 +180,8 @@
       (push (list associated-quantifier rel)
             *q-rel-store*))))
 
+
+(defparameter *scoping-ignored-roles* (list (vsym "TPC") (vsym "PSV")))
   
 (defun collect-vars-from-rel (rel)
   ;;; only called from find-unbound-vars 
@@ -185,11 +189,13 @@
   ;;; returns the variables from a relation (other than the handel)
   ;;; note that this returns the entire structures (necessary because
   ;;; of identification of sorts of variables)
-  (loop for fvp in (rel-flist  rel)
-       nconc
-       (let ((value (fvpair-value fvp)))
-         (if (var-p value) 
-             (list value)))))
+  (loop
+      for fvp in (rel-flist  rel)
+      for feature = (fvpair-feature fvp)
+      unless (member feature *scoping-ignored-roles* :test #'eq)
+      nconc
+        (let ((value (fvpair-value fvp)))
+          (and (var-p value) (list value)))))
              
 (defun collect-unbound-vars-from-rel (rel)
   ;;; collects all the variables from a rel which have to be bound
@@ -204,8 +210,11 @@
     (if existing (cdr existing)
       (let ((res (if (quick-is-quant-rel rel)
                       nil
-             (loop for fvp in (rel-flist  rel)
-                  append 
+             (loop
+                 for fvp in (rel-flist  rel)
+                 for feature = (fvpair-feature fvp)
+                 unless (member feature *scoping-ignored-roles* :test #'eq)
+                 append 
                     (let ((value (fvpair-value fvp)))
                       (loop for el in (if (listp value) value (list value))
                           nconc
@@ -410,6 +419,7 @@ printing routines -  convenient to make this global to keep printing generic")
   (when *rel-handel-path*
     (clear-scope-memos)
     (setf *top-level-variables* nil)
+    (setf *scoping-intermediate-scopes* nil)
     (let* ((rels (psoa-liszt mrsstruct))
            (hcons (psoa-h-cons mrsstruct))
            (quant-rels (loop for rel in rels when (is-quant-rel rel) collect rel))
@@ -488,9 +498,14 @@ or modulo some number of quantifiers
     (show-scope-so-far top-handel bindings rels pending-qeq))
   (incf *scoping-calls*)
   (when (> *scoping-calls* *scoping-call-limit*)
-    (unless *giving-demo-p* 
+    (unless (or *giving-demo-p* *scoping-partial-results-p*)
       (format t "~%Maximum scoping calls exceeded"))
-    (throw 'up nil))
+    (throw 'up 
+      (when *scoping-partial-results-p*
+        (loop
+            for candidate in *scoping-intermediate-scopes*
+            unless (res-struct-other-rels candidate)
+            collect (res-struct-bindings candidate)))))
   (or (cached-scope-results top-handel bvs bindings rels 
                             pending-qeq 
                             scoped-p scoping-rels)
@@ -605,7 +620,8 @@ or modulo some number of quantifiers
                                    new-top rels-left-handels res-handel)      
   (loop for new-result in new-results
        collect
-       (let ((res-bindings (res-struct-bindings new-result)))
+        (let ((res-bindings (res-struct-bindings new-result)))
+          (first (push 
          (make-res-struct
           :bindings (loop for res-binding in res-bindings
                          collect
@@ -616,7 +632,8 @@ or modulo some number of quantifiers
                                         res-binding)
                                res-binding)
                            (assoc (car res-binding) bindings)))
-          :other-rels (res-struct-other-rels new-result)))))
+          :other-rels (res-struct-other-rels new-result))
+         *scoping-intermediate-scopes*)))))
     
               
 (defun fresh-create-scoped-structures  (top-handel bvs bindings rels 
@@ -851,7 +868,7 @@ or modulo some number of quantifiers
      (sister-structure-scope (car top-rels) (cdr top-rels)
                              bvs bindings other-rels scoping-handels
                              pending-qeq scoping-rels)
-     (list (make-res-struct :bindings bindings :other-rels other-rels)))))
+     (list (first (push (make-res-struct :bindings bindings :other-rels other-rels) *scoping-intermediate-scopes*))))))
 
 
 (defun sister-args-scope (top-handels bvs bindings other-rels scoping-handels
@@ -1051,10 +1068,3 @@ or modulo some number of quantifiers
         (format t "~%pending: ~A top: ~A " pending top-handel)
         (output-scoped-rels true-top
                             (set-difference *starting-rels* rels-left) t nil 0)))))
-
-    
-  
-
-
-    
-    
