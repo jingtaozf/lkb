@@ -73,14 +73,14 @@
         for action = (get-field :status status)
         while (and status (not (eq action :close)))
         do 
-          (when (eq action :save)
-            (when (and increment (zerop (aref annotated position)))
-              (meter-advance increment)))
+          (when (and (eq action :save) increment 
+                     (zerop (aref annotated position)))
+            (meter-advance increment))
           (let ((action (get-field :status status)))
             (case action
               (:first (setf position 0))
               (:previous (setf position (max (- position 1) 0)))
-              ((:next :save) 
+              ((:next :save :skip) 
                (when (eq action :save) (incf (aref annotated position)))
                (setf position (min (+ position 1) (- nitems 1))))
               (:last (setf position (- nitems 1)))))
