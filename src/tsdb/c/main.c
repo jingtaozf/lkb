@@ -159,6 +159,9 @@ int main(int argc, char **argv) {
   union dbmalloptarg db;
 #endif
 
+  tsdb_default_stream = TSDB_DEFAULT_STREAM;
+  tsdb_error_stream = TSDB_ERROR_STREAM;
+
   tsdb_revision = tsdb_rcs_strip(TSDB_REVISION, "Revision");
   tsdb_revision_date = tsdb_rcs_strip(TSDB_REVISION_DATE, "Date");
 

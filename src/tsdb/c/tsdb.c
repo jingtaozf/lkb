@@ -53,8 +53,8 @@ Tsdb tsdb = {
   TSDB_HISTORY_SIZE,       /* history_size */
 }; /* tsdb */
 
-FILE *tsdb_default_stream = TSDB_DEFAULT_STREAM;
-FILE *tsdb_error_stream = TSDB_ERROR_STREAM;
+FILE *tsdb_default_stream = (FILE *)NULL;
+FILE *tsdb_error_stream = (FILE *)NULL;
 
 #ifdef DEBUG
   FILE *tsdb_debug_stream = (FILE *)NULL;

@@ -15,15 +15,16 @@ OBJ = o
 DOT =
 YACC_OUTPUT = y.tab
 LEX_OUTPUT = lex.yy
-CC = gcc $(CFLAGS) -O8 $(XCFLAGS)
+CC = gcc $(CFLAGS) $(XCFLAGS) # -O8 
 YACC = bison -t -o $(YACC_OUTPUT).c
 LEX = flex -8
 MV = /bin/mv
 CP = /bin/cp
-LINUX_LIBS = -Lllib -lreadline -ltermcap -lregex
-SUNOS_LIBS = -L4lib $(LINUX_LIBS) -liberty
+GENERIC_LIBS = -lreadline -ltermcap -lregex
+LINUX_LIBS = -Lllib $(GENERIC_LIBS)
+SUNOS_LIBS = -L4lib $(GENERIC_LIBS) -liberty
 HPUX_LIBS = -L7lib -lreadline -ltermcap -lregex -liberty
-SOLARIS_LIBS = -L5lib $(LINUX_LIBS) -liberty -lsocket -lnsl 
+SOLARIS_LIBS = -L5lib $(GENERIC_LIBS) -liberty -lsocket -lnsl 
 OSF_LIBS = -Lolib -lreadline -ltermcap -lregex -liberty
 
 #
