@@ -1113,9 +1113,9 @@ proc main {} {
     if {$entry != "" && [info exists test_suites($entry)]} {
       if {$compare_in_detail(source) == [lindex $test_suites($entry) 0]} {
         set compare_in_detail(source) "";
-        tsdb_set "*tsdb-gold*" "\"$compare_in_detail(source)\"";
       } else {
         set compare_in_detail(source) [lindex $test_suites($entry) 0];
+        tsdb_set "*tsdb-gold*" "\"$compare_in_detail(source)\"";
         set globals(selection) $entry;
       }; # else
     }; # if
