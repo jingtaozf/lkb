@@ -5,7 +5,7 @@ CREATE TABLE meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO meta VALUES ('db-version', '1.9');
+INSERT INTO meta VALUES ('db-version', '2.0');
 INSERT INTO meta VALUES ('filter', 'TRUE');
 
 ---
@@ -156,7 +156,7 @@ INSERT INTO qry VALUES
          'SELECT DISTINCT orthography FROM current_grammar' );
 
 INSERT INTO qry VALUES 
-       ( 'psort-id-set', 0, 
+       ( 'lex-id-set', 0, 
          'SELECT DISTINCT name FROM current_grammar');
 
 INSERT INTO qrya VALUES ( 'lookup-word', 0, 'text' );
@@ -187,7 +187,6 @@ CLUSTER current_grammar_name ON current_grammar;
 VACUUM ANALYZE current_grammar;
 ' );
 
--- see fn defn
 INSERT INTO qry VALUES 
        ( 'update-current-grammar', 0, 
 	'BEGIN;

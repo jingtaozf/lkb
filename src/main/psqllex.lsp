@@ -46,7 +46,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "1.9")
+(defvar *psql-db-version* "2.0")
 (defvar *psql-port-default* nil)
 
 (defvar *tmp-lexicon* nil)
@@ -512,7 +512,7 @@
 (defmethod collect-psort-ids ((lexicon psql-lex-database)  &key (recurse t))
   (declare (ignore recurse))
   (let* (
-	 (sql-str (sql-psort-id-set lexicon))
+	 (sql-str (sql-lex-id-set lexicon))
           (query-res (run-query 
                      lexicon 
                      (make-instance 'sql-query :sql-string sql-str))))
@@ -788,8 +788,8 @@
 (defmethod sql-orthography-set ((lexicon psql-lex-database))
   (fn lexicon 'orthography-set))
 
-(defmethod sql-psort-id-set ((lexicon psql-lex-database))
-  (fn lexicon 'psort-id-set))
+(defmethod sql-lex-id-set ((lexicon psql-lex-database))
+  (fn lexicon 'lex-id-set))
 
 (defmethod sql-lookup-word ((lexicon psql-lex-database) word)
   (fn lexicon 'lookup-word word))
