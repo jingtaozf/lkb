@@ -35,11 +35,14 @@ extern BOOL quit;
 void sigcld(void);
 #endif
 
-void tsdb_server_toplevel() {
+void sigterm(void);
+static _tsdb_server;
+
+void tsdb_server() {
 
 /*****************************************************************************\
 |*        file: 
-|*      module: tsdb_server_toplevel()
+|*      module: tsdb_server()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
 |* last update: 
@@ -48,13 +51,13 @@ void tsdb_server_toplevel() {
 |*
 \*****************************************************************************/
 
-  int server, new, child, n;
+  int new, child, n;
   struct sockaddr_in server_address, client_address;
 #if defined(DEBUG) && defined(SERVER)
   struct hostent *host;
 #endif
 
-  if((server = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+  if((_tsdb_server = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
     exit(-1);
   } /* if */
 
@@ -62,20 +65,20 @@ void tsdb_server_toplevel() {
   server_address.sin_family = AF_INET;
   server_address.sin_addr.s_addr = htonl(INADDR_ANY);
   server_address.sin_port = htons(tsdb.port);
-  if(bind(server,
+  if(bind(_tsdb_server,
           (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
     exit(-1);
   } /* if */
 
-  listen(server, TSDB_SERVER_QUEUE_LENGTH);
+  listen(_tsdb_server, TSDB_SERVER_QUEUE_LENGTH);
 
   while(TRUE) {
     n = sizeof(client_address);
-    if((new = accept(server,
+    if((new = accept(_tsdb_server,
                      (struct sockaddr *)&client_address, &n)) < 0) {
 #if defined(DEBUG) && defined(SERVER)
       fprintf(tsdb_debug_stream,
-              "server_toplevel(): failed (invalid) accept(2).\n");
+              "server(): failed (invalid) accept(2); errno: %d.\n", errno);
       fflush(tsdb_debug_stream);
 #endif
       continue;
@@ -85,11 +88,11 @@ void tsdb_server_toplevel() {
         = gethostbyaddr(&client_address.sin_addr.s_addr, 4, AF_INET)) != NULL
        && host->h_name != NULL) {
       fprintf(tsdb_debug_stream,
-              "server_toplevel(): connection from `%s'.\n", host->h_name);
+              "server(): connection from `%s'.\n", host->h_name);
     } /* if */
     else {
       fprintf(tsdb_debug_stream,
-              "server_toplevel(): connection from unknown remote host.\n");
+              "server(): connection from unknown remote host.\n");
     } /* else */
     fflush(tsdb_debug_stream);
 #endif    
@@ -100,10 +103,10 @@ void tsdb_server_toplevel() {
       close(new);
     } /* else */
     else {
-      tsdb_server_instance(new);
+      tsdb_server_child(new);
     } /* else */
   } /* while */
-} /* tsdb_server_toplevel() */
+} /* tsdb_server() */
 
 int tsdb_server_initialize() {
 
@@ -134,7 +137,7 @@ int tsdb_server_initialize() {
   if((i = fork()) < 0) {
     fprintf(tsdb_error_stream,
             "server_initialize(): unable to fork(2) server.\n");
-    return(-1);
+    return(1);
   } /* if */
   else if(i > 0) {
     exit(0);
@@ -144,7 +147,7 @@ int tsdb_server_initialize() {
   if(setpgrp(0, getpid()) == -1) {
     fprintf(tsdb_error_stream,
             "server_initialize(): unable to change process group.\n");
-    return(-2);
+    return(2);
   } /* if */
   if((i = open("/dev/tty", O_RDWR)) >= 0) {
     ioctl(i, TIOCNOTTY, (char *)NULL);
@@ -154,25 +157,25 @@ int tsdb_server_initialize() {
   if(setpgrp() == -1) {
     fprintf(tsdb_error_stream,
             "server_initialize(): unable to change process group.\n");
-    return(-2);
+    return(2);
   } /* if */
   signal(SIGHUP, SIG_IGN);
   if((i = fork()) < 0) {
     fprintf(tsdb_error_stream,
             "server_initialize(): unable to fork(2) server.\n");
-    return(-1);
+    return(1);
   } /* if */
   else if(i > 0) {
     exit(0);
   } /* if */
 #endif
 
+#ifndef DEBUG
   fclose(stdin);
   fclose(stdout);
   fclose(stderr);
   fclose(tsdb_default_stream);
   fclose(tsdb_error_stream);
-#ifndef DEBUG
   for(i = 0; i < NOFILE; i++) {
     close(i);
   } /* for */
@@ -189,6 +192,7 @@ int tsdb_server_initialize() {
 #else
   signal(SIGCLD, SIG_IGN);
 #endif
+  signal(SIGTERM, sigterm);
 
   return(0);
 } /* tsdb_server_initialize() */
@@ -220,11 +224,37 @@ void sigcld(void) {
 } /* sigcld() */
 #endif
 
-void tsdb_server_instance(int socket) {
+void sigterm(void) {
 
 /*****************************************************************************\
 |*        file: 
-|*      module: tsdb_server_instance()
+|*      module: sigterm()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* sigterm() is installed as the handler for SIGTERM signals to the TSDB
+|* server.
+\*****************************************************************************/
+
+  close(_tsdb_server);
+#if defined(DEBUG) && defined(SERVER)
+    fprintf(tsdb_debug_stream,
+            "sigterm(): [%d] going down on SIGTERM.\n", getpid());
+    fflush(tsdb_debug_stream);
+#endif
+#ifdef DEBUG
+  tsdb_close_debug(tsdb_debug_stream);
+#endif
+  exit(0);
+} /* sigterm() */
+
+void tsdb_server_child(int socket) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_server_child()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
 |* last update: 
@@ -233,24 +263,15 @@ void tsdb_server_instance(int socket) {
 |*
 \*****************************************************************************/
 
-  int i;
-  char *input = NULL;
-  char host[512 + 1], prompt[80 + 1], *foo;
+  int n;
+  char *command = NULL;
+  char host[512 + 1], prompt[80], input[1024], *foo;
   int n_commands = 0;
-
-  dup2(socket, 0);
-  dup2(socket, 1);
-  dup2(socket, 2);
 
   tsdb_default_stream = fdopen(socket, "w");
   tsdb_error_stream = fdopen(socket, "w");
 
-  initialize_readline();
-  rl_instream = fdopen(socket, "r");
-  rl_outstream = fdopen(socket, "w");
-
   if(gethostname(&host[0], 512)) {
-    perror("main(): gethostname(): ");
     host[0] = 0;
   } /* if */
   else {
@@ -259,24 +280,33 @@ void tsdb_server_instance(int socket) {
     } /* if */
   } /* else */
 
-  sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
 
-  while((!quit) && ((foo = readline(prompt)) != NULL)) {
-    if(*foo) {
-      if(input == NULL) {
-        input = strdup(foo);
+  while((!quit)) {
+    sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
+    if(tsdb_socket_write(socket, &prompt[0], strlen(prompt)) == -1) {
+      close(socket);
+      exit(0);
+    } /* if */
+    
+    if(tsdb_socket_readline(socket, &input[0], 1024) > 0) {
+      if(command == NULL) {
+        command = strdup(&input[0]);
       } /* if */
       else {
-        input = (char *)realloc(input, strlen(input) + strlen(foo) + 2);
-        input = strcat(input, " ");
-        input = strcat(input, foo);
+        command
+          = (char *)realloc(command, strlen(command) + strlen(input) + 2);
+        command = strcat(command, " ");
+        command = strcat(command, input);
       } /* else */
-      free(foo);
-      if(input != NULL && strchr(input, '.')) {
-        tsdb_parse(input);
-        add_history(input);
-        free(input);
-        input = (char *)NULL;
+      if(command != NULL && strchr(command, '.')) {
+#if defined(DEBUG) && defined(SERVER)
+        fprintf(tsdb_debug_stream,
+                "server_child(): `%s'.\n", command);
+        fflush(tsdb_debug_stream);
+#endif
+        tsdb_parse(command);
+        free(command);
+        command = (char *)NULL;
         sprintf(prompt, "tsdb@%s (%d) # ", host, ++n_commands);
       } /* if */
       else {
@@ -287,4 +317,93 @@ void tsdb_server_instance(int socket) {
 
   close(socket);
   exit(0);
-} /* tsdb_server_instance() */
+} /* tsdb_server_child() */
+
+int tsdb_socket_write(int socket, char *string, int n) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_socket_write()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  int written, left;
+
+  for(written = 0, left = n;
+      left > 0;
+      left -= written, string += written) {
+    if((written = write(socket, string, left)) == -1) {
+#if defined(DEBUG) && defined(SERVER)
+      fprintf(tsdb_debug_stream,
+              "socket_write(): write() error; errno: %d.\n", errno);
+      fflush(tsdb_debug_stream);
+#endif
+      return(-1);
+    } /* if */
+  } /* for */
+  return(n - left);
+} /* tsdb_socket_write() */
+
+int tsdb_socket_readline(int socket, char *string, int length) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_socket_readline()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* tsdb_socket_readline() reads from .socket. until (length - 1) characters
+|* have been read, a newline has been seen or EOF is encountered; .string. is
+|* always terminated by a 0 character (substituting for the closing newline if
+|* one was found).
+\*****************************************************************************/
+
+  int i, n;
+  char c;
+
+  for(n = 0; n < (length - 1) && (i = read(socket, &c, 1)) == 1; n++) {
+    if(c == '\n' || c == '\r') {
+      (void)read(socket, &c, 1);
+      string[n] = 0;
+#if defined(DEBUG) && defined(SOCKET_READLINE)
+    fprintf(tsdb_debug_stream,
+            "socket_readline(): `%s' (%d).\n", string, n + 1);
+    fflush(tsdb_debug_stream);
+#endif
+      return(n + 1);
+    } /* if */
+    string[n] = c;
+#if defined(DEBUG) && defined(SOCKET_READLINE)
+    fprintf(tsdb_debug_stream,
+            "socket_readline(): `%c' (%d).\n", c, n + 1);
+    fflush(tsdb_debug_stream);
+#endif
+  } /* for */
+  if(i == -1) {
+#if defined(DEBUG) && defined(SERVER)
+    fprintf(tsdb_debug_stream,
+            "socket_readline(): read() error; errno: %d.\n", errno);
+    fflush(tsdb_debug_stream);
+#endif
+    return(-1);
+  } /* if */
+  else if(n && !i) {
+    string[n] = 0;
+#if defined(DEBUG) && defined(SOCKET_READLINE)
+    fprintf(tsdb_debug_stream,
+            "socket_readline(): `%s' (%d).\n", string, n + 1);
+    fflush(tsdb_debug_stream);
+#endif
+    return(n + 1);
+  } /* if */
+  else {
+    return(0);
+  } /* else */
+} /* tsdb_socket_readline() */

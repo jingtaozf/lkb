@@ -395,6 +395,9 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
 #endif
 
   if(kaerb) {
+    (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
+                                     (Tsdb_tuple **)NULL);
+
     result = (Tsdb_selection *)malloc(sizeof(Tsdb_selection));
     result->relations =
       (Tsdb_relation **)malloc((selection_1->n_relations +
@@ -628,7 +631,7 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
 |*        file: 
 |*      module: tsdb_simple_merge()
 |*     version: 
-|*  written by:  tom fettig
+|*  written by: tom fettig
 |* last update: 13.07.95
 |*  updated by: tom, dfki saarbruecken
 |*****************************************************************************|
@@ -685,6 +688,9 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
  tsdb_print_selection(selection_1,tsdb_debug_stream); 
  tsdb_print_selection(selection_2,tsdb_debug_stream); 
 #endif
+
+ (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
+                                  (Tsdb_tuple **)NULL);
 
  if(kaerb) {
    result = tsdb_create_selection(selection_1->n_relations,

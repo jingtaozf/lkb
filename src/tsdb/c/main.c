@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 \*****************************************************************************/
 
   char *input = NULL;
-  char host[512 + 1], prompt[80 + 1], *foo;
+  char host[512 + 1], prompt[80 + 1], *foo, *bar;
   int n_commands = 0;
 
 #ifdef DBMALLOC
@@ -114,12 +114,25 @@ int main(int argc, char **argv) {
   tsdb_parse_options(argc, argv);
   tsdb_initialize();
 
-  if(tsdb.status && TSDB_SERVER_MODE) {
+  if((foo = strdup(argv[0])) != NULL) {
+    if((bar = strrchr(foo, TSDB_DIRECTORY_DELIMITER[0])) != NULL) {
+      *bar = 0;
+      bar++;
+    } /* if */
+    else {
+      bar = foo;
+    } /* else */
+    if(!strcmp(bar, "tsdbd")) {
+      tsdb.status |= TSDB_SERVER_MODE;
+    } /* if */
+    free(foo);
+  } /* if */
 
+  if(tsdb.status & TSDB_SERVER_MODE) {
     if(tsdb_server_initialize()) {
       exit(-1);
     } /* if */
-    tsdb_server_toplevel();
+    tsdb_server();
   } /* if */
 
   using_history();

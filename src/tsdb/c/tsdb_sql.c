@@ -164,7 +164,7 @@ int tsdb_insert(Tsdb_value *table,
   Tsdb_relation *relation;
   Tsdb_selection *selection;
   Tsdb_tuple *tuple = (Tsdb_tuple *)malloc(sizeof(Tsdb_tuple)), **foo;
-  int m, n, num_values, num_attributes;
+  int m, n, n_values, n_attributes;
   BOOL success;
   
   if((relation = tsdb_find_relation(table->value.identifier)) != NULL) {
@@ -172,25 +172,27 @@ int tsdb_insert(Tsdb_value *table,
     tuple->n_fields = relation->n_fields;
     tuple->fields = (Tsdb_value **)malloc(sizeof(Tsdb_value *));
 
-    for(num_values = 0; value_list[num_values] != NULL; num_values++);
+    for(n_values = 0; value_list[n_values] != NULL; n_values++);
 
     if(attribute_list != NULL) {
       if(!tsdb_are_attributes(attribute_list, relation))
           return(TSDB_NO_SUCH_ATTRIBUTE);
-      for(num_attributes = 0; attribute_list[num_attributes] != NULL;
-          num_attributes++);
-      if(num_attributes != num_values) {
+      for(n_attributes = 0; attribute_list[n_attributes] != NULL;
+          n_attributes++);
+      if(n_attributes != n_values) {
         fprintf(tsdb_error_stream, "tsdb: incompatible list sizes.\n");
         return(TSDB_INCOMPAT_SIZES);
       } /* if */
     } /* if */
     
     if((data = tsdb_find_data_file(table->value.identifier, "a+")) != NULL) {
+      (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
+                                       (Tsdb_tuple **)NULL);
       for(n = 0; n < relation->n_fields; n++) {
-        
+
         if(attribute_list != NULL) { /* attribute list was specified */ 
           success = FALSE;
-          for(m = 0; m < num_values; m++) {
+          for(m = 0; m < n_values; m++) {
             if(!strcmp(relation->fields[n],
                        attribute_list[m]->value.identifier)) {
               tuple->fields[n] = value_list[m];
@@ -206,7 +208,7 @@ int tsdb_insert(Tsdb_value *table,
         } /* if */
 
         else { /* attribute list wasn't specified */
-          if(n < num_values) {
+          if(n < n_values) {
             tuple->fields[n] = value_list[n];
           } /* if */
           else {
@@ -228,7 +230,8 @@ int tsdb_insert(Tsdb_value *table,
         tsdb_insert_into_selection(selection, &foo[0]);
       } /* if */
       else {
-        fprintf(tsdb_error_stream, "segementation fault: core well and truly dumped.\n");
+        fprintf(tsdb_error_stream,
+                "segementation fault: core well and truly dumped.\n");
       } /* else */
     } /* if */
     else {
@@ -236,10 +239,8 @@ int tsdb_insert(Tsdb_value *table,
     } /* else */
   } /* if */
   else {
-    if(really_verbose_mode)
-      fprintf(tsdb_error_stream, "Never fucking heard of %s.\n", table->value.identifier);
-    else
-      fprintf(tsdb_error_stream, "tsdb: unknown relation %s.\n", table->value.identifier);
+    fprintf(tsdb_error_stream,
+            "insert(): unknown relation `%s'.\n", table->value.identifier);
     return(TSDB_NO_SUCH_RELATION);
   } /* else */
 
@@ -645,11 +646,11 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
         if (r[k]!=-1) {
         tsdb_print_value(list->tuples[r[k]]->fields[f[k]],stream);
         }
-        if (k+1 < n_attributes) fprintf(stream,":");
+        if (k+1 < n_attributes) fprintf(stream,"%s", TSDB_FIELD_DELIMITER);
       } /* for */
       fprintf(stream,"\n");
     } /* for */
-    
+    fflush(stream);
   } /* for */
 
   free(r);
@@ -670,7 +671,7 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
 
 Tsdb_selection *tsdb_select(Tsdb_selection *selection,
                             Tsdb_node **conditions,
-                            BYTE type ) {
+                            BYTE type) {
   Tsdb_selection *result;
   Tsdb_relation  *relation_1;
   Tsdb_key_list  *list;
@@ -705,6 +706,9 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
   } /* for */
 
   /* Found out relations and fields to compare to in condition i */
+
+  (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
+                                   (Tsdb_tuple **)NULL);
 
   result = (Tsdb_selection *)malloc(sizeof(Tsdb_selection));
   result->relations =

@@ -49,7 +49,7 @@ FILE *tsdb_open_pager() {
 |*      module: tsdb_open_pager()
 |*     version: 
 |*  written by: tom fettig, dfki saarbruecken
-|* last update: 14-jul-95
+|* last update: 16-jul-95
 |*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |*
@@ -57,7 +57,7 @@ FILE *tsdb_open_pager() {
 
   FILE* stream = (FILE *)NULL;
 
-  if((stream = popen(tsdb_pager, "w")) == NULL) {
+  if(tsdb_pager != NULL && (stream = popen(tsdb_pager, "w")) == NULL) {
     fprintf(tsdb_error_stream,
             "open_pager(): unable to popen(3) `%s'.\n", tsdb_pager);
   } /* if */
@@ -818,6 +818,9 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
 
   if(((input = tsdb_find_data_file(relation->name, "r")) != NULL) &&
      ((tuple = tsdb_read_tuple(relation, input)) != NULL)) {
+
+    (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
+                                     (Tsdb_tuple **)NULL);
 
     selection = (Tsdb_selection *)malloc(sizeof(Tsdb_selection));
     selection->relations =

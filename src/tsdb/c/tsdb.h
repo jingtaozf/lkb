@@ -332,5 +332,8 @@ Tsdb_selection* tsdb_conditional_retrieve(Tsdb_value **, Tsdb_value **,
                                           Tsdb_node *);
 
 int tsdb_server_initialize(void);
-void tsdb_server_toplevel();
-void tsdb_server_instance(int);
+void tsdb_server();
+void tsdb_server_child(int);
+int tsdb_socket_write(int, char *, int);
+int tsdb_socket_readline(int, char *, int);
+
