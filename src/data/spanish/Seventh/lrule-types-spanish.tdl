@@ -238,6 +238,7 @@ past-part-verb-spanish := affix &
 ;;;changed 07/12 (INDEX)
 ;;;changed 07/13 (RESTR)
 
+#|
 1st-sing-verb-spanish := affix &
 [ SYN [ HEAD verb-spanish & [ FORM fin,
 		      		PRED false] ],
@@ -292,7 +293,65 @@ past-part-verb-spanish := affix &
 			  AGR 3plur & #2 ] ], 
              SEM [ INDEX #1 ] ], ... >,
   SEM [ RESTR <! act_pred & [ ACT #1 & [ REF #2 ] ] !> ] ].
+|#
 
+
+1st-sing-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      		PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+	                  AGR 1sing & [ PER 1st,
+				        NUM sing ] ] ],
+             SEM [ INDEX ref-index & #3 & [ PER 1st,
+				             NUM sing ]] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #3 ] !> ] ].
+
+2nd-sing-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 2sing ] ], 
+             SEM [ INDEX ref-index & #1 & [ PER 2nd,
+				            NUM sing ] ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
+3rd-sing-verb-spanish := affix &  
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 3sing ] ], 
+             SEM [ INDEX #1 & ref-index & [ PER 3rd,
+				            NUM sing ]] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
+1st-plur-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 1plur ] ], 
+             SEM [ INDEX #1 & ref-index & [ PER 1st,
+				            NUM plur ] ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
+
+2nd-plur-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 2plur ] ],
+             SEM [ INDEX #1 & ref-index & [ PER 2nd,
+				            NUM plur ]] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
+
+3rd-plur-verb-spanish := affix &  
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 3plur ] ], 
+             SEM [ INDEX #1 & ref-index & [ PER 3rd,
+				            NUM plur ]] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
 
 #|
 1st-sing-verb-spanish := affix &

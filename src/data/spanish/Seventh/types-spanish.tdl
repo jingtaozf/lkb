@@ -117,11 +117,13 @@ predication := feat-struc &
 instloc := *top*.
 
 ;;; ref-index changed 07/13
+;;; changed 07/18
 
 index := feat-struc &
   [ INSTLOC instloc ].
 
-     ref-index := index & [ REF agr-cat ].
+     ref-index := index & agr-cat.
+;     ref-index := index & [ REF agr-cat ].
 ;     ref-index :< index.
      sit-index :< index. 
      null-index :< index.

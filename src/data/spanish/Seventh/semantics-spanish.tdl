@@ -97,22 +97,36 @@ det_pred := predication &
 
 ;;; for possessive determiners
 ;;; changed 07/11
+;;; changed 07/18
 
 poss_det_pred := det_pred & 
- [ POSS ref-index ].
+ [ POSS agr-cat ].
+
+;poss_det_pred := det_pred & 
+; [ POSS ref-index ].
 
 ;poss_det_pred := det_pred & 
 ; [ POSS poss ].
 
+;;; changed 07/18
 ;;; actor
+;act_pred := predication &
+; [ ACT agr-cat ].
+
 act_pred := predication &
  [ ACT ref-index ].
 
 ;;; undergoer
+;und_pred := predication &
+; [ UND agr-cat ].
+
 und_pred := predication &
  [ UND ref-index ].
 
 ;;; theme
+;thm_pred := predication &
+; [ THM agr-cat ].
+
 thm_pred := predication &
  [ THM ref-index ].
 
