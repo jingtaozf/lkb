@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.19  1999/06/02 23:42:52  aac
+;; predicting null semantics
+;;
 ;; Revision 1.18  1999/04/13 01:01:57  aac
 ;; First attempt at doing qeq constraints
 ;;
@@ -390,15 +393,16 @@
   (let ((type (fs-type fs)))
     (case type
           (disco::event "e")
+          (disco::ref-ind "x")
+          (disco::full_ref-ind "x")
           (disco::event_or_index "e")
           (disco::eventtime "t")
           (disco::handle "h")
           (disco::hole "h")
           (disco::label "h")
-          (disco::ref-ind "x")
-          (disco::full_ref-ind "x")
           (disco::deg-ind "d")
           (disco::individual "d")
+	  (disco::0-dlist "c")
           (tdl::*diff-list* "c")  ;; Assume coordination structure
           (t "v"))))
 
@@ -407,13 +411,12 @@
   (let ((type (create-type (fs-type fs))))
     (cond ((equal-or-subtype type *event-type*) "e")
           ((equal-or-subtype type *ref-ind-type*) "x")
-          ((equal-or-subtype type *non_expl-ind-type*) "v")
+          ((equal-or-subtype type *full_ref-ind-type*) "x")
           ((equal-or-subtype type *event_or_index-type*) "e")
           ((equal-or-subtype type *eventtime-type*) "t")
           ((equal-or-subtype type *handle-type*) "h")  
           ((equal-or-subtype type *hole-type*) "h")
           ((equal-or-subtype type *label-type*) "h")
-          ((equal-or-subtype type *full_ref-ind-type*) "x")
           ((equal-or-subtype type *deg-ind-type*) "d")
           ((equal-or-subtype type *individual-type*) "d")
           ((equal-or-subtype type *difference-list-type*) "c") 

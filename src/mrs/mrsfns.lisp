@@ -39,32 +39,33 @@
 						(first binding-sets)))
 		    (output-scoped-mrs mrs-struct :stream stream))))))))
 
+(defun count-scopes (parse)
+ (format nil "~A" (length (make-scoped-mrs (car (extract-mrs (list parse) t))))))
+
 #|
 (defun expand-tsdb-results (result-file dest-file &optional (vitp nil))
   (let ((sent-list
-	 (tsdb::select "(parse-id i-input)" nil "(item result)" nil 
+	 (tsdb::select '("parse-id" "i-input") nil '("item" "result") nil 
 		       result-file))
 	(tree-list
-	 (tsdb::select "(parse-id tree)" nil "(result)" nil 
+	 (tsdb::select '("parse-id" "tree") nil '("result") nil 
 		       result-file))
 	(mrs-list
-	 (tsdb::select "(parse-id mrs)" nil "(result)" nil result-file))
+	 (tsdb::select '("parse-id" "mrs") nil '("result") nil result-file))
 	(*raw-mrs-output-p* nil))
     (with-open-file 
 	(ostream dest-file :direction :output :if-exists :supersede)
     (loop for rawsent in sent-list
 	  as rawtree in tree-list
           as rawmrs in mrs-list
-	do (let* ((sentstr (cdar rawsent))
-		  (sent (subseq sentstr (1+ (position #\@ sentstr))))
-		  (treestr (cdar rawtree))
-		  (tree (read-from-string 
-			 (subseq treestr (1+ (position #\@ treestr)))))
-		  (mrsstr (cdar rawmrs))
-		  (mrs (subseq mrsstr (1+ (position #\@ mrsstr)))))
+	do (let* ((sent (cdr (assoc :i-input rawsent)))
+		  (treestr (cdr (assoc :tree rawtree)))
+		  (tree (read-from-string treestr))
+		  (mrs (cdr (assoc :mrs rawmrs))))
 	     (format t "~%~A" sent)
 	     (format ostream "~%String: ~A~%" sent)
 	     (pprint tree ostream)
+	     (format ostream "~%")
 	     ;(user::output-parse-tree tree ostream)
 	     (if vitp
 	    #|
@@ -81,7 +82,7 @@
 	      (finish-output ostream)
 	      (when *mrs-to-vit* 
 	       (check-vit mrs t ostream))
-	      (format ostream "~%"))
+	      (format ostream "~%~%"))
 	    (output-mrs1 (read-from-string mrs) 'indexed ostream)))))))
 |#
 

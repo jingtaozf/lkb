@@ -75,21 +75,19 @@
 ;; representation of the structure.
 
 ;;; for VM-wordgraph identifiers
+#|
 (defstruct (whg-id)
   id
   word
   handel)
+|#
 
-;;; some time move structures and printers to separate files
-;(defun print-prolog-list (list stream level)
-;  (declare (ignore level))
-;  (let ((elements (prolog-list-members list)))
-;    (if elements
-;        (format stream "~([~A~@[~{,~A~}~]]~)" (first elements) (rest elements))
-;      (format stream "[]"))))
 
-;; DPF (16-Apr-99) - See remarks for WHD-ID structure definition above.
-#|
+(defstruct (whg-id (:print-function print-whg-id))
+  id
+  word
+  handel)
+
 (defun print-whg-id (whg stream level)
   (declare (ignore level))
   (let ((handels (whg-id-handel whg)))
@@ -100,9 +98,15 @@
         (format stream "~([~A~@[~{,~A~}~]])~)" (first handels) 
                 (rest handels))
       (format stream "[])"))))
-|#
-          
 
+
+;;; some time move structures and printers to separate files
+;(defun print-prolog-list (list stream level)
+;  (declare (ignore level))
+;  (let ((elements (prolog-list-members list)))
+;    (if elements
+;        (format stream "~([~A~@[~{,~A~}~]]~)" (first elements) (rest elements))
+;      (format stream "[]"))))
          
 ;;; WK: with an ugly way to print out 'extra' infos (for German)
 #-lkb

@@ -425,7 +425,7 @@
           (when (and vit standalone)
             (write-vit-pretty t (horrible-hack-2 vit))
             (format t "~%"))
-	  ;(check-vit vit)
+	  (check-vit vit)
           vit))
     (let ((vit (german-mrs-to-vit mrs-psoa)))
       (when standalone
@@ -742,48 +742,49 @@
 (defun convert-mrs-rel-to-vit (rel vit groups labels)
   ;;; returns a list, to allow for splitting of relations into multiple p-terms
   ;;; e.g. for verbs
-  (let* ((label (convert-label-to-vit (rel-handel rel) 
-                                      groups 
-                                      labels 
-                                      (rel-label rel)))
-         (dbitem (get-db-item (rel-sort rel)))
-         (args (collect-args-and-values-from-rel rel dbitem))
-         (pred (make-p-term :predicate 
-               (get-vit-predicate-name (rel-sort rel) dbitem)
-               :args 
-               (cons label
-                     (check-for-repair 
-		      (loop for val in (second args)
-                          collect
-                           (convert-mrs-val-to-vit val labels))
-		      dbitem))))
-         (inst (get-vit-instance-from-rel pred))
-         (semantics 
-          (cons pred
-                (loop for arg in (first args)
-                                 ;; arg is (argN . value)
-                    collect
-                      (make-p-term :predicate
-                                   (first arg)
-                                   :args (if (member (first arg) 
-						     *no-inst-arg-roles*)
-					     (list label
-                                               (convert-mrs-val-to-vit 
-                                                (rest arg)
-                                                labels))
-					   (list label
-						 inst
-						 (convert-mrs-val-to-vit 
-						  (rest arg)
-						  labels))))))))
-    (convert-mrs-var-extra (second args) vit inst groups labels)
-    (when (vit-bind-inst-rel-p rel)
-      (pushnew inst *bound-vit-vars* :test #'equalp))
-    (when (rel-extra rel)
-      (convert-mrs-rel-extra (rel-extra rel) vit inst label groups labels))
-    (when *relation-type-check*
-      (convert-relation-type-info-to-vit rel vit inst label))
-    semantics))
+  (when (rel-handel rel)
+    (let* ((label (convert-label-to-vit (rel-handel rel) 
+                                        groups 
+                                        labels 
+                                        (rel-label rel)))
+           (dbitem (get-db-item (rel-sort rel)))
+           (args (collect-args-and-values-from-rel rel dbitem))
+           (pred (make-p-term :predicate 
+                              (get-vit-predicate-name (rel-sort rel) dbitem)
+                              :args 
+                              (cons label
+                                    (check-for-repair 
+                                     (loop for val in (second args)
+                                         collect
+                                           (convert-mrs-val-to-vit val labels))
+                                     dbitem))))
+           (inst (get-vit-instance-from-rel pred))
+           (semantics 
+            (cons pred
+                  (loop for arg in (first args)
+                                   ;; arg is (argN . value)
+                      collect
+                        (make-p-term :predicate
+                                     (first arg)
+                                     :args (if (member (first arg) 
+                                                       *no-inst-arg-roles*)
+                                               (list label
+                                                     (convert-mrs-val-to-vit 
+                                                      (rest arg)
+                                                      labels))
+                                             (list label
+                                                   inst
+                                                   (convert-mrs-val-to-vit 
+                                                    (rest arg)
+                                                    labels))))))))
+      (convert-mrs-var-extra (second args) vit inst groups labels)
+      (when (vit-bind-inst-rel-p rel)
+        (pushnew inst *bound-vit-vars* :test #'equalp))
+      (when (rel-extra rel)
+        (convert-mrs-rel-extra (rel-extra rel) vit inst label groups labels))
+      (when *relation-type-check*
+        (convert-relation-type-info-to-vit rel vit inst label))
+      semantics)))
 
 
 ;;; the group/label/hole-distinction needs reworking
@@ -1055,13 +1056,10 @@
   (make-p-term :predicate (fvpair-feature fv)
                :args (list (convert-mrs-val-to-vit (fvpair-value fv) labels))))
 
-(defun compute-mood-from-prosody (mrsrel)
+(defun compute-mood-from-prosody (mrsrel pmood)
   (when (rel-p mrsrel)
     (let* ((smood (rel-sort mrsrel))
-	   (pmood (find *prosodic-mood-feature* (rel-extra mrsrel) :key #'fvpair-feature))
-	   (pval (if pmood
-		     (fvpair-value pmood)))
-	   (pslist (assoc pval *prosodic-syntactic-mood-table*)))
+	   (pslist (assoc pmood *prosodic-syntactic-mood-table*)))
       (when (and pslist (member smood (rest pslist)))
 	(setf (rel-sort mrsrel) pval))))
   mrsrel)

@@ -513,6 +513,7 @@ printing routines -  convenient to make this global to keep printing generic")
     (make-hash-table :test #'equal))
 
 (defun make-scoped-mrs (mrsstruct)
+  (clear-scope-memos)
   (setf *top-level-variables* nil)
   (let* ((rels (psoa-liszt mrsstruct))
          (hcons (psoa-h-cons mrsstruct))
@@ -1062,11 +1063,12 @@ or modulo some number of quantifiers
 ;;; printing utility fn
 
 (defun get-bound-var-value (var)
-  (let ((new-binding (assoc (get-var-num var) *canonical-bindings*)))
-    (if new-binding
-      (concatenate 'string (subseq (var-name var) 0 1)
-                   (format nil "~A" (cdr new-binding))) 
-      (var-name var))))
+  (when (var-p var)
+    (let ((new-binding (assoc (get-var-num var) *canonical-bindings*)))
+      (if new-binding
+          (concatenate 'string (subseq (var-name var) 0 1)
+                       (format nil "~A" (cdr new-binding))) 
+        (var-name var)))))
 
 
 
@@ -1075,10 +1077,11 @@ or modulo some number of quantifiers
 ;;; this doesn't fit easily into the paradigm for printing unscoped structures
 
 (defun get-true-var-num (var)
-  (let ((new-binding (assoc (get-var-num var) *canonical-bindings*)))
-    (if new-binding
-      (cdr new-binding) 
-      (get-var-num var))))
+  (when (var-p var)
+    (let ((new-binding (assoc (get-var-num var) *canonical-bindings*)))
+      (if new-binding
+          (cdr new-binding) 
+        (get-var-num var)))))
 
 (defvar *output-scope-errors* nil)
 
