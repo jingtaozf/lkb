@@ -23,6 +23,7 @@
 
 (defun lsp-process-event (id command stream)
 
+  (format t "~%~%~a~%~%" clim:*default-server-path*)
   (let ((action (intern (string (pop command)) :tsdb))
         (return lkb::%lsp-ok%))
     (case action
@@ -62,56 +63,30 @@
                                   collect (get-field :result-id bar)))))
                   (*redwoods-export-values* (list format)))
              (when active
-               (if (eq view :browse)
-                 (loop
-                     with *package* = (find-package lkb::*lkb-package*)
-                     with lkb::*deleted-daughter-features* = nil
-                     with i-input = (get-field :i-input item)
-                     with results = (get-field :results item)
-                     for i from 1
-                     for result in results
-                     for result-id = (get-field :result-id result)
-                     for derivation = (get-field :derivation result)
-                     for edge = (and derivation (reconstruct derivation))
-                     for tdfs = (and edge (lkb::edge-dag edge))
-                     for mrs = (and edge (mrs::extract-mrs edge))
-                     for title = (format
-                                  nil
-                                  "(~a:~a) `~a' [LSP # ~a]" 
-                                  i-id result-id i-input id)
-                     when (or (eq set :all)
-                              (member result-id active :test #'eql))
-                     do
-                       (case format
-                         (:avm
-                          (lkb::display-fs tdfs title))
-                         (:tree
-                          (lkb::draw-new-parse-tree
-                           (lkb::make-new-parse-tree edge 1) title nil))
-                         (:simple 
-                          (lkb::show-mrs-window nil mrs title))
-                         (:indexed 
-                          (lkb::show-mrs-indexed-window nil mrs title))
-                         (:prolog 
-                          (lkb::show-mrs-prolog-window nil mrs title))
-                         (:scoped 
-                          (lkb::show-mrs-scoped-window nil mrs title))
-                         (:rmrs 
-                          (lkb::show-mrs-rmrs-window nil mrs title))
-                         (:dependencies 
-                          (lkb::show-mrs-dependencies-window nil mrs title))
-                         (t
-                          (setf return lkb::%lsp-invalid-format%))))
-                 (let ((string (with-output-to-string (stream)
-                                 (export-tree item active :lspp t 
-                                              :stream stream))))
-                   (format stream "~s" string)
-                   (when (eq set :all)
-                     (let ((string (with-output-to-string (stream)
-                                     (export-tree item active :lspp t
-                                                  :complementp t
-                                                  :stream stream))))
-                       (format stream "~s" string)))))))
+               (loop
+                   with *package* = (find-package lkb::*lkb-package*)
+                   with lkb::*deleted-daughter-features* = nil
+                   with i-input = (get-field :i-input item)
+                   with results = (get-field :results item)
+                   for i from 1
+                   for result in results
+                   for result-id = (get-field :result-id result)
+                   for derivation = (get-field :derivation result)
+                   for edge = (and derivation (reconstruct derivation))
+                   for title = (format
+                                nil
+                                "(~a:~a) `~a' [LSP # ~a]" 
+                                i-id result-id i-input id)
+                   when (or (eq set :all)
+                            (member result-id active :test #'eql))
+                   do
+                     (if (member format '(:avm :tree :mrs :indexed :prolog
+                                          :scoped :dependencies))
+                       (if (eq view :browse)
+                         (lkb::lsp-browse 
+                          id i-input (list edge) format :title title)
+                         (lkb::lsp-return id stream (list edge) format))
+                       (setf return lkb::%lsp-invalid-format%)))))
            (setf return lkb::%lsp-syntax-error%))))
       (t (setf return lkb::%lsp-invalid-subcommand%)))
     return))

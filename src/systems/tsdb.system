@@ -24,9 +24,11 @@
 ;;;                                                      (22-nov-99  -  oe)
 ;;;
 (eval-when (:load-toplevel :execute)
+  (pushnew :itsdb *features*)
   (when (and (find-symbol "*GDE-VERSION-NO" :common-lisp-user)
              (boundp (find-symbol "*GDE-VERSION-NO" :common-lisp-user)))
     (pushnew :anlt *features*)))
+  
 
 (defsystem "tsdb"
     :source-pathname (dir-append (get-sources-dir "tsdb")

@@ -202,7 +202,10 @@
                                              meter)
   
   (when meter (meter :value (get-field :start meter)))
-  (let* ((stream (open file :direction :input :if-does-not-exist :error))
+  (let* ((lines (and meter (get-field :lines (wc file))))
+         (increment (when (and lines (> lines 0))
+                      (/ (mduration meter) lines)))
+         (stream (open file :direction :input :if-does-not-exist :error))
          (format "none")
          (author (current-user))
          (date (current-time))
@@ -220,6 +223,7 @@
                            (and (numberp n) (zerop n)))
           for length = (if commentp 0 (length string))
           for pseparation = (search pseparator string)
+          when increment do (meter-advance increment)
           when (and pseparation (zerop pseparation)) do
             (let* ((string (subseq string (length pseparator)))
                    (p-name (string-trim '(#\Space #\Tab) string)))

@@ -505,6 +505,20 @@
             do (write-byte c out))))
     target))
 
+(defun wc (file)
+  (when (probe-file file)
+    (with-open-file (stream file :direction :input)
+      (loop
+          with characters = 0
+          with lines = 0
+          for c = (read-char stream nil nil)
+          while c
+          when (char= c #\newline) do (incf lines)
+          do (incf characters)
+          finally 
+            (return (pairlis '(:characters :lines)
+                             (list characters lines)))))))
+
 (defun touch (file &key (if-exists :supersede))
   (with-open-file (foo file :direction :output
                    :if-exists if-exists :if-does-not-exist :create)))

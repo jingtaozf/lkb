@@ -2,8 +2,8 @@ proc yy_initialize {} {
 
   global globals;
 
-  .menu.file.menu entryconfig "Export" \
-    -state normal -command yy_export_results;
+#  .menu.file.menu entryconfig "Export" \
+#    -state normal -command yy_export_results;
 
   #
   # create entry pane for (YY) result filter parameters

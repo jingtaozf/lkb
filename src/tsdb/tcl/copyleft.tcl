@@ -31,7 +31,7 @@ proc copyleft {action} {
       frame $copyleft.second -bg $bg -height 8
       label $copyleft.third -bg $bg -fg green -font [concat $normalsize] \
         -text "$globals(name) is available free of royalties\
-               for research purposes $pointer."
+               under an open-source license $pointer."
       if {[info exists globals(copyleft,key)]
           && [oe copyleft $globals(copyleft,key)]} {
         frame $copyleft.fourth -bg $bg -height 6
