@@ -58,7 +58,7 @@
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lsp"
-    :depends-on (#+(and allegro-version>= (version>= 6 0) 
+    :depends-on (#+(and :psql allegro-version>= (version>= 6 0) 
                         (or :linux (and :sparc :svr4)))
                  "psql")
 
@@ -119,7 +119,7 @@
 	       #+plob 
                (:file "plex")         ; lexical database 
                (:file "lexport")      ; ASCII export of lexicon
-               #+(and allegro-version>= (version>= 6 0) 
+               #+(and :psql allegro-version>= (version>= 6 0) 
                       (or :linux (and :sparc :svr4)))
                (:file "psqllex")      ; Postgres interface for lexicon
                #+:ltemplates
