@@ -969,7 +969,7 @@ proc tsdb_evolution {code} {
       set item $test_suites($i);
       set name [lindex $item 0];
       if {$globals($name)} {
-      set selection "$selection \"$name\"";
+        set selection "$selection \"$name\"";
       }; # if
     }; # if
   }; #foreach
@@ -1007,7 +1007,7 @@ proc tsdb_trees {action} {
 
   global globals test_suites compare_in_detail;
 
-  if {[verify_ts_selection]} {return 1};
+  if {$action != "train" || [verify_ts_selection]} {return 1};
 
   set target $globals(data);
   if {![info exists compare_in_detail(source)] \
@@ -1034,9 +1034,29 @@ proc tsdb_trees {action} {
 
   set command "";
   if {$action == "train"} {
+    set list [.list subwidget hlist];
+
+    set selection "";
+    foreach i [lsort -integer [array names test_suites]] {
+      if {![$list info hidden $i]} {
+        set item $test_suites($i);
+        set name [lindex $item 0];
+        if {$globals($name)} {
+          set selection "$selection \"$name\"";
+        }; # if
+      }; # if
+    }; #foreach
+
+    if {$selection == ""} {
+      if {[verify_ts_selection]} {return 1};
+      set selection "\"$globals(data)\";
+    }; # if
+
+
     if {![input "output file:" "/tmp/" "" train]} {
       set file $globals(input);
-      if {[file isdirectory $file] || ![file writable $file]} {
+      if {[file isdirectory $file]
+           || [file exists $file] && ![file writable $file]} {
         tsdb_beep;
         status "target file `$file' not writable" 5;
         after 5000;
@@ -1046,10 +1066,12 @@ proc tsdb_trees {action} {
           && [yes-or-no-p "overwrite existing `$file'"] != 1 } {
         return [tsdb_trees $action];
       }; # if
+
       set command \
         [format \
-         "(train \"%s\" \"%s\" :type %s)" \
-         $target $file $globals(tree,model)];
+         "(train (%s) \"%s\" :type %s)" \
+         $selection $file $globals(tree,model)];
+
     }; # if
   } elseif {$action == "score"} {
     set command \

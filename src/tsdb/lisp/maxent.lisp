@@ -175,11 +175,11 @@
                (format stream "[~{~s~^ ~}] ~,10f~%" feature weight))
          (format stream "~%:end :features.~%~%:end :mem.~%"))))))
 
-(defun estimate-mem (items &key (stream *tsdb-io*))
+(defun estimate-mem (items &key (stream *tsdb-io*) model)
   #+:debug
   (setf %items% items)
   (loop
-      with model = (make-mem)
+      with model = (or model (make-mem))
       for item in items
       for iid = (get-field :i-id item)
       for readings = (get-field :readings item)

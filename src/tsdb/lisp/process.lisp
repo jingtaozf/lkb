@@ -1016,7 +1016,26 @@
 
 (defun enrich-result (result &key verbose)
   (declare (ignore verbose))
-  (let* ((readings (get-field :readings result)))
+  (let* ((readings (get-field :readings result))
+         #+:null
+         (results (get-field :results result)))
+    
+    ;;
+    ;; _fix_me_
+    ;; find a reasonably efficient way of constructing a `score' relation when
+    ;; we have scores on the results; maybe extract scored results first, sort,
+    ;; and rank.  parsers are free to not return scores at all or for a subset
+    ;; of results only.                                            (4-feb-03)
+    ;;
+    #+:null
+    (loop
+        with i = 1
+        with last = (get-field :score (first results))
+        for j from 1
+        for result in results
+        for result-id = (get-field :result-id result)
+        for score = (get-field :score result))
+                    
     (if (and *tsdb-result-hook* (integerp readings) (> readings 0))
       (multiple-value-bind (wealth condition)
           (ignore-errors (funcall *tsdb-result-hook* result))

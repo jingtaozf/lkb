@@ -1058,10 +1058,16 @@
 
 (defun export-trees (data &key (condition *statistics-select-condition*)
                                path prefix interrupt meter 
-                               (compressor "gzip -f -9")
+                               (compressor "gzip -c -9") (suffix "gz")
                                (stream *tsdb-io*))
   
   (loop
+      with offset = (cond
+                     ((search "vm6" data) 60000)
+                     ((search "vm13" data) 130000)
+                     ((search "vm31" data) 310000)
+                     ((search "vm32" data) 320000)
+                     (t 0))
       with target = (format 
                      nil 
                      "~a/~a"
@@ -1101,29 +1107,29 @@
                        (loop 
                            for bar in foo 
                            collect (get-field :result-id bar))))
-      for file = (format nil "~a/~@[~a.~]~d" target prefix parse-id)
+      for file = (format 
+                  nil 
+                  "~a/~@[~a.~]~d~@[.~a~]" 
+                  target prefix (+ parse-id offset) suffix)
       do
         (format 
          stream 
          "[~a] export-trees(): [~a] ~a active tree~:[~;s~] (of ~d).~%" 
          (current-time :long :short)
-         parse-id
+         (+ parse-id offset)
          (if version (length active) "all")
          (or (null version) (> (length active) 1))
          (length results))
-
-        #+:null
-        (lkb::release-temporary-storage
-         (loop
-             for edge being each hash-value in *reconstruct-cache*
-             collect edge))
         (clrhash *reconstruct-cache*)
-        #+:null
-        (excl:gc)
         
-        (with-open-file (stream file
-                         :direction :output
-                         :if-exists :supersede :if-does-not-exist :create)
+        #+:allegro
+        (multiple-value-bind (stream foo pid)
+            (run-process
+             compressor :wait nil :input :stream
+             :output file :if-output-exists :supersede
+             :error-output nil)
+          (declare (ignore foo #-:allegro pid))
+
           (format
            stream
            ";;;~%;;; Redwoods export of `~a';~%;;; (~a@~a; ~a).~%;;;~%~%"
@@ -1131,18 +1137,20 @@
           (format 
            stream
            "[~d] (~a of ~d) {~d} `~a'~%~a~%"
-           parse-id 
+           (+ parse-id offset)
            (if version (length active) "all") (length results) i-wf
            input #\page)
           
           (setf (get-field :results item) (nreverse results))
-          (export-tree item active :stream stream)
+          (export-tree item active :offset offset :stream stream)
           (when *redwoods-export-bad-trees-p*
-            (export-tree item active :complementp t :stream stream)))
+            (export-tree item active 
+                         :complementp t :offset offset :stream stream))
+
+          (force-output stream)
+          (close stream)
+          (sys:os-wait nil pid))
         
-        (when compressor
-          (let ((command (format nil "~a '~a'" compressor file)))
-            (run-process command :wait t)))
         (when increment (meter-advance increment))
       when (interrupt-p interrupt) do
         (format 
@@ -1155,7 +1163,7 @@
         (when meter (meter :value (get-field :end meter)))
         (when gc-strategy (restore-gc-strategy gc-strategy))))
 
-(defun export-tree (item active &key complementp (stream *tsdb-io*))
+(defun export-tree (item active &key complementp (offset 0) (stream *tsdb-io*))
 
   #+:debug
   (setf %item% item %active% active)
@@ -1184,7 +1192,7 @@
         (format 
          stream 
          "[~d:~d] ~:[(active)~;(inactive)~]~%~%" 
-         parse-id result-id complementp)
+         (+ parse-id offset) result-id complementp)
         (setf lkb::*cached-category-abbs* nil)
         (when (or (eq *redwoods-export-values* :all)
                   (smember :derivation *redwoods-export-values*))
@@ -1639,6 +1647,7 @@
          (items (analyze source 
                          :thorough '(:derivation)
                          :condition condition :gold source :readerp nil)))
+    (purge-profile-cache source)
     (case type
       (:mem
        (let ((model (estimate-mem items)))

@@ -943,7 +943,7 @@
                    (title 
                     (format 
                      nil 
-                     "tsdb(1) `~a' Parse Selecton Scores~@[ @ `~a'~]"
+                     "tsdb(1) `~a' Parse Selection Scores~@[ @ `~a'~]"
                      data condition))
                    (message "computing table layout and geometry ..."))
               (apply #'analyze-scores
