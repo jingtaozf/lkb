@@ -17,8 +17,7 @@
 
 (in-package "TSDB")
 
-(defparameter *inflectional-rule-suffix*
-  "_infl_rule")
+(defparameter *inflectional-rule-suffix* "_infl_rule")
 
 (defparameter *derivations-ignore-leafs-p* t)
 
@@ -225,7 +224,8 @@
                        (entry (find-lexical-entry 
                                surface 
                                (derivation-root (first daughters))
-                               id start end)))
+                               id start end
+                               dagp)))
                   (cond
                    ((null fs)
                     (throw :fail

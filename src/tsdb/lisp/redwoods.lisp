@@ -232,7 +232,7 @@
                         for id = (get-field :result-id result)
                         for derivation = (get-field :derivation result)
                         for edge = (when derivation
-                                     (reconstruct derivation nil))
+                                     (reconstruct derivation :word))
                         when edge do 
                           (setf (lkb::edge-foo edge) id)
                           (setf (lkb::edge-bar edge) derivation)
@@ -1389,6 +1389,14 @@
                            :condition condition :gold source)
       with nfold = (min (length data) nfold)
       initially #+:debug (setf %data% data) #-:debug nil
+      when (interrupt-p interrupt) do
+        (format 
+         stream
+         "[~a] rank-profile(): external interrupt signal~%"
+         (current-time :long :short))
+        (flush-cache cache :verbose verbose)
+        (restore-gc-strategy gc)
+        (return)
       for i from 1 to (+ nfold 1)
       do
         (multiple-value-bind (test train) (ith-nth data i nfold)

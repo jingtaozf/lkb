@@ -40,15 +40,17 @@
   (declare (ignore model))
   (case format
     (:rpm
-     (format stream "~d ~d" (event-frequency event) (event-size event))
+     (write (event-frequency event) :stream stream)
+     (write-char #\Space stream)
+     (write (event-size event) :stream stream)
      (loop
          for feature in (event-features event)
          do 
-           (format 
-            stream 
-            " ~d ~d" 
-            (feature-code feature) (feature-count feature)))
-     (format stream "~%"))))
+           (write-char #\Space stream)
+           (write (feature-code feature) :stream stream)
+           (write-char #\Space stream)
+           (write (feature-count feature) :stream stream))
+     (terpri stream))))
 
 (defstruct (context) 
   id 

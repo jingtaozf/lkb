@@ -601,10 +601,11 @@
                          (string-upcase instance)
                          instance)
                        *lkb-package*))
-         (instance (ignore-errors (get-psort-entry name))))
+         (instance (ignore-errors (get-unexpanded-psort-entry name))))
     (when instance 
-      (let ((tdfs (when dagp
-                    (copy-tdfs-completely (lex-or-psort-full-fs instance))))
+      (let ((tdfs (when (smember dagp '(:word t))
+                    (copy-tdfs-completely 
+                     (lex-or-psort-full-fs (get-psort-entry name)))))
             (ids (list (lex-or-psort-sense-id instance))))
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
@@ -627,12 +628,13 @@
     rule))
 
 (defun instantiate-rule (rule edges id &optional (dagp t))
-  (let* ((*unify-debug* :return)
+  (let* ((dagp (smember dagp '(:rule t)))
+         (*unify-debug* :return)
          (%failure% nil)
          (status 0)
          (result (when dagp (rule-full-fs rule)))
          (paths (rule-order rule)))
-    (when dagp
+    (when result
       (with-unification-context (foo)
         (loop
             while result
@@ -668,11 +670,12 @@
   ;;                                                        (22-apr-99  -  oe)
   ;;
   (with-unification-context (foo)
-    (let* ((*unify-debug* :return)
+    (let* ((dagp (smember dagp '(:irule :word t)))
+           (*unify-debug* :return)
            (%failure% nil)
            (rtdfs (when dagp (rule-full-fs mrule)))
            (tdfs (when dagp (edge-dag preterminal)))
-           (result (when dagp
+           (result (when (and rtdfs tdfs)
                      (uday rtdfs tdfs '(args first))))
            (copy (and result (restrict-and-copy-tdfs result))))
       (if (or copy (null dagp))
