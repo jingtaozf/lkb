@@ -1,4 +1,4 @@
-DROP TABLE prd;
+--DROP TABLE prd;
 CREATE TABLE prd 
 	(
 	lexid text,
@@ -13,7 +13,7 @@ PRIMARY KEY (predkey)
 
 CREATE INDEX prd_lexid on prd (lexid);
 
-DROP TABLE arg;
+--DROP TABLE arg;
 CREATE TABLE arg
 	(
 	predkey int,
@@ -24,7 +24,7 @@ PRIMARY KEY (argkey)
 
 CREATE INDEX arg_predkey on arg (predkey);
 
-DROP TABLE ddd;
+--DROP TABLE ddd;
 CREATE TABLE ddd
 	(
 	argkey int,
@@ -34,11 +34,11 @@ CREATE TABLE ddd
 
 CREATE INDEX ddd_argkey on ddd (argkey);
 
-copy prd from '/home/bmw20/tmp/semi.obj.prd';
-copy arg from '/home/bmw20/tmp/semi.obj.arg';
-copy ddd from '/home/bmw20/tmp/semi.obj.ddd';
+--copy prd from '/home/bmw20/tmp/semi.obj.prd';
+--copy arg from '/home/bmw20/tmp/semi.obj.arg';
+--copy ddd from '/home/bmw20/tmp/semi.obj.ddd';
 
-create table obj_semi as select lexid, pred, lex, pos, sense, carg, arg, 
+create view obj_semi as select lexid, pred, lex, pos, sense, carg, arg, 
 	(select val from ddd where argkey=t1.argkey and feat='gen') as gen,
 	(select val from ddd where argkey=t1.argkey and feat='pn') as pn, 
 	(select val from ddd where argkey=t1.argkey and feat='aspect.perf') as aspect_perf, 
