@@ -2,7 +2,7 @@
 |*        file: tsdb_history.c
 |*      module: 
 |*     version: 
-|*  written by: tom, dfki saarbruecken , Mon Sep  4 14:36:56 MET DST 1995
+|*  written by: tom, dfki saarbruecken
 |* last update: 
 |*  updated by: 
 |*****************************************************************************|

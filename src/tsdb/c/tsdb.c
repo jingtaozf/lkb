@@ -21,9 +21,6 @@ void free(void *foo) {
 } /* free() */
 #endif
 
-/* temporary hack before tom gets the fucking history working */
-Tsdb_selection *tsdb_last_result = (Tsdb_selection *)NULL;
-
 Tsdb tsdb = { 
   TSDB_UNIQUELY_PROJECT,   /* status */
   (Tsdb_relation **)NULL,  /* relations */
@@ -42,9 +39,14 @@ Tsdb tsdb = {
 #ifdef DEBUG
   (char *)NULL,            /* debug_file */
 #endif
+#ifdef COMPRESSED_DATA
+  (char *)NULL,            /* compress */
+  (char *)NULL,            /* uncompress */
+  (char *)NULL,            /* suffix */
+#endif
   -1,                      /* command */
   (Tsdb_history **)NULL,   /* history */
-  TSDB_HISTORY_SIZE    ,   /* history_size */
+  TSDB_HISTORY_SIZE,       /* history_size */
   (char*) NULL             /* translate_table */
 }; /* tsdb */
 

@@ -388,7 +388,8 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
       fprintf(tsdb_debug_stream, ":%s", selection_1->relations[m]->name);
     } /* for */
     fprintf(tsdb_debug_stream,
-            " (%d) # %s", selection_1->length, selection_2->relations[0]->name);
+            " (%d) # %s",
+            selection_1->length, selection_2->relations[0]->name);
     for(m = 1; m < selection_2->n_relations; m++) {
       fprintf(tsdb_debug_stream, ":%s", selection_2->relations[m]->name);
     } /* for */
@@ -406,7 +407,7 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
 #endif
 
   if(kaerb) {
-#ifdef BIG_INSERT
+#ifdef FAST_INSERT
     Tsdb_key_list*** lists;
     int last, n_lists,size;
 #endif
@@ -450,7 +451,7 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
     } /* for */
     result->length = 0;
     /* result is prepared */
-#ifdef BIG_INSERT
+#ifdef FAST_INSERT
     if (result->n_key_lists>1) {
       lists = (Tsdb_key_list***)malloc((result->n_key_lists+1)*
                                         sizeof(Tsdb_key_list**));
@@ -500,7 +501,7 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
               tuples[i] = foo->tuples[i - next_1->n_tuples];
             } /* for */
             tuples[i] = (Tsdb_tuple *)NULL;
-#ifdef BIG_INSERT
+#ifdef FAST_INSERT
             if (lists) {
               success = tsdb_collect_tuples(result,tuples,lists,last,&size);
               if (success) 
@@ -534,6 +535,14 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
         next_2 = foo;
       } /* if */
     } /* while */
+
+#ifdef FAST_INSERT
+    success = tsdb_sort_tuples(lists,last,result->n_key_lists);
+    if (success) {
+      success = tsdb_array_to_lists(result,lists,last,size);
+    }
+#endif
+    
 #if defined(DEBUG) && defined(JOIN)
     if((time = tsdb_timer(time)) != (float)-1) {
       fprintf(tsdb_debug_stream,
@@ -542,13 +551,7 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
       fflush(tsdb_debug_stream);
     } /* if */
 #endif    
-#ifdef BIG_INSERT
-    success = tsdb_sort_tuples(lists,last,result->n_key_lists);
-    if (success) {
-      success = tsdb_array_to_lists(result,lists,last,size);
-    }
-#endif
-    
+
     return(result);
   } /* if */
   else {

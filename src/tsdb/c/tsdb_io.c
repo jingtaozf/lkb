@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <pwd.h>
 #include <string.h>
@@ -768,18 +769,40 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
 
   char *path;
   FILE *file;
+#ifdef COMPRESSED_DATA
+  char *command;
+  FILE *stream;
+#endif
 
   path = strdup(tsdb.data_path);
   path = (char *)realloc(path, strlen(tsdb.data_path) + strlen(name) + 1);
   path = strcat(path, name);
 
-  if((file = fopen(path, mode)) == NULL) {
-    fprintf(tsdb_error_stream,
-            "find_data_file(): unable to open `%s'.\n", path);
-    return((FILE *)NULL);
+  if((file = fopen(path, mode)) != NULL) {
+    free(path);
+    return(file);
   } /* if */
   else {
-    return(file);
+#ifdef COMPRESSED_DATA
+    path = (char *)realloc(path, strlen(path) + strlen(tsdb.suffix) + 1);
+    path = strcat(path, tsdb.suffix);
+    if(!access(path, R_OK)) {
+      command = (char *)malloc(strlen(tsdb.uncompress) + strlen(path) + 2);
+      command = strcpy(command, tsdb.uncompress);
+      command = strcat(command, " ");
+      command = strcat(command, path);
+      if((stream = popen(command, "r")) != NULL) {
+        free(path);
+        free(command);
+        return(stream);
+      } /* if */
+      free(command);
+    } /* if */
+#endif
+    fprintf(tsdb_error_stream,
+            "find_data_file(): unable to open `%s'.\n", path);
+    free(path);
+    return((FILE *)NULL);
   } /* else */
 
 } /* tsdb_find_data_file() */
@@ -1192,7 +1215,7 @@ BOOL tsdb_write_table(Tsdb_selection* selection) {
   BOOL f;
   
   bar = selection->key_lists[0];
-  if (((output = tsdb_find_data_file(selection->relations[0]->name,"r"))
+  if (((output = tsdb_find_data_file(selection->relations[0]->name, "r"))
         == NULL) ||
       ((temp = tsdb_data_backup_file(selection->relations[0]->name)) 
         == NULL) ){
@@ -1200,7 +1223,7 @@ BOOL tsdb_write_table(Tsdb_selection* selection) {
     return FALSE;
   }
   fclose(output);
-  output = tsdb_find_data_file(selection->relations[0]->name,"w");
+  output = tsdb_find_data_file(selection->relations[0]->name, "w");
   if (!output){
     printf("the fucking data-file may not be written\n");
     return FALSE;
@@ -1282,7 +1305,9 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
       } /* if */
     } /* while */
 
-    fclose(input);
+    if(pclose(input) == -1) {
+      fclose(input);
+    } /* if */
 #if defined(DEBUG) && defined(READ_TABLE)
   if((time = tsdb_timer(time)) != (float)-1) {
     fprintf(tsdb_debug_stream,
@@ -1365,19 +1390,17 @@ void tsdb_tree_print(Tsdb_node* node, FILE* stream)
  insert--;
 
 }
-
-/*---------------------------------------------------------------------------*/
+
 void tsdb_save_changes() {
-  /* save all tables that have been changed */
-  int i=0;
-  Tsdb_selection* select;
 
-  for (i=0;tsdb.relations[i];i++) {
-    if (tsdb.relations[i]->status!=TSDB_UNCHANGED) {
-      select = tsdb_find_table(tsdb.relations[i]);
-      tsdb_write_table(select);
-      tsdb.relations[i]->status=TSDB_UNCHANGED;
+  int i = 0;
+  Tsdb_selection *selection;
+
+  for (i=0; tsdb.relations[i] != NULL; i++) {
+    if (tsdb.relations[i]->status != TSDB_UNCHANGED) {
+      selection = tsdb_find_table(tsdb.relations[i]);
+      tsdb_write_table(selection);
+      tsdb.relations[i]->status = TSDB_UNCHANGED;
     }
   }
-}
-/*---------------------------------------------------------------------------*/
+} /* tsdb_save_changes() */

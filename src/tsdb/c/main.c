@@ -83,6 +83,7 @@ char *tsdb_constants[] = {
   "tsdb_data_path",
   (char *)NULL
 };
+
 #define TSDB_CONST_NUM 6
 
 char *tsdb_variables[] = {
@@ -200,7 +201,7 @@ int main(int argc, char **argv) {
         if(input != NULL && *input && input[strlen(input) - 1] == '.') {
           tsdb_parse(input);
           add_history(input);
-          free(input);
+          /* free(input); */
           input = (char *)NULL;
           sprintf(prompt, "tsdb@%s (%d) # ", host, ++tsdb.command);
         } /* if */
@@ -255,6 +256,11 @@ void tsdb_parse_options(int argc, char **argv) {
     {"history-size", required_argument, 0, TSDB_HISTORY_OPTION},
     {"uniquely-project", optional_argument, 0, TSDB_UNIQUELY_PROJECT_OPTION},
     {"pager", optional_argument, 0, TSDB_PAGER_OPTION},
+#ifdef COMPRESSED_DATA
+    {"compress", optional_argument, 0, TSDB_COMPRESS_OPTION},
+    {"uncompress", required_argument, 0, TSDB_UNCOMPRESS_OPTION},
+    {"suffix", required_argument, 0, TSDB_SUFFIX_OPTION},
+#endif
     {"query", required_argument, 0, TSDB_QUERY_OPTION},
     {"usage", no_argument, 0, TSDB_USAGE_OPTION},
     {"help", no_argument, 0, TSDB_USAGE_OPTION},

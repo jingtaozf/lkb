@@ -1585,6 +1585,9 @@ BOOL tsdb_initialize() {
 \*****************************************************************************/
 
   char *foo;
+#ifdef COMPRESSED_DATA
+  char *baz;
+#endif
   FILE *bar;
   int len;
 #ifdef DEBUG
@@ -1659,20 +1662,20 @@ BOOL tsdb_initialize() {
       tsdb.pager = (char *)NULL;
     } /* if */
     else {
-      len = strlen(tsdb.pager)+1+strlen(REDIRECT);
+      len = strlen(tsdb.pager) + 1 + strlen(REDIRECT);
       if(!strcmp(tsdb.pager, "nil") || !strcmp(tsdb.pager, "null")) {
         tsdb.pager = (char *)NULL;
       } /* if */
       else {
-        char* pager = malloc(len);
-        strcpy(pager,tsdb.pager);
-        strcat(pager,REDIRECT);
+        char *pager = malloc(len);
+        strcpy(pager, tsdb.pager);
+        strcat(pager, REDIRECT);
         if((bar = popen(pager, "w")) == NULL) {
           fprintf(tsdb_error_stream,
                   "initialize(): unaple to popen(3) `%s'.\n", tsdb.pager);
-          pager = realloc(pager,strlen(TSDB_PAGER + len));
-          strcpy(pager,TSDB_PAGER);
-          strcat(pager,REDIRECT);
+          pager = realloc(pager, strlen(TSDB_PAGER + len));
+          strcpy(pager, TSDB_PAGER);
+          strcat(pager, REDIRECT);
           if((bar = popen(pager, "w")) != NULL) {
             free(pager);
             free(tsdb.pager);
@@ -1709,42 +1712,74 @@ BOOL tsdb_initialize() {
     } /* else */
   } /* if */
 
+#ifdef COMPRESSED_DATA
+  if(tsdb.compress == NULL) {
+    tsdb.compress = strdup(TSDB_COMPRESS);
+    if(tsdb.uncompress == NULL) {
+      tsdb.uncompress = strdup(TSDB_UNCOMPRESS);
+    } /* if */
+  } /* if */
+  else {
+    if(tsdb.uncompress == NULL) {
+      tsdb.uncompress = (char *)malloc(strlen(tsdb.compress + 4));
+      tsdb.uncompress = strcpy(tsdb.uncompress, tsdb.compress);
+      tsdb.uncompress = strcat(tsdb.uncompress, " -d");
+    } /* if */
+  } /* if */
+  if(tsdb.suffix == NULL) {
+    tsdb.suffix = strdup(TSDB_SUFFIX);
+  } /* if */
+#endif
+
   if(tsdb_all_relations() == NULL) {
     return(FALSE);
   } /* if */
 
   foo = (char *)malloc(MAXNAMLEN + 1);
+#ifdef COMPRESSED_DATA
+  baz = (char *)malloc(MAXNAMLEN + 1);
+#endif
   for(i = 0; tsdb.relations[i] != NULL; i++) {
     foo = strcpy(foo, tsdb.data_path);
     foo = strcat(foo, tsdb.relations[i]->name);
     if(access(foo, R_OK)) {
-      if((j = creat(foo, 0666)) == -1) {
-        free(foo);
-        fprintf(tsdb_error_stream,
-                "initialize(): unable to create data file for `%s'.\n",
-                tsdb.relations[i]->name);
-        fflush(tsdb_error_stream);
-        return(FALSE);
+#ifdef COMPRESSED_DATA
+      baz = strcpy(baz, foo);
+      baz = strcat(baz, tsdb.suffix);
+      if(access(baz, R_OK)) {
+#endif      
+        if((j = creat(foo, 0666)) == -1) {
+          free(foo);
+          fprintf(tsdb_error_stream,
+                  "initialize(): unable to create data file for `%s'.\n",
+                  tsdb.relations[i]->name);
+          fflush(tsdb_error_stream);
+          return(FALSE);
+        } /* if */
+        else {
+          close(j);
+          fprintf(tsdb_error_stream,
+                  "initialize(): creating empty data file for `%s'.\n",
+                  tsdb.relations[i]->name);
+          fflush(tsdb_error_stream);
+        } /* else */
+#ifdef COMPRESSED_DATA
       } /* if */
-      else {
-        close(j);
-        fprintf(tsdb_error_stream,
-                "initialize(): creating empty data file for `%s'.\n",
-                tsdb.relations[i]->name);
-        fflush(tsdb_error_stream);
-      } /* else */
+#endif
     } /* if */
   } /* for */
   free(foo);
+#ifdef COMPRESSED_DATA
+  free(baz);
+#endif
 
   tsdb_init_history(&tsdb);
   
-  if (!(tsdb.translate_table=tsdb_translate_table())) {
+  if (!(tsdb.translate_table = tsdb_translate_table())) {
     fprintf(tsdb_error_stream,
-            "initialize(): can't create translate table.\n");
+            "initialize(): unable to create translate table.\n");
     fflush(tsdb_error_stream);
-    
-  }
+  } /* if */
 
 #ifdef DEBUG
   if(tsdb.relations != NULL) {
@@ -1774,6 +1809,13 @@ BOOL tsdb_initialize() {
   fprintf(tsdb_debug_stream,
           "initialize(): pager: `%s'; debug: `%s'.\n",
           (tsdb.pager != NULL ? tsdb.pager : "null"), tsdb.debug_file);
+#ifdef COMPRESSED_DATA
+  fprintf(tsdb_debug_stream,
+          "initialize(): compress: `%s'; uncompress: `%s'; suffix: `%s'.\n",
+          (tsdb.compress != NULL ? tsdb.compress : "null"),
+          (tsdb.uncompress != NULL ? tsdb.uncompress : "null"),
+          (tsdb.suffix != NULL ? tsdb.suffix : "null"));
+#endif
   fflush(tsdb_debug_stream);
 #endif
   return(TSDB_OK);

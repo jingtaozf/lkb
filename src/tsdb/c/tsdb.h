@@ -87,6 +87,9 @@ extern void free(void *);
 #define TSDB_VERSION_OPTION 13
 #define TSDB_HISTORY_OPTION 14
 #define TSDB_UNIQUELY_PROJECT_OPTION 15
+#define TSDB_COMPRESS_OPTION 16
+#define TSDB_UNCOMPRESS_OPTION 17
+#define TSDB_SUFFIX_OPTION 18
 
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
@@ -148,6 +151,18 @@ extern void free(void *);
 
 #ifndef TSDB_DEFAULT_VALUE
 #  define TSDB_DEFAULT_VALUE ""
+#endif
+
+#ifndef TSDB_COMPRESS
+#  define TSDB_COMPRESS "gzip -c -f"
+#endif
+
+#ifndef TSDB_UNCOMPRESS
+#  define TSDB_UNCOMPRESS "gzip -c -f -d"
+#endif
+
+#ifndef TSDB_SUFFIX
+#  define TSDB_SUFFIX ".gz"
 #endif
 
 #ifndef TSDB_SERVER_PORT
@@ -250,10 +265,17 @@ typedef struct tsdb {
   char *debug_file;
 #endif
 
+#ifdef COMPRESSED_DATA
+  char *compress;
+  char *uncompress;
+  char *suffix;
+#endif
+
   int command;
   Tsdb_history **history;
   int history_size;
-  char* translate_table;
+
+  char *translate_table;
 } Tsdb;
 
 #if !defined(TSDB_C)
