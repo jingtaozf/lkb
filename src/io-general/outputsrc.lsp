@@ -298,13 +298,11 @@
                     (push entry (aref caches j))))))))
 
 (defun output-for-ebl (orth fs ostream rule-list base-id base-fs ostream2)
-  (declare (ignore fs))
   (let* ((type (type-of-fs (tdfs-indef base-fs)))
          (category (find-possibly-cached-cat type fs))
-        (infl-rules nil)
-        (other-rules nil))
-    (when (and category 
-               (not (equal category "?")))
+         (infl-rules nil)
+         (other-rules nil))
+    (when (and category (not (equal category "?")))
       (for rule in rule-list 
            do
            (if (inflectional-rule-p rule)
