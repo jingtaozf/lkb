@@ -1,82 +1,13 @@
-WARNING: RSA1 key found for host lingo.stanford.edu
-in /user/oe/.ssh/known_hosts:41
-RSA1 key fingerprint a4:ea:64:3e:e2:3a:a7:32:50:76:70:1a:e3:90:bc:f8.
-Warning: Permanently added 'lingo.stanford.edu,171.64.23.173' (RSA) to the list of known hosts.
 cvs server: Updating .
-P lexicon.csv
-P lexicon.tdl
-U mrs.tdl
-U paraphraser.mtr
+P mrs.tdl
 cvs server: Updating data
-P data/genrules.mrs
 cvs server: Updating gold
 cvs server: Updating gold/csli
 cvs server: Updating gold/ecoc
-U gold/ecoc/analysis
-U gold/ecoc/decision.gz
-U gold/ecoc/edge
-U gold/ecoc/item-phenomenon
-U gold/ecoc/item-set
-U gold/ecoc/item.gz
-U gold/ecoc/output
-U gold/ecoc/parameter
-U gold/ecoc/parse.gz
-U gold/ecoc/phenomenon
-U gold/ecoc/preference.gz
-U gold/ecoc/relations
-U gold/ecoc/result.gz
-U gold/ecoc/rule
-U gold/ecoc/run.gz
-U gold/ecoc/score
-U gold/ecoc/set
-U gold/ecoc/tree.gz
-U gold/ecoc/update.gz
 cvs server: Updating gold/hike
-U gold/hike/analysis
-U gold/hike/decision.gz
-U gold/hike/edge
-U gold/hike/item-phenomenon
-U gold/hike/item-set
-U gold/hike/item.gz
-U gold/hike/output
-U gold/hike/parameter
-U gold/hike/parse.gz
-U gold/hike/phenomenon
-U gold/hike/preference.gz
-U gold/hike/relations
-U gold/hike/result.gz
-U gold/hike/rule
-U gold/hike/run.gz
-U gold/hike/score
-U gold/hike/set
-U gold/hike/tree.gz
-U gold/hike/update.gz
 cvs server: Updating gold/mrs
 cvs server: Updating gold/trec
-U gold/trec/analysis
-U gold/trec/decision.gz
-U gold/trec/edge
-U gold/trec/item-phenomenon
-U gold/trec/item-set
-U gold/trec/item.gz
-U gold/trec/output
-U gold/trec/parameter
-U gold/trec/parse.gz
-U gold/trec/phenomenon
-U gold/trec/preference.gz
-U gold/trec/relations
-U gold/trec/result.gz
-U gold/trec/rule
-U gold/trec/run.gz
-U gold/trec/score
-U gold/trec/set
-U gold/trec/tree.gz
-U gold/trec/update.gz
 cvs server: Updating lkb
-P lkb/mrsglobals.lsp
-P lkb/mrsmunge.tdl
-U lkb/mt.lsp
-P lkb/script
 cvs server: Updating pet
 cvs server: Updating .
 cvs server: Updating doc
@@ -85,42 +16,26 @@ cvs server: Updating pet
 cvs server: Updating .
 cvs server: Updating lkb
 ? doc
+? linux
 ? man
 ? src/.l6cl
 ? src/.sacl
-? src/tsdb/c
-? src/tsdb/capi
+? src/tsdb/c-
+? src/tsdb/capi-
 ? src/tsdb/home/redwoods
 cvs server: Updating .
-RCS file: /lingo/CVS/newlkb/Makefile,v
-retrieving revision 1.22
-retrieving revision 1.23
-Merging differences between 1.22 and 1.23 into Makefile
 M Makefile
 cvs server: Updating bin
 cvs server: Updating bin/linux
-U bin/linux/pvm
-U bin/linux/pvmd3
 cvs server: Updating bin/solaris
-U bin/solaris/pvm
-U bin/solaris/pvmd3
 cvs server: Updating etc
 cvs server: Updating include
-P include/mrs.h
-P include/pvm3.h
 cvs server: Updating lib
 cvs server: Updating lib/Tktable2.7
 cvs server: Updating lib/blt2.4
 cvs server: Updating lib/blt2.4/dd_protocols
 cvs server: Updating lib/linux
-U lib/linux/libitsdb.a
-U lib/linux/libitsdb.so
-U lib/linux/libmrs.a
-U lib/linux/libpvm3.a
 cvs server: Updating lib/solaris
-U lib/solaris/libitsdb.a
-U lib/solaris/libitsdb.so
-U lib/solaris/libpvm3.a
 cvs server: Updating lib/solaris/blt2.4
 cvs server: Updating lib/solaris/blt2.4/dd_protocols
 cvs server: Updating lib/solaris/blt2.4/demos
@@ -170,9 +85,6 @@ cvs server: Updating lib/tk8.3/images
 cvs server: Updating log
 M log/build
 cvs server: Updating src
-P src/lkb.el
-P src/pg-interface.el
-P src/version.lsp
 cvs server: Updating src/.aasl
 cvs server: Updating src/.aasl/ACL_specific
 cvs server: Updating src/.aasl/io-general
@@ -246,15 +158,8 @@ cvs server: Updating src/.nasl/tsdb
 cvs server: Updating src/.nasl/tty
 cvs server: Updating src/.nasl/www
 cvs server: Updating src/ACL-CG_specific
-P src/ACL-CG_specific/tree.lsp
 cvs server: Updating src/ACL_specific
-U src/ACL_specific/build-psql.lsp
-P src/ACL_specific/compare.lsp
-U src/ACL_specific/deliver-psql.lsp
-P src/ACL_specific/parseout.lsp
-U src/ACL_specific/tree.lsp
 cvs server: Updating src/MCL_specific
-P src/MCL_specific/tree.lsp
 cvs server: Updating src/data
 cvs server: Updating src/data/Dikran
 cvs server: Updating src/data/aline
@@ -352,149 +257,38 @@ cvs server: Updating src/fasl/io-tdl
 cvs server: Updating src/fasl/main
 cvs server: Updating src/fasl/mrs
 cvs server: Updating src/general
-P src/general/ecl-patches.lsp
 cvs server: Updating src/glue
 cvs server: Updating src/io-general
 cvs server: Updating src/io-lilfes
 cvs server: Updating src/io-paths
-P src/io-paths/lexinput.lsp
-P src/io-paths/typeinput.lsp
 cvs server: Updating src/io-tdl
-P src/io-tdl/tdltypeinput.lsp
 cvs server: Updating src/lexdb
-P src/lexdb/lexport.lsp
-P src/lexdb/psql-db.lsp
-U src/lexdb/psql-msc.lsp
-P src/lexdb/psqllex.lsp
 cvs server: Updating src/lexicon
 cvs server: Updating src/main
-P src/main/batch-check.lsp
-P src/main/clex.lsp
-P src/main/discriminants.lsp
-P src/main/initializations.lsp
-P src/main/lex.lsp
-P src/main/types.lsp
 cvs server: Updating src/mrs
-P src/mrs/basemrs.lisp
-P src/mrs/interface.lisp
-P src/mrs/lkb-acl-mrs.lisp
-P src/mrs/mrsoutput.lisp
-U src/mrs/translate.lisp
 cvs server: Updating src/mrs/data
 cvs server: Updating src/mt
-P src/mt/clim.lisp
-P src/mt/globals.lisp
-U src/mt/patches.lisp
-U src/mt/semi.lisp
-P src/mt/transfer.lisp
-U src/mt/translate.lisp
-P src/mt/version.lisp
 cvs server: Updating src/non-core
 cvs server: Updating src/ppcre
 cvs server: Updating src/psql
-P src/psql/embedded-code.sql
-P src/psql/import.sql
-U src/psql/permissions.sql
-P src/psql/pg-package.cl
-U src/psql/sql2.cl
-U src/psql/sql2.lsp
-U src/psql/su-setup.sql
 cvs server: Updating src/psql/linux
-U src/psql/linux/libpq3.so
 cvs server: Updating src/psql/solaris
-U src/psql/solaris/libpq.so
 cvs server: Updating src/pvm
-P src/pvm/pvm-package.lisp
-P src/pvm/pvm.lisp
 cvs server: Updating src/pvm/linux
-U src/pvm/linux/pvm.so
 cvs server: Updating src/pvm/solaris
-U src/pvm/solaris/pvm.so
 cvs server: Updating src/rmrs
-P src/rmrs/annlt.lisp
-P src/rmrs/compare.lisp
-P src/rmrs/convert.lisp
-P src/rmrs/input.lisp
-P src/rmrs/lkb-acl-rmrs.lisp
-P src/rmrs/output.lisp
-P src/rmrs/standalone.lisp
 cvs server: Updating src/rmrs/annlt-test
-P src/rmrs/annlt-test/lex14.1.rmrs
-P src/rmrs/annlt-test/notes.txt
 cvs server: Updating src/rmrs/test1
 cvs server: Updating src/systems
-P src/systems/mrs.system
-P src/systems/mt.system
-P src/systems/psql.system
-P src/systems/rmrs.system
-P src/systems/tsdb.system
 cvs server: Updating src/tproving
 cvs server: Updating src/tsdb
 cvs server: Updating src/tsdb/TeX
 cvs server: Updating src/tsdb/c
-cvs update: move away src/tsdb/c/Makefile; it is in the way
-C src/tsdb/c/Makefile
-cvs update: move away src/tsdb/c/README; it is in the way
-C src/tsdb/c/README
-cvs update: move away src/tsdb/c/errors.h; it is in the way
-C src/tsdb/c/errors.h
-cvs update: move away src/tsdb/c/globals.h; it is in the way
-C src/tsdb/c/globals.h
-cvs update: move away src/tsdb/c/main.c; it is in the way
-C src/tsdb/c/main.c
-cvs update: move away src/tsdb/c/parser.y; it is in the way
-C src/tsdb/c/parser.y
-cvs update: move away src/tsdb/c/scanner.lex; it is in the way
-C src/tsdb/c/scanner.lex
-cvs update: move away src/tsdb/c/tsdb.c; it is in the way
-C src/tsdb/c/tsdb.c
-cvs update: move away src/tsdb/c/tsdb.h; it is in the way
-C src/tsdb/c/tsdb.h
-cvs update: move away src/tsdb/c/tsdb_debug.c; it is in the way
-C src/tsdb/c/tsdb_debug.c
-cvs update: move away src/tsdb/c/tsdb_engine.c; it is in the way
-C src/tsdb/c/tsdb_engine.c
-cvs update: move away src/tsdb/c/tsdb_history.c; it is in the way
-C src/tsdb/c/tsdb_history.c
-cvs update: move away src/tsdb/c/tsdb_io.c; it is in the way
-C src/tsdb/c/tsdb_io.c
-cvs update: move away src/tsdb/c/tsdb_server.c; it is in the way
-C src/tsdb/c/tsdb_server.c
-cvs update: move away src/tsdb/c/tsdb_sql.c; it is in the way
-C src/tsdb/c/tsdb_sql.c
-cvs update: move away src/tsdb/c/tsdb_tools.c; it is in the way
-C src/tsdb/c/tsdb_tools.c
-cvs update: move away src/tsdb/c/tsdb_utility.c; it is in the way
-C src/tsdb/c/tsdb_utility.c
 cvs server: Updating src/tsdb/c/llib
-cvs update: move away src/tsdb/c/llib/libreadline.a; it is in the way
-C src/tsdb/c/llib/libreadline.a
-cvs update: move away src/tsdb/c/llib/libregex.a; it is in the way
-C src/tsdb/c/llib/libregex.a
-cvs update: move away src/tsdb/c/llib/libtermcap.a; it is in the way
-C src/tsdb/c/llib/libtermcap.a
 cvs server: Updating src/tsdb/capi
-cvs update: move away src/tsdb/capi/Makefile; it is in the way
-C src/tsdb/capi/Makefile
-cvs update: move away src/tsdb/capi/acl.c; it is in the way
-C src/tsdb/capi/acl.c
-cvs update: move away src/tsdb/capi/capi.c; it is in the way
-C src/tsdb/capi/capi.c
-cvs update: move away src/tsdb/capi/client.c; it is in the way
-C src/tsdb/capi/client.c
-cvs update: move away src/tsdb/capi/gc.c; it is in the way
-C src/tsdb/capi/gc.c
-cvs update: move away src/tsdb/capi/mfile.c; it is in the way
-C src/tsdb/capi/mfile.c
-cvs update: move away src/tsdb/capi/mfile.h; it is in the way
-C src/tsdb/capi/mfile.h
 cvs server: Updating src/tsdb/capi/5lib
-cvs update: move away src/tsdb/capi/5lib/getloadavg.o; it is in the way
-C src/tsdb/capi/5lib/getloadavg.o
 cvs server: Updating src/tsdb/capi/llib
-U src/tsdb/capi/llib/getloadavg.o
 cvs server: Updating src/tsdb/capi/olib
-U src/tsdb/capi/olib/getloadavg.o
 cvs server: Updating src/tsdb/doc
 cvs server: Updating src/tsdb/home
 cvs server: Updating src/tsdb/home/lingo
@@ -517,20 +311,8 @@ cvs server: Updating src/tsdb/home/trees/vm32
 cvs server: Updating src/tsdb/home/trees/vm32/ezra
 cvs server: Updating src/tsdb/home/trees/vm32/ezra/01-07-17
 cvs server: Updating src/tsdb/html
-P src/tsdb/html/redwoods-annotations-header.html
 cvs server: Updating src/tsdb/linux
-U src/tsdb/linux/capi.so
-U src/tsdb/linux/gc.so
 cvs server: Updating src/tsdb/lisp
-P src/tsdb/lisp/globals.lisp
-P src/tsdb/lisp/lkb-interface.lisp
-U src/tsdb/lisp/mt.lisp
-P src/tsdb/lisp/podium.lisp
-P src/tsdb/lisp/process.lisp
-U src/tsdb/lisp/rasp.lisp
-P src/tsdb/lisp/redwoods.lisp
-P src/tsdb/lisp/statistics.lisp
-P src/tsdb/lisp/tsdb.lisp
 cvs server: Updating src/tsdb/lisp/RCS
 cvs server: Updating src/tsdb/skeletons
 cvs server: Updating src/tsdb/skeletons/csli
@@ -545,12 +327,10 @@ cvs server: Updating src/tsdb/skeletons/english/aged
 cvs server: Updating src/tsdb/skeletons/english/blend
 cvs server: Updating src/tsdb/skeletons/english/cell
 cvs server: Updating src/tsdb/skeletons/english/csli
-P src/tsdb/skeletons/english/csli/item
 cvs server: Updating src/tsdb/skeletons/english/demo
 cvs server: Updating src/tsdb/skeletons/english/ec
 cvs server: Updating src/tsdb/skeletons/english/ecoc
 cvs server: Updating src/tsdb/skeletons/english/ecos
-P src/tsdb/skeletons/english/ecos/item
 cvs server: Updating src/tsdb/skeletons/english/ecpa
 cvs server: Updating src/tsdb/skeletons/english/ecpr
 cvs server: Updating src/tsdb/skeletons/english/english
@@ -592,12 +372,7 @@ cvs server: Updating src/tsdb/skeletons/norsk/tur
 cvs server: Updating src/tsdb/skeletons/s+w
 cvs server: Updating src/tsdb/skeletons/toy
 cvs server: Updating src/tsdb/solaris
-U src/tsdb/solaris/capi.so
-U src/tsdb/solaris/gc.so
 cvs server: Updating src/tsdb/tcl
-P src/tsdb/tcl/commands.tcl
-U src/tsdb/tcl/mt.tcl
-P src/tsdb/tcl/podium.tcl
 cvs server: Updating src/tty
 cvs server: Updating src/www
 cvs server: Updating src/www/linux
@@ -611,7 +386,7 @@ cvs server: Updating src/xml
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.294; previous revision: 1.293
+new revision: 1.295; previous revision: 1.294
 done
 make[1]: Entering directory `/lingo/www/aserve/eo/lkb'
 ( \
@@ -1567,9 +1342,9 @@ CL-USER(1): ; Loading /lingo/www/aserve/eo/lkb/src/general/loadup.lisp
 ;   Loading /lingo/www/aserve/eo/lkb/src/general/loadup-library.lisp
 T
 CL-USER(2): ; Loading /lingo/www/aserve/eo/lkb/src/ACL_specific/deliver.lsp
-;   Fast loading /lingo/local/acl/code/genapp.fasl
-;     Fast loading /lingo/local/acl/code/fileutil.006
+;   Fast loading /lingo/local/acl/code/fileutil.006
 ;;; Installing fileutil patch, version 6
+;   Fast loading /lingo/local/acl/code/genapp.fasl
 ;     Fast loading /lingo/local/acl/code/build.fasl
 ;;; Installing build patch, version 1
 Bundle is up to date.
@@ -1605,7 +1380,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Feb 11, 2004 17:46)
+6.2 [Linux (x86)] (Feb 13, 2004 16:23)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2591,7 +2366,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-90841712 bytes have been tenured, next gc will be global.
+91902200 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2771,7 +2546,7 @@ CL-USER(7): ; Loading /lingo/www/aserve/eo/lkb/src/systems/tsdb.system
 ; Fast loading
 ;    /lingo/www/aserve/eo/lkb/src/.l6cl/ppcre/repetition-closures.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/ppcre/scanner.lisp
-8799592 bytes have been tenured, next gc will be global.
+8799624 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/ppcre/scanner.fasl
@@ -2791,13 +2566,13 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/xml/pxml1.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/xml/pxml3.cl
-9372752 bytes have been tenured, next gc will be global.
+9372904 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/xml/pxml3.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/xml/pxml3.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/xml/pxml2.cl
-11717904 bytes have been tenured, next gc will be global.
+11717832 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/xml/pxml2.fasl
 ;;; Fasl write complete
@@ -3356,7 +3131,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/gc.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/yy.lisp
-gc-after-hook(): local; new: 1663592; old: 284152; pending: 40; efficiency: 90.
+gc-after-hook(): local; new: 1663576; old: 284152; pending: 40; efficiency: 90.
 ;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/yy.fasl
@@ -3374,14 +3149,14 @@ gc-after-hook(): local; new: 1663592; old: 284152; pending: 40; efficiency: 90.
 ; Fast loading
 ;    /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 2442136; old: 88640; pending: 0; efficiency: 88.
-gc-after-hook(): local; new: 1481344; old: 286288; pending: 0; efficiency: 92.
+gc-after-hook(): local; new: 2438120; old: 87472; pending: 0; efficiency: 89.
+gc-after-hook(): local; new: 1508568; old: 287456; pending: 0; efficiency: 90.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lsp.lisp
-gc-after-hook(): local; new: 717608; old: 339576; pending: 0; efficiency: 90.
+gc-after-hook(): local; new: 714864; old: 339576; pending: 0; efficiency: 90.
 ;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/lsp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/lsp.fasl
@@ -3398,7 +3173,7 @@ gc-after-hook(): local; new: 717608; old: 339576; pending: 0; efficiency: 90.
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/maxent.lisp
-gc-after-hook(): local; new: 1125816; old: 100168; pending: 0; efficiency: 92.
+gc-after-hook(): local; new: 1092440; old: 100168; pending: 0; efficiency: 90.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Fasl write complete
@@ -5414,14 +5189,60 @@ src/tsdb/TeX/
 src/tsdb/TeX/piclatex.sty
 ( \
   cd /lingo/www/aserve/eo//lkb; \
+  tar Svczf /lingo/www/lingo/ftp/`date "+%Y-%m-%d"`/itsdb_source.tgz \
+      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" \
+      src/tsdb/capi; \
+)
+src/tsdb/capi/
+src/tsdb/capi/5lib/
+src/tsdb/capi/5lib/getloadavg.o
+src/tsdb/capi/llib/
+src/tsdb/capi/llib/getloadavg.o
+src/tsdb/capi/Makefile
+src/tsdb/capi/acl.c
+src/tsdb/capi/capi.c
+src/tsdb/capi/client.c
+src/tsdb/capi/gc.c
+src/tsdb/capi/mfile.c
+src/tsdb/capi/mfile.h
+src/tsdb/capi/olib/
+src/tsdb/capi/olib/getloadavg.o
+( \
+  cd /lingo/www/aserve/eo//lkb; \
+  tar Svczf /lingo/www/lingo/ftp/`date "+%Y-%m-%d"`/itsdb_source.tgz \
+      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" \
+      src/tsdb/c; \
+)
+src/tsdb/c/
+src/tsdb/c/llib/
+src/tsdb/c/llib/libreadline.a
+src/tsdb/c/llib/libregex.a
+src/tsdb/c/llib/libtermcap.a
+src/tsdb/c/Makefile
+src/tsdb/c/README
+src/tsdb/c/errors.h
+src/tsdb/c/globals.h
+src/tsdb/c/main.c
+src/tsdb/c/parser.y
+src/tsdb/c/scanner.lex
+src/tsdb/c/tsdb.c
+src/tsdb/c/tsdb.h
+src/tsdb/c/tsdb_debug.c
+src/tsdb/c/tsdb_engine.c
+src/tsdb/c/tsdb_history.c
+src/tsdb/c/tsdb_io.c
+src/tsdb/c/tsdb_server.c
+src/tsdb/c/tsdb_sql.c
+src/tsdb/c/tsdb_tools.c
+src/tsdb/c/tsdb_utility.c
+( \
+  cd /lingo/www/aserve/eo//lkb; \
   tar Svczf /lingo/www/lingo/ftp/`date "+%Y-%m-%d"`/itsdb_data.tgz \
       --exclude=src/tsdb/skeletons/english/vm97 \
       --exclude=src/tsdb/skeletons/english/vm97p \
       --exclude=src/tsdb/skeletons/english/vm98 \
-      --exclude=src/tsdb/skeletons/english/vm6 \
-      --exclude=src/tsdb/skeletons/english/vm13 \
-      --exclude=src/tsdb/skeletons/english/vm31 \
-      --exclude=src/tsdb/skeletons/english/vm32 \
       --exclude=src/tsdb/skeletons/english/wsj00 \
       --exclude=src/tsdb/skeletons/english/parc \
       --exclude=src/tsdb/skeletons/yy \
@@ -5511,6 +5332,18 @@ src/tsdb/skeletons/english/hike/item
 src/tsdb/skeletons/english/mrs/
 src/tsdb/skeletons/english/mrs/relations
 src/tsdb/skeletons/english/mrs/item
+src/tsdb/skeletons/english/vm13/
+src/tsdb/skeletons/english/vm13/relations
+src/tsdb/skeletons/english/vm13/item
+src/tsdb/skeletons/english/vm31/
+src/tsdb/skeletons/english/vm31/relations
+src/tsdb/skeletons/english/vm31/item
+src/tsdb/skeletons/english/vm32/
+src/tsdb/skeletons/english/vm32/relations
+src/tsdb/skeletons/english/vm32/item
+src/tsdb/skeletons/english/vm6/
+src/tsdb/skeletons/english/vm6/relations
+src/tsdb/skeletons/english/vm6/item
 src/tsdb/skeletons/espanol/
 src/tsdb/skeletons/espanol/banca/
 src/tsdb/skeletons/espanol/banca/relations
