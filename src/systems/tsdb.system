@@ -49,7 +49,8 @@
                              "~&; missing: `~a';~%"
                              (component-full-pathname component :source))))))
       :components
-      ((:file "ToDo")))
+      ((:file "Registration")
+       (:file "ToDo")))
      (:module "tsdb"
       :source-pathname "lisp"
       :binary-pathname ""
@@ -95,8 +96,9 @@
        (:file "showtable")
        (:file "showgraph")
        (:file "utilities")
-       (:file "podium_commands")
+       (:file "commands")
        (:file "input")
+       (:file "copyleft")
        (:file "balloon")
        (:file "balloons" :source-extension ""))))
     :depends-on (#+:page "page" #+:lkb "lkb"))
