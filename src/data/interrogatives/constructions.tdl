@@ -1,17 +1,5 @@
 ;;; <<< >>> Maximal Subtypes of Phrase
 
-;;; JTB 09/21/01 - Punctuation
-
-question-punct-ph := punct-ph & inter-cl & binary-construction.
-
-dot-punct-ph := punct-ph & core-cl & binary-construction &
-[ HD-DTR [ SS.LOC.CONT proposition ] ].
-
-bang-punct-ph-1 := punct-ph & excl-cl & binary-construction.
-
-bang-punct-ph-2 := punct-ph & core-cl & binary-construction &
-[ HD-DTR [ SS.LOC.CONT outcome ] ].
-
 ;;; Non-clausal phrases
 
 ;ncl-hd-comps-ph-0 := non-clause & hd-comp-ph-0 & unary-construction.
@@ -64,15 +52,74 @@ DTRS < phrase & [ SS #1 & [ LOC.CAT [ HEAD.FORM #form,
 
 |#
 
+;;; JTB 02/16/02 - Root-cl.
+
+root-cl-0 := root-cl & hd-only-ph & unary-construction &
+[ SS.LOC.CONT proposition & [ SOA.NUCL illoc-rel & [ MSG-ARG #1 ] ],
+  HD-DTR [ SS.LOC.CAT.HEAD.IC true,
+           SS.LOC.CONT #1 ] ].
+
+root-cl-1 := root-cl & hd-punct-ph & binary-construction & 
+[ SS.LOC.CONT #2 & [ SOA.NUCL.MSG-ARG #1 ],
+  HD-DTR [ SS.LOC.CAT.HEAD.IC true,
+           SS.LOC.CONT #1 ],
+  DTRS < expression, punctuation & [ SS.LOC.CONT #2 ] > ].
+
+;;; Imperatives - again, these are roots.  We want to prevent building
+;;;non-root ns-imperatives because they start showing up as CPs in
+;;;their own right, and we don't want that.  subject imperatives of
+;;;course get built as "declaratives"
+
+ns-imp-root-cl := imp-root-cl & hd-ph &
+[ SS.LOC [ CAT.SUBJ < >, 
+           CAT.HEAD.IC true ],
+  SS.LOC.CONT proposition & [ SOA.NUCL.MSG-ARG.SOA #soa ],
+  HD-DTR.SS.LOC [ CAT [ SUBJ < [ SLASH <! !>,
+                                 LOC [ CAT.HEAD.AGR 2per,
+                                       CONT.INDEX listener,
+                                       P-STORE <! !>,
+                                       Q-STORE <! !> ],
+                                 WH <! !> ] >,
+                        HEAD [ IC false,
+                               FORM fin ] ],
+                  CONT #soa ] ].
+
+ns-imp-root-cl-0 := ns-imp-root-cl & hd-only-ph & unary-construction.
+ns-imp-root-cl-1 := ns-imp-root-cl & hd-punct-ph & binary-construction &
+[ SS.LOC.CONT #2,
+  DTRS < expression, punctuation & [ SS.LOC.CONT #2 ] > ].
+
+;;;JTB 02/02/02 - First stab at an imperative rule.  Currently no rule
+;;;for this because we made it all a root thing.
+
+ns-imp-cl := imp-cl & unary-construction &
+[ SS.LOC [ CAT.SUBJ < >,
+           CAT.HEAD.IC true,
+           CONT.SOA #soa ],
+  HD-DTR.SS.LOC [ CAT [ SUBJ < [ SLASH <! !>,
+                                 LOC [ CAT.HEAD.AGR 2per,
+                                       CONT.INDEX listener,
+                                       P-STORE <! !>,
+                                       Q-STORE <! !> ],
+                                 WH <! !> ] >,
+                        HEAD [ IC false,
+                               FORM fin ] ],
+                  CONT #soa ] ].
+
+;;; JTB 02/1602 - factive-cl.
+
+factive-cl-0 := factive-cl & hd-only-ph & unary-construction &
+[ SS.LOC.CONT.PROP #1,
+  HD-DTR.SS.LOC.CONT #1 ].
+
+;;; Declarative clauses
+
 decl-hs-cl := decl-cl & hd-subj-ph & binary-construction &
 [ SS.LOC.CAT.HEAD [ FORM fin,
                     INV false ] ].
 
-
 decl-ns-cl := decl-cl & hd-only-ph & unary-construction &
 [ SS.LOC.CAT.SUBJ < noncanon-ss > ].
-
-
 
 ;;; CCB - An earlier draft of the Basic Interrogative Constructions
 ;;;chapter called what I am calling "PARAMS" "INDICIES", I think that my
@@ -172,7 +219,6 @@ su-wh-int-cl := wh-int-cl & binary-construction &
 ns-wh-int-cl := wh-int-cl & binary-construction &
 [ HD-DTR.SS.LOC.CAT [ HEAD [ INV #1,
                              IC #1 ] ] ].
-
 
 ;;;JTB 07/16/01 - Reprises have REPRISABLE false, but the daughter
 ;;;must be true.  reprise-in-situ-interrogative-clause (rep-int-cl)
@@ -289,6 +335,7 @@ quaternary-construction := phrase &
          [ ORTH [ LIST #third,
                   LAST #forth ] ], [ ORTH [ LIST #forth,
                                             LAST #last ] ] > ].
+
 
 
 

@@ -32,7 +32,8 @@ feat-struc := *top*.
 ;;;a list.
 
 sign := feat-struc &
-[ ORTH *list-of-strings*,
+[ ROOT /l false,
+  ORTH *list-of-strings*,
   SS synsem,
   DTRS list-of-signs ]. 
 
@@ -80,6 +81,7 @@ gap-ss := noncanon-ss &
 pro-ss := noncanon-ss &
 [ SLASH <! !>,
   LOC [ P-STORE <! !>,
+        Q-STORE <! !>,
         CAT.HEAD.CASE acc ] ].
 
 ;;; CCB - added the type elip-ss, to mark elliptical constituents.
@@ -122,7 +124,6 @@ phrase := expression &
 lex-sign := sign &
 [ NEEDS-AFFIX boolean,
   ARG-ST list-of-synsems ].
-
 
 ; The Argument Realization Principle has been incorporated into type
 ; inflected lexeme rather than word, because SLASHed constituents are
@@ -206,13 +207,14 @@ word := lex-sign & expression &
 punctuation := word &
 [ SS [ WH <! !>,
        SLASH <! !>,
-       LOC [ CAT [ COMPS < >,
+       LOC [ CONT proposition,
+             CAT [ COMPS < >,
                    SUBJ < >,
                    SPR < >,
                    HEAD punct ],
              Q-STORE <! !>,
              P-STORE <! !> ] ],
-   ARG-ST < > ].
+  ARG-ST < > ].
 
 ;;; <<< >>> PARTS OF SPEECH 
 
@@ -253,19 +255,20 @@ spec-type := feat-struc &
 
 punct := pos.
 
-verbal := pos &
+verbal := pos & mod-type &
 [ FORM vform,
   IC boolean ].
+
+nonverbal := pos.
  
-verb := verbal & mod-type &
+verb := verbal &
 [ POL boolean,
   AUX boolean,
   INV boolean,
   MOD < > ].
 
-nonverbal := pos.
-
-comp := verbal.
+comp := verbal &
+[ MODE < > ].
 
 ;;;JTB 08/19/01 - To distinguish verbs from gerunds.
 
@@ -357,10 +360,35 @@ clause := phrase &
 
 non-clause := phrase.
 
+;;;JTB 02/16/02 - Changing verb to verbal in core-cl.  Hope that don't
+;;;fuck anything up.
+
 ; core-clause (core-cl)
 core-cl := clause &
-[ SS.LOC.CAT [ HEAD verb & [ FORM clausal,
-                             MOD < > ] ] ].
+[ SS.LOC.CAT [ HEAD verbal & [ FORM clausal,
+                               MOD < > ] ] ].
+
+;;;JTB 02/16/01 - Implementing root clauses as in chapter 7, p.267
+
+; root clause (root-cl)
+root-cl := core-cl &
+[ ROOT true,
+  SS.LOC.CONT [ REPRISABLE false,
+                SOA.NUCL.ILLOCUTIONER speaker ] ].
+
+; root imperative clause - this is new.  We're going to make
+; ns-imperatives be roots so as to avoid getting things like "I prefer
+; leave" where leave is a G&S ns-imp-cl which has an outcome and gets
+; selected for by prefer.
+
+imp-root-cl := root-cl &
+[ SS.LOC.CONT.SOA.NUCL order-rel ].
+
+; factive-clause (factive-cl)
+factive-cl := core-cl &
+[ SS.LOC.CAT.HEAD.IC false,
+  SS.LOC.CONT.REPRISABLE false,
+  SS.LOC.CONT fact ].
 
 #|
 ; relative-clause (rel-cl)
@@ -390,7 +418,6 @@ inter-cl := core-cl &
 ;;; I'm treating the P-STORE and the PARAMS as *diff-lists* rather than
 ;;;sets, so might be making different predictions.  CCB - like what?
 
-
 ; headed-interrogative-clause (hd-int-cl)
 hd-int-cl := inter-cl & hd-ph.
 
@@ -417,7 +444,7 @@ is-int-cl := hd-int-cl & hd-only-ph &
 [ SS.LOC.CAT.HEAD verb & [ FORM fin,
                            IC true ] ].
 
-imp-cl := core-cl &
+imp-cl := core-cl & hd-only-ph &
 [ SS.LOC.CONT outcome ].
 
 ; exclamative-clause (excl-cl)
@@ -430,17 +457,19 @@ excl-cl := core-cl &
 ;;;and the Semantic Inheritance Principle into a single default
 ;;;unification constraint on hd-ph.
 
-
 ;;; CCB - I need to be composing the ORTH on all of these phrasal
 ;;;construtions, so that it inherits from the words to the phrases.
 ;;;Maybe I should put it in consturctions.tdl?
 
-;;;JTB 07/18/01 - wild test to see if this makes "Kim sleeps" parse
-;;;without phrasal pumping rules.
-
 hd-ph := phrase &
 [ SS /l #1,
   HD-DTR expression & [ SS /l #1 ] ].
+
+; hd-punct-phrase (hd-punct-ph)
+
+hd-punct-ph := hd-ph &
+[ HD-DTR #1,
+  DTRS < #1, punctuation > ].
 
 ; head-complement-phrase (hd-comp-ph)
 
@@ -492,7 +521,8 @@ ellip-vp-0 := ellip-vp &
   DTRS < expression > ].
 
 ellip-vp-1 := ellip-vp &
-[ HD-DTR.SS.LOC.CAT.COMPS < #1, ellip-ss >,
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 & [ LOC.CAT [ SPR < >, COMPS < > ] ], 
+                            ellip-ss >,
   DTRS < expression, [ SS #1 ] > ].
 
 ; complementizer-phrase (cp-ph)
@@ -500,20 +530,18 @@ cp-ph := hd-comp-ph &
 [ HD-DTR [ SS.LOC.CAT.HEAD comp ] ].
 
 cp-ph-1 := cp-ph &
-[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 & [ LOC.CAT [ SPR < >, COMPS < > ] ] >,
   DTRS < expression, [ SS #1 ] > ].
 
 cp-ph-2 := cp-ph &
-[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 & [ LOC.CAT [ SPR < >, COMPS < > ] ], 
+                            #2 & [ LOC.CAT [ SPR < >, COMPS < > ] ] >,
   DTRS < expression, [ SS #1 ], [ SS #2 ] > ].
 
 ;;; CCB - Note the cleverness here with this unifying with the
 ;;;constraint on clause that the SUBJ be a list of non-canonical synsems.
 ;;;An e-list is...  
 ; head-subject-phrase (hd-subj-ph)
-
-;;;JTB - 07/19/01 Will it cut down on frivolous parsing if we specify
-;;;for hd-subj-ph and hd-spr-ph that COMPS of HD-DTR must be zilch?
 
 hd-subj-ph := hd-ph &
 [ SS.LOC [ CAT [ SUBJ < > ] ],
@@ -703,7 +731,7 @@ hd-only-ph := hd-ph &
 ; non-headed-phrase (non-hd-ph)
 non-hd-ph := phrase.
 
-;;; The following is the "Filler Inclusion Constrant" which guarntees
+;;; The following is the "Filler Inclusion Constrant" which guarantees
 ;;;that the non head daughter must be WH-specified, and hence that the
 ;;;filler constituent must properly contain a wh-word.
 
@@ -721,22 +749,6 @@ wh-int-cl := hd-int-cl & hd-fill-ph &
                 PROP #2 ],
   HD-DTR.SS.LOC.CONT proposition & #2,
   DTRS < [ SS.WH <! #1 & param !> ], expression > ].
-
-;;; <<< >>> PUNCTUATED PHRASES
-
-punct-ph := hd-ph &
-[ SS.LOC.CONT.REPRISABLE false,
-  HD-DTR #1 & [ SS.LOC.CONT #2 ],
-  DTRS < #1 & [ SS [ LOC [ CAT [ HEAD verb & [ IC true ],
-                                 SPR < >,
-                                 SUBJ < >,
-                                 COMPS < > ],
-                           CONT message,
-                           P-STORE <! !>,
-                           Q-STORE <! !> ],
-                     SLASH <! !>,
-                     WH <! !> ] ], 
-         punctuation & [ SS.LOC.CONT #2 ] > ].
 
 ;;; <<< >>> VALUES FOR VARIOUS FEATURES.
 
@@ -874,7 +886,7 @@ e-list-of-signs := list-of-signs & e-list.
 list-of-expressions := list-of-signs.
 
 ne-list-of-expressions := list-of-expressions & ne-list &
-[ FIRST expression,
+[ FIRST expression & [ ROOT false ],
   REST list-of-expressions ].
 
 e-list-of-expressions := list-of-expressions & e-list.
@@ -887,8 +899,6 @@ ne-list-of-synsems := list-of-synsems & ne-list &
 
 e-list-of-synsems := list-of-synsems & e-list.
 
-
-
 list-of-canon-ss := list-of-synsems.
 
 ne-list-of-canon-ss := list-of-canon-ss & ne-list-of-synsems &
@@ -896,8 +906,6 @@ ne-list-of-canon-ss := list-of-canon-ss & ne-list-of-synsems &
   REST list-of-canon-ss ].
 
 e-list-of-canon-ss := list-of-canon-ss & e-list-of-synsems.
-
-
 
 
 list-of-noncanon-ss := list-of-synsems.

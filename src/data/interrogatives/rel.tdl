@@ -1,5 +1,9 @@
 ;;;This file contains relations
 
+resolution := feat-struct &
+[ FACT-ARG fact,
+  QUEST-ARG question ].
+
 ;;;Illocutionary relations
 
 illoc-rel := rel &
@@ -24,6 +28,7 @@ some-rel:=quant-rel.
 every-rel:=quant-rel.
 these-rel:=quant-rel.
 this-rel:=quant-rel.
+that-rel:=quant-rel.
 
 ;;;Generic relation, for generics
 genr-rel:=quant-rel.
@@ -148,7 +153,7 @@ pos-rel := pol-rel.
 
 ;;;Verbal relationships
 
-see-rel := observe-rel.
+see-rel := observe-rel & [ OBSERVED-OBJ index ].
 
 wonder-rel := rel &
 [ WONDERER index,
@@ -267,10 +272,6 @@ age-rel := v-rel &
 bark-rel := v-rel &
 [ BARKER index ].
 
-believe-rel := v-rel &
-[ BELIEVER index,
-  BELIEVED proposition ].
-
 die-rel := v-rel &
 [ DECEASED index ].
 
@@ -279,6 +280,10 @@ dine-rel := v-rel &
 
 disappear-rel := v-rel &
 [ DISAPPEARER index ].
+
+drink-rel := v-rel &
+[ DRINKER index,
+  DRUNK index ].
 
 drive-rel := v-rel & 
 [ DRIVER index ].
@@ -480,7 +485,9 @@ devour-rel := v-rel & [ DEVOURER index, DEVOURED index ].
 
 deny-rel := v-rel & [ DENIER index, DENIED index ].
 
-discover-rel := v-rel & [ DISCOVERER index, DISCOVERED index ].
+discover-rel := v-rel & [ DISCOVERER index ].
+
+discover1-rel := discover-rel & [ DISCOVERED-OBJ index ].
 
 display-rel := v-rel & [ DISPLAYER index, DISPLAYED index ].
 
@@ -536,7 +543,7 @@ love-rel := v-rel & [ LOVER index, LOVED index ].
 
 meet-rel := v-rel & [ MEETER index, MET index ].
 
-observe-rel := v-rel & [ OBSERVER index, OBSERVED index ].
+observe-rel := v-rel & [ OBSERVER index ].
 
 paint-rel := v-rel & [ PAINTER index, PAINTED index ].
 
@@ -610,25 +617,39 @@ put-rel := v-rel & [ PUTTER index, PUT index, PUT-LOC index ].
 
 wrap-rel := v-rel & [ WRAPPER index, WRAPPED index, WRAPPED-AROUND index ].
 
+tug-rel := v-rel & [ TUGGER index, TUGGED-ON index ].
+pat_v-rel := v-rel & [ PATTER index, PATTED index ].
+trick-rel := v-rel & [ TRICKER index, TRICKED index ].
+vote-rel := v-rel & [ VOTER index, VOTED-FOR index ].
+
+prop-ctv-rel := v-rel & [ PROP-ARG proposition ].
+outcome-ctv-rel := v-rel & [ OUTCM-ARG outcome ].
+fact-ctv-rel := v-rel & [ FACT-ARG fact ].
+
 ;;;These two are for subj-raising verbs
 
-continue-rel := v-rel & [ CONT-ACTION proposition ].
+continue-rel := prop-ctv-rel.
+appear-rel := prop-ctv-rel.
 
-appear-rel := v-rel & [ APPARENT-ACTION proposition ].
+;;;These are ctv (subsuming control)
 
-;;;These are control
+believe-rel := prop-ctv-rel & [ BELIEVER index ].
+think-rel := prop-ctv-rel & [ THINKER index ].
+hope-rel := prop-ctv-rel & [ HOPER index ].
+say-rel := prop-ctv-rel & [ SAYER index ].
+suspect-rel := prop-ctv-rel & [ SUSPECTER index ].
+see2-rel := observe-rel & prop-ctv-rel.
+learn-rel := prop-ctv-rel &  [ LEARNER index ].
+claim-rel := prop-ctv-rel & [ CLAIMER index ].
 
-appeal-rel := v-rel & [ APPEALER index, APPEALED-TO index, APPEALED-ACTION proposition ].
+insist-rel := outcome-ctv-rel & [ INSISTER index ].
+prefer-rel := outcome-ctv-rel & [ PREFERRER index ].
 
-try-rel := v-rel & [ TRIER index, ATTEMPTED-ACTION proposition ].
+discover2-rel := discover-rel & fact-ctv-rel.
 
-tug-rel := v-rel & [ TUGGER index, TUGGED-ON index ].
-
-pat_v-rel := v-rel & [ PATTER index, PATTED index ].
-
-trick-rel := v-rel & [ TRICKER index, TRICKED index ].
-
-vote-rel := v-rel & [ VOTER index, VOTED-FOR index ].
+;;;These are control only
+appeal-rel := prop-ctv-rel & [ APPEALER index, APPEALED-TO index ].
+try-rel := outcome-ctv-rel & [ TRIER index ].
 
 ;;;Common nouns
 cn-rel:=rel & 

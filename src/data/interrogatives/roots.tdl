@@ -13,7 +13,8 @@
 ;;; shockingly less overgeneration than I would have expected.
 
 root := phrase &
-[ SS [ LOC [ CAT [ HEAD verb & [ IC true ],
+[ ROOT true,
+  SS [ LOC [ CAT [ HEAD verb & [ IC true ],
                    SPR < >,
                    SUBJ < >,
                    COMPS < > ],

@@ -77,6 +77,8 @@ inflected-lexeme &
 ;;; so turned it off for Ivan's demo.  CCB - re-adding it for "I
 ;;; insist that Sandy leave".
 
+;;;JTB - 02/02/02 removing 2nd person restriction so we can get
+;;;subjunctive mood in embedded clauses
 
 ;;; CCB - shoud the subjuncitve be PRED true or false?
 subjunctive+imperative-verb_infl_rule := 
@@ -86,8 +88,7 @@ inflected-lexeme &
                           ORTH #orth,
                           SS.LOC [ CAT [ HEAD verb & [ FORM fin,
 		                                       PRED false ],
-                                         SUBJ < [ LOC.CAT.HEAD.CASE nom,
-                                                  LOC.CAT.HEAD.AGR 2per ] > ],
+                                         SUBJ < [ LOC.CAT.HEAD.CASE nom ] > ],
                                    CONT i-soa ] ] > ].
 
 past-verb_infl_rule := 
@@ -113,13 +114,16 @@ inflected-lexeme &
                           SS [ LOC.CAT.HEAD verb & [ FORM pfp,
                                                      PRED false ] ] ] > ].
 
-inf-verb_infl_rule :=
-inflected-lexeme &
-[ ORTH #orth,
-  DTRS < non-auxv-lxm & [ NEEDS-AFFIX false,
-                          ORTH #orth,
-                          SS [ LOC.CAT.HEAD verb & [ FORM inf,
-		                                     PRED false ] ] ] > ].
+;;;JTB 02/16/02 - removing all "inf" inflected/inflecting things like
+;;;this rule.  ONLY "to" and "for" may be [FORM inf].
+
+;inf-verb_infl_rule :=
+;inflected-lexeme &
+;[ ORTH #orth,
+;  DTRS < non-auxv-lxm & [ NEEDS-AFFIX false,
+;                          ORTH #orth,
+;                          SS [ LOC.CAT.HEAD verb & [ FORM inf,
+;		                                      PRED false ] ] ] > ].
 
 base-verb_infl_rule :=
 inflected-lexeme &
@@ -288,7 +292,7 @@ amalg-3-lrule := inflected-lexeme+amalg-3 &
 
 amalg-4-lrule := inflected-lexeme+amalg-4 &
 [ SS.LOC.CONT soa & [QUANTS [ LIST #quants1,
-                            LAST #quants_last ] ],
+                              LAST #quants_last ] ],
   SS.LOC.Q-STORE <! !>,
   ARG-ST < [ LOC.Q-STORE [ LIST #quants1,
                            LAST #quants2 ] ], [ LOC.Q-STORE [ LIST #quants2,

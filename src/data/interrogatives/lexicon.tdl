@@ -1,18 +1,22 @@
+;;; PUNCTUATION
+
 dot := punctuation & 
 [ ORTH <! "." !>,
-  SS.LOC.CONT proposition ].
+  SS.LOC.CONT.SOA.NUCL assert-rel ].
 
 q-mark := punctuation &
 [ ORTH <! "?" !>,
-  SS.LOC.CONT question ].
+  SS.LOC.CONT.SOA.NUCL ask-rel ].
 
 bang_1 := punctuation &
 [ ORTH <! "!" !>,
-  SS.LOC.CONT fact ].
+  SS.LOC.CONT.SOA.NUCL exclaim-rel ].
 
 bang_2 := punctuation &
 [ ORTH <! "!" !>,
-  SS.LOC.CONT outcome ].
+  SS.LOC.CONT.SOA.NUCL order-rel ].
+
+;;; ADVERBS
 
 not_1 := adv-lxm &
 [ ORTH <! "not" !>,
@@ -20,17 +24,7 @@ not_1 := adv-lxm &
                             LOC.CONT #cont & pos-soa ] >,
            CONT neg-soa & [ NUCL.SOA-ARG #cont ] ] ].
 
-;not_1 := adv-lxm &
-;[ ORTH <! "not" !>,
-;  SS.LOC [ CAT.HEAD.SPEC < [ LOC.CAT.HEAD verb & [ FORM nonfin ],
-;                             LOC.CONT #cont ] >,
-;           CONT neg-soa & [ NUCL.SOA-ARG #cont ] ] ].
-
-;not_1 := adv-lxm &
-;[ ORTH <! "not" !>,
-;  SS.LOC [ CAT.HEAD.SPEC < [ LOC.CAT.HEAD verb & [ FORM nonfin ],
-;                             LOC.CONT #cont ] >,
-;           CONT neg-soa & [ NUCL.SOA-ARG #cont ] ] ].
+;;;POSSESSIVE
 
 ;;;JTB - 07/18/01 Trying to eliminate all reference to phrase and
 ;;;phrase-cat argument structure stuff so we don't need to pump to
@@ -63,126 +57,154 @@ the-possessive := det-lxm &
                   WH #wh ] >,
   DTRS < inflected-lexeme > ].
 
-and_1 := word &
-[ ORTH <! "and" !>,
-  SS.LOC.CAT [ HEAD conj,
-               SPR < >,
-               SUBJ < >,
-               COMPS < > ] ].
+;;; CONJUNCTIONS
 
+;and_1 := word &
+;[ ORTH <! "and" !>,
+;  SS.LOC.CAT [ HEAD conj,
+;               SPR < >,
+;               SUBJ < >,
+;               COMPS < > ] ].
 
-;;; The definition for whether_0 and if_0 are taken from the
-;;;Wh-Complemntizers section of the Basic Interrogatives Constructions
-;;;chapter of the Ginzburg and Sag monograph.
+;;; COMPLEMENTIZERS
 
-;;; CCB - The Ginzburg and Sag definition of "whether" also indicates
-;;;that its SUBJ list be a list-of-pro-ss.  I'm not sure why this is.
+;;;Whether only gets finite clauses now because of the SUBJ < >
+;;;constraint.  If I remove it it erroneously parses "I wondered whether
+;;;leave" with a pro-ss gap.  Is this a problem for the book?
 
-whether_0 := comp-lxm &
+whether_0 := inflected-lexeme+amalg &
 [ ORTH <! "whether" !>,
-  SS.LOC [ CAT.HEAD comp & [ IC false,
-                             FORM #2 ],
+  SS.LOC [ CAT [ COMPS < #comp >,
+                 HEAD comp & [ IC false,
+                               FORM #2 ] ],
            CONT question & [ PARAMS <! !>,
-                             PROP #1 ] ],
-  ARG-ST < [ LOC [ CAT.HEAD [ INV false,
-                              FORM #2 ],
-                   CONT #1 ] ] > ].
+                             PROP #1 ],
+           P-STORE #pstore,
+           Q-STORE #qstore ], 
+  SS.SLASH #slash,
+  ARG-ST < #comp & [ LOC [ CAT [ HEAD verb & [ INV false,
+                                               FORM #2 ],
+                                 SUBJ list-of-pro-ss ],
+                           CONT #1,
+                           P-STORE #pstore,
+                           Q-STORE #qstore ],
+                    SLASH #slash ] >,
+  DTRS < comp-lxm > ].
 
-
-if_0 := comp-lxm &
+if_0 := inflected-lexeme+amalg &
 [ ORTH <! "if" !>,
-  SS.LOC [ CAT [ HEAD comp & [ IC false,
+  SS.LOC [ CAT [ COMPS < #comp >,
+                 HEAD comp & [ IC false,
                                FORM #2 & fin ] ],
            CONT question & [ PARAMS <! !>,
-                             PROP #1 ] ], 
-  ARG-ST < [ LOC [ CAT [ HEAD verb & [ INV false,
-                                       FORM #2 ],
-                         SUBJ < > ],
-                   CONT #1 ] ] > ].
+                             PROP #1 ],
+           P-STORE #pstore,
+           Q-STORE #qstore ], 
+  SS.SLASH #slash,
+  ARG-ST < #comp & [ LOC [ CAT [ HEAD verb & [ INV false,
+                                               FORM #2 ],
+                                 SUBJ < > ],
+                           CONT #1,
+                           P-STORE #pstore,
+                           Q-STORE #qstore ],
+                    SLASH #slash ] >,
+  DTRS < comp-lxm > ].
 
-
-;;;JTB 08/19/0 - Removed INF from comps to ditch feature.
+;;; JTB 08/19/0 - Removed INF from comps to ditch feature.
 
 ;;; CCB - 5/17/00 - Changed the content of that_0 to be austinian
 ;;;rather than proposition, so that it would work with outcomes - "I
 ;;;insist that Sandy leave".
 
-that_0 := comp-lxm &
+;;; JTB 02/02/02 - Modified this to put it above comp-lxm so it does
+;;; it's own amalgamation and stuff.  This is because currently
+;;; amalgamation rules only deal with scope-objs and soas.
+
+that_0 := inflected-lexeme+amalg &
 [ ORTH <! "that" !>,
-  SS.LOC [ CAT [ HEAD comp & [ IC false,
-                               FORM #2 ],
-                 SUBJ < > ],
-           CONT #1 & austinian ],
-  SS.WH <! !>,
-  ARG-ST <  [ LOC [ CAT [ HEAD verb & [ INV false,
-                                        FORM #2 ],
-                          SUBJ < >,
-                          COMPS < > ],
-                    CONT #1 ] ] > ].
+  SS.LOC [ CAT [ HEAD [ IC false,
+                        FORM #2 ],
+                 SUBJ < >,
+                 COMPS < #comp > ],
+           CONT #1 & austinian,
+           P-STORE #pstore,
+           Q-STORE #qstore ],
+  SS.SLASH #slash,
+  ARG-ST <  #comp & [ LOC [ CAT [ HEAD verb & [ INV false,
+                                                FORM #2 & fin ],
+                                  SUBJ < >,
+                                  COMPS < > ],
+                            CONT #1,
+                            P-STORE #pstore,
+                            Q-STORE #qstore ],
+                      SLASH #slash ] >,
+  DTRS < comp-lxm > ].
+
+;that_0 := comp-lxm &
+;[ ORTH <! "that" !>,
+;  SS.LOC [ CAT [ HEAD comp & [ IC false,
+;                               FORM #2 ],
+;                 SUBJ < > ],
+;           CONT #1 & austinian ],
+;  SS.WH <! !>,
+;  ARG-ST <  [ LOC [ CAT [ HEAD verb & [ INV false,
+;                                        FORM #2 ],
+;                          SUBJ < >,
+;                          COMPS < > ],
+;                    CONT #1 ] ] > ].
 
 ;;;JTB - 6/27/01 - Originally the second value on comps was of type
 ;;;"VP" which doesn't exist in this grammar, so I got rid of it and
 ;;;said the HEAD must be verbal.
 
-for_0 := comp-lxm & 
+;;;JTB - 02/02/02 - Did the same as above, put this at the already
+;;;amalgamated level so that I can avoid using amalgamation rules.
+;;;Also changed it from base to inf.
+
+for_0 := inflected-lexeme+amalg & 
 [ ORTH <! "for" !>,
-  SS.LOC [ CAT [ HEAD comp & [ IC false,
-                               FORM #4 & base ],
-                 SUBJ < > ],
-            CONT outcome & [ SOA #1 ] ],
-  ARG-ST < [ LOC #2 ],  [ LOC [ CAT [ HEAD verbal & [ FORM #4 ],
-                                      SUBJ < [ LOC #2 ] > ],
-                                CONT #1 ] ] > ].
+  SS.LOC [ CAT [ HEAD [ IC false,
+                        FORM #form & inf ],
+                 SUBJ < >,
+                 COMPS < #comp1, #comp2 > ],
+           CONT outcome & [ SOA #1 ],
+           Q-STORE [ LIST #qlist1,
+                     LAST #qlist3 ],
+           P-STORE [ LIST #plist1,
+                     LAST #plist3 ] ],
+  SS.SLASH #slash,
+  ARG-ST < #comp1 & [ LOC [ CAT #cat,
+                   CONT #cont,
+                   Q-STORE [ LIST #qlist1,
+                             LAST #qlist2 ],
+                   P-STORE [ LIST #plist1,
+                             LAST #plist2 ] ],
+             SLASH <! !> ],
+           #comp2 & [ LOC [ CAT [ HEAD verbal & [ FORM #form ],
+                         SUBJ < [ LOC [ CAT #cat,
+                                        CONT #cont,
+                                        Q-STORE <! !>,
+                                        P-STORE <! !> ],
+                                  SLASH <! !> ] > ],
+                   CONT #1,
+                   Q-STORE [ LIST #qlist2,
+                             LAST #qlist3 ],
+                   P-STORE [ LIST #plist2,
+                             LAST #plist3 ] ],
+             SLASH #slash ] >,
+   DTRS < comp-lxm > ].
 
-to_0 := vacuous-wide-scope-aux-lxm &
-[ ORTH <! "to" !>,
-  SS.LOC [ CAT [ HEAD verb & [ FORM inf ] ] ],
-  ARG-ST < synsem, [ LOC [ CAT [ HEAD verb & [ FORM base ] ] ] ] > ].
+;for_0 := comp-lxm & 
+;[ ORTH <! "for" !>,
+;  SS.LOC [ CAT [ HEAD comp & [ IC false,
+;                               FORM #4 & base ],
+;                 SUBJ < > ],
+;            CONT outcome & [ SOA #1 ] ],
+;  ARG-ST < [ LOC #2 ],  [ LOC [ CAT [ HEAD verbal & [ FORM #4 ],
+;                                      SUBJ < [ LOC #2 ] > ],
+;                                CONT #1 ] ] > ].
 
-believe_0 := v-lxm &
-[ ORTH <! "believe" !>,
-  SS.LOC.CONT.NUCL believe-rel & [ BELIEVER #index, BELIEVED #1 ],
-  ARG-ST < [ LOC.CONT.INDEX #index ], 
-           [ LOC.CAT [ HEAD.FORM fin,
-                       SUBJ < >,
-                       COMPS < > ],
-             LOC.CONT #1 ] > ].
-
-believe_1 := v-lxm &
-[ ORTH <! "believe" !>,
-  SS.LOC.CONT.NUCL believe-rel & [ BELIEVER #index, BELIEVED #1 ],
-  ARG-ST < [ LOC.CONT.INDEX #index ], 
-           [ LOC.CAT #cat,
-             LOC.CONT #cont ], 
-           [ LOC [ CAT [ HEAD.FORM inf,
-                         SUBJ < [ LOC.CAT #cat,
-                                  LOC.CONT #cont,
-                                  LOC.Q-STORE <! !>,
-                                  LOC.P-STORE <! !>,
-                                  SLASH <! !>,
-                                  WH <! !> ] >,
-                         COMPS < > ],
-                   CONT #1 ] ] > ].
-
-wonder_0 := v-lxm &
-[ ORTH <! "wonder" !>,
-  SS.LOC.CONT.NUCL [ WONDERER #1,
-                     WONDERED #2 ],
-  ARG-ST < [ LOC.CONT.INDEX #1 ], [ LOC [ CAT [ HEAD.IC false,
-                                                SUBJ < >,
-                                                COMPS < > ],
-                                          CONT #2 & question ] ] > ].
-
-think_1 := ctv &
-[ ORTH <! "think" !>,
-  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.IC false ] > ].
-
-
-insist_0 := v-lxm &
-[ ORTH <! "insist" !>,
-  ARG-ST < synsem, [ LOC [ CAT [ SUBJ < >,
-                                 COMPS < > ],
-                           CONT outcome ] ] > ].
+;;; ADJECTIVES
 
 ;;; "Easy" - an example of a lexical entry which has a compulsory
 ;;; extracting element.  Because my slash amalgimation constraint doesn't
@@ -206,7 +228,13 @@ insist_0 := v-lxm &
 ;;;is completely and utterly trashed and you're just standing there in
 ;;;disbelief thinking to yourself, "Jesus, what the hell happened here
 ;;;last night?"  That's pretty much how I feel looking at this entry
-;;;for "easy," especially when compared to the one below it.
+;;;for "easy".
+
+;;;JTB 02/17/01 - The [CASE acc] on non-subject NPs means that the
+;;;subject of "easy" and the gapped item can never be the same with
+;;;their LOC values coidentified.  I am changing this to so they are
+;;;coindexed only.  Also lost the "verb" constraint on its comp and it
+;;;just says inf.
 
 easy_0 := inflected-lexeme+amalg &
 [ ORTH <! "easy" !>,
@@ -216,9 +244,10 @@ easy_0 := inflected-lexeme+amalg &
                                 LOC.P-STORE [ LIST #plist1,
                                               LAST #plist2 ],
                          WH #wh ] >,
-                 SUBJ < #subj & [ LOC #1 & [ CAT.SPR < > ],
+                 SUBJ < #subj & [ LOC [ CAT.SPR < >, 
+                                        CONT.INDEX #1 ],
                                   WH <! !> ] >,
-                 COMPS < #2 & [ LOC.CAT [ HEAD verb & [ FORM inf ] ],
+                 COMPS < #2 & [ LOC.CAT.HEAD.FORM inf,
                                 LOC.CONT #cont ] > ],
        LOC.CONT [ NUCL.EASY-TO.SOA #cont,
                   QUANTS [ LIST #qlist1,
@@ -231,7 +260,7 @@ easy_0 := inflected-lexeme+amalg &
   ARG-ST < #subj & [ SLASH [ LIST #first,
                              LAST #rest ] ],
            #spr, 
-           #2 & [ SLASH [ LIST *cons* & < #1 . #rest >,
+           #2 & [ SLASH [ LIST *cons* & < [ CONT.INDEX #1 ] . #rest >,
                           LAST *null* & #last ],
                   LOC.Q-STORE [ LIST #qlist2,
                                 LAST #qlist_last ],
@@ -274,43 +303,6 @@ easy_0 := inflected-lexeme+amalg &
 ;;               LAST #last ] ],
 ;; DTRS < inflected-lexeme > ].
 
-please_1 := stv &
-[ ORTH <! "please" !>,
-  SS.LOC.CONT [ NUCL please-rel & [ PLEASER #ind1, 
-                                    PLEASED #ind2 ] ],
-  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
-           [ LOC.CONT.INDEX #ind2 ] > ].
-
-play_1 := ptv &
-[ ORTH <! "play" !>,
-  SS.LOC.CONT [ NUCL play-rel & [ PLAYER #ind1, 
-                                  PLAYED #ind2, 
-                                  PLAYED-ON #ind3 ] ],
-  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM on ] >,
-  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
-           [ LOC.CONT.INDEX #ind2 ], 
-           [ LOC.CONT.INDEX #ind3 ] > ].
-
-violin_1 := cn-lxm &
-[ ORTH <! "violin" !>,
-  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_violin ] > ].
-
-sonata_1 := cn-lxm &
-[ ORTH <! "sonata" !>,
-  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_sonata ] > ].
-
-picture_0 := tr-cn-lxm &
-[ ORTH <! "picture" !>,
-  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_picture & [ PICTURE-OF #index ] ] >,
-  SS.LOC.CAT.COMPS < [ LOC.CAT [ HEAD prep & [ PRED false ],
-                                 COMPS < > ],
-                       LOC.CONT.INDEX #index ] >  ].
-see_0 := stv &
-[ ORTH <! "see" !>,
-  SS.LOC.CONT [ NUCL see-rel & [ OBSERVER #1,
-                                 OBSERVED #2 ] ],
-  ARG-ST < [ LOC.CONT.INDEX #1 ], [ LOC.CONT.INDEX #2 ] > ].
-
 a_1 := non-wh-det-lxm &
 [ ORTH <! "a" !>,
   SS.LOC.CAT.HEAD.AGR 3sg,
@@ -341,14 +333,24 @@ a_2 := det-lxm &
                     WH #wh ] > ].
 
 ;;;JTB - changed wh-none to <! !> which should be the same thing, yes?
+that_2 := non-wh-det-lxm &
+[ ORTH <! "that" !>,
+  SS.LOC.CAT.HEAD.AGR 3sg,
+  SS.LOC.CONT that-rel ].
+
 these_1 := non-wh-det-lxm &
 [ ORTH <! "these" !>,
   SS.LOC.CAT.HEAD.AGR 3pl,
-  SS.LOC.CONT this-rel ].
+  SS.LOC.CONT that-rel ].
 
 this_1 := non-wh-det-lxm &
 [ ORTH <! "this" !>,
   SS.LOC.CAT.HEAD.AGR 3sg,
+  SS.LOC.CONT this-rel ].
+
+those_1 := non-wh-det-lxm &
+[ ORTH <! "those" !>,
+  SS.LOC.CAT.HEAD.AGR 3pl,
   SS.LOC.CONT this-rel ].
 
 every_1 := non-wh-det-lxm &
@@ -511,6 +513,25 @@ themselves_0 := inflected-lexeme &
   SS.LOC.CAT.HEAD [ AGR 3pl,
                     CASE acc,
                     ANA true ],
+  DTRS < pron-lxm > ].
+
+;;;JTB 02/16/02 - This is "everyone" and it sucks.
+
+everyone_0 := inflected-lexeme+amalg &
+[ ORTH <! "everyone" !>,
+  SS.LOC.Q-STORE <! every-rel & [ INDEX #1, 
+                                  RESTR < [ PROP.SOA.NUCL person-rel &
+                                                [ ARG #1 ] ] > ] !>,
+  SS.LOC.P-STORE <! !>,
+  SS.LOC.CONT.INDEX #1,
+  SS.LOC.CAT [ HEAD [ AGR 3sg,
+                      ANA false ],
+               SUBJ < >,
+               COMPS < >,
+               SPR < > ],
+  SS.SLASH <! !>,
+  SS.WH <! !>,
+  ARG-ST < >,
   DTRS < pron-lxm > ].
 
 ;;;JTB 08/18/01 - The following are the lexical entries from Chris'
@@ -770,6 +791,15 @@ unfair_1 := adj-lxm &
 undocumented_1 := adj-lxm &
 [ ORTH <! "undocumented" !>,
   SS.LOC.CONT.NUCL undocumented-rel ].
+
+;;; VERBS
+
+see_0 := stv &
+[ ORTH <! "see" !>,
+  SS.LOC.CONT [ NUCL see-rel & [ OBSERVER #1,
+                                 OBSERVED-OBJ #2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #1 ], [ LOC.CONT.INDEX #2 ] > ].
+
 
 age_1 := siv &
 [ ORTH <! "age" !>,
@@ -1033,35 +1063,110 @@ vote_2 := piv &
   SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.FORM for ] >, 
   ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
 
+;;; SUBJECT RAISING AND CONTROL VERBS, and things that take CPs
+
+continue_1 := srv &
+[ ORTH <! "continue" !>,
+  SS.LOC.CONT [ NUCL continue-rel & [ CONT-ACTION.SOA #soa ] ],
+  ARG-ST < synsem, [ LOC.CONT #soa ] > ].
+
+appear_1 := srv &
+[ ORTH <! "appear" !>,
+  SS.LOC.CONT [ NUCL appear-rel & [ APPARENT-ACTION.SOA #soa ] ],
+  ARG-ST < synsem, [ LOC.CONT #soa ] > ].
+
+;;; JTB 02/16/01 - Removing all scv verbs and instead making them ctv,
+;;;which appropriate lexical constraints on complement type.
+
+;appeal_1 := scv &
+;[ ORTH <! "appeal" !>,
+;  SS.LOC.CONT [ NUCL appeal-rel & [ APPEALER #index1, 
+;                                    APPEALED-TO #index2, 
+;                                    APPEALED-ACTION.SOA #soa ] ],
+;  ARG-ST < [ LOC.CONT.INDEX #index1], 
+;           [ LOC.CONT.INDEX #index2 ], 
+;           [ LOC.CONT #soa ] > ].
+
+believe_1 := ctv &
+[ ORTH <! "believe" !>,
+  SS.LOC.CONT [ NUCL believe-rel & [ BELIEVER #index, PROP-ARG #prop ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index ], [ LOC.CONT #prop,
+                                        LOC.CAT.HEAD.FORM fin ] > ].
+
+try_1 := ctv &
+[ ORTH <! "try" !>,
+  SS.LOC.CONT [ NUCL try-rel & [ TRIER #index, OUTCM-ARG #out ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #out,
+                                       LOC.CAT.HEAD.FORM inf,
+                                       LOC.CAT.SUBJ < [ LOC.CONT.INDEX #index ] > ] > ].
+
+think_1 := ctv &
+[ ORTH <! "think" !>,
+  SS.LOC.CONT [ NUCL think-rel & [ THINKER #index, PROP-ARG #prop ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #prop,
+                                       LOC.CAT.HEAD.FORM fin ] > ].
+
+insist_0 := ctv &
+[ ORTH <! "insist" !>,
+  SS.LOC.CONT [ NUCL insist-rel & [ INSISTER #index, OUTCM-ARG #outcome ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #outcome,
+                                       LOC.CAT.HEAD.FORM fin ] > ].
+
+prefer_0 := ctv &
+[ ORTH <! "prefer" !>,
+  SS.LOC.CONT [ NUCL prefer-rel & [ PREFERRER #index, OUTCM-ARG #outcome ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #outcome ] > ].
+
+claim_2 := ctv &
+[ ORTH <! "claim" !>,
+  SS.LOC.CONT [ NUCL claim-rel & [ CLAIMER #index, PROP-ARG #prop ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #prop ] > ].
+
 hope_1 := ctv &
 [ ORTH <! "hope" !>,
-  ARG-ST < synsem, synsem > ].
+  SS.LOC.CONT [ NUCL hope-rel & [ HOPER #index, PROP-ARG #aust ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #aust ] > ].
 
 say_1 := ctv &
 [ ORTH <! "say" !>,
-  ARG-ST < synsem, synsem > ].
+  SS.LOC.CONT [ NUCL say-rel & [ SAYER #index, PROP-ARG #aust ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #aust,
+                                       LOC.CAT.HEAD.FORM fin ] > ].
 
 suspect_1 := ctv &
 [ ORTH <! "suspect" !>,
-  ARG-ST < synsem, synsem > ].
+  SS.LOC.CONT [ NUCL suspect-rel & [ SUSPECTER #index, PROP-ARG #aust ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #aust,
+                                       LOC.CAT.HEAD.FORM fin ] > ].
+
+wonder_0 := ctv &
+[ ORTH <! "wonder" !>,
+  SS.LOC.CONT.NUCL [ WONDERER #1,
+                     WONDERED #2 ],
+  ARG-ST < [ LOC.CONT.INDEX #1 ], [ LOC [ CAT [ HEAD.IC false,
+                                                SUBJ < >,
+                                                COMPS < > ],
+                                          CONT #2 & question ] ] > ].
 
 discover_1 := ctv &
 [ ORTH <! "discover" !>,
-  ARG-ST < synsem, synsem > ].
-
-#|
-believe_2 := ctv &
-[ ORTH <! "believe" !>,
-  ARG-ST < synsem, synsem > ].
-|#
+  SS.LOC.CONT [ NUCL discover-rel & [ DISCOVERER #index, FACT-ARG #aust ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #aust ] > ].
 
 learn_1 := ctv &
 [ ORTH <! "learn" !>,
-  ARG-ST < synsem, synsem > ].
+  SS.LOC.CONT [ NUCL learn-rel & [ LEARNER #index, PROP-ARG #aust ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #aust ] > ] .
 
-;see_1 := ctv &
-;[ ORTH <! "see" !>,
-;  ARG-ST < synsem, synsem > ].
+see_1 := ctv &
+[ ORTH <! "see" !>,
+  SS.LOC.CONT [ NUCL see2-rel & [ OBSERVER #index, PROP-ARG #aust ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #aust ] > ] .
+
+observe_2 := ctv &
+[ ORTH <! "observe" !>,
+  SS.LOC.CONT [ NUCL see2-rel & [ OBSERVER #index, PROP-ARG #aust ] ],
+  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #aust ] > ] .
 
 admire_1 := stv &
 [ ORTH <! "admire" !>,
@@ -1112,7 +1217,6 @@ cause_1 := stv &
 [ ORTH <! "cause" !>,
   SS.LOC.CONT [ NUCL cause-rel & [ CAUSER #ind1, CAUSED #ind2 ] ],
   ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
-
 
 cark_1 := stv &
 [ ORTH <! "cark" !>,
@@ -1166,7 +1270,7 @@ deny_1 := stv &
 
 discover_2 := stv &
 [ ORTH <! "discover" !>,
-  SS.LOC.CONT [ NUCL discover-rel & [ DISCOVERER #ind1, DISCOVERED #ind2 ] ],
+  SS.LOC.CONT [ NUCL discover-rel & [ DISCOVERER #ind1, DISCOVERED-OBJ #ind2 ] ],
   ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
 
 display_1 := stv &
@@ -1183,6 +1287,11 @@ dread_1 := stv &
 [ ORTH <! "dread" !>,
   SS.LOC.CONT [ NUCL dread-rel & [ DREADER #ind1, DREADED #ind2 ] ],
   ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
+
+drink_1 := stv &
+[ ORTH <! "drink" !>,
+  SS.LOC.CONT [ NUCL drink-rel & [ DRINKER #ind1, DRUNK #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].  
 
 drive_2 := stv &
 [ ORTH <! "drive" !>,
@@ -1336,7 +1445,7 @@ meet_1 := stv &
 
 observe_1 := stv &
 [ ORTH <! "observe" !>,
-  SS.LOC.CONT [ NUCL observe-rel & [ OBSERVER #ind1, OBSERVED #ind2 ] ],
+  SS.LOC.CONT [ NUCL see-rel & [ OBSERVER #ind1, OBSERVED-OBJ #ind2 ] ],
   ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
 
 pat_1 := stv &
@@ -1475,6 +1584,13 @@ win_2 := stv &
   SS.LOC.CONT [ NUCL win-rel & [ WINNER #ind1, WON #ind2 ] ],
   ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ] > ].
 
+please_1 := stv &
+[ ORTH <! "please" !>,
+  SS.LOC.CONT [ NUCL please-rel & [ PLEASER #ind1, 
+                                    PLEASED #ind2 ] ],
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ] > ].
+
 bring_1 := dtv &
 [ ORTH <! "bring" !>,
   SS.LOC.CONT [ NUCL bring-rel & [ BRINGER #ind1, 
@@ -1550,13 +1666,6 @@ hand_2 := ptv &
            [ LOC.CONT.INDEX #ind2 ], 
            [ LOC.CONT.INDEX #ind3 ] > ].
 
-#|
-determine_2 := dtv &
-[ ORTH <! "determine" !>,
-  SS.LOC.CONT [ NUCL determine-rel & [ #ind1, #ind2, #ind3 ] ],
-  ARG-ST < [ LOC.CONT.INDEX #ind1 ], [ LOC.CONT.INDEX #ind2 ], [ LOC.CONT.INDEX #ind3 ] > ].
-|#
-
 donate_2 := ptv &
 [ ORTH <! "donate" !>,
   SS.LOC.CONT [ NUCL donate-rel & [ DONATER #ind1, 
@@ -1573,6 +1682,16 @@ move_1 := ptv &
                                   MOVED #ind2, 
                                   MOVED-TO #ind3 ] ],
   SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM to ] >,
+  ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
+           [ LOC.CONT.INDEX #ind2 ], 
+           [ LOC.CONT.INDEX #ind3 ] > ].
+
+play_1 := ptv &
+[ ORTH <! "play" !>,
+  SS.LOC.CONT [ NUCL play-rel & [ PLAYER #ind1, 
+                                  PLAYED #ind2, 
+                                  PLAYED-ON #ind3 ] ],
+  SS.LOC.CAT.COMPS < synsem, [ LOC.CAT.HEAD.FORM on ] >,
   ARG-ST < [ LOC.CONT.INDEX #ind1 ], 
            [ LOC.CONT.INDEX #ind2 ], 
            [ LOC.CONT.INDEX #ind3 ] > ].
@@ -1637,30 +1756,6 @@ give_2 := ptv &
            [ LOC.CONT.INDEX #ind2 ], 
            [ LOC.CONT.INDEX #ind3 ] > ].
 
-continue_1 := srv &
-[ ORTH <! "continue" !>,
-  SS.LOC.CONT [ NUCL continue-rel & [ CONT-ACTION.SOA #soa ] ],
-  ARG-ST < synsem, [ LOC.CONT #soa ] > ].
-
-appear_1 := srv &
-[ ORTH <! "appear" !>,
-  SS.LOC.CONT [ NUCL appear-rel & [ APPARENT-ACTION.SOA #soa ] ],
-  ARG-ST < synsem, [ LOC.CONT #soa ] > ].
-
-;appeal_1 := scv &
-;[ ORTH <! "appeal" !>,
-;  SS.LOC.CONT [ NUCL appeal-rel & [ APPEALER #index1, 
-;                                    APPEALED-TO #index2, 
-;                                    APPEALED-ACTION.SOA #soa ] ],
-;  ARG-ST < [ LOC.CONT.INDEX #index1], 
-;           [ LOC.CONT.INDEX #index2 ], 
-;           [ LOC.CONT #soa ] > ].
-
-try_1 := scv &
-[ ORTH <! "try" !>,
-  SS.LOC.CONT [ NUCL try-rel & [ TRIER #index, ATTEMPTED-ACTION.SOA #soa ] ],
-  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT #soa ] > ].
-
 ;;;expect_1 := orv &
 ;;;[ ORTH <! "expect" !>,
 ;;;  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT.SOA #soa ] > ].
@@ -1668,6 +1763,23 @@ try_1 := scv &
 ;;;persuade_1 := ocv &
 ;;;[ ORTH <! "persuade" !>,
 ;;;  ARG-ST < [ LOC.CONT.INDEX #index], [ LOC.CONT.SOA #soa ] > ].
+
+;;; NOUNS
+
+violin_1 := cn-lxm &
+[ ORTH <! "violin" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_violin ] > ].
+
+sonata_1 := cn-lxm &
+[ ORTH <! "sonata" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_sonata ] > ].
+
+picture_0 := tr-cn-lxm &
+[ ORTH <! "picture" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_picture & [ PICTURE-OF #index ] ] >,
+  SS.LOC.CAT.COMPS < [ LOC.CAT [ HEAD prep & [ PRED false ],
+                                 COMPS < > ],
+                       LOC.CONT.INDEX #index ] >  ].
 
 abbie_1 := cn-lxm &
 [ ORTH <! "abbie" !>,

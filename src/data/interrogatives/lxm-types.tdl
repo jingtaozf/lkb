@@ -72,7 +72,7 @@ n-lxm := lexeme &
 pron-lxm := n-lxm & no-args &
  [ SS [ LOC [ CAT [ HEAD noun & [ FORM /l normal, 
                                   ANA /l false ] ],
-              Q-STORE <! !>,
+              Q-STORE /l <! !>,
               P-STORE <! !> ],
         WH <! !> ] ].
 
@@ -173,14 +173,11 @@ pdp-lxm := p-lxm &
                                             P-STORE <! !> ] ] > ], 
               CONT soa & [ NUCL.ARG #index ] ] ] ].
 
-;;;JTB 08/18/01 - Comp?  Complementizer?
-
 comp-lxm := const-lxm &
  [ SS [ LOC.CAT [ HEAD comp,
                   SUBJ < >, 
                   SPR < > ],
         WH <! !> ] ].
-
 
 ;;;JTB 08/18/01 - Adjectives will be lexically specified to be
 ;;;predicative and the non-predicative ones will be derived via
@@ -237,18 +234,6 @@ intr-xcomp := intr &
 [ ARG-ST < [ LOC.CAT.HEAD.PRED /l false ], 
            [ LOC.CAT.HEAD.PRED /l false ] > ].
 
-;;;JTB 07/29/01 - Added <! !> constraints to prevent extra
-;;;amalgamation.
-
-; subject-control (s-con)
-s-con := intr-xcomp &
-[ ARG-ST < [ LOC [ CONT [ INDEX #1 ] ] ], 
-           [ LOC.CAT [ SUBJ < [ LOC [ CONT [ INDEX #1 ],
-                                      P-STORE <! !>,
-                                      Q-STORE <! !> ],
-                                SLASH <! !> ] >,
-                       COMPS < > ] ] > ].
-
 ; transitive (tran)
 tran := lexeme &
 [ ARG-ST < [ LOC.CAT.HEAD.PRED /l false ], 
@@ -262,13 +247,43 @@ str-tr := tran &
 tran-xcomp := tran &
 [ ARG-ST < synsem, synsem, synsem & [ LOC.CAT.HEAD.PRED /l false ]> ].
 
+;;;JTB 07/29/01 - Added <! !> constraints to prevent extra
+;;;amalgamation.  02/02/02 - All of this subsumed under pro-ss now.
+
+; subject-control (s-con)
+s-con := intr-xcomp &
+[ ARG-ST < [ LOC [ CONT [ INDEX #1 ] ] ], 
+           [ LOC.CAT [ SUBJ < pro-ss & [ LOC.CONT.INDEX #1 ] >,
+                       COMPS < > ] ] > ].
+
+;;;JTB 02/16/01 - Changed supertype to intr-xcomp instead of lexeme.
+;;;Why was it lexeme?
+
+; subject-raising (s-rais)
+s-rais := intr-xcomp &
+[ SS.LOC.CAT.SUBJ < #2 >,
+  ARG-ST < #2 & [ LOC [ CAT #1 & [ HEAD.PRED /l false ],
+                        CONT #3 ] ], 
+           [ LOC.CAT [ SUBJ < [ LOC [ CAT #1,
+                                      CONT #3,
+                                      Q-STORE <! !>,
+                                      P-STORE <! !> ],
+                                SLASH <! !> ] >,
+                       COMPS < >,
+                       HEAD.PRED /l false ] ] > ].
+
 ;;; <<< >>> Maximal Subtypes of PART-OF-SPEECH and ARG-SELECTION
 
 ; strict-intransitive-verb (siv)
 siv := non-auxv-lxm & str-intr.
 
+;;; JTB 02/16/02 - Removing scv verbs from the heirarchy.  We're
+;;;collapsing these into ctv verbs and leaving actual control
+;;;(co-indexing) to other machinary.  I'll leave s-con in for control
+;;;adjectives but that may go, too.
+
 ; subject-control-verb (scv)
-scv := non-auxv-lxm & s-con.
+;scv := non-auxv-lxm & s-con.
 
 ; subject-raising-verb (srv)
 srv := non-auxv-lxm & s-rais.
@@ -285,7 +300,7 @@ prep-arg := lexeme &
 
 ; NP-transitive-argument (NP-trans-arg) - Added by CCB 9/9/99
 NP-trans-arg := tran &
-[ ARG-ST < synsem, [ LOC.CAT [ HEAD noun,
+[ ARG-ST < synsem, [ LOC.CAT [ HEAD noun & [ CASE acc],
                                SPR < >,
                                COMPS < > ] ] > ].
 
@@ -297,16 +312,16 @@ ditrans-arg := lexeme &
 
 ; dative-argument (dt-arg) - Added by CCB 9/9/99
 dt-arg := ditrans-arg &
-[ ARG-ST < synsem, [ LOC.CAT [ HEAD noun,
+[ ARG-ST < synsem, [ LOC.CAT [ HEAD noun & [ CASE acc],
                                SPR < >,
                                COMPS < > ] ], 
-                   [ LOC.CAT [ HEAD noun,
+                   [ LOC.CAT [ HEAD noun & [ CASE acc],
                                SPR < >,
                                COMPS < > ] ] > ].
 
 ; PP-ditransitive (ptv-arg) - Added by CCB 9/9/99
 ptv-arg :=  ditrans-arg &
-[ ARG-ST < synsem, [ LOC.CAT [ HEAD noun,
+[ ARG-ST < synsem, [ LOC.CAT [ HEAD noun & [ CASE acc],
                                SPR < > ] ],
                    [ LOC.CAT [ HEAD prep & [ PRED false,
                                              FORM mkp-pform ],
@@ -314,31 +329,22 @@ ptv-arg :=  ditrans-arg &
                                SUBJ < >,
                                COMPS < > ] ] > ].
 
-; subject-raising (s-rais)
-s-rais := lexeme &
-[ SS.LOC.CAT.SUBJ < #2 >,
-  ARG-ST < #2 & [ LOC [ CAT #1 & [ HEAD.PRED /l false ],
-                        CONT #3 ] ], 
-           [ LOC.CAT [ SUBJ < [ LOC [ CAT #1,
-                                      CONT #3,
-                                      Q-STORE <! !>,
-                                      P-STORE <! !> ],
-                                SLASH <! !> ] >,
-                       COMPS < >,
-                       HEAD.PRED /l false ] ] > ].
-
 ; PP-intransitive-verb (piv)
 piv := non-auxv-lxm & prep-arg.
 
 ; strict-transitive-verb (stv)
 stv := non-auxv-lxm & NP-trans-arg.
 
+;;;JTB 02/02/02 - Removed CONT proposition restriction since these
+;;;might form outcomes as well.  This is, of course, assuming that
+;;;"ctv" is supposed to be for things taking CPs.
+
+;;;JTB 02/15/02 - Ditched form finite and SUBJ <>
 
 ctv := non-auxv-lxm & str-tr &
-[ ARG-ST < synsem, [ LOC [ CAT [ HEAD verbal & [ FORM fin ],
+[ ARG-ST < synsem, [ LOC [ CAT [ HEAD verbal,
                                  SPR < >,
-                                 COMPS < > ],
-                           CONT proposition ] ] > ].
+                                 COMPS < > ] ] ] > ].
 
 ; dative-verb (dtv)
 dtv := non-auxv-lxm & dt-arg.
@@ -584,7 +590,9 @@ narrow-scope-lxm := neg-scoping.
 
 ;;;Two contractions
 
-nt-aux-lxm := contraction.
+nt-aux-lxm := contraction &
+[ SS.LOC.CAT.HEAD.POL true ].
+
 non-nt-aux-lxm := contraction.
 
 ;;; Two modalities.  Default on base requirement for modal complements
@@ -600,6 +608,7 @@ non-nt-aux-lxm := contraction.
 non-modal-aux-lxm := modality.
 modal-aux-lxm := modality &
 [ SS.LOC.CAT.HEAD.FORM fin,
+  SS.LOC.CONT r-soa,
   ARG-ST < [ LOC.CAT.HEAD.CASE nom ], [ LOC.CAT.HEAD.FORM /l base ] > ].
 
 ;;; Two semantic types.  Vacuous have no semantics, contentful do.
@@ -679,6 +688,7 @@ cont-non-nt-narrow-scope-lxm := non-nt-narrow-scope-lxm & cont-non-nt-lxm.
 ;;;No vacuous-narrow combos.
 
 ;;; Maximal types (Just add modality):
+;;; Modal auxiliaries:
 
 wide-scope-modal-lxm := modal-aux-lxm & cont-non-nt-wide-scope-lxm.
 narrow-scope-modal-lxm := modal-aux-lxm & cont-non-nt-narrow-scope-lxm.
@@ -694,13 +704,15 @@ vacuous-wide-scope-aux-lxm := non-modal-aux-lxm & vacuous-non-nt-wide-scope-lxm.
 vacuous-nt-wide-scope-aux-lxm := non-modal-aux-lxm & vacuous-nt-wide-scope-lxm.
 ;;;No narrow helpers.
 
-;;; Copula and "do" auxiliaries.
+;;; Copula, do, have auxiliaries.  Eventually I'll try to do real inflection.
+;;; COPULA
 
 copula := vacuous-aux-lxm &
 [ ARG-ST < synsem, [ LOC.CAT.HEAD.PRED true ] > ].
 
 fin-copula := copula & 
-[ SS.LOC.CONT r-soa,
+[ SS.LOC.CONT /l r-soa,
+  SS.LOC.CAT.HEAD.FORM fin,
   ARG-ST < [ LOC.CAT.HEAD.CASE nom ], synsem > ].
 
 non-nt-fin-copula := fin-copula & vacuous-wide-scope-aux-lxm.
@@ -708,17 +720,30 @@ nt-fin-copula := fin-copula & vacuous-nt-wide-scope-aux-lxm.
 
 non-fin-copula := copula & vacuous-wide-scope-aux-lxm.
 
-do-lexeme := vacuous-wide-scope-aux-lxm &
+;;;DO
+
+do-lexeme := vacuous-aux-lxm &
 [ SS.LOC.CAT [ HEAD.PRED false ],
-  ARG-ST < [ LOC.CAT.HEAD.CASE nom ], [ LOC.CAT [ HEAD.FORM base, 
-                                                  COMPS < > ] ] >,
+  ARG-ST < synsem, [ LOC.CAT [ HEAD.FORM base, COMPS < > ] ] >,
   DTRS < auxv-lxm > ].
 
-do-lxm-unfoc := do-lexeme &
+fin-do-lexeme := do-lexeme &
+[ SS.LOC.CONT /l r-soa,
+  SS.LOC.CAT.HEAD.FORM fin,
+  ARG-ST < [ LOC.CAT.HEAD.CASE nom ], synsem > ].
+
+non-nt-fin-do-lexeme := fin-do-lexeme & vacuous-wide-scope-aux-lxm.
+nt-fin-do-lexeme := fin-do-lexeme & vacuous-nt-wide-scope-aux-lxm.
+
+non-fin-do-lexeme := do-lexeme & vacuous-wide-scope-aux-lxm.
+
+do-lxm-unfoc := non-nt-fin-do-lexeme &
 [ SS.LOC.CAT.HEAD [ AUX true ] ].
 
-do-lxm-foc := do-lexeme &
+do-lxm-foc := non-nt-fin-do-lexeme &
 [ SS.LOC.CAT.HEAD [ POL true ] ].
+
+;;;HAVE
 
 have-lxm := cont-wide-scope-aux-lxm &
 [ SS.LOC.CONT.NUCL completed-rel,
@@ -756,7 +781,7 @@ polar-lexeme+amalg := inflected-lexeme+amalg &
                  SUBJ < #1 >,
                  COMPS < #pol, #2 > ] ],
   ARG-ST < #1, #pol & pol-ss & [ LOC.CAT.HEAD adv,
-                          LOC.CONT.NUCL pol-rel ], #2 >,
+                                 LOC.CONT.NUCL pol-rel ], #2 >,
   DTRS < [ SS.LOC [ CAT [ HEAD [ AUX true,
                                  POL false ] ] ],
            ARG-ST < #1, #2 > ] > ].
@@ -821,3 +846,8 @@ wide-vacuous-non-polar-lexeme := inflected-lexeme+amalg &
            [ LOC.CONT.QUANTS [ LIST #qlist2,
                                LAST #qlist_last ] ] >,
   DTRS < vacuous-non-nt-wide-scope-lxm > ].
+
+
+
+
+

@@ -7,6 +7,11 @@
 
 ;;; I added [ CASE nom ] to SUBJ, and [ PRED false ] to HEAD.
 
+to_0 := vacuous-wide-scope-aux-lxm &
+[ ORTH <! "to" !>,
+  SS.LOC [ CAT [ HEAD verb & [ FORM inf ] ] ],
+  ARG-ST < [ SLASH <! !> ], [ LOC [ CAT [ HEAD verb & [ FORM base ] ] ] ] > ].
+
 ;;; Wide Scope Auxiliaries
 
 will_1 := wide-scope-modal-lxm &
@@ -142,9 +147,9 @@ had_0 :=  have-lxm &
 [ ORTH <! "had" !>,
   SS.LOC.CAT.HEAD.FORM fin ].
 
-have_2 := have-lxm &
-[ ORTH <! "have" !>,
-  SS.LOC.CAT.HEAD.FORM inf ].
+;have_2 := have-lxm &
+;[ ORTH <! "have" !>,
+;  SS.LOC.CAT.HEAD.FORM inf ].
 
 have_3 := have-lxm &
 [ ORTH <! "have" !>,
@@ -171,9 +176,16 @@ be_0 := non-fin-copula &
 [ ORTH <! "be" !>,
   SS.LOC.CAT.HEAD.FORM base ].
 
-be_1 := non-fin-copula &
+;be_1 := non-fin-copula &
+;[ ORTH <! "be" !>,
+;  SS.LOC.CAT.HEAD.FORM inf ].
+
+;;;JTB 02/02/02 - This is subjunctive "be".
+
+be_3 := non-nt-fin-copula & 
 [ ORTH <! "be" !>,
-  SS.LOC.CAT.HEAD.FORM inf ].
+  SS.LOC.CONT i-soa,
+  SS.LOC.CAT.HEAD.PRED false ].
 
 ;;; JTB 10/23/01 - I'm going to restrict "being" to taking only
 ;;; non-verbal complements (ie, predicative NP and Adj).  We have no
@@ -280,11 +292,21 @@ focused-do_0 := do-lxm-foc &
 [ ORTH <! "DÓ" !>,
   SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
 
+;;;subjunctive accented.
+
+focused-do_3 := do-lxm-foc &
+[ ORTH <! "DÓ" !>,
+  SS.LOC.CONT i-soa ].
+
 ;;;Ambiguous focused.
 
 focused-do_1 := do-lxm-foc &
 [ ORTH <! "do" !>,
   SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
+
+focused-do_4 := do-lxm-foc &
+[ ORTH <! "do" !>,
+  SS.LOC.CONT i-soa ].
 
 focused-did_1 := do-lxm-foc &
 [ ORTH <! "did" !> ].
@@ -297,16 +319,17 @@ focused-does_1 := do-lxm-foc &
 
 unfocused-do_0 := do-lxm-unfoc &
 [ ORTH <! "do" !>,
-  SS.LOC.CAT.HEAD.AUX true,
   SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
 
+unfocused-do_9 := do-lxm-unfoc &
+[ ORTH <! "do" !>,
+  SS.LOC.CONT i-soa ].
+
 unfocused-did_0 := do-lxm-unfoc &
-[ ORTH <! "did" !>,
-  SS.LOC.CAT.HEAD.AUX true ].
+[ ORTH <! "did" !> ].
 
 unfocused-does_0 := do-lxm-unfoc &
 [ ORTH <! "does" !>,
-  SS.LOC.CAT.HEAD.AUX true,
   SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR 3sg ] > ].
 
 ;;;Unambiguous focused.
@@ -315,6 +338,10 @@ focused-do_2 := do-lxm-foc &
 [ ORTH <! "dof" !>,
   SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
 
+focused-do_5 := do-lxm-foc &
+[ ORTH <! "dof" !>,
+  SS.LOC.CONT i-soa ].
+
 focused-did_2 := do-lxm-foc &
 [ ORTH <! "didf" !> ].
 
@@ -322,39 +349,57 @@ focused-does_2 := do-lxm-foc &
 [ ORTH <! "doesf" !>,
   SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR 3sg ] > ].
 
-;;;Unmbiguous unfocused.
+;;;Unambiguous unfocused.
 
 unfocused-do_2 := do-lxm-unfoc &
 [ ORTH <! "dou" !>,
-  SS.LOC.CAT.HEAD.AUX true,
   SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
 
+unfocused-do_6 := do-lxm-unfoc &
+[ ORTH <! "dou" !>,
+  SS.LOC.CONT i-soa ].
+
 unfocused-did_2 := do-lxm-unfoc &
-[ ORTH <! "didu" !>,
-  SS.LOC.CAT.HEAD.AUX true ].
+[ ORTH <! "didu" !> ].
 
 unfocused-does_2 := do-lxm-unfoc &
 [ ORTH <! "doesu" !>,
-  SS.LOC.CAT.HEAD.AUX true,
   SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR 3sg ] > ].
 
 ;;;Non-finite
 
-doing_0 := do-lexeme &
+doing_0 := non-fin-do-lexeme &
 [ ORTH <! "doing" !>,
   SS.LOC.CAT.HEAD.FORM prp ].
 
-done_0 := do-lexeme &
+done_0 := non-fin-do-lexeme &
 [ ORTH <! "done" !>,
   SS.LOC.CAT.HEAD.FORM pfp ].
 
-do_1 := do-lexeme &
-[ ORTH <! "do" !>,
-  SS.LOC.CAT.HEAD.FORM inf ].
+;do_1 := do-lexeme &
+;[ ORTH <! "do" !>,
+;  SS.LOC.CAT.HEAD.FORM inf ].
 
-do_3 := do-lexeme &
-[ ORTH <! "do" !>,
-  SS.LOC.CAT.HEAD.FORM base ].
+;do_3 := do-lexeme &
+;[ ORTH <! "do" !>,
+;  SS.LOC.CAT.HEAD.FORM base ].
+
+;;;Contracted
+
+dont_1 := nt-fin-do-lexeme &
+[ ORTH <! "dont" !>,
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
+
+dont_2 := nt-fin-do-lexeme &
+[ ORTH <! "dont" !>,
+  SS.LOC.CONT i-soa ].
+
+doesnt_1 := nt-fin-do-lexeme &
+[ ORTH <! "doesnt" !>,
+  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR 3sg ] > ].
+
+didnt_1 := nt-fin-do-lexeme &
+[ ORTH <! "didnt" !> ].
 
 ;;; JTB 08/31/01 - Polar adverbials.  These need more constraints,
 ;;; since they don't all beheave the same (e.g., *Could John too/so go

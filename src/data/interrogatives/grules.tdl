@@ -1,10 +1,12 @@
 ;;; This file lets the LKB know which constructions it should treat as
 ;;; grammar rules.
 
-question-punct-rule := question-punct-ph.
-dot-punct-rule := dot-punct-ph.
-bang-punct-rule-1 := bang-punct-ph-1.
-bang-punct-rule-2 := bang-punct-ph-2.
+root-cl-rule-0 := root-cl-0.
+root-cl-rule-1 := root-cl-1.
+ns-imp-root-cl-rule-0 := ns-imp-root-cl-0.
+ns-imp-root-cl-rule-1 := ns-imp-root-cl-1.
+
+factive-cl-rule-0 := factive-cl-0.
 
 ;;;JTB 07/18/01 - Why not a bare plurals rule?
 
@@ -12,7 +14,7 @@ bare-pl-rule-0 := bare-pl-np.
 
 bare-adj-rule := bare-adj-ph.
 
-;;;JTB 07/18/01 - Slowly removing all unary constructions.  No more pumping.
+;ns-imp-cl-rule := ns-imp-cl.
 
 pol-int-rule-0 := pol-int-cl-0.
 pol-int-rule-1 := pol-int-cl-1.
@@ -29,6 +31,8 @@ ncl-vb-rule-3 := ncl-vb-ph-3.
 
 ;;; JTB 07/29/01 - Removing elliptical shit because we never talked
 ;;; about it and I don't want it interfering.
+
+;;; JTB 02/02/02 - It got put back in in September.
 
 ellip-vp-rule-0 := ncl-ellip-vp-0.
 ellip-vp-rule-1 := ncl-ellip-vp-1.
@@ -53,7 +57,6 @@ decl-ns-gap-rule := decl-ns-cl &
 
 decl-ns-pro-rule := decl-ns-cl &
 [ SS.LOC.CAT.SUBJ < pro-ss > ].
-
 
 top-cl-rule := top-cl. 
 
