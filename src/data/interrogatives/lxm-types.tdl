@@ -14,14 +14,26 @@
 
 ;;; VERB LEXEME DEFINITIONS 
 
+;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
+;;;phrase restrictions on COMPS and SUBJ and SPR of VPs.
+
 v-lxm := lexeme & 
  [ SS [ LOC [ CAT [ HEAD verb & [ NEG false,
                                   ANA false],
                     SPR < >,
-	            SUBJ < [ LOC.CAT phrase-cat & [ HEAD noun,
-                                                     SPR < >,
-                                                     COMPS < > ] ] > ] ],
+	            SUBJ < [ LOC.CAT [ HEAD noun,
+                                       SPR < >,
+                                       COMPS < > ] ] > ] ],
         WH <! !> ] ].
+
+;v-lxm := lexeme & 
+; [ SS [ LOC [ CAT [ HEAD verb & [ NEG false,
+;                                  ANA false],
+;                    SPR < >,
+;	            SUBJ < [ LOC.CAT phrase-cat & [ HEAD noun,
+;                                                   SPR < >,
+;                                                   COMPS < > ] ] > ] ],
+;        WH <! !> ] ].
 
 ; CCB -- temporarially removed content from verbs, because the pol-int-cl was breaking because of a failure to unify between soa and question.  So "Can Sandy sleep?"  Was breaking. 
 ;            CONT soa ] ].
@@ -40,20 +52,20 @@ non-auxv-lxm:= v-lxm &
 
 #|
 auxv-lxm := v-lxm & 
-<[ SS.LOC.CAT [ SUBJ < [ LOC /l #1 ] >,
-               ARG-ST < [ LOC /l #1 ], [ LOC.CAT [ SUBJ < [ LOC /l #1  & [ STORE <! !> ] ] >, 
-                                         COMPS < > ] ] > ] ].
+<[ SS.LOC.CAT [ SUBJ < [ LOC /l #1 ] > ],
+   ARG-ST < [ LOC /l #1 ], [ LOC.CAT [ SUBJ < [ LOC /l #1  & [ STORE <! !> ] ] >, 
+                                       COMPS < > ] ] > ] ].
 |#
 
 ;;;JTB 07/14/01 - stopped coidentifying SUBJs and starting doing the
 ;;;locals fo the SUBJS, and insist that SLASH of complement be empty.
 
 auxv-lxm := v-lxm & 
-[ SS.LOC.CAT [ SUBJ < #2 >,
-               ARG-ST < #2 & [LOC.CAT #1], [ LOC.CAT [ SUBJ < [ LOC.CAT #1, 
-								LOC.STORE <! !>, 
-         					                SLASH <! !>] >, 
-                                              COMPS < > ] ] > ] ].
+[ SS.LOC.CAT [ SUBJ < #2 > ],
+  ARG-ST < #2 & [LOC.CAT #1], [ LOC.CAT [ SUBJ < [ LOC.CAT #1, 
+						   LOC.STORE <! !>, 
+         					   SLASH <! !>] >, 
+                                          COMPS < > ] ] > ].
 
 ;;;JTB 07/014/01 - original definition but without #1 & STORE <! !> in COMP
 ;auxv-lxm := v-lxm & 
@@ -61,13 +73,24 @@ auxv-lxm := v-lxm &
 ;               ARG-ST < #1, [ LOC.CAT [ SUBJ < #1  >, 
 ;                                        COMPS < > ] ] > ] ].
 
+;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
+;;;phrase restrictions on COMPS and SUBJ and SPR of VPs.
+
 dummy-auxv-lxm :=  v-lxm & 
-[ SS.LOC.CAT.ARG-ST < [ LOC.CAT.HEAD [ AGR expl-index & [ PERNUM 1or3sg ] ] ],
-                       #1 & [ LOC.CAT  phrase-cat & [ HEAD noun,
-                                                      SPR < > ] ],
-                       [ LOC.CAT [ HEAD [ PRED true ],
-                                          SUBJ < #1 >,
-                                          COMPS < > ] ] > ].
+[ ARG-ST < [ LOC.CAT.HEAD [ AGR expl-index & [ PERNUM 1or3sg ] ] ],
+             #1 & [ LOC.CAT  [ HEAD noun,
+                               SPR < > ] ],
+                  [ LOC.CAT [ HEAD [ PRED true ],
+                                     SUBJ < #1 >,
+                                     COMPS < > ] ] > ].
+;dummy-auxv-lxm :=  v-lxm & 
+;[ SS.LOC.CAT.ARG-ST < [ LOC.CAT.HEAD [ AGR expl-index & [ PERNUM 1or3sg ] ] ],
+;                       #1 & [ LOC.CAT  phrase-cat & [ HEAD noun,
+;                                                      SPR < > ] ],
+;                       [ LOC.CAT [ HEAD [ PRED true ],
+;                                          SUBJ < #1 >,
+;                                          COMPS < > ] ] > ].
+
 ;s-rais.
 
 
@@ -95,12 +118,20 @@ pron-lxm := n-lxm & no-args &
 ;;;for n-lxms is empty and so any stitching will accomplish the same
 ;;;thing.  Is this good enough?
 
+;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
+;;;phrase restrictions on COMPS and SUBJ and SPR.
+
 cn-lxm := n-lxm &
  [ SS.LOC [ CAT [ HEAD [ AGR.PERNUM #agr ],
-	          SPR < [ LOC.CAT phrase-cat & [ HEAD det & [ AGR.PERNUM #agr,
-                                                               COUNT /l true ],
-                                                  SPR < > ] ] > ] ] ].
+	          SPR < [ LOC.CAT [ HEAD det & [ AGR.PERNUM #agr,
+                                                 COUNT /l true ],
+                                    SPR < > ] ] > ] ] ].
 
+;cn-lxm := n-lxm &
+; [ SS.LOC [ CAT [ HEAD [ AGR.PERNUM #agr ],
+;	          SPR < [ LOC.CAT phrase-cat & [ HEAD det & [ AGR.PERNUM #agr,
+;                                                             COUNT /l true ],
+;                                                  SPR < > ] ] > ] ] ].
 
 pn-lxm := n-lxm & no-args &
  [ SS [ LOC [ CAT [ HEAD [ AGR.PERNUM 3sg ] ] ],
@@ -118,12 +149,23 @@ det-lxm := const-lxm &
               CONT null-sem ] ] ].
 
 
+;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
+;;;phrase restrictions on COMPS and SUBJ and SPR.
+
 p-lxm := const-lxm &
  [ SS.LOC.CAT [ HEAD prep,
                     SPR < >,
-                    COMPS < [ LOC [ CAT phrase-cat & [ HEAD noun,
-                                                        SPR < >,
-                                                       COMPS  < > ] ] ] > ] ].
+                    COMPS < [ LOC [ CAT [ HEAD noun,
+                                          SPR < >,
+                                          COMPS  < > ] ] ] > ] ].
+
+;p-lxm := const-lxm &
+; [ SS.LOC.CAT [ HEAD prep,
+;                    SPR < >,
+;                    COMPS < [ LOC [ CAT phrase-cat & [ HEAD noun,
+;                                                        SPR < >,
+;                                                       COMPS  < > ] ] ] > ] ].
+
 
 ;;;JTB 07/10/01 marking one shouldn't have a subject, predicative one should.
 mkp-lxm := p-lxm &
@@ -165,39 +207,38 @@ adv-lxm := const-lxm &
 
 ; no-arguments (no-args)
 no-args := lexeme &
-[ SS.LOC.CAT.ARG-ST < > ].
+[ ARG-ST < > ].
 
 ; intransitive (intr)
 intr := lexeme &
-[ SS.LOC.CAT.ARG-ST < synsem, ... > ].
+[ ARG-ST < synsem, ... > ].
 
 ; strict-intransitive (str-intr)
 str-intr := intr &
-[ SS.LOC.CAT.ARG-ST < synsem > ].
+[ ARG-ST < synsem > ].
 
 ; intransitive-xcomp (intr-xcomp)
 intr-xcomp := intr &
-[ SS.LOC.CAT.ARG-ST < synsem, synsem > ].
+[ ARG-ST < synsem, synsem > ].
 
 ; subject-control (s-con)
 s-con := intr-xcomp &
-[ SS.LOC.CAT.ARG-ST < [ LOC [ CONT [ INDEX #1 ] ] ], 
-
-                       [ LOC.CAT [ SPR < [ LOC [ CONT [ INDEX #1 ] ] ] >,
-                                   COMPS < > ] ] > ].
+[ ARG-ST < [ LOC [ CONT [ INDEX #1 ] ] ], 
+           [ LOC.CAT [ SPR < [ LOC [ CONT [ INDEX #1 ] ] ] >,
+                       COMPS < > ] ] > ].
 
 
 ; transitive (tran)
 tran := lexeme &
-[ SS.LOC.CAT.ARG-ST < synsem, synsem, ... > ].
+[ ARG-ST < synsem, synsem, ... > ].
 
 ; strict-transitive (str-tr)
 str-tr := tran &
-[ SS.LOC.CAT.ARG-ST < synsem, synsem > ].
+[ ARG-ST < synsem, synsem > ].
 
 ; transitive-xcomp (tran-xcomp)
 tran-xcomp := tran &
-[ SS.LOC.CAT.ARG-ST < synsem, synsem, synsem > ].
+[ ARG-ST < synsem, synsem, synsem > ].
 
 
 
@@ -221,41 +262,70 @@ srv := non-auxv-lxm & s-rais.
 
 
 ; PP-argument (prep-arg)
+
+;;;JTB 07/18/01 - Trying to ditch all pumping rules.  Here eliminating
+;;;phrase restrictions on COMPS and SUBJ and SPR.
+
 prep-arg := lexeme &
-[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD prep,
-                                                       SPR < >,
-                                                       COMPS < > ] ] > ].
+[ ARG-ST < synsem, [ LOC.CAT [ HEAD prep,
+                               SPR < >,
+                               COMPS < > ] ] > ].
+
+;prep-arg := lexeme &
+;[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD prep,
+;                                                       SPR < >,
+;                                                       COMPS < > ] ] > ].
 
 ; NP-transitive-argument (NP-trans-arg) - Added by CCB 9/9/99
 NP-trans-arg := tran &
-[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD noun,
-                                                     SPR < >,
-                                                     COMPS < > ] ] > ].
+[ ARG-ST < synsem, [ LOC.CAT [ HEAD noun,
+                               SPR < >,
+                               COMPS < > ] ] > ].
+
+;NP-trans-arg := tran &
+;[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD noun,
+;                                                     SPR < >,
+;                                                     COMPS < > ] ] > ].
+
 
 ; ditransitive-argument (ditrans-arg) - Added by CCB 9/9/99
 ditrans-arg := lexeme &
-[ SS.LOC.CAT.ARG-ST < synsem, synsem, synsem > ].
+[ ARG-ST < synsem, synsem, synsem > ].
 
 ; dative-argument (dt-arg) - Added by CCB 9/9/99
 dt-arg := ditrans-arg &
-[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD noun,
-                                                       SPR < >,
-                                                       COMPS < > ] ], 
-                              [ LOC.CAT phrase-cat & [ HEAD noun,
-                                                       SPR < >,
-                                                       COMPS < > ] ] > ].
+[ ARG-ST < synsem, [ LOC.CAT [ HEAD noun,
+                               SPR < >,
+                               COMPS < > ] ], 
+                   [ LOC.CAT [ HEAD noun,
+                               SPR < >,
+                               COMPS < > ] ] > ].
+
+;dt-arg := ditrans-arg &
+;[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD noun,
+;                                                       SPR < >,
+;                                                       COMPS < > ] ], 
+;                              [ LOC.CAT phrase-cat & [ HEAD noun,
+;                                                       SPR < >,
+;                                                       COMPS < > ] ] > ].
 
 ; PP-ditransitive (ptv-arg) - Added by CCB 9/9/99
 ptv-arg :=  ditrans-arg &
-[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD noun,
-                                                     SPR < > ] ],
-                              [ LOC.CAT phrase-cat & [ HEAD prep,
-                                                       SPR < > ] ] > ].
+[ ARG-ST < synsem, [ LOC.CAT [ HEAD noun,
+                               SPR < > ] ],
+                   [ LOC.CAT [ HEAD prep,
+                               SPR < > ] ] > ].
+
+;ptv-arg :=  ditrans-arg &
+;[ SS.LOC.CAT.ARG-ST < synsem, [ LOC.CAT [ HEAD noun,
+;                                          SPR < > ] ],
+;                              [ LOC.CAT [ HEAD prep,
+;                                          SPR < > ] ] > ].
 
 ; subject-raising (s-rais)
 s-rais := lexeme &
-[ SS.LOC.CAT.ARG-ST < #1, [ LOC.CAT [ SUBJ < #1 >,
-                                       COMPS < > ] ] > ].
+[ ARG-ST < #1, [ LOC.CAT [ SUBJ < #1 >,
+                           COMPS < > ] ] > ].
 
 
 
@@ -271,10 +341,10 @@ stv := non-auxv-lxm & NP-trans-arg.
 
 
 ctv := non-auxv-lxm & str-tr &
-[ SS.LOC.CAT.ARG-ST < synsem, [ LOC [ CAT [ HEAD verbal & [ FORM fin ],
-                                             SPR < >,
-                                             COMPS < > ],
-                                       CONT proposition ] ] > ].
+[ ARG-ST < synsem, [ LOC [ CAT [ HEAD verbal & [ FORM fin ],
+                                 SPR < >,
+                                 COMPS < > ],
+                           CONT proposition ] ] > ].
 
 
 ; dative-verb (dtv)
@@ -310,11 +380,11 @@ sca := adj-lxm & s-con.
 wh-lxm:=inflected-lexeme+amalg &
 [ SS [ LOC [ CAT [ SUBJ < >,
                    SPR < >,
-                   COMPS < >,
-                   ARG-ST < > ], 
+                   COMPS < > ], 
 	     CONT param],
        SLASH <! !>,
-       REL <! !> ],       
+       REL <! !> ],
+  ARG-ST < >,        
   DTRS < inflected-lexeme > ].
 
 wh-lxm-nexcl:=wh-lxm &

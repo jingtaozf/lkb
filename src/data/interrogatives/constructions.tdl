@@ -1,15 +1,17 @@
 ;;; <<< >>> Maximal Subtypes of Phrase
 
-ncl-hd-comps-ph-0 := non-clause & hd-comp-ph-0 & unary-construction.
+;;;JTB 07/17/01 - Slowly removing all unary constructions.  No more pumping.
+
+;ncl-hd-comps-ph-0 := non-clause & hd-comp-ph-0 & unary-construction.
 ncl-hd-comps-ph-1 := non-clause & hd-comp-ph-1 & binary-construction.
 ncl-hd-comps-ph-2 := non-clause & hd-comp-ph-2 & ternary-construction.
 
-ncl-vb-ph-0 := non-clause & vb-ph-0 & unary-construction.
+;ncl-vb-ph-0 := non-clause & vb-ph-0 & unary-construction.
 ncl-vb-ph-1 := non-clause & vb-ph-1 & binary-construction.
 ncl-vb-ph-2 := non-clause & vb-ph-2 & ternary-construction.
 ncl-vb-ph-3 := non-clause & vb-ph-3 & quaternary-construction.
 
-ncl-ellip-vp-0 := non-clause & ellip-vp-0 & unary-construction.
+;ncl-ellip-vp-0 := non-clause & ellip-vp-0 & unary-construction.
 ncl-ellip-vp-1 := non-clause & ellip-vp-1 & binary-construction.
 ;ncl-ellip-vp-2 := non-clause & ellip-vp-2 & ternary-construction.
 
@@ -83,7 +85,7 @@ top-cl := hd-fill-ph & core-cl & binary-construction &
                              IC true ] ],
   DTRS < [ SS.WH <! !>,
            SS.LOC.STORE <! !>,
-           SS.LOC.CAT.HEAD topic ], sign > ].
+           SS.LOC.CAT.HEAD topic ], non-lexeme > ].
 
 
 
@@ -125,9 +127,7 @@ wh-excl-cl := hd-fill-ph & excl-cl & binary-construction &
 su-wh-int-cl := wh-int-cl & binary-construction &
 [ SS.LOC.CAT.SUBJ < >,
   HD-DTR.SS.LOC.CAT.SUBJ < gap-ss & [ LOC #1 ] >,
-  DTRS < [ SS.LOC #1 ], sign > ].
-
-
+  DTRS < [ SS.LOC #1 ], non-lexeme > ].
 
 ;;; CCB - Needs to have the subject be labeled list of pro-synsems.  Why?...
 
@@ -160,14 +160,17 @@ dir-is-int-cl := is-int-cl & unary-construction &
 ; bare-plural-np (bare-pl-np)
 bare-pl-np := hd-only-ph & unary-construction &
 [ SS.LOC.CAT.SPR < >,
-  HD-DTR.SS.LOC.CAT phrase-cat & [ HEAD noun & [ AGR.PERNUM 3pl ],
-                                   SPR < [ LOC.CAT.HEAD det,
-                                            SLASH <! !>,
-                                            WH <! !> ] > ] ].
+  HD-DTR.SS.LOC.CAT [ HEAD noun & [ AGR.PERNUM 3pl ],
+                      SPR < [ LOC.CAT.HEAD det,
+                              SLASH <! !>,
+                              WH <! !> ] > ] ].
 
-
-
-;;; 
+;bare-pl-np := hd-only-ph & unary-construction &
+;[ SS.LOC.CAT.SPR < >,
+;  HD-DTR.SS.LOC.CAT phrase-cat & [ HEAD noun & [ AGR.PERNUM 3pl ],
+;                                   SPR < [ LOC.CAT.HEAD det,
+;                                            SLASH <! !>,
+;                                            WH <! !> ] > ] ].
 
 unary-construction := phrase &
 [ ORTH #first,

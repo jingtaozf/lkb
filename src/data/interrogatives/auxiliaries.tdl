@@ -11,23 +11,23 @@ will 3RD-SING-VERB will
 
 be_0 := inflected-lexeme &
 [ ORTH <! "be" !>,
-  SS.LOC.CAT [ HEAD [ FORM base ],
-               ARG-ST < synsem, [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  SS.LOC.CAT.HEAD.FORM base,
+  ARG-ST < synsem, [ LOC.CAT [ HEAD [ PRED true ] ] ] >,
   DTRS < auxv-lxm > ].
 
 
 being_0 := inflected-lexeme &
 [ ORTH <! "being" !>,
-  SS.LOC.CAT [ HEAD [ FORM prp,
-                      PRED true ],
-               ARG-ST < synsem, [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  SS.LOC.CAT.HEAD [ FORM prp,
+                    PRED true ],
+  ARG-ST < synsem, [ LOC.CAT [ HEAD [ PRED true ] ] ] >,
   DTRS < auxv-lxm > ].
 
 
 been_0 := inflected-lexeme &
 [ ORTH <! "been" !>,
-  SS.LOC.CAT [ HEAD [ FORM pfp ],
-               ARG-ST < synsem, [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  SS.LOC.CAT.HEAD [ FORM pfp ],
+  ARG-ST < synsem, [ LOC.CAT [ HEAD [ PRED true ] ] ] >,
   DTRS < auxv-lxm > ].
 
 
@@ -35,51 +35,43 @@ been_0 := inflected-lexeme &
 
 am_0 := inflected-lexeme &
 [ ORTH <! "am" !>,
-  SS.LOC.CAT [ HEAD [ FORM fin ],
-               ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM 1sg,
-                                          CASE nom ] ], 
-                         [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  SS.LOC.CAT.HEAD [ FORM fin ],
+  ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM 1sg,
+                            CASE nom ] ], 
+           [ LOC.CAT [ HEAD [ PRED true ] ] ] >,
   DTRS < auxv-lxm > ].
-
 
 
 are_0 := inflected-lexeme &
 [ ORTH <! "are" !>,
-  SS.LOC.CAT [ HEAD [ FORM fin ],
-               ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM non-1sg,
-                                          CASE nom ] ], 
-                         [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  SS.LOC.CAT.HEAD [ FORM fin ],
+  ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM non-1sg,
+                            CASE nom ] ], 
+           [ LOC.CAT [ HEAD [ PRED true ] ] ] >,
   DTRS < auxv-lxm > ].
-
-
 
 is_0 := inflected-lexeme &
 [ ORTH <! "is" !>,
-  SS.LOC.CAT [ HEAD [ FORM fin ],
-               ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM 3sg,
-                                          CASE nom ] ], 
-                         [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  SS.LOC.CAT.HEAD [ FORM fin ],
+  ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM 3sg,
+                            CASE nom ] ], 
+           [ LOC.CAT [ HEAD [ PRED true ] ] ] >,
   DTRS < auxv-lxm > ].
-
-
-
 
 was_0 := inflected-lexeme &
 [ ORTH <! "was" !>,
-  SS.LOC.CAT [ HEAD [ FORM fin ],
-               ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM 1or3sg,
-                                          CASE nom ] ], 
-                         [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  SS.LOC.CAT.HEAD [ FORM fin ],
+  ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM 1or3sg,
+                            CASE nom ] ], 
+           [ LOC.CAT [ HEAD [ PRED true ] ] ] >,
   DTRS < auxv-lxm > ].
-
-
 
 were_0 := inflected-lexeme &
 [ ORTH <! "were" !>,
-  SS.LOC.CAT [ HEAD [ FORM fin ],
-               ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM non-1sg,
-                                          CASE nom ] ], 
-                         [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  SS.LOC.CAT.HEAD [ FORM fin ],
+  ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM non-1sg,
+                            CASE nom ] ], 
+           [ LOC.CAT [ HEAD [ PRED true ] ] ] >,
   DTRS < auxv-lxm > ].
 
 
@@ -181,8 +173,8 @@ wont_0 := inflected-lexeme &
 
 have_0 :=  inflected-lexeme &
 [ ORTH <! "have" !>,
-  SS.LOC.CAT [ HEAD [ FORM fin ],
-               ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] > ],
+  SS.LOC.CAT.HEAD [ FORM fin ],
+  ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] >,
   DTRS < auxv-lxm > ].
 
 
@@ -192,8 +184,8 @@ have_0 :=  inflected-lexeme &
 
 can_0 :=  inflected-lexeme &
 [ ORTH <! "can" !>,
-  SS.LOC.CAT [ HEAD [ FORM fin ],
-               ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM base ] ] ] > ],
+  SS.LOC.CAT.HEAD [ FORM fin ],
+  ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM base ] ] ] >,
   DTRS < auxv-lxm > ].
 
 
@@ -213,7 +205,7 @@ not_0 := adv-lxm &
 
 could_0 := auxv-lxm &
 [ ORTH <! "could" !>,
-  SS.LOC.CAT [ ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM inf] ] ] > ] ].
+  ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM inf] ] ] > ].
 
 
 
@@ -221,8 +213,8 @@ could_0 := auxv-lxm &
 
 have_0a :=  auxv-lxm &
 [ ORTH <! "have" !>,
-  SS.LOC.CAT [ HEAD [ FORM fin ],
-               ARG-ST < [ ], [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] > ],
+  SS.LOC.CAT.HEAD [ FORM fin ],
+  ARG-ST < [ ], [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] >,
   DTRS < auxv-lxm > ].
 
 ;;;JTB - multiply defined, 

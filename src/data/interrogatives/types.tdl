@@ -12,18 +12,31 @@
 
 feat-struc := *top*.
 
-; I've expanded the feature NHD-DTRS to DTRS which contains all the sign's daughters and coindexes the head daughter with the HD-DTR feature where applicable.  Generalizing the feature from being a constraint on phrase to being a constraint on all signs allows the elimination of the feature STEM from word.
+; I've expanded the feature NHD-DTRS to DTRS which contains all the
+;sign's daughters and coindexes the head daughter with the HD-DTR
+;feature where applicable.  Generalizing the feature from being a
+;constraint on phrase to being a constraint on all signs allows the
+;elimination of the feature STEM from word.
+
+;;;JTB 07/18/01 - Upgraded DTRS to list-of-signs, was previously just
+;;;a list.
 
 sign := feat-struc &
 [ ORTH *list-of-strings*,
   SS synsem,
-  DTRS *list* ]. 
+  DTRS list-of-signs ]. 
 
 synsem := feat-struc &
 [ LOC local,
   SLASH *list-of-locals*,
   WH *list-of-scope-objs*,
   REL *diff-list* ].
+
+;;;JTB 07/18/01 Testing to see if forcing STORE to be empty will have
+;;;any effect on dir-is-int-cl and rep-int-cl rules from applying
+;;;vacuously to undefined lists.  It does but this constraint must go
+;;;on "word" or something like it, maybe "non-lexeme".  Maybe all
+;;;lists should default to empty unless specified otherwise?
 
 local := feat-struc &
 [ CAT  category,
@@ -36,19 +49,24 @@ category := feat-struc &
   SPR   list-of-synsems,
   COMPS list-of-synsems ].
 
-lex-cat := category &
-[ ARG-ST list-of-synsems ].
+;;;JTB 07/18/01 - Ok, ARG-ST is moving to where it is in the book,
+;;;which is lex-sign.
+
+;lex-cat := category &
+;[ ARG-ST list-of-synsems ].
 
 ;;;JTB and especially IAS 07/10/01 We're adding a comps < > to
 ;;;phrase-cat as a lark.
 
-phrase-cat := category & [COMPS < >].
+;;;JTB 07/18/01 - Wait, do we NEED a type "phrase-cat"?  Why not put
+;;;these restrictions on phrase?  Funny, that's how the book does it.
+
+;phrase-cat := category & [ COMPS < > ].
 
 ;phrase-cat := category.
 
 canon-ss := synsem.
 noncanon-ss := synsem.
-
 
 gap-ss := noncanon-ss & 
 [ LOC #1,
@@ -59,29 +77,50 @@ pro-ss := noncanon-ss &
   LOC [ STORE <! !>,
         CAT.HEAD.CASE acc ] ].
 
-;;; CCB - added the type elip-ss, to mark elliptical constituents.  This has the effect of blocking extraction on those elements since the type ellip-ss says SLASH <! !> explicitly.
+;;; CCB - added the type elip-ss, to mark elliptical constituents.
+;;;This has the effect of blocking extraction on those elements since the
+;;;type ellip-ss says SLASH <! !> explicitly.
+
+;;;JTB 07/18/01 - Trying to ditch phrase-cat
 
 ellip-ss := noncanon-ss &
 [ SLASH <! !>,
-  LOC [ CAT phrase-cat,
+  LOC [ CAT.COMPS < >,
         STORE <! !> ] ].
+
+;ellip-ss := noncanon-ss &
+;[ SLASH <! !>,
+;  LOC [ CAT phrase-cat,
+;        STORE <! !> ] ].
 
 neg-ss := noncanon-ss. 
 
 
 ;;; <<< >>> SUBTYPES OF SIGN
 
-phrase := sign &
-[ SS.LOC.CAT phrase-cat & [ HEAD  pos,
-                            COMPS < > ] ].
+;;;JTB 07/18/01 - Either use phrase-cat as a type or just specify the
+;;;restriction right here.  But I think eliminating phrase-cat is a good idea.
+
+;phrase := non-lexeme &
+;[ SS.LOC.CAT phrase-cat ].
+
+;;;JTB 7/18/01 - Upgrading daughters of phrases to
+;;;list-of-non-lexemes.  If this trick works then we won't need to
+;;;specificy non-lexeme of any daughters of phrases in the entries below.
+
+phrase := non-lexeme &
+[ SS.LOC.CAT [ COMPS < > ],
+  DTRS ne-list-of-non-lexemes ].
 
 lex-sign := sign &
 [ NEEDS-AFFIX boolean,
-  SS.LOC.CAT lex-cat ].
+  ARG-ST list-of-synsems ].
 
+;lex-sign := sign &
+;[ NEEDS-AFFIX boolean,
+;  SS.LOC.CAT lex-cat ].
 
 lexeme := lex-sign.
-
 
 ; The Argument Realization Principle has been incorporated into type
 ; inflected lexeme rather than word, because SLASHed constituents are
@@ -106,18 +145,28 @@ non-branching rule.
                                   LAST #last ] ] ],
 |#
 
+;;;JTB 07/18/01 - After moving ARG-ST to lex-sign, we need to be
+;;;explicit about the inheritence between the different lexical
+;;;levels, so I've added specific movement of ARG-ST.  Excepting the
+;;;default constraints, I wonder if we can unify these a bit?
+
 inflected-lexeme := lex-sign &
 [ NEEDS-AFFIX /l false,
   SS /l #ss,
-  DTRS < [ SS /l #ss ] > ].
+  ARG-ST /l #arg,
+  DTRS < [ SS /l #ss, ARG-ST /l #arg ] > ].
 ; lexeme
+
+;;;JTB 07/18/01 - What the hell is that SUBJ constraint???
 
 inflected-lexeme+ARP := lex-sign &
 [ NEEDS-AFFIX false,
   ORTH #orth,
-  SS /l #ss & [ LOC.CAT [ SUBJ list-of-synsems-wh-none ] ],
+  SS /l #ss & [ LOC.CAT.SUBJ list-of-synsems-wh-none],
+  ARG-ST #arg,
   DTRS < [ ORTH #orth,
-            SS /l #ss ] > ].
+            SS /l #ss,
+            ARG-ST #arg ] > ].
 ; inflected-lexeme &
 
 
@@ -125,16 +174,24 @@ inflected-lexeme+amalg := lex-sign &
 [ NEEDS-AFFIX false,
   ORTH #orth,
   SS #ss,
+  ARG-ST #arg,
   DTRS < [ ORTH #orth,
-           SS #ss ] > ].
+           SS #ss, 
+           ARG-ST #arg ] > ].
 
-word := lex-sign &
+word := lex-sign & non-lexeme &
 [ NEEDS-AFFIX false,
   ORTH #orth,
   SS /l #ss,
+  ARG-ST #arg,
   DTRS <  [ ORTH #orth,
-            SS /l #ss ] > ].
+            SS /l #ss,
+            ARG-ST #arg ] > ].
 ;inflected-lexeme+slash_amalg &
+
+;;;JTB 07/18/01 - Here's a joke:
+
+non-lexeme:=sign.
 
 ;;; <<< >>> PARTS OF SPEECH 
 
@@ -236,7 +293,8 @@ neut := gend.
 
 ;;; <<< >>> CLAUSALITY
 
-;;; CCB - Ivan's notes say that the SUBJ list on clause should be composed of noncan-ss.  Why?  
+;;; CCB - Ivan's notes say that the SUBJ list on clause should be
+;;;composed of noncan-ss.  Why?
 
 ;clause := phrase &
 ;[ SS [ LOC [ CAT [ SUBJ *list-of-noncanon-ss* ], 
@@ -281,9 +339,14 @@ decl-cl := core-cl & hd-ph &
 inter-cl := core-cl &
 [ SS.LOC.CONT question ].
 
-;;; The headed-interrogative-clause is constrained by the Wh-Question Retrieval principle, which requires that the STORE value of a hd-int-cl be the head daughter's STORE value, minus some set of indicies that are included in the clause's PARAM's set.  (Note that the set of retrieved indicies can be the empty set).
+;;; The headed-interrogative-clause is constrained by the Wh-Question
+;;;Retrieval principle, which requires that the STORE value of a
+;;;hd-int-cl be the head daughter's STORE value, minus some set of
+;;;indicies that are included in the clause's PARAM's set.  (Note that
+;;;the set of retrieved indicies can be the empty set).
 
-;;; I'm treating the STORE and the PARAMS as *diff-lists* rather than sets, so might be making different predictions.  CCB - like what?
+;;; I'm treating the STORE and the PARAMS as *diff-lists* rather than
+;;;sets, so might be making different predictions.  CCB - like what?
 
 
 ; headed-interrogative-clause (hd-int-cl)
@@ -304,17 +367,16 @@ canon-int-cl := hd-int-cl &
 [ SS.LOC.CAT.HEAD [ IC #1,
                     INV #1 ] ].
 
-;;; CCB - in-situ constructions are headed by a finite indicative verb that cannot occur as the complement of an emedding predicate.  Subtype of hd-only-ph (a non-branching headed phrasal type).
+;;; CCB - in-situ constructions are headed by a finite indicative verb
+;;;that cannot occur as the complement of an emedding predicate.  Subtype
+;;;of hd-only-ph (a non-branching headed phrasal type).
 
 is-int-cl := hd-int-cl & hd-only-ph &
 [ SS.LOC.CAT.HEAD verb & [ FORM fin,
                            IC true ] ].
 
-
 imp-cl := core-cl &
 [ SS.LOC.CONT outcome ].
-
-
 
 ; exclamative-clause (excl-cl)
 excl-cl := core-cl &
@@ -323,14 +385,25 @@ excl-cl := core-cl &
 
 ;;; <<< >>> HEADEDNESS
 
-; I've collapsed the Head Feature Principle, the Valence Principle, and the Semantic Inheritance Principle into a single default unification constraint on hd-ph.  
+;;;I've collapsed the Head Feature Principle, the Valence Principle,
+;;;and the Semantic Inheritance Principle into a single default
+;;;unification constraint on hd-ph.
 
 
-;;; CCB - I need to be composing the ORTH on all of these phrasal construtions, so that it inherits from the words to the phrases.  Maybe I should put it in consturctions.tdl?
+;;; CCB - I need to be composing the ORTH on all of these phrasal
+;;;construtions, so that it inherits from the words to the phrases.
+;;;Maybe I should put it in consturctions.tdl?
+
+;;;JTB 07/18/01 - wild test to see if this makes "Kim sleeps" parse
+;;;without phrasal pumping rules.
 
 hd-ph := phrase &
 [ SS /l #1,
-  HD-DTR sign & [ SS /l #1 ] ].
+  HD-DTR non-lexeme & [ SS /l #1 ] ].
+
+;hd-ph := phrase &
+;[ SS /l #1,
+;  HD-DTR sign & [ SS /l #1 ] ].
 
 ; head-complement-phrase (hd-comp-ph)
 ;;; CCB - I'm not allowing for non-phrasal complements.  Will that mess anything up?
@@ -343,41 +416,62 @@ nv-hd-comp-ph := hd-comp-ph &
 [ HD-DTR [ SS.LOC.CAT.HEAD nonverbal ] ].
 
 
-hd-comp-ph-0 := nv-hd-comp-ph & 
-[ HD-DTR.SS.LOC.CAT.COMPS < >,
-  DTRS < sign > ].
+;;;JTB 07/18/01 - Trying to eliminate phrasal restrictions and zero
+;;;level pumping rules
+
+;hd-comp-ph-0 := nv-hd-comp-ph & 
+;[ HD-DTR.SS.LOC.CAT.COMPS < >,
+;  DTRS < sign > ].
 
 hd-comp-ph-1 := nv-hd-comp-ph &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-  DTRS < sign, phrase & [ SS #1 ] > ].
+  DTRS < non-lexeme, [ SS #1 ] > ].
 
 hd-comp-ph-2 := nv-hd-comp-ph &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+  DTRS < non-lexeme, [ SS #1 ], [ SS #2 ] > ].
 
+;hd-comp-ph-1 := nv-hd-comp-ph &
+;[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
+;  DTRS < sign, phrase & [ SS #1 ] > ].
+
+;hd-comp-ph-2 := nv-hd-comp-ph &
+;[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
+;  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
 
 ; verb-phrase (vb-ph)
 vb-ph := hd-comp-ph &
-[ HD-DTR sign & [ SS.LOC.CAT.HEAD verb & [ AUX #1,
-                                           NEG #1 ] ] ].
+[ HD-DTR [ SS.LOC.CAT.HEAD verb & [ AUX #1,
+                                    NEG #1 ] ] ].
 
 
-vb-ph-0 := vb-ph & 
-[ HD-DTR.SS.LOC.CAT.COMPS < >,
-  DTRS < sign > ].
+;vb-ph-0 := vb-ph & 
+;[ HD-DTR.SS.LOC.CAT.COMPS < >,
+;  DTRS < sign > ].
 
 vb-ph-1 := vb-ph &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-  DTRS < sign, phrase & [ SS #1 ] > ].
+  DTRS < non-lexeme, [ SS #1 ] > ].
 
 vb-ph-2 := vb-ph &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+  DTRS < non-lexeme, [ SS #1 ], [ SS #2 ] > ].
 
 vb-ph-3 := vb-ph &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1, #2, #3 >,
-  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ], phrase & [ SS #3 ] > ].
+  DTRS < non-lexeme, [ SS #1 ], [ SS #2 ], [ SS #3 ] > ].
 
+;vb-ph-1 := vb-ph &
+;[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
+;  DTRS < sign, phrase & [ SS #1 ] > ].
+
+;vb-ph-2 := vb-ph &
+;[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
+;  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+
+;vb-ph-3 := vb-ph &
+;[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2, #3 >,
+;  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ], phrase & [ SS #3 ] > ].
 
 ; elliptical-verb-phrase (ellip-vp)
 ellip-vp := hd-comp-ph &
@@ -385,44 +479,67 @@ ellip-vp := hd-comp-ph &
 
 ellip-vp-0 := ellip-vp &
 [ HD-DTR.SS.LOC.CAT.COMPS < ellip-ss >,
-  DTRS < sign > ].
+  DTRS < non-lexeme > ].
 
 ellip-vp-1 := ellip-vp &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1, ellip-ss >,
-  DTRS < sign, phrase & [ SS #1 ] > ].
+  DTRS < non-lexeme, [ SS #1 ] > ].
 
+;ellip-vp-1 := ellip-vp &
+;[ HD-DTR.SS.LOC.CAT.COMPS < #1, ellip-ss >,
+;  DTRS < sign, phrase & [ SS #1 ] > ].
 
 ; complementizer-phrase (cp-ph)
 cp-ph := hd-comp-ph &
-[ HD-DTR sign & [ SS.LOC.CAT.HEAD comp ] ].
+[ HD-DTR [ SS.LOC.CAT.HEAD comp ] ].
 
 cp-ph-1 := cp-ph &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-  DTRS < sign, phrase & [ SS #1 ] > ].
+  DTRS < non-lexeme, [ SS #1 ] > ].
 
 cp-ph-2 := cp-ph &
 [ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+  DTRS < non-lexeme, [ SS #1 ], [ SS #2 ] > ].
+
+;cp-ph-1 := cp-ph &
+;[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
+;  DTRS < sign, phrase & [ SS #1 ] > ].
+
+;cp-ph-2 := cp-ph &
+;[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
+;  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
 
 
-
-
-;;; CCB - Note the cleverness here with this unifying with the constraint on clause that the SUBJ be a list of non-canonical synsems.  An e-list is...
+;;; CCB - Note the cleverness here with this unifying with the
+;;;constraint on clause that the SUBJ be a list of non-canonical synsems.
+;;;An e-list is...  
 ; head-subject-phrase (hd-subj-ph)
+
 hd-subj-ph := hd-ph &
 [ SS.LOC [ CAT [ SUBJ < > ] ],
   HD-DTR #1 & [ SS.LOC.CAT [ SUBJ < #2 >,
                              SPR < > ] ],
-  DTRS < phrase & [ SS #2 ], phrase & #1 > ].
+  DTRS < [ SS #2 ], #1 > ].
 
 
 ; head-specifier-phrase (hd-spr-ph)
 hd-spr-ph := hd-ph & binary-construction &
 [ SS.LOC [ CAT [ SPR < > ] ],
   HD-DTR #1 & [ SS.LOC.CAT [ SPR < #2 > ] ],
-  DTRS < phrase & [ SS #2 ], phrase & #1 > ].
+  DTRS < [ SS #2 ], #1 > ].
+
+;hd-subj-ph := hd-ph &
+;[ SS.LOC [ CAT [ SUBJ < > ] ],
+;  HD-DTR #1 & [ SS.LOC.CAT [ SUBJ < #2 >,
+;                             SPR < > ] ],
+;  DTRS < phrase & [ SS #2 ], phrase & #1 > ].
 
 
+; head-specifier-phrase (hd-spr-ph)
+;hd-spr-ph := hd-ph & binary-construction &
+;[ SS.LOC [ CAT [ SPR < > ] ],
+;  HD-DTR #1 & [ SS.LOC.CAT [ SPR < #2 > ] ],
+;  DTRS < phrase & [ SS #2 ], phrase & #1 > ].
 
 ; subject-auxilary-inversion-phrase (sai-ph)
 
@@ -431,25 +548,40 @@ sai-ph := hd-ph &
   HD-DTR #1 & [ SS.LOC.CAT [ HEAD verb & [ INV true,
                                            AUX true ],
                              SUBJ < #2 > ] ],
-  DTRS < word & #1, phrase & [ SS #2 ], ... > ].
+  DTRS < word & #1, [ SS #2 ], ... > ].
 
+;sai-ph := hd-ph & 
+;[ SS.LOC.CAT.SUBJ < >,
+;  HD-DTR #1 & [ SS.LOC.CAT [ HEAD verb & [ INV true,
+;                                           AUX true ],
+;                             SUBJ < #2 > ] ],
+;  DTRS < word & #1, phrase & [ SS #2 ], ... > ].
 
 ; elliptical sai-ph.
 sai-ph-0 := sai-ph & 
 [ HD-DTR.SS.LOC.CAT.COMPS < ellip-ss >,
-  DTRS < sign, sign > ].
+  DTRS < non-lexeme, non-lexeme > ].
 
 
 sai-ph-1 := sai-ph & 
 [ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
-  DTRS < sign, sign, phrase & [ SS #1 ] > ].
+  DTRS < non-lexeme, non-lexeme, [ SS #1 ] > ].
 
-; CCB - Is a two placed COMPS construction ever needed with sai-ph?  Do auxv-lxms ever have more than one complement? -- Yes, in the case of the dummy-subject "be".
+;sai-ph-1 := sai-ph & 
+;[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
+;  DTRS < sign, sign, phrase & [ SS #1 ] > ].
+
+;;;CCB - Is a two placed COMPS construction ever needed with sai-ph?
+;;;Do auxv-lxms ever have more than one complement? -- Yes, in the case
+;;;of the dummy-subject "be".
 
 sai-ph-2 := sai-ph & 
 [ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
-  DTRS < sign, sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+  DTRS < non-lexeme, non-lexeme, [ SS #1 ], [ SS #2 ] > ].
 
+;sai-ph-2 := sai-ph & 
+;[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
+;  DTRS < sign, sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
 
 ; head-adjunct-phrase (hd-adj-ph)
 hd-adj-ph := hd-ph & non-clause &
@@ -465,31 +597,51 @@ hd-fill-ph := hd-ph &
 	       LAST #last] ],
   HD-DTR #1 & [ SS.SLASH [ LIST *cons* & < #2 . #rest>,
 			   LAST *null* & #last ] ],
-  DTRS < phrase & [ SS [ LOC #2,
-                    SLASH <! !> ] ], phrase & #1 > ].
+  DTRS < [ SS [ LOC #2,
+                SLASH <! !> ] ], #1 > ].
 
+; head-filler-phrase (hd-fill-ph)
+;hd-fill-ph := hd-ph &
+;[ SS [ LOC.CAT.HEAD verb,
+;       SLASH [ LIST #rest,
+;	       LAST #last] ],
+;  HD-DTR #1 & [ SS.SLASH [ LIST *cons* & < #2 . #rest>,
+;			   LAST *null* & #last ] ],
+;  DTRS < phrase & [ SS [ LOC #2,
+;                    SLASH <! !> ] ], phrase & #1 > ].
 
 ;;; CCB - 5/22/00 - added the hd-modifier-ph
 ; post-head-modifier-phrase (post-hd-mod-ph)
 post-hd-mod-ph := hd-ph & binary-construction &
 [ HD-DTR #1 & [ SS #mod ],
-  DTRS < phrase & #1, phrase & [ SS.LOC.CAT [ HEAD.MOD < #mod >,
-                                 SPR < >,
-                                 SUBJ < > ] ] > ].
+  DTRS < #1, [ SS.LOC.CAT [ HEAD.MOD < #mod >,
+                            SPR < >,
+                            SUBJ < > ] ] > ].
 
+;post-hd-mod-ph := hd-ph & binary-construction &
+;[ HD-DTR #1 & [ SS #mod ],
+;  DTRS < phrase & #1, phrase & [ SS.LOC.CAT [ HEAD.MOD < #mod >,
+;                                 SPR < >,
+;                                 SUBJ < > ] ] > ].
 
 
 ;;; CCB - 5/22/00 - added the hd-modifier-ph
 ; pre-head-modifier-phrase (pre-hd-mod-ph)
 pre-hd-mod-ph := hd-ph & binary-construction &
 [ HD-DTR #1 & [ SS #mod ],
-  DTRS < phrase & [ SS.LOC.CAT [ HEAD.MOD < #mod >,
-                                 SPR < >,
-                                 SUBJ < > ] ], phrase & #1 > ].
+  DTRS < [ SS.LOC.CAT [ HEAD.MOD < #mod >,
+                        SPR < >,
+                        SUBJ < > ] ], #1 > ].
+
+;pre-hd-mod-ph := hd-ph & binary-construction &
+;[ HD-DTR #1 & [ SS #mod ],
+;  DTRS < phrase & [ SS.LOC.CAT [ HEAD.MOD < #mod >,
+;                                 SPR < >,
+;                                 SUBJ < > ] ], phrase & #1 > ].
 
 
 
-
+;;;JTB 7/18/01 - Trying to eliminate pumping rules.
 
 ; head-only-phrase (hd-only-ph)
 hd-only-ph := hd-ph & 
@@ -499,20 +651,29 @@ hd-only-ph := hd-ph &
 ; non-headed-phrase (non-hd-ph)
 non-hd-ph := phrase.
 
+;;; The following is the "Filler Inclusion Constrant" which guarntees
+;;;that the non head daughter must be WH-specified, and hence that the
+;;;filler constituent must properly contain a wh-word.
 
-
-;;; The following is the "Filler Inclusion Constrant" which  guarntees that the non head daughter must be WH-specified, and hence that the filler constituent must properly contain a wh-word.
 ;;; [ SS.LOC.CONT.PARAMS.LIST.FIRST #1,
 ;;;  DTRS < [ SS.WH #1 & param ], sign > ].
 
-;;; CCB - I'm not sure if my specification for the wh-quantifier appearing at the begining of the PARAMS list is going to work.  If the text above is correct, and that it's only to guarantee a wh-specified thing, then the [ WH g-quant ] should work by itself.
+;;; CCB - I'm not sure if my specification for the wh-quantifier
+;;;appearing at the begining of the PARAMS list is going to work.  If the
+;;;text above is correct, and that it's only to guarantee a wh-specified
+;;;thing, then the [ WH g-quant ] should work by itself.
+
+;;;JTB - 07/18/01 - Just testing, but if we specified that the second
+;;;daughter has to have comps empty does that help us at all to reduce
+;;;forming spurious phrases like "who gave" before "gave kim a book"
+;;;gets built into a phrase?
 
 ; wh-interrogative-clause (wh-int-cl)
 wh-int-cl := hd-int-cl & hd-fill-ph & 
 [ SS.LOC.CONT [ PARAMS.LIST.FIRST #1,
                 PROP #2 ],
   HD-DTR.SS.LOC.CONT proposition & #2,
-  DTRS < [ SS.WH <! #1 & param !> ], sign > ].
+  DTRS < [ SS.WH <! #1 & param !> ], non-lexeme > ].
 
 
 ;;; <<< >>> VALUES FOR VARIOUS FEATURES.
@@ -528,7 +689,9 @@ acc := case.
 
 ;;; <<< >>> Verb Form Types
 
-; Abbreviations for VFORM are: fin(ite), nonfin(ite), inf(initive) participle (part), present patriciple (prp), perfect-participle (pfp), and passive-participle (pas).
+;;;Abbreviations for VFORM are: fin(ite), nonfin(ite), inf(initive)
+;;;participle (part), present patriciple (prp), perfect-participle (pfp),
+;;;and passive-participle (pas).
 
 vform := form-cat.
 
@@ -552,9 +715,6 @@ f_not := form-cat.
 ; The noun form types distinguish between normal and idiomatic usages.
 nform := form-cat.
 normal := nform.
-
-
-
 
 
 ;-------------------------------------------------------------------------
@@ -583,7 +743,11 @@ e-list := *null*.
 [ LIST *list*,
   LAST *list* ].
 
-;;; CCB - added *e-diff-list* because the inv-decl-cl construction was leaking - it was creating the sentence "Can Sandy love the cat", so I constrainted the SLAS value of root to be an *e-diff-list* rather than just <! !> ... which I would have thought should have that definition anyway.  But maybe not for the ARG-ST list stitching.
+;;; CCB - added *e-diff-list* because the inv-decl-cl construction was
+;;;leaking - it was creating the sentence "Can Sandy love the cat", so I
+;;;constrainted the SLAS value of root to be an *e-diff-list* rather than
+;;;just <! !> ... which I would have thought should have that definition
+;;;anyway.  But maybe not for the ARG-ST list stitching.
 
 *e-diff-list* := *diff-list* &
 [ LIST #1 & e-list,
@@ -622,6 +786,16 @@ ne-list-of-signs := list-of-signs & ne-list &
 e-list-of-signs := list-of-signs & e-list.
 
 
+;;;JTB 07/18/01 - Make this for daughters so that daughters are always
+;;;words or phrases (i.e., non-lexemes)
+
+list-of-non-lexemes := list-of-signs.
+
+ne-list-of-non-lexemes := list-of-non-lexemes & ne-list &
+[ FIRST non-lexeme,
+  REST list-of-non-lexemes ].
+
+e-list-of-non-lexemes := list-of-non-lexemes & e-list.
 
 list-of-synsems := *list*.
 

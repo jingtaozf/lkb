@@ -1,24 +1,30 @@
-;;; This file lets the LKB know which constructions it should treat as grammar rules.
+;;; This file lets the LKB know which constructions it should treat as
+;;; grammar rules.
+
+;;;JTB 07/18/01 - Why not a bare plurals rule?
+
+bare-pl-rule-0:=bare-pl-np.
+
+;;;JTB 07/18/01 - Slowly removing all unary constructions.  No more pumping.
 
 pol-int-rule-0 := pol-int-cl-0.
 pol-int-rule-1 := pol-int-cl-1.
 pol-int-rule-2 := pol-int-cl-2.
 
-ncl-hd-comps-rule-0 := ncl-hd-comps-ph-0.
+;ncl-hd-comps-rule-0 := ncl-hd-comps-ph-0.
 ncl-hd-comps-rule-1 := ncl-hd-comps-ph-1.
 ncl-hd-comps-rule-2 := ncl-hd-comps-ph-2.
 
-ncl-vb-rule-0 := ncl-vb-ph-0.
+;ncl-vb-rule-0 := ncl-vb-ph-0.
 ncl-vb-rule-1 := ncl-vb-ph-1.
 ncl-vb-rule-2 := ncl-vb-ph-2.
 ncl-vb-rule-3 := ncl-vb-ph-3.
 
-ellip-vp-rule-0 := ncl-ellip-vp-0.
+;ellip-vp-rule-0 := ncl-ellip-vp-0.
 ellip-vp-rule-1 := ncl-ellip-vp-1.
 
 cp-cl-rule-1 := cp-cl-1.
 cp-cl-rule-2 := cp-cl-2.
-
 
 hd-spr-rule := hd-spr-ph.
 decl-hs-rule := decl-hs-cl.

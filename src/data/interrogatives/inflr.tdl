@@ -27,7 +27,7 @@ inflected-lexeme &
 ;;; CCB - The content for the verbs should also contain temporal information.  The handout that Ivan made for HPSG class says:
 
 ;  CONT r-soa & [ NUCL [ LOCN [ INDEX #1,
-;                               RESTR <! t-overlap(#1, NOW) !>
+;                               RESTR <! t-overlap(#1, NOW) !>]
 
 
 3rd-sing-verb_infl_rule := 
@@ -131,18 +131,16 @@ inflected-lexeme &
                       INV false ],
                SPR < >,
                SUBJ < #1 >,
-               COMPS < neg-ss & #neg & [ LOC.CAT.HEAD.FORM f_not ], #2 >,
-               ARG-ST < #1, #neg, #2 > ],
-
-
+               COMPS < neg-ss & #neg & [ LOC.CAT.HEAD.FORM f_not ], #2 > ],
+  ARG-ST < #1, #neg, #2 >, 
   DTRS < inflected-lexeme & [ NEEDS-AFFIX false,
-                      ORTH #orth,
-                      SS.LOC.CAT [ HEAD [ AUX true,
-                                          NEG false ],
-                                   SPR < >,
-                                   SUBJ < #1 >,
-                                   COMPS < #2 >,
-                                   ARG-ST < #1, #2 > ] ] > ].
+                              ORTH #orth,
+                              SS.LOC.CAT [ HEAD [ AUX true,
+                                                  NEG false ],
+                                           SPR < >,
+                                           SUBJ < #1 >,
+                                           COMPS < #2 > ], 
+                              ARG-ST < #1, #2 > ] > ].
   
 
 
@@ -155,18 +153,16 @@ inflected-lexeme &
                       INV false ],
                SPR < >,
                SUBJ < #1 >,
-               COMPS < #neg & neg-ss & [ LOC.CAT.HEAD.FORM f_not ], #2, #3 >,
-               ARG-ST < #1, #neg, #2, #3 > ],
-
-
+               COMPS < #neg & neg-ss & [ LOC.CAT.HEAD.FORM f_not ], #2, #3 > ],
+  ARG-ST < #1, #neg, #2, #3 >,
   DTRS < inflected-lexeme & [ NEEDS-AFFIX false,
                       ORTH #orth,
                       SS.LOC.CAT [ HEAD [ AUX true,
                                           NEG false ],
                                    SPR < >,
                                    SUBJ < #1 >,
-                                   COMPS < #2, #3 >,
-                                   ARG-ST < #1, #2, #3 >  ] ] > ].
+                                   COMPS < #2, #3 > ],
+                      ARG-ST < #1, #2, #3 > ] > ].
 
 
 ;;; <<< >>> Argument Realization Principle
@@ -175,25 +171,25 @@ inflected-lexeme &
 ARP-no-args := inflected-lexeme+ARP &
 [ SS.LOC.CAT [ SPR < >,
                SUBJ < >,
-               COMPS < >,
-               ARG-ST < > ],
+               COMPS < > ],
+  ARG-ST < >,
   DTRS < inflected-lexeme > ].
 
 
 ARP-comps-only := inflected-lexeme+ARP &
 [ SS.LOC.CAT [ SPR < >,
                SUBJ < >,
-               COMPS #comps & ne-list,
-               ARG-ST #comps & [ REST list-of-synsems-wh-none ] ],
+               COMPS #comps & ne-list ],
+  ARG-ST #comps & [ REST list-of-synsems-wh-none ],
   DTRS < inflected-lexeme > ].
 
 
 ARP-spr+comps := inflected-lexeme+ARP &
 [ SS.LOC.CAT [ SPR < #spr >,
                SUBJ < >,
-               COMPS #comps,
-               ARG-ST [ FIRST #spr,
-                        REST  list-of-synsems-wh-none & #comps ] ],
+               COMPS #comps ],
+  ARG-ST [ FIRST #spr,
+           REST  list-of-synsems-wh-none & #comps ],
   DTRS < inflected-lexeme > ].
 
 
@@ -201,9 +197,9 @@ ARP-spr+comps := inflected-lexeme+ARP &
 ARP-subj+comps := inflected-lexeme+ARP &
 [ SS.LOC.CAT [ SPR < >,
                SUBJ < #subj >,
-               COMPS #comps,
-               ARG-ST [ FIRST #subj,
-                        REST  list-of-synsems-wh-none & #comps ] ],
+               COMPS #comps ],
+  ARG-ST [ FIRST #subj,
+           REST  list-of-synsems-wh-none & #comps ],
   DTRS < inflected-lexeme > ].
 
 
@@ -214,85 +210,84 @@ ARP-subj+comps := inflected-lexeme+ARP &
 amalgamation-0 := inflected-lexeme+amalg &
 [ SS [ SLASH <! !>,
        WH <! !>,
-       LOC [ STORE <! !>,
-             CAT.ARG-ST < > ] ],
+       LOC.STORE <! !> ],
+  ARG-ST < >,
   DTRS < inflected-lexeme+ARP > ].
 
 amalgamation-1 := inflected-lexeme+amalg &
 [ SS [ SLASH #slash,
        WH #wh,
-       LOC [ STORE #store,
-             CAT.ARG-ST < [ SLASH #slash,
-                            WH #wh,
-                            LOC [ STORE #store ] ] > ] ],
+       LOC.STORE #store ],
+  ARG-ST < [ SLASH #slash,
+             WH #wh,
+             LOC [ STORE #store ] ] >,
   DTRS < inflected-lexeme+ARP > ].
 
 
 amalgamation-2 := inflected-lexeme+amalg &
-[ SS [ LOC [ STORE [ LIST #store_1,
-                     LAST #store_last ], 
-             CAT.ARG-ST < [ LOC.STORE [ LIST #store_1,
-                                        LAST #store_2 ] ], [ LOC.STORE [ LIST #store_2,
-                                                                         LAST #store_last ] ] > ] ],
- SS [ SLASH [ LIST #slash_1,
-               LAST #slash_last ], 
-       LOC.CAT.ARG-ST < [ SLASH [ LIST #slash_1,
-                                   LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
-                                                               LAST #slash_last ] ] > ],
- SS [ WH [ LIST #wh_1,
-            LAST #wh_last ], 
-       LOC.CAT.ARG-ST < [ WH [ LIST #wh_1,
-                               LAST #wh_2 ] ], [ WH [ LIST #wh_2,
-                                                           LAST #wh_last ] ] > ],
+[ SS.LOC.STORE [ LIST #store_1,
+                 LAST #store_last ], 
+ ARG-ST < [ LOC.STORE [ LIST #store_1,
+                         LAST #store_2 ] ], [ LOC.STORE [ LIST #store_2,
+                                                          LAST #store_last ] ] >,
+ SS.SLASH [ LIST #slash_1,
+            LAST #slash_last ], 
+ ARG-ST < [ SLASH [ LIST #slash_1,
+                    LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
+                                                 LAST #slash_last ] ] >,
+ SS.WH [ LIST #wh_1,
+         LAST #wh_last ], 
+ ARG-ST < [ WH [ LIST #wh_1,
+                 LAST #wh_2 ] ], [ WH [ LIST #wh_2,
+                                        LAST #wh_last ] ] >,
   DTRS < inflected-lexeme+ARP > ].
 
 
 amalgamation-3 := inflected-lexeme+amalg &
-[ SS [ LOC [ STORE [ LIST #store_1,
-                     LAST #store_last ], 
-            CAT.ARG-ST < [ LOC.STORE [ LIST #store_1,
-                                       LAST #store_2 ] ], [ LOC.STORE [ LIST #store_2,
-                                                                             LAST #store_3 ] ], [ LOC.STORE [ LIST #store_3,
-                LAST #store_last ] ] > ] ],
- SS [ SLASH [ LIST #slash_1,
-               LAST #slash_last ], 
-       LOC.CAT.ARG-ST < [ SLASH [ LIST #slash_1,
-                                   LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
-                                                               LAST #slash_3 ] ], [ SLASH [ LIST #slash_3,
-                                                                                          LAST #slash_last ] ] > ],
- SS [ WH [ LIST #wh_1,
-               LAST #wh_last ], 
-       LOC.CAT.ARG-ST < [ WH [ LIST #wh_1,
-                               LAST #wh_2 ] ], [ WH [ LIST #wh_2,
-                                                           LAST #wh_3 ] ], [ WH [ LIST #wh_3,
-                                                                                      LAST #wh_last ] ] > ],
+[ SS.LOC.STORE [ LIST #store_1,
+                 LAST #store_last ], 
+  ARG-ST < [ LOC.STORE [ LIST #store_1,
+                         LAST #store_2 ] ], [ LOC.STORE [ LIST #store_2,
+                                                          LAST #store_3 ] ], [ LOC.STORE [ LIST #store_3,
+                LAST #store_last ] ] >,
+ SS.SLASH [ LIST #slash_1,
+            LAST #slash_last ], 
+ ARG-ST < [ SLASH [ LIST #slash_1,
+                    LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
+                                                 LAST #slash_3 ] ], [ SLASH [ LIST #slash_3,
+                                                                              LAST #slash_last ] ] >,
+ SS.WH [ LIST #wh_1,
+         LAST #wh_last ], 
+ ARG-ST < [ WH [ LIST #wh_1,
+                 LAST #wh_2 ] ], [ WH [ LIST #wh_2,
+                                        LAST #wh_3 ] ], [ WH [ LIST #wh_3,
+                                                               LAST #wh_last ] ] >,
   DTRS < inflected-lexeme+ARP > ].
         
 
-
 amalgamation-4 := inflected-lexeme+amalg &
-[ SS [ LOC [ STORE [ LIST #store_1,
-                     LAST #store_last ], 
-             CAT.ARG-ST < [ LOC.STORE [ LIST #store_1,
-                                        LAST #store_2 ] ], [ LOC.STORE [ LIST #store_2,
-                                                                         LAST #store_3 ] ], [ LOC.STORE [ LIST #store_3, 
+[ SS.LOC.STORE [ LIST #store_1,
+                 LAST #store_last ], 
+  ARG-ST < [ LOC.STORE [ LIST #store_1,
+                         LAST #store_2 ] ], [ LOC.STORE [ LIST #store_2,
+                                                          LAST #store_3 ] ], [ LOC.STORE [ LIST #store_3, 
         LAST #store_4 ] ],  [ LOC.STORE [ LIST #store_4,
-                                          LAST #store_last ] ]  > ] ],
- SS [ SLASH [ LIST #slash_1,
-               LAST #slash_last ], 
-       LOC.CAT.ARG-ST < [ SLASH [ LIST #slash_1,
-                                   LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
-                                                               LAST #slash_3 ] ], [ SLASH [ LIST #slash_3,
+                                          LAST #store_last ] ]  >,
+ SS.SLASH [ LIST #slash_1,
+            LAST #slash_last ], 
+ ARG-ST < [ SLASH [ LIST #slash_1,
+                    LAST #slash_2 ] ], [ SLASH [ LIST #slash_2,
+                                                 LAST #slash_3 ] ], [ SLASH [ LIST #slash_3,
            LAST #slash_4 ] ],  [ SLASH [ LIST #slash_4,
-                                       LAST #slash_last ] ]  > ],
- SS [ WH [ LIST #wh_1,
-            LAST #wh_last ], 
-       LOC.CAT.ARG-ST < [ WH [ LIST #wh_1,
-                               LAST #wh_2 ] ], [ WH [ LIST #wh_2,
-                                                           LAST #wh_3 ] ], 
+                                         LAST #slash_last ] ]  >,
+ SS.WH [ LIST #wh_1,
+         LAST #wh_last ], 
+ ARG-ST < [ WH [ LIST #wh_1,
+                         LAST #wh_2 ] ], [ WH [ LIST #wh_2,
+                                                LAST #wh_3 ] ], 
     [ WH [ LIST #wh_3,
            LAST #wh_4 ] ],  [ WH [ LIST #wh_4,
-                                       LAST #wh_last ] ]  > ],
+                                       LAST #wh_last ] ]  >,
   DTRS < inflected-lexeme+ARP > ].
        
 
