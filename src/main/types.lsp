@@ -521,7 +521,7 @@
 ;;; Try to reduce the amount of space used by the expanded type hierarchy
 
 (defun clear-glbs nil
-  (compress-types)
+  (gc-types)
   (maphash #'(lambda (name type)
 	       (when (search "GLBTYPE" (symbol-name name))
 		 (setf (type-constraint type) nil)
@@ -535,7 +535,7 @@
       (reduce #'union used))))
 
 (defun purge-constraints nil
-  (compress-types)
+  (gc-types)
   (let* ((leaves (mapcar #'(lambda (x) (gethash x *types*)) 
 			 (slot-value *leaf-types* leaf-types)))
 	 (parents 
