@@ -105,7 +105,6 @@
        (:file "nf-to-fol")
        (:file "fol-to-mrs")))
 
-     #+:nil
      (:module "rmrs"
       :source-pathname "rmrs"
       :binary-pathname "rmrs"
