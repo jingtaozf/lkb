@@ -232,7 +232,7 @@ INSERT INTO current_grammar
    LIMIT 1;' );
 
 INSERT INTO qrya VALUES ( 'set-current-view', 0, 'where-subcls' );
-INSERT INTO qrya VALUES ( 'set-current-view', 1, 'embedded-str' );
+INSERT INTO qrya VALUES ( 'set-current-view', 1, 'text' );
 INSERT INTO qry VALUES 
        ( 'set-current-view', 2, 
        '
@@ -266,7 +266,7 @@ CREATE VIEW multi_revision_active
 
 CREATE VIEW active
  AS SELECT * FROM revision_active UNION SELECT * FROM multi_revision_active;
-UPDATE meta SET val=''$1'' WHERE var=''filter'';
+UPDATE meta SET val=$1 WHERE var=''filter'';
 ' );
 
 INSERT INTO qrya VALUES ( 'merge-into-db', 0, 'text' );
@@ -365,7 +365,7 @@ PRIMARY KEY (mode,slot, field)
 
 DELETE FROM defn WHERE mode = 'erg';
 INSERT INTO defn VALUES ( 'erg', 'id', 'name', '', 'symbol' );
-INSERT INTO defn VALUES ( 'erg', 'sense-id', 'name', '', 'symbol' );
+-- INSERT INTO defn VALUES ( 'erg', 'sense-id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'erg', 'orth', 'orthography', '', 'string-list' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'type', 'nil', 'symbol' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'orthography', '(stem)', 'string-fs' );
@@ -379,7 +379,7 @@ INSERT INTO defn VALUES ( 'erg', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)
 
 DELETE FROM defn WHERE mode = 'mwe';
 INSERT INTO defn VALUES ( 'mwe', 'id', 'name', '', 'symbol' );
-INSERT INTO defn VALUES ( 'mwe', 'sense-id', 'name', '', 'symbol' );
+-- INSERT INTO defn VALUES ( 'mwe', 'sense-id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'orth', 'orthography', '', 'string-list' ); 
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'type', 'nil', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'orthography', '(orth)', 'string-diff-fs' ); -- DIFF LIST
