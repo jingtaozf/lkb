@@ -1,4 +1,5 @@
 ROOT = /lingo/www/build/
+SROOT= ${HOME}/class/src
 WROOT = c:/src
 DATE = `date "+%Y-%m-%d"`
 TARGET = /lingo/www/lingo/ftp
@@ -38,6 +39,8 @@ update:
 	)
 
 all: lkb erg matrix spanish itsdb
+
+solaris: lkb_solaris itsdb_solaris
 
 #
 # link structure on CSLI LinGO ftp(1) site
@@ -120,23 +123,26 @@ lkb_linux@cypriot:
               ACL_LOCALE=C ./alisp -I clim.dxl -qq && touch ${ROOT}/.yes; )
 
 lkb_solaris:
-	${RM} -f ${ROOT}/.yes;
+	${RM} -f ${HOME}/tmp/.yes;
+	( cd ${SROOT}/lkb && ${CVS} -q update; )
 	( \
-	  echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
-	  echo "(load \"${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
+	  echo "(load \"${SROOT}/lkb/src/general/loadup.lisp\")"; \
+	  echo "(load \"${SROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
 	  echo "(pushnew :lkb *features*)"; \
+	  echo "(pushnew :lui *features*)"; \
 	  echo "(pushnew :mrs *features*)"; \
 	  echo "(setf make::*building-image-p* t)"; \
 	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
-	) | ( cd ${ROOT}/acl; ./clim -qq && touch ${ROOT}/.yes; )
+	) | ( cd ${SROOT}/acl; ./clim -qq && touch ${HOME}/tmp/.yes; )
 	( \
-	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
-	  cd ${ROOT}/lkb; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_solaris.tgz \
+	  if [ ! -f ${HOME}/tmp/.yes ]; then exit 1; fi; \
+	  cd ${SROOT}/lkb; \
+	  ${TAR} Svczf /tmp/lkb_solaris.tgz \
               --exclude=".nfs*" \
 	      solaris; \
+	  scp /tmp/lkb_solaris.tgz oe@lingo:${TARGET}/${DATE}; \
 	)
 
 lkb_windows:
@@ -160,7 +166,7 @@ lkb_windows:
 	  ${RM} -f /c/tmp/lkb_windows.zip; \
           zip -r /c/tmp/lkb_windows.zip windows; )
 #	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip eo:${TARGET}/${DATE};
-	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip lingo:/tmp;
+	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip oe@lingo:/tmp;
 
 lkb_documentation:
 	( \
@@ -239,15 +245,16 @@ itsdb_linux:
 
 itsdb_solaris:
 	( \
-	  cd ${ROOT}/lkb; \
-	  find src/.sacl -type f -exec touch {} \; ; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_solaris.tgz \
+	  cd ${SROOT}/lkb; \
+	  find src/.s6cl -type f -exec touch {} \; ; \
+	  tar Svczf /tmp/itsdb_solaris.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      bin/solaris/tsdb bin/solaris/swish++ \
 	      bin/solaris/pvmd3 bin/solaris/pvm \
 	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
-	      src/.sacl/pvm src/.sacl/tsdb; \
+	      src/.s6cl/pvm src/.s6cl/tsdb; \
+	  scp /tmp/itsdb_solaris.tgz oe@lingo:${TARGET}/${DATE}; \
 	)
 
 itsdb_libraries:
