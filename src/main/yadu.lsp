@@ -27,16 +27,16 @@
 
 
 (defstruct tail-element
-           fs path-rep spec persistence)
-        
-;;; In Lascarides and Copestake (1995), the fs is atomic, but this might
-;;; not be true when we impose well-formedness conditions
-;;; also - spec is a type there, but we might want to use other notions of
+           path-rep spec persistence)
+
+
+;;; path-rep assumes we have atomic fs tails - this simplifies
+;;; life because we don't need to worry about feature structure copying
+;;; because for some calculations a different data structure is more efficient
+;;; In Lascarides and Copestake (1995)
+;;; spec is a type, but we might want to use other notions of
 ;;; specificity
 ;;; persistence indicates whether defaults are purely lexical etc
-
-;;; path-rep is an additional slot for when we do have atomic fs tails
-;;; because for some calculations a different data structure is more efficient
 
 (defstruct yadu-pv
    path value)
@@ -57,54 +57,15 @@
 
 ;;; Copying functions
 
-(defun copy-tdfs-elements (old-tdfs) ; *** JAC new function
+(defun copy-tdfs-elements (old-tdfs)
+  ;; nothing destructive now happens to tail-elements
    (let ((indef (copy-dag (tdfs-indef old-tdfs))))
       (when indef
          (make-tdfs :indef indef
-              :tail 
-              (for element in (tdfs-tail old-tdfs)
-                 collect
-                 (copy-tail-element-completely ; *** ???
-                    element))))))
-
-(defun copy-tdfs-completely (old-tdfs)
-   (make-tdfs :indef (copy-dag-completely (tdfs-indef old-tdfs))
-              :tail 
-              (for element in (tdfs-tail old-tdfs)
-                 collect
-                 (copy-tail-element-completely
-                    element))))
-        
-(defun copy-tdfs-really-completely (old-tdfs)
-   ;;; needed for lex rule application
-   (make-tdfs :indef (copy-dag-completely (tdfs-indef old-tdfs))
-              :tail 
-              (for element in (tdfs-tail old-tdfs)
-                 collect
-                 (copy-tail-element-completely
-                    element))))
-        
-(defun copy-tail-element-completely (t-element)
-   ;;; not actually completely because paths are shared with the old
-   ;;; structure, but I think this is OK
-   (make-tail-element 
-      :fs 
-      (copy-dag-completely 
-         (tail-element-fs t-element))
-      :path-rep 
-      (let ((p-rep (tail-element-path-rep t-element)))
-         (if (yadu-pp-p p-rep)
-            (make-yadu-pp :paths
-               (copy-list (yadu-pp-paths p-rep)))
-            (if (yadu-pv-p p-rep)
-               (make-yadu-pv :path (yadu-pv-path p-rep)
-                  :value (copy-list (yadu-pv-value p-rep)))
-               (unless (null p-rep)
-                  (error "Incorrect value in path rep")))))
-      :persistence (copy-list (tail-element-persistence t-element))
-      :spec (tail-element-spec t-element)
-      ; was copy-list, but this gives error with atoms in MCL
-      ))
+                    :tail 
+                    (for element in (tdfs-tail old-tdfs)
+                         collect
+                         element)))))
 
 ;;; Utility
 
@@ -112,21 +73,24 @@
    (type-of-fs (tdfs-indef tdfs)))
 
 
-(defun tdfs-at-end-of (feat tdfs)
-   (if feat
-      (let ((path (list feat)))
-         (make-tdfs :indef
-                    (existing-dag-at-end-of-with-error (tdfs-indef tdfs) path)
-            :tail 
-            (remove-feat-from-tail-elements feat (tdfs-tail tdfs))))
+(defun tdfs-at-end-of (path tdfs)
+   (if path
+       (make-tdfs :indef
+                  (existing-dag-at-end-of-with-error (tdfs-indef tdfs) path)
+                  :tail 
+                  (remove-path-from-tail-elements path (tdfs-tail tdfs)))
       tdfs))
 
-(defun remove-feat-from-tail-elements (feat tail)
-   (when tail
-      (let ((path (create-path-from-feature-list (list feat))))
-         (for tail-element in tail
-            filter
-            (remove-feat-from-tail feat path tail-element)))))
+(defun remove-path-from-tail-elements (path tail)
+  (for tail-element in tail
+       collect
+       (remove-path-from-tail path tail-element)))
+
+
+(defun yadu-general-merge-tails (tail1 tail2 indef)
+  (if (and tail1 tail2)
+      (merge-tails tail1 tail2 indef)
+    (or tail1 tail2)))
 
 
 ;;; YADU
@@ -148,34 +112,11 @@
    (yadu1 (tdfs-indef tdfs1) (tdfs-indef tdfs2) (tdfs-tail tdfs1)
       (tdfs-tail tdfs2)))
 
-(defun yadu-features (tdfs1-feat tdfs1 tdfs2-feat tdfs2)
-   (yadu1
-      (if (listp tdfs1-feat)
-         (existing-dag-at-end-of-with-error (tdfs-indef tdfs1) tdfs1-feat)
-         (get-dag-value (tdfs-indef tdfs1) tdfs1-feat))
-      (if (listp tdfs2-feat)
-         (existing-dag-at-end-of-with-error (tdfs-indef tdfs2) tdfs2-feat)
-         (get-dag-value (tdfs-indef tdfs2) tdfs2-feat))
-      (if tdfs1-feat
-         (remove-feat-from-tail-elements tdfs1-feat (tdfs-tail tdfs1))
-         (tdfs-tail tdfs1))
-      (if tdfs2-feat
-         (remove-feat-from-tail-elements tdfs2-feat (tdfs-tail tdfs2))
-         (tdfs-tail tdfs2))))
-
-
 (defun yadu1 (indef1 indef2 tail1 tail2)
    (let ((indef12 (unify-wffs indef1 indef2)))
       (if indef12
-          (if (and tail1 tail2)
-              (let* ((tail12 (merge-tails tail1 tail2
-                                          indef12))
-                     (result (make-tdfs :indef indef12
-                                        :tail tail12)))
-                  (break "inside yadu defaults")
-                  result)
-              (make-tdfs :indef indef12
-                         :tail (or tail1 tail2))))))
+          (make-tdfs :indef indef12
+                     :tail (yadu-general-merge-tails tail1 tail2 indef12)))))
 
 (defun yadu-winner (tdfs)
   (let ((indef (tdfs-indef tdfs))
@@ -247,7 +188,7 @@
             (every #'(lambda (rem-element) 
                         (not (more-specific-p rem-element tail-element)))
                      unpartitioned)
-             (push (tail-element-fs tail-element) mu-next)
+             (push (tail-element-path-rep tail-element) mu-next)
              (push tail-element next-unpartitioned)))
        (partition-tail next-unpartitioned (cons mu-next partitioned)))
     (nreverse partitioned)))
@@ -271,15 +212,41 @@
 ;;; and think about constraints - should unify-wffs be used instead?
 
 (defun merge-tails (tail1 tail2 indef-fs)
-   ;;; change to delete-if eventually?
    (remove-if 
       #'(lambda (tail-element)
-           (let ((tail-fs (tail-element-fs tail-element)))
-              (or (dag-subsumes-p tail-fs indef-fs)
+          (let ((tail-atfs (tail-element-path-rep tail-element)))
+             (or (atomic-dag-subsumes-p tail-atfs indef-fs)
                  (not
-                    (unifiable-dags-p tail-fs indef-fs)))))
-        (union-tails tail1 tail2)))
-  
+                    (atomic-unifiable-dags-p tail-atfs indef-fs)))))
+      (union-tails tail1 tail2)))
+
+(defun atomic-dag-subsumes-p (atomic-fs fs)
+  (if (yadu-pv-p atomic-fs)
+      (let* ((path (yadu-pv-path atomic-fs))
+             (value (yadu-pv-value atomic-fs))
+             (fs-at-end-of (existing-dag-at-end-of fs 
+                                      (path-typed-feature-list path))))
+        (and fs-at-end-of
+             (subsume-types value
+                            (type-of-fs fs-at-end-of))))
+    (let* ((paths (yadu-pp-paths atomic-fs))
+           (fs1 (existing-dag-at-end-of fs
+                                        (path-typed-feature-list
+                                         (car paths)))))
+      (and fs1
+           (for path in (cdr paths)
+                all-satisfy
+                (eq fs1
+                    (existing-dag-at-end-of fs 
+                                            (path-typed-feature-list path))))))))
+
+(defun atomic-unifiable-dags-p (atomic-fs fs)
+  ;;; FIX - this is complicated because of the need to 
+  ;;; check that features are compatible with types on the
+  ;;; main fs - basically we have to do full unification
+  (declare (ignore atomic-fs fs))
+  t)
+
 (defun union-tails (tail1 tail2)
    (when (> (length tail2) (length tail1))
       (rotatef tail1 tail2))  ; swaps the values
@@ -300,17 +267,15 @@
                               (merge-persistence pers1 pers2)))
                         nil)
                      tail-element)))))
-      (append new-elements tail1)))  ; make nconc?
+      (append new-elements tail1)))  
 
 (defun merge-persistence (p1 p2)
-   (sort (union (copy-list p1) (copy-list p2)) 
+   (sort (union p1 p2) 
       #'string<))
                   
 
 (defun equal-tail-elements (el1 el2)
    (and (equalp (tail-element-spec el1) (tail-element-spec el2))
-      ;;;  stuff below SHOULD be more efficient than
-      ;;;      (dag-equal-p (tail-element-fs el1) (tail-element-fs el2))))
       (let ((pr1 (tail-element-path-rep el1))
             (pr2 (tail-element-path-rep el2)))
          (or (and (yadu-pp-p pr1) (yadu-pp-p pr2)
@@ -324,39 +289,45 @@
 
 ;;; Adding and removing features from tails for rule application
 
-(defun add-feat-to-tail (feature path tail-element)
-   (let ((new-dag (create-dag)))
-      (unify-paths path new-dag (make-path) (tail-element-fs tail-element))
-      (setf (tail-element-fs tail-element) new-dag)
-      (let ((p-rep (tail-element-path-rep tail-element)))
-         (if (yadu-pp-p p-rep)
-            (for tail-path in (yadu-pp-paths p-rep)
-               do
-               (push-feature feature tail-path))
-            (if (yadu-pv-p p-rep)
-               (push-feature feature (yadu-pv-path p-rep))
-               (unless (null p-rep)
-                  (error "Incorrect value in path rep")))))
-      tail-element))
+(defun add-path-to-tail (path tail-element)
+  (let* ((p-rep (tail-element-path-rep tail-element))
+         (new-element (make-tail-element 
+                       :spec (tail-element-spec tail-element)
+                       :persistence 
+                       (tail-element-persistence tail-element)
+                       :path-rep
+                       (if (yadu-pp-p p-rep)
+                           (make-yadu-pp :paths
+                                         (for tail-path in (yadu-pp-paths p-rep)
+                                              collect
+                                              (path-append path tail-path)))
+                         (if (yadu-pv-p p-rep)
+                             (make-yadu-pv :path 
+                                           (path-append path (yadu-pv-path p-rep))
+                                           :value (yadu-pv-value p-rep))
+                           (unless (null p-rep)
+                             (error "Incorrect value in path rep")))))))
+    new-element))
 
-(defun remove-feat-from-tail (feature path tail-element)
-  (declare (ignore feature))
-   (let ((new-dag 
-            (existing-dag-at-end-of 
-               (tail-element-fs tail-element) 
-               (path-typed-feature-list path))))
-      (when new-dag
-         (setf (tail-element-fs tail-element) new-dag)
-         (let ((p-rep (tail-element-path-rep tail-element)))
-            (if (yadu-pp-p p-rep)
-               (for tail-path in (yadu-pp-paths p-rep)
-                  do
-                  (pop-feature tail-path))
-               (if (yadu-pv-p p-rep)
-                  (pop-feature  (yadu-pv-path p-rep))
-                  (unless (null p-rep)
-                     (error "Incorrect value in path rep"))))
-            tail-element))))
+(defun remove-path-from-tail (path tail-element)
+    (let* ((p-rep (tail-element-path-rep tail-element))
+         (new-element (make-tail-element 
+                       :spec (tail-element-spec tail-element)
+                       :persistence 
+                       (tail-element-persistence tail-element)
+                       :path-rep
+                       (if (yadu-pp-p p-rep)
+                           (make-yadu-pp :paths
+                                         (for tail-path in (yadu-pp-paths p-rep)
+                                              collect
+                                              (path-delete path tail-path)))
+                         (if (yadu-pv-p p-rep)
+                             (make-yadu-pv :path 
+                                           (path-delete path (yadu-pv-path p-rep))
+                                           :value (yadu-pv-value p-rep))
+                           (unless (null p-rep)
+                             (error "Incorrect value in path rep")))))))
+      new-element))
   
 
 ;;; YADU 
@@ -404,22 +375,20 @@
 
 
 (defun carp-unify (fixed-fs def-fs-set check-ind-defs-p)
-   ; check-ind-defs-p is true if the fixed-fs might contain
-   ; some defeasible material
+  ;; def-fs-set is using path representation
+  ;; check-ind-defs-p is true if the fixed-fs might contain
+  ;; some defeasible material
+  (declare (ignore check-ind-defs-p))
+  ;;; FIX - should be able to improve matters by chucking out
+  ;;; structures which were incompatible with the fixed-fs
+  ;;; when check-ind-defs-p is true - if it isn't, we're doing the
+  ;;; first round and the tails are guaranteed to be compatible
    (setf *failure-list* nil)
-   (let* ((possible-defs 
-            (if check-ind-defs-p
-               (remove-if-not 
-                  #'(lambda (def-fs)
-                  (unify-dags (copy-dag-completely fixed-fs)
-                       (copy-dag-completely def-fs)))
-                 def-fs-set)
-              def-fs-set))
-        (all-ok (unify-in (copy-dag-completely fixed-fs) possible-defs nil)))
+   (let ((all-ok (unify-in fixed-fs def-fs-set nil)))
       (if all-ok (list all-ok)
          (or
-            (unify-combinations fixed-fs possible-defs nil nil 
-               (- (length possible-defs) 1))
+            (unify-combinations fixed-fs def-fs-set nil nil 
+               (- (length def-fs-set) 1))
             (list fixed-fs)))))
 
 
@@ -438,9 +407,8 @@
                      *failure-list*)
                   (setf success nil)) ;;; bound to fail
                (t
-                  (let* ((dag-copy (copy-dag-completely fixed-fs))
-                        (unif-result 
-                           (unify-in dag-copy combination nil)))
+                  (let ((unif-result 
+                           (unify-in fixed-fs combination nil)))
                      (if unif-result
                         (progn
                            (push unif-result successful)
@@ -466,16 +434,27 @@
 
 
 (defun unify-in (indef-fs def-fs-list added)
+  ;;; FIX - need to check for well-formedness
    (if def-fs-list
-      (let ((def-copy (copy-dag-completely (car def-fs-list))))
 ;         (incf *unif-count*)
-         (if (unify-dags indef-fs def-copy)
-            ; order is significant since unify-dags is destructive
-            ; modifying the first arg to give the result
-            ;
-            ; check-dag-for-cycles is needed to block incorrect LAST values
-            ; being inherited
-            ;           
+       (let* ((first-def (car def-fs-list))
+             (res (if (yadu-pv-p first-def) 
+                      (unify-paths (create-path-from-feature-list nil)
+                                   indef-fs
+                                   (create-path-from-feature-list 
+                                    (yadu-pv-path first-def))
+                                   (yadu-pv-value first-def))
+                    (let* ((paths (yadu-pp-paths first-def))
+                           (initial-path 
+                            (create-path-from-feature-list 
+                                      (car paths))))
+                      (dolist (path2 (cdr paths))
+                        (unify-paths initial-path       
+                                     indef-fs
+                                     (create-path-from-feature-list 
+                                      path2)
+                                     indef-fs))))))
+         (if res
             ; should this be unify-wffs?
             ; or maybe something that does limited 
             ; wellformedness checking?
@@ -510,19 +489,20 @@
       (multiple-value-bind
          (persistent non-persistent)
          (split-tail persistence (tdfs-tail tdfs))
-         (let* ((indef (copy-dag-completely (tdfs-indef tdfs)))
+         (let* ((indef (tdfs-indef tdfs))
                (partition (partition-tail non-persistent nil))
                (non-persistent-def 
-                  (generalise-set (yadu-unify (list indef) partition))))
-            (unless (unify-dags indef non-persistent-def)
+                (generalise-set (yadu-unify (list indef) partition)))
+                (result (unify-dags indef non-persistent-def)))
+            (unless result
                (error "Default is inconsistent with indef"))
-            (let ((new-indef (create-wffs indef)))
+            (let ((new-indef (create-wffs result)))
                (unless new-indef
                   (cerror "The result of incorporating the persistent defaults
                      cannot be made well-formed" "Ignore defaults")
-                     (setf new-indef (copy-dag-completely (tdfs-indef tdfs))))
-                  (make-tdfs :indef new-indef
-                     :tail persistent))))
+                     (setf new-indef indef))
+               (make-tdfs :indef new-indef
+                          :tail persistent))))
          tdfs))
 
 
@@ -539,8 +519,7 @@
                   (when (set-difference 
                         (tail-element-persistence tail-element)
                         persistence)
-                     (push (copy-tail-element-completely
-                           tail-element) persistent)))
+                     (push tail-element persistent)))
                (push tail-element persistent))) 
          (values persistent non-persistent))))
 
@@ -612,8 +591,7 @@
          (unless (and real-indef 
                (member stored-path (dag-visit real-indef)))
             (push 
-               (make-tail-element :spec spec :fs
-                  (make-path-path-fs current-path stored-path) 
+             (make-tail-element :spec spec 
                   :path-rep 
                   (make-yadu-pp :paths 
                      (list current-path stored-path))
@@ -628,8 +606,7 @@
                (and real-indef (is-atomic real-indef)
                   (equalp (type-of-fs real-indef) val))
                (push 
-                  (make-tail-element :spec spec :fs
-                     (make-path-value-fs current-path val) 
+                (make-tail-element :spec spec 
                      :path-rep 
                      (make-yadu-pv :path current-path :value val)
                      :persistence (list persistence))
@@ -640,8 +617,7 @@
                   (and real-indef 
                      (eql (dag-type real-indef) type))
                   (push 
-                     (make-tail-element :spec spec :fs
-                        (make-path-value-fs current-path (list type))
+                     (make-tail-element :spec spec 
                         :path-rep 
                         (make-yadu-pv :path current-path :value (list type))
                         :persistence (list persistence))
@@ -653,16 +629,6 @@
                   (if indef-dag (get-dag-value indef-dag label))
                   persistence))))))
 
-(defun make-path-value-fs (path value)
-   (let ((new-dag (create-typed-dag *toptype*)))
-      (unify-paths path new-dag
-         (make-u-value :types value) new-dag)
-      new-dag))
-
-(defun make-path-path-fs (path1 path2)
-   (let ((new-dag (create-typed-dag *toptype*)))
-      (unify-paths path1 new-dag path2 new-dag)
-      new-dag))
        
 
 

@@ -535,7 +535,11 @@
    (with-unification-context (ignore)
       (incf *gen-chart-unifs*)
       (unless
-         (yadu-features daughter-index rule-tdfs nil fs)
+          (setf rule-tdfs
+            (yadu rule-tdfs
+                  (create-temp-parsing-tdfs
+                   fs daughter-index)))
+;         (yadu-features daughter-index rule-tdfs nil fs)
          (incf *gen-chart-fails*)
          (return-from gen-chart-evaluate-unification nil))
       (if completedp

@@ -73,28 +73,28 @@
          (make-type-feature-pair :type *toptype*
             :feature f))))
 
-
 (defun make-pv-unif (path1 type)
   (make-unification :lhs (create-typed-path-from-feature-list path1)
                     :rhs (make-u-value :types (if (listp type) type
                                                   (list type)))))
 
 
-(defun push-feature (feature path)
-   (push feature 
-         (path-typed-feature-list path)))
+(defun path-append (path1 path2)
+  (make-path :typed-feature-list 
+             (append
+              (path-typed-feature-list path1)
+              (path-typed-feature-list path2))))
       
-(defun pop-feature (path)
-   (pop (path-typed-feature-list path)))
+(defun path-delete (path1 path2)
+  (let ((f1 (path-typed-feature-list path1))
+        (f2 (path-typed-feature-list path2)))
+    (if (and (> (length f2) (length f1))
+             (equal f1 (subseq f2 0 (length f1))))
+        (make-path :typed-feature-list 
+                   (subseq f2 (length f1)))
+      path2)))
+        
 
-
-(defun push-typed-feature (feature path)
-   (push (make-type-feature-pair :type (maximal-type-of feature)
-            :feature feature)
-         (typed-path-typed-feature-list path)))
-      
-(defun pop-typed-feature (path)
-   (pop (typed-path-typed-feature-list path)))
 
 (defun extend-typed-path (path type feature)
   (let ((new-tvp (make-type-feature-pair :type type :feature feature))
@@ -174,16 +174,14 @@
                      (output-unif unif t nil))
                   nil))))))
 
-(defun unify-paths (lhs-path lhs-dag rhs-path rhs-dag &optional wffs)
+(defun unify-paths (lhs-path lhs-dag rhs-path rhs-dag)
    ;; follows paths into dags and unifies the dags at the end
    ;; caller sets up unification context and copies result if it wants it
     (let ((dag1 (unify-paths-dag-at-end-of lhs-path lhs-dag)))
        (when dag1
           (let ((dag2 (unify-paths-dag-at-end-of rhs-path rhs-dag)))
              (when dag2
-                (if wffs 
-                   (unify-wffs dag1 dag2)
-                   (unify-dags dag1 dag2)))))))
+                   (unify-dags dag1 dag2))))))
 
 (defun unify-paths-with-fail-messages (lhs-path lhs-dag rhs-path rhs-dag 
                              lhs-id lhs-features rhs-id rhs-features)

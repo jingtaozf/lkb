@@ -402,18 +402,19 @@ because of the likelyhood of changes in the grammar.
 ;;; function to call from PAGE or LKB interface
 
 (defun mrs-to-vit-convert (mrs-psoa &optional (standalone t))
-  (if (eq *mrs-for-language* 'english)
-      (let ((mrsstruct
-             (if (boundp '*ordered-mrs-rule-list*)
-                 (munge-mrs-struct mrs-psoa *ordered-mrs-rule-list*)
-             mrs-psoa)))
-        (multiple-value-bind 
-            (vit binding-sets)
-            (mrs-to-vit mrsstruct)
-          (setf *canonical-bindings* nil)
-          (when standalone
-            (format t "~%Unscoped form")
-            (output-mrs mrsstruct 'indexed)
+  (when mrs-psoa
+    (if (eq *mrs-for-language* 'english)
+        (let ((mrsstruct
+               (if (boundp '*ordered-mrs-rule-list*)
+                   (munge-mrs-struct mrs-psoa *ordered-mrs-rule-list*)
+                 mrs-psoa)))
+          (multiple-value-bind 
+              (vit binding-sets)
+              (mrs-to-vit mrsstruct)
+            (setf *canonical-bindings* nil)
+            (when standalone
+              (format t "~%Unscoped form")
+              (output-mrs mrsstruct 'indexed)
             ;;; then try and find sets of bindings which will give a fully scoped 
             ;;; structure, and output the results
             (if binding-sets
@@ -439,7 +440,7 @@ because of the likelyhood of changes in the grammar.
       (when (and vit standalone)
         (write-vit-pretty t vit)
         (format t "~%"))
-      vit)))
+      vit))))
 
 (defun check-vit (vit &optional (as-string nil) (stream *standard-output*))
   (with-open-file (vit-out "~/tmp/vitcheck" :direction :output

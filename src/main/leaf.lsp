@@ -193,8 +193,7 @@ introduces new features ~A" name new-features)
     (make-tdfs :indef (type-constraint entry)
                :tail (for element in (tdfs-tail (type-tdfs parent-entry))
                           collect
-                          (copy-tail-element-completely
-                           element)))))
+                           element))))
      
 (defun expand-leaf-type-constraint (node type-entry parent-entry)
   (let* ((*unify-debug-cycles* t)       ; turn on cyclic dag warning messages

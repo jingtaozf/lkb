@@ -70,10 +70,10 @@
                   (constraint-of lcsupertype))))
          (set-type real-result-dag lcsupertype)
          (when constraint
-            (unify-dags real-result-dag 
-               (copy-dag-completely constraint)))
-         (unless (or (is-atomic real-dag1) (is-atomic real-dag2))
-            (generalise-subparts real-dag1 real-dag2 real-result-dag)))))
+           (let ((new-result
+                  (unify-dags real-result-dag constraint)))
+             (unless (or (is-atomic real-dag1) (is-atomic real-dag2))
+               (generalise-subparts real-dag1 real-dag2 new-result)))))))
 
 
 (defun generalise-subparts (dag1 dag2 result-dag)

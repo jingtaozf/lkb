@@ -172,6 +172,26 @@
    (get-indexed-lrules rhd-fs #'spelling-change-rule-p))
 
 
+(defun apply-lex-interactive (lex lex-entry-fs lex-rule)
+  (if 
+      ;; modification to check whether a particular 
+      ;; lexical rule is morphological - if so, then the 
+      ;; unification function is called with an extra 
+      ;; option value which describes the new 
+      ;; orthography of the result.
+      (spelling-change-rule-p lex-rule)
+      ;; need to reimplement evaluate-unifications-with-fail-messages
+      (evaluate-unifications 
+       lex-rule 
+       (list lex-entry-fs) 
+       (car (mapcar #'car 
+                    (full-morph-generate 
+                     (extract-orth-from-fs lex-entry-fs)
+                     (rule-id lex-rule)))))
+    (evaluate-unifications lex-rule
+                           (list lex-entry-fs))))
+
+
 ;;; rule format - is very like any other psort file
 
 (defun add-grammar-rule (id rule)

@@ -12,7 +12,7 @@
           *ordered-mrs-rule-list*
 ; for lexlookup
           make-pv-unif construct-tdfs create-wffs 
-          process-unifications yadu copy-tdfs-completely))
+          process-unifications yadu))
 
 (defpackage "MRS"
   (:use "COMMON-LISP" "COMMON-LISP-USER" "USER")

@@ -67,6 +67,8 @@
 
 (defvar *leaf-types* nil)
 
+(defvar *type-reload-p* nil)
+
 (defun clear-types nil
    (disable-type-interactions)
    (setf *toptype* nil)
@@ -75,7 +77,10 @@
    (setf *leaf-types* nil)
    (clear-type-cache)
    (clear-feature-table)
-   (clear-expanded-lex))
+   (clear-expanded-lex)
+#+:allegro(when *type-reload-p* (gc t))
+   (setf *type-reload-p* t))
+     
 
 (defun clear-types-for-patching-constraints nil
    (clear-type-cache)

@@ -57,15 +57,17 @@
 ;;; *lexical-persistence* is in globals.lsp
 
 (defun display-tail (tail-element stream) 
+  ; needs fixing
    (format stream "~%")
    (let ((start-pos (current-position stream))
          (pers (tail-element-persistence tail-element))
-         (spec (tail-element-spec tail-element))
-         (dag-instance (tail-element-fs tail-element)))
+         (spec (tail-element-spec tail-element)))
+;         (dag-instance (tail-element-fs tail-element)))
       (unless (equal pers (list *lexical-persistence*))
          (format stream " *"))
       (add-type-and-active-fs-region stream 
          start-pos nil spec nil t)
       (format stream ": ")
-      (display-dag1 dag-instance 'tail stream 
-         (current-position-x stream))))
+      (format stream (tail-element-path-rep tail-element))))
+;      (display-dag1 dag-instance 'tail stream 
+;        (current-position-x stream))))

@@ -371,7 +371,8 @@
      (create-path-from-feature-list *path1*)
      *fs1*
      (create-path-from-feature-list path2)
-     (copy-dag-completely fs2)
+     fs2
+     ;;; was copied, but shouldn't be necessary
      :selected1 *path1* :selected2 path2)
     (terpri)
     (unhighlight-class frame)))

@@ -41,6 +41,8 @@
 (defvar *check-paths-successes* 0)
 (defvar *check-paths-fails* 0)
 
+(defvar *cached-orth-str-list* nil)
+
 ;;; *chart-limit* is defined in globals.lsp
 
 (defvar *chart* (make-array (list *chart-limit*))) 
@@ -120,6 +122,7 @@
 ;;; interspersed among them) can be displayed
 
 (defun clear-chart nil
+   (setf *cached-orth-str-list* nil)
    (setf *parse-record* nil) 
    (fill *chart* nil) 
    (fill *morphs* nil)
@@ -587,10 +590,15 @@
    ;; process. If it is present, it is inserted in the resulting fs.
    ;;  The actual process of unification 
    (let*
-      ((rule-tdfs (rule-full-fs rule))
+      ((current-tdfs (rule-full-fs rule))
        (rule-daughter-order (cdr (rule-order rule)))
        (rule-apply-order (rule-daughters-apply-order rule))
-       (n 0))
+       (n 0)
+       (new-orth-fs (if nu-orth (get-orth-tdfs nu-orth))))
+       ;; shouldn't do this here because we may not need it
+       ;; but otherwise we get a nested unification context error
+     ;; - cache the values for a word, so it's not reconstructed 
+     ;; only wasted if the morphology is wrong
       (with-unification-context (ignore)
          (dolist (rule-feat rule-apply-order)
             (cond
@@ -598,8 +606,8 @@
                ((x-restrict-and-compatible-p
                    (if (listp rule-feat)
                       (x-existing-dag-at-end-of 
-                       (tdfs-indef rule-tdfs) rule-feat)
-                      (x-get-dag-value (tdfs-indef rule-tdfs) rule-feat))
+                       (tdfs-indef current-tdfs) rule-feat)
+                      (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
                    (edge-dag-restricted
                       (nth (position rule-feat rule-daughter-order) 
                            child-edges)))
@@ -608,57 +616,72 @@
                   (incf *check-paths-fails*)
                   (return-from evaluate-unifications nil)))
             (incf *parse-unifs*)
-            (unless
-               (yadu-features rule-feat rule-tdfs nil
-                  (nth (position rule-feat rule-daughter-order) child-fs-list))
+           (unless
+               (setf current-tdfs
+                 (yadu current-tdfs
+                       (create-temp-parsing-tdfs
+                        (nth 
+                         (position rule-feat rule-daughter-order) 
+                         child-fs-list)
+                        rule-feat)))
                (incf *parse-fails*)
                (return-from evaluate-unifications nil)))
          ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of
          ;; will return the entire structure
-         (let ((result (tdfs-at-end-of (car (rule-order rule)) rule-tdfs)))
-            (when nu-orth
-               (let ((tmp-orth-path *orth-path*))
-                  (for orth-value in (split-into-words nu-orth)
-                     do
-                     (let ((opath (create-path-from-feature-list 
-                                    (append tmp-orth-path *list-head*))))
-                        (unify-paths opath                    
-                                     (tdfs-indef result) 
-                                     (make-u-value :types (list orth-value)) 
-                                     nil)
-                        (setq tmp-orth-path 
-                              (append tmp-orth-path *list-tail*))))))
-            (when result
+         (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
+           (when nu-orth
+             (setf result
+               (yadu result new-orth-fs))) 
+           (when result
                ;; delete arcs just holding constituents' feature 
                ;; structures - before copying
                ;; otherwise their copies would be thrown away immediately
                ;; we have to check whether any of the deleted dags 
                ;; contain a cycle -
                ;; if so then the whole rule application should fail
-               (let* ((real-dag (deref-dag (tdfs-indef result)))
-                      (new (clone-dag real-dag))
-                      (arcs-to-check nil))
-                  (flet ((member-with-cyclic-check (arc)
-                            (when (member (dag-arc-attribute arc) 
-                                          *deleted-daughter-features*)
-                               (push arc arcs-to-check)
-                               t)))
-                     (setf (dag-arcs new)
-                        (remove-if #'member-with-cyclic-check (dag-arcs new)))
-                     (setf (dag-comp-arcs new)
-                        (remove-if #'member-with-cyclic-check 
-                                   (dag-comp-arcs new)))
-                     ;; take advantage of the fact that removed 
-                     ;; arcs might share structure
-                     ;; by checking them all at once
-                     (if (cyclic-dag-p (make-dag :type *toptype* 
-                                                 :arcs arcs-to-check))
-                        (progn (incf *parse-fails*) nil)
-                        (progn
-                           ;; (setf (dag-copy new) 'copy)
-                           (setf (dag-forward real-dag) new)
-                           (copy-tdfs-elements result))))))))))
+             (let* ((real-dag (deref-dag (tdfs-indef result)))
+                    (new (clone-dag real-dag))
+                    (arcs-to-check nil))
+               (flet ((member-with-cyclic-check (arc)
+                        (when (member (dag-arc-attribute arc) 
+                                      *deleted-daughter-features*)
+                          (push arc arcs-to-check)
+                          t)))
+                 (setf (dag-arcs new)
+                   (remove-if #'member-with-cyclic-check (dag-arcs new)))
+                 (setf (dag-comp-arcs new)
+                   (remove-if #'member-with-cyclic-check 
+                              (dag-comp-arcs new)))
+                 ;; take advantage of the fact that removed 
+                 ;; arcs might share structure
+                 ;; by checking them all at once
+                 (if (cyclic-dag-p (make-dag :type *toptype* 
+                                             :arcs arcs-to-check))
+                     (progn (incf *parse-fails*) nil)
+                   (progn
+                     ;; (setf (dag-copy new) 'copy)
+                     (setf (dag-forward real-dag) new)
+                     (copy-tdfs-elements result))))))))))
 
+
+(defun create-temp-parsing-tdfs (tdfs flist)
+  (let ((indef-dag (create-dag))
+        (tail nil)
+        (path (create-path-from-feature-list 
+               (if (listp flist)
+                   flist 
+                 (list flist)))))
+    (unify-paths path indef-dag (make-path) (tdfs-indef tdfs))
+    (for tail-element in (tdfs-tail tdfs)
+         do
+         (push (add-path-to-tail path tail-element) tail))
+    (make-tdfs :indef indef-dag :tail tail)))
+
+(defun get-orth-tdfs (str)
+  (or (cdr (assoc str *cached-orth-str-list* :test #'equal))
+      (let ((new-orth-tdfs (make-orth-tdfs str)))
+        (push (cons str new-orth-tdfs) *cached-orth-str-list*)
+        new-orth-tdfs)))
 
 ;;; evaluate-unifications-with-fail-messages - temporarily removed
 

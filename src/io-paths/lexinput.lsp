@@ -61,11 +61,13 @@
                   (file-write-date *psorts-temp-index-file*)))
              (file-date 
               (file-write-date file-name)))
-        (when (and cache-date file-date cache-index-date
+        (when (and overwrite-p
+                   cache-date file-date cache-index-date
                  (> cache-date file-date) 
-                 (> cache-index-date cache-date))
+                 (> cache-index-date file-date))
             (progn (setf ok t)
                    (format t "~%Reading in cached lexicon")
+                   (clear-lex)
                    (handler-case 
                        (read-psort-index-file)
                      (error (condition)

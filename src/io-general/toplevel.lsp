@@ -260,35 +260,10 @@
       (when lex-entry-fs 
          (let 
             ((lex-rule (ask-user-for-lexical-rule)))
-            (when lex-rule
+           (when lex-rule
                (let 
-                  ((result
-                        (if 
-                           ;; modification to check whether a particular 
-                           ;; lexical rule is morphological - if so, then the 
-                           ;; unification function is called with an extra 
-                           ;; option value which describes the new 
-                           ;; orthography of the result.
-                           (spelling-change-rule-p lex-rule)
-; need to reimplement with-fail-messages
-;                           (evaluate-unifications-with-fail-messages lex-rule 
-;                              (list (copy-tdfs-completely lex-entry-fs)) 
-;                              (list lex)
-;                              (car (mapcar #'car
-;                                 (full-morph-generate 
-;                                    (extract-orth-from-fs lex-entry-fs)
-;                                    (rule-id lex-rule)))))
-                           (evaluate-unifications lex-rule 
-                              (list (copy-tdfs-completely lex-entry-fs)) 
-                              (car (mapcar #'car 
-                                      (full-morph-generate 
-                                       (extract-orth-from-fs lex-entry-fs)
-                                       (rule-id lex-rule)))))
-;                           (evaluate-unifications-with-fail-messages lex-rule
-;                              (list (copy-dag-completely lex-entry-fs)) 
-;                              (list lex)))))
-                           (evaluate-unifications lex-rule
-                              (list (copy-tdfs-completely lex-entry-fs))))))
+                   ((result
+                     (apply-lex-interactive lex lex-entry-fs lex-rule)))
                   (cond (result
                         (display-fs result
                            (format nil "~(~A~) + ~A" 
@@ -434,7 +409,7 @@
                     (create-path-from-feature-list path1) 
                     resdag
                     (create-path-from-feature-list path2) 
-                    (copy-dag-completely fs2) fs1-id path1 fs2-id path2))
+                    fs2 fs1-id path1 fs2-id path2))
              (format t "~%Unification successful")
              (if resname (store-temporary-psort resname resdag))))
           (cond ((null fs1) 

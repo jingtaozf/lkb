@@ -60,89 +60,21 @@
                         )
                      ; no need to do inheritance when checking
                      ; for maximal introduction
-                     (let ((full-constraint 
-                              (inherit-constraints-debugging node type-entry 
-                                 local-constraint))) 
+                     (let* ((*unify-debug* t)
+                            (full-constraint 
+                              (inherit-constraints node type-entry 
+                                 local-constraint)))
                         (cond 
                            (full-constraint
-                            (check-fs-for-cycles full-constraint node)
-                              (setf (type-constraint type-entry)
-                                 full-constraint)
-                              (setf (type-appfeats type-entry)
-                                 (top-level-features-of full-constraint))
+                            (setf (type-constraint type-entry)
                               full-constraint)
+                            (setf (type-appfeats type-entry)
+                              (top-level-features-of full-constraint))
+                            full-constraint)
                            (t (format t "~%Type ~A's constraint 
                                  specification clashes with its parents'" node) 
-                                 nil))))))))
+                              nil))))))))
    nil)
 
-(defun inherit-constraints-debugging (node type-entry local-constraint)
-   (if (type-atomic-p type-entry)
-      (create-atomic-dag node)
-      (reduce #'(lambda (x y)
-            (unless
-               (or (null x) (null y))
-               (if (unify-dags-with-fail-messages x y nil)
-                    x)))
-         (mapcar #'(lambda (parent)
-               (let ((constraint
-                        (expand-constraint parent
-                           (get-type-entry parent))))
-                  (if constraint
-                     (copy-dag-completely constraint))))
-                  (type-parents type-entry))
-         :initial-value 
-         (if local-constraint (copy-dag-completely local-constraint)
-            (create-typed-dag node)))))
-
-(defun unify-dags-with-fail-messages (dag1 dag2 feature-path)
-   (let ((real-dag1 (follow-pointers dag1))
-         (real-dag2 (follow-pointers dag2)))
-      (or (eq real-dag1 real-dag2) 
-         (let
-            ((gcsubtype 
-                  (find-gcsubtype 
-                     (type-of-fs real-dag1)
-                     (type-of-fs real-dag2))))
-            (if gcsubtype
-              (progn
-               (set-type real-dag1 gcsubtype)
-               (cond 
-                  ((or (is-atomic real-dag1) (is-atomic real-dag2))
-                     (cond ((not (or (has-features real-dag1) 
-                                 (has-features real-dag2)))
-                           ;; fix 13 March 1992
-                           ;; to check for untyped case
-                           (put-name real-dag1 
-                              (if (listp gcsubtype) gcsubtype
-                                 (list gcsubtype)))
-                           ; ??
-                           (set-dag-value real-dag1 real-dag2))
-                        (t 
-                         (format t "~%Unification failed due to atomic non-atomic clash at path ~A" 
-                        (reverse feature-path))
-                         nil)))
-                  ((unifiable-with-fail-messages real-dag1 real-dag2 feature-path)
-                     (set-dag-value real-dag1 real-dag2))
-                  (t nil)))
-            (progn 
-                (format t "~%Unification of ~A and ~A failed at path ~A" 
-                        (type-of-fs real-dag1)  (type-of-fs real-dag2) 
-                        (reverse feature-path))
-                nil))))))
 
 
-
-(defun unifiable-with-fail-messages (dag1 dag2 feature-path)
-   (if (is-atomic dag2)
-      t
-      (for pairlis in (dag-dag-pairs dag2)
-         all-satisfy
-         (let* ((label (dag-pair-attribute pairlis))
-               (existing-dag (get-dag-value dag1 label)))
-         (if (or (null existing-dag)
-               (unify-dags-with-fail-messages (get-dag-value dag2 label)
-                  existing-dag (cons label feature-path)))
-            (put-dag-value dag1
-               label
-               (get-dag-value dag2 label)))))))

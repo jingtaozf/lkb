@@ -967,21 +967,9 @@
              (cerror "Ignore it" "Cannot make tdfs for ~A" parent))
            (when parent-tdfs
              (setf current-tail
-                   (combine-yadu-tails (tdfs-tail parent-tdfs)
+                   (yadu-general-merge-tails (tdfs-tail parent-tdfs)
                              current-tail (tdfs-indef local-tdfs))))))
       (setf (tdfs-tail local-tdfs) current-tail)
       local-tdfs))
 
-(defun combine-yadu-tails (tail1 tail2 indef)
-  (let ((ct1 (for element in tail1
-                 collect
-                 (copy-tail-element-completely
-                    element)))
-        (ct2 (for element in tail2
-                 collect
-                 (copy-tail-element-completely
-                    element))))
-    (cond ((and ct1 ct2)
-           (merge-tails ct1 ct2 indef))
-          (ct1)
-          (t ct2))))
+
