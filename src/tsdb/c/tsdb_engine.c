@@ -123,7 +123,7 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
         (*d)++;
         /* one more to delete */
         if(!relation_1->n_keys || !relation_2->n_keys) {
-          fprintf(stderr, "Bollox, no key in relation.\n");
+          fprintf(TSDB_ERROR_STREAM, "Bollox, no key in relation.\n");
           return((int *)NULL);
         } /* if */
 
@@ -172,11 +172,12 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
 
 #if defined(DEBUG) && defined(TOM)
 
-        printf("tsdb_join::\n common indices for elimination of tuples\n");
-        printf(" %s %s %ld \n",selection_1->relations[i]->name,
-               key_1,m);
-        printf(" %s %s %ld \n",selection_2->relations[j]->name,
-               key_2,n);
+        fprintf(tsdb_debug_stream,
+                "tsdb_join::\n common indices for elimination of tuples\n");
+        fprintf(tsdb_debug_stream,
+                " %s %s %ld \n",selection_1->relations[i]->name, key_1,m);
+        fprintf(tsdb_debug_stream,
+                " %s %s %ld \n",selection_2->relations[j]->name, key_2,n);
 #endif       
 
         if(kaerb) { 
@@ -453,28 +454,28 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
 #if defined(DEBUG) && defined(TOM)
   FILE* output;
 
-  tsdb_print_selection(selection_1,TSDB_DEFAULT_STREAM);
-  tsdb_print_selection(selection_2,TSDB_DEFAULT_STREAM);
+  tsdb_print_selection(selection_1,tsdb_debug_stream);
+  tsdb_print_selection(selection_2,tsdb_debug_stream);
 
 #endif
 
   delete =  tsdb_double_relations(selection_1,selection_2,&d);
 
   /*
-  tsdb_print_selection(selection_1,TSDB_DEFAULT_STREAM);
-  tsdb_print_selection(selection_2,TSDB_DEFAULT_STREAM);
+  tsdb_print_selection(selection_1,tsdb_debug_stream);
+  tsdb_print_selection(selection_2,tsdb_debug_stream);
 
   selection_1 = tsdb_clean_selection(selection_1,&fuck);
   selection_2 = tsdb_clean_selection(selection_2,&fuck);
   */
 
 #if defined(DEBUG) && defined(TOM)
-  output = tsdb_open_pager();
-  printf("reduced selection 1\n");
-  tsdb_print_selection(selection_1,output);
-  printf("reduced selection 2\n");
-  tsdb_print_selection(selection_2,output);
-  pclose(output);
+/*  output = tsdb_open_pager();*/
+  fprintf(tsdb_debug_stream,"reduced selection 1\n");
+  tsdb_print_selection(selection_1,tsdb_debug_stream);
+  fprintf(tsdb_debug_stream,"reduced selection 2\n");
+  tsdb_print_selection(selection_2,tsdb_debug_stream);
+/*  pclose(output);*/
 #endif
 
   /* Now begin with keylists */
@@ -552,13 +553,13 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
       selection_1=tsdb_simple_join(selection_1,selection_3);
 
 #if defined(DEBUG) && defined(TOM)
-      tsdb_print_selection(selection_1,TSDB_DEFAULT_STREAM);
+      tsdb_print_selection(selection_1,tsdb_debug_stream);
 #endif
       result = selection_1;
     } /* if */
     else {
-/*      fprintf(stderr, "asshole: unconnected Relations.\n");*/
-      fprintf(stderr," Error: unconnected Relations.\n");
+/*      fprintf(TSDB_ERROR_STREAM, "asshole: unconnected Relations.\n");*/
+      fprintf(TSDB_ERROR_STREAM," Error: unconnected Relations.\n");
       return((Tsdb_selection *)NULL);
     } /* else */
   } /* else */
@@ -615,10 +616,12 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
  } /* for */
  /* merge-key gefunden offset_2 und offset_1 indices der Key_lists */
 
-printf("vor create result\n");
-tsdb_print_selection(selection_1,stdout); 
-tsdb_print_selection(selection_2,stdout); 
- 
+#if defined(DEBUG) && defined(TOM)
+ fprintf(tsdb_debug_stream,"vor create result\n");
+ tsdb_print_selection(selection_1,tsdb_debug_stream); 
+ tsdb_print_selection(selection_2,tsdb_debug_stream); 
+#endif
+
  if(kaerb) {
    result = tsdb_create_selection(selection_1->n_relations,
                                   selection_1->n_key_lists);
@@ -627,18 +630,23 @@ tsdb_print_selection(selection_2,stdout);
    } /* for*/
  } /* if */
  result->length = 0;
-printf("vor match\n");
-tsdb_print_selection(selection_1,stdout); 
-tsdb_print_selection(selection_2,stdout); 
-  
+
+#if defined(DEBUG) && defined(TOM)
+ fprintf(tsdb_debug_stream,"vor match\n");
+ tsdb_print_selection(selection_1,tsdb_debug_stream); 
+ tsdb_print_selection(selection_2,tsdb_debug_stream); 
+#endif
+
  order = tsdb_relation_match(selection_1, selection_2);
 
  next_1 = selection_1->key_lists[offset_1 + key_1];
  next_2 = selection_2->key_lists[offset_2 + key_2];
 
-printf("vor merge\n");
-tsdb_print_selection(selection_1,stdout); 
-tsdb_print_selection(selection_2,stdout); 
+#if defined(DEBUG) && defined(TOM)
+ fprintf(tsdb_debug_stream,"vor merge\n");
+ tsdb_print_selection(selection_1,tsdb_debug_stream); 
+ tsdb_print_selection(selection_2,tsdb_debug_stream); 
+#endif
 
  while(next_1 != NULL && next_2 != NULL) {
    for(; next_1 != NULL &&
@@ -851,8 +859,10 @@ Tsdb_selection* tsdb_complex_merge(Tsdb_selection *selection_1,
     }
     selection_2 = tsdb_simple_join(selection_2,one);
     selection_1 = tsdb_simple_join(selection_1,two);
-    tsdb_print_selection(selection_1,TSDB_DEFAULT_STREAM);
-    tsdb_print_selection(selection_2,TSDB_DEFAULT_STREAM);
+#if defined(DEBUG) && defined(TOM)
+    tsdb_print_selection(selection_1,tsdb_debug_stream);
+    tsdb_print_selection(selection_2,tsdb_debug_stream);
+#endif
   } /* if */
   else {
     if (l_1) {
@@ -870,9 +880,12 @@ Tsdb_selection* tsdb_complex_merge(Tsdb_selection *selection_1,
      the same relations, not necessarily in the same order, but
      this is handled by simple_merge
      */
-  printf("vor tsdb_simple_merge\n");
-  tsdb_print_selection(selection_1,stdout);
-  tsdb_print_selection(selection_2,stdout);
+#if defined(DEBUG) && defined(TOM)
+  fprintf(tsdb_debug_stream,"vor tsdb_simple_merge\n");
+
+  tsdb_print_selection(selection_1,tsdb_debug_stream);
+  tsdb_print_selection(selection_2,tsdb_debug_stream);
+#endif
   result = tsdb_simple_merge(selection_1,selection_2);
   return(result);
 } /* tsdb_complex_merge() */
