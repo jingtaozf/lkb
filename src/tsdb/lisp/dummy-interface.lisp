@@ -1,3 +1,5 @@
+;;; Hey, emacs(1), this file is -*- Mode: Common-Lisp; Package: dummy; -*-
+
 (in-package :tsdb)
 
 (defpackage :dummy
@@ -5,7 +7,34 @@
 
 (in-package :dummy)
 
-(defparameter %dummy-mrs% "")
+(defparameter %dummy-mrs% "
+[ LTOP: h1
+  INDEX: e2 [ EVENT
+               DIVISIBLE:  BOOL
+               E.TENSE:  PRESENT*
+               E.ASPECT:  NO_ASPECT*
+               E.MOOD:  INDICATIVE* ]
+  RELS: <
+          [ prpstn_m_rel
+            LBL: h1
+            MARG: h3 ]
+          [ _a_q_rel
+            LBL: h4
+            ARG0: x5 [ REF-IND
+                         PNG.GEN:  REAL_GENDER
+                         PNG.PN:  3SG
+                         DIVISIBLE:  - ]
+            RSTR: h6
+            BODY: h7 ]
+          [ _dog_n_rel
+            LBL: h8
+            ARG0: x5 ]
+          [ _sleep_rel
+            LBL: h9
+            ARG0: e2
+            ARG1: x5 ] >
+  HCONS: <  h3 QEQ h9
+            h6 QEQ h8 > ]")
     
 (defun current-grammar ()
   ;;
@@ -88,7 +117,7 @@
       (ignore-errors
        (let (tgc tcpu treal conses symbols others)
          (tsdb::time-a-funcall
-          #'(lambda () (parse string trace))
+          #'(lambda () #+:null (parse string trace))
           #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
               (declare (ignore ignore))
               (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
@@ -101,9 +130,11 @@
                           readings
                           (loop
                               with nresults = (if (<= nresults 0)
-                                                readings nresults)
+                                                readings
+                                                (min readings nresults))
                               for i from 1
                               for mrs = %dummy-mrs%
+                              do (pprint (list i nresults))
                               while (>= (decf nresults) 0) collect
                                 (pairlis '(:result-id :mrs) (list i mrs))))))))
     (append
