@@ -604,8 +604,8 @@
       ;; when we don't build up the chart in strict left-to-right
       ;; order (as when we're doing a best-first search), we need to
       ;; check for rule applying to the right as well as to the left.
-      ;; WARNING: this will only work correctly if all rules are
-      ;; binary branching!!
+      ;; WARNING: this will only work correctly if all rules are no
+      ;; more than binary branching!!
       (when (and f (cdr (rule-daughters-restricted rule)))
 	(try-grammar-rule-right rule
 				(rule-daughters-restricted rule)
@@ -641,7 +641,7 @@
       (throw 'first t))))
 
 (defun try-grammar-rule-left (rule rule-restricted-list left-vertex 
-			      right-vertex child-fs-list f)
+			      right-vertex child-fs-list f &optional n)
   ;; Application of a grammar rule: Every time an edge is added to the chart,
   ;; a check is made to see whether its addition triggers a rule application.
   ;; (That is whether it has a category corresponding to the rightmost
@@ -652,9 +652,14 @@
   ;; unification(s) succeed, create a new edge (for the mother), record its
   ;; dag and associated information, add this to the chart, and invoke the
   ;; same process recursively.
+  (unless n
+    (setq n (1- (length (rule-daughters-apply-order rule)))))
   (incf *contemplated-tasks*)
-  (if (restrictors-compatible-p
-       (car rule-restricted-list) (edge-dag-restricted (car child-fs-list)))
+  (if (and (restrictors-compatible-p (car rule-restricted-list) 
+				     (edge-dag-restricted (car child-fs-list)))
+	   (check-filter (rule-id rule) 
+			 (edge-rule-number (car child-fs-list))
+			 n))
       (if (cdr rule-restricted-list)
 	  (let ((entry (aref *chart* left-vertex 0)))
 	    (when entry
@@ -665,7 +670,8 @@
 				       right-vertex
 				       (cons (chart-configuration-edge config) 
 					     child-fs-list)
-				       f))))
+				       f
+				       (1- n)))))
 	;; we've got all the bits
 	(with-agenda (f (when f (rule-priority rule)))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex
@@ -673,10 +679,13 @@
     (incf *filtered-tasks*)))
 
 (defun try-grammar-rule-right (rule rule-restricted-list left-vertex 
-				 right-vertex child-fs-list f)
+			       right-vertex child-fs-list f &optional (n 0))
   (incf *contemplated-tasks*)
-  (if (restrictors-compatible-p
-       (car rule-restricted-list) (edge-dag-restricted (car child-fs-list)))
+  (if (and (restrictors-compatible-p (car rule-restricted-list)
+				     (edge-dag-restricted (car child-fs-list)))
+	   (check-filter (rule-id rule) 
+			 (edge-rule-number (car child-fs-list))
+			 n))
       (if (cdr rule-restricted-list)
 	  (let ((entry (aref *chart* right-vertex 1)))
 	    (when entry
@@ -687,7 +696,7 @@
 					(chart-configuration-end config)
 					(cons (chart-configuration-edge config)
 					      child-fs-list)
-					f))))
+					f (1+ n)))))
 	;; we've got all the bits
 	(with-agenda (f (when f (rule-priority rule)))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex 
@@ -750,27 +759,24 @@
     ;; wrong
     (with-unification-context (ignore)
       (dolist (rule-feat rule-apply-order)
-	(cond
-	 ((eql (incf n) 1))
-	 ((x-restrict-and-compatible-p
-	   (if (listp rule-feat)
-	       (x-existing-dag-at-end-of 
-		(tdfs-indef current-tdfs) rule-feat)
-	     (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
-	   (edge-dag-restricted
-	    (nth (position rule-feat rule-daughter-order :test #'eq) 
-		 child-edges))))
-	 (t (incf *filtered-tasks*)
-	    (return-from evaluate-unifications nil)))
-	(incf *executed-tasks*)
-	(if (setq current-tdfs
-	      (yadu current-tdfs
-		    (create-temp-parsing-tdfs
-		     (nth (position rule-feat rule-daughter-order :test #'eq) 
-			  child-fs-list)
-		     rule-feat)))
-	    (incf *successful-tasks*)
-	  (return-from evaluate-unifications nil)))
+	(let ((dtr (position rule-feat rule-daughter-order :test #'eq)))
+	  (cond
+	   ((eql (incf n) 1))
+	   ((x-restrict-and-compatible-p
+	     (if (listp rule-feat)
+		 (x-existing-dag-at-end-of 
+		  (tdfs-indef current-tdfs) rule-feat)
+	       (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
+	     (edge-dag-restricted (nth dtr child-edges))))
+	   (t (incf *filtered-tasks*)
+	      (return-from evaluate-unifications nil)))
+	  (incf *executed-tasks*)
+	  (if (setq current-tdfs
+		(yadu current-tdfs
+		      (create-temp-parsing-tdfs (nth dtr child-fs-list)
+						rule-feat)))
+	      (incf *successful-tasks*)
+	    (return-from evaluate-unifications nil))))
       ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of will return the
       ;; entire structure
       (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
@@ -1056,4 +1062,57 @@
              (edge-morph-history edge-rec)))))
 
 
+;;; DISCO-style rule filter
 
+(defparameter *rule-filter* nil)
+
+(defun init-filter nil
+  (let ((names (make-hash-table :test #'eq))
+	(max-arity 0)
+	(rule-no 0)
+	(rule-list NIL))
+    (flet ((process-rule (name rule)
+	     (setq max-arity (max max-arity (1- (length (rule-order rule)))))
+	     (setf (rule-index rule) rule-no)
+	     (push (list rule-no (rule-full-fs rule) (cdr (rule-order rule)))
+		   rule-list)
+	     (setf (gethash name names) rule-no)
+	     (incf rule-no)))
+      (maphash #'process-rule *rules*)
+      (maphash #'process-rule *lexical-rules*))
+    (values
+     (setf *rule-filter*
+       (cons names
+	     (make-array (list rule-no rule-no max-arity)
+			 :initial-element nil)))
+     rule-list)))
+
+(defun build-filter nil
+  (multiple-value-bind (filter rule-list)
+      (init-filter)
+    (loop for (rule-index rule-tdfs rule-dtrs) in rule-list
+	do
+	  (loop for (test-index test-tdfs test-dtrs) in rule-list
+	      do
+		(loop for arg from 0 to (1- (length rule-dtrs))
+		    do
+		      (with-unification-context (ignore)
+			(if (yadu rule-tdfs
+				  (create-temp-parsing-tdfs
+				   (if (eq test-tdfs rule-tdfs)
+				       (copy-tdfs-completely test-tdfs)
+				     test-tdfs)
+				   (nth arg rule-dtrs)))
+			    (setf (aref (cdr filter)
+					rule-index test-index arg) t)
+			  nil)))))
+    t))
+
+(defun check-filter (rule test arg)
+  (if (and *rule-filter*
+	   (symbolp test))
+      (aref (cdr *rule-filter*)
+	    (gethash rule (car *rule-filter*))
+	    (gethash test (car *rule-filter*))
+	    arg)
+    t))

@@ -505,3 +505,21 @@
                (mapcar #'maximal-type-of features))))
       
 
+
+;;; Try to reduce the amount of space used by the expanded type hierarchy
+
+(defun compress-types nil
+  (maphash #'(lambda (name type)
+	       (declare (ignore name))
+	       (compress-dag (type-constraint type))
+	       (compress-dag (type-local-constraint type)))
+	   *types*))
+
+(defun clear-glbs nil
+  (compress-types)
+  (maphash #'(lambda (name type)
+	       (when (search "GLBTYPE" (symbol-name name))
+		 (setf (type-constraint type) nil)
+		 (setf (type-tdfs type) nil)))
+	   *types*))
+

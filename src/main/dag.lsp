@@ -945,3 +945,12 @@
 
 
 ;;; End of file
+
+(defun compress-dag (dag)
+  (when (dag-p dag)
+    (setq dag (deref-dag dag))
+    (setf (dag-x-comp-arcs-slot dag) nil)
+    (setf (dag-x-copy dag) nil)
+    (setf (dag-x-forward dag) nil)
+    (dolist (arc (dag-arcs dag))
+      (compress-dag (dag-arc-value arc)))))
