@@ -109,7 +109,8 @@
        (,(format nil "Rule ~A" (or rule-name ""))
 	:value rule)
        ("Generate from edge" :value generate
-                             :active ,(not (g-edge-p edge-record)))
+                             :active ,(and *mrs-loaded*
+                                       (not (g-edge-p edge-record))))
        ;;; FIX - actually crashes Lisp to select this with a generator edge
        (,(format nil "Lex ids ~A" (edge-lex-ids edge-record))
 	:value nil))
