@@ -93,11 +93,11 @@
        :selection-function #'lkb-funcall-menu-item))
 
 (defun expand-lkb-menu nil
-  (setf user::*lkb-menu-type* :big)
+  (setf *lkb-menu-type* :big)
   (set-up-lkb-interaction))
 
 (defun shrink-lkb-menu nil
-  (setf user::*lkb-menu-type* :core)
+  (setf *lkb-menu-type* :core)
   (set-up-lkb-interaction))
 
 (defun set-up-lkb-interaction (&optional system-type)
@@ -110,7 +110,7 @@
     (:big  (create-big-lkb-system-menu)))
    (if *lkb-exe-p* (make-lkb-top-frame)
       (make-lkb-top-menu))
-   (when user::*ordered-type-list*
+   (when *ordered-type-list*
     (enable-type-interactions)))
 
 
@@ -206,7 +206,10 @@
                      :test #'equal))
                (setf (cg:available menu-item) nil))
           (when (and value (cg:menup value))
-             (disable-defined-interactions value)))))
+            (disable-defined-interactions value)))))
+
+;;; functions called from top level menu which are time
+;;; consuming 
     
 (defun parse-sentences-batch nil
   ;;; for MCL this can just be parse-sentences
