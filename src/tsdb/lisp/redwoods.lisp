@@ -2024,7 +2024,7 @@
         with first = (get-field :i-id (first items))
         with last = (get-field :i-id (first (last items)))
         with delta = %redwoods-increment%
-        with n = (ceiling (- last first) delta)
+        with n = (max (ceiling (- last first) delta) 1)
         with increment = (when meter (/ (mduration meter) n))
         for i from 1 to n
         for foo = (format 

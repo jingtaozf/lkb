@@ -97,7 +97,8 @@
 
 (defun initialize-tsdb (&optional cache &key action background name pattern)
   
-  (declare (special *statistics-readers* *statistics-browsers* 
+  (declare (special *tsdb-podium-home* *tsdb-podium* *tsdb-wish-application*
+                    *statistics-readers* *statistics-browsers* 
                     *statistics-predicates*))
   
   (unless (and *tsdb-initialized-p* (null action))
@@ -105,6 +106,34 @@
            (tsdbrc (dir-and-name (user-homedir-pathname) ".tsdbrc"))
            (index (make-pathname :directory  *tsdb-skeleton-directory*
                                  :name *tsdb-skeleton-index*)))
+      (when (and (or (null action) (member action '(:paths :all))))
+        (setf *tsdb-application*
+          (format
+           nil "exec ~a"
+           (namestring (make-pathname
+                        :directory (pathname-directory make::bin-dir)
+                        :name "tsdb"))))
+        (setf *tsdb-home* 
+          (namestring (dir-append
+                       (get-sources-dir "tsdb") '(:relative "tsdb" "home"))))
+        (setf *tsdb-skeleton-directory* 
+          (namestring (dir-append 
+                       (get-sources-dir "tsdb")
+                       '(:relative "tsdb" "skeletons" "english"))))
+        (setf *tsdb-podium-home*
+          (namestring (dir-append
+                       (get-sources-dir "tsdb") '(:relative "tsdb" "tcl"))))
+        (setf *tsdb-podium*
+          (namestring (make-pathname 
+                       :directory *tsdb-podium-home*
+                       :name "podium.tcl")))
+        (setf *tsdb-wish-application*
+          (format
+           nil 
+           "exec ~a"
+           (namestring (make-pathname 
+                        :directory (pathname-directory make::bin-dir)
+                        :name "swish++")))))
       (when (and (or (null action) (member action '(:tsdbrc :all)))
                  (probe-file tsdbrc))
         (load tsdbrc))

@@ -1265,7 +1265,8 @@
 
 (defun complete-run (run &key stream interrupt custom)
   (when (get-field :run-id run)
-    (let ((context (get-field :context run))
+    (let ((id (get-field :run-id run))
+	  (context (get-field :context run))
           (gc-strategy (get-field :gc-strategy run))
           (client (get-field :client run)))
       (cond
@@ -1277,8 +1278,8 @@
                          (revaluate 
                           tid 
                           `(complete-run
-                            (quote ,(pairlis '(:context :gc-strategy)
-                                             (list context gc-strategy)))
+                            (quote ,(pairlis '(:run-id :context :gc-strategy)
+                                             (list id context gc-strategy)))
                             :custom ,custom)
                           1
                           :key :complete-run

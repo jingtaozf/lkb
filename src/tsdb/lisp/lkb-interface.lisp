@@ -162,7 +162,7 @@
                    &key id exhaustive nanalyses trace
                         edges derivations semantix-hook trees-hook
                         burst (nresults 0))
-  (declare (ignore derivations id))
+  (declare (ignore derivations))
   
   (let* ((*package* *lkb-package*)
          (*chasen-debug-p* nil)

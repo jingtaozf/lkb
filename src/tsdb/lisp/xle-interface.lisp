@@ -5,7 +5,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  (or (tsdb::clients-grammar) "norgram (nov-03)"))
+  (or (tsdb::clients-grammar) "norgram (jan-04)"))
 
 (defun tsdb::initialize-run (&key interactive 
                             exhaustive nanalyses
