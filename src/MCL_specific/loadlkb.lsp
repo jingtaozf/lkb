@@ -20,6 +20,7 @@
 (import '(enable-type-interactions disable-type-interactions))
 
 (defpackage "MRS")
+(defpackage "MAIN")
 
 (progn 
       (dolist  (dir-and-file 
@@ -54,6 +55,7 @@
          ("main" "generate")       ; generic CL
          ("MCL_specific" "parseout")    ; some dialect specific - parse tree fns
          ("MCL_specific" "chartout")    ; some dialect specific - chart output fns
+         ("MCL_specific" "listout")    ; some dialect specific - general list output
          ("main" "morph")       ; generic CL
          ("MCL_specific" "dialog")
          ("MCL_specific" "tree") ; some dialect specific - type hierarchy fns
@@ -80,7 +82,7 @@
 ;;; (set-up-lkb-interaction :full)
 ;;;
 ;;; if the argument is :core - the "mini" menu is set up
-(set-up-lkb-interaction :big) 
+(set-up-lkb-interaction :core) 
 
 
 
