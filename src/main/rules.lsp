@@ -444,8 +444,7 @@
 
 (defun build-rule-filter nil
   (unless (find :vanilla *features*)
-    (let (#+:packing
-          (max-arity 0)
+    (let ((max-arity 0)
           (nrules 0)
           (rule-list nil))
       (flet ((process-rule (name rule)

@@ -285,7 +285,7 @@ output results
            ;; thing.  room for debugging here ...           (8-sep-99  -  oe)
            ;;
            #+:gdebug
-           (reset-pools #+:gdebug t)
+           (reset-pools #+:gdebug :forcep #+:gdebug t)
            (if (not (mrs::make-scoped-mrs mrs))
                (format ostream "~%#| Scope failure: ~A |#" sentence)  
              ;;; check for scoping, because incorrect MRS often

@@ -36,19 +36,6 @@
 (defvar *visit-generation* 1)
 (defvar *visit-generation-max* 1)
 
-;;;
-;;; when packing the chart, we want to be able to exclude certain parts of the
-;;; structures from the subsumption test; accordingly, those parts need to be
-;;; ignored in unification: otherwise we risk packing a less specific edge into
-;;; a more specific host (and sacrifice completeness).  our current best way to
-;;; ignore parts of feature structures is to specifiy a list of features (not
-;;; paths); e.g. wherever `CONT' is seen in a structure, its value is ignored.
-;;;                                                        (15-sep-99  -  oe)
-;;;
-
-#+:packing
-(defparameter *partial-dag-interpretation* nil)
-
 (eval-when (:compile-toplevel :load-toplevel)
   (proclaim '(type fixnum *unify-generation* *unify-generation-max*
                 *visit-generation* *visit-generation-max*)))
@@ -197,6 +184,8 @@
 ;;;                                                       (7-sep-99  -  oe)
 ;;;
 
+(pushnew :recycling *features*)
+
 (defstruct pool
   (size 0 :type fixnum)
   (position 0 :type fixnum)
@@ -225,28 +214,31 @@
                           *dag-pool-size*
                           #'(lambda () (make-safe-dag-x nil nil))))
 
-(defun reset-pool (pool &optional forcep)
-  (when forcep
+(defun reset-pool (pool &key forcep compressp)
+  (when (or forcep compressp)
     (loop
         with data = (pool-data pool)
         for i from 0 to (pool-position pool)
         for dag = (svref data i) 
         when (dag-p dag) do
-          (setf (dag-type dag) :invalid)
-          (setf (dag-arcs dag) :invalid)))
+          (setf (dag-type dag) nil)
+          (setf (dag-arcs dag) nil)
+          (when compressp (compress-dag dag :recursivep nil))))
   (setf (pool-position pool) 0)
   (setf (pool-garbage pool) 0))
   
-(defun reset-pools (&optional forcep)
+
+(defun reset-pools (&key forcep compressp)
   (loop
       for pool in (list *dag-pool*)
-      do (reset-pool pool forcep)))
+      do (reset-pool pool :forcep forcep :compressp compressp)))
 
 
 (defmacro pool-next (pool)
    `(let* ((position (pool-position ,pool))
            (next
-            (svref (the simple-vector (with-verified-pool (,pool) (pool-data ,pool)))
+            (svref (the simple-vector (with-verified-pool (,pool)
+                                        (pool-data ,pool)))
                (the fixnum position))))
        (cond
           (next
@@ -278,23 +270,15 @@
       (make-dag-x ,type ,arcs)))
 
 (defun make-safe-recycled-dag-x (type arcs)
-   (let* ((pool *dag-pool*)
-          (new (pool-next pool)))
-      ;; set type and arcs slots. Clear out others - some cpu overhead, but
-      ;; reduces dynamic store footprint
-      (setf (dag-type new) type)
-      (with-verified-dag (new) ; it must really be a dag if we've got here
-         (setf (dag-arcs new) arcs)
-         (setf (dag-x-generation new) 0)
-         (setf (dag-x-new-type new) nil)
-         (setf (dag-x-comp-arcs new) nil)
-         (setf (dag-x-copy new) nil)
-         (setf (dag-x-forward new) nil)
-         (setf (dag-x-visit-slot new) nil)
-         new)))
-
-
-;;; Dag access
+  (let* ((pool *dag-pool*)
+         (new (pool-next pool)))
+    ;; set type and arcs slots. Clear out others - some cpu overhead, but
+    ;; reduces dynamic store footprint
+    (setf (dag-type new) type)
+    (with-verified-dag (new) ; it must really be a dag if we've got here
+      (setf (dag-arcs new) arcs)
+      (setf (dag-x-generation new) 0)
+      new)))
 
 (defmacro dag-safe-p (dag)
    ;; argument must be known already to be some type of dag structure
@@ -647,19 +631,6 @@
          "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
          (reverse path))))
     (throw '*fail* nil))
-   #+:packing
-   ((and *partial-dag-interpretation*
-         (smember (first path) *partial-dag-interpretation*))
-    (let ((type (minimal-type-for (first path))))
-      (cond
-       ((eq (dag-type dag1) type)
-        (setf (dag-forward dag2) dag1))
-       ((eq (dag-type dag2) type)
-        (setf (dag-forward dag1) dag2))
-       (t
-        (let ((new (may-copy-constraint-of type)))
-          (setf (dag-forward dag1) new)
-          (setf (dag-forward dag2) new))))))
    ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
   dag1)
 
@@ -1093,6 +1064,45 @@
             (setf (dag-visit dag) new-instance)
             new-instance))))
 
+;;;
+;;; functions to facilitate ambiguity packing: currently, hard-wire which parts
+;;; of the structure are deleted: everything below `CONT' (at all levels) except
+;;; for `CONT|MESSAGE'.  this badly needs a generalization using both PAGE-type
+;;; restrictors as well as a mechanism to extinct all occurences of a feature.
+;;;                                                          (12-nov-99  -  oe)
+;;;
+
+#+:packing
+(defun copy-dag-partially (dag)
+  (invalidate-visit-marks)
+  (copy-dag-partially1 dag nil))
+
+#+:packing
+(defun copy-dag-partially1 (old path)
+  (if (dag-visit old)
+    (dag-visit old)
+    (let* ((type (if (eq (first path) 'cont) 'cont (dag-type old)))
+           (arcs (if (eq (first path) 'cont)
+                   (let ((message (unify-arcs-find-arc
+                                   'message (dag-arcs old) (dag-comp-arcs old)))
+                         (path (cons 'message path)))
+                     (declare (dynamic-extent path))
+                     (when message
+                       (list (make-dag-arc 
+                              :attribute 'message
+                              :value (copy-dag-partially1
+                                      (dag-arc-value message) path)))))
+                   (loop
+                       for arc in (dag-arcs old)
+                       for label = (dag-arc-attribute arc)
+                       collect 
+                         (let ((path (cons label path)))
+                           (declare (dynamic-extent path))
+                           (make-dag-arc :attribute label
+                                         :value (copy-dag-partially1
+                                                 (dag-arc-value arc) path)))))))
+      (setf (dag-visit old) (make-dag :type type :arcs arcs)))))
+
 
 ;;; **********************************************************************
 
@@ -1302,7 +1312,7 @@
 
 ;;; Get rid of pointers to any temporary dag structure
 
-(defun compress-dag (dag)
+(defun compress-dag (dag &key (recursivep t))
   ;; no point in derefing dag since we don't expect to be called within
   ;; a unification context (so if there's a forward pointer it won't be
   ;; valid anyway)
@@ -1312,8 +1322,9 @@
       (setf (dag-x-copy dag) nil)
       (setf (dag-x-forward dag) nil)
       (setf (dag-x-visit-slot dag) nil)) ; copy-dag-completely can put a dag in this
-    (dolist (arc (with-verified-dag (dag) (dag-arcs dag)))
-      (compress-dag (dag-arc-value arc)))))
+    (when recursivep
+      (dolist (arc (with-verified-dag (dag) (dag-arcs dag)))
+        (compress-dag (dag-arc-value arc))))))
 
 
 ;;; End of file

@@ -77,7 +77,9 @@
                     (&key id category rule dag odag 
                           (dag-restricted (restrict-fs (tdfs-indef dag)))
                           leaves lex-ids parents children morph-history 
-                          spelling-change packed frozen)))
+                          spelling-change 
+                          #+:packing packed #+:packing equivalent 
+                          #+:packing frozen)))
    id category rule dag odag dag-restricted leaves lex-ids
    parents children morph-history spelling-change 
    #+:packing packed #+:packing equivalent #+:packing frozen)
@@ -199,6 +201,27 @@
      (progn
        ,@body)))
 
+;;;
+;;; recently added variant: use active key-driven parsing strategy; this seems
+;;; to 
+;;;
+;;;   - perform better than the default unidirectional passive breadth-first
+;;;     search (up to 40 % time reduction on longer VerbMobil sentences);
+;;;   - simplify best-first search and generalize to more than just binary
+;;;     branching rules;
+;;;   - outperform passive best-first mode modestly.
+;;;
+;;; until tested somewhat better, the active parser is in experimental state,
+;;; disabled by default, and hidden in `active.lsp'.
+;;;                                                        (20-jun-99  -  oe)
+;;;
+;;; now that we have tested the active parser some more (and people had the time
+;;; to get used to the idea of active parsing :-), turn it on by default.
+;;;                                                        (20-jan-00  -  oe)
+;;;
+(defparameter *active-parsing-p* t)
+
+
 ;;; *morph-records* is just so that the morphological history
 ;;; (i.e. inflection, derivation rules and any zero-morpheme rules
 ;;; interspersed among them) can be displayed
@@ -212,7 +235,8 @@
 	  (setf (aref *chart* i 1) nil))
    (fill *morphs* nil)
    (setf *morph-records* nil)
-   (setf *edge-id* 0))
+   (setf *edge-id* 0)
+   (when *active-parsing-p* (clear-achart)))
 
 ;;; Entry point to this group of functions is parse which is passed the
 ;;; sentence as a list of strings and is called from the top level
@@ -238,34 +262,6 @@
 ;;;
 (defparameter *parse-times* nil)
 
-;;;
-;;; restrict best-first parsing to some upper limit of readings; this default
-;;; preserves the former behaviour (i.e. find just one reading); i guess, this
-;;; variable should really go someplace else ...           (24-feb-99  -  oe)
-;;;
-;;; given the recent changes in best-first mode, this variable could supersede
-;;; *first-only-p*: in best-first mode (passive or active) up to this number of
-;;; analyses will be computed; if *maximal-number-of-readings* is `nil' then
-;;; best-first mode amounts to exhaustive search.          (20-jun-99  -  oe)
-;;;
-(defparameter *maximal-number-of-readings* 1)
-
-;;;
-;;; recently added variant: use active key-driven parsing strategy; this seems
-;;; to 
-;;;
-;;;   - perform better than the default unidirectional passive breadth-first
-;;;     search (up to 40 % time reduction on longer VerbMobil sentences);
-;;;   - simplify best-first search and generalize to more than just binary
-;;;     branching rules;
-;;;   - outperform passive best-first mode modestly.
-;;;
-;;; until tested somewhat better, the active parser is in experimental state,
-;;; disabled by default, and hidden in `active.lsp'.
-;;;                                                        (20-jun-99  -  oe)
-;;;
-(defparameter *active-parsing-p* nil)
-
 (defparameter *show-parse-p* t)
 
 (defun parse (user-input &optional (show-parse-p *show-parse-p*) 
@@ -283,15 +279,20 @@ Setting *first-only-p* to nil")
 	  (*contemplated-tasks* 0) (*filtered-tasks* 0)
           (*parser-rules* (get-matching-rules nil nil))
           (*parser-lexical-rules* (get-matching-lex-rules nil))
+          (*minimal-vertex* 0)
+          (*maximal-vertex* (length user-input))
           ;;
           ;; shadow global variable to allow best-first mode to decrement for
-          ;; each result found; eliminates need for additional result count;
-          ;; also, reset to `nil' when not in best-first mode: the active
-          ;; parser ignores *first-only-p* in this respect.  we hope it will
-          ;; ultimately disappear.                       (29-aug-99  -  oe)
+          ;; each result found; eliminates need for additional result count.
+          ;;                                              (22-jan-00  -  oe)
           ;;
-          (*maximal-number-of-readings*
-           (and first-only-p *maximal-number-of-readings*)))
+          (*first-only-p*
+           (cond
+            ((null first-only-p) nil)
+            ((and (numberp first-only-p) (zerop first-only-p)) nil)
+            ((numberp first-only-p) first-only-p)
+            (t 1))))
+          (declare (special *minimal-vertex* *maximal-vertex*))
       (with-parser-lock ()
 	(flush-heap *agenda*)
 	(clear-chart)
@@ -304,11 +305,11 @@ Setting *first-only-p* to nil")
           (catch :best-first
             (add-words-to-chart (and first-only-p (null *active-parsing-p*)
                                      (cons 0 (length user-input))))
-            (loop 
-                until (empty-heap *agenda*)
-                do (funcall (heap-extract-max *agenda*)))
-            (when *active-parsing-p* 
-              (complete-chart 0 (length user-input))))
+            (if *active-parsing-p*
+              (complete-chart)
+              (loop 
+                  until (empty-heap *agenda*)
+                  do (funcall (heap-extract-max *agenda*)))))
           (unless first-only-p
             ;;
             ;; best-first (passive or active mode) has already done this
@@ -408,15 +409,17 @@ Setting *first-only-p* to nil")
                                               :fs (cdr sense) 
                                               :rules nil))))))))
     (dolist (mrec word-senses)
-      (let ((lex-ids (mrecord-lex-ids mrec))
-	    (sense (mrecord-fs mrec))
-	    (history (mrecord-history mrec)))
-	(with-agenda (when f (lex-priority mrec))
-	  (activate-context (- right-vertex 1) 
-			    (construct-lex-edge sense history local-word
-						lex-ids)
-			    right-vertex
-			    f))))
+      (let* ((lex-ids (mrecord-lex-ids mrec))
+             (sense (mrecord-fs mrec))
+             (history (mrecord-history mrec))
+             (edge (construct-lex-edge sense history local-word lex-ids)))
+        (if *active-parsing-p*
+          (let ((configuration (make-chart-configuration
+                                :begin (- right-vertex 1) :end right-vertex
+                                :edge edge)))
+            (lexical-task (lex-priority mrec) configuration))
+          (with-agenda (when f (lex-priority mrec))
+            (activate-context (- right-vertex 1) edge right-vertex f)))))
     ;; add-multi-words is mostly for side effects, but want to check if we've
     ;; found something, and produce correct error messages, so we return the
     ;; strings found
@@ -496,14 +499,17 @@ Setting *first-only-p* to nil")
 	    (left-vertex (sense-record-left-vertex sense-record)))
 	(push word multi-strings)
 	(dolist (mrec (sense-record-mrecs sense-record))
-	  (let ((sense (mrecord-fs mrec))
-		(lex-ids (mrecord-lex-ids mrec))
-		(history (mrecord-history mrec)))
-	    (with-agenda (when f (lex-priority mrec))
-	      (activate-context left-vertex 
-				(construct-lex-edge sense history word
-						    lex-ids)      
-				right-vertex f))))))
+	  (let* ((sense (mrecord-fs mrec))
+                 (lex-ids (mrecord-lex-ids mrec))
+                 (history (mrecord-history mrec))
+                 (edge (construct-lex-edge sense history word lex-ids)))
+            (if *active-parsing-p*
+              (let ((configuration (make-chart-configuration
+                                    :begin left-vertex :end right-vertex
+                                    :edge edge)))
+                (lexical-task (lex-priority mrec) configuration))
+              (with-agenda (when f (lex-priority mrec))
+                (activate-context left-vertex edge right-vertex f)))))))
     ;; return multi-strings, so we know what's been found
     multi-strings))
 
@@ -698,29 +704,28 @@ Setting *first-only-p* to nil")
    (edge-id edge) left-vertex right-vertex)
 
   (add-to-chart left-vertex edge right-vertex f)
-  (unless *active-parsing-p*
-    (dolist (rule *parser-rules*)
-      ;; grammar rule application is attempted when we've got all the bits
-      (try-grammar-rule-left rule
-			     ;; avoid a call to reverse here in a fairly tight loop
-                             (rule-daughters-restricted-reversed rule)
-                             left-vertex
-			     right-vertex
-			     (list edge)
-			     f
-                             (1- (length (the list (rule-daughters-apply-order rule)))))
-      ;; when we don't build up the chart in strict left-to-right
-      ;; order (as when we're doing a best-first search), we need to
-      ;; check for rule applying to the right as well as to the left.
-      ;; WARNING: this will only work correctly if all rules are no
-      ;; more than binary branching!!
-      (when (and f (cdr (rule-daughters-restricted rule)))
-	(try-grammar-rule-right rule
-				(rule-daughters-restricted rule)
-				left-vertex
-				right-vertex
-				(list edge)
-				f 0)))))
+  (dolist (rule *parser-rules*)
+    ;; grammar rule application is attempted when we've got all the bits
+    (try-grammar-rule-left rule
+                           ;; avoid a call to reverse here in a fairly tight loop
+                           (rule-daughters-restricted-reversed rule)
+                           left-vertex
+                           right-vertex
+                           (list edge)
+                           f
+                           (1- (length (the list (rule-daughters-apply-order rule)))))
+    ;; when we don't build up the chart in strict left-to-right
+    ;; order (as when we're doing a best-first search), we need to
+    ;; check for rule applying to the right as well as to the left.
+    ;; WARNING: this will only work correctly if all rules are no
+    ;; more than binary branching!!
+    (when (and f (cdr (rule-daughters-restricted rule)))
+      (try-grammar-rule-right rule
+                              (rule-daughters-restricted rule)
+                              left-vertex
+                              right-vertex
+                              (list edge)
+                              f 0))))
 
 
 (defun add-to-chart (left edge right f)
@@ -748,9 +753,8 @@ Setting *first-only-p* to nil")
         (when result
           (push (get-internal-run-time) *parse-times*)
           (setf *parse-record* (nconc result *parse-record*))
-          (when *maximal-number-of-readings*
-            (decf *maximal-number-of-readings*)
-            (when (zerop *maximal-number-of-readings*)
+          (when *first-only-p*
+            (when (zerop (decf *first-only-p*))
               (throw :best-first t))))))))
 
 
@@ -1103,19 +1107,26 @@ Setting *first-only-p* to nil")
                          &optional end 
                          &key (frozen nil frozenp)
                               concise)
+  #-:packing
+  (declare (ignore frozen))
+  
   (let ((edge (if (edge-p item) item (chart-configuration-edge item)))
         (begin (unless (edge-p item) (chart-configuration-begin item)))
         (roots (unless (edge-p item) (chart-configuration-roots item))))
-    (when (or (null frozenp) (eq (edge-frozen edge) frozen))
+    (when (or (null frozenp) #+:packing (eq (edge-frozen edge) frozen))
       (format 
        t 
-       "~&~:[~2*~;~A-~A ~][~A] ~A => ~A~A  [~{~A~^ ~}]~:[~2*~; ~:[+~;~]~d~]"
+       "~&~:[~2*~;~A-~A ~][~A] ~A => ~A~A  [~{~A~^ ~}]"
        (and begin end) begin end
        (edge-id edge)
        (if concise (concise-edge-label edge) (edge-category edge))
        (edge-leaves edge)
        (if roots "*" "")
-       (loop for child in (edge-children edge) collect (edge-id child))
+       (loop for child in (edge-children edge) collect (edge-id child)))
+      #+:packing
+      (format
+       t
+       "~:[~2*~; ~:[+~;~]~d~]"
        (edge-frozen edge) (and (edge-frozen edge) (minusp (edge-frozen edge)))
        (edge-frozen edge))
       ;;
