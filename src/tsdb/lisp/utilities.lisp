@@ -324,6 +324,8 @@
         (format
          nil "~a-~a-~a (~2,'0d:~2,'0d h)" 
          day (nth (- month 1) months) year hour minute))
+       ((eq long :short)
+        (format nil "~2,'0d:~2,'0d:~2,'0d" hour minute second))
        (t
         (format
          nil "~a-~a-~a (~2,'0d:~2,'0d:~2,'0d)"

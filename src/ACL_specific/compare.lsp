@@ -176,10 +176,13 @@
 
 
 (defun preset-discriminants (frame)
+  
+  #+:allegro
   (format
    excl:*initial-terminal-io*
    "~&~%[~a] `~a'~%~%"
    (compare-frame-item frame) (compare-frame-input frame))
+  
   (loop
       for old in (compare-frame-gold frame)
       for matches = (loop 
@@ -281,13 +284,34 @@
   
   (when (null (compare-frame-input frame))
     (setf (compare-frame-input frame) (edge-leaves (car parses))))
-  (let ((id 0))
-    (setf (compare-frame-trees frame)
-      (mapcar #'(lambda (p) 
-                  (make-ptree :top (make-new-parse-tree p 1) :id (incf id)))
-              parses)))
+  (setf (compare-frame-trees frame)
+    (loop
+        for i from 0
+        for parse in parses
+        for tree = (make-new-parse-tree parse 1)
+        when (zerop (mod i 50)) do
+          #+:allegro
+          (format
+           excl:*initial-terminal-io*
+           "~&[~a] set-up-compare-frame(): rebuilding parse # ~a~%"
+           (current-time :long :short) i)
+          #-:allegro
+          nil
+        collect (make-ptree :edge parse :top tree :id i)))
+  #+:allegro
+  (format
+   excl:*initial-terminal-io*
+   "~&[~a] set-up-compare-frame(): rebuilt ~a tree~p.~%"
+   (current-time :long :short) (length parses) (length parses))
+
   (setf (compare-frame-otrees frame) (copy-list (compare-frame-trees frame)))
   (setf (compare-frame-discrs frame) (find-discriminants frame))
+  #+:allegro
+  (format
+   excl:*initial-terminal-io*
+   "~&[~a] set-up-compare-frame(): found ~a discriminant~p.~%"
+   (current-time :long :short) (length (compare-frame-discrs frame)) 
+   (length (compare-frame-discrs frame)))
   (setf (compare-frame-lead frame) nil)
   (preset-discriminants frame)
   
@@ -600,13 +624,7 @@
 ;;; Stuff for mini tree pane
 
 (defstruct ptree 
-  ;; Top node of parse tree
-  top					
-  ;; Output record of tree
-  output-record				
-  ;; Current color of tree
-  ink
-  id)
+  top edge output-record ink id)
   
 (defun draw-trees-window (window stream)
 
@@ -855,7 +873,7 @@
            (aref #("zero" "low" "fair" "high") foo)))))
     
     (clim:formatting-table (stream :x-spacing "X")
-      (clim:with-text-style (stream (comparison-tree-font))
+      (clim:with-text-style (stream (comparison-discriminant-font))
         (loop
             for item in discriminants
             unless (discr-hidep item) do

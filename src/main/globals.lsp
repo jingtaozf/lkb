@@ -1,5 +1,6 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991--2002
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see licence.txt for conditions.
 ;;;
 ;;; This is the base globals file because parameters have to be
 ;;; defined somewhere, but in most cases a particular set of

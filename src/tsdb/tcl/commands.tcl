@@ -94,6 +94,18 @@ proc tsdb_file {action {index -1}} {
       }; # else
       send_to_lisp :event $command;
     }; # if
+  } elseif {$action == "export"} {
+    if {[verify_ts_selection]} {return 1};
+    if {![input "target directory:" "/tmp/redwoods" "" export]} {
+      set target $globals(input);
+      if {[catch {file mkdir $target}]} {
+        tsdb_beep;
+        status "error creating target directory `$target'" 10;
+        return 1;
+      }; # if
+      set command "(export \"$globals(data)\" :path \"$target\")";
+      send_to_lisp :event $command;
+    }; # if
   } elseif {$action == "delete"} {
     if {[verify_ts_selection]} {return 1};
     set old $globals(data);

@@ -47,7 +47,7 @@
          (message (format 
                    nil 
                    "~a `~a' trees ..." 
-                   (if strip "stripping" "browsing") data))
+                   (if strip "normalizing" "browsing") data))
          (items (sort (copy-seq items) 
                       #'< :key #'(lambda (foo) (get-field :i-id foo))))
          (schema (read-database-schema data))
@@ -93,11 +93,18 @@
         for item = (when position (nth position items))
         for i-id = (get-field :i-id item)
         for status = (when (integerp i-id) 
-                       (browse-tree 
-                        data i-id frame 
-                        :gold gold
-                        :cache cache :title title :strip strip
-                        :verbose verbose :stream stream))
+                       (if *tsdb-tenure-p*
+                         (#+:allegro excl:tenuring #-:allegro progn
+                          (browse-tree 
+                           data i-id frame 
+                           :gold gold
+                           :cache cache :title title :strip strip
+                           :verbose verbose :stream stream))
+                         (browse-tree 
+                          data i-id frame 
+                          :gold gold
+                          :cache cache :title title :strip strip
+                          :verbose verbose :stream stream)))
         for action = (get-field :status status)
         for offset = (or (get-field :offset status) 1)
         while (and status (not (eq action :close)) (numberp position))
@@ -137,6 +144,12 @@
 
   (when (or (null %client%)
             (and (mp:process-p %client%) (mp:process-active-p %client%)))
+    #+:allegro
+    (format
+     excl:*initial-terminal-io*
+     "~&[~a] browse-tree(): `~a' ~@[(~a) ~] --- item # ~a~%"
+     (current-time :long :short) data gold i-id)
+
     (let* ((*reconstruct-cache* (make-hash-table :test #'eql))
            (condition (format nil "i-id = ~a" i-id))
            (items (analyze data :thorough '(:derivation) :condition condition))
@@ -144,7 +157,15 @@
            (input (or (get-field :o-input item) (get-field :i-input item)))
            (i-id (get-field :i-id item))
            (parse-id (get-field :parse-id item))
+           (results (get-field :results item))
            (trees (when parse-id
+                    #+:allegro
+                    (format
+                     excl:*initial-terminal-io*
+                     "~&[~a] browse-tree(): ~
+                      retrieved item # ~a (~a parse~p).~%"
+                     (current-time :long :short) i-id 
+                     (length results)(length results))
                     (select '("parse-id" "t-version" "t-active" "t-confidence" 
                               "t-author" "t-start" "t-end" "t-comment")
                             '(:integer :integer :integer :integer 
@@ -177,8 +198,12 @@
                          "~a (~a) confidence; version ~d on ~a by `~a'"
                          foo confidence version date user)
                         "")))
-           (results (get-field :results item))
            (edges (unless strip
+                    #+:allegro
+                    (format
+                     excl:*initial-terminal-io*
+                     "~&[~a] browse-tree(): retrieved ~a tree record~p.~%"
+                     (current-time :long :short) (length trees) (length trees))
                     (loop
                         with edges
                         for result in results
@@ -189,7 +214,14 @@
                           (setf (lkb::edge-score edge) id)
                           (setf (lkb::edge-parents edge) derivation)
                           (push edge edges)
-                        finally (return (nreverse edges)))))
+                        finally
+                          #+:allegro
+                          (format
+                           excl:*initial-terminal-io*
+                           "~&[~a] browse-tree(): reconstructed ~a edge~p.~%"
+                           (current-time :long :short) 
+                           (length edges) (length edges))
+                          (return (nreverse edges)))))
            (foo (first edges))
            (start (and foo (lkb::edge-from foo)))
            (end (and foo (lkb::edge-to foo)))
@@ -207,6 +239,12 @@
                                  parse-id version) 
                                 data)))
            (discriminants (unless strip
+                            #+:allegro
+                            (format
+                             excl:*initial-terminal-io*
+                             "~&[~a] browse-tree(): retrieved ~a decision~p.~%"
+                             (current-time :long :short)
+                             (length decisions) (length decisions))
                             (reconstruct-discriminants decisions)))
            (gtrees (when (and gold parse-id (null strip))
                      (select '("parse-id" "t-version" 
@@ -228,6 +266,12 @@
                        when (eq gversion (get-field :t-version tree))
                        collect tree))
            (gdecisions (when (and gold parse-id gversion)
+                         #+:allegro
+                         (format
+                          excl:*initial-terminal-io*
+                          "~&[~a] browse-tree(): retrieved ~a gold tree~p.~%"
+                          (current-time :long :short) 
+                          (length gtrees) (length gtrees))
                          (select '("parse-id" "version"
                                    "d-state" "d-type" "d-key" "d-value" 
                                    "d-start" "d-end" "d-date")
@@ -241,6 +285,13 @@
                                   parse-id gversion) 
                                  gold)))
            (gdiscriminants (when gdecisions
+                             #+:allegro
+                             (format
+                              excl:*initial-terminal-io*
+                              "~&[~a] browse-tree(): ~
+                               retrieved ~a gold decision~p.~%"
+                              (current-time :long :short) 
+                              (length gdecisions) (length gdecisions))
                              (reconstruct-discriminants gdecisions)))
            (lkb::*parse-record* edges))
       (declare (ignore active))
@@ -260,7 +311,6 @@
         (loop
             for decision in decisions
             do (write-decision strip decision :cache cache))
-        #-:expand
         (return-from browse-tree (acons :status :save nil)))
 
       (when (null edges)
@@ -275,7 +325,7 @@
       (setf (lkb::compare-frame-item frame) i-id)
       (setf (lkb::compare-frame-start frame) start)
       (setf (lkb::compare-frame-end frame) end)
-      (setf (lkb::compare-frame-end frame) 
+      (setf (lkb::compare-frame-derivations frame) 
         (loop
             for result in results collect (get-field :derivation result)))
       (setf (lkb::compare-frame-version frame) history)
@@ -297,9 +347,6 @@
                             *current-process* :wait))))))
       
       (let ((status (lkb::set-up-compare-frame lkb::*parse-record* frame))) 
-        #+:expand
-        (lkb::record-decision (lkb::make-decision :type :save) frame)
-        #-:expand
         (unless (eq status :skip)
           (clim:redisplay-frame-panes frame :force-p t)
           (process-add-arrest-reason *current-process* :wait)))
@@ -308,9 +355,7 @@
              (status (lkb::decision-type (first decisions)))
              (recent (second decisions)))
         (when (eq status :save)
-          (let* ((version (if version 
-                            #-:expand (incf version) #+:expand version
-                            1))
+          (let* ((version (if version (incf version) 1))
                  (trees (lkb::compare-frame-in-parses frame))
                  (active (length trees))
                  (foo (lkb::compare-frame-confidence frame))
@@ -331,7 +376,6 @@
                           (if end 
                             (decode-time end :long :tsdb)
                             (current-time :long :tsdb)))))
-            #-:expand
             (write-tree data (pairlis '(:parse-id 
                                         :t-version :t-active :t-confidence
                                         :t-author :t-start :t-end :t-comment)
@@ -362,8 +406,7 @@
                    (time (let ((time (lkb::decision-time recent)))
                            (if time
                              (decode-time time :long :tsdb)
-                             (current-time)))))
-              #-:expand
+                             (current-time :long :tsdb)))))
               (write-decision data 
                               (pairlis '(:parse-id :version 
                                          :d-state :d-type :d-key :d-value 
@@ -385,11 +428,9 @@
               for time = (let ((time (lkb::discr-time discriminant)))
                            (if time
                              (decode-time time :long :tsdb)
-                             (current-time)))
+                             (current-time :long :tsdb)))
               unless (= state 5)
               do
-                #+:expand nil
-                #-:expand
                 (write-decision data 
                                 (pairlis '(:parse-id :version 
                                            :d-state :d-type :d-key :d-value 
@@ -710,7 +751,8 @@
                "~d (~d); derivation:~%~a~%~d (~d); MRS string:~%~a~%~%"
                id i foo id i mrs))))
 
-(defun kristina (data &key condition path prefix)
+(defun export-trees (data &key (condition *statistics-select-condition*)
+                               path prefix)
   
   (loop
       with target = (format 

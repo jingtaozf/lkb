@@ -705,6 +705,8 @@ proc main {} {
   .menu.trees.menu add command \
     -label "Normalize" -command {tsdb_file strip};
   .menu.trees.menu add command \
+    -label "Export" -state disabled -command {tsdb_file export trees};
+  .menu.trees.menu add command \
     -label "Clear-Cut" -command {tsdb_file purge trees};
 
   #

@@ -79,7 +79,41 @@
                #+:mcl others #-:mcl -1)))))
 
 
+(defun current-time (&key long)
+  (decode-time (get-universal-time) :long long))
+
+(defun decode-time (time &key long)
+  (multiple-value-bind (second minute hour day month year foo bar baz)
+      (decode-universal-time time)
+    (declare (ignore foo bar baz))
+    (let ((months '("jan" "feb" "mar" "apr" "may" "jun" 
+                    "jul" "aug" "sep" "oct" "nov" "dec")))
+      (cond
+       ((null long)
+        (format nil "~a-~a-~a" day month year))
+       ((member long '(:usa :us :reverse))
+        (format nil "~2,'0d-~2,'0d-~2,'0d" (mod year 100) month day))
+       ((member long '(:tsdb))
+        (format
+         nil "~a-~a-~a ~2,'0d:~2,'0d" 
+         day (nth (- month 1) months) year hour minute))
+       ((member long '(:pretty :readable))
+        (format
+         nil "~a-~a-~a (~2,'0d:~2,'0d h)" 
+         day (nth (- month 1) months) year hour minute))
+       ((eq long :short)
+        (format nil "~2,'0d:~2,'0d:~2,'0d" hour minute second))
+       (t
+        (format
+         nil "~a-~a-~a (~2,'0d:~2,'0d:~2,'0d)"
+         day month year hour minute second))))))
+
+
 (defun start-lkb ()
+
+  (let* ((lkbrc (dir-and-name (user-homedir-pathname) ".lkbrc")))
+    (with-package (:lkb) (when (probe-file lkbrc) (load lkbrc))))
+
   ;;; this is a no-op in tty mode
   #+(not :tty)
   ;; (or :clim :common-graphics :mcl)
