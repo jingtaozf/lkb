@@ -172,9 +172,9 @@
 		 :if-exists :supersede :if-does-not-exist :create)
 	 (format 
 	  stream
-	  "@@ TnT data from LinGO Redwoods (~a by ~a)~%~
-           @@ ~d active tree~p (of ~d) for item # ~d~%~
-           @@ ~a~%"
+	  "%% TnT data from LinGO Redwoods (~a by ~a)~%~
+           %% ~d active tree~p (of ~d) for item # ~d~%~
+           %% ~a~%"
           (current-time) (current-user)
 	  (length active) (length active) (length results) i-id input)
 	 (loop
