@@ -40,7 +40,11 @@
              (ask-user-for-type nil '("Show all types?" . :check-box))
          (when type
             (let ((type-entry (get-type-entry type)))
-               (when type-entry 
+              (when (and type-entry 
+                         (if (> (length (type-descendants type-entry)) 300)
+                             (lkb-y-or-n-p 
+                              "Large hierarchy may be slow to display.  Go ahead?")
+                           t))
                   (create-type-hierarchy-tree type nil show-all-p)))))))
 
 
@@ -103,9 +107,11 @@
                     orth-list)
            (if exp-p
              (display-fs (lex-or-psort-full-fs word-entry) 
-                         (format nil "~(~A~) - expanded" word-string)
+                         (format nil "~(~A~) - ~A - expanded" word-string
+                                 (lex-or-psort-id word-entry))
                          (lex-or-psort-id word-entry))
-             (display-unexpanded-lex-entry word-string word-entry))))))
+             (display-unexpanded-lex-entry word-string word-entry
+                                 (lex-or-psort-id word-entry)))))))          
 
   
 ;;; "Lex or psort entry" show-lex
@@ -124,21 +130,27 @@
       (when lex-entry 
          (display-unexpanded-lex-entry lex lex-entry))))
 
-(defun display-unexpanded-lex-entry (lex lex-entry)
+(defun display-unexpanded-lex-entry (lex lex-entry &optional id)
   (if (eql *lkb-system-version* :laurel)
    (display-fs-and-paths 
-      (lex-or-psort-local-fs lex-entry) 
-      (format nil "~(~A~) - definition" lex)
-      (remove-if-not 
-         #'(lambda (unif) 
-            (or (c-identity-p unif)
-               (equality-p unif)
-               (inheritance-p unif)
-               (default-inheritance-p unif)))
-         (lex-or-psort-unifs lex-entry))
-      lex)
+    (lex-or-psort-local-fs lex-entry) 
+    (if id
+        (format nil "~(~A~) - ~A - definition" lex
+                id)
+      (format nil "~(~A~) - definition" lex))
+    (remove-if-not 
+     #'(lambda (unif) 
+         (or (c-identity-p unif)
+             (equality-p unif)
+             (inheritance-p unif)
+             (default-inheritance-p unif)))
+     (lex-or-psort-unifs lex-entry))
+    lex)
    (display-fs (lex-or-psort-local-fs lex-entry) 
-                     (format nil "~(~A~) - definition (indef)" lex))))
+               (if id
+                   (format nil "~(~A~) - ~A - definition (indef)" lex
+                                 id)
+                 (format nil "~(~A~) - definition (indef)" lex)))))
 
          
 (defun show-grammar-rule nil
