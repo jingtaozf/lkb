@@ -37,8 +37,8 @@ produced by robust parsers of various types.
       :binary-pathname "rmrs"
       :components
       ((:file "standalone") ;; replaces some LKB structures
+       (:file "basermrs")   ;; the RMRS specific structures
        (:file "comp")    ;; main code for semantic composition
-                         ;; and the RMRS specific structures
        (:file "annlt")   ;; The ANNLT specific code - navigates round the input trees                
        (:file "output")
                          ;; outputting RMRS structures, and also LKB
@@ -83,7 +83,8 @@ produced by robust parsers of various types.
   (construct-sem-for-tree
   '(|T/txt-sc1/----|
      (|S/np_vp| (|NP/n1_n1-name/-| (|N1/n| |Abrams_NP1|))
-      (|V1/v| |bark+ed_VVD|))))
+      (|V1/v| |bark+ed_VVD|)))
+   :rasp t)
 
 |#
 

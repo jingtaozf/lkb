@@ -137,7 +137,8 @@
       :source-pathname "rmrs"
       :binary-pathname "rmrs"
       :components
-      ((:file "comp")
+      ((:file "basermrs")
+       (:file "comp")
        (:file "convert")
        (:file "annlt")                           
        (:file "output")
