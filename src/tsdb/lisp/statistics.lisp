@@ -255,10 +255,11 @@
                     (format nil "retrieving `~a' data ..." language)))
          (extras (and extras t))
          (trees (and trees t))
+         (foo (if (consp thorough) (format nil "~{~(~a~)~^#~}" thorough) "t"))
          (key (format 
                nil 
-               "~a @ ~a~@[ # ~{~(~a~)~^#~}~]~@[~* : trees~]~@[~* : extras~]" 
-               language condition thorough trees extras))
+               "~a @ ~a~@[ # ~a~]~@[~* : trees~]~@[~* : extras~]" 
+               language condition foo trees extras))
          (relations (read-database-schema language))
          (parse (rest (find "parse" relations :key #'first :test #'string=)))
          pfields ptypes data)
@@ -317,12 +318,13 @@
                              "item" condition language 
                              :meter imeter :sort :i-id))
                (results (when thorough
-                          (select (append '("parse-id" "result-id") 
-                                          (loop for symbol in thorough
-                                              collect (format 
-                                                       nil 
-                                                       "~(~a~)" 
-                                                       symbol)))
+                          (select (append '("parse-id" "result-id")
+                                          (when (consp thorough)
+                                            (loop for symbol in thorough
+                                                collect (format 
+                                                         nil 
+                                                         "~(~a~)" 
+                                                         symbol))))
                                   nil "result" condition language 
                                   :meter rmeter :sort :parse-id)))
                (trees (when trees
@@ -345,18 +347,19 @@
                 when extra do
                   (nconc tuple extra)))
           (when results
-            (loop
-                for field in thorough
-                for reader = (find-attribute-reader field)
-                when reader
-                do
-                  (loop
-                      for result in results
-                      for value = (get-field field result)
-                      when value
-                      do 
-                        (setf (get-field field result) 
-                          (funcall reader value))))
+            (when (consp thorough)
+              (loop
+                  for field in thorough
+                  for reader = (find-attribute-reader field)
+                  when reader
+                  do
+                    (loop
+                        for result in results
+                        for value = (get-field field result)
+                        when value
+                        do 
+                          (setf (get-field field result) 
+                            (funcall reader value)))))
             ;;
             ;; _fix_me_
             ;; this is sort of hacky: since we fail to guarantee unique parse
@@ -378,6 +381,7 @@
                                    (eql key (get-field :parse-id result)))
                         collect (pop results)))
                 when matches
+                     
                 do (nconc item (acons :results matches nil))))
           ;;
           ;;
@@ -791,6 +795,10 @@
       with tritems = 0
       with tlength = 0
       with twords = 0
+      with trwords = 0
+      with tuwords = 0
+      with tawords = 0
+      with tswords = 0
       with tlstasks = 0
       with treadings = 0
       with tresults = 0
@@ -800,6 +808,8 @@
       with turesults = 0
       with tareadings = 0
       with taresults = 0
+      with tsreadings = 0
+      with tsresults = 0
       with result = nil
       for aggregate in aggregates
       for items = (rest (rest aggregate))
@@ -810,6 +820,10 @@
         (loop
             with alength = 0
             with awords = 0
+            with arwords = 0
+            with auwords = 0
+            with aawords = 0
+            with aswords = 0
             with alstasks = 0
             with areadings = 0
             with aresults = 0
@@ -819,6 +833,8 @@
             with auresults = 0
             with aareadings = 0
             with aaresults = 0
+            with asreadings = 0
+            with asresults = 0
             for item in ritems
             for ilength = (get-field :i-length item)
             for iwords = (get-field :words item)
@@ -835,18 +851,29 @@
                 (cond
                  ((eql active 0) 
                   (incf arreadings ireadings)
+                  (incf arwords iwords)
                   (incf arresults))
                  ((eql active 1)
                   (incf aureadings ireadings)
+                  (incf auwords iwords)
                   (incf auresults))
                  ((and (numberp active) (> active 1))
                   (incf aareadings ireadings)
-                  (incf aaresults))))
+                  (incf aawords iwords)
+                  (incf aaresults))
+                 ((null active )
+                  (incf asreadings ireadings)
+                  (incf aswords iwords)
+                  (incf asresults))))
             finally
               (push (cons (first aggregate)
                           (pairlis '(:items :restricted 
                                      :i-length 
                                      :words 
+                                     :rwords
+                                     :uwords
+                                     :awords
+                                     :swords
                                      :l-stasks 
                                      :lambiguity 
                                      :analyses 
@@ -856,10 +883,16 @@
                                      :uanalyses 
                                      :uresults
                                      :aanalyses 
-                                     :aresults)
+                                     :aresults
+                                     :asnalyses
+                                     :asesults)
                                    (list nitems nritems
                                          (divide alength nritems)
                                          (divide awords nritems)
+                                         (divide arwords arresults)
+                                         (divide auwords auresults)
+                                         (divide aawords aaresults)
+                                         (divide aswords asresults)
                                          (divide alstasks nritems)
                                          (divide awords alength)
                                          (divide areadings aresults)
@@ -869,12 +902,18 @@
                                          (divide aureadings auresults)
                                          auresults
                                          (divide aareadings aaresults)
-                                         aaresults)))
+                                         aaresults
+                                         (divide asreadings asresults)
+                                         asresults)))
                     result)
               (incf titems nitems)
               (incf tritems nritems)
               (incf tlength alength)
               (incf twords awords)
+              (incf trwords arwords)
+              (incf tuwords auwords)
+              (incf tawords aawords)
+              (incf tswords aswords)
               (incf tlstasks alstasks)
               (incf treadings areadings)
               (incf tresults aresults)
@@ -883,13 +922,19 @@
               (incf tureadings aureadings)
               (incf turesults auresults)
               (incf tareadings aareadings)
-              (incf taresults aaresults))
+              (incf taresults aaresults)
+              (incf tsreadings asreadings)
+              (incf tsresults asresults))
 
       finally
         (push (cons :total
                     (pairlis '(:items :restricted
                                :i-length
                                :words :l-stasks
+                               :rwords
+                               :uwords
+                               :awords
+                               :swords
                                :lambiguity
                                :analyses
                                :results
@@ -898,11 +943,17 @@
                                :uanalyses 
                                :uresults
                                :aanalyses 
-                               :aresults)
+                               :aresults
+                               :sanalyses 
+                               :sresults)
                              (list titems tritems
                                    (divide tlength tritems)
                                    (divide twords tritems)
                                    (divide tlstasks tritems)
+                                   (divide trwords trresults)
+                                   (divide tuwords turesults)
+                                   (divide tawords taresults)
+                                   (divide tswords tsresults)
                                    (divide twords tlength)
                                    (divide treadings tresults)
                                    tresults 
@@ -911,7 +962,9 @@
                                    (divide tureadings turesults)
                                    turesults
                                    (divide tareadings taresults)
-                                   taresults)))
+                                   taresults
+                                   (divide tsreadings tsresults)
+                                   tsresults)))
               result)
         (return (delete :all result :key #'first))))
 
