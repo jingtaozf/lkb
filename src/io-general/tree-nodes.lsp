@@ -50,7 +50,7 @@
          do
          (display-parse-tree edge nil)
          (when (fboundp 'mrs::output-mrs-after-parse)
-           (mrs::output-mrs-after-parse *parse-record*)))
+           (funcall 'mrs::output-mrs-after-parse *parse-record*)))
      (format t "~%No parses found")))
 
 #|     
@@ -323,24 +323,24 @@
       (dolist (entry *gen-chart*)
          (dolist (e (cdr entry))
             (push
-               (list* (gen-chart-edge-id e)
-                  (make-edge-symbol (gen-chart-edge-id e))
-                  (gen-chart-edge-needed e))
+               (list* (dotted-edge-id e)
+                  (make-edge-symbol (dotted-edge-id e))
+                  (dotted-edge-needed e))
                edge-symbols)))
       (dolist (entry *gen-chart*)
          (let ((chart-index (string-downcase (symbol-name (car entry)))))
             (dolist (e (cdr entry))
                (let ((edge-symbol
-                        (cadr (assoc (gen-chart-edge-id e) edge-symbols))))
+                        (cadr (assoc (dotted-edge-id e) edge-symbols))))
                   (setf (get edge-symbol 'chart-edge-span)
-                     (if (gen-chart-edge-needed e)
+                     (if (dotted-edge-needed e)
                         (concatenate 'string chart-index " A") chart-index))
                   (setf (get edge-symbol 'chart-edge-contents) e)
-                  (if (gen-chart-edge-children e)
-                     (dolist (c (gen-chart-edge-children e))
+                  (if (dotted-edge-children e)
+                     (dolist (c (dotted-edge-children e))
                         (when c
                            (push edge-symbol
-                              (get (cadr (assoc (gen-chart-edge-id c) edge-symbols))
+                              (get (cadr (assoc (dotted-edge-id c) edge-symbols))
                                  'chart-edge-descendents))))
                      (push edge-symbol (get root 'chart-edge-descendents)))))))
       (unless all-p
@@ -472,10 +472,9 @@
   (when display-in-chart-p 
     (display-edge-in-chart edge))
   (let ((edge-symbol (make-new-parse-tree edge 1)))
-    (setq x edge-symbol)
     (draw-new-parse-tree edge-symbol 
 			 (format nil "Edge ~A ~A" (edge-id edge) 
-				 (if (gen-chart-edge-p edge) "G" "P"))
+				 (if (g-edge-p edge) "G" "P"))
 			 nil)))
    
 (defun make-new-parse-tree (edge level)
@@ -485,8 +484,8 @@
 (defun make-new-parse-tree1 (edge level)
   ;; show active edge nodes at first level but not thereafter
   (if (and (> level 1) 
-	   (gen-chart-edge-p edge) 
-	   (gen-chart-edge-needed edge))
+	   (dotted-edge-p edge) 
+	   (dotted-edge-needed edge))
       (mapcan #'(lambda (c) 
 		  (when c 
 		    (make-new-parse-tree1 c (1+ level))))

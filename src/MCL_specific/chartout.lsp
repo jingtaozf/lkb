@@ -164,7 +164,7 @@
      #'(lambda ()
          (display-fs (edge-dag edge-record)
             (format nil "Edge ~A ~A - FS" (edge-id edge-record)
-               (if (gen-chart-edge-p edge-record) "G" "P")))))
+               (if (g-edge-p edge-record) "G" "P")))))
    (make-instance 'menu-item
      :menu-item-title (format nil "Edge ~A" (edge-id edge-record))
      :menu-item-action
@@ -282,7 +282,7 @@
              (and edge-record (chart-record-position edge-record))))
       (when edge-pos
          (unless
-            (let ((eps (make-point 30 15)))
+            (let ((eps (make-point 15 15)))
                (inside-box-p edge-pos
                   ;; make slightly smaller box than full area of visible pane
                   (cons (add-points (view-scroll-position pane) eps)
