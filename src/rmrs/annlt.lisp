@@ -6,22 +6,248 @@
 
 ;;; ANNLT specific
 
-;;; The following four parameters should be set in a user-specific
-;;; file to allow use of the interactive facility for RASP-to-RMRS
-;;; conversion
+;;; The following parameters might usefully be set in a user-specific
+;;; file for RASP-to-RMRS conversion.  Alternatively see testing.lisp
 
 (defparameter *rasp-rmrs-gram-file* nil
   "grammar file for rasp to rmrs conversion")
 
+;;; same for all variants
+  
 (defparameter *rasp-rmrs-tag-file* nil
   "tag file for rasp to rmrs conversion")
 
+;;; same for all variants
+
+
 (defparameter *rasp-xml-word-p* nil
   "set for versions of the RASP output which have the XML-style word structures")
+;;; t for semtest
+;;; nil for qa
 
-(defparameter *rasp-xml-p* nil
-  "set for output where RASP is embedded in XML")
+(defparameter *rasp-xml-type* :none
+  "either :standard, :none or :qa 
+   if :standard, RASP is embedded in XML, if :qa settings as
+   for qa experiments, if :none - raw RASP output")
+;;; :none for semtest
+;;; :qa for qa
 
+(defparameter *rasp-xml-tag* "P"
+  "when using XML input, this controls the tag we look for")
+;;; "P" for all variants
+
+(defparameter *rasp-input-file* nil
+  "file for RASP input")
+
+#|
+(make-pathname :device "d" :directory "/lingo/lkb/src/rmrs/qa/"
+	       :name "top_docs.24.parses")
+|#
+
+(defparameter *rasp-rmrs-output-file* nil
+  "file for RASP-RMRS output")
+
+#|
+"semtest-rasp.rmrs"
+(make-pathname :device "d" :directory "/lingo/lkb/src/rmrs/qa/"
+	       :name "top_docs.24.rmrs")
+|#
+
+(defparameter *rasp-full-numbers-p* t
+  "Controls whether RASP characterization is per file or per sentence")
+
+;;; Calling RASP to RMRS code
+
+(defun simple-process-rasp-file nil
+ (clear-rule-record)
+ (read-rmrs-grammar *rasp-rmrs-gram-file*)
+ (read-rmrs-tag-templates *rasp-rmrs-tag-file*)
+ (rmrs-from-file *rasp-input-file* *rasp-rmrs-output-file* *rasp-xml-type*))
+
+
+;;; File wrapper - note use of handler-case
+;;; All rather hacky due to need to cope with errors in input
+
+(defparameter *initial-rasp-num* nil)
+
+(defun rmrs-from-file (filename output xml-type)
+  ;;; xml-type control if/how input is xmlified.  
+  ;;; The wrappers etc are determined
+  ;;; by the value of xml-type - currently :standard, :qa or :none
+  ;;; when xml-type is :none, the input isn't xml
+  ;;; (or only has xml-type tags for characters), and we construct a
+  ;;; rmrs-list file as output
+  (with-open-file (istream filename :direction :input)
+    (with-open-file (ostream output :direction :output
+                     :if-exists :supersede
+                     :if-does-not-exist :create)
+      (output-rmrs-xml-file-header ostream xml-type)
+      (let ((sentence-count 0))
+        (loop (let* ((markup (if (or (eql xml-type :qa)
+				     (eql xml-type :standard))
+				 (find-lisp-in-xml-tag istream 
+						       *rasp-xml-tag*)))
+                     ;; read in XML
+                     (original (read istream nil nil))
+                     (id (read istream nil nil))
+                     (tree (read istream nil nil)))
+                (declare (ignore id))
+                (when markup
+		  (format ostream "~A" markup))
+                ;; output XML unchanged (except for whitespace)
+                (unless tree
+		  ;; there was a hack to get round lack of markup 
+		  ;; at end when RASP misbehaves but now seems better
+		  ;; to use Perl
+                  (return))
+                (when original
+                  #|
+                  blank lines in RASP cause the following
+                  () 0 ; ()
+                  
+                  (X)
+                  so we ignore cases where there's no sentence
+                  |#
+                  (unless (eql xml-type :none)
+                    (setf sentence-count (+ 1 sentence-count))
+                    (format ostream
+                            "~%<S id='~A'>" sentence-count)
+                    (format ostream
+                            "~%<string>~%~S~%</string>" original)
+                    (if *rasp-xml-word-p*    ; can't show tree
+                        ; because XML tags clash
+                        (format ostream
+                                "~%<tree></tree>"
+                                tree)
+                      (format ostream
+                                "~%<tree>~%~S~%</tree>"
+                                tree)))
+                  (handler-case
+                      (progn
+                        (unless (equal tree '(X))
+                          (when *rasp-full-numbers-p* 
+                            (setf *initial-rasp-num* nil)
+                            (setf *initial-rasp-num*
+                              (scan-rasp-for-first-num 
+                               tree most-positive-fixnum)))
+                          (construct-sem-for-tree tree :rasp ostream))
+                        (finish-output ostream))
+                    (storage-condition (condition)
+                      (format ostream "~%Memory allocation problem: ~A~%" condition))
+                    (error (condition)
+                      (format ostream "~%Error: ~A~%" condition))
+                    (serious-condition (condition)
+                      (format ostream "~%Something nasty: ~A~%" condition)))
+		  (unless (eql xml-type :none)
+                    (format ostream
+                            "~%</S>"))))))
+      (output-rmrs-xml-file-end ostream xml-type))))
+
+
+(defun output-rmrs-xml-file-header (ostream xml-type)
+  (ecase xml-type
+    (:none
+	(format ostream "<?xml version='1.0'?> <!DOCTYPE rmrs-list SYSTEM \"/homes/aac10/lingo/lkb/src/rmrs/rmrs.dtd\" >")
+	(format ostream "~%<rmrs-list>"))
+    (:standard
+     (format ostream "<?xml version='1.0'?> <!DOCTYPE CORPUS SYSTEM \"/usr/groups/mphil/qa04/dtd/analysis.dtd\" > 
+<CORPUS> 
+<DOC> 
+<DOCNO/>
+<TEXT>
+<P>"))
+    (:qa nil)))
+
+
+(defun output-rmrs-xml-file-end (ostream xml-type)
+  (ecase xml-type
+    (:none
+     (format ostream "~%</rmrs-list>"))
+    (:standard
+     (format ostream "</P></TEXT></DOC></CORPUS>~%"))
+    (:qa nil)))
+    
+
+(defun find-lisp-in-xml-tag (istream tag-searched)
+  ;;; contributed by Fabre
+  ;;;
+  ;;; allow for arbitrary xml stuff in between what we care about
+  ;;; if xml-p is nil, this is a noop
+  ;;; otherwise we scan forward looking for the first
+  ;;; P> followed by ( - maybe with whitespace
+  (let* ((stuff nil)
+         (next-char (peek-char t istream nil nil)))
+    (if (eql next-char #\()
+        nil
+      (progn
+        ;; search for beginning of XML tag
+        (loop
+          (let ((input-char1 (read-char istream nil nil)))
+            (unless input-char1 (return))
+            (push input-char1 stuff)
+            ;; when beginning of tag detected...
+            (when (eql input-char1 #\<)
+              (let ((tag-target (coerce tag-searched 'list))
+                    (tag-found-p nil)
+                    (end-found-p))
+                ;; read the tag until whitespace or end of tag
+                (loop
+                  (let ((input-char2 (peek-char nil istream nil nil)))
+                    (cond ((null input-char2) (return))
+			  ;; so far tag looks like the one we're 
+			  ;; searching for
+                          ((and tag-target
+                                (char-equal input-char2 (pop tag-target)))
+                           (push input-char2 stuff)
+                           (read-char istream nil nil))
+			  ;; reached the end of the tag and it's what we
+			  ;; were searching for
+                          ((and (null tag-target)
+                                (or (whitespacep input-char2)
+                                    (eql input-char2 #\>)))
+                           (setq tag-found-p t)
+                           (return))
+                          ;; bugger, not this one yet
+                          (t
+                           (push input-char2 stuff)
+                           (read-char istream nil nil)
+                           (return)))))
+                (if tag-found-p
+                    ;; if not yet found end of tag (eg. if there are
+                    ;; attributes), search for the end.
+                    (loop
+                      (let ((input-char3 (read-char istream nil nil)))
+                        (push input-char3 stuff)
+                        ;; when end of tag finally found...
+                        (when (eql input-char3 #\>)
+                          ;; continue reading the stream until opening
+                          ;; parenthesis is found
+                          (let ((paren-test
+                                 (loop (let ((input-char-inner
+                                              (peek-char nil istream nil nil)))
+                                         (cond ((null input-char-inner)
+						(return :eof))
+                                               ((eql input-char-inner #\()
+                                                (return :read))
+                                               ((eql input-char-inner #\<)
+                                                (return :morexml))
+                                               ((whitespacep input-char-inner)
+                                                (read-char istream nil nil)
+                                                (push input-char-inner stuff))
+                                               (t (read-char istream nil nil)
+                                                  (push input-char-inner stuff)
+                                                  (return nil)))))))
+                            (cond ((or (eql paren-test :read)
+                                       (eql paren-test :eof))
+                                   (setq end-found-p t)
+                                   (return))
+                                  ((eql paren-test :morexml)
+				;;; (format t "Gargl, this tag contains more XML elements~%")
+                                ;;; is this an error - AAC?
+				   nil)))))))
+                (if end-found-p
+                    (return))))))
+        (coerce (nreverse stuff) 'string)))))
 
 ;;; called from comp.lisp - data structures within trees
 
@@ -98,10 +324,6 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
          (second-first (position #\< after-tag)))
     (subseq after-tag 0 second-first)))
 
-(defparameter *rasp-full-numbers-p* t)
-
-(defparameter *initial-rasp-num* nil)
-
 (defun get-cfrom (str)
   ;;; <w s="19" e="24">bark+ed_VVD</w>
   ;;; extract 19
@@ -155,226 +377,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 	min)
     (let ((cfrom (get-cfrom (string tree-node))))
       (or cfrom most-positive-fixnum))))
-
   
-;;; top level call examples
-
-#|
-;;; Windows, semtest
-
-(let ((*rasp-xml-word-p* t)
-      (*rasp-xml-p* nil))
-  (simple-process-rasp-file 
-   (make-pathname 
-    :device "d"
-    :directory "/lingo/lkb/src/rmrs/annlt-test/"
-    :name "semtest.rasp")
-   "semtest-rasp.rmrs" 
-   (make-pathname 
-   :device "d"
-   :directory "/lingo/lkb/src/rmrs/annlt-test/"
-   :name "gram14.1.rmrs")
-   (make-pathname :device "d"
-		 :directory "/lingo/lkb/src/rmrs/annlt-test/"
-		 :name "lex14.1.rmrs")))
-
-;;; Linux semtest
-
-(let ((*rasp-xml-word-p* t)
-      (*rasp-xml-p* nil))
-  (simple-process-rasp-file 
-   (make-pathname 
-    :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-    :name "semtest.rasp")
-   "semtest-rasp.rmrs" 
-   (make-pathname 
-    :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-    :name "gram14.1.rmrs")
-   (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-		  :name "lex14.1.rmrs")))
-
-;;; Linux semtest with more XML
-
-(let ((*rasp-xml-word-p* t)
-      (*rasp-xml-p* nil))
-  (simple-process-rasp-file
-   (make-pathname 
-    :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-    :name "semtest.rasp")
-   "semtest-rasp.rmrs" 
-   (make-pathname 
-    :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-    :name "gram14.1.rmrs")
-   (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-		  :name "lex14.1.rmrs")
-   t))
-   
-;;; Windows, XML
-
-(let ((*rasp-xml-word-p* nil)
-      (*rasp-xml-p* t))
-  (simple-process-rasp-file 
-   (make-pathname 
-    :device "d"
-    :directory "/lingo/lkb/src/rmrs/qa/"
-    :name "top_docs.24.parses")
-   (make-pathname 
-    :device "d"
-    :directory "/lingo/lkb/src/rmrs/qa/"
-    :name "top_docs.24.rmrs")
-   (make-pathname 
-    :device "d"
-    :directory "/lingo/lkb/src/rmrs/annlt-test/"
-    :name "gram14.1.rmrs")
-   (make-pathname :device "d"
-		  :directory "/lingo/lkb/src/rmrs/annlt-test/"
-		  :name "lex14.1.rmrs")))
-|#
-
-(defun simple-process-rasp-file (ifile ofile grammar-file tag-file 
-                                 &optional blah-p)
- (clear-rule-record)
- (read-rmrs-grammar grammar-file)
- (read-rmrs-tag-templates tag-file)
- (rmrs-from-file ifile ofile *rasp-xml-p* blah-p))
-
-
-;;; File wrapper - note use of handler-case
-;;; All rather hacky due to need to cope with errors in input
-
-(defun rmrs-from-file (filename output xml-p &optional blah-p)
-  ;;; if xml-p is true, the input is xmlified and we retain
-  ;;; the structure.  when xml-p is nil, the input isn't xml
-  ;;; (or only has xml-type tags for characters), and we construct a
-  ;;; rmrs-list file as output
-  (with-open-file (istream filename :direction :input)
-    (with-open-file (ostream output :direction :output
-                     :if-exists :supersede
-                     :if-does-not-exist :create)
-      (unless (or xml-p blah-p)
-	(format ostream "<?xml version='1.0'?> <!DOCTYPE rmrs-list SYSTEM \"/homes/aac10/lingo/lkb/src/rmrs/rmrs.dtd\" >")
-	(format ostream "~%<rmrs-list>"))
-      (when blah-p
-        (output-header-blah ostream))
-      (let ((sentence-count 0))
-        (loop (let* ((markup (if xml-p (read-xml-characters istream)))
-                     ;; read in XML
-                     (original (read istream nil nil))
-                     (id (read istream nil nil))
-                     (tree (read istream nil nil)))
-                (declare (ignore id))
-                (when markup
-                  (output-rmrs-file-markup ostream markup))
-                ;; output XML unchanged (except for whitespace)
-                (unless tree
-                  (when xml-p
-                    (unless (and markup
-                                 (dolist (char (coerce markup 'list))
-                                   (unless (whitespacep char)
-                                     (return t))))
-                      ;; hack round lack of markup at end when RASP
-                      ;; misbehaves
-                      (format ostream "~%</P>~%</TEXT>~%</DOC>~%</CORPUS>~%")))
-                  (return))
-                (when original
-                  #|
-                  blank lines in RASP cause the following
-                  () 0 ; ()
-                  
-                  (X)
-                  so we ignore cases where there's no sentence
-                  |#
-                  (when (or xml-p blah-p)
-                    (setf sentence-count (+ 1 sentence-count))
-                    (format ostream
-                            "~%<S id='~A'>" sentence-count)
-                    (format ostream
-                            "~%<string>~%~S~%</string>" original)
-                    (if *rasp-xml-word-p*    ; can't show tree
-                        ; because XML tags clash
-                        (format ostream
-                                "~%<tree></tree>"
-                                tree)
-                      (format ostream
-                                "~%<tree>~%~S~%</tree>"
-                                tree)))
-                  (handler-case
-                      (progn
-                        (unless (equal tree '(X))
-                          (when *rasp-full-numbers-p* 
-                            (setf *initial-rasp-num* nil)
-                            (setf *initial-rasp-num*
-                              (scan-rasp-for-first-num 
-                               tree most-positive-fixnum)))
-                          (construct-sem-for-tree tree :rasp ostream))
-                        (finish-output ostream))
-                    (storage-condition (condition)
-                      (format ostream "~%Memory allocation problem: ~A~%" condition))
-                    (error (condition)
-                      (format ostream "~%Error: ~A~%" condition))
-                    (serious-condition (condition)
-                      (format ostream "~%Something nasty: ~A~%" condition)))
-                  (when (or xml-p blah-p)
-                    (format ostream
-                            "~%</S>")))))
-        (unless (or xml-p blah-p)
-          (format ostream "~%</rmrs-list>"))
-        (when blah-p
-          (output-end-blah ostream))))))
-
-(defun output-header-blah (ostream)
-  (format ostream "<?xml version='1.0'?> 
-<!DOCTYPE CORPUS SYSTEM \"/usr/groups/mphil/qa04/dtd/analysis.dtd\" > 
-<CORPUS> 
-<DOC> 
-<DOCNO/>
-<TEXT>
-<P>"))
-
-
-(defun output-end-blah (ostream)
-  (format ostream "</P></TEXT></DOC></CORPUS>~%"))
-
-
-
-(defun read-xml-characters (istream)
-  ;;; allow for arbitrary xml stuff in between what we care about
-  ;;; if xml-p is nil, this is a noop
-  ;;; otherwise we scan forward looking for the first
-  ;;; P> followed by ( - maybe with whitespace
-  (let* ((stuff nil)
-	 (next-char (peek-char t istream nil nil)))
-    (if (eql next-char #\()
-	nil
-      (progn 
-	(loop
-	  (let ((input-char1 (read-char istream nil nil)))
-	    (unless input-char1 (return))
-	    (push input-char1 stuff)
-	    (when (eql input-char1 #\P)
-	      (let ((input-char2 (read-char istream nil nil)))
-		(push input-char2 stuff)
-		(when (eql input-char2 #\>)
-		  (let ((paren-test
-			 (loop (let ((input-char-inner 
-				      (peek-char nil istream nil nil)))
-				 (cond ((null input-char-inner) (return :eof))
-				       ((eql input-char-inner #\()
-					(return :read))
-				       ((whitespacep input-char-inner)
-					(read-char istream nil nil)
-					(push input-char-inner stuff))
-				       (t (read-char istream nil nil)
-					  (push input-char-inner stuff)
-					  (return nil)))))))
-		    (if (or (eql paren-test :read)
-			    (eql paren-test :eof))
-			(return))))))))
-	(coerce (nreverse stuff) 'string)))))
-
-(defun output-rmrs-file-markup (ostream markup)
-  (when markup
-    (format ostream "~A" markup)))
 
 ;;; Example of use with QA experiments
 
@@ -424,7 +427,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
                                 "top_docs."
                                 qno "." "errors")))
                 (rmrs-from-file "/tmp/pfile" 
-                                         "/tmp/rfile" t)
+                                         "/tmp/rfile" :qa)
                 (excl::shell "rm /tmp/pfile")
                 (when (probe-file "/tmp/rfile")
                   ;; change the dtd to the right thing
