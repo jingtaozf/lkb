@@ -507,7 +507,7 @@
   ;; i now more or less believe we should stop using construct-mrs(), and build
   ;; our own MRS-like data structure instead ... later.        (15-feb-04; oe)
   ;;
-  #-:debug
+  #+:debug
   (setf %lhs lhs %constants constants %copies copies %rhs rhs)
   (let ((generator (let ((n 0)) #'(lambda () (decf n))))
         (mrs::*named-nodes* nil)
