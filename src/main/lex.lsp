@@ -830,3 +830,123 @@
   (compile-file x)
   (load x))
 
+
+;;;
+;;; initial code to support a notion of orthographic variants; see comments on
+;;; *duplicate-lex-ids* in `mrs/generate.lisp'.  quite possibly, this would be
+;;; easier to do in the DB natively, i.e. comparing relevant field values, but
+;;; this version at least i can run without a DB (or with).     (8-aug-04; oe)
+;;;
+
+;;;
+;;; a global repository of orthographic variants, relating sets of lexical ids
+;;; that are equivalent modulo their STEM and ONSET values.
+;;;
+(defparameter *orthographic-variants* nil)
+
+;;;
+;;; mostly for efficiency reasons: extract a hash key per lexical entry, such
+;;; that we need only compare entries with identical keys.  an invalid path for
+;;; a non-Matrix grammar should result in loss of efficiency but not desaster.
+;;;
+(defparameter *key-path* '(SYNSEM LOCAL CAT HEAD KEYS KEY))
+
+;;;
+;;; _fix_me_
+;;; give some thought to memory management, in the sense that we will end up
+;;; with the full (expanded) lexicon in core, unless the caching in the lexicon
+;;; itself did something clever to limit cache growth.  the latter, i guess,
+;;; might be a good thing to aim for, if not available already. (8-aug-04; oe)
+;;;
+(defun find-orthographic-variants (&key file)
+  (let ((stream (if (stringp file) 
+                  (open file :direction :output :if-exists :supersede)
+                  t))
+        (map (make-hash-table :test #'equal))
+        classes)
+
+    ;;
+    ;; first, populate .map. with pairs of lexical entries and restricted AVMs,
+    ;; indexed by the type at *key-path* to reduce the number of comparisons.
+    ;;
+    (loop
+        with *packing-restrictor* = (cons 'onset (last *orth-path*))
+        for id in (collect-psort-ids *lexicon*)
+        for entry = (get-lex-entry-from-id id)
+        for dag = (tdfs-indef (lex-entry-full-fs entry))
+        for key = (let ((dag (existing-dag-at-end-of dag *key-path*)))
+                    (when dag (dag-type dag)))
+        for copy = (copy-dag-partially dag)
+        do
+          (push (cons entry copy) (gethash key map)))
+
+    ;;
+    ;; next, compare all pairs (of pairs) in each .map. bucket against each
+    ;; other, though making sure to not do all pairs twice; records classes of
+    ;; two or more lexical entries that compare equivalent (in their restricted
+    ;; AVMs, i.e. sans orthography).
+    ;;
+    (loop
+        for bucket being each hash-value in map
+        do
+          (loop
+              with matches
+              for entry = (pop bucket)
+              for dag1 = (rest entry)
+              for class = (list (first entry))
+              while entry
+              do
+                (loop
+                    for (key . dag2) in bucket
+                    when (dag-equal-p dag1 dag2)
+                    unless (member key matches :test #'eq)
+                    do
+                      (push key matches)
+                      (push key class))
+                (when (rest class) (push class classes))))
+
+    (setf *orthographic-variants* (make-hash-table))
+    
+    ;;
+    ;; finally, do two things: set the global variable *orthographic-variants*
+    ;; and output a textual representation of orthographic variants for later
+    ;; re-use.  within each class sort lexicographically (for lack of a better
+    ;; notion of precedence), but respect an original list of suppressed items
+    ;; in *duplicate-lex-ids*, in case the grammar still supplies one.
+    ;;
+    (loop
+        for class in classes
+        do
+          (loop
+              with entries = (sort class #'string-lessp :key #'lex-entry-id)
+              for entry in entries
+              for id = (lex-entry-id entry)
+              when (member id *duplicate-lex-ids* :test #'eq)
+              collect id into passive
+              else collect id into active
+              finally
+                (format
+                 stream
+                 "~@[~{~(~a~)~^ ~}~]~@[ : ~{~(~a~)~^ ~}~]~%"
+                 active passive)
+                (loop
+                    for entry in entries
+                    for id = (lex-entry-id entry)
+                    for variants = (loop
+                                       for foo in entries
+                                       for bar = (lex-entry-id foo)
+                                       unless (eq bar id) collect bar)
+                    do (setf (gethash id *orthographic-variants*) variants))))
+    
+    (when (and (stringp file) (open-stream-p stream) (close stream)))
+    
+    classes))
+
+(defun orthographic-variants-p (le1 le2)
+  (when (hash-table-p *orthographic-variants*)
+    (let ((le1 (intern le1 :lkb))
+          (le2 (intern le2 :lkb)))
+      (or (eq le1 le2)
+          (member le1 (gethash le2 *orthographic-variants*) :test #'eq)
+          (member le2 (gethash le1 *orthographic-variants*) :test #'eq)))))
+
