@@ -1,0 +1,63 @@
+the := word &
+[ ORTH "the",
+  HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+that := word &
+[ ORTH "that",
+  HEAD det & [ AGR [ NUM sing ] ],
+  SPR < >,
+  COMPS < > ].
+
+those := word &
+[ ORTH "those",
+  HEAD det & [ AGR [ NUM plur ] ],
+  SPR < >,
+  COMPS < > ].
+
+dog := word &
+[ ORTH "dog",
+  HEAD noun & [ AGR #1 & [ NUM sing,
+                           PER 3rd ] ],
+  SPR < [HEAD det & [ AGR #1 ] ] >,
+  COMPS < > ].
+
+dogs := word &
+[ ORTH "dogs",
+  HEAD noun & [ AGR #1 & [ NUM plur,
+                           PER 3rd ] ],
+  SPR < [HEAD det & [ AGR #1 ] ] >,
+  COMPS < >  ].
+
+cat := word &
+[ ORTH "cat",
+  HEAD noun & [ AGR #1 & [ NUM sing,
+                           PER 3rd ] ],
+  SPR < [HEAD det & [ AGR #1 ] ] >,
+  COMPS < > ].
+
+
+barks := word &
+[ ORTH "barks",
+  HEAD verb,
+  SPR < [HEAD noun & [ AGR [ NUM sing,
+                             PER 3rd ] ] ] >,
+  COMPS < > ].
+
+;;; Notice that the agreement information on the SPR of "bark" is incorrect.  What would happen if we put "I" in the lexicon?  As an exercise try to implement the 3sing / non-3sing type distinction described in the Sag & Wasow textbook.  The tricky thing with the definition described in the book is that nothing stops non-3sing from unifying with [ PER 3, NUM sing ]. 
+
+bark := word &
+[ ORTH "bark",
+  HEAD verb,
+  SPR < [HEAD noun & [ AGR [ NUM plur ] ] ] >,
+  COMPS < > ].
+
+chased := word &
+[ ORTH "chased",
+  HEAD verb,
+  SPR < [HEAD noun] >,
+  COMPS < phrase & [HEAD noun] > ].
+
+
+

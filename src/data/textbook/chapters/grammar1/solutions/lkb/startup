@@ -1,0 +1,2 @@
+(load "~/newlkb/src/general/loadup")
+(load-system "mrs" :force t)

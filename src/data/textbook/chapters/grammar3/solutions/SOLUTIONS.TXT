@@ -1,0 +1,76 @@
+SOLUTION -- Adding the "Keep Tabs On" Idiom
+
+In order to make the meaning of the sentences ``Kim kept tabs on Sandy'' and ``Kim observed Sandy'' be the same, we will create a predication in our semantic types which is attached to both of them:
+
+observe_pred := pred &
+[ RELN r_observe,
+  OBSERVER index,
+  OBSERVED index ].
+
+r_observe :< reln.
+
+
+Therefore we simply need to attach this predication to the lexical entries for "observed" and "kept", and then we should be able to generate one sentence from the other.
+
+lexical entries:
+
+observed := word &
+[ ORTH "observed",
+  SYN [ HEAD verb,
+        SPR < phrase & [ SYN [ HEAD noun,
+                               SPR < > ],
+                         SEM [ INDEX #i ] ] >,
+        COMPS < phrase & [ SYN [ HEAD noun,
+                                 SPR < > ],
+                           SEM [ INDEX #j ] ] > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! observe_pred &
+                [ RELN r_observe,
+                  SIT #s,
+                  OBSERVER #i,
+                  OBSERVED #j ] !> ] ].
+
+
+
+kept := word &
+[ ORTH "kept",
+  SYN [ HEAD verb,
+        SPR < phrase & [ SYN [ HEAD noun,
+                               SPR < > ],
+                         SEM [ INDEX #i ] ] >,
+        COMPS < phrase & [ SYN [ HEAD noun & [ FORM f_tabs ],
+                                 SPR < > ] ],
+
+                 phrase & [ SYN [ HEAD prep,
+                                  SPR < > ],
+                            SEM [ INDEX #j ] ] > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! observe_pred &
+                [ RELN r_observe,
+                  SIT #s,
+                  OBSERVER #i,
+                  OBSERVED #j ] !> ] ].
+
+
+on := word & 
+[ ORTH "on",
+  SYN [ HEAD prep,
+        SPR < >,
+        COMPS < phrase & [ SYN [ HEAD noun,
+                                 SPR < > ],
+                           SEM [ MODE #mode,
+                                 INDEX #i ] ] > ],
+  SEM [ MODE #mode,
+        INDEX #i,
+        RESTR <! !> ] ].
+
+
+tabs := word &
+[ ORTH "tabs",
+  SYN [ HEAD noun & [ FORM f_tabs ],
+        SPR < >,
+        COMPS < > ],
+  SEM null-sem ].
+

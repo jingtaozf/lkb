@@ -1,0 +1,50 @@
+sem-struc := feat-struc &
+[ MODE  mode-cat,
+  INDEX index,
+  RESTR *diff-list* ].
+
+index :< *top*.
+
+mode-cat :< *value*.
+   prop :< mode-cat.
+   ques :< mode-cat.
+   dir  :< mode-cat.
+   ref  :< mode-cat.
+   null-mode :< mode-cat.
+
+
+
+null-sem := sem-struc &
+[ MODE null-mode,
+  RESTR <! !>].
+
+pred := feat-struc &
+[ RELN reln,
+  SIT index ].
+
+reln :< *value*.
+
+
+love_pred := pred &
+[ RELN r_love,
+  LOVER index,
+  LOVED index ].
+
+r_love :< reln.
+
+
+name_pred := pred &
+[ RELN r_name,
+  NAMED index,
+  NAME string ].
+
+r_name :< reln.
+
+
+noun_pred := pred &
+[ RELN reln,
+  INSTANCE index ].
+
+r_dog :< reln.
+
+r_cat :< reln.

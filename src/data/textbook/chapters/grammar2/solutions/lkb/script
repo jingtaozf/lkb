@@ -1,0 +1,11 @@
+(defparameter *grammar-version* "Chapter 4 Grammar 2 - Solutions")
+(lkb-load-lisp (this-directory) "globals.lsp")
+(lkb-load-lisp (this-directory) "user-fns.lsp")
+(read-tdl-type-files-aux
+     (list (lkb-pathname (parent-directory) "types.tdl")))
+(read-tdl-lex-file-aux 
+     (lkb-pathname (parent-directory) "lexicon.tdl"))
+(read-tdl-grammar-file-aux 
+     (lkb-pathname (parent-directory) "rules.tdl"))
+
+

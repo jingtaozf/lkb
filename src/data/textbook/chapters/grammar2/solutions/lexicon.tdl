@@ -1,0 +1,87 @@
+she := word &
+[ ORTH "she",
+  HEAD noun & [ AGR 3sing & [ CASE nom ] ],
+  SPR < >,
+  COMPS < > ].
+
+
+her := word &
+[ ORTH "her",
+  HEAD noun & [ AGR 3sing & [ CASE acc ] ],
+  SPR < >,
+  COMPS < > ].
+
+
+loves := word &
+[ ORTH "loves",
+  HEAD verb,
+  SPR < [HEAD noun & [ AGR 3sing & [ CASE nom ] ] ] >,
+  COMPS < phrase & [HEAD noun & [ AGR [ CASE acc ] ] ] > ].
+
+
+love := word &
+[ ORTH "love",
+  HEAD verb,
+  SPR < [HEAD noun & [ AGR non-3sing & [ CASE nom ] ] ] >,
+  COMPS < phrase & [HEAD noun & [ AGR [ CASE acc ] ] ] > ].
+
+
+
+barks := word &
+[ ORTH "barks",
+  HEAD verb,
+  SPR < [HEAD noun & [ AGR 3sing & [CASE nom ] ] ] >,
+  COMPS < > ].
+
+bark := word &
+[ ORTH "bark",
+  HEAD verb,
+  SPR < [HEAD noun & [ AGR non-3sing & [ CASE nom ] ] ] >,
+  COMPS < > ].
+
+chased := word &
+[ ORTH "chased",
+  HEAD verb,
+  SPR < [HEAD noun] >,
+  COMPS < phrase & [HEAD noun & [ AGR [ CASE acc ] ] ] > ].
+
+
+
+the := word &
+[ ORTH "the",
+  HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+that := word &
+[ ORTH "that",
+  HEAD det & [ AGR [ NUM sing ] ],
+  SPR < >,
+  COMPS < > ].
+
+those := word &
+[ ORTH "those",
+  HEAD det & [ AGR [ NUM plur ] ],
+  SPR < >,
+  COMPS < > ].
+
+dog := word &
+[ ORTH "dog",
+  HEAD noun & [ AGR #1 & 3sing ],
+  SPR < [HEAD det & [ AGR #1 ] ] >,
+  COMPS < > ].
+
+dogs := word &
+[ ORTH "dogs",
+  HEAD noun & [ AGR #1 & [ NUM plur,
+                           PER 3rd ] ],
+  SPR < [HEAD det & [ AGR #1 ] ] >,
+  COMPS < >  ].
+
+cat := word &
+[ ORTH "cat",
+  HEAD noun & [ AGR #1 & 3sing ],
+  SPR < [HEAD det & [ AGR #1 ] ] >,
+  COMPS < > ].
+
+

@@ -1,0 +1,20 @@
+DISCUSSION -- Semantics and Generation
+
+We've added a simple semantics to the type system (included in a file called sem-types.tdl), and can now use it to generate sentences.  Try it - load grammar3/script in the LKB and choose "Expand Menu" from "Options", then choose "Index" from "Generate".  You'll notice that the LKB gives a number of error messages saying that certain words don't have any associated semantics.  So far we've only added semantics to "Kim", "Loved", "The" and "Cat".  Parse ``Kim loved the cat'', and click on the resulting little tree and choose "Generate" from the contextual menu.
+
+Two sentences are generated which have an equivalent semantics and are licensed by the grammar that we've developed:
+Kim loved the cat
+*Kim loved cat
+
+Generation turns out to be a really good debugging tool.  It allows you to see overgeneration in the grammar that you wouldn't necessarily have checked for.  In this case we've only constrained the SPR and COMPS arguments of the verb to be of type phrase & [HEAD noun] - this doesn't rule out the textbook's NOM type (i.e. nouns which have gone through the head-complement rule, but which haven't discharged this specifiers yet).  Therefore we're allowing specifierless noun phrases to combine with verbs.
+
+
+EXERCISE -- Eliminate the Overgeneration, and Add Semantics
+
+Go through the lexicon and add semantics to all the words based on the semantics for the words that already have it specified.  You'll need to open the sem-types.tld file and include the type for things like bark_pred and r_bark in that file as well.  You might also want to try adding an idiom, like "keep tabs on".  To do this simply the semantics for "keep" to be the same as "observe".
+
+You'll also need integrate semantic inheritance into the head-comps-rule-2.  Read the LKB documentation on difference lists to see how that works.
+
+
+Also, constrain the verbs in the lexicon so that items on their SPR and COMPS list are all SPR < >.  That will eliminate the overgeneration observed in the ``Kim loved cat'' example.
+

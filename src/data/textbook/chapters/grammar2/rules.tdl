@@ -1,0 +1,54 @@
+head-complement-rule-0 := phrase & 
+[ HEAD #0,
+  SPR #a,
+  COMPS < >,   
+
+  ARGS < word & 
+         [ HEAD #0,
+           SPR #a, 
+           COMPS < > ] >  ].
+
+
+head-complement-rule-1 := phrase &
+[ HEAD #0,
+  SPR #a, 
+  COMPS < >,   
+
+  ARGS < word & 
+         [ HEAD #0,
+           SPR #a, 
+           COMPS < #1 > ],  #1 >  ].
+
+
+head-complement-rule-2 := phrase &
+[ HEAD #0,
+  SPR #a, 
+  COMPS < >,   
+
+  ARGS < word & 
+         [ HEAD #0,
+           SPR #a, 
+           COMPS < #1, #2 > ],  #1, #2 >  ].
+
+
+;;; Verbs constrain complements through argument selection (for example, certain ditransitive verbs take only an NP followed by a PP).  Similaryly verbs constrain their subject through inflection.  In English, for example, the -s inflection on present tense verbs limits the SPR to be 3rd person singular. 
+
+;;; Take a look at SPR values the words "bark" and "barks" in the lexicon.  The number value in the AGR feature limits what specifiers they can combind with.  Try parsing "The dogs barks" and "The dog bark".  Do you see how coindexation of the non-head daughter and the SPR the head of the phrase causes this to happen? Since this coindexation is constructed in such a general way, the head-specifier  rule covers determiner-noun agreement as well as subject-verb agreement relying on the lexical entries to place the specific selection constraints.
+
+;;; EXERCISE: Constrain verbs so that their specifier is [ CASE nom ] and their complements are [ CASE acc ].  You'll need to add some pronouns to the lexicon so that you can test to see whether your constraints are working properly.
+
+
+head-specifier-rule := phrase &
+[ HEAD #0,
+  SPR < >,
+  COMPS #a,
+
+  ARGS < phrase & 
+         #1 & [ SPR < > ],   phrase & 
+                             [ HEAD #0,
+                               SPR < #1 >,
+                               COMPS #a ] > ]. 
+
+
+
+

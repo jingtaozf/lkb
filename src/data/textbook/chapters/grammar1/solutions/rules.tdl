@@ -1,0 +1,62 @@
+head-modifier-rule := phrase &
+[ HEAD #0,
+  SPR #a & < [ ] >,
+  COMPS #b,
+
+  ARGS < phrase &
+         [ HEAD #0,
+           SPR #a,
+           COMPS #b ],  phrase &
+                        [ HEAD prep ]  > ].
+
+
+head-complement-rule-0 := phrase & 
+[ HEAD #0,
+  SPR #a,
+  COMPS < >,   
+
+  ARGS < word & 
+         [ HEAD #0,
+           SPR #a, 
+           COMPS < > ] >  ].
+
+
+head-complement-rule-1 := phrase &
+[ HEAD #0,
+  SPR #a, 
+  COMPS < >,   
+
+  ARGS < word & 
+         [ HEAD #0,
+           SPR #a, 
+           COMPS < #1 > ],  #1 >  ].
+
+
+head-complement-rule-2 := phrase &
+[ HEAD #0,
+  SPR #a, 
+  COMPS < >,   
+
+  ARGS < word & 
+         [ HEAD #0,
+           SPR #a, 
+           COMPS < #1, #2 > ],  #1, #2 >  ].
+
+
+;;; Exercise -- Delete the phrase type restriction from the ARGS of the head-specifier
+;;; rule and see what happens when you parse a sentence.
+
+head-specifier-rule := phrase &
+[ HEAD #0,
+  SPR < >,
+  COMPS #a,
+
+  ARGS < phrase & 
+         #1 & [ SPR < > ],   phrase & 
+                             [ HEAD #0,
+                               SPR < #1 >,
+                               COMPS #a ] > ]. 
+
+
+
+

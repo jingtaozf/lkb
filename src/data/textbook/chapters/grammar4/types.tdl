@@ -1,0 +1,111 @@
+feat-struc :< *top*.
+
+synsem-struc := feat-struc &
+[ SYN syn-struc,
+  SEM sem-struc,
+  ARGS *list* ].
+
+
+syn-struc := feat-struc & 
+[ HEAD pos,
+  SPR *list*,
+  COMPS *list* ].
+
+
+agr-cat := feat-struc &
+[ PER per,
+  NUM num,
+  GEND gend ].
+
+pos := feat-struc &
+[ FORM form ].
+
+form :< *value*.
+f_tabs :< form.
+
+
+nominal := pos &
+[ AGR agr-cat ].
+
+noun := nominal &
+[ CASE case ].
+det :< nominal.
+verb :< pos.
+prep :< pos.
+
+*value* :< *top*.
+per :< *value*.
+  1st :< per.
+  2nd :< per.
+  3rd :< per.
+num :< *value*.
+  sing :< num.
+  plur :< num.
+gend :< *value*.
+  fem :< gend.
+  masc :< gend.
+
+case :< *value*.
+  nom :< case.
+  acc :< case.
+
+phrase :< synsem-struc.
+
+lex-item := synsem-struc &
+[ ORTH string ].
+
+word := lex-item &
+[ SYN /l #syn,
+  SEM /l #sem,
+
+  ARGS < [SYN /l #syn,
+	  SEM /l #sem ] > ]. 
+
+
+lexeme := lex-item &
+[ SEM [ MODE /l null-mode ] ].
+
+infl-lxm :< lexeme.
+
+const-lxm :< lexeme.
+
+noun-lxm := infl-lxm &
+[ SYN [ HEAD noun & [ AGR [ PER 3rd ] ],
+        SPR /l < >,
+        COMPS < > ],
+  SEM [ MODE ref ] ].
+
+
+pron-lxm :< noun-lxm.
+
+pn-lxm := noun-lxm &
+[ SYN [ HEAD [ AGR [ NUM /l sing ] ] ] ].
+
+cn-lxm := noun-lxm &
+[ SYN [ HEAD [ AGR #1 ],
+        SPR < phrase & [ SYN [ HEAD det & [ AGR #1 ],
+                               SPR < > ] ] > ] ].
+
+root := phrase &
+[ SYN [ HEAD verb,
+        SPR < >,
+        COMPS < > ] ].
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+
+*diff-list* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+*null* := *list*.

@@ -1,0 +1,216 @@
+kim := word &
+[ ORTH "kim",
+  SYN [ HEAD noun,
+        SPR < >,
+        COMPS < > ],
+  SEM [ MODE ref,
+        INDEX #i,
+        RESTR <! name_pred &
+                [ RELN r_name,
+                  NAMED #i,
+                  NAME "Kim" ] !> ] ].
+
+sandy := word &
+[ ORTH "sandy",
+  SYN [ HEAD noun,
+        SPR < >,
+        COMPS < > ],
+  SEM [ MODE ref,
+        INDEX #i,
+        RESTR <! name_pred &
+                [ RELN r_name,
+                  NAMED #i,
+                  NAME "Sandy" ] !> ] ].
+
+
+loved := word &
+[ ORTH "loved",
+  SYN [ HEAD verb,
+        SPR < phrase & [ SYN [ HEAD noun,
+                               SPR < > ],
+                         SEM [ INDEX #i ] ] >,
+        COMPS < phrase & [ SYN [ HEAD noun,
+                                 SPR < > ],
+                           SEM [ INDEX #j ] ] > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! love_pred &
+                [ RELN r_love,
+                  SIT #s,
+                  LOVER #i,
+                  LOVED #j ] !> ] ].
+
+
+
+
+observed := word &
+[ ORTH "observed",
+  SYN [ HEAD verb,
+        SPR < phrase & [ SYN [ HEAD noun,
+                               SPR < > ],
+                         SEM [ INDEX #i ] ] >,
+        COMPS < phrase & [ SYN [ HEAD noun,
+                                 SPR < > ],
+                           SEM [ INDEX #j ] ] > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! observe_pred &
+                [ RELN r_observe,
+                  SIT #s,
+                  OBSERVER #i,
+                  OBSERVED #j ] !> ] ].
+
+
+
+kept := word &
+[ ORTH "kept",
+  SYN [ HEAD verb,
+        SPR < phrase & [ SYN [ HEAD noun,
+                               SPR < > ],
+                         SEM [ INDEX #i ] ] >,
+        COMPS < phrase & [ SYN [ HEAD noun & [ FORM f_tabs ],
+                                 SPR < > ] ],
+
+                 phrase & [ SYN [ HEAD prep,
+                                  SPR < > ],
+                            SEM [ INDEX #j ] ] > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! observe_pred &
+                [ RELN r_observe,
+                  SIT #s,
+                  OBSERVER #i,
+                  OBSERVED #j ] !> ] ].
+
+
+on := word & 
+[ ORTH "on",
+  SYN [ HEAD prep,
+        SPR < >,
+        COMPS < phrase & [ SYN [ HEAD noun,
+                                 SPR < > ],
+                           SEM [ MODE #mode,
+                                 INDEX #i ] ] > ],
+  SEM [ MODE #mode,
+        INDEX #i,
+        RESTR <! !> ] ].
+
+
+tabs := word &
+[ ORTH "tabs",
+  SYN [ HEAD noun & [ FORM f_tabs ],
+        SPR < >,
+        COMPS < > ],
+  SEM null-sem ].
+
+
+
+cat := word &
+[ ORTH "cat",
+  SYN [ HEAD noun & [ AGR #1 & [ NUM sing,
+                                 PER 3rd ] ],
+        SPR < [SYN [ HEAD det & [ AGR #1 ] ] ] >,
+        COMPS < > ],
+  SEM [ MODE ref,
+        INDEX #i,
+        RESTR <! noun_pred &
+                [ RELN r_cat,
+                  INSTANCE #i ] !> ] ].
+
+
+dog := word &
+[ ORTH "dog",
+  SYN [ HEAD noun & [ AGR #1 & [ NUM sing,
+                                 PER 3rd ] ],
+        SPR < [ SYN [ HEAD det & [ AGR #1 ] ] ] >,
+        COMPS < > ],
+  SEM [ MODE ref,
+        INDEX #i,
+        RESTR <! noun_pred &
+                [ RELN r_dog,
+                  INSTANCE #i ] !> ] ].
+
+
+dogs := word &
+[ ORTH "dogs",
+  SYN [ HEAD noun & [ AGR #1 & [ NUM plur,
+                                 PER 3rd ] ],
+        SPR < [ SYN [ HEAD det & [ AGR #1 ] ] ] >,
+        COMPS < >  ],
+  SEM [ MODE ref,
+        INDEX #i,
+        RESTR <! noun_pred &
+                [ RELN r_dog,
+                  INSTANCE #i ] !> ] ].
+
+
+barks := word &
+[ ORTH "barks",
+  SYN [ HEAD verb,
+        SPR < phrase & [ SYN [ HEAD noun & [ AGR [ NUM sing,
+                                         PER 3rd ] ],
+                                SPR < > ],
+                         SEM [ INDEX #i ] ] >,
+        COMPS < > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! bark_pred &
+                [ RELN r_bark,
+                  SIT #s,
+                  BARKER #i ] !> ] ].
+
+bark := word &
+[ ORTH "bark",
+  SYN [ HEAD verb,
+        SPR < phrase & [ SYN [ HEAD noun & [ AGR [ NUM plur ] ],
+                               SPR < > ],
+                         SEM [ INDEX #i ] ] >,
+        COMPS < > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! bark_pred &
+                [ RELN r_bark,
+                  SIT #s,
+                  BARKER #i ] !> ] ].
+
+chased := word &
+[ ORTH "chased",
+  SYN [ HEAD verb,
+        SPR < phrase & [ SYN [ HEAD noun,
+                               SPR < > ],
+                         SEM [ INDEX #i ] ] >,
+        COMPS < phrase & [SYN [ HEAD noun,
+                                SPR < > ],
+                SEM [ INDEX #j ] ] > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! chase_pred &
+                [ RELN r_chase,
+                  SIT #s,
+                  CHASER #i,
+                  CHASED #j ] !> ] ].
+
+
+
+
+the := word &
+[ ORTH "the",
+  SYN [ HEAD det,
+        SPR < >,
+        COMPS < > ],
+  SEM null-sem ].
+
+that := word &
+[ ORTH "that",
+  SYN [ HEAD det & [ AGR [ NUM sing ] ],
+        SPR < >,
+        COMPS < > ],
+  SEM null-sem ].
+
+those := word &
+[ ORTH "those",
+  SYN [ HEAD det & [ AGR [ NUM plur ] ],
+        SPR < >,
+        COMPS < > ],
+  SEM null-sem ].
+

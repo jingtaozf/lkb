@@ -1,0 +1,109 @@
+kim := word &
+[ ORTH "kim",
+  SYN [ HEAD noun,
+        SPR < >,
+        COMPS < > ],
+  SEM [ MODE ref,
+        INDEX #i,
+        RESTR <! name_pred &
+                [ RELN r_name,
+                  NAMED #i,
+                  NAME "Kim" ] !> ] ].
+
+sandy := word &
+[ ORTH "sandy",
+  SYN [ HEAD noun,
+        SPR < >,
+        COMPS < > ],
+  SEM [ MODE ref,
+        INDEX #i,
+        RESTR <! name_pred &
+                [ RELN r_name,
+                  NAMED #i,
+                  NAME "Sandy" ] !> ] ].
+
+
+loved := word &
+[ ORTH "loved",
+  SYN [ HEAD verb,
+        SPR < [ SYN [ HEAD noun ],
+                SEM [ INDEX #i ] ] >,
+        COMPS < phrase & [ SYN [ HEAD noun],
+                           SEM [ INDEX #j ] ] > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! love_pred &
+                [ RELN r_love,
+                  SIT #s,
+                  LOVER #i,
+                  LOVED #j ] !> ] ].
+
+
+cat := word &
+[ ORTH "cat",
+  SYN [ HEAD noun & [ AGR #1 & [ NUM sing,
+                                 PER 3rd ] ],
+        SPR < [SYN [ HEAD det & [ AGR #1 ] ] ] >,
+        COMPS < > ],
+  SEM [ MODE ref,
+        INDEX #i,
+        RESTR <! noun_pred &
+                [ RELN r_cat,
+                  INSTANCE #i ] !> ] ].
+
+
+the := word &
+[ ORTH "the",
+  SYN [ HEAD det,
+        SPR < >,
+        COMPS < > ],
+  SEM null-sem ].
+
+that := word &
+[ ORTH "that",
+  SYN [ HEAD det & [ AGR [ NUM sing ] ],
+        SPR < >,
+        COMPS < > ] ].
+
+those := word &
+[ ORTH "those",
+  SYN [ HEAD det & [ AGR [ NUM plur ] ],
+        SPR < >,
+        COMPS < > ] ].
+
+dog := word &
+[ ORTH "dog",
+  SYN [ HEAD noun & [ AGR #1 & [ NUM sing,
+                                 PER 3rd ] ],
+        SPR < [SYN [ HEAD det & [ AGR #1 ] ] ] >,
+        COMPS < > ] ].
+
+dogs := word &
+[ ORTH "dogs",
+  SYN [ HEAD noun & [ AGR #1 & [ NUM plur,
+                                 PER 3rd ] ],
+        SPR < [SYN [ HEAD det & [ AGR #1 ] ] ] >,
+        COMPS < >  ] ].
+
+
+barks := word &
+[ ORTH "barks",
+  SYN [ HEAD verb,
+        SPR < [SYN [ HEAD noun & [ AGR [ NUM sing,
+                                         PER 3rd ] ] ] ] >,
+        COMPS < > ] ].
+
+bark := word &
+[ ORTH "bark",
+  SYN [ HEAD verb,
+        SPR < [SYN [ HEAD noun & [ AGR [ NUM plur ] ] ] ] >,
+        COMPS < > ] ].
+
+chased := word &
+[ ORTH "chased",
+  SYN [ HEAD verb,
+        SPR < [SYN [ HEAD noun] ] >,
+        COMPS < phrase & [SYN [ HEAD noun] ] > ] ].
+
+
+

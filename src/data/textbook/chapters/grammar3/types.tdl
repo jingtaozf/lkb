@@ -1,0 +1,72 @@
+feat-struc :< *top*.
+
+synsem-struc := feat-struc &
+[ SYN syn-struc,
+  SEM sem-struc ].
+
+
+syn-struc := feat-struc & 
+[ HEAD pos,
+  SPR *list*,
+  COMPS *list* ].
+
+
+agr-cat := feat-struc &
+[ PER per,
+  NUM num,
+  GEND gend ].
+
+pos := feat-struc.
+
+nominal := pos &
+[ AGR agr-cat ].
+
+noun :< nominal.
+det :< nominal.
+verb :< pos.
+prep :< pos.
+
+
+*value* :< *top*.
+per :< *value*.
+  1st :< per.
+  2nd :< per.
+  3rd :< per.
+num :< *value*.
+  sing :< num.
+  plur :< num.
+gend :< *value*.
+  fem :< gend.
+  masc :< gend.
+
+
+phrase := synsem-struc &
+[ ARGS *list* ].
+
+word := synsem-struc &
+[ ORTH string ].
+
+
+root := phrase &
+[ SYN [ HEAD verb,
+        SPR < >,
+        COMPS < > ] ].
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+
+*diff-list* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+*null* := *list*.

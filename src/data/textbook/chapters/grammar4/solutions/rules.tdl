@@ -1,0 +1,82 @@
+head-complement-rule-0 := phrase & 
+[ SYN [ HEAD #0,
+        SPR #a,
+        COMPS < > ],
+  SEM #1,   
+
+  ARGS < word & 
+         [ SYN [ HEAD #0,
+                 SPR #a, 
+                 COMPS < > ],
+           SEM #1 ] >  ].
+
+
+head-complement-rule-1 := phrase &
+[ SYN [ HEAD #0,
+        SPR #a, 
+        COMPS < > ],   
+  SEM [ MODE #mode,
+        INDEX #index,
+        RESTR [ LIST #first,
+                LAST #last ] ],
+
+  ARGS < word & 
+         [ SYN [ HEAD #0,
+                 SPR #a, 
+                 COMPS < #1 > ],
+           SEM [ MODE #mode,
+                 INDEX #index,
+                 RESTR [ LIST #first,
+                         LAST #middle ] ] ],  #1 & 
+                                              [ SEM [ RESTR [ LIST #middle,
+                                                              LAST #last ] ] ] >  ].
+
+
+head-complement-rule-2 := phrase &
+[ SYN [ HEAD #0,
+        SPR #a, 
+        COMPS < > ],   
+  SEM [ MODE #mode,
+        INDEX #index,
+        RESTR [ LIST #first,
+                LAST #last ] ],
+
+  ARGS < word & 
+         [ SYN [ HEAD #0,
+                 SPR #a, 
+                 COMPS < #1, #2 > ],
+           SEM [ MODE #mode,
+                 INDEX #index,
+                 RESTR [ LIST #first,
+                         LAST #mid-1 ] ] ],  
+
+        #1 & 
+        [ SEM [ RESTR [ LIST #mid-1,
+                        LAST #mid-2 ] ] ],
+        
+        #2 & 
+        [ SEM [ RESTR [ LIST #mid-2,
+                        LAST #last ] ] ] > ].    
+
+
+
+
+head-specifier-rule := phrase &
+[ SYN [ HEAD #0,
+        SPR < >,
+        COMPS #a ],
+  SEM [ MODE #mode,
+        INDEX #index,
+        RESTR [ LIST #first,
+                LAST #last ] ],
+
+  ARGS < phrase & #1 & 
+         [ SEM [ RESTR [ LIST #middle,
+                          LAST #last ] ] ],  phrase & 
+                                             [ SYN [ HEAD #0,
+                                                     SPR < #1 >, 
+                                                     COMPS #a ],
+                                               SEM [ MODE #mode,
+                                                     INDEX #index,
+                                                     RESTR [ LIST #first,
+                                                             LAST #middle ] ] ] > ].

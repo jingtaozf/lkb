@@ -1,0 +1,6 @@
+Things to explain:
+
+* Irregs.  Why won't "they" work?
+* The inflection %suffix operator in the infl.tdl file.
+* the user function which indicates what rules must be accompanied by an inflection.  Can I just change it so that it inflection on rules names that end with _infl_rule?  That's kind of silly, but it might work as well as the %suffix (!s !s) crap that I'm doing now.
+* Why haven't we introduced ARG-ST yet??

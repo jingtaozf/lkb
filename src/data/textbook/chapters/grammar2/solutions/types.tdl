@@ -1,0 +1,93 @@
+feat-struc :< *top*.
+
+syn-struc := feat-struc & 
+[ HEAD pos,
+  SPR *list*,
+  COMPS *list* ].
+
+;;; The feature CASE has been added to the agr-cat, and two types nom and acc
+;;; have been declared as subtypes of case.
+
+agr-cat := feat-struc &
+[ PER per,
+  NUM num,
+  CASE case ].
+
+
+case :< *value*.
+  nom :< case.
+  acc :< case.
+
+
+*value* :< *top*.
+per :< *value*.
+  1st :< per.
+  2nd :< per.
+  3rd :< per.
+num :< *value*.
+  sing :< num.
+  plur :< num.
+gend :< *value*.
+  fem :< gend.
+  masc :< gend.
+
+;;; The following are subtypes of agr-cat that the Sag & Wasow textbook suggests.  Notice that there's nothing to stop non-3sing from unifying with [ PER 3rd, NUM sing ] or from non-1sing from unifying with [ PER 1st, NUM sing ].
+
+3sing := agr-cat &
+[ PER 3rd,
+  NUM sing,
+  GEND gend ].
+
+non-3sing :< agr-cat.
+
+1sing := non-3sing &
+[ PER 1st,
+  NUM sing ].
+
+non-1sing :< non-3sing.
+
+2sing := non-1sing &
+[ PER 2nd,
+  NUM sing ].
+
+pl := non-1sing &
+[ NUM plur ].
+
+
+
+
+pos := feat-struc.
+
+nominal := pos &
+[ AGR agr-cat ].
+
+noun :< nominal.
+det :< nominal.
+verb :< pos.
+
+
+phrase := syn-struc &
+[ ARGS *list* ].
+
+word := syn-struc &
+[ ORTH string ].
+
+
+root := phrase &
+[ HEAD verb,
+  SPR < >,
+  COMPS < > ].
+
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.

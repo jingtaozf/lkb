@@ -1,0 +1,33 @@
+SOLUTION -- Add the Head-Modifier Rule.
+
+To the types.tdl file you should have added preposition as a type of part of speech (pos) by adding 
+
+prep :< pos.
+
+To add "with" to the lexicon you should have added this entry
+
+with := word &
+[ ORTH "with",
+  HEAD prep,
+  SPR < >,
+  COMPS < phrase &
+          [ HEAD noun ] > ].
+
+Finally, the Head-Modifier Rule should look something like 
+
+head-modifier-rule := phrase &
+[ HEAD #0,
+  SPR #a & < [ ] >,
+  COMPS #b,
+
+  ARGS < phrase &
+         [ HEAD #0,
+           SPR #a,
+           COMPS #b ],  phrase &
+                        [ HEAD prep ]  > ].
+
+The Head Feature Principle has been manually incorporated by coindexing the HEAD value of the first item of the ARGS list with the HEAD of the resulting phrase.  Similarly, to incorporate the Valence Principle, the SPR and COMPS have been coindexed with the SPR and COMPS of the resulting phrase.  
+
+The addition of the SPR < [ ] > restriction prevents multiple parses.  For example, removing the restriction and parsing ``The car barks with the dogs'' will produce two parse trees.  One where the modifying PP ``with the dogs'' attaches to the VP ``barks'', and one where the PP attaches to the sentence ``The cat barks''.  Since the meanings of the two seem to be identical, we would like to eliminate the ambiguous structures.  The non-empty specifier restriction does this nicely.
+
+

@@ -1,0 +1,5 @@
+This directory contains a set of small grammars and corresponding exercises which gradually increase in complexity, and which roughly parallel the development of the grammar described in the Sag and Wasow SYNTACTIC THEORY: A FORMAL INTRODUCTION textbook beginning at chapter 4.  Each grammar's directory has a text file labeled EXERCISES.TXT, and a subdirectory within it called solutions/ which has a possible solution grammar and SOLUTIONS.TXT text file.
+
+My hope is that this set of grammars could be used as a way of acquainting novice users with the LKB system, and that the grammars and exercises be integrated into the teaching of an introductory syntax or grammar engineering course.
+
+If you have comments or suggestions, please e-mail Chris Callison-Burch <ccb@csli.stanford.edu>. 

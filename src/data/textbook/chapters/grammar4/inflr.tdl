@@ -1,0 +1,26 @@
+%(letter-set (!c bdfglmnprstz))
+%(letter-set (!s abcdefghijklmnopqrtuvwxyz))
+%(letter-set (!t bcdfghjklmnpqrstvwxz))
+%(letter-set (!v aeiou))
+
+
+; <<>> NOMINAL INFLECTIONAL RULES
+
+sing-noun-lexical-rule :=
+%suffix (!s !s)
+word &
+[ ARGS < noun-lxm & [ SYN [ HEAD noun & [ AGR [ NUM sing ] ] ] ] > ].
+
+
+plur-noun-lexical-rule :=
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
+word &
+[ ARGS < noun-lxm & [ SYN [ HEAD noun & [ AGR [ NUM plur ] ] ] ] > ].
+
+
+
+; <<>> CONSTANT INFLECTIONAL RULES
+
+constant-lexeme-lexical-rule := word &
+[ ORTH #orth,
+  ARGS < const-lxm  & [ ORTH #orth ] > ].

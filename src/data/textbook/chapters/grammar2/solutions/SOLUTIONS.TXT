@@ -1,0 +1,71 @@
+SOLUTION -- Case Constraints
+
+To add the case constraints to the SPR and COMPS of verbs, you first must introduce the CASE type into the AGR feature.  To do this simply expand AGR to be
+
+agr-cat := feat-struc &
+[ PER per,
+  NUM num,
+  CASE case ].
+
+and add the two subtypes of case 
+
+case :< *value*.
+  nom :< case.
+  acc :< case.
+
+Then it's as simple as adding the further restriction that each verb have a nominative specifier and accusative complements.  For example
+
+loves := word &
+[ ORTH "loves",
+  HEAD verb,
+  SPR < [HEAD noun & [ AGR 3sing & [ CASE nom ] ] ] >,
+  COMPS < phrase & [HEAD noun & [ AGR [ CASE acc ] ] ] > ].
+
+
+You should begin to notice that there is a lot of redundancy arising in our lexicon.  For example every verb has  SPR < [HEAD noun & [ CASE nom ] ] >.  Later we'll see how to integrate these redundant constraints (including case) into the lexeme types.
+
+
+
+SOLUTION -- 3sing and non-3sing
+
+The textbook's 3sing / non-3sing type hierarchy can be implemented as follows:
+
+3sing := agr-cat &
+[ PER 3rd,
+  NUM sing,
+  GEND gend ].
+
+non-3sing :< agr-cat.
+
+1sing := non-3sing &
+[ PER 1st,
+  NUM sing ].
+
+non-1sing :< non-3sing.
+
+2sing := non-1sing &
+[ PER 2nd,
+  NUM sing ].
+
+pl := non-1sing &
+[ NUM plur ].
+
+
+The reason that 3sing will unify with non-3sing is that the type system implemented in the LKB does not require that a feature structure of type t must unify with a subtype of t.  Such a formalism could be constructed, but it's questionable whether the value gained by such a strong notion of well-formedness would be worth the extra computation needed to implement it.
+
+The "Typed feature structures made simple" chapter from the LKB Documentation for suggests that PER and NUM be collapsed into a single feature:
+
+agr-cat := feat-struc &
+[ PERNUM pernum,
+  CASE case ].
+
+pernum :< *value*.
+
+non-3sing :< pernum.
+
+1sing :< non-3sing.
+1plur :< non-3sing.
+2sing :< non-3sing.
+2plur :< non-3sing.
+3sing :< pernum.
+3plur :< non-3sing.
