@@ -15,19 +15,21 @@
 
 (defun draw-chart-lattice (node title horizontalp)
   (declare (ignore horizontalp))
-  (let ((chart-window (clim:make-application-frame 'chart-window)))
-    (setf (chart-window-root chart-window) node)
-    (setf (clim:frame-pretty-name chart-window) title)
-    (mp:process-run-function "CHART" 
-			     #'clim:run-frame-top-level
-			     chart-window)))
+;    (when (get node 'chart-edge-descendents)
+      (let ((chart-window (clim:make-application-frame 'chart-window)))
+        (setf (chart-window-root chart-window) node)
+        (setf (clim:frame-pretty-name chart-window) title)
+        (mp:process-run-function "CHART" 
+                                 #'clim:run-frame-top-level
+                                 chart-window)))
+;)
 
 (defun draw-chart-window (window stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((*chart-edges* nil))
     (declare (special *chart-edges*))
     ;; Don't bother if there's no chart
-    (unless (null (get (chart-window-root window) 'chart-edge-descendants))
+    (unless (null (get (chart-window-root window) 'chart-edge-descendents))
       (clim:format-graph-from-root
        (chart-window-root window) 
        #'(lambda (node stream)
