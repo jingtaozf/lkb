@@ -264,7 +264,7 @@
             (when (integerp output) (excl:aclfree output))
             (setf output 
               #-:ics new #+:ics (excl:lispval-other-to-address new))
-            (setf size (array-total-size output))))
+            (setf size (array-total-size new))))
         (let ((status (pvm_collect output size)))
           (if (< status 0)
             :error
