@@ -16,6 +16,8 @@
 
 (defparameter *eds-message-relation* (vsym "MESSAGE"))
 
+(defparameter *eds-fragment-relation* (vsym "UNKNOWN_REL"))
+
 (defparameter *eds-bleached-relations*
   (list (vsym "SELECTED_REL") (vsym "DEG_REL")))
 
@@ -152,7 +154,8 @@
           (when (handle-var-p soa)
             (setf (gethash handle %eds-equivalences%) soa))
           (setf (ed-type ed) :message))
-      when (ed-quantifier-p ed) do (setf (ed-type ed) :quantifier)))
+      when (ed-quantifier-p ed) do (setf (ed-type ed) :quantifier)
+      when (ed-fragment-p ed) do (setf (ed-type ed) :fragment)))
 
 (defun ed-augment-eds (eds)
   (loop
@@ -299,17 +302,23 @@
       (or (eq type *eds-message-relation*)
           (ignore-errors (subtype-p type *eds-message-relation*))))))
 
+(defun ed-fragment-p (ed)
+  (when *eds-fragment-relation*
+    (let ((type (ed-predicate ed)))
+      (or (eq type *eds-fragment-relation*)
+          (ignore-errors (subtype-p type *eds-fragment-relation*))))))
+
 (defun ed-bleached-p (ed)
   (or 
    (eq (ed-type ed) :message)
    (and (null *eds-include-quantifiers-p*) (eq (ed-type ed) :quantifier))
    (when *eds-bleached-relations*
-     (let ((relation (ed-predicate ed)))
-       (loop
-           for foo in *eds-bleached-relations*
-           for type = (if (stringp foo) (vsym foo) foo)
-           thereis (or (eq relation type) 
-                       (ignore-errors (subtype-p relation type))))))))
+     (loop
+         with predicate = (ed-predicate ed)
+         for foo in *eds-bleached-relations*
+         for type = (if (stringp foo) (vsym foo) foo)
+         thereis (or (eq predicate type) 
+                     (ignore-errors (subtype-p predicate type)))))))
 
 (defun ed-vacuous-p (ed)
   (unless *eds-include-vacuous-relations-p*
@@ -381,5 +390,10 @@
           (push :fragmented (ed-status ed))
           (setf return t)
         finally 
-          (when return (push :cyclic (eds-status eds)))
+          (loop
+              for ed in (eds-relations eds)
+              when (eq (ed-type ed) :fragment) do (setf return nil))
+          (when return (push :fragmented (eds-status eds)))
           (return return))))
+
+
