@@ -248,23 +248,23 @@
   (ecase file-type
     (:nodes (setf *template-file* file-name)
 	    (clear-category-display-templates))
-;    (:idioms
-;     (setf *idiom-file* file-name)
-;     (clear-idioms-entries))
+    (:idioms
+     (setf *idiom-file* file-name)
+     (clear-idioms-entries))
     (:root 
      (setf *root-file* file-name)
      (clear-root-entries))))
 
 (defun finalize-psort-file (file-type)  
-;  (when (eql file-type :idioms) 
-;    (expand-idioms-phrases))
+  (when (eql file-type :idioms) 
+    (expand-idioms-phrases))
   (when (eql file-type :nodes) 
     (split-up-templates)))
 
 (defun add-psort-file-entry (name constraint default file-type)
   (ecase file-type
-;    (:idioms
-;     (add-idiom-entry name constraint default))
+    (:idioms
+     (add-idiom-entry name constraint default))
     (:nodes
      (add-category-display-template name constraint default))
     (:root 
