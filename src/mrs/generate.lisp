@@ -86,14 +86,47 @@
               (return-from nil))))))
 
 
+;;;
+;;; see whether we can put the condition facility to use.  it has the advantage
+;;; of centralizing information about the various types of (expected) errors,
+;;; their internal structure (if we were to pass any of that to an application
+;;; system), printing regime, et al.                           (25-apr-04; oe)
+;;;
+(define-condition generator-uninitialized (error) 
+  () 
+  (:report (lambda (condition stream) 
+             (declare (ignore condition))
+             (format stream "the generator indices are uninitialized"))))
+
+(define-condition unknown-predicates (error) 
+  ((eps :initarg :eps :initform nil)) 
+  (:report (lambda (condition stream) 
+             (with-slots (eps) condition
+               (format
+                stream
+                "unknown predicates: ~{|~(~a~)|~^, ~}"
+                (loop
+                    with result
+                    for ep in eps
+                    do (pushnew (mrs::ep-shorthand ep) result :test #'equal)
+                    finally (when result
+                              (return (sort result #'string-lessp)))))))))
+
+
 ;;; Interface to generator - take an input MRS, ask for instantiated lexical
 ;;; items, instantiated and uninstantiated rules that might be applicable,
 ;;; and partial ordering on lexical items, and then call generator
 ;;; proper. Clear chart and analyses record before entry in case we don't make
 ;;; it into generation proper. Do it also in chart-generate since that is also
 ;;; an entry point
+(defun generate-from-mrs (mrs &key signal)
+  (handler-case (generate-from-mrs-internal mrs)
+    (condition (condition)
+      (if signal
+        (signal condition)
+        (warn (format nil "~a" condition))))))
 
-(defun generate-from-mrs (input-sem)
+(defun generate-from-mrs-internal (input-sem)
 
   ;; (ERB 2003-10-08) For aligned generation -- if we're in first only
   ;; mode, break up the tree in *parse-record* for reference by
@@ -106,6 +139,14 @@
   (with-package (:lkb)
     (clear-gen-chart)
     (setf *cached-category-abbs* nil)
+    
+    ;;
+    ;; no need to even try generating when there is no relation index
+    ;;
+    (unless (and (hash-table-p mrs::*relation-index*)
+                 (> (hash-table-count mrs::*relation-index*) 0))
+      (signal 'generator-uninitialized))
+    
     (let (lex-results lex-items grules lex-orderings 
           tgc tcpu conses symbols others
           (input-rels 0))
@@ -124,8 +165,6 @@
         (pairlis '(:ltgc :ltcpu :lconses :lsymbols :lothers)
                  (list tgc tcpu conses symbols others)))
       
-      (unless lex-items 
-        (error "no lexical entries found (maybe generator uninitialized)"))
       (when *debugging* (print-generator-lookup-summary lex-items grules))
       
       (let ((rel-indexes nil) (rel-indexes-n -1))
@@ -146,16 +185,9 @@
         (setf %generator-unknown-eps% nil)
         (loop
             for ep in (mrs::psoa-liszt input-sem)
-            unless (getf rel-indexes ep) do (push ep %generator-unknown-eps%)
-            finally
-              (when %generator-unknown-eps%
-                (error 
-                 "unknown predicates: ~{|~(~a~)|~^, ~}"
-                 (loop
-                     with result
-                     for ep in %generator-unknown-eps%
-                     do (pushnew (mrs::ep-shorthand ep) result :test #'equal)
-                     finally (return result)))))
+            unless (getf rel-indexes ep) do (push ep %generator-unknown-eps%))
+        (when %generator-unknown-eps%
+          (signal 'unknown-predicates %generator-unknown-eps%))
         ;;
         ;; _fix_me_
         ;; i believe the following should never happen, i.e. we rightly fail

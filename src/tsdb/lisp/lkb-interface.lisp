@@ -394,7 +394,7 @@
              (tsdb::time-a-funcall
               #'(lambda ()
                   (let (#+:pooling (*dag-recycling-p* (null trace)))
-                    (generate-from-mrs mrs)))
+                    (generate-from-mrs mrs :signal t)))
               #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                   (declare (ignore ignore))
                   (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr

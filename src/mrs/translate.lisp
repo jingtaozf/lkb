@@ -67,7 +67,7 @@
                        (let* ((stream (make-string-output-stream))
                               (*standard-output* stream)
                               (mrs::*mrs-raw-output-p* nil)
-                              (strings (generate-from-mrs mrs))
+                              (strings (generate-from-mrs mrs :signal t))
                               (output (get-output-stream-string stream)))
                          (when (and (stringp output) (not (string= output "")))
                            (format

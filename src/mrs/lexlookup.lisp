@@ -202,7 +202,7 @@ at this point).
           ; union, because initial-match can include things
           ; we've found already
           ; else - generation fails
-          (error "unknown predicates: |~(~a~)|" (ep-shorthand initial-rel))))
+          (signal 'lkb::unknown-predicates :eps (list initial-rel))))
     results-so-far))
 
 (defun find-lex-entries-from-rel (lex-rels results-so-far)
