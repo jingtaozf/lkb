@@ -29,22 +29,32 @@
 (defvar *last-directory* nil)
 
 (defun ask-user-for-existing-pathname (prompt)
-  ;; This still isn't right, since it allows the user to select a
-  ;; directory rather than a file.
   (loop for filename = (clim:select-file clim-user:*lkb-top-frame* 
 					 :title prompt
 					 :directory *last-directory*)
       do (when filename
 	   (setq *last-directory* (directory-namestring (pathname filename))))
       until (or (null filename)
-		(probe-file filename))
+		(and (probe-file filename)
+                     ;; Make sure file isn't really a directory
+                     (pathname-name filename)))
       finally (return filename)))
 
 (defun ask-user-for-new-pathname (prompt)
-  ;; to match Procyon def. this isn't adequate yet - it doesn't check for
-  ;; duplications and doesn't allow the user to change directory etc
-  (clim:accepting-values (nil :own-window t)
-   (clim:accept 'clim:pathname :prompt prompt)))
+  (loop for filename = (clim:select-file clim-user:*lkb-top-frame* 
+					 :title prompt
+					 :directory *last-directory*)
+      do (when filename
+	   (setq *last-directory* (directory-namestring (pathname filename))))
+      until (or (null filename)
+		(not (probe-file filename))
+                (when (clim:notify-user clim-user:*lkb-top-frame*
+                                        (format nil 
+                                                "File ~a exists.~%Overwrite?" 
+                                                filename)
+                                        :style :question)
+                  (delete-file filename)))
+      finally (return filename)))
 
 (defun y-or-n-p-general (query-string)
   ;;; to avoid dialect specific stuff going in main files
