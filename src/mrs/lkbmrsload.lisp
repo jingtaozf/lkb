@@ -75,4 +75,10 @@
         (load #-mcl compiled-file #+mcl source-file))))
 ))
 
+;;; loading vitrification rules
+(when (fboundp 'read-mrs-rule-file-aux)
+    (read-mrs-rule-file-aux 
+     (make-pathname :name "dan-rules.mrs"
+                    :directory (append *lkb-source-dir* '("mrs" "data")))))
+
 (in-package :cl-user)

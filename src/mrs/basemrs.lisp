@@ -219,7 +219,7 @@
 
 (defmethod mrs-output-outscopes ((mrsout simple) higher lower)
   (with-slots (stream indentation) mrsout
-    (format stream "~VT~A > ~A~%" 
+    (format stream "~VT~A >= ~A~%" 
             (+ indentation 2) higher lower)))
 
 (defmethod mrs-output-leq ((mrsout simple) higher lower)
@@ -302,7 +302,7 @@
 
 (defmethod mrs-output-outscopes ((mrsout comment) higher lower)
   (with-slots (stream indentation comment-string) mrsout
-    (format stream "~VT~A > ~A~%~A" (+ indentation 2) higher lower
+    (format stream "~VT~A >= ~A~%~A" (+ indentation 2) higher lower
                              comment-string)))
 
 (defmethod mrs-output-leq ((mrsout comment) higher lower)
@@ -390,7 +390,7 @@
 ;;; ???
 (defmethod mrs-output-outscopes ((mrsout indexed) higher lower)
   (with-slots (stream) mrsout
-    (format stream "~A > ~A~%" 
+    (format stream "~A >= ~A~%" 
              higher lower)))
 
 (defmethod mrs-output-leq ((mrsout indexed) higher lower)

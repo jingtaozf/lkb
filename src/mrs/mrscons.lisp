@@ -114,9 +114,7 @@
 
 (defun violates-outscopes-p  (handel-to-check current-top-handel
                               scoping-handels bindings)
-  ;;; true if handel-to-check is in an
-  ;;; outscopes relationship with top-handel (since equality
-  ;;; is prohibited or handel-to-check is 
+  ;;; true if handel-to-check is 
   ;;; outscoped by a handel which is not on the list
   ;;; of scoping-handels
   ;;; Only complication is that we have to check this wrt bindings
@@ -135,11 +133,10 @@
       (when violation (return nil))
          (dolist (outs *outscopes*)
               (when (eql h (outscopes-h2 outs))
-                 (when (member (outscopes-h1 outs) top-bindings)
-                   (setf violation t)
-                   (return nil))
                  (unless
-                    (member (outscopes-h1 outs) full-scoping-list)
+                     (or
+                      (member (outscopes-h1 outs) full-scoping-list)
+                      (member (outscopes-h1 outs) top-bindings))
                    (setf violation t)
                    (return nil)))))
     violation)))
