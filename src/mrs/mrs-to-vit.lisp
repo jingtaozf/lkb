@@ -468,9 +468,14 @@ because of the likelyhood of changes in the grammar.
   ;;; we also collect up all the var structures for the handels
   (clear-temporary-dbs)
   (setf *current-vit* (make-vit))
-  (let* ((mrs-psoa (if (mrs-language '(english))
-		       (time-convert-mrs-struct raw-mrs-psoa)
-		     raw-mrs-psoa))
+  (let* ((unstrung-psoa (mrs-unstring-psoa raw-mrs-psoa))
+         ; Because VIT stuff doesn't like strings
+         ; old code assumed string types would be converted to
+         ; symbols on construction of the MRS, but this 
+         ; loses information
+         (mrs-psoa (if (mrs-language '(english))
+		       (time-convert-mrs-struct unstrung-psoa)
+		     unstrung-psoa))
 	 (binding-sets (make-scoped-mrs mrs-psoa))
 	 (equalities)
 	 (leqs))
@@ -1008,3 +1013,57 @@ because of the likelyhood of changes in the grammar.
   (member h2 (get-bindings-for-handel h1 bindings)))
   
 
+;;;; new function for converting strings in psoa to symbols
+
+(defun mrs-unstring-psoa (psoa)
+  ;;; non-destructive
+  (let ((new-psoa (copy-psoa psoa)))
+    (setf (psoa-message new-psoa)
+          (if (rel-p (psoa-message psoa))
+              (mrs-unstring-rel (psoa-message psoa))))
+    (setf (psoa-liszt new-psoa)
+          (for rel in (psoa-liszt psoa)
+               collect
+               (mrs-unstring-rel rel)))
+    (setf (psoa-wgliszt new-psoa)
+          (for rel in (psoa-wgliszt psoa)
+               collect
+               (mrs-unstring-rel rel)))
+    new-psoa))
+
+(defun mrs-unstring-rel (rel)
+  (let ((new-rel (copy-rel rel)))
+    (setf (rel-extra new-rel)
+          (for fvp in (rel-extra rel)
+               collect
+               (mrs-unstring-fvp fvp)))
+    (setf (rel-type new-rel)
+          (mrs-unstring-value (rel-type rel))) 
+    (setf (rel-sort new-rel)
+          (mrs-unstring-value (rel-sort new-rel)))
+    (setf (rel-flist new-rel)
+          (for fvp in (rel-flist rel)
+               collect
+               (mrs-unstring-fvp fvp)))
+    new-rel))
+
+(defun mrs-unstring-fvp (fvp)
+  (make-fvpair :feature (mrs-unstring-value (fvpair-feature fvp))
+            :value (mrs-unstring-value (fvpair-value fvp))))
+
+(defun mrs-unstring-value (val)
+  (if (listp val)
+      (for el in val
+           collect
+           (if (stringp el)
+               (read-from-string el)
+             el))
+    (if (stringp val)
+               (read-from-string val)
+             val)))
+
+
+    
+    
+               
+    

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.1  1998/06/24 17:15:10  aac
+;; adding mrs code to source control
+;;
 ;; Revision 1.7  1998/05/01 07:47:21  dan
 ;; Grand release with all parses for test suite
 ;;
@@ -43,12 +46,23 @@
   `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CONT")))
 
 ;;; DPF - Added more value-feats
+;;; AAC - corrected value-feats 
+;;; feature AM-PM exists but takes ind      ,(vsym "AMPM") 
+;;; I-ORD is boolean                       ,(vsym "I-ORD") 
+;;; doesn't seem to be used                      ,(vsym "PRED") 
+;;; doesn't seem to be used                      ,(vsym "DEMONTYPE") 
 
-(setf *value-feats* `( ,(vsym "MONTH") ,(vsym "DAY") ,(vsym "HOUR") 
-                       ,(vsym "AMPM") ,(vsym "MINUTE") ,(vsym "ORD") 
-; AAC - I-ORD is boolean      ,(vsym "I-ORD") 
-                       ,(vsym "CONST_VALUE") ,(vsym "NAMED") 
-                       ,(vsym "PRED") ,(vsym "DEMONTYPE") ,(vsym "EXCL")))
+
+(setf *value-feats* `(                        ,(vsym "YEAR") 
+                                              ,(vsym "SEASON") 
+                                              ,(vsym "MONTH") 
+                                              ,(vsym "DAY") 
+                                              ,(vsym "HOUR") 
+                                               ,(vsym "MINUTE")        
+                                               ,(vsym "ORD") 
+                                               ,(vsym "CONST_VALUE") 
+                                               ,(vsym "NAMED") 
+                                               ,(vsym "EXCL")))
 
 
 

@@ -457,6 +457,9 @@ at this point).
                                (car type)
                              type)))
              (number (var-id var-struct)))
+         (when (stringp template)
+             (setf template user::string-type*))
+         ;;; probably this shouldn't happen
          (setf (get template 'user::last-number)
                number)
          (setf instance

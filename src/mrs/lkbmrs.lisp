@@ -52,24 +52,20 @@
       (car type)
     type))
 
-#|
-  (if (listp type)
-      (let ((string-converted 
-             (mapcar #'(lambda (x) (if (stringp x)
-                                       (read-from-string x)
-                                     x))
-                     type)))
-        (if (cdr string-converted)
-            string-converted ; might be an atomic disjunction
-          (car string-converted)))
-    (if (stringp type)
-        (read-from-string type)
-      type)))
-|#
+;;; string conversion now done in the proper place - part of
+;;; the MRS to VIT conversion
+
+(defun equal-or-subtype (type1 type2)
+  (or (equal type1 type2)
+      (subtype-p type1 type2)))
 
 ;;; called from mrs-to-vit
  
 (defun is-top-type (val)
 ;;; also defined for PAGE
   (eql USER::*toptype* val))
+
+(defun tdl-precedes (type1 type2)
+  (or (equal type1 type2)
+      (subtype-p type2 type1)))
 

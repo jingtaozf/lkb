@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.1  1998/06/24 17:15:13  aac
+;; adding mrs code to source control
+;;
 ;; Revision 1.2  1998/01/16 23:59:55  malouf
 ;; Revisions to work with CSLI English grammar.
 ;;
@@ -348,38 +351,22 @@
 				(coord-abbrev-aux restval lastval gen))))
       )))
 
-;;; The following only allows for the variables being
-;;; exactly of that type - I haven't found the subtype-p function yet!
-;;; global variables are efined in mrsglobals
+;;; global variables are defined in mrsglobals
 
 (defun determine-variable-type (fs)
-  (let ((type (fs-type fs)))
-    (cond ((eql type *event-type*) "e")
-          ((eql type *eventtime-type*) "t")
-          ((eql type *handle-type*) "h")  
-          ((eql type *group_lab-type*) "g")  
-          ((eql type *hole-type*) "h")
-          ((eql type *label-type*) "h")
-          ((eql type *ref-ind-type*) "x")
-          ((eql type *deg-ind-type*) "d")
-          ((eql type *individual-type*) "d")
-          ((eql type *difference-list-type*) "c") ;; Assume coordination structure
+  (let ((type (create-type (fs-type fs))))
+    (cond ((equal-or-subtype type *event-type*) "e")
+          ((equal-or-subtype type *eventtime-type*) "t")
+          ((equal-or-subtype type *handle-type*) "h")  
+          ((equal-or-subtype type *group_lab-type*) "g")  
+          ((equal-or-subtype type *hole-type*) "h")
+          ((equal-or-subtype type *label-type*) "h")
+          ((equal-or-subtype type *ref-ind-type*) "x")
+          ((equal-or-subtype type *deg-ind-type*) "d")
+          ((equal-or-subtype type *individual-type*) "d")
+          ((equal-or-subtype type *difference-list-type*) "c") 
+          ;; Assume coordination structure
           (t "v"))))
-
-#|     
-    (case type
-          (disco::event "e")
-          (disco::eventtime "t")
-          (disco::handle "h")
-          (disco::group_lab "g")
-          (disco::hole "h")
-          (disco::label "h")
-          (disco::ref-ind "x")
-          (disco::deg-ind "d")
-          (disco::individual "d")
-	  (tdl::*diff-list* "c")  ;; Assume coordination structure
-          (t "v"))))
-|#
 
 ;; Add check for disjunction nodes, which MRS can't handle
 
