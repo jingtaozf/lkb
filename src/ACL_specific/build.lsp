@@ -66,16 +66,29 @@
 
 (setq make::*building-image-p* t)
 (setq make:*compile-during-load* t)
+
 (pushnew :lkb *features*)
+;;;
+;;; include PSQL and LUI support code (both disable by default, though) on those
+;;; platforms where we support them
+;;;
+#+(and (version>= 6 0) :linux86)
+(pushnew :psql *features*)
+#+(and (version>= 6 0) :linux86)
+(pushnew :lui *features*)
+
 (pushnew :mrs *features*)
 (pushnew :mt *features*)
 (compile-system "mt" :force t)
 (setq make::*building-image-p* nil)
 
-(setq excl:*restart-init-function* 
-  #'(lambda ()
-      (if (system:getenv "SSP")
-        (tpl:setq-default *package* (find-package :ssp))
-        (tpl:setq-default *package* (find-package :lkb)))
-      (let ((*package* (find-package "CLIM-USER")))
-	(clim-user::set-up-lkb-interaction :core))))
+;;;
+;;; even though, as of may-04, we build with the PSQL code in the image, we do
+;;; not want to operate in PSQL-mode unless explicitly requested, i.e. by the
+;;; end user running an image setting an environment variable PSQL (the same
+;;; strategy we use for turning on the LUI).  hence, drop :psql feature now and
+;;; leave it to start-lkb() to initialize PSQL and put it back on if requested.
+;;;
+(setf *features* (delete :psql *features*))
+
+(setq excl:*restart-init-function* #'lkb::start-lkb)
