@@ -76,7 +76,11 @@
 (defun initialize-psql-lexicon (&key
                                 (db "lingo")
                                 (host "localhost")
-                                (table (or (fields-tb *psql-lexicon*) "erg")))
+                                (table (or 
+					(and
+					 (typep *psql-lexicon* 'psql-database)
+					 (fields-tb *psql-lexicon*)) 
+					"erg")))
   
   (let* ((lexicon (make-instance 'psql-lex-database 
                     :dbname db :host host
