@@ -141,7 +141,7 @@
 
 (defun sort-mrs-struct-liszt (liszt)
   (let ((new-liszt 
-         (combine-similar-relations liszt nil)))
+         (combine-similar-relations liszt nil #'similar-relations-p)))
    (sort new-liszt
          #'(lambda (relset1 relset2)
              (let ((rel1 (car relset1)) (rel2 (car relset2)))
@@ -150,7 +150,7 @@
                         (value-feats-lessp (rel-flist rel1)
                                            (rel-flist rel2)))))))))
 
-(defun combine-similar-relations (liszt result-so-far)
+(defun combine-similar-relations (liszt result-so-far test-fn)
   (if (null liszt)
       result-so-far
     (let ((test-rel (car liszt))
@@ -158,12 +158,13 @@
           (non-similar nil))
       (loop for rel in (cdr liszt)
            do
-           (if (similar-relations-p test-rel rel)
+           (if (apply test-fn (list test-rel rel))
                (push rel similar)
              (push rel non-similar)))
       (combine-similar-relations non-similar
                                  (push (cons test-rel similar)
-                                      result-so-far))))) 
+				       result-so-far)
+				 test-fn))))
   
 (defun similar-relations-p (rel1 rel2)
   (and (string-equal (rel-pred rel1) (rel-pred rel2))
