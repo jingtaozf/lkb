@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.9  1999/10/14 02:14:54  aac
+;; fixes for sorts
+;;
 ;; Revision 1.8  1999/10/14 00:46:32  danf
 ;; Patches for better sorts
 ;;
@@ -604,9 +607,11 @@
 
 (defun output-p-term (vit-out p-term)
   (let ((pred (p-term-predicate p-term)))
+    (when (equal pred "eq") (setf pred "leq"))
+    (when (equal pred 'eq) (setf pred 'leq))
     (if (stringp pred)
-      (format vit-out "~A(" (p-term-predicate p-term))
-      (format vit-out "~(~A(~)" (p-term-predicate p-term)))
+      (format vit-out "~A(" pred)
+      (format vit-out "~(~A(~)" pred))
     (let ((args (p-term-args p-term))
           (need-comma nil))             ; messiness because of comma delimiters
       (when (vit-special-form-p p-term)
