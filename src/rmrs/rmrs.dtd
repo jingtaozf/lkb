@@ -30,8 +30,8 @@
           sort (x|e|h|u|l) #REQUIRED
           vid  CDATA #REQUIRED 
           num  (sg|pl|u) #IMPLIED
-          pers (1|2|3|1or3|u) #IMPLIED
-          gender (m|f|n|u) #IMPLIED
+          pers (1|2|3|1-or-3|u) #IMPLIED
+          gender (m|f|n|m-or-f|u) #IMPLIED
           divisible (+|-|u) #IMPLIED
           cogn-st (type-id|uniq-id|fam|activ|in-foc|uniq-or-less|uniq-or-fam|fam-or-activ|active-or-more|fam-or-less|uniq-or-fam-or-activ|fam-or-more|activ-or-less|uniq-or-more|u) 
           tense (past|present|future|non-past|u) #IMPLIED
