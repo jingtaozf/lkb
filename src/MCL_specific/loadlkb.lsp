@@ -2,7 +2,10 @@
 
 (defparameter *lkb-system-version* :main)
 
-(defparameter *lkb-source-dir* '(:absolute "Macintosh HD" "lkb"))
+;;(defparameter *lkb-source-dir* '(:absolute "Macintosh HD" "lkb99-expt"))
+
+(defparameter *lkb-source-dir* 
+  (butlast (pathname-directory *load-truename*)))
 
 (defparameter *psorts-temp-file* 
   (make-pathname :name "templex" 
@@ -41,6 +44,7 @@
          ("main" "rules")       ; generic CL
          ("io-paths" "ruleinput")       ; generic CL
          ("main" "parse")       ; generic CL
+         ("main" "generate")       ; generic CL
          ("MCL_specific" "parseout")    ; some dialect specific - parse tree fns
          ("MCL_specific" "chartout")    ; some dialect specific - chart output fns
          ("main" "morph")       ; generic CL
