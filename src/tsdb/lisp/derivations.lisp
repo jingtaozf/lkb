@@ -130,6 +130,8 @@
 ;;; where application of additional (glb) constraints fails.
 ;;;
 
+(defvar *reconstruct-cache* nil)
+
 (defun reconstruct-item (i-id i-input derivation)
   (let* ((*package* (or (find-package :disco)
                         (find-package :common-lisp-user))))
@@ -195,69 +197,78 @@
                        (derivation-daughters (first daughters))))
          (id (derivation-id derivation))
          (start (derivation-start derivation))
-         (end (derivation-end derivation)))
-    (cond
-     ((and (= (length daughters) 1) (null princes))
-      (let* ((surface (derivation-root (first daughters)))
-             (entry (find-lexical-entry surface root id start end)))
-        (if (null entry)
-          (throw :fail
-            (values
-             nil
-             (list derivation
-                   0
-                   :noentry
-                   (format nil "`~a' (`~a')" root surface))))
-          entry)))
-     ((and (= (length princes) 1)
-           (null (derivation-daughters (first princes)))
-           (inflectional-rule-p derivation))
-      (let* ((affix root)
-             (fs (and affix (find-affix affix)))
-             (surface (derivation-root (first princes)))
-             (entry (find-lexical-entry 
-                     surface 
-                     (derivation-root (first daughters))
-                     id start end)))
-        (cond
-         ((null fs)
-          (throw :fail
-            (values
-             nil
-             (list derivation
-                   0
-                   :noaffix
-                   (format nil "`~a'"  affix)))))
-         ((null entry)
-          (throw :fail
-            (values
-             nil
-             (list derivation
-                   0
-                   :noentry
-                   (format nil "`~a' (`~a')" root surface)))))
-         (t
-          (multiple-value-bind (result failure)
-              (instantiate-preterminal entry fs id start end)
-            (if failure
-              (throw :fail (values nil (list derivation result failure)))
-              result))))))
-     (t
-      (let* ((items
-              (loop
-                  for daughter in daughters
-                  for item = (reconstruct-derivation daughter)
-                  collect item))
-             (rule (find-rule root)))
-        (if (null rule)
-          (throw :fail
-            (values nil (list derivation 0 :norule (format nil "`~a'" root))))
-          (multiple-value-bind (result failure)
-              (instantiate-rule rule items id)
-            (if (null failure)
-              result
-              (throw :fail 
-                (values nil (list derivation result failure)))))))))))
+         (end (derivation-end derivation))
+         (edge 
+          (or (when *reconstruct-cache* (gethash id *reconstruct-cache*))
+              (cond
+               ((and (= (length daughters) 1) (null princes))
+                (let* ((surface (derivation-root (first daughters)))
+                       (entry (find-lexical-entry surface root id start end)))
+                  (if (null entry)
+                    (throw :fail
+                           (values
+                            nil
+                            (list derivation
+                                  0
+                                  :noentry
+                                  (format nil "`~a' (`~a')" root surface))))
+                    entry)))
+               ((and (= (length princes) 1)
+                     (null (derivation-daughters (first princes)))
+                     (inflectional-rule-p derivation))
+                (let* ((affix root)
+                       (fs (and affix (find-affix affix)))
+                       (surface (derivation-root (first princes)))
+                       (entry (find-lexical-entry 
+                               surface 
+                               (derivation-root (first daughters))
+                               id start end)))
+                  (cond
+                   ((null fs)
+                    (throw :fail
+                           (values
+                            nil
+                            (list derivation
+                                  0
+                                  :noaffix
+                                  (format nil "`~a'"  affix)))))
+                   ((null entry)
+                    (throw :fail
+                           (values
+                            nil
+                            (list derivation
+                                  0
+                                  :noentry
+                                  (format nil "`~a' (`~a')" root surface)))))
+                   (t
+                    (multiple-value-bind (result failure)
+                        (instantiate-preterminal entry fs id start end)
+                      (if failure
+                        (throw :fail 
+                               (values nil (list derivation result failure)))
+                        result))))))
+               (t
+                (let* ((items
+                        (loop
+                         for daughter in daughters
+                         for item = (reconstruct-derivation daughter)
+                         collect item))
+                       (rule (find-rule root)))
+                  (if (null rule)
+                    (throw :fail
+                           (values nil (list derivation 0 :norule 
+                                             (format nil "`~a'" root))))
+                    (multiple-value-bind (result failure)
+                        (instantiate-rule rule items id)
+                      (if (null failure)
+                        result
+                        (throw :fail 
+                               (values nil 
+                                       (list derivation 
+                                             result failure))))))))))))
+    (when (and *reconstruct-cache* edge)
+      (setf (gethash id *reconstruct-cache*) edge))
+    edge))
 
 ;;;
 ;;; install conversion routine and equality predicate for derivations (uniform
