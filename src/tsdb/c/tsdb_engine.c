@@ -101,7 +101,7 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
   Tsdb_relation *relation_1, *relation_2, *foo;
   Tsdb_key_list *first, *next_1, *next_2, *bar, *baz;
   int  i, j, k, m,n, index_1, index_2 ;
-  char *key_1, *key_2,*common=NULL;
+  char *key_1, *key_2;
   int* delete;
 
   delete = (int*)malloc(sizeof(int)*
@@ -189,9 +189,9 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
         fprintf(tsdb_debug_stream,
                 "tsdb_join::\n common indices for elimination of tuples\n");
         fprintf(tsdb_debug_stream,
-                " %s %s %ld \n",selection_1->relations[i]->name, key_1,m);
+                " %s %s %d \n",selection_1->relations[i]->name, key_1,m);
         fprintf(tsdb_debug_stream,
-                " %s %s %ld \n",selection_2->relations[j]->name, key_2,n);
+                " %s %s %d \n",selection_2->relations[j]->name, key_2,n);
 #endif       
 
         if(kaerb) { 
@@ -510,7 +510,6 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
   int* delete;
 
 #if defined(DEBUG) && defined(TOM)
-  FILE* output;
 
   tsdb_print_selection(selection_1,tsdb_debug_stream);
   tsdb_print_selection(selection_2,tsdb_debug_stream);
@@ -518,14 +517,6 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
 #endif
 
   delete =  tsdb_double_relations(selection_1,selection_2,&d);
-
-  /*
-  tsdb_print_selection(selection_1,tsdb_debug_stream);
-  tsdb_print_selection(selection_2,tsdb_debug_stream);
-
-  selection_1 = tsdb_clean_selection(selection_1,&fuck);
-  selection_2 = tsdb_clean_selection(selection_2,&fuck);
-  */
 
 #if defined(DEBUG) && defined(TOM)
 /*  output = tsdb_open_pager();*/
