@@ -1635,26 +1635,38 @@
           finally (return 0))))))
 
 (defun train (source file &key (condition *statistics-select-condition*)
-                               (type :mem) (verbose t) (stream t) 
+                               (type :mem) model estimatep
+                               (verbose t) (stream t)
                                interrupt meter)
   (declare (ignore interrupt meter))
 
-  (let* ((gc (install-gc-strategy 
-              nil :tenure *tsdb-tenure-p* :burst t :verbose verbose))
-         (condition (if (and condition (not (equal condition "")))
-                      (format nil "t-active >= 1 && (~a)" condition)
-                      "t-active >= 1"))
-         (items (analyze source 
-                         :thorough '(:derivation)
-                         :condition condition :gold source :readerp nil)))
-    (purge-profile-cache source)
-    (case type
-      (:mem
-       (let ((model (estimate-mem items)))
-         (when verbose
-           (format stream "train(): exporting ~a~%" model))
-         (print-mem model :file file :format :export))))
-    (restore-gc-strategy gc)))
+  (if (consp source)
+    (loop
+        with model = (or model (case type
+                                 (:mem (make-mem))))
+        with gc = (install-gc-strategy 
+                   nil :tenure *tsdb-tenure-p* :burst t :verbose verbose)
+        with condition = (if (and condition (not (equal condition "")))
+                           (format nil "t-active >= 1 && (~a)" condition)
+                           "t-active >= 1")
+        for profiles on source
+        do
+          (train (first profiles) nil :condition condition :type type
+                 :model model :estimatep (null (rest profiles))
+                 :verbose verbose :stream stream)
+        finally
+          (when verbose
+            (format stream "train(): exporting ~a~%" model))
+          (print-mem model :file file :format :export)
+          (restore-gc-strategy gc))
+    (let* ((items (analyze source 
+                           :thorough '(:derivation)
+                           :condition condition :gold source :readerp nil)))
+      (purge-profile-cache source)
+      (case type
+        (:mem
+         (estimate-mem 
+          items :model model :estimatep estimatep :stream stream))))))
 
 (defun rank-profile (source 
                      &optional (target source)

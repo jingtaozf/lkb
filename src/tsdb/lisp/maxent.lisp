@@ -175,7 +175,7 @@
                (format stream "[~{~s~^ ~}] ~,10f~%" feature weight))
          (format stream "~%:end :features.~%~%:end :mem.~%"))))))
 
-(defun estimate-mem (items &key (stream *tsdb-io*) model)
+(defun estimate-mem (items &key (stream *tsdb-io*) model (estimatep t))
   #+:debug
   (setf %items% items)
   (loop
@@ -216,20 +216,21 @@
             finally
               (record-context context model))
       finally 
-        (let* ((in (format nil "/tmp/.mem.~a.mee" (current-user)))
-               (out (format nil "/tmp/.mem.~a.mew" (current-user)))
-               (command (format 
-                         nil 
-                         "estimate -events_in ~a -params_out ~a"
-                         in out))
-               (output (if *maxent-debug-p* nil "/dev/null")))
-          (print-mem model :file in)
-          (when (probe-file out) (ignore-errors (delete-file out)))
-          (when (and (zerop (run-process 
-                             command :wait t 
-                             :output output :if-output-exists :append))
-                     (probe-file out))
-            (read-weights model out)))
+        (when estimatep
+          (let* ((in (format nil "/tmp/.mem.~a.mee" (current-user)))
+                 (out (format nil "/tmp/.mem.~a.mew" (current-user)))
+                 (command (format 
+                           nil 
+                           "estimate -events_in ~a -params_out ~a"
+                           in out))
+                 (output (if *maxent-debug-p* nil "/dev/null")))
+            (print-mem model :file in)
+            (when (probe-file out) (ignore-errors (delete-file out)))
+            (when (and (zerop (run-process 
+                               command :wait t 
+                               :output output :if-output-exists :append))
+                       (probe-file out))
+              (read-weights model out))))
         (return model)))
 
 (defun edge-to-event (edge model &key (event (make-event) eventp))
