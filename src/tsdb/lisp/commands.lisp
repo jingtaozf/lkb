@@ -29,8 +29,8 @@
                    (madjust * meter 0.5)))
          (ometer (unless *tsdb-ignore-output-p*
                    (madjust + (madjust * meter 0.5) (mduration imeter))))
-         (items (select '("i-id" "i-wf" "i-input")
-                        '(:integer :integer :string)
+         (items (select '("i-id" "i-wf" "i-length" "i-input")
+                        '(:integer :integer :integer :string)
                         "item"
                         condition
                         data
@@ -53,7 +53,7 @@
                             :unique nil :sort :i-id)))
          (all (loop
                   for item in items
-                  for length = (get-field+ :i-length item)
+                  for length = (get-field+ :i-length item 0)
                   for output = (or (unless *tsdb-ignore-output-p*
                                      (find (get-field :i-id item)
                                            outputs
@@ -86,7 +86,7 @@
       (format
        stream 
        "~&retrieve(): found ~a item~:p (~a output specification~:p).~%" 
-       (length items) (length outputs)))
+       (length all) (length outputs)))
     (when meter (meter :value (get-field :end meter)))
     (when meter
       (status :text (format nil "retrieving `~a' data ... done" data)))
