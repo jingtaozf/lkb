@@ -218,14 +218,14 @@
                     (when *lui-hidden-features*
                       (format 
                        stream 
-                       "parameter+ hidden-features ~a~a~%"
+                       "parameter+ collapsed-features ~a~a~%"
                        (first *lui-hidden-features*) %lui-eoc%)
                       (loop
                           for foo in (rest *lui-hidden-features*)
                           do
                             (format 
                              stream 
-                             "parameter+ hidden-features ~a~a~%"
+                             "parameter+ collapsed-features ~a~a~%"
                              foo %lui-eoc%)))
                     (format stream "avm ~d " id)
                     (display-dag1 dag 'linear stream))))
