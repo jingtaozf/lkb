@@ -376,11 +376,11 @@ DROP VIEW active;
 DROP TABLE current_grammar;
 
 CREATE OR REPLACE FUNCTION mod_time_private() RETURNS text AS '
-SELECT COALESCE(val,''infin'') FROM meta WHERE var=''mod_time'' LIMIT 1;
+SELECT COALESCE((SELECT val FROM meta WHERE var=''build_time'' LIMIT 1),''infin'')
 ' LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION mod_time_public() RETURNS text AS '
-SELECT COALESCE(val,''infin'') FROM public.meta WHERE var=''mod_time'' LIMIT 1;
+SELECT COALESCE((SELECT val FROM public.meta WHERE var=''build_time'' LIMIT 1),''infin'')
 ' LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION mod_time() RETURNS text AS '
@@ -388,7 +388,7 @@ SELECT max(t) FROM (SELECT mod_time_private() AS t UNION SELECT mod_time_public(
 ' LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION build_time() RETURNS text AS '
-SELECT COALESCE(val,'''') FROM meta WHERE var=''build_time'' LIMIT 1;
+SELECT COALESCE((SELECT val FROM meta WHERE var=''build_time'' LIMIT 1),'''')
 ' LANGUAGE SQL;
 
 ---
