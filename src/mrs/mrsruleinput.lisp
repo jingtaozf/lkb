@@ -1,7 +1,8 @@
 (in-package :cl-user)
 ;;;; *****************************************************
 
-(defparameter *ordered-mrs-rule-list* nil)
+;;; (defparameter *ordered-mrs-rule-list* nil)
+;;; in mrsglobals
 
 (defun clear-mrs-rules nil
   (setf *ordered-mrs-rule-list* nil))

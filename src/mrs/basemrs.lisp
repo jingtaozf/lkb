@@ -246,9 +246,10 @@
   (with-slots (stream indentation) mrsout
     (mrs-output-atomic-fn *mrs-display-structure* (var-name var))
     (if (var-extra var)
-        (let ((name (var-name var)))
-          (loop for feat-val in (var-extra var)
-              do
+        (loop for feat-val in (var-extra var)
+            do 
+              (progn (identity feat-val)
+                     ; silly, but avoids warning messages
                 (mrs-output-start-rel mrsout))))))
 
 ;;; 

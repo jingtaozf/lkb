@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.4  1999/05/07 00:34:08  aac
+;; minor fixes, mostly problems revealed by MCL
+;;
 ;; Revision 1.3  1999/04/09 23:20:56  danf
 ;; Merged WK's changes
 ;;
@@ -251,7 +254,8 @@
         (tenseandaspect nil)
         (scope nil)
         (prosody nil)
-        (ambiguities nil))
+;        (ambiguities nil)
+        )
     (check-for #\v istream)
     (check-for #\i istream)
     (check-for #\t istream)

@@ -24,6 +24,8 @@
   (format t "~%~A" cl-user::*sentence*) 
   (format t " ~A" (length (make-scoped-mrs (car (extract-mrs (list (car cl-user::*parse-record*)) t))))))
 
+
+#|
 (defun test-cache nil 
   (let ((current-cache *cache-on*))
     (format t "~%~A" cl-user::*sentence*) 
@@ -57,7 +59,7 @@
              (format t "~%WARNING cache results differ uncached: ~A cached: ~A"
                      (length uncached-result) (length cached-result)))))
     (setf *cache-on* current-cache)))
-
+|#
 
 (defun bindings-equivalent (b1 b2)
   (and (eql (length b1)
@@ -90,7 +92,7 @@
   (cond (*mrs-to-vit*
          (mrs-to-vit-convert mrs-struct))
         ((and *alex-munge* (fboundp 'alex-munge))
-         (alex-munge mrs-struct))
+         (funcall 'alex-munge mrs-struct))
         (*mrs-scoping*
          (check-mrs-struct mrs-struct))
         (t (output-mrs mrs-struct 'simple))))

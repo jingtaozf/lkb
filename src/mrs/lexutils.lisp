@@ -2,6 +2,24 @@
 
 ;;; from lexindex
 
+(defun clear-generator-index nil
+  (mrs::clear-semantic-indices)
+  (mrs::clear-lrule-globals)
+  (mrs::clear-grule-globals))
+
+(defun clear-generator-lexicon nil
+  (clear-generator-index))
+
+(defun clear-generator-lrules nil
+  (clear-generator-index))
+
+(defun clear-generator-grules nil
+  (clear-generator-index))
+  
+
+;;; for the time being, the whole lexicon has to be reindexed whenever
+;;; something is altered ...
+
 (defun index-for-generator nil
   (index-lexicon)
   (index-lexical-rules)

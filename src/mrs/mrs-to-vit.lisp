@@ -566,6 +566,7 @@
 ;;; in the english grammar the 'message' is included in liszt
                (mood nil)
                (groups (construct-vit-groups *group-members*)))
+          (declare (ignore converted-rels))
           (setf (vit-utterance-id *current-vit*) (construct-segment-description
                                                   mrs-psoa)
                 (vit-main-condition *current-vit*) (construct-main-label 
@@ -603,6 +604,7 @@
                                                     *current-vit*
                                                     group-list labels))))
            (groups (construct-vit-groups *group-members*)))
+      (declare (ignore converted-rels))
       (setf (vit-utterance-id *current-vit*) 
         (construct-segment-description mrs)
         (vit-scope *current-vit*) (append groups scope 
@@ -896,6 +898,7 @@
 ;; now we pass throuygh the extras and use *index-feature-transform-table* to
 ;; find out whether there is something to do
 (defun convert-mrs-var-extra (vars vit inst groups labels)
+  (declare (ignore groups labels))
   (loop for var in vars
       do
         (when (and (var-p var) (not (member inst *vit-instances* :test #'equalp))
@@ -921,6 +924,7 @@
 ;;;; label; extension of table format will be required
 ;;;; the routine is identical to that for var-extra
 (defun convert-mrs-rel-extra (feats vit inst label groups labels)
+  (declare (ignore inst groups labels))
   (when (not (member label *vit-instances* :test #'equalp))
     (loop for fvp in feats
         do
@@ -939,6 +943,7 @@
     (push label *vit-instances*)))
 
 (defun convert-relation-type-info-to-vit (rel vit inst label)
+  (declare (ignore inst))
   (let ((pred (rel-sort rel)))
     (loop for type in *relation-type-check*
         do
@@ -1046,6 +1051,7 @@
   vit)
 
 (defun convert-fvpair-to-pterm (fv groups labels)
+  (declare (ignore groups))
   (make-p-term :predicate (fvpair-feature fv)
                :args (list (convert-mrs-val-to-vit (fvpair-value fv) labels))))
 

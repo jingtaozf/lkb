@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.12  1999/04/09 23:20:56  danf
+;; Merged WK's changes
+;;
 ;; Revision 1.11  1999/03/06 03:45:59  aac
 ;; got rid of special message stuff in generator, added code so compatible lexical entries can be retrieved, added menu item in CLIM for lexical ids on trees
 ;;
@@ -343,3 +346,13 @@ for extra features for using the extra-features of a relation")
 
 
 (defparameter *key-handel-path* nil)
+
+;;; for munging
+
+(defparameter *ordered-mrs-rule-list* nil)
+
+;;; for scoping
+
+(defvar *canonical-bindings* nil
+"global variable which is set to the current set of bindings for the
+printing routines -  convenient to make this global to keep printing generic")

@@ -302,9 +302,13 @@
         (when (and mrsstruct (psoa-p mrsstruct))
               (check-mrs-struct mrsstruct sentence)))))
 
+#|
 (defvar *canonical-bindings* nil
 "global variable which is set to the current set of bindings for the
 printing routines -  convenient to make this global to keep printing generic")
+
+; moved to mrsglobals.lisp
+|#
 
 (defun check-mrs-struct (mrsstruct &optional sentence)
   ;;; first output the existing structure in the indexed notation

@@ -15,6 +15,7 @@
 
 (in-package "MRS")
 
+(eval-when (compile load eval)
 (export '(psoa-handel psoa-top-h psoa-index psoa-liszt psoa-h-cons
           psoa-message psoa-wgliszt psoa-key-h
           rel-extra rel-type rel-sort rel-handel rel-label rel-flist
@@ -24,4 +25,4 @@
           group-var-name group-var-extra group-var-id
           hcons-scarg hcons-outscpd
           leq-sc-scarg leq-sc-cands leq-sc-outscpd leq-sc-relation
-          whg-id-id whg-id-word whg-id-handel))
+          whg-id-id whg-id-word whg-id-handel)))

@@ -1,5 +1,6 @@
 (in-package :cl-user)
 
+(eval-when (compile load eval)
 (export '(edge-dag follow-pointers existing-dag-at-end-of dag-p is-atomic
           type-of-fs tdfs-indef lex-or-psort-id lex-or-psort-full-fs 
           dag-arcs subtype-p extend-typed-path path-p typed-path-p
@@ -15,7 +16,7 @@
           mrs-rule-constant-p mrs-rule-constant-value
 ; for lexlookup
           make-pv-unif construct-tdfs create-wffs 
-          process-unifications yadu))
+          process-unifications yadu)))
 
 ; just to avoid errors because package is undefined
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
