@@ -109,12 +109,16 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
                                :label new-label
                                :val val)))))))
          (ep 
-          (make-rel
+          (make-char-rel
            :handel new-label
            :parameter-strings (rel-parameter-strings rel)
            :extra (rel-extra rel)
            :pred pred 
-           :flist (list main-arg)))
+           :flist (list main-arg)
+	   :cfrom (if (char-rel-p rel)
+		      (char-rel-cfrom rel))
+	   :cto (if (char-rel-p rel)
+		      (char-rel-cto rel))))
          (in-group (if (member (var-id label) labels)
                        (make-in-group :labels (list label new-label)))))
     (values ep rmrs-args in-group

@@ -40,6 +40,14 @@
     `(,(vsym "HANDEL"))
   "path to get the handel from a relation")
 
+(defparameter *rel-cto-feature*
+    (vsym "CTO")
+  "feature with the CTO")
+
+(defparameter *rel-cfrom-feature*
+    (vsym "CFROM")
+  "feature with the CFROM")
+
 (defparameter *psoa-top-h-path* 
   `(,(vsym "TOP-H"))
   "path to get the top handle from a psoa")
@@ -85,7 +93,9 @@
   "A not-necessarily-complete list of features that determines printing
 order in an MRS")
 
-(defparameter *ignored-sem-features* `( ,(vsym "IDIOMP"))
+(defparameter *ignored-sem-features* `( ,(vsym "IDIOMP")
+					,(vsym "CFROM")
+					,(vsym "CTO"))
   "A list of features which are ignored completely")
 
 (defparameter *ignored-extra-features* `( ,(vsym "INSTLOC"))

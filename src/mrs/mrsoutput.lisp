@@ -262,12 +262,17 @@ duplicate variables")
                               variable-generator)))
              (pred (create-type (extract-pred-from-rel-fs fs)))
              (fvps (extract-fvps-from-rel-fs fs variable-generator indexing-p))
-             (parameter-strings (get-fvps-parameter-strings fvps)))
+             (parameter-strings (get-fvps-parameter-strings fvps))
+	     (cfrom (extract-cfrom-from-rel-fs fs))
+	     (cto (extract-cto-from-rel-fs fs)))
         (unless (member pred *dummy-relations*)
-          (make-rel :pred pred
+          (make-char-rel 
+	            :pred pred
                     :handel handle-var
                     :flist fvps
-                    :parameter-strings parameter-strings)))))
+                    :parameter-strings parameter-strings
+		    :cfrom cfrom
+		    :cto cto)))))
 ;;; FIX?? flist may be wrong way round
 
 (defun get-fvps-parameter-strings (fvps)
@@ -281,6 +286,24 @@ duplicate variables")
     (if *rel-handel-path*
         (assoc (car *rel-handel-path*)
                label-list))))
+
+(defun extract-cfrom-from-rel-fs (fs)
+  (let ((label-list (fs-arcs fs)))
+    (if *rel-cfrom-feature*
+	(let ((cfrom-fs
+	       (cdr (assoc *rel-cfrom-feature*
+			   label-list))))
+	  (if cfrom-fs
+	      (parse-integer (fs-type cfrom-fs)))))))
+
+(defun extract-cto-from-rel-fs (fs)
+  (let ((label-list (fs-arcs fs)))
+    (if *rel-cto-feature*
+	(let ((cto-fs
+	       (cdr (assoc *rel-cto-feature*
+			   label-list))))
+	  (if cto-fs
+	      (parse-integer (fs-type cto-fs)))))))
 
 (defun extract-pred-from-rel-fs (rel-fs)
     (let* ((label-list (fs-arcs rel-fs))
