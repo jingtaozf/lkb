@@ -101,6 +101,3 @@
 
 (def-lkb-parameter *top-lex-sign-type* 'word)
 
-(def-lkb-parameter *feature-ordering*
-   '(dtrs synsem orth head-dtr comp-dtrs hcs-synsems hcs-orth hd-dtr
-      tl-dtr synsem-list))

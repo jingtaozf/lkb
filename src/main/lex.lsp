@@ -22,6 +22,14 @@
 
 (defvar *language-lists* nil)
 
+   
+(defparameter *batch-mode* nil
+   "set when indexing to prevent errors in expanding a lexical entry being
+   signalled as continuable errors, rather than written
+   to a file.")
+
+(defparameter *bc96lrules* nil)
+
 (defstruct (lex-or-psort) 
    orth
    infl-pos ; for a multi-word entry only - a number
@@ -126,6 +134,8 @@
       (file-position *psorts-stream* current-file-end)
       (write specified-entry :stream *psorts-stream*)
       (terpri *psorts-stream*)
+      (when (gethash id *psorts*)
+        (format t "~%Redefining ~A" id))
       (setf (gethash id *psorts*)
          (list orth current-file-end))))
 
@@ -201,7 +211,10 @@
 
 (defun clear-lex (&optional no-delete)
   (when (fboundp 'reset-cached-lex-entries)
-   (funcall 'reset-cached-lex-entries)) ; in constraints.lsp
+    (funcall 'reset-cached-lex-entries))
+  ;; reset-cached-lexical entries is in constraints.lsp
+  ;; which isn't part of the core lkb distribution
+  ;; the use of funcall here is just to prevent compiler warnings
   (clrhash *lexical-entries*)
   (clrhash *psorts*)
   (when (fboundp 'clear-lexicon-indices)
@@ -407,7 +420,7 @@
 				(list orth 
 				      (format nil "~A" lex-id) language))))))
     (process-unif-list lex-id fs (lex-or-psort-def-unifs entry) entry
-		       *lexical-persistence* *bc96lrules* local-p interim-p)))
+		       *description-persistence* *bc96lrules* local-p interim-p)))
 
 ;;; *bclrules* is t if the style of lexical rules
 ;;; and linking adopted in Briscoe and Copestake 1996 
@@ -443,8 +456,8 @@
                            (make-indefeasible interim-fs (list persistence))
                          interim-fs)))
                   (setf (lex-or-psort-full-fs entry)
-                    (if linking-p
-                        (link-lex-entry incorp-fs)
+                    (if (and linking-p (fboundp 'link-lex-entry))
+                        (funcall 'link-lex-entry incorp-fs)
                       incorp-fs)))))))
                 (progn
                   (if fs

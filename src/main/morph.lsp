@@ -156,7 +156,8 @@
    (with-open-file 
       (istream filename
          :direction :input)
-      (format t "~%Loading morphological data")
+     (format t "~%Loading morphological data from ~A" 
+             (pathname-name filename))
       (block outer
          (loop
             ;; Go through the file - ignore comments.
@@ -180,8 +181,7 @@
                                  (letter-set-add form 
                                     *letter-set-list*)))
                            (t (error "~%Wrong type of command"))))          
-                     (morph-item-process istream)))))))
-   (format t "~%Morphological data read"))
+                     (morph-item-process istream))))))))
 
 
 

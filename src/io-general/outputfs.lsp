@@ -197,16 +197,8 @@
          (incf indentation))))))
 
 (defun make-output-label (real-name)
-   (let* ((real-string (write-to-string real-name))
-	  (real-length (length real-string)))
-      (or (cdr (assoc-if 
-               #'(lambda (test-string)
-                  (let ((test-l (length test-string)))
-                     (and (> real-length test-l)
-                        (string-equal real-string test-string
-                           :start1 (- real-length test-l)))))
-               *feature-abbreviations*))
-         real-string)))
+  ;;; removed feature abbreviation facility - probably never used
+   (write-to-string real-name))
 
 
 (defun def-edit-print-operations (indentation stream)

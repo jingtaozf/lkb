@@ -152,16 +152,27 @@
   (format ostream "~%Parents = ")
   (for parent in parents
        do
-       (let (;; (start-pos (current-position ostream))
-             (val (make-type-thing :value parent)))
-         (clim:with-text-style (ostream '(nil :bold nil))
-	   (clim:with-output-as-presentation 
-	       (ostream val 'type-thing)
-	     (format ostream "~(~A~) " (type-thing-value val))))))
+       (if (listp parent) ;; glbtypes are followed 
+                          ;; by a list of real parents
+           (progn
+             (format ostream "[")
+             (for real-parent in parent
+                  do
+                  (display-actual-parent real-parent ostream))
+             (format ostream "]"))
+         (display-actual-parent parent ostream)))
   (let ((max-width (current-position-x ostream)))
     (format ostream "~%")
     max-width))
 
+(defun display-actual-parent (parent ostream)
+  (let ((val (make-type-thing :value parent)))
+    (clim:with-text-style (ostream '(nil :bold nil))
+      (clim:with-output-as-presentation 
+          (ostream val 'type-thing)
+        (format ostream "~(~A~) " (type-thing-value val))))))
+
+       
 (defun display-active-dpaths (dpath-list ostream)
   (let ((max-width 0))
     (for unif in dpath-list
@@ -200,16 +211,20 @@
 
 (defun try-unify-fs (frame type-thing)
   (let* ((fs2 (frame-dag frame))
-	 (path2 (reverse (type-thing-type-label-list type-thing))))
+	 (path2 (reverse (type-thing-type-label-list type-thing)))
+         (result nil))
     (with-output-to-top ()
-      (unify-paths-with-fail-messages 
-       (create-path-from-feature-list *path1*)
-       *fs1*
-       (create-path-from-feature-list path2)
-       fs2
+      (setf result
+        (unify-paths-with-fail-messages 
+         (create-path-from-feature-list *path1*)
+         *fs1*
+         (create-path-from-feature-list path2)
+         fs2
      ;;; was copied, but shouldn't be necessary
-       :selected1 *path1* :selected2 path2)
-      (terpri))
+         :selected1 *path1* :selected2 path2))
+        (terpri))
+    (when result
+      (display-fs result "Unification result"))
     (setq *fs1* nil)
     (unhighlight-class frame)))
 
@@ -320,11 +335,11 @@
 ;;; ***** pop up menu actions for types ******
 
 (defun shrink-fs-action (window action path)
-  (setq x window)
   (set-dag-display-value (fs-display-record-fs (active-fs-window-fs window))
 			 (reverse path)
 			 action
-			 (fs-display-record-type-fs-display (active-fs-window-fs window)))
+			 (fs-display-record-type-fs-display 
+                          (active-fs-window-fs window)))
   (clim:redisplay-frame-panes window :force-p t))
 
 (defun display-type-comment (type comment-string &optional parent-stream)

@@ -68,14 +68,15 @@
       (and val
          (eq (type-of-fs val) 'intersective_mod))))
 
-
+(eval-when
+ (compile load eval)    
 (proclaim
    '(special *edge-id* *safe-not-to-copy-p* *orth-path* *toptype*
        *start-symbol* *debugging* *substantive-roots-p*
        mrs::*initial-semantics-path* mrs::*psoa-liszt-path*
        mrs::*liszt-first-path* mrs::*liszt-rest-path* mrs::*rel-name-path*
        mrs::*null-semantics-found-items*))
-
+)
 
 ;;; utility functions for initialising and building daughters and leaves
 ;;; fields in active chart edges
@@ -331,7 +332,7 @@
    (let ((sem-fs
             (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
                 mrs::*initial-semantics-path*)))
-      (if (and sem-fs (is-valid-fs sem-fs))
+      (if (and sem-fs (dag-p sem-fs))
          (let ((mrs (mrs::construct-mrs sem-fs nil t)))
             ;; (mrs::output-mrs input-sem 'mrs::simple)
             ;; (mrs::output-mrs mrs 'mrs::simple)
@@ -391,6 +392,7 @@
 ;;; representation of chart
 
 (defun gen-chart-dag-index (dag edge-id)
+  (declare (ignore edge-id))
    (let ((index-dag (existing-dag-at-end-of dag *semantics-index-path*)))
       (if index-dag
          (let ((index (type-of-fs index-dag)))

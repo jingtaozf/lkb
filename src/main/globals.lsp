@@ -14,9 +14,19 @@
 
 (defvar *lkb-params* nil)
 
-(defmacro def-lkb-parameter (var val &optional doc)
+;;; distinguish between user parameters - which can be edited interactively
+;;; - and other parameters, which normally shouldn't be
+
+(defvar *lkb-user-params* nil)
+
+(defvar *user-params-file* nil
+  "file where values of user params are saved")
+
+(defmacro def-lkb-parameter (var val &optional doc type)
   `(progn
-     (pushnew (quote ,var) *lkb-params*)
+     (if (eql ,type :user) 
+         (pushnew (quote ,var) *lkb-user-params*)
+         (pushnew (quote ,var) *lkb-params*))
      (defparameter ,var ,val ,doc)))
 
 
@@ -58,7 +68,8 @@
 
 ;;; Parsing
 
-(def-lkb-parameter *maximum-number-of-edges* 500)
+(def-lkb-parameter *maximum-number-of-edges* 500 
+  "limits the size of the parse chart" :user)
 
 (def-lkb-parameter *chart-limit* 100)
 
@@ -83,9 +94,6 @@
   "These features will not be passed from daughter to mother
    when parsing")
 
-(def-lkb-parameter *bc96lrules* nil)
-
-
 (def-lkb-parameter *check-paths* nil
    "an alist in which the keys are feature paths that often fail -
     these are checked first before attempting unification")
@@ -97,47 +105,37 @@
 
 ;;; Display 
 
-(def-lkb-parameter *display-type-hierarchy-on-load* t)
+(def-lkb-parameter *display-type-hierarchy-on-load* t
+  "controls whether the type hierarchy appears automatically"
+  :user)
 
-(def-lkb-parameter *display-glb-messages* nil
-   "if set, informs user of glbtypes as they are created")
-
-(def-lkb-parameter *settings-options* nil
-  "controls whether user is asked for type display options file")
-
-(def-lkb-parameter *feature-abbreviations* 
-   '(("-first" . "H")
-     ("-last" . "T"))
-   "a list of pairs of strings - if the end of a feature name 
-   matches the first string it is displayed as the 
-   second string in windows.  Used to make lists more readable") 
-   
 (def-lkb-parameter *dont-show-morphology* nil
-  "if set, the morphological structures are not shown in parse trees")
+  "if set, the morphological structures are not shown in parse trees"
+  :user)
 
 (def-lkb-parameter *dont-show-lex-rules* nil
-  "if set, applications of lexical rules are not shown in parse trees")
+  "if set, applications of lexical rules are not shown in parse trees"
+  :user)
 
-(def-lkb-parameter *parse-tree-font-size* 12)
+(def-lkb-parameter *parse-tree-font-size* 12
+  "size of font in parse trees"
+  :user)
 
-(def-lkb-parameter *fs-type-font-size* 12)
+(def-lkb-parameter *fs-type-font-size* 12
+  "size of font in AVMs"
+  :user)
 
-(def-lkb-parameter *fs-title-font-size* 12)
+(def-lkb-parameter *fs-title-font-size* 12
+  "size of font of AVM window titles"
+  :user)
 
-(def-lkb-parameter *type-tree-font-size* 12)
+(def-lkb-parameter *type-tree-font-size* 12
+  "size of font in type hierarchy display"
+  :user)
 
-(def-lkb-parameter *dialog-font-size* 12)
-
-   
-;;; Indexing
-
-
-(def-lkb-parameter *batch-mode* nil
-   "set when indexing, could also be set by the user 
-   to prevent errors in expanding a lexical entry being
-   signalled as continuable errors, rather than written
-   to a file.")
-
+(def-lkb-parameter *dialog-font-size* 12
+  "size of font in dialogs"
+  :user)
 
 ;;; Languages
 ;;; (not very useful in core LKB, maybe remove from here?)
@@ -152,19 +150,10 @@
    where a language has to be selected or specified")
    
 
-;;; Warnings etc
-
-(def-lkb-parameter *warn-of-unary-branches* nil
-   "If set warns of unary branches when type system is loaded")
-
 ;;; YADU
 
-(def-lkb-parameter *lexical-persistence* 'lex
-   "Atom marking lexical persistence of tails")
-
-(def-lkb-parameter *rule-persistence* nil
-   "Atom marking persistence of tails in rules")
-
+(def-lkb-parameter *description-persistence* 'l
+   "Atom marking tails which should be made non-default when a description is exapanded")
 
 ;;; Parse tree node labels
 
@@ -203,4 +192,6 @@
 
 (def-lkb-parameter *lkb-system-version* :page)
 
-(def-lkb-parameter *first-only-p* nil)
+(def-lkb-parameter *first-only-p* nil
+  "if set, only the first parse is produced"
+  :user)

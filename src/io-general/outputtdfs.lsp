@@ -56,14 +56,14 @@
 ;;;
 ;;; the new fs display type 'tail is in outputfs.lsp
 
-;;; *lexical-persistence* is in globals.lsp
+;;; *description-persistence* is in globals.lsp
 
 (defun display-tail (tail-element stream) 
    (format stream "~%")
    (let ((start-pos (current-position stream))
          (pers (tail-element-persistence tail-element))
          (spec (tail-element-spec tail-element)))
-      (unless (equal pers (list *lexical-persistence*))
+      (unless (equal pers (list *description-persistence*))
          (format stream " *"))
       (add-type-and-active-fs-region stream 
          start-pos nil spec nil t)

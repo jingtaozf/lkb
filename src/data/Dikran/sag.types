@@ -76,7 +76,7 @@ word (lex-cat gram-cat).
 
 root-cat (gram-cat)
 < SYN : HEAD > = verb
-< SYN : HEAD : FORM > = (fin imp)
+< SYN : HEAD : FORM > = fin-or-imp
 < SYN : VAL : SPR > = e-list
 < SYN : VAL : COMPS > = e-list
 < SYN : GAP : LST > = < SYN : GAP : LAST >
@@ -329,9 +329,26 @@ v-pred-arg-list (arg-stem)
 
 ;;; types which will need to be augmented for new lexical items.
 
-form-cat (top)
-(OR normal inf fin pres-p past-p imp pass
-    f_tabs f_on f_advantage f_of f_it f_there f_to f_by f_not).
+form-cat (top).
+
+normal (form-cat).
+inf (form-cat).
+pres-p (form-cat).
+past-p (form-cat).
+pass (form-cat).
+fin-or-imp (form-cat).
+fin (fin-or-imp).
+imp (fin-or-imp).
+
+f_tabs (form-cat).
+f_on (form-cat).
+f_advantage (form-cat).
+f_of (form-cat).
+f_it (form-cat).
+f_there (form-cat).
+f_to (form-cat).
+f_by (form-cat).
+f_not (form-cat).
 
 reln-cat (top)
 (OR r_die r_love r_give r_observe r_exploit r_annoy r_continue

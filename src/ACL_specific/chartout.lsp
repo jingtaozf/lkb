@@ -3,6 +3,24 @@
 
 (in-package :user)
 
+;;; want to make sure that a chart window is not left open after
+;;; a new sentence is parsed, since the interactions sometimes
+;;; get confused if there's a window which corresponds to an 
+;;; old parse
+;;; uses globals *main-chart-frame* and *sub-chart-window-frames*
+;;; which are defined in parseout
+
+
+(defun close-existing-chart-windows nil
+  (invalidate-chart-commands)
+  (when *main-chart-frame*
+    (clim:execute-frame-command *main-chart-frame* '(clim-user::com-quit)))
+  (for frame in *sub-chart-window-frames*
+       do
+       (clim:execute-frame-command frame '(clim-user::com-quit)))
+  (setf *main-chart-frame* nil)
+  (setf *sub-chart-window-frames* nil))
+
 (define-lkb-frame chart-window 
   ((root :initform nil
 	 :accessor chart-window-root)
@@ -15,14 +33,15 @@
 
 (defun draw-chart-lattice (node title horizontalp)
   (declare (ignore horizontalp))
-;    (when (get node 'chart-edge-descendents)
-      (let ((chart-window (clim:make-application-frame 'chart-window)))
-        (setf (chart-window-root chart-window) node)
-        (setf (clim:frame-pretty-name chart-window) title)
-        (mp:process-run-function "CHART" 
-                                 #'clim:run-frame-top-level
-                                 chart-window)))
-;)
+  (when *main-chart-frame* 
+    (clim:execute-frame-command *main-chart-frame* '(clim-user::com-quit)))
+  (let ((chart-window (clim:make-application-frame 'chart-window)))
+    (setf *main-chart-frame* chart-window)
+    (setf (chart-window-root chart-window) node)
+    (setf (clim:frame-pretty-name chart-window) title)
+    (mp:process-run-function "CHART" 
+                             #'clim:run-frame-top-level
+                             chart-window)))
 
 (defun draw-chart-window (window stream &key max-width max-height)
   (declare (ignore max-width max-height))
@@ -87,7 +106,9 @@
 			   (or (edge-rule-number edge-rec) ""))
 		  :value rule)))
 	     '(("Highlight nodes" :value highlight))
-	     '(("New chart" :value new))) 
+	     '(("New chart" :value new))
+              (if *fs1*
+                '(("Unify" :value unify))))
      (fs (display-fs (edge-dag edge-rec)
 		     (format nil "Edge ~A ~A - FS" 
 			     (edge-id edge-rec)
@@ -102,10 +123,30 @@
 	       (display-fs (rule-full-fs rule)
 			   (format nil "~A" rule-name)))))
      (highlight (display-edge-in-chart edge-rec))
-     (new (display-edge-in-new-window clim:*application-frame* edge-rec)))))
+     (new (display-edge-in-new-window clim:*application-frame* edge-rec))
+     (unify (try-unify-fs-in-chart (edge-dag edge-rec))))))
 
+(defun try-unify-fs-in-chart (fs)
+  ;;; very similar to the function in activefs
+  (let* ((fs1 *fs1*)
+         (path1 *path1*)
+         (result nil))
+    (when (and fs1 (listp path1))
+      (with-output-to-top ()
+        (setf result
+          (unify-paths-with-fail-messages 
+           (create-path-from-feature-list path1)
+           fs1
+           (create-path-from-feature-list nil)
+           (tdfs-indef fs)
+           :selected1 path1 :selected2 nil))
+        (terpri))
+      (when result
+        (display-fs result "Unification result")))
+    (setq *fs1* nil)))            
+             
 ;; called from display-parse-tree - when it is called to display an edge find
-;; topmost chart window on screen, and ask for type hierarchy window to be
+;; topmost chart window on screen, and ask for chart window to be
 ;; scrolled so given edge is visible in center, and the edge highlighted
 
 (defun display-edge-in-chart (edge)
@@ -146,10 +187,11 @@
 
 (defun display-edge-in-new-window (frame edge)
   (if edge
-      (draw-chart-lattice
-       (filtered-chart-lattice (chart-window-root frame) edge nil)
-       (string (gentemp (format nil "~A-" (clim:frame-pretty-name frame))))
-       t)
+      (progn (push frame *sub-chart-window-frames*)
+             (draw-chart-lattice
+              (filtered-chart-lattice (chart-window-root frame) edge nil)
+              (string (gentemp (format nil "~A-" (clim:frame-pretty-name frame))))
+              t))
     (lkb-beep)))
 
 ;;; -----------------------------------------------------------------

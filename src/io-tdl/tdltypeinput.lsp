@@ -65,6 +65,8 @@
   (read-tdl-type-files-aux (list file-name) settings-file))
 
 (defun read-tdl-type-files-aux (file-names &optional settings-file)
+  (when settings-file
+    (setf *display-settings-file* settings-file))
    (setf *type-file-list* file-names)
    (clear-types)
    (setf *tdl-status-info* nil)
@@ -73,40 +75,55 @@
    (let ((*readtable* (make-tdl-break-table)))
       (for file-name in file-names
          do
-         (format t "~%Reading in type file ~A" file-name)
+         (format t "~%Reading in type file ~A" (pathname-name file-name))
          (force-output t)
          (with-open-file 
             (istream file-name :direction :input)
             (read-tdl-type-stream istream)))) 
    ;; check-type-table is in checktypes.lsp           
-   (when (check-type-table) 
-      (canonicalise-feature-order)
-      (when settings-file
-         (set-up-display-settings settings-file))           
-      (set-up-type-interactions)
-      t))
+   (if *syntax-error*
+       (progn (setf *syntax-error* nil)
+              (cerror "Cancel load" "Syntax error(s) in type file")
+              nil)
+     (let ((ok 
+            (when (check-type-table) 
+              (canonicalise-feature-order)
+              (when (and settings-file (probe-file settings-file))
+                (set-up-display-settings settings-file))
+              (set-up-type-interactions)
+              t)))
+       (unless ok (cerror "Continue loading script anyway" 
+        "Problems in type file")))))
 
 (defun read-tdl-leaf-type-file-aux (file-name)
+  (pushnew file-name *leaf-type-file-list* :test #'equal)
   (let ((*readtable* (make-tdl-break-table))
         (*leaf-type-addition* t))
       (with-open-file 
          (istream file-name :direction :input)
-         (format t "~%Reading in leaf type file")
+        (format t "~%Reading in leaf type file ~A" 
+                (pathname-name file-name))
          (read-tdl-type-stream istream))))
 
 (defun read-tdl-patch-files-aux (file-names)
     (let ((*readtable* (make-tdl-break-table)))
       (for file-name in file-names
          do
-         (format t "~%Reading in type file ~A" file-name)
+         (format t "~%Reading in type file ~A" 
+                 (pathname-name file-name))
          (with-open-file 
             (istream file-name :direction :input)
             (read-tdl-type-stream istream t)))) 
     ;; check-type-table is in checktypes.lsp 
-   (when (patch-type-table) 
-      (canonicalise-feature-order)           
-      (set-up-type-interactions)
-      t))    
+    (if *syntax-error*
+      ;;; also set if cannot patch because of changes to hierarchy
+      (progn (setf *syntax-error* nil)
+             (cerror "Cancel load" "Syntax error(s) in type file")
+             nil)
+      (when (patch-type-table) 
+        (canonicalise-feature-order)           
+        (set-up-type-interactions)
+        t)) )   
 
 
 ;;; main functions
@@ -122,23 +139,34 @@
                  (read-tdl-declaration istream))
                ; declarations like :begin :type
                ((eql next-char #\#) (read-tdl-comment istream))
-               (t (read-tdl-type-entry istream augment))))))
+               (t (catch 'syntax-error
+                    (read-tdl-type-entry istream augment)))))))
 
 (defun read-tdl-comment (istream)
-  (read-char istream)
-  (check-for #\| istream "no context")
-  (loop 
-   (let ((new-char (peek-char #\| istream nil 'eof)))
-     (when (eql new-char 'eof)
-       (error "File ended in middle of comment"))
-     (read-char istream)
-     (setf new-char (peek-char t istream nil 'eof))
-     (when (eql new-char 'eof)
-       (error "File ended in middle of comment"))
-     (when (eql new-char #\#)
-       (read-char istream)
-       (return))
-     (read-char istream))))
+  (let ((start-position (file-position istream)))
+    ;; record this in case the comment isn't closed
+    (read-char istream)
+    (check-for #\| istream "no context")
+    (loop 
+      (let ((new-char (peek-char #\| istream nil 'eof)))
+        (when (eql new-char 'eof)
+          (lkb-read-cerror 
+           istream 
+           "File ended in middle of comment (comment start at ~A)" 
+           start-position)
+          (return))
+        (read-char istream)
+        (setf new-char (peek-char t istream nil 'eof))
+        (when (eql new-char 'eof)
+          (lkb-read-cerror 
+           istream 
+           "File ended in middle of comment (comment start at ~A)" 
+           start-position)
+          (return))
+        (when (eql new-char #\#)
+          (read-char istream)
+          (return))
+        (read-char istream)))))
 
 (defun read-tdl-declaration (istream)
   (read-char istream)
@@ -172,11 +200,15 @@
 	 (name (lkb-read istream nil))
 	 (next-char (peek-char t istream nil 'eof)))
     (when (and (symbolp name) (eql (schar (symbol-name name) 0) #\%))
-      (error "Illegal type name ~A - names starting with '%' are reserved ~
-                 for instance types" name))
+      (lkb-read-cerror istream 
+       "Illegal type name ~A - names starting with '%' are reserved ~
+                 for instance types" name)
+      (ignore-rest-of-entry istream name))
     (pushnew name *ordered-type-list*)    
     (unless (eql next-char #\:)
-      (error "~%Incorrect syntax following type name ~A" name))
+      (lkb-read-cerror istream
+                       "~%Incorrect syntax following type name ~A" name)
+      (ignore-rest-of-entry istream name))
     #+allegro (record-source name istream position)
     (read-char istream)
     (let ((next-char2 (peek-char t istream nil 'eof)))
@@ -189,14 +221,18 @@
          (read-char istream)
          (read-tdl-subtype-def istream name augment)
          (check-for #\. istream name))
-        (t (error "~%Syntax error following type name ~A" name))))))
+        (t (lkb-read-cerror istream
+            "~%Syntax error following type name ~A" name)
+           (ignore-rest-of-entry istream name))))))
 
 
 (defun read-tdl-subtype-def (istream name &optional augment)
 ;;; Subtype-def ->  :< type 
      (let* ((parent (lkb-read istream nil)))
        (if augment
-         (amend-type-from-file name (list parent) nil nil nil)
+;         (unless
+           (amend-type-from-file name (list parent) nil nil nil)
+;           (setf *syntax-error* t))
          (add-type-from-file name (list parent) nil nil nil))
        (let ((next-char (peek-char t istream nil 'eof)))
          (unless (eql next-char #\.)
@@ -232,7 +268,7 @@
                     (if entry
                         (push (cadr unif) (cdr entry))
                       (push unif def-alist))))
-                 (t (error "~%Unexpected unif in ~A" name))))
+                 (t (error "~%Program error: unexpected unif in ~A" name))))
       (dolist (coref (make-tdl-coreference-conditions 
                       *tdl-coreference-table* nil))
         (push coref constraint))
@@ -243,7 +279,9 @@
               (push (cadr coref) (cdr entry))
             (push coref def-alist))))
       (if augment
+;        (unless
           (amend-type-from-file name parents constraint def-alist nil)
+;          (setf *syntax-error* t))
         (add-type-from-file name parents constraint def-alist nil))
       (let ((next-char (peek-char t istream nil 'eof)))
         (unless (eql next-char #\.)
@@ -313,11 +351,18 @@
 (defun read-tdl-defterm (istream name path-so-far in-default-p)
 ;;; DefTerm -> Term | Term / Term | / Term  
   (let ((next-char (peek-char t istream nil 'eof)))
-    (cond ((eql next-char 'eof) (error "Unexpected eof when reading ~A" name))
-          ((eql next-char #\.) (error "Missing term when reading ~A" name))
+    (cond ((eql next-char 'eof) 
+           (lkb-read-cerror istream 
+                            "Unexpected eof when reading ~A" name)
+           (ignore-rest-of-entry istream name))
+          ((eql next-char #\.) 
+           (lkb-read-cerror istream "Missing term when reading ~A" name)
+           (ignore-rest-of-entry istream name))
           ((eql next-char #\/)
            (when in-default-p
-             (error "Double defaults when reading ~A" name))
+             (lkb-read-cerror istream
+                              "Double defaults when reading ~A" name)
+             (ignore-rest-of-entry istream name))
            (check-for #\/ istream name)
            (let ((persist (lkb-read istream t)))
              (read-tdl-term istream name path-so-far persist)))
@@ -325,10 +370,16 @@
            (let ((res1 (read-tdl-term istream name path-so-far nil))
                  (next-char2 (peek-char t istream nil 'eof)))
                (cond ((eql next-char2 'eof) 
-                      (error "Unexpected eof when reading ~A" name))
+                      (lkb-read-cerror istream
+                                       "Unexpected eof when reading ~A" name)
+                      (ignore-rest-of-entry istream name))
                      ((eql next-char2 #\/)
                       (when in-default-p
-                        (error "Double defaults when reading ~A" name))
+                        (lkb-read-cerror 
+                         istream 
+                         "Double defaults when reading ~A" 
+                         name)
+                        (ignore-rest-of-entry istream name))
                       (check-for #\/ istream name) 
                       (let ((persist (lkb-read istream t)))
                         (append res1
@@ -348,8 +399,14 @@
   ;;; Expanded-syntax    - ^ - not valid in type files (see below)
   ;;; Type               - anything else - returns a list of one path=type unif
   (let ((next-char (peek-char t istream nil 'eof)))
-    (cond ((eql next-char 'eof) (error "Unexpected eof when reading ~A" name))
-          ((eql next-char #\.) (error "Missing term when reading ~A" name))
+    (cond ((eql next-char 'eof) 
+           (lkb-read-cerror istream
+                            "Unexpected eof when reading ~A" name)
+           (ignore-rest-of-entry istream name))
+          ((eql next-char #\.) 
+           (lkb-read-cerror istream 
+                            "Missing term when reading ~A" name)
+           (ignore-rest-of-entry istream name))
           ((eql next-char #\[) 
            (read-tdl-feature-term istream name path-so-far in-default-p))
           ((eql next-char #\<) 
@@ -366,9 +423,11 @@
            (if *tdl-expanded-syntax-function*
                (apply *tdl-expanded-syntax-function*
                       (list istream name path-so-far in-default-p))
-             (progn (cerror "~%Treat as type" 
-                            "~% ^ syntax used without expanded-syntax-function")
-                    (read-tdl-type istream name path-so-far in-default-p))))             
+             (progn (lkb-read-cerror 
+                     istream 
+                     "^ syntax used without expanded-syntax-function")
+                    (format t "~%Treating as type")
+                    (read-tdl-type istream name path-so-far in-default-p))))
   ;;; AAC - April 1998
   ;;; The idea is to allow the TDL reading code to be specialized
   ;;; for different applications by allowing the appropriate function to
@@ -380,7 +439,8 @@
   ;;; The idea is to allow the TDL reading code to be specialized
   ;;; for different applications by allowing this function to
   ;;; be redefined
-  (cerror "~%Treat as type" "~% ^ syntax not allowed in type files")
+  (lkb-read-cerror istream "^ syntax not allowed in type files")
+  (format t "~%Treating as type")
   (read-tdl-type istream name path-so-far in-default-p))
 
 
@@ -388,8 +448,13 @@
 ;;; Feature-term -> [] | [ Attr-val {, Attr-val}* ]
   (check-for #\[ istream name)
   (let ((next-char (peek-char t istream nil 'eof)))
-    (cond ((eql next-char 'eof) (error "Unexpected eof when reading ~A" name))
-          ((eql next-char #\.) (error "Missing attribute when reading ~A" name))
+    (cond ((eql next-char 'eof) 
+           (lkb-read-cerror istream "Unexpected eof when reading ~A" name)
+           (ignore-rest-of-entry istream name))
+          ((eql next-char #\.) 
+           (lkb-read-cerror istream 
+                            "Missing attribute when reading ~A" name)
+           (ignore-rest-of-entry istream name))
           ((eql next-char #\]) 
            (let ((res
                   (list (make-tdl-path-value-unif 
@@ -434,7 +499,9 @@
   (check-for #\< istream name)
   (let ((next-char (peek-char t istream nil 'eof))
         (constraints nil))
-    (cond ((eql next-char 'eof) (error "Unexpected eof when reading ~A" name))
+    (cond ((eql next-char 'eof) 
+           (lkb-read-cerror istream "Unexpected eof when reading ~A" name)
+           (ignore-rest-of-entry istream name))
           ((eql next-char #\!) 
            (read-char istream)
            (setf constraints 
@@ -500,7 +567,10 @@
                     (check-for #\. istream name)
                     (check-for #\. istream name)
                     (unless (eql (peek-char t istream nil 'eof) #\>)
-                      (error "Invalid syntax following ... in ~A~%" name))
+                      (lkb-read-cerror 
+                       istream
+                       "Invalid syntax following ... in ~A~%" name)
+                      (ignore-rest-of-entry istream name))
                     (push (make-tdl-path-value-unif (reverse new-path)
                                                     *list-type* in-default-p)
                           constraints))
@@ -564,7 +634,10 @@
   (read-char istream) ; get rid of the hash
   (let ((corefindex (read istream nil 'end-of-file)))
     (when (eql corefindex 'end-of-file) 
-      (error "Unexpected end of file when processing ~A" name))
+      (lkb-read-cerror 
+       istream 
+       "Unexpected end of file when processing ~A" name)
+      (ignore-rest-of-entry istream name))
     (unless (symbolp corefindex)
       (setf corefindex (convert-to-lkb-symbol corefindex)))
     (let ((true-path (reverse path-so-far)))
@@ -655,15 +728,19 @@
 ;;; Templ-par -> $templ-var | $templ-var = conjunction
   (read-char istream) ; get rid of the @
   (let ((templ-name (read istream nil 'end-of-file)))
-    (when (eql templ-name 'end-of-file) 
-      (error "Unexpected end of file when processing ~A" name))
+    (when (eql templ-name 'end-of-file)
+      (lkb-read-cerror istream
+       "Unexpected end of file when processing ~A" name)
+      (ignore-rest-of-entry istream name))
     (unless (symbolp templ-name) 
       (setf templ-name (convert-to-lkb-symbol templ-name))) 
     (let ((template-entry (find templ-name *tdl-templates*
                                 :key #'tdl-templ-name)))
       (unless template-entry 
-        (error "Unknown template ~A used in ~A" templ-name
-               name))
+        (lkb-read-cerror istream 
+         "Unknown template ~A used in ~A" templ-name
+         name)
+        (ignore-rest-of-entry istream name))        
       (check-for #\( istream name)
       (let ((next-char (peek-char t istream nil 'eof))
             (constraints (get-tdl-template-constraints 
@@ -700,17 +777,22 @@
   (check-for #\$ istream name)
   (let* ((par-name (read istream nil 'end-of-file))
          (par-value 
-          (find (if (symbolp par-name) par-name (convert-to-lkb-symbol par-name)) 
+          (find (if (symbolp par-name) 
+                    par-name 
+                  (convert-to-lkb-symbol par-name)) 
                 (tdl-templ-parameters template-entry)
                 :key #'tdl-templ-parameter-name)))
     (unless par-value 
-               (error "Unknown parameter ~A used in ~A" par-name
-                      name))
+      (lkb-read-cerror istream 
+       "Unknown parameter ~A used in ~A" par-name
+       name)
+      (ignore-rest-of-entry istream name))
     (check-for #\= istream name)
-    (read-tdl-conjunction istream name 
-                          (append (reverse (tdl-templ-parameter-path par-value))
-                                  path-so-far)
-                          in-default-p)))
+    (read-tdl-conjunction 
+     istream name 
+     (append (reverse (tdl-templ-parameter-path par-value))
+             path-so-far)
+     in-default-p)))
      
              
 

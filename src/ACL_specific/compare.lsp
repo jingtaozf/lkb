@@ -266,7 +266,10 @@
     (with-open-file (stream *preference-file* 
 		     :direction :output :if-exists :append
 		     :if-does-not-exist :create)
-      (write (list timestamp (system:user-name) sentence result)
+      (write (list timestamp 
+                   #+:allegro-v5.0 (system:user-name)
+                   #-:allegro-v5.0 (system:getenv "USER")
+                   sentence result)
 	     :stream stream)
       (write-char #\lf stream))))
 

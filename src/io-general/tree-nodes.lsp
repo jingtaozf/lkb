@@ -61,13 +61,16 @@
 ;;; parse output functions which are not dialect specific
 
 (defun show-parse nil
-   (if *parse-record*
-       (progn 
+  (if *parse-record*
+       #+:allegro(show-parse-tree-frame *parse-record*)
+       #-:allegro(progn 
          (for edge in *parse-record*
               do
               (display-parse-tree edge nil))
          (when (fboundp 'mrs::output-mrs-after-parse)
            (funcall 'mrs::output-mrs-after-parse *parse-record*)))
+       ;;; replace old tree display with new frame in ACL
+       ;;; need to replicate in MCL
      (progn
        (lkb-beep)
        (format t "~%No parses found"))))

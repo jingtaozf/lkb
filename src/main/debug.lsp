@@ -17,20 +17,17 @@
                   (format t "~%~A: ~A is redundant - it is an ancestor of ~A " type parent2
                           parent)))))))
 
-(defun check-partitions (type)
-  (let* ((type-entry (get-type-entry type))
-         (daughters (type-daughters type-entry)))
-    (when daughters
-      (let*
-        ((ancestors (type-ancestors type-entry))
-         (descendants (type-descendants type-entry))
-         (lineage (cons type (append ancestors descendants))))
-        (for descendant in descendants
-             do
-             (let ((desc-entry (get-type-entry descendant)))
-               (unless (subsetp (type-ancestors desc-entry)
-                                lineage)
-                 (format t "~A " descendant))))))))
+(defun get-ancestors (type-entry)
+  ;;; general function - returns list
+  ;;; of types not entries - should be fairly safe, but slow
+   (let ((parents (type-parents type-entry)))
+      (if parents
+         (union parents
+            (reduce #'union
+                    (mapcar #'(lambda (parent)
+                                (let ((parent-entry (get-type-entry parent)))
+                                    (get-ancestors parent-entry)))
+                            parents))))))
 
 
 (defun debug-constraint (node)

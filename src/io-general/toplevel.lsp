@@ -27,12 +27,7 @@
 (defun read-script-file nil
   (let ((file-name 
          (ask-user-for-existing-pathname "Script file?")))
-    (when file-name
-      (clear-grammar)              ;; should clear everything that might not be
-      (clear-lex-rules)            ;; overridden, this should do for now    
-      (setf  *check-paths* nil)    
-      (load file-name))))
-
+    (read-script-file-aux file-name)))
 
 ;;; "View"
 ;;;
@@ -58,11 +53,16 @@
 
 (defun show-type-spec-aux (type type-entry)
    (let ((*type-fs-display* t))
-      (display-fs-and-parents (type-local-constraint type-entry) 
-         (format nil "~(~A~) - definition" type)
-         (type-parents type-entry))))
-
-
+     (display-fs-and-parents 
+      (type-local-constraint type-entry) 
+      (format nil "~(~A~) - definition" type)
+      (for parent in (type-parents type-entry)
+           append
+           (let ((parent-entry (get-type-entry parent)))
+             (if (type-glbp parent-entry)
+                 (list parent (remove-duplicates (get-real-types parent)))
+               (list parent)))))))
+           
 ;;; "Expanded type" show-type                  
 (defun show-type nil
   (let* ((type (ask-user-for-type))
@@ -287,11 +287,23 @@
                   (try-all-lexical-rules 
                      (list (cons nil lex-entry-fs)))))
             (cond (result-list
-                  (for result-pair in result-list
-                     do
-                     (display-fs (cdr result-pair)
-                        (format nil "~(~A~) ~{+ ~A~}" 
-                           lex (reverse (car result-pair))))))
+                   (draw-active-list
+                    (mapcar #'(lambda (result-pair)
+                                (let ((string 
+                                       (format nil "~(~A~) ~{+ ~A~}" 
+                                               lex 
+                                               (reverse 
+                                                (car result-pair)))))
+                                  (cons string (cons string
+                                                     (cdr result-pair)))))
+                            result-list)
+                    "Lexical rule results"
+                    (list
+                         (cons 
+                          "Feature structure"
+                          #'(lambda (display-pair)
+                              (display-fs (cdr display-pair)
+                                          (car display-pair)))))))
                (t (format t 
                      "~%No applicable lexical rules")))))))
 
@@ -310,15 +322,18 @@
   (let* ((sentence 
             (ask-for-strings-movable "Current Interaction" 
                `(("Sentence" . ,(cons :typein-menu *last-parses*))) 400)))
-      (when sentence
-         (let ((str (string-trim '(#\space #\tab #\newline) (car sentence))))
-            (setq *last-parses* 
-               (butlast
-                  (cons str (remove str *last-parses* :test #'equal))
-                  (max 0 (- (length *last-parses*) 12)))) ; limit number of sentences retained
-            (parse
-               (split-into-words 
-                  (preprocess-sentence-string str)))))))   
+    (when sentence
+      (close-existing-chart-windows)
+      (let ((str (string-trim '(#\space #\tab #\newline) (car sentence))))
+        (setq *last-parses* 
+          (butlast
+           (cons str (remove str *last-parses* :test #'equal))
+           (max 0 (- (length *last-parses*) 12))))
+                                        ; limit number of sentences retained
+        (parse
+         (split-into-words 
+          (preprocess-sentence-string str)))))))
+
 
 ;;; "Generate"
 ;;;
@@ -437,7 +452,7 @@
 ;;
 
 (defun get-parameters ()
-  (setq *lkb-params* (sort *lkb-params* #'string<))
+  (setq *lkb-user-params* (sort *lkb-user-params* #'string<))
   (let* ((*print-readably* t)
 	 (params (mapcan #'(lambda (p)
 			     ;; Skip things we won't be able to read back in
@@ -446,24 +461,43 @@
 				  (cons (string p) 
 					(write-to-string (symbol-value p))))
 			       (print-not-readable () nil)))
-			 *lkb-params*))
+			 *lkb-user-params*))
 	 (result (ask-for-strings-movable "Set options" params)))
     (when result
       (loop for p in params
 	  for r in result
 	  do (setf (symbol-value (read-from-string (car p)))
-	       (read-from-string r))))))
+	       (read-from-string r))))
+    (unless *user-params-file*
+      (setf *user-params-file* 
+        (ask-user-for-new-pathname "File to save parameters?")))
+    (when *user-params-file*
+      (with-open-file
+          (ostream *user-params-file* :direction :output
+           :if-exists :supersede)
+        (format ostream ";;; Automatically generated file - do not edit!")
+        (loop for p in params
+            for r in result
+            do
+              (format ostream "~%(defparameter ~A ~A)"
+                      (read-from-string (car p))
+                      (read-from-string r)))))))
 
 ;;
 ;; Save and load shrunk paths in display settings file
 ;;
 
+(defvar *display-settings-file* nil)
+
 (defun output-display-settings nil
-  (let ((filename (ask-user-for-new-pathname 
-                   "Save type display settings to?")))
+  (let ((filename
+         (or *display-settings-file*
+             (ask-user-for-new-pathname 
+              "Save type display settings to?"))))
     (when filename
       (unmark-type-table)
-      (with-open-file (stream filename :direction :output)
+      (with-open-file (stream filename :direction :output 
+                       :if-exists :supersede)
         (output-type-display *toptype* stream))
       (unmark-type-table))))
 
@@ -486,4 +520,5 @@
    (let ((filename (ask-user-for-existing-pathname 
                     "Load type display settings from?")))
      (when filename
+       (setf *display-settings-file* filename)
        (set-up-display-settings filename))))

@@ -13,32 +13,38 @@
 ;;; are basically concerned with handling the structures appropriately
 ;;; rather than reading them in
 
-; *ordered-rule-list* is in io-paths/ruleinput
+; *ordered-rule-list* is in main/rules.lsp
 
-(defun read-tdl-grammar-file-aux (file-name ovwr)
+(defun read-tdl-grammar-file-aux (file-name &optional ovwr)
+  (if ovwr 
+    (setf *grammar-rule-file-list* (list file-name))
+    (pushnew file-name *grammar-rule-file-list* :test #'equal))
   (setf *ordered-rule-list* nil)
    (when ovwr
       (clear-grammar))
-   (read-tdl-lex-or-grammar-rule-file file-name nil)
-   (format t "~%Grammar rule file read"))
+   (read-tdl-lex-or-grammar-rule-file file-name nil))
 
-; *ordered-lrule-list* is in io-paths
+; *ordered-lrule-list* is in main/rules.lsp
 
-(defun read-tdl-lex-rule-file-aux (file-name ovwr)
+(defun read-tdl-lex-rule-file-aux (file-name &optional ovwr)
+  (if ovwr 
+    (setf *lexical-rule-file-list* (list file-name))
+    (pushnew file-name *lexical-rule-file-list* :test #'equal))
   (setf *ordered-rule-list* nil)
   (when (fboundp 'reset-cached-lex-entries)
    (funcall 'reset-cached-lex-entries)) ; in constraints.lsp  
   (when ovwr (clear-lex-rules) )    
-  (read-tdl-lex-or-grammar-rule-file file-name t)
-  (format t "~%Lexical rule file read"))   
+  (read-tdl-lex-or-grammar-rule-file file-name t))   
       
 (defun read-tdl-lex-or-grammar-rule-file (file-name lexical)
    (let ((*readtable*
             (make-tdl-break-table)))
       (with-open-file 
          (istream file-name :direction :input)
-         (format t "~%Reading in ~Arules" (if lexical "lexical " ""))
-         (read-tdl-rule-stream istream lexical))))
+        (format t "~%Reading in ~Arules file ~A" 
+                (if lexical "lexical " "")
+                (pathname-name file-name))
+        (read-tdl-rule-stream istream lexical))))
 
 
 (defun read-tdl-rule-stream (istream lexical) 
@@ -55,21 +61,28 @@
                  (read-tdl-declaration istream))
                ; declarations like :begin :type
                ((eql next-char #\#) (read-tdl-comment istream))
-               (t (read-tdl-rule-entry istream lexical))))))
+               (t 
+                (catch 'syntax-error
+                  (read-tdl-rule-entry istream lexical)))))))
 
 
 (defun read-tdl-rule-entry (istream lexical)
   (let* ((position (1+ (file-position istream)))
 	 (id (lkb-read istream nil))
-	 (entry (make-rule :id id))
 	 (next-char (peek-char t istream nil 'eof)))
-     (unless (eql next-char #\:)
-       (error "~%Incorrect syntax following rule name ~A" id))
+    (unless (eql next-char #\:)
+      (lkb-read-cerror 
+       istream 
+       "~%Incorrect syntax following rule name ~A" id)
+      (ignore-rest-of-entry istream id))
      #+allegro (record-source id istream position)
      (read-char istream)
      (let ((next-char2 (peek-char t istream nil 'eof)))
        (unless (eql next-char2 #\=)
-            (error "~%Incorrect syntax following rule name ~A" id))   
+         (lkb-read-cerror 
+          istream 
+          "~%Incorrect syntax following rule name ~A" id)
+         (ignore-rest-of-entry istream id))
        (read-char istream)
        (let ((next-char3 (peek-char t istream nil 'eof)))
          (when (eql next-char3 #\%)
@@ -78,11 +91,4 @@
          (multiple-value-bind (non-def def)
              (read-tdl-lex-avm-def istream id)
            (check-for #\. istream id)
-           (process-unif-list id non-def def entry *rule-persistence*)
-           (when (rule-full-fs entry)
-	     (setf (rule-unifications entry) (cons non-def def))
-             (if lexical
-                 (progn (pushnew id *ordered-lrule-list*)
-                        (add-lexical-rule id entry))
-               (progn (pushnew id *ordered-rule-list*)
-                      (add-grammar-rule id entry)))))))))
+           (add-grammar-rule id non-def def *description-persistence* lexical))))))

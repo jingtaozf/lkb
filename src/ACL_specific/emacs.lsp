@@ -24,10 +24,11 @@
 
 (defun redefine-type (definition)
   (let ((*readtable* (make-tdl-break-table))
-	(*standard-output* clim-user::*lkb-top-stream*))
+	#-:tty(*standard-output* clim-user::*lkb-top-stream*))
     (with-input-from-string (istream definition)
       (read-tdl-type-stream istream t)))
-  (let ((*standard-output* clim-user:*lkb-top-stream*))
+  (let ((*standard-output* #-:tty clim-user:*lkb-top-stream*
+                           #+:tty *standard-output*))
     (when (patch-type-table) 
       (canonicalise-feature-order)           
       (set-up-type-interactions)

@@ -659,7 +659,8 @@
    (highlight-current-fs-node-any-window)
    (setf *selected-fs-node*
       (make-selected-fs-node
-         :pane pane :record current-fs-field :fs (pane-toplevel-dag pane) :path path))
+       :pane pane :record current-fs-field 
+       :fs (pane-toplevel-dag pane) :path path))
    ;; make new highlighting appear
    (highlight-current-fs-node-any-window))
 
@@ -669,13 +670,16 @@
    (let* ((sel1 *selected-fs-node*)
           (path1 (selected-fs-node-path sel1)))
       (when (listp path1)
+        (let ((result 
          (unify-paths-with-fail-messages 
             (create-path-from-feature-list path1)
             (selected-fs-node-fs sel1)
             (create-path-from-feature-list path2)
             (pane-toplevel-dag pane)
-            :selected1 path1 :selected2 path2)
-         (terpri)
+            :selected1 path1 :selected2 path2)))
+          (terpri)
+         (when result
+            (display-fs result "Unification result")))
          (highlight-current-fs-node-any-window)
          (setq *selected-fs-node* nil))))
 

@@ -4,15 +4,14 @@
 (eval-when 
     (compile load eval)
   (shadowing-import '(cl-user::read-script-file
+                      cl-user::reload-script-file
                       cl-user::read-type-patch-files
-                      cl-user::read-type-file 
-		      cl-user::read-type-files 
-		      cl-user::read-lex-file
-		      cl-user::read-grammar-file 
-		      cl-user::read-lex-rule-file
-		      cl-user::read-morph-file
-                      cl-user::read-psort-file 
-		      cl-user::read-parse-nodes-file
+                      cl-user::reload-leaf-files
+                      cl-user::reload-lex-files
+                      cl-user::reload-grammar-rules
+                      cl-user::reload-lexical-rules
+                      cl-user::reload-template-files
+                      cl-user::reload-psort-files
 		      ;; view
 		      cl-user::show-type-tree
 		      cl-user::show-type-spec 
@@ -64,8 +63,15 @@
    (setf *lkb-menu*
    (make-instance 'menu :menu-title "Lkb" :menu-items
                   (list
-                   (make-menu-item :name "Load grammar..."
-                                   :value 'read-script-file :available-p t)
+                   (make-lkb-submenu-item :menu-title "Load"
+                                          :menu-items
+                                          (list
+                                           (make-menu-item :name "Load grammar..."
+                                                           :value 'read-script-file 
+                                                           :available-p t)
+                                           (make-menu-item :name "Reload grammar"
+                                                           :value 'reload-script-file 
+                                                           :available-p nil)))
                    (make-lkb-submenu-item :menu-title "View"
                                           :menu-items
                                           (list 
@@ -110,8 +116,6 @@
                                                            :value 'apply-lex)
                                            (make-menu-item :name "Apply all lex rules..."
                                                            :value 'apply-lex-rules)
-                                           (make-menu-item :name "Unification check..."
-                                                           :value 'interactive-unification-check)
                                            )
                                           :available-p nil) 
                    (make-lkb-submenu-item :menu-title "Debug"
@@ -145,25 +149,25 @@
                   (list 
                      (make-menu-item :name "Complete grammar..."
                                      :value 'read-script-file :available-p t)
-                     (make-menu-item :name "Patch type files"
-                                     :value 'read-type-patch-files 
+                     (make-menu-item :name "Reload grammar"
+                                     :value 'reload-script-file 
                                      :available-p nil)
-                     (make-menu-item :name "Type file..."
-                        :value 'read-type-file :available-p t)
-                     (make-menu-item :name "Type files..."
-                        :value 'read-type-files :available-p t)
-                     (make-menu-item :name "Lexicon file..."
-                        :value 'read-lex-file :available-p nil)
-                     (make-menu-item :name "Grammar rule file..."
-                        :value 'read-grammar-file :available-p nil)
-                     (make-menu-item :name "Lexical rule file..."
-                        :value 'read-lex-rule-file :available-p nil)
-                     (make-menu-item :name "Morphology file..."
-                        :value 'read-morph-file :available-p nil)
-                     (make-menu-item :name "Root definition file..."
-                        :value 'read-psorts-file :available-p nil)
-                     (make-menu-item :name "Node name file..."
-                        :value 'read-parse-nodes-file :available-p nil)
+                     (make-menu-item :name "Reload constraints"
+                                     :value 'read-type-patch-files
+                                     :available-p nil)
+                     (make-menu-item :name "Reload leaf types"
+                                     :value 'reload-leaf-files
+                                     :available-p nil)
+                     (make-menu-item :name "Reload lexicon"
+                        :value 'reload-lex-files :available-p nil)
+                     (make-menu-item :name "Reload grammar rules"
+                        :value 'reload-grammar-rules :available-p nil)
+                     (make-menu-item :name "Reload lexical rules"
+                        :value 'reload-lexical-rules :available-p nil)
+                     (make-menu-item :name "Reload tree nodes"
+                        :value 'reload-template-files :available-p nil)
+                     (make-menu-item :name "Reload other instances"
+                        :value 'reload-psort-files :available-p nil)
                      )
                   :available-p t)
          (make-lkb-submenu-item :menu-title "View"
@@ -228,8 +232,6 @@
                         :value 'apply-lex)
                      (make-menu-item :name "Apply all lex rules..."
                         :value 'apply-lex-rules)
-                     (make-menu-item :name "Unification check..."
-                        :value 'interactive-unification-check)
                      )
                :available-p nil)           
             (make-menu-item :name "Tidy up"

@@ -830,7 +830,8 @@
 
 ;;; Parsing sentences from file
 
-(defun parse-sentences (&optional input-file parse-file result-file run-file)
+(defun parse-sentences (&optional input-file parse-file run-file result-file)
+  (declare (ignore run-file result-file))
    (unless input-file 
       (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
    (when

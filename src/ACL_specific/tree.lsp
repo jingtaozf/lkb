@@ -38,10 +38,19 @@
   (type-entry nil)			; type record for node
   (children nil))
 
-;; Close function - should be as in MCL version
+;; Close function
+
+(defvar *type-hierarchy-frames* nil)
+
+;;; frames are pushed on to this list when created
+;;; by display-type-hierarchy.  Would be tidier if they were
+;;; removed by the quit function, but doesn't seem to be necessary
 
 (defun close-existing-type-hierarchy-trees nil
-  nil)
+  (for frame in *type-hierarchy-frames*
+       do
+       (clim:execute-frame-command frame '(clim-user::com-quit)))
+  (setf *type-hierarchy-frames* nil))
 
 ;;
 ;; Open a type-hierarchy-window
@@ -133,6 +142,7 @@
         (clim:redisplay-frame-panes existing :force-p t))
     (progn
       (let ((thframe (clim:make-application-frame 'type-hierarchy)))
+        (push thframe *type-hierarchy-frames*)
         (setf (type-hierarchy-nodes thframe) node)
 	(setf (type-hierarchy-show-all-p thframe) show-all-p)
         (mp:process-run-function "Type Hierarchy" 

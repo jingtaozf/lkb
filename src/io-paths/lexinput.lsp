@@ -27,7 +27,19 @@
 (defparameter *category-display-templates* nil
   "used in parseout.lsp")
 
-(defparameter *ordered-lex-list* nil)
+(defvar *ordered-lex-list* nil)
+
+(defvar *lex-file-list* nil)
+
+(defvar *template-file-list* nil)
+
+(defvar *psort-file-list* nil)
+
+(defun clear-lex-load-files nil
+  (setf *lex-file-list* nil)
+  (setf *template-file-list* nil)
+  (setf *psort-file-list* nil))
+ 
 
 (defun read-lex-file nil
   ; we assume this will only be called by a user
@@ -49,8 +61,52 @@
          (read-tdl-lex-file-aux file-name overwrite-p)
          (read-lex-file-aux file-name overwrite-p)))))
 
-(defun read-cached-lex-if-available (file-name overwrite-p)
+(defun reload-lex-files nil
+  (setf *syntax-error* nil)
+  (if (check-load-names *lex-file-list* 'lexical)
+    (let ((overwrite-p t))
+      (setf *ordered-lex-list* nil)
+      (for file-name in (reverse *lex-file-list*)
+           do
+           (if (eql *lkb-system-version* :page)
+             (read-tdl-lex-file-aux file-name overwrite-p)
+             (read-lex-file-aux file-name overwrite-p))
+           (setf overwrite-p nil))
+      (when *template-file-list*
+        (reload-template-files))
+      (when *psort-file-list*
+        (reload-psort-files))
+      (format t "Reload complete"))
+    (progn
+      #-:tty(format t "~%Use Load Complete Grammar instead")
+     #+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
+
+(defun reload-template-files nil
+  (setf *syntax-error* nil)
+  (when (check-load-names *template-file-list* 'template)
+    (for template-file in *template-file-list*
+         do
+         (if (eql *lkb-system-version* :page)
+           (read-tdl-psort-file-aux template-file t)
+           (read-psort-file-aux template-file t)))
+    (format t "Reload complete")))
+
+(defun reload-psort-files nil
+  (setf *syntax-error* nil)
+  (when (check-load-names *psort-file-list* 'psort)
+    (for psort-file in *psort-file-list*
+         do
+         (if (eql *lkb-system-version* :page)
+           (read-tdl-psort-file-aux psort-file nil)
+           (read-psort-file-aux psort-file nil)))
+    (format t "Reload complete")))
+
+
+(defun read-cached-lex-if-available (file-name &optional overwrite-p)
   (if (and file-name (probe-file file-name))
+      (progn (if overwrite-p 
+                 (setf *lex-file-list* (list file-name))
+               (pushnew file-name *lex-file-list* :test #'equal))
       (let* ((ok nil)
              (cache-date
               (if (probe-file *psorts-temp-file*)
@@ -81,26 +137,29 @@
           (if (eql *lkb-system-version* :page)
               (read-tdl-lex-file-aux file-name overwrite-p)
             (read-lex-file-aux file-name overwrite-p))
-          (write-psort-index-file)))
+          (write-psort-index-file))))
     (cerror "Continue with script" "Lexicon file not found")))
 
             
-(defun read-lex-file-aux (file-name overwrite-p)
- ;  (reset-cached-lex-entries) ; in constraints.lsp  
-   (when overwrite-p (clear-lex))
-   (check-for-open-psorts-stream)
-   (let ((*readtable* (make-path-notation-break-table)))
-      (with-open-file 
-         (istream file-name :direction :input)
-         (format t "~%Reading in lexical entry file")
-         (loop
-            (let ((next-char (peek-char t istream nil 'eof)))
-               (when (eql next-char 'eof) (return))
-               (if (eql next-char #\;) 
-                  (read-line istream)
-                  (read-lex-entry istream)))))
-      (format t "~%Lexical entry file read"))
-   (flush-psorts-stream-output))
+(defun read-lex-file-aux (file-name &optional overwrite-p)
+  (if overwrite-p 
+    (setf *lex-file-list* (list file-name))
+    (pushnew file-name *lex-file-list* :test #'equal))
+  ;;  (reset-cached-lex-entries) ; in constraints.lsp  
+  (when overwrite-p (clear-lex))
+  (check-for-open-psorts-stream)
+  (let ((*readtable* (make-path-notation-break-table)))
+    (with-open-file 
+        (istream file-name :direction :input)
+      (format t "~%Reading in lexical entry file ~A" 
+              (pathname-name file-name))
+      (loop
+        (let ((next-char (peek-char t istream nil 'eof)))
+          (when (eql next-char 'eof) (return))
+          (if (eql next-char #\;) 
+              (read-line istream)
+            (read-lex-entry istream))))))
+  (flush-psorts-stream-output))
 
 (defun read-lex-entry (istream)
    (let* ((orth (lkb-read istream nil))
@@ -127,45 +186,32 @@
          (read-tdl-psort-file-aux file-name t)
          (read-psort-file-aux file-name t)))))
 
-#|
-(defun read-qc-file nil  
-   (let ((file-name 
-            (ask-user-for-existing-pathname "Quick check file?")))
-      (when file-name
-         (read-psort-file-aux file-name nil t))))
-|#
-
-(defun read-psort-file-aux (file-name &optional templates-p qc-p)
+(defun read-psort-file-aux (file-name &optional templates-p)
+  (if templates-p
+    (pushnew file-name *template-file-list* :test #'equal)
+    (pushnew file-name *psort-file-list* :test #'equal))
   (check-for-open-psorts-stream)
   (when templates-p (setf *category-display-templates* nil))
-;  (when qc-p (clear-quick-check-table))
    (let ((*readtable* (make-path-notation-break-table)))
       (with-open-file 
          (istream file-name :direction :input)
-         (format t "~%Reading in ~A file"
+         (format t "~%Reading in ~A file ~A"
                 (cond (templates-p "templates")
-;                      (qc-p "quick check")
-                      (t "psort")))
+                      (t "psort")) 
+                (pathname-name file-name))
          (loop
             (let ((next-char (peek-char t istream nil 'eof)))
                (when (eql next-char 'eof) (return))
                (if (eql next-char #\;) 
                   (read-line istream)
-                  (read-psort-entry istream templates-p qc-p)))))
-      (format t "~%~A entry file read" (cond (templates-p "Template")
-;                                             (qc-p "Quick check")
-                                             (t ""))))
+                  (read-psort-entry istream templates-p))))))
    (flush-psorts-stream-output))
 
-(defun read-psort-entry (istream &optional templates-p qc-p)
-  (declare (ignore qc-p))
+(defun read-psort-entry (istream &optional templates-p)
    (let ((id (lkb-read istream nil)))
       (multiple-value-bind 
          (non-def defs)
          (read-psort-unifications id istream)
-;        (if qc-p 
-;          (add-qc-from-file id non-def) ; in check-unif.lsp
-;                                        ; defaults would be pointless here
           (progn 
             (add-psort-from-file id non-def defs)            
             (if templates-p (pushnew id *category-display-templates*))))))

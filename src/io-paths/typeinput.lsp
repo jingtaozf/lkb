@@ -55,14 +55,22 @@
                          '(#\; #\< #\> #\= #\: #\. #\/)))
 
 (defvar *type-file-list* nil)
+(defvar *leaf-type-file-list* nil)
+
+(defun clear-type-load-files nil
+  (setf *type-file-list* nil)
+  (setf *leaf-type-file-list* nil))
+
+(defparameter *syntax-error* nil
+  "boolean that is set to t if a syntax error is detected")
 
 (defun read-type-file nil  
    (let* ((file-name 
             (ask-user-for-existing-pathname "Type file?"))
-          (settings-file nil))
-;         (if *settings-options* ; in globals.lsp
-;            (ask-user-for-existing-pathname 
-;               "Display settings file? (Cancel if none)"))
+         (settings-file
+          (or *display-settings-file* 
+              (ask-user-for-existing-pathname 
+               "Display settings file? (Cancel if none)"))))
       (when file-name
         (if (eql *lkb-system-version* :page)
          (read-tdl-type-file-aux file-name settings-file)
@@ -72,9 +80,10 @@
    (let* ((file-names 
             (ask-user-for-existing-pathnames 
                "Type file? (Cancel to finish)"))
-            (settings-file nil))
-;            (ask-user-for-existing-pathname 
-;               "Display settings file? (Cancel if none)"))
+          (settings-file 
+           (or *display-settings-file* 
+                 (ask-user-for-existing-pathname 
+                  "Display settings file? (Cancel if none)"))))
       (when file-names
         (if (eql *lkb-system-version* :page)
          (read-tdl-type-files-aux file-names settings-file)   
@@ -89,7 +98,7 @@
    (let ((*readtable* (make-path-notation-break-table)))
       (for file-name in file-names
          do
-         (format t "~%Reading in type file ~A" file-name)
+         (format t "~%Reading in type file ~A" (pathname-name file-name))
          (with-open-file 
             (istream file-name :direction :input)
             (read-type-stream istream)))) 
@@ -110,20 +119,35 @@
         (read-leaf-type-file-aux file-name)))))
 
 (defun read-leaf-type-file-aux (file-name)
+  (pushnew file-name *leaf-type-file-list* :test #'equal)
   (let ((*readtable* (make-path-notation-break-table))
         (*leaf-type-addition* t))
       (with-open-file 
          (istream file-name :direction :input)
-         (format t "~%Reading in leaf type file")
+        (format t "~%Reading in leaf type file ~A" 
+                (pathname-name file-name))
          (read-type-stream istream))))
 
-(defun read-type-patch-files nil 
-  (when *type-file-list*
+(defun reload-leaf-files nil
+  (setf *syntax-error* nil)
+  (when (check-load-names *leaf-type-file-list* "leaf type")
+    (clear-leaf-types)
+    (for file-name in (reverse *leaf-type-file-list*)
+         do
+         (if (eql *lkb-system-version* :page)
+           (read-tdl-leaf-type-file-aux file-name)
+           (read-leaf-type-file-aux file-name)))
+    (format t "Reload complete")))
+
+(defun read-type-patch-files nil
+  (setf *syntax-error* nil)
+  (when (check-load-names *type-file-list* 'type)
     (unless (eql *lkb-system-version* :page)
       (error "~%Patching currently only available for TDL syntax"))
     (clear-types-for-patching-constraints)
     (read-tdl-patch-files-aux *type-file-list*)
-    (check-for-open-psorts-stream)))
+    (check-for-open-psorts-stream)
+    (format t "Reload complete")))
 
 
 

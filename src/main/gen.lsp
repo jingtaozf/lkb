@@ -30,7 +30,6 @@
    ;; comparison
    (macrolet ((mark-subdags (arcs)
                 `(dolist (arc ,arcs)
-                    do 
                     (mark-dag-with-backwards-paths (dag-arc-value arc) firstp
                        (cons (dag-arc-attribute arc) backwards-path)))))
       (setq dag (deref-dag dag))

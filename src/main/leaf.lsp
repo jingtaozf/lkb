@@ -73,7 +73,8 @@ multiple parents ~A" name real-parents)
 introduces new features ~A" name new-features)
                     (let ((new-type
                            (make-leaf-type :name name 
-                                           :parents real-parents 
+                                           :parents real-parents
+                                           :real-parents real-parents
                                            :template-parents template-parents
                                            :daughters nil
                                            :comment comment
@@ -136,12 +137,13 @@ introduces new features ~A" name new-features)
       (setf (type-daughters parent-entry)
         (delete name (type-daughters parent-entry)))
       (setf (type-descendants parent-entry)
-        (delete name (type-descendants parent-entry)))
-      (for ancestor in (type-ancestors parent-entry)
+        (delete type-entry (type-descendants parent-entry) :test #'eq))
+      (for ancestor-entry in (type-ancestors parent-entry)
            do
-           (let ((ancestor-entry (get-type-entry ancestor)))
-             (setf (type-descendants ancestor-entry)
-               (delete name (type-descendants ancestor-entry))))))))  
+           (setf (type-descendants ancestor-entry)
+             (delete type-entry 
+                     (type-descendants ancestor-entry)
+                     :test #'eq))))))
 
 (defun new-features-in (unif-list)
   (for unif in unif-list

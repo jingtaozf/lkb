@@ -4,6 +4,7 @@
 ;;; Skeleton tty interface
 ;;; 
 ;;; Loading functions - all available as ...-aux (see script)
+;;; now including read-script-file-aux
 ;;;
 ;;; View
 ;;;
@@ -218,6 +219,9 @@
   nil)
 
 (defun close-existing-type-hierarchy-trees nil
+  nil)
+
+(defun close-existing-chart-windows nil
   nil)
 
 

@@ -1,0 +1,56 @@
+;;; Deliberately buggy file for testing syntax error checking
+
+boolean : *top*.
+;;; missing = after : 
+
+true := boolean.
+
+false := boolean.
+
+string := *top*.
+
+
+diff-list := *top* &
+[ LST list
+  LAST list ] .
+;;; missing comma after LST list
+
+list := *top*.
+
+e-list := list.
+
+ne-list := list &
+[ HD *top*,
+  TL list .
+;;; missing ]
+
+sign := *top* 
+[ SYNSEM synsem ].
+;;; missing & after *top*
+
+synsem := *top* &
+[ HEAD head,
+  VAL val ]
+;;; missing .
+
+head := *top* &
+[ AUX boolean,
+  VFORM vform ] .
+
+vform := *top*.
+
+bse := vform.
+
+inf := vform.
+
+val := *top* &
+[ COMPS list ].
+
+modal := sign &
+[ SYNSEM [ HEAD.AUX true,
+           VAL.COMPS [ HD /l [ VAL.COMPS e-list,
+                               HEAD.VFORM /l bse ],
+                       TL e-list ]]].
+;;; multiple / s
+
+

@@ -101,10 +101,10 @@
                #+:mcl (:file "picwin")      ; low level 
                #+:mcl (:file "picfield")    ; low level
 	       (:file "activefs")           ; display FS in window
+               (:file "tree")               ; type hierarchy
                (:file "parseout")           ; parse tree output
                (:file "chartout")           ; parse chart
                (:file "listout")            ; `active' lists
-               (:file "tree")               ; type hierarchy
                #+:allegro (:file "compare"))) ; comparing parses
      #+:allegro(:module "emacs-interface"              
                 :source-pathname *lisp-specific-directory*

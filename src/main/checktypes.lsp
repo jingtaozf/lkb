@@ -84,26 +84,35 @@
             new-type)))))
 
 (defun amend-type-from-file (name parents constraint default comment)
-  (let ((existing-type (get-type-entry name)))    
+  (let ((ok t)
+        (existing-type (get-type-entry name)))    
     (if existing-type
-	(if (and (null (set-difference parents (type-parents existing-type)))
-		 (null (set-difference (type-parents existing-type) parents)))
+	(if (type-parents-equal parents (type-parents existing-type)
+                                (type-real-parents existing-type))
 	    (progn 
 	      (setf (type-constraint-spec existing-type) constraint)
 	      (setf (type-default-spec existing-type) default)
 	      (setf (type-comment existing-type) comment))
-	  (format t "~%Warning - ~A ignored - patch cannot change type hierarchy"
-                name))
-      (format t "~%Warning - ~A ignored - patch only works to redefine types"
-	      name))))
+          (progn
+            (format t "~%Warning - ~A ignored - patch cannot change type hierarchy"
+                    name)
+            (setf ok nil)))
+      (progn
+        (setf ok nil)
+        (format t "~%Warning - ~A ignored - patch only works to redefine types"
+                name)))
+    ok))
+
+(defun type-parents-equal (new-parents old-parents old-real-parents)
+  (let ((test-parents (or old-real-parents old-parents))
+        (actual-new-parents (for parent in new-parents
+                                 filter
+                                 (unless (member parent *templates*)
+                                   parent))))
+    (and (null (set-difference actual-new-parents test-parents))
+         (null (set-difference test-parents actual-new-parents)))))
 
 (defvar *type-names* nil)
-
-;;; Due to a bug in Procyon Common Lisp doing a gethash on a 
-;;; hash table inside a maphash on the same hash table can 
-;;; go wrong.  To work around this the calls to maphash in
-;;; this file have been replaced with for loop on a list
-;;; of type names
 
 (defun amend-type-information (new-type new-type-entry parents daughters)
   ;;
@@ -162,6 +171,10 @@
 (defparameter *glbsets* nil)
 
 (defparameter *hierarchy-only-p* nil)
+
+(defparameter *display-glb-messages* nil
+   "if set, informs user of glbtypes as they are created")
+
 
 (defun check-type-table nil
    (scratch 'glbtype)
@@ -243,8 +256,9 @@
 ;;; connectedness
 ;;; existance of top
 ;;; no cycles
-;;; no unary branches
 ;;; unique greatest lower bound
+;;;
+;;; ;;; no unary branches test is now removed
 ;;;
 ;;; we also check for redundant links - where a node is both
 ;;; an immediate and a non-immediate daughter of another
@@ -255,16 +269,20 @@
       (for name in *type-names*
          do
          (let* ((type-entry (get-type-entry name))
-                 (parents (type-parents type-entry)))
-               (for parent in parents
-                  do
-                  (let ((parent-entry (get-type-entry parent)))
-                     (cond (parent-entry 
-                           (pushnew name 
-                                    (type-daughters parent-entry)
-                                    :test #'eq))
-                        (t (setf ok nil)
-                           (format t
+                (parents (type-parents type-entry)))
+           (setf (type-real-parents type-entry)
+             (type-parents type-entry))
+           ;;; type-parents gets reset by glb code
+           (for parent in parents
+                do
+                (let ((parent-entry (get-type-entry parent)))
+                  (cond 
+                   (parent-entry 
+                    (pushnew name 
+                             (type-daughters parent-entry)
+                             :test #'eq))
+                   (t (setf ok nil)
+                      (format t
                               "~%~A specified to have non-existent parent ~A"
                               name parent)))))))
       ok))
@@ -274,8 +292,11 @@
       (mark-node-active top-entry)
       (when (mark-for-cycles top-entry)
         (unmark-type-table)
-        (when (mark-for-redundancy top-entry)
-          (scan-table)))))
+        (if (mark-for-redundancy top-entry)
+            (scan-table)
+          (progn (find-all-redundancies)
+                 ;;; tell user about all the problems
+                 nil)))))
    
 ;;; John's algorithm for marking a graph to check for cycles 
 ;;; 1. start from top - mark node as active and seen
@@ -357,18 +378,9 @@
                         "~%~A not connected to top"
                         name))
           ;; unmark the node
-          (clear-marks type-entry) 
-          ;; check for unary branches 
-         (when (eql (length (type-daughters type-entry)) 1)
-          ;;  (setf ok nil)
-          ;; unary branches aren't going to make the rest of the 
-          ;; checking fail so let it continue
-          ;; Actually we don't really care about unary branches at all
-          ;; so unless variable is set - keep quiet
-          (when *warn-of-unary-branches*
-            (format t "~%Warning: ~A specified to have single daughter ~A"
-                        name
-                        (car (type-daughters type-entry))))))
+         (clear-marks type-entry))
+;;; removed unary branch stuff - can't imagine anyone wanting to
+;;; even be warned 
       *types*)
    (when ok
      (set-up-descendants *toptype*)
@@ -535,6 +547,7 @@
 ;;; the problem list The fix consists of adding a type with parents of the
 ;;; types which have mglbs and daughters equal to the mglbs and removing any
 ;;; redundant links.  We then make fixes to *glbsets*
+
 
 (defun fix-mglbs nil
   ;; partition specific because of *interesting-types*
@@ -887,12 +900,14 @@
                                 (setf (cdr app-tail) parent-ordered)
                                 (setq parent-ordered app-tail)
                                 (return-from found nil))))))))
-          (sorted-ordered-features (if (and *feature-ordering* ordered-features)
-                                       (fix-feature-ordering ordered-features
-                                                             *feature-ordering*)
-                                     ordered-features)))
+          (sorted-ordered-features 
+           (if (and *feature-ordering* ordered-features)
+               (fix-feature-ordering ordered-features
+                                     *feature-ordering*)
+             ordered-features)))
       (setf (type-appfeats type-record) sorted-ordered-features)
-      ;; don't process children if this type has been visited previously and its
+      ;; don't process children if this type 
+      ;; has been visited previously and its
       ;; feature ordering wasn't changed this time around
       ;(print (list type already-ordered-p (seen-node-p type-record)))
       (unless (and already-ordered-p (seen-node-p type-record))
@@ -984,15 +999,16 @@
                      (unify-wffs local-default indef)
                      local-default))))
             (when (and default-spec (not new-default))
-               (cerror
-                  "Ignore them"
-                  "Type ~A has inconsistent defaults for persistence ~A" 
+               (format t
+                       "~%Type ~A has inconsistent defaults for ~
+                        persistence ~A: ignoring those defaults" 
                   node persistence))
             (when new-default 
                (unless
                   (setq new-default (copy-dag new-default))
-                  (cerror "Ignore it"
-                     "Defeasible FS contains cycles in type ~A persistence ~A"
+                  (format t 
+                          "~%Defeasible FS contains cycles in type ~A ~
+                           persistence ~A: ignoring those defaults"
                      node persistence)))
             (unless new-default
                (setf new-default indef))
@@ -1006,7 +1022,7 @@
          (let ((parent-tdfs (expand-default-constraint parent
                                  (get-type-entry parent))))
            (unless parent-tdfs
-             (cerror "Ignore it" "Cannot make tdfs for ~A" parent))
+             (format t "~%Cannot make tdfs for ~A" parent))
            (when parent-tdfs
              (setf current-tail
                    (yadu-general-merge-tails (tdfs-tail parent-tdfs)

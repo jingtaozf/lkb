@@ -33,6 +33,9 @@
 
 (defvar *lexical-rules* (make-hash-table :test #'eq))
 
+(defvar *ordered-rule-list* nil)
+(defvar *ordered-lrule-list* nil)
+
 (defun clear-grammar nil
    (clrhash *rules*))
 
@@ -41,10 +44,7 @@
    (funcall 'reset-cached-lex-entries))
   (clrhash *lexical-rules*))
 
-
-
 (defstruct (rule (:include lex-or-psort))
-   unifications
    daughters-restricted
    daughters-apply-order
    order)
@@ -196,69 +196,76 @@
                            (list lex-entry-fs))))
 
 
-;;; rule format - is very like any other psort file
+;;; adding rules - function called from tdlruleinput and ruleinput
 
-(defun add-grammar-rule (id rule)
-   (add-lex-or-grammar-rule id rule nil))
+(defun add-grammar-rule (id non-def def rule-persistence lexical-p)
+  (let ((entry (make-rule :id id)))
+    (setf (rule-unifs entry) non-def)
+    (setf (rule-def-unifs entry) def)
+    (when (gethash id (if lexical-p *lexical-rules* *rules*))
+      (format t "~%Rule ~A redefined" id))
+    (expand-rule id entry non-def def rule-persistence lexical-p)))
 
-(defun add-lexical-rule (id rule)
-  (add-lex-or-grammar-rule id rule t))
-   
+;;; expanding rules - also called from type redefinition functions
 
-(defun add-lex-or-grammar-rule (id rule lexp)
-  ;;; YADU - need to get at the indef structure
-  (when (gethash id (if lexp *lexical-rules* *rules*))
-    (format t "~%Rule ~A redefined" id))
-  (let* ((fs (rule-full-fs rule))
-          (f-list (establish-linear-precedence (tdfs-indef fs))))
-      (setf (rule-order rule) f-list)
-      (setf (rule-daughters-restricted rule)
-         (mapcar
-            #'(lambda (path)
-                (restrict-fs
-                   (existing-dag-at-end-of (tdfs-indef fs)
-                      (if (listp path) path (list path)))))
-            (cdr f-list)))
-      (flet ((listify (x) (if (listp x) x (list x))))
-         (let*
-            ((mother-value
-               (existing-dag-at-end-of (tdfs-indef fs)
-                  (append (listify (car f-list)) *head-marking-path*)))
-             (head-path
-               (some
-                  #'(lambda (path)
-                      (and (eq
-                             (existing-dag-at-end-of (tdfs-indef fs)
-                                (append (listify path) *head-marking-path*))
-                             mother-value)
-                         path))
-                  (cdr f-list))))
-            ;; if there is a head, remaining daughters must stay in same left-to-
-            ;; right order - parser assumes this
+(defun expand-rule (id rule non-def def rule-persistence lexical-p)
+  (process-unif-list id non-def def rule rule-persistence)
+  (let ((fs (rule-full-fs rule)))  
+    (when fs
+      (if lexical-p 
+          (pushnew id *ordered-lrule-list*)
+        (pushnew id *ordered-rule-list*))
+      (let ((f-list (establish-linear-precedence (tdfs-indef fs))))
+        (setf (rule-order rule) f-list)
+        (setf (rule-daughters-restricted rule)
+          (mapcar
+           #'(lambda (path)
+               (restrict-fs
+                (existing-dag-at-end-of 
+                 (tdfs-indef fs)
+                 (if (listp path) path (list path)))))
+           (cdr f-list)))
+        (flet ((listify (x) (if (listp x) x (list x))))
+          (let*
+              ((mother-value
+                (existing-dag-at-end-of 
+                 (tdfs-indef fs)
+                 (append (listify (car f-list)) *head-marking-path*)))
+               (head-path
+                (some
+                 #'(lambda (path)
+                     (and (eq
+                           (existing-dag-at-end-of 
+                            (tdfs-indef fs)
+                            (append (listify path) *head-marking-path*))
+                           mother-value)
+                          path))
+                 (cdr f-list))))
+            ;; if there is a head, remaining daughters 
+            ;; must stay in same left-to-right order - 
+            ;; parser assumes this
             (setf (rule-daughters-apply-order rule)
-               (if head-path
-                  (cons head-path (remove head-path (cdr f-list) :count 1 :test #'eq))
-                  (cdr f-list)))))
-      (setf (gethash id (if lexp *lexical-rules* *rules*)) rule)))
+              (if head-path
+                  (cons head-path 
+                        (remove head-path (cdr f-list) :count 1 :test #'eq))
+                (cdr f-list)))))
+        (setf (gethash id (if lexical-p *lexical-rules* *rules*)) rule)))))
 
 
 ;;; The following is called from the code which redefines types
 
 (defun expand-rules nil
   (maphash #'(lambda (id rule)
-	       (process-unif-list (rule-id rule)
-				  (car (rule-unifications rule))
-				  (cdr (rule-unifications rule))
-				  rule
-				  *rule-persistence*))
+               (reexpand-rule id rule nil))
 	   *rules*)
   (maphash #'(lambda (id rule)
-	       (process-unif-list (rule-id rule)
-				  (car (rule-unifications rule))
-				  (cdr (rule-unifications rule))
-				  rule
-				  *rule-persistence*))
+               (reexpand-rule id rule t))
 	   *lexical-rules*))
+
+(defun reexpand-rule (id rule lexical-p)
+  (let ((non-def (rule-unifs rule))
+        (def (rule-def-unifs rule)))
+    (expand-rule id rule non-def def *description-persistence* lexical-p)))
 
 
 ;;; Irregular morphology

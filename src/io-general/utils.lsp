@@ -5,18 +5,49 @@
 
 (in-package :cl-user)
 
-;; moved from ACL_specific/emacs.lsp
-#+allegro
-(defun record-source (type stream position)
-  (declare (ignore position))
-  (setf (excl:source-file type :lkb) (excl::filename stream)))
-
 (defun check-for (character istream name)
    (let ((next-char (peek-char t istream nil 'eof)))
-      (unless (char= next-char character)
-         (error " ~A expected and not found in ~A at position ~A" character name (file-position istream)))
-      (read-char istream)))
+     (if (char= next-char character)
+         (read-char istream)
+       (progn 
+         (setf *syntax-error* t)
+         (format t 
+                 "~%Syntax error: ~A expected and not found in ~A at position ~A" 
+                 character name (file-position istream))
+         (format t 
+                 "~%Inserting ~A" character)
+         character))))
 
+
+(defun lkb-read-cerror (istream string &rest rest)
+  (setf *syntax-error* t)
+  (format t 
+         (concatenate 'string "~%Syntax error at position ~A: " string)  
+         (file-position istream) 
+         rest))
+
+(defun ignore-rest-of-entry (istream name)
+  ;;; called after a continuable error
+  ;;; looks for . followed by a newline etc, 
+  ;;; possibly with intervening blank space between the . and newline
+  (format t "~%Ignoring (part of) entry for ~A" name)
+  (loop 
+    (let ((next-char
+           (peek-char #\. istream nil 'eof)))
+      (when (eql next-char 'eof) (return))
+      (read-char istream)
+      (when
+          (loop
+            (let ((possible-newline
+                   (read-char istream nil 'eof)))
+              (when (member possible-newline 
+                            '(eof #'\page #\newline #\linefeed #\return))
+                (return t))
+              (when (not (whitespacep possible-newline))
+                (return nil))))
+        (return))))
+  (throw 'syntax-error nil))
+  
 
 (defun define-break-characters (char-list)
    (let ((temporary-readtable (copy-readtable *readtable*)))
@@ -99,10 +130,129 @@
 
 (defun do-parse-tty (sentence)
   (when sentence
+    (close-existing-chart-windows)
+    ;; this is sometimes called when not in tty mode
+    ;; so make sure we remove unwanted charts
     (parse (split-into-words 
             (preprocess-sentence-string 
              (string-trim '(#\space #\tab #\newline) sentence))))))
 
 
+;;; following is defined in MCL
+#-:mcl
 (defun whitespacep (char) 
-  (member char '(#\space #\tab #\newline #\page #\return)))
+  (member char '(#\space #\tab #\newline #\page #\return #\linefeed)))
+
+;;;  Loading and reloading - called by the tty version as well
+;;; as the menu driven version
+
+(defparameter *current-grammar-load-file* nil)
+
+(defun read-script-file-aux (file-name)
+  (when file-name
+    (let ( 
+          #+allegro (excl:*redefinition-warnings* nil)
+          #+mcl (*warn-if-redefine* nil)
+          #+mcl (ccl::*suppress-compiler-warnings* t)
+          (*syntax-error* nil))
+    (setf *current-grammar-load-file* file-name)
+    (clear-almost-everything)
+    (load file-name)
+    (lkb-beep)
+    (if *syntax-error*
+        (format t "~%WARNING: syntax error(s) - check messages")
+      (format t "~%Grammar input complete~%")))))
+
+
+
+(defun clear-almost-everything nil
+    (setf *syntax-error* nil)
+    (clear-type-load-files)
+    (clear-lex-load-files)
+    (clear-rule-load-files)
+    (clear-lex)
+    (reset-morph-var)
+    (clear-grammar)              ;; should clear everything that might not be
+    (clear-lex-rules)            ;; overridden, this should do for now    
+    (setf  *check-paths* nil))
+
+(defun reload-script-file nil
+  (if (and *current-grammar-load-file* 
+           (probe-file *current-grammar-load-file*))
+      (read-script-file-aux *current-grammar-load-file*)
+    (progn
+      (if *current-grammar-load-file*
+        (format t  "~%Error - existing script file ~A cannot be found"
+                *current-grammar-load-file*)
+        (format t  "~%Error - no existing script file")) 
+     #-:tty(format t "~%Use Load Complete Grammar instead")
+     #+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
+
+
+;;; Utilities to simplify script file
+
+(defun this-directory nil
+  (make-pathname 
+   :directory (pathname-directory *load-truename*)))
+
+(defun parent-directory nil
+  (make-pathname 
+   :directory (butlast (pathname-directory *load-truename*))))
+
+(defun temporary-file (name)
+  (make-pathname :name name 
+                 :directory (pathname-directory mk::tmp-dir)))
+
+(defun lkb-pathname (directory name)
+  (merge-pathnames
+   (make-pathname :name name)
+   directory))
+
+(defun lkb-load-lisp (directory name &optional optional)
+  (let ((file (merge-pathnames (make-pathname :name name) 
+                               directory)))
+    (if (probe-file file)
+        (progn 
+          #-allegro(load file)
+  ;;; above also for ACL if no compiler, but don't know how to
+  ;;; specify this
+          #+allegro(load
+                    (handler-bind ((excl:compiler-no-in-package-warning
+                                    #'(lambda (c)
+                                        (declare (ignore c))
+                                        (muffle-warning))))
+                      (compile-file file :verbose nil :print nil))))
+      (unless optional
+        (cerror "Continue loading script" "~%File ~A not found" file)))))
+
+(defun load-lkb-preferences (directory name)
+  (let ((file (merge-pathnames (make-pathname :name name) 
+                               directory)))
+    (when (probe-file file)
+      (load file))
+    (setf *user-params-file* file)))
+
+
+(defun load-irregular-spellings (directory name)
+  (read-irreg-form-string 
+   (with-open-file (istream (merge-pathnames 
+                             (make-pathname :name name)
+                             directory) :direction :input)
+     (read istream))))
+
+;;; utility for reloading
+
+(defun check-load-names (file-list &optional filetype)
+  (let ((ok t))
+    (if file-list
+      (for file in file-list
+           do
+           (unless
+            (probe-file file)
+             (format t "~%Error - file ~A does not exist" file)
+             (setf ok nil)))
+      (progn
+        (format t "~%Error - no ~A files found" 
+                (if filetype (string filetype) ""))
+        (setf ok nil)))
+      ok))

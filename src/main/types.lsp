@@ -45,7 +45,10 @@
 ;;;        specified, under certain conditions (user-controlled global) 
 ;;;        all but one of them can be treated as a template
 ;;;        thus simplifying the hierarchy
-
+;;; Oct 1998
+;;; real-parents - store original parents for display and also
+;;; in order to be able to check that only constraints have been altered 
+;;; when we reload the type hierarchy
 
 (defstruct type 
            name parents constraint (constraint-mark nil) tdfs
@@ -54,8 +57,9 @@
            constraint-spec default-spec local-constraint atomic-p glbp
            descendants
            template-parents
-           shrunk-p visible-p)          ; for display in type hierarchy
-
+           shrunk-p visible-p          ; for display in type hierarchy
+           real-parents)
+           
 (defstruct (leaf-type (:include type))
   (expanded-p nil))
         
@@ -86,7 +90,12 @@
    (clear-expanded-lex)
 #+:allegro (when (and *gc-before-reload* *type-reload-p*) (gc t))
    (setf *type-reload-p* t))
-     
+
+(defun clear-leaf-types nil
+  (for leaf-type in *leaf-types*
+       do
+       (setf (gethash leaf-type *types*) nil)))
+
 
 (defun clear-types-for-patching-constraints nil
    (clear-type-cache)
@@ -449,28 +458,13 @@
   (intersection (retrieve-descendants type1)
 		(retrieve-descendants type2)))
 
-(defun get-ancestors (type-entry)
-  ;; general function - should be fairly safe, but slow
-  (let ((parents (type-parents type-entry)))
-    (if parents
-	(union parents
-	       (reduce #'union
-		       (mapcar #'(lambda (parent)
-				   (let ((parent-entry (get-type-entry parent)))
-				     (get-ancestors parent-entry)))
-			       parents))))))
-
-
-(defun get-descendants (type-entry)
-      (let ((daughters (type-daughters type-entry)))
-      (if daughters
-         (union daughters
-            (reduce #'union
-               (mapcar #'(lambda (daughter)
-                     (get-descendants (get-type-entry daughter)))
-                  daughters))))))
-
-
+(defun get-real-types (type)
+  (let ((type-entry (get-type-entry type)))
+    (if (type-glbp type-entry)
+        (for parent in (type-parents type-entry)
+             append
+             (get-real-types parent))
+      (list type))))
 
 ;;; We need a record of the maximal type at which a particular
 ;;; feature is introduced.  The following are called from functions

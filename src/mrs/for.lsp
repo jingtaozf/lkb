@@ -9,11 +9,13 @@
 
 (in-package :cl-user)
 
+(eval-when
+ (compile load eval)
 (export '(for in do collect collect-reversed nconc filter
           some-satisfy keep-first car-filter append keep-if
           keep-unless all-satisfy none-satisfy from to
           fixnum downto by on in-stream when until while))
-
+)
 
 
 (defvar *print-loops* nil)

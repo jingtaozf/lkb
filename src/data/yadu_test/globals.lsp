@@ -1,3 +1,3 @@
-(defparameter *lexical-persistence* 'l
-   "Atom marking lexical persistence of tails")
+(defparameter *description-persistence* 'l)
+
 

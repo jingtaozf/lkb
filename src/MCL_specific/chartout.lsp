@@ -48,6 +48,13 @@
   ())
 
 
+;;; close charts after a parse
+
+
+(defun close-existing-chart-windows nil
+   (dolist (w (windows :class 'active-chart-window))
+      (window-close w)))
+  
 ;;;
 
 (defun draw-chart-lattice (node title horizontalp)
@@ -193,7 +200,27 @@
    (make-instance 'menu-item
      :menu-item-title "New chart"
      :menu-item-action
-     #'(lambda () (display-edge-in-new-window edge-record)))))
+     #'(lambda () (display-edge-in-new-window edge-record)))
+   (make-instance 'menu-item
+     :menu-item-title (format nil "Unify")
+     :menu-item-action
+     #'(lambda () (try-unify-fs-in-chart (edge-dag edge-record))))))
+
+(defun try-unify-fs-in-chart (fs)
+  ;;; very similar to the function in activefs
+  (let* ((sel1 *selected-fs-node*)
+         (path1 (selected-fs-node-path sel1)))
+    (when (listp path1)
+      (let ((result 
+             (unify-paths-with-fail-messages 
+              (create-path-from-feature-list path1)
+              (selected-fs-node-fs sel1)
+              (create-path-from-feature-list nil)
+              (tdfs-indef fs)
+            :selected1 path1 :selected2 nil)))
+         (when result
+            (display-fs result "Unification result")))
+         (setq *selected-fs-node* nil))))
 
 
 ;;; Highlight current edge, if there is one at the moment - and any ancestor

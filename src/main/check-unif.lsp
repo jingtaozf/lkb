@@ -31,8 +31,7 @@
   (chart-generate input-sem lex-entry-alts))
 
 (with-check-path-list-collection "~aac/checkpaths.lsp"
-  (parse-tsdb-sentences "~aac/grammar/tsdb/csli/item" "~aac/parses" "~aac/results"
-                        "~aac/runs"))
+  (tsdb::tsdb-do-process "csli3"))
 
 |#
 
@@ -54,7 +53,9 @@
                   (format .str. "#|~%Check paths from~%~{  ~S~%~}|#~%" ',forms))
                (format t "~%Extracting paths...")
                (write
-                  `(defparameter *check-paths* ',(extract-check-paths *fail-path-list*))
+                `(defparameter *check-paths* 
+                     ',(check-path-convert 
+                        (extract-check-paths *fail-path-list*)))
                   :stream .str. :escape t :pretty t :length nil :level nil)
                (terpri .str.)
                (format t "~%Wrote file ~A" (truename ,output-file)))))))
@@ -367,3 +368,35 @@
    (dolist (arc (dag-comp-arcs dag) nil)
       (when (eq attribute (dag-arc-attribute arc))
          (return-from x-get-dag-value (dag-arc-value arc)))))
+
+;;; The following function needs to be called if there is
+;;; a disrepancy between the checkpaths construction and
+;;; application
+
+(defun check-path-convert (check-paths)
+  (let ((new-paths nil)
+        (combined-paths nil))
+    (for thing in check-paths
+         do
+         (let ((path (car thing))
+               (count (cdr thing)))
+           (if (eql (car path) 'ARGS)
+               (let ((rest (cdr path)))
+                 (if (eql (car rest) 'FIRST)
+                     (push (cons (cdr rest) count)
+                           new-paths)
+                   (if (and (eql (car rest) 'REST)
+                            (eql (cadr rest) 'FIRST))
+                       (push (cons (cddr rest) count) new-paths)
+                     (error "Unexpected path ~A" path))))
+             (push (cons path count) new-paths))))
+    (for np in new-paths
+         do
+         (let ((existing
+                (assoc (car np) combined-paths :test #'equal)))
+           (if existing 
+               (setf (cdr existing) (+ (cdr existing) (cdr np)))
+             (push np combined-paths))))
+    (sort combined-paths #'> :key #'cdr)))
+
+             

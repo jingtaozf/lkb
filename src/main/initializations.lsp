@@ -15,7 +15,7 @@
 
 (import '(enable-type-interactions disable-type-interactions))
 
-#+:allegro (setq tk-silica::*use-clim-gc-cursor* t)
+#+(and :allegro :clim) (setq tk-silica::*use-clim-gc-cursor* t)
 
 (defpackage "MRS" (:use "COMMON-LISP" "MAKE"))
 (defpackage "MAIN" (:use "COMMON-LISP" "MAKE"))

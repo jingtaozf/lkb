@@ -16,7 +16,10 @@
 
 ; *category-display-templates* is in io-paths/lexinput
 
-(defun read-tdl-lex-file-aux (file-name overwrite-p)
+(defun read-tdl-lex-file-aux (file-name &optional overwrite-p)
+  (if overwrite-p 
+    (setf *lex-file-list* (list file-name))
+    (pushnew file-name *lex-file-list* :test #'equal))
  ;  (reset-cached-lex-entries) ; in constraints.lsp  
    (when overwrite-p (clear-lex))
    (check-for-open-psorts-stream)
@@ -24,9 +27,9 @@
             (make-tdl-break-table)))
       (with-open-file 
          (istream file-name :direction :input)
-         (format t "~%Reading in lexical entry file")
-         (read-tdl-lex-stream istream))
-      (format t "~%Lexical entry file read"))
+        (format t "~%Reading in lexical entry file ~A" 
+                (pathname-name file-name))
+        (read-tdl-lex-stream istream)))
    (flush-psorts-stream-output))
 
 
@@ -41,7 +44,8 @@
                  (read-tdl-declaration istream))
                ; declarations like :begin :type
                ((eql next-char #\#) (read-tdl-comment istream))
-               (t (read-tdl-lex-entry istream))))))
+               (t (catch 'syntax-error
+                (read-tdl-lex-entry istream)))))))
 
 
 (defun read-tdl-lex-entry (istream)
@@ -52,12 +56,16 @@
 	 (name (lkb-read istream nil))
 	 (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)
-       (error "~%Incorrect syntax following lexicon name ~A" name))
+       (lkb-read-cerror istream
+                        "~%Incorrect syntax following lexicon name ~A" name)
+       (ignore-rest-of-entry istream name))
      #+allegro (record-source name istream position)
      (read-char istream)
      (let ((next-char2 (peek-char t istream nil 'eof)))
        (unless (eql next-char2 #\=)
-            (error "~%Incorrect syntax following lexicon name ~A" name))   
+         (lkb-read-cerror istream
+                          "~%Incorrect syntax following lexicon name ~A" name)
+         (ignore-rest-of-entry istream name))
        (read-char istream)
        (multiple-value-bind
            (constraint default)
@@ -83,7 +91,7 @@
                   (if entry
                       (push (cadr unif) (cdr entry))
                     (push unif def-alist))))
-               (t (error "~%Unexpected unif in ~A" name))))
+               (t (error "~%Program error(?): Unexpected unif in ~A" name))))
     (dolist (coref (make-tdl-coreference-conditions 
                     *tdl-coreference-table* nil))
       (push coref constraint))
@@ -98,26 +106,28 @@
 
 ;;; Other varieties of files
 
-(defun read-tdl-psort-file-aux (file-name &optional templates-p qc-p)
+(defun read-tdl-parse-node-file-aux (file-name)
+  (read-tdl-psort-file-aux file-name t))
+
+(defun read-tdl-psort-file-aux (file-name &optional templates-p)
+  (if templates-p
+    (pushnew file-name *template-file-list* :test #'equal)
+    (pushnew file-name *psort-file-list* :test #'equal))
   (check-for-open-psorts-stream)  
   (when templates-p (setf *category-display-templates* nil))
-;  (when qc-p (clear-quick-check-table))
    (let ((*readtable*
           (make-tdl-break-table)))
      (with-open-file 
          (istream file-name :direction :input)
-       (format t "~%Reading in ~A file"
+       (format t "~%Reading in ~A file ~A"
                (cond (templates-p "templates")
-;;                      (qc-p "quick check")
-                     (t "psort")))
-         (read-tdl-psort-stream istream templates-p qc-p))
-      (format t "~%~A entry file read" (cond (templates-p "Template")
-;                                             (qc-p "Quick check")
-                                             (t "Psort"))))
+                     (t "psort"))
+               (pathname-name file-name))
+       (read-tdl-psort-stream istream templates-p)))
    (flush-psorts-stream-output)  
    (if templates-p (split-up-templates)))
 
-(defun read-tdl-psort-stream (istream &optional templates-p qc-p) 
+(defun read-tdl-psort-stream (istream &optional templates-p) 
    (loop
       (let ((next-char (peek-char t istream nil 'eof)))
          (when (eql next-char 'eof) (return))
@@ -129,25 +139,30 @@
                ; declarations like :begin :type
                ((eql next-char #\#) 
                 (read-tdl-comment istream))
-               (t (read-tdl-psort-entry istream templates-p qc-p))))))
+               (t 
+                (catch 'syntax-error
+                  (read-tdl-psort-entry istream templates-p)))))))
 
-(defun read-tdl-psort-entry (istream &optional templates-p qc-p)
-  (declare (ignore qc-p))
+(defun read-tdl-psort-entry (istream &optional templates-p)
    (let* ((name (lkb-read istream nil))
           (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)
-       (error "~%Incorrect syntax following template name ~A" name))
+       (lkb-read-cerror 
+        istream 
+        "~%Incorrect syntax following template name ~A" name)
+       (ignore-rest-of-entry istream name))
      (read-char istream)
      (let ((next-char2 (peek-char t istream nil 'eof)))
        (unless (eql next-char2 #\=)
-            (error "~%Incorrect syntax following template name ~A" name))   
+         (lkb-read-cerror 
+          istream 
+          "~%Incorrect syntax following template name ~A" name)
+         (ignore-rest-of-entry istream name))
        (read-char istream)
        (multiple-value-bind
            (constraint default)
            (read-tdl-lex-avm-def istream name)
          (check-for #\. istream name)
-;;       (if qc-p 
-;;           (add-qc-from-file name constraint) ; in check-unif.lsp      
          (progn 
            (add-psort-from-file name constraint default)
            (if templates-p (pushnew name *category-display-templates*)))))))
