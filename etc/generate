@@ -28,12 +28,17 @@ log=${HOME}/${skeleton}.${date}.log
   echo "(setf target 
          (tsdb::suggest-test-run-directory \"${skeleton}\" :absolute nil))"
   echo "(tsdb:tsdb :create target :skeleton \"${skeleton}\")"
+
+  echo "(setf lkb::*bypass-equality-check* nil)"
+  echo "(setf lkb::*gen-packing-p* t)"
+  echo "(setf lkb::*gen-filtering-p* t)"
+  echo "(setf lkb::*gen-equate-qeqs-p* t)"
   echo "(setf lkb::*unpack-edge-allowance* 50000)"
   echo "(setf tsdb::*tsdb-maximal-number-of-edges* 50000)"
+
   echo "(setf tsdb::*process-default-task* :generate)"
-  echo "(tsdb::tsdb-do-process target :gold \"gold/lingo/${skeleton}\"
+  echo "(tsdb::tsdb-do-process target :gold \"gold/logon/${skeleton}\"
          :type :generate :overwrite t)"
   echo "(excl:exit)"
-} | ( cd ${HOME}/src/acl; \
-      ./alisp -I bclim.dxl -locale iso.8859.1 -qq; ) \
+} | ( cd ${HOME}/src/acl; ./alisp -I bclim.dxl -locale iso.8859.1 -qq; ) \
     2>&1 | tee ${log}

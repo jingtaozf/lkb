@@ -138,7 +138,7 @@
                       ("Print" :value :print :active t)
                       ("Rule" :value :rule :active t)
                       ("Select" :value :select :active t)
-                      ("Contrast" :value :compare :active t)
+                      ("Contrast" :value :contrast :active t)
                       #+:null
                       ("Apply" :value :apply :active t)
                       #+:null
@@ -345,7 +345,7 @@
               #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
               "~&browse-mrss(): current view now active as selection.~%"))))
 
-        (:constrast
+        (:contrast
          (cond
           ((mrs-transfer-target frame)
            (let* ((mrs (nth (mrs-transfer-i frame) 

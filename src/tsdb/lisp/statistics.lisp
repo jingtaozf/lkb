@@ -83,6 +83,8 @@
 
 (defparameter *statistics-aggregate-upper* nil)
 
+(defparameter *statistics-compare-time* :total)
+
 (defparameter *statistics-detail-sloppy-alignment-p* nil)
 
 (defparameter *statistics-detail-alignment-bracket* 50)
@@ -2891,7 +2893,8 @@
                                  (olabel "(g)old") (nlabel "new")
                                  (clabel "reduction")
                                  orestrictor nrestrictor restrictor
-                                 file append meter)
+                                 file append meter 
+                                 (time *statistics-compare-time*))
 
   (let* ((ometer (madjust / meter 2))
          (nmeter (madjust + ometer (mduration ometer)))
@@ -2999,14 +3002,16 @@
                 (name (if (eq format :latex)
                         (latexify-string (second phenomenon))
                         (second phenomenon)))
-                (oetasks (round (get-field :p-etasks odata)))
-                (otime (float (get-field :tcpu odata)))
+                (oetasks (round (get-field+ :p-etasks odata -1)))
+                (otime (float (get-field time odata)))
                 (ospace (round (/ (get-field :space odata) (expt 2 10))))
-                (netasks (round (get-field :p-etasks ndata)))
-                (ntime (float (get-field :tcpu ndata)))
+                (netasks (round (round (get-field :p-etasks ndata))))
+                (ntime (get-field+ time ndata -1))
                 (nspace (round (/ (get-field :space ndata) (expt 2 10))))
                 (taskreduction 
-                 (float (* 100 (divide (- oetasks netasks) oetasks))))
+                 (if (or (minus-one-p oetasks) (minus-one-p netasks))
+                   -1
+                   (float (* 100 (divide (- oetasks netasks) oetasks)))))
                 (timereduction 
                  (float (* 100 (divide (- otime ntime) otime))))
                 (spacereduction 
@@ -3041,14 +3046,16 @@
        (let* ((odata (rest (assoc :total oaverages)))
               (ndata (rest (assoc :total naverages)))
               (name "Total")
-              (oetasks (round (get-field :p-etasks odata)))
-              (otime (float (get-field :tcpu odata)))
+              (oetasks (round (get-field+ :p-etasks odata -1)))
+              (otime (float (get-field time odata)))
               (ospace (round (/ (get-field :space odata) (expt 2 10))))
-              (netasks (round (get-field :p-etasks ndata)))
-              (ntime (float (get-field :tcpu ndata)))
+              (netasks (round (get-field+ :p-etasks ndata -1)))
+              (ntime (float (get-field time ndata)))
               (nspace (round (/ (get-field :space ndata) (expt 2 10))))
               (taskreduction 
-               (float (* 100 (divide (- oetasks netasks) oetasks))))
+               (if (or (minus-one-p oetasks) (minus-one-p netasks))
+                 -1
+                 (float (* 100 (divide (- oetasks netasks) oetasks)))))
               (timereduction 
                (float (* 100 (divide (- otime ntime) otime))))
               (spacereduction 

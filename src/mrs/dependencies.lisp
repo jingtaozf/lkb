@@ -187,6 +187,7 @@
             for representative = (when value 
                                    (ed-find-representative eds value))
             when representative do
+              #+:null
               (when (ed-p representative)
                 (setf (ed-variable representative) value))
               (push (cons (if (eq key old) (vsym "CARG") key) representative)
@@ -386,15 +387,25 @@
                     with top = (eds-top eds)
                     for ed in (eds-relations eds)
                     when (equal (ed-id ed) top) collect ed)))
+    ;;
+    ;; put .mark. on all EDs that are `reachable' from the top variable
+    ;;
     (loop
         for ed = (pop agenda)
         for id = (and ed (ed-id ed))
         while ed do
           (unless (or (eq (ed-mark ed) mark) (ed-bleached-p ed))
             (setf (ed-mark ed) mark)
+            ;;
+            ;; put all arguments of current ED on agenda (for future marking)
+            ;;
             (loop
                 for argument in (ed-arguments ed)
                 when (ed-p (rest argument)) do (push (rest argument) agenda))
+            ;;
+            ;; also, add all EDs for which the current one is an argument, i.e.
+            ;; the inverse link.
+            ;;
             (loop
                 for ed in (eds-relations eds)
                 unless (or (eq (ed-mark ed) mark) (ed-bleached-p ed)) do
@@ -403,6 +414,7 @@
                       when (and (ed-p (rest argument))
                                 (equal (ed-id (rest argument)) id)) do
                         (push ed agenda)))))
+
     (loop
         with return = nil
         for ed in (eds-relations eds)
@@ -431,6 +443,23 @@
   ;; --- or another way of linking to surface positions, e.g. the new LNK set
   ;; of surface token identifiers (in the VM and YY spirit :-).
   ;;
+  
+  ;;
+  ;; _fix_me_
+  ;; not sure what the `variable' slot was intended for, but it appears to be
+  ;; exclusively used in ed-explode(); make sure all EDs have a correct value.
+  ;;                                                           (26-nov-04; oe)
+  (loop
+      with key = (vsym "ARG0")
+      for ed in (eds-relations eds)
+      for raw = (ed-raw ed)
+      for roles = (and (rel-p raw) (rel-flist raw))
+      for arg0 = (loop
+                     for role in roles
+                     when (eq (fvpair-feature role) key)
+                     return (fvpair-value role))
+      do (setf (ed-variable ed) arg0))
+  
   (let ((mrs::*eds-include-quantifiers-p* t)
         (mrs::*eds-include-vacuous-relations-p* t))
     (nconc

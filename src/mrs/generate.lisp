@@ -547,21 +547,16 @@
    ;; Semantics are already guaranteed to be compatible wrt relation arguments since
    ;; these were skolemised in the input MRS
    (or (and *bypass-equality-check* (not (eq *bypass-equality-check* :filter)))
-      (let ((sem-fs
-               (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
-                   mrs::*initial-semantics-path*)))
-        (and sem-fs (dag-p sem-fs)
-           (let* ((mrs (mrs::construct-mrs sem-fs nil))
-                  (mrs (mrs::fill-mrs (mrs::unfill-mrs mrs))))
-;;            (when *debugging*
-;;              (display-fs sem-fs "semstructure"))
+      (let* ((mrs (mrs::extract-mrs edge))
+             (mrs (mrs::fill-mrs (mrs::unfill-mrs mrs))))
+        (setf (edge-mrs edge) mrs)
 ;;            (when *sem-debugging*
 ;;              (mrs::output-mrs input-sem 'mrs::simple)
 ;;              (mrs::output-mrs mrs 'mrs::simple))  
-             (mrs::mrs-equalp 
-              (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
-              input-sem nil *debugging* 
-              (not (eq *bypass-equality-check* :filter))))))))
+        (mrs::mrs-equalp 
+         (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
+         input-sem nil *debugging* 
+         (not (eq *bypass-equality-check* :filter))))))
 
 
 (defun gen-chart-root-edges (edges start-symbols)
@@ -689,7 +684,7 @@
                                (dag-subsumes-p (tdfs-indef (g-edge-dag inact)) (tdfs-indef (g-edge-dag edge)))
                            (when *debugging*
                               (format t "~&Trying subsumption between edges ~A and ~A"
-                                  (g-edge-id inact) (g-edge-id edge)))
+                                      (g-edge-id inact) (g-edge-id edge)))
                            (when forwardp
                               ;; (print (list forwardp backwardp (g-edge-id inact) (g-edge-id edge)))
                               (if backwardp

@@ -122,8 +122,7 @@
           #+:mcl (others (ccl::total-bytes-allocated)))
       (multiple-value-prog1
          (funcall timed-function)
-         (let (#+:mcl (others (- (ccl::total-bytes-allocated) others))
-               )
+         (let (#+:mcl (others (- (ccl::total-bytes-allocated) others)))
             (funcall report-function
                ;; tgcu tgcs tu ts tr scons ssym sother
                #+:mcl (round (* (- (ccl:gctime) tgc) 1000)
