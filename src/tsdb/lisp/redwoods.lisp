@@ -79,7 +79,7 @@
         with annotated = (make-array nitems :initial-element 0)
         with position = 0
         initially
-          #-:debug
+          #+:debug
           (setf *frame* frame)
           (unless #-:expand purge #+:expand nil
             (setf (lkb::compare-frame-current-chart frame) nil)
@@ -467,7 +467,6 @@
       with items = (analyze data :thorough '(:derivation) 
                             :condition condition)
       for item in items
-      for input = (or (get-field :o-input item) (get-field :i-input item))
       for i-id = (get-field :i-id item)
       for parse-id = (get-field :parse-id item)
       for trees = (select '("t-version") '(:integer) "tree" 
@@ -504,13 +503,12 @@
                             (write-to-string
                              (lkb::compute-derivation-tree edge) 
                              :case :downcase))))
-            for mrs = (and edge (mrs::extract-mrs edge))
-            for bar = (and edge (mrs::get-mrs-string edge))
+            for mrs = (and edge (mrs::get-mrs-string edge))
             when edge do
               (format
                t
                "~d (~d); derivation:~%~a~%~d (~d); MRS string:~%~a~%~%"
-               id i foo id i bar))))
+               id i foo id i mrs))))
 
 (defun kristina (data &key condition path prefix)
   
