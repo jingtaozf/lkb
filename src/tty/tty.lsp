@@ -298,7 +298,11 @@
   nil)
 
 (defun show-parse nil
-  nil)
+   (if *parse-record*
+      (for edge in *parse-record*
+         do
+         (pprint (parse-tree-structure edge)))
+      (format t "~%No parses")))
 
 (defun display-type-in-tree (type)
   (declare (ignore type))
