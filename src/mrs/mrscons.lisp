@@ -47,12 +47,14 @@
                  is-one-ofs))
          (let ((left (get-var-num (hcons-scarg constr)))
                (right (get-var-num (hcons-outscpd constr))))
-;           (unless (and (member left labels)
-;                        (member right labels))
-;             (struggle-on-error 
-;              "Outscopes pair ~A > ~A are not both labels" left right))
-           (push (make-outscopes :h1 left :h2 right)
-               *outscopes*))))
+           (if (and (or (member left labels) (member left holes))
+                    (or (member left labels) (member left holes)))
+               (push (make-outscopes :h1 left :h2 right)
+                     *outscopes*)
+             (unless *giving-demo-p*
+               (format t
+                       "WARNING: Outscopes pair ~A > ~A are not both valid handels - ignored" 
+                       left right))))))
 ;  (for left-intvar in left-intvars
 ;       do
 ;       (unless (member left-intvar right-intvars)
