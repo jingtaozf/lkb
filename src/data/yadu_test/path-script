@@ -1,5 +1,6 @@
 (setf *lkb-system-version* nil)
 (lkb-load-lisp (this-directory) "globals.lsp")
+(lkb-load-lisp (this-directory) "user-fns.lsp")
 (read-type-files-aux
       (list
          (lkb-pathname (this-directory) "path.types")))

@@ -22,7 +22,7 @@ ne-list := list &
 ;;; L+C section 2.
 
 verb := *top* &
-[ PAST *top* /l #pp,
+[ PAST /l #pp,
   PASTP #p /l #pp,
   PASSP #p /l #pp ].
 
