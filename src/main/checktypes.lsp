@@ -47,6 +47,8 @@
 
 (defparameter *leaf-type-addition* nil)
 
+(defvar *type-redefinitions* nil)
+
 (defun add-type-from-file (name parents constraint default comment &optional daughters)
   ;;; YADU --- extra arg needed
   (if *leaf-type-addition*
@@ -55,7 +57,8 @@
         (real-parents nil)
         (template-parents nil))
       (when existing-type
-         (format t "~%Type ~A redefined" name))
+        (format t "~%Type ~A redefined" name)
+        (push name *type-redefinitions*))
       (when (and *templates* (cdr parents))
         (for parent in parents
              do
@@ -94,9 +97,10 @@
 	      (setf (type-default-spec existing-type) default)
 	      (setf (type-comment existing-type) comment))
           (progn
-            (format t "~%Warning - ~A ignored - patch cannot change type hierarchy"
-                    name)
-            (setf ok nil)))
+            (unless (member name *type-redefinitions*)
+              (format t "~%Warning - ~A ignored - patch cannot change type hierarchy"
+                      name)
+              (setf ok nil))))
       (progn
         (setf ok nil)
         (format t "~%Warning - ~A ignored - patch only works to redefine types"
@@ -189,16 +193,20 @@
 	 (setq *partition* nil)
          (find-good-partitions *toptype*)
          (unmark-type-table)
-         (for partition in *partition*
-              do
-              (check-for-unique-glbs partition)
+         (let ((already-warned nil))
+           (for partition in *partition*
+                do
+                (check-for-unique-glbs partition)
                  ;;; partition is now a list of lists of types
-                 (when *glbsets* 
-                   (unmark-type-table)
-                   (format t 
-                           "~%Partition size ~A" 
-                           (length partition))
-                   (fix-mglbs)))
+                (when *glbsets* 
+                  (unless already-warned
+                    (format t "~%Fixing glb problem")
+                    (setf already-warned t))
+                  (unmark-type-table)
+                  (format t 
+                          "~%Partition size ~A" 
+                          (length partition))
+                  (fix-mglbs))))
 	 (setf *type-names* (sort *type-names* #'string-lessp))
          (unmark-type-table)
          (if *hierarchy-only-p*
@@ -211,6 +219,7 @@
                (optimise-check-unif-paths)
                 ;;; YADU --- extra expansion stage
                 ;;; earlier stages are unchanged
+               (format t "~%Expanding defaults")
                (when (expand-type-hierarchy-defaults)
                  (format t "~%Type file checked successfully")
 		 (gc-types)
@@ -242,7 +251,7 @@
     (when (strongly-type-constraints)
        ;;; YADU --- extra expansion stage
        ;;; earlier stages are unchanged
-;      (format t "~%Expanding defaults") 
+      (format t "~%Expanding defaults") 
       (when (expand-type-hierarchy-defaults)
 	(format t "~%Re-expanding rules")
 	(expand-rules) ; in rules.lsp
@@ -423,7 +432,7 @@
 
 (defun unmark-type-table nil
    (maphash 
-      #'(lambda (node type-entry)
+    #'(lambda (node type-entry)
            (declare (ignore node))
            (clear-marks type-entry))
         *types*))
@@ -839,6 +848,7 @@
                       (nth-value 1 (wf-constraint-of type-name)))
 	     ;; i.e. just looks at boolean ok/not-ok
 	     (setf ok nil))))
+    (setf *well-formed-trace* nil)
     (unmark-type-table)
     ;; !!! can't create cyclic dags so don't check for them
     ok))
