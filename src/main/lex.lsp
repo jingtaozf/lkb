@@ -717,7 +717,8 @@
       finally
 	(return res)))
 
-(defun str-list-2-str (str-list &optional (sep-c #\Space))
+(defun str-list-2-str (str-list &key (sep-c #\Space)
+				     (null-str ":null:"))
   (unless (listp str-list)
     (error "list expected"))
   (let ((sep (string sep-c)))
@@ -729,7 +730,10 @@
 		(cons
 		 (escape-char sep-c (pop str-list))
 		 (mapcan #'(lambda (x) (list sep
-					     (escape-char sep-c x)))
+					     (if x 
+						 (escape-char sep-c x)
+					       null-str)
+					     ))
 			 str-list))))))))
   
 (defun str-list-2-str-by-str (str-list &optional (separator " "))
