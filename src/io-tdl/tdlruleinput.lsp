@@ -27,13 +27,12 @@
 ; *ordered-lrule-list* is in main/rules.lsp
 
 (defun read-tdl-lex-rule-file-aux (file-name &optional ovwr)
-  (if ovwr 
-    (setf *lexical-rule-file-list* (list file-name))
-    (pushnew file-name *lexical-rule-file-list* :test #'equal))
+  (unless (member file-name *morphology-rule-file-list* :test #'equal)
+    (if ovwr 
+        (setf *lexical-rule-file-list* (list file-name))
+      (pushnew file-name *lexical-rule-file-list* :test #'equal)))
   (when ovwr 
     (setf *ordered-lrule-list* nil))
-  (when (fboundp 'reset-cached-lex-entries)
-   (funcall 'reset-cached-lex-entries)) ; in constraints.lsp  
   (when ovwr (clear-lex-rules) )    
   (read-tdl-lex-or-grammar-rule-file file-name t))   
       

@@ -139,8 +139,7 @@
 (defun read-cached-leaf-types-if-available (file-names)
   (unless (listp file-names) 
     (setf file-names (list file-names)))
-  (setf *leaf-type-file-list* 
-    (union file-names *leaf-type-file-list* :test #'equal))
+  (setf *leaf-type-file-list* file-names)
   (if (check-load-names file-names 'leaf-type)
       (unless (read-cached-leaf-types *leaf-types* file-names)
 	(dolist (file-name file-names)
@@ -152,13 +151,14 @@
 
 (defun reload-leaf-files nil
   (setf *syntax-error* nil)
-  (when (check-load-names *leaf-type-file-list* "leaf type")
+  (when (check-load-names *leaf-type-file-list* 'leaf-type)
     (clear-leaf-types *leaf-types*)
     (for file-name in (reverse *leaf-type-file-list*)
          do
          (if (eql *lkb-system-version* :page)
 	     (read-tdl-leaf-type-file-aux file-name)
            (read-leaf-type-file-aux file-name)))
+    (store-cached-leaf-types *leaf-types*)
     (format t "~%Reload complete")))
 
 (defun read-type-patch-files nil

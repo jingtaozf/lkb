@@ -56,12 +56,11 @@
         (read-lex-file-sub 
          (reverse *lex-file-list*)
          (if (eql *lkb-system-version* :page) :tdl :path))
+        (format t "~%Lexicon reload complete")
         (when *template-file-list*
           (reload-template-files))
         (when *psort-file-list*
-          (reload-psort-files))
-        (store-cached-lex *lexicon*)
-        (format t "~%Reload complete"))
+          (reload-psort-files)))
     (progn
       #-:tty(format t "~%Use Load Complete Grammar instead")
       #+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
@@ -74,7 +73,7 @@
          (if (eql *lkb-system-version* :page)
            (read-tdl-psort-file-aux template-file t)
            (read-psort-file-aux template-file t)))
-    (format t "~%Reload complete")))
+    (format t "~%Template reload complete")))
 
 (defun reload-psort-files nil
   (setf *syntax-error* nil)
@@ -84,7 +83,7 @@
          (if (eql *lkb-system-version* :page)
            (read-tdl-psort-file-aux psort-file nil)
            (read-psort-file-aux psort-file nil)))
-    (format t "~%Reload complete")))
+    (format t "~%File reload complete")))
 
 
 (defun read-cached-lex-if-available (file-names)
@@ -111,6 +110,7 @@
   (declare (ignore overwrite-p))
   ;;; now always overwrites but retain optional arg for consistency
   ;;; with old scripts
+  (set-temporary-lexicon-filenames)
   (read-lex-file-sub file-names :tdl))
 
 (defun read-lex-file-aux (file-names &optional overwrite-p)
@@ -122,6 +122,7 @@
   ;;; now always overwrites
   ;;; but retain optional arg for consistency
   ;;; with old scripts
+  (set-temporary-lexicon-filenames)
   (read-lex-file-sub file-names :path))
 
 (defun read-lex-file-sub (file-names syntax)
