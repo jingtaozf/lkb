@@ -1,0 +1,12 @@
+(in-package :make)
+
+(defsystem "xml"
+    :host (make-pathname :host cl-user::%sys-host%)   
+    :device (make-pathname :device cl-user::%sys-device%)
+    :source-pathname (dir-append (get-sources-dir "xml") '(:relative "xml"))
+    :binary-pathname (dir-append (get-binaries-dir "xml") '(:relative "xml"))
+    :source-extension "cl"
+    :components ((:file "pxml0")
+                 (:file "pxml1" :depends-on ("pxml0"))
+                 (:file "pxml3" :depends-on ("pxml1"))
+                 (:file "pxml2" :depends-on ("pxml3"))))
