@@ -5,7 +5,9 @@
 # to locate suitable include files.
 #
 
+binary=`basename $0`
 path=`dirname $0`
+
 if [ "{path}" = "." ]; then
   path=`pwd`
 fi
@@ -20,4 +22,4 @@ if [ -f ${home}/lib/XKeysymDB ]; then
   export XKEYSYMDB
 fi
 
-exec ${path}/.swish++ $*
+exec ${path}/.${binary} $*
