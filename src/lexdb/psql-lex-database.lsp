@@ -549,29 +549,6 @@
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-tdl lexicon ostream)))
 
-;(defmethod make-requested-fields ((lexicon psql-lex-database))
-;  "constructs the argument string to sql SELECT with all necessary fields"
-;  (unless (fields-map lexicon)
-;    (complain-no-fields-map)
-;    (error "operation aborted"))
-;  (let* ((fields 
-;	  (remove-duplicates 
-;	   (mapcar #'cadr 
-;		   (fields-map lexicon))
-;	   :test #'equal))
-;         (fields-str 
-;	  (symb-2-str 
-;	   (pop fields))))
-;    (loop 
-;        for element in fields
-;        do 
-;	  (setf fields-str 
-;	    (concatenate 'string 
-;	      fields-str 
-;	      ", " 
-;	      (symb-2-str element))))
-;    fields-str))
-
 (defmethod make-requested-fields-as-list ((lexicon psql-lex-database))
   (unless (fields-map lexicon)
     (complain-no-fields-map lexicon)
@@ -618,7 +595,6 @@
        (error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax).
  You must load updated setup files.
  See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html" lexdb-version *psql-lexdb-compat-version*)))
-      ;(retrieve-fn-defns lexicon)
       (make-field-map-slot lexicon)
       (initialize-userschema lexicon)
       (setf (name lexicon) name)
@@ -788,23 +764,36 @@
     (if *postgres-mwe-enable*
 	(mwe-initialize-userschema lexicon))))
 
-(defmethod semi-setup-1 ((lexicon psql-lex-database))  
+(defmethod semi-setup-pre ((lexicon psql-lex-database))  
   (sql-fn-get-val lexicon 
-		  :semi_setup_1))
+		  :semi_setup_pre))
   
-(defmethod semi-setup-2 ((lexicon psql-lex-database))  
+(defmethod semi-setup-post ((lexicon psql-lex-database))  
   (sql-fn-get-val lexicon 
-		  :semi_setup_2))
+		  :semi_setup_post))
  
 (defmethod semi-up-to-date-p ((lexicon psql-lex-database))  
   (string= "t"
 	   (sql-fn-get-val lexicon
 			   :semi_up_to_date_p)))
   
-(defmethod semi-out-of-date ((lexicon psql-lex-database))  
-  (mapcar #'(lambda (x) (2-symb (car x))) 
-	  (sql-fn-get-raw-records lexicon 
-				  :semi_out_of_date)))
+(defmethod semi-out-of-date ((lexicon psql-lex-database))
+  (with-slots (record-cache) lexicon
+    (let* ((reqd-fields (make-requested-fields-as-list lexicon))
+	   (records (sql-fn-get-records lexicon 
+					:semi_out_of_date
+					:fields reqd-fields))
+	   (names (mapcar 
+		   #'(lambda (x) (2-symb (cdr (assoc :name x))))
+		   records)))
+    ;;; cache records
+      (mapc
+       #'(lambda (record)  
+	   (setf (gethash (record-id record) record-cache) 
+	     record))
+	   records)
+      names)))
+    
 
 (defun compat-version (lexdb-version)
   (when (stringp lexdb-version)

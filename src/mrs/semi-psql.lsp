@@ -5,20 +5,6 @@
 
 (in-package :mrs)
 
-;(defun load-sdbt (sdbt dbname)
-;  (clear sdbt)
-;  ;;(format t "~%(loading table ~a from ~a...)" (sdbt-name sdbt) dbname)
-;  (let ((sql-query (lkb::fn-get-raw-records 
-;		    dbname 
-;		    ''lkb::test 
-;		    (format nil "SELECT * FROM semi_~a"
-;			    (sdbt-name sdbt)))))
-;    (mapc #'(lambda (row) (sdbt-rows-hash 
-;			   (mapcar #'str-to-mixed2 row)
-;			   (sdbt-rows sdbt)))
-;	  (lkb::records sql-query))
-;    (setf (sdbt-last sdbt) nil)))
-
 (defun load-sdbt (sdbt dbname)
   (clear sdbt)
   (let* ((sql-fn (case (sdbt-name sdbt)
@@ -54,7 +40,7 @@
   (with-slots (lkb::host lkb::port lkb::user lkb::dbname) lexicon
   (let* ((base (format nil "~a/semi.obj" 
 	    (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir))))))
-    (lkb::semi-setup-1 lexicon)
+    (lkb::semi-setup-pre lexicon)
     (load-db-table-from-file "semi_pred"
 			     (format nil "~a.~a" base "pred")
 			     lexicon)
@@ -67,7 +53,7 @@
     (load-db-table-from-file "semi_extra"
 			     (format nil "~a.~a" base "extra")
 			     lexicon)
-    (lkb::semi-setup-2 lexicon)
+    (lkb::semi-setup-post lexicon)
     semi
     )))
 

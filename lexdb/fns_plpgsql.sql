@@ -67,59 +67,8 @@ BEGIN
 	PERFORM update_modstamp_priv();
 
 	-- semi
-
-	CREATE TABLE semi_pred (
-		lex_id text NOT NULL,
-		pred_id text NOT NULL,
-		frame_id int NOT NULL,
-		pred_txt text NOT NULL,
-		string_p boolean NOT NULL,
-		modstamp TIMESTAMP WITH TIME ZONE);
-
-	CREATE TABLE semi_frame (
-		frame_id int NOT NULL,
-		slot text NOT NULL,
-		str text,
-		symb text,
-		var_id int,
-		type text);
-
-	CREATE TABLE semi_var (
-		var_id int NOT NULL,
-		extra_id int NOT NULL);
-
-	CREATE TABLE semi_extra (
-		extra_id int NOT NULL,
-		feat text NOT NULL,
-		val text NOT NULL);
-
-CREATE OR REPLACE FUNCTION retrieve_semi_pred() RETURNS SETOF semi_pred AS \'
-BEGIN
-	RETURN ( SELECT * FROM semi_pred );
-END;
-\' LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION retrieve_semi_frame() RETURNS SETOF semi_frame AS \'
-BEGIN
-	RETURN ( SELECT * FROM semi_frame );
-END;
-\' LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION retrieve_semi_var() RETURNS SETOF semi_var AS \'
-BEGIN
-	RETURN ( SELECT * FROM semi_var );
-END;
-\' LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION retrieve_semi_extra() RETURNS SETOF semi_extra AS \'
-BEGIN
-	RETURN ( SELECT * FROM semi_extra );
-END;
-\' LANGUAGE plpgsql;
-
-	-- semi mod time
-	DELETE FROM meta WHERE var=\'semi_build_time\';
-
+	PERFORM create_tables_semi();
+	
 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -292,6 +241,7 @@ BEGIN
  		PERFORM public.index_public_revision();
 
 		PERFORM update_modstamp_pub();
+		--DELETE FROM meta WHERE var=\'semi_build_time\';
 	ELSE
 		RAISE INFO \'0 new entries\';
 	END IF;
@@ -323,6 +273,7 @@ BEGIN
  		RAISE INFO \'Updating timestamps...\';
  		DELETE FROM public.meta WHERE var=\'mod_time\';
  		INSERT INTO public.meta VALUES (\'mod_time\',current_timestamp);
+		--DELETE FROM meta WHERE var=\'semi_build_time\';
 	END IF;
  	RETURN num_new;
 END;
@@ -510,93 +461,45 @@ END;
 -- semi
 --
 
-CREATE OR REPLACE FUNCTION semi_setup_1() RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION semi_setup_pre() RETURNS boolean AS '
 BEGIN
-DROP TABLE semi_pred CASCADE;
-DROP TABLE semi_frame CASCADE;
-DROP TABLE semi_var CASCADE;
-DROP TABLE semi_extra CASCADE;
+	PERFORM semi_drop_indices();
 
-CREATE TABLE semi_pred (
- lex_id text NOT NULL,
- pred_id text NOT NULL,
- frame_id int NOT NULL,
- pred_txt text NOT NULL,
- string_p boolean NOT NULL,
- modstamp TIMESTAMP WITH TIME ZONE
-);
-
-CREATE TABLE semi_frame (
- frame_id int NOT NULL,
- slot text NOT NULL,
- str text,
- symb text,
- var_id int,
- type text
-);
-
-CREATE TABLE semi_var (
- var_id int NOT NULL,
- extra_id int NOT NULL
-);
-
-CREATE TABLE semi_extra (
- extra_id int NOT NULL,
- feat text NOT NULL,
- val text NOT NULL
-);
- RETURN true;
+	DELETE FROM semi_pred;
+	DELETE FROM semi_frame;
+	DELETE FROM semi_var;
+	DELETE FROM semi_extra;
+	DELETE FROM semi_mod;
+RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION semi_setup_2() RETURNS text AS '
+CREATE OR REPLACE FUNCTION semi_setup_post() RETURNS boolean AS '
 BEGIN
--- build time
-DELETE FROM meta WHERE var=\'semi_build_time\';
-INSERT INTO meta VALUES (\'semi_build_time\',current_timestamp);
+	PERFORM semi_create_indices();
 
-CREATE INDEX semi_pred_lex_id ON semi_pred (lex_id);
-CREATE INDEX semi_pred_pred_id ON semi_pred (pred_id);
-CREATE INDEX semi_frame_frame_id ON semi_frame (frame_id);
-CREATE INDEX semi_frame_var_id ON semi_frame (var_id);
-CREATE INDEX semi_var_var_id ON semi_var (var_id);
-CREATE INDEX semi_extra_extra_id ON semi_extra (extra_id);
+	INSERT INTO semi_mod (SELECT DISTINCT name,userid,version,CURRENT_TIMESTAMP FROM current_grammar JOIN semi_pred ON name=lex_id);
 
----
--- merge join is fastest
----
-SET ENABLE_HASHJOIN TO false;
-
-CREATE OR REPLACE VIEW semi_obj AS
- SELECT * FROM
-  semi_pred NATURAL JOIN
-  semi_frame NATURAL LEFT JOIN
-  semi_var NATURAL LEFT JOIN
-  semi_extra;
+	---
+	-- merge join is faster
+	---
+	SET ENABLE_HASHJOIN TO false;
 
 RETURN true;
 END;
 
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.semi_build_time_private() RETURNS text AS '
+CREATE OR REPLACE FUNCTION public.semi_mod_time_private(text,text,int) RETURNS text AS '
+DECLARE
+	stamp text;
 BEGIN
-	RETURN COALESCE((SELECT val FROM meta WHERE var=\'semi_build_time\' LIMIT 1),\'\');
+	--RAISE INFO \'SELECT modstamp FROM semi_mod WHERE (name,userid,version)=(%,%,%))\', $1, $2, $3;
+	stamp := (SELECT modstamp FROM semi_mod WHERE (name,userid,version)=($1,$2,$3));
+	RETURN stamp;
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.semi_out_of_date() RETURNS SETOF text AS '
-DECLARE
-	x RECORD;
-BEGIN
-	FOR x IN
-		SELECT name FROM current_grammar WHERE modstamp > semi_build_time_private()
-		LOOP
-		RETURN NEXT x.name;
-	END LOOP;
-	RETURN;
-END;
-' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.semi_up_to_date_p() RETURNS boolean AS '
 BEGIN

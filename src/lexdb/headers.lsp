@@ -9,7 +9,7 @@
 (defvar *postgres-temp-filename* nil)
 
 (defvar *psql-lkb-version* "2.00")
-(defvar *psql-lexdb-compat-version* "3.2")
+(defvar *psql-lexdb-compat-version* "3.3")
 (defvar *psql-port-default* 5432)
 
 (defvar *postgres-tmp-lexicon* nil)
@@ -69,8 +69,8 @@
     :retrieve_semi_pred
     :retrieve_semi_var
     :semi_out_of_date
-    :semi_setup_1
-    :semi_setup_2
+    :semi_setup_post
+    :semi_setup_pre
     :semi_up_to_date_p
     :show_scratch
     :size_current_grammar

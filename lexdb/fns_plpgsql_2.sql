@@ -32,3 +32,16 @@ CREATE OR REPLACE FUNCTION public.retrieve_entry(text) RETURNS SETOF revision AS
 ' LANGUAGE sql;
 drop table current_grammar;
 
+CREATE OR REPLACE FUNCTION public.semi_out_of_date() RETURNS SETOF revision AS '
+DECLARE
+	x RECORD;
+BEGIN
+	FOR x IN
+		SELECT * FROM current_grammar as g NATURAL LEFT JOIN semi_mod as s WHERE g.modstamp > COALESCE(s.modstamp,\'-infinity\')
+		LOOP
+		RETURN NEXT x;
+	END LOOP;
+	RETURN;
+END;
+' LANGUAGE plpgsql;
+

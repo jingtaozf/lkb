@@ -206,3 +206,96 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION semi_create_indices() RETURNS boolean AS '
+BEGIN
+	CREATE INDEX semi_pred_lex_id ON semi_pred (lex_id);
+	CREATE INDEX semi_pred_pred_id ON semi_pred (pred_id);
+	CREATE INDEX semi_frame_frame_id ON semi_frame (frame_id);
+	CREATE INDEX semi_frame_var_id ON semi_frame (var_id);
+	CREATE INDEX semi_var_var_id ON semi_var (var_id);
+	CREATE INDEX semi_extra_extra_id ON semi_extra (extra_id);
+	CREATE INDEX semi_mod_name_userid_version ON semi_mod (name,userid,version);
+RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION semi_drop_indices() RETURNS boolean AS '
+BEGIN
+	DROP INDEX semi_pred_lex_id CASCADE;
+	DROP INDEX semi_pred_pred_id CASCADE;
+	DROP INDEX semi_frame_frame_id CASCADE;
+	DROP INDEX semi_frame_var_id CASCADE;
+	DROP INDEX semi_var_var_id CASCADE;
+	DROP INDEX semi_extra_extra_id CASCADE;
+	DROP INDEX semi_mod_name_userid_version CASCADE;
+RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION create_tables_semi() RETURNS boolean AS '
+BEGIN
+	CREATE TABLE semi_pred (
+		lex_id text NOT NULL,
+		pred_id text NOT NULL,
+		frame_id int NOT NULL,
+		pred_txt text NOT NULL,
+		string_p boolean NOT NULL,
+		modstamp TIMESTAMP WITH TIME ZONE
+	);
+
+	CREATE TABLE semi_frame (
+		frame_id int NOT NULL,
+		slot text NOT NULL,
+		str text,
+		symb text,
+		var_id int,
+		type text
+	);
+
+	CREATE TABLE semi_var (
+		var_id int NOT NULL,
+		extra_id int NOT NULL
+	);
+
+	CREATE TABLE semi_extra (
+		extra_id int NOT NULL,
+		feat text NOT NULL,
+		val text NOT NULL
+	);
+
+	CREATE TABLE semi_mod (
+		name text,
+		userid text,
+		version int,
+		modstamp TIMESTAMP WITH TIME ZONE
+	);
+
+	PERFORM semi_create_indices();
+
+	CREATE OR REPLACE VIEW semi_obj AS
+		SELECT * FROM
+		semi_pred NATURAL JOIN
+		semi_frame NATURAL LEFT JOIN
+		semi_var NATURAL LEFT JOIN
+		semi_extra;
+
+	CREATE OR REPLACE FUNCTION retrieve_semi_pred() RETURNS SETOF semi_pred AS \'
+		SELECT * FROM semi_pred;
+	\' LANGUAGE sql;
+
+	CREATE OR REPLACE FUNCTION retrieve_semi_frame() RETURNS SETOF semi_frame AS \'
+		SELECT * FROM semi_frame;
+	\' LANGUAGE sql;
+
+	CREATE OR REPLACE FUNCTION retrieve_semi_var() RETURNS SETOF semi_var AS \'
+		SELECT * FROM semi_var;
+	\' LANGUAGE sql;
+
+	CREATE OR REPLACE FUNCTION retrieve_semi_extra() RETURNS SETOF semi_extra AS \'
+		SELECT * FROM semi_extra;
+	\' LANGUAGE sql;
+
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
