@@ -88,8 +88,7 @@
 		     color)
       (draw-tree dtr image color))))
 
-;;; Draw a nested list of nodes in a GIF file, and return the width
-;;; and height of the image
+;;; Draw a nested list of nodes in a GIF file.
 
 (defun draw-parse-www (tree stream)
   (let ((user::*dont-show-morphology* t))

@@ -6,8 +6,10 @@
 
 (in-package :http-user)
 
-(defparameter *demo-version* "March 5, 1999")
+(defparameter *demo-version* "April 30, 1999")
 (defparameter *parser-log-file* "lkb-sentences.log")
+
+(www-utils:add-periodic-task "Flush lexicon" :daily '(clear-non-parents))
 
 ;;***************************************************************************
 ;; Feature structure cache
@@ -17,7 +19,7 @@
 
 (defvar *cache-lock* (mp:make-process-lock))
 
-(defparameter *cache-interval* 600
+(defparameter *cache-interval* 240
   "Life span of a cache entry, in seconds.")
  
 (defun cache-reaper (key)
@@ -43,38 +45,38 @@
 ;; Export parser demo page
 
 (defun write-parser-query (url stream defaults)
+  (declare (ignore url))
   (write-links :parser stream)
   (with-section-heading ("Linguistic Grammars Online" :stream stream)
-    (with-fillout-form (:post url :stream stream)
-      (with-paragraph (:stream stream)
-	(with-table (:stream stream)
-	  (with-table-row (:stream stream)
-	    (with-table-cell (:stream stream)
-	      (with-rendition (:bold :stream stream)
-		(write-string "Sentence to parse: " stream)))
-	    (with-table-cell (:stream stream)
-	      (accept-input 'string "EXPR" :size 40 :stream stream)
-	      (write-string " " stream)
-	      (accept-input 'submit-button "Submit" :stream stream)))
-	  (with-table-row (:stream stream)
-	    (with-table-cell (:stream stream))
-	    (with-table-cell (:stream stream)
-	      (write-string "Find: " stream)
-	      (accept-input 'radio-button "All" :stream stream
-				 :choices '((" first parse only " . "no") 
-					    (" all parses " . "yes"))
-				 :default (first defaults)
-				 :linebreaks nil)))
-	  (with-table-row (:stream stream)
-	    (with-table-cell (:stream stream))
-	    (with-table-cell (:stream stream)
-	      (write-string "Print: " stream)
-	      (accept-input 'checkbox "Output" :stream stream
-				 :choices '((" MRS " . "mrs")
-					    (" FOL " . "fol")
-					    (" VIT " . "vit"))
-				 :default (second defaults)
-				 :linebreaks nil))))))))
+    (with-paragraph (:stream stream)
+      (with-table (:stream stream)
+	(with-table-row (:stream stream)
+	  (with-table-cell (:stream stream)
+	    (with-rendition (:bold :stream stream)
+	      (write-string "Sentence to parse: " stream)))
+	  (with-table-cell (:stream stream)
+	    (accept-input 'string "EXPR" :size 40 :stream stream)
+	    (write-string " " stream)
+	    (accept-input 'submit-button "Submit" :stream stream)))
+	(with-table-row (:stream stream)
+	  (with-table-cell (:stream stream))
+	  (with-table-cell (:stream stream)
+	    (write-string "Find: " stream)
+	    (accept-input 'radio-button "All" :stream stream
+			  :choices '((" first parse only " . "no") 
+				     (" all parses " . "yes"))
+			  :default (first defaults)
+			  :linebreaks nil)))
+	(with-table-row (:stream stream)
+	  (with-table-cell (:stream stream))
+	  (with-table-cell (:stream stream)
+	    (write-string "Print: " stream)
+	    (accept-input 'checkbox "Output" :stream stream
+			  :choices '((" MRS " . "mrs")
+				     (" FOL " . "fol")
+				     (" VIT " . "vit"))
+			  :default (second defaults)
+			  :linebreaks nil)))))))
 
 ;; Wraps the header and footer for parser demo around something
 
@@ -117,21 +119,25 @@
 
 (defun compute-lingo-parser-form (url stream)
   (with-header (url stream "LinGO Parser Demo")
-    (write-parser-query url stream '("no" ("mrs")))))
+    (with-fillout-form (:post url :stream stream)
+      (write-parser-query url stream '("no" ("mrs"))))))
 
-;; Output results of last parse and query for next parse
+;; Output results of last parse/generation and query for next operation
 
 (defun respond-to-lingo-parser (url stream query-alist)
   (let ((*output-stream* stream))
     (declare (special *output-stream*))
     (with-header (url stream "LinGO Parser Demo")
-      (http:bind-query-values 
-       (all output) (url query-alist)
-       (write-parser-query url stream (list all (if (consp output)
-						    output
-						  (list output)))))
-      (html:horizontal-line :stream stream)
-      (write-parser-results url stream query-alist))))
+      (with-fillout-form (:post url :stream stream)
+	(http:bind-query-values 
+	 (all output) (url query-alist)
+	 (write-parser-query url stream (list all (if (consp output)
+						      output
+						    (list output)))))
+	(html:horizontal-line :stream stream)
+	(if (member "Generate" query-alist :test #'equal :key #'second)
+	    (write-generator-results url stream query-alist)
+	  (write-parser-results url stream query-alist))))))
 
 (export-url #u"/lingo/parser.html"
 	    :html-computed-form
@@ -177,36 +183,38 @@
 	    (length parses) expr)
     (write-string "<P>" stream))
   (dolist (parse parses)
-    (with-table (:stream stream)
-      (with-table-row (:vertical-alignment :top :stream stream)
-	(with-table-cell (:stream stream)
-	  (let ((filename (symbol-name (gentemp "parse"))))
-	    (setf (cached-fs filename) parse)
-	    (format stream "<IMG SRC=\"tree?~A\">"  filename)))
-	(with-table-cell (:stream stream)
-	  ;; (html:note-anchor "fs" :stream stream 
-	  ;; :reference 
-	  ;; (format nil "fs?~Ax" filename)
-	  )))
-    ;; Display semantics
-    (with-verbatim-text (:stream stream)
-      (finish-output stream)		
+    (let ((filename (symbol-name (gentemp "parse"))))
+      (setf (cached-fs filename) parse)
+      ;; Display tree
+      (format stream "<IMG SRC=\"tree?~A\">"  filename)
+      ;; Display semantics
       (let* ((output (if (consp output) 
 			 output
 		       (list output)))
 	     (*print-circle* nil)
 	     (*standard-output* stream)
 	     (fs (mrs::get-parse-fs parse))
-	     (sem-fs (mrs::path-value fs mrs::*initial-semantics-path*)))
-	(when (mrs::is-valid-fs sem-fs)
-	  (let ((mrs-struct (mrs::construct-mrs sem-fs)))
-	    (when (member "mrs" output :test #'equalp)
-	      (mrs::output-mrs mrs-struct 'mrs::simple))
+	     (sem-fs (mrs::path-value fs mrs::*initial-semantics-path*))
+	     (mrs-struct (when (mrs::is-valid-fs sem-fs)
+			   (mrs::construct-mrs sem-fs))))
+	(when mrs-struct
+	  (with-table (:stream stream)
+	    (with-table-row (:vertical-alignment :top :stream stream)
+	      (with-table-cell (:stream stream)      
+		(with-verbatim-text (:stream stream)
+		  (finish-output stream)		
+		  (when (member "mrs" output :test #'equalp)
+		    (mrs::output-mrs mrs-struct 'mrs::simple))))
+	      (with-table-cell (:stream stream)      
+		(accept-input 'submit-button filename
+			      :display-string "Generate" :stream stream))))
+	  (with-verbatim-text (:stream stream)
+	    (finish-output stream)	
 	    (if (member "vit" output :test #'equalp)
 		(mrs::mrs-to-vit-convert mrs-struct)	      
 	      (when (member "fol" output :test #'equalp)
-		(mrs::scope-mrs-struct mrs-struct))))))
-      (finish-output stream)))
+		(mrs::scope-mrs-struct mrs-struct)))))))
+    (finish-output stream))
   parses)
 
 ;;***************************************************************************
@@ -226,3 +234,29 @@
 	    :expiration `(:interval ,*cache-interval*)
 	    :public t
 	    :language :en)
+
+;;***************************************************************************
+;; Interface to generator
+
+(defun write-generator-results (url stream query-alist)
+  (let* ((parse 
+	  (string-downcase
+	   (symbol-name 
+	    (car 
+	     (find "Generate" query-alist :test #'equal :key #'second)))))
+	 (content (car (mrs::extract-mrs (list (cached-fs parse)) t))))
+    (when (mrs::psoa-liszt content)
+      (user::generate-from-mrs content))
+    (let ((sentences
+	   (sort
+	    (mapcar
+	     #'(lambda (edge)
+		 (format nil "~{~A~^ ~}" 
+			 (user::fix-spelling (user::g-edge-leaves edge))))
+	     user::*gen-record*)
+	    #'string-lessp))) 
+      (if sentences
+	  (dolist (s sentences)
+	    (format stream "<P>~A" s))
+	(format stream "<p>No strings generated")))))
+

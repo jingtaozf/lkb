@@ -21,10 +21,11 @@
 (setq excl:*restart-init-function* 
   #'(lambda ()
       (read-script-file-aux "/usr/local/etc/www/htdocs/grammar/lkb/script")
+      (index-for-generator)
       (http:start)
       (mp:process-disable mp:*current-process*)))
 
 (excl:gc t)
 
-(dumplisp :file "/eo/e4/malouf/acl/wwwlkb.dxl")
+(dumplisp :name "/eo/e4/malouf/acl/wwwlkb.dxl")
 
