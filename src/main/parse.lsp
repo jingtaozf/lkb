@@ -123,14 +123,15 @@
    (cond ((> (length user-input) *chart-limit*)
          (format t "Can't parse this length of sentence~%") nil)
       (t
-         (let ((*safe-not-to-copy-p* t))
+         (let ((*safe-not-to-copy-p* t)
+               (*parse-unifs* 0) (*parse-fails* 0))
             (clear-chart)
             (add-morphs-to-morphs user-input)
             (add-words-to-chart)
             (setf *parse-record*
                (find-spanning-edges 0 (length user-input)))
             (show-parse)
-            ))))
+            (values *parse-unifs* *parse-fails*)))))
 
 (defun add-morphs-to-morphs (user-input)
    (let ((current 0))
@@ -437,7 +438,7 @@
 	       	; grammar rules are indexed by rightmost daughter (in theory!)
 		; ie application is attempted when we've got all the bits
                (apply-grammar-rule rule
-                                   (cdr (rule-order rule))
+                                   (reverse (rule-daughters-restricted rule))
                                    left-vertex
                                    right-vertex
                                    (list edge))))
@@ -455,124 +456,102 @@
                (list
                   (make-chart-configuration :begin left :edge edge)))))))
  
-(defun apply-grammar-rule (rule rule-remainder 
-      left-vertex right-vertex rule-so-far)
-;;; Application of a grammar rule 
-;;; Every time an edge is added to the chart, a check is made to see whether
-;;; its addition triggers a rule application. 
-;;; (That is whether it has a category corresponding to the rightmost 
-;;; daughter of a grammar rule - checked before calling apply-grammar-rule
-;;; and whether edges corresponding to the other daughter categories are
-;;; already on the chart.) 
-;;; If yes 
-;;; collect the dags associated with the children, perform
-;;; the unifications specified by the rule, and if the unification(s) succeed, 
-;;; create a new edge (for the mother), record its dag and associated
-;;; information, add this to the chart, and invoke the same process
-;;; recursively.
-       (cond ((= (length rule-remainder) 1) 
-	      			; we've got all the bits
-              (apply-immediate-grammar-rule rule
-                                            left-vertex
-                                            right-vertex
-                                            rule-so-far))
-             (t
-              (dolist
-                (configuration
-                  (step-backward *toptype* ; (car rule-remainder)
-                                 left-vertex))
-                (apply-grammar-rule rule
-                                   (cdr rule-remainder)
-                                    (chart-configuration-begin configuration)
-                                    right-vertex
-                                    (cons
-                                      (chart-configuration-edge configuration)
-                                      rule-so-far))))))
+(defun apply-grammar-rule (rule rule-restricted-list left-vertex right-vertex
+                           child-fs-list)
+   ;; Application of a grammar rule 
+   ;; Every time an edge is added to the chart, a check is made to see whether
+   ;; its addition triggers a rule application. 
+   ;; (That is whether it has a category corresponding to the rightmost 
+   ;; daughter of a grammar rule - checked before calling apply-grammar-rule
+   ;; and whether edges corresponding to the other daughter categories are
+   ;; already on the chart.) 
+   ;; If yes 
+   ;; collect the dags associated with the children, perform
+   ;; the unifications specified by the rule, and if the unification(s) succeed, 
+   ;; create a new edge (for the mother), record its dag and associated
+   ;; information, add this to the chart, and invoke the same process
+   ;; recursively.
+   (cond
+      ((not
+          (restrictors-compatible-p (car rule-restricted-list)
+             (edge-dag-restricted (car child-fs-list)))))
+      ((null (cdr rule-restricted-list))
+         ;; we've got all the bits
+         (apply-immediate-grammar-rule rule left-vertex right-vertex child-fs-list))
+      (t
+        (let ((entry (aref *chart* left-vertex)))
+           (when entry
+              (dolist (configuration (chart-entry-configurations entry))
+                 (apply-grammar-rule
+                    rule
+                    (cdr rule-restricted-list)
+                    (chart-configuration-begin configuration)
+                    right-vertex
+                    (cons (chart-configuration-edge configuration) child-fs-list))))))))
 
-(defun step-backward (category right-vertex)
-   ;;;  finds all chart configurations which define vertices connected to the
-   ;;; right vertex by a node which may be of a particular type
-   (let ((candidate
-            (aref *chart* right-vertex)))
-      (when candidate
-        (let ((res nil))
-            (dolist (configuration (chart-entry-configurations candidate) res)
-               (when
-                  (greatest-common-subtype 
-                     category
-                     (edge-category (chart-configuration-edge configuration)))
-                  (push configuration res)))))))
 
 (defparameter *debugging* nil)
 
-(defun apply-immediate-grammar-rule (rule
-      left-vertex right-vertex rule-so-far)
+(defun apply-immediate-grammar-rule (rule left-vertex right-vertex child-fs-list)
    ;;; attempt to apply a grammar rule when we have all the parts which
    ;;; match its daughter categories 
-   (let* ((child-fs-list rule-so-far)
-          (unification-result
-            (and
-               (dolist (daughter-r (rule-daughters-restricted rule) t)
-                  (unless
-                     (restrictors-compatible-p daughter-r
-                        (edge-dag-restricted (pop child-fs-list)))
-                     (return nil)))
-               (evaluate-unifications
-                  rule (mapcar #'edge-dag rule-so-far) nil rule-so-far))))
+   (let ((unification-result
+           (evaluate-unifications rule (mapcar #'edge-dag child-fs-list)
+               nil child-fs-list)))
       (if unification-result
          (let ((new-edge (make-edge :id (next-edge)
                                    :category (indef-type-of-tdfs unification-result)
                                    :rule-number (rule-id rule)
-                                   :children rule-so-far
+                                   :children child-fs-list
                                    :dag unification-result
                                    :lex-ids 
                                    (mapcan
                                     #'(lambda (child)
                                         (copy-list (edge-lex-ids child)))
-                                    rule-so-far)
+                                    child-fs-list)
                                    :leaves
                                    (mapcan
                                     #'(lambda (child)
                                         (copy-list (edge-leaves child)))
-                                    rule-so-far))))
+                                    child-fs-list))))
               (activate-context left-vertex new-edge right-vertex))
          (when *debugging*
             (format t "~%Unification failure on rule ~A and edges ~:A" 
-               (rule-id rule) (mapcar #'edge-id rule-so-far))))))
+               (rule-id rule) (mapcar #'edge-id child-fs-list))))))
 
 
-(defun evaluate-unifications (rule child-fs-list
-      &optional nu-orth child-edges)
+(defun evaluate-unifications (rule child-fs-list &optional nu-orth child-edges)
    ;; modified for YADU
    ;; 
    ;; An additional optional argument is given. This is the
    ;; new orthography if the unification relates to a morphological
    ;; process. If it is present, it is inserted in the resulting fs.
    ;;  The actual process of unification 
-   (incf *parse-unifs*)
-   (let
+   (let*
       ((rule-tdfs (rule-full-fs rule))
-       (rule-feats (rule-order rule))
-       (child-fses child-fs-list))
+       (rule-daughter-order (cdr (rule-order rule)))
+       (rule-apply-order (rule-daughters-apply-order rule))
+       (n 0))
       (with-unification-context (ignore)
-         (let (;(n 0)
-               ;(child-edges-tail (cdr child-edges))
-               )
-            (dolist (rule-feat (cdr rule-feats))
-               (unless
-                  (and
-                     (or t ;(eql (incf n) 1)
-                        ;(and child-edges-tail
-                        ;   (restrictors-compatible-p
-                        ;      (x-restrict-fs
-                        ;         (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) rule-feat))
-                        ;      (edge-dag-restricted (pop child-edges-tail))))
-                        )
-                     (yadu-features rule-feat rule-tdfs nil (pop child-fses)))
-                  (return-from evaluate-unifications nil))))
-         ;; if (car rule-feats) is NIL - tdfs-at-end-of
+         (dolist (rule-feat rule-apply-order)
+            (unless
+               (or (eql (incf n) 1)
+                  (x-restrict-and-compatible-p
+                     (if (listp rule-feat)
+                        (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) rule-feat)
+                        (x-get-dag-value (tdfs-indef rule-tdfs) rule-feat))
+                     (edge-dag-restricted
+                        (nth (position rule-feat rule-daughter-order) child-edges))))
+               (return-from evaluate-unifications nil))
+            (incf *parse-unifs*)
+            (unless
+               (yadu-features rule-feat rule-tdfs nil
+                  (nth (position rule-feat rule-daughter-order) child-fs-list))
+               (incf *parse-fails*)
+               (return-from evaluate-unifications nil)))
+         ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of
          ;; will return the entire structure
-         (let ((result (tdfs-at-end-of (car rule-feats) rule-tdfs)))
+         (let ((result (tdfs-at-end-of (car (rule-order rule)) rule-tdfs)))
             (when nu-orth
                (let ((tmp-orth-path *orth-path*))
                   (for orth-value in (split-into-words nu-orth)
@@ -588,8 +567,6 @@
                ;; otherwise their copies would be thrown away immediately
                ;; we have to check whether any of the deleted dags contain a cycle -
                ;; if so then the whole rule application should fail
-               ;; what we can't check with this technique is a cycle from inside one
-               ;; of these deleted dags back to the very top of the result dag
                (let* ((real-dag (deref-dag (tdfs-indef result)))
                       (new (clone-dag real-dag))
                       (arcs-to-check nil))
@@ -728,13 +705,14 @@
                           (format ostream "~%Can't parse this length of sentence~%") 
                           nil)
                          (t
-                          (clear-chart)
-                          (add-morphs-to-morphs user-input)
-                          (add-words-to-chart)
-                          (setf *parse-record*
-                                (find-spanning-edges 0 (length user-input)))
-                          (let ((n (length *parse-record*)))
-                            (format ostream "~%~R parse~:[s~;~] found" n (= n 1))))))))))
+                          (let ((*safe-not-to-copy-p* t)
+                                (*parse-unifs* 0) (*parse-fails* 0))(clear-chart)
+                            (add-morphs-to-morphs user-input)
+                            (add-words-to-chart)
+                            (setf *parse-record*
+                                  (find-spanning-edges 0 (length user-input)))
+                            (let ((n (length *parse-record*)))
+                              (format ostream "~%~R parse~:[s~;~] found" n (= n 1)))))))))))
          (format ostream "~%Total time taken: ~A" (- (get-universal-time) start-time))
          ))))
 
@@ -781,7 +759,7 @@
 
 (defun preprocess-sentence-string (str)
   ;;; to be defined by the user
-    str))
+    str)
 
       
       
