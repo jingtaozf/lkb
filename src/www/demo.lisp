@@ -9,7 +9,7 @@
 
 (defparameter *www-port* 8000)
 
-(defparameter *www-log* (format nil "/tmp/www.log.~a" (tsdb::current-user)))
+(defparameter *www-log* (format nil "www.log.~a" (tsdb::current-user)))
 
 (defparameter *www-interrupt* nil)
 
