@@ -367,18 +367,60 @@ empty (and hope this works ...)</comment>
 
 <le>
 <tag>NP2</tag>
-<comment>252 pl names</comment>
+<comment>252 pl names: not distinguished from NP1 in ERG</comment>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>X</var></ep>
+<ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>NAMED_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
 
-<!--
-; NPD1 ; Monday,...
-; NPD2 ; Fridays,...
-; NPM1 ; April,...
--->
+
+<le>
+<tag>NPD1</tag>
+<comment>Monday,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>DOFW_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>NPD2</tag>
+<comment>Fridays,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>BARE_DIV_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>DOFW_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<le>
+<tag>NPM1</tag>
+<comment>April,...</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>MOFY_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
 
 <le>
 <tag>PN</tag>

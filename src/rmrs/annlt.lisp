@@ -63,10 +63,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 
 (defun tag-letters (tag)
   ;;; e.g., _NP1
-  (cond ((and (eql (elt tag 1) #\N) (eql (elt tag 2) #\P)) tag)
-        ;;; various sorts of NPs - will correspond to named_rel etc
-        ;;; in ERG
-        ((eql (elt tag 1) #\N) "n")
+  (cond ((eql (elt tag 1) #\N) "n")
         ((eql (elt tag 1) #\V) "v")
         ((eql (elt tag 1) #\J) "j")
         ((eql (elt tag 1) #\R) "r")
@@ -326,13 +323,16 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 #+:excl
 (defun process-rasp-files nil
   ;;; clear and load the grammars
+ (let ((*xml-word-p* nil))
  (clear-rule-record)
- (read-rmrs-grammar "~aac10/lingo/newlkb/src/rmrs/annlt-test/gram14.1.rmrs")
- (read-rmrs-tag-templates "~aac10/lingo/newlkb/src/rmrs/annlt-test/lex14.1.rmrs")
+ (read-rmrs-grammar (make-pathname 
+    :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+    :name "gram14.1.rmrs"))
+ (read-rmrs-tag-templates 
+  (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+		  :name "lex14.1.rmrs"))
  (let* ((ifiles
-         ;;; (directory "~aac10/lingo/newlkb/src/rmrs/annlt-test/jan28/*"))
-         ;;; (directory "/local/scratch/sht25/parses/*"))
-         (directory "/local/scratch/aac10/qatest/parses/*"))
+         (directory "/usr/groups/mphil/qa03/parses/*"))
         (ofiles (directory "/local/scratch/aac10/qatest/rmrs/*"))
         (ofile-qnos (loop for ofile in ofiles
                         collect
@@ -352,8 +352,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
               (excl::shell 
                (concatenate 
                    'string "gunzip -c < " 
-                   ;;; "/local/scratch/sht25/parses/"
-                   "/local/scratch/aac10/qatest/parses/"
+                    "/usr/groups/mphil/qa03/parses/"
                    namestring "> /tmp/pfile"))
               (let ((new-file (concatenate 'string 
                                 "/local/scratch/aac10/qatest/rmrs/"
@@ -370,7 +369,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
                   ;; change the dtd to the right thing
                   (excl::shell 
                    (concatenate 'string  
-                     "/homes/sht25/Clconversion/chg_dtd.p \"/homes/sht25/QA/unified\" \"/usr/groups/mphil/qa03/dtd/analysis\" CORPUS CORPUS /tmp/rfile > " new-file))
+                     "/homes/sht25/Clconversion/chg_dtd.p \"/homes/sht25/QA/unified\" \"/usr/groups/mphil/qa04/dtd/analysis\" CORPUS CORPUS /tmp/rfile > " new-file))
 		  ;;; validate the XML
                   (excl::shell 
                    (concatenate 'string
@@ -379,7 +378,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 		  ;;; gzip the file
                   (excl::shell (concatenate 'string "gzip " 
                                             new-file)))
-                (excl::shell "rm /tmp/rfile")))))))
+                (excl::shell "rm /tmp/rfile"))))))))
 
 #+:excl
 (defun revalidate-rmrs-files nil
