@@ -200,10 +200,6 @@
   "type of interaction menu that is displayed 
    - valid values are :big or :core")
 
-(def-lkb-parameter mrs::*scoping-call-limit* 10000
-  "for MRS scoping machinery - maximum number of calls"
-  :user)
-
 ;;; for the compare function 
 
 (def-lkb-parameter *discriminant-path* '(synsem local cont key))
