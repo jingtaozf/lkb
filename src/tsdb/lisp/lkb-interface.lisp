@@ -332,7 +332,6 @@
                                          :escape t :case :downcase))
                          collect (pairlis '(:result-id :derivation)
                                           (list i string))))))))))))
-        
     (unless trace (release-temporary-storage))
     (append
      (when condition
@@ -407,7 +406,8 @@
 
 (defun parse-tsdb-sentence (user-input &optional trace)
   (multiple-value-prog1
-      (let ((*dag-recycling-p* (null trace)))
+      (let (#+:pooling
+            (*dag-recycling-p* (null trace)))
         (parse user-input trace))))
 
 
@@ -571,7 +571,10 @@
       for edge in *morph-records* do
         (compress-dag (tdfs-indef (edge-dag edge))))
   (clear-chart)
-  (when *active-parsing-p* (clear-achart))
+  (when (and (fboundp (find-symbol "CLEAR-ACHART" :common-lisp-user))
+             (let ((foo(find-symbol "*ACTIVE-PARSING-P*" :common-lisp-user)))
+               (and foo (symbol-value foo))))
+    (funcall (fboundp (find-symbol "CLEAR-ACHART" :common-lisp-user)))) 
   (setf *cached-category-abbs* nil)
   (setf *parse-times* nil)
   (loop

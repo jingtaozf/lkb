@@ -586,10 +586,17 @@
                    (contrast (get :contrast tag))
                    (field (get :field tag))
                    (i-id (get :i-id tag))
-                   (title (format 
-                           nil 
-                           "`~(~a~)' clashes for `~a' (vs. `~a)' [i-id == ~a]"
-                           field data contrast i-id))
+                   (i-input (get :i-input tag))
+                   (title (if contrast
+                            (format 
+                             nil 
+                             "`~(~a~)' clashes for `~a' (vs. `~a') ~
+                              [i-id == ~a]"
+                             field data contrast i-id)
+                            (format 
+                             nil 
+                             "`~(~a~)' for `~a' [i-id == ~a]"
+                             field i-input i-id)))
                    (message "computing table layout and geometry ..."))
               (apply #'execute-tag
                      (append arguments (list :file file)))
@@ -702,6 +709,45 @@
                         nil 
                         "showtable ~s \".~(~a~)\" ~s ~s" 
                         file (gensym "") name title)
+                       :wait t)))
+                (cond
+                 ((and (equal (first return) :ok) 
+                       (equal (first (second return)) :table))
+                  (push (append (second return)
+                                (pairlis 
+                                 '(:file 
+                                   :command)
+                                 (list file
+                                       (append (rest arguments)
+                                               (list :file file)))))
+                        *tsdb-podium-windows*)
+                  (status :text (format nil "~a done" message) :duration 2))
+                 (t
+                  (status :text (format nil "~a abort" message) 
+                          :duration 2))))))
+           
+           (results
+            (let* ((data (first arguments))
+                   (meter (make-meter 0 1))
+                   (condition 
+                    (when (and *statistics-select-condition*
+                               (not (equal *statistics-select-condition* "")))
+                      *statistics-select-condition*))
+                   (title (format 
+                           nil 
+                           "tsdb(1) `~a' Results~@[ [~a]~]"
+                           data condition))
+                   (message "computing table layout and geometry ..."))
+              (apply #'browse-results
+                     (append arguments
+                             (list :file file :format :tcl :meter meter)))
+              (status :text message)
+              (let ((return 
+                      (send-to-podium 
+                       (format 
+                        nil 
+                        "showtable ~s \".~(~a~)\" ~s ~s" 
+                        file (gensym "") data title)
                        :wait t)))
                 (cond
                  ((and (equal (first return) :ok) 

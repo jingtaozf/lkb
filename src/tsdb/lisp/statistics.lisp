@@ -1175,7 +1175,7 @@
          (show (cons :i-id show))
          (shows (length show))
          (compare (if (atom compare) (list compare) compare))
-         (thorough (intersection '(:derivation :mrs) compare))
+         (thorough (nreverse (intersection '(:derivation :mrs) compare)))
          (compare (set-difference compare thorough :test #'equal))
          (predicates 
           (loop for field in compare collect (find-attribute-predicate field)))
@@ -1475,6 +1475,118 @@
     
     (when (or (stringp file) (stringp append)) (close stream))))
 
+(defun browse-results (data
+                       &key (condition *statistics-select-condition*)
+                            (format :tcl)
+                            file append meter)
+
+  (let* ((thorough '(:derivation :mrs))
+         (items
+          (if (stringp data) 
+            (analyze data 
+                     :condition condition :thorough thorough
+                     :meter meter :message t)
+            data))
+         (stream (create-output-stream file append))
+         (items (sort (copy-seq items) 
+                      #'< :key #'(lambda (foo) (get-field :i-id foo)))))
+    
+    (case format
+      (:tcl
+       (when *statistics-tcl-formats* 
+         (format stream *statistics-tcl-formats*))
+       (format
+        stream
+        "layout col def -m1 5 -r 1 -m2 5 -c black -j center~%~
+         layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
+         layout col 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
+         layout col 2 -m1 5 -r 2 -m2 5 -c black -j left~%~
+         layout col 5 -m1 5 -r 2 -m2 5 -c black -j center~%~
+         layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
+         layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%~
+         layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+         cell 1 1 -contents {i-id} -format title~%~
+         cell 1 2 -contents {i-input} -format title~%~
+         cell 1 3 -contents {readings} -format title~%~
+         cell 1 4 -contents {derivation} -format title~%~
+         cell 1 5 -contents {mrs} -format title~%"
+        (+ (length items) 1))))
+    (loop
+        with separator = 1
+        for row from 2 by 1
+        for item in items
+        for i-id = (get-field :i-id item)
+        for i-input = (get-field :i-input item)
+        for readings = (get-field :readings item)
+        for results = (get-field :results item)
+        for derivations = (loop
+                              for result in results
+                              for derivation = (get-field :derivation result)
+                              when derivation collect derivation)
+        for mrss = (loop
+                       for result in results
+                       for mrs = (get-field :mrs result)
+                       when mrs collect mrs)
+        for dtag = (intern (gensym "") :keyword)
+        for mtag = (intern (gensym "") :keyword)
+        when (= (- row 1) (* separator 10))
+        do 
+          (case format
+            (:tcl
+             (format
+              stream
+              "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+              row)))
+          (incf separator)
+        do
+          ;; _fix_me_ this creates a potential memory leak: as soon as the
+          ;; window for this table is destroyed, there will be no further
+          ;; reference to the (tag) symbols used to store data on the lisp
+          ;; side.  yet, the values associated with the symbol properties will
+          ;; never become unbound.                              (11-apr-00)
+          ;;
+          (setf (get :source dtag) data)
+          (setf (get :i-id dtag) i-id)
+          (setf (get :i-input dtag) i-input)
+          (setf (get :field dtag) :derivation)
+          (setf (get :value dtag) derivations)
+          (setf (get :source mtag) data)
+          (setf (get :i-id mtag) i-id)
+          (setf (get :i-input mtag) i-input)
+          (setf (get :field mtag) :mrs)
+          (setf (get :value mtag) mrss)
+          (case format
+            (:tcl
+             (format stream "cell ~d 1 -contents {~a} -format data~%" row i-id)
+             (if (stringp data)
+               (format 
+                stream
+                "cell ~d 2 -contents {~a} -format data -key ~d -source {~a}~%"
+                row i-input i-id data)
+               (format 
+                stream
+                "cell ~d 2 -contents {~a} -format data~%"
+                row i-input))
+             (format
+              stream
+              "cell ~d 3 -contents {~a} -format data~%~
+               cell ~d 4 -contents {~a} -format data ~
+                 -action browse -tag ~a~%~
+               cell ~d 5 -contents {~a} -format data -action browse -tag ~a~%"
+              row readings
+              row (length derivations) dtag
+              row (length mrss) mtag)))
+          
+        finally
+          (case format
+            (:tcl
+             (format
+              stream
+              "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+              (- row 1)))))
+    
+    (when (or (stringp file) (stringp append)) (close stream))))
+
 (defun execute-tag (action tag &key (format :tcl) file append)
 
   (let* ((tag (intern tag :keyword)))
@@ -1483,6 +1595,7 @@
       (:browse
        (let* ((clashes (get :value tag))
               (field (get :field tag))
+              (i-input (get :i-input tag))
               (browser (find-attribute-browser field))
               (stream (and clashes (null browser)
                            (create-output-stream file append))))
@@ -1504,7 +1617,7 @@
                   for i from 1
                   for ntag = (unless browser (intern (gensym "") :keyword))
                   when browser do
-                    (funcall browser clash)
+                    (funcall browser clash i-input)
                   else do
                     (setf (get :i-id ntag) (get :i-id tag))
                     (setf (get :i-input ntag) (get :i-input tag))
