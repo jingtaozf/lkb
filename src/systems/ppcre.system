@@ -29,6 +29,8 @@
 
 (in-package :make)
 
+(pushnew :ppcre *features*)
+
 (defsystem "ppcre"
     :source-pathname (dir-append (get-sources-dir "pvm") '(:relative "ppcre"))
     :binary-pathname (dir-append (get-binaries-dir "pvm") '(:relative "ppcre"))
