@@ -514,11 +514,13 @@
 		 (or (get-grammar-rule-entry (edge-rule-number edge))
 		     (get-lex-rule-entry (edge-rule-number edge)))))
 	 (dtrs (mapcar #'rebuild-edge (get edge-symbol 'daughters))))
-    (when edge
-      (setf (get edge-symbol 'edge-fs)
-	(if (rule-p rule)
-	    (reapply-rule rule dtrs)
-	  (copy-dag-completely (tdfs-indef (edge-dag edge)))))))
+    (cond (edge
+	   (setf (get edge-symbol 'edge-fs)
+	     (if (rule-p rule)
+		 (reapply-rule rule dtrs)
+	       (copy-dag-completely (tdfs-indef (edge-dag edge))))))
+	  ((eql (length dtrs) 1)
+	   (setf (get edge-symbol 'edge-fs) (get (car dtrs) 'edge-fs)))))
   edge-symbol)
 
 (defun reapply-rule (rule daughters)
