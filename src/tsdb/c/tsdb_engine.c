@@ -378,7 +378,8 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
       offset_1 += k;
     } /* if */
   } /* for */
-
+ /* relation index_1 and key key_1 an relation index_2 and key key_2 
+    are the join-keys */
 #if defined(DEBUG) && defined(JOIN)
     fprintf(tsdb_debug_stream,
             "simple_join(): %s", selection_1->relations[0]->name);
@@ -404,6 +405,7 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
 #endif
 
   if(kaerb) {
+    /* initialisation phase */
     (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
                                      (Tsdb_tuple **)NULL);
 
@@ -442,6 +444,7 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
       result->key_lists[i] = (Tsdb_key_list *)NULL;
     } /* for */
     result->length = 0;
+    /* result is prepared */
 
     next_1 = selection_1->key_lists[offset_1 + key_1];
     next_2 = selection_2->key_lists[offset_2 + key_2];
@@ -479,6 +482,7 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
               tuples[i] = foo->tuples[i - next_1->n_tuples];
             } /* for */
             tuples[i] = (Tsdb_tuple *)NULL;
+            /* in the first run we can count here! */
             if(tsdb_insert_into_selection(result, &tuples[0])) {
               result->length++;
             } /* if */
