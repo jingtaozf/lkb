@@ -7,54 +7,6 @@
 ;;; parse output functions - split from parse.lsp
 ;;; and extensively rewritten for MCL
 
-(defun display-parse-tree (edge display-in-chart-p)
-   ;;; takes an edge and builds the tree below it for input
-   ;;; to John's graph package - then displays it
-   ;;; with active nodes
-   (when display-in-chart-p (display-edge-in-chart edge))
-   (let ((edge-symbol (make-new-parse-tree edge 1)))
-      (draw-new-parse-tree edge-symbol 
-         (format nil "Edge ~A ~A" (edge-id edge) (if (gen-chart-edge-p edge) "G" "P"))
-         nil)))
-   
-
-(defun make-new-parse-tree (edge level)
-   ;; show active edge nodes at first level but not thereafter
-   (when edge
-      (if (and (> level 1) (gen-chart-edge-p edge) (gen-chart-edge-needed edge))
-         (some #'(lambda (c) (make-new-parse-tree c (1+ level)))
-            (edge-children edge))
-         (let
-            ((edge-symbol (make-edge-symbol (edge-id edge)))
-             (daughters (edge-children edge))
-             (daughter-list nil))
-            (setf (get edge-symbol 'edge-record) edge)
-            (if daughters
-               (dolist (daughter daughters
-                          (progn
-                             (setf (get edge-symbol 'daughters) (nreverse daughter-list))
-                             edge-symbol))
-                  (if daughter
-                     (push (make-new-parse-tree daughter (1+ level)) daughter-list)
-                     (push (make-symbol "") daughter-list))) ; active chart edge daughter
-                  (make-lex-and-morph-tree edge-symbol edge 1))))))
-
-
-(defun make-lex-and-morph-tree (edge-symbol edge level)
-   (let
-      ((leaf-symbol (make-edge-symbol (car (edge-leaves edge)))))
-      (setf (get edge-symbol 'daughters) (list leaf-symbol))
-      (when (> level 1) (setf (get leaf-symbol 'edge-record) edge))
-      (unless *dont-show-morphology*
-         (let ((mdaughter (edge-morph-history edge)))
-            (if mdaughter
-               (make-lex-and-morph-tree leaf-symbol mdaughter (1+ level)))))
-      edge-symbol))
-
-
-(defstruct parse-tree-record position
-   box value shrunk-p)
-
 ;;; dialect specific from this point
 
 ;;; *parse-tree-font-size* is in globals.lsp

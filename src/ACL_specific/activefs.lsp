@@ -155,45 +155,6 @@
       (clim:replay (clim:stream-output-history stream) stream))
     stream))
 
-#|
-(defun draw-active-fs (window stream &key max-width max-height)
-  (declare (ignore max-width max-height))
-  (mp:with-process-lock (*fs-output-lock*)
-    (let* ((fs-record (active-fs-window-fs window))
-           (fs (fs-display-record-fs fs-record))
-           (title (fs-display-record-title fs-record))
-           (parents (fs-display-record-parents fs-record))
-           (paths (fs-display-record-paths fs-record))
-           (lrule-out (fs-display-record-lrout fs-record))
-           (fudge 20)
-           (max-width 0)
-	   (record 
-	    (clim:with-output-recording-options (stream :draw nil :record t)
-	      (clim:with-output-to-output-record (stream 'clim:standard-tree-output-record)
-		(dotimes (x 1)
-		  (draw-active-title stream fs title parents paths)
-		  (when parents 
-		    (setf max-width (+ fudge (display-active-parents parents stream))))
-		  (let ((dag-width (or (if (tdfs-p fs) 
-					   (display-dag2 fs 'edit stream)
-					 (if lrule-out
-					     (display-lrule fs lrule-out stream)
-					   (display-dag1 fs 'edit stream))) 0)))
-		    (setf max-width (max (+ fudge dag-width max-width)))
-		    (when paths (setf max-width 
-				  (max max-width 
-				       (+ fudge (display-active-dpaths paths stream))))))
-		  (move-to-x-y stream max-width (current-position-y stream)))))))
-      (if (clim:output-record-p record)
-	  (progn
-	    (setq x clim:*application-frame*)
-	    (clim:replay record stream)
-	    )
-	(print "Not an output record!"))
-      record)))
-|#
-
-
 ;;; display-dag2 and display-lrule should be in output(td)fs.lsp
 ;;; rather than activefs.lsp
 
