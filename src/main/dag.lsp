@@ -1155,19 +1155,22 @@
 
 
 (defun make-well-formed (fs features-so-far &optional type-name)
+  ;;; this code could no doubt be sped up quite a lot by being more
+  ;;; careful about multiple lookups etc
    (let ((real-dag (deref-dag fs)))
      (or (dag-visit real-dag)        ; been here before
          (let ((current-type (unify-get-type real-dag)))
            (setf (dag-visit real-dag) t)
            (if (atomic-type-p current-type)
-               (if (not (dag-arcs real-dag))
-                   ;; atomic types are well-formed by definition 
-                   ;; as long as there aren't any features on the dag
-                   ;; this lookup may be a bit slow
-                   t
-                 (progn 
-                   (format t "~%Error in ~A: ~% Atomic type ~A specified to have features at ~:A" type-name current-type (reverse features-so-far))
-                   nil))
+               ;; this does a type table lookup, which will
+               ;; be repeated below if the type isn't atomic
+                (if (not (has-features real-dag))
+                    ;; atomic types are well-formed by definition 
+                    ;; as long as there aren't any features on the dag
+                    t
+                  (progn 
+                    (format t "~%Error in ~A: ~% Atomic type ~A specified to have features at ~:A" type-name current-type (reverse features-so-far))
+                    nil))
              (let
                  ((fs-type (find-type-of-fs real-dag current-type
                                             type-name features-so-far)))
@@ -1179,8 +1182,9 @@
                                        for type ~A at ~:A"
                                   type-name fs-type type-name (reverse features-so-far))
                           nil)
-                         (t (really-make-well-formed real-dag fs-type 
-                                                     features-so-far type-name)))
+                         (t
+                          (really-make-well-formed real-dag fs-type 
+                                                   features-so-far type-name)))
                  nil)))))))
 
 
@@ -1196,6 +1200,7 @@
                "~%Error in ~S:~%   No possible type for features ~S at path ~:S" 
                (or id "unknown") existing-features (reverse path))
             nil)
+         ((not existing-features) current-type)
          ((greatest-common-subtype current-type possible-type))
          (t 
             (format t "~%Error in ~A:~%  Type of fs ~A at path ~:A is incompatible with ~
@@ -1222,8 +1227,9 @@
                   (may-copy-constraint-of fs-type)))))
       (cond
        ((null constraint) 
-          (format t
-                  "~%No well-formed constraint for ~A" fs-type)
+        ;;          (format t
+        ;;                  "~%No well-formed constraint for ~A" fs-type)
+        ;; we've already warned about this, and duplication is annoying
           nil)
        ((progn
           (setq real-dag (retype-dag real-dag fs-type))
