@@ -32,17 +32,20 @@
          result)
       (loop
           for file in files
+          for base = (pathname-name (pathname file))
+          for name = (intern (string-upcase base))
           when (probe-file file) do
             (format t "~&now opening `~a':~%" file)
             (with-open-file (stream file :direction :input)
               (loop
+                  with foo = nil
                   with open = 0
                   with last = #\(
                   for (token . break) = (read-token stream '(#\( #\)))
                   when (and (or (null break) (zerop open))
                             (> (fill-pointer buffer) 0)) 
                   do
-                    (push (copy-seq buffer) result)
+                    (push (cons name (copy-seq buffer)) foo)
                     (setf (fill-pointer buffer) 0)
                     (setf last #\()
                   when (eql break #\() do
@@ -64,7 +67,8 @@
                       (vector-push-extend break buffer 4096))
                      (t
                       (vector-push-extend #\space buffer 4096)))
-                    (setf last break))))
+                    (setf last break)
+                  finally (push (nreverse foo) result))))
       (nreverse result)))
 
 (defun read-ptb-from-string (string)
@@ -110,7 +114,7 @@
         for form = (rewrite-ptb-token raw pos)
         unless (string-equal pos "-none-") do
           (if plainp
-            (push form result)
+            (push raw result)
             (push (format 
                    nil 
                    "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\"~
