@@ -1061,7 +1061,7 @@
                   (format ostream "~A~%" interim-sentence)
                   (finish-output ostream)))
             (let ((sentence (string-trim '(#\Space #\Tab) interim-sentence)))
-               (unless (equal sentence "")
+               (unless (or (equal sentence "") (char= (elt sentence 0) #\;))
                  (let* ((munged-string 
                          (if (fboundp 'preprocess-sentence-string)
                              (preprocess-sentence-string sentence)
