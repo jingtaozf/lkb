@@ -33,19 +33,20 @@
 ;;; "View"
 ;;;
 ;;; "Type hierarchy" show-type-tree
+
+(defparameter *last-type-name* '*top*)
+
 (defun show-type-tree nil
-   (let ((*last-type-name* *toptype*))
-      (declare (special *last-type-name*))
-      (multiple-value-bind (type show-all-p)
-             (ask-user-for-type nil '("Show all types?" . :check-box))
-         (when type
-            (let ((type-entry (get-type-entry type)))
-              (when (and type-entry 
-                         (if (> (length (type-descendants type-entry)) 300)
-                             (lkb-y-or-n-p 
-                              "Large hierarchy may be slow to display.  Go ahead?")
-                           t))
-                  (create-type-hierarchy-tree type nil show-all-p)))))))
+  (multiple-value-bind (type show-all-p)
+      (ask-user-for-type nil '("Show all types?" . :check-box))
+    (when type
+      (let ((type-entry (get-type-entry type)))
+        (when (and type-entry 
+                   (if (> (length (type-descendants type-entry)) 300)
+                       (lkb-y-or-n-p 
+                        "Large hierarchy may be slow to display.  Go ahead?")
+                     t))
+          (create-type-hierarchy-tree type nil show-all-p))))))
 
 
 ;;; "Type spec" show-type-spec
@@ -175,7 +176,7 @@
         
 ;;; 
 ;;; View utilities
-(defparameter *last-type-name* 'synsem-struc)
+
 
 (defun ask-user-for-type (&optional qstring check-box-spec)
    (let ((res

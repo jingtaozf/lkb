@@ -209,7 +209,8 @@
   :user)
 
 (def-lkb-parameter *gen-first-only-p* nil
-  "if set, only the first realization is produced")
+  "if set, only the first realization is produced"
+  :user)
 
 ;;; for the compare function 
 

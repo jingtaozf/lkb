@@ -121,6 +121,14 @@
                                                   (list (deasterisk value)))))))))
 
 (defun deasterisk (value)
+  (let ((val-string (reverse (string value))))
+    (if (char= (elt val-string 0) #\*)
+        (let ((new-type (intern (nreverse (subseq val-string 1)))))
+          (if (is-valid-type new-type)
+              new-type
+            value))
+      value)))
+  #|
   (or
    (and (not (stringp value))
         (let* ((ancestors (mapcar #'type-name (retrieve-ancestors value)))
@@ -130,7 +138,8 @@
           (if strict-type
               (find-gcsubtype strict-type value))))
    value))
-
+|#
+   
 (defparameter *strict-pairs*
     '((pernum . strict_sort)
       (gender . strict_sort)

@@ -39,6 +39,8 @@
 (defvar *lkb-menu-disabled-list* nil
   "Kludge because of MCL bug!!!!")
 
+(defvar *lkb-menu-grammar-file-list* nil)
+
 (defvar *lkb-menu-mrs-list* nil)
 
 (defvar *lkb-menu* nil)
@@ -69,9 +71,14 @@
 		:menu-title name
 		:value value
 		:available-p available-p)))
-    (unless (eql available-p :always) 
+    (unless (or (eql available-p :always) 
+                (and (eql available-p :grammar-file)
+                     user::*current-grammar-load-file*))
       (push (intern (concatenate 'string "COM-" name))
             *lkb-menu-disabled-list*))
+    (when (eql available-p :grammar-file)
+      (push (intern (concatenate 'string "COM-" name))
+            *lkb-menu-grammar-file-list*))
     (when (eql available-p :mrs) 
       (push (intern (concatenate 'string "COM-" name))
             *lkb-menu-mrs-list*))
@@ -348,7 +355,12 @@
   ;; this is called when a type file is being redefined it may only
   ;; work from within the application frame
   (dolist (command *lkb-menu-disabled-list*)
-    (setf (command-enabled command *lkb-top-frame*) nil)))
+    (unless (member command *lkb-menu-grammar-file-list*)
+      (setf (command-enabled command *lkb-top-frame*) nil))))
+
+(defun enable-grammar-reload-interactions nil
+  (dolist (command *lkb-menu-grammar-file-list*)
+    (setf (command-enabled command *lkb-top-frame*) t)))
 
 (defun enable-mrs-interactions nil
   (when cl-user::*mrs-loaded*

@@ -16,3 +16,6 @@
 (defun disable-type-interactions nil
   (clim-user::disable-type-interactions))
 
+(defun enable-grammar-reload-interactions nil
+  (clim-user::enable-grammar-reload-interactions))
+

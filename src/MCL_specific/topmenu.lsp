@@ -21,6 +21,8 @@
 (defvar *lkb-menu-disabled-list* nil
   "Kludge because of MCL bug!!!!")
 
+(defvar *lkb-menu-grammar-file-list* nil)
+
 (defvar *lkb-menu-mrs-list* nil)
 
 ;;; Define make-menu-item for leaf items only
@@ -34,8 +36,12 @@
                         :menu-item-action 
                         #'(lambda nil (eval-enqueue `(,value))) 
                         :disabled (not (eql available-p :always)))))
-    (unless (eql available-p :always)
+    (unless (or (eql available-p :always) 
+                (and (eql available-p :grammar-file)
+                     *current-grammar-load-file*))
       (push menu *lkb-menu-disabled-list*))
+    (when (eql available-p :grammar-file)
+      (push menu *lkb-menu-grammar-file-list*))
     (when (eql available-p :mrs) 
       (push menu *lkb-menu-mrs-list*))
     menu))
@@ -154,6 +160,12 @@
    ;; use the kludge
    (for submenu in *lkb-menu-disabled-list*
         do (menu-item-disable submenu)))
+
+(defun enable-grammar-reload-interactions nil
+   ;; called when a script file load has been attempted
+   (for submenu in *lkb-menu-grammar-file-list*
+        do 
+        (menu-item-enable submenu)))
 
 (defun enable-mrs-interactions nil
   (when cl-user::*mrs-loaded*

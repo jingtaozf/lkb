@@ -146,7 +146,7 @@
                                      :value 'read-script-file :available-p :always)
                      (make-menu-item :name "Reload grammar"
                                      :value 'reload-script-file 
-                                     :available-p :grammar)
+                                     :available-p :grammar-file)
                      (make-menu-item :name "Reload constraints"
                                      :value 'read-type-patch-files
                                      :available-p :grammar)
