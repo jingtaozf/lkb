@@ -48,13 +48,13 @@
   (cond ((and (eql (elt tag 1) #\N) (eql (elt tag 2) #\P)) tag)
         ;;; various sorts of NPs - will correspond to named_rel etc
         ;;; in ERG
-        ((eql (elt tag 1) #\N) "N")
-        ((eql (elt tag 1) #\V) "V")
-        ((eql (elt tag 1) #\J) "J")
-        ((eql (elt tag 1) #\R) "R")
-        ((eql (elt tag 1) #\P) "P")
-	((eql (elt tag 1) #\A) "Q")
-        (t "X")))
+        ((eql (elt tag 1) #\N) "n")
+        ((eql (elt tag 1) #\V) "v")
+        ((eql (elt tag 1) #\J) "j")
+        ((eql (elt tag 1) #\R) "r")
+        ((eql (elt tag 1) #\P) "p")
+	((eql (elt tag 1) #\A) "q")
+        (t "x")))
 
 
 (defun de-xml-str (str)
