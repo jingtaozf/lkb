@@ -17,8 +17,7 @@ DELETE FROM temp;
 COPY temp FROM $0 DELIMITERS '','' WITH NULL AS '''';
 DELETE FROM revision_new;
 INSERT INTO revision_new
-      select * from (select distinct name,userid,version from temp except sele
-ct name,userid,version from public.revision) as t1 natural join temp;
+      select * from (select distinct name,userid,version from temp except select name,userid,version from public.revision) as t1 natural join temp;
 INSERT INTO public.revision SELECT * FROM revision_new;
 
 alter table public.revision add primary key (name,version,userid);
