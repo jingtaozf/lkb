@@ -655,11 +655,11 @@
   (unless n
     (setq n (1- (length (rule-daughters-apply-order rule)))))
   (incf *contemplated-tasks*)
-  (if (and (restrictors-compatible-p (car rule-restricted-list) 
-				     (edge-dag-restricted (car child-fs-list)))
-	   (check-filter (rule-id rule) 
+  (if (and (check-filter (rule-id rule) 
 			 (edge-rule-number (car child-fs-list))
-			 n))
+			 n)
+	   (restrictors-compatible-p (car rule-restricted-list) 
+				     (edge-dag-restricted (car child-fs-list))))
       (if (cdr rule-restricted-list)
 	  (let ((entry (aref *chart* left-vertex 0)))
 	    (when entry
@@ -681,11 +681,11 @@
 (defun try-grammar-rule-right (rule rule-restricted-list left-vertex 
 			       right-vertex child-fs-list f &optional (n 0))
   (incf *contemplated-tasks*)
-  (if (and (restrictors-compatible-p (car rule-restricted-list)
-				     (edge-dag-restricted (car child-fs-list)))
-	   (check-filter (rule-id rule) 
+  (if (and (check-filter (rule-id rule) 
 			 (edge-rule-number (car child-fs-list))
-			 n))
+			 n)
+	   (restrictors-compatible-p (car rule-restricted-list)
+				     (edge-dag-restricted (car child-fs-list))))
       (if (cdr rule-restricted-list)
 	  (let ((entry (aref *chart* right-vertex 1)))
 	    (when entry
