@@ -507,20 +507,6 @@
     (format %lui-stream% " ~s~a~%" title %lui-eoc%))
   (force-output %lui-stream%))
 
-(defun lui-display-mrs (mrs)
-  (let* ((id (lsp-store-object nil (make-lspb :mrs mrs)))
-         (title "Simple MRS Display"))
-    (let ((string (with-output-to-string (stream)
-                    (format
-                     stream
-                     "parameter avm-collapsed-types [u h i e x]~a~%"
-                     %lui-eoc%)
-                    (format stream "avm ~d " id)
-                    (mrs::lui-dagify-mrs mrs :stream stream))))
-      (format %lui-stream% string))
-    (format %lui-stream% " ~s~a~%" title %lui-eoc%))
-  (force-output %lui-stream%))
-
 (defun lui-status-p (&optional key)
   (when (and (streamp %lui-stream%) (open-stream-p %lui-stream%))
     (if (null key)
