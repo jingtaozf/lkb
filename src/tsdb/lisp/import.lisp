@@ -277,7 +277,7 @@
                                        :i-origin :i-register :i-format
                                        :i-difficulty :i-category :i-input :i-wf
                                        :i-length :i-comment :i-author :i-date)
-                                     (list (+ (* index 1000) base)
+                                     (list (+ index base)
                                            origin register format
                                            difficulty category 
                                            (if oinput input ninput) wf
