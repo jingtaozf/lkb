@@ -1,0 +1,1004 @@
+;;; RASP output for semantic test suite, hand-selected parses
+
+("It" "rained") 1 ; (-2.194)
+(|T/txt-sc1/----|
+ (|S/np_vp| |<w s="1" e="2">It_PPH1</w>|
+  (|V1/v| |<w s="4" e="9">rain+ed_VVD</w>|)))
+
+("Abrams" "barked") 1 ; (-3.193)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="12" e="17">Abrams_NP1</w>|))
+  (|V1/v| |<w s="19" e="24">bark+ed_VVD</w>|)))
+
+("The" "window" "opened") 2 ; (-3.098 -3.837)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="27" e="29">The_AT</w>|
+   (|N1/n| |<w s="31" e="36">window_NN1</w>|))
+  (|V1/v| |<w s="38" e="43">open+ed_VVD</w>|)))
+
+("Abrams" "chased" "Browne") 2 ; (-6.773 -7.280)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="46" e="51">Abrams_NP1</w>|))
+  (|V1/v_np-name| |<w s="53" e="58">chase+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="60" e="65">Browne_NP1</w>|)))))
+
+("Abrams" "handed" "Browne" "the" "cigarette") 2 ; (-8.030 -8.514)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="68" e="73">Abrams_NP1</w>|))
+  (|V1/v_np-name_np| |<w s="75" e="80">hand+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="82" e="87">Browne_NP1</w>|))
+   (|NP/det_n1| |<w s="89" e="91">the_AT</w>|
+    (|N1/n| |<w s="93" e="101">cigarette_NN1</w>|)))))
+
+("Abrams" "handed" "the" "cigarette" "to" "Browne") 5 ; (-8.203 -8.250 -8.472 -11.428 -13.540)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="104" e="109">Abrams_NP1</w>|))
+  (|V1/v_np_pp| |<w s="111" e="116">hand+ed_VVD</w>|
+   (|NP/det_n1| |<w s="118" e="120">the_AT</w>|
+    (|N1/n| |<w s="122" e="130">cigarette_NN1</w>|))
+   (|PP/p1|
+    (|P1/p_np-name| |<w s="132" e="133">to_II</w>|
+     (|NP/n1_n1-name/-|
+      (|N1/n| |<w s="135" e="140">Browne_NP1</w>|)))))))
+
+("Abrams" "bet" "Browne" "a" "cigarette" "that" "it" "rained") 8 ; (-12.373 -12.858 -13.093 -13.578 -14.009 -14.729 -15.526 -16.245)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="143" e="148">Abrams_NP1</w>|))
+  (|V1/v_np_np_s| |<w s="150" e="152">bet_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="154" e="159">Browne_NP1</w>|))
+   (|NP/det_n1| |<w s="161" e="161">a_AT1</w>|
+    (|N1/n| |<w s="163" e="171">cigarette_NN1</w>|))
+   (|S/comp| |<w s="173" e="176">that_CST</w>|
+    (|S/np_vp| |<w s="178" e="179">it_PPH1</w>|
+     (|V1/v| |<w s="181" e="186">rain+ed_VVD</w>|))))))
+
+("Abrams" "knew" "that" "it" "rained") 1 ; (-6.067)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="189" e="194">Abrams_NP1</w>|))
+  (|V1/v_s| |<w s="196" e="199">know+ed_VVD</w>|
+   (|S/comp| |<w s="201" e="204">that_CST</w>|
+    (|S/np_vp| |<w s="206" e="207">it_PPH1</w>|
+     (|V1/v| |<w s="209" e="214">rain+ed_VVD</w>|))))))
+
+("Abrams" "intended" "to" "bark") 10 ; (-7.602 -7.682 -7.803 -8.194 -8.341 -8.421 -8.543 -8.933 -11.937 -12.184)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="217" e="222">Abrams_NP1</w>|))
+  (|V1/v_inf| |<w s="224" e="231">intend+ed_VVD</w>|
+   (|V1/to_bse/-| |<w s="233" e="234">to_TO</w>|
+    (|V1/v| |<w s="236" e="239">bark_VV0</w>|)))))
+
+("Abrams" "intended" "Browne" "to" "bark") 7 ; (-8.500 -9.575 -9.648 -10.465 -11.575 -12.202 -12.523)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="242" e="247">Abrams_NP1</w>|))
+  (|V1/v_np_inf| |<w s="249" e="256">intend+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="258" e="263">Browne_NP1</w>|))
+   (|V1/to_bse/-| |<w s="265" e="266">to_TO</w>|
+    (|V1/v| |<w s="268" e="271">bark_VV0</w>|)))))
+
+("Every" "cat" "barked") 1 ; (-3.024)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="274" e="278">Every_AT1</w>|
+   (|N1/n| |<w s="280" e="282">cat_NN1</w>|))
+  (|V1/v| |<w s="284" e="289">bark+ed_VVD</w>|)))
+
+("Every" "cat" "chased" "some" "dog") 4 ; (-4.029 -4.477 -7.602 -8.050)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="292" e="296">Every_AT1</w>|
+   (|N1/n| |<w s="298" e="300">cat_NN1</w>|))
+  (|V1/v_np| |<w s="302" e="307">chase+ed_VVD</w>|
+   (|NP/det_n1| |<w s="309" e="312">some_DD</w>|
+    (|N1/n| |<w s="314" e="316">dog_NN1</w>|)))))
+
+("My" "cat" "barked") 1 ; (-3.024)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="319" e="320">My_APP$</w>|
+   (|N1/n| |<w s="322" e="324">cat_NN1</w>|))
+  (|V1/v| |<w s="326" e="331">bark+ed_VVD</w>|)))
+
+("It" "barked") 1 ; (-2.174)
+(|T/txt-sc1/----|
+ (|S/np_vp| |<w s="334" e="335">It_PPH1</w>|
+  (|V1/v| |<w s="337" e="342">bark+ed_VVD</w>|)))
+
+("The" "cat" "chased" "it") 2 ; (-4.634 -5.575)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="345" e="347">The_AT</w>|
+   (|N1/n| |<w s="349" e="351">cat_NN1</w>|))
+  (|V1/v_np-pro| |<w s="353" e="358">chase+ed_VVD</w>|
+   |<w s="360" e="361">it_PPH1</w>|)))
+
+("The" "cat" "chased" "itself") 2 ; (-6.049 -8.106)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="365" e="367">The_AT</w>|
+   (|N1/n| |<w s="369" e="371">cat_NN1</w>|))
+  (|V1/v_np-refl| |<w s="373" e="378">chase+ed_VVD</w>|
+   |<w s="380" e="385">itself_PPX1</w>|)))
+
+("The" "cat" "chased" "one") 8 ; (-4.661 -5.421 -7.251 -7.696 -8.010 -8.456 -9.670 -10.430)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="388" e="390">The_AT</w>|
+   (|N1/n| |<w s="392" e="394">cat_NN1</w>|))
+  (|V1/v_np-pro| |<w s="396" e="401">chase+ed_VVD</w>|
+   |<w s="403" e="405">one_PN1</w>|)))
+
+("Mine" "barked") 1 ; (-5.389)
+(|T/txt-sc1/----|
+ (|S/np-poss_vp| |<w s="408" e="411">Mine_PP$</w>|
+  (|V1/v| |<w s="413" e="418">bark+ed_VVD</w>|)))
+
+("That" "opened") 2 ; (-3.133 -4.192)
+(|T/txt-sc1/----|
+ (|S/np_vp| |<w s="421" e="424">That_DD1</w>|
+  (|V1/v| |<w s="426" e="431">open+ed_VVD</w>|)))
+
+("Cats" "bark") 2 ; (-4.125 -4.871)
+(|T/txt-sc1/----|
+ (|S/np_vp| (|NP/n1-plu| (|N1/n| |<w s="434" e="437">Cat+s_NN2</w>|))
+  (|V1/v| |<w s="439" e="442">bark_VV0</w>|)))
+
+("Tobacco" "arrived") 2 ; (-3.975 -4.459)
+(|T/txt-sc1/----|
+ (|S/n1_vp| (|N1/n| |<w s="444" e="450">Tobacco_NN1</w>|)
+  (|V1/v| |<w s="452" e="458">arrive+ed_VVD</w>|)))
+
+
+("Some" "bark") 0 ; ()
+(|T/frag|
+ (|Tph/np/--|
+  (|NP/det_n1| |<w s="461" e="464">Some_DD</w>|
+   (|N1/n| |<w s="466" e="469">bark_NN1</w>|))))
+
+("Some" "of" "the" "cats" "bark") 1 ; (-6.456)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/np-pro_pp-of| |<w s="472" e="475">Some_DD</w>|
+   (|PP/p1|
+    (|P1/p_np| |<w s="477" e="478">of_IO</w>|
+     (|NP/det_n1| |<w s="480" e="482">the_AT</w>|
+      (|N1/n| |<w s="484" e="487">cat+s_NN2</w>|)))))
+  (|V1/v| |<w s="489" e="492">bark_VV0</w>|)))
+
+("No" "cat" "barked") 1 ; (-3.669)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="495" e="496">No_AT</w>|
+   (|N1/n| |<w s="498" e="500">cat_NN1</w>|))
+  (|V1/v| |<w s="502" e="507">bark+ed_VVD</w>|)))
+
+("Did" "the" "dog" "bark" "?") 1 ; (-8.950)
+(|T/txt-ph1|
+ (|Tph/vp/-|
+  (|V1/do_np/-| |<w s="510" e="512">do+ed_VDD</w>|
+   (|NP/det_n1| |<w s="514" e="516">the_AT</w>|
+    (|N1/n_n1/-| |<w s="518" e="520">dog_NN1</w>|
+     (|N1/n| |<w s="522" e="525">bark_NN1</w>|)))))
+ |<w s="526" e="526">?_?</w>|)
+
+("Which" "dog" "barked" "?") 2 ; (-4.880 -12.557)
+(|T/txt-sc1/+---|
+ (|S/np-wh_vp|
+  (|NP/det_n1| |<w s="528" e="532">Which_DDQ</w>|
+   (|N1/n| |<w s="534" e="536">dog_NN1</w>|))
+  (|V1/v| |<w s="538" e="543">bark+ed_VVD</w>|))
+ |<w s="544" e="544">?_?</w>|)
+
+("Whose" "dog" "barked" "?") 2 ; (-4.880 -12.557)
+(|T/txt-sc1/+---|
+ (|S/np-wh_vp|
+  (|NP/det_n1| |<w s="546" e="550">Whose_DDQ$</w>|
+   (|N1/n| |<w s="552" e="554">dog_NN1</w>|))
+  (|V1/v| |<w s="556" e="561">bark+ed_VVD</w>|))
+ |<w s="562" e="562">?_?</w>|)
+
+("Chase" "Browne" "!") 5 ; (-12.966 -14.242 -14.360 -15.143 -18.721)
+(|T/txt-sc1/-+--|
+ (|S/imp|
+  (|V1/v_np-name| |<w s="564" e="568">Chase_VV0</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="570" e="575">Browne_NP1</w>|))))
+ |<w s="576" e="576">!_!</w>|)
+
+("Abrams" "wondered" "which" "dog" "barked") 3 ; (-6.666 -9.225 -9.791)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="578" e="583">Abrams_NP1</w>|))
+  (|V1/v_s| |<w s="585" e="592">wonder+ed_VVD</w>|
+   (|S/np-wh_vp|
+    (|NP/det_n1| |<w s="594" e="598">which_DDQ</w>|
+     (|N1/n| |<w s="600" e="602">dog_NN1</w>|))
+    (|V1/v| |<w s="604" e="609">bark+ed_VVD</w>|)))))
+
+("Abrams" "wondered" "whether" "Browne" "barked") 2 ; (-6.652 -6.773)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="612" e="617">Abrams_NP1</w>|))
+  (|V1/vp_pp| (|V1/v| |<w s="619" e="626">wonder+ed_VVD</w>|)
+   (|PP/p1|
+    (|P1/p_s| |<w s="628" e="634">whether_CSW</w>|
+     (|S/np_vp|
+      (|NP/n1_n1-name/-| (|N1/n| |<w s="636" e="641">Browne_NP1</w>|))
+      (|V1/v| |<w s="643" e="648">bark+ed_VVD</w>|)))))))
+
+("The" "dog" "that" "Browne" "chased" "barked") 1 ; (-9.701)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="651" e="653">The_AT</w>|
+   (|N1/n_s| |<w s="655" e="657">dog_NN1</w>|
+    (|S/comp| |<w s="659" e="662">that_CST</w>|
+     (|S/np_vp|
+      (|NP/n1_n1-name/-| (|N1/n| |<w s="664" e="669">Browne_NP1</w>|))
+      (|V1/v| |<w s="671" e="676">chase+ed_VVD</w>|)))))
+  (|V1/v| |<w s="678" e="683">bark+ed_VVD</w>|)))
+
+("The" "dog" "to" "chase" "is" "barking") 6 ; (-8.045 -9.001 -10.195 -11.151 -13.527 -14.483)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="686" e="688">The_AT</w>|
+   (|N1/n_inf| |<w s="690" e="692">dog_NN1</w>|
+    (|V1/to_bse/-| |<w s="694" e="695">to_TO</w>|
+     (|V1/v| |<w s="697" e="701">chase_VV0</w>|))))
+  (|V1/be_ing/-| |<w s="703" e="704">be+s_VBZ</w>|
+   (|V1/v| |<w s="706" e="712">bark+ing_VVG</w>|))))
+
+("The" "dog" "was" "chased" "by" "Browne") 4 ; (-7.490 -7.531 -10.383 -10.486)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="715" e="717">The_AT</w>|
+   (|N1/n| |<w s="719" e="721">dog_NN1</w>|))
+  (|V1/vp_pp|
+   (|V1/be_ppart/-| |<w s="723" e="725">be+ed_VBDZ</w>|
+    (|V1/v| |<w s="727" e="732">chase+ed_VVN</w>|))
+   (|PP/p1|
+    (|P1/p_np-name| |<w s="734" e="735">by_II</w>|
+     (|NP/n1_n1-name/-|
+      (|N1/n| |<w s="737" e="742">Browne_NP1</w>|)))))))
+
+("The" "dog" "chased" "by" "Browne" "barked") 10 ; (-6.744 -6.826 -6.866 -6.947 -9.415 -9.617 -9.749 -9.831 -10.099 -10.181)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="745" e="747">The_AT</w>|
+   (|N1/n_ppart| |<w s="749" e="751">dog_NN1</w>|
+    (|V1/vp_pp| (|V1/v| |<w s="753" e="758">chase+ed_VVN</w>|)
+     (|PP/p1|
+      (|P1/p_np-name| |<w s="760" e="761">by_II</w>|
+       (|NP/n1_n1-name/-|
+        (|N1/n| |<w s="763" e="768">Browne_NP1</w>|)))))))
+  (|V1/v| |<w s="770" e="775">bark+ed_VVD</w>|)))
+
+
+("The" "dog" "is" "barking") 2 ; (-4.254 -5.211)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="778" e="780">The_AT</w>|
+   (|N1/n| |<w s="782" e="784">dog_NN1</w>|))
+  (|V1/be_ing/-| |<w s="786" e="787">be+s_VBZ</w>|
+   (|V1/v| |<w s="789" e="795">bark+ing_VVG</w>|))))
+
+("The" "dog" "has" "barked") 1 ; (-15.892)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="798" e="800">The_AT</w>|
+   (|N1/n| |<w s="802" e="804">dog_NN1</w>|))
+  (|V1/have_past/-| |<w s="806" e="808">have+s_VHZ</w>|
+   (|V1/v| |<w s="810" e="815">bark+ed_VVD</w>|))))
+
+("The" "dog" "has" "been" "barking") 2 ; (-6.528 -6.887)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="818" e="820">The_AT</w>|
+   (|N1/n| |<w s="822" e="824">dog_NN1</w>|))
+  (|V1/have_ppart/-| |<w s="826" e="828">have+s_VHZ</w>|
+   (|V1/be_ing/-| |<w s="830" e="833">be+en_VBN</w>|
+    (|V1/v| |<w s="835" e="841">bark+ing_VVG</w>|)))))
+
+("The" "dog" "had" "been" "barking") 2 ; (-6.528 -6.887)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="844" e="846">The_AT</w>|
+   (|N1/n| |<w s="848" e="850">dog_NN1</w>|))
+  (|V1/have_ppart/-| |<w s="852" e="854">have+ed_VHD</w>|
+   (|V1/be_ing/-| |<w s="856" e="859">be+en_VBN</w>|
+    (|V1/v| |<w s="861" e="867">bark+ing_VVG</w>|)))))
+
+("The" "dog" "will" "bark") 1 ; (-3.962)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="870" e="872">The_AT</w>|
+   (|N1/n| |<w s="874" e="876">dog_NN1</w>|))
+  (|V1/modal_bse/-| |<w s="878" e="881">will_VM</w>|
+   (|V1/v| |<w s="883" e="886">bark_VV0</w>|))))
+
+("The" "dog" "is" "going" "to" "bark") 10 ; (-7.706 -7.767 -7.860 -8.392 -12.077 -12.257 -12.312 -12.324 -12.692 -12.818)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="889" e="891">The_AT</w>|
+   (|N1/n| |<w s="893" e="895">dog_NN1</w>|))
+  (|V1/vp_inf|
+   (|V1/be_ing/-| |<w s="897" e="898">be+s_VBZ</w>|
+    (|V1/v| |<w s="900" e="904">go+ing_VVG</w>|))
+   (|V1/to_bse/-| |<w s="906" e="907">to_TO</w>|
+    (|V1/v| |<w s="909" e="912">bark_VV0</w>|)))))
+
+("The" "dog" "could" "bark") 1 ; (-3.956)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="915" e="917">The_AT</w>|
+   (|N1/n| |<w s="919" e="921">dog_NN1</w>|))
+  (|V1/modal_bse/-| |<w s="923" e="927">could_VM</w>|
+   (|V1/v| |<w s="929" e="932">bark_VV0</w>|))))
+
+("The" "dog" "could" "n't" "bark") 1 ; (-5.007)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="935" e="937">The_AT</w>|
+   (|N1/n| |<w s="939" e="941">dog_NN1</w>|))
+  (|V1/modal_bse/-| |<w s="943" e="947">could_VM</w>|
+   (|V1/not_vp| |<w s="948" e="950">not+_XX</w>|
+    (|V1/v| |<w s="952" e="955">bark_VV0</w>|)))))
+
+("The" "old" "dog" "barked") 1 ; (-3.880)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="958" e="960">The_AT</w>|
+   (|N1/ap_n1/-| (|AP/a1| (|A1/a| |<w s="962" e="964">old_JJ</w>|))
+    (|N1/n| |<w s="966" e="968">dog_NN1</w>|)))
+  (|V1/v| |<w s="970" e="975">bark+ed_VVD</w>|)))
+
+("The" "dog" "barked" "softly") 1 ; (-4.638)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="978" e="980">The_AT</w>|
+   (|N1/n| |<w s="982" e="984">dog_NN1</w>|))
+  (|V1/vp_advp| (|V1/v| |<w s="986" e="991">bark+ed_VVD</w>|)
+   (|AP/a1| (|A1/a| |<w s="993" e="998">softly_RR</w>|)))))
+
+("The" "dog" "probably" "barked") 1 ; (-4.970)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1001" e="1003">The_AT</w>|
+   (|N1/n| |<w s="1005" e="1007">dog_NN1</w>|))
+  (|V1/adv_vp|
+   (|AP/a1| (|A1/a| |<w s="1009" e="1016">probably_RR</w>|))
+   (|V1/v| |<w s="1018" e="1023">bark+ed_VVD</w>|))))
+
+("The" "dog" "barked" "in" "the" "garden") 3 ; (-4.252 -4.374 -8.252)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1026" e="1028">The_AT</w>|
+   (|N1/n| |<w s="1030" e="1032">dog_NN1</w>|))
+  (|V1/vp_pp| (|V1/v| |<w s="1034" e="1039">bark+ed_VVD</w>|)
+   (|PP/p1|
+    (|P1/p_np| |<w s="1041" e="1042">in_II</w>|
+     (|NP/det_n1| |<w s="1044" e="1046">the_AT</w>|
+      (|N1/n| |<w s="1048" e="1053">garden_NN1</w>|)))))))
+
+("The" "dog" "barks" "now") 0 ; ()
+(|T/frag|
+ (|NP/det_n1| |<w s="1056" e="1058">The_AT</w>|
+  (|N1/n_n1/-| |<w s="1060" e="1062">dog_NN1</w>|
+   (|N1/n| |<w s="1064" e="1068">bark+s_NN2</w>|)))
+ |<w s="1070" e="1072">now_RT</w>|)
+
+("The" "garden" "dog" "barked") 1 ; (-4.447)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1075" e="1077">The_AT</w>|
+   (|N1/n_n1/-| |<w s="1079" e="1084">garden_NN1</w>|
+    (|N1/n| |<w s="1086" e="1088">dog_NN1</w>|)))
+  (|V1/v| |<w s="1090" e="1095">bark+ed_VVD</w>|)))
+
+("The" "tobacco" "garden" "dog" "barked") 1 ; (-5.832)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1098" e="1100">The_AT</w>|
+   (|N1/n_n1/-| |<w s="1102" e="1108">tobacco_NN1</w>|
+    (|N1/n_n1/-| |<w s="1110" e="1115">garden_NN1</w>|
+     (|N1/n| |<w s="1117" e="1119">dog_NN1</w>|))))
+  (|V1/v| |<w s="1121" e="1126">bark+ed_VVD</w>|)))
+
+("The" "cat" "is" "old") 1 ; (-3.811)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1129" e="1131">The_AT</w>|
+   (|N1/n| |<w s="1133" e="1135">cat_NN1</w>|))
+  (|V1/be_ap/--| |<w s="1137" e="1138">be+s_VBZ</w>|
+   (|AP/a1| (|A1/a| |<w s="1140" e="1142">old_JJ</w>|)))))
+
+("The" "cat" "is" "in" "the" "garden") 2 ; (-4.831 -9.436)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1147" e="1149">The_AT</w>|
+   (|N1/n| |<w s="1151" e="1153">cat_NN1</w>|))
+  (|V1/be_pp/--| |<w s="1155" e="1156">be+s_VBZ</w>|
+   (|PP/p1|
+    (|P1/p_np| |<w s="1158" e="1159">in_II</w>|
+     (|NP/det_n1| |<w s="1161" e="1163">the_AT</w>|
+      (|N1/n| |<w s="1165" e="1170">garden_NN1</w>|)))))))
+
+("The" "barking" "dog" "chased" "Browne") 2 ; (-7.498 -8.005)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1173" e="1175">The_AT</w>|
+   (|N1/ap_n1/-|
+    (|AP/a1| (|A1/a| |<w s="1177" e="1183">barking_JJ</w>|))
+    (|N1/n| |<w s="1185" e="1187">dog_NN1</w>|)))
+  (|V1/v_np-name| |<w s="1189" e="1194">chase+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="1196" e="1201">Browne_NP1</w>|)))))
+
+("Chased" "dogs" "bark") 5 ; (-6.629 -6.716 -7.632 -7.851 -10.293)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1-plu|
+   (|N1/ppart_n1-r/-| |<w s="1204" e="1209">Chase+ed_VVN</w>|
+    (|N1/n| |<w s="1211" e="1214">dog+s_NN2</w>|)))
+  (|V1/v| |<w s="1216" e="1219">bark_VV0</w>|)))
+
+("Chasing" "the" "cat" "is" "old") 2 ; (-7.826 -8.990)
+(|T/txt-sc1/----|
+ (|S/ing_vp-r|
+  (|V1/v_np| |<w s="1222" e="1228">Chase+ing_VVG</w>|
+   (|NP/det_n1| |<w s="1230" e="1232">the_AT</w>|
+    (|N1/n| |<w s="1234" e="1236">cat_NN1</w>|)))
+  (|V1/be_ap/--| |<w s="1238" e="1239">be+s_VBZ</w>|
+   (|AP/a1| (|A1/a| |<w s="1241" e="1243">old_JJ</w>|)))))
+
+("That" "the" "cat" "chases" "Browne" "is" "old") 5 ; (-10.226 -10.344 -12.380 -13.466 -14.642)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/np-pro_s| |<w s="1248" e="1251">That_DD1</w>|
+   (|S/np_vp|
+    (|NP/det_n1| |<w s="1253" e="1255">the_AT</w>|
+     (|N1/n| |<w s="1257" e="1259">cat_NN1</w>|))
+    (|V1/v_np-name| |<w s="1261" e="1266">chase+s_VVZ</w>|
+     (|NP/n1_n1-name/-|
+      (|N1/n| |<w s="1268" e="1273">Browne_NP1</w>|)))))
+  (|V1/be_ap/--| |<w s="1275" e="1276">be+s_VBZ</w>|
+   (|AP/a1| (|A1/a| |<w s="1278" e="1280">old_JJ</w>|)))))
+
+("Dogs" "chase" "whatever" "barks") 2 ; (-4.656 -8.348)
+;;; WRONG
+(|T/txt-sc1/----|
+ (|S/np_vp| (|NP/n1-plu| (|N1/n| |<w s="1285" e="1288">Dog+s_NN2</w>|))
+  (|V1/v_np| |<w s="1290" e="1294">chase_VV0</w>|
+   (|NP/det_n1| |<w s="1296" e="1303">whatever_DDQV</w>|
+    (|N1/n| |<w s="1305" e="1309">bark+s_NN2</w>|)))))
+
+("The" "dog" "barked" "every" "day") 2 ; (-4.438 -5.671)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1312" e="1314">The_AT</w>|
+   (|N1/n| |<w s="1316" e="1318">dog_NN1</w>|))
+  (|V1/vp_np-nt-adv| (|V1/v| |<w s="1320" e="1325">bark+ed_VVD</w>|)
+   (|NP/det_n1| |<w s="1327" e="1331">every_AT1</w>|
+    (|N1/n| |<w s="1333" e="1335">day_NNT1</w>|)))))
+
+("When" "did" "the" "dog" "bark" "?") 0 ; ()
+;;; WRONG
+(|T/frag| (|PP/p1| (|P1/p-wh| |<w s="1338" e="1341">When_RRQ</w>|))
+ (|V1/do_ub_past| |<w s="1343" e="1345">do+ed_VDD</w>|)
+ (|NP/det_n1| |<w s="1347" e="1349">the_AT</w>|
+  (|N1/n_n1/-| |<w s="1351" e="1353">dog_NN1</w>|
+   (|N1/n| |<w s="1355" e="1358">bark_NN1</w>|)))
+ |<w s="1359" e="1359">?_?</w>|)
+
+("Three" "of" "the" "dogs" "bark") 1 ; (-7.514)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/num_of| (|NP/num| |<w s="1361" e="1365">Three_MC</w>|)
+   (|PP/p1|
+    (|P1/p_np| |<w s="1367" e="1368">of_IO</w>|
+     (|NP/det_n1| |<w s="1370" e="1372">the_AT</w>|
+      (|N1/n| |<w s="1374" e="1377">dog+s_NN2</w>|)))))
+  (|V1/v| |<w s="1379" e="1382">bark_VV0</w>|)))
+
+("Three" "bark") 0 ; ()
+;;; WRONG
+(|T/frag|
+ (|Tph/n1/---|
+  (|N1/np-num_n1| (|NP/num| |<w s="1385" e="1389">Three_MC</w>|)
+   (|N1/n| |<w s="1391" e="1394">bark_NN1</w>|))))
+
+("Browne" "'s" "dog" "barks") 0 ; ()
+;;; WRONG
+(|T/frag|
+ (|Tph/np/--|
+  (|NP/np-poss_n1|
+   (|NP/np_n-poss|
+    (|NP/n1_n1-name/-| (|N1/n| |<w s="1397" e="1402">Browne_NP1</w>|))
+    |<w s="1403" e="1404">'s+_$</w>|)
+   (|N1/n_n1/-| |<w s="1406" e="1408">dog_NN1</w>|
+    (|N1/n| |<w s="1410" e="1414">bark+s_NN2</w>|)))))
+
+("Browne" "'s" "barks") 0 ; ()
+;;; WRONG
+(|T/frag|
+ (|Tph/np/--|
+  (|NP/np-poss_n1|
+   (|NP/np_n-poss|
+    (|NP/n1_n1-name/-| (|N1/n| |<w s="1417" e="1422">Browne_NP1</w>|))
+    |<w s="1423" e="1424">'s+_$</w>|)
+   (|N1/n| |<w s="1426" e="1430">bark+s_NN2</w>|))))
+
+("Twenty" "three" "dogs" "bark") 2 ; (-8.925 -10.039)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1-plu|
+   (|N1/np-num_n1|
+    (|NP/cplx-num| |<w s="1433" e="1438">Twenty_MC</w>|
+     |<w s="1440" e="1444">three_MC</w>|)
+    (|N1/n| |<w s="1446" e="1449">dog+s_NN2</w>|)))
+  (|V1/v| |<w s="1451" e="1454">bark_VV0</w>|)))
+
+("Two" "hundred" "twenty" "dogs" "bark") 4 ; (-10.683 -11.558 -11.946 -12.671)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1-plu|
+   (|N1/np-num_n1|
+    (|NP/cplx-num| |<w s="1457" e="1459">Two_MC</w>|
+     |<w s="1461" e="1467">hundred_NNO</w>|
+     |<w s="1469" e="1474">twenty_MC</w>|)
+    (|N1/n| |<w s="1476" e="1479">dog+s_NN2</w>|)))
+  (|V1/v| |<w s="1481" e="1484">bark_VV0</w>|)))
+
+("Abrams" "arrived" "by" "car") 2 ; (-4.667 -4.788)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1487" e="1492">Abrams_NP1</w>|))
+  (|V1/vp_pp| (|V1/v| |<w s="1494" e="1500">arrive+ed_VVD</w>|)
+   (|PP/p1|
+    (|P1/p_n1| |<w s="1502" e="1503">by_II</w>|
+     (|N1/n| |<w s="1505" e="1507">car_NN1</w>|))))))
+
+("Abrams" "kept" "barking") 2 ; (-4.994 -5.869)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1510" e="1515">Abrams_NP1</w>|))
+  (|V1/v_ing| |<w s="1517" e="1520">keep+ed_VVD</w>|
+   (|V1/v| |<w s="1522" e="1528">bark+ing_VVG</w>|))))
+
+("Browne" "squeezed" "the" "cat" "in") 4 ; (-5.563 -7.185 -13.226 -13.501)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1531" e="1536">Browne_NP1</w>|))
+  (|V1/v_np_prt| |<w s="1538" e="1545">squeeze+ed_VVD</w>|
+   (|NP/det_n1| |<w s="1547" e="1549">the_AT</w>|
+    (|N1/n| |<w s="1551" e="1553">cat_NN1</w>|))
+   |<w s="1555" e="1556">in_RP</w>|)))
+
+("Browne" "squeezed" "in" "the" "cat") 3 ; (-4.431 -4.552 -8.431)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1561" e="1566">Browne_NP1</w>|))
+  (|V1/v_pp_np-hs-r| |<w s="1568" e="1575">squeeze+ed_VVD</w>|
+   (|PP/p1| (|P1/prt-r| |<w s="1577" e="1578">in_II</w>|))
+   (|NP/det_n1| |<w s="1580" e="1582">the_AT</w>|
+    (|N1/n| |<w s="1584" e="1586">cat_NN1</w>|)))))
+
+("The" "picture" "of" "Abrams" "arrived") 1 ; (-6.644)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1589" e="1591">The_AT</w>|
+   (|N1/n_pp-of| |<w s="1593" e="1599">picture_NN1</w>|
+    (|PP/p1|
+     (|P1/p_np-name| |<w s="1601" e="1602">of_IO</w>|
+      (|NP/n1_n1-name/-|
+       (|N1/n| |<w s="1604" e="1609">Abrams_NP1</w>|))))))
+  (|V1/v| |<w s="1611" e="1617">arrive+ed_VVD</w>|)))
+
+("Abrams" "wiped" "the" "table" "clean") 6 ; (-5.899 -6.385 -6.412 -6.715 -8.099 -8.242)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1620" e="1625">Abrams_NP1</w>|))
+  (|V1/v_np_ap| |<w s="1627" e="1631">wipe+ed_VVD</w>|
+   (|NP/det_n1| |<w s="1633" e="1635">the_AT</w>|
+    (|N1/n| |<w s="1637" e="1641">table_NN1</w>|))
+   (|AP/a1| (|A1/a| |<w s="1643" e="1647">clean_JJ</w>|)))))
+
+("Abrams" "put" "Browne" "in" "the" "garden") 2 ; (-6.802 -7.877)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1650" e="1655">Abrams_NP1</w>|))
+  (|V1/v_np_pp| |<w s="1657" e="1659">put_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="1661" e="1666">Browne_NP1</w>|))
+   (|PP/p1|
+    (|P1/p_np| |<w s="1668" e="1669">in_II</w>|
+     (|NP/det_n1| |<w s="1671" e="1673">the_AT</w>|
+      (|N1/n| |<w s="1675" e="1680">garden_NN1</w>|)))))))
+
+("The" "dog" "will" "bark" "if" "Browne" "arrives") 2 ; (-7.415 -7.500)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1683" e="1685">The_AT</w>|
+   (|N1/n| |<w s="1687" e="1689">dog_NN1</w>|))
+  (|V1/vp_pp|
+   (|V1/modal_bse/-| |<w s="1691" e="1694">will_VM</w>|
+    (|V1/v| |<w s="1696" e="1699">bark_VV0</w>|))
+   (|PP/p1|
+    (|P1/p_s| |<w s="1701" e="1702">if_CS</w>|
+     (|S/np_vp|
+      (|NP/n1_n1-name/-|
+       (|N1/n| |<w s="1704" e="1709">Browne_NP1</w>|))
+      (|V1/v| |<w s="1711" e="1717">arrive+s_VVZ</w>|)))))))
+
+("Abrams" "and" "Browne" "arrived") 3 ; (-6.595 -7.562 -8.275)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/np_np-coord/-|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="1720" e="1725">Abrams_NP1</w>|))
+   (|NP/cj-end_np/---| |<w s="1727" e="1729">and_CC</w>|
+    (|NP/n1_n1-name/-|
+     (|N1/n| |<w s="1731" e="1736">Browne_NP1</w>|))))
+  (|V1/v| |<w s="1738" e="1744">arrive+ed_VVD</w>|)))
+
+
+("Abrams" "," "Browne" "and" "the" "dog" "arrived") 8 ; (-10.862 -10.913 -11.345 -11.397 -12.143 -12.185 -12.627 -12.669)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/np_np-coord/+|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="1747" e="1752">Abrams_NP1</w>|))
+   |<w s="1753" e="1753">,_,</w>|
+   (|NP/np_np-coord/-|
+    (|NP/n1_n1-name/-| (|N1/n| |<w s="1755" e="1760">Browne_NP1</w>|))
+    (|NP/cj-end_np/---| |<w s="1762" e="1764">and_CC</w>|
+     (|NP/det_n1| |<w s="1766" e="1768">the_AT</w>|
+      (|N1/n| |<w s="1770" e="1772">dog_NN1</w>|)))))
+  (|V1/v| |<w s="1774" e="1780">arrive+ed_VVD</w>|)))
+
+("The" "dog" "arrived" "and" "barked") 6 ; (-6.700 -6.768 -7.087 -7.115 -7.182 -7.960)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1783" e="1785">The_AT</w>|
+   (|N1/n| |<w s="1787" e="1789">dog_NN1</w>|))
+  (|V1/vp_vp-coord-r/-|
+   (|V1/v| |<w s="1791" e="1797">arrive+ed_VVD</w>|)
+   (|V1/cj-end_vp| |<w s="1799" e="1801">and_CC</w>|
+    (|V1/v| |<w s="1803" e="1808">bark+ed_VVD</w>|)))))
+
+("The" "dog" "arrived" "and" "Browne" "barked") 5 ; (-8.043 -8.110 -8.733 -10.577 -10.811)
+(|T/txt-sc1/----|
+ (|S/s_s-coord-r/-|
+  (|S/np_vp|
+   (|NP/det_n1| |<w s="1811" e="1813">The_AT</w>|
+    (|N1/n| |<w s="1815" e="1817">dog_NN1</w>|))
+   (|V1/v| |<w s="1819" e="1825">arrive+ed_VVD</w>|))
+  (|S/cj-end_s| |<w s="1827" e="1829">and_CC</w>|
+   (|S/np_vp|
+    (|NP/n1_n1-name/-| (|N1/n| |<w s="1831" e="1836">Browne_NP1</w>|))
+    (|V1/v| |<w s="1838" e="1843">bark+ed_VVD</w>|)))))
+
+("The" "dog" "barked" "," "did" "n't" "it" "?") 1 ; (-10.580)
+(|T/txt-sc1/----|
+ (|S/s_tag-qu/+|
+  (|S/np_vp|
+   (|NP/det_n1| |<w s="1846" e="1848">The_AT</w>|
+    (|N1/n| |<w s="1850" e="1852">dog_NN1</w>|))
+   (|V1/v| |<w s="1854" e="1859">bark+ed_VVD</w>|))
+  |<w s="1860" e="1860">,_,</w>| |<w s="1862" e="1864">do+ed_VDD</w>|
+  |<w s="1865" e="1867">not+_XX</w>| |<w s="1869" e="1870">it_PPH1</w>|
+  |<w s="1871" e="1871">?_?</w>|))
+
+("It" "is" "obvious" "that" "the" "dog" "barked") 1 ; (-6.862)
+(|T/txt-sc1/----|
+ (|S/np_vp| |<w s="1873" e="1874">It_PPH1</w>|
+  (|V1/be_ap/--| |<w s="1876" e="1877">be+s_VBZ</w>|
+   (|AP/a1|
+    (|A1/a_s| |<w s="1879" e="1885">obvious_JJ</w>|
+     (|S/comp| |<w s="1887" e="1890">that_CST</w>|
+      (|S/np_vp|
+       (|NP/det_n1| |<w s="1892" e="1894">the_AT</w>|
+        (|N1/n| |<w s="1896" e="1898">dog_NN1</w>|))
+       (|V1/v| |<w s="1900" e="1905">bark+ed_VVD</w>|))))))))
+
+("Abrams" "promised" "Browne" "to" "bark") 7 ; (-8.487 -9.563 -9.635 -10.453 -11.562 -12.189 -12.511)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1908" e="1913">Abrams_NP1</w>|))
+  (|V1/v_np_inf| |<w s="1915" e="1922">promise+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="1924" e="1929">Browne_NP1</w>|))
+   (|V1/to_bse/-| |<w s="1931" e="1932">to_TO</w>|
+    (|V1/v| |<w s="1934" e="1937">bark_VV0</w>|)))))
+
+("Abrams" "seems" "to" "bark") 2 ; (-5.795 -6.392)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1940" e="1945">Abrams_NP1</w>|))
+  (|V1/v_inf| |<w s="1947" e="1951">seem+s_VVZ</w>|
+   (|V1/to_bse/-| |<w s="1953" e="1954">to_TO</w>|
+    (|V1/v| |<w s="1956" e="1959">bark_VV0</w>|)))))
+
+("Abrams" "believes" "Browne" "to" "be" "barking") 8 ; (-9.939 -10.916 -11.052 -12.029 -12.298 -12.925 -13.274 -13.902)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1962" e="1967">Abrams_NP1</w>|))
+  (|V1/v_np_inf| |<w s="1969" e="1976">believe+s_VVZ</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="1978" e="1983">Browne_NP1</w>|))
+   (|V1/to_bse/-| |<w s="1985" e="1986">to_TO</w>|
+    (|V1/be_ing/-| |<w s="1988" e="1989">be_VB0</w>|
+     (|V1/v| |<w s="1991" e="1997">bark+ing_VVG</w>|))))))
+
+("It" "bothered" "Abrams" "that" "Browne" "barked") 1 ; (-8.812)
+(|T/txt-sc1/----|
+ (|S/np_vp| |<w s="2000" e="2001">It_PPH1</w>|
+  (|V1/v_np_s| |<w s="2003" e="2010">bother+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="2012" e="2017">Abrams_NP1</w>|))
+   (|S/comp| |<w s="2019" e="2022">that_CST</w>|
+    (|S/np_vp|
+     (|NP/n1_n1-name/-| (|N1/n| |<w s="2024" e="2029">Browne_NP1</w>|))
+     (|V1/v| |<w s="2031" e="2036">bark+ed_VVD</w>|))))))
+
+("It" "took" "Abrams" "ten" "minutes" "to" "arrive") 10 ; (-12.165 -12.605 -12.692 -12.875 -12.990 -13.513 -13.898 -14.011 -14.034 -14.195)
+; WRONG 
+(|T/txt-sc1/----|
+ (|S/np_vp| |<w s="2039" e="2040">It_PPH1</w>|
+  (|V1/vp_np-nt-adv|
+   (|V1/v_np-name| |<w s="2042" e="2045">take+ed_VVD</w>|
+    (|NP/n1_n1-name/-| (|N1/n| |<w s="2047" e="2052">Abrams_NP1</w>|)))
+   (|NP/n1-nt|
+    (|N1/np-num_n1-nt| (|NP/num| |<w s="2054" e="2056">ten_MC</w>|)
+     (|N1/n_inf| |<w s="2058" e="2064">minute+s_NNT2</w>|
+      (|V1/to_bse/-| |<w s="2066" e="2067">to_TO</w>|
+       (|V1/v| |<w s="2069" e="2074">arrive_VV0</w>|))))))))
+
+("Abrams" "left" "it" "to" "Browne" "to" "bark") 10 ; (-11.508 -11.743 -12.029 -12.098 -12.399 -12.807 -12.919 -13.005 -13.182 -13.246)
+; WRONG (?)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="2077" e="2082">Abrams_NP1</w>|))
+  (|V1/vp_inf|
+   (|V1/v_np_pp| |<w s="2084" e="2087">leave+ed_VVD</w>|
+    |<w s="2089" e="2090">it_PPH1</w>|
+    (|PP/p1|
+     (|P1/p_np-name| |<w s="2092" e="2093">to_II</w>|
+      (|NP/n1_n1-name/-|
+       (|N1/n| |<w s="2095" e="2100">Browne_NP1</w>|)))))
+   (|V1/to_bse/-| |<w s="2102" e="2103">to_TO</w>|
+    (|V1/v| |<w s="2105" e="2108">bark_VV0</w>|)))))
+
+("Abrams" "strikes" "Browne" "as" "old") 7 ; (-9.840 -10.082 -10.167 -11.646 -11.848 -11.972 -12.802)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="2111" e="2116">Abrams_NP1</w>|))
+  (|V1/v_np_pp| |<w s="2118" e="2124">strike+s_VVZ</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="2126" e="2131">Browne_NP1</w>|))
+   (|PP/p1|
+    (|P1/as_ap| |<w s="2133" e="2134">as_CSA</w>|
+     (|AP/a1| (|A1/a| |<w s="2136" e="2138">old_JJ</w>|)))))))
+
+("Browne" "considers" "Abrams" "old") 1 ; (-8.366)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="2143" e="2148">Browne_NP1</w>|))
+  (|V1/v_np_ap| |<w s="2150" e="2158">consider+s_VVZ</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="2160" e="2165">Abrams_NP1</w>|))
+   (|AP/a1| (|A1/a| |<w s="2167" e="2169">old_JJ</w>|)))))
+
+("Abrams" "liked" "the" "idea" "that" "Browne" "could" "bark") 2 ; (-9.793 -10.680)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="2174" e="2179">Abrams_NP1</w>|))
+  (|V1/v_np| |<w s="2181" e="2185">like+ed_VVD</w>|
+   (|NP/det_n1| |<w s="2187" e="2189">the_AT</w>|
+    (|N1/n_s| |<w s="2191" e="2194">idea_NN1</w>|
+     (|S/comp| |<w s="2196" e="2199">that_CST</w>|
+      (|S/np_vp|
+       (|NP/n1_n1-name/-|
+        (|N1/n| |<w s="2201" e="2206">Browne_NP1</w>|))
+       (|V1/modal_bse/-| |<w s="2208" e="2212">could_VM</w>|
+        (|V1/v| |<w s="2214" e="2217">bark_VV0</w>|)))))))))
+
+("Abrams" "barked" "from" "ten" "to" "three") 3 ; (-12.642 -12.676 -13.074)
+; WRONG (from-to)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="2220" e="2225">Abrams_NP1</w>|))
+  (|V1/vp_pp|
+   (|V1/vp_pp| (|V1/v| |<w s="2227" e="2232">bark+ed_VVD</w>|)
+    (|PP/p1|
+     (|P1/p_np-num| |<w s="2234" e="2237">from_II</w>|
+      (|NP/num| |<w s="2239" e="2241">ten_MC</w>|))))
+   (|PP/p1|
+    (|P1/p_np-num| |<w s="2243" e="2244">to_II</w>|
+     (|NP/num| |<w s="2246" e="2250">three_MC</w>|))))))
+
+
+("Abrams" "was" "very" "old") 2 ; (-5.370 -8.359)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="2253" e="2258">Abrams_NP1</w>|))
+  (|V1/be_ap/--| |<w s="2260" e="2262">be+ed_VBDZ</w>|
+   (|AP/a1|
+    (|A1/adv_a1| (|AP/a1| (|A1/a| |<w s="2264" e="2267">very_RG</w>|))
+     (|A1/a| |<w s="2269" e="2271">old_JJ</w>|))))))
+
+("Nearly" "every" "dog" "barked") 3 ; (-5.290 -6.141 -7.371)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/a1-cat_np-r| (|A1/a| |<w s="2276" e="2281">Nearly_RR</w>|)
+   (|NP/det_n1| |<w s="2283" e="2287">every_AT1</w>|
+    (|N1/n| |<w s="2289" e="2291">dog_NN1</w>|)))
+  (|V1/v| |<w s="2293" e="2298">bark+ed_VVD</w>|)))
+
+("Abrams" "barked" "very" "softly") 1 ; (-5.988)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="2301" e="2306">Abrams_NP1</w>|))
+  (|V1/vp_advp|
+   (|V1/vp_advp| (|V1/v| |<w s="2308" e="2313">bark+ed_VVD</w>|)
+    (|AP/a1| (|A1/a| |<w s="2315" e="2318">very_RG</w>|)))
+   (|AP/a1| (|A1/a| |<w s="2320" e="2325">softly_RR</w>|)))))
+
+("Browne" "'s" "chasing" "of" "cats" "bothered" "Abrams") 8 ; (-13.211 -13.718 -13.798 -14.175 -14.305 -14.762 -15.112 -15.699)
+(|T/txt-sc1/----|
+ (|S/n1_vp|
+  (|N1/n1-poss_n1|
+   (|N1/n1_n-poss| (|N1/n| |<w s="2328" e="2333">Browne_NP1</w>|)
+    |<w s="2334" e="2335">'s+_$</w>|)
+   (|N1/n_pp-of| |<w s="2337" e="2343">chasing_NN1</w>|
+    (|PP/p1|
+     (|P1/p_np| |<w s="2345" e="2346">of_IO</w>|
+      (|NP/n1-plu| (|N1/n| |<w s="2348" e="2351">cat+s_NN2</w>|))))))
+  (|V1/v_np-name| |<w s="2353" e="2360">bother+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="2362" e="2367">Abrams_NP1</w>|)))))
+
+("It" "bothered" "Browne" "that" "Abrams" "chased" "cats") 1 ; (-10.170)
+(|T/txt-sc1/----|
+ (|S/np_vp| |<w s="2370" e="2371">It_PPH1</w>|
+  (|V1/v_np_s| |<w s="2373" e="2380">bother+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="2382" e="2387">Browne_NP1</w>|))
+   (|S/comp| |<w s="2389" e="2392">that_CST</w>|
+    (|S/np_vp|
+     (|NP/n1_n1-name/-| (|N1/n| |<w s="2394" e="2399">Abrams_NP1</w>|))
+     (|V1/v_np| |<w s="2401" e="2406">chase+ed_VVD</w>|
+      (|NP/n1-plu| (|N1/n| |<w s="2408" e="2411">cat+s_NN2</w>|))))))))
+
+("June" "third" "arrived") 8 ; (-6.746 -6.988 -7.483 -7.724 -8.498 -8.740 -8.994 -9.236)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/date/---| |<w s="2414" e="2417">June_NPM1</w>|
+   (|NP/num| |<w s="2419" e="2423">third_MD</w>|))
+  (|V1/v| |<w s="2425" e="2431">arrive+ed_VVD</w>|)))
+
+("Abrams" "arrived" "at" "three" "twenty") 2 ; (-10.634 -10.755)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="2434" e="2439">Abrams_NP1</w>|))
+  (|V1/vp_pp| (|V1/v| |<w s="2441" e="2447">arrive+ed_VVD</w>|)
+   (|PP/p1|
+    (|P1/p_np-num| |<w s="2449" e="2450">at_II</w>|
+     (|NP/cplx-num| |<w s="2452" e="2456">three_MC</w>|
+      |<w s="2458" e="2463">twenty_MC</w>|))))))
+
+("Browne" "arrived" "on" "Tuesday" "morning") 9 ; (-9.123 -10.882 -11.729 -11.759 -11.767 -12.885 -12.923 -14.663 -14.701)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="2466" e="2471">Browne_NP1</w>|))
+  (|V1/vp_pp| (|V1/v| |<w s="2473" e="2479">arrive+ed_VVD</w>|)
+   (|PP/p1|
+    (|P1/p_np-nt| |<w s="2481" e="2482">on_II</w>|
+     (|NP/n1-nt|
+      (|N1/n-nt_n1-nt| |<w s="2484" e="2490">Tuesday_NPD1</w>|
+       (|N1/n| |<w s="2492" e="2498">morning_NNT1</w>|))))))))
+
+("The" "cats" "found" "a" "way" "to" "bark") 10 ; (-7.527 -7.575 -7.797 -7.838 -7.886 -8.108 -8.783 -8.819 -8.823 -9.094)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="2501" e="2503">The_AT</w>|
+   (|N1/n| |<w s="2505" e="2508">cat+s_NN2</w>|))
+  (|V1/v_np| |<w s="2510" e="2514">find+ed_VVD</w>|
+   (|NP/det_n1| |<w s="2516" e="2516">a_AT1</w>|
+    (|N1/n_inf| |<w s="2518" e="2520">way_NN1</w>|
+     (|V1/to_bse/-| |<w s="2522" e="2523">to_TO</w>|
+      (|V1/v| |<w s="2525" e="2528">bark_VV0</w>|)))))))
+
+
+("The" "happier" "dog" "chased" "Browne") 2 ; (-7.491 -7.998)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="2531" e="2533">The_AT</w>|
+   (|N1/ap_n1/-|
+    (|AP/a1| (|A1/a| |<w s="2535" e="2541">happier_JJR</w>|))
+    (|N1/n| |<w s="2543" e="2545">dog_NN1</w>|)))
+  (|V1/v_np-name| |<w s="2547" e="2552">chase+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="2554" e="2559">Browne_NP1</w>|)))))
+
+("There" "were" "cats" "in" "the" "garden") 2 ; (-5.858 -6.112)
+(|T/txt-sc1/----|
+ (|S/np_vp| |<w s="2562" e="2566">There_EX</w>|
+  (|V1/be_np/---| |<w s="2568" e="2571">be+ed_VBDR</w>|
+   (|NP/n1-plu|
+    (|N1/n1_pp1| (|N1/n| |<w s="2573" e="2576">cat+s_NN2</w>|)
+     (|PP/p1|
+      (|P1/p_np| |<w s="2578" e="2579">in_II</w>|
+       (|NP/det_n1| |<w s="2581" e="2583">the_AT</w>|
+        (|N1/n| |<w s="2585" e="2590">garden_NN1</w>|)))))))))
+
+("That" "dog" "chased" "Browne") 4 ; (-6.639 -7.146 -9.902 -10.410)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="2593" e="2596">That_DD1</w>|
+   (|N1/n| |<w s="2598" e="2600">dog_NN1</w>|))
+  (|V1/v_np-name| |<w s="2602" e="2607">chase+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="2609" e="2614">Browne_NP1</w>|)))))
+
+("Somebody" "chased" "Abrams") 2 ; (-5.775 -6.282)
+(|T/txt-sc1/----|
+ (|S/np_vp| |<w s="2617" e="2624">Somebody_PN1</w>|
+  (|V1/v_np-name| |<w s="2626" e="2631">chase+ed_VVD</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="2633" e="2638">Abrams_NP1</w>|)))))
+
+("How" "happy" "was" "Abrams" "?") 2 ; (-13.921 -14.202)
+(|T/txt-sc1/+---|
+ (|S/pp_vp-r|
+  (|PP/p1|
+   (|P1/p_a| |<w s="2641" e="2643">How_RGQ</w>|
+    |<w s="2645" e="2649">happy_JJ</w>|))
+  (|V1/be_np/---| |<w s="2651" e="2653">be+ed_VBDZ</w>|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="2655" e="2660">Abrams_NP1</w>|))))
+ |<w s="2661" e="2661">?_?</w>|)
+
+("The" "number" "five" "bothers" "Browne") 0 ; ()
+(|T/frag|
+ (|Tph/np/--|
+  (|NP/np_np-name|
+   (|NP/det_n1| |<w s="2663" e="2665">The_AT</w>|
+    (|N1/n_np-num| |<w s="2667" e="2672">number_NN1</w>|
+     (|NP/num| |<w s="2674" e="2677">five_MC</w>|)))
+   (|NP/n1_n1-name/+| (|N1/n| |<w s="2679" e="2685">bother+s_NN2</w>|)
+    (|N1/n| |<w s="2687" e="2692">Browne_NP1</w>|)))))
+
+("The" "mid" "to" "upper" "nineties" "bother" "Browne") 0 ; ()
+(|T/frag|
+ (|Tph/np/--|
+  (|NP/np_np-name|
+   (|NP/det_a1-att-r/-| |<w s="2695" e="2697">The_AT</w>|
+    (|A1/a1_pp| (|A1/a| |<w s="2699" e="2701">mid_JB</w>|)
+     (|PP/p1| (|P1/prt-r| |<w s="2703" e="2704">to_II</w>|))))
+   (|NP/ap_np-name|
+    (|AP/a1| (|A1/a| |<w s="2706" e="2710">upper_JB</w>|))
+    (|NP/np-num_np-name|
+     (|NP/num| |<w s="2712" e="2719">nineties_MC2</w>|)
+     (|NP/n1_n1-name/+| (|N1/n| |<w s="2721" e="2726">bother_NN1</w>|)
+      (|N1/n| |<w s="2728" e="2733">Browne_NP1</w>|)))))))
+
+("Abrams" "could") 0 ; ()
+(|T/frag| (|N1/n| |<w s="2736" e="2741">Abrams_NP1</w>|)
+ |<w s="2743" e="2747">could_VM</w>|)
+
+("Browne" "tried" "to") 2 ; (-11.088 -11.209)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="2750" e="2755">Browne_NP1</w>|))
+  (|V1/v_pp| |<w s="2757" e="2761">try+ed_VVD</w>|
+   (|PP/p1| (|P1/prt-r| |<w s="2763" e="2764">to_II</w>|)))))
+
+("Do" "n't" "bark" "!") 2 ; (-8.098 -9.492)
+(|T/txt-sc1/-+--|
+ (|S/imp|
+  (|V1/do_bse/-| |<w s="2767" e="2768">Do_VD0</w>|
+   (|V1/not_vp| |<w s="2769" e="2771">not+_XX</w>|
+    (|V1/v| |<w s="2773" e="2776">bark_VV0</w>|))))
+ |<w s="2777" e="2777">!_!</w>|)
+
+("The" "dog" "arrived" "barking") 4 ; (-4.897 -5.549 -5.785 -6.436)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="2779" e="2781">The_AT</w>|
+   (|N1/n| |<w s="2783" e="2785">dog_NN1</w>|))
+  (|V1/v_ing| |<w s="2787" e="2793">arrive+ed_VVD</w>|
+   (|V1/v| |<w s="2795" e="2801">bark+ing_VVG</w>|))))
+
+
