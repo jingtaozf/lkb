@@ -21,6 +21,36 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+;;;
+;;; ToDo
+;;;
+;;; rework to implement the following specification:
+;;;
+;;; @ version
+;;;
+;;; : token separator (also marks transition from string- to token-level rules)
+;;;
+;;; - replace
+;;; + augment (only in token-level mode)
+;;; ^ ersatz (currently only in token-level mode)
+;;; #42
+;;;
+;;; # grouping: name set of rules # 42; group is not executed unless called
+;;;
+;;; >42 group call; groups can be recursive and stop when there was no match
+;;;
+;;; </foo/bar file inclusion: `/foo/bar' is read at this point
+;;;
+;;; | continuation line for token-level rule, in pattern or substitution, e.g.
+;;;
+;;; +it
+;;; |'s				its
+;;;
+;;; +its			it
+;;; |				's
+;;;
+
 (in-package :lkb)
 
 (defparameter *preprocessor-debug-p* t)
@@ -131,10 +161,16 @@
         result)
     (loop
         for rule in global
-        for scanner = (fsr-source rule)
+        for scanner = (fsr-scanner rule)
         for target = (fsr-target rule)
+        for match = (ppcre:regex-replace-all scanner string target)
+        when (and (eq verbose :trace) (not (string= string match))) do
+          (format
+           t
+           "~&|~a|~%  |~a|~%  |~a|~%~%"
+           (fsr-source rule) string match)
         do
-          (setf string (ppcre:regex-replace-all scanner string target)))
+          (setf string match))
     (loop
         with tokens = (ppcre:split tokenizer string)
         for token in tokens
@@ -147,6 +183,11 @@
               for scanner = (fsr-scanner rule)
               for target = (fsr-target rule)
               for match = (ppcre:regex-replace scanner token target)
+              when (and (eq verbose :trace) (not (string= token match))) do
+                (format
+                 t
+                 "~&|~a|~%  |~a|~%  |~a|~%~%"
+                 (fsr-source rule) token match)
               when (eq type :substitute) do
                 (setf token match)
               else unless (string= token match) do
@@ -187,7 +228,7 @@
                 unless (eq type :ersatz) do 
                   (push (list (incf id) start end form form) result)))
         when verbose do
-          (format t "  (~a) [~a:~a] `~a'" id start end form)
+          (format t "  (~a) [~a:~a] |~a|" id start end form)
           (loop
               for foo in extra
               for type = (case (first foo)
@@ -195,7 +236,7 @@
                            (:augment #\+)
                            (:ersatz #\^))
               for form = (second foo)
-              do (format t " {~c `~a'}" type form)
+              do (format t " {~c |~a|}" type form)
               finally (format t "~%"))
         finally 
           (return
@@ -251,3 +292,6 @@
 
 (defun preprocess-for-pet (string)
   (preprocess string :format :pet :verbose nil))
+
+(defun clear-preprocessor ()
+  (setf *preprocessor* nil))

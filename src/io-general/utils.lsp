@@ -212,7 +212,9 @@
     (reset-morph-var)
     (clear-grammar)              ;; should clear everything that might not be
     (clear-lex-rules)            ;; overridden, this should do for now    
-    (setf  *check-paths* nil))
+    (setf  *check-paths* nil)
+    #+:preprocessor
+    (clear-preprocessor))
 
 (defun reload-script-file nil
   (if (and *current-grammar-load-file* 

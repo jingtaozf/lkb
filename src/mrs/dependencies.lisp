@@ -1,15 +1,17 @@
 (in-package :mrs)
 
-(defparameter %mrs-psoa% nil)
+(defparameter *dependencies-include-quantifiers-p* nil)
 
-(defparameter %mrs-variable-counter% 0)
+(defparameter %dependencies-psoa% nil)
 
-(defparameter %mrs-symbol-table% nil)
+(defparameter %dependencies-variable-counter% 0)
 
-(defparameter %mrs-representatives-table% nil)
+(defparameter %dependencies-symbol-table% nil)
 
-(defparameter %mrs-relevant-features% 
-  '("ARG" "ARG0" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA" "RSTR"
+(defparameter %dependencies-representatives-table% nil)
+
+(defparameter %dependencies-relevant-features% 
+  '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA" "RSTR" "BODY"
     "MARG" "NAMED" "CARG" "CONST_VALUE"
     "L-INDEX" "R-INDEX" "L-HANDEL" "R-HANDEL" "MAIN" "SUBORD" "ROLE"
     "HINST" "NHINST"))
@@ -20,10 +22,11 @@
            (name (when (var-p index) (var-name index))))
       (format stream "{~@[~a~]:~%" name)
       (loop
-          with %mrs-psoa% = psoa
-          with %mrs-symbol-table% = (make-hash-table)
-          with %mrs-representatives-table% = (make-hash-table :test #'equal)
-          with %mrs-variable-counter% = 0
+          with %dependencies-psoa% = psoa
+          with %dependencies-symbol-table% = (make-hash-table)
+          with %dependencies-representatives-table% = 
+            (make-hash-table :test #'equal)
+          with %dependencies-variable-counter% = 0
           for relation in (psoa-liszt psoa)
           do
             (mrs-output-relation relation :stream stream))
@@ -31,13 +34,15 @@
     (format stream "{}~%")))
 
 (defun mrs-output-relation (relation &key (stream t))
-  (when (rel-p relation)
+  (when (and (rel-p relation)
+             (or *dependencies-include-quantifiers-p*
+                 (not (mrs-quantifier-p relation))))
     (loop
         with id = (mrs-find-identifier relation)
         with name = (symbol-name (rel-reltype relation))
         with flist = (rel-flist relation)
         with output = nil
-        for feature in %mrs-relevant-features%
+        for feature in %dependencies-relevant-features%
         for key = (vsym feature)
         for value = (loop
                         for fvpair in flist
@@ -64,7 +69,7 @@
             (format stream "]~%")))))
 
 (defun mrs-find-identifier (relation)
-  (or (gethash relation %mrs-symbol-table%)
+  (or (gethash relation %dependencies-symbol-table%)
     (let* ((flist (and (rel-p relation) (rel-flist relation)))
            instance event)
       (loop
@@ -79,8 +84,8 @@
       (let ((name (or
                    (and instance (var-p instance) (var-name instance))
                    (and event (var-p event) (var-name event))
-                   (format nil "_~d" (incf %mrs-variable-counter%)))))
-        (setf (gethash relation %mrs-symbol-table%) name)))))
+                   (format nil "_~d" (incf %dependencies-variable-counter%)))))
+        (setf (gethash relation %dependencies-symbol-table%) name)))))
 
 (defun mrs-find-representative (value)
   (cond
@@ -88,7 +93,7 @@
     (loop
         with name = (handle-var-name value)
         with qeq = (mrs-hcons-qeq name)
-        for relation in (psoa-liszt %mrs-psoa%)
+        for relation in (psoa-liszt %dependencies-psoa%)
         for handle = (handle-var-name (rel-handel relation))
         when (or (equal name handle) (equal qeq handle))
         collect (cons (mrs-find-identifier relation) (rel-reltype relation))
@@ -106,8 +111,9 @@
    ((var-p value)
     (loop
         with name = (var-name value)
-        for relation in (psoa-liszt %mrs-psoa%)
-        for id = (mrs-find-identifier relation)
+        for relation in (psoa-liszt %dependencies-psoa%)
+        for id = (unless (mrs-quantifier-p relation)
+                   (mrs-find-identifier relation))
         thereis
           (when (equal name id) 
             (cons id (rel-reltype relation)))))
@@ -118,9 +124,14 @@
   (loop
       with name = (if (stringp handle) handle (when (handle-var-p handle)
                                                 (handle-var-name handle)))
-      for hcons in (psoa-h-cons %mrs-psoa%)
+      for hcons in (psoa-h-cons %dependencies-psoa%)
       for scarg = (when (eq (hcons-relation hcons) (vsym "QEQ"))
                     (handle-var-name (hcons-scarg hcons)))
       thereis 
         (when (equal name scarg) 
           (handle-var-name (hcons-outscpd hcons)))))
+
+(defun mrs-quantifier-p (relation)
+  (when (rel-p relation)
+    (let ((flist (rel-flist relation)))
+      (find *scope-feat* flist :key #'fvpair-feature))))
