@@ -1,15 +1,116 @@
 cvs update: Updating .
+U README
+U Version.lisp
+U auxverbs.tdl
+U constructions.tdl
+U ecommerce.fsr
+U fundamentals.tdl
+U idioms.tdl
+U irregs.tab
+U letypes.tdl
+U lexdb.dfn
+U lexdb.fld
+U lexdb.rev
+cvs update: lexicon.old-format.csv is no longer in the repository
+U lexicon.tdl
+U lexrules.tdl
+U lextypes.tdl
+U paraphraser.mtr
+U parse-nodes.tdl
+U preprocessor.fsr
+U redwoods.mem
+U robustlex.tdl
+U rondane.fsr
+U rondane.mem
+U roots.tdl
+U syntax.tdl
+U variants.tab
 ? Version.lisp.fasl
 cvs update: Updating arboretum
 cvs update: Updating data
+U data/genrules.mrs
 cvs update: Updating gold
 cvs update: Updating gold/csli
+U gold/csli/decision.gz
+U gold/csli/item-phenomenon.gz
+U gold/csli/item.gz
+U gold/csli/parse.gz
+U gold/csli/phenomenon.gz
+U gold/csli/preference.gz
+U gold/csli/result.gz
+U gold/csli/run.gz
+U gold/csli/tree.gz
+U gold/csli/update.gz
 cvs update: Updating gold/dt-faqs
+U gold/dt-faqs/decision.gz
+U gold/dt-faqs/item.gz
+U gold/dt-faqs/parse.gz
+U gold/dt-faqs/preference.gz
+U gold/dt-faqs/result.gz
+U gold/dt-faqs/run.gz
+U gold/dt-faqs/tree.gz
+U gold/dt-faqs/update.gz
 cvs update: Updating gold/ecoc
+U gold/ecoc/decision.gz
+U gold/ecoc/item.gz
+U gold/ecoc/parse.gz
+U gold/ecoc/preference.gz
+U gold/ecoc/result.gz
+U gold/ecoc/run.gz
+U gold/ecoc/tree.gz
+U gold/ecoc/update.gz
 cvs update: Updating gold/hike
+U gold/hike/decision.gz
+U gold/hike/item.gz
+U gold/hike/parse.gz
+U gold/hike/preference.gz
+U gold/hike/result.gz
+U gold/hike/run.gz
+U gold/hike/tree.gz
+U gold/hike/update.gz
 cvs update: Updating gold/mrs
+U gold/mrs/decision.gz
+U gold/mrs/item.gz
+U gold/mrs/parse.gz
+U gold/mrs/preference.gz
+U gold/mrs/result.gz
+U gold/mrs/run.gz
+U gold/mrs/tree.gz
+U gold/mrs/update.gz
+cvs update: Updating gold/rondane
+U gold/rondane/analysis
+U gold/rondane/decision.gz
+U gold/rondane/edge
+U gold/rondane/item-phenomenon.gz
+U gold/rondane/item-set
+U gold/rondane/item.gz
+U gold/rondane/output
+U gold/rondane/parameter
+U gold/rondane/parse.gz
+U gold/rondane/phenomenon.gz
+U gold/rondane/preference.gz
+U gold/rondane/relations
+U gold/rondane/result.gz
+U gold/rondane/rule
+U gold/rondane/run.gz
+U gold/rondane/score
+U gold/rondane/set
+U gold/rondane/tree.gz
+U gold/rondane/update.gz
 cvs update: Updating gold/trec
+U gold/trec/decision.gz
+U gold/trec/item.gz
+U gold/trec/parse.gz
+U gold/trec/preference.gz
+U gold/trec/result.gz
+U gold/trec/run.gz
+U gold/trec/tree.gz
+U gold/trec/update.gz
 cvs update: Updating lkb
+U lkb/globals.lsp
+U lkb/patches.lsp
+U lkb/script
+U lkb/settings.lsp
 ? lkb/checkpaths.lsp.fasl
 ? lkb/globals.lsp.fasl
 ? lkb/mrs-initialization.lsp.fasl
@@ -17,6 +118,9 @@ cvs update: Updating lkb
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
 cvs update: Updating pet
+U pet/common.set
+U pet/english.set
+U pet/qc.tdl
 cvs update: Updating .
 cvs update: Updating doc
 cvs update: Updating lkb
@@ -89,6 +193,8 @@ cvs update: Updating lib/tk8.3/images
 cvs update: Updating log
 M log/build
 cvs update: Updating src
+U src/pg-interface.el
+U src/version.lsp
 ? src/.l6cl
 cvs update: Updating src/.aasl
 cvs update: Updating src/.aasl/ACL_specific
@@ -269,9 +375,13 @@ cvs update: Updating src/io-lilfes
 cvs update: Updating src/io-paths
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexdb
+U src/lexdb/extract.lsp
+U src/lexdb/lex-database.lsp
+U src/lexdb/psql-emacs.lsp
+U src/lexdb/psql-lex-database.lsp
+U src/lexdb/psql-msc.lsp
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-U src/main/initializations.lsp
 cvs update: Updating src/mrs
 cvs update: Updating src/mrs/data
 cvs update: Updating src/mt
@@ -353,21 +463,29 @@ cvs update: Updating src/tsdb/skeletons/deutsch/tub
 cvs update: Updating src/tsdb/skeletons/deutsch/vm
 cvs update: Updating src/tsdb/skeletons/deutsch/vmd
 cvs update: Updating src/tsdb/skeletons/english
+U src/tsdb/skeletons/english/Index.lisp
 cvs update: Updating src/tsdb/skeletons/english/aged
 cvs update: Updating src/tsdb/skeletons/english/blend
 cvs update: Updating src/tsdb/skeletons/english/cell
 cvs update: Updating src/tsdb/skeletons/english/csli
+U src/tsdb/skeletons/english/csli/item
 cvs update: Updating src/tsdb/skeletons/english/demo
 cvs update: Updating src/tsdb/skeletons/english/ec
 cvs update: Updating src/tsdb/skeletons/english/ecoc
+U src/tsdb/skeletons/english/ecoc/item
 cvs update: Updating src/tsdb/skeletons/english/ecos
 cvs update: Updating src/tsdb/skeletons/english/ecpa
 cvs update: Updating src/tsdb/skeletons/english/ecpr
 cvs update: Updating src/tsdb/skeletons/english/english
 cvs update: Updating src/tsdb/skeletons/english/fuse
 cvs update: Updating src/tsdb/skeletons/english/hike
+U src/tsdb/skeletons/english/hike/item
 cvs update: Updating src/tsdb/skeletons/english/mrs
+U src/tsdb/skeletons/english/mrs/item
 cvs update: Updating src/tsdb/skeletons/english/parc
+cvs update: Updating src/tsdb/skeletons/english/rondane
+U src/tsdb/skeletons/english/rondane/item
+U src/tsdb/skeletons/english/rondane/relations
 cvs update: Updating src/tsdb/skeletons/english/s+w
 cvs update: Updating src/tsdb/skeletons/english/toy
 cvs update: Updating src/tsdb/skeletons/english/vm
@@ -375,6 +493,7 @@ cvs update: Updating src/tsdb/skeletons/english/vm13
 cvs update: Updating src/tsdb/skeletons/english/vm31
 cvs update: Updating src/tsdb/skeletons/english/vm32
 cvs update: Updating src/tsdb/skeletons/english/vm6
+U src/tsdb/skeletons/english/vm6/item
 cvs update: Updating src/tsdb/skeletons/english/vm97
 cvs update: Updating src/tsdb/skeletons/english/vm97p
 cvs update: Updating src/tsdb/skeletons/english/vm98
@@ -416,7 +535,7 @@ cvs update: Updating src/xml
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.349; previous revision: 1.348
+new revision: 1.351; previous revision: 1.350
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1425,7 +1544,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Sep 17, 2004 2:40)
+6.2 [Linux (x86)] (Oct 17, 2004 10:23)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2436,7 +2555,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x4460258a> 
+#<EQUAL hash-table with 0 entries @ #x4460259a> 
  #|
 ; Libfasl from bundle code/who.fasl.
  (DISCARD-LOCAL-NAME-INFO)
@@ -2447,7 +2566,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-102880728 bytes have been tenured, next gc will be global.
+104079304 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2648,13 +2767,15 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/xml/pxml1.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-8669216 bytes have been tenured, next gc will be global.
+8462904 bytes have been tenured, next gc will be global.
+See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
+9138936 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/xml/pxml3.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/xml/pxml3.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml2.cl
-8687384 bytes have been tenured, next gc will be global.
+11354416 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/xml/pxml2.fasl
 ;;; Fasl write complete
@@ -2702,7 +2823,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/main/dag.fasl
-13755560 bytes have been tenured, next gc will be global.
+9719120 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /lingo/build/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/yadu.fasl
@@ -3050,6 +3171,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ; Fast loading /lingo/build/lkb/src/.l6cl/mrs/lexindex.fasl
 ;;; Compiling file /lingo/build/lkb/src/mrs/lexlookup.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/mrs/lexlookup.fasl
+8522232 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/mrs/lexlookup.fasl
 ;;; Compiling file /lingo/build/lkb/src/mrs/genpredict.lisp
@@ -3253,11 +3376,11 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/allegro.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/gc.lisp
-gc-after-hook(): local; new: 1057824; old: 254240; pending: 0; efficiency: 86.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/gc.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/gc.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/yy.lisp
+gc-after-hook(): local; new: 2095392; old: 423856; pending: 80; efficiency: 84.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/yy.fasl
@@ -3270,13 +3393,13 @@ gc-after-hook(): local; new: 1057824; old: 254240; pending: 0; efficiency: 86.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/derivations.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tnt-interface.lisp
-gc-after-hook(): local; new: 1292968; old: 51496; pending: 72; efficiency: 83.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1165648; old: 330360; pending: 0; efficiency: 83.
-gc-after-hook(): local; new: 1906280; old: 394888; pending: 0; efficiency: 80.
+gc-after-hook(): local; new: 1489144; old: 315144; pending: 72; efficiency: 81.
+gc-after-hook(): local; new: 920760; old: 69584; pending: 128; efficiency: 86.
+gc-after-hook(): local; new: 574680; old: 401704; pending: 128; efficiency: 85.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/redwoods.fasl
@@ -3289,7 +3412,6 @@ gc-after-hook(): local; new: 1906280; old: 394888; pending: 0; efficiency: 80.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/ptb.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/rasp.lisp
-gc-after-hook(): local; new: 585952; old: 105440; pending: 72; efficiency: 83.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/rasp.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/rasp.fasl
@@ -3297,12 +3419,12 @@ gc-after-hook(): local; new: 585952; old: 105440; pending: 72; efficiency: 83.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/pcfg.fasl
+gc-after-hook(): local; new: 606288; old: 87600; pending: 4496; efficiency: 84.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/maxent.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tagger.lisp
-gc-after-hook(): local; new: 781864; old: 116080; pending: 32; efficiency: 86.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/tagger.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/tagger.fasl
@@ -3349,6 +3471,8 @@ erg/idioms.tdl
 erg/irregs.tab
 erg/letypes.tdl
 erg/lexdb.dfn
+erg/README
+erg/lexdb.fld
 erg/lexicon.tdl
 erg/lexrinst.tdl
 erg/lexrules.tdl
@@ -3362,7 +3486,7 @@ erg/ptblex.tdl
 erg/robustlex.tdl
 erg/roots.tdl
 erg/syntax.tdl
-erg/README
+erg/lexdb.rev
 erg/arboretum/
 erg/arboretum/README
 erg/arboretum/errordesc.lsp
@@ -3500,6 +3624,26 @@ erg/gold/trec/score
 erg/gold/trec/set
 erg/gold/trec/tree.gz
 erg/gold/trec/update.gz
+erg/gold/rondane/
+erg/gold/rondane/analysis
+erg/gold/rondane/decision.gz
+erg/gold/rondane/edge
+erg/gold/rondane/item-phenomenon.gz
+erg/gold/rondane/item-set
+erg/gold/rondane/item.gz
+erg/gold/rondane/output
+erg/gold/rondane/parameter
+erg/gold/rondane/parse.gz
+erg/gold/rondane/phenomenon.gz
+erg/gold/rondane/preference.gz
+erg/gold/rondane/relations
+erg/gold/rondane/result.gz
+erg/gold/rondane/rule
+erg/gold/rondane/run.gz
+erg/gold/rondane/score
+erg/gold/rondane/set
+erg/gold/rondane/tree.gz
+erg/gold/rondane/update.gz
 erg/lkb/
 erg/lkb/char-script
 erg/lkb/checkpaths.items
@@ -3526,9 +3670,9 @@ erg/pet/common.set
 erg/ec.mem
 erg/redwoods.mem
 erg/vm.mem
-erg/lexdb.fld
-erg/lexdb.rev
-erg/lexicon.old-format.csv
+erg/rondane.fsr
+erg/rondane.mem
+erg/variants.tab
 ( \
   cd /lingo/build/; \
   tar Svczf /lingo/www/lingo/ftp/`date "+%Y-%m-%d"`/matrix.tgz \
@@ -5491,6 +5635,9 @@ src/tsdb/skeletons/english/vm32/relations
 src/tsdb/skeletons/english/vm6/
 src/tsdb/skeletons/english/vm6/item
 src/tsdb/skeletons/english/vm6/relations
+src/tsdb/skeletons/english/rondane/
+src/tsdb/skeletons/english/rondane/item
+src/tsdb/skeletons/english/rondane/relations
 src/tsdb/skeletons/espanol/
 src/tsdb/skeletons/espanol/Index.lisp
 src/tsdb/skeletons/espanol/Relations
