@@ -1077,6 +1077,7 @@ position all the quantifiers in the order required by the variables
 in their restrictors.
 |#
 
+#|
 (defun test-one-scope (&optional test-list up-to)
   (let ((num 1))
     (dolist (eg *rmrs-test-suite*)
@@ -1114,11 +1115,13 @@ in their restrictors.
 			(output-mrs1 mrs 'simple t)
 			(output-mrs1 one-scope 'simple t)
 			(pprint bindings)
-			(when (cdr bindings)
+			(when (or (cdr bindings) 
+				  (extra-bindings-p (car bindings)))
 			  (dolist (binding bindings)
 			    (setf *canonical-bindings* binding)
 			    (output-scoped-mrs one-scope :stream t))))))))))))
 	  (setf num (+ 1 num)))))
+|#
 
 (defun extra-bindings-p (binding-set)
   (dolist (binding binding-set)
