@@ -49,7 +49,7 @@
 (defun close-existing-type-hierarchy-trees nil
   (for frame in *type-hierarchy-frames*
        do
-       (clim:execute-frame-command frame '(clim-user::com-quit)))
+       (clim:execute-frame-command frame '(clim-user::com-close-to-replace)))
   (setf *type-hierarchy-frames* nil))
 
 ;;

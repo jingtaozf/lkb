@@ -14,10 +14,10 @@
 (defun close-existing-chart-windows nil
   (invalidate-chart-commands)
   (when *main-chart-frame*
-    (clim:execute-frame-command *main-chart-frame* '(clim-user::com-quit)))
+    (clim:execute-frame-command *main-chart-frame* '(clim-user::com-close-to-replace)))
   (for frame in *sub-chart-window-frames*
        do
-       (clim:execute-frame-command frame '(clim-user::com-quit)))
+       (clim:execute-frame-command frame '(clim-user::com-close-to-replace)))
   (setf *main-chart-frame* nil)
   (setf *sub-chart-window-frames* nil))
 
@@ -34,7 +34,7 @@
 (defun draw-chart-lattice (node title horizontalp &optional subframe-p)
   (declare (ignore horizontalp))
   (when (and *main-chart-frame* (not subframe-p))
-    (clim:execute-frame-command *main-chart-frame* '(clim-user::com-quit)))
+    (clim:execute-frame-command *main-chart-frame* '(clim-user::com-close-to-replace)))
   (let ((chart-window (clim:make-application-frame 'chart-window)))
     (if subframe-p
         (push chart-window
