@@ -53,16 +53,20 @@ the phrase to be checked minus the LISZT (leave this for now)
 (defun idiom-check (phrase-tdfs)
   ;;; this should only be called on a structure which has met 
   ;;; one of the `normal' root conditions. 
+  #+:debug
   (setf foo phrase-tdfs)
-  (let ((irtdfs (get-tdfs-given-id *non-idiom-root*)))
-    (if irtdfs
-        (or (yaduablep phrase-tdfs irtdfs)
-            (let ((phrase-mrs (mrs::extract-mrs-from-fs 
-                               (tdfs-indef phrase-tdfs))))
-              (dolist (idiom *idiom-phrases-expanded*)
-                (let ((idiom-mrs (idiom-phrase-mrs idiom)))
-                  (when (idiom-phrase-match idiom-mrs phrase-mrs)
-                    (return t)))))))))
+  ;;
+  ;; for backwards compatibility, allow null() *non-idiom-root* to make all
+  ;; candidate edges pass the test.                           (5-apr-04; oe)
+  ;;
+  (let ((irtdfs (and *non-idiom-root* (get-tdfs-given-id *non-idiom-root*))))
+    (or (null irtdfs)
+        (yaduablep phrase-tdfs irtdfs)
+        (let ((phrase-mrs (mrs::extract-mrs-from-fs (tdfs-indef phrase-tdfs))))
+          (dolist (idiom *idiom-phrases-expanded*)
+            (let ((idiom-mrs (idiom-phrase-mrs idiom)))
+              (when (idiom-phrase-match idiom-mrs phrase-mrs)
+                (return t))))))))
 
 (defparameter *additional-root-condition* #'idiom-check)
 
