@@ -180,6 +180,9 @@
 ;;; the path for the meta suffix symbol
 (def-lkb-parameter *suffix-path* '(META-SUFFIX))
 
+;;; the path where the args are stored
+(def-lkb-parameter *args-path* '(ARGS))
+
 ;;; the path for the recursive category
 (def-lkb-parameter *recursive-path* '(NON-LOCAL SLASH LIST FIRST))
 
