@@ -116,12 +116,13 @@
   nil)
 
 
-(defun dump-lkb nil
+(defun dump-lkb (&optional file)
   (let* ((fresh-p (not *current-grammar-load-file*))
-         (pathname (ask-user-for-new-pathname 
-                    (format nil 
+         (pathname (if file (pathname file)
+                     (ask-user-for-new-pathname 
+                       (format nil 
                             "File for image ~A grammar" 
-                            (if fresh-p "without" "with")))))
+                            (if fresh-p "without" "with"))))))
     (when pathname
       (pushnew (if fresh-p 'restart-lkb-window 'lkb-restart-function)
                *lisp-startup-functions*)

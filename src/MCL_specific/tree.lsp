@@ -15,7 +15,7 @@
 ;;; This is a function so users can change font sizes after code has loaded
 
 (defun lkb-type-tree-font nil
-   (list "Helvetica" *type-tree-font-size*))
+   (list (if (ccl:osx-p) "Lucida Grande" "Helvetica") *type-tree-font-size*))
 
 (defvar *type-display* nil)
 
@@ -93,30 +93,26 @@
 
 
 (defun make-new-type-tree (type show-all-p toplevel-p)
-   ;; make sure that top type is not hidden, no matter what hide-in-type-hierarchy-p
-   ;; function says - otherwise we may end up displaying no hierarchy at all (if all
-   ;; descendents are hidden), or just one branch rather than all
+   ;; make sure that top type is not hidden, no matter what
+   ;; hide-in-type-hierarchy-p function says - otherwise we may end up
+   ;; displaying no hierarchy at all (if all descendents are hidden), or just
+   ;; one branch rather than all
    (let ((type-record (get-type-entry type)))
-      (cond
-         ((not (type-visible-p type-record))
-            nil)
-         ((and (not toplevel-p) (not show-all-p)
-             (fboundp 'hide-in-type-hierarchy-p)
-             (funcall (symbol-function 'hide-in-type-hierarchy-p) type))
-            (mapcan
-               #'(lambda (d) (make-new-type-tree d show-all-p nil))
-               (type-daughters type-record)))
-         (t
-            (let ((node
-                   (if (symbolp type) type
-                      (intern (princ-to-string type)))))
-               (unless (get node 'daughters)
-                  (setf (get node 'daughters)
-                     (delete-duplicates
-                        (mapcan
-                           #'(lambda (d) (make-new-type-tree d show-all-p nil))
-                           (type-daughters type-record))
-                        :test #'eq)))
+      (when (type-visible-p type-record)
+         (let ((node
+                 (if (symbolp type) type
+                    (intern (princ-to-string type)))))
+            (unless (get node 'daughters)
+               (setf (get node 'daughters)
+                  (delete-duplicates
+                     (mapcan
+                        #'(lambda (d) (copy-list (make-new-type-tree d show-all-p nil)))
+                        (type-daughters type-record))
+                     :test #'eq)))
+            (if (and (not toplevel-p) (not show-all-p)
+                   (fboundp 'hide-in-type-hierarchy-p)
+                   (funcall (symbol-function 'hide-in-type-hierarchy-p) type))
+               (get node 'daughters)
                (list node))))))
 
 
@@ -275,7 +271,7 @@
                 (get-type-entry (get node 'real-thing))))
          (menu (make-instance 'active-type-pop-up-field
                  :view-position menu-pos
-                 :item-display (format nil "~(~A~) " node) ; there's a 1-off error
+                 :item-string (format nil "~(~A~) " node) ; there's a 1-off error
                  :view-font (cons :bold (lkb-type-font)))))
      (apply #'add-menu-items menu
         (type-in-tree-menu-items node type-entry menu))

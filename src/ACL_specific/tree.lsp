@@ -98,25 +98,22 @@
    ;; displaying no hierarchy at all (if all descendents are hidden), or just
    ;; one branch rather than all
    (let ((type-record (get-type-entry type)))
-     (when (type-visible-p type-record)
-       (if (and (not toplevel-p) (not show-all-p)
-		(fboundp 'hide-in-type-hierarchy-p)
-		(funcall (symbol-function 'hide-in-type-hierarchy-p) type))
-	   (mapcan #'(lambda (d) 
-		       (make-new-type-tree d show-all-p nil))
-		   (type-daughters type-record))
-	 (let ((node
-		(if (symbolp type) type
-		  (let ((new (intern (princ-to-string type))))
-		    (setf (get new 'real-thing) type)
-		    new))))
-	   (unless (get node 'daughters)
-	     (setf (get node 'daughters)
-	       (delete-duplicates
-		(mapcan
-		 #'(lambda (d) (make-new-type-tree d show-all-p nil))
-		 (type-daughters type-record)) :test #'eq)))
-	   (list node))))))
+      (when (type-visible-p type-record)
+         (let ((node
+                 (if (symbolp type) type
+                    (intern (princ-to-string type)))))
+            (unless (get node 'daughters)
+               (setf (get node 'daughters)
+                  (delete-duplicates
+                     (mapcan
+                        #'(lambda (d) (copy-list (make-new-type-tree d show-all-p nil)))
+                        (type-daughters type-record))
+                     :test #'eq)))
+            (if (and (not toplevel-p) (not show-all-p)
+                   (fboundp 'hide-in-type-hierarchy-p)
+                   (funcall (symbol-function 'hide-in-type-hierarchy-p) type))
+               (get node 'daughters)
+               (list node))))))
 
 ;;
 ;; Define a frame class for our tree window

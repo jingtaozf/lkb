@@ -79,32 +79,27 @@
       (pushnew stream-name (type-visible-p type-record))))
 
 (defun make-new-type-tree (type show-all-p toplevel-p stream-name)
-   ;; make sure that top type is not hidden, no matter what hide-in-type-hierarchy-p
-   ;; function says - otherwise we may end up displaying no hierarchy at all (if all
-   ;; descendents are hidden), or just one branch rather than all
+   ;; make sure that top type is not hidden, no matter what
+   ;; hide-in-type-hierarchy-p function says - otherwise we may end up
+   ;; displaying no hierarchy at all (if all descendents are hidden), or just
+   ;; one branch rather than all
    (let ((type-record (get-type-entry type)))
-      (cond
-         ((not (member stream-name (type-visible-p type-record)))
-            nil)
-         ((and (not toplevel-p) (not show-all-p)
-             (fboundp 'hide-in-type-hierarchy-p)
-             (funcall (symbol-function 'hide-in-type-hierarchy-p) type))
-            (mapcan
-               #'(lambda (d) (make-new-type-tree d show-all-p nil stream-name))
-               (type-daughters type-record)))
-         (t
-            (let ((node
-                   (if (symbolp type) type
-                      (let ((new (intern (princ-to-string type))))
-                         (setf (get new 'real-thing) type)
-                         new))))
-               (unless (get node 'daughters)
-                  (setf (get node 'daughters)
-                     (delete-duplicates
-                        (mapcan
-                           #'(lambda (d) 
-                               (make-new-type-tree d show-all-p nil stream-name))
-                           (type-daughters type-record)) :test #'eq)))
+      (when (member stream-name (type-visible-p type-record))
+         (let ((node
+                 (if (symbolp type) type
+                    (intern (princ-to-string type)))))
+            (unless (get node 'daughters)
+               (setf (get node 'daughters)
+                  (delete-duplicates
+                     (mapcan
+                        #'(lambda (d)
+                           (copy-list (make-new-type-tree d show-all-p nil stream-name)))
+                        (type-daughters type-record))
+                     :test #'eq)))
+            (if (and (not toplevel-p) (not show-all-p)
+                   (fboundp 'hide-in-type-hierarchy-p)
+                   (funcall (symbol-function 'hide-in-type-hierarchy-p) type))
+               (get node 'daughters)
                (list node))))))
 
 
