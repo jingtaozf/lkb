@@ -367,6 +367,12 @@ introduces new features ~A" name new-features)
                   (retype-dag parent-constraint *toptype*))))
 
 
-;;; hack
 (defmethod delete-temporary-lexicon-files ((leaf-db cdb-leaf-database))
-  (delete-temporary-lexicon-files-aux))
+  ;; i don't understand this. fix later
+  )
+;  (when (and *psorts-temp-file*
+;	     (probe-file *psorts-temp-file*))
+;    (delete-file *psorts-temp-file*))
+;  (when (and *psorts-temp-index-file*
+;	     (probe-file *psorts-temp-index-file*))
+;    (delete-file *psorts-temp-index-file*)))
