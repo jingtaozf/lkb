@@ -137,7 +137,7 @@
 (defmethod mrs-output-top-h ((mrsout simple) handel-val)
   (if handel-val
       (with-slots (stream) mrsout
-        (format stream " TOP: ~A" handel-val))))
+        (format stream " LTOP: ~A" handel-val))))
 
 (defmethod mrs-output-index ((mrsout simple) index-val)
   (with-slots (stream) mrsout
@@ -769,6 +769,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 
 (defun read-mrs-ltop (istream)
 ;;;  LTOP -> top: VAR
+  (mrs-check-for #\l istream)
   (mrs-check-for #\t istream)
   (mrs-check-for #\o istream)
   (mrs-check-for #\p istream)
@@ -831,9 +832,8 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
          (next (peek-char t istream nil nil))
          (sort (if (eql next #\") (read-mrs-atom istream) reltype)))
     (when *rel-handel-path*
-      (mrs-check-for #\h istream)
-      (mrs-check-for #\n istream)
-      (mrs-check-for #\d istream)
+      (mrs-check-for #\l istream)
+      (mrs-check-for #\b istream)
       (mrs-check-for #\l istream)
       (mrs-check-for #\: istream))
     (let ((hvar (if *rel-handel-path* (read-mrs-var istream)))

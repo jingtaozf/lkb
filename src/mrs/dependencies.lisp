@@ -9,8 +9,8 @@
 (defparameter %mrs-representatives-table% nil)
 
 (defparameter %mrs-relevant-features% 
-  '("ARG" "ARG0" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA" "NAMED" 
-    "CVAL" "CONST_VALUE"
+  '("ARG" "ARG0" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA" "MARG" "NAMED" 
+    "CARG" "CONST_VALUE"
     "L-INDEX" "R-INDEX" "L-HANDEL" "R-HANDEL" "MAIN" "SUBORD" "ROLE"
     "HINST" "NHINST"))
 
