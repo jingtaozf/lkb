@@ -1,0 +1,4337 @@
+:begin :instance.
+i_1 := pron-lxm-textbook &
+[ ORTH <! "i" !>,
+  SYN [ HEAD noun-textbook & [ AGR 1sing & [ PER 1st,
+				    NUM sing ],
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_speaker] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+we_1 := pron-lxm-textbook &
+[ ORTH <! "we" !>,
+  SYN [ HEAD noun-textbook & [ AGR non-3sing & [ PER 1st,
+					NUM plur ],
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_speakers] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+me_1 := pron-lxm-textbook &
+[ ORTH <! "me" !>,
+  SYN [ HEAD noun-textbook & [ AGR 1sing & [ PER 1st,
+				    NUM sing ],
+		      CASE acc ] ],
+  SEM [ RESTR <! [RELN r_speaker] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+us_1 := pron-lxm-textbook &
+[ ORTH <! "us" !>,
+  SYN [ HEAD noun-textbook & [ AGR non-3sing & [ PER 1st,
+					NUM plur ],
+		      CASE acc ] ],
+  SEM [ RESTR <! [RELN r_speakers] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+you_1 := pron-lxm-textbook &
+[ ORTH <! "you" !>,
+  SYN [ HEAD noun-textbook & [ AGR [ PER 2nd ] ] ],
+  SEM [ RESTR <! [RELN r_listener] !> ] ].
+:end :instance.
+; See Changes File #3
+
+; <<>>
+
+:begin :instance.
+she_1 := pron-lxm-textbook &
+[ ORTH <! "she" !>,
+  SYN [ HEAD noun-textbook & [ AGR 3sing & [ GEND fem ],
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_female] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+her_1 := pron-lxm-textbook &
+[ ORTH <! "her" !>,
+  SYN [ HEAD noun-textbook & [ AGR 3sing & [ GEND fem ],
+		      CASE acc ] ],
+  SEM [ RESTR <! [RELN r_female] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+he_1 := pron-lxm-textbook &
+[ ORTH <! "he" !>,
+  SYN [ HEAD noun-textbook & [ AGR 3sing & [ GEND masc ],
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_male] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+him_1 := pron-lxm-textbook &
+[ ORTH <! "him" !>,
+  SYN [ HEAD noun-textbook & [ AGR 3sing & [ GEND masc ],
+		      CASE acc ] ],
+  SEM [ RESTR <! [RELN r_male] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+it_1 := pron-lxm-textbook &
+[ ORTH <! "it" !>,
+  SYN [ HEAD noun-textbook & [ AGR 3sing & [ GEND neut ] ] ],
+  SEM [ RESTR <! [ RELN r_it] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+they_1 := pron-lxm-textbook &
+[ ORTH <! "they" !>,
+  SYN [ HEAD noun-textbook & [ AGR non-3sing & [ PER 3rd, GEND neut, NUM plur ],
+		      CASE nom ] ],
+  SEM [ RESTR <! [ RELN r_group] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+them_1 := pron-lxm-textbook &
+[ ORTH <! "them" !>,
+  SYN [ HEAD noun-textbook & [ AGR non-3sing & [ PER 3rd, GEND neut, NUM plur ],
+		      CASE acc ] ],
+  SEM [ RESTR <! [ RELN r_group] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+nobody_1 := pron-lxm-textbook &
+[ ORTH <! "nobody" !>,
+  SYN [ HEAD noun-textbook & [ AGR 3sing ] ],
+  SEM [ RESTR <! [RELN r_no-person] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+everybody_1 := pron-lxm-textbook &
+[ ORTH <! "everybody" !>,
+  SYN [ HEAD noun-textbook & [ AGR 3sing ] ],
+  SEM [ RESTR <! [RELN r_every-person] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+myself_1 := pron-lxm-textbook &
+[ ORTH <! "myself" !>,
+  SYN [ HEAD noun-textbook & [ AGR non-3sing & [ PER 1st ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [RELN r_speaker] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+yourself_1 := pron-lxm-textbook &
+[ ORTH <! "yourself" !>,
+  SYN [ HEAD noun-textbook & [ AGR non-3sing & [ PER 2nd, NUM sing ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [RELN r_listener] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+yourselves_1 := pron-lxm-textbook &
+[ ORTH <! "yourselves" !>,
+  SYN [ HEAD noun-textbook & [ AGR non-3sing & [ PER 2nd, NUM plur ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [RELN r_listeners] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+herself_1 := pron-lxm-textbook &
+[ ORTH <! "herself" !>,
+  SYN [ HEAD noun-textbook & [ AGR 3sing & [ GEND fem ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [RELN r_female] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+himself_1 := pron-lxm-textbook &
+[ ORTH <! "himself" !>,
+  SYN [ HEAD noun-textbook & [ AGR 3sing & [ GEND masc ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [RELN r_male] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+itself_1 := pron-lxm-textbook &
+[ ORTH <! "itself" !>,
+  SYN [ HEAD noun-textbook & [ AGR 3sing & [ PER 3rd, GEND neut ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [ RELN r_itself] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ourselves_1 := pron-lxm-textbook &
+[ ORTH <! "ourselves" !>,
+  SYN [ HEAD noun-textbook & [ AGR non-3sing & [ PER 1st, GEND neut, NUM plur ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [ RELN r_speakers] !> ] ].
+:end :instance.
+; <<>>
+
+:begin :instance.
+themselves_1 := pron-lxm-textbook &
+[ ORTH <! "themselves" !>,
+  SYN [ HEAD noun-textbook & [ AGR non-3sing & [ PER 3rd, GEND neut, NUM plur ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [ RELN r_group] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Kim_1 := pn-lxm &
+[ ORTH <! "Kim" !>,
+  SEM [ RESTR <! [ NAME 'Kim ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Sandy_1 := pn-lxm &
+[ ORTH <! "Sandy" !>,
+  SEM [ RESTR <! [ NAME 'Sandy ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Pat_1 := pn-lxm &
+[ ORTH <! "Pat" !>,
+  SEM [ RESTR <! [ NAME 'Pat ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Chris_1 := pn-lxm &
+[ ORTH <! "Chris" !>,
+  SEM [ RESTR <! [ NAME 'Chris ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Carrie_1 := pn-lxm &
+[ ORTH <! "Carrie" !>,
+  SEM [ RESTR <! [ NAME 'Carrie ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Fido_1 := pn-lxm &
+[ ORTH <! "Fido" !>,
+  SEM [ RESTR <! [ NAME 'Fido ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Leslie_1 := pn-lxm &
+[ ORTH <! "Leslie" !>,
+  SEM [ RESTR <! [ NAME 'Leslie ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Lou_1 := pn-lxm &
+[ ORTH <! "Lou" !>,
+  SEM [ RESTR <! [ NAME 'Lou ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Dana_1 := pn-lxm &
+[ ORTH <! "Dana" !>,
+  SEM [ RESTR <! [ NAME 'Dana ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Lynn_1 := pn-lxm &
+[ ORTH <! "Lynn" !>,
+  SEM [ RESTR <! [ NAME 'Lynn ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Lee_1 := pn-lxm &
+[ ORTH <! "Lee" !>,
+  SEM [ RESTR <! [ NAME 'Lee ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Maria_1 := pn-lxm &
+[ ORTH <! "Maria" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Maria ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Hannibal_1 := pn-lxm &
+[ ORTH <! "Hannibal" !>,
+  SYN [ HEAD [ AGR [ GEND masc] ] ],
+  SEM [ RESTR <! [ NAME 'Hannibal ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+TV_2 := pn-lxm &
+[ ORTH <! "TV" !>,
+  SYN [ HEAD [ AGR [ GEND neut] ] ],
+  SEM [ RESTR <! [ NAME 'TV ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Chicago_1 := pn-lxm &
+[ ORTH <! "Chicago" !>,
+  SYN [ HEAD [ AGR [ GEND neut] ] ],
+  SEM [ RESTR <! [ NAME 'Chicago ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Cleveland_1 := pn-lxm &
+[ ORTH <! "Cleveland" !>,
+  SYN [ HEAD [ AGR [ GEND neut] ] ],
+  SEM [ RESTR <! [ NAME 'Cleveland ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+America_1 := pn-lxm &
+[ ORTH <! "America" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'America ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Tarzan_1 := pn-lxm &
+[ ORTH <! "Tarzan" !>,
+  SYN [ HEAD [ AGR [ GEND masc] ] ],
+  SEM [ RESTR <! [ NAME 'Tarzan ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Jane_1 := pn-lxm &
+[ ORTH <! "Jane" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Jane ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Romeo_1 := pn-lxm &
+[ ORTH <! "Romeo" !>,
+  SYN [ HEAD [ AGR [ GEND masc] ] ],
+  SEM [ RESTR <! [ NAME 'Romeo ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Juliet_1 := pn-lxm &
+[ ORTH <! "Juliet" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Juliet ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Mulder_1 := pn-lxm &
+[ ORTH <! "Mulder" !>,
+  SYN [ HEAD [ AGR [ GEND masc] ] ],
+  SEM [ RESTR <! [ NAME 'Mulder ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Scully_1 := pn-lxm &
+[ ORTH <! "Scully" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Scully ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tabs_1 := dummy-idiom-lxm-textbook &
+[ ORTH <! "tabs" !>,
+  SYN [ HEAD [ FORM f_tabs ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+advantage_1 := dummy-idiom-lxm-textbook &
+[ ORTH <! "advantage" !>,
+  SYN [ HEAD [ FORM f_advantage ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+it_2 := dummy-idiom-lxm-textbook &
+[ ORTH <! "it" !>,
+  SYN [ HEAD [ FORM f_it,
+	       AGR 3sing ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+there_1 := infl-lxm &
+[ ORTH <! "there" !>,
+  SYN [ HEAD noun-textbook & [ FORM f_there,
+		      AGR [ PER 3rd,
+			    NUM singandplur ] ] ],
+  SEM null-sem,
+  ARG-ST < > ].  
+:end :instance.
+; & [ PER 3rd,
+;				 NUM plur] ] ] ].
+
+; <<>>
+#|
+:begin :instance.
+there_2 := dummy-idiom-lxm-textbook &
+[ ORTH <! "there" !>,
+  SYN [ HEAD [ FORM f_there,
+	       AGR 3sing ] ] ].
+:end :instance.
+|#
+
+;;; <<>> ----- DETERMINERS  -----
+
+; 's was made of type const-lxm because the ARG-ST of det-lxm is empty.  SMG
+;
+:begin :instance.
+s_1 := det-lxm-textbook &
+[ ORTH <! "s" !>,
+  SYN [ SPR < [ ] > ],
+  ARG-ST < [ SYN NP-textbook ] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+the_1 := det-lxm-textbook & 
+[ ORTH <! "the" !> ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+a_1 := det-lxm-textbook & 
+[ ORTH <! "a" !>,
+  SYN [ HEAD [ COUNT true,
+	       AGR [ NUM sing ] ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+this_1 := det-lxm-textbook & 
+[ ORTH <! "this" !>,
+  SYN [ HEAD [ AGR [ NUM sing ] ] ] ].
+:end :instance.
+
+; <<>>
+
+;; Add "that" as a pronoun-textbook lexeme as well?
+:begin :instance.
+that_1 := det-lxm-textbook & 
+[ ORTH <! "that" !>,
+  SYN [ HEAD [ AGR [ NUM sing ] ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+these_1 := det-lxm-textbook & 
+[ ORTH <! "these" !>,
+  SYN [ HEAD [ COUNT true,
+	       AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+those_1 := det-lxm-textbook & 
+[ ORTH <! "those" !>,
+  SYN [ HEAD [ COUNT true,
+	       AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+few_1 := det-lxm-textbook & 
+[ ORTH <! "few" !>,
+  SYN [ HEAD [ COUNT true,
+	       AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+many_1 := det-lxm-textbook & 
+[ ORTH <! "many" !>,
+  SYN [ HEAD [ COUNT true,
+	       AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+much_1 := det-lxm-textbook & 
+[ ORTH <! "much" !>,
+  SYN [ HEAD [ COUNT false ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+my_1 := det-lxm-textbook & 
+[ ORTH <! "my" !> ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+your_1 := det-lxm-textbook & 
+[ ORTH <! "your" !> ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+his_1 := det-lxm-textbook & 
+[ ORTH <! "his" !> ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+her_2 := det-lxm-textbook & 
+[ ORTH <! "her" !> ].
+:end :instance.
+
+; <<>>
+
+
+:begin :instance.
+its_1 := det-lxm-textbook & 
+[ ORTH <! "its" !> ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+our_1 := det-lxm-textbook & 
+[ ORTH <! "our" !> ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+their_1 := det-lxm-textbook & 
+[ ORTH <! "their" !> ].
+:end :instance.
+
+; <<>>
+
+;; Do we want to try to produce a interpretation of quantifier syntax.  If so 
+;; we have to find some way of allowing both "all chairs" as well as "all furniture".
+;; To do that involves a new grule as well as new inflectional rules, perhaps
+;; even an furniture entry in the irregs file.  Might not be worth it...  SMG
+:begin :instance.
+all_1 := det-lxm-textbook & 
+[ ORTH <! "all" !>,
+  SYN [ HEAD [ AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+; <<>>
+
+;; What about "There is no/some cat on the table." or "I love no cat"
+
+:begin :instance.
+no_1 := det-lxm-textbook & 
+[ ORTH <! "no" !>,
+  SYN [ HEAD [ AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+most_1 := det-lxm-textbook & 
+[ ORTH <! "most" !>,
+  SYN [ HEAD [ AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+
+;;; <<>> ----- PREPOSITIONS  -----
+
+:begin :instance.
+to_1 := mkp-lxm-textbook & 
+[ ORTH <! "to" !>,
+  SYN [ HEAD [FORM f_to ] ] ].
+:end :instance.
+
+; <<>>
+
+;; The entry below is necessary for instances of "told...about"
+:begin :instance.
+about_1 :=mkp-lxm-textbook &
+[ ORTH <! "about" !>,
+  SYN [HEAD [FORM f_about ] ] ].
+:end :instance.
+
+; <<>>
+
+;; This entry is needed for "I was angry with kim about the book"
+;; But it also causes more parses for "I told him about us".
+;:begin :instance.
+;about_2 :=pdp-lxm-textbook &
+;[ ORTH <! "about" !>,
+;  SYN [HEAD [FORM f_about ] ] ].
+;:end :instance.
+
+; <<>>
+
+:begin :instance.
+on_1 := mkp-lxm-textbook &
+[ ORTH <! "on" !>,
+  SYN [ HEAD [ FORM f_on ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+on_2 := pdp-lxm-textbook &
+[ ORTH <! "on" !>,
+  SYN [ HEAD [ FORM f_on ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+in_1 := mkp-lxm-textbook &
+[ ORTH <! "in" !>,
+  SYN [ HEAD [ FORM f_in ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+in_2 := pdp-lxm-textbook &
+[ ORTH <! "in" !>,
+  SYN [ HEAD [ FORM f_in ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+with_1 := pdp-lxm-textbook &
+[ ORTH <! "with" !>,
+  SYN [ HEAD [ FORM f_with ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+of_1 := mkp-lxm-textbook &
+[ ORTH <!  "of" !>,
+  SYN [ HEAD [ FORM f_of ] ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+for_1 := mkp-lxm-textbook &
+[ ORTH <!  "for" !>,
+  SYN [ HEAD [ FORM f_for ] ] ].
+:end :instance.
+
+; <<>>
+
+; Seems like we'll need a pdp-lxm for by as well to account for "I dropped the
+; book by the store." 
+:begin :instance.
+by_1 := mkp-lxm-textbook & 
+[ ORTH <!  "by" !>,
+  SYN [ HEAD [ FORM f_by ] ] ].
+:end :instance.
+
+
+:begin :instance.
+around_1 := mkp-lxm-textbook & 
+[ ORTH <!  "around" !>,
+  SYN [ HEAD [ FORM f_around ] ] ].
+:end :instance.
+
+
+;;; <<>> ----- ADVERBS, ADJECTIVES, COMPLIMENTIZERS, CONJUNCTIONS...  -----
+
+;;; RESTR added 07/11
+
+:begin :instance.
+to_2:= comp1-lxm-textbook & 
+[ ORTH <! "to" !>,
+  SYN [ HEAD [ FORM inf ],
+	SPR < [ ] > ],
+  SEM [ RESTR <! [ RELN r_to_comp ] !> ],
+  ARG-ST < #1, [SYN [SPR < #1 > ] ] > ].
+:end :instance.
+
+;:begin :instance.
+;to_2:= comp1-lxm-textbook & 
+;[ ORTH <! "to" !>,
+;  SYN [ HEAD [ FORM inf ],
+;	SPR < [ ] > ],
+;  ARG-ST < #1, [SYN [SPR < #1 > ] ] > ].
+;:end :instance.
+
+; <<>>
+
+:begin :instance.
+that_2 := comp2-lxm-textbook & 
+[ ORTH <! "that" !>,
+  SYN [ HEAD [ FORM fin ],
+	SPR < > ],
+  SEM [ RESTR <! [ RELN r_that_comp ] !> ],
+  ARG-ST < [SYN [SPR < > ] ] > ].
+:end :instance.
+
+; <<>>
+
+;; This entry needs to be fixed...
+:begin :instance.
+not_1 := adv-lxm-textbook & 
+[ ORTH <! "not" !>,
+  SYN  [ HEAD adv & [ 
+		      FORM f_not ] ],
+  ARG-ST  < >,
+  SEM [ RESTR <! [RELN r_not] !> ] ].
+:end :instance.
+;  MOD < [ SYN [ HEAD [ AUX false ] ] ] >,
+
+; <<>>
+
+:begin :instance.
+and_1 := conj-lxm-textbook &
+[ ORTH <! "and" !>,
+  SYN [ HEAD [ FORM f_and ] ],
+  SEM [ RESTR <! [ RELN r_and ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+but_1 := conj-lxm-textbook &
+[ ORTH <! "but" !>,
+  SYN [ HEAD [ FORM f_but ] ],
+  SEM [ RESTR <! [ RELN r_but ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+quickly_1 := adv-lxm-textbook &
+[ ORTH <! "quickly" !>,
+  SEM [ RESTR <! [ RELN r_quickly] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+slowly_1 := adv-lxm-textbook &
+[ ORTH <! "slowly" !>,
+  SEM [ RESTR <! [ RELN r_slowly] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+easily_1 := adv-lxm-textbook &
+[ ORTH <! "easily" !>,
+  SEM [ RESTR <! [ RELN r_easily] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+today_1 := adv-lxm-textbook &
+[ ORTH <! "today" !>,
+  SEM [ RESTR <! [ RELN r_today] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fond_1 := adj-lxm-textbook &
+[ ORTH <! "fond" !>,
+  ARG-ST < [ ], [ SYN PP & [ HEAD [ FORM f_of,
+				    P-OBJ <[SYN NP]> ] ] ] >,
+  SEM [ RESTR <! [ RELN r_fond] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+happy_1 := adj-lxm-textbook &
+[ ORTH <! "happy" !>,
+  SEM [ RESTR <! [ RELN r_happy] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+mere_1 := adj-lxm-textbook &
+[ ORTH <! "mere" !>,
+  SYN [ HEAD [ PRED false ] ],
+  SEM [ RESTR <! [ RELN r_mere] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+angry_1 := adj-lxm-textbook &
+[ ORTH <! "angry" !>,
+  SEM [ RESTR <! [ RELN r_angry] !> ] ].
+:end :instance.
+
+; <<>>
+
+;; This is for "I was angry with..." sentences but doesn't work.
+;:begin :instance.
+;angry_2 := adj-lxm-textbook &
+;[ ORTH <! "angry" !>,
+;  ARG-ST < [ ], [ SYN PP & [ HEAD [ FORM f_with,
+;				    P-OBJ <[SYN NP]> ] ] ] >,
+;  SEM [ RESTR <! [ RELN r_angry] !> ] ].
+;:end :instance.
+
+; <<>>
+
+:begin :instance.
+available_1 := adj-lxm-textbook &
+[ ORTH <! "available" !>,
+  SEM [ RESTR <! [ RELN r_available] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+black_1 := adj-lxm-textbook &
+[ ORTH <! "black" !>,
+  SEM [ RESTR <! [ RELN r_black] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+broken_1 := adj-lxm-textbook &
+[ ORTH <! "broken" !>,
+  SEM [ RESTR <! [ RELN r_broke] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+brown_1 := adj-lxm-textbook &
+[ ORTH <! "brown" !>,
+  SEM [ RESTR <! [ RELN r_brown] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+eager_1 := adj-lxm-textbook &
+[ ORTH <! "eager" !>,
+  SEM [ RESTR <! [ RELN r_eager] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+eager_2 := adj-lxm-textbook &
+[ ORTH <! "eager" !>,
+  ARG-ST < [ ], [SYN CP-inf] >,
+  SEM [ RESTR <! [ RELN r_eager] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+expensive_1 := adj-lxm-textbook &
+[ ORTH <! "expensive" !>,
+  SEM [ RESTR <! [ RELN r_expensive] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+funny_1 := adj-lxm-textbook &
+[ ORTH <! "funny" !>,
+  SEM [ RESTR <! [ RELN r_funny] !> ] ].
+:end :instance.
+
+; <<>>
+
+;; This is for "It is funny that..." sentences but doesn't work.
+;:begin :instance.
+;funny_2 := adj-lxm-textbook &
+;[ ORTH <! "funny" !>,
+;  SEM [ RESTR <! [ RELN r_funny] !> ],
+;  ARG-ST < [SYN [HEAD [FORM f_it ] ] ], [SYN [HEAD [FORM fin],
+;					      COMPS < > ] ] > ].
+;:end :instance.
+
+; <<>>
+
+:begin :instance.
+german_1 := adj-lxm-textbook &
+[ ORTH <! "german" !>,
+  SEM [ RESTR <! [ RELN r_german] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+hard_1 := adj-lxm-textbook &
+[ ORTH <! "hard" !>,
+  SEM [ RESTR <! [ RELN r_hard] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+kind_1 := adj-lxm-textbook &
+[ ORTH <! "kind" !>,
+  SEM [ RESTR <! [ RELN r_kind] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+likely_1 := adj-lxm-textbook &
+[ ORTH <! "likely" !>,
+  SEM [ RESTR <! [ RELN r_likely] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+large_1 := adj-lxm-textbook &
+[ ORTH <! "large" !>,
+  SEM [ RESTR <! [ RELN r_large] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+magnificent_1 := adj-lxm-textbook &
+[ ORTH <! "magnificent" !>,
+  SEM [ RESTR <! [ RELN r_magnificent] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+obvious_1 := adj-lxm-textbook &
+[ ORTH <! "obvious" !>,
+  SEM [ RESTR <! [ RELN r_obvious] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+offended_1 := adj-lxm-textbook &
+[ ORTH <! "offended" !>,
+  SEM [ RESTR <! [ RELN r_offended] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+optional_1 := adj-lxm-textbook &
+[ ORTH <! "optional" !>,
+  SEM [ RESTR <! [ RELN r_optional] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+new_1 := adj-lxm-textbook &
+[ ORTH <! "new" !>,
+  SEM [ RESTR <! [ RELN r_new] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+noisy_1 := adj-lxm-textbook &
+[ ORTH <! "noisy" !>,
+  SEM [ RESTR <! [ RELN r_noisy] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+unfair_1 := adj-lxm-textbook &
+[ ORTH <! "unfair" !>,
+  SEM [ RESTR <! [ RELN r_unfair] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+undocumented_1 := adj-lxm-textbook &
+[ ORTH <! "undocumented" !>,
+  SEM [ RESTR <! [ RELN r_undocumented] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+rain_1 := verb-lxm-textbook &
+[ ORTH <! "rain" !>,
+  ARG-ST < [SYN [ HEAD noun-textbook & [FORM f_it] ],
+	    SEM [ INDEX null-index ] ] >,
+  SEM [ RESTR <! [ RELN r_rain] !> ] ].
+:end :instance.
+
+; <<>>
+
+;; Should this really inherit from ptv instead?  If so, then we have to
+;; play around with the semantic fields.  
+:begin :instance.
+keep_1 := verb-lxm-textbook &
+[ ORTH <! "keep" !>,
+  ARG-ST < [SYN NP-nom,
+	    SEM [INDEX #1] ],
+	                  [SYN NP-acc & [HEAD [FORM f_tabs] ],
+			   SEM [INDEX null-index] ],
+				   	           [SYN PP & [HEAD [FORM f_on] ],
+						    SEM [INDEX #2 ] ] >,
+  SEM  [ RESTR <! stv_pred & [ RELN r_observe,
+                               ACT #1,
+                               UND #2 ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+take_1 := verb-lxm-textbook &
+[ ORTH <! "take" !>,
+  ARG-ST < [SEM [INDEX #1] ], [SYN [HEAD noun-textbook & [FORM f_advantage] ] ], 
+
+                        [SYN [HEAD prep & [FORM f_of],
+  	                      SPR < > ],
+                         SEM [ INDEX #2 ] ] >,
+  SEM  [ INDEX #index,
+         RESTR <! stv_pred & [ RELN r_exploit,
+                               SIT #index,
+                               ACT #1,
+                               UND #2 ] !> ] ]. 
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+can_1 := modal-lxm-textbook &
+[ ORTH <! "can" !>,
+  SEM  [ RESTR <! [ RELN r_can ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+could_1 := modal-lxm-textbook &
+[ ORTH <! "could" !>,
+  SEM  [ RESTR <! [ RELN r_could ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+should_1 := modal-lxm-textbook &
+[ ORTH <! "should" !>,
+  SEM  [ RESTR <! [ RELN r_should ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+would_1 := modal-lxm-textbook &
+[ ORTH <! "would" !>,
+  SEM  [ RESTR <! [ RELN r_would ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+might_1 := modal-lxm-textbook &
+[ ORTH <! "might" !>,
+  SEM  [ RESTR <! [ RELN r_might ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+must_1 := modal-lxm-textbook &
+[ ORTH <! "must" !>,
+  SEM  [ RESTR <! [ RELN r_must ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+will_1 := modal-lxm-textbook &
+[ ORTH <! "will" !>,
+  SEM  [ RESTR <! [ RELN r_will ] !> ] ].
+:end :instance.
+
+; <<>>
+
+
+:begin :instance.
+do_1 := auxv-lxm-textbook &
+[ ORTH <! "do" !>,
+  SYN [ HEAD verb-textbook & [ FORM fin ] ],
+  ARG-ST < [ ], [ SYN [ HEAD verb-textbook & [FORM inf, AUX false ] ],
+		  SEM [ INDEX #1 ] ] >,
+  SEM [ INDEX #1,
+	RESTR <! [ RELN r_do] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+get_2 := auxv-lxm-textbook &
+[ ORTH <! "get" !>,
+  SYN [ HEAD verb-textbook & [ FORM fin ] ],
+  ARG-ST < [ ], [ SYN [ HEAD verb-textbook & [FORM psp, AUX false ] ],
+		  SEM [ INDEX #1 ] ] >,
+  SEM [ INDEX #1,
+	RESTR <! [ RELN r_get] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+have_1 := auxv-lxm-textbook &
+[ ORTH <! "have" !>,
+  ARG-ST < [ ], [ SYN [ HEAD verb-textbook & [FORM psp] ] ] >,
+  SEM [ RESTR <! [ RELN r_have] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+be_1 := auxv-lxm-textbook &
+[ ORTH <! "be" !>,
+  SEM [ MODE prop,
+  	INDEX #1,
+	RESTR <! [ RELN r_be ] !> ],
+  ARG-ST < [ ], [ SYN [ HEAD [PRED true] ],
+		  SEM [ INDEX #1 ] ] > ].
+:end :instance.
+; SEM [INDEX real-index ]
+
+; <<>>
+; Check the inheritance on this one, the book says orv-lxm-textbook but my
+; notes suggest auxv instead.  And what about a blank SPR on the second
+; ARG-ST element to block double parses on "there is a cat on the table"
+:begin :instance.
+be_2 := tv-lxm-textbook &
+[ ORTH <! "be" !>,
+  SYN [ HEAD [ AUX true ] ],
+  SEM [ INDEX #3,
+	RESTR <! fiv_pred & [ ACT #2,
+			      ARG #3,
+			      RELN r_be ] !> ],
+  ARG-ST < [ SYN [ HEAD [ AGR [NUM #num],
+			  FORM f_there] ],
+	     SEM [ INDEX null-index ] ], 
+                      #4 & [ SYN [ HEAD [AGR [NUM #num] ] ],
+			     SEM [ INDEX #2 ] ],       [ SYN [ HEAD [PRED true],
+							       SPR < #4 >,
+							       COMPS < > ],
+							 SEM [ INDEX #3 ] ] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+age_1 := iv-lxm-textbook &
+[ ORTH <! "age" !>,
+  SEM [ RESTR <! [ RELN r_age-verb] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+bark_1 := iv-lxm-textbook &
+[ ORTH <! "bark" !>,
+  SEM [ RESTR <! [ RELN r_bark] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+believe_1 := iv-lxm-textbook &
+[ ORTH <! "believe" !>,
+  SEM [ RESTR <! [ RELN r_believe] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+die_1 := iv-lxm-textbook &
+[ ORTH <! "die" !>,
+  SEM [ RESTR <! [ RELN r_die] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+dine_1 := iv-lxm-textbook &
+[ ORTH <! "dine" !>,
+  SEM [ RESTR <! [ RELN r_dine] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+disappear_1 := iv-lxm-textbook &
+[ ORTH <! "disappear" !>,
+  SEM [ RESTR <! [ RELN r_disappear] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+duck_2 := iv-lxm-textbook &
+[ ORTH <! "duck" !>,
+  SEM  [ RESTR <! [ RELN r_duck-verb] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+eat_1 := iv-lxm-textbook &
+[ ORTH <! "eat" !>,
+  SEM [ RESTR <! [ RELN r_eat] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+explode_1 := iv-lxm-textbook &
+[ ORTH <! "explode" !>,
+  SEM [ RESTR <! [ RELN r_explode] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fall_1 := iv-lxm-textbook &
+[ ORTH <! "fall" !>,
+  SEM [ RESTR <! [ RELN r_fall] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fly_1 := iv-lxm-textbook &
+[ ORTH <! "fly" !>,
+  SEM [ RESTR <! [ RELN r_fly] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+float_1 := iv-lxm-textbook &
+[ ORTH <! "float" !>,
+  SEM [ RESTR <! [ RELN r_float] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+gather_1 := iv-lxm-textbook &
+[ ORTH <! "gather" !>,
+  SEM [ RESTR <! [ RELN r_gather] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+laugh_1 := iv-lxm-textbook &
+[ ORTH <! "laugh" !>,
+  SEM [ RESTR <! [ RELN r_laugh] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+leave_1 := iv-lxm-textbook &
+[ ORTH <! "leave" !>,
+  SEM [ RESTR <! [ RELN r_leave] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+lie_1 := iv-lxm-textbook &
+[ ORTH <! "lie" !>,
+  SEM [ RESTR <! [ RELN r_lie] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+live_1 := iv-lxm-textbook &
+[ ORTH <! "live" !>,
+  SEM [ RESTR <! [ RELN r_live] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+run_1 := iv-lxm-textbook &
+[ ORTH <! "run" !>,
+  SEM [ RESTR <! [ RELN r_run] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+sank_1 := iv-lxm-textbook &
+[ ORTH <! "sank" !>,
+  SEM [ RESTR <! [ RELN r_sank] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+sat_1 := iv-lxm-textbook &
+[ ORTH <! "sat" !>,
+  SEM [ RESTR <! [ RELN r_sat] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+scream_1 := iv-lxm-textbook &
+[ ORTH <! "scream" !>,
+  SEM [ RESTR <! [ RELN r_scream] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+sing_1 := iv-lxm-textbook &
+[ ORTH <! "sing" !>,
+  SEM [ RESTR <! [ RELN r_sing] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+skate_1 := iv-lxm-textbook &
+[ ORTH <! "skate" !>,
+  SEM [ RESTR <! [ RELN r_skate] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+sleep_1 :=  iv-lxm-textbook &
+[ ORTH <! "sleep" !>,
+  SEM [ RESTR <! [ RELN r_sleep] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+sneeze_1 := iv-lxm-textbook &
+[ ORTH <! "sneeze" !>,
+  SEM [ RESTR <! [ RELN r_sneeze] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+speak_1 := iv-lxm-textbook &
+[ ORTH <! "speak" !>,
+  SEM [ RESTR <! [ RELN r_speak] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+suck_1 := iv-lxm-textbook &
+[ ORTH <! "suck" !>,
+  SEM [ RESTR <! [ RELN r_suck] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+talk_1 := iv-lxm-textbook &
+[ ORTH <! "talk" !>,
+  SEM [ RESTR <! [ RELN r_talk] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tapdance_1 := iv-lxm-textbook &
+[ ORTH <! "tapdance" !>,
+  SEM [ RESTR <! [ RELN r_tapdance] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+visit_1 := iv-lxm-textbook &
+[ ORTH <! "visit" !>,
+  SEM [ RESTR <! [ RELN r_visit] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+vote_1 := iv-lxm-textbook &
+[ ORTH <! "vote" !>,
+  SEM [ RESTR <! [ RELN r_vote] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+win_1 := iv-lxm-textbook &
+[ ORTH <! "win" !>,
+  SEM [ RESTR <! [ RELN r_win] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+yell_1 := iv-lxm-textbook &
+[ ORTH <! "yell" !>,
+  SEM [ RESTR <! [ RELN r_yell] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ask_1 := piv-lxm-textbook &
+[ ORTH <! "ask" !>,
+  SEM [ RESTR <! [ RELN r_ask] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+campaign_1 := piv-lxm-textbook &
+[ ORTH <! "campaign" !>,
+  SEM [ RESTR <! [ RELN r_campaign] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+come_1 := piv-lxm-textbook &
+[ ORTH <! "come" !>,
+  SEM [ RESTR <! [ RELN r_come] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fit_1 := piv-lxm-textbook &
+[ ORTH <! "fit" !>,
+  SEM [ RESTR <! [ RELN r_fit-verb] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+go_1 := piv-lxm-textbook &
+[ ORTH <! "go" !>,
+  SEM [ RESTR <! [ RELN r_go] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+lie_2 := piv-lxm-textbook &
+[ ORTH <! "lie" !>,
+  SEM [ RESTR <! [ RELN r_lie] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+look_1 := piv-lxm-textbook &
+[ ORTH <! "look" !>,
+  SEM [ RESTR <! [ RELN r_look] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+rely_1 := piv-lxm-textbook &
+[ ORTH <! "rely" !>,
+  SEM [ RESTR <! [ RELN r_rely] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+talk_2 := piv-lxm-textbook &
+[ ORTH <! "talk" !>,
+  SEM [ RESTR <! [ RELN r_talk] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tug_1 := piv-lxm-textbook &
+[ ORTH <! "tug" !>,
+  SEM [ RESTR <! [ RELN r_tug] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+visit_2 := piv-lxm-textbook &
+[ ORTH <! "visit" !>,
+  SEM [ RESTR <! [ RELN r_visit] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+vote_2 := piv-lxm-textbook &
+[ ORTH <! "vote" !>,
+  SEM [ RESTR <! [ RELN r_vote] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+hope_1 := fiv-lxm-textbook &
+[ ORTH <! "hope" !>,
+  SEM [ RESTR <! [ RELN r_hope] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+hope_2 := scv-lxm-textbook &
+[ ORTH <! "hope" !>,
+  SEM [ RESTR <! [ RELN r_hope] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+say_1 := fiv-lxm-textbook &
+[ ORTH <! "say" !>,
+  SEM [ RESTR <! [ RELN r_say] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+think_1 := fiv-lxm-textbook &
+[ ORTH <! "think" !>,
+  SEM [ RESTR <! [ RELN r_think] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+suspect_1 := fiv-lxm-textbook &
+[ ORTH <! "suspect" !>,
+  SEM [ RESTR <! [ RELN r_suspect] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+discover_1 := fiv-lxm-textbook &
+[ ORTH <! "discover" !>,
+  SEM [ RESTR <! [ RELN r_discover] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+believe_2 := fiv-lxm-textbook &
+[ ORTH <! "believe" !>,
+  SEM [ RESTR <! [ RELN r_believe] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+learn_1 := fiv-lxm-textbook &
+[ ORTH <! "learn" !>,
+  SEM [ RESTR <! [ RELN r_learn] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+learn_2 := scv-lxm-textbook &
+[ ORTH <! "learn" !>,
+  SEM [ RESTR <! [ RELN r_learn] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+learn_3 := iv-lxm-textbook &
+[ ORTH <! "learn" !>,
+  SEM [ RESTR <! [ RELN r_learn] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+learn_4 := stv-lxm-textbook &
+[ ORTH <! "learn" !>,
+  SEM [ RESTR <! [ RELN r_learn] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+see_1 := fiv-lxm-textbook &
+[ ORTH <! "see" !>,
+  SEM [ RESTR <! [ RELN r_see] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+see_2 := stv-lxm-textbook &
+[ ORTH <! "see" !>,
+  SEM [ RESTR <! [ RELN r_see] !> ] ].
+:end :instance.
+
+; <<>>
+
+;; Added for second parse of "I saw her duck."  
+:begin :instance.
+see_3 := tv-lxm-textbook & 
+[ ORTH <! "see" !>,
+  SEM  [ RESTR <! [ ACT #1,
+		    UND #2,
+		    ARG #3,
+		    RELN r_see] !> ],
+  ARG-ST < [SEM [INDEX #1]], [SEM [INDEX #2]], [SYN [HEAD verb-textbook & [FORM inf],
+						     SPR < [ ] >,
+						     COMPS < > ],
+						SEM [INDEX #3] ] > ].
+:end :instance.
+
+; <<>>
+
+;; Added for "Pat helped Chris (to) solve the problem"  
+:begin :instance.
+help_2 := tv-lxm-textbook & 
+[ ORTH <! "help" !>,
+  SEM  [ RESTR <! [ ACT #1,
+		    UND #2,
+		    ARG #3,
+		    RELN r_help] !> ],
+  ARG-ST < [SEM [INDEX #1]], [SEM [INDEX #2]], [SYN [HEAD [FORM inf],
+						     SPR < [ ] >,
+						     COMPS < > ],
+						SEM [INDEX #3] ] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+admire_1 := stv-lxm-textbook &
+[ ORTH <! "admire" !>,
+  SEM [ RESTR <! [ RELN r_admire] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+affect_1 := stv-lxm-textbook &
+[ ORTH <! "affect" !>,
+  SEM [ RESTR <! [ RELN r_affect] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+annoy_1 := stv-lxm-textbook &
+[ ORTH <! "annoy" !>,
+  SEM [ RESTR <! [ RELN r_annoy] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+annoy_2 := tv-lxm-textbook & 
+[ ORTH <! "annoy" !>,
+  ARG-ST < [ SYN CP-fin,
+	     SEM [INDEX #1] ], [ SEM [INDEX #2] ] >,
+  SEM [ RESTR <! ctv_pred & [ ARG #1,
+			      UND #2,
+			      RELN r_annoy] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+arrest_1 := stv-lxm-textbook &
+[ ORTH <! "arrest" !>,
+  SEM [ RESTR <! [ RELN r_arrest] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ask_2 := stv-lxm-textbook &
+[ ORTH <! "ask" !>,
+  SEM [ RESTR <! [ RELN r_ask] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ask_3 := ocv-lxm-textbook &
+[ ORTH <! "ask" !>,
+  SEM [ RESTR <! [ RELN r_ask] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+avoid_1 := stv-lxm-textbook &
+[ ORTH <! "avoid" !>,
+  SEM [ RESTR <! [ RELN r_avoid] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+bite_1 := stv-lxm-textbook &
+[ ORTH <! "bite" !>,
+  SEM [ RESTR <! [ RELN r_bite] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+bare_1 := stv-lxm-textbook &
+[ ORTH <! "bare" !>,
+  SEM [ RESTR <! [ RELN r_bare] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+broke_1 := stv-lxm-textbook &
+[ ORTH <! "broke" !>,
+  SEM [ RESTR <! [ RELN r_broke] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+cause_1 := stv-lxm-textbook &
+[ ORTH <! "cause" !>,
+  SEM [ RESTR <! [ RELN r_cause] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+cark_1 := stv-lxm-textbook &
+[ ORTH <! "cark" !>,
+  SEM [ RESTR <! [ RELN r_cark] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+chase_1 := stv-lxm-textbook &
+[ ORTH <! "chase" !>,
+  SEM [ RESTR <! [ RELN r_chase] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+close_1 := stv-lxm-textbook &
+[ ORTH <! "close" !>,
+  SEM [ RESTR <! [ RELN r_close] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+consider_1 := stv-lxm-textbook &
+[ ORTH <! "consider" !>,
+  SEM [ RESTR <! [ RELN r_consider] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+consume_1 := stv-lxm-textbook &
+[ ORTH <! "consume" !>,
+  SEM [ RESTR <! [ RELN r_consume] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+cross_1 := stv-lxm-textbook &
+[ ORTH <! "cross" !>,
+  SEM [ RESTR <! [ RELN r_cross] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+cut_1 := stv-lxm-textbook &
+[ ORTH <! "cut" !>,
+  SEM [ RESTR <! [ RELN r_cut] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+determine_1 := stv-lxm-textbook &
+[ ORTH <! "determine" !>,
+  SEM [ RESTR <! [ RELN r_determine] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+devour_1 := stv-lxm-textbook &
+[ ORTH <! "devour" !>,
+  SEM [ RESTR <! [ RELN r_devour] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+deny_1 := stv-lxm-textbook &
+[ ORTH <! "deny" !>,
+  SEM [ RESTR <! [ RELN r_deny] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+discover_2 := stv-lxm-textbook &
+[ ORTH <! "discover" !>,
+  SEM [ RESTR <! [ RELN r_discover] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+display_1 := stv-lxm-textbook &
+[ ORTH <! "display" !>,
+  SEM [ RESTR <! [ RELN r_display] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+draw_1 := stv-lxm-textbook &
+[ ORTH <! "draw" !>,
+  SEM [ RESTR <! [ RELN r_draw] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+dread_1 := stv-lxm-textbook &
+[ ORTH <! "dread" !>,
+  SEM [ RESTR <! [ RELN r_dread] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+drive_1 := stv-lxm-textbook &
+[ ORTH <! "drive" !>,
+  SEM [ RESTR <! [ RELN r_drive] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+eat_2 := stv-lxm-textbook &
+[ ORTH <! "eat" !>,
+  SEM [ RESTR <! [ RELN r_eat] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+elect_1 := stv-lxm-textbook &
+[ ORTH <! "elect" !>,
+  SEM [ RESTR <! [ RELN r_elect] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+enjoy_1 := stv-lxm-textbook &
+[ ORTH <! "enjoy" !>,
+  SEM [ RESTR <! [ RELN r_enjoy] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+examine_1 := stv-lxm-textbook &
+[ ORTH <! "examine" !>,
+  SEM [ RESTR <! [ RELN r_examine] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+exploit_1 := stv-lxm-textbook &
+[ ORTH <! "exploit" !>,
+  SEM [ RESTR <! [ RELN r_exploit] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+find_1 := stv-lxm-textbook &
+[ ORTH <! "find" !>,
+  SEM [ RESTR <! [ RELN r_find] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+finish_1 := stv-lxm-textbook &
+[ ORTH <! "finish" !>,
+  SEM [ RESTR <! [ RELN r_finish] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fix_1 := stv-lxm-textbook &
+[ ORTH <! "fix" !>,
+  SEM [ RESTR <! [ RELN r_fix] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fill_1 := stv-lxm-textbook &
+[ ORTH <! "fill" !>,
+  SEM [ RESTR <! [ RELN r_fill] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fly_2 := stv-lxm-textbook &
+[ ORTH <! "fly" !>,
+  SEM [ RESTR <! [ RELN r_fly] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+follow_1 := stv-lxm-textbook &
+[ ORTH <! "follow" !>,
+  SEM [ RESTR <! [ RELN r_follow] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+gather_2 := stv-lxm-textbook &
+[ ORTH <! "gather" !>,
+  SEM [ RESTR <! [ RELN r_gather] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+get_1 := stv-lxm-textbook &
+[ ORTH <! "get" !>,
+  SEM [ RESTR <! [ RELN r_get] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+halve_1 := stv-lxm-textbook &
+[ ORTH <! "halve" !>,
+  SEM [ RESTR <! [ RELN r_halve] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+hate_1 := stv-lxm-textbook &
+[ ORTH <! "hate" !>,
+  SEM [ RESTR <! [ RELN r_hate] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+have_2 := stv-lxm-textbook &
+[ ORTH <! "have" !>,
+  SYN [ HEAD [ AUX boolean ] ],
+  SEM [ RESTR <! [ RELN r_have] !> ] ].
+:end :instance.
+
+; <<>>
+#|
+:begin :instance.
+have_3 := stv-lxm-textbook &
+[ ORTH <! "have" !>,
+  SYN [ HEAD [ AUX false ] ],
+  SEM [ RESTR <! [ RELN r_have] !> ] ].
+:end :instance.
+|#
+; <<>>
+
+:begin :instance.
+have_4 := srv-lxm-textbook &
+[ ORTH <! "have" !>,
+  SEM [ RESTR <! [ RELN r_have] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+help_1 := stv-lxm-textbook &
+[ ORTH <! "help" !>,
+  SEM [ RESTR <! [ RELN r_help] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+help_2 := iv-lxm-textbook &
+[ ORTH <! "help" !>,
+  SEM [ RESTR <! [ RELN r_help] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+hit_1 := stv-lxm-textbook &
+[ ORTH <! "hit" !>,
+  SEM [ RESTR <! [ RELN r_hit] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+improve_1 := stv-lxm-textbook &
+[ ORTH <! "improve" !>,
+  SEM [ RESTR <! [ RELN r_improve] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+improve_2 := iv-lxm-textbook &
+[ ORTH <! "improve" !>,
+  SEM [ RESTR <! [ RELN r_improve] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+involve_1 := stv-lxm-textbook &
+[ ORTH <! "involve" !>,
+  SEM [ RESTR <! [ RELN r_involve] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+know_1 := stv-lxm-textbook &
+[ ORTH <! "know" !>,
+  SEM [ RESTR <! [ RELN r_know] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+kick_1 := stv-lxm-textbook &
+[ ORTH <! "kick" !>,
+  SEM [ RESTR <! [ RELN r_kick] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+leave_2 := stv-lxm-textbook &
+[ ORTH <! "leave" !>,
+  SEM [ RESTR <! [ RELN r_leave] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+like_1 := stv-lxm-textbook &
+[ ORTH <! "like" !>,
+  SEM [ RESTR <! [ RELN r_like] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+like_2 := fiv-lxm-textbook &
+[ ORTH <! "like" !>,
+  SEM  [ RESTR <! [ RELN r_like ] !> ] ].
+:end :instance.
+; See Changes File #7 
+
+; <<>>
+
+:begin :instance.
+like_3 := scv-lxm-textbook &
+[ ORTH <! "like" !>,
+  SEM  [ RESTR <! [ RELN r_like ] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+list_1 := stv-lxm-textbook &
+[ ORTH <! "list" !>,
+  SEM [ RESTR <! [ RELN r_list] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+lock_1 := stv-lxm-textbook &
+[ ORTH <! "lock" !>,
+  SEM [ RESTR <! [ RELN r_lock] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+love_1 := stv-lxm-textbook &
+[ ORTH <! "love" !>,
+  SEM [ RESTR <! [ RELN r_love] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+meet_1 := stv-lxm-textbook &
+[ ORTH <! "meet" !>,
+  SEM [ RESTR <! [ RELN r_meet] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+observe_1 := stv-lxm-textbook &
+[ ORTH <! "observe" !>,
+  SEM [ RESTR <! [ RELN r_observe] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+offend_1 := stv-lxm-textbook &
+[ ORTH <! "offend" !>,
+  SEM [ RESTR <! [ RELN r_offend] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+open_1 := stv-lxm-textbook &
+[ ORTH <! "open" !>,
+  SEM [ RESTR <! [ RELN r_open] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+pat_2 := stv-lxm-textbook &
+[ ORTH <! "pat" !>,
+  SEM [ RESTR <! [ RELN r_pat] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+paint_1 := stv-lxm-textbook &
+[ ORTH <! "paint" !>,
+  SEM [ RESTR <! [ RELN r_paint] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+pet_1 := stv-lxm-textbook &
+[ ORTH <! "pet" !>,
+  SEM [ RESTR <! [ RELN r_pet] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+phone_1 := stv-lxm-textbook &
+[ ORTH <! "phone" !>,
+  SEM [ RESTR <! [ RELN r_phone] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+present_1 := stv-lxm-textbook &
+[ ORTH <! "present" !>,
+  SEM [ RESTR <! [ RELN r_present] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+protect_1 := stv-lxm-textbook &
+[ ORTH <! "protect" !>,
+  SEM [ RESTR <! [ RELN r_protect] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+question_1 := stv-lxm-textbook &
+[ ORTH <! "question" !>,
+  SEM [ RESTR <! [ RELN r_question] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+race_1 := stv-lxm-textbook &
+[ ORTH <! "race" !>,
+  SEM [ RESTR <! [ RELN r_race] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+rake_1 := stv-lxm-textbook &
+[ ORTH <! "rake" !>,
+  SEM [ RESTR <! [ RELN r_rake] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+represent_1 := stv-lxm-textbook &
+[ ORTH <! "represent" !>,
+  SEM [ RESTR <! [ RELN r_represent] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+respect_1 := stv-lxm-textbook &
+[ ORTH <! "respect" !>,
+  SEM [ RESTR <! [ RELN r_respect] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+sing_2 := stv-lxm-textbook &
+[ ORTH <! "sing" !>,
+  SEM [ RESTR <! [ RELN r_sing] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+solve_1 := stv-lxm-textbook &
+[ ORTH <! "solve" !>,
+  SEM [ RESTR <! [ RELN r_solve] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+spot_1 := stv-lxm-textbook &
+[ ORTH <! "spot" !>,
+  SEM [ RESTR <! [ RELN r_spot] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+spray_1 := stv-lxm-textbook &
+[ ORTH <! "spray" !>,
+  SEM [ RESTR <! [ RELN r_spray] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+spray_2 := ptv-lxm-textbook &
+[ ORTH <! "spray" !>,
+  SEM [ RESTR <! [ RELN r_spray] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+suck_2 := stv-lxm-textbook &
+[ ORTH <! "suck" !>,
+  SEM [ RESTR <! [ RELN r_suck] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+supervise_1 := stv-lxm-textbook &
+[ ORTH <! "supervise" !>,
+  SEM [ RESTR <! [ RELN r_supervise] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+take_2 := stv-lxm-textbook &
+[ ORTH <! "take" !>,
+  SEM [ RESTR <! [ RELN r_take] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+taste_1 := stv-lxm-textbook &
+[ ORTH <! "taste" !>,
+  SEM [ RESTR <! [ RELN r_taste] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+target_1 := stv-lxm-textbook &
+[ ORTH <! "target" !>,
+  SEM [ RESTR <! [ RELN r_target] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tell_1 := stv-lxm-textbook &
+[ ORTH <! "tell" !>,
+  SEM [ RESTR <! [ RELN r_tell] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+trick_1 := stv-lxm-textbook &
+[ ORTH <! "trick" !>,
+  SEM [ RESTR <! [ RELN r_trick] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+turn_1 := stv-lxm-textbook &
+[ ORTH <! "turn" !>,
+  SEM [ RESTR <! [ RELN r_turn] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+upset_1 := stv-lxm-textbook &
+[ ORTH <! "upset" !>,
+  SEM [ RESTR <! [ RELN r_upset] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+visit_3 := stv-lxm-textbook &
+[ ORTH <! "visit" !>,
+  SEM [ RESTR <! [ RELN r_visit] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+watch_1 := stv-lxm-textbook &
+[ ORTH <! "watch" !>,
+  SEM [ RESTR <! [ RELN r_watch] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+win_2 := stv-lxm-textbook &
+[ ORTH <! "win" !>,
+  SEM [ RESTR <! [ RELN r_win] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+bring_1 := dtv-lxm-textbook &
+[ ORTH <! "bring" !>,
+  SEM [ RESTR <! [ RELN r_bring] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+donate_1 := dtv-lxm-textbook &
+[ ORTH <! "donate" !>,
+  SEM [ RESTR <! [ RELN r_donate] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+hand_1 := dtv-lxm-textbook &
+[ ORTH <! "hand" !>,
+  SEM [ RESTR <! [ RELN r_hand] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+give_1 := dtv-lxm-textbook &
+[ ORTH <! "give" !>,
+  SEM [ RESTR <! [ RELN r_give] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tell_2 := dtv-lxm-textbook &
+[ ORTH <! "tell" !>,
+  SEM [ RESTR <! [ RELN r_tell] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ask_4 := ptv-lxm-textbook &
+[ ORTH <! "ask" !>,
+  SEM [ RESTR <! [ RELN r_ask] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+bring_2 := ptv-lxm-textbook &
+[ ORTH <! "bring" !>,
+  SEM [ RESTR <! [ RELN r_bring] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+hand_2 := ptv-lxm-textbook &
+[ ORTH <! "hand" !>,
+  SEM [ RESTR <! [ RELN r_hand] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+determine_2 := dtv-lxm-textbook &
+[ ORTH <! "determine" !>,
+  SEM [ RESTR <! [ RELN r_determine] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+donate_2 := ptv-lxm-textbook &
+[ ORTH <! "donate" !>,
+  SEM [ RESTR <! [ RELN r_donate] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+move_1 := ptv-lxm-textbook &
+[ ORTH <! "move" !>,
+  SEM [ RESTR <! [ RELN r_move] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+put_1 := ptv-lxm-textbook &
+[ ORTH <! "put" !>,
+  SEM [ RESTR <! [ RELN r_put] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tell_3 := ptv-lxm-textbook &
+[ ORTH <! "tell" !>,
+  SEM [ RESTR <! [ RELN r_tell] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+take_3 := ptv-lxm-textbook &
+[ ORTH <! "take" !>,
+  SEM [ RESTR <! [ RELN r_take] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+wrap_1 := ptv-lxm-textbook &
+[ ORTH <! "wrap" !>,
+  SEM [ RESTR <! [ RELN r_wrap] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+give_2 := ptv-lxm-textbook &
+[ ORTH <! "give" !>,
+  SEM [ RESTR <! [ RELN r_give] !> ] ].
+:end :instance.
+
+; <<>>
+
+;; The CP-inf seems necessary to block "I continue sleep".
+:begin :instance.
+continue_1 := srv-lxm-textbook &
+[ ORTH <! "continue" !>,
+  SEM [ RESTR <! [ RELN r_continue] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+seem_1 := srv-lxm-textbook &
+[ ORTH <! "seem" !>,
+  SEM [ RESTR <! [ RELN r_seem] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+appear_1 := srv-lxm-textbook &
+[ ORTH <! "appear" !>,
+  SEM [ RESTR <! [ RELN r_appear] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+appear_2 := orv-lxm-textbook &
+[ ORTH <! "appear" !>,
+  SEM  [ RESTR <! [ RELN r_appear ] !> ],
+  ARG-ST < [ ], [SYN [HEAD prep & [FORM f_to] ] ], [ ] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+appeal_1 := ocv-lxm-textbook &
+[ ORTH <! "appeal" !>,
+  SEM  [ RESTR <! [ RELN r_appeal ] !> ],
+  ARG-ST < [ ], [SYN [HEAD prep & [FORM f_to] ] ], [ ] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+try_1 := scv-lxm-textbook &
+[ ORTH <! "try" !>,
+  SEM [ RESTR <! [ RELN r_try] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+expect_1 := orv-lxm-textbook &
+[ ORTH <! "expect" !>,
+  SEM [ RESTR <! [ RELN r_expect] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+persuade_1 := ocv-lxm-textbook &
+[ ORTH <! "persuade" !>,
+  SEM [ RESTR <! [ RELN r_persuade] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+accusation_1 := cn-lxm-textbook &
+[ ORTH <! "accusation" !>,
+  SEM [ RESTR <! [ RELN r_accusation] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+advantage_2 := cn-lxm-textbook &
+[ ORTH <! "advantage" !>,
+  SEM [ RESTR <! [ RELN r_advantage] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+age_2 := cn-lxm-textbook &
+[ ORTH <! "age" !>,
+  SEM [ RESTR <! [ RELN r_age] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+album_1 := cn-lxm-textbook &
+[ ORTH <! "album" !>,
+  SEM [ RESTR <! [ RELN r_album] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+alps_1 := const-lxm &
+[ ORTH <! "the", "alps" !>,
+  SYN [ HEAD noun-textbook & [ FORM normal,
+		      AGR [ PER 3rd,
+			    NUM plur ] ] ],
+  SEM [ MODE ref,
+	INDEX #1,
+	RESTR <! named_pred & [ NAME 'Alps,
+				NAMED #1 ] !> ], 
+  ARG-ST < > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+pants_1 := cn-lxm-textbook &
+[ ORTH <! "pants" !>,
+  SYN [ HEAD [ AGR [ NUM plur ] ] ],
+  SEM [ RESTR <! [ RELN r_pants] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+andes_1 := const-lxm &
+[ ORTH <! "the", "andes" !>,
+  SYN [ HEAD noun-textbook & [ FORM normal,
+		      AGR [ PER 3rd,
+			    NUM plur ] ] ],
+  SEM [ MODE ref,
+	INDEX #1,
+	RESTR <! named_pred & [ NAME 'Andes,
+				NAMED #1 ] !> ], 
+  ARG-ST < > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+animal_1 := cn-lxm-textbook &
+[ ORTH <! "animal" !>,
+  SEM [ RESTR <! [ RELN r_animal] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+answer_1 := cn-lxm-textbook &
+[ ORTH <! "answer" !>,
+  SEM [ RESTR <! [ RELN r_answer] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+arrow_1 := cn-lxm-textbook &
+[ ORTH <! "arrow" !>,
+  SEM [ RESTR <! [ RELN r_arrow] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+artist_1 := cn-lxm-textbook &
+[ ORTH <! "artist" !>,
+  SEM [ RESTR <! [ RELN r_artist] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+assignment_1 := cn-lxm-textbook &
+[ ORTH <! "assignment" !>,
+  SEM [ RESTR <! [ RELN r_assignment] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+associate_1 := cn-lxm-textbook &
+[ ORTH <! "associate" !>,
+  SEM [ RESTR <! [ RELN r_associate] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+astronomer_1 := cn-lxm-textbook &
+[ ORTH <! "astronomer" !>,
+  SEM [ RESTR <! [ RELN r_astronomer] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+atom_1 := cn-lxm-textbook &
+[ ORTH <! "atom" !>,
+  SEM [ RESTR <! [ RELN r_atom] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+audience_1 := cn-lxm-textbook &
+[ ORTH <! "audience" !>,
+  SEM [ RESTR <! [ RELN r_audience] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+auxiliary_1 := cn-lxm-textbook &
+[ ORTH <! "auxiliary" !>,
+  SEM [ RESTR <! [ RELN r_auxiliary] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+baby_1 := cn-lxm-textbook &
+[ ORTH <! "baby" !>,
+  SEM [ RESTR <! [ RELN r_baby] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+back_1 := cn-lxm-textbook &
+[ ORTH <! "back" !>,
+  SEM [ RESTR <! [ RELN r_back] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+bark_2 := cn-lxm-textbook &
+[ ORTH <! "bark" !>,
+  SEM [ RESTR <! [ RELN r_bark] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+barn_1 := cn-lxm-textbook &
+[ ORTH <! "barn" !>,
+  SEM [ RESTR <! [ RELN r_barn] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+beer_1 := cn-lxm-textbook &
+[ ORTH <! "beer" !>,
+  SEM [ RESTR <! [ RELN r_beer] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+belief_1 := cn-lxm-textbook &
+[ ORTH <! "belief" !>,
+  SEM [ RESTR <! [ RELN r_belief] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+bicycle_1 := cn-lxm-textbook &
+[ ORTH <! "bicycle" !>,
+  SEM [ RESTR <! [ RELN r_bicycle] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+bird_1 := cn-lxm-textbook &
+[ ORTH <! "bird" !>,
+  SEM [ RESTR <! [ RELN r_bird] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+bit_1 := cn-lxm-textbook &
+[ ORTH <! "bit" !>,
+  SEM [ RESTR <! [ RELN r_bit] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+blanket_1 := cn-lxm-textbook &
+[ ORTH <! "blanket" !>,
+  SEM [ RESTR <! [ RELN r_blanket] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+blues_1 := cn-lxm-textbook &
+[ ORTH <! "blues" !>,
+  SEM [ RESTR <! [ RELN r_blues] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+boat_1 := cn-lxm-textbook &
+[ ORTH <! "boat" !>,
+  SEM [ RESTR <! [ RELN r_boat] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+book_1 := cn-lxm-textbook &
+[ ORTH <! "book" !>,
+  SEM [ RESTR <! [ RELN r_book] !> ] ].
+:end :instance.
+
+:end :instance.
+
+; <<>>
+
+;; This was put in to account for examples such as "I like the book about Kim"
+:begin :instance.
+book_2 := cn-lxm-textbook &
+[ ORTH <! "book" !>,
+  ARG-ST < [ ], [ SYN [ HEAD prep & [FORM f_about] ] ] >,
+  SEM [ RESTR <! [ RELN r_book] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+bucket_1 := cn-lxm-textbook &
+[ ORTH <! "bucket" !>,
+  SEM [ RESTR <! [ RELN r_bucket] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+building_1 := cn-lxm-textbook &
+[ ORTH <! "building" !>,
+  SEM [ RESTR <! [ RELN r_building] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+campaign_2 := cn-lxm-textbook &
+[ ORTH <! "campaign" !>,
+  SEM [ RESTR <! [ RELN r_campaign] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+cancer_1 := cn-lxm-textbook &
+[ ORTH <! "cancer" !>,
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
+  SEM [ RESTR <! [ RELN r_cancer] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+candidate_1 := cn-lxm-textbook &
+[ ORTH <! "candidate" !>,
+  SEM [ RESTR <! [ RELN r_candidate] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+captain_1 := cn-lxm-textbook &
+[ ORTH <! "captain" !>,
+  SEM [ RESTR <! [ RELN r_captain] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+car_1 := cn-lxm-textbook &
+[ ORTH <! "car" !>,
+  SEM [ RESTR <! [ RELN r_car] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+cardinal_1 := cn-lxm-textbook &
+[ ORTH <! "cardinal" !>,
+  SEM [ RESTR <! [ RELN r_cardinal] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+cat_1 := cn-lxm-textbook &
+[ ORTH <! "cat" !>,
+  SEM [ RESTR <! [ RELN r_cat] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+cause_2 := cn-lxm-textbook &
+[ ORTH <! "cause" !>,
+  SEM [ RESTR <! [ RELN r_cause] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+chair_1 := cn-lxm-textbook &
+[ ORTH <! "chair" !>,
+  SEM [ RESTR <! [ RELN r_chair] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+cheetah_1 := cn-lxm-textbook &
+[ ORTH <! "cheetah" !>,
+  SEM [ RESTR <! [ RELN r_cheetah] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+child_1 := cn-lxm-textbook &
+[ ORTH <! "child" !>,
+  SEM [ RESTR <! [ RELN r_child] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+city_1 := cn-lxm-textbook &
+[ ORTH <! "city" !>,
+  SEM [ RESTR <! [ RELN r_city] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+class_1 := cn-lxm-textbook &
+[ ORTH <! "class" !>,
+  SEM [ RESTR <! [ RELN r_class] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+cloud_1 := cn-lxm-textbook &
+[ ORTH <! "cloud" !>,
+  SEM [ RESTR <! [ RELN r_cloud] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+clue_1 := cn-lxm-textbook &
+[ ORTH <! "clue" !>,
+  SEM [ RESTR <! [ RELN r_clue] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+coast_1 := cn-lxm-textbook &
+[ ORTH <! "coast" !>,
+  SEM [ RESTR <! [ RELN r_coast] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+conflict_1 := cn-lxm-textbook &
+[ ORTH <! "conflict" !>,
+  SEM [ RESTR <! [ RELN r_conflict] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+council_1 := cn-lxm-textbook &
+[ ORTH <! "council" !>,
+  SEM [ RESTR <! [ RELN r_council] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+customer_1 := cn-lxm-textbook &
+[ ORTH <! "customer" !>,
+  SEM [ RESTR <! [ RELN r_customer] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+day_1 := cn-lxm-textbook &
+[ ORTH <! "day" !>,
+  SEM [ RESTR <! [ RELN r_day] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+dealer_1 := cn-lxm-textbook &
+[ ORTH <! "dealer" !>,
+  SEM [ RESTR <! [ RELN r_dealer] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+dealership_1 := cn-lxm-textbook &
+[ ORTH <! "dealership" !>,
+  SEM [ RESTR <! [ RELN r_dealership] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+defendant_1 := cn-lxm-textbook &
+[ ORTH <! "defendant" !>,
+  SEM [ RESTR <! [ RELN r_defendant] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+difference_1 := cn-lxm-textbook &
+[ ORTH <! "difference" !>,
+  SEM [ RESTR <! [ RELN r_difference] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+dinner_1 := cn-lxm-textbook &
+[ ORTH <! "dinner" !>,
+  SEM [ RESTR <! [ RELN r_dinner] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+disease_1 := cn-lxm-textbook &
+[ ORTH <! "disease" !>,
+  SEM [ RESTR <! [ RELN r_disease] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+doctor_1 := cn-lxm-textbook &
+[ ORTH <! "doctor" !>,
+  SEM [ RESTR <! [ RELN r_doctor] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+dog_1 := cn-lxm-textbook &
+[ ORTH <! "dog" !>,
+  SEM [ RESTR <! [ RELN r_dog] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+drug_1 := cn-lxm-textbook &
+[ ORTH <! "drug" !>,
+  SEM [ RESTR <! [ RELN r_drug] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+duck_1 := cn-lxm-textbook &
+[ ORTH <! "duck" !>,
+  SEM [ RESTR <! [ RELN r_duck-noun] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+earthquake_1 := cn-lxm-textbook &
+[ ORTH <! "earthquake" !>,
+  SEM [ RESTR <! [ RELN r_earthquake] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+east_1 := cn-lxm-textbook &
+[ ORTH <! "east" !>,
+  SEM [ RESTR <! [ RELN r_east] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+exam_1 := cn-lxm-textbook &
+[ ORTH <! "exam" !>,
+  SEM [ RESTR <! [ RELN r_exam] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+evidence_1 := cn-lxm-textbook &
+[ ORTH <! "evidence" !>,
+  SEM [ RESTR <! [ RELN r_evidence] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fbi_1 := cn-lxm-textbook &
+[ ORTH <! "fbi" !>,
+  SEM [ RESTR <! [ RELN r_fbi] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+felon_1 := cn-lxm-textbook &
+[ ORTH <! "felon" !>,
+  SEM [ RESTR <! [ RELN r_felon] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fever_1 := cn-lxm-textbook &
+[ ORTH <! "fever" !>,
+  SEM [ RESTR <! [ RELN r_fever] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fit_1 := cn-lxm-textbook &
+[ ORTH <! "fit" !>,
+  SEM [ RESTR <! [ RELN r_fit-noun] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+flower_1 := cn-lxm-textbook &
+[ ORTH <! "flower" !>,
+  SEM [ RESTR <! [ RELN r_flower] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+flour_1 := cn-lxm-textbook &
+[ ORTH <! "flour" !>,
+  SEM [ RESTR <! [ RELN r_flour] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+food_1 := cn-lxm-textbook &
+[ ORTH <! "food" !>,
+  SEM [ RESTR <! [ RELN r_food] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+fool_1 := cn-lxm-textbook &
+[ ORTH <! "fool" !>,
+  SEM [ RESTR <! [ RELN r_fool] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+form_1 := cn-lxm-textbook &
+[ ORTH <! "form" !>,
+  SEM [ RESTR <! [ RELN r_form] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+friend_1 := cn-lxm-textbook &
+[ ORTH <! "friend" !>,
+  SEM [ RESTR <! [ RELN r_friend] !> ] ].
+:end :instance.
+
+; <<>>
+
+;; Do we want this going through the 3sing-noun rule?
+:begin :instance.
+furniture_1 := cn-lxm-textbook &
+[ ORTH <! "furniture" !>,
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
+  SEM [ RESTR <! [ RELN r_furniture] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+game_1 := cn-lxm-textbook &
+[ ORTH <! "game" !>,
+  SEM [ RESTR <! [ RELN r_game] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+garden_1 := cn-lxm-textbook &
+[ ORTH <! "garden" !>,
+  SEM [ RESTR <! [ RELN r_garden] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+garlic_1 := cn-lxm-textbook &
+[ ORTH <! "garlic" !>,
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
+  SEM [ RESTR <! [ RELN r_garlic] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+gas_1 := cn-lxm-textbook &
+[ ORTH <! "gas" !>,
+  SEM [ RESTR <! [ RELN r_gas] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+gathering_1 := cn-lxm-textbook &
+[ ORTH <! "gathering" !>,
+  SEM [ RESTR <! [ RELN r_gathering] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+german_2 := cn-lxm-textbook &
+[ ORTH <! "german" !>,
+  SEM [ RESTR <! [ RELN r_german] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+grandmother_1 := cn-lxm-textbook &
+[ ORTH <! "grandmother" !>,
+  SEM [ RESTR <! [ RELN r_grandmother] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+guest_1 := cn-lxm-textbook &
+[ ORTH <! "guest" !>,
+  SEM [ RESTR <! [ RELN r_guest] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+hand_3 := cn-lxm-textbook &
+[ ORTH <! "hand" !>,
+  SEM [ RESTR <! [ RELN r_hand] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+head_1 := cn-lxm-textbook &
+[ ORTH <! "head" !>,
+  SEM [ RESTR <! [ RELN r_head] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+horse_1 := cn-lxm-textbook &
+[ ORTH <! "horse" !>,
+  SEM [ RESTR <! [ RELN r_horse] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+hospital_1 := cn-lxm-textbook &
+[ ORTH <! "hospital" !>,
+  SEM [ RESTR <! [ RELN r_hospital] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ice_cream_1 := cn-lxm-textbook &
+[ ORTH <! "ice", "cream" !>,
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
+  SEM [ RESTR <! [ RELN r_ice_cream] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+idea_1 := cn-lxm-textbook &
+[ ORTH <! "idea" !>,
+  SEM [ RESTR <! [ RELN r_idea] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+improvement_1 := cn-lxm-textbook &
+[ ORTH <! "improvement" !>,
+  SEM [ RESTR <! [ RELN r_improvement] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+innocent_1 := cn-lxm-textbook &
+[ ORTH <! "innocent" !>,
+  SEM [ RESTR <! [ RELN r_innocent] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+judge_1 := cn-lxm-textbook &
+[ ORTH <! "judge" !>,
+  SEM [ RESTR <! [ RELN r_judge] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+jury_1 := cn-lxm-textbook &
+[ ORTH <! "jury" !>,
+  SEM [ RESTR <! [ RELN r_jury] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+kind_2 := cn-lxm-textbook &
+[ ORTH <! "kind" !>,
+  SEM [ RESTR <! [ RELN r_kind] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+language_1 := cn-lxm-textbook &
+[ ORTH <! "language" !>,
+  SEM [ RESTR <! [ RELN r_language] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+leaf_1 := cn-lxm-textbook &
+[ ORTH <! "leaf" !>,
+  SEM [ RESTR <! [ RELN r_leaf] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+leg_1 := cn-lxm-textbook &
+[ ORTH <! "leg" !>,
+  SEM [ RESTR <! [ RELN r_leg] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+letter_1 := cn-lxm-textbook &
+[ ORTH <! "letter" !>,
+  SEM [ RESTR <! [ RELN r_letter] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+letter_2 := cn-lxm-textbook &
+[ ORTH <! "letter" !>,
+  ARG-ST < [ ], [SYN [ HEAD prep & [ FORM f_to ] ] ] >,
+  SEM [ RESTR <! [ RELN r_letter] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+letter_3 := cn-lxm-textbook &
+[ ORTH <! "letter" !>,
+  ARG-ST < [ ], [SYN [ HEAD prep & [ FORM f_for ] ] ] >,
+  SEM [ RESTR <! [ RELN r_letter] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+library_1 := cn-lxm-textbook &
+[ ORTH <! "library" !>,
+  SEM [ RESTR <! [ RELN r_library] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+life_1 := cn-lxm-textbook &
+[ ORTH <! "life" !>,
+  SEM [ RESTR <! [ RELN r_life] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+light_1 := cn-lxm-textbook &
+[ ORTH <! "light" !>,
+  SEM [ RESTR <! [ RELN r_light] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+linguist_1 := cn-lxm-textbook &
+[ ORTH <! "linguist" !>,
+  SEM [ RESTR <! [ RELN r_linguist] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+list_2 := cn-lxm-textbook &
+[ ORTH <! "list" !>,
+  SEM [ RESTR <! [ RELN r_list] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+logic_1 := cn-lxm-textbook &
+[ ORTH <! "logic" !>,
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
+  SEM [ RESTR <! [ RELN r_logic] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+age_1 := cn-lxm-textbook &
+[ ORTH <! "age" !>,
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
+  SEM [ RESTR <! [ RELN r_age-noun] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+lunch_1 := cn-lxm-textbook &
+[ ORTH <! "lunch" !>,
+  SEM [ RESTR <! [ RELN r_lunch] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+mailbox_1 := cn-lxm-textbook &
+[ ORTH <! "mailbox" !>,
+  SEM [ RESTR <! [ RELN r_mailbox] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+martini_1 := cn-lxm-textbook &
+[ ORTH <! "martini" !>,
+  SEM [ RESTR <! [ RELN r_martini] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+master_1 := cn-lxm-textbook &
+[ ORTH <! "master" !>,
+  SEM [ RESTR <! [ RELN r_master] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+meal_1 := cn-lxm-textbook &
+[ ORTH <! "meal" !>,
+  SEM [ RESTR <! [ RELN r_meal] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+meeting_1 := cn-lxm-textbook &
+[ ORTH <! "meeting" !>,
+  SEM [ RESTR <! [ RELN r_meeting] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+man_1 := cn-lxm-textbook &
+[ ORTH <! "man" !>,
+  SEM [ RESTR <! [ RELN r_man] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+monster_1 := cn-lxm-textbook &
+[ ORTH <! "monster" !>,
+  SEM [ RESTR <! [ RELN r_monster] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+mothen_1 := cn-lxm-textbook &
+[ ORTH <! "mothen" !>,
+  SEM [ RESTR <! [ RELN r_mothen] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+movie_1 := cn-lxm-textbook &
+[ ORTH <! "movie" !>,
+  SEM [ RESTR <! [ RELN r_movie] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+museum_1 := cn-lxm-textbook &
+[ ORTH <! "museum" !>,
+  SEM [ RESTR <! [ RELN r_museum] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+napkin_1 := cn-lxm-textbook &
+[ ORTH <! "napkin" !>,
+  SEM [ RESTR <! [ RELN r_napkin] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+neighborhood_1 := cn-lxm-textbook &
+[ ORTH <! "neighborhood" !>,
+  SEM [ RESTR <! [ RELN r_neighborhood] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+nephew_1 := cn-lxm-textbook &
+[ ORTH <! "nephew" !>,
+  SEM [ RESTR <! [ RELN r_nephew] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+night_1 := cn-lxm-textbook &
+[ ORTH <! "night" !>,
+  SEM [ RESTR <! [ RELN r_night] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+note_1 := cn-lxm-textbook &
+[ ORTH <! "note" !>,
+  SEM [ RESTR <! [ RELN r_note] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+opportunity_1 := cn-lxm-textbook &
+[ ORTH <! "opportunity" !>,
+  SEM [ RESTR <! [ RELN r_opportunity] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+painting_1 := cn-lxm-textbook &
+[ ORTH <! "painting" !>,
+  SEM [ RESTR <! [ RELN r_painting] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+park_1 := cn-lxm-textbook &
+[ ORTH <! "park" !>,
+  SEM [ RESTR <! [ RELN r_park] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+participant_1 := cn-lxm-textbook &
+[ ORTH <! "participant" !>,
+  SEM [ RESTR <! [ RELN r_participant] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+past_1 := cn-lxm-textbook &
+[ ORTH <! "past" !>,
+  SEM [ RESTR <! [ RELN r_past] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+patient_1 := cn-lxm-textbook &
+[ ORTH <! "patient" !>,
+  SEM [ RESTR <! [ RELN r_patient] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+pencil_1 := cn-lxm-textbook &
+[ ORTH <! "pencil" !>,
+  SEM [ RESTR <! [ RELN r_pencil] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+person_1 := cn-lxm-textbook &
+[ ORTH <! "person" !>,
+  SEM [ RESTR <! [ RELN r_person] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+phone_2 := cn-lxm-textbook &
+[ ORTH <! "phone" !>,
+  SEM [ RESTR <! [ RELN r_phone] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+picture_1 := cn-lxm-textbook &
+[ ORTH <! "picture" !>,
+  SEM [ RESTR <! [ RELN r_picture] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+picture_2 := cn-lxm-textbook &
+[ ORTH <! "picture" !>,
+  ARG-ST < [ ], [ SYN [ HEAD prep & [FORM f_of] ] ] >,
+  SEM [ RESTR <! [ RELN r_picture] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+police_1 := cn-lxm-textbook &
+[ ORTH <! "police" !>,
+  SEM [ RESTR <! [ RELN r_police] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+present_2 := cn-lxm-textbook &
+[ ORTH <! "present" !>,
+  SEM [ RESTR <! [ RELN r_present] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+price_1 := cn-lxm-textbook &
+[ ORTH <! "price" !>,
+  SEM [ RESTR <! [ RELN r_price] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+problem_1 := cn-lxm-textbook &
+[ ORTH <! "problem" !>,
+  SEM [ RESTR <! [ RELN r_problem] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+protester_1 := cn-lxm-textbook &
+[ ORTH <! "protester" !>,
+  SEM [ RESTR <! [ RELN r_protester] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+question_2 := cn-lxm-textbook &
+[ ORTH <! "question" !>,
+  SEM [ RESTR <! [ RELN r_question] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+race_2 := cn-lxm-textbook &
+[ ORTH <! "race" !>,
+  SEM [ RESTR <! [ RELN r_race] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+rain_2 := cn-lxm-textbook &
+[ ORTH <! "rain" !>,
+  SEM [ RESTR <! [ RELN r_rain] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+rake_2 := cn-lxm-textbook &
+[ ORTH <! "rake" !>,
+  SEM [ RESTR <! [ RELN r_rake] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ravioli_1 := cn-lxm-textbook &
+[ ORTH <! "ravioli" !>,
+  SEM [ RESTR <! [ RELN r_ravioli] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+relative_1 := cn-lxm-textbook &
+[ ORTH <! "relative" !>,
+  SEM [ RESTR <! [ RELN r_relative] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+riot_1 := cn-lxm-textbook &
+[ ORTH <! "riot" !>,
+  SEM [ RESTR <! [ RELN r_riot] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+river_1 := cn-lxm-textbook &
+[ ORTH <! "river" !>,
+  SEM [ RESTR <! [ RELN r_river] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+roof_1 := cn-lxm-textbook &
+[ ORTH <! "roof" !>,
+  SEM [ RESTR <! [ RELN r_roof] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+room_1 := cn-lxm-textbook &
+[ ORTH <! "room" !>,
+  SEM [ RESTR <! [ RELN r_room] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+run_2 := cn-lxm-textbook &
+[ ORTH <! "run" !>,
+  SEM [ RESTR <! [ RELN r_run] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+scream_2 := cn-lxm-textbook &
+[ ORTH <! "scream" !>,
+  SEM [ RESTR <! [ RELN r_scream] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+seat_1 := cn-lxm-textbook &
+[ ORTH <! "seat" !>,
+  SEM [ RESTR <! [ RELN r_seat] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+senora_1 := cn-lxm-textbook &
+[ ORTH <! "senora" !>,
+  SEM [ RESTR <! [ RELN r_senora] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+sentence_1 := cn-lxm-textbook &
+[ ORTH <! "sentence" !>,
+  SEM [ RESTR <! [ RELN r_sentence] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+series_1 := cn-lxm-textbook &
+[ ORTH <! "series" !>,
+  SEM [ RESTR <! [ RELN r_series] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+shepherd_1 := cn-lxm-textbook &
+[ ORTH <! "shepherd" !>,
+  SEM [ RESTR <! [ RELN r_shepherd] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+song_1 := cn-lxm-textbook &
+[ ORTH <! "song" !>,
+  SEM [ RESTR <! [ RELN r_song] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+skate_2 := cn-lxm-textbook &
+[ ORTH <! "skate" !>,
+  SEM [ RESTR <! [ RELN r_skate] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+sneeze_2 := cn-lxm-textbook &
+[ ORTH <! "sneeze" !>,
+  SEM [ RESTR <! [ RELN r_sneeze] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+spot_2 := cn-lxm-textbook &
+[ ORTH <! "spot" !>,
+  SEM [ RESTR <! [ RELN r_spot] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+storm_1 := cn-lxm-textbook &
+[ ORTH <! "storm" !>,
+  SEM [ RESTR <! [ RELN r_storm] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+student_1 := cn-lxm-textbook &
+[ ORTH <! "student" !>,
+  SEM [ RESTR <! [ RELN r_student] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+table_1 := cn-lxm-textbook &
+[ ORTH <! "table" !>,
+  SEM [ RESTR <! [ RELN r_table] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tab_2 := cn-lxm-textbook &
+[ ORTH <! "tab" !>,
+  SEM [ RESTR <! [ RELN r_tabs] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tail_1 := cn-lxm-textbook &
+[ ORTH <! "tail" !>,
+  SEM [ RESTR <! [ RELN r_tail] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tale_1 := cn-lxm-textbook &
+[ ORTH <! "tale" !>,
+  SEM [ RESTR <! [ RELN r_tale] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+talk_3 := cn-lxm-textbook &
+[ ORTH <! "talk" !>,
+  SEM [ RESTR <! [ RELN r_talk] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+teacher_1 := cn-lxm-textbook &
+[ ORTH <! "teacher" !>,
+  SEM [ RESTR <! [ RELN r_teacher] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+team_1 := cn-lxm-textbook &
+[ ORTH <! "team" !>,
+  SEM [ RESTR <! [ RELN r_team] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+telescope_1 := cn-lxm-textbook &
+[ ORTH <! "telescope" !>,
+  SEM [ RESTR <! [ RELN r_telescope] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+television_1 := cn-lxm-textbook &
+[ ORTH <! "television" !>,
+  SEM [ RESTR <! [ RELN r_television] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+theorem_1 := cn-lxm-textbook &
+[ ORTH <! "theorem" !>,
+  SEM [ RESTR <! [ RELN r_theorem] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+thief_1 := cn-lxm-textbook &
+[ ORTH <! "thief" !>,
+  SEM [ RESTR <! [ RELN r_thief] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+thing_1 := cn-lxm-textbook &
+[ ORTH <! "thing" !>,
+  SEM [ RESTR <! [ RELN r_thing] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+thrill_1 := cn-lxm-textbook &
+[ ORTH <! "thrill" !>,
+  SEM [ RESTR <! [ RELN r_thrill] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+time_1 := cn-lxm-textbook &
+[ ORTH <! "time" !>,
+  SEM [ RESTR <! [ RELN r_time] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+town_1 := cn-lxm-textbook &
+[ ORTH <! "town" !>,
+  SEM [ RESTR <! [ RELN r_town] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+toy_1 := cn-lxm-textbook &
+[ ORTH <! "toy" !>,
+  SEM [ RESTR <! [ RELN r_toy] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+trash_1 := cn-lxm-textbook &
+[ ORTH <! "trash" !>,
+  SEM [ RESTR <! [ RELN r_trash] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+trick_2 := cn-lxm-textbook &
+[ ORTH <! "trick" !>,
+  SEM [ RESTR <! [ RELN r_trick] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+trouble_1 := cn-lxm-textbook &
+[ ORTH <! "trouble" !>,
+  SEM [ RESTR <! [ RELN r_trouble] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tug_2 := cn-lxm-textbook &
+[ ORTH <! "tug" !>,
+  SEM [ RESTR <! [ RELN r_tug] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tv_1 := cn-lxm-textbook &
+[ ORTH <! "tv" !>,
+  SEM [ RESTR <! [ RELN r_tv] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+twin_1 := cn-lxm-textbook &
+[ ORTH <! "twin" !>,
+  SEM [ RESTR <! [ RELN r_twin] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+type_1 := cn-lxm-textbook &
+[ ORTH <! "type" !>,
+  SEM [ RESTR <! [ RELN r_type] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+umbrella_1 := cn-lxm-textbook &
+[ ORTH <! "umbrella" !>,
+  SEM [ RESTR <! [ RELN r_umbrella] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+unicorn_1 := cn-lxm-textbook &
+[ ORTH <! "unicorn" !>,
+  SEM [ RESTR <! [ RELN r_unicorn] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+verb_1 := cn-lxm-textbook &
+[ ORTH <! "verb" !>,
+  SEM [ RESTR <! [ RELN r_verb] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+vote_3 := cn-lxm-textbook &
+[ ORTH <! "vote" !>,
+  SEM [ RESTR <! [ RELN r_vote] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+voter_1 := cn-lxm-textbook &
+[ ORTH <! "voter" !>,
+  SEM [ RESTR <! [ RELN r_voter] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+water_1 := cn-lxm-textbook &
+[ ORTH <! "water" !>,
+  SEM [ RESTR <! [ RELN r_water] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+window_1 := cn-lxm-textbook &
+[ ORTH <! "window" !>,
+  SEM [ RESTR <! [ RELN r_window] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+wine_1 := cn-lxm-textbook &
+[ ORTH <! "wine" !>,
+  SEM [ RESTR <! [ RELN r_wine] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+witness_1 := cn-lxm-textbook &
+[ ORTH <! "witness" !>,
+  SEM [ RESTR <! [ RELN r_witness] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+woman_1 := cn-lxm-textbook &
+[ ORTH <! "woman" !>,
+  SEM [ RESTR <! [ RELN r_woman] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+work_1 := cn-lxm-textbook &
+[ ORTH <! "work" !>,
+  SEM [ RESTR <! [ RELN r_work] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+worm_1 := cn-lxm-textbook &
+[ ORTH <! "worm" !>,
+  SEM [ RESTR <! [ RELN r_worm] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Rome_1 := pn-lxm &
+[ ORTH <! "Rome" !>,
+  SEM [ RESTR <! [ NAME 'Rome ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Milan_1 := pn-lxm &
+[ ORTH <! "Milan" !>,
+  SEM [ RESTR <! [ NAME 'Milan ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Moscow_1 := pn-lxm &
+[ ORTH <! "Moscow" !>,
+  SEM [ RESTR <! [ NAME 'Moscow ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Romania_1 := pn-lxm &
+[ ORTH <! "Romania" !>,
+  SEM [ RESTR <! [ NAME 'Romania ] !> ] ].
+:end :instance.
+
+; <<>>
+

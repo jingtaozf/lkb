@@ -1,0 +1,200 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; lrules-textbook.tdl
+;;; 
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
+;;; (adapted for the use with the Spanish grammar)
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+:begin :instance.
+negation-lexical-rule-textbook := word+arg_real+ana_agr &
+[ SYN [ HEAD verb-textbook & [ FORM fin, PRED #pred, 
+		      INV #inv, NEG true, 
+		      AUX true, ANA #ana  ],
+	SPR < #spr >,
+	COMPS < [ SYN [ HEAD [ FORM f_not ] ] ] . #comps >,
+	GAP #gap ],
+  SEM #sem,
+  ARG-ST < #spr, [ SYN [ HEAD [ FORM f_not ] ] ] , #comps >,
+
+  ARGS < word+arg_real+ana_agr & [ SYN [ HEAD verb-textbook & [ FORM fin, PRED #pred,
+						       INV #inv, NEG false,
+						       AUX true, ANA #ana ], 
+					 SPR < #spr >,
+					 COMPS #comps,
+					 GAP #gap],
+				   SEM #sem,
+				   ARG-ST < #spr . #comps > ] > ].
+:end :instance.
+
+
+:begin :instance.
+inversion-lexical-rule-textbook := word+arg_real+ana_agr &
+[ SYN [ HEAD verb-textbook & [ FORM fin, PRED #pred, 
+		      INV true, NEG #neg, 
+		      AUX true, ANA #ana ],
+	SPR < >,
+	COMPS < #spr . #comps >,
+	GAP #gap ],
+  SEM [ MODE ques,
+	INDEX #index,
+	RESTR #restr ],
+  ARG-ST < #spr . #comps >,
+  
+  ARGS < word+arg_real+ana_agr & [ SYN [ HEAD verb-textbook & [ FORM fin, PRED #pred, 
+						       INV false, NEG #neg,
+						       AUX true, ANA #ana ], 
+					 SPR < #spr & [ SYN NP-textbook ] >,
+					 COMPS #comps,
+					 GAP #gap ],
+				   SEM [ MODE prop,
+					 INDEX #index,
+					 RESTR #restr ],
+				   ARG-ST < #spr . #comps > ] > ].
+:end :instance.
+
+;; The verb value was added to prevent "to" from undergoing the 
+;; extraposition rule and producing an extra "It continues to".
+:begin :instance.
+extraposition-lexical-rule-textbook := word & 
+[ SYN [ HEAD #head ],
+  SEM #sem,
+  ARG-ST < [ SYN [HEAD noun-textbook & [FORM f_it] ] ], #b , #a >,
+  
+  ARGS < word & [ SYN [ HEAD #head & verb-textbook ],
+		      SEM #sem,
+		      ARG-ST < #a & [SYN CP-fin ] , #b > ] > ].
+:end :instance.
+
+
+;; The additional #b was added to require at least two real elements
+;; so as to prevent an infinite loop of rule application.  
+;;;changed 07/12
+:begin :instance.
+ellipsis-lexical-rule-textbook := word & 
+[ SYN [ HEAD #head,
+	SPR < #1 >,
+	COMPS < > ],
+  SEM #sem,
+  ARG-ST < #1 >,
+  
+  ARGS < word & [ SYN [ HEAD #head & [AUX true,
+				      NEG false,
+                                      LANGUAGE english],
+			SPR < #1 >,
+			COMPS < #b . #a > ],
+		  SEM #sem,
+		  ARG-ST < #1 . < #b . #a > > ] > ]. 
+:end :instance.
+
+
+;:begin :instance.
+;ellipsis-lexical-rule-textbook := word & 
+;[ SYN [ HEAD #head,
+;	SPR < #1 >,
+;	COMPS < > ],
+;  SEM #sem,
+;  ARG-ST < #1 >,
+;  
+;  ARGS < word & [ SYN [ HEAD #head & [AUX true,
+;				      NEG false],
+;			SPR < #1 >,
+;			COMPS < #b . #a > ],
+;		  SEM #sem,
+;		  ARG-ST < #1 . < #b . #a > > ] > ]. 
+;:end :instance.
+
+
+;  Half of the passive rules below could be removed if we institute code for optionality of 
+;  compliments.  SMG
+;
+:begin :instance.
+tv-pass-rule-short-textbook := general-passive-lrule-textbook &
+ [ ARG-ST < [SYN [HEAD noun-textbook],
+	     SEM [INDEX #und ] ] >,
+   
+   ARGS < [ ARG-ST < [ ], [SYN [HEAD noun-textbook],
+			   SEM [INDEX #und ] ] > ] > ].
+:end :instance.
+
+
+:begin :instance.
+tv-pass-rule-long := general-passive-lrule-textbook &
+ [ ARG-ST < [SYN [HEAD noun-textbook],
+	     SEM [INDEX #und] ], [SYN [HEAD prep-textbook & [FORM f_by ] ],
+				  SEM [INDEX #act] ] >,
+	      
+   ARGS < [ ARG-ST < [SEM [INDEX #act ] ], [SYN [HEAD noun-textbook ],
+					   SEM [INDEX #und] ] > ] > ].
+:end :instance.
+
+
+:begin :instance.
+dtv-pass-rule-und-short-textbook := general-passive-lrule-textbook &
+ [ ARG-ST < [SYN [HEAD noun-textbook],
+	    SEM [INDEX #und ] ], [SYN [HEAD noun-textbook],
+				  SEM [INDEX #thm ] ] >,
+	  
+   ARGS < [ ARG-ST < [ ], [SEM [INDEX #und ] ], [SYN [HEAD noun],
+						  SEM [INDEX #thm] ] > ] > ].
+:end :instance.
+
+
+:begin :instance.
+dtv-pass-rule-und-long-textbook := general-passive-lrule-textbook & 
+ [ ARG-ST < [SYN [HEAD noun-textbook],
+	    SEM [INDEX #und ] ], [SYN [HEAD noun-textbook],
+				  SEM [INDEX #thm ] ], [SYN [HEAD prep-textbook & [FORM f_by] ],
+							SEM [INDEX #act ] ] >,
+
+   ARGS < [ ARG-ST < [ SEM [INDEX #act] ], [ SEM [INDEX #und ] ], [SYN [HEAD noun-textbook],
+								   SEM [INDEX #thm] ] > ] > ].
+:end :instance.
+
+
+:begin :instance.
+dtv-pass-rule-thm-short-textbook := general-passive-lrule-textbook & 
+[ ARG-ST < [SYN [HEAD noun-textbook],
+	    SEM [INDEX #thm ] ], [SYN [HEAD prep-textbook & [FORM #form] ],
+				  SEM [INDEX #und] ] >,
+  
+   ARGS < [ ARG-ST < *top*, [SEM [INDEX #thm ] ], [SYN [HEAD prep-textbook & [FORM #form] ],
+								  SEM [INDEX #und] ] > ] > ].
+:end :instance.  
+
+
+:begin :instance.
+dtv-pass-rule-thm-long-textbook := general-passive-lrule-textbook & 
+ [ ARG-ST < [SYN [HEAD noun-textbook],
+	    SEM [INDEX #thm ] ], [SYN [HEAD prep-textbook & [FORM #form] ],
+				  SEM [INDEX #und]              ], [SYN [HEAD prep-textbook & [FORM f_by] ],
+								    SEM [INDEX #act ] ] >,
+  
+   ARGS < [ ARG-ST < [SEM [INDEX #act ] ], [SEM [INDEX #thm ] ], [SYN [HEAD prep-textbook & [FORM #form] ],
+								  SEM [INDEX #und] ] > ] > ].
+:end :instance.  
+
+;;;added 07/10
+
+;:begin :instance.
+;pn-lxm-textbook-lexical-rule := word & 
+;[ SYN [ HEAD noun-textbook,
+;	SPR #spr,
+;	COMPS #comps ],
+;  SEM #sem,
+;  ARG-ST #arg-st,
+;  LANGUAGE english,
+;  
+;  ARGS < word & [ SYN [ HEAD noun,
+;			SPR #spr,
+;			COMPS #comps ],
+;		  SEM #sem,
+;		  ARG-ST #arg-st ] > ]. 
+;:end :instance.
+
+
+

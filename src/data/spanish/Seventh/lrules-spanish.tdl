@@ -1,0 +1,105 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;lrules-spanish.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;changed 07/11:
+;;;LANGUAGE added
+;;;changed 06/21
+
+:begin :instance.
+arg_real-principle-spr-NE := word+arg_real &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST < #spr . #comps >,
+  ARGS < word & [ SYN #syn & [ SPR < #spr >,
+			       COMPS #comps ],
+		  SEM #sem,
+		  ARG-ST < #spr . #comps > ] > ].
+:end :instance.
+
+:begin :instance.
+arg_real-principle-spr-empty := word+arg_real &
+[ SYN #syn & [ SPR < > ],
+  SEM #sem,
+  ARG-ST < #comps >,
+  ARGS < word & [ SYN #syn & [ SPR <  >,
+			       COMPS #comps ],
+		  SEM #sem,
+		  ARG-ST #comps] > ].
+:end :instance.
+
+
+;;;added 07/12
+;;;according to the etxtbook grammar,
+;;;two elements have to be specified in the arg-struc, 
+;;;to prevent an infinite loop.
+:begin :instance.
+ellipsis-lexical-rule-spanish := word & 
+[ SYN [ HEAD #head,
+	SPR < #1 >,
+	COMPS < > ],
+  SEM #sem,
+  ARG-ST < #1 >,
+  ARGS < word & [ SYN [ HEAD #head & [AUX true,
+				      NEG false,
+                                      LANGUAGE spanish ],
+			SPR < #1 >,
+			COMPS < #b . #a > ],
+		  SEM #sem,
+		  ARG-ST < #1 . < #b . #a > > ] > ]. 
+:end :instance.
+
+
+
+;:begin :instance.
+;arg_real-principle-spr-NE := word+arg_real &
+;[ SYN #syn,
+;  SEM #sem,
+;  ARG-ST < #spr . #comps >,
+;  LANGUAGE #language,
+;  ARGS < word & [ SYN #syn & [ SPR < #spr >,
+;			       COMPS #comps ],
+;		  SEM #sem,
+;		  ARG-ST < #spr . #comps > ] >,
+;		  LANGUAGE #language ].
+;:end :instance.
+
+;:begin :instance.
+;arg_real-principle-spr-empty := word+arg_real &
+;[ SYN #syn & [ SPR < > ],
+;  SEM #sem,
+;  ARG-ST < #comps >,
+;  LANGUAGE #language,
+;  ARGS < word & [ SYN #syn & [ SPR <  >,
+;			       COMPS #comps ],
+;		  SEM #sem,
+;		  ARG-ST #comps] >,
+;                  LANGUAGE #language ].
+;:end :instance.
+
+
+;;;added 07/10
+
+;:begin :instance.
+;pn-lxm-spanish-lexical-rule := word & 
+;[ SYN [ HEAD noun-spanish,
+;	SPR #spr,
+;	COMPS #comps ],
+;  SEM #sem,
+;  ARG-ST #arg-st,
+;  LANGUAGE spanish,
+;  
+;  ARGS < word & [ SYN [ HEAD noun,
+;			SPR #spr,
+;			COMPS #comps ],
+;		  SEM #sem,
+;		  ARG-ST #arg-st ] > ]. 
+;:end :instance.
+
+
+
+
+

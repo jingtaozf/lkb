@@ -1,0 +1,610 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; types-textbook.tdl
+;;; 
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
+;;; (adapted for the use with the Spanish grammar)
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;textbook-item := synsem-struc &
+;[ LANGUAGE english ].
+
+
+;agr-cat-textbook :< agr-cat.
+
+;gram-cat-textbook := gram-cat &
+;[ GAP  *diff-list* & [ LIST list-of-synsem-structs ] ].
+
+;pos-textbook :< pos.
+
+
+;sem-struc-textbook :< sem-struc.
+
+
+;predication-textbook :< predication.
+
+
+;list-of-indexes :< *list*.
+;  real-index :< index.
+;     ref-index :< real-index.
+;     sit-index :< real-index. 
+;  null-index :< index.
+
+
+
+
+;;; <<<---- PARTS OF SPEECH ---->>>
+
+;aux-value := feat-struc &
+; [ AUX boolean ].
+
+;; This intermediate type was added to allow the complimentizer
+;; "to" contain the appropriate features for the ellipsis rule.
+;verbal-feat := feat-struc &
+; [ AUX boolean,
+;   INV boolean,
+;   NEG boolean ].
+
+;;;added 07/11
+
+textbook-item  := language-specific-item &
+ [ LANGUAGE english ].
+
+verb-textbook := verb & textbook-item &
+[ INV boolean ].
+
+;; Added "topic" to the heirarchy to restrict what can be topicalized
+;; though the GAP and head-filler rules.  CCB
+topic :< pos.
+
+;;;changed 07/05
+;;;this is somewhat artificial,
+;;;but prevents AGR of being defined in two different places.
+;;;changed 07/11
+
+;nominal-cat := topic & nominal.
+
+;nominal-cat := topic & 
+; [ AGR agr-cat ]. 
+
+
+noun-textbook := noun & textbook-item.
+
+;;;changed 07/07:
+;;;changed 07/11:
+
+det-textbook := det & textbook-item &
+ [ COUNT boolean ].
+
+
+;det-textbook := nominal-cat & det & textbook-item &
+; [ COUNT boolean ].
+
+;det-textbook := nominal-cat &
+; [ COUNT boolean ].
+
+comp-textbook := comp & textbook-item.
+
+conj-textbook := conj & textbook-item.
+
+;;; changed 07/07
+
+adv-textbook := adv & textbook-item.
+
+adj-textbook := adj & textbook-item.
+
+;;;changed 07/06
+;;;changed 07/11
+
+prep-textbook := prep & textbook-item.
+
+;prep-textbook := prep & nominal-cat & textbook-item.
+
+;prep-textbook := prep & nominal-cat.
+
+;; CCB - Agreement is really only marked on Nouns and Dets.  I added onto
+;; preps because our current bining theory implementation relys on PPs
+;; having AGR.
+
+
+
+
+;;; <<<----- TYPES INHERITING FROM FORM-CAT  ----->>>
+
+
+*value* :< *top*.                
+
+
+form-cat :< *value*.
+;Nouns
+   normal :< form-cat.
+
+;Verbs
+   inf    :< form-cat.
+   fin    :< form-cat.
+   prp    :< form-cat.
+   psp    :< form-cat.
+   imp    :< form-cat.
+   pass   :< form-cat.
+
+;;;added 07/06
+
+   ger    :< form-cat.
+
+
+;Prepositions
+   f_to   :< form-cat.
+   f_about:< form-cat.
+   f_around:< form-cat.
+   f_on   :< form-cat.
+   f_in   :< form-cat.
+   f_with :< form-cat.
+   f_of   :< form-cat.
+   f_for  :< form-cat.
+   f_by   :< form-cat.
+   
+;;;added 07/06
+
+   f_from :< form-cat.
+   f_a_marker :< form-cat.
+
+;Adverbs
+   f_not  :< form-cat.
+
+;Conjuctions
+   f_and  :< form-cat.
+   f_but  :< form-cat.
+
+;Idioms
+   f_advantage :< form-cat.
+   f_tabs :< form-cat.
+
+;Dummies   
+   f_there :< form-cat.
+   f_it :< form-cat.
+
+
+;;; <<<----- STRUCTURE FOR AGR-CAT  ----->>>
+
+;;;changed 07/05
+;;;type '2orplural' will have only plurals as subtypes, 
+;;;2sing will be subtype of non3sing.
+
+3sing := agr-cat &
+    [ PER 3rd,
+      NUM sing ].
+
+;;;changed 07/13
+
+3singmasc := 3sing &
+ [ GEND masc ].
+
+3singfem := 3sing &
+ [ GEND fem ].
+
+;3singmasc := 3sing &
+; [ GEND /l masc ].
+
+;3singfem := 3sing &
+; [ GEND /l fem ].
+
+non-3sing :< agr-cat.
+
+  2orplural := non-3sing &
+    [ NUM plur ]. 
+
+  1plur := 2orplural &
+    [ PER 1st ].
+
+  1plurmasc := 1plur &
+    [ GEND  masc ].
+
+  1plurfem := 1plur &
+    [ GEND  fem ].
+
+  2plur := 2orplural &
+    [ PER 2nd ].
+
+  2plurmasc := 2plur &
+    [ GEND  masc ].
+
+  2plurfem := 2plur &
+    [ GEND  fem ].
+
+
+  3plur := 2orplural &
+    [ PER 3rd ].
+
+  3plurmasc := 3plur &
+    [ GEND /l masc ].
+
+  3plurfem := 3plur &
+    [ GEND /l fem ].
+
+
+  1sing := non-3sing &
+    [ PER 1st,
+      NUM sing ].
+
+  2sing := non-3sing &
+    [ PER 2nd,
+      NUM sing ].
+
+;non-3sing :< agr-cat-textbook.
+;  2orplural := non-3sing. 
+;  1sing-textbook := non-3sing &
+;    [ PER 1st,
+;      NUM sing ].
+
+;per :< *value*.
+; 1or3 :< per.
+;   1st := 1or3.
+;   3rd :< 1or3.
+; 2nd :< per.
+
+;num :< *value*.
+;   sing :< num. 
+;   plur :< num.
+;   singandplur :< num. 
+
+;gend :< *value*.
+;   fem  :< gend.
+;   masc :< gend.
+;   neut :< gend.
+
+;case-cat :< *value*.
+;   nom :< case-cat.
+;   acc :< case-cat.
+
+
+
+;;; <<>> ----- CONST-LXM DEFINITIONS  -----
+
+;; Right now we have MOD implemented as a list to cover the case where 
+;; the thing that can be modified is "none", which we mark as the empty list.  CCB
+
+;; Should the semantics for the entries below be put in the semantics file?
+
+;;;changed 07/07.
+
+prep-lxm-textbook := const-lxm &
+ [ SYN [ HEAD prep-textbook ] ].
+
+;prep-lxm-textbook := const-lxm-textbook &
+; [ SYN [ HEAD prep-textbook ] ].
+
+;; The nom/acc values on the ARG-ST were recently deleted.  Better?
+;; The semantics are left empty in the book, do we need any?
+pdp-lxm-textbook := prep-lxm-textbook &
+ [ SYN [ HEAD [ MOD < [SYN [HEAD norv] ] >,
+		ANA false ],
+	 SPR < [ ] > ],
+   ARG-ST < [ SYN NP-textbook ], [ SYN NP-textbook ] > ].
+
+;; If the ARG-ST isn't limited to things of type NP then that info
+;; must be placed on the the ARG-ST of verbs using P-OBJ.
+;; The semantics are left empty in the book, do we need any?
+mkp-lxm-textbook := prep-lxm-textbook &  
+ [ SYN [ HEAD [ MOD < >,
+		P-OBJ < #1 > ],
+	 SPR < > ],
+   ARG-ST < #1 > ].
+
+;   ARG-ST < #1 & [SEM [INDEX #2] ] > ].
+;   SEM [ MODE ref,
+;	 INDEX #2 & ref-index ] ].
+
+adv-lxm-textbook := const-lxm & modifier-sem &
+ [ SYN [ HEAD adv-textbook & [ FORM /l normal,
+		      MOD /l < [ SYN [ HEAD verb-textbook,
+				       COMPS < > ] ] > ] ], 
+   ARG-ST < > ].
+
+;; The NP in the ARG-ST was added to parse "I am happy"
+;; It's really not clear what should be put on the ARG-ST. 
+adj-lxm-textbook := const-lxm & modifier-sem & 
+ [ SYN [ HEAD adj-textbook & [ FORM normal,
+		      MOD /l < [ SYN [ HEAD noun-textbook,
+				       COMPS < > ] ] > ] ],
+   ARG-ST /l < [ SYN NP-textbook,
+		 SEM [INDEX ref-index] ] > ].
+
+;; This entry has been left underspecified for index because the noun-coord.
+;; requires a ref-index, but the verb-coord. requires a sit-index.
+conj-lxm-textbook := const-lxm &
+ [ SYN [ HEAD conj-textbook ],
+   SEM [ RESTR <! conj_pred !> ],
+   ARG-ST < > ].
+
+det-lxm-textbook := const-lxm & 
+ [ SYN [ HEAD det-textbook ],
+   SEM null-sem,
+   ARG-ST /l < > ].
+
+comp1-lxm-textbook := const-lxm & 
+[ SYN [ HEAD comp-textbook & [ FORM #form,
+		      AUX true ],
+	SPR < #spr > ],
+  SEM [ MODE prop,
+	INDEX sit-index & #1,
+	RESTR <! [SIT #1, ARG #2] !> ],
+  ARG-ST < #spr ,  [ SYN [ HEAD verb-textbook & [ FORM #form ],
+			  COMPS < > ],
+		    SEM [ MODE prop,
+			  INDEX sit-index & #2 ] ] > ].
+
+comp2-lxm-textbook := const-lxm & 
+[ SYN [ HEAD comp-textbook & [ FORM #form ],
+	SPR < > ],
+  SEM [ MODE prop,
+	INDEX sit-index & #1,
+	RESTR <! [SIT #1, ARG #2] !> ],
+  ARG-ST < [ SYN [ HEAD verb-textbook & [ FORM #form ],
+		   COMPS < > ],
+	     SEM [ MODE prop,
+		   INDEX sit-index & #2 ] ] > ].
+
+
+
+;;; <<>> ----- NOUN-LXM DEFINITIONS  -----
+
+noun-lxm-textbook := infl-lxm & noun-sem & 
+ [ SYN [ HEAD noun-textbook & [FORM /l normal, AGR [ PER /l 3rd ], 
+		               ANA /l false] ],
+   ARG-ST /l < > ].
+	 
+;pn-lxm-textbook := noun-lxm-textbook & pn-sem &
+; [ SYN [ HEAD [ AGR 3sing ] ],
+;   ARG-ST < > ].
+
+pron-lxm-textbook := const-lxm & noun-sem & 
+ [ SYN [ HEAD noun-textbook & [FORM /l normal, ANA /l false] ],
+   ARG-ST < > ].
+
+cn-lxm-textbook := noun-lxm-textbook & 
+ [ SYN [ HEAD [ AGR #agr & [ GEND /l neut ] ],
+	 SPR < [ ] > ],
+   ARG-ST /l < [ SYN [ HEAD det-textbook & [AGR #agr, COUNT /l true] ] ] > ].
+
+;pn-lxm-textbook := noun-lxm-textbook & pn-sem &
+; [ SYN [ HEAD [ AGR 3sing ] ],
+;   ARG-ST < > ].
+
+dummy-idiom-lxm-textbook := const-lxm &
+ [ SYN  [ HEAD noun-textbook & [ ANA false ] ], 
+   SEM  null-sem,
+   ARG-ST < > ].
+
+
+;;; <<>> ----- ABBREVIATED LEXEME TYPES  -----
+
+;; Attempting to abrieviate the ntation -- CCB
+;; Should I abbreviate it more by making a type for SPR < >, COMPS < >?  SMG
+
+
+NP-textbook := gram-cat &
+[ HEAD noun-textbook,
+  SPR < >,
+  COMPS < > ].
+
+NP-acc-textbook := NP-textbook &
+[ HEAD noun-textbook & [CASE acc] ].
+
+NP-nom-textbook := NP-textbook &
+[ HEAD [CASE nom] ].
+
+N-textbook := gram-cat & 
+[ HEAD noun-textbook,
+  SPR < [ ] > ].
+
+VP-textbook := gram-cat &
+[ HEAD verb-textbook,
+  SPR < [ ] > ].
+
+V-textbook := gram-cat &
+[ HEAD verb-textbook ].
+
+S-textbook := gram-cat &
+[ HEAD verb-textbook,
+  SPR < >,
+  COMPS < > ].
+
+PP-textbook := gram-cat &
+[ HEAD prep-textbook,
+  SPR < >,
+  COMPS < > ].
+
+CP-fin-textbook := gram-cat &
+[ HEAD comp-textbook & [FORM fin],
+  SPR < >,
+  COMPS < > ].
+
+CP-inf-textbook := gram-cat &
+[ HEAD comp-textbook & [FORM inf],
+  COMPS < > ].
+
+
+CP-fin := gram-cat &
+[ HEAD comp & [FORM fin],
+  SPR < >,
+  COMPS < > ].
+
+CP-inf := gram-cat &
+[ HEAD comp & [FORM inf],
+  COMPS < > ].
+
+;;; <<>> ----- VERB 3LEXEME TYPES  -----
+
+;; There really shouldn't be an ANA value in verbs to begin with, this should 
+;; be corrected by either sticking it in the type hierarchy for np's/pp's only
+;; or switching back to ANA/P-OBJ analysis.
+
+verb-lxm-textbook := infl-lxm & verb-sem & 
+ [ SYN [ HEAD verb-textbook & [ INV false, NEG false, AUX /l false, ANA false],
+	 SPR < [ ] > ],
+   ARG-ST < [ SYN /l NP-textbook ], ...  > ].
+
+iv-lxm-textbook := verb-lxm-textbook & iv-sem &
+ [ ARG-ST < [ ] > ]. 
+
+piv-lxm-textbook := verb-lxm-textbook & piv-sem &
+ [ ARG-ST < [ ], [ SYN PP-textbook ] > ].
+
+fiv-lxm-textbook := verb-lxm-textbook & fiv-sem &
+ [ ARG-ST < [ ], [ SYN [ HEAD [ FORM fin ],
+			 COMPS < > ] ] > ].
+;; See Changes File #7
+
+;; Tecnically, acc should be specified elsewhere.
+tv-lxm-textbook := verb-lxm-textbook &
+ [ ARG-ST < [ ], [SYN /l NP-acc-textbook ], ... > ].
+
+stv-lxm-textbook := tv-lxm-textbook & stv-sem &
+ [ ARG-ST < [ ], [ ] > ].
+
+;; Tecnically, acc should be specified elsewhere.
+dtv-lxm-textbook := tv-lxm-textbook & dtv-sem &
+ [ ARG-ST < [ ], [ ], [ SYN NP-acc-textbook ] > ].
+
+;; The P-OBJ must be used here to limit compliments to type NP,
+;; at least unless this information is put directly on the mkp-lxm.  
+ptv-lxm-textbook := tv-lxm-textbook & ptv-sem &
+ [ ARG-ST < [ ], [ ], [ SYN PP-textbook & [HEAD [P-OBJ <[SYN NP-textbook]> ] ] ] > ].
+
+;; "continue" is an example...
+srv-lxm-textbook := verb-lxm-textbook & srv-sem &
+[ ARG-ST < #1 ,  [SYN [ SPR < #1 > ] ] > ]. 
+
+auxv-lxm-textbook := srv-lxm-textbook &
+[ SYN [ HEAD verb-textbook & [ AUX true ] ] ].
+
+;; "try" is an example...
+scv-lxm-textbook := verb-lxm-textbook & scv-sem &
+[ ARG-ST < [ SEM [INDEX #1 ] ], [SYN [SPR < [SEM [INDEX #1 ] ] > ] ] > ].
+;; See Changes File #8  
+
+;; "expect is an example...
+orv-lxm-textbook := tv-lxm-textbook & orv-sem &
+ [ ARG-ST < [ ], #1, [SYN [ SPR < #1 > ] ] > ].
+
+;; "persuade" is an example...
+ocv-lxm-textbook := tv-lxm-textbook & ocv-sem &
+[ ARG-ST < [ ], [SEM [INDEX #1] ], [SYN CP-inf & [SPR < [SEM [INDEX #1] ] > ] ] > ].
+
+modal-lxm-textbook := auxv-lxm-textbook & 
+ [ SYN [ HEAD verb-textbook & [ FORM fin] ],
+   ARG-ST < [ ], [ SYN [ HEAD verb-textbook & [FORM inf] ] ] > ].
+
+
+
+;;; <<<---- TYPES INHERITING FROM SYNSEM-STRUC/LEXICAL RULE DEFINITIONS ---->>>
+
+;args-type := *top* &
+; [ ARGS *list* ].
+
+;phrase :=  synsem-struc & args-type.
+
+rule-textbook := rule & textbook-item.
+
+;; This is a slightly artificial type introduced for mechanical
+;; purposes of preventing recursion in the mod_affix definition.
+;argst-item := synsem-struc & args-type &
+;[ ARG-ST *list* ].
+
+;argst-item := synsem-struc & args-item.
+
+
+;lex-item := argst-item-textbook &
+;[ AFFIX mod_affix ].
+
+;word :< lex-item.
+
+;;  SEM [ MODE /l null-mode ]  Do we need to put this in?  
+;;  When I do an error message says it gets ignored anyway.
+;;  Why does SYN appear in this entry?  Should it?  SMG  
+;lexeme := lex-item &
+;[ ORTH #orth,
+;  SYN [ GAP <! !> ],
+;   
+;  ARGS < [ ORTH #orth ] > ].
+
+;;;chanegd 07/07
+
+;lexeme-textbook := lexeme &
+;[ SYN [ GAP <! !> ] ].
+
+;infl-lxm-textbook := lexeme-textbook &
+;[ SYN [HEAD #head ],
+;  ARG-ST #argst,
+;  
+;  ARGS < [ AFFIX affix & [ SYN [ HEAD #head],
+;			   ARG-ST #argst ] ] > ].
+			 
+;const-lxm-textbook := lexeme-textbook &
+; [ ARGS < [ AFFIX no-affix ] >].
+
+;; This was changed from gram-cat to arg-st item so as too allow affixes 
+;; to make reference to ARG-ST instead of SPR, just as in the book.  SMG
+; mod_affix := argst-item.  
+;  affix := mod_affix.
+;  no-affix :< mod_affix.
+
+
+
+meta := synsem-struc &
+  [  META-PREFIX symbol,
+     META-SUFFIX symbol ],
+    status: meta.
+
+
+
+
+
+;;; <<>> ----- MOST BASIC DEFINITIONS FOR TYPE HIERARCHY  -----
+
+
+#|
+boolean :< *value*.
+   true  :< boolean.               
+   false :< boolean.
+
+*list* :< *top*.
+
+ne-list := *cons* &
+ [ FIRST *top*,
+   REST *list* ].
+
+list-of-synsem-structs :< *list*.
+
+*null* :< list-of-synsem-structs.
+
+ne-list-of-synsem-structs := list-of-synsem-structs & ne-list &
+ [ FIRST synsem-struc,
+   REST list-of-synsem-structs ].
+
+label :=  synsem-struc &
+   [ LABEL-NAME symbol ],
+    status: label.
+
+phrase-label := label & phrase.
+
+word-label := label & word.
+
+meta := synsem-struc &
+  [  META-PREFIX symbol,
+     META-SUFFIX symbol ],
+    status: meta.
+
+|#
+
+
+
+
+
+
+
+

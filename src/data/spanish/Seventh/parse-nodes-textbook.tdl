@@ -1,0 +1,177 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; parse-nodes-textbook.tdl
+;;;
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
+;;; (adapted for the use with the Spanish grammar)
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+:begin :instance.
+
+slash := meta &
+  [ SYN [ GAP [ LIST ne-list ] ],
+    META-PREFIX "/",
+    META-SUFFIX "" ].
+
+:end :instance.
+
+:begin :instance.
+
+s-node-textbook := s-node & 
+  [  SYN S-textbook ].
+
+;s-node := label & 
+;  [  SYN S,
+;    LABEL-NAME "S" ].
+
+:end :instance.
+
+
+;
+;:begin :instance.
+;n-node := word-label & 
+;  [ SYN [ HEAD noun ],
+;    LABEL-NAME "N" ].
+;:end :instance.
+
+:begin :instance.
+n-node-textbook := n-node &
+  [ SYN [ HEAD noun-textbook ] ].
+:end :instance.
+
+;:begin :instance.
+;nom-node :=  phrase-label & 
+;  [ SYN [ HEAD noun,
+;          SPR < [ ] > ],
+;    LABEL-NAME "NOM" ].
+;:end :instance.
+
+:begin :instance.
+nom-node-textbook :=  nom-node & 
+  [ SYN [ HEAD noun-textbook ]].
+:end :instance.
+
+
+;:begin :instance.
+;np-node :=  phrase-label & 
+;  [ SYN [ HEAD noun ],
+;    LABEL-NAME "NP" ].
+;:end :instance.
+
+:begin :instance.
+np-node-textbook := np-node & 
+  [ SYN [ HEAD noun ] ].
+:end :instance.
+
+
+;:begin :instance.
+;v-node := word-label &
+;  [ SYN [ HEAD verb ],
+;    LABEL-NAME "V" ].
+;:end :instance.
+
+:begin :instance.
+v-node-textbook := v-node &
+  [ SYN [ HEAD verb-textbook ]].
+:end :instance.
+
+
+;:begin :instance.
+;vp-node :=  phrase-label & 
+;   [ SYN [ HEAD verb ],
+;     LABEL-NAME "VP" ].
+;:end :instance.
+
+:begin :instance.
+vp-node-textbook := vp-node & 
+   [ SYN [ HEAD verb-textbook ] ] .
+:end :instance.
+
+
+;:begin :instance.
+;det-node := label &
+;  [ SYN [ HEAD det ],
+;    LABEL-NAME "DET" ].
+;:end :instance.
+
+
+:begin :instance.
+det-node-textbook := det-node &
+  [ SYN [ HEAD det-textbook ] ].
+:end :instance.
+
+
+;:begin :instance.
+;p-node := word-label &
+;  [ SYN [ HEAD prep ],
+;    LABEL-NAME "P" ].
+;:end :instance.
+
+:begin :instance.
+p-node-textbook := p-node &
+  [ SYN [ HEAD prep-textbook ] ].
+:end :instance.
+
+
+;:begin :instance.
+;pp-node :=  phrase-label &
+;  [ SYN [ HEAD prep ],
+;    LABEL-NAME "PP" ].
+;:end :instance.
+
+:begin :instance.
+pp-node-textbook :=  pp-node &
+  [ SYN [ HEAD prep-textbook ] ].
+:end :instance.
+
+
+;:begin :instance.
+;adv-node := label &
+;  [ SYN [ HEAD adv ],
+;    LABEL-NAME "ADV" ].
+;:end :instance.
+
+:begin :instance.
+adv-node-textbook := adv-node &
+  [ SYN [ HEAD adv-textbook ] ].
+:end :instance.
+
+
+
+;:begin :instance.
+;adj-node := label &
+;  [ SYN [ HEAD adj ],
+;    LABEL-NAME "ADJ" ].
+;:end :instance.
+
+:begin :instance.
+adj-node-textbook := adj-node &
+  [ SYN [ HEAD adj-textbook ] ].
+:end :instance.
+
+
+
+;:begin :instance.
+;comp-node := label &
+;  [ SYN [ HEAD comp ],
+;    LABEL-NAME "COMP" ].
+;:end :instance.
+
+:begin :instance.
+comp-node-textbook := comp-node &
+  [ SYN [ HEAD comp-textbook ] ].
+:end :instance.
+
+;:begin :instance.
+;conj-node := label &
+;  [ SYN [ HEAD conj ],
+;    LABEL-NAME "CONJ" ].
+;:end :instance.
+
+:begin :instance.
+conj-node-textbook := conj-node &
+  [ SYN [ HEAD conj-textbook ] ].
+:end :instance.

@@ -1,0 +1,27 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; roots.tdl
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+:begin :instance.
+
+root :=  phrase &
+ [ SYN [ HEAD verb & [FORM fin],
+	 SPR   < >,
+	 COMPS < >,
+	 GAP   <! !> ] ].
+
+:end :instance.
+
+
+;:begin :instance.
+;
+;root :=  phrase &
+; [ SYN [ HEAD verb & [FORM fin],
+;	 SPR   < >,
+;	 COMPS < > ] ].
+;
+;:end :instance.
+

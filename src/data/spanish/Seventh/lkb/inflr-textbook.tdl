@@ -1,0 +1,180 @@
+%(letter-set (!c bdfglmnprstz))
+%(letter-set (!s abcdefghijklmnopqrtuvwxyz))
+%(letter-set (!t bcdfghjklmnpqrstvwxz))
+%(letter-set (!v aeiou))
+
+
+; <<>> NOMINAL INFLECTIONAL RULES
+
+3rd-sing-noun-textbook_infl_rule := lrule-general-textbook &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX 3rd-sing-noun-textbook ]]].
+
+plur-noun-textbook_infl_rule :=
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
+lrule-general-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX plur-noun-textbook ]]].
+
+singandplur-noun-textbook_infl_rule :=
+%suffix (zzz foobar)
+singandplur-lexical-rule-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX singandplur-noun-textbook ]]].
+
+
+
+; <<>> VERBAL INFLECTIONAL RULES
+
+past-verb-textbook_infl_rule := 
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
+past-verb-lexical-rule-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX past-verb-textbook ]]].
+
+;; Should these next three rules use something else other than the 
+;; lrule-general?  What about their semantics?
+past-part-verb-textbook_infl_rule :=
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
+lrule-general-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX past-part-verb-textbook ]]].
+
+pres-part-verb-textbook_infl_rule :=
+%suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ee eeing) (ie ying)
+lrule-general-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX pres-part-verb-textbook ]]].
+
+inf-verb-textbook_infl_rule := lrule-general-textbook &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX inf-verb-textbook ]]].
+
+1st-sing-verb-textbook_infl_rule :=
+%suffix (zzz foobar)
+present-verb-lexical-rule-textbook & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-sing-verb-textbook ]]].
+
+2orplural-verb-textbook_infl_rule :=
+%suffix (zzz foobar)
+present-verb-lexical-rule-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2orplural-verb-textbook ]]].
+
+;; This was added to allow for sentences with "annoy_2"
+comp-sing-verb-textbook_infl_rule := 
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
+present-verb-lexical-rule-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX comp-sing-verb-textbook ]]].
+
+3rd-sing-verb-textbook_infl_rule := 
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
+present-verb-lexical-rule-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-sing-verb-textbook ]]].
+
+non-3rd-sing-verb-textbook_infl_rule := 
+present-verb-lexical-rule-textbook &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX non-3rd-sing-verb-textbook ]]].
+
+1or3-sing-past-verb-textbook_infl_rule :=
+%suffix (zzz foobar)
+past-verb-lexical-rule-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1or3-sing-past-verb-textbook ]]].
+
+2orplural-past-verb-textbook_infl_rule :=
+%suffix (zzz foobar)
+past-verb-lexical-rule-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2orplural-verb-textbook ]]].
+
+
+
+; <<>>  RULES TO RECYCLE OR TRASH
+
+#|
+sing-noun_infl_rule := lrule-general-textbook &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX sing-noun-textbook ]]].
+;  This rule has been replaced by the three below. See Changes File #1
+
+; We could clean up this file a lot if we could list a disjuntion
+; of affix types which fire each of the different kind of lexical rules.
+1st-sing-noun_infl_rule := lrule-general-textbook &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX 1st-sing-noun-textbook ]]].
+
+2nd-sing-noun_infl_rule := lrule-general-textbook &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX 2nd-sing-noun-textbook ]]].
+
+;; Is this only useful for "all furniture"?  
+;; If so, it probably isn't worth having.
+count-false-noun_infl_rule := lrule-general-textbook &
+[ NEEDS-AFFIX false,
+  ARGS [ FIRST [ AFFIX count-false-noun-textbook ]]].
+
+; Are these two rules below currently working?
+plur-noun-nom_infl_rule :=
+%suffix (zzz foobar)
+plur-noun-lexical-rule-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX plur-noun-nom]]].
+
+plur-noun-acc_infl_rule :=
+%suffix (zzz foobar)
+plur-noun-lexical-rule-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX plur-noun-acc]]].
+
+modal-verb_infl_rule := 
+%suffix (zzz foobar)
+modal-verb-lexical-rule-textbook &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX modal-verb-textbook ]]].
+|#
+
+
+
+; <<>> CONSTANT INFLECTIONAL RULES
+
+;;;changed 07/11
+
+;constant-lexeme-textbook_infl_rule := lrule-general-textbook &
+;[ NEEDS-AFFIX false,
+;  ORTH #orth,
+;  SYN [ HEAD [ LANGUAGE english ]]],	
+;  ARGS [ FIRST [ ORTH #orth,
+;                 AFFIX no-affix ]]].
+
+
+;constant-lexeme-textbook_infl_rule := lrule-general-textbook &
+;[ NEEDS-AFFIX false,
+;  ORTH #orth,
+;  LANGUAGE english,
+;  ARGS [ FIRST [ ORTH #orth,
+;                 AFFIX no-affix,;
+;                 LANGUAGE language ]]].
+
+
+constant-lexeme-textbook_infl_rule := lrule-general-textbook &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX no-affix ]]].

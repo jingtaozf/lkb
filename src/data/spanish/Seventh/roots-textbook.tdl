@@ -1,0 +1,9 @@
+:begin :instance.
+;
+;root :=  phrase &
+; [ SYN [ HEAD verb & [FORM fin],
+;	 SPR   < >,
+;	 COMPS < >,
+;	 GAP   <! !> ] ].
+;
+;:end :instance.

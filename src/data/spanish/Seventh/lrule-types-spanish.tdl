@@ -1,0 +1,447 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; lrule-types-spanish.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;defined like that  in the textbook grammar.
+lrule-super :< lex-item.
+ 
+word+arg_real := lrule-super &
+[ ORTH #orth,
+  ARGS < [ ORTH #orth ] > ].
+
+;;;added 07/17 
+
+lrule-type := lrule-super &
+  [ NEEDS-AFFIX boolean ].
+
+;;;07/14: default on lexeme
+;;;changed 07/17
+
+lrule := lrule-type & 
+  [ ARGS < /l lexeme & [ AFFIX #affix,
+		      ARGS < [ AFFIX #affix ] > ] > ],
+status: lex-rule.
+
+lrule_word := lrule-type &
+  [ ARGS < word & [ AFFIX #affix,
+		      ARGS < [ AFFIX #affix ] > ] > ],
+status: lex-rule.
+
+;lrule := lrule-super & 
+;  [ ARGS < /l lexeme & [ AFFIX #affix,
+;		      ARGS < [ AFFIX #affix ] > ] >,
+;    NEEDS-AFFIX boolean ],
+;status: lex-rule.
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;changed 04/25
+;;;default arg-st added
+;;;language added 07/10
+
+lrule-general-spanish := lrule & word & 
+[ SYN #syn & [ HEAD [ LANGUAGE spanish ] ],
+  SEM #sem,
+  ARG-ST /l #arg-st,
+  ARGS < [SYN #syn,
+	  SEM #sem,
+	  ARG-ST /l #arg-st ] > ]. 
+
+
+
+;lrule-general := lrule & word & 
+;[ SYN #syn,
+;  SEM #sem,
+;  ARG-ST /l #arg-st,
+;  ARGS < [SYN #syn,
+;	  SEM #sem,
+;	  ARG-ST /l #arg-st ] > ]. 
+
+
+
+;;; <<>> LEXICAL RULES
+
+pres-verb-lex-rule-spanish := lrule & word &
+[ SYN #syn,
+  SEM [ MODE #mode,
+	INDEX #1,
+	RESTR [ LIST < [ RELN r_t-overlap,
+			 ARG1 #1,
+			 ARG2 now] . #restr >,
+                LAST #semlast ]],
+  ARG-ST #arg-st,
+  ARGS < lexeme & [  SYN #syn,
+		     SEM [ MODE #mode,
+			   RESTR [ LIST #restr,
+                                   LAST #semlast ]],
+		     ARG-ST #arg-st ] > ].
+
+;;;changed 06/26
+;;;changed 07/07
+
+pret-verb-lex-rule-spanish := lrule & word &
+[ SYN #syn,
+  SEM [ MODE #mode,
+	INDEX #1,
+	RESTR [ LIST < [RELN r_t-precede,
+			 ARG1 #1,
+			 ARG2 now] . #restr >,
+                LAST #semlast ]],
+  ARG-ST #arg-st,
+  ARGS < lexeme & [  SYN #syn,
+		     SEM [ MODE #mode,
+			   RESTR [ LIST #restr,
+                                   LAST #semlast ]],
+		     ARG-ST #arg-st ] > ].
+
+
+;pret-verb-lex-rule-spanish := lrule & word &
+;[ SYN #syn,
+;  SEM [ MODE #mode,
+;	INDEX #1,
+;	RESTR [ LIST < [RELN r_t-precede,
+;	           	 ASPECT completed,
+;			 ARG1 #1,
+;			 ARG2 now] . #restr >,
+;                LAST #semlast ]],
+;  ARG-ST #arg-st,
+;  ARGS < lexeme & [  SYN #syn,
+;		     SEM [ MODE #mode,
+;			   RESTR [ LIST #restr,
+;                                   LAST #semlast ]],
+;		     ARG-ST #arg-st ] > ].
+
+;;;changed 07/06: ASPECT
+
+imperf-verb-lex-rule-spanish := lrule & word &
+[ SYN #syn,
+  SEM [ MODE #mode,
+	INDEX #1,
+	RESTR [ LIST < [RELN r_t-precede,
+			 ARG1 #1,
+			 ARG2 now] . #restr >,
+                LAST #semlast ]],
+  ARG-ST #arg-st,
+  ARGS < lexeme & [  SYN #syn,
+		     SEM [ MODE #mode,
+			   RESTR [ LIST #restr,
+                                   LAST #semlast ]],
+		     ARG-ST #arg-st ] > ].
+
+
+;imperf-verb-lex-rule-spanish := lrule & word &
+;[ SYN #syn,
+;  SEM [ MODE #mode,
+;	INDEX #1,
+;	RESTR [ LIST < [RELN r_t-precede,
+;	                 ASPECT not_completed,
+;			 ARG1 #1,
+;			 ARG2 now] . #restr >,
+;                LAST #semlast ]],
+;  ARG-ST #arg-st,
+;  ARGS < lexeme & [  SYN #syn,
+;		     SEM [ MODE #mode,
+;			   RESTR [ LIST #restr,
+;                                  LAST #semlast ]],
+;		     ARG-ST #arg-st ] > ].
+
+
+;;; <<>> NOMINAL LEXICAL TYPES
+
+
+;;; two rules for 3rd-sing-nouns: 
+;;; they will define Gender, when it is underspecified in the lexical entry, 
+;;; and otherwise they won't unify.
+;;; changed to define MORPHGEND false in the lexical entries underspecified for MORPHGEND (01/25).
+
+
+3rd-sing-noun-masc-spanish := affix & 
+[ SYN [ HEAD noun-spanish & [ AGR 3singmasc & [ NUM sing,
+					        PER 3rd,
+                                        	GEND masc ] ] ] ].
+
+
+
+3rd-sing-noun-fem-spanish := affix & 
+[ SYN [ HEAD noun-spanish & [ AGR 3singfem & [ NUM sing,
+					       PER 3rd, 
+	                              	       GEND fem ] ] ] ].
+
+
+
+;3rd-sing-noun-masc-spanish := affix & 
+;[ SYN [ HEAD noun-spanish & [ AGR 3singmasc & [ NUM sing,
+;					        PER 3rd,
+;                                       GEND masc,
+;					MORPHGEND /l false ] ] ] ].
+
+
+
+;3rd-sing-noun-fem-spanish := affix & 
+;[ SYN [ HEAD noun-spanish & [ AGR 3singfem & [ NUM sing,
+;					       PER 3rd, 
+;	                              	       GEND fem,
+;					       MORPHGEND /l false ] ] ] ].
+
+
+
+
+plur-noun-spanish := affix &
+[ SYN [ HEAD noun-spanish & [ AGR [ NUM plur ] ] ] ].
+
+
+;;;number underspecified
+
+singandplur-noun-spanish := affix &
+[ SYN [ HEAD noun-spanish & [ AGR [ NUM singandplur ] ] ] ].
+
+
+;  <<>> VERBAL LEXICAL TYPES
+
+
+inf-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM inf,
+		      	      PRED false ] ] ].
+
+;;;changed 06/27
+
+pres-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      	      PRED false ] ] ].
+
+;;;added 06/27
+
+pret-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		              PRED false ] ] ].
+
+imperf-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      	      PRED false ] ] ].
+
+;;;added 06/22
+
+gerundive-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM ger,
+		      	      PRED true ] ] ].
+
+
+past-part-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM psp,
+		              PRED false ] ] ].
+
+
+;;;changed 06/27 (SEM)
+;;;changed 07/12 (INDEX)
+;;;changed 07/13 (RESTR)
+
+1st-sing-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      		PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+	                  AGR 1sing & #2 ] ],
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 & [ REF #2 ] ] !> ] ].
+
+2nd-sing-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 2sing & #2 ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 & [ REF #2 ] ] !> ] ].
+
+
+;;; changed 05/17 - AGR 3sing added
+;;; rearranged 06/16
+;;; SEM changed 06/27
+
+3rd-sing-verb-spanish := affix &  
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 3sing & #2 ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 & [ REF #2 ] ] !> ] ].
+
+1st-plur-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 1plur & #2 ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 & [ REF #2 ] ] !> ] ].
+
+
+2nd-plur-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 2plur & #2 ] ],
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 & [ REF #2 ] ] !> ] ].
+
+
+3rd-plur-verb-spanish := affix &  
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 3plur & #2 ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 & [ REF #2 ] ] !> ] ].
+
+
+#|
+1st-sing-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      		PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+	                  AGR 1sing & [ PER 1st,
+				        NUM sing ] ] ],
+             SEM [ INDEX #3 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #3 ] !> ] ].
+
+2nd-sing-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR #1 & 2sing ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
+3rd-sing-verb-spanish := affix &  
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR #1 & 3sing ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
+1st-plur-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR #1 & 1plur ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
+
+2nd-plur-verb-spanish := affix &
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR #1 & 2plur ] ],
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+
+
+3rd-plur-verb-spanish := affix &  
+[ SYN [ HEAD verb-spanish & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR #1 & 3plur ] ], 
+             SEM [ INDEX #1 ] ], ... >,
+  SEM [ RESTR <! act_pred & [ ACT #1 ] !> ] ].
+|#
+
+;;;should there be a distinction between 3sing and the others?
+;;;pro-drop of third person sing seems to be more restrictive.
+
+#|
+;  <<>> CLITICIZED VERB LEXICAL TYPES
+
+
+;;;added 07/13: no semantics
+;;;changed 07/14: word
+;;;changed 07/17: lrule
+
+acc-cl-verb-lex-rule-spanish := lrule_word & cl-word & 
+[ ARGS < [ SYN [ HEAD verb-spanish & [ NEG false,
+                                       CL clitic ] ],
+		   ARG-ST < [ ], [ SYN NP-acc-spanish ], ... > ] > ].
+
+
+;acc-cl-verb-lex-rule-spanish  := lrule_word & word & 
+;[ SYN #syn & [ HEAD [ LANGUAGE spanish ] ],
+;  SEM #sem,
+;  ARG-ST /l #arg-st,
+;  ARGS < [SYN #syn,
+;	  SEM #sem,
+;	  ARG-ST /l #arg-st ] > ]. 
+
+
+;acc-cl-verb-lex-rule-spanish := lrule_word & acc-cl-word & 
+;[ SYN [ HEAD #head  & [ CL acc-cl ] ],
+;  SEM #sem,
+;  ARG-ST #1,
+;  ARGS < word &  [ SYN [ HEAD #head & verb-spanish & [ NEG false,
+;                                                         CL clitic ] ],
+;		   SEM #sem,
+;		   ARG-ST #1 & < [ ], [ SYN NP-acc-spanish ], ... > ] > ].
+
+
+
+;acc-cl-verb-lex-rule-spanish := lrule & acc-cl-word &
+;[ SYN #syn,
+;  SEM #sem,
+;  ARG-ST #1,
+;  ARGS < word &  [ SYN #syn & [ HEAD verb-spanish & [ NEG false ] ],
+;		   SEM #sem,
+;		   ARG-ST #1 & < [ ], [ SYN NP-acc-spanish ], ... > ] > ].
+
+
+;acc-cliticized-verb-lex-rule-spanish := lrule & lexeme &
+;[ SYN [ HEAD # head,
+;	SPR < #a >,
+;        COMPS #c ],
+;  SEM #sem,
+;  ARG-ST #1,
+;  ARGS < lexeme &  [ SYN [ HEAD verb-spanish & # head & [ NEG false ],
+;	   		 SPR < #a >,
+;                         COMPS < #b & [ SYN NP-acc-spanish ] . #c > ],
+;		     SEM #sem,
+;		     ARG-ST #1 & < #a . < #b . #c > > ] > ].
+
+
+;acc-cliticized-verb-lex-rule-spanish := wor_to_word_lrule & word &
+;[ SYN [ HEAD # head,
+;	SPR < #a >,
+;        COMPS #c ],
+;  SEM #sem,
+;  ARG-ST #1,
+;  ARGS < word &  [ SYN [ HEAD verb-spanish & # head & [ NEG false ],
+;	   		 SPR < #a >,
+;                         COMPS < #b & [ SYN [ HEAD noun-spanish & [ CASE acc ] ] ] . #c > ],
+;		     SEM #sem,
+;		     ARG-ST #1 & < #a . < #b . #c > > ] > ].
+
+
+;acc-cliticized-verb-lex-rule-spanish := lrule & word &
+;[ SYN [ HEAD # head,
+;	SPR < #a >,
+;        COMPS #c ],
+;  SEM #sem,
+;  ARG-ST #1,
+;  ARGS < lexeme &  [ SYN [ HEAD verb-spanish & # head,
+;        	   	    SPR < #a >,
+;                           COMPS < #b & [ SYN [ HEAD noun-spanish & [ CASE acc ] ] ] . #c > ],
+;		     SEM #sem,
+;		     ARG-ST #1 & < #a . < #b . #c > > ] > ].
+
+
+
+;;;clitics added 07/13
+
+;3singmasc-acc-cliticized-verb-spanish := affix &
+;[ SYN [ HEAD verb-spanish & [ PRED false] ],
+;  SEM [ RESTR <! und_pred & [ UND [ REF [ PER 3rd,
+;					  NUM sing,
+;                                          GEND masc ] ] ] !> ] ].
+
+
+3singmasc-acc-cliticized-verb-spanish := affix.
+
+|#

@@ -1,12 +1,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
 ;;; parse-nodes.tdl
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;this file contains specifications 
-;;;for the parse nodes in the trees
-;;;(taken from the textbook grammar)
+:begin :instance.
+
+slash := meta &
+  [ SYN [ GAP [ LIST ne-list ] ],
+    META-PREFIX "/",
+    META-SUFFIX "" ].
+
+:end :instance.
 
 :begin :instance.
 
@@ -91,6 +99,12 @@ adj-node := label &
     LABEL-NAME "ADJ" ].
 :end :instance.
 
+
+:begin :instance.
+comp-node := label &
+  [ SYN [ HEAD comp ],
+    LABEL-NAME "COMP" ].
+:end :instance.
 
 
 :begin :instance.

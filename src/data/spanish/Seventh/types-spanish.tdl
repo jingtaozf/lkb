@@ -1,0 +1,912 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; types-spanish.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+:begin :type.
+
+feat-struc :< *top*.
+
+;;;changed 07/11
+
+synsem-struc := feat-struc &
+[ ORTH *diff-list*,              
+  SYN  gram-cat,
+  SEM  sem-struc ].
+
+;synsem-struc := feat-struc &
+;[ ORTH *diff-list*,              
+;  SYN  gram-cat,
+;  SEM  sem-struc,
+;  LANGUAGE language ].
+
+;spanish-item := synsem-struc &
+;[ LANGUAGE spanish ].
+
+
+;;; changed 01/21 
+;;; changed 06/19: poss
+;;; changed 06/29: agr-cat english, spanish
+;;; changed 07/07: ref-index
+;;; chaged back to feat-struc 07/12
+
+agr-cat := feat-struc & 
+[ PER per,
+  NUM num,
+  GEND gend ].
+
+;agr-cat := ref-index & 
+;[ PER per,
+;  NUM num,
+;  GEND gend ].
+
+
+;;; this one is for possessors
+poss :< agr-cat.
+
+;agr-cat-spanish := agr-cat &
+;[ MORPHGEND boolean ].
+
+;agr-cat := ref-index & poss &
+;[ GEND gend, 
+;  MORPHGEND boolean ].
+
+pos := feat-struc &
+[ FORM form-cat,
+  PRED boolean,
+  ANA boolean ].
+
+;pos-spanish :< pos.
+
+;;;changed 07/07: GAP
+
+gram-cat := feat-struc &
+[ HEAD pos,
+  SPR	list-of-synsem-structs,
+  COMPS list-of-synsem-structs,
+  GAP  *diff-list* & [ LIST list-of-synsem-structs ]  ].
+
+
+;gram-cat-spanish :< gram-cat.
+
+
+;;; added 06/19 for possessives
+;poss := feat-struc &
+;[ PER per,
+;  NUM num ].
+
+
+;;;from the textbook grammar
+;;; changed 06/19 for DEF
+
+sem-struc := feat-struc &
+[ MODE  mode-cat,
+  INDEX index,
+  RESTR list-of-predications ].
+
+;sem-struc-spanish :< sem-struc.
+
+;sem-struc := feat-struc &
+;[ MODE  mode,
+;  INDEX index,
+;  DEF boolean,
+;  RESTR list-of-predications ].
+
+;sem-struc := feat-struc &
+;[ MODE  mode,
+;  INDEX index,
+;  RESTR list-of-predications ].
+
+
+;;;changed 06/26
+
+;predication := feat-struc &
+;[ RELN reln,
+;  ASPECT aspect,
+;  SIT  sit-index ].
+
+predication := feat-struc &
+[ RELN reln,
+   SIT  sit-index ].
+
+;predication-spanish :< predication.
+
+;;; instloc is needed solely for generation
+
+instloc := *top*.
+
+;;; ref-index changed 07/13
+
+index := feat-struc &
+  [ INSTLOC instloc ].
+
+     ref-index := index & [ REF agr-cat ].
+;     ref-index :< index.
+     sit-index :< index. 
+     null-index :< index.
+
+list-of-indexes :< *list*.
+
+
+;;;added 06/26:
+
+aspect := *value*.
+
+     completed :< aspect.
+     not_completed :< aspect.
+
+;;;added 07/05:
+
+language := *value*.
+
+     spanish :< language.
+     english :< language.
+
+;;; <<<---- POS's ---->>>
+
+;;;added 07/11
+
+language-specific-item := pos &
+ [ LANGUAGE language ].
+
+spanish-item := language-specific-item &
+ [ LANGUAGE spanish ].
+
+norv :< pos.
+
+;;;changed 07/14: CL
+
+verbal-feat := feat-struc &
+ [ AUX boolean,
+   NEG boolean,
+   CL clitic ].
+
+clitic :< *value*.
+   none :< clitic.
+   pron :< clitic.
+   acc-cl :< pron.
+   dat-cl :< pron.
+
+
+;verbal-feat := feat-struc &
+; [ AUX boolean,
+;   NEG boolean ].
+
+;;;changed 07/05
+
+verb := norv & verbal-feat.
+
+verb-spanish := verb & spanish-item.
+
+:verb-spanish := norv & verbal-feat.
+
+
+;verb := norv &
+; [ AUX boolean,
+;   NEG boolean ] .
+
+nominal := pos & 
+ [ AGR agr-cat ]. 
+
+;;;changed 07/05
+;;;changed 07/11
+
+noun := norv & nominal & topic &
+ [ CASE case-cat ].
+
+noun-spanish := noun & spanish-item.
+
+;noun := norv &
+; [ CASE case-cat ].
+
+;noun-spanish :=  nominal & noun & spanish-item.
+
+
+;noun-spanish :=  nominal & norv &
+; [ CASE case-cat ].
+
+
+;;;changed 07/05:
+;;;changed 07/07:
+
+det := nominal.
+
+det-spanish := det & spanish-item &
+ [ DEF boolean ].
+
+comp := pos & verbal-feat.
+
+comp-spanish := comp & spanish-item.
+
+conj := pos.
+
+conj-spanish := conj & spanish-item.
+
+mod-type := *value* &
+  [ MOD list-of-synsem-structs ].
+
+;;;changed 07/07:
+
+adv := mod-type.
+
+adj := pos & mod-type.
+
+adv-spanish := adv & spanish-item.
+
+adj-spanish := adj & spanish-item.
+
+;adv-spanish := pos & mod-type.
+
+;adj-spanish := pos & mod-type.
+
+;;;changed 07/05:
+;;;changed 07/11:
+
+prep := nominal & mod-type &
+  [ P-OBJ list-of-synsem-structs ].
+
+prep-spanish := prep & spanish-item.
+
+;prep-spanish := pos & mod-type & 
+;  [ P-OBJ list-of-synsem-structs ].
+
+
+;;; <<<----- TYPES INHERITING FROM FORM-CAT----->>>
+
+;;;these were taken from the textbook grammar, 
+;;;which is supposed to have the form-cats for both grammars 07/07
+
+#|
+*value* :< *top*.                
+
+
+form-cat:< *value*.
+;Nouns
+   normal :< form-cat.
+
+;Verbs
+   inf    :< form-cat.
+   fin    :< form-cat.
+   ger    :< form-cat.
+   psp   :< form-cat.
+
+
+;Prepositions
+   f_para   :< form-cat.
+   f_en   :< form-cat.
+   f_con :< form-cat.
+   f_de   :< form-cat.
+   f_a :< form-cat.
+   
+   
+;Adverbs
+   f_no  :< form-cat.
+
+;Conjuctions
+   f_y  :< form-cat.
+;   f_mas  :< form-cat.
+
+|#
+
+
+;;; <<<----- STRUCTURE FOR AGR-CAT  ----->>>
+
+;;;altered 12/07 for el/la pianista --> 3singmasc 3singfem added
+;;;changed 04/24 for pal, dal, etc...
+;;;changed 06/22`
+
+
+;;;this is the "more conservative" agreement
+;;;changed 07/07
+
+
+#|
+3sing := agr-cat &
+    [ PER 3rd,
+      NUM sing ].
+
+3singmasc := 3sing &
+ [ GEND /l masc ].
+
+3singfem := 3sing &
+ [ GEND /l fem ].
+
+
+1sing-spanish := agr-cat-spanish &
+    [ PER 1st,
+      NUM sing ].
+
+2sing-spanish := agr-cat-spanish &
+    [ PER 2nd,
+      NUM sing ].
+
+1plur-spanish := agr-cat-spanish &
+    [ PER 1st,
+      NUM plur ].
+
+;;;this is necessary for nosotros, nosotras
+
+1plurmasc := 1plur-spanish &
+ [ GEND  masc ].
+
+1plurfem := 1plur-spanish &
+ [ GEND  fem ].
+
+2plur-spanish := agr-cat-spanish &
+    [ PER 2nd,
+      NUM plur ].
+
+2plurmasc := 2plur-spanish &
+ [ GEND  masc ].
+
+2plurfem := 2plur-spanish &
+ [ GEND  fem ].
+
+3plur-spanish := agr-cat-spanish &
+    [ PER 3rd,
+      NUM plur ].
+
+3plurmasc := 3plur-spanish &
+ [ GEND /l masc ].
+
+3plurfem := 3plur-spanish &
+ [ GEND /l fem ].
+
+|#
+
+;;; changed 08/02
+;;;note: different structure in textbook grammar!
+;;;changed 07/05
+
+per :< *value*.
+   1or3 := per.
+   1st :< 1or3.
+   2nd :< per.
+   3rd :< 1or3.
+
+;per :< *value*.
+;   1st := per.
+;   2nd :< per.
+;   3rd :< per.
+
+
+num :< *value*.
+   sing :< num. 
+   plur :< num.
+   singandplur :< num. 
+
+;;; changed 01/20 for perro/a
+;;; changed 01/21 --> morphgend not value, but feature
+
+;;;changed 09/29: neut added fopr textbook grammar
+
+gend :< *value*.
+   masc :< gend.
+   fem :< gend.
+   neut :< gend.
+
+
+
+;;;this will be necessary for the objective pronouns
+
+case-cat :< *value*.
+   nom :< case-cat.
+   acc :< case-cat.
+
+
+
+;;; <<>> ----- CONST-LXM DEFINITIONS  -----
+
+
+prep-lxm-spanish := const-lxm &
+ [ SYN [ HEAD prep-spanish ] ].
+
+;;; changed 02/11, added npdp and vpdp-lxm
+;;; this is to avoid overgeneration,
+;;; but it is not clear that this specification is desired.
+
+
+;;; "real" modifiers
+
+pdp-lxm-spanish := prep-lxm-spanish &
+ [ SYN [ HEAD [ MOD < [SYN [HEAD norv ] ] > ],
+	 SPR < [ ] > ],
+   ARG-ST < [ SYN NP-spanish ], [ SYN NP-spanish ] > ].
+
+
+npdp-lxm-spanish := pdp-lxm-spanish & 
+ [ SYN [ HEAD [ MOD < [SYN [HEAD noun-spanish ] ] > ] ] ].
+
+vpdp-lxm-spanish := pdp-lxm-spanish & 
+ [ SYN [ HEAD [ MOD < [SYN [HEAD verb-spanish ] ] > ] ] ].
+
+
+;;;these are for the contracted prepositions nel, pal, al, etc...
+;;;changed 04/24.
+;;;changed 06/23.
+
+masc-pdp-lxm-spanish := prep-lxm-spanish &
+ [ SYN [ HEAD [ MOD < [SYN [HEAD norv ] ] > ],
+	 SPR < [ ] > ],
+   ARG-ST < [ SYN NP-spanish ], 
+	    [ SYN N-spanish & [ HEAD [ AGR 3singmasc ] ] ] > ].
+
+masc-npdp-lxm-spanish := masc-pdp-lxm-spanish & 
+ [ SYN [ HEAD [ MOD < [SYN [HEAD noun-spanish ] ] > ] ] ].
+
+masc-vpdp-lxm-spanish := masc-pdp-lxm-spanish & 
+ [ SYN [ HEAD [ MOD < [SYN [HEAD verb-spanish ] ] > ] ] ].
+
+
+;;; argument markers
+;;;ARG-STR resttricted to NP's
+;;; default 07/05
+
+mkp-lxm-spanish := prep-lxm-spanish &  
+ [ SYN [ HEAD [ MOD < >,
+		P-OBJ < #1 > ],
+	 SPR < > ],
+   ARG-ST < #1 & [ SYN NP-spanish ] > ].
+
+;;;changed 06/26
+;;;changed 06/29
+
+;masc-mkp-lxm := mkp-lxm-spanish &  
+; [ ARG-ST < [ SYN N-spanish & [ HEAD [ AGR 3singmasc ] ] ] > ].
+
+masc-mkp-lxm-spanish := prep-lxm-spanish &  
+ [ SYN [ HEAD [ MOD < >,
+		P-OBJ < #1 > ],
+	 SPR < > ],
+   ARG-ST < #1 & [ SYN N-spanish & [ HEAD [ AGR 3singmasc ] ] ] > ].
+
+adv-lxm-spanish-spanish := const-lxm & modifier-sem &
+ [ SYN [ HEAD adv-spanish & [ FORM /l normal,
+		      MOD < [ SYN [ HEAD verb-spanish,
+				       COMPS < > ] ] > ] ], 
+   ARG-ST < > ].
+
+
+;;;changed 02/25. ARG-ST defined.
+;;;changed 02/26. NP in the SPEC
+
+adj-lxm-spanish := const-lxm & modifier-sem & 
+ [ SYN [ HEAD adj-spanish & [ FORM normal,
+		      MOD < [ SYN [ HEAD noun-spanish,
+				       COMPS < > ] ] > ],
+         SPR < [ ] > ],
+   ARG-ST /l < [ SYN NP-spanish,
+ 		 SEM [INDEX ref-index] ] > ].
+
+
+
+conj-lxm-spanish := const-lxm &
+ [ SYN [ HEAD conj-spanish ],
+   ARG-ST < > ].
+
+;;; changed 06/19: semantics
+;;;changed 06/29
+;;;changed 07/06
+
+det-lxm-spanish := const-lxm & det-sem &
+ [ SYN [ HEAD det-spanish ],
+   ARG-ST < > ].
+
+;det-lxm-spanish := const-lxm & det-sem &
+; [ SYN [ HEAD det-spanish ],
+;   SEM [ DEF boolean ],
+;   ARG-ST < > ].
+
+;;; added 06/19:
+;;; default for possessives
+;;; changed 07/06 (adjusted for DEF)
+
+def_det-lxm-spanish := det-lxm-spanish &
+ [ SEM [ RESTR /l <! [ RELN r_the ] !> ] ].
+
+indef_det-lxm-spanish := det-lxm-spanish &
+ [ SEM [ RESTR <! [ RELN r_a ] !> ] ].
+
+;def_det-lxm := det-lxm-spanish &
+; [ SEM [ DEF true,
+;         RESTR /l <! [ RELN r_the ] !> ] ].
+
+;indef_det-lxm := det-lxm-spanish &
+; [ SEM [ DEF false,
+;         RESTR <! [ RELN r_a ] !> ] ].
+
+
+poss_det-lxm-spanish := det-lxm-spanish & poss_det-sem.
+
+
+;det-lxm := const-lxm-spanish & 
+; [ SYN [ HEAD det ],
+;   SEM null-sem,
+;   ARG-ST < > ].
+
+;;; <<>> ----- NOUN-LXM   -----
+
+;;; changed 05/17
+;;; to avoid pn-lxm's inflecting in plural
+;;; changed 05/22 (for plural lexical rule)
+;;; changed 06/06 (semantics)
+;;; rearranged 06/16
+;;; changed 06/19: DEF
+;;; changed 07/12 to adapt INSTANCE to textbook grammar
+
+nominal-lxm-spanish := noun-sem & 
+ [ SYN [ HEAD noun-spanish & [ FORM /l normal, 
+                               AGR [ PER /l 3rd ],
+                               ANA /l false ] ],
+   ARG-ST /l < > ].
+
+;nominal-lxm := noun-sem & 
+; [ SYN [ HEAD noun & [FORM /l normal, AGR [ PER /l 3rd ] ] ],
+;   ARG-ST /l < > ].
+
+
+;nominal-lxm-spanish := noun-sem & 
+; [ SYN [ HEAD noun-spanish & [FORM /l normal, AGR [ PER /l 3rd ] & #1] ],
+;   SEM [ INDEX #1 ],
+;   ARG-ST /l < > ].
+
+
+;pn-lxm := infl-lxm & noun-sem & pn-sem &
+; [ SYN [ HEAD noun & [ FORM /l normal, 
+;	               AGR 3sing,
+;		       ANA /l false] ],
+;   ARG-ST /l < > ].
+	 
+pn-lxm := const-lxm & noun-sem & pn-sem &
+ [ SYN [ HEAD noun & [ FORM /l normal, 
+	               AGR 3sing,
+		       ANA /l false] ],
+   ARG-ST /l < > ].
+	 
+
+
+noun-lxm-spanish := nominal-lxm-spanish & infl-lxm. 
+
+;;; changed 06/19: DEF
+;;; changed 06/29
+;;; changed 07/06
+
+
+pron-lxm-spanish := const-lxm & noun-sem & 
+ [ SYN [ HEAD noun-spanish & [FORM /l normal, ANA /l false] ],
+   ARG-ST < > ].
+
+;pn-lxm-spanish := nominal-lxm-spanish & const-lxm & pn-sem &
+; [ ARG-ST < > ].
+
+
+;pron-lxm-spanish := const-lxm & noun-sem & 
+; [ SYN [ HEAD noun-spanish & [ FORM /l normal,
+;		               AGR #agr ] ],
+;   SEM [ INDEX #agr ],
+;   ARG-ST < > ].
+
+;;; GEND is defined by nogender-masc/fem rule,
+;;; if not defined in the lexical entry.
+;;; changed on 12/07.
+;;; changed 06/19: DEF
+;;; changed 06/29
+
+cn-lxm-spanish := noun-lxm-spanish & 
+ [ SYN [ HEAD [ AGR #agr ],
+	 SPR  /l < [ ] > ],
+   ARG-ST /l < [ SYN [ HEAD det-spanish & [ AGR #agr ] ] ] > ].
+
+;;; changed 05/17
+;;; rearranged 06/16
+;;; changed 06/16. 3sing added.
+
+;pn-lxm := nominal-lxm & const-lxm-spanish & pn-sem &
+; [ HEAD [ AGR 3sing ],
+;   ARG-ST < > ].
+
+;pn-lxm-spanish := nominal-lxm-spanish & const-lxm & pn-sem &
+; [ ARG-ST < > ].
+
+;;;for mass nouns
+
+mn-lxm-spanish := noun-lxm-spanish &
+ [ SYN [ SPR < > ] ].
+
+;;;;changed 07/10
+
+masc-pn-lxm-spanish := pn-lxm &
+ [ SYN [ HEAD [ AGR 3singmasc ] ] ].
+
+fem-pn-lxm-spanish := pn-lxm &
+ [ SYN [ HEAD [ AGR 3singfem ] ] ].
+
+;masc-pn-lxm-spanish := pn-lxm-spanish &
+; [ SYN [ HEAD [ AGR 3singmasc ] ] ].
+
+;fem-pn-lxm-spanish := pn-lxm-spanish &
+; [ SYN [ HEAD [ AGR 3singfem ] ] ].
+
+;;; <<>> ----- SHORTCUTS  -----
+
+;;;changed to general types 07/10.
+
+NP := gram-cat &
+[ HEAD noun,
+  SPR < >,
+  COMPS < > ].
+
+NP-spanish := gram-cat &
+[ HEAD noun-spanish,
+  SPR < >,
+  COMPS < > ].
+
+NP-acc-spanish := NP-spanish &
+[ HEAD noun-spanish & [CASE acc] ].
+
+NP-acc := NP &
+[ HEAD noun & [CASE acc] ].
+
+NP-nom := NP &
+[ HEAD [CASE nom] ].
+
+NP-nom-spanish := NP-spanish &
+[ HEAD [CASE nom] ].
+
+
+;NP-non3singmasc := NP-spanish &
+; [ HEAD noun-spanish & [ AGR non3singmasc ] ].
+
+N := gram-cat & 
+[ HEAD noun,
+  SPR < [ ] > ].
+
+N-spanish := gram-cat & 
+[ HEAD noun-spanish,
+  SPR < [ ] > ].
+
+VP := gram-cat &
+[ HEAD verb,
+  SPR < [ ] > ].
+
+VP-spanish := gram-cat &
+[ HEAD verb-spanish,
+  SPR < [ ] > ].
+
+V-spanish := gram-cat &
+[ HEAD verb-spanish ].
+
+V := gram-cat &
+[ HEAD verb ].
+
+S := gram-cat &
+[ HEAD verb,
+  SPR < >,
+  COMPS < > ].
+
+S-spanish := gram-cat &
+[ HEAD verb-spanish,
+  SPR < >,
+  COMPS < > ].
+
+PP := gram-cat &
+[ HEAD prep,
+  SPR < >,
+  COMPS < > ].
+
+PP-spanish := gram-cat &
+[ HEAD prep-spanish,
+  SPR < >,
+  COMPS < > ].
+
+;;; added 06/19
+
+1sg := agr-cat &
+[ PER 1st,
+  NUM sing ].
+
+1pl  := agr-cat &
+[ PER 1st,
+  NUM plur ].
+
+2sg := agr-cat &
+[ PER 2nd,
+  NUM sing ].
+
+2pl := agr-cat &
+[ PER 2nd,
+  NUM plur ].
+
+3sgorpl := agr-cat &
+[ PER 3rd ].
+
+;;; <<>> ----- VERB LXM   -----
+
+;;; changed for "hay", 03/29
+;;; changed 06/21
+
+verbal-lxm-spanish := infl-lxm & verb-sem & 
+ [ SYN [ HEAD verb-spanish & [ NEG false, AUX /l false, CL /l none ] ] ].
+
+verb-lxm-spanish := verbal-lxm-spanish &
+ [ SYN [ SPR  < [ ] > ],
+   ARG-ST < [ SYN /l NP-spanish ], ...  > ].
+
+;verb-lxm := verbal-lxm &
+; [ SYN [ SPR  < [ ] > ] ].
+
+no-subj-verb-lxm-spanish := verbal-lxm-spanish &
+ [ SYN [ SPR  < > ] ].
+
+iv-lxm-spanish := verb-lxm-spanish & iv-sem &
+ [ ARG-ST < [ ] > ]. 
+
+piv-lxm-spanish := verb-lxm-spanish & piv-sem &
+ [ ARG-ST < [ ], [ SYN PP-spanish ] > ].
+
+tv-lxm-spanish := verb-lxm-spanish &
+ [ ARG-ST < [ ], [SYN /l NP-acc-spanish ], ... > ].
+
+no-subj-stv-lxm-spanish := no-subj-verb-lxm-spanish & no-subj-stv-sem &
+ [ ARG-ST < [ ] > ]. 
+
+stv-lxm-spanish := tv-lxm-spanish & stv-sem &
+ [ ARG-ST < [ ], [ ] > ].
+
+
+;;;changed 02/09 
+;;;chabged 06/23
+dtv-lxm-spanish := tv-lxm-spanish & dtv-sem &
+ [ ARG-ST < [ ], [ ], [ SYN PP-spanish ] > ].
+
+
+;;;define here types for raising and control verbs
+;;;changed 06/22: list in SPR 
+;;;(will not account for no-subj-verb)
+
+;;;subject-raising verb
+srv-lxm-spanish := verb-lxm-spanish & srv-sem &
+[ ARG-ST < #1 ,  [SYN [ SPR < #1 > ] ] > ]. 
+
+
+;;;auxiliaries
+auxv-lxm-spanish := srv-lxm-spanish &
+[ SYN [ HEAD verb-spanish & [ AUX true ] ] ].
+
+perf_auxv-lxm-spanish := auxv-lxm-spanish &
+[ SYN [ HEAD verb-spanish & [ AUX true ] ],
+  ARG-ST < [ ], [ SYN [ HEAD verb-spanish & [FORM psp ] ] ] > ].
+
+ger_auxv-lxm-spanish := auxv-lxm-spanish &
+[ SYN [ HEAD verb-spanish & [ AUX true ] ],
+  ARG-ST < [ ], [ SYN [ HEAD verb-spanish & [FORM ger ] ] ] > ].
+
+
+
+
+;;; <<<---- TYPES INHERITING FROM SYNSEM-STRUC/LEXICAL RULE DEFINITIONS ---->>>
+
+;;; types were taken from the textbook grammar and modified
+;;; where necessary.
+
+args-type := *top* &
+ [ ARGS *list* ].
+
+phrase :=  synsem-struc & args-type.
+
+rule := args-type &
+ [ ARGS *list* ],
+ status: root-node.
+
+rule-spanish:= spanish-item & rule.
+
+
+;;;from the textbook grammar
+;; This is a slightly artificial type introduced for mechanical
+;; purposes of preventing recursion in the mod_affix definition.
+;;; changed 07/06: LANGUAGE
+;;; changed 07/07
+
+;argst-item := args-type &
+;[ ARG-ST *list* ].
+
+;argst-item-spanish := synsem-struc-spanish & args-item.
+
+
+argst-item := synsem-struc & args-type &
+[ ARG-ST *list* ].
+
+lex-item := argst-item &
+[ AFFIX mod_affix ].
+
+;lex-item-spanish := argst-item-spanish &
+;[ AFFIX mod_affix ].
+
+;;;added 07/14 for clitics:
+
+word_real :< lex-item.
+
+word :< word_real.
+
+cl-word :< word_real.
+
+acc-cl-word :< cl-word.
+
+dat-cl-word :< cl-word.
+
+;word :< lex-item.
+
+lexeme := lex-item &
+[ ORTH #orth,
+  ARGS < [ ORTH #orth ] > ].
+
+;;;changed 07/07
+
+infl-lxm := lexeme &
+[ SYN [HEAD #head ],
+  ARG-ST #argst,
+  ARGS < [ AFFIX affix & [ SYN [ HEAD #head],
+			   ARG-ST #argst ] ] > ].
+			 
+const-lxm := lexeme &
+ [ ARGS < [ AFFIX no-affix ] >].
+
+;infl-lxm-spanish := lexeme-spanish &
+;[ SYN [HEAD #head ],
+;  ARG-ST #argst,
+;  
+;  ARGS < [ AFFIX affix & [ SYN [ HEAD #head],
+;			   ARG-ST #argst ] ] > ].
+			 
+;const-lxm-spanish := lexeme-spanish &
+; [ ARGS < [ AFFIX no-affix ] >].
+
+
+ mod_affix := argst-item.  
+  affix := mod_affix.
+  no-affix :< mod_affix.
+
+
+
+;;; <<>> ----- TYPE HIERARCHY  -----
+
+;;; hierarchy was based on the textbook grammar
+
+boolean :< *value*.
+   true  :< boolean.               
+   false :< boolean.
+
+*list* :< *top*.
+
+ne-list := *cons* &
+ [ FIRST *top*,
+   REST *list* ].
+
+list-of-synsem-structs :< *list*.
+
+*null* :< list-of-synsem-structs.
+
+ne-list-of-synsem-structs := list-of-synsem-structs & ne-list &
+ [ FIRST synsem-struc,
+   REST list-of-synsem-structs ].
+
+label :=  synsem-struc &
+   [ LABEL-NAME symbol ],
+    status: label.
+
+phrase-label := label & phrase.
+
+word-label := label & word.
+
+
+
+
+
+
+
+
+
+
+
+

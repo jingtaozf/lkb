@@ -1,0 +1,284 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; lrule-types-textbook.tdl
+;;; 
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
+;;; (adapted for the use with the Spanish grammar)
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Don't change the name of lrule-super, or it will break -- it's named
+;; in the globals.lsp file.  CCB.
+;lrule-super :< lex-item.
+
+; Words go through several stages before they can be used by our grammatical
+; rules.  First the argument realization principle is applied, which sets up 
+; the correspondence between the arg-st and the spr and comps.  Next the 
+; anaphoric agreement principle determines which forms the argument structure
+; can take.
+; We've made types that correspond to these steps. They're called word, 
+; word+arg_real, and word+arg_real+ana_agr.  The latter two types correspond 
+; fairly closely to the book's notion of Lexical-Structural Description.  CCB
+ 
+;word+arg_real := lrule-super &
+;[ ORTH #orth,
+;  ARGS < [ ORTH #orth ] > ].
+ 
+;word+arg_real+ana_agr :< lrule-super.
+
+;;; turning off the binding stuff for speed too.
+;;; added this line to make sure that things go through.
+word+arg_real+ana_agr :< word+arg_real.
+
+;lrule := lrule-super & 
+;  [ ARGS < lexeme & [ AFFIX #argaff,
+;		      ARGS < [ AFFIX #argaff ] > ] >,
+;
+;    NEEDS-AFFIX boolean ],
+;status: lex-rule.
+
+;;; language added 07/10
+;;; commented 07/11
+
+;lrule-general-textbook := lrule & word & 
+;[ SYN #syn,
+;  SEM #sem,
+;  ARG-ST #arg-st,
+;  LANGUAGE english,	
+;
+;  ARGS < [SYN #syn,
+;	  SEM #sem,
+;	  ARG-ST #arg-st,
+;          LANGUAGE english  ] > ]. 
+
+
+lrule-general-textbook := lrule & word & 
+[ SYN #syn & [ HEAD [ LANGUAGE english ] ],
+  SEM #sem,
+  ARG-ST #arg-st,
+
+  ARGS < [SYN #syn,
+	  SEM #sem,
+	  ARG-ST #arg-st ] > ]. 
+
+
+;;; <<>> LEXICAL RULES
+
+present-verb-lexical-rule-textbook := lrule & word &
+[ SYN #syn,
+  SEM [ MODE #mode,
+	INDEX #1,
+	RESTR [ LIST < [RELN r_t-overlap,
+			 ARG1 #1,
+			 ARG2 now] . #restr >,
+                LAST #semlast ]],
+  ARG-ST #arg-st,
+
+  ARGS < lexeme & [  SYN #syn,
+		     SEM [ MODE #mode,
+			   RESTR [ LIST #restr,
+                                   LAST #semlast ]],
+		     ARG-ST #arg-st ] > ].
+
+
+past-verb-lexical-rule-textbook := lrule & word &
+[ SYN #syn,
+  SEM [ MODE #mode,
+	INDEX #1,
+	RESTR [ LIST  < [RELN r_t-precede,
+			 ARG1 #1,
+			 ARG2 now] . #restr >,
+                LAST #semlast ]],
+  ARG-ST #arg-st,
+  
+  ARGS < lexeme & [ SYN #syn,
+		    SEM [ MODE #mode,
+			  RESTR [ LIST #restr,
+				  LAST #semlast ]],
+		    ARG-ST #arg-st ] > ].
+
+;; This lexical rule was inserted to take care of duplicate parses in 
+;; "I like you" and "There should be a cat on the table"  
+singandplur-lexical-rule-textbook := lrule & word &
+[ SYN [ HEAD noun-textbook & [ AGR [NUM num, PER #per ], CASE #case, 
+		               FORM #form, PRED #pred, ANA #ana],
+	SPR #spr,
+	COMPS #comp ],
+  SEM #sem,
+  ARG-ST #arg-st,
+  
+  ARGS < lexeme & [ SYN [ HEAD noun-textbook & [ AGR [NUM singandplur, PER #per], CASE #case, 
+					                  FORM #form, PRED #pred, ANA #ana],
+			  SPR #spr,
+			  COMPS #comp ],
+		    SEM #sem,
+		    ARG-ST #arg-st ] > ].
+
+
+;;; <<>> NOMINAL LEXICAL TYPES
+
+;; This rule is needed to stamp 3sing onto almost all common nouns
+;; (except "pants") to prevent "The cat like me" 
+3rd-sing-noun-textbook := affix & 
+[ SYN [ HEAD noun-textbook & [ AGR 3sing & [ NUM sing,
+				     	     PER 3rd ] ] ] ].
+
+plur-noun-textbook := affix &
+[ SYN [ HEAD noun-textbook & [ AGR [ NUM plur ] ] ],
+  ARG-ST < [ SYN [ HEAD [ COUNT true ] ] ], ... > ].
+;; See Changes File #2
+
+singandplur-noun-textbook := affix &
+[ SYN [ HEAD noun-textbook & [ AGR [ NUM singandplur ] ] ] ].
+
+
+;  <<>> VERBAL LEXICAL TYPES
+
+past-verb-textbook := affix &
+[ SYN [ HEAD verb-textbook & [ FORM fin,
+		      	       PRED false ] ] ]. 
+
+pres-part-verb-textbook := affix &
+[ SYN [ HEAD verb-textbook & [ FORM prp,
+		      	       PRED true ] ] ].
+
+past-part-verb-textbook := affix & 
+[ SYN [ HEAD verb-textbook & [ FORM psp,
+		      PRED false ] ] ].
+
+inf-verb-textbook := affix &
+[ SYN [ HEAD verb-textbook & [ FORM inf,
+		      PRED false ] ] ].
+
+1st-sing-verb-textbook := affix &
+[ SYN [ HEAD verb-textbook & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 1sing& [PER 1st,
+				       NUM sing ] ] ] ], ... > ].
+
+2orplural-verb-textbook:= affix & 
+[ SYN [ HEAD verb-textbook & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 2orplural ] ] ], ...  > ].
+; See Changes File #6
+
+;; I've added this rule for "annoy_2" since it can't fire through the
+;; 3rd-sing-verb rule and overrideable defaults let too much through.
+comp-sing-verb-textbook := affix &  
+[ SYN [ HEAD verb-textbook & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN CP-fin ], ... > ]. 
+
+;comp-sing-verb-textbook := affix &  
+;[ SYN [ HEAD verb-textbook & [ FORM fin,
+;		      PRED false ] ],
+;  ARG-ST < [ SYN CP-fin-textbook ], ... > ]. 
+
+
+3rd-sing-verb-textbook := affix &  
+[ SYN [ HEAD verb-textbook & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 3sing ] ] ], ... > ]. 
+
+non-3rd-sing-verb-textbook := affix &  
+[ SYN [ HEAD verb-textbook & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR non-3sing ] ] ], ... > ].
+
+1or3-sing-past-verb-textbook := affix &
+[ SYN [ HEAD verb-textbook & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR [PER 1or3, NUM sing ] ] ] ], ... > ].
+
+;1or3-sing-past-verb-textbook := affix &
+;[ SYN [ HEAD verb-textbook & [ FORM fin,
+;		      PRED false ] ],
+;  ARG-ST < [ SYN [ HEAD [ CASE nom,
+;			  AGR [PER 1or3, NUM sing ] ] ] ], ... > ].
+
+
+;; Why does this rule need to be in this file rather than lrules?
+general-passive-lrule-textbook := word & 
+[ ORTH #orth,
+  SYN [ HEAD verb-textbook & [ FORM pass,
+		      PRED true ],
+	SPR < [ ] > ],
+  SEM #sem,
+  
+  ARGS < word & [ ORTH #orth,
+                  SYN [ HEAD verb-textbook & [ FORM psp,
+				      PRED false ] ],
+		  SEM #sem ] > ].
+
+
+
+
+; << >> RULES TO RECYCLE OR TRASH
+
+#|
+sing-noun := affix & 
+[SYN [ HEAD noun & [ AGR [ NUM sing ] ] ] ].
+;; See Changes File #1
+
+1st-sing-noun := affix &
+[ SYN [ HEAD noun & [ AGR non-3sing & [ NUM sing,
+					PER 1st ] ] ] ].
+
+2nd-sing-noun := affix &
+[ SYN [ HEAD noun & [ AGR non-3sing & [ NUM sing,
+					PER 2nd ] ] ] ].
+
+
+;; This is only if we want to parse "I love all furniture"
+;; Watch out, it tends to overgenerate with "I love furniture"
+count-false-noun := affix &
+[ SYN [ HEAD noun & [ AGR [ NUM plur ] ] ],
+  ARG-ST < [ SYN [ HEAD [ COUNT false ] ] ] > ].
+
+
+plur-noun-nom := affix &
+[SYN [ HEAD noun & [ AGR [ NUM plur ], CASE nom ] ] ].
+
+
+plur-noun-acc := affix &
+[SYN [ HEAD noun & [ AGR [ NUM plur ], CASE acc ] ] ].
+
+
+;; Should modal verbs have their own separate rule?
+modal-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin, 
+		      PRED false,
+		      AUX true ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR modalagr ] ] ], ... > ]. 
+; See Changes File #5
+
+
+;; This rule prevents modals from receiving unecessary stamping of 
+;; 3sing/non3sing, giving one parse for "There should be.."
+modal-verb-lexical-rule := lrule & word & 
+[ SYN [ HEAD #head,
+	SPR < [SYN [ HEAD [CASE #case, AGR agr-cat],
+		     SPR #sprspr,
+		     COMPS #sprcomps ],
+	       SEM #sprsem ] >,
+	COMPS #comps ],
+  SEM #sem,
+  ARG-ST #arg-st,
+  
+  ARGS < lexeme & [ SYN [ HEAD #head,
+			  SPR < [SYN [ HEAD [CASE #case, AGR modalagr],
+				       SPR #sprspr,
+				       COMPS #sprcomps ],
+				 SEM #sprsem ] >,
+			  COMPS #comps ],
+		    SEM #sem,
+		    ARG-ST #arg-st ] > ].
+|#

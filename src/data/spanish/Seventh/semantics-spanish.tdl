@@ -1,0 +1,355 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; semantics-spanish.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;; <<<-----  SEMANTIC FIELDS  ----->>>
+
+
+list-of-predications :< *diff-list*.
+
+;;;according to the textbook grammar (01/25)
+
+mode-cat :< *value*.
+   prop :< mode-cat.
+   ques :< mode-cat.
+   dir  :< mode-cat.
+   ref  :< mode-cat.
+   null-mode :< mode-cat.
+
+reln :< *value*.
+
+null-sem := sem-struc &
+[ MODE null-mode,
+  INDEX null-index,
+  RESTR <! !>].
+
+
+;;;adjuncts
+modifier-sem := synsem-struc &
+ [ SYN [ HEAD [ MOD < [SEM [INDEX #2 ] ] > ] ],
+   SEM [ MODE null-mode,
+	 INDEX #1,
+	 RESTR <! arg_pred & [ SIT #1, ARG #2 ] !> ] ].
+
+
+;;;changed 06/19
+
+;noun-sem := lex-item &
+;[ SEM [ MODE  /l ref,
+;	INDEX ref-index & #1,
+;	RESTR <! noun_pred & [ INSTANCE #1 ] !> ] ].
+
+
+;;;from the textbook grammar:
+noun-sem := lex-item &
+[ SEM [ MODE  /l ref,
+	INDEX #1,
+	RESTR <! noun_pred & [ INSTANCE #1 ] !> ] ].
+
+
+pn-sem := lex-item &
+ [ SEM [ INDEX #1,
+	 RESTR <! named_pred & [ NAMED #1 ] !> ] ].
+
+
+;;; added 06/19
+;;; changed 06/07
+
+det-sem := lex-item &
+[ SEM [ RESTR <! det_pred !> ] ].
+  
+;det-sem := lex-item &
+;[ SEM [ DEF #1,
+;	RESTR <! det_pred & [ KNOWN #1 ] !> ] ].
+
+
+;det-sem := lex-item &
+;[ SEM [ DEF /l true,
+;	RESTR <! !> ] ].
+  
+poss_det-sem := lex-item &
+[ SEM [ RESTR <! poss_det_pred !> ] ].
+  
+
+noun_pred := predication &
+ [ INSTANCE  ref-index ].
+
+named_pred := noun_pred &
+ [ RELN      r_name,
+   NAME      symbol, 
+   NAMED     ref-index].
+
+;;;changed 07/05:
+;;;taken from the textbook grammar
+;conj_pred := predication.
+ 
+conj_pred := predication &
+ [ ANDARG list-of-indexes ].
+
+
+;;; added 06/19
+
+det_pred := predication &
+ [ KNOWN boolean ].
+
+;;; for possessive determiners
+;;; changed 07/11
+
+poss_det_pred := det_pred & 
+ [ POSS ref-index ].
+
+;poss_det_pred := det_pred & 
+; [ POSS poss ].
+
+;;; actor
+act_pred := predication &
+ [ ACT ref-index ].
+
+;;; undergoer
+und_pred := predication &
+ [ UND ref-index ].
+
+;;; theme
+thm_pred := predication &
+ [ THM ref-index ].
+
+arg_pred := predication &
+ [ ARG sit-index ].
+
+;;;taken from the textbook grammar (01/25)
+;;;changed (02/03)
+;;;changed 06/21
+
+;iv_pred  :< act_pred.
+;piv_pred := act_pred & thm_pred.
+;stv_pred := act_pred & und_pred. 
+no-subj-stv_pred := thm_pred.
+;dtv_pred := act_pred & und_pred & thm_pred.
+;srv_pred :< arg_pred.
+
+;;;taken from the textbook grammar (07/05)
+
+iv_pred  :< act_pred.
+piv_pred := act_pred & thm_pred.
+fiv_pred := act_pred & arg_pred.
+stv_pred := act_pred & und_pred. 
+ctv_pred := arg_pred & und_pred.
+dtv_pred := act_pred & und_pred & thm_pred.
+srv_pred :< arg_pred.
+scv_pred := act_pred & arg_pred.
+orv_pred :< scv_pred.
+ocv_pred := act_pred & und_pred & arg_pred.
+
+
+;;;changed 06/27: pro-drop
+
+verb-sem := lex-item &
+[ SEM [INDEX #index,
+       MODE prop,
+       RESTR <! predication & [SIT #index] !> ] ].
+
+iv-sem := verb-sem &
+[ SEM [ RESTR <! iv_pred & [ ACT #1 ] !> ],
+  ARG-ST < [ SEM [ INDEX #1 ] ] > ].
+
+piv-sem := verb-sem &
+[ SEM [ RESTR <! piv_pred & [ ACT #1, 
+			      THM #2 ] !> ],
+  ARG-ST < [ SEM [ INDEX #1 ] ], [ SEM [ INDEX #2 ] ]  > ].
+
+fiv-sem := verb-sem &
+[ SEM [	RESTR <! fiv_pred & [ ACT #1,
+			      ARG #2 ] !> ],
+  ARG-ST < [SEM [INDEX #1] ], [SEM [INDEX #2 ] ] > ].
+
+stv-sem := verb-sem &
+[ SEM [ RESTR <! stv_pred & [ ACT #1,
+			      UND #2 ] !> ],
+  ARG-ST < [SEM [INDEX #1 ] ], [SEM [INDEX #2 ] ] > ].
+
+;;; added 06/21
+no-subj-stv-sem := verb-sem &
+[ SEM [ RESTR <! no-subj-stv_pred & [ THM #1 ] !> ],
+  ARG-ST < [ SEM [ INDEX #1 ] ] > ].
+
+
+;;;changed 06/23 (roles added)
+
+dtv-sem := verb-sem &
+[ SEM [ RESTR <! dtv_pred & [ ACT #1, 
+              		      UND #2, 
+			      THM #3 ] !> ],
+  ARG-ST < [SEM [INDEX #1 ] ],  [SEM [INDEX #3 ] ],  [SEM [INDEX #2 ] ] > ].  
+   
+;;;from the textbook grammar 07/05:
+;; These semantics only seem to make sense for "I gave the book to Kim"
+;; What about "I gave the book about/with/for Kim"?  
+ptv-sem := verb-sem &
+ [ SEM [ RESTR <! dtv_pred & [ ACT #1, 
+			       UND #2, 
+			       THM #3 ] !> ],
+   ARG-ST < [SEM [INDEX #1 ] ],  [SEM [INDEX #3 ] ],  [SEM [INDEX #2 ] ] > ].  
+   
+
+;;;added 06/22
+
+srv-sem := verb-sem &
+[ SEM [ RESTR <! srv_pred & [ ARG #3 ] !> ],
+  ARG-ST < [ ] ,  [ SEM [INDEX #3] ] > ].
+
+
+;;;from the textbook grammar 05/07:
+
+scv-sem := verb-sem &
+[ SEM [ RESTR <! scv_pred & [ ACT #1,
+			      ARG #3 ] !> ],
+  ARG-ST < [SEM [INDEX #1 ] ], [SEM [INDEX #3] ] > ].
+
+orv-sem := verb-sem &
+[ SEM [ RESTR <! orv_pred & [ ACT #1,
+			      ARG #3 ] !> ],
+  ARG-ST < [SEM [INDEX #1 ] ],  [ ],  [SEM [INDEX #3] ] > ].
+
+ocv-sem := verb-sem &
+[ SEM [ RESTR <! ocv_pred & [ ACT #1, 
+			      UND #2,
+			      ARG #3 ] !> ],
+  ARG-ST < [SEM [INDEX #1 ] ], [SEM [INDEX #2 ] ], [SEM [INDEX #3 ] ] > ].
+
+
+
+time_pred := predication &
+ [ ARG1  sit-index,
+   ARG2  sit-index ].
+
+
+now:< sit-index.
+
+not_pred := predication &
+ [ RELN     r_not,
+   NOT-ARG  sit-index ].
+
+question_pred := predication &
+ [ RELN       r_question,
+   QUERY-ARG  index ].
+
+auxv_pred :< arg_pred.
+
+;;;the list of relations was taken from the textbook grammar
+;;;some entries had to be added
+
+;r_name :< reln.
+;r_not :< reln.
+;r_t-overlap :< reln.
+;r_t-precede :< reln.
+
+;r_speakers :< reln.
+;r_speaker :< reln.
+;r_female :< reln.
+;r_male :< reln.
+;r_listener :< reln.
+;r_listeners :< reln. 
+;r_group :< reln.
+
+
+;;; added for Spanish:
+;;;changed 07/05
+;;; restructured 07/13
+
+;r_male_group :< r_group.
+;r_female_group :< r_group.
+;r_male_speakers :< r_speakers.
+;r_female_speakers :< r_speakers.
+;r_male_listeners :< r_listeners.
+;r_female_listeners :< r_listeners.
+
+;r_animal :< reln.
+;r_gato :< r_animal.
+;r_perro :< r_animal.
+
+;r_el :< reln.
+;r_un :< reln.
+
+;r_mi :< reln.
+;r_tu :< reln.
+;r_su :< reln.
+;r_nuestro :< reln.
+;r_vuestro :< reln.
+
+;r_en :< reln.
+;r_con :< reln.
+;r_de :< reln.
+;r_para :< reln.
+;;;changed 07/05:
+r_a_marker :< reln.
+
+;r_y :< reln.
+;r_mas :< reln. 
+
+;r_alegre :< reln.
+
+r_hay :< reln.
+;r_ser :< reln.
+;r_estar :< reln.
+;r_haber :< reln.
+;r_hacer :< reln.
+;r_tener :< reln.
+;r_comer :< reln.
+;r_mentir :< reln.
+;r_vivir :< reln.
+;r_dormir :< reln.
+;r_ir :< reln.
+;r_servir :< reln.
+;r_amar :< reln.
+;r_dar :< reln.
+;r_continuar :< reln.
+;r_escribir :< reln.
+;r_cruzar :< reln.
+
+
+;r_revista :< reln.
+;r_universidad :< reln.
+;r_corbata :< reln.
+;r_vestido :< reln.
+;r_manzana :< reln.
+;r_manzano :< reln.
+;r_banana :< reln.
+;r_pianista :< reln.
+;r_abuelo :< reln.
+;r_abuela :< reln.
+;r_chica :< reln.
+;r_chico :< reln.
+;r_avión :< reln.
+;r_casa :< reln.
+;r_mesa :< reln.
+;r_libro :< reln.
+;r_jardín :< reln.
+;r_unicornio :< reln.
+;r_estudiante :< reln. 
+;r_artista :< reln.
+
+;r_pan :< reln.
+
+;r_question :< reln.
+
+;;;from Sevent (07/05)
+;;added for Spanish
+
+r_magazine :< reln.
+r_university :< reln.
+r_tie :< reln.
+r_dress :< reln.
+r_apple :< reln.
+r_pianist :< reln.
+r_grandfather :< reln.
+r_girl :< reln.
+r_boy :< reln.
+r_airplane :< reln.
+r_house :< reln.
+r_serve :< reln.
+r_bread :< reln.
+;r_a_marker :< reln.
+r_banana :< reln.

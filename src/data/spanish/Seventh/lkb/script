@@ -1,29 +1,59 @@
-(defparameter *grammar-version* "spanish/Fourth")
+(defparameter *grammar-version* "spanish/Ninth")
 
 (lkb-load-lisp (this-directory) "globals.lsp")
 (lkb-load-lisp (this-directory) "mrs-globals-ygg.lisp")
 (lkb-load-lisp (this-directory) "user-fns.lsp")
 (load-lkb-preferences (this-directory) "user-prefs.lsp")
 (lkb-load-lisp (this-directory) "lkb-code-patches" t)
-(load-irregular-spellings (lkb-pathname (parent-directory) "irregs.lisp"))
+;(load-irregular-spellings
+;     (list  (lkb-pathname (parent-directory) "irregs-spanish.lisp")
+;            (lkb-pathname (parent-directory) "irregs-textbook.lisp")))
+(load-irregular-spellings (lkb-pathname (parent-directory) "irregs-both.lisp"))
+;(load-irregular-spellings (lkb-pathname (parent-directory) "irregs-textbook.lisp"))
+;(load-irregular-spellings (lkb-pathname (parent-directory) "irregs-spanish.lisp"))
 (read-tdl-type-files-aux
      (list (lkb-pathname (this-directory) "extra.tdl")
-           (lkb-pathname (parent-directory) "semantics.tdl")
-           (lkb-pathname (parent-directory) "lrule-types.tdl")
-           (lkb-pathname (parent-directory) "grule-types.tdl")
-           (lkb-pathname (parent-directory) "types.tdl"))
+           (lkb-pathname (parent-directory) "semantics-spanish.tdl")
+           (lkb-pathname (parent-directory) "semantics-textbook.tdl")
+           (lkb-pathname (parent-directory) "lrule-types-spanish.tdl")
+           (lkb-pathname (parent-directory) "lrule-types-textbook.tdl")
+           (lkb-pathname (parent-directory) "grule-types-spanish.tdl")
+           (lkb-pathname (parent-directory) "grule-types-textbook.tdl")
+           (lkb-pathname (parent-directory) "types-textbook.tdl")
+           (lkb-pathname (parent-directory) "types-spanish.tdl"))
      (lkb-pathname (this-directory) "settings.lsp"))
 (read-tdl-lex-file-aux
-     (lkb-pathname (parent-directory) "lexicon.tdl"))
-(read-tdl-grammar-file-aux 
-	(lkb-pathname (parent-directory) "grules.tdl"))
-(read-morph-file-aux (lkb-pathname (this-directory) "inflr.tdl"))
-(read-tdl-psort-file-aux 
-          (lkb-pathname (parent-directory) "roots.tdl"))
-(read-tdl-lex-rule-file-aux
-          (lkb-pathname (parent-directory) "lrules.tdl"))
-(read-tdl-parse-node-file-aux 
-          (lkb-pathname (parent-directory) "parse-nodes.tdl"))
+     (list  (lkb-pathname (parent-directory) "lexicon-spanish.tdl")
+     	    (lkb-pathname (parent-directory) "lexicon-textbook.tdl")))
+;(read-cached-lex-if-available
+;     (lkb-pathname (parent-directory) "lexicon-spanish.tdl")
+;     (lkb-pathname (parent-directory) "lexicon-textbook.tdl"))
+(read-tdl-grammar-file-aux (lkb-pathname (parent-directory) "grules-spanish.tdl"))
+(read-tdl-grammar-file-aux (lkb-pathname (parent-directory) "grules-textbook.tdl"))
+;(read-tdl-grammar-file-aux 
+;      (list (lkb-pathname (parent-directory) "grules-spanish.tdl")
+;	    (lkb-pathname (parent-directory) "grules-textbook.tdl")))
+;(read-morph-file-aux
+;      (list  (lkb-pathname (this-directory) "inflr-spanish.tdl")
+;             (lkb-pathname (this-directory) "inflr-textbook.tdl")))
+(read-morph-file-aux (lkb-pathname (this-directory) "inflr-spanish.tdl"))
+(read-morph-file-aux (lkb-pathname (this-directory) "inflr-textbook.tdl"))
+(read-tdl-psort-file-aux (lkb-pathname (parent-directory) "roots-spanish.tdl"))
+(read-tdl-psort-file-aux (lkb-pathname (parent-directory) "roots-textbook.tdl"))
+;(read-tdl-psort-file-aux 
+;      (list   (lkb-pathname (parent-directory) "roots-spanish.tdl")
+;              (lkb-pathname (parent-directory) "roots-textbook.tdl")))
+(read-tdl-lex-rule-file-aux (lkb-pathname (parent-directory) "lrules-spanish.tdl"))
+(read-tdl-lex-rule-file-aux (lkb-pathname (parent-directory) "lrules-textbook.tdl"))
+;(read-tdl-lex-rule-file-aux
+;       (list  (lkb-pathname (parent-directory) "lrules-spanish.tdl")
+;          (lkb-pathname (parent-directory) "lrules-textbook.tdl")))
+(read-tdl-parse-node-file-aux (lkb-pathname (parent-directory) "parse-nodes.tdl"))
+;(read-tdl-parse-node-file-aux (lkb-pathname (parent-directory) "parse-nodes-spanish.tdl"))
+;(read-tdl-parse-node-file-aux (lkb-pathname (parent-directory) "parse-nodes-textbook.tdl"))
+;(read-tdl-parse-node-file-aux 
+;      (list  (lkb-pathname (parent-directory) "parse-nodes-spanish.tdl")
+;             (lkb-pathname (parent-directory) "parse-nodes-textbook.tdl")))
 
 ; (time (batch-check-lexicon))
 
