@@ -124,6 +124,16 @@
 
 (defvar *morph-records* nil)
 
+;;;
+;;; keep track of lexical items used in each parse: whenever we use the same
+;;; lexical entry the second time, we better copy it first to avoid spurious
+;;; reentrancies.  this mechanism should suffice to remove a test in the parser
+;;; that currently checks for duplicates among the edges feeding into a rule.
+;;; --- come to think of it, this might also be useful in resetting temporary
+;;; pointers in feature structures that are part of the grammar ...
+;;;
+(defvar *lexical-entries-used* nil)
+
 ;;; Agenda stuff - the agenda is represented as a heap (as in of Cormen,
 ;;; Leiserson, and Rivest).  The heap is a tree stored in an array: the car of
 ;;; each array element is its key and the cdr is the value.
@@ -279,6 +289,7 @@ Setting *first-only-p* to nil")
 	  (*contemplated-tasks* 0) (*filtered-tasks* 0)
           (*parser-rules* (get-matching-rules nil nil))
           (*parser-lexical-rules* (get-matching-lex-rules nil))
+          (*lexical-entries-used* nil)
           (*minimal-vertex* 0)
           (*maximal-vertex* (length user-input))
           ;;
@@ -441,18 +452,23 @@ Setting *first-only-p* to nil")
 				(mhistory-new-spelling (car history)))))
 
 (defun get-senses (stem-string)
-  (let* (#+:ignore (*safe-not-to-copy-p* nil)
-         (entries (get-unexpanded-lex-entry stem-string)))
-    (for entry in entries
+  (let* (#+:ignore (*safe-not-to-copy-p* nil))
+    (for entry in (get-unexpanded-lex-entry stem-string)
          filter
-         (if (not (cdr (lex-or-psort-orth entry)))
-             ;; exclude multi-words
-             (let* ((id (lex-or-psort-id entry))
-                    (expanded-entry
-                     (get-psort-entry id)))
-               (when expanded-entry
-                 (cons id 
-		       (lex-or-psort-full-fs expanded-entry))))))))
+         (when (not (cdr (lex-or-psort-orth entry)))
+           ;; exclude multi-words
+           (let* ((id (lex-or-psort-id entry))
+                  (expanded-entry (get-psort-entry id))
+                  (tdfs (when expanded-entry 
+                          (lex-or-psort-full-fs expanded-entry))))
+             (when tdfs
+               (cons id
+                     (cond
+                      ((smember tdfs *lexical-entries-used*)
+                       (copy-tdfs-completely tdfs))
+                      (t 
+                       (push tdfs *lexical-entries-used*)
+                       tdfs)))))))))
 
 ;;; get-multi-senses has to return a structure
 
