@@ -29,25 +29,26 @@
 (defparameter *last-type-name* '*top*)
 
 (defun show-type-tree nil
-  (multiple-value-bind (type show-all-p)
-      (ask-user-for-type nil '("Show all types?" . :check-box))
+  (multiple-value-bind (type show-all-p ignore-limit-p)
+      (ask-user-for-type nil '(("Show all types?" . :check-box)
+			       ("Ignore 300 descendant limit" . :check-box)))
     (when type
-      (let ((type-entry (get-type-entry type)))
-        (when (and type-entry 
-                   (if (> (length (type-descendants type-entry)) 300)
-                       (lkb-y-or-n-p 
-                        "Large hierarchy may be slow to display.  Go ahead?")
-                     t))
-          (create-type-hierarchy-tree type nil show-all-p))))))
+      (if
+          (or ignore-limit-p
+	      (< (length (type-descendants (get-type-entry type))) 300))
+	  (create-type-hierarchy-tree type nil show-all-p)
+	(show-message-window 
+	 (format nil "Type has ~A descendants, display stopped~%Use check box to override" 
+		 (length (type-descendants (get-type-entry type)))))))))
+
 
 
 ;;; "Type spec" show-type-spec
 (defun show-type-spec nil
-   (let* ((type (ask-user-for-type))
-         (type-entry (if type (get-type-entry type))))
-      (when type-entry 
+   (let ((type (ask-user-for-type)))
+      (when type
          (display-type-in-tree type t)
-         (show-type-spec-aux type type-entry))))
+         (show-type-spec-aux type (get-type-entry type)))))
 
 (defun show-type-spec-aux (type type-entry)
    (let ((*type-fs-display* t))
@@ -161,19 +162,20 @@
   (let ((res
          (with-package (:lkb)
            (ask-for-lisp-movable "Current Interaction" 
-             `((,(or qstring "Type?") . ,*last-type-name*)
-               ,@(if check-box-spec `(,check-box-spec)))
+             (cons (cons (or qstring "Type?") *last-type-name*)
+                   check-box-spec)
              150 *type-names*))))
       (when res
         (let ((type (car res))
-              (show-all-p (cadr res)))
+              (check-1-p (cadr res))
+	      (check-2-p (caddr res)))
           (eval-possible-leaf-type *leaf-types* type)
           (let ((type-entry (get-type-entry type)))
             (unless type-entry
                (format t "~%Type ~A is not defined" type)
-               (setf type (ask-user-for-type)))
+               (setf type (ask-user-for-type qstring check-box-spec)))
             (when type (setf *last-type-name* type))
-            (values type show-all-p))))))
+            (values type check-1-p check-2-p))))))
 
 
 ;;; display-fs is in outputfs.lsp
