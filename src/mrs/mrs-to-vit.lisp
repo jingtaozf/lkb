@@ -442,6 +442,26 @@ because of the likelyhood of changes in the grammar.
         (format t "~%"))
       vit))))
 
+;; Sends output from a Unix command to an arbitrary stream.  Unlike
+;; run-shell-command, this version can send the output to a CLIM
+;; window.
+
+(defun run-command (command &optional (stream *standard-output*))
+  (multiple-value-bind (output error process)
+      (excl::run-shell-command command 
+			       :input nil 
+			       :output :stream 
+			       :error-output :output 
+			       :wait nil)
+    (declare (ignore error))
+    (unwind-protect
+        (loop 
+	    as line = (read-line output nil)
+	    until (null line)
+	    do (write-line line stream))
+      (sys:os-wait nil process))))
+
+
 (defun check-vit (vit &optional (as-string nil) (stream *standard-output*))
   (with-open-file (vit-out "~/tmp/vitcheck" :direction :output
 	                                    :if-exists :supersede)
@@ -451,7 +471,7 @@ because of the likelyhood of changes in the grammar.
       (write-vit vit-out vit))
     (format vit-out ",vitCheck(V).~%~%halt.~%"))
   (excl::run-shell-command "cd /eo/e1/vm2/vitADT/lib/Vit_Adt;/opt/quintus/bin3.2/sun4-5/prolog < ~/tmp/vitcheck" :output "~/tmp/vitout" :if-output-exists :supersede :error-output "~/tmp/viterror" :if-error-output-exists :supersede)
-  (excl::run-shell-command "tail +56 ~/tmp/viterror | tail -r | tail +2 | tail -r" :output stream)
+  (run-command "tail +56 ~/tmp/viterror | tail -r | tail +2 | tail -r"  stream)
   (format stream "~%"))
 
 (defun horrible-hack-2 (vit)
