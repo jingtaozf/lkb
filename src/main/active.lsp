@@ -937,6 +937,55 @@
 (defparameter *unpacking-failure-paths* (make-hash-table :test #'equal))
 
 #+:packing
+(defun explode! (edges adjuncts)
+  (append
+   edges
+   (loop
+       for active in adjuncts
+       for atdfs = (edge-dag active)
+       for path = (first (g-edge-needed active))
+       for forwardp = (first (edge-children active))
+       for new = 
+         (loop
+             for passive in edges
+             for ptdfs = (edge-dag passive)
+             for result = (unless (logtest (g-edge-rels-covered active)
+                                           (g-edge-rels-covered passive))
+                            (with-unification-context (ignore)
+                              (let ((result (yadu! atdfs ptdfs path)))
+                                (when result
+                                  (restrict-and-copy-tdfs result)))))
+             when result collect 
+               (make-g-edge 
+                :id (next-edge :unpack)
+                :rule (edge-rule active) :dag result
+                :category (indef-type-of-tdfs result)
+                :children (if forwardp
+                            (append (loop
+                                        for foo in (edge-children active)
+                                        when (listp foo) append foo
+                                        else collect foo)
+                                    (list passive))
+                            (cons passive (rest (edge-children active))))
+                :leaves (let ((foo (loop
+                                       for foo in (edge-leaves active)
+                                       append foo)))
+                          (if forwardp
+                            (append foo (edge-leaves passive))
+                            (append (edge-leaves passive) foo)))
+                :lex-ids (let ((foo (loop
+                                        for foo in (edge-lex-ids active)
+                                        append foo)))
+                           (if forwardp
+                             (append foo (edge-lex-ids passive))
+                             (append (edge-lex-ids passive) foo)))
+                :lexemes (append (g-edge-lexemes active) 
+                                 (g-edge-lexemes passive))
+                :rels-covered (logior (g-edge-rels-covered active)
+                                      (g-edge-rels-covered passive))))
+       when new append (explode! new adjuncts))))
+
+#+:packing
 (defun unpack-edge! (id edge &optional insidep)
   #+:fdebug
   (clrhash *unpacking-failure-paths*)
@@ -944,11 +993,12 @@
              #+:idebug
              (format
               t
-              "instantiate(): (~d < ~{~d~^ ~}~%"
+              "~&instantiate(): ~d < ~{~d~^ ~} [~a of ~a]~%"
               (edge-id edge)
               (loop
                   for child in children
-                  collect (edge-id child)))
+                  collect (edge-id child))
+              i n)
              ;;
              ;; re-use `foo' slot to keep local cache of how this edge can be
              ;; unfolded record failure, where appropriate, too. 
@@ -976,20 +1026,27 @@
                        with result = (rule-full-fs rule)
                        with leaves = nil
                        with lex-ids = nil
-                       with rels = 0
+                       with rels = #+:mrs
+                                   (if (mrs::found-rule-p rule) 
+                                     (mrs::found-rule-main-rels rule) 
+                                     0)
+                                   #-:mrs
+                                   0
                        with lexemes = nil
                        for path in paths
                        for child in children 
-                       for tdfs = (or (edge-odag child) (edge-dag child))
-                       when (g-edge-p child) do
-                         (setf rels (logior rels (g-edge-rels-covered child)))
-                         (setf lexemes (append lexemes (g-edge-lexemes child)))
+                       for tdfs = (edge-dag child)
+                       when (logtest rels (g-edge-rels-covered child))
+                       do (setf result nil)
                        while result do
                          (setf leaves (append leaves (edge-leaves child)))
                          (setf lex-ids (append lex-ids (edge-lex-ids child)))
                          (setf result (yadu! result tdfs path))
+                       when (g-edge-p child) do
+                         (setf rels (logior rels (g-edge-rels-covered child)))
+                         (setf lexemes (append lexemes (g-edge-lexemes child)))
                        finally
-                         (when result
+                         (when result 
                            (setf result (restrict-and-copy-tdfs result)))
                          (return
                            (cond
@@ -997,13 +1054,16 @@
                              (setf (aref cache i)
                                (if (g-edge-p edge)
                                  (make-g-edge
-                                  :id (next-edge) :rule rule :dag result
+                                  :id (next-edge :unpack) 
+                                  :rule rule :dag result
                                   :category (indef-type-of-tdfs result)
                                   :children children 
                                   :leaves leaves :lex-ids lex-ids
+                                  :index (g-edge-index edge)
                                   :rels-covered rels :lexemes lexemes)
                                  (make-edge
-                                  :id (next-edge) :rule rule :dag result
+                                  :id (next-edge :unpack) 
+                                  :rule rule :dag result
                                   :category (indef-type-of-tdfs result)
                                   :from (edge-from edge) :to (edge-to edge)
                                   :children children 
@@ -1021,7 +1081,65 @@
                              nil))))))))))
 
     (let ((children (edge-children edge))
-          (morphology (edge-morph-history edge)))
+          (morphology (edge-morph-history edge))
+          (adjuncts 
+           ;;
+           ;; adjoined modifiers may themselves be packed; for now, unpack them
+           ;; before attempting to insert them into our trees; the caching, we
+           ;; believe, we take care of the combinatorics, such that there is no
+           ;; expected gain in postponing modifier unpacking into another phase
+           ;; --- unless we somehow ended up building large numbers of trees
+           ;; that ultimately fail and were otherwise unneeded; after an hour
+           ;; or so over coffee (at Frederik), neither john nor i expect that
+           ;; to be the case, though.                          (15-dec-03; oe)
+           ;;
+           ;; _fix_me_
+           ;; for now, we assume modifier (active) edges are exactly binary;
+           ;; the rest of the generator rather strongly makes that assumption
+           ;; already.  in general, unpack-edge!() should be able to unpack
+           ;; active edges too, however.                       (15-dec-03; oe)
+           ;;
+           #+:null
+           (when (consp (edge-baz edge)) (edge-baz edge))
+           (loop
+               for edge in (when (consp (edge-baz edge)) (edge-baz edge))
+               for rule = (edge-rule edge)
+               for rtdfs = (rule-full-fs rule)
+               for path = (first (rule-daughters-apply-order rule))
+               for forwardp = (first (edge-children edge))
+               for new = (unpack-edge! 
+                          id 
+                          (if forwardp
+                            (first (edge-children edge))
+                            (second (edge-children edge))))
+               append
+                 (loop
+                     with *deleted-daughter-features* = nil
+                     for child in new
+                     for tdfs = (edge-dag child)
+                     for result = (with-unification-context (ignore)
+                                    (let ((result (yadu! rtdfs tdfs path)))
+                                      (when result
+                                        (restrict-and-copy-tdfs result))))
+                     when result collect
+                       (make-g-edge
+                        :id (next-edge :unpack)
+                        :rule (edge-rule edge) :dag result
+                        :category (indef-type-of-tdfs result)
+                        :needed (g-edge-needed edge)
+                        :children (if forwardp
+                                    (list child nil)
+                                    (list nil child))
+                        :leaves (if forwardp
+                                  (list (edge-leaves child) nil)
+                                  (list nil (edge-leaves child)))
+                        :lex-ids (if forwardp
+                                   (list (edge-lex-ids child) nil)
+                                   (list nil (edge-lex-ids child)))
+                        :lexemes (g-edge-lexemes child)
+                        :rels-covered (logior (g-edge-rels-covered edge)
+                                              (g-edge-rels-covered child)))))))
+  
       (cond
        ;;
        ;; ignore genuinely frozen edges; now that we are into the unpacking
@@ -1036,7 +1154,7 @@
         nil)
        ;;
        ;; unless we are inside of a recursive call on this edge already, make
-       ;; sure we recurse on all packings node and accumulate results.
+       ;; sure we recurse on all packed nodes and accumulate results.
        ;;
        ((and (null insidep) (or (edge-packed edge) (edge-equivalent edge)))
         (nconc (unpack-edge! id edge t)
@@ -1052,13 +1170,15 @@
        ;; case where we have children.
        ;;
        (morphology
-        (loop
-            with decompositions = (unpack-edge! id morphology)
-            with n = (length decompositions)
-            for decomposition in decompositions
-            for i from 0
-            for instantiation = (instantiate edge (list decomposition) i n)
-            when instantiation collect instantiation))
+        (explode! 
+         (loop
+             with decompositions = (unpack-edge! id morphology)
+             with n = (length decompositions)
+             for decomposition in decompositions
+             for i from 0
+             for instantiation = (instantiate edge (list decomposition) i n)
+             when instantiation collect instantiation)
+         adjuncts))
        ;;
        ;; the (default) recursive case: for each daughter, unfold it and build
        ;; list of unfolding results, one per daughter.  then compute all ways
@@ -1067,20 +1187,30 @@
        ;; instantiate() to support cache maintenance.
        ;;
        (children
-        (loop
-            with daughters = (loop
-                                 for edge in children
-                                 collect (unpack-edge! id edge))
-            with decompositions = (cross-product daughters)
-            with n = (length decompositions)
-            for decomposition in decompositions
-            for i from 0
-            for instantiation = (instantiate edge decomposition i n)
-            when instantiation collect instantiation))
+        (explode!
+         (loop
+             with daughters = (loop
+                                  for edge in children
+                                  collect (unpack-edge! id edge))
+             with decompositions = (cross-product daughters)
+             with n = (length decompositions)
+             for decomposition in decompositions
+             for i from 0
+             for instantiation = (instantiate edge decomposition i n)
+             when instantiation collect instantiation)
+         adjuncts))
        ;;
        ;; at the leafs of the tree, terminate the recursion.
        ;;
-       (t (list edge))))))
+       (t 
+        (when (edge-odag edge) (setf (edge-dag edge) (edge-odag edge)))
+        (explode! (list edge) adjuncts))
+       #+:null
+       (t 
+        (let ((new (if (g-edge-p edge) (copy-g-edge edge) (copy-edge edge))))
+          (setf (edge-id new) (next-edge :unpack))
+          (setf (edge-dag new) (or (edge-odag new) (edge-dag new)))
+          (explode! (list new) adjuncts)))))))
 
 #+:test
 (let ((*active-parsing-p* t)
@@ -1091,7 +1221,8 @@
   (reset-packings)
   (time (multiple-value-setq (contemplated filtered
                               executed successful)
-          (do-parse-tty "so we will have an evening there to go over things or relax.")))
+          (do-parse-tty 
+           "so we will have an evening there to go over things or relax.")))
   (format
    t
    "~&~d trees; (=~d, >~d, <~d) packings; ~d readings; ~d [~d] edges~%"
@@ -1106,6 +1237,9 @@
           sum (length (unpack-edge! nil edge))))
      (length *parse-record*))
    (tsdb::get-field :pedges (summarize-chart))
-   (unless (null *parse-record*)
-     (count-nodes (first *parse-record*) 
-                  :packingp *chart-packing-p* :chartp t))))
+   (loop
+       with mark = (gensym)
+       for edge in *parse-record*
+       sum (count-nodes
+            edge :mark mark
+            :packingp *chart-packing-p* :chartp t))))
