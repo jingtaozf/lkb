@@ -837,11 +837,10 @@ proc local_balloon {balloon action {text ""}} {
 
 proc find_graph_point {action graph button x y balloon} {
   if {[$graph element closest $x $y point -halo 5]} {
-    set element [string range $point(name) 2 end];
+    set i [string range $point(name) 2 end];
     regsub -all "\\." $graph "_" name
-    set ids "v${name}_ids$element"
-    upvar #0 $ids vector
-    if {[info exists vector]} {
+    set ids "v${name}_ids$i"
+    if {![catch {$ids variable vector}]} {
       if {$action == "post"} {
         set x [format "%.2f" $point(x)];
         set y [format "%.2f" $point(y)];
