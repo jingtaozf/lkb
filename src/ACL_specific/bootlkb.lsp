@@ -86,7 +86,8 @@
 	 ("ACL_specific" "emacs")	; dialect specific - emacs interface
 	 ("ACL_specific" "parseout")	; some dialect specific - parse tree fns
          ("ACL_specific" "chartout") ; some dialect specific
-         ("main" "morph")       ; generic CL
+	 ("ACL_specific" "listout") ; some dialect specific
+	 ("main" "morph")		; generic CL
          ("ACL_specific" "dialog")
 	 ("ACL_specific" "tree")		; some dialect specific - type hierarchy fns
 	 ("ACL_specific" "compare") ; some dialect specific - tree bank tool
