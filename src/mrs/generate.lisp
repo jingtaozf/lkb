@@ -464,7 +464,9 @@
                         (list new-edge)))))))))
 
 
-(defun gen-filter-root-edges (edges start-symbols)
+(defun gen-filter-root-edges (edges &optional (start-symbols *start-symbol*))
+
+  (unless (listp start-symbols) (setf start-symbols (list start-symbols)))
   (loop
       with roots = (loop
                        for start-symbol in start-symbols
@@ -601,14 +603,15 @@
     (unless index (return-from gen-chart-add-inactive nil))
     ;; did we just find a result?
     (when *gen-first-only-p*
-      (let ((complete
+      (let* ((complete
               (delete-if-not
-                 #'(lambda (u)
-                     (and (gen-chart-check-covering u input-rels)
-                          (gen-chart-check-compatible u input-sem)))
-                 (if *gen-packing-p* (unpack-edge! nil edge) (list edge)))))
-        (when complete
-           (setq *gen-record* complete)
+               #'(lambda (u)
+                   (and (gen-chart-check-covering u input-rels)
+                        (gen-chart-check-compatible u input-sem)))
+               (if *gen-packing-p* (unpack-edge! nil edge) (list edge))))
+             (sentential (gen-filter-root-edges complete)))
+        (when sentential
+           (setq *gen-record* sentential)
            (throw 'first t))))
     ;; see if this new inactive edge can extend any existing active edges
     (mapc
