@@ -201,13 +201,7 @@
      "~&[~a] browse-tree(): `~a' ~@[(~a) ~]--- item # ~a~%"
      (current-time :long :short) data gold i-id)
 
-    (let* (;;
-           ;; _fix_me_
-           ;; disable reconstruct cache, so that we can handle generator edges,
-           ;; where shared edges may correspond to distinct string positions.
-           ;; this requires a real solution!                   (15-dec-03; oe)
-           #-:null
-           (*reconstruct-cache* (make-hash-table :test #'eql))
+    (let* ((*reconstruct-cache* (make-hash-table :test #'eql))
            (lkb::*tree-update-match-hook* #'update-match-p)
            (lkb::*tree-automatic-update-p* 
             (when gold lkb::*tree-automatic-update-p*))

@@ -354,3 +354,13 @@
                *chart-generation-counter*))
       (show-chart)
     (lkb-beep)))
+
+(define-parse-tree-frame-command 
+    (com-compare-from-tree :name "Compare" :menu t)
+    ()
+  
+  (clim:with-application-frame (frame)
+    (let ((edges (loop
+                     for tree in (parse-tree-frame-trees frame)
+                     collect (prtree-edge tree))))
+      (compare-parses edges))))

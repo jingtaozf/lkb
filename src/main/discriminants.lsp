@@ -8,6 +8,8 @@
 
 (def-lkb-parameter *tree-discriminants-mode* :classic)
 
+(def-lkb-parameter *tree-discriminants-separator* " || ")
+
 (def-lkb-parameter *tree-results-show* :tree)
 
 (defvar *tree-discriminants-chart* nil)
@@ -101,7 +103,22 @@
   
   (if (eq mode :classic)
     (let* ((tdfs (edge-dag edge))
-           (yield (format nil "~{~a~^ ~}" (edge-leaves edge)))
+           (yield 
+            (if (edge-children edge)
+              (format 
+               nil 
+               "~{~a~^~a~}" 
+               (loop
+                   with children = (edge-children edge)
+                   with last = (first (last children))
+                   for edge in children
+                   nconc 
+                     (list 
+                      (format nil "~{~a~^ ~}" (edge-leaves edge))
+                      (if (eq edge last)
+                        ""
+                        *tree-discriminants-separator*))))
+              (format nil "~{~a~^ ~}" (edge-leaves edge))))
            (label (when *tree-use-node-labels-p* (edge-label edge)))
            (rule (edge-rule edge))
            (start (edge-from edge))

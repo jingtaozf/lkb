@@ -13,7 +13,7 @@
 ;;; - Shift and Ctrl accelerators on `Next' et al.;
 ;;; - define equivalence classes of discriminants (possibly based on equality
 ;;;   of in and out sets), so that `yes' selections can propagate;
-;;; - group equivalent discrimnators somehow;
+;;; - group equivalent discriminators somehow;
 ;;; - add info bar: show numbers of in and out trees per discriminant
 ;;; - bug fix: identify multiple applications of unary rule at same position;
 ;;; - investigate lack of edge for leafs in tree in interactive mode;
@@ -49,8 +49,8 @@
   record
   ink)
 
-(defun compare-parses ()
-  (when *parse-record* 
+(defun compare-parses (&optional (edges *parse-record*))
+  (when (eq edges *parse-record*)
     ;;
     ;; fix up edges in chart: one fine day, we should really simplify the chart
     ;; set-up: there are way too many structures, for no apparent reason ...
@@ -73,9 +73,9 @@
               for edge = (chart-configuration-edge configuration)
               do
                 (setf (edge-from edge) begin)
-                (setf (edge-to edge) end)))
-                            
-    (mp:run-function "Tree Comparison" #'compare *parse-record*)))
+                (setf (edge-to edge) end))))
+  
+  (when edges (mp:run-function "Tree Comparison" #'compare edges)))
 
 (defun compare (edges &key (runp t))
   (let ((frame (if runp
@@ -368,7 +368,7 @@
     :initform *tree-display-threshold* :accessor compare-frame-threshold)
    (tstream :initform nil :accessor compare-frame-tstream)
    (chart :initform nil :accessor  compare-frame-chart)
-   (comment :initform nil :accessor compare-frame-comment)
+   (comment :initform " " :accessor compare-frame-comment)
    (version :initform nil :accessor compare-frame-version)
    (gversion :initform nil :accessor compare-frame-gversion)
    (gactive :initform nil :accessor compare-frame-gactive)
