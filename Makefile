@@ -15,6 +15,8 @@ update:
 	  ${CVS} update -P -d -R; \
 	  cd ${ROOT}/lkb; \
 	  ${CVS} update -P -d -R; \
+	  ${CVS} commit -f -m "auto-update for build" \
+            ${ROOT}/lkb/src/version.lsp; \
 	  ${MAKE} all; \
 	) 2>&1 | ${TEE} /tmp/build.${USER}
 
@@ -167,8 +169,8 @@ spanish:
 # [incr tsdb()]
 #
 
-itsdb: itsdb_binaries itsdb_libraries itsdb_source itsdb_data \
-       itsdb_documentation
+itsdb: itsdb_binaries itsdb_libraries itsdb_source \
+       itsdb_data itsdb_trees itsdb_documentation
 
 itsdb_binaries:
 	( \
@@ -226,10 +228,23 @@ itsdb_data:
 	      --exclude=src/tsdb/skeletons/english/vm31 \
 	      --exclude=src/tsdb/skeletons/english/vm32 \
 	      --exclude=src/tsdb/skeletons/yy \
+	      --exclude=src/tsdb/home/trees \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      src/tsdb/skeletons src/tsdb/home; \
 	)
+
+itsdb_trees: itsdb_vm32
+
+itsdb_vm32:
+	( \
+	  cd ${ROOT}/lkb; \
+	  tar Svczf ${TARGET}/${DATE}/itsdb_vm32.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" \
+	      src/tsdb/home/trees/vm32; \
+	)
+
 
 itsdb_documentation:
 	( \

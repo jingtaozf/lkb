@@ -23,7 +23,6 @@
 (require :srecord)
 (require :tpl-debug)
 (require :tpl-proc)
-(require :defsys)
 (require :foreign)
 (require :defftype)
 (require :process)
