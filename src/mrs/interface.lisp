@@ -23,8 +23,11 @@
                      (cl-user::parse-tree-structure edge))
              (treat-mrs mrs t stream))))))
 
+(defvar *mrs-debug* nil)
+
 (defun treat-mrs (mrs-struct simplep stream)
   (format stream "~%~A " cl-user::*sentence*)
+  (setf *mrs-debug* mrs-struct)
   (cond (*mrs-to-vit*
          (mrs-to-vit-convert mrs-struct t stream))
         (*mrs-scoping*

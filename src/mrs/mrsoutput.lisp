@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.23  1999/06/19 18:15:17  danf
+;; Revised 'determine-variable-type' again
+;;
 ;; Revision 1.22  1999/06/18 00:20:24  aac
 ;; avoid running scoping machinery when we have a fragment, change extract-mrs to take a single edge
 ;;
@@ -146,22 +149,33 @@
 (defun remove-trailing-periods (sentence-string)
   (string-right-trim '(#\Space #\.) sentence-string))
 
+(defvar *synlabel* nil)
+(defvar *key-fs* nil)
+
 (defun extract-mrs (parse &optional generator-p)
   (setf *fragment-p* nil)
+  (setf *synlabel* nil)
   (let* ((fs (get-parse-fs parse))
          ;; get-parse-fs also sets *fragment-p*
          ;; which controls whether the scoping code is run
+         (synlabel (get-category-label parse))
+         (key-fs (if (mrs-language '(english))
+                     (path-value fs *key-handel-path*)))
          (sem-fs (path-value fs *initial-semantics-path*)))
     (if (is-valid-fs sem-fs)
-        (construct-mrs sem-fs nil generator-p))))
+        (progn
+          (setf *key-fs* key-fs)
+          (setf *synlabel* synlabel)
+          (construct-mrs sem-fs nil generator-p)))))
 
 (defun is-fragment-fs (fs)
   (and *root-path* *false-type*
   (let ((root-value (path-value fs *root-path*)))
     (if root-value 
-        (or (eql (fs-type root-value) *false-type*)
-            (and (listp (fs-type root-value))
-                 (eql (car (fs-type root-value)) *false-type*)))))))
+        (not
+         (or (eql (fs-type root-value) *true-type*)
+             (and (listp (fs-type root-value))
+                  (eql (car (fs-type root-value)) *true-type*))))))))
   
 (defun mrs-language (languages)
   (member *mrs-for-language* languages))
@@ -181,42 +195,6 @@
 (defvar *segment-id* nil)
 (defvar *short-test-vit* nil)
 (defvar *mrs-wg-liszt* nil)
-
-;;; called from VM-Parser
-;;; AAC - not called for CSLI version of PAGE or the LKB
-;;; looks like it's not used, since the current code has
-;;; an unbound variable, but put the fragment check call in
-;;; just in case
-
-#-(or :lkb :lingo)
-(defun fs2vit (fs sid)
-  (setf *segment-id* sid)
-  (let* #-pagelite
-    ((cp (copy fs))
-     (sem-fs  (path-value cp *initial-semantics-path*))
-     (fragment-p (is-fragment-fs cp))
-     (dnf (if (is-valid-fs sem-fs) 
-              (ndnf sem-fs)))
-     (fs1 (cond ((or (consp dnf)
-                     (unify::disjunction-node-p dnf))
-                 (get-first-real-alter dnf))
-                (t dnf)))
-     (mrs (if (is-valid-fs fs1)
-              (construct-mrs fs1))))
-    #+pagelite
-    ((fs1 (path-value cfs *initial-semantics-path*))
-     (fragment-p (is-fragment-fs cfs))
-     (mrs (if (is-valid-fs fs1)
-              (construct-mrs fs1))))
-    (setf *fragment-p* fragment-p)
-    (if mrs
-        (or (mrs-to-vit-convert mrs nil)
-            (make-vit :utterance-id
-                      (make-p-term :predicate "vitID"
-                                   :args (list *segment-id* nil))))
-      (make-vit :utterance-id
-                (make-p-term :predicate "vitID"
-                             :args (list *segment-id* nil) )))))
 
 ;;; it useful to store the variable-generator for VIT conversion
 
@@ -247,7 +225,12 @@
               (h-cons-fs (path-value fs *psoa-rh-cons-path*))
               (message-fs (path-value fs *psoa-message-path*))
               (wgliszt-fs (path-value fs *psoa-wgliszt-path*))
-              (key-h-fs (path-value fs *key-handel-path*))
+              (key-h-fs (if (mrs-language '(english))
+                            *key-fs*
+                          ;; KEY isn't in semantics
+                          ;; this is just for VM main label
+                          ;; so hack it
+                          (path-value fs *key-handel-path*)))
               )
           (make-psoa
            :handel (create-variable (if (mrs-language '(english))

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.15  1999/06/19 18:17:18  danf
+;; Added conj-ind-type
+;;
 ;; Revision 1.14  1999/06/18 00:20:23  aac
 ;; avoid running scoping machinery when we have a fragment, change extract-mrs to take a single edge
 ;;
@@ -371,3 +374,4 @@ printing routines -  convenient to make this global to keep printing generic")
 (defvar *root-path* nil)
 
 (defvar *false-type* nil)
+(defvar *true-type* nil)

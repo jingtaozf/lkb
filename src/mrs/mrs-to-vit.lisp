@@ -469,7 +469,20 @@
        (var-p (psoa-top-h mrs))
        (var-p (psoa-index mrs))))
 
+(defvar *mrs-to-vit-variables* nil)
+;;; memoizing conversion
+
+(defvar *extra-leqs* nil)
+
+(defvar *topvit* nil)
+
+(defvar *newmainlabel* nil)
+
 (defun mrs-to-vit (vitrified-mrs)
+  (setf *mrs-to-vit-variables* nil)
+  (setf *extra-leqs* nil)
+  (setf *topvit* nil)
+  (setf *newmainlabel* nil)
   ;;; first we produce all scoped structures, using the code in mrsresolve.lsp
   ;;; we also collect up all the var structures for the handels
   (when (check-instantiated-mrs vitrified-mrs)
@@ -526,30 +539,40 @@
             (set-up-cheap-hcons mrs-psoa)
             ;; sets globals for leqs
             (setf leqs (find-cheap-leqs mrs-psoa))))
-        (let* ((labels (if (or (not (var-p (psoa-handel mrs-psoa)))
+        (let* ((labels (if (or *fragment-p*
+                             ;;; top handels are holes if this
+                             ;;; is a fragment
+                               (not (var-p (psoa-handel mrs-psoa)))
                              (assoc (var-id (psoa-handel mrs-psoa)) label-vars))
                          label-vars
                          (push (list (var-id (psoa-handel mrs-psoa))) label-vars)))
-               (rels (psoa-liszt mrs-psoa))
-               (scope (construct-vit-scope equalities leqs labels))
-               (converted-rels (convert-mrs-rels-to-vit rels 
+               (mood nil))
+          (setf (vit-main-condition *current-vit*) 
+            (construct-main-label 
+             mrs-psoa
+             *current-vit* mood labels))
+          (when *newmainlabel*
+            (push *newmainlabel* labels))
+          (let* ((rels (psoa-liszt mrs-psoa))
+                (converted-rels (convert-mrs-rels-to-vit rels 
                                                         *current-vit* 
                                                         group-list labels))
 ;;; *group-members* is constructed as a side effect of converting rels
 ;;; in the english grammar the 'message' is included in liszt
-               (mood nil)
-               (groups (construct-vit-groups *group-members*)))
+                 (groups (construct-vit-groups *group-members*))
+                 (scope (construct-vit-scope 
+                         equalities 
+                         (append *extra-leqs* leqs) labels)))
           (declare (ignore converted-rels))
           (setf (vit-utterance-id *current-vit*) (construct-segment-description
-                                                  mrs-psoa)
-                (vit-main-condition *current-vit*) (construct-main-label 
-                                                    mrs-psoa
-                                                    *current-vit* mood labels)
-                (vit-scope *current-vit*) (append groups scope (vit-scope *current-vit*)))
+                                                  mrs-psoa))
+          (setf 
+              (vit-scope *current-vit*) 
+            (append groups scope (vit-scope *current-vit*)))
           (add-unbounds-to-vit *current-vit*)
           (convert-psoa-extras-to-vit (psoa-extras mrs-psoa) *current-vit* group-list labels)
           (values *current-vit*
-                  binding-sets))))))
+                  binding-sets)))))))
 
 (defun german-mrs-to-vit (mrs)
   (clear-temporary-dbs)
@@ -635,33 +658,41 @@
                                       :handel labels) res))))
          res)))
           
-;;; we can add an leq/eq-constraint mainlabel < tophandel if we like
-;;; at present the tophandel is regarded as a label instead as a hole
+
+;;; This is where the index is constructed, which is the thing that
+;;; needs most modification for fragments
 ;;; we also treat sentence mood (message) here
+
 (defun construct-main-label (mrs vit mood labels)
-  (let* ((tophandel (convert-mrs-val-to-vit (psoa-top-h mrs) labels))
+  (let* ((tophandel (convert-mrs-val-to-vit (psoa-top-h mrs) 
+                                            labels))
+         (tophandelnum (get-var-num (psoa-top-h mrs)))
+         (mainlabelnum 
+          (get-var-num (if (and (psoa-key-h mrs) 
+                                (mrs-language '(english)))
+                           (psoa-key-h mrs)
+                         (psoa-handel mrs))))
          (mainlabel (convert-mrs-val-to-vit (if (and (psoa-key-h mrs) 
                                                      (mrs-language '(english)))
                                                 (psoa-key-h mrs)
                                               (psoa-handel mrs)) labels))
          (index (convert-mrs-val-to-vit (psoa-index mrs) labels))
-         (tophole tophandel)
-;         (leq (make-p-term :predicate 'leq
-;                           :args (list mainlabel tophandel)))
          )
+    (unless (member tophandelnum labels)
+      (setf *topvit* tophandelnum))
+    (when (and *fragment-p* (mrs-language '(english)))
+      (setf mainlabel (calculate-fragment-main-label 
+                       mrs mainlabel mainlabelnum 
+                        tophandelnum *synlabel*)))
+    ;;; adds leqs as side-effect
     (cond ((and mood (= (length (p-term-args mood)) 2))
-;           (setf tophole (get-group-of-label (first (p-term-args mood))
-;                                             *group-members*))
            (push mood (vit-semantics vit)))
-;;          ((consp (vit-semantics vit))
-;;           (setf tophole (first (p-term-args (first (vit-semantics vit))))))
-          (t nil ; (setf tophole 
-             ; (intern (format nil "HH~A" (funcall *variable-generator*))))
+          (t nil 
              ))
-    (setf *bound-vit-vars* (union (list tophole mainlabel index) 
+    (setf *bound-vit-vars* (union (list tophandel mainlabel index) 
                                   *bound-vit-vars* :test #'equalp))
     (make-p-term :predicate 'index
-                 :args (list tophole mainlabel index))))
+                 :args (list tophandel mainlabel index))))
 
 ;;; for German I remove leq's with holes in first position (they should
 ;;; correspond to unbound holes for which no condition exists)
@@ -770,20 +801,24 @@
   ;;; i for everything else
   ;;; For conjunctions at least, we may have lists of variables
   ;;; we may also have constants
-  (cond ((listp val)
-         (for subval in val
-              collect (convert-mrs-val-to-vit subval labels)))
-        ((var-p val)
-         (cond ((is-handel-var val)
-                (convert-handel-to-vit val labels))
-               ((coord-var-p val)
-                (prepare-coordination-filter
-                 (fvpair-value 
-                  (find 'list (var-extra val) :key #'fvpair-feature))
-                 labels))
-               (t (make-vit-instance-var :id (var-id val)))))
-        ((is-top-type val) nil)
-        (t val)))
+  (or (cdr (assoc val *mrs-to-vit-variables*))
+      (let ((vit-var
+             (cond ((listp val)
+                    (for subval in val
+                         collect (convert-mrs-val-to-vit subval labels)))
+                   ((var-p val)
+                    (cond ((is-handel-var val)
+                           (convert-handel-to-vit val labels))
+                          ((coord-var-p val)
+                           (prepare-coordination-filter
+                            (fvpair-value 
+                             (find 'list (var-extra val) :key #'fvpair-feature))
+                            labels))
+                          (t (make-vit-instance-var :id (var-id val)))))
+                   ((is-top-type val) nil)
+                   (t val))))
+        (push (cons val vit-var) *mrs-to-vit-variables*)
+        vit-var)))
 
 (defun convert-handel-to-label (val)
   (if (var-p val)
@@ -1003,6 +1038,8 @@
        (let ((group (make-vit-label-var :id (car grstr)))
              (gmembers (cdr grstr)))
 	 (pushnew group *bound-vit-vars* :test #'equalp)
+         (when *topvit*
+             (push (cons (car grstr) *topvit*) *extra-leqs*))
 	 (for el in gmembers
 	      collect
 	      (make-p-term :predicate 'in_g :args (list el group))))))
@@ -1029,7 +1066,8 @@
   (make-p-term :predicate (fvpair-feature fv)
                :args (list (convert-mrs-val-to-vit (fvpair-value fv) labels))))
 
-(defun compute-mood-from-prosody (mrsrel pmood)
+(defun compute-mood-from-prosody (mrsrel &optional pmood)
+  ;; AAC - made second arg optional since it's getting called with one arg
   (when (rel-p mrsrel)
     (let* ((smood (rel-sort mrsrel))
 	   (pslist (assoc pmood *prosodic-syntactic-mood-table*)))
@@ -1174,3 +1212,29 @@
       (if (stringp val)
 	  (read-from-string val)
 	val))))
+
+
+;;; Preliminary fragment stuff
+
+
+(defun calculate-fragment-main-label (mrs oldmain oldmainnum 
+                                      topholenum synlabel)
+  (let ((scope-hole (find-scope-hole mrs)))
+    (cond ((and scope-hole
+                ;;; pronouns won't have a scopehole
+                (or (equal synlabel "DET") 
+                    (equal synlabel "NP")))
+           (let* ((new-var-num (funcall *variable-generator*))
+                  (new-var (make-vit-label-var :id new-var-num)))
+             (pushnew (cons new-var-num scope-hole) *extra-leqs*)
+             (setf *newmainlabel* (list new-var-num))
+             new-var))
+        (t (pushnew (cons oldmainnum topholenum) *extra-leqs*)
+           oldmain))))
+
+
+(defun find-scope-hole (mrs)
+  (dolist (rel (psoa-liszt mrs))
+    (when (is-quant-rel rel)
+      (return (get-scope-value rel)))))
+;; get-scope-value is in cheapscope.lisp

@@ -16,6 +16,14 @@
     (setf *fragment-p* (is-fragment-fs fs))
     fs))
 
+(defun get-category-label (edge)
+  ;;; takes the same input as get-parse-fs - returns a string
+  ;;; corresponding to the node label as used by the parse-tree
+  ;;; drawing system
+  (let ((edge-symbol (cl-user::make-new-parse-tree edge 1)))
+    (cl-user::get-string-for-edge edge-symbol)))
+
+
 (defun output-parse-tree (tree stream)
   (format stream "~A" tree))
 ;;; called from mrsfns.lsp
