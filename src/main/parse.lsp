@@ -1152,7 +1152,8 @@
   ;;; takes a top edge, returns a list of 
   ;;; lexical identifiers, unary-rule-list pairs
   (if (or (cdr (edge-lex-ids edge-rec))
-          (not (lexical-rule-p (edge-rule edge-rec))))
+          (and (rule-p (edge-rule edge-rec))
+               (not (lexical-rule-p (edge-rule edge-rec)))))
       (for child in (edge-children edge-rec)
            append
            (collect-parse-base child))
