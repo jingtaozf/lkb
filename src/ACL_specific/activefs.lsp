@@ -81,7 +81,8 @@
 			  :end-of-line-action :allow
 			  :end-of-page-action :allow
 			  :borders nil
-			  :background (clim:make-rgb-color 1 1 1)
+			  :background clim:+white+
+			  :foreground clim:+black+
 			  :display-time nil))))))
   (:layouts
    (default display)))
