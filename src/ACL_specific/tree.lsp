@@ -200,6 +200,7 @@
 (define-type-hierarchy-command (com-exit-tree :menu "Close")
     ()
   (setq *type-hier-frame* nil)
+  (unhighlight-type *standard-output*)
   (clim:frame-exit clim:*application-frame*))
 
 ;;
@@ -208,6 +209,7 @@
 
 (define-type-hierarchy-command (com-type-hier-menu)
     ((node 'hier-node :gesture :select))
+  (unhighlight-type *standard-output*)
   (let* ((type-entry (get-type-entry node))
          (type (type-name type-entry))
 	 (command (clim:menu-choose
@@ -269,6 +271,8 @@
 
 (defvar *needs-redisplay* nil)
 
+(defvar *type-selected* nil)
+
 (defun display-type-in-tree (node)
   (let* ((type-entry
 	  (or (get-type-entry node)
@@ -290,7 +294,8 @@
       (let* ((stream (clim:frame-standard-output *type-hier-frame*))
 	     (record (find-type stream type)))
 	(when record
-	  (scroll-to record stream))))))
+	  (scroll-to record stream)
+	  (highlight-type record stream))))))
 
 (defun unshrink-ancestors (type-entry top-type)
   ;; can't just use type-ancestors list since we have to stop at top-type arg
@@ -319,3 +324,19 @@
 	 (find-type-1 q stream type)))
    rec))
 
+;;; Show a highlighted type.
+
+(defun highlight-type (type stream)
+  (unhighlight-type stream)
+  (setq *type-selected* 
+    (clim:with-new-output-record (stream)
+      (clim:with-output-recording-options (stream :record t)
+	(multiple-value-bind (x1 y1 x2 y2)
+	    (clim:bounding-rectangle* 
+	     (clim:output-record-parent type))
+	  (clim:draw-rectangle* stream x1 y1 x2 y2 :
+				ink clim:+flipping-ink+ :filled t))))))
+
+(defun unhighlight-type (stream)
+  (when *type-selected*
+    (clim:erase-output-record *type-selected* stream )))

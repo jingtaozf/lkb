@@ -6,6 +6,8 @@
 ;;; Pembroke Street
 ;;; Cambridge, UK
 
+(in-package :user)
+
 ;;; Most of the functions in here are implementation specific
 ;;; This has been extensively modified for MCL
 
@@ -89,8 +91,7 @@
 
 (defun ask-for-strings-movable (title prompt-init-pairs 
 				&optional expected-width)
-  (declare (special *temp-result* *abort-query*)
-           (ignore expected-width))
+  (declare (special *temp-result* *abort-query*))
   (setf *abort-query* nil)
   (setf *temp-result* (loop for p-i-p in prompt-init-pairs
 			  collect (if (equal (cdr p-i-p) ":CHECK-BOX")
@@ -114,12 +115,13 @@
 			  (clim:accept 'string :stream stream
 				       :default 
 				       (elt *temp-result* ,(- count 1))
+				       :view '(clim:text-field-view :width ,expected-width)
 				       :prompt ,(car p-i-p))))))))
 	 
     (eval
      `(let ((stream t))
 	(restart-case
-	    ,(cons 'clim:accepting-values 
+	    ,(cons 'clim:accepting-values  
 		   (cons `(stream :own-window t 
 				  :label ,title
 				  :align-prompts :left)

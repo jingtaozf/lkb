@@ -21,6 +21,9 @@
 
 (import '(enable-type-interactions disable-type-interactions))
 
+(defpackage "MRS")
+(defpackage "MAIN")
+
 (eval-when (load eval)
 (excl:without-package-locks
 (progn 

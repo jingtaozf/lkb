@@ -4,7 +4,61 @@
 
 (in-package :user)
 
-;;; (show-chart)
+;;; Graphical display of generator chart (show-gen-chart) (show-gen-chart t)
+ 
+(defun show-gen-chart (&optional all-p) 
+  (let ((root (make-symbol "")))
+    (create-gen-chart-pointers root all-p)
+    (draw-chart-lattice root
+			(format nil "Generator Chart (~A edges)" 
+				(if all-p "all" "inactive"))
+			t)
+    root))
+ 
+ 
+(defun create-gen-chart-pointers (root all-p)
+  (let ((edge-symbols nil))
+    (dolist (entry *gen-chart*)
+      (dolist (e (cdr entry))
+	(push
+	 (list* (gen-chart-edge-id e)
+		(make-symbol (write-to-string (gen-chart-edge-id e)))
+		(gen-chart-edge-needed e))
+	 edge-symbols)))
+    (dolist (entry *gen-chart*)
+      (let ((chart-index (string-downcase (symbol-name (car entry)))))
+	(dolist (e (cdr entry))
+	  (let ((edge-symbol
+		 (cadr (assoc (gen-chart-edge-id e) edge-symbols))))
+	    (setf (get edge-symbol 'chart-edge-span)
+	      (if (gen-chart-edge-needed e)
+		  (concatenate 'string chart-index " A") chart-index))
+	    (setf (get edge-symbol 'chart-edge-contents) e)
+	    (if (gen-chart-edge-children e)
+		(dolist (c (gen-chart-edge-children e))
+		  (when c
+		    (push edge-symbol
+			  (get (cadr (assoc (gen-chart-edge-id c) edge-symbols))
+			       'chart-edge-descendents))))
+	      (push edge-symbol (get root 'chart-edge-descendents)))))))
+    (unless all-p
+      (dolist (pair edge-symbols)
+	(setf (get (cadr pair) 'chart-edge-descendents)
+	  (create-gen-chart-pointers-collapse
+	   (get (cadr pair) 'chart-edge-descendents)
+	   edge-symbols))))))
+
+
+(defun create-gen-chart-pointers-collapse (nodes edge-symbols)
+  (mapcan
+   #'(lambda (node)
+       (if (cddr (find node edge-symbols :key #'cadr))
+	   (create-gen-chart-pointers-collapse
+	    (get node 'chart-edge-descendents) edge-symbols)
+	 (list node)))
+   nodes))
+ 
+;;; Graphical display of parse chart (show-chart)
 
 (defun show-chart nil 
   (unwind-protect
@@ -21,7 +75,7 @@
 	  (setf (get root 'chart-edge-descendents) 
 	    (apply #'append word-alt-sets))
 	  (draw-chart-lattice root
-			      (format nil "Chart for \"~A...\"" 
+			      (format nil "Parse Chart for \"~A...\"" 
 				      (car (get root 'chart-edge-descendents)))
 			      t)
 	  root))))
@@ -101,7 +155,7 @@
     ()
   (clear-chart-pointers)
   (setq *chart-frame* nil)
-  (unhighlight-edge)
+  (unhighlight-edge *standard-output*)
   (clim:frame-exit clim:*application-frame*))
 
 ;;; use *parse-tree-font-size* from globals.lsp
@@ -129,8 +183,8 @@
 
 (defun draw-chart-window (window stream &key max-width max-height)
   (declare (ignore max-width max-height))
-  (clim:format-graph-from-root
-   (chart-window-root window)
+  (clim:format-graph-from-roots
+   (get (chart-window-root window) 'chart-edge-descendents)
    #'(lambda (node stream)
        (multiple-value-bind (s bold-p)
 	   (chart-node-text-string node)
@@ -165,7 +219,7 @@
 (define-parse-chart-command (com-edge-menu)
     ((edge-rec 'edge :gesture :select)) 
   (when (edge-p edge-rec)
-    (unhighlight-edge)
+    (unhighlight-edge *standard-output*)
     (let ((command (clim:menu-choose
 		    (append '(("Feature structure" :value fs))
 			    `((,(format nil "Edge ~A" (edge-id edge-rec))
@@ -178,7 +232,11 @@
 	(handler-case
             (ecase command
 	      (fs (display-fs (edge-dag edge-rec)
-			      (format nil "Edge ~A" (edge-id edge-rec))))
+			      (format nil "Edge ~A ~A - FS" 
+				      (edge-id edge-rec)
+				      (if (gen-chart-edge-p edge-rec) 
+					  "G" 
+					"P"))))
 	      (edge (display-parse-tree edge-rec nil))
 	      (rule (let* ((rule-name (edge-rule-number edge-rec))
 			   (rule (or (get-grammar-rule-entry rule-name)
@@ -239,20 +297,96 @@
 	 (find-edge-1 q stream id)))
    rec))
 
-;;; Show a highlighted edge - this is still not very reliable.  The
-;;; highlighting often gets cleared by some internal CLIM action without us
-;;; knowing about it, so then the when we try to unhighlight the selection we
-;;; end up re-highlighting it.  It might be better to not use the CLIM
-;;; highlighting mechanism at all.
+;;; Show a highlighted edge.
 
 (defun highlight-edge (edge stream)
-  (let ((*standard-output* stream))
-    (unhighlight-edge))
-  (setq *chart-selected* edge)
-  (clim:highlight-output-record edge stream :highlight))
+  (unhighlight-edge stream)
+  (setq *chart-selected* 
+    (clim:with-new-output-record (stream)
+      (clim:with-output-recording-options (stream :record t)
+	(multiple-value-bind (x1 y1 x2 y2)
+	    (clim:bounding-rectangle* 
+	     (clim:output-record-parent edge))
+	  (clim:draw-rectangle* stream x1 y1 x2 y2 :
+				ink clim:+flipping-ink+ :filled t))))))
 
-(defun unhighlight-edge ()
+(defun unhighlight-edge (stream)
   (when *chart-selected*
-    (clim:highlight-output-record *chart-selected* *standard-output* 
-				  :unhighlight)    
-    (setf *chart-selected* nil)))
+    (clim:erase-output-record *chart-selected* stream )))
+
+;;; -----------------------------------------------------------------
+;;; Draw chart as a shared forest
+
+(clim:define-application-frame parse-forest ()
+  ((root :initform nil
+	 :accessor chart-window-root))
+  (:panes
+   (display  
+    (clim:outlining (:thickness 1)
+      (clim:spacing (:thickness 1)  
+	(clim:scrolling (:scroll-bars :both)
+	  (clim:make-pane 'clim:application-pane
+			  :display-function 'draw-forest-window
+			  :text-cursor nil
+			  :width :compute
+			  :height :compute
+			  :text-style *ptree-text-style*
+			  :end-of-line-action :allow
+			  :end-of-page-action :allow
+			  :borders nil
+			  :background clim:+white+
+			  :foreground clim:+black+
+			  :display-time nil))))))
+  (:layouts
+    (:default display)))
+
+(define-parse-forest-command (com-exit-forest-window :menu "Close")
+    ()
+  (clear-chart-pointers)
+  (clim:frame-exit clim:*application-frame*))
+
+(defstruct node label daughters)
+
+(defvar *nodes* nil)
+
+(defun show-forest nil 
+  (let* ((*nodes* nil)
+	 (tree (mapcar #'make-forest *parse-record*)))
+    (draw-chart-forest tree "Parse forest" t)))
+
+(defun make-forest (parse)
+  (if (assoc parse *nodes* :test #'eq)
+      (cdr (assoc parse *nodes* :test #'eq))
+    (let ((node (make-node)))
+      (setf (node-label node) 
+	(find-category-abb (edge-dag parse)))
+      (setf (node-daughters node) 
+	(mapcar #'make-forest (edge-children parse)))
+      (push (cons parse node) *nodes*)
+      node)))
+
+
+(defun draw-chart-forest (node title horizontalp)
+  (declare (ignore horizontalp))
+  (let ((chart-window 
+	 (clim:make-application-frame 'parse-forest)))
+    (setf (chart-window-root chart-window) node)
+    (setf (clim:frame-pretty-name chart-window) title)
+    (mp:process-run-function "CHART" 
+			     #'clim:run-frame-top-level
+			     chart-window)))
+
+(defun draw-forest-window (window stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (clim:format-graph-from-roots
+   (chart-window-root window)
+   #'(lambda (node stream)
+       (write-string (node-label node) stream))
+   #'node-daughters
+   :stream stream 
+   :graph-type :dag
+   :merge-duplicates t
+   :orientation :vertical
+   :generation-separation (* 2 *ptree-node-sep*)
+   :within-generation-separation (* 2 *ptree-level-sep*)
+   :center-nodes nil))

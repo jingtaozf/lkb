@@ -41,7 +41,10 @@
          (top-ptree-node (make-new-parse-tree edge-symbol edge)))
     (when display-in-chart-p (display-edge-in-chart edge))
     (draw-new-parse-tree top-ptree-node 
-			 (format nil "Edge ~A" edge-id))))
+			 (format nil "Edge ~A ~A" 
+				 edge-id 
+				 (if (gen-chart-edge-p edge) "G" "P"))
+			 nil)))
 
 ;;; make-edge-symbol is in tree-nodes.lsp   
 
@@ -116,7 +119,8 @@
   (:layouts
     (:default display)))
 
-(defun draw-new-parse-tree (topnode title)
+(defun draw-new-parse-tree (topnode title horizontalp)
+  (declare (ignore horizontalp))
   (let ((pframe (clim:make-application-frame 'parse-tree)))
     (setf (parse-tree-nodes pframe) topnode)
     (mp:process-run-function title 
@@ -174,7 +178,11 @@
       (handler-case
 	  (ecase command
 	    (fs (display-fs (edge-dag edge-record)
-			    (format nil "Edge ~A" (edge-id edge-record))))
+			    (format nil "Edge ~A ~A - FS" 
+				    (edge-id edge-record)
+				    (if (gen-chart-edge-p edge-record) 
+					"G" 
+				      "P"))))
 	    (rule 
 	     (let* ((rule-name (edge-rule-number edge-record))
 		    (rule (or (get-grammar-rule-entry rule-name)

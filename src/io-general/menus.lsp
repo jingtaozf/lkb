@@ -1,48 +1,51 @@
 #+:allegro(in-package :clim-user)
 
-#+:allegro(eval-when 
- (compile load eval)
-(shadowing-import '(cl-user::read-type-file 
-cl-user::read-type-files 
-cl-user::read-lex-file
-cl-user::read-grammar-file 
-cl-user::read-lex-rule-file
-cl-user::morph-file-compile 
-cl-user::read-templates-file
-; view
-cl-user::show-type-tree
-cl-user::show-type-spec 
-cl-user::show-type 
-cl-user::show-lex-def 
-cl-user::show-lex
-cl-user::show-word-defs 
-cl-user::show-words 
-cl-user::show-grammar-rule 
-cl-user::show-lex-rule 
-; parse
-cl-user::do-parse 
-cl-user::show-parse 
-cl-user::show-parse-edge 
-cl-user::show-chart 
-cl-user::print-chart
-cl-user::parse-sentences 
-; link
-cl-user::apply-lex 
-cl-user::apply-lex-rules 
-cl-user::interactive-unification-check
-; tidy
-cl-user::clear-non-parents
-; output
-cl-user::dump-lkb 
-cl-user::output-type-file 
-cl-user::*lkb-system-version*)))
-
-
+#+:allegro
+(eval-when 
+    (compile load eval)
+  (shadowing-import '(cl-user::read-type-file 
+		      cl-user::read-type-files 
+		      cl-user::read-lex-file
+		      cl-user::read-grammar-file 
+		      cl-user::read-lex-rule-file
+		      cl-user::morph-file-compile 
+		      cl-user::read-templates-file
+		      ;; view
+		      cl-user::show-type-tree
+		      cl-user::show-type-spec 
+		      cl-user::show-type 
+		      cl-user::show-lex-def 
+		      cl-user::show-lex
+		      cl-user::show-word-defs 
+		      cl-user::show-words 
+		      cl-user::show-grammar-rule 
+		      cl-user::show-lex-rule 
+		      ;; parse
+		      cl-user::do-parse 
+		      cl-user::show-parse 
+		      cl-user::show-parse-edge 
+		      cl-user::show-chart 
+		      cl-user::print-chart
+		      cl-user::parse-sentences 
+		      ;; generate
+		      cl-user::generate-from-edge
+                      cl-user::show-gen-result
+                      cl-user::show-gen-edge
+		      cl-user::show-gen-chart
+		      cl-user::print-gen-chart
+		      ;; link
+		      cl-user::apply-lex 
+		      cl-user::apply-lex-rules 
+		      cl-user::interactive-unification-check
+		      ;; tidy
+		      cl-user::clear-non-parents
+		      ;; output
+		      cl-user::dump-lkb 
+		      cl-user::output-type-file 
+		      cl-user::*lkb-system-version*)))
 
 ;;; Menus moved to here from topmenu.lsp, since they can be
 ;;; treated as independent between ACL and MCL
-
-
 
 (defun create-mini-lkb-system-menu nil
   ;;; cut down system for teaching purposes
