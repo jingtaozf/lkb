@@ -167,12 +167,12 @@ catch {set trace [open "/tmp/podium.debug.$globals(user)" "w"]};
 
 proc logger {string} {
 
-    global trace;
+  global trace;
 
-    if {[info exists trace] && $string != ""} {
-        puts $trace $string;
-        flush $trace;
-    }; # if
+  if {[info exists trace] && $string != ""} {
+    puts $trace $string;
+    flush $trace;
+  }; # if
 
 }; # logger()
 
@@ -922,7 +922,8 @@ proc main {} {
 
   copyleft initialize;
   tsdb_update complete;
-  update_graph_cascade ptimes;
+  set globals(graph,tcpu) 1;
+  update_graph_cascade tcpu;
 
   #
   # the .list geometry somehow only propagates when we run the event loop :-(.

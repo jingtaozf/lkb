@@ -65,6 +65,8 @@ open issues:
 resolved issues:
 ----------------
 
+[26-jan-00] - initial curve fitting (linear and polynomial regression; custom);
+
 [02-mar-99] - add sum bottom line to `Browse' tables [mueller/13];
 
 [02-mar-99] - add attributes to `Detail - Intersection'; preliminary support

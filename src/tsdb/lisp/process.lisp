@@ -557,6 +557,7 @@
         (throw :break nil))
 
       (let* ((readings (get-field :readings result))
+             (others (get-field :others result))
              (timeup (get-field :timeup result))
              (comment (get-field+ :comment result ""))
              (global (gc-statistics :global))
@@ -572,6 +573,8 @@
                         (:efficiency ~d) (:total ~d)"
                        comment global scavenge new old efficiency total))
              (a-load #+:pvm (load_average) #-:pvm nil))
+        (when (< others -1)
+          (push (cons :others (+ (expt 2 32) others)) result))
         (push (cons :i-load i-load) result)
         (push (cons :a-load a-load) result)
         (push (cons :parse-id parse-id) result)
