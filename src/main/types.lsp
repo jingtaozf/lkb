@@ -134,7 +134,7 @@
    ;;; AAC 30/12/94
    ;;; allow for no string type
    (if *string-type*
-      (or (eql type-name *string-type*)
+      (or (eq type-name *string-type*)
          (subtype-p *string-type* type-name))))
 
 (defun get-known-type-entry (name)
@@ -217,7 +217,7 @@
       (string-type-p type2)
       (let ((ptype (instance-type-parent type1)))
          (if ptype
-            (or (eql ptype type2)
+            (or (eq ptype type2)
                (member type2 (retrieve-ancestors ptype)))
             (member type2 (retrieve-ancestors type1))))))
 
@@ -266,16 +266,14 @@
       ((stringp type2) 
          (when (string-type-p type1) type2))
       ((and (setq ptype (instance-type-parent type1))
-            (or (eql ptype type2) (member type2 (retrieve-ancestors ptype))))
+            (or (eq ptype type2) (member type2 (retrieve-ancestors ptype))))
          ;; no need to look for constraint of ptype since it's already the glb
          type1)
       ((and (setq ptype (instance-type-parent type2))
-            (or (eql ptype type1) (member type1 (retrieve-ancestors ptype))))
+            (or (eq ptype type1) (member type1 (retrieve-ancestors ptype))))
          type2) ; ditto
-      ((and (symbolp type1) (symbolp type2))
-         (cached-greatest-common-subtype type1 type2 nil))
       (t
-         (full-greatest-common-subtype type1 type2))))
+         (cached-greatest-common-subtype type1 type2 nil))))
 
 
 (defun cached-greatest-common-subtype (type1 type2 type1-atomic-p)
@@ -331,7 +329,7 @@
    ;; atomic types should have been stripped down to their constituent type
    ;; component(s) before this point
    (cond 
-      ((eql type1 type2) type1)
+      ((eq type1 type2) type1)
       ((stringp type1) 
          (when (or (equal type1 type2) (string-type-p type2))
             type1))
