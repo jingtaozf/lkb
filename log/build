@@ -26,9 +26,9 @@ cvs update: Updating .
 cvs update: Updating lkb
 cvs update: Updating .
 RCS file: /lingo/CVS/lkb/Makefile,v
-retrieving revision 1.31
 retrieving revision 1.33
-Merging differences between 1.31 and 1.33 into Makefile
+retrieving revision 1.34
+Merging differences between 1.33 and 1.34 into Makefile
 M Makefile
 ? doc
 ? linux
@@ -38,6 +38,7 @@ cvs update: Updating bin/linux
 cvs update: Updating bin/solaris
 cvs update: Updating etc
 U etc/install
+cvs update: etc/launch is no longer in the repository
 U etc/lkb
 cvs update: Updating include
 cvs update: Updating lexdb
@@ -270,7 +271,6 @@ cvs update: Updating src/fasl/main
 cvs update: Updating src/fasl/mrs
 cvs update: Updating src/general
 cvs update: Updating src/glue
-U src/glue/sppp.lsp
 cvs update: Updating src/graft
 cvs update: Updating src/io-general
 cvs update: Updating src/io-lilfes
@@ -279,9 +279,7 @@ cvs update: Updating src/io-tdl
 cvs update: Updating src/lexdb
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-U src/main/dag.lsp
 cvs update: Updating src/mrs
-U src/mrs/mrscorpus.lisp
 cvs update: Updating src/mrs/data
 cvs update: Updating src/mt
 cvs update: Updating src/non-core
@@ -307,12 +305,6 @@ cvs update: Updating src/tsdb/capi/llib
 cvs update: Updating src/tsdb/capi/olib
 cvs update: Updating src/tsdb/doc
 cvs update: Updating src/tsdb/home
-RCS file: /lingo/CVS/lkb/src/tsdb/home/export,v
-retrieving revision 1.3
-retrieving revision 1.4
-Merging differences between 1.3 and 1.4 into export
-rcsmerge: warning: conflicts during merge
-cvs update: conflicts found in src/tsdb/home/export
 C src/tsdb/home/export
 ? src/tsdb/home/log
 ? src/tsdb/home/redwoods
@@ -412,7 +404,7 @@ cvs update: Updating src/xml
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.354; previous revision: 1.353
+new revision: 1.355; previous revision: 1.354
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -1365,9 +1357,8 @@ etc/
 etc/dot.bashrc
 etc/dot.cshrc
 etc/dot.emacs
-etc/launch
-etc/install
 etc/lkb
+etc/install
 rm -f /lingo/build//.yes;
 ( cd /lingo/build//lkb && make lkb_linux@cypriot; )
 make[2]: Entering directory `/lingo/build/lkb'
@@ -1445,7 +1436,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Nov 13, 2004 9:47)
+6.2 [Linux (x86)] (Nov 13, 2004 10:07)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2456,7 +2447,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x4460258a> 
+#<EQUAL hash-table with 0 entries @ #x4460259a> 
  #|
 ; Libfasl from bundle code/who.fasl.
  (DISCARD-LOCAL-NAME-INFO)
@@ -2467,7 +2458,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-103854264 bytes have been tenured, next gc will be global.
+103966320 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2668,7 +2659,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/xml/pxml1.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-8462680 bytes have been tenured, next gc will be global.
+8462704 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 9138976 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
@@ -3281,7 +3272,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/gc.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/yy.lisp
-gc-after-hook(): local; new: 2093976; old: 424112; pending: 72; efficiency: 83.
+gc-after-hook(): local; new: 2093920; old: 424152; pending: 72; efficiency: 84.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/yy.fasl
@@ -3298,9 +3289,9 @@ gc-after-hook(): local; new: 2093976; old: 424112; pending: 72; efficiency: 83.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1488952; old: 315144; pending: 72; efficiency: 81.
-gc-after-hook(): local; new: 920784; old: 69584; pending: 128; efficiency: 87.
-gc-after-hook(): local; new: 574712; old: 401696; pending: 128; efficiency: 86.
+gc-after-hook(): local; new: 1488872; old: 315144; pending: 72; efficiency: 81.
+gc-after-hook(): local; new: 920792; old: 69584; pending: 128; efficiency: 87.
+gc-after-hook(): local; new: 574720; old: 401696; pending: 128; efficiency: 85.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/redwoods.fasl
@@ -3320,7 +3311,7 @@ gc-after-hook(): local; new: 574712; old: 401696; pending: 128; efficiency: 86.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/pcfg.fasl
-gc-after-hook(): local; new: 606104; old: 87768; pending: 4504; efficiency: 85.
+gc-after-hook(): local; new: 606272; old: 87600; pending: 4504; efficiency: 86.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/maxent.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Fasl write complete
@@ -3707,9 +3698,8 @@ etc/
 etc/dot.bashrc
 etc/dot.cshrc
 etc/dot.emacs
-etc/launch
-etc/install
 etc/lkb
+etc/install
 include/
 include/itsdb.h
 include/mrs.h
