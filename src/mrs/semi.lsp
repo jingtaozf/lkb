@@ -1104,3 +1104,6 @@
 		     (string= (id pred-name)
 			      id)))
 	      collect pred-name)))
+
+(defun get-info-from-semi (lex &key pos id (semi *semi*))
+  (mapcar #'info-from-semi-by-pred (lookup-preds lex :pos pos :id id :semi semi)))
