@@ -955,6 +955,10 @@
         (with-open-file (stream file
                          :direction :output
                          :if-exists :supersede :if-does-not-exist :create)
+          (format
+           stream
+           ";;;~%;;; Redwoods export of `~a';~%;;; (~a@~a; ~a).~%;;;~%~%"
+           data (current-user) (current-host) (current-time :long :pretty))
           (format 
            stream
            "[~d] (~a of ~d) {~d} `~a'~%~a~%"
@@ -1432,6 +1436,12 @@
                 finally
                   (return-from score-item
                     (values i 
+                            ;;
+                            ;; _fix_me_
+                            ;; adjust score for others that fall within the
+                            ;; (remaining) scoring beam, e.g. with five items
+                            ;; at rank 2 and a scoring beam of 5, return 4/5.
+                            ;;                               (28-nov-02; oe)
                             (if others (/ 1 (+ (length others) 1)) 1) 
                             (rest granks))))
           finally (return 0))))))
