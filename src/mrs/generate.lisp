@@ -10,6 +10,7 @@
 (defparameter *gen-packing-p* t)
 (defparameter *gen-filtering-p* t)
 (defparameter *bypass-equality-check* nil)
+(defparameter *gen-equate-qeqs-p* nil)
 
 (defparameter *gen-scoring-hook* nil)
 (defparameter *gen-filtering-debug* nil)
@@ -215,6 +216,8 @@
   (populate-found-configs)
   
   (setf input-sem (mrs::fill-mrs (mrs::unfill-mrs input-sem)))
+  (when *gen-equate-qeqs-p*
+    (setf input-sem (mrs::equate-all-qeqs input-sem)))
   (setf *generator-input* input-sem)
   (with-package (:lkb)
     (clear-gen-chart)
@@ -552,7 +555,8 @@
 ;;              (mrs::output-mrs input-sem 'mrs::simple)
 ;;              (mrs::output-mrs mrs 'mrs::simple))  
              (mrs::mrs-equalp 
-              mrs input-sem nil *debugging* 
+              (if *gen-equate-qeqs-p* (mrs::equate-all-qeqs mrs) mrs)
+              input-sem nil *debugging* 
               (not (eq *bypass-equality-check* :filter))))))))
 
 
