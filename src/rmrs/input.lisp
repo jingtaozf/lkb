@@ -85,7 +85,7 @@
              (eql (fourth tag) '|cto|))
       (error "Malformed ep ~A" content))
     (make-char-rel 
-     :sort (read-rmrs-pred (first body))
+     :pred (read-rmrs-pred (first body))
               :handel (read-rmrs-label (second body))
               :flist (list (read-rmrs-var (third body)))
               :cfrom (parse-integer (third tag))

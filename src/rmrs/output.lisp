@@ -38,7 +38,8 @@
 
 (defmethod rmrs-output-start-fn ((rmrsout xml) cfrom cto)
   (with-slots (stream) rmrsout
-    (format stream "~%<rmrs cfrom='~A' cto='~A'>~%" cfrom cto)))
+    (format stream "~%<rmrs cfrom='~A' cto='~A'>~%" (or cfrom 0)
+	    (or cto 0))))
 
 (defmethod rmrs-output-end-fn ((rmrsout xml))
   (with-slots (stream) rmrsout
@@ -53,7 +54,8 @@
 
 (defmethod rmrs-output-start-ep ((rmrsout xml) cfrom cto)
   (with-slots (stream) rmrsout
-    (format stream "~%<ep cfrom='~A' cto='~A'>" cfrom cto)))
+    (format stream "~%<ep cfrom='~A' cto='~A'>" (or cfrom 0)
+	    (or cto 0))))
 
 #|
 <!ELEMENT realpred EMPTY>
@@ -454,7 +456,7 @@ for gram.dtd and tag.dtd
                                 (if (char-rel-p ep)
                                     (char-rel-cto ep)
                                   0))
-          (let ((pred (rel-sort ep)))
+          (let ((pred (rel-pred ep)))
             (if (realpred-p pred)
                 (rmrs-output-realpred *rmrs-display-structure*
                                       (realpred-lemma pred)
@@ -518,12 +520,14 @@ for gram.dtd and tag.dtd
         do
           (rmrs-output-hcons-start
            display (hcons-relation hcons))
-          (print-rmrs-var 
-           (hcons-scarg hcons) bindings display)
+	  (print-rmrs-var 
+            (hcons-outscpd hcons) bindings display)
           (rmrs-output-hcons-next 
            display)
-          (print-rmrs-var 
-            (hcons-outscpd hcons) bindings display)
+	  (rmrs-output-label 
+	   display
+	   (find-rmrs-var-id (hcons-outscpd hcons)
+			     bindings))
           (rmrs-output-hcons-end display)))
 
 

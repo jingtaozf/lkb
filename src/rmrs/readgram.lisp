@@ -124,7 +124,7 @@
     (setf label (read-rmrs-simple '|label| (cadr content)))
     (multiple-value-bind (arg extras)
 	(read-rmrs-grammar-var (caddr content))
-      (make-rel :sort pred 
+      (make-rel :pred pred 
 		:handel (construct-grammar-var label)
 		:flist (list (construct-grammar-var arg extras))))))
 

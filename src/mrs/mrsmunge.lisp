@@ -278,7 +278,7 @@
                 (ac-val (action-condition-value ac)))
             (when (mrs-rule-constant-p ac-val)
               (let ((rel-val (if (null ac-feat)
-                                 (rel-sort rel)
+                                 (rel-pred rel)
                                (dolist (fvp (rel-flist rel))
                                  (when (same-names (fvpair-feature fvp) ac-feat)
                                    (return (fvpair-value fvp)))))))
@@ -308,8 +308,8 @@
     (let ((input-rel (car remaining-rels))
           (results nil))
       (dolist (rel rels)
-        (when (and (compatible-types-or-values (rel-sort input-rel)
-                        (rel-sort rel))
+        (when (and (compatible-types-or-values (rel-pred input-rel)
+                        (rel-pred rel))
                    (not (member rel matching-rels)))
           ; conditions such as predicates should be checked here
           (let ((local-bindings (copy-alist bindings)))
@@ -506,9 +506,9 @@
        collect
        (let ((new-rel
               (make-rel :extra nil ; rules should never specify extra
-               :sort (make-name-in-correct-package 
-                      (make-output-sort
-                       (rel-sort rel) (rel-extra rel)
+               :pred (make-name-in-correct-package 
+                      (make-output-pred
+                       (rel-pred rel) (rel-extra rel)
                        constant-bindings)))))
          (setf (rel-handel new-rel)
                (convert-var-to-new-bindings (rel-handel rel)
@@ -538,7 +538,7 @@
          new-rel)))
 
 
-(defun make-output-sort (rel-spec extra constant-bindings)
+(defun make-output-pred (rel-spec extra constant-bindings)
   (let* ((constant (get-appropriate-constant extra nil))
          (constant-match (if constant
                              (cdr (assoc constant constant-bindings)))))

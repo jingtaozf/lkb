@@ -35,8 +35,7 @@
   h-cons)
 
 (defstruct ep
-  reltype
-  sort  ; relation name
+  pred  ; relation name
   flist)
 
 (defstruct (rel (:include ep))

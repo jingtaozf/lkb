@@ -79,7 +79,7 @@
 
 (defun output-const-rel (rel stream mrs)
   (format stream " (~A" 
-          (remove-right-sequence "_rel" (string-downcase (rel-sort rel))))
+          (remove-right-sequence "_rel" (string-downcase (rel-pred rel))))
   (loop for feat-val in (rel-flist rel)
       do     
         (let* ((var (fvpair-value feat-val)))

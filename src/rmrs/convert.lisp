@@ -84,8 +84,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 (defparameter *rmrs-ignore-features* '("DIM"))
 
 (defun parsonify-rel (rel labels)
-  (let* ((reltype (rel-reltype rel))
-         (pred (rmrs-convert-pred (rel-sort rel)))
+  (let* ((pred (rmrs-convert-pred (rel-pred rel)))
          (flist (rel-flist rel))
          (main-arg (fvpair-value (car flist)))
          (label (rel-handel rel))
@@ -113,8 +112,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
            :handel new-label
            :parameter-strings (rel-parameter-strings rel)
            :extra (rel-extra rel)
-           :reltype reltype
-           :sort pred 
+           :pred pred 
            :flist (list main-arg)))
          (in-group (if (member (var-id label) labels)
                        (make-in-group :labels (list label new-label)))))

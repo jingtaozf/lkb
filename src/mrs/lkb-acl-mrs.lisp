@@ -59,12 +59,12 @@
     ((mrs-type-thing 'mrs-type-thing :gesture :select))
   (mrs-type-thing-command mrs-type-thing))
 
-(defun add-mrs-type-region (stream val)
-  (let ((type-rec
+(defun add-mrs-pred-region (stream val)
+  (let ((pred-rec
          (make-mrs-type-thing :value val)))
     (clim:with-text-style (stream *bold*)
       (clim:with-output-as-presentation 
-	  (stream type-rec 'mrs-type-thing)
+	  (stream pred-rec 'mrs-type-thing)
 	(write-string (string-downcase val) stream)))))
 
 (defun mrs-type-thing-command (mrs-type-thing)

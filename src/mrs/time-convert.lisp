@@ -118,7 +118,7 @@
 
 (defun create-ctime-rel (handel inst hour minutes)
   (make-rel
-   :sort (vsym "CTIME_REL")
+   :pred (vsym "CTIME_REL")
    :handel handel
    :flist
    (list (make-fvpair :feature (vsym "INST") :value inst)
@@ -126,38 +126,38 @@
          (make-fvpair :feature (vsym "MIN") :value minutes))))
 
 
-(defun nhrel-p (sort)
-  (eql sort (vsym "NUMBERED_HOUR_REL")))
+(defun nhrel-p (pred)
+  (eql pred (vsym "NUMBERED_HOUR_REL")))
 
-(defun relrel-p (sort)
-    (member sort `(,(vsym "_AFTER_HOUR_REL") ,(vsym "_BEFORE_HOUR_REL"))))
+(defun relrel-p (pred)
+    (member pred `(,(vsym "_AFTER_HOUR_REL") ,(vsym "_BEFORE_HOUR_REL"))))
 
-(defun minrel-p (sort)
-  (eql sort (vsym "MINUTE_REL")))
+(defun minrel-p (pred)
+  (eql pred (vsym "MINUTE_REL")))
 
-(defun ampmrel-p (sort)
-  (member sort `(,(vsym "_AM_REL"),(vsym "_PM_REL"))))
+(defun ampmrel-p (pred)
+  (member pred `(,(vsym "_AM_REL"),(vsym "_PM_REL"))))
 
-(defun pm-rel-p (sort)
-  (eql sort (vsym "_PM_REL")))
+(defun pm-rel-p (pred)
+  (eql pred (vsym "_PM_REL")))
 
-(defun am-rel-p (sort)
-  (eql sort (vsym "_AM_REL")))
+(defun am-rel-p (pred)
+  (eql pred (vsym "_AM_REL")))
 
-(defun past-rel-p (sort)
-  (eql sort (vsym "_AFTER_HOUR_REL")))
+(defun past-rel-p (pred)
+  (eql pred (vsym "_AFTER_HOUR_REL")))
 
-(defun to-rel-p (sort)
-  (eql sort (vsym "_BEFORE_HOUR_REL")))
+(defun to-rel-p (pred)
+  (eql pred (vsym "_BEFORE_HOUR_REL")))
 
-(defun daytime-p (sort)
-  (member sort `(,(vsym "_MORNING_REL") ,(vsym "_AFTERNOON_REL") ,(vsym "_EVENING_REL"))))
+(defun daytime-p (pred)
+  (member pred `(,(vsym "_MORNING_REL") ,(vsym "_AFTERNOON_REL") ,(vsym "_EVENING_REL"))))
 
-(defun derive-am-pm-spec (sort)
+(defun derive-am-pm-spec (pred)
   (cond
-    ((eql sort (vsym "_MORNING_REL")) 'am)
-    ((eql sort (vsym "_AFTERNOON_REL")) 'pm)
-    ((eql sort (vsym "_EVENING_REL")) 'pm)
+    ((eql pred (vsym "_MORNING_REL")) 'am)
+    ((eql pred (vsym "_AFTERNOON_REL")) 'pm)
+    ((eql pred (vsym "_EVENING_REL")) 'pm)
     (t 'pm)))
 
 ;;; Main function
@@ -170,11 +170,11 @@
          (relrels nil)
          (others nil))
     (dolist (rel rels)
-            (let ((sort (rel-sort rel)))
-              (cond ((nhrel-p sort) (push rel nhrels))
-                    ((relrel-p sort) (push rel relrels))
-                    ((minrel-p sort) (push rel minrels))
-                    ((ampmrel-p sort) (push rel ampmrels))
+            (let ((pred (rel-pred rel)))
+              (cond ((nhrel-p pred) (push rel nhrels))
+                    ((relrel-p pred) (push rel relrels))
+                    ((minrel-p pred) (push rel minrels))
+                    ((ampmrel-p pred) (push rel ampmrels))
                     (t (push rel others)))))
     (if (or nhrels relrels) 
         (let ((new-liszt (construct-time-expressions 
@@ -249,7 +249,7 @@
                  (struggle-on-error 
                   "~%Minutes specified more than once: ~A" nhrel))
                (ctime-case4 handel inst base-hour am-pm-value
-                            (rel-sort past-or-to-rel)
+                            (rel-pred past-or-to-rel)
                             (or (car indirect-minutes) 0)))))))
 ;;;
 
@@ -266,7 +266,7 @@
          (loop for ampmrel in ampmrels
               when (eql (get-var-num (get-rel-feature-value ampmrel *ampm-index-feature*))
                          (get-var-num index))
-              collect (rel-sort ampmrel))))         
+              collect (rel-pred ampmrel))))         
     (cond ((null ampmspecs) nil)
           ((cdr ampmspecs) 
            (struggle-on-error "~%Dual specification of AM and PM"))
@@ -275,7 +275,7 @@
           ((pm-rel-p (car ampmspecs))
            'pm)
           (t (struggle-on-error 
-              "~%Incorrect AM/PM rel sort: ~A" (car ampmspecs))))))
+              "~%Incorrect AM/PM rel pred: ~A" (car ampmspecs))))))
 
 (defun get-coindexed-rel-rels (index relrels)
   (loop for relrel in relrels
@@ -330,7 +330,7 @@
 (defun ctime-case6 (past-or-to-rel minrels)
   (let* ((handel (rel-handel past-or-to-rel))
          (inst (get-rel-feature-value past-or-to-rel *nhr-inst-feature*))
-         (past-or-to (rel-sort past-or-to-rel))
+         (past-or-to (rel-pred past-or-to-rel))
          (rel-minute-index 
                    (get-rel-feature-value past-or-to-rel 
                                           *rel-minute-feature*))
@@ -373,7 +373,7 @@
         (prep-prep-vals nil)
         (daytimes nil))
     (dolist (rel others)
-      (cond ((daytime-p (rel-sort rel))
+      (cond ((daytime-p (rel-pred rel))
              (push rel daytimes))
             ((eql (get-var-num (get-rel-feature-value rel *prep-arg-feature*))
                   (get-var-num index))
@@ -390,7 +390,7 @@
                  (get-var-num (get-rel-feature-value daytime *inst-feature*))))
             (if (or (member daytime-index prep-prep-vals)
                     (member daytime-index prep-arg-vals))
-              (push (derive-am-pm-spec (rel-sort daytime))
+              (push (derive-am-pm-spec (rel-pred daytime))
                     ampmspecs))))
         (cond ((null ampmspecs) (horrible-unmotivated-hack base-hour))
               ((every #'(lambda (spec) (eql spec 'am)) ampmspecs)
@@ -430,34 +430,34 @@
 (defparameter *nc-const_value* (vsym "CONST_VALUE"))
 (defparameter *nc-arg* (vsym "ARG"))
 
-(defun times_rel-p (sort)
-  (eq sort *nc-times_rel*))
+(defun times_rel-p (pred)
+  (eq pred *nc-times_rel*))
 
-(defun plus_rel-p (sort)
-  (eq sort *nc-plus_rel*))
+(defun plus_rel-p (pred)
+  (eq pred *nc-plus_rel*))
 
 ;;;
 ;;; _fix_me_
 ;;; if PAGE was slightly more appropriate, this would be unnecessary.
 ;;;
 
-(defun const_min_rel-p (sort)
-  (eq sort *nc-min-const_rel*))
+(defun const_min_rel-p (pred)
+  (eq pred *nc-min-const_rel*))
 
-(defun const_rel-p (sort)
-  (or (eq sort *nc-const_rel*) 
-      (eq sort *nc-min-const_rel*)
-      (eq sort *nc-integer_rel*)))
+(defun const_rel-p (pred)
+  (or (eq pred *nc-const_rel*) 
+      (eq pred *nc-min-const_rel*)
+      (eq pred *nc-integer_rel*)))
 
 (defun number-convert (mrs)
   (let ((liszt (psoa-liszt mrs))
         constants operators additions deletions)
     (loop
         for relation in liszt
-        for sort = (rel-sort relation)
-        when (plus_rel-p sort) do (push relation operators)
-        when (times_rel-p sort) do (push relation operators)
-        when (const_rel-p sort)	do (push relation constants))
+        for pred = (rel-pred relation)
+        when (plus_rel-p pred) do (push relation operators)
+        when (times_rel-p pred) do (push relation operators)
+        when (const_rel-p pred)	do (push relation constants))
     (loop
         for stable = t
         for i from 0
@@ -467,13 +467,13 @@
               for handel = (rel-handel operator)
               for arg = (get-rel-feature-value operator *nc-arg*)
               unless (member operator deletions :test #'eq) do
-                (let* ((sort (rel-sort operator))
+                (let* ((pred (rel-pred operator))
                        (key1 (cond 
-                               ((plus_rel-p sort) *nc-term1*)
-                               ((times_rel-p sort) *nc-factor1*)))
+                               ((plus_rel-p pred) *nc-term1*)
+                               ((times_rel-p pred) *nc-factor1*)))
                        (key2 (cond
-                               ((plus_rel-p sort) *nc-term2*)
-                               ((times_rel-p sort) *nc-factor2*)))
+                               ((plus_rel-p pred) *nc-term2*)
+                               ((times_rel-p pred) *nc-factor2*)))
                        (term1 (get-rel-feature-value operator key1))
                        (const1 (find-const-by-handle term1 additions constants))
                        (value1 (get-rel-feature-value const1 *nc-const_value*))
@@ -484,7 +484,7 @@
                                    (compute-value operator value1 value2))))
                   (when value
                     (push (make-constant handel arg value
-					 (const_min_rel-p (rel-sort const1)))
+					 (const_min_rel-p (rel-pred const1)))
 			  additions)
                     (push operator deletions)
                     (push const1 deletions)
@@ -509,24 +509,24 @@
   (or
    (loop
        for relation in new
-       thereis (when (and (const_rel-p (rel-sort relation))
+       thereis (when (and (const_rel-p (rel-pred relation))
                           (eq (rel-handel relation) handel))
                  relation))
    (loop
        for relation in old
-       thereis (when (and (const_rel-p (rel-sort relation))
+       thereis (when (and (const_rel-p (rel-pred relation))
                           (eq (rel-handel relation) handel))
                  relation))))
 
 (defun compute-value (operator term1 term2)
-  (let ((sort (rel-sort operator)))
+  (let ((pred (rel-pred operator)))
     (cond
-     ((plus_rel-p sort) (+ term1 term2))
-     ((times_rel-p sort) (* term1 term2)))))
+     ((plus_rel-p pred) (+ term1 term2))
+     ((times_rel-p pred) (* term1 term2)))))
 
 (defun make-constant (handel arg value minute-p)
   (make-rel
-   :sort (if minute-p 
+   :pred (if minute-p 
 	     *nc-min-const_rel*
 	   *nc-const_rel*)
    :handel handel

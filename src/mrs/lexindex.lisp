@@ -137,7 +137,7 @@ we assume that there will generally only be one feature
 ;;;        (FEAT2 . val3 -> (id1)
 ;;;                 val4 -> (id2 id3) 
 ;;;                   etc     ))
-  (let* ((rel-name (rel-sort rel))
+  (let* ((rel-name (rel-pred rel))
          (rel-strings (rel-parameter-strings rel))
          (index-value (gethash rel-name *relation-index*)))
     (unless rel-strings
@@ -235,9 +235,9 @@ we assume that there will generally only be one feature
 
 (defun add-rel-semdb-entry (relation)
   ;;; very crude right now
-  (let ((entry (gethash (rel-sort relation) *rel-semdb*)))
+  (let ((entry (gethash (rel-pred relation) *rel-semdb*)))
     (unless entry
-      (setf (gethash (rel-sort relation) *rel-semdb*)
+      (setf (gethash (rel-pred relation) *rel-semdb*)
         relation))))
 
 (defun determine-mrs-feature (reln pos)
@@ -262,8 +262,8 @@ we assume that there will generally only be one feature
 (defun matches-rel-record (rel lexrec)
   (and (rel-p rel)
        (rel-p lexrec)
-       (compatible-types (rel-sort rel)
-            (rel-sort lexrec))
+       (compatible-types (rel-pred rel)
+            (rel-pred lexrec))
        (subsetp
         (get-rel-parameter-strings rel)
         (rel-parameter-strings lexrec)
@@ -311,7 +311,7 @@ we assume that there will generally only be one feature
                  :id id
                  :relations construction-rels)))
           (loop for rel in 
-                (find-index-rels (mapcar #'rel-sort
+                (find-index-rels (mapcar #'rel-pred
                                                construction-rels) id)
                do
                (let ((res (cons rel new-record)))
@@ -369,7 +369,7 @@ we assume that there will generally only be one feature
                 (find-index-rels
                  (loop for rel-record in main-rels
                      unless (rel-parameter-strings rel-record)
-                     collect (rel-sort rel-record))
+                     collect (rel-pred rel-record))
                  id)
               do
                 (index-simple-semantics-record rel id))

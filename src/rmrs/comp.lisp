@@ -3,6 +3,7 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;; FIX - not dealing with optional elements in rules
+;;; FIX - ned anchors when dealing with scopal modifiers
 ;;; FIX - share-var-info
 
 (in-package :mrs)
@@ -135,7 +136,7 @@
      (MAKE-SEMSTRUCT 
       :HOOK (make-indices :index (construct-grammar-var "U") 
                           :label (construct-grammar-var "H")) 
-      :LISZT (LIST (MAKE-REL :sort "DUMMY-PRED"
+      :LISZT (LIST (MAKE-REL :pred "DUMMY-PRED"
                             :handel (construct-grammar-var "H")
                           :flist (LIST (construct-grammar-var "U")))))))
 
@@ -479,8 +480,8 @@ goes to
                        (create-new-rmrs-var 
 			:handle 
 			*rmrs-variable-generator* nil))
-                       :sort 
-                       (let ((old-pred (rel-sort old-ep)))
+                       :pred 
+                       (let ((old-pred (rel-pred old-ep)))
                          (if (dummy-pred-p old-pred)
                              (make-realpred 
                               :lemma (string-downcase (word-info-lemma lex))

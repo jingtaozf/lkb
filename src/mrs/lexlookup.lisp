@@ -90,15 +90,15 @@ at this point).
 (defun collect-lex-entries-from-mrs (psoa)
   (let* ((all-rels (psoa-liszt psoa))
          (lex-rule-rels (loop for rel in all-rels
-                            when (lex-rule-rel-p (rel-sort rel))
+                            when (lex-rule-rel-p (rel-pred rel))
                             collect rel))
          ; specified by lexical rule
          (lexical-rels (loop for rel in all-rels 
-                             when (lexical-rel-p (rel-sort rel))
+                             when (lexical-rel-p (rel-pred rel))
                              collect rel))
          ; specified in lexical entry
          (grammar-rels (loop for rel in all-rels 
-                             when (grammar-rel-p (rel-sort rel))
+                             when (grammar-rel-p (rel-pred rel))
                              collect rel))
                                         ; specified in grammar rule
     ; these are not necessarily mutually exclusive classes
@@ -192,7 +192,7 @@ at this point).
           ; union, because initial-match can include things
           ; we've found already
           ; else - generation fails
-          (format t "~%Not found ~S" (rel-sort initial-rel))))
+          (format t "~%Not found ~S" (rel-pred initial-rel))))
     results-so-far))
 
 (defun find-lex-entries-from-rel (lex-rels results-so-far)
@@ -202,10 +202,10 @@ at this point).
   ;;; MRS which MIGHT be lexical and which we haven't already
   ;;; used as triggers)
   (let* ((rel (car lex-rels))
-         (rel-sort (rel-sort rel))
+         (rel-pred (rel-pred rel))
          (rel-params (get-rel-parameter-strings rel))
          (initial-candidates (find-candidates-from-rel
-                              rel-sort rel-params rel))
+                              rel-pred rel-params rel))
         ;;; candidates are things which have the  
         ;;; relevant relation
          (candidates

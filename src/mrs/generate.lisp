@@ -90,7 +90,7 @@
                     (tdfs-indef (mrs::found-lex-inst-fs lex)) *semantics-index-path*)
                  nil)
               (mrs::found-lex-rule-list lex)
-              (mapcar #'mrs::rel-sort (mrs::found-lex-main-rels lex))))
+              (mapcar #'mrs::rel-pred (mrs::found-lex-main-rels lex))))
          (print
             (sort (remove-duplicates (mapcar #'mrs::found-lex-lex-id lex-items))
                #'string-lessp))
@@ -103,7 +103,7 @@
                      (existing-dag-at-end-of
                         (tdfs-indef (mrs::found-rule-full-fs grule)) *semantics-index-path*)
                      nil)
-                  (mapcar #'mrs::rel-sort (mrs::found-rule-main-rels grule)))))
+                  (mapcar #'mrs::rel-pred (mrs::found-rule-main-rels grule)))))
 |#
          (if lex-items
             (chart-generate input-sem lex-items grules lex-orderings)
@@ -277,7 +277,7 @@
 (defun gen-chart-check-complete (edge input-sem)
    ;; check that semantics of edge is subsumed by input-sem, i.e. that we've
    ;; got all the relations that we wanted
-   #+ignore (print (list (edge-id edge) (mapcar #'mrs::rel-sort (g-edge-rels-covered edge))))
+   #+ignore (print (list (edge-id edge) (mapcar #'mrs::rel-pred (g-edge-rels-covered edge))))
    (gen-chart-subset-p
     (mrs::psoa-liszt input-sem)
     (g-edge-rels-covered edge)))
@@ -707,7 +707,7 @@
               (mrs::psoa-liszt input-sem) (g-edge-rels-covered partial))))
         (when *gen-adjunction-debug*
           (format t "~&Missing relations ~(~:A~)" 
-                  (mapcar #'mrs::rel-sort missing-rels)))
+                  (mapcar #'mrs::rel-pred missing-rels)))
         (let ((mod-alt-list
                (gen-chart-mod-edge-partitions missing-rels 
                                               mod-candidate-edges)))
@@ -718,7 +718,7 @@
               (format t "~&Trying relation partition ~(~:A~)"
                  (mapcar
                     #'(lambda (rels-and-edges)
-                         (cons (mapcar #'mrs::rel-sort (car rels-and-edges))
+                         (cons (mapcar #'mrs::rel-pred (car rels-and-edges))
                                (mapcar #'g-edge-id (cdr rels-and-edges))))
                     mod-alt)))
             (setq mod-alt

@@ -139,7 +139,7 @@
         :value (loop
                    with dags = nil
                    for ep in (psoa-liszt mrs)
-                   for predicate = (or (rel-reltype ep) (rel-sort ep))
+                   for predicate = (rel-pred ep)
                    for handel = (let* ((foo (rel-handel ep))
                                        (bar (when (handle-var-p foo)
                                               (var-name foo))))

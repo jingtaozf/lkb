@@ -78,7 +78,7 @@ the phrase to be checked minus the LISZT (leave this for now)
 
 (defun idiom-rel-p (rel)
   ;;; cheat for now
-  (let ((relname (string (mrs::rel-sort rel))))
+  (let ((relname (string (mrs::rel-pred rel))))
     (and (char-equal (elt relname 0) #\i)
          (char-equal (elt relname 1) #\_))))
 

@@ -56,15 +56,15 @@ style grammars
                                
 
 (defun convert-fol-predicate-formula (predf gen)
-  (let*  ((sort (convert-fol-pred-symbol (first predf)))
+  (let*  ((pred (convert-fol-pred-symbol (first predf)))
           (count 0)
           (flist (loop for arg in (rest predf)
                      collect
                      (progn 
                        (incf count)  
-                       (convert-fol-argument arg sort count gen)))))
+                       (convert-fol-argument arg pred count gen)))))
     (make-rel
-     :sort sort
+     :pred pred
      :flist flist)))
 
 (defun convert-fol-pred-symbol (symbol)

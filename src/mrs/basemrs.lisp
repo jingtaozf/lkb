@@ -30,9 +30,11 @@
 ;;; defined ep so there's a basic structure for EPs for RMRS
 ;;; elaborated for MRS proper
 
+;;; I have changed the old `sort' to `pred' - the old name was 
+;;; seriously confusing
+
 (defstruct ep
-  reltype
-  sort  ; relation name
+  pred  ; relation name
   flist)
   
 (defstruct (rel (:include ep))
@@ -178,13 +180,13 @@
   (with-slots (stream) mrsout
     (format stream "~S" atomic-value)))
 
-(defmethod mrs-output-start-rel ((mrsout simple) type sort first-p)
-  (declare (ignore type first-p))
+(defmethod mrs-output-start-rel ((mrsout simple) pred first-p)
+  (declare (ignore first-p))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
-    (if (stringp sort)
-      (format stream "~VT[ ~s" indentation sort)
-      (format stream "~VT[ ~(~a~)" indentation sort))))
+    (if (stringp pred)
+      (format stream "~VT[ ~s" indentation pred)
+      (format stream "~VT[ ~(~a~)" indentation pred))))
 
 (defmethod mrs-output-rel-handel ((mrsout simple) handel)
   (if handel
@@ -260,12 +262,12 @@
 (defclass active-t (simple)
   ())
 
-(defmethod mrs-output-start-rel ((mrsout active-t) type sort first-p)
-  (declare (ignore type first-p))
+(defmethod mrs-output-start-rel ((mrsout active-t) pred first-p)
+  (declare (ignore first-p))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
     (format stream "~VT[ " indentation)
-    (lkb::add-mrs-type-region stream sort)))
+    (lkb::add-mrs-pred-region stream pred)))
 
 ;;; 
 ;;; indexed output-type class
@@ -273,7 +275,7 @@
 
 (defclass indexed (output-type) 
   ((need-comma :initform nil)
-   (temp-sort :initform nil)))
+   (temp-pred :initform nil)))
 
 (defmethod mrs-output-start-fn ((mrsout indexed))
   (with-slots (stream) mrsout
@@ -312,24 +314,23 @@
   (with-slots (stream) mrsout
     (format stream "~S" atomic-value)))
 
-(defmethod mrs-output-start-rel ((mrsout indexed) type sort first-p)
-  (declare (ignore type))
-  (with-slots (stream temp-sort) mrsout
-    (setf temp-sort sort)
+(defmethod mrs-output-start-rel ((mrsout indexed) pred first-p)
+  (with-slots (stream temp-pred) mrsout
+    (setf temp-pred pred)
     (unless first-p (format stream ",~%"))))
 
 (defmethod mrs-output-rel-handel ((mrsout indexed) handel)
   (if handel
-      (with-slots (stream temp-sort) mrsout  
+      (with-slots (stream temp-pred) mrsout  
         (format stream "~(~a~):~A(" 
                 handel (remove-right-sequence 
                         *sem-relation-suffix* 
-                        (string-downcase temp-sort))))
-    (with-slots (stream temp-sort) mrsout  
+                        (string-downcase temp-pred))))
+    (with-slots (stream temp-pred) mrsout  
         (format stream "~A(" 
                 (remove-right-sequence 
                         *sem-relation-suffix* 
-                        (string-downcase temp-sort))))))
+                        (string-downcase temp-pred))))))
 
 (defmethod mrs-output-label-fn  ((mrsout indexed) label)
   (declare (ignore label)) 
@@ -483,16 +484,16 @@ higher and lower are handle-variables
         (format stream "'~A')" atomic-value)
       (format stream "~A)" atomic-value))))
 
-(defmethod mrs-output-start-rel ((mrsout prolog) type sort first-p)
-  (declare (ignore type))
+(defmethod mrs-output-start-rel ((mrsout prolog) pred first-p)
   (with-slots (stream) mrsout
     (unless first-p (format stream ","))
     (format stream "rel('~A'," 
             (remove-right-sequence 
-                    *sem-relation-suffix*(string-downcase sort)))))
+	     *sem-relation-suffix*
+	     (string-downcase pred)))))
 
 (defmethod mrs-output-rel-handel ((mrsout prolog) handel)
-  (with-slots (stream temp-sort) mrsout  
+  (with-slots (stream temp-pred) mrsout  
     (format stream "~(~a~),[" handel)))
 
 
@@ -629,8 +630,8 @@ higher and lower are handle-variables
   (with-slots (stream) mrs
     (format stream "<td class=mrsValue>~(~a~)</td>~%" value)))
 
-(defmethod mrs-output-start-rel ((mrs html) type sort firstp)
-  (declare (ignore type firstp))
+(defmethod mrs-output-start-rel ((mrs html) pred firstp)
+  (declare (ignore firstp))
   (with-slots (stream i nrows) mrs
     (when (and (not (zerop i)) (zerop (mod i *mrs-relations-per-row*)))
       (format 
@@ -641,7 +642,7 @@ higher and lower are handle-variables
      stream 
      "    <td><table class=mrsRelation>~%      ~
       <tr><td class=mrsPredicate colspan=2>~(~a~)</td>~%"
-     sort)
+     pred)
     (incf i)))
 
 (defmethod mrs-output-rel-handel ((mrs html) handle)
@@ -786,7 +787,7 @@ higher and lower are handle-variables
     (loop for rel in (psoa-liszt psoa)
         do
           (mrs-output-start-rel *mrs-display-structure*
-                                (rel-reltype rel) (rel-sort rel) first-rel)
+                                (rel-pred rel) first-rel)
           (mrs-output-rel-handel
            *mrs-display-structure* 
            (find-var-name (rel-handel rel) connected-p))
@@ -1034,8 +1035,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 ;;; or
 ;;; REL -> [ PREDNAME FEATPAIR* ]
   (mrs-check-for #\[ istream)
-  (let* ((reltype (read-mrs-atom istream))
-         (sort reltype))
+  (let* ((relpred (read-mrs-atom istream)))
     (when *rel-handel-path*
       (mrs-check-for #\l istream)
       (mrs-check-for #\b istream)
@@ -1051,7 +1051,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
             (return))
           (push (read-mrs-featpair istream)
                 featpairs)))
-      (make-rel :reltype reltype :sort sort
+      (make-rel :pred relpred
                 :handel hvar
                 :flist (sort featpairs #'feat-sort-func)))))
           
@@ -1270,7 +1270,7 @@ VAR -> VARNAME[:CONSTNAME]*
             (push (read-mrs-indexed-featpair istream predname pos)
                   featpairs)
             (incf pos)))
-        (make-rel :sort predname
+        (make-rel :pred predname
                   :handel hvar
                   :flist (sort featpairs #'feat-sort-func))))))
           

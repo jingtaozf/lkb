@@ -135,7 +135,7 @@
   (let* ((handle (let ((handle (rel-handel relation)))
                    (when (handle-var-p handle) (handle-var-name handle))))
          (id (ed-find-identifier relation))
-         (predicate (string (or (rel-sort relation) (rel-reltype relation))))
+         (predicate (string (rel-pred relation)))
          (predicate (remove-right-sequence 
                      *sem-relation-suffix* (string-downcase predicate)))
          (flist (rel-flist relation))

@@ -76,9 +76,9 @@
 ;;; the values of features may be var structures, lists of var structures 
 ;;; or constants
 
-(defun proper-name-or-pronoun-rel (rel-sort)
+(defun proper-name-or-pronoun-rel (rel-pred)
   ;;; test changed to equal, because rels are strings in some grammars
-  (member rel-sort *top-level-rel-types* :test #'equal))
+  (member rel-pred *top-level-rel-types* :test #'equal))
 
 
 (defun get-full-handel-args-with-features (rel)
@@ -104,12 +104,12 @@
   ;;; possibly including "the" (_def_rel) and demonstratives
   (and
    (if *quant-rel-types*
-       (member (rel-sort rel) *quant-rel-types* 
+       (member (rel-pred rel) *quant-rel-types* 
                :test #'string-equal)
        (dolist (fvpair (rel-flist rel))
          (when (and (eq (fvpair-feature fvpair) *scope-feat*))
            (return t))))
-   (not (member (rel-sort rel) *top-level-rel-types* 
+   (not (member (rel-pred rel) *top-level-rel-types* 
                 :test #'eq))))
 
 
@@ -156,10 +156,10 @@
            (unless quant-var 
              (struggle-on-error 
               "~%Rel ~A has an uninstantiated bound variable"
-                    (rel-sort rel)))
+                    (rel-pred rel)))
            (when (member quant-var quant-vars)
              (struggle-on-error "~%Rel ~A has a duplicate bound variable"
-                    (rel-sort rel)))
+                    (rel-pred rel)))
            (when quant-var
              (push quant-var quant-vars)
              (push (cons quant-var rel) var-q-assoc))))
@@ -178,7 +178,7 @@
                                (when associated-quantifier
                                  (add-to-qrel-store 
                                   associated-quantifier rel)))))
-                      (when (proper-name-or-pronoun-rel (rel-sort rel))
+                      (when (proper-name-or-pronoun-rel (rel-pred rel))
                         (loop for var in rel-vars
                              do
                              (unless (member (get-var-num var) quant-vars)
@@ -354,7 +354,7 @@ printing routines -  convenient to make this global to keep printing generic")
          (let ((var (rel-handel rel)))
            (unless (is-handel-var var)
              (struggle-on-error "~%Relation ~A has incorrect handel ~A"
-                                (rel-sort rel) var))
+                                (rel-pred rel) var))
            (pushnew (get-var-num var) labels)))
     (loop for rel in rels
          do
@@ -365,7 +365,7 @@ printing routines -  convenient to make this global to keep printing generic")
                   (when (member handel-var holes)
                     (struggle-on-error 
                      "~%Relation ~A has duplicate handel arg ~A"
-                     (rel-sort rel) handel-var))
+                     (rel-pred rel) handel-var))
                   (pushnew handel-var holes)
                   (when (member handel-var labels)
                     (push handel-var equated-list)))
@@ -1052,7 +1052,7 @@ or modulo some number of quantifiers
     (setf current-string
       (format nil "~A(" 
               (remove-right-sequence 
-               *sem-relation-suffix* (string-downcase (rel-sort rel)))))
+               *sem-relation-suffix* (string-downcase (rel-pred rel)))))
     (format stream "~A" current-string)
     (setf width (+ width (length current-string)))
     (loop for feat-val in (rel-flist rel)

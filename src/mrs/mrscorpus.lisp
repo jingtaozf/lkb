@@ -145,8 +145,8 @@
    (sort new-liszt
          #'(lambda (relset1 relset2)
              (let ((rel1 (car relset1)) (rel2 (car relset2)))
-               (or (string-lessp (rel-sort rel1) (rel-sort rel2))
-                   (and (string-equal (rel-sort rel1) (rel-sort rel2))
+               (or (string-lessp (rel-pred rel1) (rel-pred rel2))
+                   (and (string-equal (rel-pred rel1) (rel-pred rel2))
                         (value-feats-lessp (rel-flist rel1)
                                            (rel-flist rel2)))))))))
 
@@ -166,7 +166,7 @@
                                       result-so-far))))) 
   
 (defun similar-relations-p (rel1 rel2)
-  (and (string-equal (rel-sort rel1) (rel-sort rel2))
+  (and (string-equal (rel-pred rel1) (rel-pred rel2))
        (let ((fv1 (rel-flist rel1))
              (fv2 (rel-flist rel2)))
          (if (eql (length fv1) (length fv2))
@@ -277,7 +277,7 @@
                                           syntactic-p noisy-p new-bindings))))))
 
 (defun mrs-relations-equal-p (rel1 rel2 syntactic-p noisy-p bindings)
-  (if (equal (rel-sort rel1) (rel-sort rel2))
+  (if (equal (rel-pred rel1) (rel-pred rel2))
       (if (setf bindings 
             (if 
                 (and (rel-handel rel1) (rel-handel rel2))
@@ -307,9 +307,9 @@
                              (rel-handel rel2))
                      nil))) 
         (progn (when noisy-p
-                 (format t "~%Sorts differ ~A ~A" 
-                         (rel-sort rel1) 
-                         (rel-sort rel2))
+                 (format t "~%Predicates differ ~A ~A" 
+                         (rel-pred rel1) 
+                         (rel-pred rel2))
                  nil))))
 
 

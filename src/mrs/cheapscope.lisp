@@ -19,7 +19,7 @@
          (let ((var (rel-handel rel)))
            (unless (is-handel-var var)
              (struggle-on-error "~%Relation ~A has incorrect handel ~A"
-                                (rel-sort rel) var))
+                                (rel-pred rel) var))
            (pushnew (get-var-num var) labels)))
     (loop for rel in rels
          do
