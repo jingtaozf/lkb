@@ -34,7 +34,8 @@
               (format (intern (string (pop command)) :keyword))
               (view (when command (intern (string (pop command)) :keyword))))
          (if (and (streamp stream) (stringp data) (integerp i-id) set format)
-           (let* ((condition (format nil "i-id == ~a" i-id))
+           (let* ((*package* (find-package :lkb))
+                  (condition (format nil "i-id == ~a" i-id))
                   (items (analyze data :thorough '(:derivation) 
                                   :condition condition))
                   (item (when (and items (null (rest items))) (first items)))
@@ -60,11 +61,9 @@
                                                data)))
                               (loop 
                                   for bar in foo 
-                                  collect (get-field :result-id bar)))))
-                  (*redwoods-export-values* (list format)))
+                                  collect (get-field :result-id bar))))))
              (when active
                (loop
-                   with *package* = (find-package lkb::*lkb-package*)
                    with lkb::*deleted-daughter-features* = nil
                    with i-input = (get-field :i-input item)
                    with results = (get-field :results item)

@@ -103,7 +103,7 @@
      (parse input nil)
      (summarize-chart))))
 
-(defun initialize-test-run (&key interactive exhaustive)
+(defun initialize-test-run (&key interactive exhaustive nanalyses)
   (declare (ignore interactive))
    ;; returns whatever it likes; the return value will be given to
    ;; finalize-test-run() to restore the interactive environment if
@@ -111,8 +111,10 @@
   (let ((*package* *lkb-package*)
         (first-only-p *first-only-p*))
     (clear-type-cache)
-    (setf *first-only-p* (unless exhaustive 
-                           (if (integerp *first-only-p*) *first-only-p* 1)))
+    (setf *first-only-p* (if (integerp nanalyses)
+                           nanalyses
+                           (unless exhaustive 
+                             (if (integerp *first-only-p*) *first-only-p* 1))))
     (pairlis '(:first-only-p)
              (list first-only-p))))
 
@@ -141,7 +143,7 @@
 ;;; representations (strings); all times in thousands of secs
 
 (defun parse-item (string 
-                   &key id exhaustive trace
+                   &key id exhaustive nanalyses trace
                         readings edges derivations semantix-hook trees-hook
                         burst (nderivations 0))
   (declare (ignore derivations #-:packing id))
@@ -153,12 +155,14 @@
               (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                            *maximum-number-of-edges*
                                            edges))
-              (*first-only-p* (unless exhaustive
-                                (if (integerp readings)
-                                  readings
-                                  (if (integerp *first-only-p*)
-                                    *first-only-p*
-                                    1))))
+              (*first-only-p* (if (integerp nanalyses)
+                                nanalyses
+                                (unless exhaustive
+                                  (if (integerp readings)
+                                    readings
+                                    (if (integerp *first-only-p*)
+                                      *first-only-p*
+                                      1)))))
               (*do-something-with-parse* nil)
               (sent
                (split-into-words (preprocess-sentence-string string)))

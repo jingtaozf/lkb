@@ -39,6 +39,8 @@
 (defparameter %lui-process% nil)
 
 (defparameter %lui-pending-events% nil)
+
+(defparameter %lui-eoc% (format nil " ~a" #\page))
 
 (defun lui-initialize ()
   (lui-shutdown)
@@ -58,18 +60,18 @@
     (when foo (setf foo foo))
     (format
      %lui-stream%
-     "parameter list-type ~a ~a~%~
-      parameter non-empty-list-type ~a ~a~%~
-      parameter empty-list-type ~a ~a~%~
-      parameter list-head ~a ~a~%~
-      parameter list-tail ~a ~a~%~
-      status ready ~a~%"
-     *list-type* #\page
-     *empty-list-type* #\page 
-     *non-empty-list-type* #\page
-     (first *list-head*) #\page
-     (first *list-tail*) #\page
-     #\page)
+     "parameter list-type ~a~a~%~
+      parameter non-empty-list-type ~a~a~%~
+      parameter empty-list-type ~a~a~%~
+      parameter list-head ~a~a~%~
+      parameter list-tail ~a~a~%~
+      status ready~a~%"
+     *list-type* %lui-eoc%
+     *empty-list-type* %lui-eoc% 
+     *non-empty-list-type* %lui-eoc%
+     (first *list-head*) %lui-eoc%
+     (first *list-tail*) %lui-eoc%
+     %lui-eoc%)
      (setf %lui-process%
       (mp:run-function '(:name "LUI") #'lsp-loop nil %lui-stream%))))
 
@@ -77,7 +79,7 @@
 
   (when %lui-stream%
     (ignore-errors
-     (format %lui-stream% "~%~%exit~a" #\page)
+     (format %lui-stream% "~%~%exit~a" %lui-eoc%)
      (force-output %lui-stream%)
      (sleep 2)
      (close %lui-stream%)
@@ -106,7 +108,7 @@
       (mp:process-add-arrest-reason %lui-process% :send-to-lui))
     (when *lui-debug-p*
       (format t "~&send-to-lui(): [send] `~a'.~%" string))
-    (format %lui-stream% "~@[wait ~*~]~a ~a" wait string #\page)
+    (format %lui-stream% "~@[wait ~*~]~a~a" wait string %lui-eoc%)
     (force-output %lui-stream%))
   (unwind-protect 
       (when (or wait recursive)
@@ -143,7 +145,7 @@
     (mp:process-revoke-arrest-reason %lui-process% :pending-events)))
 
 (defun lui-status (string)
-  (format %lui-stream% "message ~s ~a~%" string #\page))
+  (format %lui-stream% "message ~s~a~%" string %lui-eoc%))
   
 (defun lui-show-parses (edges &optional (input *sentence*))
   (loop
@@ -155,7 +157,7 @@
       do
         (format %lui-stream% "tree ~d " id)
         (lui-show-tree top input)
-        (format %lui-stream% " ~s ~a~%" title #\page))
+        (format %lui-stream% " ~s~a~%" title %lui-eoc%))
   (force-output %lui-stream%))
 
 (defun lui-show-tree (top &optional (input *sentence*))
@@ -185,7 +187,7 @@
     (let ((string (with-output-to-string (stream)
                     (display-dag1 dag 'linear stream))))
       (format %lui-stream% string))
-    (format %lui-stream% " ~s ~a~%" title #\page))
+    (format %lui-stream% " ~s~a~%" title %lui-eoc%))
   (force-output %lui-stream%))
 
 (defun lui-status-p (key)

@@ -40,7 +40,7 @@
      (i_input (* :char) string)
      (parse_id :int integer)
      (edges :int integer)
-     (exhaustive :int integer)
+     (nanalyses :int integer)
      (nderivations :int integer)
      (interactive :int integer))
   :returning :int
@@ -53,16 +53,15 @@
                  integer integer integer integer integer)
     :return-type :integer)
 
-(defun process_item (tid item exhaustive nderivations interactive)
+(defun process_item (tid item nanalyses nderivations interactive)
   (let* ((i-id (get-field :i-id item))
          (i-input (or (get-field :p-input item) (get-field :i-input item)))
          (parse-id (get-field :parse-id item))
          (edges (or (get-field :edges item) -1))
-         (exhaustive (if exhaustive 1 0))
          (interactive (if interactive 1 0))
          (status 
           (_process_item tid i-id i-input parse-id 
-                         edges exhaustive nderivations interactive)))
+                         edges nanalyses nderivations interactive)))
     (cond
      ((zerop status) :ok)
      (t :error))))

@@ -65,7 +65,8 @@
   (setf %lsp-socket%
     (socket:make-socket :connect :passive :local-port *lsp-port*))
   (setf %lsp-object-counter% 0)
-  (setf %lsp-attic% (make-array 512)))
+  (setf %lsp-attic% (make-array 512))
+  %lsp-socket%)
 
 (defun lsp-shutdown ()
   (loop
@@ -258,6 +259,7 @@
             (when (stringp input)
               (setf *sentence* input)
               (unless id 
+                #+:lui
                 (lui-status (format nil "parsing `~a' ..." input)))
               (parse (split-into-words 
                       (preprocess-sentence-string 
@@ -269,6 +271,7 @@
                                (list (first *parse-record*))
                                *parse-record*)))
                   (unless id 
+                    #+:lui
                     (lui-status (format 
                                  nil 
                                  " done (~d tree~p; ~,2f seconds)~%"
@@ -344,7 +347,13 @@
       (show-parse edges title)
       (return-from lsp-browse))
     (loop
-        for edge in edges do
+        for edge in edges
+        when (null edge) do
+          (format
+           t
+           "[~a] lsp-browse(): null edge for `~a' (~(~a~))~%"
+           id input format)
+        else do
           (case format
             (:avm
              (display-fs edge title))
@@ -369,7 +378,13 @@
   (declare (ignore id))
   (loop
       with *package* = (find-package :lkb)
-      for edge in edges do
+      for edge in edges
+      when (null edge) do
+        (format
+         t
+         "[~a] lsp-return(): null edge for `~a' (~(~a~))~%"
+         id input format)
+      else do
         (case format
           (:avm
            (let* ((dag (tdfs-indef (edge-dag edge)))

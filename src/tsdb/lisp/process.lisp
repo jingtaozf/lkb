@@ -614,14 +614,17 @@
                                   :interactive interactive 
                                   :verbose verbose)))))
 
-(defun create-run (data run-id &key comment 
-                                    gc (tenure *tsdb-tenure-p*)
-                                    (exhaustive *tsdb-exhaustive-p*)
-                                    interactive (protocol *pvm-protocol*)
-                                    verbose)
+(defun create-run (data run-id 
+                   &key comment 
+                        gc (tenure *tsdb-tenure-p*)
+                        (exhaustive *tsdb-exhaustive-p*)
+                        (nanalyses *tsdb-maximal-number-of-analyses*)
+                        interactive (protocol *pvm-protocol*)
+                        verbose)
   
   (let* ((environment (initialize-test-run :interactive interactive 
-                                           :exhaustive exhaustive))
+                                           :exhaustive exhaustive
+                                           :nanalyses nanalyses))
          (start (current-time :long :tsdb))
          (gc-strategy (unless interactive 
                         (install-gc-strategy 
@@ -732,6 +735,7 @@
                                (verbose t)
                                client
                                (exhaustive *tsdb-exhaustive-p*)
+                               (nanalyses *tsdb-maximal-number-of-analyses*)
                                (nderivations 
                                 (if *tsdb-write-passive-edges-p*
                                   -1
@@ -740,7 +744,8 @@
 
   (cond
    ((and client (eq type :parse) (client-p client))
-    (let* ((tid (client-tid client))
+    (let* ((nanalyses (or nanalyses (if exhaustive 0 1)))
+           (tid (client-tid client))
            (status (if (eq (client-protocol client) :lisp)
                      (revaluate 
                       tid 
@@ -754,7 +759,7 @@
                       :key :process-item
                       :verbose nil)
                      (process_item 
-                      tid item exhaustive nderivations interactive))))
+                      tid item nanalyses nderivations interactive))))
       (case status
         (:ok (setf (client-status client) item) :ok)
         (:error (setf (client-status client) :error) :error))))
@@ -791,6 +796,7 @@
                       :edges edges
                       :trace interactive
                       :exhaustive exhaustive
+                      :nanalyses nanalyses
                       :trees-hook trees-hook
                       :semantix-hook semantix-hook
                       :nderivations nderivations
@@ -800,6 +806,7 @@
                          :edges edges
                          :trace interactive
                          :exhaustive exhaustive
+                         :nanalyses nanalyses
                          :trees-hook trees-hook
                          :semantix-hook semantix-hook
                          :nderivations nderivations
@@ -823,6 +830,7 @@
             (parse-item i-input :edges edges
                         :trace interactive
                         :exhaustive exhaustive
+                        :nanalyses nanalyses
                         :trees-hook trees-hook
                         :semantix-hook semantix-hook
                         :nderivations nderivations
@@ -832,6 +840,7 @@
                            :edges edges
                            :trace interactive
                            :exhaustive exhaustive
+                           :nanalyses nanalyses
                            :trees-hook trees-hook
                            :semantix-hook semantix-hook
                            :nderivations nderivations
