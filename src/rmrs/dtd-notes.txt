@@ -11,14 +11,25 @@ POS - now lowercase and obligatory
 (v|n|j|r|p|q|c|x|u|a|s)
 v - verb
 n - noun
+a - adjective or adverb (i.e. supertype of j and r)
 j - adjective
-r - adverb
+r - adjective or adverb (i.e. supertype of j and r)- adverb
 p - preposition
 q - quantifier (needs to be distinguished for scoping code)
 x - other closed class
 u - unknown
-a - adjective or adverb (i.e. supertype of j and r)
-s - verbal noun (used in Japanese)
+
+The implicit hierarchy is 
+ n := u
+ v := u
+ a := u
+ j := a
+ r := a
+ s := n, s:= v
+ p := u
+ q := u
+ c := u
+ x := u
 
 Labels are always implicitly of the same sort (i.e., label)
 
@@ -41,6 +52,27 @@ information units.
 
 cfrom and cto default to -1 if unknown
 
-I am still not entirely happy with in-groups.
+In-groups are used for predicates which have the same handle in the
+MRS - they are grouped in one in-group <ing> but given unique handles
+for the RMRS.  I [AAC] am still not entirely happy with in-groups.
+
+The surface attribute on rmrs and ep is used to give the original
+surface string.  It is optional.  
+
+The base attribute is used for languages where the current parsing
+engines cannot represent the lemma properly.  For example, in Jacy the
+lemma is in ASCII, but the base form should often be Chinese
+characters.  This attribute is depreciated - as the lemma attribute in
+realpred is a string, in theory it can handle the real base form (we
+can use all of unicode).  When all the tools can handle it, then we
+can remove it.  For the moment, base should only be added if it is
+different from both lemma and string.
+
+ident is an attribute on rmrs's to identify which utterance they
+belong with.  The HoG currently uses a wrapper around the RMRS, with
+identifying information there instead.  Hinoki uses the ident
+identifier but may switch to a wrapper, in which case ident may be
+removed.  In any case it is optional.
+ 
 
 

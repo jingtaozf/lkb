@@ -1,17 +1,18 @@
 <!ELEMENT rmrs-list (rmrs)*>
-
+<!-- Documentation in dtd-notes.txt -->
 <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
 <!ATTLIST rmrs
           cfrom CDATA #REQUIRED
           cto   CDATA #REQUIRED 
-          surface   CDATA #IMPLIED >
+          surface   CDATA #IMPLIED 
+          ident     CDATA #IMPLIED >
 
 <!ELEMENT ep ((realpred|gpred), label, var)>
 <!ATTLIST ep
           cfrom CDATA #REQUIRED
           cto   CDATA #REQUIRED 
-          surface   CDATA #IMPLIED >
-
+          surface   CDATA #IMPLIED
+	  base      CDATA #IMPLIED >
 
 <!ELEMENT realpred EMPTY>
 
