@@ -95,7 +95,9 @@
 
 (defun lkb-exit-function (&optional dump)
   (declare (ignore dump))
-  (write-psort-index-file))
+  (store-cached-lex *lexicon*)
+  nil)
+
 
 
 (defun dump-lkb nil

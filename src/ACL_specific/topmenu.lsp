@@ -195,7 +195,7 @@
   (unwind-protect
       (run-frame-top-level frame)
     (when *complete-lisp-close*
-      (user::write-psort-index-file)
+      (user::store-cached-lex user::*lexicon*)
       (excl:exit 0 :no-unwind t))))
 
 (defun restart-lkb-function nil
@@ -233,7 +233,7 @@
                                              #'restart-lkb-window
                                            #'restart-lkb-function))
       (unless fresh-p
-        (user::write-psort-index-file))
+        (user::store-cached-lex user::*lexicon*))
       (user::clear-expanded-lex)
       (user::clear-type-cache)
       (user::unexpand-leaf-types)
