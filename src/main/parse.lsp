@@ -971,7 +971,7 @@
 
 (defun print-chart nil 
    (format t "~% > chart dump:~%")
-   (dotimes (vertex (- *chart-limit* 1))
+   (dotimes (vertex (- *chart-limit* 2))
       (unless 
          (print-chart-entry (+ 1 vertex) (aref *chart* (+ 1 vertex) 0))
          (return nil)))
