@@ -1,0 +1,33 @@
+;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: MAKE -*-
+
+
+(in-package :make)
+
+(defsystem "psql"
+   :source-pathname (dir-append (get-sources-dir "psql")
+                                '(:relative "psql"))
+   :binary-pathname (dir-append (get-binaries-dir "psql")
+                                '(:relative "psql"))
+
+   :components
+   (#+(and allegro-version>= (version>= 6 0) (or :linux (and :sparc :svr4)))
+    (:module "so"
+     :source-pathname %system-binaries%
+     :source-extension "so"
+     :load-only t
+     :components
+     ((:file "libpq")))
+
+    #+(and :allegro-version>= (version>= 6 0))
+    (:module "interface"
+     :source-pathname ""
+     :source-extension "cl"
+     :components
+     ((:file "pg-package")
+      (:file "bind-libpq")
+      (:file "sql")))))
+
+
+
+
+
