@@ -262,32 +262,32 @@
   (:command-table lkb-top-command-table))
 
 (defun start-lkb-frame ()
-  (let ((old-frame *lkb-top-frame*)
-        (frame (make-application-frame 'lkb-top)))
-    (dolist (command *lkb-menu-disabled-list*)
-      (setf (command-enabled command frame) nil))
-    (setf *lkb-top-frame* frame)
-    (setf *lkb-top-stream* (get-frame-pane *lkb-top-frame* 'display))
+  (let ((old-frame *lkb-top-frame*))
     (setf *lkb-top-process*
       (mp:process-run-function "start-lkb-frame" 
-                               #'run-lkb-top-menu frame excl::*initial-terminal-io*))
-    ;; crude way of seeing whether this is being called when we already have a
-    ;; grammar
-    (when user::*current-grammar-load-file*
-      (enable-type-interactions))
+                               #'run-lkb-top-menu 
+                               excl::*initial-terminal-io*))
     ;; note - if this is being called from a command in the old frame it's
     ;; important this is the last action ...
     (when old-frame
       (execute-frame-command old-frame '(com-close-to-replace)))))
 
-(defun run-lkb-top-menu (frame background-stream)
+(defun run-lkb-top-menu (background-stream)
   ;; define this function so that stuff can be called on exit from LKB
-  (setf cl-user::*lkb-background-stream* background-stream)
-  (unwind-protect
-      (run-frame-top-level frame)
-    (when *complete-lisp-close*
-      ;;(user::store-cached-lex user::*lexicon*)
-      (excl:exit 0 :no-unwind t))))
+  (let ((frame (make-application-frame 'lkb-top)))
+    (dolist (command *lkb-menu-disabled-list*)
+      (setf (command-enabled command frame) nil))
+    (setf *lkb-top-frame* frame)
+    (setf *lkb-top-stream* (get-frame-pane *lkb-top-frame* 'display))
+    ;; crude way of seeing whether this is being called when we already have a
+    ;; grammar
+    (when user::*current-grammar-load-file*
+      (enable-type-interactions))
+    (setf cl-user::*lkb-background-stream* background-stream)
+    (unwind-protect
+        (run-frame-top-level frame)
+      (when *complete-lisp-close*
+        (excl:exit 0 :no-unwind t)))))
 
 #|
 (defun user-exit-lkb-frame (frame)

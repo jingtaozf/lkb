@@ -11,11 +11,14 @@
 ;;; Main entry points
 
 (defun batch-compare (filename)
+  (mp:process-run-function "Batch" #'batch-compare-really filename))
+
+(defun batch-compare-really (filename)
   (let ((frame (clim:make-application-frame 'compare-frame)))
     (setf (compare-frame-stream frame) (open filename :direction :input))
     (setf (clim:frame-pretty-name frame) "Batch compare")
     (when (next-sentence frame)
-      (mp:process-run-function "Batch" #'clim:run-frame-top-level frame))))
+      (clim:run-frame-top-level frame))))
 
 (defun next-sentence (frame)
   (let ((*parse-record*)

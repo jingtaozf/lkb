@@ -159,14 +159,17 @@
 					      (< (length choices) 
 						 *maximum-list-pane-items*))
 					 'clim:list-pane-view
-				       `(clim:text-field-view 
-					 :width ,width))
+                                       (if (and width (numberp width))
+                                           `(clim:text-field-view :width ,width)
+                                         `(clim:text-field-view)))
 			       :query-identifier count
 			       :prompt nil)
 			    (clim:accept 'string :stream stream
 					 :default (elt result count)
-					 :view `(clim:text-field-view 
-						 :width ,width)
+					 :view 
+                                         (if (and width (numberp width))
+                                          `(clim:text-field-view :width ,width)
+                                          `(clim:text-field-view))
 					 :query-identifier count
 					 :prompt nil)))))
 		    (clim:formatting-cell (stream :align-y :center)

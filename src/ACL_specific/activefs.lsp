@@ -90,10 +90,14 @@
 
 ;;; **** display function entry points ****
 
-(defun display-basic-fs (fs title &optional parents paths id)
-  (declare (ignore output-fs))
+(defun display-basic-fs (fs title &optional parents paths id) 
+  (mp:process-run-function "FS" #'display-basic-fs-really
+			   fs title parents paths id))
+
+
+(defun display-basic-fs-really (fs title parents paths id)
   (let ((fs-window 
-          (clim:make-application-frame 'active-fs-window)))
+         (clim:make-application-frame 'active-fs-window)))
     (setf (active-fs-window-fs fs-window) 
       (make-fs-display-record :fs fs :title title :paths paths 
 			      :parents parents
@@ -113,10 +117,8 @@
        :resize-frame t
        :height (clim:text-style-height *normal* path-pane)
        :max-height (clim:text-style-height *normal* path-pane)))
-    ;; Run it    
-    (mp:process-run-function "FS" 
-			     #'clim:run-frame-top-level
-			     fs-window)))
+    ; Run it
+    (clim:run-frame-top-level fs-window)))
 
 (defun display-fs (fs title &optional id)
   (display-basic-fs fs title nil nil id))

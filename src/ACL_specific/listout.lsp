@@ -25,11 +25,15 @@
   :height *parse-window-height*)
 
 (defun draw-active-list (pairs title menu)
+  (mp:process-run-function title #'draw-active-list-really 
+                           pairs title menu))
+                           
+(defun draw-active-list-really (pairs title menu)                           
   (let ((frame (clim:make-application-frame 'list-window)))
     (setf (list-window-pairs frame) pairs)
     (setf (list-window-menu frame) menu)
     (setf (clim:frame-pretty-name frame) title)
-    (mp:process-run-function title #'clim:run-frame-top-level frame)))
+    (clim:run-frame-top-level frame)))
 
 (defun draw-list-window (frame stream &key max-width max-height)
   (declare (ignore max-width max-height))

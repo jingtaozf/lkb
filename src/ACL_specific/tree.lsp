@@ -137,15 +137,18 @@
         (setf (type-hierarchy-nodes existing) node)
 	(setf (clim:frame-pretty-name existing) title)
         (clim:redisplay-frame-panes existing :force-p t))
-    (progn
-      (let ((thframe (clim:make-application-frame 'type-hierarchy)))
-        (push thframe *type-hierarchy-frames*)
-        (setf (type-hierarchy-nodes thframe) node)
-	(setf (type-hierarchy-show-all-p thframe) show-all-p)
-        (mp:process-run-function "Type Hierarchy" 
-                                 #'clim:run-frame-top-level thframe)
-	(setf (clim:frame-pretty-name thframe) title)))))
+      (mp:process-run-function "Type Hierarchy" 
+                               #'display-type-hierarchy-really
+                               node title show-all-p)))
 
+(defun display-type-hierarchy-really (node title show-all-p)
+  (let ((thframe (clim:make-application-frame 'type-hierarchy)))
+    (push thframe *type-hierarchy-frames*)
+    (setf (type-hierarchy-nodes thframe) node)
+    (setf (type-hierarchy-show-all-p thframe) show-all-p)
+    (setf (clim:frame-pretty-name thframe) title)
+    (clim:run-frame-top-level thframe)))
+	
 (defun draw-type-hierarchy (type-hierarchy stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((node-tree (type-hierarchy-nodes type-hierarchy))

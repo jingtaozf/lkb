@@ -53,13 +53,18 @@
 
 (defun draw-new-parse-tree (topnode title horizontalp &optional counter)
   (declare (ignore horizontalp))
+  (mp:process-run-function title 
+                           #'draw-new-parse-tree-really 
+                           topnode counter))
+
+(defun draw-new-parse-tree-really (topnode counter)
   (let ((pframe (clim:make-application-frame 'parse-tree)))
     (setf (parse-tree-nodes pframe) topnode)
     (setf (parse-tree-current-chart pframe) 
       (or counter
           *chart-generation-counter*))
-    (mp:process-run-function title 
-                             #'clim:run-frame-top-level pframe)))
+    (clim:run-frame-top-level pframe)))
+
 
 (defun draw-parse-tree (ptree-frame stream &key max-width max-height)
   (declare (ignore max-width max-height))
@@ -192,12 +197,16 @@
 |#
 
 (defun show-parse-tree-frame (parses)
+  (mp:process-run-function "Parse results" 
+                             #'show-parse-tree-frame-really parses)) 
+
+(defun show-parse-tree-frame-really (parses)
   (let ((frame (clim:make-application-frame 'parse-tree-frame)))
     (set-up-parse-tree-frame parses frame)
     (setf (clim:frame-pretty-name frame) 
       (format nil "~{~a ~}" (edge-leaves (car parses))))
-    (mp:process-run-function "Parse results" 
-                             #'clim:run-frame-top-level frame)))
+    (clim:run-frame-top-level frame)))
+
 
 (defun set-up-parse-tree-frame (parses frame)
   (setf (parse-tree-frame-current-chart frame) *chart-generation-counter*)

@@ -45,6 +45,10 @@
 				'(clim-user::com-close-to-replace)))
   ;; Initialize fonts
   (setq *parse-tree-font* (clim:parse-text-style (lkb-parse-tree-font)))
+  (mp:process-run-function "CHART" #'draw-chart-lattice-really
+                           node title subframe-p))
+                           
+(defun draw-chart-lattice-really (node title subframe-p)                    
   (let* ((chart-window (clim:make-application-frame 'chart-window))
 	 (yield-pane 
 	  (find :path (clim:frame-current-panes chart-window)
@@ -63,9 +67,8 @@
       (setf *main-chart-frame* chart-window))
     (setf (chart-window-root chart-window) node)
     (setf (clim:frame-pretty-name chart-window) title)
-    (mp:process-run-function "CHART" 
-                             #'clim:run-frame-top-level
-                             chart-window)))
+    (clim:run-frame-top-level chart-window)))
+
 
 (defun draw-chart-window (window stream &key max-width max-height)
   (declare (ignore max-width max-height))
