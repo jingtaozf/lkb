@@ -215,10 +215,9 @@
     (when *lsp-debug-p*
       (format 
        t 
-       "[~a] lsp-process-event(): received: `~(~a~)' command~@[ (wait)~].~%" 
-       id (first command) waitp))
+       "[~a] lsp-process-event(): received: `~(~a~)'~@[ (wait)~].~%" 
+       id command waitp))
     
-    (pprint command)
     (unless (or waitp (null id))
       (format stream "~a~c~%" return #\page)
       (force-output stream))
