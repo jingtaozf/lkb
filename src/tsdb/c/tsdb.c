@@ -44,7 +44,8 @@ Tsdb tsdb = {
 #endif
   -1,                      /* command */
   (Tsdb_history **)NULL,   /* history */
-  TSDB_HISTORY_SIZE        /* history_size */
+  TSDB_HISTORY_SIZE    ,   /* history_size */
+  (char*) NULL             /* translate_table */
 }; /* tsdb */
 
 FILE *tsdb_default_stream = TSDB_DEFAULT_STREAM;
