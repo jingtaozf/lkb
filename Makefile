@@ -59,6 +59,8 @@ links:
 #
 
 lkb: lkb_source lkb_data lkb_binaries
+	${RM} ${TARGET}/latest;
+	${LN} ${TARGET}/${DATE} ${TARGET}/latest;
 
 lkb_source:
 	( \
@@ -90,7 +92,7 @@ lkb_data:
 	      --exclude="src/data/spanish*" \
 	      --exclude="src/data/interrogatives*" \
 	      --exclude="src/data/aline2*" \
-	      src/data src/*.el lexdb; \
+	      src/data src/*.el lexdb etc; \
 	)
 
 lkb_binaries: lkb_linux # lkb_solaris
