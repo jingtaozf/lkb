@@ -50,7 +50,7 @@ char *rev_complete[] = {
   "where",
   "from",
   "retrieve",
-  "select"
+  "select",
   "values",
   "into",
   "insert",
@@ -82,6 +82,7 @@ char *tsdb_constants[] = {
   "tsdb_data_path",
   (char *)NULL
 };
+#define TSDB_CONST_NUM 6
 
 char *tsdb_variables[] = {
   "result-path",
@@ -92,8 +93,11 @@ char *tsdb_variables[] = {
   "tsdb_max_results",
   "history-size",
   "tsdb_history_size",
+  "uniquely-project",
+  "tsdb_uniquely_project",
   (char *)NULL
 };
+#define TSDB_VAR_NUM 10
 
 char *tsdb_rest_generate(char *, int) ;
 char **tsdb_completion(char *, int, int);
@@ -566,7 +570,7 @@ char** matches_rest(char* text, int start, int end) {
   names_a = tsdb_all_attribute_names();
   rel_num = tsdb_n_relations();
   attr_num = tsdb_n_attributes();
-  if (attr_num+rel_num+10 > num) {
+  if (attr_num+rel_num+TSDB_VAR_NUM+TSDB_CONST_NUM+10 > num) {
     num+=num;
     matches = (char**)realloc(matches,(num+1)*sizeof(char*));
   }
@@ -577,11 +581,11 @@ char** matches_rest(char* text, int start, int end) {
   switch (last) {
   case 0: matches = zero;
     break;
-  case 1:
+  case 1: /* add */
     /* attributnamen */
     memcpy(matches,names_a,(attr_num+1)*sizeof(char*));
     break;
-  case 2: /* create/alter/drop table*/
+  case 2: /* create/alter/drop >table< */
     /* relationennamen, oder wenn schon existiert add oder attributliste */
 #ifdef EXACT
     v->name = words[2];
@@ -610,26 +614,26 @@ char** matches_rest(char* text, int start, int end) {
         memcpy(matches+attr_num,add,2*sizeof(char*));
       }
     }
-  case 3:
-  case 4:
-  case 5:matches = tvf;
+  case 3: /* >create< */
+  case 4: /* >alter< */
+  case 5:matches = tvf; /* >drop< */
     break;
-  case 6: /*where */
+  case 6: /* >where< */
     /* attributnamen */
     memcpy(matches,names_a,(attr_num+1)*sizeof(char*));
     break;
-  case 7: /* from */
+  case 7: /* >from< */
     /* relationsnamen oder where */
     memcpy(matches,names_r,sizeof(char*)*(1+rel_num));
     memcpy(matches+rel_num,where,2*sizeof(char*));
     break;
   case 8: 
-  case 9: /* select,retrieve */
+  case 9: /* >select,retrieve< */
     /* attributnamen oder from oder where */
     memcpy(matches,names_a,(attr_num+1)*sizeof(char*));
     memcpy(matches+attr_num,fr_wh,3*sizeof(char*));
     break;
-  case 10: /*values */
+  case 10: /* >values< */
     matches[0] = NULL;
     /*nix*/
     break;
@@ -643,6 +647,15 @@ char** matches_rest(char* text, int start, int end) {
     /* into */
     memcpy(matches,into,2*sizeof(char*));
     break;
+  case 13: /* info */
+    memcpy(matches,names_r,(rel_num+1)*sizeof(char*));
+    memcpy(matches+rel_num,tsdb_variables,(TSDB_VAR_NUM+1)*sizeof(char*));
+    memcpy(matches+rel_num+TSDB_VAR_NUM,tsdb_constants,
+           (TSDB_CONST_NUM+1)*sizeof(char*));
+    break;
+  case 14: /* set */
+    memcpy(matches,tsdb_variables,(TSDB_VAR_NUM+1)*sizeof(char*));
+    break;
   default: 
     matches[0]=NULL;
   } /* switch */
@@ -653,8 +666,12 @@ char** matches_rest(char* text, int start, int end) {
 char **tsdb_completion(char *text, int start, int end) {
 
   char **matches = (char **)NULL;
+  
+  int i = 0;
 
-  if(start == 0) {
+  while ((text[i]!='\0') && isspace(text[i])) 
+    i++;
+  if ((start == 0)&& (start<=i)) {
     matches = completion_matches(text, tsdb_command_generate);
   }
   else {
