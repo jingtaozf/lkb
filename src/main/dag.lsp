@@ -1022,7 +1022,6 @@
 ;;;                                                          (12-nov-99  -  oe)
 ;;;
 
-#+:packing
 (defun minimal-type-for (feature)
   (or (get feature :constraint)
       (let* ((introduction (maximal-type-of feature))
@@ -1032,12 +1031,10 @@
                        *toptype*)))
         (setf (get feature :constraint) type))))
 
-#+:packing
 (defun copy-dag-partially (dag)
   (invalidate-visit-marks)
   (copy-dag-partially1 dag nil))
 
-#+:packing
 (defun copy-dag-partially1 (old path)
   (if (dag-visit old)
     (dag-visit old)

@@ -54,7 +54,7 @@
 (defstruct (rule (:include psort))
   ;;; NOTE - any changes to slots here have to be mirrored
   ;;; in mrs/lexlookup.lsp make-new-found-rule
-  #+:packing rtdfs ;; restricted feature structure for improved packing
+  rtdfs ;; restricted feature structure for improved packing
   daughters-restricted
   daughters-restricted-reversed
   daughters-apply-order
@@ -226,7 +226,6 @@
   (process-unif-list id non-def def rule rule-persistence)
   (let ((fs (rule-full-fs rule)))  
     (when fs
-      #+:packing
       (setf (rule-rtdfs rule) (copy-tdfs-partially fs))
       (if lexical-p 
         (pushnew id *ordered-lrule-list*)
@@ -482,13 +481,11 @@
 
 
 (defun fill-rule-filter (rule filter test-list)
-  (let ((rule-tdfs #+:packing (rule-rtdfs rule) 
-                   #-:packing (rule-full-fs rule))
+  (let ((rule-tdfs (rule-rtdfs rule))
         (rule-daughters (cdr (rule-order rule))))
     (loop for test in test-list
         do
-          (let ((test-tdfs #+:packing (rule-rtdfs test)
-                           #-:packing (rule-full-fs test))
+          (let ((test-tdfs (rule-rtdfs test))
                 (test-index (rule-apply-index test)))
             (loop for arg from 0 to (1- (length rule-daughters))
                 for dtr in rule-daughters

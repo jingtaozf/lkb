@@ -53,7 +53,7 @@
                                 (boundp (find-symbol "*HYPER-ACTIVITY-P*"))
                                 (symbol-value 
                                  (find-symbol "*HYPER-ACTIVITY-P*"))))
-         (chart-packing-p #+:packing *chart-packing-p* #-:packing nil)
+         (chart-packing-p *chart-packing-p*)
          (agendap (or (and (not active-parsing-p) (not exhaustivep))
                       (and active-parsing-p (not exhaustivep) 
                            (find :agenda *features*))))
@@ -162,7 +162,7 @@
                    &key id exhaustive nanalyses trace
                         edges derivations semantix-hook trees-hook
                         burst (nresults 0))
-  (declare (ignore derivations #-:packing id))
+  (declare (ignore derivations id))
   
   (let* ((*package* *lkb-package*)
          (*chasen-debug-p* nil)
@@ -195,7 +195,6 @@
          ;; this really ought to be done in the parser ...  (30-aug-99  -  oe)
          ;;
          (setf *sentence* string)
-         #+:packing
          (reset-packings)
          (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks)
              (tsdb::time-a-funcall
@@ -208,16 +207,11 @@
                  (output (get-output-stream-string str))
                  (unifications *unifications*)
                  (copies *copies*)
-                 #+:packing
                  (packingp *chart-packing-p*)
-                 #+:packing
                  utcpu
-                 #+:packing
                  utgc
-                 #+:packing
                  uspace
-                 (readings #+:packing
-                           (if packingp
+                 (readings (if packingp
                              (tsdb::time-a-funcall
                               #'(lambda () 
                                   (loop
@@ -230,9 +224,7 @@
                                   (setf utgc (+ tgcu tgcs))
                                   (setf uspace
                                     (+ (* scons 8) (* ssym 24) sother))))
-                             (length *parse-record*))
-                           #-:packing
-                           (length *parse-record*))
+                             (length *parse-record*)))
                  (readings (if (or (equal output "") (> readings 0))
                               readings
                              -1))
@@ -265,7 +257,6 @@
                   (format nil "(:pool . ~d) (:garbage . ~d)" position garbage)
                   #-:pooling
                   "")
-                 #+:packing
                  (comment
                   (if packingp
                     (format 
@@ -305,7 +296,7 @@
                 (:comment . ,comment)
                 (:results .
                  ,(append
-                   (unless #+:packing packingp #-:packing nil
+                   (unless packingp
                      (loop
                          with *package* = *lkb-package*
                          with nresults = (if (<= nresults 0)
@@ -854,7 +845,7 @@
            (loop
                for configuration in (chart-entry-configurations entry)
                for edge = (chart-configuration-edge configuration)
-               for odag = #+:packing (edge-odag edge) #-:packing nil
+               for odag = (edge-odag edge)
                for tdfs = (if (dag-p odag) odag (edge-dag edge))
                for dag = (tdfs-indef tdfs)
                unless (safe-dag-p dag) do (compress-dag dag))

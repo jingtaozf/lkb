@@ -89,7 +89,6 @@
       (make-tdfs :indef indef
                  :tail (copy-tdfs-tails old-tdfs)))))
 
-#+:packing
 (defun copy-tdfs-partially (old)
   (let ((dag (copy-dag-partially (tdfs-indef old))))
     (when dag

@@ -46,8 +46,7 @@
   (pushnew :xml *features*)
   #+(or :lui (and :allegro (version>= 6 0)))
   (pushnew :lsp *features*)
-  (pushnew :pooling *features*)
-  (pushnew :packing *features*))
+  (pushnew :pooling *features*))
 
 
 (defparameter *lisp-specific-directory*

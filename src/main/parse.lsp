@@ -89,12 +89,11 @@
 				 -1))
                           mrs
                           foo bar baz
-                          #+:packing packed #+:packing equivalent 
-                          #+:packing frozen)))
+                          packed equivalent frozen adjuncts)))
    id score category rule dag odag dag-restricted leaves lex-ids
    parents children morph-history spelling-change orth-tdfs from to label head
    cfrom cto mrs foo bar baz
-   #+:packing packed #+:packing equivalent #+:packing frozen)
+   packed equivalent frozen adjuncts)
 
 (defparameter *characterize-p* nil)
 
@@ -1312,13 +1311,10 @@
                          &optional end 
                          &key (frozen nil frozenp)
                               concise (stream t))
-  #-:packing
-  (declare (ignore frozen))
-  
   (let ((edge (if (edge-p item) item (chart-configuration-edge item)))
         (begin (unless (edge-p item) (chart-configuration-begin item)))
         (roots (unless (edge-p item) (chart-configuration-roots item))))
-    (when (or (null frozenp) #+:packing (eq (edge-frozen edge) frozen))
+    (when (or (null frozenp) (eq (edge-frozen edge) frozen))
       (format 
        stream 
        "~&~:[~2*~;~A-~A ~][~A] ~A => ~A~A  [~{~A~^ ~}]"
@@ -1328,7 +1324,6 @@
        (edge-leaves edge)
        (if roots "*" "")
        (loop for child in (edge-children edge) collect (edge-id child)))
-      #+:packing
       (format
        t
        "~:[~2*~; ~:[+~;~]~d~]"
@@ -1337,7 +1332,6 @@
       ;;
       ;; if applicable, print out compact summary of packings (9-aug-99  -  oe)
       ;;
-      #+:packing
       (when (or (edge-equivalent edge) (edge-packed edge))
         (let ((edge (first (or (edge-equivalent edge) (edge-packed edge)))))
           (format 

@@ -237,6 +237,48 @@
              (dag-arc-value arc1) existing-dag2 forwardp backwardp)))))
     (values forwardp backwardp)))
 
+;;;
+;;; test for forward subsumption only, return failure path
+;;;
+(defun dag-subsumes-debug (dag1 dag2)
+  (with-unification-context (dag1)
+    (let ((result (catch '*fail* (subsume-wffs-debug dag1 dag2 t nil nil))))
+      (when (and (consp result) (eq (first result) :path))
+        (nreverse (rest result))))))
+
+(defun subsume-wffs-debug (dag1 dag2 forwardp backwardp path)
+  (when forwardp
+    (cond
+     ((null (dag-copy dag1))
+      (setf (dag-copy dag1) dag2))
+     ((not (eq (dag-copy dag1) dag2))
+      (setq forwardp nil))))
+  (when backwardp
+    (cond
+     ((null (dag-copy dag2))
+      (setf (dag-copy dag2) dag1))
+     ((not (eq (dag-copy dag2) dag1))
+      (setq backwardp nil))))
+  (unless (or forwardp backwardp) (throw '*fail* (cons :path path)))
+  (let ((type1 (type-of-fs dag1))
+        (type2 (type-of-fs dag2)))
+    (unless (eq type1 type2)
+      (when (and forwardp (not (subtype-or-equal type2 type1)))
+        (setq forwardp nil))
+      (when (and backwardp (not (subtype-or-equal type1 type2)))
+        (setq backwardp nil))
+      (unless (or forwardp backwardp) (throw '*fail* (cons :path path))))
+    (dolist (arc1 (dag-arcs dag1))
+      (let* ((label (dag-arc-attribute arc1))
+             (existing-dag2 (get-dag-value dag2 label)))
+        (when existing-dag2
+          (multiple-value-setq (forwardp backwardp)
+            (subsume-wffs-debug
+             (dag-arc-value arc1) existing-dag2 
+             forwardp backwardp
+             (cons label path))))))
+    (values forwardp backwardp)))
+
 (defun subtype-or-equal (type1 type2)
    (or (equal type1 type2)
       (subtype-p type1 type2)))

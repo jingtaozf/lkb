@@ -386,6 +386,18 @@ at this point).
                            *main-semantics-path*))
 
 (defun apply-rels-to-base (lex-id base-fs rel-list path)
+  ;;; _fix_me_
+  ;;;
+  ;;; for `variable-arity' predicates (like give and preprositions that are in
+  ;;; the lexicon as adverbs too, e.g. around) investigate skolemizing keyed
+  ;;; off the lexical entry, or some other way of making sure that roles in the
+  ;;; lexical entry that have no correspondence in the input MRS are specified
+  ;;; to some value, analogous to unbound variables in input MRSs.  maybe this:
+  ;;; extract list of relations and roles from .fs., then construct new FS for
+  ;;; .rels. (according to that order and also skolemizing roles that do not)
+  ;;; occur in the corresponding .rels. element, e.g. the ARG3 of a transitive
+  ;;; use of `give'), unify, and return.                       (18-dec-03; oe)
+  ;;;
   (loop for rel-sequence in (create-all-rel-sequences rel-list)
       when
        ;; needs fixing - unnecessary expense since we repeat this on the same
@@ -405,6 +417,10 @@ at this point).
 	    (cerror "Ignore this entry/rule" 
 		    "~%Problem in create-liszt-fs-from-rels")))
 	collect it))
+
+#+:oe
+(defun apply-rels-to-base (id fs rels path)
+  )
 
 (defun create-all-rel-sequences (rels)
   ;;; we have an ordered list of lists
@@ -604,7 +620,7 @@ at this point).
    :unifs (lkb::rule-unifs rule)
    :def-unifs (lkb::rule-def-unifs rule)
    :full-fs new-fs
-   #+:packing :rtdfs #+:packing (lkb::copy-tdfs-partially new-fs)
+   :rtdfs (lkb::copy-tdfs-partially new-fs)
    :daughters-restricted (lkb::rule-daughters-restricted rule)
    :daughters-restricted-reversed 
    (lkb::rule-daughters-restricted-reversed rule)

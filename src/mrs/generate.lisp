@@ -957,7 +957,7 @@
       (dolist (act acts)
          (when (gen-chart-try-adjunction act edge)
             (pushnew act adjoined)
-            (pushnew act (g-edge-baz edge)))))
+            (pushnew act (g-edge-adjuncts edge)))))
    (dolist (c (g-edge-children edge))
       (when c
          ;; don't try to adjoin into the needed daughter of an active edge
@@ -999,12 +999,12 @@
 
 ;;; Print out contents of generator chart (tty output) - (print-gen-chart)
 
-(defun print-gen-chart (&key (stream t))
-   (flet ((print-edge (e stream)
+(defun print-gen-chart (&key concise (stream t))
+   (flet ((print-edge (e stream concise)
             (format stream "[~A] ~A~A ~30,5T=> (~{~:A~^ ~})  [~{~A~^ ~}]~%"
                (g-edge-id e)
                (if (rule-p (g-edge-rule e)) (rule-id (g-edge-rule e))
-                   (g-edge-rule e))
+                   (if concise (first (edge-lex-ids e)) (g-edge-rule e)))
                (if (g-edge-needed e)
                   (format nil " / ~{~A~^ ~}" (g-edge-needed e))
                   "")
@@ -1017,13 +1017,13 @@
          (format stream "~%Vertex ~(~A~):~%" (car entry))
          (dolist (e (sort (append (cadr entry) (copy-list (cddr entry))) #'<
                           :key #'edge-id))
-            (print-edge e stream)
+            (print-edge e stream concise)
             (dolist (p (g-edge-equivalent e))
                (format stream " = packed ")
-               (print-edge p stream)
+               (print-edge p stream concise)
             (dolist (p (g-edge-packed e))
                (format stream " > packed ")
-               (print-edge p stream)))))
+               (print-edge p stream concise)))))
       (format stream "~%")))
 
 

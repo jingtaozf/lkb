@@ -39,9 +39,9 @@
   (pushnew :agenda *features*)
   (pushnew :hyper-activity *features*)
   (pushnew :excursion *features*)
-  #+:packing (pushnew :retroactivity *features*)
-  #+:packing (pushnew :restrict *features*)
-  #+(and :agenda :packing :naacl) (pushnew :priority *features*))
+  (pushnew :retroactivity *features*)
+  (pushnew :restrict *features*)
+  #+(and :agenda :naacl) (pushnew :priority *features*))
 
 (defparameter *hyper-activity-p* t)
 
@@ -59,10 +59,8 @@
 ;;;     to be excluded (solved --- 23-oct-99 -- oe).
 ;;;
 
-#+:packing
 (defparameter *chart-packing-p* nil)
 
-#+:packing
 (defstruct packings
   (equivalent 0 :type fixnum)
   (proactive 0 :type fixnum)
@@ -70,10 +68,8 @@
   (frozen 0 :type fixnum)
   (failures 0 :type fixnum))
 
-#+:packing
 (defparameter *packings* (make-packings))
 
-#+:packing
 (defun reset-packings (&optional (packings *packings*))
   (setf (packings-equivalent packings) 0)
   (setf (packings-proactive packings) 0)
@@ -243,7 +239,6 @@
   #-:agenda
   (declare (ignore priority))
   
-  #+:packing
   (when *chart-packing-p*
     (let ((edge (chart-configuration-edge passive)))
       (setf (edge-odag edge) (edge-dag edge))
@@ -398,7 +393,7 @@
                          (passives-by-end begin))
         for pedge = (chart-configuration-edge passive)
         unless (or #+(and :hyper-activity :excursion) (eq passive done)
-                   #+:packing (edge-frozen pedge)) do
+                   (edge-frozen pedge)) do
           (if (and (check-rule-filter arule (edge-rule pedge) key)
                    (restrictors-compatible-p
                     avector
@@ -514,7 +509,6 @@
 ;;; the unpacking phase.  this was hard to debug.          (17-sep-99  -  oe)
 ;;;
 
-#+:packing
 (defun packed-edge-p (start end edge)
   (labels (#+:pdebug
            (edge-label (edge)
@@ -601,7 +595,6 @@
   (print-trace :process-rule-and-passive 
                #+:agenda (first task) #-:agenda rule
                #+:agenda (rest task) #-:agenda passive)
-  #+:packing
   (when (edge-frozen (chart-configuration-edge #+:agenda (rest task)
                                                #-:agenda passive))
     (return-from process-rule-and-passive nil))
@@ -660,8 +653,7 @@
                                                  (passives-by-start end)
                                                  (passives-by-end begin))
                                 for pedge = (chart-configuration-edge passive)
-                                when (and #+:packing 
-                                          (null (edge-frozen pedge))
+                                when (and (null (edge-frozen pedge))
                                           (check-rule-filter 
                                            rule (edge-rule pedge) key)
                                           (restrictors-compatible-p
@@ -676,9 +668,9 @@
                           :done passive)))
             ;;
             ;; _mystery_
-            ;; it seems active edges are not recorded in the parent relation, so
-            ;; will never be be frosted.  right now, uc and i fail to explain
-            ;; why that should be unnecessary.                   (27-may-03; oe)
+            ;; it seems active edges are not recorded in the parent relation, 
+            ;; so will never be be frosted.  right now, uc and i fail to
+            ;; explain why that should be unnecessary.         (27-may-03; oe)
             ;;
             ;;
             ;; this is _truly_ experimental: to take full advantage of that
@@ -697,7 +689,6 @@
                 (process-active-and-passive active passive atdfs)))
             (fundamental4active active)))
          (t
-          #+:packing
           (when *chart-packing-p*
             (loop
                 for edge in (edge-children nedge) do
@@ -715,7 +706,6 @@
                #+:agenda (first task) #-:agenda active
                #+:agenda (rest task) #-:agenda passive)
 
-  #+:packing
   (when (and *chart-packing-p*
              (or (edge-frozen (chart-configuration-edge 
                                #+:agenda (rest task) #-:agenda passive))
@@ -805,7 +795,6 @@
             :begin begin :end end :edge nedge
             :open open :forwardp (< key (first open)))))
          (t
-          #+:packing
           (when *chart-packing-p*
             (loop
                 for edge in (edge-children nedge) do
@@ -906,7 +895,6 @@
                        sum (count-nodes edge :mark mark :chartp chartp
                                         :packingp packingp)))
          (packings (if packingp
-                     #+:packing
                      (+ (loop
                             for edge in (edge-packed edge)
                             sum (count-nodes edge :mark mark 
@@ -917,8 +905,6 @@
                             sum (count-nodes edge :mark mark 
                                              :packingp packingp
                                              :ignorep t :chartp chartp)))
-                     #-:packing
-                     0
                      0)))
     (+ current children packings)))
 
@@ -933,10 +919,9 @@
                   for bar in rests
                   collect (cons foo bar)))))
 
-#+(and :packing :fdebug)
+#+:fdebug
 (defparameter *unpacking-failure-paths* (make-hash-table :test #'equal))
 
-#+:packing
 (defun explode! (edges adjuncts)
   (append
    edges
@@ -985,7 +970,6 @@
                                       (g-edge-rels-covered passive))))
        when new append (explode! new adjuncts))))
 
-#+:packing
 (defun unpack-edge! (id edge &optional insidep)
   #+:fdebug
   (clrhash *unpacking-failure-paths*)
@@ -1099,10 +1083,9 @@
            ;; already.  in general, unpack-edge!() should be able to unpack
            ;; active edges too, however.                       (15-dec-03; oe)
            ;;
-           #+:null
-           (when (consp (edge-baz edge)) (edge-baz edge))
            (loop
-               for edge in (when (consp (edge-baz edge)) (edge-baz edge))
+               for edge in (when (consp (edge-adjuncts edge))
+                             (edge-adjuncts edge))
                for rule = (edge-rule edge)
                for rtdfs = (rule-full-fs rule)
                for path = (first (rule-daughters-apply-order rule))
@@ -1204,13 +1187,7 @@
        ;;
        (t 
         (when (edge-odag edge) (setf (edge-dag edge) (edge-odag edge)))
-        (explode! (list edge) adjuncts))
-       #+:null
-       (t 
-        (let ((new (if (g-edge-p edge) (copy-g-edge edge) (copy-edge edge))))
-          (setf (edge-id new) (next-edge :unpack))
-          (setf (edge-dag new) (or (edge-odag new) (edge-dag new)))
-          (explode! (list new) adjuncts)))))))
+        (explode! (list edge) adjuncts))))))
 
 #+:test
 (let ((*active-parsing-p* t)
