@@ -89,6 +89,11 @@
     (loop for node in tree append (extract-ptb-leaves node)))
    (t nil)))
 
+(defun rewrite-ptb-token (token pos)
+  (cond
+   ((string-equal pos "cd") "TwoDigitErsatz")
+   (t token)))
+
 (defun preprocess-ptb-string (string &key (posp *ptb-use-pos-tags-p*))
   (let (result)
     (loop
@@ -96,10 +101,11 @@
         with leaves = (extract-ptb-leaves tree)
         with i = 0
         with id = 41
-        for leave in leaves
-        for form = (second leave)
-        for pos = (first leave)
-        do
+        for leaf in leaves
+        for pos = (first leaf)
+        for raw = (second leaf)
+        for form = (rewrite-ptb-token raw pos)
+        unless (string-equal pos "-none-") do
           (push (format 
                  nil 
                  "(~d, ~d, ~d, 1, \"~a\", 0, null~:[~*~;, ~a 1.00~])" 
