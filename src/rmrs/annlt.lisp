@@ -17,12 +17,13 @@
 (defun get-dtr-nodes (node)
   (rest node))
 
-(defparameter *xml-word-p* nil)
+(defparameter *xml-word-p* nil
+  "set for versions of the RASP output which have the XML-style word structures")
 
 #|
 some of the files just have
 |Beijing:18_NP1|
-others have `XML'
+others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 |#
 
 
@@ -144,75 +145,70 @@ others have `XML'
       (or cfrom most-positive-fixnum))))
 
   
-;;; top level call
-;;; multiple files
-
+;;; top level call examples
 
 #|
-(progn
-(setf *xml-word-p* t)
-(simple-process-rasp-file 
- (make-pathname 
+;;; Windows, semtest
+
+(let ((*xml-word-p* t))
+  (simple-process-rasp-file 
+   (make-pathname 
+    :device "d"
+    :directory "/lingo/lkb/src/rmrs/annlt-test/"
+    :name "semtest.rasp")
+   "semtest.rmrs" 
+   nil
+   (make-pathname 
    :device "d"
    :directory "/lingo/lkb/src/rmrs/annlt-test/"
-   :name "semtest.rasp")
- "semtest.rmrs" nil))
+   :name "gram14.1.rmrs")
+   (make-pathname :device "d"
+		 :directory "/lingo/lkb/src/rmrs/annlt-test/"
+		 :name "lex14.1.rmrs")))
 
-(progn
-(setf *xml-word-p* t)
-(simple-process-rasp-file2 
- (make-pathname 
-   :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-   :name "semtest.rasp")
- "semtest.rmrs" nil))
+;;; Linux semtest
 
-(progn
-(setf *xml-word-p* t)
-(simple-process-rasp-file 
- (make-pathname 
-   :device "d"
-   :directory "/lingo/lkb/src/rmrs/annlt-test/"
-   :name "t1.rasp")
- "t1.rmrs" nil))
+(let ((*xml-word-p* t))  
+  (simple-process-rasp-file2 
+   (make-pathname 
+    :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+    :name "semtest.rasp")
+   "semtest.rmrs" 
+   nil
+   (make-pathname 
+    :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+    :name "gram14.1.rmrs")
+   (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+		  :name "lex14.1.rmrs")))
+   
+;;; Windows, XML
 
-(progn
- (setf *xml-word-p* nil) 
-(simple-process-rasp-file 
- (make-pathname 
-   :device "d"
-   :directory "/lingo/lkb/src/rmrs/qa/"
-   :name "top_docs.24.parses")
- (make-pathname 
-   :device "d"
-   :directory "/lingo/lkb/src/rmrs/qa/"
-   :name "top_docs.24.rmrs")
- t)
-)
+(let ((*xml-word-p* nil))
+  (simple-process-rasp-file 
+   (make-pathname 
+    :device "d"
+    :directory "/lingo/lkb/src/rmrs/qa/"
+    :name "top_docs.24.parses")
+   (make-pathname 
+    :device "d"
+    :directory "/lingo/lkb/src/rmrs/qa/"
+    :name "top_docs.24.rmrs")
+   t
+   (make-pathname 
+    :device "d"
+    :directory "/lingo/lkb/src/rmrs/annlt-test/"
+    :name "gram14.1.rmrs")
+   (make-pathname :device "d"
+		  :directory "/lingo/lkb/src/rmrs/annlt-test/"
+		  :name "lex14.1.rmrs")))
 |#
 
-(defun simple-process-rasp-file (ifile ofile xml-p)
+(defun simple-process-rasp-file (ifile ofile xml-p grammar-file tag-file)
  (clear-rule-record)
- (read-rmrs-grammar 
-  (make-pathname 
-   :device "d"
-   :directory "/lingo/lkb/src/rmrs/annlt-test/"
-   :name "gram14.1.rmrs"))
- (read-rmrs-tag-templates 
-  (make-pathname :device "d"
-		 :directory "/lingo/lkb/src/rmrs/annlt-test/"
-		 :name "lex14.1.rmrs"))
+ (read-rmrs-grammar grammar-file)
+ (read-rmrs-tag-templates tag-file)
  (rmrs-from-file ifile ofile xml-p))
 
-(defun simple-process-rasp-file2 (ifile ofile xml-p)
- (clear-rule-record)
- (read-rmrs-grammar 
-  (make-pathname 
-   :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-   :name "gram14.1.rmrs"))
- (read-rmrs-tag-templates 
-  (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-		 :name "lex14.1.rmrs"))
-  (rmrs-from-file ifile ofile xml-p))
 
 ;;; File wrapper - note use of handler-case
 ;;; All rather hacky due to need to cope with errors in input
@@ -441,8 +437,28 @@ others have `XML'
 ;;;
 ;;; need to treat NG opt specially eventually
 
+;;; a couple of utility functions
+
 (defun make-tsg-break-table nil 
-  (lkb::define-break-characters '(#\[ #\] #\.)))
+  ;;; define-break-characters in io-general/utils.lsp
+  (let ((temporary-readtable (copy-readtable *readtable*)))
+      (dolist (break-char '(#\[ #\] #\.))
+         (set-macro-character break-char
+            #'(lambda (stream x) (declare (ignore stream)) x)
+            nil
+            temporary-readtable))
+      temporary-readtable))
+
+(defun rmrs-check-for-string (str istream)
+  ;;; check-for-string in io-general/utils.lsp
+  (loop for character in (coerce str 'list)
+      do
+	(let ((next-char (peek-char t istream nil 'eof)))
+	  (if (char= next-char character)
+	      (read-char istream)
+	      (error 
+                 "~%Syntax error: ~A expected and not found at position ~A" 
+                 character (file-position istream))))))
 
 #|
 (mrs::parse-tsg-file "rmrs/annlt-test/tsg-frag"  
@@ -533,14 +549,14 @@ others have `XML'
 
 (defun parse-tsg-rule (istream)
   (let ((dtrs nil))
-    (lkb::check-for-string "PSRULE" istream)
+    (rmrs-check-for-string "PSRULE" istream)
     (multiple-value-bind (name mother dtr-strs)
 	(parse-tsg-name istream)
-      (lkb::check-for-string ":" istream)
+      (rmrs-check-for-string ":" istream)
       (parse-tsg-non-opt istream)
-      (lkb::check-for-string "-->" istream)
+      (rmrs-check-for-string "-->" istream)
       (setf dtrs (parse-tsg-dtrs istream))
-      (lkb::check-for-string "." istream)
+      (rmrs-check-for-string "." istream)
       (values name mother dtr-strs dtrs))))
 
 (defun parse-tsg-name (istream)
@@ -604,7 +620,7 @@ others have `XML'
 	      ((char= next-char #\()
 	       (read-char istream)
 	       (let ((name (parse-tsg-non-opt istream)))
-		 (lkb::check-for-string ")" istream)
+		 (rmrs-check-for-string ")" istream)
 		 (let ((next-char (peek-char t istream nil nil)))
 		   (when (eql next-char #\+)
 		     (read-char istream)
@@ -679,7 +695,7 @@ Simple qa code.
     (make-qa-struct :str str
 		    :rmrs rmrs)))
 	
-
+#+:lkb
 (defun test-qa-eg (egnum)
   (let* ((eg (assoc egnum *qa-test-suite*))
 	 (input (second eg))

@@ -138,17 +138,25 @@
       :source-pathname "rmrs"
       :binary-pathname "rmrs"
       :components
-      ((:file "basermrs")
-       (:file "comp")
-       (:file "convert")
-       (:file "annlt")                           
-       (:file "output")
+      ((:file "basermrs") ;; the RMRS specific structures
+       (:file "comp") ;; main code for semantic composition
+       (:file "convert") ;; MRS to RMRS
+       (:file "annlt") ;; The ANNLT specific code - navigates round the input trees                           
+       (:file "output") ;; outputting RMRS structures, and also LKB
+                        ;; generated structures in a compatible format.
+                        ;; In principle, supports multiple outputs - right no
+                        ;; outputs stuff in XML or a compact representation
+                        ;; LKB-specific code for comparison windows
+                        ;; but #+:lkb used
        #+:xml       
-       (:file "xml-utils")
-       (:file "readgram")
-       (:file "readtag")
-       (:file "input")
-       (:file "compare")
+       (:file "xml-utils") ;; some utilities for XML parser
+       (:file "readgram") ;; loads the data file that associates the 
+                         ;; rule names with semantic operations
+       (:file "readtag") ;; loads the data file that associates the tags with
+                         ;; base semantic structures - uses a lot of code from 
+                         ;; readgram
+       (:file "input") ;;; loads the underlying rmrs input code
+       (:file "compare") ;;; RMRS comparison
        #+(and :lkb :allegro :clim (not :tty)) 	
        (:file "lkb-acl-rmrs")            ; display etc in CLIM
 ))

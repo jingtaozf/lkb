@@ -530,16 +530,35 @@ the canonical order is fully defined.
   nil)
 
 (defun gpred-subsumes-gpred-p (gpred1 gpred2)
+  ;;; currently only called if not equal
   ;;; returns t if gpred1 subsumes gpred2
   ;;; for now, do this via the LKB type hierarchy
-  (equal-or-subtype (vsym gpred2) (vsym gpred1)))
+  ;;; if we're in the LKB - nil otherwise
+  #+:lkb
+  (let ((type1 (vsym gpred1))
+	(type2 (vsym gpred2)))
+    (and (is-valid-type type1)
+	 (is-valid-type type2)
+	 (equal-or-subtype type1 type2)))
+  #-:lkb (declare (ignore gpred1 gpred2))
+  #-:lkb nil)
 
 (defun gpred-compatible-gred-p (gpred1 gpred2)
+  ;;; currently only called if not equal
+  ;;; or subsuming
   ;;; returns t if gpred1 and gpred2 are compatible
   ;;; (equal, one subsumes the other, or have lb in a general
   ;;; hierarchy)
   ;;; for now, do this via the LKB type hierarchy
-  (compatible-types (vsym gpred1) (vsym gpred2)))
+  ;;; if we're in the LKB - nil otherwise
+  #+:lkb  
+  (let ((type1 (vsym gpred1))
+	(type2 (vsym gpred2)))
+    (and (is-valid-type type1)
+	 (is-valid-type type2)
+	 (compatible-types type1 type2)))
+  #-:lkb (declare (ignore gpred1 gpred2))
+  #-:lkb nil)
 
 (defun compare-rmrs-real-preds (pred1 pred2)
   ;;; real preds have two or three parts

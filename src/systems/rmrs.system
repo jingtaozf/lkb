@@ -43,7 +43,7 @@ produced by robust parsers of various types.
        (:file "output")
                          ;; outputting RMRS structures, and also LKB
                          ;; generated structures in a compatible format.
-                         ;; In principle, supports multiple outputs - right no
+                         ;; In principle, supports multiple outputs - right now
                          ;; outputs stuff in XML or a compact representation
        (:file "xml-utils")
                          ;; file with some utilities for XML parser
@@ -54,37 +54,57 @@ produced by robust parsers of various types.
                          ;; loads the data file that associates the tags with
                          ;; base semantic structures - uses a lot of code from 
                          ;; readgram
-       (:file "input"))) ;;; loads the underlying rmrs input code
-
+       (:file "input")   ;;; loads the underlying rmrs input code
+       (:file "compare") ;;; RMRS comparison
+))
 ))
 
 ;;; Examples of how to use the code
+;;; 
+;;; in package MRS in all cases
 
 #|
-;;; ANNLT tree output
 
- :pa :mrs
- (read-rmrs-grammar "annlt-test/gram14.1.rmrs")
- (read-rmrs-grammar "rmrs/annlt-test/gram14.1.rmrs")
- (read-rmrs-tag-templates "annlt-test/lex14.1.rmrs")
- (read-rmrs-tag-templates "rmrs/annlt-test/lex14.1.rmrs")
-  ;;; functions for ANNLT version are in annlt.lisp
+;;; take a rasp file with the `XML' style word tags
+;;; and convert it to rmrs (see annlt.lisp)
 
-  :pa :mrs
-  (rmrs-from-file "annlt-test/test-select.rasp"
-  "annlt-test/test-select.rmrs")
+(let ((*xml-word-p* t))
+  (simple-process-rasp-file 
+   (make-pathname 
+    :device "d"
+    :directory "/lingo/lkb/src/rmrs/annlt-test/"
+    :name "semtest.rasp") ; input file
+   "semtest.rmrs" ; output file
+   nil ; whether input file has XML structure or is just a tree
+   (make-pathname 
+   :device "d"
+   :directory "/lingo/lkb/src/rmrs/annlt-test/"
+   :name "gram14.1.rmrs") ; grammar rules file
+   (make-pathname :device "d"
+		 :directory "/lingo/lkb/src/rmrs/annlt-test/"
+		 :name "lex14.1.rmrs"))) ; tag file
 
-  (rmrs-from-file "rmrs/annlt-test/test-select.rasp"
-  "rmrs/annlt-test/test-select.rmrs")
+;;; read in the rmrs file (see input.lisp)
 
-  (read-rmrs-file "annlt-test/test-select.rmrs")
-  (read-rmrs-file "rmrs/annlt-test/test-select.rmrs")
+(setf *test-rmrss*
+(read-rmrs-file "semtest.rmrs" :rasp))
 
-  (construct-sem-for-tree
-  '(|T/txt-sc1/----|
-     (|S/np_vp| (|NP/n1_n1-name/-| (|N1/n| |Abrams_NP1|))
-      (|V1/v| |bark+ed_VVD|)))
-   :rasp t)
+;;; output the first of these in the `compact' format (see output.lisp)
+
+(output-rmrs (first *test-rmrss*) 'compact)
+
+;;; same but in XML (see output.lisp)
+
+(output-rmrs (first *test-rmrss*) 'xml)
+
+;;; compare the 5th and 6th of the RMRSs (see compare.lisp)
+;;; producing a list of comparison record structures
+
+(compare-rmrs (nth 4 *test-rmrss*) (nth 5 *test-rmrss*) nil)
+
+;;; produce a score for the record (not serious yet - see annlt.lisp)
+
+(qa-score 
+(first (compare-rmrs (nth 4 *test-rmrss*) (nth 5 *test-rmrss*) nil)))
 
 |#
-

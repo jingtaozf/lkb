@@ -35,7 +35,7 @@
   ;;; reads it in
   (with-input-from-string (istream str)
     (let ((rmrs (parse-xml-removing-junk istream)))
-      (setf *rmrs-debug* rmrs)
+;;      (setf *rmrs-debug* rmrs)
       (unless (xml-whitespace-string-p rmrs)
 	(read-rmrs rmrs :rasp)))))
   

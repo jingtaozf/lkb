@@ -300,11 +300,7 @@ for gram.dtd and tag.dtd
 
 
 (defmethod rmrs-output-end-var ((rmrsout compact))
-  (with-slots (stream) rmrsout
-      (lkb::current-position stream)))
-;;; may need FIXing for generality if current-position isn't
-;;; safe - also needs fixing to remove lkb specificity
-
+  nil)
 
 (defmethod rmrs-output-start-extra ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -330,16 +326,12 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-hcons-label ((rmrsout compact) label-id)
   (with-slots (stream) rmrsout
-    (format stream "h~A" label-id)
-    (lkb::current-position stream)))
+    (format stream "h~A" label-id)))
 
 (defmethod rmrs-output-top-label ((rmrsout compact) label-id)
   (with-slots (stream indentation) rmrsout
     (format stream "~VTh~A" indentation label-id)
-    (let ((pos
-	   (lkb::current-position stream)))
-      (format stream "~%")
-      pos)))
+    (format stream "~%")))
 
 ;;; Parsonian arguments
 
@@ -351,10 +343,7 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout compact))
   (with-slots (stream) rmrsout
-    (let ((position (lkb::current-position stream)))
-      (format stream ")~%")
-      position)))
-;;; FIX
+      (format stream ")~%")))
 
 ;;; hcons
 
@@ -440,6 +429,7 @@ for gram.dtd and tag.dtd
     (format stream "], ")))
 
 ;;;
+;;; This version includes cfrom and cto
 
 (defclass compact-chars (compact)
   ())
@@ -468,11 +458,50 @@ for gram.dtd and tag.dtd
   (declare (ignore feat val))
   nil)
 
+;;; Version for graphics, recording current position
+;;; used to output the first column of a comparison record
+;;; LKB only
+;;; may need FIXing for generality if current-position isn't
+;;; safe
 
+#+:lkb
+(defclass compact-g (compact-chars) ())
 
-(defclass compact-two (compact-chars)
+#+:lkb
+(defmethod rmrs-output-end-var ((rmrsout compact-g))
+  (with-slots (stream) rmrsout
+    (lkb::current-position stream)))
+
+#+:lkb
+(defmethod rmrs-output-top-label ((rmrsout compact-g) label-id)
+  (with-slots (stream indentation) rmrsout
+    (format stream "~VTh~A" indentation label-id)
+    (let ((pos
+	   (lkb::current-position stream)))
+      (format stream "~%")
+      pos)))
+
+#+:lkb
+(defmethod rmrs-output-hcons-label ((rmrsout compact-g) label-id)
+  (with-slots (stream) rmrsout
+    (format stream "h~A" label-id)
+    (lkb::current-position stream)))
+
+#+:lkb
+(defmethod rmrs-output-end-rmrs-arg ((rmrsout compact-g))
+  (with-slots (stream) rmrsout
+    (let ((position (lkb::current-position stream)))
+      (format stream ")~%")
+      position)))
+
+;;; This version is for the comparison code: only used with the lkb
+;;; used to output the second column of a comparison window
+
+#+:lkb
+(defclass compact-two (compact-g)
   ((xpos :initform 0 :initarg :xpos)))
 
+#+:lkb
 (defmethod rmrs-output-start-fn ((rmrsout compact-two) cfrom cto)
   (declare (ignore cfrom cto))
   (with-slots (stream indentation xpos) rmrsout
@@ -480,6 +509,7 @@ for gram.dtd and tag.dtd
     (format stream "~%~VT" indentation)
     (setf xpos (lkb::current-position-x stream))))
 
+#+:lkb
 (defmethod rmrs-output-top-label ((rmrsout compact-two) label-id)
   (with-slots (stream indentation xpos) rmrsout
     (format stream "~VTh~A" indentation label-id)
@@ -489,19 +519,20 @@ for gram.dtd and tag.dtd
       (format stream "~%")
       pos)))
 
+#+:lkb
 (defmethod rmrs-output-hcons-label ((rmrsout compact-two) label-id)
   (with-slots (stream xpos) rmrsout
     (format stream "h~A" label-id)
     (lkb::make-position-record xpos
       (lkb::current-position-y stream))))
 
+#+:lkb
 (defmethod rmrs-output-end-var ((rmrsout compact-two))
   (with-slots (stream xpos) rmrsout
     (lkb::make-position-record xpos
       (lkb::current-position-y stream))))
-;;; may need FIXing for generality if current-position isn't
-;;; safe - also needs fixing to remove lkb specificity
 
+#+:lkb
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout compact-two))
   (with-slots (stream xpos) rmrsout
     (let ((position

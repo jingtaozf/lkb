@@ -132,7 +132,7 @@
 	  (clim:with-output-recording-options (stream :draw nil :record t)
 	    (let  
 		((pts1 (mrs::output-rmrs1 rmrs1 
-					     'mrs::compact-chars stream t t)))
+					     'mrs::compact-g stream t t)))
 	      (move-to-x-y stream 0 0)
 	      (let ((pts2
 		     (mrs::output-rmrs1 rmrs2 'mrs::compact-two stream t t)))
@@ -379,8 +379,7 @@
 	      (mrs::read-rmrs-file "semtest.rmrs" :rasp)))
        (erg-rmrs
 	      (mrs::mrs-to-rmrs erg-mrs)))
-    (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs t 
-						  (format nil "~A" egnum)))
+    (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs t))
       (show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
 				    comparison-record (format nil "~A" egnum)))))
 
@@ -412,8 +411,7 @@
 	 (rmrs2 (rmrs-for-sentence input2 parse-number2)))
     (dolist (comparison-record 
 		(time
-		(mrs::compare-rmrs rmrs1 rmrs2 same-source-p 
-				   (concatenate 'string input1 " / " input2))))
+		(mrs::compare-rmrs rmrs1 rmrs2 same-source-p)))
       (show-mrs-rmrs-compare-window rmrs1 rmrs2
 				    comparison-record 
 				    (concatenate 'string input1 " / " input2)))))
