@@ -69,7 +69,7 @@
 (pushnew :lkb *features*)
 (pushnew :mrs *features*)
 (pushnew :mt *features*)
-(compile-system "mrs" :force t)
+(compile-system "mt" :force t)
 (setq make::*building-image-p* nil)
 
 (setq excl:*restart-init-function* 
