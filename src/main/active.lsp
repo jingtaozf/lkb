@@ -690,7 +690,6 @@
                   for bar in rests
                   collect (cons foo bar)))))
 
-#-:cray
 (defun unpack-edge! (edge &optional insidep)
   (labels ((instantiate (edge children i n)
              #+:udebug
@@ -749,7 +748,7 @@
             with n = (length decompositions)
             for decomposition in decompositions
             for i from 0
-            for instantiation = (instantiate edge (list decomposition))
+            for instantiation = (instantiate edge (list decomposition) i n)
             when instantiation collect instantiation))
        (children
         (loop
@@ -775,7 +774,7 @@
 ;;; copied out.  however, it is not obvious how (and whether) the counting
 ;;; could be done in just one pass.
 ;;;
-#-:cray
+#+:cray
 (defun unpack-edge (edge)
   ;;
   ;; unfold tree structure below .edge.  we have to do two passes to be able
