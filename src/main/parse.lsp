@@ -679,7 +679,48 @@
          ))))
 
 
-;;;
+;;; extracting a list of lexical entries used in a parse
+;;; used for testing the generation lexical lookup algorithm
 
-(defun clear-cached-edges nil
-   nil)
+(defun retrieve-lex-from-parses nil
+  (for edge in *parse-record*
+       collect
+       (edge-lex-ids edge)))
+
+; (collect-parse-base (car *parse-record*))
+
+(defun collect-parse-base (edge-rec)
+  ;;; takes a top edge, returns a list of 
+  ;;; lexical identifiers, unary-rule-list pairs
+  (if (or (cdr (edge-lex-ids edge-rec))
+          (not (get-lex-rule-entry (edge-rule-number edge-rec))))
+      (for child in (edge-children edge-rec)
+           append
+           (collect-parse-base child))
+    (list (cons (car (edge-lex-ids edge-rec))
+          (nreverse (collect-unary-rule-names edge-rec))))))
+
+(defun collect-unary-rule-names (edge-rec)
+  (when (cdr (edge-children edge-rec))
+    (error "~%Should be unary edge ~A" edge-rec))
+  (if (edge-children edge-rec)
+    (cons (edge-rule-number edge-rec)
+              (collect-unary-rule-names (car (edge-children edge-rec))))
+    (if (edge-morph-history edge-rec)
+        (cons (edge-rule-number edge-rec)
+              (collect-morph-history-rule-names 
+               (edge-morph-history edge-rec))))))
+
+(defun collect-morph-history-rule-names (edge-rec)
+  (if (edge-morph-history edge-rec)
+      (cons (edge-rule-number edge-rec)
+            (collect-morph-history-rule-names 
+             (edge-morph-history edge-rec)))))
+
+
+(defun preprocess-sentence-string (str)
+  ;;; may be redefined by the user
+    str)
+      
+      
+
