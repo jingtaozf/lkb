@@ -37,10 +37,10 @@ at this point).
   (gethash rel-name *relation-index*))
 
 (defun grammar-rel-p (rel-name)
-  (member rel-name *grule-rel-index* :key #'car))
+  (member rel-name *grule-rel-index* :key #'car :test #'equal))
   
 (defun lex-rule-rel-p (rel-name)
-  (member rel-name *lrule-rel-index* :key #'car))
+  (member rel-name *lrule-rel-index* :key #'car :test #'equal))
 
 ;;; ************************************************
 ;;;

@@ -165,15 +165,12 @@
     (format stream "~S" atomic-value)))
 
 (defmethod mrs-output-start-rel ((mrsout simple) type sort first-p)
-  (declare (ignore first-p))
+  (declare (ignore type first-p))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
-    (if (and type (not (eq type sort)))
-      (format
-       stream
-       "~VT[ ~a ~s" 
-       indentation (string-downcase type) sort)
-      (format stream "~VT[ ~A" indentation (string-downcase sort)))))
+    (if (stringp sort)
+      (format stream "~VT[ ~s" indentation sort)
+      (format stream "~VT[ ~(~a~)" indentation sort))))
 
 (defmethod mrs-output-rel-handel ((mrsout simple) handel)
   (if handel
@@ -842,8 +839,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 ;;; REL -> [ PREDNAMEFEATPAIR* ]
   (mrs-check-for #\[ istream)
   (let* ((reltype (read-mrs-atom istream))
-         (next (peek-char t istream nil nil))
-         (sort (if (eql next #\") (read-mrs-atom istream) reltype)))
+         (sort reltype))
     (when *rel-handel-path*
       (mrs-check-for #\l istream)
       (mrs-check-for #\b istream)
