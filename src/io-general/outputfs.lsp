@@ -89,7 +89,7 @@
 
 (defmethod fs-output-atomic-fn ((fsout linear) atomic-value)
   (with-slots (stream) fsout
-    (format stream "~A" atomic-value)))
+    (format stream "~s" atomic-value)))
 
 (defmethod fs-output-start-fs ((fsout linear) type depth labels)
   (declare (ignore depth labels))

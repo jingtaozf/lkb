@@ -91,7 +91,7 @@
 
   (when %lui-stream%
     (ignore-errors
-     (format %lui-stream% "~%~%exit~a" %lui-eoc%)
+     (format %lui-stream% "~%~%quit~a" %lui-eoc%)
      (force-output %lui-stream%)
      (sleep 2)
      (close %lui-stream%)
