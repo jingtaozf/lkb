@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2003 
+;;; Copyright (c) 1991--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -38,6 +38,7 @@
    (part-of :initform nil :accessor part-of)
    (invalid-p :initform t :accessor invalid-p)
    (cache-lex-list :initform nil :accessor cache-lex-list)
+   (name :initform nil :accessor name)
    ))
 
 (defmethod link ((sub-lexicon lex-database) (lexicon lex-database))
@@ -713,3 +714,4 @@
             "UNKNOWN_VERSION")))
 
 
+(defun lex (str) (car (member str (extra-lexicons *lexicon*) :key #'name :test #'string=)))

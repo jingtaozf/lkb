@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2003
+;;; Copyright (c) 1991--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -40,7 +40,7 @@
 (defvar *idiom-file* nil)
 
 ;; entry fn
-(defun read-cached-sublex-if-available (cache-file-base filenames)
+(defun read-cached-sublex-if-available (name filenames)
   ;; force filenames to list
   (unless (listp filenames) 
     (setf filenames (list filenames)))
@@ -53,10 +53,11 @@
    (t		
     (let ((lex (make-instance 'cdb-lex-database)))
       (open-lex lex
+		:name name
 		:parameters (list (make-nice-temp-file-pathname 
-				   (format nil "~a-~a.lex" (get-grammar-version) cache-file-base))
+				   (format nil "~a-~a.lex" (get-grammar-version) name))
 				  (make-nice-temp-file-pathname 
-				   (format nil "~a-~a.idx" (get-grammar-version) cache-file-base))))
+				   (format nil "~a-~a.idx" (get-grammar-version) name))))
       (unless (read-cached-lex lex filenames)
 	(let ((syntax (if (eql *lkb-system-version* :page) :tdl :path)))
 	  (load-lex-from-files lex filenames syntax)))
@@ -155,6 +156,7 @@
    (t		
     (set-temporary-lexicon-filenames)
     (open-lex *lexicon*
+	      :name "main_lexicon"
 	      :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
     (unless (read-cached-lex *lexicon* filenames)
       (let (

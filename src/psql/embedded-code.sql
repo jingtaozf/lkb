@@ -84,21 +84,21 @@ INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 0, 'select-list' );
 INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 1, 'like-text' );
 INSERT INTO qry VALUES 
        ( 'retrieve-entries-by-orthkey', 2, 
-         'SELECT $0 FROM current_grammar WHERE orthkey ILIKE $1' );
+         'SELECT $0 FROM current_grammar WHERE orthkey LIKE $1;' );
 
 INSERT INTO qrya VALUES ( 'retrieve-entry', 0, 'select-list' );
 INSERT INTO qrya VALUES ( 'retrieve-entry', 1, 'like-text' );
 INSERT INTO qry VALUES 
        ( 'retrieve-entry', 2, 
-         'SELECT $0 FROM current_grammar WHERE name ILIKE $1' );
+         'SELECT $0 FROM current_grammar WHERE name LIKE $1' );
 
 INSERT INTO qrya VALUES ( 'retrieve-head-entry', 0, 'select-list' );
 INSERT INTO qrya VALUES ( 'retrieve-head-entry', 1, 'like-text' );
 INSERT INTO qry VALUES 
        ( 'retrieve-head-entry', 2, 
-         'SELECT $0 FROM filtered WHERE name ILIKE $1
+         'SELECT $0 FROM filtered WHERE name LIKE $1
 		AND modstamp=
-			(SELECT max(modstamp) FROM filtered WHERE name ILIKE $1)
+			(SELECT max(modstamp) FROM filtered WHERE name LIKE $1)
 	LIMIT 1' );
 
 
@@ -120,13 +120,6 @@ INSERT INTO qry VALUES
 SELECT build_current_grammar();
 ' );
 
-INSERT INTO qry VALUES 
-       ( 'cluster-current-grammar', 0, 
-'
-SELECT cluster_current_grammar();
-' );
-
-
 INSERT INTO qrya VALUES ( 'update-entry', 0, 'text' );
 INSERT INTO qrya VALUES ( 'update-entry', 1, 'select-list' );
 INSERT INTO qrya VALUES ( 'update-entry', 2, 'value-list' );
@@ -135,11 +128,20 @@ INSERT INTO qry VALUES
        '
 INSERT INTO revision (name, $1) VALUES ($0 , $2); 
 DELETE FROM current_grammar 
- WHERE name ILIKE $0:like-text ; 
-INSERT INTO current_grammar 
+ WHERE name LIKE $0:like-text ; 
+----DELETE FROM current_grammar_index 
+---- WHERE name LIKE $0:like-text ;
+----DELETE FROM temp; 
+----INSERT INTO temp 
+INSERT INTO current_grammar
  SELECT * FROM active
-  WHERE name ILIKE $0:like-text 
+  WHERE name = $0 
    LIMIT 1;
+
+----INSERT INTO current_grammar 
+---- SELECT * FROM temp;
+----INSERT INTO current_grammar_index 
+---- SELECT name,orthkey FROM temp;
 ' );
 
 INSERT INTO qry VALUES 
@@ -229,6 +231,11 @@ INSERT INTO temp
 COPY temp TO $0 DELIMITERS '','' WITH NULL AS '''';
 ' );
 
+INSERT INTO qrya VALUES ( 'test', 0, 'select-list' );
+INSERT INTO qry VALUES 
+       ( 'test', 1, 
+       '$0' );
+
 
 
 
@@ -255,10 +262,11 @@ COPY temp TO $0 DELIMITERS '','' WITH NULL AS '''';
 CREATE VIEW revision_all AS SELECT * FROM revision WHERE NULL;
 CREATE VIEW active AS SELECT * FROM revision WHERE NULL;
 CREATE TABLE current_grammar AS SELECT * FROM revision WHERE NULL;
+--CREATE TABLE current_grammar_index (name text, orthkey text);
 
 CREATE OR REPLACE FUNCTION next_version(text) RETURNS integer AS '
     SELECT COALESCE(1 + max(version),0) FROM revision_all 
-	       WHERE name ~* $1 AND user=user;
+	       WHERE name LIKE $1 AND user=user;
  ' LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION orthography_set() RETURNS SETOF text AS '
@@ -270,12 +278,8 @@ CREATE OR REPLACE FUNCTION lex_id_set() RETURNS SETOF text AS '
  ' LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION lookup_word(text) RETURNS SETOF text AS '
-SELECT name FROM current_grammar WHERE orthkey ILIKE $1;
-' LANGUAGE SQL;
-
-CREATE OR REPLACE FUNCTION cluster_current_grammar() RETURNS boolean AS '
-CLUSTER current_grammar_name ON current_grammar;
-SELECT true;
+----SELECT name FROM current_grammar JOIN (SELECT name FROM current_grammar_index WHERE orthkey LIKE lower($1)) AS t2 USING (name)
+SELECT name FROM current_grammar WHERE orthkey LIKE $1;
 ' LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION clear_scratch() RETURNS boolean AS '
@@ -351,19 +355,32 @@ BEGIN
  DROP INDEX public_orthkey;
  DROP INDEX name_modstamp;
  DROP INDEX public_revision_name_modstamp;
+ DROP INDEX public_revision_name;
+ DROP INDEX public_revision_name_pattern;
  ALTER TABLE public.revision DROP CONSTRAINT revision_pkey;
 
  DELETE FROM temp;
  EXECUTE ''COPY temp FROM '' || $1 || '' DELIMITERS '''','''' WITH NULL AS '''''''' '';
  DELETE FROM revision_new;
+ CREATE INDEX temp_name_userid_version on temp (name, userid, version);
  INSERT INTO revision_new
   SELECT * FROM (SELECT DISTINCT name,userid,version FROM temp EXCEPT SELECT name,userid,version FROM public.revision) AS t1 NATURAL JOIN temp;
+ DROP INDEX temp_name_userid_version;
+ DELETE FROM temp;
  INSERT INTO public.revision SELECT * FROM revision_new;
  
  ALTER TABLE public.revision ADD PRIMARY KEY (name,version,userid);
  CREATE INDEX public_orthkey ON public.revision (orthkey); 
  CREATE UNIQUE INDEX name_modstamp ON public.revision (name,modstamp); 
  CREATE INDEX public_revision_name_modstamp ON public.revision (name, modstamp);
+
+CREATE UNIQUE INDEX public_revision_name
+ ON public.revision (name varchar_ops); 
+IF check_version(''7.4'') THEN
+	CREATE UNIQUE INDEX public_revision_name_pattern ON public.revision (name varchar_pattern_ops);
+ELSE
+	CREATE UNIQUE INDEX public_revision_name_pattern ON public.revision (name); 
+END IF;
 
  EXECUTE '' COPY revision_new TO '' || $2 || '' DELIMITERS '''','''' WITH NULL AS '''''''' '';
  RETURN (SELECT count(*) FROM revision_new);
@@ -454,10 +471,17 @@ BEGIN
  CREATE TABLE revision_new AS SELECT * FROM public.revision WHERE NULL;
 -- current_grammar
  CREATE TABLE current_grammar AS SELECT * FROM public.revision WHERE NULL;
- CREATE UNIQUE INDEX current_grammar_name
-  ON current_grammar (name); 
- CREATE INDEX current_grammar_orthkey
-  ON current_grammar (orthkey); 
+ CREATE UNIQUE INDEX current_grammar_name ON current_grammar (name varchar_ops);
+ CREATE INDEX current_grammar_orthkey ON current_grammar (orthkey varchar_ops); 
+
+ IF check_version(''7.4'') THEN
+	CREATE UNIQUE INDEX current_grammar_name_pattern ON current_grammar (name varchar_pattern_ops);
+	CREATE INDEX current_grammar_orthkey_pattern ON current_grammar (orthkey varchar_pattern_ops);
+ ELSE
+	CREATE UNIQUE INDEX current_grammar_name_pattern ON current_grammar (name);
+	CREATE INDEX current_grammar_orthkey_pattern ON current_grammar (orthkey);
+ END IF; 
+
 -- views
  CREATE VIEW filtered AS SELECT * FROM public.revision WHERE NULL;
  CREATE VIEW active

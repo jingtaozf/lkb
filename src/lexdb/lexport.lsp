@@ -1,4 +1,4 @@
-;;; Copyright (c) 2001 -- 2003 
+;;; Copyright (c) 2001 -- 2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;   see `licence.txt' for conditions.
 
@@ -72,10 +72,22 @@
   (catch 'abort 
     (apply 'export-lexicon-to-file2 rest)))
 
-(defun export-lexicon-to-file2 (&key (file (format nil "~a/lexicon" *postgres-user-temp-dir*)) 
-				    (separator *postgres-export-separator*)
-				     (lexicon *lexicon*))
-  (when (typep *lexicon* 'psql-lex-database)
+(defun export-lexicon-to-file2 (&key 
+				(dir *postgres-user-temp-dir*)
+;;				(file (format nil "~a/lexicon" *postgres-user-temp-dir*)) 
+				file 
+				(separator *postgres-export-separator*)
+				(lexicon *lexicon*)
+				use-defaults
+				(recurse t))
+  (when (and file recurse)
+    (format t "ignoring :recurse (ommit :file to enable :recurse)")
+    (setf recurse nil))
+  (unless file
+    (if (name lexicon)
+	(setf file (format nil "~a/~a" dir (name lexicon)))
+      (setf file (format nil "~a/unknown" dir))))
+  (when (typep lexicon 'psql-lex-database)
     (error "use Merge command to export LExDB"))
     
   (setf file (namestring (pathname file)))
@@ -86,42 +98,43 @@
   (setf *postgres-current-source* (get-current-source))
   (setf *postgres-export-timestamp* (extract-date-from-source *postgres-current-source*))
   
-  (setf *postgres-current-source* 
-    (ask-user-for-x 
-     "Export Lexicon" 
-     (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
-  (unless *postgres-current-source* (throw 'abort 'source))
+  (unless use-defaults
+    (setf *postgres-current-source* 
+      (ask-user-for-x 
+       "Export Lexicon" 
+       (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
+    (unless *postgres-current-source* (throw 'abort 'source))
+    
+    (setf *postgres-export-timestamp* 
+      (ask-user-for-x 
+       "Export Lexicon" 
+       (cons "Modstamp?" (or *postgres-export-timestamp* "1990-01-01"))))
+    (unless *postgres-export-timestamp* (throw 'abort 'modstamp))
+    
+    (setf *postgres-current-lang* 
+      (ask-user-for-x 
+       "Export Lexicon" 
+       (cons "Language code?" (or *postgres-current-lang* "EN"))))
+    (unless *postgres-current-lang* (throw 'abort 'lang))
+    
+    (setf *postgres-current-country* 
+      (ask-user-for-x 
+       "Export Lexicon" 
+       (cons "Country code?" (or *postgres-current-country* "UK"))))
+    (unless *postgres-current-country* (throw 'abort 'country))
+    
+    (setf *postgres-current-user* 
+      (ask-user-for-x 
+       "Export Lexicon" 
+       (cons "Username?" (or *postgres-current-user* "danf"))))
+    (unless *postgres-current-user* (throw 'abort 'user))
   
-  (setf *postgres-export-timestamp* 
-    (ask-user-for-x 
-     "Export Lexicon" 
-     (cons "Modstamp?" (or *postgres-export-timestamp* "1990-01-01"))))
-  (unless *postgres-export-timestamp* (throw 'abort 'modstamp))
-  
-  (setf *postgres-current-lang* 
-    (ask-user-for-x 
-     "Export Lexicon" 
-     (cons "Language code?" (or *postgres-current-lang* "EN"))))
-  (unless *postgres-current-lang* (throw 'abort 'lang))
-  
-  (setf *postgres-current-country* 
-    (ask-user-for-x 
-     "Export Lexicon" 
-     (cons "Country code?" (or *postgres-current-country* "UK"))))
-  (unless *postgres-current-country* (throw 'abort 'country))
-  
-  (setf *postgres-current-user* 
-    (ask-user-for-x 
-     "Export Lexicon" 
-     (cons "Username?" (or *postgres-current-user* "danf"))))
-  (unless *postgres-current-user* (throw 'abort 'user))
-  
-  (get-export-version) 
+    (get-export-version))
 
   (let ((csv-file (format nil "~a.csv" file))
 	(skip-file (format nil "~a.skip" file))
 	(multi-file (format nil "~a.multi.csv" file)))
-    (format t "~%Exporting lexicon to CSV file ~a" csv-file)
+    (format t "~%Exporting lexicon ~a to CSV file ~a" (name lexicon) csv-file)
     (format t "~%   (skip file: ~a)" skip-file)
     
     (if *postgres-export-multi-separately*
@@ -142,7 +155,15 @@
 		       :direction :output 
 		       :if-exists :supersede :if-does-not-exist :create)
 	(export-to-csv-to-file lexicon csv-file))))
-  (format t "~%Export complete"))
+  (format t "~%Export complete")
+  (when recurse
+    (mapcar #'(lambda (x) (export-lexicon :lexicon x 
+					  :dir dir
+					  :separator separator
+					  :recurse t
+					  :use-defaults t))
+	    (extra-lexicons lexicon)))
+  )
 
 
 (defmethod export-to-csv ((lexicon lex-database) stream)
@@ -238,7 +259,8 @@
 			     :keyrel keyrel)
       line))
      (t
-      (format *postgres-export-skip-stream* "~%skipping super-rich entry: ~a"  line)
+      (format *postgres-export-skip-stream* "~a" (to-tdl x))
+      ;;     (format *postgres-export-skip-stream* "~%skipping super-rich entry: ~a"  line)
       ""))))
 
 (defun csv-line (&rest str-list)
@@ -432,9 +454,14 @@
 ;;; export to .tdl file
 ;;;
 
-(defun export-lexicon-to-tdl (&key (file (format nil "~a/lexicon" *postgres-user-temp-dir*))
+(defun export-lexicon-to-tdl (&key (dir *postgres-user-temp-dir*)
+				   file 
 				   (lexicon *lexicon*))
-  (setf file (namestring (pathname file)))
+    (unless file
+    (if (name lexicon)
+	(setf file (namestring (pathname (format nil "~a/~a" dir (name lexicon)))))
+      (setf file (namestring (pathname (format nil "~a/unknown" dir))))))
+  
   (let ((tdl-file (format nil "~a.tdl" file)))
     (if (equal (subseq file (- (length file) 4)) ".tdl")
 	(setf tdl-file file))
@@ -459,7 +486,9 @@
 
 (defun unifs-2-list (unifs)
   (let ((c 0)
-	(coindex nil))
+	(coindex nil)
+	(coindex-map)
+	(match))
     (mapcan 
      #'(lambda (unif)
 	 (with-slots (rhs lhs) unif
@@ -468,13 +497,21 @@
 	     (list (append (path-typed-feature-list lhs)
 			   (u-value-type rhs))))
 	    ((typep rhs 'PATH)
-	     (incf c)
-	     (setf coindex (str-2-symb (format nil "#~a" c)))
-	     (list
-	      (append (path-typed-feature-list lhs)
-		      coindex)
-	      (append (path-typed-feature-list rhs)
-		      coindex))))))
+	     (setf match (assoc lhs coindex-map :test #'equalp))
+	     (cond 
+	      (match
+	       (setf coindex (str-2-symb (format nil "#~a" (cdr match))))
+	       (list (append (path-typed-feature-list rhs)
+			     coindex)))
+	      (t
+	       (incf c)
+	       (push (cons lhs c) coindex-map)
+	       (setf coindex (str-2-symb (format nil "#~a" c)))
+	       (list
+		(append (path-typed-feature-list lhs)
+			coindex)
+		(append (path-typed-feature-list rhs)
+			coindex))))))))
      unifs)))
 
 (defun unif-2-lists (unif)
@@ -528,6 +565,8 @@
 	     (sort p #'pack-order)
 	     ))))
 
+;; list components ordered according to their printed representation
+;; non-list components come first (non-deterministic ordering)
 (defun pack-order (x y)
   (let ((a (pack-order-str x))
 	(b (pack-order-str y)))
@@ -566,25 +605,30 @@
    (tdl-val-str (lex-entry-id x))
    (p-2-tdl (pack-unifs (lex-entry-unifs x)))))
 	  
-;; copy of p-2-tdl w/o root
+;; copy of p-2-tdl-2 w/o root
 (defun p-2-tdl (branches)
   (unless branches
     (error "non-null value expected"))
   (let* ((a-branch-flag (not (cdr (first branches))))
-	 (a-branch)
+	 (a-branches)
 	 (len)
-	 (i 0)
-	 )
+	 (i 0))
     (when a-branch-flag
-      (setf a-branch (pop branches)))
+      (do ()
+	  ((or (null branches) (cdr (first branches))))
+	(push (pop branches) a-branches)))
     (setf len (length branches))
     
      (cond
       ((and a-branch-flag (= len 0))
-       (format nil "~a" (tdl-val-str (car a-branch))))
+       (str-list-2-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
+			       a-branches)
+		       " & "))
       (a-branch-flag
        (format nil "~a &~%~a ~a"  
-	       (tdl-val-str (car a-branch))
+	       (str-list-2-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
+				       a-branches)
+			       " & ")
 	       (make-string i :initial-element #\ )
 	       (p-2-tdl-aux (+ i 3) branches)))
       ((= len 1)
@@ -599,19 +643,28 @@
   (let* ((root (car p))
 	 (branches (cdr p))
 	 (a-branch-flag (not (cdr (first branches))))
-	 (a-branch)
+	 (a-branches)
 	 (len))
   (setf i (+ i 3 (length (string root))))
     (when a-branch-flag
-      (setf a-branch (pop branches)))
+      (do ()
+	  ((or (null branches) (cdr (first branches))))
+	(push (pop branches) a-branches)))
+    (setf len (length branches))
+    
     (setf len (length branches))
      (cond
       ((and a-branch-flag (= len 0))
-       (format nil "~a ~a" (string root) (tdl-val-str (car a-branch))))
+       (format nil "~a ~a" (string root)
+	       (str-list-2-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
+				       a-branches)
+			       " & ")))
       (a-branch-flag
        (format nil "~a ~a & ~a" 
 	       (string root) 
-	       (tdl-val-str (car a-branch))
+	       (str-list-2-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
+				       a-branches)
+			       " & ")	       
 	       (p-2-tdl-aux i branches)))
       ((= len 1)
        (format nil "~a.~a" (string root) (p-2-tdl-2 i (first branches))))
@@ -756,16 +809,6 @@
 	(symbol-value version)
       (format t "WARNING: no *GRAMMAR-VERSION* defined!"))))
     
-;    (cond
-;     (	   (boundp version))
-;    *grammar-version*)
-;      (symbol-value '*grammar-version*))
-;     ((boundp 'common-lisp-user::*grammar-version*)
-;    common-lisp-user::*grammar-version*)
-;      (symbol-value 'common-lisp-user::*grammar-version*))
-;     (t
-;      (format t "WARNING: no *GRAMMAR-VERSION* defined!")))))
-
 ;;;
 ;;; extract grammatical fields
 ;;;
@@ -856,7 +899,7 @@
       (extract-value-from-unification unification))))
 
 (defun get-orthkey (orth-list)
-  (car (last orth-list)))
+  (string-downcase (car (last orth-list))))
 
 ;;;
 ;;; DB standard io

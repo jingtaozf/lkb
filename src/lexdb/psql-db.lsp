@@ -93,10 +93,10 @@
   (fn lexicon 'lex-id-set))
 
 (defmethod sql-lookup-word ((lexicon psql-lex-database) word)
-  (fn lexicon 'lookup-word word))
+  (fn lexicon 'lookup-word (string-downcase word)))
 
 (defmethod sql-retrieve-entries-by-orthkey ((lexicon psql-lex-database) select-list word)
-  (fn lexicon 'retrieve-entries-by-orthkey select-list word))
+  (fn lexicon 'retrieve-entries-by-orthkey select-list (string-downcase word)))
 
 (defmethod sql-retrieve-entry ((lexicon psql-lex-database) select-list word)
   (fn lexicon 'retrieve-entry select-list word))
@@ -107,6 +107,8 @@
 (defmethod build-lex ((lexicon psql-database))
   (format *postgres-debug-stream* "~%(building current_grammar)")
   (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
+  (format *postgres-debug-stream* "~%(vacuuming current_grammar)")
+  (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM"))
   (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
   (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
   lexicon)
@@ -114,6 +116,8 @@
 (defun build-current-grammar (lexicon)
   (format *postgres-debug-stream* "~%(building current_grammar)")
   (fn-get-records  lexicon ''build-current-grammar)
+  (format *postgres-debug-stream* "~%(vacuuming current_grammar)")
+  (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM"))
   (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
   (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
   (empty-cache lexicon))
@@ -134,7 +138,9 @@
   (format t "~%")
   (fn-get-val lexicon ''merge-into-db 
 	      revision-filename 
-	      new-entries-filename))
+	      new-entries-filename)
+  (format *postgres-debug-stream* "~%(vacuuming)")
+  (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM")))
 
 (defmethod merge-defn ((lexicon psql-lex-database) 
 			  defn-filename)  

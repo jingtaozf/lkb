@@ -8,6 +8,31 @@ ALTER DATABASE lingo SET enable_seqscan TO off;
 CREATE FUNCTION "plpgsql_call_handler" () RETURNS LANGUAGE_HANDLER AS '$libdir/plpgsql' LANGUAGE C;
 CREATE TRUSTED LANGUAGE "plpgsql" HANDLER "plpgsql_call_handler";
 
+CREATE OR REPLACE FUNCTION check_version(text) RETURNS boolean AS '
+DECLARE
+	x text;
+BEGIN
+ SELECT INTO x * FROM version();
+ x := split_part(x,'' '',2);
+ RETURN x>=$1;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION if_version(text,text,text) RETURNS text AS '
+DECLARE 
+	x boolean;
+BEGIN
+	x:= false;
+ IF check_version($1) THEN
+	EXECUTE $2;
+	x:= true;
+ ELSE
+	EXECUTE $3;
+ END IF;
+ RETURN x;
+END;
+' LANGUAGE plpgsql;
+
 CREATE TABLE public.meta (
   var varchar,
   val varchar
@@ -56,6 +81,11 @@ CREATE TABLE public.revision (
   flags INTEGER DEFAULT 0 NOT NULL,
  PRIMARY KEY (name,version,userid)
 );
+
+CREATE UNIQUE INDEX public_revision_name
+ ON public.revision (name varchar_ops); 
+
+SELECT if_version('7.4','CREATE UNIQUE INDEX public_revision_name_pattern ON public.revision (name varchar_pattern_ops)','CREATE UNIQUE INDEX public_revision_name_pattern ON public.revision (name)'); 
 
 CREATE INDEX public_orthkey
 ON public.revision (orthkey); 

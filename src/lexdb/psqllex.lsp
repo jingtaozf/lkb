@@ -544,7 +544,7 @@
   (declare (ignore in-isolation delete))
   (disconnect lexicon))
 
-(defmethod open-lex ((lexicon psql-database) &key parameters)
+(defmethod open-lex ((lexicon psql-database) &key name parameters)
   (declare (ignore parameters)) ;; for_now 
   (close-lex lexicon)
   (format t "~%Connecting to lexical database ~a as user ~a" (dbname lexicon) (user lexicon))
@@ -565,7 +565,8 @@
 	    (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then import file lkb/src/psql/import.sql using PSQL tool, and finally merge dumped LexDB into new database." dbversion (dbname lexicon))))
 	(make-field-map-slot lexicon)
 	(retrieve-fn-defns lexicon)
-	(initialize-userschema lexicon))
+	(initialize-userschema lexicon)
+	(setf (name lexicon) name))
        (t
 	(error 
 	 "unable to connect to ~s: ~a"

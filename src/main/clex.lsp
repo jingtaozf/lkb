@@ -1,4 +1,4 @@
-;;; Copyright (c) 1999--2003
+;;; Copyright (c) 1999--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -47,6 +47,7 @@
     (cond
      ((up-to-date-p filenames (list temp-file temp-index-file))
       (format t "~%Reading in cached lexicon")
+      (if (name lexicon) (format t " (~a)" (name lexicon)))
       (when (open-read lexicon)
 	(format t "~%Cached lexicon read")
 	t))
@@ -97,11 +98,12 @@
       nil))))
 
 ;; sets temp-file/temp-index-file
-(defmethod open-lex ((lexicon cdb-lex-database) &key parameters)
+(defmethod open-lex ((lexicon cdb-lex-database) &key name parameters)
   (let ((temp-file (first parameters))
 	(temp-index-file (second parameters)))
     (if (open-p lexicon)
 	(close-lex lexicon :in-isolation t))
+    (setf (name lexicon) name)
     (setf (temp-file lexicon) temp-file)
     (setf (temp-index-file lexicon) temp-index-file)))
 
