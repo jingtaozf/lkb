@@ -69,7 +69,6 @@ cvs update: Updating lib/tk8.3/images
 cvs update: Updating log
 M log/build
 cvs update: Updating src
-U src/version.lsp
 ? src/.l6cl
 ? src/.sacl
 cvs update: Updating src/.aasl
@@ -247,18 +246,15 @@ cvs update: Updating src/fasl/mrs
 cvs update: Updating src/general
 ? src/general/itsdb.lisp
 cvs update: Updating src/io-general
+U src/io-general/menus.lsp
 cvs update: Updating src/io-lilfes
 cvs update: Updating src/io-paths
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-U src/main/globals.lsp
 cvs update: Updating src/mrs
-U src/mrs/basemrs.lisp
-U src/mrs/interface.lisp
-U src/mrs/lexlookup.lisp
-U src/mrs/mrsglobals.lisp
-U src/mrs/mrsmunge.lisp
+U src/mrs/generate.lisp
+U src/mrs/mrstoplevel.lisp
 U src/mrs/translate.lisp
 cvs update: Updating src/mrs/data
 cvs update: Updating src/non-core
@@ -272,7 +268,6 @@ cvs update: Updating src/rmrs
 cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
-U src/systems/mrs.system
 cvs update: Updating src/tproving
 cvs update: Updating src/tsdb
 cvs update: Updating src/tsdb/TeX
@@ -348,7 +343,7 @@ cvs update: Updating src/www
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.166; previous revision: 1.165
+new revision: 1.167; previous revision: 1.166
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1260,7 +1255,7 @@ Root pages: 2
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Sep 16, 2002 6:23)
+6.0 [Linux (x86)] (Sep 17, 2002 5:01)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -2069,7 +2064,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/nacl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-24226496 bytes have been tenured, next gc will be global.
+24893744 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -2674,7 +2669,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/gc.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/yy.lisp
-gc-after-hook(): local; new: 3500432; old: 0; pending: 48; efficiency: 95.
+gc-after-hook(): local; new: 3484712; old: 0; pending: 0; efficiency: 95.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Fasl write complete
@@ -2812,7 +2807,7 @@ Root pages: 2
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Sep 16, 2002 6:28)
+6.0 [Linux (x86)] (Sep 17, 2002 5:06)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -3621,7 +3616,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/macl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-24226496 bytes have been tenured, next gc will be global.
+24917592 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -3858,7 +3853,7 @@ Root pages: 12
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (9/16/2 6:30)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (9/17/2 5:08)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -4379,7 +4374,7 @@ USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-22962128 bytes have been tenured, next gc will be global.
+22863688 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4485,7 +4480,7 @@ Warning: Variable #:G14185 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
-7152304 bytes have been tenured, next gc will be global.
+7152328 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/yadu.fasl
