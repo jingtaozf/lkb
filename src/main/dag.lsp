@@ -268,10 +268,6 @@
 (defmacro type-of-fs (dag)
    `(dag-type ,dag))
 
-;to delete
-;(defun set-type (dag value)
-;   (setf (dag-type dag) value))
-
 
 (defun top-level-features-of (dag)
    (unless (is-atomic dag)
@@ -280,19 +276,9 @@
 
 (defun get-dag-value (dag attribute)
    (dolist (arc (dag-arcs dag) nil)
-      (when (eql attribute (dag-arc-attribute arc))
+      (when (eq attribute (dag-arc-attribute arc))
          (return-from get-dag-value (dag-arc-value arc)))))
 
-
-;to delete
-;(defun put-dag-value (dag attribute value)
-;   (dolist (arc (dag-arcs dag))
-;      (when (eql attribute (dag-arc-attribute arc))
-;         (return-from put-dag-value
-;            (setf (dag-arc-value arc) value))))
-;   (push
-;      (make-dag-arc :attribute attribute :value value)
-;      (dag-arcs dag)))
 
 (defun get-value-at-end-of (dag labels-chain)
    (cond
@@ -317,11 +303,11 @@
 ;;; feature structures.
 ;;;
 ;;; Marks work as follows:
-;;; - the unify mark is updated after every series of unifications (with or
+;;; - the unify mark is updated AFTER every series of unifications (with or
 ;;; without a final copy operation) so that any temporary changes to
 ;;; feature structures disappear
-;;; - the visit mark is updated before any new series of visits so code
-;;; does not see any old ones
+;;; - the visit mark is updated BEFORE any new series of visits so code
+;;; does not see any old marks
 
 (defmacro with-unification-context ((dag) &body body)
    ;; caller must call copy-dag explicitly at end - before any other unification
@@ -353,8 +339,9 @@
       (catch '*fail*
          (progn
             (unify1 dag1 dag2 nil)
-            (when *unify-debug* (format t "~%Unification succeeded"))
-            t))
+            (unless (cyclic-dag-p dag1)
+               (when *unify-debug* (format t "~%Unification succeeded"))
+               t)))
       (with-unification-context (dag1) (unifiable-dags-p dag1 dag2))))
 
 
@@ -395,7 +382,7 @@
                   (progn
                      (when *unify-debug*
                         (format t "~%Unification failed due to atomic/~
-                           non-atomic clash at path ~:A" (reverse path)))
+                           non-atomic clash at path < ~{~A ~^: ~}>" (reverse path)))
                      (throw '*fail* nil))
                   (setf (dag-forward dag2) dag1))
                (progn
@@ -410,7 +397,7 @@
                               (unless res
                                  (format t 
                                     "~%Unification with constraint of type ~A failed ~
-                                    at path ~:A" new-type (reverse path))
+                                    at path < ~{~A ~^: ~}>" new-type (reverse path))
                                  (throw '*fail* nil)))
                            (unify1 dag1 constraint path)))
                      ;; dag1 might just have been forwarded so dereference it again
@@ -435,7 +422,7 @@
                   (setf (dag-copy dag1) nil))))
          (progn
             (when *unify-debug*
-               (format t "~%Unification of ~A and ~A failed at path ~:A" 
+               (format t "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>" 
                   (unify-get-type dag1) (unify-get-type dag2) (reverse path)))
             (throw '*fail* nil)))))
 
@@ -448,7 +435,7 @@
                     (let ((a (gensym)))
                        `(block find-attribute
                           (dolist (,a ,arcs nil)
-                             (when (eql (dag-arc-attribute ,a) ,v)
+                             (when (eq (dag-arc-attribute ,a) ,v)
                                 (return-from find-attribute ,a)))))))
          (let ((,v ,attribute))
             (or (find-attribute ,v ,arcs) (find-attribute ,v ,comp-arcs))))))
@@ -840,7 +827,7 @@
                                               type-name features-so-far)))
                    (if fs-type
                      (cond ((and type-name
-                                 (or (eql fs-type type-name)
+                                 (or (eq fs-type type-name)
                                      (subtype-p fs-type type-name)))
                             (format t "~%Error in ~A: ~%  Type ~A occurs in constraint ~
                                        for type ~A at ~:A"
