@@ -177,16 +177,19 @@
   (let ((database (get-field :database cache))
         (file (get-field :file cache))
         (stream (get-field :stream cache)))
+    (when verbose
+      (format 
+       *tsdb-io*
+       "~&flush-cache(): flushing `~a' tsdb(1) cache ..."
+       database)
+      (force-output *tsdb-io*))
     (format stream "~&commit.~%")
     (force-output stream)
     (close stream)
     (let* ((query (format nil "do \"~a\"" file)))
       (call-tsdb query database))
     (when verbose
-      (format 
-       *tsdb-io*
-       "~&flush-cache(): tsdb(1) cache for `~a' flushed.~%"
-       database file)
+      (format *tsdb-io* " done.~%")
       (force-output *tsdb-io*))
     (unless *tsdb-debug-mode-p*
       (delete-file file))))
@@ -463,10 +466,24 @@
                time
                r-ctasks r-etasks r-stasks r-ftasks
                size r-aedges r-pedges
-               (normalize-string derivation)
-               (normalize-string (or tree "")) 
-               (normalize-string (or mrs "")))))
+               derivation tree mrs)))
         (call-tsdb query language :cache cache)))))
+
+(defun write-rules (parse-id statistics
+                    &optional (language *tsdb-data*)
+                    &key cache)
+  (when *tsdb-rule-statistics-p*
+    (loop 
+        for rule in statistics
+        for name = (normalize-string (get-field+ :rule rule ""))
+        for filtered = (get-field+ :filtered rule -1)
+        for executed = (get-field+ :executed rule -1)
+        for successful = (get-field+ :successful rule -1)
+        for query = (format
+                     nil
+                     "insert into rule values ~d ~s ~d ~d ~d"
+                     parse-id name filtered executed successful)
+        do (call-tsdb query language :cache cache))))
 
 (defun write-output (i-id application 
                      tree mrs tasks 

@@ -3,7 +3,7 @@
 # Initialization script normally executed in the interpreter for each
 # Tk-based application.  Arranges class bindings for widgets.
 #
-# SCCS: @(#) tk.tcl 1.98 97/10/28 15:21:04
+# RCS: @(#) $Id$
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
@@ -42,7 +42,7 @@ set tk_strictMotif 0
 proc tkScreenChanged screen {
     set x [string last . $screen]
     if {$x > 0} {
-	set disp [string range $screen 0 [expr $x - 1]]
+	set disp [string range $screen 0 [expr {$x - 1}]]
     } else {
 	set disp $screen
     }
@@ -51,7 +51,7 @@ proc tkScreenChanged screen {
     global tkPriv
     global tcl_platform
 
-    if [info exists tkPriv] {
+    if {[info exists tkPriv]} {
 	set tkPriv(screen) $screen
 	return
     }
@@ -101,7 +101,7 @@ tkScreenChanged [winfo screen .]
 proc tkEventMotifBindings {n1 dummy dummy} {
     upvar $n1 name
     
-    if $name {
+    if {$name} {
 	set op delete
     } else {
 	set op add
@@ -121,6 +121,7 @@ switch $tcl_platform(platform) {
 	event add <<Cut>> <Control-Key-x> <Key-F20> 
 	event add <<Copy>> <Control-Key-c> <Key-F16>
 	event add <<Paste>> <Control-Key-v> <Key-F18>
+	event add <<PasteSelection>> <ButtonRelease-2>
 	trace variable tk_strictMotif w tkEventMotifBindings
 	set tk_strictMotif $tk_strictMotif
     }
@@ -128,11 +129,13 @@ switch $tcl_platform(platform) {
 	event add <<Cut>> <Control-Key-x> <Shift-Key-Delete>
 	event add <<Copy>> <Control-Key-c> <Control-Key-Insert>
 	event add <<Paste>> <Control-Key-v> <Shift-Key-Insert>
+	event add <<PasteSelection>> <ButtonRelease-2>
     }
     "macintosh" {
 	event add <<Cut>> <Control-Key-x> <Key-F2> 
 	event add <<Copy>> <Control-Key-c> <Key-F3>
 	event add <<Paste>> <Control-Key-v> <Key-F4>
+	event add <<PasteSelection>> <ButtonRelease-2>
 	event add <<Clear>> <Clear>
     }
 }
@@ -142,13 +145,13 @@ switch $tcl_platform(platform) {
 # ----------------------------------------------------------------------
 
 if {$tcl_platform(platform) != "macintosh"} {
-    source $tk_library/button.tcl
-    source $tk_library/entry.tcl
-    source $tk_library/listbox.tcl
-    source $tk_library/menu.tcl
-    source $tk_library/scale.tcl
-    source $tk_library/scrlbar.tcl
-    source $tk_library/text.tcl
+    source [file join $tk_library button.tcl]
+    source [file join $tk_library entry.tcl]
+    source [file join $tk_library listbox.tcl]
+    source [file join $tk_library menu.tcl]
+    source [file join $tk_library scale.tcl]
+    source [file join $tk_library scrlbar.tcl]
+    source [file join $tk_library text.tcl]
 }
 
 # ----------------------------------------------------------------------

@@ -318,7 +318,17 @@
                            (write-results
                             parse-id 
                             (get-field :results result) language
-                            :cache cache))))))
+                            :cache cache))
+                         #+:page
+                         (unless (or interactive
+                                     (= (get-field :readings result) -1))
+                           (let ((statistics (pg::rule-statistics)))
+                             (when statistics
+                               (write-rules
+                                parse-id
+                                statistics
+                                language
+                                :cache cache))))))))
                  (when increment (meter-advance increment)))))
           (when interactive
             (format *tsdb-io* "~&~a" (get-output-stream-string stream)))

@@ -107,12 +107,15 @@
           (pairlis '(tdl::*verbose-reader-p*
                      tdl::*verbose-definition-p*
                      main::*draw-chart-p*
+                     pg::stat-rules
                      pg::ebl-parser-name-rule-fn
                      pg::ebl-parser-external-signal-fn
                      pg::*maximal-number-of-edges*)
                    (list tdl::*verbose-reader-p*
                          tdl::*verbose-definition-p*
                          main::*draw-chart-p*
+                         (and parser
+                           (pg::parser-stat-rules parser))
                          (and parser 
                            (pg::ebl-parser-name-rule-fn parser))
                          (and parser 
@@ -126,7 +129,8 @@
 
       (when parser
         (setf (pg::ebl-parser-name-rule-fn (pg::get-parser :syntax))
-          #'get-informative-item-label)))
+          #'get-informative-item-label)
+        (setf (pg::parser-stat-rules parser) *tsdb-rule-statistics-p*)))
     (scanning::init-scanner)
     environment))
 
@@ -134,6 +138,9 @@
   (let ((parser (pg::get-parser :syntax)))
     (dolist (pair environment)
       (case (first pair)
+        (pg::parser-stat-rules
+         (when parser
+           (setf (pg::parser-stat-rules parser) (rest pair))))
         (pg::ebl-parser-name-rule-fn 
          (when parser
            (setf (pg::ebl-parser-name-rule-fn parser) (rest pair))))
@@ -259,6 +266,7 @@
                               (ignore-errors (funcall trees-hook item))))
                       (mrs (when semantix-hook
                              (ignore-errors (funcall semantix-hook item))))
+                      (size (fs-size item))
                       (time (pg::stats-time statistic))
                       (time (when time 
                               (/ time internal-time-units-per-second)))
@@ -276,10 +284,12 @@
                  (push (pairlis
                         '(:result-id :time
                           :r-ctasks :r-ftasks :r-etasks :r-stasks
+                          :size
                           :r-adges :r-pedges
                           :derivation :tree :mrs)
                         (list i time
                               ctasks ftasks etasks stasks
+                              size
                               r-aedges r-pedges
                               derivation tree mrs))
                        results))))
@@ -336,6 +346,36 @@
 
 (defmacro get-item-type (item)
   `(get-fs-type (lex::cfs-fs (pg::combo-item-cfs ,item))))
+
+(defgeneric get-fs-type (fs))
+(defmethod get-fs-type ((fs unify::node))
+  (tdl::value-type (unify::get-type fs)))
+(defmethod get-fs-type ((fs csli-unify::fs))
+  (csli-unify::fs-type fs))
+
+(defgeneric fs-size (fs))
+(defmethod fs-size ((item pg::combo-item)) (fs-size (pg::combo-item-cfs item)))
+(defmethod fs-size ((cfs lex::cfs)) (fs-size (lex::cfs-fs cfs)))
+(defmethod fs-size ((fs csli-unify::fs))
+  (cond ((csli-unify::tdl-atomic fs) 1)
+        (t (+ 1 (loop
+                    for arc in (csli-unify::fs-arcs fs)
+                    sum (fs-size (rest arc)))))))
+(defmethod fs-size ((fs t)) -1)
+
+(defun get-informative-item-label (item)
+  (when (pg::combo-item-p item)
+    (case (pg::combo-item-itype item)
+      ((:lex-entry :c-lex-entry)
+       (let* ((spare (pg::combo-item-spare item))
+              (spare (when (and spare (or (symbolp spare)
+                                          (stringp spare)))
+                       (string spare)))
+              (cfs (pg::combo-item-cfs item))
+              (fs (and cfs (pg::cfs-fs cfs))))
+         (and fs (string-downcase 
+                  (or spare (format nil "~a" (get-fs-type fs)))))))
+      (t (string-downcase (format nil "~a" (pg::item-label item)))))))
 
 (defun remove-terminals (derivation)
   (let ((daughters (pg::pnode-daughters derivation)))
@@ -396,25 +436,6 @@
           (type (get-item-type rule)))
       (when (member type (aref *lexical-oracle* start)) 600))
     600))
-
-(defmethod get-fs-type ((fs unify::node))
-  (tdl::value-type (unify::get-type fs)))
-(defmethod get-fs-type ((fs csli-unify::fs))
-  (csli-unify::fs-type fs))
-
-(defun get-informative-item-label (item)
-  (when (pg::combo-item-p item)
-    (case (pg::combo-item-itype item)
-      ((:lex-entry :c-lex-entry)
-       (let* ((spare (pg::combo-item-spare item))
-              (spare (when (and spare (or (symbolp spare)
-                                          (stringp spare)))
-                       (string spare)))
-              (cfs (pg::combo-item-cfs item))
-              (fs (and cfs (pg::cfs-fs cfs))))
-         (and fs (string-downcase 
-                  (or spare (format nil "~a" (get-fs-type fs)))))))
-      (t (string-downcase (format nil "~a" (pg::item-label item)))))))
 
 ;;;
 ;;; this is rather awkward because most of the code resides in the :filter
@@ -514,6 +535,21 @@
                      aedges
                      -1)
                    redges))))
+
+(defun rule-statistics ()
+  (let* ((parser (get-parser :syntax))
+         (rules (combo-parser-syn-rules parser))
+         (statistics (parser-rule-stats parser)))
+    (loop
+        for rule in rules
+        for name = (string-downcase (string (combo-item-index rule)))
+        for key = (combo-item-key rule)
+        for stats = (aref statistics key)
+        for filtered = (stats-filtered stats)
+        for executed = (stats-executed stats)
+        for successful = (stats-successful stats)
+        collect (pairlis '(:rule :filtered :executed :successful)
+                         (list name filtered executed successful)))))
 
 (defun summarize-lexicon ()
   (let* ((entries (main::output-stream main::*lexicon*))

@@ -34,7 +34,6 @@
   userdict begin			% Make "userdict" the current 
 					% dictionary
     /showpage {} def			% Redefine showpage to be null
-
     0 setgray 
     0 setlinecap
     1 setlinewidth

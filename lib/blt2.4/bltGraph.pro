@@ -427,11 +427,13 @@ systemdict /ISOLatin1Encoding known not {
 %%BeginSetup
 gsave					% Save the graphics state
 
-% Default line style parameters
+% Default line/text style parameters
 
 1 setlinewidth				% width
 1 setlinejoin				% join
 0 setlinecap				% cap
 [] 0 setdash				% dashes
 
+/CL 0 def				% Set color level mode
+0 0 0 setrgbcolor			% color
 

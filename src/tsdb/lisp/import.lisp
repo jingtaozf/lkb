@@ -18,6 +18,19 @@
 
 (in-package "TSDB")
 
+(defparameter *import-separator* ";;")
+
+(defparameter *import-punctuation* 
+  '(#\, #\. #\! #\? #\; #\: #\- #\" #\' #\` #\( #\)))
+
+(defparameter *import-origin* "unknown")
+
+(defparameter *import-register* "formal")
+
+(defparameter *import-difficulty* 1)
+
+(defparameter *import-category* "")
+
 (defun do-import-database (source target &key absolute meter)
   
   (when meter (meter :value (get-field :start meter)))
@@ -57,7 +70,8 @@
                       (make-pathname :directory tpath :name compressed))))
               (when increment (meter-advance increment))
             finally
-              (let ((sfile (make-pathname :directory source :name "relations")))
+              (let ((sfile 
+                     (make-pathname :directory source :name "relations")))
                 (when (probe-file sfile)
                   (cp sfile 
                       (make-pathname :directory tpath :name "relations")))))
@@ -68,12 +82,12 @@
                                   absolute
                                   (create t)
                                   (overwrite t)
-                                  (origin "unknown")
-                                  (register "formal")
-                                  (difficulty 1)
-                                  (category "")
+                                  (origin (or *import-origin* "unknown"))
+                                  (register (or *import-register* "formal"))
+                                  (difficulty (or *import-difficulty* 1))
+                                  (category (or *import-category* ""))
                                   comment 
-                                  (separator ";;")
+                                  (separator (or *import-separator* ";;"))
                                   meter)
   
   (when meter (meter :value (get-field :start meter)))
@@ -146,7 +160,7 @@
                                              meter)
   
   (when meter (meter :value (get-field :start meter)))
-  (let* ((stream (open file :direction :input :if-does-no-exist :error))
+  (let* ((stream (open file :direction :input :if-does-not-exist :error))
          (format "none")
          (author (current-user))
          (date (current-time))
@@ -198,10 +212,7 @@
 
 (defun normalize-item (string)
   (flet ((punctuation-p (char)
-           (member 
-            char 
-            '(#\, #\. #\! #\? #\; #\: #\- #\" #\' #\` #\( #\))
-            :test #'char=))
+           (member char *import-punctuation* :test #'char=))
          (whitespace-p (char)
            (member char '(#\Space #\Tab #\Newline) :test #'char=)))
     (let ((string (string-trim '(#\Space #\Tab #\Newline) string))

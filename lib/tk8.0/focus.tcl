@@ -3,7 +3,7 @@
 # This file defines several procedures for managing the input
 # focus.
 #
-# SCCS: @(#) focus.tcl 1.17 96/02/16 10:48:21
+# RCS: @(#) $Id$
 #
 # Copyright (c) 1994-1995 Sun Microsystems, Inc.
 #
@@ -167,9 +167,9 @@ proc tk_focusFollowsMouse {} {
     set script {
 	if {("%d" == "NotifyAncestor") || ("%d" == "NotifyNonlinear")
 		|| ("%d" == "NotifyInferior")} {
-	    if [tkFocusOK %W] {
-		focus %W
-	    }
+		    if {[tkFocusOK %W]} {
+			focus %W
+		    }
 	}
     }
     if {$old != ""} {

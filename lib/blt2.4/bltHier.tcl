@@ -1,203 +1,165 @@
+# bltHier.tcl
+# ----------------------------------------------------------------------
+# Bindings for the BLT hierbox widget
+# ----------------------------------------------------------------------
+#   AUTHOR:  George Howlett
+#            Bell Labs Innovations for Lucent Technologies
+#            gah@lucent.com
+#            http://www.tcltk.com/blt
+#
+#      RCS:  $Id$
+# ----------------------------------------------------------------------
+# Copyright (c) 1998  Lucent Technologies, Inc.
+# ======================================================================
+# Permission to use, copy, modify, and distribute this software and its
+# documentation for any purpose and without fee is hereby granted,
+# provided that the above copyright notice appear in all copies and that
+# both that the copyright notice and warranty disclaimer appear in
+# supporting documentation, and that the names of Lucent Technologies
+# any of their entities not be used in advertising or publicity
+# pertaining to distribution of the software without specific, written
+# prior permission.
+#
+# Lucent Technologies disclaims all warranties with regard to this
+# software, including all implied warranties of merchantability and
+# fitness.  In no event shall Lucent be liable for any special, indirect
+# or consequential damages or any damages whatsoever resulting from loss
+# of use, data or profits, whether in an action of contract, negligence
+# or other tortuous action, arising out of or in connection with the use
+# or performance of this software.
+# ======================================================================
 
-set bltHierBox(afterId) {}
-set bltHierBox(space) off
-set bltHierBox(x) 0
-set bltHierBox(y) 0
-
-proc blt::HierBoxAutoScan { w } {
-    global bltHierBox
-    if { ![winfo exists $w] } {
-	return
-    }
-    set x $bltHierBox(x)
-    set y $bltHierBox(y)
-    if { $y >= [winfo height $w] } {
-	$w yview scroll 1 units
-    } elseif { $y < 0 } {
-	$w yview scroll -1 units
-    } 
-    blt::HierBoxMotion $w $x $y
-    set bltHierBox(afterId) [after 10 blt::HierBoxAutoScan $w]
-}
-
-proc blt::HierBoxSelect { widget x y } {
-    set node [$widget nearest $x $y where]
-    switch $where {
-	"gadget" { 
-	    $widget toggle $node 
-	}
-	"select" {
-	    $widget selection clear 0 end
-	    $widget selection set $node
-	    $widget activate $node
-	    $widget selection anchor $node 
-	}
-    }
-}
-
-proc blt::HierBoxStartSelect { widget x y } {
-    set node [$widget nearest $x $y]
-    $widget selection anchor $node
-}
-
-proc blt::HierBoxMotion { widget x y } {
-    set node [$widget nearest $x $y]
-    global bltHierBox
-    $widget selection dragto $node $bltHierBox(action)
+array set bltHierbox {
+    afterId ""
+    space   off
+    action  ""
+    x       0
+    y       0
+    toggle  yes
+    select  off
 }
 
-proc blt::HierBoxEndSelect { widget x y } {
-    set node [$widget nearest $x $y where]
-    if { $node == "" } {
-	$widget selection cancel
-	return
-    }
-    global bltHierBox
-    $widget selection $bltHierBox(action) anchor $node
-    $widget selection anchor $node
-}
+# 
+# ButtonPress assignments
+#
+#	B1-Enter	start auto-scrolling
+#	B1-Leave	stop auto-scrolling
+#	ButtonPress-2	start scan
+#	B2-Motion	adjust scan
+#	ButtonRelease-2 stop scan
 
-bind Hierbox <ButtonPress-1> { 
-    set bltHierBox(action) ""
-    blt::HierBoxSelect %W %x %y
-}
-bind Hierbox <Shift-ButtonPress-1> { 
-    set bltHierBox(action) "set"
-    blt::HierBoxStartSelect %W %x %y
-}
-bind Hierbox <Control-ButtonPress-1> { 
-    set bltHierBox(action) "toggle"
-    blt::HierBoxStartSelect %W %x %y
-}
-bind Hierbox <B1-Motion> { 
-    if { $bltHierBox(action) != "" } {
-	set bltHierBox(x) %x
-	set bltHierBox(y) %y
-	blt::HierBoxMotion %W %x %y
-    } 
-}
-bind Hierbox <ButtonRelease-1> { 
-    if { $bltHierBox(action) != "" } {
-	after cancel $bltHierBox(afterId)
-	blt::HierBoxEndSelect %W %x %y
-    }
-}
-
-bind Hierbox <ButtonPress-3> {
-    %W hide [%W nearest %x %y]
-}
-bind Hierbox <Shift-ButtonPress-3> {
-    %W show [%W nearest %x %y]
+bind Hierbox <ButtonPress-2> {
+    set bltHierbox(cursor) [%W cget -cursor]
+    %W configure -cursor hand1
+    %W scan mark %x %y
 }
 
 bind Hierbox <B2-Motion> {
-    %W scan dragto @%x,%y
+    %W scan dragto %x %y
 }
-bind Hierbox <ButtonPress-2> {
-    set bltHierBox(cursor) [%W cget -cursor]
-    %W configure -cursor hand1
-    %W scan mark @%x,%y
-}
+
 bind Hierbox <ButtonRelease-2> {
-    %W configure -cursor $bltHierBox(cursor)
+    %W configure -cursor $bltHierbox(cursor)
 }
+
+bind Hierbox <B1-Leave> {
+    blt::HierboxAutoScan %W 
+}
+
+bind Hierbox <B1-Enter> {
+    after cancel $bltHierbox(afterId)
+}
+
+
+# 
+# KeyPress assignments
+#
+#	Up			
+#	Down
+#	Shift-Up
+#	Shift-Down
+#	Prior (PageUp)
+#	Next  (PageDn)
+#	Left
+#	Right
+#	space		Start selection toggle of entry currently with focus.
+#	Return		Start selection toggle of entry currently with focus.
+#	Home
+#	End
+#	F1
+#	F2
+#	ascii char	Go to next open entry starting with character.
+#
+# KeyRelease
+#
+#	space		Stop selection toggle of entry currently with focus.
+#	Return		Stop selection toggle of entry currently with focus.
+
 bind Hierbox <KeyPress-Up> {
-    %W activate up
-    %W see active
-    if { $bltHierBox(space) } {
-	%W selection toggle active
+    blt::HierboxTraverse %W up
+    if { $bltHierbox(space) } {
+	%W selection toggle focus
     }
 }
+
 bind Hierbox <KeyPress-Down> {
-    %W activate down
-    %W see active
-    if { $bltHierBox(space) } {
-	%W selection toggle active
+    blt::HierboxTraverse %W down
+    if { $bltHierbox(space) } {
+	%W selection toggle focus
     }
 }
 
 bind Hierbox <Shift-KeyPress-Up> {
-    %W activate parent
-    %W see active
+    blt::HierboxTraverse %W prevsibling
 }
+
 bind Hierbox <Shift-KeyPress-Down> {
-    %W activate sibling
-    %W see active
+    blt::HierboxTraverse %W nextsibling
 }
 
-bind Hierbox <B1-Leave> {
-    blt::HierBoxAutoScan %W 
-}
-
-bind Hierbox <B1-Enter> {
-    after cancel $bltHierBox(afterId)
-}
-
-# PageUp
 bind Hierbox <KeyPress-Prior> {
-    if { [%W index active] != [%W index view.top] } {
-	%W activate view.top
-    } else {
-	%W yview scroll -1 pages
-	update
-	%W activate view.bottom
-    }
-}
-# PageDown
-bind Hierbox <KeyPress-Next> {
-    if { [%W index active] != [%W index view.bottom] } {
-	%W activate view.bottom
-    } else {
-	%W yview scroll 1 pages
-	update; update
-	%W activate view.top
-    }
+    blt::HierboxPage %W top
 }
 
-bind Hierbox <Control-KeyPress-l> {
-    %W see active
+bind Hierbox <KeyPress-Next> {
+    blt::HierboxPage %W bottom
 }
+
 bind Hierbox <KeyPress-Left> {
-    %W close active
+    %W close focus
 }
 bind Hierbox <KeyPress-Right> {
-    %W open active
+    %W open focus
 }
 
 bind Hierbox <KeyPress-space> {
-    %W selection toggle active
-    set bltHierBox(space) on
+    blt::HierboxToggle %W focus
+    set bltHierbox(space) on
 }
 
-bind Hierbox <KeyRelease-space> {
-    set bltHierBox(space) off
+bind Hierbox <KeyRelease-space> { 
+    set bltHierbox(space) off
 }
 
+bind Hierbox <KeyPress-Return> {
+    blt::HierboxToggle %W focus
+    set bltHierbox(space) on
+}
+
+bind Hierbox <KeyRelease-Return> { 
+    set bltHierbox(space) off
+}
 
 bind Hierbox <KeyPress> {
-    if { [string match {[A-Za-z0-9]*} "%A"] } {
-	set last [%W index active]
-	set next [%W index next]
-	while { $next != $last } {
-	    set label [%W entry cget $next -label]
-	    if { [string index $label 0] == "%A" } {
-		break
-	    }
-	    set next [%W index -at $next next]
-	}
-	%W activate $next
-	%W see active
-    }
+    blt::HierboxSearch %W %A
 }
 
-# Home
 bind Hierbox <KeyPress-Home> {
-    %W activate root
-    %W see active
+    blt::HierboxTraverse %W root
 }
+
 bind Hierbox <KeyPress-End> {
-    %W activate end
-    %W see active
+    blt::HierboxTraverse %W end
 }
 
 bind Hierbox <KeyPress-F1> {
@@ -207,3 +169,287 @@ bind Hierbox <KeyPress-F1> {
 bind Hierbox <KeyPress-F2> {
     eval %W close -r [%W entry children root 0 end] 
 }
+
+
+# ----------------------------------------------------------------------
+# USAGE: blt::HierboxInitBindings <hierbox> 
+#
+# Invoked by internally by Hierbox_Init routine.  Initializes the 
+# default bindings for the hierbox widget entries.  These are local
+# to the widget, so they can't be set through the widget's class
+# bind tags.
+#
+# Arguments:	hierbox		hierarchy widget
+#
+# ----------------------------------------------------------------------
+proc blt::HierboxInitBindings { widget } {
+    $widget bind all <Enter> { 
+	%W entry activate current 
+    }
+    $widget bind all <Leave> { 
+	%W entry activate "" 
+    }
+    $widget bind all <ButtonPress-1> { 	
+	blt::HierboxSelect %W 
+    }
+    $widget bind all <Double-ButtonPress-1> {
+	%W toggle current
+    }
+    $widget bind all <Shift-ButtonPress-1> { 
+	blt::HierboxStartSelect %W "set"
+    }
+    $widget bind all <Control-ButtonPress-1> { 
+	blt::HierboxStartSelect %W "toggle"
+    }
+    $widget bind all <B1-Motion> { 
+	if { $bltHierbox(action) != "" } {
+	    set bltHierbox(select) on
+	}
+	set bltHierbox(x) %x
+	set bltHierbox(y) %y
+	blt::HierboxMotion %W %x %y
+    }
+    $widget bind all <ButtonRelease-1> { 
+	if { $bltHierbox(action) != "" } {
+	    blt::HierboxEndSelect %W %x %y
+	}
+	after cancel $bltHierbox(afterId)
+    }
+    #
+    # Button bindings
+    #
+    $widget button bind all <ButtonRelease-1> {
+	%W toggle current
+    }
+    $widget button bind all <Enter> {
+	%W button activate current
+    }
+    $widget button bind all <Leave> {
+	%W button activate ""
+    }
+}
+
+# ----------------------------------------------------------------------
+# USAGE: blt::HierboxAutoScan <hierbox>
+#
+# Invoked when the user is selecting elements in a hierbox widget
+# and drags the mouse pointer outside of the widget.  Scrolls the
+# view in the direction of the pointer.
+#
+# Arguments:	hierbox		hierarchy widget
+#
+# ----------------------------------------------------------------------
+proc blt::HierboxAutoScan { widget } {
+    global bltHierbox
+    if { ![winfo exists $widget] } {
+	return
+    }
+#     if { ![winfo exists $widget] ||
+#          ![info exists bltHierbox(x)] ||
+#          ![info exists bltHierbox(y)] } {
+# 	return
+#     }
+    set x $bltHierbox(x)
+    set y $bltHierbox(y)
+    if { $y >= [winfo height $widget] } {
+	$widget yview scroll 1 units
+    } elseif { $y < 0 } {
+	$widget yview scroll -1 units
+    } 
+    blt::HierboxMotion $widget $x $y
+    set bltHierbox(afterId) [after 10 blt::HierboxAutoScan $widget]
+}
+
+# ----------------------------------------------------------------------
+# USAGE blt::HierboxSelect <hierbox> 
+#
+# Invoked when the user clicks on a <hierbox> widget. The currently
+# picked entry is available using the "current" index. The selection
+# is cleared and the element at that coordinate is selected.  
+#
+# Arguments:	hierbox		hierarchy widget
+#
+# ----------------------------------------------------------------------
+proc blt::HierboxSelect { widget } {
+    global bltHierbox
+
+    set bltHierbox(action) ""
+
+    # Clear all selections before setting the new anchor.
+    $widget selection clear 0 end
+    $widget selection set current
+    $widget selection anchor current
+
+    $widget see current
+    $widget focus current
+}
+
+# ----------------------------------------------------------------------
+# USAGE: blt::HierboxStartSelect <hierbox> <action>
+#
+# Invoked when the user clicks on a <hierbox> widget at the screen
+# coordinate <x>,<y>.  Marks the start of a "drag" operation for
+# selecting multiple elements.  See related HierboxMotion and
+# HierboxEndSelect procedures.
+#
+# Arguments:	hierbox		hierarchy widget
+#		action		"set", "clear", "toggle", or "".  
+#				Indicates how to manage the selection.
+#
+# ----------------------------------------------------------------------
+proc blt::HierboxStartSelect { widget action } {
+    global bltHierbox
+
+    set bltHierbox(action) $action
+    switch -- [$widget cget -selectmode] {
+	single - active {
+	    blt::HierboxSelect $widget
+	}
+	multiple {
+	    $widget selection anchor current
+	}
+    }
+}
+
+# ----------------------------------------------------------------------
+# USAGE:	blt::HierboxMotion 
+#
+# Invoked when the user has clicked on a <hierbox> widget and has
+# dragged the mouse to the coordinate <x>,<y>.  Updates a preview
+# of the elements being selected.  See related HierboxStartSelect
+# and HierboxEndSelect procedures.
+#
+# Arguments:	hierbox		hierarchy widget
+#		x		X-coordinate of mouse pointer
+#		y		Y-coordinate of mouse pointer
+#
+# ----------------------------------------------------------------------
+proc blt::HierboxMotion { widget x y } {
+    global bltHierbox
+
+    if { $bltHierbox(action) == "" } {
+	return
+    }
+    if {[$widget cget -selectmode] == "multiple" } {
+	set node [$widget nearest $x $y]
+	$widget selection dragto $node $bltHierbox(action)
+    }
+}
+
+# ----------------------------------------------------------------------
+# USAGE: blt::HierboxEndSelect <hierbox> <x> <y>
+#
+# Invoked when the user has clicked on a <hierbox> widget and has
+# then released the mouse at coordinate <x>,<y>.  Finalizes the
+# current selection.  See related HierboxStartSelect and HierboxMotion
+# procedures.
+#
+# Arguments:	hierbox		hierarchy widget
+#		x		X-coordinate of mouse pointer
+#		y		Y-coordinate of mouse pointer
+#
+# ----------------------------------------------------------------------
+proc blt::HierboxEndSelect { widget x y } {
+    global bltHierbox
+
+    if { $bltHierbox(action) != "" } {
+	after cancel $bltHierbox(afterId)
+    }
+    if {[$widget cget -selectmode] == "multiple" } {
+	set node [$widget nearest $x $y]
+        $widget selection $bltHierbox(action) anchor $node
+        $widget selection anchor $node
+    }
+    set bltHierbox(select) "off"
+}
+
+# ----------------------------------------------------------------------
+# USAGE: blt::HierboxToggle <hierbox> <index>
+# Arguments:	hierbox		hierarchy widget
+#
+# Invoked when the user presses the space bar.  Toggles the selection
+# for the entry at <index>.
+# ----------------------------------------------------------------------
+proc blt::HierboxToggle { widget index } {
+    switch -- [$widget cget -selectmode] {
+        single - active {
+            set i [$widget index $index]
+            if {[lsearch [$widget curselection] $i] < 0} {
+                $widget selection clear 0 end
+            }
+            $widget selection toggle $index
+        }
+        multiple {
+            $widget selection toggle $index
+        }
+    }
+}
+
+# ----------------------------------------------------------------------
+# USAGE: blt::HierboxTraverse <hierbox> <where>
+#
+# Invoked by KeyPress bindings.  Moves the active selection to the
+# entry <where>, which is an index such as "up", "down", "prevsibling",
+# "nextsibling", etc.
+# ----------------------------------------------------------------------
+proc blt::HierboxTraverse { widget where } {
+    catch {$widget focus $where}
+    if {[$widget cget -selectmode] == "active"} {
+        $widget selection clear 0 end
+        $widget selection set focus
+    }
+    $widget see focus
+}
+
+# ----------------------------------------------------------------------
+# USAGE: blt::HierboxPage <hierbox> <where>
+# Arguments:	hierbox		hierarchy widget
+#
+# Invoked by KeyPress bindings.  Pages the current view up or down.
+# The <where> argument should be either "top" or "bottom".
+# ----------------------------------------------------------------------
+proc blt::HierboxPage { widget where } {
+    if { [$widget index focus] == [$widget index view.$where] } {
+        if {$where == "top"} {
+	    $widget yview scroll -1 pages
+	    $widget yview scroll 1 units
+        } else {
+	    $widget yview scroll 1 pages
+	    $widget yview scroll -1 units
+        }
+    }
+    update
+    $widget activate view.$where
+    if {[$widget cget -selectmode] == "active"} {
+        $widget selection clear 0 end
+        $widget selection set focus
+    }
+}
+
+# ----------------------------------------------------------------------
+# USAGE: blt::HierboxSearch <hierbox> <char>
+# Arguments:	hierbox		hierarchy widget
+#
+# Invoked by KeyPress bindings.  Searches for an entry that starts
+# with the letter <char> and makes that entry active.
+# ----------------------------------------------------------------------
+proc blt::HierboxSearch { widget key } {
+    if {[string match {[ -~]} $key]} {
+	set last [$widget index focus]
+	set next [$widget index next]
+	while { $next != $last } {
+	    set label [$widget entry cget $next -label]
+	    if { [string index $label 0] == $key } {
+		break
+	    }
+	    set next [$widget index -at $next next]
+	}
+	$widget focus $next
+        if {[$widget cget -selectmode] == "active"} {
+            $widget selection clear 0 end
+            $widget selection set focus
+        }
+	$widget see focus
+    }
+}
+

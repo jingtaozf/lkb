@@ -1,6 +1,8 @@
 
 proc Blt_ActiveLegend { graph } {
-    blt::ActiveLegend $graph
+    $graph legend bind all <Enter> [list blt::ActivateLegend $graph ]
+    $graph legend bind all <Leave> [list blt::DeactivateLegend $graph]
+    $graph legend bind all <ButtonPress-1> [list blt::HighlightLegend $graph]
 }
 
 proc Blt_Crosshairs { graph } {
@@ -24,14 +26,25 @@ proc Blt_ClosestPoint { graph } {
 # supposed to be private.
 #
 
-proc blt::ActiveLegend { graph } {
-    global activeEntry
+proc blt::ActivateLegend { graph } {
+    set elem [$graph legend get current]
+    $graph legend activate $elem
+}
+proc blt::DeactivateLegend { graph } {
+    set elem [$graph legend get current]
+    $graph legend deactivate $elem
+}
 
-    set activeEntry($graph) "-1"
-    bind bltActiveLegend <Motion>  {
-	blt::ActivateLegend %W %x %y
-    }    
-    blt::AddBindTag $graph bltActiveLegend 
+proc blt::HighlightLegend { graph } {
+    set elem [$graph legend get current]
+    set relief [$graph element cget $elem -labelrelief]
+    if { $relief == "flat" } {
+	$graph element configure $elem -labelrelief raised
+	$graph element activate $elem
+    } else {
+	$graph element configure $elem -labelrelief flat
+	$graph element deactivate $elem
+    }
 }
 
 proc blt::Crosshairs { graph } {
@@ -46,6 +59,8 @@ proc blt::Crosshairs { graph } {
 proc blt::ZoomStack { graph } {
     global zoomInfo
     
+    set zoomInfo($graph,interval) 100
+    set zoomInfo($graph,afterId) 0
     set zoomInfo($graph,A,x) {}
     set zoomInfo($graph,A,y) {}
     set zoomInfo($graph,B,x) {}
@@ -54,9 +69,7 @@ proc blt::ZoomStack { graph } {
     set zoomInfo($graph,corner) A
     
     bind $graph <1> { 
-	if { [%W inside %x %y] } {
-	    blt::SetZoomPoint %W %x %y 
-	}
+	blt::SetZoomPoint %W %x %y 
     }
     bind $graph <ButtonPress-3> {
 	if { [%W inside %x %y] } {
@@ -85,24 +98,6 @@ proc blt::AddBindTag { graph name } {
     }
 }
 
-proc blt::ActivateLegend { graph x y } {
-    global activeEntry
-    
-    set old $activeEntry($graph)
-    set new [$graph legend get @$x,$y]
-    if { $old != $new } {
-	if { $old != "-1" } {
-	    eval $graph legend deactivate $old
-	    eval $graph element deactivate $old
-	}
-	if { $new != "" } {
-	    eval $graph legend activate $new
-	    eval $graph element activate $new
-	}
-    }
-    set activeEntry($graph) $new
-}
-
 proc blt::FindElement { graph x y } {
     if ![$graph element closest $x $y info -interpolate yes] {
 	beep
@@ -115,6 +110,9 @@ proc blt::FindElement { graph x y } {
     #				  or closest point on line segment.
     # find(dist)		- distance from sample coordinate
     # --------------------------------------------------------------
+    foreach i [array names info] {
+        puts stderr "info($i) = $info($i)"
+    }
     set markerName "bltClosest_$info(name)"
     catch { $graph marker delete $markerName }
     $graph marker create text -coords { $info(x) $info(y) } \
@@ -151,6 +149,7 @@ proc blt::FlashPoint { graph name index count } {
 }
 
 proc blt::GetCoords { graph x y index } {
+
     #
     # We're using the default axes, instead of transforming through
     # the specific axes, because it handles inverted axes automatically
@@ -167,8 +166,8 @@ proc blt::GetCoords { graph x y index } {
     scan [$graph xaxis limits] "%s %s" xmin xmax
     scan [$graph yaxis limits] "%s %s" ymin ymax
 
-     set padx [expr ($xmax - $xmin) * 0.02]
-     set pady [expr ($ymax - $ymin) * 0.02]
+     set padx [expr ($xmax - $xmin) * 0.00]
+     set pady [expr ($ymax - $ymin) * 0.00]
      if { $x > $xmax } { 
  	set x [expr $xmax + $padx]
      } elseif { $x < $xmin } { 
@@ -231,9 +230,11 @@ proc blt::PopZoom { graph } {
 # Push the old axis limits on the stack and set the new ones
 
 proc blt::PushZoom { graph } {
-    eval $graph marker delete [$graph marker names "zoom*"]
-
     global zoomInfo
+    eval $graph marker delete [$graph marker names "zoom*"]
+    if { [info exists zoomInfo($graph,afterId)] } {
+	after cancel $zoomInfo($graph,afterId)
+    }
     set x1 $zoomInfo($graph,A,x)
     set y1 $zoomInfo($graph,A,y)
     set x2 $zoomInfo($graph,B,x)
@@ -280,35 +281,38 @@ proc blt::ResetZoom { graph } {
     }
 }
 
-option add *zoomTitle.font  -*-helvetica-bold-o-*-*-18-*-*-*-*-*-*-* 
+option add *zoomTitle.font	  -*-helvetica-bold-o-*-*-18-*-*-*-*-*-*-* 
+option add *zoomTitle.shadow	  black
+option add *zoomTitle.foreground  yellow
+option add *zoomTitle.coords	  "-Inf Inf"
 
 proc blt::ZoomTitleNext { graph } {
     global zoomInfo
-
     set level [expr [llength $zoomInfo($graph,stack)] + 1]
-    set title "Zoom #$level"
-    $graph marker create text -name "zoomTitle" -text $title \
-	-coords {-Inf Inf} -anchor nw -foreground yellow \
-	-shadow black
+    if { [$graph cget -invertxy] } {
+	set coords "-Inf -Inf"
+    } else {
+	set coords "-Inf Inf"
+    }
+    $graph marker create text -name "zoomTitle" -text "Zoom #$level" \
+	-coords $coords -bindtags "" -anchor nw
 }
 
 proc blt::ZoomTitleLast { graph } {
     global zoomInfo
-
     set level [llength $zoomInfo($graph,stack)]
     if { $level > 0 } {
-	set title "Zoom #$level"
-     	$graph marker create text -name "zoomTitle" -text $title \
-		-coords {-Inf Inf} -anchor nw -foreground yellow \
-		-shadow black
+     	$graph marker create text -name "zoomTitle" -text "Zoom #$level" -anchor nw
     }
 }
 
 proc blt::SetZoomPoint { graph x y } {
     global zoomInfo
-
     blt::GetCoords $graph $x $y $zoomInfo($graph,corner)
     if { $zoomInfo($graph,corner) == "A" } {
+	if { ![$graph inside $x $y] } {
+	    return
+	}
 
 	# First corner selected, start watching motion events
 
@@ -324,6 +328,21 @@ proc blt::SetZoomPoint { graph x y } {
 	bind $graph <Any-Motion> { }
 	blt::PushZoom $graph 
 	set zoomInfo($graph,corner) A
+    }
+}
+
+option add *zoomOutline.dashes		4	
+option add *zoomTitle.anchor		nw
+option add *zoomOutline.lineWidth	1
+option add *zoomOutline.xor		yes
+
+proc blt::ChangeDashes { graph  offset } {
+    global zoomInfo
+    incr offset
+    if { [$graph marker exists zoomOutline] } {
+	$graph marker configure zoomOutline -dashoffset $offset 
+	set zoomInfo($graph,afterId) \
+	    [after $zoomInfo($graph,interval) "blt::ChangeDashes $graph $offset"]
     }
 }
 
@@ -343,13 +362,13 @@ proc blt::Box { graph } {
     }
     set coords { $x1 $y1 $x2 $y1 $x2 $y2 $x1 $y2 $x1 $y1 }
     if { [$graph marker exists "zoomOutline"] } {
-	$graph marker configure "zoomOutline" -coords $coords
+	$graph marker configure "zoomOutline" -coords $coords 
     } else {
 	$graph marker create line -coords $coords -name "zoomOutline" \
-	    -dashes { 6 4 } -linewidth 2 \
-	    -mapx [$graph xaxis use] -mapy [$graph yaxis use]
+	    -mapx [$graph xaxis use] -mapy [$graph yaxis use] 
+	set zoomInfo($graph,afterId) \
+	    [after $zoomInfo($graph,interval) "blt::ChangeDashes $graph 0"]
     }
-    $graph marker before "zoomOutline"
 }
 
 proc Blt_PostScriptDialog { graph } {

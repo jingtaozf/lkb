@@ -12,7 +12,7 @@
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
 #
-# SCCS: @(#) safe.tcl 1.26 97/08/21 11:57:20
+# RCS: @(#) $Id$
 
 #
 # The implementation is based on namespaces. These naming conventions
@@ -31,12 +31,6 @@ namespace eval ::safe {
     namespace export interpCreate interpInit interpConfigure interpDelete \
 	    interpAddToAccessPath interpFindInAccessPath \
 	    setLogCmd ;
-
-# Proto/dummy declarations for auto_mkIndex
-proc ::safe::interpCreate {} {}
-proc ::safe::interpInit {} {}
-proc ::safe::interpConfigure {} {}
-
 
     ####
     #
@@ -417,7 +411,7 @@ proc ::safe::interpAddToAccessPath {slave path} {
 
 	Lappend [VirtualPathListName $slave] $token;
 	Lappend [PathListName $slave] $path;
-	Set $nname [expr $n+1];
+	Set $nname [expr {$n+1}];
 
 	SyncAccessPath $slave;
 
@@ -528,7 +522,7 @@ proc ::safe::interpDelete {slave} {
 		# remove the hook now, otherwise if the hook
 		# calls us somehow, we'll loop
 		Unset $hookname;
-		if {[catch {eval $hook $slave} err]} {
+		if {[catch {eval $hook [list $slave]} err]} {
 		    Log $slave "Delete hook error ($err)";
 		}
 	    }
@@ -681,7 +675,7 @@ proc ::safe::setLogCmd {args} {
 	if {[regexp {(::)|(\.\.)} $path]} {
 	    error "invalid characters in path $path";
 	}
-	set n [expr [Set [PathNumberName $slave]]-1];
+	set n [expr {[Set [PathNumberName $slave]]-1}];
 	for {} {$n>=0} {incr n -1} {
 	    # fill the token virtual names with their real value
 	    set [PathToken $n] [Set [PathToken $n $slave]];

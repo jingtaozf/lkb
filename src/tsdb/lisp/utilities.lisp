@@ -168,6 +168,23 @@
             'string (string prefix) (tsdb-escape-quotes (subseq string 1)))))
     string))
 
+(defun current-application ()
+  (cond ((and (member :page *features* :test #'eq) 
+              (not (member :lkb *features* :test #'eq)))
+         "PAGE")
+        ((and (member :lkb *features* :test #'eq) 
+              (not (member :page *features* :test #'eq)))
+         "LKB")
+        ((and (member :lkb *features* :test #'eq) 
+              (member :page *features* :test #'eq))
+         "JANUS")
+        ((member :dam *features* :test #'eq)
+         "DAM")
+        ((member :babel *features* :test #'eq)
+         "BABEL")
+        (t
+         "UNKNOWN")))
+
 (defun current-grammar ()
   (cond 
    ((and (find-symbol "*GRAMMAR-VERSION*" "USER")
@@ -202,6 +219,9 @@
 
 (defun current-os ()
   (software-version))
+
+(defun current-host ()
+  (short-site-name))
 
 (defun current-time (&key long)
   (multiple-value-bind (second minute hour day month year foo bar baz)
@@ -241,9 +261,6 @@
            (past (read-from-string line nil 0)))
       (close output)
       (list current recent past))))
-
-(defun current-host ()
-  (short-site-name))
 
 (defun pprint-memory-usage (result &optional (separator #\Space))
   (let* ((conses (* (or (get-field :conses result) 0) 8))

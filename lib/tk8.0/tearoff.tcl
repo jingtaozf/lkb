@@ -2,7 +2,7 @@
 #
 # This file contains procedures that implement tear-off menus.
 #
-# SCCS: @(#) tearoff.tcl 1.20 97/08/21 14:49:27
+# RCS: @(#) $Id$
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
@@ -49,7 +49,7 @@ proc tkTearOffMenu {w {x 0} {y 0}} {
     }
     for {set i 1} 1 {incr i} {
 	set menu $parent.tearoff$i
-	if ![winfo exists $menu] {
+	if {![winfo exists $menu]} {
 	    break
 	}
     }

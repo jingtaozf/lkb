@@ -303,6 +303,8 @@ proc make_postscript {canvas name} {
     ## Writes 'canvas' as postscript to 'file'. Page format is landscape.
     ##
 
+  global globals;
+
     ## Set regions' background to white
 
     status "generating PostScript output ...";
@@ -323,7 +325,7 @@ proc make_postscript {canvas name} {
 
     ## Write postscript file
     $canvas postscript -x $x -y $y -height $h -width $w \
-	-file $file -rotate 1
+	-file $file -rotate $globals(landscape);
     
     ## Set regions' background back to canvas background
 

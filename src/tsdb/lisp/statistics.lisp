@@ -80,6 +80,9 @@
 
 (defparameter *statistics-aggregate-upper* nil)
 
+(defparameter *statistics-aggregate-maximum* 
+  (min 20000 array-total-size-limit))
+
 (defparameter *statistics-plot-width* 150)
 
 (defparameter *statistics-plot-height* 100)
@@ -182,7 +185,7 @@
         (:p-stasks "green"))
       "black"))
 
-(defun analyze (language &key condition meter message)
+(defun analyze (language &key condition meter message concise)
 
   (let* ((message (when message
                     (format nil "retrieving `~a' data ..." language)))
@@ -214,18 +217,30 @@
             (push (first match) pfields)
             (push (second match) ptypes))))
       (unwind-protect
-        (let* ((pmeter (madjust * meter 0.5))
-               (imeter 
-                (madjust + (madjust * meter 0.25) (mduration pmeter)))
-               (ameter 
-                (madjust + (madjust * meter 0.25) (+ (mduration pmeter)
-                                                     (mduration imeter))))
+        (let* ((pmeter (madjust * meter (if concise 0.4 0.5)))
+               (imeter (madjust + (madjust * meter (if concise 0.1 0.25)) 
+                                (mduration pmeter)))
+               (rmeter (if concise
+                         (madjust + (madjust * meter 0.4) 
+                                  (+ (mduration pmeter) (mduration imeter)))
+                         (make-meter 0 0)))
+               (ameter (madjust + (madjust * meter (if concise 0.1 0.25)) 
+                                (+ (mduration pmeter) 
+                                   (mduration rmeter)
+                                   (mduration imeter))))
                (parse (select pfields ptypes "parse" condition language
                               :meter pmeter :sort :i-id))
                (item (select '("i-id" "i-input" "i-length" "i-wf")
                              '(:integer :string :integer :integer)
                              "item" condition language 
                              :meter imeter :sort :i-id))
+               (result (when concise
+                         (select '("parse-id" "result-id" "time" 
+                                   "r-ctasks" "r-ftasks" "r-etasks" "r-stasks")
+                                 '(:integer :integer :integer 
+                                   :integer :integer :integer :integer)
+                                 condition language 
+                                 :meter rmeter :sort :parse-id)))
                (all (njoin parse item :i-id :meter ameter)))
           (setf data all))
         (setf (gethash key *tsdb-profile-cache*) data)))
@@ -347,9 +362,22 @@
                   (analyze language :condition condition
                            :meter imeter :message (and meter t)) 
                   language))
-         (items (remove-if #'(lambda (foo)
-                               (< (get-field dimension foo) lower))
-                           items))
+         (items (if (eq dimension :space)
+                  (loop 
+                      for item in items
+                      for conses = (get-field :conses item)
+                      for symbols = (get-field :symbols item)
+                      for others = (get-field :others item)
+                      for space = (when (and conses symbols others
+                                             (>= conses 0)
+                                             (>= symbols 0)
+                                             (>= others 0))
+                                    (+ (* 8 conses) (* 24 symbols) others))
+                      when (>= space lower)
+                      collect (cons (cons :space space) item))
+                  (remove-if #'(lambda (foo)
+                                 (< (get-field dimension foo) lower))
+                             items)))
          (items (if upper
                   (remove-if #'(lambda (foo)
                                  (> (get-field dimension foo) upper))
@@ -382,44 +410,62 @@
              (aminimum (floor (/ minimum aggregate)))
              (maximum (apply #'max values))
              (amaximum (floor (/ maximum aggregate)))
-             (storage (make-array (+ (- amaximum aminimum) 1)
-                                  :initial-element nil))
-             result)
-        (dolist (item items)
-          (let* ((value (get-field dimension item))
-                 (class (- (floor (/ value aggregate)) aminimum)))
-            (push item (aref storage class))))
-        (dotimes (i (+ (- amaximum aminimum) 1) result)
-          (let* ((data (aref storage i))
-                 (class (* (+ i aminimum) aggregate))
-                 (name (case format
-                         (:latex
-                          (if (= aggregate 1)
-                            (format
-                             nil
-                             "\\multicolumn{1}{|c|} {\\em ~(~a~)\\/ $=$ ~d}"
-                             dimension class)
-                            (format 
-                             nil 
-                             "\\multicolumn{1}{|c|}~
-                              {~d $\\leq$ {\\em ~(~a~)\\/} $<$ ~d}"
-                             class dimension (+ class aggregate))))
-                         (:tcl
-                          (if (= aggregate 1)
-                            (format
-                             nil
-                             "~(~a~) = ~d"
-                             dimension class)
-                            (format
-                             nil
-                             "~(~a~) in [~d .. ~d|"
-                             dimension class (+ class aggregate)))))))
-            (when (>= (length data) threshold)
-              (push (cons class (cons name data)) result))))
-        (when meter 
-          (meter :value (get-field :end meter))
-          (status :text (format nil "~a done" message) :duration 5))
-        result))))
+             (width (+ (- amaximum aminimum) 1)))
+        (when (> width *statistics-aggregate-maximum*)
+          (let* ((base (/ width *statistics-aggregate-maximum*))
+                 (precision (expt 10 (floor (log base 10))))
+                 (base (* precision (ceiling base precision))))
+            (setf aggregate base
+                  aminimum (floor (/ minimum aggregate))
+                  amaximum (floor (/ maximum aggregate))
+                  width (+ (- amaximum aminimum) 1)))
+          (when meter
+            (beep)
+            (status 
+             :text (format
+                    nil
+                    "invalid (too small) aggregate width; ~
+                     using ~d instead"
+                    aggregate)
+             :duration 10)
+            (sleep 2)))
+        (let ((storage (make-array width :initial-element nil))
+              result)
+          (dolist (item items)
+            (let* ((value (get-field dimension item))
+                   (class (- (floor (/ value aggregate)) aminimum)))
+              (push item (aref storage class))))
+          (dotimes (i (+ (- amaximum aminimum) 1) result)
+            (let* ((data (aref storage i))
+                   (class (* (+ i aminimum) aggregate))
+                   (name (case format
+                           (:latex
+                            (if (= aggregate 1)
+                              (format
+                               nil
+                               "\\multicolumn{1}{|c|} {\\em ~(~a~)\\/ $=$ ~d}"
+                               dimension class)
+                              (format 
+                               nil 
+                               "\\multicolumn{1}{|c|}~
+                                {~d $\\leq$ {\\em ~(~a~)\\/} $<$ ~d}"
+                               class dimension (+ class aggregate))))
+                           (:tcl
+                            (if (= aggregate 1)
+                              (format
+                               nil
+                               "~(~a~) = ~d"
+                               dimension class)
+                              (format
+                               nil
+                               "~(~a~) in [~d .. ~d|"
+                               dimension class (+ class aggregate)))))))
+              (when (>= (length data) threshold)
+                (push (cons class (cons name data)) result))))
+          (when meter 
+            (meter :value (get-field :end meter))
+            (status :text (format nil "~a done" message) :duration 5))
+          result)))))
 
 
 (defun summarize-competence-parameters (items
@@ -505,7 +551,7 @@
                    "Phenomenon"
                    "Aggregate"))
          (caption (format 
-                   nil "(generated by ~a at ~a - (c) oe@coli.uni-sb.de)"
+                   nil "(generated by ~a at ~a -- (c) oe@coli.uni-sb.de)"
                    *tsdb-name* (current-time :long :pretty))))
                    
     (case format
@@ -666,7 +712,7 @@
                    "Phenomenon"
                    "Aggregate"))
          (caption (format 
-                   nil "(generated by ~a at ~a - (c) oe@coli.uni-sb.de)"
+                   nil "(generated by ~a at ~a -- (c) oe@coli.uni-sb.de)"
                    *tsdb-name* (current-time :long :pretty))))
     
     (if (not (and oitems nitems (= (length oitems) (length nitems))))
@@ -731,7 +777,7 @@
            stream
            "cell 1 1 -contents ~a -format title~%~
             region 1 1 2 1 -contents ~a -format title ~
-              -hor_justify center~%~
+              -hor_justify left -ver_justify center~%~
             region 1 2 1 5 -contents ~s -format title -hor_justify center~%~
             region 1 6 1 9 -contents ~s -format title -hor_justify center~%"
            alabel alabel olabel nlabel)
@@ -1284,7 +1330,7 @@
                    "Phenomenon"
                    "Aggregate"))
          (caption (format 
-                   nil "(generated by ~a at ~a - (c) oe@coli.uni-sb.de)"
+                   nil "(generated by ~a at ~a -- (c) oe@coli.uni-sb.de)"
                    *tsdb-name* (current-time :long :pretty))))
     (case format
       (:latex
@@ -1457,7 +1503,7 @@
             nlanguage))
          (ncolumns 10)
          (caption (format 
-                   nil "(generated by ~a at ~a - (c) oe@coli.uni-sb.de)"
+                   nil "(generated by ~a at ~a -- (c) oe@coli.uni-sb.de)"
                    *tsdb-name* (current-time :long :pretty))))
          
     (if (not (and oitems nitems (= (length oitems) (length nitems))))
@@ -1514,7 +1560,7 @@
            stream
            "cell 1 1 -contents ~a -format title~%~
             region 1 1 2 1 -contents ~a -format title ~
-              -hor_justify center~%~
+              -hor_justify left -ver_justify center~%~
             region 1 2 1 4 -contents ~s -format title -hor_justify center~%~
             region 1 5 1 7 -contents ~s -format title -hor_justify center~%~
             region 1 8 1 10 -contents ~s -format title -hor_justify center~%"
@@ -1773,7 +1819,7 @@
                      collect tic))
                 (caption 
                  (format 
-                  nil "(generated by ~a at ~a - (c) oe@coli.uni-sb.de)"
+                  nil "(generated by ~a at ~a -- (c) oe@coli.uni-sb.de)"
                   *tsdb-name* (current-time :long :pretty))))
 
            (format

@@ -1,10 +1,26 @@
 ------------------------------------------------------------------------------
----- things to do (usually fix or improve |:-) for tsdb(1) and the podium ----
+----     things to do (usually fix or improve |:-) for [incr tsdb(1)]     ----
 ------------------------------------------------------------------------------
 
 
 open issues:
 ------------
+
+[10-dec-98] - include condition in all window titles where appropriate;
+
+[08-dec-98] - fix treatment of hyphen and apostrophe in import();
+
+[08-dec-98] - allow export of raw data (in tsdb(1) format) from table view;
+
+[25-nov-98] - allow graphing of time and tasks for specific readings;
+
+[23-nov-98] - yes-or-no-p() implicit purge on non-empty databases;
+
+[23-nov-98] - code hostname(), username(), and register() in pure C;
+
+[20-nov-98] - fit `File - Create' cascade to documentation;
+
+[13-nov-98] - write tsdb(1), tsdb(5), and itsdb(1) man(1) pages;
 
 [03-nov-98] - center copyright caption below narrow tables;
 
@@ -13,7 +29,7 @@ open issues:
 [31-oct-98] - restrict completion to directories for database import;
 
 [28-oct-98] - format large memory usage numbers with delimiters (1.123.456);
-              find appropriate format (bug id: mueller/17)
+              find appropriate format (mueller/17)
 
 [25-oct-98] - fill in missing balloons;
 
@@ -39,9 +55,15 @@ open issues:
 resolved issues:
 ----------------
 
-[10-nov-98] - fix bug in custom query history (bug id: mueller/42);
+[01-dec-98] - provide interactive selection of colours in graphs
 
-[10-nov-98] - hide progress meter when idle (bug id: mueller:37);
+[25-nov-98] - fix logarithmic scales (kiefer/1);
+
+[25-nov-98] - enforce directory creation for imported databases (kiefer/2);
+
+[10-nov-98] - fix bug in custom query history (mueller/42);
+
+[10-nov-98] - hide progress meter when idle (mueller/37);
 
 [30-oct-98] - add copyleft caption to tables and graphs;
 
@@ -49,7 +71,7 @@ resolved issues:
 
 [21-oct-98] - fix PostScript generation for tables and graphs;
 
-[21-oct-98] - design and activate cute icon (bug id: mueller/1);
+[21-oct-98] - design and activate cute icon (mueller/1);
 
 [21-oct-98] - <Previous> and <Next> bindings et al. in tables;
 

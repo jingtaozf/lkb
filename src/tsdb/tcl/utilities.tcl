@@ -357,7 +357,9 @@ proc update_graph_cascade {code} {
 
   global globals;
 
-  set fields {first total tcpu tgc p-ftasks p-etasks p-stasks aedges pedges};
+  set fields {first total tcpu tgc 
+              p-ftasks p-etasks p-stasks 
+              aedges pedges raedges rpedges};
   if {$code == "tasks" || $code == "ptimes" || $code == "ttimes"} {
     set globals(graph,values) $code;
     foreach field $fields {
@@ -395,7 +397,8 @@ proc update_graph_cascade {code} {
     if {$globals(graph,values) != "tasks"} {
       set globals(graph,values) "";
     }; # if
-  } elseif {$code == "aedges" || $code == "pedges"} {
+  } elseif {$code == "aedges" || $code == "pedges"
+            || $code == "raedges" || $code == "rpedges"} {
     foreach field {first total tcpu tgc p-ftasks p-etasks p-stasks} {
       set globals(graph,$field) 0;
     }; # foreach
@@ -411,6 +414,59 @@ proc update_graph_cascade {code} {
   set globals(graph_values) "$globals(graph_values))";
 
 }; # update_graph_cascade()
+
+
+proc register_at_saabruecken {} {
+
+  global globals;
+
+  catch {
+    set version \
+      [expr {[info exists globals(version)] ? $globals(version) : "?"}];
+    set client [info hostname];
+    set socket [socket $globals(saarbruecken) 25];
+    fconfigure $socket -blocking yes -buffering line;
+    set status [gets $socket];
+    if {[string range $status 0 2] != "220"} {
+      return [after 600000 register_at_saabruecken];
+    }; # if
+    puts $socket "HELO $client";
+    set status [gets $socket];
+    if {[string range $status 0 2] != "250"} {
+      return [after 600000 register_at_saabruecken];
+    }; # if
+    puts $socket "MAIL FROM:<$globals(user)@$client>";
+    set status [gets $socket];
+    if {[string range $status 0 2] != "250"} {
+      return [after 600000 register_at_saabruecken];
+    }; # if
+    puts $socket "RCPT TO:<podium@coli.uni-sb.de>";
+    set status [gets $socket];
+    if {[string range $status 0 2] != "250"} {
+      after 600000 register_at_saabruecken;
+      return;
+    }; # if
+    puts $socket "DATA";
+    set status [gets $socket];
+    if {[string range $status 0 2] != "354"} {
+      after 600000 register_at_saabruecken;
+      return;
+    }; # if
+    puts $socket "To: podium@coli.uni-sb.de";
+    puts $socket \
+      "Subject: $globals(name) ($version) for `$globals(user)' on `$client'";
+    puts $socket ".";
+    set status [gets $socket];
+    if {[string range $status 0 2] != "250"} {
+      after 600000 register_at_saabruecken;
+      return;
+    }; # if
+    puts $socket "QUIT";
+    after 5000;
+    close $socket;
+  }; # catch
+
+}; # register_at_saabruecken()
 
 
 proc tsdb_set {variable {value ""}} {
@@ -442,6 +498,10 @@ proc tsdb_set {variable {value ""}} {
       write_output_p {
         set variable "*tsdb-write-output-p*"; 
         set value [lispify_truth_value $globals(write_output_p)]
+      }
+      write_rule_p {
+        set variable "*tsdb-rule-statistics-p*"; 
+        set value [lispify_truth_value $globals(write_rule_p)]
       }
       write_syntax_chart_p {
         set variable "*tsdb-write-syntax-chart-p*"; 

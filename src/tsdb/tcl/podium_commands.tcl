@@ -116,6 +116,13 @@ proc tsdb_import {code} {
           status "database `$target' already exists" 10;
           return;
         }; # if
+        set parent \
+          [string range $atarget 0 [string last $globals(slash) $atarget]];
+        if {[catch {file mkdir $parent}]} {
+          tsdb_beep;
+          status "error creating parent directory `$parent'" 10;
+          return;
+        }; # if
 
         set command "(import :items \"$source\" \"$target\")";
         send_to_lisp :event $command;
@@ -142,6 +149,13 @@ proc tsdb_import {code} {
         if {[file exists $atarget]} {
           tsdb_beep;
           status "database `$target' already exists" 10;
+          return;
+        }; # if
+        set parent \
+          [string range $atarget 0 [string last $globals(slash) $atarget]];
+        if {[catch {file mkdir $parent}]} {
+          tsdb_beep;
+          status "error creating parent directory `$parent'" 10;
           return;
         }; # if
 
@@ -320,7 +334,7 @@ proc tsdb_browse {code condition} {
       set relations "(\"item\")";
     }
     phenomena {
-      set attributes "(\"p-id\" \"p-name\" \"p-presupposition\" \"p-author\" \"p-date\")";
+      set attributes "(\"p-id\" \"p-name\" \"p-author\" \"p-date\")";
       set relations "(\"phenomenon\")";
     }
     runs {
@@ -682,7 +696,7 @@ proc tsdb_todo {} {
   global globals;
 
   if {[winfo exists .todo]} {
-    .todo destroy
+    destroy .todo
   }; # if
   set directories [file split $globals(podium_home)];
   set directories [lreplace $directories [expr [llength $directories] -1] end];

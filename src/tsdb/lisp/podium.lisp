@@ -61,7 +61,9 @@
                    :output :stream :input :stream :error-output nil))
     (format 
      *tsdb-wish-stream* 
-     "set globals(podium_home) \"~a\"~%~
+     "set globals(version) {~a}~%~
+      set globals(application) \"~a\"~%~
+      set globals(podium_home) \"~a\"~%~
       set globals(home) \"~a\"~%~
       set globals(skeleton_directory) \"~a\"~%~
       set globals(aggregate_dimension) \"~(~s~)\"~%~
@@ -74,10 +76,13 @@
       set globals(write_parse_p) ~:[0~;1~]~%~
       set globals(write_result_p) ~:[0~;1~]~%~
       set globals(write_output_p) ~:[0~;1~]~%~
+      set globals(write_rule_p) ~:[0~;1~]~%~
       set globals(write_syntax_chart_p) ~:[0~;1~]~%~
       set globals(write_lexicon_chart_p) ~:[0~;1~]~%~
       set globals(gc_p) ~(~a~)~%~
       set globals(tenure_p) ~:[0~;1~]~%"
+     *tsdb-version*
+     (current-application)
      *tsdb-podium-home* 
      *tsdb-home*
      *tsdb-skeleton-directory*
@@ -89,13 +94,14 @@
      *tsdb-exhaustive-p*
      *tsdb-write-run-p* *tsdb-write-parse-p* 
      *tsdb-write-result-p* *tsdb-write-output-p*
+     *tsdb-rule-statistics-p*
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
      *tsdb-tenure-p*
      *tsdb-gc-p*)
     (tsdb-do-phenomena :stream *tsdb-wish-stream*)
     (format *tsdb-wish-stream* "source \"~a\"~%" *tsdb-podium*)
     (format *tsdb-wish-stream* 
-            "set globals(data) \"~a\"~%" (if *tsdb-data* *tsdb-data* ""))
+            "set globals(data) \"~a\"~%" (or *tsdb-data* ""))
     (force-output *tsdb-wish-stream*))
   (setf *tsdb-wish-process*
     (mp:process-run-function (list :name "tsdb(1) podium")
@@ -135,7 +141,7 @@
 (defun podium-loop ()
   (let ((*package* (find-package "TSDB")))
     (loop
-        while (and *tsdb-wish-stream* (streamp *tsdb-wish-stream*))
+        while (streamp *tsdb-wish-stream*)
         do (process-pending-events)
            (let ((*package* (find-package "TSDB"))
                  (form (read *tsdb-wish-stream* nil nil)))
@@ -726,7 +732,8 @@
             (send-to-podium nil :recursive t))
            (t
             form))))
-    (when *tsdb-wish-process*
+    (when (and *tsdb-wish-process*
+               (not (eq mp:*current-process* *tsdb-wish-process*)))
       (mp:process-revoke-arrest-reason *tsdb-wish-process* :send-to-podium))))
 
 (defun process-pending-events ()

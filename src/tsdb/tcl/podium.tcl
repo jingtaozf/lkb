@@ -5,10 +5,11 @@ exec /coli/apps/tcl+tk/bin/wish++ "$0" "$@"
 #
 # facilitate stand-alone debugging for `oe'
 #
-set page_root [expr {[info exists env(HOSTNAME)] && $env(HOSTNAME) == "mv" 
-                     ? "/home/oe/src/page" 
-                     : "/proj/perform/page"}];
-
+if {![info exists page_root]} {
+  set page_root [expr {[info exists env(HOSTNAME)] && $env(HOSTNAME) == "mv" 
+                       ? "/home/oe/src/page" 
+                       : "/user/oe/src/page"}];
+}; # if
 #
 # import BLT library (for `table' and `graph' widgets)
 #
@@ -18,7 +19,7 @@ namespace import -force blt::tile::*
 #
 # all state is encoded in a global (associative) array `globals'
 #
-set globals(name) {[incr tsdb(1)]};
+set globals(name) {[incr tsdb()]};
 if {![info exists globals(podium_home)]} {
   set globals(podium_home) "$page_root/src/tsdb/tcl/";
 }; # if
@@ -32,6 +33,12 @@ if {![info exists globals(balloons)]} {
   set globals(balloons) "$globals(podium_home)balloons";
 }; # if
 set globals(default_skeleton) "english"
+if {![info exists globals(version)]} {
+  set globals(version) "unknown";
+}; # if
+if {![info exists globals(application)]} {
+  set globals(application) "unknown";
+}; # if
 
 if {![info exists globals(aggregate_dimension)]} {
   set globals(aggregate_dimension) :phenomena;
@@ -62,14 +69,22 @@ if {![info exists globals(graph_upper)]} {
 }; # if
 set globals(graph,by) :i-length;
 
-set globals(status) "initializing tsdb(1) podium"
+set globals(status) "";
 set globals(balloon_font) {Helvetica 10};
 set globals(status_font) {Helvetica 10};
 set globals(input_font) {Courier 10};
 set globals(copyright_font) {Helvetica 8};
-set globals(balloon_p) [expr {![info exists env(USER)] || $env(USER) != "oe"}];
+set globals(user) "";
+if {[info commands oe] == "oe"} {
+  set globals(user) [oe user];
+}; # if
+if {$globals(user) == ""} {
+  set globals(user) [expr {[info exists env(USER)] ? $env(USER) : "anonymous"}];
+}; # if
+set globals(balloon_p) [expr {$globals(user) != "oe"}];
 set globals(balloon) "";
 set globals(interrupt) "";
+set globals(landscape) 0;
 set globals(abort) 0;
 set globals(idle_colours) {yellow orange red violet blue green};
 set globals(special_menues) {
@@ -90,7 +105,7 @@ set globals(input) "";
 set globals(errno) 0;
 set globals(gensym) 0;
 set globals(slash) "/";
-set globals(user) [expr {[info exists env(USER)] ? $env(USER) : "anonymous"}];
+set globals(saarbruecken) "mail.coli.uni-sb.de";
 
 #
 # relation and attributes for current database; reset when selection changes
@@ -149,6 +164,13 @@ proc main {} {
   # withdraw podium application until it is fully decorated
   #
   wm withdraw .
+
+  #
+  # spawn background task to register at Saarbruecken support site
+  #
+  if {[info commands oe] == "oe"} {
+    oe register "$globals(name) ($globals(version))" $globals(saarbruecken);
+  }; # if
 
   #
   # decorate top-level container and create menu bar
@@ -388,6 +410,14 @@ proc main {} {
     -label "Passive Chart Items (`pedges')" \
     -variable globals(graph,pedges) \
     -command {update_graph_cascade pedges};
+  .menu.analyze.menu.values add checkbutton \
+    -label "Active Result Items (`raedges')" \
+    -variable globals(graph,raedges) \
+    -command {update_graph_cascade raedges};
+  .menu.analyze.menu.values add checkbutton \
+    -label "Passive Result Items (`rpedges')" \
+    -variable globals(graph,rpedges) \
+    -command {update_graph_cascade rpedges};
 
   #
   # `Compare' menu (and embedded cascades)
@@ -525,6 +555,18 @@ proc main {} {
     -label "Passive Edges (`pedges')" \
     -variable globals(aggregate_dimension) -value :pedges \
     -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Item Identifier (`i-id')" \
+    -variable globals(aggregate_dimension) -value :i-id \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Total Memory Usage" \
+    -variable globals(aggregate_dimension) -value :space \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Total CPU Time (`tcpu')" \
+    -variable globals(aggregate_dimension) -value :tcpu \
+    -command {tsdb_set aggregate_dimension};
 
   menu .menu.options.menu.switches -tearoff 0
   .menu.options.menu.switches add checkbutton \
@@ -543,6 +585,9 @@ proc main {} {
   .menu.options.menu.switches add checkbutton \
     -label "Write `output' Relation" \
     -variable globals(write_output_p) -command {tsdb_set write_output_p};
+  .menu.options.menu.switches add checkbutton \
+    -label "Write `rule' Relation" \
+    -variable globals(write_rule_p) -command {tsdb_set write_rule_p};
   .menu.options.menu.switches add checkbutton \
     -label "Write Lexicon Chart" \
     -variable globals(write_lexicon_chart_p) \
@@ -583,7 +628,7 @@ proc main {} {
     -label "[expr {$globals(balloon_p) ? "Disable" : "Enable"}] Balloon Help" \
     -command toggle_balloon_help;
   .menu.help.menu add separator;
-  .menu.help.menu add command -label "tsdb(1) ToDo List" \
+  .menu.help.menu add command -label "$globals(name) ToDo List" \
     -command tsdb_todo;
 
   tk_menuBar .menu .menu.file .menu.analyze .menu.help
@@ -599,7 +644,7 @@ proc main {} {
   tixMeter .status.meter -value 1;
   frame .status.meter.blind -relief sunken -bd 1;
   label .status.meter.blind.label -relief sunken -bd 0 -anchor c \
-    -font [linsert $globals(status_font) end bold] -bg black;
+    -font [linsert $globals(status_font) end bold];
 
   label .status.dummy \
           -relief sunken -bd 3 -font $globals(status_font)
@@ -624,7 +669,7 @@ proc main {} {
   place .status.label -in .status.dummy -relwidth 1 -relheight 1
   place .status.entry -in .status.dummy -relwidth 1 -relheight 1
   lower .status.entry
-  status "initializing tsdb(1) podium ..." 2
+  status "initializing $globals(name) podium ..." 2
 
   #
   # create entry pane for aggregation parameters
@@ -699,7 +744,7 @@ proc main {} {
   bind $list <Alt-Double-Button-1> [bind $list <Control-Double-Button-1>];
 
   bind $list <Enter> {
-    balloon post "<Button-1> activates current test suite; \
+    balloon post "<Button-1> selects active test suite; \
                   <Button-2> selects (gold standard) comparison source"
   }; # bind
   bind $list <Leave> {balloon unpost};
@@ -714,7 +759,7 @@ proc main {} {
   set hcenter [tixDisplayStyle text -font {Helvetica 12 bold} -anchor c]
 
   $list header create 0 -itemtype text \
-          -text "Test Suite Database" -style $hleft
+          -text "Test Suite Instance" -style $hleft
   $list header create 1 -itemtype text -text "Status" -style $hcenter
   $list header create 2 -itemtype text -text "Items" -style $hcenter
   $list header create 3 -itemtype text -text "Parses" -style $hcenter
@@ -754,8 +799,11 @@ proc main {} {
   #
   # decorate and expose podium; wait for display update
   #
-  wm title . {[incr tsdb(1)] podium}
-  wm iconname . {tsdb(1)}
+  set foo [format {%s podium @ %s [version %s @ %s]} \
+             $globals(name) [info hostname] \
+             $globals(version) $globals(application)];
+  wm title . $foo;
+  wm iconname . {tsdb()}
   if {[file exists [set icon "$globals(podium_home)icon.xbm"]]} {
     wm iconbitmap . @$icon;
   }; # if
@@ -773,6 +821,17 @@ proc main {} {
   $clist column width 0 $width;
   $clist column width 1 [expr [winfo width $list] - $width * 2];
   $clist column width 2 $width;
+
+  #
+  # read `.podiumrc' from user home directory if available
+  #
+  if {[file exists ~/.podiumrc]} {
+    set message "reading `[file nativename ~/.podiumrc]' ...";
+    status $message;
+    catch {source ~/.podiumrc};
+    after 1000;
+    status "$message done" 2;
+  }; # if
   after 2000 idle;
 
 }; # main()
@@ -923,14 +982,18 @@ proc idle {} {
 
   global globals;
 
-  set time [clock seconds];
-  set foo [expr {int($time / 10)}];
-  set colour [lindex $globals(idle_colours) \
-                     [expr {$foo % [llength $globals(idle_colours)]}]];
-  set time [clock format $time -format "%d-%b-%y (%H:%M h)"];
-  set time [string tolower [string trimleft $time "0"]];
-  .status.meter.blind.label config -text $time -fg $colour;
-  if {!$globals(abort)} {after 1000 idle};
+  if {[llength $globals(idle_colours)]} {
+    set time [clock seconds];
+    set foo [expr {int($time / 10)}];
+    set colour [lindex $globals(idle_colours) \
+                       [expr {$foo % [llength $globals(idle_colours)]}]];
+    set time [clock format $time -format "%d-%b-%y (%H:%M h)"];
+    set time [string tolower [string trimleft $time "0"]];
+    .status.meter.blind.label config -text $time -fg $colour -bg black;
+    if {!$globals(abort)} {after 1000 idle};
+  } else {
+    .status.meter.blind.label config -text "" -bg [.status.dummy cget -bg];
+  }; # else
 
 }; # idle()
 

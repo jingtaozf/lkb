@@ -79,7 +79,7 @@
 
 (defun parse-item (string &key exhaustive
                    edges trace derivations semantix-hook trees-hook)
-  (declare (ignore exhaustive derivations semantix-hook trees-hook))
+  (declare (ignore derivations semantix-hook trees-hook))
   
   (multiple-value-bind (return condition)
     (ignore-errors
@@ -87,6 +87,7 @@
             (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                          *maximum-number-of-edges*
                                          edges))
+            (*first-only-p* (not exhaustive))
              (sent
               (split-into-words (preprocess-sentence-string string)))
              (str (make-string-output-stream)) ; capture any warning messages

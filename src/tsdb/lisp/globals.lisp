@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb(1)]")
 
-(defparameter *tsdb-version* "1.2 (13-nov-98)")
+(defparameter *tsdb-version* "1.4 (10-jan-99)")
 
 (defparameter
   *tsdb-application*
@@ -58,6 +58,8 @@
 (defparameter *tsdb-write-syntax-chart-p* nil)
 
 (defparameter *tsdb-write-output-p* nil)
+
+(defparameter *tsdb-rule-statistics-p* #+:page t #-:page nil)
 
 (defparameter *tsdb-cache-database-writes-p* t)
 
@@ -106,7 +108,7 @@
 (defparameter *tsdb-global-gcs* 0)
 
 (defparameter *tsdb-profile-files*
-  (list "daughter" "edge" "parse" "result" "run"))
+  (list "daughter" "edge" "parse" "result" "rule" "run"))
 
 (defparameter *tsdb-tokens-to-ignore*
   (list "." "(" ")" "!" "?" "-" "'" "[" "]" "`"))
