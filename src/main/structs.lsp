@@ -76,7 +76,7 @@
 (defun create-typed-path-from-feature-list (f-list)
    (make-typed-path 
       :typed-feature-list
-      (for f in f-list
+      (loop for f in f-list
          collect
          (make-type-feature-pair :type *toptype*
             :feature f))))
@@ -112,12 +112,12 @@
   (if (path-p path)
       (path-typed-feature-list path)
     (if (typed-path-p path)
-        (for fvp in (typed-path-typed-feature-list path)
+        (loop for fvp in (typed-path-typed-feature-list path)
              collect
              (type-feature-pair-feature fvp)))))
 
 (defun eval-any-leaf-types (unifs)
-  (for unif in unifs
+  (loop for unif in unifs
        do
        (when (basic-unification-p unif)
               (eval-unif-half-types (basic-unification-lhs unif))
@@ -126,11 +126,11 @@
 (defun eval-unif-half-types (path-or-value)
   (cond ((path-p path-or-value) nil)
         ((u-value-p path-or-value) 
-         (for type in (u-value-types path-or-value)
+         (loop for type in (u-value-types path-or-value)
               do
               (eval-possible-leaf-type *leaf-types* type)))
         ((typed-path-p path-or-value)
-         (for fvp in (typed-path-typed-feature-list path-or-value)
+         (loop for fvp in (typed-path-typed-feature-list path-or-value)
               do
               (eval-possible-leaf-type *leaf-types*
                (type-feature-pair-type fvp))))

@@ -66,17 +66,17 @@ at this point).
 
 (defun collect-lex-entries-from-mrs (psoa)
   (let* ((all-rels (psoa-liszt psoa))
-         (lex-rule-rels (for rel in all-rels filter 
+         (lex-rule-rels (loop for rel in all-rels nconc 
                              (if (lex-rule-rel-p (rel-sort rel))
-                                 rel)))
+                                 (list rel))))
          ; specified by lexical rule
-         (lexical-rels (for rel in all-rels filter 
+         (lexical-rels (loop for rel in all-rels nconc 
                              (if (lexical-rel-p (rel-sort rel))
-                                 rel)))
+                                 (list rel))))
          ; specified in lexical entry
-         (grammar-rels (for rel in all-rels filter 
+         (grammar-rels (loop for rel in all-rels nconc 
                             (if (grammar-rel-p (rel-sort rel))
-                                 rel)))
+                                 (list rel))))
                                         ; specified in grammar rule
     ; these are not necessarily mutually exclusive classes
          (possibles 
@@ -89,7 +89,7 @@ at this point).
             ;;; on semantics or if they contribute relations
             ;;; which are on the list to be accounted for
                (nullsem (instantiate-null-semantic-items psoa lrules))
-               (nonnull (for possible in possibles
+               (nonnull (loop for possible in possibles
                              append
                                         ; check unification etc
                              (create-instantiated-structures possible lrules)))
@@ -108,9 +108,9 @@ at this point).
 #|
   (let ((ids nil)
         (found-lex-list nil))
-    (for resbundle in lexres
+    (loop for resbundle in lexres
          do
-         (for foundlex in resbundle
+         (loop for foundlex in resbundle
               do
               (when (found-lex-p foundlex)
                 (push foundlex found-lex-list)
@@ -192,14 +192,14 @@ at this point).
 
 
 (defun get-rel-parameter-strings (rel)
-  (for fvp in (rel-flist rel)
-       filter
+  (loop for fvp in (rel-flist rel)
+       nconc
        (let ((feat
               (last-path-feature (fvpair-feature fvp))))
          (if (member feat *value-feats*)
              (let ((val (fvpair-value fvp)))
-               (if (listp val) 
-                   (car val) val)))))) 
+               (list (if (listp val) 
+                   (car val) val)))))))
 
                 
 (defun find-candidates-from-rel (rel-name parameter-str rel)
@@ -256,14 +256,18 @@ at this point).
 ;;; which is OK, because we use union, rather than append,
 ;;; to stitch results together
 (defun filter-candidates (candidate-set target-rels existing-solutions)
-  (for candidate in candidate-set
-       filter
-       (or
-        (some #'(lambda (soln) 
-                  (if (eql (base-lex-lex-id soln) candidate)
-                      soln))
-                  existing-solutions)
-        (make-new-base-lex candidate target-rels))))
+  (loop for candidate in candidate-set
+      nconc
+        (let ((existing
+               (dolist (soln existing-solutions)
+                  (when (eql (base-lex-lex-id soln) candidate)
+                      (return soln)))))
+          (if existing
+              (list existing)
+            (let ((new
+                   (make-new-base-lex candidate target-rels)))
+              (if new 
+                  (list new)))))))
 
 (defun make-new-base-lex (candidate target-rels)
   (let ((semantic-entry (gethash candidate *semantic-table*)))
@@ -276,10 +280,10 @@ at this point).
                         semantic-entry))
         ; in order found in lex entry
         (let ((found-rels
-               (for target-rel in target-rels
-                    filter
+               (loop for target-rel in target-rels
+                    nconc
                     (if (matches-rel-record target-rel lex-rel)
-                        target-rel))))
+                        (list target-rel)))))
           (unless found-rels
             (setf ok nil)
             (return))
@@ -311,7 +315,7 @@ at this point).
           (instantiate-semantic-indices 
            lex-id lex-e base-fs 
            (base-lex-main-rels lex-res))))
-    (for new-found-str in new-found-lex-list
+    (loop for new-found-str in new-found-lex-list
          collect
          (apply-instantiated-rules-base new-found-str lrules))))
 
@@ -324,8 +328,8 @@ at this point).
                 (list (cons nil 
                             (found-lex-inst-fs new-found-str)))
                 lrules)))
-          (for pair in res-fs-and-rules
-               filter
+          (loop for pair in res-fs-and-rules
+               nconc
                (let ((lr-str (copy-found-lex new-found-str))
                      (ok t))
                  (dolist (rule (car pair))
@@ -341,7 +345,7 @@ at this point).
                  (setf (found-lex-rule-list lr-str) 
                    (mapcar #'lkb::rule-id (car pair)))
                  (if ok
-                     lr-str))))))
+                     (list lr-str)))))))
 
 
 (defun apply-instantiated-lexical-rules (entries rules)
@@ -357,8 +361,8 @@ at this point).
 	     append
 	       (let* ((fs (cdr entry))
 		      (fs-restricted (lkb::restrict-fs (tdfs-indef fs))))
-		 (for rule in rules
-		      filter
+		 (loop for rule in rules
+		      nconc
 		      (let* ((spelling-rule-p 
 			      (lkb::spelling-change-rule-p rule))
 			     (new-morph 
@@ -369,8 +373,9 @@ at this point).
 				;; allow morphographemics to block generation
 				(lkb::apply-morph-rule 
 				 rule fs fs-restricted new-morph))))
-			(when result 
-			  (cons (cons rule (car entry)) result))))))))
+			(if result
+                            (list
+                             (cons (cons rule (car entry)) result)))))))))
     (when transformed-entries
       (append transformed-entries
 	      (apply-instantiated-lexical-rules transformed-entries rules)))))
@@ -451,7 +456,7 @@ at this point).
                                        (make-instance-type 
                                         (rel-handel rel-str)))))
         (other-unifs
-         (for fvp in (rel-flist rel-str)
+         (loop for fvp in (rel-flist rel-str)
               append
               (let* ((feature (fvpair-feature fvp)) ; should be a symbol
                      (value (fvpair-value fvp))
@@ -510,23 +515,24 @@ at this point).
                          (let ((found-list 
                                 (apply #'append 
                                        (lkb::retrieve-lex-from-parses))))
-                           (for empty in *empty-semantics-lexical-entries*
-                                filter
+                           (loop for empty in *empty-semantics-lexical-entries*
+                                nconc
                                 (if (member empty found-list)
-                                empty)))
+                                (list empty))))
                        *empty-semantics-lexical-entries*)))
         (instantiated-sets
-          (for lex-id in real-ids
-               filter
+          (loop for lex-id in real-ids
+               nconc
                (let ((lex-e (lkb::get-psort-entry lex-id)))
                  (if lex-e
                    (let*
                       ((base-fs (lkb::lex-or-psort-full-fs lex-e))
                        (new-found-str
                         (make-found-lex 
-                         :lex-id lex-id :inst-fs base-fs)))
-                     (apply-instantiated-rules-base
-                      new-found-str lrules))
+                         :lex-id lex-id :inst-fs base-fs))
+                       (res (apply-instantiated-rules-base
+                             new-found-str lrules)))
+                     (if res (list res)))
                    (progn 
                      (format t 
                              "~%Warning: invalid generation rule --- ~A does not exist" lex-id)
@@ -550,7 +556,7 @@ at this point).
 
 (defun find-possible-rules (rel-set lexicalp)
   (append 
-   (for rule-record in (if lexicalp *contentful-lrs* *contentful-grs*)
+   (loop for rule-record in (if lexicalp *contentful-lrs* *contentful-grs*)
         append
         (let ((rule (if lexicalp 
                         (lkb::get-lex-rule-entry 
@@ -560,18 +566,18 @@ at this point).
               (main-rels
                (semantics-record-relations rule-record)))
           (let ((rel-list
-                 (for main-rel-rec in main-rels
+                 (loop for main-rel-rec in main-rels
                       collect
                       (let ((matching-rels
-                             (for rel in rel-set
-                                  filter
+                             (loop for rel in rel-set
+                                  nconc
                                   (if
                                       (matches-rel-record rel main-rel-rec)
-                                      rel))))
+                                      (list rel)))))
                         (unless matching-rels (return nil))
                         matching-rels))))
             (if rel-list
-                (for rel-comb-and-fs in 
+                (loop for rel-comb-and-fs in 
                      (apply-rels-to-base nil (lkb::rule-full-fs rule)
                                          rel-list *construction-semantics-path*)
                      collect

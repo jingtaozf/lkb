@@ -63,21 +63,22 @@
 	      (format t "~%No feature structure for ~A" 
 		      (lex-or-psort-id entry))))
 	  (unexpand-psort *lexicon* (lex-or-psort-id entry))))
+     (mrs::check-for-redundant-filter-rules)
      (setf *batch-mode* nil)))
 
 (defun get-compatible-rels (reltype)
   (let ((type-entry (get-type-entry reltype)))
     (if type-entry
         (let ((return-types (list type-entry)))
-          (for desc in (type-descendants type-entry)
+          (loop for desc in (type-descendants type-entry)
                do
                (pushnew desc return-types :test #'eq)
-               (for desc-anc in (type-ancestors desc)
+               (loop for desc-anc in (type-ancestors desc)
                     do
                     (when (member mrs::*top-semantics-entry*
                                   (type-ancestors desc-anc) :test #'eq)
                       (pushnew desc-anc return-types :test #'eq))))
-          (for anc in (type-ancestors type-entry)
+          (loop for anc in (type-ancestors type-entry)
                do
                (when (member mrs::*top-semantics-entry*
                              (type-ancestors anc) :test #'eq)
@@ -110,8 +111,8 @@
 ;;; actually used by lexlookup, but convenient to define in :lkb package
 
 (defun make-mrs-unifs (fvplist initial-features)
-  (for fvp in fvplist
-       filter
+  (loop for fvp in fvplist
+       collect
        (let ((value (mrs::extrapair-value fvp)))
            (make-unification 
             :lhs 
@@ -190,7 +191,7 @@
 
 (defun check-lex-retrieval nil
     (time
-     (for parse-res in *parse-record*
+     (loop for parse-res in *parse-record*
           do
           (let* ((lrules-and-entries-used (collect-parse-base parse-res))
                  (mrs (mrs::extract-mrs parse-res t)))
@@ -199,17 +200,17 @@
                   (mrs::collect-lex-entries-from-mrs mrs)))
               (mrs::output-mrs mrs 'mrs::simple)
               (let ((retrieved-ids
-                     (for res in identified-entry-sets
+                     (loop for res in identified-entry-sets
                           collect
                           (mrs::found-lex-lex-id-fn (car res))))
                     (overgen nil)
                     (undergen nil))
-                (for id in retrieved-ids
+                (loop for id in retrieved-ids
                      do
                      (unless
                          (member id lrules-and-entries-used :key #'car)
                        (push id overgen)))
-                (for id-and-rules in lrules-and-entries-used
+                (loop for id-and-rules in lrules-and-entries-used
                      do
                      (unless
                          (member (car id-and-rules) retrieved-ids)
@@ -221,7 +222,7 @@
 
 (defun batch-check-lex-retrieval nil
   (format t "~%~A" *sentence*)
-  (for parse-res in *parse-record*
+  (loop for parse-res in *parse-record*
        do
        (let* ((lrules-and-entries-used (collect-parse-base parse-res))
               (mrs (mrs::extract-mrs parse-res t)))
@@ -229,17 +230,17 @@
              ((identified-entry-sets
                (mrs::collect-lex-entries-from-mrs mrs)))
            (let ((retrieved-ids
-                  (for res in identified-entry-sets
+                  (loop for res in identified-entry-sets
                        collect
                        (mrs::found-lex-lex-id-fn (car res))))
                  (overgen nil)
                  (undergen nil))
-             (for id in retrieved-ids
+             (loop for id in retrieved-ids
                   do
                   (unless
                       (member id lrules-and-entries-used :key #'car)
                     (push id overgen)))
-             (for id-and-rules in lrules-and-entries-used
+             (loop for id-and-rules in lrules-and-entries-used
                   do
                   (unless
                       (member (car id-and-rules) retrieved-ids)
@@ -252,16 +253,16 @@
 ;;; needs to be made more sophisticated to deal with lex rules etc
 
 (defun quick-check-lex-retrieval nil
-     (for parse-res in *parse-record*
+     (loop for parse-res in *parse-record*
         do
         (let ((mrs (mrs::extract-mrs parse-res)))
           (mrs::output-mrs mrs 'mrs::simple)
           (let
                ((identified-entry-sets
                 (mrs::collect-lex-entries-from-mrs mrs)))
-          (for res in identified-entry-sets
+          (loop for res in identified-entry-sets
                do
-               (for item in res
+               (loop for item in res
                     do
                     (format t "~A ~A " (mrs::found-lex-lex-id-fn item)
                                        (mrs::found-lex-rule-list-fn item))

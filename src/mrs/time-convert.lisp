@@ -113,11 +113,10 @@
 
 
 
-(defun create-ctime-rel (handel label inst hour minutes)
+(defun create-ctime-rel (handel inst hour minutes)
   (make-rel
    :sort (vsym "CTIME_REL")
    :handel handel
-   :label label
    :flist
    (list (make-fvpair :feature (vsym "INST") :value inst)
          (make-fvpair :feature (vsym "HOUR") :value hour)
@@ -192,7 +191,7 @@
 (defun construct-time-expressions (nhrels minrels ampmrels relrels others)
   (if nhrels
       (append
-       (for nhrel in nhrels
+       (loop for nhrel in nhrels
             collect
             (construct-ctime nhrel minrels ampmrels relrels others))
        (reverse others))
@@ -200,14 +199,13 @@
         (struggle-on-error 
                 "~%am/pm specified but no hour")
       (append 
-              (for relrel in relrels
+              (loop for relrel in relrels
                    collect
                    (ctime-case6 relrel minrels))
               (reverse others)))))
 
 (defun construct-ctime (nhrel minrels ampmrels relrels others)
   (let* ((handel (rel-handel nhrel))
-	 (label (rel-label nhrel))
          (inst (get-rel-feature-value nhrel *nhr-inst-feature*))
          (am-pm (get-rel-feature-value nhrel *nhr-ampm-feature*))
          (base-hour (get-rel-feature-value nhrel *nhr-hour-feature*))
@@ -218,7 +216,7 @@
                 ; returns 'am 'pm nil 
 	 (direct-rel-rels (get-coindexed-rel-rels inst relrels)))            
     (cond ((and (null direct-mins) (null direct-rel-rels)) 
-           (ctime-case1 handel label inst 
+           (ctime-case1 handel inst 
                         (create-ctime-hour base-hour am-pm-value)))
           (direct-mins
            (when direct-rel-rels
@@ -228,7 +226,7 @@
            (when (cdr direct-mins)
              (struggle-on-error 
               "~%Minutes specified more than one: ~A" nhrel))
-           (ctime-case3 handel label inst 
+           (ctime-case3 handel inst 
                         (create-ctime-hour base-hour am-pm-value)
                         (car direct-mins)))
           ((cdr direct-rel-rels)
@@ -247,26 +245,26 @@
                (when (cdr indirect-minutes)
                  (struggle-on-error 
                   "~%Minutes specified more than once: ~A" nhrel))
-               (ctime-case4 handel label inst base-hour am-pm-value
+               (ctime-case4 handel inst base-hour am-pm-value
                             (rel-sort past-or-to-rel)
                             (or (car indirect-minutes) 0)))))))
 ;;;
 
 
 (defun get-coindexed-mins (index minrels)
-  (for minrel in minrels
-       filter
+  (loop for minrel in minrels
+       nconc
        (if (eql (get-var-num (get-rel-feature-value minrel *min-index-feature*))
                (get-var-num index))
-           (get-rel-feature-value minrel *min-min-feature*))))
+           (list (get-rel-feature-value minrel *min-min-feature*)))))
 
 (defun get-coindexed-ampm-rels (index ampmrels)
   (let ((ampmspecs
-         (for ampmrel in ampmrels
-              filter
+         (loop for ampmrel in ampmrels
+              nconc
               (if (eql (get-var-num (get-rel-feature-value ampmrel *ampm-index-feature*))
                          (get-var-num index))
-                  (rel-sort ampmrel)))))         
+                  (list (rel-sort ampmrel))))))         
     (cond ((null ampmspecs) nil)
           ((cdr ampmspecs) 
            (struggle-on-error "~%Dual specification of AM and PM"))
@@ -278,11 +276,11 @@
               "~%Incorrect AM/PM rel sort: ~A" (car ampmspecs))))))
 
 (defun get-coindexed-rel-rels (index relrels)
-  (for relrel in relrels
-       filter
+  (loop for relrel in relrels
+       nconc
        (if (eql (get-var-num (get-rel-feature-value relrel *rel-hour-feature*))
                (get-var-num index))
-           relrel)))
+           (list relrel))))
 
 
 (defun create-ctime-hour (base-hour am-pm)
@@ -305,21 +303,21 @@
 
 ;;; cases as in comments at beginning of file
 
-(defun ctime-case1 (handel label inst hour)
-  (create-ctime-rel handel label inst hour 0))
+(defun ctime-case1 (handel inst hour)
+  (create-ctime-rel handel inst hour 0))
 
-(defun ctime-case3 (handel label inst hour minutes)
-  (create-ctime-rel handel label inst hour minutes))
+(defun ctime-case3 (handel inst hour minutes)
+  (create-ctime-rel handel inst hour minutes))
 
-(defun ctime-case4 (handel label inst base-hour am-pm-value
+(defun ctime-case4 (handel inst base-hour am-pm-value
                            past-or-to-rel minutes)
     (cond 
      ((past-rel-p past-or-to-rel)
-        (create-ctime-rel handel label inst 
+        (create-ctime-rel handel inst 
                           (create-ctime-hour base-hour am-pm-value) 
                           minutes))
      ((to-rel-p past-or-to-rel)
-        (create-ctime-rel handel label inst
+        (create-ctime-rel handel inst
                           (create-ctime-hour (- base-hour 1) 
                                              am-pm-value)
                           (- 60 minutes)))
@@ -329,7 +327,6 @@
                            
 (defun ctime-case6 (past-or-to-rel minrels)
   (let* ((handel (rel-handel past-or-to-rel))
-	 (label (rel-label past-or-to-rel))
          (inst (get-rel-feature-value past-or-to-rel *nhr-inst-feature*))
          (past-or-to (rel-sort past-or-to-rel))
          (rel-minute-index 
@@ -345,11 +342,11 @@
        "~%Minutes specified more than once: ~A" past-or-to-rel))
     (cond 
      ((past-rel-p past-or-to)
-        (create-ctime-rel handel label inst
+        (create-ctime-rel handel inst
                           nil
                           (car direct-mins)))
      ((to-rel-p past-or-to)
-        (create-ctime-rel handel label inst 
+        (create-ctime-rel handel inst 
                           nil
                           (- 60 (car direct-mins))))
      (t (struggle-on-error "~%Problem with after/to specification")))))
@@ -466,7 +463,6 @@
           (loop
               for operator in operators
               for handel = (rel-handel operator)
-              for label = (rel-label operator)
               for arg = (get-rel-feature-value operator *nc-arg*)
               unless (member operator deletions :test #'eq) do
                 (let* ((sort (rel-sort operator))
@@ -485,7 +481,7 @@
                        (value (and value1 value2
                                    (compute-value operator value1 value2))))
                   (when value
-                    (push (make-constant handel label arg value
+                    (push (make-constant handel arg value
 					 (const_min_rel-p (rel-sort const1)))
 			  additions)
                     (push operator deletions)
@@ -526,12 +522,12 @@
      ((plus_rel-p sort) (+ term1 term2))
      ((times_rel-p sort) (* term1 term2)))))
 
-(defun make-constant (handel label arg value minute-p)
+(defun make-constant (handel arg value minute-p)
   (make-rel
    :sort (if minute-p 
 	     *nc-min-const_rel*
 	   *nc-const_rel*)
-   :handel handel :label label
+   :handel handel
    :flist (list  
            (make-fvpair :feature *nc-arg* :value arg)
            (make-fvpair :feature *nc-const_value* :value value))))

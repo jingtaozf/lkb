@@ -149,7 +149,7 @@
     (let ((test-rel (car liszt))
           (similar nil)
           (non-similar nil))
-      (for rel in (cdr liszt)
+      (loop for rel in (cdr liszt)
            do
            (if (similar-relations-p test-rel rel)
                (push rel similar)
@@ -261,9 +261,9 @@
 
 (defun mrs-relation-set-equal-p (relset1 relset2 syntactic-p noisy-p bindings)
   (and (eql (length relset1) (length relset2))
-       (for rel-alt1 in relset1
+       (loop for rel-alt1 in relset1
             append
-            (for rel-alt2 in relset2
+            (loop for rel-alt2 in relset2
                  append
                  (let ((new-bindings (copy-tree bindings)))
                    (mrs-relations-equal-p rel-alt1 rel-alt2
@@ -384,12 +384,13 @@
 (defun equal-extra-vals (extra1 extra2)
   ;;; this version is for tsdb etc, so we're really looking for identity
   (and (eql (length extra1) (length extra2))
-       (for tp1 in extra1
-            all-satisfy
-            (for tp2 in extra2
-                 some-satisfy
-                 (extrapairs-equal tp1 tp2)))))
-
+       (every #'(lambda (tp1)
+                  (some 
+                   #'(lambda (tp2) 
+                       (extrapairs-equal tp1 tp2))
+                   extra2))
+              extra1)))
+       
 (defun extrapairs-equal (tp1 tp2)
   (if (and (extrapair-p tp1) (extrapair-p tp2))
       (and 
@@ -405,24 +406,25 @@
   ;;; After this - null bindings is a failure
   (if (null bindings)
       (list (list (cons val1 val2)))
-    (for binding-possibility in bindings
-         filter
+    (loop for binding-possibility in bindings
+         nconc
          (let ((bound (assoc val1 binding-possibility)))
            (if bound                    ; val1 exists
                (if (eql (cdr bound) val2) ; if it's bound to val2 OK else fail
-                   binding-possibility)
+                   (list binding-possibility))
              (unless (rassoc val2 binding-possibility) ; check val2 hasn't got bound
                (push (cons val1 val2) binding-possibility) ; create new binding
-               binding-possibility))))))
+               (list binding-possibility)))))))
 
 
 (defun hcons-equal-p (hc-list1 hc-list2 bindings)
   (and (eql (length hc-list1) (length hc-list2))
-       (for hc1 in hc-list1
-            all-satisfy
-            (for hc2 in hc-list2
-                 some-satisfy
-                 (hcons-el-equal hc1 hc2 bindings)))))
+       (every #'(lambda (hc1)
+                  (some 
+                   #'(lambda (hc2) 
+                       (hcons-el-equal hc1 hc2 bindings))
+                   hc-list2))
+              hc-list1)))
 
 (defun hcons-el-equal (hc1 hc2 bindings)
   (and (variables-equal (hcons-scarg hc1)
@@ -434,9 +436,9 @@
   (or (and (null l1) (null l2))
       (and (eql (length l1) 
                 (length l2))
-           (for v1 in l1
-                all-satisfy
-                (for v2 in l2
-                     some-satisfy
-                     (variables-equal v1 v2 t bindings))))))
-
+           (every #'(lambda (v1)
+                      (some 
+                       #'(lambda (v2) 
+                           (variables-equal v1 v2 t bindings))
+                       l2))
+                  l1))))

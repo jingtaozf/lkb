@@ -83,7 +83,7 @@
                                         ; entries indexed by all elements
     (unless lex-entries
       (format t "~%No entry found for ~A" word-string))
-    (for word-entry in lex-entries
+    (loop for word-entry in lex-entries
          do
          (when (equal (mapcar #'string-upcase (lex-or-psort-orth word-entry))
                     orth-list)
@@ -152,7 +152,7 @@
                   (try-all-lexical-rules 
                      (list (cons nil lex-entry-fs)))))
             (cond (result-list
-                  (for result-pair in result-list
+                  (loop for result-pair in result-list
                      do
                      (display-fs-tty (cdr result-pair))))
                (t (format t 
@@ -178,7 +178,7 @@
 
 (defun display-fs-and-paths-tty (fs paths)
   (display-fs-tty fs)
-  (for path in paths
+  (loop for path in paths
        do
        (format t "~&~S" path)))
            
@@ -211,7 +211,7 @@
 (defun show-parse nil
   (if *parse-record*
       (progn
-        (for edge in *parse-record*
+        (loop for edge in *parse-record*
              do
              (format t "~&Edge ~A P:" (edge-id edge))
              (pprint (parse-tree-structure edge)))        

@@ -152,7 +152,7 @@
         (binding-sets (mrs-scoped-scoped mframe)))
     (if binding-sets
         (clim:with-text-style (stream (lkb-parse-tree-font))
-          (for binding in binding-sets
+          (loop for binding in binding-sets
                do
                (setf mrs::*canonical-bindings* (mrs::canonical-bindings binding))
                (mrs::output-scoped-mrs mrsstruct :stream stream)))

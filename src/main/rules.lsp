@@ -136,12 +136,12 @@
    (when (> *number-of-applications* *maximal-lex-rule-applications*)
       (error "~%Probable circular lexical rule"))
    (let ((transformed-entries 
-            (for entry in entries
+            (loop for entry in entries
                append
-               (for rule in 
+               (loop for rule in 
                   (get-indexed-lrules (cdr entry)
                      #'(lambda (rule) (member (rule-id rule) ignore-list)))
-                  filter
+                  nconc
                   (let* ((spelling-rule-p (spelling-change-rule-p rule))
                          (new-morph 
                               (if spelling-rule-p
@@ -153,9 +153,10 @@
                                                      (list (cdr entry))
                                                      new-morph))))
                      (if result 
-                        (cons 
+                         (list
+                          (cons 
                            (cons (rule-id rule) (car entry))
-                              result)))))))
+                              result))))))))
       (if transformed-entries
          (append transformed-entries
             (try-all-lexical-rules transformed-entries ignore-list)))))
@@ -377,8 +378,8 @@
 ;;; to the application of a rule to a stem corresponding to one of 
 ;;; the irregular forms
   (if *irregular-forms-only-p* 
-      (for reg in reg-list
-           filter
+      (loop for reg in reg-list
+           nconc
            (let* ((stem (car reg))
                   (first-rule (caadr reg))
                   (irreg-stems 
@@ -387,7 +388,7 @@
              (if (and irreg-stems first-rule
                       (member first-rule irreg-rules))
                  nil
-               reg)))
+               (list reg))))
     reg-list))
 
 

@@ -103,10 +103,11 @@
 (defun copy-tdfs-tails (tdfs)
   ;;; copies the list, removes the cached structures
   ;;; because these can be regenerated if necessary
-  (for tail-element in (tdfs-tail tdfs)
-       collect
-       (setf (tail-element-cached-tfs tail-element) nil)
-       tail-element))
+  (loop for tail-element in (tdfs-tail tdfs)
+      collect
+        (progn 
+          (setf (tail-element-cached-tfs tail-element) nil)
+          tail-element)))
 
 ;;; Utility
 
@@ -123,7 +124,7 @@
       tdfs))
 
 (defun remove-path-from-tail-elements (path tail)
-  (for tail-element in tail
+  (loop for tail-element in tail
        collect
        (remove-path-from-tail path tail-element)))
 
@@ -143,7 +144,7 @@
 (defun add-cached-tfs-to-tail (tail)
   ;;; called when we need to make sure we have all the
   ;;; cached structures
-  (for tail-element in tail
+  (loop for tail-element in tail
        do
        (unless (tail-element-cached-tfs tail-element)
          (setf (tail-element-cached-tfs tail-element) 
@@ -196,7 +197,7 @@
 (defun generalise-set (fs-set)
 ;;;  (format t "~% test generalise")
 ;;;  (let ((num 0))
-;;;  (for fs in fs-set
+;;;  (loop for fs in fs-set
 ;;;       do 
 ;;;       (incf num)
 ;;;       (display-fs fs (format nil "~A" num))))
@@ -281,18 +282,18 @@
 (defun filter-tail (tail indef-fs)
   ;;; for the case where only one TDFS has a tail, we still want to remove
   ;;; stuff that's incompatible with the indefeasible structure
-  (for tail-element in tail
-       filter
+  (loop for tail-element in tail
+       nconc
        (let ((tail-atfs (tail-element-cached-tfs tail-element)))
          (if (unifiable-wffs-p tail-atfs indef-fs)
-             tail-element))))
+             (list tail-element)))))
 
 (defun union-tails (tail1 tail2)
    (when (> (length tail2) (length tail1))
      (rotatef tail1 tail2))		; swaps the values
    (let ((new-elements
-            (for tail-element in tail2
-               filter
+            (loop for tail-element in tail2
+               nconc
                (let 
                   ((existing-element-list
                         (member tail-element tail1 
@@ -306,7 +307,7 @@
                                  (car existing-element-list))
                               (merge-persistence pers1 pers2)))
                         nil)
-                     tail-element)))))
+                     (list tail-element))))))
       (append new-elements tail1)))  
 
 (defun merge-persistence (p1 p2)
@@ -328,7 +329,7 @@
                        :path-rep
                        (if (yadu-pp-p p-rep)
                            (make-yadu-pp :paths
-                                         (for tail-path in (yadu-pp-paths p-rep)
+                                         (loop for tail-path in (yadu-pp-paths p-rep)
                                               collect
                                               (path-append path tail-path)))
                          (if (yadu-pv-p p-rep)
@@ -348,7 +349,7 @@
                        :path-rep
                        (if (yadu-pp-p p-rep)
                            (make-yadu-pp :paths
-                                         (for tail-path in (yadu-pp-paths p-rep)
+                                         (loop for tail-path in (yadu-pp-paths p-rep)
                                               collect
                                               (path-delete path tail-path)))
                          (if (yadu-pv-p p-rep)
@@ -425,10 +426,10 @@
   ;; material
   (when check-ind-defs-p
     (setf def-fs-set 
-      (for fs in def-fs-set
-           filter
-           (when (unifiable-wffs-p fs fixed-fs)
-	     fs))))
+      (loop for fs in def-fs-set
+           nconc
+           (if (unifiable-wffs-p fs fixed-fs)
+	     (list fs)))))
   ;; we improve matters by chucking out structures which were incompatible
   ;; with the fixed-fs when check-ind-defs-p is true - if it isn't, we're
   ;; doing the first round and the tails are guaranteed to be compatible
@@ -576,7 +577,7 @@
       (values nil tail)
       (let ((persistent nil)
             (non-persistent nil))
-         (for tail-element in tail
+         (loop for tail-element in tail
             do
             (if (intersection (tail-element-persistence tail-element) 
                   persistence)
@@ -602,7 +603,7 @@
    (let ((tails
             (if default-list
                (let ((tail-sets 
-                        (for def in default-list
+                        (loop for def in default-list
                            collect
                            (extract-yadu-tails (car def) (cdr def) indef
                               lexp))))
@@ -649,7 +650,7 @@
          (real-indef (if indef-dag (follow-pointers indef-dag)))
          (current-path 
             (create-path-from-feature-list (reverse path-so-far))))      
-      (for stored-path in (dag-visit real-dag)
+      (loop for stored-path in (dag-visit real-dag)
          do
          (unless (and real-indef 
                       (member stored-path (dag-visit real-indef)))
@@ -675,7 +676,7 @@
                  (save-if-new-tail 
                   (make-yadu-pv :path current-path :value (list type))
                   spec persistence)))
-            (for label in (top-level-features-of real-dag)
+            (loop for label in (top-level-features-of real-dag)
                do
                (yadu-convert-dag-to-atfs (get-dag-value real-dag label)
                   (cons label path-so-far) spec

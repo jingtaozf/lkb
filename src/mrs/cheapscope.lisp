@@ -11,16 +11,16 @@
          (hcons (psoa-h-cons mrsstruct))
          (labels nil) (holes nil) (equated-list nil)
          (top-handel (get-var-num (psoa-top-h mrsstruct))))
-    (for rel in rels
+    (loop for rel in rels
          do
          (let ((var (rel-handel rel)))
            (unless (is-handel-var var)
              (struggle-on-error "~%Relation ~A has incorrect handel ~A"
                                 (rel-sort rel) var))
            (pushnew (get-var-num var) labels)))
-    (for rel in rels
+    (loop for rel in rels
          do
-           (for full-handel-var in (get-full-handel-args rel)
+           (loop for full-handel-var in (get-full-handel-args rel)
                 do
                 (let ((handel-var (var-id full-handel-var)))
                   (when (member handel-var labels)
@@ -31,15 +31,15 @@
 
 (defun find-cheap-leqs (mrsstruct)
   (let* ((rels (psoa-liszt mrsstruct)) 
-         (quant-rels (for rel in rels filter (if (is-quant-rel rel) rel))))
+         (quant-rels (loop for rel in rels nconc (if (is-quant-rel rel) (list rel)))))
     (append
-     (for rel in rels
+     (loop for rel in rels
           append
           (if (member rel quant-rels)
               nil
             (find-necessary-scope-relationships rel quant-rels)))
      ;;; fix - probably needs to be label label relationship
-     (for outscpd in *qeqs*
+     (loop for outscpd in *qeqs*
           collect
           (cons (qeq-right outscpd)
                 (qeq-left outscpd))))))
@@ -66,10 +66,10 @@
   (let* ((rel-vars (collect-vars-from-rel rel))
         (rel-handel (get-var-num (rel-handel rel)))
         (scopes
-    (for var in rel-vars
+    (loop for var in rel-vars
          append
-          (for qrel in quant-rels
-               filter
+          (loop for qrel in quant-rels
+               nconc
                (let ((quant-var (get-bv-value qrel)))
                  (if (eql quant-var (get-var-num var))
                      (let ((restr-handel (get-restr-value qrel)))
@@ -77,9 +77,10 @@
                                (satisfy-qeq-p restr-handel rel-handel))
                            nil
                          (if (get-scope-value qrel)
+                             (list
                              (cons 
                               rel-handel
-                              (get-scope-value qrel)))))))))))
+                              (get-scope-value qrel))))))))))))
     scopes))
 
 

@@ -10,6 +10,7 @@
 (defparameter *gen-rule-list* nil)
 
 (defun clear-gen-rules nil
+  (setf mrs::*gen-rule-ids* nil)
   (setf *gen-rule-list* nil))
 
 ;;; Reading in rules expressed in tdl format
@@ -59,7 +60,7 @@
            #'read-mrs-rule-expanded-syntax)
           (*readtable* (make-tdl-break-table)))
       (setf *mrs-rule-fs-list* nil)
-      (for file in file-names
+      (loop for file in file-names
            do
            (with-open-file 
                (istream file :direction :input)
@@ -92,7 +93,7 @@
        (setf non-def
              (read-expanded-avm-def istream id))
        (check-for #\. istream id)
-       (for unif in non-def
+       (loop for unif in non-def
             do
             (if (funny-unification-p unif)
                 (push unif funny-unifs)
@@ -120,7 +121,7 @@
       ;;; returns a list of path constraints
       ;;; plus funny-unifications
     (setf constraint (read-tdl-conjunction istream name nil nil))
-    (for coref in (make-mrs-rule-coref-conditions *tdl-coreference-table*)
+    (loop for coref in (make-mrs-rule-coref-conditions *tdl-coreference-table*)
          do
       (push coref constraint))
     constraint))
@@ -134,7 +135,7 @@
                  (let ((path1 (car value))
                        (rest (cdr value)))
                    (if rest
-                     (for path2 in rest
+                     (loop for path2 in rest
                           do
                           (push (make-tdl-path-path-unif path1 path2 nil) unifs))
                      (push (make-tdl-path-value-unif path1 *toptype* nil)

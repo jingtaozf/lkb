@@ -86,7 +86,7 @@
                   (member x *duplicate-lex-ids* :test #'eq))) ; *** e.g. a -> an
               found-lex-list
               :key #'mrs::found-lex-lex-id)))
-         ;; (for lex in filtered
+         ;; (loop for lex in filtered
          ;;    do
          ;;    (format t "~%Id ~A, Lexical rules ~:A" (mrs::found-lex-lex-id lex)
          ;;       (mrs::found-lex-rule-list lex)))
@@ -199,11 +199,12 @@
          act-tot inact-tot)))))
 
 (defun extract-strings-from-gen-record nil
-  (for edge in *gen-record*
-       filter
+  (loop for edge in *gen-record*
+      nconc
+        (list
        (fix-spelling
         ;; in spell.lsp
-        (g-edge-leaves edge))))
+        (g-edge-leaves edge)))))
 
 (defun clear-gen-chart nil
    (setq *edge-id* 0)
@@ -279,8 +280,8 @@
 
 (defun gen-chart-root-edges (edge start-symbols)
   ;; c.f. create-new-root-edges in parse.lsp
-   (for start-symbol in start-symbols        
-       filter
+   (loop for start-symbol in start-symbols        
+       nconc
        (let ((tdfs (get-tdfs-given-id 
                     start-symbol)))
          (if tdfs
@@ -299,8 +300,9 @@
                                        :leaves (g-edge-leaves edge)
                                        :lex-ids (g-edge-lex-ids edge)
                                        :lexemes (g-edge-lexemes edge))))
-                      (gen-chart-add-with-index new-edge)
-                      new-edge)))))))
+                     (gen-chart-add-with-index new-edge)
+                     (list
+                      new-edge))))))))
 
 (defun gen-filter-root-edges (edge start-symbols)
    ;; c.f. filter-root-edges in parse.lsp

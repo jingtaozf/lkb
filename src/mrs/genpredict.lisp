@@ -55,6 +55,8 @@
 
 |#
 
+
+
 (defun construct-gen-rule-from-fs (id fs funny-unifs)
   ;;; input and output are constructed using construct-mrs
   ;;; with a given variable-generator
@@ -68,10 +70,12 @@
                  (output-spec (construct-output-id output-fs))
                  (condition-spec 
                       (construct-mrs condition-fs variable-generator)))
-            (when (and condition-spec output-spec)
-              (make-mrs-munge-rule 
-               :output-spec output-spec
-               :input-condition condition-spec))))))
+            (if (and condition-spec output-spec)
+                (progn 
+                  (pushnew output-spec *gen-rule-ids* :test #'eq)
+                  (make-mrs-munge-rule 
+                   :output-spec output-spec
+                   :input-condition condition-spec)))))))
 
 (defun construct-output-id (fs)
   (let ((res (fs-type fs)))

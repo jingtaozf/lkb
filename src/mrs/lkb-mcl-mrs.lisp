@@ -41,7 +41,7 @@
                    :scratch-p t
                    :wrap-p t)))
     (if binding-sets
-        (for binding in binding-sets
+        (loop for binding in binding-sets
            do
            (setf mrs::*canonical-bindings* (mrs::canonical-bindings binding))
            (mrs::output-scoped-mrs mrsstruct :stream stream))

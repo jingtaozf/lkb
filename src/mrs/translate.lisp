@@ -19,7 +19,7 @@
               (parse (split-into-words 
                       (preprocess-sentence-string 
                        (string-trim '(#\space #\tab #\newline) sentence))))
-              (for parse-res in *parse-record*
+              (loop for parse-res in *parse-record*
                    do
                    (set-current-language *source-language*)
                    ;;; mrs extraction might be language specific
@@ -28,7 +28,7 @@
                      (multiple-value-bind
                          (strings unifs-tried unifs-failed active inactive)
                          (generate-from-mrs mrs)
-                       (for string in strings
+                       (loop for string in strings
                             collect
                             (fix-spelling string))))))
           ;;; reset the current-language etc

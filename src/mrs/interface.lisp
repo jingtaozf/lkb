@@ -17,7 +17,7 @@
       (setf stream lkb::*lkb-background-stream*))
     (unless edges (setf edges *parse-record*))
     (let ((*print-circle* nil))
-      (for edge in edges 
+      (loop for edge in edges 
            do
            (let ((mrs (extract-mrs edge)))
              (format stream "~%Edge number ~A" 
@@ -83,7 +83,7 @@
     (if *parse-record*
         (progn
           (format ostream "~%;;; MRS for: ~A " sentence)
-          (for parse in *parse-record*
+          (loop for parse in *parse-record*
                do
                (let* ((mrs-struct (extract-mrs parse)))
                  (output-mrs1 mrs-struct 'simple ostream))))
@@ -151,7 +151,7 @@
 
 (defun time-scope nil
   (setf *scoping-call-limit* 1000000)
-  (for sentence in 
+  (loop for sentence in 
        #|'("Kim sleeps in Berlin in Berlin in Berlin in Berlin in Berlin in Berlin")
        |#       
        '("every daughter sees most daughters"

@@ -462,13 +462,14 @@
   (or (type-local-constraint gcsubtype)
       (let ((t1ancs (type-ancestors t1))
             (t2ancs (type-ancestors t2)))
-      (for type in (type-ancestors gcsubtype)
-           some-satisfy
-           (and (not (eq type t1))
-                (not (eq type t2))
-                (type-local-constraint type)
-                (not (member type t1ancs :test #'eq))
-                (not (member type t2ancs :test #'eq)))))))
+        (dolist (type (type-ancestors gcsubtype))
+          (when 
+              (and (not (eq type t1))
+                   (not (eq type t2))
+                   (type-local-constraint type)
+                   (not (member type t1ancs :test #'eq))
+                   (not (member type t2ancs :test #'eq)))
+            (return t))))))
 
 ;;; when called from generalisation this should only take non-atomic types 
 ;;; as arguments and so disjunctions are not taken into consideration
@@ -524,7 +525,7 @@
 (defun get-real-types (type)
   (let ((type-entry (get-type-entry type)))
     (if (type-glbp type-entry)
-        (for parent in (type-parents type-entry)
+        (loop for parent in (type-parents type-entry)
              append
              (get-real-types parent))
       (list type))))

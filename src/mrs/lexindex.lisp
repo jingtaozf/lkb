@@ -53,7 +53,7 @@
                 (make-semantics-record
                  :id id
                  :relations construction-rels)))
-          (for rel in (find-index-rels (mapcar #'relation-record-relation
+          (loop for rel in (find-index-rels (mapcar #'relation-record-relation
                                                construction-rels) id)
                do
                (let ((res (cons rel new-record)))
@@ -76,9 +76,9 @@
   ;;; types where he shouldn't, there's a maximum number of relations
   ;;; allowed, which is set quite high, because of all the glbtypes
   (let ((returned-rels nil))
-    (for reltype in reltype-list
+    (loop for reltype in reltype-list
          do
-         (for compatible-rel in (lkb::get-compatible-rels reltype)
+         (loop for compatible-rel in (lkb::get-compatible-rels reltype)
               do
               (pushnew compatible-rel returned-rels :test #'eq)))
     (when (and *maximum-genindex-relations* 
@@ -121,7 +121,7 @@
 ;;; strings/symbols as values of the associated
 ;;; feature
 
-;;; Following are called from a function in main/batch-check
+;;; Following are called from a function in lexutils
 
 (defun clear-semantic-indices nil
   (clrhash *semantic-table*)
@@ -187,17 +187,20 @@
                  :id id
                  :relations main-rels)))
           (add-semantics-record id new-record)
-          (for rel in (find-index-rels 
+          (loop for rel in (find-index-rels 
                        (mapcar #'relation-record-relation 
                                (remove-if #'relation-record-feature-string 
                                           main-rels)) id)
                do
                (index-simple-semantics-record rel id))
-          (for rel in (remove-if-not #'relation-record-feature-string 
+          (loop for rel in (remove-if-not #'relation-record-feature-string 
                                           main-rels)
                do
                (index-complex-semantics-record rel id)))
-      (progn (format t "~%Warning ~A has no semantics" id)
+      (progn (unless
+               (member id *gen-rule-ids*)
+               (format t 
+                       "~%Warning: ~A has no semantics and no filter rule" id))
              (pushnew id *empty-semantics-lexical-entries*)))))
 
 
@@ -245,12 +248,12 @@
           (unless (member real-type *dummy-relations*)
             (let* ((label-list (fs-arcs fs))
                    (string-values
-                    (for pair in label-list
-                         filter
+                    (loop for pair in label-list
+                         nconc
                          (if (member (car pair) 
                                      *value-feats*)
-                             (create-type
-                              (fs-type (cdr pair)))))))
+                             (list (create-type
+                              (fs-type (cdr pair))))))))
               (when (cdr string-values)
                 (error "~%Multiple string values not expected in ~A
                       values ~A labels ~A" id string-values label-list)) 
@@ -264,3 +267,13 @@
     (let ((reln-res (assoc (car *rel-name-path*) (fs-arcs fs))))
       (if reln-res (fs-type (cdr reln-res))))
     (fs-type fs)))
+
+(defun check-for-redundant-filter-rules nil
+  ;;; called after indexing a lexicon to warn if
+  ;;; redundant filter rules have been defined
+  (loop for heuristic-id in *gen-rule-ids*
+      do
+        (unless (member heuristic-id *empty-semantics-lexical-entries*)
+          (format t 
+                  "~%Warning: filter rule for ~A is redundant" 
+                  heuristic-id))))

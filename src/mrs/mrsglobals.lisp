@@ -167,6 +167,10 @@ order in an MRS")
 
 (defparameter *inverted-mrs-rule-list* nil)
 
+;;; for generator heuristics - list of ids dealt with - not user-settable
+
+(defparameter *gen-rule-ids* nil)
+
 ;;; for scoping
 
 ;;; not user-settable

@@ -125,7 +125,7 @@
   (if (is-valid-fs fs)
       (let ((label-list (fs-arcs fs)))
         (if (and label-list (consp label-list))
-          (for feat-val in label-list
+          (loop for feat-val in label-list
                append
                (let ((new-path (cons (car feat-val) path-so-far))
                      (next-fs (cdr feat-val)))

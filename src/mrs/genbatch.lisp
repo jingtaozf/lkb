@@ -184,7 +184,7 @@ Mean strings/sentence ~,2F Mean edges ~,1F Mean time ~,1F secs"
 
 (defun add-spaces (str-list)
   (cons (car str-list)
-     (for str in (cdr str-list)
+     (loop for str in (cdr str-list)
        append
        (list " " str))))
 
@@ -265,9 +265,10 @@ Mean strings/sentence ~,2F Mean edges ~,1F Mean time ~,1F secs"
                      
 (defun string-set-equal (set1 set2)
   (and (eql (length set1) (length set2))
-       (for x in set1
-            all-satisfy
-            (member x set2 :test #'equal))))
+       (every 
+        #'(lambda (x)
+            (member x set2 :test #'equal))
+        set1)))
 
 
 (defun read-gen-test-file-stats1 (file-name)
@@ -313,7 +314,7 @@ Mean strings/sentence ~,2F Mean edges ~,1F Mean time ~,1F secs"
         (ostream (if (and *ostream* (streamp *ostream*) (output-stream-p *ostream*)) *ostream*  t)))
     (unless *parse-record*
       (format ostream "~%#| Parse failure: ~A |#" sentence))
-    (for parse-res in *parse-record*
+    (loop for parse-res in *parse-record*
          do
          (let ((mrs (mrs::extract-mrs parse-res t))
                (tgc nil) (tcpu nil) (treal nil) (space nil)
@@ -391,7 +392,7 @@ Mean strings/sentence ~,2F Mean edges ~,1F Mean time ~,1F secs"
             "~%#| Setting mrs::*null-semantics-hack-p* to nil |#")
     (setf mrs::*null-semantics-hack-p* nil))
   (let ((mrss (mrs::read-mrs-files-aux (list file))))
-    (for mrs in mrss
+    (loop for mrs in mrss
          do
          (let ((tgc nil)
                (tcpu nil)

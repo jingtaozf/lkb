@@ -205,7 +205,7 @@
 
 (defun show-gen-result-tty nil
    (if *gen-record*
-      (for edge in *gen-record*
+      (loop for edge in *gen-record*
          do
          (format t "~&Edge ~A G:" (edge-id edge))
          (pprint (parse-tree-structure edge)))

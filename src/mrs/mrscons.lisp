@@ -27,7 +27,7 @@
           (rest (cdr *qeqs*) (cdr rest)))
         ((null rest) nil)
       (let ((left (qeq-left current)) (right (qeq-right current)))
-        (for qeq2 in rest
+        (loop for qeq2 in rest
              do
              (cond ((eql (qeq-left qeq2) left)
                    (unless *giving-demo-p*
@@ -48,7 +48,7 @@
   (define-qeq-chains holes *qeqs* equated-list))
 
 (defun check-all-qeqs (hcons labels holes)
-  (for constr in hcons
+  (loop for constr in hcons
        do
        (let ((left (get-var-num (hcons-scarg constr)))
              (right (get-var-num (hcons-outscpd constr))))
@@ -72,10 +72,11 @@
                        left right left)))))))
 
 (defun satisfy-qeq-p (x y) 
-  (for qeq in *qeqs*
-       some-satisfy
+  (dolist (qeq *qeqs*)
+     (when
        (and (eql (qeq-left qeq) x)
-            (eql (qeq-right qeq) y))))
+            (eql (qeq-right qeq) y))
+       (return t))))
     
             
 ;;;
@@ -90,7 +91,7 @@
 (defun define-qeq-chains (holes qeqs equated-list)
 ;;  (format t "~%~A" *label-hole-pairs*)
   (setf *qeq-outscopes* nil)
-  (for hole in holes
+  (loop for hole in holes
        do
        (discover-outscoped-labels hole qeqs equated-list)))
 
@@ -100,14 +101,14 @@
       (let ((outscpd-list
              (append
               (if (member hole equated-list)
-                  (for new-hole in
+                  (loop for new-hole in
                        (cdr (assoc hole *label-hole-pairs*))
                        append
                        ;; DPF 21-Jul-99 - Added from WK
                        (unless (eql hole new-hole)
                         (discover-outscoped-labels 
                          new-hole qeqs equated-list))))
-              (for qeq in qeqs
+              (loop for qeq in qeqs
                    append
                    (if (eql (qeq-left qeq) hole)
                        (let* ((immediately-outscoped (qeq-right qeq))
@@ -115,7 +116,7 @@
                                (cdr (assoc immediately-outscoped 
                                            *label-hole-pairs*))))
                          (cons immediately-outscoped
-                               (for hole-handel in hole-handels
+                               (loop for hole-handel in hole-handels
                                     append
 				    ;; DPF 21-Jul-99 - Added from WK
                                     (unless (eql hole hole-handel)
@@ -154,10 +155,10 @@ scopes of quantifiers.
 (defun find-rel-qeq (rel)
   ;;; called in pre-processing, before bindings are relevant
   (let* ((h (get-var-num (rel-handel rel)))
-         (qeqs (for qeq in *qeqs*
-                    filter
+         (qeqs (loop for qeq in *qeqs*
+                    nconc
                     (if (eql h (qeq-right qeq))
-                        qeq))))
+                        (list qeq)))))
     (when (cdr qeqs)
         (error "Multiple qeqs - condition should have been checked for"))
     (car qeqs)))
@@ -175,17 +176,18 @@ scopes of quantifiers.
   (declare (ignore bindings))
 ;;;  (format t "~%check prev ~A" previous-holes)
   (let ((bound-rels (cdr (assoc quantifier *q-rel-store* :test #'eq)))
-        (qeq-outscoped (for hole in previous-holes
+        (qeq-outscoped (loop for hole in previous-holes
                             append
                             (let ((outscpd-labels
                                    (cdr (assoc hole *qeq-outscopes*))))
                               (unless (and pending-qeq 
                                            (member pending-qeq outscpd-labels))
                                   outscpd-labels)))))
-    (for bound-rel in bound-rels
-         some-satisfy
+    (dolist (bound-rel bound-rels)
+        (when
          (let ((brhandel (get-rel-handel-num bound-rel)))
-           (member brhandel qeq-outscoped)))))
+           (member brhandel qeq-outscoped))
+         (return t)))))
            
 
     
@@ -219,14 +221,14 @@ scopes of quantifiers.
   ;;; something with the same handel
   (let ((q1rels (cdr (assoc rel1 *q-rel-store* :test #'eq)))
         (q2rels (cdr (assoc rel2 *q-rel-store* :test #'eq))))
-    (for q1rel in q1rels
-         some-satisfy
+    (dolist (q1rel q1rels)
+       (when
          (let* ((args (get-handel-args q1rel))
-                (outscoped1 (for h in args 
+                (outscoped1 (loop for h in args 
                                  append
                                  (cdr (assoc h *qeq-outscopes*)))))
-         (for q2rel in q2rels
-              some-satisfy
+         (dolist (q2rel q2rels)
+            (when
               (or (eq q1rel q2rel)
                   (eql (get-rel-handel-num q1rel)
                        (get-rel-handel-num q2rel))
@@ -234,20 +236,24 @@ scopes of quantifiers.
                           outscoped1)
                   (member (get-rel-handel-num q1rel)
                           (let* ((args (get-handel-args q2rel)))
-                            (for h in args 
+                            (loop for h in args 
                                  append
-                                 (cdr (assoc h *qeq-outscopes*)))))))))))
+                                 (cdr (assoc h *qeq-outscopes*))))))
+              (return t))))
+         (return t)))))
 
 
 (defun incompatible-q-and-scope (qrel screl)
   ;;; a quantifier cannot be sister to a scopal relation 
   ;;; if it is qeq something which the quantifier scopes over
   (let ((bound-rels (cdr (assoc qrel *q-rel-store* :test #'eq))))
-    (for h in (get-handel-args screl)
-         some-satisfy
+    (dolist (h (get-handel-args screl))
+       (when
          (let ((outscpd (cdr (assoc h *qeq-outscopes*))))
-           (for brel in bound-rels
-                some-satisfy
-                (member (get-rel-handel-num brel) outscpd))))))
+           (dolist (brel bound-rels)
+               (when
+                   (member (get-rel-handel-num brel) outscpd)
+                 (return t))))
+         (return t)))))
             
         

@@ -656,13 +656,14 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 
 
 (defun read-mrs-files-aux (file-names)
-  (for file-name in file-names
-       append
-       (format t "~%Reading in MRS file ~A" (pathname-name file-name))
-       (force-output t)
-       (with-open-file 
-           (istream file-name :direction :input)
-         (read-mrs-stream istream))))
+  (loop for file-name in file-names
+      append
+        (progn 
+          (format t "~%Reading in MRS file ~A" (pathname-name file-name))
+          (force-output t)
+          (with-open-file 
+              (istream file-name :direction :input)
+            (read-mrs-stream istream)))))
 
 (defun read-mrs-stream (istream) 
   (let ((psoas nil))

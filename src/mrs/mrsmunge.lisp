@@ -128,7 +128,7 @@
         (let ((initial (car interim))
                   (rest (cdr interim)))
               (setf interim nil)
-              (for thing in rest
+              (loop for thing in rest
                    do
                    (if (overlapping-psoas initial thing)
                        (unless *giving-demo-p*
@@ -171,7 +171,7 @@
         (h-cons (psoa-h-cons mrs)))
     (setf results
       (if i-liszt
-          (for int-res in 
+          (loop for int-res in 
                (match-mrs-rule-rels i-liszt liszt nil initial-bindings nil)
                collect
                (make-psoa-result 
@@ -215,7 +215,7 @@
         (liszt (psoa-liszt mrs)))
       (setf results
             (if i-liszt
-                (for int-res in 
+                (loop for int-res in 
                      (match-mrs-rule-rels i-liszt liszt nil initial-bindings nil)
                    collect
                    (make-psoa-result 
@@ -231,13 +231,13 @@
         (construct-hcons-results results i-h-cons h-cons))))
           
 (defun construct-hcons-results (results i-h-cons hcons)
-  (for curr-res in results
+  (loop for curr-res in results
        append
        (let ((hcons-results 
               (match-mrs-rule-hcons i-h-cons hcons nil 
                                     (psoa-result-bindings curr-res)
                                     (psoa-result-constant-bindings curr-res))))
-         (for hcons-result in hcons-results
+         (loop for hcons-result in hcons-results
               collect
               (let ((new-psoa 
                      (copy-psoa (psoa-result-matching-psoa curr-res))))
@@ -269,7 +269,7 @@
 
 (defun find-constant-values (extra rel constant-bindings)
   (let ((new-bindings nil))
-     (for ac in extra
+     (loop for ac in extra
           do
           (let ((ac-feat (action-condition-feat ac))
                 (ac-val (action-condition-value ac)))
@@ -466,7 +466,7 @@
 (defun change-psoa-hcons (old-hcons matching-hcons new-hcons-specs bindings)
   (if (or matching-hcons new-hcons-specs)
       (append (set-difference old-hcons matching-hcons)
-              (for hcons in new-hcons-specs
+              (loop for hcons in new-hcons-specs
                    collect
                    (let ((new-hcons
                           (copy-hcons hcons)))
@@ -499,7 +499,7 @@
       value))
 
 (defun change-rel-bindings (new-rel-specs bindings constant-bindings)
-  (for rel in new-rel-specs
+  (loop for rel in new-rel-specs
        collect
        (let ((new-rel
               (make-rel :extra nil ; rules should never specify extra
@@ -512,7 +512,7 @@
                                             bindings))
          (setf (rel-flist new-rel)
                (sort
-                (for fvpair in (rel-flist rel)
+                (loop for fvpair in (rel-flist rel)
                      collect
                      (make-fvpair :feature 
                                   (make-name-in-correct-package 
@@ -625,21 +625,22 @@
 ;;; makes use of the extra slot to store it
 
 (defun collect-funny-unifs (funny-unifs initial-path)
-  (for funny-unif in funny-unifs
-       filter
+  (loop for funny-unif in funny-unifs
+       nconc
        (let ((path (funny-unification-lhs funny-unif))
              (initial-path-length (length initial-path)))
-         (unless (> initial-path-length (length path))
+         (if (not (> initial-path-length (length path)))
            (if (equal (subseq path 0 initial-path-length) 
                                       initial-path)
-               (make-funny-unification 
+               (list 
+                (make-funny-unification 
                 :lhs (subseq path initial-path-length)
-                :rhs (funny-unification-rhs funny-unif)))))))
+                :rhs (funny-unification-rhs funny-unif))))))))
 
 
 (defun add-funny-stuff (mrs extra)
   ;; destructively modifies the relations
-  (for funny-unif in extra
+  (loop for funny-unif in extra
        do
        (let* ((path (funny-unification-lhs funny-unif))
               (real-path (cddr path))
@@ -683,7 +684,7 @@
 
 (defun invert-munge-rules (rules)
   (let ((result nil)) 
-    (for rule in rules
+    (loop for rule in rules
          do
          (push (make-mrs-munge-rule
                 :id (intern (concatenate 'string 
