@@ -455,3 +455,36 @@
 	  for r in result
 	  do (setf (symbol-value (read-from-string (car p)))
 	       (read-from-string r))))))
+
+;;
+;; Save and load shrunk paths in display settings file
+;;
+
+(defun output-display-settings nil
+  (let ((filename (ask-user-for-new-pathname 
+                   "Save type display settings to?")))
+    (when filename
+      (with-open-file (stream filename :direction :output)
+        (output-type-display type stream)
+        (unmark-type-table)))))
+         
+(defun output-type-display (type ostream)
+   (let ((type-record (get-type-entry type)))
+      (unless (seen-node-p type-record) 
+         (mark-node-seen type-record)
+         (let ((shrunk-paths 
+                  (display-dag1 (type-constraint type-record) 'shrunk t)))
+            ;; doesn't print anything!
+            (when shrunk-paths
+               (format ostream 
+                  "~%(~A ~%~{~A~%~})" type shrunk-paths)))
+         (unless (type-enumerated-p type-record)
+            (for daughter in (type-daughters type-record)
+               do
+               (output-type-display daughter ostream))))))
+
+(defun load-display-settings nil
+   (let ((filename (ask-user-for-existing-pathname 
+                    "Load type display settings from?")))
+     (when filenmae
+       (set-up-display-settings filename))))

@@ -46,6 +46,8 @@
 		      ;; output
 		      cl-user::dump-lkb 
 		      cl-user::output-type-file 
+                      cl-user::output-display-settings
+                      cl-user::load-display-settings
 		      cl-user::*lkb-system-version*
 		      ;; options
 		      cl-user::get-parameters)))
@@ -112,8 +114,15 @@
                                                            :value 'interactive-unification-check)
                                            )
                                           :available-p nil) 
-                   (make-menu-item :name "Set options..."
-                                   :value 'get-parameters :available-p t)))))
+                   (make-lkb-submenu-item :menu-title "Options"
+                                          :menu-items
+                                          (list
+                                           (make-menu-item :name "Set options..."
+                                                           :value 'get-parameters :available-p t)
+                                           (make-menu-item :name "Save display settings..."
+                                                           :value 'output-display-settings)
+                                           (make-menu-item :name "Load display options..."
+                                                           :value 'load-display-settings)))))))
 
 
 (defun create-big-lkb-system-menu nil
@@ -224,6 +233,8 @@
 ;                     (make-menu-item :name "Types with glbs..."
 ;                        :value 'output-type-file 
 ;                        :available-p nil)
+                     (make-menu-item :name "Display settings"
+                                     :value 'output-display-settings)
                      )
 		  :available-p nil)
 	    (make-lkb-submenu-item 

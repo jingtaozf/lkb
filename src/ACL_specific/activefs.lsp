@@ -325,7 +325,6 @@
 			 (fs-display-record-type-fs-display (active-fs-window-fs window)))
   (clim:redisplay-frame-panes window :force-p t))
 
-
 (defun display-type-comment (type comment-string &optional parent-stream)
   (declare (ignore parent-stream type))
   (when comment-string

@@ -164,16 +164,17 @@
   (let ((image-location 
          (user::ask-user-for-new-pathname 
           "File for image (local file strongly advised)")))
-    (setf excl:*restart-init-function* #'restart-lkb-function) 
-    (user::write-psort-index-file)
-    (user::clear-expanded-lex)
-    (user::clear-type-cache)
-    (user::unexpand-leaf-types)
-    (excl:dumplisp :name image-location)
-    (user::check-for-open-psorts-stream)
-    (user::lkb-beep)
-    (format t "~%Image saved~%")
-    nil))
+    (when image-location
+      (setf excl:*restart-init-function* #'restart-lkb-function) 
+      (user::write-psort-index-file)
+      (user::clear-expanded-lex)
+      (user::clear-type-cache)
+      (user::unexpand-leaf-types)
+      (excl:dumplisp :name image-location)
+      (user::check-for-open-psorts-stream)
+      (user::lkb-beep)
+      (format t "~%Image saved~%")
+      nil)))
 
 (defun enable-type-interactions nil
   ;;; it may only work from within the application frame
