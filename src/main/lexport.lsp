@@ -7,6 +7,7 @@
 ;;;
 
 ;;; bmw (jul-03)
+;;; - tdl export now handles coindexation, displays difference lists nicely
 ;;; - generalize field extraction
 ;;; - export to tdl, previous export mechanisms reworked
 ;;; - defaults, fixed bugs in export-lexicon-to-file
@@ -253,10 +254,39 @@
    (unifs-2-list unifs)))
 
 (defun unifs-2-list (unifs)
-   (mapcar 
-    (lambda (x) (append (path-typed-feature-list (unification-lhs x))
-			(u-value-type (unification-rhs x))))
-    unifs))
+  (let ((c 0)
+	(coindex nil))
+    (mapcan 
+     #'(lambda (unif)
+	 (with-slots (rhs lhs) unif
+	   (cond
+	    ((typep rhs 'U-VALUE)
+	     (list (append (path-typed-feature-list lhs)
+			   (u-value-type rhs))))
+	    ((typep rhs 'PATH)
+	     (incf c)
+	     (setf coindex (str-2-symb (format nil "\\#~a" c)))
+	     (list
+	      (append (path-typed-feature-list lhs)
+		      coindex)
+		      ;'\#1)
+	      (append (path-typed-feature-list rhs)
+		      coindex))))))
+		      ;'\#1))))))
+     unifs)))
+
+(defun unif-2-lists (unif)
+  (with-slots (rhs lhs) unif
+    (cond
+     ((typep rhs 'U-VALUE)
+      (list (append (path-typed-feature-list lhs)
+		    (u-value-type rhs))))
+     ((typep rhs 'PATH)
+      (list
+       (append (path-typed-feature-list lhs)
+	       '\#1)
+       (append (path-typed-feature-list rhs)
+	       '\#1))))))
 
 (defun pack (l2)
   (loop
@@ -279,15 +309,22 @@
 	     ))))
 
 (defun pack-order (x y)
-  (let ((a 
-	 (if (cdr x) 
-	     (string (car x))
-	   ""))
-	(b
-	 (if (cdr y) 
-	     (string (car y))
-	   "")))
-    (string< a b)))
+  (let ((a (pack-order-str x))
+	(b (pack-order-str y)))
+    ;(cond
+     ;((and (eq (car x) 'LIST) (eq (car y) 'LAST))
+     ; t)
+     ;(t
+      (string< a b)
+      ;))
+    ))
+
+(defun pack-order-str (x)
+  (cond
+   ((cdr x)
+    (string (car x)))
+   (t
+    "")))
 
 (defmethod export-to-tdl ((lexicon lex-database) stream)
   (mapc
@@ -362,12 +399,19 @@
 	       (p-2-tdl-aux i branches))))))
 
 (defun p-2-tdl-aux (i branches)
-  (let ((res (get-tdl-list branches)))
+  (let ((res))
     (cond
-     ((car res)
+     ((and (setf res (get-tdl-list branches))
+	   (every #'(lambda (x) (= (length x) 1)) res))
       (format nil "< ~a >"
 	      (str-list-2-str
-	       (mapcar 'tdl-val-str (cdr res))
+	       (mapcar (lambda (x) (p-2-tdl-2-in-list i (car x))) res)
+	       ", ")))
+     ((and (setf res (get-tdl-diff-list branches))
+	   (every #'(lambda (x) (= (length x) 1)) res))
+      (format nil "<! ~a !>"
+	      (str-list-2-str
+	       (mapcar (lambda (x) (p-2-tdl-2-in-list i (car x))) res)
 	       ", ")))
      (t
       (format nil "[ ~a ]"
@@ -375,34 +419,66 @@
 	       (mapcar (lambda (x) (p-2-tdl-2 i x)) branches)
 	       (concatenate 'string ",~%" (make-string i :initial-element #\ ))))))))
 
-;;; test whether worth trying to represent struct as tdl list
-(defun poss-tdl-listp (branches)
-  (and
-   (= (length branches) 2)
-   (equal (car (first branches)) 'FIRST)
-   (not (cddr (first branches)))
-   (equal (car (second branches)) 'REST)
-   (or (cddr (second branches))
-       (equal (caadr (second branches)) '*NULL*))))
+(defun p-2-tdl-2-in-list (i x)
+  (if (> (length x) 1)
+      (format nil "[ ~a ]" (p-2-tdl-2 i x))
+    (tdl-val-str (car x))))
 
-;;; obtain tdl list, if poss
-;;; -> ( flag . tdl-list) 
+
+(defun tdl-list-start-p (branches)
+    (and
+     (= (length branches) 2)
+     (find 'FIRST branches :key 'car)
+     (find 'REST branches :key 'car)
+     '*NULL*))
+
+(defun tdl-diff-list-start-p (branches)
+  (let ((blast))
+    (and
+     (= (length branches) 2)
+     (find 'LIST branches :key 'car)
+     (setf blast (find 'LAST branches :key 'car))
+     (= (length blast) 2)
+     (coindex-p (car (second blast)))
+     (car (second blast)))))
+
 (defun get-tdl-list (branches)
-  (let ((rest-branch (cdr (second branches)))
-	(first-val (car (second (first branches))))
-	(res))
-    (when 
-	(and
-	 branches
-	 (poss-tdl-listp branches))
-      (cond 
-       ((equal rest-branch '((*NULL*)))
-	(cons t (list first-val)))
-       (t
-	(setf res (get-tdl-list rest-branch))
-	(when
-	    (car res)
-	  (cons t (cons first-val (cdr res)))))))))
+  (let* ((bfirst (find 'FIRST branches :key 'car))
+	 (brest (find 'REST branches :key 'car))
+	 (res))
+    (when (tdl-list-start-p branches)
+      (setf res (get-tdl-list-aux '*NULL* (cdr brest)))
+      (when (car res)
+	(cons (cdr bfirst)
+	      (cdr res))))))
+
+(defun get-tdl-diff-list (branches)
+  (let* ((blist (find 'LIST branches :key 'car))
+	 (end-symb (tdl-diff-list-start-p branches))
+	 (res))
+    (when end-symb
+      (setf res (get-tdl-list-aux end-symb (cdr blist)))
+      (when (car res)
+	(cdr res)))))
+
+(defun get-tdl-list-aux (end-symb branches)
+  (let* ((vfirst (cdr (find 'FIRST branches :key 'car)))
+	 (vrest (cdr (find 'REST branches :key 'car)))
+	 (res))
+    (cond
+     ((eq (caar branches) end-symb)
+      (cons end-symb nil))
+     ((null vrest)
+      nil)
+     ((eq (caar vrest) end-symb)
+      (cons end-symb (cons vfirst nil)))
+     ((car (setf res (get-tdl-list-aux end-symb vrest)))
+      (cons end-symb (cons vfirst (cdr res)))))))
+
+(defun coindex-p (x)
+  (and
+   (symbolp x)
+   (eq (char (symb-2-str x) 0) #\#)))
 
 (defmethod export-to-csv ((lexicon lex-database) stream)
   (mapc
@@ -494,11 +570,6 @@
    (collect-psort-ids lexicon :recurse nil))
   (fn-get-records output-lexicon ''initialize-current-grammar))
 
-;(defmethod to-db ((x lex-or-psort) output-lexicon)
-;  (let* ((name (lex-or-psort-id x))
-;	 (unifs (lex-or-psort-unifs x)))
-;    (set-lexical-entry output-lexicon nil name unifs)))
-
 (defmethod to-db ((x lex-or-psort) (lexicon psql-lex-database))  
   (let* ((field-map (fields-map lexicon))
 
@@ -522,20 +593,6 @@
 	 
 	 (type (extract-field x "type" field-map))
 	 
-	 ;(name lex-id)
-	 ;(constraint new-entry)
-	 ;(temp (extract-stem-from-unifications constraint))
-	 ;(stem (cdr temp))
-	 ;(count (car temp))
-	 ;(keyrel (extract-key-from-unifications constraint))      
-	 ;(keytag (extract-tag-from-unifications constraint))
-	 ;(altkey (extract-altkey-from-unifications constraint))
-	 ;(alt2key (extract-alt2key-from-unifications constraint))
-	 ;(compkey (extract-comp-from-unifications constraint))
-	 ;(ocompkey (extract-ocomp-from-unifications constraint))
-	 ;(total (+ count 1 
-		;   (if keyrel 1 0) (if keytag 1 0) (if altkey 1 0)
-		;   (if alt2key 1 0) (if compkey 1 0) (if ocompkey 1 0)))
 	 (psql-le
 	  (make-instance 'psql-lex-entry
 	    :name name
