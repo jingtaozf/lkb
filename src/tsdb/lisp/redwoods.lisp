@@ -1222,7 +1222,7 @@
           (format stream "~%"))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :dependencies *redwoods-export-values*))
-          (mrs::mrs-output-psoa mrs :stream stream))
+          (mrs::ed-output-psoa mrs :stream stream))
         (unless lspp (format stream "~c~%" #\page))))
 
 (defun semantic-equivalence (data &key condition (file "/tmp/equivalences"))

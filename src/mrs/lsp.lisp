@@ -43,18 +43,23 @@
            (scoped (lkb::show-mrs-scoped-window nil psoa title))
            (rmrs (lkb::show-mrs-rmrs-window nil psoa title))
            (dependencies (lkb::show-mrs-dependencies-window nil psoa title))
-           (t (setf return lkb::%lsp-mrs-invalid-format%)))))
+           (t (setf return lkb::%lsp-invalid-format%)))))
       (convert
        (if (streamp stream)
          (let* ((format (if (first command)
                           (intern (string (pop command)) :mrs)
                           'simple)))
-           (if (member format '(simple indexed prolog 
-                                scoped rmrs dependencies))
+           (cond
+            ((member format '(simple indexed prolog scoped rmrs))
              (let ((string (with-output-to-string (stream)
                              (output-mrs1 psoa format stream))))
-               (format stream "~s" string))
-             (setf return lkb::%lsp-mrs-invalid-format%)))
+               (format stream "~s" string)))
+            ((eq format 'dependencies)
+             (let ((string (with-output-to-string (stream)
+                             (ed-output-psoa psoa :stream stream))))
+               (format stream "~s" string)))
+            (t
+             (setf return lkb::%lsp-invalid-format%))))
          (setf return lkb::%lsp-invalid-asynchronous-command%)))
       (t (setf return lkb::%lsp-invalid-subcommand%)))
     return))

@@ -56,14 +56,15 @@
   (declare (ignore horizontalp))
   (mp:run-function title 
                            #'draw-new-parse-tree-really 
-                           topnode counter))
+                           topnode counter title))
 
-(defun draw-new-parse-tree-really (topnode counter)
+(defun draw-new-parse-tree-really (topnode counter &optional title)
   (let ((pframe (clim:make-application-frame 'parse-tree)))
     (setf (parse-tree-nodes pframe) topnode)
     (setf (parse-tree-current-chart pframe) 
       (or counter
           *chart-generation-counter*))
+    (setf (clim:frame-pretty-name pframe) (or title "Parse Tree"))
     (clim:run-frame-top-level pframe)))
 
 

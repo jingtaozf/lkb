@@ -38,7 +38,9 @@
 
 (defconstant %lsp-syntax-error% 5)
 
-(defconstant %lsp-mrs-invalid-format% 6)
+(defconstant %lsp-invalid-format% 6)
+
+(defconstant %lsp-invalid-format% 6)
 
 (defconstant %lsp-mysterious-error% 42)
 
@@ -53,7 +55,7 @@
 (defparameter %lsp-clients% nil)
 
 (defstruct client
-  id socket stream process)
+  id socket stream process display)
 
 (defun lsp-initialize ()
   (lsp-shutdown)
@@ -92,9 +94,8 @@
          t 
          "lsp-shutdown(): shutting down client # ~a~%"
          (client-id client))
-        (ignore-errors
-         (force-output (client-stream client))
-         (close (client-stream client))))))))
+        (ignore-errors (force-output (client-stream client))
+        (ignore-errors (close (client-stream client)))))))))
 
 (defun lsp-server (&key wait)
   (if wait
@@ -164,11 +165,14 @@
       (force-output stream)
       (return-from lsp-process-event))
 
-    #-:debug
-    (when *lsp-dedbug-p*
-      (format t "[~a] lsp-process-event(): received: `~a'.~%" id command))
-    
     (when waitp (pop command))
+
+    (when *lsp-dedbug-p*
+      (format 
+       t 
+       "[~a] lsp-process-event(): received: `~(~a~)' command ~@[(wait)~].~%" 
+       id (first command) waitp))
+    
     (unless waitp
       (format stream "~a~c~%" return #\page)
       (force-output stream))
@@ -223,9 +227,17 @@
            id string))
         (return)
       while (not (eq form :eof)) collect form))
+;;
+;; (cl:setf *default-server-path* '(:motif :display "localhost:0"))
+;;
 
 (defun lsp-make-readtable ()
   (copy-readtable))
 
-(defun lsp-retrieve-object (id)
+(defun lsp-find-client (id)
+  (loop
+      for client in %lsp-clients%
+      when (equal id (client-id client)) return client))
+
+(defun lsp-retrieve-object (id n)
   (declare (ignore id)))

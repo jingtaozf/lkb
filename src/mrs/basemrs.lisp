@@ -137,14 +137,14 @@
     (format stream "[")))
 
 (defmethod mrs-output-top-h ((mrsout simple) handel-val)
-  (if handel-val
-      (with-slots (stream) mrsout
-        (format stream " LTOP: ~A" handel-val))))
+  (when (and handel-val *rel-handel-path*)
+    (with-slots (stream) mrsout
+      (format stream " LTOP: ~(~a~)" handel-val))))
 
 (defmethod mrs-output-index ((mrsout simple) index-val)
   (with-slots (stream) mrsout
     (when index-val
-      (format stream "~%  INDEX: ~A" index-val))))
+      (format stream "~%  INDEX: ~(~a~)" index-val))))
 
 (defmethod mrs-output-mode ((mrsout simple) mode-val)
   (with-slots (stream) mrsout
@@ -158,7 +158,7 @@
 
 (defmethod mrs-output-var-fn ((mrsout simple) var-string)
   (with-slots (stream) mrsout
-    (format stream "~A" var-string)))
+    (format stream "~(~a~)" var-string)))
 
 (defmethod mrs-output-atomic-fn ((mrsout simple) atomic-value)
   (with-slots (stream) mrsout
@@ -175,11 +175,11 @@
 (defmethod mrs-output-rel-handel ((mrsout simple) handel)
   (if handel
       (with-slots (stream indentation) mrsout
-        (format stream "~%~VT~A: ~A" (+ indentation 2) 'lbl handel))))
+        (format stream "~%~VT~A: ~(~a~)" (+ indentation 2) 'lbl handel))))
 
 (defmethod mrs-output-label-fn  ((mrsout simple) label)
   (with-slots (stream indentation) mrsout
-    (format stream "~%~VT~A: " (+ indentation 2) label)))
+    (format stream "~%~VT~a: " (+ indentation 2) label)))
 
 (defmethod mrs-output-start-extra ((mrsout simple) var-type)
   (with-slots (stream indentation) mrsout
@@ -213,7 +213,7 @@
   (with-slots (stream indentation) mrsout
     (unless first-p
       (format stream "~%"))
-    (format stream "~VT~A ~A ~A" 
+    (format stream "~VT~(~a~) ~A ~(~a~)" 
             (+ indentation 2) higher reln lower)))
 
 (defmethod mrs-output-end-h-cons ((mrsout simple))
@@ -273,11 +273,11 @@
 (defmethod mrs-output-top-h ((mrsout indexed) handel-val)
   (if handel-val
       (with-slots (stream) mrsout
-        (format stream "~A," handel-val))))
+        (format stream "~(~a~)," handel-val))))
 
 (defmethod mrs-output-index ((mrsout indexed) index-val)
   (with-slots (stream) mrsout
-    (format stream "~A" index-val)))
+    (format stream "~(~a~)" index-val)))
 
 (defmethod mrs-output-mode ((mrsout indexed) mode-val)
   (with-slots (stream) mrsout
@@ -289,7 +289,7 @@
 
 (defmethod mrs-output-var-fn ((mrsout indexed) var-string)
   (with-slots (stream) mrsout
-    (format stream "~A" (remove-variable-junk var-string))))
+    (format stream "~(~a~)" (remove-variable-junk var-string))))
 
 (defmethod mrs-output-atomic-fn ((mrsout indexed) atomic-value)
   (with-slots (stream) mrsout
@@ -304,7 +304,7 @@
 (defmethod mrs-output-rel-handel ((mrsout indexed) handel)
   (if handel
       (with-slots (stream temp-sort) mrsout  
-        (format stream "~A:~A(" 
+        (format stream "~(~a~):~A(" 
                 handel (remove-right-sequence 
                         *sem-relation-suffix* 
                         (string-downcase temp-sort))))
@@ -355,7 +355,7 @@
   (with-slots (stream) mrsout
     (unless first-p
       (format stream ",~%"))
-    (format stream "~A ~A ~A" 
+    (format stream "~(~a~) ~A ~(~a~)" 
             higher reln lower)))
 
 (defmethod mrs-output-end-h-cons ((mrsout indexed))
@@ -442,7 +442,7 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-top-h ((mrsout prolog) handel-val)
   (with-slots (stream) mrsout
-    (format stream "~A" handel-val)))
+    (format stream "~(~a~)" handel-val)))
 
 (defmethod mrs-output-mode ((mrsout prolog) mode-val)
   (with-slots (stream) mrsout
@@ -450,7 +450,7 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-index ((mrsout prolog) index-val)
   (with-slots (stream) mrsout
-    (format stream ",~A" index-val)))
+    (format stream ",~(~a~)" index-val)))
 
 (defmethod mrs-output-start-liszt ((mrsout prolog))
   (with-slots (stream) mrsout
@@ -458,7 +458,7 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-var-fn ((mrsout prolog) var-string)
   (with-slots (stream) mrsout
-    (format stream "~A)" (remove-variable-junk var-string))))
+    (format stream "~(~a~))" (remove-variable-junk var-string))))
 
 (defmethod mrs-output-atomic-fn ((mrsout prolog) atomic-value)
   (with-slots (stream) mrsout
@@ -476,7 +476,7 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-rel-handel ((mrsout prolog) handel)
   (with-slots (stream temp-sort) mrsout  
-    (format stream "~A,[" handel)))
+    (format stream "~(~a~),[" handel)))
 
 
 (defmethod mrs-output-label-fn  ((mrsout prolog) label)
@@ -516,7 +516,7 @@ higher and lower are handle-variables
 (defmethod mrs-output-outscopes ((mrsout prolog) reln higher lower first-p)
   (with-slots (stream) mrsout  
     (unless first-p (format stream ","))
-    (format stream "~A(~A,~A)" (string-downcase reln) higher lower)))
+    (format stream "~A(~(~a~),~(~a~))" (string-downcase reln) higher lower)))
 
 (defmethod mrs-output-end-h-cons ((mrsout prolog))
   (with-slots (stream need-comma) mrsout

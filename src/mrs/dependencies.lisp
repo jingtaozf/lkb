@@ -41,23 +41,31 @@
 
 (defmethod print-object ((object eds) stream)
   (if *eds-pretty-print-p*
-    (loop
-        initially
-          (format 
-           stream 
-           "{~@[~a:~]~@[ (cyclic)~]~@[~*~%~]" 
-           (eds-top object) (ed-cyclic-p object) (eds-relations object))
-        for ed in (eds-relations object)
-        unless (or (ed-bleached-p ed) (ed-vacuous-p ed)) do
-          (format stream " ~a~%" ed)
-        finally
-          (format stream "}~%"))
+    (let ((cyclicp (ed-cyclic-p object))
+          (fragmentedp (ed-fragmented-p object)))
+      (loop
+          with *eds-include-vacuous-relations-p*
+          = (if fragmentedp t *eds-include-vacuous-relations-p*)
+          initially
+            (format 
+             stream 
+             "{~@[~(~a~):~]~
+              ~:[~3*~; (~@[cyclic~*~]~@[ ~*~]~@[fragmented~*~])~]~@[~%~]" 
+             (eds-top object) 
+             (or cyclicp fragmentedp) 
+             cyclicp (and cyclicp fragmentedp) fragmentedp
+             (eds-relations object))
+          for ed in (eds-relations object)
+          unless (or (ed-bleached-p ed) (ed-vacuous-p ed)) do
+            (format stream " ~a~%" ed)
+          finally
+            (format stream "}~%")))
     (call-next-method)))
 
 (defstruct ed
   handle id type
   predicate arguments carg
-  raw)
+  raw mark)
 
 (defmethod print-object ((object ed) stream)
   (if *eds-pretty-print-p*
@@ -80,7 +88,7 @@
           (format stream "]"))
     (call-next-method)))
 
-(defun mrs-output-psoa (psoa &key (stream t))
+(defun ed-output-psoa (psoa &key (stream t))
   (if (psoa-p psoa)
     (format stream "~a~%" (ed-convert-psoa psoa))
     (format stream "{}~%")))
@@ -110,7 +118,7 @@
   (let* ((handle (let ((handle (rel-handel relation)))
                    (when (handle-var-p handle) (handle-var-name handle))))
          (id (ed-find-identifier relation))
-         (predicate (rel-reltype relation))
+         (predicate (or (rel-sort relation) (rel-reltype relation)))
          (flist (rel-flist relation))
          (carg (loop
                    with carg = (list (vsym "CARG") 
@@ -322,8 +330,8 @@
   ;; _fix_me_
   ;; on certain platforms (notably Linux), Allegro CL 6.2 will fail to detect a
   ;; stack overflow in (certain) recursive functions; this was pointed out to
-  ;; Franz as [spr27625] in apr-03, and soon my favourite tech person, Lois Wolf,
-  ;; suggested to make those function not-inline.                (19-may-03; oe)
+  ;; Franz as [spr27625] in apr-03, and soon my favourite tech person, Lois 
+  ;; Wolf, suggested to make those function not-inline.        (19-may-03; oe)
   ;;
   (declare (notinline foo))
   (unless (and startp (member (ed-id ed) start))
@@ -333,3 +341,34 @@
           (setf role role)
           (unless (ed-walk value (adjoin (ed-id ed) start)) (return nil))
         finally (return t))))
+
+(defun ed-fragmented-p (eds)
+  (let ((mark (gensym))
+        (agenda (loop
+                    with top = (eds-top eds)
+                    for ed in (eds-relations eds)
+                    when (equal (ed-id ed) top) collect ed)))
+    (loop
+        for ed = (pop agenda)
+        for id = (ed-id ed)
+        while ed do
+          (format t "pop(): ~a~%" ed)
+          (unless (or (eq (ed-mark ed) mark) (ed-bleached-p ed))
+            (setf (ed-mark ed) mark)
+            (loop
+                for argument in (ed-arguments ed)
+                when (ed-p (rest argument)) do (push (rest argument) agenda))
+            (loop
+                for ed in (eds-relations eds)
+                unless (or (eq (ed-mark ed) mark) (ed-bleached-p ed)) do
+                  (loop
+                      for argument in (ed-arguments ed)
+                      when (and (ed-p (rest argument))
+                                (equal (ed-id (rest argument)) id)) do
+                        (push ed agenda)))))
+    (loop
+        for ed in (eds-relations eds)
+        when (and (not (ed-bleached-p ed)) (not (eq (ed-mark ed) mark)))
+        return ed)))
+
+                                      
