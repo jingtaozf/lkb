@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.16  1999/07/09 04:51:47  aac
+;; fragments
+;;
 ;; Revision 1.15  1999/06/19 18:17:18  danf
 ;; Added conj-ind-type
 ;;
@@ -375,3 +378,7 @@ printing routines -  convenient to make this global to keep printing generic")
 
 (defvar *false-type* nil)
 (defvar *true-type* nil)
+
+(defparameter *alex-mode* nil
+  "if t, allows scope to have specified relations")
+
