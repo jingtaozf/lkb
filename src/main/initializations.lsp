@@ -83,9 +83,9 @@
                  (symbol-value building-image-p))
       (let ((*package* (find-package #+:clim :clim-user #-:clim :lkb)))
         #+:clim
-        (clim-user::set-up-lkb-interaction :core)
+        (clim-user::set-up-lkb-interaction)
         #-:clim
-        (lkb::set-up-lkb-interaction :core)))))
+        (lkb::set-up-lkb-interaction)))))
 
 
 
