@@ -58,8 +58,8 @@
 
 (defun draw-chart-window (window stream &key max-width max-height)
   (declare (ignore max-width max-height))
-  (clim:format-graph-from-roots
-   (get (chart-window-root window) 'chart-edge-descendents)
+  (clim:format-graph-from-root
+   (chart-window-root window) 
    #'(lambda (node stream)
        (multiple-value-bind (s bold-p)
 	   (chart-node-text-string node)
@@ -72,6 +72,14 @@
 	       (write-string s stream))))))
    #'(lambda (node) 
        (get node 'chart-edge-descendents))
+   ;; This trickery is to avoid drawing the connections from the dummy
+   ;; root node to the lexical edges
+   :arc-drawer #'(lambda (stream from to x1 y1 x2 y2 &rest args)
+		   (when (or (not (symbolp to))
+			     (get to 'chart-edge-contents))
+		     (apply #'clim-internals::draw-linear-arc
+			    (append (list stream from to x1 y1 x2 y2)
+				    args))))   
    :stream stream 
    :graph-type :dag
    :merge-duplicates t
