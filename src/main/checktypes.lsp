@@ -284,7 +284,7 @@
 
 (defun mark-for-cycles (type-record)
    (let ((ok t)
-         (daughters (mapcar #'get-type-entry 
+         (daughters (mapcar #'(lambda (d) (get-type-entry d))
                (type-daughters type-record))))
       (unless (seen-node-p type-record) 
          (mark-node-seen type-record)
