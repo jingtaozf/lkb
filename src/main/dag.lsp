@@ -61,6 +61,10 @@
 
 (defvar *unify-wffs* nil)
 
+(defvar *expanding-types* nil
+  "used to signal we're within a unification which may try
+   to access a constraint we haven't calculated yet")
+
 (defvar *within-unification-context-p* nil)
 (defvar *safe-not-to-copy-p* nil)
 
@@ -442,7 +446,9 @@
 	      ;; prevent separate uses of same constraint in same unification
 	      ;; becoming reentrant
 	      (when (and constraintp *unify-wffs*)
-		(let ((constraint (may-copy-constraint-of new-type)))
+		(let ((constraint (if *expanding-types*
+                                      (copy-dag-completely (wf-constraint-of new-type))
+                                      (may-copy-constraint-of new-type))))
                   (when *recording-constraints-p*
                       (pushnew new-type *type-constraint-list* :test #'eq))
 		  (if  *unify-debug*
@@ -985,7 +991,7 @@
                  "~%No constraint found for ~A" fs-type))
        ((progn
           (setq real-dag (retype-dag real-dag fs-type))
-          (unify-dags real-dag constraint)))
+          (unify-wffs real-dag constraint t)))
        (t (format t
              "~%Error in ~A:~%  Unification with constraint of ~A failed at path ~:A"
              (or type-name "unknown") fs-type (reverse features-so-far))
@@ -1005,11 +1011,12 @@
 			       type-name)))
 
 ;;; It is possible for two wffs to be unified and the result to need 
-;;; the constraint of the resulting type to be unified in - see document
-;;; Functionality of the LKB. Signalled by *unify-wffs* true
+;;; the constraint of the resulting type to be unified in - 
+;;; signalled by *unify-wffs* being t
 
-(defun unify-wffs (dag1 dag2)
-  (let ((*unify-wffs* t)) 
+(defun unify-wffs (dag1 dag2 &optional expanding-types)
+  (let ((*unify-wffs* t)
+        (*expanding-types* expanding-types))
     (unify-dags dag1 dag2)))
 
 (defun unifiable-wffs-p (dag1 dag2)
