@@ -49,7 +49,7 @@
 			   :host host
 			   :port port
 			   :user (raw-get-val lexicon "SELECT db_owner()")))
-	  (count-new-dfn 0)
+	  ;(count-new-dfn 0)
 	  (count-new 0))
       (connect conn-db-owner)
       (retrieve-fn-defns conn-db-owner)
@@ -69,9 +69,10 @@
 				     rev-filename))
 		  (format t "~%WARNING: no file ~a" rev-filename))
 		(if (probe-file dfn-filename)
-		    (setf count-new-dfn
+		    ;(setf count-new-dfn
 		      (merge-defn conn-db-owner 
-				  dfn-filename))
+				  dfn-filename)
+		      ;)
 		  (format t "~%WARNING: no file ~a" dfn-filename))
 		nil
 		)))

@@ -10,11 +10,10 @@
     ;(setf dbname nil)
     ;(setf host nil)
     ;(setf user nil)
-    (setf password nil)
+    ;(setf password nil)
     ;(setf port nil)
     )                                   ;:todo: unbind functions
   (if (next-method-p) (call-next-method)))
-
 
 (defmethod true-port ((lexicon sql-database))
   (let* ((port (or

@@ -27,7 +27,8 @@
 (defmethod connect-aux ((lexicon psql-database))
   (with-slots (port host dbname password connection user) lexicon
     ;; attempt connection w/ default pwd
-    (setf password user)
+    (if (equal "" password)
+	(setf password user))
     (or
      (connect-aux2 lexicon)
      (and
@@ -37,7 +38,7 @@
 	 (cons 
 	  (format nil "Password for ~a?" 
 		  user) 
-	  user)))
+	  password)))
       (connect-aux2 lexicon)))))
       
 (defmethod connect-aux2 ((lexicon psql-database))
