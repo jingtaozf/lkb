@@ -368,7 +368,7 @@ at this point).
 			      (when (or (not spelling-rule-p) new-morph)
 				;; allow morphographemics to block generation
 				(lkb::apply-morph-rule 
-				 rule fs fs-restricted new-morph))))
+				 rule fs fs-restricted new-morph nil))))
 			(if result
                             (list
                              (cons (cons rule (car entry)) result)))))))))
