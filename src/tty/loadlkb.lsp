@@ -26,12 +26,11 @@
 (defpackage "MAIN")
 
 (eval-when (load eval)
-(excl:without-package-locks
-(progn 
+(#+allegro excl:without-package-locks
+ #-allegro progn
     (dolist  (dir-and-file
       '( ("main" "for")         ; duplicate useful Procyon CL for loops
                            ; generic CL
-         ("io-general" "utils")
          ("main" "types")       ; generic CL
          ("main" "dag")         ; generic CL
          ("main" "yadu")        ; generic CL
@@ -57,6 +56,7 @@
          ("main" "batch-check")
          ("main" "lkb-tsdb")    ; generic CL
          ("io-general" "tree-nodes")
+         ("io-general" "utils")
          ("tty" "tty")
          ))
       (let* ((dir (car dir-and-file))
@@ -66,7 +66,7 @@
                 :directory (append *lkb-source-dir* (list dir))))
          #-mcl
          (load (make-pathname :name file :type "fasl"
-                :directory (append *lkb-fasl-dir* (list dir)))))))))
+                :directory (append *lkb-fasl-dir* (list dir))))))))
 
 
 
