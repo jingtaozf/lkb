@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.14  1999/06/18 00:20:23  aac
+;; avoid running scoping machinery when we have a fragment, change extract-mrs to take a single edge
+;;
 ;; Revision 1.13  1999/05/14 02:25:24  aac
 ;; allowing generator index to be cleared, tidying up to avoid compiler warnings
 ;;
@@ -299,7 +302,7 @@ for extra features for using the extra-features of a relation")
 (defparameter *deg-ind-type* (vsym "deg-ind"))
 (defparameter *individual-type* (vsym "individual"))
 (defparameter *difference-list-type* (vsym "*diff-list*"))
-
+(defparameter *conj-ind-type* (vsym "conj-ind"))
 
 (defparameter *no-inst-arg-roles* nil)
 
