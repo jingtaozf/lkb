@@ -51,7 +51,8 @@
 
 (defun draw-chart-lattice (node title horizontalp)
    (let*
-      ((*chart-display* t)
+      ((ccl:*idle-sleep-ticks* 0) ; don't let get-next-event give much time to others
+       (*chart-display* t)
        (*chart-records* nil)
        (*chart-font* (lkb-chart-font))
        (*chart-bold-font* (lkb-chart-bold-font))
@@ -182,32 +183,48 @@
                           (get-lex-rule-entry rule-name))))
            (when rule
              (display-fs (rule-full-fs rule)
-                         (format nil "~A" rule-name)))))))) 
+                         (format nil "~A" rule-name))))))
+   (make-instance 'menu-item
+     :menu-item-title "Highlight nodes"
+     :menu-item-action
+     #'(lambda () (display-edge-in-chart edge-record)))))
 
 
 ;;; Highlight current edge, if there is one at the moment - and any ancestor
-;;; edges that are visible
+;;; and descendent edges that are visible
 
-(defmethod view-draw-contents ((pane active-chart-window-pane))
-   (call-next-method)
+(defmethod view-draw-contents :after ((pane active-chart-window-pane))
    (view-draw-edge-highlighting pane))
 
 (defun view-draw-edge-highlighting (pane)
    (let ((record (current-chart-edge pane)))
       (when record 
-         (highlight-current-chart-edge (chart-record-edge record) pane))))
+         (highlight-chart-edge-subs (chart-record-edge record) pane)
+         (highlight-chart-edge-and-supers (chart-record-edge record) pane))))
 
 
-(defun highlight-current-chart-edge (edge pane)
-   (let ((record (display-chart-edge-record edge pane)))
-      (when record
-         (invert-text-box pane
-            (chart-record-position record)
-            (+ (chart-record-position record)
-               (chart-record-width record)))))
+(defun highlight-chart-edge-subs (edge pane)
    (dolist (subsumed-edge (edge-children edge))
       (when subsumed-edge
-         (highlight-current-chart-edge subsumed-edge pane))))
+         (let ((record (display-chart-edge-record subsumed-edge pane)))
+            (when record ; check that not an active edge suppressed in display
+               (highlight-chart-edge record pane)))
+         (highlight-chart-edge-subs subsumed-edge pane))))
+
+(defun highlight-chart-edge-and-supers (edge pane)
+   (labels
+      ((highlight-chart-edge-path-p (e)
+          ;; path from e recursively through children to edge?
+          (or (eq e edge)
+            (some #'highlight-chart-edge-path-p (edge-children e)))))
+      (dolist (record (chart-records pane))
+         (when (highlight-chart-edge-path-p (chart-record-edge record))
+            (highlight-chart-edge record pane)))))
+
+(defun highlight-chart-edge (record pane)
+   (invert-text-box pane
+      (chart-record-position record)
+      (+ (chart-record-position record) (chart-record-width record))))
 
 
 ;;; called from display-parse-tree - when it is called to display an edge
@@ -224,7 +241,7 @@
             ((pane (and existing (ccl::my-scroller existing)))
              (edge-record (and pane (display-chart-edge-record edge pane))))
             (if edge-record
-               (reposition-edge-in-window edge (ccl::my-scroller existing))
+               (reposition-edge-in-window edge pane)
                (lkb-beep))))))
 
 
