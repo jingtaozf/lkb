@@ -10,6 +10,7 @@ LINKS = lkb_data.tgz lkb_linux_ml.tgz lkb_linux.tgz lkb_solaris.tgz \
         itsdb_linux.tgz itsdb_solaris.tgz itsdb_source.tgz \
         erg.tgz matrix.tgz spanish.tgz
 
+CP=cp
 RM=rm
 MKDIR=mkdir
 LN=ln -s
@@ -31,6 +32,11 @@ update:
 	  ${CVS} commit -f -m "auto-update for build" ./src/version.lsp; \
 	  $(MAKE) all; \
 	) 2>&1 | ${TEE} ${ROOT}/lkb/log/build
+	${CP} ${ROOT}/lkb/src/lkb.el ${TARGET}/etc
+	${CP} ${ROOT}/lkb/src/tdl-mode.el ${TARGET}/etc
+	${CP} ${ROOT}/lkb/etc/dot.emacs ${TARGET}/etc
+	${CP} ${ROOT}/lkb/etc/lkb ${TARGET}/etc
+	${CP} ${ROOT}/lkb/etc/install ${TARGET}/etc
 	( \
 	  cd ${ROOT}/lkb/log; \
           mail -s "automated LKB build (${DATE})" oe@lingo.stanford.edu \
