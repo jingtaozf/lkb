@@ -903,16 +903,16 @@
            
            #+:mt
            (summarize
-            (let* ((profile (first arguments))
+            (let* ((profiles (first arguments))
                    (title (format 
                            nil 
-                           "`~a' MRS Summary~@[ [~a]~]"
-                           profile *statistics-select-condition*))
+                           "MRS Summary~@[ [~a]~]"
+                           *statistics-select-condition*))
                    (message "summarizing results ...")
                    (meter (make-meter 0 1)))
               
               (status :text message)
-              (summarize profile :meter meter :file file)
+              (summarize profiles :meter meter :file file)
               (when (probe-file file)
                 (let ((return 
                         (send-to-podium 
@@ -927,7 +927,7 @@
                                   (pairlis 
                                    '(:file :data 
                                      :command)
-                                   (list file profile 
+                                   (list file profiles 
                                          (cons 'summarize arguments))))
                           *tsdb-podium-windows*))))
               (status :text (format nil "~a done" message) :duration 2)))

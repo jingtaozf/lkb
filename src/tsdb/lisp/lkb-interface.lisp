@@ -526,18 +526,39 @@
            (error "null or malformed input MRS"))
          (let* ((edges
                  (tsdb::time-a-funcall
-                  #'(lambda () (mt::transfer-mrs mrs :filterp t))
+                  #'(lambda () (mt::transfer-mrs mrs :filterp nil))
                   #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                       (declare (ignore ignore))
                       (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
                             conses (* scons 8) symbols (* ssym 24) 
                             others sother))))
-
+                (partial (loop
+                             for edge in edges
+                             when (mt::edge-source edge) collect edge))
+                (unknown (loop
+                             with result
+                             for edge in partial
+                             do
+                               (loop
+                                   for ep in (mt::edge-source edge)
+                                   for pred = (mrs::rel-pred ep)
+                                   do (pushnew pred result :test #'equal))
+                             finally (return (sort result #'string-lessp))))
                 (*print-pretty* nil) (*print-level* nil) (*print-length* nil)
-                (output (get-output-stream-string stream))
-                (readings (length edges))
+                (output (if unknown
+                          (format
+                           nil
+                           "unknown predicates: ~{~(~s~)~^, ~}"
+                           unknown)
+                          (get-output-stream-string stream)))
+                (readings (- (length edges) (length partial)))
                 (readings (if (or (equal output "") (> readings 0))
-                            readings -1)))
+                              readings -1)))
+           (setf edges 
+             (loop 
+                 for edge in edges 
+                 unless (mt::edge-source edge) collect edge))
+           
            `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
              (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
              (:readings . ,readings)

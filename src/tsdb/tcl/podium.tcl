@@ -407,12 +407,13 @@ proc main {} {
   .menu.process.menu add separator;
   .menu.process.menu add command -label "Passive Mode" -command {tsdb_capture};
   .menu.process.menu add separator;
+  .menu.process.menu add cascade -label "Source Database" \
+    -menu .menu.compare.menu.compare
+  .menu.process.menu add separator;
   .menu.process.menu add cascade -label "Switches" \
     -menu .menu.process.menu.switches;
   .menu.process.menu add cascade \
     -label "Variables" -menu .menu.process.menu.variables;
-  .menu.process.menu add cascade -label "Source Database" \
-    -menu .menu.compare.menu.compare
 
   menu .menu.process.menu.switches -tearoff 0;
   .menu.process.menu.switches add radiobutton \
