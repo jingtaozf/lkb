@@ -1580,7 +1580,10 @@
                            for value = (mrs::extrapair-value extra)
                            for fmatch = (find feature variables :key #'first)
                            for vmatch = (find value values :key #'first)
-                           unless (or (and fmatch (null (rest fmatch)))
+                           unless (or (eq feature *mtr-skolem-property*)
+                                      (eq feature *mtr-mark-property*)
+                                      (eq feature *mtr-ditch-property*)
+                                      (and fmatch (null (rest fmatch)))
                                       (and vmatch (null (rest vmatch))))
                            collect
                              (if (or fmatch vmatch)

@@ -5,7 +5,7 @@
 (defun translate (edge)
   (when (lkb::edge-p edge)
     (let* ((mrs (ignore-errors (mrs::extract-mrs edge)))
-           (output (transfer-mrs mrs :filterp nil))
+           (output (transfer-mrs mrs :filter nil))
            (file (format nil "/tmp/.transfer.~a" (lkb::current-user))))
       (when *transfer-show-output-p*
         (browse-mrss output "Transfer Output"))
