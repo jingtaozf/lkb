@@ -112,6 +112,12 @@
 (defun get-type-entry (name)
    (gethash name *types*))
 
+(defun get-any-type-entry (name)
+  ;;; allows for instance types
+  (let ((type-parent-name (instance-type-parent name)))
+    (gethash (or type-parent-name name) *types*)))
+  
+
 (defun is-valid-type (name)
    (or (get-type-entry name)
       (stringp name)

@@ -824,7 +824,7 @@
 
 (defun canonical-order (type dag-attributes)
    (let ((ordered-attributes 
-            (type-appfeats (get-type-entry type))))
+            (type-appfeats (get-any-type-entry type))))
        (sort (copy-list dag-attributes)
              #'(lambda (x y)
                 (member y (member x ordered-attributes))))))
