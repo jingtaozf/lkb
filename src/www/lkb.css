@@ -227,6 +227,7 @@
   td.compareDiscriminantKey, td.compareDiscriminantValue {
     font-weight: normal; font-size: 10pt; 
     font-family: helvetica, arial, sans-serif; 
+    padding: 0;
   }
   td.compareMrs {
     text-align: right; vertical-align: top;
