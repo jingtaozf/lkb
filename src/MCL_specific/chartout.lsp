@@ -2,7 +2,61 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-;;; (show-chart)
+;;; Graphical display of generator chart (show-gen-chart) (show-gen-chart t)
+
+(defun show-gen-chart (&optional all-p) 
+   (let ((root (make-symbol "")))
+      (create-gen-chart-pointers root all-p)
+      (draw-chart-lattice root
+         (format nil "Generator Chart (~A edges)" (if all-p "all" "inactive"))
+         t)
+      root))
+
+
+(defun create-gen-chart-pointers (root all-p)
+   (let ((edge-symbols nil))
+      (dolist (entry *gen-chart*)
+         (dolist (e (cdr entry))
+            (push
+               (list* (gen-chart-edge-id e)
+                  (make-symbol (write-to-string (gen-chart-edge-id e)))
+                  (gen-chart-edge-needed e))
+               edge-symbols)))
+      (dolist (entry *gen-chart*)
+         (let ((chart-index (string-downcase (symbol-name (car entry)))))
+            (dolist (e (cdr entry))
+               (let ((edge-symbol
+                        (cadr (assoc (gen-chart-edge-id e) edge-symbols))))
+                  (setf (get edge-symbol 'chart-edge-span)
+                     (if (gen-chart-edge-needed e)
+                        (concatenate 'string chart-index " A") chart-index))
+                  (setf (get edge-symbol 'chart-edge-contents) e)
+                  (if (gen-chart-edge-children e)
+                     (dolist (c (gen-chart-edge-children e))
+                        (when c
+                           (push edge-symbol
+                              (get (cadr (assoc (gen-chart-edge-id c) edge-symbols))
+                                 'chart-edge-descendents))))
+                     (push edge-symbol (get root 'chart-edge-descendents)))))))
+      (unless all-p
+         (dolist (pair edge-symbols)
+            (setf (get (cadr pair) 'chart-edge-descendents)
+               (create-gen-chart-pointers-collapse
+                  (get (cadr pair) 'chart-edge-descendents)
+                  edge-symbols))))))
+
+
+(defun create-gen-chart-pointers-collapse (nodes edge-symbols)
+   (mapcan
+      #'(lambda (node)
+          (if (cddr (find node edge-symbols :key #'cadr))
+             (create-gen-chart-pointers-collapse
+                (get node 'chart-edge-descendents) edge-symbols)
+             (list node)))
+      nodes))
+
+
+;;; Graphical display of parse chart (show-chart)
 
 (defun show-chart nil 
    (unwind-protect
@@ -17,7 +71,8 @@
                 (coerce (subseq (get root 'chart-edge-descendents) 0 end) 'list)))
             (setf (get root 'chart-edge-descendents) (apply #'append word-alt-sets))
             (draw-chart-lattice root
-               (format nil "Chart for \"~A...\"" (car (get root 'chart-edge-descendents)))
+               (format nil "Parse Chart for \"~A...\""
+                  (car (get root 'chart-edge-descendents)))
                t)
             root))
       (clear-chart-pointers)))
@@ -213,7 +268,8 @@
      :menu-item-action
      #'(lambda ()
          (display-fs (edge-dag edge-record)
-                     (format nil "Edge ~A" (edge-id edge-record)))))
+            (format nil "Edge ~A ~A - FS" (edge-id edge-record)
+               (if (gen-chart-edge-p edge-record) "G" "P")))))
    (make-instance 'menu-item
      :menu-item-title (format nil "Edge ~A" (edge-id edge-record))
      :menu-item-action
