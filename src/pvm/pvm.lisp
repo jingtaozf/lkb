@@ -178,39 +178,68 @@
     ((tid :int integer)
      (tag :int integer)
      (block :int integer)
-     (file (* :char) string))
+     (output (* :char) string)
+     (size :int integer))
   :returning :int)
 
 #-(version>= 5 0)
 (defforeign
     '_pvm_poll :entry-point "pvm_poll"
-    :arguments '(integer integer integer string)
+    :arguments '(integer integer integer string integer)
     :return-type :integer)
 
-(defun pvm_poll (tid tag block)
-  (let* ((file (make-tmp-file ".pvm.io"))
-         (block (cond ((null block) 0)
-                      ((numberp block) (round block))
-                      (t -1)))
-         (status 
-          (_pvm_poll tid tag block file)))
-    (cond
-     ((zerop status) nil)
-     ((or (< status 0) (not (probe-file file))) :error)
-     (t
-      (let* ((buffer (make-string status))
-             (length (with-open-file (stream file :direction :input)
-                       (read-sequence buffer stream))))
-        (unless *pvm-debug-p* (delete-file file))
-        (when (eq status length)
-          (multiple-value-bind (result condition)
-              (ignore-errors (read-from-string buffer))
-            (when (and (null result) condition *pvm-debug-p*)
-              (format
-               t
-               "~&pvm_poll(): error `~a'.~%" condition))
-            (or result :error))))))))
-              
+#+(version>= 5 0)
+(def-foreign-call 
+    pvm_collect 
+    ((output (* :char) string) (size :int integer))
+  :returning :int)
+
+#-(version>= 5 0)
+(defforeign
+    'pvm_collect
+    :arguments '(string integer)
+    :return-type :integer)
+
+(let* ((size 4096)
+       (output (make-array 
+                (+ size 1) :element-type 'character :allocation :static)))
+  (defun pvm_poll (tid tag block)
+    (let* ((block (cond ((null block) 0)
+                        ((numberp block) (round block))
+                        (t -1)))
+           (status (_pvm_poll tid tag block output size)))
+      (cond
+       ((zerop status) nil)
+       ((< status 0) :error)
+       ((> status size)
+        (setf size (+ status 4096))
+        ;;
+        ;; _fix_me_
+        ;; we would want to free the old .output. array here; apparently, the
+        ;; way recommended in the 5.0.1 documentation --- viz. aclfree() plus 
+        ;; lispval-other-to-address() --- is unavailable because the latter
+        ;; function does not exist :-{.                       (16-feb-00  -  oe)
+        ;;
+        (setf output (make-array 
+                      (+ size 1) :element-type 'character :allocation :static))
+        (let ((status (pvm_collect output size)))
+          (if (< status 0)
+            :error
+            (multiple-value-bind (result condition)
+                (ignore-errors (read-from-string output t nil :end status))
+              (when (and (null result) condition *pvm-debug-p*)
+                (format
+                 t
+                 "~&pvm_poll(): error `~a'.~%" condition))
+              (or result :error)))))
+       (t
+        (multiple-value-bind (result condition)
+            (ignore-errors (read-from-string output t nil :end status))
+          (when (and (null result) condition *pvm-debug-p*)
+            (format
+             t
+             "~&pvm_poll(): error `~a'.~%" condition))
+          (or result :error)))))))
 
 #+(version>= 5 0)
 (def-foreign-call 
@@ -227,15 +256,10 @@
     :return-type :integer)
 
 (defun pvm_transmit (tid tag form)
-  (let ((file (make-tmp-file ".pvm.io"))
-        (*print-readably* nil))
-    (with-open-file (stream file
-                     :direction :output
-                     :if-does-no-exist :create :if-exists :supersede)
-      (format stream "~s" form))
-    (when (probe-file file)
-      (let ((status (_pvm_transmit tid tag file)))
-        status))))
+  (let* ((*print-readably* nil)
+         (string (format nil "~s" form))
+         (status (_pvm_transmit tid tag string)))
+    status))
 
 #+(version>= 5 0)
 (def-foreign-call pvm_tidtohost ((tid :int integer)) :returning :int)
