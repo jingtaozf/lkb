@@ -244,7 +244,7 @@
   (let* ((stream (clim:frame-standard-output frame))
 	 (record (find-object stream #'(lambda (e) (eql (edge-id e)
 							(edge-id edge)))))
-	 (on-path (append (collect-subs edge stream)
+	 (on-path (append (cdr (collect-subs edge stream))
 			  (collect-supers edge frame stream))))
     (setf (chart-window-words frame) nil)
     (cond (record
@@ -255,10 +255,14 @@
 
 (defun collect-subs (edge stream)
   (when edge
-    (if (edge-morph-history edge)
-	(collect-subs (edge-morph-history edge) stream)
-      (mapcan #'(lambda (x) (collect-subs x stream))
-	      (edge-children edge)))))
+    (let ((record (find-object stream #'(lambda (e) (eql (edge-id e)
+							 (edge-id edge))))))
+      (append (when record 
+		(list record))
+	      (if (edge-morph-history edge)
+		  (collect-subs (edge-morph-history edge) stream)
+		(mapcan #'(lambda (x) (collect-subs x stream))
+			(edge-children edge)))))))
 
 (defun collect-supers (edge frame stream)
   (labels
