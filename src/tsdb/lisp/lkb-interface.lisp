@@ -97,7 +97,7 @@
                    &key exhaustive trace
                         readings edges derivations semantix-hook trees-hook
                         burst derivationp)
-  (declare (ignore derivations trees-hook))
+  (declare (ignore derivations))
   
   (multiple-value-bind (return condition)
     (ignore-errors
@@ -205,12 +205,20 @@
                        for r-redges = (length 
                                        (parse-tsdb-distinct-edges parse nil))
                        for size = (parse-tsdb-count-nodes parse)
+                       for trees = (or (and trees-hook
+					    (ignore-errors 
+					     (tsdb::normalize-string
+					      (format
+					       nil
+					       "~s"
+					       (funcall trees-hook parse)))))
+				       "")
                        for mrs = (or (and semantix-hook
 					  (ignore-errors 
 					   (funcall semantix-hook parse)))
 				     "")
                        collect
-                         (pairlis '(:result-id :mrs ""
+                         (pairlis '(:result-id :mrs :tree
                                     :derivation :r-redges :size
                                     :r-stasks :r-etasks 
                                     :r-ftasks :r-ctasks
