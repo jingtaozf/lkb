@@ -48,7 +48,7 @@
 #endif
 
 #ifndef TSDB_HOME
-#  define TSDB_HOME "/home/cl-home/oe/src/tsdb/"
+#  define TSDB_HOME "/home/cl-home/fettig/work/tsdb/"
 #endif
 
 #ifndef TSDB_RELATIONS_FILE
