@@ -9,7 +9,7 @@ retrieve-entries-by-orthkey	2	SELECT $0 FROM current_grammar WHERE orthkey LIKE 
 retrieve-entry	2	SELECT $0 FROM current_grammar WHERE name LIKE $1
 retrieve-head-entry	2	SELECT $0 FROM filtered WHERE name LIKE $1\n\t\tAND modstamp=\n\t\t\t(SELECT max(modstamp) FROM filtered WHERE name LIKE $1)\n\tLIMIT 1
 retrieve-all-entries	1	SELECT $0 FROM current_grammar
-initialize-current-grammar	1	SELECT initialize_current_grammar($0);\n VACUUM ANALYZE current_grammar;
+initialize-current-grammar	1	SELECT initialize_current_grammar($0);\n --VACUUM ANALYZE current_grammar;
 build-current-grammar	0	\nSELECT build_current_grammar();\n
 update-entry	3	\nINSERT INTO revision (name, $1) VALUES ($0 , $2); \nDELETE FROM current_grammar \n WHERE name LIKE $0:like-text ; \nINSERT INTO current_grammar\n SELECT * FROM active\n  WHERE name = $0 \n   LIMIT 1;\n\nDELETE FROM meta WHERE var='mod_time';\nINSERT INTO meta VALUES ('mod_time',current_timestamp);\n
 clear-scratch	0	\nSELECT clear_scratch();\n       
