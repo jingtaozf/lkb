@@ -307,17 +307,26 @@
 (defun display-active-parents (parents ostream)
    ;; this function is dedicated to my Mother and Father
    (format ostream "~%Parents = ")
-   (for parent in parents
-        do
-        (let ((start-pos (current-position ostream)))
-           (with-bold-output ostream
-              (format ostream "~(~A~)" parent)
-              (add-active-fs-region ostream start-pos (current-position ostream)
-                 nil parent nil t)
-              (format ostream "   " parent))))
-   (let ((max-width (current-position-x ostream)))
-      (format ostream "~%")
-      max-width))
+   (flet ((display-individual-parent (parent ostream endp)
+            (let ((start-pos (current-position ostream)))
+               (with-bold-output ostream
+                  (format ostream "~(~A~)" parent)
+                  (add-active-fs-region ostream start-pos (current-position ostream)
+                     nil parent nil t)
+                  (unless endp (format ostream "  " parent))))))
+      (for parent in parents
+         do
+         (if (consp parent) ; it's actually a list of non-glbtype parents
+            (progn
+               (format ostream "(")
+               (for ptail on parent
+                  do
+                  (display-individual-parent (car ptail) ostream (null (cdr ptail))))
+               (format ostream ")  "))
+            (display-individual-parent parent ostream nil)))
+      (let ((max-width (current-position-x ostream)))
+         (format ostream "~%")
+         max-width)))
 
 
 ;;; ***** Pop up menu creation *****
@@ -433,8 +442,7 @@
          (title (fs-display-record-title fs-record))
          (parents (fs-display-record-parents fs-record))
          (paths (fs-display-record-paths fs-record))
-         (type-fs-display (fs-display-record-type-fs-display fs-record))
-         (id (fs-display-record-id fs-record)))
+         (type-fs-display (fs-display-record-type-fs-display fs-record)))
     (set-dag-display-value fs (reverse path) action type-fs-display)
             (cond 
                ((tdfs-p fs) ; YADU

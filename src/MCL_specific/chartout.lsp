@@ -202,10 +202,15 @@
      :menu-item-title "New chart"
      :menu-item-action
      #'(lambda () (display-edge-in-new-window edge-record)))
-   (make-instance 'menu-item
+   (make-instance 'dynamic-enable-menu-item
      :menu-item-title (format nil "Unify")
      :menu-item-action
-     #'(lambda () (try-unify-fs-in-chart (edge-dag edge-record))))))
+     #'(lambda () (try-unify-fs-in-chart (edge-dag edge-record)))
+     :enable-function
+     #'(lambda nil
+         (and *selected-fs-node*
+              (listp (selected-fs-node-path *selected-fs-node*)))))
+   ))
 
 (defun try-unify-fs-in-chart (fs)
   ;;; very similar to the function in activefs
