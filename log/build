@@ -158,7 +158,6 @@ cvs server: Updating src/.nasl/tty
 cvs server: Updating src/.nasl/www
 cvs server: Updating src/ACL-CG_specific
 cvs server: Updating src/ACL_specific
-P src/ACL_specific/build.lsp
 cvs server: Updating src/MCL_specific
 cvs server: Updating src/data
 cvs server: Updating src/data/Dikran
@@ -259,6 +258,7 @@ cvs server: Updating src/fasl/mrs
 cvs server: Updating src/general
 cvs server: Updating src/glue
 cvs server: Updating src/graft
+P src/graft/arboretum.lsp
 cvs server: Updating src/io-general
 cvs server: Updating src/io-lilfes
 cvs server: Updating src/io-paths
@@ -380,7 +380,7 @@ cvs server: Updating src/www/linux
 cvs server: Updating src/xml
 Checking in ./src/version.lsp;
 /lingo/CVS/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.310; previous revision: 1.309
+new revision: 1.311; previous revision: 1.310
 done
 make[1]: Entering directory `/lingo/www/aserve/eo/lkb'
 ( \
@@ -1385,7 +1385,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Apr 24, 2004 14:25)
+6.2 [Linux (x86)] (Apr 24, 2004 14:31)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2428,7 +2428,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-100921752 bytes have been tenured, next gc will be global.
+100923000 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -3230,7 +3230,7 @@ gc-after-hook(): local; new: 1496976; old: 253368; pending: 24; efficiency: 83.
 ;    /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/redwoods.lisp
 gc-after-hook(): local; new: 2169064; old: 57904; pending: 0; efficiency: 88.
-gc-after-hook(): local; new: 1345952; old: 318048; pending: 0; efficiency: 90.
+gc-after-hook(): local; new: 1345952; old: 318048; pending: 0; efficiency: 89.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
@@ -3253,7 +3253,7 @@ gc-after-hook(): local; new: 613920; old: 341488; pending: 0; efficiency: 90.
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/maxent.lisp
-gc-after-hook(): local; new: 1062240; old: 109984; pending: 0; efficiency: 83.
+gc-after-hook(): local; new: 1062240; old: 109984; pending: 0; efficiency: 85.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Fasl write complete
