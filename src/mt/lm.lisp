@@ -22,9 +22,23 @@
 (defparameter *lm-pid* nil)
 
 (defparameter *lm-output* 
-  (format nil "/tmp/.lm.io.~a.out" (lkb::current-user)))
+  (format nil "/tmp/.lm.io.~a.~a.out" (lkb::current-user) (lkb::current-pid)))
+
+(defparameter *lm-punctuation-characters* '(#\'))
 
+(defparameter *lm-measure* :logprob)
 
+(defun lm-normalize-string (string)
+  (when string
+    (loop
+        with result = (make-array (length string)
+                                  :element-type 'character
+                                  :adjustable nil :fill-pointer 0)
+        for c across string
+        unless (member c *lm-punctuation-characters* :test #'char=)
+        do (vector-push (char-downcase c) result)
+        finally (return result))))
+
 (let ((lock (mp:make-process-lock)))
 
   (defun lm-initialize (&optional (model *lm-model*))
@@ -48,18 +62,21 @@
         (setf foo foo))))
 
 
-  (defun lm-score-strings (strings)
+  (defun lm-score-strings (strings &key (measure *lm-measure*))
     (mp:with-process-lock (lock)
       (when (null *lm-input*) (lm-initialize))
       (let (files)
         (loop
             for string in strings
             for i from 0
-            for file = (format nil "/tmp/.lm.io.~a.~a" (lkb::current-user) i)
+            for file = (format 
+                        nil 
+                        "/tmp/.lm.io.~a.~a.~a" 
+                        (lkb::current-user) (lkb::current-pid) i)
             do
               (with-open-file (stream file
                                :direction :output :if-exists :supersede)
-                (format stream "<s> ~a <\\s>~%" string))
+                (format stream "<s> ~a </s>~%" (lm-normalize-string string)))
               (format 
                *lm-input*
                "perplexity ~a -text ~a~%"
@@ -82,9 +99,21 @@
                          (when (simple-vector-p bar)
                            (ignore-errors
                             (read-from-string (svref bar 0) nil nil))))
-                     when (numberp perplexity)
-                     collect (cons (pop strings) perplexity)
-                     while strings))))
+		     for score 
+		     = (when (numberp perplexity)
+                         (case measure
+                           (:perplexity perplexity)
+                           (:entropy (log perplexity 2)) 
+                           (:logprob 
+                            (* (log perplexity 2)
+                               (+ 1 (count #\space (first strings)))))
+                           (t 
+                            (error 
+                             "lm-score-strings(): unknown score type ~a~%" 
+                             measure))))
+		     when score
+		     collect (cons (pop strings) score)
+		     while strings))))
           (loop 
               for file in files when (probe-file file) 
               do (delete-file file))

@@ -72,6 +72,27 @@
       (clim::redisplay-frame-panes frame :force-p t))))
 
 
+(define-mrs-transfer-command (com-transfer-mrs-compare :menu "Compare")
+    ()
+  (clim:with-application-frame (frame)
+    (when (mrs-transfer-edges frame)
+      (loop
+          for i from 0
+          for edge in (mrs-transfer-edges frame)
+          for mrs = (edge-mrs edge)
+          collect (lkb::make-edge :id i :mrs mrs :foo i) 
+          into edges
+          finally
+            (lkb::compare-parses
+             edges :input (mrs-transfer-title frame)
+             :mode :modern :view :modern)))))
+
+
+(define-mrs-transfer-command (com-transfer-mrs-parse :menu "Parse")
+    ()
+  (parse-interactively))
+
+
 (define-mrs-transfer-command (com-transfer-mrs-transfer :menu "Transfer")
     ()
   (clim:with-application-frame (frame)
@@ -104,16 +125,19 @@
                       ("Scope" :value :scope :active t)
                       ("Indexed" :value :indexed :active t)
                       ("Dependencies" :value :dependencies :active t)
+                      ("Fragment" :value :fragment :active t)
                       ("Sort" :value :sort :active t)
                       ("Step" :value :step :active t)
                       #+:allegro
                       ("Clone" :value :clone :active t)
                       ("Save" :value :save :active t)
+                      #+:allegro
+                      ("Edit" :value :edit :active t)
                       ("Read" :value :read :active t)
                       ("Print" :value :print :active t)
                       ("Rule" :value :rule :active t)
                       ("Select" :value :select :active t)
-                      ("Compare" :value :compare :active t)
+                      ("Contrast" :value :compare :active t)
                       #+:null
                       ("Apply" :value :apply :active t)
                       #+:null
@@ -156,6 +180,17 @@
                  (format nil "~a - Dependencies" (transfer-title frame))))
            (lkb::show-mrs-dependencies-window nil mrs title)))
         
+        (:fragment
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+                (fragments (discriminate-fragments mrs))
+                (title 
+                 (format nil "~a [Fragments]" (transfer-title frame))))
+           (when fragments
+             (browse-mrss fragments title))))
+
         (:sort
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
@@ -222,6 +257,30 @@
                "~&browse-mrss(): saved current view to `~a'.~%"
                file)))))
 
+        (:edit
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+                (file 
+                 (format nil "/tmp/transfer.debug.~a" (lkb::current-user))))
+           (ignore-errors
+            (with-open-file (stream file
+                             :direction :output :if-exists :supersede)
+              (format
+               stream
+               ";;;~%;;; ~a --- ~a @ ~a~%;;;~%"
+               (mrs-transfer-title frame) 
+               (lkb::current-user) (lkb::current-time :long :pretty))
+              (mrs::output-mrs1 mrs 'mrs::simple stream)
+              (format 
+               #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
+               "~&browse-mrss(): saved current view to `~a'.~%"
+               file))
+            (when (lep:lep-is-running)
+              (lep::eval-in-emacs 
+               (format nil "(rogue-find-file \"~a\")" file))))))
+
         (:read
          (let ((file 
                 (format nil "/tmp/transfer.debug.~a" (lkb::current-user))))
@@ -285,7 +344,7 @@
               #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
               "~&browse-mrss(): current view now active as selection.~%"))))
 
-        (:compare
+        (:constrast
          (cond
           ((mrs-transfer-target frame)
            (let* ((mrs (nth (mrs-transfer-i frame) 
@@ -303,18 +362,21 @@
                     (condition
                       (clim:beep)
                       (format
-                       #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
+                       #+:allegro excl:*initial-terminal-io*
+                       #-:allegro *terminal-io*
                        "~&browse-mrss(): mrs-equalp() error `~a'.~%"
                        (lkb::normalize-string (format nil "~a" condition))))
                     (t
                      (format
-                      #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
+                      #+:allegro excl:*initial-terminal-io*
+                      #-:allegro *terminal-io*
                       "~&browse-mrss(): the equivalence comparison was ~
                        ~:[negative~;positive~].~%"
                       result)
                      (unless result
                        (format
-                        #+:allegro excl:*initial-terminal-io* #-:allegro *terminal-io*
+                        #+:allegro excl:*initial-terminal-io*
+                        #-:allegro *terminal-io*
                         "~%~%~a~%~%"
                         (get-output-stream-string stream))))))))))
           (t
@@ -450,6 +512,7 @@
            (list
             (setf (mrs-transfer-edges frame) 
               (loop
+                  with *transfer-edge-limit* = nil
                   for edge in edges
                   when (edge-p edge) collect edge
                   else collect (make-edge :mrs edge)))))

@@ -1,6 +1,11 @@
 (in-package :mrs)
 
 ;;;
+;;; LOGON-specific MRS globals; on by default for LOGON, not loaded in the core
+;;; LKB system otherwise.
+;;;
+
+;;;
 ;;; these are general MRS variables, irrespective of the AVM encoding used in
 ;;; a particular grammar.
 ;;; 
@@ -26,8 +31,12 @@
 (setf *sem-relation-suffix* "_rel")
 
 (setf *ignored-extra-features* 
-  (list 
-   (vsym "SORT")))
+  (append
+   (list (vsym "SORT") (vsym "INSTLOC"))
+   *ignored-extra-features*))
+
+(setf *mrs-equalp-ignored-roles*
+  (list *rel-link-feature* (vsym "PSV")))
 
 ;;;
 ;;; types for variable naming in output (copy from `.../src/mrs/mrsglobals.lsp'
@@ -41,9 +50,13 @@
 
 (setf %mrs-extras-filter%
   (list
-   (cons (mrs::vsym "NUM") (mrs::vsym "NUMBER"))
-   (cons (mrs::vsym "PERS") (mrs::vsym "PERSON"))
-   (cons (mrs::vsym "NATGEND") (mrs::vsym "GENDER"))
-   (cons (mrs::vsym "TENSE") (mrs::vsym "TENSE"))
-   (cons (mrs::vsym "PROG") (mrs::vsym "LUK"))
-   (cons (mrs::vsym "PERF") (mrs::vsym "LUK"))))
+   (cons (vsym "NUM") (vsym "number"))
+   (cons (vsym "PERS") (vsym "person"))
+   (cons (vsym "NATGEND") (vsym "gender"))
+   (cons (vsym "TENSE") (vsym "tense"))
+   (cons (vsym "MOOD") (vsym "mood"))
+   (cons (vsym "PROG") (vsym "luk"))
+   (cons (vsym "PERF") (vsym "luk"))))
+
+(setf *semi-fragment-relations*
+  (list "fragment_rel" (vsym "unspec_conj_rel")))

@@ -20,10 +20,23 @@
        ;; add an `anti' type to block MTR application against a bound variable
        ;;
        ((equal-or-subtype type (mrs::vsym "a")) "a")
-       (t "u")))))
+       (t "u"))))
+  
+  (defun determine-mrs-class (mrs)
+    (cond
+     ((loop
+          for ep in (psoa-liszt mrs)
+          when (member (rel-pred ep) mt::*semi-token-relations* :test #'equal)
+          return t)
+      :token)
+     ((fragmentp mrs) :fragment)))
 
-;;;
-;;; add `LNK' role, recording surface order, to constant-value features.
-;;;
-(eval-when (:load-toplevel :execute)
-  (push (vsym "LNK") *value-feats*))
+  (defun determine-ep-class (ep)
+    (cond
+     ((member (rel-pred ep) *semi-fragment-relations* :test #'equal)
+      :fragment)
+     ((member (rel-pred ep) mt::*semi-token-relations* :test #'equal)
+      :token)
+     ((member (rel-pred ep) mt::*semi-punctuation-relations* :test #'equal)
+      :token))))
+

@@ -2,6 +2,8 @@
 
 (defparameter *transfer-rule-sets* nil)
 
+(defparameter *transfer-lexicon* nil)
+
 (defparameter *transfer-result-filter* '(:complete))
 
 (defparameter *mtr-filter-path* (list (mrs::vsym "FILTER")))
@@ -16,7 +18,9 @@
 
 (defconstant *mtr-optional-path* (list (mrs::vsym "OPTIONAL")))
 
-(defconstant *mtr-unique-path* (list (mrs::vsym "UNIQUE")))
+(defconstant *mtr-equal-path* (list (mrs::vsym "EQUAL")))
+
+(defconstant *mtr-subsume-path* (list (mrs::vsym "SUBSUME")))
 
 (defconstant *mtr-skolem-property* (mrs::vsym "SKOLEM"))
 
@@ -32,10 +36,6 @@
 
 (defconstant *mtr-copy-operator* (mrs::vsym "+copy+"))
 
-(defconstant *mtr-equal-operator* (mrs::vsym "+equal+"))
-
-(defconstant *mtr-subsume-operator* (mrs::vsym "+subsume+"))
-
 (defconstant *mtr-true-type* (mrs::vsym "+"))
 
 (defconstant *mtr-false-type* (mrs::vsym "-"))
@@ -49,3 +49,15 @@
 (defconstant *semi-e-type* "e")
 
 (defconstant *semi-x-type* "x")
+
+(defconstant *semi-fragment-left* (mrs::vsym "L-HNDL"))
+
+(defconstant *semi-fragment-right* (mrs::vsym "R-HNDL"))
+
+(defconstant *semi-punctuation-relations*
+  (list "comma_rel" "period_rel" "exclamation_point_rel" "question_mark_rel"
+        (mrs::vsym "comma_rel") (mrs::vsym "period_rel")
+        (mrs::vsym "exclamation_point_rel") (mrs::vsym "question_mark_rel")))
+
+(defconstant *semi-token-relations*
+  (list "token_rel" (mrs::vsym "token_rel")))
