@@ -1,7 +1,7 @@
 \documentclass[12pt]{report}
 
 \usepackage{latexsym}
-%\usepackage{times}
+\usepackage{times}
 % should use times but too many missing fonts
 \usepackage[dvips]{hyperref}
 
@@ -340,7 +340,12 @@ tar xf newlkb.tar
 \end{verbatim}
 This will create the new directory and various subdirectories.
 It may take a few minutes to do this.  At this point, you have 
-your own local copy of the LKB system source. 
+your own local copy of the LKB system source.  Note that
+you may need to change the directory locations in {\tt general/loadup}
+and {\tt main/userfns}
+to be appropriate for your system
+(especially if you wish to run the system using MCL).
+
 
 Now follow the instructions in \S\ref{acl-src} to compile the
 files and optionally
@@ -483,6 +488,7 @@ as described in
 \section{Running the LKB from compiled files}
 \label{compiled}
 
+
 \subsection{ACL/CLIM with emacs}
 \label{acl-emacs}
 
@@ -506,6 +512,9 @@ to do something adequate outside CSLI?
 (load "tdl-mode")
 (load "lkb")
 \end{verbatim}
+\item The first time you run the system,
+create a temporary directory (see \S\ref{tempdir}).  By default, this is
+a directory called {\tt tmp} in your home directory.
 \item Start emacs.  We will assume you
 do this in the {\tt newlkb/src} directory.
 \item Start ACL/CLIM from within emacs.
@@ -552,6 +561,9 @@ To continue, see Chapter~\ref{firstsession}.
 If for some reason you cannot or do not wish to use
 the LKB from emacs, you can start the LKB from compiled files as follows:
 \begin{enumerate}
+\item The first time you run the system,
+create a temporary directory (see \S\ref{tempdir}).  By default, this is
+a directory called {\tt tmp} in your home directory.
 \item cd to \verb+newlkb/src+.  
 \item Start ACL/CLIM as in \S\ref{acl-src}
 \item At the Lisp prompt enter:
@@ -573,6 +585,7 @@ To continue, see Chapter~\ref{firstsession}.
 
 To start the LKB from MCL with compiled files, proceed as follows:
 \begin{enumerate}
+\item Create a temporary directory (see \S\ref{tmpdir}).
 \item Start MCL (double-click on the MCL icon)
 \item At the Lisp prompt enter:
 \begin{verbatim}
@@ -603,6 +616,9 @@ file
 \begin{verbatim}
 % FIX - as above
 \end{verbatim}
+\item The first time you run the system,
+create a temporary directory (see \S\ref{tempdir}).  By default, this is
+a directory called {\tt tmp} in your home directory.
 \item Start emacs
 \item Start the LKB image by (whatever FIX)
 \end{enumerate}
@@ -621,6 +637,9 @@ other name you chose for it in the earlier stages).
 You
 should now see the LKB interaction window, as shown in 
 Figure~\ref{lkbtop-unix}.
+The first time you run the system, you should
+create a temporary directory (see \S\ref{tempdir}).  By default, this is
+a directory called {\tt tmp} in your home directory.
 To continue, see Chapter~\ref{firstsession}.
 
 \subsection{Macintosh}
@@ -631,6 +650,8 @@ Mac image, you simply double-click on the
 icon for the image. 
 You
 should now see the LKB interaction menu on the menu-bar. 
+The first time you run the system, you will need to
+create a temporary directory (see \S\ref{tmpdir}).
 To continue, see Chapter~\ref{firstsession}.
 
 
@@ -687,7 +708,8 @@ for both the Mac and CLIM versions.  The illustrations in
 the rest of this
 document show the CLIM interface.
 
-Note that, in the ACL version, it is possible for the interaction
+Note that, in the ACL version, it is possible (though 
+a little difficult) for the interaction
 window to be closed inadvertently.
 It may be reopened by evaluating
 (clim-user::restart-lkb-window) in Lisp (i.e., the
@@ -712,8 +734,10 @@ Figure~\ref{loadmess}
 (the interaction window has been enlarged).  
 If there are any errors in the grammar which the system
 can detect at this point, error messages will be displayed in this window.
-With the toy grammar, there should be no errors.  If
-you do get error messages when trying to load the {\tt toy} script, it is
+With the toy grammar, there should be no errors, unless there is a problem 
+associated with the temporary directory (see \S\ref{tempdir}).
+If
+you get another error message when trying to load the {\tt toy} script, it is
 possible you have selected another file instead of script --- try again.
 \begin{figure}
 \epsfxsize=3in
@@ -3544,9 +3568,16 @@ an asterisk.
 
 \subsection{Quit}
 
-ACL/CLIM only.
-This closes the LKB top window.  It may be reopened by
+ACL/CLIM only.  Prompts the user to check if they really do want to
+quit.  There are three options when running from source files:
+\begin{description}
+\item[Lisp] Ends the Lisp session.
+\item[LKB] This just closes the LKB top window.  It may be reopened by
 evaluating (clim-user::restart-lkb-window).
+\item[Cancel] Cancels the quit.
+\end{description}
+Only the first and the last option are present when running from the distributed
+image.
 
 \subsection{Load}
 \label{load}
@@ -3712,6 +3743,8 @@ This is a very simple form of test suite: vastly
 more functionality is available from the \itsdb\ machinery which
 can be run in conjunction with the LKB (see \ref{tsdb}).
 
+\paragraph{Compare*}
+FIX - add description
 
 \subsection{Tests}
 \label{tests}
@@ -3750,6 +3783,9 @@ Show edge}.
 
 \subsection{Options}
 \label{display}
+
+\paragraph{Expand/Shrink menu} Changes the LKB top menu so that the
+asterisked commands are added/removed.
 
 \paragraph{Set options} Allows interactive setting of some system
 parameters.  FIX --- more details.
@@ -3804,12 +3840,27 @@ feature structure windows, and especially the Type Hierarchy window.
 
 \paragraph{Dump system}
 This creates an image file, which will essentially save the state of
-the current system, finishing the Lisp session.  
-The session can then be restarted by double-clicking on the new image file.
+the current system.  It can be used before a grammar is loaded, in which
+case the image may be used by multiple people, or to save state after a 
+grammar has been loaded, though because of the handling of the temporary 
+lexicon files (see \S\ref{sysglob}), it really only makes sense to do this 
+for a single user.  
 The dumped system relies on the cached lexicon, so if the templex
-or templex-index files have been deleted or modified, the saved image will
+or templex-index files are deleted or modified, the saved image will
 not work correctly.
 
+The behaviour is very different in MCL and ACL:
+
+In MCL, choosing {\bf Dump system} will prompt for a file name for the saved
+image and then save the image, finishing the Lisp session.  
+The session can then be restarted by double-clicking on the new image file.
+
+In earlier versions of ACL, standalone images were possible.  In ACL 5.0, the
+file saved is not an executable, but relies on the standard executable.  Thus,
+when restarting Lisp, you specify the saved file when emacs prompts you for a
+saved image (see e.g., \S\ref{acl-emacs}).  If you are not using emacs, the
+saved file is specified as a command line argument (see the ACL documentation).
+Note that the file is required to be of type {\tt dxl}.
 
 
 \section{Type hierarchy display}
@@ -4338,9 +4389,6 @@ the CSLI LinGO ERG:
 (time
 (progn
 (setf *grammar-directory* (parent-directory)) ; needed for MRS
-(setf *psorts-temp-file* (temporary-file "biglex")) 
-(setf *psorts-temp-index-file* (temporary-file "biglex-index"))
-        ;; so doesn't conflict with another lexicon
 (lkb-load-lisp (this-directory) "globals.lsp")
 (lkb-load-lisp (this-directory) "user-fns.lsp")
 (load-lkb-preferences (this-directory) "user-prefs.lsp")
@@ -4390,18 +4438,9 @@ to carry out all the necessary initializations of grammar parameters
 etc.  So although it might look as though a script file can
 be read in via {\tt load} like a standard Lisp file, this will
 cause various things to go wrong.
-\item The
-specification of a name for the
-temporary lexicon file and its associated index file
-\verb+*psorts-temp-file*+ and \verb+*psorts-temp-index-file*+: 
-ensuring that the lexicon file associated with a grammar has a 
-unique name allows
-multiple grammars to be used without overriding another lexicon
-(see \S\ref{glob} and \S\ref{cache}).
 \item The userprefs file is loaded automatically.  Here we assume it's
 kept in the same directory as the other globals file, which allows
-a user to set up different preferences for different grammars,
-but it could have been stored in the temporary directory.
+a user to set up different preferences for different grammars.
 \item The {\tt templates.lsp} file contains a list of 
 parameterized templates as used in TDL, but here defined in Lisp
 to avoid the necessity to reimplement the TDL reader.
@@ -4513,17 +4552,6 @@ usable inside the script file).
 Returns the directory which is contains the directory containing 
 the script file (only
 usable inside the script file).
-
-\lispcommand{temporary-directory}
-
-Returns the user's
-temporary directory, as set up in {\tt general/loadup-library}.
-By default, this is {\tt $\sim$/tmp}.  (Note that it is important that each
-user have a distinct temporary directory.)
-
-\lispcommand{temporary-file {\it name}}
-
-Specifies a file {\it name} in the temporary directory.
 
 \lispcommand{lkb-pathname {\it directory} {\it name}}
 
@@ -4651,7 +4679,8 @@ The cached lexicon functionality is provided as a temporary expedient to speed
 up reloading a grammar when the lexicon has not changed.  Whenever a lexicon is
 read into the LKB, it is stored in an external file (specified by the
 parameter \verb+*psorts-temp-file*+, see \S\ref{sysglob}) 
-rather than in memory.  Lexical entries
+rather than in memory.  
+Lexical entries
 are pulled in from this file as required.  The caching facility saves this file
 and an associated index file (specified by \verb+*psorts-temp-index-file*+, 
 see \S\ref{sysglob}) so
@@ -4787,6 +4816,30 @@ representation will be implemented at some point.)
 
 \section{Generation}
 \label{generator}
+
+The generator requires a grammar which is using MRS or a relatively
+similar formalism.  It will work in a somewhat rudimentary way on the
+textbook grammar.  The following notes are VERY sketchy.
+% FIX - do this properly ...
+\begin{enumerate}
+\item Instead of loading the lkb source, the mrs source must be loaded.  This
+is done by replacing {\tt "lkb"} with {\tt "mrs"} as the argument to
+{\tt load-system} and {\tt compile-system}.  The distributed image 
+contains the appropriate code.  
+\item The textbook grammar contains a file defining some necessary
+global parameters which is loaded if the mrs code is available.
+\item Before generating, the lexicon and lexical and grammar rules
+must be indexed.  The function which does this, {\tt index-for-generator},
+can be run from the {\bf Generate} menu.
+\item To generate, first parse a sentence.  
+Then use the parse tree display to find the number associated with the topmost
+edge in the tree for the analysis you are interested in
+(or a lower node if you like, though the results may be
+highly counterintuitive if you do this).  Then
+click {\bf Generate \ldots} in the {\bf Generate} menu and give this
+number as an argument.  (Warning: the default value supplied will NOT
+always be what you want.)
+\end{enumerate}
 
 % FIX - whatever ...
 
@@ -5277,37 +5330,6 @@ interactively, or rarely used.)
 \section{Grammar independent global variables}
 \label{indglob}
 
-\subsection{System files}
-\label{sysglob}
-\begin{description}
-\item[*psorts-temp-file*, {\tt $\sim$/tmp/templex}]
-This file is constructed by the system and used to store the unexpanded lexical
-entries, in order to save memory.  Once a lexical entry is used, it will
-be cached until either a new lexicon is read in, or until the {\bf Tidy up}
-command is used (\S\ref{tidy}).  If the temporary
-lexicon file is deleted or modified while the LKB is running, it will not
-be possible to correctly access lexical entries.  The file is retained
-after the LKB is exited so that it may be reused if the lexicon has not been 
-modified (see \S\ref{cache}, \S\ref{loadfns} and the description of 
-\verb+*psorts-temp-index-file*+, below).
-
-The pathname is actually specified as:
-\begin{verbatim}
-  (make-pathname :name "templex" 
-                 :directory (pathname-directory mk::tmp-dir))
-\end{verbatim}
-where the value of \verb+mk::tmp-dir+ is set in the loadup-library.
-
-\item[*psorts-temp-index-file*, {\tt $\sim$/tmp/templex-index}]
-This file is used to store an index for the temporary lexicon file.
-If the option is taken to read in a cached lexicon (see \S\ref{cache}
-and \S\ref{loadfns}),
-then the lexicon index is reconstructed from this file.
-If this file has been deleted, or is apparently outdated, the lexicon
-will be reconstructed from the source file.
-\end{description}
-
-
 \subsection{System behaviour}
 \label{sysbeh}
 \begin{description}
@@ -5552,7 +5574,7 @@ since the value of the orthography string and the semantic relation name are
 predictable from the identifying material.
 
 
-\item[make-orth-fs] A function used by the parser
+\item[make-orth-tdfs] A function used by the parser
 which takes a string and returns a 
 feature structure which corresponds to the orthographic part of a sign
 corresponding to that string.  The default version assumes that the string may 
@@ -5625,11 +5647,71 @@ which indicates that no item may be inflected.
 The default value for the function allows inflection on the rightmost element.
 See \S\ref{multiword}.
 
+\item[hide-in-type-hierarchy-p] Can be defined so that certain types
+are not shown when a hierarchy is displayed (useful for hierarchies
+where there are a very large number of similar leaf types, for instance
+representing semantic relations).
+
 \item[rule-priority] 
 
 FIX - Rob's
 
 \end{description}
+
+\subsection{System files}
+\label{sysglob}
+
+There are two user definable functions which control two system files.
+The file names are associated with two global variables --- these are
+initally set to {\bf nil} and are then instantiated by the functions.  The
+global variables are described below, but should not be changed
+by the user.  The functions which instantiate them may need to be changed
+for different systems.
+
+\begin{description}
+\item[lkb-tmp-dir] This function attempts to find a sensible directory for
+the temporary files needed by the LKB.  The default value for this
+on Unix is a directory {\tt tmp} in the user's home directory: on a Macintosh
+it is {\tt Macintosh HD:tmp}.  The function should be redefined as necessary
+to give a valid path.  It is currently only called by 
+{\tt set-temporary-lexicon-filenames} (below).
+
+\item[set-temporary-lexicon-filenames] This function is called in order to
+set the temporary files.  It uses lkb-tmp-dir, as defined above.
+It is useful to change the file names in this function if one is
+working with multiple grammars and using cacheing or dumping images to
+ensure that the lexicon file associated with a grammar has a 
+unique name which avoids overriding another lexicon
+(see \S\ref{cache}).
+\end{description}
+
+\begin{description}
+\item[*psorts-temp-file*, {\tt $\sim$/tmp/templex}]
+This file is constructed by the system and used to store the unexpanded lexical
+entries, in order to save memory.  Once a lexical entry is used, it will
+be cached until either a new lexicon is read in, or until the {\bf Tidy up}
+command is used (\S\ref{tidy}).  If the temporary
+lexicon file is deleted or modified while the LKB is running, it will not
+be possible to correctly access lexical entries.  The file is retained
+after the LKB is exited so that it may be reused if the lexicon has not been 
+modified (see \S\ref{cache}, \S\ref{loadfns} and the description of 
+\verb+*psorts-temp-index-file*+, below).
+
+The pathname is actually specified as:
+\begin{verbatim}
+  (make-pathname :name "templex" 
+                 :directory (lkb-tmp-dir))
+\end{verbatim}
+
+\item[*psorts-temp-index-file*]
+This file is used to store an index for the temporary lexicon file.
+If the option is taken to read in a cached lexicon (see \S\ref{cache}
+and \S\ref{loadfns}),
+then the lexicon index is reconstructed from this file.
+If this file has been deleted, or is apparently outdated, the lexicon
+will be reconstructed from the source file.
+\end{description}
+
 
 \chapter*{References}
 

@@ -2,7 +2,7 @@
 \contentsline {section}{\numberline {1.1}A brief introduction to the LKB system}{6}{section.1.1}
 \contentsline {section}{\numberline {1.2}This manual}{7}{section.1.2}
 \contentsline {section}{\numberline {1.3}Some history}{8}{section.1.3}
-\contentsline {section}{\numberline {1.4}Acknowledgments}{9}{section.1.4}
+\contentsline {section}{\numberline {1.4}Acknowledgments}{8}{section.1.4}
 \contentsline {chapter}{\numberline {2}Installing and running the system}{10}{chapter.2}
 \contentsline {section}{\numberline {2.1}Hardware and software requirements}{10}{section.2.1}
 \contentsline {section}{\numberline {2.2}Downloading the LKB}{11}{section.2.2}
@@ -11,21 +11,21 @@
 \contentsline {subsection}{\numberline {2.2.3}Getting a local copy of the LKB at CSLI}{11}{subsection.2.2.3}
 \contentsline {section}{\numberline {2.3}Compiling the source files and making an image}{12}{section.2.3}
 \contentsline {subsection}{\numberline {2.3.1}Allegro Common Lisp and CLIM (ACL/CLIM)}{12}{subsection.2.3.1}
-\contentsline {subsection}{\numberline {2.3.2}Macintosh Common Lisp (MCL)}{12}{subsection.2.3.2}
+\contentsline {subsection}{\numberline {2.3.2}Macintosh Common Lisp (MCL)}{13}{subsection.2.3.2}
 \contentsline {section}{\numberline {2.4}Running the LKB from compiled files}{13}{section.2.4}
 \contentsline {subsection}{\numberline {2.4.1}ACL/CLIM with emacs}{13}{subsection.2.4.1}
 \contentsline {subsection}{\numberline {2.4.2}ACL/CLIM without emacs}{14}{subsection.2.4.2}
 \contentsline {subsection}{\numberline {2.4.3}MCL}{15}{subsection.2.4.3}
 \contentsline {section}{\numberline {2.5}Running the LKB from a saved image}{15}{section.2.5}
 \contentsline {subsection}{\numberline {2.5.1}ACL/CLIM from emacs}{15}{subsection.2.5.1}
-\contentsline {subsection}{\numberline {2.5.2}ACL/CLIM without emacs}{15}{subsection.2.5.2}
-\contentsline {subsection}{\numberline {2.5.3}Macintosh}{15}{subsection.2.5.3}
+\contentsline {subsection}{\numberline {2.5.2}ACL/CLIM without emacs}{16}{subsection.2.5.2}
+\contentsline {subsection}{\numberline {2.5.3}Macintosh}{16}{subsection.2.5.3}
 \contentsline {section}{\numberline {2.6}Problems}{16}{section.2.6}
 \contentsline {chapter}{\numberline {3}A first session}{17}{chapter.3}
 \contentsline {section}{\numberline {3.1}The LKB top menu}{17}{section.3.1}
 \contentsline {section}{\numberline {3.2}Loading a grammar}{18}{section.3.2}
-\contentsline {section}{\numberline {3.3}Examining feature structures and types}{18}{section.3.3}
-\contentsline {subsection}{\numberline {3.3.1}The type hierarchy window}{18}{subsection.3.3.1}
+\contentsline {section}{\numberline {3.3}Examining feature structures and types}{19}{section.3.3}
+\contentsline {subsection}{\numberline {3.3.1}The type hierarchy window}{19}{subsection.3.3.1}
 \contentsline {subsection}{\numberline {3.3.2}The View commands}{21}{subsection.3.3.2}
 \contentsline {section}{\numberline {3.4}Parsing}{22}{section.3.4}
 \contentsline {section}{\numberline {3.5}Adding a lexical entry}{26}{section.3.5}
@@ -47,28 +47,28 @@
 \contentsline {paragraph}{Example 2}{38}{Item.46}
 \contentsline {paragraph}{Example 3}{38}{Item.46}
 \contentsline {subsection}{\numberline {4.3.2}Syntax of type descriptions}{39}{subsection.4.3.2}
-\contentsline {subsection}{\numberline {4.3.3}Lexical entries}{40}{subsection.4.3.3}
+\contentsline {subsection}{\numberline {4.3.3}Lexical entries}{39}{subsection.4.3.3}
 \contentsline {subsection}{\numberline {4.3.4}Rules}{40}{subsection.4.3.4}
 \contentsline {subsection}{\numberline {4.3.5}Morphological rules}{41}{subsection.4.3.5}
-\contentsline {subsection}{\numberline {4.3.6}Lists and difference lists}{43}{subsection.4.3.6}
+\contentsline {subsection}{\numberline {4.3.6}Lists and difference lists}{42}{subsection.4.3.6}
 \contentsline {subsection}{\numberline {4.3.7}Parameterized templates}{44}{subsection.4.3.7}
-\contentsline {subsection}{\numberline {4.3.8}Semantics of typed feature structure descriptions}{45}{subsection.4.3.8}
+\contentsline {subsection}{\numberline {4.3.8}Semantics of typed feature structure descriptions}{44}{subsection.4.3.8}
 \contentsline {section}{\numberline {4.4}A note about disjunction and negation}{45}{section.4.4}
 \contentsline {chapter}{\numberline {5}LKB source files}{47}{chapter.5}
 \contentsline {section}{\numberline {5.1}The script file}{48}{section.5.1}
 \contentsline {section}{\numberline {5.2}Types and type files}{48}{section.5.2}
 \contentsline {subsection}{\numberline {5.2.1}Syntactic well-formedness}{49}{subsection.5.2.1}
-\contentsline {subsection}{\numberline {5.2.2}Conditions on the type hierarchy}{51}{subsection.5.2.2}
+\contentsline {subsection}{\numberline {5.2.2}Conditions on the type hierarchy}{50}{subsection.5.2.2}
 \contentsline {subsection}{\numberline {5.2.3}Uniqueness of greatest lower bound}{52}{subsection.5.2.3}
-\contentsline {subsection}{\numberline {5.2.4}Constraints}{53}{subsection.5.2.4}
+\contentsline {subsection}{\numberline {5.2.4}Constraints}{52}{subsection.5.2.4}
 \contentsline {section}{\numberline {5.3}Lexical entries}{57}{section.5.3}
 \contentsline {section}{\numberline {5.4}Grammar rules}{57}{section.5.4}
 \contentsline {section}{\numberline {5.5}Lexical and morphological rules}{58}{section.5.5}
-\contentsline {section}{\numberline {5.6}Irregular morphology}{59}{section.5.6}
-\contentsline {section}{\numberline {5.7}Rule application during parsing}{60}{section.5.7}
+\contentsline {section}{\numberline {5.6}Irregular morphology}{58}{section.5.6}
+\contentsline {section}{\numberline {5.7}Rule application during parsing}{59}{section.5.7}
 \contentsline {section}{\numberline {5.8}Root file}{60}{section.5.8}
-\contentsline {section}{\numberline {5.9}Parse tree node labels}{61}{section.5.9}
-\contentsline {subsection}{\numberline {5.9.1}Original version}{61}{subsection.5.9.1}
+\contentsline {section}{\numberline {5.9}Parse tree node labels}{60}{section.5.9}
+\contentsline {subsection}{\numberline {5.9.1}Original version}{60}{subsection.5.9.1}
 \contentsline {subsection}{\numberline {5.9.2}PAGE emulation version}{61}{subsection.5.9.2}
 \contentsline {section}{\numberline {5.10}Ancillary files}{62}{section.5.10}
 \contentsline {subsection}{\numberline {5.10.1}Globals}{62}{subsection.5.10.1}
@@ -76,7 +76,7 @@
 \contentsline {subsection}{\numberline {5.10.3}User defined functions}{62}{subsection.5.10.3}
 \contentsline {chapter}{\numberline {6}LKB user interface}{63}{chapter.6}
 \contentsline {section}{\numberline {6.1}Top level commands}{63}{section.6.1}
-\contentsline {subsection}{\numberline {6.1.1}Quit}{64}{subsection.6.1.1}
+\contentsline {subsection}{\numberline {6.1.1}Quit}{63}{subsection.6.1.1}
 \contentsline {subsection}{\numberline {6.1.2}Load}{64}{subsection.6.1.2}
 \contentsline {paragraph}{Complete grammar \dots }{64}{subsection.6.1.2}
 \contentsline {paragraph}{Reload grammar}{64}{subsection.6.1.2}
@@ -89,7 +89,7 @@
 \contentsline {paragraph}{Reload other instances*}{64}{subsection.6.1.2}
 \contentsline {subsection}{\numberline {6.1.3}View}{64}{subsection.6.1.3}
 \contentsline {paragraph}{Type hierarchy}{64}{subsection.6.1.3}
-\contentsline {paragraph}{Type definition}{65}{subsection.6.1.3}
+\contentsline {paragraph}{Type definition}{64}{subsection.6.1.3}
 \contentsline {paragraph}{Expanded type}{65}{subsection.6.1.3}
 \contentsline {paragraph}{Lex entry}{65}{subsection.6.1.3}
 \contentsline {paragraph}{Word entries}{65}{subsection.6.1.3}
@@ -97,7 +97,7 @@
 \contentsline {paragraph}{Lexical rule}{65}{subsection.6.1.3}
 \contentsline {subsection}{\numberline {6.1.4}Parse}{65}{subsection.6.1.4}
 \contentsline {paragraph}{Parse input}{65}{subsection.6.1.4}
-\contentsline {paragraph}{Show parse}{66}{subsection.6.1.4}
+\contentsline {paragraph}{Show parse}{65}{subsection.6.1.4}
 \contentsline {paragraph}{Show chart}{66}{subsection.6.1.4}
 \contentsline {paragraph}{Batch parse}{66}{subsection.6.1.4}
 \contentsline {subsection}{\numberline {6.1.5}Tests}{66}{subsection.6.1.5}
@@ -108,8 +108,8 @@
 \contentsline {paragraph}{Print chart}{66}{subsection.6.1.6}
 \contentsline {subsection}{\numberline {6.1.7}Options}{66}{subsection.6.1.7}
 \contentsline {paragraph}{Set options}{66}{subsection.6.1.7}
-\contentsline {paragraph}{Save display settings}{67}{subsection.6.1.7}
-\contentsline {paragraph}{Load display settings}{67}{subsection.6.1.7}
+\contentsline {paragraph}{Save display settings}{66}{subsection.6.1.7}
+\contentsline {paragraph}{Load display settings}{66}{subsection.6.1.7}
 \contentsline {subsection}{\numberline {6.1.8}Generation*}{67}{subsection.6.1.8}
 \contentsline {paragraph}{Generate \dots }{67}{subsection.6.1.8}
 \contentsline {paragraph}{Redisplay result}{67}{subsection.6.1.8}
@@ -119,28 +119,28 @@
 \contentsline {paragraph}{Dump system}{67}{subsection.6.1.10}
 \contentsline {section}{\numberline {6.2}Type hierarchy display}{67}{section.6.2}
 \contentsline {section}{\numberline {6.3}Feature structure display}{68}{section.6.3}
-\contentsline {subsection}{\numberline {6.3.1}Unification checks}{70}{subsection.6.3.1}
+\contentsline {subsection}{\numberline {6.3.1}Unification checks}{69}{subsection.6.3.1}
 \contentsline {section}{\numberline {6.4}Parse output display}{71}{section.6.4}
-\contentsline {section}{\numberline {6.5}Parse tree display}{72}{section.6.5}
+\contentsline {section}{\numberline {6.5}Parse tree display}{71}{section.6.5}
 \contentsline {section}{\numberline {6.6}Chart display}{72}{section.6.6}
 \contentsline {chapter}{\numberline {7}Advanced features}{74}{chapter.7}
 \contentsline {section}{\numberline {7.1}Defining a new grammar}{74}{section.7.1}
 \contentsline {section}{\numberline {7.2}Script files}{76}{section.7.2}
-\contentsline {subsection}{\numberline {7.2.1}Loading functions}{78}{subsection.7.2.1}
+\contentsline {subsection}{\numberline {7.2.1}Loading functions}{77}{subsection.7.2.1}
 \contentsline {subsection}{\numberline {7.2.2}Utility functions}{78}{subsection.7.2.2}
 \contentsline {section}{\numberline {7.3}Check paths}{79}{section.7.3}
-\contentsline {section}{\numberline {7.4}Multiword lexemes}{80}{section.7.4}
-\contentsline {section}{\numberline {7.5}Parse ordering}{80}{section.7.5}
-\contentsline {section}{\numberline {7.6}Character sets}{80}{section.7.6}
+\contentsline {section}{\numberline {7.4}Multiword lexemes}{79}{section.7.4}
+\contentsline {section}{\numberline {7.5}Parse ordering}{79}{section.7.5}
+\contentsline {section}{\numberline {7.6}Character sets}{79}{section.7.6}
 \contentsline {subsection}{\numberline {7.6.1}MCL}{80}{subsection.7.6.1}
 \contentsline {subsection}{\numberline {7.6.2}ACL/CLIM on Unix}{80}{subsection.7.6.2}
-\contentsline {section}{\numberline {7.7}Cached lexicon}{81}{section.7.7}
+\contentsline {section}{\numberline {7.7}Cached lexicon}{80}{section.7.7}
 \contentsline {section}{\numberline {7.8}Leaf types}{81}{section.7.8}
-\contentsline {section}{\numberline {7.9}Emacs interface}{82}{section.7.9}
-\contentsline {section}{\numberline {7.10}YADU}{82}{section.7.10}
-\contentsline {section}{\numberline {7.11}MRS}{83}{section.7.11}
-\contentsline {section}{\numberline {7.12}Generation}{83}{section.7.12}
-\contentsline {section}{\numberline {7.13}TSDB}{83}{section.7.13}
+\contentsline {section}{\numberline {7.9}Emacs interface}{81}{section.7.9}
+\contentsline {section}{\numberline {7.10}YADU}{81}{section.7.10}
+\contentsline {section}{\numberline {7.11}MRS}{82}{section.7.11}
+\contentsline {section}{\numberline {7.12}Generation}{82}{section.7.12}
+\contentsline {section}{\numberline {7.13}Testing and Diagnosis}{82}{section.7.13}
 \contentsline {chapter}{\numberline {A}The tty interface}{84}{chapter.A}
 \contentsline {section}{\numberline {A.1}What is the tty mode?}{84}{section.A.1}
 \contentsline {section}{\numberline {A.2}Loading the LKB in tty mode}{84}{section.A.2}
@@ -155,14 +155,14 @@
 \contentsline {section}{\numberline {B.2}Instance descriptions}{90}{section.B.2}
 \contentsline {chapter}{\numberline {C}Details of system parameters}{91}{chapter.C}
 \contentsline {section}{\numberline {C.1}Grammar independent global variables}{92}{section.C.1}
-\contentsline {subsection}{\numberline {C.1.1}System files}{92}{subsection.C.1.1}
-\contentsline {subsection}{\numberline {C.1.2}System behaviour}{92}{subsection.C.1.2}
-\contentsline {subsection}{\numberline {C.1.3}Display parameters}{93}{subsection.C.1.3}
-\contentsline {subsection}{\numberline {C.1.4}Parse tree node labels}{94}{subsection.C.1.4}
-\contentsline {subsection}{\numberline {C.1.5}Languages}{94}{subsection.C.1.5}
-\contentsline {subsection}{\numberline {C.1.6}Defaults}{94}{subsection.C.1.6}
+\contentsline {subsection}{\numberline {C.1.1}System behaviour}{92}{subsection.C.1.1}
+\contentsline {subsection}{\numberline {C.1.2}Display parameters}{92}{subsection.C.1.2}
+\contentsline {subsection}{\numberline {C.1.3}Parse tree node labels}{93}{subsection.C.1.3}
+\contentsline {subsection}{\numberline {C.1.4}Languages}{93}{subsection.C.1.4}
+\contentsline {subsection}{\numberline {C.1.5}Defaults}{94}{subsection.C.1.5}
 \contentsline {section}{\numberline {C.2}Grammar specific parameters}{94}{section.C.2}
 \contentsline {subsection}{\numberline {C.2.1}Type hierarchy}{94}{subsection.C.2.1}
-\contentsline {subsection}{\numberline {C.2.2}Orthography and lists}{95}{subsection.C.2.2}
+\contentsline {subsection}{\numberline {C.2.2}Orthography and lists}{94}{subsection.C.2.2}
 \contentsline {subsection}{\numberline {C.2.3}Morphology and parsing}{95}{subsection.C.2.3}
-\contentsline {section}{\numberline {C.3}User definable functions}{96}{section.C.3}
+\contentsline {section}{\numberline {C.3}User definable functions}{95}{section.C.3}
+\contentsline {subsection}{\numberline {C.3.1}System files}{97}{subsection.C.3.1}
