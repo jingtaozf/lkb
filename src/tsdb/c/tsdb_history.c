@@ -25,7 +25,7 @@ extern int errno;
 #include "tsdb.h"
 #include "errors.h"
 
-#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX) || defined(OSF)
 #  include <sys/time.h>
 #else
 #  include <sys/times.h>

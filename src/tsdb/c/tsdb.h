@@ -22,6 +22,8 @@
 #    define SUNOS
 #  elif defined(linux)
 #    define LINUX
+#  elif defined(_OSF_SOURCE)
+#    define OSF
 #  endif
 #endif
 

@@ -29,7 +29,7 @@ extern int errno;
 #include "tsdb.h"
 #include "errors.h"
 
-#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX) || defined(OSF)
 #  include <sys/time.h>
 #else
 #  include <sys/times.h>
@@ -2087,7 +2087,7 @@ float tsdb_timer(BYTE action) {
 |*
 \*****************************************************************************/
 
-#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX) || defined(OSF)
   static struct timeval start[TSDB_MAX_TIMERS], stop[TSDB_MAX_TIMERS];
   struct timezone foo;
 #else
@@ -2096,7 +2096,7 @@ float tsdb_timer(BYTE action) {
   static BYTE n_timers = 0;
 
   if(action == TSDB_START_TIMER) {
-#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX) || defined(OSF)
     if(gettimeofday(&start[n_timers], &foo)) {
 #else
     if(times(&start[n_timers]) == -1) {
@@ -2113,7 +2113,7 @@ float tsdb_timer(BYTE action) {
               "timer(): timer # %d not running.\n", action);
       return((float)-1);
     } /* if */
-#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX) || defined(OSF)
     if(gettimeofday(&stop[--n_timers], &foo)) {
 #else
     if(times(&stop[--n_timers]) == -1) {
@@ -2121,7 +2121,7 @@ float tsdb_timer(BYTE action) {
       perror("tsdb_timer()");
       return((float)-1);
     } /* if */
-#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX) || defined (OSF)
     return((stop[n_timers].tv_sec - start[n_timers].tv_sec) +
            ((stop[n_timers].tv_usec - start[n_timers].tv_usec) * .000001));
 #else
