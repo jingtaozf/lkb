@@ -1001,3 +1001,97 @@ Unattached arguments are ignored
 
 
 
+;;; ****** Comparison of RMRSs based on data stored in the fine system
+
+#|
+
+We assume that we have a test suite which has been parsed using the ERG
+and by RASP.  What is stored in the fine system is the derivation in both 
+cases
+
+
+|#
+
+
+;;; temporary - set these interactively soon
+
+(defparameter *tsdb-directory1* "jabberwocky/lingo/28-05-04/lkb")
+
+
+(defparameter *tsdb-directory2* "jabberwocky/rasp/25-05-04/lkb")
+
+
+;;; Window showing sentences to compare
+
+#+:lkb
+(defun display-sentences-to-compare nil
+  (mrs::clear-rule-record)
+  ;;; temporary - set these interactively soon
+  (let ((*rasp-rmrs-gram-file*
+         (make-pathname 
+          :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+          :name "gram14.1.rmrs"))
+        (*rasp-rmrs-tag-file*
+         (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+	:name "lex14.1.rmrs")))
+    (mrs::read-rmrs-grammar *rasp-rmrs-gram-file*)
+    (mrs::read-rmrs-tag-templates *rasp-rmrs-tag-file*))
+  (let ((test-items   #+:tsdb (lkb::get-test-suite-sentences *tsdb-directory1*)
+                      #-:tsdb nil))
+    (if test-items
+        (lkb::draw-active-list
+         (loop for record in test-items
+               collect
+               (cons 
+                (format nil "~a: ~a" (car record) (cdr record))
+                record))
+         "Test items"
+         (list
+          (cons "Compare RMRSs"
+                #'(lambda (record)
+                    (compare-rmrs-from-test-suite record)))))
+      (format t "~%Test suite items cannot be retrieved")))) 
+
+
+(defparameter *characterisation-hack* nil)
+
+#+:lkb
+(defun compare-rmrs-from-test-suite (record)
+  #+:tsdb  
+  (let* ((egnum (car record))
+         (sentence (cdr record))
+         (*characterisation-hack*
+          (if lkb::*characterize-p*
+              (let ((words (lkb::preprocess-sentence-string sentence)))
+                (if (lkb::chared-word-p (car words))
+                    words))))
+         (rasp-rmrs 
+          (lkb::get-tsdb-selected-rasp-rmrs egnum *tsdb-directory2*))
+         (erg-rmrs
+          (lkb::get-tsdb-selected-erg-rmrs egnum *tsdb-directory1*)))
+    (when (and rasp-rmrs erg-rmrs)
+      (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs t))
+        ;; use string position
+        (lkb::show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
+                                           comparison-record sentence))))
+    #-:tsdb  
+    (declare (ignore record))
+    #-:tsdb 
+    nil)
+
+#+:lkb
+(defun find-cfrom-hack (from)
+  (let ((word (nth from *characterisation-hack*)))
+    (if word
+        (lkb::chared-word-cfrom word)
+      -1)))
+
+#+:lkb
+(defun find-cto-hack (to)
+  (let ((word (nth to *characterisation-hack*)))
+    (if word
+        (lkb::chared-word-cto word)
+      -1)))
+
+;;; end fine system stuff
+

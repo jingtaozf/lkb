@@ -946,8 +946,8 @@
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
                    :dag tdfs :from start :to end
-                   :cfrom (find-cfrom-hack start)
-                   :cto (find-cto-hack start))))))
+                   :cfrom (mrs::find-cfrom-hack start)
+                   :cto (mrs::find-cto-hack start))))))
 
 (defun tsdb::find-affix (type)
   (let* ((*package* *lkb-package*)
@@ -1050,10 +1050,10 @@
 ;;; when LKB is loaded
 
 
-(defun get-test-suite-sentences nil
+(defun get-test-suite-sentences (dir)
   ;;; returns assoc list of id and string
   (loop
-      for item in (tsdb::analyze *tsdb-directory1*)
+      for item in (tsdb::analyze dir)
       for id = (tsdb::get-field :i-id item)
       for input = (tsdb::get-field :i-input item)
       collect
@@ -1061,8 +1061,8 @@
 
 ;;; FIX - add some error checking!
 
-(defun get-tsdb-selected-rasp-rmrs (item)
-  (let* ((data *tsdb-directory2*)
+(defun get-tsdb-selected-rasp-rmrs (item dir)
+  (let* ((data dir)
          (frame (tsdb::browse-trees data :runp nil :verbose nil)))
     (tsdb::browse-tree 
      data item frame :runp nil :verbose nil)
@@ -1075,8 +1075,8 @@
       (if tsdb-rasp-tree
           (mrs::construct-sem-for-tree tsdb-rasp-tree :rasp :quiet)))))
 
-(defun get-tsdb-selected-erg-rmrs (item)
-  (let* ((data *tsdb-directory1*)
+(defun get-tsdb-selected-erg-rmrs (item dir)
+  (let* ((data dir)
          (frame (tsdb::browse-trees data :runp nil :verbose nil)))
     (setf (lkb::compare-frame-mode frame) :modern)
     ;;; force reconstruction of dags by browse-tree

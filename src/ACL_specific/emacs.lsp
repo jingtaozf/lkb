@@ -97,3 +97,12 @@ b
     s))
 
 |#
+
+;;; Generation and MRS/RMRS from emacs
+
+(defun generate-rmrs-from-emacs (str)
+  (with-package (:mrs)
+    (let ((rmrs (mrs::read-single-rmrs-from-string str)))
+      (when (and rmrs (mrs::rmrs-p rmrs))
+	(mrs::generate-from-rmrs rmrs)))))
+

@@ -230,64 +230,14 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 
 
 
-;;; conversion of extra values is going to be grammar specific
-;;; and there's no guarantee that it can be done one-to-one
+;;; the conversion of extra values is grammar specific
+;;; (and there's no guarantee that it can be done one-to-one)
 ;;;
-;;; for now, code below works for current ERG - rationalize 
-;;; this when we've got a better idea of what's going on
-
-
 ;;; the table should be bidirectional - i.e. work for
 ;;; RMRS to MRS too
 
-;;; (divisible . divisible)
-;;; (e.aspect.perf . refdistinct)
-;;; (e.aspect.progr . imr)
 
-;;; table below supplied by Melanie
-;;; should be moved to the grammar directory eventually
-
-(defparameter *var-extra-conversion-table*
-'(
-  ((png.gen fem) . (gender f))
-  ((png.gen masc) . (gender m))
-  ((png.gen andro) . (gender m-or-f))
-  ((png.gen neut) . (gender n))
-
-  ((png.pn 1sg) . (AND (pers 1) (num sg)))
-  ((png.pn 2sg) . (AND (pers 1) (num sg)))
-  ((png.pn 3sg) . (AND (pers 3) (num sg)))
-  ((png.pn non1sg) . (AND (pers 2-or-3) (num sg)))
-  
-  ((png.pn 1pl) . (AND (pers 1) (num pl)))
-  ((png.pn 2pl) . (AND (pers 1) (num pl)))
-  ((png.pn 3pl) . (AND (pers 3) (num pl)))
-
-  ((png.pn 1per) .  (pers 1))
-  ((png.pn 2per) .  (pers 2))
-  ((png.pn 3per) .  (pers 3))
-
-  ((e.tense basic_tense) . (tense u))
-  ((e.tense no_tense) . (tense u))
-  ((e.tense nontense) . (tense u))
-  ((e.tense future) . (tense future))
-  ((e.tense present) . (tense present))
-  ((e.tense past) . (tense past))
-;;;  ((e.tense nonpresent) . (tense non-present))
-  ((e.tense nonpresent) . (tense u))
-  ;;; my version of the DTD doesn't have `non-present'
-  ;;; replace this with line above if using a DTD that does
-  ((e.tense nonpast) . (tense non-past))
-  
- ;;; note the interpretation is intended to be that the 
- ;;; first match is taken.  For RMRS->MRS conversion, there's
- ;;; a sl problem in that nontense and no_tense are 
- ;;; both possible values corresponding to (tense u)
- ;;; and that this also corresponds to the `don't know'
- ;;; case.  We therefore need to translate the RMRS `u'
- ;;; into `basic_tense'
-  
-  ))
+;;; *var-extra-conversion-table* - now defined in mrsglobals.lisp
 
 ;;; `compiled' table
 
@@ -667,3 +617,36 @@ Errors won't be devastating anyway ...
 				    :str (string-downcase 
 					  (string (lkb::type-name type))))
 	      *meta-semi*)))
+
+;;; Generation
+
+;;; this can be called from generate-rmrs-from-emacs
+;;; see ACL_specific/emacs.lsp
+
+#+:lkb
+(defun generate-from-rmrs (rmrs)
+  (let ((mrs (convert-rmrs-to-mrs rmrs)))
+    (when mrs
+      ;;; (mrs-quick-check-lex-retrieval mrs)
+      ;;; FIX
+      (let ((mrs::%mrs-extras-defaults% nil)
+	    (lkb::*bypass-equality-check* t))
+	(lkb::generate-from-mrs mrs)
+	)
+      (lkb::show-gen-result))))
+
+;;; Utility fn
+
+(defun rmrs-for-sentence (input parse-number)
+  (let ((lkb::*show-parse-p* nil))
+    (lkb::do-parse-tty input)
+    (unless lkb::*parse-record*
+      (error "Parse failed"))
+    (let ((selected-parse (nth (- parse-number 1) lkb::*parse-record*)))
+      (unless selected-parse
+	(error "Incorrect parse number"))
+      (let ((mrs (mrs::extract-mrs selected-parse)))
+	(unless mrs (error "~%Can't extract MRS"))
+	(mrs::mrs-to-rmrs mrs)))))
+
+;;; 

@@ -763,7 +763,7 @@ Simple qa code.
   (let* ((eg (assoc egnum *qa-test-suite*))
 	 (input (second eg))
 	 (parse-number (third eg))
-	 (q-rmrs (lkb::rmrs-for-sentence input parse-number))
+	 (q-rmrs (rmrs-for-sentence input parse-number))
 	 (a-file (make-a-file-name egnum)))
     (when (and q-rmrs a-file)
 	 (let ((qa-recs nil)
