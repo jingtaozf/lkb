@@ -309,8 +309,8 @@
    "~{~(~a~)~^_~}~c~(~a~)~c~@[~(~a~)~]~%"
    forms #\tab type #\tab irule))
 
-(defun output-entry-for-tim (stream forms)
-  (format stream "~{~(~a~)~^ ~}~%" forms))
+(defun output-entry-for-tim (stream forms type)
+  (format stream "~{~(~a~)~^ ~}~c~(~a~)~%" forms #\tab type))
 
 (defun output-entry-for-stefan (stream forms id irule)
   (format
@@ -354,6 +354,8 @@
                   stream
                   id form nil (or ipos 0) (length orth)))
                 
+		(:tim
+		 (output-entry-for-tim stream orth type))
                 (:tnt
                  (output-entry-for-tnt
                   stream
@@ -393,7 +395,7 @@
                          (form (nth (if ipos (- ipos 1) 0) orth)))
                     (case format
 		      (:tim
-                       (output-entry-for-tim stream orth))
+                       (output-entry-for-tim stream orth type))
                       (:pet
                        (output-entry-for-pet
                         stream
