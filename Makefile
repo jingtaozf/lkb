@@ -81,7 +81,7 @@ lkb_source:
 	      --exclude=Makefile \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
 	      --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-	      --exclude="src/.???l*" --exclude="src/fasl*" \
+	      --exclude="src/.????*" --exclude="src/fasl*" \
 	      --exclude="*.fasl" --exclude="./lexdb*" \
 	      --exclude="src/doc*" --exclude="src/data*" \
 	      --exclude="linux*" --exclude="solaris*" --exclude="windows*" \
@@ -276,14 +276,14 @@ itsdb_linux: itsdb_linux_x86_32
 itsdb_linux_x86_32:
 	( \
 	  cd ${ROOT}/lkb; \
-	  find src/.l6cl -type f -exec touch {} \; ; \
+	  find src/.l7cl -type f -exec touch {} \; ; \
 	  tar Svczf ${TARGET}/${DATE}/itsdb_linux.x86.32.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \
 	      bin/linux.x86.32/pvmd3 bin/linux.x86.32/pvm \
 	      src/pvm/linux.x86.32/*.so src/tsdb/linux.x86.32/*.so \
-	      src/.l6cl/pvm src/.l6cl/tsdb; \
+	      src/.l7cl/pvm src/.l7cl/tsdb; \
 	)
 
 itsdb_linux_x86_64:

@@ -6,8 +6,8 @@
 ;;; course):
 ;;;
 ;;;   (let ((root (getenv "DELPHINHOME")))
-;;;     (if (file-exists-p (format "%s/dot.emacs" root))
-;;;       (load (format "%s/dot.emacs" root) nil t t)))
+;;;     (if (file-exists-p (format "%s/etc/dot.emacs" root))
+;;;       (load (format "%s/etc/dot.emacs" root) nil t t)))
 ;;;
 ;;; in other words, set the shell environment variable `DELPHINHOME' to the 
 ;;; root directory of your installation tree (which is `~/delphin' for most 
