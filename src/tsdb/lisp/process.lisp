@@ -657,10 +657,12 @@
                       (call-hook (cpu-reader cpu) i-input)))
            (o-input (when (and (stringp o-input) (not (string= o-input "")))
                       o-input))
-           (p-input (when (cpu-p cpu)
-                      (call-hook (or (cpu-preprocessor cpu)
-                                     *tsdb-preprocessing-hook*) 
-                                 (or o-input i-input)))))
+           (p-input (cond
+                     ((and (cpu-p cpu) (cpu-preprocessor cpu))
+                      (call-hook (cpu-preprocessor cpu) (or o-input i-input)))
+                     (*tsdb-preprocessing-hook*
+                      (call-hook *tsdb-preprocessing-hook* 
+                                 (or o-input i-input))))))
 
       (cond 
        ((and o-ignore (tsdb-ignore-p o-ignore))
@@ -692,7 +694,7 @@
   
   (let* ((i-id (get-field :i-id item)) 
          (i-input (or (get-field :o-input item)
-                      (unless *process-pretty-print-trace-p*
+                      (when *process-pretty-print-trace-p*
                         (get-field :p-input item))
                       (get-field :i-input item)))
          (i-wf (get-field :i-wf item))

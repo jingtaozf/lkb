@@ -42,7 +42,7 @@
                                      (user "guest")
                                      (password "guest")
                                      (table "erg")
-                                     (definition "ergd"))
+                                     (definition (format nil "~ad" table)))
   
   (let* ((lexicon (make-instance 'psql-lex-database 
                     :dbname db :host host
