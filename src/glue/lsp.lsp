@@ -312,6 +312,7 @@
                  (view (let ((foo (pop command)))
                          (and foo (intern (string foo) :keyword))))
                  (object (lsp-retrieve-object id location)))
+            (declare (ignore context))
             (when (and (second object) 
                        (member format '(:avm :edge :edges :chart :tree 
                                         :mrs :dependencies)))
