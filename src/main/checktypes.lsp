@@ -213,7 +213,7 @@
            (setf (type-constraint-mark type-entry) nil)          
            (setf (type-local-constraint type-entry) nil)))
   (unmark-type-table)  
-  (gc t) ; try and force it to reclaim space before we refill it
+  #+allegro (gc t) ; try and force it to reclaim space before we refill it
   (format t "~%Expanding constraints")
   (when (expand-and-inherit-constraints)
     (format t "~%Making constraints well formed")
