@@ -66,7 +66,7 @@
 (defun generalise-dags (dag1 dag2)
    (if *within-unification-context-p*
       (progn
-         #+(and mcl powerpc)(decf jj (CCL::%HEAP-BYTES-ALLOCATED))
+         #+:mclprofile (decf jj (ccl::%heap-bytes-allocated))
          (prog1
             (catch '*fail*
                (invalidate-visit-marks)
@@ -87,7 +87,7 @@
                               (create-path-from-feature-list (reverse other-path))
                               result-dag))))
                   (copy-dag result-dag)))
-            #+(and mcl powerpc)(incf jj (CCL::%HEAP-BYTES-ALLOCATED))
+            #+:mclprofile (incf jj (ccl::%heap-bytes-allocated))
             ))
       (with-unification-context (dag1) (generalise-dags dag1 dag2))))
 

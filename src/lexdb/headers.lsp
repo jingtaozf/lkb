@@ -107,5 +107,5 @@
       (setf *features* (remove :psql *features*)))))
 
 (defun load-libpq-3 nil
-  (let ((excl::*load-foreign-types* (cons "3" excl::*load-foreign-types*)))
+  (let (#+allegro (excl::*load-foreign-types* (cons "3" excl::*load-foreign-types*)))
     (load "libpq.so.3")))

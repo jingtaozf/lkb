@@ -75,15 +75,15 @@
 
 ;;; Functions on sets (of MRS relations) represented as integers
 
-(defun gen-chart-set-disjoint-p (r1 r2)
-   (not (logtest r1 r2)))
+(defmacro gen-chart-set-disjoint-p (r1 r2)
+   `(not (logtest ,r1 ,r2)))
 
 (defmacro gen-chart-set-equal-p (r1 r2)
-   `(= ,r1 ,r2))
+   `(eql ,r1 ,r2))
 
 (defun gen-chart-subset-p (r1 r2)
    ;; is r1 a strict subset or equal to r2
-   (= (logior r1 r2) r2))
+   (eql (logior r1 r2) r2))
 
 (defun gen-chart-set-difference (r1 r2)
    (logand r1 (lognot r2)))
@@ -261,8 +261,7 @@
     
     (let ((*gen-packing-p* (if *gen-first-only-p* nil *gen-packing-p*))
           lex-results lex-items grules lex-orderings 
-          tgc tcpu conses symbols others
-          (input-rels 0))
+          tgc tcpu conses symbols others)
       (time-a-funcall
        #'(lambda () 
            (multiple-value-setq (lex-results grules lex-orderings)
@@ -280,42 +279,15 @@
       
       (when *debugging* (print-generator-lookup-summary lex-items grules))
       
-      (let ((rel-indexes nil) (rel-indexes-n -1))
-        ;;
-        ;; _fix_me_
-        ;; why do this in two passes, rather than computing the indices as we
-        ;; go along?                                          (23-apr-04; oe)
-        ;;
-        (dolist (lex lex-items)
-          (dolist (rel (mrs::found-lex-main-rels lex))
-            (unless (getf rel-indexes rel)
-              (setf (getf rel-indexes rel) (incf rel-indexes-n)))))
-        (dolist (grule grules)
-          (when (mrs::found-rule-p grule)
-            (dolist (rel (mrs::found-rule-main-rels grule))
-              (unless (getf rel-indexes rel)
-                (setf (getf rel-indexes rel) (incf rel-indexes-n))))))
-        (setf %generator-unknown-eps% nil)
-        (loop
-            for ep in (mrs::psoa-liszt input-sem)
-            unless (getf rel-indexes ep) do (push ep %generator-unknown-eps%))
-        (when %generator-unknown-eps%
-          (error 'unknown-predicates :eps %generator-unknown-eps%))
-        ;;
-        ;; _fix_me_
-        ;; i believe the following should never happen, i.e. we rightly fail
-        ;; in the loop() above.                                (23-apr-04; oe)
-        ;;
-        #+:null
-        (dolist (rel (mrs::psoa-liszt input-sem))
-          (unless (getf rel-indexes rel)
-            (setf (getf rel-indexes rel) (incf rel-indexes-n))))
+      (let ((rel-indexes nil) (rel-indexes-n -1) (input-rels 0))
         (dolist (lex lex-items)
           (loop
               with eps = (mrs::found-lex-main-rels lex)
               initially (setf (mrs::found-lex-main-rels lex) 0)
               for ep in eps
-              for index = (ash 1 (getf rel-indexes ep))
+              for index = (ash 1 (or (getf rel-indexes ep)
+                                     (setf (getf rel-indexes ep)
+                                           (incf rel-indexes-n))))
               do 
                 (setf (mrs::found-lex-main-rels lex)
                   (logior (mrs::found-lex-main-rels lex) index))))
@@ -325,13 +297,22 @@
                 with eps = (mrs::found-rule-main-rels grule)
                 initially (setf (mrs::found-rule-main-rels grule) 0)
                 for ep in eps
-                for index = (ash 1 (getf rel-indexes ep))
+                for index = (ash 1 (or (getf rel-indexes ep)
+                                       (setf (getf rel-indexes ep)
+                                             (incf rel-indexes-n))))
                 do
                   (setf (mrs::found-rule-main-rels grule)
                     (logior (mrs::found-rule-main-rels grule) index)))))
-        (dolist (rel (mrs::psoa-liszt input-sem))
-          (setq input-rels
-            (logior input-rels (ash 1 (getf rel-indexes rel)))))
+        (setf %generator-unknown-eps% nil)
+        (loop
+            for ep in (mrs::psoa-liszt input-sem)
+            do
+              (if (getf rel-indexes ep)
+                (setq input-rels
+                   (logior input-rels (ash 1 (getf rel-indexes ep))))
+                (push ep %generator-unknown-eps%)))
+        (when %generator-unknown-eps%
+           (error 'unknown-predicates :eps %generator-unknown-eps%))
 
         #+:debug
         (setf %input-sem input-sem
@@ -665,7 +646,7 @@
       (progn
          ;;(cerror (format nil "use type ~A" *toptype*)
          ;;   "unexpectedly missing index for edge ~A: ~S" edge-id dag)
-         (warn "unexpectedly missing index for edge ~A - using ~A" edge-id *toptype*)
+         ;; (warn "unexpectedly missing index for edge ~A - using ~A" edge-id *toptype*)
          *toptype*)))
 #-:gen-index
 (defun gen-chart-dag-index (index-dag edge-id)
@@ -681,7 +662,7 @@
               (gen-chart-dag-index
                (or 
                 (existing-dag-at-end-of
-                 (tdfs-indef (g-edge-dag edge)) *semantics-index-path*)
+                  (tdfs-indef (g-edge-dag edge)) *semantics-index-path*)
                 (if *alt-semantics-index-path*
                     (existing-dag-at-end-of
                      (tdfs-indef (g-edge-dag edge)) 

@@ -186,7 +186,7 @@
 ;;; specified by the path chain.
 
 (defun unify-paths-dag-at-end-of (path-or-value dag-instance)
-   #+(and mcl powerpc)(decf ff (CCL::%HEAP-BYTES-ALLOCATED))
+   #+:mclprofile (decf ff (ccl::%heap-bytes-allocated))
    (prog1
      (cond 
       ((path-p path-or-value)
@@ -205,7 +205,7 @@
                  (create-typed-dag type)))))
       (t (error "~%Invalid path specification ~A"
             path-or-value)))
-     #+(and mcl powerpc)(incf ff (CCL::%HEAP-BYTES-ALLOCATED))))
+     #+:mclprofile (incf ff (ccl::%heap-bytes-allocated))))
 
 
 

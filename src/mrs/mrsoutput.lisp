@@ -228,7 +228,10 @@ duplicate variables")
 
 (defun make-mrs-feature (flist)
   (if (cdr flist)
-      (intern (format nil "~A~{.~A~}" (car flist) (cdr flist)) :lkb)
+      (intern (apply #'concatenate 'string
+                     (string (car flist))
+                     (mapcan #'(lambda (f) (list "." (string f))) (cdr flist)))
+              :lkb)
     (car flist)))
 
 

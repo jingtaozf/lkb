@@ -98,7 +98,7 @@
                   (dotted-edge-needed e))
                edge-symbols)))
       (dolist (entry *gen-chart*)
-         (let ((chart-index (string-downcase (symbol-name (car entry)))))
+         (let ((chart-index (string-downcase (string (car entry)))))
             (dolist (e (append (cadr entry) (cddr entry)))
                (let ((edge-symbol
                         (cadr (assoc (dotted-edge-id e) edge-symbols))))

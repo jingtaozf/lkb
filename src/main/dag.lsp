@@ -15,7 +15,7 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (export '(with-unification-context)))
 
-#+mcl
+#+:mclprofile
 (progn ; for space profiling and similar investigation
 (defparameter aa 0)
 (defparameter bb 0)
@@ -547,7 +547,7 @@
        prof:with-sampling #+:uprofile nil
        #-:uprofile
        progn
-       #+(and mcl powerpc)(decf bb (CCL::%HEAP-BYTES-ALLOCATED))
+       #+:mclprofile (decf bb (ccl::%heap-bytes-allocated))
        (prog1
            (catch '*fail*
              (progn
@@ -568,7 +568,7 @@
                               (not (eq *unify-debug* :return)))
                      (format t "~%Unification succeeded"))))
                dag1))
-         #+(and mcl powerpc)(incf bb (CCL::%HEAP-BYTES-ALLOCATED))))
+         #+:mclprofile (incf bb (ccl::%heap-bytes-allocated))))
     (with-unification-context (dag1) 
       (when (unify-dags dag1 dag2) (copy-dag dag1)))))
   
@@ -817,30 +817,31 @@
 ;;; any forward pointers set by the unifier.
 
 (defun copy-dag (dag)
-  #+(and mcl powerpc)(decf aa (CCL::%HEAP-BYTES-ALLOCATED))
+  #+:mclprofile (decf aa (ccl::%heap-bytes-allocated))
   (#+:cprofile
    prof:with-sampling #+:cprofile nil
    #-:cprofile
    progn
    (prog1 (catch '*fail* (copy-dag1 dag nil))
-     #+(and mcl powerpc)(incf aa (CCL::%HEAP-BYTES-ALLOCATED)))))
+     #+:mclprofile (incf aa (ccl::%heap-bytes-allocated)))))
 
 ;;; Tomabechi/Rob/John: not copying when dag is 'safe', type has not changed,
 ;;; no comp-arcs, and no copied dags underneath. No garbage generated in case
 ;;; where no lower level dags need to be copied
 
-(defun copy-dag1 (dag path)
+(defun copy-dag1 (dag path &aux copy)
   (setq dag (deref-dag dag))
+  (setq copy (dag-copy dag))
   (cond
-   ((eq (dag-copy dag) :inside)
+   ((eq copy :inside)
     (when (or *unify-debug* *unify-debug-cycles*)
       (if (eq *unify-debug* :return)
         (setf %failure% (list :cycle (reverse path)))
         (format t "~%Unification failed: copy found cycle at < ~{~A ~^: ~}>" 
                 (reverse path))))
     (throw '*fail* nil))
-   ((not (symbolp (dag-copy dag)))
-    (dag-copy dag))
+   ((not (symbolp copy))
+    copy)
    ((and (null (dag-arcs dag)) (null (dag-comp-arcs dag)))
     (setf (dag-copy dag)
       (if (or (not (dag-safe-p dag))
@@ -993,11 +994,12 @@
 ;;; Use -visit field not -copy since may be called from within unify
 
 (defun copy-dag-completely (dag)
-  #+(and mcl powerpc)(decf dd (CCL::%HEAP-BYTES-ALLOCATED))
-  (invalidate-visit-marks)
-   (prog1 (copy-dag-completely1 dag (create-dag))
-      #+(and mcl powerpc)(incf dd (CCL::%HEAP-BYTES-ALLOCATED))
-      ))
+   #+:mclprofile (decf dd (ccl::%heap-bytes-allocated))
+   (invalidate-visit-marks)
+   (prog1
+       (copy-dag-completely1 dag (create-dag))
+       #+:mclprofile (incf dd (ccl::%heap-bytes-allocated))
+       ))
 
 (defun copy-dag-completely1 (dag toptype-dag)
    (or (dag-visit dag)
