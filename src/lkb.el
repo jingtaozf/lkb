@@ -1,5 +1,8 @@
-;;; Copyright (c) 1998-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
-;;; see licence.txt for conditions
+;;;
+;;; Copyright (c) 1998-2004
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, 
+;;;   Benjamin Waldron; see `licence.txt' for conditions
+;;;
 
 ;;; bmw (sep 03)
 ;;; - port to emacs 21 menus
@@ -383,3 +386,13 @@
 			  "\C-cm" 'display-mrs))))
 
 ; (global-set-key "\C-cm" 'display-mrs)
+
+;;;
+;;; open a file in a new buffer, killing its existing buffer, if necessary
+;;;
+(defun rogue-find-file (file)
+  (if (file-exists-p file)
+    (let ((buffer (get-file-buffer file))
+          (find-file-hooks nil))
+      (if buffer (kill-buffer buffer))
+      (find-file file))))
