@@ -711,8 +711,7 @@
                     (list "Indexed MRS" :value 'indexed :active mrsp)
                     (list "Scoped MRS" :value 'scoped :active mrsp)
                     (list "Dependencies" :value 'dependencies :active mrsp)
-                    #+:mt
-                    (list "Transfer" :value 'transfer :active mrsp))))
+                    (list "Rephrase" :value 'rephrase :active mrsp))))
          (edge (ctree-edge tree)))
     (when command
       (handler-case
@@ -765,9 +764,11 @@
             (dependencies
              (when edge
                (ignore-errors (funcall 'show-mrs-dependencies-window edge))))
-            (transfer
-             (when edge
-               (ignore-errors (funcall 'transfer edge)))))
+            (rephrase
+             (let ((symbol (when (find-package :mt)
+                             (find-symbol "TRANSLATE" :mt))))
+               (when (and symbol (fboundp symbol))
+                 (funcall symbol edge)))))
             
         (storage-condition (condition)
           (with-output-to-top ()

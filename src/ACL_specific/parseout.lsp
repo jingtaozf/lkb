@@ -266,10 +266,7 @@
                     ("Indexed MRS" :value indexed :active ,*mrs-loaded*)
                     ("Scoped MRS" :value scoped :active ,*mrs-loaded*)
                     ("Dependencies" :value dependencies :active ,*mrs-loaded*)
-                    #+:null
-                    ("Transfer" :value transfer :active ,*mrs-loaded*)
-                    #+:mt
-                    ("Clarify" :value clarify :active ,*mrs-loaded*)
+                    ("Rephrase" :value rephrase :active ,*mrs-loaded*)
                     ))))
     (when command
       (handler-case
@@ -332,14 +329,11 @@
             (rmrs (funcall 'show-mrs-rmrs-window (prtree-edge tree)))
             (dependencies 
              (funcall 'show-mrs-dependencies-window (prtree-edge tree)))
-            #+:mt
-            (clarify
-             (let ((symbol (find-symbol "TRANSLATE" :mt)))
+            (rephrase
+             (let ((symbol (when (find-package :mt)
+                             (find-symbol "TRANSLATE" :mt))))
                (when (and symbol (fboundp symbol))
-                 (funcall symbol (prtree-edge tree)))))
-            #+:null
-            (transfer
-             (funcall 'transfer (prtree-edge tree))))
+                 (funcall symbol (prtree-edge tree))))))
         (storage-condition (condition)
           (with-output-to-top ()
             (format t "~%Memory allocation problem: ~A~%" condition)))

@@ -1,5 +1,6 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991 -- 2004;
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 
 #+:clim (in-package :clim-user)
@@ -273,11 +274,9 @@
                      (make-menu-item :name "Index"
                                      :value 'index-for-generator
                                      :available-p :mrs)
-                     #+:mt
                      (make-menu-item :name "Start server"
                                      :value 'start-generator-server
                                      :available-p :mrs)
-                     #+:mt
                      (make-menu-item :name "Stop server"
                                      :value 'stop-generator-server
                                      :available-p :mrs))
