@@ -162,8 +162,10 @@
                             "Word `([^']*)' is not in lexicon."
                             error :start start))
                          (when (and starts ends)
-                           (push (subseq error (aref starts 0) (aref ends 0)) 
-                                 result))
+                           (pushnew 
+                            (subseq error (aref starts 0) (aref ends 0)) 
+                            result
+                            :test #'equal))
                        finally (return (nreverse result)))
                    (multiple-value-bind (foo bar)
                        (ppcre::scan-to-strings 
@@ -260,7 +262,8 @@
              (host (socket:ipaddr-to-hostname address)))
         (format
          stream
-         "[~a] www-log(): [~a] `~a' --- ~a (~,2f) <~a>~@[ error: `~(~a~)'~].~%"
+         "[~a] www-log(): [~a] `~a' --- ~a~@[ (~,2f)~]~@[ <~a>~]~
+          ~@[ error: `~(~a~)'~].~%"
          (tsdb::current-time :long :pretty) 
          host input readings time edges error)))))
 
