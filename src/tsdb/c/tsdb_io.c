@@ -89,12 +89,12 @@ FILE *tsdb_open_debug() {
   if((name = getenv("TSDB_DEBUG_FILE")) != NULL) {
     file = (char *)malloc(strlen(name)
                           + (user != NULL ? 1 + strlen(user) : 0) + 1);
-    file = strdup(name);
+    strcpy(file,name);
   } /* if */
   else {
     file = (char *)malloc(strlen(TSDB_DEBUG_FILE)
                           + (user != NULL ? 1 + strlen(user) : 0) + 1);
-    file = strdup(TSDB_DEBUG_FILE);
+    strcpy(file,TSDB_DEBUG_FILE);
   } /* else */
   if(user != NULL) {
     file = strcat(file, ".");
@@ -588,23 +588,23 @@ int tsdb_write_relations() {
       r=fprintf(file,"\t%s ",relation->fields[j]);
       switch (relation->types[j]) {
       case TSDB_INTEGER:
-        r=fputs(file,":integer ");  
+        r=fputs(":integer ",file);  
         if (r==EOF) return 0;
         break;
       case TSDB_STRING:
-        r=fputs(file,":string ");
+        r=fputs(":string ",file);
         if (r==EOF) return 0;
         break;
       } /* switch */
       if (j==relation->keys[k]) {
-        r=fputs(file,":key");
+        r=fputs(":key",file);
         if (r==EOF) return 0;
         k++;
       } /* if */
-      r=fputs(file,"\n");
+      r=fputs("\n",file);
       if (r==EOF) return 0;
     }/* for */
-    r=fputs(file,"\n");
+    r=fputs("\n",file);
     if (r==EOF) return 0;
   } /* for */
   
