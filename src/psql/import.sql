@@ -1,8 +1,10 @@
+DROP TABLE erg;
 CREATE TABLE erg (
   id INTEGER,
   name VARCHAR(95),
   type VARCHAR(95),
   orthography VARCHAR(200),
+  orthkey VARCHAR(200),
   pronunciation VARCHAR(200),
   keyrel VARCHAR(50),
   altkey VARCHAR(50),
@@ -66,6 +68,7 @@ ON erg (name,version);
 
 COPY erg FROM '/tmp/lexicon.txt' DELIMITERS ',';
 
+DROP TABLE ergd;
 CREATE TABLE ergd (
   slot VARCHAR(50),
   field VARCHAR(50),

@@ -58,7 +58,7 @@
      ((eq status :connection-ok)
       (setf (connection lexicon) connection)
       (make-field-map-slot lexicon)
-      (close-psql-lexicon)
+      (when *psql-lexicon* (close-psql-lexicon *psql-lexicon*))
       (setf *psql-lexicon* lexicon)
       (clrhash (slot-value *lexicon* 'lexical-entries))
       (setf (extra-lexicons *lexicon*) 
@@ -278,21 +278,17 @@
 ;;;   lexicon database manipulation 
 ;;;
 
+
 (defmethod lookup-word ((lexicon psql-lex-database) orth &key (cache t))
   (declare (ignore cache))
   (let* ((orthography (sql-escape-string orth))
-	 (orthfield (second (assoc :orth (fields-map lexicon))))
+	 (orthfield "orthkey")
 	 (orthstr (symbol-to-str-format orthography))
          (sql-str (format 
                    nil 
-                   "select ~a from ~a ~
-                    where (~a='~a' or ~a like '~a %' or ~a like '% ~a' ~
-                           or ~a like '% ~a %');"
+                   "select ~a from ~a where ~a='~a';"
                    (second (assoc :id (fields-map lexicon)))
                    (lex-tb lexicon)
-                   orthfield orthstr
-                   orthfield orthstr
-                   orthfield orthstr
                    orthfield orthstr))
          (query-res (run-query 
                      lexicon 

@@ -382,7 +382,7 @@
               (format t "~%Word `~A' is not in lexicon." word)
               (when *unknown-word-types* 
                 (format t " Using unknown word mechanism."))))
-          (when (or morph-poss *unknown-word-types*)
+          (when (or morph-poss *unknown-word-types* t)
             (setf (aref *morphs* current)
               (make-morph-edge :id current :word base-word 
                                :morph-results 

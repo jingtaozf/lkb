@@ -62,8 +62,9 @@
         ;;print the other fields
         (format
          stream
-         "~a~a~(~a~)~(~a~)~a~(~a~)~a~(~a~)~a~(~a~)~a~(~a~)~
+         "~a~a~a~a~(~a~)~(~a~)~a~(~a~)~a~(~a~)~a~(~a~)~a~(~a~)~
           ~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a~a"
+         separator (first (last stem))
          separator  ;;pronunciation
          separator (or keyrel "")
          separator (or altkey "")
