@@ -287,7 +287,10 @@ Setting *first-only-p* to nil")
           (*parser-lexical-rules* (get-matching-lex-rules nil))
           ;;
           ;; shadow global variable to allow best-first mode to decrement for
-          ;; each result found; eliminates need for additional result count.
+          ;; each result found; eliminates need for additional result count;
+          ;; also, reset to `nil' when not in best-first mode: the active
+          ;; parser ignores *first-only-p* in this respect.  we hope it will
+          ;; ultimately disappear.                       (29-aug-99  -  oe)
           ;;
           (*maximal-number-of-readings*
            (and first-only-p *maximal-number-of-readings*)))

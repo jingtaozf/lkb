@@ -293,6 +293,7 @@
               (incf *filtered-tasks*))))))
 
 #+:packing
+
 (defun packed-edge-p (start end edge)
   (loop
       with dag = (tdfs-indef (edge-dag edge))
@@ -312,6 +313,7 @@
               (push edge (edge-packed oedge))
               (incf *packings*)
               (return configuration))
+            +:bug
             (when backwardp
               #+:pdebug
               (format 
@@ -665,6 +667,7 @@
   (labels ((unpack-edge! (edge &optional insidep)
              (let ((children (edge-children edge)))
                (cond
+                #+:bug ((edge-frozen edge) nil)
                 ((and (edge-packed edge) (null insidep))
                  (nconc (unpack-edge! edge t)
                         (loop

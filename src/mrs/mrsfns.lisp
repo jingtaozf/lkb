@@ -179,6 +179,26 @@
 |#
 #+lkb
 (defun get-vit-strings-from-phrases (parse)
+  ;;
+  ;; _fix_me_
+  ;; this all seems slightly clumsy: the regular LKB devices will typically
+  ;; bind the global *sentence* to the input string that was given to the
+  ;; parser.  when using another processor for parsing (with [icnr tsdb()]),
+  ;; the LKB will only do reconstruction of derivations before this function
+  ;; gets called.  in principle, the information can always be read off the
+  ;; parser edge; however, to play things safe during a critical integration
+  ;; effort, we decide to only (re)bind *sentence* here, if the current .parse.
+  ;; was not computed by the LKB parser recently.  in general, i would think,
+  ;; we should aim to eliminate all the globals ...         (30-aug-99  -  oe)
+  ;;
+  (unless (member parse *parse-record* :test #'eq)
+    (setf cl-user::*sentence* 
+      (format nil "~{~a~^ ~}" (cl-user::edge-leaves parse)))
+    ;;
+    ;; to avoid image growth, clear cache of expanded lexical entries; as it
+    ;; stands, at this point we know the LKB parser proper is not used in the
+    ;; current environment.
+    (common-lisp-user::clear-expanded-lex))
   (setf *mrs-wg-liszt* (compute-mrs-wg-liszt))
   (let* ((mrs-struct1 (sort-mrs-struct (extract-mrs parse)))
 	 (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
@@ -187,6 +207,7 @@
 		       mrs-struct1)))
     (multiple-value-bind (vit binding-sets)
 	(mrs-to-vit mrs-struct)
+      (declare (ignore binding-sets))
       (with-output-to-string (stream) 
 	(format nil "~S" (write-vit stream 
 				    (horrible-hack-2 vit)))))))

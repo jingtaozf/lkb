@@ -1,5 +1,32 @@
 (in-package "MAKE")
 
+;;;
+;;; the :lkb feature is there to allow add-on modules (like the MRS code and
+;;; [incr tsdb()]) to be conditionalized for various host platforms.  as it
+;;; stands, :lkb is already set in `src/general/loadup.lisp' as distributed
+;;; with the LKB (such that one can do, say, (load-system "mrs") to load MRS
+;;; plus LKB).  this is somewhat unfortunate in that [incr tsdb()] comes with
+;;; a generic version of `loadup.lisp' that allows using [incr tsdb()] in
+;;; standalone mode (as well as in conjunction with the LKB or PAGE).  so, we
+;;; have to distribute the [incr tsdb()] version separately and discourage
+;;; people to unpack it on top of the LKB source tree.  once the first release
+;;; is out, we should find a better solution here.        (22-aug-99  -  oe)
+;;;
+;;; the :tty feature, when set, disables all graphics.  the graphical user
+;;; interface currently requires CLIM (typically using Allegro CL on Unix) or
+;;; Macintosh CL.  Common Graphics (Allegro CL on Windoze) support is under
+;;; development.
+;;;
+;;; push()ing :tty manually (before any load-system() call) can also be used
+;;; to force non-graphics mode, if this seems desirable for some reason.
+;;;
+
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (pushnew :lkb *features*)
+  #+(or :cl-http (not (or :mcl :clim :common-graphics))) 
+  (pushnew :tty *features*))
+
 (defparameter *lisp-specific-directory*
     #+(and :allegro :clim) "ACL_specific"
     #+(and :allegro :tty) "ACL_specific"
