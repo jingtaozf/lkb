@@ -416,7 +416,7 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-end-var ((rmrsout compact-two))
   (with-slots (stream xpos) rmrsout
-    (make-point xpos
+    (lkb::make-position-record xpos
       (lkb::current-position-y stream))))
 ;;; may need fixing for generality if current-position isn't
 ;;; safe - also needs fixing to remove lkb specificity
