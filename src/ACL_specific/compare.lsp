@@ -208,7 +208,6 @@
 
 (defun discriminant-equal (foo bar)
   (and (equal (discr-key foo) (discr-key bar))
-       (equal (discr-value foo) (discr-value bar))
        (equal (discr-type foo) (discr-type bar))
        (equal (discr-start foo) (discr-start bar))
        (equal (discr-end foo) (discr-end bar))))
