@@ -271,4 +271,20 @@
                       (tdfs-indef (mrs::found-lex-inst-fs-fn item)) 
                       mrs::*main-semantics-path*) 'simple)))))))
 
+(defun mrs-quick-check-lex-retrieval (mrs)
+  (mrs::output-mrs mrs 'mrs::simple)
+  (let
+      ((identified-entry-sets
+        (mrs::collect-lex-entries-from-mrs mrs)))
+    (loop for res in identified-entry-sets
+        do
+          (loop for item in res
+              do
+                (format t "~A ~A " (mrs::found-lex-lex-id-fn item)
+                        (mrs::found-lex-rule-list-fn item))
+                (display-dag 
+                 (existing-dag-at-end-of 
+                  (tdfs-indef (mrs::found-lex-inst-fs-fn item)) 
+                  mrs::*main-semantics-path*) 'simple)))))
+
 
