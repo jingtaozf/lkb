@@ -31,7 +31,10 @@
 	    :display-function 'display-mrs
 	    :text-cursor nil
 	    :width 400 :height 400
-	    :text-style (make-tree-text-style)
+	    :text-style 
+            (clim:parse-text-style 
+             (list 
+              :sans-serif :roman 12))
 	    :borders t
 	    :display-after-commands :no-clear
 	    :incremental-redisplay t))
