@@ -3,8 +3,8 @@
 |*      module: tsdb command language parser
 |*     version: 
 |*  written by: andrew p. white & oe, dfki saarbruecken
-|* last update: 
-|*  updated by: 
+|* last update: 23-jul-96
+|*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |*
 \*****************************************************************************/
@@ -22,6 +22,8 @@
 #include "tsdb.h"
 
 %}
+
+%pure_parser
 
 %union {
   int integer;
@@ -45,6 +47,8 @@
        Y_LESS_OR_EQUAL
        Y_GREATER_OR_EQUAL
        Y_DO
+       Y_COMMIT
+       Y_CLOSE
        Y_RETRIEVE
        Y_UPDATE
        Y_INSERT
@@ -63,6 +67,8 @@
        Y_INTO
        Y_VALUES
        Y_KEY
+       Y_ON
+       Y_OFF
        Y_STRING_TYPE
        Y_INTEGER_TYPE
        Y_DATE_TYPE
@@ -87,11 +93,9 @@
                          y_retrieve_from
                          y_attribute_list
                          y_value_list
-                         y_attribute_value_list
                          y_table_list
                          y_attributes
                          y_values
-                         y_attribute_value_pairs
                          y_tables 
 
 %type <tsdb_value> y_attribute
@@ -112,6 +116,10 @@
 
 y_query :
   y_do
+|
+  y_commit
+|
+  y_close
 |
   y_retrieval
 |
@@ -157,6 +165,18 @@ y_do :
 |
   Y_DO Y_STRING Y_STRING '.' {
     tsdb_do($2, $3);
+  }
+;
+
+y_commit :
+  Y_COMMIT y_attribute_list '.' {
+
+  }
+;
+
+y_close :
+  Y_CLOSE '.' {
+
   }
 ;
 
@@ -322,11 +342,19 @@ y_retrieve_report :
 
 y_info :
   Y_INFO y_attribute_list '.' {
-    tsdb_info($2);
+    tsdb_info($2, (char *)NULL);
   }
 |
   Y_INFO y_value_list '.' {
-    tsdb_info($2);
+    tsdb_info($2, (char *)NULL);
+  }
+|
+  Y_INFO y_attribute_list y_redirection '.' {
+    tsdb_info($2, $3);
+  }
+|
+  Y_INFO y_value_list y_redirection '.' {
+    tsdb_info($2, $3);
   }
 ;
 
@@ -589,35 +617,17 @@ y_value :
   }
 ;
 
-y_attribute_value_list :
-  '(' y_attribute_value_pairs ')' {
-    printf("y_attribute_value_list\n");
-  }
-|
-  y_attribute_value_pairs {
-    printf("y_attribute_value_list\n");
-  }
-;
-
-y_attribute_value_pairs :
-  y_attribute_value_pair {
-    printf("singleton a_v_p\n");
-  }
-|
-  y_attribute_value_pairs y_attribute_value_pair {
-    printf("array of  a_v_p's\n");
-  }
-;
-
-y_attribute_value_pair :
-  y_attribute Y_EQUAL y_value {
-    printf("y_attribute_value_pair\n");
-  }
-;
-
 y_special :
   Y_SET {
     $$ = "set";
+  }
+|
+  Y_ON {
+    $$ = "on";
+  }
+|
+  Y_OFF {
+    $$ = "off";
   }
 ;
 
@@ -660,5 +670,7 @@ yyerror(char *s) {
   fprintf(tsdb_error_stream,
           "yyparse(): parse error; check the tsdb(1) syntax.\n");
   fflush(tsdb_error_stream);
+
+  YYABORT;
 
 } /* yyerror() */

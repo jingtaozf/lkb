@@ -3,8 +3,8 @@
 |*      module: TSDB lexical analyzer
 |*     version: 
 |*  written by: oe, dfki saarbruecken
-|* last update: 
-|*  updated by: 
+|* last update: 23-jul-96
+|*  updated by: oe, coli saarbruecken
 |*****************************************************************************|
 |*
 \*****************************************************************************/
@@ -22,6 +22,9 @@
   int c = tsdb_getchar(); \
   n = (c == EOF ? YY_NULL : (string[0] = c, 1)); \
 } /* YY_INPUT() */
+
+#undef YY_DECL
+#define YY_DECL int yylex(YYSTYPE *lvalp)
 
 #if defined(DEBUG) && defined(SCANNER)
   static int verbose_mode = TRUE;
@@ -83,6 +86,20 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
     fprintf(stderr, "DO\n");
   } /* if */
   return(Y_DO);
+}
+
+{c}{o}{m}{m}{i}{t} {
+  if(verbose_mode) {
+    fprintf(stderr, "COMMIT\n");
+  } /* if */
+  return(Y_COMMIT);
+}
+
+{c}{l}{o}{s}{e} {
+  if(verbose_mode) {
+    fprintf(stderr, "CLOSE\n");
+  } /* if */
+  return(Y_CLOSE);
 }
 
 {r}{e}{t}{r}{i}{e}{v}{e} {
@@ -253,6 +270,19 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   return(Y_QUIT);
 }
 
+{o}{n} {
+  if(verbose_mode) {
+    fprintf(stderr, "ON\n");
+  } /* if */
+  return(Y_ON);
+}
+
+{o}{f}{f} {
+  if(verbose_mode) {
+    fprintf(stderr, "OFF\n");
+  } /* if */
+  return(Y_OFF);
+}
 
 "<" {
   if(verbose_mode) {
@@ -351,7 +381,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "INTEGER\n");
   } /* if */
-  yylval.integer = atoi(&yytext[0]);
+  lvalp->integer = atoi(&yytext[0]);
   return(Y_INTEGER);
 }
 
@@ -361,7 +391,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   } /* if */
   yytext[strlen(&yytext[0]) - 1] = 0;
   /* fixme: remove escape characters for quotes */
-  yylval.string = (char *)tsdb_normalize_string(&yytext[1]);
+  lvalp->string = (char *)tsdb_normalize_string(&yytext[1]);
   return(Y_STRING);
 }
 
@@ -379,7 +409,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
                   "%d-%d-%d %d:%d:%d",
                   now->tm_mday, now->tm_mon, now->tm_year,
                   now->tm_hour, now->tm_min, now->tm_sec);
-    yylval.string = tsdb_canonical_date(&bar[0]);
+    lvalp->string = tsdb_canonical_date(&bar[0]);
     return(Y_DATE);
   } /* if */
 }
@@ -397,7 +427,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
     (void)sprintf(&bar[0],
                   "%d-%d-%d",
                   now->tm_mday, now->tm_mon, now->tm_year);
-    yylval.string = tsdb_canonical_date(&bar[0]);
+    lvalp->string = tsdb_canonical_date(&bar[0]);
     return(Y_DATE);
   } /* if */
 }
@@ -406,7 +436,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "DATE\n");
   } /* if */
-  yylval.string = tsdb_canonical_date(&yytext[0]);
+  lvalp->string = tsdb_canonical_date(&yytext[0]);
   return(Y_DATE);
 }
 
@@ -414,7 +444,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "DATE\n");
   } /* if */
-  yylval.string = tsdb_canonical_date(&yytext[0]);
+  lvalp->string = tsdb_canonical_date(&yytext[0]);
   return(Y_DATE);
 }
 
@@ -422,7 +452,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "DATE\n");
   } /* if */
-  yylval.string = tsdb_canonical_date(&yytext[0]);
+  lvalp->string = tsdb_canonical_date(&yytext[0]);
   return(Y_DATE);
 }
 
@@ -430,7 +460,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "DATE\n");
   } /* if */
-  yylval.string = tsdb_canonical_date(&yytext[0]);
+  lvalp->string = tsdb_canonical_date(&yytext[0]);
   return(Y_DATE);
 }
 
@@ -438,7 +468,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "DATE\n");
   } /* if */
-  yylval.string = tsdb_canonical_date(&yytext[0]);
+  lvalp->string = tsdb_canonical_date(&yytext[0]);
   return(Y_DATE);
 }
 
@@ -446,7 +476,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "DATE\n");
   } /* if */
-  yylval.string = tsdb_canonical_date(&yytext[0]);
+  lvalp->string = tsdb_canonical_date(&yytext[0]);
   return(Y_DATE);
 }
 
@@ -454,7 +484,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "DATE\n");
   } /* if */
-  yylval.string = tsdb_canonical_date(&yytext[0]);
+  lvalp->string = tsdb_canonical_date(&yytext[0]);
   return(Y_DATE);
 }
 
@@ -462,7 +492,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "DATE\n");
   } /* if */
-  yylval.string = tsdb_canonical_date(&yytext[0]);
+  lvalp->string = tsdb_canonical_date(&yytext[0]);
   return(Y_DATE);
 }
 
@@ -470,7 +500,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "DATE\n");
   } /* if */
-  yylval.string = tsdb_canonical_date(&yytext[0]);
+  lvalp->string = tsdb_canonical_date(&yytext[0]);
   return(Y_DATE);
 }
 
@@ -478,7 +508,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   if(verbose_mode) {
     fprintf(stderr, "IDENTIFIER\n");
   } /* if */
-  yylval.string = (char *)strdup(&yytext[0]);
+  lvalp->string = (char *)strdup(&yytext[0]);
   return(Y_IDENTIFIER);
 }
 

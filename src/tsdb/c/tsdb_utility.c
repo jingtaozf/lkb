@@ -1803,10 +1803,17 @@ BOOL tsdb_initialize() {
   fprintf(tsdb_debug_stream,
           "initialize(): output to `%s';\n",
           (tsdb.output != NULL ? tsdb.output : "stdio"));
-  fflush(tsdb_debug_stream);
   fprintf(tsdb_debug_stream,
           "initialize(): pager: `%s'; debug: `%s'.\n",
           (tsdb.pager != NULL ? tsdb.pager : "null"), tsdb.debug_file);
+  fprintf(tsdb_debug_stream,
+          "initialize(): removal of duplicates from projections is %s;\n",
+          (tsdb.status & TSDB_UNIQUELY_PROJECT ? "on" : "off"));
+#ifdef ALEP
+  fprintf(tsdb_debug_stream,
+          "initialize(): ALEP tx() output mode is %s;\n",
+          (tsdb.status & TSDB_TX_OUTPUT ? "on" : "off"));
+#endif
 #ifdef COMPRESSED_DATA
   fprintf(tsdb_debug_stream,
           "initialize(): compress: `%s'; uncompress: `%s';\n",
@@ -1815,7 +1822,9 @@ BOOL tsdb_initialize() {
   fprintf(tsdb_debug_stream,
           "initialize(): compressed file suffix: `%s'; ", 
           (tsdb.suffix != NULL ? tsdb.suffix : "null"));
-  fprintf(tsdb_debug_stream, "fs: `%c'; ofs: `%c'.\n", tsdb.fs, tsdb.ofs);
+  fprintf(tsdb_debug_stream, "fs: `%c'; ofs: `%s'.\n",
+          tsdb.fs,
+          (tsdb.ofs != NULL ? tsdb.ofs : "null"));
 #else
   fprintf(tsdb_debug_stream, 
           "initialize(): fs: `%c'; ofs: `%s'.\n",

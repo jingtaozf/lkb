@@ -22,7 +22,7 @@
 
 extern int copy_key_list_flag;
 
-void tsdb_info(Tsdb_value **value_list) {
+void tsdb_info(Tsdb_value **value_list, char *redirection) {
 
 /*****************************************************************************\
 |*        file: 
@@ -39,14 +39,24 @@ void tsdb_info(Tsdb_value **value_list) {
   Tsdb_history *bar;
   FILE *output;
   int i, j;
-  BOOL match, pager;
+  BOOL match;
+  BYTE output_type;
 
   if(value_list != NULL) {
-    pager = TRUE;
-    if((output = tsdb_open_pager()) == NULL) {
-      output = tsdb_default_stream;
-      pager = FALSE;
+    if(redirection != NULL 
+       && (output = tsdb_open_output(redirection)) != NULL) {
+      output_type = 0;
     } /* if */
+    else {
+      if(tsdb.output == NULL 
+         && (output = tsdb_open_pager()) != NULL) {
+        output_type = 1;
+      } /* if */
+      else {
+        output = tsdb_default_stream;
+        output_type = 2;
+      } /* else */
+    } /* else */
 
     for(i = 0, match = FALSE; value_list[i] != NULL; i++, match = FALSE) {
       switch(value_list[i]->type) {
@@ -142,6 +152,18 @@ void tsdb_info(Tsdb_value **value_list) {
                     (tsdb.status & TSDB_UNIQUELY_PROJECT ? "on" : "off"));
             match = TRUE;
           } /* if */
+#ifdef ALEP
+          if(!strncmp(value_list[i]->value.identifier,
+                      "tsdb_tx_output", 14)
+             || !strncmp(value_list[i]->value.identifier,
+                         "tx-output", 9)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(output,
+                    "tsdb ALEP tx() output mode is %s.\n",
+                    (tsdb.status & TSDB_TX_OUTPUT ? "on" : "off"));
+            match = TRUE;
+          } /* if */
+#endif
           if(!match) {
             fprintf(tsdb_error_stream,
                     "info(): invalid argument `%s'.\n",
@@ -179,9 +201,15 @@ void tsdb_info(Tsdb_value **value_list) {
           fflush(tsdb_error_stream);
       } /* switch */
     } /* for */
-    if(pager) {
-      pclose(output);
-    } /* if */
+
+    switch(output_type) {
+      case 0:
+        fclose(output);
+        break;
+      case 1:
+        pclose(output);
+        break;
+    } /* switch */
   } /* if */
 } /* tsdb_info() */
 
@@ -198,6 +226,7 @@ void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
 |*
 \*****************************************************************************/
 
+  char *foo;
 
   if(!strncmp(variable->value.identifier, "tsdb_result_path", 16)
      || !strncmp(variable->value.identifier, "result-path", 11)) {
@@ -262,27 +291,74 @@ void tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
       } /* else */
     } /* else */
   } /* if */
-  else if  (!strncmp(variable->value.identifier,"tsdb_uniquely_project",22)
-            || !strncmp(variable->value.identifier, "uniquely-project", 12)) {
-    if (value->type != TSDB_STRING) {
-      fprintf(tsdb_error_stream, 
-              "set: invalid type for uniquely-project: use (on/off)\n");
-      fflush(tsdb_error_stream);
-    }
+  else if(!strncmp(variable->value.identifier, "tsdb_uniquely_project", 22)
+          || !strncmp(variable->value.identifier, "uniquely-project", 12)) {
+    if(value->type != TSDB_STRING) {
+      if(value->type != TSDB_IDENTIFIER) {
+        fprintf(tsdb_error_stream, 
+                "set: invalid type for uniquely-project; "
+                "should be `on' or `off'.\n");
+        foo = (char *)NULL;
+        fflush(tsdb_error_stream);
+      } /* if */
+      else {
+        foo = value->value.identifier;
+      } /* else */
+    } /* if */
     else {
-      if (!strcmp(value->value.string,"on")) {
+      foo = value->value.string;
+    } /* else */
+    
+    if(foo != NULL) {
+      if (!strcmp(foo, "on")) {
         tsdb.status |=  TSDB_UNIQUELY_PROJECT;
       } /* if */
-      else if (!strcmp(value->value.string,"off")) {
+      else if (!strcmp(foo, "off")) {
         tsdb.status &= !TSDB_UNIQUELY_PROJECT;
       } /* if */
       else {
         fprintf(tsdb_error_stream, 
-                "set: invalid value for uniquely-project: use (on/off)\n");
+                "set: invalid value for uniquely-project: "
+                "should be `on' or `off'.\n");
         fflush(tsdb_error_stream);
       } /* else */
-    } /* else*/
+    } /* if */
   } /* if */
+#ifdef ALEP
+  else if(!strncmp(variable->value.identifier, "tsdb_tx_output", 14)
+          || !strncmp(variable->value.identifier, "tx-output", 9)) {
+    if(value->type != TSDB_STRING) {
+      if(value->type != TSDB_IDENTIFIER) {
+        fprintf(tsdb_error_stream, 
+                "set: invalid type for tx-output; "
+                "should be `on' or `off'.\n");
+        foo = (char *)NULL;
+        fflush(tsdb_error_stream);
+      } /* if */
+      else {
+        foo = value->value.identifier;
+      } /* else */
+    } /* if */
+    else {
+      foo = value->value.string;
+    } /* else */
+    
+    if(foo != NULL) {
+      if (!strcmp(foo, "on")) {
+        tsdb.status |=  TSDB_TX_OUTPUT;
+      } /* if */
+      else if (!strcmp(foo, "off")) {
+        tsdb.status &= !TSDB_TX_OUTPUT;
+      } /* if */
+      else {
+        fprintf(tsdb_error_stream, 
+                "set: invalid value for tx-output: "
+                "should be `on' or `off'.\n");
+        fflush(tsdb_error_stream);
+      } /* else */
+    } /* if */
+  } /* if */
+#endif
   else {
     fprintf(tsdb_error_stream,
             "set(): unknown variable `%s'.\n", variable->value.identifier);
@@ -983,7 +1059,7 @@ int tsdb_do(char *file, char *output) {
 
 #ifdef DEBUG
   fprintf(tsdb_debug_stream,
-          "do(): read `%d' command(s) from `%s'.\n", n_commands, path);
+          "do(): read %d command(s) from `%s'.\n", n_commands, path);
   fflush(tsdb_debug_stream);
 #endif
 
@@ -1062,6 +1138,19 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
      5. print the resulting selection
      
      */
+
+#ifdef ALEP
+  if(tsdb.status & TSDB_TX_OUTPUT) {
+    tsdb_free_tsdb_values(attribute_list);
+    tsdb_free(attribute_list);
+    attribute_list = (Tsdb_value **)malloc(3 * sizeof(Tsdb_value *));
+    attribute_list[0] = tsdb_identifier("i-id");
+    attribute_list[1] = tsdb_identifier("i-input");
+    attribute_list[2] = (Tsdb_value *)NULL;
+    tsdb_free(report);
+    report = TSDB_TX_FORMAT;
+  } /* if */
+#endif
 
   if ((relation_list) && (relation_list[0]->type==TSDB_INTEGER)) {
     foo = tsdb_get_history(relation_list[0]->value.integer);

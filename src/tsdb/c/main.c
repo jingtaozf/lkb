@@ -34,6 +34,8 @@ char *tsdb_commands[] = {
   "info",
   "set",
   "quit",
+  "commit",
+  "close",
   (char *)NULL 
 };
 
@@ -67,6 +69,8 @@ char *tsdb_keywords[] = {
   ":integer",
   ":string",
   ":key",
+  "on",
+  "off",
   (char *)NULL
 };
 
@@ -93,9 +97,18 @@ char *tsdb_variables[] = {
   "tsdb_history_size",
   "uniquely-project",
   "tsdb_uniquely_project",
+#ifdef ALEP
+  "tsdb_tx_output",
+  "tx-output",
+#endif
   (char *)NULL
 };
-#define TSDB_VAR_NUM 10
+
+#ifndef ALEP
+#  define TSDB_VAR_NUM 10
+#else
+#  define TSDB_VAR_NUM 12
+#endif
 
 char *tsdb_rest_generate(char *, int) ;
 char **tsdb_completion(char *, int, int);
@@ -119,6 +132,7 @@ int main(int argc, char **argv) {
 
   char *input = NULL;
   char host[512 + 1], prompt[80 + 1], *foo, *bar;
+  int status;
 
   if((foo = strdup(argv[0])) != NULL) {
     if((bar = strrchr(foo, TSDB_DIRECTORY_DELIMITER[0])) != NULL) {
@@ -155,9 +169,10 @@ int main(int argc, char **argv) {
   signal(SIGPIPE, SIG_IGN);
 
   if(tsdb.query != NULL) {
-    (void)tsdb_parse(tsdb.query, (FILE *)NULL);
+    status = tsdb_parse(tsdb.query, (FILE *)NULL);
   } /* if */
   else {
+    status = 0;
     using_history();
     if(read_history(TSDB_HISTORY_FILE)) {
       fprintf(tsdb_error_stream,
@@ -220,7 +235,7 @@ int main(int argc, char **argv) {
   tsdb_close_debug(tsdb_debug_stream);
 #endif
 
-  exit(0);
+  exit(status);
 } /* main() */
 
 void tsdb_parse_options(int argc, char **argv) {
@@ -264,6 +279,9 @@ void tsdb_parse_options(int argc, char **argv) {
     {"usage", no_argument, 0, TSDB_USAGE_OPTION},
     {"help", no_argument, 0, TSDB_USAGE_OPTION},
     {"version", no_argument, 0, TSDB_VERSION_OPTION},
+#ifdef ALEP
+    {"tx", no_argument, 0, TSDB_TX_OPTION},
+#endif
     {0, 0, 0, 0}
   }; /* struct option */
 
@@ -450,6 +468,11 @@ void tsdb_parse_options(int argc, char **argv) {
           tsdb_default_stream = output;
         } /* if */
         break;
+#ifdef ALEP
+      case TSDB_TX_OPTION:
+        tsdb.status |= TSDB_TX_OUTPUT;
+        break;
+#endif
       } /* switch */
   } /* while */
 } /* tsdb_parse_options() */

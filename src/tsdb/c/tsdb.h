@@ -36,6 +36,13 @@ extern void free(void *);
 #define TSDB_CLIENT_MODE 2
 #define TSDB_QUIT 4
 #define TSDB_UNIQUELY_PROJECT 8
+#ifdef ALEP
+#  define TSDB_TX_OUTPUT 128
+#endif
+
+#ifdef ALEP
+#  define TSDB_TX_FORMAT "tx(%s, '%s', '')."
+#endif
 
 #define TSDB_UNKNOWN_TYPE 0
 #define TSDB_INTEGER 1
@@ -95,6 +102,9 @@ extern void free(void *);
 #define TSDB_FS_OPTION 19
 #define TSDB_OFS_OPTION 20
 #define TSDB_OUTPUT_OPTION 21
+#ifdef ALEP
+#  define TSDB_TX_OPTION 255
+#endif
 
 #define TSDB_REDIRECTION_OVERWRITE 1
 #define TSDB_REDIRECTION_APPEND 2
@@ -395,7 +405,7 @@ char** tsdb_all_relation_names();
 BOOL tsdb_attribute_in_relation(Tsdb_relation *, char *);
 BOOL tsdb_attribute_in_selection(Tsdb_selection *, char *);
 int tsdb_relation_in_selection(Tsdb_selection *, char* );
-void tsdb_info(Tsdb_value **);
+void tsdb_info(Tsdb_value **, char *);
 void tsdb_set(Tsdb_value *, Tsdb_value *);
 int tsdb_drop_table(Tsdb_value *);
 int tsdb_create_table(Tsdb_value *, Tsdb_field **);
