@@ -45,6 +45,8 @@ GUNZIP="gunzip -c"
 TAR="tar xf -"
 SED=sed
 
+build="latest"
+
 #
 # process command-line options; for now, either set root directory and toggle
 # inclusion of Redwoods data (off by default).
@@ -54,6 +56,11 @@ while [ $# -gt 0 ]; do
     -h|--home)
       DELPHINHOME=${2};
       shift 2;
+    ;;
+    -s|--stable)
+      build="stable";
+      WGET="wget --quiet";
+      shift 1;
     ;;
     -r|--redwoods)
       TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home;
@@ -117,7 +124,7 @@ cd ${DELPHINHOME}
 
 for i in lkb_data.tgz lkb_${os}.tgz lkb_source.tgz; do
   echo -n "install: \`${i}' ...";
-  ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
+  ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/${build}/${i}; )
   if [ -f Archives/${i} ]; then
     ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
     echo " done.";
@@ -139,7 +146,7 @@ if [ "${os%%.*}" == "linux" -o "$os" == "solaris" ]; then
            itsdb_${os}.tgz itsdb_data.tgz itsdb_documentation.tgz \
            itsdb_source.tgz; do
     echo -n "install: \`${i}' ...";
-    ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
+    ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/${build}/${i}; )
     ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
     if [ -f Archives/${i} ]; then
       ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
@@ -163,7 +170,7 @@ echo " done.";
 #
 for i in erg.tgz matrix.tgz spanish.tgz; do
   echo -n "install: \`${i}' ...";
-  ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
+  ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/${build}/${i}; )
   if [ -f Archives/${i} ]; then
     ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
     echo " done.";
