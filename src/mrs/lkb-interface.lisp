@@ -148,10 +148,14 @@
   (lkb::is-valid-type type))
 
 ;;;
-;;; convert PSOA to LKB dag representation; enables use of DAG browsing tools
+;;; convert PSOA to LKB/ERG dag representation; 
+;;; enables use of DAG browsing tools
 ;;; for MRS viewing (specifically the emerging LUI AVM browser, while LUI
 ;;; does not include a specialized MRS browser).             (10-jul-03; oe)
 ;;;
+
+;;; Note - this is entirely ERG specific and should be FIXed - aac
+
 (defun psoa-to-dag (mrs)
   (let ((dag (lkb::make-dag :type 'lkb::mrs))
         (cache (make-hash-table :test #'equal)))
@@ -170,7 +174,7 @@
                    for ep in (psoa-liszt mrs)
                    for predicate = (rel-pred ep)
                    for handel = (let* ((foo (rel-handel ep))
-                                       (bar (when (handle-var-p foo)
+                                       (bar (when (is-handel-var foo)
                                               (var-string foo))))
                                   (when bar (lkb::make-dag :type bar)))
                    for flist = (rel-flist ep)
@@ -221,7 +225,8 @@
         :value (loop
                    with dags = nil
                    for hcons in (psoa-h-cons mrs)
-                   for relation = (hcons-relation hcons)
+ ;;;                   for relation = (hcons-relation hcons)
+ ;;; redundant currently cos always a qeq - FIX eventually
                    for hi = (let ((foo (hcons-scarg hcons)))
                               (when (var-p foo) 
                                 (lkb::make-dag :type (var-string foo))))
@@ -229,7 +234,14 @@
                               (when (var-p foo) 
                                 (lkb::make-dag :type (var-string foo))))
                    for dag = (lkb::make-dag 
-                                 :type (intern (string relation) :lkb))
+			      :type (vsym "qeq"))
+			     ;;; FIX - should be *qeq-type*
+			     ;;; but this file is read in before 
+			     ;;; mrsglobals because vsym defined here
+			     ;;; obviously this is not a good idea
+			     ;;; given that this code should all be making
+			     ;;; use of mrsglobals - but leave for now
+			     ;;; since this is evidently all a hack ...
                    when (and hi lo) do
                      (setf (lkb::dag-arcs dag)
                        (list
