@@ -89,12 +89,12 @@ FILE *tsdb_open_debug() {
   if((name = getenv("TSDB_DEBUG_FILE")) != NULL) {
     file = (char *)malloc(strlen(name)
                           + (user != NULL ? 1 + strlen(user) : 0) + 1);
-    strcpy(file,name);
+    strcpy(file, name);
   } /* if */
   else {
     file = (char *)malloc(strlen(TSDB_DEBUG_FILE)
                           + (user != NULL ? 1 + strlen(user) : 0) + 1);
-    strcpy(file,TSDB_DEBUG_FILE);
+    strcpy(file, TSDB_DEBUG_FILE);
   } /* else */
   if(user != NULL) {
     file = strcat(file, ".");
