@@ -971,6 +971,7 @@
         (when gc-strategy (restore-gc-strategy gc-strategy))))
 
 (defun export-tree (item active &key complementp (stream *tsdb-io*))
+
   (loop
       with *package* = (find-package lkb::*lkb-package*)
       with lkb::*deleted-daughter-features* = 
@@ -980,6 +981,7 @@
           lkb::*deleted-daughter-features*)
       with parse-id = (get-field :parse-id item)
       with results = (get-field :results item)
+      for i from 1
       for result in results
       for result-id = (get-field :result-id result)
       for derivation = (when (if complementp
@@ -990,6 +992,7 @@
       for tree = (and edge (lkb::parse-tree-structure edge))
       for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
       for mrs = (and edge (mrs::extract-mrs edge))
+      when (zerop (mod i 100)) do (clrhash *reconstruct-cache*)
       when dag do
         (format 
          stream 
