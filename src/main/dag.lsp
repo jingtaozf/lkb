@@ -8,6 +8,9 @@
 
 (in-package :cl-user)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (export '(with-unification-context)))
+
 #+mcl
 (progn ; for space profiling and similar investigation
 (defparameter aa 0)

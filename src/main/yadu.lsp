@@ -9,6 +9,9 @@
 
 (in-package :cl-user)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (export '(yadu copy-tdfs-elements)))
+
 (defparameter *yadu-debug* nil)
 
 ;;; YADU
