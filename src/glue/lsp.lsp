@@ -466,8 +466,10 @@
                     ((edge-p (lspb-edge object))
                      (tdfs-indef (edge-dag (lspb-edge object))))))
               (mrs (and dag (mrs::extract-mrs-from-fs dag))))
-         (when mrs ())))
-      #+:mrs
+         (when (and mrs (mrs::psoa-p mrs))
+           (close-existing-chart-windows)
+           (generate-from-mrs mrs)
+           (show-gen-result))))
       ((:mrs :dependencies)
        (let* ((dag (cond
                     ((tdfs-p (lspb-dag object)) 
@@ -512,7 +514,6 @@
                             (write-to-string 
                              (parse-tree-structure edge)))))
              (format stream " ~s" string) ))
-          #+:mrs
           ((:mrs :indexed :prolog :scoped :rmrs :dependencies)
            (when (eq format :mrs) (setf format :simple))
            (let* ((format (intern (string format) :mrs))
