@@ -1,0 +1,296 @@
+(1) contents of the distribution
+
+tsdb(1) is available in both precompiled binary (for SunOS, Solaris and Linux;
+other Un*x platforms on request) and source distribution.  compiling the source
+distribution of tsdb(1) presupposes gcc(1), bison(1) and flex(1), as well as
+the GNU libraries `libreadline.a' and `libregex.a' --- all of these usually are
+included in Un*x installations or can be obtained free of royalties from most
+major anonymous ftp(1) servers (e.g. `prep.ai.mit.edu').
+
+the ready-to-run binary distribution, however, should already be suitable in
+most contexts; the compiled-in default values (for files and directories) can
+be changed through the use of command line options or environment variables
+(see below).
+
+unpacking any of the binary distributions yields:
+
+  ./tsdb-0.1/
+  ./tsdb-0.1/etc/
+  ./tsdb-0.1/etc/relations
+  ./tsdb-0.1/tsdb
+  ./tsdb-0.1/README
+  ./tsdb-0.1/german/
+  ./tsdb-0.1/french/
+  ./tsdb-0.1/english/
+  ./tsdb-0.1/doc/
+  ./tsdb-0.1/doc/regex.ps
+  ./tsdb-0.1/doc/rltech.texi
+  ./tsdb-0.1/doc/history.texi
+  ./tsdb-0.1/doc/hstech.texi
+  ./tsdb-0.1/doc/hsuser.texi
+  ./tsdb-0.1/doc/regex.texi
+  ./tsdb-0.1/doc/history.dvi
+  ./tsdb-0.1/doc/history.ps
+  ./tsdb-0.1/doc/rluser.texi
+  ./tsdb-0.1/doc/readline.texi
+  ./tsdb-0.1/doc/readline.dvi
+  ./tsdb-0.1/doc/readline.ps
+  ./tsdb-0.1/doc/regex.dvi
+
+--- the TSNLP `relations' file is in the `etc' subdirectory; the three data
+directories `english', `french', and `german' are empty and have to be filled
+from one of the separate data distributions (see the respective subdirectories
+from the tsdb(1) distribution site).  the `doc' directory contains formatted
+documentation on the GNU (remember: GNU is not Un*x) libraries used in tsdb(1)
+(see below).
+
+the database kernel itself is comprised by the binary `tsdb'; see below for its
+command line synopsis.
+
+the source distribution contains the C, bison(1), and flex(1) sources:
+
+  ./tsdb-0.1/
+  ./tsdb-0.1/Makefile
+  ./tsdb-0.1/main.c
+  ./tsdb-0.1/tsdb.c
+  ./tsdb-0.1/tsdb_debug.c
+  ./tsdb-0.1/tsdb_engine.c
+  ./tsdb-0.1/tsdb_io.c
+  ./tsdb-0.1/tsdb_server.c
+  ./tsdb-0.1/tsdb_sql.c
+  ./tsdb-0.1/tsdb_utility.c
+  ./tsdb-0.1/errors.h
+  ./tsdb-0.1/globals.h
+  ./tsdb-0.1/tsdb.h
+  ./tsdb-0.1/parser.y
+  ./tsdb-0.1/scanner.lex
+
+--- the `Makefile' that ships with the source distribution builds the tsdb(1)
+library `libtsdb.a' and the `tsdb' binary.
+
+
+(2) command line synopsis
+
+tsdb(1) accepts the following set of options (in arbitrary order; options can
+be abbreviated as long as the prefix remains unambigious):
+
+  `-server' --- go into server (daemon) mode;
+  `-server=host' --- go into client mode connecting to server `host';
+  `-client' --- go into client mode;
+  `-port=n' --- server TCP port address;
+  `-home=directory' --- root directory for database;
+  `-relations-file=file' --- relations file for database;
+  `-data-path=directory' --- data directory for database;
+  `-result-path=directory' --- directory to store query results;
+  `-result-prefix=string' --- file prefix for query results;
+  `-max-results[={_0_ | 1 | ...}]' --- maximum of stored query results;
+  `-debug-file=file' --- output file for debug information;
+  `-pager[={command | _off_}' --- pager command to use;
+  `-query=string' --- query to be processed in batch mode;
+  `-usage' or `-help' --- this message (give it a try |:-);
+  `-version' --- current TSDB version.
+
+the `server', `client', and `port' options control the database network server
+mode.  note that `-client' (i.e. using tsdb(1) as the frontend talking to a
+tsdb(1) server on the network) is not yet implemented; however, using telnet(1)
+(to the appropriate port number; default is 4711) allows to connect to tsdb(1)
+processes in server mode.
+
+the `home', `relations-file', and `data-path' options control the location of
+the relation definitions and data files.  default values are `.' (for `home'),
+`etc/relations' (`relations-file'), and `german/' (`data-path'), i.e. values
+suitable for running the tsdb(1) executable in the directory resulting from
+unpacking the distribution archive.  --- both, absolute and relative path and
+file names are valid values for the `home', `relations-file', and `data-path'
+options; relative path or file names are expanded  relative to the current
+value of `home' (i.e. the current directory by default).
+
+the `result-path', `result-prefix', and `max-results' options control the
+generation of query result storage files.  initial (default) values are `/tmp/'
+(`result-path'), `tsdb.query.<user>.' (`result-prefix'), and 20 (`max-results')
+such that for user `oe' tsdb(1) will generate up to twenty files in `/tmp'
+using the names `tsdb.query.oe.1' to `tsdb.query.oe.20' where version 1 always
+corresponds to the most recent query result (i.e. for existing query result
+storage files the version number is incremented and the file renamed such that
+the file with a version number equal to `max-results' is overwritten).  used
+without an argument or a value of 0, the `max-results' option disables the
+tsdb(1) query result storage facility.
+
+the `debug-file' option allows to set the file used by tsdb(1) to log debug
+information (if the `DEBUG' flag was set when building tsdb(1)); the default
+value is `/tmp/tsdb.debug.<user>' and there should rarely be a reason to change
+it (possibly to `/dev/null').
+
+using the `-pager' option allows to set the pager program used in interactive
+tsdb(1) mode to display query results.  the default value (one of `more',
+`less', or `page') depends on the system used to run tsdb(1); when using the
+`pager' option the pager command either has to be in the shell search PATH or
+specified as an absolute file name.  a value of `null' or no value at all
+disable the tsdb(1) pager facility.
+
+the `query' option runs tsdb(1) in batch (rather than interactive) mode and
+exits after processing the `query' argument.  note that whitespace and special
+characters (e.g. `&', `|', `>', `"' et al.) have to be escaped from the shell;
+usually a pair of single quotes (`'') surrounding the `query' argument should
+be sufficient.
+
+
+(3) environment variables
+
+most of the tsdb(1) variables controlled by options can be set through the
+shell environment as well.  following is a list of environment variables
+relevant to tsdb(1); the interpretation and admissible values are similar to
+the corresponding command line options:
+
+  TSDB_HOME
+  TSDB_RELATIONS_FILE
+  TSDB_DATA_PATH
+  TSDB_RESULT_PATH
+  TSDB_RESULT_PREFIX
+  TSDB_MAX_RESULTS
+  TSDB_PAGER
+  PAGER
+
+thus, evaluating ``export TSDB_DATA_PATH=french'' (e.g. from `.bashrc') or
+``setenv TSDB_HOME /home/tsdb'' (from `.cshrc' for old-fashioned csh(1) users)
+changes the default for the data directory to (a subdirectory) `french' or,
+respectively, announces `/home/tsdb' as the home (root directory) of the
+tsdb(1) database such that the tsdb(1) executable can be used from arbitrary
+directories.
+
+besides the `home' command line option and the `TSDB_HOME' environment variable
+there is another way to determine the tsdb(1) root directory: at startup the
+database will check for the existence of a tsdb(1) pseudo user account and, on
+success, use its home directory as the tsdb(1) root directory.  the default
+user names checked are `tsdb' and `TSDB' but these can be changed at compile
+time through the `TSDB_PSEUDO_USER' compiler flag.
+
+additionally, running tsdb(1) as `tsdbd' (through linking or copying the binary
+file) puts the database into server (daemon) mode (similar to the `server'
+option).
+
+
+(4) the tsql query language
+
+following is the syntax of the tsdb(1) query language in extended backus-naur
+form (`|' is alternation; `[ ... ]' optionality; `*' and `+' repetition):
+
+  <query> :== { <info> | <set> | <retrieve> | <insert> } `.'
+
+  <info> :== `info' { `all' | `relations' | <relation name> |
+                      <tsdb constant> <tsdb variable> }
+
+  <set> :== `set' <tsdb variable> { <integer> | <string> }
+
+  retrieve :== { `retrieve' `select' }
+                 { <attribute name>+ | `*' }
+                 [ `from' <relation name>+ ]
+                 [ `where' <condition> ]
+                 [ `report' <format string> ]
+
+  <insert> :== `insert' `into' <relation name>
+                 [ <attribute name>+ ] 
+                 `values' { <integer> | <string> | <date> }+
+
+  <relation name> :== <identifier>
+
+  <attribute name> :== <identifier>
+
+  <condition> :== { <attribute name> 
+                      { `=' | `==' | `!=' | `~' | `!~' } 
+                      <string> |
+                    <attribute name>
+                      { `=' | `==' | `!=' | `<' | `>' | `<=' | `>=' }
+                      { <integer> | <date> } |
+                    <condition> { `&' | `&&' | `and' } <condition> |
+                    <condition> { `|' | `||' | `or' } <condition> |
+                    { `!' | `not' } <condition} |
+                    `(' <condition> `)'
+
+  <integer> :== [ { `+' | `-' } ] <digit>+
+
+  <digit> :== { `0' | `1' | ... | `9' }
+
+  <string> :== { `"' <any character except `"'>* `"' |
+                 ``' <any character except `''>* `'' }
+
+  <date> :== { [ <day> `-' ] <month> `-' <year>
+                 [ <whitespace> [ `(' ] <time> [ `)' ] ] |
+               `:today' | `now' }
+
+  <day> :== [ <digit> ] <digit>
+
+  <month> :== [ <digit> ] <digit>
+
+  <year> :== [ <digit> <digit> ] <digit> <digit>
+
+  <time> :== <digit> <digit> `:' <digit> <digit> [ `:' <digit> <digit> ]
+
+  <identifier> :== <character> { <character> | <digit> | `-' | `_'}*
+
+  <character> :== {`A' | `b' | ... | `Z' | `a' | `b' | ... | `z' }
+
+  <tsdb constant> :== { `home' | `tsdb_home' |
+                        `relations-file' | `tsdb_relations_file' |
+                        `data-path' | `tsdb_data_path' }
+
+  <tsdb variable> :== { `result-path' | `tsdb_result_path' |
+                        `result-prefix' | tsdb_result_prefix' |
+                        `max-results' | `tsdb_max_results' }
+
+
+(6) relation file format
+
+the `relations' files is plain ascii.  relations are separated by one or more
+empty lines (similar to paragraphs in TeX).  the first line of a paragraph is
+the relation name followed by a colon (`:'); the remaining lines of a paragraph
+define attributes (one per line) for this relation.  each attribute must have a
+datatype (one of `:integer', `:string', and `:date'); additionally, the token
+`:key' can be used to designate one or more attributes as keys that serve for
+building complex (join) relations.
+
+
+(5) data file format
+
+the data file format is similar to tsct(1): plain ascii files; one record per
+line with fields separated by `@' characters (the default value of `TSDB_FS'
+when compiling from source).
+
+
+(6) command line editing and history
+
+tsdb(1) uses the GNU readline and history libraries (remember: GNU is not Un*x)
+for the interactive command line editing and history facilities (similar to
+e.g. GNU bash(1) and gdb(1)).  relevant parts of the GNU documentation are
+included with the tsdb(1) distribution in the `doc' subdirectory; the files
+`readline' and `history' are available in both `.dvi' and `.ps' form.
+
+
+(7) regular expression matching
+
+tsdb(1) uses the GNU regular expression library to implement the match (`~')
+operator on strings.  thus, the regular expression syntax is mostly like in GNU
+emacs; the file `regex' (available in both `.dvi' and `.ps' form) fro the `doc'
+subdirectory gives details.
+
+
+(8) example queries
+
+following are a few example queries to illustrate the use of the tsdb(1) query
+language; more examples can be found at `http://tsnlp.dfki.uni-sb.de/tsnlp/'.
+
+- list the names, supertypes and presuppositions of all phenomena:
+
+    retrieve p-name p-supertypes p-presupposition.
+
+- list grammatical test items (together with their categories) relevant to
+   complementation phenomena:
+
+     retrieve i-input i-category
+       where i-wf = 1 & p-name ~ "[Cc]omplementation".
+
+- extract all noun and prepositional phrases (together with their categories and
+  the identifiers of the embedding test items):
+
+    retrieve a-instance a-category i-id
+      where a-category ~ "^NP" | a-category ~ "^PP"
