@@ -88,9 +88,8 @@
     
 
 
-(defun show-mrs-window (edge  &optional mrs title)
-  (mp:run-function "Simple MRS"
-                           #'show-mrs-window-really edge mrs title))
+(defun show-mrs-window (edge &optional mrs title)
+  (mp:run-function "Simple MRS" #'show-mrs-window-really edge mrs title))
 
 (defun show-mrs-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-simple)))
@@ -103,66 +102,66 @@
 
 
 
-(defun show-mrs-indexed-window (edge)
+(defun show-mrs-indexed-window (edge &optional mrs title)
   (mp:run-function "Indexed MRS"
-   #'show-mrs-indexed-window-really edge))
+   #'show-mrs-indexed-window-really edge mrs title))
 
-(defun show-mrs-indexed-window-really (edge)
+(defun show-mrs-indexed-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-indexed)))
     (setf (mrs-indexed-mrsstruct mframe) 
-      (mrs::extract-mrs edge))
-    (setf (clim:frame-pretty-name mframe) "Indexed MRS")
+      (or mrs (mrs::extract-mrs edge)))
+    (setf (clim:frame-pretty-name mframe) (or title "Indexed MRS"))
     (clim:run-frame-top-level mframe)))
 
-(defun show-mrs-prolog-window (edge)
+(defun show-mrs-prolog-window (edge &optional mrs title)
   (mp:run-function "Prolog MRS"
-   #'show-mrs-prolog-window-really edge))
+   #'show-mrs-prolog-window-really edge mrs title))
 
-(defun show-mrs-prolog-window-really (edge)
+(defun show-mrs-prolog-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-prolog)))
     (setf (mrs-prolog-mrsstruct mframe) 
-      (mrs::extract-mrs edge))
-    (setf (clim:frame-pretty-name mframe) "Prolog MRS")
+      (or mrs (mrs::extract-mrs edge)))
+    (setf (clim:frame-pretty-name mframe) (or title "Prolog MRS"))
     (clim:run-frame-top-level mframe)))
 
-(defun show-mrs-scoped-window (edge)
+(defun show-mrs-scoped-window (edge &optional mrs title)
   (mp:run-function "Scoped MRS"
-   #'show-mrs-scoped-window-really edge))
+   #'show-mrs-scoped-window-really edge mrs title))
   
-(defun show-mrs-scoped-window-really (edge)
+(defun show-mrs-scoped-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-scoped))
-        (mrsstruct (mrs::extract-mrs edge)))
+        (mrsstruct (or mrs (mrs::extract-mrs edge))))
     (setf (mrs-scoped-mrsstruct mframe) 
       mrsstruct)
     (setf (mrs-scoped-scoped mframe) 
       (mrs::make-scoped-mrs mrsstruct))
-    (setf (clim:frame-pretty-name mframe) "Scoped MRS")
+    (setf (clim:frame-pretty-name mframe) (or title "Scoped MRS"))
     (clim:run-frame-top-level mframe)))
 
-(defun show-mrs-rmrs-window (edge)
+(defun show-mrs-rmrs-window (edge &optional mrs title)
   (mp:run-function "RMRS"
-   #'show-mrs-rmrs-window-really edge))
+   #'show-mrs-rmrs-window-really edge mrs title))
   
-(defun show-mrs-rmrs-window-really (edge)
+(defun show-mrs-rmrs-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-rmrs))
-        (mrsstruct (mrs::extract-mrs edge)))
+        (mrsstruct (or mrs (mrs::extract-mrs edge))))
     (setf (mrs-rmrs-mrsstruct mframe) 
       mrsstruct)
     (setf (mrs-rmrs-rmrs mframe) 
       (mrs::mrs-to-rmrs mrsstruct))
-    (setf (clim:frame-pretty-name mframe) "RMRS")
+    (setf (clim:frame-pretty-name mframe) (or title "Robust MRS"))
     (clim:run-frame-top-level mframe)))
 
-(defun show-mrs-dependencies-window (edge)
+(defun show-mrs-dependencies-window (edge &optional mrs title)
   (mp:run-function "Elementary Dependencies"
-   #'show-mrs-dependencies-window-really edge))
+   #'show-mrs-dependencies-window-really edge mrs title))
   
-(defun show-mrs-dependencies-window-really (edge)
+(defun show-mrs-dependencies-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-dependencies))
-        (mrsstruct (mrs::extract-mrs edge)))
+        (mrsstruct (or mrs (mrs::extract-mrs edge))))
     (setf (mrs-dependencies-mrsstruct mframe) 
       mrsstruct)
-    (setf (clim:frame-pretty-name mframe) "Elementary Dependencies")
+    (setf (clim:frame-pretty-name mframe) (or title "Elementary Dependencies"))
     (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-simple (mframe stream &key max-width max-height)

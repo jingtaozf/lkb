@@ -288,7 +288,7 @@
   (when *eds-message-relation*
     (let ((type (ed-predicate ed)))
       (or (eq type *eds-message-relation*)
-          (subtype-p type *eds-message-relation*)))))
+          (ignore-errors (subtype-p type *eds-message-relation*))))))
 
 (defun ed-bleached-p (ed)
   (or 
@@ -299,7 +299,8 @@
        (loop
            for foo in *eds-bleached-relations*
            for type = (if (stringp foo) (vsym foo) foo)
-           thereis (or (eq relation type) (subtype-p relation type)))))))
+           thereis (or (eq relation type) 
+                       (ignore-errors (subtype-p relation type))))))))
 
 (defun ed-vacuous-p (ed)
   (unless *eds-include-vacuous-relations-p*

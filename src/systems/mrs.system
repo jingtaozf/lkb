@@ -122,6 +122,12 @@
       :binary-pathname "mrs"
       :components
       ((:file "dependencies")))
+
+     (:module "lsp"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :components
+      ((:file "lsp")))
      
      #+:mt
      (:module "translation"

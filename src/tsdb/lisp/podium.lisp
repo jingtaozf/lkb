@@ -15,6 +15,9 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#+:allegro
+(eval-when (:load-toplevel :compile-toplevel :execute)
+  (require :process))
 
 (in-package "TSDB")
 
@@ -46,10 +49,6 @@
 (defparameter %tsdb-podium-pending-events% nil)
 
 (defvar %tsdb-podium-background-process% nil)
-
-#+:allegro
-(eval-when (:load-toplevel :compile-toplevel :execute)
-  (require :process))
 
 (defun init-podium ()
   (shutdown-podium)

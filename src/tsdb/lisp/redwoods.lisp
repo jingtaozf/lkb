@@ -1165,7 +1165,8 @@
         (when meter (meter :value (get-field :end meter)))
         (when gc-strategy (restore-gc-strategy gc-strategy))))
 
-(defun export-tree (item active &key complementp (offset 0) (stream *tsdb-io*))
+(defun export-tree (item active 
+                    &key complementp lspp (offset 0) (stream *tsdb-io*))
 
   #+:debug
   (setf %item% item %active% active)
@@ -1191,10 +1192,11 @@
       for mrs = (and edge (mrs::extract-mrs edge))
       when (zerop (mod i 100)) do (clrhash *reconstruct-cache*)
       when dag do
-        (format 
-         stream 
-         "[~d:~d] ~:[(active)~;(inactive)~]~%~%" 
-         (+ parse-id offset) result-id complementp)
+        (unless lspp
+          (format 
+           stream 
+           "[~d:~d] ~:[(active)~;(inactive)~]~%~%" 
+           (+ parse-id offset) result-id complementp))
         (setf lkb::*cached-category-abbs* nil)
         (when (or (eq *redwoods-export-values* :all)
                   (smember :derivation *redwoods-export-values*))
@@ -1221,7 +1223,7 @@
         (when (or (eq *redwoods-export-values* :all)
                   (smember :dependencies *redwoods-export-values*))
           (mrs::mrs-output-psoa mrs :stream stream))
-          (format stream "~c~%" #\page)))
+        (unless lspp (format stream "~c~%" #\page))))
 
 (defun semantic-equivalence (data &key condition (file "/tmp/equivalences"))
   
