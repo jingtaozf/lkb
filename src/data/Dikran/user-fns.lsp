@@ -67,3 +67,6 @@
         (make-tdfs :indef indef)))))
 
 
+(defun preprocess-sentence-string (str)
+  (string-trim '(#\space #\* #\.) str))
+

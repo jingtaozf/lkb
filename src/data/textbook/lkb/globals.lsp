@@ -51,9 +51,6 @@
 (defparameter *deleted-daughter-features* '(ARGS HEAD-DTR NON-HEAD-DTR LCONJ-DTR RCONJ-DTR)
    "features pointing to daughters deleted on building a constituent")
 
-(defparameter *head-marking-path* '(SYNSEM LOCAL CONT KEY)
-   "coreferenced between mother and head daughter")
-
 |#
 
 ;;; Generation
