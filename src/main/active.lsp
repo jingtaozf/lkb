@@ -953,6 +953,11 @@
              ;; re-use `foo' slot to keep local cache of how this edge can be
              ;; unfolded record failure, where appropriate, too. 
              ;;
+             ;; _fix_me_
+             ;; the caching mechanism is unnecessarily complex: it would seem
+             ;; more transparent to make unpack-edge!() as a whole cache the
+             ;; set of edges corresponding to the input .edge. instead.
+             ;;                                                (11-dec-03; oe)
              (unless (vectorp (edge-foo edge))
                (setf (edge-foo edge) 
                  (make-array n :initial-element nil)))
@@ -989,13 +994,20 @@
                             (result
                              (let ((copy (restrict-and-copy-tdfs result)))
                                (setf (aref cache i)
-                                 (make-g-edge
-                                  :id (next-edge) :rule rule :dag copy
-                                  :category (indef-type-of-tdfs copy)
-                                  :from (edge-from edge) :to (edge-to edge)
-                                  :children children 
-                                  :leaves leaves :lex-ids lex-ids
-                                  :rels-covered rels :lexemes lexemes))))
+                                 (if (g-edge-p edge)
+                                   (make-g-edge
+                                    :id (next-edge) :rule rule :dag copy
+                                    :category (indef-type-of-tdfs copy)
+                                    :from (edge-from edge) :to (edge-to edge)
+                                    :children children 
+                                    :leaves leaves :lex-ids lex-ids
+                                    :rels-covered rels :lexemes lexemes)
+                                   (make-edge
+                                    :id (next-edge) :rule rule :dag copy
+                                    :category (indef-type-of-tdfs copy)
+                                    :from (edge-from edge) :to (edge-to edge)
+                                    :children children 
+                                    :leaves leaves :lex-ids lex-ids)))))
                             (t
                              #+:fdebug
                              (when id
@@ -1068,8 +1080,7 @@
        ;;
        ;; at the leafs of the tree, terminate the recursion.
        ;;
-       (t
-        (list (if (g-edge-p edge) (copy-g-edge edge) (copy-edge edge))))))))
+       (t (list edge))))))
 
 #+:test
 (let ((*active-parsing-p* t)
