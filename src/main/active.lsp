@@ -535,6 +535,11 @@
                 "~&freeze(): freezing ~a for <~d>.~%"
                 (edge-label edge) id)
                (setf (edge-frozen edge) id)
+               ;;
+               ;; _fix_me_
+               ;; there is reason to suspect we may end up counting duplicate
+               ;; freezings here.                           (29-jan-03; oe)
+               ;;
                (when (minusp id) (incf (packings-frozen *packings*))))
              (loop 
                  with id = (if recursivep id (- id))
@@ -938,6 +943,14 @@
               (loop
                   for tdfs in children
                   collect (dag-type (tdfs-indef tdfs))))
+             ;;
+             ;; re-use `dag-restricted' slot to keep local cache of how this
+             ;; edge can be unfolded; record failure, where appropriate, too.
+             ;;
+             ;; _fix_me_
+             ;; presumably, .children. should be a list of edges coming in, and
+             ;; we should return a list of fresh edges too.    (30-jan-03; oe)
+             ;;
              (unless (vectorp (edge-dag-restricted edge))
                (setf (edge-dag-restricted edge) (make-array n)))
              (let* ((cache (edge-dag-restricted edge))
@@ -978,6 +991,10 @@
     (let ((children (edge-children edge))
           (morphology (edge-morph-history edge)))
       (cond
+       ;;
+       ;; ignore genuinely frozen edges; now that we are into the unpacking
+       ;; phase, frosted edges represent valid alternatives again.
+       ;; 
        ((and (edge-frozen edge) (minusp (edge-frozen edge)))
         #+:udebug
         (format
@@ -985,6 +1002,10 @@
          "~&unpack-edge!(): ignoring <~d> (frozen for <~d>)~%"
          (edge-id edge) (edge-frozen edge))
         nil)
+       ;;
+       ;; unless we are inside of a recursive call on this edge already, make
+       ;; sure we recurse on all packings node and accumulate results.
+       ;;
        ((and (null insidep) (or (edge-packed edge) (edge-equivalent edge)))
         (nconc (unpack-edge! id edge t)
                (loop
@@ -993,6 +1014,11 @@
                (loop
                    for edge in (edge-equivalent edge)
                    nconc (unpack-edge! id edge))))
+       ;;
+       ;; given the (idiosyncratic) LKB representation of rule applications
+       ;; that affect the surface form, this is just a variant of the general
+       ;; case where we have children.
+       ;;
        (morphology
         (loop
             with decompositions = (unpack-edge! id morphology)
@@ -1001,6 +1027,13 @@
             for i from 0
             for instantiation = (instantiate edge (list decomposition) i n)
             when instantiation collect instantiation))
+       ;;
+       ;; the (default) recursive case: for each daughter, unfold it and build
+       ;; list of unfolding results, one per daughter.  then compute all ways
+       ;; in which this edge can be unfolded (`decomposed') and instantiate
+       ;; each one in turn; feed total number of decompositions and index into
+       ;; instantiate() to support cache maintenance.
+       ;;
        (children
         (loop
             with daughters = (loop
@@ -1012,6 +1045,9 @@
             for i from 0
             for instantiation = (instantiate edge decomposition i n)
             when instantiation collect instantiation))
+       ;;
+       ;; at the leafs of the tree, terminate the recursion.
+       ;;
        (t
         (list (or (edge-odag edge) (edge-dag edge))))))))
 
