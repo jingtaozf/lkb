@@ -37,19 +37,6 @@
 	    lexicon)))
 
 ;;; prepare val list for SQL INSERT INTO query
-(defun sql-val-list-str (symb-list psql-le)
-  (if (null symb-list) (error (format nil "non-null list expected")))
-  (let ((stream (make-string-output-stream)))
-    (format stream "~a" (make-sql-val-str 
-			 (retr-val psql-le (pop symb-list))))
-    (loop 
-	while symb-list
-	do 
-	  (format stream ",~a" (make-sql-val-str 
-				(retr-val psql-le (pop symb-list)))))
-    (get-output-stream-string stream)))
-
-;;; prepare val list for SQL INSERT INTO query
 (defun ordered-val-list (symb-list psql-le)
   (if (null symb-list) (error (format nil "non-null list expected")))
   (loop 

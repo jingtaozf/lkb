@@ -1,4 +1,4 @@
-db-version	3.34
+db-version	3.35
 supported-server	7.3
 supported-server	7.4
 filter	TRUE
@@ -9,7 +9,6 @@ ext-fn	complete
 ext-fn	db_owner
 ext-fn	dump_db
 ext-fn	dump_db_dfn_fld
-ext-fn	dump_scratch_db
 ext-fn	filter
 ext-fn	initialize_current_grammar
 ext-fn	initialize_user_schema

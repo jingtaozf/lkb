@@ -16,58 +16,6 @@
 (defun get-val (field record)
   (cdr (assoc field record :test #'equal)))
 
-(defun sql-escape-string (string)
-  (if (and string (stringp string))
-      (loop
-          with padding = 128
-          with length = (+ (length string) padding)
-          with result = (make-array length
-                                    :element-type 'character
-                                    :adjustable nil :fill-pointer 0)
-          for c across string
-          when (char= c #\') do
-            (vector-push #\\ result)
-            (vector-push c result)
-            (when (zerop (decf padding))              (setf padding 42)
-              (incf length padding)
-              (setf result (adjust-array result length)))
-          else do
-            (vector-push c result)
-          finally
-            (return result))
-    string))
-
-;;; prepare field list for SQL INSERT INTO query
-(defun sql-field-list-str (symb-list)
-  (concatenate 'string "(" (sql-select-list-str symb-list) ")"))
-  
-;;; prepare select list for SQL query
-(defun sql-select-list-str (symb-list)
-  (if (null symb-list) (error (format nil "non-null list expected")))
-  (let ((stream (make-string-output-stream)))
-    (format stream "~a" (symb-2-str (pop symb-list)))
-    (loop 
-	while symb-list
-	do 
-	  (format stream ",~a" (symb-2-str (pop symb-list))))
-    (get-output-stream-string stream)))
-
-;;; create val string for SQL query
-(defun make-sql-val-str (x)
-  (cond 
-   ((null x)
-    "")
-   ((listp x)
-    (format nil "'~a'" (sql-escape-string (str-list-2-str x))))
-   ((stringp x)
-    (format nil "'~a'" (sql-escape-string x)))
-   ((numberp x)
-    (format nil "~a" x))
-   ((symbolp x)
-    (format nil "~a" x))
-   (t
-    (error (format nil "unhandled data type")))))
-
 (defun record-id (record)
   (str-2-symb (cdr (assoc :name record))))
 
@@ -175,22 +123,6 @@
   (if (and (stringp x) (eq (aref x 0) #\())
       (work-out-rawlst x)
     (2-symb x)))
-
-(defun to-multi-csv-line (&key name base-name particle type keyrel)
-  (let ((separator (string *postgres-export-separator*)))
-    (format *postgres-export-multi-stream* "~a~%"
-	    (concatenate 'string
-	      name
-	      separator base-name
-	      separator particle
-	      separator type
-	      separator keyrel))
-    ""))
-
-(defun csv-line (&rest str-list)
-  (str-list-2-str str-list
-		  :sep-c *postgres-export-separator*
-		  :null-str "?"))
 
 ;;;
 ;;; misc

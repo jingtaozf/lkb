@@ -76,14 +76,17 @@
   
 (defun initialize-psql-lexicon 
     (&key
-     (db (extract-param :db *psql-lexicon-parameters*))
+     (dbname (extract-param :dbname *psql-lexicon-parameters*))
      (host (extract-param :host *psql-lexicon-parameters*))
      (table (extract-param :table *psql-lexicon-parameters*))
      (port (extract-param :port *psql-lexicon-parameters*))
      (user (extract-param :user *psql-lexicon-parameters*))
      (semi (extract-param :semi *psql-lexicon-parameters*)))
-  (unless db
-    (error "please set :db in *psql-lexicon-parameters*"))
+  ;; ensure backwards compat
+  (setf dbname
+    (or dbname (extract-param :db *psql-lexicon-parameters*)))
+  (unless dbname
+    (error "please set :dbname in *psql-lexicon-parameters*"))
   (let ((part-of))
     ;; we will create a new lexicon then insert it into the lexicon hierarchy as
     ;; a replacement for *psql-lexicon*
@@ -91,7 +94,7 @@
         (setf part-of (part-of *psql-lexicon*))
       (setf *psql-lexicon*
 	(make-instance 'psql-lex-database)))
-    (setf (dbname *psql-lexicon*) db)
+    (setf (dbname *psql-lexicon*) dbname)
     (if host (setf (host *psql-lexicon*) host))
     (if user (setf (user *psql-lexicon*) user))
     (if port (setf (port *psql-lexicon*) port))

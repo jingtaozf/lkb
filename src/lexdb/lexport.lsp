@@ -37,7 +37,6 @@
 (defun export-lexicon-to-file-aux (&key 
 				(dir (postgres-user-temp-dir))
 				file 
-				(separator *postgres-export-separator*)
 				(lexicon *lexicon*)
 				use-defaults
 				(recurse t))
@@ -51,11 +50,10 @@
   (when (typep lexicon 'psql-lex-database)
     (error "use 'merge' command to export LexDB"))
   (setf file (namestring (pathname file)))
-  (setf *postgres-export-separator* separator)
   (unless use-defaults
     ;; extra data in db entries
-    (setf *postgres-current-source* (get-current-source))
-    (setf *postgres-export-timestamp* (extract-date-from-source *postgres-current-source*))
+    (setf *lexdb-dump-source* (get-current-source))
+    (setf *lexdb-dump-timestamp* (extract-date-from-source *lexdb-dump-source*))
 
     (query-for-modstamp-username)
     (query-for-meta-fields)
@@ -74,14 +72,14 @@
 ;			 multi-file
 ;			 :direction :output 
 ;			 :if-exists :supersede :if-does-not-exist :create)
-;	  (with-open-file (*postgres-export-skip-stream* 
+;	  (with-open-file (*lexdb-dump-skip-stream* 
 ;			   skip-file
 ;			   :direction :output 
 ;			   :if-exists :supersede :if-does-not-exist :create)
 ;	    (format t "~%   (multi file: ~a)" multi-file)
 ;	    (export-to-db-dump-to-file lexicon rev-file)))	  
 ;      ;; no multi stream
-      (with-open-file (*postgres-export-skip-stream* 
+      (with-open-file (*lexdb-dump-skip-stream* 
 		       skip-file
 		       :direction :output 
 		       :if-exists :supersede :if-does-not-exist :create)
@@ -97,7 +95,7 @@
   (when recurse
     (mapcar 
      #'(lambda (x) 
-	 (export-lexicon :lexicon x :dir dir :separator separator :recurse t :use-defaults t))
+	 (export-lexicon :lexicon x :dir dir :recurse t :use-defaults t))
      (extra-lexicons lexicon))))
 
 ;;;
@@ -175,7 +173,7 @@
 			   (list promptDcons))))
 
 (defun get-export-version nil
-  (let ((old-val *postgres-export-version*)
+  (let ((old-val *lexdb-dump-version*)
 	(new-val))
     (loop
 	until (integerp new-val)
@@ -191,7 +189,7 @@
 				 :junk-allowed t)
 		(and (= b (length version-str))
 		     a)))))
-    (setf *postgres-export-version* new-val)))
+    (setf *lexdb-dump-version* new-val)))
   
 (defun extract-date-from-source (source)
   (if (not (stringp source))
@@ -213,30 +211,30 @@
       (format t "WARNING: no *GRAMMAR-VERSION* defined!"))))
 
 (defun query-for-meta-fields nil
-  (setf *postgres-current-source* 
+  (setf *lexdb-dump-source* 
     (ask-user-for-x 
      "Export Lexicon" 
-     (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
-  (unless *postgres-current-source* (throw 'abort 'source))
-  (setf *postgres-current-lang* 
+     (cons "Source?" (or (extract-pure-source-from-source *lexdb-dump-source*) ""))))
+  (unless *lexdb-dump-source* (throw 'abort 'source))
+  (setf *lexdb-dump-lang* 
     (ask-user-for-x 
      "Export Lexicon" 
-     (cons "Language code?" (or *postgres-current-lang* "EN"))))
-  (unless *postgres-current-lang* (throw 'abort 'lang))
-  (setf *postgres-current-country* 
+     (cons "Language code?" (or *lexdb-dump-lang* "EN"))))
+  (unless *lexdb-dump-lang* (throw 'abort 'lang))
+  (setf *lexdb-dump-country* 
     (ask-user-for-x 
      "Export Lexicon" 
-     (cons "Country code?" (or *postgres-current-country* "UK"))))
-  (unless *postgres-current-country* (throw 'abort 'country))) 
+     (cons "Country code?" (or *lexdb-dump-country* "UK"))))
+  (unless *lexdb-dump-country* (throw 'abort 'country))) 
 
 (defun query-for-modstamp-username nil
-  (setf *postgres-export-timestamp* 
+  (setf *lexdb-dump-timestamp* 
     (ask-user-for-x 
      "Export Lexicon" 
-     (cons "Modstamp?" (or *postgres-export-timestamp* "1990-01-01"))))
-  (unless *postgres-export-timestamp* (throw 'abort 'modstamp))
-  (setf *postgres-current-user* 
+     (cons "Modstamp?" (or *lexdb-dump-timestamp* "1990-01-01"))))
+  (unless *lexdb-dump-timestamp* (throw 'abort 'modstamp))
+  (setf *lexdb-dump-user* 
     (ask-user-for-x 
      "Export Lexicon" 
-     (cons "Username?" (or *postgres-current-user* (sys:user-name)))))
-  (unless *postgres-current-user* (throw 'abort 'user)))
+     (cons "Username?" (or *lexdb-dump-user* (sys:user-name)))))
+  (unless *lexdb-dump-user* (throw 'abort 'user)))

@@ -4,45 +4,28 @@
 
 (in-package :lkb)
 
-(defvar *psql-lexicon-parameters*) ;; define in GRAMMAR/globals.lsp
+(defvar *psql-lexicon* nil) ;; -> *lexdb* ??
+;;(def-lkb-parameter *psql-lexicon-parameters* nil :user) ;; see main/globals.lsp
 
-(defvar *postgres-temp-filename* nil)
+(defvar *psql-database-connect-timeout* 30)
+(defvar *psql-database-port* 5432)
 
-(defvar *psql-lexdb-compat-version* "3.3")
-(defvar *psql-port-default* 5432)
-
-(defvar *postgres-tmp-lexicon* nil)
-(defvar *psql-lexicon* nil)
-
-(defvar *postgres-debug-stream* t)
-
-(defvar *postgres-mwe-enable* nil)
-
-(defvar *postgres-export-output-lexicon* nil)
-(defvar *postgres-export-skip-stream* t)
-(defvar *postgres-export-separator* #\,)
-
-(defvar *postgres-export-version* 0)
-(defvar *postgres-export-timestamp* nil) ;;; see lexport.lsp
-(defvar *postgres-current-source* "?")
-(defvar *postgres-current-user* nil)
-(defvar *postgres-current-lang* nil)
-(defvar *postgres-current-country* nil)
-
-(defvar *postgres-export-multi-separately* nil)
-(defvar *postgres-export-multi-stream* t)
-
-(defvar *postgres-debug-stream*)
-
+(defvar *lexdb-major-version* "3.3")
+(defvar *lexdb-dump-skip-stream* t)
+(defvar *lexdb-dump-version* 0)
+(defvar *lexdb-dump-timestamp* nil)
+(defvar *lexdb-dump-source* "?")
+(defvar *lexdb-dump-user* nil)
+(defvar *lexdb-dump-lang* nil)
+(defvar *lexdb-dump-country* nil)
 ;; set this to nil to prevent tdl dump accompanying lexdb dump
 (defvar *lexdb-dump-tdl* t)
-
+;; obsolete after 3.33
 (defvar *lexdb-message-old-server* "PostgreSQL server version is ~a. Please upgrade to version ~a or above.")
 (defvar *lexdb-message-old-lkb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary.")
 (defvar *lexdb-message-old-lexdb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). You must load updated setup files. See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html")
-
 ;; map from obsolete names of field-map types
-(defvar *field-map-type-mneum*
+(defvar *lexdb-fmtype-alt*
     '((string . str)
       (symbol . sym)
       (string-list . str-rawlst)
@@ -50,6 +33,14 @@
       (string-diff-fs . str-dlst)
       (mixed-fs . lst)
       (mixed-diff-fs . dlst)))
+(defvar *lexdb-tmp-lexicon*)
+
+#+:mwe
+(defvar *postgres-mwe-enable* nil)
+#+:mwe
+(defvar *postgres-export-multi-separately* nil)
+#+:mwe
+(defvar *postgres-export-multi-stream* t)
 
 ;;;
 ;;; class declarations
@@ -60,7 +51,7 @@
    (host :initform "localhost" :accessor host :initarg :host)
    (user :initform (sys:user-name) :accessor user :initarg :user)
    (password :initform "" :accessor password :initarg :password)
-   (port :initform (or (system:getenv "PGPORT") (num-2-str *psql-port-default*)) :accessor port :initarg :port)))
+   (port :initform (or (system:getenv "PGPORT") *psql-database-port*) :accessor port :initarg :port)))
 
 (defclass external-lex-database (lex-database)
   ((record-cache :initform (make-hash-table :test #'eq))
@@ -97,7 +88,10 @@
   (defun LKB::SET-LEX-ENTRY nil)
   (defun LKB::MAKE-INSTANCE-PSQL-LEX-ENTRY nil)
   (defun LKB::TO-DB-DUMP nil
-    (error "Please compile with :psql")))
+    (error "Please compile with :psql"))
+  (defun LKB::LOAD-PSQL-LEXICON-FROM-SCRIPT nil
+    (error "Please set *psql-lexicon-parameters* to NIL"))
+  )
 
 (defun psql-initialize ()
   ;;

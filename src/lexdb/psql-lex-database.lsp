@@ -264,8 +264,7 @@
 	   (t
 	    (error "too many arguments")))))
     (when (catch 'pg:sql-error
-	    (format *postgres-debug-stream* 
-		    "~%~%Please wait: recreating database cache for new filter")
+	    (format t "~%~%Please wait: recreating database cache for new filter")
 	    (force-output)
 	    (unless (set-filter-aux lexicon filter)
 	      (format t "~%(LexDB filter unchanged)")
@@ -273,11 +272,9 @@
 	    nil)
       (lkb-beep)
       (set-filter lexicon))
-    (format *postgres-debug-stream* 
-	    "~%(lexicon filter: ~a )" 
+    (format t "~%(lexicon filter: ~a )" 
 	    (get-filter lexicon))
-    (format *postgres-debug-stream* 
-	    "~%(active lexical entries: ~a )" 
+    (format t "~%(active lexical entries: ~a )" 
 	    (sql-fn-get-val lexicon :size_current_grammar))))
 
 (defmethod set-filter-aux ((lexicon psql-lex-database) filter)
@@ -337,7 +334,7 @@
 			  (type (if (listp type2) type2 (list type2))))
 		     ;; correct any obsolete types
 		     (setf (car type)
-		       (or (cdr (assoc (car type) *field-map-type-mneum*))
+		       (or (cdr (assoc (car type) *lexdb-fmtype-alt*))
 			   (car type)))
 		     (list slot field path type)))
 	       (get-raw-records lexicon (format nil "SELECT slot,field,path,type FROM defn WHERE mode='~a';" (fields-tb lexicon))))
@@ -417,8 +414,8 @@
   
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-version psql-le lexicon) 
-  (if *postgres-export-timestamp* 
-      (set-val psql-le :modstamp *postgres-export-timestamp*))
+  (if *lexdb-dump-timestamp* 
+      (set-val psql-le :modstamp *lexdb-dump-timestamp*))
   (let* ((symb-list (copy-list (fields lexicon)))
 	 (symb-list (remove :name symb-list))
 	 (symb-list (remove-duplicates symb-list))
@@ -443,7 +440,7 @@
 
 #+:mwe
 (defmethod mwe-initialize-userschema ((lexicon psql-lex-database))
-  (format *postgres-debug-stream* "~%(mwe initializing private schema)")
+  (format t "~%(mwe initializing private schema)")
   (sql-fn-get-records lexicon 
 		      :mwe_initialize_schema))
 
@@ -529,6 +526,7 @@
     (setf lexdb-version nil)
     (if (next-method-p) (call-next-method))))
 
+(defvar *lexdb-temp-lexicon*)
 (defmethod open-lex ((lexicon psql-lex-database) &key name parameters)
   (declare (ignore parameters)) 
   (with-slots (lexdb-version dbname host user connection) 
@@ -537,7 +535,7 @@
     (format t "~%Connecting to lexical database ~a@~a:~a" 
 	    dbname host (true-port lexicon))
     (force-output)
-    (setf *postgres-tmp-lexicon* lexicon)
+    (setf *lexdb-tmp-lexicon* lexicon)
     (cond
      ((connect lexicon)
       (format t "~%Connected as user ~a" user)
@@ -547,11 +545,11 @@
        ((not (stringp lexdb-version))
 	(error "Unable to determine LexDB version"))
        ((string> (compat-version lexdb-version)
-		 *psql-lexdb-compat-version*)
-	(error *lexdb-message-old-lkb* lexdb-version *psql-lexdb-compat-version*))
+		 *lexdb-major-version*)
+	(error *lexdb-message-old-lkb* lexdb-version *lexdb-major-version*))
        ((string< (compat-version lexdb-version)
-		 *psql-lexdb-compat-version*)
-       (error *lexdb-message-old-lexdb* lexdb-version *psql-lexdb-compat-version*)))
+		 *lexdb-major-version*)
+       (error *lexdb-message-old-lexdb* lexdb-version *lexdb-major-version*)))
       (make-field-map-slot lexicon)
       (initialize-userschema lexicon)
       (setf (name lexicon) name)
@@ -566,11 +564,12 @@
    ((string>= (lexdb-version lexicon) "3.34")
     (let ((texts (sql-fn-get-vals lexicon :check_server_version)))
       (when texts
-	(cerror "continue anyway" "~a" (str-list-2-str texts :sep-c #\Newline)))))
+	(format t "~%WARNING: ~a" (str-list-2-str texts :sep-c #\Newline)))))
    (t
     (let ((server-version (get-server-version lexicon)))
       (unless (string>= server-version "7.3")
-	(cerror "continue anyway" *lexdb-message-old-server* server-version "7.4.x"))))))
+	(format t "~%WARNING: ")
+	(format t *lexdb-message-old-server* server-version "7.4.x"))))))
 
 (defmethod initialize-lex ((lexicon psql-lex-database))
   (when (open-lex lexicon)
@@ -862,7 +861,6 @@
       (when
 	  (catch 'pg:sql-error
 	    (progn
-	      (get-postgres-temp-filename)
 	      (let* ((rev-filename 
 		      (absolute-namestring "~a.rev" 
 					   filename))
@@ -904,13 +902,13 @@
 			 extraction-fields)
 			(list
 			 (cons :orthkey (orthkey x))
-			 (cons :userid *postgres-current-user*)
-			 (cons :version (num-2-str *postgres-export-version*))
-			 (cons :modstamp *postgres-export-timestamp*)
-			 (cons :lang *postgres-current-lang*)
-			 (cons :country *postgres-current-country*)
+			 (cons :userid *lexdb-dump-user*)
+			 (cons :version (2-str *lexdb-dump-version*))
+			 (cons :modstamp *lexdb-dump-timestamp*)
+			 (cons :lang *lexdb-dump-lang*)
+			 (cons :country *lexdb-dump-country*)
 			 (cons :confidence 1)
-			 (cons :source *postgres-current-source*)
+			 (cons :source *lexdb-dump-source*)
 			 (cons :flags 1))))
 	   (ordered-field-vals (ordered-symb-val-list fields field-vals))
 	   (line 
@@ -929,7 +927,7 @@
        ((null (cdr (assoc :unifs s)))
 	line)
        (t
-	(format *postgres-export-skip-stream* "~a" (to-tdl x))
+	(format *lexdb-dump-skip-stream* "~a" (to-tdl x))
 	"")))))
 
 (defmethod to-db ((x lex-entry) (lexicon psql-lex-database))
@@ -946,9 +944,9 @@
 	   (psql-le
 	    (apply #'make-instance-psql-lex-entry
 		   (append extracted-fields
-			   (list :country *postgres-current-country*
-				 :lang *postgres-current-lang*
-				 :source (extract-pure-source-from-source *postgres-current-source*)
+			   (list :country *lexdb-dump-country*
+				 :lang *lexdb-dump-lang*
+				 :source (extract-pure-source-from-source *lexdb-dump-source*)
 				 :confidence 1
 				 :flags 1
 				 )))))

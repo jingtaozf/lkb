@@ -13,7 +13,6 @@
   (when
       (catch 'pg:sql-error
 	(progn
-	  (get-postgres-temp-filename)
 	  (format t "~%(dumping LexDB)")
 	  (force-output)
 	  (let* ((revision-filename 
@@ -53,7 +52,6 @@
   (when
       (catch 'pg:sql-error
 	(progn
-	  (get-postgres-temp-filename)
 	  (format t "~%(dumping LexDB .dfn .fld)")
 	  (force-output)
 	  (let* ((pg-files 
@@ -74,26 +72,9 @@
     (format t "~%Dump aborted...")
     :dump_aborted))
 
-(defun dump-scratch (filename)
-  (get-postgres-temp-filename)
-  (setf filename (namestring (pathname filename)))
-  (sql-fn-get-raw-records *psql-lexicon*
-			  :dump_scratch_db
-			  :args (list 
-				 (namestring 
-				  (pathname *postgres-temp-filename*))))
-  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-					       *postgres-temp-filename*
-					       filename)))
-
 ;;;
 ;;;
 ;;;
 
 (defun absolute-namestring (format str)
   (namestring (pathname (format nil format str))))
-
-(defun get-postgres-temp-filename nil
-  (setf *postgres-temp-filename*
-    (format nil "~a.~a" "/tmp/postgres-temp" (sys:user-name))))
-

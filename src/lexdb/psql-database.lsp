@@ -45,19 +45,22 @@
       
 (defmethod connect-aux2 ((lexicon psql-database))
   (with-slots (port host dbname password user connection) lexicon
-    (setf connection 
-      (pg:connect-db-with-handler 
-       (concatenate 'string 
-	 (and port 
-	      (format nil "port='~a' " (sql-escape-string port)))
-	 (and host
-	      (format nil "host='~a' " (sql-escape-string host)))
-	 (format nil "dbname='~a' " (sql-escape-string dbname))
-	 (format nil "user='~a' " (sql-escape-string user))
-	 (and password 
-	      (format nil "password='~a'" (sql-escape-string password))))))
-    (when (eq :connection-ok (connection-status lexicon))
-      t)))
+    (let ((connect-timeout *psql-database-connect-timeout*)) 
+      (setf connection 
+	(pg:connect-db-with-handler 
+	 (concatenate 'string 
+	   (and connect-timeout 
+		(format nil "connect_timeout=~a " (sql-embedded-text (2-str connect-timeout))))
+	   (and port 
+		(format nil "port=~a " (sql-embedded-text (2-str port))))
+	   (and host
+		(format nil "host=~a " (sql-embedded-text host)))
+	   (format nil "dbname=~a " (sql-embedded-text dbname))
+	   (format nil "user=~a " (sql-embedded-text user))
+	   (and password 
+		(format nil "password=~a" (sql-embedded-text password))))))
+      (when (eq :connection-ok (connection-status lexicon))
+	t))))
 
 (defmethod connection-status ((lexicon psql-database))
   (pg:decode-connection-status 
@@ -81,7 +84,7 @@
 (defmethod run-query ((database psql-database) (query sql-query))
   (let ((connection (connection database)))
     (unless connection
-      (error "database ~s has no active connection." database))
+      (error "psql-database ~s has no active connection." database))
     (multiple-value-bind (recs cols)
         (pg:sql (sql-string query) :db connection)
       (setf (records query) recs
@@ -92,7 +95,7 @@
 (defmethod run-command-stdin ((database psql-database) command filename)
   (with-slots (connection) database
     (unless connection
-      (error "Database ~s has no active connection." database))
+      (error "psql-database ~s has no active connection." database))
     (pg::stdin-command-file connection command filename)))
 
 (defmethod run-command ((database psql-database) command)
@@ -166,6 +169,8 @@
 (defun sql-embedded-text (str)
   (format nil "'~a'" (sql-embedded-text-aux str)))
 
+;; ' -> \'
+;; \ -> \\
 (defun sql-embedded-text-aux (str)
   (cond
    ((equal str "")
