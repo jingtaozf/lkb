@@ -4,11 +4,17 @@
 
 (in-package :mrs)
 
+;;; interconversion between RMRS and MRS
+;;; 1. MRS to RMRS 
+;;; 2. RMRS to MRS (needs SEM-I)
+
 ;;; convert an MRS structure to an RMRS  
 
 ;;; settings for qa
 ;;; (defparameter *unknown-word-types* '(n_proper_le))
 ;;; (defparameter lkb::*do-something-with-parse* 'mrs::batch-output-rmrs)
+;;;
+;;; (defparameter lkb::*do-something-with-parse* 'mrs::batch-output-rmrs-only)
 
 (defparameter *mrs-to-rmrs-conversion-warnings* nil)
 
@@ -337,6 +343,77 @@ Errors won't be devastating anyway ...
     outrank-p))
 
 
+;;; RMRS to MRS conversion
+
+;;; (convert-rmrs-to-mrs *rmrs-debug*)
+
+(defun convert-rmrs-to-mrs (rmrs)
+  (setf *rmrs-debug* rmrs)
+  (make-psoa  :top-h (rmrs-top-h rmrs)
+	      :h-cons (rmrs-h-cons rmrs)
+	      :liszt (convert-rmrs-liszt-to-mrs (rmrs-liszt rmrs)
+						(rmrs-rmrs-args rmrs))))
+
+(defun convert-rmrs-liszt-to-mrs (eps rargs) 
+  ;;; FIX - in-groups
+  (loop for ep in eps
+      collect
+	(convert-rmrs-ep-to-mrs 
+	 ep
+	 (loop for rarg in rargs
+	     when (eql-var-id (rmrs-arg-label rarg) (rel-handel ep))
+	     collect rarg))))
+
+(defun convert-rmrs-ep-to-mrs (ep rargs)
+  (make-char-rel
+   :handel (rel-handel ep)
+   :parameter-strings (rel-parameter-strings ep)
+;   :extra (rel-extra ep)
+   :pred (convert-rmrs-pred-to-mrs (rel-pred ep))
+   :flist (cons (convert-rmrs-main-arg (car (rel-flist ep)))
+		(loop for rarg in rargs
+		      collect
+		      (deparsonify rarg)))
+   :cfrom (char-rel-cfrom ep)
+   :cto (char-rel-cto ep)))
 
 
+(defun convert-rmrs-main-arg (var)
+  ;;; FIX - ARG0 assumption
+  (make-fvpair :feature (vsym "ARG0")
+	       :value (convert-rmrs-to-mrs-variable var)))
 
+(defun deparsonify (rarg)
+  (make-fvpair :feature (vsym (rmrs-arg-arg-type rarg))
+	       :value 
+	       (let ((val (rmrs-arg-val rarg)))
+		 (if (var-p val)
+		     (convert-rmrs-to-mrs-variable val)
+		   val))))
+
+(defun convert-rmrs-to-mrs-variable (var)
+  ;;; FIX - conversion of extra values
+  (make-var :id (var-id var)
+	    :type (var-type var)))
+
+(defun convert-rmrs-pred-to-mrs (pred)
+  (if (realpred-p pred)
+      (let ((pred-string
+	     (concatenate 'string
+			      (convert-realpred-to-string 
+			       (realpred-lemma pred)
+			       (realpred-pos pred)
+			       (realpred-sense pred))
+			      "_rel")))
+	(if (semi-type-pred-p pred)
+	    (vsym pred-string)
+	  pred-string))
+    (vsym pred)))
+
+;;; stand ins for SEM-I functionality
+
+(defun semi-type-pred-p (pred)
+  (string-equal (realpred-pos pred) "q"))
+
+;;; FIX - SEM-I needs to return something if given a `supertype' e.g. 
+;;; open V
