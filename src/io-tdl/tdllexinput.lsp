@@ -68,6 +68,7 @@
             t
             "~%WARNING: lexicon entry `~a' redefined." name)
            (push name *ordered-lex-list*))
+         #+:psql
          (when *export-lexicon-p* 
            (unless (export-lexical-entry name constraint)
              (skip-lexical-entry istream position)))
