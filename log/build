@@ -1,15 +1,108 @@
 cvs update: Updating .
+U README
+U Version.lisp
+U auxverbs.tdl
+cvs update: characterize.tdl is no longer in the repository
+U constructions.tdl
+U ecommerce.fsr
+U english.tdl
+U fundamentals.tdl
+U inflr.tdl
+U irregs.tab
+U letypes.tdl
+U lexdb.dfn
+U lexdb.fld
+U lexdb.rev
+cvs update: lexicon.csv is no longer in the repository
+U lexicon.dfn
+U lexicon.fld
+U lexicon.old-format.csv
+U lexicon.tdl
+U lexrinst.tdl
+U lexrules.tdl
+U lextypes.tdl
+U paraphraser.mtr
+U parse-nodes.tdl
+U preprocessor.fsr
+U redwoods.mem
+U roots.tdl
+cvs update: semrels.tdl is no longer in the repository
+U syntax.tdl
 ? Version.lisp.fasl
 cvs update: Updating arboretum
+U arboretum/mal-constructions.tdl
+U arboretum/mal-inflr.tdl
+U arboretum/mal-irregs.tab
+U arboretum/mal-letypes.tdl
+U arboretum/mal-lex.tdl
+U arboretum/mal-types.tdl
 cvs update: Updating data
+U data/genrules.mrs
 cvs update: Updating gold
 cvs update: Updating gold/csli
+U gold/csli/decision.gz
+U gold/csli/item-phenomenon.gz
+U gold/csli/item.gz
+U gold/csli/parse.gz
+U gold/csli/phenomenon.gz
+U gold/csli/preference.gz
+U gold/csli/result.gz
+U gold/csli/run.gz
+U gold/csli/tree.gz
+U gold/csli/update.gz
 cvs update: Updating gold/dt-faqs
+U gold/dt-faqs/decision.gz
+U gold/dt-faqs/item.gz
+U gold/dt-faqs/parse.gz
+U gold/dt-faqs/preference.gz
+U gold/dt-faqs/result.gz
+U gold/dt-faqs/run.gz
+U gold/dt-faqs/tree.gz
+U gold/dt-faqs/update.gz
 cvs update: Updating gold/ecoc
+U gold/ecoc/decision.gz
+U gold/ecoc/item.gz
+U gold/ecoc/parse.gz
+U gold/ecoc/preference.gz
+U gold/ecoc/result.gz
+U gold/ecoc/run.gz
+U gold/ecoc/tree.gz
+U gold/ecoc/update.gz
 cvs update: Updating gold/hike
+U gold/hike/decision.gz
+U gold/hike/item.gz
+U gold/hike/parse.gz
+U gold/hike/preference.gz
+U gold/hike/result.gz
+U gold/hike/run.gz
+U gold/hike/tree.gz
+U gold/hike/update.gz
 cvs update: Updating gold/mrs
+U gold/mrs/decision.gz
+U gold/mrs/item.gz
+U gold/mrs/parse.gz
+U gold/mrs/preference.gz
+U gold/mrs/result.gz
+U gold/mrs/run.gz
+U gold/mrs/tree.gz
+U gold/mrs/update.gz
 cvs update: Updating gold/trec
+U gold/trec/decision.gz
+U gold/trec/item.gz
+U gold/trec/parse.gz
+U gold/trec/preference.gz
+U gold/trec/result.gz
+U gold/trec/run.gz
+U gold/trec/tree.gz
+U gold/trec/update.gz
 cvs update: Updating lkb
+U lkb/char-script
+U lkb/checkpaths.lsp
+U lkb/globals.lsp
+U lkb/mrsglobals.lsp
+U lkb/patches.lsp
+U lkb/script
+U lkb/user-fns.lsp
 ? lkb/checkpaths.lsp.fasl
 ? lkb/globals.lsp.fasl
 ? lkb/mrs-initialization.lsp.fasl
@@ -17,9 +110,28 @@ cvs update: Updating lkb
 ? lkb/patches.lsp.fasl
 ? lkb/user-fns.lsp.fasl
 cvs update: Updating pet
+U pet/common.set
+U pet/english.set
+U pet/flop.set
+U pet/global.set
+U pet/qc.tdl
 cvs update: Updating .
+U README
+U Version.lsp
+U head-types.tdl
+U labels.tdl
+U lexicon.tdl
+U licence.txt
+U matrix-powerset.lsp
+U matrix.tdl
 cvs update: Updating doc
 cvs update: Updating lkb
+U lkb/globals.lsp
+U lkb/mrsglobals.lisp
+U lkb/mt.lsp
+U lkb/script
+U lkb/transfer.tdl
+U lkb/user-fns.lsp
 cvs update: Updating pet
 cvs update: Updating .
 cvs update: Updating lkb
@@ -30,10 +142,30 @@ M Makefile
 ? man
 cvs update: Updating bin
 cvs update: Updating bin/linux
+U bin/linux/yzlui
 cvs update: Updating bin/solaris
 cvs update: Updating etc
 cvs update: Updating include
 cvs update: Updating lexdb
+U lexdb/default-fields.tsv
+U lexdb/defn.tsv
+cvs update: lexdb/embedded-code.sql is no longer in the repository
+cvs update: lexdb/fns-version.sql is no longer in the repository
+U lexdb/fns_plpgsql.sql
+U lexdb/fns_plpgsql_2.sql
+cvs update: lexdb/fns_sql.sql is no longer in the repository
+cvs update: lexdb/import-7.1.sql is no longer in the repository
+U lexdb/import.sql
+U lexdb/init.sql
+U lexdb/load.sql
+U lexdb/mwe.sql
+U lexdb/permissions.sql
+U lexdb/public.meta
+cvs update: lexdb/qry.tsv is no longer in the repository
+cvs update: lexdb/qrya.tsv is no longer in the repository
+U lexdb/su-setup.sql
+U lexdb/tables.sql
+U lexdb/util.sql
 cvs update: Updating lib
 cvs update: Updating lib/Tktable2.7
 cvs update: Updating lib/blt2.4
@@ -89,6 +221,8 @@ cvs update: Updating lib/tk8.3/images
 cvs update: Updating log
 M log/build
 cvs update: Updating src
+U src/pg-interface.el
+U src/version.lsp
 ? src/.l6cl
 cvs update: Updating src/.aasl
 cvs update: Updating src/.aasl/ACL_specific
@@ -164,7 +298,10 @@ cvs update: Updating src/.nasl/tty
 cvs update: Updating src/.nasl/www
 cvs update: Updating src/ACL-CG_specific
 cvs update: Updating src/ACL_specific
+U src/ACL_specific/chartout.lsp
 U src/ACL_specific/compare.lsp
+U src/ACL_specific/emacs.lsp
+U src/ACL_specific/parseout.lsp
 cvs update: Updating src/MCL_specific
 cvs update: Updating src/data
 cvs update: Updating src/data/Dikran
@@ -193,7 +330,9 @@ cvs update: Updating src/data/esslli2k/grammars/grammar4
 cvs update: Updating src/data/esslli2k/grammars/grammar5
 cvs update: Updating src/data/esslli2k/grammars/grammar6
 cvs update: Updating src/data/esslli2k/grammars/grammar7
+U src/data/esslli2k/grammars/grammar7/types.tdl
 cvs update: Updating src/data/esslli2k/grammars/grammar9
+U src/data/esslli2k/grammars/grammar9/types.tdl
 cvs update: Updating src/data/interrogatives
 cvs update: Updating src/data/interrogatives/lkb
 cvs update: Updating src/data/itfs
@@ -213,8 +352,12 @@ cvs update: Updating src/data/itfs/g4diff
 cvs update: Updating src/data/itfs/g5lex
 cvs update: Updating src/data/itfs/g6morph
 cvs update: Updating src/data/itfs/g7sem
+U src/data/itfs/g7sem/types.tdl
 cvs update: Updating src/data/itfs/g8gap
+U src/data/itfs/g8gap/types.tdl
 cvs update: Updating src/data/mrscomp
+U src/data/mrscomp/mrsglobals.lsp
+U src/data/mrscomp/types.tdl
 cvs update: Updating src/data/spanish
 cvs update: Updating src/data/spanish/Eigth
 cvs update: Updating src/data/spanish/Fifth
@@ -222,11 +365,14 @@ cvs update: Updating src/data/spanish/First
 cvs update: Updating src/data/spanish/Ninth
 cvs update: Updating src/data/spanish/Ninth/tmp
 cvs update: Updating src/data/spanish/Seventh
+U src/data/spanish/Seventh/types-spanish.tdl
+U src/data/spanish/Seventh/types.tdl
 cvs update: Updating src/data/spanish/Seventh/lkb
 cvs update: Updating src/data/spanish/Seventh/tmp
 cvs update: Updating src/data/spanish/Sixth
 cvs update: Updating src/data/spanish/backup
 cvs update: Updating src/data/textbook
+U src/data/textbook/types.tdl
 cvs update: Updating src/data/textbook/binding
 cvs update: Updating src/data/textbook/chapters
 cvs update: Updating src/data/textbook/chapters/grammar1
@@ -246,6 +392,7 @@ cvs update: Updating src/data/textbook/chapters/grammar4/lkb
 cvs update: Updating src/data/textbook/chapters/grammar4/solutions
 cvs update: Updating src/data/textbook/chapters/grammar4/solutions/lkb
 cvs update: Updating src/data/textbook/lkb
+U src/data/textbook/lkb/mrs-globals-ygg.lisp
 cvs update: Updating src/data/textbook/page
 cvs update: Updating src/data/tiniest
 cvs update: Updating src/data/tiniest/answers
@@ -264,37 +411,80 @@ cvs update: Updating src/fasl/main
 cvs update: Updating src/fasl/mrs
 cvs update: Updating src/general
 cvs update: Updating src/glue
+U src/glue/lsp.lsp
 cvs update: Updating src/graft
 cvs update: Updating src/io-general
+U src/io-general/outputfs.lsp
+U src/io-general/toplevel.lsp
 cvs update: Updating src/io-lilfes
 cvs update: Updating src/io-paths
+U src/io-paths/lexinput.lsp
 cvs update: Updating src/io-tdl
+U src/io-tdl/tdltypeinput.lsp
 cvs update: Updating src/lexdb
+U src/lexdb/command.lsp
+U src/lexdb/extract.lsp
+U src/lexdb/gentdl.lsp
+U src/lexdb/headers.lsp
+U src/lexdb/lex-database.lsp
+U src/lexdb/lex-entry.lsp
+U src/lexdb/lexport.lsp
+U src/lexdb/psql-database.lsp
+U src/lexdb/psql-db.lsp
+U src/lexdb/psql-emacs.lsp
+U src/lexdb/psql-lex-database.lsp
+U src/lexdb/psql-lex-entry.lsp
+U src/lexdb/psql-msc.lsp
+U src/lexdb/psqllex.lsp
+cvs update: src/lexdb/sql-database.lsp is no longer in the repository
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
+U src/main/check-unif.lsp
+U src/main/checktypes.lsp
+U src/main/dag.lsp
+U src/main/discriminants.lsp
+U src/main/globals.lsp
+U src/main/lex.lsp
+U src/main/parse.lsp
+U src/main/types.lsp
+U src/main/unfill-dag.lsp
 cvs update: Updating src/mrs
-U src/mrs/basemrs.lisp
+U src/mrs/generate.lisp
+U src/mrs/lexlookup.lisp
+U src/mrs/lexutils.lisp
+U src/mrs/mrscons.lisp
 U src/mrs/mrscorpus.lisp
+U src/mrs/mrsglobals.lisp
 U src/mrs/mrsoutput.lisp
+U src/mrs/mrsresolve.lisp
+U src/mrs/semi-psql.lsp
 cvs update: Updating src/mrs/data
 cvs update: Updating src/mt
 U src/mt/clim.lisp
-U src/mt/semi.lisp
-U src/mt/transfer.lisp
-U src/mt/version.lisp
 cvs update: Updating src/non-core
+U src/non-core/powerset.lsp
 cvs update: Updating src/ppcre
 cvs update: Updating src/psql
+U src/psql/bind-libpq.cl
+cvs update: src/psql/defn.sql is no longer in the repository
+cvs update: src/psql/import.sql is no longer in the repository
 cvs update: Updating src/psql/linux
 cvs update: Updating src/psql/solaris
 cvs update: Updating src/pvm
 cvs update: Updating src/pvm/linux
 cvs update: Updating src/pvm/solaris
 cvs update: Updating src/rmrs
+U src/rmrs/annlt.lisp
+U src/rmrs/comp.lisp
+U src/rmrs/compare.lisp
+U src/rmrs/convert.lisp
+U src/rmrs/lkb-acl-rmrs.lisp
+U src/rmrs/readgram.lisp
+U src/rmrs/testing.lisp
 cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
-U src/systems/www.system
+U src/systems/lkb.system
 cvs update: Updating src/tproving
 cvs update: Updating src/tsdb
 cvs update: Updating src/tsdb/TeX
@@ -350,16 +540,13 @@ cvs update: Updating src/tsdb/home/trees/vm32/ezra
 cvs update: Updating src/tsdb/home/trees/vm32/ezra/01-07-17
 cvs update: Updating src/tsdb/html
 cvs update: Updating src/tsdb/linux
+U src/tsdb/linux/capi.so
+U src/tsdb/linux/gc.so
 cvs update: Updating src/tsdb/lisp
-U src/tsdb/lisp/commands.lisp
+U src/tsdb/lisp/filter.lisp
+U src/tsdb/lisp/globals.lisp
 U src/tsdb/lisp/lkb-interface.lisp
-U src/tsdb/lisp/mt.lisp
-U src/tsdb/lisp/process.lisp
-U src/tsdb/lisp/pvm.lisp
-U src/tsdb/lisp/statistics.lisp
-U src/tsdb/lisp/tsdb.lisp
-U src/tsdb/lisp/utilities.lisp
-U src/tsdb/lisp/xle-interface.lisp
+U src/tsdb/lisp/redwoods.lisp
 cvs update: Updating src/tsdb/lisp/RCS
 cvs update: Updating src/tsdb/skeletons
 cvs update: Updating src/tsdb/skeletons/csli
@@ -433,7 +620,7 @@ cvs update: Updating src/xml
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.337; previous revision: 1.336
+new revision: 1.346; previous revision: 1.345
 done
 make[1]: Entering directory `/lingo/build/lkb'
 ( \
@@ -580,6 +767,7 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/main/types.lsp
 ./src/main/user-fns.lsp
 ./src/main/yadu.lsp
+./src/main/unfill-dag.lsp
 ./src/mrs/
 ./src/mrs/after.lisp
 ./src/mrs/basemrs.lisp
@@ -643,8 +831,6 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/ppcre/util.lisp
 ./src/psql/
 ./src/psql/License
-./src/psql/defn.sql
-./src/psql/import.sql
 ./src/psql/pg-package.cl
 ./src/psql/sql.cl
 ./src/psql/sql2.cl
@@ -715,6 +901,8 @@ make[1]: Entering directory `/lingo/build/lkb'
 ./src/xml/pxml1.cl
 ./src/xml/pxml2.cl
 ./src/xml/pxml3.cl
+./src/non-core/
+./src/non-core/powerset.lsp
 ( \
   cd /lingo/build//lkb; \
   tar Svczf /lingo/www/lingo/ftp/`date "+%Y-%m-%d"`/lkb_data.tgz \
@@ -1353,18 +1541,19 @@ src/tdl-mode.el
 lexdb/
 lexdb/defn.sql
 lexdb/defn.tsv
-lexdb/embedded-code.sql
-lexdb/fns-version.sql
 lexdb/fns_plpgsql.sql
-lexdb/fns_sql.sql
-lexdb/import-7.1.sql
+lexdb/fns_plpgsql_2.sql
 lexdb/import.sql
+lexdb/init.sql
+lexdb/load.sql
 lexdb/mwe.sql
 lexdb/permissions.sql
-lexdb/qry.tsv
-lexdb/qrya.tsv
+lexdb/public.meta
 lexdb/su-setup.sql
+lexdb/tables.sql
+lexdb/util.sql
 lexdb/example.dfn
+lexdb/default-fields.tsv
 rm -f /lingo/build//.yes;
 ( cd /lingo/build//lkb && make lkb_linux@cypriot; )
 make[2]: Entering directory `/lingo/build/lkb'
@@ -1442,7 +1631,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Jul 10, 2004 4:01)
+6.2 [Linux (x86)] (Sep 1, 2004 9:39)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2035,6 +2224,10 @@ T
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/discriminants.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /lingo/build/lkb/src/.l6cl/main/discriminants.fasl
+;;; Compiling file /lingo/build/lkb/src/main/unfill-dag.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/unfill-dag.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/build/lkb/src/.l6cl/main/unfill-dag.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/preprocess.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/preprocess.fasl
 ;;; Fasl write complete
@@ -2051,20 +2244,16 @@ T
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/lexdb/lex-entry.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /lingo/build/lkb/src/.l6cl/lexdb/lex-entry.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/sql-database.lsp
-; Autoloading for package "EXCL.OSI":
-;   Libfasl loading /lingo/local/acl/code/osi.016
-;;; Installing osi patch, version 16
-;     Libfasl loading /lingo/local/acl/code/fileutil.006
-;;; Installing fileutil patch, version 6
-;;; Writing fasl file /lingo/build/lkb/src/.l6cl/lexdb/sql-database.fasl
-;;; Fasl write complete
-;   Libfasl loading /lingo/build/lkb/src/.l6cl/lexdb/sql-database.fasl
 ;;; Compiling file /lingo/build/lkb/src/lexdb/sql-query.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/lexdb/sql-query.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /lingo/build/lkb/src/.l6cl/lexdb/sql-query.fasl
 ;;; Compiling file /lingo/build/lkb/src/lexdb/psql-database.lsp
+; Autoloading for package "EXCL.OSI":
+;   Libfasl loading /lingo/local/acl/code/osi.016
+;;; Installing osi patch, version 16
+;     Libfasl loading /lingo/local/acl/code/fileutil.006
+;;; Installing fileutil patch, version 6
 ;;; Writing fasl file
 ;;;   /lingo/build/lkb/src/.l6cl/lexdb/psql-database.fasl
 ;;; Fasl write complete
@@ -2263,6 +2452,10 @@ T
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/debug.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /lingo/build/lkb/src/.l6cl/main/debug.fasl
+;;; Compiling file /lingo/build/lkb/src/non-core/powerset.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l6cl/non-core/powerset.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/build/lkb/src/.l6cl/non-core/powerset.fasl
 ;;; Compiling file /lingo/build/lkb/src/mrs/lkb-interface.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/mrs/lkb-interface.fasl
 ;;; Fasl write complete
@@ -2472,7 +2665,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-106984824 bytes have been tenured, next gc will be global.
+105709584 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2657,7 +2850,7 @@ CL-USER(10): ; Loading /lingo/build/lkb/src/systems/tsdb.system
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/ppcre/closures.fasl
 ;;; Compiling file /lingo/build/lkb/src/ppcre/repetition-closures.lisp
-8629568 bytes have been tenured, next gc will be global.
+8629312 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /lingo/build/lkb/src/.l6cl/ppcre/repetition-closures.fasl
@@ -2681,15 +2874,15 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/xml/pxml1.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml3.cl
-9106552 bytes have been tenured, next gc will be global.
+8629144 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
-8577488 bytes have been tenured, next gc will be global.
+8486464 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/xml/pxml3.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/xml/pxml3.fasl
 ;;; Compiling file /lingo/build/lkb/src/xml/pxml2.cl
-11401344 bytes have been tenured, next gc will be global.
+9661712 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/xml/pxml2.fasl
 ;;; Fasl write complete
@@ -2737,7 +2930,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/main/dag.fasl
-13818168 bytes have been tenured, next gc will be global.
+9719256 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /lingo/build/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/yadu.fasl
@@ -2807,6 +3000,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/discriminants.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/main/discriminants.fasl
+;;; Compiling file /lingo/build/lkb/src/main/unfill-dag.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/unfill-dag.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l6cl/main/unfill-dag.fasl
 ;;; Compiling file /lingo/build/lkb/src/main/preprocess.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/preprocess.fasl
 ;;; Fasl write complete
@@ -2823,18 +3020,14 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/lexdb/lex-entry.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/lexdb/lex-entry.fasl
-;;; Compiling file /lingo/build/lkb/src/lexdb/sql-database.lsp
-; Autoloading for package "EXCL.OSI":
-; Fast loading /lingo/local/acl/code/osi.016
-;;; Installing osi patch, version 16
-;;; Writing fasl file /lingo/build/lkb/src/.l6cl/lexdb/sql-database.fasl
-;;; Fasl write complete
-; Fast loading /lingo/build/lkb/src/.l6cl/lexdb/sql-database.fasl
 ;;; Compiling file /lingo/build/lkb/src/lexdb/sql-query.lsp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/lexdb/sql-query.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/lexdb/sql-query.fasl
 ;;; Compiling file /lingo/build/lkb/src/lexdb/psql-database.lsp
+; Autoloading for package "EXCL.OSI":
+; Fast loading /lingo/local/acl/code/osi.016
+;;; Installing osi patch, version 16
 ;;; Writing fasl file
 ;;;   /lingo/build/lkb/src/.l6cl/lexdb/psql-database.fasl
 ;;; Fasl write complete
@@ -3027,6 +3220,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/main/debug.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/main/debug.fasl
+;;; Compiling file /lingo/build/lkb/src/non-core/powerset.lsp
+;;; Writing fasl file /lingo/build/lkb/src/.l6cl/non-core/powerset.fasl
+;;; Fasl write complete
+; Fast loading /lingo/build/lkb/src/.l6cl/non-core/powerset.fasl
 ;;; Compiling file /lingo/build/lkb/src/mrs/lkb-interface.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/mrs/lkb-interface.fasl
 ;;; Fasl write complete
@@ -3123,6 +3320,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/rmrs/convert.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/rmrs/convert.fasl
+8460104 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /lingo/build/lkb/src/rmrs/annlt.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/rmrs/annlt.fasl
 ;;; Fasl write complete
@@ -3292,7 +3491,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/gc.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/yy.lisp
-gc-after-hook(): local; new: 1495528; old: 50704; pending: 0; efficiency: 90.
+gc-after-hook(): local; new: 1100184; old: 2920; pending: 32; efficiency: 87.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/yy.fasl
@@ -3301,7 +3500,6 @@ gc-after-hook(): local; new: 1495528; old: 50704; pending: 0; efficiency: 90.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/mt.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/derivations.lisp
-gc-after-hook(): local; new: 1276264; old: 342912; pending: 0; efficiency: 87.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/derivations.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/derivations.fasl
@@ -3310,12 +3508,12 @@ gc-after-hook(): local; new: 1276264; old: 342912; pending: 0; efficiency: 87.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1188696; old: 74544; pending: 128; efficiency: 90.
-gc-after-hook(): local; new: 2086056; old: 584144; pending: 0; efficiency: 84.
-gc-after-hook(): local; new: 654320; old: 165240; pending: 128; efficiency: 91.
+gc-after-hook(): local; new: 959488; old: 10840; pending: 0; efficiency: 85.
+gc-after-hook(): local; new: 1237768; old: 2000; pending: 40; efficiency: 87.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/redwoods.fasl
+gc-after-hook(): local; new: 653040; old: 274776; pending: 7040; efficiency: 88.
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/lsp.lisp
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/lsp.fasl
 ;;; Fasl write complete
@@ -3329,16 +3527,15 @@ gc-after-hook(): local; new: 654320; old: 165240; pending: 128; efficiency: 91.
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/rasp.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/pcfg.lisp
-gc-after-hook(): local; new: 756664; old: 99960; pending: 0; efficiency: 89.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/maxent.lisp
+gc-after-hook(): local; new: 1043776; old: 146200; pending: 0; efficiency: 86.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Compiling file /lingo/build/lkb/src/tsdb/lisp/tagger.lisp
-gc-after-hook(): local; new: 742304; old: 69288; pending: 80; efficiency: 91.
 ;;; Writing fasl file /lingo/build/lkb/src/.l6cl/tsdb/tagger.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/build/lkb/src/.l6cl/tsdb/tagger.fasl
@@ -3375,18 +3572,18 @@ bin/linux/yzlui
 erg/
 erg/Version.lisp
 erg/auxverbs.tdl
-erg/characterize.tdl
 erg/constructions.tdl
 erg/ecommerce.fsr
 erg/english.tdl
 erg/fundamentals.tdl
+erg/inflr.tdl
 erg/gen-lex.tdl
 erg/idioms.tdl
-erg/inflr.tdl
 erg/irregs.tab
 erg/letypes.tdl
-erg/lexicon.csv
+erg/lexdb.dfn
 erg/lexicon.dfn
+erg/lexicon.fld
 erg/lexicon.tdl
 erg/lexrinst.tdl
 erg/lexrules.tdl
@@ -3399,8 +3596,8 @@ erg/preprocessor.fsr
 erg/ptblex.tdl
 erg/robustlex.tdl
 erg/roots.tdl
-erg/semrels.tdl
 erg/syntax.tdl
+erg/README
 erg/arboretum/
 erg/arboretum/README
 erg/arboretum/errordesc.lsp
@@ -3560,9 +3757,13 @@ erg/pet/flop.set
 erg/pet/global.set
 erg/pet/k2y.set
 erg/pet/qc.tdl
+erg/pet/common.set
 erg/ec.mem
 erg/redwoods.mem
 erg/vm.mem
+erg/lexdb.fld
+erg/lexdb.rev
+erg/lexicon.old-format.csv
 ( \
   cd /lingo/build/; \
   tar Svczf /lingo/www/lingo/ftp/`date "+%Y-%m-%d"`/matrix.tgz \
@@ -3590,10 +3791,15 @@ matrix/lkb/mrsglobals.lisp
 matrix/lkb/mrsmunge.tdl
 matrix/lkb/script
 matrix/lkb/user-fns.lsp
+matrix/lkb/mt.lsp
+matrix/lkb/transfer.tdl
 matrix/pet/
 matrix/pet/flop.set
 matrix/pet/global.set
 matrix/pet/pet.set
+matrix/head-types.tdl
+matrix/licence.txt
+matrix/matrix-powerset.lsp
 ( \
   cd /lingo/build/; \
   tar Svczf /lingo/www/lingo/ftp/`date "+%Y-%m-%d"`/spanish.tgz \
