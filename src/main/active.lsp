@@ -947,41 +947,55 @@
               "instantiate(): (~d < ~{~d~^ ~}~%"
               (edge-id edge)
               (loop
-                  for tdfs in children
-                  collect (dag-type (tdfs-indef tdfs))))
+                  for child in children
+                  collect (edge-id child)))
              ;;
-             ;; re-use `dag-restricted' slot to keep local cache of how this
-             ;; edge can be unfolded; record failure, where appropriate, too.
+             ;; re-use `foo' slot to keep local cache of how this edge can be
+             ;; unfolded record failure, where appropriate, too. 
              ;;
-             ;; _fix_me_
-             ;; presumably, .children. should be a list of edges coming in, and
-             ;; we should return a list of fresh edges too.    (30-jan-03; oe)
-             ;;
-             (unless (vectorp (edge-dag-restricted edge))
-               (setf (edge-dag-restricted edge) (make-array n :initial-element nil)))
-             (let* ((cache (edge-dag-restricted edge))
+             (unless (vectorp (edge-foo edge))
+               (setf (edge-foo edge) 
+                 (make-array n :initial-element nil)))
+             (let* ((cache (edge-foo edge))
                     (entry (aref cache i))
                     #+:fdebug
                     (*unify-debug* :return))
                (cond
                 ((eq entry :bottom) (incf (packings-failures *packings*)) nil)
-                ((tdfs-p entry) entry)
+                ((edge-p entry) entry)
                 (t
                  (with-unification-context (ignore)
                    (loop
                        with rule = (edge-rule edge)
                        with paths = (rest (rule-order rule))
                        with result = (rule-full-fs rule)
+                       with leaves = nil
+                       with lex-ids = nil
+                       with rels = nil
+                       with lexemes = nil
                        for path in paths
-                       for tdfs in children 
+                       for child in children 
+                       for tdfs = (or (edge-odag child) (edge-dag child))
+                       when (g-edge-p child) do
+                         (setf rels (append rels (g-edge-rels-covered child)))
+                         (setf lexemes (append lexemes (g-edge-lexemes child)))
                        while result do
+                         (setf leaves (append lex-ids (edge-leaves child)))
+                         (setf lex-ids (append lex-ids (edge-lex-ids child)))
                          (setf result (yadu! result tdfs path))
                        finally
                          (return
                            (cond
                             (result
-                             (setf (aref cache i)
-                               (restrict-and-copy-tdfs result)))
+                             (let ((copy (restrict-and-copy-tdfs result)))
+                               (setf (aref cache i)
+                                 (make-g-edge
+                                  :id (next-edge) :rule rule :dag copy
+                                  :category (indef-type-of-tdfs copy)
+                                  :from (edge-from edge) :to (edge-to edge)
+                                  :children children 
+                                  :leaves leaves :lex-ids lex-ids
+                                  :rels-covered rels :lexemes lexemes))))
                             (t
                              #+:fdebug
                              (when id
@@ -1055,7 +1069,7 @@
        ;; at the leafs of the tree, terminate the recursion.
        ;;
        (t
-        (list (or (edge-odag edge) (edge-dag edge))))))))
+        (list (if (g-edge-p edge) (copy-g-edge edge) (copy-edge edge))))))))
 
 #+:test
 (let ((*active-parsing-p* t)
