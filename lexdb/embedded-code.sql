@@ -2,53 +2,41 @@
 --- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
-SELECT public.hide_schemas();
-
 ---
 --- sql queries embedded in db
 ---
 
-CREATE TABLE qry (
-  fn text,
-  arity int,
-  sql_code text,
-PRIMARY KEY (fn)
-);
-CREATE TABLE qrya (
-  fn text,
-  arg int,
-  type text,
-PRIMARY KEY (fn,arg)
-);
+CREATE OR REPLACE FUNCTION public.create_qry_tables() RETURNS boolean AS '
+BEGIN
+	IF (table_exists_p(\'public\',\'qry\')) THEN
+		DROP TABLE public.qry CASCADE;
+	END IF;
+	IF (table_exists_p(\'public\',\'qrya\')) THEN
+		DROP TABLE public.qrya CASCADE;
+	END IF;
+	CREATE TABLE qry (
+		fn text,
+		arity int,
+		sql_code text,
+	PRIMARY KEY (fn)
+	);
+	CREATE TABLE qrya (
+		fn text,
+		arg int,
+		type text,
+	PRIMARY KEY (fn,arg)
+	);
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
 
-DELETE FROM qry;
-DELETE FROM qrya;
+SELECT create_qry_tables();
 
 \copy qry FROM 'qry.tsv'
 \copy qrya FROM 'qrya.tsv'
-
----
--- SQL functions
----
-
-CREATE VIEW revision_all AS SELECT * FROM revision WHERE NULL;
-CREATE VIEW active AS SELECT * FROM revision WHERE NULL;
-CREATE TABLE current_grammar AS SELECT * FROM revision WHERE NULL;
-
-\i fns_sql.sql
-
-DROP VIEW revision_all;
-DROP VIEW active;
-DROP TABLE current_grammar;
 
 ---
 -- PL/pgSQL
 ---
 
 \i fns_plpgsql.sql
-
----
--- fns version
----
-
-\i fns-version.sql

@@ -223,8 +223,7 @@
   (let* 
       ((strucslots 
 	(loop 
-	    for (slot-key slot-field slot-path slot-type) 
-	    in (fields-map lexicon)
+	    for (slot-key slot-field slot-path slot-type) in (fields-map lexicon)
 	    for slot-value-list = 
 	      (work-out-value 
 	       slot-type 
@@ -366,13 +365,28 @@
      (retrieve-all-records lexicon 
 			   (make-requested-fields lexicon)))))
 
+(defmethod make-mneum-f-slot ((lexicon psql-lex-database))
+  (setf (mneum-f lexicon)
+    (mapcar 
+     #'(lambda (x)
+	 (cons (first x) (second x)))
+     (records (fn-get-raw-records lexicon ''mneum-f-map (fields-tb lexicon))))
+  ))
+
+(defmethod mneum-2-f ((lexicon psql-lex-database) mneum)
+  (or 
+   (cdr (assoc mneum (mneum-f lexicon) :test #'string=))
+   mneum))
+
 (defmethod make-field-map-slot ((lexicon psql-lex-database))
-  ;; stores the mapping of fields to lex-entry structure slots
+  "stores the mapping of fields to lex-entry structure slots"
+  (setf (record-features lexicon) *record-features*)
+  (make-mneum-f-slot lexicon)
   (setf (fields-map lexicon)
     (sort
      (mapcar #'(lambda (x) 
 		 (list (str-2-keyword (first x))
-		       (str-2-keyword (second x))
+		       (str-2-keyword (mneum-2-f lexicon (second x)))
 		       (third x)
 		       (2-symb-or-list (fourth x))))
 	     (records (run-query lexicon 
@@ -443,15 +457,15 @@
 
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
+  (set-val psql-le :orthkey (lexicon-le-orthkey lexicon psql-le))
   (set-val psql-le :modstamp "NOW")
   (set-val psql-le :userid (user lexicon))
-  (set-lex-entry-aux lexicon psql-le)
-  )
+  (set-lex-entry-aux lexicon psql-le))
   
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-version psql-le lexicon) 
   (if *postgres-export-timestamp* (set-val psql-le :modstamp *postgres-export-timestamp*))
-  (let* ((symb-list '(:type :orthography :orthkey :pronunciation :keyrel :altkey :alt2key :keytag :altkeytag :compkey :ocompkey :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
+  (let* ((symb-list '(:f1 :f2 :f3 :f4 :f5 :f6 :f7 :f8 :f9 :orthkey :pronunciation :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
 	 (symb-list (remove-if #'(lambda (x) (or (null x) 
 						 (and (stringp x)
 						      (string= x ""))))
@@ -572,6 +586,8 @@
     (export-to-tdl lexicon ostream)))
 
 (defmethod make-requested-fields ((lexicon psql-lex-database))
+  (if (null (fields-map lexicon))
+      (error "no fields-map definitions"))
   ;; constructs the argument string to sql SELECT with all necessary fields
   (let* ((fields 
 	  (remove-duplicates 
@@ -628,8 +644,8 @@
        (error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax).
  You must load updated setup files.
  See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html" lexdb-version *psql-lexdb-compat-version*)))
-      (make-field-map-slot lexicon)
       (retrieve-fn-defns lexicon)
+      (make-field-map-slot lexicon)
       (initialize-userschema lexicon)
       (setf (name lexicon) name)
       lexicon)

@@ -2,6 +2,19 @@
 --- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
+CREATE OR REPLACE FUNCTION table_exists_p(text,text) RETURNS boolean AS '
+BEGIN
+RETURN
+	(SELECT (SELECT count(*)
+		FROM pg_catalog.pg_class c
+     		LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+		WHERE n.nspname = $1
+      		AND c.relname = $2)
+		> 0);
+END;
+' LANGUAGE plpgsql;
+
+-- check server version
 CREATE OR REPLACE FUNCTION check_version(text) RETURNS boolean AS '
 DECLARE
 	x text;
@@ -12,6 +25,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+-- if server version then ...
 CREATE OR REPLACE FUNCTION if_version(text,text,text) RETURNS text AS '
 DECLARE 
 	x boolean;
@@ -27,84 +41,153 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE TABLE public.meta (
-  var text,
-  val text
-);
-DELETE FROM public.meta WHERE var='db-version';
-DELETE FROM public.meta WHERE var='filter';
-INSERT INTO public.meta VALUES ('db-version', '3.12');
-INSERT INTO public.meta VALUES ('filter', 'TRUE');
+CREATE OR REPLACE FUNCTION public.db_version() RETURNS text AS '
+BEGIN
+	RETURN (SELECT val FROM public.meta WHERE var=\'db-version\');
+END;
+' LANGUAGE plpgsql;
 
----
---- main table
----
-CREATE TABLE public.revision (
-  name TEXT NOT NULL,
-  userid TEXT DEFAULT user,
-  version INTEGER DEFAULT 0,
-  modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  type TEXT NOT NULL,
-  orthography TEXT NOT NULL,
-  orthkey TEXT NOT NULL,
-  pronunciation TEXT,
-  keyrel TEXT,
-  altkey TEXT,
-  alt2key TEXT,
-  keytag TEXT,
-  altkeytag TEXT,
-  compkey TEXT,
-  ocompkey TEXT,
-  complete TEXT,
-  semclasses TEXT,
-  preferences TEXT,
-  classifier TEXT,
-  selectrest TEXT,
-  jlink TEXT,
-  comments TEXT,
-  exemplars TEXT,
-  usages TEXT,
-  lang TEXT DEFAULT 'EN',
-  country TEXT,
-  dialect TEXT,
-  domains TEXT,
-  genres TEXT,
-  register TEXT,
-  confidence real NOT NULL,
-  source TEXT,
-  flags INTEGER DEFAULT 0 NOT NULL,
- PRIMARY KEY (name,version,userid)
-);
-
-CREATE UNIQUE INDEX public_revision_name
- ON public.revision (name varchar_ops); 
-
-SELECT if_version('7.4','CREATE UNIQUE INDEX public_revision_name_pattern ON public.revision (name varchar_pattern_ops)','CREATE UNIQUE INDEX public_revision_name_pattern ON public.revision (name)'); 
-
-CREATE INDEX public_orthkey
-ON public.revision (orthkey); 
-
-CREATE UNIQUE INDEX name_modstamp
-ON public.revision (name,modstamp); 
-
-CREATE INDEX public_revision_name_modstamp ON public.revision (name, modstamp);
-
--- temp tables defined here for backwards compatibility
-CREATE TABLE temp AS SELECT * FROM public.revision WHERE NULL;
-CREATE TABLE revision_new AS SELECT * FROM public.revision WHERE NULL;
+CREATE OR REPLACE FUNCTION public.create_meta_table() RETURNS boolean AS '
+BEGIN
+	IF (table_exists_p(\'public\',\'meta\')) THEN
+		PERFORM public.hide_schemas();
+		DROP TABLE public.meta CASCADE;
+	END IF;
+	CREATE TABLE public.meta (
+		var text,
+		val text
+	);
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
 
 \i embedded-code.sql
 
-CREATE TABLE defn (
-  mode TEXT,
-  slot TEXT,
-  field TEXT,
-  path TEXT,
-  type TEXT,
-PRIMARY KEY (mode,slot, field)
-);
+SELECT create_meta_table();
 
-\copy defn FROM 'defn.tsv'
+---
+-- main table
+---
+CREATE OR REPLACE FUNCTION public.recreate_public_revision() RETURNS boolean AS '
+BEGIN
+
+	IF (table_exists_p(\'public\',\'revision\')) THEN
+		PERFORM dump_db_su(\'BACKUP-BEFORE-LEXDB-UPDATE\');
+		INSERT INTO public.meta VALUES (\'_backup\',\'BACKUP-BEFORE-LEXDB-UPDATE\');
+		DROP TABLE public.revision CASCADE;
+	END IF;
+	---
+	--- main table
+	---
+	CREATE TABLE public.revision (
+		name TEXT NOT NULL,
+		userid TEXT DEFAULT user,
+		version INTEGER DEFAULT 0,
+		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		f1 TEXT,
+		f2 TEXT,
+		orthkey TEXT NOT NULL,
+		pronunciation TEXT,
+		f3 TEXT,
+		f4 TEXT,
+		f5 TEXT,
+		f6 TEXT,
+		f7 TEXT,
+		f8 TEXT,
+		f9 TEXT,
+		complete TEXT,
+		semclasses TEXT,
+		preferences TEXT,
+		classifier TEXT,
+		selectrest TEXT,
+		jlink TEXT,
+		comments TEXT,
+		exemplars TEXT,
+		usages TEXT,
+		lang TEXT DEFAULT \'EN\',
+		country TEXT,
+		dialect TEXT,
+		domains TEXT,
+		genres TEXT,
+		register TEXT,
+		confidence real NOT NULL,
+		source TEXT,
+		flags INTEGER DEFAULT 0 NOT NULL
+	);
+
+	IF (SELECT var FROM public.meta WHERE var=\'_backup\') IS NOT NULL THEN
+		PERFORM restore_public_revision_su(\'BACKUP-BEFORE-LEXDB-UPDATE\');
+	END IF;
+
+	PERFORM public.index_public_revision();
+
+	RETURN TRUE;
+END;
+' LANGUAGE plpgsql;
+
+SELECT recreate_public_revision();
+
+--\i embedded-code.sql
+
+CREATE OR REPLACE FUNCTION public.create_defn_table() RETURNS boolean AS '
+BEGIN
+	IF (table_exists_p(\'public\',\'defn\')) THEN
+		DROP TABLE public.defn CASCADE;
+	END IF;	
+	CREATE TABLE public.defn (
+			mode TEXT,
+			slot TEXT,
+			field TEXT,
+			path TEXT,
+			type TEXT,
+		PRIMARY KEY (mode,slot, field)
+		);
+	IF (SELECT var FROM public.meta WHERE var=\'_backup\') IS NOT NULL THEN
+		PERFORM restore_public_defn_su(\'BACKUP-BEFORE-LEXDB-UPDATE\');
+	END IF;
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+
+SELECT create_defn_table();
+
+---DELETE FROM defn WHERE mode = 'EXAMPLE_erg';
+---DELETE FROM defn WHERE mode = '_EXAMPLE_erg';
+---\copy defn FROM 'defn.tsv'
+
+CREATE OR REPLACE FUNCTION public.create_bc_temp_tables() RETURNS boolean AS '
+BEGIN
+	IF (table_exists_p(\'public\',\'temp\')) THEN
+		DROP TABLE public.temp CASCADE;
+	END IF;
+	IF (table_exists_p(\'public\',\'revision_new\')) THEN
+		DROP TABLE public.revision_new CASCADE;
+	END IF;
+	CREATE TABLE public.temp AS SELECT * FROM public.revision WHERE NULL;
+	CREATE TABLE public.revision_new AS SELECT * FROM public.revision WHERE NULL;
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+SELECT public.create_bc_temp_tables();
+
 \i permissions.sql
 
-\i mwe.sql
+--\i mwe.sql
+
+---
+-- meta table
+---
+
+\copy public.meta from 'public.meta.tsv'
+
+---
+-- retain for backwards compatibility...
+---
+
+CREATE OR REPLACE FUNCTION public.orthography_set() RETURNS SETOF text AS '
+BEGIN
+    RETURN (SELECT DISTINCT f2 FROM current_grammar);
+END' LANGUAGE plpgsql;
+

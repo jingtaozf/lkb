@@ -1,3 +1,71 @@
+--- Copyright (c) 2003-2004 
+--- Benjamin Waldron;
+--- see `licence.txt' for conditions.
+
+CREATE OR REPLACE FUNCTION public.next_version(text) RETURNS integer AS '
+BEGIN
+	RETURN (SELECT COALESCE(1 + max(version),0) FROM revision_all WHERE name LIKE $1 AND user=user);
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.lex_id_set() RETURNS SETOF text AS '
+DECLARE
+	x RECORD;
+BEGIN
+	FOR x IN
+		SELECT DISTINCT name FROM current_grammar
+		LOOP
+		RETURN NEXT x.name;
+	END LOOP;
+	RETURN;
+END;
+ ' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.lookup_word(text) RETURNS SETOF text AS '
+DECLARE
+	x RECORD;
+BEGIN
+	FOR x IN
+		SELECT name FROM current_grammar WHERE orthkey LIKE $1
+		LOOP
+		RETURN NEXT x.name;
+	END LOOP;
+	RETURN;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.show_scratch() RETURNS SETOF text AS '
+DECLARE
+	x RECORD;
+BEGIN
+	FOR x IN
+		SELECT distinct name FROM revision
+		LOOP
+		RETURN NEXT x.name;
+	END LOOP;
+	RETURN;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.get_filter() RETURNS text AS '
+BEGIN
+	RETURN (SELECT val FROM meta WHERE var=\'filter\' LIMIT 1);
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.test_user(text) RETURNS SETOF text AS '
+DECLARE
+	x RECORD;
+BEGIN
+	FOR x IN
+		SELECT * FROM public.meta WHERE var=\'user\' AND val = $1
+		LOOP
+		RETURN NEXT x.val;
+	END LOOP;
+	RETURN;
+END;
+' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION public.db_owner() RETURNS text AS 
 '
 DECLARE
@@ -118,7 +186,7 @@ BEGIN
 
 	IF num_new > 0 THEN
  		RAISE INFO \'Updating table...\';
- 		DELETE FROM defn;
+ 		DELETE FROM defn WHERE mode IN (SELECT DISTINCT mode FROM temp_defn);
 		INSERT INTO defn
   			SELECT * FROM temp_defn; 
  		RAISE INFO \'Updating timestamps...\';
@@ -495,5 +563,29 @@ END;
 CREATE OR REPLACE FUNCTION public.semi_build_time_private() RETURNS text AS '
 BEGIN
 	RETURN COALESCE((SELECT val FROM meta WHERE var=\'semi_build_time\' LIMIT 1),\'\');
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.define_type_text_text() RETURNS boolean AS '
+BEGIN
+	IF table_exists_p(\'public\',\'text_text\') THEN
+		DROP TYPE public.text_text CASCADE;
+	END IF;
+	CREATE TYPE text_text AS (t1 text, t2 text);
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+SELECT public.define_type_text_text();
+
+CREATE OR REPLACE FUNCTION public.mneum_f_map(text) RETURNS SETOF text_text AS '
+DECLARE
+	x text_text;
+BEGIN
+	FOR x IN
+		SELECT slot,field from defn where mode = \'_\' || $1
+		LOOP
+		RETURN NEXT x;
+	END LOOP;
+	RETURN;
 END;
 ' LANGUAGE plpgsql;

@@ -4,26 +4,29 @@
 
 (in-package :lkb)
 
+(defmethod orthkey ((x lex-entry))
+  (car (last (slot-value x 'orth))))
+  
 (defmethod to-csv ((x lex-entry) fields-map)
   "provide line entry for lexicon db import file"
   (let* ((s (copy-slots x fields-map))
 
 	 (name (extract-field s :name fields-map))
-	 (keyrel (extract-field s :keyrel fields-map))      
-	 (keytag (extract-field s :keytag fields-map))
-	 (altkey (extract-field s :altkey fields-map))
-	 (altkeytag (extract-field s :altkeytag fields-map))
-	 (alt2key (extract-field s :alt2key fields-map))
-	 (compkey (extract-field s :compkey fields-map))
-	 (ocompkey (extract-field s :ocompkey fields-map))
-	 (type (extract-field s :type fields-map))
-	 (orthography (extract-field s :orthography fields-map))
+	 (f1 (extract-field s :f1 fields-map))
+	 (f2 (extract-field s :f2 fields-map))
+	 (f3 (extract-field s :f3 fields-map))      
+	 (f6 (extract-field s :f6 fields-map))
+	 (f4 (extract-field s :f4 fields-map))
+	 (f7 (extract-field s :f7 fields-map))
+	 (f5 (extract-field s :f5 fields-map))
+	 (f8 (extract-field s :f8 fields-map))
+	 (f9 (extract-field s :f9 fields-map))
+	 (orthkey (orthkey x))
 	 (pronunciation (extract-field s :pronunciation fields-map))
-
-	 (orth-list (string-2-str-list-on-spc orthography))
+;	 (orth-list (string-2-str-list-on-spc f2))
 	 (multi-base-name (and 
 			   *postgres-export-multi-separately* 
-			   (multi-p :name name :type type)))
+			   (multi-p :name name :type f1)))
 	 (line 
 	  (format nil "~a~%"
 		  (csv-line
@@ -31,17 +34,18 @@
 		   *postgres-current-user* ;;userid
 		   (num-2-str *postgres-export-version*) ;;version
 		   *postgres-export-timestamp* ;;modstamp
-		   type
-		   orthography 
-		   (get-orthkey orth-list)
+		   f1
+		   f2 
+;		   (get-orthkey orth-list)
+		   orthkey
 		   pronunciation
-		   keyrel
-		   altkey
-		   alt2key
-		   keytag
-		   altkeytag
-		   compkey
-		   ocompkey
+		   f3
+		   f4
+		   f5
+		   f6
+		   f7
+		   f8
+		   f9
 		   "" ;;complete
 		   "" ;;semclasses
 		   "" ;;preferences
@@ -66,9 +70,9 @@
       (if multi-base-name
 	  (to-multi-csv-line :name name
 			     :base-name multi-base-name
-			     :particle compkey
-			     :type type
-			     :keyrel keyrel)
+			     :particle f8
+			     :type f1
+			     :keyrel f3)
       line))
      (t
       (format *postgres-export-skip-stream* "~a" (to-tdl x))
@@ -81,32 +85,33 @@
 	 (s (copy-slots x fields-map))
 
 	 (name (extract-field s :name fields-map))
-	 (keyrel (extract-field s :keyrel fields-map))      
-	 (keytag (extract-field s :keytag fields-map))
-	 (altkey (extract-field s :altkey fields-map))
-	 (altkeytag (extract-field s :altkeytag fields-map))
-	 (alt2key (extract-field s :alt2key fields-map))
-	 (compkey (extract-field s :compkey fields-map))
-	 (ocompkey (extract-field s :ocompkey fields-map))	 
-	 (type (extract-field s :type fields-map))
-	 (orthography (extract-field s :orthography fields-map))
+	 (f1 (extract-field s :f1 fields-map))
+	 (f2 (extract-field s :f2 fields-map))
+	 (f3 (extract-field s :f3 fields-map))      
+	 (f6 (extract-field s :f6 fields-map))
+	 (f4 (extract-field s :f4 fields-map))
+	 (f7 (extract-field s :f7 fields-map))
+	 (f5 (extract-field s :f5 fields-map))
+	 (f8 (extract-field s :f8 fields-map))
+	 (f9 (extract-field s :f9 fields-map))	 
 	 (pronunciation (extract-field s :pronunciation fields-map))
 	 
-	 (orth-list (string-2-str-list-on-spc orthography))
+;	 (orth-list (string-2-str-list-on-spc f2))
 	 (psql-le
 	  (make-instance-psql-lex-entry
 	   :name name
-	   :type type
-	   :orthography orth-list	;list
-	   :orthkey (get-orthkey orth-list)
+	   :f1 f1
+;	   :f2 orth-list	;list
+	   :f2 f2	;list
+;	   :orthkey (get-orthkey orth-list)
+	   :f3 f3
+	   :f4 f4
+	   :f5 f5
+	   :f6 f6
+	   :f7 f7
+	   :f8 f8
+	   :f9 f9
            :pronunciation pronunciation
-	   :keyrel keyrel
-	   :altkey altkey
-	   :alt2key alt2key
-	   :keytag keytag
-	   :altkeytag altkeytag
-	   :compkey compkey
-	   :ocompkey ocompkey
 	   :country *postgres-current-country*
 	   :lang *postgres-current-lang*
 	   :source (extract-pure-source-from-source *postgres-current-source*)

@@ -10,6 +10,8 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
+(defvar *lexdb-pg-interface-version* "2.00")
+
 (require 'widget)
 
 (eval-when-compile
@@ -143,12 +145,17 @@
 ;;; globals
 ;;;
 
-(defvar *lexdb-read-only* '(:version :userid :modstamp))
-(defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :source :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp))
-(defvar *lexdb-minibuffer-max* 80)
-(defvar *lexdb-active-id-ring* nil)
-(defvar *new-entries-buffer* "*new-entries*")
-(defvar *field-mask* '((:altkey . "XaltkeyX")))
+(defvar *lexdb-record-features*)
+(defvar *lexdb-field-mask*)
+(defvar *lexdb-read-only*)
+(defvar *lexdb-minibuffer-max*)
+(defvar *lexdb-active-id-ring*)
+(defvar *new-entries-buffer*)
+
+(setf *lexdb-read-only* '(:version :userid :modstamp :orthkey))
+(setf *lexdb-minibuffer-max* 80)
+(setf *lexdb-active-id-ring* nil)
+(setf *new-entries-buffer* "*new-entries*")
 
 ;;;
 ;;; buffer local vbles
@@ -454,6 +461,8 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun lexdb-retrieve-record (id)
   (let ((fields (cle-retrieve-record-fields id))
 	(sizes (cle-retrieve-record-sizes)))
+    (setf *lexdb-field-mask* (cle-retrieve-field-mask))
+    (setf *lexdb-record-features* (cle-retrieve-record-features))
     (unless fields
       (princ (format "%s not found! " id))
       (setf fields (l:make-empty-record id)))
@@ -466,9 +475,9 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (if (equal (cdr (assoc :name record-in))
 	     "")
       (error "cannot commit record with no NAME"))
-  (push 
-   (cons :orthkey (first (split-string (cdr (assoc :orthography record-in)))))
-   record-in)
+;  (push 
+;   (cons :orthkey (first (split-string (cdr (assoc :orthography record-in)))))
+;   record-in)
   (princ "please wait... ")
   ;;(terpri)
   (cle-store-record record-in)
@@ -565,14 +574,15 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	      " "))))
 
 (defun l:fv-pair-2-fw-pair (x)
-  (let ((feat (car x))
-	(val (cdr x)))
+  (let* ((feat (car x))
+	 (feat-str (kw2str feat))
+	 (val (cdr x)))
   (cons 
    feat
    (progn 
      (widget-insert "\n"
-		    (make-string (max 0 (- 15 (length (kw2str feat)))) ? ) 
-		    (upcase (kw2str feat)) 
+		    (make-string (max 0 (- 15 (length feat-str))) ? ) 
+		    (upcase feat-str) 
 		    ": ")
      (cond
       ((member feat *lexdb-read-only*)
@@ -603,11 +613,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (field-display-str kw))
 
 (defun field-display-str (field-kw)
-  (or (cdr (assoc field-kw *field-mask*))
-      (let ((name-str (symbol-name kw)))
-    (if (= (aref name-str 0) 58)
-	(substring name-str 1)
-      (error "keyword expected")))))
+  (let* ((name-str-all (symbol-name field-kw))
+	 (name-str (substring name-str-all 1)))
+    (or (car (rassoc (downcase name-str) *lexdb-field-mask*))
+	name-str)))
 
 (defun truncate-list (l n)
   (let ((out)
@@ -655,6 +664,12 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun cle-retrieve-record-sizes nil
    (cle-eval-lexdb 'get-field-size-map))
+
+(defun cle-retrieve-field-mask nil
+   (cle-eval-lexdb 'mneum-f))
+
+(defun cle-retrieve-record-features nil
+   (cle-eval-lexdb 'record-features))
 
 (defun cle-store-record (record-in)
   (cle-eval-lexdb 'set-lex-entry 

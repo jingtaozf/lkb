@@ -27,7 +27,8 @@
 (defmethod connect-aux ((lexicon psql-database))
   (with-slots (port host dbname password connection user) lexicon
     ;; attempt connection w/ default pwd
-    (if (equal "" password)
+    (if (or (null password)
+	    (equal "" password))
 	(setf password user))
     (or
      (connect-aux2 lexicon)

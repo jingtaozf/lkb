@@ -2,6 +2,8 @@
 --- Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
+--- OUT-OF-DATE
+
 ---
 --- public tables
 ---

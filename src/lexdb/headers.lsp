@@ -8,8 +8,8 @@
 
 (defvar *postgres-temp-filename* nil)
 
+(defvar *psql-lkb-version* "2.00")
 (defvar *psql-lexdb-compat-version* "3.1")
-(defvar *psql-fns-version* "1.00")
 (defvar *psql-port-default* 5432)
 
 (defvar *postgres-tmp-lexicon* nil)
@@ -35,6 +35,9 @@
 
 (defvar *postgres-debug-stream*)
 
+;; temporary
+(defvar *record-features* '(:name :f1 :f2 :f3 :f4 :f5 :f6 :f7 :f8 :f9 :source :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp :orthkey))
+
 ;;;
 ;;; class declarations
 ;;;
@@ -53,7 +56,9 @@
    (fields-tb 
     :initform nil :accessor fields-tb :initarg :fields-tb)
    ;; a-list for mapping the lexicon-table fields to the psort-or-lex structure
-   (fields-map :initform nil :accessor fields-map)))
+   (fields-map :initform nil :accessor fields-map)
+   (record-features :initform nil :accessor record-features)
+   (mneum-f :initform nil :accessor mneum-f)))
 
 (defclass psql-database (sql-database)
   ((connection :initform nil :accessor connection :initarg connection)

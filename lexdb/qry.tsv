@@ -1,7 +1,7 @@
 next-version	1	SELECT next_version($0)
 orthography-set	0	SELECT orthography_set()
-lex-id-set	0	SELECT lex_id_set()
-lookup-word	1	SELECT lookup_word($0)
+lex-id-set	0	SELECT * FROM lex_id_set()
+lookup-word	1	SELECT * FROM lookup_word($0)
 complete	2	SELECT * FROM complete($0,$1)
 lookup-general	2	SELECT * FROM lookup_general($0,$1)
 lookup-general-null	1	SELECT * FROM lookup_general_null($0)
@@ -14,7 +14,7 @@ build-current-grammar	0	SELECT build_current_grammar();
 update-entry	3	INSERT INTO revision (name, $1) VALUES ($0 , $2); \nDELETE FROM current_grammar \n WHERE name LIKE $0:like-text ; \nINSERT INTO current_grammar\n SELECT * FROM active\n  WHERE name = $0 \n   LIMIT 1;\n\nDELETE FROM meta WHERE var='mod_time';\nINSERT INTO meta VALUES ('mod_time',current_timestamp);
 clear-scratch	0	SELECT clear_scratch()       
 commit-scratch	0	SELECT commit_scratch()       
-show-scratch	0	SELECT show_scratch()       
+show-scratch	0	SELECT * FROM show_scratch()       
 merge-defn	0	SELECT merge_dfn();
 merge-multi-into-db	1	SELECT merge_multi_into_db($0)
 dump-db	0	SELECT dump_db()
@@ -24,7 +24,7 @@ value-set	1	SELECT DISTINCT $0 FROM revision_all WHERE $0 IS NOT NULL;
 create-schema	1	SELECT create_schema($0)
 remove-schema	1	SELECT remove_schema($0)
 get-filter	0	SELECT get_filter()
-test-user	1	SELECT test_user($0);
+test-user	1	SELECT * FROM test_user($0);
 load-semi	0	SELECT load_semi()
 dump-scratch-db	1	DELETE FROM temp;\nINSERT INTO temp\n (SELECT * FROM revision ORDER BY name, userid, version);\nCOPY temp TO $0 DELIMITERS ',' WITH NULL AS '';
 test	1	$0
@@ -34,3 +34,4 @@ semi-setup-1	0	SELECT semi_setup_1();
 semi-setup-2	0	SELECT semi_setup_2();
 semi-up-to-date-p	0	select mod_time() < (select min(modstamp) from semi_pred);
 semi-out-of-date	0	select * from current_grammar where modstamp > semi_build_time_private()
+mneum-f-map	1	SELECT * FROM mneum_f_map($0);

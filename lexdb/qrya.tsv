@@ -25,3 +25,4 @@ test-user	0	text
 dump-scratch-db	0	text
 test	0	select-list
 user-read-only-p	0	text
+mneum-f-map	0	text

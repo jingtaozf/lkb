@@ -74,6 +74,8 @@
      (port (extract-param :port *psql-lexicon-parameters*))
      (user (extract-param :user *psql-lexicon-parameters*))
      (semi (extract-param :semi *psql-lexicon-parameters*)))
+  (unless db
+    (error "please set :db in *psql-lexicon-parameters*"))
   (let ((part-of))   
     (if *psql-lexicon*
         (setf part-of (part-of *psql-lexicon*))

@@ -49,3 +49,13 @@
 				(retr-val psql-le (pop symb-list)))))
     (get-output-stream-string stream)))
 
+(defmethod get-raw-orth ((lexicon psql-lex-database) (le psql-lex-entry))
+  (let* ((orth-raw-mapping (assoc :orth (fields-map lexicon)))
+	 (orth-raw-value-mapping (fourth orth-raw-mapping))
+	 (raw-orth-field (second orth-raw-mapping)))
+    (car (work-out-value
+	  orth-raw-value-mapping
+	  (retr-val le raw-orth-field)))))
+
+(defmethod lexicon-le-orthkey ((lexicon psql-lex-database) (le psql-lex-entry))
+  (car (last (get-raw-orth lexicon le))))
