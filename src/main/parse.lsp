@@ -870,6 +870,8 @@ Setting *first-only-p* to nil")
   ;; An additional optional argument is given. This is the new orthography if
   ;; the unification relates to a morphological process. If it is present, it
   ;; is inserted in the resulting fs
+  (when *unify-debug-cycles*
+    (format t "~%~A" (rule-id rule)))
   (let*
       ((current-tdfs (rule-full-fs rule))
        (rule-daughter-order
