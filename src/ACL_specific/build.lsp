@@ -12,5 +12,7 @@
 
 (setq excl:*restart-init-function* 
   #'(lambda ()
-      (let ((*package* (find-package "CLIM-USER")))
-	(clim-user::set-up-lkb-interaction :big))))
+      (let ((*package* (find-package "CLIM-USER")))        
+        (clim-user::set-up-lkb-interaction :core))))
+
+

@@ -63,7 +63,17 @@
 
 (defvar *lkb-menu* nil)
 
-(defun set-up-lkb-interaction (system-type)
+(defun expand-lkb-menu nil
+  (setf *lkb-menu-type* :big)
+  (set-up-lkb-interaction))
+
+(defun shrink-lkb-menu nil
+  (setf user::*lkb-menu-type* :core)
+  (set-up-lkb-interaction))
+
+(defun set-up-lkb-interaction (&optional system-type)
+  (unless system-type 
+    (setf system-type (or *lkb-menu-type* :core)))
   (when *lkb-menu*
    (menu-deinstall *lkb-menu*))  ; reset if we've loaded the 
                                 ; LKB before in this session
@@ -75,9 +85,12 @@
 ;;;    (:yadu (create-yadu-system-menu))
     )
   (menu-install *lkb-menu*)
-  (for submenu in *lkb-menu-disabled-list*
-        do (menu-item-disable submenu))  ; get round bug by disabling after
-                                         ; installation
+  (unless *current-grammar-load-file*
+    (for submenu in *lkb-menu-disabled-list*
+         do (menu-item-disable submenu)) ; get round bug by disabling after
+                                        ; installation, but only if
+                                        ; we don't have a grammar
+    )
   (pushnew 'lkb-exit-function *lisp-cleanup-functions*))
 
 (defun lkb-exit-function (&optional dump)
@@ -86,9 +99,17 @@
 
 
 (defun dump-lkb nil
-  (let ((pathname (ask-user-for-new-pathname "File for image?")))
+  (let* ((fresh-p (not *current-grammar-load-file*))
+         (pathname (ask-user-for-new-pathname 
+                    (format nil 
+                            "File for image ~A grammar" 
+                            (if fresh-p "without" "with")))))
     (when pathname
-      (pushnew 'lkb-restart-function *lisp-startup-functions*)
+      (pushnew (if fresh-p 'restart-lkb-window 'lkb-restart-function)
+               *lisp-startup-functions*)
+      (clear-expanded-lex)
+      (clear-type-cache)
+      (unexpand-leaf-types)
       (pushnew 'lkb-exit-function *lisp-cleanup-functions*)
       (save-application pathname
          :excise-compiler (not (y-or-n-p-general "Include lisp compiler in image?")))
@@ -97,8 +118,10 @@
 
 (defun lkb-restart-function nil
   (read-psort-index-file)
-  (set-up-lkb-interaction :big)
-  (enable-type-interactions))
+  (set-up-lkb-interaction))
+
+(defun restart-lkb-window nil
+  (set-up-lkb-interaction))
         
  
 (defun enable-type-interactions nil

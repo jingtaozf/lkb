@@ -160,7 +160,8 @@
 ;;;  Loading and reloading - called by the tty version as well
 ;;; as the menu driven version
 
-(defparameter *current-grammar-load-file* nil)
+;;; (defparameter *current-grammar-load-file* nil)
+;;; defined in globals
 
 (defun read-script-file-aux (file-name)
   (when file-name
@@ -212,13 +213,6 @@
 (defun parent-directory nil
   (make-pathname 
    :directory (butlast (pathname-directory *load-truename*))))
-
-(defun temporary-file (name)
-  (make-pathname :name name 
-                 :directory (pathname-directory mk::tmp-dir)))
-
-(defun temporary-directory nil
-  mk::tmp-dir)
 
 (defun lkb-pathname (directory name)
   (merge-pathnames
@@ -274,3 +268,5 @@
                 (if filetype (string filetype) ""))
         (setf ok nil)))
       ok))
+
+  

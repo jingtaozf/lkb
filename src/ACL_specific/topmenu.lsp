@@ -61,20 +61,29 @@
                              :menu-items menu-items)))
     (unless available-p 
             (push (intern (concatenate 'string "COM-" menu-title)) 
-                          *lkb-menu-disabled-list*))
+                  *lkb-menu-disabled-list*))
     menu))
 
+(defun expand-lkb-menu nil
+  (setf user::*lkb-menu-type* :big)
+  (set-up-lkb-interaction))
 
+(defun shrink-lkb-menu nil
+  (setf user::*lkb-menu-type* :core)
+  (set-up-lkb-interaction))
 
-(defun set-up-lkb-interaction (system-type)
-  (when (find-command-table 'lkb-top :errorp nil)
+(defun set-up-lkb-interaction (&optional system-type)
+  (unless system-type 
+    (setf system-type (or user::*lkb-menu-type* :core)))
+  (when (find-command-table 'lkb-top-command-table :errorp nil)
         (map-over-command-table-commands 
          #'(lambda (name)
-             (remove-command-from-command-table name  
-                           (find-command-table 'lkb-top)))
-           (find-command-table 'lkb-top)
+             (unless (eql name 'COM-CLOSE-TO-REPLACE)
+               (remove-command-from-command-table name  
+                    (find-command-table 'lkb-top-command-table))))
+             (find-command-table 'lkb-top-command-table)
            :inherited nil))
-  ; remove any old commands
+                                        ; remove any old commands
   (setf *lkb-menu-disabled-list* nil)
   (ecase system-type
     (:core (create-mini-lkb-system-menu))
@@ -84,8 +93,9 @@
 ; in this version most of the work has to be done
 ; by messing around with the values in *lkb-menu*
   (lkb-menu-install *lkb-menu*) 
-;  (setf *lkb-top-frame* nil)
+                                        ;  (setf *lkb-top-frame* nil)
   (start-lkb-frame))
+
 
 (defun lkb-menu-install (menu)
   (eval `(define-application-frame lkb-top ()
@@ -111,6 +121,8 @@
            (:disabled-commands ,*lkb-menu-disabled-list*)))
   ;; make sure we have a way out
   (define-command (com-quit :menu t :command-table lkb-top-command-table) ()
+    (user-exit-lkb-frame *application-frame*))
+  (define-command (com-close-to-replace :command-table lkb-top-command-table) ()
     (frame-exit *application-frame*))
   (dolist (submenu (slot-value menu 'menu-items))
     (if (lkb-menu-item-p submenu)
@@ -142,54 +154,89 @@
 
 
 (defun start-lkb-frame ()
-  (when *lkb-top-frame*
-    (execute-frame-command *lkb-top-frame* 
-                                '(com-quit)))
-  (let ((frame (make-application-frame 'lkb-top)))
+  (let ((old-frame *lkb-top-frame*)
+        (frame (make-application-frame 'lkb-top)))
     (setf *lkb-top-frame* frame)
     (setf *lkb-top-stream* (get-frame-pane *lkb-top-frame* 'display))
     (setf *lkb-top-process*
-      (mp:process-run-function "start-lkb-frame" #'run-lkb-top-menu frame))))
+      (mp:process-run-function "start-lkb-frame" #'run-lkb-top-menu frame))
+      ;; crude way of seeing whether this is being 
+    ;; called when we already have a grammar
+    (when user::*current-grammar-load-file*
+      (enable-type-interactions))
+    ;;; note - if this is being called from a command in the old frame
+    ;;; it's important this is the last action ...
+    (when old-frame
+      (execute-frame-command old-frame 
+                             '(com-close-to-replace)))))
+
+
+(defvar *complete-lisp-close* nil)
+
+(defun user-exit-lkb-frame (frame)
+  ;;; check user really wants to do this
+  ;;; by default, exit Lisp as well
+  ;;; for application, always exit Lisp as well
+  (if (member :compiler *features*)
+      (let ((result (user::ask-user-for-multiple-choice "Really exit?" 'Lisp 'LKB 'Cancel)))
+        (cond ((eq result 'lkb) (frame-exit frame))
+              ((eq result 'lisp) 
+               (setf *complete-lisp-close* t)
+               (frame-exit frame))
+              (t nil)))
+    (when (user::lkb-y-or-n-p "Really exit the system?")
+      (setf *complete-lisp-close* t)
+      (frame-exit frame)
+      )))
 
 (defun run-lkb-top-menu (frame)
   ;;; define this function so that stuff can be called on exit
   ;;; from LKB
   (unwind-protect
       (run-frame-top-level frame)
-    (user::write-psort-index-file)))
+    (when *complete-lisp-close*
+      (user::write-psort-index-file)
+      (excl:exit 0 :no-unwind t))))
 
 (defun restart-lkb-function nil
   (user::read-psort-index-file)
   (setf *last-directory* nil)
-  (set-up-lkb-interaction :core)
-  (enable-type-interactions))
+  (set-up-lkb-interaction))
 
 (defun restart-lkb-window nil
   (setf *last-directory* nil)
-  (setf common-lisp-user::*psorts-temp-file* 
-    (make-pathname :name "templex" 
-                   :directory (pathname-directory mk::tmp-dir)))
-  (setf common-lisp-user::*psorts-temp-index-file* 
-    (make-pathname :name "templex-index" 
-                   :directory (pathname-directory mk::tmp-dir)))  
-  (set-up-lkb-interaction :core)
-  (enable-type-interactions))
+  (set-up-lkb-interaction))
 
-(defun dump-lkb (&optional fresh-p)
-  (let ((image-location 
-         (user::ask-user-for-new-pathname 
-          "File for image (local file strongly advised)")))
+(defun dump-lkb nil
+  (let* ((fresh-p (not common-lisp-user::*current-grammar-load-file*))
+        (image-location 
+         (user::ask-user-for-new-pathname
+          (format nil 
+                  "File for image ~A grammar (local file advised)" 
+                  (if fresh-p "without" "with")))))                   
     (when image-location
+      ;;; apparently 5.0 requires that the file be .dxl
+      ;;; this lets the user give another type - since they may know more
+      ;;; than I do, but issues a warning message
+      #+(and :allegro (version>= 5 0))
+      (let ((image-type (pathname-type image-location)))
+        (unless image-type 
+          (setf image-location 
+            (merge-pathnames image-location
+                             (make-pathname :type "dxl"))))
+        (when image-type
+          (unless (equal image-type "dxl")
+            (format t 
+                    "~%Warning - image type was ~A when dxl was expected" 
+                    image-type))))
       (setf excl:*restart-init-function* (if fresh-p
                                              #'restart-lkb-window
-                                             #'restart-lkb-function))
-      (user::write-psort-index-file)
+                                           #'restart-lkb-function))
+      (unless fresh-p
+        (user::write-psort-index-file))
       (user::clear-expanded-lex)
       (user::clear-type-cache)
       (user::unexpand-leaf-types)
-      (when fresh-p
-        (setf common-lisp-user::*psorts-temp-file* nil)
-        (setf common-lisp-user::*psorts-temp-index-file* nil))
       (excl:dumplisp :name image-location)
       (user::check-for-open-psorts-stream)
       (user::lkb-beep)
@@ -207,11 +254,4 @@
   (dolist (command *lkb-menu-disabled-list*)
     (setf (command-enabled command *lkb-top-frame*) nil)))
 
-(defun parse-sentences-batch nil
-  ;;; for MCL this can just be parse-sentences
-  (mp:process-run-function "Batch parse" #'parse-sentences))
-
-(defun do-parse-batch nil
-  ;;; for MCL this can just be do-parse
-  (mp:process-run-function "Parse" #'do-parse))
 

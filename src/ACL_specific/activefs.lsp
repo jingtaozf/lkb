@@ -424,11 +424,7 @@
     (let ((file-name 
 	   (ask-user-for-new-pathname "File for LaTeX macros?"))) 
       (when file-name
-	(let ((real-name 
-	       (merge-pathnames 
-		(make-pathname :directory *lkb-source-dir*)
-		file-name)))
-	  (display-dag fs 'tex real-name))))))
+	  (display-dag fs 'tex file-name)))))
 
 
 ;;; ***** Other title menu functions *****

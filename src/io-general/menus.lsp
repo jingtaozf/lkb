@@ -1,5 +1,5 @@
-#+:allegro(in-package :clim-user)
-#-:allegro(in-package :cl-user)
+#+(and :allegro :clim)(in-package :clim-user)
+#-(and :allegro :clim)(in-package :cl-user)
 #+:allegro
 (eval-when 
     (compile load eval)
@@ -68,7 +68,8 @@
                                                            :available-p t)
                                            (make-menu-item :name "Reload grammar"
                                                            :value 'reload-script-file 
-                                                           :available-p nil)))
+                                                           :available-p nil))
+                                          :available-p t)
                    (make-lkb-submenu-item :menu-title "View"
                                           :menu-items
                                           (list 
@@ -120,6 +121,8 @@
                    (make-lkb-submenu-item :menu-title "Options"
                                           :menu-items
                                           (list
+                                           (make-menu-item :name "Expand menu"
+                                                           :value 'expand-lkb-menu :available-p t)
                                            (make-menu-item :name "Set options..."
                                                            :value 'get-parameters :available-p t)
                                            (make-menu-item :name "Save display settings..."
@@ -202,7 +205,7 @@
                      (make-menu-item :name "Show chart"
                         :value 'show-gen-chart))
                :available-p nil)
-         (make-lkb-submenu-item :menu-title "Links"
+         (make-lkb-submenu-item :menu-title "Tests"
                  :menu-items                       
                   (list 
                      (make-menu-item :name "Apply lexical rule..."
@@ -210,29 +213,41 @@
                      (make-menu-item :name "Apply all lex rules..."
                         :value 'apply-lex-rules)
                      )
-               :available-p nil)           
-            (make-menu-item :name "Tidy up"
-               :value 'clear-non-parents
-               :available-p nil) 
-            (make-lkb-submenu-item :menu-title "Output"
+                  :available-p nil)           
+         (make-lkb-submenu-item :menu-title "Debug"
+                                :available-p t
+                                :menu-items
+                                (list
+                                 (make-menu-item :name "Check lexicon"
+                                                 :value 'batch-check-lexicon :available-p nil)
+                                 (make-menu-item :name "Print chart"
+                                                 :value 'print-chart :available-p nil)))
+         (make-menu-item :name "Tidy up"
+                         :value 'clear-non-parents
+                         :available-p nil) 
+         (make-lkb-submenu-item :menu-title "Output"
                  :menu-items 
-                  (list                     
-                     (make-menu-item :name "Dump system..."
+                   (list                     
+                      (make-menu-item :name "Dump system..."
                         :value 'dump-lkb)
 ;                     (make-menu-item :name "Types with glbs..."
 ;                        :value 'output-type-file 
 ;                        :available-p nil)
-                     (make-menu-item :name "Display settings"
-                                     :value 'output-display-settings)
                      )
 		  :available-p nil)
 	    (make-lkb-submenu-item 
 	     :menu-title "Options"
 	     :menu-items                       
 	     (list 
+              (make-menu-item :name "Shrink menu"
+                                    :value 'shrink-lkb-menu :available-p t)
 	      (make-menu-item :name "Set options"
 			      :available-p t
-			      :value 'get-parameters))
+			      :value 'get-parameters)
+              (make-menu-item :name "Save display settings..."
+                                                           :value 'output-display-settings)
+              (make-menu-item :name "Load display options..."
+                                                           :value 'load-display-settings))
 	     :available-p t)))))
 
 

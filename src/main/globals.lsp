@@ -182,19 +182,18 @@
 
 (def-lkb-parameter *label-template-type* 'label)
 
-
-(def-lkb-parameter *psorts-temp-file* 
-  (make-pathname :name "templex" 
-                 :directory (pathname-directory mk::tmp-dir))
-   "a temporary file for the lexicon")
-
-(def-lkb-parameter *psorts-temp-index-file* 
-  (make-pathname :name "templex-index" 
-                 :directory (pathname-directory mk::tmp-dir))
-   "a file to index the lexicon")
+;;; recent additions
 
 (def-lkb-parameter *lkb-system-version* :page)
 
 (def-lkb-parameter *first-only-p* nil
   "if set, only the first parse is produced"
   :user)
+
+(def-lkb-parameter *lkb-menu-type* :big 
+  "type of interaction menu that is displayed 
+   - valid values are :big or :core")
+
+(defparameter *current-grammar-load-file* nil
+  "not user settable - has to be here because it's
+   used in lisp specific stuff as well as elsewhere")

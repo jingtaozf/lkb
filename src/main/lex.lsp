@@ -55,18 +55,28 @@
 (defun check-for-open-psorts-stream nil
    (unless (and (streamp *psorts-stream*)
                 (open-stream-p *psorts-stream*))
-      (setf *psorts-stream*
-         (open *psorts-temp-file* 
-            :direction :io
-            :if-exists :append
-            :if-does-not-exist :create))
-      (unless (and (input-stream-p *psorts-stream*)
-            (output-stream-p *psorts-stream*))
-         (error "Failed to open temporary file ~A correctly" 
-            *psorts-temp-file*))))
+     (set-temporary-lexicon-filenames)
+     (handler-case
+         (setf *psorts-stream*
+           (open *psorts-temp-file* 
+                 :direction :io
+                 :if-exists :append
+                 :if-does-not-exist :create))
+       (error (condition)
+         (format t "~%Error ~A in opening temporary lexicon file" condition)))
+     (unless (and *psorts-stream*
+                  (input-stream-p *psorts-stream*)
+                  (output-stream-p *psorts-stream*))
+       (error "~%Failure to open temporary lexicon file ~A correctly.
+               Please create the appropriate directory 
+               if it does not currently exist or redefine
+               the user functions lkb-tmp-dir and/or
+               set-temporary-lexicon-filenames.  Then reload grammar."
+                         *psorts-temp-file*))))
 
 (defun flush-psorts-stream-output nil
-   (unless (output-stream-p *psorts-stream*)
+  (unless (and (streamp *psorts-stream*)
+               (output-stream-p *psorts-stream*))
      (error "Temporary file ~A unexpectedly closed" 
             *psorts-temp-file*))
    (finish-output *psorts-stream*))
@@ -148,32 +158,37 @@
          (setf (cddr hash-table-entry) nil))))
 
 (defun write-psort-index-file nil
+  ;;; assume that this is only going to be called after 
+  ;;; a user has successfully done a psorts-temp-file
+  ;;; and by an advanced user, so don't bother with
+  ;;; fancy error checking
   (let ((ok nil))
-    (unwind-protect
-        (progn
-          (with-open-file (ostream *psorts-temp-index-file* 
-                                   :direction :output
-                                   :if-exists :supersede)
-                          (maphash #'(lambda (id value)
-                                       (prin1 id ostream)
-                                       (write-string " " ostream)
-                                       (prin1 (car value) ostream)
-                                       (write-string " " ostream)
-                                       (prin1 (cadr value) ostream)
-                                       (terpri ostream)
-                                       )
-                                   *psorts*))
-          (setf ok t))
-      ; if there's an error during the writing of the
-      ; files, delete both the index-file and the temporary file
-      ; This assumes this function is only called by the 
-      ; LKB quit routines
-      (when (and (streamp *psorts-stream*)
-                 (open-stream-p *psorts-stream*))
-        (finish-output *psorts-stream*)
-        (close *psorts-stream*))
-      (unless ok
-        (delete-temporary-lexicon-files)))))
+    (when *psorts-temp-index-file* 
+      (unwind-protect
+          (progn
+            (with-open-file (ostream *psorts-temp-index-file* 
+                             :direction :output
+                             :if-exists :supersede)
+              (maphash #'(lambda (id value)
+                           (prin1 id ostream)
+                           (write-string " " ostream)
+                           (prin1 (car value) ostream)
+                           (write-string " " ostream)
+                           (prin1 (cadr value) ostream)
+                           (terpri ostream)
+                           )
+                       *psorts*))
+            (setf ok t))
+        ;; if there's an error during the writing of the
+        ;; index file, delete it
+        (when (and (streamp *psorts-stream*)
+                   (open-stream-p *psorts-stream*))
+          (finish-output *psorts-stream*)
+          (close *psorts-stream*))
+        (unless ok
+          (when (probe-file *psorts-temp-index-file*)
+            (delete-file *psorts-temp-index-file*)))))))
+
         
 
 (defun read-psort-index-file nil
@@ -181,7 +196,9 @@
              (open-stream-p *psorts-stream*))
     (finish-output *psorts-stream*)
     (close *psorts-stream*))
-  (when (and (probe-file *psorts-temp-file*)
+  (when (and *psorts-temp-file* 
+             *psorts-temp-index-file*
+             (probe-file *psorts-temp-file*)
              (probe-file *psorts-temp-index-file*))
     (with-open-file (istream *psorts-temp-index-file* 
                              :direction :input)
@@ -227,9 +244,12 @@
     (delete-temporary-lexicon-files)))
 
 (defun delete-temporary-lexicon-files nil
-  (when (probe-file *psorts-temp-file*)
+  (when 
+      (and *psorts-temp-file*
+           (probe-file *psorts-temp-file*))
     (delete-file *psorts-temp-file*))
-  (when (probe-file *psorts-temp-index-file*)
+  (when (and *psorts-temp-index-file*
+         (probe-file *psorts-temp-index-file*))
     (delete-file *psorts-temp-index-file*)))
 
 (defun clear-expanded-lex nil

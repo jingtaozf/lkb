@@ -103,6 +103,8 @@
 
 
 (defun read-cached-lex-if-available (file-names)
+  (unless (or *psorts-temp-file* *psorts-temp-index-file*)
+    (set-temporary-lexicon-filenames))
   (setf *syntax-error* nil)
   (unless (listp file-names) (setf file-names (list file-names)))
   (if (check-load-names file-names 'lexical)
@@ -110,11 +112,14 @@
         (setf *lex-file-list* file-names)
         (let* ((ok nil)
                (cache-date
-                (if (probe-file *psorts-temp-file*)
+                (if (and *psorts-temp-file* 
+                         (probe-file *psorts-temp-file*))
                     (file-write-date *psorts-temp-file*)))
                (cache-index-date 
                 (if 
-                    (probe-file *psorts-temp-index-file*)
+                    (and
+                     *psorts-temp-index-file*
+                     (probe-file *psorts-temp-index-file*))
                     (file-write-date *psorts-temp-index-file*)))
                (last-file-date
                 (apply #'max (for file in file-names

@@ -21,12 +21,13 @@
 ;;; set LKB version
 ;;;
 
-(defvar *lkb-version* "1.0")
+(defvar *lkb-version* "5.0")
 
 (defparameter %athome% nil)
 (defparameter %sys-home%
   #-:mcl (rest (butlast (pathname-directory *load-truename*) 2))
   #+:mcl '("macintosh hd" "newlkb"))
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; --------------- END SITE-SPECIFIC INSTALLATION PARAMETERS -----------------
@@ -78,9 +79,10 @@
 (reset-system-paths)
 
 (pushnew :lkb *features*)
-#+(not (or :mcl :clim))(pushnew :tty *features*)
+#+(not (or :mcl :clim :common-graphics))(pushnew :tty *features*)
 
-;;; graphics currently assumes mcl or clim
+;;; graphics currently assumes mcl or clim,
+;;; with common graphics under development
 ;;; do (pushnew :tty *features*) manually
 ;;; if you want to use the tty version from mcl or acl/clim
 ;;; for some reason

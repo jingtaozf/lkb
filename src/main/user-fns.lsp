@@ -147,3 +147,40 @@
 (defun lex-priority (mrec)
   (declare (ignore mrec))
   1)
+
+;;; functions which returns a directory etc for LKB temporary files.
+
+
+(defparameter *psorts-temp-file* nil  
+   "a temporary file for the lexicon")
+
+(defparameter *psorts-temp-index-file* nil
+   "a file to index the lexicon")
+
+
+(defun lkb-tmp-dir nil 
+  ;;; This should be a function, rather than a global, because we 
+  ;;; need something that will work for an individual user
+  ;;; e.g. by calling user-homedir-pathname
+  ;;; unfortunately this doesn't do what we want for MCL
+  ;;; so this hardwires the pathname
+  (let ((pathname  #-mcl (user-homedir-pathname)
+                   #+mcl (make-pathname :directory "Macintosh HD"))
+        (tmp-dir '("tmp")))
+    (make-pathname
+     :host (pathname-host pathname) :device (pathname-device pathname)
+     :directory (append (pathname-directory pathname) tmp-dir)
+     :name (pathname-name pathname) :type (pathname-type pathname)
+     :version (pathname-version pathname))))
+
+(defun set-temporary-lexicon-filenames nil
+  ;;; grammars can redefine this to use different names
+  (setf *psorts-temp-file* 
+    (make-pathname :name "templex" 
+                   :directory (pathname-directory (lkb-tmp-dir))))
+  (setf *psorts-temp-index-file* 
+    (make-pathname :name "templex-index" 
+                   :directory (pathname-directory (lkb-tmp-dir)))))  
+  
+
+

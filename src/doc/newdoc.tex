@@ -405,6 +405,11 @@ To compile the LKB system files, and optionally make an image
 in ACL/CLIM, do the following:
 \begin{enumerate}
 \item cd to \verb+newlkb/src+.  
+\item Construct a fasl directory tree.  The system assumes that there
+is a directory named according to the type of system you have
+(search for {\tt BINARY-DIR-NAME} in the {\tt general} files).
+If you don't do this in advance, Lisp will give error messages, but
+you can continue from these after creating the files.
 \item Start ACL/CLIM.  The command needed will vary with your local
 installation.  For instance,
 at CSLI, the command to start ACL with CLIM is \verb+/usr/acl/bin/acl+.
@@ -451,6 +456,12 @@ as described in \S\ref{acl-emacs}.
 To compile the LKB system files, and optionally make an image
 in MCL, do the following:
 \begin{enumerate}
+\item Construct a fasl directory.  The system assumes that there
+is a directory named according to the type of system you have
+(search for {\tt BINARY-DIR-NAME} in the {\tt general} files).
+On the version of MCL we have tested this on,
+the directories are constructed automatically if they don't exist,
+so you may not need to bother with this step.
 \item Double-click on the MCL icon to start MCL
 \item Use the Load menu option to load \verb+newlkb:sre:general:loadup+
 \item Once the loadup files have been loaded, enter the following into the
@@ -585,7 +596,7 @@ To continue, see Chapter~\ref{firstsession}.
 
 To start the LKB from MCL with compiled files, proceed as follows:
 \begin{enumerate}
-\item Create a temporary directory (see \S\ref{tmpdir}).
+\item Create a temporary directory (see \S\ref{tempdir}).
 \item Start MCL (double-click on the MCL icon)
 \item At the Lisp prompt enter:
 \begin{verbatim}
@@ -651,19 +662,69 @@ icon for the image.
 You
 should now see the LKB interaction menu on the menu-bar. 
 The first time you run the system, you will need to
-create a temporary directory (see \S\ref{tmpdir}).
+create a temporary directory (see \S\ref{tempdir}).
 To continue, see Chapter~\ref{firstsession}.
+
+
+\subsection{Temporary file locations}
+\label{tempdir}
+
+The LKB requires some temporary files be created for lexicon handling.  
+Unfortunately, there is no way of ensuring that these will be created 
+in a sensible place for every user on every Lisp system.
+For
+Unix, the default location for the
+files is in a directory {\tt tmp} in the user's
+home directory.  For MCL, the default location is {\tt Macintosh HD:tmp}.  If
+it is possible to use these locations, then simply create the requisite
+directory before loading the grammar.  If it is not convenient to have these
+directories, if you are using source files, you can edit the file {\tt
+main/user-fns.lsp} so that the function {\tt lkb-tmp-dir} identifies a more
+suitable directory.  If you are using a supplied image file, you need to add a
+{\tt lkb-tmp-dir} 
+function to the {\tt user-fns} file to be loaded by every grammar 
+you use.  For instance,
+if your Mac has a disc called {\tt Applications}, add the following
+to the {\tt user-fns} file (or replace {\tt lkb-tmp-dir} if it exists
+already):
+\begin{verbatim}
+(defun lkb-tmp-dir nil 
+  (let ((pathname  #-mcl (user-homedir-pathname)
+                   #+mcl (make-pathname :directory "Applications"))
+        (tmp-dir '("tmp")))
+    (make-pathname
+     :host (pathname-host pathname) :device (pathname-device pathname)
+     :directory (append (pathname-directory pathname) tmp-dir)
+     :name (pathname-name pathname) :type (pathname-type pathname)
+     :version (pathname-version pathname))))
+\end{verbatim}
+
 
 
 \section{Problems}
 
-In case of installation or other problems, please look at the instructions
-on the 
-\href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}.
-We will make fixes for known problems available there.
-The Web site also contains details of how to report bugs that you find:
-note that it's important that you give us enough information,
-so the Web site describes what information we need.
+Some of the likely error messages are covered in various places in this
+documentation, so if you see something you don't understand, try searching for
+significant word(s) from the error message.
+
+In case of installation or other problems which don't seem to be covered in the
+documentation, please look at the instructions on the
+\href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}.  We will make
+fixes for known problems available there.  The Web site also contains details
+of how to report bugs that you find: note that it's important that you give us
+enough information, so the Web site describes what information we need.
+
+\subsection{Temporary directory missing}
+
+One likely error message is something like the following:
+\begin{verbatim}
+Failure to open temporary lexicon file /user/bloggs/tmp/templex correctly.
+Please create the appropriate directory 
+if it does not currently exist or redefine
+the user functions lkb-tmp-dir and/or
+set-temporary-lexicon-filenames.  Then reload grammar.
+\end{verbatim}
+This is a problem with the temporary files: see \S\ref{tempdir}.
 
 \chapter{A first session}
 \label{firstsession}

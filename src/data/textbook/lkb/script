@@ -1,7 +1,7 @@
 (defparameter *grammar-version* "Textbook (oct-98)")
 
 (lkb-load-lisp (this-directory) "globals.lsp")
-(lkb-load-lisp (this-directory) "mrs-globals-ygg.lisp")
+#+mrs(lkb-load-lisp (this-directory) "mrs-globals-ygg.lisp")
 (lkb-load-lisp (this-directory) "user-fns.lsp")
 (load-lkb-preferences (this-directory) "user-prefs.lsp")
 (lkb-load-lisp (this-directory) "lkb-code-patches" t)
