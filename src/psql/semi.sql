@@ -28,10 +28,11 @@ INSERT INTO qrya VALUES ( 'dump-obj-semi-main', 0, 'text' );
 INSERT INTO qry VALUES 
        ( 'dump-obj-semi-main', 1, 
        '
-DROP TABLE obj_semi_main_temp;
 CREATE TABLE obj_semi_main_temp AS
   SELECT * FROM obj_semi_main
   ORDER BY name;
+update obj_semi_main_temp set preds = null where preds = '''';
 COPY obj_semi_main_temp TO $0;
+DROP TABLE obj_semi_main_temp;
 ' );
 

@@ -23,37 +23,100 @@
         (dag-type val)
       nil)))
 
+;(defun get-arg-info (stream lex-id)
+;  (let* ((entry (get-lex-entry-from-id lex-id))
+;	 (dag (and
+;	       entry
+;	       (dag-path-val '(synsem lkeys keyrel) (tdfs-indef (lex-entry-full-fs entry)))))
+;	 (n 0)
+;	 (argN 'arg0)
+;	 (dagN))
+;    
+;    (loop
+;	while (setf dagN (dag-path-val (list argN) dag))
+;	do
+;	  (format stream "~a~%"
+;		  (tsv-line 
+;		   (list
+;		    lex-id ;;lex-id
+;		    n ;;arg
+;		    (dag-path-type (list) dagN) ;;type
+;		    (dag-path-type (list 'e 'tense) dagN) ;;tense
+;;		    (dag-path-type (list 'e 'aspect 'perf) dagN) ;;aspect-perf
+;		    (dag-path-type (list 'e 'aspect 'progr) dagN) ;;aspect-progr
+;		    (dag-path-type (list 'e 'mood) dagN) ;;mood
+;		    (dag-path-type (list 'png 'pn) dagN) ;;pn
+;		    (dag-path-type (list 'png 'gen) dagN) ;;gen
+;		    )))
+;	  
+;	  (setf n (1+ n))
+;	  (setf argN (str-2-symb (format nil "arg~a" n))))
+;    (unexpand-psort *lexicon* entry)
+;    ))
+    
 (defun get-arg-info (stream lex-id)
   (let* ((entry (get-lex-entry-from-id lex-id))
 	 (dag (and
 	       entry
-	       (dag-path-val '(synsem lkeys keyrel) (tdfs-indef (lex-entry-full-fs entry)))))
+	       (tdfs-indef (lex-entry-full-fs entry))))
+	 (dag-keyrel (dag-path-val '(synsem lkeys keyrel) dag))
+	 (dag-altkeyrel (dag-path-val '(synsem lkeys altkeyrel) dag))
+	 (dag-alt2keyrel (dag-path-val '(synsem lkeys alt2keyrel) dag))
+	 (lkey-dags (list dag-keyrel 
+			   dag-altkeyrel
+			   dag-alt2keyrel))
+	 )
+    (mapc #'(lambda (x)
+	      (get-arg-info-aux stream x lex-id))
+	  lkey-dags)
+    (unexpand-psort *lexicon* entry)))
+
+ (defun get-arg-info-aux (stream dag lex-id)
+   (let (
 	 (n 0)
 	 (argN 'arg0)
 	 (dagN))
-    
-    (loop
-	while (setf dagN (dag-path-val (list argN) dag))
-	do
-	  (format stream "~a~%"
-		  (tsv-line 
-		   (list
-		    lex-id ;;lex-id
-		    n ;;arg
-		    (dag-path-type (list) dagN) ;;type
-		    (dag-path-type (list 'e 'tense) dagN) ;;tense
-		    (dag-path-type (list 'e 'aspect 'perf) dagN) ;;aspect-perf
-		    (dag-path-type (list 'e 'aspect 'progr) dagN) ;;aspect-progr
-		    (dag-path-type (list 'e 'mood) dagN) ;;mood
-		    (dag-path-type (list 'png 'pn) dagN) ;;pn
-		    (dag-path-type (list 'png 'gen) dagN) ;;gen
-		    )))
-	  
-	  (setf n (1+ n))
-	  (setf argN (str-2-symb (format nil "arg~a" n))))
-    (unexpand-psort *lexicon* entry)
-    ))
-    
+     (loop
+	 while (setf dagN (dag-path-val (list argN) dag))
+	 do
+	   (format stream "~a~%"
+		   (tsv-line 
+		    (append
+		     (list
+		      lex-id ;;lex-id
+		      (dag-path-type '(pred) dag) ;;pred
+		      n ;;arg
+		      (dag-path-type (list) dagN) ;;type
+		      )
+		     (dag-2-txts (dag-path-val '(e) dagN))
+		     (dag-2-txts (dag-path-val '(png) dagN)))
+		    ))
+     
+	   (setf n (1+ n))
+	   (setf argN (str-2-symb (format nil "arg~a" n))))
+     ))
+
+(defun dag-2-txts (dag)
+  (fields-2-txts (dag-2-fields dag)))
+
+(defun fields-2-txts (fields)
+  (mapcar #'(lambda (x)
+	      (format nil "~a=~a" (car x) (cdr x)))
+	  fields))
+
+(defun dag-2-fields (dag &optional path)
+  (if (null dag)
+      (return-from dag-2-fields))
+  (let ((feats (top-level-features-of dag)))
+    (cond
+     (feats
+      (mapcan
+       #'(lambda (x) (dag-2-fields (dag-path-val (list x) dag) (cons x path)))
+       feats))
+     (t
+      (list (cons (str-2-symb (str-list-2-str (mapcar #'symb-2-str (reverse path)) "."))
+		  (dag-path-type nil dag)))))))
+      
 
 (defun get-secondaries-info (stream lex-id)
   (let* ((entry (get-lex-entry-from-id lex-id))
@@ -61,12 +124,18 @@
 	       entry
 	       (tdfs-indef (lex-entry-full-fs entry))))
 	 (dag-keyrel (dag-path-val '(synsem lkeys keyrel) dag))
+	 (dag-altkeyrel (dag-path-val '(synsem lkeys altkeyrel) dag))
+	 (dag-alt2keyrel (dag-path-val '(synsem lkeys alt2keyrel) dag))
+	 (lkey-dags (list dag-keyrel
+			  dag-altkeyrel
+			  dag-alt2keyrel))
+	 
 	 (*current-lex-id* lex-id)
 	 (cont-rels (dag-diff-list-2-list 
 		     (dag-path-val '(synsem local cont rels) dag)))
 	 )
     (loop
-	for x in (remove dag-keyrel cont-rels)
+	for x in (set-difference cont-rels lkey-dags)
 	do
 	  (format stream "~a~a~a~%" 
 		  (string-downcase lex-id)
@@ -149,6 +218,8 @@
 	into out-list
 	do
 	  (setf list-dag rest-dag)
+	finally
+	  (return out-list)
 	  )))
 	  
   
