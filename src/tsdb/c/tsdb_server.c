@@ -59,7 +59,7 @@ void tsdb_server() {
 |*
 \*****************************************************************************/
 
-  int new, child, n;
+  int child, n;
   struct sockaddr_in server_address, client_address;
   struct linger linger;
 #if defined(DEBUG) && defined(SERVER)
@@ -386,7 +386,6 @@ void tsdb_server_child(int socket) {
 |*
 \*****************************************************************************/
 
-  int n;
   char *command = NULL;
   char host[512 + 1], prompt[80], input[1024], *foo;
   int n_commands = 0;
@@ -442,7 +441,8 @@ void tsdb_server_child(int socket) {
           sprintf(prompt, "tsdb@%s (%d) # ", host, ++n_commands);
         } /* if */
         else {
-          sprintf(prompt, "> ", host, n_commands);
+          sprintf(prompt, "> ");
+          /*, host, n_commands);*/
         } /* else */
       } /* if */
       else {
