@@ -8,8 +8,6 @@
 (eval-when-compile
   (require 'wid-edit))
 
-(load "pg.elc")
-
 ;;;
 ;;; globals
 ;;;
