@@ -40,7 +40,7 @@ parameter:
   attribute :string
   value :string
   instance :string
-  pa-comment :string
+  comment :string
 
 set:
   s-id :integer :key
@@ -63,10 +63,9 @@ item-set:
 run:
   run-id :integer :key                  # unique test run identifier
   run-comment :string                   # descriptive narrative
-  platform :string                      # implementation platform (version)
+  platform :string                      # common-lisp platform (version)
   tsdb :string                          # tsdb(1) (version) used
   application :string                   # application (version) used
-  environment :string                   # application-specific information
   grammar :string                       # grammar (version) used
   avms :integer                         # number of avm types in image
   sorts :integer                        # number of sort types in image
@@ -78,20 +77,17 @@ run:
   host :string                          # machine used for this run
   os :string                            # operating system (version)
   start :date                           # start time of this test run
-  end :date                             # end time for this test run
-  items :integer                        # number of test items in this run
-  status :string                        # exit status (PVM only)
 
 parse:
   parse-id :integer :key                # unique parse identifier
   run-id :integer :key                  # test run for this parse
   i-id :integer :key                    # item parsed
   readings :integer                     # number of readings obtained
-  first :integer                        # time to find first reading (msec)
-  total :integer                        # total time for parsing (msec)
-  tcpu :integer                         # total (cpu) processing time (msec)
-  tgc :integer                          # gc time used (msec)
-  treal :integer                        # overall real time (msec)
+  first :integer                        # time to find first reading
+  total :integer                        # total time for parsing
+  tcpu :integer                         # total (cpu) time for processing
+  tgc :integer                          # gc time used
+  treal :integer                        # overall real time
   words :integer                        # lexical entries retrieved
   l-stasks :integer                     # successful lexical rule applications
   p-ctasks :integer                     # parser contemplated tasks (LKB)
@@ -112,12 +108,11 @@ parse:
   a-load :integer                       # average load
   date :date                            # date and time of parse
   error :string                         # error string (if applicable |:-)
-  comment :string                       # application-specific comment
 
 result:
   parse-id :integer :key                # parse for this result
   result-id :integer                    # unique result identifier
-  time :integer                         # time to find this result (msec)
+  time :integer                         # time to find this result
   r-ctasks :integer                     # parser contemplated tasks
   r-ftasks :integer                     # parser filtered tasks
   r-etasks :integer                     # parser executed tasks
@@ -132,11 +127,8 @@ result:
 rule:
   parse-id :integer :key                # parse for this rule summary
   rule :string                          # rule name
-  filtered :integer                     # rule postulations filtered
-  executed :integer                     # rule postulations executed
-  successes :integer                    # successful rule postulations
-  actives :integer                      # active edges built from this rule
-  passives :integer                     # passive edges built from this rule
+  postulations :integer                 # number of rule postulations
+  successes :integer                    # number of rule successes
 
 output:
   i-id :integer :key                    # item for this output specification
@@ -157,7 +149,7 @@ edge:
   parse-id :integer :key                # parse for this edge
   e-parser :string                      # `lexicon' or `syntax'
   e-name :string                        # edge label (as in `derivation')
-  e-type :string                        # item-tiype() of this edge
+  e-type :string                        # item-itype() of this edge
   e-status :integer                     # 0 : passive; 1 : active
   e-result :integer                     # 0 : nope; 1 : yup, result
   e-start :integer                      # start vertex for this edge
@@ -170,23 +162,4 @@ daughter:
   d-position :integer                   # position of this daughter
   d-id :integer                         # identifier of this daughter
 
-tree:
-  parse-id :integer :key
-  t-version :integer
-  t-active :integer :key
-  t-confidence :integer
-  t-author :string
-  t-start :date
-  t-end :date
-  t-comment :string
 
-decision:
-  parse-id :integer :key
-  version :integer
-  d-state :integer
-  d-type :integer
-  d-key :string
-  d-value :string
-  d-start :integer
-  d-end :integer
-  d-date :date
