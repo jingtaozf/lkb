@@ -99,6 +99,24 @@
                entries)))
       (pg::summarize-lexicon))))
 
+(defun extract-inflections (&optional (items %tsdb-lexical-preterminals%))
+  (loop
+      with result = nil
+      for item in items
+      for preterminal = (pg::combo-item-index item)
+      for name = (when (symbolp preterminal)
+                   (string-downcase (string preterminal)))
+      finally (return result)
+      when (eq (pg::combo-item-itype item) :lex-entry)
+      do
+        (let* ((daughters (pg::item-daughters item))
+               (daughter (when (= (length daughters) 1)
+                           (aref daughters 0)))
+               (itype (and daughter (pg::combo-item-itype daughter)))
+               (index (and daughter (pg::combo-item-index daughter))))
+          (when (and name daughter itype index (eq itype :morph))
+            (pushnew (list name index) result :test #'equal)))))
+
 (defun initialize-test-run (&key interactive)
   (declare (special pg::*maximal-number-of-edges*))
   
@@ -152,7 +170,8 @@
 
 (defun parse-item (string &key exhaustive
                                (edges 0) trace derivations
-                               semantix-hook trees-hook)
+                               semantix-hook trees-hook
+                               burst)
   (declare (special pg::*maximal-number-of-edges*))
 
   (let* ((string (remove-and-insert-punctuation string))
@@ -192,9 +211,9 @@
                                          sstatic)
                                   #+(and :allegro-version>= (version>= 5 0))
                                   (declare (ignore sstatic))
-                                  (setf tgc (/ (+ tgcu tgcs) 10)
-                                        tcpu (/ (+ tu ts) 10)
-                                        treal (/ tr 10)
+                                  (setf tgc (+ tgcu tgcs)
+                                        tcpu (+ tu ts)
+                                        treal tr
                                         conses scons
                                         symbols ssym
                                         others sother)))
@@ -223,7 +242,9 @@
         (condition
          (pairlis
           '(:readings :condition :error)
-          (list -1 condition (format nil "~a" condition))))
+          (list -1 
+                (unless burst condition) 
+                (normalize-string (format nil "~a" condition)))))
         ((or (eq (first return) :incomplete-input)
              (null (main::output-stream main::*lexicon*)))
          (pairlis
@@ -236,12 +257,12 @@
                  (pg::parser-stats-readings (pg::get-parser :syntax)))
                 (first (when statistics (first (last statistics))))
                 (first (when first (pg::stats-time first)))
-                (first 
-                 (when first (* (/ first internal-time-units-per-second) 100)))
+                (first (when first 
+                         (* (/ first internal-time-units-per-second) 1000)))
                 (global (pg::parser-global-stats (pg::get-parser :syntax)))
                 (total (when global (pg::stats-time global)))
-                (total 
-                 (when total (* (/ total internal-time-units-per-second) 100)))
+                (total (when total 
+                         (* (/ total internal-time-units-per-second) 1000)))
                 (ftasks (when global (pg::stats-filtered global)))
                 (etasks (when global (pg::stats-executed global)))
                 (stasks (when global (pg::stats-successful global)))
@@ -485,16 +506,11 @@
 
 (defun summarize-chart (&optional (parser (pg::get-parser :syntax)))
   (let* ((chart (parser-chart parser))
-         (passive-items-starting-at
-          (when chart 
-            (reduce #'append (chart-passive-items-starting-at chart))))
-         (passive-items-ending-at
-          (when chart 
-            (reduce #'append (chart-passive-items-ending-at chart))))
-         (pedges 
-          (when (or passive-items-starting-at passive-items-ending-at)
-            (length 
-             (union passive-items-starting-at passive-items-ending-at))))
+         (passive-items-starting-at (chart-passive-items-starting-at chart))
+         (pedges (when passive-items-starting-at
+                   (loop 
+                       for foo across  passive-items-starting-at
+                       sum (length foo))))
          (active-items-starting-at 
           (when chart (chart-active-items-starting-at chart)))
          (active-items-ending-at 
@@ -538,18 +554,44 @@
 
 (defun rule-statistics ()
   (let* ((parser (get-parser :syntax))
+         (chart (parser-chart parser))
+         (pedges (chart-passive-items-starting-at chart))
+         (saedges (chart-active-items-starting-at chart))
+         (eaedges (chart-active-items-ending-at chart))
          (rules (combo-parser-syn-rules parser))
-         (statistics (parser-rule-stats parser)))
-    (loop
-        for rule in rules
-        for name = (string-downcase (string (combo-item-index rule)))
-        for key = (combo-item-key rule)
-        for stats = (aref statistics key)
-        for filtered = (stats-filtered stats)
-        for executed = (stats-executed stats)
-        for successful = (stats-successful stats)
-        collect (pairlis '(:rule :filtered :executed :successful)
-                         (list name filtered executed successful)))))
+         (statistics (parser-rule-stats parser))
+         (counts (make-array (combo-parser-rule-number parser))))
+    (flet ((count (edge type)
+             (when (eq (combo-item-itype edge) :rule)
+               (let* ((key (combo-item-key edge)))
+                 (incf (tsdb::get-field type (aref counts key)))))))
+      (loop
+          for rule in rules
+          for name = (string-downcase (string (combo-item-index rule)))
+          for key = (combo-item-key rule)
+          for stats = (aref statistics key)
+          for filtered = (stats-filtered stats)
+          for executed = (stats-executed stats)
+          for successful = (stats-successful stats)
+          do
+            (setf (aref counts key)
+              (pairlis '(:rule 
+                         :filtered :executed :successful 
+                         :actives :passives)
+                       (list name
+                             filtered executed successful 
+                             0 0))))
+      (loop for edges across pedges
+          do (loop for edge in edges
+                 do (count edge :passives)))
+      (loop for edges across saedges
+          do (loop for edge in edges
+                 do (count edge :actives)))
+      (loop for edges across eaedges
+          do (loop for edge in edges
+                 do (count edge :actives)))
+      (loop for rule across counts
+          when rule collect rule))))
 
 (defun summarize-lexicon ()
   (let* ((entries (main::output-stream main::*lexicon*))
@@ -592,3 +634,14 @@
   (setf *maximal-number-of-edges-exceeded-p*
     (and *maximal-number-of-edges*
          (>= *edge-id-counter* *maximal-number-of-edges*))))
+
+
+
+
+
+
+
+
+
+
+

@@ -60,13 +60,16 @@
        #+:lkb (:file "lkb-interface")
        (:file "globals")
        (:file "utilities")
+       (:file "pvm")
        (:file "tsql")
        (:file "tsdb")
+       (:file "process")
        (:file "commands")
        (:file "import")
        #+:ignore (:file "server")
        (:file "statistics")
        (:file "podium")
+       #+:allegro (:file "allegro")
        #+:page (:file "page-interface")
        #+(and :page :ignore) (:file "chart")))
      (:module "podium"
@@ -101,7 +104,7 @@
        (:file "copyleft")
        (:file "balloon")
        (:file "balloons" :source-extension ""))))
-    :depends-on (#+:page "page" #+:lkb "lkb"))
+    :depends-on ("pvm" #+:page "page" #+:lkb "lkb"))
 
 
 

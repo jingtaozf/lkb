@@ -243,47 +243,6 @@
        run-id parse-id))
     parse-id))
 
-(defun merge-with-output-specifications (items language
-                                         &key (verbose t))
-  (if *tsdb-ignore-output-p*
-    (map 'list
-      #'(lambda (foo)
-          (append foo (list -1 -1 -1)))
-      items)
-    (let (outputs)
-      (do* ((length (length items) (length items))
-            (current (butlast items (- length 100))
-                     (butlast items (- length 100)))
-            (items (nthcdr 100 items) (nthcdr 100 items)))
-          ((null current))
-        (let (query)
-          (dolist (item current)
-            (push (format nil "i-id = ~d" (first item)) query))
-          (let* ((query (reduce #'(lambda (foo bar)
-                                    (concatenate 'string foo " | " bar))
-                                query))
-                 (query (concatenate 'string
-                          "select i-id o-ignore o-wf o-gc o-edges "
-                          "from output where "
-                          query
-                          " report \"(%d \\\"%s\\\" %d %d %d)\""))
-                 (result (call-tsdb query language)))
-            (with-input-from-string (stream result)
-              (do ((line (read stream nil) (read stream nil)))
-                  ((null line))
-                (push line outputs))))))
-      (when verbose
-        (format
-         *tsdb-io*
-         "~&merge-with-output-specifications(): ~
-          found ~a output specification~:p.~%" (length outputs)))
-      (dolist (item items items)
-        (let ((output (find (item-i-id item) outputs :key #'first)))
-          (if output
-            (setf (rest (last item)) (rest output))
-            (setf (rest (last item))
-              (list "" -1 -1 -1))))))))
-
 (defun select-o-derivations (language &key item)
   (let* ((condition (when item (format nil "i-id = ~d" item)))
          (derivations 
@@ -364,6 +323,8 @@
            (host (normalize-string (get-field+ :host result "")))
            (os (normalize-string (get-field+ :os result "")))
            (start (get-field :start result))
+           (end (get-field :end result))
+           (items (get-field+ :items result -1))
            (query
             (format
              nil
@@ -371,11 +332,11 @@
               ~d ~s ~
               ~s ~s ~s ~s ~
               ~d ~d ~d ~d ~d ~d ~
-              ~s ~s ~s ~a"
+              ~s ~s ~s ~a ~a ~d"
              run-id comment 
              platform tsdb application grammar
              avms sorts templates lexicon lrules rules
-             user host os start)))
+             user host os start end items)))
       (call-tsdb query language :cache cache))))
 
 (defun write-parse (result language
@@ -479,10 +440,13 @@
         for filtered = (get-field+ :filtered rule -1)
         for executed = (get-field+ :executed rule -1)
         for successful = (get-field+ :successful rule -1)
+        for actives = (get-field+ :actives rule -1)
+        for passives = (get-field+ :passives rule -1)
         for query = (format
                      nil
-                     "insert into rule values ~d ~s ~d ~d ~d"
-                     parse-id name filtered executed successful)
+                     "insert into rule values ~d ~s ~d ~d ~d ~d ~d"
+                     parse-id name filtered executed successful
+                     actives passives)
         do (call-tsdb query language :cache cache))))
 
 (defun write-output (i-id application 

@@ -540,18 +540,14 @@
 
            (rules
             (let* ((database (first arguments))
+                   (meter (make-meter 0 1))
                    (title (format 
                            nil 
                            "tsdb(1) `~a' Rule Application Profile"
-                           database))
-                   (message (format nil "retrieving `~a' data ..." database))
-                   (gmessage "computing graph layout and geometry ..."))
-              (status :text message)
-              (meter :value 0.1)
-              (apply #'rule-statistics (append arguments (list :file file)))
-              (run-meter 500)
+                           database)))
+              (apply #'rule-chart (append arguments (list :file file
+                                                          :meter meter)))
               (when (probe-file file)
-                (status :text gmessage)
                 (let ((return
                         (send-to-podium
                          (format 
@@ -565,8 +561,7 @@
                                   (pairlis 
                                    '(:data :command)
                                    (list database (cons action arguments))))
-                          *tsdb-podium-windows*)))
-                (status :text (format nil "~a done" gmessage) :duration 2))))
+                          *tsdb-podium-windows*))))))
 
            (close
             (if (second command)
@@ -795,6 +790,11 @@
 (defun status (&key (text "") (duration 0))
   (send-to-podium (format nil "status {~a} ~d" text duration) :wait t))
 
+;;;
+;;; this should really change: recording the previous status on the lisp side
+;;; of the interface causes communication overhead (to put it mildly); it
+;;; should be such that a busy() call causes exactly one message to the podium.
+;;;
 (eval-when (:load-toplevel :execute)
   (let (previous)
     (defun busy (&key (action :hold) (cursor :watch) (toplevel "."))

@@ -77,17 +77,19 @@ run:
   host :string                          # machine used for this run
   os :string                            # operating system (version)
   start :date                           # start time of this test run
+  end :date                             # end time for this test run
+  items :integer                        # number of test items in this run
 
 parse:
   parse-id :integer :key                # unique parse identifier
   run-id :integer :key                  # test run for this parse
   i-id :integer :key                    # item parsed
   readings :integer                     # number of readings obtained
-  first :integer                        # time to find first reading
-  total :integer                        # total time for parsing
-  tcpu :integer                         # total (cpu) time for processing
-  tgc :integer                          # gc time used
-  treal :integer                        # overall real time
+  first :integer                        # time to find first reading (usec)
+  total :integer                        # total time for parsing (usec)
+  tcpu :integer                         # total (cpu) processing time (usec)
+  tgc :integer                          # gc time used (usec)
+  treal :integer                        # overall real time (usec)
   words :integer                        # lexical entries retrieved
   l-stasks :integer                     # successful lexical rule applications
   p-ctasks :integer                     # parser contemplated tasks (LKB)
@@ -112,7 +114,7 @@ parse:
 result:
   parse-id :integer :key                # parse for this result
   result-id :integer                    # unique result identifier
-  time :integer                         # time to find this result
+  time :integer                         # time to find this result (usec)
   r-ctasks :integer                     # parser contemplated tasks
   r-ftasks :integer                     # parser filtered tasks
   r-etasks :integer                     # parser executed tasks
@@ -127,8 +129,11 @@ result:
 rule:
   parse-id :integer :key                # parse for this rule summary
   rule :string                          # rule name
-  postulations :integer                 # number of rule postulations
-  successes :integer                    # number of rule successes
+  filtered :integer                     # rule postulations filtered
+  executed :integer                     # rule postulations executed
+  successes :integer                    # successful rule postulations
+  actives :integer                      # active edges built from this rule
+  passives :integer                     # passive edges built from this rule
 
 output:
   i-id :integer :key                    # item for this output specification

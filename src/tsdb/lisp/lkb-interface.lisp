@@ -22,12 +22,14 @@
      (:GRAMMAR . ,(if (boundp '*grammar-version*) 
                       (symbol-value '*grammar-version*)
                       "unknown"))
-     (:APPLICATION . ,(format nil "LKB (~A mode; version)" 
-                              *lkb-system-version* 
-                              (and (find-symbol "*CVS-VERSION*")
-                                   (boundp (find-symbol "*CVS-VERSION*"))
-                                   (symbol-value 
-                                    (find-symbol "*CVS-VERSION*")))))))
+     (:APPLICATION . ,(format 
+                       nil 
+                       "LKB (~A mode; version ~@[`~a'~])" 
+                       *lkb-system-version* 
+                       (and (find-symbol "*CVS-VERSION*" :cl-user)
+                            (boundp (find-symbol "*CVS-VERSION*" :cl-user))
+                            (symbol-value 
+                             (find-symbol "*CVS-VERSION*" :cl-user)))))))
 
 
 (defun parse-word (word &key load trace)
@@ -81,8 +83,10 @@
 ;;; funcall()s .semantix-hook. and .trees-hook. to obtain MRS and tree
 ;;; representations (strings); all times in hundredths of secs
 
-(defun parse-item (string &key exhaustive
-                   edges trace derivations semantix-hook trees-hook)
+(defun parse-item (string 
+                   &key exhaustive
+                        edges trace derivations semantix-hook trees-hook
+                        burst)
   (declare (ignore derivations semantix-hook trees-hook))
   
   (multiple-value-bind (return condition)
@@ -105,9 +109,9 @@
              #'(lambda () (parse-tsdb-sentence sent trace))
              #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                  (declare (ignore ignore))
-                 (setq tgc (/ (+ tgcu tgcs) 10)
-                       tcpu (/ (+ tu ts) 10)
-                       treal (/ tr 10)
+                 (setq tgc (+ tgcu tgcs)
+                       tcpu (+ tu ts)
+                       treal tr
                        conses scons
                        symbols ssym
                        others sother)))
@@ -125,12 +129,12 @@
                       (- #+mcl (ccl::total-bytes-allocated) #-mcl -1 others)
                       tcpu
                       (round 
-                       (* (- (get-internal-run-time) tcpu #+mcl rawgc) 100)
+                       (* (- (get-internal-run-time) tcpu #+mcl rawgc) 1000)
                        internal-time-units-per-second)
                       treal
-                      (round (* (- (get-internal-real-time) treal) 100)
+                      (round (* (- (get-internal-real-time) treal) 1000)
                              internal-time-units-per-second)
-                      tgc #+mcl (round (* rawgc 100)
+                      tgc #+mcl (round (* rawgc 1000)
                                        internal-time-units-per-second)
                       #-mcl -1)))
           (let ((n 0)
@@ -156,10 +160,7 @@
                                             readings
                                             -1)))
                           (:ERROR .
-                           ,(substitute #\; #\newline
-                             (remove 
-                              #\@
-                              (string-trim '(#\newline #\space) output))))
+                           ,(tsdb::normalize-string output))
                           (:RESULTS .
                            ,(mapcar
                              #'(lambda (parse)
@@ -184,7 +185,9 @@
     (append
      (when condition
        (pairlis '(:readings :condition :error)
-                (list -1 condition (format nil "~a" condition))))
+                (list -1 
+                      (unless burst condition)
+                      (tsdb::normalize-string (format nil "~a" condition)))))
      return)))
 
 

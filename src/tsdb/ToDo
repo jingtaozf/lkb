@@ -6,6 +6,10 @@
 open issues:
 ------------
 
+[31-jan-99] - add `Uniquely Project' flag to `Switches';
+
+[30-jan-99] - migrate all phenomena-specific menus into `Options' hierarchy;
+
 [28-jan-99] - (re)synchronize Tcl and LaTeX tables (e.g. performance profile);
 
 [10-dec-98] - include condition in all window titles where appropriate;
@@ -122,6 +126,10 @@ resolved issues:
 
 vague ideas:
 ------------
+
+[30-jan-99] - rethink aggregation in profile comparison; allow target data set
+              to be aggregated (by i-id) according to source; relax constraint
+              on comparability (similar to in-detail comparison);
 
 [28-jan-99] - integrate new table viewer (speed-up); alllow dynamic
               manipulation of tables (hide and unhide columns and rows, choose

@@ -6,7 +6,8 @@ exec /coli/apps/tcl+tk/bin/wish++ "$0" "$@"
 # facilitate stand-alone debugging for `oe'
 #
 if {![info exists page_root]} {
-  set page_root [expr {[info exists env(HOSTNAME)] && $env(HOSTNAME) == "mv" 
+  set page_root [expr {[info exists env(HOSTNAME)] 
+                       && ![string first "mv" $env(HOSTNAME)]
                        ? "/home/oe/src/page" 
                        : "/user/oe/src/page"}];
 }; # if
@@ -69,6 +70,9 @@ if {![info exists globals(graph_upper)]} {
 }; # if
 set globals(graph,by) :i-length;
 
+set globals(rules,actives) 1;
+set globals(rules,passives) 1;
+
 set globals(status) "";
 set globals(balloon_font) {Helvetica 10};
 set globals(status_font) {Helvetica 10};
@@ -89,6 +93,7 @@ set globals(abort) 0;
 set globals(idle_colours) {yellow orange red violet blue green};
 set globals(special_menues) {
   .menu.analyze.menu.values
+  .menu.analyze.menu.rvalues
   .menu.options.menu.condition
   .menu.detail.menu.phenomena
   .menu.detail.menu.decoration
@@ -330,8 +335,11 @@ proc main {} {
           -command graph_parameter_input
   .menu.analyze.menu add separator
   .menu.analyze.menu add command \
-          -label "Rule Statistics" -state disabled \
+          -label "Rule Statistics" \
           -command {analyze_rules};
+  .menu.analyze.menu add cascade \
+          -label "Rule Values" \
+          -menu .menu.analyze.menu.rvalues;
 
   menu .menu.analyze.menu.by -tearoff 0
   .menu.analyze.menu.by add radiobutton \
@@ -417,6 +425,23 @@ proc main {} {
     -label "Passive Result Items (`rpedges')" \
     -variable globals(graph,rpedges) \
     -command {update_graph_cascade rpedges};
+
+  menu .menu.analyze.menu.rvalues -tearoff 0
+  .menu.analyze.menu.rvalues add checkbutton \
+    -label "Active Chart Items (`actives')" \
+    -variable globals(rules,actives);
+  .menu.analyze.menu.rvalues add checkbutton \
+    -label "Passive Chart Items (`passives')" \
+    -variable globals(rules,passives);
+  .menu.analyze.menu.rvalues add checkbutton \
+    -label "Successful Tasks (`successes')" \
+    -variable globals(rules,successes);
+  .menu.analyze.menu.rvalues add checkbutton \
+    -label "Executed Tasks (`executed')" \
+    -variable globals(rules,executed);
+  .menu.analyze.menu.rvalues add checkbutton \
+    -label "Filtered Tasks (`filtered')" \
+    -variable globals(rules,filtered);
 
   #
   # `Compare' menu (and embedded cascades)
@@ -716,7 +741,7 @@ proc main {} {
   # body of tsdb(1) podium: a scrolled multi-column listbox
   #
   tixScrolledHList .list -width 19c -scrollbar "auto +y" \
-          -options { hlist.columns 5 hlist.height 4 \
+          -options { hlist.columns 5 hlist.height 5 \
                      hlist.header true hlist.itemtype text
                      hlist.background white };
   set list [.list subwidget hlist];
@@ -764,7 +789,7 @@ proc main {} {
   $list header create 1 -itemtype text -text "Status" -style $hcenter
   $list header create 2 -itemtype text -text "Items" -style $hcenter
   $list header create 3 -itemtype text -text "Parses" -style $hcenter
-  $list header create 4 -itemtype text -text "Chart" -style $hcenter
+  $list header create 4 -itemtype text -text "Rule" -style $hcenter
 
   pack .list -in .body -side bottom -padx 0.1c -pady 0.1c -expand yes -fill y;
 

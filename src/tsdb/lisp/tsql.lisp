@@ -111,7 +111,8 @@
           (unless *tsdb-debug-mode-p* (delete-file result)))
         (when dmeter (meter :value (get-field :end dmeter)))
         (when status
-          (status :text (format nil "retrieving `~a' data ... done" language)))
+          (status :text (format nil "retrieving `~a' data ... done" language)
+                  :duration 10))
 
         (case format
           (:lisp
@@ -195,6 +196,15 @@
              (when file (close stream)))
            (length data)))))))
 
+(defun tcount (data relation &key absolute)
+  
+  (let* ((query (format nil "count ~a" relation))
+         (result (call-tsdb query data :absolute absolute :ro t))
+         (colon (and result (position #\: result)))
+         (result (and colon (subseq result (+ colon 2))))
+         (count (and result (read-from-string result))))
+    (and (numberp count) count)))
+
 (defun insert (data relation tuples &key absolute meter)
   
   (when meter (meter :value (get-field :start meter)))
@@ -254,9 +264,8 @@
                 (meter-advance increment))))
       (when meter (meter :value (get-field :end meter)))
       tuples))))
-                           
-            
-                    
+
+
 ;;;
 ;;; (overtly naive) functions borrowed from introductory Common-Lisp course 
 ;;; by janal@dfki.de and \me; i always used to say this code can be made 
@@ -309,7 +318,8 @@
 ;;; shows up in the time profile; here is an alternate implementation (that we
 ;;; probably will not teach in the introductory course).
 ;;;
-;;; _note_ njoin() assumes .relation-1. and .relation-2. to be sort()ed on .key.
+;;; _note_ njoin() assumes .relation-1. and .relation-2. to be sort()ed on 
+;;; .key.
 ;;;
 (defun njoin (relation-1 relation-2 key &key meter)
 

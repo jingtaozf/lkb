@@ -185,6 +185,21 @@
         (:p-stasks "green"))
       "black"))
 
+(defun profile-granularity (data)
+  (let* ((relations (read-database-schema data))
+         (run (and relations
+                   (find "run" relations :key #'first :test #'string=)))
+         (parse (and relations
+                   (find "parse" relations :key #'first :test #'string=))))
+    (cond 
+     ((null run) :historic)
+     ((not (find "aedges" (rest parse) :key #'first :test #'string=))
+      :ancient)
+     ((find "end" (rest run) :key #'first :test #'string=)
+      :feb-99)
+     (t
+      :aug-98))))
+
 (defun analyze (language &key condition meter message concise)
 
   (let* ((message (when message
@@ -242,6 +257,7 @@
                                  condition language 
                                  :meter rmeter :sort :parse-id)))
                (all (njoin parse item :i-id :meter ameter)))
+          (declare (ignore result))
           (setf data all))
         (setf (gethash key *tsdb-profile-cache*) data)))
     (when meter 
@@ -312,6 +328,59 @@
         (status :text (format nil "~a done" message :duration 2)))
       items)))
 
+(defun analyze-rules (language &key condition (format :tcl) meter)
+
+  (let* ((key (format nil "~a ~@[~a ~]# rules" language condition))
+         (data (gethash key *tsdb-profile-cache*)))
+    (unless data
+      (setf (gethash key *tsdb-profile-cache*) :seized)
+      (unwind-protect
+        (let* ((rules (select '("parse-id" "rule" 
+                                "filtered" "executed" "successes"
+                                "actives" "passives")
+                              '(:integer :string 
+                                :integer :integer :integer
+                                :integer :integer) 
+                              "rule"
+                              condition language 
+                              :meter meter :status meter))
+               (counts (make-hash-table))
+               foo)
+          (loop 
+              for rule in rules
+              for name = (intern (string-upcase (get-field :rule rule)))
+              for counter = (gethash name counts)
+              when counter
+              do
+                (incf (get-field :filtered counter)
+                      (get-field :filtered rule))
+                (incf (get-field :executed counter)
+                      (get-field :executed rule))
+                (incf (get-field :successes counter)
+                      (get-field :successes rule))
+                (incf (get-field :actives counter)
+                      (get-field :actives rule))
+                (incf (get-field :passives counter)
+                      (get-field :passives rule))
+              else do
+                (setf (gethash name counts)
+                  (list (find :filtered rule :key #'first)
+                        (find :executed rule :key #'first)
+                        (find :successes rule :key #'first)
+                        (find :actives rule :key #'first)
+                        (find :passives rule :key #'first))))
+          (maphash
+           #'(lambda (key value)
+               (let ((name (case format
+                             (:tcl (string key))
+                             (:latex (latexify-string (string key)))
+                             (t (string key)))))
+                 (push (cons key (cons name value)) foo)))
+           counts)
+          (setf data foo))
+        (setf (gethash key *tsdb-profile-cache*) data)))
+    data))
+
 (defun load-cache (&key (home *tsdb-home*) name pattern trace meter background)
   (if #+allegro background #-allegro nil
     #+allegro
@@ -337,13 +406,13 @@
           (analyze-aggregates name))))))
 
 (defun purge-profile-cache (data)
-  (maphash #'(lambda (key foo)
-               (declare (ignore foo))
-               (let* ((position (position #\@ key))
-                      (prefix (subseq key 0 position)))
-                 (when (or (eq data :all) (string= data prefix))
-                   (remhash key *tsdb-profile-cache*))))
-           *tsdb-profile-cache*))
+  (let ((end (length data)))
+    (maphash #'(lambda (key foo)
+                 (declare (ignore foo))
+                 (when (or (eq data :all) 
+                           (search data key :end2 (min end (length key))))
+                   (remhash key *tsdb-profile-cache*)))
+             *tsdb-profile-cache*)))
 
 (defun aggregate (&optional (language *tsdb-data*)
                   &key (condition nil)
@@ -573,7 +642,7 @@
           {\\bf ~a} & {\\bf items} & {\\bf items} & {\\bf string}~%    ~
             & {\\bf items} & {\\bf analyses} & {\\bf results}~%    ~
             & {\\bf coverage}\\\\~%  ~
-          & $\\sharp$ & $\\sharp$ & $\\propto$ & $\\propto$ & $\\propto$~%    ~
+          & $\\sharp$ & $\\sharp$ & $\\phi$ & $\\phi$ & $\\phi$~%    ~
             & $\\sharp$ & $\\%$\\\\~%  ~
           \\hline~%  ~
           \\hline~%"
@@ -757,8 +826,8 @@
             & {\\bf in} & {\\bf out}~%    ~
             & {\\bf lexical} & {\\bf parser} ~
             & {\\bf in} & {\\bf out}\\\\~%  ~
-            & $\\propto$ & $\\propto$ & \\% & \\%~%   ~
-            & $\\propto$ & $\\propto$ & \\% & \\%\\\\~%  ~
+            & $\\phi$ & $\\phi$ & \\% & \\%~%   ~
+            & $\\phi$ & $\\phi$ & \\% & \\%\\\\~%  ~
             \\hline~%  ~
             \\hline~%"
            olabel nlabel alabel))
@@ -1168,7 +1237,7 @@
     (when (or (stringp file) (stringp append)) (close stream))))
 
 (defun summarize-performance-parameters (items
-                                         &key restrictor)
+                                         &key restrictor (format :feb-99))
 
   (let ((itemtotal 0)
         (readingstotal 0)
@@ -1184,9 +1253,8 @@
         (tcputotal 0)
         (tgctotal 0)
         (spacetotal 0)
-        (old-p (every #'(lambda (foo) (null (get-field :aedges foo))) 
-                      (rest (rest (first items)))))
         result)
+    
     (dolist (phenomenon items)
       (let* ((data (rest (rest phenomenon)))
              (data (remove -1 data :key #'(lambda (foo)
@@ -1226,7 +1294,10 @@
              (firsts (map 'list #'(lambda (foo)
                                     (if (eql foo -1)
                                       -1
-                                      (/ foo (if old-p 10 100))))
+                                      (/ foo (case format
+                                               (:ancient 10)
+                                               (:aug-98 100)
+                                               (:feb-99 1000)))))
                           (remove nil firsts)))
              (totals (map 'list #'(lambda (foo)
                                     (get-field :total foo))
@@ -1234,21 +1305,30 @@
              (totals (map 'list #'(lambda (foo)
                                     (if (eql foo -1)
                                       -1
-                                      (/ foo (if old-p 10 100))))
+                                      (/ foo (case format
+                                               (:ancient 10)
+                                               (:aug-98 100)
+                                               (:feb-99 1000)))))
                           totals))
              (tcpus (map 'list #'(lambda (foo) (get-field :tcpu foo))
                          data))
              (tcpus (map 'list #'(lambda (foo)
                                     (if (eql foo -1)
                                       -1
-                                      (/ foo (if old-p 10 100))))
+                                      (/ foo (case format
+                                               (:ancient 10)
+                                               (:aug-98 100)
+                                               (:feb-99 1000)))))
                           tcpus))
              (tgcs (map 'list #'(lambda (foo) (get-field :tgc foo))
                         data))
              (tgcs (map 'list #'(lambda (foo)
                                     (if (eql foo -1)
                                       -1
-                                      (/ foo (if old-p 10 100))))
+                                      (/ foo (case format
+                                               (:ancient 10)
+                                               (:aug-98 100)
+                                               (:feb-99 1000)))))
                           tgcs))
              (space (map 'list #'(lambda (foo)
                                    (let ((conses (get-field :conses foo))
@@ -1324,13 +1404,13 @@
                                  file append (format :latex) 
                                  restrictor meter)
 
-  (let* ((items (if (stringp language) 
-                  (analyze-aggregates language :condition condition
-                                      :meter meter :format format)
-                  language))
+  (let* ((items (analyze-aggregates language :condition condition
+                                    :meter meter :format format))
          (stream (create-output-stream file append))
          (averages
-          (summarize-performance-parameters items :restrictor restrictor))
+          (summarize-performance-parameters 
+           items 
+           :restrictor restrictor :format (profile-granularity language)))
          (naggregates (- (length averages) 1))
          (ncolumns 8)
          (alabel (if (eq *statistics-aggregate-dimension* :phenomena)
@@ -1350,8 +1430,8 @@
           \\raisebox{-1.5ex}[0ex][0ex]{\\bf ~a}~%    & {\\bf items} ~
             & {\\bf etasks} & {\\bf filter} & {\\bf edges}~%    ~
             & {\\bf first}  & {\\bf total} & {\\bf space}\\\\~%  ~
-          & $\\sharp$ & $\\propto$ & \\% & $\\propto$~%    ~
-            & $\\propto$ (s) & $\\propto$ (s) & $\\propto$ (kb)\\\\~%  ~
+          & $\\sharp$ & $\\phi$ & \\% & $\\phi$~%    ~
+            & $\\phi$ (s) & $\\phi$ (s) & $\\phi$ (kb)\\\\~%  ~
           \\hline~%  ~
           \\hline~%"
          (if (stringp language) language)
@@ -1517,9 +1597,11 @@
       1
       (let* ((stream (create-output-stream file append))
              (oaverages (summarize-performance-parameters 
-                         oitems :restrictor (or orestrictor restrictor)))
+                         oitems :restrictor (or orestrictor restrictor)
+                         :format (profile-granularity olanguage)))
              (naverages (summarize-performance-parameters 
-                         nitems :restrictor (or nrestrictor restrictor)))
+                         nitems :restrictor (or nrestrictor restrictor)
+                         :format (profile-granularity nlanguage)))
              (naggregates (- (length oaverages) 1))
              (*print-circle* nil)
              (alabel (if (eq *statistics-aggregate-dimension* :phenomena)
@@ -1539,8 +1621,8 @@
               & {\\bf tasks} & {\\bf time} & {\\bf space}~%    ~
               & {\\bf tasks} & {\\bf time} & {\\bf space}~%    ~
               & {\\bf tasks} & {\\bf time} & {\\bf space}\\\\~%  ~
-            & $\\propto$ & $\\propto$ (s) & $\\propto$ (kb)~%   ~
-            & $\\propto$ & $\\propto$ (s)& $\\propto$ (kb)~%   ~
+            & $\\phi$ & $\\phi$ (s) & $\\phi$ (kb)~%   ~
+            & $\\phi$ & $\\phi$ (s)& $\\phi$ (kb)~%   ~
               & $\\%$ & $\\%$ & $\\%$\\\\~%  ~
             \\hline~%  ~
             \\hline~%"
@@ -1709,7 +1791,9 @@
                                      (eql (get-field :readings foo) -1))
                      :format format :meter meter))
          (saggregates (when attributes
-                        (summarize-performance-parameters aggregates)))
+                        (summarize-performance-parameters 
+                         aggregates
+                         :format (profile-granularity data))))
          (values (make-array (list (length attributes))))
          (units (nreverse (map 'list #'first aggregates)))
          (frequencies (map 'list 
@@ -1938,3 +2022,78 @@
         "\\endpicture~%")))
     (force-output stream)
     (when file (close stream))))
+
+(defun rule-chart (data
+                   &key condition (attributes '(:executed successes))
+                        file (format :tcl) logscale meter)
+
+  (when attributes
+    (let* ((stream (if file
+                     (create-output-stream file nil)
+                     *tsdb-io*))
+           (rules (analyze-rules data :condition condition 
+                                 :format format :meter meter))
+           (rules (sort (copy-seq rules) #'string-greaterp :key #'second))
+           (indices (loop for i from 1 to (length rules) collect i))
+           (filtered (loop for rule in rules 
+                         collect (get-field :filtered (rest (rest rule)))))
+           (executed (loop for rule in rules 
+                         collect (get-field :executed (rest (rest rule)))))
+           (successes (loop for rule in rules 
+                          collect (get-field :successes (rest (rest rule)))))
+           (actives (loop for rule in rules 
+                        collect (get-field :actives (rest (rest rule)))))
+           (passives (loop for rule in rules 
+                         collect (get-field :passives (rest (rest rule)))))
+           (label (format 
+                   nil 
+                   "~(~a~)~{ # ~(~a~)~}"
+                   (first attributes) (rest attributes))))
+
+
+      (format 
+       stream
+       "barchart -font {Helvetica 10 bold} -plotbackground white \\~%  ~
+        -width 16c -height 20c -barmode aligned -barwidth 0.75 \\~%  ~
+        -title \"Rule Postulation and Success Distribution\" \\~%  ~
+        -invertxy yes -rightmargin 10~%")
+      (format stream "legend -hide yes~%")
+      (format
+       stream
+       "axis x -stepsize 1 -tickfont {Helvetica 9} -subdivisions 1 \\~%  ~
+        -labels ~a~%"
+       (list2tcl (map 'list #'second rules)))
+      (format
+       stream
+       "axis y -title {~a} \\~%  ~
+        -logscale ~:[no~;yes~]~%" 
+       label logscale)
+      (format stream "data x1 ~a~%" (list2tcl indices))
+      (when (member :filtered attributes :test #'eq)
+        (format stream "data y1 ~a~%" (list2tcl filtered))
+        (format 
+         stream 
+         "element e1 -xdata x1 -ydata y1 -fg red -relief flat~%"))
+      (when (member :executed attributes :test #'eq)
+        (format stream "data y2 ~a~%" (list2tcl executed))
+        (format 
+         stream 
+         "element e2 -xdata x1 -ydata y2 -fg orange  -relief flat~%"))
+      (when (member :successes attributes :test #'eq)
+        (format stream "data y3 ~a~%" (list2tcl successes))
+        (format 
+         stream 
+         "element e3 -xdata x1 -ydata y3 -fg yellow -relief flat~%"))
+      (when (member :actives attributes :test #'eq)
+        (format stream "data y4 ~a~%" (list2tcl actives))
+        (format 
+         stream 
+         "element e4 -xdata x1 -ydata y4 -fg blue -relief flat~%"))
+      (when (member :passives attributes :test #'eq)
+        (format stream "data y5 ~a~%" (list2tcl passives))
+        (format 
+         stream 
+         "element e5 -xdata x1 -ydata y5 -fg green -relief flat~%"))
+
+      (force-output stream)
+      (when file (close stream)))))

@@ -18,7 +18,7 @@
 (in-package "COMMON-LISP-USER")
 
 (defpackage "TSDB"
-  (:use "COMMON-LISP" "MAKE" 
+  (:use "COMMON-LISP" "MAKE" #+:pvm "PVM"
         #+:allegro "FOREIGN-FUNCTIONS" #+:allegro "MULTIPROCESSING")
   (:nicknames "TSNLP")
   (:export

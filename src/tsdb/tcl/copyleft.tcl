@@ -95,9 +95,8 @@ proc copyleft {action} {
       # registration is completed, an asynchronous event will change the value
       # of .globals(copyleft,status).
       #
-      set timeout 30
-      for {set globals(copyleft,status) pending; set i 0} \
-          {$i <= 5 
+      for {set timeout 20; set i 0} \
+          {$i <= 4
            || $globals(copyleft,status) == "pending" && $i <= $timeout} \
           {incr i} {
         after 1000;
@@ -110,7 +109,7 @@ proc copyleft {action} {
       }; # for
       if {$i <= $timeout} {
         .list.copyleft.body.fifth config -fg green \
-          -text "- Notificataion Completed -";
+          -text "- Notification Completed -";
         status "$message done";
         after 2000;
       } else {

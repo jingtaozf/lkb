@@ -198,7 +198,9 @@ proc tsdb_option {name} {
           status "tsdb(1) skeleton root not changed" 5;
         } else {
           set path $globals(input);
-          if {![file isdirectory $path]} {
+          set index [file join $path "Index.lisp"];
+          if {![file isdirectory $path]
+              || ![file exists $index]} {
             tsdb_beep;
             status "invalid directoy `$path'" 10;
           } else {
@@ -338,7 +340,7 @@ proc tsdb_browse {code condition} {
       set relations "(\"phenomenon\")";
     }
     runs {
-      set attributes "(\"run-id\" \"comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\")";
+      set attributes "(\"run-id\" \"comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\")";
       set relations "(\"run\")";
     }
     parses {
@@ -529,9 +531,16 @@ proc analyze_rules {} {
     status [format "no chart data available for `%s' ... |:-\{" \
             $globals(data)] 10;
   } else {
+    set attributes "(";
+    foreach i {"actives" "passives" "successes" "executed" "filtered"} {
+      if {$globals(rules,$i)} {
+        set attributes "$attributes :$i";
+      }; # if
+    }; # foreach
+    set attributes "$attributes)";
     set command \
-        [format "(rules \"%s\" :logscale %s)" \
-           $globals(data) \
+        [format "(rules \"%s\" :attributes %s :logscale %s)" \
+           $globals(data) $attributes \
            [if {$globals(logscale)} {format "t"} {format "nil"}]];
     send_to_lisp :event $command;
   }; # else

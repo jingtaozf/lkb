@@ -18,328 +18,58 @@
 
 (in-package "TSDB")
 
-(defun retrieve (&optional query (language *tsdb-data*)
-                 &key (verbose t) meter)
-  (initialize-tsdb)
-  (let* ((query 
-          (format
-           nil
-           "select i-id i-wf i-input ~@[where ~a~]"
-           query))
-         (query 
-          (format
-           nil
-           "~a report \"(%s %s \\\"%s\\\")\""
-           query))
-         (result (call-tsdb query language)))
-    (when meter (meter :value (get-field :end (madjust * meter 0.5))))
-    (with-input-from-string (stream result)
-      (do ((line (read stream nil) (read stream nil))
-           (data nil data))
-          ((null line)
-           (when verbose
-             (format
-              *tsdb-io* "~&retrieve(): found ~a item~:p.~%" (length data)))
-           (when meter (meter :value (get-field :end meter)))
-           (merge-with-output-specifications
-            (sort data #'< :key #'first) 
-            language :verbose verbose))
-        (let* ((i-id (first line))
-               (i-wf (second line))
-               (i-input (third line)))
-          (if (integerp i-id)
-            (if (and (integerp i-wf)
-                              (>= i-wf 0)
-                              (<= i-wf 3))
-              (if (stringp i-input)
-                (push (list i-id i-wf i-input) data)
-                (format 
-                  *tsdb-io*
-                  "~&retrieve() invalid input `~a' in item `~a'.~%"
-                  i-input i-id))
-              (format 
-                *tsdb-io*
-                "~&retrieve() invalid wellformedness code `~a' in item `~a'.~%"
-                i-wf i-id))
-            (format 
-              *tsdb-io*
-              "~&retrieve() invalid identifier `~a' in item.~%"
-              i-id)))))))
-
-(defun tsdb-do-process (language
-                        &key condition
-                             run-id comment
-                             (verbose t)
-                             output
-                             (cache *tsdb-cache-database-writes-p*)
-                             (gc *tsdb-gc-p*)
-                             (stream *tsdb-io*)
-                             overwrite interactive 
-                             meter podium interrupt)
-  (declare (ignore podium))
-  
-  (initialize-tsdb)
-  
-  (when (and overwrite (not interactive))
-    (purge-test-run language :action :purge))
-  (let* ((stream (cond
-                  (output (create-output-stream output))
-                  (interactive (make-string-output-stream))
-                  (t stream)))
-         (*tsdb-gc-message-p* nil)
-         (run-id (or run-id 
-                     (unless interactive
-                       (+ (largest-run-id language :verbose verbose) 1))))
-         (condition (if (equal condition "") nil condition))
-         (imessage (format nil "preparing `~a' test run ..." language))
-         (pmessage (format nil "processing `~a' test run ..." language))
-         (imeter (when meter (madjust * meter 0.02)))
-         (pmeter (when meter
-                   (madjust + (madjust * meter 0.98) (mduration imeter))))
-         data abort)
+(defun retrieve (&optional condition (data *tsdb-data*)
+                 &key (stream *tsdb-io*) (verbose t) meter)
 
+  (initialize-tsdb)
+  (when meter
+    (status :text (format nil "retrieving `~a' data ..." data)))
+  (let* ((imeter (if *tsdb-ignore-output-p*
+                   meter
+                   (madjust * meter 0.5)))
+         (ometer (unless *tsdb-ignore-output-p*
+                   (madjust + (madjust * meter 0.5) (mduration imeter))))
+         (items (select '("i-id" "i-wf" "i-input")
+                        '(:integer :integer :string)
+                        "item"
+                        condition
+                        data
+                        :unique nil :sort :i-id
+                        :meter imeter))
+         (outputs (unless *tsdb-ignore-output-p*
+                    (select '("i-id" "o-ignore" "o-wf" "o-gc" "o-edges")
+                        '(:integer :string :integer :integer :integer)
+                        "output"
+                        condition
+                        data
+                        :unique nil :sort :i-id
+                        :meter ometer)))
+         (all (if *tsdb-ignore-output-p*
+                (map 'list
+                  #'(lambda (foo)
+                      (append foo (pairlis '(:o-ignore :o-wf :o-gc :o-edges)
+                                           '("" -1 -1 -1))))
+                  items)
+                (loop
+                    for item in items
+                    for output = (or (find (get-field :i-id item)
+                                           outputs
+                                           :key #'(lambda (foo)
+                                                    (get-field :i-id foo)))
+                                     (pairlis '(:o-ignore :o-wf :o-gc :o-edges)
+                                              '("" -1 -1 -1)))
+                    do 
+                      (setf (rest (last item)) output)
+                    collect item))))
+    (when verbose
+      (format
+       stream 
+       "~&retrieve(): found ~a item~:p (~a output specification~:p).~%" 
+       (length items) (length outputs)))
+    (when meter (meter :value (get-field :end meter)))
     (when meter
-      (meter :value (get-field :start imeter))
-      (status :text imessage))
-
-    (when (setf data (retrieve condition language :verbose verbose))
-      (let* ((cache (when (and cache (not interactive))
-                      (create-cache language :verbose verbose)))
-             (environment (initialize-test-run :interactive interactive))
-             (trees-hook 
-              (unless interactive
-                (typecase *tsdb-trees-hook*
-                  (null nil)
-                  (string (symbol-function 
-                           (read-from-string *tsdb-trees-hook*)))
-                  (symbol (symbol-function *tsdb-trees-hook*))
-                  (function *tsdb-trees-hook*))))
-             (semantix-hook 
-              (unless interactive
-                (typecase *tsdb-semantix-hook*
-                  (null nil)
-                  (string (symbol-function 
-                           (read-from-string *tsdb-semantix-hook*)))
-                  (symbol (symbol-function *tsdb-semantix-hook*))
-                  (function *tsdb-semantix-hook*))))
-             (gc-strategy (unless interactive (install-gc-strategy gc)))
-             (gc (get-field :gc gc-strategy))
-             (increment (when meter (/ (mduration pmeter) (length data))))
-             result gcs i-load)
-        (when meter 
-          (status :text pmessage)
-          (meter :value (get-field :start pmeter)))
-        (unwind-protect
-            (ignore-errors
-             (catch :break
-               (unless interactive
-                 (let* ((user (current-user))
-                        (comment (or comment "null"))
-                        (platform (current-platform))
-                        (grammar (current-grammar))
-                        (tsdb (current-tsdb))
-                        (host (current-host))
-                        (os (current-os))
-                        (start (current-time :long t))
-                        (run (pairlis (list :run-id :comment 
-                                            :platform :tsdb :grammar
-                                            :user :host :os :start)
-                                      (list run-id comment 
-                                            platform tsdb grammar
-                                            user host os start)))
-                        (run (append run (get-test-run-information))))
-                   (write-run run language :cache cache)))
-
-               (do* ((data data (rest data))
-                     (item (first data) (first data))
-                     (parse-id
-                      (if interactive
-                        0
-                        (+ (largest-parse-id run-id language 
-                                             :verbose verbose) 1))
-                      (+ parse-id 1)))
-                   ((null data))
-                 (when (and interrupt (probe-file interrupt))
-                   (delete-file interrupt)
-                   (setf abort t)
-                   (format
-                    stream
-                    "do-process(): abort on external interrupt signal.~%")
-                   (throw :break nil))
-                 (let* ((i-id (item-i-id item)) 
-                        (i-input (item-i-input item))
-                        (i-wf (item-i-wf item))
-                        (o-ignore (item-o-ignore item))
-                        (o-ignore 
-                         (and o-ignore (not (equal o-ignore "")) o-ignore)))
-                   (if (and o-ignore (tsdb-ignore-p))
-                     (format
-                      stream
-                      "~&do-process(): ignoring item # ~d ~
-                       (`o-ignore' is `~a').~%"
-                      i-id o-ignore)
-                     (let* ((o-wf (item-o-wf item))
-                            (o-wf (when (and o-wf (not (= o-wf -1))) o-wf))
-                            (o-gc (item-o-gc item))
-                            (o-gc 
-                             (and o-gc (not (= o-gc -1)) (not (zerop o-gc))))
-                            (gc (or o-gc gc))
-                            (o-edges (item-o-edges item))
-                            (o-edges (if (and o-edges (not (= o-edges -1)))
-                                       (floor (* *tsdb-edge-factor* o-edges))
-                                       *tsdb-maximal-number-of-edges*))
-                            (o-derivations (when (or *tsdb-lexical-oracle-p*
-                                                     *tsdb-phrasal-oracle-p*)
-                                             (select-o-derivations 
-                                              language :item i-id))))
-                       (format
-                        stream 
-                        "~&(~a) `~:[*~;~]~a' ~:[~;:~]~:[~;=~]~:[~*~;[~d]~][~a]"
-                        i-id (= i-wf 1) i-input 
-                        (eq gc :local) (eq gc :global) o-derivations 
-                        (length o-derivations) o-edges)
-                       (force-output stream)
-                       (case gc
-                         (:local #+:allegro (excl:gc))
-                         (:global #+:allegro (excl:gc) #+:allegro (excl:gc t)))
-                       (setf *tsdb-global-gcs* 0)
-                       (setf i-load (unless interactive 
-                                      (first (load-average))))
-                       (setf result (parse-item i-input :edges o-edges
-                                                :trace interactive
-                                                :exhaustive *tsdb-exhaustive-p*
-                                                :derivations o-derivations
-                                                :trees-hook trees-hook
-                                                :semantix-hook semantix-hook))
-                       (when (and (not *tsdb-minimize-gcs-p*) 
-                                  (not interactive)
-                                  (eq gc :global)
-                                  (>= *tsdb-global-gcs* 1)
-                                  (<= *tsdb-global-gcs* 3))
-                         (format 
-                          stream
-                          " (~d gc~:p);~%" *tsdb-global-gcs*)
-                         (force-output stream)
-                         #+:allegro (excl:gc t)
-                         (format 
-                          stream 
-                          "(~a) `~:[*~;~]~a' ~:[~;:~]~:[~;=~]~:[~*~;[~d]~][~a]"
-                          i-id (= i-wf 1) i-input 
-                          (eq gc :local)  (eq gc :global) o-derivations
-                          (length o-derivations) o-edges)
-                         (force-output stream)
-                         (setf gc t)
-                         (setf *tsdb-global-gcs* 0)
-                         (setf i-load (first (load-average)))
-                         (setf result (parse-item i-input :edges o-edges
-                                                :derivations o-derivations
-                                                :trees-hook trees-hook
-                                                :semantix-hook semantix-hook)))
-                       (setf gcs *tsdb-global-gcs*)
-                       (setf *tsdb-global-gcs* 0)
-
-                       #+:allegro
-                       (when (and (= (get-field :readings result) -1)
-                                  (equal (class-of 
-                                          (get-field :condition result))
-                                         (find-class 'excl:interrupt-signal)))
-                         (throw :break nil))
-
-                       (let* ((readings (get-field :readings result))
-                              (words (get-field :words result))
-                              (tcpu (/ (or (get-field :tcpu result) 0) 100))
-                              (tgc (/ (or (get-field :tgc result) 0) 100))
-                              (treal (/ (or (get-field :treal result) 0) 100))
-                              (first (/ (or (get-field :first result) 0) 100))
-                              (total (/ (or (get-field :total result) 0) 100))
-                              (aedges (get-field :aedges result))
-                              (pedges (get-field :pedges result))
-                              (edges (if (and aedges pedges)
-                                       (+ aedges pedges)
-                                       -1))
-                              (timeup (get-field :timeup result))
-                              (unifications (get-field :unifications result))
-                              (copies (get-field :copies result))
-                              (loads (load-average))
-                              (a-load
-                               (cond ((null treal) (first loads))
-                                     ((<= treal 6000) (first loads))
-                                     ((<= treal (* 5 6000)) (second loads))
-                                     (t (third loads)))))
-                         (push (cons :i-load i-load) result)
-                         (push (cons :a-load a-load) result)
-
-                         (if readings
-                           (case readings
-                             (0 (format 
-                                 stream 
-                                 " ---~:[~; time up:~] ~
-                                  (~,1f~:[~*~;:~,1f~]|~,1f s) ~
-                                  <~d:~d>~
-                                  ~:[ {~d:~d}~;~2*~] ~
-                                  (~a) [~:[~;=~]~d].~%" 
-                                 timeup 
-                                 tcpu (>= tgc 0.1) tgc total
-                                 words edges 
-                                 (or (= unifications copies 0)
-                                     (= unifications copies -1))
-                                 unifications copies 
-                                 (pprint-memory-usage result) gc gcs))
-                             (-1 (format 
-                                  stream 
-                                  " --- error: ~a.~%" 
-                                  (get-field :error result)))
-                             (t (format 
-                                 stream 
-                                 " ---~:[~; time up:~] ~a ~
-                                  (~,1f~:[~*~;:~,1f~]|~,1f:~,1f s) ~
-                                  <~d:~d>~
-                                  ~:[ {~d:~d}~;~2*~] ~
-                                  (~a) [~:[~;=~]~d].~%" 
-                                 timeup readings 
-                                 tcpu (>= tgc 0.1) tgc first total 
-                                 words edges 
-                                 (or (= unifications copies 0)
-                                     (= unifications copies -1))
-                                 unifications copies 
-                                 (pprint-memory-usage result) gc gcs)))
-                           (format stream ".~%"))
-                         (force-output stream)
-                         (push (cons :parse-id parse-id) result)
-                         (push (cons :run-id run-id) result)
-                         (push (cons :i-id i-id) result)
-                         (push (cons :gcs gcs) result)
-                         (when (and timeup (not (= readings -1)))
-                           (push (cons :error "timeup") result))
-                         (unless interactive
-                           (write-parse result language :cache cache))
-                         (unless (or interactive
-                                     (= (get-field :readings result) -1))
-                           (write-results
-                            parse-id 
-                            (get-field :results result) language
-                            :cache cache))
-                         #+:page
-                         (unless (or interactive
-                                     (= (get-field :readings result) -1))
-                           (let ((statistics (pg::rule-statistics)))
-                             (when statistics
-                               (write-rules
-                                parse-id
-                                statistics
-                                language
-                                :cache cache))))))))
-                 (when increment (meter-advance increment)))))
-          (when interactive
-            (format *tsdb-io* "~&~a" (get-output-stream-string stream)))
-          (when cache (flush-cache cache :verbose verbose))
-          (finalize-test-run environment)
-          (restore-gc-strategy gc-strategy)
-          (if abort
-            (status :text (format nil "~a interrupt" pmessage) :duration 5)  
-            (when meter
-              (status :text (format nil "~a done" pmessage) :duration 5)
-              (meter :value (get-field :end meter)))))))))
+      (status :text (format nil "retrieving `~a' data ... done" data)))
+    all))
 
 (defun tsdb-do-vocabulary (language &key condition (load :warn) 
                                          (stream *tsdb-io*)
@@ -352,8 +82,8 @@
          (whitespace '(#\Space #\Newline #\Tab))
          (imeter (madjust * meter 0.1))
          (wmeter (madjust + (madjust * meter 0.9) (mduration imeter)))
-         (items (retrieve condition language :meter imeter))
-         (strings (map 'list #'(lambda (foo) (item-i-input foo)) items))
+         (items (retrieve condition language))
+         (strings (map 'list #'(lambda (foo) (get-field :i-input foo)) items))
          (frequencies (make-hash-table :test #'equal))
          (lexicon (make-hash-table :test #'equal ))
          (lstasks (make-hash-table :test #'equal ))
@@ -428,6 +158,7 @@
            word tabulation (gethash word frequencies)
            loadp (or (gethash word lexicon) -1) (or (gethash word lstasks) -1))
           (when increment (meter-advance increment)))))
+    (format stream "~&~%")
     (when meter 
       (meter :value (get-field :end meter))
       (status :text (format nil "~a done" message) :duration 5))
@@ -485,8 +216,7 @@
                                   (member argument (list nil t "")))
                             *tsdb-data*
                             argument)
-                          :condition condition :run-id run)
-         (format *tsdb-io* "~&~%"))
+                          :condition condition :run-id run))
         
         ((:vocabulary :voc :vo :v)
          (format *tsdb-io* "~&~%")
@@ -494,8 +224,7 @@
                                      (member argument (list nil t "")))
                                *tsdb-data*
                                argument) 
-                             :condition condition :load (or load :quiet))
-         (format *tsdb-io* "~&~%"))
+                             :condition condition :load (or load :quiet)))
         
         ((:help :hel :he)
          (format *tsdb-io* "~&~%")
@@ -667,6 +396,7 @@
                                       index meter)
   
   (when meter (meter :value (get-field :start meter)))
+  (setf *tsdb-skeletons* nil)
   (initialize-tsdb nil :action :skeletons)
   (let ((directory *tsdb-skeleton-directory*)
         (skeletons 
@@ -798,7 +528,8 @@
          (t
           (when meter (meter :value (get-field :start meter)))
           (let ((status 
-                 (run-process (format nil "cp -pr '~a' '~a'" old new) :wait t)))
+                 (run-process 
+                  (format nil "cp -pr '~a' '~a'" old new) :wait t)))
             (if (zerop status)
               (let ((imeter (madjust / meter 2)))
                 (when imeter (meter :value (get-field :end imeter)))

@@ -17,30 +17,6 @@
 
 (in-package "TSDB")
 
-(defmacro item-i-id (item)
-  `(first ,item))
-
-(defmacro item-i-wf (item)
-  `(second ,item))
-
-(defmacro item-i-input (item)
-  `(third ,item))
-
-(defmacro item-o-ignore (item)
-  `(fourth ,item))
-
-(defmacro item-o-wf (item)
-  `(fifth ,item))
-
-(defmacro item-o-gc (item)
-  `(sixth ,item))
-
-(defmacro item-o-edges (item)
-  `(seventh ,item))
-
-(defmacro item-o-derivation (item)
-  `(eighth ,item))
-
 (defmacro get-field (field alist)
   `(rest (assoc ,field ,alist)))
 
@@ -111,15 +87,16 @@
     (cons (cons :gc (if (and (null tenure) (eq gc :global)) nil gc)) 
           environment)))
 
-(defun restore-gc-strategy (environment)
-  #+:allegro
-  (setf (sys:gsgc-switch :print) (get-field :print environment))
-  #+:allegro
-  (setf (sys:gsgc-switch :stats) (get-field :stats environment))
-  #+:allegro
-  (setf (sys:gsgc-switch :verbose) (get-field :verbose environment))
-  #+:allegro
-  (setf (sys:gsgc-parameter :auto-step) (get-field :auto-step environment)))
+(defun restore-gc-strategy (strategy)
+  (when strategy
+    #+:allegro
+    (setf (sys:gsgc-switch :print) (get-field :print strategy))
+    #+:allegro
+    (setf (sys:gsgc-switch :stats) (get-field :stats strategy))
+    #+:allegro
+    (setf (sys:gsgc-switch :verbose) (get-field :verbose strategy))
+    #+:allegro
+    (setf (sys:gsgc-parameter :auto-step) (get-field :auto-step strategy))))
 
 (defun remove-and-insert-punctuation (string)
   (let* ((string (remove #\, string))
@@ -167,6 +144,16 @@
         (concatenate 
             'string (string prefix) (tsdb-escape-quotes (subseq string 1)))))
     string))
+
+(defun complement! (fn)
+  #'(lambda (&rest args) (not (apply fn args))))
+
+(defun find! (item sequence 
+              &key (test #'eql) key)
+  (funcall #'remove item sequence 
+           :test #'(lambda (&rest items)
+                     (not (apply test items)))
+           :key key))
 
 (defun current-application ()
   (cond ((and (member :page *features* :test #'eq) 
@@ -309,23 +296,16 @@
                        *tsdb-application* data))
              (status (run-process command :wait t)))
         (when (zerop status)
-          (let ((status 
-                 (if (probe-file (namestring (make-pathname :directory data
-                                                            :name "item.gz")))
-                   :ro
-                   :rw))
-                (chart
-                 (or 
-                  (probe-file 
-                   (namestring (make-pathname :directory data 
-                                              :name "edge.cache")))
-                  (probe-file 
-                   (namestring (make-pathname :directory data 
-                                              :name "edge.lisp")))))
-                (items (length (select "i-id" :integer "item" nil data 
-                                       :absolute t :unique t)))
-                (parses (length (select "parse-id" :integer "parse" nil data 
-                                        :absolute t :unique t))))
+          (let* ((status 
+                  (if (probe-file (namestring (make-pathname :directory data
+                                                             :name "item.gz")))
+                    :ro
+                    :rw))
+                 (chart 
+                  (let ((n (tcount data "rule" :absolute t)))
+                    (and n (not (zerop n)))))
+                 (items (tcount data "item" :absolute t))
+                 (parses (tcount data "parse" :absolute t)))
             (pairlis (list :database 
                            :path :status :items :parses :chart)
                      (list (namestring language) 

@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.4 (29-jan-99)")
+(defparameter *tsdb-version* "1.5 (20-feb-99)")
 
 (defparameter
   *tsdb-application*
@@ -32,7 +32,7 @@
 (defparameter 
   *tsdb-home* 
   (namestring (dir-append (get-sources-dir "tsdb")
-                          '(:relative "tsdb" "home"))))
+                          '(:relative "tsdb" "home" "debug"))))
 
 (defparameter 
   *tsdb-skeleton-directory* 
@@ -63,7 +63,7 @@
 
 (defparameter *tsdb-cache-database-writes-p* t)
 
-(defparameter *tsdb-flush-cache-threshold* 500)
+(defparameter *tsdb-flush-cache-threshold* 5000)
 
 (defparameter *tsdb-verbose-cache-flush-p* nil)
 
@@ -122,46 +122,3 @@
 (defparameter *tsdb-debug-mode-p* nil)
 
 (defparameter %tsdb-lexical-preterminals% nil)
-
-#+allegro
-(eval-when (:load-toplevel :execute)
-  ;;
-  ;; establish gc() hook that toggles podium(1) cursor for global gc()s;
-  ;; unfortunately, there is no (pre-5.0 and all-lisp) way to get gc() cursors
-  ;; for scavenges too.
-  ;;
-  (let ((default-gc-after-hook excl:*gc-after-hook*)
-        global-gc-p)
-    (setf excl:*gc-after-hook*
-      #'(lambda (global scavenged tenured foo bar)
-          (when (null global-gc-p)
-            (unless global
-              (incf *tenured-bytes* tenured)
-              (when (> *tenured-bytes* excl:*tenured-bytes-limit*)
-                (excl:without-interrupts
-                  (setf global-gc-p t)
-                  (when (fboundp 'busy) (busy :cursor *tsdb-gc-cursor*))
-                  (when *tsdb-gc-message-p*
-                    (format 
-                     *terminal-io*
-                     "~&gc-after-hook(): ~d bytes were tenured; ~
-                      triggering global gc().~%"
-                     *tenured-bytes*))
-                  (excl:gc t)
-                  (setf global-gc-p nil)
-                  (setf *tenured-bytes* 0)
-                  (incf *tsdb-global-gcs*)
-                  (when (fboundp 'busy) (busy :action :restore))))))
-          (when default-gc-after-hook
-            (funcall default-gc-after-hook 
-                     global scavenged tenured foo bar)))))
-  (setf excl:*global-gc-behavior* nil)
-  ;;
-  ;; ensure that podium(1) process (talking to wish(1)) terminates gracefully;
-  ;; apparently, the EOF that wish(1) should see once the lisp stream is gone,
-  ;; is insufficient to make wish(1) exit.
-  ;;
-  (excl:advise mp:process-kill :before nil nil 
-               (when (and *tsdb-wish-process*
-                          (eq (first excl:arglist) *tsdb-wish-process*))
-                 (ignore-errors (shutdown-podium)))))
