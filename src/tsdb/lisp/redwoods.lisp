@@ -1038,7 +1038,8 @@
   ;;
   ;; during updates, a `save' match is indicated by the following conditions:
   ;;
-  ;;   - the current item has not been tree annotated already;
+  ;;   - the current item has not been tree annotated already (or `annotated'
+  ;;     as `t-active' == -1);
   ;;   - the number of active trees in the current set equals the number of
   ;;     active trees in the gold set;
   ;;   - either the current item has more than one reading, or that single one
@@ -1046,7 +1047,9 @@
   ;;     gold set.
   ;;
   (and (or (null (lkb::compare-frame-version frame))
-           (equal(lkb::compare-frame-version frame) ""))
+           (equal(lkb::compare-frame-version frame) "")
+	   (and (integerp (lkb::compare-frame-gactive frame))
+		(= (lkb::compare-frame-gactive frame) -1)))
        (integerp (lkb::compare-frame-gactive frame))
        (= (length (lkb::compare-frame-in frame)) 
           (lkb::compare-frame-gactive frame))
