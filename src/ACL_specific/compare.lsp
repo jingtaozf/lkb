@@ -165,7 +165,6 @@
                                  (symbol-name rule) yield 
                                  :constituent top start end))))
 	  (fs
-           (break)
 	   (add-discriminant frame (symbol-name parse) 
 			     (type-of-fs (tdfs-indef fs))
 			     :type
