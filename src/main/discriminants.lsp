@@ -96,7 +96,7 @@
     ;;
     ;; for all constituents, always record node label (when available).
     ;; _fix_me_
-    ;; probably, a separate :label type would be cleaner here.  (13-oct-0e; oe)
+    ;; probably, a separate :label type would be cleaner here.  (13-oct-02; oe)
     ;;
     (when label
       (add-discriminant label yield :constituent top start end))
