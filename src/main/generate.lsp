@@ -3,9 +3,6 @@
 ;;;
 ;;; CSLI, Stanford University, USA
 
-(defpackage "MRS")
-(defpackage "MAIN")
-
 
 ;;; Not done yet:
 ;;; *** multi-word lexical entries? (might need a lattice of lex possibilties
@@ -18,7 +15,7 @@
    ;; algorithm itself
    res ; feature name of mother in rule dag in active edges
    needed ; ordered list of names of daughter features still to be found
-   lex-used ; indices to sets of lexical alternatives used so far
+   lex-used ; indices to sets of generator lexical alternatives used so far
    )
 
 (defvar *gen-chart* nil)
@@ -187,8 +184,7 @@
                           (make-gen-chart-edge :dag unif
                                      :id (next-edge)
                                      :rule-number 'root
-                                     :children 
-                                     (list edge)
+                                     :children (list edge)
                                      :leaves (gen-chart-edge-leaves edge))))
                       new-edge)))))))
 
@@ -237,8 +233,7 @@
 
 (defun gen-chart-rule-ordered-daughters (rule)
    (values (rule-daughters-apply-order rule)
-      (nth (position (car (rule-daughters-apply-order rule)) (cdr (rule-order rule)))
-         (rule-daughters-restricted rule))))
+      (position (car (rule-daughters-apply-order rule)) (cdr (rule-order rule)))))
 
 
 ;;; Core control functions. Processing inactive and active edges
@@ -261,13 +256,13 @@
          (when *debugging*
             (format t "~&Trying to create new active edge from rule ~A and inactive edge ~A"
                (gen-chart-edge-id edge) (rule-id rule)))
-         (multiple-value-bind (gen-daughter-order first-restricted)
+         (multiple-value-bind (gen-daughter-order head-index) ; zero-based on daughters
                (gen-chart-rule-ordered-daughters rule)
             (let
                ((unified-dag
                   (gen-chart-try-unification (rule-full-fs rule)
                      (first gen-daughter-order) ; pick out head daughter
-                     first-restricted
+                     (nth head-index (rule-daughters-restricted rule)) ; head restrictor
                      (gen-chart-edge-dag edge)
                      (gen-chart-edge-dag-restricted edge)
                      (not (rest gen-daughter-order))
@@ -281,12 +276,13 @@
                         :needed (rest gen-daughter-order)
                         :lex-used (gen-chart-edge-lex-used edge)
                         :children
-                        (gen-make-list-and-insert (length gen-daughter-order) edge
-                           (position (first gen-daughter-order) (rule-order rule)))
+                        (cond
+                           ((null (cdr gen-daughter-order)) (list edge))
+                           ((eql head-index 0) (list edge nil))
+                           (t (list nil edge)))
                         :leaves
                         (gen-make-list-and-insert (length gen-daughter-order)
-                           (gen-chart-edge-leaves edge)
-                           (position (first gen-daughter-order) (rule-order rule))))
+                           (gen-chart-edge-leaves edge) (1+ head-index)))
                      input-sem)))))))
 
 
@@ -307,6 +303,8 @@
                   (not (rest (gen-chart-edge-needed act)))
                   (gen-chart-edge-res act))))
          (when unified-dag
+            ;; remaining non-head daughters in active edge are filled in
+            ;; left-to-right order
             (let ((new-act
                      (make-gen-chart-edge
                         :id (next-edge) 
@@ -318,7 +316,14 @@
                         (append (gen-chart-edge-lex-used act)
                            (gen-chart-edge-lex-used inact))
                         :children
-                        (gen-copy-list-and-insert (gen-chart-edge-children act) inact)
+                        (let ((combined
+                               (if (car (gen-chart-edge-children act))
+                                  (list act inact) (list inact act))))
+                           (if (rest (gen-chart-edge-needed act))
+                              ;; empty branch always on right, though if head was 3rd
+                              ;; or subsequent daughter there will also/instead be
+                              ;; interspersed unfilled arg slots
+                              (nconc combined (list nil)) combined))
                         :leaves
                         (gen-copy-list-and-insert (gen-chart-edge-leaves act)
                            (gen-chart-edge-leaves inact)))))
