@@ -585,7 +585,7 @@ at this point).
    :unifs (cl-user::rule-unifs rule)
    :def-unifs (cl-user::rule-def-unifs rule)
    :full-fs new-fs
-   #+:packing :rtdfs #+:packing (copy-tdfs-partially new-fs)
+   #+:packing :rtdfs #+:packing (common-lisp-user::copy-tdfs-partially new-fs)
    :daughters-restricted
    (cl-user::rule-daughters-restricted rule)
    :daughters-restricted-reversed
