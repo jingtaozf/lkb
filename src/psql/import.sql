@@ -39,7 +39,7 @@ CREATE TABLE revision (
   domains VARCHAR(15),
   genres VARCHAR(25),
   register VARCHAR(50),
-  confidence real,
+  confidence real NOT NULL,
   version INTEGER DEFAULT 0,
   source VARCHAR(50),
   flags INTEGER DEFAULT 0 NOT NULL,
@@ -510,11 +510,19 @@ INSERT INTO defn VALUES ( 'erg2', 'id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'erg2', 'orth', 'orthography', '', 'string-list' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'type', 'nil', 'symbol' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'orthography', '(stem)', 'string-fs' );
+--<<<<<<< import.sql
+--INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'mixed' );
+--INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); 
+--INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'symbol' );
+--INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkeytag', '(synsem lkeys altkeyrel carg)', 'mixed' );
+--INSERT INTO defn VALUES ( 'erg2', 'unifs', 'alt2key', '(synsem lkeys alt2keyrel pred)', 'symbol' );
+--=======
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'mixed' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); 
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'mixed' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkeytag', '(synsem lkeys altkeyrel carg)', 'string' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'alt2key', '(synsem lkeys alt2keyrel pred)', 'mixed' );
+-->>>>>>> 1.29
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
 

@@ -2,6 +2,9 @@
 ;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
+;;; bmw (oct-03)
+;;; - 'mixed' type to handle mix of string/symbol values in field mapping
+
 ;;; modifications by bmw (sep-03)
 ;;; - integration w/ Emacs-Postgres interface
 ;;; - LexDB menu
@@ -268,7 +271,7 @@
     (multiple-value-bind (recs cols recs-count)
         (pg:sql (sql-string query) :db connection)
       (setf (records query) recs 
-            (columns query) (mapcar #'str-to-keyword-format cols)
+            (columns query) (mapcar #'str-2-keyword cols)
             (count-recs query) recs-count))
     (if *psql-verbose-query*
 	(format *trace-output* "~%~a~%=>~%~a" (sql-string query) (records query)))
@@ -301,21 +304,6 @@
             (return result))
     string))
 
-(defun symbol-to-str-format (expr) ;: must be symbol. will not work for num
-  (unless (symbolp expr)
-    (error "symbol expected"))
-  (string-downcase (string expr)))
-
-(defun str-to-keyword-format (expr)
-  (unless (stringp expr)
-    (error "string exected"))
-  (intern (string-upcase expr) :keyword))
-
-(defun str-to-symbol-format (expr)
-  (unless (stringp expr)
-    (error "string exected"))
-  (intern (string-upcase expr) :lkb))
-
 ;;; prepare field list for SQL INSERT INTO query
 (defun sql-field-list-str (symb-list)
   (concatenate 'string "(" (sql-select-list-str symb-list) ")"))
@@ -324,11 +312,11 @@
 (defun sql-select-list-str (symb-list)
   (if (null symb-list) (error (format nil "non-null list expected")))
   (let ((stream (make-string-output-stream)))
-    (format stream "~a" (symbol-to-str-format (pop symb-list)))
+    (format stream "~a" (symb-2-str (pop symb-list)))
     (loop 
 	while symb-list
 	do 
-	  (format stream ",~a" (symbol-to-str-format (pop symb-list))))
+	  (format stream ",~a" (symb-2-str (pop symb-list))))
     (get-output-stream-string stream)))
 
 ;;; prepare val list for SQL INSERT INTO query
@@ -360,50 +348,92 @@
    (t
     (error (format nil "unhandled data type")))))
 
-(defun str-list-2-str (str-list &optional separator)
-  (setf separator 
-    (if separator
-      (format nil separator)
-      " "))
-  (let ((stream (make-string-output-stream)))
-    (if str-list (format stream "~a" (pop str-list)))
-    (loop 
-	while str-list
-	do 
-	  (format stream "~a~a" separator (pop str-list)))
-    (get-output-stream-string stream)))
+;;;
+;;; format conversion
+;;;
 
-(defun str-2-num (str)
-  (let ((symb (str-2-symb str)))
-    (if (numberp symb)
-	symb
-      0)))
-  
 (defun str-2-symb (str)
-  (let ((stream (make-string-input-stream str)))
-    (read stream nil nil)))
+  (unless (stringp str)
+    (error "string exected"))
+  (intern (string-upcase str) :lkb))
 
-(defun non-null-symb-2-str (symb)
-  (if symb
-      (symb-2-str symb)))
+(defun str-2-keyword (str)
+  (unless (stringp str)
+    (error "string exected"))
+  (intern (string-upcase str) :keyword))
+
+;; currently 'str-2-lisp-object' ...
+(defun str-2-list (str)
+  (with-package (:lkb)
+    (let ((item (read-from-string str)))
+      (cond
+       ((listp item)
+	item)
+       (t
+	(error "list expected"))))))
+
+;; use (parse-integer X :junk-allowed t) for integers
+(defun str-2-num (str &optional default)
+  (with-package (:lkb)
+    (let ((item (read-from-string str)))
+      (cond
+       ((numberp item)
+	item)
+       ((eq default t)
+	(error "number expected"))
+       (t default)))))
+
+(defun str-2-numstr (str &optional default)
+  (let ((num (str-2-num str)))
+    (cond
+     ((numberp num) 
+      (format nil "~a" num))
+     ((eq default t)
+      (error "number expected"))
+     (t default))))
+
+(defun str-list-2-str (str-list &optional (separator " "))
+  (unless (listp str-list)
+    (error "list expected"))
+  (cond
+   ((null str-list) "")
+   (t (apply 'concatenate
+	     (cons
+	      'string
+	      (cons
+	       (pop str-list)
+	       (mapcan #'(lambda (x) (list separator x)) str-list)))))))
   
 (defun symb-2-str (symb)
+  (unless (symbolp symb)
+    (error "symbol expected"))
   (cond
    ((null symb) "")
-   ((numberp symb) (num-2-str symb))
-   ((stringp symb) symb)
    (t (string-downcase (string symb)))))
-    
 
 (defun num-2-str (num)
-  (if num
-      (let ((stream (make-string-output-stream)))
-        (format stream "~a" num)
-        (get-output-stream-string stream))))
-
+  (if (null num)
+      (return-from num-2-str))
+  (unless (numberp num)
+    (error "number expected"))
+  (format nil "~a" num))
+  
 (defun char-2-symb (c)
+  (unless (characterp c)
+    (error "character expected"))
   (str-2-symb (string c)))
 
+(defun char-2-num (c)
+  (unless (characterp c)
+    (error "character expected"))
+  (str-2-num (string c)))
+
+(defun 2-symb (x)
+  (cond
+   ((symbolp x) x)
+   ((stringp x) (str-2-symb x))
+   (t (error "unhandled type"))))
+    
 (defun get-val (field record)
   (cdr (assoc field record :test #'equal)))
 
@@ -415,10 +445,10 @@
   ;; constructs the argument string to sql SELECT with all necessary fields
   (let* ((fields (remove-duplicates (mapcar #'cadr (fields-map lexicon))
                                     :test #'equal))
-         (fields-str (symbol-to-str-format (pop fields))))
+         (fields-str (symb-2-str (pop fields))))
     (loop 
         for element in fields
-        do (setf fields-str (concatenate 'string fields-str ", " (symbol-to-str-format element))))
+        do (setf fields-str (concatenate 'string fields-str ", " (symb-2-str element))))
     fields-str))
 
 ;; this is to avoid being annoyed when word not in the database.
@@ -475,7 +505,7 @@
 	 (name-field (second (assoc :id (fields-map lexicon)))))
     (loop
 	for record in records
-	for id = (str-to-symbol-format 
+	for id = (str-2-symb 
 		  (cdr 
 		   (assoc name-field record :test #'equal)))
 	do
@@ -503,11 +533,11 @@
           (query-res (run-query 
                      lexicon 
                      (make-instance 'sql-query :sql-string sql-str))))
-    (mapcar #'(lambda (x) (str-to-symbol-format (car x)))
+    (mapcar #'(lambda (x) (str-2-symb (car x)))
             (records query-res))))
 
 (defmethod retrieve-record ((lexicon psql-lex-database) id &optional reqd-fields)
-  (retrieve-record-str lexicon (symbol-to-str-format id) reqd-fields))
+  (retrieve-record-str lexicon (symb-2-str id) reqd-fields))
 
 (defmethod retrieve-record-str ((lexicon psql-lex-database) id-str &optional reqd-fields)
   (unless (connection lexicon)
@@ -515,7 +545,6 @@
     (return-from retrieve-record-str nil))
   (unless reqd-fields 
     (setf reqd-fields "*"))
-;;  (let* ((sql-str (sql-retrieve-entry lexicon (make-requested-fields lexicon) id-str))
   (let* ((sql-str (sql-retrieve-entry lexicon reqd-fields id-str))
 	 (query-res (run-query 
 		     lexicon 
@@ -574,6 +603,15 @@
                              (if (> (list-length values) 1)
                                values
                                (car values)))))))
+    
+    (let ((orth-str (second (member :orth strucargs))))
+      (if (and (listp orth-str) (cdr orth-str))
+	  ;; infl-pos is only relevant for multi-word entries
+	  (setf strucargs
+	    (append (list :infl-pos
+			  (find-infl-pos nil orth-str nil))
+		    strucargs))))
+    
     (apply #'make-lex-entry strucargs)))
 
 ;;; create slot entry
@@ -618,7 +656,7 @@
   (set-version psql-le lexicon) 
   (if *export-timestamp* (set-val psql-le :modstamp *export-timestamp*))
   (set-val psql-le :flags 1)
-  (let* ((symb-list '(:type :orthography :orthkey :keyrel :altkey :alt2key :keytag :compkey :ocompkey :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
+  (let* ((symb-list '(:type :orthography :orthkey :keyrel :altkey :alt2key :keytag :altkeytag :compkey :ocompkey :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
 	 (symb-list (remove-if #'(lambda (x) (or (null x) 
 						 (and (stringp x)
 						      (string= x ""))))
@@ -636,8 +674,8 @@
 (defmethod set-lex-entry-scratch ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (let* ((symb-list 
 	  (mapcan 
-	   #'(lambda (x) (unless (null (retr-val psql-le x)) (list x))) 
-	   '(:type :orthography :orthkey :keyrel :altkey :alt2key :keytag :compkey :ocompkey)))) 
+	   #'(lambda (x) (unless (null (retr-val psql-le x)) (list x)))
+	   '(:type :orthography :orthkey :keyrel :altkey :alt2key :keytag :altkeytag :compkey :ocompkey)))) 
     (run-query 
      lexicon 
      (make-instance 'sql-query
@@ -658,10 +696,10 @@
 (defmethod initialize-lex ((lexicon psql-database) &key no-delete psorts-temp-file)
   (declare (ignore no-delete psorts-temp-file))
   (clear-lex lexicon)
+  (if *tmp-lexicon* 
+      (clear-lex *tmp-lexicon*))
   (format t "~%Connecting to lexical database ~a" (dbname lexicon))
     (let* ((connection (connect lexicon)))
-      (if *tmp-lexicon* 
-	  (clear-lex *tmp-lexicon*))
       (setf *tmp-lexicon* lexicon)
       (format t "~%(Re)initializing ~a" (dbname lexicon))
       (cond
@@ -728,10 +766,13 @@
 (defun work-out-value (type value &key path)
   (cond ((equal type "symbol") 
 	 (unless (equal value "")
-	   (list (str-to-symbol-format value))))
+	   (list (str-2-symb value))))
 	((equal type "string")
 	 (unless (equal value "")
-	   (list value)))
+	   (list (str-to-string value))))
+	((equal type "mixed")
+	 (unless (equal value "")
+	   (list (str-to-mixed value))))
 	((equal type "string-list")
 	 (list (orth-string-to-str-list value)))
 	((equal type "string-fs")
@@ -739,10 +780,32 @@
 	((equal type "string-diff-fs")
 	 (expand-string-list-to-fs-diff-list (orth-string-to-str-list value) :path path))
 	((equal type "list") (unless (equal value "")
-			       ;;(read-from-string value) ;;this behaves strangely!
-			       (str-2-symb value)
+			       (str-2-list value)
 			       ))
 	(t (error "unhandled type during database access"))))
+
+(defun str-to-mixed (val-str)
+  (let ((len (length val-str)))
+    (cond 
+     ((eq (aref val-str 0) #\")
+      (unless (eq (aref val-str (1- len)) #\")
+	(error "STRING val must be of form \\\"STR\\\""))
+      (subseq val-str 1 (1- len)))
+     ((and (eq (aref val-str 0) #\\)
+	  (eq (aref val-str 1) #\"))
+      (str-2-symb (format nil "\"~a" (subseq val-str 2 len))))
+     (t
+      (str-2-symb val-str)))))
+
+(defun str-to-string (val-str)
+  (let ((len (length val-str)))
+    (cond 
+     ((eq (aref val-str 0) #\")
+      (unless (eq (aref val-str (1- len)) #\")
+	(error "STRING val must be of form \\\"STR\\\""))
+      (subseq val-str 1 (1- len)))
+     (t
+      (error "bad format")))))
 
 ;;; eg. ("w1" "w2") -> ((FIRST "w1") (REST FIRST "w2") (REST REST *NULL*)) 
 (defun expand-string-list-to-fs-list (string-list)
@@ -779,8 +842,8 @@
   ;; stores the mapping of fields to lex-entry structure slots
   (setf (fields-map lexicon)
     (mapcar #'(lambda (x) 
-		(append (list (str-to-keyword-format (first x))
-			      (str-to-keyword-format (second x)))
+		(append (list (str-2-keyword (first x))
+			      (str-2-keyword (second x)))
 			(cddr x)))
             (records (run-query lexicon 
                                 (make-instance 'sql-query
@@ -816,7 +879,7 @@
 	 (res (caar (records (run-query 
 			      lexicon 
 			      (make-instance 'sql-query :sql-string sql-str))))))
-    (str-2-num res)))
+    (str-2-num res 0)))
 
 (defmethod get-records ((lexicon psql-lex-database) sql-string)
   (make-column-map-record 
@@ -980,9 +1043,10 @@
 	 ((eq c #\$)
 	  (if (= i max)
 	      (error "invalid string ('$' cannot be string final)"))
-	  (unless (numberp (char-2-symb (aref str (1+ i))))
+;	  (unless (numberp (char-2-symb (aref str (1+ i))))
+	  (setf arg (char-2-num (aref str (1+ i))))
+	  (unless arg
 	    (error "invalid string ('$' can only preceed a digit)"))
-	  (setf arg (char-2-symb (aref str (1+ i))))
 	  (if (> arg (1- arity))
 	      (error "too many arguments"))
 	  (setf max-arg (max max-arg arg))
@@ -1065,6 +1129,8 @@
       (if (catch 'pg:sql-error 
             (format t "~%Updating filter")
 	    (fn-get-records lexicon ''initialize-current-grammar filter)
+	    ;;bmw!!! 2909
+	    (empty-cache lexicon)
 	    (format t "~%New filter active")
             )
 	  (set-filter lexicon))
@@ -1081,12 +1147,6 @@
     (format nil "''~a" (sql-embedded-text (subseq str 1))))
    (t
     (format nil "~a~a" (char str 0) (sql-embedded-text (subseq str 1))))))
-
-;;;
-;;; set (uninitialized) lexicon
-;;;
-;(unless *psql-lexicon* (setf *psql-lexicon* (make-instance 'psql-lex-database)))
-
 
 ;;;
 ;;; LexDB menu commands
@@ -1181,8 +1241,9 @@
 (defun field-size-elt (x)
   (let ((attname (get-val :ATTNAME x))
 	(typname (get-val :TYPNAME x))
-	(atttypmod (str-2-num (get-val :ATTTYPMOD x))))
-    (list (str-to-keyword-format attname) typname (field-len typname atttypmod))))
+	(atttypmod (str-2-num (get-val :ATTTYPMOD x)
+			      0)))
+    (list (str-2-keyword attname) typname (field-len typname atttypmod))))
 
 (defun field-len (typname atttypmod)
   (cond

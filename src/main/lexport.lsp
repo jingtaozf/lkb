@@ -6,6 +6,9 @@
 ;;; export lexicon in various formats
 ;;;
 
+;;; bmw (oct-03)
+;;; - 'mixed' type to handle mix of string/symbol values in field mapping
+
 ;;; bmw (aug-03)
 ;;; - merge-tdl-into-psql-lexicon
 ;;; - db scratch space
@@ -29,7 +32,7 @@
 				     :directory (pathname-directory (lkb-tmp-dir))))
 (defvar *export-skip-stream* t)
 (defvar *export-separator* #\,)
-(defvar *export-version* "0")
+(defvar *export-version* 0)
 (defvar *export-timestamp* nil)
 
 (defvar *export-output-lexicon* nil)
@@ -41,6 +44,7 @@
       ;;(:SENSE-ID "name" "" "symbol")
       (:UNIFS "alt2key" "(synsem local keys alt2key)" "symbol")
       (:UNIFS "altkey" "(synsem local keys altkey)" "symbol")
+      (:UNIFS "altkeytag" "(synsem local keys altkey carg)" "string")
       (:UNIFS "compkey" "(synsem lkeys --compkey)" "symbol")
       (:UNIFS "keyrel" "(synsem local keys key)" "symbol")
       (:UNIFS "keytag" "(synsem local keys key carg)" "string")
@@ -100,15 +104,8 @@
      (cons "Username?" (or *current-user* "danf"))))
   (unless *current-user* (throw 'abort 'user))
   
-  (setf *export-version* 
-    (ask-user-for-x 
-     "Export Lexicon" 
-     (cons "Version?" "0")))
-  (unless *export-version* (throw 'abort 'version))
-  
-  (setf *export-version* 
-    (symb-2-str (str-2-num *export-version*)))
-  
+  (get-export-version) 
+
   (let ((csv-file (format nil "~a.csv" file))
 	(skip-file (format nil "~a.skip" file))
 	(multi-file (format nil "~a.multi.csv" file)))
@@ -134,6 +131,25 @@
 		       :if-exists :supersede :if-does-not-exist :create)
 	(export-to-csv-to-file lexicon csv-file))))
   (format t "~%Export complete"))
+
+(defun get-export-version nil
+  (let ((old-val *export-version*)
+	(new-val))
+    (loop
+	until (integerp new-val)
+	do
+	  (let ((version-str (ask-user-for-x 
+			      "Export Lexicon" 
+			      (cons "Version?" (num-2-str old-val)))))
+	    (if (null version-str)
+		(throw 'abort 'version))
+	    (setf new-val
+	      (multiple-value-bind (a b)
+		  (parse-integer version-str
+				 :junk-allowed t)
+		(and (= b (length version-str))
+		     a)))))
+    (setf *export-version* new-val)))
   
 (defun ask-user-for-x (head promptDcons)
   (car (ask-for-strings-movable head 
@@ -221,22 +237,13 @@
 
 (defun extract-field (x field-kw &optional fields-map)
   (if (stringp field-kw)
-      (setf field-kw (str-to-keyword-format field-kw)))
+      (setf field-kw (str-2-keyword field-kw)))
   (unless (typep x 'lex-entry)
     (error "unexpected type"))
   (let* ((fields-map (or fields-map (fields-map *psql-lexicon*)))
 	 (mapping (find field-kw fields-map :key #'second :test 'equal)))
     (extract-field2 x (first mapping) (third mapping) (fourth mapping))))
 	 
-(defun 2-symb (x)
-  (cond
-   ((symbolp x)
-    x)
-   ((stringp x)
-    (str-2-symb x))
-   (t
-    (error "unhandled value"))))
-    
 (defun extract-field2 (x key2 path2 type2)
   (unless (typep x 'lex-entry)
     (error "unexpected type"))
@@ -259,8 +266,10 @@
 
 (defun extracted-val-2-str (val &key (type 'STRING))
   (cond
+   ((eq type 'MIXED)
+    (encode-mixed-as-str val))
    ((eq type 'STRING)
-    (symb-2-str val))
+    (encode-string-as-str val))
    ((eq type 'SYMBOL)
     (symb-2-str val))
    ((eq type 'STRING-LIST)
@@ -304,43 +313,43 @@
 ;;; tdl export (unpacked)
 ;;;
 
-(defmethod to-unpacked-tdl ((unif unification))
-  (let ((lhs (unification-lhs unif))
-	(rhs (unification-rhs unif)))
-  (format nil "~a ~a"
-    (str-list-2-str (path-typed-feature-list lhs) ".")
-    (tdl-val-str (u-value-type rhs)))))
+;(defmethod to-unpacked-tdl ((unif unification))
+;  (let ((lhs (unification-lhs unif))
+;	(rhs (unification-rhs unif)))
+;  (format nil "~a ~a"
+;    (str-list-2-str (path-typed-feature-list lhs) ".")
+;    (tdl-val-str (u-value-type rhs)))))
 
-(defun unifs-to-unpacked-tdl (unifs)
-  (format 
-   nil "~a &~%  [ ~a ]."
-   (str-list-2-str 
-    (mapcar 'to-unpacked-tdl
-	    (remove-if (lambda (x) (path-typed-feature-list (unification-lhs x))) 
-		       unifs))
-    "&~%    ")
-   (str-list-2-str 
-    (mapcar 'to-unpacked-tdl
-	    (remove-if-not (lambda (x) (path-typed-feature-list (unification-lhs x))) 
-			   unifs))
-    ",~%    ")))
+;(defun unifs-to-unpacked-tdl (unifs)
+;  (format 
+;   nil "~a &~%  [ ~a ]."
+;   (str-list-2-str 
+;    (mapcar 'to-unpacked-tdl
+;	    (remove-if (lambda (x) (path-typed-feature-list (unification-lhs x))) 
+;		       unifs))
+;    "&~%    ")
+;   (str-list-2-str 
+;    (mapcar 'to-unpacked-tdl
+;	    (remove-if-not (lambda (x) (path-typed-feature-list (unification-lhs x))) 
+;			   unifs))
+;    ",~%    ")))
 
-(defmethod to-unpacked-tdl ((x lex-entry))
-  (format 
-   nil "~a := ~a~%~%"
-   (tdl-val-str (lex-entry-id x))
-   (unifs-to-unpacked-tdl (lex-entry-unifs x))))
+;(defmethod to-unpacked-tdl ((x lex-entry))
+;  (format 
+;   nil "~a := ~a~%~%"
+;   (tdl-val-str (lex-entry-id x))
+;   (unifs-to-unpacked-tdl (lex-entry-unifs x))))
 	  
-(defmethod export-to-unpacked-tdl ((lexicon lex-database) stream)
-  (mapc
-   #'(lambda (x) (format stream "~a" (to-unpacked-tdl (read-psort lexicon x))))
-   (collect-psort-ids lexicon)))
+;(defmethod export-to-unpacked-tdl ((lexicon lex-database) stream)
+;  (mapc
+;   #'(lambda (x) (format stream "~a" (to-unpacked-tdl (read-psort lexicon x))))
+;   (collect-psort-ids lexicon)))
 
-(defmethod export-to-unpacked-tdl-to-file ((lexicon lex-database) filename)
-  (setf filename (namestring (pathname filename)))
-  (with-open-file 
-      (ostream filename :direction :output :if-exists :supersede)
-    (export-to-unpacked-tdl lexicon ostream)))
+;(defmethod export-to-unpacked-tdl-to-file ((lexicon lex-database) filename)
+;  (setf filename (namestring (pathname filename)))
+;  (with-open-file 
+;      (ostream filename :direction :output :if-exists :supersede)
+;    (export-to-unpacked-tdl lexicon ostream)))
  
 (defun tdl-val-str (symb)
   (cond
@@ -369,7 +378,8 @@
 			   (u-value-type rhs))))
 	    ((typep rhs 'PATH)
 	     (incf c)
-	     (setf coindex (str-2-symb (format nil "\\#~a" c)))
+	     (setf coindex (str-2-symb (format nil "#~a" c)))
+	     ;(setf coindex (str-2-symb (format nil "\\#~a" c)))
 	     (list
 	      (append (path-typed-feature-list lhs)
 		      coindex)
@@ -444,7 +454,7 @@
 ;; copy of p-2-tdl w/o root
 (defun p-2-tdl (branches)
   (unless branches
-    (error "internal"))
+    (error "non-null value expected"))
   (let* ((a-branch-flag (not (cdr (first branches))))
 	 (a-branch)
 	 (len)
@@ -515,7 +525,8 @@
       (format nil "[ ~a ]"
 	      (str-list-2-str
 	       (mapcar (lambda (x) (p-2-tdl-2 i x)) branches)
-	       (concatenate 'string ",~%" (make-string i :initial-element #\ ))))))))
+	       ;(concatenate 'string ",~%" (make-string i :initial-element #\ ))))))))
+	       (format nil ",~%~a" (make-string i :initial-element #\ ))))))))
 
 (defun p-2-tdl-2-in-list (i x)
   (if (> (length x) 1)
@@ -598,11 +609,13 @@
     (export-to-csv lexicon ostream)))
 
 (defmethod to-csv ((x lex-entry) fields-map)
-  (let* ((separator (string *export-separator*))
+  (let* (
+	 ;;(separator (string *export-separator*))
 
 	 (keyrel (extract-field x :keyrel fields-map))      
 	 (keytag (extract-field x :keytag fields-map))
 	 (altkey (extract-field x :altkey fields-map))
+	 (altkeytag (extract-field x :altkeytag fields-map))
 	 (alt2key (extract-field x :alt2key fields-map))
 	 (compkey (extract-field x :compkey fields-map))
 	 (ocompkey (extract-field x :ocompkey fields-map))
@@ -616,48 +629,49 @@
 		   (if (string> keyrel "") 1 0) 
 		   (if (string> keytag "") 1 0) 
 		   (if (string> altkey "") 1 0)
+		   (if (string> altkeytag "") 1 0)
 		   (if (string> alt2key "") 1 0) 
 		   (if (string> compkey "") 1 0) 
 		   (if (string> ocompkey "") 1 0)))
 	 
 	 (multi-base-name (and *export-multi-separately* (multi-p :name name :type type)))
-	 
 	 (line 
-	        (format nil "~a~%"
-	      (concatenate 'string
-		name
-		separator type
-		separator orthography ;:todo: comma in word?
-		separator (first orth-list)
-		separator  ;;pronunciation
-		separator keyrel
-		separator altkey
-		separator alt2key
-		separator keytag
-		separator compkey
-		separator ocompkey
-		separator ;;complete
-		separator ;;semclasses
-		separator ;;preferences
-		separator ;;classifier
-		separator ;;selectrest
-		separator ;;jlink
-		separator ;;comments
-		separator ;;exemplars
-		separator ;;usages
-		separator *current-lang* ;;lang
-		separator *current-country* ;;country
-		separator ;;dialect
-		separator ;;domains
-		separator ;;genres
-		separator ;;register
-		separator "1";;confidence
-		separator (symb-2-str *export-version*) ;;version
-		separator (or *current-source* "?") ;;source
-		separator "1" ;;flags: 1 = not deleted
-		separator *current-user* ;;userid
-		separator *export-timestamp* ;;modstamp
-		))))
+	  (format nil "~a~%"
+		  (csv-line
+		   name
+		   type
+		   orthography 
+		   (get-orthkey orth-list)
+		   ""  ;;pronunciation
+		   keyrel
+		   altkey
+		   alt2key
+		   keytag
+		   altkeytag
+		   compkey
+		   ocompkey
+		   "" ;;complete
+		   "" ;;semclasses
+		   "" ;;preferences
+		   "" ;;classifier
+		   "" ;;selectrest
+		   "" ;;jlink
+		   "" ;;comments
+		   "" ;;exemplars
+		   "" ;;usages
+		   *current-lang* ;;lang
+		   *current-country* ;;country
+		   "" ;;dialect
+		   "" ;;domains
+		   "" ;;genres
+		   "" ;;register
+		   "1";;confidence
+		   (num-2-str *export-version*) ;;version
+		   (or *current-source* "?") ;;source
+		   "1" ;;flags: 1 = not deleted
+		   *current-user* ;;userid
+		   *export-timestamp* ;;modstamp
+		   ))))
     (cond 
      ((= total (length (lex-entry-unifs x)))
       (if multi-base-name
@@ -670,6 +684,44 @@
      (t
       (format *export-skip-stream* "~%skipping super-rich entry: ~a"  line)
       ""))))
+
+(defun csv-line (&rest str-list)
+  (str-list-2-str
+   (mapcar #'csv-escape str-list)
+   ","))
+
+(defun csv-escape (str &optional (sep-char *export-separator*))
+  (let ((l))
+    (do ((i (1- (length str)) (1- i)))
+	((< i 0))
+      (push (aref str i) l)
+      (if (eq (aref str i) sep-char)
+	  (push #\\ l)))
+    (concatenate 'string l)))
+	  
+(defun encode-mixed-as-str (val)
+  (cond
+   ((null val)
+    "")
+   ((symbolp val)
+    (let ((val-str (symb-2-str val)))
+      (if (and (> (length val-str) 0)
+	       (eq (aref val-str 0) #\"))
+	  (format nil "\\~a" val-str)
+	val-str)))
+   ((stringp val)
+    (format nil "\"~a\"" val))
+   (t
+    (error "unhandled type"))))
+
+(defun encode-string-as-str (val)
+  (cond
+   ((null val)
+    "")
+   ((stringp val)
+    (format nil "\"~a\"" val))
+   (t
+    (error "unhandled type"))))
 
 (defmethod to-multi-csv-line (&key name base-name particle type keyrel)
   (let ((separator (string *export-separator*)))
@@ -737,6 +789,7 @@
 	 (keyrel (extract-field x :keyrel fields-map))      
 	 (keytag (extract-field x :keytag fields-map))
 	 (altkey (extract-field x :altkey fields-map))
+	 (altkeytag (extract-field x :altkeytag fields-map))
 	 (alt2key (extract-field x :alt2key fields-map))
 	 (compkey (extract-field x :compkey fields-map))
 	 (ocompkey (extract-field x :ocompkey fields-map))
@@ -748,6 +801,7 @@
 		   (if (string> keyrel "") 1 0) 
 		   (if (string> keytag "") 1 0) 
 		   (if (string> altkey "") 1 0)
+		   (if (string> altkeytag "") 1 0)
 		   (if (string> alt2key "") 1 0) 
 		   (if (string> compkey "") 1 0) 
 		   (if (string> ocompkey "") 1 0)))
@@ -759,11 +813,12 @@
 	   :name name
 	   :type type
 	   :orthography orth-list	;list
-	   :orthkey (first orth-list)
+	   :orthkey (get-orthkey orth-list)
 	   :keyrel keyrel
 	   :altkey altkey
 	   :alt2key alt2key
 	   :keytag keytag
+	   :altkeytag altkeytag
 	   :compkey compkey
 	   :ocompkey ocompkey
 	   :country *current-country*
@@ -779,12 +834,16 @@
       (format t "~%skipping super-rich entry: `~a'~%"  name)
       nil))))
 
+(defun get-orthkey (orth-list)
+  (car (last orth-list)))
+
 (defmethod to-db-scratch ((x lex-entry) (lexicon psql-lex-database))  
   (let* ((fields-map (fields-map lexicon))
 
 	 (keyrel (extract-field x :keyrel fields-map))      
 	 (keytag (extract-field x :keytag fields-map))
 	 (altkey (extract-field x :altkey fields-map))
+	 (altkeytag (extract-field x :altkeytag fields-map))
 	 (alt2key (extract-field x :alt2key fields-map))
 	 (compkey (extract-field x :compkey fields-map))
 	 (ocompkey (extract-field x :ocompkey fields-map))
@@ -796,6 +855,7 @@
 		   (if (string> keyrel "") 1 0)
 		   (if (string> keytag "") 1 0) 
 		   (if (string> altkey "") 1 0)
+		   (if (string> altkeytag "") 1 0)
 		   (if (string> alt2key "") 1 0) 
 		   (if (string> compkey "") 1 0) 
 		   (if (string> ocompkey "") 1 0)))
@@ -807,11 +867,12 @@
 	   :name name
 	   :type type
 	   :orthography orth-list
-	   :orthkey (first orth-list)
+	   :orthkey (get-orthkey orth-list)
 	   :keyrel keyrel
 	   :altkey altkey
 	   :alt2key alt2key
 	   :keytag keytag
+	   :altkeytag altkeytag
 	   :compkey compkey
 	   :ocompkey ocompkey
 	   :flags 1)))
