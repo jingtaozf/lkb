@@ -235,7 +235,7 @@
               (format 
                stream 
                "<form action=\"/erg/browse\" method=post
-                      accept-charset=\"utf-8\">~%~
+                      accept-charset=\"utf-8\" target=\"_blank\">~%~
                 <input type=hidden name=edges value=~a>~%  ~
                 <div id=action>~%  ~
                 <input type=submit name=action value=compare>~%  ~
@@ -447,6 +447,11 @@
                    :accept-charset "utf-8")
                   ((:table :class "compareNavigation")
                    (:span
+                    (:td
+                     ((:input 
+                       :type "button" :name "close" :value "close"
+                       :onClick "window.close()")))
+                    (:td "&nbsp;")
                     (:td
                      ((:input :type "submit" :name "action" :value "clear")))
                     (:td "&nbsp;&nbsp;|&nbsp;&nbsp;mode:")
