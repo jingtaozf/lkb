@@ -97,8 +97,7 @@
   (cond
    ((string-equal pos "nnp") "NameErsatz")
    ((member pos '("``" "''" "," "\"") :test #'string=) "")
-   #+:null
-   ((string-equal pos "cd") "TwoDigitErsatz")
+   ((member token '("--" "...") :test #'string=) "")
    ((string-equal pos "-lrb-") "(")
    ((string-equal pos "-rrb-") ")")
    (t (if lkb::*preprocessor*
@@ -143,5 +142,5 @@
   (setf (gethash :i-input *statistics-readers*)
     #'(lambda (string)
         (let ((*package* (find-package :tsdb)))
-          (preprocess-ptb-string string :plainp t)))))
+          (ptb-preprocess string :plainp t)))))
 
