@@ -67,7 +67,10 @@
                  (declare (ignore key))
                  (unless
                     (or (redundancy-rule-p value)
-                       (and test-fn (funcall test-fn value)))
+                        (and test-fn (funcall test-fn value))
+                        (and *current-language*
+                             (not (eq *current-language* 
+                                      (rule-language value)))))
                     (push value result)))
            *lexical-rules*)
     result))
@@ -80,7 +83,10 @@
                  (declare (ignore key))
                  (unless
                     (or (redundancy-rule-p value)
-                       (and test-fn (funcall test-fn value)))
+                        (and test-fn (funcall test-fn value))
+                        (and *current-language*
+                             (not (eq *current-language* 
+                                      (rule-language value)))))
                     (push value result)))
            *rules*)
     result))
