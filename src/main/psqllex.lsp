@@ -9,22 +9,25 @@
 ;;;  - rework DB access layer to cache connection in `psql-database' object.
 ;;;
 ;;; ToDo
-;;;   - use SQL maximize to honour versioning mechanism in DB (or better view);
-;;;   - look into Postgres optimization (factor of four or more);
-;;;   - find out why we spend an extra 45 seconds or more over the CDB version
-;;;     when looking up some 9000 stems;
-;;;   - decide on whether to keep using the `definition' table or move that
-;;;     information into the globals;
-;;;   - add export to TDL file support;
-;;;   - generalize import code, maybe use `definition' table;
-;;;   - add insertion of additional lexical entries support from LKB;
-;;;   - work out interface for PET (not really LKB-related);
-;;;   - investigate (declare (ignore ...)) statements (i put them in to avoid
-;;;     compiler warnings);
-;;;   - rework connection handling to re-open on demand (rather than error());
-;;;   - support for generator indexing;
-;;;   - integrate irregular spellings into lexical DB;
-;;;   - versioning of databases, delivery, et al.
+;;;  - use SQL maximize to honour versioning mechanism in DB (or better view);
+;;;  - look into Postgres optimization (factor of four or more);
+;;;  - find out why we spend an extra 45 seconds or more over the CDB version
+;;;    when looking up some 9000 stems;
+;;;  - decide on whether to keep using the `definition' table or move that
+;;;    information into the globals;
+;;;  - add export to TDL file support; probably use `definition' table;
+;;;  - generalize import code, maybe use `definition' table;
+;;;  - add insertion of additional lexical entries support from LKB; maybe use
+;;;    emacs(1) forms for input (and the emacs(1) -- lisp interface, such that
+;;;    no extra installation overhead is incurred, e.g. for a web server to
+;;;    talk to PostGres);
+;;;  - work out interface for PET (not really LKB-related);
+;;;  - investigate (declare (ignore ...)) statements (i put them in to avoid
+;;;    compiler warnings);
+;;;  - rework connection handling to re-open on demand (rather than error());
+;;;  - support for generator indexing;
+;;;  - integrate irregular spellings into lexical DB;
+;;;  - versioning of databases, delivery, et al.
 ;;;
 
 (in-package :lkb)
