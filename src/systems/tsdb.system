@@ -23,12 +23,20 @@
 				 '(:relative "tsdb"))
     :binary-pathname (dir-append (get-binaries-dir "tsdb")
 				 '(:relative "tsdb"))
+    :finally-do
+    #+(and :lkb (not :tty))
+    (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium)
+    #-(and :lkb (not :tty)) 
+    nil
     :components
     ((:module "tsdb"
       :source-pathname ""
       :components
       ((:file "tsdb-package")
-       #+:tdl (:file "tdl-patches")
+       #+:page (:file "tdl-patches")
+       #+:page (:file "page-interface")
+       #+(and :page :ignore) (:file "chart")
+       #+:lkb (:file "lkb-interface")
        (:file "globals")
        (:file "utilities")
        (:file "tsql")
@@ -36,10 +44,7 @@
        (:file "commands")
        #+:ignore (:file "server")
        (:file "statistics")
-       (:file "podium")
-       #+:page (:file "page-interface")
-       #+:ignore (:file "chart")
-       #+:lkb (:file "lkb-interface"))))
+       (:file "podium"))))
     :depends-on (#+:page "page" #+:lkb "lkb"))
 
 
