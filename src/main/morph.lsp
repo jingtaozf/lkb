@@ -459,8 +459,14 @@
 ;;; _fix_me_
 ;;; to do this properly, it should be worked into remove-morphemes() et al.
 ;;;                                                            (14-jul-03; oe)
+;;; well, i did that much, but i would much rather rewrite the code than work
+;;; out exactly how things work ...                            (22-aug-03; oe)
 ;;;
 (defparameter *maximal-morphological-rule-depth* nil)
+
+(defmacro maximal-irule-depth-p (hypothesis)
+  `(and (numberp *maximal-morphological-rule-depth*)
+        (>= (length ,hypothesis) *maximal-morphological-rule-depth*)))
 
 (defun explode (string)
   (let ((result nil)
@@ -521,7 +527,8 @@
 
 (defun remove-suffix (input-words)
    (loop for entry in input-words
-      append
+       unless (maximal-irule-depth-p (rest entry))
+       append
       (let ((node (suffix-tree-comp))
             (oldword (implode (car entry))))
 	(loop for residue on (reverse (car entry))
@@ -539,7 +546,8 @@
                              (cdr entry))))))))))
 
 (defun remove-prefix (input-words)
-   (loop for entry in input-words
+  (loop for entry in input-words
+      unless (maximal-irule-depth-p (rest entry))
       append
       (let ((node (prefix-tree-comp))
             (oldword (implode (car entry)))) 
@@ -559,7 +567,8 @@
 
 (defun remove-infix (input-words)
    (let (prefixer)
-      (loop for entry in input-words
+     (loop for entry in input-words
+         unless (maximal-irule-depth-p (rest entry))
          append
          (prog1
             (loop for segment on (car entry)
