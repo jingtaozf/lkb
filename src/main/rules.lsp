@@ -223,38 +223,44 @@
 (defun expand-rule (id rule non-def def rule-persistence lexical-p)
   (process-unif-list id non-def def rule rule-persistence)
   (let ((fs (rule-full-fs rule)))  
-    (when fs
-      (if lexical-p 
-          (pushnew id *ordered-lrule-list*)
-        (pushnew id *ordered-rule-list*))
-      (let ((f-list (establish-linear-precedence (tdfs-indef fs))))
-        (setf (rule-order rule) f-list)
-        (setf (rule-daughters-order-reversed rule) (reverse (cdr f-list)))
-        (setf (rule-daughters-restricted rule)
-          (mapcar
-           #'(lambda (path)
-               (restrict-fs
-                (existing-dag-at-end-of 
-                 (tdfs-indef fs)
-                 (if (listp path) path (list path)))))
-           (cdr f-list)))
-        (setf (rule-daughters-restricted-reversed rule)
-           (reverse (rule-daughters-restricted rule)))
-        (flet ((listify (x) (if (listp x) x (list x))))
-          (let*
-              ((mother-value
-                (existing-dag-at-end-of 
-                 (tdfs-indef fs)
-                 (append (listify (car f-list)) *head-marking-path*)))
-               (head-path
-                (some
-                 #'(lambda (path)
-                     (and (eq
-                           (existing-dag-at-end-of 
-                            (tdfs-indef fs)
-                            (append (listify path) *head-marking-path*))
-                           mother-value)
-                          path))
+     (when fs
+        (if lexical-p 
+           (pushnew id *ordered-lrule-list*)
+           (pushnew id *ordered-rule-list*))
+        (let ((f-list
+               (mapcar #'(lambda (x) (if (listp x) x (list x)))
+                       (establish-linear-precedence (tdfs-indef fs)))))
+          (setf (rule-order rule) f-list)
+          ;; note that generator requires all slots related to rule-order
+          ;; to contain paths that are eq when they are equal
+          (setf (rule-daughters-order-reversed rule) (reverse (cdr f-list)))
+          (setf (rule-daughters-restricted rule)
+            (mapcar
+             #'(lambda (path)
+                 (restrict-fs
+                   (existing-dag-at-end-of (tdfs-indef fs) path)))
+             (cdr f-list)))
+          (setf (rule-daughters-restricted-reversed rule)
+             (reverse (rule-daughters-restricted rule)))
+          (let ((key-path
+                 (some
+                  #'(lambda (path)
+                      (let ((dag
+                             (existing-dag-at-end-of 
+                              (tdfs-indef fs)
+                              (append path *key-daughter-path*))))
+                        (and dag
+                          (member (type-of-fs dag) '(+ (+)) :test #'equal)
+                          path)))
+                  (cdr f-list))))
+            ;; if there is a key daughter, remaining daughters ordered to be
+            ;; processed r->l before key-path, then l->r after - generator
+            ;; assumes this
+            (setf (rule-daughters-apply-order rule)
+              (if key-path
+                 (let ((tail (member key-path (cdr f-list) :test #'eq)))
+                    (cons key-path
+                       (nconc (nreverse (ldiff (cdr f-list) tail)) (cdr tail))))
                  (cdr f-list))))
             ;;
             ;; compute list of indices into `order' slot; these are used in
@@ -284,15 +290,6 @@
                  (nconc
                   (loop for i from 0 to (- key 1) collect i)
                   (loop for i from (+ key 1) to (- arity 1) collect i)))))
-                   
-            ;; if there is a head, remaining daughters 
-            ;; must stay in same left-to-right order - 
-            ;; parser assumes this
-            (setf (rule-daughters-apply-order rule)
-              (if head-path
-                  (cons head-path 
-                        (remove head-path (cdr f-list) :count 1 :test #'eq))
-                (cdr f-list)))))
         (setf (gethash id (if lexical-p *lexical-rules* *rules*)) rule)))))
 
 
