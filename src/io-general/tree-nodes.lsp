@@ -546,7 +546,7 @@
 	       (yadu rule-dag (create-temp-parsing-tdfs dtr-fs path)))))
     ;; Re-do spelling change
     (let ((orth-fs (when nu-orth 
-		     (get-orth-tdfs nu-orth))))
+		     (copy-tdfs-completely (get-orth-tdfs nu-orth)))))
       (when orth-fs
 	(setf rule-dag (yadu rule-dag orth-fs))))
     ;; Return the result
