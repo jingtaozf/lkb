@@ -462,34 +462,28 @@
                                ((times_rel-p sort) *nc-factor2*)))
                        (term1 (get-rel-feature-value operator key1))
                        (const1 (find-const-by-handle term1 additions constants))
+                       (value1 (get-rel-feature-value const1 *nc-const_value*))
                        (term2 (get-rel-feature-value operator key2))
                        (const2 (find-const-by-handle term2 additions constants))
+                       (value2 (get-rel-feature-value const2 *nc-const_value*))
                        (value (and value1 value2
                                    (compute-value operator value1 value2))))
                   (when value
                     (push (make-constant handel label arg value) additions)
                     (push operator deletions)
-                    (push term1 deletions)
-                    (push term2 deletions)
+                    (push const1 deletions)
+                    (push const2 deletions)
                     (setf stable nil))))
         until (or stable (>= i 42)))
     (if (or additions deletions)
       (let ((copy (copy-psoa mrs))
             (additions (loop
                            for relation in additions
-                           for handel = (rel-handel relation)
-                           unless (loop
-                                      for deletion in deletions
-                                      thereis (or (eq relation deletion)
-                                                  (eq handel deletion)))
+                           unless (member relation deletions :test #'eq)
                            collect relation))
             (relations (loop
                            for relation in liszt
-                           for handel = (rel-handel relation)
-                           unless (loop
-                                      for deletion in deletions
-                                      thereis (or (eq relation deletion)
-                                                  (eq handel deletion)))
+                           unless (member relation deletions :test #'eq)
                            collect relation)))
         (setf (psoa-liszt copy) (nconc additions relations))
         copy)
