@@ -290,6 +290,12 @@
       :components
       ((:file "arboretum")))
 
+     (:module "tdl generation"		    ; ERB 2004-08-25
+      :source-pathname "non-core"           ; utilities for generating
+      :binary-pathname "non-core"           ; head types in the Matrix
+      :components
+      ((:file "powerset.lsp")))
+     
      ;;
      ;; from here on, inclusion of MRS code; some of this is maintained as a
      ;; stand-alone `mrs.system' too, hence maintaining both system definitions
