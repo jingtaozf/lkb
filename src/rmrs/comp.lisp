@@ -436,7 +436,7 @@ goes to
 |#
 
 ;;; ***********************************************
-;;; Variable handling during composition
+;;; Variable handling during composition 
 
 (defvar *rmrs-variable-generator* nil)
 
@@ -446,6 +446,9 @@ goes to
 (defun initialize-rmrs-variables nil
   (if *restart-variable-generator*
       (init-rmrs-variable-generator)))
+
+(defun initialize-rmrs-variables-plus nil
+    (setf *rmrs-variable-generator* (create-variable-generator 10000)))
 
 (init-rmrs-variable-generator)
 

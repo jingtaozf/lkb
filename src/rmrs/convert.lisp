@@ -66,7 +66,7 @@
 ;;; Full MRS to RMRS conversion
 
 (defun mrs-to-rmrs (mrs)
-  (initialize-rmrs-variables)
+  (initialize-rmrs-variables-plus)
   (let ((lzt (psoa-liszt mrs))
         (new-lzt nil)
         (new-args nil)
@@ -220,12 +220,14 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 
 
 
+
+
 (defun rmrs-convert-variable (var)
   (make-var :type (if (member (var-type var) '("x" "e" "h" "u" "l")
                               :test #'equal)
                       (var-type var)
                     "u")
-	    :id (var-id var)))
+            :id (var-id var)))
 	    
 ;;;	    :extra (rmrs-convert-var-extra (var-extra var))))
 
@@ -322,7 +324,7 @@ Errors won't be devastating anyway ...
 ;;; probably by reference to type hierarchy
 
 (defparameter *ing-ranking*
-    '(("n" "v" "j" "p" "prpstn_m_rel")
+    '(("n" "v" "j" "p" "prpstn_m_rel" "poss_rel")
       ("v" "p" "r")))
       
 

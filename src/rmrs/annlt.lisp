@@ -6,6 +6,23 @@
 
 ;;; ANNLT specific
 
+;;; The following four parameters should be set in a user-specific
+;;; file to allow use of the interactive facility for RASP-to-RMRS
+;;; conversion
+
+(defparameter *rasp-rmrs-gram-file* nil
+  "grammar file for rasp to rmrs conversion")
+
+(defparameter *rasp-rmrs-tag-file* nil
+  "tag file for rasp to rmrs conversion")
+
+(defparameter *rasp-xml-word-p* nil
+  "set for versions of the RASP output which have the XML-style word structures")
+
+(defparameter *rasp-xml-p* nil
+  "set for output where RASP is embedded in XML")
+
+
 ;;; called from comp.lisp - data structures within trees
 
 (defun daughter-nodes-p (node)
@@ -17,8 +34,6 @@
 (defun get-dtr-nodes (node)
   (rest node))
 
-(defparameter *xml-word-p* nil
-  "set for versions of the RASP output which have the XML-style word structures")
 
 #|
 some of the files just have
@@ -28,7 +43,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 
 
 (defun get-lexical-tag (node)
-  (let* ((str (if *xml-word-p*
+  (let* ((str (if *rasp-xml-word-p*
 		  (de-xml-str (string node))
 		(string node)))	      
          (uscore-pos (position #\_ str)))
@@ -39,7 +54,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 
 (defun get-lexeme (node)
   (let* ((xml-str (string node))
-	 (str (if *xml-word-p* 
+	 (str (if *rasp-xml-word-p* 
 		  (de-xml-str xml-str)
 		xml-str))
          (uscore-pos (position #\_ str))
@@ -90,7 +105,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 (defun get-cfrom (str)
   ;;; <w s="19" e="24">bark+ed_VVD</w>
   ;;; extract 19
-  (if *xml-word-p*
+  (if *rasp-xml-word-p*
       (let ((first-s (position #\s str)))
 	(if (and (char= (elt str (+ 1 first-s)) #\=)
 		 (char= (elt str (+ 2 first-s)) #\"))
@@ -107,7 +122,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 (defun get-cto (str)
   ;;; <w s="19" e="24">bark+ed_VVD</w>
   ;;; extract 24
-  (if *xml-word-p*
+  (if *rasp-xml-word-p*
       (let ((first-e (position #\e str)))
 	(if (and (char= (elt str (+ 1 first-e)) #\=)
 		 (char= (elt str (+ 2 first-e)) #\"))
@@ -147,14 +162,14 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 #|
 ;;; Windows, semtest
 
-(let ((*xml-word-p* t))
+(let ((*rasp-xml-word-p* t)
+      (*rasp-xml-p* nil))
   (simple-process-rasp-file 
    (make-pathname 
     :device "d"
     :directory "/lingo/lkb/src/rmrs/annlt-test/"
     :name "semtest.rasp")
    "semtest-rasp.rmrs" 
-   nil
    (make-pathname 
    :device "d"
    :directory "/lingo/lkb/src/rmrs/annlt-test/"
@@ -165,13 +180,13 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 
 ;;; Linux semtest
 
-(let ((*xml-word-p* t))  
+(let ((*rasp-xml-word-p* t)
+      (*rasp-xml-p* nil))
   (simple-process-rasp-file 
    (make-pathname 
     :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
     :name "semtest.rasp")
    "semtest-rasp.rmrs" 
-   nil
    (make-pathname 
     :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
     :name "gram14.1.rmrs")
@@ -180,13 +195,13 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 
 ;;; Linux semtest with more XML
 
-(let ((*xml-word-p* t))  
+(let ((*rasp-xml-word-p* t)
+      (*rasp-xml-p* nil))
   (simple-process-rasp-file
    (make-pathname 
     :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
     :name "semtest.rasp")
    "semtest-rasp.rmrs" 
-   nil
    (make-pathname 
     :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
     :name "gram14.1.rmrs")
@@ -196,7 +211,8 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
    
 ;;; Windows, XML
 
-(let ((*xml-word-p* nil))
+(let ((*rasp-xml-word-p* nil)
+      (*rasp-xml-p* t))
   (simple-process-rasp-file 
    (make-pathname 
     :device "d"
@@ -206,7 +222,6 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
     :device "d"
     :directory "/lingo/lkb/src/rmrs/qa/"
     :name "top_docs.24.rmrs")
-   t
    (make-pathname 
     :device "d"
     :directory "/lingo/lkb/src/rmrs/annlt-test/"
@@ -216,12 +231,12 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 		  :name "lex14.1.rmrs")))
 |#
 
-(defun simple-process-rasp-file (ifile ofile xml-p grammar-file tag-file 
+(defun simple-process-rasp-file (ifile ofile grammar-file tag-file 
                                  &optional blah-p)
  (clear-rule-record)
  (read-rmrs-grammar grammar-file)
  (read-rmrs-tag-templates tag-file)
- (rmrs-from-file ifile ofile xml-p blah-p))
+ (rmrs-from-file ifile ofile *rasp-xml-p* blah-p))
 
 
 ;;; File wrapper - note use of handler-case
@@ -240,7 +255,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 	(format ostream "<?xml version='1.0'?> <!DOCTYPE rmrs-list SYSTEM \"/homes/aac10/lingo/lkb/src/rmrs/rmrs.dtd\" >")
 	(format ostream "~%<rmrs-list>"))
       (when blah-p
-        (lkb::output-header-blah ostream))
+        (output-header-blah ostream))
       (let ((sentence-count 0))
         (loop (let* ((markup (if xml-p (read-xml-characters istream)))
                      ;; read in XML
@@ -275,7 +290,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
                             "~%<S id='~A'>" sentence-count)
                     (format ostream
                             "~%<string>~%~S~%</string>" original)
-                    (if *xml-word-p*    ; can't show tree
+                    (if *rasp-xml-word-p*    ; can't show tree
                         ; because XML tags clash
                         (format ostream
                                 "~%<tree></tree>"
@@ -305,8 +320,23 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
         (unless (or xml-p blah-p)
           (format ostream "~%</rmrs-list>"))
         (when blah-p
-          (lkb::output-end-blah ostream))))))
-              
+          (output-end-blah ostream))))))
+
+(defun output-header-blah (ostream)
+  (format ostream "<?xml version='1.0'?> 
+<!DOCTYPE CORPUS SYSTEM \"/usr/groups/mphil/qa04/dtd/analysis.dtd\" > 
+<CORPUS> 
+<DOC> 
+<DOCNO/>
+<TEXT>
+<P>"))
+
+
+(defun output-end-blah (ostream)
+  (format ostream "</P></TEXT></DOC></CORPUS>~%"))
+
+
+
 (defun read-xml-characters (istream)
   ;;; allow for arbitrary xml stuff in between what we care about
   ;;; if xml-p is nil, this is a noop
@@ -351,7 +381,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 #+:excl
 (defun process-rasp-files nil
   ;;; clear and load the grammars
-  (let ((*xml-word-p* nil))
+  (let ((*rasp-xml-word-p* nil))
 ;        (wanted (mapcar #'(lambda (x) (format nil "~A" x))
 ;                        '(3 4 5 6 7 20 21 22 23 24))))
  (clear-rule-record)

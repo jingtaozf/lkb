@@ -159,6 +159,7 @@
        (:file "compare") ;;; RMRS comparison
        #+(and :lkb :allegro :clim (not :tty)) 	
        (:file "lkb-acl-rmrs")            ; display etc in CLIM
+       (:file "testing") ;;; temporary file for testing
 ))
 
      (:module "redwoods"

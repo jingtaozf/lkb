@@ -78,7 +78,7 @@
 
 ;;; Parsing
 
-(defconstant *maximum-number-of-tasks* 50000
+(defconstant *maximum-number-of-tasks* 200000
   "limits the number of pending tasks on the agenda")
 
 (def-lkb-parameter *maximum-number-of-edges* 500 
@@ -243,8 +243,9 @@
 ;;; being we prefer to assume that the user choice of pool size is appropriate
 ;;; for what is required on average.
 ;;; 
-(def-lkb-parameter *dag-pool-size* 50000)
+;;; size increased to that needed for ERG
 
+(def-lkb-parameter *dag-pool-size* 200000)
 
 ;;;
 ;;; connection parameters for lexical database, an association list with fields
@@ -297,4 +298,9 @@
 
 (defparameter *duplicate-lex-ids* '(AN)
   "temporary expedient to avoid generating dual forms")
+
+;;; RMRS interactive globals
+
+(def-lkb-parameter *pos-sensitive-rmrs-p* nil
+  "Controls whether the interactive RMRS comparison is sensitive to character position")
 

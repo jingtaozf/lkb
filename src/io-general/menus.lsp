@@ -245,7 +245,8 @@
                                      :available-p :mrs)
 		     (make-menu-item :name "Toggle RMRS (XML)"
                                      :value 'toggle-rmrs-xml
-                                     :available-p :mrs))
+                                     :available-p :mrs)
+                     )
                :available-p :mrs)
          (make-lkb-submenu-item :menu-title "Generate"
                  :menu-items                       

@@ -123,24 +123,13 @@
          (setf (type-visible-p entry) nil))
       *types*))
 
-
-; turn some of the following into macros when everything seems to work OK
-
 (defun collect-type-names nil
-   ;; work around Procyon bug - see checktypes.lsp
    (let ((type-names nil))
       (maphash #'(lambda (name entry) 
                    (declare (ignore entry))
                    (push name type-names))
          *types*)
       type-names))
-
-;; Making this a macro cuts 20 seconds off loading time for the LinGO grammar
-
-#|
-(defun get-type-entry (name)
-   (gethash name *types*))
-|#
 
 (defmacro get-type-entry (name)
    `(gethash ,name *types*))

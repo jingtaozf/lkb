@@ -214,6 +214,9 @@
 (defmethod mrs-output-max-width-fn ((mrsout output-type))
   nil)
 
+(defmethod mrs-output-end-fvpair-fn ((mrsout output-type))
+    nil)
+
 ;;; 
 ;;; simple output-type class
 ;;;
@@ -847,6 +850,138 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-end-psoa ((mrs debug)))
 
+;;; XML output class (quite similar to RMRS)
+
+(defclass mrs-xml (output-type) ())
+
+;;; <!ELEMENT mrs (var, (ep|hcons)*)>
+
+(defmethod mrs-output-start-fn ((mrsout mrs-xml))
+  (with-slots (stream) mrsout
+    (format stream "~%<mrs>~%")))
+
+(defmethod mrs-output-end-fn ((mrsout mrs-xml))
+  (with-slots (stream) mrsout
+    (format stream "~%</mrs>~%")))
+
+(defmethod mrs-output-start-psoa ((mrsout mrs-xml))
+  nil)
+
+(defmethod mrs-output-top-h ((mrsout mrs-xml) handel-val)
+  (with-slots (stream) mrsout
+    (format stream "<var vid='~A'/>" handel-val)))
+
+
+(defmethod mrs-output-index ((mrsout mrs-xml) index-val)
+  (declare (ignore index-val))
+  nil)
+
+(defmethod mrs-output-start-liszt ((mrsout mrs-xml))
+  nil)
+
+#|
+<!ELEMENT var EMPTY>
+<!ATTLIST var
+          vid  CDATA #REQUIRED >
+
+extras have to be sorted out later          
+|#
+
+(defmethod mrs-output-var-fn ((mrsout mrs-xml) var-string)
+  (with-slots (stream) mrsout
+    (format stream "<var vid='~A'/>" var-string)))
+
+(defmethod mrs-output-atomic-fn ((mrsout mrs-xml) atomic-value)
+  (with-slots (stream) mrsout
+    (format stream "<constant>~A</constant>" atomic-value)))
+
+#|
+<!ELEMENT ep (pred, var, fvpair*)>
+;;; var is the label
+<!ELEMENT pred (#PCDATA)>
+|#
+
+(defmethod mrs-output-start-rel ((mrsout mrs-xml) pred first-p)
+  (declare (ignore first-p))
+  (with-slots (stream) mrsout
+    (format stream "~%<ep>")
+    (format stream "<pred>~(~a~)</pred>" pred)))
+
+(defmethod mrs-output-rel-handel ((mrsout mrs-xml) handel)
+  (with-slots (stream) mrsout
+    (format stream "<var vid='~A'/>" handel)))
+
+#|
+<!ELEMENT fvpair (rargname, (var|constant))>
+
+<!ELEMENT rargname (#PCDATA)>
+
+<!ELEMENT constant (#PCDATA)>
+|#
+
+(defmethod mrs-output-label-fn  ((mrsout mrs-xml) label)
+  (with-slots (stream) mrsout
+    (format stream "~%<fvpair><rargname>~A</rargname>" label)))
+
+(defmethod mrs-output-end-fvpair-fn ((mrsout mrs-xml))
+  (with-slots (stream) mrsout
+    (format stream "</fvpair>")))
+
+  
+(defmethod mrs-output-start-extra ((mrsout mrs-xml) var-type)
+  (declare (ignore var-type))
+  nil)
+
+(defmethod mrs-output-extra-feat  ((mrsout mrs-xml) feat)
+  (declare (ignore feat))
+  nil)
+
+(defmethod mrs-output-extra-val  ((mrsout mrs-xml) val)
+    (declare (ignore val))
+  nil)
+
+(defmethod mrs-output-end-extra ((mrsout mrs-xml))
+  nil)
+
+(defmethod mrs-output-end-rel ((mrsout mrs-xml))
+  (with-slots (stream) mrsout
+    (format stream "</ep>")))
+
+(defmethod mrs-output-end-liszt ((mrsout mrs-xml))
+  nil)
+
+#|
+<!ELEMENT hcons (hi, lo)>
+<!ATTLIST hcons 
+          hreln (qeq|lheq|outscopes) #REQUIRED >
+
+<!ELEMENT hi (var)>
+<!ELEMENT lo (var)>
+|#
+
+(defmethod mrs-output-start-h-cons ((mrsout mrs-xml))
+  nil)
+
+(defmethod mrs-output-outscopes ((mrsout mrs-xml) reln higher lower first-p)
+  (declare (ignore first-p))
+  (with-slots (stream) mrsout
+    (format stream "~%<hcons hreln='~A'><hi>"
+            (string-downcase reln))
+    ;;; same as var
+    (format stream "<var vid='~A'/>" higher)
+    (format stream "</hi><lo>")
+    ;;; same as var
+    (format stream "<var vid='~A'/>" lower)
+    (format stream "</lo></hcons>")))
+
+(defmethod mrs-output-end-h-cons ((mrsout mrs-xml))
+  nil)
+
+(defmethod mrs-output-end-psoa ((mrsout mrs-xml))
+  nil)
+
+;;; end of classes
+
 ;;; Utility fns
 
 (defun remove-right-sequence (remove-seq existing-seq)
@@ -926,7 +1061,8 @@ higher and lower are handle-variables
                         (print-mrs-extra value))
                     (mrs-output-atomic-fn 
                      *mrs-display-structure*
-                     value))))
+                     value)))
+                (mrs-output-end-fvpair-fn *mrs-display-structure*))
           (mrs-output-end-rel *mrs-display-structure*)
 	  ;;; ideally replace above do-clause with this:
 	;  (print-rel :display-to *mrs-display-structure*
@@ -1489,12 +1625,14 @@ VAR -> VARNAME[:CONSTNAME]*
   (declare (ignore val))
   'DUMMY)
 
+;;; reading in XML version - to be added
+
 ;;;
 ;;; interim solution for MRS `unfilling' until we construct a proper SEMI; note
 ;;; that unfill-mrs() _destructively_ modifies its input.
 ;;;
 (defparameter %mrs-extras-filter% nil)
-
+
 (defun unfill-mrs (mrs &optional (filter %mrs-extras-filter%))
   (when filter
     (labels ((unfill-variable (variable)
@@ -1518,7 +1656,7 @@ VAR -> VARNAME[:CONSTNAME]*
                 for value = (fvpair-value role)
                 do (unfill-variable value)))))
   mrs)
-
+
 ;;;
 ;;; another interim solution: fill in `default' values for a range of index
 ;;; features that are not specified in an input MRS to generation, e.g. assume
@@ -1536,7 +1674,7 @@ VAR -> VARNAME[:CONSTNAME]*
          (cons (vsym "E.ASPECT.PROGR") (vsym "-"))
          (cons (vsym "E.ASPECT.PERF") (vsym "-"))
          (cons (vsym "E.TENSE") (vsym "NO_TENSE")))))
-
+
 (defun fill-mrs (mrs &optional (defaults %mrs-extras-defaults%))
   (when defaults
     (labels ((fill-variable (variable)

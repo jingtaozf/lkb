@@ -307,3 +307,34 @@
 ; we agree an extension for rmrs files etc
 
 ; (global-set-key "\C-cr" 'display-rmrs)
+
+;;; MRS display utility
+
+(defun display-mrs (arg)
+  (interactive "P")
+  (let ((beg 0)
+        (end 0)
+        (pos (point)))
+    (setq beg (calc-begin-of-mrs-expression))
+    (goto-char pos)
+    (setq end (calc-end-of-mrs-expression))
+    (eval-in-lisp (format "(lkb::display-mrs-from-string \"%s\")" 
+			  (buffer-substring beg (min (1+ end) (point-max)))))
+    (goto-char pos)))
+
+(defun calc-begin-of-mrs-expression ()
+  "calculates begin of a mrs expression in XML"
+  (or (re-search-backward "<mrs " nil t)
+               (point-min)))
+
+(defun calc-end-of-mrs-expression ()
+  "calculates end of an mrs expression"
+    (or (re-search-forward "</mrs>" nil t)
+                 (point-max)))
+
+; following is commented out because it may overlap with other commands
+; which people use
+; however, I can't see any way of making this non-global unless
+; we agree an extension for mrs files etc
+
+; (global-set-key "\C-cm" 'display-mrs)
