@@ -93,17 +93,14 @@
       (read-psort-file-aux *root-file* :root))
     (format t "~%Root file reload complete")))
 
-
 (defun read-cached-lex-if-available (file-names)
   (unless (listp file-names) 
     (setf file-names (list file-names)))
   (setf *lex-file-list* file-names)
   (cond
-   ((null file-names) ;: no files
-    (setf *ordered-lex-list* nil)
-    (clear-lex *lexicon*) 
-    (store-psort *lexicon* nil nil nil)
-    (store-cached-lex *lexicon*))
+   ((null file-names)			;: no files
+    (clear-lex *lexicon*)
+    (setf *lexicon* (create-empty-cdb-lex)))
    ((not (check-load-names file-names 'lexical)) ;: files not found
     (cerror "Continue with script" "Lexicon file not found"))
    (t					;: files found
@@ -113,7 +110,8 @@
 	(clear-lex *lexicon*)        
 	(dolist (file-name file-names)
 	  (if (eql *lkb-system-version* :page)
-	      (read-tdl-lex-file-aux-internal file-name)
+	      (let ((*lexicon-in* *lexicon*)) ;;ugly
+		(read-tdl-lex-file-aux-internal file-name))
 	    (read-lex-file-aux-internal file-name)))
 	(store-cached-lex *lexicon*)))))
   *lexicon*)
@@ -145,17 +143,21 @@
   (unless (listp file-names) 
     (setf file-names (list file-names)))
   (setf *lex-file-list* file-names)
-  (clear-lex *lexicon*)
+  (if (typep *lexicon* 'psql-lex-database)
+      (initialize-lex *lexicon*)
+    (clear-lex *lexicon*))
   (setf *ordered-lex-list* nil)
   (if (check-load-names file-names 'lexical)
       (progn
         (dolist (file-name file-names)
           (ecase syntax
             (:tdl
-             (read-tdl-lex-file-aux-internal file-name))
+	     (let ((*lexicon-in* *lexicon*))
+	       (read-tdl-lex-file-aux-internal file-name)))
             (:path 
              (read-lex-file-aux-internal file-name))))
-        (store-cached-lex *lexicon*))
+        (if (typep *lexicon* 'cdb-lex-database)
+	    (store-cached-lex *lexicon*)))
     (cerror "Continue with script" "Lexicon file not found")))
 
 
@@ -290,4 +292,7 @@
             (error "~%Badly formed lexical specification for ~A" orth)))))
 
 
+
+(defun load-new-lex-entries (filename)
+  (read-tdl-lex-file-aux (list filename)))
 
