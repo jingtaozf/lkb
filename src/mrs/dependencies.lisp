@@ -106,6 +106,10 @@
     (format stream "~a~%" (ed-convert-psoa psoa))
     (format stream "{}~%")))
 
+(defun ed-convert-edge (edge)
+  (when (lkb::edge-p edge)
+    (ed-convert-psoa (extract-mrs edge))))
+
 (defun ed-convert-psoa (psoa)
   (when (psoa-p psoa)
     (loop
@@ -131,7 +135,9 @@
   (let* ((handle (let ((handle (rel-handel relation)))
                    (when (handle-var-p handle) (handle-var-name handle))))
          (id (ed-find-identifier relation))
-         (predicate (or (rel-sort relation) (rel-reltype relation)))
+         (predicate (string (or (rel-sort relation) (rel-reltype relation))))
+         (predicate (remove-right-sequence 
+                     *sem-relation-suffix* (string-downcase predicate)))
          (flist (rel-flist relation))
          (carg (loop
                    with carg = (list (vsym "CARG") 
@@ -401,4 +407,19 @@
               when (eq (ed-type ed) :fragment) do (setf return nil))
           (when return (push :fragmented (eds-status eds)))
           (return return))))
-
+
+(defun ed-explode (eds)
+  (loop
+      for ed in (eds-relations eds)
+      unless (and (null (ed-status ed)) 
+                  (or (ed-bleached-p ed) (ed-vacuous-p ed)))
+      nconc
+        (loop
+            with functor = (ed-predicate ed)
+            for (role . value) in (ed-arguments ed)
+            when (ed-p value) collect
+              (let ((argument (format
+                               nil
+                               "~a~@[(~a)~]"
+                               (ed-predicate value) (ed-carg value))))
+                (list functor role argument)))))
