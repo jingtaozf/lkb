@@ -280,6 +280,9 @@ INSERT INTO qry VALUES
        '$0' );
 
 
+INSERT INTO qry VALUES 
+       ( 'user-read-only-p', 0, 
+       'SELECT user IN (SELECT val FROM public.meta WHERE var=''user-read-only'');' );
 
 
 

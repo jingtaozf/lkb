@@ -105,23 +105,36 @@
   (fn lexicon 'retrieve-all-entries select-list))
 
 (defmethod build-lex ((lexicon psql-database))
-  (format *postgres-debug-stream* "~%(building current_grammar)")
-  (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
-  (format *postgres-debug-stream* "~%(vacuuming current_grammar)")
-  (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar"))
+  (cond 
+   ((not (user-read-only-p lexicon))
+    (format *postgres-debug-stream* "~%(building current_grammar)")
+    (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
+    (format *postgres-debug-stream* "~%(vacuuming current_grammar)")
+    (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar")))
+   (t
+    (format t "~%(user ~a has read-only privileges)" (user lexicon))))    
   (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
   (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
   lexicon)
 
 (defun build-current-grammar (lexicon)
-  (format *postgres-debug-stream* "~%(building current_grammar)")
-  (fn-get-records  lexicon ''build-current-grammar)
-  (format *postgres-debug-stream* "~%(vacuuming current_grammar)")
-  (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar"))
+  (cond 
+   ((not (user-read-only-p lexicon))
+    (format *postgres-debug-stream* "~%(building current_grammar)")
+    (fn-get-records  lexicon ''build-current-grammar)
+    (format *postgres-debug-stream* "~%(vacuuming current_grammar)")
+    (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar")))
+   (t
+    (format t "~%(user ~a had read-only privileges)" (user lexicon))))
   (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
   (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
   (empty-cache lexicon))
-  
+
+
+(defmethod user-read-only-p ((lexicon psql-lex-database))
+  (or (string= "t" (fn-get-val lexicon ''user-read-only-p))
+      (string= "T" (fn-get-val lexicon ''user-read-only-p))))
+
 (defmethod dump-db ((lexicon psql-lex-database) revision-filename defn-filename)  
     (fn-get-records lexicon ''dump-db revision-filename defn-filename))
 
