@@ -53,28 +53,29 @@
     (maphash 
      #'(lambda (key val)
 	 (declare (ignore key))
-	 (extend-semi semi val))
+	 (extend-semi semi val :mode :batch))
      semantic-table))
+  (populate-semi-roles *semi*)
   semi)
 
-(defmethod extend-semi ((semi semi) (record semantics-record))
+(defmethod extend-semi ((semi semi) (record semantics-record) &key (mode :dynamic))
   (mapcar
    #'(lambda (rel)
-       (record-ep rel semi))
+       (record-ep rel semi :mode mode))
    (semantics-record-relations record)))
 
-(defun record-mrs (mrs semi)
+(defun record-mrs (mrs semi &key (mode :dynamic))
   (when (mrs::psoa-p mrs)
     (loop
         for ep in (mrs:psoa-liszt mrs)
-        do (record-ep ep semi))))
+        do (record-ep ep semi :mode mode))))
 
-(defun record-ep (ep semi)
+(defun record-ep (ep semi &key (mode :dynamic))
   (loop
       with roles = (rel-flist ep)
       with pred = (mrs::rel-pred ep)
       for role in roles
-       for feature = (mrs:fvpair-feature role)
+      for feature = (mrs:fvpair-feature role)
       for value = (let ((value (fvpair-value role)))
                     (if (var-p value)
                       (loop
@@ -89,12 +90,33 @@
 			    (return (make-var-base :type type :extra extra-list)))
 		      value))
       do
-        (record-role feature value semi)
+	(when (eq mode :dynamic)
+	  (record-role feature value semi))
       finally
         (record-predicate pred roles semi)))
 
+(defmethod populate-semi-roles ((semi semi))
+  (with-slots (roles predicates) semi
+    (typecase roles
+      (hash-table (clrhash roles))
+      (null (setf roles (make-hash-table)))
+      (t (error "hash-table or null expected")))
+    (loop
+	for frames being each hash-value in predicates
+	do
+	  (loop
+	      for frame in frames
+	      do
+		(loop
+		    for role in frame
+		    for feature = (fvpair-feature role)
+		    for value = (fvpair-value role)
+		    do
+		      (record-role feature value semi)
+		      )))))
+
 (defun record-role (feature value semi)
-  (pushnew value (gethash feature (semi-roles semi)) :test #'equal))
+  (pushnew value (gethash feature (semi-roles semi)) :test #'eq))
 
 (defun record-predicate (pred roles semi)
   (pushnew roles (gethash pred (semi-predicates semi)) :test #'equal))
