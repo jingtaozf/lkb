@@ -116,19 +116,26 @@
 #+lkb
 (defun get-print-name (var-struct)
   (if (var-p var-struct)
-    (format nil "~A ~{ ~A~}" (var-name var-struct) 
-            (extra-value-strings (var-extra var-struct)))
+      (let ((extras (extra-value-strings var-struct)))
+        (if extras 
+            (format nil "~A: ~{ ~A~}" (var-name var-struct) 
+                    extras)
+            (format nil "~A" (var-name var-struct))))
     "u"))
 
-(defun extra-value-strings (extra)
-  (for fvp in extra
-       filter
-       (let* ((feature (last-path-feature (fvpair-feature fvp)))
-              (abbrev (assoc feature *mrs-extra-display*)))
-         (if abbrev
-             (format nil "~A ~A"
-                     (cdr abbrev)
-                     (fvpair-value fvp))))))
+(defun extra-value-strings (var)
+  (if (var-extra var)
+      (append (for cvar in (extract-variables-from-conj var) 
+                   collect
+                   (get-print-name cvar))
+              (for fvp in (var-extra var)
+                   filter
+                   (let* ((feature (last-path-feature (fvpair-feature fvp)))
+                          (abbrev (assoc feature *mrs-extra-display*)))
+                     (if abbrev
+                         (format nil "~A ~A"
+                                 (cdr abbrev)
+                                 (fvpair-value fvp))))))))
 
 
 
@@ -216,18 +223,6 @@
   (with-slots (stream) mrsout
     (format stream "~%  H-CONS: <")))
 
-(defmethod mrs-output-is-one-of ((mrsout simple) element candidates)
-  (with-slots (stream indentation) mrsout
-    (format stream "~VT" (+ indentation 2))
-    (cond ((null candidates)
-           (format stream "~A: {}" element))
-          ((cdr candidates)
-           (format stream "~A: {~A~{,~A~}}" element 
-                   (car candidates) (cdr candidates)))
-          (t (format stream "~A: {~A}" element 
-                     (car candidates))))
-    (format stream "~%")))
-
 (defmethod mrs-output-outscopes ((mrsout simple) higher lower)
   (with-slots (stream indentation) mrsout
     (format stream "~VT~A =_q ~A~%" 
@@ -297,19 +292,6 @@
 (defmethod mrs-output-start-h-cons ((mrsout comment))
   (with-slots (stream comment-string) mrsout
     (format stream "~%~A H-CONS: < " comment-string)))
-
-(defmethod mrs-output-is-one-of ((mrsout comment) element candidates)
-  (with-slots (stream indentation comment-string) mrsout
-    (format stream "~VT" (+ indentation 2))
-    (cond ((null candidates)
-           (format stream "~A: {}" element))
-          ((cdr candidates)
-           (format stream "~A: {~A~{,~A~}}" element 
-                   (car candidates) (cdr candidates)))
-          (t (format stream "~A: {~A}" element 
-                     (car candidates))))
-    (format stream "~%~A" comment-string)) )         
-        
 
 (defmethod mrs-output-outscopes ((mrsout comment) higher lower)
   (with-slots (stream indentation comment-string) mrsout
@@ -386,17 +368,6 @@
 (defmethod mrs-output-start-h-cons ((mrsout indexed))
   (with-slots (stream) mrsout
     (format stream "~%")))
-
-(defmethod mrs-output-is-one-of ((mrsout indexed) element candidates)
-  (with-slots (stream) mrsout
-    (cond ((null candidates)
-           (format stream "~A:{}" element))
-          ((cdr candidates)
-           (format stream "~A:{~A~{,~A~}}" element 
-                   (car candidates) (cdr candidates)))
-          (t (format stream "~A:{~A}" element 
-                     (car candidates))))
-    (format stream "  ")))
 
 ;;; ???
 (defmethod mrs-output-outscopes ((mrsout indexed) higher lower)

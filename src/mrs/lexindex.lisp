@@ -52,7 +52,7 @@
                  :id id
                  :relations construction-rels)))
           (for rel in (find-index-rels (mapcar #'relation-record-relation
-                                               construction-rels))
+                                               construction-rels) id)
                do
                (let ((res (cons rel new-record)))
                  (if lexicalp (push res *lrule-rel-index*) 
@@ -63,16 +63,26 @@
         (push entry *contentless-grs*)))))
 
 
-(defun find-index-rels (reltype-list)
+(defparameter *maximum-genindex-relations* 100 
+  "maximum number of relation types allowed in indexing")
+
+(defun find-index-rels (reltype-list id)
   ;;; returns a list of all the types under the
   ;;; maximal relation-type (e.g., relation) which
   ;;; are compatible with one or more members of the type list
+  ;;; Because it's easy for Dan to make errors, by introducing underspecified
+  ;;; types where he shouldn't, there's a maximum number of relations
+  ;;; allowed, which is set quite high, because of all the glbtypes
   (let ((returned-rels nil))
     (for reltype in reltype-list
          do
          (for compatible-rel in (cl-user::get-compatible-rels reltype)
               do
               (pushnew compatible-rel returned-rels :test #'eq)))
+    (when (and *maximum-genindex-relations* 
+               (> (length returned-rels) *maximum-genindex-relations*))
+      (warn "~%Too many subtypes of relation in ~A: ignored" id)
+      (setf returned-rels nil))
     returned-rels))
 
 ;;; indexing and retrieving a lexical entry based on some input semantics
@@ -135,10 +145,11 @@
       (error "~%index-complex-semantics-record called on non-complex relation ~A" rel))
     (if rel-value
         (if (hash-table-p rel-value)
-            (pushnew id (gethash rel-string rel-value))                  
-          (error "~%Existing value of ~A in *relation-index* 
-                        isn't a hash table"
-                 rel-name))
+            (pushnew id (gethash rel-string rel-value))  
+          (progn 
+            (warn "~%Ignoring entry ~A - Existing value of ~A in *relation-index* isn't a hash table" 
+                  id rel-name)
+            nil))
       (progn (setf rel-value (make-hash-table :test #'equal))
              (setf (gethash rel-name *relation-index*)
                rel-value)
@@ -149,8 +160,10 @@
 ;;; Note that rels are kept in the order they have in the entries
 
 
-; (mrs::extract-lexical-relations (get-psort-entry 'andes_1))
-; (mrs::extract-lexical-relations (get-psort-entry 'kim_1))
+;;; (mrs::extract-lexical-relations (get-psort-entry 'andes_1))
+;;; (mrs::extract-lexical-relations (get-psort-entry 'kim_1))
+;;; (mrs::extract-lexical-relations (get-psort-entry 'to_do_with))
+
 
 
 (defun extract-lexical-relations (lex-entry)
@@ -169,7 +182,7 @@
           (for rel in (find-index-rels 
                        (mapcar #'relation-record-relation 
                                (remove-if #'relation-record-feature-string 
-                                          main-rels)))
+                                          main-rels)) id)
                do
                (index-simple-semantics-record rel id))
           (for rel in (remove-if-not #'relation-record-feature-string 

@@ -7,19 +7,32 @@
 ;;; ******** Global variables **********
 ;;;
 
-(defvar *scope-feat* 'user::scope)
-;;; temporary here
-
 ;;; set in mrsglobals-eng
+
+(defvar *scope-feat* nil)
+
 (defvar *top-level-rel-types* nil)
 
-;;; obsolete ?
 (defvar *top-level-variables* nil
   "the variables which correspond to pronouns or proper names")
 
 ;;;
 ;;; ******** utility functions (some grammar specific) **********
 ;;;
+
+;;; memoisation
+
+(defvar *rel-handel-store* nil)
+(defvar *conj-val-store* nil)
+(defvar *conj-handel-val-store* nil)
+(defvar *unbound-vars-store* nil)
+
+
+(defun clear-scope-memos nil
+  (setf *rel-handel-store* nil)
+  (setf *conj-val-store* nil)
+  (setf *unbound-vars-store* nil)
+  (setf *conj-handel-val-store* nil))
 
 ;;; Utility functions for taking apart MRS structures.
 ;;; All the functions which rely on particular names for features or rels,
@@ -28,16 +41,6 @@
 ;;; the values of features may be var structures, lists of var structures 
 ;;; or constants
 
-(defun get-vars-from-value (val)
-  ;;; takes a value, which may be a list of variables 
-  ;;; or a single variable structure and returns a list of ids
-  (if (var-p val)
-    (list (var-id val))
-    (if 
-      (and (listp val) (var-p (car val)))
-      (mapcar #'var-id val)
-      nil)))
-
 (defun proper-name-or-pronoun-rel (rel-sort)
   (member rel-sort *top-level-rel-types*))
 
@@ -45,53 +48,81 @@
 (defun get-handel-args (rel)
   ;;; returns a list of ids of any handels which are values
   ;;; of roles in the rel 
-  (for fvp in (rel-flist  rel)
-       append 
-       (let ((val (fvpair-value fvp)))
-         (if (and (var-p val) (is-handel-var val))
-           (list (var-id val))
-           (if (listp val) 
-                 (for val-el in val
-                      filter
-                      (if (and (var-p val-el) (is-handel-var val-el))
-                        (var-id val-el)))
-             nil)))))
+  (mapcar #'cdr (get-handel-args-with-features rel)))
+
 
 (defun get-handel-args-with-features (rel)
   ;;; returns a list of ids of any handels which are values
   ;;; of roles in the rel as a dotted pair, with the role
   ;;; as car
-  (for fvp in (rel-flist  rel)
-       append
-       (let ((val (fvpair-value fvp)))
-         (if (and (var-p val) (is-handel-var val))
-           (list (cons (fvpair-feature fvp) (var-id val)))
-           (if (listp val) 
-               (for val-el in val
-                    filter
-                    (if (and (var-p val-el) (is-handel-var val-el))
-                        (cons (fvpair-feature fvp) (var-id val-el))))
-             nil)))))
+  (let ((existing (assoc rel *rel-handel-store*)))
+    (if existing (cdr existing)
+        (let ((res
+               (for fvp in (rel-flist  rel)
+                    append
+                    (let ((val (fvpair-value fvp))
+                          (feature (fvpair-feature fvp)))
+                      (cond ((is-handel-var val)
+                             (list (cons feature (var-id val))))
+                            ((is-conj-var val)
+                             (for val-id in (extract-handels-from-conj val)
+                                  collect
+                                  (cons feature val-id)))
+                            ((listp val) 
+                             (for val-el in val
+                                  filter
+                                  (if (and (var-p val-el) (is-handel-var val-el))
+                                      (cons (fvpair-feature fvp) (var-id val-el)))))
+                            (t nil))))))
+          (push (cons rel res) *rel-handel-store*)
+          res))))
+
+(defun extract-handels-from-conj (val)
+  ;;; example input
+  #|
+  #S(MRS::VAR :NAME "c16" 
+              :TYPE *DIFF-LIST* 
+              :EXTRA (#S(MRS::FVPAIR :FEATURE #S(TYPED-PATH 
+                               :TYPED-FEATURE-LIST (#S(TYPE-FEATURE-PAIR :TYPE *DIFF-LIST* :FEATURE LIST))) 
+              :VALUE (#S(MRS::HANDLE-VAR :NAME "h11" :TYPE (HANDLE) :EXTRA NIL :ID 11)
+              #S(MRS::HANDLE-VAR :NAME "h17" :TYPE (HANDLE) :EXTRA NIL :ID 17)))) :ID 16))
+                                                |#
+  ;;; returns list of ids of any handel variables
+    (let ((existing (assoc val *conj-handel-val-store*)))
+      (if existing (cdr existing)
+        (let ((res
+               (let ((extra (var-extra val)))
+                 (if (listp extra)
+                     (for ex-el in extra
+                          append
+                          (if (fvpair-p ex-el)
+                              (let ((new-val (fvpair-value ex-el)))
+                                (if (listp new-val)
+                                    (for var-el in new-val
+                                         filter
+                                         (if (is-handel-var var-el)
+                                             (var-id var-el)))))))))))
+          (push (cons val res) *conj-handel-val-store*)
+          res))))
+  
 
 (defun is-handel-var (var)
     ;;; test is whether the string begins with #\h
   (and (var-p var)
        (eql (elt (var-name var) 0) #\h)))
 
+(defun is-conj-var (var)
+    ;;; test is whether the string begins with #\c
+  (and (var-p var)
+       (eql (elt (var-name var) 0) #\c)))
+
 (defun is-handel-arg-rel (rel)
   ;;; true if the rel has an argument which is a handel
-  (dolist (fvp (rel-flist  rel))
-    (let ((var (fvpair-value fvp)))
-         (when (or (and (var-p var) (is-handel-var var))
-                 (and (listp var)
-                      (for val-el in var
-                           some-satisfy
-                           (and (var-p val-el) (is-handel-var val-el)))))
-           (return t)))))
+  (get-handel-args-with-features rel))
 
 (defun nonquantified-var-p (var)
   ;;; true if the string identifier for the variable
-  ;;; begins with h or e or t
+  ;;; begins with anything other than x
   (and (var-p var)
        (not (eql (elt (var-name var) 0) '#\x))))
 
@@ -99,7 +130,7 @@
 (defun is-quant-rel (rel)
   ;;; test is presence of a feature called BV!
   ;;; But also avoid including any "quantifiers" which are top-level rels,
-  ;;; including "the" (_def_rel) and demonstratives
+  ;;; possibly including "the" (_def_rel) and demonstratives
   (dolist (fvpair (rel-flist  rel))
     (when (and (eql (fvpair-feature fvpair) *bv-feature*)
                (not (member (rel-sort rel) *top-level-rel-types* )))
@@ -152,6 +183,7 @@
                                (pushnew (get-var-num var) *top-level-variables*))))
                        rel-vars)))))
 
+
 (defun collect-vars-from-rel (rel)
   ;;; only called from find-unbound-vars 
   ;;;
@@ -162,7 +194,7 @@
        append 
        (let ((value (fvpair-value fvp)))
          (if (var-p value) 
-           (list value)
+             (cons value (extract-variables-from-conj value))
            (if (and (listp value) (var-p (car value)))
              value)))))
 
@@ -175,18 +207,47 @@
   ;;; so that variables which are introduced by such rels are 
   ;;; calculated initially and stored in the global variable
   ;;; *top-level-variables*
-  (for fvp in (rel-flist  rel)
-       append 
-       (unless (eql (fvpair-feature fvp) *bv-feature*)
-                (let ((value (fvpair-value fvp)))
-                  (for el in (if (listp value) value (list value))
-                       filter
-                       (if (and (var-p el)
-                                (not (nonquantified-var-p el))
-                                (not (member (get-var-num el) 
-                                             *top-level-variables*)))
-                         (get-var-num el)))))))
+  (let ((existing (assoc rel *unbound-vars-store*)))
+    (if existing (cdr existing)
+      (let ((res
+             (for fvp in (rel-flist  rel)
+                  append 
+                  (unless (eql (fvpair-feature fvp) *bv-feature*)
+                    (let ((value (fvpair-value fvp)))
+                      (for el in (if (listp value) value (list value))
+                           append
+                           (let ((unbound-id (unbound-var-id el))
+                                 (conjids
+                                  (for conj-var in (extract-variables-from-conj value)
+                                       filter
+                                       (unbound-var-id conj-var))))
+                             (if unbound-id (cons unbound-id conjids)
+                               conjids))))))))
+        (push (cons rel res) *unbound-vars-store*)
+        res))))
 
+(defun unbound-var-id (el)
+  (if (and (var-p el)
+           (not (nonquantified-var-p el))
+           (not (member (get-var-num el) 
+                        *top-level-variables*)))
+      (get-var-num el)))
+
+
+(defun extract-variables-from-conj (val)
+  (if (is-conj-var val)
+      (let ((existing (assoc val *conj-val-store*)))
+        (if existing (cdr existing)
+          (let ((res 
+                 (let ((extra (var-extra val)))
+                   (if (listp extra)
+                       (for ex-el in extra
+                            append
+                            (if (fvpair-p ex-el)
+                                (let ((new-val (fvpair-value ex-el)))
+                                  (if (listp new-val) new-val))))))))
+            (push (cons val res) *conj-val-store*)
+            res)))))
 
 ;;;
 ;;; ******** Main code entry point  **********
@@ -211,6 +272,7 @@ printing routines -  convenient to make this global to keep printing generic")
 
 (defun check-mrs-struct (mrsstruct &optional sentence)
   ;;; first output the existing structure in the indexed notation
+  (clear-scope-memos)
   (setf *canonical-bindings* nil)
   (when sentence
     (format t "~%~A" sentence)
@@ -270,29 +332,33 @@ printing routines -  convenient to make this global to keep printing generic")
   ;;; this is called when all the rels should
   ;;; have handels which are equal to eachother, and to handel
   ;;; and to extra, if present
-  (let* ((rel-handels (remove-duplicates 
-                       (for rel in rels collect 
-                            (get-var-num (rel-handel rel)))))
-         (new-equality (union (cons handel (if extra (list extra) nil)) 
-                                    rel-handels)))
+  (let ((new-equality nil))
+    (for rel in rels
+         do
+         (pushnew
+          (get-var-num (rel-handel rel))
+          new-equality))
+    (pushnew handel new-equality)
+    (when extra
+      (pushnew extra new-equality))
     (for binding in existing-bindings
+         ;;; some of this structure is shared, but
+         ;;; we never alter any binding destructively
          collect
            (cons (car binding) 
                  (if (member (car binding) new-equality)
-                   (copy-list new-equality)
-                   (copy-list (cdr binding)))))))
-;;; all this copying may well be unnecessary
-;;; but let's be safe for now
+                     new-equality
+                   (cdr binding))))))
 
 (defun adjust-bindings (bindings hole label)
   (for binding in bindings
-         collect
-           (cons (car binding) 
-                 (if (eql (car binding) hole)
-                   (cons label (copy-list (cdr binding)))
-                   (if (eql (car binding) label) 
-                     (cons hole (copy-list (cdr binding)))
-                     (copy-list (cdr binding)))))))
+       collect
+       (cons (car binding) 
+             (if (eql (car binding) hole)
+                 (cons label (cdr binding))
+               (if (eql (car binding) label) 
+                   (cons hole (cdr binding))
+                 (cdr binding))))))
 
 (defun construct-initial-bindings (top-handel-var rels hcons)
   ;;; finds all the handels and constructs an
@@ -312,7 +378,6 @@ printing routines -  convenient to make this global to keep printing generic")
                 do
                 (pushnew handel-var holes))))
     (pushnew top-handel holes) 
-    ;; this may be wrong, given the use of prpstn etc
     (process-hcons hcons labels holes)
     (for handel in (remove-duplicates (append labels holes))
        collect
@@ -320,7 +385,7 @@ printing routines -  convenient to make this global to keep printing generic")
 
 
 (defun get-bindings-for-handel (handel bindings)
-  (let ((hb (find handel bindings :key #'car)))
+  (let ((hb (assoc handel bindings)))
     (unless hb
       (struggle-on-error "Handel ~A not in bindings" handel))
     (if hb
@@ -385,8 +450,6 @@ printing routines -  convenient to make this global to keep printing generic")
           nil)
 ;;; variables must be bound by quantifiers unless they are in relations
 ;;; which license implicit existential binding
-;;; Note that, as far as I can tell, MRS does not have the equivalent
-;;; of VIT `free labels'
       (let ((top-handel (get-var-num (psoa-top-h mrsstruct))))
         (setf *quant-rels* quant-rels)
         ;;; should pass this around instead of global, when worked out
@@ -411,6 +474,7 @@ printing routines -  convenient to make this global to keep printing generic")
 (defstruct bindings-and-sisters
   bindings sisters pending-qeq)
 ;;; similarly, this structure is just for temporary storage of results
+
 #|
 qeqs
 
@@ -423,24 +487,25 @@ and the possible-relations are just quantifiers or things whose handels
 are or could be h2.  If we're looking at the restriction of the quantifier,
 the pending-qeq is set based on any qeqs for the restriction.
 
+we have a top-handel (i.e. a current `top-handel' - this function
+is called recursively) and a set of rels, some of which may have the
+same handel as the top-handel.  We have to generate all possibilities
+for combinations of rels which COULD have the same handel
+bindings - current bindings
+bvs - a list of the variables which are bound by quantifiers we've
+      already dealt with (nil on first call)
+rels - rels we haven't incorporated yet (all rels on first call)
+scoping-handels - handels which will outscope the handels we're
+       about to incorporate (nil on first call) - added for outscopes
+        constraint (not currently used)
+pending-qeq - handel which must get used either this call
+or modulo some number of quantifiers
+
 |#
 
 
 (defun create-scoped-structures (top-handel bvs bindings rels 
                                  scoping-handels pending-qeq scoped-p)
-  ;;; we have a top-handel (i.e. a current `top-handel' - this function
-  ;;; is called recursively) and a set of rels, some of which may have the
-  ;;; same handel as the top-handel.  We have to generate all possibilities
-  ;;; for combinations of rels which COULD have the same handel
-  ;;; bindings - current bindings
-  ;;; bvs - a list of the variables which are bound by quantifiers we've
-  ;;;       already dealt with (nil on first call)
-  ;;; rels - rels we haven't incorporated yet (all rels on first call)
-  ;;; scoping-handels - handels which will outscope the handels we're
-  ;;;        about to incorporate (nil on first call) - added for outscopes
-  ;;;        constraint (not currently used)
-  ;;; pending-qeq - handel which must get used either this call
-  ;;; or modulo some number of quantifiers
   (incf *scoping-calls*)
   (when (> *scoping-calls* *scoping-call-limit*)
     (throw 'up nil))
@@ -455,7 +520,7 @@ the pending-qeq is set based on any qeqs for the restriction.
                         top-handel)))
             pending-qeq)
         new-qeq)))
-;;  (format t "~%current top ~A bvs ~A pending-qeq ~A scoped-p ~A bindings ~A"
+;; (format t "~%current top ~A bvs ~A pending-qeq ~A scoped-p ~A bindings ~A"
 ;;          top-handel bvs pending-qeq scoped-p bindings)
   (if rels
     ; fail immediately if we're going to be left with
@@ -463,30 +528,15 @@ the pending-qeq is set based on any qeqs for the restriction.
     (let* ((handel-args (for rel in rels
                                     append (get-handel-args rel)))
            (impossible-top-rels 
-            ; the list of rels which introduce variables which are
-            ; currently free or which have a handel which is coindexed with a handel
-            ; argument of one of the rels
-            ; or which are `outscoped' by top-handel
-            ; or which are outscoped by a handel which is not on the list
-            ; of scoping-handels
-            ; or which are qeq something which is not the pending-qeq
-            (for rel in rels
-                 filter 
-                 (let ((vars (collect-unbound-vars-from-rel rel)))
-                   (if (or (and vars (not (subsetp vars bvs)))
-                           (member (get-var-num (rel-handel rel)) handel-args)
-                           (not-qeq-p
-                            pending-qeq
-                            (get-var-num (rel-handel rel)) 
-                            bindings)
-                           (violates-outscopes-p  
-                            (get-var-num (rel-handel rel)) 
-                            top-handel scoping-handels bindings))
-                     ; violates-outscopes-p is in mrscons.lsp
-                     rel))))
-           (impossible-handels 
-            (remove-duplicates (for rel in impossible-top-rels
-                                    collect (get-var-num (rel-handel rel)))))
+            (calculate-impossible-top-rels 
+             top-handel bvs bindings rels 
+             scoping-handels pending-qeq  handel-args))
+           (impossible-handels (let ((tmp nil))
+                                 (for rel in impossible-top-rels
+                                      do 
+                                      (pushnew 
+                                       (get-var-num (rel-handel rel)) tmp))
+                                 tmp))
            (possible-top-rels 
             ; the list of rels which wouldn't introduce any free variables
             ; and which don't have sisters (i.e. rels with the same handel)
@@ -498,7 +548,6 @@ the pending-qeq is set based on any qeqs for the restriction.
                                  impossible-handels))
                    rel)))
            (pending-top-rels
-            ;; if there's a pending qeq
             ;; the list of rels which could have the same handel
             ;; as the pending-qeq
             (if pending-qeq
@@ -556,6 +605,35 @@ the pending-qeq is set based on any qeqs for the restriction.
               (cons top-handel scoping-handels)
               (bindings-and-sisters-pending-qeq rel-comb-and-bindings)))))))
 
+
+(defun calculate-impossible-top-rels (top-handel bvs bindings rels 
+                                      scoping-handels pending-qeq  handel-args)
+ ;;; the list of rels which introduce variables which are
+ ;;; currently free or which have a handel which is coindexed with a handel
+ ;;; argument of one of the rels
+ ;;; or which are `outscoped' by top-handel
+ ;;; or which are outscoped by a handel which is not on the list
+ ;;; of scoping-handels
+ ;;; or which are qeq something which is not the pending-qeq
+  (declare (ignore scoping-handels top-handel))
+  (for rel in rels
+       filter 
+       (let ((handel-num (get-var-num (rel-handel rel))))
+         (if (or (member handel-num handel-args)
+#|                 
+                 (violates-outscopes-p  
+                  handel-num
+                  top-handel scoping-handels bindings)
+                                        ; violates-outscopes-p is in mrscons.lsp
+                                        ; currently redundant
+|#                                        
+             (let ((vars (collect-unbound-vars-from-rel rel)))
+               (and vars (not (subsetp vars bvs))))
+             (not-qeq-p pending-qeq handel-num
+                        bindings))
+             rel))))
+
+
 (defun make-combinations-of-top-rels  (top-handel known-top-rels 
                                        other-possibles pending
                                        possible-quants pending-qeq bindings)
@@ -566,67 +644,36 @@ the pending-qeq is set based on any qeqs for the restriction.
   ;;; we either need all the possible pending
   ;;; or all the combinations of possible-quants
   (if pending-qeq
-      (append
-       (if pending  
-           (let ((other-combinations 
-                  (generate-combinations (set-difference 
-                                          other-possibles
-                                          pending)))) 
-             (for combination in other-combinations
-                  filter
-                  (let* ((combined-rels (append pending combination))
-                         (new-bindings 
-                          (generate-top-bindings 
-                           top-handel combined-rels bindings pending-qeq)))
-                    (if (and combined-rels new-bindings)
-                        (make-bindings-and-sisters 
-                         :sisters combined-rels 
-                         :bindings new-bindings :pending-qeq nil))))))
-       #|
-         ;; simplify
-             (let ((new-bindings 
-                     (generate-top-bindings 
-                      top-handel pending bindings pending-qeq)))
-               (if new-bindings
-                   (list
-                   (make-bindings-and-sisters 
-                    :sisters pending 
-                    :bindings new-bindings :pending-qeq nil))))) 
-                    |#          
-       (let ((non-quant-combinations 
-                  (generate-combinations (set-difference 
-                                          (set-difference 
-                                           other-possibles
-                                           possible-quants)
-                                          pending))))
-             (for quant in possible-quants
-                  append
-                  (for combination in non-quant-combinations
-                       filter
-                       (let* ((combined-rels (cons quant combination))
-                              (new-bindings 
-                               (generate-top-bindings 
-                                top-handel combined-rels bindings)))
-                         (if (and combined-rels new-bindings)
-                             (make-bindings-and-sisters 
-                              :sisters combined-rels 
-                              :bindings new-bindings 
-                              :pending-qeq pending-qeq)))))))
-      (let ((other-combinations
-             (generate-combinations other-possibles)))
+      (let ((pendingless (set-difference other-possibles pending)))
+        (append
+         (if pending  
+             (new-bindings-and-sisters pendingless (list pending) top-handel bindings pending-qeq nil))
+         (if possible-quants
+             (new-bindings-and-sisters (set-difference pendingless possible-quants) 
+                                       (mapcar #'list possible-quants) 
+                                       top-handel bindings nil pending-qeq))))
+    (new-bindings-and-sisters other-possibles (list known-top-rels) top-handel bindings nil nil)))
+
+
+(defun new-bindings-and-sisters (free fixed-list top-handel bindings binding-qeq result-qeq)            
+  (let ((other-combinations 
+         (generate-combinations free)))
       ;;; other-combinations is a list of sets of rels 
       ;;; including the empty set
-        (for other-combination in other-combinations
-             filter
-             (let* ((combined-rels (append other-combination known-top-rels))
-                    (new-bindings 
-                     (generate-top-bindings 
-                      top-handel combined-rels bindings)))
-               (if (and new-bindings combined-rels)
+    (for fixed in fixed-list
+         append
+         (for combination in other-combinations
+              filter
+              (let* ((combined-rels (append fixed combination))
+                     (new-bindings 
+                      (generate-top-bindings 
+                       top-handel combined-rels bindings binding-qeq)))
+                (if (and combined-rels new-bindings)
                ;;; combined rels might be nil in the case where there are 
                ;;; no known-top-rels
-                   (make-bindings-and-sisters :sisters combined-rels 
-                                              :bindings new-bindings)))))))
+                    (make-bindings-and-sisters 
+                     :sisters combined-rels 
+                     :bindings new-bindings :pending-qeq result-qeq)))))))
 
 ;;; ******* Traversing the current leaves of the tree ********
 
@@ -674,13 +721,14 @@ the pending-qeq is set based on any qeqs for the restriction.
                                       scoping-handels pending-qeq))
       results)))
 
-;;; **********  Generating all possible relation combinastions **********                                                       
+;;; **********  Generating all possible relation combinations **********                                                       
 
 (defun generate-combinations (lst-of-rels)
   ;;; we first group the rels into clusters which share
   ;;; a handel, then generate all combinations of these
   ;;; clusters, then convert each of the results back into a 
   ;;; flat list
+  ;;; luckily it seems rare for the list to be more than 3
   (for result in (generate-all-combinations (make-handel-clusters lst-of-rels))
        collect
        (apply #'append result)))
@@ -813,7 +861,10 @@ the pending-qeq is set based on any qeqs for the restriction.
          do     
          (when need-comma (format stream ", "))
          (setf need-comma t)
-         (let ((var (fvpair-value feat-val)))
+         (let* ((var (fvpair-value feat-val))
+                (conj-vars (extract-variables-from-conj var)))
+           (when conj-vars
+             (setf var conj-vars))
            (if (listp var)
              (progn 
                (format stream "(")
@@ -821,7 +872,7 @@ the pending-qeq is set based on any qeqs for the restriction.
                     do
                     (if (is-handel-var val)
                       (output-scoped-rels (get-true-var-num val) rel-list stream)
-                      (format stream "~A" (remove-variable-junk 
+                      (format stream "~A " (remove-variable-junk 
                                       (if (var-p val)
                                         (get-bound-var-value val)
                                         val)))))

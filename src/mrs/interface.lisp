@@ -2,6 +2,13 @@
 
 ;;; LKB specific
 
+
+(defun time-scope nil 
+  (format t "~%~A" user::*sentence*) 
+  (for res in user::*parse-record* 
+       do 
+       (format t " ~A" (length (make-scoped-mrs (car (extract-mrs (list res) t)))))))
+
 (defparameter *alex-munge* nil)
 
 (defun show-mrs nil
@@ -24,7 +31,7 @@
   (declare (ignore extra-param))
   (cond (*mrs-to-vit*
          (mrs-to-vit-convert mrs-struct))
-        (*alex-munge*
+        ((and *alex-munge* (fboundp 'alex-munge))
          (alex-munge mrs-struct))
         (*mrs-scoping*
          (check-mrs-struct mrs-struct))
@@ -39,7 +46,7 @@
 
 (defun output-mrs-after-parse (edges)
   (when (and (or *mrs-to-vit* *mrs-scoping*
-               *mrs-output-p*))
+               *mrs-output-p* *alex-munge*))
     (setf *mrs-record*
       (extract-mrs edges))
     (for mrs in *mrs-record* 
@@ -52,6 +59,8 @@
 (in-package "CL-USER")
 
 
- (defparameter *do-something-with-parse* 'mrs::show-mrs)
+(defparameter *do-something-with-parse* 'mrs::show-mrs)
+
+(defparameter *do-something-with-parse* 'mrs::time-scope)
 
 |#

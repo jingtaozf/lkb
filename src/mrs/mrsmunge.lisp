@@ -486,39 +486,6 @@
       bindings))
 
 
-(defun compatible-hcons-values (remaining-input-varlist actual-varlist 
-                                              bindings matched-vars)
-  ;;; this is fairly horrible because we have to do an n-to-n match
-  ;;; e.g. if we have h1 is-one-of h2 h3 in the rule
-  ;;;      and        ha is-one-of hb hc in the input
-  ;;; there are the following possible binding sets
-  ;;; {{<1.a>, <2.b>, <3.c>}, {<1.a>, <2.c>, <3.b>}}
-  ;;; However, since the hcons is checked last, we can hope that
-  ;;; some of the possibilities will have been excluded already 
-  (if (and (null remaining-input-varlist) bindings)
-      (list bindings)
-    (let ((ivar (car remaining-input-varlist))
-          (results nil))
-      (dolist (actual-var actual-varlist)
-        (unless (member actual-var matched-vars)
-          (let ((local-bindings (copy-alist bindings)))
-            (setf local-bindings
-                  (bindings-match
-                   (get-var-num ivar)
-                   (get-var-num actual-var)
-                   bindings))
-            (record-munge-variable actual-var)
-            (when local-bindings
-              (let ((local-results 
-                     (compatible-hcons-values (cdr remaining-input-varlist)
-                                              actual-varlist 
-                                              local-bindings 
-                                              (cons actual-var matched-vars))))
-                (when local-results
-                  (setf results (append local-results results))))))))
-      results)))
-
-              
 
 ;;; once we've matched the input, we need to remove the matching relations
 ;;; and to append the output, with the appropriate binding replacements

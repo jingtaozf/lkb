@@ -20,7 +20,7 @@
          (if (eql left right)
              (unless *giving-demo-p*
                  (format t
-                         "WARNING:  qeq between identical handels ~A" 
+                         "~%WARNING:  qeq between identical handels ~A" 
                          left))
            (if (and (member left holes) (not (member left labels)))
                (if (and (member right labels) (not (member right holes)))
@@ -32,11 +32,11 @@
                                      (eql (qeq-right x) (qeq-right y)))))
                  (unless *giving-demo-p*
                    (format t
-                           "WARNING:  in ~A qeq ~A, ~A is not a label - ignored" 
+                           "~%WARNING:  in ~A qeq ~A, ~A is not a label - ignored" 
                            left right right)))
              (unless *giving-demo-p*
                (format t
-                       "WARNING:  in ~A qeq ~A, ~A is not a hole - ignored" 
+                       "~%WARNING:  in ~A qeq ~A, ~A is not a hole - ignored" 
                        left right left))))))
   (let ((problems nil))
     (do* ((current (car *qeqs*) (car rest))
@@ -48,14 +48,14 @@
              (cond ((eql (qeq-left qeq2) left)
                    (unless *giving-demo-p*
                      (format t
-                             "WARNING: multiple qeqs with left member ~A ignored"
+                             "~%WARNING: multiple qeqs with left member ~A ignored"
                              left))
                    (pushnew current problems)
                    (pushnew qeq2 problems))
                    ((eql (qeq-right qeq2) right)
                     (unless *giving-demo-p*
                       (format t
-                              "WARNING: multiple qeqs with right member ~A ignored"
+                              "~%WARNING: multiple qeqs with right member ~A ignored"
                               right))
                    (pushnew current problems)
                    (pushnew qeq2 problems))
