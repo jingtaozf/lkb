@@ -23,16 +23,13 @@
 		      ;; parse
 		      cl-user::do-parse 
 		      cl-user::show-parse 
-		      cl-user::show-parse-edge 
 		      cl-user::show-chart 
 		      cl-user::parse-sentences 
 		      cl-user::compare-parses
                       ;; generate
 		      cl-user::generate-from-edge
                       cl-user::show-gen-result
-                      cl-user::show-gen-edge
 		      cl-user::show-gen-chart
-		      cl-user::print-gen-chart
                       cl-user::index-for-generator
 		      ;; link
 		      cl-user::apply-lex 
@@ -47,6 +44,7 @@
 		      cl-user::*lkb-system-version*
                       ;; debug
                       cl-user::print-chart
+                      cl-user::print-gen-chart
                       cl-user::batch-check-lexicon
 		      ;; options
 		      cl-user::get-parameters)))
@@ -118,7 +116,8 @@
                                            (make-menu-item :name "Check lexicon"
                                                            :value 'batch-check-lexicon :available-p nil)
                                            (make-menu-item :name "Print chart"
-                                                           :value 'print-chart :available-p nil)))
+                                                           :value 'print-chart :available-p nil))
+                                           )
                    (make-lkb-submenu-item :menu-title "Options"
                                           :menu-items
                                           (list
@@ -202,7 +201,7 @@
                  (list 
                      (make-menu-item :name "Generate..."
                         :value 'generate-from-edge)
-                     (make-menu-item :name "Redisplay result"
+                     (make-menu-item :name "Redisplay realisation"
                         :value 'show-gen-result)
                      (make-menu-item :name "Show chart"
                                      :value 'show-gen-chart)
@@ -224,8 +223,10 @@
                                 (list
                                  (make-menu-item :name "Check lexicon"
                                                  :value 'batch-check-lexicon :available-p nil)
-                                 (make-menu-item :name "Print chart"
-                                                 :value 'print-chart :available-p nil)))
+                                 (make-menu-item :name "Print parser chart"
+                                                 :value 'print-chart :available-p nil)
+                                 (make-menu-item :name "Print generator chart"
+                                                 :value 'print-gen-chart :available-p nil)))
          (make-menu-item :name "Tidy up"
                          :value 'clear-non-parents
                          :available-p nil) 
