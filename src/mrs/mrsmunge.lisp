@@ -677,7 +677,7 @@
         (output-fs (path-value fs *mrs-rule-output-path*))
         (condition-fs (path-value fs *mrs-rule-condition-path*)))
       (if (and input-fs output-fs)
-          (let* ((variable-generator (create-variable-generator 1000))
+          (let* ((variable-generator (create-variable-generator 10000))
                  (*psoa-rh-cons-path* `( ,(vsym "H-CONS")  ,(vsym "LIST")))
                  (*psoa-liszt-path* `( ,(vsym "LISZT")  ,(vsym "LIST")))
                  (input-spec (construct-mrs input-fs variable-generator))
@@ -759,3 +759,23 @@
   (output-mrs (mrs-munge-rule-input-spec mrs-rule)  'simple)
   (format t "~%---->")
   (output-mrs (mrs-munge-rule-output-spec mrs-rule)  'simple))
+
+;;; Invert rules for VIT to MRS
+
+(defun invert-munge-rules (rules)
+  (let ((result nil)) 
+    (for rule in rules
+         do
+         (push (make-mrs-munge-rule
+                :id (intern (concatenate 'string 
+                              (string 
+                               (mrs-munge-rule-id rule))
+                              "-inv"))
+                :input-spec (mrs-munge-rule-output-spec rule)
+                :input-condition (mrs-munge-rule-input-condition rule)
+                :output-spec (mrs-munge-rule-input-spec rule))
+               result))
+    ;;; we want an inverted result
+    result))
+
+        

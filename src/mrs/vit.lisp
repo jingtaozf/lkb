@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.11  1999/11/12 00:21:19  aac
+;; added reader for turns, allow for transfer variables
+;;
 ;; Revision 1.10  1999/10/14 19:01:09  aac
 ;; eq's are now disliked, so convert them all to leq at the printing stage
 ;;
@@ -139,7 +142,8 @@
 
 
 (defstruct (vit-var)
-  (id 0 :type integer))
+  (id 0 :type integer)
+   subid)
 
 (defstruct (vit-hole-var (:include vit-var)
             (:print-function print-vit-hole-var)))
@@ -500,12 +504,12 @@
         (if (and (symbolp varsym) 
                  (member (elt (symbol-name varsym) 0) 
                          '(#\L #\H #\I) :test #'char=))
-            (multiple-value-bind (type number)
+            (multiple-value-bind (type number subid)
                 (split-vit-var-symbol varsym)
               (case type
-                (h (make-vit-hole-var :id number))
-                (i (make-vit-instance-var :id number))
-                (l (make-vit-label-var :id number))
+                (h (make-vit-hole-var :id number :subid subid))
+                (i (make-vit-instance-var :id number :subid subid))
+                (l (make-vit-label-var :id number :subid subid))
                 (otherwise varsym)))
           varsym))
       
@@ -517,25 +521,30 @@
          (prefix (when (> (length varname) prefixlength)
                    (subseq varname 0 prefixlength)))
          (numval (when (> (length varname) prefixlength)
-                      (read-from-string (subseq varname prefixlength))))
+                   (read-from-string (subseq varname prefixlength))))
+         (subid nil)
          (type nil))
     (if prefix
-        (cond ((or (equal prefix *vit-instance-prefix*)
-                   (char= (elt varname 0)
-                          (elt *vit-instance-prefix* 0)))
+        (cond ((equal prefix *vit-instance-prefix*)
+               (setq type 'i))
+              ((char= (elt varname 0)
+                      (elt *vit-instance-prefix* 0))
                ;;; hack because transfer uses - e.g. lt
                (setq type 'i))
-              ((or (equal prefix *vit-label-prefix*)
-                   (char= (elt varname 0)
-                          (elt *vit-label-prefix* 0)))
+              ((equal prefix *vit-label-prefix*)
                (setq type 'l))
-              ((or (equal prefix *vit-hole-prefix*)
-                   (char= (elt varname 0)
-                          (elt *vit-hole-prefix* 0)))
+              ((char= (elt varname 0)
+                      (elt *vit-label-prefix* 0))
+              (setq type 'l))
+              ((equal prefix *vit-hole-prefix*)
+               (setq type 'h))
+              ((char= (elt varname 0)
+                      (elt *vit-hole-prefix* 0))
                (setq type 'h))
               (t nil)))
+    (setq subid (elt varname 1))
     (if (integerp numval)
-        (values type numval))))
+        (values type numval subid))))
     
 (defun pterms2special-form (pterms)
   (cond ((consp pterms) (mapcar #'pterms2special-form pterms))

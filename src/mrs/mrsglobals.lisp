@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.21  1999/11/12 00:22:29  aac
+;; globals for generation
+;;
 ;; Revision 1.20  1999/10/14 02:14:47  aac
 ;; fixes for introduced bugs
 ;;
@@ -378,6 +381,8 @@ for extra features for using the extra-features of a relation")
 ;;; for munging
 
 (defparameter *ordered-mrs-rule-list* nil)
+
+(defparameter *inverted-mrs-rule-list* nil)
 
 ;;; for scoping
 

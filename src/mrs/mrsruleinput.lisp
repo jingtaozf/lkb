@@ -47,17 +47,27 @@
 
 
 ; DPF 13-Oct-99 - CONSTRUCT-MRS uses the global *key-fs*, which must be reset
-(defun read-mrs-rule-file-aux (file-name &optional generator-p)
-   (clear-mrs-rules)
-  (let ((*tdl-expanded-syntax-function* 
-         #'read-mrs-rule-expanded-syntax)
-        (*readtable* (make-tdl-break-table)))
-      (with-open-file 
-         (istream file-name :direction :input)
-         (format t "~%Reading in rule file")
-         (setf *mrs-rule-fs-list* nil)
-         (setf mrs::*key-fs* nil)
-         (read-mrs-rule-stream istream generator-p))))
+(defun read-mrs-rule-file-aux (file-names &optional generator-p)
+  (unless (listp file-names)
+    (setf file-names (list file-names)))
+  (when (every #'(lambda (file-name)
+                   (and file-name 
+                        (probe-file file-name)))
+               file-names)
+    (if generator-p
+        (clear-gen-rules) 
+      (clear-mrs-rules))
+    (let ((*tdl-expanded-syntax-function* 
+           #'read-mrs-rule-expanded-syntax)
+          (*readtable* (make-tdl-break-table)))
+      (setf *mrs-rule-fs-list* nil)
+      (setf mrs::*key-fs* nil)
+      (for file in file-names
+           do
+           (with-open-file 
+               (istream file :direction :input)
+             (format t "~%Reading in rule file ~A" file)
+             (read-mrs-rule-stream istream generator-p))))))
 
 (defun read-mrs-rule-stream (istream generator-p) 
    (loop

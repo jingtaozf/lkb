@@ -41,11 +41,15 @@
 
 #|
 (mrs::vit-to-mrs-file "vittest2")
+
+(mrs::vit-to-mrs-file "vittest13" "~aac/grammar/data/new-rules1.mrs")
 |#
 
-(defun vit-to-mrs-file (filename)
+(defun vit-to-mrs-file (filename &optional rule-file)
   ;;; takes a file of turns expressed as VITS
   ;;; converts them to MRS
+  (when rule-file
+    (read-inverted-rules rule-file))
   (let ((turns (read-vit-turn-file filename)))
     (for turn in (nreverse turns)
          do
@@ -53,10 +57,26 @@
            (format t "~%Input: ~A~%" (vitturn-input turn))
            (write-vit t vit)
            (format t "~%")
-           (let ((mrss (vit-to-mrs vit)))
+           (let* ((mrss (vit-to-mrs vit)))
+;                  (mrs (car mrss)))
              (for mrs in mrss
                   do
-                  (output-mrs1 mrs 'simple t); ))))))
+                  (output-mrs1 mrs 'simple t) ; ))))))
+#|             
+                  (let
+                      ((identified-entry-sets
+                        (mrs::collect-lex-entries-from-mrs mrs)))
+                         (for res in identified-entry-sets
+                              do
+                              (for item in res
+                                   do
+                                   (format t "~A ~A " (mrs::found-lex-lex-id-fn item)
+                                           (mrs::found-lex-rule-list-fn item))
+                                   (cl-user::display-dag 
+                                    (cl-user::existing-dag-at-end-of 
+                                     (cl-user::tdfs-indef (mrs::found-lex-inst-fs-fn item)) 
+                                     mrs::*main-semantics-path*) 'cl-user::simple))))
+                                     |#
                   (cl-user::generate-from-mrs mrs)
                   (cl-user::show-gen-result)))))))
 
@@ -68,13 +88,32 @@
     (let ((syntax (vit-syntax vit-struct))
           (tense (vit-tenseandaspect vit-struct))
           (scope (vit-scope vit-struct))
-          (sem (vit-semantics vit-struct)))
+          (sem (vit-semantics vit-struct))
+          (discourse (vit-discourse vit-struct)))
       (make-syntax-info syntax)
       (make-syntax-info tense)
+      (make-syntax-info discourse)
       (let ((mrs-rels (convert-vit-sem sem scope)))
         (for rel-alts in (expand-combinations mrs-rels)
              collect
-             (make-psoa :liszt rel-alts))))))
+             (invert-munging
+              (make-psoa :liszt rel-alts)))))))
+
+
+
+(defun invert-munging (mrs-psoa)
+  (if (boundp '*inverted-mrs-rule-list*)
+      (munge-mrs-struct mrs-psoa *inverted-mrs-rule-list*)
+    mrs-psoa))
+
+(defun read-inverted-rules (rule-file)
+  (let ((saved-rules *ordered-mrs-rule-list*))
+    (unwind-protect 
+        (progn
+          (cl-user::read-mrs-rule-file-aux rule-file)
+          (setf *inverted-mrs-rule-list*
+            (invert-munge-rules *ordered-mrs-rule-list*)))
+      (setf *ordered-mrs-rule-list* saved-rules))))
 
 (defun make-syntax-info (syntax)
   ;;; creates a record which is accessed when variables are
@@ -85,13 +124,13 @@
          (let ((index (vit-special-form-instance vit-pterm)))
            (when (and index (vit-var-p index))
              (push vit-pterm 
-                   (gethash (vit-var-id index) *index-info*))))
+                   (gethash (extract-vit-var-id index) *index-info*))))
          (if (p-term-p vit-pterm)
              ;;; file reading code doesn't create special-form
              (let ((index (first (p-term-args vit-pterm))))
            (when (and index (vit-var-p index))
              (push vit-pterm 
-                   (gethash (vit-var-id index) *index-info*))))))))
+                   (gethash (extract-vit-var-id index) *index-info*))))))))
 
 (defun expand-combinations (lst)
   (if (null lst) '(nil)
@@ -109,7 +148,7 @@
          (when (p-term-p vit-pterm)
            (let ((label (first (p-term-args vit-pterm))))
              (when label
-               (let* ((label-id (vit-var-id label))
+               (let* ((label-id (extract-vit-var-id label))
                      (exists (assoc label-id label-sets)))
                  (if exists
                    (push vit-pterm (cddr exists))
@@ -168,12 +207,17 @@
 (defun construct-mrs-rel-from-vit (label item db-item args scope)
   (make-rel
    :handel (convert-vit-label-to-mrs label scope)
-   :sort (semdbitem-gramrel db-item)
+   :sort (munge-supplied-sort (semdbitem-gramrel db-item)
+                              item)
    :flist (convert-vit-args-to-mrs item args db-item))) 
+
+(defun munge-supplied-sort (sort item)
+  sort)
 
 (defun convert-vit-args-to-mrs (item args db-item)
   (let ((mrs-args (find-mrs-args db-item))
-        (internal-args (cdr (p-term-args item))))
+        (internal-args (cdr (p-term-args item)))
+        (dbextra (semdbitem-extra db-item)))
     (for mrs-arg in mrs-args
          filter
          (let* ((mrs-arg-feature (car mrs-arg))
@@ -181,13 +225,17 @@
                 (mrs-arg-type (cdr mrs-arg)))
            (unless (member mrs-arg-feature '(cl-user::handel
                                              cl-user::label))
-             (cond ((member mrs-arg-fstring
+             (cond ((and (member mrs-arg-fstring
                             *mrs-arg-features*
                             :test #'(lambda (x y)
                                       (string-equal 
                                        x
                                        (string (cdr y)))))
+                         (not (and dbextra
+                                   (string-equal (string (car dbextra))
+                                                 "MV"))))                    
              ;;; parsons arg
+                    (let ((current
                     (dolist (arg args)
                       (when (string-equal 
                              (string (p-term-predicate arg))
@@ -198,8 +246,17 @@
                                        :value
                                        (convert-vit-arg-val-to-mrs 
                                         mrs-arg-type
-                                        (third (p-term-args arg))))))))
-                   ((eql mrs-arg-feature 'cl-user::arg4)
+                                        (third (p-term-args arg)))))))))
+                    (or current
+                       (make-fvpair :feature
+                                       mrs-arg-feature
+                                       :value mrs-arg-type))))
+                   ((and
+                     (eql mrs-arg-feature 'cl-user::arg4)
+                     (not (and dbextra
+                                   (string-equal (string (car dbextra))
+                                                 "MV"))))
+                    (let ((current
                     (dolist (arg args)
                       (when (string-equal 
                              (string (p-term-predicate arg))
@@ -210,18 +267,24 @@
                                        :value
                                        (convert-vit-arg-val-to-mrs 
                                         mrs-arg-type
-                                        (third (p-term-args arg))))))))
+                                        (third (p-term-args arg)))))))))
+                      (or current
+                       (make-fvpair :feature
+                                       mrs-arg-feature
+                                       :value mrs-arg-type))))
                     (t
            (let ((internal-arg (car internal-args)))
-             (unless internal-arg
-               (error "argument mismatch"))
-             (setf internal-args (cdr internal-args))
-             (make-fvpair :feature mrs-arg-feature
-                          :value
-                          (convert-vit-arg-val-to-mrs 
-                           mrs-arg-type
-                           internal-arg))))))))))
-    
+             (if internal-arg
+                 (progn
+                   (setf internal-args (cdr internal-args))
+                   (make-fvpair :feature mrs-arg-feature
+                                :value
+                                (convert-vit-arg-val-to-mrs 
+                                 mrs-arg-type
+                                 internal-arg)))
+               (make-fvpair :feature mrs-arg-feature
+                            :value mrs-arg-type))))))))))
+
              
 
 
@@ -241,35 +304,37 @@
       (error "Unknown relation ~A" relname))))
 
 (defun convert-vit-arg-val-to-mrs (type arg)
-  (let ((stored-arg 
-         (assoc arg *stored-args* 
-                :test #'(lambda (x y)
-                          (equal (extract-vit-var-id x)
-                                 (extract-vit-var-id y))))))
-    (let ((existing (cdr stored-arg)))
-      (if existing
-          (progn
-            (if (var-type existing)
-                (setf (var-type existing)
-                  (cl-user::greatest-common-subtype (var-type existing)
-                                                    type))
-              (setf (var-type existing) type))
-            (setf (var-name existing)
-              (determine-mrs-var-name type 
-                                      (var-id existing)))
-            existing)
-        (let* ((vittype nil)
+  (if (vit-var-p arg)
+      (let ((stored-arg 
+             (assoc arg *stored-args* 
+                    :test #'(lambda (x y)
+                              (equal (extract-vit-var-id x)
+                                     (extract-vit-var-id y))))))
+        (let ((existing (cdr stored-arg)))
+          (if existing
+              (progn
+                (if (var-type existing)
+                    (setf (var-type existing)
+                      (cl-user::greatest-common-subtype (var-type existing)
+                                                        type))
+                  (setf (var-type existing) type))
+                (setf (var-name existing)
+                  (determine-mrs-var-name type 
+                                          (var-id existing)))
+                existing)
+            (let* ((vittype nil)
         ;;; need to fix this so that type can be made more specific
         ;;; if warranted by VIT
-               (id (extract-vit-var-id arg))
-               (res
-                (make-var :extra (extract-extra-info id)
-                          :type type
-                          :name (determine-mrs-var-name type id)
-                          :id id)))
-          (push (cons arg res)
-                *stored-args*)
-          res)))))
+                   (id (extract-vit-var-id arg))
+                   (res
+                    (make-var :extra (extract-extra-info id)
+                              :type type
+                              :name (determine-mrs-var-name type id)
+                              :id id)))
+              (push (cons arg res)
+                    *stored-args*)
+              res))))
+    (format nil "~A" arg)))
 
 (defun determine-mrs-var-name (type id)
   (format nil "~A~A" 
@@ -323,7 +388,13 @@
             res)))))
 
 (defun extract-vit-var-id (id)
-  (vit-var-id id))
+  (let ((actual-id (vit-var-id id))
+        (subid (if (char-equal (vit-var-subid id) #\h) 0
+                 1000)))
+    (cond ((vit-hole-var-p id) (+ 100 actual-id subid))
+          ((vit-label-var-p id) (+ 200 actual-id subid))
+          ((vit-instance-var-p id) (+ actual-id subid))
+          (t (error "Unexpected VIT id ~A" id)))))
 
 
 (defun extract-extra-info (id)
@@ -339,10 +410,11 @@
                  ((string-equal (string pred) "num")
                   (push (get-syn-val pterm) num))
                  (t
-                  (let ((extra 
-                         (make-extra-path pred
-                                          (get-syn-val pterm))))
-                    (when extra
+                  (let ((extras 
+                         (make-extra-paths pred
+                                          (get-syn-val pterm)
+                                          (get-second-syn-val pterm))))
+                    (for extra in extras do
                       (push extra
                             res)))))))
     (let ((extra-pn (make-pers-num pers num)))
@@ -360,12 +432,23 @@
             (convert-disj-val (p-term-args val))
           val))))
 
+(defun get-second-syn-val (pterm)
+  (let ((val
+         (if (vit-special-form-p pterm)
+             (second (p-term-args pterm))
+           (third (p-term-args pterm)))))
+    (if val
+        (if (p-term-p val)
+            (convert-disj-val (p-term-args val))
+          val))))
+
 (defun convert-disj-val (vals)
+  (declare (ignore vals))
   'cl-user::*top*)
 
 (defun make-pers-num (pers num)
-  (let* ((real-pers (car pers))
-         (real-num (car num))
+  (let* ((real-pers (and (not (eql (car pers) 'cl-user::*top*)) (car pers)))
+         (real-num (and (not (eql (car num) 'cl-user::*top*)) (car num)))
          (val
     (cond ((and real-pers real-num)
            (intern (concatenate 'string (format nil "~A" real-pers)
@@ -381,13 +464,16 @@
                       '(cl-user::png cl-user::pn))
                    :value val))))
 
-(defun make-extra-path (pred val)
-  (multiple-value-bind (mrspath mrsvalue)
-      (lookup-vit-to-mrs-extra pred val)
-    (when (and mrspath mrsvalue)
-      (make-fvpair :feature 
-                   (cl-user::create-typed-path-from-feature-list mrspath)
-                   :value mrsvalue))))
+(defun make-extra-paths (pred val second-val)
+  (for local in (list val second-val)
+       filter
+       (multiple-value-bind (mrspath mrsvalue)
+           (lookup-vit-to-mrs-extra pred local)
+         (when (and mrspath mrsvalue)
+           (make-fvpair :feature 
+                        (cl-user::create-typed-path-from-feature-list mrspath)
+                        :value mrsvalue)))))
+  
 
 (defun lookup-vit-to-mrs-extra (pred val)
   (cond 
@@ -397,6 +483,12 @@
    ((and (string-equal (string pred) "ta_mood")
            (string-equal (string val) "ind"))
     (values '(cl-user::vit cl-user::vitmood) 'cl-user::indicative))
+   ((and (string-equal (string pred) "prontype")
+           (string-equal (string val) "refl"))
+    (values '(cl-user::prontype) 'cl-user::refl))
+   ((and (string-equal (string pred) "prontype")
+           (string-equal (string val) "std"))
+    (values '(cl-user::prontype) 'cl-user::std_pron))
    ((string-equal (string pred) "gend")
     (cond ((string-equal (string val) "masc")
            (values '(cl-user::png cl-user::gen) 'cl-user::masc))

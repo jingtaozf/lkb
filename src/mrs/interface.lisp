@@ -44,7 +44,7 @@
 (defun process-mrs-struct (mrs-psoa sentence maximum simplep stream)
   (when mrs-psoa
     (when sentence
-      (format stream "~%~A" sentence))
+      (format stream "~%~A~%" sentence))
     (when simplep
       (output-mrs1 mrs-psoa 'simple stream))
     (when (and (boundp '*ordered-mrs-rule-list*)

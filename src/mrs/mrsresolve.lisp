@@ -328,7 +328,9 @@ printing routines -  convenient to make this global to keep printing generic")
        do
        (setf *canonical-bindings* (canonical-bindings binding))
        (output-connected-mrs1 mrsstruct 'indexed stream)
-       (output-scoped-mrs mrsstruct :stream stream)))
+       (output-scoped-mrs mrsstruct :stream stream)
+       (format stream "~%--------------------------~%"))
+  (format stream "~%"))
   
 
 ;;; slight variant on the above for PAGE toplevel
