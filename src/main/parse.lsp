@@ -508,7 +508,7 @@
 (defun add-word (local-word morph-poss right-vertex f cfrom cto)
   ;; get-senses returns a list of conses of ids and dags corresponding to the
   ;; word senses - the type of the dag is used to do the indexing
-  (let* ((multi-results (add-multi-words morph-poss right-vertex f))
+  (let* ((multi-results (add-multi-words morph-poss right-vertex f cfrom cto))
          (word-senses 
           (if #+:ltemplates (template-p local-word) #-:ltemplates nil
             #+:ltemplates
@@ -601,13 +601,15 @@
 
 (defstruct (sense-record)
   word-string
+  cfrom
   left-vertex
   lex-ids
   fs
   morph-res
   mrecs)
   
-(defun add-multi-words (morph-poss right-vertex f)
+(defun add-multi-words (morph-poss right-vertex f cfrom cto)
+  (declare (ignore cfrom))
   (let* ((multi-strings nil)
 	 (word-senses 
           (loop for stem in (remove-duplicates 
@@ -640,15 +642,16 @@
 			    (list sense-record))))))))
     (dolist (sense-record word-senses)
       (let ((word (sense-record-word-string sense-record))
-	    (left-vertex (sense-record-left-vertex sense-record)))
+	    (left-vertex (sense-record-left-vertex sense-record))
+	    (cfrom (sense-record-cfrom sense-record)))
 	(push word multi-strings)
 	(dolist (mrec (sense-record-mrecs sense-record))
 	  (let* ((sense (mrecord-fs mrec))
                  (lex-ids (mrecord-lex-ids mrec))
                  (history (mrecord-history mrec))
                  (edge (construct-lex-edge sense history word lex-ids
-                                           left-vertex right-vertex -1 -1)))
-	    ;;; FIX multiwords
+                                           left-vertex right-vertex 
+					   cfrom cto)))
             (if *active-parsing-p*
               (let ((configuration (make-chart-configuration
                                     :begin left-vertex :end right-vertex
@@ -675,6 +678,7 @@
   (let ((entry-orth (lex-entry-orth unexpanded-entry))
         (ok t)
         (rules nil)
+	(cfrom nil)
         (amalgamated-stems nil)
         (amalgamated-words nil)
         (inflection-position (lex-entry-infl-pos unexpanded-entry))) 
@@ -687,6 +691,8 @@
 	(dolist (word-stem entry-orth)
 	  (let* ((morph-entry (aref *morphs* current-vertex))
 		 (existing-word (morph-edge-word morph-entry)))
+	    (unless cfrom
+	      (setf cfrom (morph-edge-cfrom morph-entry)))
 	    (if (eql current-position inflection-position)
 		;; inflection allowed here
 		(let ((current-morph-res 
@@ -738,6 +744,7 @@
                      (let ((left-vertex (- right-vertex (length entry-orth))))
                        (make-sense-record :word-string full-word-string
                                           :left-vertex left-vertex
+					  :cfrom cfrom
                                           :morph-res 
                                           (if rule-set
                                               (cons full-stem-string 
