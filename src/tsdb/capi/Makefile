@@ -18,7 +18,7 @@ RANLIB = ranlib
 solaris: acl.o gc.o capi.o client.o mfile.o ../../../include/itsdb.h
 	$(LD) -o ../../pvm/solaris/pvm.so acl.o $(SOLARIS_LIBS)
 	$(LD) -o ../solaris/capi.so capi.o acl.o $(SOLARIS_LIBS)
-	$(LD) -o ../solaris/gc.so gc.o
+	$(LD) -o ../solaris/gc.so gc.o $(SOLARIS_LIBS)
 	$(LD) -o ../../../lib/solaris/libitsdb.so \
 	  client.o acl.o mfile.o $(SOLARIS_LIBS)
 	$(AR) ../../../lib/solaris/libitsdb.a \

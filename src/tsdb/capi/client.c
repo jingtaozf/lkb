@@ -43,7 +43,7 @@ static int (*callbacks[4])() = {
 static struct MFILE *client_output;
 static int self = 0;
 
-int capi_register(int (*create_run)(char *, int, char *, int, char *),
+int capi_register(int (*create_run)(char *, int, char *, int, int, char *),
                   int (*process_item)(int, char *, int, int, int, int, int),
                   int (*reconstruct_item)(char *),
                   int (*complete_run)(int, char *)) {
@@ -171,7 +171,7 @@ int client_register(int self, int master) {
 
 struct MFILE *client_create_run() {
 
-  int run_id, interactive, length;
+  int run_id, interactive, protocol, length;
   char *data, *comment, *custom;
 
   if(pvm_upkint(&length, 1, 1) < 0) {
@@ -227,6 +227,15 @@ struct MFILE *client_create_run() {
     return 0;
   } /* if */
 
+  if(pvm_upkint(&protocol, 1, 1) < 0) {
+    pvm_perror("create_run()");
+    fprintf(stderr, "create_run(): unable to read receive buffer.\n");
+    fflush(stderr);
+    pvm_quit();
+    free(data); free(comment);
+    return 0;
+  } /* if */
+
   if(pvm_upkint(&length, 1, 1) < 0) {
     pvm_perror("create_run()");
     fprintf(stderr, "create_run(): unable to read receive buffer.\n");
@@ -261,7 +270,8 @@ struct MFILE *client_create_run() {
               custom,
               current_user(), current_host(), current_os());
   if(callbacks[C_CREATE_RUN] != NULL) {
-    if(callbacks[C_CREATE_RUN](data, run_id, comment, interactive) < 0) {
+    if(callbacks[C_CREATE_RUN](data, run_id, comment, interactive,
+                               protocol, custom) < 0) {
       fprintf(stderr, "create_run(): erroneous client return value.\n");
     } /* if */
   } /* if */
@@ -273,7 +283,7 @@ struct MFILE *client_create_run() {
 
 struct MFILE *client_process_item() {
 
-  int i_id, parse_id, edges, exhaustive, derivationp, interactive, length;
+  int i_id, parse_id, edges, nanalyses, derivationp, interactive, length;
   char *i_input;
 
   if(pvm_upkint(&i_id, 1, 1) < 0) {
@@ -319,7 +329,7 @@ struct MFILE *client_process_item() {
     return 0;
   } /* if */
 
-  if(pvm_upkint(&exhaustive, 1, 1) < 0) {
+  if(pvm_upkint(&nanalyses, 1, 1) < 0) {
     pvm_perror("process_item()");
     fprintf(stderr, "process_item(): unable to read receive buffer.\n");
     fflush(stderr);
@@ -354,16 +364,16 @@ struct MFILE *client_process_item() {
   
   capi_printf("\n (:return :process-item (\n"
               "  (:i-id . %d) (:parse-id . %d)\n"
-              "  (:edges . %d) (:exhaustive . %d)"
+              "  (:edges . %d) (:nanalyses . %d)"
               "  (:derivationp . %d) (:interactive . %d)\n"
               "  (:i-load . %f)\n",
               i_id, parse_id,
-              edges, exhaustive, 
+              edges, nanalyses, 
               derivationp, interactive,
               load_average());
   if(callbacks[C_PROCESS_ITEM] != NULL) {
     if(callbacks[C_PROCESS_ITEM](i_id, i_input, parse_id, edges, 
-                                 exhaustive, derivationp, interactive) < 0) {
+                                 nanalyses, derivationp, interactive) < 0) {
       fprintf(stderr, "process_item(): erroneous client return value.\n");
     } /* if */
   } /* if */
@@ -444,6 +454,7 @@ int client_open_item_summary() {
               current_time(),
               current_user(), current_host(), current_os());
   return 0;
+
 } /* client_open_item_summary() */
 
 int client_send_item_summary() {

@@ -25,7 +25,7 @@ int pvm_flush(void);
 int pvm_transmit(int, int, char *);
 int pvm_file_transmit(int, int, char *);
 int pvm_poll(int, int, int, char *, int);
-int pvm_collect(char *);
+int pvm_collect(char *, int);
 int pvm_vm_info(char *);
 int pvm_task_info(int, char *);
 
@@ -149,39 +149,39 @@ int pvm_announce(char *class, char *version, char *user) {
 
 } /* pvm_announce() */
 
-int pvm_lookup(char *class, char *version, int vsize, char *user, int usize) {
+int pvm_look_up(char *class, char *version, int vsize, char *user, int usize) {
 
   int buffer, tid;
 
   if ((buffer = pvm_recvinfo(class, 0, PvmMboxFirstAvail)) >= 0) {
     if(pvm_setrbuf(buffer) < 0) {
-      pvm_perror("pvm_lookup()");
+      pvm_perror("pvm_look_up()");
       fprintf(stderr, 
-              "pvm_lookup(): unable to read (announce) message buffer.\n");
+              "pvm_look_up(): unable to read (announce) message buffer.\n");
       fflush(stderr);
       pvm_quit();
       return -1;
     } /* if */
     if(pvm_upkint(&tid, 1, 1) < 0) {
-      pvm_perror("pvm_lookup()");
+      pvm_perror("pvm_look_up()");
       fprintf(stderr, 
-              "pvm_lookup(): unable to read (announce) message buffer.\n");
+              "pvm_look_up(): unable to read (announce) message buffer.\n");
       fflush(stderr);
       pvm_quit();
       return -1;
     } /* if */
     if(pvm_upkstr(version) < 0) {
-      pvm_perror("pvm_lookup()");
+      pvm_perror("pvm_look_up()");
       fprintf(stderr, 
-              "pvm_lookup(): unable to read (announce) message buffer.\n");
+              "pvm_look_up(): unable to read (announce) message buffer.\n");
       fflush(stderr);
       pvm_quit();
       return -1;
     } /* if */
     if(pvm_upkstr(user) < 0) {
-      pvm_perror("pvm_lookup()");
+      pvm_perror("pvm_look_up()");
       fprintf(stderr, 
-              "pvm_lookup(): unable to read (announce) message buffer.\n");
+              "pvm_look_up(): unable to read (announce) message buffer.\n");
       fflush(stderr);
       pvm_quit();
       return -1;
@@ -190,7 +190,7 @@ int pvm_lookup(char *class, char *version, int vsize, char *user, int usize) {
   } /* if */
   return 0;
 
-} /* pvm_lookup() */ 
+} /* pvm_look_up() */ 
 
 int pvm_quit(void) {
 
@@ -514,10 +514,11 @@ int pvm_poll(int tid, int tag, int block, char *output, int size) {
 
 } /* pvm_poll() */
 
-int pvm_collect(char *output) {
+int pvm_collect(char *output, int size) {
 
   int mtag, remote, n;
   double load;
+  char *foo;
 
   if(pending < 0 || psize < 0 || pvm_setrbuf(pending) < 0) {
     pvm_perror("pvm_collect()");
@@ -534,17 +535,32 @@ int pvm_collect(char *output) {
     pvm_quit();
     return(-1);
   } /* if */
-  n = sprintf(&output[0],
-              "((:tag . %i) (:remote . %i) (:content . ", 
-              mtag, remote);
-  if(pvm_upkstr(&output[n]) < 0) {
-    pvm_perror("pvm_collect()");
-    fprintf(stderr, "pvm_collect(): unable to read receive buffer.\n");
-    fflush(stderr);
-    pvm_quit();
-    return(-1);
+  n = sprintf(&output[0], "((:tag . %i) (:remote . %i)", mtag, remote);
+  if(size > (n + psize + 42)) {
+    n += sprintf(&output[n], " (:content . ");
+    if(pvm_upkstr(&output[n]) < 0) {
+      pvm_perror("pvm_collect()");
+      fprintf(stderr, "pvm_collect(): unable to read receive buffer.\n");
+      fflush(stderr);
+      pvm_quit();
+      return(-1);
+    } /* if */
+    n += psize;
   } /* if */
-  n += psize;
+  else {
+    foo = malloc(psize + 1);
+    if(foo == NULL || pvm_upkstr(foo) < 0) {
+      pvm_perror("pvm_collect()");
+      fprintf(stderr, "pvm_collect(): unable to read receive buffer.\n");
+      fflush(stderr);
+      pvm_quit();
+      free(foo);
+      return(-1);
+    } /* if */
+    free(foo);
+    n += sprintf(&output[n], " (:content . (:return :process-item (\n");
+    n += sprintf(&output[n], "  (:error . \"PVM message buffer overflow\")))");
+  } /* else */
   pending = psize = -1;
   if(pvm_upkdouble(&load, 1, 1) < 0) {
     pvm_perror("pvm_poll()");
