@@ -7,6 +7,10 @@
 ;;;  Interface to a Postgres database
 ;;;
 
+;;; bmw (nov-03)
+;;; - SEMI
+;;; - RH9 default-locale bug workaround
+
 ;;; bmw (oct-03)
 ;;; - MWE support
 ;;; - public and private database schemas
@@ -909,7 +913,7 @@
   (setf filename (namestring (pathname filename)))
   (if (catch 'pg:sql-error 
 	(fn-get-records lexicon ''add-to-db filename))
-      (error "cannot update lexical database ~a. Check that ~~/tmp/lexdb.new_entries does not contain attempts to redefine existing entries. No tuple of the form <name,userid,version,...> should correspond to an existing entry. [In particular, the TIMESTAMP of a tuple cannot change.]" (dbname lexicon))))
+      (error "cannot update lexical database ~a. Check that ~~/tmp/lexdb.new_entries does not contain attempts to redefine existing entries. No tuple of the form <name,userid,version,...> should correspond to an existing entry. [In particular, the MODSTAMP of a tuple cannot change.]" (dbname lexicon))))
       
 (defun dump-psql-lexicon (filename)
   (get-postgres-temp-filename)
@@ -1321,11 +1325,14 @@
 (defun command-generate-semi nil
   (format t "~%Generating SEM-I. See files ~asemi.*" *postgres-user-temp-dir*)
   (let ((obj-semi-main-filename (format nil "~asemi.obj.main" *postgres-user-temp-dir*))
-	(obj-semi-args-filename (format nil "~asemi.obj.args" *postgres-user-temp-dir*)))
+	(obj-semi-args-filename (format nil "~asemi.obj.args" *postgres-user-temp-dir*))
+	(obj-semi-sec-filename (format nil "~asemi.obj.sec" *postgres-user-temp-dir*)))
     (format *postgres-debug-stream* "~%(dumping obj_semi_main to file ~a)" obj-semi-main-filename)
     (dump-obj-semi-main  obj-semi-main-filename)
     (format *postgres-debug-stream* "~%(dumping obj_semi_args to file ~a)" obj-semi-args-filename)
-    (dump-obj-semi-args  obj-semi-args-filename))
+    (dump-obj-semi-args  obj-semi-args-filename)
+    (format *postgres-debug-stream* "~%(dumping obj_semi_secondaries to file ~a)" obj-semi-sec-filename)
+    (dump-obj-semi-secondaries  obj-semi-sec-filename))
   (lkb-beep))
 
 ;;;
