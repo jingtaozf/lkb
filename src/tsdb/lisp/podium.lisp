@@ -746,7 +746,7 @@
                       (send-to-podium 
                        (format 
                         nil 
-                        "showtable ~s \".~(~a~)\" ~s ~s" 
+                        "showtable ~s \".~(~a~)\" {~a} {~a}" 
                         file (gensym "") data title)
                        :wait t)))
                 (cond
