@@ -57,8 +57,6 @@
       (when (eq :connection-ok status)
 	  (setf (server-version lexicon) 
 	    (get-server-version lexicon))
-	  (setf (lexdb-version lexicon) 
-	    (get-db-version lexicon))	
 	))))
 
 (defmethod disconnect ((lexicon psql-database))
@@ -97,7 +95,11 @@
 
 (defmethod close-lex ((lexicon psql-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
-  (disconnect lexicon))
+  (with-slots (server-version fns) lexicon
+    (disconnect lexicon)
+    (setf server-version nil)
+    (setf fns nil)
+    (if (next-method-p) (call-next-method))))
 
 (defmethod true-port ((lexicon psql-database))
   (let* ((port (or
@@ -107,76 +109,6 @@
 	5432
       port)))
  
-(defmethod open-lex ((lexicon psql-database) &key name parameters)
-  (declare (ignore parameters)) 
-  (with-slots (lexdb-version server-version dbname host user connection) lexicon
-    (close-lex lexicon)    
-    (format t "~%Connecting to lexical database ~a@~a:~a" 
-	    dbname
-	    host
-	    (true-port lexicon))
-    (force-output)
-    (setf *postgres-tmp-lexicon* lexicon)
-    (cond
-     ((connect lexicon)
-      (format t "~%Connected as user ~a" user)
-      (format t "~%Opening ~a" dbname)
-      (unless (string>= server-version "7.3")
-	(error *trace-output* 
-	       "PostgreSQL server version is ~a. Please upgrade to version 7.4 or above." 
-	       server-version))
-      (cond
-       ((not (stringp lexdb-version))
-	(error "Unable to determine LexDB version"))
-       ((string> (compat-version lexdb-version)
-		 *psql-lexdb-compat-version*)
-	(error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary." lexdb-version *psql-lexdb-compat-version*))
-       ((string< (compat-version lexdb-version)
-		 *psql-lexdb-compat-version*)
-       (error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax).
- You must load updated setup files.
- See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html" lexdb-version *psql-lexdb-compat-version*)))
-      (make-field-map-slot lexicon)
-      (retrieve-fn-defns lexicon)
-      (initialize-userschema lexicon)
-      (setf (name lexicon) name)
-      lexicon)
-     (t
-      (format t "~%unable to connect to ~s:~%  ~a" 
-	      (pg:db connection) 
-	      (pg:error-message connection))
-      nil))))
-
-(defmethod initialize-lex ((lexicon psql-database) &key semi)
-  (when (open-lex lexicon)
-    (build-lex lexicon :semi semi)))
-  
-(defmethod vacuum-current-grammar ((lexicon psql-database) &key verbose)
-  (let ((command
-	 (if verbose
-	     "vacuum full analyze verbose current_grammar"
-	   "vacuum full analyze current_grammar")))
-    (format t "~%Please wait: vacuuming private table")
-    (force-output)
-    (run-command lexicon command)
-    (lkb-beep)))
-
-(defmethod vacuum-public-revision ((lexicon psql-database) &key verbose)
-  (with-slots (dbname host port) lexicon
-    (let ((l2 (make-instance 'psql-database
-		:dbname dbname
-		:host host
-		:port port
-		:user (raw-get-val lexicon "SELECT db_owner()")))
-	  (command
-	   (if verbose
-	       "vacuum full analyze verbose public.revision"    
-	     "vacuum full analyze public.revision")))
-      (format t "~%Please wait: vacuuming public table")
-      (force-output)
-      (connect l2)
-      (run-command l2 command))))
-
 ;;; returns version, eg. "7.3.2"
 (defmethod get-server-version ((lexicon psql-database))
   (let* 

@@ -562,7 +562,7 @@
     (empty-cache lexicon)
     (setf invalid-p nil)
     (setf extra-mode *lex-database-default-extra-mode*)
-    (call-next-method)
+    (if (next-method-p) (call-next-method))
     (unless in-isolation
       ;;unlink from sub-lexicons
       (mapcar 

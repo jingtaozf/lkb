@@ -44,32 +44,30 @@
 
 (defclass external-lex-database (lex-database)
   ((record-cache :initform (make-hash-table :test #'eq))
-   ;; flat-table containing the lexical database
-   (lexicon-table :initform nil :accessor lex-tb :initarg :lex-tb) ;; unused
+   ;(lex-tb :initform nil :accessor lex-tb :initarg :lex-tb)
    ;; table for mapping the lexicon-table fields to the psort-or-lex structure
-   (slot-to-fields-mapping-table 
+   (fields-tb 
     :initform nil :accessor fields-tb :initarg :fields-tb)
    ;; a-list for mapping the lexicon-table fields to the psort-or-lex structure
-   (slot-to-fields-mapping :initform nil :accessor fields-map)))
+   (fields-map :initform nil :accessor fields-map)))
 
 (defclass psql-database (sql-database)
   ((connection :initform nil :accessor connection :initarg connection)
    (server-version :initform nil :accessor server-version)
-   (lexdb-version :initform nil :accessor lexdb-version)
    (fns :initform nil :accessor fns)))
 
 (defclass psql-lex-database (psql-database external-lex-database)
-  ())
+  ((lexdb-version :initform nil :accessor lexdb-version)))
 
 (defclass sql-query ()
   ((sql-string :accessor sql-string :initarg :sql-string :initform nil)
    (records :initform :unknown :accessor records)
-   (columns :initform :unknown :accessor columns)
-   ))
+   (columns :initform :unknown :accessor columns)))
 
 (defclass psql-lex-entry ()
   ((fv-pairs :initarg :fv-pairs)))
 
+;;; temporary
 #-:psql
 (progn
   (defun MRS::DUMP-SEMI-TO-PSQL nil)

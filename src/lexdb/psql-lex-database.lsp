@@ -303,7 +303,7 @@
 	    (error "too many arguments")))))
     (when (catch 'pg:sql-error
 	    (format *postgres-debug-stream* 
-		    "~%Please wait: recreating database cache for new filter")
+		    "~%~%Please wait: recreating database cache for new filter")
 	    (force-output)
 	    (unless (set-filter-aux lexicon filter)
 	      (format t "~%(LexDB filter unchanged)")
@@ -563,3 +563,104 @@
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-tdl lexicon ostream)))
 
+(defmethod make-requested-fields ((lexicon psql-lex-database))
+  ;; constructs the argument string to sql SELECT with all necessary fields
+  (let* ((fields 
+	  (remove-duplicates 
+	   (mapcar #'cadr 
+		   (fields-map lexicon))
+	   :test #'equal))
+         (fields-str 
+	  (symb-2-str 
+	   (pop fields))))
+    (loop 
+        for element in fields
+        do 
+	  (setf fields-str 
+	    (concatenate 'string 
+	      fields-str 
+	      ", " 
+	      (symb-2-str element))))
+    fields-str))
+
+(defmethod close-lex ((lexicon psql-lex-database) &key in-isolation delete)
+  (declare (ignore in-isolation delete))
+  (with-slots (lexdb-version) lexicon
+    (setf lexdb-version nil)
+    (if (next-method-p) (call-next-method))))
+
+(defmethod open-lex ((lexicon psql-lex-database) &key name parameters)
+  (declare (ignore parameters)) 
+  (with-slots (lexdb-version server-version dbname host user connection) lexicon
+    (close-lex lexicon)    
+    (format t "~%Connecting to lexical database ~a@~a:~a" 
+	    dbname
+	    host
+	    (true-port lexicon))
+    (force-output)
+    (setf *postgres-tmp-lexicon* lexicon)
+    (cond
+     ((connect lexicon)
+      (format t "~%Connected as user ~a" user)
+      (format t "~%Opening ~a" dbname)
+      (unless (string>= server-version "7.3")
+	(error *trace-output* 
+	       "PostgreSQL server version is ~a. Please upgrade to version 7.4 or above." 
+	       server-version))
+      (cond
+       ((not (stringp lexdb-version))
+	(error "Unable to determine LexDB version"))
+       ((string> (compat-version lexdb-version)
+		 *psql-lexdb-compat-version*)
+	(error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary." lexdb-version *psql-lexdb-compat-version*))
+       ((string< (compat-version lexdb-version)
+		 *psql-lexdb-compat-version*)
+       (error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax).
+ You must load updated setup files.
+ See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html" lexdb-version *psql-lexdb-compat-version*)))
+      (make-field-map-slot lexicon)
+      (retrieve-fn-defns lexicon)
+      (initialize-userschema lexicon)
+      (setf (name lexicon) name)
+      lexicon)
+     (t
+      (format t "~%unable to connect to ~s:~%  ~a" 
+	      (pg:db connection) 
+	      (pg:error-message connection))
+      nil))))
+
+(defmethod initialize-lex ((lexicon psql-lex-database) &key semi)
+  (when (open-lex lexicon)
+    (build-lex lexicon :semi semi)))
+  
+(defmethod vacuum-current-grammar ((lexicon psql-database) &key verbose)
+  (let ((command
+	 (if verbose
+	     "vacuum full analyze verbose current_grammar"
+	   "vacuum full analyze current_grammar")))
+    (format t "~%~%Please wait: vacuuming private table")
+    (force-output)
+    (run-command lexicon command)
+    (lkb-beep)))
+
+(defmethod vacuum-public-revision ((lexicon psql-lex-database) &key verbose)
+  (with-slots (dbname host port) lexicon
+    (let ((l2 (make-instance 'psql-database
+		:dbname dbname
+		:host host
+		:port port
+		:user (raw-get-val lexicon "SELECT db_owner()")))
+	  (command
+	   (if verbose
+	       "vacuum full analyze verbose public.revision"    
+	     "vacuum full analyze public.revision")))
+      (format t "~%~%Please wait: vacuuming public table")
+      (force-output)
+      (connect l2)
+      (run-command l2 command))))
+
+(defmethod connect ((lexicon psql-lex-database)) 
+  (if (next-method-p) (call-next-method))
+  (setf (lexdb-version lexicon) 
+    (get-db-version lexicon)))	
+ 

@@ -7,7 +7,7 @@
   (let ((filename (get-filename rest :ending ".csv" :existing t)))
   
     (format t 
-            "~%Please wait: merging files ~a.* into lexical database ~a" 
+            "~%~%Please wait: merging files ~a.* into lexical database ~a" 
             filename 
             (dbname *psql-lexicon*))
     (force-output)
@@ -18,7 +18,7 @@
   (let ((filename (get-filename rest :ending ".csv" :existing nil)))
 
     (format t 
-            "~%Please wait: dumping lexical database ~a to files ~a.*" 
+            "~%~%Please wait: dumping lexical database ~a to files ~a.*" 
             (dbname *psql-lexicon*) 
             filename)
     (force-output)
@@ -29,7 +29,11 @@
   (let ((filename (format nil "~a.tdl"
                           (get-filename rest :ending ".tdl" :existing nil)))) 
                   
-    (time (export-lexicon-to-tdl :file filename))
+    (format t "~%~%Please wait: exporting lexicon to TDL file")
+    (force-output)
+    (time 
+     (export-lexicon-to-tdl :file filename))
+    (format t "~%Export complete")
     (lkb-beep)))
   
 (defun command-set-filter-psql-lexicon (&rest rest)
@@ -39,7 +43,7 @@
 
 (defun command-clear-scratch nil
   (let ((count-priv (length (show-scratch *psql-lexicon*))))
-    (format t "~%Please wait: clearing ~a entries from private space" count-priv)
+    (format t "~%~%Please wait: clearing ~a entries from private space" count-priv)
     (force-output)
     (when (> count-priv 0)
       (time
@@ -48,7 +52,7 @@
 
 (defun command-commit-scratch nil
   (let ((count-priv (length (show-scratch *psql-lexicon*))))
-    (format t "~%Please wait: moving ~a private entries to public space"
+    (format t "~%~%Please wait: moving ~a private entries to public space"
 	    count-priv)
     (force-output)
     (when (> count-priv 0)
@@ -61,13 +65,13 @@
 	 (mapcar 
 	  #'(lambda (x) (cdr (first x))) 
 	  (show-scratch *psql-lexicon*))))
-    (format t "~%Contents of scratch (~a entries): ~a"
+    (format t "~%~%Contents of scratch (~a entries): ~a"
 	    (length scratch)
 	    scratch)
     (lkb-beep)))
 
 (defun command-index-new-lex-entries nil
-  (format t "~%Please wait: indexing new lexical entries for generator")
+  (format t "~%~%Please wait: indexing new lexical entries for generator")
   (force-output)
   (time
    (index-new-lex-entries *lexicon*))
@@ -85,7 +89,8 @@
 (defun command-load-tdl-to-scratch (&rest rest)
   (let ((filename (format nil "~a.tdl"
                           (get-filename rest :ending ".tdl" :existing t)))) 
-  
+    
+    (format t "~%~%Please wait: importing TDL entries")
     (load-tdl-from-scratch filename)
     (lkb-beep)))
 

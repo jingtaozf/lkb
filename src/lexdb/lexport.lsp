@@ -113,18 +113,11 @@
 (defun export-lexicon-to-tdl (&key (dir (postgres-user-temp-dir))
 				   file 
 				   (lexicon *lexicon*))
-    (unless file
-    (if (name lexicon)
-	(setf file (namestring (pathname (format nil "~a/~a" dir (name lexicon)))))
-      (setf file (namestring (pathname (format nil "~a/unknown" dir))))))
-  
-  (let ((tdl-file (format nil "~a.tdl" file)))
-    (if (equal (subseq file (- (length file) 4)) ".tdl")
-	(setf tdl-file file))
-    (format t "~%Exporting lexicon to TDL file ~a" tdl-file)
-    (force-output)
-    (export-to-tdl-to-file lexicon tdl-file))
-  (format t "~%Export complete~%"))
+  (when (null file)
+    (let ((lex-name (or (name lexicon) "unknown")))
+      (setf file (namestring (pathname (format nil "~a/~a.tdl" dir lex-name))))))
+  (format t "~%(export filename: ~a)" file)
+  (export-to-tdl-to-file lexicon file))
 
 ;;;
 ;;; get meta-level fields
@@ -213,7 +206,8 @@
       (let ((lexicon (load-scratch-lex :filename filename)))
 	(query-for-meta-fields)
 	(reconnect psql-lexicon);; work around server bug...
-	(time (export-to-db lexicon psql-lexicon))
+	(time 
+         (export-to-db lexicon psql-lexicon))
 	(close-lex lexicon)
 	(format t "~%(private space: ~a entries)" 
 		(length (show-scratch psql-lexicon)))))))
