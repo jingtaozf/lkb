@@ -316,7 +316,7 @@ Mean strings/sentence ~,2F Mean edges ~,1F Mean time ~,1F secs"
       (format ostream "~%#| Parse failure: ~A |#" sentence))
     (loop for parse-res in *parse-record*
          do
-         (let ((mrs (mrs::extract-mrs parse-res t))
+         (let ((mrs (mrs::extract-mrs parse-res))
                (tgc nil) (tcpu nil) (treal nil) (space nil)
                (errorp nil))
            ;;

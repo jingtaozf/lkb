@@ -146,9 +146,7 @@
 
 #-tty
 (defun really-generate-from-edge (parser-edge)    
-  (let* ((input-sem (mrs::extract-mrs parser-edge t)))
-    ;; t indicates that this is being run from the generator and that
-    ;; the appropriate globals should be set
+  (let* ((input-sem (mrs::extract-mrs parser-edge)))
     (with-output-to-top ()
       (if (and input-sem (mrs::psoa-p input-sem)
                (mrs::psoa-liszt input-sem))
@@ -191,9 +189,7 @@
          (let ((parser-edge (find-edge-given-id possible-edge-name)))
             (if parser-edge
                (let* ((input-sem
-                       (mrs::extract-mrs parser-edge t)))
-   ;; t indicates that this is being run from the generator and that
-   ;; the appropriate globals should be set
+                       (mrs::extract-mrs parser-edge)))
                   (if (mrs::psoa-liszt input-sem)
                      (progn
                         (format t "~&Generating from parser edge ~A" possible-edge-name)

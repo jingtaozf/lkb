@@ -292,7 +292,7 @@
             (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
                 mrs::*initial-semantics-path*)))
      (when (and sem-fs (dag-p sem-fs))
-       (let ((mrs (mrs::construct-mrs sem-fs nil t)))
+       (let ((mrs (mrs::construct-mrs sem-fs nil)))
 ;;         (when *debugging*
 ;;           (display-fs sem-fs "semstructure"))
 ;;         (when *sem-debugging*

@@ -245,7 +245,7 @@
 	   (symbol-name 
 	    (car 
 	     (find "Generate" query-alist :test #'equal :key #'second)))))
-	 (content (mrs::extract-mrs (cached-fs parse) t)))
+	 (content (mrs::extract-mrs (cached-fs parse))))
     (when (mrs::psoa-liszt content)
       (user::generate-from-mrs content))
     (let ((sentences

@@ -2,7 +2,10 @@
 
 ;;; from lexindex
 
+(defparameter *get-compatible-rels-memo* (make-hash-table))
+
 (defun clear-generator-index nil
+  (clrhash *get-compatible-rels-memo*)
   (mrs::clear-semantic-indices)
   (mrs::clear-lrule-globals)
   (mrs::clear-grule-globals))
@@ -66,25 +69,31 @@
      (mrs::check-for-redundant-filter-rules)
      (setf *batch-mode* nil)))
 
+
+
 (defun get-compatible-rels (reltype)
-  (let ((type-entry (get-type-entry reltype)))
-    (if type-entry
-        (let ((return-types (list type-entry)))
-          (loop for desc in (type-descendants type-entry)
-               do
-               (pushnew desc return-types :test #'eq)
-               (loop for desc-anc in (type-ancestors desc)
-                    do
-                    (when (member mrs::*top-semantics-entry*
-                                  (type-ancestors desc-anc) :test #'eq)
-                      (pushnew desc-anc return-types :test #'eq))))
-          (loop for anc in (type-ancestors type-entry)
-               do
-               (when (member mrs::*top-semantics-entry*
-                             (type-ancestors anc) :test #'eq)
-                 (pushnew anc return-types :test #'eq)))
-          (mapcar #'type-name return-types))
-      (list reltype))))
+  (or (gethash reltype *get-compatible-rels-memo*)
+      (let* ((type-entry (get-type-entry reltype))
+             (return-value
+              (if type-entry
+                  (let ((return-types (list type-entry)))
+                    (loop for desc in (type-descendants type-entry)
+                        do
+                          (pushnew desc return-types :test #'eq)
+                          (loop for desc-anc in (type-ancestors desc)
+                              do
+                                (when (member mrs::*top-semantics-entry*
+                                              (type-ancestors desc-anc) :test #'eq)
+                                  (pushnew desc-anc return-types :test #'eq))))
+                    (loop for anc in (type-ancestors type-entry)
+                        do
+                          (when (member mrs::*top-semantics-entry*
+                                        (type-ancestors anc) :test #'eq)
+                            (pushnew anc return-types :test #'eq)))
+                    (mapcar #'type-name return-types))
+                (list reltype))))
+        (setf (gethash reltype *get-compatible-rels-memo*)
+          return-value))))
          
 
 
@@ -194,7 +203,7 @@
      (loop for parse-res in *parse-record*
           do
           (let* ((lrules-and-entries-used (collect-parse-base parse-res))
-                 (mrs (mrs::extract-mrs parse-res t)))
+                 (mrs (mrs::extract-mrs parse-res)))
             (let
                 ((identified-entry-sets
                   (mrs::collect-lex-entries-from-mrs mrs)))
@@ -225,7 +234,7 @@
   (loop for parse-res in *parse-record*
        do
        (let* ((lrules-and-entries-used (collect-parse-base parse-res))
-              (mrs (mrs::extract-mrs parse-res t)))
+              (mrs (mrs::extract-mrs parse-res)))
          (let
              ((identified-entry-sets
                (mrs::collect-lex-entries-from-mrs mrs)))
