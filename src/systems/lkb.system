@@ -22,12 +22,16 @@
       (cl-user::set-up-lkb-interaction :big))
     #+tty nil
     :components
-    ((:module "initialization"
+    ((:module "for"
+              :source-pathname "mrs"
+	      :binary-pathname "mrs"
+	      :components
+	      ((:file "for")))         ; for loop macros
+     (:module "initialization"
               :source-pathname "main"
 	      :binary-pathname "main"
 	      :components
 	      ((:file "initializations" :load-only t)
-               (:file "for")         ; for loop macros
                (:file "globals")))   
   ;; variables for grammar parameterization
   ;; mostly user-settable, usually reset by a globals file associated

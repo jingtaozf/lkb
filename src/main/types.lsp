@@ -9,6 +9,7 @@
 
 (in-package :cl-user)
 
+;;(defmethod print-object ((obj type) stream) (write-char #\~ stream) (prin1 (type-name obj) stream))
 ;;;
 ;;; For each type we need:
 ;;; 
@@ -145,11 +146,12 @@
          (get name 'root-template))))
 
 (defun string-type-p (type-name)
-   ;;; AAC 30/12/94
-   ;;; allow for no string type
-   (and *string-type*
-      (or (eq type-name *string-type*)
-         (member type-name (retrieve-ancestors *string-type*) :test #'eq))))
+  ;; AAC 30/12/94
+  ;; allow for no string type
+  (and *string-type*
+       (or (eq type-name *string-type*)
+	   (member (get-type-entry type-name)
+		   (retrieve-ancestors *string-type*) :test #'eq))))
 
 (defun get-known-type-entry (name)
    (or (gethash name *types*)
@@ -195,61 +197,61 @@
          (error "~%~A is not a valid type" type-name))))
 
 (defun retrieve-ancestors (type-name)
-   (let ((type-record (get-type-entry type-name)))
-      (if type-record 
-         (type-ancestors type-record)
-         (error "~%~A is not a valid type" type-name))))
+  (let ((type-record (get-type-entry type-name)))
+    (if type-record 
+	(type-ancestors type-record)
+      (error "~%~A is not a valid type" type-name))))
 
 (defun retrieve-ancestors-any-type (type-name)
-   (let ((type-record (get-type-entry type-name)))
-      (cond 
-         (type-record 
-            (type-ancestors type-record))
-         ((stringp type-name)
-            (if *string-type*
-              (cons *string-type* 
-                 (retrieve-ancestors *string-type*))))
-;;;         ((instance-type-parent type-name) ?)
-         (t 
-            (error "~%~A is not a valid type" type-name)))))
+  (let ((type-record (get-type-entry type-name)))
+    (cond 
+     (type-record 
+      (type-ancestors type-record))
+     ((stringp type-name)
+      (if *string-type*
+	  (cons *string-type* 
+		(retrieve-ancestors *string-type*))))
+     ;; ((instance-type-parent type-name) ?)
+     (t 
+      (error "~%~A is not a valid type" type-name)))))
 
 (defun retrieve-descendants (type-name)
-   (let ((type-record (get-type-entry type-name)))
-      (if type-record 
-         (type-descendants type-record)
-         (error "~%~A is not a valid type" type-name))))
+  (let ((type-record (get-type-entry type-name)))
+    (if type-record 
+	(type-descendants type-record)
+      (error "~%~A is not a valid type" type-name))))
 
 (defun retrieve-parents (type-name)
-   (let ((type-record (get-type-entry type-name)))
-      (if type-record 
-         (type-parents type-record)
-         (error "~%~A is not a valid type" type-name))))
+  (let ((type-record (get-type-entry type-name)))
+    (if type-record 
+	(type-parents type-record)
+      (error "~%~A is not a valid type" type-name))))
 
 (defun retrieve-daughters (type-name)
-   (let ((type-record (get-type-entry type-name)))
-      (if type-record 
-         (type-daughters type-record)
-         (error "~%~A is not a valid type" type-name))))
+  (let ((type-record (get-type-entry type-name)))
+    (if type-record 
+	(type-daughters type-record)
+      (error "~%~A is not a valid type" type-name))))
 
 (defun subtype-p (type1 type2)
-   (if (stringp type1) 
+  (if (stringp type1) 
       (string-type-p type2)
-      (let ((ptype (instance-type-parent type1)))
-         (if ptype
-            (or (eq ptype type2)
-               (member type2 (retrieve-ancestors ptype)))
-            (member type2 (retrieve-ancestors type1))))))
+    (let ((ptype (instance-type-parent type1)))
+      (if ptype
+	  (or (eq ptype type2)
+	      (member (get-type-entry type2) (retrieve-ancestors ptype)))
+	(member (get-type-entry type2) (retrieve-ancestors type1))))))
 
 
 (defun atomic-type-p (type-name)
-   (or (stringp type-name)
+  (or (stringp type-name)
       (let ((type-record (get-type-entry type-name)))
-         (if type-record 
+	(if type-record 
             (type-atomic-p type-record)
-            (let ((ptype (instance-type-parent type-name)))
-               (if ptype 
-                  (atomic-type-p ptype)
-                  (error "~%~A is not a valid type" type-name)))))))
+	  (let ((ptype (instance-type-parent type-name)))
+	    (if ptype 
+		(atomic-type-p ptype)
+	      (error "~%~A is not a valid type" type-name)))))))
 
 
 ;;; glb computation - entry point is greatest-common-subtype
@@ -257,8 +259,9 @@
 (defparameter *type-cache* nil)
 
 (defun clear-type-cache nil
-   ;; it's probably best to clear this out occasionally - definitely after loading
-   ;; a grammar and before parsing since different pairs of types will be exercised
+   ;; it's probably best to clear this out occasionally - definitely after
+   ;; loading a grammar and before parsing since different pairs of types will
+   ;; be exercised
    (setf *type-cache* nil))
 
 #|
@@ -274,12 +277,13 @@
 |#
 
 (defun greatest-common-subtype (type1 type2)
-   ;; implemented as a memo function. In practice we won't see anything like all
-   ;; possible combinations of arguments so best not to attempt to pre-compute the
-   ;; cache contents
+   ;; implemented as a memo function. In practice we won't see anything like
+   ;; all possible combinations of arguments so best not to attempt to
+   ;; pre-compute the cache contents
    ;;
-   ;; we expect both args to be lisp atoms, but either or both could be strings/
-   ;; string type, or instance types. The latter are cached, but not the former
+   ;; we expect both args to be lisp atoms, but either or both could be
+   ;; strings/string type, or instance types. The latter are cached, but not
+   ;; the former
    (cond 
       ((eq type1 type2) type1)
       ((arrayp type1) ; a string?
@@ -292,94 +296,102 @@
 
 
 (defun cached-greatest-common-subtype (type1 type2 type1-atomic-p)
-   ;; NB as implemented only works for types which satisfy eq test for equality i.e.
-   ;; symbols - types which are integers etc are not cached
-   ;; Also minimal extension to deal with first type arg being an atomic type, but
-   ;; restricted to containing a single disjuct which itself is just a symbol,
-   ;; signalled by 3rd arg being true. In this case the subtype if it exists must
-   ;; necessarily be atomic with a single disjunct
-   ;; Index first on potentially atomic type, since there are many of more of these
-   ;; Implemented as first a hash table, with each bucket being either an alist -
-   ;; or if more than 30 entries, a hash table itself
-   ;; Returns two values: greatest common subtype of type1 and type2 (or nil) and
-   ;; true if subtype result has a constraint which needs to be unified in
-   (unless *type-cache*
-      ;; try to minimise number of collisions by giving table a generous initial
-      ;; size - we really need speed here
-      (setq *type-cache*
-         (make-hash-table :test #'eq :size (* (hash-table-count *types*) 2))))
-   ;; many subtype results are same as type2 - so we could perhaps use a more compact
-   ;; storage representation for these cases
-   (let*
+  ;; NB as implemented only works for types which satisfy eq test for
+  ;; equality i.e.  symbols - types which are integers etc are not cached
+  ;; Also minimal extension to deal with first type arg being an atomic
+  ;; type, but restricted to containing a single disjuct which itself is
+  ;; just a symbol, signalled by 3rd arg being true.  In this case the
+  ;; subtype if it exists must necessarily be atomic with a single disjunct
+  ;; Index first on potentially atomic type, since there are many of more
+  ;; of these Implemented as first a hash table, with each bucket being
+  ;; either an alist - or if more than 30 entries, a hash table itself
+  ;; Returns two values: greatest common subtype of type1 and type2 (or
+  ;; nil) and true if subtype result has a constraint which needs to be
+  ;; unified in
+  (unless *type-cache*
+    ;; try to minimise number of collisions by giving table a generous
+    ;; initial size - we really need speed here
+    (setq *type-cache*
+      (make-hash-table :test #'eq :size (* (hash-table-count *types*) 2))))
+  ;; many subtype results are same as type2 - so we could perhaps use a
+  ;; more compact storage representation for these cases
+  (let*
       ((type1-index (if type1-atomic-p (car type1) type1))
        (entry (gethash type1-index *type-cache*))
        (found (typecase entry
-                 (null nil)
-                 (cons (cdr (assoc type2 entry :test #'eq)))
-                 (t (gethash type2 entry)))))
-      (if found
-         (values (car found) (cdr found))
-         (multiple-value-bind (subtype constraintp)
-               (full-greatest-common-subtype type1-index type2)
-            (when (and subtype type1-atomic-p) (setq subtype (list subtype)))
-            (typecase entry
-               ((or cons null) ; entry is an alist
-                  (if (> (length entry) 7)
-                     ;; convert alist into a hash table since it's got bigger than
-                     ;; an average empirical break-even point for gethash vs assoc
-                     (let ((new (make-hash-table :test #'eq :size (* (length entry) 2))))
-                        (dolist (item entry)
-                           (setf (gethash (car item) new) (cdr item)))
-                        (setf (gethash type2 new) (cons subtype constraintp))
-                        (setf (gethash type1-index *type-cache*) new))
-                     ;; add to end of list since it's likely to be less frequent (maybe)
-                     (setf (gethash type1-index *type-cache*)
-                        (nconc entry
-                           (list (cons type2 (cons subtype constraintp)))))))
-               (t ; entry is a hash table
-                  (setf (gethash type2 entry) (cons subtype constraintp))))
-            (values subtype constraintp)))))
+		(null nil)
+		(cons (cdr (assoc type2 entry :test #'eq)))
+		(t (gethash type2 entry)))))
+    (if found
+	(values (car found) (cdr found))
+      (multiple-value-bind (subtype constraintp)
+	  (full-greatest-common-subtype type1-index type2)
+	(when (and subtype type1-atomic-p) (setq subtype (list subtype)))
+	(typecase entry
+	  ((or cons null)		; entry is an alist
+	   (if (> (length entry) 7)
+	       ;; convert alist into a hash table since it's got bigger
+	       ;; than an average empirical break-even point for gethash vs
+	       ;; assoc
+	       (let ((new (make-hash-table :test #'eq :size (* (length entry) 2))))
+		 (dolist (item entry)
+		   (setf (gethash (car item) new) (cdr item)))
+		 (setf (gethash type2 new) (cons subtype constraintp))
+		 (setf (gethash type1-index *type-cache*) new))
+	     ;; add to end of list since it's likely to be less frequent
+	     ;; (maybe)
+	     (setf (gethash type1-index *type-cache*)
+	       (nconc entry
+		      (list (cons type2 (cons subtype constraintp)))))))
+	  (t				; entry is a hash table
+	   (setf (gethash type2 entry) (cons subtype constraintp))))
+	(values subtype constraintp)))))
 
 
-(defun full-greatest-common-subtype (type1 type2 &aux ptype1 ptype2)
-   ;; atomic types should have been stripped down to their constituent type
-   ;; component(s) before this point
-   (cond 
-      ((eq type1 type2) type1)
-      ((and (setq ptype1 (instance-type-parent type1))
-            (or (eq ptype1 type2) (member type2 (retrieve-ancestors ptype1) :test #'eq)))
-         ;; no need to look for constraint of ptype since it's already the glb
-         type1)
-      ((and (setq ptype2 (instance-type-parent type2))
-            (or (eq ptype2 type1) (member type1 (retrieve-ancestors ptype2) :test #'eq)))
-         type2) ; ditto
-      ((or ptype1 ptype2)
-         nil)
-      ((member type2 (retrieve-ancestors type1) :test #'eq)
-         type1)
-      ((member type1 (retrieve-ancestors type2) :test #'eq)
-         type2)
-      (t (let ((common-subtypes 
-                  (retrieve-common-descendants type1 type2)))
-            (if common-subtypes
-               (let ((greatest-common-subtype-list
-                        (intersection
-                           common-subtypes 
-                           (reduce #'intersection 
-                              (mapcar #'(lambda (subtype)
-                                    (cons subtype 
-                                       (retrieve-ancestors subtype)))
-                                 common-subtypes)))))
-                  (cond ((eql (length greatest-common-subtype-list) 1)
-                           (let ((gcsubtype (car greatest-common-subtype-list)))
-                              (values gcsubtype (if (constraint-of gcsubtype) t))))
-                     ;; return true as the second value if there is a constraint
-                     ;; that may have to be unified in
-                     (greatest-common-subtype-list
-                        (error "~%~A and ~B have multiple common subtypes "
-                           greatest-common-subtype-list))
-                     (t (error 
-                           "~%Error found in type hierarchy")))))))))
+(defun full-greatest-common-subtype (type1 type2)
+  ;; atomic types should have been stripped down to their constituent type
+  ;; component(s) before this point
+  (let ((t1 (get-type-entry type1))
+	(t2 (get-type-entry type2))
+	(ptype1)
+	(ptype2))
+    (cond 
+     ((eq type1 type2) type1)
+     ((and (setq ptype1 (instance-type-parent type1))
+	   (or (eq ptype1 type2) 
+	       (member t2 (retrieve-ancestors ptype1) :test #'eq)))
+      ;; no need to look for constraint of ptype since it's already the glb
+      type1)
+     ((and (setq ptype2 (instance-type-parent type2))
+	   (or (eq ptype2 type1) 
+	       (member type2 (retrieve-ancestors ptype2) :test #'eq)))
+      type2)			;; ditto
+     ((or ptype1 ptype2)
+      nil)
+     ((member t2 (retrieve-ancestors type1) :test #'eq)
+      type1)
+     ((member t1 (retrieve-ancestors type2) :test #'eq)
+      type2)
+     (t (let ((common-subtypes (retrieve-common-descendants type1 type2)))
+	  (when common-subtypes
+	    (let ((greatest-common-subtype-list
+		   (intersection
+		    common-subtypes 
+		    (reduce #'intersection 
+			    (mapcar #'(lambda (subtype)
+					(cons subtype 
+					      (type-ancestors subtype)))
+				    common-subtypes)))))
+	      (cond ((eql (length greatest-common-subtype-list) 1)
+		     (let ((gcsubtype (type-name (car greatest-common-subtype-list))))
+		       (values gcsubtype (if (constraint-of gcsubtype) t))))
+		    ;; return true as the second value if there is a
+		    ;; constraint that may have to be unified in
+		    (greatest-common-subtype-list
+		     (error "~%~A and ~B have multiple common subtypes "
+			    (mapcar #'(lambda (x) (type-name x)) greatest-common-subtype-list)))
+		    (t (error 
+			"~%Error found in type hierarchy"))))))))))
 
 
 ;;; when called from generalisation this should only take non-atomic types 
@@ -391,42 +403,42 @@
 ;;; will return language
 
 (defun least-common-supertype (x y)
-   (cond 
-      ((equal x y) x)
-      ((stringp x) 
-         (if (stringp y)
-            *string-type*
-            (least-common-supertype *string-type* y)))
-      ((stringp y) 
-         (least-common-supertype *string-type* x))
-      ((subtype-p x y) y)
-      ((subtype-p y x) x)
-      ((instance-type-parent x) 
-         (least-common-supertype (instance-type-parent x) y))
-      ((instance-type-parent y) 
-         (least-common-supertype x (instance-type-parent y)))
-      (t
-         (let ((z (intersection (cons x (retrieve-ancestors x))
-                     (cons y (retrieve-ancestors y)))))
-            (cond ((null z) 
-                  (error "~%Types ~A and ~A have no common ancestor" x y))
-               ((= (length z) 1) (car z))
-               ((member x z) x)
-               ((member y z) y)
-               (t (let ((lcs-list (remove-ancestors z)))
-                     (cond ((null lcs-list) 
-                           (error "~%Types ~A and ~A have no common ancestor" x y))
-                        ((= (length lcs-list) 1) (car lcs-list))
-                        (t (error 
-                              "~%Types ~A and ~A have multiple common ancestors 
+  (cond 
+   ((equal x y) x)
+   ((stringp x) 
+    (if (stringp y)
+	*string-type*
+      (least-common-supertype *string-type* y)))
+   ((stringp y) 
+    (least-common-supertype *string-type* x))
+   ((subtype-p x y) y)
+   ((subtype-p y x) x)
+   ((instance-type-parent x) 
+    (least-common-supertype (instance-type-parent x) y))
+   ((instance-type-parent y) 
+    (least-common-supertype x (instance-type-parent y)))
+   (t
+    (let ((z (intersection (cons x (mapcar #'type-name (retrieve-ancestors x)))
+			   (cons y (mapcar #'type-name (retrieve-ancestors y))))))
+      (cond ((null z) 
+	     (error "~%Types ~A and ~A have no common ancestor" x y))
+	    ((= (length z) 1) (car z))
+	    ((member x z) x)
+	    ((member y z) y)
+	    (t (let ((lcs-list (remove-ancestors z)))
+		 (cond ((null lcs-list) 
+			(error "~%Types ~A and ~A have no common ancestor" x y))
+		       ((= (length lcs-list) 1) (car lcs-list))
+		       (t (error 
+			   "~%Types ~A and ~A have multiple common ancestors 
                               ~A" x y lcs-list))))))))))
 
 (defun remove-ancestors (int-list)
    (do* ((done nil (cons initial done))
          (initial (car int-list) (car (set-difference new-int-list done)))
          (new-int-list
-            (set-difference int-list (retrieve-ancestors initial))
-            (set-difference new-int-list (retrieve-ancestors initial))))
+            (set-difference int-list (mapcar #'type-name (retrieve-ancestors initial)))
+            (set-difference new-int-list (mapcar #'type-name (retrieve-ancestors initial)))))
       ((null (set-difference new-int-list (cons initial done)))
          new-int-list)))
 
@@ -434,19 +446,19 @@
 ;;; The following utility functions assume that no cycles are present
 
 (defun retrieve-common-descendants (type1 type2)
-   (intersection (retrieve-descendants type1)
-      (retrieve-descendants type2)))
+  (intersection (retrieve-descendants type1)
+		(retrieve-descendants type2)))
 
 (defun get-ancestors (type-entry)
-  ;;; general function - should be fairly safe, but slow
-   (let ((parents (type-parents type-entry)))
-      (if parents
-         (union parents
-            (reduce #'union
-                    (mapcar #'(lambda (parent)
-                                (let ((parent-entry (get-type-entry parent)))
-                                    (get-ancestors parent-entry)))
-                            parents))))))
+  ;; general function - should be fairly safe, but slow
+  (let ((parents (type-parents type-entry)))
+    (if parents
+	(union parents
+	       (reduce #'union
+		       (mapcar #'(lambda (parent)
+				   (let ((parent-entry (get-type-entry parent)))
+				     (get-ancestors parent-entry)))
+			       parents))))))
 
 
 (defun get-descendants (type-entry)

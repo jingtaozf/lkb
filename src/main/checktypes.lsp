@@ -106,59 +106,54 @@
 ;;; of type names
 
 (defun amend-type-information (new-type new-type-entry parents daughters)
-;;;
-;;; called from fix-mglb
-;;;
-  ;;; takes a new type-name and its entry 
-  ;;; (this should have parents and daughters specified, plus any idiosyncratic
-  ;;; information)
-  ;;; a list of its parent types and of its daughter types
-  ;;; (it is assumed that these will not add a cycle, and that they are valid
-  ;;; types, so if this function is called from code which gets new specs
-  ;;; from a user, the calling function must perform the checks)
-  ;;; the fn does the following
-  ;;; 1) sets the new type entry
-  ;;; 2) amends all the daughter types so that their parents 
-  ;;;    are correct (remove any redundant links to the old parents)
-  ;;; 3) amends all the parents in a similar way
-  ;;; 3') adds the ancestors and descendants to the type entry
-  ;;; 4) adds the new type to the descendants list of all its ancestors
-  ;;; 5) adds the new type to the ancestors list of all its descendants
-  ;;; 5')  pushes the new type onto the list of ordered glbtypes
-  ;;; (used for output)
-  ;;; 6) pushes the new type onto the list of *type-names*
+  ;;
+  ;; called from fix-mglb
+  ;;
+  ;; takes a new type-name and its entry (this should have parents and
+  ;; daughters specified, plus any idiosyncratic information) a list of its
+  ;; parent types and of its daughter types (it is assumed that these will not
+  ;; add a cycle, and that they are valid types, so if this function is called
+  ;; from code which gets new specs from a user, the calling function must
+  ;; perform the checks). the fn does the following:
+  ;; 1) sets the new type entry
+  ;; 2) amends all the daughter types so that their parents 
+  ;;    are correct (remove any redundant links to the old parents)
+  ;; 3) amends all the parents in a similar way
+  ;; 3') adds the ancestors and descendants to the type entry
+  ;; 4) adds the new type to the descendants list of all its ancestors
+  ;; 5) adds the new type to the ancestors list of all its descendants
+  ;; 5') pushes the new type onto the list of ordered glbtypes
+  ;;     (used for output)
+  ;; 6) pushes the new type onto the list of *type-names*
   (let ((ancestors nil)
         (descendants nil))
     (create-mark-field new-type-entry)
     (set-type-entry new-type new-type-entry)   
-    (for dtr in daughters
-         do
-         (let ((dtr-entry (get-type-entry dtr)))
-           (setf (type-parents dtr-entry)
-                 (cons new-type (set-difference (type-parents dtr-entry) 
-                                                parents :test #'eq)))
-           (setf descendants (union descendants 
-                                    (type-descendants dtr-entry) :test #'eq))
-           (push dtr descendants)))
-    (for parent in parents
-         do
-         (let ((par-entry (get-type-entry parent)))
-           (setf (type-daughters par-entry)
-                 (cons new-type (set-difference (type-daughters par-entry) 
-                                              daughters :test #'eq)))
-           (setf ancestors (union ancestors 
-                                  (type-ancestors par-entry) :test #'eq))
-           (push parent ancestors)))
+    (dolist (dtr daughters)
+      (let ((dtr-entry (get-type-entry dtr)))
+	(setf (type-parents dtr-entry)
+	  (cons new-type (set-difference (type-parents dtr-entry) 
+					 parents :test #'eq)))
+	(setf descendants (union descendants 
+				 (type-descendants dtr-entry) :test #'eq))
+	(push (get-type-entry dtr) descendants)))
+    (dolist (parent parents)
+      (let ((par-entry (get-type-entry parent)))
+	(setf (type-daughters par-entry)
+	  (cons new-type (set-difference (type-daughters par-entry) 
+					 daughters :test #'eq)))
+	(setf ancestors (union ancestors 
+			       (type-ancestors par-entry) :test #'eq))
+	(push (get-type-entry parent) ancestors)))
     (setf (type-descendants new-type-entry) descendants)
     (setf (type-ancestors new-type-entry) ancestors)
-    (for ancestor in ancestors
-         do
-         (push new-type (type-descendants (get-type-entry ancestor))))
-    (for descendant in descendants
-         do
-         (push new-type (type-ancestors (get-type-entry descendant))))
+    (dolist (ancestor ancestors)
+      (push new-type-entry (type-descendants ancestor)))
+    (dolist (descendant descendants)
+      (push new-type-entry (type-ancestors descendant)))
     (push new-type *ordered-glbtype-list*)
-    (push new-type *type-names*)))
+    (push new-type *type-names*)
+    new-type-entry))
         
 ;;; Checking
 
@@ -178,7 +173,7 @@
        (when (check-for-cycles-etc *toptype*)
          (unmark-type-table)
          (format t "~%Checking for unique greatest lower bounds") 
-         (setf *partition* nil)
+	 (setq *partition* nil)
          (find-good-partitions *toptype*)
          (unmark-type-table)
          (for partition in *partition*
@@ -385,12 +380,10 @@
     (or (type-descendants type-entry)
         (let ((daughters (type-daughters type-entry))
               (descendants nil))
-          (for daughter in daughters
-               do
-             (pushnew daughter descendants :test #'eq)
-             (for descendant in (set-up-descendants daughter)
-                  do
-                  (pushnew descendant descendants :test #'eq)))
+          (dolist (daughter daughters)
+	    (pushnew (get-type-entry daughter) descendants :test #'eq)
+	    (dolist (descendant (set-up-descendants daughter))
+	      (pushnew descendant descendants :test #'eq)))
           (setf (type-descendants type-entry) descendants)
           descendants))))
 
@@ -406,12 +399,10 @@
   (or (type-ancestors type-entry)
       (let* ((parents (type-parents type-entry))
              (ancestors nil))
-        (for parent in parents
-             do
-             (for ancestor in (calculate-ancestors (get-type-entry parent))
-                  do
-                  (pushnew ancestor ancestors :test #'eq))
-             (pushnew parent ancestors :test #'eq))
+        (dolist (parent parents)
+	  (pushnew (get-type-entry parent) ancestors :test #'eq)
+	  (dolist (ancestor (calculate-ancestors (get-type-entry parent)))
+	    (pushnew ancestor ancestors :test #'eq)))
         (setf (type-ancestors type-entry) ancestors)
         ancestors)))
 
@@ -424,43 +415,38 @@
 
 
 (defun find-good-partitions (type)
-  ;;; doing the glb stuff over the entire hierarchy is very slow
-  ;;; when we have lots of multiple inheritance.  This function attempts
-  ;;; to find manageable subchunks, returning a list of lists of nodes which
-  ;;; should be mutually independent
-  ;;; AAC - Oct 12 1998 - faster version
+  ;; doing the glb stuff over the entire hierarchy is very slow when we have
+  ;; lots of multiple inheritance.  This function attempts to find manageable
+  ;; subchunks, returning a list of lists of nodes which should be mutually
+  ;; independent 
+  ;; AAC - Oct 12 1998 - faster version
   (let* ((type-entry (get-type-entry type))
          (daughters (type-daughters type-entry)))
     (unless (or (active-node-p type-entry)
                 (seen-node-p type-entry))
       (mark-node-active type-entry)
       (when daughters
-        (let
-            ((descendants (type-descendants type-entry)))
-          (for daughter in daughters
-               do 
-               (find-good-partitions daughter))
-          (when
-              (for descendant in descendants
+        (let ((descendants (type-descendants type-entry)))
+          (dolist (daughter daughters)
+	    (find-good-partitions daughter))
+          (when 
+	      (for descendant in descendants
                    all-satisfy
-                   (let ((desc-entry (get-type-entry descendant)))
-                     (or (seen-node-p desc-entry)
-                         (and (or (null (cdr (type-parents desc-entry)))
-                                  (subsetp (type-parents desc-entry) descendants
-                                           :test #'eq))))))
+		   (or (seen-node-p descendant)
+		       (and (or (null (cdr (type-parents descendant)))
+				(subsetp (type-parents descendant)
+					 (mapcar #'type-name descendants)
+					 :test #'eq)))))
             (let ((partition-nodes
                    (for descendant in descendants
                         filter
-                        (let ((desc-entry (get-type-entry descendant)))
-                          (if (not (seen-node-p desc-entry))
-                            (progn
-                              (mark-node-seen desc-entry)
-                              descendant))))))
-              (when partition-nodes
-                (push partition-nodes *partition*)))))))))
+			(when (not (seen-node-p descendant))
+			  (mark-node-seen descendant)
+			  descendant))))
+	      (when partition-nodes
+		(push partition-nodes *partition*)))))))))
 
 ;;; GLB stuff
-
 
 (defparameter *interesting-types* nil)
  
@@ -471,152 +457,135 @@
   (setf *glbsets* nil)
   (setf *interesting-types* nil)
   (let ((ancestors nil))
-    (for type in partition-nodes
-         do
-         (let ((type-entry (get-type-entry type)))
-           (when (cdr (type-parents type-entry))                   
-             (for ancestor in (retrieve-ancestors type)
-                  do
-                  (when (member ancestor partition-nodes :test #'eq)
-                    (pushnew ancestor ancestors :test #'eq))))))
+    (dolist (type partition-nodes)
+      (when (cdr (type-parents type))                   
+	(dolist (ancestor (type-ancestors type))
+	  (when (member ancestor partition-nodes :test #'eq)
+	    (pushnew ancestor ancestors :test #'eq)))))
     (setf *interesting-types* ancestors)
     (check-for-unique-glbs-from-top ancestors)))
 
 (defun check-for-unique-glbs-from-top (possible-nodes)
   (mapl #'(lambda (remaining-nodes)
             (let ((x (car remaining-nodes)))
-               (mapc #'(lambda (y)
-                         (let ((problem-list
-                                (check-lbs-from-top x y)))
-                           (when problem-list
-                             (push (make-glbset :top (list x y) 
-                                                :bottom problem-list) 
-                                   *glbsets*))))
-                     (cdr remaining-nodes))))
+	      (mapc #'(lambda (y)
+			(let ((problem-list (check-lbs-from-top x y)))
+			  (when problem-list
+			    (push (make-glbset :top (list x y) 
+					       :bottom problem-list) 
+				  *glbsets*))))
+		    (cdr remaining-nodes))))
         possible-nodes))
 
-
-
 ;;; this is the bottleneck in glb computation, taking more than 90% of the
-;;; cpu time. The functions looks a bit odd but that's because they're optimised
+;;; cpu time. The functions looks a bit odd but that's because they're
+;;; optimised
 
 (defvar *wanted* nil)
      
 (defun check-lbs-from-top (x y)
-  (let ((xdescendants (retrieve-descendants x))
-        (ydescendants (retrieve-descendants y)))
+  (let ((xdescendants (type-descendants x))
+        (ydescendants (type-descendants y)))
     (unless (or (member y xdescendants :test #'eq) 
                 (member x ydescendants :test #'eq))
       (let ((*wanted* nil))
-         (find-highest-intersections xdescendants ydescendants nil)
-         (if (cdr *wanted*) *wanted*)))))
+	(find-highest-intersections xdescendants ydescendants nil)
+	(when (cdr *wanted*) *wanted*)))))
 
 
 (defun find-highest-intersections (xs ys intersectp)
-   ;; find set of highest intersections between 2 sets of types -
-   ;; intersectp records whether any intersection has been detected. If there
-   ;; hasn't, test first if the next type in xs is a member of ys. If there has,
-   ;; then quickest strategy is to see whether type has been marked (i.e. is a
-   ;; descendent of an intersect point) so need not even be tested for membership
-   ;; of ys. (In former case the member test must come first otherwise type
-   ;; lookup slows things down)
-   ;; At the end, collect highest intersections and unmark the types in xs. A type
-   ;; can only have been marked if intersectp is true, since intersectp is true
-   ;; for every type in xs that is in ys (either it's true on entry, or it's set
-   ;; to true after the member test in the second branch of the if test) 
-   (when xs
-      (let ((type (car xs))
-            (type-entry nil))
-         (when
-            (if intersectp
-               ;; specialise order of tests depending on intersectp
-               (and (not (seen-node-p (setq type-entry (get-type-entry type))))
-                    (member type ys :test #'eq))
-               (and (member type ys :test #'eq)
-                    (setq intersectp t)
-                    (not (seen-node-p (setq type-entry (get-type-entry type))))))
-            (mark-node-seen type-entry)
-            (for desc in (type-descendants type-entry)
-               do 
-               (mark-node-active-and-seen (get-type-entry desc))))
-         (find-highest-intersections (cdr xs) ys intersectp)
-         (cond
-            ((null intersectp))
-            ;; if intersectp is true then type-entry will be set
-            ((not (seen-node-p type-entry)))
-            ((not (active-node-p type-entry))
-               ;; seen but not active, so is a highest intersection
-               (push type *wanted*)
-               (clear-marks type-entry))
-            (t (clear-marks type-entry))))))
+   ;; find set of highest intersections between 2 sets of types - intersectp
+   ;; records whether any intersection has been detected. If there hasn't,
+   ;; test first if the next type in xs is a member of ys. If there has,
+   ;; then quickest strategy is to see whether type has been marked (i.e. is
+   ;; a descendent of an intersect point) so need not even be tested for
+   ;; membership of ys. (In former case the member test must come first
+   ;; otherwise type lookup slows things down) At the end, collect highest
+   ;; intersections and unmark the types in xs. A type can only have been
+   ;; marked if intersectp is true, since intersectp is true for every type
+   ;; in xs that is in ys (either it's true on entry, or it's set to true
+   ;; after the member test in the second branch of the if test)
+  (when xs
+    (let ((type (car xs)))
+      (when 
+	  (if intersectp
+	      ;; specialise order of tests depending on intersectp
+	      (and (not (seen-node-p type))
+		   (member type ys :test #'eq))
+	    (and (member type ys :test #'eq)
+		 (setq intersectp t)
+		 (not (seen-node-p type))))
+	(mark-node-seen type)
+	(dolist (desc (type-descendants type))
+	  (mark-node-active-and-seen desc)))
+      (find-highest-intersections (cdr xs) ys intersectp)
+      (cond ((null intersectp))
+	    ((not (seen-node-p type)))
+	    ((not (active-node-p type))
+	     ;; seen but not active, so is a highest intersection
+	     (push type *wanted*)
+	     (clear-marks type))
+	    (t (clear-marks type))))))
 
 
 ;;;; July 1996 new stuff to fix mglbs
 
 ;;; the glb checking code puts records of problems on the global *glbsets*
-;;; We find start from the bottom, fixing 
-;;; a set which has no lower sets in the problem list
-;;; The fix consists of adding a type with parents of the
-;;; types which have mglbs and daughters equal to the mglbs
-;;; and removing any redundant links.  We then make 
-;;; fixes to *glbsets*
-
-
+;;; We find start from the bottom, fixing a set which has no lower sets in
+;;; the problem list The fix consists of adding a type with parents of the
+;;; types which have mglbs and daughters equal to the mglbs and removing any
+;;; redundant links.  We then make fixes to *glbsets*
 
 (defun fix-mglbs nil
-  ;;; partition specific because of *interesting-types*
-  (format t "~%Elements in *interesting-types* ~A" (length *interesting-types*))
+  ;; partition specific because of *interesting-types*
+  (format t "~%Elements in *interesting-types* ~A" 
+	  (length *interesting-types*))
   (loop 
-      (let* ((minset (find-minimal-glbset *glbsets*))
-        ; find candidate problem to fix 
-             (new-type (fix-mglb minset)))
-          ;;; fix-mglb now also redoes the type hierarchy info
-        (when *display-glb-messages*
-          (format t "~%Fixing ~A with glbs ~A" (glbset-top minset)
-                  (glbset-bottom minset)))
-        (modify-glbsets new-type *interesting-types*)
-;          (push new-type *interesting-types*)
-; apparently glbtypes cannot be interesting - there are never
-; cases where we get multiple glbs between glbtypes (presumably
-; because glbtypes are always minimal)
-        (unless *glbsets* ; have we fixed it yet?
-          (format t "~%Checked")
-          (return t)))))
+    (let* ((minset (find-minimal-glbset *glbsets*))
+	   ;; find candidate problem to fix 
+	   (new-type-entry (fix-mglb minset)))
+      ;; fix-mglb now also redoes the type hierarchy info
+      (when *display-glb-messages*
+	(format t "~%Fixing ~A with glbs ~A" 
+		(mapcar #'type-name (glbset-top minset))
+		(mapcar #'type-name (glbset-bottom minset))))
+      (modify-glbsets new-type-entry *interesting-types*)
+      ;; (push new-type *interesting-types*)
+      ;; apparently glbtypes cannot be interesting - there are never
+      ;; cases where we get multiple glbs between glbtypes (presumably
+      ;; because glbtypes are always minimal)
+      (unless *glbsets*			; have we fixed it yet?
+	(format t "~%Checked")
+	(return t)))))
 
-(defun modify-glbsets (new-type nodes)
-   (let* ((ancestors (retrieve-ancestors new-type)))
-     (for glbrec in *glbsets*
-          do
-         (let* ((pair (glbset-top glbrec)))
-           (if
-             (and (member (car pair) ancestors :test #'eq)
-                  (member (cadr pair) ancestors :test #'eq))
-             (let ((new-probs
-                    (check-lbs-from-top (car pair) (cadr pair))))
-               (if new-probs
-                 (setf (glbset-bottom glbrec) new-probs)
-                 (setf (glbset-ignore glbrec) t))))))
-     (for node in nodes
-         do
-         (let ((problem-list
-                (check-lbs-from-top new-type node)))
-           (when problem-list
-             (push (make-glbset :top (list new-type node) 
-                                :bottom problem-list) 
-                   *glbsets*))))
-     (setf *glbsets* 
-          (delete-if #'(lambda (x) (glbset-ignore x))
-                     *glbsets*))))
+(defun modify-glbsets (new-type-entry nodes)
+  (let* ((ancestors (type-ancestors new-type-entry)))
+    (dolist (glbrec *glbsets*)
+      (let* ((pair (glbset-top glbrec)))
+	(when (and (member (car pair) ancestors :test #'eq)
+		   (member (cadr pair) ancestors :test #'eq))
+	  (let ((new-probs (check-lbs-from-top (car pair) (cadr pair))))
+	    (if new-probs
+		(setf (glbset-bottom glbrec) new-probs)
+	      (setf (glbset-ignore glbrec) t))))))
+    (dolist (node nodes)
+      (let ((problem-list (check-lbs-from-top new-type-entry node)))
+	(when problem-list
+	  (push (make-glbset :top (list new-type-entry node) 
+			     :bottom problem-list) 
+		*glbsets*))))
+    (setf *glbsets* 
+      (delete-if #'(lambda (x) (glbset-ignore x))
+		 *glbsets*))))
 
 
 ;;; code to find best candidate to fix
 
 (defun find-minimal-glbset (glbs)
-  ;;; find a set x which has no other top set y which is 
-  ;;; more specific - that is there is no y which
-  ;;; contains both an element e such that e is strictly subsumed by
-  ;;; a member of x, and an element f which is subsumed by or equal to
-  ;;; another member of x
+  ;; find a set x which has no other top set y which is more specific - that
+  ;; is there is no y which contains both an element e such that e is strictly
+  ;; subsumed by a member of x, and an element f which is subsumed by or equal
+  ;; to another member of x
   (let* ((candidate (car glbs))
          (newset
           (do ((rest (cdr glbs) (cdr rest)))
@@ -624,58 +593,56 @@
             (when (glb-subsum-test candidate (car rest))
               (return rest)))))
     (if newset
-      (find-minimal-glbset newset)
+	(find-minimal-glbset newset)
       candidate)))
 
 (defun glb-subsum-test (glbset1 glbset2)
-  ;;; messy test
+  ;; messy test
   (let ((tset1 (glbset-top glbset1))
         (tset2 (glbset-top glbset2))
         (ok1 nil)
         (ok2 nil))
-    ;;; first check to see whether any element in tset2 is strictly more
-    ;;; specific than any element in tset1 - if so, return these elements
-    ;;; as a cons
+    ;; first check to see whether any element in tset2 is strictly more
+    ;; specific than any element in tset1 - if so, return these elements as a
+    ;; cons
     (dolist (x tset2)
       (when
-         (dolist (y tset1)
-           (when (member y (retrieve-ancestors x) :test #'eq)
-             (setf ok1 (cons x y))
-             (return ok1)))
+	  (dolist (y tset1)
+	    (when (member y (type-ancestors x) :test #'eq)
+	      (setf ok1 (cons x y))
+	      (return ok1)))
         (return ok1)))
-    ;;; now check to see whether there is some other element pair which
-    ;;; either match, or where tset2 is strictly more specific
+    ;; now check to see whether there is some other element pair which either
+    ;; match, or where tset2 is strictly more specific
     (and ok1
-      (dolist (x1 (remove (car ok1) tset2 :test #'eq))
-        (when
-          (dolist (y1 (remove (cdr ok1) tset1 :test #'eq))
-            (when (or (eq x1 y1) 
-                      (member y1 (retrieve-ancestors x1) :test #'eq))
-              (setf ok2 t)
-              (return ok2)))
-          (return ok2))))))
+	 (dolist (x1 (remove (car ok1) tset2 :test #'eq))
+	   (when
+	       (dolist (y1 (remove (cdr ok1) tset1 :test #'eq))
+		 (when (or (eq x1 y1) 
+			   (member y1 (type-ancestors x1) :test #'eq))
+		   (setf ok2 t)
+		   (return ok2)))
+	     (return ok2))))))
 
 ; code to fix the local glb problem
 
 (defun fix-mglb (glbset)
-  ;;; takes a mglbset which is at least as specific as any of the other
-  ;;; problem sets, and fixes this locally by creating a new type
-  ;;; which has as (multiple) parents all the elements in the top set
-  ;;; and has as daughters all the types in the bottom set
-  ;;;
-  ;;; if there are now some redundant links - i.e. there were originally
-  ;;; direct links between members of the top set and bottom set
-  ;;; - these are removed
-  (let* ((daughters (glbset-bottom glbset))
-         (parents (glbset-top glbset))
+  ;; takes a mglbset which is at least as specific as any of the other problem
+  ;; sets, and fixes this locally by creating a new type which has as
+  ;; (multiple) parents all the elements in the top set and has as daughters
+  ;; all the types in the bottom set
+  ;;
+  ;; if there are now some redundant links - i.e. there were originally direct
+  ;; links between members of the top set and bottom set - these are removed
+  (let* ((daughters (mapcar #'type-name (glbset-bottom glbset)))
+         (parents (mapcar #'type-name (glbset-top glbset)))
          (new-type (make-glb-name daughters))
-         (new-type-entry (make-type :name new-type :parents parents
+         (new-type-entry (make-type :name new-type 
+				    :parents parents
                                     :daughters daughters
-                                     :glbp t)))
-    (amend-type-information new-type new-type-entry parents daughters)
-    new-type))
-
-    
+				    :glbp t)))
+    (amend-type-information new-type new-type-entry parents daughters)))
+   
 
 (defun make-glb-name (dtrs)
   (declare (ignore dtrs))
@@ -729,21 +696,20 @@
          
 
 (defun determine-atomic-types nil 
-   (for node in *type-names*
-      do
-      (let ((type-entry (get-type-entry node)))
-         (let ((constraint-spec (type-constraint-spec type-entry)))
-	   (unless (leaf-type-p type-entry)
-	   (setf (type-atomic-p type-entry)
-               (not 
-                  (or constraint-spec
-                     (some #'constraint-spec-of 
-                        (type-ancestors type-entry))
-                     (some #'(lambda (daughter)
-                           (or (constraint-spec-of daughter)
-                              (some #'constraint-spec-of 
-                                 (type-ancestors (get-type-entry daughter)))))
-                        (type-descendants type-entry))))))))))
+  (dolist (node *type-names*)
+    (let ((type-entry (get-type-entry node)))
+      (let ((constraint-spec (type-constraint-spec type-entry)))
+	(unless (leaf-type-p type-entry)
+	  (setf (type-atomic-p type-entry)
+	    (not 
+	     (or constraint-spec
+		 (some #'type-constraint-spec
+		       (type-ancestors type-entry))
+		 (some #'(lambda (daughter)
+			   (or (type-constraint-spec daughter)
+			       (some #'type-constraint-spec
+				     (type-ancestors daughter))))
+		       (type-descendants type-entry))))))))))
 
 
 (defun expand-constraint (node type-entry)

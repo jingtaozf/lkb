@@ -173,18 +173,14 @@ introduces new features ~A" name new-features)
         (expand-leaf-type-constraint name type-entry parent-entry)))))
       
 (defun add-leaf-to-hierarchy (name parent parent-entry entry)
-    ;;; deals with all the slots relating to the hierarchy itself
-  (pushnew name 
-        (type-daughters parent-entry) :test #'eq)
-  (pushnew name 
-        (type-descendants parent-entry) :test #'eq)
+  (declare (ignore parent))
+  ;; deals with all the slots relating to the hierarchy itself
+  (pushnew name (type-daughters parent-entry) :test #'eq)
+  (pushnew entry (type-descendants parent-entry) :test #'eq)
   (let ((ancestors (type-ancestors parent-entry)))
-    (for ancestor in ancestors
-         do
-         (let ((ancestor-entry (get-type-entry ancestor)))
-           (pushnew name 
-                 (type-descendants ancestor-entry) :test #'eq)))
-    (setf (type-ancestors entry) (cons parent ancestors))))
+    (dolist (ancestor ancestors)
+      (pushnew entry (type-descendants ancestor) :test #'eq))
+    (setf (type-ancestors entry) (cons parent-entry ancestors))))
 
 
 (defun copy-parent-fs-slots (name entry parent-entry)

@@ -225,33 +225,33 @@
 
 (defun optimise-check-unif-path (path freq)
    (cons path
-      (if path
-         (let* ((feat (car (last path)))
-                (fs
-                   (constraint-of
+	 (if path
+	     (let* ((feat (car (last path)))
+		    (fs
+		     (constraint-of
                       (or (maximal-type-of feat)
-                         (error "Inconsistency - *check-paths* uses feature ~A ~
+			  (error "Inconsistency - *check-paths* uses feature ~A ~
                                  which is not in grammar" feat))))
-             (type (type-of-fs (get-dag-value fs feat))))
-            (when (consp type) (setq type (car type))) ; atomic type
-            (let*
-               ((types (cons type (retrieve-descendants type)))
-                (len (length types)))
-               ;; (format t "~%Feature ~A, number of possible types ~A" feat len)
-               (if (<= len (integer-length most-positive-fixnum)) ; restrict to fixnum
-                  (mapcar
-                     #'(lambda (d)
-                          (cons d
-                             (let ((val 0))
-                                (dolist
-                                   (x (cons d (retrieve-descendants d)) val)
-                                   (setq val
-                                      ;; set bit corresponding to pos
-                                      ;; of x in types list
-                                      (dpb 1 (byte 1 (position x types)) val))))))
-                     types)
-                  freq)))
-         freq)))
+		    (type (type-of-fs (get-dag-value fs feat))))
+	       (when (consp type) (setq type (car type))) ; atomic type
+	       (let*
+		   ((types (cons (get-type-entry type) (retrieve-descendants type)))
+		    (len (length types)))
+		 ;; (format t "~%Feature ~A, number of possible types ~A" feat len)
+		 (if (<= len (integer-length most-positive-fixnum)) ; restrict to fixnum
+		     (mapcar
+		      #'(lambda (d)
+                          (cons (type-name d)
+				(let ((val 0))
+				  (dolist
+				      (x (cons d (type-descendants d)) val)
+				    (setq val
+				      ;; set bit corresponding to pos
+				      ;; of x in types list
+				      (dpb 1 (byte 1 (position x types)) val))))))
+		      types)
+		   freq)))
+	   freq)))
 
 
 (defmacro type-bit-representation-p (x)
