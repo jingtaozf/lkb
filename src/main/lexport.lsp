@@ -526,9 +526,13 @@
     "")))
 
 (defmethod export-to-tdl ((lexicon lex-database) stream)
+  (format t "~%(caching all lexical entries)")
+  (cache-all-lex-entries *lexicon*)
   (mapc
    #'(lambda (x) (format stream "~a" (to-tdl (read-psort lexicon x))))
-   (collect-psort-ids lexicon)))
+   (collect-psort-ids lexicon))
+  (format t "~%(clearing cache)")
+  (empty-cache *lexicon*))
 
 (defmethod export-to-tdl-to-file ((lexicon lex-database) filename)
   (setf filename (namestring (pathname filename)))

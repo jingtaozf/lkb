@@ -48,6 +48,7 @@
 		      (reverse start-path)))))
       (when unexpandp (unexpand-psort *lexicon* id))))
   (format t "~%Lexicon checked")
+  #+:psql
   (when (typep *lexicon* 'psql-lex-database)
     (format t "~%(clearing cache)")
     (empty-cache *lexicon*)))

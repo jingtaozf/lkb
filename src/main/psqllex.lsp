@@ -1387,3 +1387,6 @@
 		  (error "kwl2alist input format"))
 		(cons kw v))))
 
+(defun recomp (x)
+  (compile-file x)
+  (load x))
