@@ -971,19 +971,34 @@
                                       (g-edge-rels-covered passive))))
        when new append (explode! new adjuncts))))
 
+(defvar *debug-stream* t)
+
 (defun unpack-edge! (id edge &optional insidep)
   #+:fdebug
   (clrhash *unpacking-failure-paths*)
-  (labels ((instantiate (edge children i n)
+  (labels (#+:idebug
+           (label (edge)
+             (typecase (edge-rule edge)
+               (string (string-upcase (edge-rule edge)))
+               (symbol (string (edge-rule edge)))
+               (rule (string (rule-id (edge-rule edge))))
+               (t "unknown")))
+           (instantiate (edge children i n)
              #+:idebug
-             (format
-              t
-              "~&instantiate(): ~d < ~{~d~^ ~} [~a of ~a]~%"
-              (edge-id edge)
-              (loop
-                  for child in children
-                  collect (edge-id child))
-              i n)
+             (loop
+                 initially
+                   (format
+                    *debug-stream*
+                    "~&instantiate(): {~d ~d ~d} ~d [~(~a~)] <"
+                    *unifications* *copies* *edge-id*
+                    (edge-id edge) (label edge))
+                 for child in children do
+                   (format
+                    *debug-stream*
+                    " ~d [~(~a~)]"
+                    (edge-id child) (label child))
+                 finally 
+                   (format *debug-stream* " [~a of ~a]" i n))
              ;;
              ;; re-use `foo' slot to keep local cache of how this edge can be
              ;; unfolded record failure, where appropriate, too. 
@@ -1001,8 +1016,14 @@
                     #+:fdebug
                     (*unify-debug* :return))
                (cond
-                ((eq entry :bottom) (incf (packings-failures *packings*)) nil)
-                ((edge-p entry) entry)
+                ((eq entry :bottom) 
+                 #+:idebug
+                 (format *debug-stream* "~%")
+                 (incf (packings-failures *packings*)) nil)
+                ((edge-p entry) 
+                 #+:idebug
+                 (format *debug-stream* "~%")
+                 entry)
                 (t
                  (with-unification-context (ignore)
                    (loop
@@ -1053,7 +1074,18 @@
                                   :category (indef-type-of-tdfs result)
                                   :from (edge-from edge) :to (edge-to edge)
                                   :children children 
-                                  :leaves leaves :lex-ids lex-ids))))
+                                  :leaves leaves :lex-ids lex-ids)))
+                             #+:idebug
+                             (let ((new (aref cache i)))
+                               (format
+                                *debug-stream*
+                                " --> ~d~%"
+                                (edge-id new))
+                               #+:null
+                               (format
+                                *debug-stream*
+                                "  ~w~%" (compute-derivation-tree new))
+                               new))
                             (t
                              #+:fdebug
                              (when id
@@ -1064,8 +1096,15 @@
                                    (gethash path *unpacking-failure-paths*))))
                              (setf (aref cache i) :bottom)
                              (incf (packings-failures *packings*))
+                             #+:idebug
+                             (format *debug-stream* "~%")
                              nil))))))))))
 
+    #+:udebug
+    (format
+     *debug-stream*
+     "unpack-edge(): ~a~%" edge)
+    
     (let ((children (edge-children edge))
           (morphology (edge-morph-history edge))
           (adjuncts 
