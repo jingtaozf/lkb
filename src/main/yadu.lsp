@@ -67,6 +67,13 @@
                          collect
                          element)))))
 
+(defun copy-tdfs-completely (old-tdfs)
+  ;; nothing destructive now happens to tail-elements
+   (let ((indef (copy-dag-completely (tdfs-indef old-tdfs))))
+     (when indef
+       (make-tdfs :indef indef
+		  :tail (copy-list (tdfs-tail old-tdfs))))))
+
 ;;; Utility
 
 (defun indef-type-of-tdfs (tdfs)

@@ -515,49 +515,44 @@
 ;; Reconstruct a parse from the chart 
 ;;
 
-(defmacro listify (thing)
-  (let ((place (gensym)))
-    `(let ((,place ,thing))
-       (if (listp ,place)
-	   ,place
-	 (list ,place)))))
-
 (defun rebuild-edge (edge-symbol)
   (let* ((edge (get edge-symbol 'edge-record))
-	 (rule (when edge
-		 (or (get-grammar-rule-entry (edge-rule-number edge))
-		     (get-lex-rule-entry (edge-rule-number edge)))))
-	 (dtrs (mapcar #'rebuild-edge (get edge-symbol 'daughters))))
-    (cond (edge
-	   (setf (get edge-symbol 'edge-fs)
-	     (if (rule-p rule)
-		 (reapply-rule rule dtrs)
-	       (copy-dag-completely (tdfs-indef (edge-dag edge))))))
-	  ((eql (length dtrs) 1)
-	   (setf (get edge-symbol 'edge-fs) (get (car dtrs) 'edge-fs)))))
+         (rule (when edge
+                 (or (get-grammar-rule-entry (edge-rule-number edge))
+                     (get-lex-rule-entry (edge-rule-number edge)))))
+         (dtrs (mapcar #'rebuild-edge (get edge-symbol 'daughters))))
+    (if edge
+	(setf (get edge-symbol 'edge-fs)
+	  (if (rule-p rule)
+	      (reapply-rule rule dtrs (edge-spelling-change edge))
+	    (copy-tdfs-completely (edge-dag edge))))
+      (setf (get edge-symbol 'edge-fs) (get (car dtrs) 'edge-fs))))
   edge-symbol)
 
-;; NB: This doesn't respect defaults!!
-
-(defun reapply-rule (rule daughters)
-  (let ((rule-dag (copy-dag-completely (tdfs-indef (rule-full-fs rule))))
-	(rule-order (cdr (rule-order rule))))
+(defun reapply-rule (rule daughters nu-orth)
+  ;; Since all the tree unifications are in one big unification
+  ;; context, we need to make a copy of each rule each time it is used
+  (let ((rule-dag (copy-tdfs-completely (rule-full-fs rule))))
+    ;; Re-do rule unifications
     (loop 
-	for path in rule-order
-	for dtr in daughters
-	do (when (get dtr 'edge-fs)
-	     (unify-dags (unify-paths-dag-at-end-of 
-			  (create-path-from-feature-list (listify path)) 
-			  rule-dag)
-			 (get dtr 'edge-fs))))
-    (unify-paths-dag-at-end-of 
-     (create-path-from-feature-list (listify (car (rule-order rule))))
-     rule-dag)))
+	for path in (cdr (rule-order rule))
+        for dtr in daughters
+	as dtr-fs = (get dtr 'edge-fs)
+	do (when dtr-fs
+	     (setf rule-dag
+	       (yadu rule-dag (create-temp-parsing-tdfs dtr-fs path)))))
+    ;; Re-do spelling change
+    (let ((orth-fs (when nu-orth 
+		     (get-orth-tdfs nu-orth))))
+      (when orth-fs
+	(setf rule-dag (yadu rule-dag orth-fs))))
+    ;; Return the result
+    (tdfs-at-end-of (car (rule-order rule)) rule-dag)))
 
 (defun copy-parse-tree (edge-symbol)
   (when (get edge-symbol 'edge-fs)
     (setf (get edge-symbol 'edge-fs) 
-      (make-tdfs :indef (copy-dag (get edge-symbol 'edge-fs)))))
+      (copy-tdfs-elements (get edge-symbol 'edge-fs))))
   (mapc #'copy-parse-tree (get edge-symbol 'daughters))
   edge-symbol)
 
