@@ -1,6 +1,7 @@
 ;;; Loading the lkb
 ;;; tty interface - main functionality only
 
+(pushnew :tty *features*)
 (defparameter *lkb-system-version* :page)
 
 ;;(defparameter *lkb-source-dir* '(:absolute "Macintosh HD" "lkb99"))

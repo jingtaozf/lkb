@@ -1,6 +1,7 @@
 ;;; Compiling the lkb
 ;;; tty interface - main functionality only
 
+(pushnew :tty *features*)
 (in-package :cl-user)
 
 #+allegro
