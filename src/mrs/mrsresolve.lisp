@@ -22,7 +22,7 @@
   ;;; true if the string identifier for the variable
   ;;; begins with anything other than x
   `(and (var-p ,var)
-       (not (eq (elt (var-name ,var) 0) '#\x))))
+       (not (char-equal (elt (var-name ,var) 0) #\x))))
 
 
 ;;; Following three are wrappers for get-full-handel-args-with-features
