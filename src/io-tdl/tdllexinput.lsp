@@ -89,10 +89,10 @@
                       (push (cadr unif) (cdr entry))
                     (push unif def-alist))))
                (t (error "~%Program error(?): Unexpected unif in ~A" name))))
-    (dolist (coref (make-tdl-coreference-conditions 
+    (dolist (coref (make-tdl-coreference-conditions istream
                     *tdl-coreference-table* nil))
       (push coref constraint))
-    (dolist (coref (make-tdl-coreference-conditions 
+    (dolist (coref (make-tdl-coreference-conditions istream 
                     *tdl-default-coreference-table* t))
       (let ((entry (assoc (car coref) def-alist)))
         (if entry

@@ -270,10 +270,10 @@
                         (push (cadr unif) (cdr entry))
                       (push unif def-alist))))
                  (t (error "~%Program error: unexpected unif in ~A" name))))
-      (dolist (coref (make-tdl-coreference-conditions 
+      (dolist (coref (make-tdl-coreference-conditions istream
                       *tdl-coreference-table* nil))
         (push coref constraint))
-      (dolist (coref (make-tdl-coreference-conditions 
+      (dolist (coref (make-tdl-coreference-conditions istream 
                       *tdl-default-coreference-table* t))
         (let ((entry (assoc (car coref) def-alist)))
           (if entry
@@ -298,7 +298,7 @@
                         status-indicator break-char status-type))
           *tdl-status-info*)))
 
-(defun make-tdl-coreference-conditions (coref-table in-default-p)
+(defun make-tdl-coreference-conditions (istream coref-table in-default-p)
   ;;; the coref table is a list of paths, indexed by
   ;;; a coreference atom.  
   ;;; If there happens to be only one path 
@@ -314,7 +314,6 @@
   ;;;               < F G > = < I J >
   (let ((unifs nil))
     (maphash #'(lambda (index value)
-                 (declare (ignore index))
                  (let ((path1 (if in-default-p 
                                   (cdar value)
                                 (car value)))
@@ -331,9 +330,12 @@
                                  (if in-default-p (cdr path2) path2) 
                                  persist) 
                                 unifs))
+                     (progn
+                       (lkb-read-cerror istream "Coreference ~A only used once"
+                                        index)
                      (push (make-tdl-path-value-unif path1 *toptype* 
                                                      persist)
-                           unifs))))
+                           unifs)))))
              coref-table)
     unifs))
 
