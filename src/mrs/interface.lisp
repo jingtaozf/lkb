@@ -171,12 +171,27 @@
     (when (and (psoa-p mrs) (ignore-errors (make-scoped-mrs mrs)))
       mrs)))
 
+;;; FIX - is someone really calling this?  it only reads in one MRS
 (defun read-mrs-from-file (file)
   (when (probe-file file)
     (#+:debug progn #-:debug ignore-errors 
-     (with-open-file (stream file :direction :input)
+     (with-open-file (istream file :direction :input)
        (let ((*package* (find-package :lkb)))
-         (read-mrs stream))))))
+         (read-mrs istream))))))
+
+(defun read-mrss-from-file (file)
+  (when (probe-file file)
+    (#+:debug progn #-:debug ignore-errors 
+     (with-open-file (istream file :direction :input)
+       (let ((*package* (find-package :lkb)))
+         (read-mrs-stream istream))))))
+
+(defun read-indexed-mrss-from-file (file)
+  (when (probe-file file)
+     (with-open-file (istream file :direction :input)
+       (let ((*package* (find-package :lkb)))
+         (read-mrs-stream istream :indexed)))))
+
 
 (defun read-indexed-mrs-from-string (string)
   (let ((*package* (find-package :mrs)))
@@ -220,12 +235,14 @@
      (with-output-to-string (stream)
        (construct-sem-for-tree derivation :rasp stream)))))
 
+#|
 #+:xml
 (defun read-rmrs-from-string (string)
   (let ((*package* (find-package :mrs)))
     (ignore-errors 
      (read-rmrs (first (xml:parse-xml string))))))
 ;;; FIX - now need a second argument to read-rmrs, indicating origin
+|#
 
 (defun browse-rmrs (rmrs &optional title)
   (ignore-errors

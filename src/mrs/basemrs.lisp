@@ -1032,7 +1032,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
               (istream file-name :direction :input)
             (read-mrs-stream istream)))))
 
-(defun read-mrs-stream (istream) 
+(defun read-mrs-stream (istream &optional syntax) 
   (let ((psoas nil))
    (loop
       (let ((next-char (peek-char t istream nil 'eof)))
@@ -1040,7 +1040,9 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
          (cond ((eql next-char #\;) 
                  (read-line istream))
                ; one line comments
-               (t (push (read-mrs istream)
+               (t (push (if (eql syntax :indexed)
+			    (read-indexed-mrs istream)
+			    (read-mrs istream))
                         psoas)))))
    (nreverse psoas)))
 
