@@ -39,7 +39,8 @@
 
 (defclass active-chart-window-pane (ccl::picture-window-pane)
    ((chart-records :initform nil :accessor chart-records)
-    (current-chart-edge :initform nil :accessor current-chart-edge))
+    (current-chart-edge :initform nil :accessor current-chart-edge)
+    (root :initform nil :accessor active-chart-window-pane-root))
    (:default-initargs 
     :scroll-bar-class 'active-chart-scroll-bar))
 
@@ -95,6 +96,7 @@
                :close-box-p t
                :view-font *chart-font*)))
          (apply #'add-subviews (cons (ccl::my-scroller real-window) fields))
+         (setf (active-chart-window-pane-root (ccl::my-scroller real-window)) node)
          (setf (current-chart-edge (ccl::my-scroller real-window)) nil)
          (setf (chart-records (ccl::my-scroller real-window)) *chart-records*)
          (invalidate-view real-window)
@@ -187,7 +189,11 @@
    (make-instance 'menu-item
      :menu-item-title "Highlight nodes"
      :menu-item-action
-     #'(lambda () (display-edge-in-chart edge-record)))))
+     #'(lambda () (display-edge-in-chart edge-record)))
+   (make-instance 'menu-item
+     :menu-item-title "New chart"
+     :menu-item-action
+     #'(lambda () (display-edge-in-new-window edge-record)))))
 
 
 ;;; Highlight current edge, if there is one at the moment - and any ancestor
@@ -215,8 +221,9 @@
    (labels
       ((highlight-chart-edge-path-p (e)
           ;; path from e recursively through children to edge?
-          (or (eq e edge)
-            (some #'highlight-chart-edge-path-p (edge-children e)))))
+          (and e
+             (or (eq e edge)
+                (some #'highlight-chart-edge-path-p (edge-children e))))))
       (dolist (record (chart-records pane))
          (when (highlight-chart-edge-path-p (chart-record-edge record))
             (highlight-chart-edge record pane)))))
@@ -234,14 +241,35 @@
 ;;; doesn't open a new chart window if not one, since user can do this from
 ;;; toplevel parse menu
 
+(defun front-chart-window nil
+   (front-window :class 'active-chart-window))
+
 (defun display-edge-in-chart (edge)
-   (let ((existing (front-window :class 'active-chart-window)))
+   (let ((existing (front-chart-window)))
       (when existing
          (let*
             ((pane (and existing (ccl::my-scroller existing)))
              (edge-record (and pane (display-chart-edge-record edge pane))))
             (if edge-record
                (reposition-edge-in-window edge pane)
+               (lkb-beep))))))
+
+
+;;; create a new chart window and display just the descendents and ancestors of
+;;; the edge in it
+
+(defun display-edge-in-new-window (edge)
+   (let ((existing (front-chart-window)))
+      (when existing
+         (let*
+            ((pane (and existing (ccl::my-scroller existing)))
+             (edge-record (and pane (display-chart-edge-record edge pane))))
+            (if edge-record
+               (draw-chart-lattice
+                  (filtered-chart-lattice
+                     (active-chart-window-pane-root pane) edge nil)
+                  (string (gentemp (format nil "~A-" (ccl:window-title existing))))
+                  t)
                (lkb-beep))))))
 
 
@@ -272,8 +300,7 @@
                (view-draw-edge-highlighting pane))
             (setf (current-chart-edge pane) edge-record)
             ;; make new highlighting appear
-            (view-draw-edge-highlighting pane)
-            ))))
+            (view-draw-edge-highlighting pane)))))
 
 
 (defun display-chart-edge-record (edge pane)
