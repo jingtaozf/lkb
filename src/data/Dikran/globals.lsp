@@ -21,6 +21,8 @@
 
 (defparameter *list-head* '(hd))
 
+(defparameter *empty-list-type* 'e-list)
+
 (defparameter *lex-rule-suffix* nil)
 ;;; create the lexical rule name from the info in irregs.tab
 ;;; for TDL - value should be an upcase string - NIL otherwise

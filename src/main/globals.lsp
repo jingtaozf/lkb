@@ -26,6 +26,8 @@
 
 (defparameter *list-head* '(hd))
 
+(defparameter *empty-list-type* '*null*)
+
 (defparameter *lex-rule-suffix* nil
   "creates the inflectional rule name from the information
    in irregs.tab - for PAGE compatability")
@@ -71,6 +73,10 @@
 (defparameter *check-paths* nil
    "an alist in which the keys are feature paths that often fail -
     these are checked first before attempting unification")
+
+(defparameter *substantive-roots-p* nil
+  "if this is set, root edges are regarded as real edges
+   for the purposes of chart display")
 
 
 ;;; Display 

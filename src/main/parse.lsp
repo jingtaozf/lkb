@@ -592,6 +592,7 @@
 
 ;;; evaluate-unifications-with-fail-messages - temporarily removed
 
+(defparameter *substantive-roots-p* nil)
 
 (defun find-spanning-edges (start-vertex end-vertex)
    ;;; Returns all edges between two vertices and checks for
@@ -610,8 +611,19 @@
 ;;; the parse is OK
                  (if (null *start-symbol*)
                      (list (chart-configuration-edge item))
-                   (create-new-root-edges item start-symbols
-                                          start-vertex end-vertex)))))))
+                   (if *substantive-roots-p*
+                       (create-new-root-edges item start-symbols
+                                              start-vertex end-vertex)
+                     (filter-root-edges item start-symbols))))))))
+
+(defun filter-root-edges (item start-symbols)
+  (dolist (start-symbol start-symbols)
+    (let ((root-spec (get-tdfs-given-id start-symbol)))
+         (when tdfs
+             (when (yadu root-spec
+                         (edge-dag 
+                          (chart-configuration-edge item)))
+               (return (list (chart-configuration-edge item))))))))
 
 (defun create-new-root-edges (item start-symbols start-vertex end-vertex)
   (for start-symbol in start-symbols        

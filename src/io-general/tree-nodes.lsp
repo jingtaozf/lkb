@@ -259,9 +259,9 @@
 
 (defun get-real-templ-feats (tmpl-fs label-p)
   (let ((feats (top-level-features-of tmpl-fs)))
-    (set-difference feats (if label-p '(LABEL-NAME) 
-                            '(META-PREFIX META-SUFFIX)))))
-
+    (set-difference feats (if label-p (list (car *label-path*))
+                            (list (car *prefix-path*)
+                                  (car *suffix-path*))))))
                               
 ;;; JAC added the following to parseout.lsp, but better here
 

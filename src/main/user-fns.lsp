@@ -22,6 +22,31 @@
 ;;;           (create-path-from-feature-list '(fs-id))
 ;;;           :rhs (make-u-value :types (list id)))
 ;;;       )))
+
+
+(defun make-orth-tdfs (orth)
+  (let ((unifs nil)
+        (tmp-orth-path nil))
+    (for orth-value in (split-into-words orth)
+         do
+         (let ((opath (create-path-from-feature-list 
+                       (append tmp-orth-path *list-head*))))
+           (push (make-unification :lhs opath                    
+                                   :rhs
+                                   (make-u-value 
+                                    :types (list orth-value)))
+                 unifs)
+           (setq tmp-orth-path (append tmp-orth-path *list-tail*))))
+    (push (make-unification :lhs
+                            (create-path-from-feature-list tmp-orth-path)
+                            :rhs 
+                            (make-u-value :types (list *empty-list-type*)))
+          unifs)
+    (let ((indef (process-unifications unifs)))
+      (when indef
+        (setf indef (create-wffs indef))
+        (make-tdfs :indef indef)))))
+
   
 
 (defun establish-linear-precedence (rule-fs)
