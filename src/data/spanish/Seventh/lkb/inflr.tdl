@@ -65,6 +65,9 @@ inf-verb_infl_rule := lrule-general &
   ARGS [ FIRST [ ORTH #orth,
                  AFFIX inf-verb ]]].
 
+
+;;; present
+
 pres-verb_infl_rule := lrule-general &
 [ NEEDS-AFFIX false,
   ORTH #orth,
@@ -73,40 +76,41 @@ pres-verb_infl_rule := lrule-general &
 
 ;;; changed 02/08
 ;;; conjugations added 02/09
+;;; changed 06/26
 
 ;;; 1st conjugation -ar
 
-1conj-1st-sing-verb_infl_rule :=
+1conj-1st-sing-pres-verb_infl_rule :=
 %suffix (ar o)
 pres-verb-lex-rule & 
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 1st-sing-verb ]]].
 
-1conj-2nd-sing-verb_infl_rule :=
+1conj-2nd-sing-pres-verb_infl_rule :=
 %suffix (ar as)
 pres-verb-lex-rule & 
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 2nd-sing-verb ]]].
 
-1conj-3rd-sing-verb_infl_rule := 
+1conj-3rd-sing-pres-pres-verb_infl_rule := 
 %suffix (ar a)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
 
-1conj-1st-plur-verb_infl_rule := 
+1conj-1st-plur-pres-verb_infl_rule := 
 %suffix (ar amos)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 1st-plur-verb ]]].
 
-1conj-2nd-plur-verb_infl_rule := 
+1conj-2nd-plur-pres-verb_infl_rule := 
 %suffix (ar áis)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 2nd-plur-verb ]]].
 
-1conj-3rd-plur-verb_infl_rule := 
+1conj-3rd-plur-pres-verb_infl_rule := 
 %suffix (ar an)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
@@ -114,37 +118,37 @@ pres-verb-lex-rule &
 
 ;;; 2nd conjugation -er
 
-2conj-1st-sing-verb_infl_rule :=
+2conj-1st-sing-pres-verb_infl_rule :=
 %suffix (er o)
 pres-verb-lex-rule & 
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 1st-sing-verb ]]].
 
-2conj-2nd-sing-verb_infl_rule :=
+2conj-2nd-sing-pres-verb_infl_rule :=
 %suffix (er es)
 pres-verb-lex-rule & 
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 2nd-sing-verb ]]].
 
-2conj-3rd-sing-verb_infl_rule := 
+2conj-3rd-sing-pres-verb_infl_rule := 
 %suffix (er e)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
 
-2conj-1st-plur-verb_infl_rule := 
+2conj-1st-plur-pres-verb_infl_rule := 
 %suffix (er emos)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 1st-plur-verb ]]].
 
-2conj-2nd-plur-verb_infl_rule := 
+2conj-2nd-plur-pres-verb_infl_rule := 
 %suffix (er éis)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 2nd-plur-verb ]]].
 
-2conj-3rd-plur-verb_infl_rule := 
+2conj-3rd-plur-pres-verb_infl_rule := 
 %suffix (er en)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
@@ -153,43 +157,334 @@ pres-verb-lex-rule &
 
 ;;; 3rd conjugation -ir
 
-3conj-1st-sing-verb_infl_rule :=
+3conj-1st-sing-pres-verb_infl_rule :=
 %suffix (ir o)
 pres-verb-lex-rule & 
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 1st-sing-verb ]]].
 
-3conj-2nd-sing-verb_infl_rule :=
+3conj-2nd-sing-pres-verb_infl_rule :=
 %suffix (ir es)
 pres-verb-lex-rule & 
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 2nd-sing-verb ]]].
 
-3conj-3rd-sing-verb_infl_rule := 
+3conj-3rd-sing-pres-verb_infl_rule := 
 %suffix (ir e)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
 
-3conj-1st-plur-verb_infl_rule := 
+3conj-1st-plur-pres-verb_infl_rule := 
 %suffix (ir imos)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 1st-plur-verb ]]].
 
-3conj-2nd-plur-verb_infl_rule := 
+3conj-2nd-plur-pres-verb_infl_rule := 
 %suffix (ir ís)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 2nd-plur-verb ]]].
 
-3conj-3rd-plur-verb_infl_rule := 
+3conj-3rd-plur-pres-verb_infl_rule := 
 %suffix (ir en)
 pres-verb-lex-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 3rd-plur-verb ]]].
 
 
+;;; preterite
+;;; added 06/26
+
+pret-verb_infl_rule := lrule-general &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX pret-verb ]]].
+
+;;; 1st conjugation -ar
+
+1conj-1st-sing-pret-verb_infl_rule :=
+%suffix (ar é)
+pret-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-sing-verb ]]].
+
+1conj-2nd-sing-pret-verb_infl_rule :=
+%suffix (ar aste)
+pret-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-sing-verb ]]].
+
+1conj-3rd-sing-pres-pret-verb_infl_rule := 
+%suffix (ar ó)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
+
+1conj-1st-plur-pret-verb_infl_rule := 
+%suffix (ar amos)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-plur-verb ]]].
+
+1conj-2nd-plur-pret-verb_infl_rule := 
+%suffix (ar asteis)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-plur-verb ]]].
+
+1conj-3rd-plur-pret-verb_infl_rule := 
+%suffix (ar aron)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-plur-verb ]]].
+
+;;; 2nd conjugation -er
+
+2conj-1st-sing-pret-verb_infl_rule :=
+%suffix (er í)
+pret-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-sing-verb ]]].
+
+2conj-2nd-sing-pret-verb_infl_rule :=
+%suffix (er iste)
+pret-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-sing-verb ]]].
+
+2conj-3rd-sing-pret-verb_infl_rule := 
+%suffix (er ió)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
+
+2conj-1st-plur-pret-verb_infl_rule := 
+%suffix (er imos)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-plur-verb ]]].
+
+2conj-2nd-plur-pret-verb_infl_rule := 
+%suffix (er isteis)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-plur-verb ]]].
+
+2conj-3rd-plur-pret-verb_infl_rule := 
+%suffix (er ieron)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-plur-verb ]]].
+
+
+;;; 3rd conjugation -ir
+
+3conj-1st-sing-pret-verb_infl_rule :=
+%suffix (ir í)
+pret-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-sing-verb ]]].
+
+3conj-2nd-sing-pret-verb_infl_rule :=
+%suffix (ir iste)
+pret-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-sing-verb ]]].
+
+3conj-3rd-sing-pret-verb_infl_rule := 
+%suffix (ir ió)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
+
+3conj-1st-plur-pret-verb_infl_rule := 
+%suffix (ir imos)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-plur-verb ]]].
+
+3conj-2nd-plur-pret-verb_infl_rule := 
+%suffix (ir isteis)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-plur-verb ]]].
+
+3conj-3rd-plur-pret-verb_infl_rule := 
+%suffix (ir ieron)
+pret-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-plur-verb ]]].
+
+
+
+;;; imperfect
+;;; added 06/27
+
+imperf-verb_infl_rule := lrule-general &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  ARGS [ FIRST [ ORTH #orth,
+                 AFFIX imperf-verb ]]].
+
+;;; 1st conjugation -ar
+
+1conj-1st-sing-imperf-verb_infl_rule :=
+%suffix (ar aba)
+imperf-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-sing-verb ]]].
+
+1conj-2nd-sing-imperf-verb_infl_rule :=
+%suffix (ar abas)
+imperf-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-sing-verb ]]].
+
+1conj-3rd-sing-pres-imperf-verb_infl_rule := 
+%suffix (ar aba)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
+
+1conj-1st-plur-imperf-verb_infl_rule := 
+%suffix (ar ábamos)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-plur-verb ]]].
+
+1conj-2nd-plur-imperf-verb_infl_rule := 
+%suffix (ar ábais)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-plur-verb ]]].
+
+1conj-3rd-plur-imperf-verb_infl_rule := 
+%suffix (ar aban)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-plur-verb ]]].
+
+;;; 2nd conjugation -er
+
+2conj-1st-sing-imperf-verb_infl_rule :=
+%suffix (er ía)
+imperf-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-sing-verb ]]].
+
+2conj-2nd-sing-imperf-verb_infl_rule :=
+%suffix (er ías)
+imperf-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-sing-verb ]]].
+
+2conj-3rd-sing-imperf-verb_infl_rule := 
+%suffix (er ía)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
+
+2conj-1st-plur-imperf-verb_infl_rule := 
+%suffix (er íamos)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-plur-verb ]]].
+
+2conj-2nd-plur-imperf-verb_infl_rule := 
+%suffix (er íais)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-plur-verb ]]].
+
+2conj-3rd-plur-imperf-verb_infl_rule := 
+%suffix (er ían)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-plur-verb ]]].
+
+
+;;; 3rd conjugation -ir
+
+3conj-1st-sing-imperf-verb_infl_rule :=
+%suffix (ir ía)
+imperf-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-sing-verb ]]].
+
+3conj-2nd-sing-imperf-verb_infl_rule :=
+%suffix (ir ía)
+imperf-verb-lex-rule & 
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-sing-verb ]]].
+
+3conj-3rd-sing-imperf-verb_infl_rule := 
+%suffix (ir ía)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
+
+3conj-1st-plur-imperf-verb_infl_rule := 
+%suffix (ir íamos)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 1st-plur-verb ]]].
+
+3conj-2nd-plur-imperf-verb_infl_rule := 
+%suffix (ir íais)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 2nd-plur-verb ]]].
+
+3conj-3rd-plur-imperf-verb_infl_rule := 
+%suffix (ir ían)
+imperf-verb-lex-rule &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-plur-verb ]]].
+
+
+
+
+;;;06/22
+
+1conj-gerundive-verb_infl_rule :=
+%suffix (ar ando)
+lrule-general &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX gerundive-verb]]].
+
+2conj-gerundive-verb_infl_rule :=
+%suffix (er iendo)
+lrule-general &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX gerundive-verb]]].
+
+3conj-gerundive-verb_infl_rule :=
+%suffix (ir iendo)
+lrule-general &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX gerundive-verb]]].
+
+
+1conj-past-part-verb_infl_rule :=
+%suffix (ar ado)
+lrule-general &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX past-part-verb]]].
+
+2conj-past-part-verb_infl_rule :=
+%suffix (er ido)
+lrule-general &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX past-part-verb]]].
+
+3conj-past-part-verb_infl_rule :=
+%suffix (ir ido)
+lrule-general &
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX past-part-verb]]].
 
 ; <<>> CONSTANT INFLECTIONAL RULES
 
