@@ -255,10 +255,12 @@
                              for edge in edges
                              append (edge-lex-ids edge))
                  :dag result
-                 :children edges)
+                 :children edges
+                 :from (edge-from (first edges)) 
+                 :to (edge-to (first (last edges))))
       (values status %failure%))))
 
-(defun instantiate-preterminal (preterminal mrule)
+(defun instantiate-preterminal (preterminal mrule &optional start end)
   ;;
   ;; _fix_me_
   ;; this hardwires some assumptions about how affixation is carried out. 
@@ -276,6 +278,7 @@
         (make-edge :id 0 :category (indef-type-of-tdfs copy) :rule mrule 
                    :leaves (copy-list (edge-leaves preterminal))
                    :lex-ids (copy-list (edge-lex-ids preterminal))
+                   :from start :to end
                    :dag copy
                    :children (list preterminal))
         (values nil %failure%)))))

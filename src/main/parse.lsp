@@ -70,13 +70,13 @@
 (defstruct
    (edge
       (:constructor make-edge
-                    (&key id category rule dag odag 
+                    (&key id score category rule dag odag 
                           (dag-restricted (restrict-fs (tdfs-indef dag)))
                           leaves lex-ids parents children morph-history 
                           spelling-change from to
                           #+:packing packed #+:packing equivalent 
                           #+:packing frozen)))
-   id category rule dag odag dag-restricted leaves lex-ids
+   id score category rule dag odag dag-restricted leaves lex-ids
    parents children morph-history spelling-change from to
    #+:packing packed #+:packing equivalent #+:packing frozen)
 

@@ -22,20 +22,29 @@
 
 (defparameter *derivations-ignore-leafs-p* t)
 
+(defmacro derivation-id (derivation)
+  `(when (integerp (first ,derivation))
+     (first ,derivation)))
+
+
 (defmacro derivation-root (derivation)
   `(if (integerp (first ,derivation)) 
      (second ,derivation)
      (first ,derivation)))
 
+(defmacro derivation-score (derivation)
+  `(when (integerp (first ,derivation))
+     (third ,derivation)))
+
 (defmacro derivation-start (derivation)
   `(if (integerp (first ,derivation)) 
      (fourth ,derivation)
-     (third ,derivation)))
+     (second ,derivation)))
 
 (defmacro derivation-end (derivation)
   `(if (integerp (first ,derivation)) 
      (fifth ,derivation)
-     (fourth ,derivation)))
+     (third ,derivation)))
 
 (defmacro derivation-daughters (derivation)
   `(if (integerp (first ,derivation))
@@ -183,11 +192,14 @@
   (let* ((root (derivation-root derivation))
          (daughters (derivation-daughters derivation))
          (princes (and (= (length daughters) 1) 
-                       (derivation-daughters (first daughters)))))
+                       (derivation-daughters (first daughters))))
+         (id (derivation-id derivation))
+         (start (derivation-start derivation))
+         (end (derivation-end derivation)))
     (cond
      ((and (= (length daughters) 1) (null princes))
       (let* ((surface (derivation-root (first daughters)))
-             (entry (find-lexical-entry surface root)))
+             (entry (find-lexical-entry surface root id start end)))
         (if (null entry)
           (throw :fail
             (values
@@ -205,7 +217,8 @@
              (surface (derivation-root (first princes)))
              (entry (find-lexical-entry 
                      surface 
-                     (derivation-root (first daughters)))))
+                     (derivation-root (first daughters))
+                     id start end)))
         (cond
          ((null fs)
           (throw :fail
@@ -225,7 +238,7 @@
                    (format nil "`~a' (`~a')" root surface)))))
          (t
           (multiple-value-bind (result failure)
-              (instantiate-preterminal entry fs)
+              (instantiate-preterminal entry fs id start end)
             (if failure
               (throw :fail (values nil (list derivation result failure)))
               result))))))
@@ -240,7 +253,7 @@
           (throw :fail
             (values nil (list derivation 0 :norule (format nil "`~a'" root))))
           (multiple-value-bind (result failure)
-              (instantiate-rule rule items)
+              (instantiate-rule rule items id)
             (if (null failure)
               result
               (throw :fail 

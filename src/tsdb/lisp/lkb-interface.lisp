@@ -341,26 +341,26 @@
               (rule (string (rule-id (edge-rule edge))))
               (t :unknown))
             *lkb-package*)))
-    (let* ((configuration (and (null (edge-children edge))
+    (let* ((id (edge-id edge))
+           (score 0)
+           (configuration (and (null (edge-children edge))
                                (find-chart-configuration :edge edge)))
-           (start (and configuration 
-                       (chart-configuration-begin configuration)))
-           (end (and configuration 
-                       (chart-configuration-end configuration))))
+           (start (or (edge-from edge)
+                      (when configuration 
+                        (chart-configuration-begin configuration))))
+           (end (or (edge-to edge)
+                    (when configuration 
+                      (chart-configuration-end configuration)))))
       (cond
        ((and (edge-morph-history edge) (edge-spelling-change edge))
         (let* ((daughter (edge-morph-history edge))
                (preterminal (first (edge-lex-ids daughter))))
-          (list (edge-label edge)
-                start end
-                (list preterminal
-                      start end
-                      (list (edge-rule daughter)
-                            start end)))))
+          (list id (edge-label edge) score start end
+                (list id preterminal score start end
+                      (list (edge-rule daughter) start end)))))
        ((null (edge-children edge))
-        (list (first (edge-lex-ids edge))
-              start end
-              (list (edge-rule edge) 0 1)))
+        (list id (first (edge-lex-ids edge)) score start end
+              (list (edge-rule edge) start end)))
        (t
         (let* ((start *chart-limit*)
                (end 0)
@@ -368,11 +368,12 @@
                 (loop
                     for child in (edge-children edge)
                     for derivation = (compute-derivation-tree child)
-                    do
-                      (setf start (min start (second derivation)))
-                      (setf end (max end (third derivation)))
+                    for cstart = (fourth derivation)
+                    for cend = (fifth derivation)
+                    when cstart do (setf start (min start cstart))
+                    when cend do (setf end (max end cend))
                     collect derivation)))
-          (nconc (list (edge-label edge) start end)
+          (nconc (list id (edge-label edge) score start end)
                  children)))))))
 
 (defun find-chart-configuration (&key edge id)
@@ -589,7 +590,7 @@
   #+:tty
   nil)
 
-(defun find-lexical-entry (form instance)
+(defun find-lexical-entry (form instance &optional id start end)
   (let* ((*package* *lkb-package*)
          (name (intern (if (stringp instance)
                          (string-upcase instance)
@@ -598,10 +599,10 @@
          (instance (ignore-errors (get-psort-entry name))))
     (when instance 
       (let ((tdfs (copy-tdfs-completely (lex-or-psort-full-fs instance)))
-            (id (lex-or-psort-sense-id instance)))
-        (make-edge :id 0 :category (indef-type-of-tdfs tdfs)
-                   :rule form :leaves (list form) :lex-ids (list id)
-                   :dag tdfs)))))
+            (ids (list (lex-or-psort-sense-id instance))))
+        (make-edge :id id :category (indef-type-of-tdfs tdfs)
+                   :rule form :leaves (list form) :lex-ids ids
+                   :dag tdfs :from start :to end)))))
 
 (defun find-affix (type)
   (let* ((*package* *lkb-package*)
@@ -619,7 +620,7 @@
                    (get-grammar-rule-entry name))))
     rule))
 
-(defun instantiate-rule (rule edges)
+(defun instantiate-rule (rule edges id)
   (let* ((*unify-debug* :return)
          (%failure% nil)
          (status 0)
@@ -638,7 +639,7 @@
           finally
             (setf result (and result (restrict-and-copy-tdfs result)))))
     (if result
-      (make-edge :id 0 :category (indef-type-of-tdfs result) :rule rule
+      (make-edge :id id :category (indef-type-of-tdfs result) :rule rule
                  :leaves (loop 
                              for edge in edges
                              append (edge-leaves edge))
@@ -646,10 +647,12 @@
                              for edge in edges
                              append (edge-lex-ids edge))
                  :dag result
-                 :children edges)
+                 :children edges
+                 :from (edge-from (first edges)) 
+                 :to (edge-to (first (last edges))))
       (values status %failure%))))
 
-(defun instantiate-preterminal (preterminal mrule)
+(defun instantiate-preterminal (preterminal mrule &optional id start end)
   ;;
   ;; _fix_me_
   ;; this hardwires some assumptions about how affixation is carried out. 
@@ -664,9 +667,10 @@
             (uday rtdfs tdfs '(args first)))
            (copy (and result (restrict-and-copy-tdfs result))))
       (if copy
-        (make-edge :id 0 :category (indef-type-of-tdfs copy) :rule mrule 
+        (make-edge :id id :category (indef-type-of-tdfs copy) :rule mrule 
                    :leaves (copy-list (edge-leaves preterminal))
                    :lex-ids (copy-list (edge-lex-ids preterminal))
+                   :from start :to end
                    :dag copy
                    :children (list preterminal))
         (values nil %failure%)))))
@@ -682,7 +686,4 @@
             *reconstruct-hook*
             find-lexical-entry find-affix find-rule
             instantiate-rule instantiate-preterminal)
-          :tsdb))
-      
-
-
+           :tsdb))

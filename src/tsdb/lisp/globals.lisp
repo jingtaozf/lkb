@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.8 (17-jun-01)")
+(defparameter *tsdb-version* "1.8 (12-jul-01)")
 
 (defparameter
   *tsdb-application*
@@ -126,7 +126,7 @@
 (defparameter *tsdb-ofs* #\@)
 
 (defparameter *tsdb-profile-files*
-  '("daughter" "edge" "parse" "result" "rule" "run"))
+  '("daughter" "edge" "parse" "result" "rule" "run" "tree" "decision"))
 
 (defparameter *tsdb-id-attributes*
   '(:i-id :p-id :ip-id :s-id :run-id :parse-id :result-id))

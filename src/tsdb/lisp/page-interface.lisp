@@ -727,7 +727,8 @@
        :itype itype)
       (values status csli-unify::%failure%))))
 
-(defun instantiate-preterminal (preterminal affix)
+(defun instantiate-preterminal (preterminal affix &optional start end)
+  (declare (ignore start end))
   ;;
   ;; _fix_me_
   ;; probably we would be better off with copies of .preterminal. and the cfs

@@ -295,8 +295,11 @@
 (defun getpid () (random (expt 2 15)))
 
 (defun current-time (&key long)
+  (decode-time (get-universal-time) :long long))
+
+(defun decode-time (time &key long)
   (multiple-value-bind (second minute hour day month year foo bar baz)
-      (get-decoded-time)
+      (decode-universal-time time)
     (declare (ignore foo bar baz))
     (let ((months '("jan" "feb" "mar" "apr" "may" "jun" 
                     "jul" "aug" "sep" "oct" "nov" "dec")))

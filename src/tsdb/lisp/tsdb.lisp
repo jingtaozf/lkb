@@ -310,6 +310,19 @@
        run-id parse-id))
     parse-id))
 
+(defun largest-tree-id (&optional (language *tsdb-data*)
+                        &key (verbose t))
+  (let* ((data (select "tree-id" :integer "tree" nil language))
+         (tree-id (loop
+                      for record in data
+                      maximize (get-field+ :tree-id record 0))))
+    (when verbose
+      (format
+       *tsdb-io* 
+       "~&largest-tree-id(): largest `tree-id' is ~a.~%"
+       tree-id))
+    tree-id))
+
 (defun select-o-derivations (language &key item)
   (let* ((condition (when item (format nil "i-id = ~d" item)))
          (derivations 
@@ -689,3 +702,62 @@
              tree mrs tasks
              user date)))
       (call-tsdb query language :cache cache)))) 
+
+(defun write-tree (data
+                   parse-id result-id version confidence
+                   t-author t-start t-end t-comment
+                   &key cache)
+  (let* ((*print-circle* nil)
+         (*print-level* nil)
+         (*print-length* nil)
+         (rawp (and cache (eq (get-field :protocol cache) :raw))))
+    (if rawp
+      (let ((stream (get-field :tree cache))
+            (ofs *tsdb-ofs*))
+        (write parse-id :stream stream) (write-char ofs stream)
+        (write result-id :stream stream) (write-char ofs stream)
+        (write version :stream stream) (write-char ofs stream)
+        (write confidence :stream stream) (write-char ofs stream)
+        (write-string t-author stream) (write-char ofs stream)
+        (write-string t-start stream) (write-char ofs stream)
+        (write-string t-end stream) (write-char ofs stream)
+        (write-string t-comment stream)
+        (terpri stream)
+        (force-output stream)
+        (incf (get-field :count cache)))
+      (let ((query (format
+                    nil
+                    "insert into tree values ~d ~d ~d ~d ~s ~a ~a ~s"
+                    parse-id result-id version confidence
+                    t-author t-start t-end t-comment)))
+        (call-tsdb query data :cache cache)))))
+
+(defun write-decision (data parse-id version 
+                       d-state d-type d-key d-value d-start d-end d-date
+                       &key cache)
+  
+  (let* ((*print-circle* nil)
+         (*print-level* nil)
+         (*print-length* nil)
+         (rawp (and cache (eq (get-field :protocol cache) :raw))))
+    (if rawp
+      (let ((stream (get-field :decision cache))
+            (ofs *tsdb-ofs*))
+        (write parse-id :stream stream) (write-char ofs stream)
+        (write version :stream stream) (write-char ofs stream)
+        (write d-state :stream stream) (write-char ofs stream)
+        (write d-type :stream stream) (write-char ofs stream)
+        (write-string d-key stream) (write-char ofs stream)
+        (write-string d-value stream) (write-char ofs stream)
+        (write d-start :stream stream) (write-char ofs stream)
+        (write d-end :stream stream) (write-char ofs stream)
+        (write-string d-date stream)
+        (terpri stream)
+        (force-output stream)
+        (incf (get-field :count cache)))
+      (let ((query (format
+                    nil
+                    "insert into decision values ~d ~d ~s ~s ~d ~d ~a"
+                    parse-id d-type d-key d-value d-start d-end d-date)))
+        (call-tsdb query data :cache cache)))))
+
