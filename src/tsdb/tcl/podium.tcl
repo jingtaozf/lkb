@@ -407,6 +407,10 @@ proc main {} {
   .menu.process.menu.switches add checkbutton \
     -label "Exhaustive Search" \
     -variable globals(exhaustive_p) -command {tsdb_set exhaustive_p};
+  .menu.process.menu.switches add checkbutton \
+    -label "Pretty Print Trace" \
+    -variable globals(pretty_print_trace_p) \
+    -command {tsdb_set pretty_print_trace_p};
   .menu.process.menu.switches add separator;
   .menu.process.menu.switches add checkbutton \
     -label "Write `run' Relation" \

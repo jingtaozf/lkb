@@ -83,6 +83,7 @@
       set globals(analogy_aggregation_p) ~:[0~;1~]~%~
       set globals(exclude_tgc_p) ~:[0~;1~]~%~
       set globals(exhaustive_p) ~:[0~;1~]~%~
+      set globals(pretty_print_trace_p) ~:[0~;1~]~%~
       set globals(write_run_p) ~:[0~;1~]~%~
       set globals(write_parse_p) ~:[0~;1~]~%~
       set globals(write_result_p) ~:[0~;1~]~%~
@@ -109,6 +110,7 @@
      *statistics-analogy-aggregation-p*
      *statistics-exclude-tgc-p*
      *tsdb-exhaustive-p*
+     *process-pretty-print-trace-p*
      *tsdb-write-run-p* *tsdb-write-parse-p* 
      *tsdb-write-result-p* *tsdb-write-output-p*
      *tsdb-rule-statistics-p*

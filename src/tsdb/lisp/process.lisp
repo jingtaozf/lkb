@@ -18,7 +18,7 @@
 
 (in-package "TSDB")
 
-(defparameter *process-pprint-item-p* t)
+(defparameter *process-pretty-print-trace-p* t)
 
 (defun tsdb-do-process (data
                         &key condition
@@ -692,7 +692,7 @@
   
   (let* ((i-id (get-field :i-id item)) 
          (i-input (or (get-field :o-input item)
-                      (unless *process-pprint-item-p*
+                      (unless *process-pretty-print-trace-p*
                         (get-field :p-input item))
                       (get-field :i-input item)))
          (i-wf (get-field :i-wf item))

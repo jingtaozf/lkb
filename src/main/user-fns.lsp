@@ -11,6 +11,7 @@
   ;; for PAGE compatability, replace #\' by #\space
   ;; except at end of word, when replace by #\space #\s
   #+:preprocessor
+  (declare (special *preprocessor*))
   (when *preprocessor*
     (return-from preprocess-sentence-string (preprocess str :format :lkb)))
   

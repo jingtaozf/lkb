@@ -823,6 +823,10 @@ proc tsdb_set {variable {value ""}} {
         set variable "*tsdb-exhaustive-p*"; 
         set value [lispify_truth_value $globals(exhaustive_p)]
       }
+      pretty_print_trace_p {
+        set variable "*process-pretty-print-trace-p*"; 
+        set value [lispify_truth_value $globals(pretty_print_trace_p)]
+      }
       write_run_p {
         set variable "*tsdb-write-run-p*"; 
         set value [lispify_truth_value $globals(write_run_p)]

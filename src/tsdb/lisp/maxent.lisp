@@ -18,6 +18,16 @@
 
 (defparameter *maxent-frequency-threshold* 10)
 
+(defparameter *maxent-options*
+  '(*maxent-collapse-irules-p*
+    *maxent-use-preterminal-types-p*
+    *maxent-lexicalization-p*
+    *maxent-active-edges-p*
+    *maxent-ngram-size*
+    *maxent-ngram-tag*
+    *maxent-ngram-back-off-p*
+    *maxent-frequency-threshold*))
+    
 (defparameter *maxent-debug-p* t)
 
 (defstruct (feature) 
@@ -131,12 +141,36 @@
             (incf (mem-count model))))))
 
 (defun print-mem (model &key file stream (format :rpm))
-  (with-open-file (foo file :direction :output :if-exists :supersede)
-    (loop
-        with stream = (or stream foo)
-        for context in (mem-contexts model)
-        do 
-          (print-context context :stream stream :model model :format format))))
+  (case format
+    (:rpm
+     (with-open-file (foo file :direction :output :if-exists :supersede)
+       (loop
+           with stream = (or stream foo)
+           for context in (mem-contexts model)
+           do 
+             (print-context 
+              context :stream stream :model model :format format))))
+    (t
+     (format 
+      stream 
+      ";;;~%;;; ~a~%;;; (exported by ~a on ~a)~%;;;~%"
+      model (current-user) (current-time :long :pretty))
+     (format stream "~%:begin :mem ~d.~%~%" (length (mem-contexts model)))
+     (loop
+         with *print-case* = :downcase
+         for key in *maxent-options*
+         when (boundp key) do
+           (format stream "~a := ~s.~%~%" key (symbol-value key)))
+     (format stream ":begin :features ~d.~%~%" (mem-count model))
+     (loop
+         with *print-case* = :downcase
+         with table = (mem-table model)
+         for i from 0
+         for feature = (code-to-symbol i table)
+         for weight across (mem-weights model)
+         while feature do
+           (format stream "[1 ~{~a~^ ~}] ~,10f~%" feature weight))
+     (format stream "~%:end :features.~%~%:end :mem.~%"))))
 
 (defun estimate-mem (items &key (stream *tsdb-io*))
   #+:debug

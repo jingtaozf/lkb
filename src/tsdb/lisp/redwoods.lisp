@@ -1716,7 +1716,7 @@
          stream
          "~&[~a] train-and-rank(): using ~a;~%"
          (current-time :long :short)  model)
-        #+:debug (setf %model% model)
+        #-:debug (setf %model% model)
       when (and (integerp readings) (> readings 1)) do
         (format 
          stream
