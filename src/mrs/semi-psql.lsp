@@ -5,10 +5,6 @@
 
 (in-package :mrs)
 
-;;; semi code requiring :psql
-#-:psql
-(error "compile with :psql")
-
 (defconstant *psql-semi-setup* "
 ---
 -- under development
