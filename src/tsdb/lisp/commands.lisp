@@ -90,7 +90,12 @@
          (imeter (madjust * meter 0.1))
          (wmeter (madjust + (madjust * meter 0.9) (mduration imeter)))
          (items (retrieve condition language))
-         (strings (map 'list #'(lambda (foo) (get-field :i-input foo)) items))
+         (strings 
+          (loop
+              for item in items
+              for i-input = (get-field :i-input item)
+              for p-input = (call-hook *tsdb-preprocessing-hook* i-input)
+              collect (or p-input i-input)))
          (frequencies (make-hash-table :test #'equal))
          (lexicon (make-hash-table :test #'equal ))
          (lstasks (make-hash-table :test #'equal ))
@@ -108,7 +113,7 @@
       ;; how dare we call a client-specific function in general code?
       ;;                                                (16-jul-00  -  oe)
       ;;
-      #+(and :lkb (not :sltg)) (uncache-lexicon)
+      #+(and :null :lkb (not :sltg)) (uncache-lexicon)
       (dolist (string strings words)
         (do* ((i (position-if #'(lambda (c) (member c whitespace)) string)
                  (position-if #'(lambda (c) (member c whitespace)) string))

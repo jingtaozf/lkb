@@ -92,6 +92,7 @@
   (declare (ignore load))
   (ignore-errors
    (let* ((*package* *lkb-package*)
+          (*chasen-debug-p* nil)
           (str (make-string-output-stream)) ; capture any warning messages
           (*standard-output* (if trace
                                  (make-broadcast-stream *standard-output* str)
@@ -146,6 +147,7 @@
   (multiple-value-bind (return condition)
       (ignore-errors
        (let* ((*package* *lkb-package*)
+              (*chasen-debug-p* nil)
               (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                            *maximum-number-of-edges*
                                            edges))

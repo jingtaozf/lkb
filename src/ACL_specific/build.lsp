@@ -1,6 +1,8 @@
 (in-package :common-lisp-user)
 
 (load (make-pathname 
+       :device (pathname-device *load-truename*)
+       :host (pathname-host *load-truename*)
        :directory (append (butlast (pathname-directory *load-truename*))
 			  '("general"))
        :name "loadup"))

@@ -79,7 +79,7 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (_pvm_register "pvm_register")
-    ((file (* :char) #+(not (version>= 6 0)) string)
+    ((file (* :char) string)
      (debugp :int integer))
   :returning :int
   #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
@@ -127,11 +127,11 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (_pvm_create "pvm_create")
-    ((task (* :char) #+(not (version>= 6 0)) string)
+    ((task (* :char) string)
      (argv (* (* :char)) 
            #+(not (version>= 6 0)) (simple-array simple-string (*)))
-     (host (* :char) #+(not (version>= 6 0)) string)
-     (architecture (* :char) #+(not (version>= 6 0)) string))
+     (host (* :char) string)
+     (architecture (* :char) string))
   :returning :int
   #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
@@ -142,18 +142,22 @@
     :return-type :integer)
 
 (defun pvm_create (task arguments &key host architecture)
-  (let ((arguments (if (and arguments 
-                            (consp arguments)
-                            (every #'(lambda (foo) 
-                                       (or (stringp foo) (symbolp foo)))
-                                   arguments))
-                     (make-array (+ (length arguments) 1)
-                                 :initial-contents (append arguments '(0)))
-                     (make-array 1 :initial-contents '(0))))
-        (host (if host (string host) ""))
-        (architecture 
-         (if (or host (null architecture)) "" (string architecture))))
-  (_pvm_create task arguments host architecture)))
+  (let* ((arguments
+          (when (consp arguments)
+            (loop
+                for argument in arguments
+                for string = (if (stringp argument) 
+                               argument
+                               (format nil "~(~s~)" argument))
+                for native = #+:(and :ics :null) (excl:string-to-native string)
+                             #-:(and :ics :null) string
+                collect native)))
+         (arguments (make-array (+ (length arguments) 1)
+                                :initial-contents (append arguments '(0))))
+         (host (if host (string host) ""))
+         (architecture 
+          (if (or host (null architecture)) "" (string architecture))))
+    (_pvm_create task arguments host architecture)))
 
 #+(version>= 5 0)
 (def-foreign-call pvm_flush (:void) :returning :int)
@@ -167,10 +171,13 @@
     ((tid :int integer)
      (tag :int integer)
      (block :int integer)
-     (output (* :char) #+(not (version>= 6 0)) string)
+     #-:ics
+     (output (* :char) string)
+     #+:ics
+     (output :int integer)
      (size :int integer))
   :returning :int
-  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) nil)
 
 #-(version>= 5 0)
 (defforeign
@@ -181,10 +188,13 @@
 #+(version>= 5 0)
 (def-foreign-call 
     pvm_collect 
-    ((output (* :char) #+(not (version>= 6 0)) string) 
+    (#-:ics
+     (output (* :char) string)
+     #+:ics
+     (output :int integer)
      (size :int integer))
   :returning :int
-  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) nil)
 
 #-(version>= 5 0)
 (defforeign
@@ -194,7 +204,9 @@
 
 (let* ((size 4096)
        (output (make-array 
-                (+ size 1) :element-type 'character :allocation :static)))
+                (+ size 1) :element-type 'character :allocation :static))
+       #+:ics
+       (output (excl:lispval-other-to-address output)))
   (defun pvm_poll (tid tag block)
     (let* ((block (cond ((null block) 0)
                         ((numberp block) (round block))
@@ -210,25 +222,38 @@
         ;; we would want to free the old .output. array here; apparently, the
         ;; way recommended in the 5.0.1 documentation --- viz. aclfree() plus 
         ;; lispval-other-to-address() --- is unavailable because the latter
-        ;; function does not exist :-{.                       (16-feb-00  -  oe)
+        ;; function does not exist :-{.                     (16-feb-00  -  oe)
         ;;
-        (setf output (make-array 
-                      (+ size 1) :element-type 'character :allocation :static))
+        ;; it seems, ACL 6.0 has lispval-other-to-address().   (13-sep-01; oe)
+        ;;
+        (when (integerp output) (excl:aclfree output))
+        (let ((new (make-array 
+                    (+ size 1) :element-type 'character :allocation :static)))
+          (setf output #-:ics new #+:ics (excl:lispval-other-to-address new)))
         (let ((status (pvm_collect output size)))
           (if (< status 0)
             :error
             (multiple-value-bind (result condition)
-                (ignore-errors (read-from-string output t nil :end status))
-              (when (and (null result) condition *pvm-debug-p*)
+                (ignore-errors 
+                 (let ((string 
+                        #-:ics output #+:ics (excl:native-to-string output)))
+                   (when *pvm-debug-p*
+                     (format t "pvm_poll(): read `~a'.~%" string))
+                   (read-from-string string t nil :end status)))
+              (when (and (null result) condition)
                 (format
                  t
                  "~&pvm_poll(): error `~a'.~%" condition))
               (or result :error)))))
        (t
         (multiple-value-bind (result condition)
-            (ignore-errors (read-from-string output t nil :end status))
-          (when (and (null result) condition *pvm-debug-p*)
-            (format t "pvm_poll(): read `~a'.~%" output)
+            (ignore-errors 
+             (let ((string 
+                    #-:ics output #+:ics (excl:native-to-string output)))
+               (when *pvm-debug-p*
+                 (format t "pvm_poll(): read `~a'.~%" string))
+               (read-from-string string t nil :end status)))
+          (when (and (null result) condition)
             (format
              t
              "~&pvm_poll(): error `~a'.~%" condition))
@@ -239,7 +264,7 @@
     (_pvm_transmit "pvm_transmit")
     ((tid :int integer)
      (tag :int integer)
-     (file (* :char) #+(not (version>= 6 0)) string))
+     (file (* :char) string))
   :returning :int
   #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
@@ -264,7 +289,7 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (_pvm_vm_info "pvm_vm_info")
-    ((file (* :char) #+(not (version>= 6 0)) string))
+    ((file (* :char) string))
   :returning :int
   #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
@@ -297,9 +322,9 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (pvm_announce "pvm_announce")
-    ((class (* :char) #+(not (version>= 6 0)) string)
-     (version (* :char) #+(not (version>= 6 0)) string)
-     (user (* :char) #+(not (version>= 6 0)) string))
+    ((class (* :char) string)
+     (version (* :char) string)
+     (user (* :char) string))
   :returning :int
   #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
@@ -312,7 +337,7 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (pvm_delinfo "pvm_delinfo")
-    ((class (* :char) #+(not (version>= 6 0)) string)
+    ((class (* :char) string)
      (index :int integer)
      (flags :int integer))
   :returning :int
@@ -331,7 +356,7 @@
 (def-foreign-call 
     (_pvm_task_info "pvm_task_info")
     ((tid :int integer)
-     (file (* :char) #+(not (version>= 6 0)) string))
+     (file (* :char) string))
   :returning :int
   #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 

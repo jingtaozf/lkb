@@ -410,4 +410,3 @@
 	(setf (stream-recording-p *standard-output*) t)
 	(funcall body))
     (mp:process-revoke-arrest-reason *lkb-top-process* :output)))
-

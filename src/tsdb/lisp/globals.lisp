@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.8 (21-aug-01)")
+(defparameter *tsdb-version* "1.8 (13-sep-01)")
 
 (defparameter
   *tsdb-application*
@@ -71,6 +71,8 @@
 (defparameter *tsdb-flush-cache-threshold* 5000)
 
 (defparameter *tsdb-verbose-cache-flush-p* nil)
+
+(defparameter *tsdb-preprocessing-hook* nil)
 
 (defparameter *tsdb-result-hook* "tsdb::result-hook")
 

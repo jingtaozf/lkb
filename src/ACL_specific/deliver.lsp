@@ -14,20 +14,24 @@
          (merge-pathnames #p"src/ACL_specific/build.lsp" sys-home))
 
    :opt-speed 3
-   :newspace (* 1024 1024 3)
-   :oldspace (* 1024 1024 10)
-   :lisp-heap-size (* 1024 1024 #-:mswindows 1024 #+:mswindows 768)
+   :newspace (* 1024 1024 4)
+   :oldspace (* 1024 1024 12)
+   :lisp-heap-size (* 1024 1024 #-:mswindows 768 #+:mswindows 512)
    ;;
    ;; change heap placement to allow immense newspace growth (21-may-00  -  oe)
    ;;
    #+:linux86 :lisp-heap-start #+:linux86 "1040M"
-   #+:linux86 :c-heap-start #+:linux86 "2816M"
    #+(and :sparc :solaris2) :c-heap-start #+(and :sparc :solaris2) #xe0000000
 
    :runtime :standard 
    #+(version>= 6 0) :runtime-bundle #+(version>= 6 0) t
    :include-clim t
    :include-compiler t
+
+   :pll-file (file-namestring (pll-file))
+   :bundle-file (file-namestring (namestring (bundle-pathname)))
+   :opt-speed 3 :opt-space 1 :opt-safety 1 :opt-debug 2
+   :read-init-files '(".clinit.cl" "clinit.cl")
 
    :include-tpl t
    :include-debugger nil

@@ -4,11 +4,11 @@
 (def-foreign-call 
     (_create_run "create_run")
     ((tid :int integer)
-     (data (* :char) #+(not (version>= 6 0)) string)
+     (data (* :char) string)
      (run-id :int integer)
-     (comment (* :char) #+(not (version>= 6 0)) string)
+     (comment (* :char) string)
      (interactive :int integer)
-     (custom (* :char) #+(not (version>= 6 0)) string))
+     (custom (* :char) string))
   :returning :int
   #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
@@ -32,7 +32,7 @@
     (_process_item "process_item")
     ((tid :int integer)
      (i_id :int integer)
-     (i_input (* :char) #+(not (version>= 6 0)) string)
+     (i_input (* :char) string)
      (parse_id :int integer)
      (edges :int integer)
      (exhaustive :int integer)
@@ -50,7 +50,7 @@
 
 (defun process_item (tid item exhaustive derivationp interactive)
   (let* ((i-id (get-field :i-id item))
-         (i-input (get-field :i-input item))
+         (i-input (or (get-field :p-input item) (get-field :i-input item)))
          (parse-id (get-field :parse-id item))
          (edges (or (get-field :edges item) -1))
          (exhaustive (if exhaustive 1 0))
@@ -68,7 +68,7 @@
     (_complete_run "complete_run")
     ((tid :int integer)
      (run_id :int integer)
-     (custom (* :char) #+(not (version>= 6 0)) string))
+     (custom (* :char) string))
   :returning :int
   #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 

@@ -642,7 +642,8 @@
            (i-id (get-field :i-id item)) 
            (i-input (get-field :i-input item))
            (i-wf (get-field :i-wf item))
-           (o-ignore (get-field :o-ignore item)))
+           (o-ignore (get-field :o-ignore item))
+           (p-input (call-hook *tsdb-preprocessing-hook* i-input)))
 
       (cond 
        ((and o-ignore (tsdb-ignore-p o-ignore))
@@ -665,8 +666,8 @@
                             (floor (* *tsdb-edge-factor* o-edges))
                             *tsdb-maximal-number-of-edges*))))
           (append 
-           (pairlis '(:run-id :parse-id :gc :edges) 
-                    (list run-id parse-id gc edges)) 
+           (pairlis '(:run-id :parse-id :gc :edges :p-input) 
+                    (list run-id parse-id gc edges p-input)) 
            item)))))))
 
 (defun print-item (item &key (stream *tsdb-io*) result interactive)
@@ -674,6 +675,7 @@
   
   (let* ((i-id (get-field :i-id item)) 
          (i-input (or (get-field :o-input item)
+                      (get-field :p-input item)
                       (get-field :i-input item)))
          (i-wf (get-field :i-wf item))
          (gc (get-field :gc item))
@@ -729,6 +731,7 @@
            (parse-id (get-field :parse-id item))
            (i-id (get-field :i-id item)) 
            (i-input (or (and interactive (get-field :o-input item))
+                        (get-field :p-input item)
                         (get-field :i-input item)))
            (gc (get-field :gc item))
            (edges (get-field :edges item))
@@ -1143,7 +1146,7 @@
                    (symbol (and (fboundp hook) (symbol-function hook)))
                    (string (ignore-errors 
                             (symbol-function (read-from-string hook))))))
-           (result (ignore-errors (apply hook arguments))))
+           (result (when hook (ignore-errors (apply hook arguments)))))
       (typecase result
         (null nil)
         (string result)
