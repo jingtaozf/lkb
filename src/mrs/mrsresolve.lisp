@@ -86,11 +86,16 @@
   
    
 (defun is-quant-rel (rel)
-  ;;; test is presence of a feature or the scope or membership
-  ;;; of *quant-rel-types*
-  ;;; But also avoid including any "quantifiers" which are top-level rels,
-  ;;; possibly including "the" (_def_rel) and demonstratives
-  ;;; FIX - needs cleanup - use _q as definitional?
+  ;;; test is presence of the body feature (prefered test)
+  ;;; or membership of *quant-rel-types*
+  ;;;
+  ;;; Since *scope-feat* is required on all quantifers
+  ;;; for the scope resolution code to work, this is a reasonable test
+  ;;;
+  ;;; The code also allows us to avoid including any "quantifiers" 
+  ;;; which are top-level rels, which for some grammars might 
+  ;;; include "the" (_def_rel) and demonstratives, but currently
+  ;;; this is not done for Matrix grammars
   (and
    (if *quant-rel-types*
        (member (rel-pred rel) *quant-rel-types* 
@@ -99,7 +104,7 @@
          (when (and (eq (fvpair-feature fvpair) *scope-feat*))
            (return t))))
    (not (member (rel-pred rel) *top-level-rel-types* 
-                :test #'eq))))
+                :test #'equal))))
 
 
 (defvar *quant-list* nil)
@@ -1132,6 +1137,16 @@ in their restrictors.
 	      (return t))))
       (return t))))
 		       
+
+#|
+generator testing
+
+(progn 
+  (let ((*mrs-base-output-p* t))
+    (lkb::do-parse-tty "the dog believed Kim did not bark")
+    (pprint (lkb::generate-from-mrs (produce-one-scope *mrs-debug*)))))
+	 
+|#
 
 (defun produce-one-scope (mrsstruct)
   ;;; returns nil in the case where something goes wrong
