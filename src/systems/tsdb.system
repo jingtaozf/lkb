@@ -88,6 +88,8 @@
        (:file "tdl-patches")
        #+(and (or :lkb :mrs) (not :sltg))
        (:file "lkb-interface")
+       #+:xle
+       (:file "xle-interface")
        #+:anlt 
        (:file "anlt-interface")
        #+:sltg

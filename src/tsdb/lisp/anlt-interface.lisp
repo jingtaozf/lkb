@@ -6,11 +6,15 @@
 ;;;
 ;;;  get-test-run-information
 ;;;  parse-word
-;;;  initialize-test-run
-;;;  finalize-test-run
+;;;  initialize-run
+;;;  finalize-run
 ;;;  parse-item
 
 (in-package :cl-user)
+
+(defun tsdb::current-grammar ()
+  "unknown")
+
 
 (defun tsdb::get-test-run-information ()
    `((:AVMS . 0)
@@ -54,10 +58,10 @@
          finally (return (pairlis '(:words :l-stasks) (list words 0)))))))
 
 
-(defun tsdb::initialize-test-run (&key interactive exhaustive)
+(defun tsdb::initialize-run (&key interactive exhaustive)
    (declare (ignore interactive exhaustive))
    ;; returns whatever it likes; the return value will be given to
-   ;; finalize-test-run() to restore the interactive environment if
+   ;; finalize-run() to restore the interactive environment if
    ;; necessary
    (setf *current-parse-trees nil)
    (setf *chart-edges nil)
@@ -66,9 +70,9 @@
      (make-lr1-parse-states nil)
      (make-parse-rule-tree nil)))
 
-(defun tsdb::finalize-test-run (environment)
+(defun tsdb::finalize-run (context)
    ;; called after completion of test run
-   (declare (ignore environment))
+   (declare (ignore context))
    (input-word-invalidations *cached-words 'normalised)
    (dolist (word *cached-words)
       (remprop word 'word))

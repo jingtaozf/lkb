@@ -518,7 +518,7 @@
                               ,data ,i 
                               :comment ,comment :gc ,gc :tenure ,tenure
                               :interactive nil :verbose ,verbose 
-                              :protocol ,protocol)
+                              :protocol ,protocol :custom ,custom)
                             nil
                             :key :create-run)
                            (create_run 
@@ -618,19 +618,20 @@
     (list (enrich-run (create-run data run-id 
                                   :comment comment :gc gc 
                                   :interactive interactive 
-                                  :verbose verbose)))))
+                                  :verbose verbose :protocol protocol)))))
 
 (defun create-run (data run-id 
                    &key comment 
                         gc (tenure *tsdb-tenure-p*)
                         (exhaustive *tsdb-exhaustive-p*)
                         (nanalyses *tsdb-maximal-number-of-analyses*)
-                        interactive (protocol *pvm-protocol*)
+                        interactive (protocol *pvm-protocol*) custom
                         verbose)
   
-  (let* ((context (initialize-test-run :interactive interactive 
-                                       :exhaustive exhaustive
-                                       :nanalyses nanalyses))
+  (let* ((run (initialize-run :interactive interactive 
+                              :exhaustive exhaustive
+                              :nanalyses nanalyses
+                              :protocol protocol :custom custom))
          (start (current-time :long :tsdb))
          (gc-strategy (unless interactive 
                         (install-gc-strategy 
@@ -641,17 +642,17 @@
          (platform (current-platform))
          (grammar (current-grammar))
          (host (current-host))
-         (os (current-os))
-         (run (pairlis (list :data :run-id :comment
-                             :platform :grammar
-                             :user :host :os :protocol :start
-                             :context :gc-strategy :gc)
-                       (list data run-id comment
-                             platform grammar
-                             user host os protocol start
-                             context gc-strategy gc))))
+         (os (current-os)))
     (gc-statistics-reset :all)
-    (append run (get-test-run-information))))
+    (nconc (pairlis (list :data :run-id :comment
+                          :platform :grammar
+                          :user :host :os :protocol :start
+                          :gc-strategy :gc)
+                    (list data run-id comment
+                          platform grammar
+                          user host os protocol start
+                          gc-strategy gc))
+           run)))
 
 (defun enrich-run (run)
   
@@ -742,10 +743,10 @@
                                client
                                (exhaustive *tsdb-exhaustive-p*)
                                (nanalyses *tsdb-maximal-number-of-analyses*)
-                               (nderivations 
+                               (nresults 
                                 (if *tsdb-write-passive-edges-p*
                                   -1
-                                  *tsdb-maximal-number-of-derivations*))
+                                  *tsdb-maximal-number-of-results*))
                                interactive burst)
 
   (cond
@@ -763,13 +764,14 @@
                         (quote ,item)
                         :trees-hook ,trees-hook 
                         :semantix-hook ,semantix-hook
-                        :nderivations ,nderivations
+                        :nanalyses ,nanalyses
+                        :nresults ,nresults
                         :verbose nil :interactive nil :burst t)
                       nil
                       :key :process-item
                       :verbose nil)
                      (process_item 
-                      tid item nanalyses nderivations interactive))))
+                      tid item nanalyses nresults interactive))))
       (case status
         (:ok (setf (client-status client) item) :ok)
         (:error (setf (client-status client) :error) :error))))
@@ -809,7 +811,7 @@
                       :nanalyses nanalyses
                       :trees-hook trees-hook
                       :semantix-hook semantix-hook
-                      :nderivations nderivations
+                      :nresults nresults
                       :burst burst)
           (generate-item mrs 
                          :string i-input
@@ -819,7 +821,7 @@
                          :nanalyses nanalyses
                          :trees-hook trees-hook
                          :semantix-hook semantix-hook
-                         :nderivations nderivations
+                         :nresults nresults
                          :burst burst)))
       (when (and (not *tsdb-minimize-gcs-p*) (not (eq gc :global))
                  (not interactive)
@@ -843,7 +845,7 @@
                         :nanalyses nanalyses
                         :trees-hook trees-hook
                         :semantix-hook semantix-hook
-                        :nderivations nderivations
+                        :nresults nresults
                         :burst burst)
             (generate-item mrs
                            :string i-input 
@@ -853,7 +855,7 @@
                            :nanalyses nanalyses
                            :trees-hook trees-hook
                            :semantix-hook semantix-hook
-                           :nderivations nderivations
+                           :nresults nresults
                            :burst burst))))
 
       #+:allegro
@@ -1200,7 +1202,8 @@
   (loop
       for run in runs
       for completion = (unless (get-field :end run)
-                         (complete-run run stream interrupt))
+                         (complete-run run 
+                                       :stream stream :interrupt interrupt))
       for status = (or (get-field :status run) (run-status run) :complete)
       when (get-field :run-id run)
       do
@@ -1213,7 +1216,7 @@
   (when (and (null interactive) %accumlated-rule-statistics%)
     (write-rules -1 %accumlated-rule-statistics% data :cache cache)))
 
-(defun complete-run (run &optional stream interrupt)
+(defun complete-run (run &key stream interrupt custom)
   (when (get-field :run-id run)
     (let ((context (get-field :context run))
           (gc-strategy (get-field :gc-strategy run))
@@ -1222,13 +1225,14 @@
        ((and client (client-p client))
         (let* ((tid (client-tid client))
                (cpu (client-cpu client))
-               (custom (and (cpu-p cpu) (cpu-complete cpu)))
+               (custom (or custom (and (cpu-p cpu) (cpu-complete cpu))))
                (status (if (eq (client-protocol client) :lisp)
                          (revaluate 
                           tid 
                           `(complete-run
                             (quote ,(pairlis '(:context :gc-strategy)
-                                             (list context gc-strategy))))
+                                             (list context gc-strategy)))
+                            :custom custom)
                           1
                           :key :complete-run
                           :verbose nil
@@ -1251,7 +1255,7 @@
             (setf (client-status client) :error)
             (acons :end (current-time :long :tsdb) nil)))))
        (t
-        (let ((finalization (finalize-test-run context)))
+        (let ((finalization (finalize-run context :custom custom)))
           (when gc-strategy (restore-gc-strategy gc-strategy))
           (cons (cons :end (current-time :long :tsdb)) finalization)))))))
 

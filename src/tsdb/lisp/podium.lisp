@@ -93,7 +93,7 @@
       set globals(process,protocol) ~d~%~
       set globals(maximal_number_of_analyses) ~d~%~
       set globals(maximal_number_of_edges) ~d~%~
-      set globals(maximal_number_of_derivations) ~d~%~
+      set globals(maximal_number_of_results) ~d~%~
       set globals(tree,updatep) ~:[0~;1~]~%~
       set globals(tree,delay) ~a~%~
       set globals(tree,thinning_normalize_p) ~:[0~;1~]~%~
@@ -122,7 +122,7 @@
      *pvm-protocol*
      *tsdb-maximal-number-of-analyses*
      *tsdb-maximal-number-of-edges* 
-     *tsdb-maximal-number-of-derivations*
+     *tsdb-maximal-number-of-results*
      delay (if (numberp delay) delay 0)
      *redwoods-thinning-normalize-p*
      *redwoods-thinning-export-p*

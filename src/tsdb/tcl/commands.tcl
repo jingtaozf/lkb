@@ -309,13 +309,13 @@ proc tsdb_option {name} {
     }
     results {
       if {![integer_input "maximal number of result details" \
-                          $globals(maximal_number_of_derivations)]} {
+                          $globals(maximal_number_of_results)]} {
         if {$globals(integer,lvalue) == ""} {
           set globals(integer,lvalue) 0;
         }; # if
-        set globals(maximal_number_of_derivations) $globals(integer,lvalue);
-        tsdb_set "*tsdb-maximal-number-of-derivations*" \
-                 $globals(maximal_number_of_derivations);
+        set globals(maximal_number_of_results) $globals(integer,lvalue);
+        tsdb_set "*tsdb-maximal-number-of-results*" \
+                 $globals(maximal_number_of_results);
       }; # if
     }
     delay {

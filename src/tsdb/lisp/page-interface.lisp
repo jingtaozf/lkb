@@ -139,7 +139,7 @@
           (when (and name daughter itype index (eq itype :morph))
             (pushnew (list name index key arity) result :test #'equal)))))
 
-(defun initialize-test-run (&key interactive exhaustive)
+(defun initialize-run (&key interactive exhaustive)
   (declare (ignore exhaustive))
   
   (let* ((storage (gensym ""))
@@ -171,7 +171,7 @@
     (setf (get :environment storage) environment)
     storage))
 
-(defun finalize-test-run (storage)
+(defun finalize-run (storage)
   (ignore-errors
    (let ((parser (pg::get-parser :syntax))
          (environment (get :environment storage)))
@@ -640,6 +640,18 @@
            (total (and statistics (stats-time statistics))))
       (when (and (integerp total) (>= total slice))
         (format nil "time limit (~a)" total))))))
+
+(defun current-grammar ()
+  (cond 
+   ((and (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)
+         (boundp (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
+    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
+   ((and (member :page *features*) 
+         (find-package "DISCO")
+         (find-symbol "*GRAMMAR-VERSION*" "DISCO")
+         (boundp (find-symbol "*GRAMMAR-VERSION*" "DISCO")))
+    (symbol-value (find-symbol "*GRAMMAR-VERSION*" "DISCO")))
+   (t "anonymous")))
 
 ;;;
 ;;; interface functions for reconstruction of derivations (in UDF --- unified

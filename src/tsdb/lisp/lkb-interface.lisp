@@ -23,6 +23,19 @@
   `(yadu ,tdfs1 (create-temp-parsing-tdfs ,tdfs2 ,path)))
 
 
+(defun current-grammar ()
+  (cond 
+   ((and (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)
+         (boundp (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
+    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
+   ((and (member :lkb *features*) 
+         (find-package :lkb)
+         (find-symbol "*GRAMMAR-VERSION*" :lkb)
+         (boundp (find-symbol "*GRAMMAR-VERSION*" :lkb)))
+    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :lkb)))
+   (t "anonymous")))
+
+
 (defun get-test-run-information ()
   (let* ((*package* *lkb-package*)
          (exhaustivep (null *first-only-p*))
@@ -49,13 +62,7 @@
       (:rules . ,(hash-table-count *rules*))
       (:lrules . ,(hash-table-count *lexical-rules*))
       (:lexicon . ,(size-of-lexicon))
-      (:grammar . 
-       ,(or
-         (loop
-             for package in (list *lkb-package* :common-lisp-user)
-             for symbol = (find-symbol "*GRAMMAR-VERSION*" package)
-             thereis (when (boundp symbol) (symbol-value symbol)))
-         "unknown"))
+      (:grammar . ,(current-grammar))
       (:application . ,(format 
                         nil 
                         "LKB (~A mode~@[; version `~a'~]; ~
@@ -74,7 +81,6 @@
                         exhaustivep 
                         (if (numberp *first-only-p*) *first-only-p* 1)
                         agendap)))))
-                       
 
 
 (defun parse-word (word &key load trace)
@@ -96,29 +102,33 @@
           (*chasen-debug-p* nil)
           (str (make-string-output-stream)) ; capture any warning messages
           (*standard-output* (if trace
-                                 (make-broadcast-stream *standard-output* str)
+                               (make-broadcast-stream *standard-output* str)
                                str))
           (input (split-into-words (preprocess-sentence-string word))))
      (declare (special *chasen-debug-p*))
      (parse input nil)
      (summarize-chart))))
 
-(defun initialize-test-run (&key interactive exhaustive nanalyses)
-  (declare (ignore interactive))
-   ;; returns whatever it likes; the return value will be given to
-   ;; finalize-test-run() to restore the interactive environment if
-   ;; necessary
+(defun initialize-run (&key interactive exhaustive nanalyses
+                            protocol custom)
+  (declare (ignore interactive protocol custom))
+  ;; returns whatever it likes; the return value will be given to
+  ;; finalize-test-run() to restore the interactive environment if
+  ;; necessary
   (let ((*package* *lkb-package*)
         (first-only-p *first-only-p*))
     (clear-type-cache)
-    (setf *first-only-p* (if (integerp nanalyses)
-                           nanalyses
-                           (unless exhaustive 
+    (setf *first-only-p* (if exhaustive
+                           nil
+                           (if (integerp nanalyses)
+                             (unless (zerop nanalyses) nanalyses)
                              (if (integerp *first-only-p*) *first-only-p* 1))))
-    (pairlis '(:first-only-p)
-             (list first-only-p))))
+    (let ((context (pairlis '(:first-only-p)
+                            (list first-only-p))))
+      (acons :context context (get-test-run-information)))))
 
-(defun finalize-test-run (environment)
+(defun finalize-run (context &key custom)
+  (declare (ignore custom))
   ;; called after completion of test run
   (let ((lexicon 0)
         (*package* *lkb-package*))
@@ -130,7 +140,7 @@
     (clear-type-cache)
     (uncache-lexicon)
     (loop
-        for (variable . value) in environment do
+        for (variable . value) in context do
           (case variable
             (:first-only-p 
              (setf *first-only-p* value))))
@@ -144,27 +154,26 @@
 
 (defun parse-item (string 
                    &key id exhaustive nanalyses trace
-                        readings edges derivations semantix-hook trees-hook
-                        burst (nderivations 0))
+                        edges derivations semantix-hook trees-hook
+                        burst (nresults 0))
   (declare (ignore derivations #-:packing id))
   
-  (multiple-value-bind (return condition)
+  (let* ((*package* *lkb-package*)
+         (*chasen-debug-p* nil)
+         (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
+                                      *maximum-number-of-edges*
+                                      edges))
+         (*first-only-p* (if exhaustive
+                           nil
+                           (if (integerp nanalyses)
+                             (unless (zerop nanalyses) nanalyses)
+                             (if (integerp *first-only-p*) 
+                                *first-only-p* 1))))
+         (*do-something-with-parse* nil))
+    (declare (special *chasen-debug-p*))
+    (multiple-value-bind (return condition)
       (ignore-errors
-       (let* ((*package* *lkb-package*)
-              (*chasen-debug-p* nil)
-              (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
-                                           *maximum-number-of-edges*
-                                           edges))
-              (*first-only-p* (if (integerp nanalyses)
-                                (unless (zerop nanalyses) nanalyses)
-                                (unless exhaustive
-                                  (if (integerp readings)
-                                    readings
-                                    (if (integerp *first-only-p*)
-                                      *first-only-p*
-                                      1)))))
-              (*do-something-with-parse* nil)
-              (sent
+       (let* ((sent
                (split-into-words (preprocess-sentence-string string)))
               (str (make-string-output-stream)) ; capture any warning messages
               (*standard-output* 
@@ -175,7 +184,7 @@
               (*copies* 0)
               (*subsumptions* 0)
               tgc tcpu treal conses symbols others)
-         (declare (special *subsumptions*) (special *chasen-debug-p*))
+         (declare (special *subsumptions*))
          ;;
          ;; this really ought to be done in the parser ...  (30-aug-99  -  oe)
          ;;
@@ -268,7 +277,7 @@
                      (packings-failures *packings*)
                      comment)
                     comment))
-                 (summary (summarize-chart :derivationp (< nderivations 0))))
+                 (summary (summarize-chart :derivationp (< nresults 0))))
             (multiple-value-bind (l-s-tasks redges words)
                 (parse-tsdb-count-lrules-edges-morphs)
               (declare (ignore l-s-tasks words))
@@ -293,9 +302,9 @@
                    (unless #+:packing packingp #-:packing nil
                      (loop
                          with *package* = *lkb-package*
-                         with nderivations = (if (<= nderivations 0)
-                                               (length *parse-record*)
-                                               nderivations)
+                         with nresults = (if (<= nresults 0)
+                                             (length *parse-record*)
+                                           nresults)
                          for i from 1
                          for parse in (reverse *parse-record*)
                          for time = (if (integerp (first times))
@@ -312,7 +321,7 @@
                          for size = (parse-tsdb-count-nodes parse)
                          for tree = (tsdb::call-hook trees-hook parse)
                          for mrs = (tsdb::call-hook semantix-hook parse)
-                         while (>= (decf nderivations) 0) collect
+                         while (>= (decf nresults) 0) collect
                            (pairlis '(:result-id :mrs :tree
                                       :derivation :r-redges :size
                                       :r-stasks :r-etasks 
@@ -323,7 +332,7 @@
                                           -1 -1 
                                           -1 -1 
                                           time))))
-                   (when (< nderivations 0)
+                   (when (< nresults 0)
                      (loop
                          for i from (length *parse-record*)
                          for derivation in (rest (assoc :derivations summary))
@@ -341,7 +350,7 @@
                 (error (pprint-error error)))
            (pairlis '(:readings :condition :error)
                     (list -1 (unless burst condition) error))))
-     return)))
+     return))))
 
 ;;;
 ;;; ToDo
@@ -352,7 +361,7 @@
 (defun generate-item (mrs
                       &key id string exhaustive nanalyses trace
                            readings edges derivations semantix-hook trees-hook
-                           burst (nderivations 0))
+                           burst (nresults 0))
   (declare (ignore derivations string id trees-hook))
 
   (let* ((*package* *lkb-package*)
@@ -430,9 +439,9 @@
                 (:results .
                  ,(loop
                       with *package* = *lkb-package*
-                      with nderivations = (if (<= nderivations 0)
-                                            (length *gen-record*)
-                                            nderivations)
+                      with nresults = (if (<= nresults 0)
+                                        (length *gen-record*)
+                                        nresults)
                       for i from 1
                       for parse in *gen-record*
                       for string in strings
@@ -445,7 +454,7 @@
                       for tree = #-:null (format nil "~{~a~^ ~}" string)
                                  #+:null (tsdb::call-hook trees-hook parse)
                       for mrs = (tsdb::call-hook semantix-hook parse)
-                      while (>= (decf nderivations) 0) collect
+                      while (>= (decf nresults) 0) collect
                         (pairlis '(:result-id :mrs :tree :string
                                    :derivation :size)
                                  (list i mrs tree string
@@ -476,8 +485,8 @@
      ((search index string)
       (subseq string 0 (max (- (search index string) 1) 0)))
      (t string))))
-         
-         
+
+
 (defun compute-derivation-tree (edge)
   (labels ((edge-label (edge)
              (intern 
@@ -913,12 +922,8 @@
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
 	   #-:ansi-eval-when (load eval compile)
-   (import '(get-test-run-information
-            parse-word
-            initialize-test-run
-            finalize-test-run
-            parse-item generate-item
-            uncache-lexicon
+  (import '(current-grammar initialize-run finalize-run
+            parse-word parse-item generate-item
             *reconstruct-hook*
             find-lexical-entry find-affix find-rule
             instantiate-rule instantiate-preterminal)

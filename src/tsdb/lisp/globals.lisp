@@ -20,19 +20,19 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (3-jul-03; beta)")
+(defparameter *tsdb-version* "2.0 (8-jul-03; beta)")
 
 (defparameter
   *tsdb-application*
   (format
     nil "exec ~a"
-    (namestring (make-pathname :directory (pathname-directory make::bin-dir)
-                               :name "tsdb"))))
+    (namestring (make-pathname
+                 :directory (pathname-directory make::bin-dir) :name "tsdb"))))
 
 (defparameter 
   *tsdb-home* 
-  (namestring (dir-append (get-sources-dir "tsdb") 
-                          '(:relative "tsdb" "home"))))
+  (namestring (dir-append
+               (get-sources-dir "tsdb") '(:relative "tsdb" "home"))))
 
 (defparameter 
   *tsdb-skeleton-directory* 
@@ -114,7 +114,7 @@
 
 (defparameter *tsdb-maximal-number-of-analyses* 0)
 
-(defparameter *tsdb-maximal-number-of-derivations* 5000)
+(defparameter *tsdb-maximal-number-of-results* 5000)
 
 (defparameter *tsdb-default-skeleton* "english")
 

@@ -251,23 +251,6 @@
         (t
          "standalone")))
 
-(defun current-grammar ()
-  (cond 
-   ((and (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)
-         (boundp (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
-    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
-   ((and (member :lkb *features*) 
-         (find-package :lkb)
-         (find-symbol "*GRAMMAR-VERSION*" :lkb)
-         (boundp (find-symbol "*GRAMMAR-VERSION*" :lkb)))
-    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :lkb)))
-   ((and (member :page *features*) 
-         (find-package "DISCO")
-         (find-symbol "*GRAMMAR-VERSION*" "DISCO")
-         (boundp (find-symbol "*GRAMMAR-VERSION*" "DISCO")))
-    (symbol-value (find-symbol "*GRAMMAR-VERSION*" "DISCO")))
-   (t "anonymous")))
-
 (defun current-tsdb ()
   *tsdb-version*)
 

@@ -3,6 +3,20 @@
 (defparameter *lkb-package* 
   (or (find-package :lkb) (find-package :common-lisp-user)))
 
+
+(defun current-grammar ()
+  (cond 
+   ((and (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)
+         (boundp (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
+    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
+   ((and (member :lkb *features*) 
+         (find-package :lkb)
+         (find-symbol "*GRAMMAR-VERSION*" :lkb)
+         (boundp (find-symbol "*GRAMMAR-VERSION*" :lkb)))
+    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :lkb)))
+   (t "anonymous")))
+
+
 (defun get-test-run-information ()
   (let* ((*package* *lkb-package*))
     `((:avms . ,(- (hash-table-count *types*) (length *templates*)))
@@ -24,10 +38,10 @@
 (defun parse-word (word &key load trace)
   (declare (ignore word load trace)))
 
-(defun initialize-test-run (&key interactive exhaustive)
+(defun initialize-run (&key interactive exhaustive)
   (declare (ignore interactive exhaustive)))
 
-(defun finalize-test-run (environment)
+(defun finalize-run (environment)
   (declare (ignore environment)))
 
 
@@ -285,11 +299,9 @@
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
 	   #-:ansi-eval-when (load eval compile)
-  (import '(get-test-run-information
-            parse-word
-            initialize-test-run
-            finalize-test-run
-            parse-item
+  (import '(current-grammar 
+            initialize-run finalize-run
+            parse-word parse-item
             *reconstruct-hook*
             find-lexical-entry find-affix find-rule
             instantiate-rule instantiate-preterminal)
