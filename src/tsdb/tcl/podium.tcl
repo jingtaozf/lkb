@@ -335,8 +335,11 @@ proc main {} {
           -command graph_parameter_input
   .menu.analyze.menu add separator
   .menu.analyze.menu add command \
-          -label "Rule Statistics" \
-          -command {analyze_rules};
+          -label "Rule Table" \
+          -command {analyze_rules table};
+  .menu.analyze.menu add command \
+          -label "Rule Graph" \
+          -command {analyze_rules graph};
   .menu.analyze.menu add cascade \
           -label "Rule Values" \
           -menu .menu.analyze.menu.rvalues;

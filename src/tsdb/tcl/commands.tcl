@@ -510,7 +510,7 @@ proc analyze_performance {} {
 }; # analyze_performance()
 
 
-proc analyze_rules {} {
+proc analyze_rules {view} {
 
   global globals test_suites;
 
@@ -539,9 +539,10 @@ proc analyze_rules {} {
     }; # foreach
     set attributes "$attributes)";
     set command \
-        [format "(rules \"%s\" :attributes %s :logscale %s)" \
+        [format "(rules \"%s\" :attributes %s :logscale %s :view :%s)" \
            $globals(data) $attributes \
-           [if {$globals(logscale)} {format "t"} {format "nil"}]];
+           [if {$globals(logscale)} {format "t"} {format "nil"}] \
+           $view];
     send_to_lisp :event $command;
   }; # else
 
