@@ -9,7 +9,9 @@
 
 (let ((target (dir-append sys-home (list :relative mk::%system-binaries%))))
   (delete-directory-and-files target)
-
+  #+(and :allegro-version>= (version>= 5 0) :excl)
+  (excl:make-directory path)
+ 
   (excl:generate-application 
    "lkb" 
    target
@@ -33,7 +35,7 @@
    :include-clim t
    :include-compiler t
 
-   :pll-file (file-namestring (pll-file))
+   :pll-file (when (pll-file) (file-namestring (pll-file)))
    :bundle-file (file-namestring (namestring (bundle-pathname)))
    :opt-speed 3 :opt-space 1 :opt-safety 1 :opt-debug 2
    :read-init-files '(".clinit.cl" "clinit.cl")
