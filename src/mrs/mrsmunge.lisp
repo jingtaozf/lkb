@@ -314,8 +314,8 @@
 
 (defun compatible-types-or-values (val1 val2)
   (or (is-top-type val1) (is-top-type val2)
-      ;(and (is-valid-type val1) (is-valid-type val2) 
-      ;     (compatible-types val1 val2))
+      (and (is-valid-type val1) (is-valid-type val2) 
+           (compatible-types val1 val2))
       (cond ((and (symbolp val1) (symbolp val2))
 	     (same-names val1 val2))
 	    ((and (stringp val1) (stringp val2))

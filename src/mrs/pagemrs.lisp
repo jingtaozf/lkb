@@ -133,3 +133,7 @@ Other useful functions from UDINE/TDL:
 
 |#
 
+;;; required by munger
+
+(defun compatible-types (type1 type2)
+  (csli-unify::unify-types type1 type2))
