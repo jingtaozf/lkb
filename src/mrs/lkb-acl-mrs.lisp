@@ -217,10 +217,15 @@
     (if eds
       (let ((record (clim:with-new-output-record (stream)
                       (clim:with-text-style (stream (lkb-parse-tree-font))
-                        (format stream "~a~%" eds)))))
-        (unless (mrs::ed-wellformed-p eds)
-          (recolor-record record clim:+red+)
-          (clim:replay record stream)))
+                        (format stream "~a~%" eds))))
+            (status (mrs::ed-suspicious-p eds))
+            (orange (or (clim:find-named-color
+                         "orange" (clim:frame-palette mframe) :errorp nil)
+                        clim:+yellow+)))
+        (cond
+         ((member :cyclic status) (recolor-record record clim:+red+))
+         ((member :fragmented status) (recolor-record record orange)))
+        (clim:replay record stream))
       (format 
        stream 
        "~%::: Dependencies structure could not be extracted~%"))))

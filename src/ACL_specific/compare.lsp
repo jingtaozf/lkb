@@ -646,7 +646,7 @@
                (eds (when (and mrs convert) 
                       (ignore-errors (funcall convert mrs))))
                (predicate (when (find-package :mrs)
-                             (find-symbol "ED-WELLFORMED-P" :mrs)))
+                             (find-symbol "ED-SUSPICIOUS-P" :mrs)))
                (predicate (when (and predicate (fboundp predicate))
                           (symbol-function predicate))))
           (when eds
@@ -675,10 +675,16 @@
                                  (stream (comparison-dependencies-font))
                                (format stream "~a" eds)))))))))
               (recolor-record 
-               record 
-               (if (funcall predicate eds)
-                 (if (update-match-p frame) clim:+magenta+ clim:+blue+)
-                 clim:+red+))
+               record
+               (let ((status (and predicate (funcall predicate eds)))
+                     (orange (or (clim:find-named-color
+                                  "orange" (clim:frame-palette frame) 
+                                  :errorp nil)
+                                 clim:+yellow+)))
+                 (cond
+                  ((member :cyclic status) clim:+red+)
+                  ((member :fragmented status) orange)
+                  (t (if (update-match-p frame) clim:+magenta+ clim:+blue+)))))
               (clim:replay record stream))))))
     (update-tree-colours frame)))
 

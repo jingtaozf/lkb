@@ -322,9 +322,9 @@
         (and (null (rest (ed-arguments ed)))
              (eq (first (first (ed-arguments ed))) (vsym "CARG"))))))
 
-(defun ed-wellformed-p (eds)
-  (and (not (ed-cyclic-p eds))
-       (not (ed-fragmented-p eds))))
+(defun ed-suspicious-p (eds)
+  (append (when (ed-cyclic-p eds) '(:cyclic))
+          (when (ed-fragmented-p eds) '(:fragmented))))
 
 (defun ed-cyclic-p (eds)
   (loop
