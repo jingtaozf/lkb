@@ -26,7 +26,7 @@
 ;;; information that's in an ordinary MRS)
 
 (defvar *semantic-table* (make-hash-table)
- "semantics associated with each instance (psort)")
+ "semantics associated with each entry")
 ;;; indexed by identifier, values are semantics-record
 
 (defvar *relation-index* (make-hash-table :test #'equal)

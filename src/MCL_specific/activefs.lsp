@@ -601,12 +601,12 @@
 ; following removed for YADU to avoid compiler warning
 ; this fn should never get called anyway
 ;     (make-instance 'menu-item
-;     :menu-item-title "Psort definition"
+;     :menu-item-title "Entry definition"
 ;               :menu-item-action 
 ;               #'(lambda ()
 ;                       (display-unexpanded-lex-entry psort lex-entry)))
     (make-instance 'menu-item
-     :menu-item-title "Expanded psort"
+     :menu-item-title "Expanded entry"
      :menu-item-action 
      #'(lambda ()
          (display-fs (lex-or-psort-full-fs lex-entry) 

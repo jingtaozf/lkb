@@ -27,8 +27,6 @@
      for package = (find-package name)
      unless (eq key package) collect name))
 
-(defparameter *grammar-directory* nil)
-
 #-:allegro
 (defparameter *lkb-background-stream* *terminal-io*)
 

@@ -31,7 +31,7 @@
                                   (type-parents type-entry))
       (format t "~%Type ~A not found" type))))
 
-;;;                     (make-menu-item :name "Lex or psort definition"
+;;;                     (make-menu-item :name "Lex definition"
 ;;;                        :value #'show-lex-def)
 
 (defun show-lex-def-tty (lex)
@@ -45,7 +45,7 @@
   (declare (ignore lex))
   (display-fs-tty (lex-or-psort-local-fs lex-entry)))
                    
-;;;                     (make-menu-item :name "Lex or psort entry"
+;;;                     (make-menu-item :name "Lex entry"
 ;;;                        :value #'show-lex)
 
 (defun show-lex-tty (lex)

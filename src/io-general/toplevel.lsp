@@ -107,7 +107,7 @@
                                  (lex-or-psort-id word-entry)))))))          
 
   
-;;; "Lex or psort entry" show-lex
+;;; "Lex or other entry" show-lex
 (defun show-lex nil
   (let* ((lex (ask-user-for-lex))
         (lex-entry (if lex (get-psort-entry lex))))
@@ -195,7 +195,7 @@
   (let ((possible-name
          (with-package (:lkb)
  	  (ask-for-lisp-movable "Current Interaction" 
-		 	        `(("Psort-id?" . ,*last-lex-id*))
+		 	        `(("Entry id?" . ,*last-lex-id*))
 			        150))))
       (when possible-name
          (let* ((lex (car possible-name))
@@ -230,31 +230,32 @@
 	  (when name (setf *last-rule-id* name))
 	  rule-entry)))))
 
-(defparameter *last-lex-rule-id* '3rd-sing-verb_infl_rule)
+(defparameter *last-lex-rule-id* nil)
 
 (defun ask-user-for-lexical-rule nil
-  (let ((rule-names nil))
-    (declare (dynamic-extent rule-names))
-    (maphash #'(lambda (name value)
-		 (declare (ignore value))
-		 (push name rule-names))
-	     *lexical-rules*)
-    (setf rule-names (sort rule-names #'string-lessp))
-    (let ((possible-rule-name
-           (with-package (:lkb)
-             (ask-for-lisp-movable "Current Interaction" 
-                                   `(("Lexical Rule?" . ,*last-lex-rule-id*))
-                                   150 rule-names))))
-      (when possible-rule-name
-	(let* ((name (car possible-rule-name))
-               (rule-entry (get-lex-rule-entry name)))
-	  (unless rule-entry 
-	    (format t "~%Lexical rule ~A is not defined" name)
-	    (setf rule-entry (ask-user-for-lexical-rule)))
-	  (when name (setf *last-lex-rule-id* name))
-	  rule-entry)))))
+  (if *lexical-rules*
+      (let ((rule-names nil))
+        (declare (dynamic-extent rule-names))
+        (maphash #'(lambda (name value)
+                     (declare (ignore value))
+                     (push name rule-names))
+                 *lexical-rules*)
+        (setf rule-names (sort rule-names #'string-lessp))
+        (let ((possible-rule-name
+               (with-package (:lkb)
+                 (ask-for-lisp-movable "Current Interaction" 
+                                       `(("Lexical Rule?" . ,*last-lex-rule-id*))
+                                       150 rule-names))))
+          (when possible-rule-name
+            (let* ((name (car possible-rule-name))
+                   (rule-entry (get-lex-rule-entry name)))
+              (unless rule-entry 
+                (format t "~%Lexical rule ~A is not defined" name)
+                (setf rule-entry (ask-user-for-lexical-rule)))
+              (when name (setf *last-lex-rule-id* name))
+              rule-entry))))))
 
-(defparameter *last-word* "Kim")
+(defparameter *last-word* nil)
 
 (defun ask-user-for-word nil
    (let ((possible-name
@@ -334,7 +335,7 @@
 ;;; "Parse Input" do-parse
 
 
-(defparameter *last-parses* '("Kim sleeps"))
+(defparameter *last-parses* '("the dog barks"))
 
 
 (defun do-parse nil

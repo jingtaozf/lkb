@@ -1,7 +1,3 @@
-;;; Copyright John Carroll 1998 All Rights Reserved.
-;;; No use or redistribution without permission.
-;;; 
-
 (in-package :lkb)
 
 ;;; *check-paths* is the parameter set in user file. This is used to construct

@@ -146,6 +146,7 @@
                      (make-menu-item :name "Reload grammar"
                                      :value 'reload-script-file 
                                      :available-p :grammar-file)
+                     #|
                      (make-menu-item :name "Reload constraints"
                                      :value 'read-type-patch-files
                                      :available-p :grammar)
@@ -161,7 +162,8 @@
                      (make-menu-item :name "Reload tree nodes"
                         :value 'reload-template-files :available-p :grammar)
                      (make-menu-item :name "Reload other entries"
-                        :value 'reload-psort-files :available-p :grammar)
+                     :value 'reload-psort-files :available-p :grammar)
+                     |#
                      )
                   :available-p :always)
          (make-lkb-submenu-item :menu-title "View"

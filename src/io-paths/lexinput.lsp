@@ -191,7 +191,7 @@
 	(istream file-name :direction :input)
       (format t "~%Reading in ~A file ~A"
 	      (cond (templates-p "templates")
-		    (t "psort")) 
+		    (t "entry")) 
 	      (pathname-name file-name))
       (loop
 	(let ((next-char (peek-char t istream nil 'eof)))

@@ -448,8 +448,8 @@
 
 (defun pop-up-psort-menu-items (psort lex-entry)
   (let ((command (clim:menu-choose
-		  '(("Psort definition" :value def)
-		    ("Expanded psort" :value exp)))))
+		  '(("Entry definition" :value def)
+		    ("Expanded entry" :value exp)))))
     (when command
       (handler-case
 	  (ecase command
@@ -515,7 +515,7 @@
 	(or (store-temporary-psort *lexicon* psort-name fs)
 	    (progn
 	      (clim:notify-user clim:*application-frame* 
-				"Psort name already used")
+				"Entry name already used")
 	      (store-as-psort fs)))))))
 
 

@@ -374,11 +374,11 @@
    (let ((menu 
             (cg:open-menu
                (list
-                  (make-instance 'cg:menu-item :name "Psort definition"
+                  (make-instance 'cg:menu-item :name "Entry definition"
                      :value 
                      #'(lambda ()
                         (display-unexpanded-lex-entry psort lex-entry)))
-                  (make-instance 'cg:menu-item :name "Expanded psort"
+                  (make-instance 'cg:menu-item :name "Expanded entry"
                      :value #'(lambda ()
                         (display-fs (lex-or-psort-full-fs lex-entry) 
                                     (format nil "~(~A~) - expanded" psort)

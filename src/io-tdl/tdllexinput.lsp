@@ -118,8 +118,8 @@
     (with-open-file 
 	(istream file-name :direction :input)
       (format t "~%Reading in ~A file ~A"
-	      (cond (templates-p "templates")
-		    (t "psort"))
+	      (cond (templates-p "parse node")
+		    (t "entry"))
 	      (pathname-name file-name))
       (read-tdl-psort-stream istream templates-p)))
   (when *simple-tree-display*

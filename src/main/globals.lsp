@@ -29,10 +29,6 @@
          (pushnew (quote ,var) *lkb-params*))
      (defparameter ,var ,val ,doc)))
 
-
-(def-lkb-parameter *templates* nil 
-   "types which are treated as templates to avoid excessive glbs")
-
 ;;; Strings
 
 (def-lkb-parameter *toptype* 'top)
@@ -217,9 +213,11 @@
 ;;; 
 (def-lkb-parameter *dag-pool-size* 50000)
 
-;;; recent additions 
+;;; controls TDL or path syntax switch (not really needed)
 
 (def-lkb-parameter *lkb-system-version* :page)
+
+;;; Agenda system
 
 (def-lkb-parameter *first-only-p* nil
   "if set, only the first parse is produced"

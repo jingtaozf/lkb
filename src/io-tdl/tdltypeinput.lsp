@@ -65,6 +65,8 @@
   (read-tdl-type-files-aux (list file-name) settings-file))
 
 (defun read-tdl-type-files-aux (file-names &optional settings-file)
+  (unless (listp file-names)
+    (setf file-names (list file-names)))
   (when settings-file
     (setf *display-settings-file* settings-file))
    (setf *type-file-list* file-names)
