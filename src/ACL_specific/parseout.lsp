@@ -112,7 +112,7 @@
        (,(format nil "Rule ~A" (or rule-name ""))
 	:value rule)
        (,(format nil "Lex ids ~A" (edge-lex-ids edge-record))
-	:value rule)
+	:value nil)
        )
      (edge (display-fs edge-fs
 		       (format nil "Edge ~A ~A - Tree FS" 
