@@ -45,6 +45,10 @@
 (defparameter *mother-feature* 0
    "The feature giving the mother in a grammar rule")
 
+(defparameter *head-marking-path* nil
+   "a feature path - a head daughter in a rule may be identified by
+    having the same value for this path as the mother")
+
 ;;; value is 'node for YADU
 
   
@@ -65,6 +69,11 @@
    when parsing")
 
 (defparameter *bc96lrules* nil)
+
+(defparameter *check-paths* nil
+   "an alist in which the keys are feature paths that often fail -
+    these are checked first before attempting unification")
+
 
 ;;; Display 
 
