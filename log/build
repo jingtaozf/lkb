@@ -163,6 +163,8 @@ cvs update: Updating src/.nasl/www
 cvs update: Updating src/ACL-CG_specific
 cvs update: Updating src/ACL_specific
 C src/ACL_specific/build.lsp
+U src/ACL_specific/compare.lsp
+U src/ACL_specific/parseout.lsp
 cvs update: Updating src/MCL_specific
 cvs update: Updating src/data
 cvs update: Updating src/data/Dikran
@@ -263,6 +265,7 @@ cvs update: Updating src/fasl/mrs
 cvs update: Updating src/general
 ? src/general/itsdb.lisp
 cvs update: Updating src/io-general
+U src/io-general/menus.lsp
 cvs update: Updating src/io-lilfes
 cvs update: Updating src/io-paths
 cvs update: Updating src/io-tdl
@@ -286,7 +289,6 @@ cvs update: Updating src/tsdb
 cvs update: Updating src/tsdb/TeX
 cvs update: Updating src/tsdb/doc
 cvs update: Updating src/tsdb/home
-? src/tsdb/home/export
 ? src/tsdb/home/redwoods
 cvs update: Updating src/tsdb/home/lingo
 cvs update: Updating src/tsdb/home/lingo/jul-98
@@ -309,7 +311,9 @@ cvs update: Updating src/tsdb/home/trees/vm32/ezra
 cvs update: Updating src/tsdb/home/trees/vm32/ezra/01-07-17
 cvs update: Updating src/tsdb/linux
 cvs update: Updating src/tsdb/lisp
+U src/tsdb/lisp/lkb-interface.lisp
 U src/tsdb/lisp/redwoods.lisp
+U src/tsdb/lisp/statistics.lisp
 cvs update: Updating src/tsdb/lisp/RCS
 cvs update: Updating src/tsdb/skeletons
 cvs update: Updating src/tsdb/skeletons/csli
