@@ -35,6 +35,12 @@
   :width *parse-window-width* 
   :height *parse-window-height*)
 
+(define-lkb-frame mrs-dependencies
+    ((mrsstruct :initform nil
+                :accessor mrs-dependencies-mrsstruct))
+  :display-function 'show-mrs-dependencies  
+  :width *parse-window-width* 
+  :height (round *parse-window-height* 2))
 
 
 (defstruct mrs-type-thing value)
@@ -124,6 +130,18 @@
     (setf (clim:frame-pretty-name mframe) "Scoped MRS")
     (clim:run-frame-top-level mframe)))
 
+(defun show-mrs-dependencies-window (edge)
+  (mp:run-function "Elementary Dependencies"
+   #'show-mrs-dependencies-window-really edge))
+  
+(defun show-mrs-dependencies-window-really (edge)
+  (let ((mframe (clim:make-application-frame 'mrs-dependencies))
+        (mrsstruct (mrs::extract-mrs edge)))
+    (setf (mrs-dependencies-mrsstruct mframe) 
+      mrsstruct)
+    (setf (clim:frame-pretty-name mframe) "Elementary Dependencies")
+    (clim:run-frame-top-level mframe)))
+
 (defun show-mrs-simple (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((mrsstruct (mrs-simple-mrsstruct mframe)))
@@ -161,3 +179,10 @@
                (mrs::output-scoped-mrs mrsstruct :stream stream)))
       (format stream "~%::: MRS structure does not scope~%"))))
 
+(defun show-mrs-dependencies (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((mrsstruct (mrs-dependencies-mrsstruct mframe)))
+    (if mrsstruct
+      (clim:with-text-style (stream (lkb-parse-tree-font))
+        (mrs::mrs-output-psoa mrsstruct :stream stream))
+      (format stream "~%::: MRS structure could not be extracted~%"))))

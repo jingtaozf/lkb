@@ -6,21 +6,27 @@
 
 (defparameter %mrs-symbol-table% nil)
 
+(defparameter %mrs-representatives-table% nil)
+
 (defparameter %mrs-relevant-features% 
-  '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA" "NAMED" "CONST_VALUE"))
+  '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA" "NAMED" "CONST_VALUE"
+    "L-INDEX" "R-INDEX" "L-HANDEL" "R-HANDEL"))
 
 (defun mrs-output-psoa (psoa &key (stream t))
-  (let* ((index (psoa-index psoa))
-         (name (when (var-p index) (var-name index))))
-    (format stream "{~@[~a~]:~%" name))
-  (loop
-      with %mrs-psoa% = psoa
-      with %mrs-symbol-table% = (make-hash-table)
-      with %mrs-variable-counter% = 0
-      for relation in (psoa-liszt psoa)
-      do
-        (mrs-output-relation relation :stream stream))
-  (format stream "}~%"))
+  (if (psoa-p psoa)
+    (let* ((index (psoa-index psoa))
+           (name (when (var-p index) (var-name index))))
+      (format stream "{~@[~a~]:~%" name)
+      (loop
+          with %mrs-psoa% = psoa
+          with %mrs-symbol-table% = (make-hash-table)
+          with %mrs-representatives-table% = (make-hash-table :test #'equal)
+          with %mrs-variable-counter% = 0
+          for relation in (psoa-liszt psoa)
+          do
+            (mrs-output-relation relation :stream stream))
+      (format stream "}~%"))
+    (format stream "{}~%")))
 
 (defun mrs-output-relation (relation &key (stream t))
   (when (rel-p relation)
@@ -56,19 +62,21 @@
             (format stream "]~%")))))
 
 (defun mrs-find-identifier (relation)
-  (let* ((flist (and (rel-p relation) (rel-flist relation)))
-         instance event)
-    (loop
-        for fvpair in flist
-        when (eq (fvpair-feature fvpair) (vsym "EVENT"))
-        do (setf event (fvpair-value fvpair))
-        when (eq (fvpair-feature fvpair) (vsym "INST"))
-        do (setf instance (fvpair-value fvpair)))
-    (or
-     (and instance (var-p instance) (var-name instance))
-     (and event (var-p event) (var-name event))
-     (setf (gethash relation %mrs-symbol-table%) 
-       (format nil "v~d" (incf %mrs-variable-counter%))))))
+  (or (gethash relation %mrs-symbol-table%)
+    (let* ((flist (and (rel-p relation) (rel-flist relation)))
+           instance event)
+      (loop
+          for fvpair in flist
+          for feature = (fvpair-feature fvpair)
+          when (eq feature (vsym "EVENT"))
+          do (setf event (fvpair-value fvpair))
+          when (or (eq feature (vsym "INST")) (eq feature (vsym "C-ARG")))
+          do (setf instance (fvpair-value fvpair)))
+      (let ((name (or
+                   (and instance (var-p instance) (var-name instance))
+                   (and event (var-p event) (var-name event))
+                   (format nil "_~d" (incf %mrs-variable-counter%)))))
+        (setf (gethash relation %mrs-symbol-table%) name)))))
 
 (defun mrs-find-representative (value)
   (cond
@@ -78,9 +86,19 @@
         with qeq = (mrs-hcons-qeq name)
         for relation in (psoa-liszt %mrs-psoa%)
         for handle = (handle-var-name (rel-handel relation))
-        thereis
-          (when (or (equal name handle) (equal qeq handle)) 
-            (cons handle (rel-reltype relation)))))
+        when (or (equal name handle) (equal qeq handle))
+        collect (cons (mrs-find-identifier relation) (rel-reltype relation))
+        into candidates
+        finally 
+          (return
+            (if (= (length candidates) 1)
+              (first candidates)
+              (or (loop
+                      for candidate in candidates
+                      for identifier = (first candidate)
+                      thereis
+                        (when (not (eql (char identifier 0) #\_)) candidate))
+                  (first candidates))))))
    ((var-p value)
     (loop
         with name = (var-name value)

@@ -253,6 +253,7 @@
                     ("Prolog MRS" :value prolog :active ,*mrs-loaded*)
                     ("Indexed MRS" :value indexed :active ,*mrs-loaded*)
                     ("Scoped MRS" :value scoped :active ,*mrs-loaded*)
+                    ("Dependencies" :value dependencies :active ,*mrs-loaded*)
                     ))))
     (when command
       (handler-case
@@ -288,6 +289,8 @@
             (indexed (funcall 'show-mrs-indexed-window (prtree-edge tree)))
             (prolog (funcall 'show-mrs-prolog-window (prtree-edge tree)))
             (scoped (funcall 'show-mrs-scoped-window (prtree-edge tree)))
+            (dependencies 
+             (funcall 'show-mrs-dependencies-window (prtree-edge tree)))
             )
         (storage-condition (condition)
           (with-output-to-top ()
