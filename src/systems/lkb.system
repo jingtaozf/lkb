@@ -4,9 +4,10 @@
 
 ;;;
 ;;; the :tty feature, when set, disables all graphics.  the graphical user
-;;; interface currently requires CLIM (typically using Allegro CL on Unix) or
-;;; Macintosh CL.  Common Graphics (Allegro CL on Windoze) support is under
-;;; development.
+;;; interface currently requires CLIM (tested using Allegro CL on Unix
+;;; and on Windows) or Macintosh CL.  Common Graphics (Allegro CL on 
+;;; Windoze) support was partly done but isn't in sync so the code
+;;; to load this has been commented out
 ;;;
 ;;; push()ing :tty manually (before any load-system() call) can also be used
 ;;; to force non-graphics mode, if this seems desirable for some reason.
@@ -16,7 +17,8 @@
            #-:ansi-eval-when (load eval compile)
   (pushnew :lkb *features*)
   (pushnew :lkb-v5.3 *features*)         
-  #+(or :cl-http (not (or :mcl :clim :common-graphics))) 
+  #+(or :cl-http (not (or :mcl :clim))) 
+       ;; (not (or :mcl :clim :common-graphics))
   (pushnew :tty *features*))
 
 ;;;
@@ -43,7 +45,7 @@
    #+(and :allegro :clim) "ACL_specific"
    #+(and :lispworks :clim) "ACL_specific"
    #+(and :allegro (not :clim) :tty) "ACL_specific"
-   #+(and :allegro :common-graphics (not :clim) (not :tty)) "ACL-CG_specific"
+;   #+(and :allegro :common-graphics (not :clim) (not :tty)) "ACL-CG_specific"
    #+:mcl "MCL_specific"
    ""))
 
@@ -171,8 +173,8 @@
                (:file "graph")              ; uses CLIM graph drawing
                #+:mcl (:file "picwin")      ; low level 
                #+:mcl (:file "picfield")    ; low level
-               #+(and :allegro (not :clim) :common-graphics)
-               (:file "fsclasses")          ; classes for display	       
+;               #+(and :allegro (not :clim) :common-graphics)
+;               (:file "fsclasses")          ; classes for display	       
                (:file "activefs")           ; display FS in window
                (:file "tree")               ; type hierarchy
                (:file "parseout")           ; parse tree output
