@@ -337,14 +337,14 @@
 
 (defun unify-dags (dag1 dag2)
    (if *within-unification-context-p*
-      (progn #+:powerpc(decf bb (CCL::%HEAP-BYTES-ALLOCATED))
+      (progn #+(and mcl powerpc)(decf bb (CCL::%HEAP-BYTES-ALLOCATED))
              (prog1
                 (catch '*fail*
                    (progn
                       (unify1 dag1 dag2 nil)
                       (when *unify-debug* (format t "~%Unification succeeded"))
                       dag1))
-                #+:powerpc(incf bb (CCL::%HEAP-BYTES-ALLOCATED))
+                #+(and mcl powerpc)(incf bb (CCL::%HEAP-BYTES-ALLOCATED))
                 ))
       (with-unification-context (dag1) (when (unify-dags dag1 dag2) (copy-dag dag1)))))
 
@@ -513,7 +513,7 @@
 
 (defun find-gcsubtype (type1 type2)
    (when (eq type1 type2) (return-from find-gcsubtype type1))
-   ;;#+:powerpc(decf cc (CCL::%HEAP-BYTES-ALLOCATED))
+   ;;#+(and mcl powerpc)(decf cc (CCL::%HEAP-BYTES-ALLOCATED))
    ;;(multiple-value-prog1
     (cond
       ((and (not (type-spec-atomic-p type1)) (not (type-spec-atomic-p type2))) 
@@ -528,7 +528,7 @@
                ((eq res (car type2)) type2)
                (t (list res)))))
       (t (gcslists type1 type2)))
-    ;;#+:powerpc(incf cc (CCL::%HEAP-BYTES-ALLOCATED)))
+    ;;#+(and mcl powerpc)(incf cc (CCL::%HEAP-BYTES-ALLOCATED)))
     )
 
 
@@ -536,8 +536,7 @@
    ;; first arg is non-atomic, second is atomic
    (if (null (cdr tlist))
       (if (and (symbolp type) (symbolp (car tlist)))
-         ;; this result can be cached - types are symbols, only a single disjunct in
-         ;; first argument
+         ;; this result can be cached - a single disjunct and only in first argument
          (cached-greatest-common-subtype tlist type t)
          (let ((res (greatest-common-subtype type (car tlist))))
             (cond
@@ -563,9 +562,9 @@
 ;;; forward pointers set by the unifier.
 
 (defun copy-dag (dag)
-   #+:powerpc(decf aa (CCL::%HEAP-BYTES-ALLOCATED))
+   #+(and mcl powerpc)(decf aa (CCL::%HEAP-BYTES-ALLOCATED))
    (prog1 (catch '*fail* (copy-dag1 dag nil))
-      #+:powerpc(incf aa (CCL::%HEAP-BYTES-ALLOCATED))
+      #+(and mcl powerpc)(incf aa (CCL::%HEAP-BYTES-ALLOCATED))
    ))
 
 ;;; Tomabechi/Rob/John: not copying when dag is 'safe', type has not changed,
@@ -725,10 +724,10 @@
 ;;; Use -visit field not -copy since may be called from within unify
 
 (defun copy-dag-completely (dag)
-   #+:powerpc(decf dd (CCL::%HEAP-BYTES-ALLOCATED))
+   #+(and mcl powerpc)(decf dd (CCL::%HEAP-BYTES-ALLOCATED))
    (invalidate-visit-marks)
    (prog1 (copy-dag-completely1 dag (create-dag))
-      #+:powerpc(incf dd (CCL::%HEAP-BYTES-ALLOCATED))
+      #+(and mcl powerpc)(incf dd (CCL::%HEAP-BYTES-ALLOCATED))
       ))
 
 (defun copy-dag-completely1 (dag toptype-dag)
