@@ -569,30 +569,44 @@
 			(edge-category edge-record))) nil))
        (values (tree-node-text-string edge-symbol) t))))
 
+
 ;;; convert tree into a nested list - for simple printing of structure
 ;;; (dolist (parse *parse-record*) (pprint (parse-tree-structure parse)))
 
-(defun parse-tree-structure (edge-record)
-   (let ((daughters (edge-children edge-record)))
-      (if daughters
-         (cons (tree-node-text-string
-                  (or (find-category-abb (edge-dag edge-record))
-                      (edge-category edge-record)))
-            (mapcar
-               #'(lambda (daughter)
-                   (if daughter
-                      (parse-tree-structure daughter)
-                      '||)) ; active chart edge daughter
-               daughters))
-         (if *dont-show-morphology*
-            (car (edge-leaves edge-record))
-            (cons (car (edge-leaves edge-record))
-               (morph-tree-structure
-                  (edge-rule-number edge-record) (edge-morph-history edge-record)))))))
+(defun parse-tree-structure (edge)
+   (car (parse-tree-structure1 edge 1)))
 
-(defun morph-tree-structure (rule edge-record)
+(defun parse-tree-structure1 (edge level)
+  ;; show active edge nodes at first level but not thereafter
+  (if (and (> level 1) 
+	   (dotted-edge-p edge) 
+	   (dotted-edge-needed edge))
+      (mapcan #'(lambda (c) 
+		  (when c 
+		    (parse-tree-structure1 c (1+ level))))
+	      (edge-children edge))
+      (let ((daughters (edge-children edge)))
+         (list
+            (if daughters
+               (cons (tree-node-text-string
+                        (or (find-category-abb (edge-dag edge))
+                           (edge-category edge)))
+                  (mapcan
+                      #'(lambda (dtr)
+                         (if dtr
+                            (parse-tree-structure1 dtr (1+ level))
+                            ;; active chart edge daughter
+                            (list ""))) 
+                      daughters))
+               (if *dont-show-morphology*
+                  (car (edge-leaves edge))
+                  (cons (car (edge-leaves edge))
+                     (morph-tree-structure
+                        (edge-rule-number edge) (edge-morph-history edge)))))))))
+
+(defun morph-tree-structure (rule edge)
    (if rule
       (cons rule
-         (if edge-record
-            (morph-tree-structure nil (edge-morph-history edge-record))))))
+         (if edge
+            (morph-tree-structure nil (edge-morph-history edge))))))
 
