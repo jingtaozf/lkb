@@ -1,14 +1,23 @@
 (in-package :mrs)
 
+;;;
+;;; ToDo
+;;;
+;;; - identify more wellformedness conditions: e.g. mark all connected pieces 
+;;;   of the graph and check for remaining fragments, or stipulate that certain
+;;;   relations minimally require certain roles (with certain types, say).
+;;;
+
 (defparameter *eds-pretty-print-p* t)
 
 (defparameter *eds-include-quantifiers-p* nil)
 
 (defparameter *eds-include-vacuous-relations-p* nil)
 
-(defparameter *eds-discourse-relation* (vsym "DISCOURSE_REL"))
-
 (defparameter *eds-message-relation* (vsym "MESSAGE"))
+
+(defparameter *eds-bleached-relations*
+  (list (vsym "SELECTED_REL") (vsym "DEG_REL")))
 
 (defparameter %eds-eds% nil)
 
@@ -130,8 +139,7 @@
             (setf (gethash handle %eds-equivalences%)
               (handle-var-name soa))
             (setf (ed-type ed) :message)))
-      when (ed-quantifier-p ed) do (setf (ed-type ed) :quantifier)
-      when (ed-discourse-p ed) do (setf (ed-type ed) :discourse)))
+      when (ed-quantifier-p ed) do (setf (ed-type ed) :quantifier)))
 
 (defun ed-augment-eds (eds)
   (loop
@@ -282,17 +290,16 @@
       (or (eq type *eds-message-relation*)
           (subtype-p type *eds-message-relation*)))))
 
-(defun ed-discourse-p (ed)
-  (when *eds-discourse-relation*
-    (let ((type (ed-predicate ed)))
-      (or (eq type *eds-discourse-relation*)
-          (subtype-p type *eds-discourse-relation*)))))
-
 (defun ed-bleached-p (ed)
   (or 
-   (member (ed-type ed) '(:message :discourse) :test #'eq)
-   (and (null *eds-include-quantifiers-p*)
-        (eq (ed-type ed) :quantifier))))
+   (eq (ed-type ed) :message)
+   (and (null *eds-include-quantifiers-p*) (eq (ed-type ed) :quantifier))
+   (when *eds-bleached-relations*
+     (let ((relation (ed-predicate ed)))
+       (loop
+           for foo in *eds-bleached-relations*
+           for type = (if (stringp foo) (vsym foo) foo)
+           thereis (or (eq relation type) (subtype-p relation type)))))))
 
 (defun ed-vacuous-p (ed)
   (unless *eds-include-vacuous-relations-p*

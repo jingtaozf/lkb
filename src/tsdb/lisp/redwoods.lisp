@@ -139,8 +139,8 @@
           (setf last action)
           (when (or (>= position nitems) (< position 0))
             (setf position nil))
-          (purge-profile-cache data)
-          (when gold (purge-profile-cache gold))
+          (purge-profile-cache data :expiryp nil)
+          (when gold (purge-profile-cache gold  :expiryp nil))
         when (interrupt-p interrupt) do
           (format 
            stream
@@ -162,7 +162,7 @@
   
     (when cache (flush-cache cache :verbose verbose))
     (when gc-strategy (restore-gc-strategy gc-strategy))
-    (purge-profile-cache data)
+    (purge-profile-cache data :expiryp nil)
     
     (when meter
       (status :text (format nil "~a done" message) :duration 10)
@@ -1038,8 +1038,7 @@
   ;;
   ;; during updates, a `save' match is indicated by the following conditions:
   ;;
-  ;;   - the current item has not been tree annotated already (or `annotated'
-  ;;     as `t-active' == -1);
+  ;;   - the current item has not been tree annotated already;
   ;;   - the number of active trees in the current set equals the number of
   ;;     active trees in the gold set;
   ;;   - either the current item has more than one reading, or that single one
@@ -1583,8 +1582,8 @@
                                       tsuccesses)))
                 results))
     (when (eq test :derivation)
-      (purge-profile-cache data)
-      (unless (equal data gold) (purge-profile-cache gold)))
+      (purge-profile-cache data :expiryp nil)
+      (unless (equal data gold) (purge-profile-cache gold :expiryp nil)))
     
     results))
 
@@ -1847,7 +1846,7 @@
     (let* ((items (analyze sources 
                            :thorough '(:derivation)
                            :condition condition :gold sources :readerp nil)))
-      (purge-profile-cache sources)
+      (purge-profile-cache sources :expiryp nil)
       (case type
         (:mem
          (estimate-mem 
@@ -1924,7 +1923,7 @@
       finally 
         (flush-cache cache :verbose verbose)
         (restore-gc-strategy gc)
-        (purge-profile-cache source)
+        (purge-profile-cache source :expiryp nil)
         (purge-profile-cache target)))
 
 (defun train-and-rank (train test 

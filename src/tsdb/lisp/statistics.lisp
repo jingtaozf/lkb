@@ -645,7 +645,9 @@
           (analyze name)
           (analyze-aggregates name))))))
 
-(defun purge-profile-cache (data)
+(defun purge-profile-cache (data &key (expiryp t))
+  (when expiryp
+    (close-connections :data (when (stringp data) data)))
   (loop
       for key being each hash-key in *tsdb-profile-cache*
       when (or (eq data :all) 

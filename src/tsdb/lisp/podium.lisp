@@ -206,7 +206,9 @@
             (let ((symbol (first arguments))
                   (value (second arguments))
                   (package (third arguments)))
-              (when (and (member symbol '(*tsdb-data* *tsdb-gold*))
+              (when (and (member symbol '(*tsdb-data* 
+                                          *tsdb-gold* 
+                                          *tsdb-cache-connections-p*))
                          *tsdb-cache-connections-p*)
                 (close-connections :data (symbol-value symbol)))
               (when (or (null package) (find-package package))
@@ -563,6 +565,7 @@
               (unless interactive
                 #+:null
                 (sleep 1)
+                (purge-profile-cache data)
                 (send-to-podium (format 
                                  nil 
                                  "update_ts_list update ~a"
