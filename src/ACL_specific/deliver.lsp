@@ -17,7 +17,7 @@
   ;; in the sys: directory, when we call generate-application(); later on, the
   ;; loadup process will change back to the LKB source directory ... :-{.
   ;;
-  #+:windows
+  #-:sparc
   (excl:chdir (translate-logical-pathname "sys:"))
   
   (excl:generate-application 
