@@ -1988,14 +1988,18 @@
      "[~a] train(): reading `~a'~%" 
      (current-time :long :short) sources)
     (loop
+        with items = (select "i-id" :integer "item" nil sources :sort :i-id)
+        with first = (get-field :i-id (first items))
+        with last = (get-field :i-id (first (last items)))
         with delta = %redwoods-increment%
-        with n = (ceiling (tcount sources "item") delta)
+        with n = (ceiling (- last first) delta)
         with increment = (when meter (/ (mduration meter) n))
         for i from 1 to n
         for foo = (format 
                    nil 
                    "i-id >= ~d && i-id < ~d~@[ && (~a)~]"
-                   (* (- i 1) delta) (* i delta) condition)
+                   (+ first (* (- i 1) delta)) 
+                   (+ first (* i delta)) condition)
         initially (when meter (meter :value (get-field :start meter)))
         do
           (when meter (meter-advance increment))

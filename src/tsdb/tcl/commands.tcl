@@ -102,6 +102,52 @@ proc tsdb_file {action {index -1}} {
       }; # else
       send_to_lisp :event $command;
     }; # if
+  } elseif {$action == "compress"} {
+    if {[verify_ts_selection]} {return 1};
+    set old $globals(data);
+    set aold "$globals(home)$old";
+    if {[file isdirectory $aold]} {
+      if {![input "new database:" $aold $globals(home) profile]} {
+        set anew $globals(input);
+        set new [string_strip $globals(home) $anew];
+        if {$new == ""} {
+          set new $old;
+          set anew $aold;
+        }; # if
+        if {[file exists $anew] && [yes-or-no-p "overwrite `$new'"] == 0} {
+          return 1;
+        }; # if
+        catch {file mkdir $anew};
+        if {![file isdirectory $anew] || ![file writable $anew]} {
+          tsdb_beep;
+          status "target directory `$new' not writable" 10;
+          return 1;
+        }; # if
+        set pattern [file join $globals(home) $old *];
+        foreach file [glob -type f -nocomplain $pattern] {
+          set name [file tail $file];
+          set target [file join $anew $name];
+          if {[catch {file copy -force $file $anew}]} {
+            tsdb_beep;
+            status "mysterious error copying `$name'" 10;
+            return 1;
+          }; # if
+          if {$name != "relations" && [file size $target] > 0} {
+            status "compressing file `$name' ...";
+            if {"$globals(user)" != "bender"} {
+              after 300;
+            }; # if
+            if {[catch [eval "exec $globals(zipper) $target"]]} {
+              tsdb_beep;
+              status "mysterious error compressing `$name'" 10;
+              return 1;
+            }; # if
+          }; # if
+        }; # foreach
+        history_add profile $new;
+        send_to_lisp :event "(list)";
+      }; # if
+    }; # if
   } elseif {$action == "export"} {
     if {[verify_ts_selection]} {return 1};
     if {![input "target directory:" "/tmp" "" export]} {

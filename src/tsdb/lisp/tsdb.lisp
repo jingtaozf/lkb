@@ -251,6 +251,11 @@
                  result)))))))))
 
 (defun create-cache (data &key (protocol :cooked) (verbose t) schema allp)
+  ;;
+  ;; _fix_me_
+  ;; make sure to not create a write cache (and thus no new files) on read-only
+  ;; profiles: add call to verify-tsdb-directory() here and inspect status.
+  ;;                                                           (27-oct-03; oe)
   (if (eq protocol :raw)
     (loop 
         with cache = (pairlis '(:database :count :protocol)

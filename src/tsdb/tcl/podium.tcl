@@ -148,6 +148,7 @@ set globals(busy_cursor) "watch";
 set globals(gc_cursor) "pirate";
 set globals(kanji_p) [expr {[info commands kanji] == "kanji"}];
 set globals(critical_cell_threshold) 2000;
+set globals(zipper) "gzip -9 -f"
 
 #
 # relation and attributes for current database; reset when selection changes
@@ -304,11 +305,13 @@ proc main {} {
   .menu.file.menu add command -label "Swap" \
     -command {tsdb_file swap} -state disabled
   .menu.file.menu add command -label "Compress" \
-    -command {tsdb_file compress} -state disabled
+    -command {tsdb_file compress}
   .menu.file.menu add command -label "Purge" \
     -command {tsdb_file purge}
   .menu.file.menu add command -label "Delete" \
     -command {tsdb_file delete}
+  .menu.file.menu add command -label "Concatenate" \
+    -command {tsdb_file concatenate} -state disabled
   .menu.file.menu add separator
   .menu.file.menu add cascade -label "Create" \
     -menu .menu.file.menu.create

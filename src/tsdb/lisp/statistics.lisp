@@ -2139,6 +2139,11 @@
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
+  ;;
+  ;; _fix_me_
+  ;; with large numbers of results, retrieval of all trees or MRSs can take
+  ;; a long time, so maybe get user confirm first          (28-oct-03; oe)
+  ;;
   (let* ((thorough '(:derivation :mrs :tree))
          (condition (if condition
                       (concatenate 'string "(readings >= 1) && " condition)
