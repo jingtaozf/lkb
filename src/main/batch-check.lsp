@@ -11,7 +11,8 @@
 		       :if-exists :new-version)  
         (setf *batch-mode* t)
         (write-time-readably ostream)
-        (dolist (id (collect-psort-ids *lexicon*))
+        (dolist (id (reverse *ordered-lex-list*))
+          ;; (collect-psort-ids *lexicon*))
 	  ;; alternatively - for lexicon only
 	  ;; (reverse *ordered-lex-list*) 
 	  (format ostream "~%Checking ~A" id)
