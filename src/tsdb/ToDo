@@ -6,6 +6,8 @@
 open issues:
 ------------
 
+[02-mar-99] - remember all changes since dec-98 and update `ToDo' file;
+
 [31-jan-99] - add `Uniquely Project' flag to `Switches';
 
 [30-jan-99] - migrate all phenomena-specific menus into `Options' hierarchy;
@@ -60,6 +62,22 @@ open issues:
 
 resolved issues:
 ----------------
+
+[02-mar-99] - add sum bottom line to `Browse' tables [mueller/13];
+
+[02-mar-99] - add attributes to `Detail - Intersection'; preliminary support
+              for user-defined comparison function (Lisp only);
+
+[02-mar-99] - add `Rule Table' and `Rule Graph' to `Analyze';
+
+[02-mar-99] - make processing timeout show in `error' field (PAGE only);
+
+[02-mar-99] - add `end' and `items' to `run' relation; change granularity for
+              all timings to milliseconds;
+
+[02-mar-99] - speed up `obtaining tsdb(1) database list' phase (i.e. startup);
+
+[02-mar-99] - disable gc() cursor (mostly); need to signal(3) swish(1) instead;
 
 [01-dec-98] - provide interactive selection of colours in graphs
 
