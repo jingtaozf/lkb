@@ -21,9 +21,9 @@
 
 ;;; This is the font for the pop up menu and the display windows
 
-(defparameter *type-font* (clim:parse-text-style '(:sans-serif :roman 9)))
+(def-lkb-parameter *type-font-spec* '(:sans-serif :roman 9))
 
-(defparameter *title-font* (clim:parse-text-style '(:fix :roman 12)))
+(def-lkb-parameter *title-font-spec* '(:fix :roman 12))
 
 ;;; ***** active types *****
 
@@ -124,18 +124,21 @@
            (fudge 20)
            (max-width 0))
       (silica:inhibit-updating-scroll-bars (stream)
-        (clim:with-output-recording-options (stream :draw nil :record t)
-	  (draw-active-title stream fs title parents paths)
-	  (when parents 
-	    (setf max-width (+ fudge (display-active-parents parents stream))))
-	  (let ((dag-width (or (if (tdfs-p fs) 
-				   (display-dag2 fs 'edit stream)
-				 (display-dag1 fs 'edit stream)) 0)))
-	    (setf max-width (max (+ fudge dag-width max-width)))
-	    (when paths (setf max-width 
-			  (max max-width 
-			       (+ fudge (display-active-dpaths paths stream))))))
-	  (move-to-x-y stream max-width (current-position-y stream))))
+        (clim:with-text-style (stream *type-font-spec*)
+	  (clim:with-output-recording-options (stream :draw nil :record t)
+	    (draw-active-title stream fs title parents paths)
+	    (when parents 
+	      (setf max-width (+ fudge 
+				 (display-active-parents parents stream))))
+	    (let ((dag-width (or (if (tdfs-p fs) 
+				     (display-dag2 fs 'edit stream)
+				   (display-dag1 fs 'edit stream)) 0)))
+	      (setf max-width (max (+ fudge dag-width max-width)))
+	      (when paths (setf max-width 
+			    (max max-width 
+				 (+ fudge 
+				    (display-active-dpaths paths stream))))))
+	    (move-to-x-y stream max-width (current-position-y stream)))))
       (clim:replay (clim:stream-output-history stream) stream))
     stream))
 
@@ -169,7 +172,7 @@
 
 (defun draw-active-title (stream fs title parents paths)
   (declare (ignore fs parents paths))
-  (clim:with-text-style (stream '(nil nil :large))
+  (clim:with-text-style (stream *title-font-spec*)
     (clim:with-output-as-presentation 
 	(stream t 'symbol)
       (format stream "~%~A~%" title))))

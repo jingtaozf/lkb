@@ -201,18 +201,25 @@
 
 ;; Add a [Print] button
 
-#|
+#+(and :ignore allegro-v4.3.1)
 (define-lkb-frame-command (com-print-frame :menu "Print") 
     ()
   (clim:with-application-frame (frame)
-    (with-open-file (file "~/print.ps" :direction :output 
-		     :if-exists :supersede)
-      (clim:with-output-to-postscript-stream (stream file :multi-page t)
-	(funcall (clim-internals::pane-display-function 
-		  (clim-internals::find-frame-pane-of-type 
-		   frame 'clim:application-pane))
-		 frame stream)))))
-|#
+    (multiple-value-bind (dest orient scale filename)
+	(get-print-options)
+      (case dest
+	(:printer (error "!"))
+	(:file	
+	 (with-open-file (file filename :direction :output 
+			  :if-exists :supersede)
+	   (clim:with-output-to-postscript-stream 
+	       (stream file :scale-to-fit (not scale) :multi-page scale
+		       :orientation orient)
+	     (funcall (clim-internals::pane-display-function 
+		       (clim-internals::find-frame-pane-of-type 
+			frame 'clim:application-pane))
+		      frame stream))))))))
+
 
 (defmacro define-lkb-frame (frame-class slots &rest pane-options)
   `(clim:define-application-frame ,frame-class (lkb-frame)

@@ -679,7 +679,7 @@
 
 ;;; minor mods to the following two functions for TDFSs
 
-(defparameter *shrunk-types* nil)
+(def-lkb-parameter *shrunk-types* nil)
 (defvar *shrunk-local-dags* nil)
 (defvar *not-shrunk-local-dags* nil)
 

@@ -20,10 +20,10 @@
 
 ;;; change *lkb-source-dir* and *lkb-fasl-dir* for a different file system
 
-;;(defparameter *lkb-source-dir* 
+;;(def-lkb-parameter *lkb-source-dir* 
 ;;              '(:absolute "user" "malouf" "lkb"))
 
-;;(defparameter *lkb-fasl-dir* 
+;;(def-lkb-parameter *lkb-fasl-dir* 
 ;;              '(:absolute "user" "malouf" "lkb" "fasl"))
 
 (defparameter *lkb-source-dir* 

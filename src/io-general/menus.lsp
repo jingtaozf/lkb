@@ -46,7 +46,9 @@
 		      ;; output
 		      cl-user::dump-lkb 
 		      cl-user::output-type-file 
-		      cl-user::*lkb-system-version*)))
+		      cl-user::*lkb-system-version*
+		      ;; options
+		      cl-user::get-parameters)))
 
 ;;; Menus moved to here from topmenu.lsp, since they can be
 ;;; treated as independent between ACL and MCL
@@ -145,8 +147,15 @@
 ;                        :value 'output-type-file 
 ;                        :available-p nil)
                      )
-               :available-p nil)))))
-
+               :available-p nil)
+	    (make-lkb-submenu-item 
+	     :menu-title "Options"
+	     :menu-items                       
+	     (list 
+	      (make-menu-item :name "Set options"
+			      :available-p t
+			      :value 'get-parameters))
+	     :available-p t)))))
 
 (defun create-big-lkb-system-menu nil
   ;;; for system with MRS etc
@@ -257,5 +266,14 @@
 ;                        :value 'output-type-file 
 ;                        :available-p nil)
                      )
-               :available-p nil)))))
+		  :available-p nil)
+	    (make-lkb-submenu-item 
+	     :menu-title "Options"
+	     :menu-items                       
+	     (list 
+	      (make-menu-item :name "Set options"
+			      :available-p t
+			      :value 'get-parameters))
+	     :available-p t)))))
+
 

@@ -427,3 +427,25 @@
 #-allegro
 (defun compare-parses ()
   nil)
+
+;;
+;; Interactively set parameters
+;;
+
+(defun get-parameters ()
+  (setq *lkb-params* (sort *lkb-params* #'string<))
+  (let* ((*print-readably* t)
+	 (params (mapcan #'(lambda (p)
+			     ;; Skip things we won't be able to read back in
+			     (handler-case
+				 (list 
+				  (cons (string p) 
+					(write-to-string (symbol-value p))))
+			       (print-not-readable () nil)))
+			 *lkb-params*))
+	 (result (ask-for-strings-movable "Set options" params)))
+    (when result
+      (loop for p in params
+	  for r in result
+	  do (setf (symbol-value (read-from-string (car p)))
+	       (read-from-string r))))))

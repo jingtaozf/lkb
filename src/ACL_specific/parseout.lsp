@@ -16,15 +16,14 @@
 (defparameter *parse-window-height* 400
   "Initial height of tree window")
 
-(defparameter *ptree-text-style* 
-    (clim:parse-text-style (list :sans-serif :roman 
-				 (or *parse-tree-font-size* 9)))
+(def-lkb-parameter *ptree-text-style* 
+    (list :sans-serif :roman (or *parse-tree-font-size* 9))
   "Text style for node labels.")
 
-(defparameter *ptree-node-sep* 6
+(def-lkb-parameter *ptree-node-sep* 6
   "Spacing between nodes in a single generation.")
 
-(defparameter *ptree-level-sep* 12
+(def-lkb-parameter *ptree-level-sep* 12
   "Spacing between levels in the tree.")                    
 
 
@@ -37,8 +36,7 @@
 	    :accessor parse-tree-nodes))
   :display-function 'draw-parse-tree
   :width *parse-window-width* 
-  :height *parse-window-height*
-  :text-style *ptree-text-style*)
+  :height *parse-window-height*)
 
 (defun draw-new-parse-tree (topnode title horizontalp)
   (declare (ignore horizontalp))
@@ -50,24 +48,25 @@
 (defun draw-parse-tree (ptree-frame stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((node-tree (parse-tree-nodes ptree-frame)))
-    (clim:format-graph-from-root
-     node-tree
-     #'(lambda (node stream)
-	 (multiple-value-bind (s bold-p) 
-	     (get-string-for-edge node)
-	   (clim:with-text-face (stream (if bold-p :bold :roman))
-	     (if (get node 'edge-record)
-		 (clim:with-output-as-presentation (stream node 'symbol)
-		   (write-string s stream))
-	       (write-string s stream)))))
-     #'(lambda (node) (get node 'daughters))
-     :graph-type :parse-tree
-     :stream stream 
-     :merge-duplicates nil
-     :orientation :vertical
-     :generation-separation *ptree-level-sep*
-     :within-generation-separation *ptree-node-sep*
-     :center-nodes nil)))
+    (clim:with-text-style (stream *ptree-text-style*)
+      (clim:format-graph-from-root
+       node-tree
+       #'(lambda (node stream)
+	   (multiple-value-bind (s bold-p) 
+	       (get-string-for-edge node)
+	     (clim:with-text-face (stream (if bold-p :bold :roman))
+	       (if (get node 'edge-record)
+		   (clim:with-output-as-presentation (stream node 'symbol)
+		     (write-string s stream))
+		 (write-string s stream)))))
+       #'(lambda (node) (get node 'daughters))
+       :graph-type :parse-tree
+       :stream stream 
+       :merge-duplicates nil
+       :orientation :vertical
+       :generation-separation *ptree-level-sep*
+       :within-generation-separation *ptree-node-sep*
+       :center-nodes nil))))
 
 
 ;;; menus

@@ -5,49 +5,49 @@
 ;;; qualia type
 ;;; qualia psort
 
-(defparameter *type-indices* 
+(def-lkb-parameter *type-indices* 
    `(((qualia) . ,(make-hash-table))
       (() . ,(make-hash-table))))
 
-(defparameter *parent-indices* 
+(def-lkb-parameter *parent-indices* 
    `(((qualia) . ,(make-hash-table))))
 
 
 
 ;;; Linking
 
-(defparameter *bc96lrules* nil)
+(def-lkb-parameter *bc96lrules* nil)
 
-(defparameter *linking-type* 'linking-type
+(def-lkb-parameter *linking-type* 'linking-type
    "Type from which linking types all inherit")
 
 
 
-(defparameter *do-really-well-formed-check* nil
+(def-lkb-parameter *do-really-well-formed-check* nil
    "If set, check lexical entries for real wel-formedness when indexing the 
    lexicon")
 
 ;; tlinks
 
-(defparameter *tlink-syntactic-sugar* t
+(def-lkb-parameter *tlink-syntactic-sugar* t
    "if set the slashed notation is assumed")
 
 
 ;;; for constraint solving and MT
 
-(defparameter *bag-types* '(word))
+(def-lkb-parameter *bag-types* '(word))
 
-;;; (defparameter *orth-path* '(orth hd))
+;;; (def-lkb-parameter *orth-path* '(orth hd))
 
-(defparameter *lang-path* '(lang))
+(def-lkb-parameter *lang-path* '(lang))
 
-(defparameter *semantics-path* 
+(def-lkb-parameter *semantics-path* 
    (create-path-from-feature-list '(sem lizst lst hd)))
 
-(defparameter *dummy-type* 'dummy)
+(def-lkb-parameter *dummy-type* 'dummy)
 
-(defparameter *type-of-isign* 's-sign)
-(defparameter *type-of-osign* 's-sign)
+(def-lkb-parameter *type-of-isign* 's-sign)
+(def-lkb-parameter *type-of-osign* 's-sign)
 
 
 
@@ -96,11 +96,11 @@
                               :rhs (make-u-value :types (list 'e-list)))))))))
          (when unifications (process-unifications unifications)))))
 
-(defparameter *top-variable-type* 'entity)
+(def-lkb-parameter *top-variable-type* 'entity)
 ;;; need to know what types variables are in order to do "SKolemisation"
 
-(defparameter *top-lex-sign-type* 'word)
+(def-lkb-parameter *top-lex-sign-type* 'word)
 
-(defparameter *feature-ordering*
+(def-lkb-parameter *feature-ordering*
    '(dtrs synsem orth head-dtr comp-dtrs hcs-synsems hcs-orth hd-dtr
       tl-dtr synsem-list))

@@ -7,119 +7,131 @@
 ;;;
 ;;; All functions have now been moved to user-fns.lsp
 
-(defparameter *templates* nil 
+(in-package :user)
+
+;;; Keep track of all parameters that get defined, so we can have a way to
+;;; edit them interactively
+
+(defvar *lkb-params* nil)
+
+(defmacro def-lkb-parameter (var val &optional doc)
+  `(progn
+     (pushnew (quote ,var) *lkb-params*)
+     (defparameter ,var ,val ,doc)))
+
+
+(def-lkb-parameter *templates* nil 
    "types which are treated as templates to avoid excessive glbs")
 
 ;;; Strings
 
-(defparameter *toptype* 'top)
+(def-lkb-parameter *toptype* 'top)
 
-(defparameter *string-type* 'string
+(def-lkb-parameter *string-type* 'string
    "a special type name - any lisp strings are subtypes of it")
 
 ;;; Lexical files
 
+(def-lkb-parameter *orth-path* '(orth lst))
 
-(defparameter *orth-path* '(orth lst))
+(def-lkb-parameter *list-tail* '(tl))
 
-(defparameter *list-tail* '(tl))
+(def-lkb-parameter *list-head* '(hd))
 
-(defparameter *list-head* '(hd))
+(def-lkb-parameter *empty-list-type* '*null*)
 
-(defparameter *empty-list-type* '*null*)
+(def-lkb-parameter *diff-list-type* '*diff-list*)
 
-(defparameter *diff-list-type* '*diff-list*)
+(def-lkb-parameter *diff-list-list* 'list)
 
-(defparameter *diff-list-list* 'list)
+(def-lkb-parameter *diff-list-last* 'last)
 
-(defparameter *diff-list-last* 'last)
-
-(defparameter *lex-rule-suffix* nil
+(def-lkb-parameter *lex-rule-suffix* nil
   "creates the inflectional rule name from the information
    in irregs.tab - for PAGE compatability")
 
-(defparameter *sense-unif-fn* nil)
+(def-lkb-parameter *sense-unif-fn* nil)
   
 ;;; Parsing
 
-(defparameter *chart-limit* 100)
+(def-lkb-parameter *chart-limit* 100)
 
-(defparameter *sign-type* 'sign
+(def-lkb-parameter *sign-type* 'sign
    "a special type wrt parsing - rule indexing is checked for its
    descendants")
 
-(defparameter *mother-feature* 0
+(def-lkb-parameter *mother-feature* 0
    "The feature giving the mother in a grammar rule")
 
-(defparameter *head-marking-path* nil
+(def-lkb-parameter *head-marking-path* nil
    "a feature path - a head daughter in a rule may be identified by
     having the same value for this path as the mother")
 
 ;;; value is 'node for YADU
 
-(defparameter *start-symbol* 'sign
+(def-lkb-parameter *start-symbol* 'sign
    "a type which specifies the type of any valid parse")
 
-(defparameter *morph-rule-type* 'morph-rule
+(def-lkb-parameter *morph-rule-type* 'morph-rule
    "lexical rules of this type will not be applied
    by the parser because it currently has no morphological
    component")
 
-(defparameter *maximal-lex-rule-applications* 7
+(def-lkb-parameter *maximal-lex-rule-applications* 7
    "The number of lexical rule applications which may be made
    before it is assumed that some rules are applying circularly")
 
-(defparameter *deleted-daughter-features* nil
+(def-lkb-parameter *deleted-daughter-features* nil
   "These features will not be passed from daughter to mother
    when parsing")
 
-(defparameter *bc96lrules* nil)
+(def-lkb-parameter *bc96lrules* nil)
 
 
-(defparameter *check-paths* nil
+(def-lkb-parameter *check-paths* nil
    "an alist in which the keys are feature paths that often fail -
     these are checked first before attempting unification")
 
-(defparameter *substantive-roots-p* nil
+(def-lkb-parameter *substantive-roots-p* nil
   "if this is set, root edges are regarded as real edges
    for the purposes of chart display")
 
 
 ;;; Display 
 
-(defparameter *display-type-hierarchy-on-load* t)
+(def-lkb-parameter *display-type-hierarchy-on-load* t)
 
-(defparameter *display-glb-messages* nil
+(def-lkb-parameter *display-glb-messages* nil
    "if set, informs user of glbtypes as they are created")
 
-(defparameter *settings-options* nil
+(def-lkb-parameter *settings-options* nil
   "controls whether user is asked for type display options file")
 
-(defparameter *feature-abbreviations* 
+(def-lkb-parameter *feature-abbreviations* 
    '(("-first" . "H")
      ("-last" . "T"))
    "a list of pairs of strings - if the end of a feature name 
    matches the first string it is displayed as the 
    second string in windows.  Used to make lists more readable") 
    
-(defparameter *dont-show-morphology* nil
+(def-lkb-parameter *dont-show-morphology* nil
   "if set, the morphological structures are not shown in parse trees")
 
-(defparameter *parse-tree-font-size* 9)
+(def-lkb-parameter *parse-tree-font-size* 9)
 
-(defparameter *fs-type-font-size* 9)
+(def-lkb-parameter *fs-type-font-size* 9)
 
-(defparameter *fs-title-font-size* 9)
+(def-lkb-parameter *fs-title-font-size* 9)
 
-(defparameter *type-tree-font-size* 9)
+(def-lkb-parameter *type-tree-font-size* 9)
 
-(defparameter *dialog-font-size* 12)
+(def-lkb-parameter *dialog-font-size* 12)
 
    
 ;;; Indexing
 
 
-(defparameter *batch-mode* nil
+(def-lkb-parameter *batch-mode* nil
    "set when indexing, could also be set by the user 
    to prevent errors in expanding a lexical entry being
    signalled as continuable errors, rather than written
@@ -129,27 +141,27 @@
 ;;; Languages
 ;;; (not very useful in core LKB, maybe remove from here?)
 
-(defparameter *current-language* 'English
+(def-lkb-parameter *current-language* 'English
    "Specifies the default language for the
    various interactions where a language has to
    be selected")
 
-(defparameter *possible-languages* nil
+(def-lkb-parameter *possible-languages* nil
    "Specifies the possible languages for interactions
    where a language has to be selected or specified")
    
 
 ;;; Warnings etc
 
-(defparameter *warn-of-unary-branches* nil
+(def-lkb-parameter *warn-of-unary-branches* nil
    "If set warns of unary branches when type system is loaded")
 
 ;;; YADU
 
-(defparameter *lexical-persistence* 'lex
+(def-lkb-parameter *lexical-persistence* 'lex
    "Atom marking lexical persistence of tails")
 
-(defparameter *rule-persistence* nil
+(def-lkb-parameter *rule-persistence* nil
    "Atom marking persistence of tails in rules")
 
 
@@ -158,21 +170,21 @@
 ;;; these are actually only used when in PAGE compatability mode
 
 ;;; the path where the name string is stored
-(defparameter *label-path* '(LABEL-NAME))
+(def-lkb-parameter *label-path* '(LABEL-NAME))
 
 ;;; the path for the meta prefix symbol
-(defparameter *prefix-path* '(META-PREFIX))
+(def-lkb-parameter *prefix-path* '(META-PREFIX))
 
 ;;; the path for the meta suffix symbol
-(defparameter *suffix-path* '(META-SUFFIX))
+(def-lkb-parameter *suffix-path* '(META-SUFFIX))
 
 ;;; the path for the recursive category
-(defparameter *recursive-path* '(NON-LOCAL SLASH LIST FIRST))
+(def-lkb-parameter *recursive-path* '(NON-LOCAL SLASH LIST FIRST))
 
 ;;; the path inside the node to be unified with the recursive node
-(defparameter *local-path* '(LOCAL))
+(def-lkb-parameter *local-path* '(LOCAL))
 
 ;;; the path inside the node to be unified with the label node
-(defparameter *label-fs-path* '(SYNSEM))
+(def-lkb-parameter *label-fs-path* '(SYNSEM))
 
-(defparameter *label-template-type* 'label)
+(def-lkb-parameter *label-template-type* 'label)
