@@ -161,12 +161,12 @@ Parse nodes need to be added so we can understand the display.
       (rule-p entry)
       (let ((order-length (length (rule-order entry))))
         (cond ((eql order-length 2)
-               (format stream "~%unary_rule(\"~A\", " name))
+               (format stream "~%id_schema(\"~A\", " name)
+               (output-lilfes-spec stream entry 1))
               ((eql order-length 3)
-               (format stream "~%binary_rule(\"~A\", " name))
-              ((eql order-length 4)
-               (format stream "~%ternary_rule(\"~A\", " name))
-              (t (error "Rule order in ~A is ~A: only unary, binary or ternary expected"
+               (format stream "~%binary_rule(\"~A\", " name)
+               (output-lilfes-spec stream entry 2))
+              (t (error "Rule order in ~A is ~A: only unary or binary expected"
                         name order-length))))
       (if (eql class :root)
           (format stream "~%root(")
@@ -174,11 +174,18 @@ Parse nodes need to be added so we can understand the display.
     (display-dag1 def 'lilfes stream)
     (format stream ").~%")))
 
+(defun output-lilfes-spec (stream entry order)
+  (if (eql order 1)
+      (format stream "unary_rule \& ARC_DTR\[HEAD-DTR\]~%")
+    (progn 
+      (format stream "binary_rule \& NH_DIR\\~A &~%" 
+              (lilfes-rule-order entry))  
+      (format stream  "ARC_DTR\[HEAD-DTR\] &~%INP_DTR\[NON-HEAD-DTR"))))
 
 
 (defun output-derived-instance-as-lilfes (string fs stream id1 id2)
   (let ((def (tdfs-indef fs)))
     ;; assume no defaults
-    (format stream "~%lex(\"~A_~A\", " id1 id2)
+    (format stream "~%lexical_entry(\"string\", " string)
     (display-dag1 def 'lilfes stream)
     (format stream ").~%")))                 

@@ -205,7 +205,7 @@
 		     (get-string-for-edge node)
 		   (clim:with-text-face (stream (if bold-p :bold :roman))
 		     (write-string s stream))))
-	     #'(lambda (node) (get node 'daughters))
+	     #'find-children
 	     :graph-type :parse-tree
 	     :stream stream 
 	     :merge-duplicates nil

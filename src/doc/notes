@@ -13,7 +13,7 @@ dvips -Ptype1 -file newdoc.dvi > newdoc.ps
 distill newdoc.ps (on turing, or eoan, accidentally ...)
 web files are on ~aac/WWW
 so 
-cp newdoc.pdf ~aac/WWW
+mv newdoc.pdf ~aac/WWW
 
 
 

@@ -616,22 +616,27 @@
 	      (edge-children edge))
       (let ((daughters (edge-children edge)))
          (list
-            (if daughters
-               (cons (tree-node-text-string
-                        (or (find-category-abb (edge-dag edge))
+          (if 
+              (and *dont-show-lex-rules*
+                   (get-lex-rule-entry (edge-rule-number edge)))
+              (car (edge-leaves edge))
+              (if daughters
+                (cons (tree-node-text-string
+                       (or (find-category-abb (edge-dag edge))
                            (edge-category edge)))
-                  (mapcan
-                      #'(lambda (dtr)
-                         (if dtr
-                            (parse-tree-structure1 dtr (1+ level))
-                            ;; active chart edge daughter
-                            (list ""))) 
-                      daughters))
-               (if *dont-show-morphology*
-                  (car (edge-leaves edge))
+                      (mapcan
+                       #'(lambda (dtr)
+                           (if dtr
+                               (parse-tree-structure1 dtr (1+ level))
+                             ;; active chart edge daughter
+                             (list ""))) 
+                       daughters))
+                (if *dont-show-morphology*
+                    (car (edge-leaves edge))
                   (cons (car (edge-leaves edge))
-                     (morph-tree-structure
-                        (edge-rule-number edge) (edge-morph-history edge)))))))))
+                        (morph-tree-structure
+                         (edge-rule-number edge) 
+                         (edge-morph-history edge))))))))))
 
 (defun morph-tree-structure (rule edge)
    (if rule

@@ -379,6 +379,14 @@ tar xf climimage5-0.tar
 This will create the new directory called {\tt lkb} containing
 several files. 
 
+Also download the data files, and unzip etc in the same way:
+\begin{verbatim}
+gunzip data5-0.tar.gz
+tar xf data5-0.tar
+\end{verbatim}
+This will create a new directory tree called {\tt data} containing
+various sample grammars.
+
 Now follow the instructions in \S\ref{emacs-clim-image}
 or \S\ref{clim-image}
 %or \S\ref{mcl-image} 
@@ -675,7 +683,8 @@ specify the standard executable at
 {\bf Executable image name:} and the image file at {\bf Lisp image:}).
 You should then get a new buffer called \verb+*common-lisp*+ with
 a running Lisp process (without a compiler, if you are using our
-image).
+image).\footnote{If you get an error message concerning a missing library,
+see \S\ref{problems}.}
 \end{enumerate}
 You
 should now also see the LKB interaction window, as shown in 
@@ -692,7 +701,9 @@ simply start the saved image by running the executable
 other name you chose for it in the earlier stages).
 You
 should now see the LKB interaction window, as shown in 
-Figure~\ref{lkbtop-unix}.
+Figure~\ref{lkbtop-unix}.\footnote{If 
+you get an error message concerning a missing library,
+see \S\ref{problems}.}
 The first time you run the system, you should
 create a temporary directory (see \S\ref{tempdir}).  By default, this is
 a directory called {\tt tmp} in your home directory.
@@ -747,6 +758,7 @@ already):
 
 
 \section{Problems}
+\label{problems}
 
 Some of the likely error messages are covered in various places in this
 documentation, so if you see something you don't understand, try searching for
@@ -758,6 +770,16 @@ documentation, please look at the instructions on the
 fixes for known problems available there.  The Web site also contains details
 of how to report bugs that you find: note that it's important that you give us
 enough information, so the Web site describes what information we need.
+
+\subsection{Missing libraries}
+
+When you start the LKB from a downloaded image, you may get an error message that
+says a library is missing (e.g., {\tt libXm.so.3}).  The CLIM interface uses
+Motif libraries and on some systems these are not made available by default.
+You should be able to fix this by adding {\tt /usr/dt/lib} to your {\tt
+LD\_LIBRARY\_PATH}: if this doesn't work (or if this explanation is
+incomprehensible \ldots), please talk to your system administrator (it's a
+standard difficulty with software that uses Motif).
 
 \subsection{Compilation: file writing problems}
 
