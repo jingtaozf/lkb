@@ -697,11 +697,17 @@
           (setf %failure% 
             (list :clash (reverse path) 
                   (unify-get-type dag1) (unify-get-type dag2)))
-        (format 
-         t 
-         "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
-         (unify-get-type dag1) (unify-get-type dag2) 
-         (reverse path))))
+	(let ((msg 
+	       (format 
+		nil 
+		"~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
+		(unify-get-type dag1) (unify-get-type dag2) 
+		(reverse path))))
+	  (when (eq *unify-debug* :window)
+	    (show-message-window msg))
+	  ;;; deliberately also show in the LKB top as before, since some
+	  ;;; people may have got used to it
+	  (format t "~A" msg))))
     (throw '*fail* nil)))))
 
 (defmacro unify-arcs-find-arc (attribute arcs comp-arcs)
@@ -1292,10 +1298,10 @@
 ;;; to support interactive unification checking
 ;;; which informs the user where unification failed
 
-(defun unify-wffs-with-fail-messages (dag1 dag2 path)
+(defun unify-wffs-with-fail-messages (dag1 dag2 path &optional window-p)
   ;; non-destructive
   (declare (ignore path))
-  (let ((*unify-debug* t)) 
+  (let ((*unify-debug* (if window-p :window t))) 
     (unify-wffs dag1 dag2)))
 
 

@@ -164,14 +164,15 @@
                    (unify-dags dag1 dag2))))))
 
 (defun unify-paths-with-fail-messages (lhs-path lhs-dag rhs-path rhs-dag 
-                             lhs-id lhs-features rhs-id rhs-features)
+				       lhs-id lhs-features rhs-id rhs-features 
+				       &optional window-p)
   (with-unification-context (lhs-dag)
     (let ((dag1 (unify-paths-dag-at-end-of lhs-path lhs-dag)))
       (if dag1
 	  (let ((dag2 (unify-paths-dag-at-end-of rhs-path rhs-dag)))
 	    (if dag2
-		(when (unify-wffs-with-fail-messages dag1 dag2 nil)
-		  (let ((*unify-debug* t))
+		(when (unify-wffs-with-fail-messages dag1 dag2 nil window-p)
+		  (let ((*unify-debug* (if window-p :window t)))
 		    (copy-dag lhs-dag)))
 	      (format t "~%Path ~A is not appropriate for dag ~A" 
 		      rhs-features rhs-id)))
