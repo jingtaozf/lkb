@@ -840,6 +840,10 @@
         for e-status = (get-field+ :status edge -1)
         for e-daughters = (normalize-string 
                            (get-field+ :daughters edge "") :escape rawp)
+        for e-parents = (normalize-string 
+                         (get-field+ :parents edge "") :escape rawp)
+        for e-alternates = (normalize-string 
+                         (get-field+ :alternates edge "") :escape rawp)
         do
           (if rawp
             (let ((stream (get-field :edge cache))
@@ -851,7 +855,9 @@
               (write e-start :stream stream) (write-char ofs stream)
               (write e-end :stream stream) (write-char ofs stream)
               (write e-status :stream stream) (write-char ofs stream)
-              (write-string e-daughters stream)
+              (write-string e-daughters stream) (write-char ofs stream)
+              (write-string e-parents stream) (write-char ofs stream)
+              (write-string e-alternates stream)
               (terpri stream)
               (force-output stream)
               (incf (get-field :count cache)))

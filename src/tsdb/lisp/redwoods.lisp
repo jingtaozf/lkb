@@ -22,6 +22,10 @@
 
 (defparameter *redwoods-trees-hook* nil)
 
+(defparameter %redwoods-increment% 100)
+
+(defparameter %model% nil)
+
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
                           gold strip inspect 
@@ -1309,14 +1313,13 @@
                             spartanp (scorep t) (n 1)  test loosep
                             file append (format :latex)
                             meter)
-  (declare (ignore meter))
 
   (let* ((stream (create-output-stream file append))
          (aggregates (summarize-scores
                       data gold :condition condition 
                       :spartanp spartanp :scorep scorep :n n
                       :test test :loosep loosep
-                      :format format))
+                      :format format :meter meter))
          (aggregates (nreverse aggregates))
          (alabel (if (eq *statistics-aggregate-dimension* :phenomena)
                    "Phenomenon"
@@ -1513,7 +1516,8 @@
 (defun summarize-scores (data &optional (gold data)
                          &key (condition *statistics-select-condition*)
                               spartanp (scorep t) (n 1) test loosep
-                              (format :latex))
+                              (format :latex) meter)
+  (declare (ignore meter))
   
   ;;
   ;; score results in .data. against ground truth in .gold.  operates in
@@ -1543,7 +1547,7 @@
 
     #+:debug
     (setf %aggregates% aggregates %gaggregates% gaggregates)
-    
+
     (loop
         with tnitems = 0
         with tnscores = 0
@@ -1572,15 +1576,15 @@
               for length = (get-field :i-length item)
               for readings = (get-field :readings item)
               for gitem = (loop
-			      for gitem = (first gdata)
-			      while (and gitem
-					 (< (get-field :i-id gitem) i-id))
-			      do (pop gdata)
-			      finally
-				(return 
-				  (let ((foo (get-field :i-id (first gdata))))
-				    (when (and foo (= foo i-id))
-				      (pop gdata)))))
+                              for gitem = (first gdata)
+                              while (and gitem
+                                         (< (get-field :i-id gitem) i-id))
+                              do (pop gdata)
+                              finally
+                                (return 
+                                  (let ((i (get-field :i-id (first gdata))))
+                                    (when (and i (= i i-id))
+                                      (pop gdata)))))
               when gitem do
                 (multiple-value-bind (i score loosep)
                     (score-item item gitem :test test :n n :loosep loosep)
@@ -1596,7 +1600,8 @@
                     (when (<= i n)
                       (if (= i 1) (incf aexact score) (incf anear score)))
                     (when loosep (incf aloose))
-                    (when asuccesses (incf (aref asuccesses (- i 1)) score)))))
+                    (when asuccesses 
+                      (incf (aref asuccesses (- i 1)) score)))))
               finally
                 (incf tnitems anitems) (incf tnscores anscores)
                 (incf tlength alength) (incf treadings areadings) 
@@ -1634,7 +1639,7 @@
     (when (eq test :derivation)
       (purge-profile-cache data :expiryp nil)
       (unless (equal data gold) (purge-profile-cache gold :expiryp nil)))
-    
+
     results))
 
 (defun score-item (item gold &key test (n 1) (loosep t) errorp)
@@ -1868,39 +1873,69 @@
     (if (listp result) (nreverse result) result)))
 
 (defun train (sources file &key (condition *statistics-select-condition*)
-                               (type :mem) model (estimatep t)
-                               (verbose t) (stream t)
-                               interrupt meter)
-  (declare (ignore interrupt meter))
+                                (type :mem) model (estimatep t) (recursep t)
+                                (verbose t) (stream t)
+                                interrupt meter)
+  (declare (ignore interrupt))
 
-  (if (consp sources)
+  (cond
+   ((consp sources)
     (loop
-        with model = (or model (case type
-                                 (:mem (make-mem))))
+        with model = (or model 
+                         (case type
+                           (:mem (let ((model (make-mem)))
+                                   (initialize-mem model)
+                                   model))))
         with gc = (install-gc-strategy 
                    nil :tenure *tsdb-tenure-p* :burst t :verbose verbose)
         with condition = (if (and condition (not (equal condition "")))
                            (format nil "t-active >= 1 && (~a)" condition)
                            "t-active >= 1")
+        with meter = (when meter (madjust / meter (length sources)))
+        with duration = (when meter (mduration meter))
+        for i from 0
         for sources on sources
+        for rmeter = (when duration (madjust + meter (* duration i)))
         do
           (train (first sources) nil :condition condition :type type
                  :model model :estimatep (null (rest sources))
-                 :verbose verbose :stream stream)
+                 :verbose verbose :stream stream :meter rmeter)
         finally
           (when verbose
             (format stream "train(): exporting ~a~%" model))
           (print-mem model :file file :format :export)
           (restore-gc-strategy gc)
-          (return model))
-    (let* ((items (analyze sources 
-                           :thorough '(:derivation)
-                           :condition condition :gold sources :readerp nil)))
+          (setf %model% model)
+          (return model)))
+   (recursep
+    (format 
+     t 
+     "[~a] train(): reading `~a'~%" 
+     (current-time :long :short) sources)
+    (loop
+        with delta = %redwoods-increment%
+        with n = (ceiling (tcount sources "item") delta)
+        with increment = (when meter (/ (mduration meter) n))
+        for i from 1 to n
+        for foo = (format 
+                   nil 
+                   "i-id >= ~d && i-id < ~d~@[ && (~a)~]"
+                   (* (- i 1) delta) (* i delta) condition)
+        initially (when meter (meter :value (get-field :start meter)))
+        do
+          (when meter (meter-advance increment))
+          (train sources nil :condition foo :type type
+                 :model model :estimatep (and estimatep (= i n))
+                 :recursep nil :verbose verbose :stream stream)
+        finally (when meter (meter :value (get-field :end meter)))))
+   (t
+    (let ((items (analyze sources :gold sources :condition condition
+                          :thorough '(:derivation) :readerp nil)))
       (purge-profile-cache sources :expiryp nil)
       (case type
         (:mem
          (estimate-mem 
-          items :model model :estimatep estimatep :stream stream))))))
+          items :model model :estimatep estimatep :stream stream)))))))
 
 (defun rank-profile (source 
                      &optional (target source)
@@ -1980,8 +2015,6 @@
 (defun train-and-rank (train test 
                        &key (type :mem) model (stream *tsdb-io*))
 
-  #+:debug
-  (setf %train% train %test% test)
   (loop
       with model = (or model
                        (case type

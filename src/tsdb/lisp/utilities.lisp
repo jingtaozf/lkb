@@ -106,23 +106,6 @@
          (string (string-right-trim (list #\space #\tab) string)))
     (concatenate 'string string ".")))
 
-#+:cray
-(defun normalize-string (string)
-  (if string
-    (let* ((string (nsubstitute #\Space #\Newline string))
-           (string (nsubstitute #\# #\@ string))
-           (string 
-            (if (> (length string) 2)
-              (reduce #'(lambda (x y)
-                          (if (and (eq x #\Space)
-                                   (eq (char (string y) 0) #\Space))
-                              (string y)
-                            (concatenate 'string (string x) (string y))))
-                      string :from-end t)
-              string)))
-      (string-trim '(#\Space #\Tab) string))
-    ""))
-
 (defun normalize-string (string &key escape (normalize t))
   (if string
     (loop

@@ -47,18 +47,26 @@
 
 (defstruct (mem)
   (table (make-symbol-table :test #'equal))
-  contexts
+  contexts (ncontexts 0)
   (frequencies (make-array 512 :initial-element 0))  
   (weights (make-array 512 :initial-element 0.0))
   (count 0)
-  (size 512))
+  (size 512)
+  (file (format nil "/tmp/.mem.~a.mee" (current-user)))
+  stream)
 
 (defmethod print-object ((object mem) stream)
   (format 
    stream 
    "#[MEM (~d context~p; ~d weight~p)]"
-   (length (mem-contexts object)) (length (mem-contexts object))
+   (mem-ncontexts object) (mem-ncontexts object)
    (mem-count object) (mem-count object)))
+
+(defun initialize-mem (model)
+  (when (mem-file model)
+    (setf (mem-stream model)
+      (open (mem-file model) :direction :output 
+            :if-does-not-exist :create :if-exists :supersede))))
 
 (defun record-feature (feature event model)
   (let ((code (feature-code feature)))
@@ -119,7 +127,11 @@
            (print-event event :stream stream :model model :format format)))))
 
 (defun record-context (context model)
-  (push context (mem-contexts model)))
+  (incf (mem-ncontexts model))
+  (if (open-stream-p (mem-stream model))
+    (print-context 
+     context :stream (mem-stream model) :model model :format :rpm)
+    (push context (mem-contexts model))))
 
 (defun score-feature (code model)
   (if (< code (mem-count model)) (aref (mem-weights model) code) 0.0))
@@ -157,7 +169,7 @@
           stream 
           ";;;~%;;; ~a~%;;; (~a@~a; ~a)~%;;;~%"
           model (current-user) (current-host) (current-time :long :pretty))
-         (format stream "~%:begin :mem ~d.~%~%" (length (mem-contexts model)))
+         (format stream "~%:begin :mem ~d.~%~%" (mem-ncontexts model))
          (loop
              with *print-case* = :downcase
              for key in *maxent-options*
@@ -177,10 +189,12 @@
          (format stream "~%:end :features.~%~%:end :mem.~%"))))))
 
 (defun estimate-mem (items &key (stream *tsdb-io*) model (estimatep t))
-  #+:debug
-  (setf %items% items)
+
   (loop
-      with model = (or model (make-mem))
+      with model = (or model 
+                       (let ((model (make-mem)))
+                         (initialize-mem model)
+                         model))
       for item in items
       for iid = (get-field :i-id item)
       for readings = (get-field :readings item)
@@ -218,14 +232,15 @@
               (record-context context model))
       finally 
         (when estimatep
-          (let* ((in (format nil "/tmp/.mem.~a.mee" (current-user)))
-                 (out (format nil "/tmp/.mem.~a.mew" (current-user)))
+          (let* ((out (format nil "/tmp/.mem.~a.mew" (current-user)))
                  (command (format 
                            nil 
                            "estimate -events_in ~a -params_out ~a"
-                           in out))
+                           (mem-file model) out))
                  (output (if *maxent-debug-p* nil "/dev/null")))
-            (print-mem model :file in)
+            (force-output (mem-stream model))
+            (close (mem-stream model))
+            (setf (mem-stream model) nil)
             (when (probe-file out) (ignore-errors (delete-file out)))
             (when (and (zerop (run-process 
                                command :wait t 

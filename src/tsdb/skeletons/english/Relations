@@ -160,7 +160,9 @@ edge:
   e-result :integer                     # 0 : nope; 1 : yup, result
   e-start :integer                      # start vertex for this edge
   e-end :integer                        # end vertex for this edge
-  e-daughters :integer                  # number of daughters
+  e-daughters :string                   # (Common-Lisp) list of daughters
+  e-parents :string                     # (Common-Lisp) list of parents
+  e-alternates :string                  # alternates packed into this edge
 
 tree:
   parse-id :integer :key

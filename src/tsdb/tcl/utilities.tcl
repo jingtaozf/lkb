@@ -427,7 +427,7 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
       -variable globals($context,unanalyzed) \
       -command "update_condition_cascade unanalyzed $context";
     $menu add checkbutton \
-      -label "Unproblematic (`readings != -1')" \
+      -label {Unproblematic (`error == ""')} \
       -variable globals($context,unproblematic) \
       -command "update_condition_cascade unproblematic $context";
     $menu add separator
@@ -541,10 +541,10 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
 
     if {$globals($context,unproblematic)} {
       if {$globals($context) == ""} {
-        set globals($context) [lispify_string "(readings != -1)"];
+        set globals($context) [lispify_string "(error == `')"];
       } else {
         set globals($context) \
-          "$globals($context) and [lispify_string "(readings != -1)"]";
+          "$globals($context) and [lispify_string "(error == `')"]";
       }; # else
     }; # if
 
