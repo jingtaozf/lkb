@@ -74,6 +74,7 @@
 ;;; with x- must be accessed only via macros below, not directly
 ;;; Size: 40 bytes (MCL), 48 bytes (Allegro)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
 (defstruct (dag
              (:constructor make-dag-x (type arcs))
              (:copier copy-dag-x))
@@ -100,6 +101,7 @@
    ;; type. We want to keep an even number of slots otherwise we likely
    ;; waste 4 bytes
    )
+)
 
 
 (defmacro with-dag-optimize ((dag) &body body)
@@ -186,12 +188,14 @@
 
 (pushnew :recycling *features*)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
 (defstruct pool
   (size 0 :type fixnum)
   (position 0 :type fixnum)
   (constructor #'(lambda ()) :type function)
   (data #(nil) :type simple-vector)
   (garbage 0 :type fixnum))
+)
 
 (defmacro with-verified-pool ((pool) &body body)
    `(locally (declare ,@(if (symbolp pool) `((type pool ,pool)))
