@@ -27,8 +27,8 @@
 ;;; for the time being, the whole lexicon has to be reindexed whenever
 ;;; something is altered ...
 
-(defun index-for-generator nil
-  (index-lexicon)
+(defun index-for-generator (&key mode)
+  (index-lexicon :mode mode)
   (index-lexical-rules)
   (index-grammar-rules)
   (format t "~%Indexing complete")
@@ -86,11 +86,9 @@
 	   (let ((new-fs (lex-entry-full-fs entry)))
 	     (if (and new-fs 
 		      (not (eq new-fs :fail)))
-		 (mrs::extract-lexical-relations2 entry)
+		 (mrs::extract-lexical-relations entry)
 	       (format t "~%No feature structure for ~A~%" 
 		       (lex-entry-id entry))))
-	   ;;; (bmw) prevent software error...
-;;;(unexpand-psort *lexicon* (lex-entry-id entry))
 	   (forget-psort *lexicon* (lex-entry-id entry))
 	   ))
       (mrs::check-for-redundant-filter-rules)))

@@ -466,3 +466,40 @@
   (setf *postgres-temp-filename*
     (format nil "~a.~a" "/tmp/postgres-temp" (sys:user-name))))
 
+(defun read-pgpass nil
+  (with-open-file 
+      (fstream
+       "~/.pgpass"
+       :direction :input
+       :if-does-not-exist nil)
+    (when fstream
+      (loop
+	  for line = (read-line fstream nil :eof)
+	  while (not (eq line :eof))
+	  collect line))))
+
+(defmethod update-pgpass-file ((lexicon psql-database))
+  (let ((entry
+	 (format nil "~a:~a:~a:~a:~a"
+		 (or (host lexicon)
+		     "local")
+		 (port lexicon)
+		 (dbname lexicon)
+		 (user lexicon)
+		 (password lexicon)))
+	(pgpass-entries (read-pgpass)))
+    (unless (member entry
+		    pgpass-entries
+		    :test 'string=)
+      (format t "(updating ~~/.pgpass)")
+      (with-open-file 
+	  (fstream
+	   "~/.pgpass"
+	   :direction :output
+	   :if-exists :supersede 
+	   :if-does-not-exist :create)
+	(format fstream "~a~%" entry)
+	(loop
+	    for line in pgpass-entries
+	    do
+	      (format fstream "~a~%" line))))))

@@ -71,7 +71,7 @@
 
 (defvar *psql-db-version* "3.07")
 (defvar *psql-fns-version* "1.00")
-(defvar *psql-port-default* nil)
+(defvar *psql-port-default* 5432)
 
 (defvar *postgres-tmp-lexicon* nil)
 (defvar *psql-lexicon* nil)
@@ -87,8 +87,8 @@
      (table (extract-param :table *psql-lexicon-parameters*))
      (port (extract-param :port *psql-lexicon-parameters*))
      (user (extract-param :user *psql-lexicon-parameters*)))
-  (unless (and db host)
-    (error "please instantiate db+host in *psql-lexicon-parameters*"))
+;  (unless (and db host)
+;    (error "please instantiate db+host in *psql-lexicon-parameters*"))
   (let ((part-of))   
     (if *psql-lexicon*
         (setf part-of (part-of *psql-lexicon*))
@@ -127,7 +127,7 @@
    (host :initform "localhost" :accessor host :initarg :host)
    (user :initform (sys:user-name) :accessor user :initarg :user)
    (password :initform "" :accessor password :initarg :password)
-   (port :initform (num-2-str *psql-port-default*) :accessor port :initarg :port)))
+   (port :initform (or (system:getenv "PGPORT") (num-2-str *psql-port-default*)) :accessor port :initarg :port)))
 
 (defclass external-lex-database (lex-database)
   ((record-cache :initform (make-hash-table :test #'eq))
@@ -175,92 +175,58 @@
 ;;;
 
 (defmethod connect ((lexicon psql-database)) 
-  (let ((user (user lexicon)))
-    (cond
-     ((and user 
-	   (eq (connect-aux lexicon :user user) 
-	       :connection-ok)))
-     (t
-      (setf user 
-	(ask-user-for-x "Connect to PostgreSQL lexicon" 
-			(cons 
-			 "Username?" 
-			 (or user 
-			     "guest"))))
-      (when user
-	(setf (user lexicon) user)
-	(connect lexicon))))))
+  (do ((conn (connect-aux lexicon)
+	     (connect-aux lexicon)))
+      (conn t)
+    (let ((user
+	   (ask-user-for-x 
+	    "PostgreSQL login" 
+	    (cons 
+	     (format nil "~a~%Username?"
+		     (pg:error-message (connection lexicon))) 
+	     (or (user lexicon) 
+		 "guest")))))
+      (if user
+	  (setf (user lexicon) user)
+	(return)))))
+    
+(defmethod connect-aux ((lexicon psql-database))
+  (with-slots (port host dbname password connection user) lexicon
+    ;; attempt connection w/ default pwd
+    (setf password user)
+    (or
+     (connect-aux2 lexicon)
+     (and
+      (setf password 
+	(ask-user-for-x 
+	 "PostgreSQL login" 
+	 (cons 
+	  (format nil "Password for ~a?" 
+		  user) 
+	  user)))
+      (connect-aux2 lexicon)))))
       
-(defmethod connect-aux ((lexicon psql-database) &key (user "guest"))
-  (with-slots (port host dbname connection) lexicon
-    (let (decoded-status password)
-      ;; attempt connection w/ default pwd
-      (setf connection 
-	(connect-aux2 :port port 
-		      :host host 
-		      :dbname dbname 
-		      :user user 
-		      :password user))
-      (setf decoded-status 
-	(pg:decode-connection-status 
-	 (pg:status connection)))
-      (unless (eq decoded-status 
-		  :connection-ok)
-	;; attempt connection w/ pwd
-	(setf password 
-	  (ask-user-for-x "Connect to PostgreSQL lexicon" 
-			  (cons 
-			   (format nil "Password for ~a?" user) 
-			   user)))
-	(when password
-	  (setf connection 
-	    (connect-aux2 :port port 
-			  :host host 
-			  :dbname dbname 
-			  :user user 
-			  :password password))))
-      (setf decoded-status 
-	(pg:decode-connection-status 
-	 (pg:status connection)))
-      (when (eq decoded-status 
-		:connection-ok)
-	(setf (server-version lexicon) 
-	  (get-server-version lexicon))
-	(setf (user lexicon) 
-	  user))
-      decoded-status)))
-
-(defun connect-aux2 (&key (host) (dbname) (user) (password) (port))
-  (let ((connection)
-	(decoded-status))
+(defmethod connect-aux2 ((lexicon psql-database))
+  (with-slots (port host dbname password user connection) lexicon
     (setf connection 
       (pg:connect-db-with-handler 
        (concatenate 'string 
-	 (if port 
-	     (format nil "port='~a' " (sql-escape-string port)))
-	 (format nil "host='~a' " (sql-escape-string host))
+	 (and port 
+	      (format nil "port='~a' " (sql-escape-string port)))
+	 ;;; if postgres running locally w/o TCPIP
+	 ;;; then set host = nil
+	 (and host
+	      (format nil "host='~a' " (sql-escape-string host)))
 	 (format nil "dbname='~a' " (sql-escape-string dbname))
 	 (format nil "user='~a' " (sql-escape-string user))
-	 (if password 
-	     (format nil "password='~a'" (sql-escape-string password))
-	   ""))))
-    (setf decoded-status 
-      (pg:decode-connection-status 
-       (pg:status connection)))
-    ;: in case postgres is running locally w/o TCPIP...
-    (unless (eq decoded-status 
-		:connection-ok)		
-      (setf connection 
-	(pg:connect-db-with-handler
-	 (concatenate 'string 
-           (if port 
-	       (format nil "port='~a' " (sql-escape-string port)))
-	   (format nil "dbname='~a' " (sql-escape-string dbname))
-	   (format nil "user='~a' " (sql-escape-string user))
-	   (if password 
-	       (format nil "password='~a'" (sql-escape-string password))
-	     "")))))
-    connection))
+	 (and password 
+	      (format nil "password='~a'" (sql-escape-string password))))))
+    (let ((status 
+	   (pg:decode-connection-status 
+	    (pg:status connection))))
+      (if (eq :connection-ok status)
+	  (setf (server-version lexicon) 
+	    (get-server-version lexicon))))))
 
 (defmethod disconnect ((lexicon psql-database))
   (with-slots (connection) lexicon
@@ -716,37 +682,39 @@
           (dbname lexicon)
           (host lexicon)
           (true-port lexicon))
-  (let* ((connection (connect lexicon))
-	 (dbversion))
-    (setf *postgres-tmp-lexicon* lexicon)
-    (cond
-     (connection
-      (format t "~%Connected as user ~a" 
-	      (user lexicon))
-      (format t "~%Opening ~a" (dbname lexicon))
-      (unless (string>= (server-version lexicon) "7.3")
-        (error *trace-output* 
-               "PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." 
-	       (server-version lexicon)))
-      (setf dbversion 
-	(get-db-version lexicon))
+  (setf *postgres-tmp-lexicon* lexicon)
+  (cond
+   ((connect lexicon)
+    (format t "~%Connected as user ~a" 
+	    (user lexicon))
+    (format t "~%Opening ~a" (dbname lexicon))
+    (unless (string>= (server-version lexicon) "7.3")
+      (error *trace-output* 
+	     "PostgreSQL server version is ~a. Please upgrade to version 7.4 or above." 
+	     (server-version lexicon)))
+    (let ((dbversion 
+	   (get-db-version lexicon)))
       (unless (string>= (get-db-version lexicon) 
                         *psql-db-version*)
         (if (string>= dbversion "3.00")
-            (error "Your database structures (v. ~a) are out of date. Change to directory lkb/lexdb/ and use PSQL tool to import file import.sql as DB owner and import su-setup.sql as DB superuser. Ignore WARNING/ERROR messages. (NOTE: existing private schemas will be renamed tmpSCHEMANAME.)" dbversion dbversion)
-          (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then change to directory lkb/lexdb and import file import.sql as DB owner using PSQL tool, and finally merge dumped LexDB into new database." dbversion (dbname lexicon))))
+            (error "Your database structures (v. ~a) are out of date. Change to directory lkb/lexdb/ and use PSQL tool to import file import.sql as DB owner and import su-setup.sql as DB superuser. Ignore WARNING/ERROR messages. (NOTE: existing private schemas will be renamed tmpSCHEMANAME.)" 
+		   dbversion 
+		   dbversion)
+          (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then change to directory lkb/lexdb and import file import.sql as DB owner using PSQL tool, and finally merge dumped LexDB into new database." 
+		 dbversion 
+		 (dbname lexicon))))
       (make-field-map-slot lexicon)
       (retrieve-fn-defns lexicon)
       (initialize-userschema lexicon)
       (setf (name lexicon) name)
-      lexicon)
-     (t
-      (format t "~%unable to connect to ~s:~%  ~a"
-              (pg:db 
-	       (connection lexicon)) 
-	      (pg:error-message (connection lexicon)))
-      nil))))
-  
+      lexicon))
+    (t
+     (format t "~%unable to connect to ~s:~%  ~a"
+	     (pg:db 
+	      (connection lexicon)) 
+	     (pg:error-message (connection lexicon)))
+     nil)))
+
 (defmethod initialize-lex ((lexicon psql-database))
   (when (open-lex lexicon)
     (build-lex lexicon)))
