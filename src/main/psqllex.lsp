@@ -842,6 +842,9 @@
   (dump-db *psql-lexicon* filename))
 
 (defun merge-into-psql-lexicon (filename)
+  (unless
+      (and *psql-lexicon* (connection *psql-lexicon*))
+    (initialize-psql-lexicon))
   (merge-into-db *psql-lexicon* filename)
   (initialize-psql-lexicon))
 
