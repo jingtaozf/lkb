@@ -107,8 +107,10 @@
 ;; rules, where the conversion code will have created variables before going
 ;; into construct-mrs(); `standard' calls are not affected.    (27-jan-04; oe)
 ;;
+(defparameter *all-nodes* nil)
+
 (defun lookup-mtr-node (dag)
-  (rest (assoc dag *named-nodes*)))
+  (rest (assoc dag *all-nodes*)))
 
 ;;; variables get unique names via the variable generator
 ;;; which can be passed as a parameter
@@ -120,27 +122,31 @@ duplicate variables")
 
 (defun construct-mrs (fs &optional existing-variable-generator)
   (if existing-variable-generator
-      (setf *variable-generator* existing-variable-generator)
-    (if *restart-variable-generator*
-        (init-variable-generator)))
-  (unless existing-variable-generator (setf *named-nodes* nil))
-  (let ((top-h-fs (if *psoa-top-h-path*
-                      (path-value fs *psoa-top-h-path*)))
-        (index-fs (path-value fs *psoa-index-path*))
-        (liszt-fs (path-value fs *psoa-liszt-path*))
-        (h-cons-fs (if *psoa-rh-cons-path*
-                       (path-value fs *psoa-rh-cons-path*))))
-    (unfill-mrs
-     (make-psoa
-      :top-h (if top-h-fs
-               (create-variable top-h-fs *variable-generator*)
-               (create-new-handle-var *variable-generator*))
-      :index (if (is-valid-fs index-fs)
-               (create-variable index-fs *variable-generator*))
-      :liszt (nreverse (construct-liszt 
-                        liszt-fs nil *variable-generator*))
-      :h-cons (nreverse (construct-h-cons 
-                         h-cons-fs nil *variable-generator*))))))
+    (setf *variable-generator* existing-variable-generator)
+    (when *restart-variable-generator* (init-variable-generator)))
+  (unless existing-variable-generator 
+    (setf *named-nodes* nil)
+    (setf *all-nodes* nil))
+  (let* ((top-h-fs (when *psoa-top-h-path*
+                     (path-value fs *psoa-top-h-path*)))
+         (index-fs (path-value fs *psoa-index-path*))
+         (liszt-fs (path-value fs *psoa-liszt-path*))
+         (h-cons-fs (when *psoa-rh-cons-path*
+                      (path-value fs *psoa-rh-cons-path*)))
+         (psoa
+          (unfill-mrs
+           (make-psoa
+            :top-h (if top-h-fs
+                     (create-variable top-h-fs *variable-generator*)
+                     (create-new-handle-var *variable-generator*))
+            :index (when (is-valid-fs index-fs)
+                     (create-variable index-fs *variable-generator*))
+            :liszt (nreverse (construct-liszt 
+                              liszt-fs nil *variable-generator*))
+            :h-cons (nreverse (construct-h-cons 
+                               h-cons-fs nil *variable-generator*))))))
+    (push (cons fs psoa) *all-nodes*)
+    psoa))
 
 
 ;;; ***************************************************
@@ -178,6 +184,7 @@ duplicate variables")
                                               :extra extra 
                                               :id idnumber)))
           (push (cons fs variable-identifier) *named-nodes*)
+          (push (cons fs variable-identifier) *all-nodes*)
           variable-identifier)))))
 
 (defun create-indexing-variable (fs)
@@ -259,28 +266,29 @@ duplicate variables")
 (defun create-rel-struct (fs variable-generator indexing-p)
   ;;; indexing-p is set if this is being called when we're indexing lexical
   ;;; entries
-  (if (is-valid-fs fs)
-      (let* ((handel-pair (if (not indexing-p)
-                              (extract-handel-pair-from-rel-fs fs)))
-             (handle-var (if handel-pair
-                             (create-variable
-                              (cdr handel-pair)
-                              variable-generator)))
-             (pred (or (lookup-mtr-node 
-                        (extract-pred-from-rel-fs fs :rawp t))
-                       (create-type (extract-pred-from-rel-fs fs))))
-             (fvps (extract-fvps-from-rel-fs fs variable-generator indexing-p))
-             (parameter-strings (get-fvps-parameter-strings fvps))
-	     (cfrom (extract-cfrom-from-rel-fs fs))
-	     (cto (extract-cto-from-rel-fs fs)))
-        (unless (member pred *dummy-relations*)
-          (make-char-rel 
-	            :pred pred
-                    :handel handle-var
-                    :flist fvps
-                    :parameter-strings parameter-strings
-		    :cfrom cfrom
-		    :cto cto)))))
+  (when (is-valid-fs fs)
+    (let* ((handel-pair (unless indexing-p
+                          (extract-handel-pair-from-rel-fs fs)))
+           (handle-var (when handel-pair
+                         (create-variable 
+                          (cdr handel-pair) variable-generator)))
+           (pred (or (lookup-mtr-node 
+                      (extract-pred-from-rel-fs fs :rawp t))
+                     (create-type (extract-pred-from-rel-fs fs))))
+           (fvps (extract-fvps-from-rel-fs fs variable-generator indexing-p))
+           (parameter-strings (get-fvps-parameter-strings fvps))
+           (cfrom (extract-cfrom-from-rel-fs fs))
+           (cto (extract-cto-from-rel-fs fs)))
+      (unless (member pred *dummy-relations*)
+        (let ((ep (make-char-rel 
+                   :pred pred
+                   :handel handle-var
+                   :flist fvps
+                   :parameter-strings parameter-strings
+                   :cfrom cfrom
+                   :cto cto)))
+          (push (cons fs ep) *all-nodes*)
+          ep)))))
 ;;; FIX?? flist may be wrong way round
 
 (defun get-fvps-parameter-strings (fvps)
