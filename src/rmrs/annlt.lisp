@@ -78,7 +78,10 @@
  (clear-rule-record)
  (read-rmrs-grammar "~aac10/lingo/newlkb/src/rmrs/annlt-test/gram14.1.rmrs")
  (read-rmrs-tag-templates "~aac10/lingo/newlkb/src/rmrs/annlt-test/lex14.1.rmrs")
- (let* ((ifiles (directory "~aac10/lingo/newlkb/src/rmrs/annlt-test/jan28/*"))
+ (let* ((ifiles
+         ;;; (directory "~aac10/lingo/newlkb/src/rmrs/annlt-test/jan28/*"))
+         ;;; (directory "/local/scratch/sht25/parses/*"))
+         (directory "/local/scratch/aac10/parses/*"))
         (ofiles (directory "/local/scratch/aac10/trec8qa/rmrs/*"))
         (ofile-qnos (loop for ofile in ofiles
                         collect
@@ -98,7 +101,8 @@
               (excl::shell 
                (concatenate 
                    'string "gunzip -c < " 
-                   "~aac10/lingo/newlkb/src/rmrs/annlt-test/jan28/"
+                   ;;; "/local/scratch/sht25/parses/"
+                   "/local/scratch/aac10/parses/"
                    namestring "> /tmp/pfile"))
               (let ((new-file (concatenate 'string 
                                 "/local/scratch/aac10/trec8qa/rmrs/"
@@ -109,20 +113,75 @@
                                 "top_docs."
                                 qno "." "errors")))
                 (rmrs-from-xmlified-file "/tmp/pfile" 
-                                "/tmp/rfile" t)
+                                         "/tmp/rfile" t)
+                (excl::shell "rm /tmp/pfile")
                 (when (probe-file "/tmp/rfile")
                   ;; change the dtd to the right thing
                   (excl::shell 
                    (concatenate 'string  
-                     "/homes/sht25/Clconversion/chg_dtd.p \"/homes/sht25/QA/unified.dtd\" \"/usr/groups/mphil/qa03/dtd/analysis.dtd\" CORPUS CORPUS /tmp/rfile > " new-file))
+                     "/homes/sht25/Clconversion/chg_dtd.p \"/homes/sht25/QA/unified\" \"/usr/groups/mphil/qa03/dtd/analysis\" CORPUS CORPUS /tmp/rfile > " new-file))
                   (excl::shell 
                    (concatenate 'string
                      "xmlnorm -Vs " new-file " 2>| " err-file))
                   ;;; note we're redirecting std err
-                  (excl::shell "rm /tmp/pfile")
-                  (excl::shell "rm /tmp/rfile")
                   (excl::shell (concatenate 'string "gzip " 
-                                            new-file)))))))))
+                                            new-file)))
+                (excl::shell "rm /tmp/rfile")))))))
+
+(defun process-rasp-specific-file (ifile)
+ (clear-rule-record)
+ (read-rmrs-grammar "~aac10/lingo/newlkb/src/rmrs/annlt-test/gram14.1.rmrs")
+ (read-rmrs-tag-templates "~aac10/lingo/newlkb/src/rmrs/annlt-test/lex14.1.rmrs")
+ (let* ((namestring (file-namestring ifile))
+        (qno (extract-qa-file-identifier namestring)))
+   (format t "~%Processing file ~A" namestring)
+   (when
+       (equal (subseq namestring 
+                           (- (length namestring) 2))
+                   "gz")
+     (excl::shell 
+      (concatenate 
+          'string "gunzip -c < " 
+          "/local/scratch/aac10/parses/"
+          namestring "> /tmp/pfile"))
+     (let ((new-file (concatenate 'string 
+                       "/local/scratch/aac10/trec8qa/rmrs/"
+                       "top_docs."
+                       qno "." "rmrs")))
+       (rmrs-from-xmlified-file "/tmp/pfile" 
+                                "/tmp/rfile" t)
+       (excl::shell "rm /tmp/pfile")
+       (when (probe-file "/tmp/rfile")
+         ;; change the dtd to the right thing
+         (excl::shell 
+          (concatenate 'string  
+            "/homes/sht25/Clconversion/chg_dtd.p \"/homes/sht25/QA/unified\" \"/usr/groups/mphil/qa03/dtd/analysis\" CORPUS CORPUS /tmp/rfile > " new-file)))
+       (excl::shell "rm /tmp/rfile")))))
+
+(defun revalidate-rmrs-files nil
+  (let* ((ifiles
+          (directory "/local/scratch/aac10/trec8qa/rmrs/*")))
+    (loop for new-file in ifiles
+        do
+          (let* ((namestring (file-namestring new-file))
+                 (qno (extract-qa-file-identifier namestring))
+                 (err-file2 (concatenate 'string 
+                                "/local/scratch/aac10/trec8qa/rmrs-errs2/" 
+                                "top_docs."
+                                qno "." "errors")))
+             (when (equal (subseq namestring 
+                                  (- (length namestring) 2))
+                          "gz")
+               (excl::shell 
+               (concatenate 
+                   'string "gunzip -c < "
+                   "/local/scratch/aac10/trec8qa/rmrs/"
+                   namestring "> /tmp/tfile"))
+               (excl::shell 
+                 (concatenate 'string
+                   "xmlnorm -Vs /tmp/tfile 2>| " err-file2))
+                  ;;; note we're redirecting std err
+               (excl::shell "rm /tmp/tfile"))))))
 
 (defun process-question-file nil
  (read-rmrs-grammar "~aac10/lingo/newlkb/src/rmrs/annlt-test/gram14.1.rmrs")
@@ -210,7 +269,7 @@
   ;;; allow for arbitrary xml stuff in between what we care about
   ;;; if xml-p is nil, this is a noop
   ;;; otherwise we scan forward looking for the first
-  ;;; > followed by ( - maybe with whitespace
+  ;;; P> followed by ( - maybe with whitespace
   (if xml-p
       (let* ((stuff nil)
              (next-char (peek-char t istream nil nil)))
@@ -218,27 +277,30 @@
             nil
           (progn 
             (loop
-              (let ((input-char (read-char istream nil nil)))
-                (unless input-char (return))
-                (push input-char stuff)
-                (when (eql input-char #\>)
-                  (let ((paren-test
-                         (loop (let ((input-char-inner 
-                                      (peek-char nil istream nil nil)))
-                                 (cond ((null input-char-inner) (return :eof))
-                                       ((eql input-char-inner #\()
-                                        (return :read))
-                                       ((lkb::whitespacep input-char-inner)
-                                        (read-char istream nil nil)
-                                        (push input-char-inner stuff))
-                                       (t (read-char istream nil nil)
-                                          (push input-char-inner stuff)
-                                          (return nil)))))))
-                         (if (or (eql paren-test :read)
-                            (eql paren-test :eof))
-                        (return))))))
-            (coerce (nreverse stuff) 'string))))
-          ))
+              (let ((input-char1 (read-char istream nil nil)))
+                (unless input-char1 (return))
+                (push input-char1 stuff)
+                (when (eql input-char1 #\P)
+                  (let ((input-char2 (read-char istream nil nil)))
+                    (push input-char2 stuff)
+                    (when (eql input-char2 #\>)
+                      (let ((paren-test
+                             (loop (let ((input-char-inner 
+                                          (peek-char nil istream nil nil)))
+                                     (cond ((null input-char-inner) (return :eof))
+                                           ((eql input-char-inner #\()
+                                            (return :read))
+                                           ((lkb::whitespacep input-char-inner)
+                                            (read-char istream nil nil)
+                                            (push input-char-inner stuff))
+                                           (t (read-char istream nil nil)
+                                              (push input-char-inner stuff)
+                                              (return nil)))))))
+                        (if (or (eql paren-test :read)
+                                (eql paren-test :eof))
+                            (return))))))))
+              (coerce (nreverse stuff) 'string))))
+        ))
 
 (defun output-rmrs-file-markup (ostream markup)
   (when markup

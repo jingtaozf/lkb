@@ -84,7 +84,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
          (main-arg (fvpair-value (car flist)))
          (label (rel-handel rel))
          (new-label (if (member (var-id label) labels) ;; conjunction
-                        (create-new-rmrs-var *rmrs-variable-generator* :handle)
+                        (create-new-rmrs-var :handle *rmrs-variable-generator*)
                         label))
          (rmrs-args
           (if (cdr flist)

@@ -1,7 +1,5 @@
 (in-package :mrs)
 
-(defparameter *rule-instructions* nil)
-
 (defparameter *valid-hook-elements* '("INDEX" "LABEL"))
 
 ;;; Reading

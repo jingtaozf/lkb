@@ -371,7 +371,9 @@ goes to
 
 (defun initialize-rmrs-variables nil
   (if *restart-variable-generator*
-        (init-rmrs-variable-generator)))
+      (init-rmrs-variable-generator)))
+
+(init-rmrs-variable-generator)
 
 (defun create-new-rmrs-var (type gen)
   ;;; constructs a new variable of a given type
@@ -489,7 +491,8 @@ goes to
 	       (indices-label hook))
 	      (t nil)))))
 
-	
+(defparameter *rule-instructions* nil)
+
 ;;; rule lookup
 
 (defun lookup-instruction (rule-name)
