@@ -490,10 +490,10 @@
          (rule (and edge (edge-rule edge)))
          (dtrs (mapcar #'rebuild-edge (get edge-symbol 'daughters))))
     (if edge
-	(setf (get edge-symbol 'edge-fs)
-	  (if (rule-p rule)
-	      (reapply-rule rule dtrs (edge-orth-tdfs edge))
-	    (copy-tdfs-completely (edge-dag edge))))
+      (setf (get edge-symbol 'edge-fs)
+        (if (rule-p rule)
+          (reapply-rule rule dtrs (edge-orth-tdfs edge))
+          (and (edge-dag edge) (copy-tdfs-completely (edge-dag edge)))))
       (setf (get edge-symbol 'edge-fs) (get (car dtrs) 'edge-fs))))
   edge-symbol)
 
@@ -527,7 +527,7 @@
     (when fs (setf (get edge-symbol 'edge-fs) (copy-tdfs-elements fs)))
     ;;
     ;; when edge has no DAG itself (typically because it was reconstructed from
-    ;; a recorded derivation in Redwoods land), record the DAG that would gone
+    ;; a recorded derivation in Redwoods land), record the DAG that would go
     ;; with this edge during parsing; however, no need to restrict the full DAG
     ;; (for strict parsing compliance), as no-one should ever be able to look
     ;; at this edge directly: all viewing (in the current LKB at least :-) is
@@ -700,10 +700,14 @@
                           for edge in children
                           maximize (depth edge))))))
            (label (edge)
-             (if (rule-p (edge-rule edge))
+             (cond 
+              ((rule-p (edge-rule edge))
                (let ((foo (string (rule-id (edge-rule edge)))))
-                 (or (inflectional-rule-p foo) foo))
-               (string (first (edge-lex-ids edge)))))
+                 (or (inflectional-rule-p foo) foo)))
+              ((and (null (edge-rule edge)) (edge-category edge))
+               (string (edge-category edge)))
+              (t
+               (string (first (edge-lex-ids edge))))))
            (derivation (edge &optional recursivep)
              (if (edge-p edge)
                (let* ((root (label edge))
@@ -738,7 +742,7 @@
                  (list (get tree 'label) width leafp comment))
                width)))
     (let* ((depth (depth edge))
-           (width (- (length (edge-lex-ids edge)) 1))
+           (width (- (length (edge-leaves edge)) 1))
            (cache (make-array (list (+ depth 1) (+ width 1))))
            (tree (or tree (make-new-parse-tree edge 1 t))))
       (index tree cache 0 0)

@@ -16,7 +16,7 @@
 
 (defun find-discriminants (edges &key (mode *tree-discriminants-mode*))
   
-  (let* ((n (+ (edge-to (first edges)) 1))
+  (let* ((n (if (edge-p (first edges)) (+ (edge-to (first edges)) 1) 0))
          (*tree-discriminants-chart* (make-array (list n n)))
          %discriminants%)
     (declare (special %discriminants%))
@@ -90,7 +90,7 @@
                       (when (char= (char keyb 0) #\_)
                         (string< keya keyb))))))))))
 
-(defun extract-discriminants-from-edge (edge top &key mode)
+(defun extract-discriminants-from-edge (edge top &key (mode :classic))
   
   (if (eq mode :classic)
     (let* ((tdfs (edge-dag edge))
@@ -128,7 +128,10 @@
         ;; all other nodes of the derivation: record rule identifier.
         ;;
         (add-discriminant 
-         (symbol-name (rule-id rule)) yield :constituent top start end)))
+         (symbol-name (rule-id rule)) yield :constituent top start end))
+       ((and (null rule) (edge-category edge))
+        (add-discriminant 
+         (string (edge-category edge)) yield :constituent top start end)))
       (loop
           for child in (edge-children edge)
           do (extract-discriminants-from-edge child top :mode mode))

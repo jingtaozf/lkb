@@ -95,7 +95,9 @@
    "#[Edge # ~d: `~(~a~)' <~{~a~^ ~}>]"
    (edge-id instance)
    (let ((rule (edge-rule instance)))
-     (if (stringp rule) rule (rule-id rule)))
+     (if rule 
+       (if (stringp rule) rule (rule-id rule)) 
+       (edge-category instance)))
    (loop 
        for child in (edge-children instance)
        collect (edge-id child))))

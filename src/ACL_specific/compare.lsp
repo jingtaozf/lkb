@@ -23,7 +23,7 @@
 
 (def-lkb-parameter *tree-comparison-threshold* 10000)
 
-(def-lkb-parameter *tree-display-threshold* 20)
+(def-lkb-parameter *tree-display-threshold* 10)
 
 ;;;
 ;;; switch to control auto-advance in update mode: set to non-nil to enable
