@@ -1417,9 +1417,3 @@
    mod-index ; 0-based index to modifier under an intersective rule instantiation
    )
 
-;;; utility - display parse tree in bracketed form
-
-(defun print-parse-tty (stream)
-  (loop for edge in *parse-record*
-      do
-        (pprint (parse-tree-structure edge) stream)))
