@@ -31,7 +31,9 @@
 #  include <malloc.h>
 #endif
 
-#define TSDB_VERSION "0.5"
+#define TSDB_VERSION "0.6"
+#define TSDB_REVISION "$Revision$"
+#define TSDB_REVISION_DATE "$Date$"
 
 #define TSDB_DEFAULT_STREAM stdout
 #define TSDB_ERROR_STREAM stderr
@@ -46,9 +48,11 @@
 #define TSDB_STATUS 128
 #define TSDB_LOCK 256
 #define TSDB_BACKUP_DATA_FILES 512
+#define TSDB_PROLOG_ESCAPE_OUTPUT 1024
+#define TSDB_LISP_ESCAPE_OUTPUT 2048
+#define TSDB_QUIET 8192
 #ifdef ALEP
-#  define TSDB_TX_OUTPUT 1024
-#  define TSDB_PROLOG_ESCAPE_OUTPUT 2048
+#  define TSDB_TX_OUTPUT 4096
 #endif
 
 #ifdef ALEP
@@ -58,7 +62,10 @@
       | TSDB_CLIENT_MODE \
       | TSDB_BACKUP_DATA_FILES)
 #else
-#  define TSDB_INITIAL_STATUS (TSDB_UNIQUELY_PROJECT)
+#  define TSDB_INITIAL_STATUS \
+     (TSDB_UNIQUELY_PROJECT \
+      | TSDB_IMPLICIT_COMMIT \
+      | TSDB_BACKUP_DATA_FILES)
 #endif
 
 #ifdef ALEP
@@ -127,6 +134,8 @@
 #define TSDB_IMPLICIT_COMMIT_OPTION 24
 #define TSDB_STATUS_OPTION 25
 #define TSDB_STANDALONE_OPTION 26
+#define TSDB_STRING_ESCAPE_OPTION 27
+#define TSDB_QUIET_OPTION 28
 #ifdef ALEP
 #  define TSDB_TX_OPTION 255
 #endif
@@ -151,7 +160,7 @@
 #endif
 
 #ifndef TSDB_RELATIONS_FILE
-#  ifdef ALEP
+#  if 1
 #    define TSDB_RELATIONS_FILE "relations"
 #  else
 #    define TSDB_RELATIONS_FILE "etc/relations"
@@ -159,7 +168,7 @@
 #endif
 
 #ifndef TSDB_DATA_PATH
-#  ifdef ALEP
+#  if 1
 #    define TSDB_DATA_PATH ""
 #  else
 #    define TSDB_DATA_PATH "german/"
@@ -226,6 +235,10 @@
 
 #ifndef TSDB_SERVER_PORT
 #  define TSDB_SERVER_PORT 4711
+#endif
+
+#ifndef TSDB_SERVER_CONNECT_TIMEOUT
+#  define TSDB_SERVER_CONNECT_TIMEOUT 10
 #endif
 
 #ifndef TSDB_SERVER_QUEUE_LENGTH
@@ -357,8 +370,8 @@ typedef struct tsdb {
 #endif
 
   extern char tsdb_version[];
-  extern char tsdb_revision[];
-  extern char tsdb_revision_date[];
+  extern char *tsdb_revision;
+  extern char *tsdb_revision_date;
 #endif
 
 void tsdb_parse_options(int, char **);
@@ -462,7 +475,10 @@ char *tsdb_user(void);
 char *tsdb_canonical_date(char *);
 int *tsdb_parse_date(char *);
 char *tsdb_normalize_string(char *);
+char *tsdb_denormalize_string(char *);
+int tsdb_quotes_are_balanced(char *);
 char *tsdb_prolog_escape_string(char *);
+char *tsdb_lisp_escape_string(char *);
 
 Tsdb_node **tsdb_linearize_conditions(Tsdb_node *);
 
