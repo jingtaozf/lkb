@@ -316,6 +316,7 @@
        (:file "basemrs")                ; MRS structures and printing 
        (:file "mrsoutput")              ; constructing MRS from parse result  
        (:file "mrscorpus")              ; checking equality etc
+       (:file "algebra")                ; semantic algebra for composition
        (:file "interface")))
 
      ;; following two files needed for scoping - can be excluded
@@ -489,5 +490,6 @@
        (:file "clim")
        (:file "semi")
        (:file "fragments")
-       #+:multiprocessing
+       #+(and :multiprocessing (not :mswindows))
+	;; looks Linux specific and doesn't compile on Windows
        (:file "lm")))))
