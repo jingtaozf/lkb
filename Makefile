@@ -3,7 +3,7 @@ WROOT = m:/src
 DATE = `date "+%Y-%m-%d"`
 TARGET = /usr/local/apache/htdocs/lingo/ftp
  
-LINKS = lkb_data.tgz lkb_linux_ml.tgz lkb_linux_om.tgz lkb_solaris.tgz \
+LINKS = lkb_data.tgz lkb_linux_ml.tgz lkb_linux.tgz lkb_solaris.tgz \
         lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
         itsdb_data.tgz itsdb_documentation.tgz itsdb_libraries.tgz \
         itsdb_linux.tgz itsdb_solaris.tgz itsdb_source.tgz \
@@ -33,7 +33,7 @@ update:
 	) 2>&1 | ${TEE} ${ROOT}/lkb/log/build
 	( \
 	  cd ${ROOT}/lkb/log; \
-          mail -s "automated build output" lkb-bugs@csli.stanford.edu \
+          mail -s "automated LKB build (${DATE})" oe@csli.stanford.edu \
             < build; \
 	  cvs commit -m "" build; \
 	)
@@ -94,20 +94,34 @@ lkb_data:
 
 lkb_binaries: lkb_linux lkb_solaris
 
-lkb_linux: lkb_linux_om lkb_linux_ml
+lkb_linux: lkb_linux
 
-lkb_linux_om:
+lkb_linux:
 	${RM} -f ${ROOT}/.yes;
-	rsh lineara "cd ${ROOT}/lkb && make lkb_linux_om@lineara";
+#	rsh lineara "cd ${ROOT}/lkb && make lkb_linux@lineara";
+	rsh cypriot "cd ${ROOT}/lkb && make lkb_linux@remote";
 	( \
 	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
 	  cd ${ROOT}/lkb; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_linux_om.tgz \
+	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_linux.tgz \
               --exclude=".nfs*" \
 	      linux; \
 	)
 	  
-lkb_linux_om@lineara:
+lkb_linux@remote:
+	( \
+	  echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
+	  echo "(load \"${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
+	  echo "(pushnew :lkb *features*)"; \
+	  echo "(pushnew :mrs *features*)"; \
+	  echo "(setf make::*building-image-p* t)"; \
+	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
+	  echo "(compile-system \"tsdb\" :force t)"; \
+	  echo "(excl:exit)"; \
+	) | ( cd /lingo/local/acl; \
+              ACL_LOCALE=C ./alisp -qq && touch ${ROOT}/.yes; )
+
+lkb_linux@lineara:
 	( \
 	  echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
 	  echo "(load \"${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
@@ -118,24 +132,6 @@ lkb_linux_om@lineara:
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
 	) | ( cd /usr/local/nacl; ./clim -qq && touch ${ROOT}/.yes; )
-
-lkb_linux_ml:
-	${RM} -f ${ROOT}/.yes;
-	rsh lineara "cd ${ROOT}/lkb && make lkb_linux_ml@lineara;
-	( \
-	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
-	  cd ${ROOT}/lkb; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_linux_ml.tgz \
-              --exclude=".nfs*" \
-	      linux; \
-	)
-	  
-lkb_linux_ml@lineara:
-	( \
-	  echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
-	  echo "(load \"${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
-	  echo "(excl:exit)"; \
-	) | ( cd /usr/local/macl; ./clim -qq && touch ${ROOT}/.yes; )
 
 lkb_solaris:
 	${RM} -f ${ROOT}/.yes;
