@@ -34,6 +34,7 @@
    '(special *edge-id* *safe-not-to-copy-p* *orth-path* *toptype*
        *start-symbol* *debugging* *substantive-roots-p*
        mrs::*initial-semantics-path* mrs::*psoa-liszt-path*
+       mrs::*liszt-first-path* mrs::*liszt-rest-path* mrs::*rel-name-path*
        mrs::*null-semantics-found-items*))
 
 
@@ -51,7 +52,11 @@
 (defun gen-chart-intersection-p (lst1 lst2)
    (member-if #'(lambda (x) (member x lst1 :test #'eq)) lst2))
 
+(defun gen-chart-subset-p (lst1 lst2)
+   ;; is lst1 a (not necessarily strict) subset of lst2?
+   (every #'(lambda (x) (member x lst2 :test #'eq)) lst1))
 
+   
 ;;;
 
 (defun generate-from-mrs (input-sem)
@@ -67,8 +72,10 @@
           ))
       (if filtered
          (chart-generate input-sem (append filtered empty))
-         (format t "~%No lexical entries could be found from MRS relations - has ~
-                    function index-for-generator been run yet?"))))
+         (progn
+            (format t "~%Some lexical entries could not be found from MRS relations - ~
+                       has function index-for-generator been run yet?")
+            nil))))
 
 
 ;;; generate from an input MRS and a bag of lexical entry FSs
@@ -141,18 +148,16 @@
          (start-symbols
             (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
       (dolist (e (gen-chart-retrieve-with-index *toptype* nil))
-         ;; process has so far checked that we have not generated any relation more
-         ;; than once - now check that we have generated them all
+         ;; process has so far checked that we have not generated any relation that
+         ;; is not in input semantics - now check that we have generated them all
          (when (eql (length (gen-chart-edge-lex-used e))
-                    (1- (length (mrs::psoa-liszt input-sem)))) ; *** prpstn_rel
+                  (1- (length (mrs::psoa-liszt input-sem)))) ; *** prpstn_rel / int_rel
             (dolist
                (new
                   (if *substantive-roots-p*
                      (gen-chart-root-edges e start-symbols)
                      (gen-filter-root-edges e start-symbols)))
                (when (gen-chart-check-complete new input-sem)
-                  (gen-chart-add-with-index new
-                     (gen-chart-dag-index (tdfs-indef (gen-chart-edge-dag new))))
                   (push new res)))))
       (nreverse res)))
 
@@ -192,6 +197,8 @@
                                      :rule-number 'root
                                      :children (list edge)
                                      :leaves (gen-chart-edge-leaves edge))))
+                      (gen-chart-add-with-index new-edge
+                         (gen-chart-dag-index (tdfs-indef (gen-chart-edge-dag new-edge))))
                       new-edge)))))))
 
 (defun gen-filter-root-edges (edge start-symbols)
@@ -251,9 +258,52 @@
       (position (car (rule-daughters-apply-order rule)) (cdr (rule-order rule)))))
 
 
+;;; Extract list of relations in semantic portion of an edge FS
+
+(defun gen-chart-relation-names (edge)
+   (let ((sem-fs
+          (existing-dag-at-end-of (tdfs-indef (gen-chart-edge-dag edge))
+             (append mrs::*initial-semantics-path* mrs::*psoa-liszt-path*))))
+      (gen-chart-relation-names1 sem-fs nil)))
+
+(defun gen-chart-relation-names1 (fs rels-list) ; c.f. mrs::construct-liszt
+  (if (mrs::is-valid-fs fs)
+     (let ((label-list (mrs::fs-arcs fs)))
+        (if label-list
+           (let ((first-part (assoc (car mrs::*liszt-first-path*)
+                                       label-list))
+                 (rest-part (assoc (car mrs::*liszt-rest-path*)
+                                      label-list)))
+               (if (and first-part rest-part)
+                  (let* ((fs (cdr first-part))
+                         (label-list (mrs::fs-arcs fs))
+                         (pred (assoc (car mrs::*rel-name-path*) label-list)))
+                      (push
+                         (mrs::create-type
+                            (if pred (mrs::fs-type (rest pred)) (mrs::fs-type fs)))
+                         rels-list)
+                      (gen-chart-relation-names1 (cdr rest-part) rels-list))
+                  rels-list))
+            rels-list))))
+
+
 ;;; Core control functions. Processing inactive and active edges
 
 (defun gen-chart-add-inactive (edge input-sem)
+   ;; check that we haven't generated any relation that is not in input semantics
+   ;; assume that once a relation has been put in liszt it won't be removed. This
+   ;; filter is needed as well as less expensive one that lexical items are used
+   ;; only once since some rules can introduce semantics when applied to null
+   ;; semantics lexical items
+   ;; *** a stronger and more expensive filter would also check indices for
+   ;; compatibility
+   (when (not (gen-chart-subset-p (gen-chart-relation-names edge)
+                 (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem))))
+      (when *gen-filter-debug*
+         (format t "~&Filtered out candidate inactive edge covering ~A ~
+                    with relations ~(~A~) that are not a subset of input semantics"
+             (gen-chart-edge-leaves edge) (gen-chart-relation-names edge)))
+      (return-from gen-chart-add-inactive nil))
    (let
       ((index
           (gen-chart-dag-index (tdfs-indef (gen-chart-edge-dag edge)))))
@@ -301,7 +351,7 @@
 
 (defun gen-chart-test-active (inact act input-sem)
    ;; can extend active edge with inactive? First check to make sure new edge
-   ;; would not generate any relation more than once
+   ;; would not use any initial lexical item more than once
    (when (not (gen-chart-intersection-p (gen-chart-edge-lex-used act)
                  (gen-chart-edge-lex-used inact)))
       (when *debugging*
@@ -364,6 +414,8 @@
       ;; so carry on processing it as an inactive edge
       ;; Check first that we have by now generated all relations from input
       ;; spec that refer to any indices that are internal to the constituent
+      ;; Doing this on creation of active edges seems not to be any
+      ;; more effective at filtering, and of course takes much more time
       (let
          ((dag (gen-chart-edge-dag act)))
          (unless (gen-chart-inaccessible-needed-p
@@ -524,7 +576,7 @@
    (format t "~&------~%")
    (dolist (entry *gen-chart*)
       (format t "Vertex ~(~A~):~%" (car entry))
-      (dolist (e (cdr entry))
+      (dolist (e (reverse (cdr entry))) ; to get in chronological order
          (format t "[~A] ~A~A ~30,5T=> (~{~:A~^ ~})  [~{~A~^ ~}]~%"
             (gen-chart-edge-id e)
             (gen-chart-edge-rule-number e)
