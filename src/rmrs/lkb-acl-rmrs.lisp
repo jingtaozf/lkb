@@ -355,7 +355,7 @@ cases
       (lkb::show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
                                          comparison-record sentence)))
   #-:tsdb  
-  (declare (ignore egnum))
+  (declare (ignore record))
   #-:tsdb 
   nil)
 
