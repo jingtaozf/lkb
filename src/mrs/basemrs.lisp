@@ -1359,8 +1359,14 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
           (when (eql next-char #\]) 
             (read-char istream)
             (return))
-          (push (read-mrs-featpair istream)
-                featpairs)))
+          (let ((fvp (read-mrs-featpair istream)))
+            ;;
+            ;; _fix_me_
+            ;; this is hacky, presumably these should not have been in the EP
+            ;; in the first place.                              (1-jul-04; oe)
+            ;;
+            (unless (member (fvpair-feature fvp) *ignored-sem-features*)
+              (push fvp featpairs)))))
       (make-rel :pred relpred
                 :handel hvar
                 :flist (sort featpairs #'feat-sort-func)))))
