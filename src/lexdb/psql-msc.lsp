@@ -245,7 +245,9 @@
    ((equal str "")
     "")
    ((eq (char str 0) #\')
-    (format nil "''~a" (sql-embedded-text-aux (subseq str 1))))
+    (format nil "\\'~a" (sql-embedded-text-aux (subseq str 1))))
+   ((eq (char str 0) #\\)
+    (format nil "\\\\~a" (sql-embedded-text-aux (subseq str 1))))
    (t
     (format nil "~a~a" (char str 0) (sql-embedded-text-aux (subseq str 1))))))
 

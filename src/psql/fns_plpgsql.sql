@@ -1,3 +1,16 @@
+CREATE OR REPLACE FUNCTION public.complete(text,text) RETURNS SETOF text AS '
+DECLARE
+	x RECORD;
+	sql_str text;
+BEGIN
+	sql_str := ''SELECT DISTINCT '' || $1 || '' AS field FROM current_grammar WHERE '' || $1 || '' ILIKE '' || $2 || '' || ''''%'''' '';
+	FOR x IN EXECUTE sql_str LOOP 
+     	  RETURN NEXT x.field;
+ 	END LOOP;
+	RETURN;
+END;
+' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION public.lookup_general(text,text) RETURNS SETOF text AS '
 DECLARE
 	x RECORD;

@@ -57,3 +57,10 @@
 	    (fn-get-records *psql-lexicon* 
 			    ''lookup-general-null
 			    (symb-2-str field-kw))))))
+
+(defmethod complete ((lexicon psql-lex-database) field-kw val-str)
+  (mapcar 'cdar 
+	  (fn-get-records *psql-lexicon* 
+			  ''complete 
+			  (symb-2-str field-kw)
+			  val-str)))

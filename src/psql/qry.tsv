@@ -2,6 +2,7 @@ next-version	1	\nSELECT next_version($0); \n
 orthography-set	0	SELECT orthography_set()
 lex-id-set	0	SELECT lex_id_set()
 lookup-word	1	SELECT lookup_word($0)
+complete	2	SELECT * FROM complete($0,$1)
 lookup-general	2	SELECT * FROM lookup_general($0,$1)
 lookup-general-null	1	SELECT * FROM lookup_general_null($0)
 retrieve-entries-by-orthkey	2	SELECT $0 FROM current_grammar WHERE orthkey LIKE $1;

@@ -1,5 +1,7 @@
 next-version	0	like-text
 lookup-word	0	like-text
+complete	0	e-select-list
+complete	1	e-like-text
 lookup-general	0	e-select-list
 lookup-general	1	e-like-text
 lookup-general-null	0	e-select-list

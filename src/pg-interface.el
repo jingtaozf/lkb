@@ -1,6 +1,13 @@
 ;;; Copyright (c) 2003-2004 Benjamin Waldron
 ;;; see licence.txt for conditions
 
+;; Portions copyright (c) 1996, 1997, 1999, 2000, 2001 Free Software Foundation, Inc.
+
+;; Free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 2, or (at your option)
+;; any later version.
+
 ;;; Add a PG menu to the emacs menu bar
 
 (require 'widget)
@@ -8,15 +15,137 @@
 (eval-when-compile
   (require 'wid-edit))
 
+;; default widgets misbehave 
+;; due to markers defining :from and :to points
+(define-widget 'editable-field-fixed-size 'default
+  "An editable text field."
+  :convert-widget 'widget-value-convert-widget
+  :keymap widget-field-keymap
+  :format "%v"
+  :help-echo "M-TAB: complete field; RET: enter value"
+  :value ""
+  :prompt-internal 'widget-field-prompt-internal
+  :prompt-history 'widget-field-history
+  :prompt-value 'widget-field-prompt-value
+  :action 'widget-field-action
+  :validate 'widget-field-validate
+  :valid-regexp ""
+  :error "Field's value doesn't match allowed forms"
+  :value-create 'widget-field-value-create
+  :value-delete 'widget-field-value-delete
+  :value-get 'widget-field-value-get
+  :match 'widget-field-match
+  :create 'l:widget-fixed-size-create
+  :delete 'l:widget-fixed-size-delete)
+
+;; delete-region based on :from + :size
+;; instead of :to which is unreliable
+(defun l:widget-fixed-size-delete (widget)
+  "Remove widget from the buffer."
+  (let ((from (widget-get widget :from))
+	(to (widget-get widget :to))
+	(inactive-overlay (widget-get widget :inactive))
+	(button-overlay (widget-get widget :button-overlay))
+	(sample-overlay (widget-get widget :sample-overlay))
+	(doc-overlay (widget-get widget :doc-overlay))
+	(inhibit-modification-hooks t)
+	(inhibit-read-only t))
+    (widget-apply widget :value-delete)
+    (when inactive-overlay
+      (delete-overlay inactive-overlay))
+    (when button-overlay
+      (delete-overlay button-overlay))
+    (when sample-overlay
+      (delete-overlay sample-overlay))
+    (when doc-overlay
+      (delete-overlay doc-overlay))
+    (delete-region from (+ 1 from 
+			   (widget-get widget :size)))
+    (set-marker from nil)
+    (set-marker to nil))
+  (widget-clear-undo))
+
+;; marker type of :from should not be 'before-insertion (t)
+(defun l:widget-fixed-size-create (widget)
+  "Create WIDGET at point in the current buffer."
+  (widget-specify-insert
+   (let ((from (point))
+	 button-begin button-end
+	 sample-begin sample-end
+	 doc-begin doc-end
+	 value-pos)
+     (insert (widget-get widget :format))
+     (goto-char from)
+     ;; Parse escapes in format.
+     (while (re-search-forward "%\\(.\\)" nil t)
+       (let ((escape (char-after (match-beginning 1))))
+	 (delete-backward-char 2)
+	 (cond ((eq escape ?%)
+		(insert ?%))
+	       ((eq escape ?\[)
+		(setq button-begin (point))
+		(insert (widget-get-indirect widget :button-prefix)))
+	       ((eq escape ?\])
+		(insert (widget-get-indirect widget :button-suffix))
+		(setq button-end (point)))
+	       ((eq escape ?\{)
+		(setq sample-begin (point)))
+	       ((eq escape ?\})
+		(setq sample-end (point)))
+	       ((eq escape ?n)
+		(when (widget-get widget :indent)
+		  (insert ?\n)
+		  (insert-char ?  (widget-get widget :indent))))
+	       ((eq escape ?t)
+		(let ((image (widget-get widget :tag-glyph))
+		      (tag (widget-get widget :tag)))
+		  (cond (image
+			 (widget-image-insert widget (or tag "image") image))
+			(tag
+			 (insert tag))
+			(t
+			 (princ (widget-get widget :value)
+				(current-buffer))))))
+	       ((eq escape ?d)
+		(let ((doc (widget-get widget :doc)))
+		  (when doc
+		    (setq doc-begin (point))
+		    (insert doc)
+		    (while (eq (preceding-char) ?\n)
+		      (delete-backward-char 1))
+		    (insert ?\n)
+		    (setq doc-end (point)))))
+	       ((eq escape ?v)
+		(if (and button-begin (not button-end))
+		    (widget-apply widget :value-create)
+		  (setq value-pos (point))))
+	       (t
+		(widget-apply widget :format-handler escape)))))
+     ;; Specify button, sample, and doc, and insert value.
+     (and button-begin button-end
+	  (widget-specify-button widget button-begin button-end))
+     (and sample-begin sample-end
+	  (widget-specify-sample widget sample-begin sample-end))
+     (and doc-begin doc-end
+	  (widget-specify-doc widget doc-begin doc-end))
+     (when value-pos
+       (goto-char value-pos)
+       (widget-apply widget :value-create)))
+   (let ((from (point-min-marker))
+	 (to (point-max-marker)))
+     (set-marker-insertion-type from nil)
+     (set-marker-insertion-type to nil)
+     (widget-put widget :from from)
+     (widget-put widget :to to)))
+  (widget-clear-undo))
+
 ;;;
 ;;; globals
 ;;;
 
-(defvar *lexdb-completion-lists* nil)
 (defvar *lexdb-read-only* '(:version :userid :modstamp))
 (defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp))
-(defvar *lexdb-completion-features*  '(:type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars))
-(defvar *lexdb-minibuffer-max* 100)
+(defvar *lexdb-minibuffer-max* 80)
 (defvar *lexdb-active-id-ring* nil)
 
 ;;;
@@ -41,7 +170,11 @@
 
 ;; unusual return values cause system to hang...
 (defun cle-eval (str)
-	 (fi:eval-in-lisp "(let ((x %s)) (if (eval (cons 'or (mapcar #'(lambda (y) (typep x y)) '%s))) x '!!!unhandled-type!!!))" str *cle-handled-types*))
+  (condition-case descr
+	 (fi:eval-in-lisp "(let ((x %s)) (if (eval (cons 'or (mapcar #'(lambda (y) (typep x y)) '%s))) x '!!!unhandled-type!!!))" 
+			  str *cle-handled-types*)
+      (error (princ (format "%s" descr))
+	     (sit-for 4))))
 
 ;;;
 ;;; menu items
@@ -122,18 +255,11 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 ;;;
 
 (defun lexdb (id)
-  (interactive (list (read-from-minibuffer "Lex Id: " "")))
-  (unless (cle-eval-lexdb 'connection)
-    (if (not (cle-eval "(common-lisp-user::featurep :lkb)"))
-	(error "Please load the the LKB"))
-    (if (not (cle-eval "(common-lisp-user::featurep :psql)"))
-	(error "The running version of LKB is not :psql enabled"))
-    (princ "Please wait... (initializing LexDb) ")
-    (cle-initialize-psql))
+  (interactive (list (l:completing-read-dyn "Lex Id: ")))
   (lexdb-load-record id))
 
 (defun lexdb-load-record (id)
-  (interactive (list (read-from-minibuffer "Lex Id: " "")))
+  (interactive (list (l:completing-read-dyn "Lex Id: ")))
   (unless (cle-eval-lexdb 'connection)
     (error "no connection to LexDb"))
   (lexdb-load-record-aux id)
@@ -230,21 +356,20 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun lexdb-complete-field-aux2 (field-kw)
   (let* ((widget (cdr (assoc field-kw lexdb-fw-map)))
 	 (value-str (cut-white-spc (widget-value widget)))
-	 (start (- (point) (length value-str)))
-	 (completion-list (cdr (assoc field-kw *lexdb-completion-lists*)))
-	 (completion (try-completion value-str completion-list))
-	 (alternatives (all-completions value-str completion-list)))
-    (when (< (length alternatives) 10000)
-      (princ (mapconcat 'identity alternatives " ")))
+	 (alternatives (cle-complete field-kw value-str))
+	 (completion (try-completion value-str 
+				     (mapcar #'list
+					     alternatives))))
+    (l:princ-list alternatives)
     (cond
      ((null completion)
-      (beep)
-      )
+      (beep))
      ((stringp completion)
       (widget-value-set widget
 			completion)
-      (call-interactively 'lexdb-normalize-buffer)
-      (set-window-point (selected-window) (+ start (length completion)))))))
+      (widget-setup)
+      (set-window-point (selected-window) 
+			(+ (widget-get widget :from) (length completion)))))))
 
 (defun lexdb-lookup-aux nil
   (let* ((widget (widget-field-find (point))))
@@ -256,20 +381,25 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun lexdb-normalize-buffer-aux (buffer)
   (lexdb-update-record-from-buffer buffer)
-  (let ((record lexdb-record))
+  (let ((record lexdb-record)
+	(pos (point)))
     (kill-buffer buffer)
     (with-current-buffer (get-buffer-create buffer)
       (lexdb-mode)
       (setf lexdb-record record)
-      (lexdb-display-record buffer))))
+      (lexdb-display-record buffer)
+      (goto-char pos))))
 
 (defun lexdb-load-record-aux (id)
-  (let* ((buffer (format "%s" id)))
+  (let ((rec (lexdb-retrieve-record id)))
+    (if (equal id "") 
+	(setf id "?new?"))
+    (setf buffer (format "%s" id))
     (if (get-buffer buffer)
 	(kill-buffer buffer))
     (with-current-buffer (get-buffer-create buffer)
       (lexdb-mode)
-      (setf lexdb-record (lexdb-retrieve-record id))
+      (setf lexdb-record rec)
       (lexdb-display-record buffer))))
 
 (defun lexdb-display-record (buffer)
@@ -283,7 +413,8 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       (erase-buffer))
     (setf lexdb-fw-map 
 	  (remove-if-not #'cdr
-			 (mapcar #'l:fv-pair-2-fw-pair (l:prepare-record (car lexdb-record)))))
+			 (mapcar #'l:fv-pair-2-fw-pair 
+				 (l:prepare-record (car lexdb-record)))))
     (widget-setup)
     lexdb-fw-map))
    
@@ -298,45 +429,31 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	 (val (cdr fv-pair))
 	 (record-elt (assoc feat record)))
     (when val
-      (if (null record-elt) (error "feature not found in record"))
+      (if (null record-elt) 
+	  (error "feature not found in record"))
       (setf (cdr record-elt) val))))
       
-
-(defun lexdb-retrieve-completion-lists nil
-  ;;(terpri)
-  (princ "generating completion lists for ")
-  (setf *lexdb-completion-lists*
-	(mapcar #'(lambda (x)
-		    (princ (format "%s " x))
-		    ;;(terpri)
-		    (cons x
-			  (cle-get-completion-list x)))
-		*lexdb-completion-features*))
-  (beep))
-	  
 (defun lexdb-retrieve-record (id)
   (let ((fields (cle-retrieve-record-fields id))
 	(sizes (cle-retrieve-record-sizes)))
-    (unless (assoc :name fields)
+    (unless fields
       (princ (format "%s not found! " id))
-      (setf fields (push 
-		    (cons :name (l:val-str id))
-		    fields)))
-    (unless *lexdb-completion-lists*
-      (lexdb-retrieve-completion-lists))
+      (setf fields (l:make-empty-record id)))
     (setf lexdb-record
 	  (cons
 	   fields
 	   sizes))))
 
 (defun lexdb-store-record (record-in)
+  (if (equal (cdr (assoc :name record-in))
+	     "")
+      (error "cannot commit record with no NAME"))
   (push 
    (cons :orthkey (first (split-string (cdr (assoc :orthography record-in)))))
    record-in)
   (princ "please wait... ")
   ;;(terpri)
   (cle-store-record record-in)
-  (lexdb-update-completion-lists record-in)
   (cle-empty-psql-cache)
   (princ (format "record saved to lexdb %s. " (cle-dbname))))
 
@@ -346,24 +463,47 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (if ids
 	(setf *lexdb-active-id-ring* (make-ring ids)))))
 
-(defun lexdb-update-completion-lists (record)
-  (mapcar #'(lambda (x) (lexdb-update-completion-list (car x)
-						(cdr x)))
-	  record))
-
-(defun lexdb-update-completion-list (field-kw val-str)
-  (let ((completion-list (assoc field-kw *lexdb-completion-lists*)))
-    (when (and completion-list
-	       (not (string= val-str "")))
-      (setf completion-list
-	    (pushnew (list val-str)
-		     (cdr completion-list)
-		     :test #'equal)))))
-
-
 ;;;
 ;;; lexdb util fns
 ;;;
+
+(defun l:make-empty-record (id)
+  (let* ((record
+	  (mapcar #'(lambda (x) (cons x (make-string 0 ?x))) 
+		  *lexdb-record-features*))
+	 (name-elt (assoc :name record)))
+  (when name-elt
+    (setf (cdr name-elt)
+	  (l:val-str id)))
+  record))
+
+(defun l:minibuffer-complete-dyn (&rest rest)
+  (interactive)
+  (unless (and
+	   (cle-eval "(packagep :lkb)")
+	   (cle-eval-lexdb 'connection))
+    (if (not (cle-eval "(common-lisp-user::featurep :lkb)"))
+	(error "Please load the the LKB"))
+    (if (not (cle-eval "(common-lisp-user::featurep :psql)"))
+	(error "Running version of LKB is not :psql enabled"))
+    (princ "Initializing LexDB: please wait... ")
+    (cle-initialize-psql))
+  (let* ((val (buffer-substring (1+ (length prompt)) 
+				(1+ (length (buffer-string)))))
+	 (minibuffer-completion-table
+	  (mapcar #'list
+		  (cle-complete :name val))))
+    (apply 'minibuffer-complete rest)))
+
+(defun l:completing-read-dyn (prompt)
+  (make-variable-buffer-local 'prompt)
+  (let* ((map (copy-keymap minibuffer-local-completion-map))
+	 (minibuffer-local-completion-map 
+	  (and
+	   (define-key map "\t" 'l:minibuffer-complete-dyn)
+	   map)))
+    (completing-read prompt 
+		     '(("dog_n1") ("dogsled_n1")))))
 
 (defun l:prepare-record (full-record)
   (mapcar #'(lambda (x) (cons x 
@@ -395,10 +535,16 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (car (find widget lexdb-fw-map :key 'cdr)))
 
 (defun l:princ-list (l)
+  (let ((trunc-l
+	 (if (< *lexdb-minibuffer-max*
+		(length l))
+	     (append (truncate-list l *lexdb-minibuffer-max*)
+		     (list "..."))
+	   l)))
   (princ 
    (mapconcat #'cle-force-str 
-	      (truncate-list l *lexdb-minibuffer-max*)
-	      " ")))
+	      trunc-l
+	      " "))))
 
 (defun l:fv-pair-2-fw-pair (x)
   (let ((feat (car x))
@@ -414,7 +560,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       ((member feat *lexdb-read-only*)
        (widget-insert val))
       (t
-       (widget-create 'editable-field
+       (widget-create 'editable-field-fixed-size
 		      :size (min 50 (l:field-size feat))
 		      :keymap nil
 		      :value-face nil
@@ -492,10 +638,6 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (cle-eval-lexdb 'set-lex-entry 
 		  (format "(make-instance 'psql-lex-entry :fv-pairs '%S))" record-in)))
 
-(defun cle-get-completion-list (field)
-  (mapcar #'list
-	  (cle-eval-lexdb 'get-value-set field)))
-
 (defun cle-empty-psql-cache nil
   (cle-eval-lexdb 'empty-cache))
 
@@ -516,3 +658,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun cle-dump-scratch (filename)
   (cle-eval (format "(dump-scratch \"%s\")" (cle-force-str filename))))
 
+(defun cle-complete (field-kw val-str)
+  (if (or (string= val-str "") (null val-str))
+      (setf val-str (cle-lisp-str ""))
+    (setf val-str (cle-lisp-str val-str)))
+  (cle-eval-lexdb 'complete
+		 field-kw
+		 val-str))
