@@ -205,7 +205,8 @@
   (or
    #+(and :allegro :mswindows)
    (if (system:getenv "TMP")
-     (ignore-errors (parse-namestring (system:getenv "TMP")))
+     (let ((path (concatenate 'string (system:getenv "TMP") "\\")))
+       (ignore-errors (parse-namestring path)))
      (when (system:getenv "TEMP")
        (ignore-errors (parse-namestring (system:getenv "TEMP")))))
   (let ((pathname  #-mcl (user-homedir-pathname)
