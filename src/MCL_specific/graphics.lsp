@@ -9,9 +9,7 @@
 ;;; defined for the CLIM version - 
 
 (defmacro with-output-to-top (() &body body)
-  `(progn
-     ,@body
-     (terpri)))
+  `(progn ,@body))
 
 
 ;;; SIMPLE DRAWING
