@@ -116,7 +116,9 @@
             (format nil "~A [~A] ~A"
                (get x 'chart-edge-span)
                (edge-id edge-record)
-               (tree-node-text-string (edge-rule-number edge-record)))
+	       (tree-node-text-string
+		  (let ((item (edge-rule edge-record)))
+		     (if (rule-p item) (rule-id item) item))))
             nil)
          (values (tree-node-text-string x) t))))
 
@@ -180,19 +182,16 @@
    (make-instance 'menu-item
      :menu-item-title 
      (format nil "Rule ~A" 
-             (or (edge-rule-number edge-record) ""))
+        (if (rule-p (edge-rule edge-record)) (rule-id (edge-rule edge-record)) ""))
      :disabled 
-     (let ((rule-name (edge-rule-number edge-record)))
-       (not (and rule-name
-                 (not (stringp rule-name)))))
+     (not (rule-p (edge-rule edge-record)))
      :menu-item-action
      #'(lambda ()
-         (let* ((rule-name (edge-rule-number edge-record))
-                (rule (or (get-grammar-rule-entry rule-name)
-                          (get-lex-rule-entry rule-name))))
-           (when rule
-             (display-fs (rule-full-fs rule)
-                         (format nil "~A" rule-name))))))
+         (let* ((item (edge-rule edge-record))
+		(rule (and (rule-p item) item)))
+	     (when rule
+	       (display-fs (rule-full-fs rule)
+			   (format nil "~A" (rule-id rule)))))))
    (make-instance 'menu-item
      :menu-item-title "Highlight nodes"
      :menu-item-action

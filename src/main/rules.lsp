@@ -49,7 +49,9 @@
    daughters-restricted-reversed
    daughters-apply-order
    order
-   daughters-order-reversed)
+   daughters-order-reversed
+   apply-filter
+   apply-index)
 
 ;;; order is an ordered list of the paths that get at mother and daughters
 ;;; e.g. 0 1 2
@@ -92,6 +94,11 @@
                     (push value result)))
            *rules*)
     result))
+
+
+(defun lexical-rule-p (x)
+   (and (rule-p x) (get-lex-rule-entry (rule-id x))))
+
 
 (defun apply-lexical-rule (rule-name fs)
    (let ((lex-rule (get-lex-rule-entry rule-name)))
@@ -352,3 +359,56 @@
     (intern (concatenate 'string (string rule-name) *lex-rule-suffix*))
     (intern rule-name)))
 
+
+;;; DISCO-style rule filter (build-rule-filter)
+
+(defun build-rule-filter nil
+   (let ((max-arity 0)
+         (nrules 0)
+         (rule-list nil))
+      (flet ((process-rule (name rule)
+               (declare (ignore name))
+               (setq max-arity (max max-arity (1- (length (rule-order rule)))))
+               (push rule rule-list)
+               (setf (rule-apply-index rule) nrules)
+               (incf nrules)))
+         (maphash #'process-rule *rules*)
+         (maphash #'process-rule *lexical-rules*)
+         (dolist (rule rule-list)
+            (let ((filter
+                    (make-array (list nrules max-arity) :initial-element nil)))
+               (setf (rule-apply-filter rule)
+                  (fill-rule-filter rule filter rule-list))))
+         t)))
+
+
+(defun fill-rule-filter (rule filter test-list)
+   (let ((rule-tdfs (rule-full-fs rule))
+         (rule-daughters (cdr (rule-order rule))))
+      (loop for test in test-list
+         do
+         (let ((test-tdfs (rule-full-fs test))
+               (test-index (rule-apply-index test)))
+            (loop for arg from 0 to (1- (length rule-daughters))
+                  for dtr in rule-daughters
+                  do
+                  (with-unification-context (ignore)
+                     (when
+                        (yadu rule-tdfs
+                           (create-temp-parsing-tdfs
+                              (if (eq test-tdfs rule-tdfs)
+                                 (copy-tdfs-completely test-tdfs)
+                                 test-tdfs)
+                              dtr))
+                        (setf (aref filter test-index arg) t))))))
+      filter))
+
+
+(defun check-rule-filter (rule test arg)
+   ;; can test fill argth daughter of rule?
+   (let ((filter (rule-apply-filter rule)))
+      (if (and filter (not (stringp test)))
+         (aref filter
+            (rule-apply-index test)
+            arg)
+         t)))

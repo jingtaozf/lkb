@@ -245,9 +245,8 @@
          (when (aref *chart* (+ 1 vertex) 0)
            (dolist (config (chart-entry-configurations 
                             (aref *chart* (+ 1 vertex) 0)))
-             (when (get-lex-rule-entry 
-                    (edge-rule-number (chart-configuration-edge config)))
-                  (incf successful-lrule-applications)))))
+             (when (lexical-rule-p (edge-rule (chart-configuration-edge config)))
+                (incf successful-lrule-applications)))))
       (values successful-lrule-applications (length distinct-parse-edges)
          (reduce #'+ (map 'vector
                       #'(lambda (x)
@@ -260,7 +259,7 @@
    ;; collect edge for top lrule on each branch and all above
    (pushnew edge found :test #'eq)
    (when (and (edge-children edge)
-            (not (get-lex-rule-entry (edge-rule-number edge))))
+            (not (lexical-rule-p (edge-rule edge))))
       (dolist (c (edge-children edge))
          (setq found (parse-tsdb-distinct-edges c found))))
    found)

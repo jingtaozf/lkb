@@ -66,8 +66,8 @@
 ;;; an edge is a structure
 ;;; it has the following properties
 ;;; category - eg S VP etc - now a type
-;;; rule-number - either the word (storms etc) or the number of the grammar
-;;; rule which has been applied to create that edge  
+;;; rule - either the word (storms etc) or the grammar rule itself which has
+;;; been applied to create that edge  
 ;;; dag - the dag associated with the constituent
 ;;; leaves - orthography of whatever this edge has been formed from
 ;;; lex-ids - like leaves, but identifiers of whole structures
@@ -76,11 +76,11 @@
 (defstruct
    (edge
       (:constructor make-edge
-                    (&key id category rule-number dag 
+                    (&key id category rule dag 
                           (dag-restricted (restrict-fs (tdfs-indef dag)))
                           leaves lex-ids children morph-history 
                           spelling-change)))
-   id category rule-number dag dag-restricted leaves lex-ids
+   id category rule dag dag-restricted leaves lex-ids
    children morph-history spelling-change)
 
 (defstruct
@@ -92,7 +92,7 @@
 
 (defstruct 
   (mhistory)
-  rule-id
+  rule
   fs
   new-spelling)
 
@@ -341,9 +341,9 @@
   #+ignore (format t "~%Construct word ~A" word)
   (make-edge :id (next-edge) 
              :category (indef-type-of-tdfs sense) 
-             :rule-number (if history (mhistory-rule-id 
-				       (car history))
-			    word)
+             :rule (if history
+                      (mhistory-rule (car history))
+		      word)
              :dag sense
              :leaves (list word)
              :lex-ids lex-ids
@@ -525,7 +525,7 @@
 
 (defun construct-morph-history (lex-ids history)
   ;;; the rule on an edge refers `back' i.e. to the way it was
-  ;;; constructed, so when this is called, the rule-id and 
+  ;;; constructed, so when this is called, the rule and 
   ;;; the new spelling (if any) of the current-record have
   ;;; already been put into an edge
   (if history
@@ -571,7 +571,7 @@
 					    :rules morph-rules 
 					    :history (cons
 						      (make-mhistory 
-						       :rule-id (rule-id rule)
+						       :rule rule
 						       :fs fs
 						       :new-spelling nil)
 						      history)))))
@@ -594,7 +594,7 @@
 					     :lex-ids lex-ids
 					     :rules (cdr morph-rules)
 					     :history (cons (make-mhistory 
-							     :rule-id rule-id
+							     :rule rule-entry
 							     :fs fs
 							     :new-spelling new-orth)
 							    history))))))))))))
@@ -674,9 +674,8 @@
   ;; dag and associated information, add this to the chart, and invoke the
   ;; same process recursively.
   (incf *contemplated-tasks*)
-  (if (and (check-filter (rule-id rule) 
-			 (edge-rule-number (car child-edge-list))
-			 n)
+  (if (and (check-rule-filter
+              rule (edge-rule (car child-edge-list)) n)
 	   (restrictors-compatible-p (car rule-restricted-list) 
 				     (edge-dag-restricted (car child-edge-list))))
       (if (cdr rule-restricted-list)
@@ -704,9 +703,8 @@
 (defun try-grammar-rule-right (rule rule-restricted-list left-vertex 
 			       right-vertex child-edge-list f n)
   (incf *contemplated-tasks*)
-  (if (and (check-filter (rule-id rule) 
-			 (edge-rule-number (car child-edge-list))
-			 n)
+  (if (and (check-rule-filter
+              rule (edge-rule (car child-edge-list)) n)
 	   (restrictors-compatible-p (car rule-restricted-list)
 				     (edge-dag-restricted (car child-edge-list))))
       (if (cdr rule-restricted-list)
@@ -748,7 +746,7 @@
                  (new-edge (make-edge :id (next-edge)
                                      :category (indef-type-of-tdfs 
                                                 unification-result)
-                                     :rule-number (rule-id rule)
+                                     :rule rule
                                      :children edge-list
                                      :dag unification-result
                                      :lex-ids 
@@ -925,7 +923,7 @@
                                      :id (next-edge)
                                      :category
                                      (indef-type-of-tdfs unif)
-                                     :rule-number start-symbol
+                                     :rule start-symbol
                                      :children 
                                      (list (chart-configuration-edge item))
                                      :lex-ids (edge-lex-ids
@@ -1078,7 +1076,7 @@
   ;;; takes a top edge, returns a list of 
   ;;; lexical identifiers, unary-rule-list pairs
   (if (or (cdr (edge-lex-ids edge-rec))
-          (not (get-lex-rule-entry (edge-rule-number edge-rec))))
+          (not (lexical-rule-p (edge-rule edge-rec))))
       (for child in (edge-children edge-rec)
            append
            (collect-parse-base child))
@@ -1089,68 +1087,15 @@
   (when (cdr (edge-children edge-rec))
     (error "~%Should be unary edge ~A" edge-rec))
   (if (edge-children edge-rec)
-    (cons (edge-rule-number edge-rec)
-              (collect-unary-rule-names (car (edge-children edge-rec))))
+    (cons (rule-id (edge-rule edge-rec))
+          (collect-unary-rule-names (car (edge-children edge-rec))))
     (if (edge-morph-history edge-rec)
-        (cons (edge-rule-number edge-rec)
+        (cons (rule-id (edge-rule edge-rec))
               (collect-morph-history-rule-names 
                (edge-morph-history edge-rec))))))
 
 (defun collect-morph-history-rule-names (edge-rec)
   (if (edge-morph-history edge-rec)
-      (cons (edge-rule-number edge-rec)
+      (cons (rule-id (edge-rule edge-rec))
             (collect-morph-history-rule-names 
              (edge-morph-history edge-rec)))))
-
-
-;;; DISCO-style rule filter
-
-(defvar *rule-filter* nil)
-
-(defun init-filter nil
-  (let ((max-arity 0)
-	(rule-no 0)
-	(rule-list NIL))
-    (flet ((process-rule (name rule)
-	     (setq max-arity (max max-arity (1- (length (rule-order rule)))))
-	     (push (list rule-no (rule-full-fs rule) (cdr (rule-order rule)))
-		   rule-list)
-	     (setf (get name 'filter-index) rule-no)
-	     (incf rule-no)))
-      (maphash #'process-rule *rules*)
-      (maphash #'process-rule *lexical-rules*))
-    (values
-     (setf *rule-filter*
-       (make-array (list rule-no rule-no max-arity)
-			 :initial-element nil))
-     rule-list)))
-
-(defun build-filter nil
-  (multiple-value-bind (filter rule-list)
-      (init-filter)
-    (loop for (rule-index rule-tdfs rule-dtrs) in rule-list
-	do
-	  (loop for (test-index test-tdfs test-dtrs) in rule-list
-	      do
-		(loop for arg from 0 to (1- (length rule-dtrs))
-		    do
-		      (with-unification-context (ignore)
-			(if (yadu rule-tdfs
-				  (create-temp-parsing-tdfs
-				   (if (eq test-tdfs rule-tdfs)
-				       (copy-tdfs-completely test-tdfs)
-				     test-tdfs)
-				   (nth arg rule-dtrs)))
-			    (setf (aref filter
-					rule-index test-index arg) t)
-			  nil)))))
-    t))
-
-(defun check-filter (rule test arg)
-  (if (and *rule-filter*
-	   (symbolp test))
-      (aref *rule-filter*
-	    (get rule 'filter-index)
-	    (get test 'filter-index)
-	    arg)
-    t))

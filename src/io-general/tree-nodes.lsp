@@ -550,9 +550,7 @@
 
 (defun rebuild-edge (edge-symbol)
   (let* ((edge (get edge-symbol 'edge-record))
-         (rule (when edge
-                 (or (get-grammar-rule-entry (edge-rule-number edge))
-                     (get-lex-rule-entry (edge-rule-number edge)))))
+         (rule (and edge (edge-rule edge)))
          (dtrs (mapcar #'rebuild-edge (get edge-symbol 'daughters))))
     (if edge
 	(setf (get edge-symbol 'edge-fs)
@@ -621,7 +619,7 @@
       (let ((daughters (edge-children edge)))
          (list
           (if (and *dont-show-lex-rules*
-                   (get-lex-rule-entry (edge-rule-number edge)))
+                   (lexical-rule-p (edge-rule edge)))
              (car (edge-leaves edge))
              (if daughters
                 (cons (tree-node-text-string
@@ -639,11 +637,11 @@
                    (car (edge-leaves edge))
                    (cons (car (edge-leaves edge))
                      (morph-tree-structure
-                      (edge-rule-number edge) (edge-morph-history edge))))))))))
+                        (edge-rule edge) (edge-morph-history edge))))))))))
 
 (defun morph-tree-structure (rule edge)
    (if rule
-      (cons rule
+      (cons (if (rule-p rule) (rule-id rule) rule)
          (if edge
             (morph-tree-structure nil (edge-morph-history edge))))))
 

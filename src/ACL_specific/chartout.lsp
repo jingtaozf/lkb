@@ -92,7 +92,9 @@
 	 (format nil "~A [~A] ~A"
 		 (get x 'chart-edge-span)
 		 (edge-id edge-record)
-		 (tree-node-text-string (edge-rule-number edge-record)))
+		 (tree-node-text-string
+		    (let ((item (edge-rule edge-record)))
+		       (if (rule-p item) (rule-id item) item))))
 	 nil)
       (values (tree-node-text-string x) t))))
 
@@ -104,9 +106,9 @@
      (append '(("Feature structure" :value fs))
 	     `((,(format nil "Tree" (edge-id edge-rec))
 		:value edge))
-	     (unless (stringp (edge-rule-number edge-rec))
+	     (when (rule-p (edge-rule edge-rec))
 	       `((,(format nil "Rule ~A" 
-			   (or (edge-rule-number edge-rec) ""))
+			   (rule-id (edge-rule edge-rec)))
 		  :value rule)))
 	     '(("Highlight nodes" :value highlight))
 	     '(("New chart" :value new))
@@ -119,12 +121,11 @@
 				 "G" 
 			       "P"))))
      (edge (display-parse-tree edge-rec nil))
-     (rule (let* ((rule-name (edge-rule-number edge-rec))
-		  (rule (or (get-grammar-rule-entry rule-name)
-			    (get-lex-rule-entry rule-name))))
+     (rule (let* ((item (edge-rule edge-rec))
+		  (rule (and (rule-p item) item)))
 	     (when rule
 	       (display-fs (rule-full-fs rule)
-			   (format nil "~A" rule-name)))))
+			   (format nil "~A" (rule-id rule))))))
      (highlight (display-edge-in-chart edge-rec))
      (new (display-edge-in-new-window 
            clim:*application-frame* 

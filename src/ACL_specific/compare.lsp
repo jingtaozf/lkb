@@ -105,7 +105,8 @@
     (cond (record
 	   (let* ((leaves (edge-leaves record))
 		  (label (find-category-abb fs))
-		  (rule (edge-rule-number record))
+		  (item (edge-rule record))
+		  (rule (if (rule-p item) (rule-id item) item))
 		  (yield (apply #'concatenate 
 				`(string
 				  ,@(mapcan #'(lambda (x) 
@@ -251,8 +252,8 @@
 (defun type-tree (tree)
   (let ((edge-record (get tree 'edge-record)))
     (cons (if edge-record
-	      (if (symbolp (edge-rule-number edge-record))
-		  (edge-rule-number edge-record)
+	      (if (rule-p (edge-rule edge-record))
+		  (rule-id (edge-rule edge-record))
 		(edge-category edge-record))
 	    (symbol-name tree))
 	  (mapcar #'type-tree (get tree 'daughters)))))

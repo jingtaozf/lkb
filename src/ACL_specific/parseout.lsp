@@ -73,18 +73,18 @@
 
 (defun find-children (node)
   (let ((edge-record (get node 'edge-record))
-	(dtrs (get node 'daughters)))
+        (dtrs (get node 'daughters)))
     (cond ((and (or *dont-show-morphology*
-		    *dont-show-lex-rules*)
-		(null edge-record))
-	   ;; Leaf node
-	   nil)
-	  ((and *dont-show-lex-rules*
-		(get-lex-rule-entry (when edge-record
-				      (edge-rule-number edge-record))))
-	   ;; Lexical rule node
-	   (mapcar #'find-leaf dtrs))
-	  (t dtrs))))
+                    *dont-show-lex-rules*)
+                (null edge-record))
+           ;; Leaf node
+           nil)
+          ((and *dont-show-lex-rules*
+                edge-record
+                (lexical-rule-p (edge-rule edge-record)))
+           ;; Lexical rule node
+           (mapcar #'find-leaf dtrs))
+          (t dtrs))))
 
 ;; Given a node, return the first leaf node dominated by it.  Assumes
 ;; that this node and all nodes under it are unary branching/
@@ -104,7 +104,8 @@
     ((edge-symbol 'symbol :gesture :select))
   (let* ((edge-record (get edge-symbol 'edge-record))
 	 (edge-fs (get edge-symbol 'edge-fs))
-	 (rule-name (edge-rule-number edge-record)))
+	 (item (edge-rule edge-record))
+         (rule-name (if (rule-p item) (rule-id item) item)))
     (pop-up-menu
      `((,(format nil "Feature structure - Edge ~A" (edge-id edge-record))
 	:value edge)
@@ -118,16 +119,15 @@
 				 "P")))
 	   (display-edge-in-chart edge-record))
      (rule 
-      (let* ((rule-name (edge-rule-number edge-record))
-	     (rule (or (get-grammar-rule-entry rule-name)
-		       (get-lex-rule-entry rule-name))))
-	(if rule
-	    (display-fs (rule-full-fs rule)
-			(format nil "~A" rule-name))
-	  (let ((alternative (get-tdfs-given-id rule-name)))
-	    (when alternative
-	      (display-fs alternative
-			  (format nil "~A" rule-name))))))))))
+      (let* ((item (edge-rule edge-record))
+             (rule (and (rule-p item) item)))
+            (if rule
+               (display-fs (rule-full-fs rule)
+                  (format nil "~A" (rule-id rule)))
+               (let ((alternative (get-tdfs-given-id item)))
+                  (when alternative
+                     (display-fs alternative
+                        (format nil "~A" item))))))))))
 
 
 
