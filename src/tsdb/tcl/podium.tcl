@@ -174,12 +174,10 @@ source "$globals(podium_home)commands.tcl";
 source "$globals(podium_home)input.tcl";
 source "$globals(podium_home)balloon.tcl";
 source "$globals(podium_home)copyleft.tcl";
-if {[info exists globals(yy_p)] && $globals(yy_p)
-    || $globals(user) == "oe"} {
-  if {[file exists "$globals(podium_home)yy.tcl"]} {
-    source "$globals(podium_home)yy.tcl";
-  }; # if
-}; #if
+if {[file exists "$globals(podium_home)yy.tcl"]} {
+  source "$globals(podium_home)yy.tcl";
+}; # if
+
 #
 # log activity to trace file (for debugging)
 #
@@ -697,9 +695,9 @@ proc main {} {
   .menu.trees.menu add command \
      -label "Browse" -state disabled -command {tsdb_browse trees ""};
   .menu.trees.menu add command \
-     -label "Annotate" -command {tsdb_browse trees ""};
-  .menu.trees.menu add command \
     -label "Summarize" -command {analyze_trees};
+  .menu.trees.menu add command \
+     -label "Annotate" -command {tsdb_browse trees ""};
   .menu.trees.menu add command \
     -label "Update" -command {tsdb_browse trees "" 1 "" 1};
   .menu.trees.menu add command \
@@ -712,32 +710,34 @@ proc main {} {
   #
   # `Options' menu (and embedded cascades)
   #
-  menu .menu.options.menu -tearoff 0
+  menu .menu.options.menu -tearoff 0;
   .menu.options.menu add command -label "Database Root" \
-    -command "tsdb_option home"
+    -command "tsdb_option home";
   .menu.options.menu add command -label "Skeleton Root" \
-    -command "tsdb_option skeleton_directory"
-  .menu.options.menu add separator
+    -command "tsdb_option skeleton_directory";
+  .menu.options.menu add separator;
   .menu.options.menu add cascade -label "Update" \
-    -menu .menu.options.menu.update
-  .menu.options.menu add separator
+    -menu .menu.options.menu.update;
+  .menu.options.menu add separator;
   .menu.options.menu add cascade \
     -label "TSQL Condition" \
-    -menu .menu.options.menu.condition
+    -menu .menu.options.menu.condition;
   .menu.options.menu add cascade \
     -label "Phenomena" \
-    -menu .menu.options.menu.phenomena
+    -menu .menu.options.menu.phenomena;
   .menu.options.menu add command -label "New Condition" \
     -command condition_input;
-  .menu.options.menu add separator
+  .menu.options.menu add separator;
   .menu.options.menu add cascade \
     -label "Aggregate By" \
-    -menu .menu.options.menu.aggregate
+    -menu .menu.options.menu.aggregate;
   .menu.options.menu add command \
     -label "Aggregation Parameters" -command aggregate_input;
-  .menu.options.menu add separator
+  .menu.options.menu add separator;
   .menu.options.menu add cascade \
-    -label "Switches" -menu .menu.options.menu.switches
+    -label "Switches" -menu .menu.options.menu.switches;
+  .menu.options.menu add cascade \
+    -label "Variables" -menu .menu.options.menu.variables;
 
   menu .menu.options.menu.update -tearoff 0
   .menu.options.menu.update add command -label "Skeleton List" \
@@ -811,13 +811,7 @@ proc main {} {
   .menu.options.menu.switches add checkbutton \
     -label "Exhaustive Search" \
     -variable globals(exhaustive_p) -command {tsdb_set exhaustive_p};
-  .menu.options.menu.switches add command \
-    -label "Chart Size Limit" \
-    -command {tsdb_option pedges};
-  .menu.options.menu.switches add command \
-    -label "Result Storage Limit" \
-    -command {tsdb_option results};
-  .menu.options.menu.switches add separator
+  .menu.options.menu.switches add separator;
   .menu.options.menu.switches add checkbutton \
     -label "Write `run' Relation" \
     -variable globals(write_run_p) -command {tsdb_set write_run_p};
@@ -841,27 +835,27 @@ proc main {} {
     -label "Write Syntax Chart" \
     -variable globals(write_syntax_chart_p) \
     -command {tsdb_set write_syntax_chart_p};
-  .menu.options.menu.switches add separator
+  .menu.options.menu.switches add separator;
   .menu.options.menu.switches add radiobutton \
     -label "On Demand Garbage Collect" \
-    -variable globals(gc_p) -value nil -command {tsdb_set gc_p}
+    -variable globals(gc_p) -value nil -command {tsdb_set gc_p};
   .menu.options.menu.switches add radiobutton \
     -label "Preliminary  Scavenge" \
-    -variable globals(gc_p) -value :local -command {tsdb_set gc_p}
+    -variable globals(gc_p) -value :local -command {tsdb_set gc_p};
   .menu.options.menu.switches add radiobutton \
     -label "Preliminary Garbage Collect" \
-    -variable globals(gc_p) -value :global -command {tsdb_set gc_p}
+    -variable globals(gc_p) -value :global -command {tsdb_set gc_p};
   .menu.options.menu.switches add checkbutton \
     -label "Enable Tenuring" \
-    -variable globals(tenure_p) -command {tsdb_set tenure_p}
-  .menu.options.menu.switches add separator
+    -variable globals(tenure_p) -command {tsdb_set tenure_p};
+  .menu.options.menu.switches add separator;
   .menu.options.menu.switches add checkbutton \
     -label "Overwrite Test Run" \
     -variable globals(overwrite);
   .menu.options.menu.switches add checkbutton \
     -label "Autoload Vocabulary" \
     -variable globals(autoload_vocabulary);
-   .menu.options.menu.switches add separator
+   .menu.options.menu.switches add separator;
   .menu.options.menu.switches add checkbutton \
     -label "Exclude GC Time" \
     -variable globals(exclude_tgc_p) \
@@ -885,6 +879,14 @@ proc main {} {
       -label "Custom Fields" \
       -variable globals(graph,extras);
   }; # if
+
+  menu .menu.options.menu.variables -tearoff 0
+  .menu.options.menu.variables add command \
+    -label "Chart Size Limit" \
+    -command {tsdb_option pedges};
+  .menu.options.menu.variables add command \
+    -label "Result Storage Limit" \
+    -command {tsdb_option results};
 
   #
   # `Help' menu (and embedded cascades)

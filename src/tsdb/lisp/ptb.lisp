@@ -1,6 +1,6 @@
 (in-package :tsdb)
 
-(defvar *ptb-use-pos-tags-p* nil)
+(defvar *ptb-use-pos-tags-p* t)
 
 (defun read-token (stream breaks)
   (loop
@@ -84,7 +84,7 @@
 
 (defun extract-ptb-leaves (tree)
   (cond
-   ((and (listp tree) (every #'stringp tree)) (list tree))
+   ((and tree (listp tree) (every #'stringp tree)) (list tree))
    ((listp tree)
     (loop for node in tree append (extract-ptb-leaves node)))
    (t nil)))
@@ -118,7 +118,7 @@
                    (incf id) i (incf i) form raw posp pos)
                   result))
           (unless (lkb::punctuationp form) (incf length)))
-    (values (format nil "~{~a~^ ~}" (nreverse result)) length)))
+    (values (and result (format nil "~{~a~^ ~}" (nreverse result))) length)))
 
 #+:null         
 (eval-when #+:ansi-eval-when (:load-toplevel :execute)

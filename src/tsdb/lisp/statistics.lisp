@@ -239,13 +239,16 @@
          (run (and relations
                    (find "run" relations :key #'first :test #'string=)))
          (parse (and relations
-                   (find "parse" relations :key #'first :test #'string=))))
+                     (find "parse" relations :key #'first :test #'string=)))
+         (update (and relations
+                      (find "update" relations :key #'first :test #'string=))))
     (cond 
      ((null run) :historic)
      ((not (find "aedges" (rest parse) :key #'first :test #'string=)) 0)
      ((find "environment" (rest run) :key #'first :test #'string=) 9903)
      ((find "end" (rest run) :key #'first :test #'string=) 9902)
-     (t 9808))))
+     ((null update) 0209)
+     (t 0210))))
 
 (defun analyze (language &key condition meter message thorough trees extras)
 

@@ -594,7 +594,8 @@
   #+:tty
   nil)
 
-(defun find-lexical-entry (form instance &optional id start end)
+(defun find-lexical-entry (form instance &optional id start end (dagp t))
+
   (let* ((*package* *lkb-package*)
          (name (intern (if (stringp instance)
                          (string-upcase instance)
@@ -602,9 +603,10 @@
                        *lkb-package*))
          (instance (ignore-errors (get-psort-entry name))))
     (when instance 
-      (let ((tdfs (copy-tdfs-completely (lex-or-psort-full-fs instance)))
+      (let ((tdfs (when dagp
+                    (copy-tdfs-completely (lex-or-psort-full-fs instance))))
             (ids (list (lex-or-psort-sense-id instance))))
-        (make-edge :id id :category (indef-type-of-tdfs tdfs)
+        (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
                    :dag tdfs :from start :to end)))))
 
@@ -624,26 +626,28 @@
                    (get-grammar-rule-entry name))))
     rule))
 
-(defun instantiate-rule (rule edges id)
+(defun instantiate-rule (rule edges id &optional (dagp t))
   (let* ((*unify-debug* :return)
          (%failure% nil)
          (status 0)
-         (result (rule-full-fs rule))
+         (result (when dagp (rule-full-fs rule)))
          (paths (rule-order rule)))
-    (with-unification-context (foo)
-      (loop
-          while result
-          for path in (rest paths)
-          for edge in edges
-          for tdfs = (edge-dag edge)
-          for i from 0
-          do
-            (setf status i)
-            (setf result (uday result tdfs path))
-          finally
-            (setf result (and result (restrict-and-copy-tdfs result)))))
-    (if result
-      (make-edge :id id :category (indef-type-of-tdfs result) :rule rule
+    (when dagp
+      (with-unification-context (foo)
+        (loop
+            while result
+            for path in (rest paths)
+            for edge in edges
+            for tdfs = (edge-dag edge)
+            for i from 0
+            do
+              (setf status i)
+              (setf result (uday result tdfs path))
+            finally
+              (setf result (and result (restrict-and-copy-tdfs result))))))
+    (if (or result (null dagp))
+      (make-edge :id id :category (and result (indef-type-of-tdfs result))
+                 :rule rule
                  :leaves (loop 
                              for edge in edges
                              append (edge-leaves edge))
@@ -656,7 +660,8 @@
                  :to (edge-to (first (last edges))))
       (values status %failure%))))
 
-(defun instantiate-preterminal (preterminal mrule &optional id start end)
+(defun instantiate-preterminal (preterminal mrule 
+                                &optional id start end (dagp t))
   ;;
   ;; _fix_me_
   ;; this hardwires some assumptions about how affixation is carried out. 
@@ -665,13 +670,14 @@
   (with-unification-context (foo)
     (let* ((*unify-debug* :return)
            (%failure% nil)
-           (rtdfs (rule-full-fs mrule))
-           (tdfs (edge-dag preterminal))
-           (result 
-            (uday rtdfs tdfs '(args first)))
+           (rtdfs (when dagp (rule-full-fs mrule)))
+           (tdfs (when dagp (edge-dag preterminal)))
+           (result (when dagp
+                     (uday rtdfs tdfs '(args first))))
            (copy (and result (restrict-and-copy-tdfs result))))
-      (if copy
-        (make-edge :id id :category (indef-type-of-tdfs copy) :rule mrule 
+      (if (or copy (null dagp))
+        (make-edge :id id :category (and copy (indef-type-of-tdfs copy))
+                   :rule mrule 
                    :leaves (copy-list (edge-leaves preterminal))
                    :lex-ids (copy-list (edge-lex-ids preterminal))
                    :from start :to end

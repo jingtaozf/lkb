@@ -371,7 +371,7 @@
                              (pairlis '(:run-id 
                                         :parse-id :i-id)
                                       (list (get-field :run-id run) 
-                                            parse-id i-id))
+                                            (get-field :parse-id item) i-id))
                              content))
                     (result (enrich-result result)))
                (when status (status :text status))
@@ -459,7 +459,8 @@
                                       :verbose verbose :stream stream)
               for bar = (append 
                          (pairlis '(:run-id :parse-id :i-id)
-                                  (list (get-field :run-id run) parse-id i-id))
+                                  (list (get-field :run-id run) 
+                                        (get-field :parse-id item) i-id))
                          content)
               for result = (enrich-result bar)
               do
@@ -643,8 +644,13 @@
            (i-input (get-field :i-input item))
            (i-wf (get-field :i-wf item))
            (o-ignore (get-field :o-ignore item))
-           (p-input (when (get-field :client run)
-                      (call-hook *tsdb-preprocessing-hook* i-input))))
+           (parse-id (if (>= parse-id i-id) parse-id i-id))
+           (client (get-field :client run))
+           (cpu (and client (client-cpu client)))
+           (p-input (when (cpu-p cpu)
+                      (call-hook (or (cpu-preprocessor cpu)
+                                     *tsdb-preprocessing-hook*) 
+                                 i-input))))
 
       (cond 
        ((and o-ignore (tsdb-ignore-p o-ignore))

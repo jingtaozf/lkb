@@ -747,8 +747,8 @@
          (version (get-field :version record))
          (d-state (get-field :d-state record))
          (d-type (get-field :d-type record))
-         (d-key (get-field :d-key record))
-         (d-value (get-field :d-value record))
+         (d-key (string-trim '(#\Space) (or (get-field :d-key record) "")))
+         (d-value (string-trim '(#\Space) (or (get-field :d-value record) "")))
          (d-start (get-field :d-start record))
          (d-end (get-field :d-end record))
          (d-date (get-field :d-date record)))
@@ -795,4 +795,45 @@
                     nil
                     "insert into preference values ~d ~d ~d"
                     parse-id t-version result-id)))
+        (call-tsdb query data :cache cache)))))
+
+(defun write-update (data record &key cache)
+  (let* ((*print-circle* nil)
+         (*print-level* nil)
+         (*print-length* nil)
+         (rawp (and cache (eq (get-field :protocol cache) :raw)))
+         (parse-id (get-field :parse-id record))
+         (version (get-field :version record))
+         (u-matches (get-field+ :u-matches record -1))
+         (u-mismatches (get-field+ :u-mismatches record -1))
+         (u-decisions (get-field+ :u-decisions record -1))
+         (u-gin (get-field+ :u-gin record -1))
+         (u-gout (get-field+ :u-gout record -1))
+         (u-pin (get-field+ :u-pin record -1))
+         (u-pout (get-field+ :u-pout record -1))
+         (u-in (get-field+ :u-in record -1))
+         (u-out (get-field+ :u-out record -1)))
+    (if rawp
+      (let ((stream (get-field :update cache))
+            (ofs *tsdb-ofs*))
+        (write parse-id :stream stream) (write-char ofs stream)
+        (write version :stream stream) (write-char ofs stream)
+        (write u-matches :stream stream) (write-char ofs stream)
+        (write u-mismatches :stream stream) (write-char ofs stream)
+        (write u-decisions :stream stream) (write-char ofs stream)
+        (write u-gin :stream stream) (write-char ofs stream)
+        (write u-gout :stream stream) (write-char ofs stream)
+        (write u-pin :stream stream) (write-char ofs stream)
+        (write u-pout :stream stream) (write-char ofs stream)
+        (write u-in :stream stream) (write-char ofs stream)
+        (write u-out :stream stream) (write-char ofs stream)
+        (terpri stream)
+        (force-output stream)
+        (incf (get-field :count cache)))
+      (let ((query (format
+                    nil
+                    "insert into preference values ~
+                     ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d"
+                    parse-id version u-matches u-mismatches u-decisions
+                    u-gin u-gout u-pin u-pout u-in u-out)))
         (call-tsdb query data :cache cache)))))

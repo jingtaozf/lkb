@@ -83,7 +83,9 @@ proc tsdb_file {action {index -1}} {
     }; # if
   } elseif {$action == "purge"} {
     if {[verify_ts_selection]} {return 1};
-    set prompt [format "purge `%s'%s" $globals(data) \
+    set prompt [format "%s `%s'%s" \
+                [expr {$index == "trees" ? "clear-cut" : "purge"}] \
+                $globals(data) \
                 [expr {$index == "trees" ? " trees" : ""}]];
     if {[file isdirectory $globals(home)$globals(data)] 
         && [yes-or-no-p $prompt] == 1} {

@@ -89,8 +89,7 @@
       set globals(maximal_number_of_edges) ~d~%~
       set globals(maximal_number_of_derivations) ~d~%~
       set globals(gc_p) ~(~a~)~%~
-      set globals(tenure_p) ~:[0~;1~]~%~
-      set globals(yy_p) ~:[0~;1~]~%"
+      set globals(tenure_p) ~:[0~;1~]~%~%"
      *tsdb-version*
      (current-application)
      *tsdb-podium-home* 
@@ -110,8 +109,7 @@
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
      *tsdb-maximal-number-of-edges* *tsdb-maximal-number-of-derivations*
      *tsdb-gc-p*
-     *tsdb-tenure-p*
-     #-:yy nil #+:yy t)
+     *tsdb-tenure-p*)
     (tsdb-do-phenomena :stream *tsdb-wish-stream*)
     (format *tsdb-wish-stream* "source \"~a\"~%" *tsdb-podium*)
     (format *tsdb-wish-stream* 
@@ -181,7 +179,7 @@
      (unless (eq (first (second form)) 'quit) (busy))
      (unwind-protect
       (multiple-value-bind (foo condition)
-       (ignore-errors
+       (progn;ignore-errors
         (let* ((command (second form))
                (action (first command))
                (arguments (rest command))
@@ -897,9 +895,11 @@
                             :duration 2)))))))
 
            (trees
-            (let* ((meter (make-meter 0 1)))
+            (let* ((interrupt (install-interrupt-handler))
+                   (meter (make-meter 0 1)))
               (apply #'browse-trees
-                     (append arguments (list :meter meter))))
+                     (append arguments 
+                             (list :interrupt interrupt :meter meter))))
             (send-to-podium 
              (format nil "update_ts_list update ~a" (first arguments)) 
              :wait t))

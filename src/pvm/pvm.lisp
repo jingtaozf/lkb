@@ -25,7 +25,8 @@
 
 (defstruct cpu 
   host spawn options 
-  architecture class threshold name template 
+  architecture class threshold name template
+  preprocessor reader
   create complete)
 
 (defstruct client tid cpu task protocol form status load)

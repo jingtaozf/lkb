@@ -183,16 +183,16 @@
            t
            "~&~%(~d) `~a' --- success.~%")))))))
 
-(defun reconstruct (derivation)
+(defun reconstruct (derivation &optional (dagp t))
   (let ((derivation (cond
                       ((consp derivation) derivation)
                       ((and (stringp derivation) (not (string= derivation "")))
                        (read-from-string derivation)))))
     (when derivation
       (catch :fail
-        (reconstruct-derivation derivation)))))
+        (reconstruct-derivation derivation dagp)))))
 
-(defun reconstruct-derivation (derivation)
+(defun reconstruct-derivation (derivation &optional (dagp t))
   (let* ((root (derivation-root derivation))
          (daughters (derivation-daughters derivation))
          (princes (and (= (length daughters) 1) 
@@ -205,7 +205,8 @@
               (cond
                ((and (= (length daughters) 1) (null princes))
                 (let* ((surface (derivation-root (first daughters)))
-                       (entry (find-lexical-entry surface root id start end)))
+                       (entry 
+                        (find-lexical-entry surface root id start end)))
                   (if (null entry)
                     (throw :fail
                            (values
@@ -244,7 +245,7 @@
                                   (format nil "`~a' (`~a')" root surface)))))
                    (t
                     (multiple-value-bind (result failure)
-                        (instantiate-preterminal entry fs id start end)
+                        (instantiate-preterminal entry fs id start end dagp)
                       (if failure
                         (throw :fail 
                                (values nil (list derivation result failure)))
@@ -253,7 +254,7 @@
                 (let* ((items
                         (loop
                          for daughter in daughters
-                         for item = (reconstruct-derivation daughter)
+                         for item = (reconstruct-derivation daughter dagp)
                          collect item))
                        (rule (find-rule root)))
                   (if (null rule)
@@ -261,7 +262,7 @@
                            (values nil (list derivation 0 :norule 
                                              (format nil "`~a'" root))))
                     (multiple-value-bind (result failure)
-                        (instantiate-rule rule items id)
+                        (instantiate-rule rule items id dagp)
                       (if (null failure)
                         result
                         (throw :fail 

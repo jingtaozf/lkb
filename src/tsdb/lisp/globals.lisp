@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.9 (9-oct-02)")
+(defparameter *tsdb-version* "1.9 (18-oct-02)")
 
 (defparameter
   *tsdb-application*
@@ -86,13 +86,13 @@
 
 (defparameter *tsdb-tenure-p* nil)
 
-(defparameter *tsdb-generation-spread* 20)
+(defparameter *tsdb-generation-spread* 10)
 
-(defparameter *tsdb-scavenge-limit* 402653184)
+(defparameter *tsdb-scavenge-limit* nil)
 
 (defparameter *tsdb-tenured-bytes* 0)
 
-(defparameter *tsdb-tenured-bytes-limit* 20971520)
+(defparameter *tsdb-tenured-bytes-limit* (* 32 1024 1024))
 
 (defparameter *tsdb-gc-verbosity* nil)
 
@@ -130,12 +130,12 @@
 
 (defparameter *tsdb-efs* #\@)
 
-(defparameter *tsdb-profile-files*
-  '("daughter" "edge" "parse" "result" "rule" "run" 
-    "tree" "decision" "preference"))
-
 (defparameter *tsdb-redwoods-files*
-  '("tree" "decision" "preference"))
+  '("tree" "decision" "preference" "update"))
+
+(defparameter *tsdb-profile-files*
+  (append '("daughter" "edge" "parse" "result" "rule" "run")
+          *tsdb-redwoods-files*))
 
 (defparameter *tsdb-id-attributes*
   '(:i-id :p-id :ip-id :s-id :run-id :parse-id :result-id))

@@ -116,7 +116,7 @@
               for tuple in data
               for value = (get-field :i-input tuple)
               for new = (and value (funcall reader value))
-              when new do 
+              when (and new (stringp new) (not (string= new ""))) do 
                 (setf (rest tuple) (acons :o-input new (rest tuple)))))
 
         (when dmeter (meter :value (get-field :end dmeter)))

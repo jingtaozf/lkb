@@ -39,7 +39,7 @@
         global-gc-p)
     (setf excl:*gc-after-hook*
       #'(lambda (global new old efficiency pending)
-          (when (and #-:oe *tsdb-gc-message-p* (output-stream-p stream))
+          (when (and *tsdb-gc-message-p* (output-stream-p stream))
             (format
              stream
              "~&gc-after-hook(): ~:[local~;global~]~@[ (r)~*~]; ~
@@ -73,7 +73,8 @@
             ;; sent today.                                   (22-jan-00  -  oe)
             ;;
             #+:edelweiss
-            (when (or (>= new *tsdb-scavenge-limit*) (< new 0))
+            (when (and (integerp *tsdb-scavenge-limit*)
+                       (>= new *tsdb-scavenge-limit*))
               (let ((*print-readably* nil)
                     (*print-miser-width* 40)
                     (*print-pretty* t)
@@ -93,8 +94,7 @@
                   (setf global-gc-p t)
                   #-(version>= 5 0)
                   (busy :gc :start)
-                  (when (and #-:oe *tsdb-gc-message-p* 
-                             (output-stream-p stream))
+                  (when (and *tsdb-gc-message-p* (output-stream-p stream))
                     (format 
                      stream
                      "~&gc-after-hook(): ~d bytes were tenured; ~

@@ -575,7 +575,7 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
       set condition [history_move $context 1];
       if {$globals($context,$i)} {
         if {$globals($context) == ""} {
-          set globals($context) "([lispify_string $condition])";
+          set globals($context) "[lispify_string $condition]";
         } else {
           set globals($context) \
             "$globals($context) and ([lispify_string $condition])";
@@ -584,7 +584,7 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
     }; # for
   }; # if
 
-  set globals($context) [normalize_condition $globals($context)];
+  set globals($context) $globals($context);
 
   if {$context == "condition"} {
     tsdb_set "*statistics-select-condition*" "\"$globals(condition)\"";
