@@ -289,6 +289,7 @@ output results
              (format ostream 
                      "~%#| Setting mrs::*null-semantics-hack-p* to nil |#")
              (setf mrs::*null-semantics-hack-p* nil))
+           #+(and :pooling :gdebug)
            (reset-pools #+:gdebug :forcep #+:gdebug t)
            (if (not (mrs::make-scoped-mrs mrs))
                (format ostream "~%#| Scope failure: ~A |#" sentence)  
