@@ -149,11 +149,11 @@
 
 
 (defun get-lex-entry (orth)
-  (for psort in (lookup-word *lexicon* orth)
+  (for psort in (remove-duplicates (lookup-word *lexicon* orth))
        filter (get-psort-entry psort)))
 
 (defun get-unexpanded-lex-entry (orth)
-  (for psort in (lookup-word *lexicon* orth)
+  (for psort in (remove-duplicates (lookup-word *lexicon* orth))
        filter (get-unexpanded-psort-entry psort)))
 
 (defun add-lex-from-file (orth sense-id fs-or-type defs)
