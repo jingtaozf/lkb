@@ -160,7 +160,15 @@
               (with-input-from-string (stream string)
                 (read-mrs stream)))))
     (when (psoa-p mrs) mrs)))
-    
+
+(defun read-and-scope-mrs-from-string (string)
+  (let ((*package* (find-package :lkb))
+        (mrs (ignore-errors 
+              (with-input-from-string (stream string)
+                (read-mrs stream)))))
+    (when (and (psoa-p mrs) (ignore-errors (make-scoped-mrs mrs)))
+      mrs)))
+
 (defun read-mrs-from-file (file)
   (when (probe-file file)
     (#+:debug progn #-:debug ignore-errors 

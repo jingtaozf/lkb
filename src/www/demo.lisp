@@ -341,7 +341,7 @@
           when (and mrsp (or mrs edge)) do
             (format stream "<td class=resultsMrs>~%")
             (mrs::output-mrs1 
-             (or mrs (mrs::extract-mrs edge))'mrs::html stream)
+             (or mrs (mrs::extract-mrs edge))'mrs::html stream i)
             (format stream "</td>~%")
           do (format stream "</tr>")))
      ((or (null error) (equal error ""))

@@ -21,10 +21,11 @@ function classSetColor(name, color) {
   // MRS: make highlighting far more efficient and prevent highlighting across
   // structures.                                               (5-aug-03; oe)
   //
-  return false;
+  //return false;
   var all = document.all ? document.all : document.getElementsByTagName('*');
   var elements = new Array();
   for (var i = 0; i < all.length; i++)
+    //elements[all[i].className] = all[i];
     if (all[i].className == name) all[i].style.color = color;
 
 } // classSetColor()

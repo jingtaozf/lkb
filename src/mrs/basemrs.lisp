@@ -162,8 +162,8 @@
   ((indentation :initform 0 :initarg :indentation)
    (stream :initarg :stream)))
 
-(defmethod initialize-display-structure ((class output-type) mrs-instance)
-  (declare (ignore mrs-instance)))
+(defmethod initialize-display-structure ((class output-type) mrs &optional id)
+  (declare (ignore mrs id)))
 
 (defmethod mrs-output-error-fn ((mrsout output-type) mrs-instance)
   (with-slots (stream) mrsout
@@ -559,12 +559,14 @@ higher and lower are handle-variables
 (defparameter *mrs-relations-per-row* 6)
 
 (defclass html (output-type) 
-  ((nrels :initform nil)
+  ((id :initform 0)
+   (nrels :initform nil)
    (i :initform nil)
    (nrows :initform nil)))
 
-(defmethod initialize-display-structure ((class html) mrs)
-  (with-slots (nrels nrows i) class
+(defmethod initialize-display-structure ((class html) mrs &optional n)
+  (with-slots (id nrels nrows i) class
+    (setf id n)
     (setf nrels (length (psoa-liszt mrs)))
     (setf nrows (ceiling nrels *mrs-relations-per-row*))
     (setf i 0)))
@@ -583,29 +585,29 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-top-h ((mrs html) handle)
   (when (and handle *rel-handel-path*)
-    (with-slots (stream) mrs
+    (with-slots (id stream) mrs
       (format 
        stream 
        "<tr><td class=mrsFeatureTop>TOP</td>~%~
         <td class=mrsValueTop>~%  ~
-        <div class=\"mrsVariable~:(~a~)\"~%       ~
-             onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~%       ~
-             onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</div>~%~
+        <div class=\"mrsVariable~a~:(~a~)\"~%       ~
+             onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~%       ~
+             onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</div>~%~
         </td>~%" 
-       handle handle handle handle))))
+       id handle id handle id handle handle))))
 
 (defmethod mrs-output-index ((mrs html) index)
   (when index
-    (with-slots (stream) mrs
+    (with-slots (id stream) mrs
       (format 
        stream 
        "<tr>~%<td class=mrsFeatureIndex>INDEX</td>~%~
         <td class=mrsValueIndex>~%  ~
-        <div class=\"mrsVariable~:(~a~)\"~%       ~
-             onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~%       ~
-             onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</div>~%~
+        <div class=\"mrsVariable~a~:(~a~)\"~%       ~
+             onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~%       ~
+             onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</div>~%~
         </td>~%" 
-       index index index index))))
+       id index id index id index index))))
 
 (defmethod mrs-output-start-liszt ((mrs html))
   (with-slots (stream nrows) mrs
@@ -620,15 +622,15 @@ higher and lower are handle-variables
      nrows)))
 
 (defmethod mrs-output-var-fn ((mrs html) variable)
-  (with-slots (stream) mrs
+  (with-slots (id stream) mrs
     (format 
      stream 
      "<td class=mrsValue>~%~
-      <div class=\"mrsVariable~:(~a~)\"~
-             onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~
-             onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</div>~
+      <div class=\"mrsVariable~a~:(~a~)\"~
+             onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~
+             onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</div>~
       </td>~%" 
-     variable variable variable variable)))
+     id variable id variable id variable variable)))
 
 (defmethod mrs-output-atomic-fn ((mrs html) value)
   (with-slots (stream) mrs
@@ -651,14 +653,15 @@ higher and lower are handle-variables
 
 (defmethod mrs-output-rel-handel ((mrs html) handle)
   (when handle
-    (with-slots (stream) mrs
+    (with-slots (id stream) mrs
       (format 
        stream 
        "      <tr><td class=mrsLabel>LBL</td><td class=mrsValue>~%
-        <div class=\"mrsVariable~:(~a~)\"~
-             onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~
-             onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</div></td>~%"
-       handle handle handle handle))))
+        <div class=\"mrsVariable~a~:(~a~)\"~
+             onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~
+             onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~
+               ~(~a~)</div></td>~%"
+       id handle id handle id handle handle))))
 
 (defmethod mrs-output-label-fn  ((mrs html) label)
   (with-slots (stream) mrs
@@ -698,20 +701,20 @@ higher and lower are handle-variables
       <td class=mrsValueHcons>{ ")))
 
 (defmethod mrs-output-outscopes ((mrs html) relation higher lower firstp)
-  (with-slots (stream) mrs
+  (with-slots (id stream) mrs
     (unless firstp (format stream ", "))
     (format 
      stream 
-     "<span class=\"mrsVariable~:(~a~)\"~
-            onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~
-            onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</span> ~
+     "<span class=\"mrsVariable~a~:(~a~)\"~
+            onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~
+            onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span> ~
       ~a ~
-      <span class=\"mrsVariable~:(~a~)\"~
-            onMouseOver=\"mrsVariableSelect('~:(~a~)')\"~
-            onMouseOut=\"mrsVariableUnselect('~:(~a~)')\">~(~a~)</span>"
-     higher higher higher higher 
+      <span class=\"mrsVariable~a~:(~a~)\"~
+            onMouseOver=\"mrsVariableSelect('~a~:(~a~)')\"~
+            onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span>"
+     id higher id higher id higher higher 
      relation 
-     lower lower lower lower)))
+     id lower id lower id lower lower)))
 
 (defmethod mrs-output-end-h-cons ((mrs html))
   (with-slots (stream) mrs
@@ -750,10 +753,10 @@ higher and lower are handle-variables
     (output-mrs1 mrs-instance device t)))
 
 (let ((lock #+:allegro (mp:make-process-lock) #-:allegro nil))
-  (defun output-mrs1 (mrs-instance device stream)
+  (defun output-mrs1 (mrs-instance device stream &optional (id 0))
     (#+:allegro mp:with-process-lock #+:allegro (lock) #-:allegro progn
       (def-print-operations device 0 stream)
-      (initialize-display-structure *mrs-display-structure* mrs-instance)
+      (initialize-display-structure *mrs-display-structure* mrs-instance id)
       (cond ((psoa-p mrs-instance)
              (mrs-output-start-fn *mrs-display-structure*)
              (print-psoa mrs-instance)
