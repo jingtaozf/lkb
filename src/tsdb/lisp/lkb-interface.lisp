@@ -491,7 +491,16 @@
       (subseq string 0 (max (- (search index string) 1) 0)))
      (t string))))
 
-
+#-:mt
+(defun tsdb::transfer-item (mrs
+                      &key id string exhaustive nanalyses trace
+                           edges derivations semantix-hook trees-hook
+                           burst (nresults 0))
+  (declare (ignore mrs 
+                   id string exhaustive nanalyses trace
+                   edges derivations semantix-hook trees-hook
+                   burst nresult)))
+  
 #+:mt
 (defun tsdb::transfer-item (mrs
                       &key id string exhaustive nanalyses trace
