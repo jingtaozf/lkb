@@ -2025,7 +2025,7 @@
 
 (defun rule-chart (data
                    &key condition (attributes '(:executed successes))
-                        file (format :tcl) logscale meter)
+                        file (format :tcl) (view :graph) logscale meter)
 
   (when attributes
     (let* ((stream (if file
@@ -2049,51 +2049,121 @@
                    nil 
                    "~(~a~)~{ # ~(~a~)~}"
                    (first attributes) (rest attributes))))
-
-
-      (format 
-       stream
-       "barchart -font {Helvetica 10 bold} -plotbackground white \\~%  ~
-        -width 16c -height 20c -barmode aligned -barwidth 0.75 \\~%  ~
-        -title \"Rule Postulation and Success Distribution\" \\~%  ~
-        -invertxy yes -rightmargin 10~%")
-      (format stream "legend -hide yes~%")
-      (format
-       stream
-       "axis x -stepsize 1 -tickfont {Helvetica 9} -subdivisions 1 \\~%  ~
-        -labels ~a~%"
-       (list2tcl (map 'list #'second rules)))
-      (format
-       stream
-       "axis y -title {~a} \\~%  ~
-        -logscale ~:[no~;yes~]~%" 
-       label logscale)
-      (format stream "data x1 ~a~%" (list2tcl indices))
-      (when (member :filtered attributes :test #'eq)
-        (format stream "data y1 ~a~%" (list2tcl filtered))
-        (format 
-         stream 
-         "element e1 -xdata x1 -ydata y1 -fg red -relief flat~%"))
-      (when (member :executed attributes :test #'eq)
-        (format stream "data y2 ~a~%" (list2tcl executed))
-        (format 
-         stream 
-         "element e2 -xdata x1 -ydata y2 -fg orange  -relief flat~%"))
-      (when (member :successes attributes :test #'eq)
-        (format stream "data y3 ~a~%" (list2tcl successes))
-        (format 
-         stream 
-         "element e3 -xdata x1 -ydata y3 -fg yellow -relief flat~%"))
-      (when (member :actives attributes :test #'eq)
-        (format stream "data y4 ~a~%" (list2tcl actives))
-        (format 
-         stream 
-         "element e4 -xdata x1 -ydata y4 -fg blue -relief flat~%"))
-      (when (member :passives attributes :test #'eq)
-        (format stream "data y5 ~a~%" (list2tcl passives))
-        (format 
-         stream 
-         "element e5 -xdata x1 -ydata y5 -fg green -relief flat~%"))
-
+      
+      (case view
+        (:graph
+         (format 
+           stream
+           "barchart -font {Helvetica 10 bold} -plotbackground white \\~%  ~
+            -width 16c -height 20c -barmode aligned -barwidth 0.75 \\~%  ~
+            -title \"Rule Postulation and Success Distribution\" \\~%  ~
+            -invertxy yes -rightmargin 10~%")
+          (format stream "legend -hide yes~%")
+          (format
+           stream
+           "axis x -stepsize 1 -tickfont {Helvetica 9} -subdivisions 1 \\~%  ~
+            -labels ~a~%"
+           (list2tcl (map 'list #'second rules)))
+          (format
+           stream
+           "axis y -title {~a} \\~%  ~
+            -logscale ~:[no~;yes~]~%" 
+           label logscale)
+          (format stream "data x1 ~a~%" (list2tcl indices))
+          (when (member :filtered attributes :test #'eq)
+            (format stream "data y1 ~a~%" (list2tcl filtered))
+            (format 
+             stream 
+             "element e1 -xdata x1 -ydata y1 -fg red -relief flat~%"))
+          (when (member :executed attributes :test #'eq)
+            (format stream "data y2 ~a~%" (list2tcl executed))
+            (format 
+             stream 
+             "element e2 -xdata x1 -ydata y2 -fg orange  -relief flat~%"))
+          (when (member :successes attributes :test #'eq)
+            (format stream "data y3 ~a~%" (list2tcl successes))
+            (format 
+             stream 
+             "element e3 -xdata x1 -ydata y3 -fg yellow -relief flat~%"))
+          (when (member :actives attributes :test #'eq)
+            (format stream "data y4 ~a~%" (list2tcl actives))
+            (format 
+             stream 
+             "element e4 -xdata x1 -ydata y4 -fg blue -relief flat~%"))
+          (when (member :passives attributes :test #'eq)
+            (format stream "data y5 ~a~%" (list2tcl passives))
+            (format 
+             stream 
+             "element e5 -xdata x1 -ydata y5 -fg green -relief flat~%")))
+        (:table
+         (when *statistics-tcl-formats* 
+           (format stream *statistics-tcl-formats*))
+         (format
+          stream
+          "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+           layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
+           layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
+           layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
+           layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
+           layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%~
+           layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
+           layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+           layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+          (+ (length attributes) 1) 
+          (+ (length rules) 1)
+          (+ (length rules) 2))
+         (format stream "cell 1 1 -contents \"Rule\" -format title~%")
+         (loop
+             for attribute in attributes
+             for i from 2
+             do
+               (format 
+                stream 
+                "cell 1 ~d -contents \"~(~a~)\" -format title~%"
+                i attribute))
+         (loop
+             for rule in rules
+             for i from 2
+             with totals = (pairlis 
+                            attributes
+                            (map 'list 
+                              #'(lambda (foo) (declare (ignore foo)) 0)
+                              attributes))
+             do
+               (format 
+                stream 
+                "cell ~d ~d -contents \"~a\" -format data~%"
+                i 1 (second rule))
+               (loop
+                   for attribute in attributes
+                   for value = (get-field attribute (rest (rest rule)))
+                   for j from 2
+                   when (not (= value -1))
+                   do
+                     (incf (get-field attribute totals) value)
+                   do
+                     (format 
+                      stream 
+                      "cell ~d ~d -contents \"~a\" -format data~%"
+                      i j value))
+             finally
+               (format 
+                stream 
+                "cell ~d ~d -contents \"Total\" -format total~%"
+                (+ i 1) 1)
+               (loop
+                   for attribute in attributes
+                   for j from 2
+                   do
+                     (format
+                      stream
+                      "cell ~d ~d -contents \"~a\" -format total~%"
+                      (+ i 1) j (get-field attribute totals))))))
       (force-output stream)
-      (when file (close stream)))))
+      (when file (close stream))
+      (pairlis '(:names 
+                 :passives :actives :successes :executed :filtered)
+               (list (map 'list #'first rules)
+                     passives actives successes executed filtered)))))
+
+

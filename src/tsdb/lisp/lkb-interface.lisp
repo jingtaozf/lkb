@@ -137,61 +137,97 @@
                       tgc #+mcl (round (* rawgc 1000)
                                        internal-time-units-per-second)
                       #-mcl -1)))
-          (let ((n 0)
-                (*print-pretty* nil) (*print-level* nil) (*print-length* nil))
+          (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
+                 (output (get-output-stream-string str))
+                 (readings (length *parse-record*))
+                 (readings (if (or (equal output "") (> readings 0))
+                              readings
+                             -1))
+                 (best-first-p (> (length *parse-times*) 2))
+                 (end (pop *parse-times*))
+                 (times (nreverse *parse-times*))
+                 (start (pop times))
+                 (total (round (* (- end start) 1000) 
+                               internal-time-units-per-second))
+                 (first (if best-first-p
+                          (round (* (- (first times) start) 1000) 
+                                 internal-time-units-per-second)
+                          (if (> readings 0) total -1))))
             (multiple-value-bind (l-s-tasks redges words)
                 (parse-tsdb-count-lrules-edges-morphs)
-              (let ((output (get-output-stream-string str)))
-              `((:TIMEUP) (:COPIES . -1) (:UNIFICATIONS . -1)
-                          (:OTHERS . ,others) (:SYMBOLS . ,symbols) 
-                          (:CONSES . ,conses)
-                          (:TREAL . ,treal) (:TCPU . ,(+ tcpu tgc)) 
-                          (:TGC . ,tgc)
-                          (:REDGES . ,redges) 
-                          (:PEDGES . ,(- *edge-id* (length *morph-records*)))
-                          (:AEDGES . -1)
-                          (:P-STASKS . ,s-tasks) (:P-ETASKS . ,e-tasks) 
-                          (:P-FTASKS . ,f-tasks) (:P-CTASKS . ,c-tasks) 
-                          (:L-STASKS . ,l-s-tasks) (:WORDS . ,words)
-                          (:TOTAL . ,tcpu) (:FIRST . ,tcpu) 
-                          (:READINGS . ,(let ((readings
-                                               (length *parse-record*)))
-                                          (if (or (equal output "")
-                                                  (> readings 0))
-                                            readings
-                                            -1)))
-                          (:ERROR .
-                           ,(tsdb::normalize-string output))
-                          (:RESULTS .
-                           ,(mapcar
-                             #'(lambda (parse)
-                                 (prog1
-                                     `((:MRS . "") (:TREE . "")
-                                       (:DERIVATION .
-                                        #+:cray
-                                        ,(prin1-to-string
-                                          (parse-tree-structure parse))
-                                        #-:cray
-                                        "")
-                                       (:R-REDGES .
-                                        ,(length (parse-tsdb-distinct-edges
-                                                  parse nil)))
-                                       (:SIZE . ,(parse-tsdb-count-nodes parse))
-                                       (:R-STASKS . -1) (:R-ETASKS . -1) 
-                                       (:R-FTASKS . -1)
-                                       (:R-CTASKS . -1) 
-                                       (:TIME . ,tcpu) (:RESULT-ID . ,n))
-                                   (setq tcpu 0 n (1+ n))))
-                             *parse-record*)))))))))
+              `((:TIMEUP) ;; we should be able to tell from *edge-id*
+                (:COPIES . -1) (:UNIFICATIONS . -1)
+                (:OTHERS . ,others) (:SYMBOLS . ,symbols) 
+                (:CONSES . ,conses)
+                (:TREAL . ,treal) (:TCPU . ,(+ tcpu tgc)) 
+                (:TGC . ,tgc)
+                (:REDGES . ,redges) 
+                (:PEDGES . ,(- *edge-id* (length *morph-records*)))
+                (:AEDGES . -1)
+                (:P-STASKS . ,s-tasks) (:P-ETASKS . ,e-tasks) 
+                (:P-FTASKS . ,f-tasks) (:P-CTASKS . ,c-tasks) 
+                (:L-STASKS . ,l-s-tasks) (:WORDS . ,words)
+                (:TOTAL . ,total) (:FIRST . ,first) 
+                (:READINGS . ,readings)
+                (:ERROR . ,(tsdb::normalize-string output))
+                (:RESULTS .
+                 ,(loop
+                      for i from 0
+                      for parse in (nreverse *parse-record*)
+                      for time = (if (integerp (first times))
+                                   (round (* (- (pop times) start) 1000)
+                                          internal-time-units-per-second )
+                                   total)
+                      for derivation = (tsdb::normalize-string
+                                        (format
+                                         nil
+                                         "~s"
+                                         (compute-derivation-tree parse)))
+                      for r-redges = (length 
+                                      (parse-tsdb-distinct-edges parse nil))
+                      for size = (parse-tsdb-count-nodes parse)
+                      collect
+                        (pairlis '(:result-id :mrs :tree
+                                   :derivation :r-redges :size
+                                   :r-stasks :r-etasks 
+                                   :r-ftasks :r-ctasks
+                                   :time)
+                                 (list i "" ""
+                                       derivation r-redges size
+                                       -1 -1 
+                                       -1 -1 
+                                       time))))))))))
     (append
      (when condition
-       (pairlis '(:readings :condition :error)
+       (pairlis '(:readings 
+                  :condition 
+                  :error)
                 (list -1 
                       (unless burst condition)
                       (tsdb::normalize-string (format nil "~a" condition)))))
      return)))
 
 
+
+(defun compute-derivation-tree (edge &optional (offset 0))
+  (cond
+   ((null (edge-children edge))
+    (list (format nil "~(~a~)" (first (edge-lex-ids edge)))
+          offset (+ offset 1)
+          (list (format nil "~(~a~)" (edge-rule-number edge)) 
+                offset (+ offset 1))))
+   (t
+    (let* ((end offset)
+           (children
+            (loop 
+                for kid in (edge-children edge)
+                for derivation = (compute-derivation-tree kid end)
+                do
+                  (setf end (max end (third derivation)))
+                collect derivation)))
+      (nconc (list (format nil "~(~a~)" (edge-rule-number edge))
+                   offset end)
+             children)))))
 
 (defun parse-tsdb-sentence (user-input &optional trace)
    (multiple-value-prog1

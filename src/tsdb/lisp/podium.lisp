@@ -539,12 +539,13 @@
               (status :text (format nil "~a done" message) :duration 2)))
 
            (rules
-            (let* ((database (first arguments))
+            (let* ((data (first arguments))
+                   (view (find-key-argument :view arguments))
                    (meter (make-meter 0 1))
                    (title (format 
                            nil 
                            "tsdb(1) `~a' Rule Application Profile"
-                           database)))
+                           data)))
               (apply #'rule-chart (append arguments (list :file file
                                                           :meter meter)))
               (when (probe-file file)
@@ -552,15 +553,15 @@
                         (send-to-podium
                          (format 
                           nil 
-                          "showgraph ~a \".~(~a~)\" ~s {~a}" 
-                          file (gensym "") database title)
+                          "show~(~a~) ~a \".~(~a~)\" ~s {~a}" 
+                          view file (gensym "") data title)
                          :wait t)))
                   (when (and (equal (first return) :ok) 
                              (equal (first (second return)) :graph))
                     (push (append (second return)
                                   (pairlis 
                                    '(:data :command)
-                                   (list database (cons action arguments))))
+                                   (list data (cons action arguments))))
                           *tsdb-podium-windows*))))))
 
            (close

@@ -391,15 +391,17 @@
   (when (pg::combo-item-p item)
     (case (pg::combo-item-itype item)
       ((:lex-entry :c-lex-entry)
-       (let* ((spare (pg::combo-item-spare item))
-              (spare (when (and spare (or (symbolp spare)
-                                          (stringp spare)))
-                       (string spare)))
-              (cfs (pg::combo-item-cfs item))
-              (fs (and cfs (pg::cfs-fs cfs))))
-         (and fs (string-downcase 
-                  (or spare (format nil "~a" (get-fs-type fs)))))))
-      (t (string-downcase (format nil "~a" (pg::item-label item)))))))
+       (if nil
+         (let* ((spare (pg::combo-item-spare item))
+                (spare (when (and spare (or (symbolp spare)
+                                            (stringp spare)))
+                         (string spare)))
+                (cfs (pg::combo-item-cfs item))
+                (fs (and cfs (pg::cfs-fs cfs))))
+           (and fs (string-downcase 
+                    (or spare (format nil "~a" (get-fs-type fs))))))
+         (format nil "~(~a~)" (pg::combo-item-index item))))
+      (t (format nil "~(~a~)" (pg::item-label item))))))
 
 (defun remove-terminals (derivation)
   (let ((daughters (pg::pnode-daughters derivation)))
@@ -564,37 +566,38 @@
          (rules (combo-parser-syn-rules parser))
          (statistics (parser-rule-stats parser))
          (counts (make-array (combo-parser-rule-number parser))))
-    (flet ((count (edge type)
-             (when (eq (combo-item-itype edge) :rule)
-               (let* ((key (combo-item-key edge)))
-                 (incf (tsdb::get-field type (aref counts key)))))))
-      (loop
-          for rule in rules
-          for name = (string-downcase (string (combo-item-index rule)))
-          for key = (combo-item-key rule)
-          for stats = (aref statistics key)
-          for filtered = (stats-filtered stats)
-          for executed = (stats-executed stats)
-          for successful = (stats-successful stats)
-          do
-            (setf (aref counts key)
-              (pairlis '(:rule 
-                         :filtered :executed :successful 
-                         :actives :passives)
-                       (list name
-                             filtered executed successful 
-                             0 0))))
-      (loop for edges across pedges
-          do (loop for edge in edges
-                 do (count edge :passives)))
-      (loop for edges across saedges
-          do (loop for edge in edges
-                 do (count edge :actives)))
-      (loop for edges across eaedges
-          do (loop for edge in edges
-                 do (count edge :actives)))
-      (loop for rule across counts
-          when rule collect rule))))
+    (when statistics
+      (flet ((count (edge type)
+               (when (eq (combo-item-itype edge) :rule)
+                 (let* ((key (combo-item-key edge)))
+                   (incf (tsdb::get-field type (aref counts key)))))))
+        (loop
+            for rule in rules
+            for name = (string-downcase (string (combo-item-index rule)))
+            for key = (combo-item-key rule)
+            for stats = (aref statistics key)
+            for filtered = (stats-filtered stats)
+            for executed = (stats-executed stats)
+            for successful = (stats-successful stats)
+            do
+              (setf (aref counts key)
+                (pairlis '(:rule 
+                           :filtered :executed :successful 
+                           :actives :passives)
+                         (list name
+                               filtered executed successful 
+                               0 0))))
+        (loop for edges across pedges
+            do (loop for edge in edges
+                   do (count edge :passives)))
+        (loop for edges across saedges
+            do (loop for edge in edges
+                   do (count edge :actives)))
+        (loop for edges across eaedges
+            do (loop for edge in edges
+                   do (count edge :actives)))
+        (loop for rule across counts
+            when rule collect rule)))))
 
 (defun summarize-lexicon ()
   (let* ((entries (main::output-stream main::*lexicon*))
