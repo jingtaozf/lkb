@@ -10,7 +10,7 @@ if [ "{path}" = "." ]; then
   path=`pwd`
 fi
 home=`echo $path | sed "s@/bin/linux@@"`
-TCL_LIBRARY=${home}/lib/tcl8.0
+TCL_LIBRARY=${home}/lib/tcl8.3
 BLT_LIBRARY=${home}/lib/blt2.4
 export TCL_LIBRARY
 export BLT_LIBRARY
