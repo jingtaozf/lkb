@@ -179,6 +179,7 @@
 
 (define-type-hierarchy-command (com-type-hier-menu) 
     ((node 'hier-node :gesture :select))
+  (unhighlight-objects clim:*application-frame*)
   (let* ((type-entry (get-type-entry node))
 	 (frame clim:*application-frame*)
 	 (command (clim:menu-choose
@@ -224,8 +225,7 @@
 		       (create-type-hierarchy-tree type nil show-all-p))))))))
 	(error (condition)
 	  (format clim-user:*lkb-top-stream*  
-		  "~%Error: ~A~%" condition))))
-    (unhighlight-objects frame)))
+		  "~%Error: ~A~%" condition))))))
 
  
 ;;; NB Problems caused by having only 1 field per type for shrunk and visible

@@ -89,68 +89,59 @@
 ;;; :ok and :cancel and a series of non-editable editable text
 ;;; pairs corresponding to the argument list
 ;;; When the ok box is clicked the amended vales are returned
-;;; when the cancel box is clicked the original defaults are returned
+;;; when the cancel box is clicked, nil is returned
 ;;; The dialog box built is sized appropriately
 
-;;; the following, extraordinarily messy function, is due
-;;; to accepting-values being a macro
-
-;;; note to self - rewrite this thing!  
-
-(defun ask-for-strings-movable (title prompt-init-pairs 
-				&optional expected-width)
-  (declare (special *temp-result* *abort-query* *history*))
-  (setf *abort-query* nil)
-  (setf *history* nil)
-  (setf *temp-result* (loop for p-i-p in prompt-init-pairs
-			  for count from 0
-			  collect (cond ((equal (cdr p-i-p) ":CHECK-BOX")
-					 nil) ; Default for checkbox is nil
-					((and (consp (rest p-i-p))
-					      (eq (second p-i-p) :TYPEIN-MENU))
-					 (setf (getf *history* count)
-					   (cddr p-i-p))
-					 (third p-i-p))
-					(t (cdr p-i-p)))))
-  ;; this has to be a special, because eval doesn't take any notice of lexical
-  ;; environment
-  (let ((accepting-values-body
-	 (loop for p-i-p in prompt-init-pairs
-	     for count from 0
-	     append
-	       (list '(terpri stream)
-		     `(setf (elt *temp-result* ,count)
-			(typecase (elt *temp-result* ,count)
-			  (boolean
-			   (clim:accept 'boolean :stream stream
-					:default (elt *temp-result* ,count)
-					:prompt ,(car p-i-p)
-					:view 'clim:toggle-button-view))
-			  (t
-			   (clim:accept 'string :stream stream
-					:default (elt *temp-result* ,count)
-					:view '(clim:text-field-view 
-						:width ,expected-width)
-					:prompt ,(car p-i-p)))))
-		     `(when (getf *history* ,count)
-			(clim:accept-values-command-button (stream) 
-			    "Prev"
-			  (let ((choice (clim:menu-choose
-					 (getf *history* ,count))))
-			    (when choice
-			      (setf (elt *temp-result* ,count) choice)))))))))
-
-    (eval
-     `(let ((stream t))
-	(restart-case
-	    ,(cons 'clim:accepting-values  
-		   (cons `(stream :own-window t 
-				  :label ,title
-				  :align-prompts :left)
-                         (cdr accepting-values-body)))
-	  (abort () (setf *abort-query* t) nil))
-	(if *abort-query* nil *temp-result*)))))
-     
+(defun ask-for-strings-movable (title prompt-init-pairs &optional width)
+  (let* ((history nil)
+	 (result (loop for p-i-p in prompt-init-pairs
+		     for count from 0
+		     collect (cond ((equal (cdr p-i-p) ":CHECK-BOX")
+				    nil) ; Default for checkbox is nil
+				   ((and (consp (rest p-i-p))
+					 (eq (second p-i-p) 
+					     :TYPEIN-MENU))
+				    (setf (getf history count) (cddr p-i-p))
+				    (third p-i-p))
+				   (t (cdr p-i-p))))))
+    (flet ((accepting-values-body (stream)
+	     (clim:formatting-table (stream)
+		 (loop for p-i-p in prompt-init-pairs
+		     for count from 0
+		     do 
+		       (clim:formatting-row (stream)
+			 (clim:formatting-cell (stream :align-y :center)
+			   (write-string (car p-i-p) stream))
+			 (clim:formatting-cell (stream :align-y :center)
+			   (setf (elt result count)
+			     (if (typep (elt result count) 'boolean)
+				 (clim:accept 'boolean :stream stream
+					      :default (elt result count)
+					      :query-identifier count
+					      :prompt nil
+					      :view 'clim:toggle-button-view)
+			       (clim:accept 'string :stream stream
+					    :default (elt result count)
+					    :view `(clim:text-field-view 
+						    :width ,width)
+					    :query-identifier count
+					    :prompt nil))))
+			 (clim:formatting-cell (stream :align-y :center)
+			   (when (getf history count)
+			     (clim:accept-values-command-button (stream) "Prev"
+			       (let ((choice (clim:menu-choose
+					      (getf history count))))
+				 (when choice
+				   (setf (elt result count) choice)))))))))))
+      (declare (dynamic-extent #'accepting-values-body))
+      (restart-case
+	  (clim-internals::invoke-accepting-values t #'accepting-values-body
+						   :own-window t 
+						   :label title)
+	(abort () ;; User selected "Cancel", so bail out
+	  (return-from ask-for-strings-movable nil)))
+      ;; User selected "OK", so return the result
+      result)))
 
 (defun ask-for-lisp-movable (title prompt-init-pairs &optional expected-width)
   ;; Procyon version called a special dialog item - no known equivalnet in MCL

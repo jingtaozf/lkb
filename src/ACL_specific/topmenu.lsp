@@ -87,42 +87,54 @@
   (eval `(define-application-frame lkb-top ()
            (clim:standard-application-frame) 
            (:panes 
-            (display :application))
+	    (display
+	     (clim:outlining (:thickness 1)
+	       (clim:spacing (:thickness 1)  
+		 (clim:scrolling (:scroll-bars :both)
+		   (clim:make-pane 'clim:application-pane
+				   :name "lkb-pane"
+				   :text-cursor nil
+				   :end-of-line-action :allow
+				   :borders nil
+				   :background clim:+white+
+				   :foreground clim:+black+
+				   :draw t
+				   :record t
+				   :display-time t))))))
            (:layouts
             (default display))
            (:command-table lkb-top-command-table)
            (:disabled-commands ,*lkb-menu-disabled-list*)))
+  ;; make sure we have a way out
   (define-command (com-quit :menu t :command-table lkb-top-command-table) ()
     (frame-exit *application-frame*))
-; make sure we have a way out
-  (cl-user::for submenu cl-user::in (slot-value menu 'menu-items)
-       cl-user::do
-       (if (lkb-menu-item-p submenu)
-           (eval `(define-command
-                    (,(intern (concatenate 'string "COM-" 
-                                    (lkb-menu-item-menu-title submenu)))
-                     :command-table lkb-top-command-table
-                     :menu ,(lkb-menu-item-menu-title submenu))
-                    ()
-                    (let* ((command (menu-choose 
-                               (quote ,(lkb-menu-item-menu-items submenu))))) 
-                      (when command
-                            (handler-case
-                             (funcall command)
-                   (error (condition)
-                     (format t  "~%Error: ~A~%" condition)))))))
-         (if (and (listp submenu)
-                  (stringp (car submenu))
-                  (eql (cadr submenu) :VALUE))
-            (eval `(define-lkb-top-command
-                    (,(intern (concatenate 'string "COM-" 
-                                    (car submenu)))
-                     :menu ,(car submenu))
-                    ()
-                    (handler-case
-                     (funcall (quote ,(caddr submenu)))
-                   (error (condition)
-                      (format t "~%Error: ~A~%" condition)))))))))
+  (dolist (submenu (slot-value menu 'menu-items))
+    (if (lkb-menu-item-p submenu)
+	(eval `(define-command
+		   (,(intern (concatenate 'string "COM-" 
+					  (lkb-menu-item-menu-title submenu)))
+		    :command-table lkb-top-command-table
+		    :menu ,(lkb-menu-item-menu-title submenu))
+		   ()
+		 (let* ((command (menu-choose 
+				  (quote ,(lkb-menu-item-menu-items submenu))))) 
+		   (when command
+		     (handler-case
+			 (funcall command)
+		       (error (condition)
+		       (format t  "~%Error: ~A~%" condition)))))))
+      (if (and (listp submenu)
+	       (stringp (car submenu))
+	       (eql (cadr submenu) :VALUE))
+	  (eval `(define-lkb-top-command
+		     (,(intern (concatenate 'string "COM-" 
+					    (car submenu)))
+		      :menu ,(car submenu))
+		     ()
+		   (handler-case
+		       (funcall (quote ,(caddr submenu)))
+		     (error (condition)
+		       (format t "~%Error: ~A~%" condition)))))))))
 
 
 (defun start-lkb-frame ()
@@ -161,16 +173,14 @@
 
 (defun enable-type-interactions nil
   ;;; it may only work from within the application frame
-  (cl-user::for command cl-user::in *lkb-menu-disabled-list*
-      cl-user::do
-      (setf (command-enabled command *lkb-top-frame*) t)))
+  (dolist (command *lkb-menu-disabled-list*)
+    (setf (command-enabled command *lkb-top-frame*) t)))
 
 (defun disable-type-interactions nil
   ;;; this is called when a type file is being redefined
   ;;; it may only work from within the application frame
-  (cl-user::for command cl-user::in *lkb-menu-disabled-list*
-      cl-user::do
-      (setf (command-enabled command *lkb-top-frame*) nil)))
+  (dolist (command *lkb-menu-disabled-list*)
+    (setf (command-enabled command *lkb-top-frame*) nil)))
 
 (defun parse-sentences-batch nil
   ;;; for MCL this can just be parse-sentences

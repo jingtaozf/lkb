@@ -139,6 +139,20 @@
 
 
 ;;; ========================================================================
+;;; Macros for pop-up menus
+
+(defmacro pop-up-menu (menu &body cases)
+  (let ((command (gensym)))
+    `(let ((,command (clim:menu-choose ,menu)))
+       (when ,command
+	 (handler-case
+	     (ecase ,command
+	       ,@cases)
+	   (error (condition)
+	     (format clim-user:*lkb-top-stream* 
+		     "~%Error: ~A~%" condition)))))))
+
+;;; ========================================================================
 ;;; Define general frame class for LKB frames
 
 (clim:define-application-frame lkb-frame ()

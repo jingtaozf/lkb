@@ -195,68 +195,50 @@
          (full-tdfs (type-thing-full-tdfs type-thing))
 	 (frame clim:*application-frame*))
     (when (and (atom type) type-entry)
-      (let ((command 
-	     (clim:menu-choose
-	      `(("Hierarchy" :value hier
-			     :active ,(getf (class-frames frame) 
-					    (find-class 'type-hierarchy)))
-		("Help" :value help
-			:active ,(type-comment type-entry))
-		("Shrink/expand" :value shrink)
-		("Show source" :value source
-			       :active ,(source-available-p type))
-		("Type definition" :value def
-				   :active 
-				   ,(type-constraint type-entry))
-		("Expanded type" :value exp
-				 :active ,(type-constraint type-entry))
-		("Full structure" :value full
-				  :active full-tdfs)
-		("Select" :value select)
-		("Unify" :value unify
-			 :active ,(highlighted-class frame))))))
-	;; see CLIM 13-2 for making things inactive
-	(when command
-	  (handler-case
-	      (ecase command
-		(hier (display-type-in-tree type))
-		(help (display-type-comment type 
-					    (type-comment type-entry)))
-		(source (edit-source type))
-		(shrink (shrink-fs-action 
-			 frame
-			 (if (type-thing-shrunk-p type-thing)
-			     :expand 
-			   :shrink)
-			 type-label-list))
-		(def (if (type-constraint type-entry)
-			 (display-fs-and-parents 
-			  (type-local-constraint type-entry) 
-			  (format nil 
-				  "~(~A~)  - definition" 
-                                  type)
-                          (type-parents type-entry))
-                       (format clim-user:*lkb-top-stream* 
-                               "~%No constraint for type ~A" type)))
-		(exp (if (type-constraint type-entry)
-			 (display-fs-and-parents 
-			  (type-constraint type-entry) 
-			  (format nil 
-				  "~(~A~) - expanded" 
-				  type)
-			  (type-parents type-entry))
-		       (format clim-user:*lkb-top-stream* 
-			       "~%No constraint for type ~A" type)))
-		(full (if full-tdfs
-			  (display-fs full-tdfs
-				      (format nil 
-					      "LR constraint"))))
-		(select (select-fs frame type-thing))
-		(unify (try-unify-fs frame type-thing)))
-	    (error (condition)
-	      (format clim-user:*lkb-top-stream*  
-		      "~%Error: ~A~%" condition))))))))
-
+      (pop-up-menu
+       `(("Hierarchy" :value hier
+		      :active ,(getf (class-frames frame) 
+				     (find-class 'type-hierarchy)))
+	 ("Help" :value help
+		 :active ,(type-comment type-entry))
+	 ("Shrink/expand" :value shrink)
+	 ("Show source" :value source
+			:active ,(source-available-p type))
+	 ("Type definition" :value def
+			    :active 
+			    ,(type-constraint type-entry))
+	 ("Expanded type" :value exp
+			  :active ,(type-constraint type-entry))
+	 ("Full structure" :value full
+			   :active full-tdfs)
+	 ("Select" :value select)
+	 ("Unify" :value unify
+		  :active ,(highlighted-class frame)))
+       (hier (display-type-in-tree type))
+       (help (display-type-comment type (type-comment type-entry)))
+       (source (edit-source type))
+       (shrink (shrink-fs-action frame
+				 (if (type-thing-shrunk-p type-thing)
+				     :expand 
+				   :shrink)
+				 type-label-list))
+       (def (if (type-constraint type-entry)
+		(display-fs-and-parents (type-local-constraint type-entry) 
+					(format nil "~(~A~)  - definition" 
+						type)
+					(type-parents type-entry))
+	      (format clim-user:*lkb-top-stream* 
+		      "~%No constraint for type ~A" type)))
+       (exp (if (type-constraint type-entry)
+		(display-fs-and-parents (type-constraint type-entry) 
+					(format nil "~(~A~) - expanded" type)
+					(type-parents type-entry))
+	      (format clim-user:*lkb-top-stream* 
+		      "~%No constraint for type ~A" type)))
+       (full (if full-tdfs
+		 (display-fs full-tdfs (format nil "LR constraint"))))
+       (select (select-fs frame type-thing))
+       (unify (try-unify-fs frame type-thing))))))
 
 ;;; ***** pop up menu actions for types ******
 
@@ -269,31 +251,24 @@
 
 (defun display-type-comment (type comment-string &optional parent-stream)
   (declare (ignore parent-stream type))
-  (if comment-string
-      (format clim-user:*lkb-top-stream* 
-              "~%~A" comment-string)))
+  (when comment-string
+    (format clim-user:*lkb-top-stream* "~%~A" comment-string)))
 
 ;;; *** the title or top pop up menu ****
 
 (define-active-fs-window-command (com-title-fs-menu)
     ((name 'symbol :gesture :select))
-  (let* ((fs (fs-display-record-fs
-	      (active-fs-window-fs clim:*application-frame*)))
-         (command (clim:menu-choose
-                   `(("Output TeX" :value tex)
-		     ("Show source" :value source 
-				    :active ,(source-available-p name))
-		     ("Store fs" :value store)))))
-    (when command
-      (handler-case
-	  (ecase command
-	    (tex (output-fs-in-tex fs))
-	    (source (edit-source name))
-	    (store (store-as-psort fs)))
-	(error (condition)
-	  (format clim-user:*lkb-top-stream*  
-		  "~%Error: ~A~%" condition))))))
-
+  (let ((fs (fs-display-record-fs 
+	     (active-fs-window-fs clim:*application-frame*))))
+    (pop-up-menu
+     `(("Output TeX" :value tex)
+       ("Show source" :value source 
+		      :active ,(source-available-p name))
+       ("Store fs" :value store))
+     (tex (output-fs-in-tex fs))
+     (source (edit-source name))
+     (store (store-as-psort fs)))))
+  
 ;;; **** pop up menus for psorts (called when paths are displayed) *****
 
 ;;; display-fs-spec etc are in lexinput.lsp
@@ -322,44 +297,44 @@
 
 (defun pop-up-psort-menu-items (psort lex-entry)
   (let ((command (clim:menu-choose
-                   '(("Psort definition" :value def)
-                     ("Expanded psort" :value exp)))))
+		  '(("Psort definition" :value def)
+		    ("Expanded psort" :value exp)))))
     (when command
-          (handler-case
-            (ecase command
-                   (def (display-unexpanded-lex-entry psort lex-entry))  
-                   (exp (display-fs (lex-or-psort-full-fs lex-entry) 
-                           (format nil "~(~A~) - expanded" psort)))) 
-            (error (condition)
-                   (format clim-user:*lkb-top-stream*  
-                           "~%Error: ~A~%" condition))))))
+      (handler-case
+	  (ecase command
+	    (def (display-unexpanded-lex-entry psort lex-entry))  
+	    (exp (display-fs (lex-or-psort-full-fs lex-entry) 
+			     (format nil "~(~A~) - expanded" psort)))) 
+	(error (condition)
+	  (format clim-user:*lkb-top-stream*  
+		  "~%Error: ~A~%" condition))))))
 
 
 (defun pop-up-lex-rule-menu-items (psort rule-entry)
   (declare (ignore psort))
   (let ((command (clim:menu-choose
-                   '(("Show rule" :value rule)))))
+		  '(("Show rule" :value rule)))))
     (when command
-          (handler-case
-            (ecase command
-                   (rule (display-fs (rule-full-fs rule-entry) 
-                         (format nil "~(~A~)" (rule-id rule-entry)))))
-            (error (condition)
-                   (format clim-user:*lkb-top-stream*  
-                           "~%Error: ~A~%" condition))))))
+      (handler-case
+	  (ecase command
+	    (rule (display-fs (rule-full-fs rule-entry) 
+			      (format nil "~(~A~)" (rule-id rule-entry)))))
+	(error (condition)
+	  (format clim-user:*lkb-top-stream*  
+		  "~%Error: ~A~%" condition))))))
 
 ;;;  ***** TeX macros  ******
 
 (defun output-fs-in-tex (fs)
-      (when fs
-         (let ((file-name 
-                  (ask-user-for-new-pathname "File for LaTeX macros?"))) 
-            (when file-name
-                  (let ((real-name 
-                         (merge-pathnames 
-                          (make-pathname :directory *lkb-source-dir*)
-                          file-name)))
-                    (display-dag fs 'tex real-name))))))
+  (when fs
+    (let ((file-name 
+	   (ask-user-for-new-pathname "File for LaTeX macros?"))) 
+      (when file-name
+	(let ((real-name 
+	       (merge-pathnames 
+		(make-pathname :directory *lkb-source-dir*)
+		file-name)))
+	  (display-dag fs 'tex real-name))))))
 
 
 ;;; ***** Other title menu functions *****

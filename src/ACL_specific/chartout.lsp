@@ -59,18 +59,19 @@
    :center-nodes nil))
 
 (defun chart-node-text-string (x)
-   (let ((edge-record (get x 'chart-edge-contents)))
-      (if edge-record
-         (values
-            (format nil "~A [~A] ~A"
-               (get x 'chart-edge-span)
-               (edge-id edge-record)
-               (tree-node-text-string (edge-rule-number edge-record)))
-            nil)
-         (values (tree-node-text-string x) t))))
+  (let ((edge-record (get x 'chart-edge-contents)))
+    (if edge-record
+	(values
+	 (format nil "~A [~A] ~A"
+		 (get x 'chart-edge-span)
+		 (edge-id edge-record)
+		 (tree-node-text-string (edge-rule-number edge-record)))
+	 nil)
+      (values (tree-node-text-string x) t))))
 
 (define-chart-window-command (com-edge-menu)
     ((edge-rec 'edge :gesture :select)) 
+  (unhighlight-objects clim:*application-frame*)
   (when (edge-p edge-rec)
     (let ((command (clim:menu-choose
 		    (append '(("Feature structure" :value fs))
@@ -98,8 +99,7 @@
 				    (format nil "~A" rule-name))))))
 	  (error (condition)
 	    (format clim-user:*lkb-top-stream*  
-		    "~%Error: ~A~%" condition))))))
-    (unhighlight-objects clim:*application-frame*))
+		    "~%Error: ~A~%" condition)))))))
 
 
 ;;; called from display-parse-tree - when it is called to display an edge find
