@@ -16,6 +16,7 @@
 #include <pwd.h>
 #include <string.h>
 #include <malloc.h>
+#include <memory.h>
 #include <limits.h>
 #include "globals.h"
 #include "tsdb.h"
@@ -343,7 +344,7 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
   Tsdb_key_list *next_1, *next_2, *foo;
   Tsdb_tuple **tuples;
   int index_1, index_2, key_1, key_2, offset_1, offset_2;
-  int  i, j, k, l;
+  int  i, j, k, l,success;
   BOOL kaerb = FALSE;
 #if defined(DEBUG) && defined(JOIN)
   float time;
@@ -405,6 +406,10 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
 #endif
 
   if(kaerb) {
+#ifdef BIG_INSERT
+    Tsdb_key_list*** lists;
+    int last, n_lists,size;
+#endif
     /* initialisation phase */
     (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
                                      (Tsdb_tuple **)NULL);
@@ -445,6 +450,19 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
     } /* for */
     result->length = 0;
     /* result is prepared */
+#ifdef BIG_INSERT
+    if (result->n_key_lists>1) {
+      lists = (Tsdb_key_list***)malloc((result->n_key_lists+1)*
+                                        sizeof(Tsdb_key_list**));
+      size = 4000;
+      for (i=0;i<result->n_key_lists;i++) {
+        lists[i] = (Tsdb_key_list**)malloc((size+1)*sizeof(Tsdb_key_list*));
+      } /* for */
+    }
+    else 
+      lists = NULL;
+    last = 0;
+#endif
 
     next_1 = selection_1->key_lists[offset_1 + key_1];
     next_2 = selection_2->key_lists[offset_2 + key_2];
@@ -482,13 +500,24 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
               tuples[i] = foo->tuples[i - next_1->n_tuples];
             } /* for */
             tuples[i] = (Tsdb_tuple *)NULL;
-            /* in the first run we can count here! */
+#ifdef BIG_INSERT
+            success = tsdb_collect_tuples(result,tuples,lists,last,&size);
+            if (success) 
+              last++;
+            else {
+              free(tuples);
+              /* free arrays!!! */
+              return (Tsdb_selection*)NULL;
+            } /* else */
+#else
+            /* in the first run we could count here! */
             if(tsdb_insert_into_selection(result, &tuples[0])) {
               result->length++;
             } /* if */
             else {
               free(tuples);
             } /* else */
+#endif
           } /* for */
         } /* for */
         next_2 = foo;
@@ -502,6 +531,13 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
       fflush(tsdb_debug_stream);
     } /* if */
 #endif    
+#ifdef BIG_INSERT
+    success = tsdb_sort_tuples(lists,last,result->n_key_lists);
+    if (success) {
+      success = tsdb_array_to_lists(result,lists,last,size);
+    }
+#endif
+    
     return(result);
   } /* if */
   else {
