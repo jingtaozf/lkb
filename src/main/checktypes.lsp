@@ -1022,9 +1022,25 @@
             (unless new-default
                (setf new-default indef))
             (cons persistence new-default)))))
-            
+
+
+;; Check for defaults that aren't at the top level
+
+(defun collect-tails (node dag)
+  (let* ((type (type-of-fs dag))
+	 (type-entry (unless (type-spec-atomic-p type)
+		       (get-type-entry type))))
+    (when type-entry
+      (let ((tdfs (type-tdfs type-entry)))
+	(when (and tdfs
+		   (tdfs-tail tdfs))
+	  (format t "~%Default constraint on ~A ignored in ~A"
+		  (type-name type-entry) node)))
+      (dolist (arc (dag-arcs dag))
+	(collect-tails node (dag-arc-value arc))))))
+
 (defun inherit-default-constraints (node type-entry local-tdfs)
-  (declare (ignore node))
+  (collect-tails node (tdfs-indef local-tdfs))
   (let ((current-tail (tdfs-tail local-tdfs)))
     (for parent in (type-parents type-entry)
          do
