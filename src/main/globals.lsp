@@ -68,6 +68,9 @@
 
 ;;; Parsing
 
+(defconstant *maximum-number-of-tasks* 50000
+  "limits the number of pending tasks on the agenda")
+
 (def-lkb-parameter *maximum-number-of-edges* 500 
   "limits the size of the parse chart" :user)
 

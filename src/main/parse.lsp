@@ -154,7 +154,8 @@
 (defun heap-insert (a key value)
   (incf (heap-size a))
   (when (>= (heap-size a)  (array-dimension a 0))
-    (error "Heap overflow!"))
+    (error "~%Too many pending tasks, probable runaway rule: parse/generate aborted 
+             (see documentation of *maximum-number-of-tasks*)"))
   (loop 
       with i = (heap-size a)
       while (and (> i 1)
@@ -166,14 +167,14 @@
 
 (defun heap-extract-max (a)
   (when (< (heap-size a) 1)
-    (error "Heap underflow!"))
+    (error "This shouldn't happen!  Something's wrong with the parser."))
   (let ((max (shiftf (aref a 1) (aref a (heap-size a)))))
     (decf (heap-size a))
     (heapify a 1)
     (cdr max)))
 
 (defun make-heap ()
-  (let ((heap (make-array '(5000))))
+  (let ((heap (make-array (list *maximum-number-of-tasks*))))
     (setf (aref heap 0) 0)
     heap))
 
