@@ -218,6 +218,7 @@
        "[~a] lsp-process-event(): received: `~(~a~)' command~@[ (wait)~].~%" 
        id (first command) waitp))
     
+    (pprint command)
     (unless (or waitp (null id))
       (format stream "~a~c~%" return #\page)
       (force-output stream))
@@ -317,7 +318,7 @@
                  (object (lsp-retrieve-object id location)))
             (when (and object 
                        (member format '(:avm :edge :edges :chart :tree 
-                                        :generate
+                                        :entity :generate
                                         :mrs :dependencies)))
               (lsp-browse id context object format view))))
 
@@ -347,7 +348,8 @@
                           (when (numberp n) 
                             (let ((lspb (lsp-retrieve-object id n)))
                               (when (lspb-p lspb)
-                                (lspb-dag lspb))))))
+                                (or (lspb-dag lspb)
+                                    (edge-dag (lspb-edge lspb))))))))
                  (path1 (pop command))
                  (tdfs2 (let ((n (pop command)))
                           (when (numberp n) 
@@ -442,18 +444,21 @@
                           nil
                           "`~a'~@[ [LSP # ~a]~]"
                           (lspb-input object) id))))
-    (when (eq format :tree)
-      (show-parse object title)
-      (return-from lsp-browse))
+
     (case format
+      (:tree
+       (if (and (lspb-p object) (edge-p (lspb-edge object)))
+         (show-parse (list (lspb-edge object)) title)
+         (show-parse object title)))
+       
       (:avm
        (if (eq view :local)
          (when (edge-p (lspb-edge object))
            (display-fs (edge-dag (lspb-edge object)) title))
          (display-fs 
-          (if (edge-p (lspb-edge object))
-            (edge-dag (lspb-edge object)) 
-            (lspb-dag object))
+          (cond
+           ((edge-p (lspb-edge object)) (edge-dag (lspb-edge object)))
+           ((tdfs-p (lspb-dag object)) (lspb-dag object)))
           title)))
       ((:edge :edges)
        (when (and (lspb-morphs object) (lspb-chart object))
@@ -463,6 +468,19 @@
            (mp:process-wait-with-timeout "Waiting" 5 #'chart-ready)
            (when (edge-p (lspb-edge object)) 
              (display-edge-in-chart (lspb-edge object))))))
+      (:entity
+       (when (and (lspb-p object) (edge-p (lspb-edge object)))
+         (let ((edge (lspb-edge object)))
+           (if (rule-p (edge-rule edge))
+             (display-fs
+              (rule-full-fs (edge-rule edge))
+              (format nil "Grammar Rule `~(~a~)'" (rule-id (edge-rule edge))))
+             (let* ((id (first (edge-lex-ids edge)))
+                    (entry (get-lex-entry-from-id id)))
+               (when entry
+                 (display-fs
+                  (lex-entry-full-fs entry)
+                  (format nil "Lexical Entry `~(~a~)'" id))))))))
       (:generate
        (let* ((dag (cond
                     ((tdfs-p (lspb-dag object)) 
