@@ -9,20 +9,7 @@
     :depends-on (#+:lkb "lkb" #+:page "page")
     :finally-do
     (progn
-      #+:lkb(setf cl-user::*mrs-loaded* t)
-      (when COMMON-LISP-USER::*grammar-directory* 
-              (load (merge-pathnames
-                        (make-pathname :name "mrsglobals-eng.lisp")
-                    COMMON-LISP-USER::*grammar-directory*)))
-      (when (and COMMON-LISP-USER::*grammar-directory*
-                 (fboundp 'read-mrs-rule-file-aux))
-        (read-mrs-rule-file-aux 
-                (merge-pathnames
-                   (make-pathname :directory 
-                       (pathname-directory
-                        (dir-append COMMON-LISP-USER::*grammar-directory* 
-                                    '(:relative "data"))))          
-                   (make-pathname :name "new-rules.mrs")))))
+      #+:lkb(setf cl-user::*mrs-loaded* t))
     :components
     ((:module "core"
       :source-pathname "mrs"
