@@ -2144,6 +2144,22 @@ char *tsdb_expand_directory(char *base, char *name) {
   return(NULL);
 } /* tsdb_expand_directory() */
 
+char *tsdb_expand_file(char *directory, char *name) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_expand_file()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  
+} /* tsdb_expand_file() */
+
 char *tsdb_user() {
 
 /*****************************************************************************\

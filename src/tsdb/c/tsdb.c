@@ -43,7 +43,8 @@ Tsdb tsdb = {
   (char *)NULL,            /* debug_file */
 #endif
   (Tsdb_history **)NULL,   /* history */
-  -1                       /* history_position */
+  -1,                      /* history_position */
+  TSDB_HISTORY_SIZE        /* history_size */
 }; /* tsdb */
 
 FILE *tsdb_default_stream = TSDB_DEFAULT_STREAM;

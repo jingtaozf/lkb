@@ -111,6 +111,10 @@ extern void free(void *);
 #  define TSDB_MAX_RESULTS 20
 #endif
 
+#ifndef TSDB_HISTORY_SIZE
+#  define TSDB_HISTORY_SIZE 100
+#endif
+
 #ifndef TSDB_TEMPORARY_FILE
 #  define TSDB_TEMPORARY_FILE "tsdb.tmp"
 #endif
@@ -229,6 +233,7 @@ typedef struct tsdb {
 
   Tsdb_history **history;
   int history_position;
+  int history_size;
 } Tsdb;
 
 #if !defined(TSDB_C)
