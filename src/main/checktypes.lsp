@@ -818,12 +818,7 @@
 ;               (format t "~%Type ~A has an invalid constraint specification" type-name)
                   (setf ok nil)))
          (unmark-type-table)
-; !!! can't create cyclic dags
-;         (for type in *type-names* 
-;            do 
-;            (let ((constraint (constraint-of type)))
-;               (if constraint
-;                  (check-fs-for-cycles constraint type))))
+; !!! can't create cyclic dags so don't check for them
          ok))
 
 (defun wf-constraint-of (type-name) 

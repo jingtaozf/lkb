@@ -154,8 +154,9 @@
                   (list                     
                      (make-menu-item :name "Dump system..."
                         :value 'dump-lkb)
-                     (make-menu-item :name "Types with glbs..."
-                        :value 'output-type-file 
-                        :available-p nil))
+;                     (make-menu-item :name "Types with glbs..."
+;                        :value 'output-type-file 
+;                        :available-p nil)
+                     )
                :available-p nil)))))
 

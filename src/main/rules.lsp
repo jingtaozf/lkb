@@ -103,16 +103,16 @@
                   (get-indexed-lrules (cdr entry)
                      #'(lambda (rule) (member (rule-id rule) ignore-list)))
                   filter
-                  (let ((result
-                           (evaluate-unifications rule
-                              (list (cdr entry))
-                              (if 
-                                (spelling-change-rule-p rule)
-                                ;;; test changed AAC Feb 1996
-                                (car (mapcar #'car
-                                             (full-morph-generate 
-                                              (extract-orth-from-fs (cdr entry))
-                                              (rule-id rule))))))))
+                  (let* ((spelling-rule-p (spelling-change-rule-p rule))
+                         (new-morph 
+                              (if spelling-rule-p
+                                  (construct-new-morph entry rule)))
+                         (result
+                          (if (or (not spelling-rule-p) new-morph)
+                              ; allow morphographemics to block generation
+                              (evaluate-unifications rule
+                                                     (list (cdr entry))
+                                                     new-morph))))
                      (if result 
                         (cons 
                            (cons (rule-id rule) (car entry))
@@ -120,7 +120,18 @@
       (if transformed-entries
          (append transformed-entries
             (try-all-lexical-rules transformed-entries ignore-list)))))
-         
+
+
+(defun construct-new-morph (entry rule)
+  (let ((new-morph
+         (full-morph-generate 
+          (extract-orth-from-fs 
+           (cdr entry))
+          (rule-id rule))))
+    (if new-morph
+        (car (mapcar #'car new-morph)))))
+    
+
 (defun apply-all-lexical-rules (entries)
    (incf *number-of-applications*)
    (when (> *number-of-applications* *maximal-lex-rule-applications*)
@@ -130,14 +141,14 @@
                append
                (for rule in (get-indexed-lrules entry)
                   filter
-                  (evaluate-unifications rule
-                     (list entry)
-                     (if 
-                       (spelling-change-rule-p rule)
-                       (car (mapcar #'car
-                                    (full-morph-generate 
-                                     (extract-orth-from-fs entry)
-                                     (rule-id rule))))))))))
+                  (let* ((spelling-rule-p (spelling-change-rule-p rule))
+                         (new-morph 
+                              (if spelling-rule-p
+                                  (construct-new-morph entry rule))))
+                    (if (or (not spelling-rule-p) new-morph)
+                        (evaluate-unifications rule
+                                               (list entry)
+                                               new-morph)))))))
       (if transformed-entries 
          (append transformed-entries
             (apply-all-lexical-rules transformed-entries)))))

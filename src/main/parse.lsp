@@ -144,7 +144,7 @@
                                      (append (morph-analyse word)
                                        (find-irregular-morphs word))
                                      #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
-           (unless morph-poss (format t "Word ~A is not in lexicon~%" word)
+           (unless morph-poss (format t "~%Word ~A is not in lexicon" word)
                    (return))
            (setf (aref *morphs* current)
                  (make-morph-edge :id current :word word :morph-results morph-poss))
@@ -441,10 +441,15 @@
                       (if morph-rules
                          (let* ((morph-rule-info (car morph-rules))
                                 (new-orth (cadr morph-rule-info))
-                                 (rule-id (car morph-rule-info))
+                                (rule-id (car morph-rule-info))
+                                (rule-entry (get-lex-rule-entry rule-id))
                                 (result
-                                 (apply-morph-rule 
-                                   (get-lex-rule-entry rule-id) fs fs-restricted new-orth)))
+                                 (if rule-entry
+                                     (apply-morph-rule 
+                                      rule-entry fs fs-restricted new-orth))))
+                           (unless rule-entry
+                             (format t "~%Warning: rule ~A specified by morphology was not found"
+                                     rule-id))
                            (if result 
                              (list (make-mrecord :fs result 
                                                  :lex-ids lex-ids

@@ -51,24 +51,35 @@
 
 (defun read-cached-lex-if-available (file-name overwrite-p)
   (if (and file-name (probe-file file-name))
-    (let* ((cache-date
-            (if (probe-file *psorts-temp-file*)
-                (file-write-date *psorts-temp-file*)))
-           (cache-index-date 
-            (if 
-                (probe-file *psorts-temp-index-file*)
-                (file-write-date *psorts-temp-index-file*)))
-           (file-date 
-            (file-write-date file-name)))
-      (if (and cache-date file-date cache-index-date
-               (> cache-date file-date) 
-               (> cache-index-date cache-date))
-          (progn (format t "~%Reading in cached lexicon")
-                 (read-psort-index-file)
-                 (format t "~%Cached lexicon read"))
-        (if (eql *lkb-system-version* :page)
-            (read-tdl-lex-file-aux file-name overwrite-p)
-          (read-lex-file-aux file-name overwrite-p))))
+      (let* ((ok nil)
+             (cache-date
+              (if (probe-file *psorts-temp-file*)
+                  (file-write-date *psorts-temp-file*)))
+             (cache-index-date 
+              (if 
+                  (probe-file *psorts-temp-index-file*)
+                  (file-write-date *psorts-temp-index-file*)))
+             (file-date 
+              (file-write-date file-name)))
+        (when (and cache-date file-date cache-index-date
+                 (> cache-date file-date) 
+                 (> cache-index-date cache-date))
+            (progn (setf ok t)
+                   (format t "~%Reading in cached lexicon")
+                   (handler-case 
+                       (read-psort-index-file)
+                     (error (condition)
+                       (format t "~%Error: ~A~%" condition)
+                       (delete-file *psorts-temp-file*)
+                       (delete-file *psorts-temp-index-file*)
+                       (setf ok nil)))
+                   (if ok
+                       (format t "~%Cached lexicon read")
+                     (format t "~%Cached lexicon corrupt: reading lexicon source file"))))
+        (unless ok
+          (if (eql *lkb-system-version* :page)
+              (read-tdl-lex-file-aux file-name overwrite-p)
+            (read-lex-file-aux file-name overwrite-p))))
     (cerror "Continue with script" "Lexicon file not found")))
 
             
