@@ -993,7 +993,7 @@
       when dag do
         (format 
          stream 
-         "[~d:~d] ~:[(inactive)~;(active)~]~%~%~%" 
+         "[~d:~d] ~:[(active)~;(inactive)~]~%~%~%" 
          parse-id result-id complementp)
         (setf lkb::*cached-category-abbs* nil)
         (when (or (eq *redwoods-export-values* :all)
