@@ -1064,11 +1064,14 @@
          (frame (tsdb::browse-trees data :runp nil :verbose nil)))
     (tsdb::browse-tree 
      data item frame :runp nil :verbose nil)
-    (let* ((tsdb-rasp-tree (edge-bar (first (compare-frame-edges frame))))
+    (let* ((edges (or (compare-frame-in frame) (compare-frame-edges frame)))
+           (tsdb-rasp-tree (if edges (edge-bar (first edges))))
            (mrs::*rasp-xml-word-p* t)   ; FIX - RASP `script'
-          (mrs::*initial-rasp-num* (mrs::scan-rasp-for-first-num 
-                                    tsdb-rasp-tree most-positive-fixnum)))
-      (mrs::construct-sem-for-tree tsdb-rasp-tree :rasp :quiet))))
+           (mrs::*initial-rasp-num* (if tsdb-rasp-tree
+                                        (mrs::scan-rasp-for-first-num 
+                                         tsdb-rasp-tree most-positive-fixnum))))
+      (if tsdb-rasp-tree
+          (mrs::construct-sem-for-tree tsdb-rasp-tree :rasp :quiet)))))
 
 (defun get-tsdb-selected-erg-rmrs (item)
   (let* ((data *tsdb-directory1*)
@@ -1077,6 +1080,8 @@
     ;;; force reconstruction of dags by browse-tree
     (tsdb::browse-tree 
      data item frame :runp nil :verbose nil)
-    (mrs::mrs-to-rmrs (mrs::extract-mrs
-                       (first (compare-frame-edges frame))))))
+    (let ((edges (or (compare-frame-in frame) (compare-frame-edges frame))))
+      (if edges
+        (mrs::mrs-to-rmrs (mrs::extract-mrs
+                           (first edges)))))))
     
