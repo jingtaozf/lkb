@@ -73,6 +73,28 @@ char *tsdb_keywords[] = {
   (char *)NULL
 };
 
+char *tsdb_constants[] = {
+  "home",
+  "tsdb_home",
+  "relations-file",
+  "tsdb_relations_file",
+  "data-path",
+  "tsdb_data_path",
+  (char *)NULL
+};
+
+char *tsdb_variables[] = {
+  "result-path",
+  "tsdb_result_path",
+  "result-prefix",
+  "tsdb_result_prefix",
+  "max-results",
+  "tsdb_max_results",
+  "history-size",
+  "tsdb_history_size",
+  (char *)NULL
+};
+
 char *tsdb_rest_generate(char *, int) ;
 char **tsdb_completion(char *, int, int);
 char *tsdb_command_generate(char *, int);
@@ -171,6 +193,7 @@ int main(int argc, char **argv) {
         } /* else */
         free(foo);
         if(input != NULL && *input && input[strlen(input) - 1] == '.') {
+          tsdb.command = n_commands;
           tsdb_parse(input);
           add_history(input);
           free(input);
@@ -362,7 +385,8 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
       case TSDB_HISTORY_OPTION:
         if (optarg != NULL) {
-          if ((tsdb.history_size = strtol(optarg,&bar,10)) == 0 
+          long l = strtol(optarg,&bar,10);
+          if ( l == 0 
               && optarg == bar ) {
             fprintf(tsdb_error_stream,
                     "parse_options(): "
@@ -370,6 +394,8 @@ void tsdb_parse_options(int argc, char **argv) {
                     optarg);            
             tsdb.history_size = -1;
           } /* if */
+          else
+            tsdb.history_size = l;
           /* further things are done in tsdb_initialize!! */
         } 
         else {
