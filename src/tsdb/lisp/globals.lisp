@@ -32,7 +32,7 @@
 (defparameter 
   *tsdb-home* 
   (namestring (dir-append (get-sources-dir "tsdb")
-                          '(:relative "tsdb" "home" "debug"))))
+                          '(:relative "tsdb" "home"))))
 
 (defparameter 
   *tsdb-skeleton-directory* 
