@@ -116,6 +116,10 @@
                       for tree in trees
                       when (eq version (get-field :t-version tree))
                       collect tree))
+           (confidence (let* ((foo (get-field :t-confidence (first trees))))
+                         (if (and (integerp foo) (>= foo 0) (<= foo 3))
+                            foo
+                            3)))
            (history (let* ((foo (get-field :t-confidence (first trees)))
                            (confidence 
                             (if (and (integerp foo) (>= foo 0) (<= foo 3))
@@ -143,6 +147,7 @@
       (declare (ignore active))
       (setf (lkb::compare-frame-item frame) i-id)
       (setf (lkb::compare-frame-version frame) history)
+      (setf (lkb::compare-frame-confidence frame) confidence)
       (setf (lkb::compare-frame-preset frame) discriminants)
       (lkb::set-up-compare-frame lkb::*parse-record* frame)
       (if (null %client%)
@@ -157,7 +162,11 @@
         (when (eq status :save)
           (let* ((version (if version (incf version) 1))
                  (active (length (lkb::compare-frame-in-parses frame)))
-                 (confidence 0)
+                 (foo (lkb::compare-frame-confidence frame))
+                 (confidence (if (and (integerp foo)
+                                      (>= foo 0) (<= foo 3))
+                                foo
+                               -1))
                  (t-author (current-user))
                  (t-start (let* ((start (first (last decisions)))
                                  (start (when (lkb::decision-p start)
