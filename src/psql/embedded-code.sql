@@ -312,6 +312,10 @@ CLUSTER current_grammar_name ON current_grammar;
 SELECT true;'' 
 LANGUAGE SQL;
 
+CREATE OR REPLACE VIEW obj_semi_main AS SELECT name, keyrel_lexeme(keyrel) as lexeme, keyrel_pos(keyrel) as pos, keyrel_sense(keyrel) as sense, keytag, comments, exemplars from current_grammar where btrim(keyrel,''"'') like ''\\_%'';
+
+CREATE TABLE obj_semi_main_temp();
+
 ' );
 
 INSERT INTO qrya VALUES ( 'remove-schema', 0, 'select-list' );

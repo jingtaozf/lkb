@@ -22,10 +22,6 @@ SELECT
 ' 
 LANGUAGE SQL;
 
-CREATE OR REPLACE VIEW obj_semi_main AS SELECT name, keyrel_lexeme(keyrel) as lexeme, keyrel_pos(keyrel) as pos, keyrel_sense(keyrel) as sense, keytag, comments, exemplars from current_grammar where btrim(keyrel,'"') like '\\_%';
-
-CREATE TABLE obj_semi_main_temp();
-
 DELETE FROM qry WHERE fn='dump-obj-semi-main';
 DELETE FROM qrya WHERE fn='dump-obj-semi-main';
 INSERT INTO qrya VALUES ( 'dump-obj-semi-main', 0, 'text' );
