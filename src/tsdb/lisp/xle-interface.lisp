@@ -74,6 +74,8 @@
   ;; the exception of the :readings (number of analyses) field, probably.  the
   ;; item structure can contain a :results field, which should be a list of 
   ;; [incr tsdb()] result structures, including (among others) a :mrs field.
+  ;; note that all values in [incr tsdb()] item and result structures have to
+  ;; be of type integer or string.
   ;;
   (multiple-value-bind (return condition)
       (ignore-errors
