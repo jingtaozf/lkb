@@ -434,6 +434,9 @@
 
 
 
+;;; this is the bottleneck in glb computation, taking more than 90% of the
+;;; cpu time. The functions looks a bit odd but that's because they're optimised
+
 (defvar *wanted* nil)
      
 (defun check-lbs-from-top (x y)
@@ -442,74 +445,48 @@
     (unless (or (member y xdescendants :test #'eq) 
                 (member x ydescendants :test #'eq))
       (let ((*wanted* nil))
-         (find-highest-intersections xdescendants ydescendants)
-         (collect-highest-intersects xdescendants)
+         (find-highest-intersections xdescendants ydescendants nil)
          (if (cdr *wanted*) *wanted*)))))
 
-(defun find-highest-intersections (xs ys)
-   (for type in xs
-      do
-      (when (member type ys :test #'eq)
-         (let ((type-entry (get-type-entry type)))
-            (unless (seen-node-p type-entry)
-               (mark-node-seen type-entry)
-               (for desc in (type-descendants type-entry)
-                  do 
-                  (mark-node-active-and-seen (get-type-entry desc))))))))
 
-#|
-
-(defun find-highest-intersections (type)
-  (let ((type-entry (get-type-entry type)))
-    (unless (seen-node-p type-entry)
-      (if (member type *others*)
-        (progn (mark-node-seen type-entry)
-               ; a seen but not active node is highest so far
-               (for desc in (retrieve-descendants type)
-                    do 
-                    (mark-node-active-and-seen (get-type-entry desc))))
-        (for daughter in (type-daughters type-entry)
-             do
-             (find-highest-intersections daughter))))))
-
-|#
-
-(defun collect-highest-intersects (xs)
-  (for type in xs
-       do
-       (let ((type-entry (get-type-entry type)))         
-         (cond 
+(defun find-highest-intersections (xs ys intersectp)
+   ;; find set of highest intersections between 2 sets of types -
+   ;; intersectp records whether any intersection has been detected. If there
+   ;; hasn't, test first if the next type in xs is a member of ys. If there has,
+   ;; then quickest strategy is to see whether type has been marked (i.e. is a
+   ;; descendent of an intersect point) so need not even be tested for membership
+   ;; of ys. (In former case the member test must come first otherwise type
+   ;; lookup slows things down)
+   ;; At the end, collect highest intersections and unmark the types in xs. A type
+   ;; can only have been marked if intersectp is true, since intersectp is true
+   ;; for every type in xs that is in ys (either it's true on entry, or it's set
+   ;; to true after the member test in the second branch of the if test) 
+   (when xs
+      (let ((type (car xs))
+            (type-entry nil))
+         (when
+            (if intersectp
+               ;; specialise order of tests depending on intersectp
+               (and (not (seen-node-p (setq type-entry (get-type-entry type))))
+                    (member type ys :test #'eq))
+               (and (member type ys :test #'eq)
+                    (setq intersectp t)
+                    (not (seen-node-p (setq type-entry (get-type-entry type))))))
+            (mark-node-seen type-entry)
+            (for desc in (type-descendants type-entry)
+               do 
+               (mark-node-active-and-seen (get-type-entry desc))))
+         (find-highest-intersections (cdr xs) ys intersectp)
+         (cond
+            ((null intersectp))
+            ;; if intersectp is true then type-entry will be set
             ((not (seen-node-p type-entry)))
             ((not (active-node-p type-entry))
-               ;; seen but not active
+               ;; seen but not active, so is a highest intersection
                (push type *wanted*)
                (clear-marks type-entry))
             (t (clear-marks type-entry))))))
-  
-           
 
-#|
-
-(defun check-lbs-from-top (x y)
-  (let ((xdescendants (retrieve-descendants x))
-        (ydescendants (retrieve-descendants y)))
-    (unless (or (member y xdescendants)
-                (member x ydescendants))
-      (let ((z (intersection xdescendants ydescendants)))
-        (if (cdr z)
-          (let ((problem-list (remove-descendants-glb z)))
-            (if (cdr problem-list)
-              problem-list)))))))
-
-(defun remove-descendants-glb (int-list)
-   (do* ((done nil (cons initial done))
-         (initial (car int-list) (car (set-difference new-int-list done)))
-         (new-int-list (set-difference int-list (retrieve-descendants initial))
-            (set-difference new-int-list (retrieve-descendants initial))))
-      ((null (set-difference new-int-list (cons initial done)))
-            new-int-list)))
-
-|#          
 
 ;;;; July 1996 new stuff to fix mglbs
 
