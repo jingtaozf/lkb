@@ -63,7 +63,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "3.05")
+(defvar *psql-db-version* "3.06")
 (defvar *psql-port-default* nil)
 (defvar *psql-lexicon-parameters*) ;; define in GRAMMAR/globals.lsp
 
