@@ -150,12 +150,13 @@
     ;; t indicates that this is being run from the generator and that
     ;; the appropriate globals should be set
     (with-output-to-top ()
-      (if (mrs::psoa-liszt input-sem)
+      (if (and input-sem (mrs::psoa-p input-sem)
+               (mrs::psoa-liszt input-sem))
 	  (progn
 	    (close-existing-chart-windows)
 	    (generate-from-mrs input-sem)
 	    (show-gen-result))
-	(format t "~%Could not extract any MRS relations from edge ~A"
+	(format t "~%Could not extract valid MRS from edge ~A"
 		(edge-id parser-edge))))))
 
 #-tty
