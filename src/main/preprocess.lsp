@@ -104,11 +104,11 @@
                       (format
                        t
                        "read-preprocessor(): [~d] invalid pattern `~a'~%"
-                       n source))
+                       n source)))
                   (format
                    t
                    "read-preprocessor(): [~d] invalid `~a'~%"
-                   n line))))
+                   n line)))
                (t
                 (format
                  t
