@@ -19,25 +19,24 @@
    (t
     (error "please set *batch-check-diff-list*"))))
    
-(defun batch-check-lexicon (&optional (unexpandp t) &key (check-duplicates t))
+(defun batch-check-lexicon (&optional (unexpandp t) &key (check-duplicates t) (lexicon *lexicon*))
   (let ((*batch-mode* t)
 	(start-path (get-diff-list-start-path)))
-    (when (typep *lexicon* 'psql-lex-database)
+    (when (typep lexicon 'psql-lex-database)
       (format t "~%(caching all lexical records)")
-      (cache-all-lex-records *lexicon*))
+      (cache-all-lex-records lexicon))
     (format t "~%Checking lexicon")
 ;    (format t "~%  - difference-list check starts at path ~a" start-path)
-    (dolist (id (collect-psort-ids *lexicon*))
+    (dolist (id (collect-psort-ids lexicon))
       ;; alternatively - for lexicon only
       ;; (collect-psort-ids *lexicon*) 
-      (check-lex-entry id
+      (check-lex-entry id lexicon
 		       :unexpandp unexpandp
-		       :start-path start-path)
-      ))
+		       :start-path start-path)))
   (when check-duplicates
-    (display-tdl-duplicates *lexicon*))
+    (display-tdl-duplicates lexicon))
 ;  (format t "~%(emptying cache)")
-  (empty-cache *lexicon*)
+  (empty-cache lexicon)
   (format t "~%Lexicon checked"))
 
 (defun display-tdl-duplicates (lexicon)
@@ -71,12 +70,11 @@
       (format t "~%END OF DUPLICATE ENTRIES~%"))))
       
 
-(defun check-lex-entry (id &key unexpandp
-				start-path)
-  (let* ((entry (read-psort *lexicon* id :cache (not unexpandp)))
+(defun check-lex-entry (id lexicon &key unexpandp
+					start-path)
+  (let* ((entry (read-psort lexicon id :cache (not unexpandp)))
 	 ;;(lex-id (lex-entry-id entry)) ;;huh?
-	 (lex-id id)
-	 )
+	 (lex-id id))
     (cond 
      ((null entry)
       (format t "~%WARNING: lexical entry '~a' not found in lexicon" lex-id)

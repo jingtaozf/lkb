@@ -443,7 +443,8 @@
 				symb-list
 				(ordered-val-list symb-list psql-le)))
     (unless
-	(check-lex-entry (str-2-symb (retr-val psql-le :name)))
+	(check-lex-entry (str-2-symb (retr-val psql-le :name))
+			 lexicon)
       (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :name)))))
 
 #+:mwe

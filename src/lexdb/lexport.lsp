@@ -36,49 +36,36 @@
 
 (defun export-lexicon-to-file-aux (&key 
 				(dir (postgres-user-temp-dir))
-				file 
+				name 
 				(lexicon *lexicon*)
 				use-defaults
 				(recurse t))
   "export to db dump file format"
-  (when (and file recurse)
-    (format t "ignoring :recurse (ommit :file to enable :recurse)")
+  (when (and name recurse)
+    (format t "ignoring :recurse (ommit :name to enable :recurse)")
     (setf recurse nil))
-  (when (null file)
-    (setf file (format nil "~a/~a" dir 
-                       (or (name lexicon) "unknown"))))
   (when (typep lexicon 'psql-lex-database)
     (error "use 'merge' command to export LexDB"))
-  (setf file (namestring (pathname file)))
-  (unless use-defaults
-    ;; extra data in db entries
-    (setf *lexdb-dump-source* (get-current-source))
-    (setf *lexdb-dump-timestamp* (extract-date-from-source *lexdb-dump-source*))
-
-    (query-for-modstamp-username)
-    (query-for-meta-fields)
-    (get-export-version))
-
-  (let ((rev-file (format nil "~a.rev" file))
-	(skip-file (format nil "~a.skip" file))
-	;(multi-file (format nil "~a.multi.rev" file))
-	)
+  (let* ((file (namestring
+	       (pathname
+		(format nil "~a/~a" dir 
+			(or name (name lexicon) "unknown")))))
+	(*lexdb-dump-source* *lexdb-dump-source*)
+	(*lexdb-dump-timestamp* *lexdb-dump-timestamp*)
+	(rev-file (format nil "~a.rev" file))
+	(skip-file (format nil "~a.skip" file)))
+    (unless use-defaults
+      ;; extra data in db entries
+      (setf *lexdb-dump-source* (get-current-source))
+      (setf *lexdb-dump-timestamp* (extract-date-from-source *lexdb-dump-source*))
+      
+      (query-for-modstamp-username)
+      (query-for-meta-fields)
+      (get-export-version))
+    
     (format t "~%~%Please wait: exporting lexicon ~a to REV file ~a" (name lexicon) rev-file)
     (format t "~%   (skip file: ~a)" skip-file)
     
-;    (if *postgres-export-multi-separately*
-;	;; set multi stream
-;	(with-open-file (*postgres-export-multi-stream* 
-;			 multi-file
-;			 :direction :output 
-;			 :if-exists :supersede :if-does-not-exist :create)
-;	  (with-open-file (*lexdb-dump-skip-stream* 
-;			   skip-file
-;			   :direction :output 
-;			   :if-exists :supersede :if-does-not-exist :create)
-;	    (format t "~%   (multi file: ~a)" multi-file)
-;	    (export-to-db-dump-to-file lexicon rev-file)))	  
-;      ;; no multi stream
       (with-open-file (*lexdb-dump-skip-stream* 
 		       skip-file
 		       :direction :output 
@@ -87,10 +74,7 @@
 	  (error "please initialize *psql-lexicon*"))
 	(when (string>= (lexdb-version *psql-lexicon*) "3.32")
 	  (dump-dfn-fld *psql-lexicon* file))
-	(export-to-db-dump-to-file lexicon rev-file)
-	)
-      ;)
-    )
+	(export-to-db-dump-to-file lexicon rev-file)))
   (format t "~%export complete")
   (when recurse
     (mapcar 
