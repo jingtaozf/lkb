@@ -111,7 +111,7 @@ e.g.
             (when (eql (rem nsent 50) 1)
                ;; remove all cached lexical entries at start and after every 50 sentences
                (uncache-lexical-entries))
-            (format t " ~A" id) (finish-output)
+            (parse-tsdb-sentences-progress id)
             (if (> (length words) *chart-limit*)
                (error "Sentence ~A too long" id)
                (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
@@ -163,6 +163,13 @@ e.g.
                               (incf n))))))))
          (setq line (read-line istream nil 'eof)))
      (uncache-lexical-entries)))
+
+(defun parse-tsdb-sentences-progress (id)
+   (let ((str
+            (or (find-symbol "*LKB-TOP-STREAM*" (find-package "CLIM-USER"))
+               *standard-output*)))
+      (format str " ~A" id)
+      (finish-output str)))
 
 
 (defun parse-tsdb-sentence (user-input)
