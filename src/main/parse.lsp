@@ -640,6 +640,12 @@
 
 
 (defun activate-context (left-vertex edge right-vertex f)
+  #+:pdebug
+  (format 
+   t 
+   "~&activate-context(): edge # ~d: [~d -- ~d];~%"
+   (edge-id edge) left-vertex right-vertex)
+
     (add-to-chart left-vertex edge right-vertex f)
     (dolist (rule *parser-rules*)
       ;; grammar rule application is attempted when we've got all the bits
@@ -707,23 +713,43 @@
   ;; dag and associated information, add this to the chart, and invoke the
   ;; same process recursively.
   (declare (type fixnum n))
+  #+:pdebug
+  (format
+   t
+   "~&try-grammar-rule-left(): `~(~a~) [~d] <-- ~{~d~^ ~} [~d -- ~d]~%"
+   (rule-id rule) (length rule-restricted-list)
+   (loop for e in  child-edge-list collect (edge-id e))
+   left-vertex right-vertex)
   (incf *contemplated-tasks*)
   (if (and (check-rule-filter rule (edge-rule (car child-edge-list)) n)
 	   (restrictors-compatible-p (car rule-restricted-list) 
 				     (edge-dag-restricted 
-				      (car child-edge-list)))) 
+				      (car child-edge-list))))
       (if (cdr rule-restricted-list)
 	  (let ((entry (aref (the (simple-array t (* *)) *chart*) 
 			     left-vertex 0)))
 	    (when entry
-	      (dolist (config (chart-entry-configurations entry))
-                (try-grammar-rule-left rule
-                                       (cdr rule-restricted-list)
-                                       (chart-configuration-begin config)
-                                       right-vertex
-                                       (cons (chart-configuration-edge config) 
-                                             child-edge-list)
-                                       f (1- n)))))
+	      (dolist (config (chart-entry-configurations entry) t)
+		(unless
+		    ;; inner recusive call returns nil in cases when first
+		    ;; unif attempt fails - if this happens there's no point
+		    ;; continuing with other alternatives here
+		    (try-grammar-rule-left 
+                     rule
+                     (cdr rule-restricted-list)
+                     (chart-configuration-begin config)
+                     right-vertex
+                     (cons (chart-configuration-edge config) child-edge-list)
+                     f (1- n))
+                  #+:pdebug
+                  (format
+                   t
+                   "~&try-grammar-rule-left(): ~
+                    `~(~a~) [~d] <-- ~{~d~^ ~} [~d -- ~d] ... throw~%"
+                   (rule-id rule) (length rule-restricted-list)
+                   (loop for e in  child-edge-list collect (edge-id e))
+                   left-vertex right-vertex)
+                  (return-from try-grammar-rule-left nil)))))
 	;; we've got all the bits
 	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex
@@ -742,13 +768,15 @@
 	  (let ((entry (aref *chart* right-vertex 1)))
 	    (when entry
 	      (dolist (config (chart-entry-configurations entry))
+		(unless
                   (try-grammar-rule-right rule
 					  (cdr rule-restricted-list)
 					  left-vertex
 					  (chart-configuration-end config)
 					  (cons (chart-configuration-edge config)
 					        child-edge-list)
-					  f (1+ n)))))
+					  f (1+ n))
+                  (return-from try-grammar-rule-right nil)))))
 	;; we've got all the bits
 	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex 
@@ -762,12 +790,17 @@
 				     child-edge-list f backwardp)
   ;; attempt to apply a grammar rule when we have all the parts which match
   ;; its daughter categories
-#+ignore (format t "~%Try Rule id ~A left ~A right ~A dtrs ~A" (rule-id rule)  
-	  left-vertex right-vertex (mapcar #'edge-id child-edge-list))
+  #+:pdebug
+  (format
+   t
+   "~&try-immediate-grammar-rule(): `~(~a~) <-- ~{~d~^ ~} [~d -- ~d]"
+   (rule-id rule) (loop for e in  child-edge-list collect (edge-id e))
+   left-vertex right-vertex)
   (let ((child-edge-list-reversed (reverse child-edge-list)))
     (multiple-value-bind (unification-result first-failed-p)
-	 (evaluate-unifications rule (mapcar #'edge-dag child-edge-list-reversed)
-				nil child-edge-list-reversed backwardp)
+        (evaluate-unifications rule (mapcar #'edge-dag 
+                                            child-edge-list-reversed)
+                               nil child-edge-list-reversed backwardp)
       (if unification-result
 	  (let* ((edge-list
                     (if backwardp child-edge-list child-edge-list-reversed))
@@ -785,15 +818,11 @@
                                       #'(lambda (child)
                                           (copy-list (edge-leaves child)))
                                       edge-list))))
-	    #+ignore (format t " Succeed.")
+	    #+pdebug (format t " ... success.~%")
 	    (activate-context left-vertex new-edge right-vertex f)
             t)
         (progn
-	  #+ignore (format t " Fail.")
-	  (when *debugging*
-	    #+ignore (format t "~%~A" *filtered-tasks*)
-	    (format t "~%Unification failure on rule ~A and edges ~:A" 
-		    (rule-id rule) (mapcar #'edge-id child-edge-list)))
+	  #+pdebug (format t " ... ~:[fail~;throw~].~%" first-failed-p)
           (if first-failed-p nil t))))))
 
 
@@ -1187,4 +1216,3 @@
    ;; needed for chart display etc
    rels-covered ; set of relations generated so far
    index)
-
