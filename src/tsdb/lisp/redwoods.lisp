@@ -84,8 +84,9 @@
 
     #+:debug
     (setf lkb::%frame% frame)
-    (setf (lkb::compare-frame-ids frame) 
-      (loop for item in items collect (get-field :i-id item)))
+    (when frame 
+      (setf (lkb::compare-frame-ids frame) 
+        (loop for item in items collect (get-field :i-id item))))
     
     (when (functionp *statistics-result-filter*)
       (setf items
@@ -111,7 +112,7 @@
           with annotated = (make-array nitems :initial-element 0)
           with position = 0
           initially
-            (unless #-:expand strip #+:expand nil
+            (unless frame
               (setf (lkb::compare-frame-chart frame) nil)
               (setf (clim:frame-pretty-name frame) title)
               (setf (lkb::compare-frame-controller frame) *current-process*))
