@@ -10,13 +10,19 @@
 
 <!ELEMENT head (#PCDATA) >
 
-<!ELEMENT semstruct (hook,(ep|rarg|ing|hcons)*)>
+<!ELEMENT semstruct (hook,(slots),(ep|rarg|ing|hcons)*)>
 
 <!ELEMENT hook (index,label)>
 
 <!ELEMENT index (#PCDATA)>
 
 <!ELEMENT label (#PCDATA)>
+
+<!ELEMENT slots (noanchor|anchor)>
+
+<!ELEMENT noanchor EMPTY>
+
+<!ELEMENT anchor (#PCDATA)>
 
 <!ELEMENT ep (gpred,label,var)>
 

@@ -40,7 +40,7 @@
           nil)))
 
 (defun read-rmrs-tag-template (real-xml)
-;;;  <!ELEMENT le (tag, (documentation)*, semstruct)>
+;;;  <!ELEMENT le (tag, (comment)*, semstruct)>
   (let* ((tag (car real-xml)))
     (if (eq tag '|le|)
 	(let ((name nil) 
@@ -52,7 +52,7 @@
                    (let ((next-tag (car next-el)))    
                      (ecase next-tag
 		       (|tag| (setf name (cadr next-el)))
-		       (|documentation| nil)
+		       (|comment| nil)
 					; (setf doc (cadr next-el))
                        (|semstruct| 
                            (setf semstruct 

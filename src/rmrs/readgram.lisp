@@ -5,7 +5,7 @@
 
 (in-package :mrs)
 
-(defparameter *valid-hook-elements* '("INDEX" "LABEL"))
+(defparameter *valid-hook-elements* '("INDEX" "LABEL" "ANCHOR"))
 
 ;;; Reading
 
@@ -74,8 +74,8 @@
       collect (cadr dtr)))
       
 (defun read-rmrs-semstruct (content)
-;;; <!ELEMENT semstruct (hook,(ep|rarg|ing|hcons)*)> 
-  (let ((hook nil) (eps nil) (rargs nil) (ings nil)
+;;; <!ELEMENT semstruct (hook,(slots),(ep|rarg|ing|hcons)*)> 
+  (let ((hook nil) (slots nil) (eps nil) (rargs nil) (ings nil)
         (h-cons nil))
     (loop for next-el in content
           do
@@ -90,6 +90,7 @@
                             h-cons)
 	      (ecase next-tag
 		(|hook| (setf hook (read-rmrs-semstruct-hook tag-content)))
+		(|slots| (setf slots (read-rmrs-semstruct-slots tag-content)))
 		(|ep| (push (read-rmrs-semstruct-ep tag-content)
 			  eps))
                 (|rarg| (push (read-rmrs-semstruct-rarg tag-content)
@@ -97,6 +98,7 @@
                 (|ing| (push (read-rmrs-semstruct-in-g tag-content)
 			     ings)))))))
     (make-semstruct :hook (or hook (make-default-hook))
+		    :slots slots
                     :liszt (nreverse eps)
 		    ;; binding-list is constructed when the
                     ;; real semstruct is created
@@ -116,6 +118,15 @@
          :label label
          :index index)))
 
+
+(defun read-rmrs-semstruct-slots (slots)
+;;; <!ELEMENT slots (noanchor|anchor)>
+  (let* ((content (first slots))
+	 (tag (first content))
+	 (body (second content)))
+    (ecase tag
+      (|noanchor| :none)
+      (|anchor| (construct-grammar-var body)))))
 
 (defun read-rmrs-semstruct-ep (content)
   ;;; <!ELEMENT ep ((gpred|pred|realpred),label,var)>
@@ -215,7 +226,7 @@
 	     (member hook-element *valid-hook-elements* :test #'string-equal))
 	(make-pointer :dtrnum dtr-number 
 		      :hook-el hook-element)
-      (error "~%Invalid args to convert-hook-info ~S ~S"
+      (error "~%Invalid args to read-dtr-hook ~S ~S"
 	  dh dtrs))))   
 
 ;;; Outputting rules

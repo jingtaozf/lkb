@@ -6,7 +6,6 @@
 ;;; Building semantic structures via an algebra
 
 ;;; FIX - not dealing with optional elements in rules
-;;; FIX - need anchors when dealing with scopal modifiers
 ;;; FIX - share-var-info
 
 (in-package :mrs)
@@ -18,23 +17,25 @@
 
 (defstruct (semstruct (:include rmrs))
   hook
-;;;  holes / anchors
+  slots
   )
 
 ;;; hook has an indices structure as a value
 ;;;
-;;; holes would be a list of indices, tagged by some sort of name
+;;; a full version of slots would be a list of indices, 
+;;; tagged by some sort of name
 ;;; corresponding to the syntax
 ;;; however, for the robust semantic composition,
 ;;; we don't know anything about argument-hood lexically,
-;;; and holes is generally unset, except (perhaps) for prepositions
+;;; and slots is generally unset, except (perhaps) for prepositions
 ;;; where the class may have known properties (this assumes the
 ;;; preposition/particle distinction is made)
-;;; for now, I'll try and do without holes
 ;;;
-;;; FIX - doing without holes won't work as soon as scopal modification 
-;;; (including negation) is treated properly.  But may be able to
-;;; get away with an `anchor' - single index - instead
+;;; doing without slots completely doesn't work as soon as scopal 
+;;; modification  (including negation) is treated properly,
+;;; because the modifier `hides' the verb etc's ltop.
+;;; But may be able to
+;;; get away with an `anchor' - a single label - instead of the full thing
 
 
 (defstruct indices
@@ -270,6 +271,8 @@
   (let ((rule-instruction (lookup-instruction rule-name))
 	(dtr-hooks (loop for dtr in dtrs
 		       collect (semstruct-hook dtr)))
+	(dtr-slots (loop for dtr in dtrs
+		       collect (semstruct-slots dtr)))
 	(dtr-eps (loop for dtr in dtrs
 		     append (semstruct-liszt dtr)))
         (dtr-rargs (loop for dtr in dtrs
@@ -282,8 +285,6 @@
 	 (loop for dtr in dtrs
 	     append (semstruct-bindings dtr)))
 	(cfrom (let ((current-min most-positive-fixnum))
-		     ;; FIX should be maximum integer
-		     ;; but don't have CL book here
 		 (dolist (dtr dtrs)
 		   (let ((dtr-cfrom (semstruct-cfrom dtr)))
 		     (when (and dtr-cfrom
@@ -323,7 +324,7 @@
       ;;; if semstruct has been computed - this affects the
       ;;; equality computation via *local-var-context*
       (setf equalities 
-	(compute-equalities dtr-hooks
+	(compute-equalities dtr-hooks dtr-slots
 			    (rmrs-rule-eqs rule-instruction))))
     (let ((semstruct-out
            (make-semstruct :hook 
@@ -340,6 +341,17 @@
                                 ;;; assume semhead is single dtr 
                                 ;;; if unary rule
                                (make-default-running-hook)))
+			   :slots (cond 
+				   (semstruct 
+				    (semstruct-slots semstruct))
+				   ((eql semhead -1)
+				    :none)
+				   (semhead 
+				    (semstruct-slots 
+				     (elt dtrs semhead)))
+				   ((not (cdr dtrs))
+				    (semstruct-slots (car dtrs)))
+				   (t nil))
                            :liszt (if semstruct 
                                       (append 
                                        (semstruct-liszt semstruct) dtr-eps)
@@ -485,6 +497,10 @@ goes to
   (let* ((new-hook (generate-new-hook (semstruct-hook semstruct))))
     (make-semstruct 
      :hook new-hook
+     :slots (let ((slots-spec (semstruct-slots semstruct)))
+	      (cond ((eql slots-spec :none) :none)
+		    (slots-spec (generate-new-var slots-spec))
+		    (t (indices-label new-hook))))
      :liszt
      (loop for old-ep in (semstruct-liszt semstruct)
          collect
@@ -542,9 +558,9 @@ goes to
    :label (generate-new-var (indices-label old-hook))
    :index (generate-new-var (indices-index old-hook))))
 
-(defun compute-equalities (dtr-hooks equalities)
+(defun compute-equalities (dtr-hooks dtr-slots equalities)
   ;;; equality components in rules are either 
-  ;;; integers (indicating dtr-hooks) or
+  ;;; integers plus path (indicating dtr-hook elements or dtr-slots ) or
   ;;; variables which should correspond to the *local-var-context*
   ;;;
   ;;; this function returns a list of lists of variables
@@ -555,7 +571,7 @@ goes to
 	(dolist (el els)
 	  (let  ((new-var 
 		  (if (pointer-p el)
-		      (get-var-for-pointer el dtr-hooks)
+		      (get-var-for-pointer el dtr-hooks dtr-slots)
 		    (rest (assoc el *local-var-context* 
                                  :test #'eql-var-id)))))
 	    (when new-var
@@ -576,17 +592,24 @@ goes to
       (setf (var-extra v2) (var-extra v1))
     (setf (var-extra v1) (var-extra v2))))
 
-(defun get-var-for-pointer (pointer dtr-hooks)
+(defun get-var-for-pointer (pointer dtr-hooks dtr-slots)
   (let* ((dtr-num (pointer-dtrnum pointer))
-	 (hook (elt dtr-hooks dtr-num)))
-    (if (and hook (indices-p hook))
-	(cond ((equal (pointer-hook-el pointer)
-		      "INDEX") 
-	       (indices-index hook))
-              ((equal (pointer-hook-el pointer)
-		      "LABEL") 
-	       (indices-label hook))
-	      (t nil)))))
+	 (hook (elt dtr-hooks dtr-num))
+	 (slot (elt dtr-slots dtr-num)))
+    (cond ((and
+	    (equal (pointer-hook-el pointer)
+		   "INDEX")
+	    hook (indices-p hook))
+	   (indices-index hook))
+	  ((and (equal (pointer-hook-el pointer)
+		       "LABEL") 	       
+		hook (indices-p hook))
+	   (indices-label hook))
+	  ((and (equal (pointer-hook-el pointer)
+		       "ANCHOR") 	       
+		slot (not (eql slot :none)))
+	   slot)
+	  (t nil))))
 
 ;;; ********************************
 ;;; Rule lookup

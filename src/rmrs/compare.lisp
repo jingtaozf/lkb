@@ -47,6 +47,14 @@ Should be possible to reuse this as MRS code
   rel2
   comp-status)
 
+;;; comp-status records the class of compatibility
+;;; between the relation
+;;; :equal
+;;; :sub1 - rel1 is more specific tham rel2
+;;; :sub2 - rel2 is more specific tham rel1
+;;; :comp - rel1 and rel2 are compatible but not equal
+;;;         and not in a subsumes relationship
+
 ;;; Main entry point - same-source-p is t if we want
 ;;; to use the character position information 
 ;;; FIX - need to put in a quick and dirty check for the
@@ -257,8 +265,8 @@ the canonical order is fully defined.
 		 ep
 		 (rmrs-rmrs-args rmrs))))))
       (dolist (qeq (rmrs-h-cons rmrs))
-	(cond
-	  ((equal (hcons-relation qeq) "qeq")
+	(cond ;;; TEMP - case
+	  ((string-equal (hcons-relation qeq) "qeq")
 	   (pushnew (hcons-scarg qeq) holes 
 		    :test #'eql-var-id)
 	   (pushnew (hcons-outscpd qeq) labels 
@@ -315,8 +323,12 @@ the canonical order is fully defined.
 
 (defun compare-rmrs-aux (rmrs1 rmrs2 comp-record same-source-p)
   ;;; FIX needs much more!
+  ;;; compare-rmrs-top-h 
   (compare-rmrs-liszts (rmrs-liszt rmrs1) (rmrs-liszt rmrs2) 
 		       comp-record same-source-p))
+  ;;; rmrs-args 
+  ;;; rmrs-h-cons
+  ;;; rmrs-in-groups
 
 (defun compare-rmrs-liszts (l1 l2 comp-record same-source-p)
   (if (and l1 l2)
@@ -448,28 +460,69 @@ the canonical order is fully defined.
       comparison-record)))
       
 
-     
-
 (defun compare-rmrs-preds (rel1 rel2)
-  ;;; code is used both for comparing rels from different
-  ;;; sources and putting rels into equivalence classes
-  ;;; initially, though in the latter case we treat as a boolean fn
+  ;;; FIX - need to think about the parameter
+  ;;; strings handling
   (let ((pred1 (rel-pred rel1))
 	(pred2 (rel-pred rel2)))
-  ;;; a gram pred can never to equal to a non-gram pred
     (cond ((and (realpred-p pred1) 
 		(realpred-p pred2))
 	   (compare-rmrs-real-preds pred1 pred2))
-	  ((realpred-p pred1) nil)
-	  ((realpred-p pred2) nil)
+	  ((realpred-p pred1) (if (gpred-subsumes-real-p pred2 pred1)
+				  :sub1))
+	  ;;; 1 is more specific
+	  ((realpred-p pred2) (if (gpred-subsumes-real-p pred1 pred2)
+				  :sub2))
 	  ((and (equal pred1 pred2) 
 		(string-equal (rel-parameter-strings rel1)
 			      (rel-parameter-strings rel2)))
 	 ;;; string equal returns t if args are both nil
 	   :equal)
+	  ((and (rel-parameter-strings rel1)
+	       (rel-parameter-strings rel2)) nil)
+	  ;;; this is a sl arbitrary decision that may need to be reconsidered
+	  ((and (gpred-subsumes-gpred-p pred1 pred2) 
+		(not (rel-parameter-strings rel1))) :sub2)
+	  ;;; 2 is more specific
+	  ((and (gpred-subsumes-gpred-p pred2 pred1)
+		(not (rel-parameter-strings rel2))) :sub1)
+	  ((and (gpred-compatible-gred-p pred1 pred2)
+		(not (or (rel-parameter-strings rel1)
+			 (rel-parameter-strings rel2)))) :comp)
 	  (t nil))))
 
+
+
+(defun gpred-subsumes-real-p (gpred real-pred)
+  ;;; returns t if the gpred subsumes the real-pred
+  ;;; always nil for now
+  (declare (ignore gpred real-pred))
+  nil)
+
+(defun gpred-subsumes-gpred-p (gpred1 gpred2)
+  ;;; returns t if gpred1 subsumes gpred2
+  ;;; for now, do this via the LKB type hierarchy
+  (equal-or-subtype (vsym gpred2) (vsym gpred1)))
+
+(defun gpred-compatible-gred-p (gpred1 gpred2)
+  ;;; returns t if gpred1 and gpred2 are compatible
+  ;;; (equal, one subsumes the other, or have lb in a general
+  ;;; hierarchy)
+  ;;; for now, do this via the LKB type hierarchy
+  (compatible-types (vsym gpred1) (vsym gpred2)))
+
 (defun compare-rmrs-real-preds (pred1 pred2)
+  ;;; real preds have two or three parts
+  ;;; lemma, pos and (optionally) sense
+  ;;; the lemma has to be equal for there to be
+  ;;; any relationship 
+  ;;; pos has the possibility of an underspecified value
+  ;;; (this shouldn't occur with a specified sense)
+  ;;;
+  ;;; an unspecified sense always subsumes a specified sense
+  ;;;
+  ;;; currently don't allow anything other than the  
+  ;;; specified/unspecified distinction for pos or sense
   (if (equal (realpred-lemma pred1)
 	     (realpred-lemma pred2))
 	   (cond ((equal (realpred-pos pred1)
@@ -478,12 +531,18 @@ the canonical order is fully defined.
 				(realpred-sense pred2)) 
 			 :equal)
 			((null (realpred-sense pred1))
-			 :sub1)
+			 :sub2) ;;; 2 is more specific
 			((null (realpred-sense pred2))
-			 :sub2)
+			 :sub1) ;;; 1 is more specific
 			(t nil)))
-		 ((unknown-rmrs-pos pred1) :sub1)
-	         ((unknown-rmrs-pos pred2) :sub2)
+		 ((unknown-rmrs-pos pred1) 
+		  (when (realpred-sense pred1)
+			(error "~A should not have a sense specification with unknown pos" pred1))
+		  :sub2)
+	         ((unknown-rmrs-pos pred2) 
+		  (when (realpred-sense pred2)
+			(error "~A should not have a sense specification with unknown pos" pred2))
+		  :sub1)
 		 (t nil))
     nil))
 

@@ -131,8 +131,8 @@
  (make-pathname 
    :device "d"
    :directory "/lingo/lkb/src/rmrs/annlt-test/"
-   :name "rasp.out")
- "xxx" nil)
+   :name "semtest.rasp")
+ "semtest.rmrs" nil)
 
 |#
 

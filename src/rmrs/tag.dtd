@@ -1,6 +1,6 @@
 <!ELEMENT lex (le)*>
 
-<!ELEMENT le (tag, (documentation)*, semstruct)>
+<!ELEMENT le (tag, (comment)*, semstruct)>
 
 <!ELEMENT tag (#PCDATA)>
 

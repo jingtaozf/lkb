@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003
+;; Copyright (c) 2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -114,48 +114,169 @@
 		 (+ (position-y ep1-pos) 10)
 		 (- (position-x ep2-pos) 10)
 		 (+ (position-y ep2-pos) 10)
-		 :ink +red-flipping-ink+)))))))
+		 :ink (determine-comparison-line-colour
+		       (mrs::match-rel-record-comp-status match)))))))))
 
+(defun determine-comparison-line-colour (comp-type)
+  ;;; if we assume that the deep-grammar derived RMRS is
+  ;;; in position 1, then the :sub2 and :comp cases are
+  ;;; generally unexpected - hence use red/magenta for these
+  (ecase comp-type
+    (:equal +green-flipping-ink+)
+    (:sub1 +blue-flipping-ink+)
+    (:sub2 +red-flipping-ink+)
+    (:comp +magenta-flipping-ink+)))
+    
 ;;; ************* Temporary !!!! ************************
 
 (defparameter *rmrs-test-suite*
-    '("It rained"
-      "Abrams barked" 
-      "The window opened"
-      "Abrams chased Browne"
-      "Abrams handed Browne the cigarette" 
-      "Abrams handed the cigarette to Browne"
-      "Abrams bet Browne a cigarette that it rained"
-      "Abrams knew that it rained"
-      "Abrams intended to bark" 
-      "Abrams intended Browne to bark"
-      "Every cat barked"
-      "Every cat chased some dog"
-      "My cat barked"
-      "It barked"
-      "The cat chased it"
-      "The cat chased itself"
-      "The cat chased one"
-      "Mine barked"
-      "That opened"
-      "Cats bark"))
+'(    
+("It rained." . 1) ; 1
+("Abrams barked." . 1) 
+("The window opened." . 1) 
+("Abrams chased Browne." . 1) 
+("Abrams handed Browne the cigarette." . 1) ; 5
+("Abrams handed the cigarette to Browne." . 1) 
+("Abrams bet Browne a cigarette that it rained." . 1) 
+("Abrams knew that it rained." . 1) 
+("Abrams intended to bark." . 1) 
+("Abrams intended Browne to bark." . 1) 
+("Every cat barked." . 1) ; 11
+("Every cat chased some dog." . 1)
+("My cat barked." . 1)
+("It barked." . 1)
+("The cat chased it." . 1)
+("The cat chased itself." . 1) ; 16
+("The cat chased one." . 1)
+("Mine barked." . 1)
+("That opened." . 1)
+("Cats bark." . 1)
+("Tobacco arrived." . 1) ; 21
+("Some bark." . 1)
+("Some of the cats bark." . 1)
+("No cat barked." . 1)
+("Did the dog bark?" . 1)
+("Which dog barked?" . 1) ; 26
+("Whose dog barked?" . 1)
+("Chase Browne!" . 1)
+("Abrams wondered which dog barked." . 1)
+("Abrams wondered whether Browne barked." . 1)
+("The dog that Browne chased barked." . 2) ; 31
+("The dog to chase is barking." . 1)
+("The dog was chased by Browne." . 1)
+("The dog chased by Browne barked." . 2)
+("The dog is barking." . 1)
+("The dog has barked." . 1) ; 36
+("The dog has been barking." . 1)
+("The dog had been barking." . 1)
+("The dog will bark." . 1)
+("The dog is going to bark." . 1)
+("The dog could bark." . 1) ; 41
+("The dog couldn't bark." . 1) ; 
+("The old dog barked." . 1)
+("The dog barked softly." . 1)
+("The dog probably barked." . 1)
+("The dog barked in the garden." . 1) ; 46
+("The dog barks now." . 1)
+("The garden dog barked." . 1)
+("The tobacco garden dog barked." . 2)
+("The cat is old." . 1)
+("The cat is in the garden." . 1) ; 51
+("The barking dog chased Browne." . 1)
+("Chased dogs bark." . 1)
+("Chasing the cat is old." . 1)
+("That the cat chases Browne is old." . 1)
+("Dogs chase whatever barks." . 1) ; 56
+("The dog barked every day." . 1)
+("When did the dog bark?" . 3)
+("Three of the dogs bark." . 2)
+("Three bark." . 1)
+("Browne's dog barks." . 1) ; 61
+("Browne's barks." . 2)
+("Twenty three dogs bark." . 1)
+("Two hundred twenty dogs bark." . 1)
+("Abrams arrived by car." . 1)
+("Abrams kept barking." . 1) ; 66
+("Browne squeezed the cat in." . 1)
+("Browne squeezed in the cat." . 1)
+("The picture of Abrams arrived." . 1)
+("Abrams wiped the table clean." . 1)
+("Abrams put Browne in the garden." . 1) ; 71
+("The dog will bark if Browne arrives." . 1)
+("Abrams and Browne arrived." . 1)
+("Abrams, Browne and the dog arrived." . 3)
+("The dog arrived and barked." . 1)
+("The dog arrived and Browne barked." . 1) ; 76
+("The dog barked, didn't it?" . 1)
+("It is obvious that the dog barked." . 1)
+("Abrams promised Browne to bark." . 1)
+("Abrams seems to bark." . 1)
+("Abrams believes Browne to be barking." . 1) ; 81
+("It bothered Abrams that Browne barked." . 1)
+("It took Abrams ten minutes to arrive." . 2)
+("Abrams left it to Browne to bark." . 1)
+("Abrams strikes Browne as old." . 1)
+("Browne considers Abrams old." . 1) ; 86
+("Abrams liked the idea that Browne could bark." . 1)
+("Abrams barked from ten to three." . 1)
+("Abrams was very old." . 1)
+("Nearly every dog barked." . 1)
+("Abrams barked very softly." . 1) ; 91
+("Browne's chasing of cats bothered Abrams." . 1)
+("It bothered Browne that Abrams chased cats." . 1)
+("June third arrived." . 1)
+("Abrams arrived at three twenty." . 1)
+("Browne arrived on Tuesday morning." . 1) ; 96
+("The cats found a way to bark." . 5)
+("The happier dog chased Browne." . 1)
+("There were cats in the garden." . 1)
+("That dog chased Browne." . 1)
+("Somebody chased Abrams." . 1) ; 101
+("How happy was Abrams?" . 1)
+("The number five bothers Browne." . 2)
+("Abrams could." . 1)
+("Browne tried to." . 1)
+("Don't bark!" . 1) ; 106
+("The dog arrived barking." . 1)))
+
 
 (defun compare-eg (egnum)
-  (let* ((input (nth (- egnum 1)
-			     *rmrs-test-suite*))
+  (let* ((eg (nth (- egnum 1)
+		  *rmrs-test-suite*))
+	 (input (car eg))
+	 (parse-number (cdr eg))
 	(rasp-mrs 
 	 (nth (- egnum 1)
-	      (mrs::read-rmrs-file "xxx" :rasp)))
+	      (mrs::read-rmrs-file "semtest.rmrs" :rasp)))
        (erg-mrs
 	(let ((*show-parse-p* nil))
 	  (do-parse-tty input)
 	  (unless *parse-record*
 	    (error "Parse failed"))
-	  (let ((mrs (mrs::extract-mrs (car *parse-record*))))
-	    (unless mrs (error "~%Can't extract MRS"))
-	    (mrs::mrs-to-rmrs mrs)))))
+	  (let ((selected-parse (nth (- parse-number 1) *parse-record*)))
+	    (unless selected-parse
+	        (error "Incorrect parse number"))
+	    (let ((mrs (mrs::extract-mrs selected-parse)))
+	      (unless mrs (error "~%Can't extract MRS"))
+	      (mrs::mrs-to-rmrs mrs))))))
     (dolist (comparison-record (mrs::compare-rmrs erg-mrs rasp-mrs t input))
       (show-mrs-rmrs-compare-window erg-mrs rasp-mrs 
 				    comparison-record input))))
 
+#|
 
+(defun compare-eg (egnum)
+  (let* ((erg-mrs 
+	 (nth (- egnum 1)
+	      (mrs::read-mrss-from-file "rmrs/annlt-test/semtest.erg")))
+	(rasp-rmrs 
+	 (nth (- egnum 1)
+	      (mrs::read-rmrs-file "semtest.rmrs" :rasp)))
+       (erg-rmrs
+	      (mrs::mrs-to-rmrs erg-mrs)))
+    (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs t 
+						  (format nil "~A" egnum)))
+      (show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
+				    comparison-record (format nil "~A" egnum)))))
+
+|#
