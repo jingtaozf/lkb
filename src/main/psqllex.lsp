@@ -215,11 +215,17 @@
   (let ((connection (connection database)))
     (unless connection
       (error "database ~s has no active connection." database))
+
+    (time
+    
     (multiple-value-bind (recs cols recs-count)
         (pg:sql (sql-string query) :db connection)
       (setf (records query) recs 
             (columns query) cols
             (count-recs query) recs-count))
+    
+    )
+    
     (if *psql-verbose-query* ;;; verbosity flag
 	(format *trace-output* "~%~a~%=>~%~a" (sql-string query) (records query)))
     query))
@@ -370,7 +376,7 @@
 ;; --- psql-lex-database methods
 ;;;
 
-(defmethod lookup-word ((lexicon psql-lex-database) orth &key (cache t))
+(defmethod lookup-word-OLD ((lexicon psql-lex-database) orth &key (cache t))
   (declare (ignore cache))
   (if (connection lexicon)
       (let* (
@@ -383,6 +389,36 @@
 			 lexicon 
 			 (make-instance 'sql-query :sql-string sql-str))))
 	(mapcar #'str-to-symbol-format (mapcar #'car (records query-res))))))
+
+(defmethod lookup-word ((lexicon psql-lex-database) orth &key (cache t))
+  (declare (ignore cache))
+  (if (connection lexicon)
+      (let* (
+	     (orthstr (string-downcase (sql-escape-string orth)))
+	     (sql-str (format 
+		       nil 
+		       "SELECT ~a FROM retrieve_entries('~a');"
+		       (make-requested-fields lexicon)
+		       orthstr))
+	     (query-res (run-query 
+			 lexicon 
+			 (make-instance 'sql-query :sql-string sql-str)))
+	     (ids (lookup-word-aux query-res lexicon)))
+	ids)))
+
+(defun lookup-word-aux (query-res lexicon)
+  (with-slots (psorts) lexicon
+    (let* (
+	 (records (make-column-map-record query-res))
+	 (name-field (second (assoc :id (fields-map lexicon))))
+	 )
+    (loop
+	for record in records
+	for id = (str-to-symbol-format (cdr (assoc name-field record :test #'equal)))
+	do
+	  (unless (gethash id psorts)
+	    (setf (gethash id psorts) (make-psort-struct lexicon record)))
+	 collect id))))
 
 ; to be used to control whether the table exists
 (defmethod table-existing-p ((lexicon psql-lex-database) tablename)
@@ -569,7 +605,7 @@
 	 :name (symb-2-str name)
 	 :type (symb-2-str (extract-type-from-unifications constraint))
 	 :orthography stem		;list
-	 :orthkey (first (last stem))
+	 :orthkey (first stem)
 	 :keyrel (symb-2-str keyrel)
 	 :altkey (symb-2-str altkey)
 	 :alt2key (symb-2-str alt2key)
