@@ -506,7 +506,7 @@ at this point).
                            (for empty in *empty-semantics-lexical-entries*
                                 filter
                                 (if (member empty found-list)
-                                    empty)))
+                                empty)))
                        *empty-semantics-lexical-entries*)))
         (instantiated-sets
           (for lex-id in real-ids

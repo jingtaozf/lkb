@@ -13,7 +13,8 @@
   ;;; it's set in topmenu.lsp
   (when (or *mrs-scoping*
             *mrs-output-p*)
-    (unless stream (setf stream cl-user::*lkb-background-stream*))
+    (unless stream
+      (setf stream cl-user::*lkb-background-stream*))
     (unless edges (setf edges *parse-record*))
     (let ((*print-circle* nil))
       (for edge in edges 
@@ -57,4 +58,60 @@
                                      stream maximum)))))
 
 
+;;;
+
+#|
+(defparameter cl-user::*do-something-with-parse* 'mrs::batch-output-mrs)
+|#
+
+(defun batch-output-mrs nil
+  ;;; to be called from LKB batch processing
+  (let ((sentence cl-user::*sentence*)
+        (ostream (if (and cl-user::*ostream* 
+                          (streamp cl-user::*ostream*) 
+                          (output-stream-p cl-user::*ostream*)) 
+                     cl-user::*ostream*  t)))
+    (if *parse-record*
+        (progn
+          (format ostream "~%;;; MRS for: ~A " sentence)
+          (for parse in *parse-record*
+               do
+               (let* ((mrs-struct (extract-mrs parse)))
+                 (output-mrs1 mrs-struct 'simple ostream))))
+      (format ostream "~%;;; Parse failure: ~A " sentence))
+    (finish-output ostream)))
+
+
+;;; The following are primarily for the TSDB machinery
+;;; - they all take an edge and return a string related
+;;; to the MRS in some way
+;;; Functions are from mrsfns.lisp
+
+
+(defun get-mrs-string (parse)
+  (return-mrs-info-string parse :simple))
+  
+(defun get-mrs-indexed-string (parse) 
+  (return-mrs-info-string parse :indexed))
+
+(defun get-mrs-resolved-string (parse)
+  (return-mrs-info-string parse :first-scoped))
+  
+(defun count-scopes (parse)
+  (return-mrs-info-string parse :count-scopes))
+    
+(defun return-mrs-info-string (parse info-type)
+  (let* ((mrs-struct (extract-mrs parse)))
+    (with-output-to-string (stream)
+      (ecase info-type
+        (:simple (output-mrs1 mrs-struct 'simple stream))
+        (:indexed (output-mrs1 mrs-struct 'indexed stream))
+        (:first-scoped (let ((binding-sets (make-scoped-mrs mrs-struct)))
+                   (when binding-sets
+                     (with-output-to-string (stream) 
+                       (setf *canonical-bindings* (canonical-bindings 
+                                                   (first binding-sets)))
+                       (output-scoped-mrs mrs-struct :stream stream)))))
+        (:count-scopes (format stream "~A" 
+                               (length (make-scoped-mrs mrs-struct))))))))
 

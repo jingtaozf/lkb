@@ -284,7 +284,11 @@ output results
            ;; resetting the pool on entry to the generator would be the right
            ;; thing.  room for debugging here ...           (8-sep-99  -  oe)
            ;;
-           #+:gdebug
+           ;; following should fix the problem - aac
+           (when mrs::*null-semantics-hack-p*
+             (format ostream 
+                     "~%#| Setting mrs::*null-semantics-hack-p* to nil |#")
+             (setf mrs::*null-semantics-hack-p* nil))
            (reset-pools #+:gdebug :forcep #+:gdebug t)
            (if (not (mrs::make-scoped-mrs mrs))
                (format ostream "~%#| Scope failure: ~A |#" sentence)  
@@ -330,6 +334,67 @@ output results
                  (format ostream "~A)~%" (if errorp -1 treal))
                  (finish-output ostream)))))))
 
-           
+
+;;; somewhat different fn for generating from a file of MRSs
+
+;;; (generate-from-mrs-file "foo" t)
+
+(defun generate-from-mrs-file (file ostream)
+  (when mrs::*null-semantics-hack-p*
+    (format ostream 
+            "~%#| Setting mrs::*null-semantics-hack-p* to nil |#")
+    (setf mrs::*null-semantics-hack-p* nil))
+  (let ((mrss (mrs::read-mrs-files-aux (list file))))
+    (for mrs in mrss
+         do
+         (let ((tgc nil)
+               (tcpu nil)
+               (treal nil)
+               (errorp nil))
+         (when (and mrs (mrs::psoa-p mrs))
+           (reset-pools #+:gdebug :forcep #+:gdebug t)
+           (if (not (mrs::make-scoped-mrs mrs))
+               (format ostream "~%#| Scope failure: ~A |#")  
+             ;;; check for scoping, because incorrect MRS often
+             ;;; causes serious problems for generator
+             (multiple-value-bind
+                 (strings unifs-tried unifs-failed active inactive)
+                 (excl::time-a-funcall
+                  #'(lambda () 
+                      (#-:gdebug 
+                       handler-case 
+                       #+:gdebug 
+                       progn
+                       (generate-from-mrs mrs)
+                       #-:gdebug  
+                       (storage-condition (condition)
+                                          (format t "~%Memory allocation problem in generation: ~A" condition)
+                                          (setf errorp t))
+                       #-:gdebug
+                       (error (condition)
+                              (format t  
+                                      "~%Error in generation: ~A%" condition)
+                              (setf errorp t))))
+                  #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+                      (declare (ignore ignore sother ssym scons))
+                      (setq tgc (+ tgcu tgcs))
+                      (setq tcpu (+ tu ts))
+                      (setq treal tr)
+                      ))
+               (declare (ignore unifs-tried unifs-failed))
+               (clear-gen-chart)        ; prevent any recycled dags from hanging around
+               (unless (and (integerp active)
+                            (integerp inactive))
+                 (setf errorp t)
+                 (format t "~%Problem in generation caused by missing relation?"))
+               (format ostream "~%(")
+               (format ostream "~A" "Unknown sentence")
+               (format ostream "~%~S" (if (listp strings) strings nil))
+               (format ostream " ~A " errorp)
+               (format ostream "~A " (if errorp -1 (+ active inactive)))
+               (format ostream "~A " (if errorp -1 tgc))
+               (format ostream "~A " (if errorp -1 tcpu))
+               (format ostream "~A)~%" (if errorp -1 treal))
+               (finish-output ostream))))))))
 
 

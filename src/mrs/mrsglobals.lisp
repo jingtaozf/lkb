@@ -2,6 +2,8 @@
 
 ;;; Globals - freed of VM specific stuff
 
+(defparameter *giving-demo-p* nil)
+
 (defparameter *mrs-results-check* nil)
 ;; mrscorpus and mrsfns - causes results to be checked against
 ;; previous stored results
@@ -111,7 +113,8 @@ order in an MRS")
 ;;; for generation - real values in mrsglobals-eng
 
 (defparameter *null-semantics-hack-p* nil
-  "for debugging - if set, this cheats on null semnatic items")
+  "for debugging - if set, this cheats on null semantic items
+   WARNING - do not set when processing in batch mode")
 
 (defparameter *dummy-relations* nil)
 

@@ -24,8 +24,7 @@
        (:file "basemrs")                ; MRS structures and printing 
        (:file "mrsoutput")              ; constructing MRS from parse result  
        (:file "mrscorpus")              ; checking equality etc
-       (:file "interface")
-       (:file "mrsfns")))                 ; from old mrsglobals
+       (:file "interface")))
        ;; following two files needed for scoping - can be excluded
        ;; for generation
      (:module "scoping"

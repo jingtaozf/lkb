@@ -44,7 +44,6 @@
                   (eql (car (fs-type root-value)) *true-type*))))))))
   
 
-(defvar *variable-generator* nil)
 (defparameter *named-nodes* nil)
 (defvar *restart-variable-generator* t
     "if t the variable counter is restarted for each sentence")
@@ -72,17 +71,6 @@
      :h-cons (nreverse (construct-h-cons h-cons-fs
                                          nil
                                          *variable-generator*)))))
-
-(defun create-variable-generator (&optional start)
-  (let ((number (or start 0)))
-    #'(lambda nil
-        (incf number)
-        number)))
-
-(defun init-variable-generator ()
-  (setf *variable-generator* (create-variable-generator)))
-
-(init-variable-generator)
 
 ;; Allow NIL argument to get-var-num
 (defun get-var-num (var-struct)

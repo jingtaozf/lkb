@@ -1,9 +1,8 @@
+(in-package "MRS")
+
 ;;; Reorganised MRS code -
 ;;; this is the basic MRS file, which defines the lisp structures
 ;;; used for internally encoding MRS.  
-
-
-(in-package "MRS")
 
 ;;; MRS structs
 ;;; because I want to be able to do other things with MRSs besides
@@ -52,6 +51,24 @@
   relation
   scarg
   outscpd)
+
+;;; variable generator - moved from mrsoutput because it could
+;;; potentially be called without that code having been read in
+
+(defvar *variable-generator* nil)
+
+(defun create-variable-generator (&optional start)
+  (let ((number (or start 0)))
+    #'(lambda nil
+        (incf number)
+        number)))
+
+(defun init-variable-generator ()
+  (setf *variable-generator* (create-variable-generator)))
+
+(init-variable-generator)
+
+
 
 ;;; The MRS structure could be output either as simple ascii
 ;;; or as LaTeX and possibly in other ways
@@ -113,9 +130,13 @@
     (format stream "~%  LISZT: <")
     (setf indentation (+ indentation 10))))
 
+(defmethod mrs-output-var-fn ((mrsout simple) var-string)
+  (with-slots (stream) mrsout
+    (format stream "~A" var-string)))
+
 (defmethod mrs-output-atomic-fn ((mrsout simple) atomic-value)
   (with-slots (stream) mrsout
-    (format stream "~A" atomic-value)))
+    (format stream "~S" atomic-value)))
 
 (defmethod mrs-output-start-rel ((mrsout simple) sort first-p)
   (with-slots (stream indentation) mrsout
@@ -215,9 +236,13 @@
   (with-slots (stream) mrsout
     (format stream "AND[ ")))
 
+(defmethod mrs-output-var-fn ((mrsout indexed) var-string)
+  (with-slots (stream) mrsout
+    (format stream "~A" (remove-variable-junk var-string))))
+
 (defmethod mrs-output-atomic-fn ((mrsout indexed) atomic-value)
   (with-slots (stream) mrsout
-    (format stream "~A" (remove-variable-junk atomic-value))))
+    (format stream "~A" atomic-value)))
 
 (defmethod mrs-output-start-rel ((mrsout indexed) sort first-p)
   (declare (ignore first-p))
@@ -348,6 +373,10 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream "[")))
 
+(defmethod mrs-output-var-fn ((mrsout prolog) var-string)
+  (with-slots (stream) mrsout
+    (format stream "'~A')" var-string)))
+
 (defmethod mrs-output-atomic-fn ((mrsout prolog) atomic-value)
   (with-slots (stream) mrsout
     (if (stringp atomic-value)
@@ -467,7 +496,7 @@ higher and lower are handle-variables
                 (let ((value (fvpair-value feat-val)))
                   (if (var-p value)
                       (progn
-                        (mrs-output-atomic-fn 
+                        (mrs-output-var-fn 
                          *mrs-display-structure*
                          (find-var-name value connected-p))
                         (print-mrs-extra value))
@@ -580,7 +609,7 @@ QEQ -> VARNAME RELNNAME VARNAME
                ; one line comments
                (t (push (read-mrs istream)
                         psoas)))))
-   psoas))
+   (nreverse psoas)))
 
 (defparameter *already-read-vars* nil
   "temporary storage of variables read in in one MRS")
