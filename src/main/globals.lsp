@@ -246,6 +246,14 @@
 ;;; 
 (def-lkb-parameter *dag-pool-size* 50000)
 
+
+;;;
+;;; connection parameters for lexical database, an association list with fields
+;;; `:host', `:user', `:password', `:db', and `:table' (and maybe `:encoding',
+;;; one day).
+;;;
+(defparameter *psql-lexicon-parameters* nil)
+
 ;;; controls TDL or path syntax switch (not really needed)
 
 (def-lkb-parameter *lkb-system-version* :page)
