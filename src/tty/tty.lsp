@@ -214,9 +214,11 @@
         (for edge in *parse-record*
              do
              (format t "~&Edge ~A P:" (edge-id edge))
-             (pprint (parse-tree-structure edge)))
-        (when (fboundp 'mrs::output-mrs-after-parse)
-          (funcall 'mrs::output-mrs-after-parse *parse-record*)))
+             (pprint (parse-tree-structure edge)))        
+        (let ((hook (when (and (find-package :mrs) 
+                               (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs))
+                      (fboundp (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)))))
+          (when hook (funcall hook *parse-record*))))
       (format t "~&No parses")))
 
 

@@ -914,4 +914,6 @@
           sum (length (unpack-edge! nil edge))))
      (length *parse-record*))
    (tsdb::get-field :pedges (summarize-chart))
-   (count-nodes (first *parse-record*) :packingp *chart-packing-p* :chartp t)))
+   (unless (null *parse-record*)
+     (count-nodes (first *parse-record*) 
+                  :packingp *chart-packing-p* :chartp t))))

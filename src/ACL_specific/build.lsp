@@ -5,12 +5,12 @@
 			  '("general"))
        :name "loadup"))
 
-(setq *building-image-p* t)
+(setq lkb::*building-image-p* t)
 (setq make:*compile-during-load* t)
 ;;(sys:record-strings "/tmp/lkb.str" 
 ;;  (load-system "mrs"))
 (compile-system "mrs" :force t)
-(setq *building-image-p* nil)
+(setq lkb::*building-image-p* nil)
 
 (setq excl:*restart-init-function* 
   #'(lambda ()

@@ -201,7 +201,7 @@
 ;;; being we prefer to assume that the user choice of pool size is appropriate
 ;;; for what is required on average.
 ;;; 
-(defparameter *dag-pool-size* 200000)
+(defparameter *dag-pool-size* 50000)
 
 ;;; recent additions 
 

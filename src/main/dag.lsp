@@ -1069,6 +1069,16 @@
 ;;;
 
 #+:packing
+(defun minimal-type-for (feature)
+  (or (get feature :constraint)
+      (let* ((introduction (maximal-type-of feature))
+             (constraint (and introduction (constraint-of introduction)))
+             (type (or (and constraint 
+                            (type-of-fs (get-dag-value constraint feature)))
+                       *toptype*)))
+        (setf (get feature :constraint) type))))
+
+#+:packing
 (defun copy-dag-partially (dag)
   (invalidate-visit-marks)
   (copy-dag-partially1 dag nil))
@@ -1077,10 +1087,12 @@
 (defun copy-dag-partially1 (old path)
   (if (dag-visit old)
     (dag-visit old)
-    (let* ((type (if (eq (first path) *packing-restrictor*)
-                     (maximal-type-of (first path))
-                     (dag-type old)))
-           (arcs (unless (eq (first path) *packing-restrictor*)
+    (let* ((type (if (and *packing-restrictor*
+                          (smember (first path) *packing-restrictor*))
+                   (minimal-type-for (first path))
+                   (dag-type old)))
+           (arcs (unless (and *packing-restrictor*
+                              (smember (first path) *packing-restrictor*))
                    (loop
                        for arc in (dag-arcs old)
                        for label = (dag-arc-attribute arc)
