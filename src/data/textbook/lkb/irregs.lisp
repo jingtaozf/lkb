@@ -1,4 +1,3 @@
-"
 can 3RD-SING-VERB can
 could 3RD-SING-VERB could
 
@@ -186,5 +185,4 @@ wives PLUR-NOUN wife
 women PLUR-NOUN woman
 written PAST-PART-VERB write
 wrote PAST-VERB write
-"
 

@@ -1,13 +1,26 @@
+;the first time you try and run it do:
+;
+;(load "~/lkb/src/general/loadup")
+;(compile-system "mrs" :force t) 
+;
+;on subsequent sessions, the files will be compiled, so do
+;
+
+(load "~/lkb/src/general/loadup")
+(load-system "mrs")
+
+
+
 ; In raw CLIM-ACL image
 
 ; First time after update, do
 ;(load "~/lkb/ACL_specific/bootlkb.lsp")
 
 ; Each time
-(load "~/lkb/ACL_specific/loadlkb.lsp")
+;(load "~/lkb/ACL_specific/loadlkb.lsp")
 
 ; Assuming working directory is set to "~/lkb"
-(load "~/grammar/lkb/script")
+;(load "~/grammar/lkb/script")
 
 ; have some coffee ...
 

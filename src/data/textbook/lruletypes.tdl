@@ -10,12 +10,41 @@
 ;;; CCB don't change the name of lrule, or it will break -- it's named
 ;;; in the globals.lsp file.
 
+general-passive-lrule := word & 
+[ ORTH #orth,
+  SYN [ HEAD verb & [ FORM pass,
+		      PRED true ],
+	SPR < [ ] > ],
+  SEM #sem,
+  
+  ARGS < word & [ ORTH #orth,
+                  SYN [ HEAD verb & [ FORM psp,
+				      PRED false ] ],
+		  SEM #sem ] > ].
+
+
 lrule-super := lex-item & 
   [ ARGS < lexeme & [ AFFIX #argaff,
 		      ARGS < [ AFFIX #argaff ] > ] >,
 
     NEEDS-AFFIX boolean ],
 status: lex-rule.
+#|
+:begin :instance.
+extraposition-lexical-rule := lrule-lexeme & 
+[ SYN  [HEAD #syn],
+  SEM #sem,
+  ARG-ST < #a & [SYN [HEAD comp] ] , #b >,
+  
+  ARGS < lexeme & [SYN [HEAD #syn,
+			SPR < [SYN [HEAD noun & [FORM f_it] ] ] >,
+			COMPS < #b, #a > ],
+		   SEM #sem,
+		   ARG-ST < [SYN [HEAD noun & [FORM f_it] ] ], #b , #a > ] > ].
+:end :instance.
+|#
+
+
 
 lrule := lrule-super & word &
 [ SYN #syn,
@@ -65,6 +94,11 @@ non-3rd-sing-verb := affix &
 		 PRED false ],
    SPR < [ SYN [ HEAD [ CASE nom, AGR non-3sing ] ] ] > ].
 
+3rd-sing-verb := affix &  
+ [ HEAD verb & [ FORM fin,
+		 PRED false ],
+   SPR < [ SYN [ HEAD [ CASE nom, AGR 3sing ] ] ] > ].
+
 past-verb := affix &
  [ HEAD verb & [ FORM fin,
 		 PRED false ],
@@ -85,5 +119,6 @@ past-part-verb := affix &
 inf-verb := affix &
  [ HEAD verb & [ FORM inf,
 		 PRED false ] ].
+
 
 

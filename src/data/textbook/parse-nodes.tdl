@@ -1,7 +1,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
-;;; Linguistics 137: CL Practicum, Winter 1998
-;;;  
+;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
+;;; implementation by Chris Callison-Burch & Scott Guffey
+;;;
 ;;; parse-nodes.tdl
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -13,7 +14,7 @@ slash := meta &
     META-PREFIX "/",
     META-SUFFIX "" ].
 
-s1 := label &
+s := label &
   [ SYN [ HEAD verb,
 	  SPR < >,
 	  COMPS < > ],
@@ -29,28 +30,15 @@ n := label &
 	  SPR < [ ] > ],
     LABEL-NAME "N" ].
 
-vp :=  label &
+vp :=  label & 
    [ SYN [ HEAD verb,
-	   SPR < [ ] >,
-	   COMPS < > ],
+	   SPR < [ ] > ],
      LABEL-NAME "VP" ].
 
-;;; AAC - fixed COMPS placement below
-
 v := label &
-  [ SYN [ HEAD verb ,
-          COMPS < [ ] >],
+  [ SYN [ HEAD verb ],
     LABEL-NAME "V" ].
 
-v1 := label &
-  [ SYN [ HEAD verb ,
-          COMPS < [ ], [ ] >],
-    LABEL-NAME "V" ].
-
-v2 := label &
-  [ SYN [ HEAD verb ,
-          COMPS < [ ], [ ], [ ] >],
-    LABEL-NAME "V" ].
 
 det := label &
   [ SYN [ HEAD det ],

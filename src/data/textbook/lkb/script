@@ -1,11 +1,12 @@
 (defparameter *grammar-version* "Textbook (oct-98)")
 
 (lkb-load-lisp (this-directory) "globals.lsp")
+(lkb-load-lisp (this-directory) "mrs-globals-ygg.lisp")
 (lkb-load-lisp (this-directory) "user-fns.lsp")
 (load-lkb-preferences (this-directory) "user-prefs.lsp")
 (lkb-load-lisp (this-directory) "lkb-code-patches" t)
 (lkb-load-lisp (this-directory) "checkpaths.lsp" t)
-(load-irregular-spellings (lkb-pathname (this-directory) "irregs.lisp"))
+(load-irregular-spellings (lkb-pathname (parent-directory) "irregs.lisp"))
 (read-tdl-type-files-aux
      (list (lkb-pathname (this-directory) "extra.tdl")
            (lkb-pathname (parent-directory) "types.tdl")
@@ -14,7 +15,9 @@
 (read-tdl-lex-file-aux 
      (lkb-pathname (parent-directory) "lexicon.tdl"))
 (read-tdl-grammar-file-aux 
-     (lkb-pathname (parent-directory) "grules.tdl"))
+	(lkb-pathname (parent-directory) "grules.tdl"))
+(read-tdl-grammar-file-aux 
+	(lkb-pathname (parent-directory) "binding.tdl"))
 (read-morph-file-aux (lkb-pathname (this-directory) "inflr.tdl"))
 (read-tdl-psort-file-aux 
           (lkb-pathname (parent-directory) "roots.tdl"))

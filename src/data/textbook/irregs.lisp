@@ -1,24 +1,20 @@
+"
 can 3RD-SING-VERB can
 could 3RD-SING-VERB could
-
 am NON-3RD-SING-VERB be
 are NON-3RD-SING-VERB be
 is 3RD-SING-VERB be
+are NON-3RD-SING-VERB be
 was PAST-VERB be
-were PAST-VERB be
-
+were PAST-VERB be 
 they PLUR-NOUN-NOM it
 them PLUR-NOUN-ACC it
-
 we PLUR-NOUN i
 us PLUR-NOUN me
 you PLUR-NOUN you
-
 ourselves PLUR-NOUN myself
 themselves PLUR-NOUN itself
-
 there PLUR-NOUN there
-
 arisen PAST-PART-VERB arise
 arose PAST-VERB arise
 ate PAST-VERB eat
@@ -30,7 +26,9 @@ been PAST-PART-VERB be
 began PAST-VERB begin
 begun PAST-PART-VERB begin
 bet PAST-VERB bet
+bit PAST-VERB bite
 bet PAST-PART-VERB bet
+bitten PAST-PART-VERB bit
 bought PAST-VERB buy
 bought PAST-PART-VERB buy
 broke PAST-VERB break
@@ -77,10 +75,6 @@ given PAST-PART-VERB give
 gone PAST-PART-VERB go
 got PAST-VERB get
 gotten PAST-PART-VERB get
-had PAST-VERB have
-	
-;had PAST-PART-VERB have    (This is only for the possessive have)
-
 halves PLUR-NOUN half
 has 3RD-SING-VERB have
 heard PAST-VERB hear
@@ -185,4 +179,4 @@ wives PLUR-NOUN wife
 women PLUR-NOUN woman
 written PAST-PART-VERB write
 wrote PAST-VERB write
-
+"

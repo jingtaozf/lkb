@@ -82,7 +82,7 @@ comp :< pos.
 conj := pos &
  [ ANA false ].
 
-mod-type := feat-struc &
+mod-type := *value* &
   [ MOD list-of-synsem-structs ].
 
 adv := pos & mod-type &
@@ -118,6 +118,7 @@ form-cat :< *value*.
    f_to   :< form-cat.
    f_about:< form-cat.
    f_on   :< form-cat.
+   f_with :< form-cat.
    f_of   :< form-cat.
    f_for  :< form-cat.
    f_by   :< form-cat.
@@ -130,24 +131,44 @@ form-cat :< *value*.
 
 
 ;;; <<<----- STRUCTURE FOR AGR-CAT  ----->>>
-   
+
+
+
+3sing := agr-cat & 
+ [ PER 3rd,
+   NUM sing ].
+
+non-3sing :< agr-cat.
+
+
+plural := non-3sing & 
+ [ NUM plur ].
+
+1or2sing :< non-3sing.
+
+1sing := 1or2sing & 
+ [ PER 1st,
+   NUM sing ].
+
+2sing := 1or2sing & 
+ [ PER 2nd,
+   NUM sing ].
+
+
 per :< *value*.
    1st :< per.
    2nd :< per.
    3rd :< per.
+
 num :< *value*.
    sing :< num. 
    plur :< num.
+
 gend :< *value*.
    fem  :< gend.
    masc :< gend.
    neut :< gend.
 
-3sing := agr-cat &
- [ PER 3rd,
-   NUM sing ].
-
-non-3sing :< agr-cat.
 
 case-cat :< *value*.
    nom :< case-cat.
@@ -248,10 +269,14 @@ r_cat :< reln.
 r_goose :< reln.
 r_ice-cream :< reln.
 r_Ande :< reln.
+r_story :< reln.
+r_astronomer :< reln.
+r_telescope  :< reln.
 
 r_and :< reln.
 
 r_eat :< reln.
+r_see :< reln.
 r_kick :< reln.
 r_sleep :< reln.
 r_die :< reln.
@@ -288,6 +313,274 @@ r_t-precede :< reln.
 r_question :< reln.
 r_not      :< reln.
 
+ r_age :< reln.
+ r_bark :< reln.
+ r_believe :< reln.
+ r_dine :< reln.
+ r_disappear :< reln.
+ r_fall :< reln.
+ r_fly :< reln.
+ r_float :< reln.
+ r_gather :< reln.
+ r_laugh :< reln.
+ r_leave :< reln.
+ r_lie :< reln.
+ r_live :< reln.
+ r_run :< reln.
+ r_sank :< reln.
+ r_sat :< reln.
+ r_scream :< reln.
+ r_sing :< reln.
+ r_skate :< reln.
+ r_sneeze :< reln.
+ r_speak :< reln.
+ r_suck :< reln.
+ r_talk :< reln.
+ r_tapdance :< reln.
+ r_visit :< reln.
+ r_win :< reln.
+ r_yell :< reln.
+ r_ask :< reln.
+ r_campaign :< reln.
+ r_come :< reln.
+ r_cooccur :< reln.
+ r_fit :< reln.
+ r_go :< reln.
+ r_look :< reln.
+ r_rely :< reln.
+ r_tug :< reln.
+ r_hope :< reln.
+ r_say :< reln.
+ r_think :< reln.
+ r_suspect :< reln.
+ r_discover :< reln.
+ r_learn :< reln.
+ r_admire :< reln.
+ r_affect :< reln.
+ r_arrest :< reln.
+ r_avoid :< reln.
+ r_bite :< reln.
+ r_bare :< reln.
+ r_broke :< reln.
+ r_cark :< reln.
+ r_chase :< reln.
+ r_close :< reln.
+ r_consider :< reln.
+ r_consume :< reln.
+ r_cross :< reln.
+ r_cut :< reln.
+ r_determine :< reln.
+ r_devour :< reln.
+ r_deny :< reln.
+ r_display :< reln.
+ r_draw :< reln.
+ r_dread :< reln.
+ r_drive :< reln.
+ r_elect :< reln.
+ r_enjoy :< reln.
+ r_examine :< reln.
+ r_find :< reln.
+ r_finish :< reln.
+ r_fix :< reln.
+ r_fill :< reln.
+ r_follow :< reln.
+ r_get :< reln.
+ r_halve :< reln.
+ r_help :< reln.
+ r_hit :< reln.
+ r_improve :< reln.
+ r_involve :< reln.
+ r_know :< reln.
+ r_leave :< reln.
+ r_list :< reln.
+ r_lock :< reln.
+ r_meet :< reln.
+ r_pat :< reln.
+ r_paint :< reln.
+ r_pet :< reln.
+ r_phone :< reln.
+ r_present :< reln.
+ r_protect :< reln.
+ r_race :< reln.
+ r_rake :< reln.
+ r_represent :< reln.
+ r_respect :< reln.
+ r_solve :< reln.
+ r_spot :< reln.
+ r_spray :< reln.
+ r_supervise :< reln.
+ r_take :< reln.
+ r_taste :< reln.
+ r_target :< reln.
+ r_trick :< reln.
+ r_turn :< reln.
+ r_upset :< reln.
+ r_watch :< reln.
+ r_bring :< reln.
+ r_donate :< reln.
+ r_hand :< reln.
+ r_move :< reln.
+ r_put :< reln.
+ r_wrap :< reln.
+ r_appear :< reln.
+ r_appeal :< reln.
+ r_try :< reln.
+ r_abbie :< reln.
+ r_accusation :< reln.
+ r_advantage :< reln.
+ r_album :< reln.
+ r_alps :< reln.
+ r_andes :< reln.
+ r_animal :< reln.
+ r_answer :< reln.
+ r_arrow :< reln.
+ r_artist :< reln.
+ r_assignment :< reln.
+ r_associate :< reln.
+ r_atom :< reln.
+ r_audience :< reln.
+ r_auxiliary :< reln.
+ r_baby :< reln.
+ r_barn :< reln.
+ r_beer :< reln.
+ r_belief :< reln.
+ r_bicycle :< reln.
+ r_bird :< reln.
+ r_bit :< reln.
+ r_blanket :< reln.
+ r_blues :< reln.
+ r_boat :< reln.
+ r_bucket :< reln.
+ r_building :< reln.
+ r_cancer :< reln.
+ r_candidate :< reln.
+ r_captain :< reln.
+ r_car :< reln.
+ r_cardinal :< reln.
+ r_chair :< reln.
+ r_cheetah :< reln.
+ r_child :< reln.
+ r_city :< reln.
+ r_class :< reln.
+ r_cloud :< reln.
+ r_clue :< reln.
+ r_coast :< reln.
+ r_conflict :< reln.
+ r_council :< reln.
+ r_customer :< reln.
+ r_day :< reln.
+ r_dealer :< reln.
+ r_dealership :< reln.
+ r_defendant :< reln.
+ r_difference :< reln.
+ r_dinner :< reln.
+ r_disease :< reln.
+ r_doctor :< reln.
+ r_dog :< reln.
+ r_drug :< reln.
+ r_duck :< reln.
+ r_earthquake :< reln.
+ r_east :< reln.
+ r_exam :< reln.
+ r_fbi :< reln.
+ r_felon :< reln.
+ r_fever :< reln.
+ r_food :< reln.
+ r_fool :< reln.
+ r_form :< reln.
+ r_friend :< reln.
+ r_furniture :< reln.
+ r_game :< reln.
+ r_garden :< reln.
+ r_garlic :< reln.
+ r_gas :< reln.
+ r_gathering :< reln.
+ r_grandmother :< reln.
+ r_guest :< reln.
+ r_head :< reln.
+ r_horse :< reln.
+ r_hospital :< reln.
+ r_improvement :< reln.
+ r_innocent :< reln.
+ r_judge :< reln.
+ r_jury :< reln.
+ r_language :< reln.
+ r_leg :< reln.
+ r_letter :< reln.
+ r_library :< reln.
+ r_life :< reln.
+ r_light :< reln.
+ r_linguist :< reln.
+ r_logic :< reln.
+ r_lunch :< reln.
+ r_mailbox :< reln.
+ r_martini :< reln.
+ r_master :< reln.
+ r_meal :< reln.
+ r_meeting :< reln.
+ r_man :< reln.
+ r_monster :< reln.
+ r_museum :< reln.
+ r_napkin :< reln.
+ r_neighborhood :< reln.
+ r_nephew :< reln.
+ r_night :< reln.
+ r_note :< reln.
+ r_opportunity :< reln.
+ r_painting :< reln.
+ r_park :< reln.
+ r_participant :< reln.
+ r_past :< reln.
+ r_patient :< reln.
+ r_pencil :< reln.
+ r_person :< reln.
+ r_police :< reln.
+ r_price :< reln.
+ r_problem :< reln.
+ r_protester :< reln.
+ r_ravioli :< reln.
+ r_riot :< reln.
+ r_river :< reln.
+ r_roof :< reln.
+ r_room :< reln.
+ r_seat :< reln.
+ r_senora :< reln.
+ r_sentence :< reln.
+ r_series :< reln.
+ r_shepherd :< reln.
+ r_song :< reln.
+ r_storm :< reln.
+ r_student :< reln.
+ r_tabs :< reln.
+ r_tail :< reln.
+ r_tale :< reln.
+ r_teacher :< reln.
+ r_team :< reln.
+ r_television :< reln.
+ r_theorem :< reln.
+ r_thief :< reln.
+ r_thrill :< reln.
+ r_time :< reln.
+ r_town :< reln.
+ r_toy :< reln.
+ r_trash :< reln.
+ r_trouble :< reln.
+ r_tv :< reln.
+ r_twin :< reln.
+ r_type :< reln.
+ r_umbrella :< reln.
+ r_unicorn :< reln.
+ r_verb :< reln.
+ r_voter :< reln.
+ r_water :< reln.
+ r_window :< reln.
+ r_wine :< reln.
+ r_witness :< reln.
+ r_woman :< reln.
+ r_work :< reln.
+ r_worm :< reln.
+
+
 
 
 ;;; <<<---- TYPES INHERITING FROM SYNSEM-STRUC/LEXICAL RULE DEFINITIONS ---->>>
@@ -311,20 +604,21 @@ mod_affix :< gram-cat.
 ; the correspondence between the arg-st and the spr and comps.  Next the 
 ; anaphoric agreement principle determines which forms the argument structure
 ; can take.
-; We've made types that correspond to these steps. They're called
-; word, word+arg-realization, and word+arg_realization+ana_agreement.  The 
-; latter two types correspond fairly closely to the books notion of Lexical-
-; Structural Description.  CCB
+; We've made types that correspond to these steps. They're called word, 
+; word+arg_real, and word+arg_real+ana_agr.  The latter two types correspond 
+; fairly closely to the book's notion of Lexical-Structural Description.  CCB
  
+phrase :=  synsem-struc & args-type.
+
 word := lex-item.
  
-word+arg_realization := lex-item.
+word+arg_real := lex-item.
  
-word+arg_realization+ana_agreement :< lex-item.
+word+arg_real+ana_agr :< lex-item.
 
-; The constraints in the book for lexeme are "...",  it might be good to hide 
-; the some of the affix information from the user initially to avoid confusion.
-;
+;;; CCB removed the restiction that the ORTH contained a single string.
+;;; Might try using AAC's mod if it doesn't work.  Hers is as follows"
+#|
 lexeme := lex-item &
  [ AFFIX mod_affix,
    ORTH #orth & [ LIST [ FIRST string,
@@ -332,6 +626,15 @@ lexeme := lex-item &
                   LAST /l #last ],
    SYN [ GAP <! !> ],
    ARGS < [ ORTH #orth ] > ].
+|#
+
+lexeme := lex-item &
+ [ AFFIX mod_affix,
+   ORTH #orth,
+   SYN [ GAP <! !> ],
+   ARGS < [ ORTH #orth ] > ].
+
+
 
 infl-lxm := lexeme &
  [ ARGS < [ AFFIX affix &
@@ -349,20 +652,6 @@ rule := synsem-struc & args-type &
  [ ARGS *list* ],
  status: root-node.
 
-one-type := synsem-struc &
- [ DTR synsem-struc ].
-
-general-passive-lrule := word & 
-[ ORTH #orth,
-  SYN [ HEAD verb & [ FORM pass,
-		      PRED true ],
-	SPR < [ ] > ],
-  SEM #sem,
-  
-  ARGS < word & [ ORTH #orth,
-                  SYN [ HEAD verb & [ FORM psp,
-				      PRED false ] ],
-		  SEM #sem ] > ].
 
 
 
@@ -377,8 +666,8 @@ prep-lxm := const-lxm &
 pdp-lxm := prep-lxm &
  [ SYN [ HEAD [ ANA false ],
 	 SPR < [ ] > ],
-   ARG-ST < [ SYN [ HEAD noun & [ CASE acc ] ] ],  [ SYN [ HEAD noun & [ ANA false,
-									 CASE acc ] ] ] > ].
+   ARG-ST < [ SYN [ HEAD noun ] ],  [ SYN [ HEAD noun & [ ANA false,
+				                	  CASE acc ] ] ] > ].
 
 mkp-lxm := prep-lxm &  
  [ SYN [ HEAD [ MOD < >, 
@@ -430,7 +719,7 @@ comp-lxm := const-lxm &
 
 ; I've pushed the empty ARG-ST default constraint down from the noun-lxm
 ; to the pron-lxm and pn-lxm because the current system doesn't support
-; defaults. 
+; defaults.  CCB
 
 noun-lxm := infl-lxm &
  [ SYN [ HEAD noun & [FORM normal,
@@ -619,7 +908,7 @@ nh-dtr-type := dtr-type &
 head-dtr-type := dtr-type &
  [ H synsem-struc ].
 
-grule :< word+arg_realization+ana_agreement.
+grule :< phrase.
 
 head-feature-principle := grule & head-dtr-type & 
  [ SYN [ HEAD #head ],
@@ -645,21 +934,16 @@ semantic-inheritance-principle := grule & head-dtr-type &
 
 headed-rule := head-feature-principle & 
                semantic-inheritance-principle & 
-	       valence-principle & 
-	       
-
- [ ARG-ST #argst,
-
-   H [ ARG-ST #argst ] ].
+	       valence-principle.
 
 
-semantic-compositionality-principle1 := grule &
+semantic-compositionality-unary := grule &
 [ SEM [ RESTR #restr ],
 
   ARGS < [ SEM [ RESTR #restr ] ] > ].
 
 
-semantic-compositionality-principle2 := grule &
+semantic-compositionality-binary := grule &
 [ SEM [ RESTR [ LIST #restr_first,
 		LAST #restr_last ] ],
 
@@ -669,7 +953,7 @@ semantic-compositionality-principle2 := grule &
 	 [ SEM [ RESTR [ LIST #restr_middle,
 			 LAST #restr_last ] ] ] > ].
 
-semantic-compositionality-principle3 := grule &
+semantic-compositionality-trinary := grule &
 [ SEM [ RESTR [ LIST #restr_first,
 		LAST #restr_last ] ],
 
@@ -682,12 +966,12 @@ semantic-compositionality-principle3 := grule &
 	 [ SEM [ RESTR [ LIST #restr_third,
 			 LAST #restr_last ] ] ] > ].
 
-GAP-principle1 := grule &
+GAP-principle-unary := grule &
 [ SYN [ GAP #gap ],
 
   ARGS < [ SYN [ GAP #gap ] ] > ].
 
-GAP-principle2 := grule &
+GAP-principle-binary := grule &
 [ SYN [ GAP [ LIST #gap_first,
 	      LAST #gap_last ] ],
 
@@ -698,7 +982,7 @@ GAP-principle2 := grule &
 		       LAST  #gap_last ] ] ] > ].
 
 
-GAP-principle3 := grule &
+GAP-principle-trinary := grule &
 [ SYN [ GAP [ LIST #gap_first,
 	      LAST #gap_last ] ],
 
@@ -711,141 +995,106 @@ GAP-principle3 := grule &
 	 [ SYN [ GAP [ LIST #gap_third,
 		       LAST  #gap_last ] ] ] > ].
 
-;;; Phrasal-rule is a constraint that only allows a rule that inherits from
-;;; it to apply to comps-empty word+arg_realization+ana_agreements.
 
-phrasal-rule1 := grule &
-[ SYN [ COMPS < > ],
 
-  ARGS < [ SYN [ COMPS < > ] ] > ].
 
-phrasal-rule2 := grule &
-[ SYN [ COMPS < > ],
 
-  ARGS < [ SYN [ COMPS < > ] ], [ SYN [ COMPS < > ] ] > ].
-
-unary-grule := grule &
-[ ARGS < word+arg_realization+ana_agreement > ].
-
-unary-grule-phrasal := nh-dtr-type & GAP-principle1 & phrasal-rule1 &
-		       semantic-compositionality-principle1 & 
-		       unary-grule &
+unary-grule-type := GAP-principle-unary & semantic-compositionality-unary &
  [ ORTH #orth,
-
-   NH1 #1,
-   ARGS < #1 & [ ORTH #orth ] > ].
+   ARGS < [ ORTH #orth ] > ].
 
 
-unary-grule-headed := headed-rule & GAP-principle1 &
-		      semantic-compositionality-principle1 &
-		      unary-grule &
- [ ORTH #orth,
-
-   H #1,
-   ARGS < #1 & [ ORTH #orth ] > ].
-
-
-unary-grule-minusGAP := nh-dtr-type & 
-			semantic-compositionality-principle1 &
-			unary-grule &
- [ ORTH #orth,
-
-   NH1 #1,
-   ARGS < #1 & [ ORTH #orth ] > ].
-
-
-unary-grule-headed-minusGAP := headed-rule &  
-			       semantic-compositionality-principle1 &
-			       unary-grule &
- [ ORTH #orth,
-
-   H #1,
-   ARGS < #1 & [ ORTH #orth ] > ].
-
-
-
-birule :=  GAP-principle2 & nh-dtr-type &
-	   semantic-compositionality-principle2 &
+binary-grule-type :=  GAP-principle-binary & nh-dtr-type & 
+		     semantic-compositionality-binary & 
  [ ORTH [ LIST #first,
 	  LAST #last ],
-   ARGS < word+arg_realization+ana_agreement & [ ORTH [ LIST #first,
-		   LAST #middle ] ],   word+arg_realization+ana_agreement & [ ORTH [ LIST #middle,
+
+   ARGS <  [ ORTH [ LIST #first,
+		    LAST #middle ] ],  [ ORTH [ LIST #middle,
 						LAST #last] ], ... > ].
 
 
+trinary-grule-type :=  GAP-principle-trinary & nh-dtr-type & 
+		     semantic-compositionality-trinary &
+ [ ORTH [ LIST #first,
+	  LAST #last],
+   NH2 synsem-struc,
+   ARGS < [ORTH [ LIST #first,
+		  LAST #second ] ],  [ORTH [ LIST #second,
+					     LAST #third ] ], 
 
-birule-headfirst := birule & headed-rule &
+	  [ORTH [LIST #third,
+		 LAST #last] ] > ].
+
+
+unary-COMPS-rule := unary-grule-type & headed-rule &
+[ H #1,
+  ARGS < #1 & word+arg_real+ana_agr > ].
+
+
+binary-COMPS-rule := binary-grule-type & headed-rule &
  [ H #1,
    NH1 #2,
-   ARGS < #1, #2 > ] .
+   ARGS < word+arg_real+ana_agr & #1,  phrase & #2 > ] .
 
-birule-headfinal := birule & headed-rule & 
+
+trinary-COMPS-rule := trinary-grule-type & headed-rule &
+ [ H   #1,
+   NH1 #2,
+   NH2 #3,
+   ARGS < word+arg_real+ana_agr & #1, phrase & #2, phrase & #3 > ].
+
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+unary-grule := nh-dtr-type & unary-grule-type &
+ [ NH1 #1,
+   ARGS < phrase & #1 > ].
+
+
+unary-grule-headed := headed-rule & unary-grule &
+ [ H #1,
+   ARGS < phrase & #1 > ].
+
+
+birule-headfirst := binary-grule-type & headed-rule &
+ [ H #1,
+   NH1 #2,
+   ARGS < phrase & #1, phrase & #2 > ] .
+
+birule-headfinal := binary-grule-type & headed-rule & 
  [ NH1 #1,
    H #2,
-   ARGS < #1, #2 > ] .
+   ARGS < phrase & #1, phrase & #2 > ] .
 
 
 
-phrasal-birule-headfirst := birule-headfirst &
-			    phrasal-rule2.
-
-
-phrasal-birule-headfinal := birule-headfinal &
-			    phrasal-rule2.
-
-phrasal-birule-headfinal-right-to-left := phrasal-birule-headfinal & 
-					  right-to-left.
-
-
-right-to-left := grule &
- [ ARGS [ FIRST [ KEY-ARG boolnum ],
-          REST [ FIRST [ KEY-ARG + ] ] ] ].
-
-
-birule-minusGAP := semantic-compositionality-principle2 & nh-dtr-type &
+birule-minusGAP := semantic-compositionality-binary & nh-dtr-type &
  [ ORTH [ LIST #first,
 	  LAST #last ],
-   ARGS < word+arg_realization+ana_agreement & [ ORTH [ LIST #first,
-		   LAST #middle ] ],     word+arg_realization+ana_agreement & [ ORTH [ LIST #middle,
-					       LAST #last] ], ... > ].
+   ARGS < [ ORTH [ LIST #first,
+		   LAST #middle ] ],  [ ORTH [ LIST #middle,
+					       LAST #last] ] > ].
 
 birule-headfinal-minusGAP := birule-minusGAP & 
 			     headed-rule & 
 			    
  [ NH1 #1,
    H #2,
-   ARGS < #1, #2 > ] .
+   ARGS < phrase & #1,  phrase & #2 > ] .
 
 
-triplus-rule := grule &
- [ ORTH [ LIST #first ],
-   3 synsem-struc,
-   ARGS < word+arg_realization+ana_agreement & [ORTH [ LIST #first,
-			   LAST #second ] ],  
 
-	  word+arg_realization+ana_agreement & [ORTH [ LIST #second,
-			   LAST #third ] ],   
+trirule-nonheaded := trinary-grule-type &
+ [ NH1 #1,
+   NH2 #2,
+   NH3 synsem-struc & #3,
 
-	  word+arg_realization+ana_agreement & [ORTH [LIST #third ] ] > ].
-
-; Does the trirule need further constraints like those applied to the the birule
-; like GAP principle and semantic compositionality?  
-
-trirule := triplus-rule & one-type & GAP-principle3 & 
-	   semantic-compositionality-principle3 &
- [ ORTH [ LAST #0 ],
-   SEM [ RESTR [ LIST #first,
-		 LAST #last ] ],
-   1 #1,
-   2 #2,
-   3 #3,
-   ARGS < #1 & [ SEM [ RESTR [ LIST #first,
-			       LAST #second ] ] ],
-	  #2 & [ SEM [ RESTR [ LIST #second,
-			       LAST #third ] ] ],
-	  #3 & [ ORTH [ LAST #0 ],
-		 SEM [ RESTR [ LIST #third,
-			       LAST #last ] ] ] > ].
+   ARGS< phrase & #1,  phrase & #2,  phrase & #3> ].
 
 
 

@@ -78,4 +78,3 @@
 
 (defparameter *label-template-type* 'label)
 
-

@@ -19,7 +19,8 @@ lrule &
 3rd-sing-verb_infl_rule := 
 %suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (f ves) (tch tches) (sh shes)
 3rd-sing-verb-lexical-rule &
-[ NEEDS-AFFIX true ].
+[ NEEDS-AFFIX true,
+  ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
 
 past-verb_infl_rule := 
 %suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 

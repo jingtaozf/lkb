@@ -1,8 +1,6 @@
-
-
 :begin :instance.
 
-root :=  word+arg_realization+ana_agreement &
+root :=  phrase &
  [ SYN [ HEAD verb & [FORM fin],
 	 SPR   < >,
 	 COMPS < >,

@@ -7,51 +7,77 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-:begin :instance.
-extraposition-lexical-rule := lrule-lexeme & 
-[ SYN  [HEAD #syn],
-  SEM #sem,
-  ARG-ST < #a & [SYN [HEAD comp] ] , #b >,
-  
-  ARGS < lexeme & [SYN [HEAD #syn,
-			SPR < [SYN [HEAD noun & [FORM f_it] ] ] >,
-			COMPS < #b, #a > ],
-		   SEM #sem,
-		   ARG-ST < [SYN [HEAD noun & [FORM f_it] ] ], #b , #a > ] > ].
-:end :instance.
 
 
+
+;;; NEGATION LEXICAL RULE.  CCB
+
 :begin :instance.
-negation-lexical-rule := lexeme & 
-[ ORTH #orth,
-  SYN [ HEAD verb & [ FORM fin,
+negation-lexical-rule := word+arg_real+ana_agr &
+[ SYN [ HEAD verb & [ FORM fin,
 		      PRED #pred,
 		      INV #inv, 
 		      NEG true, 
 		      AUX true,
 		      ANA #ana  ],
 	SPR #spr,
-	COMPS < [ SYN [ HEAD [ FORM f_not ] ] ] . #comps > ],
+	COMPS < [ SYN [ HEAD [ FORM f_not ] ] ] . #comps >,
+	GAP #gap ],
   SEM #sem,
   ARG-ST #arg-st,
-   
-  ARGS < lexeme & [  ORTH #orth,
-                     SYN [ HEAD verb & [ PRED #pred,
-					  INV #inv, 
-					  NEG false,
-					  AUX true,
-					  ANA #ana ], 
+
+  ARGS < word+arg_real+ana_agr & [ SYN [ HEAD verb & [ FORM fin,
+				      PRED #pred,
+				      INV #inv, 
+				      NEG false,
+				      AUX true,
+				      ANA #ana ], 
 			    SPR #spr,
-			    COMPS #comps ],
+			    COMPS #comps,
+			    GAP #gap],
+		      SEM #sem,
+		      ARG-ST #arg-st ] > ].
+:end :instance.
+
+
+;;; Add MODE Question to this inversion rule.  CCB.
+
+:begin :instance.
+inversion-lexical-rule := word+arg_real+ana_agr &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED #pred,
+		      INV true, 
+		      NEG #neg, 
+		      AUX true,
+		      ANA #ana  ],
+	SPR < >,
+	COMPS < #spr . #comps >,
+	GAP #gap ],
+  SEM #sem,
+  ARG-ST #arg-st,
+
+  ARGS < word+arg_real+ana_agr & [ SYN [ HEAD verb & [ FORM fin,
+				      PRED #pred,
+				      INV false, 
+				      NEG #neg,
+				      AUX true,
+				      ANA #ana ], 
+			    SPR < #spr & [ SYN [ HEAD noun ] ] >,
+			    COMPS #comps,
+			    GAP #gap ],
 		      SEM #sem,
 		      ARG-ST #arg-st ] > ].
 :end :instance.
 
 
 
+
+
 ;  Half of the passive rules below could be removed if we institute code for optionality of 
 ;  compliments.  SMG
 ;
+
+
 :begin :instance.
 tv-pass-rule-short := general-passive-lrule &
  [ ARG-ST < [SYN [HEAD noun],
