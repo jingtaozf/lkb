@@ -53,10 +53,12 @@
     (mrs::browse-mrs *generator-input*)))
 
 #-tty
-(defun show-gen-edge nil
+(defun show-gen-edge (&optional id)
   (let ((possible-edge-name
-         (ask-for-lisp-movable "Current Interaction" 
-          `(("Specify an edge number" . ,*edge-id*)) 60)))
+         (if (numberp id)
+           (list id)
+           (ask-for-lisp-movable "Current Interaction" 
+            `(("Specify an edge number" . ,*edge-id*)) 60))))
       (when possible-edge-name
          (let* ((edge-id (car possible-edge-name))
                 (edge-record (find-gen-edge-given-id edge-id)))

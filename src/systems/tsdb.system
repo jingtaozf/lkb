@@ -122,6 +122,7 @@
        #+:allegro
        (:file "gc")
        (:file "yy")
+       #+:lkb
        (:file "mt")
        #+:page 
        (:file "page-interface")
@@ -183,5 +184,6 @@
     :depends-on (#+(and :allegro (or :linux (and :sparc :svr4) :alpha)) "pvm"
 		 #+(and :mrs (not :lkb)) "mrs"
 		 #+:lkb "lkb"
+                 #-:lkb "ppcre"
 		 #+:page "page"))
 

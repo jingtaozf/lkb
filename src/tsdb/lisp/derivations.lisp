@@ -252,7 +252,7 @@
           (reconstruct-cfg-derivation derivation))))))
 
 (defun reconstruct-derivation (derivation &optional (dagp t) topp)
-  (declare (special %derivation-offset%))
+  (declare (special %derivation-offset%) #-:lkb (ignore topp))
   #+:debug
   (pprint (list %derivation-offset% derivation))
   (let* ((root (derivation-root derivation))

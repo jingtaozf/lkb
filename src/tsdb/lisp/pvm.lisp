@@ -333,6 +333,7 @@
                             (loop
                                 for result in results
                                 collect (get-field :tree result)))
+                           #+:lkb
                            (strings (mt::lm-score-strings strings)))
                       (loop
                           for result in results

@@ -1196,7 +1196,9 @@
      ((and (numberp value1) (numberp value2))
       (= value1 value2))
      #+:ppcre
-     (expression (ppcre::scan expression (string value1)))
+     (expression (ppcre::scan 
+                  expression 
+                  (if (symbolp value1) (format nil "~(~a~)" value1) value1)))
      
      ;;
      ;; _fix_me_
@@ -1292,7 +1294,9 @@
 
     (cond
      #+:ppcre
-     (expression (ppcre::scan expression (string pred1)))
+     (expression (ppcre::scan 
+                  expression 
+                  (if (symbolp pred1) (format nil "~(~a~)" pred1) pred1)))
      ((mrs::var-p pred2)
       (forward-variable pred2 pred1 solution)
       pred1)
