@@ -68,7 +68,8 @@
        #+:lkb (:file "mrsruleinput")           ; creating rules for above
                                          ; requires LKB, but outputs compiled 
                                          ; rules which can be used without LKB
-       #+(and :lkb (not :tty)) (:file "lkb-acl-mrs")      ; display etc in CLIM
+       #+(and :lkb :allegro :clim (not :tty)) 
+              (:file "lkb-acl-mrs")      ; display etc in CLIM
        #+:page (:file "acl-mrs")
        #+:lkb (:file "lkbmrs")          ; LKB specific - redefines
                                         ; some functions
