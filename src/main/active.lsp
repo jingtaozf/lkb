@@ -1,7 +1,10 @@
-;;; Copyright (c) 2000-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
-
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
+
+
+;;; Copyright (c) 2000--2002
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;        file: active.lsp
@@ -107,6 +110,98 @@
         (setf (aref chart i 0) nil (aref chart i 1) nil))
   (setf *active-edge-id* 0))
 
+;;;
+;;; add `chart reduction' support analoguous to PET (and first implemented in
+;;; DFKI PAGE, following a proposal by Dr. Mueller).  given a set of pairs of
+;;; paths into signs <source , target>+, after chart initialization (lexical
+;;; look-up), check that for each lexical entry with a valid type at one of the
+;;; source paths there is an item in the chart whose type at one of the target
+;;; paths is compatible (i.e. unifiable) with the source type.  in other words,
+;;; for all selectional restrictions, as found in a source path, some lexical
+;;; entry must supply the appropriate value.  the `rely on' lexical entry will
+;;; only survive if an `_on_rel_s' is provided somewhere in the chart.
+;;;
+;;; _fix_me_
+;;; as i write this, i realize that there are (at least) two flaws in the 
+;;; current implementation: (i) as noted for PET a few weeks ago, it should be
+;;; possible for rules to also supply the target dependencies and (ii) when
+;;; checking dependencies, we should only look at provided values found under
+;;; the corresponding path, i.e. the target in the paths pair that gave rise
+;;; to this token dependency.  as, currently, the target paths tend to be all
+;;; the same and, at the worst, we may keep a few too many edges in the chart,
+;;; let people at DFKI play with this for a little while first.
+;;;                                                      (24-oct-02; oe & bk)
+
+(defparameter *chart-dependencies* nil)
+
+(defun chart-dependencies-provided ()
+  (loop
+      with results
+      with paths = (loop 
+                       for i from 0
+                       for path in *chart-dependencies*
+                       unless (or (evenp i)
+                                  (member path paths :test #'equal))
+                       collect path into paths
+                       finally (return paths))
+      for i from 1 to (- *chart-limit* 1)
+      for entry = (aref *chart* i 0)
+      for configurations = (and entry (chart-entry-configurations entry))
+      while entry
+      do
+        (loop
+            for configuration in configurations
+            for edge = (chart-configuration-edge configuration)
+            for tdfs = (edge-dag edge)
+            for dag = (tdfs-indef tdfs)
+            do
+              (loop
+                  for path in paths
+                  for key = (existing-dag-at-end-of dag path)
+                  for type = (and key (type-of-fs key))
+                  when type do (pushnew type results :test #'eq)))
+      finally (return results)))
+
+(defun chart-dependencies-p (edge paths provided)
+  (loop
+      with tdfs = (edge-dag edge)
+      with dag = (tdfs-indef tdfs)
+      for path in paths
+      for node = (existing-dag-at-end-of dag path)
+      always (or (null node) 
+                 (loop
+                     with type = (type-of-fs node)
+                     for foo in provided
+                     thereis (greatest-common-subtype foo type)))))
+  
+(defun reduce-chart ()
+
+  (labels ((freeze (edge id)
+             #+:rdebug
+             (format t "~&freeze(): ~a~%" edge)
+             (setf (edge-frozen edge) id)
+             (loop 
+                 for parent in (edge-parents edge) do (freeze parent id))))
+
+    (loop
+        with paths = (loop 
+                         for i from 0
+                         for path in *chart-dependencies*
+                         unless (or (oddp i) (member path paths :test #'equal))
+                         collect path into paths
+                         finally (return paths))
+        with provided = (chart-dependencies-provided)
+        for i from 1 to (- *chart-limit* 1)
+        for entry = (aref *chart* i 0)
+        for configurations = (and entry (chart-entry-configurations entry))
+        while entry
+        do
+          (loop
+              for configuration in configurations
+              for edge = (chart-configuration-edge configuration)
+              for happyp = (chart-dependencies-p edge paths provided)
+              unless happyp do (freeze edge -1)))))
+
 (defmacro yadu! (tdfs1 tdfs2 path)
   `(yadu ,tdfs1 (create-temp-parsing-tdfs ,tdfs2 ,path)))
 
@@ -162,7 +257,7 @@
         (restrict-fs (tdfs-indef (edge-dag edge))))))
   #+:agenda
   (cond 
-   (*first-only-p*
+   ((or *first-only-p* *chart-dependencies*)
     (heap-insert *agenda* priority passive))
    (t
     (fundamental4passive passive)))
@@ -172,7 +267,7 @@
 (defmacro rule-and-passive-task (rule passive)
   #+:agenda
   `(cond
-    (*first-only-p*
+    ((or *first-only-p* *chart-dependencies*)
      (let ((priority (rule-priority ,rule)))
        (heap-insert *agenda* priority (cons ,rule ,passive))))
     #+:priority
@@ -191,7 +286,7 @@
   (declare (ignore arule))
   #+:agenda
   `(cond
-    (*first-only-p*
+    ((or *first-only-p* *chart-dependencies*)
      (let ((priority (rule-priority ,arule)))
        (heap-insert *agenda* priority (cons ,active ,passive))))
     #+:priority
@@ -207,12 +302,22 @@
   `(process-active-and-passive ,active ,passive))
 
 (defun complete-chart ()
+
+  ;;
+  ;; the chart reduction after lexical look-up only works when we are using an
+  ;; agenda, such that the lexical look-up phase is completed before the start
+  ;; actual parsing.  i should probably eliminate many of these conditionals
+  ;; and just make the agenda-driven mode the default.         (24-oct-02; oe)
+  ;;
+  #+:agenda
+  (when *chart-dependencies* (reduce-chart))
+
   ;;
   ;; now run the main parser loop: until we empty the agenda (or hell
   ;; freezes over) apply the fundamental rule of chart parsing.
   ;;
   #+:agenda
-  (when (or *first-only-p* #+:priority *chart-packing-p*)
+  (when (or *first-only-p* *chart-dependencies* #+:priority *chart-packing-p*)
     (loop
         until (empty-heap *agenda*)
         for task = (heap-extract-max *agenda*)
@@ -393,6 +498,7 @@
 ;;; the second class is marked with a negative `frozen' value and ignored in
 ;;; the unpacking phase.  this was hard to debug.          (17-sep-99  -  oe)
 ;;;
+
 #+:packing
 (defun packed-edge-p (start end edge)
   (labels (#+:pdebug
