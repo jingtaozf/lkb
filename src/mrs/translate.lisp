@@ -66,6 +66,7 @@
                        ;;
                        (let* ((stream (make-string-output-stream))
                               (*standard-output* stream)
+                              (mrs::*mrs-raw-output-p* nil)
                               (strings (generate-from-mrs mrs))
                               (output (get-output-stream-string stream)))
                          (when (and (stringp output) (not (string= output "")))
@@ -75,17 +76,19 @@
                             (current-time :long :short)
                             (normalize-string output)))
                          strings))
-                    (if condition
+                    (cond
+                     (condition
                       (format
                        log
                        "~&[~a] translate(): error `~a'.~%"
                        (current-time :long :short)
-                       (normalize-string (format nil "~a" condition)))
+                       (normalize-string (format nil "~a" condition))))
+                     (t
                       (format
                        log
                        "~&[~a] translate(): ~a generation result~p.~%"
                        (current-time :long :short)
-                       (length result) (length result)))
+                       (length result) (length result))))
                     (force-output log)
                     (when result (show-gen-result))
                     (invalidate-marks)
