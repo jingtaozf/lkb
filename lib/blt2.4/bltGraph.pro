@@ -36,7 +36,7 @@
 /DrawSymbolProc 0 def			% Routine to draw symbol outline/fill
 /StippleProc 0 def			% Stipple routine (bar segments)
 /DashesProc 0 def			% Dashes routine (line segments)
- 
+  
 % Define the array ISOLatin1Encoding (which specifies how characters are 
 % encoded for ISO-8859-1 fonts), if it isn't already present (Postscript 
 % level 2 is supposed to define it, but level 1 doesn't). 
@@ -88,7 +88,7 @@ systemdict /ISOLatin1Encoding known not {
 
 % font ISOEncode font 
 % This procedure changes the encoding of a font from the default 
-% Postscript encoding to ISOLatin1.  It's typically invoked just 
+% Postscript encoding to ISOLatin1.  It is typically invoked just 
 % before invoking "setfont".  The body of this procedure comes from 
 % Section 5.6.1 of the Postscript book. 
 

@@ -14,7 +14,8 @@
 # 
 # RCS: @(#) $Id$
 
-package provide tcltest 1.0
+package require Tcl 8.2
+package provide tcltest 1.0.1
 
 # create the "tcltest" namespace for all testing variables and procedures
 
