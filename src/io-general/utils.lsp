@@ -265,12 +265,21 @@
     (setf *user-params-file* file)))
 
 
-(defun load-irregular-spellings (pathname)
-  (with-package (:lkb)
-    (read-irreg-form-string 
-     (with-open-file (istream pathname
-                      :direction :input)
-       (read istream)))))
+(defun load-irregular-spellings (pathnames)
+  (when pathnames
+    (unless (listp pathnames)
+      (setf pathnames (list pathnames)))
+    (with-package (:lkb)
+      (read-irreg-form-strings 
+       (for pathname in pathnames
+            filter
+            (let ((res
+                   (with-open-file (istream pathname
+                                    :direction :input)
+                     (read istream))))
+              (when (and res (stringp res))
+                res)))))))
+              
   
 ;;; utility for reloading
 

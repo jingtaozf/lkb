@@ -399,36 +399,37 @@
 (find-irregular-morphs "has")
 |#
 
-(defun read-irreg-form-string (string)
-  (when (and string (stringp string))
-    (clrhash *irregular-forms*)
-    (clrhash *irregular-forms-gen*) 
+(defun read-irreg-form-strings (strings)
+  ;;; caller has checked these are actual strings
+  (clrhash *irregular-forms*)
+  (clrhash *irregular-forms-gen*) 
+  (dolist (string strings)
     (with-input-from-string (stream string)
-      (loop for irreg = (read-line stream nil nil)
-          while irreg
-          unless (or (zerop (length irreg)) (eq (elt irreg 0) #\;))
-          do
-            (let* ((irreg-right (position '#\  irreg))                         
-                   (spelling 
-                    (if irreg-right
-                        (string-upcase (subseq irreg 0 irreg-right))))
-                   (aff-right 
-                    (if irreg-right
-                        (position '#\  irreg :start (+ 1 irreg-right))))
-                   (affixname 
-                    (if (and irreg-right aff-right)
-                        (string-upcase
-                         (subseq irreg (+ 1 irreg-right) aff-right))))
-                   (stem-right 
-                    (if aff-right
-                        (position '#\  irreg :start (+ 1 aff-right))))
-                   (stem 
-                    (if aff-right
-                        (string-upcase
-                        (subseq irreg (+ 1 aff-right) stem-right)))))
-              (if (and spelling affixname stem)
-                  (add-to-irregulars spelling (create-lex-rule-name affixname) 
-                                     stem)))))))
+         (loop for irreg = (read-line stream nil nil)
+             while irreg
+             unless (or (zerop (length irreg)) (eq (elt irreg 0) #\;))
+             do
+               (let* ((irreg-right (position '#\  irreg))                         
+                      (spelling 
+                       (if irreg-right
+                           (string-upcase (subseq irreg 0 irreg-right))))
+                      (aff-right 
+                       (if irreg-right
+                           (position '#\  irreg :start (+ 1 irreg-right))))
+                      (affixname 
+                       (if (and irreg-right aff-right)
+                           (string-upcase
+                            (subseq irreg (+ 1 irreg-right) aff-right))))
+                      (stem-right 
+                       (if aff-right
+                           (position '#\  irreg :start (+ 1 aff-right))))
+                      (stem 
+                       (if aff-right
+                           (string-upcase
+                            (subseq irreg (+ 1 aff-right) stem-right)))))
+                 (if (and spelling affixname stem)
+                     (add-to-irregulars spelling (create-lex-rule-name affixname) 
+                                        stem)))))))
 
 (defun add-to-irregulars (irreg-form rule stem)
   (push (list stem (list rule irreg-form))
