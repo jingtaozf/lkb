@@ -1102,7 +1102,8 @@ in their restrictors.
 		    (let* ((original-scopes 
 			    (length (make-scoped-mrs mrs)))
 			   (one-scope (produce-one-scope mrs))
-			   (bindings (make-scoped-mrs one-scope)))
+			   (bindings (if one-scope 
+					 (make-scoped-mrs one-scope))))
 		      (if bindings
 			  (if (cdr bindings)
 			      (format t "~%Error: multiple scopes for ~A" num)
@@ -1139,14 +1140,54 @@ in their restrictors.
 		       
 
 #|
-generator testing
+;;; generator testing
 
-(progn 
-  (let ((*mrs-base-output-p* t))
-    (lkb::do-parse-tty "the dog believed Kim did not bark")
-    (pprint (lkb::generate-from-mrs (produce-one-scope *mrs-debug*)))))
+(defun test-qeq-gen (&optional test-list up-to)
+  (let ((num 1))
+    (dolist (eg *rmrs-test-suite*)
+      (let ((sentence (car eg))
+	    (parsenum (cdr eg)))
+	(when (and sentence 
+		   (if test-list (member num test-list) t)
+		   (if up-to (> num up-to) t))
+	  (let ((lkb::*show-parse-p* nil))
+	    (lkb::do-parse-tty sentence)
+	    (when lkb::*parse-record*
+	      (let ((selected-parse (nth (- parsenum 1) lkb::*parse-record*)))
+		(if (not selected-parse)
+		    (format t "~%WARNING: Incorrect parse number in ~A" num)
+		  (let ((mrs (extract-mrs selected-parse)))
+		    (unless mrs (error "~%Can't extract MRS"))
+		    (let* ((lkb::*bypass-equality-check* :eqqeqs)
+			   (%mrs-extras-defaults% nil)
+			   (genresults (lkb::generate-from-mrs 
+					(equate-all-qeqs mrs)))
+			   (strgen (loop for res in genresults
+				       collect
+				       (format nil "~{~A~^ ~}" res))))
+		      (unless (member sentence strgen :test #'string-equal)
+			(format t "~%WARNING `~A' not generated" sentence))
+		      (pprint strgen)))))))))
+      (setf num (+ 1 num)))))
 	 
 |#
+
+(defun equate-all-qeqs (mrsstruct)
+  (let ((copy-mrsstruct (copy-psoa mrsstruct)))
+    (setf (psoa-liszt copy-mrsstruct)
+      (loop for rel in (psoa-liszt copy-mrsstruct)
+	  collect
+	    (let* ((new-rel (copy-rel rel))
+		   (new-flist (loop for fvp in (rel-flist new-rel)
+				  collect
+				    (copy-fvpair fvp))))
+	      (setf (rel-flist new-rel)
+		new-flist)
+	      new-rel)))
+    (let*
+	((qeq-list (psoa-h-cons copy-mrsstruct))
+	 (equated-struct (equate-qeqs qeq-list copy-mrsstruct)))
+      equated-struct)))
 
 (defun produce-one-scope (mrsstruct)
   ;;; returns nil in the case where something goes wrong
@@ -1165,35 +1206,47 @@ generator testing
 	(top-qeq top-qeq-hole-fvp) 
 	(find-top-qeq-hole copy-mrsstruct)
       (let*
-	 ((qeq-list (remove top-qeq (psoa-h-cons copy-mrsstruct)))
-	  (equated-struct (equate-qeqs qeq-list copy-mrsstruct))
-	  (q-rels (loop for rel in (psoa-liszt copy-mrsstruct) 
-		     when (is-quant-rel rel) collect rel))
-	  (qlist (if q-rels 
-		     (order-quantifiers equated-struct q-rels top-qeq))))
-	(if q-rels
-	    (if qlist
-		(let ((top-q-label (rel-handel (car qlist))))
-		  (setf (psoa-h-cons equated-struct) 
-		    nil)
-		  (if top-qeq-hole-fvp 
-		      (setf (fvpair-value top-qeq-hole-fvp)
-			top-q-label)
-		    (setf 
-			(psoa-top-h equated-struct)
-		      top-q-label))
-		  equated-struct)
+	  ((rels (psoa-liszt copy-mrsstruct))
+	   (qeq-list (remove top-qeq (psoa-h-cons copy-mrsstruct)))
+	   (equated-struct (equate-qeqs qeq-list copy-mrsstruct))
+	   (q-rels (loop for rel in rels
+		       when (is-quant-rel rel) collect rel))
+	   (implicit-existentials (find-unbound-vars rels q-rels))
+	   (free-variables (loop for var in implicit-existentials
+			       unless (nonquantified-var-p var)
+			       collect var)))
+	(if free-variables
+	    (progn
+	      (struggle-on-error "~%Free variables in MRS: ~A"
+				 (remove-duplicates (mapcar #'var-string free-variables)
+						    :test #'equal))
+	      nil) ; returns nil if there are free variables
+	  (let
+	      ((qlist (if q-rels 
+			  (order-quantifiers equated-struct q-rels top-qeq))))
+	    (if q-rels
+		(if qlist
+		    (let ((top-q-label (rel-handel (car qlist))))
+		      (setf (psoa-h-cons equated-struct) 
+			nil)
+		      (if top-qeq-hole-fvp 
+			  (setf (fvpair-value top-qeq-hole-fvp)
+			    top-q-label)
+			(setf 
+			    (psoa-top-h equated-struct)
+			  top-q-label))
+		      equated-struct)
 	      ;;; qrels but no qlist means failure - return nil
-	      nil)
+		  nil)
 	  ;;; no quantifiers, so set the marg directly to
 	  ;;; the outscpd
-	  (progn
-	    (setf (psoa-h-cons equated-struct) 
-		    nil)
-	    (when top-qeq-hole-fvp 
-		(setf (fvpair-value top-qeq-hole-fvp)
-		  (hcons-outscpd top-qeq)))
-	    equated-struct))))))
+	      (progn
+		(setf (psoa-h-cons equated-struct) 
+		  nil)
+		(when top-qeq-hole-fvp 
+		  (setf (fvpair-value top-qeq-hole-fvp)
+		    (hcons-outscpd top-qeq)))
+		equated-struct))))))))
 	  
 (defun equate-qeqs (qeq-list mrsstruct)
   ;;; DESTRUCTIVE!
@@ -1297,12 +1350,16 @@ generator testing
     (unless ordering-so-far
       (throw 'qup nil))
     (if to-order
-	(progn
+	(let ((progress nil))
 	  (dolist (ordered-q-s ordering-so-far)
 	    (let ((bv (get-bv-value ordered-q-s)))
 	      (dolist (unordered-q-s to-order)
-		(setf (cdr unordered-q-s) 
-		  (remove bv (cdr unordered-q-s))))))
+		(when (member bv (cdr unordered-q-s))
+		  (setf progress t)
+		  (setf (cdr unordered-q-s) 
+		    (remove bv (cdr unordered-q-s)))))))
+	  (unless progress
+	    (throw 'qup nil))
 	  (q-order to-order ordering-so-far))
       ordering-so-far)))
     
