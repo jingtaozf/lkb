@@ -50,6 +50,37 @@ proc tsdb_file {action {index -1}} {
   } elseif {$action == "reread"} {
     if {[verify_ts_selection]} {return 1};
     update_ts_list update $globals(data);
+  } elseif {$action == "strip"} {
+    if {[verify_ts_selection]} {return 1};
+    set old $globals(data);
+    set aold "$globals(home)$old";
+    if {[file isdirectory $aold]} {
+      set anew [string range $aold 0 [string last $globals(slash) $aold]];
+      if {![input "new database:" $anew $globals(home) profile]} {
+        set anew $globals(input);
+        set new [string_strip $globals(home) $anew];
+        if {$new == ""} {
+          tsdb_beep;
+          status "invalid name for target database" 10;
+          return;
+        }; # if
+        if {[file exists $anew]} {
+          tsdb_beep;
+          status "database `$new' already exists" 10;
+          return;
+        }; # if
+        set parent \
+          [string range $anew 0 [string last $globals(slash) $anew]];
+        if {[catch {file mkdir $parent}]} {
+          tsdb_beep;
+          status "error creating parent directory `$parent'" 10;
+          return;
+        }; # if
+        history_add profile $new;
+        set command "(strip  \"$old\" \"$new\")";
+        send_to_lisp :event $command;
+      }; # if
+    }; # if
   } elseif {$action == "purge"} {
     if {[verify_ts_selection]} {return 1};
     if {[file isdirectory $globals(home)$globals(data)] 
@@ -74,7 +105,7 @@ proc tsdb_file {action {index -1}} {
           after 1000;
         }; # if
         if {"$globals(user)" != "ebender"} {
-          after 500;
+          after 300;
         }; # if
       }; # foreach
       status "deleting directory `$old' ...";

@@ -409,6 +409,10 @@
             do (write-byte c out))))
     target))
 
+(defun touch (file &key (if-exists :supersede))
+  (with-open-file (foo file :direction :output
+                   :if-exists if-exists :if-does-not-exist :create)))
+
 (defun purge-directory (path)
   (let* ((path (if (stringp path) path (namestring path)))
          (pattern (make-pathname :directory path :name :wild))

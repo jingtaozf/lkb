@@ -29,8 +29,10 @@
 (defun select (attributes types relations condition
                &optional (language *tsdb-data*) 
                &key absolute unique
-                    quiet ro meter status file (format :lisp) sort)
-  (declare (special *statistics-tcl-formats*))
+                    quiet ro meter status file (format :lisp) sort
+                    efs *tsdb-efs*)
+  (declare (special *statistics-tcl-formats*)
+           (ignore efs))
 
   (when meter 
     (meter :value (get-field :start meter)))
@@ -128,7 +130,7 @@
              (sort data (if (eq stype :integer) #'< #'string<) 
                    :key #'(lambda (foo) (get-field sattribute foo)))
              data))
-          (:ntcl
+          ((:ntcl :ascii)
            (let* ((data 
                    (if sort
                      (sort data (if (eq stype :integer) #'< #'string<) 
@@ -141,16 +143,17 @@
                   (length (length data))
                   (*print-circle* nil)
                   (totals (make-array (length attributes) :initial-element 0)))
-             (format
-              stream
-              "viewer fast~%~
-               noofrows ~d~%noofcols ~d~%~
-               titlerows 1~%tilecols 1~%"
-              (+ length 2) width)
-             (loop
-                 for attribute in attributes
-                 do
-                   (format stream "{~a}~%" attribute))
+             (when (eq format :ntcl)
+               (format
+                stream
+                "viewer fast~%~
+                 noofrows ~d~%noofcols ~d~%~
+                 titlerows 1~%tilecols 1~%"
+                (+ length 2) width)
+               (loop
+                   for attribute in attributes
+                   do
+                     (format stream "{~a}~%" attribute)))
              (loop
                  for item in data
                  do
@@ -162,7 +165,7 @@
                        when (and (integerp field) (not (= field -1)))
                        do 
                          (incf (aref totals i) field)
-                       do
+                       when (eq format :ntcl) do
                          (format stream "{~a}~%" field)))
              (loop
                  for attribute in attributes

@@ -259,6 +259,8 @@ proc main {} {
     -command {tsdb_file swap} -state disabled
   .menu.file.menu add command -label "Compress" \
     -command {tsdb_file compress} -state disabled
+  .menu.file.menu add command -label "Strip" \
+    -command {tsdb_file strip}
   .menu.file.menu add command -label "Purge" \
     -command {tsdb_file purge}
   .menu.file.menu add command -label "Delete" \

@@ -400,7 +400,33 @@
                                 arguments
                                 (list :meter meter)))))
               (status :text (format nil "~a done" message) :duration 5)))
-           
+
+           (strip
+            (let* ((source (first arguments))
+                   (target (second arguments))
+                   (arguments (rest (rest arguments)))
+                   (meter (make-meter 0 1))
+                   (status (apply #'browse-trees
+                                  (append (list source :purge target)
+                                          arguments
+                                          (list :meter meter)))))
+              (if (null status)
+                (let ((message (format 
+                                nil 
+                                "mysterious problem creating `~a'"
+                                target)))
+                  (beep)
+                  (status :text message :duration 5)
+                  (sleep 2))
+                (let* ((new (tsdb-do-list 
+                             *tsdb-home* :stream nil
+                             :format :list :name target)))
+                  (when (and new (= (length new) 1))
+                    (send-to-podium
+                     (format nil "update_ts_list add ~a" (first new))
+                     :wait t))))))
+
+
            (purge
             (let* ((action (third arguments)))
               (apply #'purge-test-run arguments)

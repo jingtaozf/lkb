@@ -35,7 +35,7 @@
 
 (defparameter *import-category* "S")
 
-(defun do-import-database (source target &key absolute meter)
+(defun do-import-database (source target &key absolute meter except)
   
   (when meter (meter :value (get-field :start meter)))
   (let* ((tpath (if absolute (namestring target) (find-tsdb-directory target)))
@@ -64,14 +64,18 @@
             for (relation) in schema
             for compressed = (format nil "~a.gz" relation)
             do
-              (let ((sfile (make-pathname :directory source :name relation)))
+              (let ((sfile (make-pathname :directory source :name relation))
+                    (tfile (make-pathname :directory tpath :name relation)))
                 (when (probe-file sfile)
-                  (cp sfile 
-                      (make-pathname :directory tpath :name relation))))
-              (let ((sfile (make-pathname :directory source :name compressed)))
+                  (if (member relation except :test #'equal)
+                    (touch tfile)
+                    (cp sfile tfile))))
+              (let ((sfile (make-pathname :directory source :name compressed))
+                    (tfile (make-pathname :directory tpath :name compressed)))
                 (when (probe-file sfile)
-                  (cp sfile 
-                      (make-pathname :directory tpath :name compressed))))
+                  (if (member relation except :test #'equal)
+                    (touch tfile)
+                    (cp sfile tfile))))
               (when increment (meter-advance increment))
             finally
               (let ((sfile 

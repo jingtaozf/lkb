@@ -4,7 +4,7 @@
 ;;; ToDo
 ;;;
 ;;; - confidence menu;
-;;; - `Reset' buttom: re-instantiate original, preset state;
+;;; - `Reset' button: re-instantiate original, preset state;
 ;;; - reorder trees: active at top;
 ;;; - pairwise comparison of trees;
 ;;; - highlighting of discriminats on tree select;
@@ -18,9 +18,16 @@
                      &key (condition *statistics-select-condition*)
                           (cache *tsdb-cache-database-writes-p*)
                           (verbose t)
-                          meter)
+                          (stream *tsdb-io*)
+                          purge meter)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
+
+  (when purge
+    (unless (do-import-database (find-tsdb-directory data) purge 
+                                :meter (when meter (make-meter 0 1))
+                                :except '("tree" "decision"))
+      (return-from browse-trees nil)))
 
   (let* ((condition (if condition
                       (concatenate 'string "(readings >= 1) && " condition)
@@ -30,12 +37,15 @@
             (analyze data 
                      :condition condition :meter meter :message t)
             data))
-         (message (format nil "browsing `~a' trees ..." data))
+         (message (format 
+                   nil 
+                   "~a `~a' trees ..." 
+                   data (if purge "purging" "browsing")))
          (items (sort (copy-seq items) 
                       #'< :key #'(lambda (foo) (get-field :i-id foo))))
          (schema (read-database-schema data))
          (cache (when cache
-                  (create-cache data 
+                  (create-cache (or purge data)
                                 :schema schema :verbose verbose 
                                 :protocol cache)))
          %client%)
@@ -54,7 +64,8 @@
 
     (loop
         with increment = (and meter (/ 1 (if items (length items) 1)))
-        with frame = (clim:make-application-frame 'lkb::compare-frame)
+        with frame = (unless purge
+                       (clim:make-application-frame 'lkb::compare-frame))
         with title = (format 
                       nil 
                       "[incr tsdb()] Tree Selection~@[ @ `~a'~]" condition)
@@ -64,32 +75,39 @@
         initially
           #+:debug
           (setf *frame* frame)
-          (setf (lkb::compare-frame-current-chart frame) nil)
-          (setf (clim:frame-pretty-name frame) title)
-          (setf (lkb::compare-frame-controller frame) *current-process*)
+          (unless purge
+            (setf (lkb::compare-frame-current-chart frame) nil)
+            (setf (clim:frame-pretty-name frame) title)
+            (setf (lkb::compare-frame-controller frame) *current-process*))
         for item = (when position (nth position items))
         for i-id = (get-field :i-id item)
         for status = (when (integerp i-id) 
                        (browse-tree 
-                        data i-id frame :cache cache :title title))
+                        data i-id frame 
+                        :cache cache :title title :purge purge
+                        :verbose verbose :stream stream))
         for action = (get-field :status status)
+        for offset = (or (get-field :offset status) 1)
         while (and status (not (eq action :close)) (numberp position))
         do 
           (when (and (eq action :save) increment 
                      (zerop (aref annotated position)))
             (meter-advance increment))
-          (let ((action (get-field :status status)))
-            (case action
-              (:first (setf position 0))
-              (:previous (setf position (max (- position 1) 0)))
-              ((:skip :null)
-               (setf position (when (< position (- nitems 1)) (+ position 1))))
-              ((:next :save) 
-               (when (eq action :save) (incf (aref annotated position)))
-               (setf position (min (+ position 1) (- nitems 1))))
-              (:last (setf position (- nitems 1)))))
+          (case action
+            (:first (setf position 0))
+            (:previous (setf position (max (- position offset) 0)))
+            ((:skip :null)
+             (setf position 
+               (when (< position (- nitems 1)) (+ position offset))))
+            ((:next :save) 
+             (when (eq action :save) (incf (aref annotated position)))
+             (setf position 
+               (if (= position (- nitems 1))
+                 (if purge nil (- nitems 1))
+                 (+ position offset))))
+            (:last (setf position (- nitems 1))))
         finally
-          (clim:frame-exit frame)
+          (when frame (clim:frame-exit frame))
           (when (mp:process-p %client%)
             (mp:process-kill %client%)))
   
@@ -99,7 +117,7 @@
       (status :text (format nil "~a done" message) :duration 10)
       (meter :value 1))))
 
-(defun browse-tree (data i-id frame &key title cache)
+(defun browse-tree (data i-id frame &key title cache purge verbose stream)
   
   (declare (special %client%))
 
@@ -109,15 +127,17 @@
            (items (analyze data :thorough '(:derivation) :condition condition))
            (item (and (null (rest items)) (first items)))
            (input (or (get-field :o-input item) (get-field :i-input item)))
+           (i-id (get-field :i-id item))
            (parse-id (get-field :parse-id item))
-           (trees (select '("parse-id" "t-version" "t-active"
-                            "t-confidence" "t-author" "t-end")
-                          '(:integer :integer :integer
-                            :integer :string :date)
-                          "tree" 
-                          (format nil "parse-id == ~a" parse-id) 
-                          data
-                          :sort :parse-id))
+           (trees (when parse-id
+                    (select '("parse-id" "t-version" "t-active" "t-confidence" 
+                              "t-author" "t-start" "t-end" "t-comment")
+                            '(:integer :integer :integer :integer 
+                              :string :date :date :string)
+                            "tree" 
+                            (format nil "parse-id == ~a" parse-id) 
+                            data
+                            :sort :parse-id)))
            (version (loop
                         for tree in trees
                         maximize (get-field :t-version tree)))
@@ -125,17 +145,17 @@
                       for tree in trees
                       when (eq version (get-field :t-version tree))
                       collect tree))
+           (user (get-field :t-author (first trees)))
+           (date (get-field :t-end (first trees)))
            (confidence (let* ((foo (get-field :t-confidence (first trees))))
                          (if (and (integerp foo) (>= foo 0) (<= foo 3))
-                            foo
-                            3)))
+                           foo
+                           3)))
            (history (let* ((foo (get-field :t-confidence (first trees)))
                            (confidence 
                             (if (and (integerp foo) (>= foo 0) (<= foo 3))
                               (aref #("zero" "low" "fair" "high") foo)
-                              "unknown"))
-                           (user (get-field :t-author (first trees)))
-                           (date (get-field :t-end (first trees))))
+                              "unknown")))
                       (if (and (> version 0) user date)
                         (format
                          nil
@@ -143,25 +163,52 @@
                          foo confidence version date user)
                         "")))
            (results (get-field :results item))
-           (edges (loop
-                      with edges
-                      for result in results
-                      for id = (get-field :result-id result)
-                      for derivation = (get-field :derivation result)
-                      for edge = (and derivation (reconstruct derivation))
-                      when edge do 
-                        (setf (lkb::edge-score edge) id)
-                        (setf (lkb::edge-parents edge) derivation)
-                        (push edge edges)
-                      finally (return (nreverse edges))))
+           (edges (unless purge
+                    (loop
+                        with edges
+                        for result in results
+                        for id = (get-field :result-id result)
+                        for derivation = (get-field :derivation result)
+                        for edge = (and derivation (reconstruct derivation))
+                        when edge do 
+                          (setf (lkb::edge-score edge) id)
+                          (setf (lkb::edge-parents edge) derivation)
+                          (push edge edges)
+                        finally (return (nreverse edges)))))
            (foo (first edges))
            (start (and foo (lkb::edge-from foo)))
            (end (and foo (lkb::edge-to foo)))
-           (discriminants (reconstruct-discriminants data parse-id version))
+           (decisions (when (and parse-id version)
+                        (select '("parse-id" "version"
+                                  "d-state" "d-type" "d-key" "d-value" 
+                                  "d-start" "d-end" "d-date")
+                                '(:integer :integer
+                                  :integer :integer :string :string 
+                                  :integer :integer :date)
+                                "decision" 
+                                (format 
+                                 nil 
+                                 "parse-id == ~a && version == ~a" 
+                                 parse-id version) 
+                                data)))
+           (discriminants (unless purge (reconstruct-discriminants decisions)))
            (lkb::*parse-record* edges))
       (declare (ignore active))
 
-      (unless edges 
+      (when purge
+        (when trees
+          (write-tree purge (first trees) :cache cache))
+        (loop
+            for decision in decisions
+            do (write-decision purge decision :cache cache))
+        (return-from browse-tree (acons :status :save nil)))
+
+      (when (null edges)
+        (when verbose
+          (format
+           stream
+           "browse-tree(): failed to reconstruct item # ~d (parse # ~d).~%"
+           i-id parse-id))
         (return-from browse-tree (acons :status :null nil)))
       
       (setf (lkb::compare-frame-input frame) input)
@@ -179,12 +226,15 @@
         #+:debug
         (when (find :compiler *features*)
           (excl:advise mp:process-kill :after nil nil
-            `(when (and ,%client% (eq (first excl:arglist) ,%client%))
-               (ignore-errors 
-                (process-revoke-arrest-reason *current-process* :wait))))))
-      (unless (eq (lkb::set-up-compare-frame lkb::*parse-record* frame) :skip)
-        (clim:redisplay-frame-panes frame :force-p t)
-        (process-add-arrest-reason *current-process* :wait))
+                       `(when (and ,%client% 
+                                   (eq (first excl:arglist) ,%client%))
+                          (ignore-errors 
+                           (process-revoke-arrest-reason 
+                            *current-process* :wait))))))
+      (let ((status (lkb::set-up-compare-frame lkb::*parse-record* frame))) 
+        (unless (eq status :skip)
+          (clim:redisplay-frame-panes frame :force-p t)
+          (process-add-arrest-reason *current-process* :wait)))
 
       (let* ((decisions (lkb::compare-frame-decisions frame))
              (status (lkb::decision-type (first decisions)))
@@ -195,7 +245,7 @@
                  (foo (lkb::compare-frame-confidence frame))
                  (confidence (if (and (integerp foo)
                                       (>= foo 0) (<= foo 3))
-                                foo
+                               foo
                                -1))
                  (t-author (current-user))
                  (t-start (let* ((start (first (last decisions)))
@@ -210,8 +260,12 @@
                           (if end 
                             (decode-time end :long t)
                             (current-time :long t)))))
-            (write-tree data parse-id version active confidence
-                        t-author t-start t-end "" 
+            (write-tree data (pairlis '(:parse-id 
+                                        :t-version :t-active :t-confidence
+                                        :t-author :t-start :t-end :t-comment)
+                                      (list parse-id 
+                                            version active confidence
+                                            t-author t-start t-end ""))
                         :cache cache))
 
           (when (and (lkb::decision-p recent)
@@ -221,28 +275,19 @@
                    (type (encode-discriminant-type recent))
                    (start (lkb::compare-frame-start frame))
                    (end (lkb::compare-frame-end frame))
-                   #|                   
-                   (edge (get (lkb::decision-value recent) 'lkb::edge-record))
-                   (id (when (lkb::edge-p edge) (lkb::edge-score edge)))
-                   (key (when (and (eq (lkb::decision-type recent) :select)
-                                   (numberp id))
-                          (format nil "~a" id)))
-                   (derivation (and (lkb::edge-p edge) 
-                                    (lkb::edge-parents edge)))
-                   (value (when derivation
-                            (with-standard-io-syntax
-                              (let ((*package* lkb::*lkb-package*))
-                                (write-to-string
-                                derivation :case :downcase)))))
-                   |#                                
                    (time (let ((time (lkb::decision-time recent)))
                            (if time
                              (decode-time time :long t)
                              (current-time)))))
-              (write-decision data parse-id version 
-                              state type nil nil start end time
+              (write-decision data 
+                              (pairlis '(:parse-id :version 
+                                         :d-state :d-type :d-key :d-value 
+                                         :d-start :d-end :d-date)
+                                       (list parse-id version 
+                                             state type nil nil 
+                                             start end time))
                               :cache cache)))
-                   
+          
           (loop
               with version = (or version 1)
               for discriminant in (lkb::compare-frame-discrs frame)
@@ -258,8 +303,13 @@
                              (current-time)))
               unless (= state 5)
               do
-                (write-decision data parse-id version 
-                                state type key value start end time
+                (write-decision data 
+                                (pairlis '(:parse-id :version 
+                                           :d-state :d-type :d-key :d-value 
+                                           :d-start :d-end :d-date)
+                                         (list parse-id version 
+                                               state type key value 
+                                               start end time))
                                 :cache cache)))
                  
         (pairlis '(:status) (list status))))))
@@ -294,19 +344,8 @@
       (t -1)))
    (t -1)))
 
-(defun reconstruct-discriminants (data parse-id version)
+(defun reconstruct-discriminants (decisions)
   (loop
-      with decisions = (when (and parse-id version)
-                         (select '("d-state" "d-type" "d-key" "d-value" 
-                                   "d-start" "d-end")
-                                 '(:integer :integer :string :string 
-                                   :integer :integer)
-                                 "decision" 
-                                 (format 
-                                  nil 
-                                  "parse-id == ~a && version == ~a" 
-                                  parse-id version) 
-                                 data))
       for decision in decisions
       for state = (get-field :d-state decision)
       for type = (get-field :d-type decision)

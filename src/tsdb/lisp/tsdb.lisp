@@ -703,14 +703,19 @@
              user date)))
       (call-tsdb query language :cache cache)))) 
 
-(defun write-tree (data
-                   parse-id version active confidence
-                   t-author t-start t-end t-comment
-                   &key cache)
+(defun write-tree (data record &key cache)
   (let* ((*print-circle* nil)
          (*print-level* nil)
          (*print-length* nil)
-         (rawp (and cache (eq (get-field :protocol cache) :raw))))
+         (rawp (and cache (eq (get-field :protocol cache) :raw)))
+         (parse-id (get-field :parse-id record))
+         (version (get-field :t-version record))
+         (active (get-field :t-active record))
+         (confidence (get-field :t-confidence record))
+         (t-author (get-field :t-author record))
+         (t-start (get-field :t-start record))
+         (t-end (get-field :t-end record))
+         (t-comment (get-field :t-comment record)))
     (if rawp
       (let ((stream (get-field :tree cache))
             (ofs *tsdb-ofs*))
@@ -732,14 +737,21 @@
                     t-author t-start t-end t-comment)))
         (call-tsdb query data :cache cache)))))
 
-(defun write-decision (data parse-id version 
-                       d-state d-type d-key d-value d-start d-end d-date
-                       &key cache)
+(defun write-decision (data record &key cache)
   
   (let* ((*print-circle* nil)
          (*print-level* nil)
          (*print-length* nil)
-         (rawp (and cache (eq (get-field :protocol cache) :raw))))
+         (rawp (and cache (eq (get-field :protocol cache) :raw)))
+         (parse-id (get-field :parse-id record))
+         (version (get-field :version record))
+         (d-state (get-field :d-state record))
+         (d-type (get-field :d-type record))
+         (d-key (get-field :d-key record))
+         (d-value (get-field :d-value record))
+         (d-start (get-field :d-start record))
+         (d-end (get-field :d-end record))
+         (d-date (get-field :d-date record)))
     (if rawp
       (let ((stream (get-field :decision cache))
             (ofs *tsdb-ofs*))
