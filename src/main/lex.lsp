@@ -441,7 +441,7 @@
 (defun get-other-entry (fs-id)
   (or (get-root-entry fs-id)
       (get-display-template-entry fs-id)
-;      (get-idiom-entry fs-id)
+      (get-idiom-entry fs-id)
       (get-temporary-entry fs-id)))
 
 ;;; temporary storage of structures created by unification check
