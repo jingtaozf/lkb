@@ -40,18 +40,17 @@
   #-:psql
   (declare (ignore mode))
   #+:psql
-  (unless (eq mode :recompile)
-    (format t "~% (attempting to retrieve SEM-I from LexDB)")
-    (if (mrs::semi-p 
-	 (catch 'pg::sql-error
-	   (mrs::populate-semi-from-psql mrs::*semi*)))
-	(return-from index-lexicon)
-      (format t "~% (unable to retrieve database SEM-I)")))
-  (format t "~% (recompiling semantic indices)")
-  #+:psql
   (when (typep *lexicon* 'psql-lex-database)
+    (unless (eq mode :recompile)
+      (format t "~% (attempting to retrieve SEM-I from LexDB)")
+      (if (mrs::semi-p 
+	   (catch 'pg::sql-error
+	     (mrs::populate-semi-from-psql mrs::*semi*)))
+	  (return-from index-lexicon)
+	(format t "~% (unable to retrieve database SEM-I)")))
     (format t "~%(caching all lexical records)")
     (cache-all-lex-records-orth *lexicon*))
+  (format t "~% (recompiling semantic indices)")
   (mrs::clear-semantic-indices)
   (let ((*batch-mode* t))
     (if mrs::*top-semantics-type*
