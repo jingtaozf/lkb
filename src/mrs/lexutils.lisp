@@ -37,7 +37,7 @@
       #'(lambda (entry)
 	  (expand-psort-entry entry)
 	  (let ((new-fs (lex-or-psort-full-fs entry)))
-	    (if new-fs
+	    (if (and new-fs (not (eq new-fs :fail)))
 		(mrs::extract-lexical-relations entry)
 	      (format t "~%No feature structure for ~A" 
 		      (lex-or-psort-id entry))))
