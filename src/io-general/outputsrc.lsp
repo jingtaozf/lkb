@@ -175,22 +175,22 @@
   (unless file-name 
     (setf file-name
       (ask-user-for-new-pathname "Output file?")))
-  (if (eq syntax :pet)
+  (if (or (eq syntax :pet) (eq syntax :tnt))
     (if ids-used
-      (output-lexicon-for-pet file-name ids-used)
-      (output-lexicon-for-pet file-name))
+      (output-lexicon-for-pet file-name syntax ids-used)
+      (output-lexicon-for-pet file-name syntax))
     (when file-name 
       (with-open-file 
           (ostream file-name :direction :output :if-exists :supersede)
         (let ((count 0)
-	      (eblstream (when (eq syntax :ebl)
+              (eblstream (when (eq syntax :ebl)
                          (open (concatenate 'string file-name ".lextypes")
                                :direction :output
                                :if-exists :supersede
                                :if-does-not-exist :create))))
           (unless (or ids-used *ordered-lex-list*)
             (cerror "Continue without lexicon" 
-                    "No lexicon list - lexicon must be read in from scratch"))
+                    "No lexicon list - lexicon must be read from scratch"))
           (loop for lex-name in (or ids-used (reverse *ordered-lex-list*))
                do            
                (if (> count 100)
@@ -209,10 +209,10 @@
                              (try-all-lexical-rules 
                               (list (cons nil lex-entry-fs)) 
                               (if (eq syntax :ebl)
-				    (loop
-				      for rule in (get-indexed-lrules nil nil)
-				      when (not (inflectional-rule-p rule))
-				      collect (rule-id rule))))))
+                                (loop
+                                    for rule in (get-indexed-lrules nil nil)
+                                    when (not (inflectional-rule-p rule))
+                                    collect (rule-id rule))))))
                       (idno 0))
                  (loop for result-pair in result-list
                       do
@@ -230,21 +230,18 @@
                             orth fs ostream id stem derivation))
                           (:ebl
                            (output-for-ebl orth fs ostream (car result-pair)
-					   lex-name lex-entry-fs eblstream))
+                                           lex-name lex-entry-fs eblstream))
                           (:chic
-                           (output-for-chic orth fs ostream (car result-pair) 
+                           (output-for-chic orth fs ostream 
+                                            (car result-pair) 
                                             lex-name lex-entry-fs 
                                             (lex-or-psort-infl-pos lex-entry)
                                             stem))
-                          (:uc
-                           (output-for-uc orth fs ostream (car result-pair) 
-                                           lex-name lex-entry-fs 
-                                           (lex-or-psort-infl-pos lex-entry)))
                           (t (error "Unsupported syntax specifier ~A"
                                     syntax))))
                       (incf idno))))
-	  (when (eq syntax :ebl)
-	    (output-rules-for-ebl eblstream)))))))
+          (when (eq syntax :ebl)
+            (output-rules-for-ebl eblstream)))))))
 
 (defun output-rules-for-ebl (stream)
   (labels ((output-rules (stream rules)
@@ -304,8 +301,18 @@
      "  {\"~(~a~)\", ~(~s~), NULL, ~:[NULL~*~;\"~(~a~)\"~], ~d, ~d},~%"
      instance form irule irule ipos length)))
 
+(defun output-entry-for-tnt (stream forms type irule)
+  ;;
+  ;; filter out `unk-' VerbMobil default lexical entries (25-mar-00  -  oe)
+  ;;
+  (format
+   stream
+   "~{~(~a~)~^_~}~c~(~a~)~c~@[~(~a~)~]~%"
+   forms #\tab type #\tab irule))
+
 (defun output-lexicon-for-pet (file 
-                               &optional (ids (or *ordered-lex-list*
+                               &optional (format :pet)
+                                         (ids (or *ordered-lex-list*
                                                   (collect-expanded-lex-ids 
                                                    *lexicon*))))
   (if (null ids)
@@ -326,15 +333,24 @@
           for i from 1
           for entry = (get-psort-entry id)
           for tdfs = (and entry (lex-or-psort-full-fs entry))
+          for type = (and tdfs (indef-type-of-tdfs tdfs))
           for inflectedp = (and tdfs (dag-inflected-p (tdfs-indef tdfs)))
           for ipos = (and entry (lex-or-psort-infl-pos entry))
           when (zerop (mod i 100)) do (clear-expanded-lex)
           do
             (let* ((orth (lex-or-psort-orth entry))
                    (form (nth (if ipos (- ipos 1) 0) orth)))
-              (output-entry-for-pet
-               stream
-               id form nil (or ipos 0) (length orth)))
+              (case format
+                (:pet
+                 (output-entry-for-pet
+                  stream
+                  id form nil (or ipos 0) (length orth)))
+                
+                (:tnt
+                 (output-entry-for-tnt
+                  stream
+                  orth type nil))))
+
           unless (or inflectedp (not entry)) do
             (loop
                 with dag = (tdfs-indef tdfs)
@@ -361,11 +377,17 @@
                                  (yadu! rtdfs tdfs path)))
                 when result do
                   (incf successes)
-                  (let* ((form (split-into-words form))
-                         (form (nth (if ipos (- ipos 1) 0) form)))
-                    (output-entry-for-pet
-                     stream
-                     id form rid (or ipos 0) (length orth)))
+                  (let* ((orth (split-into-words form))
+                         (form (nth (if ipos (- ipos 1) 0) orth)))
+                    (case format
+                      (:pet
+                       (output-entry-for-pet
+                        stream
+                        id form rid (or ipos 0) (length orth)))
+                      (:tnt
+                       (output-entry-for-tnt
+                        stream
+                        orth type rid))))
                 else unless cache do
                   (incf failures)
                   (let* ((parent (get-type-entry type))
@@ -378,7 +400,6 @@
                                      (yadu! rtdfs tdfs path))))
                          (entry (cons type (if result t :fail))))
                     (push entry (aref caches j))))))))
-
 
 (defun output-for-ebl (orth fs ostream rule-list base-id base-fs ostream2)
   (let* ((type (type-of-fs (tdfs-indef base-fs)))
@@ -428,29 +449,6 @@
                                     (split-into-words orth)) orth)
                   (first stem)
                   (inflectional-rule-p (first infl-rules)))))))
-
-(defun output-for-uc (orth fs ostream rule-list base-id base-fs infl-pos)
-  (let* ((type (type-of-fs (tdfs-indef base-fs)))
-         (infl-rules nil)
-         (infl (dag-inflected-p (tdfs-indef fs)))
-         (other-rules nil))
-    (declare (ignore type))
-    (loop for rule in rule-list 
-         do
-         (if (inflectional-rule-p rule)
-             (push rule infl-rules)
-           (push rule other-rules)))
-    (unless other-rules
-      (if infl
-         (format ostream 
-                  "  {\"~(~S~)\", ~(~S~), NULL, ~:[NULL~*~;\"~(~S~)\"~], ~S, ~S},~%" 
-                  base-id
-                  (if infl-pos (nth (- infl-pos 1) 
-                                    (split-into-words orth)) orth)
-                  infl-rules
-                  (if infl-rules (first infl-rules))
-                  (if infl-pos infl-pos 0)
-                  (length (split-into-words orth)))))))
 
 (defvar *cat-type-cache* (make-hash-table))
 
