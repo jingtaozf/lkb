@@ -101,7 +101,7 @@
        "<?xml version='1.0' encoding='utf-8'?><text>~a</text>~%~a~%"
        (xml-escape-string text) #\page)
       (force-output stream))
-    (setf (stream-external-format stream) (excl:find-external-format :ascii))
+    (setf (stream-external-format stream) (excl:find-external-format :utf-8))
     (let ((*package* (find-package :lkb))
           (n (loop
                  with size = (array-dimension *sppp-input-buffer* 0)
