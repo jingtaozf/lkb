@@ -250,6 +250,9 @@
   (with-slots (stream indentation) mrsout
     (format stream " ]~%" indentation)))
 
+;;;
+;;; active output class (for on-line browsing in CLIM)
+;;;
 
 (defclass active-t (simple)
   ())
@@ -538,6 +541,133 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream ")~%")))
 
+;;; 
+;;; HTML output-type class
+;;;
+
+(defclass html (output-type) ())
+
+(defmethod mrs-output-start-fn ((mrs html))
+  (with-slots (stream) mrs
+    (format stream "~V%" 1)))
+
+(defmethod mrs-output-end-fn ((mrs html))
+  (with-slots (stream) mrs
+    (format stream "~V%" 1)))
+
+(defmethod mrs-output-start-psoa ((mrs html))
+  (with-slots (stream) mrs
+    (format stream "<table class=mrs>")))
+
+(defmethod mrs-output-top-h ((mrs html) handle)
+  (when (and handle *rel-handel-path*)
+    (with-slots (stream) mrs
+      (format 
+       stream 
+       "<tr><td id=top>TOP</td><td class=top>~(~a~)</td>~%" 
+       handle))))
+
+(defmethod mrs-output-index ((mrs html) index)
+  (when index
+    (with-slots (stream) mrs
+      (format 
+       stream 
+       "<tr><td id=index>INDEX</td><td class=index>~(~a~)</td>~%" 
+       index))))
+
+(defmethod mrs-output-mode ((mrs html) mode)
+  (declare (ignore mode)))
+
+(defmethod mrs-output-start-liszt ((mrs html))
+  (with-slots (stream) mrs
+    (format
+     stream 
+     "<tr><td id=rels>RELS</td>~
+      <td class=rels>~%  ~
+      <table class=container>~%    ~
+      <tr>~%    ~
+      <td><span class=bracket>&lang;</span></td>~%")))
+
+(defmethod mrs-output-var-fn ((mrs html) variable)
+  (with-slots (stream) mrs
+    (format stream "<td class=value>~(~a~)</td>~%" variable)))
+
+(defmethod mrs-output-atomic-fn ((mrs html) value)
+  (with-slots (stream) mrs
+    (format stream "<td class=value>~(~a~)</td>~%" value)))
+
+(defmethod mrs-output-start-rel ((mrs html) type sort firstp)
+  (declare (ignore type firstp))
+  (with-slots (stream) mrs
+    (format 
+     stream 
+     "    <td><table class=relation>~%      ~
+      <tr><td class=predicate colspan=2>~(~a~)</td>~%"
+     sort)))
+
+(defmethod mrs-output-rel-handel ((mrs html) handle)
+  (when handle
+    (with-slots (stream) mrs
+      (format 
+       stream 
+       "      <tr><td class=label>LBL</td><td class=value>~(~a~)</td>~%"
+       handle))))
+
+(defmethod mrs-output-label-fn  ((mrs html) label)
+  (with-slots (stream) mrs
+    (format 
+     stream 
+     "      <tr><td class=label>~a</td>"
+     label)))
+
+(defmethod mrs-output-start-extra ((mrs html) type)
+  (declare (ignore type)))
+
+(defmethod mrs-output-extra-feat  ((mrs html) feature)
+  (declare (ignore feature)))
+
+(defmethod mrs-output-extra-val  ((mrs html) value)
+  (declare (ignore value)))
+
+(defmethod mrs-output-end-extra ((mrs html)))
+
+(defmethod mrs-output-end-rel ((mrs html))
+  (with-slots (stream) mrs
+    (format stream "    </table></td>~%")))
+
+(defmethod mrs-output-end-liszt ((mrs html))
+  (with-slots (stream) mrs
+    (format 
+     stream 
+     "    <td><span class=bracket>&rang;</span></td>~%  ~
+      </table>~%</td>~%")))
+
+(defmethod mrs-output-start-h-cons ((mrs html))
+  (with-slots (stream) mrs
+    (format stream "<tr><td id=hcons>HCONS</td><td class=hcons>&lang; ")))
+
+(defmethod mrs-output-outscopes ((mrs html) relation higher lower firstp)
+  (with-slots (stream) mrs
+    (unless firstp (format stream ", "))
+    (format 
+     stream 
+     "~(~a~) ~a ~(~a~)"
+     higher relation lower)))
+
+(defmethod mrs-output-end-h-cons ((mrs html))
+  (with-slots (stream) mrs
+    (format stream " &rang;</td>~%")))
+
+(defmethod mrs-output-start-info-s ((mrs html)))
+
+(defmethod mrs-output-info-s ((mrs html) focus variable firstp)
+  (declare (ignore focus variable firstp)))
+
+(defmethod mrs-output-end-info-s ((mrs html)))
+
+(defmethod mrs-output-end-psoa ((mrs html))
+  (with-slots (stream) mrs
+    (format stream "</table>")))
 
 
 ;;; Utility fns

@@ -546,7 +546,7 @@
   edge-symbol)
 
 (defun label-parse-tree (symbol)
-  (get-string-for-edge symbol)
+  (setf (get symbol 'label) (get-string-for-edge symbol))
   (loop
       for daughter in (get symbol 'daughters)
       do 
@@ -689,3 +689,66 @@
        ;; return nothing much for a pseudonode
        (values nil t nil))))
 
+;;;
+;;; generate HTML-only rendering of parse tree; requires LKB style sheet
+;;;
+
+(defun edge2html (edge stream)
+  (labels ((depth (edge)
+             (let ((children (or (edge-children edge) 
+                                 (when (edge-morph-history edge)
+                                   (list (edge-morph-history edge))))))
+               (if (null children)
+                 1
+                 (+ 1 (loop
+                          for edge in children
+                          maximize (depth edge))))))
+           (index (tree cache row column)
+             (let ((width
+                    (loop
+                        with row = (+ row 1)
+                        with daughters = (get tree 'daughters)
+                        with width = 0
+                        for tree in daughters
+                        do
+                          (incf width (index tree cache row (+ column width)))
+                        finally (return (if daughters width 1))))
+                   (leafp (null (get tree 'edge-record))))
+               (setf (aref cache row column) 
+                 (list (get tree 'label) width leafp))
+               width)))
+    (let* ((depth (depth edge))
+           (width (- (length (edge-lex-ids edge)) 1))
+           (cache (make-array (list (+ depth 1) (+ width 1))))
+           (tree (make-new-parse-tree edge 1)))
+      (label-parse-tree tree)
+      (index tree cache 0 0)
+      (loop
+          initially (format stream "<table cellspacing=0 class=tree>~%")
+          finally (format stream "</table>")
+          for row from 0 to depth
+          do (format stream "<tr>~%")
+          do
+            (loop
+                with span = 0
+                for column from 0 to width
+                for label = (aref cache row column)
+                when label do
+                  (let ((string (first label))
+                        (size (second label))
+                        (leafp (third label)))
+                    (format 
+                     stream 
+                     "  <td class=~:[branch~;leaf~] colspan=~a>~%    ~
+                      <div class=~:[label~;form~]>~a</div>~%  </td>~
+                      ~:[~;<td class=margin>&nbsp;</td>~]~%"
+                     leafp (if (= size 1) 1 (- (* size 2) 1)) leafp string 
+                     (< (+ column (- size 1)) width))
+                    (setf span (- size 1)))
+                else when (zerop span) do
+                  (format 
+                   stream 
+                   "  <td class=none>~:[~;<td class=margin>&nbsp;</td>~]~%"
+                   (< column width))
+                else do (decf span))
+          do (format stream "</tr>~%")))))
