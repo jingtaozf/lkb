@@ -131,7 +131,7 @@
 ;;; View utilities
 (defparameter *last-type-name* 'cat)
 
-(defun ask-user-for-type (&optional qstring)
+(defun ask-user-for-type (&optional qstring check-box-spec)
    (let ((res
             (ask-for-lisp-movable "Current Interaction" 
                `((,(or qstring "Type?") . ,*last-type-name*)
@@ -145,7 +145,7 @@
                (format t "~%Type ~A is not defined" type)
                (setf type (ask-user-for-type)))
             (setf *last-type-name* type)
-            type))))
+            (values type show-all-p)))))
 
 
 ;;; display-fs is in outputfs.lsp
