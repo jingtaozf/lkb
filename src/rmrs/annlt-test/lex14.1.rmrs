@@ -3,6 +3,7 @@
 <lex>
 <le>
 <tag>APP$</tag>
+<documentation>his,her,its,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -11,6 +12,7 @@
 
 <le>
 <tag>AT</tag>
+<documentation>the, no</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -19,6 +21,7 @@
 
 <le>
 <tag>AT1</tag>
+<documentation>a,an,every</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -26,28 +29,29 @@
 </le>
 
 <!--
-; CC
-; CCB
+; CC ; and, or, nor, plus
+; CCB ; but
 ; CS
-; CSA
-; CSN
-; CST
-; CSW
-; DA
-; DA1
-; DA2
-; DA2R
-; DAR
-; DAT
-; DB
-; DB2
-; DD
-; DD1
-; DD2
+; CSA ;  though, unless, when,...
+; CSN  ; than
+; CST ; that
+; CSW ; whether
+; DA ; same, former, latter, such, own
+; DA1 ; little, much
+; DA2  ; few, many, several
+; DA2R ; fewer
+; DAR ; less,more
+; DAT ; most,least
+; DB ; all, half
+; DB2  ; both
+; DD ; any,enough,some,lot,rest
+; DD1 ; each,another,neither,either,this,that
+; DD2 ; these,those,many,few,several
 -->
 
 <le>
 <tag>DDQ</tag>
+<documentation>what,which</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -55,15 +59,16 @@
 </le>
 
 <!--
-; DDQ$
-; DDQV
-; EX
-; ICS
-; IF
+; DDQ$ ; whose
+; DDQV ; whatever,whichever
+; EX ; there
+; ICS ; before,after,like,save,except,...
+; IF ; for
 -->
 
 <le>
 <tag>II</tag>
+<documentation>154 preps</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -72,6 +77,7 @@
 
 <le>
 <tag>IO</tag>
+<documentation>of</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -79,15 +85,16 @@
 </le>
 
 <!--
-; IW
-; JA
-; JB
-; JBR
-; JBT
+; IW  ; with, without
+; JA ; ablaze, asleep,...
+; JB ; NUM-yard, car-hire,...
+; JBR ; upper,inner,...
+; JBT ; utmost
 -->
 
 <le>
 <tag>JJ</tag>
+<documentation>8k+ adjs</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -95,20 +102,21 @@
 </le>
 
 <!--
-; JJR
-; JJT
-; JK
-; LE
-; MC 
-; MC-MC
-; MC1
-; MC2
-; MD
-; ND1
+; JJR ; 154 adj+er
+; JJT ; 126 adj+est
+; JK ; orient(at)ed
+; LE ; both, (n)either, not only
+; MC ; 208 numbers
+; MC-MC ; number ranges, 1-2
+; MC1 ; one
+; MC2 ; num+s,zeros,eighties
+; MD ; ordinal,first,thirtieth
+; ND1 ; north, southeast,...
 -->
 
 <le>
 <tag>NN</tag>
+<documentation>sheep, media,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -117,6 +125,7 @@
 
 <le>
 <tag>NN1</tag>
+<documentation>14k sg nouns</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -125,6 +134,7 @@
 
 <le>
 <tag>NN2</tag>
+<documentation>7k pl nouns</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -132,12 +142,13 @@
 </le>
 
 <!--
-; FW
-; FO
+; FW ; 1.4k foreign wds
+; FO ; 300+ formulas
 -->
 
 <le>
 <tag>NNJ</tag>
+<documentation>co,corp,Revenue</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -146,6 +157,7 @@
 
 <le>
 <tag>NNJ1</tag>
+<documentation>School,committee,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -154,6 +166,7 @@
 
 <le>
 <tag>NNJ2</tag>
+<documentation>associates</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -162,6 +175,7 @@
 
 <le>
 <tag>NNL</tag>
+<documentation>Ave,Dr,Rd,St</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -170,6 +184,7 @@
 
 <le>
 <tag>NNL1</tag>
+<documentation>Street, river,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -178,6 +193,7 @@
 
 <le>
 <tag>NNL2</tag>
+<documentation>gardens,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -186,6 +202,7 @@
 
 <le>
 <tag>NNO</tag>
+<documentation>thousand,billion,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -194,6 +211,7 @@
 
 <le>
 <tag>NNO2</tag>
+<documentation>hundreds, dozens,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -202,6 +220,7 @@
 
 <le>
 <tag>NNS</tag>
+<documentation>Gen,Gov,Sir,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -210,6 +229,7 @@
 
 <le>
 <tag>NNS1</tag>
+<documentation>Mayor,Major,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -218,6 +238,7 @@
 
 <le>
 <tag>NNS2</tag>
+<documentation>Masters,generals,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -226,6 +247,7 @@
 
 <le>
 <tag>NNSA1</tag>
+<documentation>esq, jr,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -234,6 +256,7 @@
 
 <le>
 <tag>NNSB1</tag>
+<documentation>Baron, Brig,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -242,6 +265,7 @@
 
 <le>
 <tag>NNSB2</tag>
+<documentation>Ministers,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -250,6 +274,7 @@
 
 <le>
 <tag>NNT1</tag>
+<documentation>autumn, day,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -258,6 +283,7 @@
 
 <le>
 <tag>NNT2</tag>
+<documentation>weeks, hours,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -266,6 +292,7 @@
 
 <le>
 <tag>NNU</tag>
+<documentation>cent,bhp,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -274,6 +301,7 @@
 
 <le>
 <tag>NNU1</tag>
+<documentation>gram,yard,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -282,6 +310,7 @@
 
 <le>
 <tag>NNU2</tag>
+<documentation>mins,miles,...</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -290,6 +319,7 @@
 
 <le>
 <tag>NP1</tag>
+<documentation>9k+ sg names</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
@@ -303,6 +333,7 @@
 
 <le>
 <tag>NP2</tag>
+<documentation>252 pl names</documentation>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -310,9 +341,9 @@
 </le>
 
 <!--
-; NPD1
-; NPD2
-; NPM1
+; NPD1 ; Monday,...
+; NPD2 ; Fridays,...
+; NPM1 ; April,...
 -->
 
 <le>
@@ -529,21 +560,38 @@
 
 ;;; end pronouns
 
-; RA - ago, p.m.
-; REX
-; RG
-; RGA
-; RGQ
-; RGQV
-; RRR
-; RRT
-; RT
-; TO
-; UH
+; RA ; ago, p.m.
+; REX ; i.e.,e.g.
+; RG ; very, as, over,...
+; RGA ; indeed, enough
+; RGQ ; how
+; RGQV ; however
+; RL ; upstairs,inside,...
+; RP ; out,over,...
+; RR ; 2k advbs
+; RRQ ; where, why, when
+; RRQV ; wherever, whenever
+; RRR ; adv+er
+; RRT ; adv+est
+; RT ; today,again,now,then,...
 -->
 
 <le>
+<tag>TO</tag>
+<documentation>to inf</documentation>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<!--
+; UH ; dammit,yes,eh,...
+-->
+
+
+<le>
 <tag>VBO</tag>
+<documentation>be</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -552,6 +600,7 @@
 
 <le>
 <tag>VBDR</tag>
+<documentation>were</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -561,6 +610,7 @@
 
 <le>
 <tag>VBDZ</tag>
+<documentation>was</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -569,6 +619,7 @@
 
 <le>
 <tag>VBG</tag>
+<documentation>being</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -577,6 +628,7 @@
 
 <le>
 <tag>VBM</tag>
+<documentation>am</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -585,6 +637,7 @@
 
 <le>
 <tag>VBN</tag>
+<documentation>been</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -593,6 +646,7 @@
 
 <le>
 <tag>VBR</tag>
+<documentation>are</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -601,6 +655,7 @@
 
 <le>
 <tag>VBZ</tag>
+<documentation>is</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -609,6 +664,7 @@
 
 <le>
 <tag>VDO</tag>
+<documentation>do</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -617,14 +673,7 @@
 
 <le>
 <tag>VDD</tag>
-<semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
-</semstruct>
-</le>
-
-<le>
-<tag>VDD</tag>
+<documentation>did</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -633,6 +682,7 @@
 
 <le>
 <tag>VDG</tag>
+<documentation>doing</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -641,6 +691,7 @@
 
 <le>
 <tag>VDN</tag>
+<documentation>done</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -649,6 +700,7 @@
 
 <le>
 <tag>VDZ</tag>
+<documentation>does</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -657,6 +709,7 @@
 
 <le>
 <tag>VHO</tag>
+<documentation>have</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -665,6 +718,7 @@
 
 <le>
 <tag>VHD</tag>
+<documentation>had</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -673,6 +727,7 @@
 
 <le>
 <tag>VHG</tag>
+<documentation>having</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -681,6 +736,7 @@
 
 <le>
 <tag>VHN</tag>
+<documentation>had</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -689,6 +745,7 @@
 
 <le>
 <tag>VHZ</tag>
+<documentation>has</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -697,6 +754,7 @@
 
 <le>
 <tag>VM</tag>
+<documentation>can,...</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -705,6 +763,7 @@
 
 <le>
 <tag>VMK</tag>
+<documentation>ought,used</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -713,6 +772,7 @@
 
 <le>
 <tag>VVD</tag>
+<documentation>2k+ verb+ed</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var tense='past'>E</var></ep>
@@ -721,6 +781,7 @@
 
 <le>
 <tag>VVG</tag>
+<documentation>2k+ verb+ing</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -729,14 +790,7 @@
 
 <le>
 <tag>VVN</tag>
-<semstruct>
-<hook><index>E</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>E</var></ep>
-</semstruct>
-</le>
-
-<le>
-<tag>VVN</tag>
+<documentation>3k verb+en</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -745,6 +799,7 @@
 
 <le>
 <tag>VVZ</tag>
+<documentation>1k+ verb+s</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -753,6 +808,7 @@
 
 <le>
 <tag>VVO</tag>
+<documentation>2.5k verb</documentation>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>
@@ -760,11 +816,27 @@
 </le>
 
 <!--
-; XX
+; XX ; not
 ; ZZ1
-; ZZ2
-; $
+; ZZ2 ; letters, A,Alpha
+-->
 
+<le>
+<tag>$</tag>
+<documentation>'s, 'S, '</documentation>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><gpred>DEF_EXPLICIT_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>POSS_REL</gpred><label>H1</label><var>X</var></ep>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>X1</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H1</label><var>X</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+</le>
+
+<!--
 ; punctuation
 
 ; BCS
