@@ -50,20 +50,20 @@ BYTE tsdb_value_compare(Tsdb_value *foo, Tsdb_value *bar) {
       break;
     default:
       if(really_verbose_mode) 
-        fprintf(stderr,
+        fprintf(TSDB_ERROR_STREAM,
                 "What are you at? I've never heard of such a tsdb type.\n");
       else 
-        fprintf(stderr,
+        fprintf(TSDB_ERROR_STREAM,
                 "tsdb_value_compare: invalid value type in comparison.\n");
       return(TSDB_VALUE_INCOMPATIBLE);
     } /* switch */
   } /* if */
   else {
     if(really_verbose_mode) 
-      fprintf(stderr,
+      fprintf(TSDB_ERROR_STREAM,
               "Dickhead, you want me to compare strings & integers???.\n");
     else 
-      fprintf(stderr,
+      fprintf(TSDB_ERROR_STREAM,
               "tsdb_value_compare: incompatible types in comparison.\n");
     return(TSDB_VALUE_INCOMPATIBLE);
   } /* else */
@@ -171,10 +171,10 @@ BOOL tsdb_are_attributes(Tsdb_value **attribute_list, Tsdb_relation *relation){
     } /* for */
     if(!kaerb) {
       if(really_verbose_mode)
-        fprintf(stderr, "No such fucking attribute: %s\n",
+        fprintf(TSDB_ERROR_STREAM, "No such fucking attribute: %s\n",
                 attribute_list[i]->value.identifier);
       else
-        fprintf(stderr, "No such attribute: %s\n",
+        fprintf(TSDB_ERROR_STREAM, "No such attribute: %s\n",
                 attribute_list[i]->value.identifier);
       return(FALSE);
     } /* if */
@@ -206,6 +206,10 @@ BOOL tsdb_joins_to(Tsdb_relation *rel,Tsdb_selection* sel) {
 
   int i;
 
+  if (sel==NULL) {
+    return FALSE;
+  }/* if */
+    
   for (i=0; i<sel->n_relations; i++) {
     if (tsdb_are_joinable(rel,sel->relations[i]))
       return(TRUE);
@@ -301,7 +305,7 @@ Tsdb_relation** tsdb_attribute_relations(Tsdb_value *value)
         if (!attribute_relations) {
           attribute_relations = (Tsdb_relation**) 
             malloc((tsdb_n_relations()+1)*sizeof(Tsdb_relation*));
-          memset(attribute_relations,0,
+          memset(attribute_relations,'\0',
                  (tsdb_n_relations()+1)*sizeof(Tsdb_relation*));
         } /* if */
         attribute_relations[k++] = tsdb_relations[i];
@@ -387,7 +391,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
     number = TRUE;
   }
   else {
-    fprintf(stderr, "tsdb: bad tsdb_type.\n");
+    fprintf(TSDB_ERROR_STREAM, "tsdb: bad tsdb_type.\n");
     return(FALSE);
   }
 
@@ -412,34 +416,34 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
   case TSDB_LESS_THAN :
     if(number) answer = (tuple->fields[i]->value.integer < integer);
     else {
-      fprintf(stderr, "Cannot compare strings with '<' operator.\n");
+      fprintf(TSDB_ERROR_STREAM, "Cannot compare strings with '<' operator.\n");
       answer = FALSE;
     }
     break;
   case TSDB_LESS_OR_EQUAL_THAN :
     if(number) answer = (tuple->fields[i]->value.integer <= integer);
     else {
-      fprintf(stderr, "Cannot compare strings with '<=' operator.\n");
+      fprintf(TSDB_ERROR_STREAM, "Cannot compare strings with '<=' operator.\n");
       answer = FALSE;
     }
     break;
   case TSDB_GREATER_THAN :
     if(number) answer = (tuple->fields[i]->value.integer > integer);
     else {
-      fprintf(stderr, "Cannot compare strings with '>' operator.\n");
+      fprintf(TSDB_ERROR_STREAM, "Cannot compare strings with '>' operator.\n");
       answer = FALSE;
     }
     break;
   case TSDB_GREATER_OR_EQUAL_THAN :
     if(number) answer = (tuple->fields[i]->value.integer >= integer);
     else {
-      fprintf(stderr, "Cannot compare strings with '>=' operator.\n");
+      fprintf(TSDB_ERROR_STREAM, "Cannot compare strings with '>=' operator.\n");
       answer = FALSE;
     }
     break;
   case TSDB_SUBSTRING :
     if(number) {
-      fprintf(stderr, "Cannot compare integers with '~' operator.\n");
+      fprintf(TSDB_ERROR_STREAM, "Cannot compare integers with '~' operator.\n");
       answer = FALSE;
     }
     else {
@@ -448,15 +452,19 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
     break; 
   case TSDB_NOT_SUBSTRING :
     if(number) {
-      fprintf(stderr, "Cannot compare integers with '~' operator.\n");
+      fprintf(TSDB_ERROR_STREAM, "Cannot compare integers with '~' operator.\n");
       answer = TRUE;
     }
     else {
       answer = (strstr(string, tuple->fields[i]->value.string) == NULL);
     }
     break; 
-    default :
-      fprintf(stderr, "no such operator.\n");
+/*  case TSDB_PATTERN : 
+    if (number) {
+      
+    } */
+  default :
+      fprintf(TSDB_ERROR_STREAM, "no such operator.\n");
   } /* switch */
   
   printf("returning %d.\n", answer);
@@ -728,6 +736,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
 |*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |*
+|*
 \*****************************************************************************/
 
   int i;
@@ -820,6 +829,8 @@ int tsdb_relation_in_selection(Tsdb_selection* selection,char* name)
   /* returns -1 if name isn't a relation in selection */
   int i;
 
+  if (!selection)
+    return(-1);
   for (i=0;i<selection->n_relations;i++) {
     if (!strcmp(selection->relations[i]->name,name))
       return(i);
@@ -834,7 +845,9 @@ BOOL tsdb_attribute_in_selection(Tsdb_selection *selection, char *name)
 {
   Tsdb_relation *relation;
   int i,j;
-
+  
+  if (!selection)
+    return FALSE;
   for (i=0;relation=selection->relations[i];i++) {
     for (j=0;j<relation->n_fields;j++) {
       if (!strcmp(relation->fields[j],name))
@@ -1403,7 +1416,7 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
                 kaerb = TRUE;
                 break;
               default:
-                fprintf(stderr, "tsdb: ignoring invalid data tuple.\n");
+                fprintf(TSDB_ERROR_STREAM, "tsdb: ignoring invalid data tuple.\n");
                 return(FALSE);
               } /* switch */
             } /* while */
@@ -1420,7 +1433,7 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
           case TSDB_LESS_THAN:
             break;
           default:
-            fprintf(stderr, "tsdb: ignoring invalid data tuple.\n");
+            fprintf(TSDB_ERROR_STREAM, "tsdb: ignoring invalid data tuple.\n");
             return(FALSE);
           } /* switch */
       } /* if */
@@ -1445,7 +1458,7 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
 void tsdb_negate_node(Tsdb_node* node)
 {
   if (node->node->type != TSDB_OPERATOR) {
-    fprintf(stderr,"tsdb_negate_node: wrong type at leaf\n");
+    fprintf(TSDB_ERROR_STREAM,"tsdb_negate_node: wrong type at leaf\n");
     return ;
   }
   switch (node->node->value.operator) {
@@ -1474,7 +1487,7 @@ void tsdb_negate_node(Tsdb_node* node)
     node->node->value.operator = TSDB_SUBSTRING ; 
     break;
   default:
-    fprintf(stderr," eh what??\n");
+    fprintf(TSDB_ERROR_STREAM," eh what??\n");
   }/* switch */
 
 } /* tsdb_negate_node */
