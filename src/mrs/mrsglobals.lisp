@@ -119,6 +119,10 @@ order in an MRS")
 
 (defparameter *scope-feat* (vsym "SCOPE"))
 
+(defparameter *scoping-ignored-roles* (list (vsym "TPC") (vsym "PSV"))
+  "Variables which are the values of these features are ignored
+   with respect to the scoping code.  This is curently used for the
+   simple information structure encoding.")
 
 ;;;
 ;;; MRS output control
@@ -194,7 +198,6 @@ set in the code")
 
 (defvar *fragment-p* nil
   "if t for a parse, cheapscope is not called - not user settable")
-
 
 ;;; the following are needed only for the detection of fragments
 ;;; indicated in the LinGO gramar by the value of ROOT
