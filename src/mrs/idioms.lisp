@@ -84,10 +84,24 @@ the phrase to be checked minus the LISZT (leave this for now)
                   (not (idiom-rel-p set-el)))))))
 
 (defun idiom-rel-p (rel)
+  ;;; FIX
+  ;;; relation name ends with _i_rel - this won't quite do because
+  ;;; we want to allow for different senses and anyway this should use the
+  ;;; standard pred parsing code
+  (let* ((relpred (mrs::rel-pred rel))
+         (relname (when relpred (string relpred))))
+    (and relname
+         (equal "_i_rel" (subseq relname (- (length relname) 6))))))
+
+#|
+old definition was leading i_
+
+(defun idiom-rel-p (rel)
   ;;; cheat for now
   (let ((relname (string (mrs::rel-pred rel))))
     (and (char-equal (elt relname 0) #\i)
          (char-equal (elt relname 1) #\_))))
+|#
 
 (defun get-idiom-entry (id)
   (cdr (assoc id *idiom-phrases*)))
