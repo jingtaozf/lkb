@@ -48,10 +48,18 @@
         always (member c *punctuation-characters*))))
 
 (defstruct fspp
+  version
   (tokenizer (ppcre:create-scanner "[ \\t]+"))
   global
   local)
 
+(defmethod print-object ((object fspp) stream)
+  (format 
+   stream 
+   "#[FSPP (~d global, ~d token-level rules @ `~a')]"
+   (length (fspp-global object)) (length (fspp-local object)) 
+   (fspp-tokenizer object)))
+
 (defstruct fsr
   type
   source
@@ -77,6 +85,13 @@
           when (and c (not (char= c #\;))) do
             (multiple-value-bind (start end) (ppcre:scan separator line)
               (cond
+               ((char= c #\@)
+                (let* ((version (subseq line 1 end))
+                       (version (if (string= version "$Date: " :end1 7)
+                                  (subseq version 7 (- (length version) 2))
+                                  version)))
+                  (setf (fspp-version fspp) 
+                    (string-trim '(#\Space) version))))
                ((char= c #\:)
                 (let ((tokenizer (subseq line 1 end)))
                   (setf (fspp-tokenizer fspp) tokenizer)))
@@ -119,10 +134,12 @@
               (nreverse (fspp-global fspp)))
             (setf (fspp-local fspp)
               (nreverse (fspp-local fspp)))
+            (format t "~a~%" fspp)
             (return (setf *preprocessor* fspp))))))
 
 (defun preprocess (string &key (preprocessor *preprocessor*) 
-                               (verbose *preprocessor-debug-p*))
+                               (verbose *preprocessor-debug-p*)
+                               (format :pet))
 
   (when (null preprocessor)
     (return-from preprocess string))
@@ -179,10 +196,18 @@
         with i = 0
         with id = 41
         for (form . extra) in tokens
+        for surface = (or (second (find :ersatz extra :key #'first)) form)
         for start = i
         for end = (incf i)
+        do
+          (push (list (incf id) start end form surface) result)
+          (unless (eq format :lkb)
+            (loop
+                for (type form) in extra
+                unless (eq type :ersatz) do 
+                  (push (list (incf id) start end form form) result)))
         when verbose do
-          (format t "  (~a) [~a:~a] `~a'" (incf id) start end form)
+          (format t "  (~a) [~a:~a] `~a'" id start end form)
           (loop
               for foo in extra
               for type = (case (first foo)
@@ -190,23 +215,34 @@
                            (:augment #\+)
                            (:ersatz #\^))
               for form = (second foo)
-              for original = (third foo)
-              do (format t " {~c `~a'~@[ `~a'~]}" type form original)
+              do (format t " {~c `~a'}" type form)
               finally (format t "~%"))
-        do
-          (push (format 
-                 nil 
-                 "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
-                 (incf id) start end form form)
-                result)
-          (loop
-              for (type form) in extra
-              unless (eq type :ersatz) do 
-                (push (format 
-                       nil 
-                       "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
-                       (incf id) start end form form)
-                      result))
         finally 
           (return
-            (values (format nil "~{~a~^ ~}" (nreverse result)) length)))))
+            (case format
+              (:lkb
+               (loop
+                   for i = -1
+                   for token in (nreverse result)
+                   for start = (second token)
+                   for form = (fourth token)
+                   unless (= start i) collect form into forms
+                   finally 
+                     (return (values (format nil "~{~a~^ ~}" forms)
+                                     (length forms)))))
+              (:pet
+               (loop
+                   for (id start end form surface) in (nreverse result)
+                   for token = (format 
+                                nil 
+                                "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
+                                id start end form surface)
+                   collect token into tokens
+                   finally 
+                     (return
+                       (values (format nil "~{~a~^ ~}" tokens) length))))
+              (:list
+               (values (nreverse result) length)))))))
+
+(defun preprocess-for-pet (string)
+  (preprocess string :format :pet :verbose nil))

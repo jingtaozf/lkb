@@ -10,6 +10,10 @@
   ;; except
   ;; for PAGE compatability, replace #\' by #\space
   ;; except at end of word, when replace by #\space #\s
+  #+:preprocessor
+  (when *preprocessor*
+    (return-from preprocess-sentence-string (preprocess str :format :lkb)))
+  
   (let ((in-word nil)
         (chars (coerce str 'list))
         (result-chars nil))
