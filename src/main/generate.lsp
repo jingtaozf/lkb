@@ -55,20 +55,6 @@
 (defparameter *gen-adjunction-debug* nil)
 
 
-(defparameter *semantics-index-path* '(synsem local cont index)
-   "path used by generator to index chart")
-
-(defparameter *intersective-rule-names* '(adjh_i nadj_i hadj_i)
-   "names of rules that introduce intersective modifiers")
-
-(defun intersective-modifier-dag-p (dag)
-   "is this dag a possible intersective modifier?"
-   (let ((val
-          (existing-dag-at-end-of dag 
-                                  '(synsem local cat head mod first local))))
-      (and val
-           (subtype-or-equal (type-of-fs val) 'intersective_mod))))
-
 (eval-when
  (compile load eval)    
 (proclaim
@@ -185,7 +171,8 @@
 ;;; proper. Do it also in chart-generate since that is also an entry point
 
 (defun generate-from-mrs (input-sem)
-   (clear-gen-chart)
+  (clear-gen-chart)
+  (setf *cached-category-abbs* nil)
    (let*
       ((found-lex-list
           (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
@@ -265,14 +252,20 @@
                 (length (gen-chart-retrieve-with-index *toptype* nil)))
              (act-tot
                 (length (gen-chart-retrieve-with-index *toptype* t))))
-         (values
-            ;; !!! if we look just at the leaves we are assuming that the final
-            ;; orthography is purely the concatenation of the orthographies of the
-            ;; lexical entries passed in - this is not actually correct in general:
-            ;; e.g. "a apple" -> "an apple"
-            (mapcar #'g-edge-leaves *gen-record*)
+        (values
+         ;; extract-string-from-gen-record 
+         ;; looks after changes like
+         ;; e.g. "a apple" -> "an apple"
+            (extract-strings-from-gen-record)
             *gen-chart-unifs* *gen-chart-fails*
             act-tot inact-tot (+ act-tot inact-tot)))))
+
+(defun extract-strings-from-gen-record nil
+  (for edge in *gen-record*
+       filter
+       (fix-spelling
+        ;; in spell.lsp
+        (g-edge-leaves edge))))
 
 (defun clear-gen-chart nil
    (setq *edge-id* 0)
@@ -338,21 +331,7 @@
             ;; (mrs::output-mrs input-sem 'mrs::simple)
             ;; (mrs::output-mrs mrs 'mrs::simple)
             ;; *** trap errors
-            (more-robust-mrs-equalp mrs input-sem nil)
-#|
-            ;; old version
-            ;; allows "in the city kim interviewed" generating from input mrs from
-            ;; "kim interviewed in the city"
-            (and ; *** how do you check mrs for equality properly? (handel values
-                 ; may be variously fully instantiated or not, or have different
-                 ; names but refer to same relation if instantiated)
-                 ; this is just a crude top-level check
-                (equal (mrs::var-name (mrs::psoa-handel mrs))
-                   (mrs::var-name (mrs::psoa-handel input-sem)))
-                (equal (mrs::var-name (mrs::psoa-index mrs))
-                   (mrs::var-name (mrs::psoa-index input-sem))))
-|#
-            ))))
+            (more-robust-mrs-equalp mrs input-sem nil)))))
 
 
 (defun gen-chart-root-edges (edge start-symbols)

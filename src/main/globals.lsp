@@ -202,3 +202,22 @@
    used in lisp specific stuff as well as elsewhere")
 
 (defparameter *lexicon* nil)
+
+;;; generator globals (should be moved eventually)
+
+(defparameter *semantics-index-path* '(synsem local cont index)
+  "path used by generator to index chart")
+
+(defparameter *intersective-rule-names* '(adjh_i nadj_i hadj_i_uns)
+  "names of rules that introduce intersective modifiers")
+
+;;; functions which currently contain grammar specific stuff
+#|
+
+generate-from-mrs
+
+gen-chart-finish-active
+
+
+gen-chart-adjoin-modifiers
+|#
