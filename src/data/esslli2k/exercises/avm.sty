@@ -1,0 +1,82 @@
+\def\ensuremath{\relax
+  \let\mathshift=$
+  \ifmmode
+    \global\let\ensurenonmath\relax
+  \else
+    \global\let\ensurenonmath=\mathshift
+    \mathshift\relax
+  \fi\relax}
+
+\def\oeatt#1{\hbox{\tt #1}}
+\def\oeattribute#1{\hbox{\tt #1}}
+\def\oeval#1{\hbox{\it #1\/}}
+\def\oetype#1{\hbox{\it #1\/}}
+\let\oeRoman\roman
+\def\oeroman#1{\hbox{\rm #1}}
+\def\oecategory#1{\hbox{\it #1\/}}
+
+
+\def\oetag#1{%
+  \hbox{\lower 3pt\vbox{\hrule%
+                        \hbox{\vrule\kern 2pt%
+                              \vbox{\kern 2pt\hbox{\sf #1}\kern 2pt}%
+                              \kern 2pt\vrule}%
+                        \hrule}\kern 0.2ex}}
+
+\def\oetop{\hbox{$\mathchar"023E$}}
+\def\oebottom{\hbox{$\bot$}}
+\def\oepipe{\hbox{$\,|\,$}}
+\def\oenode#1{\hbox{\bf #1\strut}}
+
+\def\oeavm#1{%
+  \mathsurround=0pt%
+  \let\quad=~%
+  \hbox{$%
+    \mskip-\thinmuskip%
+    \left\lbrack%
+    \mskip -0.5\thinmuskip%
+    \matrix{\noalign{\vglue 0.75ex}%
+            \ifx\empty#1\empty\kern1pt\cr\else\ignorespaces#1\crcr\fi%
+            \noalign{\vglue 0.75ex}}%
+    \mskip -0.5\thinmuskip%
+    \right\rbrack%
+    \mskip -\thinmuskip$}}
+
+\def\oetavm#1#2{%
+  \hbox{$\hbox{\vphantom{\oeavm{#2}}}_{\oetype{#1}\strut}\oeavm{#2}$}}
+
+\def\oeattval#1#2{%
+  \oeatt{#1}\hfill&\oeval{#2}\hfill\cr}
+\let\oeav\oeattval
+
+\def\oedisjunction#1{%
+  \mathsurround=0pt%
+  \let\quad=~%
+  \hbox{$%
+    \mskip-\thinmuskip%
+    \left\lbrace%
+    \mskip -0.5\thinmuskip%
+    \matrix{\noalign{\vglue 0.75ex}%
+            \ifx\empty#1\empty\kern1pt\cr\else\ignorespaces#1\crcr\fi%
+            \noalign{\vglue 0.75ex}}%
+    \mskip -0.5\thinmuskip%
+    \right\rbrace%
+    \mskip -\thinmuskip$}}
+
+\def\oesequence#1{\relax
+  \mathsurround=0pt%
+  \hbox{$%
+    \left\langle%
+      \hbox{\ignorespaces #1}%
+    \right\rangle$}}
+
+\def\oesequence#1{\relax
+  \mathsurround=0pt%
+  \hbox{$%
+    \left\langle%
+      \hbox{\ignorespaces #1}%
+    \right\rangle$}}
+
+\def\oewidth#1{%
+  \setbox0={#1}%
+  \wd0}

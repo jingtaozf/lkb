@@ -1,5 +1,4 @@
 \documentclass[10pt]{article}
-\input{avm}
 \setlength{\evensidemargin}{0in}
 \setlength{\oddsidemargin}{0in}
 \setlength{\textwidth}{6.5in}
@@ -7,6 +6,26 @@
 \setlength{\textheight}{9in}
 \pagestyle{empty}
 \parindent=0pt
+
+\usepackage{latexsym}
+\usepackage{epsfig}
+\usepackage{fancybox}
+\usepackage{graphics}
+\usepackage{graphpap}
+\usepackage{tree-dvips}
+\usepackage{avm}
+
+\newcommand{\att}[1]{{\mbox{\scriptsize {\bf #1}}}}
+\newcommand{\attval}[2]{{\mbox{\scriptsize #1}\ {{#2}}}}
+\newcommand{\attvallist}[2]{{\mbox{\scriptsize #1}\ {<{#2}>}}}
+\newcommand{\attvallistleft}[2]{{\mbox{\scriptsize #1}\ {<{#2}}}}
+\newcommand{\attvallistright}[2]{{\mbox{\scriptsize #1}\ {{#2}>}}}
+\newcommand{\attvaltlist}[2]{{\mbox{\scriptsize #1}\ {<{\myvaluebold{#2}}>}}}
+\newcommand{\attvaltyp}[2]{{\mbox{\scriptsize #1}\ {\myvaluebold{#2}}}}
+\newcommand{\attvalshrunktyp}[2]{{\mbox{\scriptsize #1}\ {\boxvaluebold{#2}}}}
+\newcommand{\myvaluebold}[1]{{\mbox{\scriptsize {\bf #1}}}}
+\newcommand{\boxvaluebold}[1]{{\fbox{\scriptsize {\bf #1}}}}
+\newcommand{\ind}[1]{{\setlength{\fboxsep}{0.25mm} \: \fbox{{\tiny #1}} \:}}
 
 \begin{document}
 \begin{center}
@@ -56,9 +75,9 @@ ESSLLI 2000
   \item [(iii)]
         Include the contents of the file `{\tt extras.tdl}' at the end
         of your own `{\tt types.tdl}' file.
-        Move the attribute \att{ORTH} from \type{lex-item} to
-        \type{syn-struc} and change its value from \type{string} to
-        \type{*dlist*}.
+        Move the attribute \att{ORTH} from {\it lex-item} to
+        {\it syn-struc} and change its value from {\it string} to
+        {\it *dlist*}.
         In the lexicon, replace all occurences of \att{ORTH} with the
         path to the first element of the new orthography difference
         list: \att{ORTH.LIST.FIRST} (a shorthand path notation).
@@ -78,19 +97,19 @@ ESSLLI 2000
         embedded into a container structure providing a `pointer' to
         the end of the list, e.g.\\
         \centerline{%
-        \rlap{\tag{A}}\tavm{\mbox{*dlist*}$\,$}{
-          \av{LIST}{\rlap{\tag{1}}\tavm{\mbox{*ne-list*}$\,$}{%
-            \av{FIRST}{"foo"}\av{REST}{\tag{2}*list*}}}
-          \av{LAST}{\tag{2}}}\hspace{1cm}
-        \rlap{\tag{B}}\tavm{\mbox{*dlist*}$\,$}{
-          \av{LIST}{\rlap{\tag{3}}\tavm{\mbox{*ne-list*}$\,$}{%
-            \av{FIRST}{"bar"}\av{REST}{\tag{4}*list*}}}
-          \av{LAST}{\tag{4}}}}\\
-        Now, using the \att{LAST} pointer of difference list \tag{A} we
-        can append \tag{A} and \tag{B} by (i) unifying the front of
-        \tag{B} (i.e.\ the value of its \att{LIST} feature) into the
-        tail of \tag{A} (its \att{LAST} value) and (ii) using the tail
-        of difference list \tag{B} as the new tail for the result of
+        \rlap{\oetag{A}}\oetavm{\mbox{*dlist*}$\,$}{
+          \oeav{LIST}{\rlap{\oetag{1}}\oetavm{\mbox{*ne-list*}$\,$}{%
+            \oeav{FIRST}{"foo"}\oeav{REST}{\oetag{2}*list*}}}
+          \oeav{LAST}{\oetag{2}}}\hspace{1cm}
+        \rlap{\oetag{B}}\oetavm{\mbox{*dlist*}$\,$}{
+          \oeav{LIST}{\rlap{\oetag{3}}\oetavm{\mbox{*ne-list*}$\,$}{%
+            \oeav{FIRST}{"bar"}\oeav{REST}{\oetag{4}*list*}}}
+          \oeav{LAST}{\oetag{4}}}}\\
+        Now, using the \att{LAST} pointer of difference list \oetag{A} we
+        can append \oetag{A} and \oetag{B} by (i) unifying the front of
+        \oetag{B} (i.e.\ the value of its \att{LIST} feature) into the
+        tail of \oetag{A} (its \att{LAST} value) and (ii) using the tail
+        of difference list \oetag{B} as the new tail for the result of
         the concatenation (see Section~4.8.2 in the on-line LKB manual).
   \item []
         The goal of this exercise is to pass up the \att{ORTH} values
@@ -102,14 +121,14 @@ ESSLLI 2000
         \begin{itemize}
           \item [(a)]
                 Make sure \att{ORTH} is an appropriate feature for the
-                type \type{syn-struc} and is constrained to be of type
-                \type{*dlist*} (see the preparatory instructions
+                type {\it syn-struc} and is constrained to be of type
+                {\it *dlist*} (see the preparatory instructions
                 above); also, make sure that all lexical entries
                 provide their orthography as the value of the feature
                 path \att{ORTH.LIST.FIRST}.
           \item [(b)]
                 The general constraint on \att{ORTH} (viz.\
-                \type{*dlist*}) allows arbitrary-length lists.  For the
+                {\it *dlist*}) allows arbitrary-length lists.  For the
                 list concatenation to work, it is essential that the
                 \att{LAST} pointer in each difference list is correctly
                 bound to the list position following the last element,
@@ -119,7 +138,7 @@ ESSLLI 2000
                 \att{LIST.REST}.
                 Ensure that all lexical entries will have properly
                 terminated singleton lists as their \att{ORTH} value by
-                adding the appropriate constraint to \type{lex-item}
+                adding the appropriate constraint to {\it lex-item}
                 (those who have started from our `grammar6' get this
                 step for free). 
           \item [(c)]
@@ -128,31 +147,31 @@ ESSLLI 2000
                 the resulting list the \att{ORTH} value on the mother.
                 To avoid duplication of the append operation in the
                 `{\tt rules.tdl}' file, introduce types
-                \type{unary-rule}, \type{binary-rule}, and
-                \type{ternary-rule} that inherit from \type{phrase} and
+                {\it unary-rule}, {\it binary-rule}, and
+                {\it ternary-rule} that inherit from {\it phrase} and
                 perform the concatenation of \att{ORTH} values.
           \item [(d)]
                 In order to have one specific type for each actual rule
                 in the `{\tt rules.tdl}' file, we need to
                 cross-multiply the three types accounting for rule
-                arity with the \type{head-initial} vs.\
-                \type{head-final} distinction introduced last week.
+                arity with the {\it head-initial} vs.\
+                {\it head-final} distinction introduced last week.
                 Use multiple inheritance to create types
-                \type{unary-head-initial-rule},
-                \type{binary-head-initial-rule}, and
-                \type{ternary-head-initial-rule}, as well as
-                \type{binary-head-final-rule}; for the time being, we
+                {\it unary-head-initial-rule},
+                {\it binary-head-initial-rule}, and
+                {\it ternary-head-initial-rule}, as well as
+                {\it binary-head-final-rule}; for the time being, we
                 have exactly one head-final rule in our
                 grammar.
 %          \item [(e)]
 %                The type that our grammar uses as a `start symbol' is
-%                called \type{root} and resides in `{\tt types.tdl}'. 
+%                called {\it root} and resides in `{\tt types.tdl}'. 
 %                Based on this type, the LKB system validates each
 %                complete analysis of an input string to unify with the
 %                constraints on this type, thus checking for
 %                `sentence-hood' (currently, only specifier-saturated
 %                verbal projections are accepted as sentences).
-%                Make sure that he \type{root} type can unify with an
+%                Make sure that he {\it root} type can unify with an
 %                appliation of the specifier$\,$--$\,$head rule which in
 %                our grammar derives sentences (see (f) below).
           \item [(e)]
@@ -170,39 +189,39 @@ ESSLLI 2000
         relations are introduced by lexical entries and successively
         combined as words are combined with other words (or phrases) to
         form larger phrases.
-        We will use a type \type{relation} to capture the basic
+        We will use a type {\it relation} to capture the basic
         units of semantics that are associated with words, and subtypes
-        \type{arg1-relation}, \type{arg1-2-relation}, and
-        \type{arg1-2-3-relation} for predicates of corresponding arity:\\
+        {\it arg1-relation}, {\it arg1-2-relation}, and
+        {\it arg1-2-3-relation} for predicates of corresponding arity:\\
         \centerline{
-        \tavm{relation$\,$}{\av{PRED}{string}\av{ARG0}{index}}$\,$,
-        \tavm{arg1-relation$\,$}{\av{PRED}{string}
-                                 \av{ARG0}{index}
-                                 \av{ARG1}{index}}\hspace{2ex}
+        \oetavm{relation$\,$}{\oeav{PRED}{string}\oeav{ARG0}{index}}$\,$,
+        \oetavm{arg1-relation$\,$}{\oeav{PRED}{string}
+                                 \oeav{ARG0}{index}
+                                 \oeav{ARG1}{index}}\hspace{2ex}
         $\cdots$%\hspace{2ex}
-        \tavm{arg1-2-3-relation$\,$}{\av{PRED}{string}
-                                 \av{ARG0}{index}
-                                 \av{ARG1}{index}
-                                 \av{ARG2}{index}
-                                 \av{ARG3}{index}}\hspace{2ex}}\\
+        \oetavm{arg1-2-3-relation$\,$}{\oeav{PRED}{string}
+                                 \oeav{ARG0}{index}
+                                 \oeav{ARG1}{index}
+                                 \oeav{ARG2}{index}
+                                 \oeav{ARG3}{index}}\hspace{2ex}}\\
         \begin{itemize}
           \item [(a)]
-                Add atomic types \type{index} with subtypes
-                \type{object} and \type{event}, which we will use to
+                Add atomic types {\it index} with subtypes
+                {\it object} and {\it event}, which we will use to
                 represent variables in role assignment.
           \item [(b)]
-                Add the types \type{relation} through
-                \type{arg1-2-3-relation} (as shown above) below 
-                \type{feat-struc}.
+                Add the types {\it relation} through
+                {\it arg1-2-3-relation} (as shown above) below 
+                {\it feat-struc}.
         \end{itemize}
   \item []
         To associate semantics with words and phrases, we need another
         type that will serve as the value of a new \att{SEM} attribute
-        in \type{syn-struc}:\\
+        in {\it syn-struc}:\\
         \verb|  |%
-        \tavm{semantics$\,$}{\av{INDEX}{index}
-                            \av{KEY}{relation}
-                            \av{RELS}{*dlist*}}\\
+        \oetavm{semantics$\,$}{\oeav{INDEX}{index}
+                            \oeav{KEY}{relation}
+                            \oeav{RELS}{*dlist*}}\\
         Roughly speaking, the \att{INDEX} attribute corresponds to the
         external variable that is available for binding, the \att{KEY}
         attribute points to the distinguished relation that is used for
@@ -212,40 +231,40 @@ ESSLLI 2000
         For the lexical entries `dog' and `chase', respectively, we want
         the following semantics (as the value of their \att{SEM}
         feature):\\ 
-         \tavm{semantics$\,$}{%
-           \av{INDEX}{\tag{1}object}
-           \av{KEY}{\rlap{\tag{2}}\tavm{\mbox{relation}$\,$}{%
-             \av{PRED}{"dog\_rel"}
-             \av{ARG0}{\tag{1}}}}
-            \av{RELS}{\avm{%
-              \av{LIST}{\avm{\av{FIRST}{\tag{2}}\av{REST}{\tag{3}}}}
-              \av{LAST}{\tag{3}}}}}
-         \tavm{semantics$\,$}{%
-           \av{INDEX}{\tag{4}event}
-           \av{KEY}{\rlap{\tag{5}}1\tavm{\mbox{arg1-2-relation}$\,$}{%
-             \av{PRED}{"chase\_rel"}
-             \av{ARG0}{\tag{4}}
-             \av{ARG1}{index}
-             \av{ARG2}{index}}}
-            \av{RELS}{\avm{%
-              \av{LIST}{\avm{\av{FIRST}{\tag{5}}\av{REST}{\tag{6}}}}
-              \av{LAST}{\tag{6}}}}}\\
+         \oetavm{semantics$\,$}{%
+           \oeav{INDEX}{\oetag{1}object}
+           \oeav{KEY}{\rlap{\oetag{2}}\oetavm{\mbox{relation}$\,$}{%
+             \oeav{PRED}{"dog\_rel"}
+             \oeav{ARG0}{\oetag{1}}}}
+            \oeav{RELS}{\oeavm{%
+              \oeav{LIST}{\oeavm{\oeav{FIRST}{\oetag{2}}\oeav{REST}{\oetag{3}}}}
+              \oeav{LAST}{\oetag{3}}}}}
+         \oetavm{semantics$\,$}{%
+           \oeav{INDEX}{\oetag{4}event}
+           \oeav{KEY}{\rlap{\oetag{5}}1\oetavm{\mbox{arg1-2-relation}$\,$}{%
+             \oeav{PRED}{"chase\_rel"}
+             \oeav{ARG0}{\oetag{4}}
+             \oeav{ARG1}{index}
+             \oeav{ARG2}{index}}}
+            \oeav{RELS}{\oeavm{%
+              \oeav{LIST}{\oeavm{\oeav{FIRST}{\oetag{5}}\oeav{REST}{\oetag{6}}}}
+              \oeav{LAST}{\oetag{6}}}}}\\
         \begin{itemize}
           \item [(a)]
-                Introduce the type \type{semantics}, add the feature
-                \att{SEM} to \type{syn-struc}, and constrain its value
-                to \type{semantics}.
+                Introduce the type {\it semantics}, add the feature
+                \att{SEM} to {\it syn-struc}, and constrain its value
+                to {\it semantics}.
           \item [(b)]
-                Enrich the \type{lexeme} type to reflect that (i)
+                Enrich the {\it lexeme} type to reflect that (i)
                 lexical items have a singleton \att{RELS} list, (ii)
                 the \att{KEY} relation corresponds to the first (and
                 only) element in \att{RELS}, and (iii) the \att{INDEX}
                 is the \att{ARG0} of the \att{KEY}.
           \item [(c)]
-                Enrich the types \type{det-lxm}, \type{noun-lxm}, and
-                \type{verb-lxm} (or their equivalents) to constrain the
-                semantic \att{INDEX} to be of type \type{object} (for
-                determiners and nouns) and \type{event} (for verbs),
+                Enrich the types {\it det-lxm}, {\it noun-lxm}, and
+                {\it verb-lxm} (or their equivalents) to constrain the
+                semantic \att{INDEX} to be of type {\it object} (for
+                determiners and nouns) and {\it event} (for verbs),
                 respectively.
           \item [(d)]
                 Add a unique relation, as the value of
@@ -273,13 +292,13 @@ ESSLLI 2000
                 are contributed by the semantic head; for our grammar,
                 the semantic head equals the syntactic head in all
                 constructions: add appropriate co-indexation of
-                \att{INDEX} and \att{KEY} to the \type{head-initial}
-                and \type{head-final} types.
+                \att{INDEX} and \att{KEY} to the {\it head-initial}
+                and {\it head-final} types.
           \item [(c)]
-                Inflectional rules are subtypes of \type{word} but
+                Inflectional rules are subtypes of {\it word} but
                 behave much like unary rules; add the passing up of the
                 \att{SEM} value from the daughter to that of the mother
-                on the type \type{word}.
+                on the type {\it word}.
           \item [(d)]
                 Reload the grammar, eliminate remaining errors (if
                 any), and make sure that (i) coverage remains unchanged
@@ -309,7 +328,7 @@ ESSLLI 2000
           \item [(c)]
                 Prepositions are special (and our current analysis is
                 arguable anyway): they identify the \att{INDEX} of the
-                \type{syn-struc} selected for by \att{MOD} with their
+                {\it syn-struc} selected for by \att{MOD} with their
                 own \att{INDEX}, and map the \att{INDEX} of their
                 complement to \att{ARG1}.
           \item [(d)]
@@ -319,13 +338,13 @@ ESSLLI 2000
                 cat gave that dog those aardvarks', or `the cat barked near
                 those dogs' the following well-formedness conditions
                 hold in the semantics: (i) all indexes are specialized to
-                either \type{event} or \type{object}, (ii) determiner
+                either {\it event} or {\it object}, (ii) determiner
                 and noun in each noun phrase share the same \att{ARG0}
                 variable, (iii) all roles in a verbal relation are
                 bound to the indexes of the corresponding arguments,
                 and (iv) the \att{ARG0} of a prepositional phrase 
                 {\em modifier\/} is bound to the \att{ARG0} of the
-                \type{event} or \type{object} being modified.
+                {\it event} or {\it object} being modified.
         \end{itemize}
   \item The LKB provides facilities to read out a semantic formula from
         a feature structure, print it in various formats, perform
@@ -346,10 +365,10 @@ ESSLLI 2000
           \item [(a)]
                 For generator-internal purposes, the generator requires
                 \att{INDEX} values to have one appropriate feature,
-                \att{INSTLOC}, whose value is of type \type{instloc}.
-                Add the atomic type \type{instloc} (as a subtype of
-                \type{*top*}) and enrich the type definition for
-                \type{index}.  Reload the grammar.
+                \att{INSTLOC}, whose value is of type {\it instloc}.
+                Add the atomic type {\it instloc} (as a subtype of
+                {\it *top*}) and enrich the type definition for
+                {\it index}.  Reload the grammar.
           \item [(b)]
                 To get full access to the LKB generation component,
                 execute the `Options -- Expand Menu' command.  Then, to
