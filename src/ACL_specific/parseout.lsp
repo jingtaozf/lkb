@@ -82,12 +82,11 @@
   (let* ((edge-record (get edge-symbol 'edge-record))
 	 (edge-fs (get edge-symbol 'edge-fs))
 	 (item (edge-rule edge-record))
-         (rule-name (if (rule-p item) (rule-id item) item))
-	 (chart-frame (reuse-frame 'chart-window)))
+         (rule-name (if (rule-p item) (rule-id item) item)))
     (pop-up-menu
      `((,(format nil "Feature structure - Edge ~A" (edge-id edge-record))
 	:value fs)
-       ("Show edge in chart" :value edge :active ,chart-frame)
+       ("Show edge in chart" :value edge)
        (,(format nil "Rule ~A" (or rule-name ""))
 	:value rule)
        ("Generate from edge" :value generate)
@@ -99,7 +98,9 @@
 			       (if (g-edge-p edge-record) 
 				   "G" 
 				 "P"))))
-     (edge (highlight-edge edge-record chart-frame :scroll-to t))
+     (edge (let ((chart-frame (reuse-frame 'chart-window)))
+	     (when chart-frame
+	       (highlight-edge edge-record chart-frame :scroll-to t))))
      (rule 
       (let* ((item (edge-rule edge-record))
              (rule (and (rule-p item) item)))
