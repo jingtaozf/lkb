@@ -952,11 +952,20 @@
 
 (defun dump-psql-lexicon (filename)
   (setf filename (namestring (pathname filename)))
-  (dump-db *psql-lexicon* filename))
+  (dump-db *psql-lexicon* *postgres-temp-filename*)
+  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
+					       *postgres-temp-filename*
+					       filename
+					       *postgres-temp-filename*)))
 
 (defun dump-multi-psql-lexicon (filename)
   (setf filename (namestring (pathname filename)))
-  (dump-multi-db *psql-lexicon* filename))
+  (dump-multi-db *psql-lexicon* *postgres-temp-filename*)
+  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
+					       *postgres-temp-filename*
+					       filename
+					       *postgres-temp-filename*)))
+
 
 ;(defun merge-into-psql-lexicon (filename)
 ;  (setf filename (namestring (pathname filename)))

@@ -28,6 +28,7 @@
 (defvar *export-lexicon-p* nil)
 (defvar *export-to* nil)
 
+(defvar *postgres-temp-filename* "/tmp/postgres-temp")
 (defvar *export-file* (make-pathname :name "lexicon"
 				     :directory (pathname-directory (lkb-tmp-dir))))
 (defvar *export-skip-stream* t)
@@ -639,6 +640,9 @@
 	  (format nil "~a~%"
 		  (csv-line
 		   name
+		   *current-user* ;;userid
+		   (num-2-str *export-version*) ;;version
+		   *export-timestamp* ;;modstamp
 		   type
 		   orthography 
 		   (get-orthkey orth-list)
@@ -666,11 +670,8 @@
 		   "" ;;genres
 		   "" ;;register
 		   "1";;confidence
-		   (num-2-str *export-version*) ;;version
 		   (or *current-source* "?") ;;source
 		   "1" ;;flags: 1 = not deleted
-		   *current-user* ;;userid
-		   *export-timestamp* ;;modstamp
 		   ))))
     (cond 
      ((= total (length (lex-entry-unifs x)))
