@@ -14,7 +14,7 @@
   (:use :common-lisp :excl :foreign-functions)
   (:export
    "CONNECT-DB" "DECODE-CONNECTION-STATUS" "STATUS" "DB"
-   "ERROR-MESSAGE" "SQL" "FINISH"))
+   "ERROR-MESSAGE" "SQL" "FINISH" "SQL-ERROR"))
 
    
 

@@ -7,6 +7,8 @@
 ;; (http://opensource.franz.com/preamble.html),
 ;; known as the LLGPL.
 
+;; 18/07/03 Ben Waldron: modified SQL to throw error.
+
 (in-package :pg)
 
 (defparameter *DEFAULT-DATABASE* nil)
@@ -37,7 +39,10 @@
 	(let ((exec-status (decode-exec-status (result-status result))))
 	  (unless (or (eq :pgres-command-ok exec-status)
 		      (eq :pgres-tuples-ok exec-status))
-	    (error "BAD COMMAND TO ~s: ~a" (db db) (result-error-message result)))
+	    ;(error "BAD COMMAND TO ~s: ~a" (db db) (result-error-message result))
+	    (warn "BAD COMMAND TO ~s: ~a" (db db) (result-error-message result))            
+	    (throw 'sql-error (result-error-message result))            
+            )
 	  (let ((field-names (loop for field below (nfields result)
 				 collect (field-name result field)))
 		(result-table (loop for tuple below (ntuples result)
