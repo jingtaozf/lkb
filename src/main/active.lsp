@@ -30,9 +30,15 @@
 ;;; arguments, i.e. rule or active plus passive item).
 ;;;
 
+(pushnew :agenda *features*)
+
+(defparameter *hyper-activity* nil)
+
 (defstruct (active-chart-configuration (:include chart-configuration))
   open
-  forwardp)
+  forwardp
+  #+:adebug (executions 0)
+  #+:adebug (successes 0))
 
 (defvar *achart* (make-array (list *chart-limit* 2)))
 
@@ -174,7 +180,10 @@
                  (restrictors-compatible-p
                   (nth key (rule-daughters-restricted rule))
                   (edge-dag-restricted edge)))
+          #+:agenda
           (heap-insert *aagenda* (rule-priority rule) (cons rule passive))
+          #-:agenda
+          (process-rule-and-passive (cons rule passive))
           (incf *filtered-tasks*))))
 
 (defun fundamental4active (active)
@@ -208,7 +217,10 @@
                    avector
                    (edge-dag-restricted pedge)))
         do
+          #+:agenda
           (heap-insert *aagenda* (rule-priority arule) (cons active passive))
+          #-:agenda
+          (process-active-and-passive (cons active passive))
         else do
           (incf *filtered-tasks*))))
 
@@ -267,8 +279,11 @@
                      (restrictors-compatible-p
                       (edge-dag-restricted aedge)
                       pvector))
+              #+:agenda
               (heap-insert *aagenda* 
                (rule-priority prule) (cons active passive))
+              #-:agenda
+              (process-active-and-passive (cons active passive))
               (incf *filtered-tasks*))))
     (loop
         for active in following
@@ -279,8 +294,11 @@
                      (restrictors-compatible-p
                       (edge-dag-restricted aedge)
                       pvector))
+              #+:agenda
               (heap-insert *aagenda* 
                (rule-priority prule) (cons active passive))
+              #-:agenda
+              (process-active-and-passive (cons active passive))
               (incf *filtered-tasks*))))))
 
 (defun process-rule-and-passive (task)
@@ -295,27 +313,39 @@
          (rhs (arule-rhs rule))
          (open (rest rhs))
          (key (first rhs))
-         (root (first (rule-order rule)))
          (daughters (rest (rule-order rule)))
          (path (nth key daughters))
          (passive (rest task))
          (edge (chart-configuration-edge passive))
          (ptdfs (edge-dag edge))
-         (result
+         (nedge
           (with-unification-context (ignore)
             (incf *executed-tasks*)
             (let* ((tdfs (yadu rtdfs (create-temp-parsing-tdfs ptdfs path))))
               (when tdfs
-                (if open
-                  (copy-tdfs-elements tdfs)
-                  (restrict-and-copy-tdfs (tdfs-at-end-of root tdfs)))))))
-         (nedge (and result
-                     (make-edge :id (next-edge)
-                                :category (indef-type-of-tdfs result)
-                                :rule rule :children (list edge)
-                                :dag result :dag-restricted nil
-                                :lex-ids (copy-list (edge-lex-ids edge))
-                                :leaves (copy-list (edge-leaves edge))))))
+                ;;
+                ;; _fix_me_
+                ;; tdfs-at-end-of() is not guaranteed to work within a
+                ;; unification context.
+                ;;
+                (let* ((root (tdfs-at-end-of (first (rule-order rule)) tdfs))
+                       (vector (if open
+                                 (tdfs-qc-vector
+                                  tdfs (nth (first open) daughters))
+                                 (tdfs-qc-vector root)))
+                       (copy (if open
+                               (if *hyper-activity*
+                                 t
+                                 (copy-tdfs-elements tdfs))
+                               (restrict-and-copy-tdfs root))))
+                  (when copy
+                    (make-edge :id (next-edge)
+                               :category (indef-type-of-tdfs (if (eq copy t)
+                                                               tdfs copy))
+                               :rule rule :children (list edge)
+                               :dag copy :dag-restricted vector
+                               :lex-ids (copy-list (edge-lex-ids edge))
+                               :leaves (copy-list (edge-leaves edge))))))))))
     (when nedge
       (incf *successful-tasks*)
       (let ((begin (chart-configuration-begin passive))
@@ -323,13 +353,11 @@
         (if open
           (fundamental4active
            (make-active-chart-configuration 
-            :begin begin :end end 
-            :edge (restrict-edge nedge (nth (first open) daughters))
-            :open open 
-            :forwardp (< key (first open))))
+            :begin begin :end end :edge nedge
+            :open open :forwardp (< key (first open))))
           (fundamental4passive
            (make-chart-configuration
-            :begin begin :end end :edge (restrict-edge nedge))))))))
+            :begin begin :end end :edge nedge)))))))
 
 (defun process-active-and-passive (task)
   
@@ -339,14 +367,13 @@
   (print-trace :process-active-and-passive (rest task))
 
   (let* ((active (first task))
-         (open (active-chart-configuration-open active))
+         (key (first (active-chart-configuration-open active)))
+         (open (rest (active-chart-configuration-open active)))
          (forwardp (active-chart-configuration-forwardp active))
-         (key (first open))
          (aedge (chart-configuration-edge active))
          (achildren (edge-children aedge))
          (atdfs (edge-dag aedge))
          (arule (edge-rule aedge))
-         (root (first (rule-order arule)))
          (daughters (rest (rule-order arule)))
          (path (nth key daughters))
          (passive (rest task))
@@ -355,47 +382,69 @@
          (nedge
           (with-unification-context (ignore)
             (incf *executed-tasks*)
-            (let* ((tdfs (yadu atdfs (create-temp-parsing-tdfs ptdfs path)))
-                   (result (when tdfs 
-                             (if (rest open)
-                               (copy-tdfs-elements tdfs)
-                               (restrict-and-copy-tdfs 
-                                (tdfs-at-end-of root tdfs)))))
-                   (children (if forwardp
-                               (append achildren (list pedge))
-                               (cons pedge achildren)))
-                   (ids (loop 
-                            for child in children 
-                            append (edge-lex-ids child)))
-                   (leaves (loop 
-                               for child in children 
-                               append (edge-leaves child))))
-              (when result
-                (make-edge :id (next-edge)
-                           :category (indef-type-of-tdfs result)
-                           :rule arule
-                           :children children
-                           :dag result :dag-restricted nil
-                           :lex-ids ids :leaves leaves))))))
+            (when (eq atdfs t)
+              #+:adebug
+              (print-trace :reconstruct active)
+              (loop
+                  initially (setf atdfs (rule-full-fs arule))
+                  for edge in achildren
+                  for tdfs = (edge-dag edge)
+                  for i in (arule-rhs arule)
+                  for path = (nth i daughters)
+                  do
+                    (setf atdfs 
+                      (yadu atdfs (create-temp-parsing-tdfs tdfs path)))
+                    (incf *executed-tasks*) (incf *successful-tasks*)))
+            #+:adebug
+            (incf (active-chart-configuration-executions active))
+            (let* ((tdfs (yadu atdfs (create-temp-parsing-tdfs ptdfs path))))
+              (when tdfs
+                (let* ((root (tdfs-at-end-of (first (rule-order arule)) tdfs))
+                       (vector (if open
+                                 (tdfs-qc-vector 
+                                  tdfs (nth (first open) daughters))
+                                 (tdfs-qc-vector root)))
+                       (copy (if open
+                               (if *hyper-activity*
+                                 t
+                                 (copy-tdfs-elements tdfs))
+                               (restrict-and-copy-tdfs root))))
+                  (when copy
+                    (let* ((category (indef-type-of-tdfs (if (eq copy t)
+                                                           tdfs
+                                                           copy)))
+                           (children (if forwardp
+                                       (append achildren (list pedge))
+                                       (cons pedge achildren)))
+                           (ids (loop 
+                                    for child in children 
+                                    append (edge-lex-ids child)))
+                           (leaves (loop 
+                                       for child in children 
+                                       append (edge-leaves child))))
+                      (make-edge :id (next-edge)
+                                 :category category :rule arule
+                                 :children children
+                                 :dag copy :dag-restricted vector
+                                 :lex-ids ids :leaves leaves)))))))))
     (when nedge
       (incf *successful-tasks*)
+      #+:adebug
+      (incf (active-chart-configuration-successes active))
       (let* ((begin (if forwardp
                       (chart-configuration-begin active)
                       (chart-configuration-begin passive)))
              (end (if forwardp
                     (chart-configuration-end passive)
-                    (chart-configuration-end active)))
-             (open (rest open)))
+                    (chart-configuration-end active))))
         (if open
           (fundamental4active
            (make-active-chart-configuration 
-            :begin begin :end end 
-            :edge (restrict-edge nedge (nth (first open) daughters))
-            :open open 
-            :forwardp (< key (first open))))
+            :begin begin :end end :edge nedge
+            :open open :forwardp (< key (first open))))
           (fundamental4passive
            (make-chart-configuration
-            :begin begin :end end :edge (restrict-edge nedge))))))))
+            :begin begin :end end :edge nedge)))))))
 
 (defun restrict-and-copy-tdfs (tdfs)
   (let* ((dag (deref-dag (tdfs-indef tdfs)))
@@ -416,12 +465,16 @@
         (unless result (decf *successful-tasks*))
         result))))
 
-(defun restrict-edge (edge &optional path)
-  (let* ((dag (if path
-                (existing-dag-at-end-of (tdfs-indef (edge-dag edge)) path)
-                (tdfs-indef (edge-dag edge)))))
-    (setf (edge-dag-restricted edge) (restrict-fs dag))
-    edge))
+(defun tdfs-qc-vector (tdfs &optional path)
+  (let* ((dag (x-existing-dag-at-end-of (deref-dag (tdfs-indef tdfs)) path))
+         (vector (x-restrict-fs dag)))
+    #+:adebug
+    (when *adebugp*
+      (format t "tdfs-qc-vector(): ~s;~%" vector))
+    vector))
+
+#+:adebug
+(defparameter *adebugp* t)
 
 #+:adebug
 (defun debug-label (object)
@@ -438,31 +491,32 @@
    ((stringp object) object)
    ((rule-p object) (rule-id object))
    (t "unknown")))
-
+
 #+:adebug
 (defun print-trace (context object)
-  (if (arule-p object)
-    (let* ((label (debug-label object))
-           (open (arule-rhs object)))
-      (format
-       t
-       "~(~a~)(): `~(~a~)' [open: ~{~a~^ ~}];~%"
-       context label open))
-    (let* ((begin (chart-configuration-begin object))
-           (end (chart-configuration-end object))
-           (label (debug-label object))
-           (edge (chart-configuration-edge object))
-           (id (edge-id edge))
-           (children (loop 
-                         for child in (edge-children edge)
-                         collect (edge-id child)))
-           (open (when (active-chart-configuration-p object)
-                   (active-chart-configuration-open object)))
-           (forwardp (when (active-chart-configuration-p object)
-                       (active-chart-configuration-forwardp object))))
-      (format 
-       t
-       "~(~a~)(): ~d-~d: ~a (~a < ~{~a~^ ~})~
-        ~@[ [open: ~{~a~^ ~} - ~:[backwards~;forward~]]~];~%"
-       context begin end label id children open forwardp))))
+  (when *adebugp*
+    (if (arule-p object)
+      (let* ((label (debug-label object))
+             (open (arule-rhs object)))
+        (format
+         t
+         "~(~a~)(): `~(~a~)' [open: ~{~a~^ ~}];~%"
+         context label open))
+      (let* ((begin (chart-configuration-begin object))
+             (end (chart-configuration-end object))
+             (label (debug-label object))
+             (edge (chart-configuration-edge object))
+             (id (edge-id edge))
+             (children (loop 
+                           for child in (edge-children edge)
+                           collect (edge-id child)))
+             (open (when (active-chart-configuration-p object)
+                     (active-chart-configuration-open object)))
+             (forwardp (when (active-chart-configuration-p object)
+                         (active-chart-configuration-forwardp object))))
+        (format 
+         t
+         "~(~a~)(): ~d-~d: ~a (~a < ~{~a~^ ~})~
+          ~@[ [open: ~{~a~^ ~} - ~:[backwards~;forward~]]~];~%"
+         context begin end label id children open forwardp)))))
 

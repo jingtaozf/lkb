@@ -892,9 +892,10 @@ Setting *first-only-p* to nil")
 	   ((zerop n))
 	   ((x-restrict-and-compatible-p
 	     (if (listp rule-feat)
-		 (x-existing-dag-at-end-of 
-		  (tdfs-indef current-tdfs) rule-feat)
-	       (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
+	       (x-existing-dag-at-end-of 
+                (deref-dag (tdfs-indef current-tdfs)) rule-feat)
+	       (x-get-dag-value 
+                (deref-dag (tdfs-indef current-tdfs)) rule-feat))
 	     (edge-dag-restricted child-edge)))
 	   (t (incf *filtered-tasks*)
 	      (return-from evaluate-unifications nil))))

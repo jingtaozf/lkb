@@ -388,49 +388,76 @@
 
 ;;; Versions called dynamically inside the scope of a set of unifications
 
+;;;
+;;; note that x-existing-dag-at-end-of() now assumes the input argument has
+;;; been dereferenced already; otherwise, x-restrict-fs() would amount in one
+;;; deref-dag() call per quick check path.                 (23-jun-99  -  oe)
+;;;
+
+(defun x-restrict-fs (fs)
+  (loop 
+      with fs = (deref-dag fs)
+      for path-spec in *check-paths-optimised*
+      collect
+        (let ((v (x-existing-dag-at-end-of fs (car path-spec))))
+          (when v
+            (let ((type (or (dag-new-type v) (dag-type v))))
+              (when type
+                (when (consp type) (setq type (car type)))
+                (if (consp (cdr path-spec))
+                  (or (cdr (assoc type (cdr path-spec) :test #'eq))
+                      (cdr (assoc (instance-type-parent type)
+                                  (cdr path-spec) :test #'eq))
+                      (error "Inconsistency - ~A ~
+                              could not find restrictor bit vector ~
+                              for type ~A at path ~A" 'x-restrict-fs
+                              type (car path-spec)))
+                  type)))))))
+
 (defun x-restrict-and-compatible-p (fs child-restricted)
-  (loop for path-spec in *check-paths-optimised*
+  (loop
+      with fs = (deref-dag fs)
+      for path-spec in *check-paths-optimised*
+      for dt = (let ((v (x-existing-dag-at-end-of fs (car path-spec))))
+                 (when v
+                   (let ((type (or (dag-new-type v) (dag-type v))))
+                     (when type
+                       (when (consp type) (setq type (car type)))
+                       (if (consp (cdr path-spec))
+                           (or (cdr (assoc type (cdr path-spec) :test #'eq))
+                               (cdr (assoc (instance-type-parent type)
+                                           (cdr path-spec) :test #'eq))
+                               (error "Inconsistency - ~A ~
+                                       could not find restrictor bit vector ~
+                                       for type ~A at path ~A" 'x-restrict-fs
+                                       type (car path-spec)))
+                         type)))))
       for ct in child-restricted
       do
-      (let ((dt
-	     (let ((v (x-existing-dag-at-end-of fs (car path-spec))))
-	       (when v
-	         (let ((type (dag-new-type v)))
-	           (when type
-		      (when (consp type) (setq type (car type)))
-                      (if (consp (cdr path-spec))
-		         (or
-			    (cdr (assoc type (cdr path-spec) :test #'eq))
-			    (cdr (assoc (instance-type-parent type)
-                                    (cdr path-spec) :test #'eq))
-			    (error "Inconsistency - ~A could not find restrictor bit vector ~
-                                   for type ~A at path ~A" 'x-restrict-and-compatible-p
-                                   type (car path-spec)))
-		         type)))))))
         (cond
          ((or (eq dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
          ((not (type-bit-representation-p dt))
 	  (unless (greatest-common-subtype dt ct) 
 	    (return-from x-restrict-and-compatible-p nil)))
          ((zerop (logand (the fixnum dt) (the fixnum ct)))
-	  (return-from x-restrict-and-compatible-p nil)))))
+	  (return-from x-restrict-and-compatible-p nil))))
   t)
 
 (defun x-existing-dag-at-end-of (dag labels-chain)
-  (let ((real-dag (deref-dag dag)))
-    (cond 
-     ((null labels-chain) real-dag)
-     ((is-atomic real-dag) nil)
-     (t
-      (let ((one-step-down (x-get-dag-value real-dag (car labels-chain))))
-	(when one-step-down 
-	  (x-existing-dag-at-end-of one-step-down (cdr labels-chain))))))))
+  (cond 
+   ((null labels-chain) dag)
+   ((is-atomic dag) nil)
+   (t
+    (let ((one-step-down (x-get-dag-value dag (car labels-chain))))
+      (when one-step-down 
+        (x-existing-dag-at-end-of 
+         (deref-dag one-step-down) (cdr labels-chain)))))))
 
 (defun x-get-dag-value (dag attribute)
-  (dolist (arc (dag-arcs dag))
+  (dolist (arc (dag-comp-arcs dag) nil)
     (when (eq attribute (dag-arc-attribute arc))
       (return-from x-get-dag-value (dag-arc-value arc))))
-  (dolist (arc (dag-comp-arcs dag) nil)
+  (dolist (arc (dag-arcs dag))
     (when (eq attribute (dag-arc-attribute arc))
       (return-from x-get-dag-value (dag-arc-value arc)))))
 

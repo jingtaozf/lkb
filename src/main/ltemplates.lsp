@@ -127,6 +127,7 @@
 (defparameter *result* nil)
 
 (defun parse-with-preprocessor (&optional file)
+  (declare (special *parse-record*))
   (let* ((file
           (or file
               (ask-user-for-existing-pathname "Input file?"))))
@@ -148,7 +149,7 @@
                       when (and (listp form) (not (keywordp (first form))))
                       do 
                         (parse (preprocess-form form))
-                      and collect (extract-semantix)
+                      and collect (length *parse-record*)
                       and do 
                         (if *verbose-preprocesser-p*
                           (let ((readings (length *parse-record*)))
