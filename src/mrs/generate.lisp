@@ -111,8 +111,7 @@
           (input-rels 0))
       (time-a-funcall
        #'(lambda () 
-           (multiple-value-setq (lex-results grules lex-orderings
-                                 %generator-unknown-eps%)
+           (multiple-value-setq (lex-results grules lex-orderings)
              (mrs::collect-lex-entries-from-mrs input-sem))
            (multiple-value-setq (lex-items grules lex-orderings)
              (filter-generator-lexical-items 
@@ -125,13 +124,8 @@
         (pairlis '(:ltgc :ltcpu :lconses :lsymbols :lothers)
                  (list tgc tcpu conses symbols others)))
       
-      (when %generator-unknown-eps%
-        (error 
-         "unknown predicates: ~{|~(~a~)|~^, ~}"
-         (loop
-             for ep in %generator-unknown-eps%
-             collect (mrs::ep-shorthand ep))))
-      (unless lex-items (error "no lexical entries found"))
+      (unless lex-items 
+        (error "no lexical entries found (maybe generator uninitialized)"))
       (when *debugging* (print-generator-lookup-summary lex-items grules))
       
       (let ((rel-indexes nil) (rel-indexes-n -1))
@@ -149,16 +143,19 @@
             (dolist (rel (mrs::found-rule-main-rels grule))
               (unless (getf rel-indexes rel)
                 (setf (getf rel-indexes rel) (incf rel-indexes-n))))))
+        (setf %generator-unknown-eps% nil)
         (loop
             for ep in (mrs::psoa-liszt input-sem)
-            unless (getf rel-indexes ep) collect ep into unknown
+            unless (getf rel-indexes ep) do (push ep %generator-unknown-eps%)
             finally
-              (when unknown
+              (when %generator-unknown-eps%
                 (error 
                  "unknown predicates: ~{|~(~a~)|~^, ~}"
                  (loop
-                     for ep in unknown
-                     collect (mrs::ep-shorthand ep)))))
+                     with result
+                     for ep in %generator-unknown-eps%
+                     do (pushnew (mrs::ep-shorthand ep) result :test #'equal)
+                     finally (return result)))))
         ;;
         ;; _fix_me_
         ;; i believe the following should never happen, i.e. we rightly fail
@@ -190,11 +187,7 @@
         (dolist (rel (mrs::psoa-liszt input-sem))
           (setq input-rels
             (logior input-rels (ash 1 (getf rel-indexes rel)))))
-        ;;
-        ;; _fix_me_
-        ;; use bitvectors to test for lexical gaps, i.e. relations from the
-        ;; input MRS that are not provided by any of the elements.
-        ;;                                                     23-apr-04; oe)
+
         (chart-generate
          input-sem input-rels lex-items grules lex-orderings rel-indexes)))))
 

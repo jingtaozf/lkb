@@ -102,15 +102,8 @@ at this point).
          (grammar-rels (loop for rel in all-rels 
                              when (grammar-rel-p (rel-pred rel))
                            collect rel))
-         (unknown
-          (loop
-              for ep in all-rels
-              unless (or (find ep lex-rule-rels :test #'eq)
-                         (find ep lexical-rels :test #'eq)
-                         (find ep grammar-rels :test #'eq))
-              collect ep))
-                                        ; specified in grammar rule
-    ; these are not necessarily mutually exclusive classes
+         ;; specified in grammar rule
+         ;; these are not necessarily mutually exclusive classes
          (possibles 
           ; Part 1
           ; candidates found without getting actual lex-entry
@@ -140,9 +133,8 @@ at this point).
           (values
            lexres
            (find-possible-rules grammar-rels nil)
-           (find-linear-order-spec lexres)
-           unknown))
-      (values nil nil nil unknown))))
+           (find-linear-order-spec lexres)))
+      (values nil nil nil))))
 
 ;;; third value is an ordering specification 
 ;;; given as a list of lex-ids 
