@@ -441,7 +441,7 @@
                       (if mrecs
 			  (progn
 			    (setf (sense-record-mrecs sense-record) mrecs)
-			    sense-record)))))))                      
+			    sense-record)))))))
     (dolist (sense-record word-senses)
       (let ((word (sense-record-word-string sense-record))
 	    (left-vertex (sense-record-left-vertex sense-record)))
@@ -500,9 +500,17 @@
 		    (setf ok nil)
 		    (return)))
 	      ;; else cannot be inflected        
-	      (unless (string-equal word-stem existing-word)
-		(setf ok nil)
-		(return)))
+	      (if (string-equal word-stem existing-word)
+                  (let ((current-morph-res 
+		       (morph-edge-morph-results morph-entry)))
+                    (setf new-morph-res
+                      (for res in current-morph-res
+                           filter
+                           (if (string-equal word-stem (car res))
+                               res))))
+                (progn
+                  (setf ok nil)
+                  (return))))
 	    (push word-stem amalgamated-stems)
 	    (push " " amalgamated-stems)
 	    (push existing-word amalgamated-words)
@@ -518,31 +526,24 @@
 		     (full-word-string 
 		      (apply #'concatenate 'string 
 			     (nreverse (cdr amalgamated-words)))))
-		(cons 
-		 (make-sense-record :word-string full-word-string
-				    :left-vertex (- right-vertex 
-						    (length entry-orth))
-				    :morph-res (list full-stem-string)
-				    :lex-ids (list (lex-or-psort-id
-						    expanded-entry))
-				    :fs (protect (lex-or-psort-full-fs 
-						  expanded-entry)))
-		 (for rule in (for res in new-morph-res
-				   filter
-				   (caadr res))
-		      collect
-		      (make-sense-record :word-string full-word-string
-					 :left-vertex (- right-vertex 
-							 (length entry-orth))
-					 :morph-res 
-					 (list full-stem-string 
-					       (list rule 
-						     full-word-string))
-					 :lex-ids (list (lex-or-psort-id
-							 expanded-entry))
-					 :fs (protect 
-					      (lex-or-psort-full-fs 
-					       expanded-entry)))))))))))))
+                (for res in new-morph-res
+                     collect
+                     (let ((rule (caadr res))
+                           (left-vertex (- right-vertex (length entry-orth))))
+                       ;;; NEED to FIX - won't allow for multiple affixes
+                       (make-sense-record :word-string full-word-string
+                                          :left-vertex left-vertex
+                                          :morph-res 
+                                          (if rule
+                                              (list full-stem-string 
+                                                    (list rule 
+                                                          full-word-string))
+                                              (list full-stem-string))
+                                          :lex-ids (list (lex-or-psort-id
+                                                          expanded-entry))
+                                          :fs (protect 
+                                               (lex-or-psort-full-fs 
+                                                expanded-entry)))))))))))))
 
 
 (defun construct-morph-history (lex-ids history)
