@@ -1,0 +1,1322 @@
+thing := *top*.
+
+handle := thing.
+
+individual := thing.
+
+event := individual.
+
+sem := *top* &
+[ HANDEL handle].
+
+sem-struc := *top* &
+[MODE1 mode-cat,
+ INDEX1 index1,
+ RESTR1 list-preds].
+
+;;; sem-struc features
+
+mode-cat :< *top*.
+prop :< mode-cat.
+quest :< mode-cat.
+dir :< mode-cat.
+ref :< mode-cat.
+
+index1 :< *top*.
+ref-index :< index1.
+sit-index :< index1.
+null-index :< index1.
+null-ref-index :< ref-index.
+imp-ref-index :< ref-index.
+
+list-preds :< diff-list.
+
+predication := *top* &
+ [ RELN1 reln].
+
+reln :< *top*.
+
+np-prd-pred := sit-pred & arg1-pred.
+
+named-pred := sit-pred &
+ [ RELN1 r-name ].
+
+np-named-pred := named-pred &
+ [ NAME1 string ].
+
+np-named-prd-pred := np-named-pred & np-prd-pred.
+pp-named-prd-pred := np-named-pred & pp-prd-pred.
+
+pron-named-pred := named-pred &
+ [ PRON1 string ].
+
+pron-np-named-prd-pred := pron-named-pred & np-prd-pred.
+pron-np-named-prd-pred2 := pron-named-pred & pp-prd-pred.
+noun-pred := predication &
+ [ INST1 ref-index].
+
+noun-pred2 := noun-pred & sit-pred.
+
+noun-np-prd-pred := noun-pred & np-prd-pred.
+noun-pp-prd-pred := noun-pred & pp-prd-pred.
+
+noun-complex-pred := sit-pred & arg1-pred.
+
+particle-pred := sit-pred &
+ [ RELN1 r-particle,
+   PART string ].
+
+quant-pred := sit-pred &
+ [ BV1 ref-index].
+
+np-quant-prd-pred := quant-pred & np-prd-pred.
+pp-quant-prd-pred := quant-pred & pp-prd-pred.
+
+adj-pred := arg1-pred & sit-pred.
+
+prd-adj-pred := arg1-pred & sit-pred.
+
+prd-vp-adj-pred := prd-adj-pred & arg2-pred.
+
+mod-pred := arg2-pred &
+ [ ARG2 ref-index].
+
+sit-pred := predication &
+ [ SIT index1].
+sit1-pred := sit-pred &
+ [ SIT1 index1].
+sit2-pred := sit1-pred &
+ [ SIT2 index1].
+
+arg-pred :< predication.
+arg1-pred := arg-pred & 
+ [ ARG1 index1].
+arg2-pred := arg-pred &
+ [ ARG2 index1].
+arg3-pred := arg-pred &
+ [ ARG3 index1].
+
+sent-adv-pred := arg1-pred & sit-pred.
+pp-adv-pred :< sent-adv-pred.
+np-adv-pred :< sent-adv-pred.
+att-adj-adv-pred :< sent-adv-pred.
+prd-adj-adv-pred :< sent-adv-pred.
+np-adv-pred2 := sent-adv-pred & arg2-pred.
+neg-vp-adv-pred :< sent-adv-pred.
+vp-adv-pred :< sent-adv-pred.
+sent-pp-adv-pred := vp-adv-pred & arg2-pred.
+adv-adv-pred := sent-adv-pred.
+adv-adv-pred2 := sent-adv-pred.
+wh-sent-adv-pred := sent-adv-pred.
+vp-adv-pred2 := vp-adv-pred & arg2-pred.
+vp-act-adv-pred2 := vp-adv-pred2 & act_pred.
+
+extr-pred :< sit-pred.
+
+np-free-rel-pred := extr-pred & arg1-pred & arg2-pred.
+np-free-rel-prd-pred := np-free-rel-pred & np-prd-pred.
+
+rel-pred := extr-pred & arg1-pred & arg2-pred.
+adj-rel-pred :< rel-pred.
+subj-rel-pred :< rel-pred.
+obj-rel-pred :< rel-pred.
+pp-rel-pred :< rel-pred.
+pp-rel-pred2 := rel-pred & arg3-pred.
+
+wh-extr-pred := extr-pred & arg1-pred.
+wh-adj-pred :< wh-extr-pred.
+wh-adj-pred2 :< extr-pred.
+wh-subj-pred :< extr-pred.
+wh-obj-pred :< extr-pred.
+wh-obj-pred2 :< wh-extr-pred.
+wh-pp-pred :< extr-pred.
+wh-pp-pred2 :< wh-pp-pred.
+wh-pp-pred3 :< wh-extr-pred.
+
+prep-pred := arg1-pred & sit-pred.
+np-prep-pred := arg1-pred & arg2-pred & sit-pred.
+prep-vping-pred := arg1-pred & sit-pred.
+prep-loc-pred := prep-pred.
+pp-pred := prep-loc-pred & arg2-pred.
+pp-prd-pred := pp-pred.
+
+conj-pred := arg1-pred & arg2-pred.
+conj-nom-pred2 := conj-pred & noun-pred.
+conj-nom-pred1 := conj-pred & noun-pred.
+conj-sent-pred := conj-pred & sit-pred.
+conj-vp-pred := conj-pred & sit-pred.
+conj-vp-act-pred := conj-vp-pred & act_pred.
+conj-vp-und-pred := conj-vp-act-pred & und_pred.
+conj-prt-pred := conj-pred & sit-pred.
+
+compound-noun-pred := arg1-pred & noun-pred.
+
+sent-comp-pred := arg1-pred & arg2-pred.
+
+;;; verb-predication
+
+verb_predication :< sit-pred.
+
+act_pred := verb_predication &
+ [ ACT ref-index ].
+
+und_pred := verb_predication &
+ [ UND index1 ].
+
+thm_pred := verb_predication &
+ [ THM ref-index ].
+
+prt_pred := verb_predication &
+ [ PRT1 index1].
+
+verb_pred :< verb_predication.
+verb_arg_pred := verb_pred & arg1-pred.
+verb_act_pred := verb_pred & act_pred.
+iv_pred := verb_act_pred.
+iv_und_pred := iv_pred & und_pred.
+iv_arg_pred := iv_pred & arg1-pred.
+iv_pred_prt := iv_pred & prt_pred. 
+loc_intrans_pred := iv_arg_pred.
+loc_intrans_pred_prt := loc_intrans_pred & iv_pred_prt.
+ir_control_pred := verb_arg_pred.
+ir_control_pred_prt := ir_control_pred & iv_pred_prt.
+aux_pred := ir_control_pred.
+ir_adj_control_pred := ir_control_pred.
+ir_np_control_pred := ir_control_pred.
+ir_pp_control_pred := ir_control_pred.
+;ir_act_control_pred := ir_control_pred & act_pred.
+inf_pred := ir_control_pred.
+comp_pred := verb_arg_pred.
+sent_pred := verb_arg_pred.
+sents_pred := arg1-pred & arg2-pred.
+;;aux_pred := verb_arg_pred.
+ie_control_pred := iv_arg_pred.
+ie_adj_control_pred := ie_control_pred.
+ie_np_control_pred := ie_control_pred.
+ie_pp_control_pred := ie_control_pred.
+ie_control_pred_prt := ie_control_pred & iv_pred_prt.
+obl_iv_pred := iv_und_pred.
+obl_iv_pred_prt := obl_iv_pred & iv_pred_prt.
+tv_pred := iv_und_pred.
+tv_arg_pred := tv_pred & arg1-pred.
+tv_pred_prt := tv_pred & iv_pred_prt.
+pass_pred := tv_pred &
+	[ACT null-ref-index].
+pass_arg_pred := tv_arg_pred & pass_pred.
+tr_control_pred := iv_arg_pred.
+te_control_pred := tv_arg_pred.
+loc_trans_pred := tv_arg_pred.
+loc_trans_pred_prt := loc_trans_pred & tv_pred_prt.
+dtv_pred := tv_pred & thm_pred.
+dtv_arg_pred := dtv_pred & arg1-pred.
+obl_tv_pred := dtv_pred.
+obl_tv_pred_prt := obl_tv_pred & dtv_pred_prt.
+pass_dtv_pred := dtv_pred & pass_pred.
+pass_dtv_arg_pred := pass_dtv_pred & dtv_arg_pred. 
+dtv_pred_prt := dtv_pred & tv_pred_prt.
+vp-sent-pred := iv_arg_pred.
+
+;;; ref-ind := individual.
+
+index := thing &
+[AGR agr ,
+ QUALIA nomqualia].
+
+agr := *top* &
+[ pers person,
+ num number,
+ gender gender].  
+   
+non3sg := agr.
+
+1_or_2 := non3sg &
+[pers 1or2].
+
+3pl := non3sg &
+[pers 3,
+ num pl].
+
+3sg := agr &
+[pers 3,
+ num sg].
+
+var_agr := agr.
+
+gender := *top*.
+ 
+male := gender.
+
+female := gender.
+
+neuter  := gender.
+
+person := *top*.
+
+1or2 := person.
+
+1 := 1or2.
+
+2 := 1or2.
+
+3 := person.
+
+number := *top*.
+
+sg := number.
+
+mass_or_pl:= number.
+   
+mass1 := mass_or_pl.
+
+pl := mass_or_pl.
+
+;;; Playing with thesis stuff in mrs ...
+   
+nomqualia := *top* &
+[form form,
+ telic verb_rel].
+
+animal := nomqualia &
+[ form normal_ind].
+
+comestible := nomqualia.
+
+c_natural := comestible .
+
+ref-ind := index.
+it-ind := index.
+there-ind := index.
+
+
+; The basic semantic structure, a CONT, is just something with a handel.
+; Conts are further classified into mrss (i.e., things with liszts) and
+; relations (i.e., things that go on liszts).  Conts are divided into psoas
+; (with an distinguished event) and nom-objs (with a distinguished index).
+; 
+; instead of CONT, we've got sem
+
+mrs := sem &
+[ INDEX thing,
+  LISZT diff-list].
+
+empty-sem := mrs &
+[ LISZT [ 	LST #1,
+		LAST #1]].
+
+
+psoa := mrs &
+[ INDEX event].
+
+nom-obj := mrs &
+[ INDEX index ].
+
+common-nom-obj := nom-obj.
+
+common-nom-obj2 := sem-struc &
+[RESTR1 [ LST [ HD noun-pred &
+			[INST1 #index],
+		TL #1],
+	LAST #1],
+ INDEX1 #index].
+
+common-nom-obj3 := common-nom-obj2 &
+[RESTR1 [ LST [ HD noun-pred2]]].
+
+common-nom-obj4 := common-nom-obj2 &
+[RESTR1 [ LST [ HD noun-np-prd-pred]]].
+
+relation := sem.
+
+; Relations are classified according to the types of arguments they take.  All
+; relations have a handel.  In addition, quantifier relations have a bound
+; variable and a restriction, nominal relations have an instance, and event
+; relations have an event.  Furthermore, nominal relations and event relations
+; can have addition roles, depending on their meaning.
+
+quant_rel := relation &
+ [BV  ref-ind,
+  RESTR handle ].
+
+the_rel := quant_rel.
+which_rel := quant_rel.
+
+;;; More playing with thesis stuff 
+;;; almost certainly don't really want to do plurals and 
+;;; quantisation this way ...
+
+basic_nom_rel := relation &
+[ INST ref-ind,
+  QUANT boolean,
+  PLMOD boolean].
+   
+   
+nom_rel := basic_nom_rel.
+
+tempnom_rel := basic_nom_rel.
+
+day_rel := tempnom_rel.
+non_day_rel := tempnom_rel.
+
+verb_prep_rel := relation.
+
+event_rel := verb_prep_rel &
+[ EVENT event ].
+
+temp_prec_rel := event_rel &
+[ BEFORE event].
+
+no_role_rel := event_rel. 
+; E.g., weather verbs
+
+
+;;; Verbal semantic types
+
+verb-sem4 := sem-struc &
+[MODE1 prop,
+ INDEX1 sit-index,
+ RESTR1 [LST [TL #2],
+	LAST #2 ]].
+
+pass-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD pass_pred]]].
+
+
+arg1-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD arg1-pred]]].
+
+inf-sem4 :=verb-sem4 &
+[RESTR1 [ LST [ HD inf_pred]]].
+
+comp-sem4 :=verb-sem4 &
+[RESTR1 [ LST [ HD comp_pred]]].
+
+sent-sem4 :=verb-sem4 &
+[RESTR1 [ LST [ HD sent_pred]]].
+
+sents-sem4 :=verb-sem4 &
+[RESTR1 [ LST [ HD sents_pred]]].
+
+intrans-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD iv_pred]]].
+
+intrans-raising-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD ir_control_pred]]].
+
+aux-sem4 := intrans-raising-sem4 &
+[RESTR1 [ LST [ HD aux_pred]]].
+
+intrans-raising-adj-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD ir_adj_control_pred]]].
+
+intrans-raising-np-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD ir_np_control_pred]]].
+
+intrans-raising-pp-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD ir_pp_control_pred]]].
+
+intrans-equi-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD ie_control_pred]]].
+
+intrans-equi-adj-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD ie_adj_control_pred]]].
+
+intrans-equi-np-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD ie_np_control_pred]]].
+
+intrans-equi-pp-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD ie_pp_control_pred]]].
+
+loc-intrans-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD loc_intrans_pred]]].
+
+obl-intrans-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD obl_iv_pred]]].
+
+trans-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD tv_pred]]].
+
+pass-trans-sem4 := trans-sem4 & pass-sem4.
+
+pass-arg-sem4 := pass-trans-sem4 &
+[RESTR1 [ LST [ HD pass_arg_pred]]].
+
+trans-raising-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD tr_control_pred]]].
+
+trans-equi-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD te_control_pred]]].
+
+loc-trans-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD loc_trans_pred]]].
+
+ditrans-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD dtv_pred]]].
+
+obl-trans-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD obl_tv_pred]]].
+
+pass-dtr-sem4 := ditrans-sem4 & pass-sem4.
+
+pass-dtr-arg-sem4 := pass-dtr-sem4  &
+[RESTR1 [ LST [ HD pass_dtv_arg_pred]]].
+
+vp-sent-sem4 := verb-sem4 &
+[RESTR1 [ LST [ HD vp-sent-pred]]].
+
+;;; MRS translation of Sanfilippo style semantics
+;;; do verbs differently as in Ant's version - all arguments are
+;;; related by thematic role types to the event
+;;; 
+
+
+arg_rel := event_rel &
+[ ARG thing ].
+
+role_rel := arg_rel &
+[ ARG ref-ind ].
+
+verb_rel := event_rel. 
+;;;"rel for the verb-pred itself".
+
+
+;;; roles (obviously Ant used lots lots more!)
+
+p-agt_rel := role_rel.
+
+p-pat_rel := role_rel.
+
+prep_rel := role_rel.
+
+;;; verb semantic types
+
+;;;"   [ cat [ active2 [ lst [ tl [ hd [ sign [ cat [ m-feats [ diatheses intrans-diatheses]]]]]]]]]"
+verb-sem := psoa &
+[ LISZT [ LST [ HD verb_rel &
+			[ EVENT #1,
+			  HANDEL #2]]],
+ INDEX #1,
+ HANDEL #2].
+
+;;; ignore pleonastic subjects etc for now.
+
+theta-sem := verb-sem &
+[ LISZT [ LST [ 	HD [ 	EVENT #1,
+				HANDEL #2],
+			TL [ HD role_rel &
+				[EVENT #1,
+				HANDEL #2]]]]].
+
+
+;;; The following are minimal adaptations of Antonio's types -
+;;; it might be possible to do this more neatly
+        
+
+;;;"The formula which describes the semantics of a strict intransitive 
+;;;verb is exactly as 'verb-sem', with the exception that the second 
+;;;argument of the liszt encodes a thematic formula 
+;;;whose predicate instantiates a proto-agent role. In linear notation[
+;;;   [e1] [V-Pred(e1), p-agt(e1,x)]"
+strict-intrans-sem := theta-sem &
+[ LISZT [ 	LST [ TL [ 	HD p-agt_rel,
+				TL #1]],
+		LAST #1]].
+
+;;; inserted in 22/01/99
+;;;"The formula which describes the semantics of a strict intransitive 
+;;;verb is exactly as 'verb-sem', with the exception that the second 
+;;;argument of the liszt encodes a thematic formula 
+;;;whose predicate instantiates a proto-agent role. In linear notation[
+;;;   [e1] [V-Pred(e1), p-agt(e1,x)]"
+intrans-sem2 := theta-sem &
+[ LISZT [ 	LST [ TL [ 	HD p-agt_rel,
+				TL /l #1]],
+		LAST /l #1]].
+
+
+trans-or-intrans-sem := theta-sem.
+;;;"Intermediate type.
+;;;The type 'trans-or-intrans-sem' describes the semantics of any verb which 
+;;;is associated with at least two formulae --- either two thematic formulae, 
+;;;or a thematic formula and a formula describing the semantics of a 'comp' 
+;;;(e.g. sentential complement) or 'xcomp' (e.g. VP complement). The first 
+;;;argument role is always a formula whose predicate is either a proto-agent 
+;;;or non thematic; the latter specification is used for extraposition
+;;;and subject raising verbs where the subject argument is non thematic, e.g. 
+;;;   'John seems to be tired' 
+;;;   'It bothers Bill that Mary snores'
+;;;In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt-or-no-theta(e1,x), Formula]".
+
+
+;;;"Intermediate type.
+;;;'trans/intrans-no-comp/xcomp-sem' characterizes the semantics of verbs of type
+;;;'trans/intrans-sem' which have no 'comp' or 'xcomp' complements.  
+;;;   'Bill thought that Mary would come'. 
+;;;'trans/intrans-no-comp/xcomp-sem' verbs have a thematic subject. 
+;;;In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt(e1,x), ??))"#|
+trans-or-intrans-no-comp-or-xcomp-sem := trans-or-intrans-sem &
+[ LISZT [ LST [ TL [ HD  p-agt_rel]]]].
+
+;;;"The semantics of a strict transitive inherits all specifications from the type
+;;;'trans/intrans-no-comp/xcomp-sem', and instantiates a proto-patient formula as 
+;;;the second and last argument role. In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt(e1,x), p-pat(e1,y)]" 
+strict-trans-sem := trans-or-intrans-no-comp-or-xcomp-sem &
+[LISZT [ 	LST [ HD [ 	EVENT #1,
+				HANDEL #2],       
+ 			TL [ TL [ 	HD p-pat_rel &
+					    [	EVENT #1 ,
+						HANDEL #2 ],
+					TL #3]]],
+		LAST #3]].       
+
+;;; inserted in 22/01/99
+;;;"The semantics of a strict transitive inherits all specifications from the type
+;;;'intrans-sem', and instantiates a proto-patient formula as 
+;;;the second and last argument role. In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt(e1,x), p-pat(e1,y)]" 
+trans-sem2 := intrans-sem2 &
+[ LISZT [ 	LST [ 	HD [ 	EVENT #1,
+				HANDEL #2 ],
+			TL [ TL [ 	HD  p-pat_rel &
+						[EVENT #1,
+						HANDEL #2 ],
+					TL /l #3]]], 
+		LAST /l #3]].       
+
+;;;"For intransitive verbs that have a prepositional complement, e.g. 
+;;;   'John talked to Bill'. 
+;;;The second and last argument role is a prep_rel
+;;;In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt(e1,x), prep(e1,y)]"
+intrans-obl-sem := trans-or-intrans-no-comp-or-xcomp-sem &
+[ LISZT [ 	LST [ HD [ 	EVENT #1,
+				HANDEL #2],
+			TL [ TL [ 	HD prep_rel &
+					    [	EVENT #1,
+						HANDEL #2],
+					TL #3]]],
+		LAST #3]].       
+
+;;; inserted on 22/01/99
+;;;"For intransitive verbs that have a prepositional complement, e.g. 
+;;;   'John talked to Bill'. 
+;;;The second and last argument role is a prep_rel
+;;;In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt(e1,x), prep(e1,y)]"
+intrans-obl-sem2 := intrans-sem2 &
+[ LISZT [ 	LST [ HD [ 	EVENT #1,
+				HANDEL #2], 
+			TL [ TL [ 	HD  prep_rel &
+					   [ 	EVENT #1,
+						HANDEL #2],
+					TL /l #3]]],
+		LAST /l #3]].       
+
+;;; inserted on 22/01/99
+;;;"For intransitive verbs that have a sentential complement, e.g. 
+;;;   'John seems to run'. 
+;;;The second and last argument role is a prep_rel
+;;;In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt(e1,x), prep(e1,y)]"
+intrans-control-sem2 := intrans-sem2 &
+[ LISZT [ 	LST [ HD [ 	EVENT #1,
+				HANDEL #2],
+			TL [ 	HD #3,
+				TL [ HD verb_rel &
+					    [	EVENT #1,
+						HANDEL #2],
+					TL [ 	HD #3,
+						TL /l #4 ]]]],
+		LAST /l #4]].       
+        
+;;; inserted on 22/01/99
+;;;"For intransitive verbs that have a sentential complement, e.g. 
+;;;   'John seems to run'. 
+;;;The second and last argument role is a prep_rel
+;;;In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt(e1,x), prep(e1,y)]"
+trans-control-sem2 := trans-sem2 &
+[ LISZT [ LST [ 	HD [ 	EVENT #1,
+				HANDEL #2],
+			TL [ TL [ 	HD #3,
+					TL [ 	HD  verb_rel &
+						    [	EVENT #1,
+							HANDEL #2],
+						TL [ 	HD #3 ,
+							TL /l #4 ]]]]],
+		LAST /l #4]].       
+        
+intrans-or-trans-obl-trans-or-ditrans-sem := trans-or-intrans-sem. 
+;;;"Intermediate type.
+;;;This type, a subset of 'trans/intrans-sem', characterizes the semantics 
+;;;of verbs which take three complements. In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt-or-no-theta(e1,x), ??".
+   
+trans-or-obl-trans-or-ditrans-sem := intrans-or-trans-obl-trans-or-ditrans-sem. 
+;;;"Intermediate type.
+;;;For transitive and ditransitive verbs. The argument list of the conjunctive 
+;;;formula which follows the subject argument role in 'intrans/trans/intrans-sem' 
+;;;has as its first member a thematic formula which instantiates either a 
+;;;proto-patient or a non thematic role; the latter specification is for object 
+;;;raising verbs, e.g. 
+;;;'Jon believes Mary to be right'. 
+;;;In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt-or-no-theta(e1,x), 
+;;;                p-pat-or-no-theta(e1,y), Formula]".
+    
+
+;;;"For transitives taking an oblique complement and ditransitives, e.g 
+;;;   'Mary gave a book to Bill'
+;;;   'Mary gave Bill a book'. 
+;;;The object role is thematic and it is followed by a prepositional 
+;;;formula. In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt(e1,x), p-pat(e1,y),prep-pat(e1,z)]"
+obl-trans-or-ditrans-sem := trans-or-obl-trans-or-ditrans-sem &
+[ LISZT [LST [ 	HD [ 	EVENT #1,
+				HANDEL #2],  
+			TL [ 	HD  p-agt_rel &
+				   [	EVENT #1,
+					HANDEL #2],
+				TL [ 	HD  p-pat_rel  &
+					   [	EVENT #1,
+						HANDEL #2],
+					TL [ 	HD  prep_rel &
+						   [	EVENT #1,
+							HANDEL #2],
+						TL #7]]]],
+	LAST #7]].
+
+
+;;; inserted 22/01/99    
+;;;"For transitives taking an oblique complement and ditransitives, e.g 
+;;;   'Mary gave a book to Bill'
+ ;;;  'Mary gave Bill a book'. 
+;;;The object role is thematic and it is followed by a prepositional 
+;;;formula. In linear notation[ 
+;;;   [e1][V-Pred(e1), p-agt(e1,x), p-pat(e1,y),prep-pat(e1,z)]"
+obl-trans-or-ditrans-sem2 := trans-sem2 &
+[ LISZT [ LST [ 	HD [	EVENT #1,
+				HANDEL #2],
+			TL [ TL [ TL [ 	HD prep_rel &
+					    [ 	EVENT #1,
+						HANDEL  #2],
+					TL #3 ]]]],
+		LAST #3]].
+
+
+
+
+;;; Stuff after this point is just for test purposes
+
+
+reg-raised-np-sem := nom-obj &
+[ LISZT [ 	LST [ HD name_rel &
+				[HANDEL #2,
+				 INST #3],
+			TL #1],
+		LAST #1],
+  HANDEL #2,
+  INDEX #3].
+
+reg-np-sem := nom-obj &
+[ LISZT [ 	LST [ HD  name_rel &
+				[HANDEL #2,
+				INST #3],
+			TL #1], 
+		LAST #1],
+ HANDEL #2,
+ INDEX #3].
+
+
+
+;;; inserted 22/03/99
+reg-np-sem2 := sem-struc &
+[RESTR1 [ LST [ 	HD np-named-pred &
+		  		[SIT #index],
+			TL #1],
+		LAST #1],
+ INDEX1 #index].
+
+pron-reg-np-sem2 := sem-struc &
+[RESTR1 [ LST [ 	HD pron-named-pred &
+		  		[SIT #index],
+			TL #1],
+		LAST #1],
+ INDEX1 #index].
+
+p-agt-cause-transfer_rel := p-agt_rel.
+
+p-pat-recip_rel := prep_rel.
+
+name_rel := basic_nom_rel &
+[ NAME string ].
+
+give_rel := verb_rel.
+
+flap_rel := verb_rel.
+
+wave_rel := verb_rel.
+
+eat_rel := verb_rel.
+
+
+rabbit_rel := nom_rel &
+[ INST [ QUALIA  animal]].
+
+cheese_rel := nom_rel &
+[ INST [ QUALIA comestible]].
+
+;;;-------------------- relations------------------------
+
+r-again :< r-adv.
+r-all :< r-adv.
+r-already :< r-adv.
+r-also :< r-adv.
+r-another :< reln.
+r-any :< r-adv.
+r-anymore :< r-adv.
+r-at :< r-adv.
+r-before :< r-adv.
+r-both :< r-adv.
+r-by :< reln.
+r-either :< r-adv.
+r-each :< r-adv.
+r-enough :< r-adv.
+r-first :< r-adv.
+r-for :< reln.
+r-in :< reln.
+r-just :< r-adv.
+r-later :< r-adv.
+r-maybe :< r-adv.
+r-never :< r-adv.
+r-not :< r-adv.
+r-now  :< r-adv.
+r-often :< r-adv.
+r-on :< reln.
+r-only :< reln.
+r-out :< reln.
+r-over :< reln.
+r-quite :< r-adv.
+r-really :< r-adv.
+r-slowly :< reln.
+r-so :< r-adv.
+r-some :< r-adv.
+r-sometimes :< r-adv.
+r-soon :< r-adv.
+r-still :< r-adv.
+r-then :< r-adv.
+r-today :< r-adv.
+r-together :< r-adv.
+r-too :< r-adv.
+r-up :< r-adv.
+r-very :< r-adv.
+r-with :< reln.
+r-yet :< r-adv.
+
+r-wh :< reln.
+
+r-action :< reln.
+r-animal :< reln.
+r-arm :< reln.
+r-apple :< reln.
+r-baby :< reln.
+r-ball :< reln.
+r-banana :< reln.
+r-bath :< reln.
+r-bear :< reln.
+r-bed :< reln.
+r-beef :< reln.
+r-beep :< reln.
+r-beverage :< reln.
+r-bib :< reln.
+r-bird :< reln.
+r-bit :< reln.
+r-bite :< reln.
+r-blanket :< reln.
+r-boat :< reln.
+r-body :< reln.
+r-booboo :< reln.
+r-book :< reln.
+r-bookcase :< reln.
+r-brandy :< reln.
+r-breakfast :< reln.
+r-bunny :< reln.
+r-bucket :< reln.
+r-bundle :< reln.
+r-button :< reln.
+r-camel :< reln.
+r-car :< reln.
+r-card :< reln.
+r-cat :< r-animal.
+r-catalogue :< reln.
+r-chair :< reln.
+r-cheese :< reln.
+r-chicken :< reln.
+r-chickie :< reln.
+r-chimney :< reln.
+r-clothes :< reln.
+r-cloud :< reln.
+r-coat :< reln.
+r-coffee :< reln.
+r-cold :< reln.
+r-color :< r-animal.
+r-cow :< reln.
+r-cradle :< reln.
+r-crayon :< reln.
+r-creep :< reln.
+r-crib :< reln.
+r-cup :< reln.
+r-daddy :< reln.
+r-day :< reln.
+r-daytime :< reln.
+r-diaper :< reln.
+r-difference :< reln.
+r-direction :< reln.
+r-disease :< reln.
+r-dog :< r-animal.
+r-doll :< reln.
+r-donkey :< reln.
+r-door :< reln.
+r-duck :< reln.
+r-elbow :< reln.
+r-elephant :< reln.
+r-end :< reln.
+r-entertainment :< reln.
+r-eye :< reln.
+r-face :< reln.
+r-familia :< reln.
+r-finger :< reln.
+r-fish :< reln.
+r-floor :< reln.
+r-flower :< reln.
+r-food :< reln.
+r-foot :< reln.
+r-fraction :< reln.
+r-function :< reln.
+r-girl :< reln.
+r-glasses :< reln.
+r-gogo :< reln.
+r-goose :< reln.
+r-ground :< reln.
+r-hair :< reln.
+r-hammer :< reln.
+r-hand :< reln.
+r-hat :< reln.
+r-head :< reln.
+r-hole :< reln.
+r-home :< reln.
+r-honey :< reln.
+r-horsie :< reln.
+r-house :< reln.
+r-hug :< reln.
+r-human :< reln.
+r-idea :< reln.
+r-jacket :< reln.
+r-jammies :< reln.
+r-juice :< reln.
+r-kitchen :< reln.
+r-kitty :< reln.
+r-knee :< reln.
+r-lamb :< reln.
+r-lap :< reln.
+r-laundry :< reln.
+r-lolly :< reln.
+r-mammal :< reln.
+r-man :< reln.
+r-mantle :< reln.
+r-matter :< reln.
+r-mass :< reln.
+r-metal :< reln.
+r-microphone :< reln.
+r-milk :< reln.
+r-minute :< reln.
+r-mirror :< reln.
+r-mommy :< reln.
+r-monkey :< reln.
+r-moon :< reln.
+r-morning :< reln.
+r-movie :< reln.
+r-mouse :< reln.
+r-name :< reln.
+r-napkin :< reln.
+r-nightime :< reln.
+r-nose :< reln.
+r-number :< reln.
+r-nut :< reln.
+r-object :< reln.
+r-oinko :< reln.
+r-one :< reln.
+r-page :< reln.
+r-pajama :< reln.
+r-pant :< reln.
+r-paper :< reln.
+r-party :< reln.
+r-pear :< reln.
+r-peel :< reln.
+r-pen :< reln.
+r-perfume :< reln.
+r-person :< reln.
+r-picture :< reln.
+r-pig :< reln.
+r-pigtail :< reln.
+r-pillow :< reln.
+r-pin :< reln.
+r-place :< reln.
+r-plate :< reln.
+r-pocket :< reln.
+r-popsicle :< reln.
+r-potty :< reln.
+r-powder :< reln.
+r-puppet :< reln.
+r-record :< reln.
+r-reference :< reln.
+r-room :< reln.
+r-rubber :< reln.
+r-rug :< reln.
+r-sailboat :< reln.
+r-school :< reln.
+r-seal :< reln.
+r-shade :< reln.
+r-shadow :< reln.
+r-sheet :< reln.
+r-shirt :< reln.
+r-shoe :< reln.
+r-shopping :< reln.
+r-sky :< reln.
+r-sleeper :< reln.
+r-sleeve :< reln.
+r-slipper :< reln.
+r-snow :< reln.
+r-soap :< reln.
+r-sock :< reln.
+r-spin :< reln.
+r-spoon :< reln.
+r-star :< reln.
+r-state :<reln.
+r-story :< reln.
+r-sugar :< reln.
+r-summer :< reln.
+r-sun :< reln.
+r-table :< reln.
+r-tape :< reln.
+r-tea :< reln.
+r-tear :< reln.
+r-there :< reln.
+r-thing :< reln.
+r-tickle :< reln.
+r-tight :< reln.
+r-time :< reln.
+r-tissue :< reln.
+r-tooth :< reln.
+r-top :< reln.
+r-tower :< reln.
+r-toy :< reln.
+r-tray :< reln.
+r-tree :< reln.
+r-trouble :< reln.
+r-truck :< reln.
+r-tub :< reln.
+r-type :< reln.
+r-vase :< reln.
+r-wall :< reln.
+r-walrus :< reln.
+r-way :< reln.
+r-wheel :< reln.
+r-wind :< reln.
+r-windmill :< reln.
+r-window :< reln.
+r-wonder :< reln.
+r-zipper :< reln.
+r-word :< reln.
+
+r-beautiful :< reln.
+r-big :< reln.
+r-breakable :< reln.
+r-bumpy :< reln.
+r-blue :< reln.
+r-dead :< reln.
+r-delicious :< reln.
+r-dirty :< reln.
+r-dump :< reln.
+r-fresh :< reln.
+r-great :< reln.
+r-high :< reln.
+r-jammie :< reln.
+r-light :< reln.
+r-little :< reln.
+r-living :< reln.
+r-long :< reln.
+r-many :< reln.
+r-more :< reln.
+r-next :< reln.
+r-new :< reln.
+r-other :< reln.
+r-pretend :< reln.
+r-pretty :< reln.
+r-red :< reln.
+r-regular :< reln.
+r-right :< reln.
+r-training :< reln.
+r-scalloped :< reln.
+r-several :< reln.
+r-strong :< reln.
+r-surveying :< reln.
+r-sweet :< reln.
+r-winter :< reln.
+r-wrong :< reln.
+
+r-alright :< reln.
+r-asleep :< reln.
+r-awake :< reln.
+r-bad :< reln.
+r-better :< reln.
+r-black :< reln.
+r-bright :< reln.
+r-careful :< reln.
+r-clean :< reln.
+r-cool :< reln.
+r-cute :< reln.
+r-damp :< reln.
+r-dark :< reln.
+r-different :< reln.
+r-empty :< reln.
+r-fine :< reln.
+r-fun :< reln.
+r-gentle :< reln.
+r-good :< reln.
+r-green :< reln.
+r-hard :< reln.
+r-hot :< reln.
+r-hungry :< reln.
+r-icky :< reln.
+r-interesting :< reln.
+r-mauve :< reln.
+r-muddy :< reln.
+r-neat :< reln.
+r-nice :< reln.
+r-okay :< reln.
+r-patient :< reln.
+r-plastic :< reln.
+r-possible :< reln.
+r-sad :< reln.
+r-sleepy :< reln.
+r-small :< reln.
+r-sorry :< reln.
+r-stuck :< reln.
+r-thirsty :< reln.
+r-tired :< reln.
+r-unbelievable :< reln.
+r-warm :< reln.
+r-weak :< reln.
+r-wet :< reln.
+r-white :< reln.
+r-winding :< reln.
+r-windy :< reln.
+r-yellow :< reln.
+r- :< reln.
+
+
+r-add :< reln.
+r-arrange :< reln.
+r-ask :< reln.
+r-attach :< reln.
+r-balance :< reln.
+r-bang :< reln.
+r-bark :< reln.
+r-believe :< reln.
+r-blow :< reln.
+r-boo :< reln.
+r-break :<reln.
+r-bring :< reln.
+r-brush :< reln.
+r-build :< reln.
+r-bump :< reln.
+r-buy :< reln.
+r-call :< reln.
+r-carry :< reln.
+r-change :< reln.
+r-chew :< reln.
+r-climb :< reln.
+r-close :< reln.
+r-comb :< reln.
+r-comfort :< reln.
+r-come :< reln.
+r-count :< reln.
+r-cover :< reln.
+r-cry :< reln.
+r-cut :< reln.
+r-dance :< reln.
+r-decide :< reln.
+r-digest :< reln.
+r-dive :< reln.
+r-discover :< reln.
+r-do :< reln.
+r-draw :< reln.
+r-dress :< reln.
+r-drink :< reln.
+r-drop :< reln.
+r-dry :< reln.
+r-eat :< reln.
+r-enjoy :< reln.
+r-fall :< reln.
+r-fasten :< reln.
+r-feed :< reln.
+r-feel :< reln.
+r-find :< reln.
+r-finish :< reln.
+r-fit :< reln.
+r-fix :< reln.
+r-flop :< reln.
+r-fly :< reln.
+r-forget :< reln.
+r-foo :< reln.
+r-get :< reln.
+r-guess :< reln.
+r-give :< reln.
+r-go :< reln.
+r-hang :< reln.
+r-have :< reln.
+r-hear :< reln.
+r-help :< reln.
+r-hide :< reln.
+r-hit :< reln.
+r-hold :< reln.
+r-hope :< reln.
+r-horse :< reln.
+r-hurt :< reln.
+r-keep :< reln.
+r-kick :< reln.
+r-kiss :< reln.
+r-knock :< reln.
+r-know :< reln.
+r-jump :< reln.
+r-last :< reln.
+r-lay :< reln.
+r-learn :< reln.
+r-leave :< reln.
+r-let :< reln.
+r-lick :< reln.
+r-lie :< reln.
+r-ligth :< reln.
+r-like :< reln.
+r-look :< reln.
+r-lose :< reln.
+r-make :< reln.
+r-mean :< reln.
+r-miss :< reln.
+r-move :< reln.
+r-nap :< reln.
+r-need :< reln.
+r-nightnight :< reln.
+r-open :< reln.
+r-persuade :< reln.
+r-pick :< reln.
+r-play :< reln.
+r-plan :< reln.
+r-plug :< reln.
+r-point :< reln.
+r-pop :< reln.
+r-pour :< reln.
+r-pretend :< reln.
+r-pull :< reln.
+r-push :< reln.
+r-put :< reln.
+r-rain :< reln.
+r-reach :< reln.
+r-read :< reln.
+r-ready :< reln.
+r-remember :< reln.
+r-repeat :< reln.
+r-rest :< reln.
+r-ride :< reln.
+r-rock :< reln.
+r-roll :< reln.
+r-run :< reln.
+r-say :< reln.
+r-see :< reln.
+r-shred :< reln.
+r-show :< reln.
+r-sing :< reln.
+r-sit :< reln.
+r-sled :< reln.
+r-sleep :< reln.
+r-slide :< reln.
+r-smell :< reln.
+r-smile :< reln.
+r-sound :< reln.
+r-spill :< reln.
+r-spit :< reln.
+r-squeak :< reln.
+r-start :< reln.
+r-stand :< reln.
+r-stay :< reln.
+r-step :< reln.
+r-stick :< reln.
+r-stop :< reln.
+r-suppose :< reln.
+r-swim :< reln.
+r-sweep :< reln.
+r-take :< reln.
+r-talk :< reln.
+r-taste :< reln.
+r-tell :< reln.
+r-tend :< reln.
+r-think :< reln.
+r-throw :< reln.
+r-tie :< reln.
+r-tinkle :< reln.
+r-toast :< reln.
+r-toilet :< reln.
+r-touch :< reln.
+r-turn :< reln.
+r-try :< reln.
+r-understand  :< reln.
+r-unzip :< reln.
+r-use :< reln.
+r-wait :< reln.
+r-wake :< reln.
+r-walk :< reln.
+r-want :< reln.
+r-wash :< reln.
+r-watch :< reln.
+r-wear :< reln.
+r-will :< reln.
+r-wipe :< reln.
+r-work :< reln.
+r-write :< reln.
+r-zip :< reln.
+
+r-inf :< reln.
+
+
+r-aux :<reln.
+r-modal :< reln.
+r-neg-modal :< r-modal.
+
+r-particle :< reln.
+r-prep :< reln.
+r-to :< r-prep.
+
+r-the :< reln.
+r-a :< reln.
+r-det :< reln.
+r-dem :< reln.
+
+r-comp :< reln.
+
+r-poss :< reln.
+
+r-and :< reln.
+r-or :< reln.
+r-conj :< reln.
+
+
+r-adv :< reln.
+r-adj :< reln.
+
+
+
+
+

@@ -1,0 +1,23 @@
+boolean := *top*.
+
+true := boolean.
+  
+false:= boolean. 
+ 
+string :=  *top*. 
+;;;"A special type which any lisp string will unify". 
+ 
+ 
+;;;"Do append eqvnt without recursive types" 
+diff-list := *top* & 
+[ LST list, 
+  LAST list ]. 
+ 
+list := *top*. 
+ 
+e-list := list. 
+ 
+ne-list := list & 
+[HD *top*, 
+ TL list]. 
+ 

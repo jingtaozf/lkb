@@ -1,0 +1,420 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; Linguistics 137: CL Practicum, Winter 1998
+;;;  
+;;; parse-nodes.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+s1 := label &
+ [ NODE [CAT sent-cat],
+  LABEL-NAME "S"].
+
+s2 := label &
+ [ NODE [CAT [ 	RESULT3 [ SIGN [ CAT sent-cat]],
+		ACTIVE3 [ 	LST #1,
+				LAST #1]]],
+  LABEL-NAME "S"].
+
+det :=  label &
+ [ NODE det-sign3 ,
+   LABEL-NAME "NP/N" ].
+
+p :=  label &
+ [ NODE [ CAT np-cat &
+		[ M-FEATS [ CASE p-case]]],
+   LABEL-NAME "NPp" ].
+
+pp1 :=  label &
+ [ NODE [ CAT prep-cat &
+		[ RESULT3 [ SIGN [ CAT np-cat &
+					[ M-FEATS [ CASE p-case]]],
+			NUMBER-ARGS [LST e-list]]]],
+   LABEL-NAME "NPp" ].
+
+pp2 :=  label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [ CAT np-cat &
+					[ M-FEATS [ CASE p-case]]]]]],
+   LABEL-NAME "NPp/NP" ].
+
+np1 :=  label &
+ [ NODE [CAT [ RESULT3 [ SIGN [ CAT np-cat ]]]],
+   LABEL-NAME "NP" ].
+
+np2 :=  label &
+ [ NODE [CAT np-cat ],
+   LABEL-NAME "NP" ].
+
+
+prt :=  label &
+ [ NODE particle-sign &
+	[ CAT particle-cat &
+		[ M-FEATS [ CASE p-case]]],
+   LABEL-NAME "PRT" ].
+
+comp := label &
+ [ NODE sent-comp-sign3,
+   LABEL-NAME "COMP"].
+
+comp1 := label &
+ [ NODE comp-base-sent-sign3,
+   LABEL-NAME "COMP"].
+
+vp_nps := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ 	SIGN np-sign,
+					DIRECTION1 [ DIR-VALUE backward]],
+				TL #1],
+			LAST #1]]],
+   LABEL-NAME "S\\NP"].
+
+
+vp_pps := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN oblique-role-np-sign &
+					[CAT [ M-FEATS [CASE p-case]]],	
+				     DIRECTION1 [ DIR-VALUE forward]],
+				TL #1],
+			LAST #1]]],
+   LABEL-NAME "S/NPP"].
+
+vp_prt := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ 	SIGN [ CAT particle-cat],
+					DIRECTION1 [ DIR-VALUE forward]],
+				TL #1],
+			LAST #1]]],
+   LABEL-NAME "S/PRT"].
+
+vp_nps_pps := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN oblique-role-np-sign &
+					[CAT [ M-FEATS [CASE p-case]]],	
+				     DIRECTION1 [ DIR-VALUE forward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE backward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S\\NP/NPP"].
+
+vp_pps_nps := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE backward]],
+				TL [ 	HD [ 	SIGN oblique-role-np-sign &
+							[CAT [ M-FEATS [CASE p-case]]],		
+					  	DIRECTION1 [ DIR-VALUE forward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S/NPP\\NP"].
+
+vp_nps_prt := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN [ CAT particle-cat],
+				     DIRECTION1 [ DIR-VALUE forward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE backward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S\\NP/PRT"].
+
+vp_prt_nps := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE backward]],
+				TL [ 	HD [ 	SIGN [ CAT particle-cat],
+					  	DIRECTION1 [ DIR-VALUE forward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S/PRT\\NP"].
+
+vp_npo := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ 	SIGN np-sign,
+					DIRECTION1 [ DIR-VALUE forward]],
+				TL #1],
+			LAST #1]]],
+   LABEL-NAME "S/NP"].
+
+vp_npo_nps := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE backward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE forward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S/NP\\NP"].
+
+vp_npo_npo := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE forward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE forward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S/NP/NP"].
+
+vp_npp_npo_nps := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE  backward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE  forward ]],
+					TL [ 	HD [ 	SIGN oblique-role-np-sign,
+					  		DIRECTION1 [ DIR-VALUE  forward ]],
+						TL #1]]],
+			LAST #1]]],
+   LABEL-NAME "S/NPP/NP\\NP"].
+
+vp_nps_npp_npo := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL [ 	HD [ 	SIGN oblique-role-np-sign,
+				  		DIRECTION1 [ DIR-VALUE  forward ]],
+					TL [ 	HD [ 	SIGN np-sign,
+						  	DIRECTION1 [ DIR-VALUE  backward ]],
+						TL #1]]],
+			LAST #1]]],
+   LABEL-NAME "S\\NP/NPP/NP"].
+
+vp_npo_nps_npp := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN oblique-role-np-sign,
+				     DIRECTION1 [ DIR-VALUE  forward ]],
+				TL [ HD [ SIGN np-sign,
+				     	  DIRECTION1 [ DIR-VALUE  backward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE  forward ]],
+					TL #1]]],
+			LAST #1]]],
+   LABEL-NAME "S/NP\\NP/NPP"].
+
+vp_prt_npo_nps := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE  backward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE  forward ]],
+					TL [ 	HD [ 	SIGN [ CAT particle-cat],
+					  		DIRECTION1 [ DIR-VALUE  forward ]],
+						TL #1]]],
+			LAST #1]]],
+   LABEL-NAME "S/PRT/NP\\NP"].
+
+vp_nps_prt_npo := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL [ 	HD [ 	SIGN [ CAT particle-cat],
+				  		DIRECTION1 [ DIR-VALUE  forward ]],
+					TL [ 	HD [ 	SIGN np-sign,
+						  	DIRECTION1 [ DIR-VALUE  backward ]],
+						TL #1]]],
+			LAST #1]]],
+   LABEL-NAME "S\\NP/PRT/NP"].
+
+vp_npo_nps_prt := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN [ CAT particle-cat],
+				     DIRECTION1 [ DIR-VALUE  forward ]],
+				TL [ HD [ SIGN np-sign,
+				     	  DIRECTION1 [ DIR-VALUE  backward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE  forward ]],
+					TL #1]]],
+			LAST #1]]],
+   LABEL-NAME "S/NP\\NP/PRT"].
+
+vp_npo_npp := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN dir-obj-np-sign,
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL [ 	HD [ 	SIGN oblique-role-np-sign,
+					  	DIRECTION1 [ DIR-VALUE  forward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S/NPP/NP"].
+
+vp_npp_npo := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN oblique-role-np-sign,
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL [ 	HD [ 	SIGN dir-obj-np-sign,
+					  	DIRECTION1 [ DIR-VALUE  forward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S\\NP/NPP"].
+
+vp_nps_npo := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE  backward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S\\NP/NP"].
+
+vp_npo_npo_nps := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE  backward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE  forward ]],
+					TL [ 	HD [ 	SIGN np-sign,
+							DIRECTION1 [ DIR-VALUE  forward]],
+						TL #1]]],
+			LAST #1]]],
+   LABEL-NAME "S/NP/NP\\NP"].
+
+vp_npo_nps_npo := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE  backward ]],
+					TL [ 	HD [ 	SIGN np-sign,
+							DIRECTION1 [ DIR-VALUE  forward]],
+						TL #1]]],
+			LAST #1]]],
+   LABEL-NAME "S/NP\\NP/NP"].
+
+vp_nps_npo_npo := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ VERB true,
+						   AUX false]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE  forward ]],
+					TL [ 	HD [ 	SIGN np-sign,
+							DIRECTION1 [ DIR-VALUE  backward]],
+						TL #1]]],
+			LAST #1]]],
+   LABEL-NAME "S\\NP/NP/NP"].
+
+
+aux1 := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ 	VERB true,
+							AUX true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE  backward]],
+				TL [ 	HD [ 	SIGN [ CAT intrans-cat3],
+					  	DIRECTION1 [ DIR-VALUE  forward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "(S\\NP)/(S\\NP)"].
+
+aux2 := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ 	VERB true,
+							AUX true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN [ CAT intrans-cat3],
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE  backward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "(S\\NP)/(S\\NP)"].
+
+aux3 := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ 	VERB true,
+							AUX true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN [ CAT intrans-cat3],
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL #1],
+			LAST #1]]],
+   LABEL-NAME "S/(S\\NP)"].
+
+aux_inv := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ 	VERB true,
+							AUX true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN [ CAT intrans-cat3],
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL [ 	HD [ 	SIGN np-sign,
+					  	DIRECTION1 [ DIR-VALUE  forward]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S/NP/(S\\NP)"].
+
+aux_inv2 := label &
+ [ NODE [ CAT [ RESULT3 [ SIGN [CAT sent-cat &
+					[M-FEATS [ 	VERB true,
+							AUX true]]]],
+		ACTIVE3 [ LST [ HD [ SIGN np-sign,
+				     DIRECTION1 [ DIR-VALUE  forward]],
+				TL [ 	HD [ 	SIGN [ CAT intrans-cat3],
+					  	DIRECTION1 [ DIR-VALUE  forward ]],
+					TL #1]],
+			LAST #1]]],
+   LABEL-NAME "S/(S\\NP)/NP"].
+
+n :=  label &
+ [ NODE [CAT noun-cat],
+   LABEL-NAME "N" ].
+
+wh-adj := label &
+ [ NODE wh-adj-extraction-sign,
+   LABEL-NAME "S/S"].
+
+conj := label &
+ [ NODE [ CAT conj-basic-cat1],
+   LABEL-NAME "CONJ"].
+
+adj_1 :=  label &
+ [ NODE [ CAT att-adj-cat &
+	  [RESULT3 [ SIGN [ CAT noun-cat]]]],
+   LABEL-NAME "N/N" ].
+
+adj_2 :=  label &
+ [ NODE [ CAT att-adj-cat &
+	   [RESULT3 [ SIGN [ CAT np-cat]]]],
+   LABEL-NAME "NP/NP" ].
+
+pred-adj_1 :=  label &
+ [ NODE [ CAT pred-adj-cat],
+   LABEL-NAME "NP\\NP" ].
+
+prt := label &
+ [ NODE [ CAT particle-cat],
+   LABEL-NAME "PRT"].
+
+neg_adv := label &
+ [ NODE neg-vp-adv-sign &
+	[ CAT neg-vp-adv-cat],
+   LABEL-NAME "(S\\NP)\\(S\\NP)"].
+
+vp_adv_sign2 := label &
+ [ NODE vp-adv-sign2 &
+	[ CAT vp-adv-cat2],
+   LABEL-NAME "(S\\NP)\\(S\\NP)/NP"].
+
+

@@ -1,0 +1,144 @@
+
+;;; lexical (and  morphological) rules
+
+
+%(letter-set (!c bdfglmnprstz))
+%(letter-set (!s abcdefghijklmnopqrtuvwxyz))
+%(letter-set (!t bcdfghjklmnpqrstvwxz))
+%(letter-set (!a abcdefghijklmnopqrstuvwxyz))
+
+
+pl-n-irule :=
+%suffix (!s !ss) (er ers) (!ss !ssses) (ss sses) (!ty !ties) (f ves) (tch tches) (sh shes) 
+  lrule-infl &
+ [ 1  [ CAT noun-cat &
+		[M-FEATS [	WH false,
+				PRON false,
+				CASE reg-case]]],
+  NODE [ CAT noun-cat &
+		[M-FEATS [ 	AGR2 [ NUM pl]]]]].
+
+3sg-n-irule := lrule-no-aff &
+ [ 1 [ CAT noun-cat &
+		[M-FEATS [ 	WH false,
+				PRON false,
+				CASE reg-case]]],
+  NODE [ CAT noun-cat &
+		[M-FEATS [ 	AGR2 3sg]]]].
+     
+;;; Inflectional rules
+
+3sg-v-irule :=
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (f ves) (tch tches)  (sh shes) 
+  lrule-infl & 
+  [ 1 [ CAT intrans-cat3 &  
+ 		[ RESULT3 [ 	SIGN [ CAT [ M-FEATS [ 	VFORM no-fin,
+							AUX #aux,
+							INV #inv,
+							COMP-FORM #comp,
+							TAKE-PARTICLE #take,
+							PARTICLE #particle,
+							DIATHESES #diatheses]],
+					SEM2 #sem2],
+				NUMBER-ARGS #na],
+		ACTIVE3 #active3]],
+    NODE [ CAT intrans-cat3 & 
+		[ RESULT3 [ 	SIGN [ CAT [ M-FEATS [ 	VFORM fin,
+							AUX #aux,
+							INV #inv,
+							COMP-FORM #comp,
+							TAKE-PARTICLE #take,
+							PARTICLE #particle,
+							DIATHESES #diatheses]],
+					SEM2 #sem2],
+				NUMBER-ARGS #na,
+				PERMUTED-ARGS #na],
+		  ACTIVE3 #active3 & 
+			[ LST [ HD [ SIGN [ CAT [ M-FEATS [ AGR2 3sg]]]]]]]]].
+
+non3sg-v-irule := lrule-no-aff & 
+  [ 1  [ CAT intrans-cat3 &
+ 		[ RESULT3 [ 	SIGN [ CAT [ M-FEATS [ 	VFORM no-fin,
+							AUX #aux,
+							INV #inv,
+							COMP-FORM #comp,
+							TAKE-PARTICLE #take,
+							PARTICLE #particle,
+							DIATHESES #diatheses]],
+					SEM2 #sem2],
+				NUMBER-ARGS #na],
+		ACTIVE3 #active3]],
+    NODE [ CAT intrans-cat3 & 
+		[ RESULT3 [ 	SIGN [ CAT [ M-FEATS [ 	VFORM fin,
+							AUX #aux,
+							INV #inv,
+							COMP-FORM #comp,
+							TAKE-PARTICLE #take,
+							PARTICLE #particle,
+							DIATHESES #diatheses]],
+					SEM2 #sem2],
+				NUMBER-ARGS #na,
+				PERMUTED-ARGS #na],
+		  ACTIVE3 #active3 & 
+			[ LST [ HD [ SIGN [ CAT [ M-FEATS [ AGR2 non3sg]]]]]]]]].
+
+base-v-irule := lrule-no-aff & 
+  [ 1  [ CAT intrans-cat3 &
+		[RESULT3 [SIGN [CAT [ M-FEATS [ VFORM no-fin]]]]]],
+    NODE [ CAT intrans-cat3 &
+		[RESULT3 [ SIGN [ CAT [ M-FEATS [ VFORM base]]]]]]].
+
+pprt-v-irule := 
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
+lrule-infl &
+  [ 1  [ CAT verb-cat3 & #cat &
+		[RESULT3 [ SIGN [ CAT [ M-FEATS [ VFORM no-fin]]]]]],
+    NODE [ CAT verb-cat3 & #cat &
+		[RESULT3 [ SIGN [ CAT [ M-FEATS [ VFORM prp]]]]]]].
+
+past-v-irule := 
+%suffix (* ed) (!ty !tied) (e ed) (!t!v!c !t!v!c!ced) 
+lrule-infl &
+  [ 1  [ CAT verb-cat3 &
+ 		[ RESULT3 [ 	SIGN [ CAT [ M-FEATS [ 	VFORM no-fin,
+							AUX #aux,
+							INV #inv,
+							COMP-FORM #comp,
+							TAKE-PARTICLE #take,
+							PARTICLE #particle,
+							DIATHESES #diatheses]],
+					SEM2 #sem2],
+				NUMBER-ARGS #na],
+		ACTIVE3 #active3]],
+    NODE [ CAT verb-cat3 & 
+		[ RESULT3 [ 	SIGN [ CAT [ M-FEATS [ 	VFORM fin,
+							AUX #aux,
+							INV #inv,
+							COMP-FORM #comp,
+							TAKE-PARTICLE #take,
+							PARTICLE #particle,
+							DIATHESES #diatheses]],
+					SEM2 #sem2],
+				NUMBER-ARGS #na,
+				PERMUTED-ARGS #na],
+		  ACTIVE3 #active3]]].
+
+
+prprt-v-irule :=
+%suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ie ying)
+lrule-infl &
+  [ 1  [ CAT verb-cat3 &
+		[RESULT3 [ SIGN [ CAT [ M-FEATS [ 	VFORM no-fin]]]]]],
+    NODE [ CAT verb-cat3 &
+		[ RESULT3 [ SIGN [ CAT [ M-FEATS [ 	VFORM ing]]]]]]].
+
+
+
+
+
+
+
+
+
+
+

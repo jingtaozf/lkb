@@ -1,0 +1,410 @@
+;;; %%%%%%%%%%%%%%%%%%%% GENERATES ADJ CATEGORY THAT MODIFIES NPS %%%%%%%%%%%%%%%
+np-att-adj := lrule-word1 &
+[NODE 
+  [ CAT [	RESULT3 [SIGN [ CAT np-cat & #npcat &
+				  [	CAT-TYPE np,
+					M-FEATS #m-feats],
+				SEM2 [	MODE1 #mode1,
+					INDEX1 #index1]],
+			 NUMBER-ARGS #na,
+			 PERMUTED-ARGS #na],
+		ACTIVE3 [LST [ 	HD [	SIGN [ 	CAT #npcat,
+						SEM2 [ 	INDEX1 #index2]],
+					DIRECTION1 [ DIR-VALUE forward]],
+				TL #1],
+			LAST #1]],
+	SEM2 #sem2 &
+		[MODE1 #mode1,
+		 INDEX1 #index1,
+		 RESTR1 [ LST [ HD [ 	SIT #index1,
+					ARG1 #index2]]]]], 	
+ 1 [NODE att-adj-sign3 &
+	[CAT att-adj-cat &
+	     [	RESULT3 [ SIGN [CAT noun-cat &
+				    [ 	CAT-TYPE n,
+				       	M-FEATS #m-feats]],
+			  NUMBER-ARGS #na]],
+	SEM2 #sem2]]].
+
+;;; %%%%%%%%%%%%%%%%%%%% GENERATES NP CATEGORIES FROM NOUNS %%%%%%%%%%%%%%%
+;;; **** COUNT should be false, but it is not working at the moment
+noun-to-np := lrule-lexeme1 &
+[NODE [ CAT np-cat &
+		[ M-FEATS #m-feats],
+	SEM2 #sem2],
+ 1 [ NODE [CAT noun-cat & 
+	      [	M-FEATS #m-feats &
+			[COUNT boolean ]],
+	SEM2 #sem2]]].
+
+
+;;; %%%%%%%%%%%%%%%%%%%% GENERATES COMPOUND-NOUN CAT FROM NOUN CAT %%%%%%%%%%%%%%%
+compound_nouns := lrule-lexeme1 &
+[NODE [ CAT  [	RESULT3 [SIGN [ CAT noun-cat &
+				   [ M-FEATS [ 	ADV false,
+						LOC false,
+						WH false,
+						PRON false,
+						CASE reg-case,
+						AGR2 #agr]],
+				SEM2 [ 	MODE1 #mode1,
+					INDEX1 #index1]],
+			 NUMBER-ARGS #2 &
+				  [ 	LST [ 	HD arg,
+						TL e-list & #1],
+					LAST #1],
+			 PERMUTED-ARGS #2], 
+		ACTIVE3 [LST [ HD [ 	SIGN [ CAT noun-cat & 
+						   [ M-FEATS [ 	ADV false,
+								LOC false,
+								WH false,
+								PRON false,
+								CASE reg-case]],
+						SEM2 [ 	INDEX1 #index2,
+							RESTR1 [ LST [ HD [INST1 #index2]]]]],
+					DIRECTION1 [DIR-VALUE backward]],
+			 	TL #3],
+		   	LAST #3]],
+	SEM2 [ 	MODE1 #mode1,
+		INDEX1 #index1,
+		RESTR1 [ LST [ 	HD compound-noun-pred & #hd &
+					[ ARG1 #index2],
+				TL #4],
+			LAST #4]]],
+ 1 [ NODE  [	CAT noun-cat &
+	   [ M-FEATS [ 	ADV false,
+			LOC false,
+			WH false,
+			PRON false,
+			CASE reg-case,
+			AGR2 #agr]],
+	SEM2 [	MODE1 #mode1,
+		INDEX1 #index1,
+		RESTR1 [ LST [ 	HD #hd]]]]]].
+ 	
+
+;;; %%%%%%%%%%%%%%%%%%%% GENERATES INVERTED MODAL CATEGORY FROM MODAL CATEGORY %%%%%%%%%%%%%%%
+;;; is that a house (S\NP)/(S\NP) = S/(S\NP)/NP
+inv_modal := lrule-lexeme1 &
+[NODE [ CAT [	RESULT3 [SIGN [ ORTH #orth,
+				ORTH2 #orth2,
+				CAT [ CAT-TYPE sent,
+				      M-FEATS[	VERB #verb,
+						AUX true,
+						INV true,
+						VFORM fin,
+						COMP-FORM #comp-form,
+						TAKE-PARTICLE #take-particle,
+						PARTICLE #particle,
+						DIATHESES #diatheses]],
+				SEM2 [	MODE1 #mode1,
+					INDEX1 #index1]],	 
+			 NUMBER-ARGS #na,
+			 PERMUTED-ARGS #na], 
+		ACTIVE3 [LST [ 	HD [ 	SIGN poss-subj-np-sign & #np-sign,
+					DIRECTION1 [DIR-VALUE  forward]],
+				TL #tl],
+		   	LAST #last]],
+	SEM2 [	MODE1 #mode1 & quest,
+		INDEX1 #index1,
+		RESTR1 #restr1]],
+ 1 [ NODE  [ CAT [RESULT3 [ SIGN [ORTH #orth,
+				ORTH2 #orth2, 
+				CAT [ CAT-TYPE sent,
+				       M-FEATS[	VERB #verb,
+						AUX true,
+						INV false,
+						VFORM fin,
+						COMP-FORM #comp-form,
+						TAKE-PARTICLE #take-particle,
+						PARTICLE #particle,
+						DIATHESES #diatheses]]],
+			  NUMBER-ARGS #na],
+		ACTIVE3 [LST [ 	HD [ 	SIGN poss-subj-np-sign & #np-sign,
+					DIRECTION1 [ DIR-VALUE backward]],
+				TL #tl],
+	   		 LAST #last]],
+	     SEM2  [	MODE1 prop,
+			INDEX1 #index1,
+			RESTR1 #restr1]]]].
+
+;;; %%%%%%%%%%%%%%%%%%%% GENERATES MODAL CATEGORY THAT TAKES WH WORDS (WH QUESTIONS) %%%%%%%%%%%%%%%
+;;; what is that S\NPs/NPo = S\NPo/NPs
+wh-inv_modal := lrule-lexeme1 &
+[NODE [ CAT [	RESULT3 [SIGN [ ORTH #orth,
+				ORTH2 #orth2,
+				CAT [ CAT-TYPE sent,
+				      M-FEATS[	VERB #verb,
+						AUX true,
+						INV true,
+						VFORM fin,
+						COMP-FORM #comp-form,
+						TAKE-PARTICLE #take-particle,
+						PARTICLE #particle,
+						DIATHESES #diatheses]],
+				SEM2 [	MODE1 #mode1,
+					INDEX1 #index1]],	 
+			 NUMBER-ARGS #na,
+			 PERMUTED-ARGS #na], 
+		ACTIVE3 [LST [ 	HD [ 	SIGN #subject,
+					DIRECTION1 [ DIR-VALUE forward]],
+				TL [ 	HD [	SIGN #object &
+							[ CAT [	M-FEATS [ WH true]]],
+						DIRECTION1 [DIR-VALUE backward]],
+					TL #tl]],
+		   	LAST #last]],
+	SEM2 [ 	MODE1 #mode1 & quest,
+		INDEX1 #index1,
+		RESTR1 #restr1]],
+ 1 [ NODE  [CAT intrans-control-linking-cat3 &
+	[	RESULT3 [ SIGN [ORTH #orth, 
+				ORTH2 #orth2,
+				CAT [ CAT-TYPE sent,
+				       M-FEATS[	VERB #verb,
+						AUX true,
+						INV false,
+						VFORM fin,
+						COMP-FORM #comp-form,
+						TAKE-PARTICLE #take-particle,
+						PARTICLE #particle,
+						DIATHESES #diatheses]],
+				SEM2 [	INDEX1 #INDEX1]],
+			  NUMBER-ARGS #na],
+		ACTIVE3 [LST [ 	HD [ 	SIGN #subject,
+					DIRECTION1 [ DIR-VALUE backward]],
+				TL [	HD [	SIGN #object,
+						DIRECTION1 [ DIR-VALUE forward]],
+					TL #tl]],
+	   		 LAST #last]],
+	SEM2 [ 	MODE1 prop,
+		INDEX1 #index1,
+		RESTR1 #restr1]]]].
+
+;;; %%%%%%%%%%%%%%%%%%%% GENERATES PASSIVE-NO-BY SIGNS FROM VERBAL SIGNS %%%%%%%%%%%%%%%
+passive_no_by := lrule-lexeme1 &
+[NODE  [ CAT [	RESULT3 [SIGN [ ORTH #orth,
+				ORTH2 #orth2,
+				CAT [ CAT-TYPE sent,
+				      M-FEATS[	VERB true,
+						AUX false,
+						INV false,
+						VFORM pass,
+						COMP-FORM #comp-form,
+						TAKE-PARTICLE #take-particle,
+						PARTICLE #particle,
+						DIATHESES #diatheses]],
+				SEM2 [MODE1 #mode1,
+					 INDEX1 #index1]],	 
+			 NUMBER-ARGS #na1 & [ 	LST #na,
+						LAST #nalast],
+			 PERMUTED-ARGS #na1], 
+		ACTIVE3 [LST [ 	HD [ 	SIGN poss-subj-np-sign &
+						[SEM2 #objsem],
+					DIRECTION1 [ DIR-VALUE backward]],
+				TL #tl],
+		   	LAST #last]],
+	SEM2 #sem2 &
+		[MODE1 #mode1,
+		 INDEX1 #index1,
+		 RESTR1 [ LST [ HD [ ACT null-ref-index]]]]],
+ 1 [ NODE  [ CAT trans-cat3 &
+	[RESULT3 [ SIGN [ORTH #orth, 
+			ORTH2 #orth2,
+			CAT [ 	CAT-TYPE sent,
+				M-FEATS[ VERB true,
+					AUX false,
+					INV false,
+					VFORM prp,
+					COMP-FORM #comp-form,
+					TAKE-PARTICLE #take-particle,
+					PARTICLE #particle,
+					DIATHESES #diatheses]],
+			SEM2 [	MODE1 #mode1,
+				INDEX1 #index1]],
+		NUMBER-ARGS [ 	LST [ TL #na],
+				LAST #nalast]],
+	ACTIVE3 [LST [ 	HD [ 	SIGN poss-subj-np-sign,
+				DIRECTION1 [DIR-VALUE backward]],
+			TL [ 	HD [ 	SIGN dir-obj-np-sign &
+						[SEM2 #objsem],
+					DIRECTION1 [ DIR-VALUE forward]],
+				TL #tl]],
+	   	 LAST #last]],
+   SEM2 #sem2]]].
+
+;;; %%%%%%%%%%%%%%%%%%%% GENERATES PASSIVE SIGNS FROM VERBAL SIGNS  %%%%%%%%%%%%%%%
+passive := lrule-lexeme1 &
+[NODE [ CAT [	RESULT3 [SIGN [ ORTH #orth,
+				ORTH2 #orth2,
+				CAT [ CAT-TYPE sent,
+				      M-FEATS[	VERB true,
+						AUX false,
+						INV false,
+						VFORM pass,
+						COMP-FORM #comp-form,
+						TAKE-PARTICLE #take-particle,
+						PARTICLE #particle,
+						DIATHESES #diatheses]],
+				SEM2 [	MODE1 #mode1,
+					INDEX1 #index1]],	 
+			 NUMBER-ARGS #na,
+			 PERMUTED-ARGS #na], 
+		ACTIVE3 [LST [ 	HD [ 	SIGN poss-subj-np-sign &
+						[SEM2 #objsem &
+							[INDEX1 #index2]],
+					DIRECTION1 [ DIR-VALUE backward]],
+				TL [   HD [ 	SIGN oblique-role-np-sign &
+							[CAT [ M-FEATS [ P-FORM by]],
+						 	SEM2 #subjsem &
+								[INDEX1 #index3,
+								 RESTR1 [ LST [ HD [ SIT #index3]]]]],
+						DIRECTION1 [DIR-VALUE forward]],
+					TL #tl]],
+		   	LAST #last]],
+	SEM2 #sem2 &
+		[MODE1 #mode1,
+		 INDEX1 #index1,
+		 RESTR1 [ LST [ HD [ 	ACT #index3,
+					UND #index2]]]]],
+ 1 [ NODE  [CAT trans-cat3 &
+	[RESULT3 [ SIGN [ORTH #orth, 
+			ORTH2 #orth2,
+			CAT [ 	CAT-TYPE sent,
+				M-FEATS[ VERB true,
+					AUX false,
+					INV false,
+					VFORM prp,
+					COMP-FORM #comp-form,
+					TAKE-PARTICLE #take-particle,
+					PARTICLE #particle,
+					DIATHESES #diatheses]],
+			SEM2 #sem2],
+		NUMBER-ARGS #na],
+	ACTIVE3 [LST [ 	HD [ 	SIGN poss-subj-np-sign &
+					[SEM2 #subjsem],
+				DIRECTION1 [ DIR-VALUE backward]],
+			TL [ 	HD [ 	SIGN dir-obj-np-sign &
+						[SEM2 #objsem],
+					DIRECTION1 [ DIR-VALUE forward]],
+				TL #tl]],
+	   	 LAST #last]],
+   SEM2 #sem2]]].
+
+;;; %%%%%%%%%%%%%%%%%%%%%% GENERATES IMPERATIVE SIGNS FROM VERBAL SIGNS %%%%%%%%%%%%%%%
+;;; a outra ja captura este caso tambem
+imperative := lrule-lexeme1 &
+[NODE [ CAT [	RESULT3 [SIGN [ ORTH #orth,
+				CAT [ CAT-TYPE sent,
+				      M-FEATS 
+					     [	VERB true,
+						INV false,
+						VFORM fin,
+						AUX #aux,
+						COMP-FORM #comp-form,
+						TAKE-PARTICLE #take-particle,
+						PARTICLE #particle,
+						DIATHESES #diatheses]],
+				SEM2 [ 	MODE1 #mode1,
+					INDEX1 #index1]],
+			 NUMBER-ARGS #na1 &[ 	LST #na,
+						LAST #nalast],
+			 PERMUTED-ARGS #na1], 
+		ACTIVE3 [LST #tl,
+		   	LAST #last]],
+	SEM2 [	MODE1 #mode1 & dir,
+		INDEX1 #index1,
+	 	RESTR1 #restr1 &
+			[ LST [	HD #hd &
+					[ ACT imp-ref-index]]]]] ,
+ 1 [NODE [ CAT intrans-cat3 &
+	[RESULT3 [ SIGN [ORTH #orth, 
+			CAT [ 	CAT-TYPE sent,
+				M-FEATS 
+				     [ 	VERB true,
+					INV false,
+					VFORM base,
+					AUX #aux,
+					COMP-FORM #comp-form,
+					TAKE-PARTICLE #take-particle,
+					PARTICLE #particle,
+					DIATHESES #diatheses]]],
+		NUMBER-ARGS [ 	LST [ TL #na],
+				LAST #nalast]],
+	ACTIVE3 [LST [ 	HD [ 	SIGN poss-subj-np-sign &
+					[CAT [ M-FEATS [ AGR2 non3sg]]], 
+				DIRECTION1 [ DIR-VALUE backward]],
+			TL #tl],
+	   	 LAST #last]],
+   SEM2 [MODE1 prop,
+	 INDEX1 #index1,
+	 RESTR1 #restr1 &
+		[ LST [ HD #hd]]]]]].
+
+;;; NODE [ SEM2
+;;;& [ACT #act],
+;				TL [ 	HD named-pred &
+;						[RELN1 r-name,
+;						 NAMED1 #act,
+;						 NAME1 "you"],
+;					TL #tlsem]],
+;			LAST #tlsem]]]
+
+;;; do not run
+imperative_modal := lrule-lexeme1 &
+[NODE [ CAT [	RESULT3 [SIGN [ ORTH #orth,
+				ORTH2 #orth2,
+				CAT [ CAT-TYPE sent,
+				      M-FEATS 
+					     [	VERB true,
+						INV false,
+						VFORM fin,
+						AUX #aux,
+						COMP-FORM #comp-form,
+						TAKE-PARTICLE #take-particle,
+						PARTICLE #particle,
+						DIATHESES #diatheses]],
+				SEM2 [ 	MODE1 #mode1,
+					INDEX1 #index1]],
+			 NUMBER-ARGS #na1 &[ 	LST #na,
+						LAST #nalast],
+			 PERMUTED-ARGS #na1], 
+		ACTIVE3 [LST #tl &
+				[HD [ SIGN [ SEM2 [ RESTR1 [ LST [ HD [ ACT imp-ref-index]]]]]]],
+		   	LAST #last]],
+	SEM2 [	MODE1 #mode1 & dir,
+		INDEX1 #index1,
+	 	RESTR1 #restr1 &
+			[ LST [	HD #hd ]]]] ,
+ 1 [NODE [CAT intrans-cat3 &
+	[RESULT3 [ SIGN [ORTH #orth, 
+			ORTH2 #orth2,
+			CAT [ 	CAT-TYPE sent,
+				M-FEATS 
+				     [ 	VERB true,
+					INV false,
+					VFORM base,
+					AUX true & #aux,
+					COMP-FORM #comp-form,
+					TAKE-PARTICLE #take-particle,
+					PARTICLE #particle,
+					DIATHESES #diatheses]]],
+		NUMBER-ARGS [ 	LST [ TL #na],
+				LAST #nalast]],
+	ACTIVE3 [LST [ 	HD [ 	SIGN poss-subj-np-sign,
+				DIRECTION1 [ DIR-VALUE backward]],
+			TL #tl],
+	   	 LAST #last]],
+   SEM2 [ 	MODE1 prop,
+		INDEX1 #index1,
+		RESTR1 #restr1 &
+			[ LST [ HD #hd]]]]]].
+
+
+
+
+
+
+
+
+
+

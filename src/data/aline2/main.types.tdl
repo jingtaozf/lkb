@@ -1,0 +1,3876 @@
+;;; Falta: 
+;;; 1 - ADVERBS are not working for inverted sentences and imperatives, since
+;;;	they are defined as combining with an intrans sign requiring and np subj
+ 
+;;; 
+;;; 1- Regras de permutation, composition and application funcionando
+;;; 2- TDL notation 
+;;; 3- AGR introduzido em nominal-m-feats 
+;;; 4- SEM esta arrumado, adicionando default reentrancies entre LISZT LST TL ... e LISZT LAST nos signs 
+;;; 5- modificado em 15/03/99 
+;;; 02/02/99 version without removing original specifications 
+;;; 6- conj signs estao funcionando 
+;;; 7- Adicionei SEM2 nos signs para semantica mais simples 
+;;; 8- Adicionei e-list nos signs
+ 
+;;; Signs 
+ 
+;;; Nomenclature is a bit screwed 
+;;; I want to retain sign for something with a  
+;;; syn, sem and orth so I can borrow bits of the old type system 
+;;; 
+;;; but I'm also using NODE so I can have phrasal signs as in 
+;;; HPSG 
+;;; 
+;;; Hence total-sign is something with a NODE which takes a value 
+;;; of type sign, and one or more daughters, 1 ..., which 
+;;; will be total-signs for phrases but ordinary signs for  
+;;; words. 
+;;; 
+;;; word is introduced purely so that the grammar rules see a 
+;;; consistent interface 
+ 
+any-sign := *top*. 
+ 
+total-sign :=  any-sign & 
+[  NODE sign  ]. 
+ 
+;;; inserted 22/03/99 to insert SEM2 
+sign := any-sign & 
+[ orth  diff-list, 
+  orth2 diff-list, 
+  cat  cat, 
+  sem  sem, 
+  SEM2 sem-struc  ]. 
+ 
+unary := total-sign & 
+[  1 *top* ]. 
+ 
+;;; "A phrase combines two signs with the categorial syntax 
+;;; according to the grammar rules, but will always have an 
+;;; orth which is the append of the input orths and a  
+;;; semantics which is the append of the input liszts. 
+;;; The handel and index are rule specific." 
+phrase := unary & 
+[  NODE [	ORTH [  LST #1, 
+  			LAST #2 ], 
+		ORTH2 [ LST #3, 
+  			LAST #4 ] ], 
+  1 total-sign &  
+ 	[ NODE [ 	ORTH [ 	LST #1, 
+				LAST #5 ], 
+ 			ORTH2 [ LST #3, 
+				LAST #6 ] ] ], 
+  2 total-sign &  
+ 	[ NODE [ 	ORTH [ 	LST #5,  
+				LAST #2  ], 
+			ORTH2 [ LST #6,  
+				LAST #4  ] ] ] ]. 
+ 
+;;; inserted 28/04 
+back_phrase := phrase & 
+[  NODE [ SEM2 [  	RESTR1 [ 	LST #1, 
+					LAST #2 ] ] ], 
+  1 total-sign &  
+ 	[ NODE [ 	SEM2 [ 	RESTR1 [ 	LST #3, 
+						LAST #2 ] ] ] ], 
+  2 total-sign &  
+ 	[ NODE [ 	SEM2 [ 	RESTR1 [ 	LST #1, 
+						LAST #3 ] ] ] ] ].  
+ 
+;;; inserted 28/04 
+for_phrase := phrase & 
+[  NODE [ SEM2 [  	RESTR1 [ 	LST #1, 
+					LAST #2 ] ] ], 
+  1 total-sign &  
+ 	[ NODE [ 	SEM2 [ 	RESTR1 [ 	LST #1, 
+						LAST #3 ] ] ] ], 
+  2 total-sign &  
+ 	[ NODE [ 	SEM2 [ 	RESTR1 [ 	LST #3, 
+						LAST #2 ] ] ] ] ].  
+ 
+;;;"A phrase combines one sign with the categorial syntax 
+;;;according to the grammar rules, but will always have an 
+;;;orth which is the append of the input orths and a  
+;;;semantics which is the append of the input liszts. 
+;;;The handel and index are rule specific." 
+unary-phrase := unary & 
+[  NODE [ 	ORTH #1, 
+		ORTH2 #2, 
+		SEM2 #3 ],  
+ 1  total-sign &  
+ [  	NODE [ 	ORTH #1, 
+		ORTH2 #2, 
+		SEM2 #3 ] ] ]. 
+ 
+
+permutation:= unary-phrase.
+forward-application := for_phrase.
+forward-composition := for_phrase.
+backward-application := back_phrase. 
+backward-composition := back_phrase.
+
+lex-sign := sign & 
+[  ORTH [ 	LST [ 	TL /l #1 ], 
+		LAST /l #1 ], 
+  ORTH2 [ 	LST [ 	TL /l #3 ], 
+		LAST /l #3 ],   
+  SEM2 [ 	RESTR1 [ 	LST [  TL /l #2 ], 
+				LAST /l #2 ] ] ]. 
+ 
+lex-word-sign :< lex-sign. 
+ 
+lex-lexeme-sign :< lex-sign. 
+ 
+;;; old 
+word := unary & 
+[ NODE lex-sign, 
+  1 lex-sign ]. 
+ 
+basic-word := unary & 
+[ NODE lex-word-sign ]. 
+ 
+word1 := basic-word & 
+[ 1 lex-word-sign ]. 
+ 
+basic-lexeme := unary & 
+[ NODE lex-lexeme-sign ]. 
+ 
+lexeme := basic-lexeme & 
+[ 1 lex-lexeme-sign ]. 
+ 
+lexeme1 := basic-lexeme & 
+[ 1 total-sign ]. 
+ 
+;;; not working
+lrule-infl1 := lexeme & 
+[ NODE [	ORTH2 #3, 
+		CAT /l #1, 
+		SEM2 #2 ], 
+ 1  [ 	ORTH2 #3, 
+	CAT /l #1, 
+	SEM2 #2 ] ]. 
+ 
+;;; old 
+lrule-infl := word & 
+[ NODE [  	ORTH2 #3, 
+		CAT /l #1, 
+		SEM2 #2 ], 
+ 1  [ 	ORTH2 #3, 
+	CAT /l #1, 
+	SEM2 #2 ] ]. 
+ 
+lrule-lexeme1 := lexeme1 & 
+[  NODE [ 	ORTH #1, 
+		ORTH2 #3, 
+		SEM2 /l #2 ], 
+ 1  [ 	NODE lex-lexeme-sign &  
+	    [ 	ORTH #1, 
+		ORTH2 #3, 
+		SEM2 /l #2 ] ] ]. 
+ 
+lrule-word1 := basic-word & 
+[  NODE [ 	ORTH #1, 
+		ORTH2 #3, 
+		SEM2 #2 ], 
+ 1  [ 	NODE lex-word-sign & 
+	   [ 	ORTH #1, 
+		ORTH2 #3, 
+		SEM2 #2 ] ] ]. 
+ 
+;;; OLD 
+lrule-lexeme :=  word & 
+[  NODE [ 	ORTH #1, 
+		ORTH2 #3, 
+		SEM2 #2 ], 
+ 1  [ 	ORTH #1, 
+	ORTH2 #3, 
+	SEM2 #2 ] ]. 
+ 
+lrule-no-aff1 := lexeme & 
+[  NODE [ 	ORTH #1, 
+		ORTH2 #2, 
+		CAT /l #3, 
+		SEM2 #4 ], 
+  1  [ 	ORTH #1, 
+	ORTH2 #2, 
+	CAT /l #3, 
+	SEM2 #4 ] ]. 
+ 
+;;; old 
+lrule-no-aff := word & 
+[  NODE [ 	ORTH #1, 
+		ORTH2 #2, 
+		CAT /l #3, 
+		SEM2 #4 ], 
+  1  [ 	ORTH #1, 
+	ORTH2 #2, 
+	CAT /l #3, 
+	SEM2 #4 ] ]. 
+ 
+;;; Syntax: a Categorial Grammar Specification  
+;;; Based on Antonio Sanfilippo's type system 
+    
+cat := *top*. 
+;;;"The category of a sign encodes syntactic information  
+;;;concerning subcategorization, part of speech and  
+;;;morphosyntactic features. Following the insights of a 
+;;;categorial grammar calculus, two types of category are 
+;;;distinguished: basic categories, and complex (e.g. functor) 
+;;;categories.". 
+ 
+ 
+;;;"Basic categories consist of category type, and a series of  
+;;;attribute-value pairs encoding morphosyntactic features relative  
+;;;to category type." 
+basic-cat := cat & 
+ [ cat-type cat-type, 
+   m-feats m-feats ]. 
+ 
+;;;"There are three category types: noun, noun phrase and sentence." 
+cat-type := *top*. 
+ 
+n := cat-type. 
+ 
+np := cat-type. 
+ 
+sent := cat-type. 
+ 
+prt := np. 
+ 
+;;; 'm-feats' changed: Antonio 1-92 
+;;; took away 'agr' from 'm-feats'; only 'nominal-m-feats' encode agreement  
+;;; features 
+ 
+;;;"The morphosyntactic information of all category types makes  
+;;;reference to paradigm type (regular or irregular)."  
+m-feats := *top* & 
+[  reg-morph boolean ]. 
+    
+;;; removed agr from m-feats to go on index instead 
+;;; 02/99 put agr back on m-feats 
+ 
+agr-m-feats := m-feats & 
+[  AGR2 agr ]. 
+ 
+;;; 17/03/99 reinserted agr on nominal-m-feats 
+ 
+;;;"The morphosyntactic information relative to the categories 'n' and  
+;;;'np' includes information relative to nominal form (e.g.  
+;;;regular or pleonastic), case." 
+nominal-m-feats := agr-m-feats & 
+ [ NOMINAL-FORM nominal-form, 
+   PRON boolean, 
+   WH boolean, 
+   ADV boolean,
+   COUNT boolean, 
+   P-FORM pform, 
+   CASE case, 
+   LOC boolean ]. 
+ 
+;prt-m-feats := m-feats & 
+;[ PFORM pform ]. 
+
+nominal-form := *top*. 
+ 
+norm := nominal-form. 
+   
+pleonastic  := nominal-form. 
+ 
+it := pleonastic. 
+ 
+there := pleonastic. 
+ 
+case := *top*. 
+    
+;;;"Basic category for nouns." 
+noun-cat := basic-cat & 
+[ m-feats nominal-m-feats, 
+  cat-type n ]. 
+    
+;;; Ann - added not-acc as subtype of case because I need to block 
+;;; the output of lexical rules being a strict-intrans-sign with 
+;;; an NP arg taking accusative case, and we don't have negation. 
+;;; I assume if we have strict-intrans-sign that the arg cannot 
+;;; be acc. 
+ 
+not-acc := case. 
+ 
+no-case := not-acc. 
+;;;"For subcategorized subjects of non-finite verbs. It prevents  
+;;;the generation of sentences such as  
+;;;   'John to sleep' 
+;;;   'Bill eating' 
+;;;Also, for subject NPs which are not assigned case but can combine with a  
+;;;non-finite VP after combining with a prepositional complementizer, e.g. 
+;;;   'for John to sleep'". 
+    
+reg-case := case. 
+;;;"For subject NPs which combine with tensed verbs, 
+;;; or direct object NPs.". 
+  
+nom := reg-case & not-acc. 
+ 
+acc := reg-case. 
+ 
+p-case  := case. 
+;;;"For oblique NPs (e.g. indirect objects).". 
+ 
+ 
+pform := *top*. 
+ 
+about :< pform. 
+apart :< pform. 
+around :< pform. 
+at :< pform. 
+away :< pform. 
+back :< pform.
+before :< pform.
+behind :< pform.
+by :< pform. 
+down :< pform. 
+for :< pform. 
+from :< pform. 
+in :< pform. 
+inside :< pform.
+like :< pform. 
+of :< pform. 
+off :< pform. 
+on :< pform. 
+onto  :< pform. 
+over :< pform. 
+out :< pform. 
+to :< pform. 
+through:< pform. 
+under :< pform.
+up :< pform. 
+with :< pform. 
+ 
+;;;"Morphosyntactic features specific to verb signs. 'vform' encodes  
+;;;properties of verbs concerning tense and mood; 'comp-form' specifies  
+;;;whether the sentence takes a complementizer and if so what kind;  
+;;;'alternation' encodes information about possible verbal diatheses (e.g.  
+;;;causative-inchoative, dative movement); 'prt' specifies what kind of  
+;;;particle (e.g. 'up, down' about, off') a verb can take (if any)." 
+sent-m-feats  := m-feats & 
+[ verb boolean, 
+  aux boolean, 
+  inv boolean, 
+  vform vform, 
+  comp-form comp-form, 
+  take-particle boolean, 
+  particle pform, 
+  diatheses alternations ]. 
+ 
+vform := *top*. 
+ 
+fin := vform. 
+ 
+no-fin := vform. 
+ 
+base := no-fin. 
+ 
+ing := no-fin. 
+ 
+inf := no-fin. 
+ 
+pass := no-fin. 
+ 
+prp := no-fin. 
+ 
+psp := no-fin. 
+ 
+imp := no-fin. 
+ 
+comp-form := *top*. 
+ 
+no-comp-or-that-comp := comp-form. 
+ 
+no-comp := no-comp-or-that-comp . 
+ 
+that-comp:= no-comp-or-that-comp . 
+ 
+for-comp := comp-form. 
+ 
+wh-comp := comp-form. 
+ 
+alternations := *top* & 
+ [  prt-alt prt-or-obl-alt ]. 
+ 
+strict-intrans-diatheses := alternations. 
+ 
+other-intrans-diatheses := alternations. 
+ 
+trans-diatheses :=  alternations & 
+ [ trans-alt string ]. 
+ 
+strict-trans-diatheses := trans-diatheses. 
+ 
+other-trans-diatheses := trans-diatheses. 
+ 
+obl-diatheses := alternations & 
+ [ obl-alt prt-or-obl-alt ]. 
+ 
+intrans-obl-diatheses := obl-diatheses. 
+ 
+other-intrans-obl-diatheses := obl-diatheses. 
+ 
+ditrans-trans-obl-diatheses := trans-diatheses & obl-diatheses. 
+ 
+trans-obl-diatheses := ditrans-trans-obl-diatheses. 
+ditrans-diatheses := ditrans-trans-obl-diatheses & 
+ [ dat-movt string ]. 
+ 
+prt-or-obl-alt :=  *top*. 
+ 
+prt-or-obl-alt-info := prt-or-obl-alt. 
+ 
+qua-path := prt-or-obl-alt-info. 
+cum-path := prt-or-obl-alt-info. 
+no-path := prt-or-obl-alt-info. 
+ 
+prt-or-obl-alt-no-info := prt-or-obl-alt &  no-info. 
+ 
+no-info := *top*. 
+   
+;;;"Basic category for noun phrases." 
+np-cat := basic-cat & 
+ [ m-feats nominal-m-feats, 
+   cat-type np ]. 
+ 
+;;; Nouns that subcategorise for a complete sentence, e.g: it is no wonder you are wet 
+;;; N/S 
+noun-complex-cat := complex-cat3 & 
+[ RESULT3 [  	SIGN [ CAT noun-cat &
+				[ M-FEATS [ 	PRON false, 
+						WH false, 
+						ADV false, 
+						LOC false, 
+						CASE /l reg-case ] ] ], 
+		NUMBER-ARGS #1 & 
+			[ LST [  TL e-list & #2 ], 
+			  LAST #2 ], 
+		PERMUTED-ARGS #1 ], 
+ ACTIVE3 [ LST [ 	HD [ 	SIGN [  CAT sent-cat ], 
+			DIRECTION1 vargdir ], 
+		TL #3 ], 
+	 LAST #3 ] ]. 
+ 
+;;;"Basic category for sentences." 
+sent-cat := basic-cat & 
+ [ m-feats sent-m-feats, 
+   cat-type sent ].    
+ 
+;;;"Basic category for sentences." 
+;particle-cat := basic-cat & 
+; [ m-feats nominal-m-feats,
+;   cat-type prt ].    
+particle-cat := np-cat & 
+ [ cat-type prt,
+   m-feats [ case p-case ]].    
+   
+;;;"Complex categories are recursively defined by letting the category  
+;;;attribute of a sign to be a triple consisting of an active part of type 
+;;;sign, a direction specification relative to the active part of the category, 
+;;;and a result part which is allowed to instantiate either a basic or complex  
+;;;category. This is a feature structure specification for the more familiar  
+;;;slash notation usually adopted in categorial grammars, e.g. 
+;;;   '(S\NP)-NP'. 
+;;;Modified so that the result is a sign" 
+complex-cat := cat & 
+ [ result sign, 
+   direction direction, 
+   active  sign ]. 
+ 
+;;; inserted 19/01/99 
+complex-cat3 := cat & 
+ [ result3 result-args, 
+   active3 comps-list ]. 
+
+adv-cat := complex-cat3.
+ 
+;;;"Direction specifies the order occurrence of the argument relative to the  
+;;;functor sign during a parse (see grammar rules). The specification  
+;;;'backward-wrap' is used to allow the direct object of a transitive taking  
+;;;an oblique or clausal complement to be the first argument to combine with  
+;;;the verb, though not the outermost subcategorized sign, e.g. 
+;;;   'S\NP [ subj ]-NP [ obj ]-NP [ obl ] , NP [ obj ] -> S\NP [ subj ]-NP [ obl ]' 
+;;;The specification 'no-dir' is used to block the application of grammar-rules." 
+direction := *top*. 
+ 
+forward := direction. 
+ 
+backward := direction. 
+ 
+backward-wrap:= direction. 
+ 
+no-dir:= direction. 
+
+
+;;; DIRECTIONALITY HIERARCHY
+
+top-direction := *top* &
+[ DIR-VALUE direction].
+gendir := top-direction &
+[ DIR-VALUE /l forward].
+
+subjdir := gendir &
+[ DIR-VALUE backward].
+;;; vargdir captures the directionality specification for 
+;;; all verbal arguments, except the subject (oblique, locative, sentential, linking,..)
+vargdir := gendir &
+[ DIR-VALUE forward].
+conjargdir1 := gendir &
+[ DIR-VALUE forward].
+conjargdir2 := gendir &
+[ DIR-VALUE backward].
+ndir2 := gendir &
+[ DIR-VALUE /l forward].
+ndir := ndir2 &
+[ DIR-VALUE forward].
+detdir := ndir2 &
+[ DIR-VALUE forward].
+prdadjdir := gendir &
+[ DIR-VALUE backward].
+ppargdir := ndir2 &
+[ DIR-VALUE /l forward].
+ppargdir1 := ppargdir &
+[ DIR-VALUE forward].
+ppargdir2 := ppargdir &
+[ DIR-VALUE backward].
+advargdir1 := gendir &
+[ DIR-VALUE forward].
+advargdir2 := gendir &
+[ DIR-VALUE direction].
+advargdir3 := gendir &
+[ DIR-VALUE backward].
+whsentargdir := gendir &
+[ DIR-VALUE forward].
+relargdir := ndir2 &
+[ DIR-VALUE /l backward].
+relargdir1 := relargdir &
+[ DIR-VALUE backward].
+relargdir2 := relargdir &
+[ DIR-VALUE forward].
+relargdir3 := relargdir &
+[ DIR-VALUE backward].
+whargdir1 := gendir &
+[ DIR-VALUE forward].
+whargdir2 := gendir &
+[ DIR-VALUE forward].
+whargdir3 := gendir &
+[ DIR-VALUE backward].
+whargdir4 := gendir &
+[ DIR-VALUE forward].
+compargdir1 := gendir &
+[ DIR-VALUE direction].
+compargdir2 := gendir &
+[ DIR-VALUE forward].
+scompargdir1 := gendir &
+[ DIR-VALUE forward].
+scompargdir2 := gendir &
+[ DIR-VALUE backward].
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+;;; SUBCAT STRUCTURES TEMPLATES  ;;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+ 
+;;; inserted 12/02/99 
+args := *top* & 
+[  sign sign ]. 
+ 
+;;; inserted 12/02/99 
+result-args := args & 
+[ number-args  diff-list, 
+  permuted-args  diff-list ]. 
+ 
+;;; inserted 12/02/99 
+active-args := args & 
+[ direction1  gendir ]. 
+ 
+;;; inserted 19/01/99 
+comps-list := diff-list. 
+ 
+;;; inserted 15/02/99 
+arg := *top*. 
+ 
+basic-sign := sign & 
+ [ cat basic-cat & 
+  	[  m-feats [  reg-morph /l true ] ] ] . 
+ 
+noun-sign := basic-sign & 
+[ cat noun-cat & 
+	 [  m-feats [ 	nominal-form /l norm, 
+			CASE /l reg-case, 
+			LOC /l false, 
+			PRON /l false, 
+			WH /l false, 
+			ADV /l false ] ] ] .   
+ 
+complex-sign := sign & 
+ [  cat complex-cat ]. 
+ 
+;;; inserted 19/01/99 
+complex-sign3 := sign & 
+  [ cat complex-cat3 ]. 
+ 
+np-sign := basic-sign & 
+ [ cat np-cat & 
+	[ M-FEATS [ 	CASE /l reg-case,  
+			PRON /l false, 
+			WH /l false, 
+			ADV /l false, 
+			LOC /l false ] ] ] .   
+ 
+noun-complex-sign := lex-word-sign & 
+[ CAT noun-complex-cat & 
+	[ RESULT3 [  SIGN [  SEM2 [ MODE1 #mode1, 
+				INDEX1 #index1 ] ] ], 
+	ACTIVE3 [  LST [  HD [  SIGN [  SEM2 [  	INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [	MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD noun-complex-pred & 
+			    [  	SIT #index1, 
+				ARG1 #index2 ], 
+			TL #1 ], 
+		LAST #1 ] ] ]. 
+ 
+particle-sign := lex-np-sign & lex-word-sign &
+ [ cat particle-cat, 
+  SEM2 [  RESTR1 [  LST [  HD particle-pred ] ] ] ]. 
+   
+  
+;;; Ann 
+;;; Added so that subjects can't be dir-obj-np-signs 
+ 
+;;; inserted 30/03/99 
+poss-subj-np-sign := np-sign & 
+ [ cat [  m-feats [  case not-acc ] ] ]. 
+ 
+dummy-np-sign := poss-subj-np-sign & 
+ [ cat [  m-feats [  nominal-form pleonastic ] ] ]. 
+   
+;;; inserted 22/03/99 
+dummy-np-sign2 := pron-lex-np-sign &  
+ [ cat [  m-feats [  	nominal-form pleonastic, 
+			case not-acc  ] ] ]. 
+;;; inserted 22/03/99 
+lex-np-sign := np-sign & lex-sign &
+[  CAT [  M-FEATS [  	COUNT /l true]]]. 
+ 
+;;; inserted 30/03/99 
+dir-obj-np-sign :=  np-sign & 
+ [  cat [  m-feats [  case  acc ] ] ]. 
+ 
+;;; inserted 04/02/99  
+oblique-role-np-sign := np-sign. 
+ 
+reg-np-sign :=  poss-subj-np-sign. 
+ 
+;;; inserted 22/01/99 
+reg-lex-np-sign := lex-np-sign & lex-word-sign & 
+[  CAT [  M-FEATS [  	CASE /l reg-case, 
+			AGR2 /l 3sg ] ],  
+  SEM2 reg-np-sem2 ]. 
+ 
+;;; inserted 22/01/99 
+lex-np-noun-sign := lex-np-sign & lex-word-sign & 
+[  SEM2 common-nom-obj2 ]. 
+ 
+;;; inserted 22/01/99 
+pron-lex-np-sign := lex-np-sign & lex-word-sign & 
+[ CAT [  M-FEATS [  PRON true ] ], 
+  SEM2 pron-reg-np-sem2 ]. 
+ 
+nom-pron-lex-np-sign := pron-lex-np-sign & 
+[  CAT [  M-FEATS [  CASE nom ] ] ].  
+ 
+;;; inserted 22/01/99 
+acc-pron-lex-np-sign := pron-lex-np-sign & 
+[  CAT [  M-FEATS [  CASE acc ] ] ]. 
+ 
+;;;"non pleonastic NP signs, e.g. proper names and pronouns.". 
+;;;< sem > = reg-np-sem . 
+ 
+;;; inserted 22/01/99 
+poss-subj-lex-lexeme-sign := lex-lexeme-sign & poss-subj-np-sign. 
+
+;;; inserted 22/01/99 
+poss-subj-reg-lex-np-sign := reg-lex-np-sign & poss-subj-np-sign. 
+;;;"non pleonastic NP signs, e.g. proper names and pronouns.". 
+ 
+;;; inserted 22/01/99 
+poss-subj-nom-pron-lex-np-sign := nom-pron-lex-np-sign & poss-subj-np-sign. 
+;;;"non pleonastic NP signs, e.g. proper names and pronouns.". 
+ 
+;;; inserted 22/01/99 
+poss-subj-pron-lex-np-sign := pron-lex-np-sign & poss-subj-np-sign. 
+;;;"non pleonastic NP signs, e.g. proper names and pronouns.". 
+ 
+;;; inserted 22/01/99 
+poss-subj-lex-np-noun-sign := lex-np-noun-sign & poss-subj-np-sign. 
+ 
+;;; inserted 31/03/99 
+dir-obj-reg-lex-np-sign := reg-lex-np-sign & dir-obj-np-sign. 
+
+;;; inserted 31/03/99 
+dir-obj-lex-lexeme-sign := lex-lexeme-sign & dir-obj-np-sign. 
+ 
+;;; inserted 31/03/99 
+dir-obj-acc-pron-lex-np-sign := acc-pron-lex-np-sign & dir-obj-np-sign. 
+ 
+;;; inserted 31/03/99 
+dir-obj-lex-np-noun-sign := lex-np-noun-sign & dir-obj-np-sign. 
+ 
+;;; inserted 31/03/99 
+oblique-role-lex-lexeme-sign := lex-lexeme-sign & oblique-role-np-sign. 
+
+;;; inserted 31/03/99 
+oblique-role-reg-lex-np-sign := reg-lex-np-sign & oblique-role-np-sign. 
+ 
+;;; inserted 31/03/99 
+oblique-role-acc-pron-lex-np-sign := acc-pron-lex-np-sign & oblique-role-np-sign. 
+ 
+;;; inserted 31/03/99 
+oblique-role-lex-np-noun-sign := lex-np-noun-sign & oblique-role-np-sign & 
+[  SEM2 common-nom-obj3 ]. 
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+ ;;;;;;;;;;;;; 
+   ;;; VERBS ;;; 
+   ;;;;;;;;;;;;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+;;; Category Types ;;; 
+;;;;;;;;;;;;;;;;;;;;;; 
+ 
+;;; removed 22/01/99 
+;;;"Intermediate type. 
+;;;All verb categories are complex (i.e. functor) categories.". 
+verb-cat := complex-cat. 
+ 
+;;; inserted 19/01/99 
+;;;"Intermediate type. Not needed 
+;;;All verb categories are complex (i.e. functor) categories.". 
+verb-cat3 := complex-cat3. 
+ 
+;;; removed 22/01/99  
+;;;"The category type of tensed strict intransitives. Given an NP sign  
+;;;as argument, a category of type 'sent-cat' is returned though  
+;;;functional application (see grammar rules in the file 'ucg-grammar-rules'. 
+;;;Direction is 'forward' because verbs combine with type raised NPs, e.g.  
+;;;   X-(X-NP)  S-NP -> S" 
+strict-intrans-cat := verb-cat & 
+[ RESULT [ 	CAT sent-cat ],   
+  DIRECTION forward,  
+  ACTIVE  poss-subj-np-sign ]. 
+ 
+;;; inserted 15/02/99 
+intrans-cat3 := verb-cat3 & 
+ [ RESULT3 [ 	SIGN [ 	CAT sent-cat & 
+				[  M-FEATS [ 	VERB true, 
+					 	AUX /l false, 
+						INV /l false, 
+						COMP-FORM /l no-comp ] ] ], 
+		NUMBER-ARGS #1 & [ 	LST [ 	HD arg, 
+						TL /l e-list & /l #2 ], 
+					LAST /l #2 ], 
+		PERMUTED-ARGS #1 ], 
+  ACTIVE3 [ 	LST [ 	HD [ 	SIGN poss-subj-np-sign , 
+				DIRECTION1 subjdir ]]]]. 
+ 
+;;; removed 22/01/99  
+;;;"Intermediate Type. 
+;;;It characterizes all verbs which have at least two  
+;;;subcategorized complements." 
+X-sign-X-cat := verb-cat & 
+  [ result [  cat [  active  sign ] ] ]. 
+   
+;;; removed 22/01/99  
+;;;"The category type of strict transitives, e.g. 
+;;;   'Bill ate a sandwich' 
+;;;The active sign is a direct object NP. The direction attribute relative  
+;;;to the direct object NP is specified to be 'backward' because verbs combine  
+;;;with type raised NPs, e.g.  
+;;;   S-NP-NP S-NP-(S-NP-NP)  -> S-NP" 
+strict-trans-cat := X-sign-X-cat & 
+  [ result [  cat strict-intrans-cat ], 
+    direction backward, 
+    active dir-obj-np-sign ]. 
+ 
+;;; inserted 15/02/99 
+trans-cat3 := intrans-cat3 & 
+ [ RESULT3 [  NUMBER-ARGS [  	LST [  TL [ 	HD arg, 
+					 	TL /l e-list & /l #1 ] ], 
+				LAST 	/l #1 ] ], 
+   ACTIVE3 [ 	LST [ 	TL [ 	HD [ 	SIGN dir-obj-np-sign, 
+					DIRECTION1 vargdir  ]]]]].
+   
+;;; removed 22/01/99  
+backward-wrap-trans-cat := X-sign-X-cat & 
+  [ result [  cat  strict-trans-backward-cat ] ]. 
+;;;"Intermediate type. 
+;;;This category type describes the subcategorization pattern of transitives  
+;;;with the direction attribute relative to the direct object NP specified to be  
+;;;'backward-wrap'. Such a specification allows the direct object NP to be  
+;;;satisfied through the 'backward-wrapping' rule (see file 'ucg-grammar-rules').  
+;;;For transitives which take a clausal-oblique complement where  
+;;;the oblique-comp-xcomp complement is the outer-most subcategorized argument  
+;;;(according to Dowty's obliqueness hierarchy) although it is the direct object  
+;;;NP which follows the verb, e.g. 
+;;;   'Jon gave a book to Mary' 
+;;;   'Mary persuaded Bill to leave' 
+;;;   'Mary persuaded Bill that Jon is right'" 
+ 
+ 
+;;; Ann 
+;;; the above type is changed and the type below added,  
+;;; to make every node correctly typed.  This is necessary 
+;;; so that lex rules don't screw up.   
+   
+;;; removed 22/01/99  
+;;;"Like strict-trans-cat except for direction" 
+strict-trans-backward-cat := X-sign-X-cat & 
+[ result [  cat strict-intrans-cat ], 
+  direction backward-wrap, 
+  active  dir-obj-np-sign ]. 
+   
+;;; removed 22/01/99  
+;;;"Intermediate type. 
+;;;For verbs which have an oblique NP (i.e. a prepositional phrase) as the  
+;;;outer-most subcategorized complement." 
+obl-cat := X-sign-X-cat & 
+  [ direction backward, 
+    active oblique-role-np-sign ]. 
+   
+;;; removed 22/01/99  
+;;; Added by Ann 
+;;; Antonio wasn't very consistent about adding all the 
+;;; types and specifying stuff on cat vs on sign, but this screws 
+;;; up the default lex rules 
+obl-intrans-cat := obl-cat & 
+   [ result [  cat strict-intrans-cat ],  
+     active [  cat [  m-feats [ case p-case ] ] ] ]. 
+ 
+;;; inserted 15/02/99 
+;;; oblique-role-np-sign1 because of parsing problems 
+obl-intrans-cat3 := intrans-cat3 & 
+[ RESULT3 [ 	NUMBER-ARGS [ 	LST [ 	TL [ 	HD arg, 
+						TL /l e-list & /l #1 ] ], 
+				LAST /l #1 ] ],   
+  ACTIVE3 [ 	LST [ 	TL [ 	HD [ 	SIGN oblique-role-np-sign & 
+						[ CAT [ 	M-FEATS [ LOC /l false, 
+								 CASE p-case ] ] ], 
+					DIRECTION1 vargdir ]]]]].
+ 
+;;; MODIFIED 07/04/99 
+intrans-basic-control-cat3 := intrans-cat3 & 
+ [ RESULT3 [ 	NUMBER-ARGS [ 	LST [ 	TL [ 	HD arg, 
+						TL /l e-list & /l #1 ] ], 
+				LAST /l #1 ] ] ].  
+ 
+intrans-control-cat3 := intrans-basic-control-cat3 & 
+ [ ACTIVE3 [ 	LST [ 	HD [  SIGN poss-subj-np-sign & #sign ], 
+			TL [ 	HD [  	SIGN [  CAT intrans-cat3 &  
+					  	  [RESULT3 [ NUMBER-ARGS [LST [ TL /l e-list & /l #3],
+									  LAST /l #3]],  
+						   ACTIVE3 [  LST [  HD [  SIGN #sign ] ] ] ] ],  
+					DIRECTION1 vargdir ]]]]].
+ 
+;;; XXX considerar a retirada desta categoria e inserir a info
+;;; diretamente no sign apropriado
+;;; inserted 28/04/99 
+intrans-control-linking-cat3 := intrans-cat3 & 
+ [ RESULT3 [ 	SIGN [  CAT [  M-FEATS [ 	INV false ] ] ] ] ]. 
+ 
+;;; removed 22/01/99  
+;;;"The category of ditransitives: prepositional role is assigned accusative  
+;;;case." 
+ditrans-cat := obl-cat & 
+ [ result [  cat strict-trans-cat ], 
+   active [  cat [  m-feats [  case acc ] ] ] ]. 
+ 
+;;; inserted 15/02/99 
+ditrans-cat3 := trans-cat3 & 
+[ RESULT3 [ 	NUMBER-ARGS [ 	LST [ 	TL [ 	TL  [ 	HD arg, 
+							TL /l e-list & /l #1 ] ] ], 
+				LAST /l #1 ] ], 
+  ACTIVE3 [  LST [ 	TL [ 	TL [ 	HD [ 	SIGN oblique-role-np-sign & 
+							[ CAT [ 	M-FEATS [ CASE /l acc ] ] ], 
+						DIRECTION1 vargdir ]]]]]].
+ 
+;;; inserted 15/02/99 
+trans-control-cat3 := trans-cat3 & 
+ [ RESULT3 [ 	NUMBER-ARGS [ 	LST [ 	TL [ 	TL [ 	HD arg, 
+							TL /l e-list & /l #1 ] ] ], 
+				LAST /l #1 ] ], 
+  ACTIVE3 [ 	LST [ TL [ HD [  SIGN  
+				    [ 	ORTH #orth, 
+				  	ORTH2 #orth2, 
+				 	SEM2 #sem2 ] ], 
+			   TL [ HD [ SIGN [ CAT intrans-cat3 &  
+					      [ ACTIVE3 [ LST [ HD [ SIGN poss-subj-np-sign & 
+								      [ ORTH #orth, 
+								        ORTH2 #orth2, 
+									SEM2 #sem2 ] ] ] ] ] ],  
+				   DIRECTION1 vargdir ]]]]]].
+ 
+;;; removed 22/01/99  
+obl-trans-cat := obl-cat & backward-wrap-trans-cat & 
+   [  active [  cat [  m-feats [  case p-case ] ] ] ]. 
+;;;"The category of transitives which take an oblique object." 
+ 
+ 
+obl-trans-cat3 := ditrans-cat3 & 
+ [ ACTIVE3 [ LST [ TL [ TL [ HD [ SIGN [ CAT [ M-FEATS [CASE p-case,
+							LOC /l false ] ] ] ] ] ] ] ] ]. 
+ 
+ 
+;;; inserted 15/02/99 
+vp-sent-cat3 := intrans-cat3 & 
+ [ RESULT3 [ NUMBER-ARGS [ 	LST [ TL [ 	HD arg, 
+						TL /l e-list & /l #1 ] ], 
+				LAST 	/l #1 ] ], 
+   ACTIVE3 [ 	LST [ TL [ 	HD [ 	SIGN [  CAT sent-cat ], 
+					DIRECTION1 vargdir  ]]]]].
+ 
+ 
+;;; Semantics is 
+;;; in mrs.types 
+ 
+ 
+;;; VERB SIGNS 
+ 
+;;; removed 22/01/99  
+verb-sign := complex-sign & lex-sign & 
+   [ cat [  result [  sem [  	handel #handel, 
+				index #index  ] ] ], 
+     sem [  handel #handel, 
+		index #index ] ]. 
+ 
+;;; inserted in 15/02/99 
+;;; ADD VFORM /l no-fin 
+;;; AUX, VERB AND INV defined in intrans-cat, but are not passed to verb-signs in this version 
+verb-sign3 := complex-sign3 & lex-lexeme-sign & 
+[  cat [  result3 [  sign [  	cat [  m-feats [  
+						take-particle /l false, 
+						VERB true, 
+					 	AUX /l false, 
+						INV /l false ] ], 
+ 
+				SEM2 [  MODE1 #mode, 
+					INDEX1 #index1 ] ] ] ], 
+  SEM2 verb-sem4 & 
+	[ MODE1 #mode & /l prop, 
+	  INDEX1 #index1, 
+	  RESTR1 [  LST [  HD [  SIT #index1 ] ] ] ] ].  
+ 
+;;; inserted in 15/02/99 
+verb-1-comp-sign3 := verb-sign3 & 
+[ cat [ active3 [ lst [ hd [ sign [ sem2 [ index1 #act]]]]]], 
+  SEM2 [ RESTR1 [  LST [  HD [  ACT #act ] ] ] ] ].  
+  
+;;; removed 22/01/99  
+;;;"The type of strict intransitives, e.g. 
+;;;   'John sleeps' 
+;;;Category is of type 'strict-intrans-cat', semantics of type 'intrans-sem'" 
+strict-intrans-sign := verb-sign & 
+  [ cat strict-intrans-cat & 
+       [  result [  cat [  m-feats [  diatheses strict-intrans-diatheses ] ] ] ], 
+   sem strict-intrans-sem ]. 
+ 
+;;; inserted in 15/02/99 - modified 15/03/99 - modified 22/03/99 
+;;; just for parsing purpose the default end of CAT and SEM lists were included 
+;;; since it is not being passed at the moment 
+intrans-sign3 := verb-1-comp-sign3 & 
+ [  cat  intrans-cat3 &  
+	[ result3 [  	sign [   cat [  m-feats [  diatheses strict-intrans-diatheses ] ] ], 
+   		    	number-args [  	lst [  tl /l e-list & /l #1 ], 
+					last /l #1 ] ] , 
+ 	active3 [ lst [ tl /l #2 & /l e-list ], 
+		  last /l #2 ] ], 
+  SEM2 intrans-sem4].
+ 
+;;; < cat : active3: lst : tl > e-list 
+ 
+intrans-prt-sign3 := intrans-sign3 & 
+[  CAT [  RESULT3 [ SIGN [  CAT [  M-FEATS [  	TAKE-PARTICLE true,
+						PARTICLE #pform ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl e-list &  #1 ] ], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ hd [ 	sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+						sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+					DIRECTION1 vargdir],
+				tl #2 & e-list  ] ], 
+			last #2 ] ], 
+ SEM2 [ RESTR1 [ LST [ HD iv_pred_prt &
+				[PRT1 #index1]]]]].
+ 
+;;; removed 22/01/99  
+2-complements-verb-sign := verb-sign & 
+   [  	cat [  result [  cat [  result [  sem [ handel #handel, 
+						index #index ] ] ] ] ], 
+	sem [ 	handel #handel, 
+		index #index ] ]. 
+
+;;; inserted in 15/02/99 
+verb-2-comp-sign3 := verb-1-comp-sign3 &  
+ [ cat [ active3 [ lst [ tl [ HD [ SIGN [ SEM2 [ INDEX1 #und ] ] ] ]]]], 
+   SEM2 [ RESTR1 [  LST [  HD [ UND index1 & #und ] ] ] ] ]. 
+ 
+;;; removed 22/01/99  
+;;;"The type of strict transitive, e.g. 
+;;;   'John reads a book'." 
+strict-trans-sign := 2-complements-verb-sign & 
+[ cat strict-trans-cat & 
+	[ result [  cat [  result [  cat [  m-feats [  diatheses strict-trans-diatheses ] ] ] ] ] ], 
+ sem  strict-trans-sem ]. 
+ 
+;;; inserted in 15/02/99 - modified 15/03/99 - modified 22/03/99 
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+trans-sign3 := verb-2-comp-sign3 &  
+ [ cat trans-cat3 & 
+	[ result3 [ 	sign [ 	cat [ 	m-feats [ diatheses strict-trans-diatheses ] ] ], 
+			number-args [  	lst [  	tl [  	tl /l e-list &  /l #1 ] ], 
+						last /l #1 ] ], 
+	active3 [  	lst [ 	tl [ 	tl /l #2 & /l e-list ] ], 
+			last /l #2 ] ], 
+ SEM2 trans-sem4].
+
+;;; < cat : active3: lst : tl : tl > e-list 
+ 
+ 
+trans-prt-sign3 := trans-sign3 &  
+ [ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl e-list &  #1 ]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[hd [sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+						sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+					DIRECTION1 vargdir],
+				    tl #2 & e-list]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD tv_pred_prt &
+				[PRT1 #index1]]]]].
+    
+
+;;; removed 22/01/99  
+;;;"Intermediate type'" 
+obl-sign := verb-sign & 
+   [ cat obl-cat ]. 
+    
+;;; removed 22/01/99  
+;;;"For intransitives which take a subject and oblique NP only, e.g.  
+;;;   'Bill talks to Mary'" 
+obl-intrans-sign := obl-sign & 2-complements-verb-sign & 
+[ cat obl-intrans-cat & 
+	[ result [  cat [  result [  cat [  m-feats [  diatheses intrans-obl-diatheses ] ] ] ] ] ], 
+ sem intrans-obl-sem ]. 
+ 
+;;; inserted 15/02/99 
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+obl-intrans-sign3 := verb-2-comp-sign3 & 
+[ cat  obl-intrans-cat3 & 
+	[ result3 [  	sign [  	cat [  m-feats [  diatheses intrans-obl-diatheses ] ] ], 
+			number-args [  	lst [  tl [  tl  /l e-list & /l #1 ] ], 
+						last  /l #1  ] ], 
+ 	active3 [  	lst [  	tl [  	tl /l #2 & /l e-list ] ], 
+			last /l #2 ] ], 
+ SEM2 obl-intrans-sem4].
+
+;;;   < cat : active3 : lst : tl : tl > = e-list 
+ 
+obl-intrans-prt-sign3 := obl-intrans-sign3 & 
+ [ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl e-list &  #1 ]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[hd [sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+						sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+					DIRECTION1 vargdir],
+				    tl #2 & e-list]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD obl_iv_pred_prt &
+				[PRT1 #index1]]]]].
+    
+loc-intrans-sign3 := verb-1-comp-sign3 & 
+[ cat  obl-intrans-cat3 & 
+	[ result3 [  	sign [  	cat [  m-feats [  diatheses intrans-obl-diatheses ] ] ], 
+			number-args [  	lst [  tl [  tl /l e-list & /l #1 ] ], 
+						last /l #1  ] ], 
+ 	active3 [ lst [ tl [ HD [ SIGN [ CAT [ M-FEATS [ LOC true ] ],  
+					SEM2 [ 	INDEX1 #index1, 
+						RESTR1[ LST [ HD [ SIT #index1 ] ] ] ] ] ], 
+			     tl /l #2  & /l e-list] ], 
+		  last /l #2 ] ], 
+ SEM2 loc-intrans-sem4 & 
+      [ RESTR1 [  LST [  HD [ ARG1 #index1 ] ] ] ] ]. 
+;;;   < cat : active3 : lst : tl : tl > = e-list 
+ 
+
+loc-intrans-prt-sign3 := loc-intrans-sign3 & 
+ [ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl e-list &  #1 ]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[hd [sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+						sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+					DIRECTION1 vargdir],
+				    tl #2 & e-list]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD loc_intrans_pred_prt &
+				[PRT1 #index1]]]]].
+
+;;; inserted 08/04/99  
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+intrans-raising-linking-sign3 :=  verb-sign3. 
+ 
+ 
+;;; inserted 08/04/99  
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+intrans-raising-adj-sign3 :=  intrans-raising-linking-sign3 & 
+[ cat intrans-control-linking-cat3 & 
+   [ 	result3 [ number-args [  lst [  tl [  tl  e-list & #1 ] ], 
+					 last #1 ] ],  
+   	active3 [  	lst [  	HD [  SIGN #sign & 
+					[  SEM2 [ MODE1 #mode3,  
+						INDEX1 #act ] ] ], 
+				tl [  	 
+				   HD [  SIGN  
+					  [ CAT pred-adj-cat &  
+					      [ 	RESULT3 [  SIGN [ CAT [  M-FEATS nominal-m-feats ],  
+								SEM2 [  MODE1 #mode2, 
+									INDEX1 #index2 ] ] ], 
+						ACTIVE3 [  LST [  HD [  SIGN #sign & 
+									[  SEM2 [ MODE1 #mode3,  
+										INDEX1 #act ] ] ] ] ] ], 
+					     SEM2 [  	MODE1 #mode2, 
+							INDEX1 #index2, 
+							RESTR1 [  LST [  HD [ 	SIT #index2 ] ] ] ] ], 
+					DIRECTION1 vargdir ],  
+				   tl #2 & e-list ] ], 
+			last #2 ] ], 
+  SEM2 intrans-raising-adj-sem4 & 
+	[ RESTR1 [  LST [  HD [  	ARG1 #index2  ] ] ] ] ]. 
+;;;   < cat : active3 : lst : tl : tl > = e-list 
+ 
+;;; inserted 08/04/99  
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+intrans-raising-np-sign3 := intrans-raising-linking-sign3 & 
+[ cat intrans-control-linking-cat3 &  
+   [ 	result3 [ number-args [ lst [  tl [  tl  e-list & #1 ] ], 
+				last #1 ] ],  
+   	active3 [  	lst [  	HD [  SIGN [  SEM2 [  INDEX1 #index1 ] ] ], 
+				tl [  	 
+				   HD [  SIGN [ CAT np-cat & 
+							[  M-FEATS [  CASE reg-case ] ], 
+						SEM2 [  INDEX1 #index2,
+							RESTR1 [ LST [ HD np-prd-pred &
+									[ ARG1 #index1 ]]]]], 
+					DIRECTION1 vargdir ], 
+				   tl #2  & e-list] ], 
+			last #2 ] ], 
+  SEM2 intrans-raising-np-sem4 & 
+	[ RESTR1 [  LST [  HD [ ARG1 #index2  ] ] ] ] ]. 
+;;;   < cat : active3 : lst : tl : tl > = e-list 
+ 
+;;; inserted 08/04/99  
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+intrans-raising-pp-sign3 := intrans-raising-linking-sign3 & 
+[ cat intrans-control-linking-cat3 &  
+    [ 	result3 [ number-args [  lst [  tl [  tl  e-list & #1 ] ], 
+				 last #1 ] ],  
+   	active3 [  	lst [  	HD [  SIGN [  SEM2 [  INDEX1 #index1 ] ] ], 
+				tl [  	 
+				   HD [  SIGN [ CAT np-cat & 
+							[  M-FEATS [  	CASE p-case, 
+									LOC /l true ] ], 
+						SEM2 [  INDEX1 #index2, 
+							RESTR1 [  LST [ HD pp-prd-pred &
+									    [ 	ARG2 #index1,
+										SIT #index2 ] ] ] ] ], 
+					DIRECTION1 vargdir ], 
+				   tl #2 & e-list ] ], 
+			last #2 ] ], 
+  SEM2 intrans-raising-pp-sem4 & 
+	[ RESTR1 [  LST [  HD [	ARG1 #index2  ] ] ] ] ]. 
+ 
+intrans-equi-linking-sign3 := verb-1-comp-sign3. 
+ 
+;;; inserted 08/04/99  
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+intrans-equi-adj-sign3 :=  intrans-equi-linking-sign3 & 
+[ cat intrans-control-linking-cat3 & 
+   [ 	result3 [ number-args [ lst [  tl [  tl  e-list & #1 ] ], 
+				last #1 ] ],  
+   	active3 [  	lst [  	HD [  SIGN #sign & 
+					[  SEM2 [ MODE1 #mode3,  
+						INDEX1 #act ] ] ], 
+				tl [  	 
+				   HD [  SIGN [ CAT pred-adj-cat & 
+					    [ 	RESULT3 [  SIGN [ CAT [  M-FEATS nominal-m-feats ],  
+								SEM2 [  MODE1 #mode2, 
+									INDEX1 #index2 ] ] ], 
+						ACTIVE3 [  LST [  HD [  SIGN #sign & 
+									[  SEM2 [ MODE1 #mode3,  
+										INDEX1 #act ] ] ] ] ] ], 
+					     SEM2 [  	MODE1 #mode2, 
+							INDEX1 #index2, 
+							RESTR1 [  LST [  HD [ 	SIT #index2, 
+										ARG1 #act ] ] ] ] ], 
+					DIRECTION1 vargdir ],  
+				   tl #2 & e-list ] ], 
+			last #2 ] ], 
+  SEM2 intrans-equi-adj-sem4 & 
+	[ RESTR1 [  LST [  HD [ ACT #act, 
+				ARG1 #index2  ] ] ] ] ]. 
+;;;   < cat : active3 : lst : tl : tl > = e-list 
+ 
+;;; inserted 08/04/99  
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+intrans-equi-np-sign3 := intrans-equi-linking-sign3 & 
+[ cat intrans-control-linking-cat3 &  
+   [ 	result3 [ number-args [  lst [  tl [  tl  e-list & #1 ] ], 
+				 last #1 ] ],  
+   	active3 [  	lst [  	HD [  SIGN [  SEM2 [  INDEX1 #act ] ] ], 
+				tl [  	 
+				   HD [  SIGN [ CAT np-cat & 
+							[  M-FEATS [  CASE reg-case ] ], 
+						SEM2 [  INDEX1 #index2 ] ], 
+					DIRECTION1 vargdir ], 
+				   tl #2 & e-list ] ], 
+			last #2 ] ], 
+  SEM2 intrans-equi-np-sem4 & 
+	[ RESTR1 [  LST [  HD [ ACT #act, 
+				ARG1 #index2  ] ] ] ] ]. 
+;;;   < cat : active3 : lst : tl : tl > = e-list 
+ 
+;;; inserted 08/04/99  
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+intrans-equi-pp-sign3 := intrans-equi-linking-sign3 & 
+[ cat intrans-control-linking-cat3 &  
+    [ 	result3 [ number-args [  lst [  tl [  tl  e-list & #1 ] ], 
+				 last #1 ] ],  
+   	active3 [  	lst [  	HD [  SIGN [  SEM2 [  INDEX1 #act ] ] ], 
+				tl [  	 
+				   HD [  SIGN [ CAT np-cat & 
+							[  M-FEATS [  	CASE p-case, 
+									LOC /l true ] ], 
+						SEM2 [  INDEX1 #index2, 
+							RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ], 
+					DIRECTION1 vargdir ], 
+				   tl #2 & e-list ] ], 
+			last #2 ] ], 
+  SEM2 intrans-equi-pp-sem4 & 
+	[ RESTR1 [  LST [  HD [ ACT #act, 
+				ARG1 #index2  ] ] ] ] ]. 
+;;;   < cat : active3 : lst : tl : tl > = e-list 
+ 
+;;; inserted 15/02/99 - modified 15/03/99 
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+intrans-raising-basic-sign3 := verb-sign3 & 
+[ cat intrans-control-cat3 & 
+   	[ result3 [ sign [ CAT [  M-FEATS [  DIATHESES strict-intrans-diatheses ] ] ],  
+		  number-args [  lst [  tl [  tl  /l e-list & /l #1 ] ], 
+				 last /l #1 ] ],  
+   	active3 [  	lst [  	tl [  	 
+				   HD [  SIGN [ CAT  
+					       [RESULT3[SIGN[SEM2[MODE1 #mode2, 
+								  INDEX1 #index2 ] ] ]], 
+					     SEM2 [  	MODE1 #mode2, 
+							INDEX1 #index2, 
+							RESTR1[LST[HD[SIT #index2]]]]]], 
+				   tl /l #2 & /l e-list ] ], 
+			last /l #2 ] ], 
+  SEM2 intrans-raising-sem4 &  
+      [  RESTR1 [  LST [  HD [  ARG1 #index2  ] ] ] ] ]. 
+;;;   < cat : active3 : lst : tl : tl > = e-list 
+ 
+intrans-raising-sign3 := intrans-raising-basic-sign3 &
+[ cat [ active3 [  	lst [  	HD [  SIGN [  SEM2 [  INDEX1 #act ] ] ], 
+				tl [  	 
+				   HD [  SIGN [ CAT 
+						[RESULT3 [  SIGN [ CAT [  M-FEATS [  VFORM /l inf ] ]]],  
+						ACTIVE3 [  LST [  HD [  SIGN [  SEM2 [  INDEX1 #act ] ] ] ] ] ], 
+					     SEM2 [ RESTR1 [  LST [  HD [ ACT #act]]]]]]]]]]].
+
+;;; inserted 15/02/99 - modified 15/03/99 
+intrans-raising-base-sign3 := intrans-raising-sign3 & 
+[ cat [  active3 [  lst [  tl [ HD [  SIGN [  CAT [  RESULT3 [  SIGN [ CAT [  M-FEATS [  VFORM base ] ] ] ] ] ] ] ] ] ] ] ]. 
+ 
+;;; inserted 15/02/99 - modified 15/03/99 
+intrans-raising-base-prt-sign3 := intrans-raising-base-sign3 & 
+[ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl e-list &  #1 ]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[hd [sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+						sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+					DIRECTION1 vargdir],
+				    tl #2 & e-list]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD ir_control_pred_prt &
+				[PRT1 #index1]]]]].
+
+;;; inserted 15/02/99 - modified 02/05/99 
+intrans-raising-ing-sign3 := intrans-raising-sign3 & 
+[ cat [  active3 [  lst [  tl [ HD [  SIGN [  CAT [  RESULT3 [  SIGN [ CAT [  M-FEATS [  VFORM ing ] ] ] ] ] ] ] ] ] ] ] ]. 
+ 
+;;; inserted 15/02/99 - modified 02/05/99 
+intrans-raising-ing-prt-sign3 := intrans-raising-ing-sign3 & 
+[ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl e-list &  #1 ]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[hd [sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+						sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+					DIRECTION1 vargdir],
+				    tl #2 & e-list]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD ir_control_pred_prt &
+				[PRT1 #index1]]]]].
+ 
+;;; VForm by default is base
+aux-sign3 := intrans-raising-sign3 &
+[cat[ 	RESULT3 [SIGN [ CAT [ M-FEATS [ AUX true,
+					INV false,
+					TAKE-PARTICLE false]]]],
+	active3[ lst[ tl[ 
+		HD[ SIGN[ CAT[
+			RESULT3[ SIGN[ CAT[ M-FEATS[ VFORM /l base]]],
+				 NUMBER-ARGS [ LST [ TL /l e-list]]]]]]]]]],
+ SEM2 aux-sem4].
+
+aux-pass-sign3 := intrans-raising-basic-sign3 &
+[ CAT [ RESULT3 [SIGN [ CAT [ M-FEATS [ AUX true,
+					INV false,
+					TAKE-PARTICLE false]]]],
+	ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ INDEX1 #und]]],
+			TL [ HD [ SIGN [ CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ VFORM pass]]]]],
+					SEM2 pass-sem4 &
+					[RESTR1 [ LST [ HD [ ACT null-ref-index,
+							   UND #und]]]]]]]]]]].
+
+aux-ing-sign3 := aux-sign3 & 
+[  cat [ active3 [  lst [  tl [  hd [ sign [  cat [ result3 [ SIGN [ CAT [  M-FEATS [  VFORM ing ] ] ] ] ] ] ] ] ] ] ] ]. 
+ 
+aux-prp-sign3 := aux-sign3 & 
+[  cat [ active3 [  lst [  tl [  hd [ sign [  cat [ result3 [ SIGN [ CAT [  M-FEATS [  VFORM prp ] ] ] ] ] ] ] ] ] ] ] ]. 
+ 
+aux-inf-sign3 := aux-sign3 & 
+[  cat [ active3 [  lst [  tl [  hd [ sign [  cat [ result3 [ SIGN [ CAT [  M-FEATS [  VFORM inf ] ] ] ] ] ] ] ] ] ] ] ]. 
+
+;;; inserted 15/02/99 - modified 15/03/99 
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+intrans-equi-sign3 := verb-1-comp-sign3 & 
+[ cat intrans-control-cat3 & 
+   	[ result3 [ sign [ CAT [  M-FEATS [  DIATHESES strict-intrans-diatheses ] ] ],  
+		  number-args [ lst [  tl [  tl  /l e-list & /l #1 ] ], 
+				last /l #1 ] ],  
+   	active3 [  	lst [  	HD [  SIGN [  SEM2 [  INDEX1 #act ] ] ], 
+				tl [  	 
+				   HD [  SIGN [ CAT  
+					        [ RESULT3 [ SIGN [ 
+								CAT [ M-FEATS [ VFORM /l inf ]],  
+								SEM2 [  MODE1 #mode2, 
+									INDEX1 #index2 ] ] ], 
+						ACTIVE3 [  LST [  HD [  SIGN [  SEM2 [  INDEX1 #act ] ] ] ] ] ], 
+					     SEM2 [  	MODE1 #mode2, 
+							INDEX1 #index2, 
+							RESTR1 [  LST [  HD [ 	SIT #index2, 
+										ACT #act ] ] ] ] ] ],  
+				   tl /l #2 & /l e-list] ], 
+			last /l #2 ] ], 
+  SEM2 intrans-equi-sem4 &  
+      [  RESTR1 [  LST [  HD [ 	ACT #act, 
+				ARG1 #index2  ] ] ] ] ]. 
+;;;   < cat : active3 : lst : tl : tl > = e-list 
+ 
+intrans-equi-prt-sign3 := intrans-equi-sign3 & 
+[ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl e-list &  #1 ]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[hd [sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+						sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+					DIRECTION1 vargdir],
+				    tl #2 & e-list]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD ie_control_pred_prt &
+				[PRT1 #index1]]]]].
+
+
+intrans-equi-base-sign3 := intrans-equi-sign3 & 
+[ cat [  active3 [  lst [  tl [  HD [  SIGN [  CAT [  RESULT3 [  SIGN [  CAT [  M-FEATS [  VFORM base ] ] ] ] ] ] ] ] ] ] ] ].  
+ 
+intrans-equi-ing-sign3 := intrans-equi-sign3 & 
+[ cat [  active3 [  lst [  tl [  HD [  SIGN [  CAT [  RESULT3 [  SIGN [  CAT [  M-FEATS [  VFORM ing ] ] ] ] ] ] ] ] ] ] ] ].  
+ 
+intrans-equi-ing-prt-sign3 := intrans-equi-ing-sign3 & 
+[ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl e-list &  #1 ]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[hd [sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+						sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+					DIRECTION1 vargdir],
+				    tl #2 & e-list]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD ie_control_pred_prt &
+				[PRT1 #index1]]]]].
+ 
+ 
+;;; removed 22/01/99  
+3-complements-verb-sign := verb-sign & 
+   [  cat [  result [  cat [  result [  cat [  result [  sem [ 	handel #handel,
+							 	index #index ] ] ], 
+					     sem [ handel #handel, 
+						   index #index ] ] ] ] ] ]. 
+;;; inserted 15/02/99  
+verb-3-comp-sign3 := verb-2-comp-sign3 & 
+[ cat [ active3 [ lst [ tl [ tl [ HD [ SIGN [ SEM2 [ INDEX1 #thm ]]]]]]]], 
+ SEM2 [ RESTR1 [  LST [  HD [ THM #thm ] ] ] ] ]. 
+    
+;;; removed 22/01/99  
+obl-xcomp-comp-intrans-obl-trans-ditrans-sign :=obl-sign & 3-complements-verb-sign. 
+;;;"Intermediate type. 
+;;;For verbs which take a subject, an oblique NP and either a direct object,  
+;;;xcomp or comp.". 
+ 
+;;; removed 22/01/99  
+;;;"Ditransitives, e.g. 
+;;;   'John gives Mary a book'" 
+ditrans-sign := obl-xcomp-comp-intrans-obl-trans-ditrans-sign & 
+[  cat  ditrans-cat & 
+   [  result [ cat [ result [ cat [ result [ cat [ m-feats [ diatheses ditrans-diatheses ] ] ] ] ] ] ] ], 
+  sem obl-trans-or-ditrans-sem ]. 
+ 
+;;; inserted 15/02/99 - modified 15/03/99 
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+;;;"Ditransitives, e.g. 
+;;;   'John gives Mary a book'" 
+ditrans-sign3 := verb-3-comp-sign3 & 
+[ cat ditrans-cat3 &  
+  	[ result3 [  	sign [  cat [  m-feats [  diatheses ditrans-diatheses ] ] ], 
+			number-args [  	lst [  tl [  tl [  tl /l e-list & /l #1 ] ] ], 
+					last /l #1 ] ],  
+   	active3 [ lst [ tl [ tl [ HD [ SIGN [ CAT [ M-FEATS[ CASE acc]]]],  
+				  tl /l #2 & /l e-list ] ] ], 
+		  last /l #2 ] ], 
+ SEM2 ditrans-sem4].
+
+;;; 	active3 [  	lst [  tl [  tl [  tl e-list ] ] ] ] 
+ 
+ditrans-prt-sign3 := ditrans-sign3 & 
+[ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl [ tl e-list &  #1 ]]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[ tl [ hd [  sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+							sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+						DIRECTION1 vargdir],
+				    	tl #2 & e-list]]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD dtv_pred_prt &
+				[PRT1 #index1]]]]].
+ 
+ 
+;;; inserted 31/03/99 
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+trans-raising-sign3 := verb-1-comp-sign3 & 
+[ cat trans-control-cat3 & 
+	[ result3 [ sign [ CAT [  M-FEATS [  DIATHESES strict-trans-diatheses ] ] ], 
+		  number-args [ lst [  tl [  tl [  tl e-list & #1 ] ] ], 
+				last #1 ] ], 
+   	active3 [ lst [ TL [ HD [ SIGN [  SEM2 [  INDEX1 #und ] ] ],  
+			     tl[HD[SIGN[CAT  
+					 [ RESULT3 [ SIGN [ 
+							CAT [ M-FEATS [ VFORM /l inf ]],  
+							SEM2 [  MODE1 #mode2, 
+								INDEX1 #index2 ] ] ],  
+					  ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [  INDEX1 #und ] ] ] ] ] ], 
+					  SEM2 [MODE1 #mode2, 
+						INDEX1 #index2, 
+						RESTR1 [LST[HD[SIT #index2, 
+							       ACT #und ] ] ] ] ] ], 
+				tl #2 & e-list ] ] ], 
+		last #2 ] ], 
+ SEM2 trans-raising-sem4 & 
+     [ 	RESTR1 [  LST [  HD [ 	ARG1 #index2  ] ] ] ] ]. 
+;;; active3 : lst : tl : tl : tl > = e-list 
+ 
+trans-raising-base-sign3 := trans-raising-sign3 & 
+[ cat [  active3 [  lst [  tl [  tl [ HD [  SIGN [  CAT [  RESULT3 [  SIGN [ CAT [  M-FEATS [  VFORM base ] ] ] ] ] ] ] ] ] ] ] ] ]. 
+ 
+trans-raising-prp-sign3 := trans-raising-sign3 & 
+[ cat [  active3 [  lst [  tl [  tl [ HD [  SIGN [  CAT [  RESULT3 [  SIGN [ CAT [  M-FEATS [  VFORM prp ] ] ] ] ] ] ] ] ] ] ] ] ]. 
+
+trans-raising-ing-sign3 := trans-raising-sign3 & 
+[ cat [  active3 [  lst [  tl [  tl [ HD [  SIGN [  CAT [  RESULT3 [  SIGN [ CAT [  M-FEATS [  VFORM ing ] ] ] ] ] ] ] ] ] ] ] ] ]. 
+ 
+;;; inserted 31/03/99 
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+trans-equi-sign3 := verb-2-comp-sign3 & 
+[ cat trans-control-cat3 & 
+	[ result3 [ sign [ CAT [  M-FEATS [  DIATHESES strict-trans-diatheses ] ] ], 
+		 number-args [  lst [  tl [  tl [  tl e-list & #1 ] ] ], 
+				last #1 ] ], 
+   	active3 [ lst [ TL [tl[HD[SIGN[CAT  
+					[RESULT3 [  SIGN [ 
+							CAT [ M-FEATS [ VFORM /l inf ]],  
+							SEM2[MODE1 #mode2, 
+							     INDEX1 #index2 ] ] ],  
+						ACTIVE3[LST[HD[SIGN[SEM2[INDEX1 #und ] ] ] ] ] ], 
+					    SEM2[MODE1 #mode2, 
+						 INDEX1 #index2, 
+						 RESTR1[LST[HD[SIT #index2, 
+							   ACT #und ]]]]]], 
+				tl #2 & e-list ] ] ], 
+		last #2 ] ], 
+ SEM2 trans-equi-sem4 & 
+     [ 	RESTR1 [  LST [  HD [ 	UND index1 & #und, 
+				ARG1 #index2  ] ] ] ] ]. 
+;;; active3 : lst : tl : tl : tl > = e-list 
+;;; sem trans-control-sem2 & 
+;;;	[ liszt [  lst [  tl [  tl [  tl [  tl [  tl #3 ] ] ] ] ], 
+;;;		last #3 ] ], 
+ 
+trans-equi-base-sign3 := trans-equi-sign3 & 
+[ cat [  active3 [  lst [  TL [  tl [  HD [  SIGN [  CAT [  RESULT3 [  SIGN [  CAT [  M-FEATS [  VFORM base ] ] ] ] ] ] ] ] ] ] ] ] ]. 
+ 
+;;; removed 22/01/99  
+;;;Intermediate type. 
+;;;For transitive verbs which take a clausal-oblique complement. According  
+;;;to Dowty's obliqueness hierarchy, the clausal-oblique complement is the  
+;;;outermost subcategorized argument although it is the direct 
+;;;object NP which follows the verb, e.g. 
+;;;   'John gives a book to Mary' 
+;;;   'Mary persuaded Bill to leave' 
+;;;   'Mary persuaded Bill that Jon is right' 
+;;;Category is of type 'backward-wrap-trans-cat' which describes the  
+;;;subcategorization pattern of transitives with the direction attribute 
+;;;relative to the direct object NP specified to be 'backward-wrap'. Such a  
+;;;specification allows the direct object NP to be satisfied through the  
+;;;'backward-wrapping' rule (see file 'ucg-grammar-rules'). " 
+trans-xcomp-comp-obl-sign := 3-complements-verb-sign & 
+   [  cat backward-wrap-trans-cat ]. 
+    
+;;; removed 22/01/99  
+;;;"Transitives which take an oblique object. 
+;;;;;;According to Dowty's obliqueness hierarchy, the oblique  
+;;;complement is the outer-most subcategorized argument  although it is the  
+;;;direct object NP which follows the verb (see definition for  
+;;;'trans-xcomp-comp-obl-sign'), e.g. 
+;;;   'John gives a book to Mary'" 
+obl-trans-sign := obl-xcomp-comp-intrans-obl-trans-ditrans-sign & trans-xcomp-comp-obl-sign & 
+[ cat [   result [  cat [  result [  cat [  result [  cat [  m-feats [  diatheses trans-obl-diatheses ] ] ] ] ] ] ] ], 
+ sem obl-trans-or-ditrans-sem ]. 
+ 
+;;; inserted in 15/02/99 - modified 15/03/99 
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+obl-trans-sign3 := verb-1-comp-sign3 & 
+[  cat obl-trans-cat3 & 
+	[ result3 [ sign [ cat [ m-feats [ diatheses trans-obl-diatheses ] ] ], 
+   		  number-args [ lst [  tl [  tl [  tl  /l e-list & /l #1 ] ] ], 
+				last /l #1 ] ], 
+   	active3 [ lst [ HD [ SIGN [ SEM2 [ INDEX1 #act ] ] ], 
+			tl [ HD [ SIGN [ SEM2 [  INDEX1 #thm ] ] ], 
+			    tl[ HD[SIGN[SEM2[INDEX1 #und, 
+					     RESTR1[LST[HD[SIT #und]]]]]], 
+				tl  /l #2 & /l e-list ] ] ], 
+		  last /l #2 ] ], 
+ SEM2 obl-trans-sem4 & 
+    [ 	RESTR1 [  LST [  HD [ 	ACT #act,  
+				UND index1 & #und, 
+				THM #thm ] ] ] ] ]. 
+ 
+;;;   < cat : active3 : lst : tl : tl : tl > = e-list 
+;;; sem obl-trans-or-ditrans-sem2, 
+ 
+obl-trans-prt-sign3 := obl-trans-sign3 & 
+[ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl [ tl e-list &  #1 ]]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[ tl [ hd [  sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+							sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+						DIRECTION1 vargdir],
+				    	tl #2 & e-list]]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD obl_tv_pred_prt &
+				[PRT1 #index1]]]]].
+  
+;;; inserted 06/05/99 
+;;; transitives subcategorising for a locative : e.g. leave it in the garden 
+loc-trans-sign3 := verb-2-comp-sign3 & 
+[  cat obl-trans-cat3 & 
+	[result3[sign[cat[m-feats[diatheses trans-obl-diatheses ] ] ], 
+   		 number-args[lst[ tl [ tl [tl /l  e-list & /l #1 ]]], 
+			     last /l #1]], 
+   	active3[ lst[ tl[ tl[ HD[ SIGN [ 
+				 	CAT [ M-FEATS [ LOC true ] ],  
+				 	SEM2 [	INDEX1 #index1, 
+				      		RESTR1[ LST[ HD[ SIT #index1]]]]]], 
+			   tl  /l #2  & /l e-list] ] ], 
+			last /l #2 ] ], 
+ SEM2 loc-trans-sem4 & 
+    [RESTR1[LST[HD[ARG1 #index1] ] ] ] ]. 
+ 
+loc-trans-prt-sign3 := loc-trans-sign3 & 
+[ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl [ tl e-list &  #1 ]]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[ tl [ hd [  sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+							sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+						DIRECTION1 vargdir],
+				    	tl #2 & e-list]]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD loc_trans_pred_prt &
+				[PRT1 #index1]]]]].
+ 
+;;; Testing lexical rules and defaults 
+ 
+;;; removed 15/02/99    
+dative-sign := ditrans-sign & 
+[ SEM [  LISZT [  LST [  TL [  	HD /l p-agt-cause-transfer_rel,    
+					TL [  TL [  HD /l p-pat-recip_rel ] ] ] ] ] ] ].   
+ 
+;;; inserted 15/02/99 
+dative-sign3 := ditrans-sign3.
+
+;;; removed 15/02/99    
+transfer-sign := obl-trans-sign. 
+  
+;;; inserted 15/02/99 
+transfer-sign3 := obl-trans-sign3. 
+    
+transfer-prt-sign3 := transfer-sign3 &
+[ cat [ result3 [ sign [ cat [ m-feats [ take-particle true,
+						PARTICLE #pform  ]]], 
+		    number-args #na & 
+			[lst [ tl [ tl [tl [ tl e-list &  #1 ]]]], 
+			 last #1 ],
+		    permuted-args #na ], 
+	active3 [  	lst [tl[ tl[ tl [ hd [  sign [ 	cat particle-cat &
+							[M-FEATS [ P-FORM #pform]],
+							sem2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]],
+						DIRECTION1 vargdir],
+				    	tl #2 & e-list]]]], 
+			last #2 ]], 
+ SEM2 [ RESTR1 [ LST [ HD obl_tv_pred_prt &
+				[PRT1 #index1]]]]].
+ 
+;;; inserted 30/04/99 
+;;; just for parsing purpose the default end of the list was included 
+;;; since it is not being passed at the moment 
+vp-sent-sign3 := verb-1-comp-sign3 &  
+ [ cat vp-sent-cat3 & 
+	[ result3 [ 	number-args [  	lst [  	tl [  	tl e-list &  #1 ] ], 
+					last #1 ] ], 
+	active3 [ lst [ tl [ HD [ SIGN [ SEM2 [ INDEX1 #index1, 
+						RESTR1[LST[HD[SIT #index1]]]]]], 
+			     tl #2 & e-list ] ], 
+		  last #2 ] ], 
+ SEM2 vp-sent-sem4 & 
+	[ RESTR1 [  LST [  HD [ ARG1 #index1 ] ] ] ] ]. 
+;;; < cat : active3: lst : tl : tl > e-list 
+ 
+ 
+ 
+;;; THE FOLLOWING SIGNS ARE DEFINED FOR PARSING PURPOSES 
+ 
+;;; inserted 23/02/99 
+;;; 28/04/99 conjunction of NPs or Ns should pass as index to the verb the index of the conjunctions 
+
+conj-basic-cat1 := complex-cat3 & 
+[  result3 [  	number-args #3 & [ lst [  hd arg, 
+					tl [  	hd arg, 
+						tl  e-list & #2 ] ], 
+				last #2 ], 
+		permuted-args #3 ], 
+	active3 [  lst [  hd [  direction1 conjargdir1 ], 
+			  tl [  hd [ 	direction1 /l conjargdir2 ], 
+				tl #5 & e-list ] ], 
+		last #5 ] ].
+
+conj-basic-cat := conj-basic-cat1 & 
+[  active3 [  lst [  hd [  direction1 conjargdir1 ], 
+			  tl [  hd [ 	direction1 conjargdir2 ], 
+				tl #5 & e-list ] ], 
+		last #5 ] ].
+
+conj-basic-cat2 := conj-basic-cat & 
+[  result3 [  	sign [  cat [  	cat-type #1]]], 
+   active3 [  lst [  hd [  sign [ cat [ cat-type #1]]], 
+		     tl [  hd [ sign [ cat [ cat-type #1]]]]]]].
+
+conj-basic-cat3 := conj-basic-cat1 & 
+[  result3 [  	sign [  cat [  	cat-type #1]]], 
+   active3 [  lst [  hd [  sign [ cat [ cat-type #1]]], 
+		     tl [  hd [ direction1 conjargdir1,
+				sign [ cat [ cat-type #1]]]]]]].
+
+conj-np-cat := conj-basic-cat2 & 
+[  result3 [  sign [ cat [ 	CAT-TYPE np,
+				M-FEATS nominal-m-feats & 
+					[  AGR2 [  NUM pl ] ] ]]], 
+   active3 [  lst [  	hd [  sign [  cat [  M-FEATS nominal-m-feats ]]], 
+			tl [  hd [ sign [ cat [ M-FEATS nominal-m-feats ]]]]]]].
+
+conj-n-cat := conj-basic-cat2 & 
+[  result3 [  sign [ cat [ 	CAT-TYPE n,
+				M-FEATS nominal-m-feats & 
+					[  AGR2 [  NUM pl ] ] ]]], 
+   active3 [  lst [  	hd [  sign [  cat [  M-FEATS nominal-m-feats ]]], 
+			tl [  hd [ sign [ cat [ M-FEATS nominal-m-feats ]]]]]]].
+
+conj-sent-cat := conj-basic-cat2 & 
+[ result3 [  sign [  cat [  cat-type sent ]]], 
+  active3 [  lst [  hd [  sign [  cat [  cat-type sent ]]], 
+		    tl [  hd [  sign [ cat [  cat-type sent ]]]]]]].
+ 
+conj-sent-cat2 := conj-basic-cat3 & 
+[ result3 [  sign [  cat [  cat-type sent ]]], 
+  active3 [  lst [  hd [  sign [  cat [  cat-type sent ]]], 
+		    tl [  hd [  sign [ cat [  cat-type sent ]]]]]]].
+ 
+conj-prt-cat := conj-basic-cat2 &
+[ result3 [  sign [  	CAT particle-cat &
+				[ M-FEATS [ P-FORM #pform]]]], 
+  active3 [  lst [  hd [  sign  [ cat particle-cat &
+					[M-FEATS [ P-FORM #pform]]]], 
+			tl [  hd [  sign [ cat particle-cat ]]]]]].
+
+conj-vp-cat := conj-basic-cat & 
+[  result3 [ 	sign [  cat [ result3 [ sign [  cat [ cat-type sent & #2 ]], 
+					number-args #3, 
+					permuted-args #3 ], 
+			    active3 #active &
+				[ LST [ HD [ 	SIGN [ CAT [ CAT-TYPE np]],
+						DIRECTION1 [ DIR-VALUE direction ]]]]]]], 
+   active3 [ lst [ hd [ sign [  cat [   result3 [ sign [ cat [ cat-type #2 ]],  
+						  number-args #3 ], 
+					active3 #active ]]], 
+		   tl [ hd [ sign [ cat [ result3 [ sign [ cat [ cat-type #2 ]],   
+						    number-args #3 ], 
+					  active3 #active ]]]]]]].
+
+conj-basic-sign := lex-word-sign & 
+[ cat conj-basic-cat1 & 
+	[  result3 [  sign [  
+			SEM2 [  MODE1 #mode1, 
+				INDEX1 #index1 ]]], 
+	active3 [  lst [  hd [  sign [  SEM2 [ INDEX1 #index2 ]]], 
+			tl [  hd [ sign [ SEM2 [ INDEX1 #index3 ]]]]]]], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD conj-pred & 
+			    [ 	ARG1 #index2, 
+				ARG2 #index3 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+
+conj-nom-sign1 := conj-basic-sign & 
+[ cat conj-np-cat, 
+  SEM2 [INDEX1 #index1,
+	RESTR1 [  LST [  HD conj-nom-pred1 &
+				[INST1 #index1]]]]].
+
+conj-nom-sign2 := conj-basic-sign & 
+[ cat conj-np-cat, 
+  SEM2 [INDEX1 #index1,
+	RESTR1 [  LST [  HD conj-nom-pred2 &
+				[INST1 #index1]]]]].
+
+conj-sent-sign := conj-basic-sign & 
+[ cat conj-sent-cat &
+	[ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ INDEX1 #index2]]],
+			  TL [ HD [ SIGN [ SEM2 [INDEX1 #index3]]]]]]],
+  SEM2 [INDEX1 #index1,
+	RESTR1 [  LST [  HD conj-sent-pred &
+				[SIT #index1,
+				 ARG1 #index2,
+				 ARG2 #index3]]]]].
+
+;conj-sent-sign := conj-basic-sign & 
+;[ cat conj-sent-cat &
+;	[ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ RESTR1 [ LST [ HD [ SIT #index2 ]]]]]],
+;			  TL [ HD [ SIGN [ SEM2 [ RESTR1 [ LST [ HD [ SIT #index3]]]]]]]]]],
+;  SEM2 [INDEX1 #index1,
+;	RESTR1 [  LST [  HD conj-sent-pred &
+;				[SIT #index1,
+;				 ARG1 #index2,
+;				 ARG2 #index3]]]]].
+
+conj-sent-sign2 := conj-basic-sign & 
+[ cat conj-sent-cat2 &
+	[ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ RESTR1 [ LST [ HD [ SIT #index2 ]]]]]],
+			  TL [ HD [ SIGN [ SEM2 [ RESTR1 [ LST [ HD [ SIT #index3]]]]]]]]]],
+  SEM2 [INDEX1 #index1,
+	RESTR1 [  LST [  HD conj-sent-pred &
+				[SIT #index1,
+				 ARG1 #index2,
+				 ARG2 #index3]]]]].
+ 
+conj-prt-sign := conj-basic-sign & 
+[ cat conj-prt-cat & 
+ 	[ active3 [ lst [ hd [ sign [ SEM2 [ RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ]], 
+			  tl [  hd [  sign [ SEM2 [ RESTR1 [  LST [  HD [  SIT #index3 ] ] ] ] ]]]]]], 
+ SEM2 [ INDEX1 #index1, 
+	RESTR1 [  LST [  HD conj-prt-pred & 
+			    [ 	SIT #index1, 
+				ARG1 #index2, 
+				ARG2 #index3 ]]]]]. 
+
+conj-vp-sign := conj-basic-sign & 
+[ cat conj-vp-cat & 
+	[  result3 [  	sign [  cat [  	result3 [ sign [SEM2 [ 	MODE1 #mode1, 
+								INDEX1 #index1 ]]]],
+				SEM2 [ 	MODE1 #mode1, 
+					INDEX1 #index1 ]]], 
+	active3 [  	lst [  	hd [  	sign [  cat [ result3 [ sign [ 	SEM2 [  MODE1 #mode1, 
+										INDEX1 #index2 ]]]],  
+						SEM2 [  MODE1 #mode1, 
+							INDEX1 #index2, 
+							RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ]], 
+				tl [  	hd [  	sign [  cat [ result3 [ sign [ SEM2 [	MODE1 #mode1, 
+										 	INDEX1 #index3 ]]]], 
+							SEM2 [  MODE1 #mode1, 
+								INDEX1 #index3, 
+								RESTR1 [  LST [  HD [  SIT #index3 ] ] ] ] ]]]]]], 
+  SEM2 [INDEX1 #index1, 
+	RESTR1[ LST [  	HD conj-vp-pred & 
+			    [  	SIT #index1, 
+				ARG1 #index2, 
+				ARG2 #index3 ]]]]].
+
+
+;;; removed 22/01/99 
+;;;"Attributive adjective, e.g. 
+;;;   'The red table'." 
+att-ADJ-sign := lex-sign & 
+[ cat [ result [  cat #1 ], 
+	direction forward, 
+  	active noun-sign &  
+		[ cat #1 ] ] ]. 
+ 
+;;; inserted 15/02/99 
+;;;"Attributive adjective, e.g. 
+;;;   'The red table'." 
+att-adj-cat := complex-cat3 & 
+[ result3 [  	sign [ cat [ cat-type n & #cat]], 
+		number-args #1 & [lst [hd arg, 
+					tl  e-list & #2 ], 
+				  last #2 ], 
+		permuted-args #1 ], 
+ active3 [  	lst [  	hd [  	sign [ cat 
+					[cat-type #cat,
+					M-FEATS nominal-m-feats]], 
+				direction1  ndir ], 
+			tl #3 & e-list ], 
+		last #3 ]]. 
+
+att-adj-sign3 := lex-word-sign & 
+[ cat att-adj-cat & 
+	[ result3 [  	sign [ 	SEM2 [ 	MODE1 #mode1, 
+					INDEX1 #index1 ] ]], 
+	active3 [  	lst [  	hd [  	sign [ SEM2 [  INDEX1 #index2 ] ]]]]], 
+ SEM2 [ MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD adj-pred & 
+				[ 	SIT #index1, 
+					ARG1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+;;; < cat : active3: lst : tl > e-list 
+
+att-ADJ-sign2 := lex-word-sign & 
+[ cat att-adj-cat & 
+	[ result3 [  	sign [ 	cat #cat, 
+				SEM2 [ 	MODE1 #mode1, 
+					INDEX1 #index1 ] ], 
+			number-args #1 & [ lst [ hd arg, 
+						tl  e-list & #2 ], 
+					  last #2 ], 
+			permuted-args #1 ], 
+	active3 [  	lst [  	hd [  	sign noun-sign & 
+						[ cat #cat, 
+						 SEM2 [  INDEX1 #index2 ] ], 
+					direction1  ndir ], 
+				tl #3 & e-list ], 
+			last #3 ] ], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD adj-pred & 
+				[ 	SIT #index1, 
+					ARG1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+;;; < cat : active3: lst : tl > e-list 
+ 
+;;; removed 22/01/99   
+;;;"Predicative adjective, e.g. 
+;;;   'The table is red'." 
+pred-ADJ-sign := lex-sign &  
+   [ cat [  	result [  cat #1 ], 
+   		direction no-dir, 
+		active [  cat #1 ] ] ]. 
+ 
+;;; inserted 15/02/99   
+;;;"Predicative adjective, e.g. 
+;;;   'The table is red'." 
+pred-adj-basic-cat := complex-cat3 &  
+[  result3 [  	sign [ cat np-cat & #cat], 
+		number-args #1 & 
+			[ lst [ hd arg, 
+   				tl  /l e-list & /l #2 ], 
+			last /l #2 ], 
+ 		permuted-args #1 ], 
+   active3 [ lst [ hd [ sign [ cat #cat ],
+			DIRECTION1 prdadjdir ], 
+		   tl /l #3 & /l e-list ], 
+	     last /l #3  ]].
+
+;;; NP\NP
+pred-adj-cat := pred-adj-basic-cat &
+[ result3 [NUMBER-ARGS [LST [ TL e-list & #1],
+			LAST #1]],
+  active3 [ lst [ tl #3 & e-list ], 
+	     last #3  ]].
+
+;;; inserted 10/05/99   
+;;;"Predicative adjectives that take inf VP as complement, e.g. 
+;;;   'The boy is ready to go'."
+;;; (NP\NP)/(S\NP) 
+pred-vp-adj-cat := pred-adj-basic-cat &  
+[  result3 [  	sign [ cat #cat ], 
+		number-args [ 	lst [  	tl [  tl  e-list & #2 ] ], 
+				last #2 ] ], 
+   active3 [  lst [  	hd [  sign [  cat #cat]], 
+			tl [  HD [  SIGN [ CAT intrans-cat3 & 
+						[ RESULT3 [ 	SIGN [ CAT [ M-FEATS [ VFORM /l inf ] ] ], 
+							 	NUMBER-ARGS [  	LST [  TL e-list & #1 ], 
+										LAST #1 ] ], 
+						ACTIVE3 [ LST [ HD [ SIGN poss-subj-np-sign & 
+								 	[CAT #cat]], 
+								TL #5 ], 
+							LAST #5 ]]],
+				    DIRECTION1 vargdir], 
+				TL #3  & e-list ] ], 
+			last #3 ]]. 
+
+;;; inserted 15/02/99   
+pred-adj-basic-sign := lex-word-sign &  
+[  cat pred-adj-basic-cat & 
+	[  result3 [  	sign [ SEM2 [  	MODE1 #mode1, 
+					INDEX1 #index1 ]]]],
+ SEM2 [	MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [	LST [  TL #4 ], 
+			LAST #4 ] ] ]. 
+
+;;;"Predicative adjective, e.g. 
+;;;   'The table is red'." 
+;;; NP\NP
+pred-adj-sign3 := pred-adj-basic-sign &  
+[  cat pred-adj-cat & 
+	[ result3 [  	sign [ SEM2 [ INDEX1 #index1 ]]],
+	 ACTIVE3 [ 	LST [  	hd [ sign [ SEM2 [ INDEX1 #index2 ] ]]]]],
+ SEM2 [ 	INDEX1 #index1, 
+		RESTR1 [ LST [ 	HD prd-adj-pred & 
+				[ 	SIT #index1, 
+					ARG1 #index2 ] ] ] ] ]. 
+;;;[ cat [ active3 [lst [ hd [ direction1 /l objdir ] ] ] ], 
+
+;;; inserted 10/05/99   
+;;;"Predicative adjectives that take inf VP as complement, e.g. 
+;;;   'The boy is ready to go'." 
+;;; (NP\NP)/(S\NP)
+pred-vp-adj-sign3 := pred-adj-basic-sign &  
+[  cat pred-vp-adj-cat & 
+	[  active3 [  lst [  hd [  sign [SEM2 [ MODE1 #mode2, 
+						INDEX1 #index2 ] ] ], 
+			tl [  	HD [  SIGN [ 	CAT [ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [MODE1 #mode2, 
+											INDEX1 #index2 ] ] ] ]]], 
+						SEM2 [  INDEX1 #index3, 
+							RESTR1 [  LST [  HD [ 	SIT #index3, 
+										ACT #index2 ] ] ] ] ] ]]]]],	   
+ SEM2 [ INDEX1 #index1, 
+	RESTR1 [ LST [ HD prd-vp-adj-pred & 
+			[ 	SIT #index1,
+				ARG1 #index2, 
+				ARG2 #index3 ] ] ] ] ]. 
+ 
+;;;"The category of polymorphic type-raised NPs, e.g. X-(X-NP)." 
+raised-np-cat := complex-cat & 
+  [ result #1, 
+   direction #dir, 
+   active [  cat [  result #1, 
+		 direction #dir ] ] ]. 
+ 
+;;;"Lexical raised NP signs, e.g. proper names and pronouns." 
+raised-np-sign := lex-sign & 
+[  cat raised-np-cat & 
+ 	[  active [  cat [  active [  cat [  m-feats [  case reg-case ] ] ] ] ] ] ]. 
+   
+;;;"Lexical raised non pleonastic NP signs, e.g. proper names and pronouns." 
+reg-raised-np-sign := raised-np-sign & 
+[ sem  reg-raised-np-sem  ]. 
+ 
+;;;"Lexical raised pleonastic NP signs, e.g.  
+;;;   'it'      in   'It bothers Bill that Sue is here' 
+;;;   'there'   in   'There seems to be a problem'." 
+dummy-raised-np-sign := raised-np-sign & 
+[ cat [  active [  cat [  active dummy-np-sign ] ] ] ]. 
+ 
+;;; removed 22/01/99   
+;;;"Determiners; treated as generalized quantifiers, e.g. the semantics for a  
+;;;sentence like 'a man sleeps' is: 
+;;;   [ e1 ]a([ x1 ]man(x1) , [ e1 ]and([ e1 ]sleep(e1), [ e1 ]p-agt(e1,x1)))" 
+det-sign := lex-sign & 
+[  cat [ result [  cat raised-np-cat & 
+			[  active [  cat [  active [  cat [  m-feats #1 ] ] ] ] ] ], 
+	direction forward, 
+	active noun-sign &  
+		[  cat [  m-feats #1 ] ] ] ]. 
+   
+;;; inserted 15/02/99   
+;;;"Determiners; treated as generalized quantifiers, e.g. the semantics for a  
+;;;sentence like 'a man sleeps' is: 
+;;;   [ e1 ]a([ x1 ]man(x1) , [ e1 ]and([ e1 ]sleep(e1), [ e1 ]p-agt(e1,x1)))" 
+det-cat := complex-cat3 & 
+[  result3 [  	sign np-sign &  
+			[ cat np-cat & 
+				[ m-feats /l #m-feats ]], 
+		number-args #1 & [ lst [ hd arg, 
+					 tl e-list & #2 ], 
+				last  #2 ], 
+		permuted-args #1 ], 
+	active3 [  	lst [  	hd [  	sign noun-sign & 
+						[ cat [  m-feats  /l #m-feats  ]], 
+					direction1  detdir ], 
+				tl #3  & e-list ], 
+			last #3 ]]. 
+ 
+;;; inserted 15/02/99   
+;;;"Determiners; treated as generalized quantifiers, e.g. the semantics for a  
+;;;sentence like 'a man sleeps' is: 
+;;;   [ e1 ]a([ x1 ]man(x1) , [ e1 ]and([ e1 ]sleep(e1), [ e1 ]p-agt(e1,x1)))" 
+det-sign3 := lex-word-sign & 
+[  cat det-cat &
+	[  result3 [  sign [ SEM2 [ 	MODE1 #mode1, 
+					INDEX1 #index1 ]]], 
+	active3 [  	lst [  	hd [  	sign [ SEM2 [ INDEX1 #index2 ]]]]]], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [ HD quant-pred & 
+				[ SIT #index1,  
+				 BV1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+ 
+ 
+;;; removed 22/01/99 
+;;;"Prepositions; combine with raised NP's  
+;;;The resulting NP inherits all the semantic and category specifications of the  
+;;;input NP, except the case feature which is changed from 'reg-case' to 'p-case'." 
+prep-sign := lex-sign & 
+[  cat [ result [  cat raised-np-cat & 
+			[  active [  cat [ active [ cat [  m-feats [  	nominal-form #nform, 
+									case p-case, 
+									reg-morph #rmorph ] ], 
+					sem #sem  ] ] ] ], 
+		sem  reg-raised-np-sem & #sem & 
+				[ handel #handel, 
+ 				index #index ] ],  
+  	direction backward, 
+	active [ cat [  m-feats [  nominal-form  #nform, 
+				case reg-case, 
+				reg-morph #rmorph ] ], 
+  		sem [  handel #handel, 
+			index #index  ] ] ],    
+ sem empty-sem & 
+	[ handel #handel, 
+	index #index ] ]. 
+ 
+;;; inserted 15/02/99 
+;;;"Prepositions
+prep-basic-cat := complex-cat3 & 
+[  result3 [  	sign [ cat np-cat & 
+			     [ m-feats [ case /l p-case ]]],  
+		number-args #1, 
+		permuted-args #1 ]]. 
+
+prep-basic-cat1 := prep-basic-cat &
+[  result3 [  	number-args [ 	lst [ 	tl e-list & #2 ], 
+				last #2 ]], 
+	active3 [  lst [  tl #3  & e-list ], 
+		  last #3 ]]. 
+ 
+prep-basic-cat2 := prep-basic-cat & 
+[  result3 [  	number-args [ 	lst [ tl [tl e-list & #2 ]], 
+				last #2 ]], 
+	active3 [  lst [ tl [ tl #3  & e-list ]], 
+		  last #3 ]]. 
+
+;;; inserted 15/02/99 
+;;;"Prepositions; combine with NP's  
+;;;The resulting NP inherits all the semantic and category specifications of the  
+;;;input NP, except the case feature which is changed from 'reg-case' to 'p-case'." 
+;;; PP/NP
+prep-cat := prep-basic-cat1 & 
+[  result3 [  sign [  cat [ cat-type np, 
+			    m-feats [  	nominal-form #nform, 
+					loc /l false, 
+					case p-case, 
+					reg-morph #rmorph, 
+					agr2 #agr ] ] ] ],  
+  active3 [  lst [  hd [  sign [  cat [	cat-type np,
+					m-feats [ 	case reg-case, 
+							loc false, 
+							nominal-form #nform, 
+							reg-morph #rmorph, 
+							agr2 #agr ]]], 
+				direction1 ppargdir1 ]]]].
+ 
+prep-loc-cat := prep-cat & 
+[  result3 [  sign [  cat [  m-feats [  loc true ] ] ] ] ]. 
+
+;;; inserted 02/05/99 
+;;; Prepositions that subcategorise for VPing: e.g. what about going to the cinema 
+;;; PP/(S\NP)
+prep-vp-cat := prep-basic-cat1 & 
+[  active3 [  lst [  hd [  sign verb-sign3 & 
+				[ cat intrans-cat3 & 
+					[  result3 [  sign [  cat [  m-feats [  vform ing ] ] ] ] ]], 
+				direction1 ppargdir1 ]]]]. 
+
+;;; NP\NP/NP
+np-prep-cat := prep-basic-cat2 &
+[  result3 [  sign [  cat [ cat-type np,
+			    m-feats [  	nominal-form #nform, 
+					loc /l false, 
+					case reg-case, 
+					reg-morph #rmorph, 
+					agr2 #agr ] ] ] ],  
+	active3 [  lst [  hd [  sign [  cat np-cat &
+					  [   cat-type np,
+					     m-feats [  case reg-case, 
+							loc false, 
+							nominal-form #nform, 
+							reg-morph #rmorph, 
+							agr2 #agr ] ]], 
+				direction1 ppargdir2 ], 
+			tl [  	hd [  	sign [  cat [  	cat-type np,
+							m-feats [  case reg-case ] ]], 
+					direction1 ppargdir1 ]]]]].
+
+;;; inserted 15/02/99 
+prep-basic-sign := lex-word-sign & 
+[  cat prep-basic-cat & 
+	[  result3 [  sign [ SEM2 [  	MODE1 #mode1, 
+				INDEX1 #index1 ]]]],  
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [ LST [  HD [  SIT #index1 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+ 
+;;; inserted 15/02/99 
+;;;"Prepositions; combine with NP's  
+;;;The resulting NP inherits all the semantic and category specifications of the  
+;;;input NP, except the case feature which is changed from 'reg-case' to 'p-case'." 
+;;; PP/NP
+prep-sign3 := prep-basic-sign & 
+[  cat prep-cat &
+	[  active3 [  lst [  hd [  sign [  SEM2 [  INDEX1 #index2 ] ]]]]], 
+ SEM2 [  RESTR1 [  LST [  HD prep-pred & 
+				[  ARG1 #index2 ] ] ] ] ]. 
+ 
+;;; inserted 02/05/99 
+;;; Prepositions that subcategorise for VPing: e.g. what about going to the cinema 
+;;; PP/(S\NP)
+prep-vping-sign3 := prep-basic-sign & 
+[  cat prep-vp-cat &
+	[  active3 [  lst [  hd [  sign [ SEM2 [INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ]]]]], 
+ SEM2 [  RESTR1 [  LST [  HD prep-vping-pred & 
+				[  ARG1 #index2 ] ] ] ] ]. 
+
+;;;,  NP\NP/NP
+np-prep-sign3 := prep-basic-sign &
+[  cat np-prep-cat &
+	[  active3 [  lst [  hd [  sign [  SEM2 [  INDEX1 #index2 ] ]], 
+			tl [  	hd [  	sign [  SEM2 [  INDEX1 #index3 ]]]]]]], 
+ SEM2 [  RESTR1 [  LST [  HD np-prep-pred & 
+			[  	ARG1 #index2,
+				ARG2 #index3  ] ] ] ] ]. 
+
+;;; PPloc/NP
+prep-loc-sign3 := prep-basic-sign & 
+[ cat prep-loc-cat &
+	[  active3 [ lst [ hd [ sign [ sem2 [ index1 #index1]]]]]],
+ SEM2 [  RESTR1 [  LST [  HD prep-loc-pred &
+				[ ARG1 #index1] ] ] ]]. 
+
+ 
+;;; removed 22/01/99       
+;;;"VP modifiers, e.g. 'to' in 'to sleep'" 
+vp-mod-sign := lex-sign & 
+[ cat [  result [  cat strict-intrans-cat & 
+			[ active #act, 
+			direction #dir  ] ], 
+	active [  cat strict-intrans-cat & 
+			[ active  #act, 
+			direction  #dir ] ] ] ]. 
+ 
+;;; inserted 15/02/99  
+;;; problem with intrans-cat3 that doens't inherit NUMBER-ARGS:TL:e-list      
+;;;"VP modifiers, e.g. 'to' in 'to sleep'" 
+;;; S/(S\NP)\NP = (S\NP)/(S\NP)
+infinitival-cat := complex-cat3 &
+[  result3 [  	sign [  cat sent-cat & 
+					[ m-feats [  	AUX false,
+							INV false,
+							vform inf ]]], 
+			number-args #1 & [ lst [ tl [ tl e-list & #8 ]], 
+					  last #8 ], 
+			permuted-args #1 ], 
+	active3 [  	lst [	hd [ 	sign poss-subj-np-sign & #np-sign,
+					DIRECTION1 subjdir],
+				tl [ hd [ sign [ cat intrans-cat3 & 
+						[  result3 [ sign [ cat sent-cat & 
+									[ M-FEATS [  	VERB true,
+											VFORM base,
+											AUX false,
+											INV false ]]],  
+							   number-args #na & 
+								[ lst [ tl e-list]],
+							   permuted-args #na], 
+						 active3 [lst [ hd [ 	sign #np-sign,
+									direction1 subjdir ],
+								tl e-list ]]]], 
+					   direction1 vargdir ], 
+					tl #6 & e-list]], 
+			last #6 ] ].
+
+;;; inserted 15/02/99  
+;;; problem with intrans-cat3 that doens't inherit NUMBER-ARGS:TL:e-list      
+;;;"VP modifiers, e.g. 'to' in 'to sleep'" 
+infinitival-sign3 := lex-word-sign & 
+[ cat infinitival-cat &
+	[  result3 [  	sign [  SEM2 [  MODE1 #mode1, 
+					INDEX1 #index1 ]]], 
+	active3 [  	lst [	tl [ hd [ sign [ cat [  result3 [ sign [ SEM2 [ MODE1 #mode2, 
+										INDEX1 #index2 ]]]],  
+					     	SEM2 [  MODE1 #mode2, 
+							INDEX1 #index2, 
+							RESTR1 [  LST [  HD [  	SIT #index2] ] ] ] ]]]]]], 
+  SEM2 inf-sem4 & 
+	[ MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [ LST [ 	HD [  	SIT #index1,
+				ARG1 #index2 ], 
+			TL #7 ], 
+		 LAST #7 ] ] ]. 
+
+;;; %%%%%%%%%%%%%% ADVERBS %%%%%%%%%%%%% 
+ 
+
+;;; --------------------------------- ADVERBIAL CATS ----------------------------------
+adv-basic-cat1 :=complex-cat3 &
+[ result3 [  	number-args #1, 
+		permuted-args #1 ]]. 
+
+adv-basic-atomic-cat1 := adv-basic-cat1 &
+[ result3 [  	sign [ cat [ cat-type #cat]]],
+  active3 [  	lst [	hd [ sign [ cat [ cat-type #cat]]]]]].
+
+adv-basic-atomic-cat := adv-basic-atomic-cat1 &
+[ result3 [  	number-args [ 	lst [ tl e-list & #2 ], 
+				last #2 ]], 
+  active3 [  	lst [	tl #3  & e-list ], 
+		last #3 ] ]. 
+
+adv-basic-atomic-cat2 := adv-basic-atomic-cat1 &
+[ result3 [  	number-args [ 	lst [ tl [ tl e-list & #2 ]],
+				last #2 ]], 
+  active3 [  	lst [ tl [ tl #3  & e-list ]], 
+		last #3 ] ]. 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking sents as complements: e.g again  
+;;; (S|S)
+sent-adv-cat := adv-basic-atomic-cat &
+[result3 [  sign [  cat sent-cat & 
+				[ M-FEATS #m-feats ]]], 
+ active3 [  lst [  hd [  sign [  cat sent-cat & 
+					[ M-FEATS #m-feats ]], 
+			direction1 advargdir2]]]].  
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking NPs as complements: e.g several toys 
+;;; NP/NP
+np-adv-cat := adv-basic-atomic-cat &
+[  result3 [  	sign np-sign & 
+			[  cat [ M-FEATS [  AGR2 [  NUM /l pl ] ] ] ]], 
+  active3 [ lst [ hd [ 	sign np-sign & 
+				[  cat [  M-FEATS [ P-FORM pform, 
+						    CASE /l reg-case, 
+						    AGR2 [  NUM /l pl  ] ] ] ], 
+			direction1 advargdir1 ]]]]. 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking PPs as complements: e.g several of the toys 
+;;; PP/PP
+pp-adv-cat := np-adv-cat &
+[  active3 [  lst [  hd [  sign [ cat [  M-FEATS [ CASE p-case]]]]]]].
+
+;;; S\S/NP
+;;; adverbs taking sents as complements: e.g another time  
+sent-np-adv-basic-cat := adv-basic-atomic-cat2 & 
+[  	result3 [ sign [ cat sent-cat]],
+	active3 [ lst [  hd [  direction1 advargdir3 ], 
+			tl [  	hd [  	sign [  cat np-cat ], 
+					direction1 advargdir1 ]]]]].
+ 
+;;; inserted 02/05/99 
+;;; basic complex adverb cat
+adv-basic-cat := adv-basic-cat1 &
+[  result3 [  sign [  CAT [  	RESULT3 [SIGN [ CAT #cat], 
+					 NUMBER-ARGS #na &
+						[ LST [ TL /l e-list &  /l #1],
+						  LAST /l #1],
+					 PERMUTED-ARGS #na],
+				ACTIVE3 #active3 ] ]], 
+	active3 [  lst [  hd [  sign [ CAT [ RESULT3 [ 	SIGN [  CAT #cat],  
+							NUMBER-ARGS #na ],  
+					     ACTIVE3 #active3 ] ] ]]]].
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking att adjectives as complements: e.g so many 
+att-adj-adv-cat := adv-basic-cat &
+[ result3 [  	sign [  CAT [  RESULT3 [  SIGN [  CAT [  M-FEATS [  AGR2 [  NUM /l pl ] ] ]]]]],
+		NUMBER-ARGS [ 	LST [ TL e-list & #1],
+				LAST #1]], 
+  active3 [  	lst [  	hd [  	sign att-adj-sign3 &  
+					[ CAT [ RESULT3 [ SIGN [  CAT [  M-FEATS [  AGR2 [  NUM /l pl  ] ] ] ]]]], 
+			  	direction1 advargdir1],
+			TL e-list & #1 ],
+		LAST #1]]. 
+
+
+;;; inserted 02/05/99  
+pred-adj-adv-cat :=  adv-basic-cat &
+[RESULT3 [ 	SIGN [ CAT  pred-adj-cat ],
+		NUMBER-ARGS [ 	LST [ TL e-list & #1],
+				LAST #1]], 
+ active3 [  lst [  HD [ SIGN pred-adj-sign3, 
+			DIRECTION1 advargdir1],
+ 		TL e-list & #1 ],
+	LAST #1]]. 
+
+;;; negation
+;;; do not touch it 
+;;; ((S\NP)/(S\NP))\((S\NP)/(S\NP))
+neg-vp-adv-cat := adv-basic-cat & 
+[ result3 [ 	sign [  cat [  result3 [ sign [ cat [ 	cat-type sent,
+							m-feats [ 	verb true, 
+									aux /l true ]]],
+					NUMBER-ARGS [ 	LST [ TL e-list & #1],
+							LAST #1]],
+				ACTIVE3 [ LST [ HD [ SIGN [ CAT [ CAT-TYPE np]]],
+						TL e-list]]]], 
+		number-args [	lst [ tl e-list & #2 ],
+				last #2]], 
+ active3 [ lst [ hd [ direction1 advargdir2], 
+		 tl #6 & e-list ], 
+	  last #6 ] ]. 
+
+neg-vp-adv-cat-old := adv-basic-cat & 
+[ result3 [ 	sign [  cat [  result3 [ sign [ cat [ 	cat-type sent,
+							m-feats [ 	verb true, 
+									aux /l true ]]],
+					NUMBER-ARGS [ 	LST [ TL [ TL e-list & #1]],
+							LAST #1]],
+				ACTIVE3 [ LST [ HD [ SIGN [ CAT [ CAT-TYPE np]]],
+						TL [ 	HD [ SIGN [ CAT intrans-cat3]],
+							TL e-list]]]]], 
+		number-args [	lst [ tl e-list & #2 ],
+				last #2]], 
+ active3 [ lst [ hd [ direction1 advargdir2], 
+		 tl #6 & e-list ], 
+	  last #6 ] ]. 
+
+;;; vp adverbs 
+;;; (S\NP)/(S\NP)
+;;; e.g.:he ran before
+vp-adv-cat := adv-basic-cat &
+[ result3 [ 	sign [ cat intrans-cat3],  
+		number-args [ 	lst [  tl  e-list & #1 ], 
+				last #1 ]], 
+ active3 [ lst [ hd [ 	sign [ cat [ result3 [ number-args [lst [ tl e-list]]]]], 
+			direction1 advargdir2], 
+		tl #6 & e-list ], 
+	last #6 ] ]. 
+ 
+;;; inserted 02/05/99 
+;;; VERBAL ADVERBS with NP complements e.g.: (he runs) in the garden, (come here) a little bit 
+;;; (S\NP)\(S\NP)/NP
+vp-adv-cat2 := adv-basic-cat & 
+[  result3 [  	sign [ cat intrans-cat3 & #cat],
+		number-args [ lst [  tl [  tl e-list & #2 ] ], 
+				  last #2 ] ], 
+	active3 [  lst [  hd [  sign [ cat #cat],
+				direction1 advargdir3 ], 
+			tl [  	hd [  	sign [  cat np-cat ], 
+					direction1 advargdir1 ], 
+				tl #5  & e-list ] ], 
+		last #5 ] ]. 
+ 
+;;;;;; SENTENCE DEGREE MODIFIERS e.g.: she'll be learning that very soon 
+;;; (S|S)/(S|S)
+sent-degree-adv-cat := adv-basic-cat &
+[ result3 [ sign [ cat [ RESULT3 [ SIGN [  CAT sent-cat]]]], 
+		NUMBER-ARGS [ 	LST [  TL e-list & #2 ], 
+			  	LAST #2 ]], 
+	ACTIVE3 [  LST [  HD [  SIGN [ CAT sent-adv-cat], 
+				DIRECTION1 advargdir1 ], 
+			TL #3  & e-list ], 
+		LAST #3 ] ]. 
+ 
+;;; -------------------------------- ADVERBIAL SIGNS ------------------------------
+
+;;; basic adverbial sign
+adv-basic-sign1 := lex-word-sign &
+[ cat adv-basic-cat1 &
+	[  result3 [  sign [  SEM2 [ 	MODE1 #mode1, 
+					INDEX1 #index1 ] ] ], 
+	active3 [  lst [  hd [  sign [  SEM2 [  INDEX1 #index2]]]]]], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD [ 	SIT #index1, 
+				ARG1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+
+;;; inserted 02/05/99 
+;;; adverbs taking sents as complements: e.g again 
+sent-adv-sign := adv-basic-sign1 & 
+[ cat sent-adv-cat &
+	[ active3 [  lst [  hd [  sign [  SEM2 [  MODE1 #mode1, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [  MODE1 #mode1, 
+	RESTR1 [  LST [  HD sent-adv-pred ]]]]. 
+
+;;; inserted 02/05/99 
+;;; adverbs taking sents as complements: e.g another time 
+;;; S\S/NP
+sent-np-adv-sign := adv-basic-sign1 & 
+[ cat sent-np-adv-basic-cat &
+	[  active3 [  lst [  hd [  sign [  SEM2 [  	INDEX1 #index2, 
+							RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ], 
+			tl [  hd [  sign [  SEM2 [  INDEX1 #index3 ] ] ] ] ] ] ], 
+ SEM2 [ RESTR1 [  LST [  HD np-adv-pred2 & 
+			      [	ARG2 #index3 ]]]]].
+ 
+;;; inserted 02/05/99 
+;;; basic adverbial signs for complex categories
+adv-basic-sign := adv-basic-sign1 &
+[ cat adv-basic-cat &
+	[ result3 [ sign [ cat [ RESULT3 [ SIGN [ SEM2 [ 	INDEX1 #index1 ] ] ]],
+			SEM2 [ INDEX1 #index1 ]]], 
+	active3 [  lst [  hd [  sign [  cat [  RESULT3 [  SIGN [ SEM2 [  INDEX1 #index2 ] ] ] ], 
+				   	SEM2 [ INDEX1 #index2 ] ] ] ] ] ]]. 
+
+;;; inserted 02/05/99 
+;;; adverbs taking att adjectives as complements: e.g so many 
+att-adj-adv-sign := adv-basic-sign & 
+[CAT att-adj-adv-cat &
+	[ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ MODE1 #mode1]]]]]], 
+ SEM2 [	MODE1 #mode1,
+	RESTR1 [  LST [  HD att-adj-adv-pred ]]]].
+ 
+;;; inserted 08/04/99  
+;;; adverbs taking pred-adjs as complements: e.g. too blue 
+pred-adj-adv-sign :=  adv-basic-sign & 
+[ cat pred-adj-adv-cat &
+	[ active3 [  lst [  HD [  SIGN [ SEM2 [ MODE1 #mode1,
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ]], 
+ SEM2 [ MODE1 #mode1,
+	RESTR1 [  LST [  HD prd-adj-adv-pred]]]].
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking PPs as complements: e.g several of the toys 
+np-adv-sign := adv-basic-sign1 & 
+[ cat np-adv-cat &
+	[  active3 [  lst [  hd [  sign [  SEM2 [ MODE1 #mode1, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [ MODE1 #mode1, 
+	RESTR1 [  LST [  HD np-adv-pred ]]]].
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking PPs as complements: e.g several of the toys 
+pp-adv-sign := adv-basic-sign1 & 
+[ cat pp-adv-cat &
+	[  active3 [  lst [  hd [  sign [  SEM2 [ MODE1 #mode1, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [ MODE1 #mode1, 
+	RESTR1 [  LST [  HD pp-adv-pred ]]]].
+ 
+;;; inserted 02/05/99 
+;;; do not touch it 
+;;; (S\NP)\(S\NP)
+neg-vp-adv-sign := adv-basic-sign &
+[ cat neg-vp-adv-cat &
+	[active3 [ lst [ hd [ sign [ SEM2 [MODE1 #mode1, 
+					INDEX1 #index2, 
+					RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ]], 
+  SEM2 [MODE1 #mode1, 
+	RESTR1 [ LST [  HD neg-vp-adv-pred ]]]]. 
+
+;;; inserted 02/05/99 
+;;; VERBAL ADVERBS e.g.: really likes, he runs too, hold still 
+;;; (S\NP)/(S\NP)
+vp-adv-sign := adv-basic-sign & 
+[ cat vp-adv-cat &
+	[  active3 [  	lst [  	hd [  	sign [  SEM2 [ 	MODE1 #mode1, 
+							INDEX1 #index2, 
+							RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+  SEM2 [MODE1 #mode1, 
+	RESTR1[ LST [  	HD vp-adv-pred ]]]].
+ 
+;;; inserted 02/05/99 
+;;; VERBAL ADVERBS  with NP complements e.g.: he runs in the garden 
+vp-adv-sign2 := adv-basic-sign & 
+[ cat vp-adv-cat2 &
+	[ active3 [  	lst [  	hd [  	sign [  SEM2 [  MODE1 #mode1,
+							INDEX1 #index2, 
+							RESTR1 [  LST [  HD [  	SIT #index2,
+										ACT #act ] ] ] ] ] ], 
+				tl [  hd [  sign [  sem2 [  INDEX1 #index3 ] ] ] ] ] ] ], 
+  SEM2 [MODE1 #mode1, 
+	RESTR1 [ LST [  HD vp-adv-pred2 & 
+			    [  	ACT #act,
+				ARG2 #index3 ]]]]].
+ 
+;;;;;; SENTENCE DEGREE MODIFIERS e.g.: she'll be learning that very soon 
+sent-degree-adv-sign := adv-basic-sign & 
+[ cat sent-degree-adv-cat & 
+	[ ACTIVE3 [  LST [  HD [  SIGN [ SEM2 [ MODE1 #mode1, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ]]]]], 
+ SEM2 [ MODE1 #mode1, 
+	RESTR1 [  LST [ HD adv-adv-pred ]]]].
+ 
+;;;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+;;;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+;;; inserted 02/05/99 
+;;; adverbs taking att adjectives as complements: e.g so many 
+adj-adv-basic-sign2 := lex-word-sign & 
+[ cat adv-cat & 
+	[  result3 [  sign  
+			[  CAT [  RESULT3 [  SIGN [  CAT 
+							[  M-FEATS [  AGR2 [  NUM /l pl ] ] ] ], 
+					NUMBER-ARGS #6, 
+					PERMUTED-ARGS #6 ], 
+				ACTIVE3 #active3 ] ], 
+		number-args #3 & [ lst [  hd arg, 
+					tl e-list & #2 ], 
+				last #2 ], 
+		permuted-args #3 ], 
+	active3 [  lst [  hd [  sign att-adj-sign3 &  
+				[ CAT [ RESULT3 [ SIGN [  CAT  
+						   	[  M-FEATS [  AGR2 [  NUM /l pl  ] ] ] ], 
+						 NUMBER-ARGS #6 ],  
+					ACTIVE3 #active3 ] ], 
+			  direction1 advargdir1], 
+			tl #5  & e-list ], 
+		last #5 ] ] ]. 
+ 
+ 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking att adjectives as complements: e.g so many 
+att-adj-adv-sign2 := adj-adv-basic-sign2 & 
+[ cat [ result3 [ sign [ cat [ RESULT3 [ SIGN [ CAT #cat  &
+							[  M-FEATS [  AGR2 [  NUM pl ] ] ], 
+						SEM2 [ 	MODE1 #mode1, 
+							INDEX1 #index1 ] ] ] ], 
+			SEM2 [  MODE1 #mode1, 
+				INDEX1 #index1 ] ] ], 
+	active3 [  lst [  hd [  sign [  cat [  RESULT3 [  SIGN [ CAT #cat &
+									[  M-FEATS [  AGR2 [  NUM pl ] ] ], 
+							 SEM2 [  MODE1 #mode1, 
+								INDEX1 #index2 ] ] ] ], 
+				   SEM2 [ MODE1 #mode1, 
+					  INDEX1 #index2 ] ] ] ] ] ], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  	HD att-adj-adv-pred & 
+				[ 	SIT #index1, 
+					ARG1 #index2 ], 
+			TL #4 & e-list ], 
+		LAST #4 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99  
+adj-adv-basic-sign22 :=  lex-word-sign & 
+[ cat adv-cat & 
+	[  result3 [  number-args #2 & [ lst [  hd arg, 
+						tl e-list & #1 ], 
+					last #1 ], 
+		permuted-args #2 ],  
+     active3 [  lst [  	HD [  	DIRECTION1 /l advargdir1 ],  
+			tl #3  & e-list ], 
+		last #3 ] ] ]. 
+ 
+;;; inserted 08/04/99  
+;;; adverbs taking pred-adjs as complements: e.g. too blue 
+pred-adj-adv-sign2 :=  adj-adv-basic-sign22 & 
+[ cat [  result3 [ SIGN [ CAT pred-adj-cat & 
+			    [  	RESULT3 [  SIGN [  CAT #cat, 
+						 SEM2 [  MODE1 #mode1, 
+							INDEX1 #index1 ] ], 
+					NUMBER-ARGS #3, 
+					PERMUTED-ARGS #3 ], 
+				ACTIVE3 #active3 ], 
+			SEM2 [ 	MODE1 #mode1, 
+				INDEX1 #index1 ] ] ], 
+     active3 [  lst [  	HD [  SIGN pred-adj-sign3 & 
+				[ CAT [  RESULT3 [ SIGN [  CAT #cat ], 
+						NUMBER-ARGS #3 ], 
+					ACTIVE3 #active3 ],  
+				 SEM2 [ INDEX1 #index2, 
+					RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [ MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD prd-adj-adv-pred & 
+				[  	SIT #index1, 
+					ARG1 #index2  ], 
+			TL #1 ], 
+		LAST #1 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking PPs as complements: e.g several of the toys 
+pp-adv-basic-sign2 := lex-word-sign & 
+[ cat adv-cat & 
+	[  result3 [  sign np-sign & 
+			[  cat [ M-FEATS [  AGR2 [  NUM /l pl ] ] ] ], 
+		number-args #3 & [ lst [ hd arg, 
+					 tl e-list & #2 ], 
+				last #2 ], 
+		permuted-args #3 ], 
+	active3 [ lst [ hd [ sign np-sign & 
+				[  cat [  M-FEATS [ P-FORM pform, 
+						    CASE p-case, 
+						    AGR2 [  NUM /l pl  ] ] ] ], 
+			    direction1 advargdir1 ], 
+			tl #5  & e-list  ], 
+		last #5 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking PPs as complements: e.g several of the toys 
+pp-adv-sign2 := pp-adv-basic-sign2 & 
+[ cat [  result3 [  sign [  SEM2 [  	MODE1 #mode1, 
+					INDEX1 #index1 ] ] ], 
+	active3 [  lst [  hd [  sign [  	SEM2 [  MODE1 #mode1, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD pp-adv-pred & 
+				[ SIT #index1, 
+				 ARG1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking PPs as complements: e.g several toys 
+np-adv-basic-sign2 := lex-word-sign & 
+[ cat adv-cat & 
+	[  result3 [  sign np-sign & 
+			[  cat [ M-FEATS [  AGR2 [  NUM /l pl ] ] ] ], 
+		number-args #3 & [ lst [  hd arg, 
+					tl e-list & #2 ], 
+				last #2 ], 
+		permuted-args #3 ], 
+	active3 [  lst [  hd [  sign np-sign & 
+				[  cat [  M-FEATS [ CASE reg-case, 
+						AGR2 [  NUM /l pl  ] ] ] ], 
+			    direction1 advargdir1 ], 
+			tl #5  & e-list ], 
+		last #5 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking PPs as complements: e.g several toys 
+np-adv-sign2 := np-adv-basic-sign2 & 
+[ cat [ result3 [ sign [ SEM2 [ MODE1 #mode1, 
+				INDEX1 #index1 ] ] ], 
+	active3 [  lst [  hd [ sign [ SEM2 [  	MODE1 #mode1, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [ HD np-adv-pred & 
+				[ SIT #index1, 
+				 ARG1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking sents as complements: e.g again  
+sent-adv-basic-sign2 := lex-word-sign & 
+[ cat adv-cat & 
+	[  result3 [  sign [  cat sent-cat & 
+				[ M-FEATS #m-feats ] ], 
+		number-args #3 & [ lst [  hd arg, 
+					tl /l e-list & /l #2 ], 
+				last /l #2 ], 
+		permuted-args #3 ], 
+	active3 [  lst [  hd [  sign [  cat sent-cat & 
+						[ M-FEATS #m-feats ] ], 
+				direction1 /l advargdir2],  
+			tl /l #5  & /l e-list ], 
+		last /l #5 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking sents as complements: e.g again 
+sent-adv-sign2 := sent-adv-basic-sign2 & 
+[ cat [  result3 [  sign [  SEM2 [ 	MODE1 #mode1, 
+					INDEX1 #index1 ] ] ], 
+	active3 [  lst [  hd [  sign [  SEM2 [  MODE1 #mode1, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD sent-adv-pred & 
+			    [ 	SIT #index1, 
+				ARG1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking sents as complements: e.g in the garden, another time  
+sent-np-adv-basic-sign2 := sent-adv-basic-sign2 & 
+[ cat [  result3 [  number-args [ lst [  tl [  tl e-list & #2 ] ], 
+				  last #2 ] ], 
+	active3 [  lst [  hd [  direction1 advargdir3 ], 
+			tl [  	hd [  	sign [  cat np-cat ], 
+					direction1 advargdir1 ], 
+				tl #5  & e-list ] ], 
+		last #5 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking sents as complements: e.g another time 
+sent-np-adv-sign2 := sent-np-adv-basic-sign2 & 
+[ cat [  result3 [  sign [  SEM2 [  	MODE1 #mode1, 
+					INDEX1 #index1 ] ] ], 
+	active3 [  lst [  hd [  sign [  SEM2 [  INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ], 
+			tl [  hd [  sign [  SEM2 [  INDEX1 #index3 ] ] ] ] ] ] ], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD np-adv-pred2 & 
+			      [	SIT #index1, 
+				ARG1 #index2, 
+				ARG2 #index3 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; adverbs taking sents as complements: e.g out there, in the garden  
+sent-pp-adv-sign2 := sent-np-adv-basic-sign2 & 
+[ cat [  result3 [  sign [  SEM2 [  	MODE1 #mode1, 
+					INDEX1 #index1 ] ] ], 
+	active3 [  lst [  hd [  sign [  SEM2 [  INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ], 
+			tl [  hd [  sign [  SEM2 [  INDEX1 #index3 ] ] ] ] ] ] ], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD sent-pp-adv-pred & 
+			   [ 	SIT #index1, 
+				ARG1 #index2, 
+				ARG2 #index3 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+ 
+ 
+ 
+;;; inserted 02/05/99 
+;;; VERBAL ADVERBS   
+;;; do not touch it 
+neg-vp-adv-basic-sign2 := lex-word-sign & 
+[ cat adv-cat & 
+	[  result3 [  	sign 
+			    [  	cat [  	result3 [ sign [ cat #2 & [ cat-type sent, 
+								m-feats [ verb true, 
+									aux /l true ] ] ], 
+						number-args #3, 
+						permuted-args #3 ], 
+					active3 #active ] ], 
+			number-args #1 & [ lst [  hd arg, 
+						 tl  /l e-list & /l #7 ], 
+					  last /l #7 ], 
+			permuted-args #1 ], 
+	active3 [  	lst [  	hd [  	sign [  cat  
+						[  result3 [ sign [ cat #2 ], 
+							   number-args #3 ], 
+						  active3 #active ] ],
+					direction1 advargdir2], 
+				tl /l #6 & /l e-list  ], 
+			last /l #6 ] ] ]. 
+ 
+;;; inserted 02/05/99 
+;;; VERBAL ADVERBS  
+;;; do not touch it 
+neg-vp-adv-sign2 := neg-vp-adv-basic-sign2 & 
+[ cat [  result3 [ sign [ 	cat [ result3 [ sign [ SEM2 [ MODE1 #mode1, 
+								INDEX1 #index1 ] ] ] ], 
+				SEM2 [  MODE1 #mode1, 
+					INDEX1 #index1 ] ] ], 
+	active3 [ lst [ hd [ sign [ cat [ result3 [ sign [ SEM2 [ 	MODE1 #mode1, 
+									INDEX1 #index2 ] ] ] ],  
+						SEM2 [  MODE1 #mode1, 
+							INDEX1 #index2, 
+							RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+  SEM2 [ MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [ LST [  HD neg-vp-adv-pred & 
+			 	[ 	SIT #index1, 
+					ARG1 #index2 ], 
+			TL #7 ], 
+		LAST #7 ] ] ]. 
+ 
+;;; inserted 02/05/99 
+;;; VERBAL ADVERBS  (really likes) 
+vp-adv-basic-sign2 := lex-word-sign & 
+[ cat adv-cat & 
+	[  result3 [  	sign 
+			    [  	cat intrans-cat3 &  
+				[  	result3 [ sign [  cat #2 ], 
+						number-args #3, 
+						permuted-args #3 ], 
+					active3 #active ] ], 
+			number-args #1 & [ lst [  hd arg, 
+						 tl  /l e-list & /l #e-list ], 
+					  last /l #e-list ], 
+			permuted-args #1 ], 
+	active3 [  	lst [  	hd [  	sign [  cat  
+						[  result3 [ sign [ cat #2 ], 
+							   number-args #3 &
+								[lst [ tl e-list]]], 
+						  active3 #active ] ],
+					direction1 advargdir2], 
+				tl /l #6 & /l e-list ], 
+			last /l #6 ] ] ]. 
+ 
+;;; inserted 02/05/99 
+;;; VERBAL ADVERBS e.g.: really likes, he runs too, hold still 
+vp-adv-sign22 := vp-adv-basic-sign2 & 
+[ cat [  result3 [  	sign [  cat [  	result3 [ sign [  SEM2 [ MODE1 #mode1, 
+								 INDEX1 #index1 ] ] ] ], 
+				SEM2 [ 	MODE1 #mode1, 
+					INDEX1 #index1 ] ] ], 
+	active3 [  	lst [  	hd [  	sign [  cat [  result3 [ sign [ SEM2[ MODE1 #mode1, 
+									 INDEX1 #index2 ] ] ] ],  
+						SEM2 [ 	MODE1 #mode1, 
+							INDEX1 #index2, 
+							RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+  SEM2 [ MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1[ LST [  	HD vp-adv-pred & 
+			 	[ 	SIT #index1, 
+					ARG1 #index2 ], 
+			TL #7 ], 
+		LAST #7 ] ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; VERBAL ADVERBS with NP complements e.g.: (he runs) in the garden, (come here) a little bit 
+vp-adv-basic-sign22 := vp-adv-basic-sign2 & 
+[ cat [ result3 [ number-args [ lst [  tl [  tl  e-list & #e-list ] ], 
+				last #e-list ] ], 
+	active3 [  	lst [  	tl [  	hd [  	sign [  cat np-cat & 
+							[ m-feats [  case acc ] ] ], 
+						direction1 advargdir1 ],  
+					tl #6  & e-list ] ], 
+			last #6 ] ] ]. 
+ 
+;;; inserted 02/05/99 
+;;; VERBAL ADVERBS  with NP complements e.g.: he runs in the garden 
+vp-adv-sign222 := vp-adv-basic-sign22 & 
+[ cat [  result3 [  	sign [  cat [  	result3 [ sign [ SEM2 [ MODE1 #mode1, 
+								INDEX1 #index1 ] ] ] ], 
+				SEM2 [  MODE1 #mode1, 
+					INDEX1 #index1 ] ] ], 
+	active3 [  	lst [  	hd [  	sign [  cat [  result3 [ sign [ SEM2 [ INDEX1 #index2 ] ] ] ],  
+						SEM2 [  INDEX1 #index2, 
+							RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ], 
+				tl [  hd [  sign [  sem2 [  INDEX1 #index3 ] ] ] ] ] ] ], 
+  SEM2 [ MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [ LST [  HD vp-adv-pred2 & 
+			    [  	SIT #index1, 
+				ARG1 #index2, 
+				ARG2 #index3 ], 
+			TL #7 ], 
+		LAST #7 ] ] ]. 
+ 
+;;;;;; SENTENCE DEGREE MODIFIERS e.g.: she'll be learning that very soon 
+adv-adv-sign := lex-word-sign & 
+[ cat adv-cat & 
+	[ result3 [ sign [ cat [ RESULT3 [ SIGN [  CAT sent-cat, 
+						SEM2 [  MODE1 #mode1, 
+							INDEX1 #index1 ] ], 
+					 NUMBER-ARGS #5, 
+					 PERMUTED-ARGS #5 ], 
+				ACTIVE3 #active3 ], 
+			SEM2 [  MODE1 #mode1, 
+				INDEX1 #index1 ] ], 
+		NUMBER-ARGS #1 & 
+			[ LST [  TL e-list & #2 ], 
+			  LAST #2 ], 
+		PERMUTED-ARGS #1 ], 
+	ACTIVE3 [  LST [  HD [  SIGN sent-adv-basic-sign2 & 
+				   [ 	CAT [  	RESULT3 [  NUMBER-ARGS #5 ], 
+						ACTIVE3 #active3 ],	 
+					SEM2 [  INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ], 
+				DIRECTION1 advargdir1 ], 
+			TL #3  & e-list ], 
+		LAST #3 ] ], 
+ SEM2 [ MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [ HD adv-adv-pred & 
+			   [  	SIT #index1, 
+				ARG1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+ 
+;;; XXX acresentar uma semantica particular SIT ARG1 RELN 
+;;; VP DEGREE MODIFIERS e.g.: she'll be learning that very soon 
+adv-adv-sign2 := lex-word-sign & 
+[ cat adv-cat & 
+	[ result3 [ sign [ cat [ RESULT3 [ SIGN [ CAT intrans-cat3 & 
+						[ RESULT3 [  	SIGN [  
+								  CAT #cat, 
+								  SEM2 [ MODE1 #mode1, 
+									 INDEX1 #index1 ] ], 
+								NUMBER-ARGS #5, 
+								PERMUTED-ARGS #5 ], 
+						 ACTIVE3 #active4 ], 
+						SEM2 [  MODE1 #mode1, 
+							INDEX1 #index1 ] ],  
+				 	NUMBER-ARGS #7, 
+					PERMUTED-ARGS #7 ], 
+				ACTIVE3 #active3 & 
+				    [ LST [ HD [ SIGN [ CAT [ RESULT3 [ SIGN [ CAT #cat ], 
+									NUMBER-ARGS #5 ], 
+								ACTIVE3 #active4 ] ] ] ] ] ], 
+			SEM2 [  MODE1 #mode1, 
+				INDEX1 #index1 ] ], 
+		NUMBER-ARGS #1 & [ LST [  HD arg, 
+					TL e-list & #2 ], 
+			 	  LAST #2 ], 
+		PERMUTED-ARGS #1 ], 
+	ACTIVE3 [  LST [  HD [  SIGN vp-adv-basic-sign2 & 
+				   [ cat [ RESULT3 [ SIGN [ CAT [ RESULT3 [ NUMBER-ARGS #5 ], 
+								  ACTIVE3 #active4 ], 
+							    SEM2 [  	MODE1 #mode2, 
+									INDEX1 #index2 ] ],  
+							 NUMBER-ARGS #7 ], 
+						 ACTIVE3 #active3 ], 
+					SEM2 [  MODE1 #mode2, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ], 
+				DIRECTION1 advargdir1 ], 
+			TL #3  & e-list ], 
+		LAST #3 ] ], 
+ SEM2 [ MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [ HD adv-adv-pred2 & 
+			    [  	SIT #index1, 
+				ARG1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+ 
+;;; %%%%%%%%%%%%%%%% WH SENTENCES %%%%%%%%%%%%%%%%%%%% 
+ 
+;;; inserted 02/05/99 
+;;; how/what about the elephant/going to the cinema 
+wh-sent-basic-cat := complex-cat3 &
+[  result3 [  sign [  cat sent-cat & 
+				[ m-feats [  	AUX false, 
+						INV true ] ] ], 
+		number-args #3 & [ lst [  hd arg, 
+					tl e-list & #2 ], 
+				last #2 ], 
+		permuted-args #3 ], 
+ active3 [  lst [  hd [  sign np-sign & 
+				[  cat [  M-FEATS [ P-FORM about, 
+						CASE p-case ] ] ], 
+			    direction1 whargdir1 ], 
+			tl #5  & e-list ], 
+		last #5 ] ]. 
+ 
+ 
+;;; inserted 02/05/99 
+;;; how/what about the elephant/going to the cinema 
+wh-sent-sign := lex-word-sign & 
+[ cat wh-sent-basic-cat &
+	[ result3 [ sign [ SEM2 [ MODE1 #mode1, 
+				INDEX1 #index1 ] ] ], 
+	active3 [  lst [  hd [  sign [ SEM2 [  	MODE1 #mode1, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD wh-sent-adv-pred & 
+				[ 	SIT #index1, 
+					ARG1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+
+
+
+;;; %%%%%%%%%%%%%%%% EXTRACTIONS %%%%%%%%%%%%%%%%%%%% 
+
+extraction-basic-cat := complex-cat3 &
+[  result3 [  	number-args #3 & [ 	lst [  	hd arg, 
+						tl /l e-list & /l #2 ], 
+					last /l #2 ], 
+		permuted-args #3 ], 
+  active3 [ 	lst [ tl /l #5  & /l e-list  ], 
+		last /l #5 ] ]. 
+
+;;; %%%%%%%%%%%%%%%% FREE RELATIVE CLAUSES %%%%%%%%%%%%%%%%%%%% 
+
+;;; WH NPs that subcategorise for an incomplete sentence, e.g: this is what they say 
+;;; NP/(S/NP)
+np-free-rel-basic-cat := extraction-basic-cat & 
+[	RESULT3 [  	SIGN np-sign & 
+				[ CAT [ M-FEATS [ 	WH true, 
+							ADV false, 
+							LOC false, 
+							CASE /l reg-case ]]],
+			NUMBER-ARGS [ 	LST [ TL e-list & #1],
+					LAST #1]],
+ 	ACTIVE3 [ LST [ HD  [  	SIGN [  CAT [ 	RESULT3 [	SIGN [ CAT sent-cat &
+									[M-FEATS [ VFORM fin]]],
+								NUMBER-ARGS [  LST [  TL e-list ] ] ], 
+						ACTIVE3 [  LST [ HD [  SIGN dir-obj-np-sign],
+								 TL e-list]]]], 
+				DIRECTION1 relargdir2 ]]]].
+
+np-free-rel-sign := lex-word-sign &
+[ CAT np-free-rel-basic-cat &
+	[ RESULT3 [  SIGN [  SEM2 [ 	MODE1 #mode1, 
+					INDEX1 #index1 ] ] ], 
+	ACTIVE3 [  LST [HD [  SIGN [  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ INDEX1 #index2]]]]]],
+					SEM2 [  INDEX1 #index3, 
+						RESTR1 [  LST [  HD [  	SIT #index3,
+									UND #index2 ] ] ] ] ] ],
+			TL e-list & #2 ],
+		 LAST #2 ] ], 
+ SEM2 [ MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD np-free-rel-pred & 
+			    [  	SIT #index1, 
+				ARG1 #index2,
+				ARG2 #index3 ], 
+			TL #1 ], 
+		LAST #1 ] ] ]. 
+ 
+
+;;; %%%%%%%%%%%%%%%% RELATIVIZERS %%%%%%%%%%%%%%%%%%%% 
+
+relativizer-basic-cat := extraction-basic-cat & 
+[  result3 [  sign [  cat [ result3 [ 	SIGN [ CAT noun-cat],
+						NUMBER-ARGS #1 &
+								[LST [ TL #2 & e-list],
+								 LAST #2],
+						PERMUTED-ARGS #1],
+				 ACTIVE3 [ LST [ HD [ 	SIGN [ CAT noun-cat],
+							DIRECTION1 relargdir1],
+						 TL #3 & e-list],
+					  LAST #3]]],
+		 NUMBER-ARGS #4 &
+			     [ 	LST [ TL /l #5 & /l e-list],
+				LAST /l #5],
+		 PERMUTED-ARGS #4], 
+	active3 [ lst [ hd [ direction1 relargdir2],
+			TL /l #6 & /l e-list],
+		 LAST /l #6]]. 
+
+relativizer-basic-sign := lex-word-sign &
+[ CAT relativizer-basic-cat &
+	[  RESULT3 [ SIGN [ CAT [ RESULT3 [ SIGN [ SEM2 [ INDEX1 #index1]]],
+				ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ 	INDEX1 #index2,
+									RESTR1[ LST [ HD [ INST1 #index2]]]]]]]]],
+			  SEM2 [ MODE1 #mode1,
+				 INDEX1 #index1]]],
+	ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ 	INDEX1 #index3,
+						RESTR1 [ LST [ HD [ SIT #index3]]]]]]]]],
+  SEM2 [MODE1 #mode1,		
+	INDEX1 #index1,
+	RESTR1 [ LST [ HD [ 	SIT #index1,
+				ARG1 #index2,
+				ARG2 #index3 ],
+			TL #tl],
+		LAST #tl]]].
+
+
+;;; ADJUNCTS 
+;;; (N\N)/S
+;;; where, when, why: E.g. the place where Mary lives
+adj-relativizer-cat := relativizer-basic-cat & 
+[  	RESULT3 [ NUMBER-ARGS [ LST [ TL #1 & e-list ],
+				LAST #1]],
+ 	ACTIVE3 [ LST [ HD [ SIGN [ CAT sent-cat &
+					[ M-FEATS [ VFORM fin]]],
+				direction1 relargdir2 ],
+			TL e-list & #2],
+		LAST #2]].
+
+adj-relativizer-sign := relativizer-basic-sign & 
+[ CAT adj-relativizer-cat,
+  SEM2 [RESTR1 [ LST [ HD adj-rel-pred ]]]].
+
+;;; SUBJECT REL PRONS
+;;; (N\N)/(S\NP)
+;;; who, that, which: E.g. the person who likes him
+subj-relativizer-cat := relativizer-basic-cat & 
+[ 	RESULT3 [ NUMBER-ARGS [ LST [ TL #1 & e-list ],
+				LAST #1]],
+ 	ACTIVE3 [ LST [ HD [ 	SIGN [ CAT [ RESULT3 [ 	SIGN [ CAT sent-cat &
+								[ M-FEATS [ VFORM fin]]],
+						NUMBER-ARGS [ LST [ TL e-list]]],
+				    ACTIVE3 [ LST [ HD [ SIGN poss-subj-np-sign,
+							 DIRECTION1 subjdir],
+						   TL e-list]]]]],
+			TL e-list & #2],
+		LAST #2]].
+
+;;; SUBJECT REL PRONS
+;;; (N\N)/(S\NP)
+;;; who, that, which: E.g. the person who likes him
+subj-relativizer-sign := relativizer-basic-sign & 
+[ CAT subj-relativizer-cat &
+	[  ACTIVE3 [ LST [ HD [ SIGN [ 	CAT [ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ INDEX1 #index2]]]]]],
+					SEM2 [ 	RESTR1 [ LST [ HD [ ACT #index2]]]]]]]]],
+  SEM2 [RESTR1 [ LST [ HD subj-rel-pred ]]]].
+
+;;; OBJECT REL PRONS
+;;; (N\N)/(S/NP)
+;;; who, whom, that, which: E.g. the person who Bill likes
+obj-relativizer-cat := relativizer-basic-cat & 
+[ 	RESULT3 [ NUMBER-ARGS [ LST [ TL #1 & e-list ],
+				LAST #1]],
+ 	ACTIVE3 [ LST [ HD [ 	SIGN [ CAT [ 	RESULT3 [ 	SIGN [ CAT sent-cat &
+								[ M-FEATS [ VFORM fin]]],
+							NUMBER-ARGS [ LST [ TL e-list]]],
+					 ACTIVE3 [ LST [ HD [ 	SIGN dir-obj-np-sign,
+								DIRECTION1 vargdir],
+							TL e-list]]]]],
+			TL e-list & #2],
+		LAST #2]].
+
+;;; OBJECT REL PRONS
+;;; (N\N)/(S/NP)
+;;; who, whom, that, which: E.g. the person who Bill likes
+obj-relativizer-sign := relativizer-basic-sign & 
+[ CAT obj-relativizer-cat &
+	[ACTIVE3 [ LST [ HD [ SIGN [ 	CAT [ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ INDEX1 #index2]]]]]],
+					SEM2 [ 	RESTR1 [ LST [ HD [ 	UND #index2]]]]]]]]],
+  SEM2 [RESTR1 [ LST [ HD obj-rel-pred]]]].
+
+;;; PP ARG REL PRONS
+;;; (N\N)/(S/PP)
+;;; where: E.g. the table where he put the vase
+pp-relativizer-cat := relativizer-basic-cat & 
+[ACTIVE3 [ LST [ HD [ 	SIGN [ CAT [ RESULT3 [ 	SIGN [ CAT sent-cat &
+								[ M-FEATS [ VFORM fin]]],
+						NUMBER-ARGS [ LST [ TL e-list]]],
+					 ACTIVE3 [ LST [ HD [ 	SIGN np-sign &
+									[ CAT [ M-FEATS [ CASE p-case,
+											  LOC true]]], 
+								DIRECTION1 vargdir],
+							TL e-list]]]]]]]].
+;;; PP ARG REL PRONS
+;;; (N\N)/(S/PP)
+;;; where: E.g. the table where he put the vase
+pp-relativizer-sign := relativizer-basic-sign & 
+[ CAT pp-relativizer-cat &
+    [	RESULT3 [ NUMBER-ARGS [ LST [ TL #1 & e-list ],
+				LAST #1]],
+	ACTIVE3 [ LST [ HD [ SIGN [ 	CAT [ 	RESULT3 [ SIGN [ SEM2 [ INDEX1 #index3]]],
+						ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ INDEX1 #index2]]]]]],
+					SEM2 [ 	INDEX1 #index3,
+						RESTR1 [ LST [ HD [ 	SIT #index3,
+									ARG1 #index2]]]]]],
+			TL e-list & #2],
+		LAST #2]],
+  SEM2 [RESTR1 [ LST [ HD pp-rel-pred ]]]].
+
+;;; PP ARG REL PRONS
+;;; (N\N)/(S/PP)\(PP/NP)
+;;; where: E.g. the table on which he put the vase
+pp-relativizer-cat2 := pp-relativizer-cat & 
+[ 	RESULT3 [ NUMBER-ARGS [ LST [ TL [ TL #1 & e-list ]],
+				LAST #1]],
+	ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ 	RESULT3 [ 	SIGN [ CAT np-cat &
+									 [ M-FEATS [ CASE p-case]]],
+								NUMBER-ARGS [ LST [ TL e-list]]],
+					 	ACTIVE3 [ LST [ HD [ 	SIGN np-sign, 
+									DIRECTION1 ppargdir1],
+								TL e-list]]]],
+				   DIRECTION1 relargdir3],
+			    TL # 2 & e-list ]],
+		LAST #2]].	
+
+;;; PP ARG REL PRONS
+;;; (N\N)/(S/PP)\(PP/NP)
+;;; where: E.g. the table on which he put the vase
+pp-relativizer-sign2 := relativizer-basic-sign & 
+[ CAT pp-relativizer-cat2 &
+	[  ACTIVE3 [ LST [ HD [ SIGN [ 	CAT [ 	RESULT3 [ SIGN [ SEM2 [ INDEX1 #index3]]],
+						ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ INDEX1 #index4]]]]]],
+					SEM2 [ 	INDEX1 #index3,
+						RESTR1 [ LST [ HD [ 	SIT #index3,
+									ARG1 #index4]]]]]],
+			TL [ HD [ SIGN [ SEM2 [ INDEX1 #index4,
+						RESTR1 [ LST [ HD [ 	SIT #index4,
+									ARG1 #index2]]]]]]]]]],
+  SEM2 [RESTR1 [ LST [ HD pp-rel-pred2  &
+			    [ 	ARG1 #index2,
+				ARG3 #index4 ]]]]].
+
+;;; %%%%%%%%%%%%%%%% WH EXTRACTION SENTENCES %%%%%%%%%%%%%%%%%%%% 
+ 
+
+;;; inserted 02/05/99 
+wh-extraction-basic-cat := extraction-basic-cat & 
+[  result3 [  sign [  cat sent-cat & 
+				[ m-feats [  	INV /l true ] ] ]]]. 
+
+wh-extraction-basic-cat2 := wh-extraction-basic-cat & 
+[  active3 [ lst [ hd [ sign [ cat [ RESULT3 [ SIGN [ CAT  sent-cat &
+								[CAT-TYPE sent, 
+					 			M-FEATS [VERB true, 
+									 AUX true, 
+									 INV /l true ] ] ],
+						   NUMBER-ARGS [ LST [ TL e-list]]],
+					ACTIVE3 [ LST [ HD [ 	SIGN np-sign],
+							TL e-list]]]], 
+			    direction1 whargdir1 ]]]]. 
+
+wh-extraction-basic-sign := lex-word-sign &
+[ SEM2 [RESTR1 [LST [  TL #1],
+		LAST #1]]].
+ 
+
+wh-extraction-basic-sign1 := wh-extraction-basic-sign &
+[cat [ 	result3 [ sign [ SEM2 [ MODE1 #mode2, 
+				INDEX1 #index2]]],
+	active3 [  lst [  hd [  sign [  SEM2 [  MODE1 #mode2,
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  	SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [	MODE1 #mode2, 
+	INDEX1 #index2]]. 
+
+wh-extraction-basic-sign2 := wh-extraction-basic-sign1 &
+[cat [ 	active3 [  lst [  hd [  sign [  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [INDEX1 #index1]]]]]]]]]]],
+ SEM2 [	RESTR1 [ LST [ HD [ SIT #index1]]]]].
+
+;;; %%%%%% SUBJECT EXTRACTION
+;;; WH SUBJECT EXTRACTION CAT 
+;;; S/(S\NP)
+;;; who, what E.g. who do you think loves him
+wh-subj-extraction-cat := wh-extraction-basic-cat2 & 
+[ RESULT3 [ 	SIGN [ CAT [ M-FEATS #m-feats]],
+		NUMBER-ARGS [ 	LST [ TL e-list & #1],
+				LAST #1]], 
+  active3 [ lst [ hd [ sign [ cat [RESULT3 [ SIGN [ CAT [ M-FEATS #m-feats]]],
+					 ACTIVE3 [ LST [ HD [ 	SIGN poss-subj-np-sign,
+								DIRECTION1 subjdir]]]]]],
+		TL e-list & #2],
+	  LAST #2]]. 
+
+;;; WH SUBJECT EXTRACTION SIGN
+;;; S/(S\NP)
+;;; who, what E.g. who do you think loves him
+wh-subj-extraction-sign := wh-extraction-basic-sign2 & 
+[cat wh-subj-extraction-cat & 
+   [ 	result3 [ sign [ SEM2 [ RESTR1 [ LST [ HD [ SIT #index1]]]]]], 
+	active3 [  lst [  hd [  sign [  CAT [ 	RESULT3 [ SIGN [ SEM2 [ INDEX1 #index2,
+									RESTR1 [LST [HD [SIT #index2]]]]]],
+						ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ INDEX1 #index1]]]]]],
+					SEM2 [  RESTR1 [  LST [  HD [  	ACT #index1 ] ] ] ] ] ] ] ] ], 
+ SEM2 [	RESTR1 [  LST [  HD wh-subj-pred ]]]].
+ 
+;;; %%%%%% OBJECT EXTRACTION
+;;; WH OBJECT EXTRACTION CAT
+;;; S/(S/NP)
+;;; who, what, whom E.g. who do you love 
+wh-obj-extraction-cat := wh-extraction-basic-cat2 & 
+[RESULT3 [ 	SIGN [ CAT [ M-FEATS #m-feats]],
+		NUMBER-ARGS [ 	LST [ TL /l e-list & /l #1],
+				LAST /l #1]], 
+ active3 [ lst [ hd [ sign [ cat [	RESULT3 [ SIGN [ CAT [ M-FEATS #m-feats]]],
+ 					ACTIVE3 [ LST [ HD [ 	SIGN dir-obj-np-sign,
+								DIRECTION1 vargdir]]]]]]]]]. 
+;;; WH OBJECT EXTRACTION SIGN
+;;; S/(S/NP)
+;;; who, what, whom E.g. who do you love 
+wh-obj-extraction-sign := wh-extraction-basic-sign2 & 
+[ cat wh-obj-extraction-cat &
+   [ 	active3 [  lst [  hd [  sign [  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ INDEX1 #index1,
+										RESTR1 [ LST [ HD [ SIT #index1]]]]]]]]]]],
+			TL e-list & #2],
+	  	  LAST #2]], 
+ SEM2 [ RESTR1 [  LST [  HD wh-obj-pred ]]]].
+
+;;; WH OBJECT EXTRACTION SIGN
+;;; S/(S/NP)/N
+;;; what, which E.g. what/which person do you love. He asked what/which person do you love.  
+wh-obj-extraction-cat2 := wh-obj-extraction-cat & 
+[ RESULT3 [ NUMBER-ARGS [ LST [ TL [ TL e-list & #tl]],
+				LAST #tl]],
+	active3 [ lst [ tl [ 	hd [	sign [ cat noun-cat],
+					DIRECTION1 whargdir2],
+				tl #1 & e-list]],
+		 last #1]].
+
+;;; WH OBJECT EXTRACTION SIGN
+;;; S/(S/NP)/N
+;;; what, which E.g. what/which person do you love. He asked what/which person do you love. 
+wh-obj-extraction-sign2 := wh-extraction-basic-sign2 & 
+[ cat wh-obj-extraction-cat2 &
+   [ 	active3 [  lst [ HD [ SIGN [ 	CAT [ 	ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ 	INDEX1 #index1,
+											RESTR1 [ LST [ HD [ SIT #index1]]]]]]]]],
+					SEM2 [ INDEX1 #index3 ] ]]]]], 
+ SEM2 [ RESTR1 [  LST [  HD wh-obj-pred2 & 
+				[ 	SIT #index1,
+					ARG1 #index3]]]]]. 
+
+;;; %%%%%% PP ARG EXTRACTION
+;;; WH PREPOSITIONAL PHRASE EXTRACTION SIGN
+;;; S/(S/PP)
+;;; where E.g. where did he put the vase. She asked where did he put the vase
+wh-pp-extraction-cat := wh-extraction-basic-cat2 & 
+[RESULT3 [ 	SIGN [ CAT [ M-FEATS #m-feats]],
+		NUMBER-ARGS [ 	LST [ TL /l e-list & /l #1],
+				LAST /l #1]], 
+ active3 [ lst [ hd [ sign [ cat [	RESULT3 [ SIGN [ CAT [ M-FEATS #m-feats]]],
+ 					ACTIVE3 [ LST [ HD [ 	SIGN [ CAT [ M-FEATS [ 	CASE p-case,
+											LOC true]]],
+								DIRECTION1 vargdir]]]]]]]]]. 
+
+;;; WH PREPOSITIONAL PHRASE EXTRACTION SIGN
+;;; S/(S/PP)
+;;; where E.g. where did he put the vase. She asked where did he put the vase
+wh-pp-extraction-sign := wh-extraction-basic-sign2 & 
+[ cat wh-pp-extraction-cat &
+	[RESULT3 [ NUMBER-ARGS [ LST [ TL e-list & #2],
+				LAST #2]], 
+	 active3 [  lst [hd [  sign [  	CAT [ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [INDEX1	#index1,
+										RESTR1 [ LST [ HD [ SIT #index1]]]]]]]]]]],
+			TL e-list & #1],
+		 LAST #1]],
+ SEM2 [ RESTR1 [  LST [  HD wh-pp-pred ]]]].
+
+;;; WH PREPOSITIONAL PHRASE EXTRACTION SIGN
+;;; S/(S/PP)\(PP/NP)
+;;; who, whom, what E.g. by whom was he seen. She wondered to whom did he give the flowers
+wh-pp-extraction-cat2 := wh-pp-extraction-cat &  
+[ 	RESULT3 [ NUMBER-ARGS [ LST [ TL [ TL /l e-list &  /l #tl]],
+				LAST /l #tl]],
+	active3 [ lst [ tl [ hd [ sign [ cat [ RESULT3 [ SIGN [ CAT  np-cat &
+								[M-FEATS [CASE p-case]]],
+							 NUMBER-ARGS [ LST [ TL e-list]]],
+						ACTIVE3 [ LST [ HD [ 	SIGN [ CAT np-cat],
+									DIRECTION1 ppargdir1]]]]], 
+				 DIRECTION1 whargdir3],
+			   tl /l #1 & /l e-list ]],
+		 last /l #1]].
+
+;;; WH PREPOSITIONAL PHRASE EXTRACTION SIGN
+;;; S/(S/PP)\(PP/NP)
+;;; who, whom, what E.g. by whom was he seen. She wondered to whom did he give the flowers
+wh-pp-extraction-sign2 := wh-extraction-basic-sign1 & 
+[ cat wh-pp-extraction-cat2 &
+	[RESULT3 [ NUMBER-ARGS [ LST [ TL [TL e-list & #2]],
+				LAST #2]], 
+	 active3 [  lst [ HD [SIGN [	CAT [ 	ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ 	INDEX1 #index3,
+											RESTR1 [ LST [ HD [ SIT #index3]]]]]]]]]]],
+			  TL [ HD [ SIGN [SEM2[ INDEX1 #index3,
+						RESTR1 [ LST [ HD [ ARG1 #index1 ] ]]]]],
+				TL e-list & #1]],
+		   LAST #1]], 
+ SEM2 [ RESTR1 [  LST [  HD wh-pp-pred2 & 
+				[ 	SIT #index1]]]]]. 
+
+;;; WH PREPOSITIONAL PHRASE EXTRACTION SIGN
+;;; S/(S/PP)\(PP/NP)/N
+;;; which, what E.g. on which table did he put the vase. 
+wh-pp-extraction-cat3 := wh-pp-extraction-cat2 &  
+[ 	RESULT3 [ NUMBER-ARGS [ LST [ TL [ TL [ TL e-list & #tl]]],
+				LAST #tl]],
+	active3 [ lst [ tl [ tl [ hd [ 	sign [ cat noun-cat ],
+				 	DIRECTION1 whargdir4],
+				 tl #1 & e-list]]],
+		 last #1]].
+
+;;; WH PREPOSITIONAL PHRASE EXTRACTION SIGN
+;;; S/(S/PP)\(PP/NP)/N
+;;; which, what E.g. on which table did he put the vase. 
+wh-pp-extraction-sign3 := wh-extraction-basic-sign1 & 
+[ cat wh-pp-extraction-cat3 &
+     [ 	active3 [  lst [hd [  sign [  	CAT [ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [INDEX1	#index3,
+										RESTR1 [ LST [ HD [ SIT #index3]]]]]]]]]]],
+			TL [ 	HD [ SIGN [ SEM2 [ INDEX1 #index3,
+						   RESTR1 [ LST [ HD [ ARG1 #index1 ] ]]]]],
+				TL [ HD [ SIGN [ SEM2 [ INDEX1 #index4 ]]]]]]]], 
+ SEM2 [ RESTR1 [  LST [  HD wh-pp-pred3 & 
+				[ 	SIT #index1, 
+					ARG1 #index4]]]]].
+
+
+;;; %%%%%% ADJUNCT EXTRACTION 
+;;; WH ADJUNCT EXTRACTION SIGN
+;;; S/S
+;;; how/why can/should I do that 
+wh-adj-extraction-cat := wh-extraction-basic-cat & 
+[RESULT3 [ 	SIGN [ CAT [ M-FEATS #m-feats]],
+		NUMBER-ARGS [ 	LST [ TL e-list & #1],
+				LAST #1]], 
+ active3 [ lst [ hd [ sign [ cat [ CAT-TYPE sent, 
+					 M-FEATS #m-feats &
+						   [ 	VERB true, 
+							AUX true, 
+							INV true ] ] ], 
+			    direction1 whargdir1 ], 
+			tl #1  & e-list ], 
+		last #1 ] ]. 
+ 
+;;; WH ADJUNCT EXTRACTION SIGN
+;;; S/S
+;;; how/why/where/when can I do that 
+wh-adj-extraction-sign := wh-extraction-basic-sign & 
+[ cat wh-adj-extraction-cat &
+	[ result3 [ sign [ SEM2 [ MODE1 #mode1, 
+				INDEX1 #index1 ] ] ], 
+	active3 [  lst [  hd [  sign [  SEM2 [  MODE1 #mode1, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ] ] ] ] ], 
+ SEM2 [  MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD wh-adj-pred & 
+				[ 	SIT #index1, 
+					ARG1 #index2 ]]]]].
+ 
+ 
+;;; WH ADJUNCT EXTRACTION SIGN
+;;; S/(S/(NP\NP))
+;;; how E.g. how does he look. She asked how he looks
+wh-adj-extraction-cat2 := wh-extraction-basic-cat & 
+[RESULT3   [	SIGN [ CAT [ M-FEATS #m-feats]],          
+		NUMBER-ARGS [ 	LST [ TL e-list & #1],
+				LAST #1]], 
+  active3 [ 	lst [ hd [ sign [ cat [ RESULT3 [ SIGN [ CAT  sent-cat &
+								[CAT-TYPE sent, 
+					 			M-FEATS #m-feats &
+									[VERB true, 
+									 AUX true, 
+									 INV true ] ] ],
+						   NUMBER-ARGS [ LST [ TL e-list]]],
+					ACTIVE3 [ LST [ HD [ 	SIGN pred-adj-sign3,
+								DIRECTION1 whargdir2]]]]],
+			    direction1 whargdir1 ], 
+			tl #5 & e-list  ], 
+		last #5 ] ]. 
+ 
+
+;;; WH ADJUNCT EXTRACTION SIGN
+;;; S/(S/(NP\NP))
+;;; how E.g. how does he look. She asked how he looks
+wh-adj-extraction-sign2 := wh-extraction-basic-sign2 & 
+[ cat wh-adj-extraction-cat2 &
+	[ active3 [  lst [  hd [  sign [  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ SEM2 [ INDEX1 #index1,
+										 RESTR1 [ LST [ HD [ SIT #index1]]]]]]]]]]]]]], 
+ SEM2 [ RESTR1 [  LST [  HD wh-adj-pred2 ]]]]. 
+ 
+;;; %%%%%%%%%%%%%% COMPLEMENTIZERS %%%%%%%%%%%%% 
+ 
+;;; removed 22/01/99       
+;;;"Complementizer for non finite sentences, e.g.  
+;;;   'for' in 'for Bill to sleep' 
+;;;   'that' in 'that he sleep' 
+;;;The complementizer combines with a type raised NP from which all   
+;;;semantic and syntactic features are inherited except 'case' which 
+;;;is changed to 'no-case'. This allows the resulting NP to combine  
+;;;with a non-finite VP." 
+comp-non-fin-sent-sign := lex-sign & 
+[  cat [ result [ cat [ active [ cat [ active [ cat [ m-feats [ nominal-form #nform, 
+								case no-case, 
+								reg-morph #rmorph ] ] ] ] ] ] ], 
+	direction backward, 
+	active [ cat [ m-feats [ nominal-form #nform, 
+				reg-morph #rmorph, 
+				case reg-case ] ] ] ] ]. 
+ 
+;;; inserted 08/04/99       
+;;; problem with intrans-cat3 that doens't inherit NUMBER-ARGS:TL:e-list 
+;;;"Complementizer for non finite sentences, e.g.  
+;;;   'for' in 'for Bill to sleep' 
+;;;   'that' in 'that he sleep' 
+;;;The complementizer combines with a type raised NP from which all   
+;;;semantic and syntactic features are inherited except 'case' which 
+;;;is changed to 'no-case'. This allows the resulting NP to combine  
+;;;with a non-finite VP." 
+;;; XXX - acresentar o case no-case quando estiver usando agreement 
+comp-non-fin-sent-sign3 := lex-word-sign & 
+[  cat [  result3 [ sign [  cat sent-cat & 
+				[  M-FEATS [ 	VERB /l false,  
+						AUX false, 
+						INV false, 
+						TAKE-PARTICLE false ] ], 
+			SEM2 [ 	MODE1 #mode2, 
+				INDEX1 #index2 ] ], 
+		number-args #1 & [ lst [  hd arg, 
+					tl [  	hd arg, 
+						tl e-list & #2  ] ], 
+				last #2 ], 
+		permuted-args #1 ], 
+	active3 [  lst [  hd [  sign np-sign & #np-sign & 
+				    [  cat [  m-feats [  case reg-case ] ] ],
+				direction1 compargdir1], 
+			tl [  hd [  sign [ cat intrans-cat3 & 
+					[ result3 [ SIGN [ CAT [ M-FEATS [  VFORM /l inf, 
+									AUX false, 
+									INV false ] ], 
+							SEM2 [ 	MODE1 #mode1, 
+								INDEX1 #index1 ] ] ], 
+					 active3 [  lst [  hd [  sign #np-sign ] ] ] ], 
+				    SEM2 [  	MODE1 #mode1, 
+						INDEX1 #index1, 
+						RESTR1 [  LST [  HD [  SIT #index1 ] ] ] ] ], 
+				direction1 compargdir2 ], 
+			      tl #3 & e-list ] ], 
+		last #3 ] ], 
+ SEM2 comp-sem4 & 
+	[ MODE1 #mode2, 
+	INDEX1 #index2, 
+	RESTR1 [ LST [ 	HD [  ARG1 #index1 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+;;; < cat : active3: lst : tl > e-list 
+ 
+;;; inserted 30/04/99 
+comp-base-sent-sign3 := comp-non-fin-sent-sign3 & 
+[  cat [  active3 [  lst [  tl [  hd [  sign [ cat [ result3 [ SIGN [ CAT [  M-FEATS [  VFORM base ] ] ] ] ] ] ] ] ] ] ] ]. 
+ 
+;;; removed 22/01/99       
+;;;"Sentential complementizers, e.g. 'that, whether'" 
+sent-comp-sign := lex-sign & 
+[ cat [ result [  cat sent-cat ], 
+ 	direction forward, 
+	active [  cat sent-cat & 
+			[  m-feats [  comp-form no-comp ] ] ] ] ]. 
+ 
+;;; inserted 15/02/99       
+;;;"Sentential complementizers, e.g. 'that, whether'" 
+;;; E.g.: I'm not sure if it rains. 
+sent-comp-sign3 := lex-word-sign & 
+[  cat [  result3 [ sign [  cat sent-cat & 
+				[  m-feats [  	comp-form comp-form, 
+						VERB /l false  ] ], 
+			SEM2 [  	MODE1 #mode1, 
+				INDEX1 #index1 ] ], 
+		number-args #1 & [ lst [  hd arg, 
+					tl e-list & #2   ], 
+				last #2 ], 
+		permuted-args #1 ], 
+	active3 [  lst [  hd [  sign [ 	cat sent-cat & 
+						[ m-feats [  comp-form no-comp ] ], 
+					SEM2 [  	INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2 ] ] ] ] ], 
+				direction1 scompargdir1 ], 
+			tl #3 & e-list ], 
+		last #3 ] ], 
+ SEM2 sent-sem4 & 
+      [ MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [ LST [ 	HD [  ARG1 #index2 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+;;; < cat : active3: lst : tl > e-list 
+ 
+;;; inserted 23/02/99 
+;;; talvez tirar 
+sents-comp-sign3 := lex-word-sign & 
+[ cat [  result3 [  sign [  cat sent-cat, 
+			SEM2 [  MODE1 #mode1, 
+				INDEX1 #index1 ] ], 
+		number-args #3 & [ lst [  hd arg, 
+					tl [  	hd arg, 
+						tl  e-list & #2 ] ], 
+				last #2 ], 
+		permuted-args #3 ], 
+	active3 [  lst [  hd [  sign [  cat sent-cat & 
+						[  m-feats [  comp-form comp-form  ] ], 
+					SEM2 [  	MODE1 #mode1, 
+						INDEX1 #index2, 
+						RESTR1 [  LST [  HD [  SIT #index2  ] ] ] ] ], 
+				direction1 scompargdir1 ], 
+			tl [  hd [  sign [ cat sent-cat & 
+						[  m-feats [  comp-form comp-form  ] ], 
+					SEM2 [  MODE1 #mode1, 
+						INDEX1 #index3, 
+						RESTR1 [  LST [  HD [  SIT 
+ #index3 ] ] ] ] ], 
+				  direction1 scompargdir2 ], 
+				tl #5 & e-list] ], 
+		last #5 ] ], 
+ SEM2 sents-sem4 & 
+    [  	MODE1 #mode1, 
+	INDEX1 #index1, 
+	RESTR1 [  LST [  HD [ 	ARG1 #index2, 
+				ARG2 #index3 ], 
+			TL #4 ], 
+		LAST #4 ] ] ]. 
+ 
+;;; stuff from thesis 
+    
+;;; REMOVED 22/03/99 
+;;;"Lexical noun, e.g.  
+;;;   'book'" 
+;;;lex-noun-sign := noun-sign & lex-sign & 
+;;;[ sem  common-nom-obj ]. 
+ 
+;;;"Lexical noun, e.g.  
+;;;   'book'" 
+lex-noun-sign := noun-sign & lex-lexeme-sign & 
+[CAT [ M-FEATS [ COUNT /l true]], 
+ sem  common-nom-obj, 
+ SEM2 common-nom-obj2  ]. 
+   
+ 
+form := *top*. 
+ 
+indform := form. 
+ 
+normal_ind := indform. 
+ 
+individ := normal_ind. 
+ 
+plural := normal_ind. 
+ 
+group:= normal_ind. 
+ 
+strange_ind := indform. 
+ 
+pair:= strange_ind. 
+ 
+complex :=strange_ind. 
+ 
+portion :=strange_ind. 
+ 
+massform := form. 
+ 
+mass := massform. 
+collection  := massform. 
+ 
+ 
+ 
+;;; dog - individ 
+;;; children, dogs - plural 
+;;; scissors - pair 
+;;; works - complex 
+;;; team - group (can shift to plural) 
+;;; furniture - collection  
+;;; whisky - mass  
+;;; oats - mass  
+;;; a whisky - portion 
+ 
+ 
+ 
+;;; We have the following constraints 
+;;; 
+;;; Agr      plmod       qua            form              plural rule 
+;;; 
+;;; sg       false       true           individ         applies 
+;;; pl       true        false (lex)    plural                - 
+;;; pl       false       true           pair               applies 
+;;; sg/pl    false       true           complex            applies 
+;;; sg/(pl)  false       true           group              applies 
+;;; sg       false       true           portion            applies 
+;;; sg       false       false (lex)    mass                  - 
+;;; pl       false       false          mass (pl. ta)         - 
+;;; sg       false       false (lex)    collection            - 
+ 
+ 
+;;; The plural rule applies to any lexical item which is quantised 
+ 
+;;; Thesis stuff - the most straightforward transaltion to MRS involves 
+;;; a) putting qualia in the index 
+;;; b) making QUANT and PLMOD be possible features of nominal rels 
+;;;    (I don't like this at all, but there's no obvious alternative 
+;;;      after ten minutes thought which avoid proliferating rel types 
+;;;      and which allows rules to modify these values) 
+ 
+;;; The first six of these correspond to count nouns 
+;;; modified 17/03/99 to insert CAT AGR values 
+lex-count-noun := lex-noun-sign & 
+[ CAT [ M-FEATS [ 	AGR2 [ 	NUM /l sg ] ] ], 
+ sem [ index [  qualia [  form indform /l individ  ], 
+		agr [  num /l sg ] ], 
+	liszt [  lst [  hd [ plmod /l false, 
+			quant /l true  ] ] ] ] ]. 
+ 
+ 
+;;; default specification for lex-count-noun is as individ 
+;;; modified 17/03/99 to insert CAT AGR values 
+lex-uncount-noun := lex-noun-sign & 
+[ CAT [ M-FEATS [ AGR2 [ NUM /l sg ] ] ],  
+ sem [ liszt [  lst [  hd [  	quant false, 
+				plmod  false ] ] ], 
+	index [ qualia [  form massform ], 
+		agr [  num /l sg ] ] ] ]. 
+   
+;;; the following were psorts 
+;;; modified 17/03/99 to insert CAT AGR values 
+lex-individ := lex-count-noun & 
+[ CAT [ M-FEATS [ AGR2 [ 	NUM sg ] ] ], 
+ sem [ index [  qualia [  form individ ], 
+		agr [  num sg ] ], 
+	liszt [  lst [  hd [ plmod false, 
+				quant true  ] ] ] ] ]. 
+ 
+;;; lex-plural was originally for nouns like children 
+;;; but with new treatment of types/lex rules it holds for 
+;;; all plurals 
+;;; modified 17/03/99 to insert CAT AGR values 
+lex-plural := lex-count-noun & 
+[ CAT [ M-FEATS [ AGR2 [ NUM pl ] ] ], 
+ sem [ index [ 	qualia [  form plural ], 
+			agr [  num pl ] ], 
+	liszt [  lst [  hd [ 	plmod  true, 
+			 	quant false  ] ] ] ] ]. 
+ 
+lex-group := lex-count-noun & 
+[ sem [  index [  qualia [  form group ] ] ] ]. 
+    
+;;; modified 17/03/99 to insert CAT AGR values 
+lex-pair := lex-count-noun & 
+[ cat [  m-feats [  reg-morph false, 
+		AGR2 [ 	NUM pl ] ] ], 
+ sem [  index [ qualia [  form pair ], 
+		agr [  num pl ] ] ] ]. 
+ 
+; lex-complex 
+;   <> < lex-individ <> 
+;  < sem : index : qualia : form > = complex. 
+;   < sem : ind : agr : num > == num. 
+; usual problem - can't override a default with an underspeciifed 
+; value - leave this for now 
+ 
+lex-mass := lex-uncount-noun & 
+[ sem [  index [  qualia [  form mass ] ] ] ]. 
+ 
+; agr stays default because 
+; pluralia tantum take plural agreement but are uncountable 
+; * three oats 
+ 
+lex-collection := lex-uncount-noun & 
+[ sem [  index [  qualia [  form collection ] ] ] ]. 
+    
+;;; modified 17/03/99 to insert CAT AGR values 
+lex-portion := lex-count-noun & 
+[ CAT [ M-FEATS [ AGR2 [ 	NUM sg ] ] ], 
+ sem [ index [  agr [  num sg ], 
+		qualia [  form portion ] ], 
+	liszt [  lst [  hd [    plmod false, 
+				quant true  ] ] ] ] ] . 
+    
+ 
+;;%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+; LABEL and META used for labeling nodes in parse trees
+; AAC - and they must have their features declared ...
+
+label := total-sign & 
+[ label-name string  ], 
+    status: label.
+
+;;;phrase-label := label & phrase.
+
+;;;word-label := label & word.
+
+meta := total-sign &
+  [  META-PREFIX string,
+     META-SUFFIX string ],
+    status: meta.

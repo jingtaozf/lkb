@@ -1,0 +1,6427 @@
+;;; %%%%%%%%%%%%%% NAMES %%%%%%%%%%%%%%%%%%%
+ann_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "ann"]],
+  ORTH2 [ LST [ HD  "ann"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "ann"]]]]].
+
+bill_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "bill"]],
+  ORTH2 [ LST [ HD  "bill"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "bill"]]]]].
+
+colt_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "colt"]],
+  ORTH2 [ LST [ HD  "colt"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "colt"]]]]].
+
+daddy_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "daddy"]],
+  ORTH2 [ LST [ HD  "daddy"]],  
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "daddy"]]]]].
+
+dennis_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "dennis"]],
+  ORTH2 [ LST [ HD  "dennis"]],  
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "dennis"]]]]].
+
+florida_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "florida"]],
+  ORTH2 [ LST [ HD  "florida"]],  
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "florida"]]]]].
+
+gammy_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "gammy"]],
+  ORTH2 [ LST [ HD  "gammy"]],  
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "gammy"]]]]].
+
+georgie_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "georgie"]],
+  ORTH2 [ LST [ HD  "georgie"]],  
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "georgie"]]]]].
+
+goldie_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "goldie"]],
+  ORTH2 [ LST [ HD  "goldie"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "goldie"]]]]].
+
+jerry_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "jerry"]],
+  ORTH2 [ LST [ HD  "jerry"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "jerry"]]]]].
+
+john_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "john"]],
+  ORTH2 [ LST [ HD  "john"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "john"]]]]].
+
+keke_1 := reg-lex-np-sign &
+[ ORTH [ LST [ HD  "keke"]],
+  ORTH2 [ LST [ HD  "keke"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "keke"]]]]].
+
+Mama_1 := reg-lex-np-sign &
+[ ORTH [ LST [ HD  "mama"]],
+  ORTH2 [ LST [ HD  "mama"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "mama"]]]]].
+
+mary_1 := reg-lex-np-sign &
+[ ORTH [ LST [ HD  "mary"]],
+  ORTH2 [ LST [ HD  "mary"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "mary"]]]]].
+
+michael_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "michael"]],
+  ORTH2 [ LST [ HD  "michael"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "michael"]]]]].
+
+mommy_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "mommy"]],
+  ORTH2 [ LST [ HD  "mommy"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "mommy"]]]]].
+
+naomi_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "naomi"]],
+  ORTH2 [ LST [ HD  "naomi"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "naomi"]]]]].
+
+nomi_1 := reg-lex-np-sign  &
+[ ORTH [ LST [ HD  "nomi"]],
+  ORTH2 [ LST [ HD  "nomi"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "nomi"]]]]].
+
+sandy_1 := reg-lex-np-sign &
+[ ORTH [ LST [ HD  "sandy"]],
+  ORTH2 [ LST [ HD  "sandy"]],
+  SEM2 [ RESTR1[ LST [ HD [ NAME1 "sandy"]]]]].
+
+;;; %%%%%%%%%%%%%% NOUNS %%%%%%%%%%%%%%%%%%%
+
+noun_1 := lex-noun-sign &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+abc-s_1 := lex-noun-sign &
+[ORTH [ LST [ HD "abc-s"]],
+ ORTH2 [ LST [ HD "abc-s"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+animal_1 := lex-noun-sign &
+[ORTH [ LST [ HD "animal"]],
+ ORTH2 [ LST [ HD "animal"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+apple_1 := lex-noun-sign &
+[ORTH [ LST [ HD "apple"]],
+ ORTH2 [ LST [ HD "apple"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+arm_1 := lex-noun-sign &
+[ORTH [ LST [ HD "arm"]],
+ ORTH2 [ LST [ HD "arm"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+aspirin_1 := lex-noun-sign &
+[ORTH [ LST [ HD "aspirin"]],
+ ORTH2 [ LST [ HD "aspirin"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+baby_1 := lex-noun-sign &
+[ORTH [ LST [ HD "baby"]],
+ ORTH2 [ LST [ HD "baby"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-baby]]]]].
+
+baby_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "baby"]],
+ ORTH2 [ LST [ HD "baby"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-baby]]]]].
+
+back_1 := lex-noun-sign &
+[ORTH [ LST [ HD "back"]],
+ ORTH2 [ LST [ HD "back"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+bacon_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bacon"]],
+ ORTH2 [ LST [ HD "bacon"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+bag_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bag"]],
+ ORTH2 [ LST [ HD "bag"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+ball_1 := lex-noun-sign &
+[ORTH [ LST [ HD "ball"]],
+ ORTH2 [ LST [ HD "ball"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+ballon_1 := lex-noun-sign &
+[ORTH [ LST [ HD "ballon"]],
+ ORTH2 [ LST [ HD "ballon"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+banana_1 := lex-noun-sign &
+[ORTH [ LST [ HD "banana"]],
+ ORTH2 [ LST [ HD "banana"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+barn_1 := lex-noun-sign &
+[ORTH [ LST [ HD "barn"]],
+ ORTH2 [ LST [ HD "barn"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+basket_1 := lex-noun-sign &
+[ORTH [ LST [ HD "basket"]],
+ ORTH2 [ LST [ HD "basket"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+bath_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bath"]],
+ ORTH2 [ LST [ HD "bath"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+bathroom_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bathroom"]],
+ ORTH2 [ LST [ HD "bathroom"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+bear_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bear"]],
+ ORTH2 [ LST [ HD "bear"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+bed_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bed"]],
+ ORTH2 [ LST [ HD "bed"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+bedroom_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bedroom"]],
+ ORTH2 [ LST [ HD "bedroom"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+beef_1 := lex-noun-sign &
+[ORTH [ LST [ HD "beef"]],
+ ORTH2 [ LST [ HD "beef"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+bell_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bell"]],
+ ORTH2 [ LST [ HD "bell"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+bib_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bib"]],
+ ORTH2 [ LST [ HD "bib"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+billy_1 := lex-noun-sign &
+[ORTH [ LST [ HD "billy"]],
+ ORTH2 [ LST [ HD "billy"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+birdie_1 := lex-noun-sign &
+[ORTH [ LST [ HD "birdie"]],
+ ORTH2 [ LST [ HD "birdie"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+birdie_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "birdie"]],
+ ORTH2 [ LST [ HD "birdie"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+bit_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bit"]],
+ ORTH2 [ LST [ HD "bit"]],
+ CAT [ M-FEATS [ ADV true]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+bit_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "bit"]],
+ ORTH2 [ LST [ HD "bit"]],
+ CAT [ M-FEATS [ ADV true]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+bite_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bite"]],
+ ORTH2 [ LST [ HD "bite"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-action]]]]].
+
+blanket_1 := lex-noun-sign &
+[ORTH [ LST [ HD "blanket"]], 
+ ORTH2 [ LST [ HD "blanket"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+blender_1 := lex-noun-sign &
+[ORTH [ LST [ HD "blender"]],
+ ORTH2 [ LST [ HD "blender"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+boat_1 := lex-noun-sign &
+[ORTH [ LST [ HD "boat"]],
+ ORTH2 [ LST [ HD "boat"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+body_1 := lex-noun-sign &
+[ORTH [ LST [ HD "body"]],
+ ORTH2 [ LST [ HD "body"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+booboo_1 := lex-noun-sign &
+[ORTH [ LST [ HD "booboo"]],
+ ORTH2 [ LST [ HD "booboo"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-booboo]]]]].
+
+book_1 := lex-noun-sign &
+[ORTH [ LST [ HD "book"]],
+ ORTH2 [ LST [ HD "book"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+bookcase_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bookcase"]],
+ ORTH2 [ LST [ HD "bookcase"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+boot_1 := lex-noun-sign &
+[ORTH [ LST [ HD "boot"]],
+ ORTH2 [ LST [ HD "boot"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+bottle_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bottle"]],
+ ORTH2 [ LST [ HD "bottle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+box_1 := lex-noun-sign &
+[ORTH [ LST [ HD "box"]],
+ ORTH2 [ LST [ HD "box"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+bowl_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bowl"]],
+ ORTH2 [ LST [ HD "bowl"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+brandy_1 := lex-noun-sign &
+[ORTH [ LST [ HD "brandy"]],
+ ORTH2 [ LST [ HD "brandy"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-beverage]]]]].
+
+bread_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bread"]],
+ ORTH2 [ LST [ HD "bread"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+breakfast_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "breakfast"]],
+ ORTH2 [ LST [ HD "breakfast"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+breakfast_2 := lex-noun-sign &
+[ORTH [ LST [ HD "brakfast"]],
+ ORTH2 [ LST [ HD "breakfast"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+broken_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "broken"]],
+ ORTH2 [ LST [ HD "broken"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+brush_1 := lex-noun-sign &
+[ORTH [ LST [ HD "brush"]],
+ ORTH2 [ LST [ HD "brush"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+bs_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bs"]],
+ ORTH2 [ LST [ HD "bs"]],
+ CAT [ M-FEATS [AGR2 [NUM pl]]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-bs]]]]].
+
+bucket_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bucket"]],
+ ORTH2 [ LST [ HD "bucket"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+bug_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bug"]],
+ ORTH2 [ LST [ HD "bug"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+bunny_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "bunny"]],
+ ORTH2 [ LST [ HD "bunny"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+bundle_1 := lex-noun-sign &
+[ORTH [ LST [ HD "bundle"]],
+ ORTH2 [ LST [ HD "bundle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+butter_1 := lex-noun-sign &
+[ORTH [ LST [ HD "butter"]],
+ ORTH2 [ LST [ HD "butter"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+butterfly_1 := lex-noun-sign &
+[ORTH [ LST [ HD "butterfly"]],
+ ORTH2 [ LST [ HD "butterfly"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+button_1 := lex-noun-sign &
+[ORTH [ LST [ HD "button"]],
+ ORTH2 [ LST [ HD "button"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+calf_1 := lex-noun-sign &
+[ORTH [ LST [ HD "calf"]],
+ ORTH2 [ LST [ HD "calf"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+camel_1 := lex-noun-sign &
+[ORTH [ LST [ HD "camel"]],
+ ORTH2 [ LST [ HD "camel"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+candle_1 := lex-noun-sign &
+[ORTH [ LST [ HD "candle"]],
+ ORTH2 [ LST [ HD "candle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+car_1 := lex-noun-sign &
+[ORTH [ LST [ HD "car"]],
+ ORTH2 [ LST [ HD "car"]], 
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+card_1 := lex-noun-sign &
+[ORTH [ LST [ HD "card"]],
+ ORTH2 [ LST [ HD "card"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+cardboard_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cardboard"]],
+ ORTH2 [ LST [ HD "cardboard"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+carrot_1 := lex-noun-sign &
+[ORTH [ LST [ HD "carrot"]],
+ ORTH2 [ LST [ HD "carrot"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+cat_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cat"]],
+ ORTH2 [ LST [ HD "cat"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-cat]]]]].
+
+catalogue_1 := lex-noun-sign &
+[ORTH [ LST [ HD "catalogue"]],
+ ORTH2 [ LST [ HD "catalogue"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+chair_1 := lex-noun-sign &
+[ORTH [ LST [ HD "chair"]],
+ ORTH2 [ LST [ HD "chair"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+chandelier_1 := lex-noun-sign &
+[ORTH [ LST [ HD "chandelier"]],
+ ORTH2 [ LST [ HD "chandelier"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+change_1 := lex-noun-sign &
+[ORTH [ LST [ HD "change"]],
+ ORTH2 [ LST [ HD "change"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-action]]]]].
+
+;;; mass
+cheerios_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cheerios"]],
+ ORTH2 [ LST [ HD "cheerios"]],
+ CAT [ M-FEATS [ COUNT false]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+cheese_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cheese"]],
+ ORTH2 [ LST [ HD "cheese"]],
+ CAT [ M-FEATS [ COUNT false]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+cheese_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "cheese"]],
+ ORTH2 [ LST [ HD "cheese"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+chicken_1 := lex-noun-sign &
+[ORTH [ LST [ HD "chicken"]],
+ ORTH2 [ LST [ HD "chicken"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+chicken_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "chicken"]],
+ ORTH2 [ LST [ HD "chicken"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+chickie_1 := lex-noun-sign &
+[ORTH [ LST [ HD "chickie"]],
+ ORTH2 [ LST [ HD "chickie"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+chickie_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "chickie"]],
+ ORTH2 [ LST [ HD "chickie"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+chimney_1 := lex-noun-sign &
+[ORTH [ LST [ HD "chimney"]],
+ ORTH2 [ LST [ HD "chimney"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+chopstick_1 := lex-noun-sign &
+[ORTH [ LST [ HD "chopstick"]],
+ ORTH2 [ LST [ HD "chopstick"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+clipper_1 := lex-noun-sign &
+[ORTH [ LST [ HD "clipper"]],
+ ORTH2 [ LST [ HD "clipper"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+clock_1 := lex-noun-sign &
+[ORTH [ LST [ HD "clock"]],
+ ORTH2 [ LST [ HD "clock"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+cloth_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cloth"]],
+ ORTH2 [ LST [ HD "cloth"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+clothes_1 := lex-noun-sign &
+[ORTH [ LST [ HD "clothes"]],
+ ORTH2 [ LST [ HD "clothes"]],
+ CAT [ M-FEATS [AGR2 [NUM pl]]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-clothes]]]]].
+
+clothes_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "clothes"]],
+ ORTH2 [ LST [ HD "clothes"]],
+ CAT [ M-FEATS [AGR2 [NUM pl]]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-clothes]]]]].
+
+cloud_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cloud"]],
+ ORTH2 [ LST [ HD "cloud"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+coat_1 := lex-noun-sign &
+[ORTH [ LST [ HD "coat"]],
+ ORTH2 [ LST [ HD "coat"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+cocoa_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cocoa"]],
+ ORTH2 [ LST [ HD "cocoa"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+coffee_1 := lex-noun-sign &
+[ORTH [ LST [ HD "coffee"]],
+ ORTH2 [ LST [ HD "coffee"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-beverage]]]]].
+
+cold_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cold"]],
+ ORTH2 [ LST [ HD "cold"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-disease]]]]].
+
+color_1 := lex-noun-sign &
+[ORTH [ LST [ HD "color"]],
+ ORTH2 [ LST [ HD "color"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-color]]]]].
+
+cow_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cow"]],
+ ORTH2 [ LST [ HD "cow"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+cradle_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cradle"]],
+ ORTH2 [ LST [ HD "cradle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+crayon_1 := lex-noun-sign &
+[ORTH [ LST [ HD "crayon"]],
+ ORTH2 [ LST [ HD "crayon"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+cream_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cream"]],
+ ORTH2 [ LST [ HD "cream"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+creep_1 := lex-noun-sign &
+[ORTH [ LST [ HD "creep"]],
+ ORTH2 [ LST [ HD "creep"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-creep]]]]].
+
+crib_1 := lex-noun-sign &
+[ORTH [ LST [ HD "crib"]],
+ ORTH2 [ LST [ HD "crib"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+crispies_1 := lex-noun-sign &
+[ORTH [ LST [ HD "crispies"]],
+ ORTH2 [ LST [ HD "crispies"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+crumb_1 := lex-noun-sign &
+[ORTH [ LST [ HD "crumb"]],
+ ORTH2 [ LST [ HD "crumb"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+cup_1 := lex-noun-sign &
+[ORTH [ LST [ HD "cup"]],
+ ORTH2 [ LST [ HD "cup"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+daddy_2 := lex-noun-sign  &
+[ ORTH [ LST [ HD  "daddy"]],
+  ORTH2 [ LST [ HD  "daddy"]],  
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-person]]]]].
+
+daffodil_1 := lex-noun-sign  &
+[ ORTH [ LST [ HD  "daffodil"]],
+  ORTH2 [ LST [ HD  "daffodil"]],  
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-person]]]]].
+
+day_1 := lex-noun-sign &
+[ORTH [ LST [ HD "day"]],
+ ORTH2 [ LST [ HD "day"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+daytime_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "daytime"]],
+ ORTH2 [ LST [ HD "daytime"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+desk_1 := lex-noun-sign &
+[ORTH [ LST [ HD "desk"]],
+ ORTH2 [ LST [ HD "desk"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+diaper_1 := lex-noun-sign &
+[ORTH [ LST [ HD "diaper"]],
+ ORTH2 [ LST [ HD "diaper"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+difference_1 := lex-noun-sign &
+[ORTH [ LST [ HD "difference"]],
+ ORTH2 [ LST [ HD "difference"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-state]]]]].
+
+dinner_1 := lex-noun-sign &
+[ORTH [ LST [ HD "dinner"]],
+ ORTH2 [ LST [ HD "dinner"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+dish_1 := lex-noun-sign &
+[ORTH [ LST [ HD "dish"]],
+ ORTH2 [ LST [ HD "dish"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+dishwasher_1 := lex-noun-sign &
+[ORTH [ LST [ HD "dishwasher"]],
+ ORTH2 [ LST [ HD "dishwasher"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+dog_1 := lex-noun-sign &
+[ORTH [ LST [ HD "dog"]],
+ ORTH2 [ LST [ HD "dog"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-dog]]]]].
+
+doggie_1 := lex-noun-sign &
+[ORTH [ LST [ HD "doggie"]],
+ ORTH2 [ LST [ HD "doggie"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-dog]]]]].
+
+doggie_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "doggie"]],
+ ORTH2 [ LST [ HD "doggie"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-dog]]]]].
+
+dolly_1 := lex-noun-sign &
+[ORTH [ LST [ HD "dolly"]],
+ ORTH2 [ LST [ HD "dolly"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+dolly_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "dolly"]],
+ ORTH2 [ LST [ HD "dolly"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+donkey_1 := lex-noun-sign &
+[ORTH [ LST [ HD "donkey"]],
+ ORTH2 [ LST [ HD "donkey"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+door_1 := lex-noun-sign &
+[ORTH [ LST [ HD "door"]],
+ ORTH2 [ LST [ HD "door"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+dress_1 := lex-noun-sign &
+[ORTH [ LST [ HD "dress"]],
+ ORTH2 [ LST [ HD "dress"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-clothes]]]]].
+
+drop_1 := lex-noun-sign &
+[ORTH [ LST [ HD "drop"]],
+ ORTH2 [ LST [ HD "drop"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+dropper_1 := lex-noun-sign &
+[ORTH [ LST [ HD "dropper"]],
+ ORTH2 [ LST [ HD "dropper"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-person]]]]].
+
+duck_1 := lex-noun-sign &
+[ORTH [ LST [ HD "duck"]],
+ ORTH2 [ LST [ HD "duck"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+duck_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "duck"]],
+ ORTH2 [ LST [ HD "duck"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+ear_1 := lex-noun-sign &
+[ORTH [ LST [ HD "ear"]],
+ ORTH2 [ LST [ HD "ear"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+edge_1 := lex-noun-sign &
+[ORTH [ LST [ HD "edge"]],
+ ORTH2 [ LST [ HD "edge"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+egg_1 := lex-noun-sign &
+[ORTH [ LST [ HD "egg"]],
+ ORTH2 [ LST [ HD "egg"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+elbow_1 := lex-noun-sign &
+[ORTH [ LST [ HD "elbow"]],
+ ORTH2 [ LST [ HD "elbow"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+elephant_1 := lex-noun-sign &
+[ORTH [ LST [ HD "elephant"]],
+ ORTH2 [ LST [ HD "elephant"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+end_1 := lex-noun-sign &
+[ORTH [ LST [ HD "end"]],
+ ORTH2 [ LST [ HD "end"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+extinguisher_1 := lex-noun-sign &
+[ORTH [ LST [ HD "extinguisher"]],
+ ORTH2 [ LST [ HD "extinguisher"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+eye_1 := lex-noun-sign &
+[ORTH [ LST [ HD "eye"]],
+ ORTH2 [ LST [ HD "eye"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+face_1 := lex-noun-sign &
+[ORTH [ LST [ HD "face"]],
+ ORTH2 [ LST [ HD "face"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+familia_1 := lex-noun-sign &
+[ORTH [ LST [ HD "familia"]],
+ ORTH2 [ LST [ HD "familia"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+finger_1 := lex-noun-sign &
+[ORTH [ LST [ HD "finger"]],
+ ORTH2 [ LST [ HD "finger"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+fire_1 := lex-noun-sign &
+[ORTH [ LST [ HD "fire"]],
+ ORTH2 [ LST [ HD "fire"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+fish_1 := lex-noun-sign &
+[ORTH [ LST [ HD "fish"]],
+ ORTH2 [ LST [ HD "fish"]],
+ CAT [ M-FEATS [AGR2 [NUM pl]]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+five_1 := lex-noun-sign &
+[ORTH [ LST [ HD "five"]],
+ ORTH2 [ LST [ HD "five"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-number]]]]].
+
+floor_1 := lex-noun-sign &
+[ORTH [ LST [ HD "floor"]],
+ ORTH2 [ LST [ HD "floor"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+flower_1 := lex-noun-sign &
+[ORTH [ LST [ HD "flower"]],
+ ORTH2 [ LST [ HD "flower"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+foot_1 := lex-noun-sign &
+[ORTH [ LST [ HD "foot"]],
+ ORTH2 [ LST [ HD "foot"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+fraction_1 := lex-noun-sign &
+[ORTH [ LST [ HD "fraction"]],
+ ORTH2 [ LST [ HD "fraction"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+friday_1 := lex-noun-sign &
+[ORTH [ LST [ HD "friday"]],
+ ORTH2 [ LST [ HD "friday"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+frisbee_1 := lex-noun-sign &
+[ORTH [ LST [ HD "frisbee"]],
+ ORTH2 [ LST [ HD "frisbee"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+frog_1 := lex-noun-sign &
+[ORTH [ LST [ HD "frog"]],
+ ORTH2 [ LST [ HD "frog"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+function_1 := lex-noun-sign &
+[ORTH [ LST [ HD "function"]],
+ ORTH2 [ LST [ HD "function"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-function]]]]].
+
+gander_1 := lex-noun-sign &
+[ORTH [ LST [ HD "gander"]],
+ ORTH2 [ LST [ HD "gander"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+girl_1 := lex-noun-sign &
+[ORTH [ LST [ HD "girl"]],
+ ORTH2 [ LST [ HD "girl"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-human]]]]].
+
+glasses_1 := lex-noun-sign &
+[ORTH [ LST [ HD "glasses"]],
+ ORTH2 [ LST [ HD "glasses"]],
+ CAT [ M-FEATS [AGR2 [NUM pl]]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+goat_1 := lex-noun-sign &
+[ORTH [ LST [ HD "goat"]],
+ ORTH2 [ LST [ HD "goat"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+gogo_1 := lex-noun-sign &
+[ORTH [ LST [ HD "gogo"]],
+ ORTH2 [ LST [ HD "gogo"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+gook_1 := lex-noun-sign &
+[ORTH [ LST [ HD "gook"]],
+ ORTH2 [ LST [ HD "gook"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+goose_1 := lex-noun-sign &
+[ORTH [ LST [ HD "goose"]],
+ ORTH2 [ LST [ HD "goose"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+grass_1 := lex-noun-sign &
+[ORTH [ LST [ HD "grass"]],
+ ORTH2 [ LST [ HD "grass"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+grasshopper_1 := lex-noun-sign &
+[ORTH [ LST [ HD "grasshopper"]],
+ ORTH2 [ LST [ HD "grasshopper"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+ground_1 := lex-noun-sign &
+[ORTH [ LST [ HD "ground"]],
+ ORTH2 [ LST [ HD "ground"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+gruff_1 := lex-noun-sign &
+[ORTH [ LST [ HD "gruff"]],
+ ORTH2 [ LST [ HD "gruff"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+hair_1 := lex-noun-sign &
+[ORTH [ LST [ HD "hair"]],
+ ORTH2 [ LST [ HD "hair"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+hair_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "hair"]],
+ ORTH2 [ LST [ HD "hair"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+;;; hands NP
+hammer_1 := lex-noun-sign &
+[ORTH [ LST [ HD "hammer"]],
+ ORTH2 [ LST [ HD "hammer"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+hand_1 := lex-noun-sign &
+[ORTH [ LST [ HD "hand"]],
+ ORTH2 [ LST [ HD "hand"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+handle_1 := lex-noun-sign &
+[ORTH [ LST [ HD "handle"]],
+ ORTH2 [ LST [ HD "handle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+hanger_1 := lex-noun-sign &
+[ORTH [ LST [ HD "hanger"]],
+ ORTH2 [ LST [ HD "hanger"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+hard_1 := lex-noun-sign &
+[ORTH [ LST [ HD "hard"]],
+ ORTH2 [ LST [ HD "hard"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-state]]]]].
+
+hat_1 := lex-noun-sign &
+[ORTH [ LST [ HD "hat"]],
+ ORTH2 [ LST [ HD "hat"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+head_1 := lex-noun-sign &
+[ORTH [ LST [ HD "head"]],
+ ORTH2 [ LST [ HD "head"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+help_4 := lex-np-noun-sign &
+[ORTH [ LST [ HD "help"]],
+ ORTH2 [ LST [ HD "help"]],
+ CAT [ M-FEATS [AGR2 [NUM pl]]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-action]]]]].
+
+help_3 := lex-noun-sign &
+[ORTH [ LST [ HD "help"]],
+ ORTH2 [ LST [ HD "help"]],
+ CAT [ M-FEATS [AGR2 [NUM pl]]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-action]]]]].
+
+hole_1 := lex-noun-sign &
+[ORTH [ LST [ HD "hole"]],
+ ORTH2 [ LST [ HD "hole"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+home_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "home"]],
+ ORTH2 [ LST [ HD "home"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+home_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "home"]],
+ ORTH2 [ LST [ HD "home"]],
+  CAT [ M-FEATS [ 	CASE p-case,
+			LOC true]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+honey_1 := lex-noun-sign &
+[ORTH [ LST [ HD "honey"]],
+ ORTH2 [ LST [ HD "honey"]],
+ CAT [ M-FEATS [AGR2 [NUM pl]]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+horse_1 := lex-noun-sign &
+[ORTH [ LST [ HD "horse"]],
+ ORTH2 [ LST [ HD "horse"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+;;; horsies 
+horsie_1 := lex-noun-sign &
+[ORTH [ LST [ HD "horsie"]],
+ ORTH2 [ LST [ HD "horsie"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+house_1 := lex-noun-sign &
+[ORTH [ LST [ HD "house"]],
+ ORTH2 [ LST [ HD "house"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+hug_1 := lex-noun-sign &
+[ORTH [ LST [ HD "hug"]],
+ ORTH2 [ LST [ HD "hug"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-hug]]]]].
+
+ice_1 := lex-noun-sign &
+[ORTH [ LST [ HD "ice"]],
+ ORTH2 [ LST [ HD "ice"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+idea_1 := lex-noun-sign &
+[ORTH [ LST [ HD "idea"]],
+ ORTH2 [ LST [ HD "idea"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-idea]]]]].
+
+instrument_1 := lex-noun-sign &
+[ORTH [ LST [ HD "instrument"]],
+ ORTH2 [ LST [ HD "instrument"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+jacket_1 := lex-noun-sign &
+[ORTH [ LST [ HD "jacket"]],
+ ORTH2 [ LST [ HD "jacket"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-clothes]]]]].
+
+jammies_1 := lex-noun-sign &
+[ORTH [ LST [ HD "jammies"]],
+ ORTH2 [ LST [ HD "jammies"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-clothes]]]]].
+
+jelly_1 := lex-noun-sign &
+[ORTH [ LST [ HD "jelly"]],
+ ORTH2 [ LST [ HD "jelly"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+juice_1 := lex-noun-sign &
+[ORTH [ LST [ HD "juice"]],
+ ORTH2 [ LST [ HD "juice"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-beverage]]]]].
+
+kangaroo_1 := lex-noun-sign &
+[ORTH [ LST [ HD "kangaroo"]],
+ ORTH2 [ LST [ HD "kangaroo"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+kiss_2 := lex-noun-sign &
+[ORTH [ LST [ HD "kiss"]],
+ ORTH2 [ LST [ HD "kiss"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-kiss]]]]].
+
+kitchen_1 := lex-noun-sign &
+[ORTH [ LST [ HD "kitchen"]],
+ ORTH2 [ LST [ HD "kitchen"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+kitty_1 := lex-noun-sign &
+[ORTH [ LST [ HD "kitty"]],
+ ORTH2 [ LST [ HD "kitty"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+knee_1 := lex-noun-sign &
+[ORTH [ LST [ HD "knee"]],
+ ORTH2 [ LST [ HD "knee"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+knife_1 := lex-noun-sign &
+[ORTH [ LST [ HD "knife"]],
+ ORTH2 [ LST [ HD "knife"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+knob_1 := lex-noun-sign &
+[ORTH [ LST [ HD "knob"]],
+ ORTH2 [ LST [ HD "knob"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+lab_1 := lex-noun-sign &
+[ORTH [ LST [ HD "lab"]],
+ ORTH2 [ LST [ HD "lab"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+lady_1 := lex-noun-sign &
+[ORTH [ LST [ HD "lady"]],
+ ORTH2 [ LST [ HD "lady"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-person]]]]].
+
+ladybug_1 := lex-noun-sign &
+[ORTH [ LST [ HD "ladybug"]],
+ ORTH2 [ LST [ HD "ladybug"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+lamb_1 := lex-noun-sign &
+[ORTH [ LST [ HD "lamb"]],
+ ORTH2 [ LST [ HD "lamb"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+lamp_1 := lex-noun-sign &
+[ORTH [ LST [ HD "lamp"]],
+ ORTH2 [ LST [ HD "lamp"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+lap_1 := lex-noun-sign &
+[ORTH [ LST [ HD "lap"]],
+ ORTH2 [ LST [ HD "lap"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+laundry_1 := lex-noun-sign &
+[ORTH [ LST [ HD "laundry"]],
+ ORTH2 [ LST [ HD "laundry"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+leg_1 := lex-noun-sign &
+[ORTH [ LST [ HD "leg"]],
+ ORTH2 [ LST [ HD "leg"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+;;; lights
+light_1 := lex-noun-sign &
+[ORTH [ LST [ HD "light"]],
+ ORTH2 [ LST [ HD "light"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+living_1 := lex-noun-sign &
+[ORTH [ LST [ HD "living"]],
+ ORTH2 [ LST [ HD "living"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-state]]]]].
+
+lock_1 := lex-noun-sign &
+[ORTH [ LST [ HD "lock"]],
+ ORTH2 [ LST [ HD "lock"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+lolly_1 := lex-noun-sign &
+[ORTH [ LST [ HD "lolly"]],
+ ORTH2 [ LST [ HD "lolly"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+mallet_1 := lex-noun-sign &
+[ORTH [ LST [ HD "mallet"]],
+ ORTH2 [ LST [ HD "mallet"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+mammal_1 := lex-noun-sign &
+[ORTH [ LST [ HD "mammal"]],
+ ORTH2 [ LST [ HD "mammal"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+man_1 := lex-noun-sign &
+[ORTH [ LST [ HD "man"]],
+ ORTH2 [ LST [ HD "man"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-person]]]]].
+
+mantle_1 := lex-noun-sign &
+[ORTH [ LST [ HD "mantle"]],
+ ORTH2 [ LST [ HD "mantle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+matter_1 := lex-noun-sign &
+[ORTH [ LST [ HD "matter"]],
+ ORTH2 [ LST [ HD "matter"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-state]]]]].
+
+matzo_1 := lex-noun-sign &
+[ORTH [ LST [ HD "matzo"]],
+ ORTH2 [ LST [ HD "matzo"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+mauve_1 := lex-noun-sign &
+[ORTH [ LST [ HD "mauve"]],
+ ORTH2 [ LST [ HD "mauve"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-color]]]]].
+
+meowo_1 := lex-noun-sign &
+[ORTH [ LST [ HD "meowo"]],
+ ORTH2 [ LST [ HD "meowo"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+metal_1 := lex-noun-sign &
+[ORTH [ LST [ HD "metal"]],
+ ORTH2 [ LST [ HD "metal"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+microphone_1 := lex-noun-sign &
+[ORTH [ LST [ HD "microphone"]],
+ ORTH2 [ LST [ HD "microphone"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+;;; mass
+milk_1 := lex-noun-sign &
+[ORTH [ LST [ HD "milk"]],
+ ORTH2 [ LST [ HD "milk"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-beverage]]]]].
+
+minute_1 := lex-noun-sign &
+[ORTH [ LST [ HD "minute"]],
+ ORTH2 [ LST [ HD "minute"]],
+ CAT [ M-FEATS [ ADV true]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+minute_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "minute"]],
+ ORTH2 [ LST [ HD "minute"]],
+ CAT [ M-FEATS [ ADV true]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+mirror_1 := lex-noun-sign &
+[ORTH [ LST [ HD "mirror"]],
+ ORTH2 [ LST [ HD "mirror"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+mommy_2 := lex-noun-sign  &
+[ORTH [ LST [ HD  "mommy"]],
+ ORTH2 [ LST [ HD  "mommy"]],
+ SEM2 [ RESTR1[ LST [ HD [ RELN1 r-person]]]]].
+
+monkey_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "monkey"]],
+ ORTH2 [ LST [ HD "monkey"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+moon_1 := lex-noun-sign &
+[ORTH [ LST [ HD "moon"]],
+ ORTH2 [ LST [ HD "moon"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+moon_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "moon"]],
+ ORTH2 [ LST [ HD "moon"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+mooo_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "mooo"]],
+ ORTH2 [ LST [ HD "mooo"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+morning_1 := lex-noun-sign &
+[ORTH [ LST [ HD "morning"]],
+ ORTH2 [ LST [ HD "morning"]],
+ CAT [ M-FEATS [ ADV true]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+morning_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "morning"]],
+ ORTH2 [ LST [ HD "morning"]],
+ CAT [ M-FEATS [ ADV true]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+movie_1 := lex-noun-sign &
+[ORTH [ LST [ HD "movie"]],
+ ORTH2 [ LST [ HD "movie"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+mouse_1 := lex-noun-sign &
+[ORTH [ LST [ HD "mouse"]],
+ ORTH2 [ LST [ HD "mouse"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-mouse]]]]].
+
+mouth_1 := lex-noun-sign &
+[ORTH [ LST [ HD "mouth"]],
+ ORTH2 [ LST [ HD "mouth"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+name_1 := lex-noun-sign &
+[ORTH [ LST [ HD "name"]],
+ ORTH2 [ LST [ HD "name"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-name]]]]].
+
+nap_2 := lex-noun-sign &
+[ORTH [ LST [ HD "nap"]],
+ ORTH2 [ LST [ HD "nap"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-action]]]]].
+
+nap_3 := lex-np-noun-sign &
+[ORTH [ LST [ HD "nap"]],
+ ORTH2 [ LST [ HD "nap"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-action]]]]].
+
+napkin_1 := lex-noun-sign &
+[ORTH [ LST [ HD "napkin"]],
+ ORTH2 [ LST [ HD "napkin"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+necklace_1 := lex-noun-sign &
+[ORTH [ LST [ HD "necklace"]],
+ ORTH2 [ LST [ HD "necklace"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+night_1 := lex-noun-sign &
+[ORTH [ LST [ HD "night"]],
+ ORTH2 [ LST [ HD "night"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+nighttime_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "nighttime"]],
+ ORTH2 [ LST [ HD "nighttime"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+no_1 := lex-noun-sign &
+[ORTH [ LST [ HD "no"]],
+ ORTH2 [ LST [ HD "no"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+nose_1 := lex-noun-sign &
+[ORTH [ LST [ HD "nose"]],
+ ORTH2 [ LST [ HD "nose"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+nut_1 := lex-noun-sign &
+[ORTH [ LST [ HD "nut"]],
+ ORTH2 [ LST [ HD "nut"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+ogre_1 := lex-noun-sign &
+[ORTH [ LST [ HD "ogre"]],
+ ORTH2 [ LST [ HD "ogre"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+oinko_1 := lex-noun-sign &
+[ORTH [ LST [ HD "oinko"]],
+ ORTH2 [ LST [ HD "oinko"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+oinko_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "oinko"]],
+ ORTH2 [ LST [ HD "oinko"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+one_1 := lex-noun-sign &
+[ORTH [ LST [ HD "one"]],
+ ORTH2 [ LST [ HD "one"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-reference]]]]].
+
+one_2 := lex-noun-sign &
+[ORTH [ LST [ HD "one"]],
+ ORTH2 [ LST [ HD "one"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-number]]]]].
+
+package_1 := lex-noun-sign &
+[ORTH [ LST [ HD "package"]],
+ ORTH2 [ LST [ HD "package"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+page_1 := lex-noun-sign &
+[ORTH [ LST [ HD "page"]],
+ ORTH2 [ LST [ HD "page"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+pajama_1 := lex-noun-sign &
+[ORTH [ LST [ HD "pajama"]],
+ ORTH2 [ LST [ HD "pajama"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-clothes]]]]].
+
+;;; pants
+pants_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "pants"]],
+ ORTH2 [ LST [ HD "pants"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-clothes]]]]].
+
+pant_1 := lex-noun-sign &
+[ORTH [ LST [ HD "pant"]],
+ ORTH2 [ LST [ HD "pant"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-clothes]]]]].
+
+paper_1 := lex-noun-sign &
+[ORTH [ LST [ HD "paper"]],
+ ORTH2 [ LST [ HD "paper"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-paper]]]]].
+
+party_1 := lex-noun-sign &
+[ORTH [ LST [ HD "party"]],
+ ORTH2 [ LST [ HD "party"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-entertainment]]]]].
+
+passy_1 := lex-noun-sign &
+[ORTH [ LST [ HD "passy"]],
+ ORTH2 [ LST [ HD "passy"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+peanut_1 := lex-noun-sign &
+[ORTH [ LST [ HD "peanut"]],
+ ORTH2 [ LST [ HD "peanut"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+pear_1 := lex-noun-sign &
+[ORTH [ LST [ HD "pear"]],
+ ORTH2 [ LST [ HD "pear"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+peel_1 := lex-noun-sign &
+[ORTH [ LST [ HD "peel"]],
+ ORTH2 [ LST [ HD "peel"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+peepo_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "peepo"]],
+ ORTH2 [ LST [ HD "peepo"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+pegboard_1 := lex-noun-sign &
+[ORTH [ LST [ HD "pegboard"]],
+ ORTH2 [ LST [ HD "pegboard"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+people_1 := lex-noun-sign &
+[ORTH [ LST [ HD "people"]],
+ ORTH2 [ LST [ HD "people"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-person]]]]].
+
+perfume_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "perfume"]],
+ ORTH2 [ LST [ HD "perfume"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+perfume_2 := lex-noun-sign &
+[ORTH [ LST [ HD "perfume"]],
+ ORTH2 [ LST [ HD "perfume"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+pen_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "pen"]],
+ ORTH2 [ LST [ HD "pen"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+phone_1 := lex-noun-sign &
+[ORTH [ LST [ HD "phone"]],
+ ORTH2 [ LST [ HD "phone"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+picnic_1 := lex-noun-sign &
+[ORTH [ LST [ HD "picnic"]],
+ ORTH2 [ LST [ HD "picnic"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+picture_1 := lex-noun-sign &
+[ORTH [ LST [ HD "picture"]],
+ ORTH2 [ LST [ HD "picture"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+picture_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "picture"]],
+ ORTH2 [ LST [ HD "picture"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+piggy_1 := lex-noun-sign &
+[ORTH [ LST [ HD "piggy"]],
+ ORTH2 [ LST [ HD "piggy"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+piggy_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "piggy"]],
+ ORTH2 [ LST [ HD "piggy"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+pigtail_1 := lex-noun-sign &
+[ORTH [ LST [ HD "pigtail"]],
+ ORTH2 [ LST [ HD "pigtail"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+pillow_1 := lex-noun-sign &
+[ORTH [ LST [ HD "pillow"]], 
+ ORTH2 [ LST [ HD "pillow"]], 
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+pin_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "pin"]],
+ ORTH2 [ LST [ HD "pin"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+pizza_1 := lex-noun-sign &
+[ORTH [ LST [ HD "pizza"]],
+ ORTH2 [ LST [ HD "pizza"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+place_1 := lex-noun-sign &
+[ORTH [ LST [ HD "place"]], 
+ ORTH2 [ LST [ HD "place"]], 
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+plate_1 := lex-noun-sign &
+[ORTH [ LST [ HD "plate"]], 
+ ORTH2 [ LST [ HD "plate"]], 
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+plural_1 := lex-noun-sign &
+[ORTH [ LST [ HD "plural"]],
+ ORTH2 [ LST [ HD "plural"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+pocket_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "pocket"]],
+ ORTH2 [ LST [ HD "pocket"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+poodle_1 := lex-noun-sign &
+[ORTH [ LST [ HD "poodle"]],
+ ORTH2 [ LST [ HD "poodle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+popsicle_1 := lex-noun-sign &
+[ORTH [ LST [ HD "popsicle"]],
+ ORTH2 [ LST [ HD "popsicle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+potato_1 := lex-noun-sign &
+[ORTH [ LST [ HD "potato"]],
+ ORTH2 [ LST [ HD "potato"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+potty_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "potty"]],
+ ORTH2 [ LST [ HD "potty"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+powder_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "powder"]],
+ ORTH2 [ LST [ HD "powder"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+powder_2 := lex-noun-sign &
+[ORTH [ LST [ HD "powder"]],
+ ORTH2 [ LST [ HD "powder"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+puddle_1 := lex-noun-sign &
+[ORTH [ LST [ HD "puddle"]],
+ ORTH2 [ LST [ HD "puddle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+puppet_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "puppet"]],
+ ORTH2 [ LST [ HD "puppet"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+puppet_2 := lex-noun-sign &
+[ORTH [ LST [ HD "puppet"]],
+ ORTH2 [ LST [ HD "puppet"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+purse_1 := lex-noun-sign &
+[ORTH [ LST [ HD "purse"]],
+ ORTH2 [ LST [ HD "purse"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+quacko_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "quacko"]],
+ ORTH2 [ LST [ HD "quacko"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+rabbit_1 := lex-noun-sign &
+[ORTH [ LST [ HD "rabbit"]],
+ ORTH2 [ LST [ HD "rabbit"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+raisin_1 := lex-noun-sign &
+[ORTH [ LST [ HD "raisin"]],
+ ORTH2 [ LST [ HD "raisin"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+record_1 := lex-noun-sign &
+[ORTH [ LST [ HD "recorder"]],
+ ORTH2 [ LST [ HD "recorder"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+red_1 := lex-noun-sign &
+[ORTH [ LST [ HD "red"]],
+ ORTH2 [ LST [ HD "red"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-color]]]]].
+
+refrigerator_1 := lex-noun-sign &
+[ORTH [ LST [ HD "refrigerator"]],
+ ORTH2 [ LST [ HD "refrigerator"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+reindeer_1 := lex-noun-sign &
+[ORTH [ LST [ HD "reindeer"]],
+ ORTH2 [ LST [ HD "reindeer"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+ribbon_1 := lex-noun-sign &
+[ORTH [ LST [ HD "ribbon"]],
+ ORTH2 [ LST [ HD "ribbon"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+road_1 := lex-noun-sign &
+[ORTH [ LST [ HD "road"]],
+ ORTH2 [ LST [ HD "road"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+room_1 := lex-noun-sign &
+[ORTH [ LST [ HD "room"]],
+ ORTH2 [ LST [ HD "room"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+rubber_1 := lex-noun-sign &
+[ORTH [ LST [ HD "rubber"]],
+ ORTH2 [ LST [ HD "rubber"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+rug_1 := lex-noun-sign &
+[ORTH [ LST [ HD "rug"]],
+ ORTH2 [ LST [ HD "rug"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+sailboat_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sailboat"]],
+ ORTH2 [ LST [ HD "sailboat"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+sandal_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sandal"]],
+ ORTH2 [ LST [ HD "sandal"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+sandwich_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sandwich"]],
+ ORTH2 [ LST [ HD "sandwich"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+school_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "school"]],
+ ORTH2 [ LST [ HD "school"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+seal_1 := lex-noun-sign &
+[ORTH [ LST [ HD "seal"]],
+ ORTH2 [ LST [ HD "seal"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+seal_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "seal"]],
+ ORTH2 [ LST [ HD "seal"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+shade_1 := lex-noun-sign &
+[ORTH [ LST [ HD "shade"]],
+ ORTH2 [ LST [ HD "shade"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+shadow_1 := lex-noun-sign &
+[ORTH [ LST [ HD "shadow"]],
+ ORTH2 [ LST [ HD "shadow"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+sheep_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sheep"]],
+ ORTH2 [ LST [ HD "sheep"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+sheet_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sheet"]],
+ ORTH2 [ LST [ HD "sheet"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+shirt_1 := lex-noun-sign &
+[ORTH [ LST [ HD "shirt"]],
+ ORTH2 [ LST [ HD "shirt"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+shoe_1 := lex-noun-sign &
+[ORTH [ LST [ HD "shoe"]],
+ ORTH2 [ LST [ HD "shoe"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+shoe_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "shoe"]],
+ ORTH2 [ LST [ HD "shoe"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+shopping_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "shopping"]],
+ ORTH2 [ LST [ HD "shopping"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+show_1 := lex-noun-sign &
+[ORTH [ LST [ HD "show"]],
+ ORTH2 [ LST [ HD "show"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+side_1 := lex-noun-sign &
+[ORTH [ LST [ HD "side"]],
+ ORTH2 [ LST [ HD "side"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+sill_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sill"]],
+ ORTH2 [ LST [ HD "sill"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+sky_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sky"]],
+ ORTH2 [ LST [ HD "sky"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+sleeper_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sleeper"]],
+ ORTH2 [ LST [ HD "sleeper"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+sleeve_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sleeve"]],
+ ORTH2 [ LST [ HD "sleeve"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+slide_1 := lex-noun-sign &
+[ORTH [ LST [ HD "slide"]],
+ ORTH2 [ LST [ HD "slide"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+slipper_1 := lex-noun-sign &
+[ORTH [ LST [ HD "slipper"]],
+ ORTH2 [ LST [ HD "slipper"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+smile_1 := lex-noun-sign &
+[ORTH [ LST [ HD "smile"]],
+ ORTH2 [ LST [ HD "smile"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-action]]]]].
+
+smiling_1 := lex-noun-sign &
+[ORTH [ LST [ HD "smiling"]],
+ ORTH2 [ LST [ HD "smiling"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-action]]]]].
+
+snap_1 := lex-noun-sign &
+[ORTH [ LST [ HD "snap"]],
+ ORTH2 [ LST [ HD "snap"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+snow_1 := lex-noun-sign &
+[ORTH [ LST [ HD "snow"]],
+ ORTH2 [ LST [ HD "snow"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+snow_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "snow"]],
+ ORTH2 [ LST [ HD "snow"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+soap_1 := lex-noun-sign &
+[ORTH [ LST [ HD "soap"]],
+ ORTH2 [ LST [ HD "soap"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+;;; socks
+sock_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sock"]],
+ ORTH2 [ LST [ HD "sock"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+socks_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "socks"]],
+ ORTH2 [ LST [ HD "socks"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+spin_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD  "spin"]],
+ ORTH2 [ LST [ HD  "spin"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-spin]]]]].
+
+spin_3 := lex-noun-sign &
+[ORTH [ LST [ HD  "spin"]],
+ ORTH2 [ LST [ HD  "spin"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-spin]]]]].
+
+spoon_1 := lex-noun-sign &
+[ORTH [ LST [ HD "spoon"]],
+ ORTH2 [ LST [ HD "spoon"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+spot_1 := lex-noun-sign &
+[ORTH [ LST [ HD "spot"]],
+ ORTH2 [ LST [ HD "spot"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+stamp_1 := lex-noun-sign &
+[ORTH [ LST [ HD "stamp"]],
+ ORTH2 [ LST [ HD "stamp"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+star_1 := lex-noun-sign &
+[ORTH [ LST [ HD "star"]],
+ ORTH2 [ LST [ HD "star"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+stick_3 := lex-noun-sign &
+[ ORTH [ LST [ HD  "stick"]],
+  ORTH2 [ LST [ HD  "stick"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stick]]]]].
+
+story_1 := lex-noun-sign &
+[ORTH [ LST [ HD "story"]],
+ ORTH2 [ LST [ HD "story"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-story]]]]].
+
+strainer_1 := lex-noun-sign &
+[ORTH [ LST [ HD "strainer"]],
+ ORTH2 [ LST [ HD "strainer"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+sugar_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sugar"]],
+ ORTH2 [ LST [ HD "sugar"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+sugar_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "sugar"]],
+ ORTH2 [ LST [ HD "sugar"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+summer_1 := lex-noun-sign &
+[ORTH [ LST [ HD "summer"]],
+ ORTH2 [ LST [ HD "summer"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+sun_1 := lex-noun-sign &
+[ORTH [ LST [ HD "sun"]],
+ ORTH2 [ LST [ HD "sun"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+sun_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "sun"]],
+ ORTH2 [ LST [ HD "sun"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+swim_1 := lex-noun-sign &
+[ORTH [ LST [ HD "swim"]],
+ ORTH2 [ LST [ HD "swim"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+swing_1 := lex-noun-sign &
+[ORTH [ LST [ HD "swing"]],
+ ORTH2 [ LST [ HD "swing"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+table_1 := lex-noun-sign &
+[ORTH [ LST [ HD "table"]],
+ ORTH2 [ LST [ HD "table"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tail_1 := lex-noun-sign &
+[ORTH [ LST [ HD "tail"]],
+ ORTH2 [ LST [ HD "tail"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tape_1 := lex-noun-sign &
+[ORTH [ LST [ HD "tape"]],
+ ORTH2 [ LST [ HD "tape"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tea_1 := lex-noun-sign &
+[ORTH [ LST [ HD "tea"]],
+ ORTH2 [ LST [ HD "tea"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-beverage]]]]].
+
+tear_3 := lex-noun-sign &
+[ORTH [ LST [ HD "tear"]],
+ ORTH2 [ LST [ HD "tear"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+three_1 := lex-noun-sign &
+[ORTH [ LST [ HD "three"]],
+ ORTH2 [ LST [ HD "three"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+thing_1 := lex-noun-sign &
+[ORTH [ LST [ HD "thing"]],
+ ORTH2 [ LST [ HD "thing"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+;;; things
+thing_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "thing"]],
+ ORTH2 [ LST [ HD "thing"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tickle_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "tickle"]],
+ ORTH2 [ LST [ HD "tickle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-tickle]]]]].
+
+;;; tights
+tights_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "tights"]],
+ ORTH2 [ LST [ HD "tights"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-tight]]]]].
+
+time_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "time"]],
+ ORTH2 [ LST [ HD "time"]],
+ CAT [ M-FEATS [ ADV true]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+;NP/(S\NP)inf = it is time to go to bed
+;time_2 := lex-noun-vp-sign &
+;[ORTH [ LST [ HD "time"]],
+; ORTH2 [ LST [ HD "time"]],
+; SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tire_1 := lex-noun-sign &
+[ORTH [ LST [ HD "tire"]],
+ ORTH2 [ LST [ HD "tire"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tissue_1 := lex-noun-sign &
+[ORTH [ LST [ HD "tissue"]],
+ ORTH2 [ LST [ HD "tissue"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+toast_1 := lex-noun-sign &
+[ORTH [ LST [ HD "toast"]],
+ ORTH2 [ LST [ HD "toast"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+toaster_1 := lex-noun-sign &
+[ORTH [ LST [ HD "toaster"]],
+ ORTH2 [ LST [ HD "toaster"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+toilet_1 := lex-noun-sign &
+[ORTH [ LST [ HD "toilet"]],
+ ORTH2 [ LST [ HD "toilet"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-place]]]]].
+
+;;; teeth
+tooth_1 := lex-np-noun-sign &
+[ORTH [ LST [ HD "tooth"]],
+ ORTH2 [ LST [ HD "tooth"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+tooth_2 := lex-noun-sign &
+[ORTH [ LST [ HD "tooth"]],
+ ORTH2 [ LST [ HD "tooth"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-body]]]]].
+
+top_1 := lex-noun-sign &
+[ORTH [ LST [ HD "top"]],
+ ORTH2 [ LST [ HD "top"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tower_1 := lex-noun-sign &
+[ORTH [ LST [ HD "tower"]],
+ ORTH2 [ LST [ HD "tower"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+;;; toys NP
+toy_1 := lex-noun-sign &
+[ORTH [ LST [ HD "toy"]],
+ ORTH2 [ LST [ HD "toy"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+train_1 := lex-noun-sign &
+[ORTH [ LST [ HD "train"]],
+ ORTH2 [ LST [ HD "train"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tray_1 := lex-noun-sign &
+[ORTH [ LST [ HD "tray"]],
+ ORTH2 [ LST [ HD "tray"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tree_1 := lex-noun-sign &
+[ORTH [ LST [ HD "tree"]],
+ ORTH2 [ LST [ HD "tree"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tricycle_1 := lex-noun-sign &
+[ORTH [ LST [ HD "tricycle"]],
+ ORTH2 [ LST [ HD "tricycle"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+trouble_1 := lex-noun-sign &
+[ORTH [ LST [ HD "trouble"]],
+ ORTH2 [ LST [ HD "trouble"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-state]]]]].
+
+truck_1 := lex-noun-sign &
+[ORTH [ LST [ HD "truck"]],
+ ORTH2 [ LST [ HD "truck"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+tub_1 := lex-noun-sign &
+[ORTH [ LST [ HD "tub"]],
+ ORTH2 [ LST [ HD "tub"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+two_1 := lex-noun-sign &
+[ORTH [ LST [ HD "two"]],
+ ORTH2 [ LST [ HD "two"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-number]]]]].
+
+type_1 := lex-noun-sign &
+[ORTH [ LST [ HD "type"]],
+ ORTH2 [ LST [ HD "type"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-type]]]]].
+
+vase_1 := lex-noun-sign &
+[ORTH [ LST [ HD "vase"]], 
+ ORTH2 [ LST [ HD "vase"]], 
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+vitamin_1 := lex-noun-sign &
+[ORTH [ LST [ HD "vitamin"]],
+ ORTH2 [ LST [ HD "vitamin"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+wall_1 := lex-noun-sign &
+[ORTH [ LST [ HD "wall"]], 
+ ORTH2 [ LST [ HD "wall"]], 
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+walrus_1 := lex-noun-sign &
+[ORTH [ LST [ HD "walrus"]], 
+ ORTH2 [ LST [ HD "walrus"]], 
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-animal]]]]].
+
+wastebasket_1 := lex-noun-sign &
+[ORTH [ LST [ HD "wastebasket"]],
+ ORTH2 [ LST [ HD "wastebasket"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+water_1 := lex-noun-sign &
+[ORTH [ LST [ HD "water"]],
+ ORTH2 [ LST [ HD "water"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-beverage]]]]].
+
+watering_1 := lex-noun-sign &
+[ORTH [ LST [ HD "watering"]],
+ ORTH2 [ LST [ HD "watering"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-type]]]]].
+
+way_1 := lex-noun-sign &
+[ORTH [ LST [ HD "way"]],
+ ORTH2 [ LST [ HD "way"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-direction]]]]].
+
+;;; wheels NP
+wheel_1 := lex-noun-sign &
+[ORTH [ LST [ HD "wheel"]],
+ ORTH2 [ LST [ HD "wheel"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+while_1 := lex-noun-sign &
+[ORTH [ LST [ HD "while"]],
+ ORTH2 [ LST [ HD "while"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+wind_1 := lex-noun-sign &
+[ORTH [ LST [ HD "wind"]], 
+ ORTH2 [ LST [ HD "wind"]], 
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+wind_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "wind"]], 
+ ORTH2 [ LST [ HD "wind"]], 
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+windmill_1 := lex-noun-sign &
+[ORTH [ LST [ HD "windmill"]], 
+ ORTH2 [ LST [ HD "windmill"]], 
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+window_1 := lex-noun-sign &
+[ORTH [ LST [ HD "window"]],
+ ORTH2 [ LST [ HD "window"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+wonder_1 := noun-complex-sign &
+[ORTH [ LST [ HD "wonder"]],
+ ORTH2 [ LST [ HD "window"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-time]]]]].
+
+woofo_1 := lex-noun-sign &
+[ORTH [ LST [ HD "woofo"]],
+ ORTH2 [ LST [ HD "woofo"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+woofo_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "woofo"]],
+ ORTH2 [ LST [ HD "woofo"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+;;; words NP
+word_1 := lex-noun-sign &
+[ORTH [ LST [ HD "word"]],
+ ORTH2 [ LST [ HD "word"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+work_1 := lex-noun-sign &
+[ORTH [ LST [ HD "work"]],
+ ORTH2 [ LST [ HD "work"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-work]]]]].
+
+yes_1 := lex-noun-sign &
+[ORTH [ LST [ HD "yes"]],
+ ORTH2 [ LST [ HD "yes"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-word]]]]].
+
+yogurt_1 := lex-noun-sign &
+[ORTH [ LST [ HD "yogurt"]],
+ ORTH2 [ LST [ HD "yogurt"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-food]]]]].
+
+zipper_1 := lex-noun-sign &
+[ORTH [ LST [ HD "zipper"]],
+ ORTH2 [ LST [ HD "zipper"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+zipper_2 := lex-np-noun-sign &
+[ORTH [ LST [ HD "zipper"]],
+ ORTH2 [ LST [ HD "zipper"]],
+ SEM2 [ RESTR1 [ LST [ HD [RELN1 r-object]]]]].
+
+;;; %%%%%%%%%%%%%% PRONOUNS %%%%%%%%%%%%%%%%%%%
+
+I_1 := nom-pron-lex-np-sign  &
+[ORTH [ LST [ HD  "I"]],
+ ORTH2 [ LST [ HD  "I"]],
+ CAT [ M-FEATS [ AGR2 [NUM sg,
+			PERS 1]]],
+ SEM2 [ RESTR1[ LST [ HD [ PRON1 "I"]]]]].
+
+you_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "you"]],
+  ORTH2 [ LST [ HD  "you"]],
+  CAT [ M-FEATS [ AGR2 [PERS 2]]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "you"]]]]].
+
+he_1 := nom-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "he"]],
+  ORTH2 [ LST [ HD  "he"]],
+  CAT [ M-FEATS [ AGR2 3sg]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "he"]]]]].
+
+she_1 := nom-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "she"]],
+  ORTH2 [ LST [ HD  "she"]],
+  CAT [ M-FEATS [ AGR2 3sg]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "she"]]]]].
+
+it_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "it"]],
+  ORTH2 [ LST [ HD  "it"]],
+  CAT [ M-FEATS [ AGR2 3sg]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "it"]]]]].
+
+we_1 := nom-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "we"]],
+  ORTH2 [ LST [ HD  "we"]],
+  CAT [ M-FEATS [ AGR2 [NUM pl,
+			PERS 1]]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "we"]]]]].
+
+they_1 := nom-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "they"]],
+  ORTH2 [ LST [ HD  "they"]], 
+  CAT [ M-FEATS [ AGR2 [NUM pl,
+			PERS 3]]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "they"]]]]].
+
+me_1 := acc-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "me"]],
+  ORTH2 [ LST [ HD  "me"]],
+  CAT [ M-FEATS [ AGR2 [NUM sg,
+			PERS 1]]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "me"]]]]].
+
+her_1 := acc-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "her"]],
+  ORTH2 [ LST [ HD  "her"]],
+  CAT [ M-FEATS [ AGR2 3sg]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "her"]]]]].
+
+here_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "here"]],
+  ORTH2 [ LST [ HD  "here"]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "here"]]]]].
+
+him_1 := acc-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "him"]],
+  ORTH2 [ LST [ HD  "him"]],
+  CAT [ M-FEATS [ AGR2 3sg]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "him"]]]]].
+
+us_1 := acc-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "us"]],
+  ORTH2 [ LST [ HD  "us"]],
+  CAT [ M-FEATS [ AGR2 [NUM pl,
+			PERS 1]]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "us"]]]]].
+
+them_1 := acc-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "them"]],
+  ORTH2 [ LST [ HD  "them"]],
+  CAT [ M-FEATS [ AGR2 [NUM pl,
+			PERS 3]]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "them"]]]]].
+
+herself_1 := acc-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "herself"]],
+  ORTH2 [ LST [ HD  "herself"]],
+  CAT [ M-FEATS [ AGR2 3sg ]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "herself"]]]]].
+
+himself_1 := acc-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "himself"]],
+  ORTH2 [ LST [ HD  "himself"]],
+  CAT [ M-FEATS [ AGR2 3sg ]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "himself"]]]]].
+
+myself_1 := acc-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "myself"]],
+  ORTH2 [ LST [ HD  "myself"]],
+  CAT [ M-FEATS [ AGR2 [NUM sg,
+			PERS 1]]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "myself"]]]]].
+
+yourself_1 := acc-pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "yourself"]],
+  ORTH2 [ LST [ HD  "yourself"]],
+  CAT [ M-FEATS [ AGR2 [NUM sg,
+			PERS 2]]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "yourself"]]]]].
+
+everything_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "everything"]],
+  ORTH2 [ LST [ HD  "everything"]],
+  CAT [ M-FEATS [ AGR2 3sg]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "everything"]]]]].
+
+more_3 := pron-lex-np-sign &
+[ ORTH [ LST [ HD  "more"]],
+  ORTH2 [ LST [ HD  "more"]],
+  SEM2 [ RESTR1 [ LST [ HD [ PRON1 "more"]]]]]. 
+
+some_3 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "some"]],
+  ORTH2 [ LST [ HD  "some"]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "some"]]]]].
+
+somebody_3 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "somebody"]],
+  ORTH2 [ LST [ HD  "somebody"]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "somebody"]]]]].
+
+something_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "something"]],
+  ORTH2 [ LST [ HD  "something"]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "something"]]]]].
+
+that_5 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "that"]],
+  ORTH2 [ LST [ HD  "that"]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "that"]]]]].
+
+this_2 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "this"]],
+  ORTH2 [ LST [ HD  "this"]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "this"]]]]].
+
+those_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "those"]],
+  ORTH2 [ LST [ HD  "those"]],
+  CAT [ M-FEATS [ AGR2 [NUM pl,
+			PERS 3]]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "those"]]]]].
+
+these_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "these"]],
+  ORTH2 [ LST [ HD  "these"]],
+  CAT [ M-FEATS [ AGR2 [NUM pl,
+			PERS 3]]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "these"]]]]].
+
+there_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "there"]],
+  ORTH2 [ LST [ HD  "there"]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "there"]]]]].
+
+how_2 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "how"]],
+  ORTH2 [ LST [ HD  "how"]],
+  CAT [ M-FEATS [ WH true,
+		  ADV true,
+		  AGR2 var_agr]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "how"]]]]].
+
+so_3 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "so"]],
+  ORTH2 [ LST [ HD  "so"]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "so"]]]]].
+
+;;; pron, wh+, ub=q
+what_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "what"]],
+  ORTH2 [ LST [ HD  "what"]],
+  CAT [ M-FEATS [ WH true]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "what"]]]]].
+
+;;; pron, wh+, ub=q
+where_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "where"]],
+  ORTH2 [ LST [ HD  "where"]],
+  CAT [ M-FEATS [ 	WH true,
+			LOC true,
+			CASE p-case,
+			AGR2 var_agr]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "where"]]]]].
+
+;;; pron, wh+, ub=q
+where_6 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "where"]],
+  ORTH2 [ LST [ HD  "where"]],
+  CAT [ M-FEATS [ 	WH true]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "where"]]]]].
+
+;;; pron, wh+, ub=q
+who_1 := pron-lex-np-sign  &
+[ ORTH [ LST [ HD  "who"]],
+  ORTH2 [ LST [ HD  "who"]],
+  CAT [ M-FEATS [ 	WH true,
+			AGR2 var_agr]],
+  SEM2 [ RESTR1[ LST [ HD [ PRON1 "who"]]]]].
+
+;;; Locatives
+
+
+here_2 := lex-np-noun-sign  &
+[ ORTH [ LST [ HD  "here"]],
+  ORTH2 [ LST [ HD  "here"]],
+  CAT [ M-FEATS [ 	CASE p-case,
+			LOC true]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-place]]]]].
+
+there_2 := lex-np-noun-sign  &
+[ ORTH [ LST [ HD  "there"]],
+  ORTH2 [ LST [ HD  "there"]],
+  CAT [ M-FEATS [ 	CASE p-case,
+			LOC true]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-there]]]]].
+
+outside_1 := lex-np-noun-sign  &
+[ ORTH [ LST [ HD  "outside"]],
+  ORTH2 [ LST [ HD  "outside"]], 
+  CAT [ M-FEATS [ LOC true,
+		  CASE p-case]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-place]]]]].
+
+out_4 := lex-np-noun-sign  &
+[ ORTH [ LST [ HD  "out"]],
+  ORTH2 [ LST [ HD  "out"]], 
+  CAT [ M-FEATS [ LOC true,
+		  CASE p-case]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-place]]]]].
+
+upside_down_1 := lex-np-noun-sign  &
+[ ORTH [ LST [ 	HD  "upside",
+		TL [ 	HD "down",
+			TL #1]],
+	LAST #1],
+  ORTH2 [ LST [ HD  "upside",
+		TL [ 	HD "down",
+			TL #2]],
+	LAST #2],
+  CAT [ M-FEATS [ LOC true,
+		  CASE p-case]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-place]]]]].
+
+
+;;; %%%%%%%%%%%%%% ADJECTIVES %%%%%%%%%%%%%%%%%%%
+
+;;; %%%%%%%%%%%%%% ATTRIBUTIVE ADJECTIVES %%%%%%%%%%%%%%%%%%%
+
+np-att-adj_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+beautiful_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "beautiful"]],
+  ORTH2 [ LST [ HD  "beautiful"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-beautiful]]]]].
+
+big_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "big"]],
+  ORTH2 [ LST [ HD  "big"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-big]]]]].
+
+breakable_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "breakable"]],
+  ORTH2 [ LST [ HD  "breakable"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-breakable]]]]].
+
+bumpy_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "bumpy"]],
+  ORTH2 [ LST [ HD  "bumpy"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-bumpy]]]]].
+
+blue_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "blue"]],
+  ORTH2 [ LST [ HD  "blue"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-blue]]]]].
+
+clean_2 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "clean"]],
+  ORTH2 [ LST [ HD  "clean"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-clean]]]]].
+
+dead_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "dead"]],
+  ORTH2 [ LST [ HD  "dead"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dead]]]]].
+
+delicious_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "delicious"]],
+  ORTH2 [ LST [ HD  "delicious"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-delicious]]]]].
+
+different_2 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "different"]],
+  ORTH2 [ LST [ HD  "different"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-different]]]]].
+
+dirty_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "dirty"]],
+  ORTH2 [ LST [ HD  "dirty"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dirty]]]]].
+
+dump_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "dump"]],
+  ORTH2 [ LST [ HD  "dump"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dump]]]]].
+
+fresh_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "fresh"]],
+  ORTH2 [ LST [ HD  "fresh"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fresh]]]]].
+
+good_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "good"]],
+  ORTH2 [ LST [ HD  "good"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-good]]]]].
+
+great_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "great"]],
+  ORTH2 [ LST [ HD  "great"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-great]]]]].
+
+green_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "green"]],
+  ORTH2 [ LST [ HD  "green"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-green]]]]].
+
+high_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "high"]],
+  ORTH2 [ LST [ HD  "high"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-high]]]]].
+
+jammie_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "jammie"]],
+  ORTH2 [ LST [ HD  "jammie"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-jammie]]]]].
+
+light_3 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "light"]],
+  ORTH2 [ LST [ HD  "light"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-light]]]]].
+
+little_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "little"]], 
+  ORTH2 [ LST [ HD  "little"]], 
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-little]]]]].
+
+living_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "living"]],
+  ORTH2 [ LST [ HD  "living"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-living]]]]].
+
+long_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "long"]],
+  ORTH2 [ LST [ HD  "long"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-long]]]]].
+
+many_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "many"]],
+  ORTH2 [ LST [ HD  "many"]],
+  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ CAT [ M-FEATS [ AGR2 [ NUM pl]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-many]]]]].
+
+more_4 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "more"]],
+  ORTH2 [ LST [ HD  "more"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-more]]]]].
+
+next_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "next"]],
+  ORTH2 [ LST [ HD  "next"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-next]]]]].
+
+new_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "new"]],
+  ORTH2 [ LST [ HD  "new"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-new]]]]].
+
+nice_2 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "nice"]],
+  ORTH2 [ LST [ HD  "nice"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-nice]]]]].
+
+orange_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "orange"]],
+  ORTH2 [ LST [ HD  "orange"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-orange]]]]].
+
+other_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "other"]],
+  ORTH2 [ LST [ HD  "other"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-other]]]]].
+
+pretend_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "pretend"]],
+  ORTH2 [ LST [ HD  "pretend"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pretend]]]]].
+
+pretty_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "pretty"]],
+  ORTH2 [ LST [ HD  "pretty"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pretty]]]]].
+
+red_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "red"]],
+  ORTH2 [ LST [ HD  "red"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-red]]]]].
+
+regular_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "regular"]],
+  ORTH2 [ LST [ HD  "regular"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-regular]]]]].
+
+right_2 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "right"]],
+  ORTH2 [ LST [ HD  "right"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-right]]]]].
+
+training_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "training"]],
+  ORTH2 [ LST [ HD  "training"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-training]]]]].
+
+scalloped_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "scalloped"]],
+  ORTH2 [ LST [ HD  "scalloped"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-scalloped]]]]].
+
+several_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "several"]],
+  ORTH2 [ LST [ HD  "several"]],
+  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ CAT [ M-FEATS [ AGR2 [ NUM pl]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-several]]]]].
+
+strong_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "strong"]],
+  ORTH2 [ LST [ HD  "strong"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-strong]]]]].
+
+surveying_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "surveying"]],
+  ORTH2 [ LST [ HD  "surveying"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-surveying]]]]].
+
+sweet_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "sweet"]],
+  ORTH2 [ LST [ HD  "sweet"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sweet]]]]].
+
+white_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "white"]],
+  ORTH2 [ LST [ HD  "white"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-white]]]]].
+
+winter_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "winter"]],
+  ORTH2 [ LST [ HD  "winter"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-winter]]]]].
+
+wrong_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "wrong"]],
+  ORTH2 [ LST [ HD  "wrong"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wrong]]]]].
+
+yellow_1 := att-adj-sign3 &
+[ ORTH [ LST [ HD  "yellow"]],
+  ORTH2 [ LST [ HD  "yellow"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-yellow]]]]].
+
+
+;;; %%%%%%%%%%%%%% PREDICATIVE ADJECTIVES %%%%%%%%%%%%%%%%%%%
+
+alright_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "alright"]],
+  ORTH2 [ LST [ HD  "alright"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-alright]]]]].
+
+asleep_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "asleep"]],
+  ORTH2 [ LST [ HD  "asleep"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-asleep]]]]].
+
+awake_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "awake"]],
+  ORTH2 [ LST [ HD  "awake"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-awake]]]]].
+
+bad_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "bad"]],
+  ORTH2 [ LST [ HD  "bad"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-bad]]]]].
+
+better_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "better"]],
+  ORTH2 [ LST [ HD  "better"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-better]]]]].
+
+big_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "big"]],
+  ORTH2 [ LST [ HD  "big"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-big]]]]].
+
+black_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "black"]],
+  ORTH2 [ LST [ HD  "black"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-black]]]]].
+
+blue_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "blue"]],
+  ORTH2 [ LST [ HD  "blue"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-blue]]]]].
+
+bright_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "bright"]],
+  ORTH2 [ LST [ HD  "bright"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-bright]]]]].
+
+broken_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "broken"]],
+  ORTH2 [ LST [ HD  "broken"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-break]]]]].
+
+careful_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "careful"]],
+  ORTH2 [ LST [ HD  "careful"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-careful]]]]].
+
+clean_3 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "clean"]],
+  ORTH2 [ LST [ HD  "clean"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-clean]]]]].
+
+cold_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "cold"]],
+  ORTH2 [ LST [ HD  "cold"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-cold]]]]].
+
+cool_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "cool"]],
+  ORTH2 [ LST [ HD  "cool"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-cool]]]]].
+
+cute_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "cute"]],
+  ORTH2 [ LST [ HD  "cute"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-cute]]]]].
+
+damp_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "damp"]],
+  ORTH2 [ LST [ HD  "damp"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-damp]]]]].
+
+dark_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "dark"]],
+  ORTH2 [ LST [ HD  "dark"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dark ]]]]].
+
+different_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "different"]],
+  ORTH2 [ LST [ HD  "different"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-different]]]]].
+
+empty_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "empty"]] ,
+  ORTH2 [ LST [ HD  "empty"]] ,
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-empty]]]]].
+
+fine_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "fine"]],
+  ORTH2 [ LST [ HD  "fine"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fine]]]]].
+
+fun_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "fun"]],
+  ORTH2 [ LST [ HD  "fun"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fun]]]]].
+
+gentle_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "gentle"]],
+  ORTH2 [ LST [ HD  "gentle"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-gentle]]]]].
+
+good_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "good"]],
+  ORTH2 [ LST [ HD  "good"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-good]]]]].
+
+green_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "green"]],
+  ORTH2 [ LST [ HD  "green"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-green]]]]].
+
+hard_2 := pred-vp-adj-sign3 &
+[ ORTH [ LST [ HD  "hard"]],
+  ORTH2 [ LST [ HD  "hard"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hard]]]]].
+
+hard_3 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "hard"]],
+  ORTH2 [ LST [ HD  "hard"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hard]]]]].
+
+hot_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "hot"]],
+  ORTH2 [ LST [ HD  "hot"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hot]]]]].
+
+hungry_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "hungry"]],
+  ORTH2 [ LST [ HD  "hungry"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hungry]]]]].
+
+icky_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "icky"]],
+  ORTH2 [ LST [ HD  "icky"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-icky]]]]].
+
+interesting_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "interesting"]],
+  ORTH2 [ LST [ HD  "interesting"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-interesting]]]]].
+
+light_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "light"]], 
+  ORTH2 [ LST [ HD  "light"]], 
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-light]]]]].
+
+little_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "little"]], 
+  ORTH2 [ LST [ HD  "little"]], 
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-little]]]]].
+
+mauve_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "mauve"]],
+  ORTH2 [ LST [ HD  "mauve"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-mauve]]]]].
+
+muddy_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "muddy"]],
+  ORTH2 [ LST [ HD  "muddy"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-muddy]]]]].
+
+neat_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "neat"]], 
+  ORTH2 [ LST [ HD  "neat"]], 
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neat]]]]].
+
+nice_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "nice"]],
+  ORTH2 [ LST [ HD  "nice"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-nice]]]]].
+
+okay_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "okay"]],
+  ORTH2 [ LST [ HD  "okay"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-okay]]]]].
+
+open_3 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "open"]],
+  ORTH2 [ LST [ HD  "open"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-open]]]]].
+
+patient_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "patient"]],
+  ORTH2 [ LST [ HD  "patient"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-patient]]]]].
+
+plastic_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "plastic"]],
+  ORTH2 [ LST [ HD  "plastic"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-plastic]]]]].
+
+possible_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "possible"]],
+  ORTH2 [ LST [ HD  "possible"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-possible]]]]].
+
+pretty_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "pretty"]],
+  ORTH2 [ LST [ HD  "pretty"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pretty]]]]].
+
+ready_1 := pred-vp-adj-sign3 &
+[ ORTH [ LST [ HD  "ready"]],
+  ORTH2 [ LST [ HD  "ready"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-ready]]]]].
+
+ready_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "ready"]],
+  ORTH2 [ LST [ HD  "ready"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-ready]]]]].
+
+right_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "right"]],
+  ORTH2 [ LST [ HD  "right"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-right]]]]].
+
+sad_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "sad"]],
+  ORTH2 [ LST [ HD  "sad"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sad]]]]].
+
+sleepy_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "sleepy"]],
+  ORTH2 [ LST [ HD  "sleepy"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sleepy]]]]].
+
+small_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "small"]],
+  ORTH2 [ LST [ HD  "small"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-small]]]]].
+
+sorry_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "sorry"]],
+  ORTH2 [ LST [ HD  "sorry"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sorry]]]]].
+
+stuck_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "stuck"]],
+  ORTH2 [ LST [ HD  "stuck"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stuck]]]]].
+
+thirsty_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "thirsty"]],
+  ORTH2 [ LST [ HD  "thirsty"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-thirsty]]]]].
+
+tired_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "tired"]],
+  ORTH2 [ LST [ HD  "tired"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-tired]]]]].
+
+;;; it is unbelievable that .../ unbelievable what this kid knows 
+unbelievable_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "unbelievable"]],
+  ORTH2 [ LST [ HD  "unbelievable"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-unbelievable]]]]].
+
+warm_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "warm"]], 
+  ORTH2 [ LST [ HD  "warm"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-warm]]]]].
+
+weak_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "weak"]],
+  ORTH2 [ LST [ HD  "weak"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-weak]]]]].
+
+wet_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "wet"]],
+  ORTH2 [ LST [ HD  "wet"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wet]]]]].
+
+white_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "white"]],
+  ORTH2 [ LST [ HD  "white"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-white]]]]].
+
+winding_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "winding"]],
+  ORTH2 [ LST [ HD  "winding"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-winding]]]]].
+
+windy_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "windy"]],
+  ORTH2 [ LST [ HD  "windy"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-windy]]]]].
+
+wrong_2 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "wrong"]],
+  ORTH2 [ LST [ HD  "wrong"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wrong]]]]].
+
+yellow_1 := pred-adj-sign3 &
+[ ORTH [ LST [ HD  "yellow"]],
+  ORTH2 [ LST [ HD  "yellow"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-yellow]]]]].
+
+;;; %%%%%%%%%%%%%% DETERMINERS  %%%%%%%%%%%%%%%%%%%
+
+a_1 := det-sign3 &
+[ ORTH [ LST [ HD  "a"]],
+  ORTH2 [ LST [ HD  "a"]],
+  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ CAT [ M-FEATS [ AGR2 3sg]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-a]]]]]. 
+
+an_1 := det-sign3 &
+[ ORTH [ LST [ HD  "an"]],
+  ORTH2 [ LST [ HD  "an"]],
+  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ CAT [ M-FEATS [ AGR2 3sg]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-det]]]]]. 
+
+another_2 := det-sign3 &
+[ ORTH [ LST [ HD  "another"]],
+  ORTH2 [ LST [ HD  "another"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-det]]]]].
+
+any_1 := det-sign3 &
+[ ORTH [ LST [ HD  "any"]],
+  ORTH2 [ LST [ HD  "any"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-det]]]]]. 
+
+each_1 := det-sign3 &
+[ ORTH [ LST [ HD  "each"]],
+  ORTH2 [ LST [ HD  "each"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-det]]]]]. 
+
+every_1 := det-sign3 &
+[ ORTH [ LST [ HD  "every"]],
+  ORTH2 [ LST [ HD  "every"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-det]]]]]. 
+
+her_2 := det-sign3  &
+[ ORTH [ LST [ HD  "her"]],
+  ORTH2 [ LST [ HD  "her"]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-poss]]]]].
+
+his_1 := det-sign3  &
+[ ORTH [ LST [ HD  "his"]],
+  ORTH2 [ LST [ HD  "his"]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-poss]]]]].
+
+its_1 := det-sign3  &
+[ ORTH [ LST [ HD  "its"]],
+  ORTH2 [ LST [ HD  "its"]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-poss]]]]].
+
+my_1 := det-sign3 &
+[ ORTH [ LST [ HD  "my"]],
+  ORTH2 [ LST [ HD  "my"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-poss]]]]]. 
+
+many_2 := det-sign3 &
+[ ORTH [ LST [ HD  "many"]],
+  ORTH2 [ LST [ HD  "many"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-det]]]]]. 
+
+more_1 := det-sign3 &
+[ ORTH [ LST [ HD  "more"]],
+  ORTH2 [ LST [ HD  "more"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-det]]]]]. 
+
+no_2 := det-sign3 &
+[ ORTH [ LST [ HD  "no"]],
+  ORTH2 [ LST [ HD  "no"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-the]]]]]. 
+our_1 := det-sign3 &
+[ ORTH [ LST [ HD  "our"]],
+  ORTH2 [ LST [ HD  "our"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-det]]]]]. 
+
+some_1 := det-sign3 &
+[ ORTH [ LST [ HD  "some"]],
+  ORTH2 [ LST [ HD  "some"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-det]]]]]. 
+
+that_1 := det-sign3 &
+[ ORTH [ LST [ HD  "that"]], 
+  ORTH2 [ LST [ HD  "that"]], 
+  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ CAT [ M-FEATS [ AGR2 3sg]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dem]]]]]. 
+
+the_1 := det-sign3 &
+[ ORTH [ LST [ HD  "the"]],
+  ORTH2 [ LST [ HD  "the"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-the]]]]]. 
+
+these_2 := det-sign3  &
+[ ORTH [ LST [ HD  "these"]],
+  ORTH2 [ LST [ HD  "these"]],
+  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ CAT [ M-FEATS [ AGR2 non3sg]]]]]]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-dem]]]]].
+
+this_1 := det-sign3 &
+[ ORTH [ LST [ HD  "this"]],
+  ORTH2 [ LST [ HD  "this"]],
+  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ CAT [ M-FEATS [ AGR2 3sg]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dem]]]]]. 
+
+those_2 := det-sign3 &
+[ ORTH [ LST [ HD  "those"]],
+  ORTH2 [ LST [ HD  "those"]],
+  CAT [ ACTIVE3 [ LST [ HD [ SIGN [ CAT [ M-FEATS [ AGR2 non3sg]]]]]]],  
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dem]]]]]. 
+
+what_3 := det-sign3  &
+[ ORTH [ LST [ HD  "what"]],
+  ORTH2 [ LST [ HD  "what"]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-det]]]]].
+
+;;; wh+
+;which_1 := det-sign3 &
+;[ ORTH [ LST [ HD  "which"]],
+;  ORTH2 [ LST [ HD  "which"]],
+;  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-det]]]]]. 
+
+your_1 := det-sign3 &
+[ ORTH [ LST [ HD  "your"]],
+  ORTH2 [ LST [ HD  "your"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-poss]]]]]. 
+
+;;; %%%%%%%%%%%%%% COMPLEMENTISERS %%%%%%%%%%%%%%%%%%%
+
+
+for_2 := comp-non-fin-sent-sign3 &
+[ ORTH [ LST [ HD  "for"]],
+  ORTH2 [ LST [ HD  "for"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ COMP-FORM for-comp]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-comp]]]]]. 
+
+whether_1 := comp-non-fin-sent-sign3 &
+[ ORTH [ LST [ HD  "whether"]],
+  ORTH2 [ LST [ HD  "whether"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ COMP-FORM wh-comp]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-comp]]]]]. 
+
+that_3 := comp-base-sent-sign3 &
+[ ORTH [ LST [ HD  "that"]],
+  ORTH2 [ LST [ HD  "that"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ COMP-FORM that-comp]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-comp]]]]]. 
+
+if_1 := sent-comp-sign3 &
+[ ORTH [ LST [ HD  "if"]],
+  ORTH2 [ LST [ HD  "if"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-comp]]]]]. 
+
+that_2 := sent-comp-sign3 &
+[ ORTH [ LST [ HD  "that"]],
+  ORTH2 [ LST [ HD  "that"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ COMP-FORM that-comp]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-comp]]]]]. 
+
+then_2 := sent-comp-sign3 &
+[ ORTH [ LST [ HD  "that"]],
+  ORTH2 [ LST [ HD  "that"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ COMP-FORM that-comp]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-comp]]]]]. 
+
+why_1 := sent-comp-sign3 &
+[ ORTH [ LST [ HD  "why"]],
+  ORTH2 [ LST [ HD  "why"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ COMP-FORM wh-comp]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-comp]]]]]. 
+
+;;; %%%%%%%%%%%%%% CONJUNCTIONS %%%%%%%%%%%%%%%%%%%
+
+and_1 := conj-nom-sign &
+[ ORTH [ LST [ HD  "and"]],
+  ORTH2 [ LST [ HD  "and"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-and]]]]].
+
+and_2 := conj-prt-sign &
+[ ORTH [ LST [ HD  "and"]],
+  ORTH2 [ LST [ HD  "and"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-and]]]]].
+
+and_3 := conj-sent-sign &
+[ ORTH [ LST [ HD  "and"]],
+  ORTH2 [ LST [ HD  "and"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-and]]]]].
+
+and_4 := conj-vp-sign &
+[ ORTH [ LST [ HD  "and"]],
+  ORTH2 [ LST [ HD  "and"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-and]]]]].
+
+because_1 := conj-sent-sign &
+[ ORTH [ LST [ HD  "because"]],
+  ORTH2 [ LST [ HD  "because"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+because_2 := conj-sent-sign2 &
+[ ORTH [ LST [ HD  "because"]],
+  ORTH2 [ LST [ HD  "because"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+but_3 := conj-sent-sign &
+[ ORTH [ LST [ HD  "but"]],
+  ORTH2 [ LST [ HD  "but"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+if_2 := conj-sent-sign &
+[ ORTH [ LST [ HD  "if"]],
+  ORTH2 [ LST [ HD  "if"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+if_3 := conj-sent-sign2 &
+[ ORTH [ LST [ HD  "if"]],
+  ORTH2 [ LST [ HD  "if"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+nor_1 := conj-sent-sign &
+[ ORTH [ LST [ HD  "nor"]],
+  ORTH2 [ LST [ HD  "nor"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+or_1 := conj-vp-sign &
+[ ORTH [ LST [ HD  "or"]],
+  ORTH2 [ LST [ HD  "or"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-or]]]]].
+
+or_2 := conj-nom-sign &
+[ ORTH [ LST [ HD  "or"]],
+  ORTH2 [ LST [ HD  "or"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-or]]]]].
+
+so_1 := conj-sent-sign &
+[ ORTH [ LST [ HD  "so"]],
+  ORTH2 [ LST [ HD  "so"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ CAT-TYPE sent]]]], 
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+than_1 := conj-sent-sign &
+[ ORTH [ LST [ HD  "than"]],
+  ORTH2 [ LST [ HD  "than"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+when_1 := conj-sent-sign &
+[ ORTH [ LST [ HD  "when"]],
+  ORTH2 [ LST [ HD  "when"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+when_2 := conj-sent-sign2 &
+[ ORTH [ LST [ HD  "when"]],
+  ORTH2 [ LST [ HD  "when"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+while_1 := conj-sent-sign &
+[ ORTH [ LST [ HD  "while"]],
+  ORTH2 [ LST [ HD  "while"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+while_2 := conj-sent-sign2 &
+[ ORTH [ LST [ HD  "while"]],
+  ORTH2 [ LST [ HD  "while"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-conj]]]]].
+
+;;; %%%%%%%%%%%%%% MODALS %%%%%%%%%%%%%%%%%%%
+
+inv-modal_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+;;; MODALS + INF  (have to go)
+have_2 := aux-inf-sign3 &
+[ ORTH [ LST [ HD  "have"]],
+  ORTH2 [ LST [ HD  "have"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+ought_1 := aux-inf-sign3 &
+[ ORTH [ LST [ HD  "ought"]],
+  ORTH2 [ LST [ HD  "ought"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+;;; I used to go out
+use_2 := aux-inf-sign3 &
+[ ORTH [ LST [ HD  "use"]],
+  ORTH2 [ LST [ HD  "use"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+;;; MODALS + PRP (have got, have gone, have been)
+
+am_6 := aux-prp-sign3 &
+[ ORTH [ LST [ HD  "am"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+are_6 := aux-prp-sign3 &
+[ ORTH [ LST [ HD  "are"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+be_6 := aux-prp-sign3 &
+[ ORTH [ LST [ HD  "be"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+get_13 := aux-prp-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+have_3 := aux-prp-sign3 &
+[ ORTH [ LST [ HD  "have"]],
+  ORTH2 [ LST [ HD  "have"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+were_6 := aux-prp-sign3 &
+[ ORTH [ LST [ HD  "were"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+;;; MODALS + VING  (be going)
+
+
+am_1 := aux-ing-sign3 &
+[ ORTH [ LST [ HD  "am"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+are_1 := aux-ing-sign3 &
+[ ORTH [ LST [ HD  "are"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+aren_t_1 := aux-ing-sign3 &
+[ ORTH [ LST [ HD  "arent"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+be_1 := aux-ing-sign3 &
+[ ORTH [ LST [ HD  "be"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+isn_t_1 := aux-ing-sign3 &
+[ ORTH [ LST [ HD  "isnt"]],
+  ORTH2 [ LST [ HD  "isnt"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+stay_2 := aux-ing-sign3 &
+[ ORTH [ LST [ HD  "stay"]],
+  ORTH2 [ LST [ HD  "stay"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+wasn_t_1 := aux-ing-sign3 &
+[ ORTH [ LST [ HD  "wasnt"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+were_1 := aux-ing-sign3 &
+[ ORTH [ LST [ HD  "were"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+weren_t_1 := aux-ing-sign3 &
+[ ORTH [ LST [ HD  "werent"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+;;; MODALS + PASS  (be called)
+
+am_2 := aux-pass-sign3 &
+[ ORTH [ LST [ HD  "am"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+are_2 := aux-pass-sign3 &
+[ ORTH [ LST [ HD  "are"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+be_2 := aux-pass-sign3 &
+[ ORTH [ LST [ HD  "be"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+were_2 := aux-pass-sign3 &
+[ ORTH [ LST [ HD  "were"]],
+  ORTH2 [ LST [ HD  "be"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+
+;;; MODALS + BASE  (should go)
+
+can_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "can"]],
+  ORTH2 [ LST [ HD  "can"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+can_t_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "cant"]],
+  ORTH2 [ LST [ HD  "cant"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+can_t_2 := aux-sign3 &
+[ ORTH [ LST [ HD  "cannot"]],
+  ORTH2 [ LST [ HD  "cannot"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+could_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "could"]],
+  ORTH2 [ LST [ HD  "could"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+couldn_t_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "couldnt"]],
+  ORTH2 [ LST [ HD  "couldnt"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+didn_t_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "didnt"]],
+  ORTH2 [ LST [ HD  "didnt"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+do_2 := aux-sign3 &
+[ ORTH [ LST [ HD  "do"]],
+  ORTH2 [ LST [ HD  "do"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+doesn_t_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "doesnt"]],
+  ORTH2 [ LST [ HD  "doesnt"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+don_t_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "dont"]],
+  ORTH2 [ LST [ HD  "dont"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+had_better_1 := aux-sign3 &
+[ORTH [ LST [ 	HD  "had",
+		TL [ 	HD "better",
+			TL #1]],
+	LAST #1],
+ ORTH2 [ LST [ 	HD  "had",
+		TL [ 	HD "better",
+			TL #2]],
+	LAST #2],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+might_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "might"]],
+  ORTH2 [ LST [ HD  "might"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+must_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "must"]],
+  ORTH2 [ LST [ HD  "must"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+mustn_t_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "mustnt"]],
+  ORTH2 [ LST [ HD  "mustnt"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+shall_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "shall"]],
+  ORTH2 [ LST [ HD  "shall"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+should_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "should"]],
+  ORTH2 [ LST [ HD  "should"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+shouldn_t_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "shouldnt"]],
+  ORTH2 [ LST [ HD  "shouldnt"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+will_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "will"]],
+  ORTH2 [ LST [ HD  "will"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+would_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "would"]],
+  ORTH2 [ LST [ HD  "would"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+wouldn_t_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "wouldnt"]],
+  ORTH2 [ LST [ HD  "wouldnt"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+wont_1 := aux-sign3 &
+[ ORTH [ LST [ HD  "wont"]],
+  ORTH2 [ LST [ HD  "wont"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-neg-modal]]]]].
+
+;;; %%%%%%%%%%%%%% INFINITIVAL %%%%%%%%%%%%%%%%%%%
+
+to_2 := infinitival-sign3 &
+[ ORTH [ LST [ HD  "to"]],
+  ORTH2 [ LST [ HD  "to"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-inf]]]]].
+
+;;; %%%%%%%%%%%%%% VERBS %%%%%%%%%%%%%%%%%%%
+
+;;; %%%%%%%%%%%%%% INTRANSITIVE %%%%%%%%%%%%%%%%%%%
+
+intrans-imperative_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+attach_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "attach"]],
+  ORTH2 [ LST [ HD  "attach"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-attach]]]]].
+
+bark_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "bark"]],
+  ORTH2 [ LST [ HD  "bark"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-bark]]]]].
+
+beep_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "beep"]],
+  ORTH2 [ LST [ HD  "beep"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-beep]]]]].
+
+blow_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "blow"]],
+  ORTH2 [ LST [ HD  "blow"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-blow]]]]].
+
+break_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "break"]],
+  ORTH2 [ LST [ HD  "break"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-break]]]]].
+
+carry_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "carry"]],
+  ORTH2 [ LST [ HD  "carry"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-carry]]]]].
+
+close_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "close"]],
+  ORTH2 [ LST [ HD  "close"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-close]]]]].
+
+come_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "come"]],
+  ORTH2 [ LST [ HD  "come"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-come]]]]].
+
+count_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "count"]],
+  ORTH2 [ LST [ HD  "count"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-count]]]]].
+
+cry_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "cry"]],
+  ORTH2 [ LST [ HD  "cry"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-cry]]]]].
+
+dance_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "dance"]],
+  ORTH2 [ LST [ HD  "dance"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dance]]]]].
+
+draw_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "draw"]],
+  ORTH2 [ LST [ HD  "draw"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-draw]]]]].
+
+dress_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "dress"]],
+  ORTH2 [ LST [ HD  "dress"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dress]]]]].
+
+dry_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "dry"]],
+  ORTH2 [ LST [ HD  "dry"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dry]]]]].
+
+eat_3 := intrans-sign3 &
+[ ORTH [ LST [ HD  "eat"]],
+  ORTH2 [ LST [ HD  "eat"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-eat]]]]].
+
+fall_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "fall"]],
+  ORTH2 [ LST [ HD  "fall"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fall]]]]].
+
+fit_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "fit"]],
+  ORTH2 [ LST [ HD  "fit"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fit]]]]].
+
+fly_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "fly"]],
+  ORTH2 [ LST [ HD  "fly"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fly]]]]].
+
+go_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "go"]],
+  ORTH2 [ LST [ HD  "go"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-go]]]]].
+
+help_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "help"]],
+  ORTH2 [ LST [ HD  "help"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-help]]]]].
+
+hide_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "hide"]],
+  ORTH2 [ LST [ HD  "hide"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hide]]]]].
+
+hold_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "hold"]],
+  ORTH2 [ LST [ HD  "hold"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hold]]]]].
+
+hope_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "hope"]],
+  ORTH2 [ LST [ HD  "hope"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hope]]]]].
+
+horse_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "horse"]],
+  ORTH2 [ LST [ HD  "horse"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-horse]]]]].
+
+hurt_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "hurt"]],
+  ORTH2 [ LST [ HD  "hurt"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hurt]]]]].
+
+jump_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "jump"]],
+  ORTH2 [ LST [ HD  "jump"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-jump]]]]].
+
+kick_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "kick"]],
+  ORTH2 [ LST [ HD  "kick"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-kick]]]]].
+
+kiss_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "kiss"]],
+  ORTH2 [ LST [ HD  "kiss"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-kiss]]]]].
+
+know_3 := intrans-sign3 &
+[ ORTH [ LST [ HD  "know"]],
+  ORTH2 [ LST [ HD  "know"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-know]]]]].
+
+last_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "last"]],
+  ORTH2 [ LST [ HD  "last"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-last]]]]].
+
+lie_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "lie"]],
+  ORTH2 [ LST [ HD  "lie"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-lie]]]]].
+
+like_5 := intrans-sign3 &
+[ ORTH [ LST [ HD  "like"]],
+  ORTH2 [ LST [ HD  "like"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-like]]]]].
+
+look_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "look"]],
+  ORTH2 [ LST [ HD  "look"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-look]]]]].
+
+move_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "move"]],
+  ORTH2 [ LST [ HD  "move"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-move]]]]].
+
+nap_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "nap"]],
+  ORTH2 [ LST [ HD  "nap"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-nap]]]]].
+
+nightnight_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "nightnight"]],
+  ORTH2 [ LST [ HD  "nightnight"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-nightnight]]]]].
+
+open_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "open"]],
+  ORTH2 [ LST [ HD  "open"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-open]]]]].
+
+play_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "play"]],
+  ORTH2 [ LST [ HD  "play"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-play]]]]].
+
+point_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "point"]],
+  ORTH2 [ LST [ HD  "point"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-point]]]]].
+
+potty_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "potty"]],
+  ORTH2 [ LST [ HD  "potty"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-potty]]]]].
+
+rain_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "rain"]],
+  ORTH2 [ LST [ HD  "rain"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-rain]]]]].
+
+read_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "read"]],
+  ORTH2 [ LST [ HD  "read"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-read]]]]].
+
+remember_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "remember"]],
+  ORTH2 [ LST [ HD  "remember"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-remember]]]]].
+
+rest_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "rest"]],
+  ORTH2 [ LST [ HD  "rest"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-rest]]]]].
+
+ride_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "ride"]],
+  ORTH2 [ LST [ HD  "ride"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-ride]]]]].
+
+rock_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "rock"]],
+  ORTH2 [ LST [ HD  "rock"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-rock]]]]].
+
+run_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "run"]],
+  ORTH2 [ LST [ HD  "run"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-run]]]]].
+
+say_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "say"]],
+  ORTH2 [ LST [ HD  "say"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-say]]]]].
+
+see_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "see"]],
+  ORTH2 [ LST [ HD  "see"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-see]]]]].
+
+sing_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "sing"]],
+  ORTH2 [ LST [ HD  "sing"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sing]]]]].
+
+sled_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "sled"]],
+  ORTH2 [ LST [ HD  "sled"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sled]]]]].
+
+sleep_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "sleep"]],
+  ORTH2 [ LST [ HD  "sleep"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sleep]]]]].
+
+slide_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "slide"]],
+  ORTH2 [ LST [ HD  "slide"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-slide]]]]].
+
+smell_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "smell"]],
+  ORTH2 [ LST [ HD  "smell"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-smell]]]]].
+
+smile_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "smile"]],
+  ORTH2 [ LST [ HD  "smile"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-smile]]]]].
+
+spin_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "spin"]],
+  ORTH2 [ LST [ HD  "spin"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-spin]]]]].
+
+;;;squeaking
+squeak_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "squeak"]],
+  ORTH2 [ LST [ HD  "squeak"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-squeak]]]]].
+
+stand_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "stand"]],
+  ORTH2 [ LST [ HD  "stand"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stand]]]]].
+
+stop_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "stop"]],
+  ORTH2 [ LST [ HD  "stop"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stop]]]]].
+
+swim_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "swim"]],
+  ORTH2 [ LST [ HD  "swim"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-swim]]]]].
+
+talk_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "talk"]],
+  ORTH2 [ LST [ HD  "talk"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-talk]]]]].
+
+think_3 := intrans-sign3 &
+[ ORTH [ LST [ HD  "think"]],
+  ORTH2 [ LST [ HD  "think"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-think]]]]].
+
+tinkle_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "tinkle"]],
+  ORTH2 [ LST [ HD  "tinkle"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-tinkle]]]]].
+
+toast_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "toast"]],
+  ORTH2 [ LST [ HD  "toast"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-toast]]]]].
+
+toilet_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "toilet"]],
+  ORTH2 [ LST [ HD  "toilet"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-toilet]]]]].
+
+touch_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "touch"]],
+  ORTH2 [ LST [ HD  "touch"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-touch]]]]].
+
+try_3 := intrans-sign3 &
+[ ORTH [ LST [ HD  "try"]],
+  ORTH2 [ LST [ HD  "try"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-try]]]]].
+
+understand_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "understand"]],
+  ORTH2 [ LST [ HD  "understand"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-understand]]]]].
+
+want_8 := intrans-sign3 &
+[ ORTH [ LST [ HD  "want"]],
+  ORTH2 [ LST [ HD  "want"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-want]]]]].
+
+watch_2 := intrans-sign3 &
+[ ORTH [ LST [ HD  "watch"]],
+  ORTH2 [ LST [ HD  "watch"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-watch]]]]].
+
+walk_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "walk"]],
+  ORTH2 [ LST [ HD  "walk"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-walk]]]]].
+
+work_1 := intrans-sign3 &
+[ ORTH [ LST [ HD  "work"]],
+  ORTH2 [ LST [ HD  "work"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-work]]]]].
+
+;;; INTRANSITIVE WITH PARTICLES
+
+intrans-prt-imperative_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+intrans-prt_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+clean_4 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "clean"]],
+  ORTH2 [ LST [ HD  "clean"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-clean]]]]].
+
+come_7 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "come"]],
+  ORTH2 [ LST [ HD  "come"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE in]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-come]]]]].
+
+come_2 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "come"]],
+  ORTH2 [ LST [ HD  "come"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE on]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-come]]]]].
+
+come_8 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "come"]],
+  ORTH2 [ LST [ HD  "come"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-come]]]]].
+
+come_4 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "come"]],
+  ORTH2 [ LST [ HD  "come"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE over]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-come]]]]].
+
+come_9 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "come"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-come]]]]].
+
+dry_3 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "dry"]],
+  ORTH2 [ LST [ HD  "dry"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off ]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dry]]]]].
+
+fall_2 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "fall"]],
+  ORTH2 [ LST [ HD  "fall"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down ]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fall]]]]].
+
+fall_3 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "fall"]],
+  ORTH2 [ LST [ HD  "fall"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fall]]]]].
+
+fall_4 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "fall"]],
+  ORTH2 [ LST [ HD  "fall"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fall]]]]].
+
+fall_5 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "fall"]],
+  ORTH2 [ LST [ HD  "fall"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE over]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fall]]]]].
+
+flop_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "flop"]],
+  ORTH2 [ LST [ HD  "flop"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE around]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-flop]]]]].
+
+fly_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "fly"]],
+  ORTH2 [ LST [ HD  "fly"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE away]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fly]]]]].
+  
+go_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "go"]],
+  ORTH2 [ LST [ HD  "go"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE around]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-go]]]]].
+
+get_11 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+get_12 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+hold_4 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "hold"]],
+  ORTH2 [ LST [ HD  "hold"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE on]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hold]]]]].
+
+lay_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "lay"]],
+  ORTH2 [ LST [ HD  "lay"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-lay]]]]].
+
+lie_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "lie"]],
+  ORTH2 [ LST [ HD  "lie"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-lie]]]]].
+
+look_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "look"]],
+  ORTH2 [ LST [ HD  "look"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE at]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-look]]]]].
+
+pop_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "pop"]],
+  ORTH2 [ LST [ HD  "pop"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pop]]]]].
+
+pull_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "pull"]],
+  ORTH2 [ LST [ HD  "pull"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pull]]]]].
+
+sit_2 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "sit"]],
+  ORTH2 [ LST [ HD  "sit"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sit]]]]].
+
+sit_3 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "sit"]],
+  ORTH2 [ LST [ HD  "sit"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sit]]]]].
+
+slide_3 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "slide"]],
+  ORTH2 [ LST [ HD  "slide"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-slide]]]]].
+
+stand_2 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "stand"]],
+  ORTH2 [ LST [ HD  "stand"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stand]]]]].
+
+sweep_1 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "sweep"]],
+  ORTH2 [ LST [ HD  "sweep"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sweep]]]]].
+
+wake_2 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "wake"]],
+  ORTH2 [ LST [ HD  "wake"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wake]]]]].
+
+wash_3 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "wash"]],
+  ORTH2 [ LST [ HD  "wash"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wash]]]]].
+
+watch_3 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "watch"]],
+  ORTH2 [ LST [ HD  "watch"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-watch]]]]].
+
+zip_2 := intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "zip"]],
+  ORTH2 [ LST [ HD  "zip"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-zip]]]]].
+
+;;; INTRANSITIVE CONTROL 
+
+;;; LINKING VERBS
+
+;;; nao
+intrans-raising-adj-imperative_1 := intrans-raising-adj-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+;;; nao
+intrans-raising-np-imperative_1 := intrans-raising-np-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+;;; nao
+intrans-raising-pp-imperative_1 := intrans-raising-pp-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+am_3 := intrans-raising-adj-sign3 &
+[ ORTH [ LST [ HD  "am"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+are_3 := intrans-raising-adj-sign3 &
+[ ORTH [ LST [ HD  "are"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+be_3 := intrans-raising-adj-sign3 &
+[ ORTH [ LST [ HD  "be"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+feel_6 := intrans-raising-adj-sign3 &
+[ ORTH [ LST [ HD  "feel"]],
+  ORTH2 [ LST [ HD  "feel"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-feel]]]]].
+
+get_6 := intrans-raising-adj-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+taste_1 := intrans-raising-adj-sign3 &
+[ ORTH [ LST [ HD  "taste"]],
+  ORTH2 [ LST [ HD  "taste"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-taste]]]]].
+
+were_3 := intrans-raising-adj-sign3 &
+[ ORTH [ LST [ HD  "were"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+am_4 := intrans-raising-np-sign3 &
+[ ORTH [ LST [ HD  "am"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+are_4 := intrans-raising-np-sign3 &
+[ ORTH [ LST [ HD  "are"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+be_4 := intrans-raising-np-sign3 &
+[ ORTH [ LST [ HD  "be"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+were_4 := intrans-raising-np-sign3 &
+[ ORTH [ LST [ HD  "were"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+am_5 := intrans-raising-np-sign3 &
+[ ORTH [ LST [ HD  "am"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+are_5 := intrans-raising-pp-sign3 &
+[ ORTH [ LST [ HD  "are"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+be_5 := intrans-raising-pp-sign3 &
+[ ORTH [ LST [ HD  "be"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+were_5 := intrans-raising-pp-sign3 &
+[ ORTH [ LST [ HD  "were"]],
+  ORTH2 [ LST [ HD  "be"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-modal]]]]].
+
+;;; INTRANSITIVE RAISING VERBS
+
+;;; nao
+intrans-raising-imperative_1 := intrans-raising-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+tend_1 := intrans-raising-sign3 &
+[ ORTH [ LST [ HD  "tend"]],
+  ORTH2 [ LST [ HD  "tend"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-tend]]]]].
+
+;;; INTRANS EQUI LINKING VERBS
+
+;;; nao
+intrans-equi-adj-imperative_1 := intrans-equi-adj-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+get_4 := intrans-equi-adj-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+smell_3 := intrans-equi-adj-sign3 &
+[ ORTH [ LST [ HD  "smell"]],
+  ORTH2 [ LST [ HD  "smell"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-smell]]]]].
+
+;;; INTRANSITIVE EQUI VERBS
+
+intrans-equi-prt_1 := intrans-equi-ing-prt-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+;;; nao
+intrans-equi-imperative_1 := intrans-equi-ing-prt-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+come_3 := intrans-equi-base-sign3 &
+[ ORTH [ LST [ HD  "come"]],
+  ORTH2 [ LST [ HD  "come"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-come]]]]].
+
+do_3 := intrans-equi-ing-prt-sign3 &
+[ ORTH [ LST [ HD  "do"]],
+  ORTH2 [ LST [ HD  "do"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE with]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-do]]]]].
+
+do_5 := intrans-equi-ing-sign3 &
+[ ORTH [ LST [ HD  "do"]],
+  ORTH2 [ LST [ HD  "do"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE with]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-do]]]]].
+
+finish_4 := intrans-equi-sign3 &
+[ ORTH [ LST [ HD  "finish"]],
+  ORTH2 [ LST [ HD  "finish"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-finish]]]]].
+
+go_4 := intrans-equi-sign3 &
+[ ORTH [ LST [ HD  "go"]],
+  ORTH2 [ LST [ HD  "go"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-go]]]]].
+
+go_5 := intrans-equi-base-sign3 &
+[ ORTH [ LST [ HD  "go"]],
+  ORTH2 [ LST [ HD  "go"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-go]]]]].
+
+go_7 := intrans-equi-prt-sign3 &
+[ ORTH [ LST [ HD  "go"]],
+  ORTH2 [ LST [ HD  "go"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE back]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-go]]]]].
+
+;;; VER GO
+going_6 := intrans-equi-sign3 &
+[ ORTH [ LST [ HD  "going"]],
+  ORTH2 [ LST [ HD  "go"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-go]]]]].
+
+keep_1 := intrans-equi-ing-sign3 &
+[ ORTH [ LST [ HD  "keep"]],
+  ORTH2 [ LST [ HD  "keep"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-keep]]]]].
+
+learn_1 := intrans-equi-sign3 &
+[ ORTH [ LST [ HD  "learn"]],
+  ORTH2 [ LST [ HD  "learn"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-learn]]]]].
+
+like_2 := intrans-equi-sign3 &
+[ ORTH [ LST [ HD  "like"]],
+  ORTH2 [ LST [ HD  "like"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-like]]]]].
+
+suppose_2 := intrans-equi-sign3 &
+[ ORTH [ LST [ HD  "suppose"]],
+  ORTH2 [ LST [ HD  "suppose"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-suppose]]]]].
+
+try_1 := intrans-equi-sign3 &
+[ ORTH [ LST [ HD  "try"]],
+  ORTH2 [ LST [ HD  "try"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-try]]]]].
+
+want_3 := intrans-equi-sign3 &
+[ ORTH [ LST [ HD  "want"]],
+  ORTH2 [ LST [ HD  "want"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-want]]]]].
+
+;;;would_like_1 := intrans-equi-sign3 &
+;;;[ ORTH [ LST [ 	HD  "would",
+;;;		TL [ 	HD "like",
+;;;			TL #1]],
+;;;	LAST #1],
+;;;  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-want]]]]].
+
+
+;;; LOCATIVE INTRANSITIVE 
+
+loc-intrans-imperative_1 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+chew_5 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "chew"]],
+  ORTH2 [ LST [ HD  "chew"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-chew]]]]].
+
+climb_5 := loc-intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "climb"]],
+  ORTH2 [ LST [ HD  "climb"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-climb]]]]].
+
+come_5 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "come"]],
+  ORTH2 [ LST [ HD  "come"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-come]]]]].
+
+come_10 := loc-intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "come"]],
+  ORTH2 [ LST [ HD  "come"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE over]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-come]]]]].
+
+dive_2 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "dive"]],
+  ORTH2 [ LST [ HD  "dive"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dive]]]]].
+
+draw_2 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "draw"]],
+  ORTH2 [ LST [ HD  "draw"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-draw]]]]].
+
+get_2 := loc-intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+go_3 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "go"]],
+  ORTH2 [ LST [ HD  "go"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-go]]]]].
+
+go_8 := loc-intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "go"]],
+  ORTH2 [ LST [ HD  "go"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE over]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-go]]]]].
+
+hide_2 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "hide"]],
+  ORTH2 [ LST [ HD  "hide"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hide]]]]].
+
+lie_3 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "lie"]],
+  ORTH2 [ LST [ HD  "lie"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-lie]]]]].
+
+point_3 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "point"]],
+  ORTH2 [ LST [ HD  "point"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-point]]]]].
+
+push_2 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "push"]],
+  ORTH2 [ LST [ HD  "push"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-push]]]]].
+
+sit_1 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "sit"]],
+  ORTH2 [ LST [ HD  "sit"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sit]]]]].
+
+sled_2 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "sled"]],
+  ORTH2 [ LST [ HD  "sled"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sled]]]]].
+
+stay_1 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "stay"]],
+  ORTH2 [ LST [ HD  "stay"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stay]]]]].
+
+stay_2 := loc-intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "stay"]],
+  ORTH2 [ LST [ HD  "stay"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stay]]]]].
+
+step_2 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "step"]],
+  ORTH2 [ LST [ HD  "step"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-step]]]]].
+
+stick_4 := loc-intrans-sign3 &
+[ ORTH [ LST [ HD  "stick"]],
+  ORTH2 [ LST [ HD  "stick"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stick]]]]].
+
+stick_1 := loc-intrans-prt-sign3 &
+[ ORTH [ LST [ HD  "stick"]],
+  ORTH2 [ LST [ HD  "stick"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stick]]]]].
+
+;;; OBLIQUE INTRANSITIVE 
+
+obl-intrans-imperative_1 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+attach_2 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "attach"]],
+  ORTH2 [ LST [ HD  "attach"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [ P-FORM to]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-attach]]]]].
+
+hang_1 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "hang"]],
+  ORTH2 [ LST [ HD  "hang"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [ P-FORM onto]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hang]]]]].
+
+look_3 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "look"]],
+  ORTH2 [ LST [ HD  "look"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [ P-FORM at]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-look]]]]].
+
+look_4 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "look"]],
+  ORTH2 [ LST [ HD  "look"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [P-FORM like]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-look]]]]].
+
+look_6 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "look"]],
+  ORTH2 [ LST [ HD  "look"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [P-FORM out]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-look]]]]].
+
+play_1 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "play"]],
+  ORTH2 [ LST [ HD  "play"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [ P-FORM with]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-play]]]]].
+
+talk_1 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "talk"]],
+  ORTH2 [ LST [ HD  "talk"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [ P-FORM to]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-talk]]]]].
+
+think_4 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "think"]],
+  ORTH2 [ LST [ HD  "think"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [ P-FORM about]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-think]]]]].
+
+sound_1 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "sound"]],
+  ORTH2 [ LST [ HD  "sound"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [ P-FORM like]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sound]]]]].
+
+start_1 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "start"]],
+  ORTH2 [ LST [ HD  "start"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [ P-FORM with]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-start]]]]].
+
+step_1 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "step"]],
+  ORTH2 [ LST [ HD  "step"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-step]]]]].
+
+;;; stuck (loc +)
+stick_2 := obl-intrans-sign3 &
+[ ORTH [ LST [ HD  "stick"]],
+  ORTH2 [ LST [ HD  "stick"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stick]]]]].
+
+;;; %%%%%%%%%%%%%% TRANSITIVE %%%%%%%%%%%%%%%%%%%
+
+;;; nao
+trans-imperative_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+add_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "add"]],
+  ORTH2 [ LST [ HD  "add"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-add]]]]].
+
+arrange_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "arrange"]],
+  ORTH2 [ LST [ HD  "arrange"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-arrange]]]]].
+
+ask_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "ask"]],
+  ORTH2 [ LST [ HD  "ask"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-ask]]]]].
+
+attach_3 := trans-sign3 &
+[ ORTH [ LST [ HD  "attach"]],
+  ORTH2 [ LST [ HD  "attach"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-attach]]]]].
+
+bang_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "bang"]],
+  ORTH2 [ LST [ HD  "bang"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-bang]]]]].
+
+beep_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "beep"]],
+  ORTH2 [ LST [ HD  "beep"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-beep]]]]].
+
+blow_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "blow"]],
+  ORTH2 [ LST [ HD  "blow"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-blow]]]]].
+
+boo_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "boo"]],
+  ORTH2 [ LST [ HD  "boo"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-boo]]]]].
+
+break_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "break"]],
+  ORTH2 [ LST [ HD  "break"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-break]]]]].
+
+bring_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "bring"]],
+  ORTH2 [ LST [ HD  "bring"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-bring]]]]].
+
+brush_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "brush"]],
+  ORTH2 [ LST [ HD  "brush"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-brush]]]]].
+
+build_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "build"]],
+  ORTH2 [ LST [ HD  "build"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-build]]]]].
+
+bump_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "bump"]],
+  ORTH2 [ LST [ HD  "bump"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-bump]]]]].
+
+buy_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "buy"]],
+  ORTH2 [ LST [ HD  "buy"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-buy]]]]].
+
+call_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "call"]],
+  ORTH2 [ LST [ HD  "call"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-call]]]]].
+
+change_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "change"]],
+  ORTH2 [ LST [ HD  "change"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-change]]]]].
+
+close_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "close"]],
+  ORTH2 [ LST [ HD  "close"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-close]]]]].
+
+comb_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "comb"]],
+  ORTH2 [ LST [ HD  "comb"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-comb]]]]].
+
+comfort_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "comfort"]],
+  ORTH2 [ LST [ HD  "comfort"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-comfort]]]]].
+
+cover_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "cover"]],
+  ORTH2 [ LST [ HD  "cover"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-cover]]]]].
+
+cut_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "cut"]],
+  ORTH2 [ LST [ HD  "cut"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-cut]]]]].
+
+digest_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "digest"]],
+  ORTH2 [ LST [ HD  "digest"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-digest]]]]].
+
+do_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "do"]],
+  ORTH2 [ LST [ HD  "do"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-do]]]]].
+
+draw_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "draw"]],
+  ORTH2 [ LST [ HD  "draw"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-draw]]]]].
+
+dress_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "dress"]],
+  ORTH2 [ LST [ HD  "dress"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dress]]]]].
+
+drink_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "drink"]],
+  ORTH2 [ LST [ HD  "drink"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-drink]]]]].
+
+dry_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "dry"]],
+  ORTH2 [ LST [ HD  "dry"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-dry]]]]].
+
+eat_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "eat"]],
+  ORTH2 [ LST [ HD  "eat"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-eat]]]]].
+
+enjoy_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "enjoy"]],
+  ORTH2 [ LST [ HD  "enjoy"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-enjoy]]]]].
+
+feed_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "feed"]],
+  ORTH2 [ LST [ HD  "feed"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-feed]]]]].
+
+find_3 := trans-sign3 &
+[ ORTH [ LST [ HD  "find"]],
+  ORTH2 [ LST [ HD  "find"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-find]]]]].
+
+finish_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "finish"]],
+  ORTH2 [ LST [ HD  "finish"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-finish]]]]].
+
+fix_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "fix"]],
+  ORTH2 [ LST [ HD  "fix"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fix]]]]].
+
+forget_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "forget"]],
+  ORTH2 [ LST [ HD  "forget"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-forget]]]]].
+
+get_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+give_3 := trans-sign3 &
+[ ORTH [ LST [ HD  "give"]],
+  ORTH2 [ LST [ HD  "give"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-give]]]]].
+
+go_9 := trans-sign3 &
+[ ORTH [ LST [ HD  "go"]],
+  ORTH2 [ LST [ HD  "go"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-go]]]]].
+
+guess_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "guess"]],
+  ORTH2 [ LST [ HD  "guess"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-guess]]]]].
+
+have_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "have"]],
+  ORTH2 [ LST [ HD  "have"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-have]]]]].
+
+hear_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "hear"]],
+  ORTH2 [ LST [ HD  "hear"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hear]]]]].
+
+help_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "help"]],
+  ORTH2 [ LST [ HD  "help"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-help]]]]].
+
+hit_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "hit"]],
+  ORTH2 [ LST [ HD  "hit"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hit]]]]].
+
+hold_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "hold"]],
+  ORTH2 [ LST [ HD  "hold"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hold]]]]].
+
+hurt_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "hurt"]],
+  ORTH2 [ LST [ HD  "hurt"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hurt]]]]].
+
+know_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "know"]],
+  ORTH2 [ LST [ HD  "know"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-know]]]]].
+
+kiss_3 := trans-sign3 &
+[ ORTH [ LST [ HD  "kiss"]],
+  ORTH2 [ LST [ HD  "kiss"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-kiss]]]]].
+
+leave_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "leave"]],
+  ORTH2 [ LST [ HD  "leave"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-leave]]]]].
+
+learn_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "learn"]],
+  ORTH2 [ LST [ HD  "learn"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-learn]]]]].
+
+lick_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "lick"]],
+  ORTH2 [ LST [ HD  "lick"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-lick]]]]].
+
+light_4 := trans-sign3 &
+[ ORTH [ LST [ HD  "light"]],
+  ORTH2 [ LST [ HD  "light"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-light]]]]].
+
+like_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "like"]],
+  ORTH2 [ LST [ HD  "like"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-like]]]]].
+
+lose_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "lose"]],
+  ORTH2 [ LST [ HD  "lose"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-lose]]]]].
+
+make_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "make"]],
+  ORTH2 [ LST [ HD  "make"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-make]]]]].
+
+mean_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "mean"]],
+  ORTH2 [ LST [ HD  "mean"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-mean]]]]].
+
+miss_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "miss"]],
+  ORTH2 [ LST [ HD  "miss"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-miss]]]]].
+
+move_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "move"]],
+  ORTH2 [ LST [ HD  "move"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-move]]]]].
+
+need_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "need"]],
+  ORTH2 [ LST [ HD  "need"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-need]]]]].
+
+open_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "open"]],
+  ORTH2 [ LST [ HD  "open"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-open]]]]].
+
+peel_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "peel"]],
+  ORTH2 [ LST [ HD  "peel"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-peel]]]]].
+
+plan_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "plan"]],
+  ORTH2 [ LST [ HD  "plan"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-plan]]]]].
+
+play_3 := trans-sign3 &
+[ ORTH [ LST [ HD  "play"]],
+  ORTH2 [ LST [ HD  "play"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-play]]]]].
+
+plug_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "plug"]],
+  ORTH2 [ LST [ HD  "plug"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-plug]]]]].
+
+pour_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "pour"]],
+  ORTH2 [ LST [ HD  "pour"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pour]]]]].
+
+push_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "push"]],
+  ORTH2 [ LST [ HD  "push"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-push]]]]].
+
+reach_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "reach"]],
+  ORTH2 [ LST [ HD  "reach"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-reach]]]]].
+
+read_4 := trans-sign3 &
+[ ORTH [ LST [ HD  "read"]],
+  ORTH2 [ LST [ HD  "read"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-read]]]]].
+
+remember_3 := trans-sign3 &
+[ ORTH [ LST [ HD  "remember"]],
+  ORTH2 [ LST [ HD  "remember"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-remember]]]]].
+
+repeat_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "repeat"]],
+  ORTH2 [ LST [ HD  "repeat"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-repeat]]]]].
+
+ride_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "ride"]],
+  ORTH2 [ LST [ HD  "ride"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-ride]]]]].
+
+say_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "say"]],
+  ORTH2 [ LST [ HD  "say"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-say]]]]].
+
+see_3 := trans-sign3 &
+[ ORTH [ LST [ HD  "see"]],
+  ORTH2 [ LST [ HD  "see"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-see]]]]].
+
+shred_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "shred"]],
+  ORTH2 [ LST [ HD  "shred"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-shred]]]]].
+
+show_3 := trans-sign3 &
+[ ORTH [ LST [ HD  "show"]],
+  ORTH2 [ LST [ HD  "show"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-show]]]]].
+
+smell_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "smell"]],
+  ORTH2 [ LST [ HD  "smell"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-smell]]]]].
+
+spill_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "spill"]],
+  ORTH2 [ LST [ HD  "spill"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-spill]]]]].
+
+take_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "take"]],
+  ORTH2 [ LST [ HD  "take"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-take]]]]].
+
+tear_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "tear"]],
+  ORTH2 [ LST [ HD  "tear"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-tear]]]]].
+
+tell_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "tell"]],
+  ORTH2 [ LST [ HD  "tell"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-tell]]]]].
+
+think_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "think"]],
+  ORTH2 [ LST [ HD  "think"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-think]]]]].
+
+throw_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "throw"]],
+  ORTH2 [ LST [ HD  "throw"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-throw]]]]].
+
+tie_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "tie"]],
+  ORTH2 [ LST [ HD  "tie"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-tie]]]]].
+
+toast_3 := trans-sign3 &
+[ ORTH [ LST [ HD  "toast"]],
+  ORTH2 [ LST [ HD  "toast"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-toast]]]]].
+
+touch_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "touch"]],
+  ORTH2 [ LST [ HD  "touch"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-touch]]]]].
+
+try_2 := trans-sign3 &
+[ ORTH [ LST [ HD  "try"]],
+  ORTH2 [ LST [ HD  "try"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-try]]]]].
+
+turn_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "turn"]],
+  ORTH2 [ LST [ HD  "turn"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-turn]]]]].
+
+unzip_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "unzip"]],
+  ORTH2 [ LST [ HD  "unzip"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-unzip]]]]].
+
+use_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "use"]],
+  ORTH2 [ LST [ HD  "use"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-use]]]]].
+
+wait_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "wait"]],
+  ORTH2 [ LST [ HD  "wait"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wait]]]]].
+
+want_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "want"]],
+  ORTH2 [ LST [ HD  "want"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-want]]]]].
+
+wash_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "wash"]], 
+  ORTH2 [ LST [ HD  "wash"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wash]]]]].
+
+watch_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "watch"]], 
+  ORTH2 [ LST [ HD  "watch"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-watch]]]]].
+
+wear_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "wear"]], 
+  ORTH2 [ LST [ HD  "wear"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wear]]]]].
+
+wipe_1 := trans-sign3 &
+[ ORTH [ LST [ HD  "wipe"]],
+  ORTH2 [ LST [ HD  "wipe"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wipe]]]]].
+
+zipper_3 := trans-sign3 &
+[ ORTH [ LST [ HD  "zipper"]],
+  ORTH2 [ LST [ HD  "zipper"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-zipper]]]]].
+
+
+;;; TRANSITIVES WITH PARTICLES
+
+trans-prt_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+clean_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "clean"]],
+  ORTH2 [ LST [ HD  "clean"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-clean]]]]].
+
+clean_5 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "clean"]],
+  ORTH2 [ LST [ HD  "clean"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-clean]]]]].
+
+come_6 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "come"]],
+  ORTH2 [ LST [ HD  "come"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-come]]]]].
+
+fasten_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "fasten"]],
+  ORTH2 [ LST [ HD  "fasten"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fasten]]]]].
+
+finish_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "finish"]],
+  ORTH2 [ LST [ HD  "fasten"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-finish]]]]].
+
+finish_3 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "finish"]],
+  ORTH2 [ LST [ HD  "finish"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE with]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-finish]]]]].
+
+get_14 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+get_10 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+get_5 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE on]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+get_9 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+get_15 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+have_5 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "have"]],
+  ORTH2 [ LST [ HD  "have"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE on]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-have]]]]].
+
+hold_3 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "hold"]],
+  ORTH2 [ LST [ HD  "hold"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hold]]]]].
+
+hold_5 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "hold"]],
+  ORTH2 [ LST [ HD  "hold"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hold]]]]].
+
+hold_6 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "hold"]],
+  ORTH2 [ LST [ HD  "hold"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE on]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hold]]]]].
+
+knock_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "knock"]],
+  ORTH2 [ LST [ HD  "knock"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-knock]]]]].
+
+leave_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "leave"]],
+  ORTH2 [ LST [ HD  "leave"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE over]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-leave]]]]].
+
+pick_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "pick"]],
+  ORTH2 [ LST [ HD  "pick"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE at]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pick]]]]].
+
+pull_2 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "pull"]],
+  ORTH2 [ LST [ HD  "pull"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pull]]]]].
+
+pull_5 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "pull"]],
+  ORTH2 [ LST [ HD  "pull"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pull]]]]].
+
+pull_6 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "pull"]],
+  ORTH2 [ LST [ HD  "pull"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pull]]]]].
+
+pull_4 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "pull"]],
+  ORTH2 [ LST [ HD  "pull"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pull]]]]].
+
+push_4 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "push"]],
+  ORTH2 [ LST [ HD  "push"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-push]]]]].
+
+put_7 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "put"]],
+  ORTH2 [ LST [ HD  "put"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE away]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-put]]]]].
+
+put_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "put"]],
+  ORTH2 [ LST [ HD  "put"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-put]]]]].
+
+put_3 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "put"]],
+  ORTH2 [ LST [ HD  "put"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE in]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-put]]]]].
+
+put_4 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "put"]],
+  ORTH2 [ LST [ HD  "put"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE on]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-put]]]]].
+
+put_6 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "put"]],
+  ORTH2 [ LST [ HD  "put"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-put]]]]].
+
+roll_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "roll"]],
+  ORTH2 [ LST [ HD  "roll"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-roll]]]]].
+
+spit_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "spit"]],
+  ORTH2 [ LST [ HD  "spit"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-spit]]]]].
+
+take_2 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "take"]],
+  ORTH2 [ LST [ HD  "take"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE away]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-take]]]]].
+
+take_3 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "take"]],
+  ORTH2 [ LST [ HD  "take"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-take]]]]].
+
+take_4 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "take"]],
+  ORTH2 [ LST [ HD  "take"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-take]]]]].
+
+tear_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "tear"]],
+  ORTH2 [ LST [ HD  "tear"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE apart]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-tear]]]]].
+
+turn_2 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "turn"]],
+  ORTH2 [ LST [ HD  "turn"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-turn]]]]].
+
+wake_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "wake"]],
+  ORTH2 [ LST [ HD  "wake"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wake]]]]].
+
+want_4 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "want"]],
+  ORTH2 [ LST [ HD  "want"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-want]]]]].
+
+want_5 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "want"]],
+  ORTH2 [ LST [ HD  "want"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE on]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-want]]]]].
+
+wash_2 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "wash"]],
+  ORTH2 [ LST [ HD  "wash"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wash]]]]].
+
+wash_4 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "wash"]],
+  ORTH2 [ LST [ HD  "wash"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wash]]]]].
+
+write_1 := trans-prt-sign3 &
+[ ORTH [ LST [ HD  "write"]],
+  ORTH2 [ LST [ HD  "write"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-write]]]]].
+
+
+;;; TRANSITIVE CONTROL
+
+;;; TRANSITIVE RAISING CONTROL
+
+trans-raising_1 := trans-raising-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+believe_1 := trans-raising-sign3 &
+[ ORTH [ LST [ HD  "believe"]],
+  ORTH2 [ LST [ HD  "believe"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-believe]]]]].
+
+have_4 := trans-raising-prp-sign3 &
+[ ORTH [ LST [ HD  "have"]],
+  ORTH2 [ LST [ HD  "have"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-have]]]]].
+
+suppose_1 := trans-raising-sign3 &
+[ ORTH [ LST [ HD  "suppose"]],
+  ORTH2 [ LST [ HD  "suppose"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-suppose]]]]].
+
+want_2 := trans-raising-sign3 &
+[ ORTH [ LST [ HD  "want"]],
+  ORTH2 [ LST [ HD  "want"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-want]]]]].
+
+want_6 := trans-raising-ing-sign3 &
+[ ORTH [ LST [ HD  "want"]],
+  ORTH2 [ LST [ HD  "want"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-want]]]]].
+
+want_7 := trans-raising-prp-sign3 &
+[ ORTH [ LST [ HD  "want"]],
+  ORTH2 [ LST [ HD  "want"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-want]]]]].
+
+;;; TRANSITIVE EQUI CONTROL
+
+trans-equi_1 := trans-equi-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+hear_2 := trans-equi-base-sign3 &
+[ ORTH [ LST [ HD  "hear"]],
+  ORTH2 [ LST [ HD  "hear"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hear]]]]].
+
+let_1 := trans-equi-base-sign3 &
+[ ORTH [ LST [ HD  "let"]],
+  ORTH2 [ LST [ HD  "let"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-let]]]]].
+
+make_2 := trans-equi-base-sign3 &
+[ ORTH [ LST [ HD  "make"]],
+  ORTH2 [ LST [ HD  "make"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-make]]]]].
+
+persuade_1 := trans-equi-sign3 &
+[ ORTH [ LST [ HD  "persuade"]],
+  ORTH2 [ LST [ HD  "persuade"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-persuade]]]]].
+
+tell_3 := trans-equi-sign3 &
+[ ORTH [ LST [ HD  "tell"]],
+  ORTH2 [ LST [ HD  "tell"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-tell]]]]].
+
+watch_4 := trans-equi-base-sign3 &
+[ ORTH [ LST [ HD  "watch"]],
+  ORTH2 [ LST [ HD  "watch"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-watch]]]]].
+
+
+;;; LOCATIVE TRANSITIVE 
+
+loc-trans_1 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+balance_1 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "balance"]],
+  ORTH2 [ LST [ HD  "balance"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-balance]]]]].
+
+bang_2 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "bang"]],
+  ORTH2 [ LST [ HD  "bang"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-bang]]]]].
+
+bring_3 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "bring"]],
+  ORTH2 [ LST [ HD  "bring"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-bring]]]]].
+
+call_3 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "call"]],
+  ORTH2 [ LST [ HD  "call"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-call]]]]].
+
+get_7 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+get_16 := loc-trans-prt-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+hold_7 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "hold"]],
+  ORTH2 [ LST [ HD  "hold"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hold]]]]].
+
+leave_3 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "leave"]],
+  ORTH2 [ LST [ HD  "leave"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-leave]]]]].
+
+move_3 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "move"]],
+  ORTH2 [ LST [ HD  "move"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-move]]]]].
+
+push_3 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "push"]],
+  ORTH2 [ LST [ HD  "push"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-push]]]]].
+
+put_2 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "put"]],
+  ORTH2 [ LST [ HD  "put"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-put]]]]].
+
+put_5 := loc-trans-prt-sign3 &
+[ ORTH [ LST [ HD  "put"]],
+  ORTH2 [ LST [ HD  "put"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE back]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-put]]]]].
+
+put_8 := loc-trans-prt-sign3 &
+[ ORTH [ LST [ HD  "put"]],
+  ORTH2 [ LST [ HD  "put"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-put]]]]].
+
+put_9 := loc-trans-prt-sign3 &
+[ ORTH [ LST [ HD  "put"]],
+  ORTH2 [ LST [ HD  "put"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-put]]]]].
+
+stick_5 := loc-trans-sign3 &
+[ ORTH [ LST [ HD  "stick"]],
+  ORTH2 [ LST [ HD  "stick"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-stick]]]]].
+
+take_7 := loc-trans-prt-sign3 &
+[ ORTH [ LST [ HD  "take"]],
+  ORTH2 [ LST [ HD  "take"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-take]]]]].
+
+take_8 := loc-trans-prt-sign3 &
+[ ORTH [ LST [ HD  "take"]],
+  ORTH2 [ LST [ HD  "take"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-take]]]]].
+
+throw_2 := loc-trans-prt-sign3 &
+[ ORTH [ LST [ HD  "throw"]],
+  ORTH2 [ LST [ HD  "throw"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE on]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-throw]]]]].
+
+;;; %%%%%%%%%%%%%% OBLIQUE TRANSITIVE %%%%%%%%%%%%%%%%%%%
+
+transfer-passive-no-by_1 := transfer-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+transfer-passive_1 := transfer-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+transfer-imperative_1 := transfer-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+call_1 := transfer-sign3 &
+[ ORTH [ LST [ HD  "call"]],
+  ORTH2 [ LST [ HD  "call"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-call]]]]].
+
+cover_2 := transfer-sign3 &
+[ ORTH [ LST [ HD  "cover"]],
+  ORTH2 [ LST [ HD  "cover"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-cover]]]]].
+
+do_4 := transfer-sign3 &
+[ ORTH [ LST [ HD  "do"]],
+  ORTH2 [ LST [ HD  "do"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-do]]]]].
+
+donate_1 := transfer-sign3 &
+[ ORTH [ LST [ HD  "donate"]],
+  ORTH2 [ LST [ HD  "donate"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-give]]]]].
+
+feed_2 := transfer-sign3 &
+[ ORTH [ LST [ HD  "feed"]],
+  ORTH2 [ LST [ HD  "feed"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-feed]]]]].
+
+;;; also transfer sign
+find_2 := transfer-sign3 &
+[ ORTH [ LST [ HD  "find"]],
+  ORTH2 [ LST [ HD  "find"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-find]]]]].
+
+fix_2 := transfer-sign3 &
+[ ORTH [ LST [ HD  "fix"]],
+  ORTH2 [ LST [ HD  "fix"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-fix]]]]].
+
+;;; also transfer sign
+get_8 := transfer-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+;;; ver dative-sign3
+give_2 := transfer-sign3 &
+[ ORTH [ LST [ HD  "give"]],
+  ORTH2 [ LST [ HD  "give"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-give]]]]].
+
+look_7 := transfer-sign3 &
+[ ORTH [ LST [ HD  "look"]],
+  ORTH2 [ LST [ HD  "look"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE at]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-look]]]]].
+
+look_8 := transfer-sign3 &
+[ ORTH [ LST [ HD  "look"]],
+  ORTH2 [ LST [ HD  "look"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE for]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-look]]]]].
+
+make_3 := transfer-sign3 &
+[ ORTH [ LST [ HD  "make"]],
+  ORTH2 [ LST [ HD  "make"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-make]]]]].
+
+pull_3 := transfer-sign3 &
+[ ORTH [ LST [ HD  "pull"]],
+  ORTH2 [ LST [ HD  "pull"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pull]]]]].
+
+read_1 := transfer-sign3 &
+[ ORTH [ LST [ HD  "read"]],
+  ORTH2 [ LST [ HD  "read"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-read]]]]].
+
+;;; ver dative-sign3
+show_2 := transfer-sign3 &
+[ ORTH [ LST [ HD  "show"]],
+  ORTH2 [ LST [ HD  "show"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-show]]]]].
+
+take_5 := transfer-prt-sign3 &
+[ ORTH [ LST [ HD  "take"]],
+  ORTH2 [ LST [ HD  "take"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-take]]]]].
+
+take_6 := transfer-prt-sign3 &
+[ ORTH [ LST [ HD  "take"]],
+  ORTH2 [ LST [ HD  "take"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-take]]]]].
+
+talk_3 := transfer-prt-sign3 &
+[ ORTH [ LST [ HD  "talk"]],
+  ORTH2 [ LST [ HD  "talk"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ PARTICLE off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-talk]]]]].
+
+tell_4 := transfer-sign3 &
+[ ORTH [ LST [ HD  "tell"]],
+  ORTH2 [ LST [ HD  "tell"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-tell]]]]].
+
+
+;;; %%%%%%%%%%%%%% DITRANSITIVE %%%%%%%%%%%%%%%%%%%
+
+dative-passive-no-by_1 := dative-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+dative-passive_1 := dative-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+dative-imperative_1 := dative-sign3 &
+[ ORTH [ LST [ HD  "*top*"]]].
+
+call_3 := dative-sign3 &
+[ ORTH [ LST [ HD  "call"]],
+  ORTH2 [ LST [ HD  "call"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-call]]]]].
+
+;;; also transfer sign
+give_1 := dative-sign3 &
+[ ORTH [ LST [ HD  "give"]],
+  ORTH2 [ LST [ HD  "give"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-give]]]]].
+
+;;; also transfer sign
+bring_2 := dative-sign3 &
+[ ORTH [ LST [ HD  "bring"]],
+  ORTH2 [ LST [ HD  "bring"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-bring]]]]].
+
+;;; also transfer sign
+find_1 := dative-sign3 &
+[ ORTH [ LST [ HD  "find"]],
+  ORTH2 [ LST [ HD  "find"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-find]]]]].
+
+;;; also transfer sign
+get_3 := dative-sign3 &
+[ ORTH [ LST [ HD  "get"]],
+  ORTH2 [ LST [ HD  "get"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-get]]]]].
+
+;;; also transfer sign
+read_3 := dative-sign3 &
+[ ORTH [ LST [ HD  "read"]],
+  ORTH2 [ LST [ HD  "read"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-read]]]]].
+
+;;; also transfer sign
+show_1 := dative-sign3 &
+[ ORTH [ LST [ HD  "show"]],
+  ORTH2 [ LST [ HD  "show"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-show]]]]].
+
+tell_2 := dative-sign3 &
+[ ORTH [ LST [ HD  "tell"]],
+  ORTH2 [ LST [ HD  "tell"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-tell]]]]].
+
+
+;;; %%%%%%%%%%%%%% VERBS WITH SENTENTIAL COMPLEMENTS  %%%%%%%%%%%%%%%%%%%
+
+believe_2 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "believe"]],
+  ORTH2 [ LST [ HD  "believe"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-believe]]]]].
+
+decide_1 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "decide"]],
+  ORTH2 [ LST [ HD  "decide"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-decide]]]]].
+
+discover_1 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "discover"]],
+  ORTH2 [ LST [ HD  "discover"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-discover]]]]].
+
+hope_2 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "hope"]],
+  ORTH2 [ LST [ HD  "hope"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hope]]]]].
+
+know_2 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "know"]],
+  ORTH2 [ LST [ HD  "know"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-know]]]]].
+
+look_5 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "look"]],
+  ORTH2 [ LST [ HD  "look"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-look]]]]].
+
+pretend_2 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "pretend"]],
+  ORTH2 [ LST [ HD  "pretend"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pretend]]]]].
+
+remember_1 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "remember"]],
+  ORTH2 [ LST [ HD  "remember"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-remember]]]]].
+
+say_3 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "say"]],
+  ORTH2 [ LST [ HD  "say"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-say]]]]].
+
+see_1 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "see"]],
+  ORTH2 [ LST [ HD  "see"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-see]]]]].
+
+think_2 := vp-sent-sign3 &
+[ ORTH [ LST [ HD  "think"]],
+  ORTH2 [ LST [ HD  "think"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-think]]]]].
+
+;;; %%%%%%%%%%%%%% PREPOSITIONS %%%%%%%%%%%%%%%%%%%
+
+about_1 := prep-sign3 &
+[ ORTH [ LST [ HD  "about"]],
+  ORTH2 [ LST [ HD  "about"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM about]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+about_2 := prep-vping-sign3 &
+[ ORTH [ LST [ HD  "about"]],
+  ORTH2 [ LST [ HD  "about"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM about]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+around_2 := prep-sign3 &
+[ ORTH [ LST [ HD  "around"]],
+  ORTH2 [ LST [ HD  "around"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM around]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+at_1 := prep-sign3 &
+[ ORTH [ LST [ HD  "at"]],
+  ORTH2 [ LST [ HD  "at"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM at]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+at_3 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "at"]],
+  ORTH2 [ LST [ HD  "at"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM at]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+away_2 := prep-sign3 &
+[ ORTH [ LST [ HD  "away"]],
+  ORTH2 [ LST [ HD  "away"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM away]]]]],
+  SEM2 [ RESTR1 [ LST [ HD  [ RELN1 r-prep]]]]].
+
+before_2 := prep-sign3 &
+[ ORTH [ LST [ HD  "before"]],
+  ORTH2 [ LST [ HD  "before"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM before]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+behind_1 := prep-sign3 &
+[ ORTH [ LST [ HD  "behind"]],
+  ORTH2 [ LST [ HD  "behind"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM behind]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+by_1 := prep-sign3 &
+[ ORTH [ LST [ HD  "by"]],
+  ORTH2 [ LST [ HD  "by"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM by]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+down_1 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "down"]],
+  ORTH2 [ LST [ HD  "down"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM down]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+for_1 := prep-sign3 &
+[ ORTH [ LST [ HD  "for"]],
+  ORTH2 [ LST [ HD  "for"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM for]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+for_5 := np-prep-sign3 &
+[ ORTH [ LST [ HD  "for"]],
+  ORTH2 [ LST [ HD  "for"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM for]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+from_1 := prep-sign3 &
+[ ORTH [ LST [ HD  "from"]],
+  ORTH2 [ LST [ HD  "from"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM from]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+in_1 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "in"]],
+  ORTH2 [ LST [ HD  "in"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM in]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+inside_1 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "inside"]],
+  ORTH2 [ LST [ HD  "inside"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM inside]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+into_1 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "into"]],
+  ORTH2 [ LST [ HD  "into"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM in]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+like_4 := prep-sign3 &
+[ ORTH [ LST [ HD  "like"]],
+  ORTH2 [ LST [ HD  "like"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM like]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+of_1 := prep-sign3 &
+[ ORTH [ LST [ HD  "of"]],
+  ORTH2 [ LST [ HD  "of"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM of]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+of_2 := np-prep-sign3 &
+[ ORTH [ LST [ HD  "of"]],
+  ORTH2 [ LST [ HD  "of"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM of]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+off_2 := prep-sign3 &
+[ ORTH [ LST [ HD  "off"]],
+  ORTH2 [ LST [ HD  "off"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD  [ RELN1 r-prep]]]]].
+
+off_3 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "off"]],
+  ORTH2 [ LST [ HD  "off"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM off]]]]],
+  SEM2 [ RESTR1 [ LST [ HD  [ RELN1 r-prep]]]]].
+
+on_2 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "on"]],
+  ORTH2 [ LST [ HD  "on"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM on]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+;;; NP\NP/NP = the flower with green leaves
+on_4 := np-prep-sign3 &
+[ ORTH [ LST [ HD  "on"]],
+  ORTH2 [ LST [ HD  "on"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM on]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+onto_1 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "onto"]],
+  ORTH2 [ LST [ HD  "onto"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM onto]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+over_2 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "over"]],
+  ORTH2 [ LST [ HD  "over"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM over]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+out_5 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "out"]],
+  ORTH2 [ LST [ HD  "out"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM out]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+to_1 := prep-sign3 &
+[ ORTH [ LST [ HD  "to"]],
+  ORTH2 [ LST [ HD  "to"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM to]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+to_3 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "to"]],
+  ORTH2 [ LST [ HD  "to"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM to]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+through_1 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "through"]],
+  ORTH2 [ LST [ HD  "through"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM through]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+under_1 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "under"]],
+  ORTH2 [ LST [ HD  "under"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+up_1 := prep-loc-sign3 &
+[ ORTH [ LST [ HD  "up"]],
+  ORTH2 [ LST [ HD  "up"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM up]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+with_1 := prep-sign3 &
+[ ORTH [ LST [ HD  "with"]],
+  ORTH2 [ LST [ HD  "with"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM with]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+with_5 := np-prep-sign3 &
+[ ORTH [ LST [ HD  "with"]],
+  ORTH2 [ LST [ HD  "with"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ P-FORM with]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-prep]]]]].
+
+;;; %%%%%%%%%%%%%% PARTICLES %%%%%%%%%%%%%%%%%%%
+
+apart_1 := particle-sign &
+[ ORTH [ LST [ HD  "apart"]],
+  ORTH2 [ LST [ HD  "apart"]],
+  CAT [ M-FEATS [ P-FORM apart]],
+  SEM2 [ RESTR1 [ LST [ HD  [ PART "apart"]]]]].
+
+around_1 := particle-sign &
+[ ORTH [ LST [ HD  "around"]],
+  ORTH2 [ LST [ HD  "around"]],
+  CAT [ M-FEATS [ P-FORM around]],
+  SEM2 [ RESTR1 [ LST [ HD  [ PART "around"]]]]].
+
+at_2 := particle-sign &
+[ ORTH [ LST [ HD  "at"]],
+  ORTH2 [ LST [ HD  "at"]],
+  CAT [ M-FEATS [ P-FORM at]],
+  SEM2 [ RESTR1 [ LST [ HD  [ PART "at"]]]]].
+
+away_1 := particle-sign &
+[ ORTH [ LST [ HD  "away"]],
+  ORTH2 [ LST [ HD  "away"]],
+  CAT [ M-FEATS [ P-FORM away]],
+  SEM2 [ RESTR1 [ LST [ HD  [ PART "away"]]]]].
+
+back_1 := particle-sign &
+[ ORTH [ LST [ HD  "back"]],
+  ORTH2 [ LST [ HD  "back"]],
+  CAT [ M-FEATS [ P-FORM back]],
+  SEM2 [ RESTR1 [ LST [ HD  [ PART "back"]]]]].
+
+down_2 := particle-sign &
+[ ORTH [ LST [ HD  "down"]],
+  ORTH2 [ LST [ HD  "down"]],
+  CAT [ M-FEATS [ P-FORM down]],
+  SEM2 [ RESTR1 [ LST [ HD  [ PART "down"]]]]].
+
+in_4 := particle-sign &
+[ ORTH [ LST [ HD  "in"]],
+  ORTH2 [ LST [ HD  "in"]],
+  CAT [ M-FEATS [ P-FORM in]],
+  SEM2 [ RESTR1 [ LST [ HD  [ PART "in"]]]]].
+
+off_1 := particle-sign &
+[ ORTH [ LST [ HD  "off"]],
+  ORTH2 [ LST [ HD  "off"]],
+  CAT [ M-FEATS [ P-FORM off]],
+  SEM2 [ RESTR1 [ LST [ HD  [ PART "off"]]]]].
+
+on_1 := particle-sign &
+[ ORTH [ LST [ HD  "on"]],
+  ORTH2 [ LST [ HD  "on"]],
+  CAT [ M-FEATS [ P-FORM on]],
+  SEM2 [ RESTR1 [ LST [ HD  [ PART "on"]]]]].
+
+over_1 := particle-sign &
+[ ORTH [ LST [ HD  "over"]],
+  ORTH2 [ LST [ HD  "over"]],
+  CAT [ M-FEATS [ P-FORM over]],
+  SEM2 [ RESTR1 [ LST [ HD  [ PART "over"]]]]].
+
+out_1 := particle-sign &
+[ ORTH [ LST [ HD  "out"]],
+  ORTH2 [ LST [ HD  "out"]],
+  CAT [ M-FEATS [ P-FORM out]],
+  SEM2 [ RESTR1 [ LST [ HD [ PART "out"]]]]].
+
+up_2 := particle-sign &
+[ ORTH [ LST [ HD  "up"]],
+  ORTH2 [ LST [ HD  "up"]],
+  CAT [ M-FEATS [ P-FORM up]],
+  SEM2 [ RESTR1 [ LST [ HD [ PART "up"]]]]].
+
+with_2 := particle-sign &
+[ ORTH [ LST [ HD  "with"]],
+  ORTH2 [ LST [ HD  "with"]],
+  CAT [ M-FEATS [ P-FORM with]],
+  SEM2 [ RESTR1 [ LST [ HD [ PART "with"]]]]].
+
+
+;;; %%%%%%%%%%%%%% ADVERB %%%%%%%%%%%%%%%%%%%
+
+;;; PP-ADVERB
+
+;;; all of them
+all_3 := pp-adv-sign &
+[ ORTH [ LST [ HD  "all"]],
+  ORTH2 [ LST [ HD  "all"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-all]]]]].
+
+;;; both of them
+both_2 := pp-adv-sign &
+[ ORTH [ LST [ HD  "both"]],
+  ORTH2 [ LST [ HD  "both"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-both]]]]].
+
+;;; each of them
+each_2 := pp-adv-sign &
+[ ORTH [ LST [ HD  "each"]],
+  ORTH2 [ LST [ HD  "each"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-each]]]]].
+
+;;; enough of them
+enough_2 := pp-adv-sign &
+[ ORTH [ LST [ HD  "enough"]],
+  ORTH2 [ LST [ HD  "enough"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-enough]]]]].
+
+;;; one of them
+one_3 := pp-adv-sign &
+[ ORTH [ LST [ HD  "one"]],
+  ORTH2 [ LST [ HD  "one"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-one]]]]].
+
+right_8 := pp-adv-sign &
+[ ORTH [ LST [ HD  "right"]],
+  ORTH2 [ LST [ HD  "right"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-right]]]]].
+
+;;; some of them
+some_2 := pp-adv-sign &
+[ ORTH [ LST [ HD  "some"]],
+  ORTH2 [ LST [ HD  "some"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-some]]]]].
+
+;;; several of them
+several_2 := pp-adv-sign &
+[ ORTH [ LST [ HD  "several"]],
+  ORTH2 [ LST [ HD  "several"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-several]]]]].
+
+;;; NP-ADVERB
+
+;;; all your dollies
+all_1 := np-adv-sign &
+[ ORTH [ LST [ HD  "all"]],
+  ORTH2 [ LST [ HD  "all"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-all]]]]].
+
+any_2 := np-adv-sign &
+[ ORTH [ LST [ HD  "any"]],
+  ORTH2 [ LST [ HD  "any"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-any]]]]].
+
+both_1 := np-adv-sign &
+[ ORTH [ LST [ HD  "both"]],
+  ORTH2 [ LST [ HD  "both"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-both]]]]].
+
+;;; enough dolls
+enough_3 := np-adv-sign &
+[ ORTH [ LST [ HD  "enough"]],
+  ORTH2 [ LST [ HD  "enough"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-enough]]]]].
+
+just_3 := np-adv-sign &
+[ ORTH [ LST [ HD  "just"]],
+  ORTH2 [ LST [ HD  "just"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-just]]]]].
+
+more_5 := np-adv-sign &
+[ ORTH [ LST [ HD  "more"]],
+  ORTH2 [ LST [ HD  "more"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-more]]]]].
+
+one_4 := np-adv-sign &
+[ ORTH [ LST [ HD  "one"]],
+  ORTH2 [ LST [ HD  "one"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-one]]]]].
+
+only_1 := np-adv-sign &
+[ ORTH [ LST [ HD  "only"]],
+  ORTH2 [ LST [ HD  "only"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-only]]]]].
+
+right_7 := np-adv-sign &
+[ ORTH [ LST [ HD  "right"]],
+  ORTH2 [ LST [ HD  "right"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-right]]]]].
+
+some_5 := np-adv-sign &
+[ ORTH [ LST [ HD  "some"]],
+  ORTH2 [ LST [ HD  "some"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-some]]]]].
+
+
+;;; ADJ-ADVERB
+
+;;; light blue car
+light_5 := att-adj-adv-sign &
+[ ORTH [ LST [ HD  "light"]],
+  ORTH2 [ LST [ HD  "light"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-light]]]]].
+
+;;; really nice dollies
+really_2 := att-adj-adv-sign &
+[ ORTH [ LST [ HD  "really"]],
+  ORTH2 [ LST [ HD  "really"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-really]]]]].
+
+;;; so many
+so_2 := att-adj-adv-sign &
+[ ORTH [ LST [ HD  "so"]],
+  ORTH2 [ LST [ HD  "so"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-so]]]]].
+
+;;; SENT-ADVERB
+
+again_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "again"]],
+  ORTH2 [ LST [ HD  "again"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-again]]]]].
+
+anymore_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "anymore"]],
+  ORTH2 [ LST [ HD  "anymore"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-anymore]]]]].
+
+either_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "either"]],
+  ORTH2 [ LST [ HD  "either"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-either]]]]].
+
+first_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "first"]],
+  ORTH2 [ LST [ HD  "first"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-first]]]]].
+
+later_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "later"]],
+  ORTH2 [ LST [ HD  "later"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-later]]]]].
+
+maybe_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "maybe"]],
+  ORTH2 [ LST [ HD  "maybe"]],
+  CAT [ ACTIVE3 [ LST [ HD [ 	SIGN [ CAT [ M-FEATS [ INV false]]],
+				DIRECTION1 [ DIR-VALUE  forward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-maybe]]]]].
+
+now_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "now"]],
+  ORTH2 [ LST [ HD  "now"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-now]]]]].
+
+once_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "once"]],
+  ORTH2 [ LST [ HD  "once"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-once]]]]].
+
+often_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "often"]],
+  ORTH2 [ LST [ HD  "often"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-often]]]]].
+
+sometimes_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "sometimes"]],
+  ORTH2 [ LST [ HD  "sometimes"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-sometimes]]]]].
+
+soon_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "soon"]],
+  ORTH2 [ LST [ HD  "soon"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-soon]]]]].
+
+still_2 := sent-adv-sign &
+[ ORTH [ LST [ HD  "still"]],
+  ORTH2 [ LST [ HD  "still"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-still]]]]].
+
+then_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "then"]],
+  ORTH2 [ LST [ HD  "then"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-then]]]]].
+
+today_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "today"]],
+  ORTH2 [ LST [ HD  "today"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-today]]]]].
+
+too_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "too"]],
+  ORTH2 [ LST [ HD  "too"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-too]]]]].
+
+yet_1 := sent-adv-sign &
+[ ORTH [ LST [ HD  "yet"]],
+  ORTH2 [ LST [ HD  "yet"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-yet]]]]].
+
+
+;;; PRED-ADJ-ADVERB
+
+all_2 := pred-adj-adv-sign &
+[ ORTH [ LST [ HD  "all"]],
+  ORTH2 [ LST [ HD  "all"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-all]]]]].
+
+also_1 := pred-adj-adv-sign &
+[ ORTH [ LST [ HD  "also"]],
+  ORTH2 [ LST [ HD  "also"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-also]]]]].
+
+enough_1 := pred-adj-adv-sign &
+[ ORTH [ LST [ HD  "enough"]],
+  ORTH2 [ LST [ HD  "enough"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-enough]]]]].
+
+pretty_3 := pred-adj-adv-sign &
+[ ORTH [ LST [ HD  "pretty"]],
+  ORTH2 [ LST [ HD  "pretty"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-pretty]]]]].
+
+very_3 := pred-adj-adv-sign &
+[ ORTH [ LST [ HD  "very"]],
+  ORTH2 [ LST [ HD  "very"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-very]]]]].
+
+too_2 := pred-adj-adv-sign &
+[ ORTH [ LST [ HD  "too"]],
+  ORTH2 [ LST [ HD  "too"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-too]]]]].
+
+;;; VP-ADVERB
+
+already_1 := vp-adv-sign &
+[ ORTH [ LST [ HD  "already"]],
+  ORTH2 [ LST [ HD  "already"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-already]]]]].
+
+before_1 := vp-adv-sign &
+[ ORTH [ LST [ HD  "before"]],
+  ORTH2 [ LST [ HD  "before"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-before]]]]].
+
+hard_4 := vp-adv-sign &
+[ ORTH [ LST [ HD  "hard"]],
+  ORTH2 [ LST [ HD  "hard"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-hard]]]]].
+
+just_1 := vp-adv-sign &
+[ ORTH [ LST [ HD  "just"]],
+  ORTH2 [ LST [ HD  "just"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-just]]]]].
+
+later_2 := vp-adv-sign &
+[ ORTH [ LST [ HD  "later"]],
+  ORTH2 [ LST [ HD  "later"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-later]]]]].
+
+long_2 := vp-adv-sign &
+[ ORTH [ LST [ HD  "long"]],
+  ORTH2 [ LST [ HD  "long"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-long]]]]].
+
+more_2 := vp-adv-sign &
+[ ORTH [ LST [ HD  "more"]],
+  ORTH2 [ LST [ HD  "more"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-more]]]]]. 
+
+never_1 := neg-vp-adv-sign &
+[ ORTH [ LST [ HD  "never"]],
+  ORTH2 [ LST [ HD  "never"]],
+  CAT [ ACTIVE3 [ LST [ HD [ 	DIRECTION1 [ DIR-VALUE  backward],
+				SIGN [ CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-never]]]]].
+
+never_2 := neg-vp-adv-sign &
+[ ORTH [ LST [ HD  "never"]],
+  ORTH2 [ LST [ HD  "never"]],
+  CAT [ ACTIVE3 [ LST [ HD [ 	DIRECTION1 [ DIR-VALUE  forward],
+				SIGN [ CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ VFORM inf ]]]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-never]]]]].
+
+not_2 := neg-vp-adv-sign &
+[ ORTH [ LST [ HD  "not"]],
+  ORTH2 [ LST [ HD  "not"]],
+  CAT [ ACTIVE3 [ LST [ HD [ 	DIRECTION1 [ DIR-VALUE  backward],
+				SIGN [ CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-not]]]]].
+
+not_3 := neg-vp-adv-sign &
+[ ORTH [ LST [ HD  "not"]],
+  ORTH2 [ LST [ HD  "not"]],
+  CAT [ ACTIVE3 [ LST [ HD [ 	DIRECTION1 [ DIR-VALUE  forward],
+				SIGN [ CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX false]]]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-not]]]]].
+
+no_1 := neg-vp-adv-sign &
+[ ORTH [ LST [ HD  "no"]],
+  ORTH2 [ LST [ HD  "no"]],
+  CAT [ ACTIVE3 [ LST [ HD [ 	DIRECTION1 [ DIR-VALUE  backward],
+				SIGN [ CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ AUX true]]]]]]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-not]]]]].
+
+really_3 := vp-adv-sign &
+[ ORTH [ LST [ HD  "really"]],
+  ORTH2 [ LST [ HD  "really"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-really]]]]].
+
+right_3 := vp-adv-sign &
+[ ORTH [ LST [ HD  "right"]],
+  ORTH2 [ LST [ HD  "right"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-right]]]]].
+
+slowly_1 := vp-adv-sign &
+[ ORTH [ LST [ HD  "slowly"]],
+  ORTH2 [ LST [ HD  "slowly"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-slowly]]]]].
+
+still_1 := vp-adv-sign &
+[ ORTH [ LST [ HD  "still"]],
+  ORTH2 [ LST [ HD  "still"]],
+  CAT [ ACTIVE3 [ LST [ HD [ DIRECTION1 [ DIR-VALUE  backward]]]]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-still]]]]].
+
+together_1 := vp-adv-sign &
+[ ORTH [ LST [ HD  "together"]],
+  ORTH2 [ LST [ HD  "together"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-together]]]]]. 
+
+too_3 := vp-adv-sign &
+[ ORTH [ LST [ HD  "too"]],
+  ORTH2 [ LST [ HD  "too"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-too]]]]].
+
+up_3 := vp-adv-sign &
+[ ORTH [ LST [ HD  "up"]],
+  ORTH2 [ LST [ HD  "up"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-up]]]]].
+
+;;; VP-LOCATIVE-ADVERB 
+
+
+a_2 := vp-adv-sign2 &
+[ ORTH [ LST [ HD  "a"]],
+  ORTH2 [ LST [ HD  "a"]],
+  CAT [ ACTIVE3 [ LST [ TL [ HD [ SIGN [ CAT [ M-FEATS [ADV true,
+							WH false,
+							LOC false,
+							PRON false]]]]]]]], 
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-a]]]]].
+
+for_3 := vp-adv-sign2 &
+[ ORTH [ LST [ HD  "for"]],
+  ORTH2 [ LST [ HD  "for"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-for]]]]].
+
+in_2 := vp-adv-sign2 &
+[ ORTH [ LST [ HD  "in"]],
+  ORTH2 [ LST [ HD  "in"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-in]]]]].
+
+like_3 := vp-adv-sign2 &
+[ ORTH [ LST [ HD  "like"]],
+  ORTH2 [ LST [ HD  "like"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-like]]]]].
+
+on_3 := vp-adv-sign2 &
+[ ORTH [ LST [ HD  "on"]],
+  ORTH2 [ LST [ HD  "on"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-on]]]]].
+
+out_2 := vp-adv-sign2 &
+[ ORTH [ LST [ HD  "out"]],
+  ORTH2 [ LST [ HD  "out"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-out]]]]].
+
+over_3 := vp-adv-sign2 &
+[ ORTH [ LST [ HD  "over"]],
+  ORTH2 [ LST [ HD  "over"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-over]]]]].
+
+right_5 := vp-adv-sign2 &
+[ ORTH [ LST [ HD  "right"]],
+  ORTH2 [ LST [ HD  "right"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-right]]]]].
+
+to_4 := vp-adv-sign2 &
+[ ORTH [ LST [ HD  "to"]],
+  ORTH2 [ LST [ HD  "to"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-to]]]]].
+
+with_3 := vp-adv-sign2 &
+[ ORTH [ LST [ HD  "with"]],
+  ORTH2 [ LST [ HD  "with"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-with]]]]].
+
+;;;LOCATIVE-ADVERBS AND ADVERBS OF TIME 
+
+another_1 := sent-np-adv-sign &
+[ ORTH [ LST [ HD  "another"]],
+  ORTH2 [ LST [ HD  "another"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-another]]]]].
+
+at_5 := sent-np-adv-sign &
+[ ORTH [ LST [ HD  "at"]],
+  ORTH2 [ LST [ HD  "at"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-at]]]]].
+
+by_2 := sent-np-adv-sign &
+[ ORTH [ LST [ HD  "by"]],
+  ORTH2 [ LST [ HD  "by"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-adv]]]]].
+
+for_4 := sent-np-adv-sign &
+[ ORTH [ LST [ HD  "for"]],
+  ORTH2 [ LST [ HD  "for"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-for]]]]].
+
+in_3 := sent-np-adv-sign &
+[ ORTH [ LST [ HD  "in"]],
+  ORTH2 [ LST [ HD  "in"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-in]]]]].
+
+out_3 := sent-np-adv-sign &
+[ ORTH [ LST [ HD  "out"]],
+  ORTH2 [ LST [ HD  "out"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-out]]]]].
+
+over_4 := sent-np-adv-sign &
+[ ORTH [ LST [ HD  "over"]],
+  ORTH2 [ LST [ HD  "over"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-over]]]]].
+
+with_4 := sent-np-adv-sign &
+[ ORTH [ LST [ HD  "with"]],
+  ORTH2 [ LST [ HD  "with"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-with]]]]].
+
+
+;;; ADVERB-ADVERB - SENT
+
+quite_1 := adv-adv-sign &
+[ ORTH [ LST [ HD  "quite"]],
+ ORTH2 [ LST [ HD  "quite"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-quite]]]]].
+
+right_6 := adv-adv-sign &
+[ ORTH [ LST [ HD  "right"]],
+  ORTH2 [ LST [ HD  "right"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-right]]]]].
+
+very_1 := adv-adv-sign &
+[ ORTH [ LST [ HD  "very"]],
+  ORTH2 [ LST [ HD  "very"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-very]]]]].
+
+;;; ADVERB-ADVERB - VP
+
+quite_2 := adv-adv-sign2 &
+[ ORTH [ LST [ HD  "quite"]],
+  ORTH2 [ LST [ HD  "quite"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-quite]]]]].
+
+some_4 := adv-adv-sign2 &
+[ ORTH [ LST [ HD  "some"]],
+  ORTH2 [ LST [ HD  "some"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-some]]]]]. 
+
+very_2 := adv-adv-sign2 &
+[ ORTH [ LST [ HD  "very"]],
+  ORTH2 [ LST [ HD  "very"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-very]]]]].
+
+;;; %%%%%%%%%%%%%% WH Words as sentences %%%%%%%%%%%%%%
+
+what_2 := wh-sent-sign &
+[ ORTH [ LST [ HD  "what"]],
+  ORTH2 [ LST [ HD  "what"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+how_1 := wh-sent-sign &
+[ ORTH [ LST [ HD  "how"]],
+  ORTH2 [ LST [ HD  "how"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+;;; %%%%%%%%%%%%%% WH Extractions %%%%%%%%%%%%%%
+
+;;; this is what i like
+what_4 := np-free-rel-sign  &
+[ ORTH [ LST [ HD  "what"]],
+  ORTH2 [ LST [ HD  "what"]],
+  CAT [ RESULT3 [ SIGN [ CAT [ M-FEATS [ WH true,
+		  			AGR2 var_agr]]]]],
+  SEM2 [ RESTR1[ LST [ HD [ RELN1 r-det]]]]].
+
+
+who_2 := wh-subj-extraction-sign &
+[ ORTH [ LST [ HD  "who"]],
+  ORTH2 [ LST [ HD  "who"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+what_5 := wh-obj-extraction-sign &
+[ ORTH [ LST [ HD  "what"]],
+  ORTH2 [ LST [ HD  "what"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+who_3 := wh-obj-extraction-sign &
+[ ORTH [ LST [ HD  "who"]],
+  ORTH2 [ LST [ HD  "who"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+whom_1 := wh-obj-extraction-sign &
+[ ORTH [ LST [ HD  "whom"]],
+  ORTH2 [ LST [ HD  "whom"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+what_6 := wh-obj-extraction-sign2 &
+[ ORTH [ LST [ HD  "what"]],
+  ORTH2 [ LST [ HD  "what"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+which_2 := wh-obj-extraction-sign2 &
+[ ORTH [ LST [ HD  "which"]],
+  ORTH2 [ LST [ HD  "which"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+where_3 := wh-pp-extraction-sign &
+[ ORTH [ LST [ HD  "where"]],
+  ORTH2 [ LST [ HD  "where"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+what_7 := wh-pp-extraction-sign2 &
+[ ORTH [ LST [ HD  "what"]],
+  ORTH2 [ LST [ HD  "what"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+who_4 := wh-pp-extraction-sign2 &
+[ ORTH [ LST [ HD  "who"]],
+  ORTH2 [ LST [ HD  "who"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+whom_2 := wh-pp-extraction-sign2 &
+[ ORTH [ LST [ HD  "whom"]],
+  ORTH2 [ LST [ HD  "whom"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+what_8 := wh-pp-extraction-sign3 &
+[ ORTH [ LST [ HD  "what"]],
+  ORTH2 [ LST [ HD  "what"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+which_3 := wh-pp-extraction-sign3 &
+[ ORTH [ LST [ HD  "which"]],
+  ORTH2 [ LST [ HD  "which"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+how_3 := wh-adj-extraction-sign &
+[ ORTH [ LST [ HD  "how"]],
+  ORTH2 [ LST [ HD  "how"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+why_2 := wh-adj-extraction-sign &
+[ ORTH [ LST [ HD  "why"]],
+  ORTH2 [ LST [ HD  "why"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+where_2 := wh-adj-extraction-sign &
+[ ORTH [ LST [ HD  "where"]],
+  ORTH2 [ LST [ HD  "where"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+how_4 := wh-adj-extraction-sign2 &
+[ ORTH [ LST [ HD  "how"]],
+  ORTH2 [ LST [ HD  "how"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+who_5 := subj-relativizer-sign &
+[ ORTH [ LST [ HD  "who"]],
+  ORTH2 [ LST [ HD  "who"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+what_9 := subj-relativizer-sign &
+[ ORTH [ LST [ HD  "what"]],
+  ORTH2 [ LST [ HD  "what"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+which_4 := subj-relativizer-sign &
+[ ORTH [ LST [ HD  "which"]],
+  ORTH2 [ LST [ HD  "which"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+who_6 := obj-relativizer-sign &
+[ ORTH [ LST [ HD  "who"]],
+  ORTH2 [ LST [ HD  "who"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+whom_3 := obj-relativizer-sign &
+[ ORTH [ LST [ HD  "whom"]],
+  ORTH2 [ LST [ HD  "whom"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+what_10 := obj-relativizer-sign & 
+[ ORTH [ LST [ HD  "what"]],
+  ORTH2 [ LST [ HD  "what"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+which_5 := obj-relativizer-sign &
+[ ORTH [ LST [ HD  "which"]],
+  ORTH2 [ LST [ HD  "which"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+where_4 := pp-relativizer-sign &
+[ ORTH [ LST [ HD  "where"]],
+  ORTH2 [ LST [ HD  "where"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+who_7 := pp-relativizer-sign2 &
+[ ORTH [ LST [ HD  "who"]],
+  ORTH2 [ LST [ HD  "who"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+whom_4 := pp-relativizer-sign2 &
+[ ORTH [ LST [ HD  "whom"]],
+  ORTH2 [ LST [ HD  "whom"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+which_6 := pp-relativizer-sign2 &
+[ ORTH [ LST [ HD  "which"]],
+  ORTH2 [ LST [ HD  "which"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+
+when_2 := adj-relativizer-sign & 
+[ ORTH [ LST [ HD  "how"]],
+  ORTH2 [ LST [ HD  "how"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+why_3 := adj-relativizer-sign &
+[ ORTH [ LST [ HD  "why"]],
+  ORTH2 [ LST [ HD  "why"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].
+
+where_5 := adj-relativizer-sign &
+[ ORTH [ LST [ HD  "where"]],
+  ORTH2 [ LST [ HD  "where"]],
+  SEM2 [ RESTR1 [ LST [ HD [ RELN1 r-wh]]]]].

@@ -1,0 +1,7 @@
+
+root :=  total-sign &
+ [ NODE [CAT sent-cat & 
+		[ M-FEATS [ 	VFORM fin,
+				VERB true]]]].
+
+;;; no futuro trocar vform por fin
