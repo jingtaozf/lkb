@@ -22,6 +22,8 @@
 
 (defparameter *process-raw-print-trace-p* nil)
 
+(defparameter %graft-aligned-generation-hack% nil)
+
 (defun tsdb-do-process (data
                         &key condition
                              run-id comment
@@ -790,7 +792,11 @@
                                   for rank in ranks
                                   for foo = (get-field :rank rank)
                                   thereis (when (eql foo 1) rank)))
-                         (mrs (get-field :mrs top)))
+                         (mrs (get-field :mrs top))
+                         (derivation (get-field :derivation top))
+                         (edge (and derivation
+                                    (ignore-errors (reconstruct derivation)))))
+                    (when edge (setf %graft-aligned-generation-hack% edge))
                     (if (and reader (stringp mrs))
                       (funcall reader mrs)
                       mrs))))
