@@ -110,7 +110,10 @@
      `((,(format nil "Feature structure - Edge ~A" (edge-id edge-record))
 	:value edge)
        (,(format nil "Rule ~A" (or rule-name ""))
-	:value rule))
+	:value rule)
+       (,(format nil "Lex ids ~A" (edge-lex-ids edge-record))
+	:value rule)
+       )
      (edge (display-fs edge-fs
 		       (format nil "Edge ~A ~A - Tree FS" 
 			       (edge-id edge-record)

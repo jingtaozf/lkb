@@ -8,11 +8,20 @@
   (index-grammar-rules)
   (format t "~%Indexing complete")
   nil)
- 
 
 (defun index-lexicon nil
   (mrs::clear-semantic-indices)
-   (setf *batch-mode* t)
+  (setf *batch-mode* t)
+  (if mrs::*top-semantics-type*
+      (setf mrs::*top-semantics-entry* 
+        (get-type-entry mrs::*top-semantics-type*))
+    (progn (cerror "~A will be used (indexing may be inefficient)" 
+                   "~%No *top-semantics-type* defined" *toptype*)
+           (setf mrs::*top-semantics-entry*
+             (get-type-entry *toptype*))))
+  (unless mrs::*top-semantics-entry*
+    (error "~%No entry found for top semantics type ~A" 
+           mrs::*top-semantics-type*))
    (let ((ids nil))
       ;; because of multiple lexical entries, an id may be indexed by
       ;; multiple orthographies
@@ -29,14 +38,36 @@
 	     (format t "~%No feature structure for ~A" lex-id))))
        (unexpand-psort *lexicon* id))
      (setf *batch-mode* nil)))
-  
+
+
+(defun get-compatible-rels (reltype)
+  (let* ((type-entry (get-type-entry reltype))
+         (return-types (list type-entry)))
+    (for desc in (type-descendants type-entry)
+         do
+         (pushnew desc return-types :test #'eq)
+         (for desc-anc in (type-ancestors desc)
+              do
+              (when (member mrs::*top-semantics-entry*
+                            (type-ancestors desc-anc) :test #'eq)
+                (pushnew desc-anc return-types :test #'eq))))
+    (for anc in (type-ancestors type-entry)
+          do
+          (when (member mrs::*top-semantics-entry*
+                        (type-ancestors anc) :test #'eq)
+            (pushnew anc return-types :test #'eq)))
+    (mapcar #'type-name return-types)))
+         
+
+
+
 (defun index-lexical-rules nil
   (mrs::clear-lrule-globals)
   (maphash #'(lambda (id entry)
                (let* ((tdfs (rule-full-fs entry))
                       (fs (if tdfs (tdfs-indef tdfs))))
                  (if fs
-                     (mrs::extract-lex-rule-rels id fs entry))))
+                     (mrs::extract-rule-rels id fs entry t))))
            *lexical-rules*))           
                            
 
@@ -46,7 +77,7 @@
                (let* ((tdfs (rule-full-fs entry))
                       (fs (if tdfs (tdfs-indef tdfs))))
                  (if fs
-                     (mrs::extract-grammar-rule-rels id fs entry))))
+                     (mrs::extract-rule-rels id fs entry nil))))
            *rules*))
                  
 ;;; actually used by lexlookup, but convenient to define in USER

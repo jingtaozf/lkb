@@ -13,17 +13,6 @@
   (member rel-name *lrule-rel-index* :key #'car))
 
 
-(defun message-only-rel-p (rel)
-  (some #'(lambda (record) 
-            (let ((message-rels (cdr record)))
-              (some #'(lambda (message-rel)
-                        (matches-rel-record rel message-rel))
-                     message-rels)))
-            *message-only-rels*))
-       
-
-         
-
 #| 
 Lookup algorithm
 
@@ -31,11 +20,11 @@ Do the lookup on the first lexical rel (i.e. one that was indexed in the
 lexicon), allowing the entries found to gobble other rels that are in the MRS.
 If this fails, check whether that rel could be provided by a lex-rule etc, if
 not, fail completely.  If it doesn't fail, each solution will contain a list of
-other relations which have also been contributed (possibly nil) or could have
-been contributed.  Recurse on the rest of the relations, checking to see if a
+other relations which have also been contributed (possibly nil).  
+Recurse on the rest of the relations, checking to see if a
 result has already been constructed for a particular lex-id.
 
-Given a set of lex ids, and the relations they (may) account for,
+Given a set of lex ids, and the relations they account for,
 apply lexical rules and instantiate indices (possibly failing
 at this point).
 
@@ -48,21 +37,19 @@ at this point).
   lex-id
   lex-entry
   rule-list
-  main-rels
-  message-rels)
+  main-rels)
 
 (defstruct (found-lex)
   ;;; for reporting results of lexical checking
   lex-id
   inst-fs ; instantiated
   rule-list
-  main-rels
-  message-rels)
+  main-rels)
 
 (defstruct (found-rule (:include cl-user::rule))
   ;;; the rule-fs is replaced by the instantiated version
   main-rels ; for grammar rules, these will be the things in ccont
-  message-rels)
+  )
 
 
 ;;; following fns are defined so they can be called in a file
@@ -81,6 +68,10 @@ at this point).
 (defvar *possible-grules* nil)
 
 (defun collect-lex-entries-from-mrs (psoa)
+  #|
+  (setf *top-handel* (make-instance-type (psoa-handel psoa)))
+  (format t "~%~A" *top-handel*)
+  |#
   (let* ((all-rels (psoa-liszt psoa))
          (lex-rule-rels (for rel in all-rels filter 
                              (if (lex-rule-rel-p (rel-sort rel))
@@ -94,24 +85,20 @@ at this point).
                             (if (grammar-rel-p (rel-sort rel))
                                  rel)))
                                         ; specified in grammar rule
-         (message-only-rels 
-          (for rel in all-rels filter 
-               (if (message-only-rel-p rel)
-                   rel)))
     ; these are not necessarily mutually exclusive classes
          (possibles 
           ; candidates found without getting actual lex-entry
           (find-lexical-candidates lexical-rels lex-rule-rels 
-                                   grammar-rels message-only-rels nil)))
+                                   grammar-rels nil)))
     (if possibles
-        (let ((lrules (find-possible-lrules lex-rule-rels)))
+        (let ((lrules (find-possible-rules lex-rule-rels t)))
 ;;;          (format t "~%~A" (mapcar #'cl-user::rule-id lrules))
             ;;; lexical rules are possible if they have no effect
             ;;; on semantics or if they contribute relations
             ;;; which are on the list to be accounted for
           (setf *possible-grules*
-            (find-possible-grules grammar-rels))
-          (instantiate-null-semantic-items message-only-rels lrules)
+            (find-possible-rules grammar-rels nil))
+          (instantiate-null-semantic-items lrules)
           (for possible in possibles
                append
                ; check unification etc
@@ -119,7 +106,7 @@ at this point).
                                          
 
 (defun find-lexical-candidates (lex-rels lex-rule-rels grammar-rels
-                                message-only-rels results-so-far)
+                                results-so-far)
   ;;; results-so-far is an list of base-lex 
   ;;; structures 
   (if lex-rels
@@ -129,13 +116,11 @@ at this point).
                                          results-so-far)))
         (if (or initial-match 
                 (member initial-rel lex-rule-rels)
-                (member initial-rel grammar-rels)
-                (member initial-rel message-only-rels))
+                (member initial-rel grammar-rels))
          ; if we've found a matching rel, or an alternative
          ; source, then we recurse on the rest of the rels
             (find-lexical-candidates (cdr lex-rels)
                                      lex-rule-rels grammar-rels
-                                     message-only-rels
                                      (union initial-match
                                              results-so-far))
           ; union, because initial-match can include things
@@ -173,7 +158,7 @@ at this point).
 (defun matches-rel-record (rel rec)
   (and (rel-p rel)
        (relation-record-p rec)
-       (eql (rel-sort rel)
+       (compatible-types (rel-sort rel)
             (relation-record-relation rec))
        (equal (car (get-rel-parameter-strings rel))
               (relation-record-feature-string rec))))       
@@ -228,10 +213,6 @@ at this point).
 ;;; satisfied. In general, relations are allowed if they
 ;;; are somewhere in target-rels
 ;;; All rels used are recorded in the result, via the base-lex structure
-;;;
-;;; extras are required if they are in the LISZT of the candidate,
-;;; extras are allowed if they are only 
-;;; in the MESSAGE rels (we need all or none)
 
 ;;; the first instance of any possible triggering relation
 ;;; returns all results (even if relation is duplicated)
@@ -254,9 +235,8 @@ at this point).
       (error "~%Inconsistent database? 
                    ~A has no entry in *semantic-table*" candidate))
     (let ((found-main-rels nil)
-          (found-message-rels nil)
           (ok t))
-      (dolist (lex-rel (semantics-record-main-relations 
+      (dolist (lex-rel (semantics-record-relations 
                         semantic-entry))
         ; in order found in lex entry
         (let ((found-rels
@@ -270,26 +250,10 @@ at this point).
           (push found-rels found-main-rels)))
       (if (and ok found-main-rels)
           ;;; empty semantics things are done elsewhere
-          (progn
-            (dolist (lex-rel 
-                     (semantics-record-message-relations 
-                      semantic-entry))
-              (let ((found-rels
-                     (for target-rel in target-rels
-                          filter
-                          (if (matches-rel-record target-rel lex-rel)
-                              target-rel))))
-                (if found-rels
-                    (setf found-message-rels 
-                      (append found-rels found-message-rels))
-                  (setf ok nil))))
-            (when (or (null found-message-rels)
-                      ok)
-              (make-base-lex 
-               :lex-id candidate
-               ;; preserve lexical ordering of rels in LISZTs 
-               :main-rels (reverse found-main-rels)
-               :message-rels (reverse found-message-rels))))))))
+          (make-base-lex 
+           :lex-id candidate
+           ;; preserve lexical ordering of rels in LISZTs 
+           :main-rels (reverse found-main-rels))))))
                                                        
          
 
@@ -310,8 +274,7 @@ at this point).
          (new-found-lex-list 
           (instantiate-semantic-indices 
            lex-id lex-e base-fs 
-           (base-lex-main-rels lex-res)
-           (base-lex-message-rels lex-res))))
+           (base-lex-main-rels lex-res))))
     (for new-found-str in new-found-lex-list
          collect
          (apply-instantiated-rules-base new-found-str lrules))))
@@ -337,9 +300,7 @@ at this point).
                                          (found-lex-main-rels lr-str))
                          (setf ok nil)
                          (return))
-                       (push main-rel (found-lex-main-rels lr-str)))
-                     (dolist (message-rel (found-rule-message-rels rule))
-                       (push message-rel (found-lex-message-rels lr-str)))))
+                       (push main-rel (found-lex-main-rels lr-str)))))
                  (setf (found-lex-inst-fs lr-str) (cdr pair))
                  (setf (found-lex-rule-list lr-str) 
                    (mapcar #'cl-user::rule-id (car pair)))
@@ -379,19 +340,14 @@ at this point).
          (append transformed-entries
             (apply-instantiated-lexical-rules transformed-entries rules)))))
 
-(defun instantiate-semantic-indices (lex-id lex-e base-fs main-rels
-                                            message-rels)
+(defun instantiate-semantic-indices (lex-id lex-e base-fs main-rels)
 ;;; produces found-lex structures
   (declare (ignore lex-e))
   (unless main-rels
     (error "~%~A has no main relations - instantiate-semantic-indices
             should not be called"))
-  (for new-str in
-       (apply-rels-to-base lex-id base-fs main-rels 
-                           *main-semantics-path*)
-       collect
-       (setf (found-lex-message-rels new-str) message-rels)
-       new-str))
+  (apply-rels-to-base lex-id base-fs main-rels 
+                           *main-semantics-path*))
 
     
 
@@ -407,11 +363,16 @@ at this point).
          (if new-fs 
              (cl-user::with-unification-context (base-fs)
                (if (yadu base-fs new-fs)
-                   (make-found-lex 
-                    :lex-id lex-id
-                    :inst-fs (cl-user::copy-tdfs-elements base-fs)
-                    :main-rels rel-sequence)))
-           (cerror "Ignore this entry" 
+                   (if lex-id
+                       (make-found-lex 
+                        :lex-id lex-id
+                        :inst-fs (cl-user::copy-tdfs-elements base-fs)
+                        :main-rels rel-sequence)
+                     ; if null lex-id assume it's a rule
+                     (cons
+                      (cl-user::copy-tdfs-elements base-fs)
+                      rel-sequence))))
+           (cerror "Ignore this entry/rule" 
                                 "~%Problem in create-liszt-fs-from-rels")))))
                       
 
@@ -517,7 +478,7 @@ at this point).
 
 (defvar *null-semantics-found-items* nil)
 
-(defun instantiate-null-semantic-items (message-only-rels lrules)
+(defun instantiate-null-semantic-items (lrules)
   (setf *null-semantics-found-items* 
         (let ((real-ids *empty-semantics-lexical-entries*))
           (for lex-id in real-ids
@@ -526,16 +487,7 @@ at this point).
                       (base-fs (cl-user::lex-or-psort-full-fs lex-e))
                       (new-found-str
                        (make-found-lex 
-                        :lex-id lex-id :inst-fs base-fs
-                        :message-rels 
-                        (for message-rel-rec in
-                             (cdr (assoc lex-id *message-only-rels*))
-                             append
-                             (for input-message-rel in message-only-rels
-                                  filter
-                                  (if (matches-rel-record input-message-rel
-                                                          message-rel-rec)
-                                      input-message-rel))))))
+                        :lex-id lex-id :inst-fs base-fs)))
                  (apply-instantiated-rules-base
                   new-found-str lrules))))))
 
@@ -561,21 +513,24 @@ at this point).
 ;;; lexical rules which do not affect the semantics have to be
 ;;; applied generally 
 ;;; 
-;;; lexical rules which introduce message relations are treated
-;;; according to whether they contain main-relations or not
-;;; The message relations they might cover are listed, but the
-;;; feature structure is not instantiated.
 
-(defun find-possible-lrules (rel-set)
+;;; Grammar rules
+;;;
+;;; Similar to lexical rules, but they are passed to the parser
+;;; rather than applied here
+
+
+(defun find-possible-rules (rel-set lexicalp)
   (append 
-   (for rule-record in *contentful-lrs*
+   (for rule-record in (if lexicalp *contentful-lrs* *contentful-grs*)
         append
-        (let ((rule (cl-user::get-lex-rule-entry 
-                     (semantics-record-id rule-record)))
+        (let ((rule (if lexicalp 
+                        (cl-user::get-lex-rule-entry 
+                         (semantics-record-id rule-record))
+                      (cl-user::get-grammar-rule-entry 
+                       (semantics-record-id rule-record))))
               (main-rels
-               (semantics-record-c-cont-relations rule-record))
-              (message-rels 
-               (semantics-record-message-relations rule-record)))
+               (semantics-record-relations rule-record)))
           (let ((rel-list
                  (for main-rel-rec in main-rels
                       collect
@@ -586,31 +541,22 @@ at this point).
                                       (matches-rel-record rel main-rel-rec)
                                       rel))))
                         (unless matching-rels (return nil))
-                        matching-rels)))
-                (found-message-rels 
-                 (for message-rel-rec in message-rels
-                      append
-                      (for rel in rel-set
-                           filter
-                           (if
-                               (matches-rel-record rel message-rel-rec)
-                               rel)))))
+                        matching-rels))))
             (if rel-list
                 (for rel-comb-and-fs in 
-                     (apply-rels-to-rule (cl-user::rule-full-fs rule)
+                     (apply-rels-to-base nil (cl-user::rule-full-fs rule)
                                          rel-list *construction-semantics-path*)
                      collect
                      (make-new-found-rule rule (car rel-comb-and-fs)
-                                          (cdr rel-comb-and-fs)
-                                          found-message-rels))
+                                          (cdr rel-comb-and-fs)))
               (if (null main-rels)
                   (list (make-new-found-rule 
                          rule (cl-user::rule-full-fs rule)
-                         nil found-message-rels)))))))
-  *contentless-lrs*))
+                         nil)))))))
+  (if lexicalp *contentless-lrs* *contentless-grs*)))
 
 
-(defun make-new-found-rule (rule new-fs rels message-rels)
+(defun make-new-found-rule (rule new-fs rels)
   (make-found-rule
    :id (cl-user::rule-id rule)
    :language (cl-user::rule-language rule)
@@ -630,79 +576,7 @@ at this point).
    (cl-user::rule-apply-filter rule)
    :apply-index
    (cl-user::rule-apply-index rule)
-   :main-rels rels
-   :message-rels message-rels))
-
-
-(defun apply-rels-to-rule (base-fs rel-list path)
-  (for rel-sequence in (create-all-rel-sequences rel-list)
-       filter
-       ;;; needs fixing
-       ;;; unnecessary expense since we repeat this on the same rels for 
-       ;;; multiple ids
-       (let ((new-fs (create-liszt-fs-from-rels 
-                       rel-sequence
-                       path)))
-         (if new-fs 
-             (cl-user::with-unification-context (base-fs)
-               (if (yadu base-fs new-fs)
-                   (cons
-                    (cl-user::copy-tdfs-elements base-fs)
-                    rel-sequence)))
-           (cerror "Ignore this rule" 
-                                "~%Problem in create-liszt-fs-from-rels")))))
-
-
-;;; Grammar rules
-;;;
-;;; Similar to lexical rules, but they are passed to the parser
-;;; rather than applied here
-
-
-(defun find-possible-grules (rel-set)
-  (append 
-   (for rule-record in *contentful-grs*
-        append
-        (let ((rule (cl-user::get-grammar-rule-entry 
-                     (semantics-record-id rule-record)))
-              (main-rels
-               (semantics-record-c-cont-relations rule-record))
-              (message-rels 
-               (semantics-record-message-relations rule-record)))
-          (let ((rel-list
-                 (for main-rel-rec in main-rels
-                      collect
-                      (let ((matching-rels
-                             (for rel in rel-set
-                                  filter
-                                  (if
-                                      (matches-rel-record rel main-rel-rec)
-                                      rel))))
-                        (unless matching-rels (return nil))
-                        matching-rels)))
-                (found-message-rels 
-                 (for message-rel-rec in message-rels
-                      append
-                      (for rel in rel-set
-                           filter
-                           (if
-                               (matches-rel-record rel message-rel-rec)
-                               rel)))))
-            (if rel-list
-                (for rel-comb-and-fs in 
-                     (apply-rels-to-rule (cl-user::rule-full-fs rule)
-                                         rel-list *construction-semantics-path*)
-                     collect
-                     (make-new-found-rule rule (car rel-comb-and-fs)
-                                          (cdr rel-comb-and-fs)
-                                          found-message-rels))
-              (if (null main-rels)
-                  (list (make-new-found-rule 
-                         rule (cl-user::rule-full-fs rule)
-                         nil found-message-rels)))))))
-  *contentless-grs*))                    
-
-
+   :main-rels rels))
 
 
 

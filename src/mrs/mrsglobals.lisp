@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.10  1999/03/04 06:03:52  aac
+;; construction semantics correct for lexical rules, redid equality checking
+;;
 ;; Revision 1.9  1999/02/25 06:27:48  aac
 ;; not very well tested changes to generation lexical lookup, also fixing references to user rather than cl-user package
 ;;
@@ -293,7 +296,10 @@ for extra features for using the extra-features of a relation")
 
 (defparameter *construction-semantics-path* nil)
 
-(defparameter *message-semantics-path* nil)
+(defparameter *top-semantics-type* nil)
+
+(defparameter *top-semantics-entry* nil
+  "set in lexutils")
 
 ;;; for passing non-mrs-information (SYN, CTXT) to Vits:
 

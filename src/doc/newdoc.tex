@@ -3233,7 +3233,21 @@ Error in NE-LIST:
   Type NE-LIST occurs in constraint for type NE-LIST at (REST)
 \end{error}
 Similarly it is an error to mention a daughter of a type in its
-constraint.
+constraint.  It is also an error to make two types mutually
+recursive
+\begin{verbatim}
+foo := *top* &
+[ F bar ].
+
+bar := *top* &
+[ G foo ].
+\end{verbatim}
+The error message in this case is:
+\begin{error}
+FOO is used in expanding its own constraint 
+                    expansion sequence: (BAR FOO)
+\end{error}
+
 
 Note that it {\em is} 
 possible to define recursive types.  For example, a correct

@@ -109,6 +109,12 @@
           ;; this must be called after mrs::collect-lex-entries-from-mrs since the
           ;; latter sets up mrs::*null-semantics-found-items* for it
           ))
+     #|
+     (for lex in filtered
+          do
+          (format t "~%Id ~A, Rules ~A" (mrs::found-lex-lex-id lex)
+          (mrs::found-lex-rule-list lex)))
+     |#
       (if filtered
          (chart-generate input-sem (append filtered empty) mrs::*possible-grules*)
          (progn
@@ -160,8 +166,9 @@
                   :dag lex-entry-fs
                   :needed nil
                   :rels-covered
-                  (mrs::found-lex-main-rels found) ; ignore any message rels
-                  :children nil :leaves (list word))
+                  (mrs::found-lex-main-rels found)
+                  :children nil :leaves (list word) 
+                  :lex-ids (list (mrs::found-lex-lex-id found)))
               input-sem)))
       (multiple-value-bind (complete partial)
             (gen-chart-find-complete-edges
@@ -236,11 +243,8 @@
    ;; got all the relations that we wanted
    #+ignore (print (list (edge-id edge) (mapcar #'mrs::rel-sort (g-edge-rels-covered edge))))
    (gen-chart-subset-p
-       ;; *** discount any rels that might be coming from a message
-       (remove-if
-         #'(lambda (s) (or (eq s 'MESSAGE) (subtype-p s 'MESSAGE)))
-         (mrs::psoa-liszt input-sem) :key #'mrs::rel-sort)
-      (g-edge-rels-covered edge)))
+    (mrs::psoa-liszt input-sem)
+    (g-edge-rels-covered edge)))
 
 
 (defun gen-chart-check-compatible (edge input-sem)
@@ -257,9 +261,9 @@
        (let ((mrs (mrs::construct-mrs sem-fs nil t)))
 ;;         (when *debugging*
 ;;           (display-fs sem-fs "semstructure"))
-;;        (when *debugging*
+;;        (when *sem-debugging*
 ;;           (mrs::output-mrs input-sem 'mrs::simple)
-;;           (mrs::output-mrs mrs 'mrs::simple))        
+;;           (mrs::output-mrs mrs 'mrs::simple))  
          (mrs::mrs-equalp mrs input-sem nil *debugging*)))))
 
 #|
@@ -289,7 +293,8 @@
                                      :id (next-edge)
                                      :rule 'root
                                      :children (list edge)
-                                     :leaves (g-edge-leaves edge))))
+                                     :leaves (g-edge-leaves edge)
+                                     :lex-ids (g-edge-lex-ids edge))))
                       (gen-chart-add-with-index new-edge
                          (gen-chart-dag-index (tdfs-indef (g-edge-dag new-edge))
                             (g-edge-id new-edge)))
@@ -408,11 +413,14 @@
             :rels-covered
             (append
                (if (mrs::found-rule-p rule)
-                  (mrs::found-rule-main-rels rule)) ; ignore any message rels
+                  (mrs::found-rule-main-rels rule)) 
                (g-edge-rels-covered edge))
             :children
             (gen-make-list-and-insert (length gen-daughter-order)
-               edge (1+ head-index))
+                                      edge (1+ head-index))
+            :lex-ids 
+            (gen-make-list-and-insert (length gen-daughter-order)
+               (g-edge-lex-ids edge) (1+ head-index))
             :leaves
             (gen-make-list-and-insert (length gen-daughter-order)
                (g-edge-leaves edge) (1+ head-index))))))
@@ -452,7 +460,10 @@
                            (g-edge-rels-covered inact))
                         :children
                         (gen-copy-list-and-insert (g-edge-children act)
-                           inact)
+                                                  inact)
+                        :lex-ids 
+                        (gen-copy-list-and-insert (g-edge-lex-ids act)
+                           (g-edge-lex-ids inact))
                         :leaves
                         (gen-copy-list-and-insert (g-edge-leaves act)
                            (g-edge-leaves inact)))))
@@ -583,25 +594,13 @@
          (when *gen-adjunction-debug*
             (format t "~&---~%Partial edge [~A] spanning ~:A" (g-edge-id partial)
                (g-edge-leaves partial)))
-         (let* ((*optional-rel-names* nil)
-                (missing-rels
-                  ;; *** don't go looking for rels that might be coming from a message
-                  ;; - but they might be part of the semantics proper so can't just ignore
-                  ;; them in the input-sem
-                  (remove-if
-                     #'(lambda (s)
-                         (when (or (eq s 'MESSAGE) (subtype-p s 'MESSAGE))
-                            (pushnew s *optional-rel-names* :test #'eq)
-                            t))
-                     (gen-chart-set-difference
-                        (mrs::psoa-liszt input-sem) (g-edge-rels-covered partial))
-                     :key #'mrs::rel-sort)
-                  ))
-            (declare (special *optional-rel-names*))
+         (let ((missing-rels
+                (gen-chart-set-difference
+                 (mrs::psoa-liszt input-sem) 
+                 (g-edge-rels-covered partial))))
             (when *gen-adjunction-debug*
-               (format t "~&Missing relations ~(~:A~)" (mapcar #'mrs::rel-sort missing-rels))
-               (when *optional-rel-names*
-                  (format t "~&'Optional' possibly message relations ~(~:A~)" *optional-rel-names*)))
+              (format t "~&Missing relations ~(~:A~)" 
+                      (mapcar #'mrs::rel-sort missing-rels)))
             (dolist (mod-alt
                       (gen-chart-mod-edge-partitions
                          (list (car missing-rels)) (cdr missing-rels) (cdr missing-rels)
@@ -652,14 +651,6 @@
          (setq rels-edges nil)
          (dolist (e mod-candidate-edges)
            (let ((rels-covered (g-edge-rels-covered e)))
-               (declare (special *optional-rel-names*))
-               ;; *** pick up optionality of message rels - see above
-               (when *optional-rel-names*
-                  (setq rels-covered
-                     (remove-if
-                        #'(lambda (s)
-                            (member s *optional-rel-names* :test #'eq))
-                        rels-covered :key #'mrs::rel-sort)))
                (when (gen-chart-set-equal-p rels-covered rels)
                   (push e rels-edges))))
          (setf (gethash rels cached-rels-edges) rels-edges))
@@ -821,6 +812,8 @@
                            (mrs::found-rule-main-rels rule))
                         (mapcar #'g-edge-rels-covered daughters))
                      :children daughters
+                     :lex-ids (apply #'append
+                                     (mapcar #'g-edge-lex-ids daughters))
                      :leaves (mapcar #'g-edge-leaves daughters))))
                (gen-chart-finish-active new-edge)
                (gen-chart-add-with-index new-edge *toptype*)
