@@ -16,20 +16,30 @@
 (defparameter %sys-home%
   (rest (butlast (pathname-directory *load-truename*) 2)))
 
-(defparameter %sys-host%
-  (pathname-host *load-truename*))
-
-(defparameter %sys-device%
-  (pathname-device *load-truename*))
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; --------------- END SITE-SPECIFIC INSTALLATION PARAMETERS -----------------
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defparameter sys-home (make-pathname :host %sys-host%
-                        :device %sys-device%
+(defparameter sys-home (make-pathname 
+                        :host (pathname-host *load-truename*)
+                        :device (pathname-device *load-truename*)
                         :directory (cons #-:lucid :absolute 
                                          #+:lucid :root %sys-home%)))
+
+;;;
+;;; the defsystem() :host and :device components are plain useless, since they
+;;; are _not_ evaluated; to avoid having to patch `defsystem.lisp' (which comes
+;;; dumped into at least CLISP and CMU-CL nowadays), use pathname defaults for
+;;; :host and :device (certainly constant for all systems in an installation).
+;;;
+;;; _fix_me_
+;;; unfortunately, for ACL 6.2, this is not enough (see `allegro-patches.lisp')
+;;; --- need to test for (Open)MCL at least.                    (9-sep-03; oe)
+;;;
+(setf *default-pathname-defaults*
+  (merge-pathnames (make-pathname :host (pathname-host *load-truename*)
+                                  :device (pathname-device *load-truename*))))
 
 (defparameter general-dir 
     (append 
@@ -57,7 +67,7 @@
 #+:allegro
 (load
  (make-pathname 
-  :device %sys-device% :directory general-dir :name "allegro-patches"))
+  :directory general-dir :name "allegro-patches"))
 
 #+(and :mcl (not :openmcl))
 (load
@@ -77,18 +87,13 @@
 
 #+:lispworks
 (load
- (make-pathname :host %sys-host%
-                :device %sys-device%
-                :directory general-dir :name "lispworks-patches"))
+ (make-pathname :directory general-dir :name "lispworks-patches"))
 
 (load
- (make-pathname :host %sys-host% :device %sys-device%
-   :directory general-dir :name "loadup-library"))
+ (make-pathname :directory general-dir :name "loadup-library"))
 
 (in-package :make)
 
 (reset-module-status)
 (reset-system-paths)
-
-
 

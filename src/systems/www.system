@@ -11,7 +11,6 @@
 (pushnew :www *features*)
 
 (defsystem "www"
-    :device (make-pathname :device cl-user::%sys-device%)
     :source-pathname (dir-append (get-sources-dir "www") '(:relative "www"))
     :binary-pathname (dir-append (get-binaries-dir "www") '(:relative "www"))
     :source-extension "lisp"

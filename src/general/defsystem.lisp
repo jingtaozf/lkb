@@ -1,49 +1,75 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp -*-
-;;; Mon Mar 13 20:33:57 1995 by Mark Kantrowitz <mkant@GLINDA.OZ.CS.CMU.EDU>
-;;; defsystem.lisp -- 164167 bytes
+;;; -*- Mode: Lisp; Package: make -*-
+;;; -*- Mode: CLtL; Syntax: Common-Lisp -*-
+
+;;; DEFSYSTEM 3.3 Interim.
+
+;;; defsystem.lisp --
 
 ;;; ****************************************************************
 ;;; MAKE -- A Portable Defsystem Implementation ********************
 ;;; ****************************************************************
 
-;;; This is a portable system definition facility for Common Lisp. 
+;;; This is a portable system definition facility for Common Lisp.
 ;;; Though home-grown, the syntax was inspired by fond memories of the
 ;;; defsystem facility on Symbolics 3600's. The exhaustive lists of
 ;;; filename extensions for various lisps and the idea to have one
 ;;; "operate-on-system" function instead of separate "compile-system"
-;;; and "load-system" functions were taken from Xerox Corp.'s PCL 
+;;; and "load-system" functions were taken from Xerox Corp.'s PCL
 ;;; system.
 
 ;;; This system improves on both PCL and Symbolics defsystem utilities
-;;; by performing a topological sort of the graph of file-dependency 
+;;; by performing a topological sort of the graph of file-dependency
 ;;; constraints. Thus, the components of the system need not be listed
 ;;; in any special order, because the defsystem command reorganizes them
 ;;; based on their constraints. It includes all the standard bells and
 ;;; whistles, such as not recompiling a binary file that is up to date
 ;;; (unless the user specifies that all files should be recompiled).
 
-;;; Written by Mark Kantrowitz, School of Computer Science, 
+;;; Originally written by Mark Kantrowitz, School of Computer Science,
 ;;; Carnegie Mellon University, October 1989.
 
-;;; Copyright (c) 1989-95 by Mark Kantrowitz. All rights reserved.
+;;; MK:DEFSYSTEM 3.3 Interim
+;;;
+;;; Copyright (c) 1989 - 1999 Mark Kantrowitz. All rights reserved.
+;;;               1999 - 2002 Mark Kantrowitz and Marco Antoniotti. All
+;;;                           rights reserved.
 
-;;; Use and copying of this software and preparation of derivative works
-;;; based upon this software are permitted, so long as the following
-;;; conditions are met:
-;;;      o no fees or compensation are charged for use, copies, or
-;;;        access to this software
-;;;      o this copyright notice is included intact.
-;;; This software is made available AS IS, and no warranty is made about 
-;;; the software or its performance. 
+;;; Use, copying, modification, merging, publishing, distribution
+;;; and/or sale of this software, source and/or binary files and
+;;; associated documentation files (the "Software") and of derivative
+;;; works based upon this Software are permitted, as long as the
+;;; following conditions are met:
 
-;;; Please send bug reports, comments and suggestions to mkant@cs.cmu.edu. 
+;;;      o this copyright notice is included intact and is prominently
+;;;        visible in the Software
+;;;      o distribution of a modification to the Software have been
+;;;        previously submitted to the maintainers; if the maintainers
+;;;        decide not to include the submitted changes, the "full
+;;;        name" of the re-distributed Software ("MK:DEFSYSTEM", or
+;;;        "MAKE:DEFSYSTEM", or "MK-DEFSYSTEM") must be changed.
+
+;;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+;;; EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+;;; MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+;;; IN NO EVENT SHALL M. KANTROWITZ AND M. ANTONIOTTI BE LIABLE FOR ANY
+;;; CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+;;; TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+;;; SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+;;; Except as contained in this notice, the names of M. Kantrowitz and
+;;; M. Antoniotti shall not be used in advertising or otherwise to promote
+;;; the sale, use or other dealings in this Software without prior written
+;;; authorization from M. Kantrowitz and M. Antoniotti.
+
+
+;;; Please send bug reports, comments and suggestions to <marcoxa@cons.org>.
 
 ;;; ********************************
 ;;; Change Log *********************
 ;;; ********************************
 ;;;
 ;;; Note: Several of the fixes from 30-JAN-91 and 31-JAN-91 were done in
-;;; September and October 1990, but not documented until January 1991. 
+;;; September and October 1990, but not documented until January 1991.
 ;;;
 ;;; akd  = Abdel Kader Diagne <diagne@dfki.uni-sb.de>
 ;;; as   = Andreas Stolcke <stolcke@ICSI.Berkeley.EDU>
@@ -60,6 +86,7 @@
 ;;; jk   = John_Kolojejchick@MORK.CIMDS.RI.CMU.EDU
 ;;; kt   = Kevin Thompson <kthompso@ptolemy.arc.nasa.gov>
 ;;; kc   = Kaelin Colclasure <kaelin@bridge.com>
+;;; kmr  = Kevin M. Rosenberg <kevin@rosenberg.net>
 ;;; lmh  = Liam M. Healy <Liam.Healy@nrl.navy.mil>
 ;;; mc   = Matthew Cornell <cornell@unix1.cs.umass.edu>
 ;;; oc   = Oliver Christ <oli@adler.ims.uni-stuttgart.de>
@@ -72,7 +99,7 @@
 ;;; yc   = Yang Chen <yangchen%iris.usc.edu@usc.edu>
 ;;;
 ;;; Thanks to Steve Strassmann <straz@media-lab.media.mit.edu> and
-;;; Sean Boisen <sboisen@BBN.COM> for detailed bug reports and 
+;;; Sean Boisen <sboisen@BBN.COM> for detailed bug reports and
 ;;; miscellaneous assistance. Thanks also to Gabriel Inaebnit
 ;;; <inaebnit@research.abb.ch> for help with VAXLisp bugs.
 ;;;
@@ -89,7 +116,7 @@
 ;;; 15-NOV-90  mk   Changed package name to "MAKE", eliminating "DEFSYSTEM"
 ;;;                 to avoid conflicts with allegro, symbolics packages
 ;;;                 named "DEFSYSTEM".
-;;; 30-JAN-91  mk   Modified append-directories to work with the 
+;;; 30-JAN-91  mk   Modified append-directories to work with the
 ;;;                 logical-pathnames system.
 ;;; 30-JAN-91  mk   Append-directories now works with Sun CL4.0. Also, fixed
 ;;;                 bug wrt Lucid 4.0's pathnames (which changed from lcl3.0
@@ -129,7 +156,7 @@
 ;;;                 get, there's no need to intern the names as symbols,
 ;;;                 and strings don't have packages to cause problems.
 ;;;                 Added UNDEFSYSTEM, DEFINED-SYSTEMS, and DESCRIBE-SYSTEM.
-;;;                 Added :delete-binaries command. 
+;;;                 Added :delete-binaries command.
 ;;; 31-JAN-91  mk   Franz Allegro CL has a defsystem in the USER package,
 ;;;                 so we need to do a shadowing import to avoid name
 ;;;                 conflicts.
@@ -166,7 +193,7 @@
 ;;;                 if *operations-propagate-to-subsystems* is T (the default)
 ;;;                 and the systems were defined using either defsystem
 ;;;                 or as a :system component of another system. Thus if
-;;;                 a system depends on another, it can now recompile the 
+;;;                 a system depends on another, it can now recompile the
 ;;;                 other.
 ;;; 01-FEB-91  mk   Added default definitions of PROVIDE/REQUIRE/*MODULES*
 ;;;                 for lisps that have thrown away these definitions in
@@ -176,7 +203,7 @@
 ;;;                 file on operation :compile. Either compiles or loads
 ;;;                 the file, but not both. In other words, compiling the
 ;;;                 file satisfies the demand to load it. This is useful
-;;;                 for PCL defmethod and defclass definitions, which wrap  
+;;;                 for PCL defmethod and defclass definitions, which wrap
 ;;;                 an (eval-when (compile load eval) ...) around the body
 ;;;                 of the definition -- we save time by not loading the
 ;;;                 compiled code, since the eval-when forces it to be
@@ -185,7 +212,7 @@
 ;;;                 some lisps may maintain a separate environment for
 ;;;                 the compiler. This feature is for the person who asked
 ;;;                 that a :COMPILE-SATISFIES-LOAD keyword be added to
-;;;                 modules. It's named :COMPILE-ONLY instead to match 
+;;;                 modules. It's named :COMPILE-ONLY instead to match
 ;;;                 :LOAD-ONLY.
 ;;; 11-FEB-91  mk   Now adds :mk-defsystem to features list, to allow
 ;;;                 special cased loading of defsystem if not already
@@ -200,7 +227,7 @@
 ;;;                 pathnames relative to its parent component.
 ;;; 12-MAR-91  mk   Uncommented :device :absolute for CMU pathnames, so
 ;;;                 that the leading slash is included.
-;;; 12-MAR-91  brad Patches for Allegro 4.0.1 on Sparc. 
+;;; 12-MAR-91  brad Patches for Allegro 4.0.1 on Sparc.
 ;;; 12-MAR-91  mk   Changed definition of format-justified-string so that
 ;;;                 it no longer depends on the ~<~> format directives,
 ;;;                 because Allegro 4.0.1 has a bug which doesn't support
@@ -222,7 +249,7 @@
 ;;; 15-MAR-91 rs    Added afs-source-directory to handle versions when
 ;;;                 compiling C code under lisp. Other minor changes to
 ;;;                 translate-version and operate-on-system.
-;;; 21-MAR-91 gi    Fixed bug in defined-systems. 
+;;; 21-MAR-91 gi    Fixed bug in defined-systems.
 ;;; 22-MAR-91 mk    Replaced append-directories with new version that works
 ;;;                 by actually appending the directories, after massaging
 ;;;                 them into the proper format. This should work for all
@@ -239,7 +266,7 @@
 ;;;                 file-write-date got swapped.
 ;;; 16-APR-91 mk    If the component is load-only, defsystem shouldn't
 ;;;                 tell you that there is no binary and ask you if you
-;;;                 want to load the source.  
+;;;                 want to load the source.
 ;;; 17-APR-91 mc    Two additional operations for MCL.
 ;;; 21-APR-91 mk    Added feature requested by ik. *files-missing-is-an-error*
 ;;;                 new global variable which controls whether files (source
@@ -296,7 +323,7 @@
 ;;;                 by returning NIL if the argument isn't a string.
 ;;;  3-NOV-93 mk    In Allegro 4.2, pathname device is :unspecific by default.
 ;;; 11-NOV-93 fdmm  Fixed package definition lock problem when redefining
-;;;                 REQUIRE on ACL. 
+;;;                 REQUIRE on ACL.
 ;;; 11-NOV-93 fdmm  Added machine and software types for SGI and IRIX. It is
 ;;;                 important to distinguish the OS version and CPU type in
 ;;;                 SGI+ACL, since ACL 4.1 on IRIX 4.x and ACL 4.2 on IRIX 5.x
@@ -312,8 +339,8 @@
 ;;; 03-NOV-94 fdmm  Added SCHEME-COMPILE-FILE, so that defsystem can now
 ;;;                 compile Pseudoscheme files.
 ;;; 04-NOV-94 fdmm  Added the exported generic function SET-LANGUAGE, to
-;;;                 have a clean, easy to extend  interface for telling 
-;;;                 defsystem which language to assume for compilation. 
+;;;                 have a clean, easy to extend  interface for telling
+;;;                 defsystem which language to assume for compilation.
 ;;;                 Currently supported arguments: :common-lisp, :scheme.
 ;;; 11-NOV-94 kc    Ported to Allegro CL for Windows 2.0 (ACLPC) and CLISP.
 ;;; 18-NOV-94 fdmm  Changed the entry *filename-extensions* for LispWorks
@@ -321,9 +348,9 @@
 ;;;                 Added entries for :mcl and :clisp too.
 ;;; 16-DEC-94 fdmm  Added and entry for CMU CL on SGI to *filename-extensions*.
 ;;; 16-DEC-94 fdmm  Added OS version identification for CMU CL on SGI.
-;;; 16-DEC-94 fdmm  For CMU CL 17 : Bypassed make-pathnames call fix 
+;;; 16-DEC-94 fdmm  For CMU CL 17 : Bypassed make-pathnames call fix
 ;;;                 in NEW-APPEND-DIRECTORIES.
-;;; 16-DEC-94 fdmm  Added HOME-SUBDIRECTORY to fix CMU's ignorance about `~' 
+;;; 16-DEC-94 fdmm  Added HOME-SUBDIRECTORY to fix CMU's ignorance about `~'
 ;;;                 when specifying registries.
 ;;; 16-DEC-94 fdmm  For CMU CL 17 : Bypassed :device fix in make-pathnames call
 ;;;                 in COMPONENT-FULL-PATHNAME. This fix was also reported
@@ -334,13 +361,13 @@
 ;;; 03-JAN-95 fdmm  Do not include :pcl in *features* if :clos is there.
 ;;;  2-MAR-95 mk    Modified fdmm's *central-registry* change to use
 ;;;                 user-homedir-pathname and to be a bit more generic in the
-;;;                 pathnames. 
+;;;                 pathnames.
 ;;;  2-MAR-95 mk    Modified fdmm's updates to *filename-extensions* to handle
 ;;;                 any CMU CL binary extensions.
 ;;;  2-MAR-95 mk    Make kc's port to ACLPC a little more generic.
 ;;;  2-MAR-95 mk    djc reported a bug, in which GET-SYSTEM was not returning
 ;;;                 a system despite the system's just having been loaded.
-;;;                 The system name specified in the :depends-on was a 
+;;;                 The system name specified in the :depends-on was a
 ;;;                 lowercase string. I am assuming that the system name
 ;;;                 in the defsystem form was a symbol (I haven't verified
 ;;;                 that this was the case with djc, but it is the only
@@ -348,14 +375,14 @@
 ;;;                 was storing the system in the hash table as an
 ;;;                 uppercase string, but attempting to retrieve it as a
 ;;;                 lowercase string. This behavior actually isn't a bug,
-;;;                 but a user error. It was intended as a feature to 
+;;;                 but a user error. It was intended as a feature to
 ;;;                 allow users to use strings for system names when
 ;;;                 they wanted to distinguish between two different systems
 ;;;                 named "foo.system" and "Foo.system". However, this
 ;;;                 user error indicates that this was a bad design decision.
 ;;;                 Accordingly, CANONICALIZE-SYSTEM-NAME now uppercases
 ;;;                 even strings for retrieving systems, and the comparison
-;;;                 in *modules* is now case-insensitive. The result of 
+;;;                 in *modules* is now case-insensitive. The result of
 ;;;                 this change is if the user cannot have distinct
 ;;;                 systems in "Foo.system" and "foo.system" named "Foo" and
 ;;;                 "foo", because they will clobber each other. There is
@@ -365,15 +392,15 @@
 ;;;                 further step of requiring system filenames to be lowercase
 ;;;                 because we actually find this kind of case-sensitivity
 ;;;                 to be useful, when maintaining two different versions
-;;;                 of the same system. 
+;;;                 of the same system.
 ;;;  7-MAR-95 mk    Added simplistic handling of logical pathnames. Also
 ;;;                 modified new-append-directories so that it'll try to
-;;;                 split up pathname directories that are strings into a 
+;;;                 split up pathname directories that are strings into a
 ;;;                 list of the directory components. Such directories aren't
 ;;;                 ANSI CL, but some non-conforming implementations do it.
 ;;;  7-MAR-95 mk    Added :proclamations to defsystem form, which can be used
 ;;;                 to set the compiler optimization level before compilation.
-;;;                 For example, 
+;;;                 For example,
 ;;;                  :proclamations '(optimize (safety 3) (speed 3) (space 0))
 ;;;  7-MAR-95 mk    Defsystem now tells the user when it reloads the system
 ;;;                 definition.
@@ -397,7 +424,7 @@
 ;;;                 RELATIVE ever shows up in the Result, we now know to
 ;;;                 add an extra conditionalization to prevent abs-keyword
 ;;;                 from being set to :relative.
-;;;  7-MAR-95 ss    Miscellaneous fixes for MCL 2.0 final. 
+;;;  7-MAR-95 ss    Miscellaneous fixes for MCL 2.0 final.
 ;;;                 *compile-file-verbose* not in MCL, *version variables
 ;;;                 need to occur before AFS-SOURCE-DIRECTORY definition,
 ;;;                 and certain code needed to be in the CCL: package.
@@ -416,8 +443,8 @@
 ;;;                 compilation and loading functions can be overridden by
 ;;;                 specifying a :compiler or :loader in the system
 ;;;                 definition. Also added :documentation slot to the system
-;;;                 definition. 
-;;;                    Where this comes in real handy is if one has a 
+;;;                 definition.
+;;;                    Where this comes in real handy is if one has a
 ;;;                 compiler-compiler implemented in Lisp, and wants the
 ;;;                 system to use the compiler-compiler to create a parser
 ;;;                 from a grammar and then compile parser. To do this one
@@ -453,7 +480,7 @@
 ;;;  8-MAR-95 mk    Added special hack requested by Steve Strassman, which
 ;;;                 allows one to specify absolute pathnames in the shorthand
 ;;;                 for a list of components, and have defsystem recognize
-;;;                 which are absolute and which are relative. 
+;;;                 which are absolute and which are relative.
 ;;;                 I actually think this would be a good idea, but I haven't
 ;;;                 tested it, so it is disabled by default. Search for
 ;;;                 *enable-straz-absolute-string-hack* to enable it.
@@ -471,7 +498,7 @@
 ;;;                 MAKE-PATHNAME with :host NIL. I'm not sure which version
 ;;;                 it is, but the current version doesn't have this problem.
 ;;;                 If given :host nil, it defaults the host to
-;;;                 COMMON-LISP::*UNIX-HOST*. So I haven't "fixed" this 
+;;;                 COMMON-LISP::*UNIX-HOST*. So I haven't "fixed" this
 ;;;                 problem.
 ;;;  9-MAR-95 mk    Integrated top-level commands for Allegro designed by bha
 ;;;                 into the code, with slight modifications.
@@ -496,12 +523,12 @@
 ;;;                 LispWorks and ACL(SGI) support, bug fixes for ACL 4.1/4.2.
 ;;; 14-MAR-95 fdmm  Finally added the bit of code to discriminate cleanly
 ;;;                 among different lisps without relying on (software-version)
-;;;                 idiosyncracies. 
+;;;                 idiosyncracies.
 ;;;                 You can now customize COMPILER-TYPE-TRANSLATION so that
 ;;;                 AFS-BINARY-DIRECTORY can return a different value for
 ;;;                 different lisps on the same platform.
 ;;;                 If you use only one compiler, do not care about supporting
-;;;                 code for multiple versions of it, and want less verbose 
+;;;                 code for multiple versions of it, and want less verbose
 ;;;                 directory names, just set *MULTIPLE-LISP-SUPPORT* to nil.
 ;;; 17-MAR-95 lmh   Added EVAL-WHEN for one of the MAKE-PACKAGE calls.
 ;;;                 CMU CL's RUN-PROGRAM is in the extensions package.
@@ -510,6 +537,56 @@
 ;;;                 suppress compiler warnings in CMU CL.
 ;;; 17-MAR-95 mk    Added conditionalizations to avoid certain CMU CL compiler
 ;;;                 warnings reported by lmh.
+;;; 19990610  ma    Added shadowing of 'HARDCOPY-SYSTEM' for LW Personal Ed.
+
+;;; 19991211  ma    NEW VERSION 4.0 started.
+;;; 19991211  ma    Merged in changes requested by T. Russ of
+;;;                 ISI. Please refer to the special "ISI" comments to
+;;;                 understand these changes
+;;; 20000228 ma     The symbols FIND-SYSTEM, LOAD-SYSTEM, DEFSYSTEM,
+;;;                 COMPILE-SYSTEM and HARDCOPY-SYSTEM are no longer
+;;;                 imported in the COMMON-LISP-USER package.
+;;;                 Cfr. the definitions of *EXPORTS* and
+;;;                 *SPECIAL-EXPORTS*.
+;;; 2000-07-21 rlt  Add COMPILER-OPTIONS to defstruct to allow user to
+;;;                 specify special compiler options for a particular
+;;;                 component.
+;;; 2002-01-08 kmr  Changed allegro symbols to lowercase to support
+;;;                 case-sensitive images
+
+;;;---------------------------------------------------------------------------
+;;; ISI Comments
+;;;
+;;; 19991211 Marco Antoniotti
+;;; These comments come from the "ISI Branch".  I believe I did
+;;; include the :load-always extension correctly.  The other commets
+;;; seem superseded by other changes made to the system in the
+;;; following years.  Some others are now useless with newer systems
+;;; (e.g. filename truncation for new Windows based CL
+;;; implementations.)
+
+;;;  1-OCT-92 tar   Fixed problem with TI Lisp machines and append-directory.
+;;;  1-OCT-92 tar   Made major modifications to compile-file-operation and
+;;;                 load-file-operation to reduce the number of probe-file
+;;;                 and write-date inquiries.  This makes the system run much
+;;;                 faster through slow network connections.
+;;; 13-OCT-92 tar   Added :load-always slot to components. If this slot is
+;;;                 specified as non-NIL, always loads the component.
+;;;                 This does not trigger dependent compilation.
+;;;                 (This can be useful when macro definitions needed
+;;;                 during compilation are changed by later files.  In
+;;;                 this case, not reloading up-to-date files can
+;;;                 cause different results.)
+;;; 28-OCT-93 tar   Allegro 4.2 causes an error on (pathname-device nil)
+;;; 14-SEP-94 tar   Disable importing of symbols into (CL-)USER package
+;;;                 to minimize conflicts with other defsystem utilities.
+;;; 10-NOV-94 tar   Added filename truncation code to support Franz Allegro
+;;;                 PC with it's 8 character filename limitation.
+;;; 15-MAY-98 tar   Changed host attribute for pathnames to support LispWorks
+;;;                 (Windows) pathnames which reference other Drives.  Also
+;;;                 updated file name convention.
+;;;  9-NOV-98 tar   Updated new-append-directories for Lucid 5.0
+;;;
 
 
 ;;; ********************************
@@ -524,7 +601,7 @@
 ;;;       Franz Allegro Common Lisp 4.0/4.1/4.2
 ;;;       Franz Allegro Common Lisp for Windows (2.0)
 ;;;       Lucid Common Lisp (Version 2.1 6-DEC-87)
-;;;       Lucid Common Lisp (3.0 [SPARC,SUN3]) 
+;;;       Lucid Common Lisp (3.0 [SPARC,SUN3])
 ;;;       Lucid Common Lisp (4.0 [SPARC,SUN3])
 ;;;       VAXLisp (v2.2) [VAX/VMS]
 ;;;       VAXLisp (v3.1)
@@ -533,7 +610,7 @@
 ;;;       Symbolics XL12000 (Genera 8.3)
 ;;;
 ;;;    DEFSYSTEM needs to be tested in the following lisps:
-;;;       Macintosh Common Lisp 
+;;;       Macintosh Common Lisp
 ;;;       Symbolics Common Lisp (8.0)
 ;;;       KCL (June 3, 1987 or later)
 ;;;       AKCL (1.86, June 30, 1987 or later)
@@ -545,14 +622,14 @@
 
 ;;; ********************************
 ;;; To Do **************************
-;;; ******************************** 
+;;; ********************************
 ;;;
 ;;; COMPONENT-FULL-PATHNAME is a major source of slowness in the system
 ;;; because of all the calls to the expensive operations MAKE-PATHNAME
 ;;; and NAMESTRING. To improve performance, DEFSYSTEM should be reworked
 ;;; to avoid any need to call MAKE-PATHNAME and NAMESTRING, as the logical
 ;;; pathnames package does. Unfortunately, I don't have the time to do this
-;;; right now. Instead, I installed a temporary improvement by memoizing 
+;;; right now. Instead, I installed a temporary improvement by memoizing
 ;;; COMPONENT-FULL-PATHNAME to cache previous calls to the function on
 ;;; a component by component and type by type basis. The cache is
 ;;; cleared before each call to OOS, in case filename extensions change.
@@ -566,7 +643,7 @@
 ;;;
 ;;; True CLtL2 logical pathnames support -- can't do it, because CLtL2
 ;;; doesn't have all the necessary primitives, and even in Allegro CL 4.2
-;;;   (namestring #l"foo:bar;baz.lisp") 
+;;;   (namestring #l"foo:bar;baz.lisp")
 ;;; does not work properly.
 ;;;
 ;;; Create separate stand-alone documentation for defsystem, and also
@@ -594,8 +671,8 @@
 ;;;
 ;;; A common error/misconception seems to involve assuming that :system
 ;;; components should include the name of the system file, and that
-;;; defsystem will automatically load the file containing the system 
-;;; definition and propagate operations to it. Perhaps this would be a 
+;;; defsystem will automatically load the file containing the system
+;;; definition and propagate operations to it. Perhaps this would be a
 ;;; nice feature to add.
 ;;;
 ;;; If a module is :load-only t, then it should not execute its :finally-do
@@ -608,7 +685,7 @@
 ;;; and inform the user of out of date fasls with the choice
 ;;; to load the old fasl or recompile and then load the new
 ;;; fasl?
-;;; 
+;;;
 ;;; modify compile-file-operation to handle a query keyword....
 ;;;
 ;;; Perhaps systems should keep around the file-write-date of the system
@@ -627,13 +704,13 @@
 ;;; :load-time for modules and systems -- maybe record the time the system
 ;;; was loaded/compiled here and print it in describe-system?
 ;;;
-;;; Make it easy to define new functions that operate on a system. For 
-;;; example, a function that prints out a list of files that have changed, 
+;;; Make it easy to define new functions that operate on a system. For
+;;; example, a function that prints out a list of files that have changed,
 ;;; hardcopy-system, edit-system, etc.
 ;;;
-;;; If a user wants to have identical systems for different lisps, do we 
-;;; force the user to use logical pathnames? Or maybe we should write a 
-;;; generic-pathnames package that parses any pathname format into a 
+;;; If a user wants to have identical systems for different lisps, do we
+;;; force the user to use logical pathnames? Or maybe we should write a
+;;; generic-pathnames package that parses any pathname format into a
 ;;; uniform underlying format (i.e., pull the relevant code out of
 ;;; logical-pathnames.lisp and clean it up a bit).
 ;;;
@@ -645,28 +722,28 @@
 ;;; isn't found. However, is there any way to provide a more informative
 ;;; error message? Probably not, especially if the system has multiple
 ;;; files of the same name.
-;;; 
+;;;
 ;;; For a module none of whose files needed to be compiled, have it print out
 ;;; "no files need recompilation".
-;;; 
+;;;
 ;;; Write a system date/time to a file? (version information) I.e., if the
 ;;; filesystem supports file version numbers, write an auxiliary file to
 ;;; the system definition file that specifies versions of the system and
-;;; the version numbers of the associated files. 
-;;; 
+;;; the version numbers of the associated files.
+;;;
 ;;; Add idea of a patch directory.
-;;; 
+;;;
 ;;; In verbose printout, have it log a date/time at start and end of
-;;; compilation: 
-;;;     Compiling system "test" on 31-Jan-91 21:46:47 
+;;; compilation:
+;;;     Compiling system "test" on 31-Jan-91 21:46:47
 ;;;     by Defsystem version v2.0 01-FEB-91.
-;;; 
+;;;
 ;;; Define other :force options:
 ;;;    :query    allows user to specify that a file not normally compiled
 ;;;              should be. OR
 ;;;    :confirm  allows user to specify that a file normally compiled
 ;;;              shouldn't be. AND
-;;; 
+;;;
 ;;; We currently assume that compilation-load dependencies and if-changed
 ;;; dependencies are identical. However, in some cases this might not be
 ;;; true. For example, if we change a macro we have to recompile functions
@@ -674,13 +751,13 @@
 ;;; as the new CMU Common Lisp), but not if we change a function. Splitting
 ;;; these apart (with appropriate defaulting) would be nice, but not worth
 ;;; doing immediately since it may save only a couple of file recompilations,
-;;; while making defsystem much more complex than it already is. 
-;;; 
+;;; while making defsystem much more complex than it already is.
+;;;
 ;;; Current dependencies are limited to siblings. Maybe we should allow
 ;;; nephews and uncles? So long as it is still a DAG, we can sort it.
 ;;; Answer: No. The current setup enforces a structure on the modularity.
 ;;; Otherwise, why should we have modules if we're going to ignore it?
-;;; 
+;;;
 ;;; Currently a file is recompiled more or less if the source is newer
 ;;; than the binary or if the file depends on a file that has changed
 ;;; (i.e., was recompiled in this session of a system operation).
@@ -691,7 +768,7 @@
 ;;; recompilation in the following circumstances:
 ;;;   1. If a file's source is newer than its binary, or
 ;;;   2. If a file's source is not newer than its binary, but the file
-;;;      depends directly or indirectly on a module (or file) that is newer. 
+;;;      depends directly or indirectly on a module (or file) that is newer.
 ;;;      For a regular file use the file-write-date (FWD) of the source or
 ;;;      binary, whichever is more recent. For a load-only file, use the only
 ;;;      available FWD. For a module, use the most recent (max) FWD of any of
@@ -701,8 +778,8 @@
 ;;; maybe just the FWD timestamp, and to use the value of CHANGED in
 ;;; needs-compilation decisions. (Use of NIL/T as values is an optimization.
 ;;; The FWD timestamp which indicates the most recent time of any changes
-;;; should be sufficient.) This will affect not just the 
-;;; compile-file-operation, but also the load-file-operation because of 
+;;; should be sufficient.) This will affect not just the
+;;; compile-file-operation, but also the load-file-operation because of
 ;;; compilation during load. Also, since FWDs will be used more prevalently,
 ;;; we probably should couple this change with the inclusion of load-times
 ;;; in the component defstruct. This is a tricky and involved change, and
@@ -715,29 +792,29 @@
 ;;; ********************************************************************
 
 ;;; To use this system,
-;;; 1. If you want to have a central registry of system definitions, 
+;;; 1. If you want to have a central registry of system definitions,
 ;;;    modify the value of the variable *central-registry* below.
 ;;; 2. Load this file (defsystem.lisp) in either source or compiled form,
 ;;; 3. Load the file containing the "defsystem" definition of your system,
 ;;; 4. Use the function "operate-on-system" to do things to your system.
 
-;;; For more information, see the documentation and examples in 
+;;; For more information, see the documentation and examples in
 ;;; lisp-utilities.ps.
 
 ;;; ********************************
 ;;; Usage Comments *****************
 ;;; ********************************
 
-;;; If you use symbols in the system definition file, they get interned in 
+;;; If you use symbols in the system definition file, they get interned in
 ;;; the COMMON-LISP-USER package, which can lead to name conflicts when
 ;;; the system itself seeks to export the same symbol to the COMMON-LISP-USER
 ;;; package. The workaround is to use strings instead of symbols for the
-;;; names of components in the system definition file. In the major overhaul, 
+;;; names of components in the system definition file. In the major overhaul,
 ;;; perhaps the user should be precluded from using symbols for such
 ;;; identifiers.
 ;;;
 ;;; If you include a tilde in the :source-pathname in Allegro, as in "~/lisp",
-;;; file name expansion is much slower than if you use the full pathname, 
+;;; file name expansion is much slower than if you use the full pathname,
 ;;; as in "/user/USERID/lisp".
 ;;;
 
@@ -751,7 +828,7 @@
 ;;; ********************************
 ;;; Let's be smart about CLtL2 compatible Lisps:
 (eval-when (compile load eval)
-  #+(or (and allegro-version>= (version>= 4 0)) :mcl)
+  #+(or (and allegro-version>= (version>= 4 0)) :mcl :sbcl)
   (pushnew :cltl2 *features*))
 
 ;;; ********************************
@@ -775,26 +852,40 @@
 ;;; and MODULE-FILES being undefined. Don't worry about them.
 
 ;;; Now that ANSI CL includes PROVIDE and REQUIRE again, is this code
-;;; necessary? 
+;;; necessary?
 
-#-(or (and :CMU (not :new-compiler)) :vms :mcl :lispworks
+#-(or (and :CMU (not :new-compiler))
+      :vms
+      :mcl
+      :lispworks
+      :clisp
+      :sbcl
+      :cormanlisp
       (and allegro-version>= (version>= 4 1)))
-(eval-when #-(or :lucid :cmu17) (:compile-toplevel :load-toplevel :execute)
-	   #+(or :lucid :cmu17) (compile load eval)
-  (unless (or (fboundp 'lisp::require) (fboundp 'user::require)
+(eval-when #-(or :lucid :cmu17 :cmu18)
+           (:compile-toplevel :load-toplevel :execute)
+	   #+(or :lucid :cmu17 :cmu18)
+           (compile load eval)
+
+  (unless (or (fboundp 'lisp::require)
+	      (fboundp 'user::require)
+
 	      #+(and :excl (and allegro-version>= (version>= 4 0)))
 	      (fboundp 'cltl1::require)
-	      #+lispworks (fboundp 'system::require))
-    #-lispworks
+
+	      #+:lispworks
+	      (fboundp 'system::require))
+
+    #-:lispworks
     (in-package "LISP")
-    #+lispworks
+    #+:lispworks
     (in-package "SYSTEM")
 
     (export '(*modules* provide require))
 
     ;; Documentation strings taken almost literally from CLtL1.
-  
-    (defvar *MODULES* ()
+
+    (defvar *modules* ()
       "List of names of the modules that have been loaded into Lisp so far.
      It is used by PROVIDE and REQUIRE.")
 
@@ -805,7 +896,7 @@
 
     ;; The directory listed in *library* is implementation dependent,
     ;; and is intended to be used by Lisp manufacturers as a place to
-    ;; store their implementation dependent packages. 
+    ;; store their implementation dependent packages.
     ;; Lisp users should use systems and *central-registry* to store
     ;; their packages -- it is intended that *central-registry* is
     ;; set by the user, while *library* is set by the lisp.
@@ -817,7 +908,7 @@
     (defvar *module-files* (make-hash-table :test #'equal)
       "Hash table mapping from module names to list of files for the
      module. REQUIRE loads these files in order.")
-    
+
     (defun canonicalize-module-name (name)
       ;; if symbol, string-downcase the printrep to make nicer filenames.
       (if (stringp name) name (string-downcase (string name))))
@@ -829,20 +920,20 @@
     (defun module-files (name)
       (gethash name *module-files*))
 
-    (defun PROVIDE (name)
+    (defun provide (name)
       "Adds a new module name to the list of modules maintained in the
-     variable *modules*, thereby indicating that the module has been 
+     variable *modules*, thereby indicating that the module has been
      loaded. Name may be a string or symbol -- strings are case-senstive,
      while symbols are treated like lowercase strings. Returns T if
      NAME was not already present, NIL otherwise."
       (let ((module (canonicalize-module-name name)))
 	(unless (find module *modules* :test #'string=)
-	  ;; Module not present. Add it and return T to signify that it 
+	  ;; Module not present. Add it and return T to signify that it
 	  ;; was added.
 	  (push module *modules*)
 	  t)))
 
-    (defun REQUIRE (name &optional pathname)
+    (defun require (name &optional pathname)
       "Tests whether a module is already present. If the module is not
      present, loads the appropriate file or set of files. The pathname
      argument, if present, is a single pathname or list of pathnames
@@ -857,7 +948,7 @@
 	  (when (and pathname (not (listp pathname)))
 	    ;; If there's a pathname or pathnames, ensure that it's a list.
 	    (setf pathname (list pathname)))
-	  (unless pathname 
+	  (unless pathname
 	    ;; If there's no pathname, try for a defmodule definition.
 	    (setf pathname (module-files module)))
 	  (unless pathname
@@ -865,7 +956,7 @@
 	    (when *library*
 	      (setf pathname (concatenate 'string *library* module))
 	      ;; Test if the file exists.
-	      ;; We assume that the lisp will default the file type 
+	      ;; We assume that the lisp will default the file type
 	      ;; appropriately. If it doesn't, use #+".fasl" or some
 	      ;; such in the concatenate form above.
 	      (if (probe-file pathname)
@@ -875,7 +966,7 @@
 		  ;; a load error.
 		  (setf pathname nil))))
 	  ;; Now that we've got the list of pathnames, let's load them.
-	  (dolist (pname pathname T)
+	  (dolist (pname pathname t)
 	    (load pname :verbose nil)))))))
 
 ;;; ********************************
@@ -889,78 +980,146 @@
 ;;; MAKE package. A nice side-effect is that the short nickname
 ;;; MK is my initials.
 
-#-(or :cltl2 :lispworks)
+#+clisp
+(defpackage "MAKE" (:use "COMMON-LISP") (:nicknames "MK"))
+
+#+cormanlisp
+(defpackage "MAKE" (:use "COMMON-LISP") (:nicknames "MK"))
+
+#-(or :sbcl :cltl2 :lispworks)
 (in-package "MAKE" :nicknames '("MK"))
 
 ;;; For CLtL2 compatible lisps...
-#+(and :excl (or :allegro-v4.0 :allegro-v4.1) :cltl2)
-(defpackage "MAKE" (:nicknames "MK") (:use "COMMON-LISP") 
+#+(and :excl :allegro-v4.0 :cltl2)
+(defpackage "MAKE" (:nicknames "MK" "make" "mk") (:use :common-lisp)
 	    (:import-from cltl1 *modules* provide require))
 
+;;; *** Marco Antoniotti <marcoxa@icsi.berkeley.edu> 19970105
+;;; In Allegro 4.1, 'provide' and 'require' are not external in
+;;; 'CLTL1'.  However they are in 'COMMON-LISP'.  Hence the change.
+#+(and :excl :allegro-v4.1 :cltl2)
+(defpackage "MAKE" (:nicknames "MK" "make" "mk") (:use :common-lisp) )
+
 #+(and :excl :allegro-version>= (version>= 4 2))
-(defpackage "MAKE" (:nicknames "MK") (:use "COMMON-LISP"))
-	    
-#+lispworks
-(defpackage "MAKE" (:nicknames "MK") (:use "COMMON-LISP") 
+(defpackage "MAKE" (:nicknames "MK" "make" "mk") (:use :common-lisp))
+
+#+:lispworks
+(defpackage "MAKE" (:nicknames "MK") (:use "COMMON-LISP")
 	    (:import-from system *modules* provide require)
-	    (:export "DEFSYSTEM" "COMPILE-SYSTEM" "LOAD-SYSTEM" 
+	    (:export "DEFSYSTEM" "COMPILE-SYSTEM" "LOAD-SYSTEM"
 		     "DEFINE-LANGUAGE" "*MULTIPLE-LISP-SUPPORT*"))
 
-#+:mcl                                  
-(defpackage "MAKE" (:nicknames "MK") (:use "COMMON-LISP") 
+#+:mcl
+(defpackage "MAKE" (:nicknames "MK") (:use "COMMON-LISP")
   (:import-from ccl *modules* provide require))
-#+(and :cltl2 (not (or (and :excl (or :allegro-v4.0 :allegro-v4.1)) :mcl)))   
+
+;;; *** Marco Antoniotti <marcoxa@icsi.berkeley.edu> 19951012
+;;; The code below, is originally executed also for CMUCL. However I
+;;; believe this is wrong, since CMUCL comes with its own defpackage.
+;;; I added the extra :CMU in the 'or'.
+#+(and :cltl2 (not (or :cmu :clisp :sbcl
+		       (and :excl (or :allegro-v4.0 :allegro-v4.1))
+		       :mcl)))
 (eval-when (compile load eval)
-  (unless (find-package "MAKE") 
+  (unless (find-package "MAKE")
     (make-package "MAKE" :nicknames '("MK") :use '("COMMON-LISP"))))
 
-#+(or :cltl2 lispworks)
+;;; *** Marco Antoniotti <marcoxa@icsi.berkeley.edu> 19951012
+;;; Here I add the proper defpackage for CMU
+#+:CMU
+(defpackage "MAKE" (:use "COMMON-LISP" "CONDITIONS")
+  (:nicknames "MK"))
+
+#+:sbcl
+(defpackage "MAKE" (:use "COMMON-LISP")
+  (:nicknames "MK"))
+
+#+(or :cltl2 :lispworks)
 (eval-when (compile load eval)
   (in-package "MAKE"))
 
-#+(and :excl (or :allegro-v4.0 :allegro-v4.1) :cltl2)
+;;; *** Marco Antoniotti <marcoxa@icsi.berkeley.edu> 19970105
+;;; 'provide' is not esternal in 'CLTL1' in Allegro v 4.1
+#+(and :excl :allegro-v4.0 :cltl2)
 (cltl1:provide 'make)
+#+(and :excl :allegro-v4.0 :cltl2)
+(provide 'make)
+
 #+:mcl
 (ccl:provide 'make)
+
 #+(and :cltl2 (not (or (and :excl (or :allegro-v4.0 :allegro-v4.1)) :mcl)))
 (provide 'make)
-#+lispworks
+
+#+:lispworks
 (provide 'make)
+
 #-(or :cltl2 :lispworks)
 (provide 'make)
 
 (pushnew :mk-defsystem *features*)
 
+;;; Some compatibility issues.  Mostly for CormanLisp.
+;;; 2002-02-20 Marco Antoniotti
+
+#+cormanlisp
+(defun compile-file-pathname (pathname-designator)
+ (merge-pathnames (make-pathname :type "fasl")
+		  (etypecase pathname-designator
+		    (pathname pathname-designator)
+		    (string (parse-namestring pathname-designator))
+		    ;; We need FILE-STREAM here as well.
+		    )))
+
+#+cormanlisp
+(defun file-namestring (pathname-designator)
+  (let ((p (etypecase pathname-designator
+	     (pathname pathname-designator)
+	     (string (parse-namestring pathname-designator))
+	     ;; We need FILE-STREAM here as well.
+	     )))
+    (namestring (make-pathname :directory ()
+			       :name (pathname-name p)
+			       :type (pathname-type p)
+			       :version (pathname-version p)))))
+
 ;;; The external interface consists of *exports* and *other-exports*.
 
 ;;; AKCL (at least 1.603) grabs all the (export) forms and puts them up top in
 ;;; the compile form, so that you can't use a defvar with a default value and
-;;; then a succeeding export as well.  
+;;; then a succeeding export as well.
+
 (eval-when (compile load eval)
    (defvar *special-exports* nil)
    (defvar *exports* nil)
    (defvar *other-exports* nil)
 
    (export (setq *exports*
-		 '(operate-on-system 
-		   oos 
+		 '(operate-on-system
+		   oos
 		   afs-binary-directory afs-source-directory
 		   files-in-system)))
-   (export (setq *special-exports* 
-		 '(defsystem compile-system load-system)))
+   (export (setq *special-exports*
+		 '()))
    (export (setq *other-exports*
-		 '(*central-registry* 
-		   *bin-subdir* 
-		   machine-type-translation 
+		 '(*central-registry*
+		   *bin-subdir*
+
+		   add-registry-location
+		   find-system
+		   defsystem compile-system load-system hardcopy-system
+
+
+		   machine-type-translation
 		   software-type-translation
 		   compiler-type-translation
 		   ;; require
 		   define-language
-		   allegro-make-system-fasl 
-		   files-which-need-compilation  
+		   allegro-make-system-fasl
+		   files-which-need-compilation
 		   undefsystem
 		   defined-systems
-		   describe-system clean-system edit-system hardcopy-system
+		   describe-system clean-system edit-system ;hardcopy-system
 		   system-source-size make-system-tag-table
 		   *defsystem-version*
 		   *compile-during-load*
@@ -977,29 +1136,31 @@
 ;;; We import these symbols into the USER package to make them
 ;;; easier to use. Since some lisps have already defined defsystem
 ;;; in the user package, we may have to shadowing-import it.
-#-(OR :CMU :CCL :ALLEGRO :EXCL :lispworks :symbolics)
+#|
+#-(or :sbcl :cmu :ccl :allegro :excl :lispworks :symbolics)
 (eval-when (compile load eval)
   (import *exports* #-(or :cltl2 :lispworks) "USER"
 	            #+(or :cltl2 :lispworks) "COMMON-LISP-USER")
-  (import *special-exports* #-(or :cltl2 :lispworks) "USER" 
+  (import *special-exports* #-(or :cltl2 :lispworks) "USER"
 	                    #+(or :cltl2 :lispworks) "COMMON-LISP-USER"))
-#+(OR :CMU :CCL :ALLEGRO :EXCL :lispworks :symbolics)
+#+(or :sbcl :cmu :ccl :allegro :excl :lispworks :symbolics)
 (eval-when (compile load eval)
-  (import *exports* #-(or :cltl2 :lispworks) "USER" 
+  (import *exports* #-(or :cltl2 :lispworks) "USER"
 	            #+(or :cltl2 :lispworks) "COMMON-LISP-USER")
-  (shadowing-import *special-exports* 
-		    #-(or :cltl2 :lispworks) "USER" 
+  (shadowing-import *special-exports*
+		    #-(or :cltl2 :lispworks) "USER"
 		    #+(or :cltl2 :lispworks) "COMMON-LISP-USER"))
+|#
 
 #-(or :PCL :CLOS)
-(when (find-package "PCL") 
+(when (find-package "PCL")
   (pushnew :pcl *modules*)
   (pushnew :pcl *features*))
 
 ;;; ********************************
 ;;; Defsystem Version **************
 ;;; ********************************
-(defparameter *defsystem-version* "v3.0 14-MAR-95"
+(defparameter *defsystem-version* "3.3 Interim, 2002-06-13"
   "Current version number/date for Defsystem.")
 
 ;;; ********************************
@@ -1014,16 +1175,30 @@
   "If T, afs-binary-directory will try to return a name dependent
    on the particular lisp compiler version being used.")
 
+;;; home-subdirectory --
 ;;; HOME-SUBDIRECTORY is used only in *central-registry* below.
 ;;; Note that CMU CL 17e does not understand the ~/ shorthand for home
 ;;; directories.
+;;;
+;;; Note:
+;;; 20020220 Marco Antoniotti
+;;; The #-cormanlisp version is the original one, which is broken anyway, since
+;;; it is UNIX dependent.
+;;; I added the kludgy #+cormalisp (v 1.5) one, since it is missing
+;;; the ANSI USER-HOMEDIR-PATHNAME function.
+#-cormanlisp
 (defun home-subdirectory (directory)
   (concatenate 'string
-	#+:cmu "home:"
-	#-:cmu (let ((homedir (user-homedir-pathname)))
+	#+(or :sbcl :cmu) "home:"
+	#-(or :sbcl :cmu) (let ((homedir (user-homedir-pathname)))
 		 (or (when homedir (namestring homedir))
 		     "~/"))
 	directory))
+
+#+cormanlisp
+(defun home-subdirectory (directory)
+  (declare (type string directory))
+  (concatenate 'string "C:\\" directory))
 
 ;;; The following function is available for users to add
 ;;;   (setq mk:*central-registry* (defsys-env-search-path))
@@ -1038,58 +1213,76 @@
 
 ;;; Change this variable to set up the location of a central
 ;;; repository for system definitions if you want one.
-;;; This is a defvar to allow users to change the value in their 
+;;; This is a defvar to allow users to change the value in their
 ;;; lisp init files without worrying about it reverting if they
 ;;; reload defsystem for some reason.
 
 ;;; Note that if a form is included in the registry list, it will be evaluated
 ;;; in COMPUTE-SYSTEM-PATH to return the appropriate directory to check.
 
-(defvar *central-registry* 
+(defvar *central-registry*
   `(;; Current directory
     "./"
-    #+:lucid                (working-directory)
-    #+(or :allegro ACLPC)   (current-directory)
-    #+:cmu                  (default-directory)
-    #+:lispworks
-    ,(multiple-value-bind (major minor) (system::lispworks-version)
-       (if (or (> major 3) 
+    #+:LUCID     (working-directory)
+    #+ACLPC      (current-directory)
+    #+:allegro   (excl:current-directory)
+    #+:sbcl      (progn *default-pathname-defaults*)
+    #+:CMU       (ext:default-directory)
+    ;; *** Marco Antoniotti <marcoxa@icsi.berkeley.edu>
+    ;; Somehow it is better to qualify default-directory in CMU with
+    ;; the appropriate package (i.e. "EXTENSIONS".)
+    ;; Same for Allegro.
+    #+(and :lispworks (not :lispworks4))
+    ,(multiple-value-bind (major minor)
+			  #-:lispworks-personal-edition
+			  (system::lispworks-version)
+			  #+:lispworks-personal-edition
+			  (values system::*major-version-number*
+				  system::*minor-version-number*)
+       (if (or (> major 3)
 	       (and (= major 3) (> minor 2))
 	       (and (= major 3) (= minor 2)
 		    (equal (lisp-implementation-version) "3.2.1")))
-	   `(make-pathname :directory 
+	   `(make-pathname :directory
 			   ,(find-symbol "*CURRENT-WORKING-DIRECTORY*"
 					 (find-package "SYSTEM")))
-	 (find-symbol "*CURRENT-WORKING-DIRECTORY*"
-		      (find-package "LW"))))
-
+           (find-symbol "*CURRENT-WORKING-DIRECTORY*"
+                        (find-package "LW"))))
+    #+:lispworks4
+    (hcl:get-working-directory)
     ;; Home directory
+    #-sbcl
     (mk::home-subdirectory "lisp/systems/")
 
     ;; Global registry
-    "/usr/local/lisp/Registry/") 
+    "/usr/local/lisp/Registry/")
   "Central directory of system definitions. May be either a single
    directory pathname, or a list of directory pathnames to be checked
    after the local directory.")
 
+
+(defun add-registry-location (pathname)
+  "Adds a path to the central registry."
+  (push pathname *central-registry*))
+
 (defvar *bin-subdir* ".bin/"
   "The subdirectory of an AFS directory where the binaries are really kept.")
 
-;;; These variables set up defaults for operate-on-system, and are used 
+;;; These variables set up defaults for operate-on-system, and are used
 ;;; for communication in lieu of parameter passing. Yes, this is bad,
 ;;; but it keeps the interface small. Also, in the case of the -if-no-binary
 ;;; variables, parameter passing would require multiple value returns
 ;;; from some functions. Why make life complicated?
 (defvar *tell-user-when-done* nil
   "If T, system will print ...DONE at the end of an operation")
-(defvar *oos-verbose* nil 
+(defvar *oos-verbose* nil
   "Operate on System Verbose Mode")
-(defvar *oos-test* nil 
+(defvar *oos-test* nil
   "Operate on System Test Mode")
 (defvar *load-source-if-no-binary* nil
   "If T, system will try loading the source if the binary is missing")
 (defvar *bother-user-if-no-binary* t
-  "If T, the system will ask the user whether to load the source if 
+  "If T, the system will ask the user whether to load the source if
    the binary is missing")
 (defvar *load-source-instead-of-binary* nil
   "If T, the system will load the source file instead of the binary.")
@@ -1102,7 +1295,7 @@
    and up to date.")
 
 (defvar *files-missing-is-an-error* t
-  "If both the source and binary files are missing, signal a continuable 
+  "If both the source and binary files are missing, signal a continuable
    error instead of just a warning.")
 
 (defvar *operations-propagate-to-subsystems* t
@@ -1123,12 +1316,12 @@
 ;;; ********************************
 
 ;;; Massage people's *features* into better shape.
-(eval-when (compile load eval)  
+(eval-when (compile load eval)
   (dolist (feature *features*)
     (when (and (symbolp feature)   ; 3600
                (equal (symbol-name feature) "CMU"))
       (pushnew :CMU *features*)))
-  
+
   #+Lucid
   (when (search "IBM RT PC" (machine-type))
     (pushnew :ibm-rt-pc *features*))
@@ -1145,23 +1338,22 @@
          #+IBCL                               ("lsp"  . "o")
          #+Xerox                              ("lisp" . "dfasl")
 	 ;; Lucid on Silicon Graphics
-	 #+(and Lucid MIPS)                   ("lisp" . "mbin")   
+	 #+(and Lucid MIPS)                   ("lisp" . "mbin")
 	 ;; the entry for (and lucid hp300) must precede
 	 ;; that of (and lucid mc68000) for hp9000/300's running lucid,
 	 ;; since *features* on hp9000/300's also include the :mc68000
 	 ;; feature.
 	 #+(and lucid hp300)                  ("lisp" . "6bin")
          #+(and Lucid MC68000)                ("lisp" . "lbin")
-         #+(and Lucid Vax)                    ("lisp" . "vbin")   
+         #+(and Lucid Vax)                    ("lisp" . "vbin")
          #+(and Lucid Prime)                  ("lisp" . "pbin")
          #+(and Lucid SUNRise)                ("lisp" . "sbin")
          #+(and Lucid SPARC)                  ("lisp" . "sbin")
          #+(and Lucid :IBM-RT-PC)             ("lisp" . "bbin")
 	 ;; PA is Precision Architecture, HP's 9000/800 RISC cpu
-	 #+(and Lucid PA)                    ("lisp" . "hbin")   
-         #+excl                               ("cl"   . "fasl")
-         #+CMU           ("lisp" . ,(or (c:backend-fasl-file-type c:*backend*)
-					"fasl"))
+	 #+(and Lucid PA)		      ("lisp" . "hbin")
+         #+excl ("cl"   . ,(pathname-type (compile-file-pathname "foo.cl")))
+         #+CMU  ("lisp" . ,(or (c:backend-fasl-file-type c:*backend*) "fasl"))
 ;	 #+(and :CMU (not (or :sgi :sparc)))  ("lisp" . "fasl")
 ;        #+(and :CMU :sgi)                    ("lisp" . "sgif")
 ;        #+(and :CMU :sparc)                  ("lisp" . "sparcf")
@@ -1170,38 +1362,31 @@
          #+TI ("lisp" . #.(string (si::local-binary-file-type)))
          #+:gclisp                            ("LSP"  . "F2S")
          #+pyramid                            ("clisp" . "o")
-         #+:coral                             ("lisp" . "fasl")
+         #+:coral                             ("lisp" . "pfsl")
 	 ;; Harlequin LispWorks
 	 #+:lispworks 	      ("lisp" . ,COMPILER:*FASL-EXTENSION-STRING*)
 ;        #+(and :sun4 :lispworks)             ("lisp" . "wfasl")
 ;        #+(and :mips :lispworks)             ("lisp" . "mfasl")
-         #+:mcl                               ("lisp" . "fasl")
-	 #+clisp                              ("lisp" . "fas")
-	 
-         ;; Otherwise,
-         ("lisp" . "fasl")))
-  "Filename extensions for Common Lisp. A cons of the form
-   (Source-Extension . Binary-Extension). If the system is 
-   unknown (as in *features* not known), defaults to lisp and lbin.")
+         #+:mcl                               ("lisp" . "pfsl")
 
-;;; In ANSI CL, we should be able to get the object file type by
-;;; doing (pathname-type (compile-file-pathname "foo.lisp")).
+         ;; Otherwise,
+         ("lisp" . ,(pathname-type (compile-file-pathname "foo.lisp")))))
+  "Filename extensions for Common Lisp. A cons of the form
+   (Source-Extension . Binary-Extension). If the system is
+   unknown (as in *features* not known), defaults to lisp and fasl.")
 
 (defvar *system-extension*
   ;; MS-DOS systems can only handle three character extensions.
   #-ACLPC "system"
-  #+ACLPC "sys" 
+  #+ACLPC "sys"
   "The filename extension to use with systems.")
-
-(defvar *standard-source-file-types* '("lisp" "l" "cl" "lsp"))
-(defvar *standard-binary-file-types* '("fasl"))
 
 ;;; The above variables and code should be extended to allow a list of
 ;;; valid extensions for each lisp implementation, instead of a single
 ;;; extension. When writing a file, the first extension should be used.
 ;;; But when searching for a file, every extension in the list should
-;;; be used. For example, CMU Common Lisp recognizes "lisp" "l" "cl" and 
-;;; "lsp" (*load-source-types*) as source code extensions, and 
+;;; be used. For example, CMU Common Lisp recognizes "lisp" "l" "cl" and
+;;; "lsp" (*load-source-types*) as source code extensions, and
 ;;; (c:backend-fasl-file-type c:*backend*)
 ;;; (c:backend-byte-fasl-file-type c:*backend*)
 ;;; and "fasl" as binary (object) file extensions (*load-object-types*).
@@ -1212,7 +1397,7 @@
 ;;; Note that in any event, the toplevel system (defined with defsystem)
 ;;; will have its dependencies delayed. Not having dependencies delayed
 ;;; might be useful if we define several systems within one defsystem.
-(defvar *system-dependencies-delayed* t 
+(defvar *system-dependencies-delayed* t
   "If T, system dependencies are expanded at run time")
 
 ;;; Replace this with consp, dammit!
@@ -1222,12 +1407,13 @@
 ;;; ********************************
 ;;; Component Operation Definition *
 ;;; ********************************
+(eval-when (:compile-toplevel :load-toplevel :execute)
 (defvar *version-dir* nil
   "The version subdir. bound in operate-on-system.")
 (defvar *version-replace* nil
   "The version replace. bound in operate-on-system.")
 (defvar *version* nil
-  "Default version.")
+  "Default version."))
 
 (defvar *component-operations* (make-hash-table :test #'equal)
   "Hash table of (operation-name function) pairs.")
@@ -1241,19 +1427,19 @@
 ;;; ********************************
 
 ;;; mc 11-Apr-91: Bashes MCL's point reader, so commented out.
-#-:mcl 
+#-:mcl
 (eval-when (compile load eval)
   ;; Define #@"foo" as a shorthand for (afs-binary-directory "foo").
   ;; For example,
   ;;    <cl> #@"foo"
   ;;    "foo/.bin/rt_mach/"
-  (set-dispatch-macro-character 
-   #\# #\@ 
+  (set-dispatch-macro-character
+   #\# #\@
    #'(lambda (stream char arg)
        (declare (ignore char arg))
        `(afs-binary-directory ,(read stream t nil t)))))
 
-(defconstant *find-irix-version-script*
+(defvar *find-irix-version-script*
     "\"1,4 d\\
 s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 /./,$ d\\
@@ -1264,7 +1450,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
   (let* ((full-version (software-version))
 	 (blank-pos (search " " full-version))
 	 (os (subseq full-version 0 blank-pos))
-	 (version-rest (subseq full-version 
+	 (version-rest (subseq full-version
 			       (1+ blank-pos)))
 	 os-version)
     (setq blank-pos (search " " version-rest))
@@ -1279,7 +1465,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 			       (1+ blank-pos)))
     (concatenate 'string
       os " " os-version))      ; " " version-rest
-  #+(and :sgi :cmu)
+  #+(and :sgi :cmu :sbcl)
   (concatenate 'string
     (software-type)
     (software-version))
@@ -1287,7 +1473,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
   (let ((soft-type (software-type)))
     (if (equalp soft-type "IRIX5")
         (progn
-          (foreign:call-system  
+          (foreign:call-system
 	    (format nil "versions ~A | sed -e ~A > ~A"
                          "eoe1"
                          *find-irix-version-script*
@@ -1301,11 +1487,13 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
   (software-type))
 
 (defun compiler-version ()
-  #+lispworks (concatenate 'string 
+  #+:lispworks (concatenate 'string
 		"lispworks" " " (lisp-implementation-version))
-  #+excl      (concatenate 'string 
-		"excl" " " EXCL::*COMMON-LISP-VERSION-NUMBER*)
-  #+cmu       (concatenate 'string 
+  #+excl      (concatenate 'string
+		"excl" " " excl::*common-lisp-version-number*)
+  #+sbcl      (concatenate 'string
+			   "sbcl" " " (lisp-implementation-version))
+  #+cmu       (concatenate 'string
 		"cmu" " " (lisp-implementation-version))
   #+kcl       "kcl"
   #+akcl      "akcl"
@@ -1321,7 +1509,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
   #+coral     "coral"
   #+gclisp    "gclisp"
   )
-  
+
 (defun afs-binary-directory (root-directory)
   ;; Function for obtaining the directory AFS's @sys feature would have
   ;; chosen when we're not in AFS. This function is useful as the argument
@@ -1332,18 +1520,18 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 		  (machine-type)
 		  #+(and :sgi :allegro-version>= (version>= 4 2))
 		  (machine-version)))
-	(software (software-type-translation 
-		   #-(and :sgi (or :cmu
-				   (and :allegro-version>= (version>= 4 2))))  
+	(software (software-type-translation
+		   #-(and :sgi (or :cmu :sbcl
+				   (and :allegro-version>= (version>= 4 2))))
 		   (software-type)
-		   #+(and :sgi (or :cmu
+		   #+(and :sgi (or :cmu :sbcl
 				   (and :allegro-version>= (version>= 4 2))))
 		   (operating-system-version)))
 	(lisp (compiler-type-translation (compiler-version))))
     ;; pmax_mach rt_mach sun3_35 sun3_mach vax_mach
     (setq root-directory (namestring root-directory))
     (setq root-directory (ensure-trailing-slash root-directory))
-    (format nil "~A~@[~A~]~@[~A/~]" 
+    (format nil "~A~@[~A~]~@[~A/~]"
 	    root-directory
 	    *bin-subdir*
 	    (if *multiple-lisp-support*
@@ -1356,7 +1544,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
   ;; to :source-pathname in defsystem.
   (setq root-directory (namestring root-directory))
   (setq root-directory (ensure-trailing-slash root-directory))
-  (format nil "~A~@[~A/~]" 
+  (format nil "~A~@[~A/~]"
           root-directory
           (and version-flag (translate-version *version*))))
 
@@ -1365,17 +1553,21 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
     (string-equal s "")))
 
 (defun ensure-trailing-slash (dir)
-  (if (and dir 
+  (if (and dir
 	   (not (null-string dir))
 	   (not (char= (char dir
 			     (1- (length dir)))
-		       #\/)))
+		       #\/))
+	   (not (char= (char dir
+			     (1- (length dir)))
+		       #\\))
+	   )
       (concatenate 'string dir "/")
       dir))
 
 (defun afs-component (machine software &optional lisp)
-  (format nil "~@[~A~]~@[_~A~]~@[_~A~]" 
-	    machine 
+  (format nil "~@[~A~]~@[_~A~]~@[_~A~]"
+	    machine
 	    (or software "mach")
 	    lisp))
 
@@ -1398,22 +1590,31 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 (machine-type-translation "Silicon Graphics Iris 4D (R3000)" "sgi")
 (machine-type-translation "Silicon Graphics Iris 4D (R4000)" "sgi")
 (machine-type-translation "Silicon Graphics Iris 4D (R4400)" "sgi")
-(machine-type-translation "IP22"                             "sgi") 
+(machine-type-translation "IP22"                             "sgi")
 ;;; MIPS R4000 Processor Chip Revision: 3.0
 ;;; MIPS R4400 Processor Chip Revision: 5.0
 ;;; MIPS R4600 Processor Chip Revision: 1.0
-(machine-type-translation "IP20"                             "sgi") 
+(machine-type-translation "IP20"                             "sgi")
 ;;; MIPS R4000 Processor Chip Revision: 3.0
-(machine-type-translation "IP17"                             "sgi") 
+(machine-type-translation "IP17"                             "sgi")
 ;;; MIPS R4000 Processor Chip Revision: 2.2
-(machine-type-translation "IP12"                             "sgi") 
+(machine-type-translation "IP12"                             "sgi")
 ;;; MIPS R2000A/R3000 Processor Chip Revision: 3.0
-(machine-type-translation "IP7"                              "sgi") 
+(machine-type-translation "IP7"                              "sgi")
 ;;; MIPS R2000A/R3000 Processor Chip Revision: 3.0
+
+(machine-type-translation "x86"                              "x86")
+;;; ACL
+(machine-type-translation "IBM PC Compatible"                "x86")
+;;; LW
+(machine-type-translation "I686"                             "x86")
+;;; LW
+(machine-type-translation "PC/386"                           "x86")
+;;; CLisp Win32
 
 #+(and :lucid :sun :mc68000)
 (machine-type-translation "unknown"     "sun3")
- 
+
 
 (defvar *software-type-alist* (make-hash-table :test #'equal)
   "Hash table for retrieving the software-type")
@@ -1430,14 +1631,22 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 (software-type-translation "IRIX5"         "irix5")
 ;;(software-type-translation "IRIX liasg5 5.2 02282016 IP22 mips" "irix5") ; (software-version)
 
-(software-type-translation "IRIX 5.2" "irix5") 
-(software-type-translation "IRIX 5.3" "irix5") 
+(software-type-translation "IRIX 5.2" "irix5")
+(software-type-translation "IRIX 5.3" "irix5")
 (software-type-translation "IRIX5.2"  "irix5")
 (software-type-translation "IRIX5.3"  "irix5")
+
+(software-type-translation "Linux" "linux") ; Lispworks for Linux
+(software-type-translation "Linux 2.x, Redhat 6.x and 7.x" "linux") ; ACL
+(software-type-translation "Microsoft Windows 9x/Me and NT/2000/XP" "win32")
+(software-type-translation "Windows NT" "win32") ; LW for Windows
+(software-type-translation "ANSI C program" "ansi-c") ; CLISP
+(software-type-translation "C compiler" "ansi-c") ; CLISP for Win32
+
 (software-type-translation nil             "")
 
 #+:lucid
-(software-type-translation "Unix" 
+(software-type-translation "Unix"
 			   #+:lcl4.0 "4.0"
 			   #+(and :lcl3.0 (not :lcl4.0)) "3.0")
 
@@ -1450,6 +1659,28 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 
 (compiler-type-translation "lispworks 3.2.1"         "lispworks")
 (compiler-type-translation "lispworks 3.2.60 beta 6" "lispworks")
+(compiler-type-translation "lispworks 4.2.0"         "lispworks")
+
+#+allegro
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (or (find :case-sensitive common-lisp:*features*)
+	      (find :case-insensitive common-lisp:*features*))
+    (if (or (eq excl:*current-case-mode* :case-sensitive-lower)
+	    (eq excl:*current-case-mode* :case-sensitive-upper))
+	(push :case-sensitive common-lisp:*features*)
+      (push :case-insensitive common-lisp:*features*))))
+
+
+#+(and allegro case-sensitive ics)
+(compiler-type-translation "excl 6.1" "excl-m")
+#+(and allegro case-sensitive (not ics))
+(compiler-type-translation "excl 6.1" "excl-m8")
+
+#+(and allegro case-insensitive ics)
+(compiler-type-translation "excl 6.1" "excl-a")
+#+(and allegro case-insensitive (not ics))
+(compiler-type-translation "excl 6.1" "excl-a8")
+
 (compiler-type-translation "excl 4.2" "excl")
 (compiler-type-translation "excl 4.1" "excl")
 (compiler-type-translation "cmu 17f" "cmu")
@@ -1461,7 +1692,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 ;;; ********************************
 
 ;;; If you use strings for system names, be sure to use the same case
-;;; as it appears on disk, if the filesystem is case sensitive. 
+;;; as it appears on disk, if the filesystem is case sensitive.
 (defun canonicalize-system-name (name)
   ;; Originally we were storing systems using GET. This meant that the
   ;; name of a system had to be a symbol, so we interned the symbols
@@ -1469,9 +1700,9 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
   ;; storing the systems in a hash table, we've switched to using strings.
   ;; Since the hash table is case sensitive, we use uppercase strings.
   ;; (Names of modules and files may be symbols or strings.)
-  #|(if (keywordp name)
+  #||(if (keywordp name)
       name
-      (intern (string-upcase (string name)) "KEYWORD"))|#
+      (intern (string-upcase (string name)) "KEYWORD"))||#
   (if (stringp name) (string-upcase name) (string-upcase (string name))))
 
 (defvar *defined-systems* (make-hash-table :test #'equal)
@@ -1501,7 +1732,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 ;;; Directory Pathname Hacking *****
 ;;; ********************************
 
-;;; Unix example: An absolute directory starts with / while a 
+;;; Unix example: An absolute directory starts with / while a
 ;;; relative directory doesn't. A directory ends with /, while
 ;;; a file's pathname doesn't. This is important 'cause
 ;;; (pathname-directory "foo/bar") will return "foo" and not "foo/".
@@ -1527,7 +1758,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 ;;; 	(merge-pathnames "[root.]file.ext" "[son]") ==> "[root.son]file.ext"
 ;;; 	(merge-pathnames "[root]file.ext" "[son]")  ==> "[root]file.ext"
 ;;; Thus the problem with the #-VMS code was that it was merging x y into
-;;; [[x]][y] instead of [x][y] or [x]y. 
+;;; [[x]][y] instead of [x][y] or [x]y.
 
 ;;; Miscellaneous notes:
 ;;;   On GCLisp, the following are equivalent:
@@ -1542,7 +1773,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
   ;; Version of append-directories for CLtL2-compliant lisps. In particular,
   ;; they must conform to section 23.1.3 "Structured Directories". We are
   ;; willing to fix minor aberations in this function, but not major ones.
-  ;; Tested in Allegro CL 4.0 (SPARC), Allegro CL 3.1.12 (DEC 3100), 
+  ;; Tested in Allegro CL 4.0 (SPARC), Allegro CL 3.1.12 (DEC 3100),
   ;; CMU CL old and new compilers, Lucid 3.0, Lucid 4.0.
   (setf absolute-dir (or absolute-dir "")
 	relative-dir (or relative-dir ""))
@@ -1555,64 +1786,87 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 	 (abs-directory (directory-to-list (pathname-directory abs-dir)))
 	 (abs-keyword (when (keywordp (car abs-directory))
 			(pop abs-directory)))
-	 (abs-name (file-namestring abs-dir)) ; was pathname-name
+	 ;; Stig (July 2001):
+	 ;; Somehow CLISP dies on the next line, but NIL is ok.
+	 (abs-name (ignore-errors (file-namestring abs-dir))) ; was pathname-name
 	 (rel-directory (directory-to-list (pathname-directory rel-dir)))
 	 (rel-keyword (when (keywordp (car rel-directory))
 			(pop rel-directory)))
-	 (rel-file (file-namestring rel-dir))
+         #-(or :MCL :sbcl :clisp) (rel-file (file-namestring rel-dir))
+	 ;; Stig (July 2001);
+	 ;; These values seems to help clisp as well
+	 #+(or :MCL :sbcl :clisp) (rel-name (pathname-name rel-dir))
+	 #+(or :MCL :sbcl :clisp) (rel-type (pathname-type rel-dir))
 	 (directory nil))
+
     ;; TI Common Lisp pathnames can return garbage for file names because
     ;; of bizarreness in the merging of defaults.  The following code makes
     ;; sure that the name is a valid name by comparing it with the
     ;; pathname-name.  It also strips TI specific extensions and handles
-    ;; the necessary case conversion.  TI maps upper back into lower case 
+    ;; the necessary case conversion.  TI maps upper back into lower case
     ;; for unix files!
-    #+TI(if (search (pathname-name abs-dir) abs-name :test #'string-equal)
-	    (setf abs-name (string-right-trim "." (string-upcase abs-name)))
-	    (setf abs-name nil))
-    #+TI(if (search (pathname-name rel-dir) rel-file :test #'string-equal)
-	    (setf rel-file (string-right-trim "." (string-upcase rel-file)))
-	    (setf rel-file nil))
+    #+TI (if (search (pathname-name abs-dir) abs-name :test #'string-equal)
+	     (setf abs-name (string-right-trim "." (string-upcase abs-name)))
+	     (setf abs-name nil))
+    #+TI (if (search (pathname-name rel-dir) rel-file :test #'string-equal)
+	     (setf rel-file (string-right-trim "." (string-upcase rel-file)))
+	     (setf rel-file nil))
     ;; Allegro v4.0/4.1 parses "/foo" into :directory '(:absolute :root)
-    ;; and filename "foo". The namestring of a pathname with 
+    ;; and filename "foo". The namestring of a pathname with
     ;; directory '(:absolute :root "foo") ignores everything after the
     ;; :root.
     #+(and allegro-version>= (version>= 4 0))
     (when (eq (car abs-directory) :root) (pop abs-directory))
     #+(and allegro-version>= (version>= 4 0))
     (when (eq (car rel-directory) :root) (pop rel-directory))
+
     (when (and abs-name (not (null-string abs-name))) ; was abs-name
       (cond ((and (null abs-directory) (null abs-keyword))
 	     #-(or :lucid :kcl :akcl TI) (setf abs-keyword :relative)
 	     (setf abs-directory (list abs-name)))
 	    (t
 	     (setf abs-directory (append abs-directory (list abs-name))))))
-    (when (and (null abs-directory) 
-	       (or (null abs-keyword) 
-		   ;; In Lucid, an abs-dir of nil gets a keyword of 
+    (when (and (null abs-directory)
+	       (or (null abs-keyword)
+		   ;; In Lucid, an abs-dir of nil gets a keyword of
 		   ;; :relative since (pathname-directory (pathname ""))
 		   ;; returns (:relative) instead of nil.
 		   #+:lucid (eq abs-keyword :relative))
 	       rel-keyword)
+      ;; The following feature switches seem necessary in CMUCL
+      ;; Marco Antoniotti 19990707
+      #+(or :sbcl :CMU)
+      (if (typep abs-dir 'logical-pathname)
+	  (setf abs-keyword :absolute)
+	  (setf abs-keyword rel-keyword))
+      #-(or :sbcl :CMU)
       (setf abs-keyword rel-keyword))
     (setf directory (append abs-directory rel-directory))
     (when abs-keyword (setf directory (cons abs-keyword directory)))
-    (namestring 
+    (namestring
      (make-pathname :host host
 		    :device device
-		    :directory 
-		    #+(or (not :cmu) (not :cmu17) (not :cmu18)) directory
-		    #+(and :cmu (not :cmu17) (not :cmu18)) (coerce directory 'simple-vector)
-		    :name rel-file))))
+                    :directory
+		    #-(and :cmu (not (or :cmu17 :cmu18)))
+                    directory
+		    #+(and :cmu (not (or :cmu17 :cmu18)))
+                    (coerce directory 'simple-vector)
+		    :name
+		    #-(or :sbcl :MCL :clisp) rel-file
+		    #+(or :sbcl :MCL :clisp) rel-name
+
+		    #+(or :sbcl :MCL :clisp) :type
+		    #+(or :sbcl :MCL :clisp) rel-type
+		    ))))
 
 (defun directory-to-list (directory)
   ;; The directory should be a list, but nonstandard implementations have
-  ;; been known to use a vector or even a string. 
-  (cond ((listp directory) 
+  ;; been known to use a vector or even a string.
+  (cond ((listp directory)
 	 directory)
 	((stringp directory)
 	 (cond ((find #\; directory)
-		;; It's probably a logical pathname, so split at the 
+		;; It's probably a logical pathname, so split at the
 		;; semicolons:
 		(split-string directory :item #\;))
                #+MCL
@@ -1627,7 +1881,7 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
 	 (coerce directory 'list))))
 
 
-(defparameter *append-dirs-tests* 
+(defparameter *append-dirs-tests*
   '("~/foo/" "baz/bar.lisp"
      "~/foo" "baz/bar.lisp"
      "/foo/bar/" "baz/barf.lisp"
@@ -1653,8 +1907,8 @@ s/^[^M]*IRIX Execution Environment 1, *[a-zA-Z]* *\\([^ ]*\\)/\\1/p\\
     (format t "~&ABS: ~S ~18TREL: ~S ~41TResult: ~S"
 	    abs-dir rel-dir (new-append-directories abs-dir rel-dir))))
 
-#|
-<cl> (test-new-append-directories) 
+#||
+<cl> (test-new-append-directories)
 
 ABS: "~/foo/"     REL: "baz/bar.lisp"    Result: "/usr0/mkant/foo/baz/bar.lisp"
 ABS: "~/foo"      REL: "baz/bar.lisp"    Result: "/usr0/mkant/foo/baz/bar.lisp"
@@ -1673,7 +1927,7 @@ ABS: NIL          REL: "baz/barf.lisp"   Result: "baz/barf.lisp"
 ABS: NIL          REL: "/baz/barf.lisp"  Result: "/baz/barf.lisp"
 ABS: NIL          REL: NIL               Result: ""
 
-|#
+||#
 
 
 (defun append-directories (absolute-directory relative-directory)
@@ -1684,33 +1938,88 @@ ABS: NIL          REL: NIL               Result: ""
    is a directory, with no filename stuck on the end. Relative-directory,
    however, may have a filename stuck on the end."
   (when (or absolute-directory relative-directory)
-    (cond 
-     ;; We need a reliable way to determine if a pathname is logical.
-     ;; Allegro 4.1 does not recognize the syntax of a logical pathname
-     ;;  as being logical unless its logical host is already defined.
-     #+(or (and allegro-version>= (version>= 4 1))
-	   :logical-pathnames-mk)
-     ((and absolute-directory (logical-pathname-p absolute-directory))
-      ;; For use with logical pathnames package.
-      (append-logical-directories-mk absolute-directory relative-directory))
-     ((namestring-probably-logical absolute-directory)
-      ;; A simplistic stab at handling logical pathnames
-      (append-logical-pnames absolute-directory relative-directory))
-     (t
-      ;; In VMS, merge-pathnames actually does what we want!!!
-      #+:VMS(namestring (merge-pathnames (or absolute-directory "")
-					 (or relative-directory "")))
-      #+:macl1.3.2(namestring (make-pathname :directory absolute-directory
-					     :name relative-directory))
-      ;; Cross your fingers and pray.
-      #-(or :VMS :macl1.3.2)
-      (new-append-directories absolute-directory relative-directory)))))
+    (cond
+     ;; KMR commented out because: when appending two logical pathnames,
+     ;; using this code translates the first logical pathname then appends
+     ;; the second logical pathname -- an error.
+     #|
+      ;; We need a reliable way to determine if a pathname is logical.
+      ;; Allegro 4.1 does not recognize the syntax of a logical pathname
+      ;;  as being logical unless its logical host is already defined.
+
+      #+(or (and allegro-version>= (version>= 4 1))
+	    :logical-pathnames-mk)
+      ((and absolute-directory
+	    (logical-pathname-p absolute-directory)
+	    relative-directory)
+       ;; For use with logical pathnames package.
+       (append-logical-directories-mk absolute-directory relative-directory))
+     |#
+      ((namestring-probably-logical absolute-directory)
+       ;; A simplistic stab at handling logical pathnames
+       (append-logical-pnames absolute-directory relative-directory))
+      (t
+       ;; In VMS, merge-pathnames actually does what we want!!!
+       #+:VMS
+       (namestring (merge-pathnames (or absolute-directory "")
+				    (or relative-directory "")))
+       #+:macl1.3.2
+       (namestring (make-pathname :directory absolute-directory
+				  :name relative-directory))
+       ;; Cross your fingers and pray.
+       #-(or :VMS :macl1.3.2)
+       (new-append-directories absolute-directory relative-directory)))))
 
 #+:logical-pathnames-mk
 (defun append-logical-directories-mk (absolute-dir relative-dir)
   (lp:append-logical-directories absolute-dir relative-dir))
 
-;;; this works in allegro-v4.1 and above.
+
+;;; append-logical-pathnames-mk --
+;;; The following is probably still bogus and it does not solve the
+;;; problem of appending two logical pathnames.
+;;; Anyway, as per suggetsion by KMR, the function is not called
+;;; anymore.
+;;; Hopefully this will not cause problems for ACL.
+
+#+(and (and allegro-version>= (version>= 4 1))
+       (not :logical-pathnames-mk))
+(defun append-logical-directories-mk (absolute-dir relative-dir)
+  ;; We know absolute-dir and relative-dir are non nil.  Moreover
+  ;; absolute-dir is a logical pathname.
+  (setq absolute-dir (logical-pathname absolute-dir))
+  (etypecase relative-dir
+    (string (setq relative-dir (parse-namestring relative-dir)))
+    (pathname #| do nothing |#))
+  
+  (translate-logical-pathname
+   (merge-pathnames relative-dir absolute-dir)))
+
+#| Old version 2002-03-02
+#+(and (and allegro-version>= (version>= 4 1))
+       (not :logical-pathnames-mk))
+(defun append-logical-directories-mk (absolute-dir relative-dir)
+  ;; We know absolute-dir and relative-dir are non nil.  Moreover
+  ;; absolute-dir is a logical pathname.
+  (setq absolute-dir (logical-pathname absolute-dir))
+  (etypecase relative-dir
+    (string (setq relative-dir (parse-namestring relative-dir)))
+    (pathname #| do nothing |#))
+
+  (translate-logical-pathname
+   (make-pathname
+    :host (or (pathname-host absolute-dir)
+	      (pathname-host relative-dir))
+    :directory (append (pathname-directory absolute-dir)
+		       (cdr (pathname-directory relative-dir)))
+    :name (or (pathname-name absolute-dir)
+	      (pathname-name relative-dir))
+    :type (or (pathname-type absolute-dir)
+	      (pathname-type relative-dir))
+    :version (or (pathname-version absolute-dir)
+		 (pathname-version relative-dir)))))
+
+;; Old version
 #+(and (and allegro-version>= (version>= 4 1))
        (not :logical-pathnames-mk))
 (defun append-logical-directories-mk (absolute-dir relative-dir)
@@ -1729,6 +2038,7 @@ ABS: NIL          REL: NIL               Result: ""
 		(pathname-type relative-dir))
       :version (or (pathname-version absolute-dir)
 		   (pathname-version relative-dir))))))
+|#
 
 ;;; determines if string or pathname object is logical
 #+:logical-pathnames-mk
@@ -1741,14 +2051,45 @@ ABS: NIL          REL: NIL               Result: ""
 (defun logical-pathname-p (thing)
   (typep (parse-namestring thing) 'logical-pathname))
 
+(defun pathname-logical-p (thing)
+  (typecase thing
+    (logical-pathname t)
+    #+clisp ; CLisp has non conformant Logical Pathnames.
+    (pathname (pathname-logical-p (namestring thing)))
+    (string (and (= 1 (count #\: thing)) ; Shortcut.
+		 (ignore-errors (translate-logical-pathname thing))
+		 t))
+    (t nil)))
+
+;;; This affects only one thing.
+;;; 19990707 Marco Antoniotti
+;;; old version
+
 (defun namestring-probably-logical (namestring)
   (and (stringp namestring)
        ;; unix pathnames don't have embedded semicolons
        (find #\; namestring)))
+#||
+;;; New version
+(defun namestring-probably-logical (namestring)
+  (and (stringp namestring)
+       (typep (parse-namestring namestring) 'logical-pathname)))
+
+
+;;; New new version
+;;; 20000321 Marco Antoniotti
+(defun namestring-probably-logical (namestring)
+  (pathname-logical-p namestring))
+||#
 
 (defun append-logical-pnames (absolute relative)
-  (let ((abs (or absolute ""))
-	(rel (or relative "")))
+  (declare (type (or null string pathname) absolute relative))
+  (let ((abs (if absolute
+		 #-clisp (namestring absolute)
+		 #+clisp absolute ;; Stig (July 2001): hack to avoid CLISP from translating the whole string
+		 ""))
+	(rel (if relative (namestring relative) ""))
+	)
     ;; Make sure the absolute directory ends with a semicolon unless
     ;; the pieces are null strings
     (unless (or (null-string abs) (null-string rel)
@@ -1758,31 +2099,31 @@ ABS: NIL          REL: NIL               Result: ""
     ;; Return the concatenate pathnames
     (concatenate 'string abs rel)))
 
-#|
+#||
 ;;; This was a try at appending a subdirectory onto a directory.
 ;;; It failed. We're keeping this around to prevent future mistakes
 ;;; of a similar sort.
 (defun merge-directories (absolute-directory relative-directory)
   ;; replace concatenate with something more intelligent
   ;; i.e., concatenation won't work with some directories.
-  ;; it should also behave well if the parent directory 
+  ;; it should also behave well if the parent directory
   ;; has a filename at the end, or if the relative-directory ain't relative
-  (when absolute-directory 
+  (when absolute-directory
     (setq absolute-directory (pathname-directory absolute-directory)))
-  (concatenate 'string 
+  (concatenate 'string
 	       (or absolute-directory "")
 	       (or relative-directory "")))
-|#
+||#
 
-#|
+#||
 <cl> (defun d (d n) (namestring (make-pathname :directory d :name n)))
 
 D
 <cl> (d "~/foo/" "baz/bar.lisp")
-"/usr0/mkant/foo/baz/bar.lisp" 
+"/usr0/mkant/foo/baz/bar.lisp"
 
 <cl> (d "~/foo" "baz/bar.lisp")
-"/usr0/mkant/foo/baz/bar.lisp" 
+"/usr0/mkant/foo/baz/bar.lisp"
 
 <cl> (d "/foo/bar/" "baz/barf.lisp")
 "/foo/bar/baz/barf.lisp"
@@ -1805,12 +2146,13 @@ D
 <cl> (d nil nil)
 ""
 
-|#
+||#
 
 
 
 
 (defun new-file-type (pathname type)
+  ;; why not (make-pathname :type type :defaults pathname)?
   (make-pathname
    :host (pathname-host pathname)
    :device (pathname-device pathname)
@@ -1827,31 +2169,44 @@ D
 (defvar *source-pathname-default* nil
   "Default value of :source-pathname keyword in DEFSYSTEM. Set this to
    \"\" to avoid having to type :source-pathname \"\" all the time.")
+
 (defvar *binary-pathname-default* nil
   "Default value of :binary-pathname keyword in DEFSYSTEM.")
 
 ;;; Removed TIME slot, which has been made unnecessary by the new definition
 ;;; of topological-sort.
+
 (defstruct (topological-sort-node (:conc-name topsort-))
-  color
-;  time
-)
+  (color :white :type (member :gray :black :white))
+  ;; time
+  )
 
 (defstruct (component (:include topological-sort-node)
                       (:print-function print-component))
-  type                ; :defsystem, :system, :subsystem, :module, :file, or :private-file
-  name                ; a symbol or string
-  indent              ; number of characters of indent in verbose output to the user.
-  host                ; the pathname host (i.e., "/../a")
-  device              ; the pathname device
-  source-root-dir
-  ;; relative or absolute (starts with "/"), directory or file (ends with "/")
+  (type :file     ; to pacify the CMUCL compiler (:type is alway supplied)
+	:type (member :defsystem
+		      :system
+		      :subsystem
+		      :module
+		      :file
+		      :private-file))
+  (name nil :type (or symbol string))
+  (indent 0 :type (mod 1024))		; Number of characters of indent in
+					; verbose output to the user.
+  host					; The pathname host (i.e., "/../a").
+  device				; The pathname device.
+  source-root-dir			; Relative or absolute (starts
+					; with "/"), directory or file
+					; (ends with "/").
   (source-pathname *source-pathname-default*)
-  source-extension    ; a string, e.g., "lisp". If nil, uses default for machine-type
+  source-extension			; A string, e.g., "lisp"
+					; if NIL, inherit
   (binary-pathname *binary-pathname-default*)
   binary-root-dir
-  binary-extension    ; a string, e.g., "fasl". If nil, uses default for machine-type
-  package             ; package for use-package
+  binary-extension			; A string, e.g., "fasl". If
+					; NIL, uses default for
+					; machine-type.
+  package				; Package for use-package.
 
   ;; The following three slots are used to provide for alternate compilation
   ;; and loading functions for the files contained within a component. If
@@ -1859,52 +2214,71 @@ D
   ;; used. Otherwise the functions are derived from the language. If no
   ;; language is specified, it defaults to Common Lisp (:lisp). Other current
   ;; possible languages include :scheme (PseudoScheme) and :c, but the user
-  ;; can define additional language mappings. Compilation functions should 
+  ;; can define additional language mappings. Compilation functions should
   ;; accept a pathname argument and a :output-file keyword; loading functions
   ;; just a pathname argument. The default functions are #'compile-file and
-  ;; #'load. Unlike fdmm's SET-LANGUAGE macro, this allows a defsystem to 
+  ;; #'load. Unlike fdmm's SET-LANGUAGE macro, this allows a defsystem to
   ;; mix languages.
-  (language nil #+(or (not :allegro) :compiler) :type 
-                #+(or (not :allegro) :compiler) (or NULL SYMBOL))
-  (compiler nil #+(or (not :allegro) :compiler) :type 
-                #+(or (not :allegro) :compiler) (or NULL function))
-  (loader   nil #+(or (not :allegro) :compiler) :type 
-                #+(or (not :allegro) :compiler)(or NULL function))      
+  (language nil :type (or null symbol))
+  (compiler nil :type (or null symbol function))
+  (loader   nil :type (or null symbol function))
+  (compiler-options nil :type list)	; A list of compiler options to
+                                        ; use for compiling this
+                                        ; component.  These must be
+                                        ; keyword options supported by
+                                        ; the compiler.
 
-  components          ; a list of components comprising this component's definition
-  depends-on          ; a list of the components this one depends on. may refer only
-                      ; to the components at the same level as this one.
-  proclamations       ; compiler options, such as '(optimize (safety 3))
-  initially-do        ; form to evaluate before the operation
-  finally-do          ; form to evaluate after the operation
-  compile-form        ; for foreign libraries
-  load-form           ; for foreign libraries
-;  load-time           ; The file-write-date of the binary/source file loaded.
+  (components () :type list)		; A list of components
+					; comprising this component's
+					; definition.
+  (depends-on () :type list)		; A list of the components
+					; this one depends on. may
+					; refer only to the components
+					; at the same level as this
+					; one.
+  proclamations				; Compiler options, such as
+					; '(optimize (safety 3)).
+  initially-do				; Form to evaluate before the
+					; operation.
+  finally-do				; Form to evaluate after the operation.
+  compile-form				; For foreign libraries.
+  load-form				; For foreign libraries.
+
+  ;; load-time				; The file-write-date of the
+					; binary/source file loaded.
+
   ;; If load-only is T, will not compile the file on operation :compile.
   ;; In other words, for files which are :load-only T, loading the file
   ;; satisfies any demand to recompile.
-  load-only           ; If T, will not compile this file on operation :compile.
+  load-only				; If T, will not compile this
+					; file on operation :compile.
   ;; If compile-only is T, will not load the file on operation :compile.
   ;; Either compiles or loads the file, but not both. In other words,
   ;; compiling the file satisfies the demand to load it. This is useful
-  ;; for PCL defmethod and defclass definitions, which wrap a 
+  ;; for PCL defmethod and defclass definitions, which wrap a
   ;; (eval-when (compile load eval) ...) around the body of the definition.
   ;; This saves time in some lisps.
-  compile-only        ; If T, will not load this file on operation :compile.
-  ;; optional documentation slot
-  (documentation nil #+(or (not :allegro) :compiler) :type 
-                     #+(or (not :allegro) :compiler) (or NULL string))
-)
+  compile-only				; If T, will not load this
+					; file on operation :compile.
+  #|| ISI Extension ||#
+  load-always				; If T, will force loading
+					; even if file has not
+					; changed.
+  ;; PVE: add banner
+  (banner nil :type (or null string))
+
+  (documentation nil :type (or null string)) ; Optional documentation slot
+  )
 
 (defvar *file-load-time-table* (make-hash-table :test #'equal)
-  "Hash table of file-write-dates for the system definitions and 
+  "Hash table of file-write-dates for the system definitions and
    files in the system definitions.")
 (defun component-load-time (component)
   (when component
     (etypecase component
       (string    (gethash component *file-load-time-table*))
       (pathname (gethash (namestring component) *file-load-time-table*))
-      (component 
+      (component
        (ecase (component-type component)
 	 (:defsystem
 	  (let* ((name (component-name component))
@@ -1918,6 +2292,8 @@ D
 	  (let ((path (component-full-pathname component :source)))
 	    (when path
 	      (gethash path *file-load-time-table*)))))))))
+
+#-(or :cmu17 :cmu18)
 (defsetf component-load-time (component) (value)
   `(when ,component
     (etypecase ,component
@@ -1925,7 +2301,7 @@ D
       (pathname (setf (gethash (namestring (the pathname ,component))
 			       *file-load-time-table*)
 		      ,value))
-      (component 
+      (component
        (ecase (component-type ,component)
 	 (:defsystem
 	  (let* ((name (component-name ,component))
@@ -1942,8 +2318,68 @@ D
 		    ,value)))))))
     ,value))
 
+#+(or :cmu17 :cmu18)
+(defun (setf component-load-time) (value component)
+  (declare
+   (type (or null string pathname component) component)
+   (type (or unsigned-byte null) value))
+  (when component
+    (etypecase component
+      (string   (setf (gethash component *file-load-time-table*) value))
+      (pathname (setf (gethash (namestring (the pathname component))
+			       *file-load-time-table*)
+		      value))
+      (component
+       (ecase (component-type component)
+	 (:defsystem
+	     (let* ((name (component-name component))
+		    (path (when name (compute-system-path name nil))))
+	       (declare (type (or string pathname null) path))
+	       (when path
+		 (setf (gethash (namestring path) *file-load-time-table*)
+		       value))))
+	 ((:file :private-file)
+	  ;; Use only :source pathname to identify file.
+	  (let ((path (component-full-pathname component :source)))
+	    (when path
+	      (setf (gethash path *file-load-time-table*)
+		    value)))))))
+    value))
+
+
+;;; compute-system-path --
+
+
 (defun compute-system-path (module-name definition-pname)
-  (let* ((filename (format nil "~A.~A" 
+  (let* ((file-pathname
+	  (make-pathname :name (etypecase module-name
+				 (symbol (string-downcase
+					  (string module-name)))
+				 (string module-name))
+			 :type *system-extension*)))
+    (or (when definition-pname		; given pathname for system def
+	  (probe-file definition-pname))
+	;; Then the central registry. Note that we also check the current
+	;; directory in the registry, but the above check is hard-coded.
+	(cond (*central-registry*
+	       (if (listp *central-registry*)
+		   (dolist (registry *central-registry*)
+		     (let ((file (probe-file
+				  (append-directories (if (consp registry)
+							  (eval registry)
+							  registry)
+						      file-pathname))))
+		       (when file (return file))))
+		   (probe-file (append-directories *central-registry*
+						   file-pathname))))
+	      (t
+	       ;; No central registry. Assume current working directory.
+	       ;; Maybe this should be an error?
+	       (probe-file file-pathname))))))
+#|
+
+(defun compute-system-path (module-name definition-pname)
+  (let* ((filename (format nil "~A.~A"
 			   (if (symbolp module-name)
 			       (string-downcase (string module-name))
 			     module-name)
@@ -1952,10 +2388,10 @@ D
 	  (probe-file definition-pname))
 	;; Then the central registry. Note that we also check the current
 	;; directory in the registry, but the above check is hard-coded.
-	(cond (*central-registry*	
+	(cond (*central-registry*
 	       (if (listp *central-registry*)
 		   (dolist (registry *central-registry*)
-		     (let ((file (probe-file 
+		     (let ((file (probe-file
 				  (append-directories (if (consp registry)
 							  (eval registry)
 							registry)
@@ -1967,32 +2403,35 @@ D
 	       ;; No central registry. Assume current working directory.
 	       ;; Maybe this should be an error?
 	       (probe-file filename))))))
+|#
+
 
 (defvar *reload-systems-from-disk* t
   "If T, always tries to reload newer system definitions from disk.
    Otherwise first tries to find the system definition in the current
    environment.")
 
-(defun FIND-SYSTEM (system-name &optional (mode :ask) definition-pname)
+(defun find-system (system-name &optional (mode :ask) definition-pname)
   "Returns the system named SYSTEM-NAME. If not already loaded, loads it.
    This allows operate-on-system to work on non-loaded as well as
    loaded system definitions. DEFINITION-PNAME is the pathname for
    the system definition, if provided."
   (ecase mode
-    (:ASK
+    (:ask
      (or (get-system system-name)
-	 (when (y-or-n-p-wait 
+	 (when (y-or-n-p-wait
 		#\y 20
 		"System ~A not loaded. Shall I try loading it? "
 		system-name)
 	   (find-system system-name :load definition-pname))))
-    (:ERROR
+    (:error
      (or (get-system system-name)
 	 (error "Can't find system named ~s." system-name)))
-    (:LOAD-OR-NIL
+    (:load-or-nil
      (let ((system (get-system system-name)))
        (or (unless *reload-systems-from-disk* system)
-	   ;; If SYSTEM-NAME is a symbol, it will lowercase the symbol's string
+	   ;; If SYSTEM-NAME is a symbol, it will lowercase the
+	   ;; symbol's string.
 	   ;; If SYSTEM-NAME is a string, it doesn't change the case of the
 	   ;; string. So if case matters in the filename, use strings, not
 	   ;; symbols, wherever the system is named.
@@ -2002,8 +2441,8 @@ D
 			    (null (component-load-time path))
 			    (< (component-load-time path)
 			       (file-write-date path))))
-	       (tell-user-generic 
-		(format nil "Loading system ~A from file ~A" 
+	       (tell-user-generic
+		(format nil "Loading system ~A from file ~A"
 			system-name
 			path))
 	       (load path)
@@ -2013,7 +2452,7 @@ D
 		       (file-write-date path))))
 	     system)
 	   system)))
-    (:LOAD
+    (:load
      (or (unless *reload-systems-from-disk* (get-system system-name))
 	 (or (find-system system-name :load-or-nil definition-pname)
 	     (error "Can't find system named ~s." system-name))))))
@@ -2049,9 +2488,9 @@ D
 	    (component-extension system :binary)
 	    (component-depends-on system)
 	    (component-components system))
-    #|(when recursive
+    #||(when recursive
       (dolist (component (component-components system))
-	(describe-system component stream recursive)))|#      
+	(describe-system component stream recursive)))||#
     system))
 
 (defun canonicalize-component-name (component)
@@ -2062,7 +2501,7 @@ D
     ;; Otherwise, make it a downcase string -- important since file
     ;; names are often constructed from component names, and unix
     ;; prefers lowercase as a default.
-    (setf (component-name component) 
+    (setf (component-name component)
 	  (string-downcase (string (component-name component))))))
 
 (defun component-pathname (component type)
@@ -2132,64 +2571,81 @@ D
   ;; before the :binary one.
   (if version
       (multiple-value-setq (version-dir version-replace)
-	  (translate-version version))
-    (setq version-dir *version-dir* version-replace *version-replace*))
+	(translate-version version))
+      (setq version-dir *version-dir* version-replace *version-replace*))
   (let ((pathname
-	 (append-directories 
+	 (append-directories
 	  (if version-replace
 	      version-dir
-	    (append-directories (component-root-dir component type)
-				version-dir))
+	      (append-directories (component-root-dir component type)
+				  version-dir))
 	  (component-pathname component type))))
+
     ;; When a logical pathname is used, it must first be translated to
     ;; a physical pathname. This isn't strictly correct. What should happen
     ;; is we fill in the appropriate slots of the logical pathname, and
     ;; then return the logical pathname for use by compile-file & friends.
     ;; But calling translate-logical-pathname to return the actual pathname
     ;; should do for now.
-    #+:logical-pathnames-mk
-    (when (eq (lp:pathname-host-type pathname) :logical)
-      ;;(setf (lp::%logical-pathname-type pathname)
-      ;;      (component-extension component type))
-      (setf pathname (lp:translate-logical-pathname pathname)))
-    #+(and (and allegro-version>= (version>= 4 1))
-	   (not :logical-pathnames-mk))
-    (when (and (pathname-host pathname) (logical-pathname-p pathname))
-      (setf pathname (translate-logical-pathname pathname)))
 
-    (namestring
-     (make-pathname :name (pathname-name pathname)
-		    :type (let ((suffix (component-extension component type)))
-                            (if (equal suffix "") nil suffix))
-		    :host (when (component-host component)
-			    ;; MCL2.0b1 and ACLPC cause an error on
-			    ;; (pathname-host nil)
-			    (pathname-host (component-host component)))
-		    :device #+(and :CMU (not :cmu17)) nil ;;:absolute
-		    #-(and :CMU (not :cmu17))
-		    (let ((dev (component-device component)))
-		      (when dev
-			(pathname-device dev)))
-		    ;; :version :newest
-		    ;; Use :directory instead of :defaults
-		    :directory (pathname-directory pathname)))))
+    ;; (format t "pathname = ~A~%" pathname)
+    ;; (format t "type = ~S~%" (component-extension component type))
+
+    ;; 20000303 Marco Antoniotti
+    ;; Changed the following according to suggestion by Ray Toy.  I
+    ;; just collapsed the tests for "logical-pathname-ness" into a
+    ;; single test (heavy, but probably very portable) and added the
+    ;; :name argument to the MAKE-PATHNAME in the MERGE-PATHNAMES
+    ;; beacuse of possible null names (e.g. :defsystem components)
+    ;; causing problems with the subsequenct call to NAMESTRING.
+    (cond ((pathname-logical-p pathname) ; See definition of test above.
+	   (setf pathname
+		 (merge-pathnames pathname
+				  (make-pathname
+				   :name (component-name component)
+				   :type (component-extension component
+							      type))))
+	   ;;(format t "new path = ~A~%" pathname)
+	   (namestring (translate-logical-pathname pathname)))
+	  (t
+	   (namestring
+	    (make-pathname :host (when (component-host component)
+				   ;; MCL2.0b1 and ACLPC cause an error on
+				   ;; (pathname-host nil)
+				   (pathname-host (component-host component)))
+			   :directory (pathname-directory pathname)
+			   ;; Use :directory instead of :defaults
+			   :name (pathname-name pathname)
+			   :type (component-extension component type)
+			   :device
+			   #+(and :CMU (not (or :cmu17 :cmu18)))
+			   :absolute
+			   #+sbcl
+			   :unspecific
+			   #-(or :sbcl (and :CMU (not (or :cmu17 :cmu18))))
+			   (let ((dev (component-device component)))
+			     (if dev
+                                 (pathname-device dev)
+                                 (pathname-device pathname)))
+			   ;; :version :newest
+			   ))))))
 
 ;;; What about CMU17 :device :unspecific in the above?
 
 (defun translate-version (version)
-  ;; Value returns the version directory and whether it replaces 
+  ;; Value returns the version directory and whether it replaces
   ;; the entire root (t) or is a subdirectory.
   ;; Version may be nil to signify no subdirectory,
   ;; a symbol, such as alpha, beta, omega, :alpha, mark, which
   ;; specifies a subdirectory of the root, or
   ;; a string, which replaces the root.
-  (cond ((null version) 
+  (cond ((null version)
 	 (values "" nil))
 	((symbolp version)
 	 (values (let ((sversion (string version)))
 		   (if (find-if #'lower-case-p sversion)
 		       sversion
-		       (string-downcase sversion))) 
+		       (string-downcase sversion)))
 		 nil))
 	((stringp version)
 	 (values version t))
@@ -2198,7 +2654,7 @@ D
 (defun component-extension (component type &key local)
   (ecase type
     (:source (or (component-source-extension component)
-		 (unless local 
+		 (unless local
 		   (default-source-extension component)))) ; system default
     (:binary (or (component-binary-extension component)
 		 (unless local
@@ -2214,22 +2670,41 @@ D
 ;;; System Definition **************
 ;;; ********************************
 (defun create-component (type name definition-body &optional parent (indent 0))
-  (let ((component (apply #'make-component :type type :name name
-			  :indent indent definition-body))) 
+  (let ((component (apply #'make-component
+			  :type type
+			  :name name
+			  :indent indent definition-body)))
     ;; Set up :load-only attribute
     (unless (find :load-only definition-body)
-      ;; If the :load-only attribute wasn't specified, 
+      ;; If the :load-only attribute wasn't specified,
       ;; inherit it from the parent. If no parent, default it to nil.
-      (setf (component-load-only component) 
+      (setf (component-load-only component)
 	    (when parent
 	      (component-load-only parent))))
     ;; Set up :compile-only attribute
     (unless (find :compile-only definition-body)
-      ;; If the :compile-only attribute wasn't specified, 
+      ;; If the :compile-only attribute wasn't specified,
       ;; inherit it from the parent. If no parent, default it to nil.
-      (setf (component-compile-only component) 
+      (setf (component-compile-only component)
 	    (when parent
 	      (component-compile-only parent))))
+
+    ;; Set up :compiler-options attribute
+    (unless (find :compiler-options definition-body)
+      ;; If the :compiler-option attribute wasn't specified,
+      ;; inherit it from the parent.  If no parent, default it to NIL.
+      (setf (component-compiler-options component)
+	    (when parent
+	      (component-compiler-options parent))))
+
+    #|| ISI Extension ||#
+    ;; Set up :load-always attribute
+    (unless (find :load-always definition-body)
+      ;; If the :load-always attribute wasn't specified,
+      ;; inherit it from the parent. If no parent, default it to nil.
+      (setf (component-load-always component)
+	    (when parent
+	      (component-load-always parent))))
 
     ;; Initializations/after makes
     (canonicalize-component-name component)
@@ -2263,7 +2738,7 @@ D
     ;; Return the component.
     component))
 
-(defmacro defsystem (name &rest definition-body)    
+(defmacro defsystem (name &rest definition-body)
   `(create-component :defsystem ',name ',definition-body nil 0))
 
 (defun create-component-pathnames (component parent)
@@ -2294,44 +2769,22 @@ D
 	(eval (component-pathname component :binary)))
 
   ;; Pass along the host and devices
-
-  #|
   (setf (component-host component)
 	(or (component-host component)
 	    (when parent (component-host parent))))
   (setf (component-device component)
 	(or (component-device component)
 	    (when parent (component-device parent))))
-  |#
-  ;; AAC - the device really has to be evaluated to be of much use
-   (setf (component-device component)
-         (or 
-             (if (pathnamep (component-device component))
-                (component-device component)
-                (eval (component-device component)))
-             (if parent
-                (if (pathnamep (component-device parent))
-                   (component-device parent)
-                   (eval (component-device parent))))))
-   (setf (component-host component)
-         (or 
-             (if (pathnamep (component-host component))
-                (component-host component)
-                (eval (component-host component)))
-             (if parent
-                (if (pathnamep (component-host parent))
-                   (component-host parent)
-                  (eval (component-host parent))))))  
-  
+
   ;; Set up extension defaults
   (setf (component-extension component :source)
 	(or (component-extension component :source :local t) ; local default
 	    (when parent		; parent's default
-	      (component-extension parent :source)))) 
+	      (component-extension parent :source))))
   (setf (component-extension component :binary)
 	(or (component-extension component :binary  :local t) ; local default
 	    (when parent		; parent's default
-	      (component-extension parent :binary)))) 
+	      (component-extension parent :binary))))
 
   ;; Set up pathname defaults -- expand with parent
   ;; We must set up the source pathname before the binary pathname
@@ -2357,7 +2810,7 @@ D
 		 ;; When the binary root is nil, use source.
 		 (component-root-dir component :source))) )
      ;; Set the relative pathname to be nil
-     (setf (component-pathname component pathname-type) 
+     (setf (component-pathname component pathname-type)
 	   nil));; should this be "" instead?
     ;; If the name of the component-pathname is nil, it
     ;; defaults to the name of the component. Use "" to
@@ -2367,7 +2820,7 @@ D
      (setf (component-root-dir component pathname-type)
 	   ""
 	   #+ignore(or (when (component-pathname component pathname-type)
-			 (pathname-directory 
+			 (pathname-directory
 			  (component-pathname component pathname-type)))
 		       (when (eq pathname-type :binary)
 			 ;; When the binary root is nil, use source.
@@ -2422,10 +2875,10 @@ D
 		    (when (eq pathname-type :binary)
 		      ;; When the binary-pathname is nil use source.
 		      (component-pathname component :source)))))))
-    ))	   
+    ))
 
-#| ;; old version
-(defun expand-component-components (component &optional (indent 0)) 
+#|| ;; old version
+(defun expand-component-components (component &optional (indent 0))
   (let ((definitions (component-components component)))
     (setf (component-components component)
 	  (remove-if #'null
@@ -2434,9 +2887,9 @@ D
 							      component
 							      indent))
 			     definitions)))))
-|#
+||#
 ;; new version
-(defun expand-component-components (component &optional (indent 0)) 
+(defun expand-component-components (component &optional (indent 0))
   (let ((definitions (component-components component)))
     (if (eq (car definitions) :serial)
 	(setf (component-components component)
@@ -2460,7 +2913,7 @@ D
 	(when new
 	  ;; Make this component depend on the previous one. Since
 	  ;; we don't know the form of the definition, we have to
-	  ;; expand it first. 
+	  ;; expand it first.
 	  (when previous (pushnew previous (component-depends-on new)))
 	  ;; The dependencies will be linked later, so we use the name
 	  ;; instead of the actual component.
@@ -2488,7 +2941,7 @@ D
 (defun expand-component-definition (definition parent &optional (indent 0))
   ;; Should do some checking for malformed definitions here.
   (cond ((null definition) nil)
-        ((stringp definition) 
+        ((stringp definition)
          ;; Strings are assumed to be of type :file
 	 (if (and *enable-straz-absolute-string-hack*
 		  (absolute-file-namestring-p definition))
@@ -2497,12 +2950,16 @@ D
 	   ;; Normal behavior
 	   (create-component :file definition nil parent indent)))
         ((and (listp definition)
-              (not (member (car definition) 
+              (not (member (car definition)
 			   '(:defsystem :system :subsystem
 			     :module :file :private-file))))
          ;; Lists whose first element is not a component type
          ;; are assumed to be of type :file
-         (create-component :file (car definition) (cdr definition) parent indent))
+         (create-component :file
+			   (car definition)
+			   (cdr definition)
+			   parent
+			   indent))
         ((listp definition)
          ;; Otherwise, it is (we hope) a normal form definition
          (create-component (car definition)   ; type
@@ -2519,13 +2976,13 @@ D
       (setf (component-depends-on component)
             (mapcar #'(lambda (dependency)
 			(let ((parent (find (string dependency) components
-					    :key #'component-name 
+					    :key #'component-name
 					    :test #'string-equal)))
 			  (cond (parent parent)
 				;; make it more intelligent about the following
 				(t (warn "Dependency ~S of component ~S not found."
 					 dependency component)))))
-			      
+
                     (component-depends-on component))))))
 
 ;;; ********************************
@@ -2534,29 +2991,29 @@ D
 
 ;;; New version of topological sort suggested by rs2. Even though
 ;;; this version avoids the call to sort, in practice it isn't faster. It
-;;; does, however, eliminate the need to have a TIME slot in the 
+;;; does, however, eliminate the need to have a TIME slot in the
 ;;; topological-sort-node defstruct.
 (defun topological-sort (list &aux (sorted-list nil))
   (labels ((dfs-visit (znode)
-	      (setf (topsort-color znode) 'gray)
+	      (setf (topsort-color znode) :gray)
 	      (unless (and *system-dependencies-delayed*
 			   (eq (component-type znode) :system))
 		(dolist (child (component-depends-on znode))
-		  (cond ((eq (topsort-color child) 'white)
+		  (cond ((eq (topsort-color child) :white)
 			 (dfs-visit child))
-			((eq (topsort-color child) 'gray)
+			((eq (topsort-color child) :gray)
 			 (format t "~&Detected cycle containing ~A" child)))))
-	      (setf (topsort-color znode) 'black)
+	      (setf (topsort-color znode) :black)
 	      (push znode sorted-list)))
     (dolist (znode list)
-      (setf (topsort-color znode) 'white))
+      (setf (topsort-color znode) :white))
     (dolist (znode list)
-      (when (eq (topsort-color znode) 'white)
+      (when (eq (topsort-color znode) :white)
         (dfs-visit znode)))
     (nreverse sorted-list)))
 
-#|
-;;; Older version of topological sort. 
+#||
+;;; Older version of topological sort.
 (defun topological-sort (list &aux (time 0))
   ;; The algorithm works by calling depth-first-search to compute the
   ;; blackening times for each vertex, and then sorts the vertices into
@@ -2579,7 +3036,7 @@ D
       (when (eq (topsort-color node) 'white)
         (dfs-visit node)))
     (sort list #'< :key #'topsort-time)))
-|#
+||#
 
 ;;; ********************************
 ;;; Output to User *****************
@@ -2599,7 +3056,7 @@ D
 	  (push (subseq string index i) result))
 	(setf index (1+ i))))))
 
-;; probably should remove the ",1" entirely. But AKCL 1.243 dies on it 
+;; probably should remove the ",1" entirely. But AKCL 1.243 dies on it
 ;; because of an AKCL bug.
 ;; KGK suggests using an 8 instead, but 1 does nicely.
 (defun prompt-string (component)
@@ -2607,12 +3064,15 @@ D
 	  *oos-test*
 	  (component-indent component)))
 
-#|
+#||
 (defun format-justified-string (prompt contents)
-  (format t (concatenate 'string "~%" prompt "-~{~<~%" prompt " ~1,80:; ~A~>~^~}")
+  (format t (concatenate 'string
+			 "~%"
+			 prompt
+			 "-~{~<~%" prompt " ~1,80:; ~A~>~^~}")
 	  (split-string contents))
   (finish-output *standard-output*))
-|#
+||#
 
 (defun format-justified-string (prompt contents &optional (width 80)
 				       (stream *standard-output*))
@@ -2640,15 +3100,15 @@ D
      (format nil "~A ~(~A~) ~@[\"~A\"~] ~:[~;...~]"
 	     ;; To have better messages, wrap the following around the
 	     ;; case statement:
-	     ;;(if (find (component-type component) 
+	     ;;(if (find (component-type component)
 	     ;;    '(:defsystem :system :subsystem :module))
 	     ;;  "Checking"
 	     ;;  (case ...))
 	     ;; This gets around the problem of DEFSYSTEM reporting
 	     ;; that it's loading a module, when it eventually never
 	     ;; loads any of the files of the module.
-	     (case what 
-	       ((compile :compile) 
+	     (case what
+	       ((compile :compile)
 		(if (component-load-only component)
 		    ;; If it is :load-only t, we're loading.
 		    "Loading"
@@ -2740,13 +3200,13 @@ D
 ;;; Lots of lisps, especially those that run on top of UNIX, do not get
 ;;; their input one character at a time, but a whole line at a time because
 ;;; of the buffering done by the UNIX system. This causes y-or-n-p-wait
-;;; to not always work as expected. 
+;;; to not always work as expected.
 ;;;
 ;;; I wish lisp did all its own buffering (turning off UNIX input line
 ;;; buffering by putting the UNIX into CBREAK mode). Of course, this means
-;;; that we lose input editing, but why can't the lisp implement this? 
+;;; that we lose input editing, but why can't the lisp implement this?
 
-(defun y-or-n-p-wait (&optional (default #\y) (timeout 20) 
+(defun y-or-n-p-wait (&optional (default #\y) (timeout 20)
 				format-string &rest args)
   "Y-OR-N-P-WAIT prints the message, if any, and reads characters from
    *QUERY-IO* until the user enters y, Y or space as an affirmative, or either
@@ -2765,19 +3225,19 @@ D
 			 (read-char-wait timeout *query-io* nil nil)
 			 (read-char *query-io*)))
 	  (char (or read-char default)))
-     ;; We need to ignore #\newline because otherwise the bugs in 
+     ;; We need to ignore #\newline because otherwise the bugs in
      ;; clear-input will cause y-or-n-p-wait to print the "Type ..."
      ;; message every time... *sigh*
      ;; Anyway, we might want to use this to ignore whitespace once
      ;; clear-input is fixed.
      (unless (find char '(#\tab #\newline #\return))
-       (when (null read-char) 
+       (when (null read-char)
 	 (format *query-io* "~@[~A~]" default)
 	 (finish-output *query-io*))
        (cond ((null char) (return t))
 	     ((find char '(#\y #\Y #\space) :test #'char=) (return t))
 	     ((find char '(#\n #\N) :test #'char=) (return nil))
-	     (t 
+	     (t
 	      (when *clear-input-before-query* (clear-input *query-io*))
 	      (format *query-io* "~&Type \"y\" for yes or \"n\" for no. ")
 	      (when format-string
@@ -2785,72 +3245,93 @@ D
 		(apply #'format *query-io* format-string args))
 	      (finish-output *query-io*)))))))
 
-#|
+#||
 (y-or-n-p-wait #\y 20 "What? ")
 (progn (format t "~&hi") (finish-output)
        (y-or-n-p-wait #\y 10 "1? ")
        (y-or-n-p-wait #\n 10 "2? "))
-|#
+||#
 ;;; ********************************
 ;;; Operate on System **************
 ;;; ********************************
 ;;; Operate-on-system
-;; Operation is :compile, 'compile, :load or 'load
-;; Force is :all or :new-source or :new-source-and-dependents or a list of
-;; specific modules.
-;;    :all (or T) forces a recompilation of every file in the system
-;;    :new-source-and-dependents compiles only those files whose
-;;          sources have changed or who depend on recompiled files.
-;;    :new-source compiles only those files whose sources have changed
-;;    A list of modules means that only those modules and their dependents are recompiled.
-;; Test is T to print out what it would do without actually doing it. 
-;;      Note: it automatically sets verbose to T if test is T.
-;; Verbose is T to print out what it is doing (compiling, loading of
-;;      modules and files) as it does it.
-;; Dribble should be the pathname of the dribble file if you want to 
-;; dribble the compilation.
-;; Load-source-instead-of-binary is T to load .lisp instead of binary files.
-;; Version may be nil to signify no subdirectory,
-;; a symbol, such as alpha, beta, omega, :alpha, mark, which
-;; specifies a subdirectory of the root, or
-;; a string, which replaces the root.
-;;
-(defun operate-on-system (name operation &key force
+;;; Operation is :compile, 'compile, :load or 'load
+;;; Force is :all or :new-source or :new-source-and-dependents or a list of
+;;; specific modules.
+;;;    :all (or T) forces a recompilation of every file in the system
+;;;    :new-source-and-dependents compiles only those files whose
+;;;          sources have changed or who depend on recompiled files.
+;;;    :new-source compiles only those files whose sources have changed
+;;;    A list of modules means that only those modules and their
+;;;    dependents are recompiled.
+;;; Test is T to print out what it would do without actually doing it.
+;;;      Note: it automatically sets verbose to T if test is T.
+;;; Verbose is T to print out what it is doing (compiling, loading of
+;;;      modules and files) as it does it.
+;;; Dribble should be the pathname of the dribble file if you want to
+;;; dribble the compilation.
+;;; Load-source-instead-of-binary is T to load .lisp instead of binary files.
+;;; Version may be nil to signify no subdirectory,
+;;; a symbol, such as alpha, beta, omega, :alpha, mark, which
+;;; specifies a subdirectory of the root, or
+;;; a string, which replaces the root.
+
+(defun operate-on-system (name operation
+			       &key
+			       force
 			       (version *version*)
 			       (test *oos-test*) (verbose *oos-verbose*)
-                               (load-source-instead-of-binary 
+                               (load-source-instead-of-binary
 				*load-source-instead-of-binary*)
                                (load-source-if-no-binary
-				*load-source-if-no-binary*) 
+				*load-source-if-no-binary*)
 			       (bother-user-if-no-binary
 				*bother-user-if-no-binary*)
 			       (compile-during-load *compile-during-load*)
 			       dribble
-			       (minimal-load *minimal-load*))
+			       (minimal-load *minimal-load*)
+			       (override-compilation-unit nil)
+			       )
+  (declare #-(or :cltl2 :ansi-cl) (ignore override-compilation-unit))
   (unwind-protect
       ;; Protect the undribble.
-      (#+(not (and :allegro (not :compiler)))
-       with-compilation-unit 
-       #+(not (and :allegro (not :compiler)))
-       nil
-       #-(not (and :allegro (not :compiler)))
-       progn
+      (#+(and (not (and :allegro (not :compiler)))
+              (or :cltl2 :ansi-cl))
+         with-compilation-unit
+	 #+(and (not (and :allegro (not :compiler)))
+                (or :cltl2 :ansi-cl)) 
+         (:override override-compilation-unit)
+	 #-(and (not (and :allegro (not :compiler)))
+                (or :cltl2 :ansi-cl))
+         progn
 	(when *reset-full-pathname-table* (clear-full-pathname-tables))
 	(when dribble (dribble dribble))
 	(when test (setq verbose t))
-	(when (null force);; defaults
+	(when (null force)		; defaults
 	  (case operation
 	    ((load :load) (setq force :all))
 	    ((compile :compile) (setq force :new-source-and-dependents))
 	    (t (setq force :all))))
 	;; Some CL implementations have a variable called *compile-verbose*
 	;; or *compile-file-verbose*.
-	(multiple-value-bind (*version-dir* *version-replace*) 
+	(multiple-value-bind (*version-dir* *version-replace*)
 	    (translate-version version)
 	  ;; CL implementations may uniformly default this to nil
-	  (let ((*load-verbose* t) ; nil
-		#-(or MCL CMU) (*compile-file-verbose* t) ; nil
-		(*compile-verbose* t) ; nil
+	  (let ((*load-verbose* #-common-lisp-controller t
+				#+common-lisp-controller nil) ; nil
+		#-(or MCL CMU CLISP :sbcl lispworks)
+		(*compile-file-verbose* t) ; nil
+		#+common-lisp-controller
+		(*compile-print* nil)
+		#+(and common-lisp-controller cmu)
+		(ext:*compile-progress* nil)
+		#+(and common-lisp-controller cmu)
+		(ext:*require-verbose* nil)
+		#+(and common-lisp-controller cmu)
+		(ext:*gc-verbose* nil)
+
+		(*compile-verbose* #-common-lisp-controller t
+				   #+common-lisp-controller nil) ; nil
 		(*version* version)
 		(*oos-verbose* verbose)
 		(*oos-test* test)
@@ -2860,28 +3341,29 @@ D
 		(*load-source-instead-of-binary* load-source-instead-of-binary)
 		(*minimal-load* minimal-load)
 		(system (find-system name :load)))
-	    #-CMU
+	    #-(or CMU CLISP :sbcl :lispworks :cormanlisp)
 	    (declare (special *compile-verbose* #-MCL *compile-file-verbose*)
-		     (ignore *compile-verbose* #-MCL *compile-file-verbose*))
+		     (ignore *compile-verbose* #-MCL *compile-file-verbose*)
+		     (optimize (inhibit-warnings 3)))
 	    (unless (component-operation operation)
 	      (error "Operation ~A undefined." operation))
 	    (operate-on-component system operation force))))
     (when dribble (dribble))))
 
-(defun COMPILE-SYSTEM (name &key force
+(defun compile-system (name &key force
 			    (version *version*)
 			    (test *oos-test*) (verbose *oos-verbose*)
 			    (load-source-instead-of-binary
 			     *load-source-instead-of-binary*)
-			    (load-source-if-no-binary 
-			     *load-source-if-no-binary*) 
+			    (load-source-if-no-binary
+			     *load-source-if-no-binary*)
 			    (bother-user-if-no-binary
 			     *bother-user-if-no-binary*)
 			    (compile-during-load *compile-during-load*)
 			    dribble
 			    (minimal-load *minimal-load*))
   ;; For users who are confused by OOS.
-  (operate-on-system 
+  (operate-on-system
    name :compile
    :force force
    :version version
@@ -2894,18 +3376,18 @@ D
    :dribble dribble
    :minimal-load minimal-load))
 
-(defun LOAD-SYSTEM (name &key force
+(defun load-system (name &key force
 			 (version *version*)
 			 (test *oos-test*) (verbose *oos-verbose*)
 			 (load-source-instead-of-binary
 			  *load-source-instead-of-binary*)
-			 (load-source-if-no-binary *load-source-if-no-binary*) 
+			 (load-source-if-no-binary *load-source-if-no-binary*)
 			 (bother-user-if-no-binary *bother-user-if-no-binary*)
 			 (compile-during-load *compile-during-load*)
 			 dribble
 			 (minimal-load *minimal-load*))
   ;; For users who are confused by OOS.
-  (operate-on-system 
+  (operate-on-system
    name :load
    :force force
    :version version
@@ -2918,13 +3400,13 @@ D
    :dribble dribble
    :minimal-load minimal-load))
 
-(defun CLEAN-SYSTEM (name &key (force :all)
+(defun clean-system (name &key (force :all)
 			 (version *version*)
 			 (test *oos-test*) (verbose *oos-verbose*)
 			 dribble)
   "Deletes all the binaries in the system."
   ;; For users who are confused by OOS.
-  (operate-on-system 
+  (operate-on-system
    name :delete-binaries
    :force force
    :version version
@@ -2932,7 +3414,7 @@ D
    :verbose verbose
    :dribble dribble))
 
-(defun EDIT-SYSTEM
+(defun edit-system
     (name &key force
 	       (version *version*)
 	       (test *oos-test*)
@@ -2947,7 +3429,7 @@ D
    :verbose verbose
    :dribble dribble))
 
-(defun HARDCOPY-SYSTEM
+(defun hardcopy-system
     (name &key force
 	       (version *version*)
 	       (test *oos-test*)
@@ -2972,14 +3454,14 @@ D
 	(progn
 	  ;; Use the correct package.
 	  (when (component-package component)
-	    (tell-user-generic (format nil "Using package ~A" 
+	    (tell-user-generic (format nil "Using package ~A"
 				       (component-package component)))
 	    (unless *oos-test*
 	      (unless (find-package (component-package component))
 		;; If the package name is the same as the name of the system,
 		;; and the package is not defined, this would lead to an
 		;; infinite loop, so bomb out with an error.
-		(when (string-equal (string (component-package component)) 
+		(when (string-equal (string (component-package component))
 				    (component-name component))
 		  (format t "~%Component ~A not loaded:~%"
 			  (component-name component))
@@ -2994,12 +3476,13 @@ D
 	      (let ((package (find-package (component-package component))))
 		(when package
 		  (setf *package* package)))))
-
-	  ;; Load any required systems
+	  #+mk-original
 	  (when (eq type :defsystem)	; maybe :system too?
 	    (operate-on-system-dependencies component operation force))
+	  (when (or (eq type :defsystem) (eq type :system))
+	    (operate-on-system-dependencies component operation force))
 
-	  ;; Do any compiler proclamations 
+	  ;; Do any compiler proclamations
 	  (when (component-proclamations component)
 	    (tell-user-generic (format nil "Doing proclamations for ~A"
 				       (component-name component)))
@@ -3020,13 +3503,15 @@ D
 	  ;; seem right. So instead, we propagate the :load-only attribute
 	  ;; to the components, and modify compile-file-operation so that
 	  ;; it won't compile the files (and modify tell-user to say "Loading"
-	  ;; instead of "Compiling" for load-only modules). 
-	  #|(when (and (find operation '(:compile compile))
-	       (component-load-only component))
-      (setf operation :load))|#
+	  ;; instead of "Compiling" for load-only modules).
+	  #||
+	  (when (and (find operation '(:compile compile))
+		     (component-load-only component))
+	    (setf operation :load))
+	  ||#
 
 	  ;; Do operation and set changed flag if necessary.
-	  (setq changed 
+	  (setq changed
 		(case type
 		  ((:file :private-file)
 		   (funcall (component-operation operation) component force))
@@ -3038,7 +3523,19 @@ D
 	    (tell-user-generic (format nil "Doing finalizations for ~A"
 				       (component-name component)))
 	    (or *oos-test*
-		(eval (component-finally-do component)))))
+		(eval (component-finally-do component))))
+
+	  ;; add the banner if needed
+	  #+cmu
+	  (when (component-banner component)
+	    (unless (stringp (component-banner component))
+	      (error "The banner should be a string, it is: ~S"
+	             (component-banner component)))
+	    (setf (getf ext:*herald-items*
+			(intern (string-upcase  (component-name component))
+				(find-package :keyword)))
+		  (list
+		     (component-banner component)))))
 
       ;; Reset the package. (Cleanup form of unwind-protect.)
       ;;(in-package old-package)
@@ -3051,7 +3548,7 @@ D
       (or *oos-test*
 	  (provide (canonicalize-system-name (component-name component))))))
 
-  ;; Return non-NIL if something changed in this component and hence had 
+  ;; Return non-NIL if something changed in this component and hence had
   ;; to be recompiled. This is only used as a boolean.
   changed)
 
@@ -3083,20 +3580,20 @@ D
 			    ;; the system dependency must not exist in the
 			    ;; *modules* for it to be loaded. Note that
 			    ;; the dependencies are implicitly systems.
-			    (find operation '(load :load))    
+			    (find operation '(load :load))
 			    ;; (or (eq force :all) (eq force t))
 			    (find (canonicalize-system-name system)
 				  *modules* :test #'string-equal))
 		 (operate-on-system system operation :force force)))
 	      ((listp system)
-	       (tell-user-require-system 
+	       (tell-user-require-system
 		(cond ((and (null (car system)) (null (cadr system)))
 		       (caddr system))
 		      (t system))
 		component)
 	       (or *oos-test* (new-require (car system) nil
 					   (eval (cadr system))
-					   (caddr system) 
+					   (caddr system)
 					   (or (car (cdddr system))
 					       *version*))))
 	      (t
@@ -3105,7 +3602,7 @@ D
 
 ;;; Modules can depend only on siblings. If a module should depend
 ;;; on an uncle, then the parent module should depend on that uncle
-;;; instead. Likewise a module should depend on a sibling, not a niece 
+;;; instead. Likewise a module should depend on a sibling, not a niece
 ;;; or nephew. Modules also cannot depend on cousins. Modules cannot
 ;;; depend on parents, since that is circular.
 
@@ -3120,12 +3617,12 @@ D
 	(dolist (module (component-components component))
 	  (when (operate-on-component module operation
 		  (cond ((and (module-depends-on-changed module changed)
-			      #|(some #'(lambda (dependent)
+			      #||(some #'(lambda (dependent)
 					(member dependent changed))
-				    (component-depends-on module))|#
+				    (component-depends-on module))||#
 			      (or (non-empty-listp force)
 				  (eq force :new-source-and-dependents)))
-			 ;; The component depends on a changed file 
+			 ;; The component depends on a changed file
 			 ;; and force agrees.
 			 (if (eq force :new-source-and-dependents)
 			     :new-source-all
@@ -3133,7 +3630,7 @@ D
 			((and (non-empty-listp force)
 			      (member (component-name module) force
 				      :test #'string-equal :key #'string))
-			 ;; Force is a list of modules 
+			 ;; Force is a list of modules
 			 ;; and the component is one of them.
 			 :all)
 			(t force)))
@@ -3157,10 +3654,10 @@ D
 (defun new-require (module-name &optional pathname definition-pname
 				default-action (version *version*))
   ;; If the pathname is present, this behaves like the old require.
-  (unless (and module-name 
+  (unless (and module-name
 	       (find #-CMU (string module-name)
 		     #+CMU (string-downcase (string module-name))
-		     *modules* :test #'string=)) 
+		     *modules* :test #'string=))
     (cond (pathname
 	   (funcall *old-require* module-name pathname))
 	  ;; If the system is defined, load it.
@@ -3176,22 +3673,22 @@ D
 	     :load-source-instead-of-binary *load-source-instead-of-binary*
 	     :minimal-load *minimal-load*))
 	  ;; If there's a default action, do it. This could be a progn which
-	  ;; loads a file that does everything. 
+	  ;; loads a file that does everything.
 	  ((and default-action
 		(eval default-action)))
 	  ;; If no system definition file, try regular require.
 	  ;; had last arg  PATHNAME, but this wasn't really necessary.
-	  ((funcall *old-require* module-name)) 
+	  ((funcall *old-require* module-name))
 	  ;; If no default action, print a warning or error message.
 	  (t
-	   (format t "~&Warning: System ~A doesn't seem to be defined..." 
+	   (format t "~&Warning: System ~A doesn't seem to be defined..."
 		   module-name)))))
 
 ;;; Note that in some lisps, when the compiler sees a REQUIRE form at
-;;; top level it immediately executes it. This is as if an 
+;;; top level it immediately executes it. This is as if an
 ;;; (eval-when (compile load eval) ...) were wrapped around the REQUIRE
 ;;; form. I don't see any easy way to do this without making REQUIRE
-;;; a macro. 
+;;; a macro.
 ;;;
 ;;; For example, in VAXLisp, if a (require 'streams) form is at the top of
 ;;; a file in the system, compiling the system doesn't wind up loading the
@@ -3200,62 +3697,67 @@ D
 ;;;
 ;;; So perhaps we should replace the redefinition of lisp:require
 ;;; with the following macro definition:
-#|
+#||
 (unless *old-require*
-  (setf *old-require* 
-	(symbol-function #-(or lispworks 
+  (setf *old-require*
+	(symbol-function #-(or :lispworks
+			       :sbcl
 			       (and :excl :allegro-v4.0)) 'lisp:require
-			 #+lispworks 'system:::require
+			 #+:sbcl 'cl:require
+			 #+:lispworks 'system:::require
 			 #+(and :excl :allegro-v4.0) 'cltl1:require))
 
   (let (#+:CCL (ccl:*warn-if-redefine-kernel* nil))
     ;; Note that lots of lisps barf if we redefine a function from
     ;; the LISP package. So what we do is define a macro with an
-    ;; unused name, and use (setf macro-function) to redefine 
+    ;; unused name, and use (setf macro-function) to redefine
     ;; lisp:require without compiler warnings. If the lisp doesn't
-    ;; do the right thing, try just replacing require-as-macro 
+    ;; do the right thing, try just replacing require-as-macro
     ;; with lisp:require.
-    (defmacro require-as-macro (module-name 
+    (defmacro require-as-macro (module-name
 				&optional pathname definition-pname
 				default-action (version '*version*))
       `(eval-when (compile load eval)
-	 (new-require ,module-name ,pathname ,definition-pname 
+	 (new-require ,module-name ,pathname ,definition-pname
 		      ,default-action ,version)))
-    (setf (macro-function #-(and :excl :allegro-v4.0) 'lisp:require
+    (setf (macro-function #-(and :excl :sbcl :allegro-v4.0) 'lisp:require
+			  #+:sbcl 'cl:require
 			  #+(and :excl :allegro-v4.0) 'cltl1:require)
 	  (macro-function 'require-as-macro))))
-|#
+||#
 ;;; This will almost certainly fix the problem, but will cause problems
 ;;; if anybody does a funcall on #'require.
 
 ;;; Redefine old require to call the new require.
-(eval-when #-(or :lucid :cmu17) (:load-toplevel :execute)
-	   #+(or :lucid :cmu17) (load eval)
+(eval-when #-(or :lucid :cmu17 :cmu18) (:load-toplevel :execute)
+	   #+(or :lucid :cmu17 :cmu18) (load eval)
 (unless *old-require*
-  (setf *old-require* 
-	(symbol-function 
-	 #-(or (and :excl :allegro-v4.0) :mcl :lispworks) 'lisp:require
+  (setf *old-require*
+	(symbol-function
+	 #-(or (and :excl :allegro-v4.0) :mcl :sbcl :lispworks) 'lisp:require
 	 #+(and :excl :allegro-v4.0) 'cltl1:require
-	 #+lispworks3.1 'common-lisp::require
+	 #+:sbcl 'cl:require
+	 #+:lispworks3.1 'common-lisp::require
 	 #+(and :lispworks (not :lispworks3.1)) 'system::require
 	 #+:mcl 'ccl:require))
 
   (unless *dont-redefine-require*
-    (let (#+(or :mcl (and :CCL (not lispworks)))
+    (let (#+(or :mcl (and :CCL (not :lispworks)))
 	  (ccl:*warn-if-redefine-kernel* nil))
       #-(or (and allegro-version>= (version>= 4 1)) :lispworks)
-      (setf (symbol-function 
-	     #-(or (and :excl :allegro-v4.0) :mcl :lispworks) 'lisp:require
+      (setf (symbol-function
+	     #-(or (and :excl :allegro-v4.0) :mcl :sbcl :lispworks) 'lisp:require
 	     #+(and :excl :allegro-v4.0) 'cltl1:require
-	     #+lispworks3.1 'common-lisp::require
+	     #+:lispworks3.1 'common-lisp::require
+	     #+:sbcl 'cl:require
 	     #+(and :lispworks (not :lispworks3.1)) 'system::require
 	     #+:mcl 'ccl:require)
 	    (symbol-function 'new-require))
-      #+lispworks
+      #+:lispworks
       (let ((warn-packs system::*packages-for-warn-on-redefinition*))
 	(declare (special system::*packages-for-warn-on-redefinition*))
 	(setq system::*packages-for-warn-on-redefinition* nil)
-	(setf (symbol-function 
+	(setf (symbol-function
 	       #+:lispworks3.1 'common-lisp::require
 	       #-:lispworks3.1 'system::require
 	       )
@@ -3273,7 +3775,7 @@ D
 ;;; This section is used for defining language-specific behavior of
 ;;; defsystem. If the user changes a language definition, it should
 ;;; take effect immediately -- they shouldn't have to reload the
-;;; system definition file for the changes to take effect. 
+;;; system definition file for the changes to take effect.
 
 (defvar *language-table* (make-hash-table :test #'equal)
   "Hash table that maps from languages to language structures.")
@@ -3313,18 +3815,18 @@ D
   (let ((language (find-language (or (component-language component)
 				     :lisp))))
     (or (when language (language-source-extension language))
-	"lisp")))
+	(car *filename-extensions*))))
 
 (defun default-binary-extension (component)
   (let ((language (find-language (or (component-language component)
 				     :lisp))))
     (or (when language (language-binary-extension language))
-	"fasl")))
+	(cdr *filename-extensions*))))
 
-(defmacro define-language (name &key compiler loader 
+(defmacro define-language (name &key compiler loader
 				source-extension binary-extension)
   (let ((language (gensym "LANGUAGE")))
-    `(let ((,language (make-language :name ,name 
+    `(let ((,language (make-language :name ,name
 				     :compiler ,compiler
 				     :loader ,loader
 				     :source-extension ,source-extension
@@ -3332,30 +3834,18 @@ D
        (setf (gethash ,name *language-table*) ,language)
        ,name)))
 
-#|
+#||
 ;;; Test System for verifying multi-language capabilities.
 (defsystem foo
   :language :lisp
-  :components ((:module c :language :c :components ("foo" "bar")) 
+  :components ((:module c :language :c :components ("foo" "bar"))
 	       (:module lisp :components ("baz" "barf"))))
 
-|#
-
-;;; Set up binary path names based on information about this implementation,
-;;; and add a hook to defsystem so that it creates the necessary directories
-;;; as it goes.  This eliminates the need to create a .?asl tree by hand and
-;;; it ought to be completely portable.
-
-(defun compile-file-in-dir (source &key output-file #+CMU error-file)
-  (progn
-    (ensure-directories-exist output-file :verbose t)
-    (compile-file source :output-file output-file 
-		  #+CMU :error-file #+CMU error-file)))
-
+||#
 
 ;;; *** Lisp Language Definition
 (define-language :lisp
-  :compiler #'compile-file-in-dir
+  :compiler #'compile-file
   :loader #'load
   :source-extension (car *filename-extensions*)
   :binary-extension (cdr *filename-extensions*))
@@ -3363,10 +3853,10 @@ D
 ;;; *** PseudoScheme Language Definition
 (defun scheme-compile-file (filename &rest args)
   (let ((scheme-package (find-package "SCHEME")))
-    (apply (symbol-function (find-symbol "COMPILE-FILE" 
+    (apply (symbol-function (find-symbol "COMPILE-FILE"
 					       scheme-package))
 	   filename
-	   (funcall (symbol-function 
+	   (funcall (symbol-function
 		     (find-symbol "INTERACTION-ENVIRONMENT"
 				     scheme-package)))
 	   args)))
@@ -3384,33 +3874,221 @@ D
 ;;; we might add a COMPILER-OPTIONS slot to the component defstruct.
 
 (defparameter *c-compiler* "gcc")
-#-symbolics
+#-(or symbolics (and :lispworks :harlequin-pc-lisp ))
+
 (defun run-unix-program (program arguments)
+  ;; arguments should be a list of strings, where each element is a
+  ;; command-line option to send to the program.
   #+:lucid (run-program program :arguments arguments)
-  #+:allegro (excl:run-shell-command (format nil "~A~@[ ~A~]"
-					     program arguments))
-  #+KCL (system (format nil "~A~@[ ~A~]" program arguments))
+  #+:allegro (excl:run-shell-command
+	      (format nil "~A~@[ ~{~A~^ ~}~]"
+		      program arguments))
+  #+KCL (system (format nil "~A~@[ ~{~A~^ ~}~]" program arguments))
   #+:cmu (extensions:run-program program arguments)
-  #+:lispworks (foreign:call-system-showing-output 
-		(format nil "~A~@[ ~A~]" program arguments))
+  #+:sbcl (sb-ext:run-program program arguments)
+  #+:lispworks (foreign:call-system-showing-output
+		(format nil "~A~@[ ~{~A~^ ~}~]" program arguments))
+  #+clisp (#+lisp=cl ext:run-program #-lisp=cl lisp:run-program
+                     program :arguments arguments)
   )
-(defun c-compile-file (filename &rest args &key output-file)
+
+#+(or symbolics (and :lispworks :harlequin-pc-lisp))
+(defun run-unix-program (program arguments)
+  (declare (ignore program arguments))
+  (error "MK::RUN-UNIX-PROGRAM: this does not seem to be a UN*X system.")
+  )
+
+#||
+(defun c-compile-file (filename &rest args &key output-file error-file)
   ;; gcc -c foo.c -o foo.o
   (declare (ignore args))
   (run-unix-program *c-compiler*
 		    (format nil "-c ~A~@[ -o ~A~]"
 			    filename
 			    output-file)))
+||#
+
+#||
+(defun c-compile-file (filename &rest args &key output-file error-file)
+  ;; gcc -c foo.c -o foo.o
+  (declare (ignore args error-file))
+  (run-unix-program *c-compiler*
+		    `("-c" ,filename ,@(if output-file `("-o" ,output-file)))))
+||#
+
+
+;;; The following code was inserted to improve C compiler support (at
+;;; least under Linux/GCC).
+;;; Thanks to Espen S Johnsen.
+;;;
+;;; 20001118 Marco Antoniotti.
+
+(defun default-output-pathname (path1 path2 type)
+  (if (eq path1 t)
+      (translate-logical-pathname
+       (merge-pathnames (make-pathname :type type) (pathname path2)))
+      (translate-logical-pathname (pathname path1))))
+
+
+(defun run-compiler (program
+		     arguments
+		     output-file
+		     error-file
+		     error-output
+		     verbose)
+  #-cmu (declare (ignore error-file error-output))
+
+  (flet ((make-useable-stream (&rest streams)
+	   (apply #'make-broadcast-stream (delete nil streams)))
+	 )
+    (let (#+cmu (error-file error-file)
+	  #+cmu (error-file-stream nil)
+	  (verbose-stream nil)
+	  (old-timestamp (file-write-date output-file))
+	  (fatal-error nil)
+	  (output-file-written nil)
+	  )
+      (unwind-protect
+	   (progn
+	     #+cmu
+	     (setf error-file
+		   (when error-file
+		     (default-output-pathname error-file
+			                      output-file
+                     		              *compile-error-file-type*))
+
+		   error-file-stream
+		   (and error-file
+			(open error-file
+			      :direction :output
+			      :if-exists :supersede)))
+
+	     (setf verbose-stream
+		   (make-useable-stream
+		    #+cmu error-file-stream
+		    (and verbose *trace-output*)))
+
+	     (format verbose-stream "Running ~A~@[ ~{~A~^ ~}~]~%"
+		     program
+		     arguments)
+
+	     (setf fatal-error
+		   #-cmu
+		   (and (run-unix-program program arguments) nil) ; Incomplete.
+		   #+cmu
+		   (let* ((error-output
+			   (make-useable-stream error-file-stream
+						(if (eq error-output t)
+						    *error-output*
+						  error-output)))
+			  (process
+			   (ext:run-program program arguments
+					    :error error-output)))
+		     (not (zerop (ext:process-exit-code process)))))
+
+	     (setf output-file-written
+		   (and (probe-file output-file)
+			(not (eql old-timestamp
+				  (file-write-date output-file)))))
+
+
+	     (when output-file-written
+	       (format verbose-stream "~A written~%" output-file))
+	     (format verbose-stream "Running of ~A finished~%"
+		     program)
+	     (values (and output-file-written output-file)
+		     fatal-error
+		     fatal-error))
+
+	#+cmu
+	(when error-file
+	  (close error-file-stream)
+	  (unless (or fatal-error (not output-file-written))
+	    (delete-file error-file)))
+
+	(values (and output-file-written output-file)
+		fatal-error
+		fatal-error)))))
+
+
+(defun c-compile-file (filename &rest args
+				&key
+				(output-file t)
+				(error-file t)
+				(error-output t)
+				(verbose *compile-verbose*)
+				debug
+				link
+				optimize
+				cflags
+				definitions
+				include-paths
+				library-paths
+				libraries
+				(error t))
+  (declare (ignore args))
+
+  (flet ((map-options (flag options &optional (func #'identity))
+	   (mapcar #'(lambda (option)
+		       (format nil "~A~A" flag (funcall func option)))
+		   options))
+	 )
+    (let* ((output-file (default-output-pathname output-file filename "o"))
+	   (arguments
+	    `(,@(when (not link) '("-c"))
+	      ,@(when debug '("-g"))
+	      ,@(when optimize (list (format nil "-O~D" optimize)))
+	      ,@cflags
+	      ,@(map-options
+		 "-D" definitions
+		 #'(lambda (definition)
+		     (if (atom definition)
+			 definition
+		       (apply #'format nil "~A=~A" definition))))
+	      ,@(map-options "-I" include-paths #'truename)
+	      ,(namestring (truename filename))
+	      "-o"
+	      ,(namestring (translate-logical-pathname output-file))
+	      ,@(map-options "-L" library-paths #'truename)
+	      ,@(map-options "-l" libraries))))
+
+      (multiple-value-bind (output-file warnings fatal-errors)
+	  (run-compiler *c-compiler*
+			arguments
+			output-file
+			error-file
+			error-output
+			verbose)
+	(if (and error (or (not output-file) fatal-errors))
+	    (error "Compilation failed")
+	    (values output-file warnings fatal-errors))))))
+
 
 (define-language :c
   :compiler #'c-compile-file
-  :loader #+:lucid #'load-foreign-files 
+  :loader #+:lucid #'load-foreign-files
           #+:allegro #'load
-          #-(or :lucid :allegro) #'load
+          #+:cmu #'alien:load-foreign
+          #+:sbcl #'sb-alien:load-foreign
+	  #+(and :lispworks :unix (not :linux)) #'link-load:read-foreign-modules
+	  #+(and :lispworks (or (not :unix) :linux)) #'fli:register-module
+          #+(or :ecl :gcl :kcl) #'load ; should be enough.
+          #-(or :lucid
+		:allegro
+		:cmu
+		:sbcl
+		:lispworks
+		:ecl :gcl :kcl)
+	  (lambda (&rest args)
+	    (declare (ignore args))
+	    (cerror "Continue returning NIL."
+		    "Loader not defined for C foreign libraries in ~A ~A."
+		    (lisp-implementation-type)
+		    (lisp-implementation-version)))
   :source-extension "c"
   :binary-extension "o")
 
-#|
+#||
 ;;; FDMM's changes, which we've replaced.
 (defvar *compile-file-function* #'cl-compile-file)
 
@@ -3421,16 +4099,18 @@ D
 #+(or :clos :pcl)
 (defmethod set-language ((lang (eql :scheme)))
   (setq *compile-file-function #'scheme-compile-file))
-|#
+||#
 
 ;;; ********************************
 ;;; Component Operations ***********
 ;;; ********************************
 ;;; Define :compile/compile and :load/load operations
+(eval-when (load eval)
 (component-operation :compile  'compile-and-load-operation)
 (component-operation 'compile  'compile-and-load-operation)
 (component-operation :load     'load-file-operation)
 (component-operation 'load     'load-file-operation)
+)
 
 (defun compile-and-load-operation (component force)
   ;; FORCE was CHANGED. this caused defsystem during compilation to only
@@ -3439,7 +4119,7 @@ D
     ;; Return T if the file had to be recompiled and reloaded.
     (if (and changed (component-compile-only component))
 	;; For files which are :compile-only T, compiling the file
-	;; satisfies the need to load. 
+	;; satisfies the need to load.
 	changed
 	;; If the file wasn't compiled, or :compile-only is nil,
 	;; check to see if it needs to be loaded.
@@ -3452,7 +4132,7 @@ D
   ;; it with the directory of the source file. For example,
   ;; (compile-file "src/globals.lisp" :output-file "bin/globals.sbin")
   ;; tries to stick the file in "./src/bin/globals.sbin" instead of
-  ;; "./bin/globals.sbin" like any normal lisp. This hack seems to fix the 
+  ;; "./bin/globals.sbin" like any normal lisp. This hack seems to fix the
   ;; problem. I wouldn't have expected this problem to occur with any
   ;; use of defsystem, but some defsystem users are depending on
   ;; using relative pathnames (at least three folks reported the problem).
@@ -3470,7 +4150,7 @@ D
 	 ;; For files which are :load-only T, loading the file
 	 ;; satisfies the demand to recompile.
 	 (and (null (component-load-only component)) ; not load-only
-	      (or (find force '(:all :new-source-all t) :test #'eq) 
+	      (or (find force '(:all :new-source-all t) :test #'eq)
 		  (and (find force '(:new-source :new-source-and-dependents)
 			     :test #'eq)
 		       (needs-compilation component)))))
@@ -3478,24 +4158,38 @@ D
 
     (cond ((and must-compile (probe-file source-pname))
 	   (with-tell-user ("Compiling source" component :source)
-	     (or *oos-test*
-		 (funcall (compile-function component)
+	     (let ((output-file
+		    #+:lucid
+		     (unmunge-lucid (component-full-pathname component
+							     :binary))
+		     #-:lucid
+		     (component-full-pathname component :binary)))
+
+	       ;; make certain the directory we need to write to
+	       ;; exists [pvaneynd@debian.org 20001114]
+	       ;; Added PATHNAME-HOST following suggestion by John
+	       ;; DeSoi [marcoxa@sourceforge.net 20020529]
+
+	       (ensure-directories-exist
+		(make-pathname
+		 :host (pathname-host output-file)
+		 :directory (pathname-directory output-file)))
+
+	       (or *oos-test*
+		   (apply (compile-function component)
 			  source-pname
 			  :output-file
-			  #+:lucid
-			  (unmunge-lucid (component-full-pathname component
-								  :binary))
-			  #-:lucid
-			  (component-full-pathname component :binary)
-			  #+CMU :error-file 
-			  #+CMU (and *cmu-errors-to-file* 
+			  output-file
+			  #+CMU :error-file
+			  #+CMU (and *cmu-errors-to-file*
 				     (component-full-pathname component
 							      :error))
 			  #+(and CMU (not :new-compiler))
 			  :errors-to-terminal
 			  #+(and CMU (not :new-compiler))
 			  *cmu-errors-to-terminal*
-			  )))
+			  (component-compiler-options component)
+			  ))))
 	   must-compile)
 	  (must-compile
 	   (tell-user "Source file not found. Not compiling"
@@ -3509,23 +4203,26 @@ D
   ;; Otherwise we only need to recompile if it depends on a file that changed.
   (let ((source-pname (component-full-pathname component :source))
 	(binary-pname (component-full-pathname component :binary)))
-    (and 
+    (and
      ;; source must exist
-     (probe-file source-pname) 
+     (probe-file source-pname)
      (or
       ;; no binary
-      (null (probe-file binary-pname)) 
+      (null (probe-file binary-pname))
       ;; old binary
-      (< (file-write-date binary-pname) 
+      (< (file-write-date binary-pname)
 	 (file-write-date source-pname))))))
 
 (defun needs-loading (component &optional (check-source t) (check-binary t))
   ;; Compares the component's load-time against the file-write-date of
-  ;; the files on disk. 
+  ;; the files on disk.
   (let ((load-time (component-load-time component))
 	(source-pname (component-full-pathname component :source))
 	(binary-pname (component-full-pathname component :binary)))
-    (or 
+    (or
+     #|| ISI Extension ||#
+     (component-load-always component)
+
      ;; File never loaded.
      (null load-time)
      ;; Binary is newer.
@@ -3552,7 +4249,7 @@ D
 	 (needs-compilation (if (component-load-only component)
 				source-needs-loading
 				(needs-compilation component)))
-	 (check-for-new-source 
+	 (check-for-new-source
 	  ;; If force is :new-source*, we're checking for files
 	  ;; whose source is newer than the compiled versions.
 	  (find force '(:new-source :new-source-and-dependents :new-source-all)
@@ -3585,7 +4282,7 @@ D
 		     (funcall (load-function component) binary-pname)
 		     (setf (component-load-time component)
 			   (file-write-date binary-pname)))))
-	     T)
+	     t)
 	    ((and source-exists
 		  (or (and load-source	; implicit needs-comp...
 			   (or *load-source-instead-of-binary*
@@ -3599,11 +4296,11 @@ D
 	     ;;   o  we're loading new source and user wasn't asked to compile
 	     (with-tell-user ("Loading source" component :source)
 	       (or *oos-test*
-		   (progn 
+		   (progn
 		     (funcall (load-function component) source-pname)
 		     (setf (component-load-time component)
 			   (file-write-date source-pname)))))
-	     T)
+	     t)
 	    ((and binary-exists load-binary)
 	     (with-tell-user ("Loading binary"   component :binary)
 	       (or *oos-test*
@@ -3611,24 +4308,26 @@ D
 		     (funcall (load-function component) binary-pname)
 		     (setf (component-load-time component)
 			   (file-write-date binary-pname)))))
-	     T)
+	     t)
 	    ((and (not binary-exists) (not source-exists))
 	     (tell-user-no-files component :force)
 	     (when *files-missing-is-an-error*
 	       (cerror "Continue, ignoring missing files."
 		       "~&Source file ~S ~:[and binary file ~S ~;~]do not exist."
 		       source-pname
-		       (or *load-source-if-no-binary* 
+		       (or *load-source-if-no-binary*
 			   *load-source-instead-of-binary*)
 		       binary-pname))
 	     nil)
-	    (t 
+	    (t
 	     nil)))))
 
+(eval-when (load eval)
 (component-operation :clean    'delete-binaries-operation)
 (component-operation 'clean    'delete-binaries-operation)
 (component-operation :delete-binaries     'delete-binaries-operation)
 (component-operation 'delete-binaries     'delete-binaries-operation)
+)
 (defun delete-binaries-operation (component force)
   (when (or (eq force :all)
 	    (eq force t)
@@ -3642,7 +4341,7 @@ D
 			(or *oos-test*
 			    (delete-file binary-pname)))))))
 
-	
+
 ;; when the operation = :compile, we can assume the binary exists in test mode.
 ;;	((and *oos-test*
 ;;	      (eq operation :compile)
@@ -3655,43 +4354,45 @@ D
 ;;; or old-binary
 (defun compile-and-load-source-if-no-binary (component)
   (when (not (or *load-source-instead-of-binary*
-		 (and *load-source-if-no-binary* 
+		 (and *load-source-if-no-binary*
 		      (not (binary-exists component)))))
     (cond ((component-load-only component)
-	   #|(let ((prompt (prompt-string component)))
+	   #||
+	   (let ((prompt (prompt-string component)))
 	     (format t "~A- File ~A is load-only, ~
-                      ~&~A  not compiling."
+                        ~&~A  not compiling."
 		     prompt
 		     (component-full-pathname component :source)
-		     prompt))|#
+		     prompt))
+	   ||#
 	   nil)
 	  ((eq *compile-during-load* :query)
 	   (let* ((prompt (prompt-string component))
 		  (compile-source
-		   (y-or-n-p-wait 
+		   (y-or-n-p-wait
 		    #\y 30
 		    "~A- Binary file ~A is old or does not exist. ~
-                   ~&~A  Compile (and load) source file ~A instead? "
+                     ~&~A  Compile (and load) source file ~A instead? "
 		    prompt
 		    (component-full-pathname component :binary)
 		    prompt
 		    (component-full-pathname component :source))))
-	     (unless (y-or-n-p-wait 
+	     (unless (y-or-n-p-wait
 		      #\y 30
 		      "~A- Should I bother you if this happens again? "
 		      prompt)
-	       (setq *compile-during-load* 
-		     (y-or-n-p-wait 
+	       (setq *compile-during-load*
+		     (y-or-n-p-wait
 		      #\y 30
 		      "~A- Should I compile and load or not? "
-		      prompt))) ; was compile-source, then t
+		      prompt)))		; was compile-source, then t
 	     compile-source))
 	  (*compile-during-load*)
 	  (t nil))))
 
 (defun load-source-if-no-binary (component)
   (and (not *load-source-instead-of-binary*)
-       (or (and *load-source-if-no-binary* 
+       (or (and *load-source-if-no-binary*
 		(not (binary-exists component)))
 	   (component-load-only component)
 	   (when *bother-user-if-no-binary*
@@ -3717,24 +4418,24 @@ D
 ;;; ********************************
 ;;; Creates toplevel command aliases for Allegro CL.
 #+:allegro
-(top-level:alias ("compile-system" 8) 
+(top-level:alias ("compile-system" 8)
   (system &key force (minimal-load mk:*minimal-load*)
 	  test verbose version)
   "Compile the specified system"
 
-  (mk:compile-system system :force force 
+  (mk:compile-system system :force force
 		     :minimal-load minimal-load
 		     :test test :verbose verbose
 		     :version version))
 
 #+:allegro
-(top-level:alias ("load-system" 5) 
+(top-level:alias ("load-system" 5)
   (system &key force (minimal-load mk:*minimal-load*)
 	  (compile-during-load mk:*compile-during-load*)
 	  test verbose version)
   "Compile the specified system"
 
-  (mk:load-system system :force force 
+  (mk:load-system system :force force
 		  :minimal-load minimal-load
 		  :compile-during-load compile-during-load
 		  :test test :verbose verbose
@@ -3763,25 +4464,25 @@ D
   (system &key force test verbose version)
   "Delete binaries in the specified system."
 
-  (mk:clean-system system :force force 
+  (mk:clean-system system :force force
 		   :test test :verbose verbose
 		   :version version))
 
 #+:allegro
-(top-level:alias ("edit-system" 7) 
+(top-level:alias ("edit-system" 7)
   (system &key force test verbose version)
   "Load system source files into Emacs."
 
-  (mk:edit-system system :force force 
+  (mk:edit-system system :force force
 		  :test test :verbose verbose
 		  :version version))
 
 #+:allegro
-(top-level:alias ("hardcopy-system" 9) 
+(top-level:alias ("hardcopy-system" 9)
   (system &key force test verbose version)
   "Hardcopy files in the specified system."
 
-  (mk:hardcopy-system system :force force 
+  (mk:hardcopy-system system :force force
 		      :test test :verbose verbose
 		      :version version))
 
@@ -3796,10 +4497,10 @@ D
 ;;; Allegro Make System Fasl *******
 ;;; ********************************
 #+:excl
-(defun allegro-make-system-fasl (system destination 
+(defun allegro-make-system-fasl (system destination
 					&optional (include-dependents t))
   (excl:shell
-   (format nil "rm -f ~A; cat~{ ~A~} > ~A" 
+   (format nil "rm -f ~A; cat~{ ~A~} > ~A"
 	   destination
 	   (if include-dependents
 	       (files-in-system-and-dependents system :all :binary)
@@ -3816,12 +4517,12 @@ D
 					    (type :source) version)
   ;; Returns a list of the pathnames in system and dependents in load order.
   (let ((system (find-system name :load)))
-    (multiple-value-bind (*version-dir* *version-replace*) 
+    (multiple-value-bind (*version-dir* *version-replace*)
 	(translate-version version)
       (let ((*version* version))
 	(let ((result (file-pathnames-in-component system type force)))
 	  (dolist (dependent (reverse (component-depends-on system)))
-	    (setq result 
+	    (setq result
 		  (append (files-in-system-and-dependents dependent
 							  force type version)
 			  result)))
@@ -3830,7 +4531,7 @@ D
 (defun files-in-system (name &optional (force :all) (type :source) version)
   ;; Returns a list of the pathnames in system in load order.
   (let ((system (find-system name :load)))
-    (multiple-value-bind (*version-dir* *version-replace*) 
+    (multiple-value-bind (*version-dir* *version-replace*)
 	(translate-version version)
       (let ((*version* version))
 	(file-pathnames-in-component system type force)))))
@@ -3839,12 +4540,12 @@ D
   (mapcar #'(lambda (comp) (component-full-pathname comp type))
 	  (file-components-in-component component force)))
 
-(defun file-components-in-component (component &optional (force :all) 
+(defun file-components-in-component (component &optional (force :all)
 					       &aux result changed)
   (case (component-type component)
     ((:file :private-file)
-     (when (setq changed 
-		 (or (find force '(:all t) :test #'eq) 
+     (when (setq changed
+		 (or (find force '(:all t) :test #'eq)
 		     (and (not (non-empty-listp force))
 			  (needs-compilation component))))
        (setq result
@@ -3852,8 +4553,8 @@ D
     ((:module :system :subsystem :defsystem)
      (dolist (module (component-components component))
        (multiple-value-bind (r c)
-	   (file-components-in-component 
-	    module 
+	   (file-components-in-component
+	    module
 	    (cond ((and (some #'(lambda (dependent)
 				  (member dependent changed))
 			      (component-depends-on module))
@@ -3864,7 +4565,8 @@ D
 		  ((and (non-empty-listp force)
 			(member (component-name module) force
 				:test #'string-equal :key #'string))
-		   ;; Force is a list of modules and the component is one of them.
+		   ;; Force is a list of modules and the component is
+		   ;; one of them.
 		   :all)
 		  (t force)))
 	 (when c
@@ -3875,12 +4577,13 @@ D
 (setf (symbol-function 'oos) (symbol-function 'operate-on-system))
 
 ;;; ********************************
-;;; Additional Component Operations 
+;;; Additional Component Operations
 ;;; ********************************
 
 ;;; *** Edit Operation ***
 
-;;; Should this conditionalization be (or :mcl (and :CCL (not lispworks)))?
+;;; Should this conditionalization be (or :mcl (and :CCL (not :lispworks)))?
+#|
 #+:ccl
 (defun edit-operation (component force)
   "Always returns nil, i.e. component not changed."
@@ -3910,6 +4613,7 @@ D
 (make::component-operation :edit 'edit-operation)
 #+(or :ccl :allegro)
 (make::component-operation 'edit 'edit-operation)
+|#
 
 ;;; *** Hardcopy System ***
 (defparameter *print-command* "enscript -2Gr" ; "lpr"
@@ -3931,13 +4635,14 @@ D
 
 ;;; *** System Source Size ***
 
-(defun system-source-size (system-name)
+(defun system-source-size (system-name &optional (force :all))
   "Prints a short report and returns the size in bytes of the source files in
    <system-name>."
-  (let* ((file-list (files-in-system system-name :all :source))
+  (let* ((file-list (files-in-system system-name force :source))
          (total-size (file-list-size file-list)))
-    (format t "~&~S (~A files) totals ~A bytes (~A K)"
-            system-name (length file-list) total-size (round total-size 1024))
+    (format t "~&~a/~a (~:d file~:p) totals ~:d byte~:p (~:d kB)"
+            system-name force (length file-list)
+            total-size (round total-size 1024))
     total-size))
 
 (defun file-list-size (file-list)
@@ -3961,45 +4666,4 @@ D
     (format t "done.~%")))
 
 
-
-;;; ****************************************************************
-;;; Dead Code ******************************************************
-;;; ****************************************************************
-
-#|
-;;; ********************************
-;;; Alist Manipulation *************
-;;; ********************************
-;;; This is really gross. I've replaced it with hash tables.
-
-(defun alist-lookup (name alist &key (test #'eql) (key #'identity))
-  (cdr (assoc name alist :test test :key key)))
-
-(defmacro set-alist-lookup ((name alist &key (test '#'eql) (key '#'identity)) 
-			    value)
-  (let ((pair (gensym)))
-    `(let ((,pair (assoc ,name ,alist :test ,test :key ,key)))
-       (if ,pair
-	   (rplacd ,pair ,value)
-	 (push (cons ,name ,value) ,alist)))))
-
-(defun component-operation (name &optional operation)
-  (if operation
-      (set-alist-lookup (name *component-operations*) operation)
-    (alist-lookup name *component-operations*)))
-
-(defun machine-type-translation (name &optional operation)
-  (if operation
-      (set-alist-lookup (name *machine-type-alist* :test #'string-equal)
-			operation)
-    (alist-lookup name *machine-type-alist* :test #'string-equal)))
-
-(defun software-type-translation (name &optional operation)
-  (if operation
-      (set-alist-lookup (name *software-type-alist* :test #'string-equal)
-			operation)
-    (alist-lookup name *software-type-alist* :test #'string-equal)))
-
-|#
-
-;;; *END OF FILE*
+;;; end of file -- defsystem.lisp --

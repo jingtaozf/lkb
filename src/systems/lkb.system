@@ -61,9 +61,6 @@
    ""))
 
 (defsystem "lkb"
-
-    :host (make-pathname :host cl-user::%sys-host%)   
-    :device (make-pathname :device cl-user::%sys-device%)
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lsp"

@@ -18,7 +18,6 @@ produced by robust parsers of various types.
 ;;; (this is only available with the LKB)
 
 (defsystem "rmrs"
-    :device (make-pathname :device cl-user::%sys-device%)
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lisp"

@@ -30,8 +30,6 @@
 (in-package :make)
 
 (defsystem "ppcre"
-    :host (make-pathname :host cl-user::%sys-host%)   
-    :device (make-pathname :device cl-user::%sys-device%)
     :source-pathname (dir-append (get-sources-dir "pvm") '(:relative "ppcre"))
     :binary-pathname (dir-append (get-binaries-dir "pvm") '(:relative "ppcre"))
     :source-extension "lisp"

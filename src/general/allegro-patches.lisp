@@ -29,12 +29,17 @@
 (pushnew :linux *features*)
 
 ;;;
+;;; on Windoze, Allegro CL fails to respect *default-pathname-defaults* :-{.
+;;;
+(excl:chdir (make-pathname :device (pathname-device *load-truename*)))
+
+;;;
 ;;; load the portable defsystem() from CMU
 ;;;
 
 #-:mk-defsystem
 (load 
- (make-pathname :device %sys-device% :directory general-dir :name "defsystem"))
+ (make-pathname :directory general-dir :name "defsystem"))
 
 (in-package :make)
 
@@ -80,8 +85,9 @@
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (let ((excl:*enable-package-locked-errors* nil))
     (shadowing-import
-      '(make:defsystem make:undefsystem
-        make:load-system make:compile-system make:clean-system)
+      '(make::defsystem make::undefsystem
+        make::load-system make::compile-system make::clean-system 
+        make::find-system)
       :excl)))
 
 (defun run-process (&rest arguments)

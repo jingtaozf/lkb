@@ -31,8 +31,7 @@
 ;;;
 
 #-:mk-defsystem
-(load (make-pathname :host %sys-host% :device %sys-device%
-                     :directory general-dir :name "defsystem"))
+(load (make-pathname :directory general-dir :name "defsystem"))
 
 (in-package "MAKE")
 

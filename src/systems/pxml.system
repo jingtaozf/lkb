@@ -1,8 +1,6 @@
 (in-package :make)
 
 (defsystem "pxml"
-    :host (make-pathname :host cl-user::%sys-host%)   
-    :device (make-pathname :device cl-user::%sys-device%)
     :source-pathname (dir-append (get-sources-dir "pxml") '(:relative "xml"))
     :binary-pathname (dir-append (get-binaries-dir "pxml") '(:relative "xml"))
     :source-extension "cl"
