@@ -54,7 +54,7 @@
 
 (defun find-gen-edge-given-id (edge-id)
    (dolist (entry *gen-chart*)
-      (dolist (edge (cdr entry))
+      (dolist (edge (append (cadr entry) (cddr entry)))
          (when (eql edge-id (edge-id edge))
             (return-from find-gen-edge-given-id edge)))))
 
@@ -76,7 +76,7 @@
    ;; end up hanging on to old edges
    (let ((edge-symbols nil))
       (dolist (entry *gen-chart*)
-         (dolist (e (cdr entry))
+         (dolist (e (append (cadr entry) (cddr entry)))
             (push
                (list* (dotted-edge-id e)
                   (make-edge-symbol (dotted-edge-id e))
@@ -84,7 +84,7 @@
                edge-symbols)))
       (dolist (entry *gen-chart*)
          (let ((chart-index (string-downcase (symbol-name (car entry)))))
-            (dolist (e (cdr entry))
+            (dolist (e (append (cadr entry) (cddr entry)))
                (let ((edge-symbol
                         (cadr (assoc (dotted-edge-id e) edge-symbols))))
                   (setf (get edge-symbol 'chart-edge-span)
