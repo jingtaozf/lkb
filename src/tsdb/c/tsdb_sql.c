@@ -280,7 +280,7 @@ int tsdb_insert(Tsdb_value *table,
       } /* else */
     } /* if */
     else {
-      return(TSDB_NO_DATA);
+      return(TSDB_NO_DATA_FILE);
     } /* else */
   } /* if */
   else {
@@ -298,7 +298,8 @@ int tsdb_clean_relation(Tsdb_relation* relation, Tsdb_value* fuck)
   int  i;
   
   table = tsdb_find_table(relation);
-    
+  if (!table)
+    return 0;
   for (last=NULL,first = list = table->key_lists[0]; list != NULL ;) {
     if (list->tuples[0]->fields[0]==fuck) {
       /* to be freed */
@@ -393,7 +394,11 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
     case TSDB_OR:
       left = tsdb_complex_select(node->left,wanted);
       right = tsdb_complex_select(node->right,wanted);
+      if (!left || !right) 
+        return NULL;
       result = tsdb_complex_merge(left,right);
+      if (!result)
+        return NULL;
       if (result!=left)
         tsdb_free_selection(left);
       tsdb_free_selection(right);
@@ -401,7 +406,11 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
     case TSDB_AND:
       left = tsdb_complex_select(node->left,wanted);
       right = tsdb_complex_select(node->right,wanted);
+      if (!left || !right) 
+        return NULL;
       result = tsdb_join(left,right);
+      if (!result)
+        return NULL;
       if (result != left)
         tsdb_free_selection(left);
       tsdb_free_selection(right);
@@ -440,6 +449,8 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
       else
         node_relation = all_relations[0];
       result = tsdb_find_table(node_relation);
+      if (!result) 
+        return NULL;
       result = tsdb_select(result,&a[0],TSDB_AND);
       /* No free necessary: find_table returns global Data */
     } /* if */
@@ -472,6 +483,8 @@ Tsdb_selection* tsdb_add_relations(Tsdb_selection* selection,
   memset(joined,'\0',(r+1)*(sizeof(int)));
   if (!selection) {
     selection = tsdb_find_table(relations[0]);
+    if (!selection)
+      return NULL;
     selection = tsdb_copy_selection(selection);;
     joined[0] = 1;
     to_join--;
@@ -488,6 +501,8 @@ Tsdb_selection* tsdb_add_relations(Tsdb_selection* selection,
         else
           if (tsdb_joins_to(relations[i],selection)) {
             table = tsdb_find_table(relations[i]);
+            if (!table)
+              return(NULL);
             temp = tsdb_join(selection,table);
             if (temp!=selection) {
               tsdb_free_selection(selection);
@@ -503,6 +518,8 @@ Tsdb_selection* tsdb_add_relations(Tsdb_selection* selection,
       for (j=0;j<r;j++)
         if (!joined[j]) {
           table = tsdb_find_table(relations[j]);
+          if (!table) 
+            return NULL;
           temp = tsdb_join(selection,table);
           if (temp!=selection) {
               tsdb_free_selection(selection);
@@ -530,6 +547,8 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
 
   for (i=0;relations[i];i++) {
     table = tsdb_find_table(relations[i]);
+    if (!table)
+      return NULL;
     if (tsdb_joins_to(relations[i],selection))
       if (table->length < sj) 
         smallest_joinable=i;
@@ -538,14 +557,25 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
         smallest = i;
   }
   
-  if (smallest_joinable!=-1)
-    selection = tsdb_join(selection,
-                          tsdb_find_table(relations[smallest_joinable]));
+  if (smallest_joinable!=-1) {
+    table = tsdb_find_table(relations[smallest_joinable]);
+    if (!table)
+      return NULL;
+    selection = tsdb_join(selection,table);
+  }
   else
-    if (smallest != -1 )
-      selection = tsdb_join(selection,tsdb_find_table(relations[smallest]));
-    else
-      selection = tsdb_join(selection,tsdb_find_table(relations[0]));
+    if (smallest != -1 ) {
+      table = tsdb_find_table(relations[smallest_joinable]);
+      if (!table)
+        return NULL;
+      selection = tsdb_join(selection,table);
+    }
+    else {
+      table = tsdb_find_table(relations[smallest_joinable]);
+      if (!table)
+        return NULL;   
+      selection = tsdb_join(selection,table);
+    } /* else */
   return(selection);
 } /* tsdb_join_one_relation */
 
@@ -633,8 +663,12 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
    }
  } /* if */
 
-  if (conditions)
+  if (conditions) {
     selection = tsdb_complex_select(conditions, NULL);
+    if (!selection) {
+      return;
+    }
+  }
   /* now join with relations that aren't in */
   
 #if defined(DEBUG) && defined(TOM)
@@ -654,6 +688,9 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
       } /* for */
       a_relations[i] = NULL;
       temp = tsdb_add_relations(selection,a_relations);
+      if (!temp) {
+        return 0;
+      }
       if (temp!=selection) {
         if (selection) 
           tsdb_free_selection(selection);
@@ -677,11 +714,16 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
             if (selection==NULL) {
               from_find = TRUE;
               selection = tsdb_find_table(a_relations[0]);
+              if (!selection)
+                return NULL;
             }
             else {
               Tsdb_selection *temp;
               temp = selection;
               selection = tsdb_join_one_relation(selection,a_relations);
+              if (!selection) {
+                return 0;
+              } /* */
               if (!from_find) {
                 tsdb_free_selection(temp);
               }
@@ -802,46 +844,50 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
 #endif
 
   relation = selection->relations[n=0];
-
-  for (i=0,offset=0;i<1;i++,offset++) {
-    if (offset == relation->n_keys) {
-      offset = 0;
-      relation = selection->relations[++n];
-    } /* if */
+  
 #if defined(DEBUG) && defined(TOM)
-    if (!selection->key_lists[i]) {
-      fprintf(tsdb_debug_stream," Key list %s is empty\n",
-              relation->fields[relation->keys[offset]]);
-    }
-    else
-      fprintf(tsdb_debug_stream,"Key list %s\n",relation->fields[relation->keys[offset]]);
+  if (!selection->key_lists[0]) {
+    fprintf(tsdb_debug_stream," Key list %s is empty\n",
+            relation->fields[relation->keys[0]]);
+  }
+  else
+    fprintf(tsdb_debug_stream,"Key list %s\n",
+            relation->fields[relation->keys[0]]);
 #endif
-    projection = (char**)malloc((selection->length+1)*sizeof(char*));
-    if (projection) {
-      memset(projection,'\0',(selection->length+1)*sizeof(char*));
+
+  projection = (char**)malloc((selection->length+1)*sizeof(char*));
+  if (projection) {
+    memset(projection,'\0',(selection->length+1)*sizeof(char*));
+    
+    for (n=0,list = selection->key_lists[0]; 
+         list!=NULL; list=list->next,n++) {
+      projection[n]=tsdb_sprint_key_list(list,r,f,n_attributes);
+      if (!projection[n])
+        return;
       
-      for (n=0,list = selection->key_lists[i]; 
-           list!=NULL; list=list->next,n++) {
-        projection[n]=tsdb_sprint_key_list(list,r,f,n_attributes);
-        if (!projection[n])
-          return;
-        
-      } /* for key_list */
-    } /* for i */
-    n  = tsdb_uniq_projection(projection,n);
-    if((output = tsdb_open_pager()) != NULL) {
-      tsdb_print_projection(projection,n,output);
-      pclose(output);
-    } /* if */
-    else {
-      tsdb_print_projection(projection, n, tsdb_default_stream);
-    } /* else */
-    if (output=tsdb_open_result()) {
-      tsdb_print_projection(projection,n,output);
-      fclose(output);
-    }
-    tsdb_free_char_array(projection,n);
+    } /* for key_list */
   } /* if */
+
+#if defined(DEBUG) && defined(TOM)
+  fprintf(tsdb_debug_stream,"project:\n");
+  for (k=0;k<n;k++) {
+    fprintf(tsdb_debug_stream,"%s\n",projection[k]);
+  } /* for */
+#endif    
+
+  n  = tsdb_uniq_projection(projection,n);
+  if((output = tsdb_open_pager()) != NULL) {
+    tsdb_print_projection(projection,n,output);
+    pclose(output);
+  } /* if */
+  else {
+    tsdb_print_projection(projection, n, tsdb_default_stream);
+  } /* else */
+  if (output=tsdb_open_result()) {
+    tsdb_print_projection(projection,n,output);
+    fclose(output);
+  }
+  tsdb_free_char_array(projection,n);
   free(r);
   free(f);
 } /* tsdb_project() */
