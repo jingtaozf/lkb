@@ -366,6 +366,7 @@
     (when (eq load :collect) (setf %tsdb-lexical-preterminals% nil))
     (when strings
       (format stream "~%")
+      #+:lkb (uncache-lexicon)
       (dolist (string strings words)
         (do* ((i (position-if #'(lambda (c) (member c whitespace)) string)
                  (position-if #'(lambda (c) (member c whitespace)) string))

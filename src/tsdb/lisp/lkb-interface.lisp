@@ -18,7 +18,7 @@
      (:TEMPLATES . ,(length *templates*))
      (:RULES . ,(hash-table-count *rules*))
      (:LRULES . ,(hash-table-count *lexical-rules*))
-     (:LEXICON . ,(length (collect-expanded-lex-ids *lexicon*)))
+     (:LEXICON . (size-of-lexicon))
      (:GRAMMAR . ,(if (boundp '*grammar-version*) 
                       (symbol-value '*grammar-version*)
                       "unknown"))
@@ -69,7 +69,7 @@
    (declare (ignore environment))
   (let ((*package* (find-package "COMMON-LISP-USER")))
     (clear-type-cache)
-    (clear-expanded-lex)))
+    (uncache-lexicon)))
 
 ;;; sets the processor into exhaustive mode if requested; parses
 ;;; .string. without producing any printout (unless .trace. is set);
@@ -132,6 +132,7 @@
                 (*print-pretty* nil) (*print-level* nil) (*print-length* nil))
             (multiple-value-bind (l-s-tasks redges words)
                 (parse-tsdb-count-lrules-edges-morphs)
+              (let ((output (get-output-stream-string str)))
               `((:TIMEUP) (:COPIES . -1) (:UNIFICATIONS . -1)
                           (:OTHERS . ,others) (:SYMBOLS . ,symbols) 
                           (:CONSES . ,conses)
@@ -143,21 +144,25 @@
                           (:P-FTASKS . ,f-tasks) (:P-CTASKS . ,c-tasks) 
                           (:L-STASKS . ,l-s-tasks) (:WORDS . ,words)
                           (:TOTAL . ,tcpu) (:FIRST . ,tcpu) 
-                          (:READINGS . ,(length *parse-record*))
+                          (:READINGS . ,(if (equal output "")
+                                          (length *parse-record*)
+                                          -1))
                           (:ERROR .
                            ,(substitute #\; #\newline
                              (remove 
                               #\@
-                              (string-trim '(#\newline #\space) 
-                                           (get-output-stream-string str)))))
+                              (string-trim '(#\newline #\space) output))))
                           (:RESULTS .
                            ,(mapcar
                              #'(lambda (parse)
                                  (prog1
                                      `((:MRS . "") (:TREE . "")
                                        (:DERIVATION .
+                                        #+:cray
                                         ,(prin1-to-string
-                                          (parse-tree-structure parse)))
+                                          (parse-tree-structure parse))
+                                        #-:cray
+                                        "")
                                        (:R-REDGES .
                                         ,(length (parse-tsdb-distinct-edges
                                                   parse nil)))
@@ -167,7 +172,7 @@
                                        (:R-CTASKS . -1) 
                                        (:TIME . ,tcpu) (:RESULT-ID . ,n))
                                    (setq tcpu 0 n (1+ n))))
-                             *parse-record*))))))))
+                             *parse-record*)))))))))
     (append
      (when condition
        (pairlis '(:readings :condition :error)
@@ -175,7 +180,6 @@
      return)))
 
 
-(defvar *do-something-with-parse* nil)
 
 (defun parse-tsdb-sentence (user-input &optional trace)
    (multiple-value-prog1
@@ -225,17 +229,33 @@
       (invalidate-visit-marks)
       (parse-tsdb-count-nodes1 (tdfs-indef (edge-dag edge)) 0)))
 
-
+;;;
+;;; abstract from recent changes in LKB lexicon interface (28-jan-99  -  oe)
 ;;;
 
-(defun uncache-psorts ()
-   (maphash
-      #'(lambda (id value)
-          (declare (ignore id))
-          (setf (cddr value) nil))
-      *psorts*))
+(defun uncache-lexicon ()
+  (cond 
+   ((and (find-symbol "CLEAR-EXPANDED-LEX")
+         (fboundp (find-symbol "CLEAR-EXPANDED-LEX")))
+    (funcall (symbol-function (find-symbol "CLEAR-EXPANDED-LEX"))))
+   ((and (find-symbol "*PSORTS*") (boundp (find-symbol "*PSORTS*")))
+    (maphash
+     #'(lambda (id value)
+         (declare (ignore id))
+         (setf (cddr value) nil))
+     (symbol-value (find-symbol "*PSORTS*"))))))
 
 
+(defun size-of-lexicon ()
+  (cond
+   ((and (find-symbol "*PSORTS*") (boundp (find-symbol "*PSORTS*")))
+    (hash-table-count (symbol-value (find-symbol "*PSORTS*"))))
+   ((and (find-symbol "*LEXICON*") (boundp (find-symbol "*LEXICON*")))
+    (length (collect-expanded-lex-ids 
+             (symbol-value (find-symbol "*LEXICON*")))))
+   (t
+    -1)))
+    
 ;;;
 
 (eval-when (:load-toplevel :compile-toplevel :execute)
@@ -244,9 +264,6 @@
                 parse-word
                 initialize-test-run
                 finalize-test-run
-                parse-item)
-               :TSDB)))
-
-
-
-
+                parse-item
+                uncache-lexicon)
+              :TSDB)))

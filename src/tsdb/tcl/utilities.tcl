@@ -690,6 +690,9 @@ proc show_text {file {container ""} {title ""} {width 80} {height 25}} {
     1,2 $toplevel.print -pady {5 10}
   table configure $toplevel r1 -resize none
 
+  bind $toplevel <q> [list "tsdb_close" $toplevel];
+  bind $toplevel <Q> [bind $toplevel <q>];
+
   wm title $toplevel $title
   wm iconname $toplevel $title
 

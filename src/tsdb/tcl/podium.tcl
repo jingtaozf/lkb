@@ -131,7 +131,7 @@ source "$globals(podium_home)table.tcl";
 source "$globals(podium_home)showtable.tcl";
 source "$globals(podium_home)showgraph.tcl";
 source "$globals(podium_home)utilities.tcl";
-source "$globals(podium_home)podium_commands.tcl";
+source "$globals(podium_home)commands.tcl";
 source "$globals(podium_home)input.tcl";
 source "$globals(podium_home)balloon.tcl";
 source "$globals(podium_home)copyleft.tcl";
@@ -218,6 +218,8 @@ proc main {} {
   .menu.file.menu add separator
   .menu.file.menu add cascade -label "Import" \
     -menu .menu.file.menu.import
+  .menu.file.menu add command -label "Export" \
+    -command {tsdb_file export} -state disabled
   .menu.file.menu add separator
   .menu.file.menu add command -label "Close" -command tsdb_close 
   .menu.file.menu add command -label "Quit" -command tsdb_quit
@@ -557,12 +559,12 @@ proc main {} {
     -variable globals(aggregate_dimension) -value :i-id \
     -command {tsdb_set aggregate_dimension};
   .menu.options.menu.aggregate add radiobutton \
-    -label "Total Memory Usage" \
-    -variable globals(aggregate_dimension) -value :space \
-    -command {tsdb_set aggregate_dimension};
-  .menu.options.menu.aggregate add radiobutton \
     -label "Total CPU Time (`tcpu')" \
     -variable globals(aggregate_dimension) -value :tcpu \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Total Memory Usage" \
+    -variable globals(aggregate_dimension) -value :space \
     -command {tsdb_set aggregate_dimension};
 
   menu .menu.options.menu.switches -tearoff 0
@@ -625,6 +627,8 @@ proc main {} {
     -label "[expr {$globals(balloon_p) ? "Disable" : "Enable"}] Balloon Help" \
     -command toggle_balloon_help;
   .menu.help.menu add separator;
+  .menu.help.menu add command -label "Registration Information" \
+    -command tsdb_registration;
   .menu.help.menu add command -label "$globals(name) ToDo List" \
     -command tsdb_todo;
 

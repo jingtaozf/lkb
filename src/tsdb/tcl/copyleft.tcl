@@ -8,7 +8,7 @@ proc copyleft {action} {
   set normalsize {Helvetica 12};
   set small {Helvetica 10};
   set message "contacting protocol server `mail.coli.uni-sb.de' ...";
-
+  set pointer "(See `Help - Registration')";
   switch $action {
     initialize {
       if {[winfo exists .list.copyleft]} {
@@ -30,7 +30,7 @@ proc copyleft {action} {
       frame $copyleft.second -bg $bg -height 8
       label $copyleft.third -bg $bg -fg green -font [concat $normalsize] \
         -text "$globals(name) is available free of royalties\
-               for research purposes."
+               for research purposes $pointer."
       if {[info exists globals(copyleft,key)]
           && [oe copyleft $globals(copyleft,key)]} {
         frame $copyleft.fourth -bg $bg -height 6
@@ -70,8 +70,18 @@ proc copyleft {action} {
       tkwait visibility .;
       set status $globals(status);
       set visible [lindex [winfo children .status] end];
+      #
+      # aesthetics: strip duplicate reference to registration information
+      #
+      set availability [.list.copyleft.body.third cget -text];
+      set strip [string last $pointer $availability];
+      if {$strip > 0} {
+        incr strip -2;
+        set availability "[string range $availability 0 $strip].";
+        .list.copyleft.body.third config -text $availability;
+      }; # if
       .list.copyleft.body.fifth config -fg yellow \
-        -text "Registration in Progress (See User & Reference Manual)";
+        -text "Notification in Progress $pointer";
       place .list.copyleft -in .list \
         -relwidth 1 -relheight 1 -bordermode outside;
       raise .list.copyleft;
@@ -100,7 +110,7 @@ proc copyleft {action} {
       }; # for
       if {$i <= $timeout} {
         .list.copyleft.body.fifth config -fg green \
-          -text "- Registration Completed -";
+          -text "- Notificataion Completed -";
         status "$message done";
         after 2000;
       } else {

@@ -502,11 +502,15 @@
                                        (get-field+ :readings foo -1))
                              parses)))
         (push (cons (first phenomenon)
-                    (pairlis '(:items :restricted :i-length 
-                               :words :l-stasks
+                    (pairlis '(:items :restricted 
+                               :i-length :words 
+                               :l-stasks 
+                               :lambiguity 
                                :analyses :results)
-                             (list items restricted (average lengths) 
-                                   (average wordss) (average lstaskss)
+                             (list items restricted 
+                                   (average lengths) (average wordss) 
+                                   (average lstaskss)
+                                   (divide (sum wordss) (sum lengths))
                                    (average readingss) (length parses))))
               result)
         (incf itemtotal items)
@@ -520,12 +524,14 @@
                 (pairlis '(:items :restricted
                            :i-length
                            :words :l-stasks
+                           :lambiguity
                            :analyses
                            :results)
                          (list itemtotal restrictedtotal
                                (divide lengthtotal restrictedtotal)
                                (divide wordstotal restrictedtotal)
                                (divide lstaskstotal restrictedtotal)
+                               (divide wordstotal lengthtotal)
                                (divide readingstotal parsestotal)
                                parsestotal)))
           (delete :all result :key #'first))))
@@ -807,7 +813,7 @@
                 (name (if (eq format :latex)
                         (latexify-string (second phenomenon))
                         (second phenomenon)))
-                (owords (get-field :words odata))
+                (owords (get-field :lambiguity odata))
                 (oanalyses (get-field :analyses odata))
                 (owfrestricted (get-field :restricted owfdata))
                 (owfresults (get-field :results owfdata))
@@ -819,7 +825,7 @@
                 (oifcoverage (if (zerop oifrestricted)
                                100
                                (float (* 100 (/ oifresults oifrestricted)))))
-                (nwords (get-field :words ndata))
+                (nwords (get-field :lambiguity ndata))
                 (nanalyses (get-field :analyses ndata))
                 (nwfrestricted (get-field :restricted nwfdata))
                 (nwfresults (get-field :results nwfdata))
@@ -837,7 +843,8 @@
                stream
                "  ~a & ~,2f & ~,2f & ~,1f & ~,1f~%    ~
                 & ~,2f & ~,2f & ~,1f & ~,1f\\\\~%"
-               name owords oanalyses owfcoverage oifcoverage
+               name 
+               owords oanalyses owfcoverage oifcoverage
                nwords nanalyses nwfcoverage nifcoverage))
              (:tcl
               (format
@@ -861,7 +868,7 @@
               (nwfdata (rest (assoc :total nwfaverages)))
               (nifdata (rest (assoc :total nifaverages)))
               (name "Total")
-              (owords (get-field :words odata))
+              (owords (get-field :lambiguity odata))
               (oanalyses (get-field :analyses odata))
               (owfrestricted (get-field :restricted owfdata))
               (owfresults (get-field :results owfdata))
@@ -873,7 +880,7 @@
               (oifcoverage (if (zerop oifrestricted)
                              100
                              (float (* 100 (/ oifresults oifrestricted)))))
-              (nwords (get-field :words ndata))
+              (nwords (get-field :lambiguity ndata))
               (nanalyses (get-field :analyses ndata))
               (nwfrestricted (get-field :restricted nwfdata))
               (nwfresults (get-field :results nwfdata))
@@ -1646,8 +1653,8 @@
             (format
              stream 
              "  \\hline~%  \\hline~%  ~
-              {\\bf ~a} & {\\bf ~d} & {\\bf ~,1f} & {\\bf ~d}~%    ~
-              & {\\bf ~d} & {\\bf ~,1f} & {\\bf ~d}~%    ~
+              {\\bf ~a} & {\\bf ~d} & {\\bf ~,2f} & {\\bf ~d}~%    ~
+              & {\\bf ~d} & {\\bf ~,2f} & {\\bf ~d}~%    ~
               & {\\bf ~,1f} & {\\bf ~,1f} & {\\bf ~,1f}\\\\~%  \\hline~%"
              name oetasks otime ospace netasks ntime nspace
              taskreduction timereduction spacereduction)

@@ -127,6 +127,8 @@ proc showgraph {FileName {Toplevel ""} {output "unknown"} {Title ""}} {
       balloon post "click <Button-1> or <Button-3> on the plot area to adjust axis limits; <Button-2> to reset"
     }; # bind
     bind $g <Leave> {balloon unpost};
+    bind $t <q> [list "tsdb_close" $t];
+    bind $t <Q> [bind $t <q>];
 
     #
     # activate legend entries: pop-up menu for interactive colour selection

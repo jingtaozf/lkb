@@ -1,14 +1,16 @@
 ------------------------------------------------------------------------------
-----     things to do (usually fix or improve |:-) for [incr tsdb(1)]     ----
+----     things to do (usually fix or improve |:-) for [incr tsdb()]      ----
 ------------------------------------------------------------------------------
 
 
 open issues:
 ------------
 
+[28-jan-99] - (re)synchronize Tcl and LaTeX tables (e.g. performance profile);
+
 [10-dec-98] - include condition in all window titles where appropriate;
 
-[08-dec-98] - fix treatment of hyphen and apostrophe in import();
+[08-dec-98] - fix treatment of hyphen and apostrophe in import() (mueller/18);
 
 [08-dec-98] - allow export of raw data (in tsdb(1) format) from table view;
 
@@ -29,7 +31,7 @@ open issues:
 [31-oct-98] - restrict completion to directories for database import;
 
 [28-oct-98] - format large memory usage numbers with delimiters (1.123.456);
-              find appropriate format (mueller/17)
+              find appropriate format (mueller/17);
 
 [25-oct-98] - fill in missing balloons;
 
@@ -77,7 +79,7 @@ resolved issues:
 
 [21-oct-98] - make table size depend on screen resolution;
 
-[04-aug-98] - `Browse.Condition' cascade (with history);
+[04-aug-98] - `Browse -- Condition' cascade (with history);
 
 [04-aug-98] - context-sensitive completion for `Condition' and `Custom Query';
 
@@ -109,7 +111,7 @@ resolved issues:
 
 [29-jul-98] - allow cut and paste from tables;
 
-[26-jun-98] - add `Create', `Rename', `Purge', `Delete' et al. to `File' meneu;
+[26-jun-98] - add `Create', `Rename', `Purge', `Delete' et al. to `File' menu;
 
 [26-jun-98] - run meter() when updating the skeleton list;
 
@@ -118,4 +120,14 @@ resolved issues:
 [24-jun-98] - fix event handling mechanism in podium-loop();
 
 
+vague ideas:
+------------
 
+[28-jan-99] - integrate new table viewer (speed-up); alllow dynamic
+              manipulation of tables (hide and unhide columns and rows, choose
+              sort key, export current view as raw data and condition for new
+              queries);
+
+[27-jan-99] - use regular expressions to mask (hide, selective display) entries
+              from the list of test suite instances; incremental search on all
+              or currently mapped entries;
