@@ -3,6 +3,13 @@
 (in-package "COMMON-LISP-USER")
 
 ;;;
+;;; apparently, contemporary versions of CMUCL come with a newer, incompatible
+;;; version of defsystem(); make sure we always load our own (and look into the
+;;; newer version at some point in the future).                (13-aug-03; oe)
+;;;
+(setf *features* (delete :mk-defsystem *features*))
+
+;;;
 ;;; load the portable defsystem() from CMU
 ;;;
 
