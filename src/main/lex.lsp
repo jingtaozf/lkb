@@ -97,14 +97,14 @@
                 file-entry)))))
 
 (defun read-psort-entry-from-file (file-pointer id)
-   #+:mcl(decf ee (CCL::TOTAL-BYTES-ALLOCATED))
+   #+(and mcl powerpc)(decf ee (CCL::TOTAL-BYTES-ALLOCATED))
    (prog1
     (let ((successful-positioning
             (file-position *psorts-stream* file-pointer)))
       (unless successful-positioning 
          (error "Can't retrieve entry for ~A~%" id))
       (read *psorts-stream* t))
-    #+:mcl(incf ee (CCL::TOTAL-BYTES-ALLOCATED))))
+    #+(and mcl powerpc)(incf ee (CCL::TOTAL-BYTES-ALLOCATED))))
 
 
 (defun store-psort (id entry)
