@@ -10,9 +10,9 @@
 10@unknown@formal@none@1@S@Friday the nineteenth is all bad for me.@1@8@@oe@16-5-2000
 11@unknown@formal@none@1@XP@tied up all day.@1@4@@oe@16-5-2000
 12@unknown@formal@none@1@S@when are you free on Monday the fifteenth?@1@8@@oe@16-5-2000
-13@unknown@formal@none@1@XP@from nine A-M until noon?@1@5@@oe@16-5-2000
+13@unknown@formal@none@1@XP@from nine a.m. until noon?@1@5@@oe@16-5-2000
 14@unknown@formal@none@1@XP@alright.@1@1@@oe@16-5-2000
-15@unknown@formal@none@1@@I am free from nine, until, excuse me.@0@8@@oe@16-5-2000
+15@unknown@formal@none@1@S@I am free from nine, until, excuse me.@0@8@@oe@16-5-2000
 16@unknown@formal@none@1@S@no I am not,@1@4@@oe@16-5-2000
 17@unknown@formal@none@1@S@what about Tuesday the sixteenth.@1@5@@oe@16-5-2000
 18@unknown@formal@none@1@S@Tuesday the sixteenth, any time, after noon is fine.@1@9@@oe@16-5-2000
@@ -37,7 +37,7 @@
 37@unknown@formal@none@1@S@I am free again all day on the seventh.@1@9@@oe@16-5-2000
 38@unknown@formal@none@1@S@so how does that sound.@1@5@@oe@16-5-2000
 39@unknown@formal@none@1@S@actually I am going to be out of town on the seventh.@1@12@@oe@16-5-2000
-40@unknown@formal@none@1@@how does, let us see, the thirtieth of March sound.@0@10@@oe@16-5-2000
+40@unknown@formal@none@1@S@how does, let us see, the thirtieth of March sound.@1@10@@oe@16-5-2000
 41@unknown@formal@none@1@XP@at about, three.@1@3@@oe@16-5-2000
 42@unknown@formal@none@1@S@March thirtieth at, three o'clock is fine.@1@7@@oe@16-5-2000
 43@unknown@formal@none@1@S@I will see you then.@1@5@@oe@16-5-2000
@@ -53,7 +53,7 @@
 53@unknown@formal@none@1@S@I have something from, two to three, but that is about it.@1@12@@oe@16-5-2000
 54@unknown@formal@none@1@S@no, Monday is bad.@1@4@@oe@16-5-2000
 55@unknown@formal@none@1@S@I am tied up the whole day.@1@7@@oe@16-5-2000
-56@unknown@formal@none@1@@how about@0@2@@oe@16-5-2000
+56@unknown@formal@none@1@XP@how about@0@2@@oe@16-5-2000
 57@unknown@formal@none@1@S@let us go into the second week.@1@7@@oe@16-5-2000
 58@unknown@formal@none@1@S@what about, say Wednesday afternoon at three, or, Thursday or Friday at three.@1@13@@oe@16-5-2000
 59@unknown@formal@none@1@S@I, think, Wednesday the third at, three is fine, for me.@1@11@@oe@16-5-2000
@@ -87,14 +87,14 @@
 87@unknown@formal@none@1@XP@Wednesday, in the afternoon?@1@4@@oe@16-5-2000
 88@unknown@formal@none@1@XP@or the fifth.@1@3@@oe@16-5-2000
 89@unknown@formal@none@1@XP@in the morning.@1@3@@oe@16-5-2000
-90@unknown@formal@none@1@S@I am also free after one, P-M, on Wednesday the fourth?@1@11@@oe@16-5-2000
+90@unknown@formal@none@1@S@I am also free after one, p.m., on Wednesday the fourth?@1@11@@oe@16-5-2000
 91@unknown@formal@none@1@S@so what about, around two.@1@5@@oe@16-5-2000
 92@unknown@formal@none@1@S@two o'clock on Wednesday the fourth sounds good.@1@8@@oe@16-5-2000
 93@unknown@formal@none@1@S@I will see you then.@1@5@@oe@16-5-2000
 94@unknown@formal@none@1@S@great I will see you then.@1@6@@oe@16-5-2000
 95@unknown@formal@none@1@XP@bye.@1@1@@oe@16-5-2000
 96@unknown@formal@none@1@S@okay. when, are you free.@1@5@@oe@16-5-2000
-97@unknown@formal@none@1@@I think, I am free all day on, Wednesday it looks like, the sixth.@0@14@@oe@16-5-2000
+97@unknown@formal@none@1@S@I think, I am free all day on, Wednesday it looks like, the sixth.@0@14@@oe@16-5-2000
 98@unknown@formal@none@1@XP@sorry, can not do Wednesday.@1@5@@oe@16-5-2000
 99@unknown@formal@none@1@S@I will be out of town all day.@1@8@@oe@16-5-2000
 100@unknown@formal@none@1@S@wow, I am tied up on Thursday and Friday too.@1@10@@oe@16-5-2000
@@ -122,7 +122,7 @@
 122@unknown@formal@none@1@S@are you free, on, the afternoon of, Thursday the first.@1@10@@oe@16-5-2000
 123@unknown@formal@none@1@XP@or the morning, of, Friday the second.@1@7@@oe@16-5-2000
 124@unknown@formal@none@1@S@those are, pretty, open days for me.@1@7@@oe@16-5-2000
-125@unknown@formal@none@1@S@well on the, first, I can only meet you, after four P-M?@1@12@@oe@16-5-2000
+125@unknown@formal@none@1@S@well on the, first, I can only meet you, after four p.m.?@1@12@@oe@16-5-2000
 126@unknown@formal@none@1@S@so that might be tight.@1@5@@oe@16-5-2000
 127@unknown@formal@none@1@S@on, Friday I have a seminar from ten to two thirty.@1@11@@oe@16-5-2000
 128@unknown@formal@none@1@S@both those days are a little crowded,@1@7@@oe@16-5-2000
@@ -139,7 +139,7 @@
 139@unknown@formal@none@1@S@do you have any, free time on the sixth.@1@9@@oe@16-5-2000
 140@unknown@formal@none@1@S@I have a meeting from two to four, in the afternoon.@1@11@@oe@16-5-2000
 141@unknown@formal@none@1@XP@so maybe, sometime on the sixth,@1@6@@oe@16-5-2000
-142@unknown@formal@none@1@@otherwise just do it in the fifth morning.@0@8@@oe@16-5-2000
+142@unknown@formal@none@1@S@otherwise just do it in the fifth morning.@0@8@@oe@16-5-2000
 143@unknown@formal@none@1@S@I am out of town on the sixth.@1@8@@oe@16-5-2000
 144@unknown@formal@none@1@S@so, let me see.@1@4@@oe@16-5-2000
 145@unknown@formal@none@1@S@like I am free on the afternoon of the eighth, and the morning of the ninth.@1@16@@oe@16-5-2000
@@ -152,25 +152,24 @@
 152@unknown@formal@none@1@XP@great.@1@1@@oe@16-5-2000
 153@unknown@formal@none@1@S@it will be nice ,@1@5@@oe@16-5-2000
 154@unknown@formal@none@1@S@both have, kind of, less hectic schedules.@1@7@@oe@16-5-2000
-155@unknown@formal@none@1@@I will see you at two on the, eighth it was.@0@11@@oe@16-5-2000
+155@unknown@formal@none@1@S@I will see you at two on the, eighth it was.@0@11@@oe@16-5-2000
 156@unknown@formal@none@1@XP@right?@1@1@@oe@16-5-2000
 157@unknown@formal@none@1@XP@great.@1@1@@oe@16-5-2000
-158@unknown@formal@none@1@S@see you later.@1@3@@oe@16-5-2000
+158@unknown@formal@none@1@XP@see you later.@1@3@@oe@16-5-2000
 159@unknown@formal@none@1@S@well I am out of town from the, twenty seventh to the, first of February so, that is not so great.@1@21@@oe@16-5-2000
-160@unknown@formal@none@1@XP@the twenty fifth?@1@3@@oe@16-5-2000
-161@unknown@formal@none@1@XP@is, pretty busy@1@3@@oe@16-5-2000
+160@unknown@formal@none@1@XP@the twenty fifth is, pretty busy@1@3@@oe@16-5-2000
 162@unknown@formal@none@1@S@I, do not think I can really have much time there.@1@11@@oe@16-5-2000
 163@unknown@formal@none@1@S@how is the, twenty sixth for you.@1@7@@oe@16-5-2000
 164@unknown@formal@none@1@S@I , could get to you after three o'clock in the afternoon.@1@12@@oe@16-5-2000
 165@unknown@formal@none@1@S@the twenty sixth is actually pretty bad,@1@7@@oe@16-5-2000
-166@unknown@formal@none@1@@I, have in seminar from nine to four so,@0@9@@oe@16-5-2000
+166@unknown@formal@none@1@S@I, have in seminar from nine to four so,@0@9@@oe@16-5-2000
 167@unknown@formal@none@1@S@even though I could try to rush to, meet you by, four thirty, that would be, kind of, hectic perhaps,@1@20@@oe@16-5-2000
 168@unknown@formal@none@1@S@are you free, on, the afternoon of Wednesday the third.@1@10@@oe@16-5-2000
 169@unknown@formal@none@1@S@I am out of town the first and the second, but, the afternoon of the third I will, be around all afternoon.@1@22@@oe@16-5-2000
 170@unknown@formal@none@1@S@and, yeah, hopefully that will work.@1@6@@oe@16-5-2000
 171@unknown@formal@none@1@XP@because I am running out of, tries.@1@7@@oe@16-5-2000
-172@unknown@formal@none@1@@afternoon of the third is pretty good, any time after, two.@0@11@@oe@16-5-2000
-173@unknown@formal@none@1@@okay well just so, to have a little buffer of time there, we can make it at three o'clock on the, we said the third.@0@25@@oe@16-5-2000
+172@unknown@formal@none@1@S@afternoon of the third is pretty good, any time after, two.@0@11@@oe@16-5-2000
+173@unknown@formal@none@1@S@okay well just so, to have a little buffer of time there, we can make it at three o'clock on the, we said the third.@0@25@@oe@16-5-2000
 174@unknown@formal@none@1@XP@right?@1@1@@oe@16-5-2000
 175@unknown@formal@none@1@S@yeah, so, if that is good with you then, that would be great with me.@1@15@@oe@16-5-2000
 176@unknown@formal@none@1@S@okay that is good.@1@4@@oe@16-5-2000
@@ -195,11 +194,11 @@
 195@unknown@formal@none@1@S@I have two all day seminars.@1@6@@oe@16-5-2000
 196@unknown@formal@none@1@S@the, fifth is good,@1@4@@oe@16-5-2000
 197@unknown@formal@none@1@S@I only have stuff in the afternoon?@1@7@@oe@16-5-2000
-198@unknown@formal@none@1@@how is then.@0@3@@oe@16-5-2000
+198@unknown@formal@none@1@S@how is then.@1@3@@oe@16-5-2000
 199@unknown@formal@none@1@XP@the twenty ninth also.@1@4@@oe@16-5-2000
 200@unknown@formal@none@1@XP@only stuff in the afternoon.@1@5@@oe@16-5-2000
 201@unknown@formal@none@1@S@well actually that is kind of funny, because, on the fifth and the twenty ninth I only have stuff in the morning,@1@22@@oe@16-5-2000
-202@unknown@formal@none@1@@how about,@0@2@@oe@16-5-2000
+202@unknown@formal@none@1@XP@how about,@0@2@@oe@16-5-2000
 203@unknown@formal@none@1@S@is the morning of the twenty eighth relatively, free for you?@1@11@@oe@16-5-2000
 204@unknown@formal@none@1@S@nope, the, twenty eighth I only am free in the afternoon.@1@11@@oe@16-5-2000
 205@unknown@formal@none@1@S@the, thirtieth I am free all day.@1@7@@oe@16-5-2000
@@ -211,7 +210,7 @@
 211@unknown@formal@none@1@S@I am, busy from two to four.@1@7@@oe@16-5-2000
 212@unknown@formal@none@1@S@but, even if you are free around noon, like we could get together at twelve or even one.@1@18@@oe@16-5-2000
 213@unknown@formal@none@1@S@it is cutting a little close though.@1@7@@oe@16-5-2000
-214@unknown@formal@none@1@XP@wait.@1@1@@oe@16-5-2000
+214@unknown@formal@none@1@S@wait.@1@1@@oe@16-5-2000
 215@unknown@formal@none@1@S@yeah, it is a two hour meeting.@1@7@@oe@16-5-2000
 216@unknown@formal@none@1@S@yeah, well I am free the morning of the sixth.@1@10@@oe@16-5-2000
 217@unknown@formal@none@1@S@and, I have to be somewhere by two.@1@8@@oe@16-5-2000
@@ -229,7 +228,7 @@
 229@unknown@formal@none@1@S@I am busy from one to four in the afternoon on the twenty ninth.@1@14@@oe@16-5-2000
 230@unknown@formal@none@1@S@I think we are probably going to have to, get together after work.@1@13@@oe@16-5-2000
 231@unknown@formal@none@1@S@what day would be good for that.@1@7@@oe@16-5-2000
-232@unknown@formal@none@1@@basically, any day, other than, the thirtieth, the thirty first the second, the third.@0@14@@oe@16-5-2000
+232@unknown@formal@none@1@XP@basically, any day, other than, the thirtieth, the thirty first the second, the third.@0@14@@oe@16-5-2000
 233@unknown@formal@none@1@S@yeah, those days I will be away and so, I will not be in town to even, be at work.@1@20@@oe@16-5-2000
 234@unknown@formal@none@1@S@so but any other day is fine with me.@1@9@@oe@16-5-2000
 235@unknown@formal@none@1@XP@whatever you want.@1@3@@oe@16-5-2000
@@ -242,11 +241,11 @@
 242@unknown@formal@none@1@XP@pretty free the afternoon of the first. as well,@1@9@@oe@16-5-2000
 243@unknown@formal@none@1@S@well the only time I was free anytime in those, periods was on the twenty eighth,@1@16@@oe@16-5-2000
 244@unknown@formal@none@1@S@I have an hour between two and three?@1@8@@oe@16-5-2000
-245@unknown@formal@none@1@@if you would not, be able to get to those that be okay.@0@13@@oe@16-5-2000
+245@unknown@formal@none@1@S@if you would not, be able to get to those that be okay.@0@13@@oe@16-5-2000
 246@unknown@formal@none@1@S@well, between two and three is fine, with me.@1@9@@oe@16-5-2000
 247@unknown@formal@none@1@S@I can, easily get there.@1@5@@oe@16-5-2000
-248@unknown@formal@none@1@@are we suppose to meet for two hours though?@0@9@@oe@16-5-2000
-249@unknown@formal@none@1@@I am confused about the whole, rules I guess.@0@9@@oe@16-5-2000
+248@unknown@formal@none@1@S@are we supposed to meet for two hours though?@1@9@@oe@16-5-2000
+249@unknown@formal@none@1@S@I am confused about the whole, rules I guess.@1@9@@oe@16-5-2000
 250@unknown@formal@none@1@S@I do not know@1@4@@oe@16-5-2000
 251@unknown@formal@none@1@S@I think we can, meet for an hour@1@8@@oe@16-5-2000
 252@unknown@formal@none@1@S@we do not need, that much time.@1@7@@oe@16-5-2000
@@ -276,9 +275,9 @@
 276@unknown@formal@none@1@S@hm, now you said you were free, on the, mornings of the twenty ninth and the, thirtieth.@1@17@@oe@16-5-2000
 277@unknown@formal@none@1@S@now, I have a ten o'clock meeting on the thirtieth.@1@10@@oe@16-5-2000
 278@unknown@formal@none@1@S@but maybe, it would be just as easy if we got together, say at eight on the thirtieth, as opposed to like , after work some day.@1@27@@oe@16-5-2000
-279@unknown@formal@none@1@@because that way, yeah I do not know sometimes early morning meetings.@0@12@@oe@16-5-2000
-280@unknown@formal@none@1@@when you, can not, fit it in your,@0@8@@oe@16-5-2000
-281@unknown@formal@none@1@S@nine to five are, a little more productive than, end of the day meetings.@1@14@@oe@16-5-2000
+279@unknown@formal@none@1@XP@because that way, yeah I do not know sometimes early morning meetings.@0@12@@oe@16-5-2000
+280@unknown@formal@none@1@XP@when you, can not, fit it in your,@0@8@@oe@16-5-2000
+281@unknown@formal@none@1@S@nine to five are, a little more productive than, end of the day meetings.@0@14@@oe@16-5-2000
 282@unknown@formal@none@1@S@well okay , eight o'clock in the morning on the Thursday should be good.@1@14@@oe@16-5-2000
 283@unknown@formal@none@1@S@wait,@1@1@@oe@16-5-2000
 284@unknown@formal@none@1@S@I am really confused.@1@4@@oe@16-5-2000
@@ -299,7 +298,7 @@
 299@unknown@formal@none@1@XP@and the, morning, of the tenth?@1@6@@oe@16-5-2000
 300@unknown@formal@none@1@S@how is that time for you.@1@6@@oe@16-5-2000
 301@unknown@formal@none@1@S@I am out of town, both of those days, and, I am out of town on Thursday.@1@17@@oe@16-5-2000
-302@unknown@formal@none@1@@but on the eighth, I am, free, from twelve to,.@0@10@@oe@16-5-2000
+302@unknown@formal@none@1@XP@but on the eighth, I am, free, from twelve to,.@0@10@@oe@16-5-2000
 303@unknown@formal@none@1@S@wait.@1@1@@oe@16-5-2000
 304@unknown@formal@none@1@S@I am free, from, three to four, or three to five, or, on the twelfth I am, free,@1@18@@oe@16-5-2000
 305@unknown@formal@none@1@S@I am not free all day on the twelfth.@1@9@@oe@16-5-2000
@@ -320,7 +319,7 @@
 320@unknown@formal@none@1@S@how is, my office.@1@4@@oe@16-5-2000
 321@unknown@formal@none@1@S@your office sounds great.@1@4@@oe@16-5-2000
 322@unknown@formal@none@1@S@I will see you, on Tuesday the sixteenth at two o'clock?@1@11@@oe@16-5-2000
-323@unknown@formal@none@1@S@okay see you then.@1@4@@oe@16-5-2000
+323@unknown@formal@none@1@XP@okay see you then.@1@4@@oe@16-5-2000
 324@unknown@formal@none@1@XP@bye.@1@1@@oe@16-5-2000
 325@unknown@formal@none@1@S@yes I wanted to see when you wanted to meet, the week, of, March twenty ninth, the twenty ninth, and the thirtieth,@1@22@@oe@16-5-2000
 326@unknown@formal@none@1@S@that Monday and Tuesday, anytime after three would be great with me.@1@12@@oe@16-5-2000
@@ -342,7 +341,7 @@
 342@unknown@formal@none@1@S@the twenty fifth and twenty sixth are pretty busy.@1@9@@oe@16-5-2000
 343@unknown@formal@none@1@S@I think we are going to have to go to the next week,@1@13@@oe@16-5-2000
 344@unknown@formal@none@1@S@on Wednesday the third, I am free in the morning, like maybe from, eight o'clock to ten?@1@17@@oe@16-5-2000
-345@unknown@formal@none@1@@that is also pretty bad week.@0@6@@oe@16-5-2000
+345@unknown@formal@none@1@S@that is also pretty bad week.@0@6@@oe@16-5-2000
 346@unknown@formal@none@1@S@any time, from the third to the fifth from eight in the morning to ten would be okay,@1@18@@oe@16-5-2000
 347@unknown@formal@none@1@S@how is then for you.@1@5@@oe@16-5-2000
 348@unknown@formal@none@1@S@I am out of town that Monday and Tuesday, and, my mornings are pretty booked,@1@15@@oe@16-5-2000
@@ -413,18 +412,18 @@
 413@unknown@formal@none@1@S@well I am on vacation from the twenty fourth to the twenty seventh, so, that is really not, good for me.@1@21@@oe@16-5-2000
 414@unknown@formal@none@1@S@you said you were booked the twenty second to the twenty fourth,@1@12@@oe@16-5-2000
 415@unknown@formal@none@1@S@I was, relatively free then.@1@5@@oe@16-5-2000
-416@unknown@formal@none@1@@but, the twenty ninth, thirtieth I am only busy in the afternoon,@0@12@@oe@16-5-2000
-417@unknown@formal@none@1@@how is your days the, twenty ninth and thirtieth.@0@9@@oe@16-5-2000
+416@unknown@formal@none@1@S@but, the twenty ninth, thirtieth I am only busy in the afternoon,@0@12@@oe@16-5-2000
+417@unknown@formal@none@1@S@how is your days the, twenty ninth and thirtieth.@0@9@@oe@16-5-2000
 418@unknown@formal@none@1@S@I am busy all day on the twenty ninth, but the thirtieth, I have a meeting at ten o'clock, so, if you would like, we could, schedule it, like maybe around eight o'clock.@1@33@@oe@16-5-2000
 419@unknown@formal@none@1@S@if you, are, booked, that afternoon, I am free that afternoon, but like I said the morning would be fine.@1@20@@oe@16-5-2000
 420@unknown@formal@none@1@XP@if it is okay with you.@1@6@@oe@16-5-2000
-421@unknown@formal@none@1@@okay the morning eight o'clock.@0@5@@oe@16-5-2000
+421@unknown@formal@none@1@XP@okay the morning eight o'clock.@0@5@@oe@16-5-2000
 422@unknown@formal@none@1@S@your office would be good,@1@5@@oe@16-5-2000
 423@unknown@formal@none@1@S@they are painting mine, so, why don't we do it there.@1@11@@oe@16-5-2000
 424@unknown@formal@none@1@XP@eight o'clock at, my office, on, November, the, thirtieth?@1@9@@oe@16-5-2000
 425@unknown@formal@none@1@XP@sounds great.@1@2@@oe@16-5-2000
 426@unknown@formal@none@1@S@I guess I will see you then.@1@7@@oe@16-5-2000
-427@unknown@formal@none@1@@hi. I would like to make a, an appointment with you, somewhere, on the week of the eighth, or the week of the fifteenth?@0@24@@oe@16-5-2000
+427@unknown@formal@none@1@S@hi. I would like to make a, an appointment with you, somewhere, on the week of the eighth, or the week of the fifteenth?@0@24@@oe@16-5-2000
 428@unknown@formal@none@1@S@okay, I am free all day on the seventeenth,@1@9@@oe@16-5-2000
 429@unknown@formal@none@1@S@how is then for you.@1@5@@oe@16-5-2000
 430@unknown@formal@none@1@S@I have a seminar, between nine, and four thirty, on the seventeenth.@1@12@@oe@16-5-2000
@@ -455,12 +454,12 @@
 455@unknown@formal@none@1@S@the week of the fifth, I am free the morning of the sixth, and all day on the seventh,@1@19@@oe@16-5-2000
 456@unknown@formal@none@1@S@how are, those days for you.@1@6@@oe@16-5-2000
 457@unknown@formal@none@1@S@well on the sixth, and the seventh, I am going to be out of town, but, the eighth is really good for me,@1@23@@oe@16-5-2000
-458@unknown@formal@none@1@@I am free, eleven o'clock, and then, for the rest of the day.@0@13@@oe@16-5-2000
+458@unknown@formal@none@1@S@I am free, eleven o'clock, and then, for the rest of the day.@0@13@@oe@16-5-2000
 459@unknown@formal@none@1@S@okay the eighth sounds good.@1@5@@oe@16-5-2000
 460@unknown@formal@none@1@S@I do have a meeting in the morning that ends at ten, so, maybe we can meet at like, one thirty?@1@21@@oe@16-5-2000
 461@unknown@formal@none@1@XP@yes.@1@1@@oe@16-5-2000
 462@unknown@formal@none@1@S@one thirty sounds good for me,@1@6@@oe@16-5-2000
-463@unknown@formal@none@1@S@see you then,@1@3@@oe@16-5-2000
+463@unknown@formal@none@1@XP@see you then,@1@3@@oe@16-5-2000
 464@unknown@formal@none@1@S@hi I would like to make an appointment with you? either, the week of the twenty fifth, or the week of the first.@1@23@@oe@16-5-2000
 465@unknown@formal@none@1@S@well this is a pretty rough week,@1@7@@oe@16-5-2000
 466@unknown@formal@none@1@S@I am pretty busy, on, Monday.@1@6@@oe@16-5-2000
@@ -470,17 +469,17 @@
 470@unknown@formal@none@1@S@how is then for you.@1@5@@oe@16-5-2000
 471@unknown@formal@none@1@S@well, on Tuesday the second I am going to be out of town.@1@13@@oe@16-5-2000
 472@unknown@formal@none@1@S@but, the third is really good for me, because, I will be free, at around twelve o'clock.@1@17@@oe@16-5-2000
-473@unknown@formal@none@1@S@because I have a meeting from nine thirty until twelve.@1@10@@oe@16-5-2000
+473@unknown@formal@none@1@XP@because I have a meeting from nine thirty until twelve.@1@10@@oe@16-5-2000
 474@unknown@formal@none@1@S@on the third I do have a business appointment from one to two in the afternoon.@1@16@@oe@16-5-2000
 475@unknown@formal@none@1@S@so how about three o'clock to five o'clock then?@1@9@@oe@16-5-2000
 476@unknown@formal@none@1@XP@on Wednesday the third?@1@4@@oe@16-5-2000
 477@unknown@formal@none@1@XP@yes.@1@1@@oe@16-5-2000
 478@unknown@formal@none@1@S@three o'clock to five o'clock is good for me.@1@9@@oe@16-5-2000
-479@unknown@formal@none@1@S@see you then.@1@3@@oe@16-5-2000
+479@unknown@formal@none@1@XP@see you then.@1@3@@oe@16-5-2000
 480@unknown@formal@none@1@S@hi, I would like to make an appointment with you? either the week of the twenty fourth, or the week of the thirty first.@1@24@@oe@16-5-2000
 481@unknown@formal@none@1@S@this week is pretty free for me,@1@7@@oe@16-5-2000
 482@unknown@formal@none@1@S@the twenty seventh I am free all day.@1@8@@oe@16-5-2000
-483@unknown@formal@none@1@S@I am free, anytime after, eleven A-M, on the twenty sixth, and anytime after, like one A-M on the twenty fourth?@1@21@@oe@16-5-2000
+483@unknown@formal@none@1@S@I am free, anytime after, eleven a.m., on the twenty sixth, and anytime after, like one a.m. on the twenty fourth?@1@21@@oe@16-5-2000
 484@unknown@formal@none@1@S@I am out of town on the thirty first to the second?@1@12@@oe@16-5-2000
 485@unknown@formal@none@1@S@so that probably would not be good.@1@7@@oe@16-5-2000
 486@unknown@formal@none@1@S@what in that range sounds good for you.@1@8@@oe@16-5-2000
@@ -491,11 +490,11 @@
 491@unknown@formal@none@1@S@no I am out of town on the second.@1@9@@oe@16-5-2000
 492@unknown@formal@none@1@XP@the third and fourth,@1@4@@oe@16-5-2000
 493@unknown@formal@none@1@S@well the third I am free after twelve.@1@8@@oe@16-5-2000
-494@unknown@formal@none@1@S@and the fourth I am free, anytime from nine in the morning until like two, P-M.@1@16@@oe@16-5-2000
+494@unknown@formal@none@1@S@and the fourth I am free, anytime from nine in the morning until like two, p.m.@1@16@@oe@16-5-2000
 495@unknown@formal@none@1@S@how is then for you.@1@5@@oe@16-5-2000
 496@unknown@formal@none@1@S@how about from, twelve o'clock until, two o'clock on the third.@1@11@@oe@16-5-2000
 497@unknown@formal@none@1@S@could we make that a little later, like one o'clock to, three o'clock?@1@13@@oe@16-5-2000
-498@unknown@formal@none@1@S@yes.@1@1@@oe@16-5-2000
+498@unknown@formal@none@1@XP@yes.@1@1@@oe@16-5-2000
 499@unknown@formal@none@1@S@that is fine for me.@1@5@@oe@16-5-2000
 500@unknown@formal@none@1@S@I will see you then.@1@5@@oe@16-5-2000
 501@unknown@formal@none@1@S@hi, I would like to make an appointment with you, either the week of the twenty sixth, or the week of, the second.@1@23@@oe@16-5-2000
@@ -523,11 +522,11 @@
 523@unknown@formal@none@1@S@would you be free in the afternoon on the twenty ninth?@1@11@@oe@16-5-2000
 524@unknown@formal@none@1@S@no, actually I am busy all day on the twenty ninth.@1@11@@oe@16-5-2000
 525@unknown@formal@none@1@S@how about Friday October first.@1@5@@oe@16-5-2000
-526@unknown@formal@none@1@S@I am free for most of the day, except for, between eleven, like from ten to eleven A-M@1@18@@oe@16-5-2000
+526@unknown@formal@none@1@S@I am free for most of the day, except for, between eleven, like from ten to eleven a.m.@1@18@@oe@16-5-2000
 527@unknown@formal@none@1@S@I am busy, on the first.@1@6@@oe@16-5-2000
 528@unknown@formal@none@1@S@no, Friday is, no good,@1@5@@oe@16-5-2000
 529@unknown@formal@none@1@S@I have, meetings basically from, nine to five.@1@8@@oe@16-5-2000
-530@unknown@formal@none@1@@I am out of town from the fourth to sixth,@0@10@@oe@16-5-2000
+530@unknown@formal@none@1@S@I am out of town from the fourth to sixth,@0@10@@oe@16-5-2000
 531@unknown@formal@none@1@S@and I have got seminars on the seventh and eighth.@1@10@@oe@16-5-2000
 532@unknown@formal@none@1@XP@if we can not find time, during the regular, day.@1@10@@oe@16-5-2000
 533@unknown@formal@none@1@S@would you have a problem meeting after hours like maybe at five o'clock some day?@1@15@@oe@16-5-2000
@@ -544,7 +543,7 @@
 544@unknown@formal@none@1@S@I will see you then.@1@5@@oe@16-5-2000
 545@unknown@formal@none@1@S@hi, I would like to make an appointment with you, either the week of the twenty second or the, week of the twenty ninth.@1@24@@oe@16-5-2000
 546@unknown@formal@none@1@S@I am going on a trip, from Thursday, the twenty fifth to the twenty seventh, so I would like to get the meeting in before then.@1@26@@oe@16-5-2000
-547@unknown@formal@none@1@@I basically, Monday through Wednesday have afternoon meetings, from around, like two to four thirty, two to five o'clock.@0@19@@oe@16-5-2000
+547@unknown@formal@none@1@S@I basically, Monday through Wednesday have afternoon meetings, from around, like two to four thirty, two to five o'clock.@0@19@@oe@16-5-2000
 548@unknown@formal@none@1@S@would sometime in the morning, be good on any of those days?@1@12@@oe@16-5-2000
 549@unknown@formal@none@1@S@I do not really have much time in the morning, except on the twenty third.@1@15@@oe@16-5-2000
 550@unknown@formal@none@1@S@I only have an hour there.@1@6@@oe@16-5-2000
@@ -580,7 +579,7 @@
 580@unknown@formal@none@1@XP@Rob@1@1@@oe@16-5-2000
 581@unknown@formal@none@1@S@how about February third, in the afternoon.@1@7@@oe@16-5-2000
 582@unknown@formal@none@1@XP@well, early or late afternoon.@1@5@@oe@16-5-2000
-583@unknown@formal@none@1@S@I am, tied up, that day from ten, in the morning until, two P-M,@1@14@@oe@16-5-2000
+583@unknown@formal@none@1@S@I am, tied up, that day from ten, in the morning until, two p.m.,@1@14@@oe@16-5-2000
 584@unknown@formal@none@1@S@if you are free after that, that would be great.@1@10@@oe@16-5-2000
 585@unknown@formal@none@1@S@how about from two thirty to four thirty at my office.@1@11@@oe@16-5-2000
 586@unknown@formal@none@1@XP@alright.@1@1@@oe@16-5-2000
@@ -589,13 +588,13 @@
 589@unknown@formal@none@1@XP@say Rob@1@2@@oe@16-5-2000
 590@unknown@formal@none@1@S@how about the second or third, the second in the morning, or late afternoon and the third, anytime after ten.@1@20@@oe@16-5-2000
 591@unknown@formal@none@1@S@well, I will be out of town on the second,@1@10@@oe@16-5-2000
-592@unknown@formal@none@1@S@the third, however, I am free after eleven A-M.@1@9@@oe@16-5-2000
+592@unknown@formal@none@1@S@the third, however, I am free after eleven a.m.@1@9@@oe@16-5-2000
 593@unknown@formal@none@1@S@what time, were you, specifically thinking about.@1@7@@oe@16-5-2000
 594@unknown@formal@none@1@S@how about from noon to two.@1@6@@oe@16-5-2000
 595@unknown@formal@none@1@XP@at my office, if that is okay?@1@7@@oe@16-5-2000
 596@unknown@formal@none@1@S@yes, in fact that is excellent.@1@6@@oe@16-5-2000
 597@unknown@formal@none@1@S@I will see you then.@1@5@@oe@16-5-2000
-598@unknown@formal@none@1@@okay. Rob@0@2@@oe@16-5-2000
+598@unknown@formal@none@1@XP@okay. Rob@1@2@@oe@16-5-2000
 599@unknown@formal@none@1@S@how about either the morning, of, the twenty seventh or twenty eighth.@1@12@@oe@16-5-2000
 600@unknown@formal@none@1@S@well, unfortunately those mornings, I am, tied up.@1@8@@oe@16-5-2000
 601@unknown@formal@none@1@S@however, I do have, some free time the morning of Thursday the twenty ninth,@1@14@@oe@16-5-2000
@@ -630,10 +629,10 @@
 630@unknown@formal@none@1@S@I have got a meeting from ten thirty to one, but after that I am free,@1@16@@oe@16-5-2000
 631@unknown@formal@none@1@S@how does that sound to you.@1@6@@oe@16-5-2000
 632@unknown@formal@none@1@S@okay, unless you want to try to squeeze it in on Thursday the thirtieth, from anywhere between twelve and two thirty.@1@21@@oe@16-5-2000
-633@unknown@formal@none@1@@because that is the only times I am free that day.@0@11@@oe@16-5-2000
+633@unknown@formal@none@1@XP@because that is the only times I am free that day.@0@11@@oe@16-5-2000
 634@unknown@formal@none@1@S@no, I am afraid I can not do it that day,@1@11@@oe@16-5-2000
 635@unknown@formal@none@1@S@so, why don't we meet Saturday the second.@1@8@@oe@16-5-2000
-636@unknown@formal@none@1@S@say from two thirty to four thirty?@1@7@@oe@16-5-2000
+636@unknown@formal@none@1@XP@say from two thirty to four thirty?@1@7@@oe@16-5-2000
 637@unknown@formal@none@1@S@how does that sound.@1@4@@oe@16-5-2000
 638@unknown@formal@none@1@S@that is fine, but you are cutting into my TV sports time.@1@12@@oe@16-5-2000
 639@unknown@formal@none@1@S@but I will do it.@1@5@@oe@16-5-2000
@@ -655,9 +654,9 @@
 655@unknown@formal@none@1@XP@because , I have nothing that morning.@1@7@@oe@16-5-2000
 656@unknown@formal@none@1@S@that is no good,@1@4@@oe@16-5-2000
 657@unknown@formal@none@1@S@how about, anytime Friday, except during lunch.@1@7@@oe@16-5-2000
-658@unknown@formal@none@1@@either at morning or afternoon after one thirty.@0@8@@oe@16-5-2000
+658@unknown@formal@none@1@XP@either at morning or afternoon after one thirty.@0@8@@oe@16-5-2000
 659@unknown@formal@none@1@S@well, I am out of town, the twenty fifth through the twenty seventh.@1@13@@oe@16-5-2000
-660@unknown@formal@none@1@@hm do you have any time, say, in the mornings of the twenty ninth, thirtieth, or first?@0@17@@oe@16-5-2000
+660@unknown@formal@none@1@S@hm do you have any time, say, in the mornings of the twenty ninth, thirtieth, or first?@0@17@@oe@16-5-2000
 661@unknown@formal@none@1@S@nothing is good in those mornings.@1@6@@oe@16-5-2000
 662@unknown@formal@none@1@S@how about the afternoon, of the second?@1@7@@oe@16-5-2000
 663@unknown@formal@none@1@XP@or, the thirtieth.@1@3@@oe@16-5-2000
@@ -740,13 +739,13 @@
 740@unknown@formal@none@1@S@well I will, try to have a good time,@1@9@@oe@16-5-2000
 741@unknown@formal@none@1@S@I guess I will, see you soon.@1@7@@oe@16-5-2000
 742@unknown@formal@none@1@XP@bye,@1@1@@oe@16-5-2000
-743@unknown@formal@none@1@S@hello Ian,@1@2@@oe@16-5-2000
+743@unknown@formal@none@1@XP@hello Ian,@1@2@@oe@16-5-2000
 744@unknown@formal@none@1@S@I think we should schedule a meeting, sometime soon?@1@9@@oe@16-5-2000
 745@unknown@formal@none@1@S@what does your schedule look like.@1@6@@oe@16-5-2000
 746@unknown@formal@none@1@S@well I am going to be at the condo, in Hawaii, from the first to the seventh.@1@17@@oe@16-5-2000
 747@unknown@formal@none@1@S@so this first week is out,@1@6@@oe@16-5-2000
 748@unknown@formal@none@1@S@the week after that I am free almost every day though,@1@11@@oe@16-5-2000
-749@unknown@formal@none@1@@so, any time then, good for you?@0@7@@oe@16-5-2000
+749@unknown@formal@none@1@XP@so, any time then, good for you?@0@7@@oe@16-5-2000
 750@unknown@formal@none@1@S@well, I could, squeeze you in, at the, beginning of the week, but I would rather hold off, until, Friday the thirteenth.@1@22@@oe@16-5-2000
 751@unknown@formal@none@1@S@I know that is bad luck, but, it is going to have to do.@1@14@@oe@16-5-2000
 752@unknown@formal@none@1@S@that is cool,@1@3@@oe@16-5-2000
@@ -762,7 +761,7 @@
 762@unknown@formal@none@1@S@have a good time on, vacation.@1@6@@oe@16-5-2000
 763@unknown@formal@none@1@XP@thanks.@1@1@@oe@16-5-2000
 764@unknown@formal@none@1@S@and I will, see you then,@1@6@@oe@16-5-2000
-765@unknown@formal@none@1@S@alright, Ian,@1@2@@oe@16-5-2000
+765@unknown@formal@none@1@XP@alright, Ian,@1@2@@oe@16-5-2000
 766@unknown@formal@none@1@S@I would like to schedule a meeting with you in the next couple of weeks,@1@15@@oe@16-5-2000
 767@unknown@formal@none@1@S@today is Friday the fifth,@1@5@@oe@16-5-2000
 768@unknown@formal@none@1@S@I am going to be out of town, Tuesday Wednesday and Thursday next week. so that is out of the question.@1@21@@oe@16-5-2000
@@ -785,7 +784,7 @@
 785@unknown@formal@none@1@XP@sure.@1@1@@oe@16-5-2000
 786@unknown@formal@none@1@XP@sounds great.@1@2@@oe@16-5-2000
 787@unknown@formal@none@1@S@I will, see you then,@1@5@@oe@16-5-2000
-788@unknown@formal@none@1@S@okay Ian,@1@2@@oe@16-5-2000
+788@unknown@formal@none@1@XP@okay Ian,@1@2@@oe@16-5-2000
 789@unknown@formal@none@1@S@I think we should meet again sometime soon,@1@8@@oe@16-5-2000
 790@unknown@formal@none@1@S@today is Monday the fifth, and I am going out of town tomorrow, and the next day.@1@17@@oe@16-5-2000
 791@unknown@formal@none@1@S@but, I get home, at, four o'clock on Friday. so we could meet,@1@13@@oe@16-5-2000
@@ -806,7 +805,7 @@
 806@unknown@formal@none@1@S@so, how about an afternoon meeting.@1@6@@oe@16-5-2000
 807@unknown@formal@none@1@S@I do not want to, have to make you wake up that early on a, free day.@1@17@@oe@16-5-2000
 808@unknown@formal@none@1@S@how does one thirty sound, on Wednesday the twenty first.@1@10@@oe@16-5-2000
-809@unknown@formal@none@1@S@one thirty, P-M, is, still a little bit early for me.@1@11@@oe@16-5-2000
+809@unknown@formal@none@1@S@one thirty, p.m., is, still a little bit early for me.@1@11@@oe@16-5-2000
 810@unknown@formal@none@1@S@why don't we make it, three o'clock, in the afternoon, on the, twenty first, Wednesday.@1@15@@oe@16-5-2000
 811@unknown@formal@none@1@XP@sounds good.@1@2@@oe@16-5-2000
 812@unknown@formal@none@1@S@so, three o'clock on Wednesday the twenty first, you want to meet at the golf course?@1@16@@oe@16-5-2000
@@ -872,7 +871,7 @@
 872@unknown@formal@none@1@S@okay let us see when I have some free time to set up a meeting here.@1@16@@oe@16-5-2000
 873@unknown@formal@none@1@S@how does Monday, the thirty first, early morning sound. anytime up until, noon.@1@13@@oe@16-5-2000
 874@unknown@formal@none@1@S@well, I am out of town, from the thirty first through the second, so I am afraid it does not sound terribly good.@1@23@@oe@16-5-2000
-875@unknown@formal@none@1@S@June third and June fourth.@1@5@@oe@16-5-2000
+875@unknown@formal@none@1@XP@June third and June fourth.@1@5@@oe@16-5-2000
 876@unknown@formal@none@1@S@I am free in the afternoon and morning respectively,@1@9@@oe@16-5-2000
 877@unknown@formal@none@1@S@how does that coincide with your schedule.@1@7@@oe@16-5-2000
 878@unknown@formal@none@1@S@let us see, I could fit a meeting in, on Thursday.@1@11@@oe@16-5-2000
@@ -906,7 +905,7 @@
 906@unknown@formal@none@1@S@okay, we will see you.@1@5@@oe@16-5-2000
 907@unknown@formal@none@1@S@let us see,@1@3@@oe@16-5-2000
 908@unknown@formal@none@1@S@the first week of the twenty second through the twenty sixth, I am pretty much tied up.@1@17@@oe@16-5-2000
-909@unknown@formal@none@1@@how does the thirtieth, afternoon sound. or evening.@0@8@@oe@16-5-2000
+909@unknown@formal@none@1@S@how does the thirtieth, afternoon sound. or evening.@0@8@@oe@16-5-2000
 910@unknown@formal@none@1@S@evening would be fine also.@1@5@@oe@16-5-2000
 911@unknown@formal@none@1@S@well, I am tied up all afternoon and much of the early evening as well, on, the thirtieth unfortunately,@1@19@@oe@16-5-2000
 912@unknown@formal@none@1@S@do you have any free time, say the morning of the twenty ninth?@1@13@@oe@16-5-2000
@@ -922,16 +921,16 @@
 922@unknown@formal@none@1@S@I am so glad we were able to meet today.@1@10@@oe@16-5-2000
 923@unknown@formal@none@1@S@but I feel that we need to have another two hour meeting, sometime in the next few weeks?@1@18@@oe@16-5-2000
 924@unknown@formal@none@1@S@are you free anytime then?@1@5@@oe@16-5-2000
-925@unknown@formal@none@1@S@yeah Mr Fritzsche,@1@3@@oe@16-5-2000
-926@unknown@formal@none@1@@as a matter of fact I am free from say@0@10@@oe@16-5-2000
+925@unknown@formal@none@1@XP@yeah Mr Fritzsche,@1@3@@oe@16-5-2000
+926@unknown@formal@none@1@S@as a matter of fact I am free from say@0@10@@oe@16-5-2000
 927@unknown@formal@none@1@S@how about on Tuesday, afternoon@1@5@@oe@16-5-2000
-928@unknown@formal@none@1@@or, sometime the morning on Wednesday.@0@6@@oe@16-5-2000
-929@unknown@formal@none@1@@at tenth.@0@2@@oe@16-5-2000
+928@unknown@formal@none@1@XP@or, sometime the morning on Wednesday.@0@6@@oe@16-5-2000
+929@unknown@formal@none@1@XP@at tenth.@0@2@@oe@16-5-2000
 930@unknown@formal@none@1@S@I am, really sorry Mr Lew, but I am going to be out of town, on Tuesday and Wednesday.@1@19@@oe@16-5-2000
 931@unknown@formal@none@1@XP@and also Thursday.@1@3@@oe@16-5-2000
 932@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 933@unknown@formal@none@1@S@how about Monday,@1@3@@oe@16-5-2000
-934@unknown@formal@none@1@S@no, can not do that,@1@5@@oe@16-5-2000
+934@unknown@formal@none@1@XP@no, can not do that,@1@5@@oe@16-5-2000
 935@unknown@formal@none@1@XP@Tuesday the sixteenth?@1@3@@oe@16-5-2000
 936@unknown@formal@none@1@XP@after noon?@1@2@@oe@16-5-2000
 937@unknown@formal@none@1@S@yeah that is actually a very, brilliant plan,@1@8@@oe@16-5-2000
@@ -941,23 +940,23 @@
 941@unknown@formal@none@1@XP@Tuesday afternoon,@1@2@@oe@16-5-2000
 942@unknown@formal@none@1@XP@my office.@1@2@@oe@16-5-2000
 943@unknown@formal@none@1@S@how about that.@1@3@@oe@16-5-2000
-944@unknown@formal@none@1@S@so how about one P-M to three P-M on Tuesday?@1@10@@oe@16-5-2000
+944@unknown@formal@none@1@S@so how about one p.m. to three p.m. on Tuesday?@1@10@@oe@16-5-2000
 945@unknown@formal@none@1@XP@be fine then?@1@3@@oe@16-5-2000
 946@unknown@formal@none@1@XP@yes sir.@1@2@@oe@16-5-2000
 947@unknown@formal@none@1@S@that will work out perfectly.@1@5@@oe@16-5-2000
-948@unknown@formal@none@1@S@thank you very much.@1@4@@oe@16-5-2000
+948@unknown@formal@none@1@XP@thank you very much.@1@4@@oe@16-5-2000
 949@unknown@formal@none@1@S@okay, I look forward to seeing you then.@1@8@@oe@16-5-2000
 950@unknown@formal@none@1@XP@bye.@1@1@@oe@16-5-2000
-951@unknown@formal@none@1@S@Mr Lew.@1@2@@oe@16-5-2000
+951@unknown@formal@none@1@XP@Mr Lew.@1@2@@oe@16-5-2000
 952@unknown@formal@none@1@S@I am not sure that we were able to cover everything we needed to today?@1@15@@oe@16-5-2000
 953@unknown@formal@none@1@S@so I was wondering if in the next two weeks we could get together again for another meeting?@1@18@@oe@16-5-2000
 954@unknown@formal@none@1@S@I am free, after two thirty, on, Monday the twenty ninth, or from three to five, on Tuesday, the thirtieth?@1@20@@oe@16-5-2000
 955@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 956@unknown@formal@none@1@S@on the twenty ninth, I, am, occupied from three to four thirty, because of a meeting,@1@16@@oe@16-5-2000
-957@unknown@formal@none@1@S@and, on the thirtieth, I have got a meeting from eleven to, twelve thirty, P-M.@1@15@@oe@16-5-2000
+957@unknown@formal@none@1@S@and, on the thirtieth, I have got a meeting from eleven to, twelve thirty, p.m.@1@15@@oe@16-5-2000
 958@unknown@formal@none@1@S@so let us see.@1@4@@oe@16-5-2000
 959@unknown@formal@none@1@S@did you say you were free, in the afternoon, those days.@1@11@@oe@16-5-2000
-960@unknown@formal@none@1@S@yes, I did say I was free on Tuesday the thirtieth, from three to five P-M.@1@16@@oe@16-5-2000
+960@unknown@formal@none@1@S@yes, I did say I was free on Tuesday the thirtieth, from three to five p.m.@1@16@@oe@16-5-2000
 961@unknown@formal@none@1@XP@if that would be okay with you.@1@7@@oe@16-5-2000
 962@unknown@formal@none@1@S@sure, , three to five, , seems like a reasonable hour.@1@11@@oe@16-5-2000
 963@unknown@formal@none@1@S@and if I could meet you in your office, that will be great,@1@13@@oe@16-5-2000
@@ -967,27 +966,27 @@
 967@unknown@formal@none@1@S@but, that is great.@1@4@@oe@16-5-2000
 968@unknown@formal@none@1@S@I will see you then.@1@5@@oe@16-5-2000
 969@unknown@formal@none@1@XP@bye.@1@1@@oe@16-5-2000
-970@unknown@formal@none@1@S@thank you so much for your time today.@1@8@@oe@16-5-2000
+970@unknown@formal@none@1@XP@thank you so much for your time today.@1@8@@oe@16-5-2000
 971@unknown@formal@none@1@S@I really do feel that, we need to get together again, in the next two weeks,@1@16@@oe@16-5-2000
-972@unknown@formal@none@1@S@are you free, on January the twenty fifth, Monday, from any time besides two to three P-M?@1@17@@oe@16-5-2000
+972@unknown@formal@none@1@S@are you free, on January the twenty fifth, Monday, from any time besides two to three p.m.?@1@17@@oe@16-5-2000
 973@unknown@formal@none@1@S@unfortunately , that day I am, pretty much occupied from nine to five,@1@13@@oe@16-5-2000
 974@unknown@formal@none@1@S@and hm, that will be hard to do.@1@8@@oe@16-5-2000
-975@unknown@formal@none@1@@on the twenty seventh until, let us see.@0@8@@oe@16-5-2000
-976@unknown@formal@none@1@@twenty ninth I will be out of town so, that will be hard to do.@0@15@@oe@16-5-2000
+975@unknown@formal@none@1@XP@on the twenty seventh until, let us see.@0@8@@oe@16-5-2000
+976@unknown@formal@none@1@S@twenty ninth I will be out of town so, that will be hard to do.@0@15@@oe@16-5-2000
 977@unknown@formal@none@1@S@but, on the twenty sixth, which is Tuesday, I have got three to five.@1@14@@oe@16-5-2000
 978@unknown@formal@none@1@XP@so if that is good for you.@1@7@@oe@16-5-2000
 979@unknown@formal@none@1@S@I am sorry, but that is not very good for me at all.@1@13@@oe@16-5-2000
 980@unknown@formal@none@1@S@let us see,@1@3@@oe@16-5-2000
-981@unknown@formal@none@1@S@how about, the twenty seventh, after, eleven A-M?@1@8@@oe@16-5-2000
+981@unknown@formal@none@1@S@how about, the twenty seventh, after, eleven a.m.?@1@8@@oe@16-5-2000
 982@unknown@formal@none@1@S@the twenty seventh I will be out of town.@1@9@@oe@16-5-2000
 983@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 984@unknown@formal@none@1@XP@the twenty ninth, and the, twenty eighth?@1@7@@oe@16-5-2000
 985@unknown@formal@none@1@XP@will be the same.@1@4@@oe@16-5-2000
 986@unknown@formal@none@1@S@I guess I will be out until, the first of February.@1@11@@oe@16-5-2000
-987@unknown@formal@none@1@S@but, on Tuesday on the other hand, I have got three to five P-M free.@1@15@@oe@16-5-2000
-988@unknown@formal@none@1@S@and on Wednesday I have got three to say, five P-M again.@1@12@@oe@16-5-2000
+987@unknown@formal@none@1@S@but, on Tuesday on the other hand, I have got three to five p.m. free.@1@15@@oe@16-5-2000
+988@unknown@formal@none@1@S@and on Wednesday I have got three to say, five p.m. again.@1@12@@oe@16-5-2000
 989@unknown@formal@none@1@S@so can you check please,@1@5@@oe@16-5-2000
-990@unknown@formal@none@1@S@did you say that you were free, from three to five, P-M, on Wednesday, the third, because if so that would be a perfect time for me.@1@27@@oe@16-5-2000
+990@unknown@formal@none@1@S@did you say that you were free, from three to five, p.m., on Wednesday, the third, because if so that would be a perfect time for me.@1@27@@oe@16-5-2000
 991@unknown@formal@none@1@XP@sure, sounds good.@1@3@@oe@16-5-2000
 992@unknown@formal@none@1@XP@the third Wednesday,@1@3@@oe@16-5-2000
 993@unknown@formal@none@1@S@that sounds good.@1@3@@oe@16-5-2000
@@ -999,26 +998,26 @@
 999@unknown@formal@none@1@S@well I am so glad I got to talk to you today,@1@12@@oe@16-5-2000
 1000@unknown@formal@none@1@S@I really feel that we need to, make another meeting, for about two hours, in the next two weeks,@1@19@@oe@16-5-2000
 1001@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
-1002@unknown@formal@none@1@S@are you free on, May the twenty fourth, on Monday, anytime before one P-M,@1@14@@oe@16-5-2000
+1002@unknown@formal@none@1@S@are you free on, May the twenty fourth, on Monday, anytime before one p.m.,@1@14@@oe@16-5-2000
 1003@unknown@formal@none@1@XP@yes.@1@1@@oe@16-5-2000
 1004@unknown@formal@none@1@S@matter of fact I am free from nine to ten, but that will not give us the consecutive, two hour period,@1@21@@oe@16-5-2000
 1005@unknown@formal@none@1@S@so, I would rather have it some other day.@1@9@@oe@16-5-2000
 1006@unknown@formal@none@1@S@on the twenty sixth, that will be Wednesday,@1@8@@oe@16-5-2000
-1007@unknown@formal@none@1@S@I have got, a meeting from nine thirty until ten thirty, A-M.@1@12@@oe@16-5-2000
+1007@unknown@formal@none@1@S@I have got, a meeting from nine thirty until ten thirty, a.m.@1@12@@oe@16-5-2000
 1008@unknown@formal@none@1@S@otherwise I am pretty much free that day, so that will be great.@1@13@@oe@16-5-2000
 1009@unknown@formal@none@1@S@on Thursday I am completely free.@1@6@@oe@16-5-2000
 1010@unknown@formal@none@1@S@the problem is, I have a seminar on both of those days from nine thirty to four thirty,@1@18@@oe@16-5-2000
 1011@unknown@formal@none@1@S@so, we would not be able to get two hours in either way.@1@13@@oe@16-5-2000
 1012@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 1013@unknown@formal@none@1@S@how about on the, thirty first Monday?@1@7@@oe@16-5-2000
-1014@unknown@formal@none@1@S@do you think, you will be free before two P-M?@1@10@@oe@16-5-2000
+1014@unknown@formal@none@1@S@do you think, you will be free before two p.m.?@1@10@@oe@16-5-2000
 1015@unknown@formal@none@1@S@this conflict is rather horrendous.@1@5@@oe@16-5-2000
 1016@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
-1017@unknown@formal@none@1@S@the, thirty first would be the day that I go out of town and I, will not be back until the Thursday which would be the third of June, and I have got a meeting from ten until eleven A-M.@1@40@@oe@16-5-2000
+1017@unknown@formal@none@1@S@the, thirty first would be the day that I go out of town and I, will not be back until the Thursday which would be the third of June, and I have got a meeting from ten until eleven a.m.@1@40@@oe@16-5-2000
 1018@unknown@formal@none@1@S@so if you are free that afternoon, we will arrange something.@1@11@@oe@16-5-2000
 1019@unknown@formal@none@1@S@I am completely free, after, ten o'clock,@1@7@@oe@16-5-2000
 1020@unknown@formal@none@1@S@so you said you are free , after eleven?@1@9@@oe@16-5-2000
-1021@unknown@formal@none@1@@well, how about@0@3@@oe@16-5-2000
+1021@unknown@formal@none@1@XP@well, how about@0@3@@oe@16-5-2000
 1022@unknown@formal@none@1@S@we can like eat lunch, at eleven thirty, and then after that we can, go to the meeting,@1@18@@oe@16-5-2000
 1023@unknown@formal@none@1@S@so, how about eleven thirty to two thirty?@1@8@@oe@16-5-2000
 1024@unknown@formal@none@1@S@that is an hour for lunch and two hours for the meeting,@1@12@@oe@16-5-2000
@@ -1041,26 +1040,26 @@
 1041@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 1042@unknown@formal@none@1@S@are you free on Monday the twenty sixth, after twelve o'clock?@1@11@@oe@16-5-2000
 1043@unknown@formal@none@1@S@or, how about, sometime in the morning on, Tuesday the twenty seventh?@1@12@@oe@16-5-2000
-1044@unknown@formal@none@1@S@no.@1@1@@oe@16-5-2000
+1044@unknown@formal@none@1@XP@no.@1@1@@oe@16-5-2000
 1045@unknown@formal@none@1@S@those days are, pretty bad for me, because I have, got seminars from nine until four thirty.@1@17@@oe@16-5-2000
-1046@unknown@formal@none@1@S@however, on the twenty eighth, which is Wednesday, I have got one to four P-M free,@1@16@@oe@16-5-2000
+1046@unknown@formal@none@1@S@however, on the twenty eighth, which is Wednesday, I have got one to four p.m. free,@1@16@@oe@16-5-2000
 1047@unknown@formal@none@1@S@I have got a lunch meeting, from noon to one but otherwise I am pretty much free that day.@1@19@@oe@16-5-2000
 1048@unknown@formal@none@1@S@and, Thursday morning I am pretty much free too.@1@9@@oe@16-5-2000
 1049@unknown@formal@none@1@S@I am dreadfully sorry but, from two, to four thirty, I have got a meeting, on the twenty eighth, and on, Thursday the twenty ninth, I am busy the entire morning, because I have got a lecture.@1@37@@oe@16-5-2000
-1050@unknown@formal@none@1@@I have got to do.@0@5@@oe@16-5-2000
+1050@unknown@formal@none@1@S@I have got to do.@0@5@@oe@16-5-2000
 1051@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 1052@unknown@formal@none@1@S@Friday, the thirtieth, I am out of town and, I do not get back until Wednesday, the fourth, of August,@1@20@@oe@16-5-2000
 1053@unknown@formal@none@1@S@so, are you free, on Wednesday, between nine to eleven, or, one to five?@1@14@@oe@16-5-2000
 1054@unknown@formal@none@1@XP@yes, actually on Wednesday, which is the fourth of August.@1@10@@oe@16-5-2000
 1055@unknown@formal@none@1@S@let us see,@1@3@@oe@16-5-2000
 1056@unknown@formal@none@1@S@I have a meeting from nine until, eleven, but otherwise I am pretty much free.@1@15@@oe@16-5-2000
-1057@unknown@formal@none@1@@the afternoon I am completely free.@0@6@@oe@16-5-2000
-1058@unknown@formal@none@1@@and if that does not work out for you, then we can do on Thursday, which is, the fifth.@0@19@@oe@16-5-2000
+1057@unknown@formal@none@1@XP@the afternoon I am completely free.@0@6@@oe@16-5-2000
+1058@unknown@formal@none@1@S@and if that does not work out for you, then we can do on Thursday, which is, the fifth.@0@19@@oe@16-5-2000
 1059@unknown@formal@none@1@S@and, let us see.@1@4@@oe@16-5-2000
 1060@unknown@formal@none@1@S@from nine until two I am pretty much free.@1@9@@oe@16-5-2000
 1061@unknown@formal@none@1@XP@okay.@1@1@@oe@16-5-2000
 1062@unknown@formal@none@1@S@Wednesday, August the fourth would be great for me.@1@9@@oe@16-5-2000
-1063@unknown@formal@none@1@S@how about, two to four P-M,@1@6@@oe@16-5-2000
+1063@unknown@formal@none@1@S@how about, two to four p.m.,@1@6@@oe@16-5-2000
 1064@unknown@formal@none@1@S@we can meet, in my office.@1@6@@oe@16-5-2000
 1065@unknown@formal@none@1@XP@sure.@1@1@@oe@16-5-2000
 1066@unknown@formal@none@1@S@two to four sounds good@1@5@@oe@16-5-2000
@@ -1079,21 +1078,21 @@
 1079@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 1080@unknown@formal@none@1@XP@after twelve o'clock on, Monday or Tuesday, the twenty seventh or twenty eighth of September?@1@15@@oe@16-5-2000
 1081@unknown@formal@none@1@S@well let us see,@1@4@@oe@16-5-2000
-1082@unknown@formal@none@1@S@the afternoons I am pretty much occupied on the twenty seventh, but I am free in the morning.@1@18@@oe@16-5-2000
+1082@unknown@formal@none@1@S@the afternoons I am pretty much occupied on the twenty seventh, but I am free in the morning.@0@18@@oe@16-5-2000
 1083@unknown@formal@none@1@S@and on the twenty eighth I have got a meeting from three to five, and I have got a lunch meeting from, noon to, two.@1@25@@oe@16-5-2000
 1084@unknown@formal@none@1@S@on Wednesday on the other hand I, have, a meeting from ten, to, noon but otherwise I am pretty much free.@1@21@@oe@16-5-2000
 1085@unknown@formal@none@1@S@so are you free that day?@1@6@@oe@16-5-2000
-1086@unknown@formal@none@1@S@okay on Wednesday the twenty ninth I have got a seminar from nine A-M to four thirty P-M.@1@18@@oe@16-5-2000
+1086@unknown@formal@none@1@S@okay on Wednesday the twenty ninth I have got a seminar from nine a.m. to four thirty p.m.@1@18@@oe@16-5-2000
 1087@unknown@formal@none@1@S@is there any chance, you would like to meet like, after work?@1@12@@oe@16-5-2000
 1088@unknown@formal@none@1@S@after work would be hard to do, but on, the weekend on the other hand, we could do something@1@19@@oe@16-5-2000
-1089@unknown@formal@none@1@@we can have a talk , on weekend I guess.@0@10@@oe@16-5-2000
+1089@unknown@formal@none@1@S@we can have a talk , on weekend I guess.@0@10@@oe@16-5-2000
 1090@unknown@formal@none@1@S@how about on Saturday,@1@4@@oe@16-5-2000
-1091@unknown@formal@none@1@S@the Saturday I have got a brunch meeting from ten thirty, until one P-M, but otherwise I am, free that day.@1@21@@oe@16-5-2000
+1091@unknown@formal@none@1@S@the Saturday I have got a brunch meeting from ten thirty, until one p.m., but otherwise I am, free that day.@1@21@@oe@16-5-2000
 1092@unknown@formal@none@1@S@okay that is great.@1@4@@oe@16-5-2000
-1093@unknown@formal@none@1@S@how about from two to four P-M on, Saturday October the second@1@12@@oe@16-5-2000
+1093@unknown@formal@none@1@S@how about from two to four p.m. on, Saturday October the second@1@12@@oe@16-5-2000
 1094@unknown@formal@none@1@S@we can get together and have our meeting.@1@8@@oe@16-5-2000
 1095@unknown@formal@none@1@XP@excellent,@1@1@@oe@16-5-2000
-1096@unknown@formal@none@1@XP@so two to four P-M on Saturday the second of October.@1@11@@oe@16-5-2000
+1096@unknown@formal@none@1@XP@so two to four p.m. on Saturday the second of October.@1@11@@oe@16-5-2000
 1097@unknown@formal@none@1@S@I will look forward to seeing you, and, that will do.@1@11@@oe@16-5-2000
 1098@unknown@formal@none@1@XP@thank you very much.@1@4@@oe@16-5-2000
 1099@unknown@formal@none@1@S@I look forward to seeing you then.@1@7@@oe@16-5-2000
@@ -1102,23 +1101,23 @@
 1102@unknown@formal@none@1@S@so, in the next two weeks do you think we could get together for a, two hour meeting?@1@18@@oe@16-5-2000
 1103@unknown@formal@none@1@S@I am booked Monday November the twenty second because I have got a class nine to twelve a meeting, one thirty to three and a lab from three to five.@1@30@@oe@16-5-2000
 1104@unknown@formal@none@1@S@but, let us see,@1@4@@oe@16-5-2000
-1105@unknown@formal@none@1@S@on Tuesday the twenty third, I am free from, three to five P-M,@1@13@@oe@16-5-2000
+1105@unknown@formal@none@1@S@on Tuesday the twenty third, I am free from, three to five p.m.,@1@13@@oe@16-5-2000
 1106@unknown@formal@none@1@S@and, let us see.@1@4@@oe@16-5-2000
 1107@unknown@formal@none@1@S@on Thursday the twenty fifth, I am free from twelve to two. if either of those times are good for you.@1@21@@oe@16-5-2000
-1108@unknown@formal@none@1@S@yeah Mr Fritzsche,@1@3@@oe@16-5-2000
+1108@unknown@formal@none@1@XP@yeah Mr Fritzsche,@1@3@@oe@16-5-2000
 1109@unknown@formal@none@1@S@I am afraid actually I am, occupied , on both the days.@1@12@@oe@16-5-2000
 1110@unknown@formal@none@1@S@let us see, on, the twenty fifth, I will be out of town,@1@13@@oe@16-5-2000
-1111@unknown@formal@none@1@@and I will not be getting back until, let us see, December, first, on Wednesday,@0@15@@oe@16-5-2000
+1111@unknown@formal@none@1@S@and I will not be getting back until, let us see, December, first, on Wednesday,@1@15@@oe@16-5-2000
 1112@unknown@formal@none@1@S@and on Wednesday, I have got a meeting from one, to five.@1@12@@oe@16-5-2000
 1113@unknown@formal@none@1@S@but I have the morning free,@1@6@@oe@16-5-2000
 1114@unknown@formal@none@1@S@so can you check, that date please.@1@7@@oe@16-5-2000
 1115@unknown@formal@none@1@S@I am sorry, but my morning is, booked, because I have got a class from nine to twelve on Wednesday December the first.@1@23@@oe@16-5-2000
-1116@unknown@formal@none@1@@let us see on Thursday I have got a class from nine to twelve also, but I am, completely free besides for that,@0@23@@oe@16-5-2000
+1116@unknown@formal@none@1@S@let us see on Thursday I have got a class from nine to twelve also, but I am, completely free besides for that,@0@23@@oe@16-5-2000
 1117@unknown@formal@none@1@XP@so, anytime from twelve to five fine with you?@1@9@@oe@16-5-2000
 1118@unknown@formal@none@1@XP@because I am, completely booked, December the third.@1@8@@oe@16-5-2000
 1119@unknown@formal@none@1@XP@because I have got a seminar.@1@6@@oe@16-5-2000
 1120@unknown@formal@none@1@S@yeah, actually this could be a little tougher than I thought it was going to be, but, let us see.@1@20@@oe@16-5-2000
-1121@unknown@formal@none@1@S@the third, I have got a conference from nine thirty until six P-M.@1@13@@oe@16-5-2000
+1121@unknown@formal@none@1@S@the third, I have got a conference from nine thirty until six p.m.@1@13@@oe@16-5-2000
 1122@unknown@formal@none@1@S@so, that will be hard to do.@1@7@@oe@16-5-2000
 1123@unknown@formal@none@1@S@on, Saturday, I have got a, lunch meeting from twelve to two,@1@12@@oe@16-5-2000
 1124@unknown@formal@none@1@S@so, as we did before we could go into the, weekend.@1@11@@oe@16-5-2000
@@ -1146,17 +1145,17 @@
 1146@unknown@formal@none@1@S@if not, how about, Tuesday the sixteenth@1@7@@oe@16-5-2000
 1147@unknown@formal@none@1@S@I am free after twelve o'clock.@1@6@@oe@16-5-2000
 1148@unknown@formal@none@1@XP@either of those two times good.@1@6@@oe@16-5-2000
-1149@unknown@formal@none@1@@well, thank you Mr Fritzsche, for the very informative, message, and let us see well at twelve,@0@17@@oe@16-5-2000
+1149@unknown@formal@none@1@S@well, thank you Mr Fritzsche, for the very informative, message, and let us see well at twelve,@0@17@@oe@16-5-2000
 1150@unknown@formal@none@1@XP@well today actually.@1@3@@oe@16-5-2000
 1151@unknown@formal@none@1@S@this afternoon I am pretty much free.@1@7@@oe@16-5-2000
 1152@unknown@formal@none@1@S@but, did you say you were free this Friday.@1@9@@oe@16-5-2000
-1153@unknown@formal@none@1@@or if not then I could actually see you on Tuesday sixteenth, which will be, Tuesday,@0@16@@oe@16-5-2000
+1153@unknown@formal@none@1@S@or if not then I could actually see you on Tuesday sixteenth, which will be, Tuesday,@0@16@@oe@16-5-2000
 1154@unknown@formal@none@1@S@and let us see,@1@4@@oe@16-5-2000
 1155@unknown@formal@none@1@S@yeah, I am free that afternoon, and the seventeenth I am completely free.@1@13@@oe@16-5-2000
 1156@unknown@formal@none@1@XP@well since you said you are free today.@1@8@@oe@16-5-2000
 1157@unknown@formal@none@1@S@how about we schedule the meeting in about an hour?@1@10@@oe@16-5-2000
 1158@unknown@formal@none@1@XP@if so.@1@2@@oe@16-5-2000
-1159@unknown@formal@none@1@S@how about from, one to three P-M, at my office?@1@10@@oe@16-5-2000
+1159@unknown@formal@none@1@S@how about from, one to three p.m., at my office?@1@10@@oe@16-5-2000
 1160@unknown@formal@none@1@S@that way we can get the meeting over with and we can have a fun month and stuff.@1@18@@oe@16-5-2000
 1161@unknown@formal@none@1@XP@okay bye.@1@2@@oe@16-5-2000
 1162@unknown@formal@none@1@XP@well hi there Rob.@1@4@@oe@16-5-2000
@@ -1206,10 +1205,10 @@
 1206@unknown@formal@none@1@S@we could go ahead and meet over in your office,@1@10@@oe@16-5-2000
 1207@unknown@formal@none@1@S@how does that look?@1@4@@oe@16-5-2000
 1208@unknown@formal@none@1@S@well I have already got a meeting scheduled from one to two on Wednesday the third@1@16@@oe@16-5-2000
-1209@unknown@formal@none@1@S@if you are free after, two P-M that day, that would be great.@1@13@@oe@16-5-2000
+1209@unknown@formal@none@1@S@if you are free after, two p.m. that day, that would be great.@1@13@@oe@16-5-2000
 1210@unknown@formal@none@1@S@what have you got?@1@4@@oe@16-5-2000
 1211@unknown@formal@none@1@S@actually, it looks like I am free all afternoon so we could either do it between two and four, or three and five , whichever looks better to you.@1@29@@oe@16-5-2000
-1212@unknown@formal@none@1@S@alright.@1@1@@oe@16-5-2000
+1212@unknown@formal@none@1@XP@alright.@1@1@@oe@16-5-2000
 1213@unknown@formal@none@1@S@in that case why don't we make it from three to five say, in your office.@1@16@@oe@16-5-2000
 1214@unknown@formal@none@1@S@okay , great that sounds perfect.@1@6@@oe@16-5-2000
 1215@unknown@formal@none@1@S@I will, see you there.@1@5@@oe@16-5-2000
@@ -1218,7 +1217,7 @@
 1218@unknown@formal@none@1@S@it looks like I am going to be pretty busy,@1@10@@oe@16-5-2000
 1219@unknown@formal@none@1@XP@Wednesday the twenty sixth through the twenty eighth.@1@8@@oe@16-5-2000
 1220@unknown@formal@none@1@S@so, if we could maybe get it in the morning sometime on, either May the twenty fourth or twenty fifth that would be perfect.@1@24@@oe@16-5-2000
-1221@unknown@formal@none@1@@well, those meetings, or, pardon me.@0@6@@oe@16-5-2000
+1221@unknown@formal@none@1@XP@well, those meetings, or, pardon me.@0@6@@oe@16-5-2000
 1222@unknown@formal@none@1@S@those days are fairly bad.@1@5@@oe@16-5-2000
 1223@unknown@formal@none@1@S@I am out of town then from the thirty first, all the way through June second.@1@16@@oe@16-5-2000
 1224@unknown@formal@none@1@S@but I have got, loads of free time Thursday and Friday the fourth.@1@13@@oe@16-5-2000
@@ -1246,13 +1245,13 @@
 1246@unknown@formal@none@1@S@that sounds good enough.@1@4@@oe@16-5-2000
 1247@unknown@formal@none@1@S@we will meet then.@1@4@@oe@16-5-2000
 1248@unknown@formal@none@1@XP@okay Rob.@1@2@@oe@16-5-2000
-1249@unknown@formal@none@1@S@here, in the next two weeks,@1@6@@oe@16-5-2000
+1249@unknown@formal@none@1@XP@here, in the next two weeks,@1@6@@oe@16-5-2000
 1250@unknown@formal@none@1@XP@looks like we can schedule, even some time outside of the regular business hours.@1@14@@oe@16-5-2000
 1251@unknown@formal@none@1@S@would you prefer, just to try to keep it, between nine and five or, you know, is it okay , if we can move outside that somewhere.@1@27@@oe@16-5-2000
 1252@unknown@formal@none@1@S@well, let us try to get it within regular business hours first.@1@12@@oe@16-5-2000
 1253@unknown@formal@none@1@S@the morning of Monday the twenty seventh is, free for me, as is the afternoon of, Wednesday the twenty ninth.@1@20@@oe@16-5-2000
 1254@unknown@formal@none@1@S@do you have any time then?@1@6@@oe@16-5-2000
-1255@unknown@formal@none@1@S@unfortunately not,@1@2@@oe@16-5-2000
+1255@unknown@formal@none@1@XP@unfortunately not,@1@2@@oe@16-5-2000
 1256@unknown@formal@none@1@S@I am tied up between classes and a, seminar I am going to,@1@13@@oe@16-5-2000
 1257@unknown@formal@none@1@S@actually we could, move down to Wednesday October the sixth,@1@10@@oe@16-5-2000
 1258@unknown@formal@none@1@S@I am free you know, all day long if there is any time in there you might be able to fit it in.@1@23@@oe@16-5-2000
@@ -1295,7 +1294,7 @@
 1295@unknown@formal@none@1@S@however I do have, a whole bunch of free time the mornings of Monday Tuesday and Wednesday the twenty second twenty third and twenty fourth@1@25@@oe@16-5-2000
 1296@unknown@formal@none@1@S@how about you.@1@3@@oe@16-5-2000
 1297@unknown@formal@none@1@XP@ouch.@1@1@@oe@16-5-2000
-1298@unknown@formal@none@1@@twenty second twenty third and twenty fourth I have, classes, or meetings every day in the morning.@0@17@@oe@16-5-2000
+1298@unknown@formal@none@1@S@twenty second twenty third and twenty fourth I have, classes, or meetings every day in the morning.@0@17@@oe@16-5-2000
 1299@unknown@formal@none@1@S@how are you looking on, Thursday, December the second,@1@9@@oe@16-5-2000
 1300@unknown@formal@none@1@S@I can do it anytime after noon.@1@7@@oe@16-5-2000
 1301@unknown@formal@none@1@S@well, unfortunately I can not.@1@5@@oe@16-5-2000
@@ -1323,7 +1322,7 @@
 1323@unknown@formal@none@1@S@that is a great idea.@1@5@@oe@16-5-2000
 1324@unknown@formal@none@1@S@when are you free next week,@1@6@@oe@16-5-2000
 1325@unknown@formal@none@1@S@well let us see.@1@4@@oe@16-5-2000
-1326@unknown@formal@none@1@@Monday looks, pretty good except for I have a , early morning meeting and a lunch meeting.@0@17@@oe@16-5-2000
+1326@unknown@formal@none@1@S@Monday looks, pretty good except for I have a , early morning meeting and a lunch meeting.@0@17@@oe@16-5-2000
 1327@unknown@formal@none@1@S@Monday is pretty bad,@1@4@@oe@16-5-2000
 1328@unknown@formal@none@1@S@I have got meetings from like ten o'clock in the morning to four in the afternoon.@1@16@@oe@16-5-2000
 1329@unknown@formal@none@1@S@so, that really would not be great.@1@7@@oe@16-5-2000
@@ -1334,7 +1333,7 @@
 1334@unknown@formal@none@1@S@how about the, next week.@1@5@@oe@16-5-2000
 1335@unknown@formal@none@1@S@well Monday I have got a meeting in the afternoon.@1@10@@oe@16-5-2000
 1336@unknown@formal@none@1@XP@Monday the fifteenth.@1@3@@oe@16-5-2000
-1337@unknown@formal@none@1@@sixteenth again I only have a class in the morning so the afternoon would be good.@0@16@@oe@16-5-2000
+1337@unknown@formal@none@1@S@sixteenth again I only have a class in the morning so the afternoon would be good.@0@16@@oe@16-5-2000
 1338@unknown@formal@none@1@S@and Wednesday I am free all day.@1@7@@oe@16-5-2000
 1339@unknown@formal@none@1@XP@the seventeenth.@1@2@@oe@16-5-2000
 1340@unknown@formal@none@1@S@well then, Tuesday the sixteenth, looks pretty good in the afternoon.@1@11@@oe@16-5-2000
@@ -1343,7 +1342,7 @@
 1343@unknown@formal@none@1@S@how about go out, around one?@1@6@@oe@16-5-2000
 1344@unknown@formal@none@1@XP@and do a, kind of luncheon deal?@1@7@@oe@16-5-2000
 1345@unknown@formal@none@1@S@yeah, I have got a class from nine to twelve the same day.@1@13@@oe@16-5-2000
-1346@unknown@formal@none@1@S@one o'clock, lunch sounds good.@1@5@@oe@16-5-2000
+1346@unknown@formal@none@1@S@one o'clock, lunch sounds good.@0@5@@oe@16-5-2000
 1347@unknown@formal@none@1@S@why don't we meet in the lobby downstairs, and we can decide where to go then.@1@16@@oe@16-5-2000
 1348@unknown@formal@none@1@XP@okay.@1@1@@oe@16-5-2000
 1349@unknown@formal@none@1@S@that sounds great.@1@3@@oe@16-5-2000
@@ -1371,7 +1370,7 @@
 1371@unknown@formal@none@1@XP@conference room?@1@2@@oe@16-5-2000
 1372@unknown@formal@none@1@S@that works for me.@1@4@@oe@16-5-2000
 1373@unknown@formal@none@1@S@I will see you then.@1@5@@oe@16-5-2000
-1374@unknown@formal@none@1@@okay well how about we trying and meet sometimes, next week or the week after, the very latest. and try to get this wrapped up.@0@25@@oe@16-5-2000
+1374@unknown@formal@none@1@S@okay well how about we trying and meet sometimes, next week or the week after, the very latest. and try to get this wrapped up.@0@25@@oe@16-5-2000
 1375@unknown@formal@none@1@S@that is a good idea.@1@5@@oe@16-5-2000
 1376@unknown@formal@none@1@S@but next week I am, going to be on a, business trip from the twenty seventh to the twenty ninth,@1@20@@oe@16-5-2000
 1377@unknown@formal@none@1@S@so and, Monday and Tuesday are pretty tight also.@1@9@@oe@16-5-2000
@@ -1392,7 +1391,7 @@
 1392@unknown@formal@none@1@S@how about we meet next week the following week and hash out the details.@1@14@@oe@16-5-2000
 1393@unknown@formal@none@1@S@yeah, that is a good idea.@1@6@@oe@16-5-2000
 1394@unknown@formal@none@1@S@when in the next two week would be good for you,@1@11@@oe@16-5-2000
-1395@unknown@formal@none@1@@I am relatively light load in the next two weeks.@0@10@@oe@16-5-2000
+1395@unknown@formal@none@1@S@I am relatively light load in the next two weeks.@0@10@@oe@16-5-2000
 1396@unknown@formal@none@1@S@although from the thirty first to the second, I, am, going to be on a trip to Tokyo.@1@18@@oe@16-5-2000
 1397@unknown@formal@none@1@S@other than that I have got pretty, you know, scattered meetings and appointments all over the place.@1@17@@oe@16-5-2000
 1398@unknown@formal@none@1@S@well next week I am, packed pretty tight, though Monday and Tuesday, morning and, really early afternoon like until one or two, I am free.@1@25@@oe@16-5-2000
@@ -1416,12 +1415,12 @@
 1416@unknown@formal@none@1@S@so, three to five in the afternoon would be, good for, me,@1@12@@oe@16-5-2000
 1417@unknown@formal@none@1@S@or, yeah, that is good.@1@5@@oe@16-5-2000
 1418@unknown@formal@none@1@XP@okay.@1@1@@oe@16-5-2000
-1419@unknown@formal@none@1@S@three to five in the afternoon on the third.@1@9@@oe@16-5-2000
+1419@unknown@formal@none@1@XP@three to five in the afternoon on the third.@1@9@@oe@16-5-2000
 1420@unknown@formal@none@1@S@shall we make it my office?@1@6@@oe@16-5-2000
 1421@unknown@formal@none@1@XP@sounds good.@1@2@@oe@16-5-2000
 1422@unknown@formal@none@1@S@that is the, third floor right?@1@6@@oe@16-5-2000
-1423@unknown@formal@none@1@@yeah, that is three oh twelve.@0@6@@oe@16-5-2000
-1424@unknown@formal@none@1@S@see you there.@1@3@@oe@16-5-2000
+1423@unknown@formal@none@1@S@yeah, that is three oh twelve.@0@6@@oe@16-5-2000
+1424@unknown@formal@none@1@XP@see you there.@1@3@@oe@16-5-2000
 1425@unknown@formal@none@1@S@great. well how about we meet then, next week and just get the, finishing touches put on the project.@1@19@@oe@16-5-2000
 1426@unknown@formal@none@1@XP@yeah that,@1@2@@oe@16-5-2000
 1427@unknown@formal@none@1@S@that would be great.@1@4@@oe@16-5-2000
@@ -1439,15 +1438,15 @@
 1439@unknown@formal@none@1@S@so if we did something in the one to three range, on Thursday?@1@13@@oe@16-5-2000
 1440@unknown@formal@none@1@S@does that sound good to you?@1@6@@oe@16-5-2000
 1441@unknown@formal@none@1@S@no, I have a staff meeting from two to four.@1@10@@oe@16-5-2000
-1442@unknown@formal@none@1@@how about,@0@2@@oe@16-5-2000
+1442@unknown@formal@none@1@XP@how about,@0@2@@oe@16-5-2000
 1443@unknown@formal@none@1@S@are you free anytime the second of Monday ,@1@9@@oe@16-5-2000
-1444@unknown@formal@none@1@@the, Monday the second, .@0@5@@oe@16-5-2000
+1444@unknown@formal@none@1@XP@the, Monday the second, .@0@5@@oe@16-5-2000
 1445@unknown@formal@none@1@S@no, I do not get back from that, meeting until the third, actually.@1@13@@oe@16-5-2000
 1446@unknown@formal@none@1@S@and it will not be until late the third so I can not do anything then either.@1@17@@oe@16-5-2000
 1447@unknown@formal@none@1@S@but well, how does early next week look.@1@8@@oe@16-5-2000
 1448@unknown@formal@none@1@S@oh yeah, that is right.@1@5@@oe@16-5-2000
 1449@unknown@formal@none@1@S@you have your meeting.@1@4@@oe@16-5-2000
-1450@unknown@formal@none@1@@well Wednesday and Thursday of next week are, kind of, I do not know.@0@14@@oe@16-5-2000
+1450@unknown@formal@none@1@S@well Wednesday and Thursday of next week are, kind of, I do not know.@0@14@@oe@16-5-2000
 1451@unknown@formal@none@1@S@Wednesday I have the morning free and the early afternoon free and, Thursday I am free all afternoon.@1@18@@oe@16-5-2000
 1452@unknown@formal@none@1@XP@if you, have any free time then.@1@7@@oe@16-5-2000
 1453@unknown@formal@none@1@S@when were you free on Wednesday the twenty eighth.@1@9@@oe@16-5-2000
@@ -1470,7 +1469,7 @@
 1470@unknown@formal@none@1@S@actually tomorrow I am, already, planning a golf trip with the boss.@1@12@@oe@16-5-2000
 1471@unknown@formal@none@1@S@and then, I have that, meeting,@1@6@@oe@16-5-2000
 1472@unknown@formal@none@1@S@I leave town next Friday and I do not get back until Tuesday, so that is no good either.@1@19@@oe@16-5-2000
-1473@unknown@formal@none@1@@how about a dinner. meeting, on Wednesday the twenty eighth, maybe like five six o'clock.@0@15@@oe@16-5-2000
+1473@unknown@formal@none@1@S@how about a dinner. meeting, on Wednesday the twenty eighth, maybe like five six o'clock.@0@15@@oe@16-5-2000
 1474@unknown@formal@none@1@XP@yeah okay.@1@2@@oe@16-5-2000
 1475@unknown@formal@none@1@S@I am pretty sure I could get away, for a couple hours and do that sometime Wednesday evening.@1@18@@oe@16-5-2000
 1476@unknown@formal@none@1@S@I have a meeting that gets out at four thirty,@1@10@@oe@16-5-2000
@@ -1486,14 +1485,14 @@
 1486@unknown@formal@none@1@S@that is not good.@1@4@@oe@16-5-2000
 1487@unknown@formal@none@1@S@I have classes basically, every morning except Wednesday the sixth.@1@10@@oe@16-5-2000
 1488@unknown@formal@none@1@S@I am free in the morning.@1@6@@oe@16-5-2000
-1489@unknown@formal@none@1@@but other than that, well, I could something nine to eleven Friday the eighth.@0@14@@oe@16-5-2000
+1489@unknown@formal@none@1@S@but other than that, well, I could something nine to eleven Friday the eighth.@0@14@@oe@16-5-2000
 1490@unknown@formal@none@1@S@but Wednesday the sixth and Friday the eighth are the only days I have anything free in the morning.@1@19@@oe@16-5-2000
-1491@unknown@formal@none@1@@bei I could something@0@4@@oe@16-5-2000
+1491@unknown@formal@none@1@XP@bei I could something@0@4@@oe@16-5-2000
 1492@unknown@formal@none@1@S@no , those do not work for me.@1@8@@oe@16-5-2000
-1493@unknown@formal@none@1@@free in the afternoon of the twenty ninth and thirtieth?@0@10@@oe@16-5-2000
+1493@unknown@formal@none@1@XP@free in the afternoon of the twenty ninth and thirtieth?@1@10@@oe@16-5-2000
 1494@unknown@formal@none@1@XP@after like, twelve and two respectively?@1@6@@oe@16-5-2000
-1495@unknown@formal@none@1@@Tuesday the morning you are not free.@0@7@@oe@16-5-2000
-1496@unknown@formal@none@1@@I have out of town, the fourth to the sixth.@0@10@@oe@16-5-2000
+1495@unknown@formal@none@1@S@Tuesday the morning you are not free.@0@7@@oe@16-5-2000
+1496@unknown@formal@none@1@S@I have out of town, the fourth to the sixth.@0@10@@oe@16-5-2000
 1497@unknown@formal@none@1@XP@got seminars basically all day the seventh and the eighth.@1@10@@oe@16-5-2000
 1498@unknown@formal@none@1@S@so, next week is really, bad.@1@6@@oe@16-5-2000
 1499@unknown@formal@none@1@XP@two weeks from now, sorry.@1@5@@oe@16-5-2000
@@ -1507,8 +1506,8 @@
 1507@unknown@formal@none@1@S@how is the first for you.@1@6@@oe@16-5-2000
 1508@unknown@formal@none@1@S@well, I have an hour and a half free between eleven and, twelve thirty, but I tend not to like, you know, meetings that are kind of under pressure to get to other places.@1@34@@oe@16-5-2000
 1509@unknown@formal@none@1@S@so I would prefer not to do that.@1@8@@oe@16-5-2000
-1510@unknown@formal@none@1@@basically I have got meeting, from nine to eleven, another meeting twelve thirty to two, and another meeting three thirty to five.@0@22@@oe@16-5-2000
-1511@unknown@formal@none@1@@so there are, three hours in there somewhere, but I would I would prefer something else if possible.@0@18@@oe@16-5-2000
+1510@unknown@formal@none@1@S@basically I have got meeting, from nine to eleven, another meeting twelve thirty to two, and another meeting three thirty to five.@0@22@@oe@16-5-2000
+1511@unknown@formal@none@1@S@so there are, three hours in there somewhere, but I would I would prefer something else if possible.@0@18@@oe@16-5-2000
 1512@unknown@formal@none@1@S@you said you were kind of packed the seventh and the eighth,@1@12@@oe@16-5-2000
 1513@unknown@formal@none@1@S@do you have anything late on the eighth?@1@8@@oe@16-5-2000
 1514@unknown@formal@none@1@XP@or maybe like twelve to two, on the seventh?@1@9@@oe@16-5-2000
@@ -1529,8 +1528,8 @@
 1529@unknown@formal@none@1@XP@meet in the lobby?@1@4@@oe@16-5-2000
 1530@unknown@formal@none@1@XP@yeah.@1@1@@oe@16-5-2000
 1531@unknown@formal@none@1@S@well I really have to get going. but we have to get this done by the third, at the very latest.@1@21@@oe@16-5-2000
-1532@unknown@formal@none@1@@so how about we trying to meet sometime over the next, couple of weeks.@0@14@@oe@16-5-2000
-1533@unknown@formal@none@1@@I am, kind of packed. but, that,@0@7@@oe@16-5-2000
+1532@unknown@formal@none@1@S@so how about we trying to meet sometime over the next, couple of weeks.@0@14@@oe@16-5-2000
+1533@unknown@formal@none@1@S@I am, kind of packed. but, that,@0@7@@oe@16-5-2000
 1534@unknown@formal@none@1@S@like I said, I got to get this project in by the third.@1@13@@oe@16-5-2000
 1535@unknown@formal@none@1@S@so when are you free over the next couple weeks?@1@10@@oe@16-5-2000
 1536@unknown@formal@none@1@S@for the most part mornings are good for me.@1@9@@oe@16-5-2000
@@ -1550,7 +1549,7 @@
 1550@unknown@formal@none@1@S@afternoons I am consistently booked.@1@5@@oe@16-5-2000
 1551@unknown@formal@none@1@S@Monday I , only have a meeting from one to three, .@1@12@@oe@16-5-2000
 1552@unknown@formal@none@1@XP@the twenty ninth.@1@3@@oe@16-5-2000
-1553@unknown@formal@none@1@@twenty second I have meeting from three to five, twenty third, two to four thirty, if , mornings are bad for you.@0@22@@oe@16-5-2000
+1553@unknown@formal@none@1@S@twenty second I have meeting from three to five, twenty third, two to four thirty, if , mornings are bad for you.@0@22@@oe@16-5-2000
 1554@unknown@formal@none@1@S@what time do your classes get out, usually.@1@8@@oe@16-5-2000
 1555@unknown@formal@none@1@S@they do not get out until noon.@1@7@@oe@16-5-2000
 1556@unknown@formal@none@1@S@and this, Monday the twenty second is really looking bad.@1@10@@oe@16-5-2000
@@ -1558,23 +1557,23 @@
 1558@unknown@formal@none@1@S@so , that is no good.@1@6@@oe@16-5-2000
 1559@unknown@formal@none@1@S@Tuesday the twenty third I have free after three like I said.@1@12@@oe@16-5-2000
 1560@unknown@formal@none@1@S@and I do not know,@1@5@@oe@16-5-2000
-1561@unknown@formal@none@1@@maybe I could find, somewhere on the schedule though wedge something in?@0@12@@oe@16-5-2000
+1561@unknown@formal@none@1@S@maybe I could find, somewhere on the schedule though wedge something in?@0@12@@oe@16-5-2000
 1562@unknown@formal@none@1@S@Wednesday the twenty fourth would you be free from like one to three?@1@13@@oe@16-5-2000
 1563@unknown@formal@none@1@S@no, we have that, resource management class from one thirty to three thirty actually.@1@14@@oe@16-5-2000
-1564@unknown@formal@none@1@@which kind of have to go to.@0@7@@oe@16-5-2000
+1564@unknown@formal@none@1@XP@which kind of have to go to.@0@7@@oe@16-5-2000
 1565@unknown@formal@none@1@S@or the boss is going to get a little upset.@1@10@@oe@16-5-2000
-1566@unknown@formal@none@1@S@because it is one of his pet projects.@1@8@@oe@16-5-2000
+1566@unknown@formal@none@1@XP@because it is one of his pet projects.@1@8@@oe@16-5-2000
 1567@unknown@formal@none@1@S@that gets out at three, thirty.@1@6@@oe@16-5-2000
 1568@unknown@formal@none@1@S@and I am, leaving town around five, for the evening.@1@10@@oe@16-5-2000
-1569@unknown@formal@none@1@@so, that is I do not know,@0@7@@oe@16-5-2000
+1569@unknown@formal@none@1@S@so, that is I do not know,@0@7@@oe@16-5-2000
 1570@unknown@formal@none@1@S@that is not a good day.@1@6@@oe@16-5-2000
 1571@unknown@formal@none@1@S@you said you are out of town, from the twenty fifth until when?@1@13@@oe@16-5-2000
 1572@unknown@formal@none@1@S@well my flight comes back late the twenty seventh, like, about, eleven thirty at night.@1@15@@oe@16-5-2000
 1573@unknown@formal@none@1@S@let me think,@1@3@@oe@16-5-2000
-1574@unknown@formal@none@1@@I guess maybe we can do it on the evening,@0@10@@oe@16-5-2000
+1574@unknown@formal@none@1@S@I guess maybe we can do it on the evening,@0@10@@oe@16-5-2000
 1575@unknown@formal@none@1@S@how about, sometime next Monday, next Monday Tuesday Wednesday?@1@9@@oe@16-5-2000
 1576@unknown@formal@none@1@S@well like I said, Wednesday evening I am going to be out of town@1@14@@oe@16-5-2000
-1577@unknown@formal@none@1@@and Monday evening, there is a, dance class I am going with my wife.@0@14@@oe@16-5-2000
+1577@unknown@formal@none@1@S@and Monday evening, there is a, dance class I am going with my wife.@0@14@@oe@16-5-2000
 1578@unknown@formal@none@1@S@but the, Tuesday the twenty third in the evening, I could do it because I am free from three . on Tuesday.@1@22@@oe@16-5-2000
 1579@unknown@formal@none@1@S@okay, so, I have a meeting that gets out at four thirty, so, maybe at like six o'clock we can get together.@1@22@@oe@16-5-2000
 1580@unknown@formal@none@1@S@okay, how about we meet in the planning room up on the fifth floor.@1@14@@oe@16-5-2000
@@ -1629,13 +1628,13 @@
 1629@unknown@formal@none@1@S@my schedule does not look good, this first week,@1@9@@oe@16-5-2000
 1630@unknown@formal@none@1@S@are you free at all next week?@1@7@@oe@16-5-2000
 1631@unknown@formal@none@1@S@I am free on Tuesday, and I could do something on the morning of the thirty first. which is a Monday.@1@21@@oe@16-5-2000
-1632@unknown@formal@none@1@S@no sorry.@1@2@@oe@16-5-2000
+1632@unknown@formal@none@1@XP@no sorry.@1@2@@oe@16-5-2000
 1633@unknown@formal@none@1@S@I am going to be out of town that week.@1@10@@oe@16-5-2000
 1634@unknown@formal@none@1@XP@those couple of days also.@1@5@@oe@16-5-2000
 1635@unknown@formal@none@1@S@what about Thursday or Friday the, third or the fourth?@1@10@@oe@16-5-2000
-1636@unknown@formal@none@1@S@Thursday I am free after ten A-M, and Friday I could, squeeze something in, between ten and one?@1@18@@oe@16-5-2000
+1636@unknown@formal@none@1@S@Thursday I am free after ten a.m., and Friday I could, squeeze something in, between ten and one?@1@18@@oe@16-5-2000
 1637@unknown@formal@none@1@XP@or, after three.@1@3@@oe@16-5-2000
-1638@unknown@formal@none@1@@well Thursday seem to be freer for both of us.@0@10@@oe@16-5-2000
+1638@unknown@formal@none@1@S@well Thursday seem to be freer for both of us.@0@10@@oe@16-5-2000
 1639@unknown@formal@none@1@S@so let us say have a meeting over lunch?@1@9@@oe@16-5-2000
 1640@unknown@formal@none@1@XP@on Thursday at noon?@1@4@@oe@16-5-2000
 1641@unknown@formal@none@1@XP@sounds good.@1@2@@oe@16-5-2000
@@ -1666,7 +1665,7 @@
 1666@unknown@formal@none@1@XP@yeah.@1@1@@oe@16-5-2000
 1667@unknown@formal@none@1@S@that is fine.@1@3@@oe@16-5-2000
 1668@unknown@formal@none@1@S@I will see you then.@1@5@@oe@16-5-2000
-1669@unknown@formal@none@1@@next two weeks are really jam packed.@0@7@@oe@16-5-2000
+1669@unknown@formal@none@1@S@next two weeks are really jam packed.@0@7@@oe@16-5-2000
 1670@unknown@formal@none@1@S@are you free on the sixth at all maybe?@1@9@@oe@16-5-2000
 1671@unknown@formal@none@1@S@no I am gone for the whole beginning part of that week.@1@12@@oe@16-5-2000
 1672@unknown@formal@none@1@XP@all through Wednesday.@1@3@@oe@16-5-2000
@@ -1682,7 +1681,7 @@
 1682@unknown@formal@none@1@XP@until two probably,@1@3@@oe@16-5-2000
 1683@unknown@formal@none@1@S@so let us make it at three.@1@7@@oe@16-5-2000
 1684@unknown@formal@none@1@XP@okay.@1@1@@oe@16-5-2000
-1685@unknown@formal@none@1@S@three o'clock on, Sunday the third.@1@6@@oe@16-5-2000
+1685@unknown@formal@none@1@XP@three o'clock on, Sunday the third.@1@6@@oe@16-5-2000
 1686@unknown@formal@none@1@XP@sounds great.@1@2@@oe@16-5-2000
 1687@unknown@formal@none@1@S@I am looking forward to it.@1@6@@oe@16-5-2000
 1688@unknown@formal@none@1@S@I tell you Bart,@1@4@@oe@16-5-2000
@@ -1693,7 +1692,7 @@
 1693@unknown@formal@none@1@S@and I will just, hope I have got some free time then.@1@12@@oe@16-5-2000
 1694@unknown@formal@none@1@S@yeah I am going to be really busy at the end of this month too.@1@15@@oe@16-5-2000
 1695@unknown@formal@none@1@S@with Thanksgiving and all I will be out of town,@1@10@@oe@16-5-2000
-1696@unknown@formal@none@1@@so, how about@0@3@@oe@16-5-2000
+1696@unknown@formal@none@1@XP@so, how about@0@3@@oe@16-5-2000
 1697@unknown@formal@none@1@S@I do not know,@1@4@@oe@16-5-2000
 1698@unknown@formal@none@1@S@do you want to, just, try say Monday the twenty second?@1@11@@oe@16-5-2000
 1699@unknown@formal@none@1@XP@before I go away?@1@4@@oe@16-5-2000
@@ -1702,7 +1701,7 @@
 1702@unknown@formal@none@1@S@so , let us say dinner at, seven?@1@8@@oe@16-5-2000
 1703@unknown@formal@none@1@XP@somewhere?@1@1@@oe@16-5-2000
 1704@unknown@formal@none@1@XP@sounds good.@1@2@@oe@16-5-2000
-1705@unknown@formal@none@1@@nice dinner will be a good close to a Monday,@0@10@@oe@16-5-2000
+1705@unknown@formal@none@1@S@nice dinner will be a good close to a Monday,@0@10@@oe@16-5-2000
 1706@unknown@formal@none@1@XP@so Monday the twenty second, at seven,@1@7@@oe@16-5-2000
 1707@unknown@formal@none@1@S@and I guess we will decide on a restaurant then.@1@10@@oe@16-5-2000
 1708@unknown@formal@none@1@XP@sound good?@1@2@@oe@16-5-2000
@@ -1720,14 +1719,14 @@
 1720@unknown@formal@none@1@XP@bye bye.@1@2@@oe@16-5-2000
 1721@unknown@formal@none@1@S@okay. I guess we should get together again,@1@8@@oe@16-5-2000
 1722@unknown@formal@none@1@S@the next week does not look, so good.@1@8@@oe@16-5-2000
-1723@unknown@formal@none@1@@how about is April, first good? in the afternoon,@0@9@@oe@16-5-2000
+1723@unknown@formal@none@1@S@how about is April, first good? in the afternoon,@0@9@@oe@16-5-2000
 1724@unknown@formal@none@1@XP@not really.@1@2@@oe@16-5-2000
 1725@unknown@formal@none@1@S@I am, pretty tied up in a meeting for most of the afternoon.@1@13@@oe@16-5-2000
 1726@unknown@formal@none@1@S@what about on Friday.@1@4@@oe@16-5-2000
 1727@unknown@formal@none@1@S@I would be free say after, three o'clock.@1@8@@oe@16-5-2000
 1728@unknown@formal@none@1@XP@no, sorry.@1@2@@oe@16-5-2000
-1729@unknown@formal@none@1@@I have, really, a meeting every Friday.@0@7@@oe@16-5-2000
-1730@unknown@formal@none@1@@at three, how about@0@4@@oe@16-5-2000
+1729@unknown@formal@none@1@S@I have, really, a meeting every Friday.@0@7@@oe@16-5-2000
+1730@unknown@formal@none@1@XP@at three, how about@0@4@@oe@16-5-2000
 1731@unknown@formal@none@1@S@what about the following Thursday?@1@5@@oe@16-5-2000
 1732@unknown@formal@none@1@XP@the eighth.@1@2@@oe@16-5-2000
 1733@unknown@formal@none@1@XP@anytime after, eleven?@1@3@@oe@16-5-2000
@@ -1751,7 +1750,7 @@
 1751@unknown@formal@none@1@XP@if that is better.@1@4@@oe@16-5-2000
 1752@unknown@formal@none@1@S@well, I am tied up on the twenty fifth.@1@9@@oe@16-5-2000
 1753@unknown@formal@none@1@S@but did you say Wednesday the third?@1@7@@oe@16-5-2000
-1754@unknown@formal@none@1@@what is your schedule look like in the afternoon.@0@9@@oe@16-5-2000
+1754@unknown@formal@none@1@S@what is your schedule look like in the afternoon.@0@9@@oe@16-5-2000
 1755@unknown@formal@none@1@XP@say after two o'clock?@1@4@@oe@16-5-2000
 1756@unknown@formal@none@1@S@after two is fine?@1@4@@oe@16-5-2000
 1757@unknown@formal@none@1@S@should we say around two, or two thirty?@1@8@@oe@16-5-2000
@@ -1788,7 +1787,7 @@
 1788@unknown@formal@none@1@S@I am going to be out of town, until, the, third.@1@11@@oe@16-5-2000
 1789@unknown@formal@none@1@S@what about the next day, which is, a Wednesday the fourth?@1@11@@oe@16-5-2000
 1790@unknown@formal@none@1@S@does that sound good?@1@4@@oe@16-5-2000
-1791@unknown@formal@none@1@S@sometime in the afternoon?@1@4@@oe@16-5-2000
+1791@unknown@formal@none@1@XP@sometime in the afternoon?@1@4@@oe@16-5-2000
 1792@unknown@formal@none@1@S@let us do a late lunch.@1@6@@oe@16-5-2000
 1793@unknown@formal@none@1@XP@say at two o'clock?@1@4@@oe@16-5-2000
 1794@unknown@formal@none@1@S@yeah that sounds good.@1@4@@oe@16-5-2000
@@ -1808,7 +1807,7 @@
 1808@unknown@formal@none@1@S@I forgot about a, previous appointment I had made.@1@9@@oe@16-5-2000
 1809@unknown@formal@none@1@S@what about Saturday.@1@3@@oe@16-5-2000
 1810@unknown@formal@none@1@XP@like, Saturday the second.@1@4@@oe@16-5-2000
-1811@unknown@formal@none@1@@how does you schedule look, that day.@0@7@@oe@16-5-2000
+1811@unknown@formal@none@1@S@how does your schedule look, that day.@1@7@@oe@16-5-2000
 1812@unknown@formal@none@1@S@well, I am going to be playing tennis until about, one.@1@11@@oe@16-5-2000
 1813@unknown@formal@none@1@S@but anytime after then would be great.@1@7@@oe@16-5-2000
 1814@unknown@formal@none@1@S@let us try something different for a change,@1@8@@oe@16-5-2000
@@ -1821,17 +1820,17 @@
 1821@unknown@formal@none@1@S@what does your schedule look like.@1@6@@oe@16-5-2000
 1822@unknown@formal@none@1@S@well, , I have got quite a lot going on next week?@1@12@@oe@16-5-2000
 1823@unknown@formal@none@1@S@but the evenings would be fine.@1@6@@oe@16-5-2000
-1824@unknown@formal@none@1@@really, after, I mean anytime after five, or four even.@0@10@@oe@16-5-2000
+1824@unknown@formal@none@1@XP@really, after, I mean anytime after five, or four even.@0@10@@oe@16-5-2000
 1825@unknown@formal@none@1@XP@basically,@1@1@@oe@16-5-2000
 1826@unknown@formal@none@1@S@well let us see here.@1@5@@oe@16-5-2000
-1827@unknown@formal@none@1@S@as you know,@1@3@@oe@16-5-2000
+1827@unknown@formal@none@1@XP@as you know,@1@3@@oe@16-5-2000
 1828@unknown@formal@none@1@S@I do not like to, go anywhere on Sundays.@1@9@@oe@16-5-2000
 1829@unknown@formal@none@1@S@what about Monday,@1@3@@oe@16-5-2000
 1830@unknown@formal@none@1@S@say, we could meet for dinner?@1@6@@oe@16-5-2000
 1831@unknown@formal@none@1@XP@at six thirty?@1@3@@oe@16-5-2000
 1832@unknown@formal@none@1@S@yeah, , six thirty sounds good,@1@6@@oe@16-5-2000
 1833@unknown@formal@none@1@XP@sounds good.@1@2@@oe@16-5-2000
-1834@unknown@formal@none@1@@is has been quite a year.@0@6@@oe@16-5-2000
+1834@unknown@formal@none@1@S@it has been quite a year.@1@6@@oe@16-5-2000
 1835@unknown@formal@none@1@S@I will see you then.@1@5@@oe@16-5-2000
 1836@unknown@formal@none@1@S@it, certainly has been quite a year.@1@7@@oe@16-5-2000
 1837@unknown@formal@none@1@S@alright we will see you later.@1@6@@oe@16-5-2000
@@ -1840,7 +1839,7 @@
 1840@unknown@formal@none@1@S@and I was wondering if you had any time, March, fourth? in the afternoon?@1@14@@oe@16-5-2000
 1841@unknown@formal@none@1@S@actually, the fourth is pretty bad.@1@6@@oe@16-5-2000
 1842@unknown@formal@none@1@S@I have a track meet in the afternoon.@1@8@@oe@16-5-2000
-1843@unknown@formal@none@1@@what about@0@2@@oe@16-5-2000
+1843@unknown@formal@none@1@XP@what about@0@2@@oe@16-5-2000
 1844@unknown@formal@none@1@S@Wednesdays are good for me.@1@5@@oe@16-5-2000
 1845@unknown@formal@none@1@XP@say, the third or the seventeenth?@1@6@@oe@16-5-2000
 1846@unknown@formal@none@1@S@we could meet, pretty much anytime, on a Wednesday.@1@9@@oe@16-5-2000
@@ -1882,11 +1881,11 @@
 1882@unknown@formal@none@1@S@are you free, next Wednesday?@1@5@@oe@16-5-2000
 1883@unknown@formal@none@1@S@yeah, hm I am free all day.@1@7@@oe@16-5-2000
 1884@unknown@formal@none@1@S@that would be a great time to get together.@1@9@@oe@16-5-2000
-1885@unknown@formal@none@1@@where, and when would like to do it.@0@8@@oe@16-5-2000
-1886@unknown@formal@none@1@S@during the day.@1@3@@oe@16-5-2000
+1885@unknown@formal@none@1@S@where, and when would like to do it.@0@8@@oe@16-5-2000
+1886@unknown@formal@none@1@XP@during the day.@1@3@@oe@16-5-2000
 1887@unknown@formal@none@1@S@let us meet in my office, around, three in the afternoon.@1@11@@oe@16-5-2000
 1888@unknown@formal@none@1@S@could we make it a little, earlier, ,@1@8@@oe@16-5-2000
-1889@unknown@formal@none@1@@case it runs, you know, maybe, a little over two hours,@0@11@@oe@16-5-2000
+1889@unknown@formal@none@1@XP@case it runs, you know, maybe, a little over two hours,@0@11@@oe@16-5-2000
 1890@unknown@formal@none@1@S@I would kind of like to be back home, relatively early on Wednesday.@1@13@@oe@16-5-2000
 1891@unknown@formal@none@1@S@how about like, two o'clock?@1@5@@oe@16-5-2000
 1892@unknown@formal@none@1@S@I am sorry,@1@3@@oe@16-5-2000
@@ -1898,10 +1897,10 @@
 1898@unknown@formal@none@1@S@Thursday the first, is pretty, busy.@1@6@@oe@16-5-2000
 1899@unknown@formal@none@1@S@there are, much better days,@1@5@@oe@16-5-2000
 1900@unknown@formal@none@1@S@I am, free all day Wednesday the thirty first@1@9@@oe@16-5-2000
-1901@unknown@formal@none@1@@and, seventh for that matter.@0@5@@oe@16-5-2000
+1901@unknown@formal@none@1@XP@and, seventh for that matter.@0@5@@oe@16-5-2000
 1902@unknown@formal@none@1@S@you are, booked those days?@1@5@@oe@16-5-2000
 1903@unknown@formal@none@1@S@yeah, I am going to be in meetings, all day on Wednesday,@1@12@@oe@16-5-2000
-1904@unknown@formal@none@1@@and I will out on town the seventh,@0@8@@oe@16-5-2000
+1904@unknown@formal@none@1@S@and I will out on town the seventh,@0@8@@oe@16-5-2000
 1905@unknown@formal@none@1@S@so, what about Friday mornings?@1@5@@oe@16-5-2000
 1906@unknown@formal@none@1@S@well, Friday the second, the morning would be pretty tight.@1@10@@oe@16-5-2000
 1907@unknown@formal@none@1@S@I have a seminar at ten.@1@6@@oe@16-5-2000
@@ -1915,7 +1914,7 @@
 1915@unknown@formal@none@1@S@and a meeting sounds like a good idea.@1@8@@oe@16-5-2000
 1916@unknown@formal@none@1@XP@the, third of February, sometime, in the late afternoon, like maybe, three o'clock.@1@13@@oe@16-5-2000
 1917@unknown@formal@none@1@S@yes, that sounds find to me,@1@6@@oe@16-5-2000
-1918@unknown@formal@none@1@S@say your office.@1@3@@oe@16-5-2000
+1918@unknown@formal@none@1@XP@say your office.@1@3@@oe@16-5-2000
 1919@unknown@formal@none@1@S@as luck would have it, my office is being painted that day, so maybe yours would be a better idea.@1@20@@oe@16-5-2000
 1920@unknown@formal@none@1@XP@really?@1@1@@oe@16-5-2000
 1921@unknown@formal@none@1@S@mine is being painted too,@1@5@@oe@16-5-2000
@@ -1926,7 +1925,7 @@
 1926@unknown@formal@none@1@S@when would you like to do that?@1@7@@oe@16-5-2000
 1927@unknown@formal@none@1@S@would sometime next week be okay?@1@6@@oe@16-5-2000
 1928@unknown@formal@none@1@S@yeah, meeting would be a great idea.@1@7@@oe@16-5-2000
-1929@unknown@formal@none@1@@how is,@0@2@@oe@16-5-2000
+1929@unknown@formal@none@1@S@how is,@0@2@@oe@16-5-2000
 1930@unknown@formal@none@1@S@how about Wednesday , the, twenty sixth, sometime, after lunch.@1@10@@oe@16-5-2000
 1931@unknown@formal@none@1@XP@like, one thirty.@1@3@@oe@16-5-2000
 1932@unknown@formal@none@1@S@maybe, well I do not want to go, late.@1@9@@oe@16-5-2000
@@ -1971,7 +1970,7 @@
 1971@unknown@formal@none@1@XP@that I could, come over and talk to you?@1@9@@oe@16-5-2000
 1972@unknown@formal@none@1@S@Monday and Tuesday, I am going to be at a, pharmaceutical seminar all day.@1@14@@oe@16-5-2000
 1973@unknown@formal@none@1@S@so , that is not so great.@1@7@@oe@16-5-2000
-1974@unknown@formal@none@1@@how about Wednesday the twenty eighth afternoon.@0@7@@oe@16-5-2000
+1974@unknown@formal@none@1@S@how about Wednesday the twenty eighth afternoon.@0@7@@oe@16-5-2000
 1975@unknown@formal@none@1@S@well I am going to be in a, shareholder's meeting from two until four thirty.@1@15@@oe@16-5-2000
 1976@unknown@formal@none@1@S@but, really, like, if, it could be early in the afternoon I could make it.@1@15@@oe@16-5-2000
 1977@unknown@formal@none@1@S@that would be cutting it a little close, and, you know, , we would would be under pressure, during the whole meeting, so that is, not a great idea.@1@29@@oe@16-5-2000
@@ -1984,7 +1983,7 @@
 1984@unknown@formal@none@1@S@so, I will be back after that.@1@7@@oe@16-5-2000
 1985@unknown@formal@none@1@S@let us see here,@1@4@@oe@16-5-2000
 1986@unknown@formal@none@1@S@did we talk about Tuesday?@1@5@@oe@16-5-2000
-1987@unknown@formal@none@1@@because I just,@0@3@@oe@16-5-2000
+1987@unknown@formal@none@1@S@because I just,@0@3@@oe@16-5-2000
 1988@unknown@formal@none@1@S@I have got one meeting Tuesday at three.@1@8@@oe@16-5-2000
 1989@unknown@formal@none@1@XP@Thursday,@1@1@@oe@16-5-2000
 1990@unknown@formal@none@1@S@you are talking about Thursday,@1@5@@oe@16-5-2000
@@ -2008,7 +2007,7 @@
 2008@unknown@formal@none@1@S@hi, I have been doing some research, on the Soutome, hydrobiology? project,@1@12@@oe@16-5-2000
 2009@unknown@formal@none@1@S@and I have got some findings, I think you might, be very interested in.@1@14@@oe@16-5-2000
 2010@unknown@formal@none@1@S@I was wondering if we could get together for a meeting sometime,@1@12@@oe@16-5-2000
-2011@unknown@formal@none@1@@the first week of, well, second week actually of October.@0@10@@oe@16-5-2000
+2011@unknown@formal@none@1@XP@the first week of, well, second week actually of October.@0@10@@oe@16-5-2000
 2012@unknown@formal@none@1@XP@like, say, Monday or Tuesday afternoon or, really anytime Wednesday.@1@10@@oe@16-5-2000
 2013@unknown@formal@none@1@XP@Monday and Wednesday,@1@3@@oe@16-5-2000
 2014@unknown@formal@none@1@S@Monday and Tuesday afternoons are bad for me,@1@8@@oe@16-5-2000
@@ -2021,7 +2020,7 @@
 2021@unknown@formal@none@1@S@how is that for you.@1@5@@oe@16-5-2000
 2022@unknown@formal@none@1@XP@sounds great.@1@2@@oe@16-5-2000
 2023@unknown@formal@none@1@XP@any suggestions on, where we should go?@1@7@@oe@16-5-2000
-2024@unknown@formal@none@1@@there is this Chinese place we can go,@0@8@@oe@16-5-2000
+2024@unknown@formal@none@1@S@there is this Chinese place we can go,@0@8@@oe@16-5-2000
 2025@unknown@formal@none@1@S@but I forget how to get there.@1@7@@oe@16-5-2000
 2026@unknown@formal@none@1@S@why don't we just meet in the lobby then.@1@9@@oe@16-5-2000
 2027@unknown@formal@none@1@S@and we can go out for lunch.@1@7@@oe@16-5-2000
@@ -2045,12 +2044,12 @@
 2045@unknown@formal@none@1@XP@twenty ninth thirtieth and thirty first,@1@6@@oe@16-5-2000
 2046@unknown@formal@none@1@XP@and sorry the, first of December.@1@6@@oe@16-5-2000
 2047@unknown@formal@none@1@S@how is then for you.@1@5@@oe@16-5-2000
-2048@unknown@formal@none@1@@well, the@0@2@@oe@16-5-2000
+2048@unknown@formal@none@1@XP@well, the@0@2@@oe@16-5-2000
 2049@unknown@formal@none@1@S@the mornings on Monday Tuesday and Wednesday and, well, all week are generally bad for me but, on Tuesday, I only have the meeting from ten to twelve,@1@28@@oe@16-5-2000
 2050@unknown@formal@none@1@XP@so if you wanted to, meet , right after twelve,@1@10@@oe@16-5-2000
 2051@unknown@formal@none@1@XP@maybe have lunch or something,@1@5@@oe@16-5-2000
 2052@unknown@formal@none@1@S@then, we could do it then, if you still, like have an opening until two.@1@15@@oe@16-5-2000
-2053@unknown@formal@none@1@S@_no.@1@1@@oe@16-5-2000
+2053@unknown@formal@none@1@XP@no.@1@1@@oe@16-5-2000
 2054@unknown@formal@none@1@S@I have , a lunch meeting on Tuesday from one to three, so, that will not work.@1@17@@oe@16-5-2000
 2055@unknown@formal@none@1@S@I have got a conference all day, on Friday the third.@1@11@@oe@16-5-2000
 2056@unknown@formal@none@1@S@otherwise I am pretty booked up.@1@6@@oe@16-5-2000
@@ -2062,7 +2061,7 @@
 2062@unknown@formal@none@1@XP@and then, basically, all evening every day ,@1@8@@oe@16-5-2000
 2063@unknown@formal@none@1@S@I, do not have a life, so it does not matter.@1@11@@oe@16-5-2000
 2064@unknown@formal@none@1@S@in general weekends , are not great for me.@1@9@@oe@16-5-2000
-2065@unknown@formal@none@1@@I prefer to do things on the evening.@0@8@@oe@16-5-2000
+2065@unknown@formal@none@1@S@I prefer to do things on the evening.@0@8@@oe@16-5-2000
 2066@unknown@formal@none@1@S@how about sometime next week@1@5@@oe@16-5-2000
 2067@unknown@formal@none@1@S@we, can do like a dinner meeting, from maybe, six, to eight or something.@1@14@@oe@16-5-2000
 2068@unknown@formal@none@1@XP@okay.@1@1@@oe@16-5-2000
@@ -2090,16 +2089,16 @@
 2090@unknown@formal@none@1@XP@probably in the next two weeks for about two hours.@1@10@@oe@16-5-2000
 2091@unknown@formal@none@1@S@so let us see@1@4@@oe@16-5-2000
 2092@unknown@formal@none@1@S@it is the twenty sixth today,@1@6@@oe@16-5-2000
-2093@unknown@formal@none@1@@beginning of next week looks pretty bad.@0@7@@oe@16-5-2000
+2093@unknown@formal@none@1@S@beginning of next week looks pretty bad.@0@7@@oe@16-5-2000
 2094@unknown@formal@none@1@S@how about, Thursday the first of April.@1@7@@oe@16-5-2000
 2095@unknown@formal@none@1@S@I have a class in the morning.@1@7@@oe@16-5-2000
-2096@unknown@formal@none@1@S@how about, one P-M.@1@4@@oe@16-5-2000
+2096@unknown@formal@none@1@S@how about, one p.m.@1@4@@oe@16-5-2000
 2097@unknown@formal@none@1@XP@between one and three on Thursday the first.@1@8@@oe@16-5-2000
 2098@unknown@formal@none@1@S@the first is not very good for me.@1@8@@oe@16-5-2000
 2099@unknown@formal@none@1@S@I have got a seminar from ten to two thirty, and then a meeting from three to four.@1@18@@oe@16-5-2000
 2100@unknown@formal@none@1@S@how about the seventh.@1@4@@oe@16-5-2000
 2101@unknown@formal@none@1@S@I am free all day on that day.@1@8@@oe@16-5-2000
-2102@unknown@formal@none@1@@I will be out of town on@0@7@@oe@16-5-2000
+2102@unknown@formal@none@1@S@I will be out of town on@0@7@@oe@16-5-2000
 2103@unknown@formal@none@1@S@the eighth is good.@1@4@@oe@16-5-2000
 2104@unknown@formal@none@1@S@when would you like to meet.@1@6@@oe@16-5-2000
 2105@unknown@formal@none@1@S@how about two o'clock?@1@4@@oe@16-5-2000
@@ -2115,7 +2114,7 @@
 2115@unknown@formal@none@1@S@how about, Wednesday afternoon. the twenty seventh?@1@7@@oe@16-5-2000
 2116@unknown@formal@none@1@S@no I am sorry@1@4@@oe@16-5-2000
 2117@unknown@formal@none@1@S@on the, the twenty seventh, through the first I am going to be out of town,@1@16@@oe@16-5-2000
-2118@unknown@formal@none@1@@how about,@0@2@@oe@16-5-2000
+2118@unknown@formal@none@1@XP@how about,@0@2@@oe@16-5-2000
 2119@unknown@formal@none@1@S@well my schedule is really full.@1@6@@oe@16-5-2000
 2120@unknown@formal@none@1@S@how about, three to five on the twenty sixth.@1@9@@oe@16-5-2000
 2121@unknown@formal@none@1@S@could you do that?@1@4@@oe@16-5-2000
@@ -2129,7 +2128,7 @@
 2129@unknown@formal@none@1@S@two thirty, Wednesday afternoon the third is, pretty good for me.@1@11@@oe@16-5-2000
 2130@unknown@formal@none@1@S@so I guess I will meet you then.@1@8@@oe@16-5-2000
 2131@unknown@formal@none@1@S@well let us get together again.@1@6@@oe@16-5-2000
-2132@unknown@formal@none@1@S@how about, Monday morning, the twenty fourth. at, eleven, A-M.@1@10@@oe@16-5-2000
+2132@unknown@formal@none@1@S@how about, Monday morning, the twenty fourth. at, eleven, a.m.@1@10@@oe@16-5-2000
 2133@unknown@formal@none@1@S@I have got a meeting from ten to twelve on the twenty fourth.@1@13@@oe@16-5-2000
 2134@unknown@formal@none@1@S@could you meet after, twelve o'clock?@1@6@@oe@16-5-2000
 2135@unknown@formal@none@1@XP@only if it is at, four.@1@6@@oe@16-5-2000
@@ -2141,14 +2140,14 @@
 2141@unknown@formal@none@1@S@if not I am free all day the twenty seventh.@1@10@@oe@16-5-2000
 2142@unknown@formal@none@1@S@oh yeah I guess we should meet for about two hours.@1@11@@oe@16-5-2000
 2143@unknown@formal@none@1@S@the twenty seventh is pretty bad.@1@6@@oe@16-5-2000
-2144@unknown@formal@none@1@S@I have, seminar from nine thirty until four thirty.@1@9@@oe@16-5-2000
+2144@unknown@formal@none@1@S@I have, seminar from nine thirty until four thirty.@0@9@@oe@16-5-2000
 2145@unknown@formal@none@1@S@what about Tuesday morning.@1@4@@oe@16-5-2000
 2146@unknown@formal@none@1@XP@the twenty fifth.@1@3@@oe@16-5-2000
 2147@unknown@formal@none@1@XP@from, I guess ten until twelve?@1@6@@oe@16-5-2000
 2148@unknown@formal@none@1@XP@or eleven until one?@1@4@@oe@16-5-2000
 2149@unknown@formal@none@1@S@eleven to one on the twenty fifth is pretty good.@1@10@@oe@16-5-2000
 2150@unknown@formal@none@1@S@so I will meet you then?@1@6@@oe@16-5-2000
-2151@unknown@formal@none@1@S@okay eleven A-M, on, Tuesday the twenty fifth.@1@8@@oe@16-5-2000
+2151@unknown@formal@none@1@XP@okay eleven a.m., on, Tuesday the twenty fifth.@1@8@@oe@16-5-2000
 2152@unknown@formal@none@1@S@I guess I will see you then.@1@7@@oe@16-5-2000
 2153@unknown@formal@none@1@XP@bye.@1@1@@oe@16-5-2000
 2154@unknown@formal@none@1@XP@bye.@1@1@@oe@16-5-2000
@@ -2189,13 +2188,13 @@
 2189@unknown@formal@none@1@S@what about Friday afternoon the first.@1@6@@oe@16-5-2000
 2190@unknown@formal@none@1@S@I could only meet Friday, if it was for one and a half hours, or if it was after five o'clock.@1@21@@oe@16-5-2000
 2191@unknown@formal@none@1@S@I have got, meetings all day.@1@6@@oe@16-5-2000
-2192@unknown@formal@none@1@S@what about. six P-M.@1@4@@oe@16-5-2000
+2192@unknown@formal@none@1@S@what about. six p.m.@1@4@@oe@16-5-2000
 2193@unknown@formal@none@1@XP@on, Friday, the first.@1@4@@oe@16-5-2000
 2194@unknown@formal@none@1@XP@okay.@1@1@@oe@16-5-2000
 2195@unknown@formal@none@1@S@I, hate to mix, business and weekends.@1@7@@oe@16-5-2000
-2196@unknown@formal@none@1@@but I will pencil you in and we will we will get it done.@0@14@@oe@16-5-2000
+2196@unknown@formal@none@1@S@but I will pencil you in and we will we will get it done.@0@14@@oe@16-5-2000
 2197@unknown@formal@none@1@S@it is kind of important I guess,@1@7@@oe@16-5-2000
-2198@unknown@formal@none@1@XP@okay I guess six P-M on Friday.@1@7@@oe@16-5-2000
+2198@unknown@formal@none@1@XP@okay I guess six p.m. on Friday.@1@7@@oe@16-5-2000
 2199@unknown@formal@none@1@S@and we will try and keep it to an hour and a half.@1@13@@oe@16-5-2000
 2200@unknown@formal@none@1@S@so it should only be from, six to seven thirty on Friday, evening the first.@1@15@@oe@16-5-2000
 2201@unknown@formal@none@1@S@so I guess I will see you then,@1@8@@oe@16-5-2000
@@ -2206,15 +2205,15 @@
 2206@unknown@formal@none@1@S@so I guess we should get together again.@1@8@@oe@16-5-2000
 2207@unknown@formal@none@1@S@my schedule looks pretty bad.@1@5@@oe@16-5-2000
 2208@unknown@formal@none@1@S@it is the nineteenth today,@1@5@@oe@16-5-2000
-2209@unknown@formal@none@1@@how about hm all of next well@0@7@@oe@16-5-2000
+2209@unknown@formal@none@1@S@how about hm all of next well@0@7@@oe@16-5-2000
 2210@unknown@formal@none@1@S@actually next Friday does not look too bad,@1@8@@oe@16-5-2000
 2211@unknown@formal@none@1@S@I only have a meeting at lunch,@1@7@@oe@16-5-2000
 2212@unknown@formal@none@1@S@so, how about Friday afternoon, on the twenty sixth.@1@9@@oe@16-5-2000
 2213@unknown@formal@none@1@S@well I am going to be out of town, from the twenty fifth to the twenty eighth.@1@17@@oe@16-5-2000
 2214@unknown@formal@none@1@S@so Friday is out.@1@4@@oe@16-5-2000
-2215@unknown@formal@none@1@@could you meet on an, early morning on the, early part of this week?@0@14@@oe@16-5-2000
+2215@unknown@formal@none@1@S@could you meet on an, early morning on the, early part of this week?@0@14@@oe@16-5-2000
 2216@unknown@formal@none@1@S@I am free, mornings of the twenty second twenty third and twenty fourth.@1@13@@oe@16-5-2000
-2217@unknown@formal@none@1@@twenty second and twenty fourth are pretty bad.@0@8@@oe@16-5-2000
+2217@unknown@formal@none@1@S@twenty second and twenty fourth are pretty bad.@0@8@@oe@16-5-2000
 2218@unknown@formal@none@1@S@but, on the twenty third, I do not, have a meeting until ten, so, maybe we could come in early and meet at, eight.@1@24@@oe@16-5-2000
 2219@unknown@formal@none@1@XP@on Tuesday the twenty third.@1@5@@oe@16-5-2000
 2220@unknown@formal@none@1@XP@yeah, as much as I hate to do it,@1@9@@oe@16-5-2000
@@ -2232,7 +2231,7 @@
 2232@unknown@formal@none@1@S@so, I guess it is up to you whether you would rather meet at eight, or at, five.@1@18@@oe@16-5-2000
 2233@unknown@formal@none@1@S@it is your call.@1@4@@oe@16-5-2000
 2234@unknown@formal@none@1@S@I am a, evening man myself, so I would prefer the, second, but, if the, twenty third works for you it is fine with me.@1@25@@oe@16-5-2000
-2235@unknown@formal@none@1@S@well let us make it Thursday the second, at, five P-M.@1@11@@oe@16-5-2000
+2235@unknown@formal@none@1@S@well let us make it Thursday the second, at, five p.m.@1@11@@oe@16-5-2000
 2236@unknown@formal@none@1@S@so, I guess we will, meet, then.@1@7@@oe@16-5-2000
 2237@unknown@formal@none@1@XP@sounds good,@1@2@@oe@16-5-2000
 2238@unknown@formal@none@1@S@I will see you then, bye.@1@6@@oe@16-5-2000
@@ -2246,7 +2245,7 @@
 2246@unknown@formal@none@1@S@how are those, times for you.@1@6@@oe@16-5-2000
 2247@unknown@formal@none@1@XP@okay.@1@1@@oe@16-5-2000
 2248@unknown@formal@none@1@S@unfortunately, those two days I am going to be out of town.@1@12@@oe@16-5-2000
-2249@unknown@formal@none@1@@so, how about,@0@3@@oe@16-5-2000
+2249@unknown@formal@none@1@XP@so, how about,@0@3@@oe@16-5-2000
 2250@unknown@formal@none@1@S@I do not know,@1@4@@oe@16-5-2000
 2251@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 2252@unknown@formal@none@1@XP@the seventeenth,@1@2@@oe@16-5-2000
@@ -2265,9 +2264,9 @@
 2265@unknown@formal@none@1@S@why don't we meet, the sixteenth, at two o'clock, say at, your office.@1@13@@oe@16-5-2000
 2266@unknown@formal@none@1@S@hey, how is it going.@1@5@@oe@16-5-2000
 2267@unknown@formal@none@1@S@I want to know.@1@4@@oe@16-5-2000
-2268@unknown@formal@none@1@@are you doing anything, the twenty ninth, thirtieth, or, thirty first?@0@11@@oe@16-5-2000
+2268@unknown@formal@none@1@S@are you doing anything, the twenty ninth, thirtieth, or, thirty first?@1@11@@oe@16-5-2000
 2269@unknown@formal@none@1@S@I would like to, get together,@1@6@@oe@16-5-2000
-2270@unknown@formal@none@1@S@talk and stuff or, whatever you want to do.@1@9@@oe@16-5-2000
+2270@unknown@formal@none@1@XP@talk and stuff or, whatever you want to do.@1@9@@oe@16-5-2000
 2271@unknown@formal@none@1@S@I do not know.@1@4@@oe@16-5-2000
 2272@unknown@formal@none@1@S@I am available, probably anytime.@1@5@@oe@16-5-2000
 2273@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
@@ -2287,7 +2286,7 @@
 2287@unknown@formal@none@1@S@I do not know,@1@4@@oe@16-5-2000
 2288@unknown@formal@none@1@S@I guess, in the next couple weeks,@1@7@@oe@16-5-2000
 2289@unknown@formal@none@1@S@what do you think.@1@4@@oe@16-5-2000
-2290@unknown@formal@none@1@@I have, most,@0@3@@oe@16-5-2000
+2290@unknown@formal@none@1@S@I have, most,@0@3@@oe@16-5-2000
 2291@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 2292@unknown@formal@none@1@S@well first tell me,@1@4@@oe@16-5-2000
 2293@unknown@formal@none@1@S@when do you think you would be available during the next couple weeks.@1@13@@oe@16-5-2000
@@ -2303,13 +2302,13 @@
 2303@unknown@formal@none@1@XP@actually yeah.@1@2@@oe@16-5-2000
 2304@unknown@formal@none@1@S@the twenty sixth, , I can meet after four.@1@9@@oe@16-5-2000
 2305@unknown@formal@none@1@S@I have a seminar all day, and so, I will not be able to meet until after four.@1@18@@oe@16-5-2000
-2306@unknown@formal@none@1@S@but, you know,@1@3@@oe@16-5-2000
+2306@unknown@formal@none@1@XP@but, you know,@1@3@@oe@16-5-2000
 2307@unknown@formal@none@1@S@how about like from four to five or something like that.@1@11@@oe@16-5-2000
-2308@unknown@formal@none@1@@or no, not,@0@3@@oe@16-5-2000
+2308@unknown@formal@none@1@XP@or no, not,@0@3@@oe@16-5-2000
 2309@unknown@formal@none@1@S@unfortunately Tuesday I am also going to be out of town.@1@11@@oe@16-5-2000
-2310@unknown@formal@none@1@@but twenty sixth , if four to five sounds good.@0@10@@oe@16-5-2000
+2310@unknown@formal@none@1@XP@but twenty sixth , if four to five sounds good.@0@10@@oe@16-5-2000
 2311@unknown@formal@none@1@S@what do you think.@1@4@@oe@16-5-2000
-2312@unknown@formal@none@1@S@well, I think we are really going to need two hours to discuss everything we need to discuss, and I would, rather not stray past five P-M,@1@27@@oe@16-5-2000
+2312@unknown@formal@none@1@S@well, I think we are really going to need two hours to discuss everything we need to discuss, and I would, rather not stray past five p.m.,@1@27@@oe@16-5-2000
 2313@unknown@formal@none@1@XP@so.@1@1@@oe@16-5-2000
 2314@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 2315@unknown@formal@none@1@S@let me look elsewhere on my schedule.@1@7@@oe@16-5-2000
@@ -2329,18 +2328,18 @@
 2329@unknown@formal@none@1@S@I will see you on the, the third then.@1@9@@oe@16-5-2000
 2330@unknown@formal@none@1@XP@alright?@1@1@@oe@16-5-2000
 2331@unknown@formal@none@1@XP@talk to you later.@1@4@@oe@16-5-2000
-2332@unknown@formal@none@1@@hi. I would like to know if.@0@7@@oe@16-5-2000
-2333@unknown@formal@none@1@@do you have times in the next couple weeks to schedule, schedule another meeting,@0@14@@oe@16-5-2000
+2332@unknown@formal@none@1@S@hi. I would like to know if.@0@7@@oe@16-5-2000
+2333@unknown@formal@none@1@S@do you have times in the next couple weeks to schedule, schedule another meeting,@0@14@@oe@16-5-2000
 2334@unknown@formal@none@1@S@perhaps, I think my best time would probably be,@1@9@@oe@16-5-2000
 2335@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 2336@unknown@formal@none@1@XP@Tuesday June first, or maybe Wednesday,@1@6@@oe@16-5-2000
 2337@unknown@formal@none@1@XP@well, actually Tuesday Wednesday or Thursday,@1@6@@oe@16-5-2000
-2338@unknown@formal@none@1@XP@anytime Tuesday, after two P-M on, Wednesday, and, after ten A-M on Thursday.@1@13@@oe@16-5-2000
+2338@unknown@formal@none@1@XP@anytime Tuesday, after two p.m. on, Wednesday, and, after ten a.m. on Thursday.@1@13@@oe@16-5-2000
 2339@unknown@formal@none@1@S@if those days are, good or, good with you then we could meet.@1@13@@oe@16-5-2000
-2340@unknown@formal@none@1@@or, otherwise just,@0@3@@oe@16-5-2000
+2340@unknown@formal@none@1@XP@or, otherwise just,@0@3@@oe@16-5-2000
 2341@unknown@formal@none@1@S@what else do you think.@1@5@@oe@16-5-2000
 2342@unknown@formal@none@1@S@well, Thursday June third would be just fine, with me.@1@10@@oe@16-5-2000
-2343@unknown@formal@none@1@S@say from one to three P-M?@1@6@@oe@16-5-2000
+2343@unknown@formal@none@1@XP@say from one to three p.m.?@1@6@@oe@16-5-2000
 2344@unknown@formal@none@1@S@where would you like to meet.@1@6@@oe@16-5-2000
 2345@unknown@formal@none@1@XP@well.@1@1@@oe@16-5-2000
 2346@unknown@formal@none@1@S@I do not know.@1@4@@oe@16-5-2000
@@ -2359,13 +2358,13 @@
 2359@unknown@formal@none@1@S@it is really nice to see you again.@1@8@@oe@16-5-2000
 2360@unknown@formal@none@1@XP@guess we have to, arrange a meeting in the next couple of weeks to discuss our business again.@1@18@@oe@16-5-2000
 2361@unknown@formal@none@1@XP@for me, the first available date,@1@6@@oe@16-5-2000
-2362@unknown@formal@none@1@S@it, looks to be, let us say the twenty sixth, or the twenty seventh, before three P-M. and the twenty sixth anytime after noon.@1@24@@oe@16-5-2000
+2362@unknown@formal@none@1@S@it, looks to be, let us say the twenty sixth, or the twenty seventh, before three p.m. and the twenty sixth anytime after noon.@1@24@@oe@16-5-2000
 2363@unknown@formal@none@1@S@are you available, during those times?@1@6@@oe@16-5-2000
 2364@unknown@formal@none@1@XP@unfortunately no.@1@2@@oe@16-5-2000
 2365@unknown@formal@none@1@S@I am tied up all day both days,@1@8@@oe@16-5-2000
-2366@unknown@formal@none@1@S@the, twenty eighth however I have my afternoon free, after one P-M.@1@12@@oe@16-5-2000
+2366@unknown@formal@none@1@S@the, twenty eighth however I have my afternoon free, after one p.m.@1@12@@oe@16-5-2000
 2367@unknown@formal@none@1@S@do you have any time, then?@1@6@@oe@16-5-2000
-2368@unknown@formal@none@1@S@actually no, the only time I have available on the twenty eighth is before two P-M,@1@16@@oe@16-5-2000
+2368@unknown@formal@none@1@S@actually no, the only time I have available on the twenty eighth is before two p.m.,@1@16@@oe@16-5-2000
 2369@unknown@formal@none@1@S@but, Thursday, I have, my whole afternoon free,@1@8@@oe@16-5-2000
 2370@unknown@formal@none@1@S@Friday I am going to be out of town,@1@9@@oe@16-5-2000
 2371@unknown@formal@none@1@S@actually I will be out of town until the third.@1@10@@oe@16-5-2000
@@ -2381,7 +2380,7 @@
 2381@unknown@formal@none@1@S@would you, have enough time to meet on Wednesday?@1@9@@oe@16-5-2000
 2382@unknown@formal@none@1@S@hey how is it going.@1@5@@oe@16-5-2000
 2383@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
-2384@unknown@formal@none@1@@for our, normal business meeting, I wanted,@0@7@@oe@16-5-2000
+2384@unknown@formal@none@1@XP@for our, normal business meeting, I wanted,@0@7@@oe@16-5-2000
 2385@unknown@formal@none@1@S@do you have time the twenty seventh or twenty eighth of September.@1@12@@oe@16-5-2000
 2386@unknown@formal@none@1@XP@any time in the afternoon.@1@5@@oe@16-5-2000
 2387@unknown@formal@none@1@S@that is, when, I am available.@1@6@@oe@16-5-2000
@@ -2394,10 +2393,10 @@
 2394@unknown@formal@none@1@S@but, I do have some time, Wednesday the twenty ninth in the afternoon, and Thursday the thirtieth in the late afternoon.@1@21@@oe@16-5-2000
 2395@unknown@formal@none@1@XP@if you can spare some time then.@1@7@@oe@16-5-2000
 2396@unknown@formal@none@1@XP@okay.@1@1@@oe@16-5-2000
-2397@unknown@formal@none@1@@well I guess, we are going have to go into the next either Friday, or, the next week@0@18@@oe@16-5-2000
+2397@unknown@formal@none@1@S@well I guess, we are going have to go into the next either Friday, or, the next week@0@18@@oe@16-5-2000
 2398@unknown@formal@none@1@XP@because I have no time during those two days.@1@9@@oe@16-5-2000
 2399@unknown@formal@none@1@S@I am, tied up virtually all day.@1@7@@oe@16-5-2000
-2400@unknown@formal@none@1@S@Friday I am available anytime after eleven A-M?@1@8@@oe@16-5-2000
+2400@unknown@formal@none@1@S@Friday I am available anytime after eleven a.m.?@1@8@@oe@16-5-2000
 2401@unknown@formal@none@1@S@and during the next week, I am available, every afternoon, the fourth fifth and sixth.@1@15@@oe@16-5-2000
 2402@unknown@formal@none@1@S@actually the sixth I am available all day.@1@8@@oe@16-5-2000
 2403@unknown@formal@none@1@S@and, also the eighth of October I , could meet with you in the afternoon.@1@15@@oe@16-5-2000
@@ -2418,7 +2417,7 @@
 2418@unknown@formal@none@1@XP@meet until three thirty.@1@4@@oe@16-5-2000
 2419@unknown@formal@none@1@XP@two hours,@1@2@@oe@16-5-2000
 2420@unknown@formal@none@1@S@I think two hours should be enough.@1@7@@oe@16-5-2000
-2421@unknown@formal@none@1@@is that,@0@2@@oe@16-5-2000
+2421@unknown@formal@none@1@S@is that,@0@2@@oe@16-5-2000
 2422@unknown@formal@none@1@S@does that coincide with you.@1@5@@oe@16-5-2000
 2423@unknown@formal@none@1@S@yeah, that will be fine.@1@5@@oe@16-5-2000
 2424@unknown@formal@none@1@S@where, would you like to meet.@1@6@@oe@16-5-2000
@@ -2442,7 +2441,7 @@
 2442@unknown@formal@none@1@XP@from twelve to two.@1@4@@oe@16-5-2000
 2443@unknown@formal@none@1@XP@because other than that I am booked up.@1@8@@oe@16-5-2000
 2444@unknown@formal@none@1@XP@or even after one thirty on Friday.@1@7@@oe@16-5-2000
-2445@unknown@formal@none@1@@maybe we can go into the next week if, if necessary but let us see.@0@15@@oe@16-5-2000
+2445@unknown@formal@none@1@S@maybe we can go into the next week if, if necessary but let us see.@0@15@@oe@16-5-2000
 2446@unknown@formal@none@1@S@what do you have available that week.@1@7@@oe@16-5-2000
 2447@unknown@formal@none@1@XP@not much if anything on the days you have mentioned I am afraid.@1@13@@oe@16-5-2000
 2448@unknown@formal@none@1@S@however, the next week, Monday and Tuesday I have free time.@1@11@@oe@16-5-2000
@@ -2462,7 +2461,7 @@
 2462@unknown@formal@none@1@S@Thursday afternoon I am also free, from, noon on,and, that is, that is about it.@1@15@@oe@16-5-2000
 2463@unknown@formal@none@1@S@so it is just basically Tuesday and Thursday.@1@8@@oe@16-5-2000
 2464@unknown@formal@none@1@S@are you available on those afternoons?@1@6@@oe@16-5-2000
-2465@unknown@formal@none@1@S@well, it does not look real good for getting in a meeting before five P-M.@1@15@@oe@16-5-2000
+2465@unknown@formal@none@1@S@well, it does not look real good for getting in a meeting before five p.m.@1@15@@oe@16-5-2000
 2466@unknown@formal@none@1@XP@as I am tied up until then basically every day.@1@10@@oe@16-5-2000
 2467@unknown@formal@none@1@S@I will tell you what.@1@5@@oe@16-5-2000
 2468@unknown@formal@none@1@S@you mentioned Thursday the second.@1@5@@oe@16-5-2000
@@ -2489,13 +2488,13 @@
 2489@unknown@formal@none@1@S@I do however have, the morning of Monday the fifteenth off, as well as, the afternoon of Tuesday the sixteenth.@1@20@@oe@16-5-2000
 2490@unknown@formal@none@1@S@do you have any time, on those dates?@1@8@@oe@16-5-2000
 2491@unknown@formal@none@1@XP@yes.@1@1@@oe@16-5-2000
-2492@unknown@formal@none@1@S@I will be open on the sixteenth after twelve P-M.@1@10@@oe@16-5-2000
+2492@unknown@formal@none@1@S@I will be open on the sixteenth after twelve p.m.@1@10@@oe@16-5-2000
 2493@unknown@formal@none@1@S@I am free on that day.@1@6@@oe@16-5-2000
 2494@unknown@formal@none@1@S@okay, in that case why don't we meet from say, one to three.@1@13@@oe@16-5-2000
 2495@unknown@formal@none@1@S@how does that sound,@1@4@@oe@16-5-2000
 2496@unknown@formal@none@1@S@that sounds okay with me.@1@5@@oe@16-5-2000
 2497@unknown@formal@none@1@S@I will be there.@1@4@@oe@16-5-2000
-2498@unknown@formal@none@1@S@yes I will be able to meet with you at about three P-M on, Monday the twenty ninth@1@18@@oe@16-5-2000
+2498@unknown@formal@none@1@S@yes I will be able to meet with you at about three p.m. on, Monday the twenty ninth@1@18@@oe@16-5-2000
 2499@unknown@formal@none@1@S@you are open.@1@3@@oe@16-5-2000
 2500@unknown@formal@none@1@S@unfortunately I am not.@1@4@@oe@16-5-2000
 2501@unknown@formal@none@1@S@I have got a meeting, exactly at three on the twenty ninth.@1@12@@oe@16-5-2000
@@ -2503,7 +2502,7 @@
 2503@unknown@formal@none@1@S@however, Tuesday the thirtieth I have got my afternoon free, and, the thirty first Wednesday I am free all day,@1@20@@oe@16-5-2000
 2504@unknown@formal@none@1@S@have you got a couple hours in there somewhere?@1@9@@oe@16-5-2000
 2505@unknown@formal@none@1@XP@seems as if I will be tied up all day on Wednesday.@1@12@@oe@16-5-2000
-2506@unknown@formal@none@1@S@but on Tuesday the thirtieth I am open at, three P-M.@1@11@@oe@16-5-2000
+2506@unknown@formal@none@1@S@but on Tuesday the thirtieth I am open at, three p.m.@1@11@@oe@16-5-2000
 2507@unknown@formal@none@1@S@okay then, would a three to five meeting, be good with you?@1@12@@oe@16-5-2000
 2508@unknown@formal@none@1@S@yes that sounds, fine with me.@1@6@@oe@16-5-2000
 2509@unknown@formal@none@1@XP@okay great.@1@2@@oe@16-5-2000
@@ -2519,11 +2518,11 @@
 2519@unknown@formal@none@1@S@yeah I believe we should schedule for next week@1@9@@oe@16-5-2000
 2520@unknown@formal@none@1@S@I am pretty much tied up every other day after that.@1@11@@oe@16-5-2000
 2521@unknown@formal@none@1@S@I will be open on Wednesday the third.@1@8@@oe@16-5-2000
-2522@unknown@formal@none@1@XP@after twelve P-M.@1@3@@oe@16-5-2000
+2522@unknown@formal@none@1@XP@after twelve p.m.@1@3@@oe@16-5-2000
 2523@unknown@formal@none@1@S@how does that sound.@1@4@@oe@16-5-2000
 2524@unknown@formal@none@1@XP@not bad,@1@2@@oe@16-5-2000
 2525@unknown@formal@none@1@S@I have got a meeting from one to two, and I could easily schedule a meeting with you, on that day.@1@21@@oe@16-5-2000
-2526@unknown@formal@none@1@S@say three to five,@1@4@@oe@16-5-2000
+2526@unknown@formal@none@1@XP@say three to five,@1@4@@oe@16-5-2000
 2527@unknown@formal@none@1@S@where would you like to meet.@1@6@@oe@16-5-2000
 2528@unknown@formal@none@1@S@okay I guess we will meet at the, conference center on Wall-Street.@1@12@@oe@16-5-2000
 2529@unknown@formal@none@1@S@how does that sound,@1@4@@oe@16-5-2000
@@ -2539,14 +2538,14 @@
 2539@unknown@formal@none@1@S@on Tuesday I will be at a meeting from about two to four thirty.@1@14@@oe@16-5-2000
 2540@unknown@formal@none@1@S@which means I, will not be able to make it then.@1@11@@oe@16-5-2000
 2541@unknown@formal@none@1@S@I am also be tied up, like, on the twenty sixth and twenty seventh for all day.@1@17@@oe@16-5-2000
-2542@unknown@formal@none@1@XP@also on the Friday, twenty eighth I will be at a seminar all day.@1@14@@oe@16-5-2000
+2542@unknown@formal@none@1@S@also on the Friday, twenty eighth I will be at a seminar all day.@0@14@@oe@16-5-2000
 2543@unknown@formal@none@1@S@how about the Monday after that, like in the morning,@1@10@@oe@16-5-2000
 2544@unknown@formal@none@1@S@we can settle for a morning meeting.@1@7@@oe@16-5-2000
 2545@unknown@formal@none@1@S@well, I will be out of town, from the thirty first through the second.@1@14@@oe@16-5-2000
 2546@unknown@formal@none@1@S@Thursday the third I am free, in the afternoon, and, Friday the fourth, I am free in the morning.@1@19@@oe@16-5-2000
 2547@unknown@formal@none@1@S@I do not suppose you have a couple of hours on those dates.@1@13@@oe@16-5-2000
 2548@unknown@formal@none@1@S@yes I actually do.@1@4@@oe@16-5-2000
-2549@unknown@formal@none@1@S@on Thursday the third I will be out of a meeting at ten A-M so I will be free after that.@1@21@@oe@16-5-2000
+2549@unknown@formal@none@1@S@on Thursday the third I will be out of a meeting at ten a.m. so I will be free after that.@1@21@@oe@16-5-2000
 2550@unknown@formal@none@1@S@we can meet any time during the day, whether you want to meet for lunch or, any time after that.@1@20@@oe@16-5-2000
 2551@unknown@formal@none@1@S@it is up to you.@1@5@@oe@16-5-2000
 2552@unknown@formal@none@1@S@alright then in that case, why don't we meet for lunch, at say twelve, to two.@1@16@@oe@16-5-2000
@@ -2555,7 +2554,7 @@
 2555@unknown@formal@none@1@S@that sounds fine to me.@1@5@@oe@16-5-2000
 2556@unknown@formal@none@1@S@I will meet you on, the third.@1@7@@oe@16-5-2000
 2557@unknown@formal@none@1@XP@again, take care.@1@3@@oe@16-5-2000
-2558@unknown@formal@none@1@S@if you would like to meet on the, Monday the twenty sixth, I will be open after twelve, P-M.@1@19@@oe@16-5-2000
+2558@unknown@formal@none@1@S@if you would like to meet on the, Monday the twenty sixth, I will be open after twelve, p.m.@1@19@@oe@16-5-2000
 2559@unknown@formal@none@1@S@if not I will be open at, morning time, on Tuesday the twenty seventh.@1@14@@oe@16-5-2000
 2560@unknown@formal@none@1@S@how does that sound.@1@4@@oe@16-5-2000
 2561@unknown@formal@none@1@S@well, I am tied up all day.@1@7@@oe@16-5-2000
@@ -2564,10 +2563,10 @@
 2564@unknown@formal@none@1@S@I am free, in the afternoon Wednesday the twenty eighth.@1@10@@oe@16-5-2000
 2565@unknown@formal@none@1@S@the morning, Thursday the twenty ninth, and all day Friday the thirtieth.@1@12@@oe@16-5-2000
 2566@unknown@formal@none@1@S@what have you got, on those dates,@1@7@@oe@16-5-2000
-2567@unknown@formal@none@1@XP@at Wednesday I will be able to meet you for lunch from twelve to two.@1@15@@oe@16-5-2000
+2567@unknown@formal@none@1@S@at Wednesday I will be able to meet you for lunch from twelve to two.@0@15@@oe@16-5-2000
 2568@unknown@formal@none@1@S@but after two I will be at a meeting from two to four thirty.@1@14@@oe@16-5-2000
 2569@unknown@formal@none@1@S@I will be, pretty much at a lecture on the twenty ninth on Thursday.@1@14@@oe@16-5-2000
-2570@unknown@formal@none@1@S@from nine to twelve, and I will be out of town on Friday.@1@13@@oe@16-5-2000
+2570@unknown@formal@none@1@XP@from nine to twelve, and I will be out of town on Friday.@1@13@@oe@16-5-2000
 2571@unknown@formal@none@1@S@so if it is inconvenient for you on Wednesday, how about we schedule for next week.@1@16@@oe@16-5-2000
 2572@unknown@formal@none@1@XP@yeah.@1@1@@oe@16-5-2000
 2573@unknown@formal@none@1@S@it looks like, next week is probably our best, plan.@1@10@@oe@16-5-2000
@@ -2575,15 +2574,15 @@
 2575@unknown@formal@none@1@S@if not I have got the whole day free.@1@9@@oe@16-5-2000
 2576@unknown@formal@none@1@S@Tuesday and Wednesday the third and fourth, I am free in the afternoons if you have got some time then.@1@20@@oe@16-5-2000
 2577@unknown@formal@none@1@S@well I actually will not be getting back from out of town until, Tuesday night, the third.@1@17@@oe@16-5-2000
-2578@unknown@formal@none@1@S@however I do have Wednesday the fourth open, after one P-M, I will be out of a meeting,@1@18@@oe@16-5-2000
+2578@unknown@formal@none@1@S@however I do have Wednesday the fourth open, after one p.m., I will be out of a meeting,@1@18@@oe@16-5-2000
 2579@unknown@formal@none@1@S@how does that sound to you.@1@6@@oe@16-5-2000
 2580@unknown@formal@none@1@XP@sounds good,@1@2@@oe@16-5-2000
 2581@unknown@formal@none@1@S@why don't we meet from, oh say two to four, at, your office?@1@13@@oe@16-5-2000
 2582@unknown@formal@none@1@S@how does that sound.@1@4@@oe@16-5-2000
 2583@unknown@formal@none@1@S@that will be fine with me.@1@6@@oe@16-5-2000
-2584@unknown@formal@none@1@S@okay, I will be free to meet with you, after, twelve P-M on both Monday the twenty seventh and, Tuesday the twenty eighth.@1@23@@oe@16-5-2000
+2584@unknown@formal@none@1@S@okay, I will be free to meet with you, after, twelve p.m. on both Monday the twenty seventh and, Tuesday the twenty eighth.@1@23@@oe@16-5-2000
 2585@unknown@formal@none@1@S@how does that sound to you.@1@6@@oe@16-5-2000
-2586@unknown@formal@none@1@S@unfortunately not real good.@1@4@@oe@16-5-2000
+2586@unknown@formal@none@1@XP@unfortunately not real good.@1@4@@oe@16-5-2000
 2587@unknown@formal@none@1@S@I am, tied up both afternoons.@1@6@@oe@16-5-2000
 2588@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 2589@unknown@formal@none@1@S@I am free, the afternoon of Wednesday the twenty ninth, and late afternoon of Thursday the thirtieth.@1@17@@oe@16-5-2000
@@ -2595,7 +2594,7 @@
 2595@unknown@formal@none@1@S@also on Thursday I will be tied up at a meeting from two thirty to five.@1@16@@oe@16-5-2000
 2596@unknown@formal@none@1@XP@does not leave me much space to work with.@1@9@@oe@16-5-2000
 2597@unknown@formal@none@1@S@how about Saturday afternoon.@1@4@@oe@16-5-2000
-2598@unknown@formal@none@1@XP@say about, two P-M.@1@4@@oe@16-5-2000
+2598@unknown@formal@none@1@XP@say about, two p.m.@1@4@@oe@16-5-2000
 2599@unknown@formal@none@1@S@maybe we can meet.@1@4@@oe@16-5-2000
 2600@unknown@formal@none@1@S@yeah, actually that looks like, our best option.@1@8@@oe@16-5-2000
 2601@unknown@formal@none@1@S@I have got a meeting, on Saturday from ten thirty to one,@1@12@@oe@16-5-2000
@@ -2603,19 +2602,19 @@
 2603@unknown@formal@none@1@S@two, in fact sounds great.@1@5@@oe@16-5-2000
 2604@unknown@formal@none@1@S@where would you like to meet.@1@6@@oe@16-5-2000
 2605@unknown@formal@none@1@S@we could meet at Herald-Square if you would like, and, from there we go up to the office building,@1@19@@oe@16-5-2000
-2606@unknown@formal@none@1@@I have an office up there also we can work at.@0@11@@oe@16-5-2000
+2606@unknown@formal@none@1@S@I have an office up there also we can work at.@0@11@@oe@16-5-2000
 2607@unknown@formal@none@1@S@how's that sound.@1@3@@oe@16-5-2000
 2608@unknown@formal@none@1@S@I am pretty much booked all day on the twenty second of Monday.@1@13@@oe@16-5-2000
-2609@unknown@formal@none@1@S@how does the twenty third sound at about three P-M?@1@10@@oe@16-5-2000
+2609@unknown@formal@none@1@S@how does the twenty third sound at about three p.m.?@1@10@@oe@16-5-2000
 2610@unknown@formal@none@1@S@I would be free from about three to five.@1@9@@oe@16-5-2000
 2611@unknown@formal@none@1@S@well, unfortunately that is exactly when I will be tied up that day.@1@13@@oe@16-5-2000
-2612@unknown@formal@none@1@S@the twenty fourth, I am, free until three P-M.@1@9@@oe@16-5-2000
+2612@unknown@formal@none@1@S@the twenty fourth, I am, free until three p.m.@1@9@@oe@16-5-2000
 2613@unknown@formal@none@1@XP@so, all morning.@1@3@@oe@16-5-2000
 2614@unknown@formal@none@1@S@and then, I am going to be out of town from the twenty fifth through the twenty seventh.@1@18@@oe@16-5-2000
 2615@unknown@formal@none@1@S@so, if we want to try, before I go out of town, that would be, the only time I could do it.@1@22@@oe@16-5-2000
 2616@unknown@formal@none@1@S@if not we will have to, try something afterwards.@1@9@@oe@16-5-2000
 2617@unknown@formal@none@1@S@I will be attending a class from one thirty to three thirty on, the twenty fourth.@1@16@@oe@16-5-2000
-2618@unknown@formal@none@1@S@I could schedule a meeting at four P-M and, maybe we can run over.@1@14@@oe@16-5-2000
+2618@unknown@formal@none@1@S@I could schedule a meeting at four p.m. and, maybe we can run over.@1@14@@oe@16-5-2000
 2619@unknown@formal@none@1@XP@until maybe six o'clock, if, you like.@1@7@@oe@16-5-2000
 2620@unknown@formal@none@1@S@yeah, it looks like that is probably our best bet.@1@10@@oe@16-5-2000
 2621@unknown@formal@none@1@XP@seeing as how I am pretty much, tied up, all day.@1@11@@oe@16-5-2000
@@ -2648,7 +2647,7 @@
 2648@unknown@formal@none@1@S@how about, Tuesday.@1@3@@oe@16-5-2000
 2649@unknown@formal@none@1@S@I am free from, twelve on.@1@6@@oe@16-5-2000
 2650@unknown@formal@none@1@S@Tuesday the, sixteenth is, pretty good for me.@1@8@@oe@16-5-2000
-2651@unknown@formal@none@1@S@say we meet at one o'clock.@1@6@@oe@16-5-2000
+2651@unknown@formal@none@1@XP@say we meet at one o'clock.@1@6@@oe@16-5-2000
 2652@unknown@formal@none@1@S@okay that is fine,@1@4@@oe@16-5-2000
 2653@unknown@formal@none@1@S@I will pencil you in.@1@5@@oe@16-5-2000
 2654@unknown@formal@none@1@XP@see you at one o'clock.@1@5@@oe@16-5-2000
@@ -2659,12 +2658,12 @@
 2659@unknown@formal@none@1@S@I have the whole day off.@1@6@@oe@16-5-2000
 2660@unknown@formal@none@1@S@that should be alright.@1@4@@oe@16-5-2000
 2661@unknown@formal@none@1@S@so I will see you from ten to twelve on Friday the ninth.@1@13@@oe@16-5-2000
-2662@unknown@formal@none@1@S@okay, see you later.@1@4@@oe@16-5-2000
+2662@unknown@formal@none@1@XP@okay, see you later.@1@4@@oe@16-5-2000
 2663@unknown@formal@none@1@XP@okay Bart,@1@2@@oe@16-5-2000
 2664@unknown@formal@none@1@S@are, you free anytime Monday?@1@5@@oe@16-5-2000
 2665@unknown@formal@none@1@XP@say in the morning.@1@4@@oe@16-5-2000
 2666@unknown@formal@none@1@S@no Monday is really bad.@1@5@@oe@16-5-2000
-2667@unknown@formal@none@1@XP@and so is Tuesday the twenty sixth.@1@7@@oe@16-5-2000
+2667@unknown@formal@none@1@S@and so is Tuesday the twenty sixth.@1@7@@oe@16-5-2000
 2668@unknown@formal@none@1@S@and I will, be out of town the rest of that week.@1@12@@oe@16-5-2000
 2669@unknown@formal@none@1@S@so we are going to have to move it into, the second week, say starting with Tuesday?@1@17@@oe@16-5-2000
 2670@unknown@formal@none@1@S@Tuesday or Wednesday late afternoons are good.@1@7@@oe@16-5-2000
@@ -2701,7 +2700,7 @@
 2701@unknown@formal@none@1@S@hello, Monday, is pretty good for me@1@7@@oe@16-5-2000
 2702@unknown@formal@none@1@S@all I have is a meeting from ten to twelve,@1@10@@oe@16-5-2000
 2703@unknown@formal@none@1@S@and Tuesday is good for me@1@6@@oe@16-5-2000
-2704@unknown@formal@none@1@S@all I have is a three P-M meeting,@1@8@@oe@16-5-2000
+2704@unknown@formal@none@1@S@all I have is a three p.m. meeting,@1@8@@oe@16-5-2000
 2705@unknown@formal@none@1@XP@so, sometime in the afternoon Monday?@1@6@@oe@16-5-2000
 2706@unknown@formal@none@1@XP@or maybe, on Tuesday in the morning.@1@7@@oe@16-5-2000
 2707@unknown@formal@none@1@S@no actually I have seminars on Monday and Tuesday.@1@9@@oe@16-5-2000
@@ -2763,7 +2762,7 @@
 2763@unknown@formal@none@1@S@sure it will.@1@3@@oe@16-5-2000
 2764@unknown@formal@none@1@S@we will say, six o'clock at, Taco-Bell.@1@7@@oe@16-5-2000
 2765@unknown@formal@none@1@XP@later.@1@1@@oe@16-5-2000
-2766@unknown@formal@none@1@@today is, let us say March, fifth nineteen ninety three.@0@10@@oe@16-5-2000
+2766@unknown@formal@none@1@S@today is, let us say March, fifth nineteen ninety three.@1@10@@oe@16-5-2000
 2767@unknown@formal@none@1@S@when would you like to, schedule a meeting.@1@8@@oe@16-5-2000
 2768@unknown@formal@none@1@S@how about, on the, tenth,@1@5@@oe@16-5-2000
 2769@unknown@formal@none@1@XP@twelve o'clock?@1@2@@oe@16-5-2000
@@ -2774,12 +2773,12 @@
 2774@unknown@formal@none@1@S@how about on the seventeenth, any time you want,@1@9@@oe@16-5-2000
 2775@unknown@formal@none@1@S@I, have a seminar between nine, to four thirty.@1@9@@oe@16-5-2000
 2776@unknown@formal@none@1@S@is there any other, time available?@1@6@@oe@16-5-2000
-2777@unknown@formal@none@1@@how about from, twenty two, to the twenty sixth, again, any time you, want,@0@14@@oe@16-5-2000
+2777@unknown@formal@none@1@S@how about from, twenty two, to the twenty sixth, again, any time you, want,@0@14@@oe@16-5-2000
 2778@unknown@formal@none@1@XP@sure.@1@1@@oe@16-5-2000
-2779@unknown@formal@none@1@@what time is, ,@0@4@@oe@16-5-2000
-2780@unknown@formal@none@1@@well it is supposed to be within the two week wait a second.@0@13@@oe@16-5-2000
+2779@unknown@formal@none@1@S@what time is, ,@0@4@@oe@16-5-2000
+2780@unknown@formal@none@1@S@well it is supposed to be within the two week wait a second.@0@13@@oe@16-5-2000
 2781@unknown@formal@none@1@XP@never mind.@1@2@@oe@16-5-2000
-2782@unknown@formal@none@1@@how about,@0@2@@oe@16-5-2000
+2782@unknown@formal@none@1@XP@how about,@0@2@@oe@16-5-2000
 2783@unknown@formal@none@1@S@let me set it on the twenty third, five o'clock.@1@10@@oe@16-5-2000
 2784@unknown@formal@none@1@XP@twenty third, at five o'clock.@1@5@@oe@16-5-2000
 2785@unknown@formal@none@1@XP@sounds good.@1@2@@oe@16-5-2000
@@ -2796,24 +2795,24 @@
 2796@unknown@formal@none@1@XP@on the eighteenth.@1@3@@oe@16-5-2000
 2797@unknown@formal@none@1@XP@Thursday March, eighteenth nineteen ninety three.@1@6@@oe@16-5-2000
 2798@unknown@formal@none@1@S@on the eighteenth, twelve o'clock, that is perfectly fine.@1@9@@oe@16-5-2000
-2799@unknown@formal@none@1@@alright, let us schedule for next appointment.@0@7@@oe@16-5-2000
+2799@unknown@formal@none@1@S@alright, let us schedule for next appointment.@0@7@@oe@16-5-2000
 2800@unknown@formal@none@1@XP@okay the next meeting.@1@4@@oe@16-5-2000
-2801@unknown@formal@none@1@S@how about, the thirtieth, at, eleven P-M.@1@7@@oe@16-5-2000
+2801@unknown@formal@none@1@S@how about, the thirtieth, at, eleven p.m.@1@7@@oe@16-5-2000
 2802@unknown@formal@none@1@S@I am sorry.@1@3@@oe@16-5-2000
 2803@unknown@formal@none@1@XP@on the thirtieth?@1@3@@oe@16-5-2000
 2804@unknown@formal@none@1@S@eleven, to, twelve thirty I am not available.@1@8@@oe@16-5-2000
 2805@unknown@formal@none@1@S@you can schedule, at a time earlier than that.@1@9@@oe@16-5-2000
-2806@unknown@formal@none@1@@like let us say from twenty two to twenty sixth?@0@10@@oe@16-5-2000
+2806@unknown@formal@none@1@S@like let us say from twenty two to twenty sixth?@0@10@@oe@16-5-2000
 2807@unknown@formal@none@1@XP@or, on the thirty first.@1@5@@oe@16-5-2000
 2808@unknown@formal@none@1@S@that would be fine with me.@1@6@@oe@16-5-2000
-2809@unknown@formal@none@1@@what about twenty ninth through, the second though.@0@8@@oe@16-5-2000
+2809@unknown@formal@none@1@S@what about twenty ninth through, the second though.@0@8@@oe@16-5-2000
 2810@unknown@formal@none@1@XP@of April.@1@2@@oe@16-5-2000
-2811@unknown@formal@none@1@S@because I will be, out of town pretty much most of next week.@1@13@@oe@16-5-2000
+2811@unknown@formal@none@1@XP@because I will be, out of town pretty much most of next week.@1@13@@oe@16-5-2000
 2812@unknown@formal@none@1@S@I just wanted to make sure.@1@6@@oe@16-5-2000
 2813@unknown@formal@none@1@S@are you available on the thirty first?@1@7@@oe@16-5-2000
 2814@unknown@formal@none@1@XP@because that day I am free.@1@6@@oe@16-5-2000
 2815@unknown@formal@none@1@XP@you free all day?@1@4@@oe@16-5-2000
-2816@unknown@formal@none@1@S@if so, then how about four P-M.@1@7@@oe@16-5-2000
+2816@unknown@formal@none@1@S@if so, then how about four p.m.@1@7@@oe@16-5-2000
 2817@unknown@formal@none@1@XP@on the thirty first.@1@4@@oe@16-5-2000
 2818@unknown@formal@none@1@XP@sounds good again.@1@3@@oe@16-5-2000
 2819@unknown@formal@none@1@S@so we will set a second meeting, on the thirty first,@1@11@@oe@16-5-2000
@@ -2822,46 +2821,46 @@
 2822@unknown@formal@none@1@S@today is, Friday January twenty second.@1@6@@oe@16-5-2000
 2823@unknown@formal@none@1@S@when is the next appointment@1@5@@oe@16-5-2000
 2824@unknown@formal@none@1@S@would you like to make the following week.@1@8@@oe@16-5-2000
-2825@unknown@formal@none@1@@the week of twenty fifth through, twenty ninth, or February first through fifth.@0@13@@oe@16-5-2000
+2825@unknown@formal@none@1@XP@the week of twenty fifth through, twenty ninth, or February first through fifth.@0@13@@oe@16-5-2000
 2826@unknown@formal@none@1@XP@hey.@1@1@@oe@16-5-2000
 2827@unknown@formal@none@1@S@are you there still?@1@4@@oe@16-5-2000
 2828@unknown@formal@none@1@S@today is January, twenty second, nineteen ninety three.@1@8@@oe@16-5-2000
-2829@unknown@formal@none@1@@what time is best for you, during the week of twenty, fifth, through the twenty ninth.@0@16@@oe@16-5-2000
+2829@unknown@formal@none@1@S@what time is best for you, during the week of twenty, fifth, through the twenty ninth.@0@16@@oe@16-5-2000
 2830@unknown@formal@none@1@S@okay. today is January twenty second nineteen ninety three?@1@9@@oe@16-5-2000
-2831@unknown@formal@none@1@@when would you like to make an, meeting for, the week of twenty fifth through the twenty ninth.@0@18@@oe@16-5-2000
-2832@unknown@formal@none@1@S@I am not free, two to three P-M Monday?@1@9@@oe@16-5-2000
-2833@unknown@formal@none@1@XP@nine to four P-M, on the twenty sixth, Tuesday?@1@9@@oe@16-5-2000
+2831@unknown@formal@none@1@S@when would you like to make an, meeting for, the week of twenty fifth through the twenty ninth.@0@18@@oe@16-5-2000
+2832@unknown@formal@none@1@S@I am not free, two to three p.m. Monday?@1@9@@oe@16-5-2000
+2833@unknown@formal@none@1@XP@nine to four p.m., on the twenty sixth, Tuesday?@1@9@@oe@16-5-2000
 2834@unknown@formal@none@1@XP@ten to eleven on, Wednesday?@1@5@@oe@16-5-2000
 2835@unknown@formal@none@1@S@and I am not free from, nine to twelve, and three to four thirty on, Thursday.@1@16@@oe@16-5-2000
-2836@unknown@formal@none@1@@we might have to schedule the appointment on the February?@0@10@@oe@16-5-2000
-2837@unknown@formal@none@1@@because in January, I am out of town from twenty seventh to twenty ninth, and, the only time I am available, on, Monday will be , after five?@0@28@@oe@16-5-2000
-2838@unknown@formal@none@1@@and twenty sixth will be between twelve and one?@0@9@@oe@16-5-2000
+2836@unknown@formal@none@1@S@we might have to schedule the appointment on the February?@0@10@@oe@16-5-2000
+2837@unknown@formal@none@1@XP@because in January, I am out of town from twenty seventh to twenty ninth, and, the only time I am available, on, Monday will be , after five?@0@28@@oe@16-5-2000
+2838@unknown@formal@none@1@S@and twenty sixth will be between twelve and one?@0@9@@oe@16-5-2000
 2839@unknown@formal@none@1@S@if those, times are not, good for you, maybe we should arrange meetings during February?@1@15@@oe@16-5-2000
-2840@unknown@formal@none@1@S@how about, five P-M on the twenty fifth.@1@8@@oe@16-5-2000
+2840@unknown@formal@none@1@S@how about, five p.m. on the twenty fifth.@1@8@@oe@16-5-2000
 2841@unknown@formal@none@1@S@is that okay?@1@3@@oe@16-5-2000
 2842@unknown@formal@none@1@S@alright, then we will set our third meetings on the, twenty fifth, Monday?@1@13@@oe@16-5-2000
-2843@unknown@formal@none@1@XP@five P-M?@1@2@@oe@16-5-2000
-2844@unknown@formal@none@1@@and now, we are finish with scene three?@0@8@@oe@16-5-2000
+2843@unknown@formal@none@1@XP@five p.m.?@1@2@@oe@16-5-2000
+2844@unknown@formal@none@1@S@and now, we are finish with scene three?@0@8@@oe@16-5-2000
 2845@unknown@formal@none@1@S@and just give me a minute and go on to scene four.@1@12@@oe@16-5-2000
 2846@unknown@formal@none@1@XP@over.@1@1@@oe@16-5-2000
 2847@unknown@formal@none@1@S@alright it is, May twenty first nineteen ninety three.@1@9@@oe@16-5-2000
 2848@unknown@formal@none@1@S@when would you like to schedule the next meeting.@1@9@@oe@16-5-2000
-2849@unknown@formal@none@1@@here is some, clues.@0@4@@oe@16-5-2000
-2850@unknown@formal@none@1@@I am not free twenty fourth from one to four.@0@10@@oe@16-5-2000
-2851@unknown@formal@none@1@@twenty fifth, from two to four thirty I am not free, either.@0@12@@oe@16-5-2000
+2849@unknown@formal@none@1@S@here is some, clues.@0@4@@oe@16-5-2000
+2850@unknown@formal@none@1@S@I am not free twenty fourth from one to four.@0@10@@oe@16-5-2000
+2851@unknown@formal@none@1@S@twenty fifth, from two to four thirty I am not free, either.@0@12@@oe@16-5-2000
 2852@unknown@formal@none@1@S@I am not free on the twenty sixth from nine thirty to four thirty.@1@14@@oe@16-5-2000
-2853@unknown@formal@none@1@@twenty seven I am, not free from nine thirty to four thirty.@0@12@@oe@16-5-2000
-2854@unknown@formal@none@1@@and twenty eighth I am not free from nine thirty to four thirty.@0@13@@oe@16-5-2000
+2853@unknown@formal@none@1@S@twenty seven I am, not free from nine thirty to four thirty.@0@12@@oe@16-5-2000
+2854@unknown@formal@none@1@S@and twenty eighth I am not free from nine thirty to four thirty.@0@13@@oe@16-5-2000
 2855@unknown@formal@none@1@S@how about on the twenty fourth, Monday?@1@7@@oe@16-5-2000
 2856@unknown@formal@none@1@XP@nine o'clock.@1@2@@oe@16-5-2000
 2857@unknown@formal@none@1@XP@sounds fine with me.@1@4@@oe@16-5-2000
 2858@unknown@formal@none@1@S@okay then we will go on to scene five.@1@9@@oe@16-5-2000
 2859@unknown@formal@none@1@S@okay, it is July twenty third nineteen ninety three.@1@9@@oe@16-5-2000
 2860@unknown@formal@none@1@S@when, is the best time for, you in the following week.@1@11@@oe@16-5-2000
-2861@unknown@formal@none@1@@here is times that are not free.@0@7@@oe@16-5-2000
+2861@unknown@formal@none@1@S@here is times that are not free.@0@7@@oe@16-5-2000
 2862@unknown@formal@none@1@XP@ten to twelve on the twenty sixth,@1@7@@oe@16-5-2000
-2863@unknown@formal@none@1@S@from three P-M on on the twenty seventh I got a meeting,@1@12@@oe@16-5-2000
-2864@unknown@formal@none@1@XP@two to four thirty P-M meeting on the twenty eighth,@1@10@@oe@16-5-2000
+2863@unknown@formal@none@1@S@from three p.m. on on the twenty seventh I got a meeting,@1@12@@oe@16-5-2000
+2864@unknown@formal@none@1@XP@two to four thirty p.m. meeting on the twenty eighth,@1@10@@oe@16-5-2000
 2865@unknown@formal@none@1@XP@and nine to twelve, lecture, on the twenty ninth,@1@9@@oe@16-5-2000
 2866@unknown@formal@none@1@S@and I will be out of town the thirtieth.@1@9@@oe@16-5-2000
 2867@unknown@formal@none@1@XP@any, other times other that that?@1@6@@oe@16-5-2000
@@ -2875,21 +2874,21 @@
 2875@unknown@formal@none@1@XP@here, times not available.@1@4@@oe@16-5-2000
 2876@unknown@formal@none@1@XP@twenty seventh from nine to twelve?@1@6@@oe@16-5-2000
 2877@unknown@formal@none@1@XP@twenty eighth from nine to twelve?@1@6@@oe@16-5-2000
-2878@unknown@formal@none@1@XP@nine to four thirty P-M on the twenty ninth?@1@9@@oe@16-5-2000
+2878@unknown@formal@none@1@XP@nine to four thirty p.m. on the twenty ninth?@1@9@@oe@16-5-2000
 2879@unknown@formal@none@1@S@I am not free on the thirtieth from nine to twelve, and from two thirty to five?@1@17@@oe@16-5-2000
 2880@unknown@formal@none@1@S@and on, October first I am not free from ten to eleven.@1@12@@oe@16-5-2000
 2881@unknown@formal@none@1@S@all, other times are available.@1@5@@oe@16-5-2000
 2882@unknown@formal@none@1@S@what, time, would you like to, meet.@1@7@@oe@16-5-2000
 2883@unknown@formal@none@1@S@I would like to set a meeting then October first?@1@10@@oe@16-5-2000
-2884@unknown@formal@none@1@@which in on Friday?@0@4@@oe@16-5-2000
+2884@unknown@formal@none@1@XP@which in on Friday?@0@4@@oe@16-5-2000
 2885@unknown@formal@none@1@XP@between two to three?@1@4@@oe@16-5-2000
-2886@unknown@formal@none@1@@how does sound to you.@0@5@@oe@16-5-2000
+2886@unknown@formal@none@1@S@how does sound to you.@0@5@@oe@16-5-2000
 2887@unknown@formal@none@1@XP@sounds good.@1@2@@oe@16-5-2000
 2888@unknown@formal@none@1@XP@see you then?@1@3@@oe@16-5-2000
 2889@unknown@formal@none@1@S@let us move on to scene seven.@1@7@@oe@16-5-2000
 2890@unknown@formal@none@1@S@okay it is November nineteenth nineteen ninety three.@1@8@@oe@16-5-2000
 2891@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
-2892@unknown@formal@none@1@@I am not free twenty second from nine to twelve, one thirty to three and three to five?@0@18@@oe@16-5-2000
+2892@unknown@formal@none@1@S@I am not free twenty second from nine to twelve, one thirty to three and three to five?@0@18@@oe@16-5-2000
 2893@unknown@formal@none@1@XP@twenty third,@1@2@@oe@16-5-2000
 2894@unknown@formal@none@1@S@I am not free from ten to twelve,@1@8@@oe@16-5-2000
 2895@unknown@formal@none@1@XP@one thirty to three?@1@4@@oe@16-5-2000
@@ -2900,13 +2899,13 @@
 2900@unknown@formal@none@1@XP@and twenty sixth@1@3@@oe@16-5-2000
 2901@unknown@formal@none@1@S@I am not free from twelve to one thirty.@1@9@@oe@16-5-2000
 2902@unknown@formal@none@1@XP@any times available?@1@3@@oe@16-5-2000
-2903@unknown@formal@none@1@@how about on the twenty fourth two o'clock?@0@8@@oe@16-5-2000
+2903@unknown@formal@none@1@S@how about on the twenty fourth two o'clock?@0@8@@oe@16-5-2000
 2904@unknown@formal@none@1@S@are you available then?@1@4@@oe@16-5-2000
 2905@unknown@formal@none@1@XP@nope, sorry.@1@2@@oe@16-5-2000
-2906@unknown@formal@none@1@@I got, one thirty three thirty.@0@6@@oe@16-5-2000
+2906@unknown@formal@none@1@S@I got, one thirty three thirty.@0@6@@oe@16-5-2000
 2907@unknown@formal@none@1@S@how about three thirty on the twenty fourth.@1@8@@oe@16-5-2000
 2908@unknown@formal@none@1@S@how about, on the same day, eleven o'clock?@1@8@@oe@16-5-2000
-2909@unknown@formal@none@1@S@nope,@1@1@@oe@16-5-2000
+2909@unknown@formal@none@1@XP@nope,@1@1@@oe@16-5-2000
 2910@unknown@formal@none@1@XP@does not look good.@1@4@@oe@16-5-2000
 2911@unknown@formal@none@1@S@let us move on to the following week@1@8@@oe@16-5-2000
 2912@unknown@formal@none@1@S@see if we have got something up,@1@7@@oe@16-5-2000
@@ -2918,16 +2917,16 @@
 2918@unknown@formal@none@1@S@and on the thirtieth I am not free from ten to twelve.@1@12@@oe@16-5-2000
 2919@unknown@formal@none@1@XP@December first.@1@2@@oe@16-5-2000
 2920@unknown@formal@none@1@S@I am not free from nine to twelve,@1@8@@oe@16-5-2000
-2921@unknown@formal@none@1@@and from one thirty three thirty,@0@6@@oe@16-5-2000
-2922@unknown@formal@none@1@S@December second I am not free from, nine to twelve, and, I got a seminar on December third from nine thirty A-M to five P-M.@1@25@@oe@16-5-2000
-2923@unknown@formal@none@1@@any other times during that week, is okay with me.@0@10@@oe@16-5-2000
-2924@unknown@formal@none@1@@do you got a time?@0@5@@oe@16-5-2000
+2921@unknown@formal@none@1@XP@and from one thirty three thirty,@0@6@@oe@16-5-2000
+2922@unknown@formal@none@1@S@December second I am not free from, nine to twelve, and, I got a seminar on December third from nine thirty a.m. to five p.m.@1@25@@oe@16-5-2000
+2923@unknown@formal@none@1@S@any other times during that week, is okay with me.@0@10@@oe@16-5-2000
+2924@unknown@formal@none@1@S@do you got a time?@0@5@@oe@16-5-2000
 2925@unknown@formal@none@1@S@it sounds like between twelve and one o'clock would be the best time,@1@13@@oe@16-5-2000
 2926@unknown@formal@none@1@S@how about on the twenty ninth, and thirtieth?@1@8@@oe@16-5-2000
-2927@unknown@formal@none@1@@or either December first.@0@4@@oe@16-5-2000
+2927@unknown@formal@none@1@XP@or either December first.@0@4@@oe@16-5-2000
 2928@unknown@formal@none@1@XP@between twelve and one.@1@4@@oe@16-5-2000
 2929@unknown@formal@none@1@S@take your pick and then, reply back to me.@1@9@@oe@16-5-2000
-2930@unknown@formal@none@1@S@how about twelve to one P-M.@1@6@@oe@16-5-2000
+2930@unknown@formal@none@1@S@how about twelve to one p.m.@1@6@@oe@16-5-2000
 2931@unknown@formal@none@1@XP@on Tuesday.@1@2@@oe@16-5-2000
 2932@unknown@formal@none@1@XP@sounds good with you?@1@4@@oe@16-5-2000
 2933@unknown@formal@none@1@S@that is good.@1@3@@oe@16-5-2000
@@ -2939,9 +2938,9 @@
 2939@unknown@formal@none@1@S@well, if I remember correctly my schedule is, free from eleven until two that day.@1@15@@oe@16-5-2000
 2940@unknown@formal@none@1@S@the rest of the day is all tied up.@1@9@@oe@16-5-2000
 2941@unknown@formal@none@1@S@what about you.@1@3@@oe@16-5-2000
-2942@unknown@formal@none@1@S@well then I afraid our schedules do not coincide on Monday the eighth.@1@13@@oe@16-5-2000
+2942@unknown@formal@none@1@S@well then I afraid our schedules do not coincide on Monday the eighth.@0@13@@oe@16-5-2000
 2943@unknown@formal@none@1@S@I am out of town,@1@5@@oe@16-5-2000
-2944@unknown@formal@none@1@@and or tied up the rest of the week.@0@9@@oe@16-5-2000
+2944@unknown@formal@none@1@XP@and or tied up the rest of the week.@0@9@@oe@16-5-2000
 2945@unknown@formal@none@1@S@so, we will have to move into the next week.@1@10@@oe@16-5-2000
 2946@unknown@formal@none@1@S@Tuesday the sixteenth I am free all afternoon.@1@8@@oe@16-5-2000
 2947@unknown@formal@none@1@S@how about, you.@1@3@@oe@16-5-2000
@@ -2979,11 +2978,11 @@
 2979@unknown@formal@none@1@S@Friday the ninth, from ten until noon is our meeting.@1@10@@oe@16-5-2000
 2980@unknown@formal@none@1@S@okay we need to set up a meeting in the next two weeks.@1@13@@oe@16-5-2000
 2981@unknown@formal@none@1@S@I will tell you what.@1@5@@oe@16-5-2000
-2982@unknown@formal@none@1@@*I will start off with,@0@5@@oe@16-5-2000
+2982@unknown@formal@none@1@S@*I will start off with,@0@5@@oe@16-5-2000
 2983@unknown@formal@none@1@S@I am, out of town Tuesday the ninth through Thursday the eleventh.@1@12@@oe@16-5-2000
 2984@unknown@formal@none@1@S@so those days are out.@1@5@@oe@16-5-2000
-2985@unknown@formal@none@1@@how are you, say, afternoon, the sixteenth.@0@7@@oe@16-5-2000
-2986@unknown@formal@none@1@@okay, afternoon of the sixteenth looks pretty good.@0@8@@oe@16-5-2000
+2985@unknown@formal@none@1@S@how are you, say, afternoon, the sixteenth.@0@7@@oe@16-5-2000
+2986@unknown@formal@none@1@S@okay, afternoon of the sixteenth looks pretty good.@0@8@@oe@16-5-2000
 2987@unknown@formal@none@1@S@what time would you like to meet.@1@7@@oe@16-5-2000
 2988@unknown@formal@none@1@S@how about say two to four?@1@6@@oe@16-5-2000
 2989@unknown@formal@none@1@S@is that okay?@1@3@@oe@16-5-2000
@@ -3007,7 +3006,7 @@
 3007@unknown@formal@none@1@S@okay, the sixth and the seventh, I am out of town,@1@11@@oe@16-5-2000
 3008@unknown@formal@none@1@S@what would you think of, the other date that you mentioned.@1@11@@oe@16-5-2000
 3009@unknown@formal@none@1@S@well, the eighth in the afternoon is good for me,@1@10@@oe@16-5-2000
-3010@unknown@formal@none@1@S@=or the ninth, anytime during the day.@1@7@@oe@16-5-2000
+3010@unknown@formal@none@1@XP@or the ninth, anytime during the day.@1@7@@oe@16-5-2000
 3011@unknown@formal@none@1@S@take your pick.@1@3@@oe@16-5-2000
 3012@unknown@formal@none@1@XP@okay.@1@1@@oe@16-5-2000
 3013@unknown@formal@none@1@S@the eighth will be fine.@1@5@@oe@16-5-2000
@@ -3034,7 +3033,7 @@
 3034@unknown@formal@none@1@XP@right.@1@1@@oe@16-5-2000
 3035@unknown@formal@none@1@S@I will see you then.@1@5@@oe@16-5-2000
 3036@unknown@formal@none@1@S@alright let us meet again soon,@1@6@@oe@16-5-2000
-3037@unknown@formal@none@1@@in the morning, of the twenty fourth, twenty fifth and thirty first,@0@12@@oe@16-5-2000
+3037@unknown@formal@none@1@XP@in the morning, of the twenty fourth, twenty fifth and thirty first,@0@12@@oe@16-5-2000
 3038@unknown@formal@none@1@S@I am pretty much free.@1@5@@oe@16-5-2000
 3039@unknown@formal@none@1@S@how are you fixed for time then.@1@7@@oe@16-5-2000
 3040@unknown@formal@none@1@XP@rather poorly I am afraid.@1@5@@oe@16-5-2000
@@ -3080,7 +3079,7 @@
 3080@unknown@formal@none@1@S@okay, I would like to set up another meeting with you,@1@11@@oe@16-5-2000
 3081@unknown@formal@none@1@S@let me see,@1@3@@oe@16-5-2000
 3082@unknown@formal@none@1@S@the best time for me, over the next, two weeks, would either be, on the, twenty ninth, the thirtieth, the, first, second, or fifth.@1@24@@oe@16-5-2000
-3083@unknown@formal@none@1@@would sometime the morning on the twenty ninth be fine,@0@10@@oe@16-5-2000
+3083@unknown@formal@none@1@S@would sometime the morning on the twenty ninth be fine,@0@10@@oe@16-5-2000
 3084@unknown@formal@none@1@XP@maybe at like, ten o'clock,@1@5@@oe@16-5-2000
 3085@unknown@formal@none@1@S@actually , on the twenty ninth it would have to be, after two thirty.@1@14@@oe@16-5-2000
 3086@unknown@formal@none@1@S@so, how is that.@1@4@@oe@16-5-2000
@@ -3093,7 +3092,7 @@
 3093@unknown@formal@none@1@S@so , how about the first, or the second.@1@9@@oe@16-5-2000
 3094@unknown@formal@none@1@S@no, both days are bad,@1@5@@oe@16-5-2000
 3095@unknown@formal@none@1@S@I am, busy the whole day, on both days.@1@9@@oe@16-5-2000
-3096@unknown@formal@none@1@@are you free, seventh?@0@4@@oe@16-5-2000
+3096@unknown@formal@none@1@S@are you free, seventh?@0@4@@oe@16-5-2000
 3097@unknown@formal@none@1@XP@Wednesday?@1@1@@oe@16-5-2000
 3098@unknown@formal@none@1@S@no, I am out of town on the sixth and seventh.@1@11@@oe@16-5-2000
 3099@unknown@formal@none@1@S@the only days for me, I suppose will be, Monday the fifth, or, the eighth and ninth.@1@17@@oe@16-5-2000
@@ -3121,7 +3120,7 @@
 3121@unknown@formal@none@1@XP@morning and afternoon on the second,@1@6@@oe@16-5-2000
 3122@unknown@formal@none@1@S@and that is it.@1@4@@oe@16-5-2000
 3123@unknown@formal@none@1@S@none of those days are okay for me,@1@8@@oe@16-5-2000
-3124@unknown@formal@none@1@@how about twenty seventh, the Thursday?@0@6@@oe@16-5-2000
+3124@unknown@formal@none@1@S@how about twenty seventh, the Thursday?@0@6@@oe@16-5-2000
 3125@unknown@formal@none@1@S@I am free the whole day.@1@6@@oe@16-5-2000
 3126@unknown@formal@none@1@S@is it possible anytime then?@1@5@@oe@16-5-2000
 3127@unknown@formal@none@1@S@no it is not.@1@4@@oe@16-5-2000
@@ -3151,14 +3150,14 @@
 3151@unknown@formal@none@1@S@Wednesday is completely open,@1@4@@oe@16-5-2000
 3152@unknown@formal@none@1@XP@Wednesday the sixth that is,@1@5@@oe@16-5-2000
 3153@unknown@formal@none@1@S@let us try that.@1@4@@oe@16-5-2000
-3154@unknown@formal@none@1@@sixth is impossible.@0@3@@oe@16-5-2000
+3154@unknown@formal@none@1@S@sixth is impossible.@0@3@@oe@16-5-2000
 3155@unknown@formal@none@1@S@I am out of town on that day.@1@8@@oe@16-5-2000
 3156@unknown@formal@none@1@S@how about, hm on Sunday?@1@5@@oe@16-5-2000
 3157@unknown@formal@none@1@XP@sometime the morning on Sunday?@1@5@@oe@16-5-2000
 3158@unknown@formal@none@1@S@would that be fine?@1@4@@oe@16-5-2000
-3159@unknown@formal@none@1@@or maybe after, two two thirty?@0@6@@oe@16-5-2000
+3159@unknown@formal@none@1@XP@or maybe after, two two thirty?@0@6@@oe@16-5-2000
 3160@unknown@formal@none@1@S@okay, that is, Sunday the third, at two thirty would be fine.@1@12@@oe@16-5-2000
-3161@unknown@formal@none@1@@great, let us meet, at two thirty then, at,@0@9@@oe@16-5-2000
+3161@unknown@formal@none@1@S@great, let us meet, at two thirty then, at,@0@9@@oe@16-5-2000
 3162@unknown@formal@none@1@S@you choose the place,@1@4@@oe@16-5-2000
 3163@unknown@formal@none@1@S@let us meet at, the Primanti-Brothers in Oakland.@1@8@@oe@16-5-2000
 3164@unknown@formal@none@1@XP@great.@1@1@@oe@16-5-2000
@@ -3167,13 +3166,13 @@
 3167@unknown@formal@none@1@S@okay, let us meet on the twenty second then, from six to eight,@1@13@@oe@16-5-2000
 3168@unknown@formal@none@1@S@would my place be okay?@1@5@@oe@16-5-2000
 3169@unknown@formal@none@1@S@yep, that will be fine.@1@5@@oe@16-5-2000
-3170@unknown@formal@none@1@@that was from six,@0@4@@oe@16-5-2000
+3170@unknown@formal@none@1@S@that was from six,@0@4@@oe@16-5-2000
 3171@unknown@formal@none@1@S@did you say six to eight?@1@6@@oe@16-5-2000
 3172@unknown@formal@none@1@S@yeah, that is what I said.@1@6@@oe@16-5-2000
 3173@unknown@formal@none@1@XP@six to eight.@1@3@@oe@16-5-2000
 3174@unknown@formal@none@1@XP@meet you there,@1@3@@oe@16-5-2000
 3175@unknown@formal@none@1@XP@see you there.@1@3@@oe@16-5-2000
-3176@unknown@formal@none@1@@I would like to set up a meetings@0@8@@oe@16-5-2000
+3176@unknown@formal@none@1@S@I would like to set up a meetings@0@8@@oe@16-5-2000
 3177@unknown@formal@none@1@XP@sometime, in the next couple weeks,@1@6@@oe@16-5-2000
 3178@unknown@formal@none@1@S@and let us see.@1@4@@oe@16-5-2000
 3179@unknown@formal@none@1@S@today is the fifth?@1@4@@oe@16-5-2000
@@ -3190,7 +3189,7 @@
 3190@unknown@formal@none@1@S@that will be Tuesday and let us see.@1@8@@oe@16-5-2000
 3191@unknown@formal@none@1@S@I will be out of town that day, and, the same holds, for the tenth, and the eleventh.@1@18@@oe@16-5-2000
 3192@unknown@formal@none@1@S@so I will be out of town, the whole time.@1@10@@oe@16-5-2000
-3193@unknown@formal@none@1@@and I will be in the, beach, somewhere.@0@8@@oe@16-5-2000
+3193@unknown@formal@none@1@S@and I will be in the, beach, somewhere.@0@8@@oe@16-5-2000
 3194@unknown@formal@none@1@XP@sorry about that.@1@3@@oe@16-5-2000
 3195@unknown@formal@none@1@S@okay let us try something else then.@1@7@@oe@16-5-2000
 3196@unknown@formal@none@1@S@the next week, again Tuesday Wednesday and Thursday I have got time.@1@12@@oe@16-5-2000
@@ -3200,11 +3199,11 @@
 3200@unknown@formal@none@1@S@if you have a few hours then, what do you think about that.@1@13@@oe@16-5-2000
 3201@unknown@formal@none@1@S@yeah that will work.@1@4@@oe@16-5-2000
 3202@unknown@formal@none@1@S@the sixteenth I have got class from, nine until noon.@1@10@@oe@16-5-2000
-3203@unknown@formal@none@1@S@and suppose I am free after that.@1@7@@oe@16-5-2000
+3203@unknown@formal@none@1@XP@and suppose I am free after that.@1@7@@oe@16-5-2000
 3204@unknown@formal@none@1@XP@so yeah if we could meet, for a couple of hours I guess from, one to three, on Tuesday.@1@19@@oe@16-5-2000
 3205@unknown@formal@none@1@S@did you say Tuesday you were free,@1@7@@oe@16-5-2000
 3206@unknown@formal@none@1@S@that will probably work.@1@4@@oe@16-5-2000
-3207@unknown@formal@none@1@@if not on Wednesday on the seventeenth I have got, seminar from, nine o'clock A-M until four thirty P-M, and then I am free.@0@24@@oe@16-5-2000
+3207@unknown@formal@none@1@S@if not on Wednesday on the seventeenth I have got, seminar from, nine o'clock a.m. until four thirty p.m., and then I am free.@0@24@@oe@16-5-2000
 3208@unknown@formal@none@1@S@so and you are free for the whole day Wednesday so we could, meet sometime then from say, five thirty until seven thirty.@1@23@@oe@16-5-2000
 3209@unknown@formal@none@1@S@that will be great.@1@4@@oe@16-5-2000
 3210@unknown@formal@none@1@S@I will, tell you what.@1@5@@oe@16-5-2000
@@ -3250,16 +3249,16 @@
 3250@unknown@formal@none@1@XP@until the twenty ninth.@1@4@@oe@16-5-2000
 3251@unknown@formal@none@1@S@I will tell you what,@1@5@@oe@16-5-2000
 3252@unknown@formal@none@1@S@I have got a bear of a schedule all next week,@1@11@@oe@16-5-2000
-3253@unknown@formal@none@1@@I could not possibly meet you until, believe it or don't Wednesday the third.@0@14@@oe@16-5-2000
+3253@unknown@formal@none@1@S@I could not possibly meet you until, believe it or don't Wednesday the third.@0@14@@oe@16-5-2000
 3254@unknown@formal@none@1@XP@from two to four or, somewhere around that area on Wednesday,@1@11@@oe@16-5-2000
 3255@unknown@formal@none@1@S@I do not really know what to tell you about the other dates because, there is really not much of anything.@1@21@@oe@16-5-2000
 3256@unknown@formal@none@1@S@what do you have, that day.@1@6@@oe@16-5-2000
 3257@unknown@formal@none@1@XP@yeah Wednesday the third of February two to four did you say?@1@12@@oe@16-5-2000
-3258@unknown@formal@none@1@@that sounds actually very good.@0@5@@oe@16-5-2000
+3258@unknown@formal@none@1@S@that sounds actually very good.@0@5@@oe@16-5-2000
 3259@unknown@formal@none@1@S@yeah, that way we have got two hours of lunch break and , that will be wonderful.@1@17@@oe@16-5-2000
 3260@unknown@formal@none@1@XP@thanks.@1@1@@oe@16-5-2000
 3261@unknown@formal@none@1@XP@alright.@1@1@@oe@16-5-2000
-3262@unknown@formal@none@1@S@why don't you come down to my office at two P-M, Wednesday the third, and I will see you then.@1@20@@oe@16-5-2000
+3262@unknown@formal@none@1@S@why don't you come down to my office at two p.m., Wednesday the third, and I will see you then.@1@20@@oe@16-5-2000
 3263@unknown@formal@none@1@XP@yeah, good deal.@1@3@@oe@16-5-2000
 3264@unknown@formal@none@1@S@so I will see you on, Wednesday, at two.@1@9@@oe@16-5-2000
 3265@unknown@formal@none@1@XP@in, your office.@1@3@@oe@16-5-2000
@@ -3267,12 +3266,12 @@
 3267@unknown@formal@none@1@XP@hey Rob.@1@2@@oe@16-5-2000
 3268@unknown@formal@none@1@S@by the way I would like to set up a meeting sometime,@1@12@@oe@16-5-2000
 3269@unknown@formal@none@1@S@let us see,@1@3@@oe@16-5-2000
-3270@unknown@formal@none@1@@the May of twenty fourth, until June,@0@7@@oe@16-5-2000
+3270@unknown@formal@none@1@XP@the May of twenty fourth, until June,@0@7@@oe@16-5-2000
 3271@unknown@formal@none@1@XP@sometime, within the, next two weeks or so.@1@8@@oe@16-5-2000
 3272@unknown@formal@none@1@S@let us see@1@3@@oe@16-5-2000
 3273@unknown@formal@none@1@S@today would be, the twenty first.@1@6@@oe@16-5-2000
 3274@unknown@formal@none@1@S@and I would like to know if you have any free time,@1@12@@oe@16-5-2000
-3275@unknown@formal@none@1@@starting from twenty fourth,@0@4@@oe@16-5-2000
+3275@unknown@formal@none@1@XP@starting from twenty fourth,@0@4@@oe@16-5-2000
 3276@unknown@formal@none@1@XP@until, say, the fourth or the eleventh.@1@7@@oe@16-5-2000
 3277@unknown@formal@none@1@XP@actually, tell you what@1@4@@oe@16-5-2000
 3278@unknown@formal@none@1@S@yeah, why don't you tell me first when you are free.@1@11@@oe@16-5-2000
@@ -3280,7 +3279,7 @@
 3280@unknown@formal@none@1@S@I am free every afternoon from the twenty fourth through the twenty seventh.@1@13@@oe@16-5-2000
 3281@unknown@formal@none@1@S@do you have a, couple of hours in there somewhere?@1@10@@oe@16-5-2000
 3282@unknown@formal@none@1@S@yeah , the afternoons I am pretty much occupied,@1@9@@oe@16-5-2000
-3283@unknown@formal@none@1@@I just realized I have got whole bunch of, meetings and seminars, through the week.@0@15@@oe@16-5-2000
+3283@unknown@formal@none@1@S@I just realized I have got whole bunch of, meetings and seminars, through the week.@0@15@@oe@16-5-2000
 3284@unknown@formal@none@1@S@on Monday actually, in the morning I am free.@1@9@@oe@16-5-2000
 3285@unknown@formal@none@1@S@I have got a meeting from, one to four.@1@9@@oe@16-5-2000
 3286@unknown@formal@none@1@S@other than that I am pretty much free the whole day.@1@11@@oe@16-5-2000
@@ -3292,9 +3291,9 @@
 3292@unknown@formal@none@1@S@actually I will be leaving the thirty first and not coming back until the third of June.@1@17@@oe@16-5-2000
 3293@unknown@formal@none@1@S@hm, well , let us give you these two options.@1@10@@oe@16-5-2000
 3294@unknown@formal@none@1@S@Thursday the twenty seventh I am free all day, not just the afternoon@1@13@@oe@16-5-2000
-3295@unknown@formal@none@1@@and then Thursday the, the third of June, I am free, from noon on.@0@14@@oe@16-5-2000
+3295@unknown@formal@none@1@S@and then Thursday the, the third of June, I am free, from noon on.@0@14@@oe@16-5-2000
 3296@unknown@formal@none@1@S@how are those times for you.@1@6@@oe@16-5-2000
-3297@unknown@formal@none@1@@yeah the Thursday, on, the third of June sounds actually very good.@0@12@@oe@16-5-2000
+3297@unknown@formal@none@1@S@yeah the Thursday, on, the third of June sounds actually very good.@0@12@@oe@16-5-2000
 3298@unknown@formal@none@1@S@yeah I have got a meeting from nine thirty, until ten, but other than that I am pretty much free that day.@1@22@@oe@16-5-2000
 3299@unknown@formal@none@1@S@so, I guess, we could, meet,@1@6@@oe@16-5-2000
 3300@unknown@formal@none@1@S@let us set up an appointment@1@6@@oe@16-5-2000
@@ -3302,7 +3301,7 @@
 3302@unknown@formal@none@1@S@say, like let us see,@1@5@@oe@16-5-2000
 3303@unknown@formal@none@1@XP@noon to two or something,@1@5@@oe@16-5-2000
 3304@unknown@formal@none@1@S@that way we can, have lunch together and, discuss the stuff.@1@11@@oe@16-5-2000
-3305@unknown@formal@none@1@@okay, lunch meeting on the third sounds great.@0@8@@oe@16-5-2000
+3305@unknown@formal@none@1@S@okay, lunch meeting on the third sounds great.@0@8@@oe@16-5-2000
 3306@unknown@formal@none@1@XP@my expense account or yours.@1@5@@oe@16-5-2000
 3307@unknown@formal@none@1@S@yeah that is no, big deal@1@6@@oe@16-5-2000
 3308@unknown@formal@none@1@S@now that I have got a new job I can afford to pay for you, whatever if that is what you meant and , we will set up, the appointment.@1@30@@oe@16-5-2000
@@ -3321,10 +3320,10 @@
 3321@unknown@formal@none@1@XP@Tuesday or Wednesday, the third or the fourth,@1@8@@oe@16-5-2000
 3322@unknown@formal@none@1@S@I am free both of those afternoons.@1@7@@oe@16-5-2000
 3323@unknown@formal@none@1@S@how are those times for you.@1@6@@oe@16-5-2000
-3324@unknown@formal@none@1@@yeah fourth of August, is actually a, good day.@0@9@@oe@16-5-2000
+3324@unknown@formal@none@1@S@yeah fourth of August, is actually a, good day.@0@9@@oe@16-5-2000
 3325@unknown@formal@none@1@XP@the Wednesday,@1@2@@oe@16-5-2000
 3326@unknown@formal@none@1@S@and let us see@1@4@@oe@16-5-2000
-3327@unknown@formal@none@1@S@I have got, a meeting from, eleven until one P-M, but other than that I am pretty much free that day.@1@21@@oe@16-5-2000
+3327@unknown@formal@none@1@S@I have got, a meeting from, eleven until one p.m., but other than that I am pretty much free that day.@1@21@@oe@16-5-2000
 3328@unknown@formal@none@1@S@so I say we, meet at two until four.@1@9@@oe@16-5-2000
 3329@unknown@formal@none@1@XP@in my office?@1@3@@oe@16-5-2000
 3330@unknown@formal@none@1@S@would that work?@1@3@@oe@16-5-2000
@@ -3337,10 +3336,10 @@
 3337@unknown@formal@none@1@S@let us see,@1@3@@oe@16-5-2000
 3338@unknown@formal@none@1@XP@twenty fourth@1@2@@oe@16-5-2000
 3339@unknown@formal@none@1@S@this day is almost over.@1@5@@oe@16-5-2000
-3340@unknown@formal@none@1@@but, the afternoons of twenty seventh and twenty eighth, I am free,@0@12@@oe@16-5-2000
+3340@unknown@formal@none@1@S@but, the afternoons of twenty seventh and twenty eighth, I am free,@0@12@@oe@16-5-2000
 3341@unknown@formal@none@1@S@and, the sixth of October I am completely free.@1@9@@oe@16-5-2000
 3342@unknown@formal@none@1@S@and the fifth of October my afternoon is free too.@1@10@@oe@16-5-2000
-3343@unknown@formal@none@1@@well unfortunately the afternoons of twenty seventh and twenty eighth are really really bad@0@14@@oe@16-5-2000
+3343@unknown@formal@none@1@S@well unfortunately the afternoons of twenty seventh and twenty eighth are really really bad@0@14@@oe@16-5-2000
 3344@unknown@formal@none@1@S@and I will be, on a, working vacation Monday the fourth through Wednesday the sixth.@1@15@@oe@16-5-2000
 3345@unknown@formal@none@1@S@how is your afternoon on, the twenty ninth or the thirtieth, of September.@1@13@@oe@16-5-2000
 3346@unknown@formal@none@1@XP@yeah the twenty ninth and the thirtieth.@1@7@@oe@16-5-2000
@@ -3354,15 +3353,15 @@
 3354@unknown@formal@none@1@S@so if you are not doing anything, on, Saturday we can meet on Saturday afternoon.@1@15@@oe@16-5-2000
 3355@unknown@formal@none@1@S@yeah I will tell you what,@1@6@@oe@16-5-2000
 3356@unknown@formal@none@1@S@Saturday the second I have got a brunch meeting from ten thirty to one.@1@14@@oe@16-5-2000
-3357@unknown@formal@none@1@@if you want to stop, over to my actual home.@0@10@@oe@16-5-2000
+3357@unknown@formal@none@1@XP@if you want to stop, over to my actual home.@0@10@@oe@16-5-2000
 3358@unknown@formal@none@1@S@around two o'clock, that will be fine,@1@7@@oe@16-5-2000
 3359@unknown@formal@none@1@S@we will have a nice informal meeting,@1@7@@oe@16-5-2000
-3360@unknown@formal@none@1@XP@take a couple hours,@1@4@@oe@16-5-2000
+3360@unknown@formal@none@1@S@take a couple hours,@1@4@@oe@16-5-2000
 3361@unknown@formal@none@1@S@how does that sound to you.@1@6@@oe@16-5-2000
 3362@unknown@formal@none@1@XP@yeah sounds great@1@3@@oe@16-5-2000
 3363@unknown@formal@none@1@XP@as long as I do not, get lost on the way , because I usually get lost, quite often,@1@19@@oe@16-5-2000
 3364@unknown@formal@none@1@S@but yeah , if I do get there, which , I will manage to do somehow, yeah, that sounds good.@1@20@@oe@16-5-2000
-3365@unknown@formal@none@1@@so we will have I guess nice snack or something, and we will talk things over.@0@16@@oe@16-5-2000
+3365@unknown@formal@none@1@S@so we will have I guess nice snack or something, and we will talk things over.@0@16@@oe@16-5-2000
 3366@unknown@formal@none@1@XP@alright.@1@1@@oe@16-5-2000
 3367@unknown@formal@none@1@XP@alright excellent.@1@2@@oe@16-5-2000
 3368@unknown@formal@none@1@S@I will, see you then.@1@5@@oe@16-5-2000
@@ -3381,13 +3380,13 @@
 3381@unknown@formal@none@1@XP@however, the twenty ninth Monday.@1@5@@oe@16-5-2000
 3382@unknown@formal@none@1@S@I will be free in the morning, and then again in the late afternoon,@1@14@@oe@16-5-2000
 3383@unknown@formal@none@1@S@that is really, for me, probably the best I could do.@1@11@@oe@16-5-2000
-3384@unknown@formal@none@1@@unless we want to move, into one of the weekends,@0@10@@oe@16-5-2000
+3384@unknown@formal@none@1@XP@unless we want to move, into one of the weekends,@0@10@@oe@16-5-2000
 3385@unknown@formal@none@1@S@if we can all avoid it I would rather not.@1@10@@oe@16-5-2000
-3386@unknown@formal@none@1@@but what do think about either morning or late afternoon, twenty ninth of November.@0@14@@oe@16-5-2000
+3386@unknown@formal@none@1@S@but what do think about either morning or late afternoon, twenty ninth of November.@0@14@@oe@16-5-2000
 3387@unknown@formal@none@1@XP@yeah the twenty ninth@1@4@@oe@16-5-2000
 3388@unknown@formal@none@1@S@let us see.@1@3@@oe@16-5-2000
 3389@unknown@formal@none@1@S@I have got class until noon, and I have got a lab from say three to five.@1@17@@oe@16-5-2000
-3390@unknown@formal@none@1@@you mentioned, let us see.@0@5@@oe@16-5-2000
+3390@unknown@formal@none@1@S@you mentioned, let us see.@0@5@@oe@16-5-2000
 3391@unknown@formal@none@1@XP@late afternoon,@1@2@@oe@16-5-2000
 3392@unknown@formal@none@1@S@I, will not be able to do that because of, the lab.@1@12@@oe@16-5-2000
 3393@unknown@formal@none@1@S@but, sometime, say from, five to seven or so that will be great if we could, have I guess dinner together and, talk.@1@23@@oe@16-5-2000
@@ -3397,7 +3396,7 @@
 3397@unknown@formal@none@1@S@would you, have any time free, then?@1@7@@oe@16-5-2000
 3398@unknown@formal@none@1@S@well I will tell you what,@1@6@@oe@16-5-2000
 3399@unknown@formal@none@1@S@let us shoot for the dinner meeting on Monday the twenty ninth,@1@12@@oe@16-5-2000
-3400@unknown@formal@none@1@@we will meet, say, my office around five thirty,@0@9@@oe@16-5-2000
+3400@unknown@formal@none@1@S@we will meet, say, my office around five thirty,@0@9@@oe@16-5-2000
 3401@unknown@formal@none@1@S@and we will go to dinner from there.@1@8@@oe@16-5-2000
 3402@unknown@formal@none@1@S@how does that sound.@1@4@@oe@16-5-2000
 3403@unknown@formal@none@1@XP@sounds good yeah.@1@3@@oe@16-5-2000
