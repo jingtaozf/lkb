@@ -922,6 +922,9 @@ proc main {} {
     -label "Aggregation Parameters" -command aggregate_input;
   .menu.options.menu add separator;
   .menu.options.menu add cascade \
+    -label "Result Filter" \
+    -menu .menu.options.menu.filter;
+  .menu.options.menu add cascade \
     -label "Switches" -menu .menu.options.menu.switches;
 
   menu .menu.options.menu.update -tearoff 0
@@ -991,6 +994,12 @@ proc main {} {
     -label "Total Memory Usage" \
     -variable globals(aggregate_dimension) -value :space \
     -command {tsdb_set aggregate_dimension};
+
+  menu .menu.options.menu.filter -tearoff 0
+  .menu.options.menu.update add command -label "MRS Scoping" \
+      -command [list tsdb_filter scoping];
+  .menu.options.menu.update add command -label "ED Extraction" \
+      -command [list tsdb_filter dependencies];
 
   menu .menu.options.menu.switches -tearoff 0
   .menu.options.menu.switches add checkbutton \

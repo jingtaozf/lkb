@@ -916,11 +916,14 @@
                    :children (list preterminal))
         (values nil %failure%)))))
 
+(defun reconstruct-mrs (id mrs length)
+  (make-edge :id id :mrs mrs :from 0 :to length))
+
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
 	   #-:ansi-eval-when (load eval compile)
   (import '(current-grammar initialize-run finalize-run
             parse-word parse-item generate-item
             *reconstruct-hook*
             find-lexical-entry find-affix find-rule
-            instantiate-rule instantiate-preterminal)
+            instantiate-rule instantiate-preterminal reconstruct-mrs)
            :tsdb))

@@ -193,6 +193,9 @@
                                          (runp t) stream)
   
   (declare (special %client%))
+  
+  #+:debug
+  (setf lkb::%frame% frame)
 
   (when (or (null runp)
             (null %client%)
@@ -208,10 +211,12 @@
            (lkb::*tree-automatic-update-p* 
             (when gold lkb::*tree-automatic-update-p*))
            (condition (format nil "i-id = ~a" i-id))
-           (items (analyze data :thorough '(:derivation) :condition condition))
+           (items (analyze data :thorough '(:derivation :mrs) 
+                           :condition condition))
            (item (and (null (rest items)) (first items)))
            (input (or (get-field :o-input item) (get-field :i-input item)))
            (i-id (get-field :i-id item))
+           (i-length (get-field :i-length item))
            (readings (get-field :readings item))
            (parse-id (get-field :parse-id item))
            (results (get-field :results item))
@@ -269,11 +274,16 @@
                         for result in results
                         for id = (get-field :result-id result)
                         for derivation = (get-field :derivation result)
-                        for edge = (when derivation
-                                     (reconstruct derivation mode))
+                        for mrs = (get-field :mrs result)
+                        for edge = (if (and derivation 
+                                            (not (equal derivation "")))
+                                     (reconstruct derivation mode)
+                                     (when mrs 
+                                       (reconstruct-mrs id mrs i-length)))
                         when edge do 
                           (setf (lkb::edge-foo edge) id)
                           (setf (lkb::edge-bar edge) derivation)
+                          (setf (lkb::edge-mrs edge) mrs)
                           (push edge edges)
                         finally
                           #+:allegro

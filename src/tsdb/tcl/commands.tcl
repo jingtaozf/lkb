@@ -1136,6 +1136,19 @@ proc tsdb_trees {action} {
 
 }; # tsdb_trees()
 
+proc tsdb_filter {code} {
+
+  global globals;
+
+  switch $code {
+    scoping {
+    }
+    dependencies {
+    }
+  }; # switch
+
+}; # if
+
 proc tsdb_switch {code} {
 
   global globals;
