@@ -136,12 +136,13 @@ UPDATE meta SET val=$0:text WHERE var=''filter'';
 -- build current_grammar
 --
 
-DELETE FROM current_grammar; 
-INSERT INTO current_grammar 
-	SELECT * FROM active
-	; 
+--DELETE FROM current_grammar; 
+--INSERT INTO current_grammar 
+--	SELECT * FROM active;
+--DELETE FROM meta WHERE var=''build_time'';
+--INSERT INTO meta VALUES (''build_time'',current_timestamp);
 
--- SELECT build_current_grammar();
+SELECT build_current_grammar();
 
 VACUUM ANALYZE current_grammar;
 ' );
@@ -149,11 +150,13 @@ VACUUM ANALYZE current_grammar;
 INSERT INTO qry VALUES 
        ( 'build-current-grammar', 0, 
 '
-DELETE FROM current_grammar; 
-INSERT INTO current_grammar 
-	SELECT * FROM active; 
+--DELETE FROM current_grammar; 
+--INSERT INTO current_grammar 
+--	SELECT * FROM active; 
+--DELETE FROM meta WHERE var=''build_time'';
+--INSERT INTO meta VALUES (''build_time'',current_timestamp);
 
---SELECT build_current_grammar();
+SELECT build_current_grammar();
 ' );
 
 INSERT INTO qry VALUES 
@@ -390,6 +393,18 @@ INSERT INTO current_grammar
   WHERE lower(name)=lower(\\$1) 
    LIMIT 1;
 CLUSTER current_grammar_name ON current_grammar; 
+SELECT true;'' 
+LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION build_current_grammar () RETURNS boolean AS
+''
+
+DELETE FROM current_grammar; 
+INSERT INTO current_grammar 
+	SELECT * FROM active; 
+DELETE FROM meta WHERE var=''''build_time'''';
+INSERT INTO meta VALUES (''''build_time'''',current_timestamp);
+
 SELECT true;'' 
 LANGUAGE SQL;
 

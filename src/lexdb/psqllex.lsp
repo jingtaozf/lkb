@@ -755,3 +755,18 @@
 	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
      (retrieve-all-records lexicon (make-requested-fields lexicon)))))
 
+;;CREATE OR REPLACE FUNCTION build_current_grammar () RETURNS boolean AS
+;;''
+;;
+;;SELECT CASE
+;;  WHEN
+;;    coalesce((SELECT max(modstamp) FROM revision_all),''''infinity'''')
+;;    >=
+;;    coalesce((SELECT val FROM meta WHERE var=''''build_time'''' LIMIT 1),''''-infinity'''')
+;;      THEN build_current_grammar_aux()
+;;  ELSE false
+;;  END;
+;;
+;;'' 
+;;LANGUAGE SQL;
+
