@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <termios.h>
 #include <errno.h>
 extern int errno;
 #include <readline/readline.h>
@@ -144,10 +145,15 @@ int main(int argc, char **argv) {
   char *input = NULL;
   char host[512 + 1], prompt[80 + 1], *foo, *bar;
   int status;
+  struct termios termios;
+
 #ifdef _DEBUG_MALLOC_INC
   int baz;
   union dbmalloptarg db;
 #endif
+
+  tsdb_revision = tsdb_rcs_strip(TSDB_REVISION, "Revision");
+  tsdb_revision_date = tsdb_rcs_strip(TSDB_REVISION_DATE, "Date");
 
   if((foo = strdup(argv[0])) != NULL) {
     if((bar = strrchr(foo, TSDB_DIRECTORY_DELIMITER[0])) != NULL) {
@@ -230,14 +236,21 @@ int main(int argc, char **argv) {
     } /* else */
 
     tsdb.command = 0;
+    prompt[0] = (char)0;
     if(tsdb.status & TSDB_TSDB_CLIENT) {
       sprintf(prompt, "%c", TSDB_CLIENT_CONNECT_OK);
     } /* if */
-    else {
+    else if(!(tsdb.status & TSDB_QUIET)) {
       sprintf(prompt, "tsdb@%s (%d) # ", host, tsdb.command);
-    } /* else */
+    } /* if */
 
-    while(!(tsdb.status & TSDB_QUIT) && ((foo = readline(prompt)) != NULL)) {
+    if(!tcgetattr(fileno(stdout), &termios)) {
+      termios.c_lflag &= ~ECHO;
+      tcsetattr(fileno(stdout), TCSANOW, &termios);
+    } /* if */
+
+    while(!(tsdb.status & TSDB_QUIT) 
+          && ((foo = readline(prompt)) != NULL)) {
       for(; *foo && isspace(*foo); foo++);
       if(*foo) {
         for(bar = &foo[strlen(foo) - 1];
@@ -260,9 +273,9 @@ int main(int argc, char **argv) {
           if(tsdb.status & TSDB_TSDB_CLIENT) {
             sprintf(prompt, "%c", TSDB_CLIENT_CONNECT_OK);
           } /* if */
-          else {
+          else if(!(tsdb.status & TSDB_QUIET)) {
             sprintf(prompt, "tsdb@%s (%d) # ", host, tsdb.command);
-          } /* else */
+          } /* if */
         } /* if */
         else {
           if(!(tsdb.status & TSDB_TSDB_CLIENT)) {
@@ -330,8 +343,11 @@ void tsdb_parse_options(int argc, char **argv) {
     {"implicit-commit", optional_argument, 0, TSDB_IMPLICIT_COMMIT_OPTION},
     {"debug-file", required_argument, 0, TSDB_DEBUG_FILE_OPTION},
     {"history-size", required_argument, 0, TSDB_HISTORY_OPTION},
+    {"string-escape", optional_argument, 0, TSDB_STRING_ESCAPE_OPTION},
     {"uniquely-project", optional_argument, 0, TSDB_UNIQUELY_PROJECT_OPTION},
     {"pager", optional_argument, 0, TSDB_PAGER_OPTION},
+    {"quiet", optional_argument, 0, TSDB_QUIET_OPTION},
+    {"poll", optional_argument, 0, TSDB_QUIET_OPTION},
 #ifdef COMPRESSED_DATA
     {"compress", optional_argument, 0, TSDB_COMPRESS_OPTION},
     {"uncompress", required_argument, 0, TSDB_UNCOMPRESS_OPTION},
@@ -456,7 +472,12 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
       case TSDB_IMPLICIT_COMMIT_OPTION:
         if(optarg == NULL) {
-          tsdb.status |= TSDB_IMPLICIT_COMMIT;
+          if(TSDB_INITIAL_STATUS & TSDB_IMPLICIT_COMMIT) {
+            tsdb.status &= ~TSDB_IMPLICIT_COMMIT;
+          } /* if */
+          else {
+            tsdb.status |= TSDB_IMPLICIT_COMMIT;
+          } /* else */
         } /* if */
         else {
           if(!strcmp(optarg, "on")) {
@@ -480,6 +501,19 @@ void tsdb_parse_options(int argc, char **argv) {
         } /* if */
         else {
           tsdb.pager = (char *)NULL;
+        } /* else */
+        break;
+      case TSDB_QUIET_OPTION:
+        if(optarg == NULL) {
+          tsdb.status |= TSDB_QUIET;
+        } /* if */
+        else {
+          if(!strcmp(optarg, "on")) {
+            tsdb.status |= TSDB_QUIET;
+          } /* if */
+          else {
+            tsdb.status &= ~TSDB_QUIET;
+          } /* else */
         } /* else */
         break;
       case TSDB_UNIQUELY_PROJECT_OPTION:
@@ -513,10 +547,8 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
       case TSDB_VERSION_OPTION:
         fprintf(tsdb_error_stream,
-                "tsdb(1) %s (%s) [%s] --- (c) oe@tsnlp.dfki.uni-sb.de.\n",
-                tsdb_version,
-                tsdb_rcs_strip(tsdb_revision, "Revision"),
-                tsdb_rcs_strip(tsdb_revision_date, "Date"));
+                "tsdb(1) %s (%s) [%s] --- (c) oe@coli.uni-sb.de.\n",
+                tsdb_version, tsdb_revision, tsdb_revision_date);
         exit(0);
         break;
       case TSDB_HISTORY_OPTION:
@@ -527,6 +559,7 @@ void tsdb_parse_options(int argc, char **argv) {
                     "parse_options(): "
                     "non-integer (`%s') argument to `-history-size'.\n",
                     optarg);
+            fflush(tsdb_error_stream);
             tsdb.history_size = 0;
           } /* if */
         } /* if */
@@ -534,6 +567,26 @@ void tsdb_parse_options(int argc, char **argv) {
           tsdb.history_size = 0;
         } /* else */
         break;
+    case TSDB_STRING_ESCAPE_OPTION:
+      if(optarg != NULL) {
+        if(!strcmp(optarg, "lisp")) {
+          tsdb.status |= TSDB_LISP_ESCAPE_OUTPUT;
+        } /* if */
+        else if(!strcmp(optarg, "prolog")) {
+          tsdb.status |= TSDB_PROLOG_ESCAPE_OUTPUT;
+        } /* if */
+        else {
+          fprintf(tsdb_error_stream,
+                  "parse_options(): "
+                  "unknown `-string-escape' type; "
+                  "should be `lisp' or `prolog'.\n");
+          fflush(tsdb_error_stream);
+        } /* else */
+      } /* if */
+      else {
+        tsdb.status &= ~(TSDB_LISP_ESCAPE_OUTPUT | TSDB_PROLOG_ESCAPE_OUTPUT);
+      } /* else */
+      break;
       case TSDB_FS_OPTION:
         if(optarg != NULL) {
           tsdb.fs = optarg[0];
@@ -634,11 +687,19 @@ void tsdb_usage() {
   fprintf(tsdb_error_stream,
           "  `-history-size[={_0_ | 1 | ...}]' --- size of query storage;\n");
   fprintf(tsdb_error_stream,
-          "  `-implicit-commit[={_on_ | off}]' --- "
-          "always commit (and save) changes;\n");
+          "  `-implicit-commit[={%s}]' --- "
+          "always commit (and save) changes;\n",
+          (TSDB_INITIAL_STATUS & TSDB_IMPLICIT_COMMIT 
+           ? "on | _off_" : "_on_ | off"));
+  fprintf(tsdb_error_stream,
+          "  `-string-escape[={lisp | prolog | _off_}]' --- "
+          "string output conventions;\n");
   fprintf(tsdb_error_stream,
           "  `-uniquely-project[={on | _off_}]' --- "
           "remove duplicates from projections;\n");
+  fprintf(tsdb_error_stream,
+          "  `-{quiet | poll}[={_on_ | off}]' --- "
+          "quiet (non-prompting) mode;\n");
 #ifdef DEBUG
   fprintf(tsdb_error_stream,
           "  `-debug-file=file' --- output file for debug information;\n");
@@ -659,6 +720,55 @@ void tsdb_usage() {
           "  `-version' --- current TSDB version.\n");
   fflush(tsdb_error_stream);
 } /* tsdb_usage() */
+
+char *tsdb_readline(char *prompt) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_readline()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 15-apr-97
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  char foo[4096], *bar;
+  static char *buffer = (char *)NULL;
+  static int size = 0;
+  struct termios termios;
+
+  if(!(tsdb.status & TSDB_QUIET)) {
+    return(readline(prompt));
+  } /* if */
+  else {
+    if(!tcgetattr(fileno(stdout), &termios)) {
+      termios.c_lflag &= ~ECHO;
+      tcsetattr(fileno(stdout), TCSANOW, &termios);
+    } /* if */
+    if((bar = fgets(&foo[0], 4096, stdin)) != NULL
+       && foo[strlen(foo) - 1] != '\n') {
+      if(!size) {
+        size = 4096;
+        buffer = (char *)malloc(size);
+      } /* if */
+      (void)strcpy(buffer, &foo[0]);
+      while(fgets(&foo[0], 4096, stdin) != NULL
+            && foo[strlen(foo) - 1] != '\n') {
+        if((strlen(&foo[0]) + strlen(buffer) + 1) > size) {
+          size *= 2;
+          buffer = (char*)realloc(buffer, size);
+        } /* if */
+        (void)strcat(buffer, &foo[0]);
+      } /* while */
+      return(strdup(buffer));
+    } /* if */
+    else {
+      return((bar != NULL ? strdup(&foo[0]) : (char *)NULL));
+    } /* else */
+  } /* else */
+} /* tsdb_readline() */
 
 int initialize_readline(void) {
 
