@@ -646,7 +646,7 @@
                   (setq lower-copied-p arcs-tail)) ; a lower-level dag was copied
                (setf (car new-vals) v)
                (copy-dag-arcs
-                  (cdr arcs-tail) new-vals new-path lower-copied-p arcs new-arcs))))
+                  (cdr arcs-tail) new-vals path lower-copied-p arcs new-arcs))))
       (lower-copied-p
          ;; need to make a copy of arcs here - but (cdr lower-copied-p)
          ;; is a tail that we can re-use
