@@ -46,10 +46,10 @@
           leq-sc-scarg leq-sc-cands leq-sc-outscpd leq-sc-relation
           whg-id-id whg-id-word whg-id-handel))
 
+#+:lkb
 (defun vsym (str) 
   ;;; allow mrsglobals-eng file to be system independent
   (intern (string-upcase str) "USER"))
-
 
 (in-package "USER")
 

@@ -255,7 +255,7 @@
                  :matching-psoa new-psoa))))))
 
 (defun compatible-types-or-values (val1 val2)
-  (or (eql val1 *toptype*) (eql val2 *toptype*)
+  (or (is-top-type val1) (is-top-type val2)
       (if (and (symbolp val1) (symbolp val2))
           (same-names val1 val2)
         (equal val1 val2))))

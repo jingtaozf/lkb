@@ -372,7 +372,7 @@
         (write-vit vit-out vit))
       (format vit-out ",vitCheck(V).~%~%halt.~%"))
     (excl::run-shell-command "cd /eo/e1/vm2/vitADT/lib/Vit_Adt;/opt/quintus/bin3.2/sun4-5/prolog < ~/tmp/vitcheck" :output "~/tmp/vitout" :if-output-exists :supersede :error-output "~/tmp/viterror" :if-error-output-exists :supersede)
-    (run-command "tail +56 ~/tmp/viterror | tail -r | tail +2 | tail -r"  stream)
+    (run-command "tail +65 ~/tmp/viterror | tail -r | tail +2 | tail -r"  stream)
     (format stream "~%"))
   #-allegro
   (warn "function check-vit needs customising for this Lisp"))
