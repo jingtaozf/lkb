@@ -5,7 +5,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  "unknown")
+  "norgram (jul-03)")
 
 (defun initialize-run (&key interactive 
                             exhaustive nanalyses
@@ -55,7 +55,8 @@
                    &key id exhaustive nanalyses trace
                         edges derivations semantix-hook trees-hook
                         burst (nresults 0))
-  (declare (ignore id edges derivations semantix-hook trees-hook burst))
+  (declare (ignore id exhaustive nanalyses edges derivations 
+		   semantix-hook trees-hook burst))
   ;;
   ;; send string through processor (i.e. parser) and return processing results.
   ;; the parameters are:
@@ -78,29 +79,45 @@
   ;; be of type integer or string.
   ;;
   (multiple-value-bind (return condition)
-      (ignore-errors
-       (let (tgc tcpu treal conses symbols others)
+      (#-:debug ignore-errors #+:debug progn
+       (let (tgc tcpu treal conses symbols others utcpu graph solutions)
          (tsdb::time-a-funcall
-          #'(lambda () (parse string trace))
+          #'(lambda () (setf graph (parse string trace)))
           #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
               (declare (ignore ignore))
               (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
                     conses (* scons 8) symbols (* ssym 24) others sother)))
          (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
-                (readings (length %results%)))
-           (pairlis '(:others :symbols :conses :treal :tcpu :tgc
+                (readings 
+		 (tsdb::time-a-funcall
+		  #'(lambda () 
+		      (loop
+			  for solution = (solution (get-next-solution graph))
+			  while (not (zerop solution)) 
+			  do (push solution solutions)
+			  count 1))
+		  #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+		      (declare (ignore scons ssym sother ignore))
+		      (setf utcpu (- (+ tu ts) (+ tgcu tgcs)))
+		      (incf treal tr)))))
+           (pairlis '(:others :symbols :conses :treal :total :tcpu :tgc
                       :readings :results)
-                    (list others symbols conses treal tcpu tgc
+                    (list others symbols conses treal (+ tcpu utcpu) tcpu tgc
                           readings
                           (loop
                               with nresults = (if (<= nresults 0)
                                                 readings
                                                 (min readings nresults))
                               for i from 1
-                              for result in %results%
-                              for mrs = (extract-mrs result)
+                              for solution in (nreverse solutions)
+                              for mrs = (extract-mrs graph solution)
                               while (>= (decf nresults) 0) collect
-                                (pairlis '(:result-id :mrs) (list i mrs))))))))
+                                (pairlis '(:result-id :mrs) (list i mrs))
+			      finally 
+				(unless (zerop (solution graph))
+				  (free-graph-solution 
+				   (graph-address graph)))))))))
+
     (append
      (when condition
        (let* ((error (tsdb::normalize-string (format nil "~a" condition))))
