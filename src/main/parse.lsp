@@ -696,40 +696,61 @@
 
 ;;; Parsing sentences from file
 
-(defun parse-sentences nil
-  (let* ((input-file 
-            (ask-user-for-existing-pathname "Sentence file?"))
-         (output-file 
-            (and input-file (ask-user-for-new-pathname "Output file?")))
+(defun parse-sentences (&optional input-file parse-file result-file)
+   (unless input-file 
+      (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
+   (when
+      (and input-file
+         (or (probe-file input-file)
+            (error "Input file ~A does not exist" input-file)))
+      (with-open-file (istream input-file :direction :input)
+         (let ((line (read-line istream nil 'eof)))
+            (cond
+               ((eq line 'eof))
+               ((eql (count #\@ line) 11) ; must be 12 fields in tsdb input
+                  (parse-tsdb-sentences1 istream line parse-file result-file))
+               (t
+                  (batch-parse-sentences istream line parse-file)))))))
+
+
+(defparameter *do-something-with-parse* nil)
+
+(defun batch-parse-sentences (istream raw-sentence parse-file)
+  (let* ((output-file 
+            (or parse-file (ask-user-for-new-pathname "Output file?")))
          (start-time (get-universal-time)))
-    (unless (and input-file output-file) (return-from parse-sentences nil))
-    (with-open-file (istream input-file :direction :input)
-      (with-open-file (ostream output-file :direction :output
-                               :if-exists :supersede)
-         (loop (let ((raw-sentence (read-line istream nil 'eof)))
-                 (when (eql raw-sentence 'eof) (return))
-                 (format ostream "~%~A" raw-sentence)
-                 (let ((sentence (string-trim '(#\Space #\Tab) raw-sentence)))
-                     (unless (equal sentence "")
-                       (let
-                         ((user-input 
-                           (split-into-words (preprocess-sentence-string sentence))))
-                   (cond ((> (length user-input) *chart-limit*)
-                          (format ostream "~%Can't parse this length of sentence~%") 
+     (unless output-file (return-from batch-parse-sentences nil))
+     (with-open-file (ostream output-file :direction :output
+                              :if-exists :supersede :if-does-not-exist :create)
+        (loop
+           (when (eql raw-sentence 'eof) (return))
+           (format ostream "~A~%" raw-sentence)
+           (finish-output ostream)
+           (let ((sentence (string-trim '(#\Space #\Tab) raw-sentence)))
+              (unless (equal sentence "")
+                 (let ((user-input 
+                        (split-into-words (preprocess-sentence-string sentence))))
+                    (cond
+                       ((> (length user-input) *chart-limit*)
+                          (format ostream "  can't parse this length of sentence~%") 
+                          (finish-output ostream)
                           nil)
-                         (t
+                       (t
                           (let ((*safe-not-to-copy-p* t)
                                 (*parse-unifs* 0) (*parse-fails* 0))
-                            (clear-chart)
-                            #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
-                            (add-morphs-to-morphs user-input)
-                            (add-words-to-chart)
-                            (setf *parse-record*
-                                  (find-spanning-edges 0 (length user-input)))
-                            (let ((n (length *parse-record*)))
-                              (format ostream "~%~R parse~:[s~;~] found" n (= n 1)))))))))))
-         (format ostream "~%Total time taken: ~A" (- (get-universal-time) start-time))
-         ))))
+                             (clear-chart)
+                             #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
+                             (add-morphs-to-morphs user-input)
+                             (add-words-to-chart)
+                             (setf *parse-record*
+                                (find-spanning-edges 0 (length user-input)))
+                             (when (fboundp *do-something-with-parse*)
+                                (funcall *do-something-with-parse*))
+                             (let ((n (length *parse-record*)))
+                                (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1)))
+                             (finish-output ostream)))))))
+           (setq raw-sentence (read-line istream nil 'eof)))
+        (format ostream "Total elapsed time: ~A secs~%" (- (get-universal-time) start-time)))))
 
 
 ;;; extracting a list of lexical entries used in a parse

@@ -59,14 +59,19 @@ e.g.
 ;;; Parsing sentences from file
 ;;; (parse-tsdb-sentences "Macintosh HD:lkb99-expt:big:grammar:tsdb:csli:item" "Macintosh HD:lkb99-expt:big:parsenew" "Macintosh HD:lkb99-expt:big:resultnew")
 ;;; (parse-tsdb-sentences "Macintosh HD:lkb99-expt:big:item1" "Macintosh HD:lkb99-expt:big:parsenew1" "Macintosh HD:lkb99-expt:big:resultnew1")
-;;; (parse-tsdb-sentences)
 
-(defun parse-tsdb-sentences (&optional input-file parse-file result-file)
-   (unless input-file 
-      (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
-   (when
-      (and input-file
-         (or (probe-file input-file) (error "Input file ~A does not exist" input-file)))
+(defun parse-tsdb-sentences (input-file parse-file result-file)
+   (with-open-file (istream input-file :direction :input)
+      (parse-tsdb-sentences1
+         istream (read-line istream nil 'eof) parse-file result-file)))
+
+
+(defun parse-tsdb-sentences1 (istream line parse-file result-file)
+   (flet ((parse-tsdb-sentences-get-filename (prompt file)
+            (unless file
+               (setq file (ask-user-for-new-pathname prompt)))
+            (when file
+               (if (probe-file file) (and (delete-file file) file) file))))
       (when
          (setq parse-file
             (parse-tsdb-sentences-get-filename "Parse file?" parse-file))
@@ -74,13 +79,12 @@ e.g.
             (setq result-file
                (parse-tsdb-sentences-get-filename "Result file?" result-file))
             (format t "~%~A: ~A -> ~A, ~A..." 'parse-tsdb-sentences
-               input-file parse-file result-file)
+               (truename istream) parse-file result-file)
             (finish-output)
             (let ((start-time (get-internal-run-time))
                   #+mcl (start-gc-time (gctime))
                   )
-               (with-open-file (istream input-file :direction :input)
-                  (parse-tsdb-sentences1 istream parse-file result-file))
+               (parse-tsdb-sentences2 istream line parse-file result-file)
                (format t "~%~%Total CPU time: ~A secs"
                   (round (- (get-internal-run-time) start-time)
                      internal-time-units-per-second))
@@ -90,22 +94,17 @@ e.g.
                      internal-time-units-per-second))
                )))))
 
-(defparameter *do-something-with-parse* nil)
 
-(defun parse-tsdb-sentences-get-filename (prompt file)
-   (unless file
-      (setq file (ask-user-for-new-pathname prompt)))
-   (when file
-      (if (probe-file file) (and (delete-file file) file) file)))
+(proclaim '(special *do-something-with-parse*))
 
-(defun parse-tsdb-sentences1 (istream parse-file result-file &aux (nsent 0))
+(defun parse-tsdb-sentences2 (istream line parse-file result-file &aux (nsent 0))
    ;; open and close output files for each sentence, so if run fails we have all
    ;; results in them until that point
    (clear-type-cache)
    (unwind-protect
       (loop
          (multiple-value-bind (id words)
-               (parse-tsdb-sentence-read (read-line istream nil 'eof))
+               (parse-tsdb-sentence-read line)
             (when (eq id 'eof) (return))
             (incf nsent)
             ;; (when (eql (rem nsent 50) 1) (print nsent) (gc) (room))
@@ -141,7 +140,8 @@ e.g.
                               (format ostream "~A@~A@~A@~A@-1@-1@-1@-1@@~S@~%"
                                  id n time *edge-id* (parse-tree-structure parse))
                               (setq time 0) ; zero time for all parses after first
-                              (incf n)))))))))
+                              (incf n))))))))
+         (setq line (read-line istream nil 'eof)))
      (uncache-lexical-entries)))
 
 
