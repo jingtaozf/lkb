@@ -64,7 +64,7 @@
 ;;; the values of features may be var structures, lists of var structures 
 ;;; or constants
 
-(defun proper-name-or-pronoun-rel (rel-pred)
+(defun top-level-rel-p (rel-pred)
   ;;; test changed to equal, because rels are strings in some grammars
   (member rel-pred *top-level-rel-types* :test #'equal))
 
@@ -127,7 +127,7 @@
   ;;; and another list of rels, and returns a list of the 
   ;;; variables in that list (as integers) which are not bound by the
   ;;; quant-rels and which do not occur as variables in
-  ;;; pronouns or proper name relations
+  ;;; relations which are specified to occur at top level
   ;;;
   ;;; As a side effect, pushes variables associated with pronouns or
   ;;; proper names, which are NOT explicitly bound by quantifiers
@@ -167,7 +167,7 @@
                                (when associated-quantifier
                                  (add-to-qrel-store 
                                   associated-quantifier rel)))))
-                      (when (proper-name-or-pronoun-rel (rel-pred rel))
+                      (when (top-level-rel-p (rel-pred rel))
                         (loop for var in rel-vars
                              do
                              (unless (member (get-var-num var) quant-vars)
@@ -181,7 +181,7 @@
             *q-rel-store*))))
 
 
-(defparameter *scoping-ignored-roles* (list (vsym "TPC") (vsym "PSV")))
+
   
 (defun collect-vars-from-rel (rel)
   ;;; only called from find-unbound-vars 
@@ -431,10 +431,9 @@ printing routines -  convenient to make this global to keep printing generic")
                                 collect var)))
       (if free-variables
           (progn
-            (unless *giving-demo-p*
-              (format t "~%Free variables in MRS: ~A" 
+            (struggle-on-error "~%Free variables in MRS: ~A" 
                       (remove-duplicates (mapcar #'var-string free-variables)
-                                         :test #'equal)))
+                                         :test #'equal))
             nil)
 ;;; variables must be bound by quantifiers unless they are in relations
 ;;; which license implicit existential binding
@@ -719,10 +718,9 @@ or modulo some number of quantifiers
     (if scoped-p
         (progn
           (when new-qeq
-            (unless *giving-demo-p*
-              (format t 
-                      "~%Warning, qeq specified for scope handel ~A ignored" 
-                      top-handel)))
+            (struggle-on-error
+                      "~%qeq specified for scope handel ~A" 
+                      top-handel))
           pending-qeq)
       new-qeq)))
 
@@ -1068,3 +1066,260 @@ or modulo some number of quantifiers
         (format t "~%pending: ~A top: ~A " pending top-handel)
         (output-scoped-rels true-top
                             (set-difference *starting-rels* rels-left) t nil 0)))))
+
+;;; Making a single scoped MRS
+
+#| For the MRSs produced by the ERG, ignoring (for now) any
+constraints other than qeqs - any scopable MRS
+will have a scoped structure which corresponds to replacing all of the
+qeqs with eqs, apart from the top one, and inserting in the topmost
+position all the quantifiers in the order required by the variables
+in their restrictors.
+|#
+
+(defun test-one-scope (&optional test-list up-to)
+  (let ((num 1))
+    (dolist (eg *rmrs-test-suite*)
+      (let ((sentence (car eg))
+	    (parsenum (cdr eg)))
+	(when (and sentence 
+		   (if test-list (member num test-list) t)
+		   (if up-to (> num up-to) t))
+	  (let ((lkb::*show-parse-p* nil))
+	    (lkb::do-parse-tty sentence)
+	    (when lkb::*parse-record*
+	      (let ((selected-parse (nth (- parsenum 1) lkb::*parse-record*)))
+		(if (not selected-parse)
+		    (format t "~%WARNING: Incorrect parse number in ~A" num)
+		  (let ((mrs (extract-mrs selected-parse)))
+		    (unless mrs (error "~%Can't extract MRS"))
+		    (let* ((original-scopes 
+			    (length (make-scoped-mrs mrs)))
+			   (one-scope (produce-one-scope mrs))
+			   (bindings (make-scoped-mrs one-scope)))
+		      (if bindings
+			  (if (cdr bindings)
+			      (format t "~%Error: multiple scopes for ~A" num)
+			    (if (extra-bindings-p (car bindings))
+				(format t "~%Warning: incomplete scoping for ~A" 
+					num)
+			      (if (> original-scopes 0)
+				  (format t "~%~A successfully scoped" num)
+				(format t "~%Error: ~A scoped, original failed to scope" num))))
+		    ;;; if no scopes
+			(if (> original-scopes 0)
+			    (format t "~%Error: no scopes for ~A, original scoped" num)
+			  (format t "~%~A failed to scope, as did original" num)))
+		      (when test-list
+			(output-mrs1 mrs 'simple t)
+			(output-mrs1 one-scope 'simple t)
+			(pprint bindings)
+			(when (cdr bindings)
+			  (dolist (binding bindings)
+			    (setf *canonical-bindings* binding)
+			    (output-scoped-mrs one-scope :stream t))))))))))))
+	  (setf num (+ 1 num)))))
+
+(defun extra-bindings-p (binding-set)
+  (dolist (binding binding-set)
+    (when 
+	(let ((first (car binding)))
+	  (dolist (other (cdr binding))
+	    (unless (eql other first)
+	      (return t))))
+      (return t))))
+		       
+
+(defun produce-one-scope (mrsstruct)
+  ;;; returns nil in the case where something goes wrong
+  (let ((copy-mrsstruct (copy-psoa mrsstruct)))
+    (setf (psoa-liszt copy-mrsstruct)
+      (loop for rel in (psoa-liszt copy-mrsstruct)
+	  collect
+	    (let* ((new-rel (copy-rel rel))
+		   (new-flist (loop for fvp in (rel-flist new-rel)
+				  collect
+				    (copy-fvpair fvp))))
+	      (setf (rel-flist new-rel)
+		new-flist)
+	      new-rel)))
+    (multiple-value-bind 
+	(top-qeq top-qeq-hole-fvp) 
+	(find-top-qeq-hole copy-mrsstruct)
+      (let*
+	 ((qeq-list (remove top-qeq (psoa-h-cons copy-mrsstruct)))
+	  (equated-struct (equate-qeqs qeq-list copy-mrsstruct))
+	  (q-rels (loop for rel in (psoa-liszt copy-mrsstruct) 
+		     when (is-quant-rel rel) collect rel))
+	  (qlist (if q-rels 
+		     (order-quantifiers equated-struct q-rels top-qeq))))
+	(if q-rels
+	    (if qlist
+		(let ((top-q-label (rel-handel (car qlist))))
+		  (setf (psoa-h-cons equated-struct) 
+		    nil)
+		  (if top-qeq-hole-fvp 
+		      (setf (fvpair-value top-qeq-hole-fvp)
+			top-q-label)
+		    (setf 
+			(psoa-top-h equated-struct)
+		      top-q-label))
+		  equated-struct)
+	      ;;; qrels but no qlist means failure - return nil
+	      nil)
+	  ;;; no quantifiers, so set the marg directly to
+	  ;;; the outscpd
+	  (progn
+	    (setf (psoa-h-cons equated-struct) 
+		    nil)
+	    (when top-qeq-hole-fvp 
+		(setf (fvpair-value top-qeq-hole-fvp)
+		  (hcons-outscpd top-qeq)))
+	    equated-struct))))))
+	  
+(defun equate-qeqs (qeq-list mrsstruct)
+  ;;; DESTRUCTIVE!
+  ;;; replace all the qeqs in the hcons with equalities
+  ;;; except the top one, in the case of an ERG-like grammar
+  ;;; where the top handle is equated with a relation which has
+  ;;; a qeq constraint
+  (when qeq-list
+    (loop for rel in (psoa-liszt mrsstruct)
+	do
+	  (loop for fvp in (rel-flist rel)
+	      do
+		(let ((val (fvpair-value fvp)))
+		  (if (is-handel-var val)
+		      (let ((equated-var (find-qeq-outscpd val qeq-list)))
+			(when equated-var
+			  (setf (fvpair-value fvp) equated-var))))))))
+  mrsstruct)
+
+(defun find-qeq-outscpd (val qeq-list)
+  (dolist (qeq qeq-list)
+    (when (eql-var-id val (hcons-scarg qeq))
+      (return (hcons-outscpd qeq)))))
+
+(defun find-top-qeq-hole (mrsstruct)
+  ;;; grammar specific
+  ;;; if the top handel is bound to something with an MARG
+  ;;; follow the chain of relations down until we come to a qeq
+  ;;; and then return the hole which is filled by a qeq
+  (let ((top-h (psoa-top-h mrsstruct)))
+    (if (and top-h
+	     (var-p top-h))
+      (let* ((var-num (var-id top-h))
+	     (top-rels
+	      (get-rels-with-label-num var-num mrsstruct)))
+	(if (or (not top-rels) (cdr top-rels))		; should be unique
+	    nil
+	  (chain-down-margs (car top-rels) mrsstruct))))))
+
+(defun chain-down-margs (rel mrsstruct)
+  (let* ((marg-fvp (dolist (fvpair (rel-flist rel))
+		    (when (eq (fvpair-feature fvpair) 'lkb::marg)
+		      (return fvpair))))
+	(marg-value 
+	 (if marg-fvp
+	       (get-var-num (fvpair-value marg-fvp)))))
+    (if marg-value
+	(let ((top-rels
+	       (get-rels-with-label-num marg-value mrsstruct)))
+	  (if top-rels
+	      (if (cdr top-rels)
+		  nil
+		(chain-down-margs (car top-rels) mrsstruct))
+	    (dolist (qeq (psoa-h-cons mrsstruct))
+	      (when (eq marg-value (var-id (hcons-scarg qeq)))
+		(return (values qeq marg-fvp)))))))))
+	  
+
+(defun order-quantifiers (mrsstruct q-rels top-qeq)
+  ;;; the quantifiers have had their restrictors fixed.
+  ;;; for every quantifier we find the variable it binds
+  ;;; and all variables in its restrictor.  We then attempt to find
+  ;;; a valid ordering - if we can't, then we can't scope.
+  (let ((q-var-struct (loop for q in q-rels
+			   collect
+			     (let ((bv (get-bv-value q)))
+			       (cons q
+				     (remove bv 
+					     (find-contained-variables 
+					      q mrsstruct)))))))
+    ;;; (pprint q-var-struct)
+    (let* ((qs (catch 'qup (q-order q-var-struct nil)))
+	   (ordered-rels (nreverse qs)))
+      (when ordered-rels 
+	(link-q-bodies ordered-rels top-qeq))
+;;;      (pprint ordered-rels)
+      ordered-rels)))
+
+(defun link-q-bodies (qlist top-qeq)
+    (let* ((first-q (car qlist))
+	   (first-q-body-fvp
+	    (dolist (fvpair (rel-flist first-q))
+	      (when (eq (fvpair-feature fvpair) *scope-feat*)
+		(return fvpair)))))
+      (if (cdr qlist)
+	  (let ((next-q-label (rel-handel (cadr qlist))))
+	    (setf (fvpair-value first-q-body-fvp)
+	      next-q-label)
+	    (link-q-bodies (cdr qlist) top-qeq))
+	(when top-qeq
+	    (setf (fvpair-value first-q-body-fvp)
+	      (hcons-outscpd top-qeq))))))
+    
+
+(defun q-order (q-var-struct ordering-so-far)
+  (let ((to-order nil))
+    (dolist (q-s q-var-struct)
+      (if (cdr q-s)
+	  (push q-s to-order)
+	(push (car q-s) ordering-so-far)))
+    (unless ordering-so-far
+      (throw 'qup nil))
+    (if to-order
+	(progn
+	  (dolist (ordered-q-s ordering-so-far)
+	    (let ((bv (get-bv-value ordered-q-s)))
+	      (dolist (unordered-q-s to-order)
+		(setf (cdr unordered-q-s) 
+		  (remove bv (cdr unordered-q-s))))))
+	  (q-order to-order ordering-so-far))
+      ordering-so-far)))
+    
+
+(defun get-rels-with-label-num (num mrsstruct)
+  (let ((liszt (psoa-liszt mrsstruct)))
+    (loop for rel in liszt
+      when (equal num (get-rel-handel-num rel))
+      collect rel)))
+
+(defun get-normal-vars (rel)
+  ;;; returns the non-handle variables from a relation
+  (let ((vars nil))
+    (dolist (fvp (rel-flist  rel))
+      (let ((feature (fvpair-feature fvp)))
+	(unless (member feature *scoping-ignored-roles* :test #'eq)
+	  (let* ((value (fvpair-value fvp))
+		 (id (unbound-var-id value)))
+	    (when id
+	      (pushnew id
+		       vars :test #'equal))))))
+    vars))
+
+
+(defun find-contained-variables (rel mrsstruct)
+  (let ((normal-vars (get-normal-vars rel))
+	(hargs (get-full-handel-args rel)))
+    (dolist (harg hargs)
+      (let* ((harg-num (get-var-num harg))
+	     (sc-rels (get-rels-with-label-num harg-num mrsstruct)))
+	(dolist (sc-rel sc-rels)
+	  (dolist (var (find-contained-variables sc-rel mrsstruct))
+	    (pushnew var normal-vars :test #'equal)))))
+    normal-vars))
+	      
+
+ 
+
