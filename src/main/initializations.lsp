@@ -168,7 +168,7 @@
         (find-package (if (system:getenv "SSP") :ssp :lkb)))
       
       #+:lui
-      (when (system:getenv "LUI") (lui-initialize))
+      (when (system:getenv "LUI") (lui-initialize t))
 
       ;;
       ;; in the following, the featurep() test makes sense, since our run-time

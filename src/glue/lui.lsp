@@ -45,15 +45,16 @@
 
 (defparameter %lui-eoc% (format nil " ~a" #\page))
 
-(defun lui-initialize ()
+(defun lui-initialize (&optional runtimep)
   (lui-shutdown)
-  (setf *lui-application*
-    (format
-     nil 
-     "exec ~a -p"
-     (namestring 
-      (make-pathname 
-       :directory (pathname-directory make::bin-dir) :name "yzlui"))))
+  (when runtimep
+    (setf *lui-application*
+      (format
+       nil 
+       "exec ~a -p"
+       (namestring 
+        (make-pathname 
+         :directory (pathname-directory make::bin-dir) :name "yzlui")))))
   (let (foo)
     (multiple-value-setq (%lui-stream% foo %lui-pid%)
       #-(or :openmcl :clisp)
