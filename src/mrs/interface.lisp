@@ -121,7 +121,8 @@
   (return-mrs-info-string parse :count-scopes))
     
 (defun return-mrs-info-string (parse info-type)
-  (let* ((mrs-struct (extract-mrs parse)))
+  (let* ((*package* (find-package :lkb))
+         (mrs-struct (extract-mrs parse)))
     (with-output-to-string (stream)
       (ecase info-type
         (:simple (output-mrs1 mrs-struct 'simple stream))
