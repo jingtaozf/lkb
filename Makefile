@@ -1,7 +1,7 @@
-ROOT = /eo/e7/apache/htdocs/src
-WROOT = m:/src/lingo
+ROOT = /lingo/www/build/
+WROOT = c:/src
 DATE = `date "+%Y-%m-%d"`
-TARGET = /usr/local/apache/htdocs/lingo/ftp
+TARGET = /lingo/www/lingo/ftp
  
 LINKS = lkb_data.tgz lkb_linux_ml.tgz lkb_linux.tgz lkb_solaris.tgz \
         lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
@@ -32,7 +32,7 @@ update:
 	) 2>&1 | ${TEE} ${ROOT}/lkb/log/build
 	( \
 	  cd ${ROOT}/lkb/log; \
-          mail -s "automated LKB build (${DATE})" lkb@lingo.stanford.edu \
+          mail -s "automated LKB build (${DATE})" oe@lingo.stanford.edu \
             < build; \
 	  cvs commit -m "" build; \
 	)
@@ -90,12 +90,11 @@ lkb_data:
 	      src/data src/*.el; \
 	)
 
-lkb_binaries: lkb_linux lkb_solaris
+lkb_binaries: lkb_linux # lkb_solaris
 
 lkb_linux:
 	${RM} -f ${ROOT}/.yes;
-#	rsh lineara "cd ${ROOT}/lkb && make lkb_linux@lineara";
-	rsh cypriot "cd ${ROOT}/lkb && make lkb_linux@cypriot";
+	( cd ${ROOT}/lkb && make lkb_linux@cypriot; )
 	( \
 	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
 	  cd ${ROOT}/lkb; \
@@ -109,25 +108,16 @@ lkb_linux@cypriot:
 	  echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
 	  echo "(load \"${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
 	  echo "(pushnew :lkb *features*)"; \
+	  echo "(pushnew :psql *features*)"; \
+	  echo "(pushnew :lui *features*)"; \
 	  echo "(pushnew :mrs *features*)"; \
+	  echo "(pushnew :mt *features*)"; \
 	  echo "(setf make::*building-image-p* t)"; \
 	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
 	) | ( cd /lingo/local/acl; \
               ACL_LOCALE=C ./alisp -I clim.dxl -qq && touch ${ROOT}/.yes; )
-
-lkb_linux@lineara:
-	( \
-	  echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
-	  echo "(load \"${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
-	  echo "(pushnew :lkb *features*)"; \
-	  echo "(pushnew :mrs *features*)"; \
-	  echo "(setf make::*building-image-p* t)"; \
-	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
-	  echo "(compile-system \"tsdb\" :force t)"; \
-	  echo "(excl:exit)"; \
-	) | ( cd /usr/local/nacl; ./clim -qq && touch ${ROOT}/.yes; )
 
 lkb_solaris:
 	${RM} -f ${ROOT}/.yes;
@@ -229,21 +219,12 @@ spanish:
 # [incr tsdb()]
 #
 
-itsdb: itsdb_binaries itsdb_libraries itsdb_source \
+itsdb: itsdb_binaries itsdb_libraries itsdb_source itsdb_capi itsdb_tsdb \
        itsdb_data itsdb_documentation
 
-itsdb_binaries:
-	( \
-	  cd ${ROOT}/lkb; \
-	  find src/.sacl -type f -exec touch {} \; ; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_solaris.tgz \
-	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
-              --exclude=".nfs*" \
-	      bin/solaris/tsdb bin/solaris/swish++ \
-	      bin/solaris/pvmd3 bin/solaris/pvm \
-	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
-	      src/.sacl/pvm src/.sacl/tsdb; \
-	)
+itsdb_binaries: itsdb_linux # itsdb_solaris
+
+itsdb_linux:
 	( \
 	  cd ${ROOT}/lkb; \
 	  find src/.l6cl -type f -exec touch {} \; ; \
@@ -254,6 +235,19 @@ itsdb_binaries:
 	      bin/linux/pvmd3 bin/linux/pvm \
 	      src/pvm/linux/*.so src/tsdb/linux/*.so \
 	      src/.l6cl/pvm src/.l6cl/tsdb; \
+	)
+
+itsdb_solaris:
+	( \
+	  cd ${ROOT}/lkb; \
+	  find src/.sacl -type f -exec touch {} \; ; \
+	  tar Svczf ${TARGET}/${DATE}/itsdb_solaris.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" \
+	      bin/solaris/tsdb bin/solaris/swish++ \
+	      bin/solaris/pvmd3 bin/solaris/pvm \
+	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
+	      src/.sacl/pvm src/.sacl/tsdb; \
 	)
 
 itsdb_libraries:
@@ -278,6 +272,24 @@ itsdb_source:
 	      src/tsdb/TeX; \
 	)
 
+itsdb_capi:
+	( \
+	  cd ${ROOT}/lkb; \
+	  tar Svczf ${TARGET}/${DATE}/itsdb_capi.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" \
+	      src/tsdb/capi; \
+	)
+
+itsdb_tsdb:
+	( \
+	  cd ${ROOT}/lkb; \
+	  tar Svczf ${TARGET}/${DATE}/itsdb_tsdb.tgz \
+	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" \
+	      src/tsdb/c; \
+	)
+
 itsdb_data:
 	( \
 	  cd ${ROOT}/lkb; \
@@ -285,10 +297,6 @@ itsdb_data:
 	      --exclude=src/tsdb/skeletons/english/vm97 \
 	      --exclude=src/tsdb/skeletons/english/vm97p \
 	      --exclude=src/tsdb/skeletons/english/vm98 \
-	      --exclude=src/tsdb/skeletons/english/vm6 \
-	      --exclude=src/tsdb/skeletons/english/vm13 \
-	      --exclude=src/tsdb/skeletons/english/vm31 \
-	      --exclude=src/tsdb/skeletons/english/vm32 \
 	      --exclude=src/tsdb/skeletons/english/wsj00 \
 	      --exclude=src/tsdb/skeletons/english/parc \
 	      --exclude=src/tsdb/skeletons/yy \
