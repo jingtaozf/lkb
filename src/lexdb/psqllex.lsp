@@ -791,9 +791,6 @@
 	    (first rest))
 	   (t
 	    (error "too many arguments")))))
-    ;;    (when (or (null filter) (string= filter old-filter))
-    ;;      (format t "Database filter unchanged")
-    ;;      (return-from set-filter))
     (when (catch 'pg:sql-error
 	    (format *postgres-debug-stream* 
 		    "~%Please wait: recreating database cache for new filter")
@@ -801,10 +798,6 @@
 	    (unless (set-filter-aux lexicon filter)
 	      (format t "~%(LexDB filter unchanged)")
 	      (return-from set-filter))
-	    ;;(initialize-psql-lexicon) ;; must reconnect to avoid server bug...
-	    ;;(fn-get-records lexicon ''initialize-current-grammar filter)
-	    ;;(empty-cache lexicon)
-	
 	    nil)
       (lkb-beep)
       (set-filter lexicon))
