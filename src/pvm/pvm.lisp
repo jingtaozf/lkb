@@ -58,8 +58,9 @@
 (defforeign 'pvm_mytid :arguments nil :return-type :integer)
 
 (let ((user (current-user))
-      (tid (pvm_mytid)))
+      tid)
   (defun make-tmp-file (prefix)
+    (unless tid (setf tid (pvm_mytid)))
     (let ((file (format 
                  nil 
                  "/tmp/~a.~a.~a.~a" 
