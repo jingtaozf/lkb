@@ -7,6 +7,8 @@
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
+  #+(and :allegro (version>= 6 0))
+  (pushnew :xml *features*)
   (pushnew :mrs *features*))
 
 (defsystem "mrs"
@@ -14,14 +16,23 @@
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lisp"
-    :depends-on ("lkb")
+    :depends-on (#+:lkb "lkb" #+:xml "xml")
 
     :finally-do
     (when (and (find-package :lkb) (find-symbol "*MRS-LOADED*" :lkb))
       (set (find-symbol "*MRS-LOADED*" :lkb) t))
 
     :components
-    ((:module "core"
+    ((:module "package"
+      :source-pathname ""
+      :binary-pathname ""
+      :load-only t
+      :source-extension "lsp"
+      :components
+               ((:file "lkb-package")
+                (:file "mrs-package")))
+     
+     (:module "core"
       :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
@@ -47,19 +58,23 @@
       :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
-       ((:file "cheapscope")             ; scope for fragments
-        (:file "mrsmunge")               ; manipulate MRS via rules
-                                         ; currently for vitrifying - potential
-                                         ; other uses
-        (:file "mrsruleinput")           ; creating rules for above
-                                         ; requires LKB, but outputs compiled 
-                                         ; rules which can be used without LKB
-       #+(and :allegro :clim (not :tty)) 
-       (:file "lkb-acl-mrs")             ; display etc in CLIM
-       #+(and :mcl (not :tty)) 
-       (:file "lkb-mcl-mrs")             ; display etc in MCL
-       (:file "lkbmrs")))                ; LKB specific - redefines
-                                         ; some functions
+      ((:file "cheapscope")             ; scope for fragments
+       #+:lkb
+       (:file "mrsmunge")               ; manipulate MRS via rules
+                                        ; currently for vitrifying - potential
+                                        ; other uses
+       #+:lkb
+       (:file "mrsruleinput")           ; creating rules for above
+                                        ; requires LKB, but outputs compiled 
+                                        ; rules which can be used without LKB
+       #+(and :lkb :allegro :clim (not :tty)) 
+       (:file "lkb-acl-mrs")            ; display etc in CLIM
+       #+(and :lkb :mcl (not :tty)) 
+       (:file "lkb-mcl-mrs")            ; display etc in MCL
+       #+:lkb
+       (:file "lkbmrs")))               ; LKB specific - redefines
+                                        ; some functions
+     #+:lkb
      (:module "generator"
       :source-pathname "mrs"
       :binary-pathname "mrs"
@@ -68,7 +83,8 @@
        (:file "spell")                  ; for a/an
        (:file "genbatch")
        (:file "mrstoplevel")))      
-
+     
+     #+:lkb
      (:module "generator-morph"
       :source-pathname "mrs"
       :binary-pathname "mrs"
@@ -124,6 +140,7 @@
       :components
       ((:file "dependencies")))
 
+     #+:lkb
      (:module "lsp"
       :source-pathname "mrs"
       :binary-pathname "mrs"

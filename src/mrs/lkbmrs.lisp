@@ -1,5 +1,6 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 (in-package :mrs)
 
@@ -62,14 +63,15 @@
 (defun fs-type (fs)
   ;;; also defined for PAGE
   (let* ((real-type (type-of-fs fs)))
-    (when 
-        (and #+allegro (or (string-equal (system:getenv "USER") "aac")
-                        (string-equal (system:getenv "USER") "dan")
-                           (string-equal (system:getenv "USER") "danf"))
-             #-allegro nil
-             (search "GLBTYPE" (if (stringp real-type) real-type
+    (when (and #+allegro 
+               (let ((user (system:getenv "USER")))
+                 (member user '("aac" "dan" "danf" "oe") :test #'string-equal))
+               #-allegro 
+               nil
+               (search "GLBTYPE" (if (stringp real-type)
+                                   real-type
                                    (symbol-name real-type))))
-      ;;; if there's a glbtype, and the user is Dan, be annoying
+      ;;; if there's a glbtype, and the user is expected to care, be annoying
       (dotimes (n 5)
         (lkb::lkb-beep)
         (format t "~%!!!!!!!!!!!!!!!!!!!!!!" real-type))
@@ -95,8 +97,118 @@
       t ; *** fudge, since sometimes erroneously gets called with nil args
       (lkb::greatest-common-subtype type1 type2)))
 
-
 (defun is-valid-type (val)
   (lkb::is-valid-type val))
 
+(defun determine-variable-type (fs)
+  (let ((type (create-type (fs-type fs))))
+    (cond ((equal-or-subtype type *event-type*) "e")
+          ((equal-or-subtype type *conj-ind-type*) "e")
+          ((equal-or-subtype type *ref-ind-type*) "x")
+          ((equal-or-subtype type *full_ref-ind-type*) "x")
+          ((equal-or-subtype type *deg-ind-type*) "d")
+          ((equal-or-subtype type *non_expl-ind-type*) "v")
+          ((equal-or-subtype type *event_or_index-type*) "e")
+          ((equal-or-subtype type *eventtime-type*) "t")
+          ((equal-or-subtype type *handle-type*) "h")  
+          ((equal-or-subtype type *hole-type*) "h")
+          ((equal-or-subtype type *label-type*) "h")
+          ;;((equal-or-subtype type *individual-type*) "d")
+          ((equal-or-subtype type *difference-list-type*) "c") 
+          ;; Assume coordination structure
+          (t "v"))))
+
+;;;
+;;; convert PSOA to LKB dag representation; enables use of DAG browsing tools
+;;; for MRS viewing (specifically the emerging GLUE AVM browser, while GLUE
+;;; does not include a specialized MRS browser).             (10-jul-03; oe)
+;;;
+(defun psoa-to-dag (mrs)
+  (let ((dag (lkb::make-dag :type 'lkb::mrs))
+        (cache (make-hash-table :test #'equal)))
+    (setf (lkb::dag-arcs dag)
+      (list
+       (lkb::make-dag-arc
+        :attribute (vsym "LTOP")
+        :value (lkb::make-dag :type (var-name (psoa-top-h mrs))))
+       (lkb::make-dag-arc 
+        :attribute (vsym "INDEX") 
+        :value (lkb::make-dag :type (var-name (psoa-index mrs))))
+       (lkb::make-dag-arc
+        :attribute (vsym "RELS")
+        :value (loop
+                   with dags = nil
+                   for ep in (psoa-liszt mrs)
+                   for predicate = (or (rel-reltype ep) (rel-sort ep))
+                   for handel = (let* ((foo (rel-handel ep))
+                                       (bar (when (handle-var-p foo)
+                                              (var-name foo))))
+                                  (when bar (lkb::make-dag :type bar)))
+                   for flist = (rel-flist ep)
+                   when handel do
+                     (let ((dag (lkb::make-dag 
+                                 :type (intern (string predicate) :lkb))))
+                       (loop
+                           with arcs = (list (lkb::make-dag-arc 
+                                              :attribute (vsym "LBL")
+                                              :value handel))
+                           for pair in flist
+                           for feature = (mrs:fvpair-feature pair)
+                           for foo = (mrs:fvpair-value pair)
+                           for value = (let* ((bar (cond
+                                                    ((stringp foo) foo)
+                                                    ((var-p foo) 
+                                                     (var-name foo)))))
+                                         (lkb::make-dag :type bar))
+                           for arc = (lkb::make-dag-arc 
+                                      :attribute feature :value value)
+                           for extras = (when (var-p foo)
+                                          (var-extra foo))
+                           do
+                             (when (and extras 
+                                        (not (gethash (var-name foo) cache)))
+                               (setf (gethash (var-name foo) cache) foo)
+                               (loop
+                                   with arcs = nil
+                                   for extra in extras
+                                   for efeature = (extrapair-feature extra)
+                                   for evalue = (lkb::make-dag
+                                                 :type (extrapair-value extra))
+                                   for earc = (lkb::make-dag-arc
+                                               :attribute efeature
+                                               :value evalue)
+                                   do
+                                     (push earc arcs)
+                                   finally
+                                     (setf (lkb::dag-arcs value)
+                                       (nreverse arcs))))
+                             (push arc arcs)
+                           finally
+                             (setf (lkb::dag-arcs dag) (nreverse arcs)))
+                       (push dag dags))
+                   finally (return (lkb::list-to-dag (nreverse dags)))))
+       (lkb::make-dag-arc
+        :attribute (vsym "HCONS")
+        :value (loop
+                   with dags = nil
+                   for hcons in (psoa-h-cons mrs)
+                   for relation = (hcons-relation hcons)
+                   for hi = (let ((foo (hcons-scarg hcons)))
+                              (when (var-p foo) 
+                                (lkb::make-dag :type (var-name foo))))
+                   for lo = (let ((foo (hcons-outscpd hcons)))
+                              (when (var-p foo) 
+                                (lkb::make-dag :type (var-name foo))))
+                   for dag = (lkb::make-dag 
+                                 :type (intern (string relation) :lkb))
+                   when (and hi lo) do
+                     (setf (lkb::dag-arcs dag)
+                       (list
+                        (lkb::make-dag-arc 
+                         :attribute (vsym "HARG") :value hi)
+                        (lkb::make-dag-arc 
+                         :attribute (vsym "LARG") :value lo)))
+                     (push dag dags)
+                   finally (return (lkb::list-to-dag (nreverse dags)))))))
+    dag))
 

@@ -1,5 +1,6 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 ;;; Creating MRS structures from results of parse
 ;;;
@@ -250,24 +251,6 @@ duplicate variables")
       (intern (format nil "~A~{.~A~}" (car flist) (cdr flist)) :lkb)
     (car flist)))
 
-#+lkb
-(defun determine-variable-type (fs)
-  (let ((type (create-type (fs-type fs))))
-    (cond ((equal-or-subtype type *event-type*) "e")
-          ((equal-or-subtype type *conj-ind-type*) "e")
-          ((equal-or-subtype type *ref-ind-type*) "x")
-          ((equal-or-subtype type *full_ref-ind-type*) "x")
-          ((equal-or-subtype type *deg-ind-type*) "d")
-          ((equal-or-subtype type *non_expl-ind-type*) "v")
-          ((equal-or-subtype type *event_or_index-type*) "e")
-          ((equal-or-subtype type *eventtime-type*) "t")
-          ((equal-or-subtype type *handle-type*) "h")  
-          ((equal-or-subtype type *hole-type*) "h")
-          ((equal-or-subtype type *label-type*) "h")
-          ;((equal-or-subtype type *individual-type*) "d")
-          ((equal-or-subtype type *difference-list-type*) "c") 
-          ;; Assume coordination structure
-          (t "v"))))
 
 ;;; ****************************************************
 ;;;

@@ -37,11 +37,9 @@
 ;;; not used in LKB code but required by some grammar loading stuff
 (defparameter *grammar-directory* nil)
 
-#-:allegro
-(defparameter *lkb-background-stream* *terminal-io*)
-
-#+:allegro
-(defparameter *lkb-background-stream* excl::*initial-terminal-io*)
+(defparameter *lkb-background-stream*
+  #-:allegro *terminal-io*
+  #+:allegro excl::*initial-terminal-io*)
 
 (import '(enable-type-interactions disable-type-interactions))
 
@@ -55,32 +53,32 @@
 
 
 (defun time-a-funcall (timed-function report-function)
-   #+(and :allegro-version>= (not (version>= 6 1)))
-   (excl::time-a-funcall timed-function report-function)
-   #+(and :allegro-version>= (version>= 6 1))
-   (excl::time-a-funcall report-function timed-function)
-   #-:allegro
-   (let* ((treal (get-internal-real-time))
-          (tcpu (get-internal-run-time))
-          #+:mcl (tgc (ccl:gctime))
-          #+:mcl (others (ccl::total-bytes-allocated)))
-      (multiple-value-prog1
-         (funcall timed-function)
-         (let (#+:mcl (others (- (ccl::total-bytes-allocated) others))
-               )
-            (funcall report-function
-               ;; tgcu tgcs tu ts tr scons ssym sother
-               #+:mcl (round (* (- (ccl:gctime) tgc) 1000)
-                             internal-time-units-per-second)
-               #-:mcl 0
-               0
-               (round (* (- (get-internal-run-time) tcpu) 1000)
-                      internal-time-units-per-second)
-               0
-               (round (* (- (get-internal-real-time) treal) 1000)
-                      internal-time-units-per-second)
-               0 0
-               #+:mcl others #-:mcl -1)))))
+  #+(and :allegro-version>= (not (version>= 6 1)))
+  (excl::time-a-funcall timed-function report-function)
+  #+(and :allegro-version>= (version>= 6 1))
+  (excl::time-a-funcall report-function timed-function)
+  #-:allegro
+  (let* ((treal (get-internal-real-time))
+         (tcpu (get-internal-run-time))
+         #+:mcl (tgc (ccl:gctime))
+         #+:mcl (others (ccl::total-bytes-allocated)))
+    (multiple-value-prog1
+        (funcall timed-function)
+      (let (#+:mcl 
+            (others (- (ccl::total-bytes-allocated) others)))
+        (funcall report-function
+                 ;; tgcu tgcs tu ts tr scons ssym sother
+                 #+:mcl (round (* (- (ccl:gctime) tgc) 1000)
+                               internal-time-units-per-second)
+                 #-:mcl 0
+                 0
+                 (round (* (- (get-internal-run-time) tcpu) 1000)
+                        internal-time-units-per-second)
+                 0
+                 (round (* (- (get-internal-real-time) treal) 1000)
+                        internal-time-units-per-second)
+                 0 0
+                 #+:mcl others #-:mcl -1)))))
 
 
 (defun current-time (&key long)
@@ -120,12 +118,13 @@
 
   ;;; this is a no-op in tty mode
   #+(not :tty)
-  ;; (or :clim :common-graphics :mcl)
   (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :make)))
-    (unless (and building-image-p (boundp building-image-p)
+    (unless (and building-image-p 
+                 (boundp building-image-p)
                  (symbol-value building-image-p))
       #+:allegro
-      (tpl:setq-default *package* (find-package :lkb))
+      (tpl:setq-default *package* 
+        (find-package (if (system:getenv "SSP") :ssp :lkb)))
       (let ((display (system:getenv "DISPLAY"))
             (*package* (find-package #+:clim :clim-user #-:clim :lkb)))
         (when (and (stringp display) (not (zerop (length display))))

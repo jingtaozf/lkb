@@ -10,14 +10,17 @@
 
 ;;; (defparameter lkb::*do-something-with-parse* 'mrs::batch-output-rmrs)
 
+#+:lkb
 (defun batch-output-simple-rmrs nil
   ;;; to be called from LKB batch processing
   (batch-output-rmrs-aux t))
 
+#+:lkb
 (defun batch-output-rmrs nil
   ;;; to be called from LKB batch processing
   (batch-output-rmrs-aux nil))
   
+#+:lkb
 (defun batch-output-rmrs-aux (simple-p)  
   (let ((sentence lkb::*parse-input*)
         (ostream (if (and lkb::*ostream* 
@@ -45,7 +48,8 @@
               "~%<rmrs></rmrs>"))
     (format ostream "</S>~%")
     (finish-output ostream)))
-  
+
+#+:lkb
 (defun batch-output-rmrs-only nil  
   (let ((ostream (if (and lkb::*ostream* 
                           (streamp lkb::*ostream*) 

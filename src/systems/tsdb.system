@@ -171,5 +171,5 @@
        (:file "balloons" :source-extension ""))))
     
     :depends-on (#+(and :allegro (or :linux (and :sparc :svr4) :alpha)) "pvm"
-                 #+:page "page"
-                 #+(or :lkb :mrs) "mrs"))
+                 #+:mrs "mrs" #+(and :lkb (not :mrs)) "lkb" #+:page "page"))
+

@@ -67,6 +67,7 @@
 (setq make::*building-image-p* t)
 (setq make:*compile-during-load* t)
 (pushnew :lkb *features*)
+(pushnew :mrs *features*)
 (when (system:getenv "MT")
   (pushnew :mt *features*))
 (compile-system "mrs" :force t)
