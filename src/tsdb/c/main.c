@@ -14,6 +14,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <getopt.h>
+#include <memory.h>
 #include "globals.h"
 #include "tsdb.h"
 #include <readline/readline.h>
