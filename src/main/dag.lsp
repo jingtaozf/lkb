@@ -245,16 +245,16 @@
 
 ;;; Creation of dags
 
-(defun create-typed-dag (type)
-   (make-dag :type type :arcs nil))
+(defmacro create-typed-dag (type)
+  `(make-dag :type ,type :arcs nil))
 
-(defun create-dag nil
-   (make-dag :type *toptype* :arcs nil))
+(defmacro create-dag nil
+  `(make-dag :type *toptype* :arcs nil))
 
 (defun create-atomic-dag (type)
-   (make-dag
-      :type (if (consp type) type (list type))
-      :arcs nil))
+  (make-dag
+   :type (if (consp type) type (list type))
+   :arcs nil))
 
 
 (defmacro type-spec-atomic-p (type)
@@ -446,17 +446,17 @@
 	(throw '*fail* nil)))))
 
 (defmacro unify-arcs-find-arc (attribute arcs comp-arcs)
-   ;; find arc in arcs or comp-arcs with given attribute - also used in
-   ;; structs.lsp
-   (let ((v (gensym)))
-      `(macrolet ((find-attribute (v arcs)
-                    (let ((a (gensym)))
-                       `(block find-attribute
-                          (dolist (,a ,arcs nil)
-                             (when (eq (dag-arc-attribute ,a) ,v)
-                                (return-from find-attribute ,a)))))))
-         (let ((,v ,attribute))
-            (or (find-attribute ,v ,arcs) (find-attribute ,v ,comp-arcs))))))
+  ;; find arc in arcs or comp-arcs with given attribute - also used in
+  ;; structs.lsp
+  (let ((v (gensym)))
+    `(macrolet ((find-attribute (v arcs)
+		  (let ((a (gensym)))
+		    `(block find-attribute
+		       (dolist (,a ,arcs nil)
+			 (when (eq (dag-arc-attribute ,a) ,v)
+			   (return-from find-attribute ,a)))))))
+       (let ((,v ,attribute))
+	 (or (find-attribute ,v ,arcs) (find-attribute ,v ,comp-arcs))))))
 
 (defun unify-arcs (dag1 dag2 path)
   (let ((arcs1 (dag-arcs dag1))
@@ -813,6 +813,18 @@
                (declare (dynamic-extent new-path))
                (cyclic-dag-p1 (dag-arc-value arc) new-path)))
          (setf (dag-copy dag) :outside))))
+
+;; Removes the marks left by cyclic-dag-p
+
+(defun fix-dag (dag)   
+  (setq dag (deref-dag dag))
+  (when (dag-copy dag)
+    (setf (dag-copy dag) nil)
+    (dolist (arc (dag-arcs dag))
+      (fix-dag (dag-arc-value arc)))
+    (dolist (arc (dag-comp-arcs dag))
+      (fix-dag (dag-arc-value arc)))
+    dag))
 
 
 

@@ -165,9 +165,9 @@
 (defun more-specific-p (el1 el2)
    (let ((spec1 (tail-element-spec el1))
          (spec2 (tail-element-spec el2)))
-      (if (eql spec1 'lex) 
-         (not (eql spec2 'lex))
-         (if (eql spec2 'lex)
+      (if (eq spec1 'lex) 
+         (not (eq spec2 'lex))
+         (if (eq spec2 'lex)
             nil
             (subtype-p spec1 spec2)))))
 
@@ -392,8 +392,8 @@
 
 
 ;;; We need to find the maximal results
-;;; I'm attempting to make this efficient for the case where
-;;; most of the defaults are mutually compatible
+;;; I'm attempting to make this efficient for the case where most of the
+;;; defaults are mutually compatible
 ;;;
 ;;; Algorithm
 ;;; for n members of def-fs-set
@@ -409,56 +409,83 @@
 ;;;                   3) unify in all combinations
 ;;;                   4) recurse from A
 
-;;; tweak - keep a record of failures and don't try any combination 
-;;; which is a superset of the failures
+;;; tweak - keep a record of failures and don't try any combination which is a
+;;; superset of the failures
 
-;;; check for individual consistency of defs with the
-;;; fixed-fs (since this isn't actually the indefeasible fs but only the
-;;; less defeasible information there may be stuff which is incompatible with 
-;;; it in the tails).  
+;;; check for individual consistency of defs with the fixed-fs (since this
+;;; isn't actually the indefeasible fs but only the less defeasible
+;;; information there may be stuff which is incompatible with it in the
+;;; tails).
 
 (defparameter *failure-list* nil)
+(defparameter *temp-bit-vector* nil)
 
 (defun carp-unify (fixed-fs def-fs-set check-ind-defs-p)
-  ;; def-fs-set is using path representation
-  ;; check-ind-defs-p is true if the fixed-fs might contain
-  ;; some defeasible material
+  ;; def-fs-set is using path representation 
+  ;; check-ind-defs-p is true if the fixed-fs might contain some defeasible
+  ;; material
   (when check-ind-defs-p
     (setf def-fs-set 
       (for fs in def-fs-set
            filter
-           (if (atomic-unifiable-dags-p fs fixed-fs)
-               fs))))
-  ;; we improve matters by chucking out
-  ;; structures which were incompatible with the fixed-fs when
-  ;; check-ind-defs-p is true - if it isn't, we're doing the first
-  ;; round and the tails are guaranteed to be compatible
+           (when (atomic-unifiable-dags-p fs fixed-fs)
+	   fs))))
+  ;; we improve matters by chucking out structures which were incompatible
+  ;; with the fixed-fs when check-ind-defs-p is true - if it isn't, we're
+  ;; doing the first round and the tails are guaranteed to be compatible
   ;; because the tail elements have already been filtered
-  (setf *failure-list* nil)
-  (let ((all-ok (unify-in fixed-fs def-fs-set nil)))
-    (if all-ok (list all-ok)
+  (let* ((*failure-list* nil)
+	 (*temp-bit-vector* (make-array (list (length def-fs-set))
+					:element-type 'bit))
+	 ;; We represent a set of constraints as a bit vector, so we need to
+	 ;; assign each constraint a bit position
+	 (encoded-defs (loop for def in def-fs-set
+			   and pos upfrom 0
+			   collect (cons def pos)))
+	 (all-ok (unify-in fixed-fs 
+			   encoded-defs 
+			   (make-array (list (length def-fs-set))
+				       :element-type 'bit 
+				       :initial-element 1))))
+    (if (dag-p all-ok)
+	(list all-ok)
       (or
-       (unify-combinations fixed-fs def-fs-set nil nil 
-			   (- (length def-fs-set) 1))
+       (unify-combinations fixed-fs encoded-defs nil nil 
+			   (1- (length def-fs-set)))
        (list fixed-fs)))))
 
-(defmacro fast-subsetp (l1 l2)
-  (let ((elt (gensym))
-	(list1 (gensym))
-	(list2 (gensym)))
-    `(let ((,list1 ,l1)
-	   (,list2 ,l2))
-       (dolist (,elt ,list1 t)
-	 (unless (member ,elt ,list2 :test #'eq)
-	   (return nil))))))
+;; Quick subset test for sets encoded as bit vectors.  The Allegro version
+;; calls the runtime system directly, avoiding a little bit of type-checking
+;; overhead.
 
-(defun unify-combinations (fixed-fs def-fs-list existing-combs 
+#-allegro
+(defmacro fast-subsetp (l1 l2)
+  `(progn
+     (bit-and ,l1 ,l2 *temp-bit-vector*)  
+     (equal ,l1 *temp-bit-vector*)))
+
+#+allegro
+(defmacro fast-subsetp (l1 l2)
+  `(progn
+     (excl::.primcall 'sys::rs-bitop
+		      ,l1
+		      ,l2
+		      *temp-bit-vector*
+		      boole-and)
+     (excl::.primcall 'sys::rs-bit-equal 
+		      ,l1 
+		      *temp-bit-vector*)))
+
+
+(defun unify-combinations (fixed-fs encoded-defs existing-combs 
 			   successful comb-length)
+  ;; (format t "~%Combination length = ~a" comb-length)
   (if (zerop comb-length)
       successful
     (let ((success t)
-	  (combinations (generate-combinations def-fs-list comb-length)))
-      (loop for combination in combinations
+	  (gen (bit-vector-generator (length encoded-defs) comb-length)))
+      (loop for combination = (funcall (the known-function gen))
+	  until (null combination)
 	  do
             (cond ((dolist (old-comb existing-combs) 
 		     (when (fast-subsetp combination old-comb)
@@ -469,68 +496,155 @@
 		       (return t)))
 		   (setf success nil))	; bound to fail
 		  (t
-		   (let ((unif-result (unify-in fixed-fs combination nil)))
-                     (if unif-result
-			 (progn
-                           (push unif-result successful)
-                           (push combination existing-combs))
-		       (setf success nil))))))
+		   (let ((unif-result (unify-in fixed-fs encoded-defs 
+						combination)))
+                     (cond ((dag-p unif-result)
+			    ;; Unification succeeded
+			    (push unif-result successful)
+			    (push combination existing-combs))
+			   ((consp unif-result)
+			    ;; Unification failed, so move the constraint that
+			    ;; caused the failure to the front of the list of
+			    ;; constraints.  That way, subsequent calls to
+			    ;; unify-in will fail sooner, and the failure sets
+			    ;; in *failure-list* will be smaller.
+			    (setq encoded-defs (cons unif-result
+						     (delete unif-result
+							     encoded-defs
+							     :test #'eq)))
+			    (setf success nil))
+			   (t (setf success nil)))))))
       (if success
 	  successful
-	(unify-combinations fixed-fs def-fs-list existing-combs successful 
+	(unify-combinations fixed-fs encoded-defs existing-combs successful 
 			    (1- comb-length))))))
 
-(defun generate-combinations (elements clength)
-  (declare (type fixnum clength))
-  (let ((elength (length elements)))
-    (cond ((or (> clength elength) (< clength 1))
-	   (error "Incorrect length input"))
-	  ((eql elength clength) 
-	   (list elements))
-	  ((eql clength 1) 
-	   (mapcar #'list elements ))
-	  (t 
-	   (nconc (generate-combinations (cdr elements) clength)
-		   (loop for comb in (generate-combinations (cdr elements) 
-							    (1- clength))
-		       collect (cons (car elements) comb)))))))
 
-(defun unify-in (indef-fs def-fs-list added)
+;; Returns a function which, when called, returns a new vector of n
+;; bits with m ones and n-m zeros. This implementation is based on
+;; Matthew Belamonte's C implementation of:
+;;
+;;   Chase, Philip J. 1970. "Algorithm 382: Combinations of M out of N
+;;   objects [G6]", Communications of the ACM 13(6):368.
+;;
+;; Beyond that, you don't want to know.
+
+(defun bit-vector-generator (n m)
+  (let ((x 0)
+	(y 0)
+	(z 0)
+	(first t)
+	(p (make-array (+ n 2) :element-type 'fixnum))
+	(b (make-array (list n) :element-type 'bit
+		       :initial-element 1)))
+    (declare (type (simple-array fixnum 1) p)
+	     (type fixnum x y z))
+    ;; Initialize variables
+    (setf (aref p 0) (1+ n))
+    (loop for i from 1 to (- n m) 
+	do (setf (aref p i) 0))
+    (loop for i from (1+ (- n m)) to n
+	do (setf (aref p i) (+ i (- m n))))
+    (setf (aref p (1+ n)) -2)
+    (if (zerop m)
+	(setf (aref p 1) 1))
+    ;; Initialize bit vector
+    (loop for i from 0 to (- n m 1)
+	do (setf (sbit b i) 0))
+    ;; Return bit vector function
+    (lambda ()
+      (declare (optimize (safety 0)))
+      (block generator
+	(if first
+	    (setf first nil)
+	  (let ((j 1))
+	    (declare (type fixnum j))
+	    (loop while (<= (aref p j) 0)
+		do (incf j))
+	    (if (= (aref p (1- j)) 0)
+		(progn
+		  (loop for i from (1- j) downto 1
+		      do (setf (aref p i) -1))
+		  (setf (aref p j) 0)
+		  (setf x 0)
+		  (setf z 0)
+		  (setf (aref p 1) 1)
+		  (setf y (1- j)))
+	      (progn
+		(if (> j 1)
+		    (setf (aref p (1- j)) 0))
+		(loop
+		    do (incf j)
+		    while (> (aref p j) 0))
+		(let ((k (1- j))
+		      (i j))
+		  (declare (type fixnum k i))
+		  (loop while (= (aref p i) 0)
+		      do (setf (aref p i) -1)
+			 (incf i))
+		  (if (= (aref p i) -1)
+		      (progn
+			(setf (aref p i) (aref p k))
+			(setf z (1- (aref p k)))
+			(setf x (1- i))
+			(setf y (1- k))
+			(setf (aref p k) -1))
+		    (progn
+		      (if (= i (aref p 0))
+			  (return-from generator nil)
+			(progn
+			  (setf (aref p j) (aref p i))
+			  (setf z (1- (aref p i)))
+			  (setf (aref p i) 0)
+			  (setf x (1- j))
+			  (setf y (1- i)))))))))
+	    (setf (sbit b x) 1)
+	    (setf (sbit b y) 0)))
+	b))))
+
+;; Try unifying a set of constraints (represented as a bit vector) into a
+;; feature structure.  If successful, return the resulting feature structure.
+;; Otherwise, add the set of conflicting constraints to *failure-list* and
+;; return the fatal constraint.
+
+(defun unify-in (indef-fs encoded-defs combo)
   (with-unification-context (nil)
-    (when (unify-in1 indef-fs def-fs-list added)
-      (copy-dag indef-fs))))
-      
-(defun unify-in1 (indef-fs def-fs-list added)
-  ;; FIX - need to check for well-formedness
-  (if def-fs-list
-      ;; (incf *unif-count*)
-      (let* ((first-def (car def-fs-list))
-	     (res (if (yadu-pv-p first-def)
-		      (unify-paths (yadu-pv-path first-def)
-				   indef-fs
-				   (make-u-value 
-				    :types (yadu-pv-value first-def))
-				   nil)
-		    (let* ((paths (yadu-pp-paths first-def))
-			   (initial-path (car paths))
-			   (ok nil))
-		      (dolist (path2 (cdr paths))
-			(setf ok
-			  (unify-paths initial-path       
-				       indef-fs
-				       path2
-				       indef-fs))
-			(unless ok
-			  (return)))
-		      ok))))
-	(if res
-	    (unify-in1 indef-fs (cdr def-fs-list) 
-		       (cons (car def-fs-list) added))
-	  (progn
-	    (push (cons (car def-fs-list) added) *failure-list*) 
-	    nil)))
-    indef-fs))
+    (unify-in1 indef-fs encoded-defs combo (make-array (length encoded-defs)
+				       :element-type 'bit 
+				       :initial-element 0))))
 
+(defun unify-in1 (indef-fs encoded-defs combo added)
+  ;; FIX - need to check for well-formedness
+  (if encoded-defs
+      (let* ((first-def (car encoded-defs))
+	     (res (or (zerop (sbit combo (cdr first-def))) ; Skip - not in set
+		      (progn
+			(setf (sbit added (cdr first-def)) 1)
+			(if (yadu-pv-p (car first-def))
+			    (unify-paths (yadu-pv-path (car first-def))
+					 indef-fs
+					 (make-u-value 
+					  :types (yadu-pv-value 
+						  (car first-def)))
+					 nil)
+			  (let* ((paths (yadu-pp-paths (car first-def)))
+				 (initial-path (car paths)))
+			    (dolist (path2 (cdr paths) t)
+			      (unless (unify-paths initial-path       
+						   indef-fs
+						   path2
+						   indef-fs)
+				(return)))))))))
+	(cond ((and res (not (cyclic-dag-p indef-fs)))
+	       ;; So far so good, now try the next constraint
+	       (unify-in1 (fix-dag indef-fs) (cdr encoded-defs) combo added))
+	      (t 
+	       ;; Failed: add set so far to *failure-list* and return the
+	       ;; constraint that caused the failure
+	       (push added *failure-list*) 
+	       first-def)))
+    ;; Unifications all successful, now try to copy
+    (copy-dag indef-fs)))
 
 ;;; incorporating all the defaults of a given persistence
 ;;; non-destructively
