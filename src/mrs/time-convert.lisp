@@ -151,10 +151,11 @@
   (member sort `(,(vsym "_MORNING_REL") ,(vsym "_AFTERNOON_REL") ,(vsym "_EVENING_REL"))))
 
 (defun derive-am-pm-spec (sort)
-  (ecase sort
-    ((vsym "_MORNING_REL") 'am)
-    ((vsym "_AFTERNOON_REL") 'pm)
-    ((vsym "_EVENING_REL") 'pm)))
+  (cond
+    ((eql sort (vsym "_MORNING_REL")) 'am)
+    ((eql sort (vsym "_AFTERNOON_REL")) 'pm)
+    ((eql sort (vsym "_EVENING_REL")) 'pm)
+    (t (error "Error in derive-am-pm-spec"))))
 
 
 

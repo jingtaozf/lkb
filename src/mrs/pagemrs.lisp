@@ -35,7 +35,6 @@
   (or (eql type1 type2)
       (tdl:extends type1 type2)))
 
-
 ;;; called from mrs-to-vit
 
 (defun is-top-type (val)

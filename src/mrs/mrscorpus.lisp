@@ -111,15 +111,77 @@
 ;;; To facilitate checking, we want a canonical form for the 
 ;;; set valued features.
 ;;; We sort the liszt by rel type - if there are
-;;; two identical rel types, we use handel number
+;;; two identical rel types, we further sort by
+;;; any value features that may be present
+;;; If there are relations which are identical wrt
+;;; both relation sort and all value features
+;;; we group them together, so the sort returns a list
+;;; of lists.  Checking for equality then requires
+;;; we allow for the possibility of different binding
+;;; sets.
 
 (defun sort-mrs-struct-liszt (liszt)
-   (sort (copy-list liszt)
-      #'(lambda (rel1 rel2)
-          (or (string-lessp (rel-sort rel1) (rel-sort rel2))
-              (and (string-equal (rel-sort rel1) (rel-sort rel2))
-                   (< (get-var-num (rel-handel rel1))
-                      (get-var-num (rel-handel rel2))))))))
+  (let ((new-liszt (combine-similar-relations liszt nil)))
+   (sort new-liszt
+         #'(lambda (relset1 relset2)
+             (let ((rel1 (car relset1)) (rel2 (car relset2)))
+               (or (string-lessp (rel-sort rel1) (rel-sort rel2))
+                   (and (string-equal (rel-sort rel1) (rel-sort rel2))
+                        (value-feats-lessp (rel-flist rel1)
+                                           (rel-flist rel2)))))))))
+
+(defun combine-similar-relations (liszt result-so-far)
+  (if (null liszt)
+      result-so-far
+    (let ((test-rel (car liszt))
+          (similar nil)
+          (non-similar nil))
+      (for rel in (cdr liszt)
+           do
+           (if (similar-relations-p test-rel rel)
+               (push rel similar)
+             (push rel non-similar)))
+      (combine-similar-relations non-similar
+                                 (push (cons test-rel similar)
+                                      result-so-far))))) 
+  
+(defun similar-relations-p (rel1 rel2)
+  (and (string-equal (rel-sort rel1) (rel-sort rel2))
+       (let ((fv1 (rel-flist rel1))
+             (fv2 (rel-flist rel2)))
+         (if (eql (length fv1) (length fv2))
+                         ;;; assumes canonical feature ordering
+             (loop for fvpair1 in fv1
+                 as fvpair2 in fv2
+                 always 
+                   (and (eql (fvpair-feature fvpair1)
+                             (fvpair-feature fvpair2))
+                        (or (not (member (fvpair-feature fvpair1)
+                                         *value-feats*))
+                            (equal (fvpair-value fvpair1)
+                                   (fvpair-value fvpair2)))))))))
+          
+
+(defun value-feats-lessp (fv1 fv2)
+  (let ((l1 (length fv1))
+        (l2 (length fv2)))
+    (if (eql l1 l2)
+        (loop for fvpair1 in fv1
+            as fvpair2 in fv2
+            do 
+              (let ((feat1 (fvpair-feature fvpair1))
+                    (feat2 (fvpair-feature fvpair2)))
+                (unless (eql feat1 feat2)
+                  (return (string-lessp feat1 feat2)))
+                (when (member (fvpair-feature fvpair1)
+                              *value-feats*)
+                  (let ((val1 (fvpair-value fvpair1))
+                        (val2 (fvpair-value fvpair2)))
+                  (unless (equal val1 val2)
+                    (return (string-lessp val1 val2))))))
+            finally 
+              (error "~%Similar relations not grouped"))
+      (< l1 l2))))
 
 ;;; need sort-mrs-hcons
 
@@ -175,13 +237,18 @@
              as rel2 in liszt2
            always
              (if
-                 (mrs-relations-equal-p rel1 rel2 syntactic-p noisy-p)
+                 (mrs-relation-set-equal-p rel1 rel2 syntactic-p noisy-p)
                  t
                (progn
                  (when noisy-p
                    (format t "~%Relations differ ~A ~A" rel1 rel2))
                  nil))))))
 
+(defun mrs-relation-set-equal-p (relset1 relset2 syntactic-p noisy-p)
+  (and (eql (length relset1) (length relset2))
+       ;;; temporary hack
+       (mrs-relations-equal-p (car relset1) (car relset2) 
+                              syntactic-p noisy-p)))
 
 (defun mrs-relations-equal-p (rel1 rel2 syntactic-p noisy-p)
   (if (eql (rel-sort rel1) (rel-sort rel2))
@@ -288,7 +355,7 @@
                         (setf ok nil)
                         (return))
                       (when comparable-p
-                        (unless (compatible-types (fvpair-value tp1)
+                        (unless (compatible-extra-values (fvpair-value tp1)
                                                   (fvpair-value tp2))
                           (setf ok nil)
                           (return)))))))))
@@ -296,6 +363,18 @@
         (return)))
     ok))
 
+
+(defun compatible-extra-values (val1 val2)
+  ;;; needs to deal with lists of variables correctly
+  ;;; currently just checks for first ones being compatible
+  (if (and (listp val1) (var-p (car val1)))
+      (if (and (listp val2) (var-p (car val2)))
+          (variables-equal (car val1) (car val2) nil)
+        nil)
+    (compatible-types val1 val2)))
+
+
+  
 
 (defun typed-feature-list-compatible (tp1 tp2)
   (if (or (null tp1) (null tp2))

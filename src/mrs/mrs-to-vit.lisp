@@ -364,19 +364,18 @@
 (defun check-vit (vit &optional (as-string nil) (stream *standard-output*))
   #+allegro
   (progn
-    (with-open-file (vit-out "~/tmp/vitcheck" :direction :output
-                                              :if-exists :supersede)
-      (format vit-out "ensure_loaded(vitADT).~%V = ")
-      (if as-string 
-	  (format vit-out "~A" vit)
-        (write-vit vit-out vit))
-      (format vit-out ",vitCheck(V).~%~%halt.~%"))
-    (excl::run-shell-command "cd /eo/e1/vm2/vitADT/lib/Vit_Adt;/opt/quintus/bin3.2/sun4-5/prolog < ~/tmp/vitcheck" :output "~/tmp/vitout" :if-output-exists :supersede :error-output "~/tmp/viterror" :if-error-output-exists :supersede)
-    (run-command "tail +65 ~/tmp/viterror | tail -r | tail +2 | tail -r"  stream)
-    (format stream "~%"))
+   (with-open-file (vit-out "~/tmp/vitcheck" :direction :output
+	                                    :if-exists :supersede)
+    (format vit-out "ensure_loaded(vitADT).~%V = ")
+    (if as-string 
+	(format vit-out "~A" vit)
+      (write-vit vit-out vit))
+    (format vit-out ",vitCheck(V).~%~%halt.~%"))
+   (excl::run-shell-command "cd /eo/e1/vm2/vitADT/lib/Vit_Adt;/opt/quintus/bin3.2/sun4-5/prolog < ~/tmp/vitcheck" :output "~/tmp/vitout" :if-output-exists :supersede :error-output "~/tmp/viterror" :if-error-output-exists :supersede)
+   (excl::run-shell-command "tail +65 ~/tmp/viterror | tail -r | tail +2 | tail -r" :output "~/tmp/errorout" :error-output "~/tmp/realerrorout" :if-output-exists :supersede :if-error-output-exists :supersede)
+   (format stream "~%"))
   #-allegro
   (warn "function check-vit needs customising for this Lisp"))
-
 
 (defun horrible-hack-2 (vit)
   ;;; deletes any leqs which cannot be expressed correctly because
@@ -928,39 +927,49 @@
     ;;; collecting the leqs is more complex - it's done
     ;;; by walking down the tree for the connected MRS
         (setf *leqs* nil)
-        (collect-leqs-from-rels top-handel rels binding-set nil)
+        (collect-leqs-from-rels top-handel rels binding-set nil nil)
         (values equalities *leqs*))))
     
-(defun collect-leqs-from-rels (top-handel rel-list bindings holes-so-far)
+(defun collect-leqs-from-rels (top-handel rel-list bindings holes-so-far labels-so-far)
   ;;; Given a current top-handel, find all the relations
-  ;;; which are labelled with this handel (or with a label bound to this handel)
-  ;;; Add leqs between each of these labels and each of the holes we've come across
+  ;;; which are labelled with this handel 
+  ;;; (or with a label bound to this handel)
+  ;;; Add leqs between each of these labels and each of the holes 
+  ;;; we've come across
   ;;; so far.  Then for each of these rels, find all their handel arguments
   ;;; add these to holes-so-far and recurse
-   (let ((top-rels (for rel in rel-list
-                        filter
-                        (let ((relh (get-var-num (rel-handel rel))))
-                          (if (is-locally-equivalent relh top-handel bindings)
-                            (progn
-                              (for hole in holes-so-far
-                                   do
-                                   (unless (eql relh hole)
-                                     (pushnew (cons relh hole) *leqs* :test #'equal)))
-                              rel))))))
-    (for rel in top-rels
-         do
-         (for feat-val in (rel-flist rel)
-              do     
-              (let ((var (fvpair-value feat-val)))
-                (if (listp var)
-                  (for val in var
-                       do
-                       (if (is-handel-var val)
-                         (collect-leqs-from-rels (get-var-num val) rel-list bindings
-                                                 (cons (get-var-num val) holes-so-far))))
-                  (if (is-handel-var var)
-                    (collect-leqs-from-rels (get-var-num var) rel-list bindings
-                                            (cons (get-var-num var) holes-so-far)))))))))
+  (if (member top-handel labels-so-far)
+      (progn (format t "Cyclic structure?")
+             nil)
+    (let ((top-rels 
+           (for rel in rel-list
+                filter
+                (let ((relh (get-var-num (rel-handel rel))))
+                  (if (is-locally-equivalent relh top-handel bindings)
+                      (progn
+                        (for hole in holes-so-far
+                             do
+                             (unless (eql relh hole)
+                               (pushnew (cons relh hole) *leqs* :test #'equal)))
+                        rel))))))
+      (for rel in top-rels
+           do
+           (for feat-val in (rel-flist rel)
+                do     
+                (let ((var (fvpair-value feat-val)))
+                  (if (listp var)
+                      (for val in var
+                           do
+                           (if (is-handel-var val)
+                               (collect-leqs-from-rels 
+                                (get-var-num val) rel-list bindings
+                                (cons (get-var-num val) holes-so-far)
+                                (cons top-handel labels-so-far))))
+                    (if (is-handel-var var)
+                        (collect-leqs-from-rels 
+                         (get-var-num var) rel-list bindings
+                         (cons (get-var-num var) holes-so-far)
+                         (cons top-handel labels-so-far))))))))))
 
 (defun is-locally-equivalent (h1 h2 bindings)
   (member h2 (get-bindings-for-handel h1 bindings)))

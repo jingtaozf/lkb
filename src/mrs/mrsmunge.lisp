@@ -568,25 +568,27 @@
                (convert-var-to-new-bindings (rel-handel rel)
                                             bindings))
          (setf (rel-flist new-rel)
-               (for fvpair in (rel-flist rel)
-                    collect
-                    (make-fvpair :feature 
-                                 (make-name-in-correct-package 
-                                  (fvpair-feature fvpair))
-                                 :value
-                                 (if 
-                                     (member (fvpair-feature fvpair) 
-                                             *value-feats* 
-                                             :test #'same-names)
-                                     (make-value-in-package
-                                      (make-output-value
-                                       (fvpair-value fvpair)
-                                       (fvpair-feature fvpair)
-                                       (rel-extra rel)
-                                       constant-bindings))
-                                   (convert-var-to-new-bindings 
-                                    (fvpair-value fvpair)
-                                    bindings)))))
+               (sort
+                (for fvpair in (rel-flist rel)
+                     collect
+                     (make-fvpair :feature 
+                                  (make-name-in-correct-package 
+                                   (fvpair-feature fvpair))
+                                  :value
+                                  (if 
+                                      (member (fvpair-feature fvpair) 
+                                              *value-feats* 
+                                              :test #'same-names)
+                                      (make-value-in-package
+                                       (make-output-value
+                                        (fvpair-value fvpair)
+                                        (fvpair-feature fvpair)
+                                        (rel-extra rel)
+                                        constant-bindings))
+                                    (convert-var-to-new-bindings 
+                                     (fvpair-value fvpair)
+                                     bindings))))
+                #'feat-sort-func))
          new-rel)))
 
 (defun make-output-sort (rel-spec extra constant-bindings)

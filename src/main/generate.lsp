@@ -6,13 +6,16 @@
 (in-package :cl-user)
 
 (defun more-robust-mrs-equalp (mrs1 mrs2 &optional syntactic-p)
-   ;; *** make sure any errors in mrs-equalp don't stop the show
+  (mrs::mrs-equalp mrs1 mrs2 syntactic-p t))
+#|
+  ;; *** make sure any errors in mrs-equalp don't stop the show
    (handler-case 
-         (mrs::mrs-equalp mrs1 mrs2 syntactic-p)
+         (mrs::mrs-equalp mrs1 mrs2 syntactic-p t)
       (error (condition)
          (warn "Error '~A' occurred in ~A - returning true"
             condition 'mrs::mrs-equalp)
          t)))
+|#
 
 ;;;
 

@@ -66,14 +66,48 @@
 ;;          (cerror "Struggle on"
 ;;           "~A is not a label and is not an intermediate variable"
 ;;                 right-intvar)))
-  (setf *is-one-ofs* (substitute-int-vars is-one-ofs 
-                                       left-intvars labels))
+  (setf *is-one-ofs* (substitute-int-vars 
+                      ; is-one-ofs
+                      (combine-is-one-ofs is-one-ofs) 
+                      left-intvars labels))
+  ; (format t "~%~S" *is-one-ofs*)
   ))
 
 
 ;;;
 ;;; is-one-of constraints
 
+
+(defun combine-is-one-ofs (is-one-ofs)
+   ;;; aka horrible-hack-3
+   ;;; takes the union of is-one-of constraints -
+   ;;; should take the intersection but that'd require 
+   ;;; fixing the grammar ...
+  (let ((combined nil)
+        (remainder is-one-ofs))
+    (loop (unless remainder
+            (return nil))
+          (let* ((test (car remainder))
+                 (test-left (possible-binding-h1 test))
+                 (test-right (possible-binding-hset test))
+                 (rest (cdr remainder)))
+            (unless test
+              (return nil))
+            (setf remainder nil)
+            (for is-one-of in rest
+                 do
+                 (if (eql test-left (possible-binding-h1 is-one-of))
+                     (setf test-right 
+                           (union test-right
+                              (possible-binding-hset is-one-of)))
+                   (push is-one-of remainder)))
+            (push (make-possible-binding :h1 test-left
+                                         :hset test-right)
+                  combined)))
+    combined))
+            
+                          
+            
 
 (defun substitute-int-vars (constraints left-intvars labels)
   (for constraint in constraints

@@ -20,7 +20,7 @@
   (when (and (or *mrs-to-vit* *mrs-scoping*
                *mrs-output-p*))
     (setf *mrs-record*
-      (extract-mrs *parse-record*))
+      (extract-mrs edges))
     (if *mrs-to-vit*
         (for mrs in *mrs-record*
              do

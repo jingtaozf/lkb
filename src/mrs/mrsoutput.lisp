@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.9  1998/09/04 00:43:32  aac
+;; merging WK's changes
+;;
 ;; Revision 1.8  1998/08/24 21:59:14  oe
 ;; committing minor changes contributed by the manager; make MRS work for PAGE ...
 ;;
@@ -338,7 +341,6 @@
 
 ;;; global variables are defined in mrsglobals
 
-#+:lkb
 (defun determine-variable-type (fs)
   (let ((type (create-type (fs-type fs))))
     (cond ((equal-or-subtype type *event-type*) "e")
@@ -354,20 +356,6 @@
           ;; Assume coordination structure
           (t "v"))))
 
-#+:page
-(defun determine-variable-type (fs)
-  (let ((type (fs-type fs)))
-    (case type
-          (disco::event "e")
-          (disco::eventtime "t")
-          (disco::handle "h")
-          (disco::hole "h")
-          (disco::label "h")
-          (disco::ref-ind "x")
-          (disco::deg-ind "d")
-          (disco::individual "d")
-          (tdl::*diff-list* "c")  ;; Assume coordination structure
-          (t "v"))))
 
 ;; Add check for disjunction nodes, which MRS can't handle
 
@@ -463,8 +451,12 @@
     ))
 
 (defun feat-sort-func (fvp1 fvp2)
-  (let* ((feat1 (car fvp1))
-         (feat2 (car fvp2))
+  (let* ((feat1 (if (fvpair-p fvp1) 
+                    (fvpair-feature fvp1)
+                    (car fvp1)))
+         (feat2 (if (fvpair-p fvp2) 
+                    (fvpair-feature fvp2)
+                    (car fvp2)))
          (remlist (member feat1 *feat-priority-list*)))
     (if remlist (or (member feat2 remlist)
                     (not (member feat2 *feat-priority-list*)))

@@ -62,9 +62,10 @@
 
 (defun show-parse nil
    (if *parse-record*
-      (for edge in *parse-record*
-         do
-         (display-parse-tree edge nil)
+       (progn 
+         (for edge in *parse-record*
+              do
+              (display-parse-tree edge nil))
          (when (fboundp 'mrs::output-mrs-after-parse)
            (funcall 'mrs::output-mrs-after-parse *parse-record*)))
      (progn
