@@ -64,6 +64,15 @@ int tsdb_parse(char *command, FILE *stream) {
 
 int tsdb_getchar(void) {
 
+  static BOOL newline = TRUE;
+
+  if(*tsdb.input == '#' && newline) {
+    for(tsdb.input++; *tsdb.input && *tsdb.input != '\n'; tsdb.input++);
+  } /* if */
+  newline = (!*tsdb.input 
+             || *tsdb.input == '\n' 
+             || *tsdb.input == '.' && !*(tsdb.input + 1)
+             ? TRUE : FALSE);
   return((*tsdb.input ? *tsdb.input++ : EOF));
 
 } /* tsdb_getchar */

@@ -408,6 +408,10 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
       else if(!strcmp(foo, "off")) {
         tsdb.status &= ~TSDB_IMPLICIT_COMMIT;
       } /* if */
+      else if(!strcmp(foo, "exit")) {
+        tsdb.status &= ~TSDB_IMPLICIT_COMMIT;
+        tsdb.status |= TSDB_COMMIT_ON_EXIT;
+      } /* if */
       else {
         fprintf(tsdb_error_stream, 
                 "set(): invalid value for `implicit-commit': "
@@ -1297,31 +1301,6 @@ int tsdb_do(char *file, char *redirection) {
   while(!(tsdb.status & TSDB_QUIT) 
         && !status 
         && fgets(&buffer[0], 4096, input) != NULL) {
-#ifdef MUELL
-    for(foo = &buffer[0]; *foo && isspace(*foo); foo++);
-    if(*foo) {
-      for(bar = &foo[strlen(foo) - 1];
-          bar >= foo && isspace(*bar);
-          *bar = 0, bar--);
-      if(command == NULL) {
-        command = strdup(foo);
-      } /* if */
-      else {
-        command
-          = (char *)realloc(command, strlen(command) + strlen(foo) + 2);
-        command = strcat(command, " ");
-        command = strcat(command, foo);
-      } /* else */
-      if(command != NULL && *command && command[strlen(command) - 1] == '.') {
-        status = tsdb_parse(command, input);
-        tsdb_free(command);
-        command = (char *)NULL;
-#ifdef DEBUG
-        n_commands++;
-#endif     
-      } /* if */
-    } /* if */
-#else
     if(command == NULL) {
       command = strdup(&buffer[0]);
     } /* if */
@@ -1348,7 +1327,6 @@ int tsdb_do(char *file, char *redirection) {
 #endif     
       } /* if */
     } /* if */
-#endif
   } /* while */
 
   if(command != NULL) {

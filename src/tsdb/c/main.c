@@ -314,7 +314,7 @@ int main(int argc, char **argv) {
   } /* else */
 
   if(!(tsdb.status & TSDB_READ_ONLY)) {
-    (void)tsdb_save_changes(FALSE);
+    (void)tsdb_save_changes(tsdb.status & TSDB_COMMIT_ON_EXIT ? TRUE : FALSE);
   } /* if */
 
 #ifdef DEBUG
@@ -506,7 +506,10 @@ void tsdb_parse_options(int argc, char **argv) {
           if(!strcmp(optarg, "on")) {
             tsdb.status |= TSDB_IMPLICIT_COMMIT;
           } /* if */
-          else {
+          else if(!strcmp(optarg, "exit")) {
+            tsdb.status &= ~TSDB_IMPLICIT_COMMIT;
+            tsdb.status |= TSDB_COMMIT_ON_EXIT;
+          } /* if */{
             tsdb.status &= ~TSDB_IMPLICIT_COMMIT;
           } /* else */
         } /* else */
@@ -720,9 +723,9 @@ void tsdb_usage() {
           "  `-history-size[={_0_ | 1 | ...}]' --- size of query storage;\n");
   fprintf(tsdb_error_stream,
           "  `-implicit-commit[={%s}]' --- "
-          "always commit (and save) changes;\n",
+          "always commit changes;\n",
           (TSDB_INITIAL_STATUS & TSDB_IMPLICIT_COMMIT 
-           ? "on | _off_" : "_on_ | off"));
+           ? "on | _off_ | exit" : "_on_ | off | exit"));
   fprintf(tsdb_error_stream,
           "  `-string-escape[={lisp | prolog | _off_}]' --- "
           "string output conventions;\n");
