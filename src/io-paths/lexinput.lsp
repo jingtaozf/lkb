@@ -132,8 +132,8 @@
   (setf *syntax-error* nil)
   (when (check-load-name *idiom-file*)
     (if (eql *lkb-system-version* :page)
-	(read-tdl-psort-file-aux *idiom-file* :idiom)
-      (read-psort-file-aux *idiom-file* :idiom))
+	(read-tdl-psort-file-aux *idiom-file* :idioms)
+      (read-psort-file-aux *idiom-file* :idioms))
     (format t "~%Idiom file reload complete")))
 
 (defun reload-root-file nil
