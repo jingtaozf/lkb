@@ -53,6 +53,7 @@
                             :unique nil :sort :i-id)))
          (all (loop
                   for item in items
+                  for length = (get-field+ :i-length item)
                   for output = (or (unless *tsdb-ignore-output-p*
                                      (find (get-field :i-id item)
                                            outputs
@@ -61,7 +62,7 @@
                                    (pairlis '(:o-ignore :o-wf :o-gc :o-edges)
                                             '("" -1 -1 -1)))
                   do (nconc item output)
-                  collect item)))
+                  when (> length 0) collect item)))
     (when results
       (loop
           for item in all

@@ -783,6 +783,8 @@ proc main {} {
     -label "Summarize" -menu .menu.trees.menu.summarize;
   .menu.trees.menu add separator;
   .menu.trees.menu add command \
+    -label "Train" -command {tsdb_trees train};
+  .menu.trees.menu add command \
     -label "Rank" -command {tsdb_trees rank};
   .menu.trees.menu add command \
     -label "Score" -command {tsdb_trees score};

@@ -2,15 +2,15 @@
 
 (in-package :tsdb)
 
-(defparameter *maxent-collapse-irules-p* t)
+(defparameter *maxent-collapse-irules-p* nil)
 
 (defparameter *maxent-use-preterminal-types-p* t)
 
-(defparameter *maxent-lexicalization-p* t)
+(defparameter *maxent-lexicalization-p* nil)
 
 (defparameter *maxent-active-edges-p* t)
 
-(defparameter *maxent-ngram-size* 3)
+(defparameter *maxent-ngram-size* 0)
 
 (defparameter *maxent-ngram-tag* :type)
 
@@ -140,7 +140,7 @@
             (setf (aref (mem-weights model) i) weight)
             (incf (mem-count model))))))
 
-(defun print-mem (model &key file stream (format :rpm))
+(defun print-mem (model &key (file "/dev/null") stream (format :rpm))
   (case format
     (:rpm
      (with-open-file (foo file :direction :output :if-exists :supersede)
@@ -150,27 +150,30 @@
            do 
              (print-context 
               context :stream stream :model model :format format))))
-    (t
-     (format 
-      stream 
-      ";;;~%;;; ~a~%;;; (~a@~a; ~a)~%;;;~%"
-      model (current-user) (current-host) (current-time :long :pretty))
-     (format stream "~%:begin :mem ~d.~%~%" (length (mem-contexts model)))
-     (loop
-         with *print-case* = :downcase
-         for key in *maxent-options*
-         when (boundp key) do
-           (format stream "~a := ~s.~%~%" key (symbol-value key)))
-     (format stream ":begin :features ~d.~%~%" (mem-count model))
-     (loop
-         with *print-case* = :downcase
-         with table = (mem-table model)
-         for i from 0
-         for feature = (code-to-symbol i table)
-         for weight across (mem-weights model)
-         while feature do
-           (format stream "[1 ~{~a~^ ~}] ~,10f~%" feature weight))
-     (format stream "~%:end :features.~%~%:end :mem.~%"))))
+    (:export
+     (with-open-file (foo file :direction :output :if-exists :supersede)
+       (let  ((stream (or stream foo)))
+         (format 
+          stream 
+          ";;;~%;;; ~a~%;;; (~a@~a; ~a)~%;;;~%"
+          model (current-user) (current-host) (current-time :long :pretty))
+         (format stream "~%:begin :mem ~d.~%~%" (length (mem-contexts model)))
+         (loop
+             with *print-case* = :downcase
+             for key in *maxent-options*
+             when (boundp key) do
+               (format stream "~a := ~s.~%~%" key (symbol-value key)))
+         (format stream ":begin :features ~d.~%~%" (mem-count model))
+         (loop
+             with *print-case* = :downcase
+             with *package* = (find-package lkb::*lkb-package*)
+             with table = (mem-table model)
+             for i from 0
+             for feature = (code-to-symbol i table)
+             for weight across (mem-weights model)
+             while feature do
+               (format stream "[~{~s~^ ~}] ~,10f~%" feature weight))
+         (format stream "~%:end :features.~%~%:end :mem.~%"))))))
 
 (defun estimate-mem (items &key (stream *tsdb-io*))
   #+:debug
@@ -256,7 +259,7 @@
      ((and (eq (lkb::edge-foo edge) model) (consp (lkb::edge-bar edge)))
       (lkb::edge-bar edge))
      ((null daughters)
-      (let* ((feature (list root (first (lkb::edge-leaves edge))))
+      (let* ((feature (list 1 root (first (lkb::edge-leaves edge))))
              (code (symbol-to-code feature table)))
         (setf (lkb::edge-head edge) root)
         (setf (lkb::edge-foo edge) model)
@@ -267,9 +270,12 @@
                         then (first (lkb::edge-children daughter))
                         while daughter
                         collect (edge-root daughter)))
-             (feature (nconc extra (list (first (lkb::edge-leaves edge)))))
+             (feature (nconc (list 1 root)
+                             extra 
+                             (list (first (lkb::edge-leaves edge)))))
              (code (symbol-to-code feature table)))
-        (setf (lkb::edge-head edge) feature)
+        (pprint feature)
+        (setf (lkb::edge-head edge) (first (last extra)))
         (setf (lkb::edge-foo edge) model)
         (setf (lkb::edge-bar edge) (list code))))
      (t
@@ -286,13 +292,16 @@
           (setf (lkb::edge-head edge) (lkb::edge-head (nth key daughters)))))
       (let* ((roots (loop
                         for edge in daughters
-                        collect (edge-root edge)))
+                        for root = (edge-root edge)
+                        for head = (lkb::edge-head edge)
+                        nconc (cons root (when *maxent-lexicalization-p*
+                                           (list head)))))
              (head (lkb::edge-head edge))
              (feature (cons root roots))
              (codes (if *maxent-lexicalization-p*
-                      (list (symbol-to-code (cons head feature) table)
-                            (symbol-to-code feature table))
-                      (list (symbol-to-code feature table)))))
+                      (list (symbol-to-code (cons 1 (cons head feature)) table)
+                            (symbol-to-code (cons 1 feature) table))
+                      (list (symbol-to-code (cons 1 feature) table)))))
         ;;
         ;; include (back-off, in a sense) features for partially instantiated
         ;; constituents (corresponding to active edges in the parser): for
@@ -307,12 +316,17 @@
               for foo = (ith-n rhs 1 i)
               for roots = (loop
                               for j in foo
-                              collect (edge-root (nth j daughters)))
+                              for root = (edge-root (nth j daughters))
+                              for head = (lkb::edge-head (nth j daughters))
+                              nconc (cons root (when *maxent-lexicalization-p*
+                                                 (list head))))
               for feature = (cons root roots)
               when *maxent-lexicalization-p* do
-                (push (symbol-to-code (cons head feature) table) codes)
+                (push
+                 (symbol-to-code (cons 2 (cons head feature)) table)
+                 codes)
               do
-                (push (symbol-to-code feature table) codes)))
+                (push (symbol-to-code (cons 2 feature) table) codes)))
         (setf (lkb::edge-foo edge) model)
         (setf (lkb::edge-bar edge) codes))))))
 
@@ -355,7 +369,7 @@
     (lkb::rule (lkb::rule-id (lkb::edge-rule edge)))
     (string (let ((instance (first (lkb::edge-lex-ids edge))))
               (if *maxent-use-preterminal-types-p*
-                  (type-of-lexical-entry instance)
+                (type-of-lexical-entry instance)
                 instance)))
     (t (error "edge-root(): unknown rule in edge ~a~%" edge))))
                 
@@ -412,3 +426,7 @@
              sum (mem-score-edge edge model))
          (mem-score-edge passive model))))
    (t -10)))
+
+
+
+

@@ -1033,7 +1033,25 @@ proc tsdb_trees {action} {
   }; # if
 
   set command "";
-  if {$action == "score"} {
+  if {$action == "train"} {
+    if {![input "output file:" "/tmp/" "" train]} {
+      set file $globals(input);
+      if {[file isdirectory $file] || ![file writable $file]} {
+        tsdb_beep;
+        status "target file `$file' not writable" 5;
+        after 5000;
+        return [tsdb_trees $action];
+      }; # if
+      if {[file exists $file] 
+          && [yes-or-no-p "overwrite existing `$file'"] != 1 } {
+        return [tsdb_trees $action];
+      }; # if
+      set command \
+        [format \
+         "(train \"%s\" \"%s\" :type %s)" \
+         $target $file $globals(tree,model)];
+    }; # if
+  } elseif {$action == "score"} {
     set command \
       [format \
        "(analyze-scores \"%s\" \"%s\" :scorep %s :spartanp %s \

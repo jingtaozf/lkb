@@ -1626,6 +1626,27 @@
                             (rest granks))))
           finally (return 0))))))
 
+(defun train (source file &key (condition *statistics-select-condition*)
+                               (type :mem) (verbose t) (stream t) 
+                               interrupt meter)
+  (declare (ignore interrupt meter))
+
+  (let* ((gc (install-gc-strategy 
+              nil :tenure *tsdb-tenure-p* :burst t :verbose verbose))
+         (condition (if (and condition (not (equal condition "")))
+                      (format nil "t-active >= 1 && (~a)" condition)
+                      "t-active >= 1"))
+         (items (analyze source 
+                         :thorough '(:derivation)
+                         :condition condition :gold source :readerp nil)))
+    (case type
+      (:mem
+       (let ((model (estimate-mem items)))
+         (when verbose
+           (format stream "train(): exporting ~a~%" model))
+         (print-mem model :file file :format :export))))
+    (restore-gc-strategy gc)))
+
 (defun rank-profile (source 
                      &optional (target source)
                      &key (condition *statistics-select-condition*)
@@ -1647,7 +1668,7 @@
       with cache = (create-cache target :verbose verbose :protocol cache)
       with condition = (if (and condition (not (equal condition "")))
                          (format nil "t-active >= 1 && (~a)" condition)
-                         condition)
+                         "t-active >= 1")
       with data = (analyze source 
                            :thorough '(:derivation)
                            :condition condition :gold source :readerp nil)
@@ -1672,7 +1693,7 @@
              "~&[~a] rank-profile:() iteration # ~d (~d against ~d)~%"
              (current-time :long :short) i (length test) (length train))
             (loop
-                with items =  (train-and-rank train test :type type)
+                with items = (train-and-rank train test :type type)
                 for item in items
                 for parse-id = (get-field :parse-id item)
                 for ranks = (get-field :ranks item)
