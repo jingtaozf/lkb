@@ -791,3 +791,8 @@
 
 
 (defun lex (str) (car (member str (extra-lexicons *lexicon*) :key #'name :test #'string=)))
+
+(defun recomp (x)
+  (compile-file x)
+  (load x))
+

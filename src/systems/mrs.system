@@ -180,12 +180,14 @@
        ((:file "translate")))           ; collection of crude MT functions
 
      #+:lkb
-     (:module "semi"
+     (:module "semi"                    ;;; the semantic interface
        :source-pathname "mrs"
        :binary-pathname "mrs"
        :source-extension "lsp"
        :components
-       ((:file "semi")))           ; semi
+       ((:file "semi")
+	#+:psql
+	(:file "semi-psql")))
 
      #+:nil
       (:module "extensions"

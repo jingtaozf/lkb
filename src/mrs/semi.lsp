@@ -13,6 +13,7 @@
 (defconstant *semi-i-type* "i")
 (defconstant *semi-e-type* "e")
 (defconstant *semi-x-type* "x")
+
 (defstruct semi
   signature
   (roles (make-hash-table))
@@ -21,8 +22,7 @@
   (lexicon (make-hash-table))
   (pred-names (make-hash-table :test #'equal))
   (lex-preds (make-hash-table :test #'equal))
-  (pos-preds (make-hash-table :test #'equal))
-  )
+  (pos-preds (make-hash-table :test #'equal)))
 
 (defclass pred-name ()
   ((key :accessor key :initarg :key)
@@ -435,21 +435,6 @@
   (push row (gethash (car row) sdbt))
   sdbt)
 
-#+:psql
-(defun load-sdbt (sdbt dbname)
-  (clear sdbt)
-  (format t "~%loading table ~a from ~a..." (sdbt-name sdbt) dbname)
-  (let ((sql-query (lkb::fn-get-raw-records 
-		    dbname 
-		    ''lkb::test 
-		    (format nil "SELECT * FROM semi_~a"
-			    (sdbt-name sdbt)))))
-    (mapc #'(lambda (row) (sdbt-rows-hash 
-			   (mapcar #'str-to-mixed2 row)
-			   (sdbt-rows sdbt)))
-	  (lkb::records sql-query))
-    (setf (sdbt-last sdbt) nil)))
-
 (defun print-sdbt (sdbt &key (stream t))
   (format t " ~a" (sdbt-rows sdbt))
   (maphash #'(lambda (key rows)
@@ -465,8 +450,7 @@
 	   (make-sdbt :name 'frame :last 0)
 	   (make-sdbt :name 'var :last 0)
 	   (make-sdbt :name 'extra :last 0)))
-  (leaf-hash (make-hash-table :test #'equal))
-  )
+  (leaf-hash (make-hash-table :test #'equal)))
 
 (defmethod clear ((sdb sdb))
   (with-slots (tables leaf-hash) sdb
@@ -503,14 +487,6 @@
 	   (print-sdbt x :stream stream)))
      (sdb-tables sdb))))
     
-#+:psql
-(defun load-sdb (sdb dbname)
-  (mapcar #'(lambda (x)
-	      (load-sdbt x dbname))
-	  (sdb-tables sdb)))
-
-;; for now...
-;(defvar *sdb* (make-sdb))
 (defvar *sdb* nil)
 
 (defun print-semi-db (semi)
@@ -522,161 +498,6 @@
       finally
 	(setf *sdb* sdb)
 	(print-sdb sdb)))
-
-#+:psql
-(defmethod dump-semi-to-psql ((semi semi) &key (psql-lexicon lkb::*psql-lexicon*))
-  (populate-semi semi)
-  (print-semi-db semi)
-  (excl:run-shell-command 
-   (format nil "cd psql; echo '\\i semi.sql' | psql ~a" (lkb::dbname psql-lexicon)))
-  semi
-  )
-
-#+:psql
-(defmethod populate-semi-from-psql ((semi semi) &key (psql-lexicon lkb::*psql-lexicon*))
-  (close-semi semi)
-  (let ((sdb (make-sdb)))
-    (load-sdb sdb psql-lexicon)
-    (populate-semantic-table sdb)
-    (populate-semi semi))
-  semi)
-
-#+:psql
-(defun prepare-cached-lexicon-index (&key (psql-lexicon lkb::*psql-lexicon*))
-  (setf *sdb* (make-sdb))
-  (load-sdb *sdb* psql-lexicon)
-  (populate-relation-index *sdb*)
-  (make-semi))
-
-#+:psql
-(defun populate-relation-index (sdb)
-  (let* ((pred-t (sdb-table sdb 'pred))
-	 (pred-r (sdbt-rows pred-t)))
-    (clrhash *relation-index*)
-    (loop
-	for rows being each hash-value in pred-r
-	do
-	  (loop
-	    for row in rows
-	      for id = (first row)
-	      for rel = (second row)
-	      do
-		(index-simple-semantics-record rel id)
-		;(setf (gethash rel *relation-index*) t)
-		)))
-    *relation-index*
-    )
-
-(defmethod populate-semantic-table ((sdb sdb))
-  (let* ((pred-t (sdb-table sdb 'pred))
-	 (pred-r (sdbt-rows pred-t)))
-    (loop
-	for lex-id being each hash-key in pred-r
-	for record = (load-lex-id-db lex-id sdb)
-	do
-	  (add-semantics-record2 lex-id record)
-	  ))
-  (setf *sdb* nil)
-  *semantic-table*)
-
-;;; -> lex-id
-;;; semantics_record.id = lex-id
-;;;                 .relations = frame-list
-(defun load-lex-id-db (lex-id sdb)
-  (let* ((pred-t (sdb-table sdb 'pred))
-	 (pred-r (sdbt-rows pred-t))
-	 (rows (gethash lex-id pred-r)))
-    (make-semantics-record :id lex-id
-			   :relations (load-relations-db rows sdb)))) 
-
-;;; -> (lex-id pred frame-id)*
-;;; rel-base*.pred = pred
-;;;          .flist = role-list
-(defun load-relations-db (rows sdb)
-  (loop
-      with leaf-hash = (sdb-leaf-hash sdb)
-      for row in rows
-      for pred = (let* ((pred-raw (second row))
-			(pred-hash (gethash pred-raw leaf-hash)))
-		   (or
-		    pred-hash
-		    (setf (gethash pred-raw leaf-hash) pred-raw)))
-      for frame-id = (third row)
-      collect
-	(make-rel :pred pred
-		  :flist (load-fvpairs-db frame-id sdb))))
-
-;;; -> frame-id
-;;; (frame-id slot str symb var-id)
-;;; fvpair*.feature = slot
-;;;        .value   = slot-val
-(defun load-fvpairs-db (frame-id sdb)
-  (loop
-      with frame-t = (sdb-table sdb 'frame)
-      with frame-r = (sdbt-rows frame-t)
-      with rows = (gethash frame-id frame-r)
-      with leaf-hash = (sdb-leaf-hash sdb)
-      for row in rows
-      for slot = (second row)
-      for str = (let* ((str-raw (third row))
-		       (str-hash (gethash str-raw leaf-hash)))
-		   (or
-		    str-hash
-		    (setf (gethash  str-raw leaf-hash) str-raw)))
-      for symb = (fourth row)
-      for var-id = (fifth row)
-      for type = (let* ((type-raw (sixth row))
-		       (type-hash (gethash type-raw leaf-hash)))
-		   (or
-		    type-hash
-		    (setf (gethash type-raw leaf-hash) type-raw)))
-      for slot-val = (cond
-		      ((and str (null symb) (null var-id))
-		       str)
-		      ((and (null str) symb (null var-id))
-		       symb)
-		      ((and (null str) (null symb) var-id)
-		       (make-var :type type
-				 :extra (load-extra-list-db var-id sdb)
-				 :id :dummy))
-		      (t
-		       (error "(str,symb,var-id)=(~a,~a,~a)"
-			      str symb var-id)))
-      collect
-	(make-fvpair :feature slot
-		     :value slot-val)))
-
-;;; -> var-id
-;;; (var-id extra-id)
-;;; extrapair*.feature = feature
-;;;           .value = value  
-(defun load-extra-list-db (var-id sdb)
-  (loop 
-      with var-t = (sdb-table sdb 'var)
-      with var-r = (sdbt-rows var-t)
-      with rows = (gethash var-id var-r)
-      for row in rows
-      for extra-id = (second row)
-      collect
-	(load-extra-db extra-id sdb)))
-
-;;; -> extra-id
-;;; (extra-id feature value)
-;;; extrapair.feature
-;;;          .value
-(defun load-extra-db (extra-id sdb)
-  (let* ((extra-t (sdb-table sdb 'extra))
-	 (extra-r (sdbt-rows extra-t))
-	 (rows (gethash extra-id extra-r))
-	 (row (car rows))
-	 (feature (second row))
-	 (value (third row)))
-    (unless (= 1 (length rows))
-      (error "~a rows for extra-id=~a" 
-	     (length rows) extra-id))
-    (make-extrapair :feature feature
-		    :value value)))
-
 
 (defun process-record-db (record sdb)
   (let* ((pred-t (sdb-table sdb 'pred))
@@ -841,23 +662,6 @@
   (tsv-escape
    (2-db-str val)))
    
-;   (typecase val
-;     (null
-;      "\\N")
-;     (symbol
-;      (let ((val-str (string-downcase (string val))))
-;	(if (and (> (length val-str) 0)
-;		 (eq (aref val-str 0) #\"))
-;	    (format nil "\\~a" val-str)
-;	  val-str)))
-;     (string
-;      (format nil "\"~a\"" val))
-;     (number
-;      (format nil "~a" val))
-;     (t
-;      (error "unhandled type: ~a" val)))
-;   ))
-
 (defun 2-db-str (val)
   (typecase val
     (null
@@ -902,152 +706,6 @@
      (t
       (lkb::str-2-symb val-str)))))
 
-
-#+:psql
-(defun rc (&optional (file "mrs/semi"))
-	   (lkb::recomp file))
-
-;;; -> lex-id
-;;; semantics_record.id = lex-id
-;;;                 .relations = frame-list
-#+:psql
-(defun load-lex-id-psql (lex-id db)
-  (let* (
-	 ;(pred-t (sdb-table sdb 'pred))
-	 ;(pred-r (sdbt-rows pred-t))
-	 (rows (getrows lex-id 'pred db)))
-    (make-semantics-record :id lex-id
-			   :relations (load-relations-psql rows db)))) 
-
-;;; -> (lex-id pred frame-id)*
-;;; rel-base*.pred = pred
-;;;          .flist = role-list
-#+:psql
-(defun load-relations-psql (rows db)
-  (loop
-      with leaf-hash = (sdb-leaf-hash *sdb*)
-      for row in rows
-      for pred = (let* ((pred-raw (second row))
-			(pred-hash (gethash pred-raw leaf-hash)))
-		   (or
-		    pred-hash
-		    (setf (gethash pred-raw leaf-hash) pred-raw)))
-      for frame-id = (third row)
-      collect
-	(make-rel :pred pred
-		  :flist (load-fvpairs-psql frame-id db))))
-
-;;; -> frame-id
-;;; (frame-id slot str symb var-id)
-;;; fvpair*.feature = slot
-;;;        .value   = slot-val
-#+:psql
-(defun load-fvpairs-psql (frame-id db)
-  (loop
-      ;with frame-t = (sdb-table sdb 'frame)
-      ;with frame-r = (sdbt-rows frame-t)
-      with rows = (getrows frame-id 'frame db)
-      with leaf-hash = (sdb-leaf-hash *sdb*)
-      for row in rows
-      for slot = (second row)
-      for str = (let* ((str-raw (third row))
-		       (str-hash (gethash str-raw leaf-hash)))
-		   (or
-		    str-hash
-		    (setf (gethash  str-raw leaf-hash) str-raw)))
-      for symb = (fourth row)
-      for var-id = (fifth row)
-      for type = (let* ((type-raw (sixth row))
-		       (type-hash (gethash type-raw leaf-hash)))
-		   (or
-		    type-hash
-		    (setf (gethash type-raw leaf-hash) type-raw)))
-      for slot-val = (cond
-		      ((and str (null symb) (null var-id))
-		       str)
-		      ((and (null str) symb (null var-id))
-		       symb)
-		      ((and (null str) (null symb) var-id)
-		       (make-var :type type
-				 :extra (load-extra-list-psql var-id db)
-				 :id :dummy))
-		      (t
-		       (error "(str,symb,var-id)=(~a,~a,~a)"
-			      str symb var-id)))
-      collect
-	(make-fvpair :feature slot
-		     :value slot-val)))
-
-;;; -> var-id
-;;; (var-id extra-id)
-;;; extrapair*.feature = feature
-;;;           .value = value  
-#+:psql
-(defun load-extra-list-psql (var-id db)
-  (loop 
-      ;with var-t = (sdb-table sdb 'var)
-      ;with var-r = (sdbt-rows var-t)
-      with rows = (getrows var-id 'var db)
-      for row in rows
-      for extra-id = (second row)
-      collect
-	(load-extra-psql extra-id db)))
-
-;;; -> extra-id
-;;; (extra-id feature value)
-;;; extrapair.feature
-;;;          .value
-#+:psql
-(defun load-extra-psql (extra-id db)
-  (let* (
-	 ;(extra-t (sdb-table sdb 'extra))
-	 ;(extra-r (sdbt-rows extra-t))
-	 (rows (getrows extra-id 'extra db))
-	 (row (car rows))
-	 (feature (second row))
-	 (value (third row)))
-    (unless (= 1 (length rows))
-      (error "~a rows for extra-id=~a" 
-	     (length rows) extra-id))
-    (make-extrapair :feature feature
-		    :value value)))
-
-#+:psql
-(defun get-raw-rows (db table key val)
-  (let ((rows (lkb::records
-		  (lkb::fn-get-raw-records db 
-					   ''lkb::get-semi-general 
-					   table key
-					   (2-db-str val)))))
-    (loop 
-	for row in rows
-	collect
-	  (mapcar #'str-to-mixed2 row))
-    ;rows
-    ))
-  
-#+:psql
-(defun getrows (val table db)
-  (let (
-	(raw-rows
-	 (case table
-	   ('pred
-	    (get-raw-rows db "semi_pred" "lex_id" val))
-	   ('frame
-	    (get-raw-rows db "semi_frame" "frame_id" val))
-	   ('var
-	    (get-raw-rows db "semi_var" "var_id" val))
-	   ('extra
-	    (get-raw-rows db "semi_extra" "extra_id" val))
-	   (t
-	    (error "unhandled table name")))))
-    raw-rows))
-         
-;    (mapc #'(lambda (row) (sdbt-rows-hash 
-;;			   (mapcar #'str-to-mixed2 row)
-;			   (sdbt-rows sdbt)))
-;	  (lkb::records sql-query))
-
 (defun str-2-symb (str)
   (unless (stringp str)
     (error "string exected"))
@@ -1082,17 +740,6 @@
       collect (subseq string i j)
       while j))
 
-;(defun get-pred-name (pred)
-;  (let* ((pred-fields (if (stringp pred)
-;			  (get-lex-pred-fields pred))))
-;    (make-instance 'pred-name
-;      :key pred
-;      :name (if (stringp pred) pred (string-downcase (string pred)))
-;      :string-p (stringp pred)
-;      :lex (nth 0 pred-fields)
-;      :pos (nth 1 pred-fields)
-;      :id (nth 2 pred-fields))))
-
 (defun get-pred-name (pred)
   (let* ((pred-str (if (stringp pred) pred (string-downcase (string pred))))
 	 (pred-fields (get-lex-pred-fields pred-str)))
@@ -1103,16 +750,6 @@
       :lex (nth 0 pred-fields)
       :pos (nth 1 pred-fields)
       :id (nth 2 pred-fields))))
-
-(defun info-from-semi-by-pred (pred &key (semi *semi*))
-  (let* ((pred-name (gethash pred (semi-pred-names semi)))
-	 (predicate (gethash pred (semi-predicates semi)))
-	 
-	 (args (mapcar
-		#'rel-base-flist
-		predicate)))
-    (cons (string-p pred-name)
-	  args)))
 
 (defun lookup-preds (lex &key pos id (semi *semi*))
   (mapcar #'key
@@ -1128,15 +765,67 @@
 			      id)))
 	      collect pred-name)))
 
+(defun info-from-semi-by-pred (pred &key (semi *semi*))
+   "depreciated: see more-info-from-semi-by-pred"
+  (let* ((pred-name (gethash pred (semi-pred-names semi)))
+	 (predicate (gethash pred (semi-predicates semi)))
+	 
+	 (args (mapcar
+		#'rel-base-flist
+		predicate)))
+    (cons (string-p pred-name)
+	  args)))
+
 (defun get-info-from-semi (lex &key pos id (semi *semi*))
+  "depreciated: see more-info-from-semi"
   (mapcar #'info-from-semi-by-pred (lookup-preds lex :pos pos :id id :semi semi)))
 
+(defun more-info-from-semi-by-pred (pred &key (semi *semi*))
+  "return stringness and arg-structure"
+  (let* ((pred-name (gethash pred (semi-pred-names semi)))
+	 (predicate (gethash pred (semi-predicates semi)))
+	 
+	 (args (mapcar
+		#'rel-base-flist
+		predicate)))
+    (list
+     (cons :stringness (string-p pred-name))
+     (cons :args args))))
+
+(defun get-more-info-from-semi (lex &key pos id (semi *semi*))
+  "for each pred matching lex pos? id? return info on pred"
+  (mapcar #'(lambda (x) 
+	      (list
+	       (cons :pred x)
+	       (cons :info (more-info-from-semi-by-pred x))))
+	  (lookup-preds lex :pos pos :id id :semi semi)))
+
 ;;;
-;;;
+;;; extract info from comps list
 ;;;
 
+(defparameter *comps-path* 
+  `(,(vsym "SYNSEM") ,(vsym "LOCAL") ,(vsym "CAT") ,(vsym "VAL") ,(vsym "COMPS"))
+  "Following this path into a sign gets you to the COMPS list")
+
+(defparameter *comps-elt-key-path* 
+  `(,(vsym "LOCAL") ,(vsym "CAT") ,(vsym "HEAD") ,(vsym "KEYS") ,(vsym "KEY"))
+  "Following this path into an element on the COMPS list gets you the KEY")
+
+(defparameter *comps-elt-index-path* 
+  `(,(vsym "LOCAL") ,(vsym "CONT") ,(vsym "HOOK") ,(vsym "INDEX"))
+  "Following this path into an element on the COMPS list gets you the INDEX")
+
+(defparameter *comps-elt-opt-path* 
+  `(,(vsym "OPT"))
+  "Following this path into an element on the COMPS list gets you the OPT value")
+
+(defparameter *semantics-to-rels-path* 
+  `(,(vsym "RELS"))
+  "Following this path from the start of the MRS structure gets you to the RELS list")
+
 (defun get-dag-by-id (lex-id)
-  (let* ((entry (lkb::get-lex-entry-from-id lex-id :cache nil))
+  (let* ((entry (lkb::get-lex-entry-from-id lex-id))
 	 (dag (and
 	       entry
 	       (tdfs-indef (lex-entry-full-fs entry)))))
@@ -1146,8 +835,7 @@
   (get-comps-list (get-dag-by-id lex-id)))
 
 (defun get-comps-list (dag)
-  (let* ((comps-path 
-	  '(lkb::synsem lkb::local lkb::cat lkb::val lkb::comps))
+  (let* ((comps-path *comps-path*)
 	 (comps-dag (path-value dag 
 				comps-path)))
     (lkb::dag-list-2-list comps-dag)))
@@ -1157,39 +845,42 @@
 
 (defun get-rels-list (dag)
   (let* ((rels-path 
-	  (append mrs::*initial-semantics-path* '(lkb::rels)))
+	  (append *initial-semantics-path* 
+		  *semantics-to-rels-path*))
 	 (rels-dag (path-value dag 
 			       rels-path)))
     (lkb::dag-diff-list-2-list rels-dag)))
 
-(defun extract-comps-info-by-id (lex-id)
-  (let* ((comps-list (get-comps-list-by-id lex-id))
-	 (rels-list (get-rels-list-by-id lex-id)))
+(defun extract-comps-info (dag)
+  (let* ((comps-list (get-comps-list dag))
+	 (rels-list (get-rels-list dag)))
     (mapcar
      #'(lambda (x) (extract-comps-elt-info x rels-list))
      comps-list)))
 
+(defun extract-comps-info-by-id (lex-id)
+  (extract-comps-info (get-dag-by-id lex-id)))
+
 (defun extract-comps-elt-info (comps-elt rels-list)
   (let* ((comp-rel (lkb::dag-type 
 	       (path-value comps-elt
-			   '(lkb::local lkb::cat lkb::head lkb::keys lkb::key))))
+			   *comps-elt-key-path*)))
 	 (index (path-value comps-elt
-			    '(lkb::local lkb::cont lkb::hook lkb::index)))
+			    *comps-elt-index-path*))
 	 (opt (lkb::dag-type (path-value comps-elt
-					 '(lkb::opt))))
+					 *comps-elt-opt-path*)))
 	 (coslot
 	  (loop
 	      for rel in rels-list
-	      for rel-pred = (path-value rel *rel-name-path*)
-	      do
-		(format t "~%PRED=~a" rel-pred)
+	      for rel-pred = (lkb::dag-type
+			      (path-value rel *rel-name-path*))
+	      append
 		(loop
 		    for arc in (dag-arcs rel)
 		    for feat = (car arc)
 		    for val = (cdr arc)
 		    unless (ignored-sem-arc feat)
-		    if (eq (and (describe feat) (describe val) (print val)) 
-			   (and (describe index) (print index)))
+		    if (eq val index)
 		    collect
 		      (cons rel-pred feat)
 		      ))))
@@ -1202,3 +893,11 @@
     (or (member feature *ignored-sem-features*)
      (eql feature (car *rel-handel-path*))
      (eql feature (car *rel-name-path*))))
+
+;;
+;; 
+;;
+
+(defun rc (&optional (file "mrs/semi"))
+	   (lkb::recomp file))
+

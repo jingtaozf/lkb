@@ -289,10 +289,6 @@
 (defun un-keyword (keyword-symb)
   (str-2-symb (symb-2-str keyword-symb)))
 
-(defun recomp (x)
-  (compile-file x)
-  (load x))
-
 (defun split-on-char (string &optional (char #\Space))
   (loop for i = 0 then (1+ j)
       as j = (position char string :start i)
