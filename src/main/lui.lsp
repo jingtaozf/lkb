@@ -46,10 +46,13 @@
   (lui-shutdown)
   (let (foo)
     (multiple-value-setq (%lui-stream% foo %lui-pid%)
-      #-:openmcl
+      #-(or :openmcl :clisp)
       (run-process *lui-application*
                    :wait nil
-                   :output :stream :input :stream :error-output nil)
+                   :output :stream :input :stream 
+                   #-:clisp :error-output #-:clisp nil)
+      #+:clisp
+      (ext:make-pipe-io-stream *lui-application* :buffered nil)
       #+:openmcl
       (let ((process (run-program "yzlui" nil :wait nil :input :stream
                                   :output :stream)))
@@ -72,8 +75,14 @@
      (first *list-head*) %lui-eoc%
      (first *list-tail*) %lui-eoc%
      %lui-eoc%)
-     (setf %lui-process%
-      (mp:run-function '(:name "LUI") #'lsp-loop nil %lui-stream%))))
+    (force-output %lui-stream%)
+    #-:clisp
+    (setf %lui-process%
+      (mp:run-function '(:name "LUI") #'lsp-loop nil %lui-stream%))
+    #+:clisp
+    (lsp-loop nil %lui-stream%)
+    #+:clisp
+    (lui-shutdown)))
 
 (defun lui-shutdown ()
 
@@ -87,14 +96,18 @@
   (when %lui-pid%
     (ignore-errors
      (run-process "kill -HUP ~d" %lui-pid% 
-                  :wait t :output "/dev/null" :error-output "/dev/null")
+                  :wait t :output "/dev/null" 
+                  #-:clisp :error-output #-:clisp "/dev/null")
      (run-process "kill -TERM ~d" %lui-pid% 
-                  :wait t :output "/dev/null" :error-output "/dev/null")
+                  :wait t :output "/dev/null" 
+                  #-:clisp :error-output #-:clisp "/dev/null")
      (run-process "kill -QUIT ~d" %lui-pid% 
-                  :wait t :output "/dev/null" :error-output "/dev/null"))
+                  :wait t :output "/dev/null" 
+                  #-:clisp :error-output #-:clisp "/dev/null"))
     #+:allegro
     (sys:os-wait nil %lui-pid%)
     (setf %lui-pid% nil))
+  #-:clisp
   (when %lui-process%
     (let ((process %lui-process%))
       (setf %lui-process% nil)

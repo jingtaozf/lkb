@@ -50,6 +50,7 @@
   (when (and *generator-server* forkp) (stop-generator-server))
   (if forkp
     (with-output-to-top ()
+      #-:clisp
       (setf *generator-server*
         (mp:run-function "generator server" #'start-generator-server nil)))
     (translate :serverp t)))
@@ -58,6 +59,7 @@
   (when *generator-server*
     (let ((process *generator-server*))
       (setf *generator-server* nil)
+      #-:clisp
       (ignore-errors
        (mp:process-kill process)))))
 

@@ -7,7 +7,7 @@
 
 ;;; parse output functions which are not dialect specific
 
-#-tty
+#-:tty
 (defun show-parse (&optional edges title)
   (let ((edges (or edges *parse-record*)))
     (if edges
@@ -27,7 +27,7 @@
         (format t "~%No parses found")))))
 
 
-#-tty
+#-:tty
 (defun show-parse-edge nil
   (let ((possible-edge-name
          (with-package (:lkb)

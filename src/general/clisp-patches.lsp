@@ -26,7 +26,7 @@
 
 (defvar %binary-dir-name% 
   (or
-   #+(and :pc386 :unix) ".lfas"
+   #+(and :pc386 :linux) ".lfas"
    #+(and :pc386 (not :unix)) ".wfas"
    ".cfas"))
 
@@ -43,3 +43,7 @@
   (error "~&loadup: unable to determine system type; see file ~
           `clisp-patches.lisp'.~%"))
 
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (export 'run-process)
+  (setf (symbol-function 'run-process) 
+    (symbol-function 'ext:run-shell-command)))

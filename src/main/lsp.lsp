@@ -60,6 +60,7 @@
   id socket stream process
   (display #+:clim clim:*default-server-path* #-:clim nil))
 
+#-:clisp
 (defun lsp-initialize ()
   (lsp-shutdown)
   (setf %lsp-socket%
@@ -68,6 +69,7 @@
   (setf %lsp-attic% (make-array 512))
   %lsp-socket%)
 
+#-:clisp
 (defun lsp-shutdown ()
   (loop
       for client in %lsp-clients%
@@ -84,6 +86,7 @@
     (ignore-errors (close %lsp-socket%)))
   (setf %lsp-socket% nil))
 
+#-:clisp
 (defun lsp-shutdown-client (client)
   (cond
    ((numberp client)
@@ -103,6 +106,7 @@
         (ignore-errors (force-output (client-stream client))
         (ignore-errors (close (client-stream client)))))))))
 
+#-:clisp 
 (defun lsp-server (&key wait)
   (if wait
     (unwind-protect
@@ -147,6 +151,7 @@
                      "[~a] lsp-loop(): premature end of file ~
                       (read ~a characters)~%" 
                      id n)
+                    #-:clisp
                     (lsp-shutdown-client id)
                     (return)
                   when (= n size) do
@@ -248,6 +253,11 @@
                t
                "[~d] lsp-process-event(): new DISPLAY is `~a'.~%"
                id (or (third (client-display client)) "local")))))
+         (grammar
+          (let ((script (pop command)))
+            (format t "grammar(): `~a'~%" script)
+            (when (probe-file script)
+              (read-script-file-aux script))))
          (parse
           (let* ((input (pop command))
                  (set (let ((foo (pop command))) 

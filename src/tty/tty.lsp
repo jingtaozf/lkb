@@ -165,9 +165,21 @@
 ;;;                        :value #'dump-lkb)
 
 
+;;;
+;;; _fix_me_
+;;; no good need to have `-tty' version of this (and others); unify things one
+;;; day, so that these functions dispatch appropriately.       (8-jun-03; oe)
+;;;
 (defun display-fs-tty (fs)
-   (display-dag fs 'simple))
+  (if #+:lui (lui-status-p :avm) #-:lui nil
+    #+:lui (lui-display-fs fs nil) 
+    (display-dag fs 'simple)))
 
+#+:lui
+(defun display-fs (fs title &optional id)
+  (if #+:lui (lui-status-p :avm) #-:lui nil
+    #+:lui (lui-display-fs fs title id) #-:lui nil
+    (display-fs-tty fs)))
 
 (defun display-fs-and-paths-tty (fs paths)
   (display-fs-tty fs)
@@ -206,7 +218,7 @@
   (let ((edges (or edges *parse-record*)))
     (if edges
       (if #+:lui (lui-status-p :tree) #-:lui nil
-        #+:lui (lui-show-parses edges *sentence*) #-:lui
+        #+:lui (lui-show-parses edges *sentence*) #-:lui nil
         (loop 
             for edge in edges
             do
