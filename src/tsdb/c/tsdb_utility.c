@@ -1410,6 +1410,21 @@ BOOL tsdb_initialize() {
     return(FALSE);
   } /* if */
 
+  foo = (char *)malloc(MAXNAMLEN + 1);
+  for(i = 0; tsdb.relations[i] != NULL; i++) {
+    foo = strcpy(foo, tsdb.data_path);
+    foo = strcat(foo, tsdb.relations[i]->name);
+    if(access(foo, R_OK)) {
+      free(foo);
+      fprintf(tsdb_error_stream,
+              "initialize(): unable to locate data file for relation `%s'.\n",
+              tsdb.relations[i]->name);
+      fflush(tsdb_error_stream);
+      return(FALSE);
+    } /* if */
+  } /* for */
+  free(foo);
+
 #ifdef DEBUG
   if(tsdb.relations != NULL) {
     for(i = 0; tsdb.relations[i] != NULL; i++) {
