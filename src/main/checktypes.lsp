@@ -946,7 +946,9 @@
                         (if res
                             (setf (type-constraint type-entry) res)
                           (format t "~%Warning: cycle in well-formed constraint for ~A" type-name)))
-                    (format t "~%Warning: cannot make constraint for ~A well-formed" type-name))
+                    nil)
+                    ;; (format t "~%Warning: cannot make constraint for ~A well-formed" type-name))
+                    ;; warning msg is excessive
                 (invalidate-marks)
                 )))
           (setf (type-constraint type-entry)
