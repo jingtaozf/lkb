@@ -395,8 +395,7 @@
     (pop-up-menu
      `(("Output TeX" :value tex)
        ("Show source" :value source 
-		      :active ,(source-available-p name))
-       ("Store fs" :value store))
+		      :active ,(source-available-p name)))
      (tex (output-fs-in-tex fs))
      (source (edit-source name))
      (store (store-as-psort fs)))))

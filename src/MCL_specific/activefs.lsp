@@ -547,10 +547,10 @@
      :menu-item-title "Output TeX..."
      :menu-item-action 
      #'(lambda () (eval-enqueue `(output-fs-in-tex ,fs-record))))
-   (make-instance 'menu-item
-     :menu-item-title "Store fs..."
-     :menu-item-action 
-     #'(lambda () (eval-enqueue `(store-as-psort ,fs-record))))
+;;;   (make-instance 'menu-item
+;;;     :menu-item-title "Store fs..."
+;;;     :menu-item-action 
+;;;     #'(lambda () (eval-enqueue `(store-as-psort ,fs-record))))
 ;;;   (make-instance 'menu-item
 ;;;     :menu-item-title "LDB entry"
 ;;;     :menu-item-action 

@@ -418,12 +418,7 @@
                     :value 
                     #'(lambda ()
                           (edit-source name)) 
-		        :available-p (source-available-p name))
-                  (make-instance 'cg:menu-item :name "Store fs"
-                     :available-p t
-                     :value 
-                     #'(lambda ()
-                          (store-as-psort fs-record)))
+		        :available-p (source-available-p name)))
                   )                  
                'cg:pop-up-menu (lkb-parent-stream)
                :selection-function #'lkb-funcall-menu-item)))
