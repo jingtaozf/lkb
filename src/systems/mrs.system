@@ -77,7 +77,8 @@
                                         ; entries etc on semantics
        (:file "lexlookup")              ; LKB specific - retrieving
        (:file "genpredict")))           ; LKB specific - null semantics
-
+     
+     #+:nil
      (:module "idioms"
       :source-pathname "mrs"
       :binary-pathname "mrs"
@@ -103,6 +104,7 @@
        (:file "nf-to-fol")
        (:file "fol-to-mrs")))
 
+     #+:nil
      (:module "rmrs"
       :source-pathname "rmrs"
       :binary-pathname "rmrs"
