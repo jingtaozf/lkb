@@ -47,6 +47,10 @@
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
 #endif
 
+#ifndef TSDB_DIRECTORY_DELIMITER
+#  define TSDB_DIRECTORY_DELIMITER "/"
+#endif
+
 #ifndef TSDB_HOME
 #  define TSDB_HOME "/home/cl-home/fettig/work/tsdb/"
 #endif
@@ -59,8 +63,16 @@
 #  define TSDB_DATA_PATH "lib/"
 #endif
 
-#ifndef TSDB_LAST_RESULT
-#  define TSDB_LAST_RESULT "res"
+#ifndef TSDB_RESULT_PATH
+#  define TSDB_RESULT_PATH "/tmp/"
+#endif
+
+#ifndef TSDB_RESULT_PREFIX
+#  define TSDB_RESULT_PREFIX "tsdb.query."
+#endif
+
+#ifndef TSDB_MAX_RESULTS
+#  define TSDB_MAX_RESULTS 20
 #endif
 
 #ifndef TSDB_TEMPORARY_FILE
@@ -75,7 +87,7 @@
 #  define TSDB_FS '@'
 #endif
 
-#ifndef TSDB_BACKUP_CHAR
+#ifndef TSDB_BACKUP_SUFFIX
 #  define TSDB_BACKUP_SUFFIX "~"
 #endif
 
@@ -150,7 +162,9 @@ typedef struct tsdb_selection {
   extern char *tsdb_home;
   extern char *tsdb_relations_file;
   extern char *tsdb_data_path;
-  extern char *tsdb_last_result;
+  extern char *tsdb_result_path;
+  extern char *tsdb_result_prefix;
+  extern int tsdb_max_results;
   extern char *tsdb_pager;
 
   extern char *tsdb_input;
@@ -164,6 +178,7 @@ typedef struct tsdb_selection {
 
 int tsdb_parse(char *);
 int tsdb_getchar(void);
+BOOL tsdb_verify_selection(Tsdb_selection *);
 void tsdb_debug_join_path(Tsdb_value **, Tsdb_value**);
 void tsdb_debug_simple_join(Tsdb_value **, Tsdb_value**);
 char *tsdb_pseudo_user();

@@ -24,7 +24,9 @@ int really_verbose_mode = FALSE;
 char *tsdb_home;
 char *tsdb_relations_file;
 char *tsdb_data_path;
-char *tsdb_last_result;
+char *tsdb_result_path;
+char *tsdb_result_prefix;
+BYTE tsdb_max_results = TSDB_MAX_RESULTS;
 char *tsdb_input;
 char *tsdb_pager;
 
