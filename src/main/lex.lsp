@@ -88,7 +88,7 @@
 
 (defgeneric store-psort (lexicon id entry &optional orth))
 
-(defgeneric read-psort (lexicon id &key cache recurse))
+(defgeneric read-psort (lexicon id &key cache recurse new-instance))
 
 (defgeneric unexpand-psort (lexicon id))
 
@@ -534,12 +534,12 @@
 
 
 ;;; todo: cache
-(defmethod read-psort :around ((lexicon lex-database) id &key (cache t) (recurse t))
+(defmethod read-psort :around ((lexicon lex-database) id &key (cache t) (recurse t) (new-instance nil))
   (cond ((and (next-method-p) 
 	      (call-next-method)))
 	(recurse 
 	 (some #'(lambda (lex) 
-		   (read-psort lex id :cache cache))
+		   (read-psort lex id :cache cache :new-instance new-instance))
 	       (extra-lexicons lexicon)))))
 
 (defmethod close-lex :around ((lexicon lex-database) &key in-isolation delete)
@@ -674,7 +674,47 @@
       (error "number expected"))
      (t default))))
 
-(defun str-list-2-str (str-list &optional (separator " "))
+(defun explode-to-chars (string)
+  (loop
+      for i from 0 to (1- (length string))
+      collect (aref string i)))
+  
+(defun escape-char (esc-char string)
+  (implode-from-chars
+   (loop
+       for i from 0 to (1- (length string))
+       for c = (aref string i)
+       if (or (eq c esc-char)
+	      (eq c #\\))
+       collect #\\
+       collect c)))
+  
+(defun implode-from-chars (char-list)
+  (loop
+      with res = (make-string (length char-list))
+      for c in char-list
+      for i upfrom 0
+      do
+	(setf (schar res i) c)
+      finally
+	(return res)))
+
+(defun str-list-2-str (str-list &optional (sep-c #\Space))
+  (unless (listp str-list)
+    (error "list expected"))
+  (let ((sep (string sep-c)))
+    (cond
+     ((null str-list) "")
+     (t (apply 'concatenate
+	       (cons
+		'string
+		(cons
+		 (escape-char sep-c (pop str-list))
+		 (mapcan #'(lambda (x) (list sep
+					     (escape-char sep-c x)))
+			 str-list))))))))
+  
+(defun str-list-2-str-by-str (str-list &optional (separator " "))
   (unless (listp str-list)
     (error "list expected"))
   (cond
@@ -684,7 +724,9 @@
 	      'string
 	      (cons
 	       (pop str-list)
-	       (mapcan #'(lambda (x) (list separator x)) str-list)))))))
+	       (mapcan #'(lambda (x) (list separator 
+					   x))
+		       str-list)))))))
   
 (defun symb-2-str (symb)
   (unless (symbolp symb)
@@ -715,6 +757,12 @@
    ((symbolp x) x)
    ((stringp x) (str-2-symb x))
    (t (error "unhandled type"))))
+
+#+:psql
+(defun 2-symb-or-list (x)
+  (if (and (stringp x) (eq (aref x 0) #\())
+      (work-out-value 'list x)
+    (2-symb x)))
 
 (defun 2-str (x)
   (cond

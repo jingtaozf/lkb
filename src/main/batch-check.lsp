@@ -5,6 +5,7 @@
 
 (in-package :lkb)
 
+(defvar *current-lex-id*)
 (defvar *grammar-specific-batch-check-fn* nil)
 (defvar *batch-check-diff-list-strict* nil)
 (defvar *batch-check-diff-list*)
@@ -182,3 +183,42 @@
     (if (typep val 'dag)
         (dag-type val)
       nil)))
+
+(defun dag-diff-list-2-list (dag)
+  (let* ((last-dag (dag-path-val (list *diff-list-last*) dag))
+	 (list-dag (dag-path-val (list *diff-list-list*) dag)))
+    (loop
+	with rest-dag
+	while (not (eq list-dag
+		       last-dag))
+	do
+	  (setf rest-dag (dag-path-val '(rest) list-dag))
+	  (when (null rest-dag)
+	    (format t "~%WARNING: invalid difference list ~a in ~a" out-list *current-lex-id*)
+	    (loop-finish))
+	collect (dag-path-val '(first) list-dag)
+	into out-list
+	do
+	  (setf list-dag rest-dag)
+	finally
+	  (return out-list)
+	  )))
+
+(defun dag-list-2-list (dag)
+  (let* ((list-dag dag))
+    (loop
+	with rest-dag
+	while (not (equal (dag-type list-dag)
+			  *empty-list-type*))
+	do
+	  (setf rest-dag (dag-path-val *list-tail* list-dag))
+	  (when (null rest-dag)
+	    (format t "~%WARNING: invalid list ~a in ~a" out-list dag)
+	    (loop-finish))
+	collect (dag-path-val *list-head* list-dag)
+	into out-list
+	do
+	  (setf list-dag rest-dag)
+	finally
+	  (return out-list)
+	  )))

@@ -297,6 +297,21 @@
       collect (subseq string i j)
       while j))
 
+(defun mixed-list-2-str (str-list &optional (separator " "))
+  (unless (listp str-list)
+    (error "list expected"))
+  (cond
+   ((null str-list) "")
+   (t (apply 'concatenate
+	     (cons
+	      'string
+	      (cons
+	       (escape-char #\Space (encode-mixed-as-str (pop str-list)))
+	       (mapcan #'(lambda (x) 
+			   (list separator 
+				 (escape-char #\Space (encode-mixed-as-str x))))
+		       str-list)))))))
+
 ;;;
 ;;; lexport
 ;;;
