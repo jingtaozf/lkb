@@ -630,6 +630,7 @@
 (defun gen-chart-adjoin-modifiers (partial-edges input-sem)
   (let ((*active-modifier-edges* nil)
 	(mod-candidate-edges (gen-chart-intersective-inactive-edges))
+	(cached-rels-edges (make-hash-table :test #'equal))
 	(res nil))
     (declare (special *active-modifier-edges*))
     (when *gen-adjunction-debug*
@@ -647,8 +648,12 @@
 	  (format t "~&Missing relations ~(~:A~)" 
 		  (mapcar #'mrs::rel-sort missing-rels)))
 	(dolist (mod-alt
-		    (gen-chart-mod-edge-partitions missing-rels 
-						   mod-candidate-edges))
+		    (gen-chart-mod-edge-partitions 
+		     (list (car missing-rels)) 
+		     (cdr missing-rels) 
+		     (cdr missing-rels)
+		     mod-candidate-edges 
+		     cached-rels-edges))
 	  (when *gen-adjunction-debug*
 	    (format t "~&Relation partitions ~(~:A~)"
 		    (mapcar
@@ -725,6 +730,7 @@
     (make-partitions1 nil subsets set)
     *partitions*))
 
+#|
 (defun gen-chart-mod-edge-partitions (rels edges)
   (declare (ignore cached-rels-edges))
   (let ((cache (make-hash-table :test #'equal)))
@@ -745,12 +751,10 @@
 			      (append (list s)
 				      (gethash s cache)))
 			  p))
-	      (make-partitions subsets rels)))))
+			  (make-partitions subsets rels)))))
+|#
   
   
-#|
-
-
 (defun gen-chart-mod-edge-partitions (rels next rest mod-candidate-edges 
 				      cached-rels-edges)
   ;; compute sets of partitions of input relations with each partition
@@ -780,7 +784,7 @@
 					     mod-candidate-edges cached-rels-edges))
 	  next))
       (when rels-edges (list (list (cons rels rels-edges)))))))
-|#
+
 
 
 (defun gen-chart-create-active-mod-edges (mod-alt)
