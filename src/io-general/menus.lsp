@@ -318,10 +318,10 @@
                                   :value 'command-merge-into-psql-lexicon
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Dump"
-                                  :value 'command-dump-psql-lexicon
-                                  ;:available-p :always
-				  )
+;                  (make-menu-item :name "Dump"
+;                                  :value 'command-dump-psql-lexicon
+;                                  ;:available-p :always
+;				  )
                   (make-menu-item :name "Dump (TDL format)"
                                   :value 'command-export-lexicon-to-tdl
                                   ;:available-p :always
