@@ -32,10 +32,13 @@
 (defclass xml (rmrs-output-type) ())
 
 ;;; <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
+;;; <!ATTLIST rmrs
+;;;          cfrom CDATA #REQUIRED
+;;;          cto   CDATA #REQUIRED >
 
-(defmethod rmrs-output-start-fn ((rmrsout xml))
+(defmethod rmrs-output-start-fn ((rmrsout xml) cfrom cto)
   (with-slots (stream) rmrsout
-    (format stream "~%<rmrs>~%")))
+    (format stream "~%<rmrs cfrom='~A' cto='~A'>~%" cfrom cto)))
 
 (defmethod rmrs-output-end-fn ((rmrsout xml))
   (with-slots (stream) rmrsout
@@ -237,7 +240,8 @@ for gram.dtd and tag.dtd
 
 (defclass compact (rmrs-output-type) ())
 
-(defmethod rmrs-output-start-fn ((rmrsout compact))
+(defmethod rmrs-output-start-fn ((rmrsout compact) cfrom cto)
+  (declare (ignore cfrom cto))
   (with-slots (stream) rmrsout
     (format stream "")))
 
@@ -353,7 +357,8 @@ for gram.dtd and tag.dtd
 (defun output-rmrs1 (rmrs-instance device stream)
   (def-rmrs-print-operations device stream)
   (cond ((rmrs-p rmrs-instance)         
-         (rmrs-output-start-fn *rmrs-display-structure*)
+         (rmrs-output-start-fn *rmrs-display-structure* 0 0)
+         ;;; to be fixed when we have characters
          (print-rmrs rmrs-instance)
          (rmrs-output-end-fn *rmrs-display-structure*))
         (t (rmrs-output-error-fn *rmrs-display-structure* 

@@ -12,6 +12,7 @@
 
 #|
 (read-rmrs-file "test.xml")
+(read-rmrs-file "rmrs/annlt-test/test-select.rmrs")
 |#
  
 (defun read-rmrs-file (file-name)
@@ -28,10 +29,13 @@
 
 (defun read-rmrs (content)
 ;;; <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
+;;; <!ATTLIST rmrs
+;;;          cfrom CDATA #REQUIRED
+;;;          cto   CDATA #REQUIRED >
   (let ((top-h nil) (eps nil) (rargs nil) (ings nil)
         (h-cons nil))
     (let ((tag (car content)))
-      (unless (eql tag '|rmrs|)
+      (unless (eql (car tag) '|rmrs|)
         (error "~A is not an rmrs" content)))
     (setf content (cdr content))
     (loop (let ((next-el (car content)))

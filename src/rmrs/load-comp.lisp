@@ -77,12 +77,20 @@ produced by robust parsers of various types.
 
  :pa :mrs
  (read-rmrs-grammar "annlt-test/gram14.1.rmrs")
+ (read-rmrs-grammar "rmrs/annlt-test/gram14.1.rmrs")
  (read-rmrs-tag-templates "annlt-test/lex14.1.rmrs")
+ (read-rmrs-tag-templates "rmrs/annlt-test/lex14.1.rmrs")
   ;;; functions for ANNLT version are in annlt.lisp
 
   :pa :mrs
   (rmrs-from-file "annlt-test/test-select.rasp"
   "annlt-test/test-select.rmrs")
+
+  (rmrs-from-file "rmrs/annlt-test/test-select.rasp"
+  "rmrs/annlt-test/test-select.rmrs")
+
+  (read-rmrs-file "annlt-test/test-select.rmrs")
+  (read-rmrs-file "rmrs/annlt-test/test-select.rmrs")
 
   (construct-sem-for-tree
   '(|T/txt-sc1/----|

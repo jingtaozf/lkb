@@ -1,6 +1,9 @@
 <!ELEMENT rmrs-list (rmrs)*>
 
 <!ELEMENT rmrs (label, (ep|rarg|ing|hcons)*)>
+<!ATTLIST rmrs
+          cfrom CDATA #REQUIRED
+          cto   CDATA #REQUIRED >
 
 <!ELEMENT ep ((realpred|gpred), label, var)>
 <!ATTLIST ep
