@@ -278,8 +278,7 @@
 	    (get-filter lexicon))
     (format *postgres-debug-stream* 
 	    "~%(active lexical entries: ~a )" 
-	    (sql-fn-get-val lexicon 
-			:size_current_grammar))))
+	    (sql-fn-get-val lexicon :size_current_grammar))))
 
 (defmethod set-filter-aux ((lexicon psql-lex-database) filter)
   (unless (or (null filter) 
@@ -354,10 +353,12 @@
 
 (defmethod get-internal-table-defn ((lexicon psql-lex-database))
   (cond 
-   ((string>= (server-version lexicon) "7.3")
+   ((string>= (get-server-version lexicon) "7.3")
     (if (string>= (lexdb-version lexicon)
 		  "3.31")
-	(sql-fn-get-records *lexicon* :return_field_info2 :args (list "public" "revision"))
+	(sql-fn-get-records *lexicon* 
+			    :return_field_info2 
+			    :args (list "public" "revision"))
       (get-records lexicon 
 		   "SELECT attname, typname, atttypmod FROM pg_catalog.pg_attribute AS attribute JOIN (SELECT * FROM pg_catalog.pg_class WHERE relname='revision') AS class ON attribute.attrelid=class.relfilenode JOIN pg_catalog.pg_type AS type ON (type.typelem=attribute.atttypid);")))
    (t
@@ -530,7 +531,7 @@
 
 (defmethod open-lex ((lexicon psql-lex-database) &key name parameters)
   (declare (ignore parameters)) 
-  (with-slots (lexdb-version server-version dbname host user connection) 
+  (with-slots (lexdb-version dbname host user connection) 
       lexicon
     (close-lex lexicon)    
     (format t "~%Connecting to lexical database ~a@~a:~a" 
@@ -541,8 +542,7 @@
      ((connect lexicon)
       (format t "~%Connected as user ~a" user)
       (format t "~%Opening ~a" dbname)
-      (unless (string>= server-version "7.3")
-	(error *lexdb-message-old-server* server-version "7.4.x"))
+      (check-server-version lexicon)
       (cond
        ((not (stringp lexdb-version))
 	(error "Unable to determine LexDB version"))
@@ -560,6 +560,17 @@
       (format t "~%unable to connect to ~s:~%  ~a" 
 	      (pg:db connection) (pg:error-message connection))
       nil))))
+
+(defmethod check-server-version ((lexicon psql-lex-database))
+  (cond
+   ((string>= (lexdb-version lexicon) "3.34")
+    (let ((texts (sql-fn-get-vals lexicon :check_server_version)))
+      (when texts
+	(cerror "continue anyway" "~a" (str-list-2-str texts :sep-c #\Newline)))))
+   (t
+    (let ((server-version (get-server-version lexicon)))
+      (unless (string>= server-version "7.3")
+	(cerror "continue anyway" *lexdb-message-old-server* server-version "7.4.x"))))))
 
 (defmethod initialize-lex ((lexicon psql-lex-database))
   (when (open-lex lexicon)
@@ -593,15 +604,26 @@
 
 (defmethod connect ((lexicon psql-lex-database)) 
   (if (next-method-p) (call-next-method))
-  (setf (lexdb-version lexicon) 
-    (get-db-version lexicon)))	
+  (when (eq (connection-status lexicon)
+	    :connection-ok)
+    (setf (lexdb-version lexicon) 
+      (get-db-version lexicon))
+    (get-ext-fns lexicon)))	
+
+(defmethod get-ext-fns ((lexicon psql-lex-database)) 
+  (setf (ext-fns lexicon)
+    (mapcar #'(lambda (x)
+		(str-2-keyword (car x)))
+	    (get-raw-records lexicon "SELECT * FROM ext_fns()"))))
 
 ;;;
 ;;;
 ;;;
 
 (defmethod get-db-version ((lexicon psql-lex-database))
-  (caar (records (run-command lexicon "SELECT val FROM public.meta WHERE var=\'db-version\' LIMIT 1"))))
+  (caar 
+   (get-raw-records lexicon 
+		    "SELECT val FROM public.meta WHERE var='db-version' LIMIT 1")))
   ;(sql-fn-get-val lexicon :lexdb_version))
     
 (defmethod get-filter ((lexicon psql-lex-database))
@@ -769,3 +791,180 @@
 	  (sql-fn-get-raw-records lexicon
 				  :value_set
 				  :args (list (2-str field)))))
+
+;; return sql code to call db function and return
+;; appropriate fields
+(defmethod sql-fn-string ((lexicon psql-lex-database) fn &key args fields)
+  (with-slots (lexdb-version ext-fns) lexicon
+    (when (and 
+	   (string>= lexdb-version "3.34")
+	   (not (member fn ext-fns)))
+      (error "~a not `LexDB external function'" fn))
+    (unless fields
+      (setf fields '(:*)))
+    (let ((fields-str (str-list-2-str
+		       (mapcar #'string fields)
+		       :sep-c #\,))
+	  (fn-str (string fn))
+	  (args-str 
+	   (str-list-2-str
+	    (mapcar #'sql-fn-arg args)
+	    :sep-c #\,
+	    :esc nil)))
+      (format nil "SELECT ~a FROM ~a(~a)" fields-str fn-str args-str))))
+
+(defun sql-fn-arg (x)
+  (cond
+   ((stringp x)
+    (sql-embedded-text x))
+   ((listp x)
+    (sql-embedded-text
+     (str-list-2-str
+      (mapcar
+       #'sql-fn-arg
+       x)
+      :sep-c #\,)))
+   (t
+    (2-str x))))
+
+(defmethod sql-fn-get-records ((lexicon psql-lex-database) fn &key args fields)
+  (get-records lexicon
+	       (sql-fn-string lexicon fn :args args :fields fields)))
+  
+(defmethod sql-fn-get-raw-records ((lexicon psql-lex-database) fn &key args fields)
+  (get-raw-records lexicon
+		   (sql-fn-string lexicon fn :args args :fields fields)))
+  
+(defmethod sql-fn-get-val ((lexicon psql-lex-database) fn &key args fields)
+  (caar (sql-fn-get-raw-records lexicon fn :args args :fields fields)))
+  
+(defmethod sql-fn-get-vals ((lexicon psql-lex-database) fn &key args fields)
+  (mapcar #'car
+	  (sql-fn-get-raw-records lexicon fn :args args :fields fields)))
+  
+;;
+;;
+;;
+
+(defmethod merge-into-lexicon ((lexicon psql-lex-database) filename)
+  "reconnect as db owner and merge new data into lexdb"
+  (with-slots (dbname host port) lexicon
+    (unless dbname
+      (error "please set :dbname"))
+    (let ((conn-db-owner 
+	   (make-instance 'psql-lex-database
+	     :dbname dbname
+	     :host host
+	     :port port
+	     :user (sql-fn-get-val lexicon :db_owner)))
+	  (count-new 0))
+      (connect conn-db-owner)
+      (when
+	  (catch 'pg:sql-error
+	    (progn
+	      (get-postgres-temp-filename)
+	      (let* ((rev-filename 
+		      (absolute-namestring "~a.rev" 
+					   filename))
+		     (dfn-filename 
+		      (absolute-namestring "~a.dfn" 
+					   filename)))
+		(if (probe-file rev-filename)
+		    (setf count-new 
+		      (merge-into-db conn-db-owner 
+				     rev-filename))
+		  (format t "~%WARNING: no file ~a" rev-filename))
+		(cond
+		 ((probe-file dfn-filename)
+		  (merge-defn conn-db-owner 
+			      dfn-filename)
+		  (make-field-map-slot lexicon))
+		 (t
+		  (format t "~%WARNING: no file ~a" dfn-filename)))
+		nil
+		)))
+	(format t "Merge new entries aborted..."))
+      (if (and 
+	   (equal count-new 0))
+	  (empty-cache lexicon)
+	(initialize-psql-lexicon))
+      (disconnect conn-db-owner))))
+
+(defmethod to-db-dump ((x lex-entry) (lexicon psql-lex-database))
+  "provide line entry for lexicon db import file"
+  (with-slots (fields-map fields) lexicon
+    (let* ((s (copy-slots x fields-map))
+	   (extraction-fields (remove-duplicates
+			       (cons :name (grammar-fields lexicon))))
+	   (field-vals (append
+			(mapcar 
+			 #'(lambda (x) 
+			     (cons x
+				   (extract-field s x fields-map)))
+			 extraction-fields)
+			(list
+			 (cons :orthkey (orthkey x))
+			 (cons :userid *postgres-current-user*)
+			 (cons :version (num-2-str *postgres-export-version*))
+			 (cons :modstamp *postgres-export-timestamp*)
+			 (cons :lang *postgres-current-lang*)
+			 (cons :country *postgres-current-country*)
+			 (cons :confidence 1)
+			 (cons :source *postgres-current-source*)
+			 (cons :flags 1))))
+	   (ordered-field-vals (ordered-symb-val-list fields field-vals))
+	   (line 
+	    (format nil "~a~%" 
+		    (str-list-2-str
+		     (mapcar
+		      #'(lambda (x)
+			  (let ((val (cdr x)))
+			    (if val
+				(2-str val)
+			      nil)))
+		      ordered-field-vals)
+		     :sep-c #\tab
+		     :null-str "\\N"))))
+      (cond 
+       ((null (cdr (assoc :unifs s)))
+	line)
+       (t
+	(format *postgres-export-skip-stream* "~a" (to-tdl x))
+	"")))))
+
+(defmethod to-db ((x lex-entry) (lexicon psql-lex-database))
+  "insert lex-entry into lexicon db (user scratch space)"
+  (with-slots (fields-map) lexicon
+    (let* ((s (copy-slots x fields-map))
+	   (extraction-fields (remove-duplicates
+			       (cons :name (grammar-fields lexicon))))
+	   (extracted-fields
+	    (mapcan 
+	     #'(lambda (x) (list x (extract-field s x fields-map)))
+	     extraction-fields))
+	 
+	   (psql-le
+	    (apply #'make-instance-psql-lex-entry
+		   (append extracted-fields
+			   (list :country *postgres-current-country*
+				 :lang *postgres-current-lang*
+				 :source (extract-pure-source-from-source *postgres-current-source*)
+				 :confidence 1
+				 :flags 1
+				 )))))
+      (cond
+       ((null (cdr (assoc :unifs s)))
+	(set-lex-entry lexicon psql-le)
+	(empty-cache lexicon))
+       (t
+       (format t "~%skipping super-rich entry:~%~a" (to-tdl x))
+       nil)))))
+  
+;; import lexicon to LexDB
+(defmethod export-to-db ((lexicon lex-database) (lexdb psql-lex-database))
+  (mapc
+   #'(lambda (x) 
+       (to-db (read-psort lexicon x :recurse nil :new-instance t) 
+	      lexdb))
+   (collect-psort-ids lexicon :recurse nil))
+  (build-lex-aux lexdb))

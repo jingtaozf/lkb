@@ -227,3 +227,14 @@
 
 (defun get-coindex-symb (i)
   (format nil "#~a" i))
+
+;;
+;; misc
+;;
+
+(defun ordered-symb-val-list (ordered-symb-list symb-val-list)
+  (if (null ordered-symb-list) (error (format nil "non-null list expected")))
+  (loop 
+      while ordered-symb-list
+      collect (assoc (pop ordered-symb-list) symb-val-list)))
+

@@ -11,7 +11,7 @@ SELECT public.create_public_meta_table();
 SELECT public.create_public_revision_table();
 SELECT public.create_public_defn_table();
 SELECT public.create_bc_temp_tables();
-\copy public.meta from 'public.meta.tsv'
+\copy public.meta from 'public.meta'
 
 --
 -- remaining function definitions

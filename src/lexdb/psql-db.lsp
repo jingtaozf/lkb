@@ -86,50 +86,6 @@
 					       *postgres-temp-filename*
 					       filename)))
 
-(defun merge-into-psql-lexicon (lexicon filename)
-  "reconnect as db owner and merge new data into lexdb"
-  (with-slots (dbname host port) lexicon
-    (unless dbname
-      (error "please set :dbname"))
-    (let ((conn-db-owner (make-instance 'psql-lex-database
-			   :dbname dbname
-			   :host host
-			   :port port
-			   :user (sql-fn-get-val lexicon
-						 :db_owner)))
-	  (count-new 0))
-      (connect conn-db-owner)
-      (when
-	  (catch 'pg:sql-error
-	    (progn
-	      (get-postgres-temp-filename)
-	      (let* ((rev-filename 
-		      (absolute-namestring "~a.rev" 
-					   filename))
-		     (dfn-filename 
-		      (absolute-namestring "~a.dfn" 
-					   filename)))
-		(if (probe-file rev-filename)
-		    (setf count-new 
-		      (merge-into-db conn-db-owner 
-				     rev-filename))
-		  (format t "~%WARNING: no file ~a" rev-filename))
-		(cond
-		 ((probe-file dfn-filename)
-		  (merge-defn conn-db-owner 
-			      dfn-filename)
-		  (make-field-map-slot lexicon))
-		 (t
-		  (format t "~%WARNING: no file ~a" dfn-filename)))
-		nil
-		)))
-	(format t "Merge new entries aborted..."))
-      (if (and 
-	   (equal count-new 0))
-	  (empty-cache lexicon)
-	(initialize-psql-lexicon))
-      (disconnect conn-db-owner))))
-
 ;;;
 ;;;
 ;;;

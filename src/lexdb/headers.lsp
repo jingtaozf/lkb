@@ -34,52 +34,6 @@
 
 (defvar *postgres-debug-stream*)
 
-;; keep track of LexDB fns called from Lisp
-(defvar *postgres-sql-fns*
-  '(:clear_scratch
-    :commit_scratch
-    :complete
-    :db_owner
-    :dump_db
-    :dump_db_dfn_fld
-    :dump_scratch_db
-    :filter
-    :initialize_current_grammar
-    :initialize_user_schema
-    :lex_id_set 
-    :lexdb_version
-    :list_fields
-    :lookup_general
-    :lookup_general_null
-    :lookup_word
-    :merge_into_db2
-    :merge_defn
-    :mneum_f_map
-    :next_version 
-    :orthography_set
-    :retrieve_all_entries
-    :retrieve_current_timestamp
-    :retrieve_entries_by_orthkey
-    :retrieve_entry
-    :retrieve_head_entry
-    :revision_new
-    :retrieve_private_revisions
-    :retrieve_semi_extra
-    :retrieve_semi_frame
-    :retrieve_semi_pred
-    :retrieve_semi_var
-    :return_field_info2
-    :semi_out_of_date
-    :semi_setup_post
-    :semi_setup_pre
-    :semi_up_to_date_p
-    :size_current_grammar
-    :test_user
-    :update_entry
-    :user_read_only_p
-    :value_set
-    :version))
-
 ;; set this to nil to prevent tdl dump accompanying lexdb dump
 (defvar *lexdb-dump-tdl* t)
 
@@ -117,11 +71,11 @@
    (fields :initform nil :accessor fields)))
 
 (defclass psql-database (sql-database)
-  ((connection :initform nil :accessor connection :initarg connection)
-   (server-version :initform nil :accessor server-version)))
+  ((connection :initform nil :accessor connection :initarg connection)))
 
 (defclass psql-lex-database (psql-database external-lex-database)
   ((lexdb-version :initform nil :accessor lexdb-version)
+   (ext-fns :initform nil :accessor ext-fns)
    (semi :initform nil :accessor semi)))
 
 (defclass sql-query ()
@@ -142,10 +96,8 @@
   (defun LKB::RELOAD-ROOTS-MWE nil)
   (defun LKB::SET-LEX-ENTRY nil)
   (defun LKB::MAKE-INSTANCE-PSQL-LEX-ENTRY nil)
-  (defun LKB::ORDERED-SYMB-VAL-LIST nil)
-  (defun LKB::GRAMMAR-FIELDS nil)
-  (defun LKB::BUILD-LEX-AUX nil)
-)
+  (defun LKB::TO-DB-DUMP nil
+    (error "Please compile with :psql")))
 
 (defun psql-initialize ()
   ;;

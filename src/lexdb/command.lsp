@@ -17,7 +17,7 @@
       (format t "~%~%Please wait: merging files ~a.* into lexical database ~a" 
 	      filename (dbname *psql-lexicon*))
       (force-output)
-      (time (merge-into-psql-lexicon *psql-lexicon* filename))
+      (time (merge-into-lexicon *psql-lexicon* filename))
       (format t " ...done")
       (lkb-beep))))
 

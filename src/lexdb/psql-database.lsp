@@ -9,6 +9,7 @@
 ;;;
 
 (defmethod connect ((lexicon psql-database)) 
+  (disconnect lexicon)
   (do ((conn (connect-aux lexicon)
 	     (connect-aux lexicon)))
       (conn t)
@@ -55,12 +56,12 @@
 	 (format nil "user='~a' " (sql-escape-string user))
 	 (and password 
 	      (format nil "password='~a'" (sql-escape-string password))))))
-    (let ((status 
-	   (pg:decode-connection-status 
-	    (pg:status connection))))
-      (when (eq :connection-ok status)
-	  (setf (server-version lexicon) 
-	    (get-server-version lexicon))))))
+    (when (eq :connection-ok (connection-status lexicon))
+      t)))
+
+(defmethod connection-status ((lexicon psql-database))
+  (pg:decode-connection-status 
+	    (pg:status (connection lexicon))))
 
 (defmethod disconnect ((lexicon psql-database))
   (with-slots (connection) lexicon
@@ -104,69 +105,19 @@
 
 (defmethod close-lex ((lexicon psql-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
-  (with-slots (server-version fns) lexicon
-    (disconnect lexicon)
-    (setf server-version nil)
-    (if (next-method-p) (call-next-method))))
+  (disconnect lexicon)
+  (if (next-method-p) (call-next-method)))
 
 ;;;
 ;;; 
 ;;;
 
-;; return sql code to call db function and return
-;; appropriate fields
-(defun sql-fn-string (fn &key args fields)
-  (unless (member fn *postgres-sql-fns*)
-    (error "~a not in *postgres-sql-fns*" fn))
-  (unless fields
-    (setf fields '(:*)))
-  (let ((fields-str (str-list-2-str
-		     (mapcar #'string fields)
-		     :sep-c #\,))
-	(fn-str (string fn))
-	(args-str 
-	  (str-list-2-str
-	   (mapcar
-	    #'sql-fn-arg
-	    args)
-	   :sep-c #\,
-	   :esc nil)))
-    (format nil "SELECT ~a FROM ~a(~a)" fields-str fn-str args-str)))
-
-(defun sql-fn-arg (x)
-  (cond
-   ((stringp x)
-    (sql-embedded-text x))
-   ((listp x)
-    (sql-embedded-text
-     (str-list-2-str
-      (mapcar
-       #'sql-fn-arg
-       x)
-      :sep-c #\,)))
-   (t
-    (2-str x))))
-
-(defmethod sql-fn-get-records ((lexicon psql-database) fn &key args fields)
-  (get-records lexicon
-	       (sql-fn-string fn :args args :fields fields)))
-  
-(defmethod sql-fn-get-raw-records ((lexicon psql-database) fn &key args fields)
-  (get-raw-records lexicon
-		   (sql-fn-string fn :args args :fields fields)))
-  
-(defmethod sql-fn-get-val ((lexicon psql-database) fn &key args fields)
-  (caar (sql-fn-get-raw-records lexicon fn :args args :fields fields)))
-  
-;;
-;;
-;;
-
 ;;; returns version, eg. "7.3.2"
 (defmethod get-server-version ((lexicon psql-database))
+  (unless (string< (lexdb-version lexicon) "3.34")
+    (error "obsolete function call"))
   (let ((version-str 
-	 (sql-fn-get-val lexicon
-			 :version)))
+	 (caar (get-raw-records lexicon "SELECT * FROM VERSION()"))))
     (second (split-on-char version-str))))
 
 ;; unused?

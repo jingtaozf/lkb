@@ -56,12 +56,6 @@
       while symb-list
       collect (retr-val psql-le (pop symb-list))))
 
-(defun ordered-symb-val-list (ordered-symb-list symb-val-list)
-  (if (null ordered-symb-list) (error (format nil "non-null list expected")))
-  (loop 
-      while ordered-symb-list
-      collect (assoc (pop ordered-symb-list) symb-val-list)))
-
 
 (defmethod get-raw-orth ((lexicon psql-lex-database) (le psql-lex-entry))
   (let* ((orth-raw-mapping (assoc :orth (fields-map lexicon)))

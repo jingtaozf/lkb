@@ -10,6 +10,53 @@
 -- admin tasks
 --
 
+CREATE OR REPLACE FUNCTION public.ext_fns() RETURNS SETOF text AS '
+	SELECT val FROM public.meta WHERE var=\'ext-fn\';
+' LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION public.server_version() RETURNS text AS '
+	select split_part((select version()),\' \',2)
+' LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION public.supported_server_versions() RETURNS SETOF text AS '
+	SELECT val FROM public.meta WHERE var=\'supported-server\';
+' LANGUAGE sql;
+
+CREATE OR REPLACE FUNCTION public.check_server_version() RETURNS SETOF text AS '
+DECLARE
+	supported text;
+	actual text;
+	release text;
+	major text;
+	release_major text;
+	message text;
+	x RECORD;
+BEGIN
+	SELECT * INTO supported FROM public.supported_server_versions();
+	actual := server_version();
+	release := split_part(actual,\'.\',1);
+	major := split_part(actual,\'.\',2);
+	release_major := release || \'.\' || major;
+
+	IF (SELECT count(*) FROM public.supported_server_versions() WHERE supported_server_versions=release_major)=0 THEN
+		message := \'Unsupported PSQL Server version (\' || actual || \')\';
+		RAISE WARNING \'%\', message;
+		RETURN NEXT message;
+
+		message := \'Supported PSQL Server versions: \';
+		FOR x IN SELECT * FROM supported_server_versions() LOOP
+			message := message || x.supported_server_versions || \'.x \';
+		END LOOP;
+
+		RAISE WARNING \'%\', message;
+		RETURN NEXT message;
+		RETURN;
+	ELSE
+		RETURN;
+	END IF;
+END;
+' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION public.dump_data() RETURNS boolean AS '
 DECLARE
 	backup_file_base text;

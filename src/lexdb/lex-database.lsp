@@ -46,12 +46,3 @@
     (format t "~%(emptying cache)")
     (empty-cache lexicon)))
 
-;; place port lexicon to LexDB
-(defmethod export-to-db ((lexicon lex-database) (lexdb psql-lex-database))
-  (mapc
-   #'(lambda (x) 
-       (to-db (read-psort lexicon x :recurse nil :new-instance t) 
-	      lexdb))
-   (collect-psort-ids lexicon :recurse nil))
-  (build-lex-aux lexdb))
-
