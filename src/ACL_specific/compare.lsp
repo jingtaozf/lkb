@@ -80,7 +80,7 @@
                  (clim:make-application-frame 'compare-frame)
                  (clim:make-application-frame 
                   'compare-frame :frame-manager nil))))
-    #+:debug
+    #-:debug
     (setf %frame% frame)
     (setf (compare-frame-chart frame) *chart-generation-counter*)
     (setf (compare-frame-runp frame) runp)
@@ -1193,6 +1193,10 @@
 ;;; in the segregated directory.                                (6-aug-03; oe)
 ;;;
 (defun html-compare (frame &key (stream t) (indentation 0))
+
+  #-:debug
+  (setf %frame% frame)
+
   (let ((treep (or (not (integerp *tree-display-threshold*))
                    (<= (length (compare-frame-trees frame)) 
                        *tree-display-threshold*))))
