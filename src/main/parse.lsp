@@ -879,12 +879,14 @@ Setting *first-only-p* to nil")
 				     child-edge-list f backwardp)
   ;; attempt to apply a grammar rule when we have all the parts which match
   ;; its daughter categories
-  (when (or (null *brackets-list*)
-            (consistent-bracketing-p (mapcar #'(lambda (edge)
+  (cond ((and *brackets-list*
+            (not (consistent-bracketing-p (mapcar #'(lambda (edge)
                                                  (cons (edge-from edge)
                                                        (edge-to edge)))
                                              child-edge-list)
-                                    *brackets-list*)) 
+                                          *brackets-list*)))
+         t) ; t because we don't want the first-failed-p effect 
+        (t
     #+:pdebug
     (format
      t
@@ -920,7 +922,7 @@ Setting *first-only-p* to nil")
               t)
           (progn
             #+pdebug (format t " ... ~:[fail~;throw~].~%" first-failed-p)
-            (if first-failed-p nil t)))))))
+            (if first-failed-p nil t))))))))
 
 
 (defun evaluate-unifications (rule child-fs-list 

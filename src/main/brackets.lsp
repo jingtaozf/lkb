@@ -45,19 +45,42 @@ for a rule application, and a list of start and end vertices for paired
 brackets, and returns t or nil depending on whether the
 bracketing is consistent.
 
-e.g.
+Test cases:
+
+0) brackets don't intersect with rule to be applied
+
+(consistent-bracketing-p '((0 . 2) (2 . 5)) '((5 . 8)))
+
+=> t
+
+1) brackets outscope rule to be applied
 
 (consistent-bracketing-p '((0 . 2) (2 . 5)) '((0 . 6)))
 => t
 
+2) brackets match existing constituent
+
 (consistent-bracketing-p '((0 . 2) (2 . 5)) '((0 . 2)))
 => t
+
+3) brackets inside existing constituent
+a)
 
 (consistent-bracketing-p '((0 . 2) (2 . 5)) '((0 . 1)))
 => t
 
+b)
+
+(consistent-bracketing-p '((0 . 2) (2 . 3)) '((1 . 2)))
+=> t
+
+4) brackets inside postulated constituent, but greater
+than existing constituent
+
 (consistent-bracketing-p '((0 . 2) (2 . 5)) '((0 . 4)))
 => nil
+
+5) brackets cross postulated constituent
 
 (consistent-bracketing-p '((0 . 2) (2 . 5)) '((2 . 8)))
 => nil
@@ -89,13 +112,13 @@ e.g.
         ((< bracket-start start) 
          (>= bracket-end end)) ; OK if bigger
         ((= bracket-start start) 
-         (or (>= bracket-end end) ; OK if perfect match
+         (or (>= bracket-end end) ; OK if perfect match or bigger
              (<= bracket-end (cdar constituent-list))))
                                         ; OK if part of first constituent
         (t (some #'(lambda (constituent)
                      (and (>= bracket-start (car constituent))
                           (<= bracket-end (cdr constituent))))
-                 (cdr constituent-list) ; OK if part of another constituent
+                 constituent-list ; OK if part of a constituent
                  ))))
 
 
