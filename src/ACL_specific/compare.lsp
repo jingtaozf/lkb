@@ -597,8 +597,10 @@
                     '("Enlarged Tree" :value show)
                     (list "MRS" :value 'mrs :active mrsp)
                     (list "Indexed MRS" :value 'indexed :active mrsp)
-                   (list "Scoped MRS" :value 'scoped :active mrsp)
-                   (list "Dependencies" :value 'dependencies :active mrsp))))
+                    (list "Scoped MRS" :value 'scoped :active mrsp)
+                    (list "Dependencies" :value 'dependencies :active mrsp)
+                    #+:mt
+                    (list "Transfer" :value 'transfer :active mrsp))))
          (edge (ctree-edge tree)))
     (when command
       (handler-case
@@ -652,7 +654,11 @@
                (ignore-errors (funcall 'show-mrs-scoped-window edge))))
             (dependencies
              (when edge
-               (ignore-errors (funcall 'show-mrs-dependencies-window edge)))))
+               (ignore-errors (funcall 'show-mrs-dependencies-window edge))))
+            (transfer
+             (when edge
+               (ignore-errors (funcall 'transfer edge)))))
+            
         (storage-condition (condition)
           (with-output-to-top ()
             (format t "~%Memory allocation problem: ~A~%" condition)))

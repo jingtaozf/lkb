@@ -850,8 +850,7 @@
                      "~a/~a"
                      (or path "/lingo/oe/tmp") (directory2file data))
       with *reconstruct-cache* = (make-hash-table :test #'eql)
-      with items = (analyze data :thorough '(:derivation) 
-                            :condition condition :readerp nil)
+      with items = (analyze data :thorough '(:derivation) :condition condition)
       with increment = (when (and meter items)
                          (/ (- (get-field :end meter) (get-field :start meter))
                             (length items) 1))
