@@ -106,7 +106,6 @@
        (:file "podium")
        #+(and :lkb :allegro :clim)
        (:file "trees")
-       (:file "tnt-interface")
        #+:allegro
        (:file "allegro")
        #+:allegro
@@ -115,7 +114,8 @@
        (:file "yy")
        #+:page 
        (:file "page-interface")
-       (:file "derivations")))
+       (:file "derivations")
+       (:file "tnt-interface")))
      
      #+:dfki
      (:module "podium"
