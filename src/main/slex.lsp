@@ -47,7 +47,7 @@
 	       (> cache-index-date last-file-date))
       (setf ok t)
       (format t "~%Reading in cached lexicon")
-      (clear-lex lexicon t)
+      (clear-lex lexicon :no-delete t)
       (handler-case 
 	  (read-psort-index-file)
 	(error (condition)
@@ -94,8 +94,8 @@
 	    (when (probe-file *psorts-temp-index-file*)
 	      (delete-file *psorts-temp-index-file*))))))))
 
-(defmethod clear-lex ((lexicon simple-lex-database) &optional no-delete)
-  (declare (ignore no-delete))
+(defmethod clear-lex ((lexicon simple-lex-database) &rest rest)
+  (declare (ignore rest))
   ;; Close temporary lexicon file
   (with-slots (psorts-stream) lexicon
       (when (and (streamp psorts-stream)
