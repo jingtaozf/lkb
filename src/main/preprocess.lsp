@@ -79,7 +79,7 @@
   scanner
   target)
 
-(defun read-preprocessor (file)
+(defun read-preprocessor (file &key (fspp (make-fspp) fsppp))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (let* ((path (pathname file))
@@ -87,68 +87,78 @@
         (format 
          t 
          "~&Reading preprocessor rules `~a~@[.~a~]'~%" 
-         (pathname-name path) type))
-      (loop
-          with fspp = (make-fspp)
-          with separator = (ppcre:create-scanner "\\t+")
-          for n from 1
-          for line = (read-line stream nil nil)
-          for length = (length line)
-          for c = (unless (zerop length) (char line 0))
-          when (and c (not (char= c #\;))) do
-            (multiple-value-bind (start end) (ppcre:scan separator line)
-              (cond
-               ((char= c #\@)
-                (let* ((version (subseq line 1 end))
-                       (version (if (string= version "$Date: " :end1 7)
-                                  (subseq version 7 (- (length version) 2))
-                                  version)))
-                  (setf (fspp-version fspp) 
-                    (string-trim '(#\Space) version))))
-               ((char= c #\:)
-                (let ((tokenizer (subseq line 1 end)))
-                  (setf (fspp-tokenizer fspp) tokenizer)))
-               ((member c '(#\! #\- #\+ #\^) :test #'char=)
-                (if (and start end)
-                  (let* ((type (case c
-                                 (#\! :replace)
-                                 (#\- :substitute)
-                                 (#\+ :augment)
-                                 (#\^ :ersatz)))
-                         (source (subseq line 1 start))
-                         (target (subseq line end))
-                         (scanner
-                          (ignore-errors
-                           (ppcre:create-scanner 
-                            (if (eq type :replace)
-                              source
-                              (format nil "^~a$" source)))))
-                         (match (make-fsr :type type :source source
-                                          :scanner scanner :target target)))
-                    (if scanner
-                      (if (eq type :replace)
-                        (push match (fspp-global fspp))
-                        (push match (fspp-local fspp)))
-                      (format
-                       t
-                       "read-preprocessor(): [~d] invalid pattern `~a'~%"
-                       n source)))
+         (pathname-name path) type)
+        (loop
+            with separator = (ppcre:create-scanner "\\t+")
+            for n from 1
+            for line = (read-line stream nil nil)
+            for length = (length line)
+            for c = (unless (zerop length) (char line 0))
+            when (and c (not (char= c #\;))) do
+              (multiple-value-bind (start end) (ppcre:scan separator line)
+                (cond
+                 ((char= c #\@)
+                  (let* ((version (subseq line 1 end))
+                         (version (if (string= version "$Date: " :end1 7)
+                                    (subseq version 7 (- (length version) 2))
+                                    version)))
+                    (setf (fspp-version fspp) 
+                      (string-trim '(#\Space) version))))
+                 ((char= c #\<)
+                  (let* ((name (subseq line 1 end))
+                         (file (or (probe-file name)
+                                   (probe-file (merge-pathnames name path)))))
+                    (if file
+                      (read-preprocessor file :fspp fspp)
+                        (format
+                         t
+                         "read-preprocessor(): [~d] unable to include `~a'~%"
+                         n name))))
+                 ((char= c #\:)
+                  (let ((tokenizer (subseq line 1 end)))
+                    (setf (fspp-tokenizer fspp) tokenizer)))
+                 ((member c '(#\! #\- #\+ #\^) :test #'char=)
+                  (if (and start end)
+                    (let* ((type (case c
+                                   (#\! :replace)
+                                   (#\- :substitute)
+                                   (#\+ :augment)
+                                   (#\^ :ersatz)))
+                           (source (subseq line 1 start))
+                           (target (subseq line end))
+                           (scanner
+                            (ignore-errors
+                             (ppcre:create-scanner 
+                              (if (eq type :replace)
+                                source
+                                (format nil "^~a$" source)))))
+                           (match (make-fsr :type type :source source
+                                            :scanner scanner :target target)))
+                      (if scanner
+                        (if (eq type :replace)
+                          (push match (fspp-global fspp))
+                          (push match (fspp-local fspp)))
+                        (format
+                         t
+                         "read-preprocessor(): [~d] invalid pattern `~a'~%"
+                         n source)))
+                    (format
+                     t
+                     "read-preprocessor(): [~d] invalid `~a'~%"
+                     n line)))
+                 (t
                   (format
                    t
-                   "read-preprocessor(): [~d] invalid `~a'~%"
-                   n line)))
-               (t
-                (format
-                 t
-                 "read-preprocessor(): [~d] ignoring unknown rule type `~a'~%"
-                 n c))))
-          when (null line) do
-            (setf (fspp-global fspp)
-              (nreverse (fspp-global fspp)))
-            (setf (fspp-local fspp)
-              (nreverse (fspp-local fspp)))
-            (format t "~a~%" fspp)
-            (return (setf *preprocessor* fspp))))))
+                   "read-preprocessor(): [~d] ~
+                    ignoring unknown rule type `~a'~%"
+                   n c))))
+            when (null line) do
+              (setf (fspp-global fspp)
+                (nreverse (fspp-global fspp)))
+              (setf (fspp-local fspp)
+                (nreverse (fspp-local fspp)))
+              (unless fsppp (format t "~a~%" fspp))
+              (return (if fsppp fspp (setf *preprocessor* fspp))))))))
 
 (defun preprocess (string &key (preprocessor *preprocessor*) 
                                (globalp t) (tokenp t)
