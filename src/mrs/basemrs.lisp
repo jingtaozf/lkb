@@ -998,6 +998,10 @@ extras have to be sorted out later
 <!ELEMENT constant (#PCDATA)>
 |#
 
+(defmethod mrs-output-rel-link   ((mrsout mrs-xml) link)
+  (declare (ignore link))
+  nil)
+
 (defmethod mrs-output-label-fn  ((mrsout mrs-xml) label)
   (with-slots (stream) mrsout
     (format stream "~%<fvpair><rargname>~A</rargname>" label)))
@@ -1083,8 +1087,12 @@ extras have to be sorted out later
 ;;; Actual output fns
 
 (defun output-mrs (mrs-instance device &optional file-name)
+  ;;; AAC - changed behaviour when called with file name
+  ;;; so that it will append if an existing file is given
   (if file-name
-    (with-open-file (stream file-name :direction :output)
+      (with-open-file (stream file-name :direction :output
+		       :if-exists :append
+		       :if-does-not-exist :create)
       (output-mrs1 mrs-instance device stream))
     (output-mrs1 mrs-instance device t)))
 

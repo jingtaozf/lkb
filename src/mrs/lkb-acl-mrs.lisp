@@ -59,6 +59,36 @@
   :width *parse-window-width* 
   :height (round *parse-window-height* 2))
 
+;;; XML output - eventually we want to do this generally for all windows
+
+;;; Assume the output is to a file which is saved between calls
+
+(define-mrs-simple-command (com-output-mrs-xml :menu "Save as XML") 
+    ()
+  (save-mrs-as-xml (mrs-simple-mrsstruct clim:*application-frame*)))
+
+(define-mrs-indexed-command (com-output-mrs-indexed-xml :menu "Save as XML") 
+    ()
+  (save-mrs-as-xml (mrs-indexed-mrsstruct clim:*application-frame*)))
+
+(defparameter *mrs-xml-output-file* nil)
+
+(defun save-mrs-as-xml (mrsstruct)
+  (let ((file-name (if *mrs-xml-output-file*
+		       (let ((use-existing-p 
+			      (lkb-y-or-n-p (format nil "Append to ~A?"
+						    *mrs-xml-output-file*))))
+			 (if use-existing-p
+			     *mrs-xml-output-file*
+			   (ask-user-for-new-pathname 
+			    "New file for MRS XML dumps")))
+		       (ask-user-for-new-pathname "File for MRS XML dumps"))))
+    (setf *mrs-xml-output-file* file-name)
+    (when file-name
+      (mrs::output-mrs
+       mrsstruct
+       'mrs::mrs-xml file-name))))
+
 (defstruct mrs-type-thing value)
 
 (define-mrs-simple-command (com-type-mrs-menu)

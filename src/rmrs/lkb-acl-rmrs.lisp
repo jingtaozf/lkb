@@ -49,6 +49,34 @@
   (set-selected-rmrs-from-menu 
    (mrs-rmrs-rmrs clim:*application-frame*)))
 
+;;; As MRS - XML output
+
+(define-rmrs-ordinary-command (com-output-rmrs-xml :menu "Save as XML") 
+    ()
+  (save-rmrs-as-xml (rmrs-ordinary-rmrs clim:*application-frame*)))
+
+(define-mrs-rmrs-command (com-output-mrs-rmrs-xml :menu "Save as XML") 
+    ()
+  (save-rmrs-as-xml (mrs-rmrs-rmrs clim:*application-frame*)))
+
+(defparameter *rmrs-xml-output-file* nil)
+
+(defun save-rmrs-as-xml (rmrsstruct)
+  (let ((file-name (if *rmrs-xml-output-file*
+		       (let ((use-existing-p 
+			      (lkb-y-or-n-p (format nil "Append to ~A?"
+						    *rmrs-xml-output-file*))))
+			 (if use-existing-p
+			     *rmrs-xml-output-file*
+			   (ask-user-for-new-pathname 
+			    "New file for RMRS XML dumps")))
+		       (ask-user-for-new-pathname "File for RMRS XML dumps"))))
+    (setf *rmrs-xml-output-file* file-name)
+    (when file-name
+      (mrs::output-rmrs
+       rmrsstruct
+       'mrs::xml file-name))))
+
 ;;; ordinary window for one RMRS
 
 ;;; calling function (called from emacs)

@@ -550,8 +550,12 @@ for gram.dtd and tag.dtd
 ;;; is a variant of output-mrs
 
 (defun output-rmrs (rmrs-instance device &optional file-name)
+    ;;; AAC - changed behaviour when called with file name
+  ;;; so that it will append if an existing file is given
      (if file-name
-      (with-open-file (stream file-name :direction :output)
+	 (with-open-file (stream file-name :direction :output
+			  :if-exists :append
+			  :if-does-not-exist :create)
          (output-rmrs1 rmrs-instance device stream))
       (output-rmrs1 rmrs-instance device t)))
 
