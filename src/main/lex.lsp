@@ -32,7 +32,13 @@
 
 (defclass lex-database () 
   ((lexical-entries :initform (make-hash-table :test #'equal))
+      ;;; cache results of lookup-word
+      ;;; :empty records cases where lookup-word returned nil
+      ;;; (to distinguish from cases where value not cached)
    (psorts :initform (make-hash-table :test #'eq))
+      ;;; cache results of read-psort
+      ;;; :empty records cases where read-psort returned nil
+      ;;; (to distinguish from cases where value not cached)
    (extra-lexicons :initform nil :reader extra-lexicons) ;: use link/unlink to write
    (extra-mode :initform *lex-database-default-extra-mode* :accessor extra-mode)
    (part-of :initform nil :accessor part-of)
@@ -150,9 +156,17 @@
   (let ((entry (read-psort *lexicon* id :cache cache)))
     entry))
 
+;; ??? shouldn't this simply clear the psorts hash(es) as below ???
 (defun clear-expanded-lex nil
   (dolist (id (collect-expanded-lex-ids *lexicon*))
-    (unexpand-psort *lexicon* id)))
+    (forget-psort *lexicon* id)))
+
+;(defun clear-expanded-lex (&optional (lexicon *lexicon*))
+;  (with-slots (psorts) lexicon
+;    (clrhash psorts)
+;    (mapcar #'(lambda (x) (clear-expanded-lex x))
+;	    (extra-lexicons lexicon)))))
+
 
 (defun clear-non-parents nil
   (format t "~%Removing cached lexical entries")
@@ -585,12 +599,15 @@
   (let ((ids nil))
     (maphash #'(lambda (id value)
                  (when (and value
+			    (not (eq value :empty))
 			    (lex-entry-full-fs value))
 		   (push id ids)))
 	     (slot-value lexicon 'psorts))
     ids))
 
+;;; forget-psort is generally better
 (defmethod unexpand-psort ((lexicon lex-database) id)
+  "remove cached entry from lexicon providing a value only (eg. first lexicon with non-:empty in cache)"
   (let* ((id-lexicon (lexicon-for-id lexicon id))
 	 (psorts 
 	  (cond
@@ -607,6 +624,7 @@
     (some #'(lambda (x) (lexicon-for-id x id)) (extra-lexicons lexicon))))
 
 (defmethod forget-psort ((lexicon lex-database) id)
+  "remove cached entry (can be :empty) from all lexicons"
   (remhash id (slot-value lexicon 'psorts))
   (some #'(lambda (x) (forget-psort x id)) (extra-lexicons lexicon)))
 

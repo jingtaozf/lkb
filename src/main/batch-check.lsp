@@ -125,7 +125,7 @@
     (setf *number-of-applications* 0)
     (try-all-morph-rules (list (lex-entry-full-fs entry))
                          (if plus-ids id))
-    (unexpand-psort *lexicon* id)))
+    (forget-psort *lexicon* id)))
     
 (defun try-all-morph-rules (entries &optional id)
    (incf *number-of-applications*)
