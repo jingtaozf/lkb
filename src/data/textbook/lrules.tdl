@@ -1,4 +1,4 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; 
 ;;; SYNTACTIC THEORY by Sag and Wasow -- Textbook Grammar 
 ;;; implementation by Chris Callison-Burch & Scott Guffey
@@ -8,90 +8,89 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-
-
-;;; NEGATION LEXICAL RULE.  CCB
-
 :begin :instance.
 negation-lexical-rule := word+arg_real+ana_agr &
-[ SYN [ HEAD verb & [ FORM fin,
-		      PRED #pred,
-		      INV #inv, 
-		      NEG true, 
-		      AUX true,
-		      ANA #ana  ],
-	SPR #spr,
+[ SYN [ HEAD verb & [ FORM fin, PRED #pred, 
+		      INV #inv, NEG true, 
+		      AUX true, ANA #ana  ],
+	SPR < #spr >,
 	COMPS < [ SYN [ HEAD [ FORM f_not ] ] ] . #comps >,
 	GAP #gap ],
   SEM #sem,
-  ARG-ST #arg-st,
+  ARG-ST < #spr, [ SYN [ HEAD [ FORM f_not ] ] ] , #comps >,
 
-  ARGS < word+arg_real+ana_agr & [ SYN [ HEAD verb & [ FORM fin,
-				      PRED #pred,
-				      INV #inv, 
-				      NEG false,
-				      AUX true,
-				      ANA #ana ], 
-			    SPR #spr,
-			    COMPS #comps,
-			    GAP #gap],
-		      SEM #sem,
-		      ARG-ST #arg-st ] > ].
+  ARGS < word+arg_real+ana_agr & [ SYN [ HEAD verb & [ FORM fin, PRED #pred,
+						       INV #inv, NEG false,
+						       AUX true, ANA #ana ], 
+					 SPR < #spr >,
+					 COMPS #comps,
+					 GAP #gap],
+				   SEM #sem,
+				   ARG-ST < #spr . #comps > ] > ].
 :end :instance.
 
-
-;;; Add MODE Question to this inversion rule.  CCB.
 
 :begin :instance.
 inversion-lexical-rule := word+arg_real+ana_agr &
-[ SYN [ HEAD verb & [ FORM fin,
-		      PRED #pred,
-		      INV true, 
-		      NEG #neg, 
-		      AUX true,
-		      ANA #ana  ],
+[ SYN [ HEAD verb & [ FORM fin, PRED #pred, 
+		      INV true, NEG #neg, 
+		      AUX true, ANA #ana ],
 	SPR < >,
 	COMPS < #spr . #comps >,
 	GAP #gap ],
-  SEM #sem,
-  ARG-ST #arg-st,
-
-  ARGS < word+arg_real+ana_agr & [ SYN [ HEAD verb & [ FORM fin,
-				      PRED #pred,
-				      INV false, 
-				      NEG #neg,
-				      AUX true,
-				      ANA #ana ], 
-			    SPR < #spr & [ SYN [ HEAD noun ] ] >,
-			    COMPS #comps,
-			    GAP #gap ],
-		      SEM #sem,
-		      ARG-ST #arg-st ] > ].
-:end :instance.
-
-
-
-#|
-:begin :instance.
-extraposition-lexical-rule := lrule-lexeme & 
-[ SYN  [HEAD #syn],
-  SEM #sem,
-  ARG-ST < #a & [SYN [HEAD comp] ] , #b >,
+  SEM [ MODE ques,
+	INDEX #index,
+	RESTR #restr ],
+  ARG-ST < #spr . #comps >,
   
-  ARGS < lexeme & [SYN [HEAD #syn,
-			SPR < [SYN [HEAD noun & [FORM f_it] ] ] >,
-			COMPS < #b, #a > ],
-		   SEM #sem,
-		   ARG-ST < [SYN [HEAD noun & [FORM f_it] ] ], #b , #a > ] > ].
+  ARGS < word+arg_real+ana_agr & [ SYN [ HEAD verb & [ FORM fin, PRED #pred, 
+						       INV false, NEG #neg,
+						       AUX true, ANA #ana ], 
+					 SPR < #spr & [ SYN NP ] >,
+					 COMPS #comps,
+					 GAP #gap ],
+				   SEM [ MODE prop,
+					 INDEX #index,
+					 RESTR #restr ],
+				   ARG-ST < #spr . #comps > ] > ].
 :end :instance.
-|#
+
+;; The verb value was added to prevent "to" from undergoing the 
+;; extraposition rule and producing an extra "It continues to".
+:begin :instance.
+extraposition-lexical-rule := word & 
+[ SYN [ HEAD #head ],
+  SEM #sem,
+  ARG-ST < [ SYN [HEAD noun & [FORM f_it] ] ], #b , #a >,
+  
+  ARGS < word & [ SYN [ HEAD #head & verb ],
+		      SEM #sem,
+		      ARG-ST < #a & [SYN CP-fin] , #b > ] > ].
+:end :instance.
+
+
+;; The additional #b was added to require at least two real elements
+;; so as to prevent an infinite loop of rule application.  
+:begin :instance.
+ellipsis-lexical-rule := word & 
+[ SYN [ HEAD #head,
+	SPR < #1 >,
+	COMPS < > ],
+  SEM #sem,
+  ARG-ST < #1 >,
+  
+  ARGS < word & [ SYN [ HEAD #head & [AUX true,
+				      NEG false],
+			SPR < #1 >,
+			COMPS < #b . #a > ],
+		  SEM #sem,
+		  ARG-ST < #1 . < #b . #a > > ] > ]. 
+:end :instance.
 
 
 ;  Half of the passive rules below could be removed if we institute code for optionality of 
 ;  compliments.  SMG
 ;
-
-
 :begin :instance.
 tv-pass-rule-short := general-passive-lrule &
  [ ARG-ST < [SYN [HEAD noun],
@@ -138,7 +137,7 @@ dtv-pass-rule-und-long := general-passive-lrule &
 
 :begin :instance.
 dtv-pass-rule-thm-short := general-passive-lrule & 
- [ ARG-ST < [SYN [HEAD noun],
+[ ARG-ST < [SYN [HEAD noun],
 	    SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
 				  SEM [INDEX #und] ] >,
   

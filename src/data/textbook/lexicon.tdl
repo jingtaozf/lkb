@@ -1,9 +1,21 @@
 :begin :instance.
 i_1 := pron-lxm &
 [ ORTH <! "i" !>,
-  SYN [ HEAD noun & [ AGR non-3sing & [ PER 1st ],
-  	CASE nom ] ],
+  SYN [ HEAD noun & [ AGR 1sing & [ PER 1st,
+				    NUM sing ],
+		      CASE nom ] ],
   SEM [ RESTR <! [RELN r_speaker] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+we_1 := pron-lxm &
+[ ORTH <! "we" !>,
+  SYN [ HEAD noun & [ AGR non-3sing & [ PER 1st,
+					NUM plur ],
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_speakers] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -11,9 +23,21 @@ i_1 := pron-lxm &
 :begin :instance.
 me_1 := pron-lxm &
 [ ORTH <! "me" !>,
-  SYN [ HEAD noun & [ AGR non-3sing & [ PER 1st ],
-  	CASE acc ] ],
+  SYN [ HEAD noun & [ AGR 1sing & [ PER 1st,
+				    NUM sing ],
+		      CASE acc ] ],
   SEM [ RESTR <! [RELN r_speaker] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+us_1 := pron-lxm &
+[ ORTH <! "us" !>,
+  SYN [ HEAD noun & [ AGR non-3sing & [ PER 1st,
+					NUM plur ],
+		      CASE acc ] ],
+  SEM [ RESTR <! [RELN r_speakers] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -21,28 +45,18 @@ me_1 := pron-lxm &
 :begin :instance.
 you_1 := pron-lxm &
 [ ORTH <! "you" !>,
-  SYN [ HEAD noun & [ AGR non-3sing & [ PER 2nd ],
-  	CASE nom ] ],
+  SYN [ HEAD noun & [ AGR [ PER 2nd ] ] ],
   SEM [ RESTR <! [RELN r_listener] !> ] ].
 :end :instance.
-
-; <<>>
-
-:begin :instance.
-you_2 := pron-lxm &
-[ ORTH <! "you" !>,
-  SYN [ HEAD noun & [ AGR non-3sing & [ PER 2nd ],
-  	CASE acc ] ],
-  SEM [ RESTR <! [RELN r_listener] !> ] ].
-:end :instance.
+; See Changes File #3
 
 ; <<>>
 
 :begin :instance.
 she_1 := pron-lxm &
 [ ORTH <! "she" !>,
-  SYN [ HEAD noun & [ AGR 3sing & [ PER 3rd, GEND fem ],
-  	CASE nom ] ],
+  SYN [ HEAD noun & [ AGR 3sing & [ GEND fem ],
+		      CASE nom ] ],
   SEM [ RESTR <! [RELN r_female] !> ] ].
 :end :instance.
 
@@ -51,8 +65,8 @@ she_1 := pron-lxm &
 :begin :instance.
 her_1 := pron-lxm &
 [ ORTH <! "her" !>,
-  SYN [ HEAD noun & [ AGR 3sing & [ PER 3rd, GEND fem ],
-  	CASE acc ] ],
+  SYN [ HEAD noun & [ AGR 3sing & [ GEND fem ],
+		      CASE acc ] ],
   SEM [ RESTR <! [RELN r_female] !> ] ].
 :end :instance.
 
@@ -61,8 +75,8 @@ her_1 := pron-lxm &
 :begin :instance.
 he_1 := pron-lxm &
 [ ORTH <! "he" !>,
-  SYN [ HEAD noun & [ AGR 3sing & [ PER 3rd, GEND masc ],
-  	CASE nom ] ],
+  SYN [ HEAD noun & [ AGR 3sing & [ GEND masc ],
+		      CASE nom ] ],
   SEM [ RESTR <! [RELN r_male] !> ] ].
 :end :instance.
 
@@ -71,8 +85,8 @@ he_1 := pron-lxm &
 :begin :instance.
 him_1 := pron-lxm &
 [ ORTH <! "him" !>,
-  SYN [ HEAD noun & [ AGR 3sing & [ PER 3rd, GEND masc ],
-  	CASE acc ] ],
+  SYN [ HEAD noun & [ AGR 3sing & [ GEND masc ],
+		      CASE acc ] ],
   SEM [ RESTR <! [RELN r_male] !> ] ].
 :end :instance.
 
@@ -81,8 +95,28 @@ him_1 := pron-lxm &
 :begin :instance.
 it_1 := pron-lxm &
 [ ORTH <! "it" !>,
-  SYN [ HEAD noun & [ AGR [ PER 3rd, GEND neut ] ] ],
+  SYN [ HEAD noun & [ AGR 3sing & [ GEND neut ] ] ],
   SEM [ RESTR <! [ RELN r_it] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+they_1 := pron-lxm &
+[ ORTH <! "they" !>,
+  SYN [ HEAD noun & [ AGR non-3sing & [ PER 3rd, GEND neut, NUM plur ],
+		      CASE nom ] ],
+  SEM [ RESTR <! [ RELN r_group] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+them_1 := pron-lxm &
+[ ORTH <! "them" !>,
+  SYN [ HEAD noun & [ AGR non-3sing & [ PER 3rd, GEND neut, NUM plur ],
+		      CASE acc ] ],
+  SEM [ RESTR <! [ RELN r_group] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -109,7 +143,7 @@ everybody_1 := pron-lxm &
 myself_1 := pron-lxm &
 [ ORTH <! "myself" !>,
   SYN [ HEAD noun & [ AGR non-3sing & [ PER 1st ],
-  	CASE acc,
+		      CASE acc,
         ANA true ] ],
   SEM [ RESTR <! [RELN r_speaker] !> ] ].
 :end :instance.
@@ -119,10 +153,21 @@ myself_1 := pron-lxm &
 :begin :instance.
 yourself_1 := pron-lxm &
 [ ORTH <! "yourself" !>,
-  SYN [ HEAD noun & [ AGR non-3sing & [ PER 2nd ],
-  	CASE acc,
-        ANA true  ] ],
+  SYN [ HEAD noun & [ AGR non-3sing & [ PER 2nd, NUM sing ],
+		      CASE acc,
+        ANA true ] ],
   SEM [ RESTR <! [RELN r_listener] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+yourselves_1 := pron-lxm &
+[ ORTH <! "yourselves" !>,
+  SYN [ HEAD noun & [ AGR non-3sing & [ PER 2nd, NUM plur ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [RELN r_listeners] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -130,8 +175,8 @@ yourself_1 := pron-lxm &
 :begin :instance.
 herself_1 := pron-lxm &
 [ ORTH <! "herself" !>,
-  SYN [ HEAD noun & [ AGR 3sing & [ PER 3rd, GEND fem ],
-  	CASE acc,
+  SYN [ HEAD noun & [ AGR 3sing & [ GEND fem ],
+		      CASE acc,
         ANA true ] ],
   SEM [ RESTR <! [RELN r_female] !> ] ].
 :end :instance.
@@ -141,8 +186,8 @@ herself_1 := pron-lxm &
 :begin :instance.
 himself_1 := pron-lxm &
 [ ORTH <! "himself" !>,
-  SYN [ HEAD noun & [ AGR 3sing & [ PER 3rd, GEND masc ],
-  	CASE acc,
+  SYN [ HEAD noun & [ AGR 3sing & [ GEND masc ],
+		      CASE acc,
         ANA true ] ],
   SEM [ RESTR <! [RELN r_male] !> ] ].
 :end :instance.
@@ -153,9 +198,30 @@ himself_1 := pron-lxm &
 itself_1 := pron-lxm &
 [ ORTH <! "itself" !>,
   SYN [ HEAD noun & [ AGR 3sing & [ PER 3rd, GEND neut ],
-  	CASE acc,
+		      CASE acc,
         ANA true ] ],
   SEM [ RESTR <! [ RELN r_itself] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ourselves_1 := pron-lxm &
+[ ORTH <! "ourselves" !>,
+  SYN [ HEAD noun & [ AGR non-3sing & [ PER 1st, GEND neut, NUM plur ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [ RELN r_speakers] !> ] ].
+:end :instance.
+; <<>>
+
+:begin :instance.
+themselves_1 := pron-lxm &
+[ ORTH <! "themselves" !>,
+  SYN [ HEAD noun & [ AGR non-3sing & [ PER 3rd, GEND neut, NUM plur ],
+		      CASE acc,
+        ANA true ] ],
+  SEM [ RESTR <! [ RELN r_group] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -267,6 +333,15 @@ Hannibal_1 := pn-lxm &
 ; <<>>
 
 :begin :instance.
+TV_2 := pn-lxm &
+[ ORTH <! "TV" !>,
+  SYN [ HEAD [ AGR [ GEND neut] ] ],
+  SEM [ RESTR <! [ NAME 'TV ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
 Chicago_1 := pn-lxm &
 [ ORTH <! "Chicago" !>,
   SYN [ HEAD [ AGR [ GEND neut] ] ],
@@ -367,29 +442,42 @@ advantage_1 := dummy-idiom-lxm &
 it_2 := dummy-idiom-lxm &
 [ ORTH <! "it" !>,
   SYN [ HEAD [ FORM f_it,
-  	AGR 3sing ] ] ].
+	       AGR 3sing ] ] ].
 :end :instance.
 
 ; <<>>
 
 :begin :instance.
-there_1 := dummy-idiom-lxm &
+there_1 := infl-lxm &
+[ ORTH <! "there" !>,
+  SYN [ HEAD noun & [ FORM f_there,
+		      AGR [ PER 3rd,
+			    NUM singandplur ] ] ],
+  SEM null-sem,
+  ARG-ST < > ].  
+:end :instance.
+; & [ PER 3rd,
+;				 NUM plur] ] ] ].
+
+; <<>>
+#|
+:begin :instance.
+there_2 := dummy-idiom-lxm &
 [ ORTH <! "there" !>,
   SYN [ HEAD [ FORM f_there,
-  	AGR [ PER 3rd ] ] ] ].
+	       AGR 3sing ] ] ].
 :end :instance.
+|#
 
 ;;; <<>> ----- DETERMINERS  -----
 
 ; 's was made of type const-lxm because the ARG-ST of det-lxm is empty.  SMG
 ;
 :begin :instance.
-s_1 := const-lxm &
+s_1 := det-lxm &
 [ ORTH <! "s" !>,
-  SYN [ HEAD det,
-	SPR < [ SYN [ HEAD noun,
-                      SPR < >  ] ] > ],
-  SEM null-sem].
+  SYN [ SPR < [ ] > ],
+  ARG-ST < [ SYN NP ] > ].
 :end :instance.
 
 ; <<>>
@@ -418,6 +506,7 @@ this_1 := det-lxm &
 
 ; <<>>
 
+;; Add "that" as a pronoun lexeme as well?
 :begin :instance.
 that_1 := det-lxm & 
 [ ORTH <! "that" !>,
@@ -426,13 +515,11 @@ that_1 := det-lxm &
 
 ; <<>>
 
-; <<>>
-
 :begin :instance.
 these_1 := det-lxm & 
 [ ORTH <! "these" !>,
   SYN [ HEAD [ COUNT true,
-	       AGR non-3sing & [ NUM plur ] ] ] ].
+	       AGR [ NUM plur ] ] ] ].
 :end :instance.
 
 ; <<>>
@@ -441,7 +528,7 @@ these_1 := det-lxm &
 those_1 := det-lxm & 
 [ ORTH <! "those" !>,
   SYN [ HEAD [ COUNT true,
-	       AGR non-3sing & [ NUM plur ] ] ] ].
+	       AGR [ NUM plur ] ] ] ].
 :end :instance.
 
 ; <<>>
@@ -450,7 +537,7 @@ those_1 := det-lxm &
 few_1 := det-lxm & 
 [ ORTH <! "few" !>,
   SYN [ HEAD [ COUNT true,
-	       AGR non-3sing & [ NUM plur ] ] ] ].
+	       AGR [ NUM plur ] ] ] ].
 :end :instance.
 
 ; <<>>
@@ -459,7 +546,7 @@ few_1 := det-lxm &
 many_1 := det-lxm & 
 [ ORTH <! "many" !>,
   SYN [ HEAD [ COUNT true,
-	       AGR non-3sing & [ NUM plur ] ] ] ].
+	       AGR [ NUM plur ] ] ] ].
 :end :instance.
 
 ; <<>>
@@ -521,24 +608,33 @@ their_1 := det-lxm &
 :end :instance.
 
 ; <<>>
-; Do we want to try to produce a interpretation of quantifier syntax.  If so we have to find some
-; way of allowing both "all chairs" as well as "all furniture".    Right now things seem to work
-; okay as long as we have furniture listed in the irregs file as a plural noun.  SMG
 
-; <<>>
-
+;; Do we want to try to produce a interpretation of quantifier syntax.  If so 
+;; we have to find some way of allowing both "all chairs" as well as "all furniture".
+;; To do that involves a new grule as well as new inflectional rules, perhaps
+;; even an furniture entry in the irregs file.  Might not be worth it...  SMG
 :begin :instance.
 all_1 := det-lxm & 
 [ ORTH <! "all" !>,
-  SYN [ HEAD [ AGR non-3sing & [ NUM plur ] ] ] ].
+  SYN [ HEAD [ AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+; <<>>
+
+;; What about "There is no/some cat on the table." or "I love no cat"
+
+:begin :instance.
+no_1 := det-lxm & 
+[ ORTH <! "no" !>,
+  SYN [ HEAD [ AGR [ NUM plur ] ] ] ].
 :end :instance.
 
 ; <<>>
 
 :begin :instance.
-no_1 := det-lxm & 
-[ ORTH <! "no" !>,
-  SYN [ HEAD [ AGR non-3sing & [ NUM plur ] ] ] ].
+most_1 := det-lxm & 
+[ ORTH <! "most" !>,
+  SYN [ HEAD [ AGR [ NUM plur ] ] ] ].
 :end :instance.
 
 
@@ -552,8 +648,7 @@ to_1 := mkp-lxm &
 
 ; <<>>
 
-; The entry below is necessary for instances of "told...about"
-;
+;; The entry below is necessary for instances of "told...about"
 :begin :instance.
 about_1 :=mkp-lxm &
 [ ORTH <! "about" !>,
@@ -562,7 +657,15 @@ about_1 :=mkp-lxm &
 
 ; <<>>
 
+;; This entry is needed for "I was angry with kim about the book"
+;; But it also causes more parses for "I told him about us".
+;:begin :instance.
+;about_2 :=pdp-lxm &
+;[ ORTH <! "about" !>,
+;  SYN [HEAD [FORM f_about ] ] ].
+;:end :instance.
 
+; <<>>
 
 :begin :instance.
 on_1 := mkp-lxm &
@@ -572,22 +675,10 @@ on_1 := mkp-lxm &
 
 ; <<>>
 
-
-
 :begin :instance.
 on_2 := pdp-lxm &
 [ ORTH <! "on" !>,
-  SYN [ HEAD [ FORM f_on,
-	       MOD < [ SYN [ HEAD noun ] ] > ] ] ].
-:end :instance.
-
-; <<>>
-
-:begin :instance.
-on_3 := pdp-lxm &
-[ ORTH <! "on" !>,
-  SYN [ HEAD [ FORM f_on,
-	       MOD < [ SYN [ HEAD verb ] ] > ] ] ].
+  SYN [ HEAD [ FORM f_on ] ] ].
 :end :instance.
 
 ; <<>>
@@ -603,17 +694,7 @@ in_1 := mkp-lxm &
 :begin :instance.
 in_2 := pdp-lxm &
 [ ORTH <! "in" !>,
-  SYN [ HEAD [ FORM f_in,
-	       MOD < [ SYN [ HEAD noun ] ] > ] ] ].
-:end :instance.
-
-; <<>>
-
-:begin :instance.
-in_3 := pdp-lxm &
-[ ORTH <! "in" !>,
-  SYN [ HEAD [ FORM f_in,
-	       MOD < [ SYN [ HEAD verb ] ] > ] ] ].
+  SYN [ HEAD [ FORM f_in ] ] ].
 :end :instance.
 
 ; <<>>
@@ -621,21 +702,10 @@ in_3 := pdp-lxm &
 :begin :instance.
 with_1 := pdp-lxm &
 [ ORTH <! "with" !>,
-  SYN [ HEAD [ FORM f_with,
-	       MOD < [ SYN [ HEAD noun ] ] > ] ] ].
+  SYN [ HEAD [ FORM f_with ] ] ].
 :end :instance.
 
 ; <<>>
-
-:begin :instance.
-with_2 := pdp-lxm &
-[ ORTH <! "with" !>,
-  SYN [ HEAD [ FORM f_with,
-	       MOD < [ SYN [ HEAD verb ] ] > ] ] ].
-:end :instance.
-
-; <<>>
-
 
 :begin :instance.
 of_1 := mkp-lxm &
@@ -655,7 +725,6 @@ for_1 := mkp-lxm &
 
 ; Seems like we'll need a pdp-lxm for by as well to account for "I dropped the
 ; book by the store." 
-;
 :begin :instance.
 by_1 := mkp-lxm & 
 [ ORTH <!  "by" !>,
@@ -673,16 +742,7 @@ around_1 := mkp-lxm &
 ;;; <<>> ----- ADVERBS, ADJECTIVES, COMPLIMENTIZERS, CONJUNCTIONS...  -----
 
 :begin :instance.
-that_2 := comp-lxm & 
-[ ORTH <! "that" !>,
-  SYN [HEAD [ FORM fin ] ],
-  ARG-ST < [SYN [SPR < > ] ] > ].
-:end :instance.
-
-; <<>>
-
-:begin :instance.
-to_2:= comp-lxm & 
+to_2:= comp1-lxm & 
 [ ORTH <! "to" !>,
   SYN [ HEAD [ FORM inf ],
 	SPR < [ ] > ],
@@ -692,24 +752,43 @@ to_2:= comp-lxm &
 ; <<>>
 
 :begin :instance.
+that_2 := comp2-lxm & 
+[ ORTH <! "that" !>,
+  SYN [ HEAD [ FORM fin ],
+	SPR < > ],
+  ARG-ST < [SYN [SPR < > ] ] > ].
+:end :instance.
+
+; <<>>
+
+;; This entry needs to be fixed...
+:begin :instance.
 not_1 := adv-lxm & 
 [ ORTH <! "not" !>,
-  SYN  [ HEAD adv & [ MOD < [SYN [HEAD [AUX false ] ] ] >,
-		      FORM f_not ],
-	 SPR  < >,
-	 COMPS < > ],
+  SYN  [ HEAD adv & [ 
+		      FORM f_not ] ],
+  ARG-ST  < >,
   SEM [ RESTR <! [RELN r_not] !> ] ].
 :end :instance.
+;  MOD < [ SYN [ HEAD [ AUX false ] ] ] >,
 
 ; <<>>
 
 :begin :instance.
 and_1 := conj-lxm &
 [ ORTH <! "and" !>,
-  SYN [ HEAD [ FORM f_and ] ] ].
+  SYN [ HEAD [ FORM f_and ] ],
+  SEM [ RESTR <! [ RELN r_and ] !> ] ].
 :end :instance.
 
+; <<>>
 
+:begin :instance.
+but_1 := conj-lxm &
+[ ORTH <! "but" !>,
+  SYN [ HEAD [ FORM f_but ] ],
+  SEM [ RESTR <! [ RELN r_but ] !> ] ].
+:end :instance.
 
 ; <<>>
 
@@ -722,12 +801,21 @@ quickly_1 := adv-lxm &
 ; <<>>
 
 :begin :instance.
-easily_1 := adv-lxm &
-[ ORTH <! "easily" !>,
-  SEM [ RESTR <! [ RELN r_quickly] !> ] ].
+slowly_1 := adv-lxm &
+[ ORTH <! "slowly" !>,
+  SEM [ RESTR <! [ RELN r_slowly] !> ] ].
 :end :instance.
 
 ; <<>>
+
+:begin :instance.
+easily_1 := adv-lxm &
+[ ORTH <! "easily" !>,
+  SEM [ RESTR <! [ RELN r_easily] !> ] ].
+:end :instance.
+
+; <<>>
+
 :begin :instance.
 today_1 := adv-lxm &
 [ ORTH <! "today" !>,
@@ -737,10 +825,48 @@ today_1 := adv-lxm &
 ; <<>>
 
 :begin :instance.
+fond_1 := adj-lxm &
+[ ORTH <! "fond" !>,
+  ARG-ST < [ ], [ SYN PP & [ HEAD [ FORM f_of,
+				    P-OBJ <[SYN NP]> ] ] ] >,
+  SEM [ RESTR <! [ RELN r_fond] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+happy_1 := adj-lxm &
+[ ORTH <! "happy" !>,
+  SEM [ RESTR <! [ RELN r_happy] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+mere_1 := adj-lxm &
+[ ORTH <! "mere" !>,
+  SYN [ HEAD [ PRED false ] ],
+  SEM [ RESTR <! [ RELN r_mere] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
 angry_1 := adj-lxm &
 [ ORTH <! "angry" !>,
   SEM [ RESTR <! [ RELN r_angry] !> ] ].
 :end :instance.
+
+; <<>>
+
+;; This is for "I was angry with..." sentences but doesn't work.
+;:begin :instance.
+;angry_2 := adj-lxm &
+;[ ORTH <! "angry" !>,
+;  ARG-ST < [ ], [ SYN PP & [ HEAD [ FORM f_with,
+;				    P-OBJ <[SYN NP]> ] ] ] >,
+;  SEM [ RESTR <! [ RELN r_angry] !> ] ].
+;:end :instance.
 
 ; <<>>
 
@@ -766,7 +892,6 @@ broken_1 := adj-lxm &
   SEM [ RESTR <! [ RELN r_broke] !> ] ].
 :end :instance.
 
-
 ; <<>>
 
 :begin :instance.
@@ -786,6 +911,15 @@ eager_1 := adj-lxm &
 ; <<>>
 
 :begin :instance.
+eager_2 := adj-lxm &
+[ ORTH <! "eager" !>,
+  ARG-ST < [ ], [SYN CP-inf] >,
+  SEM [ RESTR <! [ RELN r_eager] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
 expensive_1 := adj-lxm &
 [ ORTH <! "expensive" !>,
   SEM [ RESTR <! [ RELN r_expensive] !> ] ].
@@ -798,6 +932,17 @@ funny_1 := adj-lxm &
 [ ORTH <! "funny" !>,
   SEM [ RESTR <! [ RELN r_funny] !> ] ].
 :end :instance.
+
+; <<>>
+
+;; This is for "It is funny that..." sentences but doesn't work.
+;:begin :instance.
+;funny_2 := adj-lxm &
+;[ ORTH <! "funny" !>,
+;  SEM [ RESTR <! [ RELN r_funny] !> ],
+;  ARG-ST < [SYN [HEAD [FORM f_it ] ] ], [SYN [HEAD [FORM fin],
+;					      COMPS < > ] ] > ].
+;:end :instance.
 
 ; <<>>
 
@@ -908,19 +1053,27 @@ undocumented_1 := adj-lxm &
 :begin :instance.
 rain_1 := verb-lxm &
 [ ORTH <! "rain" !>,
-  ARG-ST < [SYN [HEAD noun & [FORM f_it] ] ] >,
+  ARG-ST < [SYN [ HEAD noun & [FORM f_it] ],
+	    SEM [ INDEX null-index ] ] >,
   SEM [ RESTR <! [ RELN r_rain] !> ] ].
 :end :instance.
 
 ; <<>>
 
+;; Should this really inherit from ptv instead?  If so, then we have to
+;; play around with the semantic fields.  
 :begin :instance.
 keep_1 := verb-lxm &
 [ ORTH <! "keep" !>,
-  ARG-ST < [SEM [INDEX #1] ], [SYN [HEAD noun & [FORM f_tabs] ]  ], [SYN [HEAD prep & [FORM f_on] ], SEM [INDEX #2] ] >,
+  ARG-ST < [SYN NP-nom,
+	    SEM [INDEX #1] ],
+	                  [SYN NP-acc & [HEAD [FORM f_tabs] ],
+			   SEM [INDEX null-index] ],
+				   	           [SYN PP & [HEAD [FORM f_on] ],
+						    SEM [INDEX #2 ] ] >,
   SEM  [ RESTR <! stv_pred & [ RELN r_observe,
                                ACT #1,
-                               UND #2 ] !> ] ]. 
+                               UND #2 ] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -943,41 +1096,82 @@ take_1 := verb-lxm &
 ; <<>>
 
 :begin :instance.
-can_1 := auxv-lxm &
+can_1 := modal-lxm &
 [ ORTH <! "can" !>,
-  SYN [ HEAD verb & [ FORM fin ] ],
-  ARG-ST < [ ], [ SYN [ HEAD verb & [FORM inf] ] ] >,
-  SEM [ RESTR <! [ RELN r_can] !> ] ].
+  SEM  [ RESTR <! [ RELN r_can ] !> ] ].
 :end :instance.
 
 ; <<>>
 
 :begin :instance.
-could_1 := auxv-lxm &
+could_1 := modal-lxm &
 [ ORTH <! "could" !>,
-  SYN [ HEAD verb & [ FORM fin ] ],
-  ARG-ST < [ ], [ SYN [ HEAD verb & [FORM inf] ] ] >,
-  SEM [ RESTR <! [ RELN r_could] !> ] ].
+  SEM  [ RESTR <! [ RELN r_could ] !> ] ].
 :end :instance.
 
 ; <<>>
+
+:begin :instance.
+should_1 := modal-lxm &
+[ ORTH <! "should" !>,
+  SEM  [ RESTR <! [ RELN r_should ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+would_1 := modal-lxm &
+[ ORTH <! "would" !>,
+  SEM  [ RESTR <! [ RELN r_would ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+might_1 := modal-lxm &
+[ ORTH <! "might" !>,
+  SEM  [ RESTR <! [ RELN r_might ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+must_1 := modal-lxm &
+[ ORTH <! "must" !>,
+  SEM  [ RESTR <! [ RELN r_must ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+will_1 := modal-lxm &
+[ ORTH <! "will" !>,
+  SEM  [ RESTR <! [ RELN r_will ] !> ] ].
+:end :instance.
+
+; <<>>
+
 
 :begin :instance.
 do_1 := auxv-lxm &
 [ ORTH <! "do" !>,
   SYN [ HEAD verb & [ FORM fin ] ],
-  ARG-ST < [ ], [ SYN [ HEAD verb & [FORM inf, AUX false ] ] ] >,
-  SEM [ RESTR <! [ RELN r_do] !> ] ].
+  ARG-ST < [ ], [ SYN [ HEAD verb & [FORM inf, AUX false ] ],
+		  SEM [ INDEX #1 ] ] >,
+  SEM [ INDEX #1,
+	RESTR <! [ RELN r_do] !> ] ].
 :end :instance.
 
 ; <<>>
 
 :begin :instance.
-will_1 := auxv-lxm &
-[ ORTH <! "will" !>,
+get_2 := auxv-lxm &
+[ ORTH <! "get" !>,
   SYN [ HEAD verb & [ FORM fin ] ],
-  ARG-ST < [ ], [ SYN [ HEAD verb & [FORM inf] ] ] >,
-  SEM [ RESTR <! [ RELN r_will] !> ] ].
+  ARG-ST < [ ], [ SYN [ HEAD verb & [FORM psp, AUX false ] ],
+		  SEM [ INDEX #1 ] ] >,
+  SEM [ INDEX #1,
+	RESTR <! [ RELN r_get] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -985,7 +1179,6 @@ will_1 := auxv-lxm &
 :begin :instance.
 have_1 := auxv-lxm &
 [ ORTH <! "have" !>,
-  SYN [ HEAD verb & [ FORM fin ] ],
   ARG-ST < [ ], [ SYN [ HEAD verb & [FORM psp] ] ] >,
   SEM [ RESTR <! [ RELN r_have] !> ] ].
 :end :instance.
@@ -996,23 +1189,33 @@ have_1 := auxv-lxm &
 be_1 := auxv-lxm &
 [ ORTH <! "be" !>,
   SEM [ MODE prop,
-  	INDEX #ind ],
+  	INDEX #1,
+	RESTR <! [ RELN r_be ] !> ],
   ARG-ST < [ ], [ SYN [ HEAD [PRED true] ],
-  	SEM [ INDEX #ind ] ] > ].
+		  SEM [ INDEX #1 ] ] > ].
 :end :instance.
+; SEM [INDEX real-index ]
 
 ; <<>>
-
+; Check the inheritance on this one, the book says orv-lxm but my
+; notes suggest auxv instead.  And what about a blank SPR on the second
+; ARG-ST element to block double parses on "there is a cat on the table"
 :begin :instance.
-be_2 := infl-lxm &
+be_2 := tv-lxm &
 [ ORTH <! "be" !>,
-  SYN [ HEAD verb & [ AUX true, INV false, NEG false ],
-  	SPR < [ ] > ],
-  SEM [INDEX #ind,
-  	MODE prop],
-  ARG-ST < [SYN [HEAD noun & [FORM f_there] ] ], #1 & [ SYN [HEAD noun] ], [ SYN [ HEAD [PRED true],
-                                                                             SPR < #1 > ],
-									     SEM [ INDEX #ind] ] > ].
+  SYN [ HEAD [ AUX true ] ],
+  SEM [ INDEX #3,
+	RESTR <! fiv_pred & [ ACT #2,
+			      ARG #3,
+			      RELN r_be ] !> ],
+  ARG-ST < [ SYN [ HEAD [ AGR [NUM #num],
+			  FORM f_there] ],
+	     SEM [ INDEX null-index ] ], 
+                      #4 & [ SYN [ HEAD [AGR [NUM #num] ] ],
+			     SEM [ INDEX #2 ] ],       [ SYN [ HEAD [PRED true],
+							       SPR < #4 >,
+							       COMPS < > ],
+							 SEM [ INDEX #3 ] ] > ].
 :end :instance.
 
 ; <<>>
@@ -1020,7 +1223,7 @@ be_2 := infl-lxm &
 :begin :instance.
 age_1 := iv-lxm &
 [ ORTH <! "age" !>,
-  SEM [ RESTR <! [ RELN r_age] !> ] ].
+  SEM [ RESTR <! [ RELN r_age-verb] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -1061,6 +1264,14 @@ dine_1 := iv-lxm &
 disappear_1 := iv-lxm &
 [ ORTH <! "disappear" !>,
   SEM [ RESTR <! [ RELN r_disappear] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+duck_2 := iv-lxm &
+[ ORTH <! "duck" !>,
+  SEM  [ RESTR <! [ RELN r_duck-verb] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -1300,7 +1511,7 @@ come_1 := piv-lxm &
 :begin :instance.
 fit_1 := piv-lxm &
 [ ORTH <! "fit" !>,
-  SEM [ RESTR <! [ RELN r_fit] !> ] ].
+  SEM [ RESTR <! [ RELN r_fit-verb] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -1370,7 +1581,7 @@ vote_2 := piv-lxm &
 ; <<>>
 
 :begin :instance.
-hope_1 := ctv-lxm &
+hope_1 := fiv-lxm &
 [ ORTH <! "hope" !>,
   SEM [ RESTR <! [ RELN r_hope] !> ] ].
 :end :instance.
@@ -1378,7 +1589,16 @@ hope_1 := ctv-lxm &
 ; <<>>
 
 :begin :instance.
-say_1 := ctv-lxm &
+hope_2 := scv-lxm &
+[ ORTH <! "hope" !>,
+  SEM [ RESTR <! [ RELN r_hope] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+say_1 := fiv-lxm &
 [ ORTH <! "say" !>,
   SEM [ RESTR <! [ RELN r_say] !> ] ].
 :end :instance.
@@ -1386,7 +1606,7 @@ say_1 := ctv-lxm &
 ; <<>>
 
 :begin :instance.
-think_1 := ctv-lxm &
+think_1 := fiv-lxm &
 [ ORTH <! "think" !>,
   SEM [ RESTR <! [ RELN r_think] !> ] ].
 :end :instance.
@@ -1394,7 +1614,7 @@ think_1 := ctv-lxm &
 ; <<>>
 
 :begin :instance.
-suspect_1 := ctv-lxm &
+suspect_1 := fiv-lxm &
 [ ORTH <! "suspect" !>,
   SEM [ RESTR <! [ RELN r_suspect] !> ] ].
 :end :instance.
@@ -1402,7 +1622,7 @@ suspect_1 := ctv-lxm &
 ; <<>>
 
 :begin :instance.
-discover_1 := ctv-lxm &
+discover_1 := fiv-lxm &
 [ ORTH <! "discover" !>,
   SEM [ RESTR <! [ RELN r_discover] !> ] ].
 :end :instance.
@@ -1410,7 +1630,7 @@ discover_1 := ctv-lxm &
 ; <<>>
 
 :begin :instance.
-believe_2 := ctv-lxm &
+believe_2 := fiv-lxm &
 [ ORTH <! "believe" !>,
   SEM [ RESTR <! [ RELN r_believe] !> ] ].
 :end :instance.
@@ -1418,7 +1638,7 @@ believe_2 := ctv-lxm &
 ; <<>>
 
 :begin :instance.
-learn_1 := ctv-lxm &
+learn_1 := fiv-lxm &
 [ ORTH <! "learn" !>,
   SEM [ RESTR <! [ RELN r_learn] !> ] ].
 :end :instance.
@@ -1426,9 +1646,74 @@ learn_1 := ctv-lxm &
 ; <<>>
 
 :begin :instance.
-see_1 := ctv-lxm &
+learn_2 := scv-lxm &
+[ ORTH <! "learn" !>,
+  SEM [ RESTR <! [ RELN r_learn] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+learn_3 := iv-lxm &
+[ ORTH <! "learn" !>,
+  SEM [ RESTR <! [ RELN r_learn] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+learn_4 := stv-lxm &
+[ ORTH <! "learn" !>,
+  SEM [ RESTR <! [ RELN r_learn] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+see_1 := fiv-lxm &
 [ ORTH <! "see" !>,
   SEM [ RESTR <! [ RELN r_see] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+see_2 := stv-lxm &
+[ ORTH <! "see" !>,
+  SEM [ RESTR <! [ RELN r_see] !> ] ].
+:end :instance.
+
+; <<>>
+
+;; Added for second parse of "I saw her duck."  
+:begin :instance.
+see_3 := tv-lxm & 
+[ ORTH <! "see" !>,
+  SEM  [ RESTR <! [ ACT #1,
+		    UND #2,
+		    ARG #3,
+		    RELN r_see] !> ],
+  ARG-ST < [SEM [INDEX #1]], [SEM [INDEX #2]], [SYN [HEAD verb & [FORM inf],
+						     SPR < [ ] >,
+						     COMPS < > ],
+						SEM [INDEX #3] ] > ].
+:end :instance.
+
+; <<>>
+
+;; Added for "Pat helped Chris (to) solve the problem"  
+:begin :instance.
+help_2 := tv-lxm & 
+[ ORTH <! "help" !>,
+  SEM  [ RESTR <! [ ACT #1,
+		    UND #2,
+		    ARG #3,
+		    RELN r_help] !> ],
+  ARG-ST < [SEM [INDEX #1]], [SEM [INDEX #2]], [SYN [HEAD [FORM inf],
+						     SPR < [ ] >,
+						     COMPS < > ],
+						SEM [INDEX #3] ] > ].
 :end :instance.
 
 ; <<>>
@@ -1458,6 +1743,18 @@ annoy_1 := stv-lxm &
 ; <<>>
 
 :begin :instance.
+annoy_2 := tv-lxm & 
+[ ORTH <! "annoy" !>,
+  ARG-ST < [ SYN CP-fin,
+	     SEM [INDEX #1] ], [ SEM [INDEX #2] ] >,
+  SEM [ RESTR <! ctv_pred & [ ARG #1,
+			      UND #2,
+			      RELN r_annoy] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
 arrest_1 := stv-lxm &
 [ ORTH <! "arrest" !>,
   SEM [ RESTR <! [ RELN r_arrest] !> ] ].
@@ -1467,6 +1764,14 @@ arrest_1 := stv-lxm &
 
 :begin :instance.
 ask_2 := stv-lxm &
+[ ORTH <! "ask" !>,
+  SEM [ RESTR <! [ RELN r_ask] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ask_3 := ocv-lxm &
 [ ORTH <! "ask" !>,
   SEM [ RESTR <! [ RELN r_ask] !> ] ].
 :end :instance.
@@ -1756,13 +2061,40 @@ hate_1 := stv-lxm &
 :begin :instance.
 have_2 := stv-lxm &
 [ ORTH <! "have" !>,
+  SYN [ HEAD [ AUX boolean ] ],
   SEM [ RESTR <! [ RELN r_have] !> ] ].
+:end :instance.
+
+; <<>>
+#|
+:begin :instance.
+have_3 := stv-lxm &
+[ ORTH <! "have" !>,
+  SYN [ HEAD [ AUX false ] ],
+  SEM [ RESTR <! [ RELN r_have] !> ] ].
+:end :instance.
+|#
+; <<>>
+
+:begin :instance.
+have_4 := srv-lxm &
+[ ORTH <! "have" !>,
+  SEM [ RESTR <! [ RELN r_have] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
 :end :instance.
 
 ; <<>>
 
 :begin :instance.
 help_1 := stv-lxm &
+[ ORTH <! "help" !>,
+  SEM [ RESTR <! [ RELN r_help] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+help_2 := iv-lxm &
 [ ORTH <! "help" !>,
   SEM [ RESTR <! [ RELN r_help] !> ] ].
 :end :instance.
@@ -1779,6 +2111,14 @@ hit_1 := stv-lxm &
 
 :begin :instance.
 improve_1 := stv-lxm &
+[ ORTH <! "improve" !>,
+  SEM [ RESTR <! [ RELN r_improve] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+improve_2 := iv-lxm &
 [ ORTH <! "improve" !>,
   SEM [ RESTR <! [ RELN r_improve] !> ] ].
 :end :instance.
@@ -1826,6 +2166,24 @@ like_1 := stv-lxm &
 ; <<>>
 
 :begin :instance.
+like_2 := fiv-lxm &
+[ ORTH <! "like" !>,
+  SEM  [ RESTR <! [ RELN r_like ] !> ] ].
+:end :instance.
+; See Changes File #7 
+
+; <<>>
+
+:begin :instance.
+like_3 := scv-lxm &
+[ ORTH <! "like" !>,
+  SEM  [ RESTR <! [ RELN r_like ] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
 list_1 := stv-lxm &
 [ ORTH <! "list" !>,
   SEM [ RESTR <! [ RELN r_list] !> ] ].
@@ -1861,6 +2219,22 @@ meet_1 := stv-lxm &
 observe_1 := stv-lxm &
 [ ORTH <! "observe" !>,
   SEM [ RESTR <! [ RELN r_observe] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+offend_1 := stv-lxm &
+[ ORTH <! "offend" !>,
+  SEM [ RESTR <! [ RELN r_offend] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+open_1 := stv-lxm &
+[ ORTH <! "open" !>,
+  SEM [ RESTR <! [ RELN r_open] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -1949,14 +2323,6 @@ represent_1 := stv-lxm &
 respect_1 := stv-lxm &
 [ ORTH <! "respect" !>,
   SEM [ RESTR <! [ RELN r_respect] !> ] ].
-:end :instance.
-
-; <<>>
-
-:begin :instance.
-see_2 := stv-lxm &
-[ ORTH <! "see" !>,
-  SEM [ RESTR <! [ RELN r_see] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -2138,7 +2504,7 @@ tell_2 := dtv-lxm &
 ; <<>>
 
 :begin :instance.
-ask_3 := ptv-lxm &
+ask_4 := ptv-lxm &
 [ ORTH <! "ask" !>,
   SEM [ RESTR <! [ RELN r_ask] !> ] ].
 :end :instance.
@@ -2225,10 +2591,21 @@ give_2 := ptv-lxm &
 
 ; <<>>
 
+;; The CP-inf seems necessary to block "I continue sleep".
 :begin :instance.
 continue_1 := srv-lxm &
 [ ORTH <! "continue" !>,
-  SEM [ RESTR <! [ RELN r_continue] !> ] ].
+  SEM [ RESTR <! [ RELN r_continue] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+seem_1 := srv-lxm &
+[ ORTH <! "seem" !>,
+  SEM [ RESTR <! [ RELN r_seem] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
 :end :instance.
 
 ; <<>>
@@ -2236,15 +2613,26 @@ continue_1 := srv-lxm &
 :begin :instance.
 appear_1 := srv-lxm &
 [ ORTH <! "appear" !>,
-  SEM [ RESTR <! [ RELN r_appear] !> ] ].
+  SEM [ RESTR <! [ RELN r_appear] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
 :end :instance.
 
 ; <<>>
 
 :begin :instance.
-appeal_1 := scv-lxm &
+appear_2 := orv-lxm &
+[ ORTH <! "appear" !>,
+  SEM  [ RESTR <! [ RELN r_appear ] !> ],
+  ARG-ST < [ ], [SYN [HEAD prep & [FORM f_to] ] ], [ ] > ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+appeal_1 := ocv-lxm &
 [ ORTH <! "appeal" !>,
-  SEM [ RESTR <! [ RELN r_appeal] !> ] ].
+  SEM  [ RESTR <! [ RELN r_appeal ] !> ],
+  ARG-ST < [ ], [SYN [HEAD prep & [FORM f_to] ] ], [ ] > ].
 :end :instance.
 
 ; <<>>
@@ -2252,7 +2640,8 @@ appeal_1 := scv-lxm &
 :begin :instance.
 try_1 := scv-lxm &
 [ ORTH <! "try" !>,
-  SEM [ RESTR <! [ RELN r_try] !> ] ].
+  SEM [ RESTR <! [ RELN r_try] !> ],
+  ARG-ST < [ ], [SYN CP-inf] > ].
 :end :instance.
 
 ; <<>>
@@ -2269,14 +2658,6 @@ expect_1 := orv-lxm &
 persuade_1 := ocv-lxm &
 [ ORTH <! "persuade" !>,
   SEM [ RESTR <! [ RELN r_persuade] !> ] ].
-:end :instance.
-
-; <<>>
-
-:begin :instance.
-abbie_1 := cn-lxm &
-[ ORTH <! "abbie" !>,
-  SEM [ RESTR <! [ RELN r_abbie] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -2314,17 +2695,40 @@ album_1 := cn-lxm &
 ; <<>>
 
 :begin :instance.
-alps_1 := cn-lxm &
-[ ORTH <! "alps" !>,
-  SEM [ RESTR <! [ RELN r_alps] !> ] ].
+alps_1 := const-lxm &
+[ ORTH <! "the", "alps" !>,
+  SYN [ HEAD noun & [ FORM normal,
+		      AGR [ PER 3rd,
+			    NUM plur ] ] ],
+  SEM [ MODE ref,
+	INDEX #1,
+	RESTR <! named_pred & [ NAME 'Alps,
+				NAMED #1 ] !> ], 
+  ARG-ST < > ].
 :end :instance.
 
 ; <<>>
 
 :begin :instance.
-andes_1 := cn-lxm &
-[ ORTH <! "andes" !>,
-  SEM [ RESTR <! [ RELN r_andes] !> ] ].
+pants_1 := cn-lxm &
+[ ORTH <! "pants" !>,
+  SYN [ HEAD [ AGR [ NUM plur ] ] ],
+  SEM [ RESTR <! [ RELN r_pants] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+andes_1 := const-lxm &
+[ ORTH <! "the", "andes" !>,
+  SYN [ HEAD noun & [ FORM normal,
+		      AGR [ PER 3rd,
+			    NUM plur ] ] ],
+  SEM [ MODE ref,
+	INDEX #1,
+	RESTR <! named_pred & [ NAME 'Andes,
+				NAMED #1 ] !> ], 
+  ARG-ST < > ].
 :end :instance.
 
 ; <<>>
@@ -2511,6 +2915,18 @@ book_1 := cn-lxm &
   SEM [ RESTR <! [ RELN r_book] !> ] ].
 :end :instance.
 
+:end :instance.
+
+; <<>>
+
+;; This was put in to account for examples such as "I like the book about Kim"
+:begin :instance.
+book_2 := cn-lxm &
+[ ORTH <! "book" !>,
+  ARG-ST < [ ], [ SYN [ HEAD prep & [FORM f_about] ] ] >,
+  SEM [ RESTR <! [ RELN r_book] !> ] ].
+:end :instance.
+
 ; <<>>
 
 :begin :instance.
@@ -2540,6 +2956,7 @@ campaign_2 := cn-lxm &
 :begin :instance.
 cancer_1 := cn-lxm &
 [ ORTH <! "cancer" !>,
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
   SEM [ RESTR <! [ RELN r_cancer] !> ] ].
 :end :instance.
 
@@ -2764,7 +3181,7 @@ drug_1 := cn-lxm &
 :begin :instance.
 duck_1 := cn-lxm &
 [ ORTH <! "duck" !>,
-  SEM [ RESTR <! [ RELN r_duck] !> ] ].
+  SEM [ RESTR <! [ RELN r_duck-noun] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -2826,6 +3243,14 @@ fever_1 := cn-lxm &
 ; <<>>
 
 :begin :instance.
+fit_1 := cn-lxm &
+[ ORTH <! "fit" !>,
+  SEM [ RESTR <! [ RELN r_fit-noun] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
 flower_1 := cn-lxm &
 [ ORTH <! "flower" !>,
   SEM [ RESTR <! [ RELN r_flower] !> ] ].
@@ -2873,10 +3298,11 @@ friend_1 := cn-lxm &
 
 ; <<>>
 
+;; Do we want this going through the 3sing-noun rule?
 :begin :instance.
 furniture_1 := cn-lxm &
 [ ORTH <! "furniture" !>,
-  SYN [ SPR < [ SYN [ HEAD [COUNT false] ] ] > ],
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
   SEM [ RESTR <! [ RELN r_furniture] !> ] ].
 :end :instance.
 
@@ -2901,6 +3327,7 @@ garden_1 := cn-lxm &
 :begin :instance.
 garlic_1 := cn-lxm &
 [ ORTH <! "garlic" !>,
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
   SEM [ RESTR <! [ RELN r_garlic] !> ] ].
 :end :instance.
 
@@ -2981,7 +3408,7 @@ hospital_1 := cn-lxm &
 :begin :instance.
 ice_cream_1 := cn-lxm &
 [ ORTH <! "ice", "cream" !>,
-  SYN [ SPR < [ SYN [ HEAD [COUNT false] ] ] > ],
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
   SEM [ RESTR <! [ RELN r_ice_cream] !> ] ].
 :end :instance.
 
@@ -3068,6 +3495,24 @@ letter_1 := cn-lxm &
 ; <<>>
 
 :begin :instance.
+letter_2 := cn-lxm &
+[ ORTH <! "letter" !>,
+  ARG-ST < [ ], [SYN [ HEAD prep & [ FORM f_to ] ] ] >,
+  SEM [ RESTR <! [ RELN r_letter] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+letter_3 := cn-lxm &
+[ ORTH <! "letter" !>,
+  ARG-ST < [ ], [SYN [ HEAD prep & [ FORM f_for ] ] ] >,
+  SEM [ RESTR <! [ RELN r_letter] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
 library_1 := cn-lxm &
 [ ORTH <! "library" !>,
   SEM [ RESTR <! [ RELN r_library] !> ] ].
@@ -3110,7 +3555,17 @@ list_2 := cn-lxm &
 :begin :instance.
 logic_1 := cn-lxm &
 [ ORTH <! "logic" !>,
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
   SEM [ RESTR <! [ RELN r_logic] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+age_1 := cn-lxm &
+[ ORTH <! "age" !>,
+  ARG-ST < [ SYN [ HEAD [COUNT false] ] ] >,
+  SEM [ RESTR <! [ RELN r_age-noun] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -3318,6 +3773,15 @@ phone_2 := cn-lxm &
 :begin :instance.
 picture_1 := cn-lxm &
 [ ORTH <! "picture" !>,
+  SEM [ RESTR <! [ RELN r_picture] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+picture_2 := cn-lxm &
+[ ORTH <! "picture" !>,
+  ARG-ST < [ ], [ SYN [ HEAD prep & [FORM f_of] ] ] >,
   SEM [ RESTR <! [ RELN r_picture] !> ] ].
 :end :instance.
 
@@ -3823,6 +4287,38 @@ work_1 := cn-lxm &
 worm_1 := cn-lxm &
 [ ORTH <! "worm" !>,
   SEM [ RESTR <! [ RELN r_worm] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Rome_1 := pn-lxm &
+[ ORTH <! "Rome" !>,
+  SEM [ RESTR <! [ NAME 'Rome ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Milan_1 := pn-lxm &
+[ ORTH <! "Milan" !>,
+  SEM [ RESTR <! [ NAME 'Milan ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Moscow_1 := pn-lxm &
+[ ORTH <! "Moscow" !>,
+  SEM [ RESTR <! [ NAME 'Moscow ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Romania_1 := pn-lxm &
+[ ORTH <! "Romania" !>,
+  SEM [ RESTR <! [ NAME 'Romania ] !> ] ].
 :end :instance.
 
 ; <<>>

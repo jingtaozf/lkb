@@ -7,10 +7,8 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;; Don't change the name of lrule-super, or it will break -- it's named
-;;; in the globals.lsp file.  CCB.
-
-
+;; Don't change the name of lrule-super, or it will break -- it's named
+;; in the globals.lsp file.  CCB.
 lrule-super :< lex-item.
 
 ; Words go through several stages before they can be used by our grammatical
@@ -39,36 +37,146 @@ lrule := lrule-super &
     NEEDS-AFFIX boolean ],
 status: lex-rule.
 
-lrule-general := lrule & word &
+lrule-general := lrule & word & 
 [ SYN #syn,
   SEM #sem,
   ARG-ST #arg-st,
 
-  WORD-DUMMY-LABEL boolean,
   ARGS < [SYN #syn,
 	  SEM #sem,
 	  ARG-ST #arg-st ] > ]. 
 
-3rd-sing-verb-lexical-rule := lrule & word &
-[ SYN #syn & [ HEAD  verb & [ FORM fin,
-			      PRED false ],
-	       SPR < [ SYN [ HEAD [ AGR 3sing ] ] ] > ],
+
+;;; <<>> LEXICAL RULES
+
+present-verb-lexical-rule := lrule & word &
+[ SYN #syn,
   SEM [ MODE #mode,
 	INDEX #1,
-	RESTR [ LIST  < [RELN r_t-overlap,
+	RESTR [ LIST < [RELN r_t-overlap,
 			 ARG1 #1,
 			 ARG2 now] . #restr >,
                 LAST #semlast ]],
   ARG-ST #arg-st,
+
   ARGS < lexeme & [  SYN #syn,
 		     SEM [ MODE #mode,
 			   RESTR [ LIST #restr,
                                    LAST #semlast ]],
-		     ARG-ST #arg-st ] >,
- NEEDS-AFFIX true ].
+		     ARG-ST #arg-st ] > ].
 
 
+past-verb-lexical-rule := lrule & word &
+[ SYN #syn,
+  SEM [ MODE #mode,
+	INDEX #1,
+	RESTR [ LIST  < [RELN r_t-precede,
+			 ARG1 #1,
+			 ARG2 now] . #restr >,
+                LAST #semlast ]],
+  ARG-ST #arg-st,
+  
+  ARGS < lexeme & [ SYN #syn,
+		    SEM [ MODE #mode,
+			  RESTR [ LIST #restr,
+				  LAST #semlast ]],
+		    ARG-ST #arg-st ] > ].
 
+;; This lexical rule was inserted to take care of duplicate parses in 
+;; "I like you" and "There should be a cat on the table"  
+singandplur-lexical-rule := lrule & word &
+[ SYN [ HEAD noun & [ AGR [NUM num, PER #per ], CASE #case, 
+		      FORM #form, PRED #pred, ANA #ana],
+	SPR #spr,
+	COMPS #comp ],
+  SEM #sem,
+  ARG-ST #arg-st,
+  
+  ARGS < lexeme & [ SYN [ HEAD noun & [ AGR [NUM singandplur, PER #per], CASE #case, 
+					FORM #form, PRED #pred, ANA #ana],
+			  SPR #spr,
+			  COMPS #comp ],
+		    SEM #sem,
+		    ARG-ST #arg-st ] > ].
+
+
+;;; <<>> NOMINAL LEXICAL TYPES
+
+;; This rule is needed to stamp 3sing onto almost all common nouns
+;; (except "pants") to prevent "The cat like me" 
+3rd-sing-noun := affix & 
+[ SYN [ HEAD noun & [ AGR 3sing & [ NUM sing,
+				    PER 3rd ] ] ] ].
+
+plur-noun := affix &
+[ SYN [ HEAD noun & [ AGR [ NUM plur ] ] ],
+  ARG-ST < [ SYN [ HEAD [ COUNT true ] ] ], ... > ].
+;; See Changes File #2
+
+singandplur-noun := affix &
+[ SYN [ HEAD noun & [ AGR [ NUM singandplur ] ] ] ].
+
+
+;  <<>> VERBAL LEXICAL TYPES
+
+past-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false ] ] ]. 
+
+pres-part-verb := affix &
+[ SYN [ HEAD verb & [ FORM prp,
+		      PRED true ] ] ].
+
+past-part-verb := affix & 
+[ SYN [ HEAD verb & [ FORM psp,
+		      PRED false ] ] ].
+
+inf-verb := affix &
+[ SYN [ HEAD verb & [ FORM inf,
+		      PRED false ] ] ].
+
+1st-sing-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 1sing & [PER 1st,
+				       NUM sing ] ] ] ], ... > ].
+
+2orplural-verb := affix & 
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 2orplural ] ] ], ...  > ].
+; See Changes File #6
+
+;; I've added this rule for "annoy_2" since it can't fire through the
+;; 3rd-sing-verb rule and overrideable defaults let too much through.
+comp-sing-verb := affix &  
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN CP-fin ], ... > ]. 
+
+3rd-sing-verb := affix &  
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 3sing ] ] ], ... > ]. 
+
+non-3rd-sing-verb := affix &  
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR non-3sing ] ] ], ... > ].
+
+1or3-sing-past-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR [PER 1or3, NUM sing ] ] ] ], ... > ].
+; See Changes File #6
+
+
+;; Why does this rule need to be in this file rather than lrules?
 general-passive-lrule := word & 
 [ ORTH #orth,
   SYN [ HEAD verb & [ FORM pass,
@@ -84,51 +192,65 @@ general-passive-lrule := word &
 
 
 
+; << >> RULES TO RECYCLE OR TRASH
 
+#|
 sing-noun := affix & 
- [ HEAD noun & [ AGR [ NUM sing ] ] ].
+[SYN [ HEAD noun & [ AGR [ NUM sing ] ] ] ].
+;; See Changes File #1
 
-plur-noun := affix &
- [ HEAD noun & [ AGR [ NUM plur ] ],
-   SPR < [ SYN [ HEAD [ COUNT true ] ] ] > ].
+1st-sing-noun := affix &
+[ SYN [ HEAD noun & [ AGR non-3sing & [ NUM sing,
+					PER 1st ] ] ] ].
+
+2nd-sing-noun := affix &
+[ SYN [ HEAD noun & [ AGR non-3sing & [ NUM sing,
+					PER 2nd ] ] ] ].
+
+
+;; This is only if we want to parse "I love all furniture"
+;; Watch out, it tends to overgenerate with "I love furniture"
+count-false-noun := affix &
+[ SYN [ HEAD noun & [ AGR [ NUM plur ] ] ],
+  ARG-ST < [ SYN [ HEAD [ COUNT false ] ] ] > ].
+
 
 plur-noun-nom := affix &
- [ HEAD noun & [ AGR [ NUM plur ], CASE nom ] ].
+[SYN [ HEAD noun & [ AGR [ NUM plur ], CASE nom ] ] ].
+
 
 plur-noun-acc := affix &
- [ HEAD noun & [ AGR [ NUM plur ], CASE acc ] ].
+[SYN [ HEAD noun & [ AGR [ NUM plur ], CASE acc ] ] ].
 
 
-non-3rd-sing-verb := affix &  
- [ HEAD verb & [ FORM fin,
-		 PRED false ],
-   SPR < [ SYN [ HEAD [ CASE nom, AGR non-3sing ] ] ] > ].
-
-3rd-sing-verb := affix &  
- [ HEAD verb & [ FORM fin,
-		 PRED false ],
-   SPR < [ SYN [ HEAD [ CASE nom, AGR 3sing ] ] ] > ].
-
-past-verb := affix &
- [ HEAD verb & [ FORM fin,
-		 PRED false ],
-   SPR < [ SYN [ HEAD [ CASE nom ] ] ] > ].
-
-pass-verb := affix &
- [ HEAD verb & [ FORM pass,
-		 PRED true ] ].
-
-pres-part-verb := affix &
- [ HEAD verb & [ FORM prp,
-		 PRED true ] ].
-
-past-part-verb := affix & 
- [ HEAD verb & [ FORM psp,
-		 PRED false ] ].
-
-inf-verb := affix &
- [ HEAD verb & [ FORM inf,
-		 PRED false ] ].
+;; Should modal verbs have their own separate rule?
+modal-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin, 
+		      PRED false,
+		      AUX true ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR modalagr ] ] ], ... > ]. 
+; See Changes File #5
 
 
-
+;; This rule prevents modals from receiving unecessary stamping of 
+;; 3sing/non3sing, giving one parse for "There should be.."
+modal-verb-lexical-rule := lrule & word & 
+[ SYN [ HEAD #head,
+	SPR < [SYN [ HEAD [CASE #case, AGR agr-cat],
+		     SPR #sprspr,
+		     COMPS #sprcomps ],
+	       SEM #sprsem ] >,
+	COMPS #comps ],
+  SEM #sem,
+  ARG-ST #arg-st,
+  
+  ARGS < lexeme & [ SYN [ HEAD #head,
+			  SPR < [SYN [ HEAD [CASE #case, AGR modalagr],
+				       SPR #sprspr,
+				       COMPS #sprcomps ],
+				 SEM #sprsem ] >,
+			  COMPS #comps ],
+		    SEM #sem,
+		    ARG-ST #arg-st ] > ].
+|#

@@ -1,4 +1,4 @@
-(defparameter *grammar-version* "Textbook (oct-98)")
+(defparameter *grammar-version* "Textbook (jul-99)")
 
 (lkb-load-lisp (this-directory) "globals.lsp")
 #+mrs(lkb-load-lisp (this-directory) "mrs-globals-ygg.lisp")

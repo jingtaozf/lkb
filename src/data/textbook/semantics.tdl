@@ -33,10 +33,18 @@ null-sem := sem-struc &
 
 modifier-sem := synsem-struc &
  [ SYN [ HEAD [ MOD < [SEM [INDEX #2 ] ] > ] ],
-   SEM [ INDEX #1,
+   SEM [ MODE null-mode,
+	 INDEX #1,
 	 RESTR <! arg_pred & [ SIT #1, ARG #2 ] !> ] ].
 
+noun-sem := lex-item &
+[ SEM [ MODE  /l ref,
+	INDEX #1,
+	RESTR <! noun_pred & [ INSTANCE #1 ] !> ] ].
 
+pn-sem := lex-item &
+ [ SEM [ INDEX #1,
+	 RESTR <! named_pred & [ NAMED #1 ] !> ] ].
 
 noun_pred := predication &
  [ INSTANCE  ref-index ].
@@ -49,7 +57,8 @@ named_pred := noun_pred &
 ;;; named_pred should be a sub-type of noun_pred where NAMED = INSTANCE.
 ;;; It's redundant to have both NAMED and INSTANCE.  CCB
 
-conj_pred := predication.
+conj_pred := predication &
+ [ ANDARG list-of-indexes ].
 
 act_pred := predication &
  [ ACT ref-index ].
@@ -58,96 +67,85 @@ und_pred := predication &
 thm_pred := predication &
  [ THM ref-index ].
 
+;; Should this be sit-index, or would we rather it be unspecified?
+arg_pred := predication &
+ [ ARG sit-index ].
+
 iv_pred  :< act_pred.
 piv_pred := act_pred & thm_pred.
-stv_pred := act_pred & und_pred.
-ctv_pred := act_pred & arg_pred.
+fiv_pred := act_pred & arg_pred.
+stv_pred := act_pred & und_pred. 
+ctv_pred := arg_pred & und_pred.
 dtv_pred := act_pred & und_pred & thm_pred.
 srv_pred :< arg_pred.
 scv_pred := act_pred & arg_pred.
 orv_pred :< scv_pred.
 ocv_pred := act_pred & und_pred & arg_pred.
 
-iv-sem := lex-item &
-[ SEM [ INDEX #index,
-	RESTR <! iv_pred & [ SIT #index,
-			     ACT #1 ] !> ],
+verb-sem := lex-item &
+[ SEM [INDEX #index,
+       MODE prop,
+       RESTR <! predication & [SIT #index] !> ] ].
+
+iv-sem := verb-sem &
+[ SEM [ RESTR <! iv_pred & [ ACT #1 ] !> ],
   ARG-ST < [ SEM [ INDEX #1 ] ] > ].
 
-piv-sem := lex-item &
-[ SEM [ INDEX #index,
-	RESTR <! piv_pred & [ SIT #index,
-			      ACT #1, 
+piv-sem := verb-sem &
+[ SEM [ RESTR <! piv_pred & [ ACT #1, 
 			      THM #2 ] !> ],
   ARG-ST < [ SEM [ INDEX #1 ] ], [ SEM [ INDEX #2 ] ]  > ].
 
-ctv-sem := lex-item &
-[ SEM [ INDEX #index,
-        RESTR <! ctv_pred & [ SIT #index,
-                              ACT #1,
+fiv-sem := verb-sem &
+[ SEM [	RESTR <! fiv_pred & [ ACT #1,
 			      ARG #2 ] !> ],
-  ARG-ST < [ SEM [ INDEX #1 ] ], [ SEM [ INDEX #2 ] ] > ].
-  
-stv-sem := lex-item &
-[ SEM [ INDEX #index,
-        RESTR <! stv_pred & [ SIT #index,
-                              ACT #1, 
-			      UND #2 ] !> ],
-  ARG-ST < [SEM [INDEX #1 ] ], [ SEM [INDEX #2 ] ] > ].
+  ARG-ST < [SEM [INDEX #1] ], [SEM [INDEX #2 ] ] > ].
+; See Changes File #7
 
-dtv-sem := lex-item &
-[ SEM [ INDEX #index,
-        RESTR <! dtv_pred & [ SIT #index,
-			      ACT #1, 
+stv-sem := verb-sem &
+[ SEM [ RESTR <! stv_pred & [ ACT #1,
+			      UND #2 ] !> ],
+  ARG-ST < [SEM [INDEX #1 ] ], [SEM [INDEX #2 ] ] > ].
+
+dtv-sem := verb-sem &
+[ SEM [ RESTR <! dtv_pred & [ ACT #1, 
 			      UND #2, 
 			      THM #3 ] !> ],
-  ARG-ST < [ SEM [ INDEX #1 ] ], [ SEM [ INDEX #2 ] ], [ SEM [ INDEX #3 ] ] > ].
+  ARG-ST < [SEM [INDEX #1 ] ], [SEM [INDEX #2 ] ], [SEM [INDEX #3 ] ] > ].
   
-ptv-sem := lex-item &
- [ SEM [ INDEX #index,
-         RESTR <! dtv_pred & [ SIT #index,
-			       ACT #1, 
+;; These semantics only seem to make sense for "I gave the book to Kim"
+;; What about "I gave the book about/with/for Kim"?  
+ptv-sem := verb-sem &
+ [ SEM [ RESTR <! dtv_pred & [ ACT #1, 
 			       UND #2, 
 			       THM #3 ] !> ],
-   ARG-ST < [ SEM [ INDEX #1 ] ],  [ SEM [ INDEX #3 ] ],  [ SEM [ INDEX #2 ] ] > ].  
+   ARG-ST < [SEM [INDEX #1 ] ],  [SEM [INDEX #3 ] ],  [SEM [INDEX #2 ] ] > ].  
    
-srv-sem := lex-item &
-[ SEM [	INDEX #index,
-        RESTR <! srv_pred & [ SIT #index,
-			      ARG #3 ] !> ],
-  ARG-ST < *top* ,  [ SEM [INDEX #3] ] > ].
+srv-sem := verb-sem &
+[ SEM [ RESTR <! srv_pred & [ ARG #3 ] !> ],
+  ARG-ST < [ ] ,  [ SEM [INDEX #3] ] > ].
 
-scv-sem := lex-item &
-[ SEM [ INDEX #index,
-       	RESTR <! scv_pred & [ SIT #index,
-			      ACT #1,
+scv-sem := verb-sem &
+[ SEM [ RESTR <! scv_pred & [ ACT #1,
 			      ARG #3 ] !> ],
-  ARG-ST < [ SEM [INDEX #1 ] ], [ SEM [INDEX #3] ] > ].
+  ARG-ST < [SEM [INDEX #1 ] ], [SEM [INDEX #3] ] > ].
 
-;;; Are the sematics right for this one?  It looks weird.  CCB		  
-orv-sem := lex-item &
-[ SEM [ INDEX #index,
-       	RESTR <! orv_pred & [ SIT #index,
-			      ACT #1,
+orv-sem := verb-sem &
+[ SEM [ RESTR <! orv_pred & [ ACT #1,
 			      ARG #3 ] !> ],
-  ARG-ST < [ SEM [ INDEX #1 ] ],  [ ],  [SEM [INDEX #3] ] > ].
+  ARG-ST < [SEM [INDEX #1 ] ],  [ ],  [SEM [INDEX #3] ] > ].
 
-ocv-sem := lex-item &
-[ SEM [ INDEX #index,
-        RESTR <! ocv_pred & [ SIT #index,
-			      ACT #1, 
+ocv-sem := verb-sem &
+[ SEM [ RESTR <! ocv_pred & [ ACT #1, 
 			      UND #2,
 			      ARG #3 ] !> ],
-  ARG-ST < [ SEM [ INDEX #1 ] ] , [ SEM [ INDEX #2 ] ], [ SEM [INDEX #3 ] ] > ].
+  ARG-ST < [SEM [INDEX #1 ] ], [SEM [INDEX #2 ] ], [SEM [INDEX #3 ] ] > ].
 
-
-		     
 time_pred := predication &
  [ ARG1  sit-index,
    ARG2  sit-index ].
 
 now:< sit-index.
-
 
 not_pred := predication &
  [ RELN     r_not,
@@ -157,20 +155,19 @@ question_pred := predication &
  [ RELN       r_question,
    QUERY-ARG  index ].
 
-arg_pred := predication &
- [ ARG  index ].
-
 auxv_pred :< arg_pred.
 
 r_name :< reln.
 r_not :< reln.
 r_t-overlap :< reln.
+r_t-precede :< reln.
 
+r_speakers :< reln.
 r_speaker :< reln.
 r_female :< reln.
 r_male :< reln.
 r_listener :< reln.
-r_thing :< reln. 
+r_listeners :< reln. 
 r_group :< reln.
 r_no-person :< reln.
 r_every-person :< reln.
@@ -178,13 +175,26 @@ r_every-person :< reln.
 r_animal :< reln.
 r_cat :< r_animal.
 r_dog :< r_animal.
-r_duck :< r_animal.
+r_duck-noun :< r_animal.
 
 r_it :< reln.
 r_itself :< reln.
 r_tabs :< reln.
 r_advantage :< reln.
 r_there :< reln.
+
+r_can :< reln.
+r_could :< reln.
+r_should :< reln.
+r_would :< reln.
+r_might :< reln.
+r_must :< reln.
+r_will :< reln.
+
+r_have :< reln.
+r_do :< reln.
+r_get :< reln.
+
 r_the :< reln.
 r_a :< reln.
 r_this :< reln.
@@ -194,14 +204,17 @@ r_those :< reln.
 r_few :< reln.
 r_many :< reln.
 r_much :< reln.
+
 r_my :< reln.
 r_your :< reln.
 r_his :< reln.
 r_its :< reln.
 r_our :< reln.
 r_their :< reln.
+
 r_all :< reln.
 r_no :< reln.
+
 r_to :< reln.
 r_about :< reln.
 r_on :< reln.
@@ -210,11 +223,19 @@ r_with :< reln.
 r_of :< reln.
 r_for :< reln.
 r_by :< reln.
+
 r_around :< reln.
 r_and :< reln.
+r_but :< reln. 
+
 r_easily :< reln.
 r_quickly :< reln.
 r_today :< reln.
+r_slowly :< reln.
+
+r_happy :< reln.
+r_fond :< reln.
+r_mere :< reln.
 r_angry :< reln.
 r_available :< reln.
 r_black :< reln.
@@ -237,18 +258,16 @@ r_noisy :< reln.
 r_unfair :< reln.
 r_undocumented :< reln.
 r_rain :< reln.
-r_can :< reln.
-r_could :< reln.
-r_do :< reln.
-r_will :< reln.
-r_have :< reln.
-r_age :< reln.
+
+r_age-verb :< reln.
 r_bark :< reln.
+r_be :< reln.
 r_believe :< reln.
 r_die :< reln.
 r_dine :< reln.
 r_disappear :< reln.
 r_drive :< reln.
+r_duck-verb :< reln.
 r_eat :< reln.
 r_explode :< reln.
 r_fall :< reln.
@@ -278,7 +297,7 @@ r_yell :< reln.
 r_ask :< reln.
 r_campaign :< reln.
 r_come :< reln.
-r_fit :< reln.
+r_fit-verb :< reln.
 r_go :< reln.
 r_look :< reln.
 r_rely :< reln.
@@ -321,7 +340,6 @@ r_finish :< reln.
 r_fix :< reln.
 r_fill :< reln.
 r_follow :< reln.
-r_get :< reln.
 r_halve :< reln.
 r_hate :< reln.
 r_help :< reln.
@@ -336,6 +354,8 @@ r_lock :< reln.
 r_love :< reln.
 r_meet :< reln.
 r_observe :< reln.
+r_offend :< reln.
+r_open :< reln. 
 r_pat :< reln.
 r_paint :< reln.
 r_pet :< reln.
@@ -366,16 +386,15 @@ r_move :< reln.
 r_put :< reln.
 r_wrap :< reln.
 r_continue :< reln.
+r_seem :< reln. 
 r_appear :< reln.
 r_appeal :< reln.
 r_try :< reln.
 r_expect :< reln.
 r_persuade :< reln.
-r_abbie :< reln.
 r_accusation :< reln.
 r_album :< reln.
-r_alps :< reln.
-r_andes :< reln.
+r_pants :< reln. 
 r_answer :< reln.
 r_arrow :< reln.
 r_artist :< reln.
@@ -431,6 +450,7 @@ r_evidence :< reln.
 r_fbi :< reln.
 r_felon :< reln.
 r_fever :< reln.
+r_fit-noun :< reln.
 r_flower :< reln.
 r_flour :< reln.
 r_food :< reln.
@@ -463,6 +483,7 @@ r_life :< reln.
 r_light :< reln.
 r_linguist :< reln.
 r_logic :< reln.
+r_age-noun :< reln. 
 r_lunch :< reln.
 r_mailbox :< reln.
 r_martini :< reln.

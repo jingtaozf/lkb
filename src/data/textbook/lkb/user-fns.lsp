@@ -1,3 +1,5 @@
+;;; LinGO big grammar specific functions
+
 
 (defun preprocess-sentence-string (str)
   ;; replace all punctuation by spaces
@@ -82,21 +84,3 @@ FIRST))))
 (defun hide-in-type-hierarchy-p (type-name)
   (and (symbolp type-name)
        (search "GLBTYPE" (symbol-name type-name))))
-
-
-
-(defun set-temporary-lexicon-filenames nil
-  (let ((prefix
-         (if (and (boundp '*grammar-version*) 
-                  (stringp (eval '*grammar-version*)))
-             ;; avoid warnings due to unbound variable on compilation
-             (remove-if-not #'alphanumericp 
-                            (eval '*grammar-version*))
-           "biglex")))
-    (setf *psorts-temp-file* 
-      (make-pathname :name prefix 
-                     :directory (pathname-directory (lkb-tmp-dir))))
-    (setf *psorts-temp-index-file* 
-      (make-pathname :name (concatenate 'string prefix "-index") 
-                     :directory (pathname-directory (lkb-tmp-dir))))))
-

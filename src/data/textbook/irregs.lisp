@@ -1,20 +1,23 @@
 "
-can 3RD-SING-VERB can
-could 3RD-SING-VERB could
-am NON-3RD-SING-VERB be
-are NON-3RD-SING-VERB be
-being PRES-PART-VERB be
+am 1ST-SING-VERB be
+are 2ORPLURAL-VERB be
 is 3RD-SING-VERB be
-was PAST-VERB be
-were PAST-VERB be 
-they PLUR-NOUN-NOM it
-them PLUR-NOUN-ACC it
-we PLUR-NOUN i
-us PLUR-NOUN me
-you PLUR-NOUN you
-ourselves PLUR-NOUN myself
-themselves PLUR-NOUN itself
-there PLUR-NOUN there
+was 1OR3-SING-PAST-VERB be
+were 2ORPLURAL-PAST-VERB be
+
+can 3RD-SING-VERB can
+would 3RD-SING-VERB would
+could 3RD-SING-VERB could
+should 3RD-SING-VERB should
+must 3RD-SING-VERB must
+will 3RD-SING-VERB will
+
+;there 3RD-SING-NOUN there
+;there 3RD-PLUR-NOUN there
+there SINGANDPLUR-NOUN there
+
+pants PLUR-NOUN pants 
+
 arisen PAST-PART-VERB arise
 arose PAST-VERB arise
 ate PAST-VERB eat
@@ -182,7 +185,6 @@ understood PAST-PART-VERB understand
 undertaken PAST-PART-VERB undertake
 undertook PAST-VERB undertake
 went PAST-VERB go
-will 3RD-SING-VERB will
 wives PLUR-NOUN wife
 women PLUR-NOUN woman
 won PAST-VERB win

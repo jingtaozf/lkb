@@ -12,9 +12,11 @@
 
 dtr-type :< synsem-struc.
 
-nh-dtr-type := dtr-type &
+nh1-dtr-type := dtr-type &
  [ NH1 synsem-struc ].
 
+nh2-dtr-type := dtr-type &
+ [ NH2 synsem-struc ].
 
 head-dtr-type := dtr-type &
  [ H synsem-struc ].
@@ -45,7 +47,6 @@ semantic-inheritance-principle := grule & head-dtr-type &
 
 headed-rule := head-feature-principle & 
                semantic-inheritance-principle.
-	
 
 
 semantic-compositionality-unary := grule &
@@ -107,15 +108,12 @@ GAP-principle-trinary := grule &
 		       LAST  #gap_last ] ] ] > ].
 
 
-
-
-
 unary-grule-type := GAP-principle-unary & semantic-compositionality-unary &
  [ ORTH #orth,
    ARGS < [ ORTH #orth ] > ].
 
 
-binary-grule-type :=  GAP-principle-binary & nh-dtr-type & 
+binary-grule-type :=  GAP-principle-binary & nh1-dtr-type & 
 		     semantic-compositionality-binary & 
  [ ORTH [ LIST #first,
 	  LAST #last ],
@@ -125,17 +123,16 @@ binary-grule-type :=  GAP-principle-binary & nh-dtr-type &
 						LAST #last] ], ... > ].
 
 
-trinary-grule-type :=  GAP-principle-trinary & nh-dtr-type & 
+trinary-grule-type :=  GAP-principle-trinary & nh1-dtr-type & nh2-dtr-type &
 		     semantic-compositionality-trinary &
  [ ORTH [ LIST #first,
 	  LAST #last],
-   NH2 synsem-struc,
    ARGS < [ORTH [ LIST #first,
-		  LAST #second ] ],  [ORTH [ LIST #second,
-					     LAST #third ] ], 
-
-	  [ORTH [LIST #third,
-		 LAST #last] ] > ].
+		  LAST #second ] ],  
+	  [ORTH [ LIST #second,
+		  LAST #third ] ], 
+	  [ORTH [ LIST #third,
+		  LAST #last] ] > ].
 
 
 unary-COMPS-rule := unary-grule-type & headed-rule &
@@ -162,7 +159,7 @@ trinary-COMPS-rule := trinary-grule-type & headed-rule &
 
 
 
-unary-grule := nh-dtr-type & unary-grule-type &
+unary-grule := nh1-dtr-type & unary-grule-type &
  [ NH1 #1,
    ARGS < phrase & #1 > ].
 
@@ -184,7 +181,7 @@ birule-headfinal := binary-grule-type & headed-rule &
 
 
 
-birule-minusGAP := semantic-compositionality-binary & nh-dtr-type &
+birule-minusGAP := semantic-compositionality-binary & nh1-dtr-type &
  [ ORTH [ LIST #first,
 	  LAST #last ],
    ARGS < [ ORTH [ LIST #first,
@@ -203,9 +200,10 @@ birule-headfinal-minusGAP := birule-minusGAP &
 trirule-nonheaded := trinary-grule-type &
  [ NH1 #1,
    NH2 #2,
-   NH3 synsem-struc & #3,
+   NH3 #3,
 
-   ARGS< phrase & #1,  phrase & #2,  phrase & #3> ].
-
+   ARGS< phrase & #1,
+	     phrase & #2, 
+	         phrase & #3> ].
 
 

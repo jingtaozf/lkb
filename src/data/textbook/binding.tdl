@@ -35,11 +35,11 @@ render the parse charts virtually unreadable.  Previous implementations of
 this involved a single binary branching head-complement rule coupled with
 a non-branching GAP rule that moved an item from the COMPS to the GAP. 
 This was discarded in the interest of producing non-binary branching trees.
-
 |#
 
-:begin :instance.
 
+;; Can/should we put the case constraint inside these rules?
+:begin :instance.
 arg_real-principle-spr-NE := word+arg_real &
 [ SYN #syn,
   SEM #sem,
@@ -50,12 +50,10 @@ arg_real-principle-spr-NE := word+arg_real &
 			       GAP <! !>],
 		  SEM #sem,
 		  ARG-ST < #spr . #comps > ] > ].
-
 :end :instance.
 
 
 :begin :instance.
-
 arg_real-principle-spr-empty := word+arg_real &
 [ SYN #syn,
   SEM #sem,
@@ -66,19 +64,15 @@ arg_real-principle-spr-empty := word+arg_real &
 			       GAP <! !>],
 		  SEM #sem,
 		  ARG-ST #comps] > ].
-
 :end :instance.
 
 
 #|
 ;;; I'm leaving this as an example of how to leave the GAP list can be left
 ;;; too general.  I'm currently limiting extraction to topcial elements.
-;;; This helps with parsing speed, makes geneated senetences sensible.
+;;; This helps with parsing speed, makes generated senetences sensible.
 ;;; CCB
-
-
-;;;;;
-
+;;;
 :begin :instance.
 arg_real-principle-GAP1 :=  word+arg_real &
 [ SYN [ HEAD #head,
@@ -149,13 +143,14 @@ arg_real-principle-GAP3 :=  word+arg_real &
 			   SEM #sem,
 			   ARG-ST #arg-st] > ].
 :end :instance.
-
-;;;;;
-
-
-
+;;;;
 |#
 
+
+
+#| 
+; I'm commenting the gap rules out temporarily to avoid problems
+; while debugging the grammar.  SMG
 
 ;;;;;
 
@@ -229,45 +224,39 @@ arg_real-principle-GAP3 :=  word+arg_real &
 			   SEM #sem,
 			   ARG-ST #arg-st] > ].
 :end :instance.
-
 ;;;;;
+|#
 
 
 
-
-
+; Beginning of the binding rules...
 #|
 :begin :instance.
-
 ana_agr-principle-e := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
   ARG-ST #arg-st & < >,
 
   ARGS < word+arg_real & [ SYN #syn,
-		     SEM #sem,
-		     ARG-ST #arg-st ] > ].
-
+			   SEM #sem,
+			   ARG-ST #arg-st ] > ].
 :end :instance.
 
 
 :begin :instance.
-
 ana_agr-principle-x := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
   ARG-ST #arg-st & < [ ] >,
 
   ARGS < word+arg_real & [ SYN #syn,
-		     SEM #sem,
-		     ARG-ST #arg-st ] > ].
-
+			   SEM #sem,
+			   ARG-ST #arg-st ] > ].
 :end :instance.
 
 
 
 :begin :instance.
-
 ana_agr-principle-x+ := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
@@ -277,53 +266,46 @@ ana_agr-principle-x+ := word+arg_real+ana_agr &
 					   SEM [INDEX #ind]] >,
 
   ARGS < word+arg_real & [ SYN #syn,
-		     SEM #sem,
-		     ARG-ST #arg-st ] > ].
-
+			   SEM #sem,
+			   ARG-ST #arg-st ] > ].
 :end :instance.
 
 
 
 :begin :instance.
-
 ana_agr-principle-x- := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
   ARG-ST #arg-st & < [ ],  [SYN [HEAD [ANA false]]] >,
 
   ARGS < word+arg_real & [ SYN #syn,
-		     SEM #sem,
-		     ARG-ST #arg-st ] > ].
-
-
+			   SEM #sem,
+			   ARG-ST #arg-st ] > ].
 :end :instance.
 
 
 
 :begin :instance.
-
 ana_agr-principle-x-+ := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
   ARG-ST #arg-st & < [SYN [HEAD [AGR #agr]],
 		      SEM [INDEX #ind]], 
 
-                      [SYN [HEAD [ANA false]]],
+		     [SYN [HEAD [ANA false]]],
 
-                      [SYN [HEAD [ANA true,
-				  AGR #agr]],
-		       SEM [INDEX #ind]] >,
+		     [SYN [HEAD [ANA true,
+				 AGR #agr]],
+		      SEM [INDEX #ind]] >,
 
   ARGS < word+arg_real & [ SYN #syn,
-		     SEM #sem,
-		     ARG-ST #arg-st ] > ].
-
+			   SEM #sem,
+			   ARG-ST #arg-st ] > ].
 :end :instance.
 
 
 
 :begin :instance.
-
 ana_agr-principle-x+- := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
@@ -332,38 +314,33 @@ ana_agr-principle-x+- := word+arg_real+ana_agr &
 
                      [SYN [HEAD [ ANA true,
 			          AGR #agr]],
-                      SEM [INDEX #ind]],
-
+		      SEM [INDEX #ind]],
+		     
 		     [SYN [HEAD [ANA false]]] >,
 
   ARGS < word+arg_real & [ SYN #syn,
-		     SEM #sem,
-		     ARG-ST #arg-st ] > ].
-
+			   SEM #sem,
+			   ARG-ST #arg-st ] > ].
 :end :instance.
 
 
 
 
 :begin :instance.
-
 ana_agr-principle-x-- := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
   ARG-ST #arg-st & < [ ],  [SYN [HEAD [ANA false]]],
-
 		     [SYN [HEAD [ANA false]]] >,
 
   ARGS < word+arg_real & [ SYN #syn,
-		     SEM #sem,
-		     ARG-ST #arg-st ] > ].
-
+			   SEM #sem,
+			   ARG-ST #arg-st ] > ].
 :end :instance.
 
 
 
 :begin :instance.
-
 ana_agr-principle-xi+ := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
@@ -374,14 +351,12 @@ ana_agr-principle-xi+ := word+arg_real+ana_agr &
 						      SEM [INDEX #ind]] >,
 
   ARGS < word+arg_real & [ SYN #syn,
-		     SEM #sem,
-		     ARG-ST #arg-st ] > ].
-
+			   SEM #sem,
+			   ARG-ST #arg-st ] > ].
 :end :instance.
 
 
 :begin :instance.
-
 ana_agr-principle-x++ := word+arg_real+ana_agr &
 [ SYN #syn,
   SEM #sem,
@@ -395,9 +370,7 @@ ana_agr-principle-x++ := word+arg_real+ana_agr &
 		      SEM [INDEX #ind]] >,
 
   ARGS < word+arg_real & [ SYN #syn,
-		     SEM #sem,
-		     ARG-ST #arg-st ] > ].
-
+			   SEM #sem,
+			   ARG-ST #arg-st ] > ].
 :end :instance.
-
 |#
