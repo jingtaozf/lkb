@@ -98,16 +98,10 @@
 #+:null
 (defun hash (key)
   (let ((h 5381))
-    (loop for c across #-(and :oe :allegro-version>= (version>= 6 0)) 
-                       key
-                       #+(and :oe :allegro-version>= (version>= 6 0)) 
-                       (excl:string-to-octets key)
+    (loop for c across #-:ics key #+:ics (excl:string-to-octets key)
 	do
 	  (setq h (ldb (byte 32 0) (+ h (ash h 5))))
-	  (setq h (logxor h #-(and :oe :allegro-version>= (version>= 6 0)) 
-                            (char-code c) 
-                            #+(and :oe :allegro-version>= (version>= 6 0)) 
-                            c)))
+	  (setq h (logxor h #-:ics (char-code c) #+:ics c)))
     h))
 
 
