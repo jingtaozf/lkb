@@ -156,11 +156,10 @@
   ())
 
 (defclass sql-query ()
-  ((sql-string :accessor sql-string :initarg :sql-string)
-   (records :accessor records)
-   (columns :accessor columns)
-   (count-records :accessor count-recs)
-   (mapped-recs :accessor mapped-recs)))
+  ((sql-string :accessor sql-string :initarg :sql-string :initform nil)
+   (records :initform :unknown :accessor records)
+   (columns :initform :unknown :accessor columns)
+   ))
 
 (defclass psql-lex-entry ()
   ((fv-pairs :initarg :fv-pairs)))
@@ -257,6 +256,22 @@
 ;;; --- sql-query methods and functions
 ;;;
 
+(defmethod print-object ((object sql-query) stream)
+  (with-slots (sql-string records columns count-records mapped-recs) object
+    (let ((records-c (if (listp records)
+			 (length records)
+		       records))
+	  (columns-c (if (listp columns)
+			 (length columns)
+		       columns)))
+      (format
+       stream
+       "#[SQL-QUERY: ~a~%  [~a record~p; ~a column~p]]"
+       sql-string
+       records-c records-c 
+       columns-c columns-c
+       ))))
+
 (defmethod run-command-stdin ((database psql-database) command filename)
   (let ((connection (connection database)))
     (unless connection
@@ -270,11 +285,10 @@
   (let ((connection (connection database)))
     (unless connection
       (error "database ~s has no active connection." database))
-    (multiple-value-bind (recs cols recs-count)
+    (multiple-value-bind (recs cols)
         (pg:sql (sql-string query) :db connection)
-      (setf (records query) recs 
-            (columns query) (mapcar #'str-2-keyword cols)
-            (count-recs query) recs-count))
+      (setf (records query) recs
+            (columns query) (mapcar #'str-2-keyword cols)))
     query))
 
 ;;; returns _association list_
