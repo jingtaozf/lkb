@@ -249,8 +249,10 @@
                    when (and hi lo) do
                      (setf (lkb::dag-arcs dag)
                        (list
-                        (lkb::make-dag-arc :attribute (vsym "HI") :value hi)
-                        (lkb::make-dag-arc :attribute (vsym "LO") :value lo)))
+                        (lkb::make-dag-arc 
+                         :attribute (vsym "HARG") :value hi)
+                        (lkb::make-dag-arc 
+                         :attribute (vsym "LARG") :value lo)))
                      (push dag dags)
                    finally (return (lkb::list-to-dag (nreverse dags)))))))
     dag))
