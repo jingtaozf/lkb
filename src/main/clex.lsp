@@ -35,8 +35,7 @@
    (temp-index-file :initform nil
 		    :accessor temp-index-file
 		    :initarg :temp-index-file)
-   (source-files :initform nil :accessor source-files)
-   ))
+   (source-files :initform nil :accessor source-files)))
 
 (setf *lexicon* (make-instance 'cdb-lex-database))
 
@@ -49,6 +48,7 @@
       (format t "~%Reading in cached lexicon")
       (if (name lexicon) (format t " (~a)" (name lexicon)))
       (when (open-read lexicon)
+        (setf (source-files lexicon) filenames)
 	(format t "~%Cached lexicon read")
 	t))
      (t
@@ -87,9 +87,11 @@
       (when invalid-p
 	(format t "~%(discarding invalid lexicon)")
 	(close-lex lexicon :delete t)
-	(open-lex lexicon
-		  :parameters (list (make-nice-temp-file-pathname ".empty")
-				    (make-nice-temp-file-pathname ".empty-index")))
+	(unless
+            (open-lex lexicon
+                      :parameters (list (make-nice-temp-file-pathname ".empty")
+                                        (make-nice-temp-file-pathname ".empty-index")))
+          (return-from build-cache))
 	(write-empty-lex lexicon))
       t)
      (t
@@ -105,7 +107,8 @@
 	(close-lex lexicon :in-isolation t))
     (setf (name lexicon) name)
     (setf (temp-file lexicon) temp-file)
-    (setf (temp-index-file lexicon) temp-index-file)))
+    (setf (temp-index-file lexicon) temp-index-file))
+  t)
 
 (defmethod open-p ((lexicon cdb-lex-database))
   (with-slots (temp-file temp-index-file) lexicon
