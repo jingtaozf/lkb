@@ -65,10 +65,6 @@ at this point).
   (found-lex-inst-fs item))
 
 (defun collect-lex-entries-from-mrs (psoa)
-  #|
-  (setf *top-handel* (make-instance-type (psoa-handel psoa)))
-  (format t "~%~A" *top-handel*)
-  |#
   (let* ((all-rels (psoa-liszt psoa))
          (lex-rule-rels (for rel in all-rels filter 
                              (if (lex-rule-rel-p (rel-sort rel))
@@ -88,21 +84,51 @@ at this point).
           (find-lexical-candidates lexical-rels lex-rule-rels 
                                    grammar-rels nil)))
     (if possibles
-        (let ((lrules (find-possible-rules lex-rule-rels t)))
-;;;          (format t "~%~A" (mapcar #'cl-user::rule-id lrules))
+        (let* ((lrules (find-possible-rules lex-rule-rels t))
             ;;; lexical rules are possible if they have no effect
             ;;; on semantics or if they contribute relations
             ;;; which are on the list to be accounted for
-          (values
-           (append 
-            (instantiate-null-semantic-items psoa lrules)
-            (for possible in possibles
-                 append
+               (nullsem (instantiate-null-semantic-items psoa lrules))
+               (nonnull (for possible in possibles
+                             append
                                         ; check unification etc
-                 (create-instantiated-structures possible lrules)))
-           (find-possible-rules grammar-rels nil))))))
-           
-           
+                             (create-instantiated-structures possible lrules)))
+               (lexres (append nullsem nonnull)))
+          (values
+           lexres
+           (find-possible-rules grammar-rels nil)
+           (find-linear-order-spec lexres))))))
+
+;;; third value is an ordering specification 
+;;; given as a list of lex-ids 
+
+(defun find-linear-order-spec (lexres)
+  (declare (ignore lexres))
+  nil)
+#|
+  (let ((ids nil)
+        (found-lex-list nil))
+    (for resbundle in lexres
+         do
+         (for foundlex in resbundle
+              do
+              (when (found-lex-p foundlex)
+                (push foundlex found-lex-list)
+                (pushnew (found-lex-lex-id foundlex) ids))))
+    (mapcar
+            #'(lambda (ordering)
+                (mapcar
+                   #'(lambda (id)
+                       (remove-if-not #'(lambda (x) (eq x id)) found-lex-list
+                                      :key #'mrs::found-lex-lex-id))
+                   ordering))
+            (find-partial-orders ids))))
+|#
+            
+(defun find-partial-orders (ids)
+  nil)
+;;;  '((PROJECT_N1 MANAGER_N1)))
+
                                          
 
 (defun find-lexical-candidates (lex-rels lex-rule-rels grammar-rels
@@ -355,7 +381,8 @@ at this point).
        ;; rels for multiple ids
 	(let ((new-fs (create-liszt-fs-from-rels rel-sequence path)))
 	  (if new-fs 
-	      (let ((result (yadu base-fs new-fs)))
+	      (let* (; (cl-user::*unify-debug* t)
+                     (result (yadu base-fs new-fs)))
 		(if result
 		    (if lex-id
 			(make-found-lex 
@@ -401,15 +428,18 @@ at this point).
 		do
 		  (push unif path-list))
 	    (setf current-path (append current-path *rest-path*))))
-    (let* ((fs (process-unifications path-list))
+    (let* (; (cl-user::*unify-debug* t)
+           (fs (process-unifications path-list))
 	   (wffs (when fs (create-wffs fs)))
 	   (tdfs (when wffs (construct-tdfs wffs nil nil))))
       tdfs)))
 
 (defun create-unifs-for-rel (rel-str path)
   (let ((handel-unif (if (rel-handel rel-str)
-              (make-pv-unif (append path *rel-handel-path*)
-                 (make-instance-type (rel-handel rel-str)))))
+                         (make-pv-unif (append (append path *rel-handel-path*)
+                                               *instloc-path*)
+                                       (make-instance-type 
+                                        (rel-handel rel-str)))))
         (other-unifs
          (for fvp in (rel-flist rel-str)
         append
@@ -418,13 +448,13 @@ at this point).
               (new-path (append path (list feature))))
           (if (listp value) ; exclude conj values for the time being
               nil
-            (cons
-             (make-pv-unif new-path
-                           (if (var-p value)
-                               (make-instance-type value)
-                             value))
-             (if (var-p value)
-                 (CL-USER::make-mrs-unifs (var-extra value) new-path))))))))
+            (if (var-p value)
+                (cons
+                   (make-pv-unif (append new-path *instloc-path*)
+                               (make-instance-type value))
+                   (CL-USER::make-mrs-unifs (var-extra value) new-path))
+               (list (make-pv-unif new-path
+                                   value))))))))
   (if handel-unif (cons handel-unif other-unifs)
       other-unifs)))
 
@@ -434,17 +464,12 @@ at this point).
   ;;; We do the `extra' slot stuff in create-unifs-for-rel
   ;;; JAC seems to have decided that all instance
   ;;; types should start with `%', so this function does this
+  ;;; 
+  ;;; modified because all instance types are now stored on the
+  ;;; *instloc-path* in the variable fs
        (let* ((instance nil)
-             (type (var-type var-struct))
-             (template (if (null type) 
-                           (error "~%Need type of variable ~A" var-struct)
-                           (if (listp type)
-                               (car type)
-                             type)))
+             (template *instloc-type*)
              (number (var-id var-struct)))
-         (when (stringp template)
-             (setf template cl-user::*string-type*))
-         ;;; probably this shouldn't happen
          (setf (get template 'cl-user::last-number)
                number)
          (setf instance
