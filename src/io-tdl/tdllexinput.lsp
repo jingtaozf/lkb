@@ -64,7 +64,11 @@
            (constraint default)
            (read-tdl-lex-avm-def istream name)
          (check-for #\. istream name)
-         (push name *ordered-lex-list*)
+         (if (member name *ordered-lex-list* :test #'eq)
+           (format
+            t
+            "~&WARNING: redefining lexicon entry `~a'.~%" name)
+           (push name *ordered-lex-list*))
          (add-lex-from-file nil name constraint default)))))
 
 
