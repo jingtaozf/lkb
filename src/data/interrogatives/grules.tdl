@@ -93,7 +93,6 @@ su-wh-int-cl-3 := su-wh-int-cl &
 ;           STORE <! #1 !> ],
 ;  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
 
-
 su-wh-int-cl-5 := su-wh-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 !>,
            STORE <! #2, #3 !> ],
@@ -104,7 +103,15 @@ su-wh-int-cl-6 := su-wh-int-cl &
            STORE <! #3 !> ],
   HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
 
+su-wh-int-cl-7 := su-wh-int-cl & 
+[ SS.LOC [ CONT.PARAMS <! #1, #3 !>,
+           STORE <! #2 !> ],
+  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
 
+su-wh-int-cl-8 := su-wh-int-cl & 
+[ SS.LOC [ CONT.PARAMS <! #1, #2, #3 !>,
+           STORE <! !> ],
+  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
 
 ns-wh-int-cl-1 := ns-wh-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 !>,

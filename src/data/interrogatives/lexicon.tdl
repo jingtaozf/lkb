@@ -132,7 +132,7 @@ insist_0 := v-lxm &
 ;;; AMALG constraint on the lexical entries for such cases.
 
 ;;;JTB - 6/27/01 - two problems: this originally inherited from
-;;;inflected-lexeme+amalg, which doesn't exist anymore, so I've updated
+;;;inflected-lexeme+slash_amalg, which doesn't exist anymore, so I've updated
 ;;;it (correctly I hope).  Second, in the original copy (given below) the
 ;;;first slash value of the COMP was unified with the singleton value of
 ;;;the SUBJ, but the former is a LOC and the latter an SS, so I've
@@ -153,7 +153,7 @@ easy_0 := inflected-lexeme+amalg &
                LAST #last ] ],
  DTRS < inflected-lexeme > ].
 
-;;easy_0 := inflected-lexeme+amalg &
+;;easy_0 := inflected-lexeme+slash_amalg &
 ;;[ ORTH <! "easy" !>,
 ;;  SS [ LOC.CAT [ HEAD adj & [ FORM normal,
 ;;                              PRED true ],

@@ -7,15 +7,20 @@
 ;;; constructions seem to be inf, and they weren't parsing.
 ;                                 FORM fin ] ],
 
+;;; JTB - 07/08/01, changed STORE from <! !> which seemed to unify with 
+;;; *list-of-params* to *e-list-of-params* which won't.  This cuts out a 
+;;; small amount of overgeneration with "Who gave WHÁT to WHÓM?" but 
+;;; shockingly less overgeneration than I would have expected.
+
 root := phrase &
 [ SS [ LOC [ CAT [ HEAD verb & [ IC true ],
                    SPR < >,
                    SUBJ < >,
                    COMPS < > ],
              CONT message,
-             STORE <! !> ],
-       SLASH <! !>,
-       WH <! !> ] ].
+             STORE *e-list-of-params* ],
+       SLASH *e-list-of-locals*,
+       WH *e-list-of-scope-objs* ] ].
 
 
 

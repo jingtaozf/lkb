@@ -78,10 +78,9 @@ their_1 := det-lxm &
 to_1 := mkp-lxm &
 [ ORTH <! "to" !> ].
 
-
+;;;JTB 07/10/01 - uncommented to see what happens.
 ;to_2 := pdp-lxm &
 ;[ ORTH <! "to" !> ].
-
 
 about_1 := mkp-lxm &
 [ ORTH <! "about" !> ].
@@ -849,6 +848,13 @@ answer_1 := cn-lxm &
 arrow_1 := cn-lxm &
 [ ORTH <! "arrow" !>,
   SS.LOC.CONT.SOA.NUCL r_arrow ].
+
+;;;JTB 07/07/01 the following definition may be better as it makes 
+;;;arrow a param and thus compatible with things wanting indices.
+
+;;;arrow_1 := cn-lxm &
+;;;[ ORTH <! "arrow" !>,
+;;;  SS.LOC.CONT.INDEX r_arrow ].
 
 artist_1 := cn-lxm &
 [ ORTH <! "artist" !>,

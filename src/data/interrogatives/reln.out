@@ -140,6 +140,7 @@ r_andes := reln.
 r_animal := reln.
 r_answer := reln.
 r_arrow := reln.
+;;;JTB 07/07/01 this might be better:  r_arrow:=index.
 r_artist := reln.
 r_assignment := reln.
 r_associate := reln.

@@ -16,14 +16,11 @@ sing-noun_infl_rule := inflected-lexeme &
                    ORTH #orth,
                    SS.LOC.CAT [ HEAD noun & [ AGR.PERNUM 3sg ] ] ] > ].
 
-
 plur-common-noun_infl_rule :=
 %suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
 inflected-lexeme &
 [ DTRS < n-lxm & [ NEEDS-AFFIX true,
                    SS.LOC.CAT [ HEAD noun & [ AGR.PERNUM 3pl ] ] ] > ].
-
- 
 
 ;;; <<< >>> ENGLISH VERBAL INFLECTION
 

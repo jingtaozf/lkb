@@ -170,7 +170,6 @@ e-list-of-relns := list-of-relns & e-list.
 
 ;;; *diff-list* types.
 
-
 *list-of-params* := *diff-list* &
 [ LIST list-of-params,
   LAST list-of-params ].
@@ -183,7 +182,13 @@ e-list-of-relns := list-of-relns & e-list.
 [ LIST list-of-scope-objs,
   LAST list-of-scope-objs ].
 
+*e-list-of-locals* := *list-of-locals* & *e-diff-list* & 
+[ LIST #1 & e-list-of-locals,
+  LAST #1 ].
 
+*e-list-of-scope-objs* := *list-of-scope-objs* & *e-diff-list* & 
+[ LIST #1 & e-list-of-scope-objs,
+  LAST #1 ].
 
 *list-of-quants* := *diff-list* &
 [ LIST list-of-quants,
@@ -199,3 +204,18 @@ e-list-of-relns := list-of-relns & e-list.
 *list-of-relns* := *diff-list* &
 [ LIST list-of-relns,
   LAST list-of-relns ].
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

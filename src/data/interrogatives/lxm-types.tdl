@@ -116,18 +116,17 @@ p-lxm := const-lxm &
  [ SS.LOC.CAT [ HEAD prep,
                     SPR < >,
                     COMPS < [ LOC [ CAT phrase-cat & [ HEAD noun,
-                                                        SPR < > ] ] ] > ] ].
+                                                        SPR < >,
+                                                       COMPS  < > ] ] ] > ] ].
 
-
+;;;JTB 07/10/01 marking one shouldn't have a subject, predicative one should.
 mkp-lxm := p-lxm &
- [ SS.LOC.CAT [ HEAD.PRED true,
-                SUBJ < synsem > ] ].
-
-
-
-pdp-lxm := p-lxm &
  [ SS.LOC.CAT [ HEAD.PRED false,
                 SUBJ < > ] ].
+
+pdp-lxm := p-lxm &
+ [ SS.LOC.CAT [ HEAD.PRED true,
+                SUBJ < synsem > ] ].
 
 
 comp-lxm := const-lxm &

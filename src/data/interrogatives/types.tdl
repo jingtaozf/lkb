@@ -39,7 +39,12 @@ category := feat-struc &
 lex-cat := category &
 [ ARG-ST list-of-synsems ].
 
-phrase-cat := category.
+;;;JTB and especially IAS 07/10/01 We're adding a comps < > to
+;;;phrase-cat as a lark.
+
+phrase-cat := category & [COMPS < >].
+
+;phrase-cat := category.
 
 canon-ss := synsem.
 noncanon-ss := synsem.
@@ -175,7 +180,8 @@ nominal-cat := topic &
  [ AGR index ]. 
 
 noun := nominal-cat & mod-type &
- [ CASE case ].
+ [ CASE case,
+   MOD /l < > ].
 
 det := nominal-cat & deg-type &
  [ COUNT boolean ].
@@ -709,4 +715,12 @@ e-list-of-noncanon-ss.
 *list-of-synsems-wh-none* := *list-of-synsems* &
 [ LIST list-of-synsems-wh-none,
   LAST list-of-synsems-wh-none ]. 
+
+
+
+
+
+
+
+
 
