@@ -1,20 +1,30 @@
---- postgres optimization os poor...
+-- DROP TABLE meta CASCADE;
+-- DROP TABLE revision CASCADE;
+-- DROP TABLE multi CASCADE;
+-- DROP TABLE current_grammar CASCADE;
+-- DROP TABLE temp CASCADE;
+-- DROP TABLE qry CASCADE;
+-- DROP TABLE qrya CASCADE;
+
+-- DROP VIEW grammar_view1 CASCADE;
+-- DROP VIEW grammar_view2 CASCADE;
+-- DROP VIEW grammar_view CASCADE;
+
+--- postgres optimization is poor...
 ALTER DATABASE lingo SET enable_seqscan TO off;
 
---- versioning mechanism for db structure
-DROP TABLE ergm CASCADE;
-CREATE TABLE ergm (
+
+CREATE TABLE meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO ergm VALUES ('db-version', '1.3');
-INSERT INTO ergm VALUES ('filter', 'TRUE');
+INSERT INTO meta VALUES ('db-version', '1.5');
+INSERT INTO meta VALUES ('filter', 'TRUE');
 
 ---
 --- main table
 ---
-DROP TABLE erg CASCADE;
-CREATE TABLE erg (
+CREATE TABLE revision (
   name VARCHAR(95),
   type VARCHAR(95),
   orthography VARCHAR(200),
@@ -46,20 +56,31 @@ CREATE TABLE erg (
   source VARCHAR(50),
   flags INTEGER DEFAULT 0 NOT NULL,
   userid VARCHAR(25) DEFAULT user,
---  id SERIAL,
   modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
  PRIMARY KEY (name,version,userid)
 );
 
 CREATE INDEX orthkey
-ON erg (orthkey); 
+ON revision (orthkey); 
 
-CREATE INDEX erg_name_modstamp ON erg (name, modstamp);
+CREATE INDEX revision_name_modstamp ON revision (name, modstamp);
+
+---
+--- multi word entries
+---
+
+CREATE TABLE multi (
+  name VARCHAR(95),
+  verb_id VARCHAR(95),
+  particle VARCHAR(95),
+  type VARCHAR(200),
+  keyrel VARCHAR(200),
+PRIMARY KEY (name)
+);
 
 ---
 --- table on which queries executed
 ---
-DROP TABLE current_grammar CASCADE;
 CREATE TABLE current_grammar (
   name VARCHAR(95),
   type VARCHAR(95),
@@ -92,19 +113,17 @@ CREATE TABLE current_grammar (
   source VARCHAR(50),
   flags INTEGER,
   userid VARCHAR(25),
---  id INTEGER,
   modstamp TIMESTAMP WITH TIME ZONE,
  PRIMARY KEY (name)
 );
 
-CREATE INDEX grammar_orthkey
-ON grammar (orthkey); 
+CREATE INDEX current_grammar_orthkey
+ON current_grammar (orthkey); 
 
 ---
 --- temporary table
 ---
-DROP TABLE grammar_update CASCADE;
-CREATE TABLE grammar_update (
+CREATE TABLE temp (
 
   name VARCHAR(95),
   type VARCHAR(95),
@@ -139,194 +158,294 @@ CREATE TABLE grammar_update (
   source VARCHAR(50),
   flags INTEGER,
   userid VARCHAR(25),
---  id INTEGER,
   modstamp TIMESTAMP WITH TIME ZONE
 );
 
 ---
---- definition table
+--- sql queries embedded in db
 ---
-DROP TABLE ergd CASCADE;
-CREATE TABLE ergd (
-  slot VARCHAR(50),
-  field VARCHAR(50),
-  path VARCHAR(255),
-  type VARCHAR(20),
-PRIMARY KEY (slot, path)
-);
-
---- unnecessary???
-CREATE INDEX ergd_slot
-ON ergd (slot); 
-
-INSERT INTO ergd VALUES ( 'id', 'name', '', 'symbol' );
-INSERT INTO ergd VALUES ( 'sense-id', 'name', '', 'symbol' );
-INSERT INTO ergd VALUES ( 'orth', 'orthography', '', 'string-list' );
-INSERT INTO ergd VALUES ( 'unifs', 'type', 'nil', 'symbol' );
-INSERT INTO ergd VALUES ( 'unifs', 'orthography', '(stem)', 'string-fs' );
-INSERT INTO ergd VALUES ( 'unifs', 'keyrel', '(synsem local keys key)', 'symbol' );
-INSERT INTO ergd VALUES ( 'unifs', 'keytag', '(synsem local keys key carg)', 'string' );
-INSERT INTO ergd VALUES ( 'unifs', 'altkey', '(synsem local keys altkey)', 'symbol' );
-INSERT INTO ergd VALUES ( 'unifs', 'alt2key', '(synsem local keys alt2key)', 'symbol' );
-INSERT INTO ergd VALUES ( 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
-INSERT INTO ergd VALUES ( 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
-
----
---- (default) view of active versions
----
-
-DROP VIEW erg_current CASCADE;
-CREATE VIEW erg_current
-	AS SELECT erg.* 
-	FROM 
-		(erg 
-		NATURAL JOIN 
-		(SELECT name, max(modstamp) AS modstamp 
-                        FROM erg
-                        WHERE flags = 1
-                        GROUP BY name) AS tmp
-		 ); 
-
-CREATE VIEW new_pkeys 
-       AS SELECT t2.* from 
-          ((SELECT name,userid,version FROM erg) t1 
-           RIGHT OUTER JOIN 
-           (SELECT name,userid,version FROM grammar_update) t2 
-           USING (name,userid,version))
-            where t1.name IS NULL;
-
----
---- sql code embedded in db
----
-DROP TABLE ergq CASCADE;
-CREATE TABLE ergq (
+CREATE TABLE qry (
   fn VARCHAR(50),
   arity int,
-  sql_code VARCHAR(1024),
+  sql_code VARCHAR(4096),
 PRIMARY KEY (fn)
 );
 
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'test', 1, 
          '$0' );
 
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'next-version', 1, 
-         'SELECT COALESCE(1 + max(version),0) FROM erg WHERE (name,user) = ($0,user)');
+         'SELECT COALESCE(1 + max(version),0) FROM revision WHERE (name,user) = ($0,user)');
 
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'orthography-set', 0, 
          'SELECT DISTINCT orthography FROM current_grammar' );
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'psort-id-set', 0, 
          'SELECT DISTINCT name FROM current_grammar');
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'lookup-word', 1, 
          'SELECT name FROM current_grammar WHERE orthkey=$0' );
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'retrieve-entries-by-orthkey', 2, 
          'SELECT $0 FROM current_grammar WHERE orthkey=$1' );
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'retrieve-entry', 2, 
          'SELECT $0 FROM current_grammar WHERE name=$1' );
 
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'initialize-current-grammar', 0, 
-         'VACUUM ANALYZE erg; 
+         'VACUUM ANALYZE revision; 
           BEGIN; 
           DELETE FROM current_grammar; 
-          INSERT INTO current_grammar SELECT * FROM erg_current; 
+          INSERT INTO current_grammar SELECT * FROM grammar_view; 
           COMMIT; 
           CLUSTER current_grammar_pkey ON current_grammar; 
           VACUUM ANALYZE current_grammar' );
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'update-current-grammar', 0, 
        'BEGIN;
-        DELETE FROM grammar_update;
-        INSERT INTO grammar_update 
-               SELECT * FROM erg_current 
+        DELETE FROM temp;
+        INSERT INTO temp 
+               SELECT * FROM grammar_view 
                       WHERE modstamp >= 
                       (SELECT max(modstamp) FROM current_grammar); 
         DELETE FROM current_grammar 
                WHERE name IN 
-               (SELECT name FROM erg_update); 
+               (SELECT name FROM temp); 
         INSERT INTO current_grammar 
-               SELECT * FROM grammar_update; 
+               SELECT * FROM temp; 
         COMMIT' );
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'current-grammar-up-to-date-p', 0, 
        '(SELECT 
                 (SELECT COALESCE(max(modstamp),''-infinity'') FROM current_grammar) 
                 < 
-                (SELECT COALESCE(max(modstamp),''infinity'') FROM erg))');
-INSERT INTO ergq VALUES 
+                (SELECT COALESCE(max(modstamp),''infinity'') FROM revision))');
+INSERT INTO qry VALUES 
        ( 'update-entry', 3, 
-       'INSERT INTO erg (name, $1) VALUES ($0, $2); 
+       'INSERT INTO revision (name, $1) VALUES ($0, $2); 
        DELETE FROM current_grammar 
               WHERE name=$0; 
        INSERT INTO current_grammar 
-              SELECT * FROM erg_current 
+              SELECT * FROM grammar_view
               	WHERE name = $0
 		LIMIT 1' );
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'set-current-view', 1, 
-       'DROP VIEW erg_current;
-        CREATE VIEW erg_current
-	AS SELECT erg.* 
+       '-- DROP VIEW grammar_view;
+	DROP VIEW grammar_view1 CASCADE;
+	-- DROP VIEW grammar_view2;
+
+        CREATE VIEW grammar_view1
+	AS SELECT revision.* 
 	FROM 
-		(erg 
+		(revision 
 		NATURAL JOIN 
 		(SELECT name, max(modstamp) AS modstamp 
-                        FROM erg
+                        FROM revision
                         WHERE flags = 1
                               AND $0
-                        GROUP BY name) AS tmp
+                        GROUP BY name) AS t1
 		 ); 
-        UPDATE ergm SET val=''$0'' WHERE var=''filter'';
+
+CREATE VIEW grammar_view2 AS 
+	SELECT 
+  multi.name,
+  COALESCE(multi.type,rev.type) AS type,
+  rev.orthography,
+  rev.orthkey,
+  rev.pronunciation,
+  COALESCE(multi.keyrel,rev.keyrel) AS keyrel,
+  rev.altkey,
+  rev.alt2key,
+  rev.keytag,
+  COALESCE(multi.particle,rev.compkey) AS compkey,
+  rev.ocompkey,
+  rev.complete,
+  rev.semclasses,
+  rev.preferences,
+
+  rev.classifier,
+  rev.selectrest,
+  rev.jlink,
+  rev.comments,
+  rev.exemplars,
+  rev.usages,
+  rev.lang,
+  rev.country,
+  rev.dialect,
+  rev.domains,
+  rev.genres,
+  rev.register,
+  rev.confidence,
+  rev.version,
+
+  rev.source,
+  rev.flags,
+  rev.userid,
+  rev.modstamp
+
+	FROM multi LEFT JOIN grammar_view1 AS rev 
+		ON rev.name = multi.verb_id;
+
+
+	CREATE VIEW grammar_view
+		AS SELECT * FROM grammar_view1 UNION SELECT * FROM grammar_view2;
+        UPDATE meta SET val=''$0'' WHERE var=''filter'';
 ' );
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'merge-into-db', 1, 
        '
-       DELETE FROM grammar_update;
-       COPY grammar_update FROM $0 DELIMITERS '','' NULL '''';
-       INSERT INTO erg 
-              (SELECT grammar_update.* FROM (new_pkeys NATURAL JOIN grammar_update));
-       DELETE FROM grammar_update;
+       DELETE FROM temp;
+       COPY temp FROM $0 DELIMITERS '','' NULL '''';
+       INSERT INTO revision 
+              (SELECT temp.* FROM (new_pkeys NATURAL JOIN temp));
+       DELETE FROM temp;
        ' );
-INSERT INTO ergq VALUES 
+INSERT INTO qry VALUES 
        ( 'dump-db', 1, 
        '
-       DELETE FROM grammar_update;       
-       INSERT INTO grammar_update (SELECT * FROM erg ORDER BY modstamp, name, userid, version);
-       COPY erg TO $0 DELIMITERS '','' NULL '''';
-       DELETE FROM grammar_update;
+       DELETE FROM temp;       
+       INSERT INTO temp (SELECT * FROM revision ORDER BY modstamp, name, userid, version);
+       COPY revision TO $0 DELIMITERS '','' NULL '''';
+       DELETE FROM temp;
 ' );
 
 
 
 ---
---- arities of sql 'virtual functions'
+--- arities of sql queries
 ---
-DROP TABLE ergqa CASCADE;
-CREATE TABLE ergqa (
+CREATE TABLE qrya (
   fn VARCHAR(50),
   arg int,
   type VARCHAR(50),
 PRIMARY KEY (fn,arg)
 );
 
-INSERT INTO ergqa VALUES ( 'test', 0, 'select-list' );
+INSERT INTO qrya VALUES ( 'test', 0, 'select-list' );
 
-INSERT INTO ergqa VALUES ( 'next-version', 0, 'text');
+INSERT INTO qrya VALUES ( 'next-version', 0, 'text');
 
-INSERT INTO ergqa VALUES ( 'lookup-word', 0, 'text' );
-INSERT INTO ergqa VALUES ( 'retrieve-entries-by-orthkey', 0, 'select-list' );
-INSERT INTO ergqa VALUES ( 'retrieve-entries-by-orthkey', 1, 'text' );
-INSERT INTO ergqa VALUES ( 'retrieve-entry', 0, 'select-list' );
-INSERT INTO ergqa VALUES ( 'retrieve-entry', 1, 'text' );
-INSERT INTO ergqa VALUES ( 'update-entry', 0, 'text' );
-INSERT INTO ergqa VALUES ( 'update-entry', 1, 'select-list' );
-INSERT INTO ergqa VALUES ( 'update-entry', 2, 'value-list' );
-INSERT INTO ergqa VALUES ( 'set-current-view', 0, 'where-subcls' );
-INSERT INTO ergqa VALUES ( 'merge-into-db', 0, 'text' );
-INSERT INTO ergqa VALUES ( 'dump-db', 0, 'text' );
+INSERT INTO qrya VALUES ( 'lookup-word', 0, 'text' );
+INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 0, 'select-list' );
+INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 1, 'text' );
+INSERT INTO qrya VALUES ( 'retrieve-entry', 0, 'select-list' );
+INSERT INTO qrya VALUES ( 'retrieve-entry', 1, 'text' );
+INSERT INTO qrya VALUES ( 'update-entry', 0, 'text' );
+INSERT INTO qrya VALUES ( 'update-entry', 1, 'select-list' );
+INSERT INTO qrya VALUES ( 'update-entry', 2, 'value-list' );
+INSERT INTO qrya VALUES ( 'set-current-view', 0, 'where-subcls' );
+INSERT INTO qrya VALUES ( 'merge-into-db', 0, 'text' );
+INSERT INTO qrya VALUES ( 'dump-db', 0, 'text' );
+
+---
+--- views
+---
+
+CREATE VIEW grammar_view1
+	AS SELECT revision.* 
+	FROM 
+		(revision 
+		NATURAL JOIN 
+		(SELECT name, max(modstamp) AS modstamp 
+                        FROM revision
+                        WHERE flags = 1
+                        GROUP BY name) AS t1
+		 ); 
+
+CREATE VIEW grammar_view2 AS 
+	SELECT 
+  multi.name,
+  COALESCE(multi.type,rev.type) AS type,
+  rev.orthography,
+  rev.orthkey,
+  rev.pronunciation,
+  COALESCE(multi.keyrel,rev.keyrel) AS keyrel,
+  rev.altkey,
+  rev.alt2key,
+  rev.keytag,
+  COALESCE(multi.particle,rev.compkey) AS compkey,
+  rev.ocompkey,
+  rev.complete,
+  rev.semclasses,
+  rev.preferences,
+
+  rev.classifier,
+  rev.selectrest,
+  rev.jlink,
+  rev.comments,
+  rev.exemplars,
+  rev.usages,
+  rev.lang,
+  rev.country,
+  rev.dialect,
+  rev.domains,
+  rev.genres,
+  rev.register,
+  rev.confidence,
+  rev.version,
+
+  rev.source,
+  rev.flags,
+  rev.userid,
+  rev.modstamp
+
+	FROM multi LEFT JOIN grammar_view1 AS rev 
+		ON rev.name = multi.verb_id;
+
+CREATE VIEW grammar_view
+	AS SELECT * FROM grammar_view1 UNION SELECT * FROM grammar_view2;
+
+CREATE VIEW new_pkeys 
+       AS SELECT t2.* from 
+          ((SELECT name,userid,version FROM revision) t1 
+           RIGHT OUTER JOIN 
+           (SELECT name,userid,version FROM temp) t2 
+           USING (name,userid,version))
+            where t1.name IS NULL;
+
+---
+--- definition table
+---
+
+-- DROP TABLE defn CASCADE;
+
+CREATE TABLE defn (
+  mode VARCHAR(50),
+  slot VARCHAR(50),
+  field VARCHAR(50),
+  path VARCHAR(255),
+  type VARCHAR(20),
+PRIMARY KEY (mode,slot, field)
+);
+
+DELETE FROM defn WHERE mode = 'erg';
+INSERT INTO defn VALUES ( 'erg', 'id', 'name', '', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'sense-id', 'name', '', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'orth', 'orthography', '', 'string-list' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'type', 'nil', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'orthography', '(stem)', 'string-fs' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'keyrel', '(synsem local keys key)', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'keytag', '(synsem local keys key carg)', 'string' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'altkey', '(synsem local keys altkey)', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'alt2key', '(synsem local keys alt2key)', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
+
+
+DELETE FROM defn WHERE mode = 'mwe';
+INSERT INTO defn VALUES ( 'mwe', 'id', 'name', '', 'symbol' );
+INSERT INTO defn VALUES ( 'mwe', 'sense-id', 'name', '', 'symbol' );
+INSERT INTO defn VALUES ( 'mwe', 'orth', 'orthography', '', 'string-list' ); 
+INSERT INTO defn VALUES ( 'mwe', 'unifs', 'type', 'nil', 'symbol' );
+INSERT INTO defn VALUES ( 'mwe', 'unifs', 'orthography', '(orth list)', 'string-diff-fs' ); -- DIFF LIST
+INSERT INTO defn VALUES ( 'mwe', 'unifs', 'keyrel', '(sem keys key1)', 'string' );
+INSERT INTO defn VALUES ( 'mwe', 'unifs', 'keytag', '(sem keys key carg)', 'string' );
+INSERT INTO defn VALUES ( 'mwe', 'unifs', 'altkey', '(sem keys altkey)', 'symbol' );
+INSERT INTO defn VALUES ( 'mwe', 'unifs', 'alt2key', '(sem keys alt2key)', 'symbol' );
+INSERT INTO defn VALUES ( 'mwe', 'unifs', 'compkey', '(sem keys --compkey)', 'symbol' );
+INSERT INTO defn VALUES ( 'mwe', 'unifs', 'ocompkey', '(sem keys --ocompkey)', 'symbol' );
