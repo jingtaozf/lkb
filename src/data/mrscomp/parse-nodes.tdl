@@ -14,12 +14,12 @@ v-label := label &
 [ HEAD verb,
   LABEL-NAME "V" ].
 
-np-label := label & 
-[ HEAD noun, SPR <>, COMPS <>,
-  LABEL-NAME "NP" ].
+dp-label := label & 
+[ HEAD det, SPR <>, SPEC <>, COMPS <>,
+  LABEL-NAME "DP" ].
 
 n-label := label & 
-[ HEAD noun, SPR < [] >,
+[ HEAD noun, 
   LABEL-NAME "N" ].
 
 nm-label := label & 

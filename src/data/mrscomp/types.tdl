@@ -4,7 +4,8 @@ syn-struc := feat-struc &
 [ ORTH *dlist*,
   HEAD pos,
   SPR *list*,
-  COMPS *list*, 
+  COMPS *list*,
+  SPEC *list*, 
   SEM semantics,
   GAP *dlist*,
   ARGS *list* ].
@@ -45,6 +46,23 @@ adj := pos & [MOD [CAT < [ SPR *ne-list*, HEAD noun ] >, DIR pre]].
 deg := pos & [MOD [CAT < [ SPR *list* ] >, DIR pre]].
 conj := pos & [MOD.CAT <>].
 comp := pos & [MOD.CAT <>].
+
+;;; schematically, we are concerned with three types of slot
+;;; for the semantics
+;;; 1. Accumulators: RELS and QEQS 
+;;;    Implemented as difference lists --- only for accumulating values.  
+;;;    The only operation on accumulators during parsing is difference 
+;;;    list append.
+;;; 2. Hooks: INDEX and LTOP
+;;;    A pointer into the LZT which is set up lexically: the only
+;;;    way of accessing parts of the semantics of a sign.
+;;; 3. Holes: e.g., the SPR's INDEX.  A pointer into a syntax `slot', 
+;;;    which will be coindexed with a hook in another sign.
+;;; 
+;;; 1 and 2 are represented in the semantics
+;;;
+;;; We also have the global value GTOP which is the same for all signs
+;;; and may be redundant
 
 semantics := feat-struc &
 [ GTOP handle,
@@ -109,10 +127,13 @@ unary-rule-passgap := unary-rule &
 binary-rule := phrase &
 [ ORTH [LIST #ofront, LAST #otail],
   SEM.RELS [LIST #cfront, LAST #ctail ],
+  SEM.QEQS [LIST #qfront, LAST #qtail ],
   ARGS < [ ORTH [LIST #ofront, LAST #omiddle ],
-           SEM.RELS [LIST #cfront, LAST #cmiddle ] ],
+           SEM.RELS [LIST #cfront, LAST #cmiddle ],
+           SEM.QEQS [LIST #qfront, LAST #qmiddle ]],
          [ ORTH [LIST #omiddle, LAST #otail ],
-           SEM.RELS [LIST #cmiddle, LAST #ctail ] ] > ].
+           SEM.RELS [LIST #cmiddle, LAST #ctail ], 
+           SEM.QEQS [LIST #qmiddle, LAST #qtail ]] > ].
 
 binary-rule-passgap := binary-rule &
 [ GAP [LIST #gfront, LAST #gtail ],
@@ -122,16 +143,20 @@ binary-rule-passgap := binary-rule &
 ternary-rule := phrase &
 [ ORTH [LIST #ofront, LAST #otail],
   SEM.RELS [LIST #cfront, LAST #ctail ],
+  SEM.QEQS [LIST #qfront, LAST #qtail ],
   GAP [ LIST #gfront,
 	LAST #gtail ],
   ARGS < [ ORTH [LIST #ofront, LAST #omiddle1 ],
            SEM.RELS [LIST #cfront, LAST #cmiddle1 ],
+           SEM.QEQS [LIST #qfront, LAST #qmiddle1 ],
            GAP [LIST #gfront, LAST #gmiddle1 ] ],
          [ ORTH [LIST #omiddle1, LAST #omiddle2 ],
            SEM.RELS [LIST #cmiddle1, LAST #cmiddle2 ],
+           SEM.QEQS [LIST #qmiddle1, LAST #qmiddle2 ],
            GAP [LIST #gmiddle1, LAST #gmiddle2 ] ],
          [ ORTH [LIST #omiddle2, LAST #otail ],
            SEM.RELS [LIST #cmiddle2, LAST #ctail ],
+           SEM.QEQS [LIST #qmiddle2, LAST #qtail ],
            GAP [LIST #gmiddle2, LAST #gtail ] ] > ].
 
 head-initial := phrase &
@@ -178,10 +203,12 @@ lex-item := syn-struc &
 ;;; types, but that doesn't really matter
 
 lexeme := lex-item &
-[ SEM [ HOOK /l [ INDEX #index,
+[ SPEC /l < >, 
+  SEM [ HOOK /l [ INDEX #index,
                   LTOP #ltop,
                   KEYPRED #pred ],        
-        RELS <! #key !> ],
+        RELS <! #key !>,
+        QEQS /l <! !> ],
   KEY #key & /l [ HNDL #ltop,
                   PRED #pred,
                   ARG0 #index] ].
@@ -191,23 +218,30 @@ const-lxm := lexeme.
 word := lex-item &
 [ HEAD #head,
   SPR #spr,
+  SPEC #spec,
   COMPS #comps,
   SEM #cont,
   ARGS < lexeme &
          [ HEAD #head,
            SPR #spr,
+           SPEC #spec,
            COMPS #comps,
            SEM #cont ] > ].
 
 det-lxm := const-lxm &
-[ HEAD det,
+[ HEAD nominal & [AGR #agr],
   SPR < >,
   COMPS < >,
+  SPEC < [ HEAD noun & [ AGR #agr ],
+           SEM.HOOK [ INDEX #index, 
+                      LTOP  #lh ]]>,
   SEM [ HOOK [ INDEX #index & object,
-               LTOP fhandle ]],
+               LTOP fhandle ],
+        QEQS <! [ HARG #rh, LARG #lh ] !>],
   KEY det-relation 
       & [ HNDL qhandle,
-          BV  #index ]]. 
+          BV  #index,
+          RESTR #rh ]]. 
 
 sg-det-lxm := det-lxm &
 [ HEAD [ AGR 3sing ]].
@@ -216,11 +250,10 @@ pl-det-lxm := det-lxm &
 [ HEAD [ AGR non-3sing ]].
 
 noun-lxm := lexeme &
-[ HEAD noun & [AGR #agr],
-  SPR < [HEAD det & [AGR #agr],
-         SEM.HOOK.INDEX #index ] >,
+[ HEAD noun,
+  SPR < >,
   COMPS < >,
-  SEM [ HOOK.INDEX object & #index ] ].
+  SEM [ HOOK.INDEX object ] ].
 
 pronm-lxm := const-lxm &
 [ HEAD noun & [AGR /l 3sing, FORM /l norm],
@@ -240,7 +273,7 @@ plur-noun := noun-form &
 
 verb-lxm := lexeme &
 [ HEAD verb,
-  SPR < phrase & [HEAD noun, SPR <>] >,
+  SPR < phrase & [HEAD det, SPR <>, SPEC <>] >,
   SEM [ HOOK.INDEX event ] ].
 
 verb-form := word &
@@ -274,19 +307,19 @@ intrans-verb := verb-lxm &
 
 trans-verb := verb-lxm &
 [ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1] >,
-  COMPS < phrase & [HEAD noun, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg2] >,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg2] >,
   KEY arg1-2-relation & [ARG1 #arg1, ARG2 #arg2]].
 
 ditranspp-verb := verb-lxm &
 [ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1] >,
-  COMPS < phrase & [HEAD noun, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg2],
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg2],
           phrase & [HEAD prep, SPR <>, SEM.HOOK.INDEX #arg3] >,
   KEY arg1-2-3-relation & [ARG1 #arg1, ARG2 #arg2, ARG3 #arg3]].
 
 ditransnp-verb := verb-lxm &
 [ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1] >,
-  COMPS < phrase & [HEAD noun, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg2],
-          phrase & [HEAD noun, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg3] >,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg2],
+          phrase & [HEAD det, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg3] >,
   KEY arg1-2-3-relation & [ARG1 #arg1, ARG2 #arg2, ARG3 #arg3]].
 
 srv-lxm := verb-lxm &

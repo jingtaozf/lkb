@@ -28,7 +28,7 @@
   "path to get an index from a psoa")
 (defparameter *psoa-event-path* `(,(vsym "HOOK") ,(vsym "INDEX")))
 (defparameter *psoa-liszt-path* `(,(vsym "RELS") ,(vsym "LIST")))
-(defparameter *psoa-rh-cons-path* `(,(vsym "H-CONS") ,(vsym "LIST")))
+(defparameter *psoa-rh-cons-path* `(,(vsym "QEQS") ,(vsym "LIST")))
 
 (defparameter *ref-ind-type* (vsym "object"))
 

@@ -1,37 +1,64 @@
 head-complement-rule-0 := unary-head-initial & 
 [ SPR #spr,
+  SPEC #spec,
   ARGS < word & 
          [ SPR #spr, 
+           SPEC #spec,
            COMPS < > ] >  ].
 
 head-complement-rule-1 := binary-head-initial &
-[ SPR #spr, 
+[ SPR #spr,
+  SPEC #spec,
   ARGS < word & 
          [ SPR #spr, 
+           SPEC #spec,
            COMPS < #1 > ],
          #1 >  ].
 
 
 head-complement-rule-2 := ternary-head-initial &
 [ SPR #spr, 
+  SPEC #spec,
   ARGS < word & 
          [ SPR #spr, 
+           SPEC #spec,
            COMPS < #1, #2> ],  
          #1, #2 > ].
 
 head-specifier-rule := binary-head-final-passgap &
 [ SPR < >,
+  SPEC #spec,
   COMPS #comps,
   ARGS < phrase & #1,
          phrase & 
          [ SPR < #1 >,
+           SPEC #spec,
            COMPS #comps ] > ]. 
+
+
+;;; rule introduced so we can have a DP analysis
+;;; which makes the semantics simpler.  Alternative
+;;; is to have SPEC and SPR and make the noun the
+;;; syntactic head and the determiner the semantic
+;;; head, but this is rather complex.
+
+head-spec-rule := binary-head-initial &
+[ SPR #spr,
+  SPEC < >,
+  COMPS #comps,
+  ARGS < phrase & 
+         [ SPEC < #1 >,
+           SPR #spr,
+           COMPS #comps ],
+         phrase & #1 > ].
 
 head-modifier-rule := binary-head-initial &
 [ SPR #spr,
+  SPEC #spec,
   COMPS #comps,
   ARGS < phrase & #hdtr &
          [ SPR #spr,
+           SPEC #spec,
            COMPS #comps ],
          phrase & 
          [HEAD [MOD [CAT < #hdtr >, DIR post]],
@@ -39,18 +66,22 @@ head-modifier-rule := binary-head-initial &
 
 modifier-head-rule := binary-head-final-passgap &
 [ SPR #spr,
+  SPEC #spec,
   COMPS #comps,
   ARGS <phrase &  
          [ HEAD [MOD [CAT < #hdtr >, DIR pre]],
 	   GAP <! !> ], 
 	phrase & #hdtr &
          [ SPR #spr,
+           SPEC #spec,
            COMPS #comps ] > ].
 
 noun-modifier-rule := unary-rule &
 [ HEAD noun-mod & [ MOD.CAT < [ SEM.HOOK #hook ] > ],
   SPR <>,
   ARGS < phrase & [ HEAD noun, SPR < [ ] >, SEM.HOOK #hook ] > ].
+
+;;; revisions needed to the following rule
 
 bare-pl-noun-rule := unary-head-initial &
 [ HEAD noun & [AGR non-3sing],
@@ -61,6 +92,7 @@ coord-rule := phrase &
 [ ORTH [LIST #ofront, LAST #otail],
   HEAD #hd,
   SPR #spr,
+  SPEC #spec,
   COMPS #comps,
   SEM.RELS [LIST #cfront, LAST #ctail ],
   GAP [ LIST #gfront,
@@ -69,6 +101,7 @@ coord-rule := phrase &
          [ ORTH [LIST #ofront, LAST #omiddle1 ],
            HEAD #hd,
            SPR #spr,
+           SPEC #spec,
            COMPS #comps,
            SEM.RELS [LIST #cfront, LAST #cmiddle1 ],
            GAP [LIST #gfront, LAST #gtail ] ],
@@ -80,7 +113,8 @@ coord-rule := phrase &
          phrase &
          [ ORTH [LIST #omiddle2, LAST #otail ],
            HEAD #hd,
-           SPR #spr,
+           SPR #spr,  
+           SPEC #spec,
            COMPS #comps,
            SEM.RELS [LIST #cmiddle2, LAST #ctail ],
            GAP [LIST #gfront, LAST #gtail ] ] > ].
@@ -88,30 +122,38 @@ coord-rule := phrase &
 head-gap-rule-1 := unary-head-initial-startgap &
 [ GAP <! #1 !>,
   SPR #spr,
+  SPEC #spec,
   ARGS < word & 
-         [ SPR #spr, 
+         [ SPR #spr,
+           SPEC #spec,
            COMPS < #1 > ] >  ].
 
 head-gap-rule-2 := binary-head-initial-startgap &
 [ GAP <! #1 !>,
   SPR #spr,
+  SPEC #spec,
   ARGS < word & 
-         [ SPR #spr, 
+         [ SPR #spr,
+           SPEC #spec,
            COMPS < #1, #2 > ], #2 & [ GAP <! !> ] > ].
 
 head-gap-rule-3 := binary-head-initial-startgap &
 [ GAP <! #2 !>,
   SPR #spr,
+  SPEC #spec,
   ARGS < word & 
          [ SPR #spr, 
+           SPEC #spec,
            COMPS < #1, #2 > ], #1 & [ GAP <! !> ] > ].
 
 head-filler-rule := binary-head-final &
 [ HEAD verb,
   SPR < >,
+  SPEC < >,
   GAP <! !>,
   ARGS < phrase & #1 & [ GAP <! !> ],
          phrase & 
          [ SPR < >,
+           SPEC < >,
            GAP <! #1 !> ] > ]. 
 
