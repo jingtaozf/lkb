@@ -1,7 +1,3 @@
-;;; Switch for mal-rules
-;;; Stephan Oepen, Emily Bender 16-05-2003
-;;; accompanying modifications to rules.lsp (in get-matching-rules)
-
 ;;; Still to do: 
 ;;; Generalize switch to allow classification of mal-rules,
 ;;; perhaps by giving ROBUST a wider range of (typed) values.
@@ -348,13 +344,11 @@
 ;; and input string, and either declares it grammatical, fails to 
 ;; parse it, or returns a diagnosis of the error and a corrected version.
 
+(declaim (special *gen-scoring-hook* *bypass-equality-check* *gen-packing-p*))
+
 (defun grammar-check (string)
 
-  (declare (special *gen-scoring-hook* *bypass-equality-check*
-                    *gen-packing-p*))
-  ;; Save values of *first-only-p* and *gen-first-only-p* so
-  ;; we can reset them at the end.
-  ;; Likewise for *(gen-)mal-active-p*
+
   (let* ((new-string nil)
          (*first-only-p* t)
          (*gen-packing-p* nil)
