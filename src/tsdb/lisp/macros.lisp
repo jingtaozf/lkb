@@ -47,7 +47,7 @@
 (defmacro average (values)
   `(loop
        for value in ,values
-       for i from 0
+       for i from 1
        sum value into total
        finally (return (divide total i))))
 
