@@ -43,7 +43,7 @@
 		      lkb::compare-rmrs-interactive
                       ;; lexical db
                       lkb::command-merge-into-psql-lexicon
-                      ;lkb::command-dump-psql-lexicon
+                      lkb::command-dump-psql-lexicon
                       lkb::command-export-lexicon-to-tdl
                       lkb::command-load-tdl-to-scratch
                       lkb::command-clear-scratch
@@ -317,10 +317,10 @@
                                   :value 'command-merge-into-psql-lexicon
                                   ;:available-p :always
 				  )
-;                  (make-menu-item :name "Dump"
-;                                  :value 'command-dump-psql-lexicon
-;                                  ;:available-p :always
-;				  )
+                  (make-menu-item :name "Dump"
+                                  :value 'command-dump-psql-lexicon
+                                  ;:available-p :always
+				  )
                   (make-menu-item :name "Dump (TDL format)"
                                   :value 'command-export-lexicon-to-tdl
                                   ;:available-p :always
