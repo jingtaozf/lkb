@@ -347,11 +347,15 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
       left = tsdb_complex_select(node->left,wanted);
       right = tsdb_complex_select(node->right,wanted);
       result = tsdb_complex_merge(left,right);
+      tsdb_free_selection(left);
+      tsdb_free_selection(right);
       break;
     case TSDB_AND:
       left = tsdb_complex_select(node->left,wanted);
       right = tsdb_complex_select(node->right,wanted);
       result = tsdb_join(left,right);
+      tsdb_free_selection(left);
+      tsdb_free_selection(right);
       break;
     case TSDB_NOT:
     case TSDB_NOT_NOT:
@@ -388,6 +392,7 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,Tsdb_relation ** wanted)
         node_relation = all_relations[0];
       result = tsdb_find_table(node_relation);
       result = tsdb_select(result,&a[0],TSDB_AND);
+      /* No free necessary: find_table returns global Data */
     } /* if */
   } /* else */
   return result;
@@ -443,6 +448,7 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
   Tsdb_relation **a_relations, **relations, *rel;
   int s_attributes = 10, i, j, k,r,kaerb=0;
   Tsdb_selection *selection=NULL;
+  BOOL from_find=FALSE;
 
   /* 
      1. find out about attributes in conditions, transform expression
@@ -477,8 +483,11 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
         kaerb = 1;
       } /* if */
     } /* for */
-    if (kaerb)
+    if (kaerb) {
+      if (attributes)
+        free(attributes);
       return -1;
+    } /* if */
   } /* if */
   else
     r = tsdb_n_relations();
@@ -492,8 +501,11 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
        kaerb = 1;
      } /* if */
    } /* for */
-   if (kaerb)
+   if (kaerb) {
+     if (attributes)
+       free(attributes);
      return -1;
+   }
  } /* if */
 
   if (conditions)
@@ -508,9 +520,6 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
   for(i = 0; relation_list && relation_list[i]; i++) ;
   for(j = 0; attribute_list && attribute_list[j]; j++) ;
   
-  relations = (Tsdb_relation **)malloc(sizeof(Tsdb_relation *) * (i + j + 1));
-  memset(relations,'\0',sizeof(Tsdb_relation*)*(i + j +1));
-  
   /* check from relations */
   for (i=0;attribute_list && attribute_list[i];i++) {
     if (!tsdb_attribute_in_selection(selection,
@@ -518,16 +527,28 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
       a_relations = tsdb_attribute_relations(attribute_list[i]);
       for (j=0;a_relations[j];j++) {
         if (!tsdb_relation_in_selection(selection,a_relations[j]->name)!=-1) {
-          if (selection==NULL)
+          if (selection==NULL) {
+            from_find = TRUE;
             selection = tsdb_find_table(a_relations[0]);
-          else
+          }
+          else {
+            Tsdb_selection *temp;
+            temp = selection;
             selection = tsdb_join_one_relation(selection,a_relations);
+            if (!from_find) {
+              tsdb_free_selection(temp);
+            }
+            from_find = FALSE;
+          }
           a_relations[i+1]=NULL;
         }
       } /* for */
       free(a_relations);
     } /* if */
   }/* for */
+
+  if (attributes)
+    free(attributes);
 
   /* now check the attributes for projections */
   if (attribute_list) {
@@ -538,9 +559,13 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
     else {
       tsdb_project(selection,attribute_list,TSDB_DEFAULT_STREAM);
     } /* else */
+    if (!from_find)
+      tsdb_free_selection(selection);
     return(selection->length);
   } /* if */
   
+  if (!from_find)
+    tsdb_free_selection(selection);
   return(0);
 
 } /* tsdb_complex_retrieve */
@@ -625,8 +650,23 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
     } /* for */
     
   } /* for */
+
+  free(r);
+  free(f);
 } /* tsdb_project() */
 
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_select()
+|*     version: 
+|*  written by: tom fettig, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* always returns a copy of selection!!
+\*****************************************************************************/
+
 Tsdb_selection *tsdb_select(Tsdb_selection *selection,
                             Tsdb_node **conditions,
                             BYTE type ) {
@@ -716,13 +756,13 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
           break;
         case TSDB_SUBSTRING:
           match = match ||
-            tsdb_value_substring(list->tuples[relation[i]]->fields[field[i]],
-                                 conditions[i]->right->node);
+            tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
+                             conditions[i]->right->node,NULL);
           break;
         case TSDB_NOT_SUBSTRING:
           match = match || 
-            !(tsdb_value_substring(list->tuples[relation[i]]->fields[field[i]],
-                                   conditions[i]->right->node));
+            !(tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
+                                   conditions[i]->right->node,NULL));
           break;
         } /* switch */
       } /* if */
@@ -750,13 +790,13 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
           break;
         case TSDB_SUBSTRING:
           match = match &&
-            tsdb_value_substring(list->tuples[relation[i]]->fields[field[i]],
-                                 conditions[i]->right->node);
+            tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
+                             conditions[i]->right->node,NULL);
           break;
         case TSDB_NOT_SUBSTRING:
           match = match && 
-            !(tsdb_value_substring(list->tuples[relation[i]]->fields[field[i]],
-                                   conditions[i]->right->node));
+            !(tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
+                               conditions[i]->right->node,NULL));
           break;
         } /* switch */
       } /* if */
@@ -770,6 +810,11 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
         result->length++;
     } /* if */
   } /* for */
+  
+  free(relation);
+  free(field);
+  free(results);
+
   return(result);
 } /* tsdb_select() */
 
