@@ -340,8 +340,7 @@
             ;;
             ;; shadow global variable to allow best-first mode to decrement for
             ;; each result found; eliminates need for additional result count.
-            ;;                                           (22-jan-00  -  oe)
-            ;;
+            ;;                                              (22-jan-00  -  oe)
             (*first-only-p*
              (cond
               ((null first-only-p) nil)
@@ -355,7 +354,6 @@
           (setf *cached-category-abbs* nil)
           (setf *parse-record* nil)
           (setf *parse-times* (list (get-internal-run-time)))
-          #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
           (let ((*safe-not-to-copy-p* #-:cle t #+:cle nil))
             (add-morphs-to-morphs user-input)
             (catch :best-first
@@ -387,16 +385,13 @@
         (let* ((word (string-upcase base-word))
                (new (+ current 1))
                 (morph-poss 
-                 (progn #+:powerpc(decf gg (CCL::%HEAP-BYTES-ALLOCATED))
-                        (prog1
-                            (union
-                             (filter-for-irregs
-                              (remove-duplicates
-                               (morph-analyse word)
-                               :test #'equalp))
-                             ;; filter is in rules.lsp
-                             (find-irregular-morphs word) :test #'equalp)
-                          #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
+                 (union
+                  (filter-for-irregs
+                   (remove-duplicates
+                    (morph-analyse word)
+                    :test #'equalp))
+                  ;; filter is in rules.lsp
+                  (find-irregular-morphs word) :test #'equalp)))
           (unless #+:ltemplates (template-p word) #-:ltemplates nil
             (unless morph-poss 
               (format t "~%Word `~A' is not in lexicon." word)
@@ -1080,8 +1075,7 @@
 
 
 (defun create-temp-parsing-tdfs (tdfs flist)
-  #+:powerpc (decf hh (CCL::%HEAP-BYTES-ALLOCATED))
-  (prog1 (if (null flist) tdfs
+  (if (null flist) tdfs
     (let ((indef-dag (create-dag))
           (tail nil))
       (unify-list-path flist indef-dag (tdfs-indef tdfs))
@@ -1091,8 +1085,7 @@
           (loop for tail-element in (tdfs-tail tdfs)
                do
                (push (add-path-to-tail path tail-element) tail))))
-      (make-tdfs :indef indef-dag :tail tail)))
-    #+:powerpc (incf hh (CCL::%HEAP-BYTES-ALLOCATED))))
+      (make-tdfs :indef indef-dag :tail tail))))
 
 (defun get-orth-tdfs (str)
   (let ((new-orth-tdfs (make-orth-tdfs str)))

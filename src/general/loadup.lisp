@@ -1,5 +1,6 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 
 (in-package :common-lisp-user)
@@ -43,7 +44,7 @@
 ;;;
 ;;; analogously, we now have one patch file per Lisp environment that we know
 ;;; of; although these files are somewhat smaller these days, it seems we still
-;;; require some small amount of vendor-specific tweaking (2-jun-00  -  oe)
+;;; require some small amount of vendor-specific tweaking.  (2-jun-00  -  oe)
 ;;;
 
 #+:cmu
@@ -56,12 +57,16 @@
 
 #+:allegro
 (load
- (make-pathname :device %sys-device%
-   :directory general-dir :name "allegro-patches"))
+ (make-pathname 
+  :device %sys-device% :directory general-dir :name "allegro-patches"))
 
-#+:mcl
+#+(and :mcl (not :openmcl))
 (load
  (make-pathname :directory general-dir :name "mcl-patches"))
+
+#+:openmcl
+(load
+ (make-pathname :directory general-dir :name "openmcl-patches"))
 
 #+:clisp
 (load
