@@ -36,6 +36,9 @@
                       lkb::read-mrs-rule-file
                       lkb::clear-mrs-rules
                       lkb::choose-mrs-output-level
+                      ;; lexical db
+                      ;lkb::initialize-psql-lexicon
+                      ;lkb::set-filter-psql-lexicon
                       ;; generate
                       lkb::show-gen-result
                       lkb::show-generator-input
@@ -254,6 +257,19 @@
                                      :value 'stop-generator-server
                                      :available-p :mrs))
                :available-p :mrs)
+;         (make-lkb-submenu-item :menu-title "LexDB"
+;                 :menu-items                       
+;                 (list 
+;                  #+:psql
+;                  (make-menu-item :name "Reinitialize"
+;                                  :value 'initialize-psql-lexicon
+;                                  :available-p :always)
+;                  #+:psql
+;                  (make-menu-item :name "Set filter"
+;                                  :value 'set-filter-psql-lexicon
+;                                  :available-p :always)
+;                  )
+;                 :available-p :always)
          (make-lkb-submenu-item :menu-title "Debug"
                                 :available-p :grammar
                                 :menu-items
