@@ -1,0 +1,45 @@
+
+\section{Grammar 2: Head-Specifier Constructions}
+
+In English present tense verbs specify for 3rd person singular subjects or non-3rd person singular subjects.  Take a look at SPR values the words ``bark'' and ``barks'' in the lexicon.  Verbs constrain their subject through inflection, so we've marked all the verbs with the -s as having a 3rd person SPR.  The number value in the AGR feature limits what specifiers they can combine with.  
+
+Try parsing ``The dogs barks'' and ``The dog bark''.  Do you see how coindexation of the non-head daughter and the SPR the head of the phrase prevents these sentences from parsing?  Since this coindexation is constructed in such a general way, the head-specifier rule covers determiner-noun agreement as well as subject-verb agreement relying on the lexical entries to place the specific selection constraints.
+
+\es{That dog barks.\\
+Those dogs bark.\\
+The dog barks.\\
+The dogs bark.\\
+{*That dogs barks.}\\
+{*Those dog barks.} \\
+{*The dogs barks.}\\
+{*The dog bark.}
+}
+
+Notice, however, that the agreement value on ``bark'' in the lexicon is actually incorrect.  It's marked as [ NUM pl ] which works for our current lexicon since we don't have any pronouns, but would incorrectly rule out ``I bark''.  In section 4.6 the textbook describes a type distinction for English agreement between 3sing and non-3sing.  Here we have two exercises - one that adds case constraints and requires that a simple new type be added to the hierarchy, and one that explores the more complicated 3sing non-3sing types.
+
+
+
+\subsection{Exercise: Case Constraints}
+
+Further constrain the verbs so that their specifier is [ CASE nom ] and their complements are [ CASE acc ].  You will need to introduce CASE as an agreement feature on nominals.  You'll also need to add some pronouns to the lexicon so that you can test to see whether your constraints are working properly.
+
+
+\subsection{Exercise: 3sing and non-3sing}
+
+The type distinction presented in the textbook between non-3sing and 3sing doesn't quite work as expected because there is nothing that prevents a structure [ PER 3rd, NUM sing ] from unifying with non-3sing.  Implement the textbook's type distinction (from page 89):
+
+\begin{cprog}
+        pernum
+        /    \
+    3sing   non-3sing
+            /       \
+          1sing  non-1sing
+                 /       \
+               2sing      pl 
+\end{cprog}
+
+Then mark the SPR of all present tense verbs in the lexicon as either 3sing or non-3sing.  Try parings ``The dog bark''.  Notice that even though ``dog'' is 3sing it can still unify with the non-3sing type specified by the ``bark''.
+
+See the end of the \emph{Typed feature structures made simple} chapter from the LKB Documentation for a alternative 3sing / non-3sing type hierarchy.
+
+

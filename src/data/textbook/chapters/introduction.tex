@@ -1,0 +1,50 @@
+
+
+\section{Introduction}
+
+This document describes a set of small grammars and exercises which I am prototyping.  The grammars gradually increase in complexity, and roughly parallel the development of the grammar described in the Sag and Wasow \emph{Syntactic Theory: A Formal Introduction} textbook beginning at chapter 4.  My hope is that this set of grammars could be used as a way of acquainting novice users with the use of the LKB system, and that the grammars and exercises be integrated into the teaching of an introductory syntax or grammar engineering course.  If you have comments or suggestions, please e-mail me at ccb@csli.stanford.edu. 
+
+I've currently got four small grammars.  Each grammar is described by a set of files which can be run on the LKB and used to parse sentences, and to examine feature structures and type hierarchies.  Each of the sections in this paper following the introduction have a short discussion and an exercise for one of small grammars.  The final section of the paper has the solutions to the exercises, and a solution grammar is provided in a subdirectory called \filename{solutions} in each of the grammar directories.
+
+
+\subsection{How to install the LKB}
+
+The LKB grammar development environment is available as a UNIX executable file, and can be obtained from \webaddress{http://www-csli.stanford.edu/\~{}aac/lkb.html} as gzipped tar files.  Use Netscape to download the file appropriate to your flavor of UNIX.  At the command prompt type:
+
+        \command{gunzip climimage5-2.tar.gz}
+
+\noindent or
+
+        \command{gunzip linuximage5-2.tar.gz}
+
+\noindent depending on whether you are installing the Solaris or Linux version.  This should give you a .tar file which you can extract the LKB image from by typing:
+
+        \command{tar xf climimage5-2.tar}
+
+\noindent or
+
+        \command{tar xf linuximage5-2.tar}
+
+\noindent This will create the new directory called \filename{lkb/} containing several files including the \filename{lkb} executable.  To get the grammars described in this document, click on the "sample grammars" link and unzip them as you did the LKB image.  The grammar lessons are contained within the  \filename{data/textbook/chapters/} directory.  [NOTE: The grammar lessons are not in the current release of the LKB but are publicly accessible at \webaddress{http://www.stanford.edu/\~{}anakin/grammar-lessons.tar.gz}].  If you have trouble installing the LKB please refer to its comprehensive documentation also available from the LKB homepage.
+
+
+
+\subsection{Getting familiar with the system}
+
+After you've downloaded the LKB and the grammar lessons, try opening the first grammar.  Run the LKB by typing \command{lkb} from within \filename{lkb/} directory.  Then choose Load:Complete grammar from the menus, and select the  \filename{data/textbook/chapters/grammar1/lkb/script} file.  The script file tells the LKB which files to load and what type they are.  In this case it looks like this:
+
+\cprogfile{grammar1/lkb/script}
+
+The first two files  \filename{globals.lsp} and  \filename{user-fns.lsp} are LISP files with user functions that govern the behavior of the LKB.  The next line indicates that a single file, \filename{types.tdl}, describes the type hierarchy for the grammar.  The remaining lines indicate that the grammar rules are contained within \filename{rules.tdl} and the lexicon within \filename{lexicon.tdl}.  Other commands are used to load in files containing lexical and morphological rules, but we're not using any in this simple grammar. 
+
+Once the grammar has finished loading you should get a message in the LKB window which says that the grammar input is complete, and see its type hierarchy.  The features associated with each type are contained within the  \filename{types.tdl} file:\\
+
+\cprogfile{grammar1/types.tdl}
+
+Notice that you can see the features for any of these types by clicking on it in the hierarchy and choosing "type definition" from the pop up menu, and you can see all the types which it gets through inheritance by choosing "expanded type" (if you've already dismissed the hierarchy, you can get it back by choosing View:Type hierarchy from the LKB's menus).
+
+Try parsing a sentence like ``The dog chased the cat'' by choosing Parse:Parse input.  A small parse tree pop up after LKB has finished parsing the sentence.  Click on it and choose "show enlarged tree".  Notice that each of the nodes on the enlarged tree is clickable and will tell you what rule applied to form that node, and allow you to display its feature structure.  Click on the "PHRASE" node above "cat" and choose the feature structure option for that node.  You'll see all the information that has been built up for that phrase, including all coindexation. 
+
+That's an overview of the most basic functionality of the LKB.  For a complete description of its other features see the LKB documentation available at  \webaddress{http://www-csli.stanford.edu/\~{}aac/lkb.html}.  If you'd like to continue on with the lessons, go on to the next section.
+
+

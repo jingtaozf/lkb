@@ -1,0 +1,203 @@
+
+\section{Solutions}
+
+
+\subsection{Grammar 1: Add the Head-Modifier Rule}
+
+To the types.tdl file you should have added preposition as a type of part of speech (pos) by adding 
+
+\begin{cprog}
+prep := pos.
+
+To add "with" to the lexicon you should have added this entry
+
+with := word &
+[ ORTH "with",
+  HEAD prep,
+  SPR < >,
+  COMPS < phrase &
+          [ HEAD noun ] > ].
+
+Finally, the Head-Modifier Rule should look something like 
+
+head-modifier-rule := phrase &
+[ HEAD #0,
+  SPR #a & < [ ] >,
+  COMPS #b,
+
+  ARGS < phrase &
+         [ HEAD #0,
+           SPR #a,
+           COMPS #b ],  phrase &
+                        [ HEAD prep ]  > ].
+\end{cprog}
+The Head Feature Principle has been manually incorporated by coindexing the HEAD value of the first item of the ARGS list with the HEAD of the resulting phrase.  Similarly, to incorporate the Valence Principle, the SPR and COMPS have been coindexed with the SPR and COMPS of the resulting phrase.  
+
+The addition of the SPR $<$ [ ] $>$ restriction prevents multiple parses.  For example, removing the restriction and parsing ``The car barks with the dogs'' will produce two parse trees.  One where the modifying PP ``with the dogs'' attaches to the VP ``barks'', and one where the PP attaches to the sentence ``The cat barks''.  Since the meanings of the two seem to be identical, we would like to eliminate the ambiguous structures.  The non-empty specifier restriction does this nicely.
+
+
+
+\subsection{Grammar 2: Case Constraints}
+
+To add the case constraints to the SPR and COMPS of verbs, you first must introduce the CASE type into the AGR feature.  To do this simply expand AGR to be
+\begin{cprog}
+
+agr-cat := feat-struc &
+[ PER per,
+  NUM num,
+  CASE case ].
+
+and add the two subtypes of case 
+
+case :< *value*.
+  nom :< case.
+  acc :< case.
+
+\end{cprog}
+
+
+Then it's as simple as adding the further restriction that each verb have 
+a nominative specifier and accusative complements.  For example
+
+\begin{cprog}
+
+loves := word &
+[ ORTH "loves",
+  HEAD verb,
+  SPR < [HEAD noun & [ AGR 3sing & [ CASE nom ] ] ] >,
+  COMPS < phrase & [HEAD noun & [ AGR [ CASE acc ] ] ] > ].
+
+\end{cprog}
+
+
+You should begin to notice that there is a lot of redundancy arising in our lexicon.  For example every verb has  SPR $<$ [HEAD noun \& [ CASE nom ] ] $>$.  Later we'll see how to integrate these redundant constraints (including case) into the lexeme types.
+
+
+
+\subsection{grammar 2: 3sing and non-3sing}
+
+The textbook's 3sing / non-3sing type hierarchy can be implemented as follows:
+\begin{cprog}
+3sing := agr-cat &
+[ PER 3rd,
+  NUM sing,
+  GEND gend ].
+
+non-3sing :< agr-cat.
+
+1sing := non-3sing &
+[ PER 1st,
+  NUM sing ].
+
+non-1sing :< non-3sing.
+
+2sing := non-1sing &
+[ PER 2nd,
+  NUM sing ].
+
+pl := non-1sing &
+[ NUM plur ].
+\end{cprog}
+
+The reason that 3sing will unify with non-3sing is that the type system implemented in the LKB does not require that a feature structure of type t must unify with a subtype of t.  Such a formalism could be constructed, but it's questionable whether the value gained by such a strong notion of well-formedness would be worth the extra computation needed to implement it.
+
+The "Typed feature structures made simple" chapter from the LKB Documentation for suggests that PER and NUM be collapsed into a single feature:
+\begin{cprog}
+agr-cat := feat-struc &
+[ PERNUM pernum,
+  CASE case ].
+
+pernum :< *value*.
+
+non-3sing :< pernum.
+
+1sing :< non-3sing.
+1plur :< non-3sing.
+2sing :< non-3sing.
+2plur :< non-3sing.
+3sing :< pernum.
+3plur :< non-3sing.
+\end{cprog}
+
+\subsection{Grammar 3: Adding the "Keep Tabs On" Idiom}
+
+In order to make the meaning of the sentences ``Kim kept tabs on Sandy'' and ``Kim observed Sandy'' be the same, we will create a predication in our semantic types which is attached to both of them:
+
+\begin{cprog}
+observe-pred := pred &
+[ RELN r-observe,
+  OBSERVER index,
+  OBSERVED index ].
+
+r-observe :< reln.
+\end{cprog}
+
+Therefore we simply need to attach this predication to the lexical entries for "observed" and "kept", and then we should be able to generate one sentence from the other.
+
+lexical entries:
+\begin{cprog}
+observed := word &
+[ ORTH "observed",
+  SYN [ HEAD verb,
+        SPR < phrase & [ SYN [ HEAD noun,
+                               SPR < > ],
+                         SEM [ INDEX #i ] ] >,
+        COMPS < phrase & [ SYN [ HEAD noun,
+                                 SPR < > ],
+                           SEM [ INDEX #j ] ] > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! observe-pred &
+                [ RELN r-observe,
+                  SIT #s,
+                  OBSERVER #i,
+                  OBSERVED #j ] !> ] ].
+
+
+
+kept := word &
+[ ORTH "kept",
+  SYN [ HEAD verb,
+        SPR < phrase & 
+                       [ SYN [ HEAD noun,
+                               SPR < > ],
+                         SEM [ INDEX #i ] ] >,
+        COMPS < phrase & 
+                         [ SYN [ HEAD noun & [ FORM f-tabs ],
+                                 SPR < > ] ],
+
+                 phrase & 
+                          [ SYN [ HEAD prep,
+                                  SPR < > ],
+                            SEM [ INDEX #j ] ] > ],
+  SEM [ MODE prop,
+        INDEX #s,
+        RESTR <! observe-pred &
+                [ RELN r-observe,
+                  SIT #s,
+                  OBSERVER #i,
+                  OBSERVED #j ] !> ] ].
+
+
+on := word & 
+[ ORTH "on",
+  SYN [ HEAD prep,
+        SPR < >,
+        COMPS < phrase & 
+                         [ SYN [ HEAD noun,
+                                 SPR < > ],
+                           SEM [ MODE #mode,
+                                 INDEX #i ] ] > ],
+  SEM [ MODE #mode,
+        INDEX #i,
+        RESTR <! !> ] ].
+
+
+tabs := word &
+[ ORTH "tabs",
+  SYN [ HEAD noun & [ FORM f-tabs ],
+        SPR < >,
+        COMPS < > ],
+  SEM null-sem ].
+
+\end{cprog}

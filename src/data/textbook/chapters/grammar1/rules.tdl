@@ -1,12 +1,4 @@
 
-;;; The head-complement rule is described in the textbook as being a single rule. In fact, part of the justification for eliminating the [ VAL int|tr|dtr ] feature  and introducing the head-complement rule is precisely because the revision reduces the number of rules needed from 3 to 1.  However, it turns out that the notation  used in the textbook is imprecise in the computational system of the LKB.  It's still necessary to explicitly detail a head-complement rule for heads that take 0, 1, and 2 complements. 
-
-;;; Note that the rules here are written slightly different than in the textbook.   Rather than the --> notation we're simply embedding everything that occurs to the right of the arrow in a feature called ARGS (for arguments) in the resulting sturcture (the structure built on the left-hand side of the arrow).  Also, we're currently hand encoding the Head Feature Priniciple and the Valence Principle into the rules themselves.  In the next iteration of the grammar we'll show how to  tease out these constraints so that they apply to all rules, and don't have to  be redundently specified. 
-
-;;; Exercise -- Add the Head-Modifier Rule.
-
-;;; Advanced Exercise -- Design the head-complement rule so that it has a binary branching structure and discuss how many rules can be eliminated.
-
 head-complement-rule-0 := phrase & 
 [ HEAD #0,
   SPR #a,

@@ -1,8 +1,8 @@
-SOLUTION -- Add the Head-Modifier Rule.
+ SOLUTION -- Add the Head-Modifier Rule.
 
 To the types.tdl file you should have added preposition as a type of part of speech (pos) by adding 
 
-prep :< pos.
+prep := pos.
 
 To add "with" to the lexicon you should have added this entry
 

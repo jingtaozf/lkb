@@ -24,7 +24,7 @@ Further constrain the verbs so that their specifier is [ CASE nom ] and their co
 
 EXERCISE -- 3sing and non-3sing
 
-The type distinction presented in the textbook between non-3sing and 3sing is invalid because there is nothing that prevents a structure [ PER 3rd, NUM sing ] from unifying with non-3sing.  Implement the textbook's type distinction (from page 89):
+The type distinction presented in the textbook between non-3sing and 3sing doesn't quite work as expected because there is nothing that prevents a structure [ PER 3rd, NUM sing ] from unifying with non-3sing.  Implement the textbook's type distinction (from page 89):
         pernum
         /    \
     3sing   non-3sing
@@ -36,4 +36,3 @@ The type distinction presented in the textbook between non-3sing and 3sing is in
 Then mark the SPR of all present tense verbs in the lexicon as either 3sing or non-3sing.  Try parings ``The dog bark''.  Notice that even though "dog" is 3sing it can still unify with the non-3sing type specified by the "bark".
 
 See the end of the "Typed feature structures made simple" chapter from the LKB Documentation for a alternative 3sing / non-3sing type hierarchy.
-

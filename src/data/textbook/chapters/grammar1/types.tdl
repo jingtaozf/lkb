@@ -1,14 +1,14 @@
-feat-struc :< *top*.
+feat-struc := *top*.
 
 syn-struc := feat-struc & 
 [ HEAD pos,
   SPR *list*,
   COMPS *list* ].
 
-pos :< feat-struc.
-noun :< pos.
-verb :< pos.
-det :< pos.
+pos := feat-struc.
+noun := pos.
+verb := pos.
+det := pos.
 
 
 phrase := syn-struc &
@@ -36,3 +36,4 @@ string := *top*.
    REST *list* ].
 
 *null* := *list*.
+
