@@ -153,7 +153,17 @@
     (unless (or (and building-image-p (boundp building-image-p)
                      (symbol-value building-image-p))
                 (find :slave *features*))
-      #+:allegro
+      
+      ;;
+      ;; reset mk::bin-dir et al. according to current image location
+      ;;
+      (let* ((sys (truename (translate-logical-pathname "sys:")))
+	     (home (make-pathname 
+		    :directory (butlast (pathname-directory sys)))))
+	(setf mk::sys-home (merge-pathnames home sys))
+	(mk::reset-system-paths))
+      
+      #+:allegr
       (tpl:setq-default *package* 
         (find-package (if (system:getenv "SSP") :ssp :lkb)))
       

@@ -100,7 +100,7 @@ lkb_linux:
 	  cd ${ROOT}/lkb; \
 	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_linux.tgz \
               --exclude=".nfs*" \
-	      linux; \
+	      linux bin/linux/yzlui; \
 	)
 	  
 lkb_linux@cypriot:
