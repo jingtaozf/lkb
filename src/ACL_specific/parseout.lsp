@@ -200,13 +200,13 @@
 |#
 
 (defun show-parse-tree-frame (parses &optional (title "Parse results"))
-  (mp:run-function title #'show-parse-tree-frame-really parses)) 
+  (mp:run-function title #'show-parse-tree-frame-really parses title)) 
 
-(defun show-parse-tree-frame-really (parses)
+(defun show-parse-tree-frame-really (parses &optional title)
   (let ((frame (clim:make-application-frame 'parse-tree-frame)))
     (set-up-parse-tree-frame parses frame)
     (setf (clim:frame-pretty-name frame) 
-      (format nil "~{~a ~}" (edge-leaves (car parses))))
+      (or title (format nil "~{~a ~}" (edge-leaves (car parses)))))
     (clim:run-frame-top-level frame)))
 
 

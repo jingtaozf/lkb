@@ -53,7 +53,8 @@
 (defparameter %lsp-clients% nil)
 
 (defstruct client
-  id socket stream process display)
+  id socket stream process
+  (display #+:clim clim:*default-server-path* #-:clim nil))
 
 (defun lsp-initialize ()
   (lsp-shutdown)
@@ -154,7 +155,15 @@
         (return)))
 
 (defun lsp-process-event (id event stream)
-  (let* ((command (lsp-parse-command id event))
+  (let* ((client  (loop
+                      for client in %lsp-clients%
+                      when (= (client-id client) id) return client))
+         #+:clim
+         (display clim:*default-server-path*)
+         #+:clim
+         (clim:*default-server-path* 
+          (if client (client-display client) display))
+         (command (lsp-parse-command id event))
          (waitp (eq (first command) 'wait))
          (return %lsp-ok%))
 
@@ -176,7 +185,7 @@
       (force-output stream))
     (multiple-value-bind (foo condition)
       (ignore-errors
-       (case (first command)
+       (case (pop command)
          (tsdb 
           (if (find-package :tsdb)
             (let* ((symbol (find-symbol "LSP-PROCESS-EVENT" :tsdb))
@@ -184,7 +193,7 @@
                                (symbol-function symbol))))
               (if function
                 (setf return
-                  (funcall function id (rest command) (when waitp stream)))
+                  (funcall function id command (when waitp stream)))
                 (setf return %lsp-invalid-module%)))
             (setf return %lsp-invalid-module%)))
          (mrs 
@@ -194,9 +203,44 @@
                                (symbol-function symbol))))
               (if function
                 (setf return 
-                  (funcall function id (rest command) (when waitp stream)))
+                  (funcall function id command (when waitp stream)))
                 (setf return %lsp-invalid-module%)))
             (setf return %lsp-invalid-module%)))
+         (display
+          (when client
+            (setf (client-display client)
+              (if (and (stringp (first command))
+                       (> (length (first command)) 0))
+                (list (first (client-display client)) :display (first command))
+                #+:clim
+                display))
+            (when *lsp-dedbug-p*
+              (format
+               t
+               "[~d] lsp-process-event(): new DISPLAY is `~a'.~%"
+               id (or (third (client-display client)) "local")))))
+         (parse
+          (let* ((input (pop command))
+                 (set (let ((foo (pop command))) 
+                        (and foo (intern (string foo) :keyword))))
+                 (format (let ((foo (pop command))) 
+                           (and foo (intern (string foo) :keyword))))
+                 (view (let ((foo (pop command))) 
+                         (and foo (intern (string foo) :keyword)))))
+            (when (stringp input)
+              (parse (split-into-words 
+                      (preprocess-sentence-string 
+                       (string-trim '(#\space #\tab #\newline) input)))
+                     nil)
+              (when *parse-record*
+                (setf *parse-record* (nreverse *parse-record*))
+                (let ((edges (if (eq set :best)
+                               (list (first *parse-record*))
+                               *parse-record*)))
+                  (if (eq view :browse)
+                    (lsp-browse id input edges format)
+                    (lsp-return id stream edges format))))
+              (format stream "~a " (length *parse-record*)))))
          (t
           (setf return %lsp-invalid-command%))))
       (declare (ignore foo))
@@ -225,9 +269,6 @@
            id string))
         (return)
       while (not (eq form :eof)) collect form))
-;;
-;; (cl:setf *default-server-path* '(:motif :display "localhost:0"))
-;;
 
 (defun lsp-make-readtable ()
   (copy-readtable))
@@ -238,4 +279,58 @@
       when (equal id (client-id client)) return client))
 
 (defun lsp-retrieve-object (id n)
-  (declare (ignore id)))
+  (declare (ignore id n)))
+
+(defun lsp-browse (id input edges format &key title)
+  (let ((title (or title (format nil "`~a' [LSP # ~a]" input id))))
+    #+(and :allegro :clim)
+    (when (eq format :tree)
+      (show-parse-tree-frame edges title)
+      (return-from lsp-browse))
+    (loop
+        for edge in edges do
+          (case format
+            (:avm
+             (lkb::display-fs (edge-dag edge) title))
+            #+:mrs
+            ((:mrs :indexed :prolog :scoped :rmrs :dependencies)
+             (let ((mrs (mrs::extract-mrs edge)))
+               (case format
+                 (:mrs
+                  (lkb::show-mrs-window nil mrs title))
+                 (:indexed 
+                  (lkb::show-mrs-indexed-window nil mrs title))
+                 (:prolog 
+                  (lkb::show-mrs-prolog-window nil mrs title))
+                 (:scoped 
+                  (lkb::show-mrs-scoped-window nil mrs title))
+                 (:rmrs 
+                  (lkb::show-mrs-rmrs-window nil mrs title))
+                 (:dependencies 
+                  (lkb::show-mrs-dependencies-window nil mrs title)))))))))
+
+(defun lsp-return (id stream edges format)
+  (declare (ignore id))
+  (loop
+      with *package* = (find-package :lkb)
+      for edge in edges do
+        (case format
+          (:avm
+           (let* ((dag (tdfs-indef (edge-dag edge)))
+                  (string (with-output-to-string (stream)
+                            (lkb::display-dag1 dag 'compact stream))))
+             (format stream "~s " string)))
+          (:tree
+           (let* ((*package* (find-package :lkb))
+                  (string (with-standard-io-syntax
+                            (write-to-string 
+                             (lkb::parse-tree-structure edge)))))
+             (format stream "~s " string) ))
+          #+:mrs
+          ((:mrs :indexed :prolog :scoped :rmrs :dependencies)
+           (when (eq format :mrs) (setf format :simple))
+           (let* ((format (intern (string format) :mrs))
+                  (mrs (mrs::extract-mrs edge))
+                  (string (with-output-to-string (stream)
+                            (mrs::output-mrs1 mrs format stream))))
+             (format stream "~s " string))))))
