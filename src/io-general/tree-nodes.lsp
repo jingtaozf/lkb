@@ -14,7 +14,8 @@
          (sort
             (mapcar
                #'(lambda (edge)
-                   (cons (format nil "~{~A~^ ~}" (g-edge-leaves edge))
+                   (cons (format nil "~{~A~^ ~}" 
+                                 (fix-spelling (g-edge-leaves edge)))
                       edge))
                *gen-record*)
             #'string-lessp :key #'car)
@@ -60,12 +61,9 @@
 
 ;;; parse output functions which are not dialect specific
 
-(defvar *cached-category-abbs* nil)
-
 (defun show-parse nil
   (if *parse-record*
      (progn
-         (setf *cached-category-abbs* nil)
        #+(and :allegro :clim)(show-parse-tree-frame *parse-record*)
        #-(and :allegro :clim) 
          (for edge in *parse-record*
@@ -628,7 +626,8 @@
              (car (edge-leaves edge))
              (if daughters
                 (cons (tree-node-text-string
-                       (or (find-category-abb (edge-dag edge))
+                       (or (find-category-abb 
+                            (edge-dag edge))
                            (edge-category edge)))
                   (mapcan
                    #'(lambda (dtr)
