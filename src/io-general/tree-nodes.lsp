@@ -232,7 +232,9 @@
 ; checking for slash etc
 
 (defun check-meta (fs)
-  (let ((meta-fs (existing-dag-at-end-of fs *recursive-path*)))
+  (let ((meta-fs 
+         (unless (diff-list-funny-stuff fs *recursive-path*)
+           (existing-dag-at-end-of fs *recursive-path*))))
     (if (null meta-fs)
         ""
       (dolist (meta-tmpl *meta-display-templates*)
@@ -242,6 +244,18 @@
                                (match-meta-label meta-fs)
                                (meta-template-suffix meta-tmpl))))))))
 
+(defun diff-list-funny-stuff (fs path)
+  (let ((diff-list-pos (position *diff-list-list* path)))
+    (if diff-list-pos
+        (let ((diff-list-fs 
+               (existing-dag-at-end-of fs (subseq path 0 diff-list-pos))))
+          (and diff-list-fs
+               (empty-diff-list-p diff-list-fs))))))
+
+(defun empty-diff-list-p (fs)
+  (let ((list-val (existing-dag-at-end-of fs (list *diff-list-list*)))
+        (last-val (existing-dag-at-end-of fs (list *diff-list-last*))))
+    (eq list-val last-val)))
 
 (defun template-match-p (tmpl-fs fs)
   ;;; the test is whether all the `real' parts of the
