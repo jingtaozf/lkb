@@ -1,0 +1,1 @@
+#ifndef	YZ_IMAGE_H#define	YZ_IMAGE_Hint	yzDisplayBits5i1p(int	x, int	y, int	dx, int	dy, int	rb, void	*bits);int	yzGetDepth();int	yzCopyRect2i2i2i(int	srcx, int	srcy, int	dstx, int	dsty,								int	width, int	height);/* shortcuts (yz 0.2.0) */#define	yzDisplayBits	yzDisplayBits5i1p#define	yzCopyRect		yzCopyRect2i2i2i#endif
