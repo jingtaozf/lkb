@@ -21,6 +21,7 @@
 #
 
 LD_ASSUME_KERNEL=2.2.5
+export LD_ASSUME_KERNEL=2.2.5
 
 path=`dirname $0`
 if [ "{path}" = "." ]; then
