@@ -13,7 +13,8 @@
   #+:preprocessor
   (declare (special *preprocessor*))
   (when *preprocessor*
-    (return-from preprocess-sentence-string (preprocess str :format :lkb)))
+    (return-from preprocess-sentence-string 
+      (preprocess str :format :lkb :verbose nil)))
   
   (let ((in-word nil)
         (chars (coerce str 'list))
