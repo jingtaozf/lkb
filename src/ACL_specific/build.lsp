@@ -62,7 +62,7 @@
                 "latin-8" "latin-9" "latin1" "latin14" "latin15" "latin2"
                 "latin3" "latin4" "latin5" "latin6" "latin7" "latin8" "latin9"
                 "shiftjis" "ujis" "unicode" "utf8" "void")
-    do (excl::find-external-format (intern ef :keyword)))
+    do (excl::find-external-format (intern (string-upcase ef) :keyword)))
 
 (setq make::*building-image-p* t)
 (setq make:*compile-during-load* t)

@@ -1,5 +1,6 @@
 ROOT = /lingo/build/
-SROOT= ${HOME}/class/src
+SROOT = ${HOME}/class/src
+LROOT = ${HOME}/src/lingo
 WROOT = c:/src
 DATE = `date "+%Y-%m-%d"`
 TARGET = /lingo/www/lingo/ftp
@@ -131,6 +132,32 @@ lkb_linux@cypriot:
 	  echo "(excl:exit)"; \
 	) | ( cd /lingo/local/acl; \
               ACL_LOCALE=C ./alisp -I clim.dxl -qq && touch ${ROOT}/.yes; )
+
+lkb_linux@ar:
+	${RM} -f ${LROOT}/.yes;
+	( \
+	  echo "(load \"${LROOT}/lkb/src/general/loadup.lisp\")"; \
+	  echo "(load \"${LROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
+	  echo "(pushnew :lkb *features*)"; \
+	  echo "(pushnew :psql *features*)"; \
+	  echo "(pushnew :lui *features*)"; \
+	  echo "(pushnew :mrs *features*)"; \
+	  echo "(pushnew :mt *features*)"; \
+	  echo "(setf make::*building-image-p* t)"; \
+	  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
+	  echo "(compile-system \"tsdb\" :force t)"; \
+	  echo "(excl:exit)"; \
+	) | ( cd /logon/oe/src/logon/franz/linux.x86.64; \
+              ACL_LOCALE=C ./alisp -I clim.dxl -qq && touch ${LROOT}/.yes; )
+	( \
+	  if [ ! -f ${LROOT}/.yes ]; then exit 1; fi; \
+	  cd ${LROOT}/lkb; \
+	  ${TAR} Svczf /tmp/lkb_linux.x86.64.tgz \
+              --exclude=".nfs*" \
+	      linux.x86.64 bin/linux.x86.64/yzlui; \
+	  scp /tmp/lkb_linux.x86.64.tgz \
+            oe@lingo.stanford.edu:${TARGET}/${DATE}; \
+	)
 
 lkb_solaris:
 	${RM} -f ${HOME}/tmp/.yes;
