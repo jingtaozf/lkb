@@ -23,7 +23,6 @@ cvs update: Updating lkb
 cvs update: Updating .
 ? doc
 ? etc
-? links
 ? linux
 ? man
 ? solaris
@@ -267,7 +266,6 @@ cvs update: Updating src/io-paths
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-U src/main/parse.lsp
 cvs update: Updating src/mrs
 cvs update: Updating src/mrs/data
 cvs update: Updating src/non-core
@@ -281,8 +279,6 @@ cvs update: Updating src/rmrs
 cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
-U src/systems/lkb.system
-U src/systems/tsdb.system
 cvs update: Updating src/tproving
 cvs update: Updating src/tsdb
 cvs update: Updating src/tsdb/TeX
@@ -311,83 +307,46 @@ cvs update: Updating src/tsdb/home/trees/vm32/ezra
 cvs update: Updating src/tsdb/home/trees/vm32/ezra/01-07-17
 cvs update: Updating src/tsdb/linux
 cvs update: Updating src/tsdb/lisp
-U src/tsdb/lisp/derivations.lisp
-U src/tsdb/lisp/globals.lisp
-U src/tsdb/lisp/lkb-interface.lisp
-U src/tsdb/lisp/maxent.lisp
-U src/tsdb/lisp/pcfg.lisp
-U src/tsdb/lisp/podium.lisp
-U src/tsdb/lisp/redwoods.lisp
-U src/tsdb/lisp/statistics.lisp
 cvs update: Updating src/tsdb/lisp/RCS
 cvs update: Updating src/tsdb/skeletons
 cvs update: Updating src/tsdb/skeletons/csli
 cvs update: Updating src/tsdb/skeletons/deutsch
-U src/tsdb/skeletons/deutsch/Relations
 cvs update: Updating src/tsdb/skeletons/deutsch/babel
-U src/tsdb/skeletons/deutsch/babel/relations
 cvs update: Updating src/tsdb/skeletons/deutsch/german
-U src/tsdb/skeletons/deutsch/german/relations
 cvs update: Updating src/tsdb/skeletons/deutsch/tub
-U src/tsdb/skeletons/deutsch/tub/relations
 cvs update: Updating src/tsdb/skeletons/deutsch/vm
-U src/tsdb/skeletons/deutsch/vm/relations
 cvs update: Updating src/tsdb/skeletons/deutsch/vmd
-U src/tsdb/skeletons/deutsch/vmd/relations
 cvs update: Updating src/tsdb/skeletons/english
 cvs update: Updating src/tsdb/skeletons/english/aged
-U src/tsdb/skeletons/english/aged/relations
 cvs update: Updating src/tsdb/skeletons/english/blend
-U src/tsdb/skeletons/english/blend/relations
 cvs update: Updating src/tsdb/skeletons/english/csli
-U src/tsdb/skeletons/english/csli/relations
 cvs update: Updating src/tsdb/skeletons/english/demo
-U src/tsdb/skeletons/english/demo/relations
 cvs update: Updating src/tsdb/skeletons/english/ec
-U src/tsdb/skeletons/english/ec/relations
 cvs update: Updating src/tsdb/skeletons/english/english
-U src/tsdb/skeletons/english/english/relations
 cvs update: Updating src/tsdb/skeletons/english/fuse
-U src/tsdb/skeletons/english/fuse/relations
 cvs update: Updating src/tsdb/skeletons/english/parc
-U src/tsdb/skeletons/english/parc/relations
 cvs update: Updating src/tsdb/skeletons/english/s+w
 cvs update: Updating src/tsdb/skeletons/english/toy
 cvs update: Updating src/tsdb/skeletons/english/vm
 cvs update: Updating src/tsdb/skeletons/english/vm13
-U src/tsdb/skeletons/english/vm13/relations
 cvs update: Updating src/tsdb/skeletons/english/vm31
-U src/tsdb/skeletons/english/vm31/relations
 cvs update: Updating src/tsdb/skeletons/english/vm32
-U src/tsdb/skeletons/english/vm32/relations
 cvs update: Updating src/tsdb/skeletons/english/vm6
-U src/tsdb/skeletons/english/vm6/relations
 cvs update: Updating src/tsdb/skeletons/english/vm97
-U src/tsdb/skeletons/english/vm97/relations
 cvs update: Updating src/tsdb/skeletons/english/vm97p
-U src/tsdb/skeletons/english/vm97p/relations
 cvs update: Updating src/tsdb/skeletons/english/vm98
-U src/tsdb/skeletons/english/vm98/relations
 cvs update: Updating src/tsdb/skeletons/english/wsj00
-U src/tsdb/skeletons/english/wsj00/relations
 cvs update: Updating src/tsdb/skeletons/evm
 cvs update: Updating src/tsdb/skeletons/francaise
-U src/tsdb/skeletons/francaise/Relations
 cvs update: Updating src/tsdb/skeletons/francaise/french
-U src/tsdb/skeletons/francaise/french/relations
 cvs update: Updating src/tsdb/skeletons/french
 cvs update: Updating src/tsdb/skeletons/german
 cvs update: Updating src/tsdb/skeletons/norsk
-U src/tsdb/skeletons/norsk/Relations
 cvs update: Updating src/tsdb/skeletons/norsk/enkel
-U src/tsdb/skeletons/norsk/enkel/relations
 cvs update: Updating src/tsdb/skeletons/s+w
 cvs update: Updating src/tsdb/skeletons/toy
 cvs update: Updating src/tsdb/solaris
 cvs update: Updating src/tsdb/tcl
-U src/tsdb/tcl/commands.tcl
-U src/tsdb/tcl/podium.tcl
-U src/tsdb/tcl/showtable.tcl
 cvs update: Updating src/tty
 cvs update: Updating src/www
 **********
@@ -399,7 +358,7 @@ cvs update: Updating src/www
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.189; previous revision: 1.188
+new revision: 1.190; previous revision: 1.189
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -606,7 +565,6 @@ src/psql/linux/
 src/psql/linux/libpq.so
 src/psql/solaris/
 src/psql/solaris/libpq.so
-links
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
   tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/lkb_data.tgz \
@@ -1314,7 +1272,7 @@ Root pages: 2
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Nov 5, 2002 10:20)
+6.0 [Linux (x86)] (Nov 5, 2002 14:58)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -2105,7 +2063,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/nacl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-23025832 bytes have been tenured, next gc will be global.
+22911816 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -2384,7 +2342,7 @@ CL-USER(7): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/rules.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/parse.lsp
-8830744 bytes have been tenured, next gc will be global.
+8831288 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/parse.fasl
@@ -2850,26 +2808,39 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1797712; old: 436488; pending: 0; efficiency: 96.
+gc-after-hook(): local; new: 1796864; old: 436488; pending: 0; efficiency: 96.
 ; While compiling RANK-PROFILE:
-Error: Iteration in LOOP follows body code.
-Current LOOP context: FOR I FROM 1 TO (+ NFOLD 1) DO.
-  [condition type: SIMPLE-ERROR]
-
-Restart actions (select using :continue):
- 0: retry the compilation of /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
- 1: continue compiling
-    /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp but
-    generate no output file
- 2: Return to Top Level (an "abort" restart)
- 3: Abort #<PROCESS Initial Lisp Listener>
-
-[changing package from "COMMON-LISP-USER" to "TSDB"]
-[1] TSNLP(8): :pop
-
-[changing package from "TSDB" to "COMMON-LISP-USER"]
-CL-USER(8): EOF
-Do you really want to kill process "Initial Lisp Listener" [n]? 
+Warning: variable INTERRUPT is used yet it was declared ignored
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/ptb.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/ptb.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/ptb.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/pcfg.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/pcfg.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/pcfg.fasl
+;;; Compiling file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/maxent.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/maxent.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/maxent.fasl
+Warning: While compiling these undefined functions were referenced:
+         MRS::OUTPUT-RMRS1 from position 1098 in
+           /eo/e7/apache/htdocs/src/lkb/src/mrs/interface.lisp
+         MRS::SIMPLE-MRS-TO-RMRS from position 1098 in
+           /eo/e7/apache/htdocs/src/lkb/src/mrs/interface.lisp
+         LKB::EXPAND-IDIOMS-PHRASES from position 4248 in
+           /eo/e7/apache/htdocs/src/lkb/src/io-tdl/tdllexinput.lsp
+(#<MODULE: tsdb>)
+CL-USER(8): ; killing "scheduler work-out [spr19158]"
+; killing "Initial Lisp Listener"
 ; Exiting Lisp
 ( \
   if [ ! -f /eo/e7/apache/htdocs/src/.yes ]; then exit 1; fi; \
@@ -2961,7 +2932,7 @@ Root pages: 2
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Nov 5, 2002 10:25)
+6.0 [Linux (x86)] (Nov 5, 2002 15:03)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -3752,7 +3723,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/macl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-23025832 bytes have been tenured, next gc will be global.
+23024392 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -3989,7 +3960,7 @@ Root pages: 12
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (11/5/2 10:19)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (11/5/2 14:57)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -4516,7 +4487,7 @@ USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-21767384 bytes have been tenured, next gc will be global.
+21533144 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4625,7 +4596,7 @@ Warning: Variable #:G18099 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
-7170448 bytes have been tenured, next gc will be global.
+7170128 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/yadu.fasl
@@ -5043,26 +5014,30 @@ Warning: Variable #:G27369 is never used.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tnt-interface.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 2734192; old: 562312; pending: 0; efficiency: 96.
+gc-after-hook(): local; new: 2302472; old: 562312; pending: 0; efficiency: 96.
 ; While compiling RANK-PROFILE:
-Error: Iteration in LOOP follows body code.
-Current LOOP context: FOR I FROM 1 TO (+ NFOLD 1) DO.
-  [condition type: SIMPLE-ERROR]
-
-Restart actions (select using :continue):
- 0: retry the compilation of /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
- 1: continue compiling
-    /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp but generate no
-    output file
- 2: Return to Top Level (an "abort" restart)
- 3: Abort #<PROCESS Initial Lisp Listener>
-
-[changing package from "COMMON-LISP-USER" to "TSDB"]
-[1] TSNLP(8): :pop
-
-[changing package from "TSDB" to "COMMON-LISP-USER"]
-USER(8): EOF
-Do you really want to kill process "Initial Lisp Listener" [n]? 
+Warning: variable INTERRUPT is used yet it was declared ignored
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/ptb.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/ptb.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/ptb.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/pcfg.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/pcfg.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/pcfg.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/maxent.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/maxent.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/maxent.fasl
+Warning: While compiling these undefined functions were referenced:
+         MRS::OUTPUT-RMRS1, MRS::SIMPLE-MRS-TO-RMRS,
+         LKB::EXPAND-IDIOMS-PHRASES.
+(#<MODULE: tsdb>)
+USER(8): ; killing "scheduler work-out [spr19158]"
+; killing "Initial Lisp Listener"
 ; Exiting Lisp
 ( \
   if [ ! -f /eo/e7/apache/htdocs/src/.yes ]; then exit 1; fi; \
@@ -5236,6 +5211,7 @@ src/.sacl/tsdb/tnt-interface.fasl
 src/.sacl/tsdb/yy.fasl
 src/.sacl/tsdb/evolution.fasl
 src/.sacl/tsdb/pcfg.fasl
+src/.sacl/tsdb/maxent.fasl
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
   find src/.l6cl -type f -exec touch {} \; ; \
@@ -5282,6 +5258,7 @@ src/.l6cl/tsdb/tnt-interface.fasl
 src/.l6cl/tsdb/yy.fasl
 src/.l6cl/tsdb/evolution.fasl
 src/.l6cl/tsdb/pcfg.fasl
+src/.l6cl/tsdb/maxent.fasl
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
   tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/itsdb_libraries.tgz \
