@@ -1,0 +1,99 @@
+------------------------------------------------------------------------------
+---- things to do (usually fix or improve |:-) for tsdb(1) and the podium ----
+------------------------------------------------------------------------------
+
+
+open issues:
+------------
+
+[03-nov-98] - center copyright caption below narrow tables;
+
+[02-nov-98] - fix copyright caption (text marker) in graph and chart;
+
+[31-oct-98] - restrict completion to directories for database import;
+
+[28-oct-98] - format large memory usage numbers with delimiters (1.123.456);
+              find appropriate format (bug id: mueller/17)
+
+[25-oct-98] - fill in missing balloons;
+
+[21-oct-98] - exclude table header from scrolling;
+
+[21-oct-98] - fix rename `foo/bar' to `foo';
+
+[22-oct-98] - history mechanism for `File - Import' command;
+
+[22-oct-98] - some sort of summary mechanisms (e.g. total numbers) for tables;
+
+[05-aug-98] - allow rename of `foo' to `foo/bar';
+
+[04-aug-98] - `Compress' operation in `File' menue;
+
+[01-aug-98] - allow customization for default names (`%g/%v/%s/%d/%p');
+
+[01-aug-98] - redirect test run output into file;
+
+[30-jul-98] - provide HTML generation for tables;
+
+
+resolved issues:
+----------------
+
+[10-nov-98] - fix bug in custom query history (bug id: mueller/42);
+
+[10-nov-98] - hide progress meter when idle (bug id: mueller:37);
+
+[30-oct-98] - add copyleft caption to tables and graphs;
+
+[30-oct-98] - block interactive processing while podium is busy;
+
+[21-oct-98] - fix PostScript generation for tables and graphs;
+
+[21-oct-98] - design and activate cute icon (bug id: mueller/1);
+
+[21-oct-98] - <Previous> and <Next> bindings et al. in tables;
+
+[21-oct-98] - make table size depend on screen resolution;
+
+[04-aug-98] - `Browse.Condition' cascade (with history);
+
+[04-aug-98] - context-sensitive completion for `Condition' and `Custom Query';
+
+[01-aug-98] - add `computing table geometry' message to various commands;
+
+[01-aug-98] - call gc() from `File' menue;
+
+[29-jul-98] - redo analyze-phenomena() to use raw data and list data not
+              associated with a phenomenon as a special class `Other';
+
+[29-jul-98] - produce TCL output for comparison tables (`Compare' menue);
+
+[29-jul-98] - integrate balloon help (display help window on top when active);
+
+[29-jul-98] - make backgrounding test run optional;
+
+[29-jul-98] - have analyze() produce status messages (comparative views require
+              two databases; hence, evaluate-remote-command() cannot do it);
+
+[29-jul-98] - reset profile cache when changing the database root;
+
+[29-jul-98] - parse *tsdb-home* into canonical representation;
+
+[29-jul-98] - allow selection of (gold-standard) comparison source in list;
+
+[29-jul-98] - generate `Browse' menues dynamically from list of phenomena;
+
+[29-jul-98] - fill in missing menue entries in `Browse' et al.;
+
+[29-jul-98] - allow cut and paste from tables;
+
+[26-jun-98] - add `Create', `Rename', `Purge', `Delete' et al. to `File' meneu;
+
+[26-jun-98] - run meter() when updating the skeleton list;
+
+[24-jun-98] - update database list only when database root effectively changes;
+
+[24-jun-98] - fix event handling mechanism in podium-loop();
+
+
+

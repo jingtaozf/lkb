@@ -24,27 +24,84 @@
     :binary-pathname (dir-append (get-binaries-dir "tsdb")
 				 '(:relative "tsdb"))
     :finally-do
-    #+(and :lkb (not :tty))
-    (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium)
-    #-(and :lkb (not :tty)) 
+    #+(or (and (not :lkb) :unix) (and :lkb (not :tty)))
+    (when #+:allegro (system:getenv "DISPLAY") #-:allegro t
+      (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium))
+    #-(or (and (not :lkb) :unix) (and :lkb (not :tty)))
     nil
     :components
-    ((:module "tsdb"
+    ((:module "agenda"
       :source-pathname ""
+      :source-extension ""
+      :operation-form 
+      ((:load (lambda (component force)
+                (declare (ignore force))
+                (unless (probe-file 
+                         (component-full-pathname component :source))
+                  (format t
+                   "~&; missing: `~a';~%"
+                   (component-full-pathname component :source)))))
+       (:compile (lambda (component force)
+                   (declare (ignore force))
+                   (unless (probe-file 
+                            (component-full-pathname component :source))
+                     (format t
+                             "~&; missing: `~a';~%"
+                             (component-full-pathname component :source))))))
+      :components
+      ((:file "ToDo")))
+     (:module "tsdb"
+      :source-pathname "lisp"
+      :binary-pathname ""
       :components
       ((:file "tsdb-package")
        #+:page (:file "tdl-patches")
-       #+:page (:file "page-interface")
-       #+(and :page :ignore) (:file "chart")
        #+:lkb (:file "lkb-interface")
        (:file "globals")
        (:file "utilities")
        (:file "tsql")
        (:file "tsdb")
        (:file "commands")
+       (:file "import")
        #+:ignore (:file "server")
        (:file "statistics")
-       (:file "podium"))))
+       (:file "podium")
+       #+:page (:file "page-interface")
+       #+(and :page :ignore) (:file "chart")))
+     (:module "podium"
+      :source-pathname "tcl"
+      :source-extension "tcl"
+      :load-only t
+      :operation-form 
+      ((:load (lambda (component force)
+                (declare (ignore force))
+                (unless (probe-file 
+                         (component-full-pathname component :source))
+                  (format t
+                   "~&; missing: `~a';~%"
+                   (component-full-pathname component :source)))))
+       (:compile (lambda (component force)
+                   (declare (ignore force))
+                   (unless (probe-file 
+                            (component-full-pathname component :source))
+                     (format t
+                             "~&; missing: `~a';~%"
+                             (component-full-pathname component :source))))))
+      :components
+      ((:file "icon" :source-extension "xbm")
+       (:file "podium")
+       (:file "goodies")
+       (:file "table")
+       (:file "showtable")
+       (:file "showgraph")
+       (:file "utilities")
+       (:file "podium_commands")
+       (:file "input")
+       (:file "balloon")
+       (:file "balloons" :source-extension ""))))
     :depends-on (#+:page "page" #+:lkb "lkb"))
+
+
+
 
 

@@ -28,7 +28,7 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
     if {$name == "all"} {
       $list delete all
       .menu.detail.menu.compare delete 0 end;
-      foreach i [lsort [array names test_suites]] {
+      foreach i [lsort -integer [array names test_suites]] {
         set item $test_suites($i);
         set left $wleft;
         set center $wcenter;
@@ -65,7 +65,9 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
       if {[info exists active]} {
         $list selection clear;
         $list selection set $active;
-      }; # if
+      } else {
+        set globals(data) "";
+      }; # else
       if {[info exists selection] && $selection != -1} {
         $list see $selection;
       }; # if
@@ -162,7 +164,6 @@ proc update_phenomena_list {} {
 
   set browse_cascades {
     .menu.browse.menu.items
-    .menu.browse.menu.phenomena
     .menu.browse.menu.parses
     .menu.browse.menu.results
     .menu.browse.menu.errors
@@ -215,16 +216,201 @@ proc update_source_database {index} {
 }; # update_source_database()
 
 
-proc update_condition_cascade {menu class} {
+proc update_condition_cascade {{active ""}} {
 
-  global globals conditions;
+  global globals;
 
-  if {[$menu index end] != "none"} {
-    $menu delete 0 end;
+  if {$active == "null"} {
+    set globals(condition,null) 1;
+    foreach i {wellformed illformed analyzed unanalyzed} {
+      set globals(condition,$i) 0;
+    }; # foreach
+    for {set i 0} {$i < $globals(condition,size)} {incr i} {
+      set globals(condition,$i) 0;
+    }; # for
+  } elseif {[regexp {^[0-9]+$} $active]} {
+    set globals(condition,null) 0;
+  } elseif {$active == "wellformed"} {
+    set globals(condition,null) 0;
+    set globals(condition,illformed) 0;
+  } elseif {$active == "illformed"} {
+    set globals(condition,null) 0;
+    set globals(condition,wellformed) 0;
+  } elseif {$active == "analyzed"} {
+    set globals(condition,null) 0;
+    set globals(condition,unanalyzed) 0;
+  } elseif {$active == "unanalyzed"} {
+    set globals(condition,null) 0;
+    set globals(condition,analyzed) 0;
+  }; # else
+
+  #
+  # construct cascade of checkbuttons; bottom is .n. (5) most recent history
+  # entries for the condition class.
+  #
+  if {[.menu.options.menu.condition index end] != "none"} {
+    .menu.options.menu.condition delete 0 end;
   }; # if
-  $menu add command 
+  .menu.options.menu.condition add checkbutton \
+    -label "No Condition" \
+    -variable globals(condition,null) \
+    -command {update_condition_cascade null};
+  .menu.options.menu.condition add separator
+
+  .menu.options.menu.condition add checkbutton \
+    -label "Wellformed (`i-wf = 1')" \
+    -variable globals(condition,wellformed) \
+    -command {update_condition_cascade wellformed};
+  .menu.options.menu.condition add checkbutton \
+    -label "Illformed (`i-wf = 0')" \
+    -variable globals(condition,illformed) \
+    -command {update_condition_cascade illformed};
+  .menu.options.menu.condition add checkbutton \
+    -label "Analyzed (`readings > 0')" \
+    -variable globals(condition,analyzed) \
+    -command {update_condition_cascade analyzed};
+  .menu.options.menu.condition add checkbutton \
+    -label "Unanalyzed (`readings = 0')" \
+    -variable globals(condition,unanalyzed) \
+    -command {update_condition_cascade unanalyzed};
+
+  history_move condition end 1;
+  for {set i 0} {$i < 10} {incr i} {
+    if {[set condition [history_move condition 1 1]] == ""} {
+      break;
+    }; # if
+    if {!$i} {
+      .menu.options.menu.condition add separator
+    }; # if
+    .menu.options.menu.condition add checkbutton \
+      -label "`$condition'" -variable globals(condition,$i) \
+      -command [list update_condition_cascade $i];
+  }; # for
+  set globals(condition,size) $i;
+  history_move condition end 1;
+
+  #
+  # determine current TSQL condition: conjunctively concatenate all active
+  # restrictions.
+  #
+  set globals(condition) "";
+  if {!$globals(condition,null)} {
+
+    if {$globals(condition,wellformed)} {
+      if {$globals(condition) == ""} {
+        set globals(condition) [lispify_string "(i-wf = 1)"];
+      } else {
+        set globals(condition) \
+          "$globals(condition) and [lispify_string "(i-wf = 1)"]";
+      }; # else
+    }; # if
+
+    if {$globals(condition,illformed)} {
+      if {$globals(condition) == ""} {
+        set globals(condition) [lispify_string "(i-wf = 0)"];
+      } else {
+        set globals(condition) \
+          "$globals(condition) and [lispify_string "(i-wf = 0)"]";
+      }; # else
+    }; # if
+
+    if {$globals(condition,analyzed)} {
+      if {$globals(condition) == ""} {
+        set globals(condition) [lispify_string "(readings > 0)"];
+      } else {
+        set globals(condition) \
+          "$globals(condition) and [lispify_string "(readings > 0)"]";
+      }; # else
+    }; # if
+
+    if {$globals(condition,unanalyzed)} {
+      if {$globals(condition) == ""} {
+        set globals(condition) [lispify_string "(readings = 0)"];
+      } else {
+        set globals(condition) \
+          "$globals(condition) and [lispify_string "(readings = 0)"]";
+      }; # else
+    }; # if
+
+    history_move condition end 1;
+    for {set i 0} {$i < $globals(condition,size)} {incr i} {
+
+      set condition [history_move condition 1];
+      if {$globals(condition,$i)} {
+        if {$globals(condition) == ""} {
+          set globals(condition) [lispify_string $condition];
+        } else {
+          set globals(condition) \
+            "$globals(condition) and [lispify_string $condition]";
+        }; # else
+      }; # if
+    }; # for
+  }; # if
+
+  tsdb_set "*statistics-select-condition*" "\"$globals(condition)\"";
+  history_move condition end 1;
 
 }; # update_condition_cascade()
+
+
+proc update_graph_cascade {code} {
+
+  global globals;
+
+  set fields {first total tcpu tgc p-ftasks p-etasks p-stasks aedges pedges};
+  if {$code == "tasks" || $code == "ptimes" || $code == "ttimes"} {
+    set globals(graph,values) $code;
+    foreach field $fields {
+      set globals(graph,$field) 0;
+    }; # foreach
+    switch $code {
+      tasks {
+        set globals(graph,p-ftasks) 1;
+        set globals(graph,p-etasks) 1;
+        set globals(graph,p-stasks) 1;
+      }
+      ptimes {
+        set globals(graph,first) 1;
+        set globals(graph,total) 1;
+      }
+      ttimes {
+        set globals(graph,tcpu) 1;
+        set globals(graph,tgc) 1;
+      }
+    }; # switch
+  } elseif {$code == "first" || $code == "total" 
+            || $code == "tcpu" || $code == "tgc"} {
+    foreach field {p-ftasks p-etasks p-stasks aedges pedges} {
+      set globals(graph,$field) 0;
+    }; # foreach
+    if {$globals(graph,values) != "ptimes" 
+        && $globals(graph,values) != "ttimes"} {
+      set globals(graph,values) "";
+    }; # if
+  } elseif {$code == "p-ftasks" || $code == "p-etasks" 
+            || $code == "p-stasks"} {
+    foreach field {first total tcpu tgc aedges pedges} {
+      set globals(graph,$field) 0;
+    }; # foreach
+    if {$globals(graph,values) != "tasks"} {
+      set globals(graph,values) "";
+    }; # if
+  } elseif {$code == "aedges" || $code == "pedges"} {
+    foreach field {first total tcpu tgc p-ftasks p-etasks p-stasks} {
+      set globals(graph,$field) 0;
+    }; # foreach
+    set globals(graph,values) "";
+  }; # if
+
+  set globals(graph_values) "(";
+  foreach field $fields {
+    if {$globals(graph,$field)} {
+      set globals(graph_values) "$globals(graph_values) :$field";
+    }; # if
+  }; # foreach
+  set globals(graph_values) "$globals(graph_values))";
+
+}; # update_graph_cascade()
 
 
 proc tsdb_set {variable {value ""}} {
@@ -233,6 +419,10 @@ proc tsdb_set {variable {value ""}} {
 
   if {$value == ""} {
     switch $variable {
+      aggregate_dimension {
+        set variable "*statistics-aggregate-dimension*";
+        set value $globals(aggregate_dimension);
+      }
       exhaustive_p {
         set variable "*tsdb-exhaustive-p*"; 
         set value [lispify_truth_value $globals(exhaustive_p)]
@@ -272,6 +462,20 @@ proc tsdb_set {variable {value ""}} {
     }; # switch
   }; # if
 
+  if {$value == "" || $value == "\"\""} {
+    switch -exact $variable {
+      *statistics-select-condition* -
+      *statistics-aggregate-size* -
+      *statistics-aggregate-threshold* -
+      *statistics-aggregate-lower* -
+      *statistics-aggregate-upper* {
+        set value nil;
+      }
+      default {
+        set value "\"\"";
+      }
+    }; # switch
+  }; # if
   set command [format "(set %s %s)" $variable $value];
   send_to_lisp :event $command;
 
@@ -307,6 +511,7 @@ proc read_database_schema {data} {
 
 }; # read_database_schema()
 
+
 proc lispify_truth_value {value} {
 
   if {$value} {
@@ -316,6 +521,55 @@ proc lispify_truth_value {value} {
   }; # else
 
 }; # lispify_truth_value()
+
+
+proc entry_incr {entry increment {lower ""} {upper ""} {label ""}} {
+
+  if {[entry_validate $entry $lower $upper $label]} {
+    set current [$entry get];
+    if {$current == ""} {set current 0};
+    incr current $increment;
+    if {$lower != "" && $current < $lower} {set current $lower};
+    if {$upper != "" && $current > $upper} {set current $upper};
+    $entry delete 0 end;
+    $entry insert 0 $current;
+  }; # if
+
+}; # entry_incr()
+
+
+proc entry_validate {entry {lower ""} {upper ""} {label ""}} {
+
+  set current [$entry get];
+  if {[regexp {^[+-]?[0-9]+$} $current] || $current == ""} {
+    if {$current == "" || $lower == "" || $current >= $lower} {
+      if {$current == "" || $upper == "" || $current <= $upper} {
+        return 1;
+      } else {
+        set error [format "invalid (too large) value in entry field%s (%s)" \
+                   [expr {$label != "" ? " `$label'" : ""}] \
+                   "should be less or equal $upper"];
+      }; # else
+    } else {
+      set error [format "invalid (too small) value in entry field%s (%s)" \
+                 [expr {$label != "" ? " `$label'" : ""}] \
+                 "should be greater or equal $lower"];
+    }; # else
+  } else {
+    set error [format "invalid (non-numeric) value in entry field%s" \
+               [expr {$label != "" ? " `$label'" : ""}]];
+  }; # else
+
+  if {[info exists error]} {
+    tsdb_beep;
+    status $error;
+    after 2500;
+    status "";
+    lower .status.label;
+  }; # if
+  return 0;
+
+}; # entry_validate()
 
 
 proc string_strip {prefix string} {
@@ -420,7 +674,12 @@ proc show_chart {file {container ""} {title ""}} {
 
 }; # show_chart()
 
-proc send_to_lisp {code string {lispify 0}} {
+proc send_to_lisp {code string {lispify 0} {force 1}} {
+
+  if {!$force && [busy isbusy .] != ""} {
+    tsdb_beep;
+    return;
+  }; # if
 
   if {$lispify} {
     set string [lispify_string $string];
@@ -441,12 +700,23 @@ proc lispify_string {string} {
 }; # lispify-string()
 
 
-proc initialize_meter {{toplevel ".meter"} {label ""}} {
+proc unlispify_string {string} {
 
-  toplevel $toplevel;
-  wm title $label;
-  
-}; # initialize_meter()
+  regsub -all {\\(\\|")} $string {\1} string;
+  return $string;
+
+}; # unlispify-string()
+
+
+proc current-time {{long 0}} {
+
+  set now [clock seconds];
+  set day [string trim [clock format $now -format "%d"] {"0"}];
+  set format [expr {$long ? "%b-%y (%H:%M)" : "%b-%y"}];
+  set time "$day-[clock format $now -format $format]";
+  string tolower $time;
+
+}; # current-time()
 
 #
 # set of utility functions to maintain (input) history for various entry types
@@ -457,8 +727,10 @@ proc history_add {class item} {
 
   if {$item != ""} {
     if {[info exists history($class)]} {
-      set history($class) [linsert $history($class) 0 $item]
-      incr history($class,size);
+      if {[lsearch -exact $history($class) $item] < 0} {
+        set history($class) [linsert $history($class) 0 $item]
+        incr history($class,size);
+      }; # if
     } else {
       set history($class) [list $item];
       set history($class,size) 1;
@@ -468,14 +740,28 @@ proc history_add {class item} {
 
 }; # history_add()
 
-proc history_move {class offset} {
+proc history_move {class offset {quiet 0}} {
 
   global history;
 
-  if {![info exists history($class)] 
-      || [set position [expr $history($class,position) + $offset]] < -1
+  if {![info exists history($class)]} {
+    if {!$quiet} {
+      tsdb_beep;
+    }; # if
+    set history(errno) -1;
+    return "";
+  }; # if
+
+  if {$offset == "end"} { 
+    set history($class,position) -1;
+    return "";
+  }; # if
+
+  if {[set position [expr $history($class,position) + $offset]] < -1
       || $position > [expr $history($class,size) - 1]} {
-    tsdb_beep;
+    if {!$quiet} {
+      tsdb_beep;
+    }; # if
     set history(errno) -1;
     return "";
   }; # if
@@ -504,4 +790,67 @@ proc entry_history {entry class offset} {
   }; # if
 
 }; # entry_history()
+
+proc menu_button_down {window button} {
 
+  global globals;
+
+  set special 0;
+  foreach menu $globals(special_menues) {
+    if {$menu == $window} {
+      set special 1;
+      break;
+    }; # if
+  }; # foreach
+
+  if {!$special || $button != 2} {
+    tkMenuButtonDown $window;
+  }; # if
+  
+}; # menu_button_down()
+
+
+proc menu_button_up {window button} {
+
+  global globals;
+
+  set special 0;
+  foreach menu $globals(special_menues) {
+    if {$menu == $window} {
+      set special 1;
+      break;
+    }; # if
+  }; # foreach
+
+  if {!$special || $button != 2} {
+     tkMenuInvoke $window 1;
+  } else {
+    $window invoke active;
+  }; # else
+
+}; # menu_button_up()
+
+
+proc install_interrupt_handler {file} {
+
+  global globals;
+
+  set globals(interrupt) $file;
+  balloon post "<Control-C> or <Control-G> abort \
+                processing (i.e. the current test run)"
+  bind . <Control-C> tsdb_abort;
+  bind . <Control-c> tsdb_abort;
+  bind . <Control-G> tsdb_abort;
+  bind . <Control-g> tsdb_abort;
+
+}; # install_interrupt_handler()
+
+
+proc delete_interrupt_handler {} {
+
+  global globals;
+
+  set globals(interrrupt) "";
+  balloon unpost;
+
+}; # delete_interrupt_handler()

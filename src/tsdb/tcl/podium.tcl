@@ -3,14 +3,11 @@
 exec /coli/apps/tcl+tk/bin/wish++ "$0" "$@"
 
 #
-# only used for stand-alone debugging
+# facilitate stand-alone debugging for `oe'
 #
 set page_root [expr {[info exists env(HOSTNAME)] && $env(HOSTNAME) == "mv" 
                      ? "/home/oe/src/page" 
                      : "/proj/perform/page"}];
-
-wm title . "tsdb(1) podium"
-wm iconname . "tsdb(1) podium"
 
 #
 # import BLT library (for `table' and `graph' widgets)
@@ -21,6 +18,7 @@ namespace import -force blt::tile::*
 #
 # all state is encoded in a global (associative) array `globals'
 #
+set globals(name) {[incr tsdb(1)]};
 if {![info exists globals(podium_home)]} {
   set globals(podium_home) "$page_root/src/tsdb/tcl/";
 }; # if
@@ -34,25 +32,66 @@ if {![info exists globals(balloons)]} {
   set globals(balloons) "$globals(podium_home)balloons";
 }; # if
 set globals(default_skeleton) "english"
+
+if {![info exists globals(aggregate_dimension)]} {
+  set globals(aggregate_dimension) :phenomena;
+}; # if
+if {![info exists globals(aggregate_size)]} {
+  set globals(aggregate_size) 2;
+}; # if
+if {![info exists globals(aggregate_threshold)]} {
+  set globals(aggregate_threshold) 1;
+}; # if
+if {![info exists globals(aggregate_lower)]} {
+  set globals(aggregate_lower) 0;
+}; # if
+if {![info exists globals(aggregate_upper)]} {
+  set globals(aggregate_upper) "";
+}; # if
+if {![info exists globals(graph_size)]} {
+  set globals(graph_size) 1;
+}; # if
+if {![info exists globals(graph_threshold)]} {
+  set globals(graph_threshold) 1;
+}; # if
+if {![info exists globals(graph_lower)]} {
+  set globals(graph_lower) 0;
+}; # if
+if {![info exists globals(graph_upper)]} {
+  set globals(graph_upper) "";
+}; # if
+set globals(graph,by) :i-length;
+
 set globals(status) "initializing tsdb(1) podium"
 set globals(balloon_font) {Helvetica 10};
 set globals(status_font) {Helvetica 10};
 set globals(input_font) {Courier 10};
+set globals(copyright_font) {Helvetica 8};
 set globals(balloon_p) [expr {![info exists env(USER)] || $env(USER) != "oe"}];
 set globals(balloon) "";
-set globals(browse_condition) "";
+set globals(interrupt) "";
+set globals(abort) 0;
+set globals(idle_colours) {yellow orange red violet blue green};
+set globals(special_menues) {
+  .menu.analyze.menu.values
+  .menu.options.menu.condition
+  .menu.detail.menu.phenomena
+  .menu.detail.menu.decoration
+  .menu.detail.menu.intersection
+  .menu.options.menu.switches
+}; # globals(special_menues)
+set globals(condition) "";
+set globals(condition,size) 0;
 set globals(overwrite) 1;
+set globals(autoload_vocabulary) 1;
 set globals(logscale) 0;
 set globals(selection) -1;
 set globals(input) "";
 set globals(errno) 0;
 set globals(gensym) 0;
 set globals(slash) "/";
-set globals(user) [expr {[info exists env(USER)]
-                         ? $env(USER)
-                         : "anonymous"}];
+set globals(user) [expr {[info exists env(USER)] ? $env(USER) : "anonymous"}];
 
-#
 #
 # relation and attributes for current database; reset when selection changes
 # and filled on-demand (completion request) from back-end process.
@@ -68,9 +107,9 @@ set compare_in_detail(phenomena,all) 1;
 set compare_in_detail(show,i-input) 1;
 set compare_in_detail(compare,words) 0;
 set compare_in_detail(compare,readings) 1;
+
 #
-#
-# load table display modules by oliver (genius) `plaehn@coli.uni-sb.de' 
+# load table display modules by oliver (the genius) `plaehn@coli.uni-sb.de' 
 #
 source "$globals(podium_home)goodies.tcl"
 source "$globals(podium_home)table.tcl"
@@ -78,7 +117,8 @@ source "$globals(podium_home)showtable.tcl"
 source "$globals(podium_home)showgraph.tcl"
 source "$globals(podium_home)utilities.tcl"
 source "$globals(podium_home)podium_commands.tcl"
-source "$globals(podium_home)/balloon.tcl"
+source "$globals(podium_home)input.tcl"
+source "$globals(podium_home)balloon.tcl"
 
 #
 # log activity to trace file (for debugging)
@@ -132,20 +172,26 @@ proc main {} {
              -text "Compare" -underline 0 -menu .menu.compare.menu
   menubutton .menu.detail \
              -text "Detail" -underline 0 -menu .menu.detail.menu
+  menubutton .menu.options \
+             -text "Options" -underline 0 -menu .menu.options.menu
   menubutton .menu.help \
              -text "Help" -underline 0 -menu .menu.help.menu
   pack .menu.file .menu.browse .menu.process \
-       .menu.analyze .menu.compare .menu.detail -side left
+       .menu.analyze .menu.compare .menu.detail .menu.options -side left
   pack .menu.help -side right
 
   #
   # `File' menu (and embedded cascades)
   #
   menu .menu.file.menu -tearoff 0
+  .menu.file.menu add command -label "Copy" \
+    -command {tsdb_file copy} -state disabled
   .menu.file.menu add command -label "Rename" \
     -command {tsdb_file rename}
   .menu.file.menu add command -label "Reread" \
     -command {tsdb_file reread}
+  .menu.file.menu add command -label "Compress" \
+    -command {tsdb_file compress} -state disabled
   .menu.file.menu add command -label "Purge" \
     -command {tsdb_file purge}
   .menu.file.menu add command -label "Delete" \
@@ -154,70 +200,28 @@ proc main {} {
   .menu.file.menu add cascade -label "Create" \
     -menu .menu.file.menu.create
   .menu.file.menu add separator
-  .menu.file.menu add cascade -label "Directories" \
-    -menu .menu.file.menu.directories
-  .menu.file.menu add cascade -label "Options" \
-    -menu .menu.file.menu.options
+  .menu.file.menu add cascade -label "Import" \
+    -menu .menu.file.menu.import
   .menu.file.menu add separator
-  .menu.file.menu add cascade -label "Update" \
-    -menu .menu.file.menu.update
   .menu.file.menu add command -label "Close" -command tsdb_close 
   .menu.file.menu add command -label "Quit" -command tsdb_quit
-
-  menu .menu.file.menu.update -tearoff 0
-  .menu.file.menu.update add command -label "Skeleton List" \
-    -command [list tsdb_update skeletons]
-  .menu.file.menu.update add command -label "Database List" \
-    -command [list tsdb_update all]
-  .menu.file.menu.update add separator;
-  .menu.file.menu.update add command -label "All tsdb(1) Status" \
-    -command [list tsdb_update complete]
 
   #
   # the `File.Create' (cascaded) menu will be filled in dynamically
   #
   menu .menu.file.menu.create -tearoff 0
 
-  menu .menu.file.menu.directories -tearoff 0
-  .menu.file.menu.directories add command -label "Database Root" \
-    -command "tsdb_option home"
-  .menu.file.menu.directories add command -label "Skeleton Root" \
-    -command "tsdb_option skeleton_directory"
-
-  menu .menu.file.menu.options -tearoff 0
-  .menu.file.menu.options add checkbutton -label "Exhaustive Search" \
-    -variable globals(exhaustive_p) -command {tsdb_set exhaustive_p};
-  .menu.file.menu.options add separator
-  .menu.file.menu.options add checkbutton -label "Write `run' Relation" \
-    -variable globals(write_run_p) -command {tsdb_set write_run_p};
-  .menu.file.menu.options add checkbutton -label "Write `parse' Relation" \
-    -variable globals(write_parse_p) -command {tsdb_set write_parse_p};
-  .menu.file.menu.options add checkbutton -label "Write `result' Relation" \
-    -variable globals(write_result_p) -command {tsdb_set write_result_p};
-  .menu.file.menu.options add checkbutton -label "Write `output' Relation" \
-    -variable globals(write_output_p) -command {tsdb_set write_output_p};
-  .menu.file.menu.options add checkbutton -label "Write Lexicon Chart" \
-    -variable globals(write_lexicon_chart_p) \
-    -command {tsdb_set write_lexicon_chart_p};
-  .menu.file.menu.options add checkbutton -label "Write Syntax Chart" \
-    -variable globals(write_syntax_chart_p) \
-    -command {tsdb_set write_syntax_chart_p};
-  .menu.file.menu.options add separator
-  .menu.file.menu.options add radiobutton -label "On Demand Garbage Collect" \
-    -variable globals(gc_p) -value nil -command {tsdb_set gc_p}
-  .menu.file.menu.options add radiobutton -label "Preliminary  Scavenge" \
-    -variable globals(gc_p) -value :local -command {tsdb_set gc_p}
-  .menu.file.menu.options add radiobutton \
-    -label "Preliminary Garbage Collect" \
-    -variable globals(gc_p) -value :global -command {tsdb_set gc_p}
-  .menu.file.menu.options add checkbutton \
-    -label "Enable Tenuring" \
-    -variable globals(tenure_p) -command {tsdb_set tenure_p}
-  .menu.file.menu.options add separator
-  .menu.file.menu.options add checkbutton -label "Overwrite Test Run" \
-    -variable globals(overwrite);
-  .menu.file.menu.options add checkbutton -label "Logarithmic Scales" \
-    -variable globals(logscale);
+  #
+  # `File.Import' cascade
+  #
+  menu .menu.file.menu.import -tearoff 0
+  .menu.file.menu.import add command -label "tsdb(1) Database" \
+    -command {tsdb_import database};
+  .menu.file.menu.import add command -label "Test Items" \
+    -command {tsdb_import items};
+  .menu.file.menu.import add separator
+  .menu.file.menu.import add command -label "Skeleton Data" \
+    -state disabled;
 
   #
   # `Browse' menu (and embedded cascades)
@@ -230,8 +234,8 @@ proc main {} {
   .menu.browse.menu add separator
   .menu.browse.menu add cascade \
       -label "Test Items" -menu .menu.browse.menu.items
-  .menu.browse.menu add cascade \
-      -label "Phenomena" -menu .menu.browse.menu.phenomena
+  .menu.browse.menu add command \
+      -label "Phenomena" -command {tsdb_browse phenomena ""}
   .menu.browse.menu add command \
       -label "Test Run(s)" -command {tsdb_browse runs ""}
   .menu.browse.menu add cascade \
@@ -241,8 +245,6 @@ proc main {} {
   .menu.browse.menu add cascade \
     -label "Errors" -menu .menu.browse.menu.errors
   .menu.browse.menu add separator
-  .menu.browse.menu add command -label "Condition" \
-    -command tsdb_browse_condition;
   .menu.browse.menu add command -label "Custom Query" -command "tsdb_select"
 
   menu .menu.browse.menu.items -tearoff 0
@@ -265,17 +267,20 @@ proc main {} {
   # `Process' menu (and embedded cascades)
   #
   menu .menu.process.menu -tearoff 0
-  .menu.process.menu add command -label "Vocabulary" \
-          -command {tsdb_browse_vocabulary 1}
-  .menu.process.menu add separator
   .menu.process.menu add command -label "All Items" \
       -command {tsdb_process all}
   .menu.process.menu add command -label "Positive Items" \
       -command {tsdb_process positive}
   .menu.process.menu add command -label "Negative Items" \
       -command {tsdb_process negative}
+  .menu.process.menu add command -label "TSQL Condition" \
+      -command {tsdb_process condition}
   .menu.process.menu add separator
-  .menu.process.menu add command -label "Interrupt" -command {tsdb_abort}
+  .menu.process.menu add command -label "Vocabulary" \
+      -command {tsdb_browse_vocabulary 1}
+#  .menu.process.menu add separator
+#  .menu.process.menu add command -label "Interrupt" \
+#      -command {tsdb_abort} -state disabled;
 
   #
   # `Analyze' menu (and embedded cascades)
@@ -287,41 +292,102 @@ proc main {} {
   .menu.analyze.menu add command \
           -label "Overgeneration" \
           -command {analyze_competence 0}
-  .menu.analyze.menu add cascade \
-          -label "Performance" -command {analyze_performance :all} \
-          -menu .menu.analyze.menu.performance
-  .menu.analyze.menu add separator
-  .menu.analyze.menu add cascade \
-          -label "Condition" \
-          -menu .menu.analyze.menu.condition
-  .menu.analyze.menu add cascade \
-          -label "Aggregate" \
-          -menu .menu.analyze.menu.aggregate
+  .menu.analyze.menu add command \
+          -label "Performance" -command {analyze_performance}
   .menu.analyze.menu add separator
   .menu.analyze.menu add command \
-          -label "Parsing Times" \
-          -command {tsdb_graph :time}
+          -label "Show Graph" \
+          -command tsdb_graph;
   .menu.analyze.menu add command \
-          -label "Parser Tasks" \
-          -command {tsdb_graph :tasks}
+          -label "Show Chart" \
+          -command {tsdb_graph chart};
+  .menu.analyze.menu add cascade \
+          -label "Graph By" \
+          -menu .menu.analyze.menu.by;
+  .menu.analyze.menu add cascade \
+          -label "Graph Values" \
+          -menu .menu.analyze.menu.values;
   .menu.analyze.menu add command \
-          -label "Rule Statistics" \
-          -command {analyze_rules}
+          -label "Graph Parameters" \
+          -command graph_parameter_input
+  .menu.analyze.menu add separator
+  .menu.analyze.menu add command \
+          -label "Rule Statistics" -state disabled \
+          -command {analyze_rules};
 
-  menu  .menu.analyze.menu.performance -tearoff 0
-  .menu.analyze.menu.performance add command \
-          -label "All Items" -command {analyze_performance :all}
-  .menu.analyze.menu.performance add command \
-          -label "Positive Items" -command {analyze_performance :positive}
-  .menu.analyze.menu.performance add command \
-          -label "Negative Items" -command {analyze_performance :negative}
-  .menu.analyze.menu.performance add command \
-          -label "Analyzed Items" -command {analyze_performance :analyzed}
-  .menu.analyze.menu.performance add command \
-          -label "Unanalyzed Items" -command {analyze_performance :unanalyzed}
+  menu .menu.analyze.menu.by -tearoff 0
+  .menu.analyze.menu.by add radiobutton \
+    -label "String Length (`i-length')" \
+    -variable globals(graph,by) -value :i-length;
+  .menu.analyze.menu.by add radiobutton \
+    -label "Lexical Entries (`words')" \
+    -variable globals(graph,by) -value :words;
+  .menu.analyze.menu.by add radiobutton \
+    -label "Parser Analyses (`readings')" \
+    -variable globals(graph,by) -value :readings;
+  .menu.analyze.menu.by add radiobutton \
+    -label "Executed Tasks (`p-etasks')" \
+    -variable globals(graph,by) -value :p-etasks;
+  .menu.analyze.menu.by add radiobutton \
+    -label "Successful Tasks (`p-stasks')" \
+    -variable globals(graph,by) -value :p-stasks;
+  .menu.analyze.menu.by add radiobutton \
+    -label "Active Edges (`aedges')" \
+    -variable globals(graph,by) -value :aedges;
+  .menu.analyze.menu.by add radiobutton \
+    -label "Passive Edges (`pedges')" \
+    -variable globals(graph,by) -value :pedges;
 
-  menu .menu.analyze.menu.condition -tearoff 0
-  menu .menu.analyze.menu.aggregate -tearoff 0
+  menu .menu.analyze.menu.values -tearoff 0
+  .menu.analyze.menu.values add radiobutton \
+    -label "Parser Tasks" \
+    -variable globals(graph,values) -value tasks \
+    -command {update_graph_cascade tasks};
+  .menu.analyze.menu.values add radiobutton \
+    -label "Parsing Times" \
+    -variable globals(graph,values) -value ptimes \
+    -command {update_graph_cascade ptimes};
+  .menu.analyze.menu.values add radiobutton \
+    -label "Total Times" \
+    -variable globals(graph,values) -value ttimes \
+    -command {update_graph_cascade ttimes};
+  .menu.analyze.menu.values add separator
+  .menu.analyze.menu.values add checkbutton \
+    -label "Time For First Reading (`first')" \
+    -variable globals(graph,first) \
+    -command {update_graph_cascade first};
+  .menu.analyze.menu.values add checkbutton \
+    -label "Time For All Readings (`total')" \
+    -variable globals(graph,total) \
+    -command {update_graph_cascade total};
+  .menu.analyze.menu.values add checkbutton \
+    -label "Overall Processing Time (`tcpu')" \
+    -variable globals(graph,tcpu) \
+    -command {update_graph_cascade tcpu};
+  .menu.analyze.menu.values add checkbutton \
+    -label "Garbage Collection Time (`tgc')" \
+    -variable globals(graph,tgc) \
+    -command {update_graph_cascade tgc};
+  .menu.analyze.menu.values add checkbutton \
+    -label "Filtered Tasks (`p-ftasks')" \
+    -variable globals(graph,p-ftasks) \
+    -command {update_graph_cascade p-ftasks};
+  .menu.analyze.menu.values add checkbutton \
+    -label "Executed Tasks (`p-etasks')" \
+    -variable globals(graph,p-etasks) \
+    -command {update_graph_cascade p-etasks};
+  .menu.analyze.menu.values add checkbutton \
+    -label "Successful Tasks (`p-stasks')" \
+    -variable globals(graph,p-stasks) \
+    -command {update_graph_cascade p-stasks};
+  .menu.analyze.menu.values add checkbutton \
+    -label "Active Chart Items (`aedges')" \
+    -variable globals(graph,aedges) \
+    -command {update_graph_cascade aedges};
+  .menu.analyze.menu.values add checkbutton \
+    -label "Passive Chart Items (`pedges')" \
+    -variable globals(graph,pedges) \
+    -command {update_graph_cascade pedges};
 
   #
   # `Compare' menu (and embedded cascades)
@@ -334,10 +400,6 @@ proc main {} {
   .menu.compare.menu add separator
   .menu.compare.menu add cascade -label "Source Database" \
     -menu .menu.detail.menu.compare
-   .menu.compare.menu add separator
-  .menu.compare.menu add cascade -label "Aggregate" \
-    -menu .menu.compare.menu.aggregate -state disabled;
-  menu .menu.compare.menu.aggregate -tearoff 0
 
   #
   # `Detail' menu (and embedded cascades)
@@ -384,6 +446,136 @@ proc main {} {
   menu .menu.detail.menu.compare -tearoff 0
 
   #
+  # `Options' menu (and embedded cascades)
+  #
+  menu .menu.options.menu -tearoff 0
+  .menu.options.menu add command -label "Database Root" \
+    -command "tsdb_option home"
+  .menu.options.menu add command -label "Skeleton Root" \
+    -command "tsdb_option skeleton_directory"
+  .menu.options.menu add separator
+  .menu.options.menu add cascade -label "Update" \
+    -menu .menu.options.menu.update
+  .menu.options.menu add separator
+  .menu.options.menu add cascade \
+    -label "TSQL Condition" \
+    -menu .menu.options.menu.condition
+  .menu.options.menu add command -label "New Condition" \
+    -command condition_input;
+  .menu.options.menu add separator
+  .menu.options.menu add cascade \
+    -label "Aggregate By" \
+    -menu .menu.options.menu.aggregate
+  .menu.options.menu add command \
+    -label "Aggregation Parameters" -command aggregate_input;
+  .menu.options.menu add separator
+  .menu.options.menu add cascade \
+    -label "Switches" -menu .menu.options.menu.switches
+
+  menu .menu.options.menu.update -tearoff 0
+  .menu.options.menu.update add command -label "Skeleton List" \
+    -command [list tsdb_update skeletons]
+  .menu.options.menu.update add command -label "Database List" \
+    -command [list tsdb_update all]
+  .menu.options.menu.update add separator;
+  .menu.options.menu.update add command -label "All tsdb(1) Status" \
+    -command [list tsdb_update complete]
+
+  menu .menu.options.menu.condition -tearoff 0
+
+
+  menu .menu.options.menu.aggregate -tearoff 0
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Phenomena" \
+    -variable globals(aggregate_dimension) -value :phenomena \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Grammaticality (`i-wf')" \
+    -variable globals(aggregate_dimension) -value :i-wf \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "String Length (`i-length')" \
+    -variable globals(aggregate_dimension) -value :i-length \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Lexical Entries (`words')" \
+    -variable globals(aggregate_dimension) -value :words \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Parser Analyses (`readings')" \
+    -variable globals(aggregate_dimension) -value :readings \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Executed Tasks (`p-etasks')" \
+    -variable globals(aggregate_dimension) -value :p-etasks \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Filtered Tasks (`p-ftasks')" \
+    -variable globals(aggregate_dimension) -value :p-ftasks \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Successful Tasks (`p-stasks')" \
+    -variable globals(aggregate_dimension) -value :p-stasks \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+     -label "Active Edges (`aedges')" \
+    -variable globals(aggregate_dimension) -value :aedges \
+    -command {tsdb_set aggregate_dimension};
+  .menu.options.menu.aggregate add radiobutton \
+    -label "Passive Edges (`pedges')" \
+    -variable globals(aggregate_dimension) -value :pedges \
+    -command {tsdb_set aggregate_dimension};
+
+  menu .menu.options.menu.switches -tearoff 0
+  .menu.options.menu.switches add checkbutton \
+    -label "Exhaustive Search" \
+    -variable globals(exhaustive_p) -command {tsdb_set exhaustive_p};
+  .menu.options.menu.switches add separator
+  .menu.options.menu.switches add checkbutton \
+    -label "Write `run' Relation" \
+    -variable globals(write_run_p) -command {tsdb_set write_run_p};
+  .menu.options.menu.switches add checkbutton \
+    -label "Write `parse' Relation" \
+    -variable globals(write_parse_p) -command {tsdb_set write_parse_p};
+  .menu.options.menu.switches add checkbutton \
+    -label "Write `result' Relation" \
+    -variable globals(write_result_p) -command {tsdb_set write_result_p};
+  .menu.options.menu.switches add checkbutton \
+    -label "Write `output' Relation" \
+    -variable globals(write_output_p) -command {tsdb_set write_output_p};
+  .menu.options.menu.switches add checkbutton \
+    -label "Write Lexicon Chart" \
+    -variable globals(write_lexicon_chart_p) \
+    -command {tsdb_set write_lexicon_chart_p};
+  .menu.options.menu.switches add checkbutton \
+    -label "Write Syntax Chart" \
+    -variable globals(write_syntax_chart_p) \
+    -command {tsdb_set write_syntax_chart_p};
+  .menu.options.menu.switches add separator
+  .menu.options.menu.switches add radiobutton \
+    -label "On Demand Garbage Collect" \
+    -variable globals(gc_p) -value nil -command {tsdb_set gc_p}
+  .menu.options.menu.switches add radiobutton \
+    -label "Preliminary  Scavenge" \
+    -variable globals(gc_p) -value :local -command {tsdb_set gc_p}
+  .menu.options.menu.switches add radiobutton \
+    -label "Preliminary Garbage Collect" \
+    -variable globals(gc_p) -value :global -command {tsdb_set gc_p}
+  .menu.options.menu.switches add checkbutton \
+    -label "Enable Tenuring" \
+    -variable globals(tenure_p) -command {tsdb_set tenure_p}
+  .menu.options.menu.switches add separator
+  .menu.options.menu.switches add checkbutton \
+    -label "Overwrite Test Run" \
+    -variable globals(overwrite);
+  .menu.options.menu.switches add checkbutton \
+    -label "Autoload Vocabulary" \
+    -variable globals(autoload_vocabulary);
+  .menu.options.menu.switches add checkbutton \
+    -label "Logarithmic Scales" \
+    -variable globals(logscale);
+
+  #
   # `Help' menu (and embedded cascades)
   #
   menu .menu.help.menu -tearoff 0
@@ -403,13 +595,16 @@ proc main {} {
   #
   # the bottom line: podium status display 
   #
-  frame .status -relief raised -bd 2
-  tixMeter .status.meter -value 1
+  frame .status -relief raised -bd 2;
+  tixMeter .status.meter -value 1;
+  frame .status.meter.blind -relief sunken -bd 1;
+  label .status.meter.blind.label -relief sunken -bd 0 -anchor c \
+    -font [linsert $globals(status_font) end bold] -bg black;
 
   label .status.dummy \
           -relief sunken -bd 3 -font $globals(status_font)
   label .status.label \
-          -relief flat -bd 0 -font $globals(status_font)  -padx 0 -pady 0 \
+          -relief flat -bd 0 -font $globals(status_font) -padx 0 -pady 0 \
           -textvariable globals(status);
 
   tixLabelEntry .status.entry \
@@ -417,13 +612,14 @@ proc main {} {
           -options [list label.font $globals(status_font) \
                          label.padx 0 label.pady 0 \
                          entry.font $globals(input_font) \
-                         entry.relief flat entry.highlightThickness 0 ]
+                         entry.relief flat entry.highlightThickness 0 ];
   [.status.entry subwidget label] config \
-    -bg [[.status.entry subwidget entry] cget -bg] -font $globals(status_font)
-  [.status.entry subwidget entry] config -font $globals(input_font)
-  pack .status -side bottom -fill x -expand no
-  pack .status.dummy -side right -padx 1 -pady 1 -fill both -expand yes
-  pack .status.meter -side right -padx 2
+    -bg [[.status.entry subwidget entry] cget -bg];
+  pack .status -side bottom -fill x -expand no;
+  pack .status.dummy -side right -padx 1 -pady 1 -fill both -expand yes;
+  pack .status.meter -side right -padx 2;
+  place .status.meter.blind -in .status.meter -relwidth 1 -relheight 1;
+  pack .status.meter.blind.label -fill both -expand 1;
 
   place .status.label -in .status.dummy -relwidth 1 -relheight 1
   place .status.entry -in .status.dummy -relwidth 1 -relheight 1
@@ -431,11 +627,52 @@ proc main {} {
   status "initializing tsdb(1) podium ..." 2
 
   #
+  # create entry pane for aggregation parameters
+  #
+  set grey lightgrey;
+  frame .status.aggregate -bd 0 -bg $grey;
+  frame .status.aggregate.fill0 -bd 0 -bg $grey;
+  frame .status.aggregate.fill1 -bd 0 -bg $grey;
+  frame .status.aggregate.fill2 -bd 0 -bg $grey;
+  frame .status.aggregate.fill3 -bd 0 -bg $grey;
+  frame .status.aggregate.fill4 -bd 0 -bg $grey;
+
+  set loptions [list -font $globals(status_font) -padx 0 -pady 0 -bg $grey];
+  set eoptions [list -justify right -font $globals(input_font) \
+                     -bd 1 -relief solid -width 3 -highlightthickness 0 \
+                     -bg white];
+  eval label .status.aggregate.lsize -text "size\\ " $loptions;
+  eval entry .status.aggregate.esize $eoptions;
+  eval label .status.aggregate.lthreshold -text "threshold\\ " $loptions;
+  eval entry .status.aggregate.ethreshold $eoptions;
+  eval label .status.aggregate.llower -text "lower\\ " $loptions;
+  eval entry .status.aggregate.elower $eoptions;
+  eval label .status.aggregate.lupper -text "upper\\ " $loptions;
+  eval entry .status.aggregate.eupper  $eoptions;
+
+  place .status.aggregate -in .status.dummy -relwidth 1 -relheight 1;
+  pack .status.aggregate.fill0 -side left -fill both -expand yes;
+  pack .status.aggregate.lsize -side left;
+  pack .status.aggregate.esize -side left;
+  pack .status.aggregate.fill1 -side left -fill both -expand yes;
+  pack .status.aggregate.lthreshold -side left;
+  pack .status.aggregate.ethreshold -side left;
+  pack .status.aggregate.fill2 -side left -fill both -expand yes;
+  pack .status.aggregate.llower -side left;
+  pack .status.aggregate.elower -side left;
+  pack .status.aggregate.fill3 -side left -fill both -expand yes;
+  pack .status.aggregate.lupper -side left;
+  pack .status.aggregate.eupper -side left;
+  pack .status.aggregate.fill4 -side left -fill both -expand yes;
+  lower .status.aggregate;
+
+  #
   # body of tsdb(1) podium: a scrolled multi-column listbox
   #
   tixScrolledHList .list -width 19c -scrollbar "auto +y" \
           -options { hlist.columns 5 hlist.height 4 \
-                     hlist.header true hlist.itemtype text};
+                     hlist.header true hlist.itemtype text
+                     hlist.background white };
   set list [.list subwidget hlist];
   $list config -selectmode single \
           -browsecmd tsdb_list_select -command tsdb_list_run
@@ -461,6 +698,12 @@ proc main {} {
   bind $list <Shift-Double-Button-1> [bind $list <Control-Double-Button-1>];
   bind $list <Alt-Double-Button-1> [bind $list <Control-Double-Button-1>];
 
+  bind $list <Enter> {
+    balloon post "<Button-1> activates current test suite; \
+                  <Button-2> selects (gold standard) comparison source"
+  }; # bind
+  bind $list <Leave> {balloon unpost};
+
   $list column width 0 10c
   $list column width 1 2c
   $list column width 2 2c
@@ -485,7 +728,7 @@ proc main {} {
   tixScrolledHList .completions -width [winfo width .list] \
     -scrollbar "auto +y" \
     -options { hlist.columns 3 hlist.header true 
-               hlist.itemtype text hlist.background yellow};
+               hlist.itemtype text hlist.background yellow };
   set clist [.completions subwidget hlist];
   $clist header create 1 -itemtype text -text "Completions" -style $hcenter;
   place .completions -in .list -relwidth 1 -relheight 1;
@@ -500,6 +743,8 @@ proc main {} {
     }; # foreach
   }
   bind all <Tab> {};
+  bind Menu <Button> {menu_button_down %W %b};
+  bind Menu <ButtonRelease> {menu_button_up %W %b};
 
   #
   # read in balloon help bindings and message
@@ -507,11 +752,18 @@ proc main {} {
   balloon_setup $globals(balloons);
 
   #
-  # expose podium; wait for display update
+  # decorate and expose podium; wait for display update
   #
+  wm title . {[incr tsdb(1)] podium}
+  wm iconname . {tsdb(1)}
+  if {[file exists [set icon "$globals(podium_home)icon.xbm"]]} {
+    wm iconbitmap . @$icon;
+  }; # if
   wm deiconify .
   tkwait visibility .
+
   tsdb_update complete;
+  update_graph_cascade ptimes;
 
   #
   # the .list geometry somehow only propagates when we run the event loop :-(.
@@ -521,36 +773,40 @@ proc main {} {
   $clist column width 0 $width;
   $clist column width 1 [expr [winfo width $list] - $width * 2];
   $clist column width 2 $width;
+  after 2000 idle;
 
 }; # main()
 
 proc evaluate {script {quiet 0}} {
 
-    global globals;
-    global test_suites skeletons phenomena;
+  global globals;
+  global test_suites skeletons phenomena;
 
-    set status [catch {eval $script} return];
+  logger [format "(evaluate: %s)" $script];
+  set status [catch {eval $script} return];
     
-    if {$status == 0} {
-        if {!$quiet} {
-          puts [format "(:ok %s)" $return];
-        }
+  if {$status == 0} {
+    if {!$quiet} {
+      puts [format "(:ok %s)" $return];
+    }; # if
+  } else {
+    set return [lispify_string $return];
+    if {$status == 1} {
+      puts [format "(:error \"%s\")" $return];
+    } elseif {$status == 2} {
+      puts [format "(:return \"%s\")" $return];
+    } elseif {$status == 3} {
+      puts [format "(:break)" $return];
+    } elseif {$status == 4} {
+      puts [format "(:continue)" $return];
     } else {
-      set return [lispify_string $return];
-      if {$status == 1} {
-        puts [format "(:error \"%s\")" $return];
-      } elseif {$status == 2} {
-        puts [format "(:return \"%s\")" $return];
-      } elseif {$status == 3} {
-        puts [format "(:break)" $return];
-      } elseif {$status == 4} {
-        puts [format "(:continue)" $return];
-      } else {
-        puts [format "(:user \"%s\")" $return];
-      }; # else
+      puts [format "(:user \"%s\")" $return];
     }; # else
+  }; # else
     
-    logger [format "(%d \"%s\")" $status $return];
+  logger [expr {$return != "" \
+                ? "(return: $status $return)" \
+                : "(return: $status)"}];
 
 }; # evaluate()
 
@@ -590,6 +846,11 @@ proc reset_status {string} {
 
 proc meter {value {text ""}} {
 
+  if {$value == "hide"} {
+    raise .status.meter.blind;
+    return;
+  }; # if
+  lower .status.meter.blind;
   .status.meter config -value $value -text $text;
   update idletasks; 
 
@@ -625,6 +886,7 @@ proc run_meter {duration {initial 0.0} {background 0}} {
 
 }; # run_meter()
 
+
 proc gensym {} {
 
   global globals;
@@ -632,255 +894,6 @@ proc gensym {} {
   incr globals(gensym);
 
 }; # gensym()
-
-
-proc input {prompt {default ""} {base ""} {mode ""}} {
-
-  global globals;
-
-  busy release 
-  set label [.status.entry subwidget label];
-  set entry [.status.entry subwidget entry];
-  set prompt " $prompt";
-
-  $label config -text $prompt;
-  $entry delete 0 end
-  set default [string_strip $base $default];
-  $entry insert 0 $default;
-  $entry icursor end;
-  $entry xview end;
-
-  bind $entry <Return> { 
-    set globals(errno) 0;
-    set globals(input) [.status.entry.frame.entry get];
-  }; # bind
-  if {$mode == "select"} {
-    bind $entry <Tab> [list select_completion $entry $mode]
-    set file 0;
-  } elseif {$mode == "from"} {
-    bind $entry <Tab> [list select_completion $entry $mode]
-    set file 0;
-  } elseif {$mode == "where"} {
-    bind $entry <Tab> [list select_completion $entry $mode]
-    set file 0;
-  } else {
-    bind $entry <Tab> [list file_completion $entry $base]
-    set file 1;
-  }; # else
-  bind $entry {<Escape> <BackSpace>} {
-    set cursor [[.status.entry subwidget entry] index insert];
-    set string [[.status.entry subwidget entry] get];
-    set string [string range $string 0 [expr $cursor - 1]];
-    regexp -nocase -indices { *[a-z0-9_-]*[^a-z0-9_-]? *$} $string indices
-    set start [lindex $indices 0];
-    if {$start == $cursor && $start > 0} {incr start -1}
-    [.status.entry subwidget entry] delete $start $cursor;
-    [.status.entry subwidget entry] icursor $start;
-    break;
-  }; # bind
-  bind $entry <Alt-BackSpace> [bind $entry {<Escape> <BackSpace>}]
-  bind $entry <Meta-BackSpace> [bind $entry {<Escape> <BackSpace>}]
-  bind $entry <Control-g> {
-    set globals(errno) 1;
-  }; # bind
-  bind $entry <Control-G> [bind $entry <Control-g>];
-
-  #
-  # until we sort out proper (mouse-driven) operation of the .completions
-  # scrollbar (while grab()ing the input field) establish a cludge
-  #
-  bind $entry <ButtonPress> {
-    if {[winfo containing %X %Y] == [.completions subwidget vsb]} {
-      tsdb_beep;
-      status [format "%%s %%s" \
-              "<PageUp> or <PageDown> (and equivalents)" \
-              "scroll the list of completions"];
-      after 1500;
-      status "";
-      raise .status.entry;
-      update idletasks;
-    }; # if
-  }; # bind
-  bind $entry <Prior> {[.completions subwidget hlist] yview scroll -1 pages};
-  bind $entry <Alt-v> [bind $entry {<Prior>}];
-  bind $entry {<Escape> <v>} [bind $entry {<Prior>}];
-  bind $entry <Next> {[.completions subwidget hlist] yview scroll 1 pages};
-  bind $entry <Control-v> [bind $entry {<Next>}];
-
-  #
-  # enable history mechanism for appropriate input classes 
-  #
-  if {$mode != ""} {
-    bind $entry <Up> [list entry_history $entry $mode 1];
-    bind $entry <Down> [list entry_history $entry $mode -1];
-  } else {
-    bind $entry <Up> {};
-    bind $entry <Down> {};
-  }; # else
-
-  set focus [focus -displayof .]
-  focus $entry
-  grab set $entry
-
-  raise .status.entry;
-  tkwait variable globals(errno);
-
-  grab release $entry
-  focus $focus
-  raise .status.label
-
-  if {!$globals(errno) && $file} {
-    set globals(input) "$base$globals(input)"
-  }; # if
-  lower .completions;
-  return $globals(errno)
-
-}; # input()
-
-
-proc file_completion {entry {base ""}} {
-
-  set prefix "$base[$entry get]";
-  set completion [complete $prefix];
-  if {$completion != "" } {
-    set completion [string_strip $base $completion];
-    $entry delete 0 end;
-    $entry insert 0 $completion;
-    $entry selection clear;
-    $entry icursor end;
-  }; # if
-  
-}; # file_completion()
-
-
-proc select_completion {entry mode} {
-
-  global globals;
-
-  if {![info exists globals(relations)] 
-      || ![info exists globals(attributes)]
-      || $globals(relations) == "" 
-      || $globals(attributes) == ""
-      || ![llength $globals(relations)]
-      || ![llength $globals(attributes)]} {
-    read_database_schema $globals(data);
-  }; # if
-
-  set prefix [$entry get];
-  if {$mode == "select"} {
-    regexp -nocase {[a-z0-9_-]*$} $prefix match;
-    set completions $globals(attributes);
-  } elseif {$mode == "from"} {
-    regexp -nocase {[a-z0-9_-]*$} $prefix match;
-    set completions $globals(relations);
-  } else {
-    regexp -nocase {^(.*(&|\||!|\())? *([a-z0-9_-]*)$} $prefix \
-      foo bar baz match;
-    set completions $globals(attributes);
-  }; # else
-
-  if {[info exists match]} {
-    set completion [complete $match $completions];
-    if {$completion != "" } {
-      set position [expr [string length $prefix] - [string length $match]];
-      $entry delete $position end;
-      $entry insert $position $completion;
-      $entry selection clear;
-      $entry icursor end;
-    }; # if
-  } else {
-    tsdb_beep;
-  }; # else
-
-};# select_completion()
-
-
-proc complete {prefix {completions ""}} {
-
-  global globals;
-
-  set file 0;
-  if {$completions == ""} {
-    set file 1;
-    set completions [lsort [glob -nocomplain -- "$prefix*"]]
-  } else {
-    set length [expr [string length $prefix] - 1];
-    set foo {};
-    foreach item $completions {
-      if {![string compare $prefix [string range $item 0 $length]]} {
-        lappend foo $item;
-      }; # if
-    };# foreach
-    set completions $foo;
-  }; # else
-
-  if {![llength $completions]} {
-    tsdb_beep;
-    return ""
-  }; # if
-  set completion [lindex $completions 0];
-  if {[llength $completions] > 1} {
-    set kaerb 0;
-    for {set i [expr [string length $prefix] - 1]} {!$kaerb} {incr i} {
-      set match [string range $completion 0 $i];
-      foreach item $completions {
-        if {[string compare $match [string range $item 0 $i]]} {
-          set completion [string range $match 0 [expr $i - 1]];
-          set kaerb 1;
-        }; # if
-      }; # foreach
-    }; # for
-  }; # if
-
-  if {$file && [llength $completions] == 1 
-      && [file isdirectory $completion] && $completion != $globals(slash)} {
-    set completion "[file dirname [file join $completion .]]$globals(slash)"
-  }; # if
-
-  if {!$file && [llength $completions] == 1} {
-    set completion "$completion ";
-  }; # if
-
-  if {[llength $completions] > 1} {
-    show_completions $completions $file;
-  } else {
-    [.completions subwidget hlist] delete all;
-  }; # else
-  return $completion
-
-}; # complete()
-
-
-proc show_completions {completions {file 0}} {
-
-  global globals;
-
-  set clist [.completions subwidget hlist];
-  set center [tixDisplayStyle text -bg yellow -anchor w -font {Helvetica 10}];
-
-  $clist delete all
-  set i 0;
-  foreach item [lsort $completions] {
-    set nitem $item;
-    if {$file && [set slash [string last $globals(slash) $item]] >= 0} {
-      set nitem [string range $item [expr $slash + 1] end];
-    }; # if
-    if {$file && [file isdirectory $item] && $item != $globals(slash)} {
-      set nitem "[file dirname [file join $nitem .]]$globals(slash)"
-    }; # if
-    set hposition [expr {int($i / 3)}];
-    set vposition [expr {$i % 3}];
-    if {!$vposition} {
-      $clist add $hposition -at $hposition -text $nitem -style $center;
-    } else {
-      $clist item create $hposition $vposition -text $nitem -style $center;
-    }; # else
-    incr i;
-  };# foreach
-
-  raise .completions;
-
-};# show_completions()
 
 
 proc yes-or-no-p {prompt} {
@@ -906,5 +919,21 @@ proc yes-or-no-p {prompt} {
 
 }; # yes-or-no-p()
 
+proc idle {} {
+
+  global globals;
+
+  set time [clock seconds];
+  set foo [expr {int($time / 10)}];
+  set colour [lindex $globals(idle_colours) \
+                     [expr {$foo % [llength $globals(idle_colours)]}]];
+  set time [clock format $time -format "%d-%b-%y (%H:%M h)"];
+  set time [string tolower [string trimleft $time "0"]];
+  .status.meter.blind.label config -text $time -fg $colour;
+  if {!$globals(abort)} {after 1000 idle};
+
+}; # idle()
+
 
 main
+

@@ -10,8 +10,14 @@ if [ "{path}" = "." ]; then
   path=`pwd`
 fi
 home=`echo $path | sed "s@/bin/solaris@@"`
-TCL_LIBRARY=${home}/lib/solaris/tcl8.0
-BLT_LIBRARY=${home}/lib/solaris/blt2.4
+TCL_LIBRARY=${home}/lib/tcl8.0
+BLT_LIBRARY=${home}/lib/blt2.4
 export TCL_LIBRARY
+export BLT_LIBRARY
+
+if [ -f ${home}/lib/XKeysymDB ]; then
+  XKEYSYMDB=${home}/lib/XKeysymDB
+  export XKEYSYMDB
+fi
 
 exec ${path}/.swish++ $*
