@@ -44,7 +44,7 @@
 (defun read-lex-rule-file-aux (file-name ovwr)
   (setf *ordered-rule-list* nil)
   (when (fboundp 'reset-cached-lex-entries)
-   (reset-cached-lex-entries)) ; in constraints.lsp  
+   (funcall 'reset-cached-lex-entries)) ; in constraints.lsp  
   (when ovwr (clear-lex-rules) )    
   (read-lex-or-grammar-rule-file file-name t)
   (format t "~%Lexical rule file read"))   

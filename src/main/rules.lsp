@@ -36,8 +36,8 @@
 
 (defun clear-lex-rules nil
   (when (fboundp 'reset-cached-lex-entries)
-   (reset-cached-lex-entries))
-   (clrhash *lexical-rules*))
+   (funcall 'reset-cached-lex-entries))
+  (clrhash *lexical-rules*))
 
 
 

@@ -199,11 +199,11 @@
 
 (defun clear-lex (&optional no-delete)
   (when (fboundp 'reset-cached-lex-entries)
-   (reset-cached-lex-entries)) ; in constraints.lsp
+   (funcall 'reset-cached-lex-entries)) ; in constraints.lsp
   (clrhash *lexical-entries*)
   (clrhash *psorts*)
   (when (fboundp 'clear-lexicon-indices)
-   (clear-lexicon-indices))
+   (funcall 'clear-lexicon-indices))
   (setf *language-lists* nil)
   (close-temporary-lexicon-file)
   (unless no-delete
@@ -217,7 +217,7 @@
 
 (defun clear-expanded-lex nil
   (when (fboundp 'reset-cached-lex-entries)
-   (reset-cached-lex-entries)) ; in constraints.lsp
+   (funcall 'reset-cached-lex-entries)) ; in constraints.lsp
   (maphash #'(lambda (id value)
                (declare (ignore id))
                (setf (cddr value) nil))
