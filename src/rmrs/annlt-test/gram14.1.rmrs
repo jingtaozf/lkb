@@ -502,9 +502,10 @@ ANNA - adding anchor to all main S rules
 </rule-->
 
 <rule>
-<name>S/pp_s</name>
+<name>S/pp_s/+</name>
 <comment>testing anchor
-ANNA - added ING between PP and S's main verb (jab.ex.1)</comment>
+ANNA - added ING between PP and S's main verb (jab.ex.1, all gen.ex.)
+     - also added ARG1 for PP since this wouldn't be e.g. an _of_p_sel here </comment>
 <dtrs><dtr>PP</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
@@ -512,13 +513,33 @@ ANNA - added ING between PP and S's main verb (jab.ex.1)</comment>
 <slots><anchor>H2</anchor></slots>
 <!-- ANNA - this ARGN is just dangling...remove for now (jab.ex.1)-->
 <!--rarg><rargname>ARGN</rargname><label>H</label><var>U</var></rarg-->
+<rarg><rargname>ARG1</rargname><label>H1</label><var>E1</var></rarg>
 <ing><ing-a><var>H2</var></ing-a><ing-b><var>H1</var></ing-b></ing>
-<hcons hreln='qeq'><hi><var>H</var></hi><lo><var>H1</var></lo></hcons>
+<!--hcons hreln='qeq'><hi><var>H</var></hi><lo><var>H1</var></lo></hcons-->
 </semstruct>
 <equalities><rv>U</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>PP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H2</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E1</rv><dh><dtr>S</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>S/pp_s/-</name>
+<comment>ANNA - equivalent rule for comma-absent case</comment>
+<dtrs><dtr>PP</dtr><dtr>S</dtr></dtrs>
+<head>S</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<slots><anchor>H2</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H</label><var>E1</var></rarg>
+<ing><ing-a><var>H2</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+</semstruct>
+<equalities><rv>U</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>PP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E1</rv><dh><dtr>S</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <!--rule>
@@ -569,9 +590,9 @@ ANNA - added ING between PP and S's main verb (jab.ex.1)</comment>
 <equalities><rv>U</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
-<rule>
+<!--rule>
 <name>S/np-nt-adv_s</name>
-<comment>ANNA - unspec_loc_rel probably needs to be added here - CHECK usage</comment>
+<comment>ANNA - unspec_loc_rel probably needs to be added here - CHECK usage </comment>
 <dtrs><dtr>N</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
@@ -581,6 +602,50 @@ ANNA - added ING between PP and S's main verb (jab.ex.1)</comment>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
+</rule-->
+
+<rule>
+<name>S/np-nt-adv_s/-</name>
+<comment>ANNA - no optional comma case (text.ex.2, here ex.7,8)</comment>
+<dtrs><dtr>N</dtr><dtr>S</dtr></dtrs>
+<head>S</head>
+<semstruct>
+<hook><index>E</index><label>H2</label></hook>
+<slots><anchor>H1</anchor></slots>
+<ep><gpred>UNSPEC_LOC_REL</gpred><label>H3</label><var>E1</var></ep>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>E</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H3</label><var>X</var></rarg>
+<!-- ANNA - why was this here? what was it supposed to be attached to? -->
+<!--rarg><rargname>ARGN</rargname><label>H</label><var>X</var></rarg-->
+<ing><ing-a><var>H3</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>N</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>S</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>S/np-nt-adv_s/+</name>
+<comment>ANNA - optional comma case (text.ex.3, here ex.7,8)</comment>
+<dtrs><dtr>N</dtr><dtr>PUNCT</dtr><dtr>S</dtr></dtrs>
+<head>S</head>
+<semstruct>
+<hook><index>E</index><label>H2</label></hook>
+<slots><anchor>H1</anchor></slots>
+<ep><gpred>UNSPEC_LOC_REL</gpred><label>H3</label><var>E1</var></ep>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>E</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H3</label><var>X</var></rarg>
+<!-- ANNA - why was this here? what was it supposed to be attached to? -->
+<!--rarg><rargname>ARGN</rargname><label>H</label><var>X</var></rarg-->
+<ing><ing-a><var>H3</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>N</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>S</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -608,23 +673,46 @@ ANNA - added ING between PP and S's main verb (jab.ex.1)</comment>
 </rule-->
 
 <rule>
-<name>S/adv_s</name>
-<comment>ANNA - removed unwanted ARGN (why was it there?) and added prpstn_m_rel for sentential adverb (sem.ex.116)</comment>
-<dtrs><dtr>A</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
+<name>S/adv_s/+</name>
+<comment>ANNA - removed unwanted ARGN (why was it there?) and added prpstn_m_rel for sentential adverb (sem.ex.116, us.ex.7-9)
+ - remove prpstn_m_rel since not all adverbs seem to want it e.g. "earlier", "elsewhere"? These want an ING instead and a different ARG1</comment>
+<dtrs><dtr>A</dtr><dtr>PUNCT</dtr><dtr>S</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
 <hook><index>E</index><label>H3</label></hook>
 <slots><anchor>H1</anchor></slots>
 <ep><gpred>PRPSTN_M_REL</gpred><label>H3</label><var>H2</var></ep>
-<!--rarg><rargname>ARGN</rargname><label>H</label><var>X</var></rarg-->
+<rarg><rargname>ARG1</rargname><label>H</label><var>H4</var></rarg>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
+<!--ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing-->
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>A</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>A</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H4</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
+<name>S/adv_s/-</name>
+<comment>ANNA - removed unwanted ARGN (why was it there?) and added prpstn_m_rel for sentential adverb (sem.ex.116, us.ex.7-9)
+ - remove prpstn_m_rel since not all adverbs seem to want it e.g. "earlier", "elsewhere"? These want an ING instead and a different ARG1</comment>
+<dtrs><dtr>A</dtr><dtr>S</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H3</label></hook>
+<slots><anchor>H1</anchor></slots>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H3</label><var>H2</var></ep>
+<rarg><rargname>ARG1</rargname><label>H</label><var>H4</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
+<!--ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing-->
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>A</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>A</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H4</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
+</rule>
+
+<!--rule>
 <name>S/s_pco_pp</name>
 <dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>PP</dtr></dtrs>
 <head>S</head>
@@ -633,6 +721,22 @@ ANNA - added ING between PP and S's main verb (jab.ex.1)</comment>
 <slots><anchor>H1</anchor></slots>
 </semstruct>
 <equalities><rv>H1</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
+</rule-->
+
+<rule>
+<name>S/s_pco_pp</name>
+<comment>ANNA - added ING between PP and S (gap ex.3)</comment>
+<dtrs><dtr>S</dtr><dtr>PUN</dtr><dtr>PP</dtr></dtrs>
+<head>S</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<slots><anchor>H1</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H2</label><var>E</var></rarg>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
+</semstruct>
+<equalities><rv>H1</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>PP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>S</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -1161,9 +1265,9 @@ semantics.
 
 <rule>
 <name>S/pp_vp-r</name>
-<comment>ANNA - added prpstn_m_rel for rare locative/heavy inversions (sem.ex.102)</comment>
+<comment>ANNA - added prpstn_m_rel for rare locative/heavy inversions (sem.ex.102, meth.ex.7,15,16)</comment>
 <dtrs><dtr>PP</dtr><dtr>V2</dtr></dtrs>
-<head>V2</head>
+<head>RULE</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <slots><anchor>H10</anchor></slots>
@@ -1172,6 +1276,7 @@ semantics.
 </semstruct>
 <equalities><rv>H2</rv><dh><dtr>V2</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H10</rv><dh><dtr>V2</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>V2</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <!--
@@ -1299,7 +1404,7 @@ semantics.
 <rule>
 <name>S/np-wh_vp</name>
 <comment>uniformly giving this an int_rel won't work because it's used for relative clauses
-ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)</comment>
+ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112, det.ex.13-15)</comment>
 <dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
@@ -1314,7 +1419,6 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 <equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
 </rule>
-
 
 <rule>
 <name>S/pp-wh_s</name>
@@ -1413,8 +1517,23 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 </rule-->
 
 <rule>
-<name>S/s_s-coord</name>
-<dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
+<name>S/s_s-coord/-</name>
+<dtrs><dtr>S1</dtr><dtr>S2</dtr></dtrs>
+<head>S1</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<slots><anchor>H1</anchor></slots>
+<rarg><rargname>L-HNDL</rargname><label>H1</label><var>H2</var></rarg>
+<rarg><rargname>L-INDEX</rargname><label>H1</label><var>E1</var></rarg>
+</semstruct>
+<equalities><rv>H1</rv><dh><dtr>S2</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>S1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E1</rv><dh><dtr>S1</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>S/s_s-coord/+</name>
+<dtrs><dtr>S1</dtr><dtr>PUNCT</dtr><dtr>S2</dtr></dtrs>
 <head>S1</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
@@ -1434,9 +1553,25 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 </rule-->
 
 <rule>
-<name>S/s_s-coord-r</name>
-<comment>ANNA - (sem.ex.76)</comment>
-<dtrs><dtr>S1</dtr><dtr>OPT</dtr><dtr>S2</dtr></dtrs>
+<name>S/s_s-coord-r/-</name>
+<comment>ANNA - no optional comma case (sem.ex.76)</comment>
+<dtrs><dtr>S1</dtr><dtr>S2</dtr></dtrs>
+<head>S1</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<slots><anchor>H1</anchor></slots>
+<rarg><rargname>L-HNDL</rargname><label>H1</label><var>H2</var></rarg>
+<rarg><rargname>L-INDEX</rargname><label>H1</label><var>E1</var></rarg>
+</semstruct>
+<equalities><rv>H1</rv><dh><dtr>S2</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>S1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E1</rv><dh><dtr>S1</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>S/s_s-coord-r/+</name>
+<comment>ANNA - optional comma case (sem.ex.76)</comment>
+<dtrs><dtr>S1</dtr><dtr>PUNCT</dtr><dtr>S2</dtr></dtrs>
 <head>S1</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
@@ -1457,7 +1592,7 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 
 <rule>
 <name>S/cj-end_s</name>
-<comment>ANNA - (sem.ex.76)</comment>
+<comment>ANNA - (sem.ex.76,text.ex.4)</comment>
 <dtrs><dtr>CJ</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
@@ -1514,11 +1649,22 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 <head>V</head>
 </rule>
 
-
-<rule>
+<!--rule>
 <name>V1/v</name>
 <dtrs><dtr>V</dtr></dtrs>
 <head>V</head>
+</rule-->
+
+<rule>
+<name>V1/v</name>
+<comment>ANNA - making sure VPs have anchors so e.g. PPs can be INGed with all Ss (gen.ex.3)</comment>
+<dtrs><dtr>V</dtr></dtrs>
+<head>V</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
+</semstruct>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <!--rule>
@@ -1619,7 +1765,7 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
-<rule>
+<!--rule>
 <name>V1/v_n1</name>
 <dtrs><dtr>V</dtr><dtr>N</dtr></dtrs>
 <head>V</head>
@@ -1629,6 +1775,24 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+</rule-->
+
+<rule>
+<name>V1/v_n1</name>
+<comment>ANNA - added bare_div_q_rel for N1 (meth.ex.8)</comment>
+<dtrs><dtr>V</dtr><dtr>N</dtr></dtrs>
+<head>V</head>
+<semstruct>
+<hook><index>E</index><label>H10</label></hook>
+<ep><gpred>BARE_DIV_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H10</label><var>X</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H10</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
@@ -1817,7 +1981,7 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
-<rule>
+<!--rule>
 <name>V1/v_pp</name>
 <dtrs><dtr>V</dtr><dtr>PP</dtr></dtrs>
 <head>V</head>
@@ -1827,6 +1991,24 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 </semstruct>
 <equalities><rv>E1</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+</rule-->
+
+<rule>
+<name>V1/v_pp</name>
+<comment>ANNA - added anchor (text.ex.19,20,22)</comment>
+<dtrs><dtr>V</dtr><dtr>PP</dtr></dtrs>
+<head>V</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
+<!--rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg-->
+<rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>E1</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>PP</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
@@ -1928,7 +2110,7 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
-<rule>
+<!--rule>
 <name>V1/v_pp_ing-hs-r</name>
 <dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
@@ -1938,6 +2120,34 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 </semstruct>
 <equalities><rv>E1</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+</rule-->
+
+<rule>
+<name>V1/v_pp_ing-hs-r</name>
+<comment>ANNA - will ING always be a gerund/nominalisation? (text.ex.17)</comment>
+<dtrs><dtr>V</dtr><dtr>PP</dtr><dtr>VP</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><gpred>NOM_REL</gpred><label>H2</label><var>X</var></ep>
+<ep><gpred>IMPLICIT_Q_REL</gpred><label>H6</label><var>X</var></ep>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H3</label><var>H4</var></ep>
+<!--rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg-->
+<rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H2</label><var>H3</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H5</label><var>U</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H1</label><var>X</var></rarg>
+<rarg><rargname>RSTR</rargname><label>H6</label><var>H7</var></rarg>
+<rarg><rargname>BODY</rargname><label>H6</label><var>H8</var></rarg>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+<hcons hreln='qeq'><hi><var>H4</var></hi><lo><var>H5</var></lo></hcons>
+<hcons hreln='qeq'><hi><var>H7</var></hi><lo><var>H2</var></lo></hcons>
+</semstruct>
+<equalities><rv>E1</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H5</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>PP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 
@@ -1953,13 +2163,27 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 <head>V</head>
 </rule>
 
-<rule>
+<!--rule>
 <name>V1/v_s</name>
 <dtrs><dtr>V</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <rarg><rargname>ARG2</rargname><label>H</label><var>H1</var></rarg>
+</semstruct>
+<equalities><rv>H1</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+</rule-->
+
+<rule>
+<name>V1/v_s</name>
+<comment>ANNA -  I've changed the ARG2 ("prove that dogs bark") to ARG2-4 to allow for "show (someone) that dogs bark" and "bet (someone) (a fiver) that dogs bark" (meth.ex.7, us.ex.13-16)</comment>
+<dtrs><dtr>V</dtr><dtr>S</dtr></dtrs>
+<head>V</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<rarg><rargname>ARG2-4</rargname><label>H</label><var>H1</var></rarg>
 </semstruct>
 <equalities><rv>H1</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
@@ -3030,7 +3254,8 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 
 <rule>
 <name>V1/v_np_s</name>
-<comment>ANNA - should this rule always make the ARG1 of V be the S? (sem.ex.82)</comment>
+<comment>ANNA - should this rule always make the ARG1 of V be the S? (sem.ex.82)
+no - consider "we showed abrams that browne barked" </comment>
 <dtrs><dtr>V</dtr><dtr>NP</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
 <semstruct>
@@ -3149,18 +3374,49 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 ; VP postmod rules
 -->
 
-<rule>
+<!--rule>
 <name>V1/adv_vp</name>
 <dtrs><dtr>ADV</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
-</rule>
+</rule-->
 
 <rule>
+<name>V1/adv_vp</name>
+<comment>ANNA - added ING between adverb and VP and ARG1 for adverb (meth.ex.14, us.ex.1, text.ex.15)</comment>
+<dtrs><dtr>ADV</dtr><dtr>VP</dtr></dtrs>
+<head>VP</head>
+<semstruct>
+<hook><index>E1</index><label>H</label></hook>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+</semstruct>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<!--rule>
 <name>V1/vp_advp</name>
 <dtrs><dtr>VP</dtr><dtr>ADV</dtr></dtrs>
 <head>VP</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><dh><dtr>VP</dtr><he>INDEX</he></dh><dh><dtr>ADV</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
+</rule-->
+
+<rule>
+<name>V1/vp_advp</name>
+<comment>ANNA  - added ARG1 to adverb (us.ex.10,11,12)</comment>
+<dtrs><dtr>VP</dtr><dtr>ADV</dtr></dtrs>
+<head>VP</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>E2</var></rarg>
 <ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
 </semstruct>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
@@ -3211,7 +3467,7 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 
 <rule>
 <name>V1/vp_np-nt-adv</name>
-<comment> ANNA - (sem.ex.47,57)</comment>
+<comment> ANNA - (sem.ex.47,57, here ex.11)</comment>
 <dtrs><dtr>VP</dtr><dtr>NP</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
@@ -3415,10 +3671,40 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 <equalities><rv>H</rv>?? want this to be the label of the prpstn_m_rel for the construction</equalities>
 </rule-->
 
-<rule>
+<!--rule>
 <name>V1/be_past</name>
 <dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
+</rule-->
+
+<rule>
+<name>V1/be_past/-</name>
+<dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
+<head>VP</head>
+<semstruct>
+<hook><index>E</index><label>H2</label></hook>
+<slots><anchor>H</anchor></slots>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/be_past/+</name>
+<comment>ANNA - NEW RULE - linked adverb to VP as in other rules (text.ex.16)</comment>
+<dtrs><dtr>V</dtr><dtr>ADV</dtr><dtr>VP</dtr></dtrs>
+<head>VP</head>
+<semstruct>
+<hook><index>E</index><label>H2</label></hook>
+<slots><anchor>H</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H</var></ing-b></ing>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
@@ -3473,15 +3759,16 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 </rule-->
 
 <rule>
-<name>V1/be_np</name>
-<comment>ANNA - need to make the _be_v's LABEL the LABEL of the V1 (sem.ex.99)
- - need to make NP's INDEX the ARG of _be_v but sometimes want ARG2, sometimes ARG1 (sem.ex.99,111)</comment>
-<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>NP</dtr><dtr>OPT</dtr></dtrs><!-- ANNA - had to make RULE the head to make S/np_vp's prpstn_m_rel qeq _be_v (sem.ex.111)-->
+<name>V1/be_np/---</name>
+<comment>ANNA - need to make the _be_v's LABEL the LABEL of the V1
+ - need to make NP's INDEX the ARG of _be_v but sometimes want ARG2, sometimes ARG1 (sem.ex.99,111, meth.ex.14, us.ex.10,11,12,19)</comment>
+<dtrs><dtr>V</dtr><dtr>NP</dtr></dtrs>
+<!-- ANNA - had to make RULE the head to make S/np_vp's prpstn_m_rel qeq _be_v -->
 <head>RULE</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <slots><anchor>H</anchor></slots>
-<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG1-2</rargname><label>H</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
@@ -3489,9 +3776,195 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 </rule>
 
 <rule>
+<name>V1/be_np/+--</name>
+<comment>ANNA - need to make the _be_v's LABEL the LABEL of the V1
+ - need to make NP's INDEX the ARG of _be_v but sometimes want ARG2, sometimes ARG1 (sem.ex.99,111, meth.ex.14, us.ex.10,11,12,19)
+- optional adverb case</comment>
+<dtrs><dtr>V</dtr><dtr>ADV</dtr><dtr>NP</dtr></dtrs>
+<!-- ANNA - had to make RULE the head to make S/np_vp's prpstn_m_rel qeq _be_v -->
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
+<rarg><rargname>ARG1-2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H</var></ing-b></ing>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/be_np/++-</name>
+<comment>ANNA - need to make the _be_v's LABEL the LABEL of the V1
+ - need to make NP's INDEX the ARG of _be_v but sometimes want ARG2, sometimes ARG1 (sem.ex.99,111, meth.ex.14, us.ex.10,11,12,19)
+- optional adverb *and* negation case</comment>
+<dtrs><dtr>V</dtr><dtr>ADV</dtr><dtr>NEG</dtr><dtr>NP</dtr></dtrs>
+<!-- ANNA - had to make RULE the head to make S/np_vp's prpstn_m_rel qeq _be_v -->
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H2</label></hook>
+<slots><anchor>H</anchor></slots>
+<rarg><rargname>ARG1-2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H2</label><var>H3</var></rarg>
+<hcons hreln='qeq'><hi><var>H3</var></hi><lo><var>H</var></lo></hcons>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>NEG</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/be_np/-+-</name>
+<comment>ANNA - need to make the _be_v's LABEL the LABEL of the V1
+ - need to make NP's INDEX the ARG of _be_v but sometimes want ARG2, sometimes ARG1 (sem.ex.99,111, meth.ex.14, us.ex.10,11,12,19)
+- optional negation case</comment>
+<dtrs><dtr>V</dtr><dtr>NEG</dtr><dtr>NP</dtr></dtrs>
+<!-- ANNA - had to make RULE the head to make S/np_vp's prpstn_m_rel qeq _be_v -->
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
+<rarg><rargname>ARG1-2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>NEG</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<!--rule>
 <name>V1/be_n1</name>
 <dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>OPT</dtr><dtr>N</dtr><dtr>OPT</dtr></dtrs>
 <head>N</head>
+</rule-->
+
+<rule>
+<name>V1/be_n1/---</name>
+<comment>ANNA - equivalent semantics to S/be_np (meth.ex.9)</comment>
+<dtrs><dtr>V</dtr><dtr>N1</dtr></dtrs>
+<!-- ANNA - had to make RULE the head to make S/np_vp's prpstn_m_rel qeq _be_v -->
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H10</label></hook>
+<slots><anchor>H10</anchor></slots>
+<ep><gpred>BARE_DIV_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
+<rarg><rargname>ARG1-2</rargname><label>H10</label><var>X</var></rarg>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H10</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/be_n1/--+</name>
+<comment>ANNA - don't know what to do for this optional particle case (need to add rest of opt prt cases)</comment>
+<dtrs><dtr>V</dtr><dtr>N1</dtr><dtr>PRT</dtr></dtrs>
+<!-- ANNA - had to make RULE the head to make S/np_vp's prpstn_m_rel qeq _be_v -->
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H10</label></hook>
+<slots><anchor>H10</anchor></slots>
+<ep><gpred>BARE_DIV_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
+<rarg><rargname>ARG1-2</rargname><label>H10</label><var>X</var></rarg>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H10</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/be_n1/+--</name>
+<comment>ANNA - equivalent semantics to S/be_np, optional punctuation *and* adverb case
+The ERG doesn't actually parse "was quickly machinery" but I've copied the semantics from "quickly was machinery"</comment>
+<dtrs><dtr>V</dtr><dtr>ADV</dtr><dtr>N1</dtr></dtrs>
+<!-- ANNA - had to make RULE the head to make S/np_vp's prpstn_m_rel qeq _be_v -->
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H10</label></hook>
+<slots><anchor>H10</anchor></slots>
+<ep><gpred>BARE_DIV_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H11</label><var>E</var></rarg>
+<rarg><rargname>ARG1-2</rargname><label>H10</label><var>X</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
+<ing><ing-a><var>H11</var></ing-a><ing-b><var>H10</var></ing-b></ing>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H10</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H11</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/be_n1/++-</name>
+<comment>ANNA - equivalent semantics to S/be_np, optional negation *and* adverb case
+The ERG doesn't actually parse "was quickly machinery" but I've copied the semantics from "quickly was machinery"</comment>
+<dtrs><dtr>V</dtr><dtr>ADV</dtr><dtr>NEG</dtr><dtr>N1</dtr></dtrs>
+<!-- ANNA - had to make RULE the head to make S/np_vp's prpstn_m_rel qeq _be_v -->
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H12</label></hook>
+<slots><anchor>H10</anchor></slots>
+<ep><gpred>BARE_DIV_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H11</label><var>E</var></rarg>
+<rarg><rargname>ARG1-2</rargname><label>H10</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H12</label><var>H13</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
+<hcons hreln='qeq'><hi><var>H13</var></hi><lo><var>H10</var></lo></hcons>
+<ing><ing-a><var>H11</var></ing-a><ing-b><var>H10</var></ing-b></ing>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H10</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H11</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H12</rv><dh><dtr>NEG</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/be_n1/-+-</name>
+<comment>ANNA - equivalent semantics to S/be_np, optional negation case
+The ERG doesn't actually parse "was quickly not machinery" but I've copied the semantics from "quickly was not machinery"</comment>
+<dtrs><dtr>V</dtr><dtr>NEG</dtr><dtr>N1</dtr></dtrs>
+<!-- ANNA - had to make RULE the head to make S/np_vp's prpstn_m_rel qeq _be_v -->
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H11</label></hook>
+<slots><anchor>H10</anchor></slots>
+<ep><gpred>BARE_DIV_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>ARG1-2</rargname><label>H10</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H11</label><var>H12</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
+<hcons hreln='qeq'><hi><var>H12</var></hi><lo><var>H10</var></lo></hcons>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H10</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H11</rv><dh><dtr>NEG</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -3630,9 +4103,28 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 </rule-->
 
 <rule>
-<name>V1/to_bse</name>
-<comment>ANNA - (sem.ex.9,10) </comment>
-<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
+<name>V1/to_bse/-</name>
+<comment>ANNA - (sem.ex.9,10) no optional adverb missing</comment>
+<dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<!-- ANNA - pass up VP's anchor to be INF's anchor so e.g. V1/v_np_inf (sem.ex.10) and V1/v_inf (sem.ex.9) can find VP's ARG1-->
+<slots><anchor>H</anchor></slots>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
+<!-- ANNA - infinitival verb has unknown subject (sem.ex.32) but this means we get two ARG1s when S/np_vp can link NP's INDEX with VP's anchor -->
+<rarg><rargname>ARG1</rargname><label>H</label><var>U</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
+</semstruct>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/to_bse/+</name>
+<comment>ANNA - (sem.ex.9,10) TO DO - optional adverb case</comment>
+<dtrs><dtr>V</dtr><dtr>ADV</dtr><dtr>VP</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
 <hook><index>E</index><label>H1</label></hook>
@@ -3652,9 +4144,32 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 ; have rules
 -->
 
-<rule>
+<!--rule>
 <name>V1/have_ppart</name>
 <dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
+<head>VP</head>
+</rule-->
+
+<rule>
+<name>V1/have_ppart/+</name>
+<comment>ANNA - adverb present case needs to add adverb's semantics (us.ex.2) </comment>
+<dtrs><dtr>V</dtr><dtr>ADV</dtr><dtr>VP</dtr></dtrs>
+<head>VP</head>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<slots><anchor>H</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>E</var></rarg>
+<ing><ing-a><var>H1</var></ing-a><ing-b><var>H</var></ing-b></ing>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/have_ppart/-</name>
+<comment>ANNA - adverb absent case </comment>
+<dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 </rule>
 
@@ -3790,9 +4305,9 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 </rule-->
 
 <rule>
-<name>V1/modal_bse</name>
-<comment>ANNA - (sem.ex.39,41,72)</comment>
-<dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
+<name>V1/modal_bse/-</name>
+<comment>ANNA - adverb missing case (sem.ex.39,41,72,us.ex.14,15, text.ex.19)</comment>
+<dtrs><dtr>V</dtr><dtr>VP</dtr></dtrs>
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H1</label></hook>
@@ -3802,6 +4317,24 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 </semstruct>
 <equalities><rv>H1</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
+</rule>
+
+<rule>
+<name>V1/modal_bse/+</name>
+<comment>ANNA - alternative rule for adverb present case </comment>
+<dtrs><dtr>V</dtr><dtr>ADV</dtr><dtr>VP</dtr></dtrs>
+<head>V</head>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<slots><anchor>H3</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H3</var></ing-b></ing>
+</semstruct>
+<equalities><rv>H1</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
@@ -4223,7 +4756,7 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 
 <rule>
 <name>NP/det_n1</name>
-<comment>ANNA - adding label of determiner as NP's anchor so rules like NP/a1-dg_np-r can find the determiner (sem.ex.90)</comment>
+<comment>ANNA - adding label of determiner as NP's anchor so rules like NP/a1-dg_np-r can find the determiner (sem.ex.90, text.ex.19, gap ex.2)</comment>
 <dtrs><dtr>DET</dtr><dtr>N</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
@@ -4265,11 +4798,31 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 <head>N1-WH</head>
 </rule>
 
-<rule>
+<!--rule>
 <name>NP/det_det_n1</name>
 <comment>AUTO</comment>
 <dtrs><dtr>DET</dtr><dtr>DET1</dtr><dtr>N1</dtr></dtrs>
 <head>N1</head>
+</rule-->
+
+<rule>
+<name>NP/det_det_n1</name>
+<comment>ANNA - not sure how best to treat this since the ERG doesn't handle two determiners
+so modelling on "another such" (DET ADJ) (gen.ex.17)</comment>
+<dtrs><dtr>DET</dtr><dtr>DET1</dtr><dtr>N1</dtr></dtrs>
+<head>N1</head>
+<semstruct>
+<hook><index>X</index><label>H2</label></hook>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>X</var></rarg>
+<ing><ing-a><var>H4</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>DET</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>DET1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H4</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
@@ -4282,17 +4835,18 @@ ANNA - added ANCHOR to find the VP's LABEL inside relative clauses (sem.ex.112)<
 <!--rule>
 <name>NP/part_n2</name>
 <comment>AUTO</comment>
+<comment>ANNA - what is the OPT? I can't see an optional daiughter in tsg14-t8qa</comment>
 <dtrs><dtr>PART</dtr><dtr>OPT</dtr><dtr>N2</dtr></dtrs>
 <head>N2</head>
 </rule-->
 
 <rule>
 <name>NP/part_n2</name>
-<comment>ANNA - passing up anchor (sem.ex.127)</comment>
-<dtrs><dtr>PART</dtr><dtr>OPT</dtr><dtr>N2</dtr></dtrs>
-<head>N2</head>
+<comment>ANNA - passing up anchor (det.ex.8,9)</comment>
+<dtrs><dtr>PART</dtr><dtr>N2</dtr></dtrs>
+<head>RULE</head>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
+<hook><index>X</index><label>H1</label></hook>
 <slots><anchor>H1</anchor></slots>
 <ep><gpred>PART_OF_REL</gpred><label>H2</label><var>X</var></ep>
 <rarg><rargname>ARG1</rargname><label>H2</label><var>X1</var></rarg>
@@ -4439,15 +4993,17 @@ ARG1 of the PP is left unbound.</comment>
 
 <rule>
 <name>NP/np-pro_s</name>
-<comment>ANNA -  want ING between pronoun and sentence(sem.ex.117)</comment>
+<comment>ANNA -  want ING between pronoun and sentence, ARG1 for main verb in sentence(sem.ex.117)</comment>
 <dtrs><dtr>NP-PRO</dtr><dtr>S</dtr></dtrs>
 <head>NP-PRO</head>
 <semstruct>
 <hook><index>X</index><label>H1</label></hook>
+<rarg><rargname>ARG2</rargname><label>H3</label><var>X</var></rarg>
 <ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
 </semstruct>
 <equalities><rv>H1</rv><dh><dtr>NP-PRO</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H2</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>S</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>X</rv><dh><dtr>NP-PRO</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
@@ -4465,11 +5021,29 @@ ARG1 of the PP is left unbound.</comment>
 <head>NP-PRO</head>
 </rule>
 
-<rule>
+<!--rule>
 <name>NP/np-pro_n</name>
 <comment>AUTO</comment>
 <dtrs><dtr>NP-PRO</dtr><dtr>N</dtr></dtrs>
 <head>NP-PRO</head>
+</rule-->
+
+<rule>
+<name>NP/np-pro_n</name>
+<comment>ANNA - adding determiner type semantics for pronoun modified NPs (det.ex.4,6)</comment>
+<dtrs><dtr>NP-PRO</dtr><dtr>N</dtr></dtrs>
+<head>NP-PRO</head>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<slots><anchor>H</anchor></slots>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>NP-PRO</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>NP-PRO</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
+<equalities><dh><dtr>N</dtr><he>INDEX</he></dh><dh><dtr>NP-PRO</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -4741,10 +5315,104 @@ extended correctly if necessary
 </rule>
 
 <rule>
+<name>NP/det_a1-est-r/+</name>
+<comment>ANNA - why was there no AUTO rule for this?</comment>
+<dtrs><dtr>DET</dtr><dtr>A1-EST-R</dtr><dtr>ADV</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>X</index><label>H4</label></hook>
+<slots><anchor>H</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>DET</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>A1-EST-R</dtr><he>LABEL</he></dh></equalities>
+<equalities><dh><dtr>A1-EST-R</dtr><he>INDEX</he></dh><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<rule>
+<name>NP/det_a1-est-r/-</name>
+<comment>ANNA - why was there no AUTO rule for this? (gap ex.3)</comment>
+<dtrs><dtr>DET</dtr><dtr>A1-EST-R</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>X</index><label>H4</label></hook>
+<slots><anchor>H</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H3</var></lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>DET</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>A1-EST-R</dtr><he>LABEL</he></dh></equalities>
+<equalities><dh><dtr>A1-EST-R</dtr><he>INDEX</he></dh><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
+</rule>
+
+<!--rule>
 <name>NP/det_ing-r</name>
 <comment>AUTO - HEAD</comment>
 <dtrs><dtr>DET</dtr><dtr>ING-R</dtr><dtr>OPT</dtr></dtrs>
 <head>RULE</head>
+</rule-->
+
+<rule>
+<name>NP/det_ing-r/-</name>
+<comment>ANNA - missing treatment of "much barking" type NPs (det.ex.3)</comment>
+<dtrs><dtr>DET</dtr><dtr>ING-R</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>X1</index><label>H4</label></hook>
+<slots><anchor>H</anchor></slots>
+<ep><gpred>UDEF_Q_REL</gpred><label>H8</label><var>X1</var></ep>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H9</label><var>H10</var></ep>
+<ep><gpred>GENERIC_NONPRO_REL</gpred><label>H17</label><var>X</var></ep>
+<ep><gpred>NOM_REL</gpred><label>H5</label><var>X1</var></ep>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H6</label><var>H7</var></ep>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H5</label><var>H6</var></rarg>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>RSTR</rargname><label>H8</label><var>H11</var></rarg>
+<rarg><rargname>BODY</rargname><label>H8</label><var>H12</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H17</var></lo></hcons>
+<hcons hreln='qeq'><hi><var>H7</var></hi><lo><var>H3</var></lo></hcons>
+<hcons hreln='qeq'><hi><var>H11</var></hi><lo><var>H9</var></lo></hcons>
+<hcons hreln='qeq'><hi><var>H10</var></hi><lo><var>H5</var></lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>DET</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>ING-R</dtr><he>LABEL</he></dh></equalities>
+<!--equalities><dh><dtr>ING-R</dtr><he>INDEX</he></dh><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities-->
+</rule>
+
+<rule>
+<name>NP/det_ing-r/+</name>
+<comment>ANNA - optional daughter version (doesn't appear to have gerund_rel/nominalise_rel</comment>
+<dtrs><dtr>DET</dtr><dtr>ING-R</dtr><dtr>PRT</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>X</index><label>H4</label></hook>
+<slots><anchor>H</anchor></slots>
+<ep><gpred>GENERIC_NONPRO_REL</gpred><label>H17</label><var>X</var></ep>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H6</label><var>H7</var></ep>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H13</label><var>E</var></rarg>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H17</var></lo></hcons>
+<hcons hreln='qeq'><hi><var>H7</var></hi><lo><var>H3</var></lo></hcons>
+<ing><ing-a><var>H3</var></ing-a><ing-b><var>H13</var></ing-b></ing>
+<ing><ing-a><var>H17</var></ing-a><ing-b><var>H6</var></ing-b></ing>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>DET</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>ING-R</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H13</rv><dh><dtr>PRT</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>ING-R</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -4812,18 +5480,42 @@ extended correctly if necessary
 
 <rule>
 <name>N1/ap_n1/-</name>
-<comment>Note the /- (i.e. no opt) FIX?</comment>
+<comment>Note the /- (i.e. no opt) FIX?
+ANNA - passed up N's anchor (meth.ex. 5, all gen.ex., here ex.1)</comment>
 <dtrs><dtr>ADJ</dtr><dtr>N</dtr></dtrs>
 <head>N</head>
 <semstruct>
 <hook><index>X</index><label>H2</label></hook>
+<slots><anchor>H3</anchor></slots>
 <ing><ing-a><var>H2</var></ing-a><ing-b><var>H1</var></ing-b></ing>
-<rarg><rargname>ARG1</rargname><label>H0</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>X</var></rarg>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<!-- ANNA - added this equality to make the ARG2 of _use_v the N's index in APs like "commonly used" (gen.ex.3)-->
+<!--equalities><dh><dtr>N</dtr><he>INDEX</he></dh><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities-->
+<!--equalities><rv>X</rv><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities-->
+<equalities><rv>H0</rv><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ADJ</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N</dtr><he>ANCHOR</he></dh></equalities>
+</rule>
+
+<rule>
+<name>N1/ap_n1/+</name>
+<comment>ANNA - added + case for N1/ap_n1 rule</comment>
+<dtrs><dtr>ADJ</dtr><dtr>PUNCT</dtr><dtr>N</dtr></dtrs>
+<head>N</head>
+<semstruct>
+<hook><index>X</index><label>H2</label></hook>
+<slots><anchor>H3</anchor></slots>
+<ing><ing-a><var>H2</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>X</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>ADJ</dtr><he>LABEL</he></dh></equalities>
-<equalities><rv>H0</rv><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>ADJ</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>H2</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
 <!--rule>
@@ -4951,12 +5643,13 @@ FIXed head to RULE
 </rule-->
 
 <rule>
-<name>N1/n_n1</name>
-<comment>ANNA - trying to deal with compound nouns as in ERG (sem.ex.48,49)</comment>
-<dtrs><dtr>N</dtr><dtr>OPT</dtr><dtr>N1</dtr></dtrs>
+<name>N1/n_n1/+</name>
+<comment>ANNA - trying to deal with compound nouns as in ERG (sem.ex.48,49, meth.ex.4,5)</comment>
+<dtrs><dtr>N</dtr><dtr>PUNCT</dtr><dtr>N1</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
+<slots><anchor>H2</anchor></slots>
 <ep><gpred>COMPOUND_REL</gpred><label>H</label><var>E</var></ep>
 <ep><gpred>UDEF_Q_REL</gpred><label>H1</label><var>X1</var></ep>
 <rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
@@ -4974,6 +5667,31 @@ FIXed head to RULE
 <equalities><rv>H4</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
+
+<rule>
+<name>N1/n_n1/-</name>
+<comment>ANNA - trying to deal with compound nouns as in ERG (sem.ex.48,49, meth.ex.4,5)</comment>
+<dtrs><dtr>N</dtr><dtr>N1</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<slots><anchor>H2</anchor></slots>
+<ep><gpred>COMPOUND_REL</gpred><label>H</label><var>E</var></ep>
+<ep><gpred>UDEF_Q_REL</gpred><label>H1</label><var>X1</var></ep>
+<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X1</var></rarg>
+<!--ANNA - in the latest ERG this RSTR is hardwired to the N's LABEL -->
+<!--ANNA - it's been changed back in the latest latest version! -->
+<rarg><rargname>RSTR</rargname><label>H1</label><var>H5</var></rarg>
+<rarg><rargname>BODY</rargname><label>H1</label><var>H3</var></rarg>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H2</var></ing-b></ing>
+<hcons hreln='qeq'><hi><var>H5</var></hi><lo><var>H4</var></lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>X1</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H4</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
+</rule>
 <rule>
 <name>N1/n-name_n1</name>
 <dtrs><dtr>N1</dtr><dtr>N2</dtr></dtrs>
@@ -5410,7 +6128,7 @@ There's no way currently of underspecifying the attachment</comment>
 
 <rule>
 <name>N1/n_pp-of</name>
-<comment>ANNA - (sem.ex.69)</comment>
+<comment>ANNA - (sem.ex.69, meth.ex.17-19)</comment>
 <dtrs><dtr>N</dtr><dtr>PP-OF</dtr></dtrs>
 <head>N</head>
 <semstruct>
@@ -5465,12 +6183,13 @@ There's no way currently of underspecifying the attachment</comment>
 
 <rule>
 <name>N1/n_ppart</name>
-<comment>ANNA - trying to introduce prpstn_m_rel for ppart clauses (sem.ex.34)</comment>
+<comment>ANNA - trying to introduce prpstn_m_rel for ppart clauses (sem.ex.34, us.ex.10-12)</comment>
 <dtrs><dtr>N</dtr><dtr>PPART</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
 <hook><index>X</index><label>H3</label></hook>
 <ep><gpred>PRPSTN_M_REL</gpred><label>H</label><var>H1</var></ep>
+<rarg><rargname>ARG1</rargname><label>H2</label><var>U</var></rarg>
 <rarg><rargname>ARG2</rargname><label>H2</label><var>X</var></rarg>
 <ing><ing-a><var>H3</var></ing-a><ing-b><var>H</var></ing-b></ing>
 <hcons hreln='qeq'><hi><var>H1</var></hi><lo><var>H2</var></lo></hcons>
@@ -5535,17 +6254,19 @@ There's no way currently of underspecifying the attachment</comment>
 <rule>
 <name>N1/n1_pp4</name>
 <comment>ANNA - pp4 == P2[ADJ +, PFORM FOR, WH @x]
-- added ARG1s for noun and preposition (jab.ex.1)</comment>
+- added ARG1s for noun and preposition (jab.ex.1, meth.ex.10,11,12)</comment>
 <dtrs><dtr>N1</dtr><dtr>PP4</dtr></dtrs>
 <head>N1</head>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
-<rarg><rargname>ARG1</rargname><label>H</label><var>U</var></rarg>
+<!-- ANNA - this ARG1 isn't anything to do with the "for" PP (it's from n_ppof_le nouns) -->
+<!--rarg><rargname>ARG1</rargname><label>H2</label><var>U</var></rarg-->
 <rarg><rargname>ARG1</rargname><label>H1</label><var>X</var></rarg>
 <ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
 </semstruct>
 <equalities><rv>H</rv><dh><dtr>N1</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H1</rv><dh><dtr>PP4</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>N1</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>X</rv><dh><dtr>N1</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
@@ -5741,7 +6462,7 @@ There's no way currently of underspecifying the attachment</comment>
 
 <rule>
 <name>P1/p_np</name>
-<comment>ANNA - can't add ARG1 for preposition since e.g. _of_p_sel doesn't want this (sem.ex.23,jab.ex.1)</comment>
+<comment>ANNA - can't add ARG1 for preposition since e.g. _of_p_sel doesn't want this (sem.ex.23,jab.ex.1,all gen.ex., gap ex.3)</comment>
 <dtrs><dtr>P</dtr><dtr>NP</dtr></dtrs>
 <head>P</head>
 <semstruct>
@@ -5801,11 +6522,25 @@ There's no way currently of underspecifying the attachment</comment>
 <head>P</head>
 </rule>
 
-<rule>
+<!--rule>
 <name>P1/p_np-pro</name>
 <comment>AUTO</comment>
 <dtrs><dtr>P</dtr><dtr>NP-PRO</dtr></dtrs>
 <head>P</head>
+</rule-->
+
+<rule>
+<name>P1/p_np-pro</name>
+<comment>ANNA - added ARG2 for preposition (here ex.1)</comment>
+<dtrs><dtr>P</dtr><dtr>NP-PRO</dtr></dtrs>
+<head>P</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<slots><anchor>X</anchor></slots>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>NP-PRO</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>P</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
@@ -5892,12 +6627,13 @@ There's no way currently of underspecifying the attachment</comment>
 
 <rule>
 <name>P1/p_n1</name>
-<comment>ANNA - added udef_q_rel for PPs with bare N1s (sem.ex.65)</comment>
+<comment>ANNA - added udef_q_rel for PPs with bare N1s (sem.ex.65)
+- changed udef_q_rel to implicit_q_rel cos it might be a bare_div_q_rel (meth.ex.10)</comment>
 <dtrs><dtr>P</dtr><dtr>N</dtr></dtrs>
 <head>RULE</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><gpred>UDEF_Q_REL</gpred><label>H1</label><var>X</var></ep>
+<ep><gpred>IMPLICIT_Q_REL</gpred><label>H1</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H1</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H1</label><var>H3</var></rarg>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
@@ -6007,11 +6743,35 @@ Just saying the p_s rule is rare
 <head>P</head>
 </rule>
 
-<rule>
+<!--rule>
 <name>P1/p_ing</name>
 <comment>AUTO</comment>
 <dtrs><dtr>P</dtr><dtr>ING</dtr></dtrs>
 <head>P</head>
+</rule-->
+
+<rule>
+<name>P1/p_ing</name>
+<comment>ANNA - is the ING always a nominalisation/gerund? (meth.ex.2,3,14,17, text.ex.15)</comment>
+<dtrs><dtr>P</dtr><dtr>ING</dtr></dtrs>
+<head>P</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<slots><anchor>X</anchor></slots>
+<ep><gpred>IMPLICIT_Q_REL</gpred><label>H1</label><var>X</var></ep>
+<!-- ANNA - want a NOM_OR_GER_REL but this isn't defined in the hierarchy -->
+<ep><gpred>NOM_REL</gpred><label>H4</label><var>X</var></ep>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H5</label><var>H6</var></ep>
+<rarg><rargname>RSTR</rargname><label>H1</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H1</label><var>H3</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H4</label><var>H5</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H7</label><var>U</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H4</var></lo></hcons>
+<hcons hreln='qeq'><hi><var>H6</var></hi><lo><var>H7</var></lo></hcons>
+</semstruct>
+<equalities><rv>H</rv><dh><dtr>P</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H7</rv><dh><dtr>ING</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
@@ -6211,11 +6971,23 @@ Just saying the p_s rule is rare
 <head>P</head>
 </rule>
 
-<rule>
+<!--rule>
 <name>A1/a</name>
 <comment>AUTO</comment>
 <dtrs><dtr>A</dtr></dtrs>
 <head>A</head>
+</rule-->
+
+<rule>
+<name>A1/a</name>
+<comment>ANNA - making sure APs have the right LABEL (sem.ex.43)</comment>
+<dtrs><dtr>A</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<slots><anchor>X</anchor></slots>
+</semstruct>
+<equalities><rv>H</rv><dh><dtr>A</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
@@ -6297,11 +7069,28 @@ Just saying the p_s rule is rare
 <head>A-ER</head>
 </rule>
 
-<rule>
+<!--rule>
 <name>A1/advp_ppart-r</name>
 <comment>AUTO  - HEAD</comment>
 <dtrs><dtr>ADVP</dtr><dtr>PPART-R</dtr></dtrs>
 <head>RULE</head>
+</rule-->
+
+<rule>
+<name>A1/advp_ppart-r</name>
+<comment>ANNA - (gen.ex.3)</comment>
+<dtrs><dtr>ADVP</dtr><dtr>PPART-R</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<slots><anchor>X</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>U</var></rarg>
+<!-- ANNA - want to make PPART's ARG2 the same as ADVP's ARG1 but can't access it here (gen.ex.3)-->
+<rarg><rargname>ARG2</rargname><label>H1</label><var>X</var></rarg>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+</semstruct>
+<equalities><rv>H</rv><dh><dtr>ADVP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>PPART-R</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>
@@ -6311,11 +7100,25 @@ Just saying the p_s rule is rare
 <head>RULE</head>
 </rule>
 
-<rule>
+<!--rule>
 <name>A1/a_pp-of</name>
 <comment>AUTO</comment>
 <dtrs><dtr>A</dtr><dtr>PP-OF</dtr></dtrs>
 <head>A</head>
+</rule-->
+
+<rule>
+<name>A1/a_pp-of</name>
+<comment>ANNA - added ING between A and PP-OF (gap ex.3)</comment>
+<dtrs><dtr>A</dtr><dtr>PP-OF</dtr></dtrs>
+<head>A</head>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+</semstruct>
+<equalities><rv>H</rv><dh><dtr>A</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>PP-OF</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>A</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
 <rule>
@@ -6394,11 +7197,23 @@ Just saying the p_s rule is rare
 <head>A1</head>
 </rule>
 
-<rule>
+<!--rule>
 <name>AP/a1</name>
 <comment>AUTO</comment>
 <dtrs><dtr>A1</dtr></dtrs>
 <head>A1</head>
+</rule-->
+
+<rule>
+<name>AP/a1</name>
+<comment>ANNA - making sure APs have the right LABEL (sem.ex.43)</comment>
+<dtrs><dtr>A1</dtr></dtrs>
+<head>RULE</head>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<slots><anchor>X</anchor></slots>
+</semstruct>
+<equalities><rv>H</rv><dh><dtr>A1</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>

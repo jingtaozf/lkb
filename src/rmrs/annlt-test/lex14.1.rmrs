@@ -31,10 +31,9 @@ see sem ex 13
 </semstruct>
 </le>
 
-
 <le>
 <tag>AT</tag>
-<comment>the, no</comment>
+<comment>article e.g. the, no (gap ex.3)</comment>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>X</var></ep>
@@ -85,7 +84,7 @@ ANNA - NEW RULE - (sem.ex.72)</comment>
 </le>
 
 <!--
-; CSA ;  though, unless, when,... 
+; CSA ;  as (as a conjunction)
 ; CSN  ; than
 -->
 
@@ -115,14 +114,88 @@ empty (and hope ths works ...)</comment>
 </semstruct>
 </le>
 
-
 <!--
 ; DA ; same, former, latter, such, own
+-->
+
+<le>
+<tag>DA</tag>
+<comment> after-determiner, capable of pronominal function e.g.same, former, latter, such, own (gen.ex.14-17, det.ex.1,2)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; DA1 ; little, much
+-->
+
+<le>
+<tag>DA1</tag>
+<comment> singular after-determiner, capable of pronominal function e.g.little, much (det.ex.3)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; DA2  ; few, many, several
+-->
+
+<le>
+<tag>DA2</tag>
+<comment> plural after-determiner, capable of pronominal function e.g. few, several, many (det.ex.4)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; DA2R ; fewer
+-->
+
+<le>
+<tag>DA2R</tag>
+<comment> comparative plural after-determiner, capable of pronominal function e.g. fewer (det.ex.5)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+<ep><gpred>COMP_REL</gpred><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; DAR ; less,more
+-->
+
+<le>
+<tag>DAR</tag>
+<comment>ANNA - comparative after-determiner, capable of pronominal function e.g. more, less (det.ex.6)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+<ep><gpred>COMP_REL</gpred><label>H1</label><var>U</var></ep>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>X</var></rarg>
+</semstruct>
+</le>
+
+<!--
 ; DAT ; most,least
+-->
+
+<le>
+<tag>DAT</tag>
+<comment> superlative after-determiner, capable of pronominal function e.g. most, least (det.ex.7)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; DB ; all, half
 -->
 
@@ -137,8 +210,44 @@ empty (and hope ths works ...)</comment>
 
 <!--
 ; DB2  ; both
+-->
+
+<le>
+<tag>DB2</tag>
+<comment>plural before-determiner, capable of pronominal function e.g. both (det.ex.9)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; DD ; any,enough,some,lot,rest
+-->
+
+<le>
+<tag>DD</tag>
+<comment> determiner, capable of pronominal function e.g. any, some (det.ex.10)</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; DD1 ; each,another,neither,either,this,that
+-->
+
+<le>
+<tag>DD1</tag>
+<comment>each,another,neither,either,this,that</comment>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>X</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; DD2 ; these,those,many,few,several
 -->
 
@@ -181,7 +290,7 @@ empty (and hope ths works ...)</comment>
 
 <le>
 <tag>DDQV</tag>
-<comment>ANNA - NEW RULE -  (sem.ex.56)</comment>
+<comment>ANNA - NEW RULE - (sem.ex.56)</comment>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
 <ep><gpred>FREE_RELATIVE_EVER_Q_REL</gpred><label>H</label><var>X</var></ep>
@@ -260,6 +369,20 @@ empty (and hope ths works ...)</comment>
 
 <!--
 ; JJT ; 126 adj+est
+-->
+
+<le>
+<tag>JJT</tag>
+<comment>ANNA - NEW RULE - general superlative adjective e.g. oldest, best, biggest (gap ex.3)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<!-- ANNA - will it be okay for these preds to share a label...?-->
+<ep><pred/><label>H</label><var>E</var></ep>
+<ep><gpred>SUPERL_REL</gpred><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; JK ; orient(at)ed
 ; LE ; both, (n)either, not only
 ; MC ; 208 numbers
@@ -281,6 +404,18 @@ empty (and hope ths works ...)</comment>
 ; MC1 ; one
 ; MC2 ; num+s,zeros,eighties
 ; MD ; ordinal,first,thirtieth
+-->
+
+<le>
+<tag>MD</tag>
+<comment>ANNA - NEW RULE - ordinals e.g first, next, thirtieth</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; ND1 ; north, southeast,...
 -->
 
@@ -716,13 +851,14 @@ ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
 
 <le>
 <tag>PPHS1</tag>
-<comment>he, she</comment>
+<comment>he, she
+ANNA - swapped round pronoun_q_rel and pron_rel again</comment>
 <semstruct>
 <hook><index>X</index><label>H0</label></hook>
+<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
-<ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -859,7 +995,7 @@ ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
 
 <le>
 <tag>RGQ</tag>
-<comment>ANNA - NEW RULE - wh- degree adverbs (sem.ex.102)</comment>
+<comment>ANNA - NEW RULE - wh- degree adverbs (sem.ex.102, meth.ex.19)</comment>
 <semstruct>
 <hook><index>U</index><label>H0</label></hook>
 <ep><gpred>ABSTR_DEG_REL</gpred><label>H0</label><var>X</var></ep>
@@ -872,7 +1008,31 @@ ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
 <!--
 ; RGQV ; however
 ; RL ; upstairs,inside,...
+-->
+
+<le>
+<tag>RL</tag>
+<comment> ANNA - NEW RULE - locative adverbs e.g. alongside, forward, upstairs, inside (text.ex.16) </comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; RP ; out,over,...
+-->
+
+<le>
+<tag>RP</tag>
+<comment> ANNA - NEW RULE - prepositional adverbs, particles e.g. in, about, up, out </comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; RR ; 2k advbs
 -->
 
@@ -889,25 +1049,40 @@ ANNA - think there were a couple of bugs in this (sem.ex.18)</comment>
 ; RRQ ; where, why, when
 ; RRQV ; wherever, whenever
 ; RRR ; adv+er
+-->
+
+<le>
+<tag>RRR</tag>
+<comment> ANNA - NEW RULE - comparative general adverbs e.g. better, longer, earlier (us.ex.8)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ep><pred/><label>H</label><var>E</var></ep>
+<ep><gpred>COMP_REL</gpred><label>H</label><var>U</var></ep>
+</semstruct>
+</le>
+
+<!--
 ; RRT ; adv+est
 ; RT ; today,again,now,then,...
 -->
 
 <le>
 <tag>RT</tag>
-<comment> ANNA - NEW RULE - giving temporal adverbs their semantic makeup (sem.ex.47)</comment>
+<comment> ANNA - NEW RULE - nominal adverb of time e.g. now, tommorow, today, again, then (sem.ex.47, text.ex.1,2, here ex.7-9,11)</comment>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
+<slots><anchor>H5</anchor></slots>
+<!-- ANNA - can't add unspec_loc_rel here cos e.g. "again" doesn't want it -->
 <!--ep><gpred>UNSPEC_LOC_REL</gpred><label>H</label><var>E</var></ep-->
 <ep><gpred>_TIME_N</gpred><label>H1</label><var>X</var></ep>
 <ep><gpred>DEF_Q_REL</gpred><label>H2</label><var>X</var></ep>
-<!-- ANNA - creates  _something_r which doesn't match ERG's _something_j -->
-<ep><pred/><label>H5</label><var>X</var></ep>
+<ep><pred/><label>H5</label><var>U</var></ep>
 <!-- ANNA - ARG1's event should coindex with the event of the verb the adverb modifies but how can this be done? -->
 <!--rarg><rargname>ARG1</rargname><label>H</label><var>E1</var></rarg-->
 <!--rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg-->
 <rarg><rargname>RSTR</rargname><label>H2</label><var>H3</var></rarg>
 <rarg><rargname>BODY</rargname><label>H2</label><var>H4</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H5</label><var>X</var></rarg>
 <ing><ing-a><var>H1</var></ing-a><ing-b><var>H5</var></ing-b></ing>
 <hcons hreln='qeq'><hi><var>H3</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
