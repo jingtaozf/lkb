@@ -39,6 +39,7 @@
                       lkb::toggle-mrs-scoping	
 		      lkb::toggle-rmrs
                       lkb::toggle-rmrs-xml
+		      lkb::compare-rmrs-interactive
                       ;; lexical db
                       lkb::command-merge-into-psql-lexicon
                       ;lkb::command-dump-psql-lexicon
@@ -245,6 +246,9 @@
                                      :available-p :mrs)
 		     (make-menu-item :name "Toggle RMRS (XML)"
                                      :value 'toggle-rmrs-xml
+                                     :available-p :mrs)
+		     (make-menu-item :name "RMRS compare"
+                                     :value 'compare-rmrs-interactive
                                      :available-p :mrs)
                      )
                :available-p :mrs)
