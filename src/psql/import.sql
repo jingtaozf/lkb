@@ -5,7 +5,7 @@ CREATE TABLE meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO meta VALUES ('db-version', '2.4');
+INSERT INTO meta VALUES ('db-version', '2.5');
 INSERT INTO meta VALUES ('filter', 'TRUE');
 
 ---
@@ -21,6 +21,7 @@ CREATE TABLE revision (
   altkey VARCHAR(50),
   alt2key VARCHAR(50),
   keytag VARCHAR(50),
+  altkeytag VARCHAR(50),
   compkey VARCHAR(50),
   ocompkey VARCHAR(50),
   complete VARCHAR(200),
@@ -66,6 +67,7 @@ CREATE VIEW revision_view AS
   lower(altkey) AS altkey,
   lower(alt2key) AS alt2key,
   lower(keytag) AS keytag,
+  lower(altkeytag) AS altkeytag,
   lower(compkey) AS compkey,
   lower(ocompkey) AS ocompkey,
   complete,
@@ -115,6 +117,7 @@ CREATE VIEW multi_revision AS
   rev.altkey,
   rev.alt2key,
   rev.keytag,
+  rev.altkeytag,
   COALESCE(multi.particle,rev.compkey) AS compkey,
   rev.ocompkey,
   rev.complete,
@@ -172,6 +175,7 @@ CREATE TABLE scratch (
   altkey VARCHAR(50),
   alt2key VARCHAR(50),
   keytag VARCHAR(50),
+  altkeytag VARCHAR(50),
   compkey VARCHAR(50),
   ocompkey VARCHAR(50),
  PRIMARY KEY (name)
@@ -188,6 +192,7 @@ CREATE VIEW scratch_revision AS
   altkey,
   alt2key,
   keytag,
+  altkeytag,
   compkey,
   ocompkey,
 
@@ -482,6 +487,7 @@ INSERT INTO defn VALUES ( 'erg', 'unifs', 'orthography', '(stem)', 'string-fs' )
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'keyrel', '(synsem local keys key)', 'symbol' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'keytag', '(synsem local keys key carg)', 'string' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'altkey', '(synsem local keys altkey)', 'symbol' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'altkeytag', '(synsem local keys altkey carg)', 'string' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'alt2key', '(synsem local keys alt2key)', 'symbol' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
@@ -504,10 +510,11 @@ INSERT INTO defn VALUES ( 'erg2', 'id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'erg2', 'orth', 'orthography', '', 'string-list' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'type', 'nil', 'symbol' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'orthography', '(stem)', 'string-fs' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'string' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); -- or symbol?
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'symbol' );
-INSERT INTO defn VALUES ( 'erg2', 'unifs', 'alt2key', '(synsem lkeys alt2keyrel pred)', 'symbol' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'mixed' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); 
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'mixed' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkeytag', '(synsem lkeys altkeyrel carg)', 'string' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'alt2key', '(synsem lkeys alt2keyrel pred)', 'mixed' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
 INSERT INTO defn VALUES ( 'erg2', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
 
