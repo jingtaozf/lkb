@@ -356,7 +356,7 @@
 
 (defun generate-item (mrs
                       &key id string exhaustive nanalyses trace
-                           readings edges derivations semantix-hook trees-hook
+                           edges derivations semantix-hook trees-hook
                            burst (nresults 0))
   (declare (ignore derivations string id trees-hook))
 
@@ -364,14 +364,13 @@
          (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                       *maximum-number-of-edges*
                                       edges))
-         (*first-only-p* (if (integerp nanalyses)
-                           (unless (zerop nanalyses) nanalyses)
-                           (unless exhaustive
-                             (if (integerp readings)
-                               readings
-                               (if (integerp *first-only-p*)
-                                 *first-only-p*
-                                 1)))))
+         (*gen-first-only-p* (if exhaustive
+                               nil
+                               (if (integerp nanalyses)
+                                 (unless (zerop nanalyses) nanalyses)
+                                 (if (integerp *gen-first-only-p*) 
+                                   *gen-first-only-p*
+                                   1))))
          (*do-something-with-parse* nil)
          (stream (make-string-output-stream))
          (*standard-output* 
