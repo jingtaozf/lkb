@@ -20,13 +20,13 @@
     (unless (and (boundp 'cl-user::*building-image-p*)
 		 cl-user::*building-image-p*)
       (let ((*package* (find-package "CLIM-USER")))
-	(clim-user::set-up-lkb-interaction :big)))
+	(clim-user::set-up-lkb-interaction :core)))
   #+(and :allegro :common-graphics (not :tty))
     (unless (and (boundp 'cl-user::*building-image-p*)
 		 cl-user::*building-image-p*)
-	(cl-user::set-up-lkb-interaction :big))
+	(cl-user::set-up-lkb-interaction :core))
     #+(and :mcl (not :tty))
-    (cl-user::set-up-lkb-interaction :big)
+    (cl-user::set-up-lkb-interaction :core)
     #+tty nil
     :components
     ((:module "version"
