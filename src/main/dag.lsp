@@ -773,8 +773,7 @@
 ;;; it safe
 
 (defun may-copy-constraint-of (type-name)
-  (let* ((type-parent-name (instance-type-parent type-name))
-	 (type-record (get-type-entry (or type-parent-name type-name)))
+  (let* ((type-record (get-type-entry type-name))
 	 (constraint (type-constraint type-record))
 	 (cache (type-constraint-mark type-record))
          (*safe-not-to-copy-p* nil)

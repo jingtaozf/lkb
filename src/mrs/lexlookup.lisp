@@ -497,30 +497,7 @@ at this point).
       other-unifs)))
 
 (defun make-instance-type (var-struct)
-  ;;; a var structure consists of a name (which we ignore) 
-  ;;; an `extra' slot and a unique id
-  ;;; We do the `extra' slot stuff in create-unifs-for-rel
-  ;;; JAC seems to have decided that all instance
-  ;;; types should start with `%', so this function does this
-  ;;; 
-  ;;; modified because all instance types are now stored on the
-  ;;; *instloc-path* in the variable fs
-       (let* ((instance nil)
-             (template *instloc-type*)
-             (number (var-id var-struct)))
-         (setf (get template 'lkb::last-number)
-               number)
-         (setf instance
-               (intern
-                 (concatenate 'string
-                              "%"
-                              (string template)
-                              (princ-to-string number)) :lkb))
-         (push instance
-               (get template 'lkb::children))
-         (setf (get instance 'lkb::root-template)
-               template)
-         instance))
+  (var-string var-struct))
 
 ;;; *******************************************************       
 ;;;

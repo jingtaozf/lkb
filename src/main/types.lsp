@@ -134,28 +134,9 @@
 (defmacro get-type-entry (name)
    `(gethash ,name *types*))
 
-(defun get-any-type-entry (name)
-  ;;; allows for instance types
-  (let ((type-parent-name (instance-type-parent name)))
-    (gethash (or type-parent-name name) *types*)))
-  
 (defun is-valid-type (name)
    (or (get-type-entry name)
-      (stringp name)
-      (instance-type-parent name)))
-
-; instance-types added for MT removed for GLB stuff
-(defun instance-type-parent (name)
-  (locally
-      (declare (optimize (speed 3) (safety 0)) 
-               (inline symbolp symbol-name schar))
-    (and (symbolp name)
-         ;; they start with % so we can quickly test without searching the
-         ;; property list
-         (eql (the character
-                (schar (the simple-string (symbol-name (the symbol name))) 0))
-              #\%)
-         (get name 'root-template))))
+      (stringp name)))
 
 (defun string-type-p (type-name)
   ;; AAC 30/12/94
@@ -235,13 +216,8 @@
 (defun subtype-p (type1 type2)
   (if (stringp type1) 
       (string-type-p type2)
-    (let ((ptype (instance-type-parent type1)))
-      (if ptype
-	  (or (eq ptype type2)
-	      (member (get-type-entry type2) (retrieve-ancestors ptype) 
-		      :test #'eq))
-	(member (get-type-entry type2) (retrieve-ancestors type1)
-		:test #'eq)))))
+    (member (get-type-entry type2) (retrieve-ancestors type1)
+		:test #'eq)))
 
 (defun safe-subtype-p (type1 type2)
   ;;
@@ -254,11 +230,7 @@
       (let ((type-record (get-type-entry type-name)))
 	(if type-record 
             (type-atomic-p type-record)
-	  (let ((ptype (instance-type-parent type-name)))
-	    (if ptype 
-		(atomic-type-p ptype)
-	      (error "~%~A is not a valid type" type-name)))))))
-
+	  (error "~%~A is not a valid type" type-name)))))
 
 ;;; glb computation - entry point is greatest-common-subtype
 
@@ -378,8 +350,7 @@
   ;; attempt to pre-compute the cache contents
   ;;
   ;; we expect both args to be lisp atoms, but either or both could be
-  ;; strings/string type, or instance types. The latter are cached,
-  ;; but not the former
+  ;; strings/string type.  String types are not cached
   (cond 
    ((eq type1 type2) type1)
    ((arrayp type1)			; a string?
@@ -392,21 +363,9 @@
 
 (defun full-greatest-common-subtype (type1 type2)
   (let ((t1 (get-type-entry type1))
-	(t2 (get-type-entry type2))
-	ptype1 ptype2)
+	(t2 (get-type-entry type2)))
     (cond 
      ((eq type1 type2) type1)
-     ((and (setq ptype1 (instance-type-parent type1))
-	   (or (eq ptype1 type2) 
-	       (member t2 (retrieve-ancestors ptype1) :test #'eq)))
-      ;; no need to look for constraint of ptype since it's already the glb
-      type1)
-     ((and (setq ptype2 (instance-type-parent type2))
-	   (or (eq ptype2 type1) 
-	       (member t1 (retrieve-ancestors ptype2) :test #'eq)))
-      type2)			;; ditto
-     ((or ptype1 ptype2)
-      nil)
      ((member t2 (type-ancestors t1) :test #'eq)
       type1)
      ((member t1 (type-ancestors t2) :test #'eq)
@@ -471,10 +430,6 @@
     (least-common-supertype *string-type* x))
    ((subtype-p x y) y)
    ((subtype-p y x) x)
-   ((instance-type-parent x) 
-    (least-common-supertype (instance-type-parent x) y))
-   ((instance-type-parent y) 
-    (least-common-supertype x (instance-type-parent y)))
    (t
     (let ((z (intersection (cons x (mapcar #'type-name (retrieve-ancestors x)))
 			   (cons y (mapcar #'type-name (retrieve-ancestors y))))))

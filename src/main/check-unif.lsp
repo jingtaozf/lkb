@@ -343,8 +343,6 @@
 		    ;; of this path, so use it instead of the type name
 		    (or
 		     (cdr (assoc type (cdr path-spec) :test #'eq))
-		     (cdr (assoc (instance-type-parent type)
-				 (cdr path-spec) :test #'eq))
 		     (error "Inconsistency - ~A could not find restrictor ~
                               bit vector for type ~A at path ~A" 
 			    'restrict-fs type (car path-spec)))
@@ -388,8 +386,6 @@
                 (when (consp type) (setq type (car type)))
                 (if (consp (cdr path-spec))
                   (or (cdr (assoc type (cdr path-spec) :test #'eq))
-                      (cdr (assoc (instance-type-parent type)
-                                  (cdr path-spec) :test #'eq))
                       (error "Inconsistency - ~A ~
                               could not find restrictor bit vector ~
                               for type ~A at path ~A" 'x-restrict-fs
@@ -407,8 +403,6 @@
                        (when (consp type) (setq type (car type)))
                        (if (consp (cdr path-spec))
                            (or (cdr (assoc type (cdr path-spec) :test #'eq))
-                               (cdr (assoc (instance-type-parent type)
-                                           (cdr path-spec) :test #'eq))
                                (error "Inconsistency - ~A ~
                                        could not find restrictor bit vector ~
                                        for type ~A at path ~A" 'x-restrict-fs
