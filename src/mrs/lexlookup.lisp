@@ -473,12 +473,15 @@ at this point).
   (let* ((real-ids (if cl-user::*gen-rule-list*
                        (genpredict-mrs-struct input-sem 
                                               cl-user::*gen-rule-list*)
-                     (let ((found-list (apply #'append 
-                                   (cl-user::retrieve-lex-from-parses))))
-                      (for empty in *empty-semantics-lexical-entries*
-                           filter
-                           (if (member empty found-list)
-                               empty)))))
+                     (if *null-semantics-hack-p*
+                         (let ((found-list 
+                                (apply #'append 
+                                       (cl-user::retrieve-lex-from-parses))))
+                           (for empty in *empty-semantics-lexical-entries*
+                                filter
+                                (if (member empty found-list)
+                                    empty)))
+                       *empty-semantics-lexical-entries*)))
         (instantiated-sets
           (for lex-id in real-ids
                filter

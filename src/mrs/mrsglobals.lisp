@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.17  1999/08/06 01:00:13  aac
+;; added an alex-mode to allow for the output of munging rules
+;;
 ;; Revision 1.16  1999/07/09 04:51:47  aac
 ;; fragments
 ;;
@@ -330,6 +333,8 @@ for extra features for using the extra-features of a relation")
 (defvar *suppressed-VM-arg-roles* nil)
 
 ;;; for generation - real values in mrsglobals-eng
+
+(defparameter *null-semantics-hack-p* t)
 
 (defparameter *dummy-relations* nil)
 
