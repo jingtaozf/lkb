@@ -11,7 +11,8 @@
 
 #if defined(NOFREE)
 #  if !defined(TSDB_DOT_C)
-extern void free(void *);
+/*extern void free(void *);*/
+#define free(x) x
 #  endif
 #endif
 
