@@ -35,9 +35,6 @@
 ;;; `mrsoutput.lisp'; see comment there and resolve with ann.  (10-dec-03; oe)
 ;;;
 
-(defparameter *top-pred-type* (vsym "PREDSORT")
-  "most general type under *rel-name-path*; typically not a good predicate")
-
 (defparameter *rel-handel-path*
     `(,(vsym "HANDEL"))
   "path to get the handel from a relation")

@@ -1,5 +1,6 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998-2004
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 (in-package "MRS")
 
@@ -164,7 +165,7 @@ we assume that there will generally only be one feature
                             (warn "~%Ignoring ~A - ~A inconsistent in ~A"
                                  id rel-strings rel-name)))))
           (t 
-            (warn "~%Ignoring entry ~A - Existing value of ~A in *relation-index* isn't a hash table" 
+            (warn "~%Ignoring entry ~A - Existing value of ~A in *relation-index* isn't a complex index" 
                   id rel-name)))))
 
 ;;; accessing the stored data - called from lexlookup.lisp
@@ -226,6 +227,11 @@ we assume that there will generally only be one feature
 
 ;;; code for tables indexed by relation 
 
+;;;
+;;; _fix_me_
+;;; possibly dead code; see comment further down.              (24-apr-04; oe)
+;;;
+#+:null
 (defun add-semantics-record (id record)
   (setf (gethash id *semantic-table*)
     record)
@@ -378,6 +384,14 @@ we assume that there will generally only be one feature
 ;;; Note that rels are kept in the order they have in the entries
 
 
+;;;
+;;; _fix_me_
+;;; it appears that the following is dead code, ben?  the comment on `nobody
+;;; doing smart things with complex relations', however, should probably move
+;;; to add-semantics-record2(), as it is still a relevant limitation i think.
+;;; consider loosing the dead code and going back to the origina names maybe?
+;;;                                                            (24-apr-04; oe)
+#+:null
 (defun extract-lexical-relations (lex-entry)
   (let* ((fs (tdfs-indef (lex-entry-full-fs lex-entry)))
          (id  (lex-entry-id lex-entry))
@@ -392,10 +406,8 @@ we assume that there will generally only be one feature
                  :id id
                  :relations main-rels)))
           (loop
-              with top = (let ((top (if *rel-name-path*
-                                      *top-pred-type*
-                                      *top-semantics-type*)))
-                           (and (is-valid-type top) top))
+              with top = (when (is-valid-type *top-semantics-type*)
+                           *top-semantics-type*)
               for rel in main-rels
               for pred = (rel-pred rel)
               when (or (null pred)
@@ -430,6 +442,7 @@ we assume that there will generally only be one feature
                        "~%Warning: ~A has no semantics and no filter rule" id))
              (pushnew id *empty-semantics-lexical-entries*)))))
 
+
 ;;; !!!
 (defun extract-lexical-relations2 (lex-entry)
   (let* ((fs (tdfs-indef (lex-entry-full-fs lex-entry)))
@@ -445,10 +458,8 @@ we assume that there will generally only be one feature
                  :id id
                  :relations main-rels)))
           (loop
-              with top = (let ((top (if *rel-name-path*
-                                      *top-pred-type*
-                                      *top-semantics-type*)))
-                           (and (is-valid-type top) top))
+              with top = (when (is-valid-type *top-semantics-type*)
+                           *top-semantics-type*)
               for rel in main-rels
               for pred = (rel-pred rel)
               when (or (null pred)
