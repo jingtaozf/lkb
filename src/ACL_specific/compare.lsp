@@ -29,11 +29,7 @@
 ;;; **********************************************************************
 ;;; Collect differences among a set of parses
 
-(defstruct discr in out toggle)
-
-(defstruct (syn-discr (:include discr)) label yield)
-
-(defstruct (sem-discr (:include discr)) word rel)
+(defstruct discr key value in out toggle type)
 
 (defvar *discrs*)
 
@@ -41,20 +37,19 @@
   (let ((*discrs* nil))
     ;; Collect all constituents
     (dolist (parse parses)
-      (find-syn-discriminants-in-parse parse parse))
+      (find-discriminants-in-parse parse parse))
     ;; Filter out discriminants that are implied by other longer discriminants
     (setq *discrs*
       (delete-if #'(lambda (x) 
 		     (some #'(lambda (y)
 			       (and (equal (discr-in x)
 					   (discr-in y))
-				    (> (length (syn-discr-yield y))
-				       (length (syn-discr-yield x)))))
+				    (eq (discr-type x) :constituent)
+				    (eq (discr-type y) :constituent)
+				    (> (length (discr-value y))
+				       (length (discr-value x)))))
 			   *discrs*))
 		 *discrs*))
-    ;; Collect all word meanings
-    (dolist (parse parses)
-      (find-sem-discriminants-in-parse parse parse))
     ;; Filter out discriminants that don't rule out any parses
     (setq *discrs*
       (delete-if #'(lambda (x) (= (length (discr-in x ))
@@ -65,52 +60,45 @@
       (setf (discr-out x) (set-difference parses (discr-in x))))
     ;; Sort in order of yield, with semantic discriminants at end
     (sort *discrs* #'> :key #'(lambda (n) 
-				(if (syn-discr-p n)
-				    (length (syn-discr-yield n))
+				(if (stringp (discr-value n))
+				    (length (discr-value n))
 				  0)))))
 
-(defun find-sem-discriminants-in-parse (parse top)
-  (if (edge-children parse) 
-      (dolist (child (edge-children parse))
-	(find-sem-discriminants-in-parse child top))
-    (let* ((rel (type-of-fs (existing-dag-at-end-of 
-			     (tdfs-indef (edge-dag parse)) 
-			     '(synsem local cont key))))
-	   (word (car (edge-leaves parse)))
-	   (old (member (list word rel)
-			*discrs*
-			:test #'(lambda (x y)
-				  (equal x
-					 (list (sem-discr-word y)
-					       (sem-discr-rel y)))))))
-      (if old
-	  (pushnew top (discr-in (car old)))
-	(push (make-sem-discr :word word
-			      :rel rel
-			      :in (list top)
-			      :out nil
-			      :toggle :unknown)
-	      *discrs*)))))
+(defun find-discriminants-in-parse (parse top)
+  (let ((label (find-category-abb (edge-dag parse)))
+	(yield (apply #'concatenate 
+		      (append '(string) 
+			      (mapcan #'(lambda (x) 
+					  (list x " ")) 
+				      (edge-leaves parse))))))
+    (add-discriminant label yield :constituent top))
+  (unless (edge-children parse)
+    (let ((word (car (edge-leaves parse)))
+	  (type (type-of-fs (tdfs-indef (edge-dag parse))))
+	  (rel (type-of-fs (existing-dag-at-end-of 
+			    (tdfs-indef (edge-dag parse)) 
+			    '(synsem local cont key)))))
+      (add-discriminant word type :type top)
+      (add-discriminant word rel :rel top)))
+  (dolist (child (edge-children parse))
+    (find-discriminants-in-parse child top)))
 
-(defun find-syn-discriminants-in-parse (parse top)
-  (let* ((label (find-category-abb (edge-dag parse)))
-	 (yield (edge-leaves parse))
-	 (old (member (list label yield)
-		      *discrs*
-		      :test #'(lambda (x y)
-				(equal x
-				       (list (syn-discr-label y)
-					     (syn-discr-yield y)))))))
+(defun add-discriminant (key value type top)
+  (let ((old (member (list key value)
+		     *discrs*
+		     :test #'(lambda (x y)
+			       (equal x
+				      (list (discr-key y)
+					    (discr-value y)))))))
     (if old
 	(pushnew top (discr-in (car old)))
-      (push (make-syn-discr :label label
-			    :yield yield
-			    :in (list top)
-			    :out nil
-			    :toggle :unknown)
-	    *discrs*))
-    (dolist (child (edge-children parse))
-      (find-syn-discriminants-in-parse child top))))
+      (push (make-discr :key key
+			:value value
+			:in (list top)
+			:out nil
+			:type type
+			:toggle :unknown)
+	    *discrs*))))
 
 ;;; **********************************************************************
 ;;; Application frame for comparison window
@@ -125,7 +113,9 @@
    (in :initform nil
        :accessor compare-frame-in-parses)
    (out :initform nil
-	:accessor compare-frame-out-parses))
+	:accessor compare-frame-out-parses)
+   (trees-stream :initform nil
+		:accessor compare-frame-trees-stream))
   (:panes
    (trees  
     (clim:outlining (:thickness 1)
@@ -141,7 +131,8 @@
 			  :end-of-line-action :allow
 			  :end-of-page-action :allow
 			  :borders nil
-			  :incremental-redisplay '(t :check-overlapping nil)
+			  ;; :incremental-redisplay '(t :check-overlapping nil)
+			  :display-time nil
 			  :background clim:+white+
 			  :foreground clim:+black+)))))
    (display  
@@ -158,6 +149,7 @@
 			  :end-of-line-action :allow
 			  :end-of-page-action :allow
 			  :borders nil
+			  :incremental-redisplay t
 			  :background clim:+white+
 			  :foreground clim:+black+))))))
   (:layouts
@@ -170,11 +162,12 @@
 (define-compare-frame-command (com-clear-compare-frame :menu "Clear")
     ()
   (clim:with-application-frame (frame)
-    (setf (compare-frame-in-parses frame) nil)
+    (setf (compare-frame-in-parses frame) (compare-frame-parses frame))
     (setf (compare-frame-out-parses frame) nil)
     (dolist (d (compare-frame-discrs frame))
       (setf (discr-toggle d) :unknown))
-    (recompute-in-and-out frame)))
+    (recompute-in-and-out frame)
+    (update-trees frame)))
 
 (define-compare-frame-command (com-done-compare-frame :menu "Done")
     ()
@@ -195,7 +188,60 @@
   ink)
   
 (defun draw-trees-window (window stream)
-  (let ((done-p nil))
+  (setf (compare-frame-trees-stream window) stream)
+  (dolist (tree (compare-frame-trees window))
+    (setf (ptree-ink tree) clim:+foreground-ink+)
+    (setf (ptree-output-record tree)
+      (clim:with-new-output-record (stream)
+	(clim:with-output-recording-options (stream :record t)
+	  (clim:with-output-as-presentation 
+	      (stream tree 'ptree :single-box t)
+	    (clim:format-graph-from-root
+	     (ptree-top tree)
+	     #'(lambda (node stream)
+		 (multiple-value-bind (s bold-p) 
+		     (get-string-for-edge node)
+		   (clim:with-text-face (stream (if bold-p :bold :roman))
+		     (write-string s stream))))
+	     #'(lambda (node) (get node 'daughters))
+	     :graph-type :parse-tree
+	     :stream stream 
+	     :merge-duplicates nil
+	     :orientation :vertical
+	     :generation-separation 7
+	     :move-cursor t
+	     :within-generation-separation 7
+	     :center-nodes nil)))
+	(terpri stream))))
+  (update-trees window))
+
+(define-compare-frame-command (com-tree-menu)
+    ((tree 'ptree :gesture :select))
+  (let ((command (clim:menu-choose
+		  '(("Select" :value select :active t)
+		    ("Show tree" :value show)))))
+    (when command
+      (handler-case
+	  (ecase command
+	    (select 
+	     (clim:with-application-frame (frame)
+	       (dolist (d (compare-frame-discrs frame))
+		 (setf (discr-toggle d) :unknown))
+	       (setf (compare-frame-in-parses frame) (list (ptree-parse tree)))
+	       (setf (compare-frame-out-parses frame) 
+		 (remove (ptree-parse tree) 
+			 (compare-frame-parses frame) 
+			 :test #'eq))
+	       (update-trees frame)))
+	    (show (draw-new-parse-tree (ptree-top tree)
+				       "Parse tree" nil)))
+	(error (condition) 
+	  (declare (ignore condition) )
+	  nil)))))
+
+(defun update-trees (window)
+  (let ((done-p nil)
+	(stream (compare-frame-trees-stream window)))
     (dolist (tree (compare-frame-trees window))
       (let ((ink (cond ((member (ptree-parse tree) 
 				(compare-frame-out-parses window)
@@ -208,98 +254,50 @@
 		       (t clim:+foreground-ink+))))
 	(when (eq ink clim:+green+)
 	  (setq done-p t))
-	(clim:updating-output (stream :unique-id tree
-				      :cache-value ink)
-	  (clim:with-drawing-options (stream :ink ink)
-	    (clim:with-output-as-presentation 
-		(stream tree 'ptree :single-box t)
-	      (clim:format-graph-from-root
-	       (ptree-top tree)
-	       #'(lambda (node stream)
-		   (multiple-value-bind (s bold-p) 
-		       (get-string-for-edge node)
-		     (clim:with-text-face (stream (if bold-p :bold :roman))
-		       (write-string s stream))))
-	       #'(lambda (node) (get node 'daughters))
-	       :graph-type :parse-tree
-	       :stream stream 
-	       :merge-duplicates nil
-	       :orientation :vertical
-	       :generation-separation 7
-	       :move-cursor t
-	       :within-generation-separation 7
-	       :center-nodes nil)))
-	  (terpri stream))))
+	(unless (eq ink (ptree-ink tree))
+	  (setf (ptree-ink tree) ink)
+	  (recolor-tree (ptree-output-record tree) ink)
+	  (clim:replay (ptree-output-record tree) stream))))
     (setf (clim:command-enabled 'com-done-compare-frame window) done-p)))
 
-
-(define-compare-frame-command (com-tree-menu)
-    ((tree 'ptree :gesture :select))
-  (let ((command (clim:menu-choose
-		  '(("Select" :value select :active nil)
-		    ("Show tree" :value show)))))
-    (when command
-      (handler-case
-	  (ecase command
-	    (select 
-	     (clim:with-application-frame (frame)
-	       (dolist (d (compare-frame-discrs frame))
-		 (setf (discr-toggle d) :unknown))
-	       (setf (compare-frame-in-parses frame) (list (ptree-parse tree)))
-	       (setf (compare-frame-out-parses frame) 
-		 (delete (ptree-parse tree) 
-			 (compare-frame-parses frame) 
-			 :test #'eq))))
-	    (show (draw-new-parse-tree (ptree-top tree)
-				       "Parse tree" nil)))
-	(error (condition) 
-	  (declare (ignore condition) )
-	  nil)))))
-
-(defun update-trees (window stream)
-  (dolist (tree (compare-frame-trees window))
-    (with-slots (output-record ink) tree
-      (let ((new-ink (if (member (ptree-parse tree) 
-				 (compare-frame-out-parses window)
-				 :test #'eq)
-			 clim:+red+
-		       clim:+foreground-ink+)))
-	(unless (eq new-ink ink)
-	  (setf (clim:displayed-output-record-ink output-record) new-ink)
-	  (setf ink new-ink)
-	  (clim:replay output-record stream))))))
-
+(defun recolor-tree (record ink)
+  (labels ((recolor-node (node) 
+	     (when (clim:displayed-output-record-p node)
+	       (setf (clim:displayed-output-record-ink node) ink))
+	     (clim:map-over-output-records #'recolor-node node)))
+    (declare (dynamic-extent recolor-node))
+    (recolor-node record)))
+  
+  
 ;;; **********************************************************************
 ;;; Stuff for constituent pane
 
 (defun draw-compare-window (window stream)
   (let ((discrs (compare-frame-discrs window)))
-    (format stream "~a~%~%" (edge-leaves (car (compare-frame-parses window))))
-    (format stream "~a parse~:p in, ~a parse~:p out~%~%" 
-	    (length (compare-frame-in-parses window))
-	    (length (compare-frame-out-parses window)))
+    (clim:updating-output (stream :cache-value t)
+      (format stream "~a~%~%" 
+	      (edge-leaves (car (compare-frame-parses window)))))
+    (clim:updating-output (stream) 
+      (format stream "~a parse~:p in, ~a parse~:p out~%~%" 
+	      (length (compare-frame-in-parses window))
+	      (length (compare-frame-out-parses window))))
     (clim:formatting-table (stream :x-spacing "XX")
       (dolist (d discrs)
 	(clim:formatting-row (stream)
 	  (clim:with-output-as-presentation
 	      (stream d 'discr)
-	    (clim:formatting-cell (stream :align-x :center)
-	      (write-string (cond ((eq (discr-toggle d) t)
-				   "+")
-				  ((null (discr-toggle d))
-				   "-")
-				  (t "?"))
-			    stream))
+	    (clim:updating-output (stream :cache-value (discr-toggle d))
+	      (clim:formatting-cell (stream :align-x :center)
+		(write-string (cond ((eq (discr-toggle d) t)
+				     "+")
+				    ((null (discr-toggle d))
+				     "-")
+				    (t "?"))
+			      stream)))
 	    (clim:formatting-cell (stream :align-x :left)
-	      (if (syn-discr-p d)
-		  (write-string (syn-discr-label d) stream)
-		(write-string (sem-discr-word d) stream)))
+	      (write-string (discr-key d) stream))
 	    (clim:formatting-cell (stream :align-x :left)
-	      (if (syn-discr-p d)
-		  (format stream "~A" (syn-discr-yield d))
-		(format stream "~A" (sem-discr-rel d))))))))))
-
-
+	      (format stream "~A" (discr-value d)))))))))
 
 (define-compare-frame-command (com-discr-menu)
     ((discr 'discr :gesture :select))
@@ -322,7 +320,8 @@
 	(error (condition) 
 	  (declare (ignore condition) )
 		   nil))
-      (recompute-in-and-out clim:*application-frame*))))
+      (recompute-in-and-out clim:*application-frame*)
+      (update-trees clim:*application-frame*))))
 
 ;; Apply inference rules from Carter (1997) until nothing changes
 
@@ -364,5 +363,5 @@
   (dolist (p parses)
     (pushnew p (compare-frame-out-parses frame) :test #'eq)
     (setf (compare-frame-in-parses frame)
-      (delete p (compare-frame-in-parses frame)))))
+      (remove p (compare-frame-in-parses frame)))))
 
