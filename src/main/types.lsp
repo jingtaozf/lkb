@@ -621,4 +621,5 @@
             for daughter in daughters
             do
               (format stream "    <type name=\"~(~a~)\"/>~%" daughter))
-        (format stream "  </children>~%</type>~%")))
+        (format stream "  </children>~%</type>~%")
+      finally (when file (close stream))))

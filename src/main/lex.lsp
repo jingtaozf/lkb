@@ -723,4 +723,7 @@
          stream
          "<instance name=\"~(~a~)\" type=\"~(~a~)\" ~
            stem=\"~(~{~a~^ ~}~)\" status=\"lexicon\"/>~%"
-         id type stem)))
+         id type stem)
+      finally (when file (close stream))))
+
+

@@ -537,4 +537,5 @@
           (format
            stream
            "<instance name=\"~(~a~)\" type=\"~(~a~)\" status=\"~a\"/>~%"
-           id type (if (inflectional-rule-p id) "irule" "lrule")))))
+           id type (if (inflectional-rule-p id) "irule" "lrule")))
+    (when file (close stream))))
