@@ -248,7 +248,7 @@
 248@CSLI@formal@none@1@S@Him was hired by her.@0@5@@oe@8-sep-1999
 249@CSLI@formal@none@1@S@He was hired by she.@0@5@@oe@8-sep-1999
 250@CSLI@formal@none@1@S@An office was shown to Abrams by Chiang.@1@8@@oe@8-sep-1999
-251@CSLI@formal@none@1@S@A office was shown to Abrams.@1@6@@oe@8-sep-1999
+251@CSLI@formal@none@1@S@An office was shown to Abrams.@1@6@@oe@8-sep-1999
 252@CSLI@formal@none@1@S@An office was shown by Abrams to Chiang.@0@8@@oe@8-sep-1999
 253@CSLI@formal@none@1@S@Chiang was shown an office by Abrams.@1@7@@oe@8-sep-1999
 254@CSLI@formal@none@1@S@An office was shown Chiang by Abrams.@0@7@@oe@8-sep-1999
@@ -894,8 +894,8 @@
 894@CSLI@formal@none@1@S@All but seven programmers were hired.@1@6@@oe@8-sep-1999
 895@CSLI@formal@none@1@S@Fewer than half the programmers were hired.@1@7@@oe@8-sep-1999
 896@CSLI@formal@none@1@S@Fewer than half of the programmers were hired.@1@8@@oe@8-sep-1999
-897@CSLI@formal@none@1@S@An number of programmers were interviewed.@1@6@@oe@8-sep-1999
-898@CSLI@formal@none@1@S@An number of programmers was interviewed.@1@6@@oe@8-sep-1999
+897@CSLI@formal@none@1@S@A number of programmers were interviewed.@1@6@@oe@8-sep-1999
+898@CSLI@formal@none@1@S@A number of programmers was interviewed.@1@6@@oe@8-sep-1999
 899@CSLI@formal@none@1@S@More managers than programmers were interviewed.@1@6@@oe@8-sep-1999
 900@CSLI@formal@none@1@S@More managers were interviewed.@1@4@@oe@8-sep-1999
 901@CSLI@formal@none@1@S@Fewer managers than programmers were interviewed.@1@6@@oe@8-sep-1999
@@ -934,7 +934,7 @@
 934@CSLI@formal@none@1@S@Do anyone not be trustworthy!@0@5@@oe@8-sep-1999
 935@CSLI@formal@none@1@S@It is hard to work.@1@5@@oe@8-sep-1999
 936@CSLI@formal@none@1@S@It is hard for programmers to work.@1@7@@oe@8-sep-1999
-937@CSLI@formal@none@1@S@It is hard interview programmers.@1@5@@oe@8-sep-1999
+937@CSLI@formal@none@1@S@It is hard to interview programmers.@1@6@@oe@8-sep-1999
 938@CSLI@formal@none@1@S@It is hard for managers to interview programmers.@1@8@@oe@8-sep-1999
 939@CSLI@formal@none@1@S@It is hard for managers for engineers to interview programmers.@1@10@@oe@8-sep-1999
 940@CSLI@formal@none@1@S@Programmers are hard to interview.@1@5@@oe@8-sep-1999
@@ -956,8 +956,8 @@
 956@CSLI@formal@none@1@S@Programmers are a bitch to interview.@1@6@@oe@8-sep-1999
 957@CSLI@formal@none@1@S@It is a bitch for managers to interview programmers.@1@9@@oe@8-sep-1999
 958@CSLI@formal@none@1@S@It is a bitch to interview programmers.@1@7@@oe@8-sep-1999
-959@CSLI@formal@none@1@S@The bookcase is heavy for the engineers to move.@1@9@@oe@8-sep-1999
-960@CSLI@formal@none@1@S@The bookcase is heavy to move.@1@6@@oe@8-sep-1999
+959@CSLI@formal@none@1@S@The bookcase is heavy for the engineers to move.@0@9@@oe@8-sep-1999
+960@CSLI@formal@none@1@S@The bookcase is heavy to move.@0@6@@oe@8-sep-1999
 961@CSLI@formal@none@1@S@It is heavy for the engineers to move the bookcase.@0@10@@oe@8-sep-1999
 962@CSLI@formal@none@1@S@It is heavy to move the bookcase.@0@7@@oe@8-sep-1999
 963@CSLI@formal@none@1@S@Chiang is too old for the manager to hire.@1@9@@oe@8-sep-1999
@@ -1312,14 +1312,14 @@
 1312@CSLI@formal@none@1@S@Kim wonders when to sleep.@1@5@@oe@8-sep-1999
 1313@CSLI@formal@none@1@S@Kim wonders when Sandy to sleep.@0@6@@oe@8-sep-1999
 1314@CSLI@formal@none@1@S@Kim wonders when for Sandy to sleep.@0@7@@oe@8-sep-1999
-1315@CSLI@formal@none@1@S@Kim wonders what to think Sandy likes.@1@7@@oe@8-sep-1999
-1316@CSLI@formal@none@1@S@Kim wonders by whom to think Sandy was hired.@1@9@@oe@8-sep-1999
+1315@CSLI@formal@none@1@S@Kim wondered what to think Sandy likes.@1@7@@oe@8-sep-1999
+1316@CSLI@formal@none@1@S@Kim wondered by whom to think Sandy was hired.@1@9@@oe@8-sep-1999
 1317@CSLI@formal@none@1@S@Kim wonders who to think Sandy was hired by.@1@9@@oe@8-sep-1999
 1318@CSLI@formal@none@1@S@Kim wonders by whom Pat to think Sandy was hired.@0@10@@oe@8-sep-1999
 1319@CSLI@formal@none@1@S@Kim wonders Pat by whom to think Sandy was hired.@0@10@@oe@8-sep-1999
 1320@CSLI@formal@none@1@S@Kim wonders who Pat to think Sandy was hired by.@0@10@@oe@8-sep-1999
 1321@CSLI@formal@none@1@S@Kim wonders Pat who to think Sandy was hired by.@0@10@@oe@8-sep-1999
-1322@CSLI@formal@none@1@S@Kim wonders by whom to think Sandy hired.@0@8@@oe@8-sep-1999
+1322@CSLI@formal@none@1@S@Kim wondered by whom to think Sandy hired.@0@8@@oe@8-sep-1999
 1323@CSLI@formal@none@1@S@Kim wonders if Sandy slept.@1@5@@oe@8-sep-1999
 1324@CSLI@formal@none@1@S@Kim wonders if Sandy sleeps.@1@5@@oe@8-sep-1999
 1325@CSLI@formal@none@1@S@Kim wonders if Sandy sleep.@0@5@@oe@8-sep-1999
@@ -1333,7 +1333,7 @@
 1333@CSLI@formal@none@1@S@The person to talk to is Sandy.@1@7@@oe@8-sep-1999
 1334@CSLI@formal@none@1@S@Kim the person to talk to is Sandy.@0@8@@oe@8-sep-1999
 1335@CSLI@formal@none@1@S@Which person the person to talk to is Sandy.@0@9@@oe@8-sep-1999
-1336@CSLI@formal@none@1@S@Sandy found a person to talk to.@1@7@@oe@8-sep-1999
+1336@CSLI@formal@none@1@S@Sandy finds a person to talk to.@1@7@@oe@8-sep-1999
 1337@CSLI@formal@none@1@S@Sandy found a person to sleep.@1@6@@oe@8-sep-1999
 1338@CSLI@formal@none@1@S@Sandy found a person to slept.@0@6@@oe@8-sep-1999
 1339@CSLI@formal@none@1@S@The person to slept is Kim.@0@6@@oe@8-sep-1999
