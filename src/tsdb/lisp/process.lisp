@@ -57,7 +57,8 @@
          (imeter (when meter (madjust * meter 0.02)))
          (pmeter (when meter
                    (madjust + (madjust * meter 0.98) (mduration imeter))))
-         items abort)
+         items abort %accumlated-rule-statistics%)
+    (declare (special %accumlated-rule-statistics%))
 
     (when meter
       (meter :value (get-field :start imeter))
@@ -643,13 +644,15 @@
           (if (eq (first content) :return)
             (case (second content)
               (:process-item
-               (let* ((result (third content)))
+               (let* ((run-id (get-field+ :run-id run))
+                      (result (nconc (pairlis '(:host :run-id)
+                                              (list host run-id))
+                                     (third content))))
+                      
                  (setf (client-status client) :ready)
                  (return-from process-queue
-                   (pairlis '(:pending :ready 
-                              :item :result)
-                            (list pending run 
-                                  item (acons :host host result))))))
+                   (pairlis '(:pending :ready :item :result)
+                            (list pending run item result)))))
               (:create-run
                (let ((ready (third content)))
                  (when (consp ready)
@@ -789,12 +792,14 @@
        parse-id 
        (get-field :results result) data
        :cache cache)
-      (when statistics
-        (write-rules
-         parse-id
-         statistics
-         data
-         :cache cache)))))
+      (when (and *tsdb-rule-statistics-p* statistics)
+        (if (eq *tsdb-rule-statistics-p* :raw)
+          (write-rules
+           parse-id
+           statistics
+           data
+           :cache cache)
+          (accumulate-rules statistics))))))
 
 (defun pre-process (&key burstp)
   (declare (ignore burstp)))
@@ -810,6 +815,7 @@
     (room) (excl:gc) (room)))
 
 (defun complete-runs (data runs &key cache interactive stream interrupt)
+  (declare (special %accumlated-rule-statistics%))
   (loop
       for run in runs
       for completion = (unless (get-field :end run)
@@ -822,7 +828,9 @@
                              (if (eq status :ready) :complete status)))
               completion)
         (unless interactive 
-          (write-run (append completion run) data :cache cache))))
+          (write-run (append completion run) data :cache cache)))
+  (when (and (null interactive) %accumlated-rule-statistics%)
+    (write-rules -1 %accumlated-rule-statistics% data :cache cache)))
 
 (defun complete-run (run &optional stream interrupt)
   (when (get-field :run-id run)
@@ -917,3 +925,36 @@
 (defun run-tid (run)
   (let ((client (get-field :client run)))
     (and client (client-tid client))))
+
+(defun accumulate-rules (statistics)
+  (declare (special %accumlated-rule-statistics%))
+  (if %accumlated-rule-statistics%
+    (loop
+        for rule in statistics
+        for name = (get-field+ :rule rule "")
+        for filtered = (get-field :filtered rule)
+        for executed = (get-field :executed rule)
+        for successful = (get-field :successful rule)
+        for actives = (get-field :actives rule)
+        for passives = (get-field :passives rule)
+        for arule = (loop
+                        for arule in %accumlated-rule-statistics%
+                        for aname = (get-field+ :rule arule "")
+                        thereis (when (equal name aname) arule))
+        for afiltered = (get-field :filtered arule)
+        for aexecuted = (get-field :executed arule)
+        for asuccessful = (get-field :successful arule)
+        for aactives = (get-field :actives arule)
+        for apassives = (get-field :passives arule)
+        do
+          (when (and filtered afiltered) 
+            (incf (get-field :filtered arule) filtered))
+          (when (and executed aexecuted)
+            (incf (get-field :executed arule) executed))
+          (when (and successful asuccessful)
+            (incf (get-field :successful arule) successful))
+          (when (and actives aactives)
+            (incf (get-field :actives arule) actives))
+          (when (and passives apassives)
+            (incf (get-field :passives arule) passives)))
+    (setf %accumlated-rule-statistics% statistics)))

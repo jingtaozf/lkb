@@ -77,7 +77,13 @@
    ((symbolp gold)
     (cond 
      ((symbolp blue) (eq gold blue))
+     ((integerp blue) (string-equal (symbol-name gold) (format nil "~d" blue)))
      ((stringp blue) (string-equal (symbol-name gold) blue))))
+   ((integerp gold)
+    (cond 
+     ((symbolp blue) (eq (intern (format nil "~d" gold) :tsdb) blue))
+     ((integerp blue) (= gold blue))
+     ((stringp blue) (string-equal (format nil "~d" gold) blue))))
    ((or (null (derivation-daughters gold)) (null (derivation-daughters blue)))
     (if *derivations-ignore-leafs-p*
       t
@@ -238,6 +244,9 @@
 ;;;
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
 	   #-:ansi-eval-when (load eval compile)
-  (setf (gethash :derivation *statistics-readers*) #'read-from-string)
+  (setf (gethash :derivation *statistics-readers*)
+    #'(lambda (string)
+        (let ((*package* (find-package :tsdb)))
+          (read-from-string string))))
   (setf (gethash :derivation *statistics-predicates*)
     #'(lambda (gold blue) (not (derivation-equal gold blue)))))

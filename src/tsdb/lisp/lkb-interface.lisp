@@ -10,8 +10,14 @@
 ;;; has been made public ... sigh.                         (22-aug-99  -  oe)
 ;;;
 
+#+:LKB-V5.3
+(in-package :lkb)
+#-:LKB-V5.3
 (in-package :cl-user)
 
+(defparameter *lkb-package* 
+  (or (find-package :lkb) (find-package :common-lisp-user)))
+  
 ;;;
 ;;; another instance of versioning kludges: yadu!() only comes in with the new
 ;;; active parser in the current development version       (26-aug-99  -  oe)
@@ -21,7 +27,7 @@
 
 
 (defun get-test-run-information ()
-  (let* ((*package* (find-package :common-lisp-user))
+  (let* ((*package* *lkb-package*)
          (exhaustivep (null *first-only-p*))
          (active-parsing-p (and (find-symbol "*ACTIVE-PARSING-P*")
                                 (boundp (find-symbol "*ACTIVE-PARSING-P*"))
@@ -81,7 +87,7 @@
   ;;
   (declare (ignore load))
   (ignore-errors
-   (let* ((*package* (find-package "COMMON-LISP-USER"))
+   (let* ((*package* *lkb-package*)
           (str (make-string-output-stream)) ; capture any warning messages
           (*standard-output* (if trace
                                  (make-broadcast-stream *standard-output* str)
@@ -95,7 +101,7 @@
    ;; returns whatever it likes; the return value will be given to
    ;; finalize-test-run() to restore the interactive environment if
    ;; necessary
-  (let ((*package* (find-package "COMMON-LISP-USER"))
+  (let ((*package* *lkb-package*)
         (first-only-p *first-only-p*))
     (clear-type-cache)
     (setf *first-only-p* (unless exhaustive 
@@ -106,7 +112,7 @@
 (defun finalize-test-run (environment)
   ;; called after completion of test run
   (let ((lexicon 0)
-        (*package* (find-package "COMMON-LISP-USER")))
+        (*package* *lkb-package*))
     (loop 
         for id in (collect-expanded-lex-ids *lexicon*)
         do 
@@ -122,10 +128,6 @@
     (pairlis '(:lexicon) (list lexicon))))
 
 
-(defmacro with-package ((package) &body body)
-  `(let ((*package* (find-package ,package)))
-     ,@body))
-
 ;;; sets the processor into exhaustive mode if requested; parses
 ;;; .string. without producing any printout (unless .trace. is set);
 ;;; funcall()s .semantix-hook. and .trees-hook. to obtain MRS and tree
@@ -139,7 +141,7 @@
   
   (multiple-value-bind (return condition)
       (ignore-errors
-       (let* ((*package* (find-package "COMMON-LISP-USER"))
+       (let* ((*package* *lkb-package*)
               (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                            *maximum-number-of-edges*
                                            edges))
@@ -297,16 +299,16 @@
                  ,(append
                    (unless #+:packing packingp #-:packing nil
                      (loop
+                         with *package* = *lkb-package*
                          for i from 0
                          for parse in (reverse *parse-record*)
                          for time = (if (integerp (first times))
                                       (round (* (- (pop times) start) 1000)
                                              internal-time-units-per-second )
                                       total)
-                         for derivation = (with-package (:common-lisp-user)
-                                            (write-to-string
-                                             (compute-derivation-tree parse)
-                                             :escape t :case :downcase))
+                         for derivation = (write-to-string
+                                           (compute-derivation-tree parse)
+                                           :escape t :case :downcase)
                          for r-redges = (length 
                                          (parse-tsdb-distinct-edges parse nil))
                          for size = (parse-tsdb-count-nodes parse)
@@ -327,9 +329,8 @@
                      (loop
                          for i from (length *parse-record*)
                          for derivation in (rest (assoc :derivations summary))
-                         for string = (with-package (:common-lisp-user)
-                                        (write-to-string derivation
-                                         :escape t :case :downcase))
+                         for string = (write-to-string derivation
+                                       :escape t :case :downcase)
                          collect (pairlis '(:result-id :derivation)
                                           (list i string))))))))))))
     (unless trace (release-temporary-storage))
@@ -356,7 +357,7 @@
               (symbol (edge-rule edge))
               (rule (rule-id (edge-rule edge)))
               (t :unknown))
-            :common-lisp-user)))
+            *lkb-package*)))
     (let* ((configuration (and (null (edge-children edge))
                                (find-chart-configuration :edge edge)))
            (start (and configuration 
@@ -464,13 +465,11 @@
                 (incf i-stasks)
                 (incf words)
                 (when (edge-morph-history edge)
-                  (loop
-                      for child in (edge-morph-history edge)
-                      for tdfs = (edge-dag child)
-                      for dag = (and tdfs (tdfs-indef tdfs))
-                      when (and dag (dag-inflected-p dag))
-                      do
-                        (incf words))))
+                  (let* ((child (edge-morph-history edge))
+                         (tdfs (edge-dag child))
+                         (dag (and tdfs (tdfs-indef tdfs))))
+                    (when (and dag (dag-inflected-p dag))
+                      (incf words)))))
                ((rule-p rule)
                 (incf pedges)
                 (when (lexical-rule-p rule) (incf l-stasks)))
@@ -523,7 +522,7 @@
 
 
 (defun size-of-lexicon ()
-  (let ((*package* (find-package :common-lisp-user)))
+  (let ((*package* *lkb-package*))
     (cond
      ((and (find-symbol "*PSORTS*") (boundp (find-symbol "*PSORTS*")))
       (hash-table-count (symbol-value (find-symbol "*PSORTS*"))))
@@ -564,10 +563,10 @@
       for edge in *morph-records* do
         (compress-dag (tdfs-indef (edge-dag edge))))
   (clear-chart)
-  (when (and (fboundp (find-symbol "CLEAR-ACHART" :common-lisp-user))
-             (let ((foo(find-symbol "*ACTIVE-PARSING-P*" :common-lisp-user)))
+  (when (and (fboundp (find-symbol "CLEAR-ACHART" *lkb-package*))
+             (let ((foo (find-symbol "*ACTIVE-PARSING-P*" *lkb-package*)))
                (and foo (symbol-value foo))))
-    (funcall (fboundp (find-symbol "CLEAR-ACHART" :common-lisp-user)))) 
+    (funcall (fboundp (find-symbol "CLEAR-ACHART" *lkb-package*)))) 
   (setf *cached-category-abbs* nil)
   (setf *parse-times* nil)
   (loop
@@ -582,15 +581,16 @@
       for rule in (get-matching-rules nil nil)
       for dag = (tdfs-indef (rule-full-fs rule)) do
         (compress-dag dag))
-  (if (listp *start-symbol*)
-    (loop
-        for root in *start-symbol* 
-        for tdfs = (get-tdfs-given-id root)
-        for dag = (and tdfs (tdfs-indef tdfs))
-        when (dag-p dag) do (compress-dag dag))
-    (let* ((tdfs (get-tdfs-given-id *start-symbol*))
-           (dag (and tdfs (tdfs-indef tdfs))))
-      (when (dag-p dag) (compress-dag dag)))))
+  (ignore-errors
+    (if (listp *start-symbol*)
+      (loop
+          for root in *start-symbol* 
+          for tdfs = (get-tdfs-given-id root)
+          for dag = (and tdfs (tdfs-indef tdfs))
+          when (dag-p dag) do (compress-dag dag))
+      (let* ((tdfs (get-tdfs-given-id *start-symbol*))
+             (dag (and tdfs (tdfs-indef tdfs))))
+        (when (dag-p dag) (compress-dag dag))))))
                   
 ;;;
 ;;; interface functions for reconstruction of derivations (in UDF --- unified
@@ -607,11 +607,11 @@
   nil)
 
 (defun find-lexical-entry (form instance)
-  (let* ((*package* (find-package "COMMON-LISP-USER"))
+  (let* ((*package* *lkb-package*)
          (name (intern (if (stringp instance)
                          (string-upcase instance)
                          instance)
-                       :common-lisp-user))
+                       *lkb-package*))
          (instance (ignore-errors (get-psort-entry name))))
     (when instance 
       (let ((tdfs (copy-tdfs-completely (lex-or-psort-full-fs instance)))
@@ -621,9 +621,9 @@
                    :dag tdfs)))))
 
 (defun find-affix (type)
-  (let* ((*package* (find-package "COMMON-LISP-USER"))
+  (let* ((*package* *lkb-package*)
          (name (string-upcase (string type)))
-         (name (intern name :common-lisp-user))
+         (name (intern name *lkb-package*))
          (rule (find-rule name)))
     (when (rule-p rule) rule)))
 
@@ -631,7 +631,7 @@
   (let* ((name (intern (if (stringp instance)
                            (string-upcase instance)
                          instance)
-                       :common-lisp-user))
+                       *lkb-package*))
          (rule (or (get-lex-rule-entry name)
                    (get-grammar-rule-entry name))))
     rule))

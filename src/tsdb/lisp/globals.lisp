@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.7 (24-may-00)")
+(defparameter *tsdb-version* "1.7 (6-jun-00)")
 
 (defparameter
   *tsdb-application*
@@ -61,7 +61,7 @@
 
 (defparameter *tsdb-write-output-p* nil)
 
-(defparameter *tsdb-rule-statistics-p* #+:page nil #-:page nil)
+(defparameter *tsdb-rule-statistics-p* nil)
 
 (defparameter *tsdb-verbose-processing-p* t)
 
