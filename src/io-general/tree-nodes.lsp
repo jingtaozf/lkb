@@ -11,6 +11,9 @@
       (for edge in *gen-record*
          do
          (display-parse-tree edge nil))
+      (format t "~%No strings generated")))
+
+#|     
       (let ((possible-edge-name
                (ask-for-lisp-movable "Current Interaction" 
                   `(("No generation results - specify an edge number" . ,*edge-id*)) 60)))
@@ -19,6 +22,7 @@
                    (edge-record (find-gen-edge-given-id edge-id)))
                (when edge-record 
                   (display-parse-tree edge-record nil)))))))
+|#
             
 (defun show-gen-edge nil
    (let ((possible-edge-name

@@ -334,17 +334,19 @@
       (when possible-edge-name
          (setf *last-generate-from-edge* (car possible-edge-name))
          (let ((parser-edge (find-edge-given-id (car possible-edge-name))))
-            (when parser-edge
+            (if parser-edge
                (let* ((input-sem
                        (car (mrs::extract-mrs (list parser-edge) t))))
    ;; t indicates that this is being run from the generator and that
    ;; the appropriate globals should be set
                   (if (mrs::psoa-liszt input-sem)
-                     (when
+                     (progn
                         (generate-from-mrs input-sem)
                         (show-gen-result))
                      (format t "~%Could not extract any MRS relations from edge ~A"
-                        (car possible-edge-name)))))))))
+                        (car possible-edge-name))))
+               (format t "~%No parser edge ~A"
+                        (car possible-edge-name)))))))
 
 
 #|
