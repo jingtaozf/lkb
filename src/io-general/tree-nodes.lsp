@@ -60,9 +60,12 @@
 
 ;;; parse output functions which are not dialect specific
 
+(defvar *cached-category-abbs* nil)
+
 (defun show-parse nil
   (if *parse-record*
      (progn
+         (setf *cached-category-abbs* nil)
        #+(and :allegro :clim)(show-parse-tree-frame *parse-record*)
        #-(and :allegro :clim) 
          (for edge in *parse-record*
@@ -125,7 +128,6 @@
          (format nil "~A~A" (if morph-p 'medge 'edge) edge-id))))
 
 
-
 (defun find-category-abb (fs)
   ;;; Two versions of this - one as in the original LKB and another 
   ;;; which is for page emulation.
@@ -147,13 +149,17 @@
   ;;;     This gives nodes like S/NP
 
   ;;; Longer term, rules should be indexed by these categories.
-  (if (eql *lkb-system-version* :page)
-    (calculate-tdl-label fs)
-    (dolist (tmpl *category-display-templates*)
-      (let* ((tmpl-entry (get-psort-entry tmpl))
-              (tmpl-fs (if tmpl-entry (tdfs-indef (lex-or-psort-full-fs tmpl-entry)))))
-          (when (and tmpl-fs (dag-subsumes-p tmpl-fs (tdfs-indef fs)))
-            (return tmpl))))))
+   (or (cdr (assoc fs *cached-category-abbs*))
+       (let ((abb
+              (if (eql *lkb-system-version* :page)
+                 (calculate-tdl-label fs)
+                 (dolist (tmpl *category-display-templates*)
+                    (let* ((tmpl-entry (get-psort-entry tmpl))
+                           (tmpl-fs (if tmpl-entry (tdfs-indef (lex-or-psort-full-fs tmpl-entry)))))
+                       (when (and tmpl-fs (dag-subsumes-p tmpl-fs (tdfs-indef fs)))
+                          (return tmpl)))))))
+          (push (cons fs abb) *cached-category-abbs*)
+          abb)))
         
 
 ;;; code after this point is for the PAGE simulation version
@@ -204,7 +210,7 @@
 
 (defun label-template-fs-p (fs)
   (let ((type (type-of-fs fs)))
-    (eql (if (listp type) (car type) type) 
+    (subtype-or-equal (if (listp type) (car type) type) 
          *label-template-type*)))
 
 ; extracting label string
