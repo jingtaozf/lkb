@@ -229,8 +229,7 @@
       for char = (code-char
                   (if asciip
                     (read-byte stream)
-                    (code-char (+ (ash (read-byte stream) 8) 
-                                  (read-byte stream)))))
+                    (+ (ash (read-byte stream) 8) (read-byte stream))))
       do
         (setf (char string i) char)
       finally (return string)))
