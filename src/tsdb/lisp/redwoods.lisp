@@ -671,19 +671,19 @@
 
 (defun reconstruct-discriminant (istate type key value start end)
   (let* ((type (cond 
-                ((eq type 1) :relation)
-                ((eq type 2) :type)
-                ((eq type 3) :constituent)
-                ((eq type 4) :select)
-                ((eq type 5) :reject)
+                ((eql type 1) :relation)
+                ((eql type 2) :type)
+                ((eql type 3) :constituent)
+                ((eql type 4) :select)
+                ((eql type 5) :reject)
                 (t nil)))
          (toggle :unknown)
          (state :unknown))
     (cond
-     ((eq istate 1) (setf toggle t) (setf state t))
-     ((eq istate 2) (setf toggle nil) (setf state nil))
-     ((eq istate 3) (setf state t))
-     ((eq istate 4) (setf state nil)))
+     ((eql istate 1) (setf toggle t) (setf state t))
+     ((eql istate 2) (setf toggle nil) (setf state nil))
+     ((eql istate 3) (setf state t))
+     ((eql istate 4) (setf state nil)))
     (lkb::make-discriminant :type (intern type :keyword) 
                             :key key :value value 
                             :start start :end end
