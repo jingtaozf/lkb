@@ -21,6 +21,75 @@
 #include "tsdb.h"
 #include "errors.h"
 
+BOOL tsdb_verify_selection(Tsdb_selection *selection) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_verify_selection()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* tsdb_verify_selection() makes an attempt to check the integitry of
+|* .selection.
+\*****************************************************************************/
+
+#ifdef DEBUG
+  Tsdb_relation *foo;
+  Tsdb_key_list *next;
+  int i, j, k;
+
+  if(selection != NULL) {
+    fprintf(tsdb_debug_stream,
+            "verify_selection(): %s", selection->relations[0]->name);
+    for(i = 1; i < selection->n_relations; i++) {
+      fprintf(tsdb_debug_stream, ":%s", selection->relations[i]->name);
+    } /* for */
+    fprintf(tsdb_debug_stream, " (%d).\n", selection->length);
+    fflush(tsdb_debug_stream);
+
+    /* verify that all key lists have equal length */
+    for(i = 0; i < selection->n_key_lists; i++) {
+      if(selection->key_lists[i] != NULL) {
+        for(next = selection->key_lists[i], j = 0;
+            next != NULL;
+            next = next->next, j++);
+        if(j != selection->length) {
+          fprintf(tsdb_debug_stream,
+                  "verify_selection(): key list # %d has invalid length %d.\n",
+                  i, j);
+          fflush(tsdb_debug_stream);
+          return(FALSE);
+        } /* if */
+      } /* if */
+      else {
+        fprintf(tsdb_debug_stream,
+                "verify_selection(): key list # %d is empty.\n", i);
+        fflush(tsdb_debug_stream);
+        return(FALSE);
+      } /* else */
+    } /* for */
+
+    /* verify total number of key lists vs. the individual relations */
+    for(i = 0, j = 0;
+        i < selection->n_relations;
+        j += selection->relations[i]->n_keys, i++);
+    if(j != selection->n_key_lists) {
+      fprintf(tsdb_debug_stream,
+              "verify_selection(): invalid number of key lists.\n");
+      fflush(tsdb_debug_stream);
+      return(FALSE);
+    } /* if */
+  } /* if */
+  else {
+    fprintf(tsdb_debug_stream, "verify_selection(): empty selection.\n");
+    fflush(tsdb_debug_stream);
+  } /* else */
+#endif
+  return(TRUE);
+} /* tsdb_verify_selection() */
+
 void tsdb_debug_join_path(Tsdb_value **source_attribute_list,
                           Tsdb_value **target_attribute_list) {
 
@@ -113,6 +182,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
   Tsdb_relation **relations_1, **relations_2;
   Tsdb_selection **selections_1, **selections_2;
   Tsdb_selection *selection_1, *selection_2, *result;
+  FILE *output;
   int i;
 
   for(i = 0; attribute_list_1[i] != NULL; i++);
@@ -221,7 +291,12 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
   } /* else */
 
   if((result = tsdb_simple_join(selection_1, selection_2)) != NULL) {
-    tsdb_print_selection(result);
+    (void)tsdb_verify_selection(result);
+    if((output = tsdb_open_result()) != NULL) {
+      tsdb_print_selection(result, output);
+    } /* if */
+    else {
+      tsdb_print_selection(result, TSDB_DEFAULT_STREAM);
+    } /* else */
   } /* if */
 } /* tsdb_debug_simple_join() */
-

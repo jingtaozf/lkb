@@ -1,3 +1,14 @@
+/*****************************************************************************\
+|*        file: tsdb_engine.c
+|*      module: 
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
 #include <signal.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -323,6 +334,14 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
   int index_1, index_2, key_1, key_2, offset_1, offset_2;
   int  i, j, k, l;
   BOOL kaerb = FALSE;
+#if defined(DEBUG) && defined(JOIN)
+  float time;
+  int m;
+#endif
+
+#if defined(DEBUG) && defined(JOIN)
+  time = tsdb_timer(TSDB_START_TIMER);
+#endif
 
   for(offset_1 = 0, i = 0; !kaerb && i < selection_1->n_relations; i++) {
     for(offset_2 = 0, j = 0; !kaerb && j < selection_2->n_relations; j++) {
@@ -348,6 +367,30 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
       offset_1 += k;
     } /* if */
   } /* for */
+
+#if defined(DEBUG) && defined(JOIN)
+    fprintf(tsdb_debug_stream,
+            "simple_join(): %s", selection_1->relations[0]->name);
+    for(m = 1; m < selection_1->n_relations; m++) {
+      fprintf(tsdb_debug_stream, ":%s", selection_1->relations[m]->name);
+    } /* for */
+    fprintf(tsdb_debug_stream,
+            " (%d) # %s", selection_1->length, selection_2->relations[0]->name);
+    for(m = 1; m < selection_2->n_relations; m++) {
+      fprintf(tsdb_debug_stream, ":%s", selection_2->relations[m]->name);
+    } /* for */
+  if(kaerb) {
+    fprintf(tsdb_debug_stream,
+            " (%d) [%s].\n",
+            selection_2->length,
+            selection_1->relations[index_1]->fields[key_1]);
+  } /* if */
+  else {
+    fprintf(tsdb_debug_stream,
+            " (%d) have no join key.\n", selection_2->length);
+  } /* else */
+  fflush(tsdb_debug_stream);
+#endif
 
   if(kaerb) {
     result = (Tsdb_selection *)malloc(sizeof(Tsdb_selection));
@@ -433,6 +476,14 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
         next_2 = foo;
       } /* if */
     } /* while */
+#if defined(DEBUG) && defined(JOIN)
+    if((time = tsdb_timer(time)) != (float)-1) {
+      fprintf(tsdb_debug_stream,
+              "simple_join(): assembled %d tuples in %.1f seconds.\n",
+              result->length, time);
+      fflush(tsdb_debug_stream);
+    } /* if */
+#endif    
     return(result);
   } /* if */
   else {

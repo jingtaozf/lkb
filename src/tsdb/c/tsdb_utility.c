@@ -16,6 +16,8 @@
 #include <pwd.h>
 #include <string.h>
 #include <malloc.h>
+#include <unistd.h>
+#include <dirent.h>
 #include <sys/timeb.h>
 
 #include "globals.h"
@@ -1178,7 +1180,7 @@ BOOL tsdb_initialize() {
 |* popen(3) to me (30-jun-95 -- oe).
 \*****************************************************************************/
 
-  char *name;
+  char *name, *foo;
   FILE* f;
 #ifdef DEBUG
   int i;
@@ -1186,32 +1188,27 @@ BOOL tsdb_initialize() {
 
 #ifdef DBMALLOC
   union dbmalloptarg m;
+  m.str = "malloc_tsdb";
+  mallopt(MALLOC_ERRFILE,m);
 #endif
 
 #ifdef SYSV
   struct sigaction tsdb_sig = { SIG_IGN, (sigset_t)0, 0 };
   sigaction(SIGPIPE, &tsdb_sig);
-#endif
-
-#ifndef SYSV
+#else
   signal(SIGPIPE, SIG_IGN);
-#endif
-
-#ifdef DBMALLOC
-  m.str = "malloc_tsdb";
-  mallopt(MALLOC_ERRFILE,m);
 #endif
 
   if((tsdb_debug_stream = tsdb_open_debug()) == NULL) {
     tsdb_debug_stream = TSDB_ERROR_STREAM;
   } /* if */
+
   if((name = getenv("TSDB_HOME")) != NULL || 
      (name = tsdb_pseudo_user()) != NULL) {
-    
     tsdb_home = strdup(name);
-    if(tsdb_home[strlen(tsdb_home) - 1] != '/') {
+    if(tsdb_home[strlen(tsdb_home) - 1] != TSDB_DIRECTORY_DELIMITER[0]) {
       tsdb_home = (char *)realloc(tsdb_home, strlen(tsdb_home) + 2);
-      tsdb_home = strcat(tsdb_home, "/");
+      tsdb_home = strcat(tsdb_home, TSDB_DIRECTORY_DELIMITER);
     } /* if */
     tsdb_relations_file =
       (char *)malloc(strlen(tsdb_home) + 
@@ -1230,16 +1227,18 @@ BOOL tsdb_initialize() {
   } /* else */
   
   if((name = getenv("TSDB_RELATIONS_FILE")) != NULL) {
-    if(name[0] == '/') { /* absolute path */
+    if(name[0] == TSDB_DIRECTORY_DELIMITER[0]) {
       tsdb_relations_file = strdup(name);
-      if(tsdb_relations_file[strlen(tsdb_relations_file) - 1] != '/') {
+      if(tsdb_relations_file[strlen(tsdb_relations_file) - 1]
+         != TSDB_DIRECTORY_DELIMITER[0]) {
         tsdb_relations_file = 
           (char *)realloc(tsdb_relations_file, 
                           strlen(tsdb_relations_file) + 2);
-        tsdb_relations_file = strcat(tsdb_relations_file, "/");
+        tsdb_relations_file
+          = strcat(tsdb_relations_file, TSDB_DIRECTORY_DELIMITER);
       } /* if */
     } /* if */
-    else { /* relative path */
+    else {
       tsdb_relations_file = strdup(name);
       tsdb_relations_file = strdup(tsdb_home);
       tsdb_relations_file = (char *)realloc(tsdb_relations_file, 
@@ -1248,20 +1247,22 @@ BOOL tsdb_initialize() {
       tsdb_relations_file = strcat(tsdb_relations_file, name);
     } /* else */
   } /* if */
-  else { /* use default relations_file */
+  else {
     tsdb_relations_file = strdup(tsdb_home);
     tsdb_relations_file = (char *)realloc(tsdb_relations_file, 
                                           strlen(tsdb_relations_file) + 
                                           strlen(TSDB_RELATIONS_FILE) + 1);
     tsdb_relations_file = strcat(tsdb_relations_file, TSDB_RELATIONS_FILE);
   } /* else */
+
   if((name = getenv("TSDB_DATA_PATH")) != NULL) {
-    if(name[0] == '/') { /* absolute path */
+    if(name[0] == TSDB_DIRECTORY_DELIMITER[0]) {
       tsdb_data_path = strdup(name);
-      if(tsdb_data_path[strlen(tsdb_data_path) - 1] != '/') {
+      if(tsdb_data_path[strlen(tsdb_data_path) - 1]
+         != TSDB_DIRECTORY_DELIMITER[0]) {
         tsdb_data_path = (char *)realloc(tsdb_data_path, 
                                          strlen(tsdb_data_path) + 2);
-        tsdb_data_path = strcat(tsdb_data_path, "/");
+        tsdb_data_path = strcat(tsdb_data_path, TSDB_DIRECTORY_DELIMITER);
       } /* if */
     } /* if */
     else { /* relative path */
@@ -1273,7 +1274,7 @@ BOOL tsdb_initialize() {
       tsdb_data_path = strcat(tsdb_data_path, name);
     } /* else */
   } /* if */
-  else { /* use default data_path */
+  else {
     tsdb_data_path = strdup(tsdb_home);
     tsdb_data_path = (char *)realloc(tsdb_data_path, 
                                      strlen(tsdb_data_path) + 
@@ -1281,13 +1282,69 @@ BOOL tsdb_initialize() {
     tsdb_data_path = strcat(tsdb_data_path, TSDB_DATA_PATH);
   } /* else */
 
-  if (!(name=getenv("TSDB_LAST_RESULT"))) {
-    name = tempnam(NULL,"TSDB_");
-    tsdb_last_result = strdup(name);
-  }
+  if((name = getenv("TSDB_RESULT_PATH")) != NULL) {
+    tsdb_result_path = strdup(name);
+    if(tsdb_result_path[strlen(tsdb_result_path) - 1]
+       != TSDB_DIRECTORY_DELIMITER[0]) {
+      tsdb_result_path = (char *)realloc(tsdb_result_path,
+                                         strlen(tsdb_result_path) + 2);
+      tsdb_result_path = strcat(tsdb_result_path, TSDB_DIRECTORY_DELIMITER);
+    } /* if */
+    if(access(tsdb_result_path, W_OK | X_OK)) {
+      fprintf(TSDB_ERROR_STREAM,
+              "initialize(): unable to write directory `%s'.\n",
+              tsdb_result_path);
+      tsdb_result_path = strdup(TSDB_RESULT_PATH);
+    } /* if */
+  } /* if */
   else {
-    tsdb_last_result = strdup(name);
+    tsdb_result_path = strdup(TSDB_RESULT_PATH);
   } /* else */
+
+  if((name = getenv("TSDB_RESULT_PREFIX")) != NULL) {
+    tsdb_result_prefix = strdup(name);
+  } /* if */
+  else {
+    tsdb_result_prefix = strdup(TSDB_RESULT_PREFIX);
+    if((foo = getenv("USER")) != NULL) {
+      tsdb_result_prefix
+        = (char *)realloc(tsdb_result_prefix,
+                          strlen(tsdb_result_prefix + strlen(foo) + 2));
+      tsdb_result_prefix = strcat(tsdb_result_prefix, foo);
+      tsdb_result_prefix = strcat(tsdb_result_prefix, ".");
+    } /* if */
+  } /* else */
+
+  if((name = getenv("TSDB_MAX_RESULTS")) != NULL) {
+    if(!(tsdb_max_results = (BYTE)strtol(name, &foo, 10)) &&
+       name == foo) {
+      fprintf(TSDB_ERROR_STREAM,
+              "initialize(): "
+              "non-integer (`%s') for `TSDB_MAX_RESULTS'.\n", name);
+      tsdb_max_results = TSDB_MAX_RESULTS;
+    } /* if */
+  } /* if */
+  else {
+    tsdb_max_results = TSDB_MAX_RESULTS;
+  } /* else */
+  if((strlen(tsdb_result_path) + strlen(tsdb_result_prefix)
+      + tsdb_max_results / 10) > MAXNAMLEN) {
+    fprintf(TSDB_ERROR_STREAM,
+            "initialize(): "
+            "TSDB_RESULT_PATH + TSDB_RESULT_PREFIX are too long.\n");
+    free(tsdb_result_path);
+    free(tsdb_result_prefix);
+    tsdb_result_path = strdup(TSDB_RESULT_PATH);
+    tsdb_result_prefix = strdup(TSDB_RESULT_PREFIX);
+    if((foo = getenv("USER")) != NULL) {
+      tsdb_result_prefix
+        = (char *)realloc(tsdb_result_prefix,
+                          strlen(tsdb_result_prefix + strlen(foo) + 2));
+      tsdb_result_prefix = strcat(tsdb_result_prefix, foo);
+      tsdb_result_prefix = strcat(tsdb_result_prefix, ".");
+    } /* if */
+    tsdb_max_results = TSDB_MAX_RESULTS;
+  } /* if */
 
   name = getenv("PAGER");
   if (name && (f=popen(name,"w"))) {
@@ -1350,34 +1407,29 @@ float tsdb_timer(BYTE action) {
 |*
 \*****************************************************************************/
 
-  static struct timeb start, stop;
-  static BOOL running = FALSE;
+  static struct timeb start[TSDB_MAX_TIMERS], stop[TSDB_MAX_TIMERS];
+  static BYTE n_timers = 0;
 
   if(action == TSDB_START_TIMER) {
-    if(ftime(&start) == -1) {
+    if(ftime(&start[n_timers]) == -1) {
       perror("tsdb_timer()");
       return((float)-1);
     } /* if */
-    running = TRUE;
-    return((float)0);
-  } /* if */
-  else if(action == TSDB_STOP_TIMER) {
-    if(!running) {
-      fprintf(TSDB_ERROR_STREAM, "timer(): timer has to be started first.\n");
-      return(-1);
-    } /* if */
-    if(ftime(&stop) == -1) {
-      perror("tsdb_timer()");
-      return((float)-1);
-    } /* if */
-    running = FALSE;
-    return((stop.time - start.time)
-           + ((stop.millitm - start.millitm) * 0.001));
+    n_timers++;
+    return((float)n_timers);
   } /* if */
   else {
-    fprintf(TSDB_ERROR_STREAM,
-            "timer(): invalid action `%d'.\n", action);
-    return((float)-1);
+    if(!n_timers || action > n_timers) {
+      fprintf(TSDB_ERROR_STREAM,
+              "timer(): timer # %d not running.\n", action);
+      return((float)-1);
+    } /* if */
+    if(ftime(&stop[--n_timers]) == -1) {
+      perror("tsdb_timer()");
+      return((float)-1);
+    } /* if */
+    return((stop[n_timers].time - start[n_timers].time)
+           + ((stop[n_timers].millitm - start[n_timers].millitm) * 0.001));
   } /* else */
 
 } /* tsdb_timer() */
@@ -1385,18 +1437,37 @@ float tsdb_timer(BYTE action) {
 BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
                                 Tsdb_tuple **tuples) {
 
-/* inserts tuple tuples in selection.
- * tuples isn't copied, so don't free it afterwards!
-*/
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_insert_into_selection()
+|*     version: 
+|*  written by: andrew p. white & oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* tsdb_insert_into_selection() inserts .tuples. into all key lists of
+|* .selection.; note that .tuples. is not copied.
+|*****************************************************************************|
+|* <known bugs>
+|* for several key lists and growing length the linear search turns out to be
+|* too inefficient; hence, the plan is to add a second level index or similar.
+\*****************************************************************************/
+
 
   Tsdb_value *value, *comparison;
   Tsdb_key_list *new, *next;
   int i, j, offset, n_tuples;
   BOOL kaerb;
+#if defined(DEBUG) && defined(INSERT_INTO_SELECTION)
+  float time = tsdb_timer(TSDB_START_TIMER);
+  int n_keys = 0;
+#endif
 
   for(n_tuples = 0; tuples != NULL && tuples[n_tuples] != NULL; n_tuples++);
-
   for(i = 0, offset = 0; i < selection->n_relations; i++, offset += j) {
+#if defined(DEBUG) && defined(INSERT_INTO_SELECTION)
+    n_keys += selection->relations[i]->n_keys;
+#endif    
     for (j = 0; j < selection->relations[i]->n_keys; j++) {
       kaerb = FALSE;
       value = tuples[i]->fields[selection->relations[i]->keys[j]];
@@ -1416,7 +1487,8 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
                 kaerb = TRUE;
                 break;
               default:
-                fprintf(TSDB_ERROR_STREAM, "tsdb: ignoring invalid data tuple.\n");
+                fprintf(TSDB_ERROR_STREAM,
+                        "insert_into_selection(): ignoring invalid tuple.\n");
                 return(FALSE);
               } /* switch */
             } /* while */
@@ -1433,7 +1505,8 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
           case TSDB_LESS_THAN:
             break;
           default:
-            fprintf(TSDB_ERROR_STREAM, "tsdb: ignoring invalid data tuple.\n");
+            fprintf(TSDB_ERROR_STREAM,
+                    "insert_into_selection(): ignoring invalid tuple.\n");
             return(FALSE);
           } /* switch */
       } /* if */
@@ -1447,6 +1520,15 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
       } /* if */
     } /* for */
   } /* for */
+#if defined(DEBUG) && defined(INSERT_INTO_SELECTION)
+  if((time = tsdb_timer(time)) != (float)-1) {
+    fprintf(tsdb_debug_stream,
+            "insert_into_selection(): inserted %d tuple(s) (%d key lists) "
+            "in %.3f seconds.\n",
+            n_tuples, n_keys, time);
+    fflush(tsdb_debug_stream);
+  } /* if */
+#endif
   return(TRUE);
 
 } /* tsdb_insert_into_selection() */

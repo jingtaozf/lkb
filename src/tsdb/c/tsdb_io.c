@@ -16,6 +16,7 @@
 #include <pwd.h>
 #include <string.h>
 #include <malloc.h>
+#include <dirent.h>
 #include <sys/types.h>
 #include <sys/time.h>
 
@@ -75,38 +76,47 @@ FILE *tsdb_open_debug() {
 
 #ifdef DEBUG
   FILE *output;
-  char *name, *date, *user;
+  char *name, *file, *date, *user;
   time_t clock;
 
   if(time(&clock) != (time_t)-1) {
-    date = ctime(&clock);
+    if((date = ctime(&clock)) != NULL) {
+      date[strlen(date) - 1] = 0;
+    } /* if */
     user = getenv("USER");
   } /* if */
      
   if((name = getenv("TSDB_DEBUG_FILE")) != NULL) {
-    if((output = fopen(name, "w")) != NULL) {
-      fprintf(output,
-              "TSDB debug opened by %s on %s\n",
-              (user != NULL ? user : ""),
-              (date != NULL ? date : "\n"));
-      fflush(output);
-      return(output);
-    } /* if */
+    file = (char *)malloc(strlen(name)
+                          + (user != NULL ? 1 + strlen(user) : 0) + 1);
+    file = strdup(name);
   } /* if */
   else {
-    if((output = fopen(TSDB_DEBUG_FILE, "w")) != NULL) {
-      fprintf(output,
-              "TSDB debug opened by %s on %s\n",
-              (user != NULL ? user : ""),
-              (date != NULL ? date : "\n"));
-      fflush(output);
-      return(output);
-    } /* if */
+    file = (char *)malloc(strlen(TSDB_DEBUG_FILE)
+                          + (user != NULL ? 1 + strlen(user) : 0) + 1);
+    file = strdup(TSDB_DEBUG_FILE);
   } /* else */
+  if(user != NULL) {
+    file = strcat(file, ".");
+    file = strcat(file, user);
+  } /* if */
+
+  if((output = fopen(file, "w")) != NULL) {
+    fprintf(output,
+            "TSDB debug opened by %s on %s.\n\n",
+            (user != NULL ? user : ""),
+            (date != NULL ? date : ""));
+    fflush(output);
+    free(file);
+    return(output);
+  } /* if */
 
   fprintf(TSDB_ERROR_STREAM,
           "open_debug(): unable to open file `%s'.\n",
-          (name != NULL ? name : TSDB_DEBUG_FILE));
+          (file != NULL ? file : TSDB_DEBUG_FILE));
+  if(file != NULL) {
+    free(file);
+  } /* if */
 #endif    
   return((FILE *)NULL);
 } /* tsdb_open_debug() */
@@ -118,8 +128,8 @@ void tsdb_close_debug(FILE *stream) {
 |*      module: tsdb_close_debug()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
-|* last update: 
-|*  updated by: 
+|* last update: 12-jul-95
+|*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |*
 \*****************************************************************************/
@@ -129,10 +139,12 @@ void tsdb_close_debug(FILE *stream) {
   time_t clock;
 
   if(time(&clock) != (time_t)-1) {
-    date = ctime(&clock);
+    if((date = ctime(&clock)) != NULL) {
+      date[strlen(date) - 1] = 0;
+    } /* if */
   } /* if */
      
-  fprintf(stream, "\nTSDB debug closed on %s", (date != NULL ? date : "\n"));
+  fprintf(stream, "\nTSDB debug closed on %s.\n", (date != NULL ? date : ""));
   fclose(stream);
 #endif
 } /* tsdb_close_debug() */
@@ -223,26 +235,67 @@ void tsdb_print_array(Tsdb_value **array, FILE *stream) {
 
 } /* tsdb_print_array() */
 
-void tsdb_print_selection(Tsdb_selection* selection,FILE *stream){
-  int i;
+void tsdb_print_selection(Tsdb_selection *selection, FILE *stream) {
 
-  if (!selection) {
-    fprintf(stream,"selection empty\n");
-    fflush(stream);
-    return;
-  }
-   for ( i=0;i<selection->n_relations;i++){
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_print_selection()
+|*     version: 
+|*  written by: tom fettig & oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* tsdb_print_selection() behaves rather different in DEBUG than in regular
+|* mode: without the DEBUG option it simply prints out all tuples from
+|* .selection. in the order of the first key list; yet, in DEBUG mode it prints
+|* additional information about .selction. to the debug stream.
+\*****************************************************************************/
+
+#ifdef DEBUG
+  Tsdb_relation *foo;
+  int i, j, k;
+#endif
+
+  if(selection != NULL
+     && selection->length && selection->key_lists[0] != NULL) {
+    tsdb_print_key_list(selection->key_lists[0], stream);
+  } /* if */
+  
+#if defined(DEBUG) && defined(PRINT_SELECTION) && !defined(TOM)
+  if(selection != NULL) {
+    fprintf(tsdb_debug_stream,
+            "print_selection(): %s", selection->relations[0]->name);
+    for(i = 1; i < selection->n_relations; i++) {
+      fprintf(tsdb_debug_stream, ":%s", selection->relations[i]->name);
+    } /* for */
+    fprintf(tsdb_debug_stream, " (%d);\n", selection->length);
+    foo = selection->relations[0];
+    fprintf(tsdb_debug_stream,
+            "print_selection(): keys: %s (0)", foo->fields[foo->keys[0]]);
+    for(j = 1; j < foo->n_keys; j++) {
+      fprintf(tsdb_debug_stream, ", %s (%d)",
+              foo->fields[foo->keys[j]], i);
+    } /* for */
+    for(i = 1; i < selection->n_relations; i++) {
+      foo = selection->relations[i];
+      for(j = 1; j < foo->n_keys; j++) {
+        fprintf(tsdb_debug_stream, ", %s (%d)",
+                foo->fields[foo->keys[j]], i);
+      } /* for */
+    } /* for */
+    fprintf(tsdb_debug_stream, ".\n");
+    fflush(tsdb_debug_stream);
+  } /* if */
+  else {
+    fprintf(tsdb_debug_stream, "print_selection(): null pointer.\n");
+  } /* else */
+#endif
+
 #if defined(DEBUG) && defined(TOM)
+  for ( i=0;i<selection->n_relations;i++){
     fprintf(stream,"selection relation %ld\n",i);
     tsdb_print_relation(selection->relations[i],stream);
-#endif
   }
-
-#if !defined(DEBUG) 
-  tsdb_print_key_list(selection->key_lists[0],stream);
-#endif
-
-#if defined(DEBUG) && defined(TOM)
   for (i=0;i<selection->n_key_lists;i++) {
     fprintf(tsdb_debug_stream,"key list %ld\n",i);
     tsdb_print_key_list(selection->key_lists[i],stream);
@@ -746,11 +799,7 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
   FILE *input;
   int i;
 #if defined(DEBUG) && defined(READ_TABLE)
-  float time;
-#endif
-
-#if defined(DEBUG) && defined(READ_TABLE)
-  (void)tsdb_timer(TSDB_START_TIMER);
+  float time = tsdb_timer(TSDB_START_TIMER);
 #endif
 
   if(((input = tsdb_find_data_file(relation->name, "r")) != NULL) &&
@@ -791,7 +840,7 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
 
     fclose(input);
 #if defined(DEBUG) && defined(READ_TABLE)
-  if((time = tsdb_timer(TSDB_STOP_TIMER)) != (float)-1) {
+  if((time = tsdb_timer(time)) != (float)-1) {
     fprintf(tsdb_debug_stream,
             "read_table(): read %d tuples for `%s' in %.1f seconds.\n",
             selection->length, relation->name, time);
@@ -806,20 +855,42 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
 
 } /* tsdb_read_table() */
 
-/*---------------------------------------------------------------------------*/
+FILE* tsdb_open_result() {
 
-FILE* tsdb_open_result()
-{
-  FILE* f;
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_open_result()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
 
-  f = fopen(tsdb_last_result,"w");
-  if (!f) { fprintf(TSDB_ERROR_STREAM,"TSDB: couldn't open %s\n",tsdb_last_result);}
-  return(f);
+  FILE* output;
+  int i;
+  char old[MAXNAMLEN], new[MAXNAMLEN];
 
-} /* tsdb_open_result */
+  for(i = tsdb_max_results; i > 1; i--) {
+    (void)sprintf(&new[0],
+                  "%s%s%d", tsdb_result_path, tsdb_result_prefix, i);
+    (void)sprintf(&old[0],
+                  "%s%s%d", tsdb_result_path, tsdb_result_prefix, i - 1);
+    (void)rename(old, new);
+  } /* for */
+  
 
+  if((output = fopen(&old[0], "w")) == NULL) {
+    fprintf(TSDB_ERROR_STREAM,
+            "open_result(): unable to create \%s'.\n", &old[0]);
+    return((FILE *)NULL);
+  } /* if */
+  
+  return(output);
+
+} /* tsdb_open_result() */
 
-/*---------------------------------------------------------------------------*/
 void tsdb_tree_print(Tsdb_node* node, FILE* stream)
 {
  static int insert = 0;
