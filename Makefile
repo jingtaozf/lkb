@@ -11,6 +11,8 @@ TEE=tee
 
 update:
 	( \
+	  cd ${ROOT}/matrix; \
+	  ${CVS} update -P -d -R; \
 	  cd ${ROOT}/spanish; \
 	  ${CVS} update -P -d -R; \
 	  cd ${ROOT}/lkb; \
@@ -18,19 +20,19 @@ update:
 	  ${CVS} commit -f -m "auto-update for build" \
             ${ROOT}/lkb/src/version.lsp; \
 	  $(MAKE) all; \
-	) 2>&1 | ${TEE} ${ROOT}/lkb/build
+	) 2>&1 | ${TEE} ${ROOT}/lkb/log/build
 	( \
 	  cd ${ROOT}/lkb/log; \
 	  cvs commit -m "" build; \
 	)
 
-all: lkb erg spanish itsdb
+all: lkb erg matrix spanish itsdb
 
 #
 # LKB grammar development environment
 #
 
-lkb: lkb_source lkb_data lkb_binaries lkb_documentation
+lkb: lkb_source lkb_data lkb_binaries
 
 lkb_source:
 	( \
@@ -46,6 +48,7 @@ lkb_source:
 	      --exclude="linux*" --exclude="solaris*" --exclude="windows*" \
 	      --exclude="src/www*" --exclude=src/systems/www.system \
 	      --exclude="bin*" --exclude="include*" --exclude="lib*" \
+	      --exclude="man*" --exclude="doc*" --exclude="log*" \
 	      --exclude="etc*" --exclude=src/general/itsdb.lisp \
 	      --exclude="src/tsdb*" --exclude="src/pvm*" \
 	      --exclude=src/systems/tsdb.system \
@@ -167,6 +170,22 @@ erg:
 	      --exclude="pet*" --exclude="tsdb*" \
 	      --exclude="*.fasl" \
 	      erg; \
+	)
+
+
+#
+# MatriX Grammar Starter-Kit (Emily M. Bender et al.)
+#
+
+matrix:
+	( \
+	  cd ${ROOT}; \
+	  ${TAR} Svczf ${TARGET}/${DATE}/matrix.tgz \
+	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+	      --exclude="pet*" --exclude="tsdb*" \
+	      --exclude="*.fasl" \
+	      matrix; \
 	)
 
 #
