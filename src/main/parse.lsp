@@ -32,8 +32,9 @@
 (defvar *successful-tasks* 0)
 (defvar *contemplated-tasks* 0)
 (defvar *filtered-tasks* 0)
+(defvar *packings* 0)
 (declaim (type fixnum *executed-tasks* *successful-tasks* 
-	       *contemplated-tasks* *filtered-tasks*))
+	       *contemplated-tasks* *filtered-tasks* *packings*))
 
 (defvar *parser-rules* nil)
 (defvar *parser-lexical-rules* nil)
@@ -72,10 +73,10 @@
       (:constructor make-edge
                     (&key id category rule dag 
                           (dag-restricted (restrict-fs (tdfs-indef dag)))
-                          leaves lex-ids children morph-history 
-                          spelling-change)))
+                          leaves lex-ids parents children morph-history 
+                          spelling-change packed frozen)))
    id category rule dag dag-restricted leaves lex-ids
-   children morph-history spelling-change)
+   parents children morph-history spelling-change packed frozen)
 
 (defstruct
    (mrecord
@@ -91,13 +92,13 @@
   new-spelling)
 
 (defvar *edge-id* 0)
+(declaim (type fixnum *edge-id*))
 
 (defun next-edge nil
   (when (> *edge-id* *maximum-number-of-edges*)
     (error "~%Probable runaway rule: parse/generate aborted 
              (see documentation of *maximum-number-of-edges*)"))
-  (incf *edge-id*)
-  *edge-id*)
+  (incf *edge-id*))
 
 (defvar *morphs* (make-array (list *chart-limit*) :initial-element nil))
 
@@ -216,12 +217,16 @@
 (defvar *parser-lock* (mp:make-process-lock))
 
 (defmacro with-parser-lock (() &body body)
-  #+allegro
-  `(mp:with-process-lock (*parser-lock*)
-     ,@body)
-  #-allegro
-  `(progn ,@body))
-
+  (let ((form
+         `(progn
+            (when *dag-recycling-p*
+              (setf (pool-position *dag-pool*) 0)
+              (setf (pool-garbage *dag-pool*) 0))
+            ,@body)))
+    #+allegro
+    `(mp:with-process-lock (*parser-lock*) ,form)
+    #-allegro
+    form))
 
 ;;;
 ;;; satisfy measurement fetish: list used to store (cpu) time used to find
@@ -257,10 +262,12 @@
 ;;; disabled by default, and hidden in `active.lsp'.
 ;;;                                                        (20-jun-99  -  oe)
 ;;;
-(defparameter *active-parsing* nil)
+(defparameter *active-parsing-p* nil)
 
-(defun parse (user-input &optional (show-parse-p t) 
-				   (first-only-p *first-only-p*))
+(defparameter *show-parse-p* t)
+
+(defun parse (user-input &optional (show-parse-p *show-parse-p*) 
+                                   (first-only-p *first-only-p*))
   (when (and first-only-p (greater-than-binary-p))
     (format t "~%First only mode only works if rules are unary or binary.
 Setting *first-only-p* to nil")
@@ -270,15 +277,15 @@ Setting *first-only-p* to nil")
       (error "Sentence ~A too long - ~A words maximum (*chart-limit*)" 
              user-input *chart-limit*)
     (let ((*executed-tasks* 0) (*successful-tasks* 0)
-	  (*contemplated-tasks* 0) (*filtered-tasks* 0)
+	  (*contemplated-tasks* 0) (*filtered-tasks* 0) (*packings* 0)
           (*parser-rules* (get-matching-rules nil nil))
           (*parser-lexical-rules* (get-matching-lex-rules nil))
           ;;
           ;; shadow global variable to allow best-first mode to decrement for
           ;; each result found; eliminates need for additional result count.
           ;;
-          (*maximal-number-of-readings* (and (or first-only-p *active-parsing*)
-                                             *maximal-number-of-readings*)))
+          (*maximal-number-of-readings*
+           (and first-only-p *maximal-number-of-readings*)))
       (with-parser-lock ()
 	(flush-heap *agenda*)
 	(clear-chart)
@@ -289,13 +296,13 @@ Setting *first-only-p* to nil")
 	(let ((*safe-not-to-copy-p* t))
 	  (add-morphs-to-morphs user-input)
           (catch :best-first
-            (add-words-to-chart (and first-only-p (null *active-parsing*)
+            (add-words-to-chart (and first-only-p (null *active-parsing-p*)
                                      (cons 0 (length user-input))))
             (loop 
                 until (empty-heap *agenda*)
                 do (funcall (heap-extract-max *agenda*)))
-            (when *active-parsing* (complete-chart 0 (length user-input))))
-          (unless (or first-only-p *active-parsing*)
+            (when *active-parsing-p* (complete-chart 0 (length user-input))))
+          (unless (or first-only-p *active-parsing-p*)
             ;;
             ;; best-first (passive or active mode) have already done this
             ;; incrementally in the parse loop
@@ -305,7 +312,7 @@ Setting *first-only-p* to nil")
         (push (get-internal-run-time) *parse-times*))
 	(when show-parse-p (show-parse))
 	(values *executed-tasks* *successful-tasks* *contemplated-tasks*
-		*filtered-tasks*))))
+		*filtered-tasks* *packings*))))
 
 (defun add-morphs-to-morphs (user-input)
    (let ((current 0))
@@ -681,7 +688,7 @@ Setting *first-only-p* to nil")
    (edge-id edge) left-vertex right-vertex)
 
   (add-to-chart left-vertex edge right-vertex f)
-  (unless *active-parsing*
+  (unless *active-parsing-p*
     (dolist (rule *parser-rules*)
       ;; grammar rule application is attempted when we've got all the bits
       (try-grammar-rule-left rule
@@ -1081,14 +1088,36 @@ Setting *first-only-p* to nil")
 
 (defun print-chart-configuration (span right-vertex)
    (let ((e (chart-configuration-edge span)))
-      (format t "~A-~A [~A] ~A => ~A~A  [~{~A~^ ~}]~%"
+      (format t "~A-~A [~A] ~A => ~A~A  [~{~A~^ ~}]"
          (chart-configuration-begin span)
          right-vertex
          (edge-id e)
          (edge-category e)
          (edge-leaves e)
          (if (chart-configuration-roots span) "*" "")
-         (mapcar #'edge-id (edge-children e)))))
+         (mapcar #'edge-id (edge-children e)))
+      ;;
+      ;; if applicable, print out compact summary of packings (9-aug-99  -  oe)
+      ;;
+      (when (edge-packed e)
+        (let ((edge (first (edge-packed e))))
+          (format 
+           t 
+           "[~d < ~{~d~^ ~}" 
+           (edge-id edge) 
+           (loop for child in (edge-children edge) collect (edge-id child))))
+        (loop
+            for edge in (rest (edge-packed e)) do
+              (format 
+               t 
+               "; ~d < ~{~d~^ ~}"
+               (edge-id edge) 
+               (loop 
+                   for child in (edge-children edge) 
+                   collect (edge-id child))))
+        (format t "]"))
+      (format t "~%")))
+      
 
 
 ;;; Parsing sentences from file

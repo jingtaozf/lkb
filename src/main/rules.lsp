@@ -37,15 +37,17 @@
 (defvar *ordered-lrule-list* nil)
 
 (defun clear-grammar nil
-  (declare (special *arules*))
   (setf *ordered-rule-list* nil)
   (when (fboundp 'clear-generator-grules)
     (funcall 'clear-generator-grules))
-  (clrhash *rules*)
-  (setf *arules* nil))
+  (when (fboundp 'clear-generator-grules)
+    (funcall 'clear-generator-grules))
+  (clrhash *rules*))
 
 (defun clear-lex-rules nil
   (setf *ordered-lrule-list* nil)
+  (when (fboundp 'reset-cached-lex-entries)
+    (funcall 'reset-cached-lex-entries))
   (when (fboundp 'clear-generator-lrules)
     (funcall 'clear-generator-lrules))
   (clrhash *lexical-rules*))
@@ -57,6 +59,7 @@
    daughters-restricted-reversed
    daughters-apply-order
    order
+   rhs ;; list of indices into `order' --- for key-driven parsing
    daughters-order-reversed
    apply-filter
    apply-index)
@@ -253,6 +256,35 @@
                            mother-value)
                           path))
                  (cdr f-list))))
+            ;;
+            ;; compute list of indices into `order' slot; these are used in
+            ;; key-driven parsing (using the new (hyper-)active parser); there
+            ;; seems to be some overlap with `daughters-apply-order' used in
+            ;; the generator.  however, the parser really needs the numerical
+            ;; encoding to decide wheter an edge wants to extend forwards or
+            ;; backwards.  brief inspection of the generation code suggests
+            ;; that `daughters-apply-order' currently is only used to compute
+            ;; a numerical index of the (linguistic) head daughter.  --- so, 
+            ;; maybe the two mechanisms could be joined.     (19-jul-99  -  oe)
+            ;;
+            (let* ((daughters (rest (rule-order rule)))
+                   (arity (length daughters))
+                   (dag (tdfs-indef fs))
+                   (key (or
+                         (loop
+                             for path in daughters
+                             for i from 0
+                             for daughter = (existing-dag-at-end-of dag path)
+                             when (key-daughter-p daughter)
+                             return i)
+                         0)))
+              (setf (rule-rhs rule)
+                (cons
+                 key
+                 (nconc
+                  (loop for i from 0 to (- key 1) collect i)
+                  (loop for i from (+ key 1) to (- arity 1) collect i)))))
+                   
             ;; if there is a head, remaining daughters 
             ;; must stay in same left-to-right order - 
             ;; parser assumes this
@@ -380,23 +412,24 @@
 ;;; DISCO-style rule filter (build-rule-filter)
 
 (defun build-rule-filter nil
-   (let ((max-arity 0)
-         (nrules 0)
-         (rule-list nil))
+  (unless (find :vanilla *features*)
+    (let ((max-arity 0)
+          (nrules 0)
+          (rule-list nil))
       (flet ((process-rule (name rule)
                (declare (ignore name))
                (setq max-arity (max max-arity (1- (length (rule-order rule)))))
                (push rule rule-list)
                (setf (rule-apply-index rule) nrules)
                (incf nrules)))
-         (maphash #'process-rule *rules*)
-         (maphash #'process-rule *lexical-rules*)
-         (dolist (rule rule-list)
-            (let ((filter
-                    (make-array (list nrules max-arity) :initial-element nil)))
-               (setf (rule-apply-filter rule)
-                  (fill-rule-filter rule filter rule-list))))
-         t)))
+        (maphash #'process-rule *rules*)
+        (maphash #'process-rule *lexical-rules*)
+        (dolist (rule rule-list)
+          (let ((filter
+                 (make-array (list nrules max-arity) :initial-element nil)))
+            (setf (rule-apply-filter rule)
+              (fill-rule-filter rule filter rule-list))))
+        t))))
 
 
 (defun fill-rule-filter (rule filter test-list)

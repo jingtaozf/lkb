@@ -18,6 +18,12 @@
 ;;; Jan 1995 - made equal-wffs-p and subsumes-wffs-p work 
 ;;; on non well typed fs
 
+;;;
+;;; establish global counter for calls to subsumption test.  (14-jul-99  -  oe)
+;;;
+(defparameter *subsumptions* 0)
+(declaim (type fixnum *subsumptions*))
+
 (defun mark-dag-with-backwards-paths (dag firstp backwards-path) 
    ;; mark nodes with lists of paths - generalisation will be reentrant
    ;; in those paths that both the originals were reentrant in
@@ -246,31 +252,74 @@
 
 |#
 
-;;; subsumption - true if dag1 subsumes dag2
+;;; subsumption - first value true if dag1 subsumes dag2, second value true
+;;; if reverse relation holds
+
+;;; One-pass algorithm simultaneously traversing the two dags: at each node
+;;; visited in dag1 insert pointer to
+;;; corresponding dag2 node. If we reach a dag1 node that already has a pointer
+;;; this corresponds to a reentrancy in dag1 - if the pointer
+;;; isn't eq to the current dag2 node then return false (i.e. this is a reentrancy
+;;; in dag1 that isn't present in dag2, so dag1 can't subsume dag2). Also of
+;;; course check for type subsumption on each node
 
 (defun dag-subsumes-p (dag1 dag2)
-   (invalidate-visit-marks)
-   (mark-dag-with-backwards-paths dag1 t nil)
-   (mark-dag-with-backwards-paths dag2 nil nil)
-   (subsume-wffs-p dag1 dag2))
-        
-(defun subsume-wffs-p (real-dag1 real-dag2)
-   ;; dag1 only subsumes dag2 if there are no extra reentrancies
-   ;; in dag1
-   (let ((reentrancy-difference
-            (set-difference 
-               (car (dag-visit real-dag1)) (cdr (dag-visit real-dag2))
-               :test #'equal)))
-      (unless reentrancy-difference
-         (if (subsume-types (type-of-fs real-dag1)
-               (type-of-fs real-dag2))
-            (or (is-atomic real-dag1)
-               (for label in (top-level-features-of real-dag1)
-                  all-satisfy
-                  (let ((existing-dag1 (get-dag-value real-dag1 label))
-                        (existing-dag2 (get-dag-value real-dag2 label)))
-                        (and existing-dag2
-                           (subsume-wffs-p existing-dag1 existing-dag2)))))))))
+  ;; assume not circular, and not called within a unification context
+  (incf *subsumptions*)
+  (with-unification-context (dag1)
+    (catch '*fail* (subsume-wffs-p dag1 dag2 nil t t))))
+
+
+(defun subsume-wffs-p (real-dag1 real-dag2 backwards-path forwardp backwardp)
+   ;; forwardp, backwardp are true when it's possible that dag1 subsumes dag2
+   ;; and vice-versa respectively. When the possibility has been ruled out the
+   ;; appropriate variable is set to false. Fail as soon as they are both false
+   (when (and (eq (car backwards-path) 'cont) ; *** SYNSEM:LOCAL:CONT
+              (eq (cadr backwards-path) 'local)
+              (eq (caddr backwards-path) 'synsem))
+      (return-from subsume-wffs-p (values forwardp backwardp)))
+   (when forwardp
+      (cond
+         ((null (dag-copy real-dag1))
+            (setf (dag-copy real-dag1) real-dag2))
+         ((not (eq (dag-copy real-dag1) real-dag2))
+            (setq forwardp nil))
+         ;; ((eq real-dag1 real-dag2)
+         ;;    (return-from subsume-wffs-p t))
+         ;; There isn't much equality of structures between different edges, so
+         ;; not worth testing for it since it involves extra complication: if we
+         ;; stop here and don't perform full processing inside the structure
+         ;; (since all nodes inside it will be eq between dag1 and dag2, and any
+         ;; strictly internal reentrancies will necessarily be the same) we would
+         ;; still need to assign pointers inside it so that any external
+         ;; reentrancies into the structure would be treated correctly
+         ))
+   (when backwardp
+      (cond
+         ((null (dag-copy real-dag2))
+            (setf (dag-copy real-dag2) real-dag1))
+         ((not (eq (dag-copy real-dag2) real-dag1))
+            (setq backwardp nil))))
+   (unless (or forwardp backwardp) (throw '*fail* nil))
+   (let ((type1 (type-of-fs real-dag1))
+         (type2 (type-of-fs real-dag2)))
+      (unless (eq type1 type2)
+         (when (and forwardp (not (subsume-types type1 type2)))
+            (setq forwardp nil))
+         (when (and backwardp (not (subsume-types type2 type1)))
+            (setq backwardp nil))
+         (unless (or forwardp backwardp) (throw '*fail* nil)))
+      (dolist (arc1 (dag-arcs real-dag1))
+         (let* ((label (dag-arc-attribute arc1))
+                (existing-dag2 (get-dag-value real-dag2 label)))
+            (if existing-dag2
+               (let ((new-backwards-path (cons label backwards-path)))
+                  (declare (dynamic-extent new-backwards-path))
+                  (multiple-value-setq (forwardp backwardp)
+                     (subsume-wffs-p
+                        (dag-arc-value arc1) existing-dag2 new-backwards-path
+                        forwardp backwardp))))))
+      (values forwardp backwardp)))
 
 (defun subsume-types (type1 type2)
   ;;; make this long-winded in the hope of improving efficiency
@@ -310,7 +359,6 @@
       (subtype-or-equal type2 type1)) ; type1 atomic
                                ; type2 atomic               
          ))
- 
             
 (defun subtype-or-equal (type1 type2)
    (or (equal type1 type2)

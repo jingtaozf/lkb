@@ -36,6 +36,14 @@
 (defvar *visit-generation* 1)
 (defvar *visit-generation-max* 1)
 
+;;;
+;;; [incr tsdb()] support: global counters for calls to unify-dags() and
+;;; copy-dag().
+;;;
+(defparameter *unifications* 0)
+(defparameter *copies* 0)
+(declaim (type fixnum *unifications* *copies*))
+
 (eval-when (:compile-toplevel :load-toplevel)
   (proclaim '(type fixnum *unify-generation* *unify-generation-max*
                 *visit-generation* *visit-generation-max*)))
@@ -101,16 +109,66 @@
    ;; number of slots
    )
 
-(defmacro make-dag (&key type arcs)
-   `(if *safe-not-to-copy-p*
-      ;; safe not to copy this node? False for rules, lexical entries, type
-      ;; constraints - when we pick them or parts of them up those bits must be copied
-      ;; else multiple uses in the same analysis could become reentrant. True during
-      ;; parsing and generation - assumes that the same derived constituent can't be
-      ;; used more than once in a single analysis
-      (make-safe-dag-x ,type ,arcs)
-      (make-dag-x ,type ,arcs)))
+;;;
+;;; first attempt at dag recycling.  to reduce creation of garbage, keep a pool
+;;; of (safe) dag instances.  while parsing (i.e. when creating temporary data)
+;;; use dags from the pool rather than allocation new ones.  the parser has to
+;;; record the initial pool pointer (on entry) and can then reset the pointer
+;;; once the parse has completed.  this should reduce dynamic allocation quite
+;;; significantly (at the minor cost of slightly increased initial image size);
+;;; garbage collection time should drop accordingly.        (17-jul-99  -  oe)
+;;;
+(defstruct pool
+  (size 0 :type fixnum)
+  (position 0 :type fixnum)
+  (constructor #'(lambda ()) :type function)
+  (data #(nil) :type simple-vector)
+  (garbage 0 :type fixnum))
 
+(defun create-pool (size constructor)
+  (#+allegro excl:tenuring #-allegro progn
+      (let ((pool (make-pool :size size :constructor constructor))
+            (data (make-array (+ size 1)
+                              :initial-element nil 
+                              :adjustable nil :fill-pointer nil)))
+        (loop
+            for i from 0 to (max 0 (- size 1)) do
+              (setf (svref data i) (funcall constructor)))
+        (setf (pool-data pool) data)
+        pool)))
+
+(defmacro pool-next (pool)
+  (declare (type pool pool))
+  `(let ((next (svref (the simple-vector (pool-data ,pool))
+                      (the fixnum (pool-position ,pool)))))
+     (cond
+      ((null next)
+       (incf (pool-garbage ,pool))
+       (funcall (pool-constructor ,pool)))
+      (t
+       (incf (pool-position ,pool))
+       next))))
+
+(defparameter *dag-pool* (create-pool 
+                          *dag-pool-size*
+                          #'(lambda () (make-safe-dag-x nil nil))))
+
+(defparameter *dag-recycling-p* nil)
+
+(defmacro make-dag (&key type arcs)
+  ;; safe not to copy this node? False for rules, lexical entries, type 
+  ;; constraints - when we pick them or parts of them up those bits must be
+  ;; copied else multiple uses in the same analysis could become reentrant.
+  ;; True during parsing and generation - assumes that the same derived
+  ;; constituent can't be used more than once in a single analysis
+  `(if *safe-not-to-copy-p*
+     (if *dag-recycling-p*
+       (let ((new (pool-next *dag-pool*)))
+         (declare (type safe-dag new))
+         (setf (safe-dag-type new) ,type (safe-dag-arcs new) ,arcs)
+         new)
+       (make-safe-dag-x ,type ,arcs))
+     (make-dag-x ,type ,arcs)))
 
 ;; (pushnew :lkb-nochecks *features*)
 
@@ -340,31 +398,36 @@
 
 (defun unify-dags (dag1 dag2)
   (if *within-unification-context-p*
-      (progn #+(and mcl powerpc)(decf bb (CCL::%HEAP-BYTES-ALLOCATED))
-             (prog1
-		 (catch '*fail*
-                   (progn
-                     (unify1 dag1 dag2 nil)
-                     (when (or *unify-debug* *unify-debug-cycles*)
-                       (if (cyclic-dag-p dag1)
-                         ;;
-                         ;; for the (eq *unify-debug* :return) variant the 
-                         ;; %failure% value is determined in cyclic-dag-p()
-                         ;; already; hence suppress printed output here.  the
-                         ;; baroque conditionals preserve the original LKB
-                         ;; behaviour.                   (19-mary-99  -  oe)
-                         ;;
-                         (unless (and (null *unify-debug-cycles*)
-                                      (eq *unify-debug* :return))
-                           (format t "~%Unification failed - cyclic result"))
-                         (when (and *unify-debug* 
-                                    (not (eq *unify-debug* :return)))
-                           (format t "~%Unification succeeded"))))
-                     dag1))
-                #+(and mcl powerpc)(incf bb (CCL::%HEAP-BYTES-ALLOCATED))
-                ))
-     (with-unification-context (dag1) 
-       (when (unify-dags dag1 dag2) (copy-dag dag1)))))
+      (#+:uprofile
+       prof:with-sampling #+:uprofile nil
+       #-:uprofile
+       progn
+       #+(and mcl powerpc)(decf bb (CCL::%HEAP-BYTES-ALLOCATED))
+       (incf *unifications*)
+       (prog1
+           (catch '*fail*
+             (progn
+               (unify1 dag1 dag2 nil)
+               (when (or *unify-debug* *unify-debug-cycles*)
+                 (if (cyclic-dag-p dag1)
+                     ;;
+                     ;; for the (eq *unify-debug* :return) variant the 
+                     ;; %failure% value is determined in cyclic-dag-p()
+                     ;; already; hence suppress printed output here.  the
+                     ;; baroque conditionals preserve the original LKB
+                     ;; behaviour.                   (19-mar-99  -  oe)
+                     ;;
+                     (unless (and (null *unify-debug-cycles*)
+                                  (eq *unify-debug* :return))
+                       (format t "~%Unification failed - cyclic result"))
+                   (when (and *unify-debug* 
+                              (not (eq *unify-debug* :return)))
+                     (format t "~%Unification succeeded"))))
+               dag1))
+         #+(and mcl powerpc)(incf bb (CCL::%HEAP-BYTES-ALLOCATED))))
+    (with-unification-context (dag1) 
+      (when (unify-dags dag1 dag2) (copy-dag dag1)))))
+  
 
 (defun unifiable-dags-p (dag1 dag2)
   (if *within-unification-context-p*
@@ -545,7 +608,9 @@
   (let* ((type-parent-name (instance-type-parent type-name))
 	 (type-record (get-type-entry (or type-parent-name type-name)))
 	 (constraint (type-constraint type-record))
-	 (cache (type-constraint-mark type-record)))
+	 (cache (type-constraint-mark type-record))
+         (*safe-not-to-copy-p* nil)
+         (*dag-recycling-p* nil))
     (unless (consp cache)
       (setq cache (list* 0 nil nil))	; mark, unused, used
       (setf (type-constraint-mark type-record) cache))
@@ -628,10 +693,14 @@
 ;;; any forward pointers set by the unifier.
 
 (defun copy-dag (dag)
-   #+(and mcl powerpc)(decf aa (CCL::%HEAP-BYTES-ALLOCATED))
+  #+(and mcl powerpc)(decf aa (CCL::%HEAP-BYTES-ALLOCATED))
+  (incf *copies*)
+  (#+:cprofile
+   prof:with-sampling #+:cprofile nil
+   #-:cprofile
+   progn
    (prog1 (catch '*fail* (copy-dag1 dag nil))
-      #+(and mcl powerpc)(incf aa (CCL::%HEAP-BYTES-ALLOCATED))
-   ))
+     #+(and mcl powerpc)(incf aa (CCL::%HEAP-BYTES-ALLOCATED)))))
 
 ;;; Tomabechi/Rob/John: not copying when dag is 'safe', type has not changed,
 ;;; no comp-arcs, and no copied dags underneath. No garbage generated in case

@@ -78,6 +78,12 @@
 (def-lkb-parameter *maximum-number-of-edges* 500 
   "limits the size of the parse chart" :user)
 
+(def-lkb-parameter *maximum-number-of-active-edges* 3000 
+  "limits the size of the active parse chart" :user)
+
+(declaim (type fixnum *maximum-number-of-edges*)
+         (type fixnum *maximum-number-of-active-edges*))
+
 (def-lkb-parameter *chart-limit* 100)
 
 (def-lkb-parameter *mother-feature* 0
@@ -184,7 +190,22 @@
 
 (def-lkb-parameter *label-template-type* 'label)
 
-;;; recent additions
+;;;
+;;; size of static pool used to cache safe dag instances (see `dag.lsp').
+;;;
+;;; if each dag instance has approximately 50 bytes, then we should be able to
+;;; affort some (static) 10 mbytes for pool storage.  once make-dag() runs out
+;;; of pool instances, new structures will be allocated dynamically (and become
+;;; garbage eventually).  hence, the initial pool size can be a crucial choice.
+;;;
+;;; though it seems tempting to allocate new pools as required, this would mean
+;;; that one huge sentence could grow the image size permanently.  for the time
+;;; being we prefer to assume that the user choice of pool size is appropriate
+;;; for what is required on average.
+;;; 
+(defparameter *dag-pool-size* 200000)
+
+;;; recent additions 
 
 (def-lkb-parameter *lkb-system-version* :page)
 
@@ -203,7 +224,6 @@
 ;;; for the compare function 
 
 (def-lkb-parameter *discriminant-path* '(synsem local cont key))
-
 
 (defparameter *current-grammar-load-file* nil
   "not user settable - has to be here because it's
