@@ -42,6 +42,7 @@
 
 #define TSDB_START_TIMER 0
 #define TSDB_STOP_TIMER 1
+#define TSDB_MAX_TIMERS 20
 
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
