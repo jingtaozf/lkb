@@ -90,7 +90,8 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
          (main-arg (fvpair-value (car flist)))
          (label (rel-handel rel))
          (new-label (if (member (var-id label) labels) ;; conjunction
-                        (create-new-rmrs-var :handle *rmrs-variable-generator*)
+                        (create-new-rmrs-var 
+			 :handle *rmrs-variable-generator* nil)
                         label))
          (rmrs-args
           (if (cdr flist)
@@ -155,9 +156,9 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
               ;;; nasty so just output what we've got
             str
           (make-realpred :lemma (subseq str 1 uscore-pos2)
-                         :pos (subseq str uscore-pos uscore-pos3)
+                         :pos (subseq str (+ 1 uscore-pos2) uscore-pos3)
                          :sense (if uscore-pos4
-                                   (subseq str uscore-pos3 uscore-pos4))))))))
+                                   (subseq str (+ 1 uscore-pos3) uscore-pos4))))))))
 
 
                
