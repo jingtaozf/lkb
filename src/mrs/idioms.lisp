@@ -22,7 +22,7 @@
 (defun expand-idioms-phrases nil
   (setf *idiom-phrases-expanded* nil)
   (dolist (ip *idiom-phrases*)
-    (let ((iptdfs (get-tdfs-given-id ip)))
+    (let ((iptdfs (get-tdfs-given-id (car ip))))
       (when iptdfs
         (let ((ipmrs (mrs::extract-mrs-from-fs (tdfs-indef iptdfs))))
           (when ipmrs
@@ -53,6 +53,7 @@ the phrase to be checked minus the LISZT (leave this for now)
 (defun idiom-check (phrase-tdfs)
   ;;; this should only be called on a structure which has met 
   ;;; one of the `normal' root conditions. 
+  (setf foo phrase-tdfs)
   (let ((irtdfs (get-tdfs-given-id *non-idiom-root*)))
     (if irtdfs
         (or (yaduablep phrase-tdfs irtdfs)
@@ -82,5 +83,8 @@ the phrase to be checked minus the LISZT (leave this for now)
     (and (char-equal (elt relname 0) #\i)
          (char-equal (elt relname 1) #\_))))
 
-    
+(defun get-idiom-entry (id)
+  (cdr (assoc id *idiom-phrases*)))
 
+; Added stub for function now called in lexinput.lsp
+(defun clear-idioms-entries () nil)
