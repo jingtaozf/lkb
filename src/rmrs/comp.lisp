@@ -543,10 +543,10 @@ goes to
      (loop for old-ing in (semstruct-in-groups semstruct)
          collect
            (make-in-group 
-            :labels
-            (loop for old-arg in (in-group-labels old-ing)
-                collect
-                  (generate-new-var old-arg))))
+            :label-a
+            (generate-new-var (in-group-label-a old-ing))
+	    :label-b
+            (generate-new-var (in-group-label-b old-ing))))
      :h-cons
      (loop for old-hcons in (semstruct-h-cons semstruct)
          collect

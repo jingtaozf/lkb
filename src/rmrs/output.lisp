@@ -632,12 +632,12 @@ for gram.dtd and tag.dtd
           (rmrs-output-ingroup-start
            display)
           (print-rmrs-var 
-           (car (in-group-labels in-g))
+           (in-group-label-a in-g)
            bindings display)
           (rmrs-output-ingroup-next
            display)
           (print-rmrs-var 
-           (cadr (in-group-labels in-g))
+           (in-group-label-b in-g)
            bindings display)
           (rmrs-output-end-ingroup display)))
 

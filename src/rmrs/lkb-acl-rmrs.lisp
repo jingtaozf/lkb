@@ -125,12 +125,12 @@
   ;;; if we assume that the deep-grammar derived RMRS is
   ;;; in position 1, then the :sub2 and :comp cases are
   ;;; generally unexpected - hence use red/magenta for these
-  (declare (ignore var-comp-type arg-comp-type)
-	   (ecase pred-comp-type
-	     (:equal +green-flipping-ink+)
-	     (:sub1 +blue-flipping-ink+)
-	     (:sub2 +red-flipping-ink+)
-	     (:comp +magenta-flipping-ink+))))
+  (declare (ignore var-comp-type arg-comp-type))
+  (ecase pred-comp-type
+    (:equal +green-flipping-ink+)
+    (:sub1 +blue-flipping-ink+)
+    (:sub2 +red-flipping-ink+)
+    (:comp +magenta-flipping-ink+)))
     
 ;;; ************* Temporary !!!! ************************
 
@@ -286,7 +286,8 @@
       ("Abrams barked." 1 "Browne barked." 1)
       ("The cat chased the cat." 1 "The cat chased the cat." 1)
       ("The cat chased the cat." 1 "The cat chased the dog." 1)
-      ("The dog chased the cat." 1 "The cat chased the dog." 1)))
+      ("The dog chased the cat." 1 "The cat chased the dog." 1)
+      ("The big dog chased the cat." 1 "The big cat chased the dog." 1)))
 
 
 (defun test-eg (egnum same-source-p)

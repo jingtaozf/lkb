@@ -64,22 +64,20 @@
   (let ((lzt (psoa-liszt mrs))
         (new-lzt nil)
         (new-args nil)
-        (new-in-groups nil)
-        (labels nil))
+        (label-recs nil))
     (dolist (rel lzt)
-          (multiple-value-bind (ep rmrs-args in-group label-list)
-            (parsonify-rel rel labels)
+          (multiple-value-bind (ep rmrs-args new-label-recs)
+            (parsonify-rel rel label-recs)
             (push ep new-lzt)
             (setf new-args (append new-args rmrs-args))
-            (when in-group
-                (push in-group new-in-groups))
-            (setf labels label-list)))
+            (setf label-recs new-label-recs)))
     (make-rmrs   :top-h (psoa-top-h mrs)
                  :h-cons (psoa-h-cons mrs)
                  :liszt (nreverse new-lzt)
-                 :in-groups (nreverse new-in-groups)
+                 :in-groups (construct-converted-in-groups label-recs) 
                  :rmrs-args new-args
 		 :origin :erg)))
+
 
 
 #|
@@ -90,8 +88,14 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 
 (defparameter *rmrs-ignore-features* '("DIM"))
 
-(defun parsonify-rel (rel labels)
+(defstruct ing-info
+  label type new-label-type-pairs)
+
+(defun parsonify-rel (rel label-recs)
+  ;;; label-recs is a list of ing-info structures
+  ;;; so that we can have a canonical notion of in-group
   (let* ((pred (rmrs-convert-pred (rel-pred rel)))
+	 (rel-type (determine-ing-rel-type pred)) 
          (flist (rel-flist rel))
 	 (main-arg (fvpair-value (car flist)))
          (converted-main-arg (if (var-p main-arg)
@@ -100,10 +104,14 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 				       (format nil "~A as main argument" main-arg))
 				      main-arg)))
          (label (rel-handel rel))
-         (new-label (if (member (var-id label) labels) ;; conjunction
+	 (label-id (var-id label))
+	 (label-match (dolist (label-rec label-recs)
+			(when (eql label-id 
+				   (var-id (ing-info-label label-rec)))
+			  (return label-rec))))
+         (new-label (if label-match ;; conjunction
                         (create-new-rmrs-var 
-			 "h" *rmrs-variable-generator* nil)
-                        label))
+			 "h" *rmrs-variable-generator* nil)))
          (rmrs-args
           (if (cdr flist)
               (loop for fvpair in (cdr flist)
@@ -118,13 +126,13 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
                                        :test #'equal))
                         (list (make-rmrs-arg 
                                :arg-type (string feat)
-                               :label new-label
+                               :label (or new-label label)
                                :val (if (var-p val)
 					(rmrs-convert-variable val)
 				      val))))))))
          (ep 
           (make-char-rel
-           :handel new-label
+           :handel (or new-label label)
            :parameter-strings (rel-parameter-strings rel)
            :extra (rel-extra rel)
            :pred pred 
@@ -132,15 +140,42 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 	   :cfrom (if (char-rel-p rel)
 		      (char-rel-cfrom rel))
 	   :cto (if (char-rel-p rel)
-		    (char-rel-cto rel))))
-	 ;;; FIX - it would be convenient to have a canonical approach
-	 ;;; to IN-G generation, which unfortunately means complicating this
-         (in-group (if (member (var-id label) labels)
-                       (make-in-group :labels (list label 
-						    new-label)))))
-    (values ep rmrs-args in-group
-            (cons (var-id new-label) labels))))
+		    (char-rel-cto rel)))))
+    (values ep rmrs-args 
+	    (record-ing-info label-recs 
+			     label new-label rel-type label-match))))
 
+(defun record-ing-info (label-recs label new-label rel-type
+			      label-match)
+  (if label-match
+      (progn
+	(push (cons new-label rel-type) 
+	      (ing-info-new-label-type-pairs label-match))
+	label-recs)
+    (cons (make-ing-info :label label :type rel-type)
+	  label-recs)))
+
+(defun construct-converted-in-groups (label-recs)
+  (let ((ings nil))
+    (dolist (label-rec label-recs)
+      (let ((matches (ing-info-new-label-type-pairs label-rec)))
+	(when matches
+	  (let* ((var-pairs (cons (cons (ing-info-label label-rec)
+				       (ing-info-type label-rec))
+				 matches))
+		(sorted-pairs (sort var-pairs #'ing-rel-type-greater-p 
+				    :key #'cdr))
+		 (top-rank-var (caar sorted-pairs)))
+	    (dolist (pair (cdr sorted-pairs))
+	      (push
+		  (make-in-group :label-a top-rank-var
+				 :label-b (car pair))
+		  ings))))))
+    ings))
+
+
+
+  
 (defun rmrs-convert-pred (pred)
   ;;; the pred should obey the format:
   ;;; _lemma_pos_sense_rel
@@ -236,7 +271,60 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 			   
 |#		  
  
- 
+
+;;; **************************************************
+;;; ING handling
+;;; **************************************************
+
+#|
+
+It is conveninet to have a notion of a canonical set of IN-Gs
+This can be regarded in the same way as the set of qeqs - although
+different groups of qeqs might semantically result in the same thing,
+if we assume consistent composition principles, we'll get the same set
+of qeqs for comparable strings.  The same is true of IN-Gs - although
+semantically they (probably) just correspond to conjunction, we
+can compare much more efficiently if we assume rules about how they are 
+constructed.  This also allow us to play games with underspecification
+and possibly change the interpretation of IN-Gs, but this is ignored for
+now.
+
+The assumption is that whenever an IN-G is created, it corresponds to
+a situation where one label can be considered `higher'.
+Higher could be defined in several ways (and I think it's really arbitrary), 
+but let's assume that the modifiee is always `higher' 
+(this makes sense because it may have several modifiers)
+and that a semantic head is always higher otherwise.				This is a bit complicated here in the context of conversion from the ERG
+because we don't know what the composition rules are, so we have to
+try and simulate on the basis of which label comes from a more `major' relation.
+Code here allows record of this for debugging.  Main problem is working
+out the hierarchy on grammar preds.  However, in practice we can 
+limit this to the cases which occur in the RASP-RMRS code for now.
+
+Errors won't be devastating anyway ...
+|#
+
+(defun determine-ing-rel-type (pred)
+  (if (realpred-p pred)
+      (realpred-pos pred)
+    pred))
+
+;;; FIX to treat grammar preds
+;;; probably by reference to type hierarchy
+
+(defparameter *ing-ranking*
+    '(("n" "v" "j" "p" "prpstn_m_rel")
+      ("v" "p" "r")))
+      
+
+(defun ing-rel-type-greater-p (type1 type2)
+  (let* ((outrank-rec (assoc type1 *ing-ranking* :test #'equal))
+	 (outrank-p
+	  (and outrank-rec
+	       (member type2 (cdr outrank-rec) :test #'equal))))
+;;;    (format t "~%Outranks ~A ~A: ~A" type1 type2 outrank-p)
+    outrank-p))
+
 
 
 

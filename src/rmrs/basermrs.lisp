@@ -23,7 +23,11 @@
   val)
 
 (defstruct in-group
-  labels)
+  label-a label-b)
+
+;;; Jan 2004 - AAC 
+;;; changed structure to reflect the XML and to support the 
+;;; notion of a canonical approach to in-groups
 
 ;;; the variables are replaced by canonical forms when 
 ;;; the structure is printed

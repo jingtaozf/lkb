@@ -7,20 +7,21 @@ There are two somewhat different situations to consider:
 how close they are e.g. question answering
 2) the RMRSs come from the same text
 
-For now, attempt to use the same code for both situations.
+The same code is used for both situations.
 
 The idea is to record the RMRS results with comparison records,
-using a comp-status slot.  This should enable
-display and scoring of differences.
+using comp-status slots.  This enables display and scoring of 
+similarities.
 
 The backbone of the comparison is the eps, especially the
 ones from real words, especially the ones from open class words.
 
-Should be possible to reuse this as MRS code
+It should be possible to reuse this as MRS code.  In fact it could replace
+the MRS equalities code, provided there are jumps out when structures are
+found non-equal, but leave for now.
 
-Jan 1 2004: The best way of doing this now looks like a two pass strategy
-(actually three pass if you include the quick threshold check which I haven't
-done yet).  
+AAC Jan 1 2004: Originally I intended to do this incrementally, but
+the best way of doing this now looks like a multi-pass strategy.
 
 The general idea is to leave the more complicated binding until the basic
 relation match has been done and for the indeterminacy in comparison
@@ -35,7 +36,7 @@ and
 
 B: the big dog snores and the big cat sleeps
 
-We have on a first pass
+We have on a first pass:
 
 the1 . the1, the1 . the6, the6 . the1, the6 . the6
 big2 . big2, big2 . big7, big7 . big2, big7 . big7
@@ -45,44 +46,53 @@ and5 . and5
 cat8 . cat8
 snore9 . snore4
 
-the labels are paired and the characteristic variables
+The labels are paired and the characteristic variables.
 
-obviously these relation pairings are not all mutually compatible in that
+Obviously these relation pairings are not all mutually compatible in that
 one thing can only be paired once, but because repeated relations are less
 common that unrepeated ones, it's more economical to store things
 this way and work out the global compatibilities later
 
 In the second pass, the variable bindings are used to rule out members
-of sets, and to give lower scores to matches of relations where the 
-arguments differ.  In the case above, we want to rule out the `wrong' pairings
-for `the' and `big' and reduce the overall score (somehow) because snore and 
-sleep don't have matching ARGs.  We locate the mismatch on the relation with 
-the ARGs.
+of sets, and to record cases where the arguments differ.  
+In the case above, we want to rule out the `wrong' pairings
+for `the' (and possibly `big') and reduce the overall score (somehow) 
+because snore and sleep don't have matching ARGs.  We locate the 
+record of mismatch on the relation with the ARGs.
 
 |#
 
-(defstruct (comp-rmrs (:include rmrs))
-  labels holes distinguished undistinguished)
+(defstruct (comp-rmrs (:include rmrs)))
 
-;;; the extra slots here are for caching the variables distinguished
-;;; vs undistinguished is explained below
+;;; Originally I intended this to have extra slots compared to
+;;; a normal rmrs but this doesn't seem required now.  However
+;;; it differes from a normal rmrs because
+;;; a comp-rmrs rels list is a list of comparison-set structures. 
 
-;;; a comp-rmrs rels list is a list of the following
-;;; structures.  For the same source case, this list
-;;; is ordered via characterisation - for the 
-;;; non-same-source case, there will just be one list
-;;; for now, but the code is general so that if we 
-;;; produce some idea of typing mutually distinct pred classes
-;;; we can use that to order the rels
+;;; For the same source case, this list is ordered via characterisation -
+;;; for the non-same-source case, there will just be one list for now,
+;;; but the code is general so that if we produce some idea of typing
+;;; mutually distinct pred classes we can use that to order the 
+;;; comparison sets.
 
 (defstruct comparison-set
   cfrom cto real-preds constant-preds gram-preds)
-;;; real-preds and constant-preds are sorted, gram-preds aren't
+;;; real-preds and constant-preds are sorted, gram-preds aren't.
+
+;;; Matching involves taking advantage of sortal order
+;;; wherever possible.  This means making assumptions
+;;; about compatibility between different classes of predicates.
+;;; This will probably have to be parameterisable depending on the
+;;; grammar and the application, since we might have `external'
+;;; predicate hierarchies (or no hierarchies at all)
+
+
+;;; *********************************************
+;;; Storing results 
+;;;
 
 (defstruct rmrs-comparison-record
-  matched-rels
-  label-list
-  var-list)
+  matched-rels)
 
 (defstruct match-rel-record
   rel1
@@ -91,8 +101,7 @@ the ARGs.
   var-comp-status
   arg-comp-status
   label-pair ;; rel labels
-  cvar-pair ;; characteristic vars of ns and vs - taken
-            ;; as fixed
+  cvar-pair ;; characteristic vars
   other-vars ;; all other var pairs
   )
 
@@ -106,13 +115,15 @@ the ARGs.
 
   
 ;;; *************************************************************  
-  
+;;;
+;;; Code
+;;;
+
 ;;; Main entry point - same-source-p is t if we want
 ;;; to use the character position information 
-;;; FIX - need to put in a quick and dirty check for the
+;;; FIX? - possibly need to put in a quick and dirty check for the
 ;;; weighted match case for e.g. QA, since otherwise this
-;;; will be much too expensive
-
+;;; might be too expensive computationally
 
 (defun compare-rmrs (rmrs1 rmrs2 same-source-p input-string)
   (declare (ignore input-string))
@@ -124,20 +135,21 @@ the ARGs.
 	 (new-rmrs2 (sort-rmrs (convert-to-comparison-rmrs rmrs2)
 			       same-source-p))
 	 (first-pass
-	  (compare-rmrs-aux new-rmrs1 new-rmrs2 
-			      (initial-comparison-record)
-			      same-source-p))
+	  (compare-rmrs-liszts (rmrs-liszt new-rmrs1) 
+			       (rmrs-liszt new-rmrs2)
+			       (initial-comparison-record)
+			       same-source-p))
 	 (second-pass (prune-comparison-record first-pass)))
     (expand-comparison-records second-pass)))
 
 (defun initial-comparison-record nil
   (make-rmrs-comparison-record 
-   :matched-rels nil
-   :label-list nil
-   :var-list nil))
+   :matched-rels nil))
 
 #|
-sorting
+***********************************************
+Sorting
+**********************************************
 
 If the source is the same, this is assumed to have some reflection
 on linear order of rels and the sorting reflects that linear order
@@ -148,10 +160,10 @@ rels with the same character positions.
 
 In the case where the source is not the same, and we're allowing
 for subsumption, the rels are sorted
-into two groups.  The first group are the lexially governed cases
+into three groups.  The first group contains the lexially governed cases
 which can be put into a canonical order (alphabetical order on 
-real predicate name, followed by constant-valued rels which
-have alphabetical order on CARGs).  The second group
+real predicate name).  The second group is the constant-valued rels which
+have alphabetical order on CARGs.  The third group
 are the grammar preds, which can't be put into any order lexically
 because we have to allow for subsumption.
 We may be able to order them by some notion of 
@@ -166,22 +178,19 @@ of a canonical order.  If this were fully general, i.e.,
 if we allowed for any predicate to subsume any other,
 we would have a big problem ... 
 
-As it is, we make the assumption
-that we do an initial match on real preds where
-subsumption is simply as indicated by the lemma/pos/sense 
-conventions. grampreds without CARGS are always treated as secondary.
+As it is, we make the assumption that we do an initial match on real 
+preds where subsumption is simply as indicated by the lemma/pos/sense 
+conventions.  Grampreds without CARGS are always treated as secondary.
 Grampreds may be in a subsumption hierarchy with respect to 
 eachother and real preds, but we aren't going to bother about grampreds
 in RMRSs from different sources unless we have some matching 
 realpreds.  So the code for doing the gram pred match
-can be slower, though we don't do full backtracking and 
-we assume a single match - see below.
+can be slower.
 
 FIX - we could have a speedier version for equality checking where
 the canonical order is fully defined.
 
 |#
-
 
 (defun sort-rmrs (rmrs same-source-p)
   (let* ((liszt (rmrs-liszt rmrs))
@@ -190,7 +199,8 @@ the canonical order is fully defined.
 	      (loop for relset in
 		    (combine-similar-relations liszt nil 
 					       #'rmrs-rel-sort-same-source-eql)
-		    ;;; combine-similar-relations in mrs/mrscorpus.lisp
+		    ;;; combine-similar-relations in
+		    ;;; mrs/mrscorpus.lisp
 		  collect
 		  (group-relations-by-class relset))
 	    (list (group-relations-by-class liszt)))))
@@ -202,6 +212,8 @@ the canonical order is fully defined.
       (setf (rmrs-liszt rmrs)
 	sorted-liszt)
       rmrs)))
+
+;;; Sorting predicate functions
 
 (defun rmrs-rel-sort-same-source-eql (rel1 rel2)
   (let ((cfrom1 (char-rel-cfrom rel1))
@@ -228,6 +240,24 @@ the canonical order is fully defined.
     (or (< cfrom1 cfrom2)
 	(and (eql cfrom1 cfrom2) 
 	     (< cto1 cto2)))))
+
+(defun rmrs-constant-pred-lesser-p (rel1 rel2)
+  (let ((pred1 (rel-pred rel1))
+	(pred2 (rel-pred rel2)))
+    (if (equal pred1 pred2)
+	(let ((str1 (rel-parameter-strings rel1))
+	      (str2 (rel-parameter-strings rel2)))
+	  (string-lessp str1 str2))
+      (string-lessp pred1 pred2))))
+      
+(defun rmrs-real-pred-lesser-p (rel1 rel2)
+  (let ((pred1 (rel-pred rel1))
+	(pred2 (rel-pred rel2)))
+  ;;; note that this ignores pos tags and senses deliberately
+    (string-lessp (realpred-lemma pred1)
+		  (realpred-lemma pred2))))
+
+;;; Dividing relations into classes
 
 (defun group-relations-by-class (rels)
   (let ((real-pred-rels nil)
@@ -257,111 +287,45 @@ the canonical order is fully defined.
 			     #'rmrs-constant-pred-lesser-p :key #'car)
        :gram-preds gram-pred-rels))))
 
-
-(defun rmrs-constant-pred-lesser-p (rel1 rel2)
+(defun rmrs-constant-pred-rel-eql (rel1 rel2)
+  ;;; used for grouping similar relations
+    ;;; needs to be kept reasonably consistent with above
   (let ((pred1 (rel-pred rel1))
 	(pred2 (rel-pred rel2)))
-    (if (equal pred1 pred2)
-	(let ((str1 (rel-parameter-strings rel1))
-	      (str2 (rel-parameter-strings rel2)))
-	  (string-lessp str1 str2))
-      (string-lessp pred1 pred2))))
-      
+    (and (equal pred1 pred2) 
+	 (string-equal (rel-parameter-strings rel1)
+		       (rel-parameter-strings rel2)))))
 
-
-(defun rmrs-real-pred-lesser-p (rel1 rel2)
+(defun rmrs-real-pred-rel-eql (rel1 rel2)
+  ;;; used for grouping similar relations
   (let ((pred1 (rel-pred rel1))
 	(pred2 (rel-pred rel2)))
-  ;;; note that this ignores pos tags and senses deliberately
-    (string-lessp (realpred-lemma pred1)
-		  (realpred-lemma pred2))))
+    (compare-rmrs-real-preds pred1 pred2)))
 
 
-;;; Inequalities
-;;;
-;;; When two RMRSs are compared, it may be possible to
-;;; find a match which involves equating two currently unequated
-;;; variables.  For ERG output, we currently assume that this will never
-;;; happen.  
-;;; For RASP output, we guarantee that primary variables associated
-;;; with nouns and with verbs will never be shared.
-;;;
-;;; e.g. dog_n_rel(x1), cat_n_rel(x2), x1 neq x2
-;;;
-;;; This could be modelled via binary inequalities, but this is
-;;; extremely verbose and currently seems unnecessary
-;;; Instead we have a list of distinguished variables
-;;; and a list of undistinguished variables. 
-;;; An undistinguished variable may be equated with a distinguished
-;;; one or with another undistinguished variable, but two
-;;; distinguished variables may never be equated.
-;;; For the ERG, currently, all real variables are distinguished.
-;;; All labels are always distinguished.
+;;; **********************************************
+;;; Conversion to comp-rmrs structures
 
-;;; Variables are extracted during the pass over the RMRS
-;;; structure which converts it to a comp-rmrs
-;;; This code also puts any CARG values into parameter-strings
+;;; This code puts any CARG values into parameter-strings
 ;;; --- CARGS can subsequently be ignored
 
 (defun convert-to-comparison-rmrs (rmrs)
-  (let* ((holes (list (rmrs-top-h rmrs)))
-	 (labels nil)
-	 (distinguished nil)
-	 (undistinguished nil))
     (loop for ep in (rmrs-liszt rmrs)
 	do
-	  (progn
-	    (pushnew (rel-handel ep) labels 
-		     :test #'eql-var-id)
-	    (let ((ep-var (retrieve-rmrs-ep-var ep)))
-	      (if (or (eql (rmrs-origin rmrs) :erg)
-		      (distinguished-rel-type-p ep))
-		  (pushnew ep-var distinguished
-			   :test #'eql-var-id)
-		(pushnew ep-var undistinguished
-			 :test #'eql-var-id))
-	      (setf (rel-parameter-strings ep)
-		(get-carg-value
-		 ep
-		 (rmrs-rmrs-args rmrs))))))
-      (dolist (qeq (rmrs-h-cons rmrs))
-	(cond ;;; TEMP - case
-	  ((string-equal (hcons-relation qeq) "qeq")
-	   (pushnew (hcons-scarg qeq) holes 
-		    :test #'eql-var-id)
-	   (pushnew (hcons-outscpd qeq) labels 
-		    :test #'eql-var-id))
-	  (t (error "Unsupported hcons relation ~A"  (hcons-relation qeq)))))
-      (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
-	    do
-	    (progn
-	      (pushnew (rmrs-arg-label rmrs-arg) 
-		       labels :test #'eql-var-id)
-	      (let ((value (rmrs-arg-val rmrs-arg)))
-		(if (is-handel-var value)
-		    (pushnew value holes :test #'eql-var-id)
-		  (if (var-p value) 
-		      (ecase (rmrs-origin rmrs) 
-			(:erg
-			 (pushnew value distinguished 
-				  :test #'eql-var-id))
-			(:rasp 
-			 (pushnew value undistinguished 
-				  :test #'eql-var-id))))))))
-	(make-comp-rmrs
-	 :top-h (rmrs-top-h rmrs)
-	 :liszt (rmrs-liszt rmrs)
-	 :h-cons (rmrs-h-cons rmrs)
-	 :rmrs-args (rmrs-rmrs-args rmrs)
-	 :in-groups (rmrs-in-groups rmrs)
-	 :bindings nil ;;; should already be canonicalized??
-	 :cfrom (rmrs-cfrom rmrs)
-	 :cto (rmrs-cto rmrs)
-	 :origin (rmrs-origin rmrs)
-	 :labels labels
-	 :holes holes
-	 :distinguished distinguished
-	 :undistinguished undistinguished)))
+	  (setf (rel-parameter-strings ep)
+	    (get-carg-value
+	     ep
+	     (rmrs-rmrs-args rmrs))))
+    (make-comp-rmrs
+     :top-h (rmrs-top-h rmrs)
+     :liszt (rmrs-liszt rmrs)
+     :h-cons (rmrs-h-cons rmrs)
+     :rmrs-args (rmrs-rmrs-args rmrs)
+     :in-groups (rmrs-in-groups rmrs)
+     :bindings nil ;;; should already be canonicalized??
+     :cfrom (rmrs-cfrom rmrs)
+     :cto (rmrs-cto rmrs)
+     :origin (rmrs-origin rmrs)))
 
 (defun get-carg-value (rel rmrs-args)
   (let ((lbl (rel-handel rel)))
@@ -371,24 +335,10 @@ the canonical order is fully defined.
 		 (equal (rmrs-arg-arg-type arg)
 			"CARG"))
 	(return (rmrs-arg-val arg))))))
-      
 
-(defun distinguished-rel-type-p (rel)
-  (let ((pred (rel-pred rel)))
-    (or (equal pred "named_rel")
-	(and (realpred-p pred)
-	 (or (equal (realpred-pos pred) "n")
-	     (equal (realpred-pos pred) "v"))))))
-
-
-(defun compare-rmrs-aux (rmrs1 rmrs2 comp-record same-source-p)
-  ;;; FIX needs much more!
-  ;;; compare-rmrs-top-h 
-  (compare-rmrs-liszts (rmrs-liszt rmrs1) (rmrs-liszt rmrs2) 
-		       comp-record same-source-p))
-  ;;; rmrs-args 
-  ;;; rmrs-h-cons
-  ;;; rmrs-in-groups
+;;; ********************************************
+;;; Code for inital pred comparison
+;;;
 
 (defun compare-rmrs-liszts (l1 l2 comp-record same-source-p)
   (if (and l1 l2)
@@ -456,10 +406,6 @@ the canonical order is fully defined.
     comp-record))
 
 (defun compare-rmrs-unordered-rel-set (s1 s2 comp-record)
-  ;;; the full set of possibilities here is horrible
-  ;;; since in principle if we have {a,b} and {c,d}
-  ;;; we should allow for the possibility that if a matches c
-  ;;; b might match d if we ignored the a/c match    
   (let ((matches nil))
     (dolist (rel1 s1)
       (dolist (rel2 s2)
@@ -475,40 +421,31 @@ the canonical order is fully defined.
 (defun compare-rmrs-rels (rel1 rel2)
   (let ((pred-comparison (compare-rmrs-preds rel1 rel2)))
     (if pred-comparison
-	(let ((match-record
-	       (make-match-rel-record :rel1 rel1
-				      :rel2 rel2
-				      :pred-comp-status pred-comparison
-				      :label-pair 
-				      (cons (rel-handel rel1)
-					    (rel-handel rel2))
-				      :cvar-pair nil
-				      :other-vars nil)))    
+	(let* ((cvar-pair (get-char-var-pair rel1 rel2))
+	       ;;; don't let var match affect comp-status for now
+	       (match-record
+		(make-match-rel-record :rel1 rel1
+				       :rel2 rel2
+				       :pred-comp-status pred-comparison
+				       :label-pair 
+				       (cons (var-id (rel-handel rel1))
+					     (var-id (rel-handel rel2)))
+				       :cvar-pair cvar-pair 
+				       :other-vars nil)))    
 	  match-record)
       nil)))
 
-
-#|
-	(let ((var-match-record 
-	       (let ((label-match (compare-rmrs-labels 
-				   (rel-handel rel1)
-				   (rel-handel rel2)
-				   comparison-record)))
-		 (if label-match
-		     (let* ((var1 (retrieve-rmrs-ep-var rel1))
-			    (var2 (retrieve-rmrs-ep-var rel2)))
-		       (cond ((and var1 var2)
-			      (compare-rmrs-vars var1 var2 label-match))
-			     ((or var1 var2) nil) 
-			     ;; this probably shouldn't happen		      
-			     (t label-match)))
-		   nil))))
-|#
-
+(defun get-char-var-pair (rel1 rel2)
+  (let* ((var1 (retrieve-rmrs-ep-var rel1))
+	 (var2 (retrieve-rmrs-ep-var rel2)))
+    (if (and var1 var2)
+	(cons (var-id var1)
+	      (var-id var2)))))
 
 (defun compare-rmrs-preds (rel1 rel2)
-  ;;; FIX - need to think about the parameter
-  ;;; strings handling
+  ;;; FIX? - need to think about the parameter
+  ;;; strings handling.  Note that rmrs-constant-pred-rel-eql
+  ;;; needs to be consistent with this
   (let ((pred1 (rel-pred rel1))
 	(pred2 (rel-pred rel2)))
     (cond ((and (realpred-p pred1) 
@@ -536,21 +473,6 @@ the canonical order is fully defined.
 		(not (or (rel-parameter-strings rel1)
 			 (rel-parameter-strings rel2)))) :comp)
 	  (t nil))))
-
-(defun rmrs-constant-pred-rel-eql (rel1 rel2)
-  ;;; used for grouping similar relations
-    ;;; needs to be kept reasonably consistent with above
-  (let ((pred1 (rel-pred rel1))
-	(pred2 (rel-pred rel2)))
-    (and (equal pred1 pred2) 
-	 (string-equal (rel-parameter-strings rel1)
-		       (rel-parameter-strings rel2)))))
-
-(defun rmrs-real-pred-rel-eql (rel1 rel2)
-  ;;; used for grouping similar relations
-  (let ((pred1 (rel-pred rel1))
-	(pred2 (rel-pred rel2)))
-    (compare-rmrs-real-preds pred1 pred2)))
 
 (defun gpred-subsumes-real-p (gpred real-pred)
   ;;; returns t if the gpred subsumes the real-pred
@@ -609,33 +531,104 @@ the canonical order is fully defined.
   (equal (realpred-pos pred)
 	 "u"))
 
-(defun compare-rmrs-vars (var1 var2 comparison-record)
-  (declare (ignore var1 var2))
-  comparison-record)
-
-(defun compare-rmrs-labels (var1 var2 comparison-record)
-  (declare (ignore var1 var2))
-  comparison-record)
-
-#|
-
-(defun compare-rmrs-vars (var1 var2 comparison-record)
-  (let ((extra-comparison (compare-rmrs-extras (var-extra var1)
-					       (var-extra var2))))
-    (if extra-comparison
-	(if (not-eq-vars (var-id var1) 
-			 (var-id var2))
-	    ))))
-
-|#
 
 
 ;;;; ******************************************************
 ;;; The second pass
+;;; 
 ;;; *******************************************************
 
-(defun prune-comparison-record (comparison-record)
-  comparison-record)
+;;; Inequalities
+;;;
+;;; When two RMRSs are compared, it may be possible to
+;;; find a match which involves equating two currently unequated
+;;; variables.  For ERG output, we currently assume that this will never
+;;; happen.  
+;;; For RASP output, we guarantee that primary variables associated
+;;; with nouns and with verbs will never be shared.
+;;;
+;;; e.g. dog_n_rel(x1), cat_n_rel(x2), x1 neq x2
+;;;
+;;; This could be modelled via binary inequalities, but this is
+;;; extremely verbose and currently seems unnecessary
+;;; Instead we have a list of distinguished variables
+;;; and a list of undistinguished variables. 
+;;; An undistinguished variable may be equated with a distinguished
+;;; one or with another undistinguished variable, but two
+;;; distinguished variables may never be equated.
+;;; For the ERG, currently, all real variables are distinguished.
+;;; All labels are always distinguished.
+
+(defun distinguished-rel-type-p (rel)
+  (let ((pred (rel-pred rel)))
+    (or (equal pred "named_rel")
+	(and (realpred-p pred)
+	 (or (equal (realpred-pos pred) "n")
+	     (equal (realpred-pos pred) "v"))))))
+
+;;; Pruning 
+
+(defun prune-comparison-record (comp-record)
+  (let ((firm-bindings nil)
+	(matches (rmrs-comparison-record-matched-rels
+			    comp-record)))
+    (dolist (match-set matches)
+	(unless (cdr match-set)      
+	  (let* ((mrec (car match-set))
+		 (pred-comp-status (match-rel-record-pred-comp-status mrec)))
+	  (when (distinguished-rel-type-p
+		 (if (eql pred-comp-status :sub2)
+		     (match-rel-record-rel2 mrec)
+		   (match-rel-record-rel1 mrec)))
+	    (let ((label-pair (match-rel-record-label-pair mrec))
+		  (cvar-pair (match-rel-record-cvar-pair mrec)))
+	      (push label-pair firm-bindings)
+	      (push cvar-pair firm-bindings))))))
+    (let ((new-matches
+	   (loop for match-set in matches
+	       nconc
+		 (prune-match-set match-set firm-bindings))))
+      (setf (rmrs-comparison-record-matched-rels
+	     comp-record)
+	new-matches)
+      comp-record)))
+    
+(defun prune-match-set (mrecs bindings)
+  ;;; this doesn't look at arguments but gets rid of
+  ;;; det etc pairings where there's a match failure 
+  ;;; on the noun.  It could be adapted so it looked at arguments
+  ;;; too - see whether this is necessary later.
+  ;;; The rationale here is that things like determiners have
+  ;;; no interesting existence apart from the nouns.
+  (let ((new-mrecs
+	 (loop for match-record in mrecs
+	     unless (incompatible-with-bindings-p 
+		     (match-rel-record-cvar-pair match-record) 
+		     bindings)
+	     collect match-record)))
+    (if new-mrecs
+	(list new-mrecs))))
+	     
+(defun incompatible-with-bindings-p (pair firm-bindings)
+  ;;; all vars in firm bindings are
+  ;;; assumed to be unique
+    (let* ((a-var (car pair))
+	   (b-var (cdr pair))
+	   (bound-a (assoc a-var firm-bindings))
+	   (bound-b (rassoc b-var firm-bindings)))
+      (or (and bound-a
+	       (not (eql (cdr bound-a) b-var)))
+	  (and bound-b
+	       (not (eql (car bound-b) a-var))))))
+
+
+;;; ******************************************************
+;;; Expansion and arguments
+;;;
+;;; FIX - this needs to be modified to prune in the same way as above
+;;; so that we only get determiners matching with the particular noun
+;;;
+;;; *****************************************************
 
 (defun expand-comparison-records (comp-record)
   (let* ((match-alternatives (rmrs-comparison-record-matched-rels
@@ -645,12 +638,7 @@ the canonical order is fully defined.
     (loop for option in flat-matches
 	collect
 	  (make-rmrs-comparison-record 
-	   :matched-rels option
-	   :label-list (rmrs-comparison-record-label-list
-			comp-record)
-	   :var-list
-	   (rmrs-comparison-record-var-list
-			      comp-record)))))
+	   :matched-rels option))))
 
 
 (defun expand-comparison-records-aux (option-list)
@@ -712,4 +700,54 @@ the canonical order is fully defined.
 	(return t)))))
     
     
-    
+;;; Checking argument bindings
+;;;
+;;;
+#|
+Arguments are checked after expansion to see whether they
+are compatible with the set of binding for the particular
+set of match record that has been produced.
+
+Argument compatability status is recorded.
+
+Unattached arguments are ignored
+|#
+
+#|
+    (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
+	do
+	  (progn
+	    (pushnew (rmrs-arg-label rmrs-arg) 
+		     labels :test #'eql-var-id)
+	    (let ((value (rmrs-arg-val rmrs-arg)))
+	      (if (is-handel-var value)
+		  (pushnew value holes :test #'eql-var-id)
+		(if (var-p value) 
+		    (ecase (rmrs-origin rmrs) 
+		      (:erg
+		       (pushnew value distinguished 
+				:test #'eql-var-id))
+		      (:rasp 
+		       (pushnew value undistinguished 
+				  :test #'eql-var-id))))))))
+
+|#
+
+;;; Checking top label
+;;;
+
+;;; Checking in-groups
+;;;
+;;; Canonicalised in-groups
+;;;
+
+
+
+;;; Checking h-cons
+;;;
+;;; This is a syntactic check in the sense that two sets of
+;;; h-cons might give rise to the same scopings but
+;;; still be non-eql.  However, because the qeq construction
+;;; has rules which are obeyed by the ERG and RASP, this doesn't concern
+;;; us.  The hcons check is therefore trivial - exact match is a match
+;;; anything else isn't

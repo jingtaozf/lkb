@@ -213,8 +213,8 @@
     (unless (and (eql (car ing-a-xml) '|ing-a|)
                  (eql (car ing-b-xml) '|ing-b|))
       (error "Malformed ing ~A" content))
-    (make-in-group :labels (list (read-rmrs-var (cadr ing-a-xml))
-                                 (read-rmrs-var (cadr ing-b-xml))))))
+    (make-in-group :label-a (read-rmrs-var (cadr ing-a-xml))
+                   :label-b (read-rmrs-var (cadr ing-b-xml)))))
                                  
 
 (defun read-rmrs-hcons (content)

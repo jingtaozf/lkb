@@ -183,8 +183,8 @@
   (let ((ing-a nil) (ing-b nil))
     (setf ing-a (read-rmrs-grammar-var (second (car content))))
     (setf ing-b (read-rmrs-grammar-var (second (cadr content))))
-    (make-in-group :labels (list (construct-grammar-var ing-a) 
-                                 (construct-grammar-var ing-b)))))
+    (make-in-group :label-a (construct-grammar-var ing-a) 
+                   :label-b (construct-grammar-var ing-b))))
 
 (defun read-rmrs-semstruct-qeq (content)
 ;;; <!ELEMENT hcons (hi, lo)>
