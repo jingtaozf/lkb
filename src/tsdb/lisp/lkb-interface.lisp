@@ -127,7 +127,7 @@
     (setf *first-only-p* (if exhaustive
                            nil
                            (if (integerp nanalyses)
-                             (unless (zerop nanalyses) nanalyses)
+                             (or (zerop nanalyses) nanalyses)
                              (if (integerp *first-only-p*) *first-only-p* 1))))
     (let ((context (pairlis '(:first-only-p)
                             (list first-only-p))))
@@ -172,7 +172,7 @@
          (*first-only-p* (if exhaustive
                            nil
                            (if (integerp nanalyses)
-                             (unless (zerop nanalyses) nanalyses)
+                             (or (zerop nanalyses) nanalyses)
                              (if (integerp *first-only-p*) 
                                 *first-only-p* 1))))
          (*do-something-with-parse* nil))
@@ -369,7 +369,7 @@
          (*gen-first-only-p* (if exhaustive
                                nil
                                (if (integerp nanalyses)
-                                 (unless (zerop nanalyses) nanalyses)
+                                 (or (zerop nanalyses) nanalyses)
                                  (if (integerp *gen-first-only-p*) 
                                    *gen-first-only-p*
                                    1))))
