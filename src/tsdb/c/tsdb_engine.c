@@ -114,9 +114,10 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
                                   selection_2->relations[j])) {
 
         relation_1 = tsdb_find_relation(selection_1->relations[i]->name);
-        if (!common)
-          common =strdup(selection_1->relations[i]->name);
-        /* tsdb_find_relation gives the real thing */
+        /*        
+           if (!common)
+           common =strdup(selection_1->relations[i]->name);
+           tsdb_find_relation gives the real thing */
 
         if (relation_1 == selection_1->relations[i]) {
 /*          printf("Basic relation pointer found!!\n");*/
@@ -320,6 +321,7 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
 |* tsdb_simple_join() computes the equijoin (on the first common key) of
 |* .selection_1. and .selection_2. which are assumed to be compatible relation
 |* instances (i.e. they contain the same relations in identical order).
+|* tsdb_simple_join() doesn't free selection_[1,2].
 |*****************************************************************************|
 |* <known bugs>
 |* At least for the key list we are currently looking at insert() clearly is 
@@ -576,6 +578,8 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
   
   selection_3->key_lists[selection_3->n_key_lists] = NULL;
   free(names);
+  free(delete);
+  delete = NULL;
 
   if(d) {
     if(selection_3->n_relations) {
@@ -619,8 +623,17 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
 
 } /* tsdb_join() */
 
-/*---------------------------------------------------------------------------*/
 
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_simple_merge()
+|*     version: 
+|*  written by:  tom fettig
+|* last update: 13.07.95
+|*  updated by: tom, dfki saarbruecken
+|*****************************************************************************|
+|* tsdb_simple_merge() doesn't deallocate selection_[1,2]!
+\*****************************************************************************/
 
 Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
                                   Tsdb_selection *selection_2) {
@@ -804,11 +817,24 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
    } /* for */
  } /* if */
  
+ free(order);
  return(result);
    
 } /* tsdb_simple_merge() */
 /*---------------------------------------------------------------------------*/
 
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_complex_merge()
+|*     version: 
+|*  written by: tom fettig 
+|* last update: 13-jul-95
+|*  updated by: tom, dfki saarbruecken
+|*****************************************************************************|
+|* doesn't touch selection_1 and selection_2, but shouldn't lose memory
+|* if all tables are loaded!!
+\*****************************************************************************/
 
 Tsdb_selection* tsdb_complex_merge(Tsdb_selection *selection_1,
                                    Tsdb_selection *selection_2)
@@ -839,16 +865,20 @@ Tsdb_selection* tsdb_complex_merge(Tsdb_selection *selection_1,
   
   Tsdb_selection *result;
   Tsdb_relation **path=NULL,**not_in_1,**not_in_2;
-  Tsdb_selection *one, *two, *three;
+  Tsdb_selection *one, *two, *three,*temp;
   int offset_1, offset_2;
   int  i, j, l_1,l_2;
   BOOL joinable = FALSE,kaerb = FALSE;
    
   not_in_1 = (Tsdb_relation**)
     malloc(tsdb_n_relations()*sizeof(Tsdb_relation*));
+  if (!not_in_1) 
+    return(NULL);
   not_in_2 = (Tsdb_relation**)
     malloc(tsdb_n_relations()*sizeof(Tsdb_relation*));
-  
+  if (!not_in_2)
+    return NULL;
+
   for(l_2 = 0, offset_1 = 0, i = 0, kaerb = FALSE; 
       !kaerb && i < selection_1->n_relations; 
       i++) {
@@ -903,13 +933,20 @@ Tsdb_selection* tsdb_complex_merge(Tsdb_selection *selection_1,
       path[i-1] = (Tsdb_relation*) NULL;
 
       three = tsdb_find_tables(path+1);
+      temp = one;
       one = tsdb_simple_join(one,three);
-
+      tsdb_free_selection(temp);
+      tsdb_free_selection(three);
       three = tsdb_find_tables(path+1);
+      temp = two;
       two  = tsdb_simple_join(two,three);
+      tsdb_free_selection(temp);
+      tsdb_free_selection(three);
     }
     selection_2 = tsdb_simple_join(selection_2,one);
+    tsdb_free_selection(one);
     selection_1 = tsdb_simple_join(selection_1,two);
+    tsdb_free_selection(two);
 #if defined(DEBUG) && defined(TOM)
     tsdb_print_selection(selection_1,tsdb_debug_stream);
     tsdb_print_selection(selection_2,tsdb_debug_stream);
@@ -920,11 +957,13 @@ Tsdb_selection* tsdb_complex_merge(Tsdb_selection *selection_1,
       /* l_1 relations are lacking from selection_1 */
       one = tsdb_find_tables(not_in_1);
       selection_1 = tsdb_simple_join(selection_1,one);
+      tsdb_free_selection(one);
     } /* l_1 */
     if (l_2) {
       /* l_2 relations are lacking from selection_2 */
       two = tsdb_find_tables(not_in_2);
       selection_2 = tsdb_simple_join(selection_2,two);
+      tsdb_free_selection(two);
     } /* l_2 */
   } /* else */
   /* now everything is set up that selection_1 and selection_2 have
@@ -938,6 +977,8 @@ Tsdb_selection* tsdb_complex_merge(Tsdb_selection *selection_1,
   tsdb_print_selection(selection_2,tsdb_debug_stream);
 #endif
   result = tsdb_simple_merge(selection_1,selection_2);
+  free(not_in_1);
+  free(not_in_2);
   return(result);
 } /* tsdb_complex_merge() */
 /*---------------------------------------------------------------------------*/
