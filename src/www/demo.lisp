@@ -793,7 +793,12 @@
     &mdash; LKB: ~a &mdash; ~a: ~a]</div>~%"
    (tsdb::current-grammar) 
    (subseq lkb::*cvs-version* 6 (- (length lkb::*cvs-version*) 2))
-   tsdb::*tsdb-name* tsdb::*tsdb-version*))
+   tsdb::*tsdb-name* tsdb::*tsdb-version*)
+  (format
+   stream
+   "<div id=\"navtxt\" class=\"navtext\" ~
+         style=\"position: absolute; top: -100px; left: 0px; ~
+                 visibility: hidden\"></div>"))
 
 (let ((lock (mp:make-process-lock)))
   (defun www-log (request input readings time edges error)
