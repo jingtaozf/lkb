@@ -8,18 +8,18 @@
     :depends-on (#+:lkb "lkb" #+:page "page")
     :finally-do
     (progn
-      (when *grammar-directory* 
+      (when COMMON-LISP-USER::*grammar-directory* 
               (load (merge-pathnames
                         (make-pathname :name "mrsglobals-eng.lisp")
-                    *grammar-directory*)))
-      (when (and *grammar-directory*
+                    COMMON-LISP-USER::*grammar-directory*)))
+      (when (and COMMON-LISP-USER::*grammar-directory*
                  mrs::*mrs-to-vit* 
                  (fboundp 'read-mrs-rule-file-aux))
         (read-mrs-rule-file-aux 
                 (merge-pathnames
                    (make-pathname :directory 
                        (pathname-directory
-                        (dir-append *grammar-directory* 
+                        (dir-append COMMON-LISP-USER::*grammar-directory* 
                                     '(:relative "data"))))          
                    (make-pathname :name "new-rules.mrs")))))
     :components

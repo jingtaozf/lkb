@@ -6,7 +6,7 @@
 (in-package :cl-user)
 
 (defun more-robust-mrs-equalp (mrs1 mrs2 &optional syntactic-p)
-  (mrs::mrs-equalp mrs1 mrs2 syntactic-p t))
+  (mrs::mrs-equalp mrs1 mrs2 syntactic-p *debugging*))
 #|
   ;; *** make sure any errors in mrs-equalp don't stop the show
    (handler-case 

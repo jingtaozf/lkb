@@ -210,7 +210,9 @@
    ;;; corresponding to the word senses 
    ;;; - the type of the dag is used 
    ;;; to do the indexing
-      (let* ((word-senses 
+  (let* ((multi-results
+               (add-multi-words morph-poss right-vertex))
+         (word-senses 
               (for morph-res in morph-poss
                    append
                    (for sense in (get-senses (car morph-res))
@@ -230,12 +232,10 @@
                               (construct-lex-edge sense history local-word
                                                     lex-ids)
                                  right-vertex)))
-        (let ((multi-results
-               (add-multi-words morph-poss right-vertex)))
           ; add-multi-words is mostly for side effects, but want to
           ; check if we've found something, and produce correct error
           ; messages, so we return the strings found
-          (values word-senses multi-results))))
+          (values word-senses multi-results)))
 
 (defun construct-lex-edge (sense history word lex-ids)
   (make-edge :id (next-edge) 
@@ -335,7 +335,9 @@
 
 (defun get-multi-senses (stem-string right-vertex)
   (let ((entries (get-unexpanded-lex-entry (string-upcase stem-string))))
-    (for entry in entries
+    (for entry in (sort entries #'(lambda (x y) 
+                                    (> (length (lex-or-psort-orth x))
+                                       (length (lex-or-psort-orth y)))))
          append
          (if (cdr (lex-or-psort-orth entry))
            (check-multi-word stem-string entry right-vertex
@@ -397,8 +399,10 @@
                                       :morph-res (list full-stem-string)
                                       :lex-ids (list (lex-or-psort-id
                                                 expanded-entry))
-                                      :fs (lex-or-psort-full-fs 
-                                           expanded-entry))
+                                      :fs 
+                                      (copy-tdfs-completely
+                                       (lex-or-psort-full-fs 
+                                        expanded-entry)))
                    (for rule in (for res in new-morph-res
                                      filter
                                      (caadr res))
@@ -412,8 +416,10 @@
                                                        full-word-string))
                                            :lex-ids (list (lex-or-psort-id
                                                 expanded-entry))
-                                    :fs (lex-or-psort-full-fs 
-                                         expanded-entry))))))))))))
+                                           :fs
+                                           (copy-tdfs-completely
+                                           (lex-or-psort-full-fs 
+                                         expanded-entry)))))))))))))
 
 
 (defun construct-morph-history (lex-ids history)
@@ -567,6 +573,8 @@
                                           child-fs-list)
    ;;; attempt to apply a grammar rule when we have all the parts which
    ;;; match its daughter categories 
+   ;; (format t "~%Rule id ~A left ~A right ~A filter ~A" (rule-id rule) 
+   ;; left-vertex right-vertex *filtered-tasks*)
    (let ((unification-result
            (evaluate-unifications rule (mapcar #'edge-dag child-fs-list)
                nil child-fs-list)))
@@ -588,7 +596,8 @@
                                         (copy-list (edge-leaves child)))
                                     child-fs-list))))
               (activate-context left-vertex new-edge right-vertex))
-         (when *debugging*
+        (when *debugging*
+;            (format t "~%~A" *filtered-tasks*)
             (format t "~%Unification failure on rule ~A and edges ~:A" 
                (rule-id rule) (mapcar #'edge-id child-fs-list))))))
 
@@ -760,7 +769,8 @@
    (terpri))
 
 (defun print-chart-entry (vertex item)
-   (when item 
+  (if item 
+    (progn
       (terpri)
       (dolist
          (configuration
@@ -775,7 +785,9 @@
                         (< (chart-configuration-begin span1)
                            (chart-configuration-begin span2)))))))
          (print-chart-configuration configuration vertex))
-      t))
+      t)
+    (aref *morphs* vertex)))      ; return t if we might be in the middle
+                                  ; of a multi word
 
 (defun print-chart-configuration (span right-vertex)
    (let ((e (chart-configuration-edge span)))

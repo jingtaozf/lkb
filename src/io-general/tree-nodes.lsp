@@ -408,15 +408,17 @@
    (let ((edge-symbols nil))
       (dotimes (vertex (1- *chart-limit*))
          (when (aref *chart* (1+ vertex))
-            (dolist (span (chart-entry-configurations (aref *chart* (1+ vertex))))
+           (dolist (span (chart-entry-configurations 
+                          (aref *chart* (1+ vertex))))
                (let ((e (chart-configuration-edge span)))
                   (push
                      (cons (edge-id e) (make-edge-symbol (edge-id e)))
                      edge-symbols)))))
       (dotimes (vertex (1- *chart-limit*))
          (if (aref *chart* (1+ vertex)) 
-            (create-chart-pointers1 (1+ vertex) root edge-symbols)
-            (return vertex)))))
+             (create-chart-pointers1 (1+ vertex) root edge-symbols)
+           (unless (aref *morphs* (1+ vertex))
+            (return vertex))))))
 
 
 (defun create-chart-pointers1 (right-vertex root edge-symbols)
@@ -426,7 +428,8 @@
             ((e (chart-configuration-edge span))
              (edge-symbol (cdr (assoc (edge-id e) edge-symbols))))
             (setf (get edge-symbol 'chart-edge-span)
-               (format nil "~A-~A" (chart-configuration-begin span) right-vertex))
+              (format nil "~A-~A" 
+                      (chart-configuration-begin span) right-vertex))
             (setf (get edge-symbol 'chart-edge-contents) e)
             (if (edge-children e)
                (dolist (c (edge-children e))
@@ -441,7 +444,8 @@
                      (push (setq pair (cons lex (make-symbol lex))) lex-pairs))
                   (push edge-symbol (get (cdr pair) 'chart-edge-descendents))
                   (pushnew (cdr pair)
-                     (aref (get root 'chart-edge-descendents) (1- right-vertex)))))))))
+                           (aref (get root 'chart-edge-descendents) 
+                                 (1- right-vertex)))))))))
 
 
 ;;; make a copy of an existing root and descendent chart lattice, filtered such that
