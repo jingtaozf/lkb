@@ -35,6 +35,10 @@
  *	Libpvm3 includes.
  *
  * $Log$
+ * Revision 1.52  2004/09/08 19:52:43  pvmsrc
+ * Upped to PVM version 3.4.5 (how sequential... :)
+ * (Spanker=kohl)
+ *
  * Revision 1.51  2001/09/27 21:24:18  pvmsrc
  * Increased default PVMTMPNAMLEN to 64...
  * 	- suggested by BEOSCYLD / Joe Vitale <vitale@scyld.com>
@@ -272,10 +276,10 @@
 *	Release version
 */
 
-#define	PVM_VER				"3.4.4"
+#define	PVM_VER				"3.4.5"
 #define	PVM_MAJOR_VERSION	3
 #define	PVM_MINOR_VERSION	4
-#define PVM_PATCH_VERSION	4
+#define PVM_PATCH_VERSION	5
 
 #ifndef WIN32
 #include	<sys/time.h>

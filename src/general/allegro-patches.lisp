@@ -25,7 +25,7 @@
 #+:allegro-v4.2 (pushnew :cltl2 *features*)
 #+:ansi-cl (pushnew :cltl2 *features*)
 
-#+(and (:or :linux86 :linux86-64) (not :linux))
+#+(and (or :linux86 :linux86-64) (not :linux))
 (pushnew :linux *features*)
 
 ;;;
@@ -47,11 +47,18 @@
 
 (defvar %binary-dir-name% 
     (or
-     #+(and (version>= 6 0) :linux86-64 :clim) ".l64l"
+     #+(and (version>= 7 0) :linux86-64 :clim) ".l7c4"
+     #+(and (version>= 7 0) :linux86-64 (not :clim)) ".l7s4"
+     #+(and (version>= 7 0) :linux86 :clim) ".l7cl"
+     #+(and (version>= 7 0) :linux86 (not :clim)) ".l7sl"
      #+(and (version>= 6 0) :linux86 :clim) ".l6cl"
      #+(and (version>= 6 0) :linux86 (not :clim)) ".l6sl"
+     #+(and (version>= 7 0) :sparc :clim) ".s7cl" 
+     #+(and (version>= 7 0) :sparc (not :clim)) ".s7sl"
      #+(and (version>= 6 0) :sparc :clim) ".s6cl" 
      #+(and (version>= 6 0) :sparc (not :clim)) ".s6sl"
+     #+(and (version>= 7 0) :mswindows :clim) "w7cl" 
+     #+(and (version>= 7 0) :mswindows (not :clim)) "w7sl"
      #+(and (version>= 6 0) :mswindows :clim) "w6cl" 
      #+(and (version>= 6 0) :mswindows (not :clim)) "w6sl"
      #+(and :sparc :clim) ".sacl" #+(and :sparc (not :clim)) ".sasl"
@@ -76,8 +83,8 @@
 
 (defvar %system-binaries%
   #+:prism "hppa"
-  #+:linux86 "linux"
-  #+:linux86-64 "linux"
+  #+:linux86 "linux.x86.32"
+  #+:linux86-64 "linux.x86.64"
   #+:sunos4 "sunos"
   #+(and :sun :svr4) "solaris"
   #+:alpha "osf"

@@ -17,14 +17,9 @@
     :binary-pathname (dir-append (get-binaries-dir "www") '(:relative "www"))
     :source-extension "lisp"
     :depends-on ("tsdb")
+    :initially-do (require :aserve)
     :components
-    ((:module "aserve"
-      :source-pathname %system-binaries%
-      :source-extension "fasl"
-      :load-only t
-      :components
-      ((:file "aserve")))
-     (:module "www"
+    ((:module "www"
       :source-pathname ""
       :binary-pathname ""
       :components

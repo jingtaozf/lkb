@@ -273,7 +273,9 @@
 #  define TSDB_COMMENT_CHRARACTER '#'
 #endif
 
-#define ISUPPER(c) (isascii (c) && isupper (c))
+#ifndef ISUPPER
+#  define ISUPPER(c) (isascii (c) && isupper (c))
+#endif
 
 typedef struct tsdb_field {
   char *name;

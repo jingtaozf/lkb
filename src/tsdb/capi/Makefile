@@ -3,8 +3,11 @@ SHELL = /bin/sh
 SOLARIS_LIBS = \
    5lib/getloadavg.o -L../../../lib/solaris -lpvm3 -lsocket -lnsl -lkstat -lc
 
-LINUX_LIBS = \
-   llib/getloadavg.o -L../../../lib/linux -lpvm3
+LINUX_X86_32_LIBS = \
+   -L../../../lib/linux.x86.32 -lpvm3
+
+LINUX_X86_64_LIBS = \
+   -L../../../lib/linux.x86.64 -lpvm3
 
 OSF_LIBS = \
     olib/getloadavg.o -L../../../lib/osf -lpvm3 -lc
@@ -25,21 +28,41 @@ solaris: acl.o gc.o capi.o client.o mfile.o ../../../include/itsdb.h
 	  client.o acl.o mfile.o 5lib/getloadavg.o \
 	  ../../../lib/solaris/libpvm3.a
 
-linux: 
+linux.x86.32: 
 	make clean;
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) acl.c
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) mfile.c
-	gcc -shared -o ../../pvm/linux/pvm.so acl.o $(LINUX_LIBS)
+	gcc -shared -o ../../pvm/linux.x86.32/pvm.so acl.o \
+	  $(LINUX_X86_32_LIBS)
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) gc.c
-	gcc -shared -o ../linux/gc.so gc.o
+	gcc -shared -o ../linux.x86.32/gc.so gc.o
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) capi.c
-	gcc -shared -o ../linux/capi.so capi.o acl.o $(LINUX_LIBS)
+	gcc -shared -o ../linux.x86.32/capi.so capi.o acl.o \
+	  $(LINUX_X86_32_LIBS)
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) client.c
-	gcc -shared -o ../../../lib/linux/libitsdb.so \
-	  client.o acl.o mfile.o $(LINUX_LIBS)
-	$(AR) ../../../lib/linux/libitsdb.a \
-	  client.o acl.o mfile.o llib/getloadavg.o
-	$(RANLIB) ../../../lib/linux/libitsdb.a
+	gcc -shared -o ../../../lib/linux.x86.32/libitsdb.so \
+	  client.o acl.o mfile.o $(LINUX_X86_32_LIBS)
+	$(AR) ../../../lib/linux.x86.32/libitsdb.a \
+	  client.o acl.o mfile.o
+	$(RANLIB) ../../../lib/linux.x86.32/libitsdb.a
+
+linux.x86.64: 
+	make clean;
+	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) acl.c
+	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) mfile.c
+	gcc -shared -o ../../pvm/linux.x86.64/pvm.so acl.o \
+          $(LINUX_X86_64_LIBS)
+	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) gc.c
+	gcc -shared -o ../linux.x86.64/gc.so gc.o
+	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) capi.c
+	gcc -shared -o ../linux.x86.64/capi.so capi.o acl.o \
+          $(LINUX_X86_64_LIBS)
+	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) client.c
+	gcc -shared -o ../../../lib/linux.x86.64/libitsdb.so \
+	  client.o acl.o mfile.o $(LINUX_X86_64_LIBS)
+	$(AR) ../../../lib/linux.x86.64/libitsdb.a \
+	  client.o acl.o mfile.o
+	$(RANLIB) ../../../lib/linux.x86.64/libitsdb.a
 
 osf: 
 	make clean;
@@ -57,7 +80,7 @@ osf:
 
 client: client.c ../../../include/itsdb.h
 	$(CC) -DMAIN -c client.c
-	$(CC) -DMAIN -o client client.o acl.o $(SOLARIS_LIBS)
+	$(CC) -DMAIN -o client client.o acl.o mfile.o $(LINUX_LIBS)
 
 client.o: client.c
 	rm -f client.o

@@ -21,7 +21,8 @@ LEX = flex -8
 MV = /bin/mv
 CP = /bin/cp
 GENERIC_LIBS = -lreadline -ltermcap -lregex
-LINUX_LIBS = -Lllib $(GENERIC_LIBS)
+LINUX_X86_32_LIBS = -Lllib $(GENERIC_LIBS)
+LINUX_X86_64_LIBS = -L6lib $(GENERIC_LIBS)
 SUNOS_LIBS = -L4lib $(GENERIC_LIBS) -liberty
 HPUX_LIBS = -L7lib -lreadline -ltermcap -lregex -liberty
 SOLARIS_LIBS = -L5lib $(GENERIC_LIBS) -liberty -lsocket -lnsl 
@@ -59,8 +60,14 @@ sunos : main.$(OBJ)$(DOT) libtsdb.a
 	$(CC) -o tsdb main.$(OBJ)$(DOT) libtsdb.a $(LIBS) $(SUNOS_LIBS)
 #
 #
-linux : main.$(OBJ)$(DOT) libtsdb.a
-	$(CC) -o tsdb main.$(OBJ)$(DOT) libtsdb.a $(LIBS) $(LINUX_LIBS)
+linux.x86.32 : main.$(OBJ)$(DOT) libtsdb.a
+	$(CC) -o tsdb main.$(OBJ)$(DOT) libtsdb.a $(LIBS) \
+	  $(LINUX_X86_32_LIBS)
+
+linux.x86.64 : main.$(OBJ)$(DOT) libtsdb.a
+	$(CC) -o tsdb main.$(OBJ)$(DOT) libtsdb.a $(LIBS) \
+          $(LINUX_X86_64_LIBS)
+
 #
 #
 hpux : main.$(OBJ)$(DOT) libtsdb.a

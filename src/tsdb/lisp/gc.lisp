@@ -21,15 +21,18 @@
 (defun enable-gc-cursor (pid)
   (let ((gc-start (get-entry-point "gc_start"))
         (gc-end (get-entry-point "gc_end")))
+    #-:64bit
     (when (and gc-start gc-end (integerp pid))
       (enable_gc_cursor pid)
       #+(version>= 5 0)
-      (push (make-array 1 :element-type '(unsigned-byte 32) 
-                        :initial-element gc-start)
+      (push (make-array 
+             1 :element-type '(unsigned-byte #-:64bit 32 #+:64bit 64) 
+             :initial-element gc-start)
             (excl:gc-before-c-hooks))
       #+(version>= 5 0)
-      (push (make-array 1 :element-type '(unsigned-byte 32) 
-                        :initial-element gc-end)
+      (push (make-array 
+             1 :element-type '(unsigned-byte #-:64bit 32 #+:64bit 64)
+             :initial-element gc-end)
             (excl:gc-after-c-hooks)))))
 
             
