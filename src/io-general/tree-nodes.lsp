@@ -703,19 +703,43 @@
                  (+ 1 (loop
                           for edge in children
                           maximize (depth edge))))))
+           (label (edge)
+             (typecase (edge-rule edge)
+               (rule (string (rule-id (edge-rule edge))))
+               (string (string-upcase (edge-rule edge)))
+               (symbol (string (edge-rule edge)))))
+           (derivation (edge &optional recursivep)
+             (if (edge-p edge)
+               (let* ((root (label edge))
+                      (from (edge-from edge))
+                      (to (edge-to edge))
+                      (children (or (edge-children edge)
+                                    (let ((foo (edge-morph-history edge)))
+                                      (when foo (list foo)))))
+                      (children (unless recursivep
+                                  (loop
+                                      for child in children
+                                      collect (derivation child t)))))
+                 (format 
+                  nil
+                  "~:[~2*~;[~a:~a] ~]~(~a~)~@[ -> ~{~a~^ ~}~]"
+                  (and (numberp from) (numberp to)) from to root children))
+               ""))
            (index (tree cache row column)
-             (let ((width
-                    (loop
-                        with row = (+ row 1)
-                        with daughters = (get tree 'daughters)
-                        with width = 0
-                        for tree in daughters
-                        do
-                          (incf width (index tree cache row (+ column width)))
-                        finally (return (if daughters width 1))))
-                   (leafp (null (get tree 'edge-record))))
+             (let* ((width
+                     (loop
+                         with row = (+ row 1)
+                         with daughters = (get tree 'daughters)
+                         with width = 0
+                         for tree in daughters
+                         do
+                           (incf width (index tree cache row (+ column width)))
+                         finally (return (if daughters width 1))))
+                    (edge (get tree 'edge-record))
+                    (comment (derivation edge))
+                    (leafp (null edge)))
                (setf (aref cache row column) 
-                 (list (get tree 'label) width leafp))
+                 (list (get tree 'label) width leafp comment))
                width)))
     (let* ((depth (depth edge))
            (width (- (length (edge-lex-ids edge)) 1))
@@ -736,13 +760,17 @@
                 when label do
                   (let ((string (first label))
                         (size (second label))
-                        (leafp (third label)))
+                        (leafp (third label))
+                        (comment (or (fourth label) "")))
                     (format 
                      stream 
                      "  <td class=~:[branch~;leaf~] colspan=~a>~%    ~
-                      <div class=~:[label~;form~]>~a</div>~%  </td>~
+                      <div class=~:[label~;form~]~%         ~
+                           onMouseOver=\"postStatus('~a')\"~%         ~
+                           onMouseOut=\"postStatus('')\">~a</div>~%  </td>~
                       ~:[~;<td class=margin>&nbsp;</td>~]~%"
-                     leafp (if (= size 1) 1 (- (* size 2) 1)) leafp string 
+                     leafp (if (= size 1) 1 (- (* size 2) 1)) 
+                     leafp comment string 
                      (< (+ column (- size 1)) width))
                     (setf span (- size 1)))
                 else when (zerop span) do

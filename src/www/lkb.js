@@ -15,7 +15,6 @@ function mrsVariableUnselect(name)
 
 function classSetColor(name, color) {
 
-  // window.status = 'setting ' + name + ' to ' + color;
   var all = document.all ? document.all : document.getElementsByTagName('*');
   var elements = new Array();
   for (var i = 0; i < all.length; i++)
@@ -23,3 +22,9 @@ function classSetColor(name, color) {
 
 } // classSetColor()
 
+
+function postStatus(string) {
+
+  window.status = string;
+  
+} // postStatus()

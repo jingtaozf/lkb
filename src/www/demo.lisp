@@ -227,7 +227,8 @@
       (format
        stream 
        "<div id=error>~
-        <p>No analysis was found for your input. Is it grammatical?</p>~%~
+        <p>No analysis was found for your input.&nbsp;&nbsp;~
+        Is it grammatical?</p>~%~
         </div>~%"))
      ((integerp error)
       (format
