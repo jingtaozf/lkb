@@ -84,6 +84,63 @@ output results
             (/ total-edges sentence-count)
             (/ (/ total-time sentence-count) 1000)))))
 
+(defun read-gen-test-file1 (file-name)
+  ;;; takes a file of output results from generation, and produces
+  ;;; averages etc
+  (let ((sentence-count 0)
+        (total-sentence-length 0)
+        (total-strings 0)
+        (total-edges 0)
+        (total-time 0))
+  (with-open-file (istream file-name :direction :input)
+    (loop (let ((res (read istream nil nil)))
+            (unless res (return))
+ ;           (format t "~%~S" res)
+            (let* ((input-sentence
+                    (split-into-words 
+                     (preprocess-sentence-string (elt res 0))))
+                   (input-sentence-text 
+                    (apply #'concatenate 'string 
+                           (add-spaces input-sentence)))
+                   (strings (elt res 1))
+                   (strings-text 
+                    (mapcar 
+                     #'(lambda (str) 
+                         (preprocess-sentence-string
+                                (apply #'concatenate 'string 
+                                       (add-spaces str))))
+                            strings))
+                  (errorp (elt res 2))
+                  (edges (elt res 3))
+                  (time (elt res 5)))
+              (if errorp
+                (format t 
+                        "~%Error when generating from ~A - results ignored" 
+                        input-sentence-text)
+                (progn
+                  (if strings-text
+                      (unless
+                          (member input-sentence-text strings-text 
+                                  :test #'string-equal)
+                        (format t 
+                                "~%String not matched when generating from ~A" 
+                                input-sentence-text))
+                    (format t 
+                         "~%No strings generated from ~A" 
+                                input-sentence-text))
+                  (setf sentence-count (+ sentence-count 1))
+                  (setf total-sentence-length 
+                    (+ total-sentence-length (length input-sentence)))
+                  (setf total-strings (+ total-strings (length strings)))
+                  (setf total-edges (+ total-edges edges))
+                  (setf total-time (+ total-time time)))))))
+    (format t 
+         "~%Mean length ~,2F Mean strings ~,2F Mean edges ~,1F Mean time ~,1F secs"
+            (/ total-sentence-length sentence-count)
+            (/ total-strings sentence-count)
+            (/ total-edges sentence-count)
+            (/ (/ total-time sentence-count) 1000)))))
+
 (defun pick-from-gen-test-file (file-name)
   ;;; takes a file of output results from generation, and produces
   ;;; averages etc
@@ -151,7 +208,48 @@ output results
                    (unless (eql edges1 edges2)
                      (format t "~%Differences in edges in ~A" input-sentence-text)                     
                      (format t "~%Edges ~A ~A" edges1 edges2))
-                     )))))))
+                   )))))))
+
+(defun compare-gen-test-files1 (file-name1 file-name2)
+  ;;; compares two files of output results from generation
+    (with-open-file (istream1 file-name1 :direction :input)
+      (with-open-file (istream2 file-name2 :direction :input) 
+        (let ((total1 0) (total2 0) (count 0))
+        (loop (let ((res1 (read istream1 nil nil))
+                    (res2 (read istream2 nil nil)))
+                (unless (and res1 res2) (return))
+                (let* ((input-sentence1 (split-into-words 
+                     (preprocess-sentence-string  (elt res1 0))))
+                       (input-sentence2 (split-into-words 
+                     (preprocess-sentence-string (elt res2 0)))))
+                  (unless (equalp input-sentence1 input-sentence2)
+                    (error "~%Unequal sentences"))
+                  (let
+                   ((input-sentence-text 
+                    (apply #'concatenate 'string 
+                           (add-spaces input-sentence1)))
+                    (strings1 (elt res1 1))
+                    (strings2 (elt res2 1))
+                    (errorp1 (elt res1 2))
+                    (errorp2 (elt res2 2))
+                    (time1 (elt res1 5))
+                    (time2 (elt res2 5)))
+                   (unless (equal errorp1 errorp2)
+                     (format t "~%Differences in error in ~A" input-sentence-text)
+                     (format t "~%1 ~A" res1)
+                     (format t "~%2 ~A" res2))                     
+                   (unless (string-set-equal strings1 strings2)
+                     (format t "~%Differences in strings in ~A" input-sentence-text)
+                     (format t "~%1 ~A" res1)
+                     (format t "~%2 ~A" res2))
+                   (when (equal errorp1 errorp2)
+                     (setf total1 (+ total1 time1))
+                     (setf total2 (+ total2 time2))
+                     (incf count))))))
+        (format t "~%mean time run 1: ~,1F seconds ~% mean time run 2: ~,1F seconds"  
+                (/ (/ total1 count) 1000)
+                (/ (/ total2 count) 1000))))))
+                              
                      
 (defun string-set-equal (set1 set2)
   (and (eql (length set1) (length set2))
@@ -164,7 +262,7 @@ output results
 
 (defun check-generate nil
   (let ((sentence *sentence*)
-        (ostream (if (and *ostream* (output-stream-p *ostream*)) *ostream*  t)))
+        (ostream (if (and *ostream* (streamp *ostream*) (output-stream-p *ostream*)) *ostream*  t)))
     (unless *parse-record*
       (format ostream "~%#| Parse failure: ~A |#" sentence))
     (for parse-res in *parse-record*
@@ -185,6 +283,9 @@ output results
                     #'(lambda () 
                         (handler-case 
                             (generate-from-mrs mrs)
+                          (storage-condition (condition)
+                            (format t "~%Memory allocation problem in generation: ~A caused by ~A~%" condition sentence)
+                            (setf errorp t))
                           (error (condition)
                             (format t  
                                     "~%Error in generation: ~A caused by ~A~%" condition sentence)
@@ -202,7 +303,7 @@ output results
                    (setf errorp t)
                    (format t "~%Problem in generation caused by missing relation?"))
                  (format ostream "~%(")
-                 (format ostream "~S" sentence)
+                 (format ostream "~A" sentence)
                  (format ostream "~%~S" (if (listp strings) strings nil))
                  (format ostream " ~A " errorp)
                  (format ostream "~A " (if errorp -1 (+ active inactive)))
