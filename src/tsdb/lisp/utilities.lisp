@@ -117,33 +117,41 @@
 
 (defun normalize-string (string &key escape)
   (if string
-    (let* ((result (make-array 4096
-                               :element-type 'character
-                               :adjustable t :fill-pointer 0)))
-      (loop
-          with space = t
-          for c across string
-          ;;
-          ;; _fix_me_
-          ;; as it stands, normalize-string() gets only called on strings that
-          ;; we are about to insert into tsdb(1); in case we write the data
-          ;; files directly, we have to obey tsdb(1) escape conventions; thus,
-          ;; the `@' --> `\s' translation should usually be deactivated.
-          ;;                                              (26-aug-99  -  oe)
-          when (and escape (char= c *tsdb-ofs*)) do
-            (vector-push-extend #\\ result 2048)
-            (vector-push-extend #\s result 2048)
-          else when (member c '(#\Space #\Newline #\Tab)) do
-            (unless space
-              (vector-push-extend #\Space result 2048)
-              (setf space t))
-          else do
-            (vector-push-extend c result 2048)
-            (setf space nil)
-          finally
-            (when (and space (not (zerop (fill-pointer result))))
-              (decf (fill-pointer result))))
-      result)
+    (loop
+        with padding = 42
+        with length = (+ (length string) padding)
+        with result = (make-array length
+                                  :element-type 'character
+                                  :adjustable nil :fill-pointer 0)
+        with space = t
+        for c across string
+        ;;
+        ;; _fix_me_
+        ;; as it stands, normalize-string() gets only called on strings that
+        ;; we are about to insert into tsdb(1); in case we write the data
+        ;; files directly, we have to obey tsdb(1) escape conventions; thus,
+        ;; the `@' --> `\s' translation should usually be deactivated.
+        ;;                                              (26-aug-99  -  oe)
+        when (and escape (char= c *tsdb-ofs*)) do
+          (vector-push #\\ result)
+          (vector-push #\s result)
+          (when (zerop (decf padding))
+            (setf padding 42)
+            (incf length padding)
+            (setf result (adjust-array result length)))
+          (setf space nil)
+        else when (member c '(#\Space #\Newline #\Tab)) do
+          (when space (incf padding))
+          (unless space
+            (vector-push #\Space result)
+            (setf space :space))
+        else do
+          (vector-push c result)
+          (setf space nil)
+        finally
+          (when (and (eq space :space) (not (zerop (fill-pointer result))))
+            (decf (fill-pointer result)))
+          (return result))
     ""))
 
 (defun string-strip (prefix string)

@@ -108,16 +108,17 @@
 ;;;
 
 (defun reconstruct-item (i-id i-input derivation)
-  (let* ((*package* (or (find-package "DISCO")
-                        (find-package "COMMON-LISP-USER"))))
+  (let* ((*package* (or (find-package :disco)
+                        (find-package :common-lisp-user))))
     (multiple-value-bind (result failure)
         (reconstruct derivation)
       (cond
        (failure
-        (format
-         t
-         "~&~%(~d) `~a'~%~%  ~s~%~%"
-         i-id i-input (first failure))
+        (let ((*package* (find-package :tsdb)))
+          (format
+           t
+           "~&~%(~d) `~a'~%~%  ~s~%~%"
+           i-id i-input (first failure)))
         (case (third failure)
           (:noaffix
            (format t "  no affix ~a.~%" (fourth failure)))
@@ -129,7 +130,7 @@
            (format
             t
             "  ~(~a~) in daughter # ~d;~%  path: "
-            (first (third failure)) (second failure))
+            (first (third failure)) (or (second failure) 0))
            (if (eq (first (third failure)) :cycle)
              (format
               t

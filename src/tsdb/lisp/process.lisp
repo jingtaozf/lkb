@@ -573,7 +573,7 @@
                         (:efficiency ~d) (:total ~d)"
                        comment global scavenge new old efficiency total))
              (a-load #+:pvm (load_average) #-:pvm nil))
-        (when (< others -1)
+        (when (and (integerp others) (< others -1))
           (push (cons :others (+ (expt 2 32) others)) result))
         (push (cons :i-load i-load) result)
         (push (cons :a-load a-load) result)

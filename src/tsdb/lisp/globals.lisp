@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.6 (10-mar-00)")
+(defparameter *tsdb-version* "1.6 (26-mar-00)")
 
 (defparameter
   *tsdb-application*
@@ -65,7 +65,7 @@
 
 (defparameter *tsdb-verbose-processing-p* t)
 
-(defparameter *tsdb-cache-database-writes-p* :cooked)
+(defparameter *tsdb-cache-database-writes-p* :raw)
 
 (defparameter *tsdb-flush-cache-threshold* 5000)
 

@@ -5,8 +5,8 @@
 ;;;      module: gc() after hook for Allegro CL
 ;;;     version: 0.0 (30-jul-98)
 ;;;  written by: oe, csli stanford
-;;; last update: 22-jan-99
-;;;  updated by: oe, coli saarbruecken
+;;; last update: 26-mar-00
+;;;  updated by: oe, csli stanford
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; author            | date        | modification
 ;;; ------------------|-------------|------------------------------------------
@@ -42,7 +42,7 @@
           (when (and #-:oe *tsdb-gc-message-p* (output-stream-p stream))
             (format
              stream
-             "~&gc-after-hook(): ~:[local~;global~]~@[ (recursive)~*~]; ~
+             "~&gc-after-hook(): ~:[local~;global~]~@[ (r)~*~]; ~
               new: ~a; old: ~a; pending: ~a~@[~*; efficiency: ~d~].~%" 
              global global-gc-p new old pending 
              (integerp efficiency) efficiency)
@@ -93,7 +93,8 @@
                   (setf global-gc-p t)
                   #-(version>= 5 0)
                   (busy :gc :start)
-                  (when (and #-:oe *tsdb-gc-message-p* (output-stream-p stream))
+                  (when (and #-:oe *tsdb-gc-message-p* 
+                             (output-stream-p stream))
                     (format 
                      stream
                      "~&gc-after-hook(): ~d bytes were tenured; ~
@@ -108,6 +109,10 @@
             (funcall default-gc-after-hook 
                      global new old efficiency pending)))))
   (setf excl:*global-gc-behavior* nil)
+  ;;
+  ;; increase buffer size used with stream io; reduce write(2) system calls.
+  ;;
+  (setf excl::stream-buffer-size 8192)
   ;;
   ;; ensure that podium(1) process (talking to wish(1)) terminates gracefully;
   ;; apparently, the EOF that wish(1) should see once the lisp stream is gone,

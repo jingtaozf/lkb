@@ -143,7 +143,6 @@
               (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
                                            *maximum-number-of-edges*
                                            edges))
-              (*maximum-number-of-active-edges* *maximum-number-of-edges*)
               (*first-only-p* (unless exhaustive
                                 (if (integerp readings) readings 1)))
               (*do-something-with-parse* nil)
@@ -158,7 +157,7 @@
               (*copies* 0)
               (*subsumptions* 0)
               tgc tcpu treal conses symbols others)
-         (declare (special *maximum-number-of-active-edges* *subsumptions*))
+         (declare (special *subsumptions*))
          ;;
          ;; this really ought to be done in the parser ...  (30-aug-99  -  oe)
          ;;
@@ -604,8 +603,9 @@
 (defparameter *reconstruct-hook*
   #-:tty
   #'(lambda (edge &optional (i-input "reconstructed item"))
+      (declare (ignore i-input))
       (when (edge-p edge)
-        (display-fs (edge-dag edge) i-input)))
+        (display-parse-tree edge nil)))
   #+:tty
   nil)
 
