@@ -675,6 +675,12 @@
                           :open open :forwardp forwardp
                           :done passive)))
             ;;
+            ;; _mystery_
+            ;; it seems active edges are not recorded in the parent relation, so
+            ;; will never be be frosted.  right now, uc and i fail to explain
+            ;; why that should be unnecessary.                   (27-may-03; oe)
+            ;;
+            ;;
             ;; this is _truly_ experimental: to take full advantage of that
             ;; hyper-active strategy, we want to extend a new active edge
             ;; right after it was built.  hence, reset the generation counter
