@@ -136,4 +136,20 @@ Other useful functions from UDINE/TDL:
 ;;; required by munger
 
 (defun compatible-types (type1 type2)
-  (csli-unify::unify-types type1 type2))
+  (let ((type1name (fetch-and-expand-type type1))
+	(type2name (fetch-and-expand-type type2)))
+    (when (and type1name type2name)
+      (not (eq (csli-unify::unify-types type1name type2name)
+	       'CSLI-UNIFY::*FAIL*)))))
+
+(defun is-valid-type (type)
+  (tdl::get-infon (intern type lex::*lex-package*) lex::*lex-package* :avms))
+
+(defun fetch-and-expand-type (name &optional (domain *lex-package*))
+  (let* ((domain (string domain))
+         (name (intern name domain))
+         (infon (tdl::get-infon name domain :avms)))
+    (when infon
+      (lex::convert 
+       (tdl::feature-structure-term (tdl::get-prototype name domain :avms))
+       user::*unifier*))))
