@@ -228,6 +228,8 @@
         (enable-grammar-reload-interactions)
       (clear-almost-everything)
       (load file-name)
+      #+:lui
+      (when (lui-status-p) (lui-parameters))
       (lkb-beep)
       (if *syntax-error*
         (format t "~%WARNING: syntax error(s) - check messages")

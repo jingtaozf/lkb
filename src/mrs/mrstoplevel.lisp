@@ -9,42 +9,36 @@
 
 ;;; generator output functions which are not dialect specific
 
-#-tty
 (defun show-gen-result nil
-   (if *gen-record*
-      (draw-active-list
-         (sort
-            (mapcar
-               #'(lambda (edge)
-                   (cons (format nil "~{~A~^ ~}" 
-                                 (fix-spelling (g-edge-leaves edge)))
-                      edge))
-               *gen-record*)
-            #'string-lessp :key #'car)
-         "Generated Sentences"
-         (list
-            (cons "Feature structure"
-               #'(lambda (edge)
-                   (display-fs (g-edge-dag edge)
-                      (format nil "Edge ~A G - Tree FS" (g-edge-id edge)))))
-            (cons "Tree"
-               #'(lambda (edge)
-                   (display-parse-tree edge nil)))
-            (cons "MRS"
-                #'(lambda (edge)
-                    (show-mrs-window edge)))))
-      (show-message-window "No strings generated")))
+  (if #+:lui (lui-status-p :realization) #-:lui nil
+    (lui-show-gen-result)
+    #+:tty
+    (show-gen-result-tty)
+    #-:tty
+     (if *gen-record*
+        (draw-active-list
+           (sort
+              (mapcar
+                 #'(lambda (edge)
+                     (cons (format nil "~{~A~^ ~}" 
+                                   (fix-spelling (g-edge-leaves edge)))
+                        edge))
+                 *gen-record*)
+              #'string-lessp :key #'car)
+           "Generated Sentences"
+           (list
+              (cons "Feature structure"
+                 #'(lambda (edge)
+                     (display-fs (g-edge-dag edge)
+                        (format nil "Edge ~A G - Tree FS" (g-edge-id edge)))))
+              (cons "Tree"
+                 #'(lambda (edge)
+                     (display-parse-tree edge nil)))
+              (cons "MRS"
+                  #'(lambda (edge)
+                      (show-mrs-window edge)))))
+        (show-message-window "No strings generated"))))
 
-#|     
-      (let ((possible-edge-name
-               (ask-for-lisp-movable "Current Interaction" 
-                  `(("No generation results - specify an edge number" . ,*edge-id*)) 60)))
-         (when possible-edge-name
-            (let* ((edge-id (car possible-edge-name))
-                   (edge-record (find-gen-edge-given-id edge-id)))
-               (when edge-record 
-                  (display-parse-tree edge-record nil)))))))
-|#
 
 #-:tty
 (defun show-generator-input ()

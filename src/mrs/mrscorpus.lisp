@@ -247,7 +247,7 @@
 	 (*mrs-equalp-properties-p* propertyp)
          (bindings (variables-equal (psoa-top-h mrs1)
                                     (psoa-top-h mrs2) syntactic-p nil)))
-    (if (or bindings (null *psoa-top-h-path*))
+    (if (or bindings (null *rel-handel-path*))
        (if (setf bindings (variables-equal (psoa-index mrs1)
                             (psoa-index mrs2) syntactic-p bindings))
            (if (setf bindings (mrs-liszts-equal-p (psoa-liszt mrs1)
@@ -305,7 +305,7 @@
   (if (equal (rel-pred rel1) (rel-pred rel2))
       ;; then predicates ok
       (if (setf bindings 
-            (if (and (rel-handel rel1) (rel-handel rel2))
+            (if (or (rel-handel rel1) (rel-handel rel2))
                 (variables-equal 
                  (rel-handel rel1) 
                  (rel-handel rel2) syntactic-p bindings)

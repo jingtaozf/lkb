@@ -176,7 +176,9 @@
         (find-package (if (system:getenv "SSP") :ssp :lkb)))
       
       #+:lui
-      (when (getenv "LUI") (lui-initialize runtimep))
+      (let* ((lui (getenv "LUI"))
+             (port (parse-integer lui :junk-allowed t)))
+        (when lui (lui-initialize :port port :runtimep runtimep)))
 
       ;;
       ;; in the following, the featurep() test makes sense, since our run-time

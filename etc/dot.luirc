@@ -1,0 +1,41 @@
+#
+# sample user-specific LUI configuration file
+#
+
+#
+# the feature structure browser
+#
+parameter avm-center-features 1
+parameter avm-margins 2
+parameter avm-hidden-features [WLINK]
+parameter avm-collapsed-features [ARGS]
+parameter avm-hidden-types
+parameter avm-collapsed-types [non_local]
+parameter avm-bar-font #F[Helvetica 12 roman black]
+parameter avm-type-font #F[Helvetica 12 roman blue]
+parameter avm-feature-font #F[Helvetica 12 roman black]
+parameter avm-tag-font #F[Helvetica 12 roman green]
+parameter avm-structure-bracket-color 
+parameter avm-list-bracket-color
+parameter avm-tag-box-color
+
+#
+# the summary browser for trees, showing all trees in a single window
+#
+parameter tree-summary-bar-font #F[Helvetica 9 roman black]
+parameter tree-summary-node-font #F[Helvetica 9 roman black]
+parameter tree-summary-surface-font #F[Helvetica 9 roman black]
+
+#
+# the detailed tree browser, showing a single tree
+#
+parameter tree-detail-bar-font #F[Helvetica 14 roman black]
+parameter tree-detail-node-font #F[Helvetica 14 roman black]
+parameter tree-detail-surface-font #F[Helvetica 14 roman black]
+
+#
+# the chart browser
+#
+parameter chart-bar-font #F[Helvetica 12 roman black]
+parameter chart-word-font #F[Helvetica 12 roman black]
+parameter chart-edge-font #F[Helvetica 12 roman black]

@@ -41,9 +41,13 @@
     MARG L-INDEX R-INDEX L-HNDL R-HNDL L-HANDEL R-HANDEL 
     MAIN SUBORD ROLE HINST NHINST))
 
+(defparameter *lui-autonomy-p* nil)
+
 (defparameter *lui-debug-p* nil)
 
 (defparameter %lui-stream% nil)
+
+(defparameter %lui-socket% nil)
 
 (defparameter %lui-pid% nil)
 
@@ -53,7 +57,7 @@
 
 (defparameter %lui-eoc% (format nil " ~a" #\page))
 
-(defun lui-initialize (&optional runtimep)
+(defun lui-initialize (&key runtimep port)
   (lui-shutdown)
   (when runtimep
     (setf *lui-application*
@@ -63,57 +67,48 @@
        (namestring 
         (make-pathname 
          :directory (pathname-directory make::bin-dir) :name "yzlui")))))
-  (let (foo)
-    (multiple-value-setq (%lui-stream% foo %lui-pid%)
-      #-:clisp
-      (run-process *lui-application*
-                   :wait nil
-                   :output :stream :input :stream 
-                   #-(or :sbcl :openmcl) :error-output 
-		   #-(or :sbcl :openmcl) nil)
-      #+:clisp
-      (ext:make-pipe-io-stream *lui-application* :buffered nil))
-                    
-    (when foo (setf foo foo))
-    #+:allegro
-    (setf (stream-external-format %lui-stream%) 
-      (excl:find-external-format :utf-8))
-    (format
-     %lui-stream%
-     "parameter list-type ~a~a~%~
-      parameter non-empty-list-type ~a~a~%~
-      parameter empty-list-type ~a~a~%~
-      parameter list-head ~a~a~%~
-      parameter list-tail ~a~a~%~
-      parameter type-font #F[Helvetica ~a roman blue]~a~%~
-      parameter feature-font #F[Helvetica ~a roman black]~a~%~
-      parameter path-font #F[Helvetica ~a roman black]~a~%~
-      parameter big-tree-font #F[Helvetica ~a roman black]~a~%~
-      parameter small-tree-font #F[Helvetica ~a roman black]~a~%~
-      status ready~a~%"
-     *list-type* %lui-eoc%
-     *non-empty-list-type* %lui-eoc%
-     *empty-list-type* %lui-eoc% 
-     (first *list-head*) %lui-eoc%
-     (first *list-tail*) %lui-eoc%
-     *fs-type-font-size* %lui-eoc%
-     *fs-type-font-size* %lui-eoc%
-     *parse-tree-font-size* %lui-eoc%
-     *parse-tree-font-size* %lui-eoc%
-     *summary-tree-font-size* %lui-eoc%
-     %lui-eoc%)
-    (force-output %lui-stream%)
-    #-:clisp
-    (setf %lui-process%
-      #+:sbcl 
-      (sb-thread:make-thread 
-       #'(lambda () (lsp-loop nil %lui-stream%)))
-      #-:sbcl
-      (mp:run-function '(:name "LUI") #'lsp-loop nil %lui-stream%))
-    #+:clisp
-    (lsp-loop nil %lui-stream%)
-    #+:clisp
-    (lui-shutdown)))
+  (if port
+    (let* ((socket (socket:make-socket :connect :passive :local-port port))
+           (stream (socket:accept-connection socket :wait t))
+           (address (socket:remote-host stream))
+           (host (socket:ipaddr-to-hostname address))
+           (port (socket:remote-port stream)))
+      (format
+       t
+       "lui-initialize(): remote connection from `~a:~a'~%"
+       host port)
+      (setf %lui-socket% socket)
+      (setf %lui-stream% stream)
+      (setf %lui-pid% nil))
+    (let (foo)
+      (multiple-value-setq (%lui-stream% foo %lui-pid%)
+        #-:clisp
+        (run-process *lui-application*
+                     :wait nil
+                     :output :stream :input :stream 
+                     #-(or :sbcl :openmcl) :error-output 
+                     #-(or :sbcl :openmcl) nil)
+        #+:clisp
+        (ext:make-pipe-io-stream *lui-application* :buffered nil))
+      (setf foo foo)))
+
+  #+:allegro
+  (setf (stream-external-format %lui-stream%) 
+    (excl:find-external-format :utf-8))
+
+  (lui-parameters :all)
+  
+  #-:clisp
+  (setf %lui-process%
+    #+:sbcl 
+    (sb-thread:make-thread 
+     #'(lambda () (lsp-loop nil %lui-stream%)))
+    #-:sbcl
+    (mp:run-function '(:name "LUI") #'lsp-loop nil %lui-stream%))
+  #+:clisp
+  (lsp-loop nil %lui-stream%)
+  #+:clisp
+  (lui-shutdown))
 
 (defun lui-shutdown ()
 
@@ -124,6 +119,11 @@
     (sleep 2)
     (ignore-errors (close %lui-stream%))
     (setf %lui-stream% nil))
+  (when %lui-socket%
+    (ignore-errors (socket:shutdown %lui-socket% :output))
+    (ignore-errors (socket:shutdown %lui-socket% :input))
+    (ignore-errors (close %lui-socket%))
+    (setf %lui-socket% nil))
   #-:clisp
   (when %lui-pid%
     (ignore-errors
@@ -149,6 +149,61 @@
       (ignore-errors
        #+:sbcl (sb-thread:terminate-thread process)
        #-:sbcl (mp:process-kill process)))))
+
+(defun lui-parameters (&optional style)
+  (unless style
+    (format
+     %lui-stream%
+     "parameter list-type ~a~a~%~
+      parameter non-empty-list-type ~a~a~%~
+      parameter empty-list-type ~a~a~%~
+      parameter list-head ~a~a~%~
+      parameter list-tail ~a~a~%~
+      status ready~a~%"
+     *list-type* %lui-eoc%
+     *non-empty-list-type* %lui-eoc%
+     *empty-list-type* %lui-eoc% 
+     (first *list-head*) %lui-eoc%
+     (first *list-tail*) %lui-eoc%
+     %lui-eoc%))
+  (unless *lui-autonomy-p*
+    (when (smember style '(:avm :all))
+      (format
+       %lui-stream%
+       "parameter avm-bar-font #F[Helvetica ~a roman blue]~a~%~
+        parameter avm-type-font #F[Helvetica ~a roman blue]~a~%~
+        parameter avm-feature-font #F[Helvetica ~a roman black]~a~%~
+        parameter avm-tag-font #F[Helvetica ~a roman red]~a~%"
+       *fs-type-font-size* %lui-eoc%
+       *fs-type-font-size* %lui-eoc%
+       *fs-type-font-size* %lui-eoc%
+       *fs-type-font-size* %lui-eoc%))
+    (when (smember style '(:tree :all))
+      (format
+       %lui-stream%
+       "parameter tree-summary-bar-font #F[Helvetica ~a roman black]~a~%~
+        parameter tree-summary-node-font #F[Helvetica ~a roman black]~a~%~
+        parameter tree-summary-surface-font #F[Helvetica ~a roman black]~a~%~
+        parameter tree-detail-bar-font #F[Helvetica ~a roman black]~a~%~
+        parameter tree-detail-node-font #F[Helvetica ~a roman black]~a~%~
+        parameter tree-detail-surface-font #F[Helvetica ~a roman black]~a~%"
+       *summary-tree-font-size* %lui-eoc%
+       *summary-tree-font-size* %lui-eoc%
+       *summary-tree-font-size* %lui-eoc%
+       *parse-tree-font-size* %lui-eoc%
+       *parse-tree-font-size* %lui-eoc%
+       *parse-tree-font-size* %lui-eoc%))
+    (when (smember style '(:chart :all))
+      (format
+       %lui-stream%
+       "parameter chart-bar-font #F[Helvetica ~a roman blue]~a~%~
+        parameter chart-word-font #F[Helvetica ~a roman black]~a~%~
+        parameter chart-word-font #F[Helvetica ~a roman black]~a~%"
+       *parse-tree-font-size* %lui-eoc%
+       *parse-tree-font-size* %lui-eoc%
+       *parse-tree-font-size* %lui-eoc%)))
+  
+  (force-output %lui-stream%))
 
 (defun send-to-lui (string &key (wait nil) recursive)
   (unless recursive
@@ -196,22 +251,17 @@
   (loop
       with stream = (make-string-output-stream)
       initially
-        (format 
-         stream 
-         "parameter path-font #F[Helvetica ~a roman black]~a~%~
-          parameter big-tree-font #F[Helvetica ~a roman black]~a~%~
-          parameter small-tree-font #F[Helvetica ~a roman black]~a~%~
-          group ~d ~s~a~%"
-         *parse-tree-font-size* %lui-eoc%
-         *parse-tree-font-size* %lui-eoc%
-         *summary-tree-font-size* %lui-eoc%
-         (length edges) 
+        (lui-parameters :tree)
+        (format
+         stream
+         "group ~d ~s~a~%"
+         (length edges)
          (if input
            (format
             nil
             "`~a' (~a Tree~p)"
             input (length edges) (length edges))
-           "Processing Result(s)")
+           "Analysis Result(s)")
          %lui-eoc%)
       for i from 1
       for title = (format nil "`~a' Parse Tree # ~d" input i)
@@ -223,8 +273,42 @@
                   :edge edge :dag tdfs)
       for id = (lsp-store-object nil lspb)
       do
+        (setf (lspb-id lspb) id)
         (format stream "tree ~d " id)
-        (lui-show-tree top input :chart chart :morphs morphs :stream stream)
+        (lui-show-tree top input :lspb lspb :stream stream)
+        (format stream " ~s~a~%" title %lui-eoc%)
+      finally
+        (format %lui-stream% "~a" (get-output-stream-string stream)))
+  (force-output %lui-stream%))
+
+(defun lui-show-gen-result (&optional (edges *gen-record*)
+                                      (chart (copy-tree *gen-chart*)))
+
+  (declare (special *gen-record* *gen-chart* *generator-input*))
+  
+  (loop
+      with stream = (make-string-output-stream)
+      initially 
+        (lui-parameters :tree)
+        (format
+         stream
+         "group ~d ~s~a~%"
+         (length edges)
+         "Realization Result(s)"
+         %lui-eoc%)
+      for i from 1
+      for title = (format nil "Realization Tree # ~d" i)
+      for edge in edges 
+      for top = (make-new-parse-tree edge 1)
+      for tdfs = (get top 'edge-fs)
+      for lspb = (make-lspb
+                  :chart chart :mrs *generator-input*
+                  :edge edge :dag tdfs)
+      for id = (lsp-store-object nil lspb)
+      do
+        (setf (lspb-id lspb) id)
+        (format stream "tree ~d " id)
+        (lui-show-tree top nil :lspb lspb :stream stream)
         (format stream " ~s~a~%" title %lui-eoc%)
       finally
         (format %lui-stream% "~a" (get-output-stream-string stream)))
@@ -232,16 +316,17 @@
 
 (defun lui-show-tree (top &optional (input *sentence*)
                       &key morphs chart lspb (stream %lui-stream%))
-  (let* ((edge (get top 'edge-record))
-         (tdfs (get top 'edge-fs))
-         (lspb (make-lspb
-                :context lspb :input input :morphs morphs :chart chart
-                :edge edge :dag tdfs))
+  (let* ((edge (if lspb (lspb-edge lspb) (get top 'edge-record)))
+         (tdfs (if lspb (lspb-dag lspb) (get top 'edge-fs)))
+         (lspb (or lspb
+                   (make-lspb
+                    :context lspb :input input :morphs morphs :chart chart
+                    :edge edge :dag tdfs)))
          (daughters (get top 'daughters))
          (form (when (and daughters (null (rest daughters))
                           (null (get (first daughters) 'edge-record)))
                  (get-string-for-edge (first daughters))))
-         (id (lsp-store-object nil lspb))
+         (id (or (lspb-id lspb) (lsp-store-object nil lspb)))
          (label (get-string-for-edge top))
          (n (edge-id edge))
          (rule (if (rule-p (edge-rule edge))
@@ -260,12 +345,7 @@
   (let* ((id (lsp-store-object nil (make-lspb :dag tdfs)))
          (dag (tdfs-indef tdfs))
          (*package* (find-package :lkb)))
-    (format
-     %lui-stream%
-     "parameter type-font #F[Helvetica ~a roman blue]~a~%~
-      parameter feature-font #F[Helvetica ~a roman black]~a~%"
-     *fs-type-font-size* %lui-eoc%
-     *fs-type-font-size* %lui-eoc%)
+    (lui-parameters :avm)
     (let ((string (with-output-to-string (stream)
                     (format stream "avm ~d " id)
                     (display-dag1 dag 'linear stream))))
@@ -285,13 +365,10 @@
         (nvertices (loop 
                        for i from 0 for foo across morphs 
                        when (null foo) return i)))
-    (format 
-     stream 
-     "parameter chart-word-font #F[Helvetica ~a oblique black]~a~%~
-      parameter chart-edge-font #F[Helvetica ~a roman black]~a~%~
-      chart ~d ~d ~s~%"
-     *parse-tree-font-size* %lui-eoc%
-     *parse-tree-font-size* %lui-eoc%
+    (lui-parameters :chart)
+    (format
+     stream
+     "chart ~d ~d ~s~%"
      -1 nvertices
      (if input (format nil "`~a' (Chart)" input) "Chart View"))
 
@@ -317,7 +394,12 @@
                     :input input :morphs morphs :chart chart :edge edge)
         for key = (lsp-store-object nil lspb)
         for id = (edge-id edge)
-        for name = (tree-node-text-string (find-category-abb (edge-dag edge)))
+        for name
+        = (format 
+           nil 
+           "~a[~a]"
+           (tree-node-text-string (find-category-abb (edge-dag edge)))
+           id)
         for label = (typecase (edge-rule edge)
                       (string (first (edge-lex-ids edge)))
                       (symbol (edge-rule edge))
@@ -406,38 +488,46 @@
 
 (defun lui-display-mrs (mrs)
   (let* ((id (lsp-store-object nil (make-lspb :mrs mrs)))
-         (dag (mrs::psoa-to-dag mrs))
          (title "Simple MRS Display"))
     (let ((string (with-output-to-string (stream)
+                    (format
+                     stream
+                     "parameter avm-collapsed-types [u h i e x]~a~%"
+                     %lui-eoc%)
+                    #+:null
                     (when *lui-hidden-features*
                       (format 
                        stream 
-                       "parameter+ collapsed-features ~a~a~%"
+                       "parameter+ avm-collapsed-features ~a~a~%"
                        (first *lui-hidden-features*) %lui-eoc%)
                       (loop
                           for foo in (rest *lui-hidden-features*)
                           do
                             (format 
                              stream 
-                             "parameter+ collapsed-features ~a~a~%"
+                             "parameter+ avm-collapsed-features ~a~a~%"
                              foo %lui-eoc%)))
                     (format stream "avm ~d " id)
-                    (display-dag1 dag 'linear stream))))
+                    (mrs::lui-dagify-mrs mrs :stream stream))))
       (format %lui-stream% string))
     (format %lui-stream% " ~s~a~%" title %lui-eoc%))
   (force-output %lui-stream%))
 
-(defun lui-status-p (key)
+(defun lui-status-p (&optional key)
   (when (and (streamp %lui-stream%) (open-stream-p %lui-stream%))
-    (case key
-      #-:null
-      (:tree (streamp %lui-stream%))
-      #-:null
-      (:avm (streamp %lui-stream%))
-      #-:null
-      (:chart (streamp %lui-stream%))
-      #-:null
-      (:mrs (streamp %lui-stream%)))))
+    (if (null key)
+      (streamp %lui-stream%)
+      (case key
+        #-:null
+        (:tree (streamp %lui-stream%))
+        #-:null
+        (:avm (streamp %lui-stream%))
+        #-:null
+        (:chart (streamp %lui-stream%))
+        #-:null
+        (:realization (streamp %lui-stream%))
+        #+:null
+        (:mrs (streamp %lui-stream%))))))
 
 (defun copy-array (array)
   (let ((dimensions (array-dimensions array))

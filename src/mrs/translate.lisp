@@ -210,7 +210,7 @@
     :entry-point "getpid"
     :arguments nil
     :return-type :integer)
-#-:allegro-version
+#-:allegro
 (defun current-pid () (random (expt 2 15)))
 
 ;;; functions that allow for translation (using interlingua)

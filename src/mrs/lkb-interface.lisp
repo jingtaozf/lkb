@@ -152,90 +152,90 @@
 ;;; for MRS viewing (specifically the emerging LUI AVM browser, while LUI
 ;;; does not include a specialized MRS browser).             (10-jul-03; oe)
 ;;;
-(defun psoa-to-dag (mrs)
-  (let ((dag (lkb::make-dag :type 'lkb::mrs))
-        (cache (make-hash-table :test #'equal)))
-    (setf (lkb::dag-arcs dag)
-      (list
-       (lkb::make-dag-arc
-        :attribute (vsym "LTOP")
-        :value (lkb::make-dag :type (var-string (psoa-top-h mrs))))
-       (lkb::make-dag-arc 
-        :attribute (vsym "INDEX") 
-        :value (lkb::make-dag :type (var-string (psoa-index mrs))))
-       (lkb::make-dag-arc
-        :attribute (vsym "RELS")
-        :value (loop
-                   with dags = nil
-                   for ep in (psoa-liszt mrs)
-                   for predicate = (rel-pred ep)
-                   for handel = (let* ((foo (rel-handel ep))
-                                       (bar (when (var-p foo)
-                                              (var-string foo))))
-                                  (when bar (lkb::make-dag :type bar)))
-                   for flist = (rel-flist ep)
-                   when handel do
-                     (let ((dag (lkb::make-dag 
-                                 :type (intern (string predicate) :lkb))))
-                       (loop
-                           with arcs = (list (lkb::make-dag-arc 
-                                              :attribute (vsym "LBL")
-                                              :value handel))
-                           for pair in flist
-                           for feature = (mrs:fvpair-feature pair)
-                           for foo = (mrs:fvpair-value pair)
-                           for value = (let* ((bar (cond
-                                                    ((stringp foo) foo)
-                                                    ((var-p foo) 
-                                                     (var-string foo)))))
-                                         (lkb::make-dag :type bar))
-                           for arc = (lkb::make-dag-arc 
-                                      :attribute feature :value value)
-                           for extras = (when (var-p foo)
-                                          (var-extra foo))
-                           do
-                             (when (and extras 
-                                        (not (gethash (var-string foo) cache)))
-                               (setf (gethash (var-string foo) cache) foo)
-                               (loop
-                                   with arcs = nil
-                                   for extra in extras
-                                   for efeature = (extrapair-feature extra)
-                                   for evalue = (lkb::make-dag
-                                                 :type (extrapair-value extra))
-                                   for earc = (lkb::make-dag-arc
-                                               :attribute efeature
-                                               :value evalue)
-                                   do
-                                     (push earc arcs)
-                                   finally
-                                     (setf (lkb::dag-arcs value)
-                                       (nreverse arcs))))
-                             (push arc arcs)
-                           finally
-                             (setf (lkb::dag-arcs dag) (nreverse arcs)))
-                       (push dag dags))
-                   finally (return (lkb::list-to-dag (nreverse dags)))))
-       (lkb::make-dag-arc
-        :attribute (vsym "HCONS")
-        :value (loop
-                   with dags = nil
-                   for hcons in (psoa-h-cons mrs)
-                   for relation = (hcons-relation hcons)
-                   for hi = (let ((foo (hcons-scarg hcons)))
-                              (when (var-p foo) 
-                                (lkb::make-dag :type (var-string foo))))
-                   for lo = (let ((foo (hcons-outscpd hcons)))
-                              (when (var-p foo) 
-                                (lkb::make-dag :type (var-string foo))))
-                   for dag = (lkb::make-dag :type relation)
-                   when (and hi lo) do
-                     (setf (lkb::dag-arcs dag)
-                       (list
-                        (lkb::make-dag-arc 
-                         :attribute (vsym "HARG") :value hi)
-                        (lkb::make-dag-arc 
-                         :attribute (vsym "LARG") :value lo)))
-                     (push dag dags)
-                   finally (return (lkb::list-to-dag (nreverse dags)))))))
-    dag))
+(defun lui-dagify-mrs (mrs &key (stream t))
+  (declare (special *rel-handel-path*))
+  
+  (let ((cache (make-hash-table)))
+    (labels ((dagify-variable (variable)
+               (if (var-p variable)
+                 (if (gethash variable cache)
+                   (format stream "<~(~a~)>" (var-string variable))
+                   (loop
+                       initially
+                         (format
+                          stream
+                          "<~(~a~)>=~:[~;#D[~]~(~a~)"
+                          (var-string variable) 
+                          (var-extra variable) (var-type variable))
+                       for extra in (var-extra variable)
+                       for feature = (extrapair-feature extra)
+                       for value = (extrapair-value extra)
+                       do (format stream " ~a: ~(~a~)" feature value)
+                       finally
+                         (when (var-extra variable) (format stream "]"))
+                         (setf (gethash variable cache) variable)))
+                 (format stream "?"))))
+      (format stream "#D[mrs")
+      (when *rel-handel-path*
+        (format stream " LTOP: ")
+        (dagify-variable (psoa-top-h mrs)))
+      (when (psoa-index mrs)
+        (format stream " INDEX: ")
+        (dagify-variable (psoa-index mrs)))
+      (if (psoa-liszt mrs)
+        (loop
+            with cons = lkb::*non-empty-list-type*
+            with null = lkb::*empty-list-type*
+            with first = (first lkb::*list-head*)
+            with rest = (first lkb::*list-tail*)
+            with n = 0
+            initially (format stream " RELS:")
+            for ep in (psoa-liszt mrs)
+            for label = (rel-handel ep)
+            for pred = (rel-pred ep)
+            do
+              (format stream " #D[~(~a~) ~a: #D[~(~a~)" cons first pred)
+              (when label 
+                (format stream " LBL: ")
+                (dagify-variable label))
+              (loop
+                  for role in (rel-flist ep)
+                  for feature = (fvpair-feature role)
+                  for value = (fvpair-value role)
+                  when (var-p value) do
+                    (format stream " ~a: " feature)
+                    (dagify-variable value)
+                  else do
+                    (format stream "~a: ~a" feature value))
+              (format stream "] ~a:" rest)
+              (incf n)
+            finally 
+              (format stream " ~(~a~)" null)
+              (loop 
+                  for i from 1 to n
+                  do (format stream "]"))))
+      (if (psoa-h-cons mrs)
+        (loop
+            with cons = lkb::*non-empty-list-type*
+            with null = lkb::*empty-list-type*
+            with first = (first lkb::*list-head*)
+            with rest = (first lkb::*list-tail*)
+            with n = 0
+            initially (format stream " HCONS:")
+            for hcons in (psoa-h-cons mrs)
+            for type = (hcons-relation hcons)
+            for hi = (hcons-scarg hcons)
+            for lo = (hcons-outscpd hcons)
+            do
+              (format stream " #D[~(~a~) ~a: #D[~(~a~) HARG: " cons first type)
+              (dagify-variable hi)
+              (format stream " LARG: ")
+              (dagify-variable lo)
+              (format stream "] ~a:" rest)
+              (incf n)
+            finally 
+              (format stream " ~(~a~)" null)
+              (loop 
+                  for i from 1 to n
+                  do (format stream "]"))))
+      (format stream "]"))))

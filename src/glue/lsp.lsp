@@ -44,7 +44,7 @@
 
 (defparameter *lsp-port* 4712)
 
-(defparameter *lsp-debug-p* t)
+(defparameter *lsp-debug-p* nil)
 
 (defparameter %lsp-socket% nil)
 

@@ -89,7 +89,7 @@ if [ "$OSTYPE" = "linux" -o "$OSTYPE" = "linux-gnu" ]; then
       os="linux.x86.64"
       ;;
     *)
-      echo "lkb: unknown Linux variant (check \`uname -i'); exit."
+      echo "lkb: unknown Linux architecture (check \`uname -i'); exit."
       exit 1;
   esac
 elif [ "$OSTYPE" = "solaris" -o "${OSTYPE%%?.?}" = "solaris" ]; then
