@@ -23,7 +23,8 @@
 (defclass lex-database () 
   ((lexical-entries :initform (make-hash-table :test #'equal))
    (psorts :initform (make-hash-table :test #'eq))
-   (temp-psorts :initform (make-hash-table :test #'eq))))
+   (temp-psorts :initform (make-hash-table :test #'eq))
+   (extra-lexicons :initform nil :accessor extra-lexicons)))
 
 (defgeneric lookup-word (lexicon orth &key (cache t)))
 
@@ -365,7 +366,12 @@
   (cond ((gethash orth (slot-value lexicon 'lexical-entries)))
 	(t 
 	 (let ((value (call-next-method)))
-	   (when cache
+	   ;; If main lexicon doesn't have an entry, try the other lexicons
+	   (when (null value)
+	     (setf value
+	       (some #'(lambda (lex) (lookup-word lex orth :cache nil))
+		     (extra-lexicons lexicon))))
+	   (when (and cache value)
 	     (setf (gethash orth (slot-value lexicon 'lexical-entries)) 
 	       value))
 	   value))))
@@ -395,7 +401,9 @@
 (defmethod read-psort :around ((lexicon lex-database) id &key (cache t))
   (declare (ignore cache))
   (cond ((gethash id (slot-value lexicon 'temp-psorts)))
-	(t (call-next-method))))
+	((call-next-method))
+	(t (some #'(lambda (lex) (read-psort lex id :cache nil))
+		 (extra-lexicons lexicon)))))
 
 (defmethod clear-lex :around ((lexicon lex-database) &optional no-delete)
   (when (fboundp 'reset-cached-lex-entries)
@@ -407,6 +415,7 @@
     (funcall 'clear-lexicon-indices))
   ;; (setf *language-lists* nil)
   (call-next-method)
+  (mapcar #'(lambda (lex) (clear-lex lex no-delete)) (extra-lexicons lexicon))
   (unless no-delete
     (delete-temporary-lexicon-files)))
 
