@@ -25,7 +25,7 @@
 
 (defparameter %athome% nil)
 (defparameter %sys-home%
-  #-:mcl '("user" "malouf" "newlkb")
+  #-:mcl (rest (butlast (pathname-directory *load-truename*) 2))
   #+:mcl '("macintosh hd" "lkb"))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
