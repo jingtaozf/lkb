@@ -7,7 +7,6 @@
   }
   td { 
     font-weight: normal; font-family: helvetica, arial, sans-serif;
-    color: #1a04a5;
   }
   td.center {
     text-align: center;
@@ -48,19 +47,17 @@
     font-size: 10pt; font-style: italic; text-align: right; 
   }
   span.mrsBracket { 
-    font-size: 150%; 
+    color: #1a04a5;
+    font-size: 16pt; 
   }
 
   table.tree {
     padding: 0.2em;
-    border: none;
-    border-width: thin;
     color: #1a04a5;
     background: #d8d6d6;
   }
-  td.branch {
+  td.treeBranch {
     padding: 0.2ex;
-    color: #1a04a5;
     border-top: solid;
     border-top-width: thin;
     border-left: solid;
@@ -70,7 +67,7 @@
     text-align: center;
     vertical-align: top;
   }
-  td.leaf {
+  td.treeLeaf {
     padding: 0.2ex;
     border-left: solid;
     border-left-width: thin;
@@ -79,14 +76,14 @@
     text-align: center;
     vertical-align: top;
   }
-  td.margin {
+  td.treeMargin {
     padding: 0em;
   }
-  div.label {
+  div.treeLabel {
     font-weight: normal; font-size: 10pt; 
     font-family: helvetica, arial, sans-serif;
   }
-  div.form {
+  div.treeForm {
     font-weight: normal; font-size: 10pt; 
     font-family: helvetica, Arial, sans-serif;
     font-style: italic; 
@@ -95,16 +92,7 @@
   table.results {
     border-collapse: collapse;
   }
-  td.tree, td.mrs {
-    background: #d8d6d6;
-    text-align: center; vertical-align: top;
-    padding: 0.2em;
-    border-top: solid;
-    border-bottom: solid;
-    border-width: thin;
-    color: #2d2d2b;
-  }
-  td.navigation {
+  td.resultsNavigation {
     background: #d8d6d6;
     color: #2d2d2b;
     text-align: center; vertical-align: middle;
@@ -115,16 +103,27 @@
     font-weight: normal; font-size: 14pt; 
     font-family: helvetica, arial, sans-serif;
   }
-  table.navigation {
+  table.resultsNavigation {
     border-collapse: collapse;
     vertical-align: middle;
+    color: #1a04a5;
   }
-  div.navigation {
+  div.resultsNavigation {
     font-weight: normal; font-size: 12pt; 
     font-family: helvetica, arial, sans-serif;
   }
+  td.resultsTree, td.resultsMrs {
+    background: #d8d6d6;
+    text-align: center; vertical-align: top;
+    padding: 0.2em;
+    border-top: solid;
+    border-bottom: solid;
+    border-width: thin;
+    color: #2d2d2b;
+  }
+
   td.buttons { 
-    font-weight: normal; font-size: 80%; 
+    font-weight: normal; font-size: 12pt; 
     font-family: helvetica, arial, sans-serif;
     color: black; vertical-align: middle;
   }
@@ -141,12 +140,19 @@
     margin-bottom: 1em;
   }
   div#summary { 
-    font-weight: normal; font-size: 100%; 
+    font-weight: normal; font-size: 12pt; 
     font-family: helvetica, arial, sans-serif; 
     margin-bottom: 1em;
   }
+  div#action { 
+    font-weight: normal; font-size: 12pt; 
+    font-family: helvetica, arial, sans-serif;
+    color: black; vertical-align: middle;
+    margin-bottom: 1em;
+  }
+
   div#error { 
-    font-weight: normal; font-size: 100%; 
+    font-weight: normal; font-size: 12pt; 
     font-family: helvetica, arial, sans-serif; 
     background: #d8d6d6;
     color: red;
@@ -157,11 +163,77 @@
     margin-bottom: 1em;
   }
   div#version { 
-    font-weight: normal; font-size: 60%; 
+    font-weight: normal; font-size: 8pt; 
     font-family: helvetica, arial, sans-serif; 
     margin-top: 1ex;
   }
 
+  table.compareNavigation {
+    font-weight: normal; font-size: 12pt; 
+    font-family: helvetica, arial, sans-serif;
+    color: black; vertical-align: middle;
+    margin-bottom: 1em;
+  }
+  table.compare {
+    border-collapse: collapse;
+    background: #d8d6d6;
+    border:solid;
+    border-width: thin;
+  }
+  td.compareTop {
+    text-align: center; vertical-align: top;
+    padding: 5px;
+    border-bottom: solid;
+    border-width: thin;
+  }
+  td.compareTrees {
+    text-align: left; vertical-align: top;
+    margin-bottom: auto;
+    padding-top: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+  table.compareTrees {
+    border-collapse: collapse;
+  }
+  td.compareTreeLabel {
+
+  }
+  table.compareTreeLabel {
+
+  }
+  td.compareTreeId, td.compareTreeScore {
+
+  }
+  td.compareDiscriminants {
+    text-align: right; vertical-align: top;
+    padding: 0;
+    border-left: solid;
+    border-width: thin;
+  }
+  table.compareDiscriminants {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
+  table.compareDiscriminantsOnly {
+    border-left: solid;
+    border-width: thin;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-left: auto;
+  }
+  td.compareDiscriminantState, td.compareDiscriminantToggle,
+  td.compareDiscriminantKey, td.compareDiscriminantValue {
+    font-weight: normal; font-size: 10pt; 
+    font-family: helvetica, arial, sans-serif; 
+  }
+  td.compareMrs {
+    text-align: right; vertical-align: top;
+    padding-top: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+    border-width: thin;
+  }
 </style>
 
 

@@ -32,16 +32,31 @@
 (defparameter *www-maximal-number-of-edges* 5000)
 
 (defparameter *www-maximal-number-of-results* 10)
+
+(defvar %www-clients% 0)
 
+(defvar %www-object-counter% 0)
+
+(defvar %www-attic% (make-array 512))
+
 (defun initialize ()
+  (setf %www-clients% 0)
+  (setf %www-object-counter% 0)
+  (setf %www-attic% (make-array 512))
   (start :port *www-port* :external-format (excl:crlf-base-ef :utf-8))
   (publish-file :path "/lkb.css" :file *www-lkb-css*)
   (publish-file :path "/lkb.js" :file *www-lkb-js*)
   (publish :path "/erg"
     :content-type "text/html"
-    :function #'(lambda (request entity) (www-run request entity))))
-
-(defun www-run (request entity)
+    :function #'(lambda (request entity) (www-erg request entity)))
+  (publish :path "/erg/browse"
+    :content-type "text/html"
+    :function #'(lambda (request entity) (www-browse request entity)))
+  (publish :path "/erg/compare"
+    :content-type "text/html"
+    :function #'(lambda (request entity) (www-compare request entity))))
+
+(defun www-erg (request entity)
   #+:debug
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
@@ -143,7 +158,7 @@
                     ((:td :class "buttons") "&nbsp;results")))))
                 (:center
                  (when (and (eq method :post) input)
-                   (www-parse-input
+                   (www-parse
                     input
                     :exhaustivep exhaustivep :treep treep :mrsp mrsp
                     :request request :stream *html-stream*))))))))))
@@ -154,7 +169,7 @@
 
 (defparameter %www-log-lock% (mp:make-process-lock))
 
-(defun www-parse-input (input &key exhaustivep treep mrsp request stream)
+(defun www-parse (input &key exhaustivep treep mrsp request stream)
   (let* ((result 
           (mp:with-process-lock (%www-parse-lock%)
             (tsdb::parse-item 
@@ -164,7 +179,14 @@
          (readings (tsdb::get-field :readings result))
          (time (tsdb::get-field :tcpu result))
          (time (and (numberp time) (/ time 1000)))
-         (edges (tsdb::get-field :pedges result))
+         (pedges (tsdb::get-field :pedges result))
+         (results (tsdb::get-field :results result))
+         (edges (loop 
+                    for result in results
+                    for derivation = (tsdb::get-field :derivation result)
+                    for edge = (and derivation (tsdb::reconstruct derivation))
+                    do (nconc result (acons :edge edge nil))
+                    collect edge))
          (error (tsdb::get-field :error result))
          (error (unless (> readings 0)
                   (or
@@ -192,7 +214,7 @@
                        (ignore-errors 
                         (read-from-string (aref bar 0) nil nil))))
                    error))))
-    (when request (www-log request input readings time edges error))
+    (when request (www-log request input readings time pedges error))
     (cond
      ((null error)
       (format
@@ -206,39 +228,52 @@
          (min readings *www-maximal-number-of-results*)
          readings)
        readings (= readings 1)
-       time edges edges)
+       time pedges pedges)
       (mp:with-process-lock (%www-visualize-lock%)
         (loop
             initially
               (format 
                stream 
-               "<form action=\"/lkb/browse\" method=post
+               "<form action=\"/erg/browse\" method=post
                       accept-charset=\"utf-8\">~%~
-                <table class=results>~%")
+                <input type=hidden name=edges value=~a>~%  ~
+                <div id=action>~%  ~
+                <input type=submit name=action value=compare>~%  ~
+                <select name=set size=1>~%    ~
+                <option value=all selected>all analyses</option>~%    ~
+                <option value=active>selection</option>~%    ~
+                </select>~%  ~
+                &nbsp;&nbsp;|&nbsp;&nbsp;~%  ~
+                <input type=submit name=action value=avm disabled>&nbsp;~%  ~
+                <input type=submit name=action value=scope disabled>&nbsp;~%  ~
+                <input type=submit name=action value=dependencies ~
+                       disabled>&nbsp;~%  ~
+                <input type=submit name=action value=generate disabled>~%  ~
+                </div>~%<table class=results>~%"
+               (www-store-object nil edges))
             finally (format stream "</table></form>~%")
-            with results = (tsdb::get-field :results result)
-            for i from 1 to (or *www-maximal-number-of-results* readings)
+            for i from 0 to (- (or *www-maximal-number-of-results* readings) 1)
             for result in results
-            for derivation = (tsdb::get-field :derivation result)
-            for edge = (tsdb::reconstruct derivation)
+            for edge = (tsdb::get-field :edge result)
             for mrs = (mrs::extract-mrs edge)
             do
               (format 
                stream 
-               "<tr>~%<td class=navigation>~%  <table class=navigation>~%    ~
+               "<tr>~%<td class=resultsNavigation>~%  ~
+                <table class=resultsNavigation>~%    ~
                 <tr><td class=center>~%~
-                <div class=navigation># ~a</div></td></tr>~%    ~
+                <div class=resultsNavigation># ~a</div></td></tr>~%    ~
                 <tr><td class=center>~
                 <input type=checkbox name=selection value=\"~a\">~
                 </td></tr>~%  ~
                 </table></td>~%"
                i i)
             when treep do
-              (format stream "<td class=tree>~%")
-              (lkb::edge2html edge stream)
+              (format stream "<td class=resultsTree>~%")
+              (lkb::html-tree edge :stream stream :indentation 4)
               (format stream "</td>~%")
             when mrsp do
-              (format stream "<td class=mrs>~%")
+              (format stream "<td class=resultsMrs>~%")
               (mrs::output-mrs1 mrs 'mrs::html stream)
               (format stream "</td>~%")
             do (format stream "</tr>"))))
@@ -277,7 +312,178 @@
      "<div id=version>[ERG: ~a &mdash; LKB CVS: ~a]</div>~%"
      (tsdb::current-grammar) 
      (subseq lkb::*cvs-version* 6 (- (length lkb::*cvs-version*) 2)))))
-     
+
+(defun www-browse (request entity &key edges)
+  #+:debug
+  (setf %request% request %entity% entity)
+  (let* ((method (request-method request))
+         (body (when (eq method :post) (get-request-body request)))
+         (query (and body (form-urlencoded-to-query body)))
+         (action (lookup-form-value "action" query))
+         (edges (or edges
+                    (if query 
+                      (lookup-form-value "edges" query)
+                      (request-query-value "edges" request :post nil))))
+         (edges (typecase edges
+                  (string (ignore-errors (parse-integer edges)))
+                  (number edges)))
+         (set (lookup-form-value "set" query))
+         (selection (lookup-form-value "selection" query)))
+    (cond
+     ((equal action "compare")
+      (when (and selection (equal set "active"))
+        (loop
+            with all = (www-retrieve-object nil edges)
+            with active = nil
+            for foo in (if (listp selection) selection (list selection))
+            for i = (ignore-errors (parse-integer foo))
+            for edge = (and i (nth i all))
+            when edges do (push edge active)
+            finally (setf edges (www-store-object nil active))))
+      (www-compare request entity :edges edges)))))
+
+(defun www-compare (request entity &key edges)
+  #+:debug
+  (setf %request% request %entity% entity)
+  (let* ((method (request-method request))
+         (body (when (eq method :post) (get-request-body request)))
+         (query (and body (form-urlencoded-to-query body)))
+         (index (if query 
+                  (lookup-form-value "frame" query)
+                  (request-query-value "frame" request :post nil)))
+         (frame (when (stringp index) (ignore-errors (parse-integer index))))
+         (frame (when (integerp frame) (www-retrieve-object nil frame)))
+         (edges (or edges
+                    (if query 
+                      (lookup-form-value "edges" query)
+                      (request-query-value "edges" request :post nil))))
+         (edges (typecase edges
+                  (string (ignore-errors (parse-integer edges)))
+                  (number edges)))
+         (mode (lookup-form-value "mode" query))
+         (classicp (equal mode "classic"))
+         (display (lookup-form-value "display" query))
+         (concisep (or (null display) (equal display "concise")))
+         (orderedp (equal display "ordered"))
+         (fullp (equal display "full"))
+         (action (lookup-form-value "action" query))
+         resetp)
+    
+    (cond
+     (frame
+      (if mode
+        (let ((mode (intern (string-upcase (string mode)) :keyword)))
+          (unless (eq mode (lkb::compare-frame-mode frame))
+            (setf (lkb::compare-frame-mode frame) mode)
+            (lkb::set-up-compare-frame frame (lkb::compare-frame-edges frame))
+            (setf resetp t)))
+        (setf classicp (eq (lkb::compare-frame-mode frame) :classic)))
+
+      (when (and (not resetp) display)
+        (let ((display (intern (string-upcase display) :keyword)))
+          (unless (eq display (lkb::compare-frame-display frame))
+            (setf (lkb::compare-frame-display frame) display)
+            (lkb::update-trees frame))))
+      (unless resetp
+        (if (equal action "clear")
+          (lkb::reset-discriminants frame)
+          (loop
+              with discriminants = (lkb::compare-frame-discriminants frame)
+              with decisions = nil
+              for i from 0 to (length (lkb::compare-frame-discriminants frame))
+              for key = (format nil "~a" i)
+              for value = (lookup-form-value key query)
+              when (and value (not (equal value "?"))) do
+                (let ((value (when (equal value "+") t)))
+                  (push (cons i value) decisions))
+              finally (pprint decisions)
+                (loop
+                    for (i . value) in decisions
+                    for discriminant = (nth i discriminants)
+                    do
+                      (setf (lkb::discriminant-toggle discriminant) value)
+                      (setf (lkb::discriminant-state discriminant) value))
+                (lkb::recompute-in-and-out frame)
+                      (lkb::update-trees frame t)))))
+     ((integerp edges)
+      (let ((edges (www-retrieve-object nil edges))
+            (lkb::*tree-discriminants-mode* :modern)
+            (lkb::*tree-display-threshold* 10))
+        (when edges
+          (setf frame (lkb::compare edges :runp nil))
+          (setf index (www-store-object nil frame))
+          (setf classicp (eq (lkb::compare-frame-mode frame) :classic))
+          (setf concisep (eq (lkb::compare-frame-display frame) :concise))
+          (setf orderedp (eq (lkb::compare-frame-display frame) :ordered))
+          (setf fullp (eq (lkb::compare-frame-display frame) :full))))))
+
+          
+    (with-http-response (request entity)
+      (with-http-body (request entity
+                       :external-format (excl:crlf-base-ef :utf-8))
+        (format
+         *html-stream*
+         "<!DOCTYPE HTML PUBLIC ~
+          \"-//W3C//DTD HTML 4.01 Transitional//EN\">~%")
+        (html (:html
+               (:head
+                ((:meta
+                  :http-equiv "Content-Type" 
+                  :content "text/html; charset=utf-8"))
+                (:title "Redwoods Tree Comparison")
+                :newline
+                ((:link
+                  :type "text/css" :rel "stylesheet"
+                  :href "/lkb.css"))
+                :newline
+                ((:script
+                  :src "/lkb.js" :language "javascript" 
+                  :type "text/javascript")))
+               :newline
+               (:body
+                (:center
+                 ((:form 
+                   :action "/erg/compare" :method "post"
+                   :accept-charset "utf-8")
+                  ((:table :class "compareNavigation")
+                   (:span
+                    (:td
+                     ((:input :type "submit" :name "action" :value "clear")))
+                    (:td "&nbsp;&nbsp;|&nbsp;&nbsp;mode:")
+                    (:td
+                     ((:select 
+                       :size 1 :name "mode"
+                       :onChange "this.form.submit()")
+                      ((:option 
+                        :value "classic" 
+                        :if* classicp :selected :if* classicp '||)
+                       "classic")
+                      ((:option 
+                        :value "modern" 
+                        :if* (not classicp) :selected :if* (not classicp) '||)
+                       "modern")))
+                    (:td "&nbsp;&nbsp;|&nbsp;&nbsp;display:")
+                    (:td
+                     ((:select 
+                       :size 1 :name "display"
+                       :onChange "this.form.submit()")
+                      ((:option 
+                        :value "concise" 
+                        :if* concisep :selected :if* concisep '||)
+                       "concise")
+                      ((:option 
+                        :value "ordered" 
+                        :if* orderedp :selected :if* orderedp '||)
+                       "ordered")
+                      ((:option 
+                        :value "full" 
+                        :if* fullp :selected :if* fullp '||)
+                       "full")))))
+                  :newline
+                  ((:input :type "hidden" :name "frame" :value index))
+                  :newline
+                  (when frame
+                    (lkb::html-compare frame :stream *html-stream*)))))))))))
 
 (defun www-log (request input readings time edges error)
   (mp:with-process-lock (%www-log-lock%)
@@ -292,6 +498,20 @@
           ~@[ error: `~(~a~)'~].~%"
          (tsdb::current-time :long :pretty) 
          host input readings time edges error)))))
+
+(defun www-store-object (id object &key globalp)
+  (let ((n %www-object-counter%))
+    (setf (aref %www-attic% n) (cons (if globalp -1 id) object))
+    (incf %www-object-counter%)
+    (when (>= %www-object-counter% (array-total-size %www-attic%))
+      (setf %www-attic% (adjust-array %www-attic% (* %www-object-counter% 2))))
+    n))
+
+(defun www-retrieve-object (id n)
+  (when (and (numberp n) (< n (array-total-size %www-attic%)))
+    (let ((bucket (aref %www-attic% n)))
+      (when (or (equal (first bucket) -1) (equal (first bucket) id))
+        (rest bucket)))))
 
 (defun lookup-form-value (name query)
   (loop

@@ -15,6 +15,13 @@ function mrsVariableUnselect(name)
 
 function classSetColor(name, color) {
 
+  //
+  // _fix_me_
+  // rewrite using a global array of relevant elements, indexed by embedding
+  // MRS: make highlighting far more efficient and prevent highlighting across
+  // structures.                                               (5-aug-03; oe)
+  //
+  return false;
   var all = document.all ? document.all : document.getElementsByTagName('*');
   var elements = new Array();
   for (var i = 0; i < all.length; i++)
