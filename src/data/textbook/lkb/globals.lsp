@@ -56,6 +56,10 @@
 
 |#
 
+;;; Generation
+
+(defparameter  *semantics-index-path* '(SEM INDEX))
+
 ;;; Parse tree node labels
 
 ;;; the path where the name string is stored

@@ -1,6 +1,14 @@
 (in-package "MRS")
 ;;; Globals for YGG
 
+(defparameter *mrs-to-vit* nil)
+
+(defparameter *mrs-for-language* 'english)
+
+(defparameter *mrs-scoping* nil)
+
+(defparameter *alex-munge* nil)
+
 (defparameter *initial-semantics-path* `(,(vsym "SEM") ))
 
 (defparameter *main-semantics-path* `(,(vsym "SEM") ,(vsym "RESTR") ,(vsym "LIST")))

@@ -57,4 +57,8 @@
   "controls whether user is asked for type display options file")
 
 (defparameter *feature-ordering*
- '(arg-str orth syn sem))
+    '(arg-str orth syn sem))
+
+(defparameter *description-persistence* 'lex
+  "Atom marking tails which should be made non-default when a description is expanded")
+
