@@ -108,6 +108,9 @@
    ;; with the full fs associated with full-tdfs
    type-label-list type shrunk-p atomic-p top-box full-tdfs)
 
+(defstruct (reentrancy-click-field (:include type-click-field))
+   label valuep)
+
 (defstruct (title-click-field (:include click-field))
    title fs)
 
@@ -165,7 +168,9 @@
 
 
 (defun create-active-fs-pop-up (field menu-pos)
-  (cond ((type-click-field-p field) (create-active-fs-pop-up-type field menu-pos))
+  (cond ((reentrancy-click-field-p field)
+           (create-active-fs-pop-up-reentrancy field menu-pos))
+        ((type-click-field-p field) (create-active-fs-pop-up-type field menu-pos))
         ((title-click-field-p field) (create-active-fs-pop-up-title field menu-pos))
         ((psort-click-field-p field) (create-active-fs-pop-up-psort field menu-pos))
         (t (error "Unknown class of pop up object"))))
@@ -277,7 +282,7 @@
               (fs-display-record-type-fs-display
                  (feature-structure (ccl::my-scroller real-window)))
               *type-fs-display*))
-        (setf (fields (ccl::my-scroller real-window)) fields)
+        (setf (fields (ccl::my-scroller real-window)) (nreverse fields))
         (invalidate-view real-window)
         real-window)))
 
@@ -453,7 +458,10 @@
      :menu-item-action 
      #'(lambda ()
          (try-unify-fs (view-container menu) field (reverse type-label-list)))
-     :enable-function #'(lambda nil *selected-fs-node*))
+     :enable-function
+     #'(lambda nil
+         (and *selected-fs-node*
+              (listp (selected-fs-node-path *selected-fs-node*)))))
    )))
 
 
@@ -657,15 +665,16 @@
    (declare (ignore current-fs-field))
    (let* ((sel1 *selected-fs-node*)
           (path1 (selected-fs-node-path sel1)))
-      (unify-paths-with-fail-messages 
-         (create-path-from-feature-list path1)
-         (selected-fs-node-fs sel1)
-         (create-path-from-feature-list path2)
-         (pane-toplevel-dag pane)
-         :selected1 path1 :selected2 path2)
-      (terpri)
-      (highlight-current-fs-node-any-window)
-      (setq *selected-fs-node* nil)))
+      (when (listp path1)
+         (unify-paths-with-fail-messages 
+            (create-path-from-feature-list path1)
+            (selected-fs-node-fs sel1)
+            (create-path-from-feature-list path2)
+            (pane-toplevel-dag pane)
+            :selected1 path1 :selected2 path2)
+         (terpri)
+         (highlight-current-fs-node-any-window)
+         (setq *selected-fs-node* nil))))
 
 
 (defun highlight-current-fs-node-any-window nil
@@ -674,3 +683,71 @@
          (when (eq (ccl::my-scroller w) (selected-fs-node-pane *selected-fs-node*))
             (highlight-current-fs-node
                (selected-fs-node-record *selected-fs-node*) (ccl::my-scroller w))))))
+
+
+;;; **********************************************************************
+
+(defun create-active-fs-pop-up-reentrancy (field menu-pos)
+  ;; YADU --- full-tdfs for lrule display
+  (let ((label (reentrancy-click-field-label field))
+        (menu (make-instance 'active-fs-pop-up-field
+                 :view-position menu-pos
+                 :item-display (reentrancy-click-field-type field)
+                 :view-font (cons :bold (lkb-type-font)))))
+      (apply #'add-menu-items menu
+         (list
+            (make-instance 'menu-item
+               :menu-item-title "Find next"
+               :menu-item-action 
+               #'(lambda ()
+                   (select-fs (view-container menu) field t)
+                   (select-fs-node-label label (view-container menu) field)))
+            (make-instance 'menu-item
+               :menu-item-title "Find value"
+               :menu-item-action 
+               #'(lambda ()
+                   (select-fs-node-label label (view-container menu) nil)))))
+      menu))
+
+
+(defun select-fs-node-label (label pane current)
+   (let* ((passed-current-p nil)
+          (record
+            (find-if
+               #'(lambda (r)
+                   (and (reentrancy-click-field-p r)
+                      (eql (reentrancy-click-field-label r) label)
+                      (if current
+                         (if passed-current-p t
+                            (progn
+                               (when (eq r current)
+                                  (setq passed-current-p t))
+                               nil))
+                         (reentrancy-click-field-valuep r))))
+               (fields pane))))
+      (when record
+         (let ((node-pos (reentrancy-click-field-view-pos record)))
+            (unless
+               (let ((eps (make-point 15 15)))
+                  (inside-box-p node-pos
+                     ;; make slightly smaller box than full area of visible pane
+                     (cons (add-points (view-scroll-position pane) eps)
+                        (subtract-points
+                           (add-points (view-scroll-position pane) (view-size pane))
+                           eps))))
+               (set-view-scroll-position pane 0
+                  (max 0 ; only scroll vertically
+                     (- (point-v node-pos)
+                        (truncate (point-v (view-size pane)) 2)))))
+            (select-fs pane record t)))))
+
+
+(defun add-active-pointer (stream position pointer valuep)
+   (let ((record
+          (make-reentrancy-click-field :view-pos position
+             :label pointer :type (format nil "<~A>" pointer) :valuep valuep)))
+      (push record (fields stream))
+      (write-string (reentrancy-click-field-type record) stream)
+      (when valuep
+         (write-string " = " stream))))
+
