@@ -228,7 +228,7 @@
                   :needed nil
                   :rels-covered
                   (append (mrs::found-lex-main-rels found)
-                          (mrs::found-lex-alternative-rels found)
+;                          (mrs::found-lex-alternative-rels found)
                           (mrs::found-lex-message-rels found))
                   :children nil :leaves (list word))
               input-sem)))
@@ -728,12 +728,12 @@
 (defun gen-chart-mod-edge-partitions (rels next rest mod-candidate-edges cached-rels-edges)
    ;; compute sets of partitions of input relations with each partition containing
    ;; the set of modifier edges that cover those relations: e.g.
-   ;; ( (((r1 r2) e1 e2) ((r3 r4) e3))  (((r1) e4 e5 e6) ((r2 r3 r4) e5)) )
+  ;; ( (((r1 r2) e1 e2) ((r3 r4) e3))  (((r1) e4 e5 e6) ((r2 r3 r4) e5)) )
    (let ((rels-edges (gethash rels cached-rels-edges t)))
       (when (eq rels-edges t)
          (setq rels-edges nil)
          (dolist (e mod-candidate-edges)
-            (let ((rels-covered (g-edge-rels-covered e)))
+           (let ((rels-covered (g-edge-rels-covered e)))
                (declare (special *optional-rel-names*))
                ;; *** optionality only needed because no one tells us when rules
                ;; introduce rels - see comment above
