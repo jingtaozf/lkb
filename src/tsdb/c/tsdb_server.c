@@ -1030,14 +1030,14 @@ char *tsdb_obtain_server_home(int client) {
     fprintf(tsdb_error_stream,
             "obtain_server_status(): incomplete write on server socket.\n");
     fflush(tsdb_error_stream);
-    tsdb.errno = TSDB_SOCKET_IO_ERROR;
+    tsdb.error = TSDB_SOCKET_IO_ERROR;
     return((char *)NULL);
   } /* if */
 
   if(tsdb_socket_readline(client, &buffer[0], 1024) >= 0
      && buffer[0]) {
     if((status = tsdb_client_clear_stream(client, TRUE))) {
-      tsdb.errno = status;
+      tsdb.error = status;
       return((char *)NULL);
     } /* if */
     if((foo = strrchr(&buffer[0], '`')) != NULL) {
@@ -1050,7 +1050,7 @@ char *tsdb_obtain_server_home(int client) {
                   "obtain_server_home(): got `%s'.\n", foo);
           fflush(tsdb_debug_stream);
 #endif
-          tsdb.errno = TSDB_OK;
+          tsdb.error = TSDB_OK;
           return(foo);
         } /* if */
       } /* if */
@@ -1060,7 +1060,7 @@ char *tsdb_obtain_server_home(int client) {
   fprintf(tsdb_error_stream,
           "obtain_server_home(): incomplete or invalid data from server.\n");
   fflush(tsdb_error_stream);
-  tsdb.errno = TSDB_SOCKET_IO_ERROR;
+  tsdb.error = TSDB_SOCKET_IO_ERROR;
   return((char *)NULL);
 
 } /* tsdb_obtain_server_home() */

@@ -833,12 +833,12 @@ Tsdb_relation *tsdb_find_relation(char *name) {
      tsdb_all_relations() != NULL) {
     for(i = 0; tsdb.relations[i] != NULL; i++) {
       if(!strcmp(name, tsdb.relations[i]->name)) {
-        tsdb.errno = TSDB_OK;
+        tsdb.error = TSDB_OK;
         return(tsdb.relations[i]);
       } /* if */
     } /* for */
   } /* if */
-  tsdb.errno = TSDB_UNKNOWN_RELATION_ERROR;
+  tsdb.error = TSDB_UNKNOWN_RELATION_ERROR;
   return((Tsdb_relation *)NULL);
 
 } /* tsdb_find_relation() */
@@ -1009,7 +1009,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
     fprintf(tsdb_error_stream,
             "find_table(): invalid context or parameter call.\n");
     fflush(tsdb_error_stream);
-    tsdb.errno = TSDB_UNKNOWN_ERROR;
+    tsdb.error = TSDB_UNKNOWN_ERROR;
     return((Tsdb_selection *)NULL);
   } /* if */
   for(i = 0;
@@ -1021,7 +1021,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
             "find_table(): unknown relation `%s'.\n",
             relation->name);
     fflush(tsdb_error_stream);
-    tsdb.errno = TSDB_UNKNOWN_RELATION_ERROR;
+    tsdb.error = TSDB_UNKNOWN_RELATION_ERROR;
     return((Tsdb_selection *)NULL);
   } /* if */
 
@@ -1030,7 +1030,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
       tsdb.data = (Tsdb_selection **)malloc(2 * sizeof(Tsdb_selection *));
       tsdb.data[0] = foo;
       tsdb.data[1] = (Tsdb_selection *)NULL;
-      tsdb.errno = TSDB_OK;
+      tsdb.error = TSDB_OK;
       return(tsdb.data[0]);
     } /* if */
     else {
@@ -3339,7 +3339,7 @@ BOOL tsdb_check_potential_command(char *string) {
         if(tsdb.query != NULL) {
           baz = strdup(tsdb.query);
         } /* if */
-        tsdb.errno = tsdb_parse(foo, (FILE *)NULL);
+        tsdb.error = tsdb_parse(foo, (FILE *)NULL);
         tsdb_free(tsdb.query);
         tsdb.query = baz;
         return(TRUE);

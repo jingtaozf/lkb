@@ -843,11 +843,11 @@ int tsdb_commit(Tsdb_value **relations) {
               "commit(): unknown relation `%s'.\n",
               relations[i]->value.identifier);
       fflush(tsdb_error_stream);
-      status = tsdb.errno;
+      status = tsdb.error;
       continue;
     } /* if */
     if((selection = tsdb_find_table(relation)) == NULL) {
-      status = tsdb.errno;
+      status = tsdb.error;
       continue;
     } /* if */
     if(relation->status != TSDB_CLEAN) {
@@ -1428,7 +1428,7 @@ int tsdb_retrieve(Tsdb_value **relation_list,
   int unique_tuples;
 
   unique_tuples = -1;
-  tsdb.errno = TSDB_OK;
+  tsdb.error = TSDB_OK;
 
   if((result = tsdb_complex_retrieve(relation_list,
                                      attribute_list, conditions,
@@ -1444,7 +1444,7 @@ int tsdb_retrieve(Tsdb_value **relation_list,
   } /* if */
 #endif
 
-  return((result == NULL ? tsdb.errno : TSDB_OK));
+  return((result == NULL ? tsdb.error : TSDB_OK));
 
 } /* tsdb_retrieve() */
 
@@ -1503,7 +1503,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
     if (foo==NULL) {
       fprintf(tsdb_error_stream,"retrieve(): no history item %d.\n",
               relation_list[0]->value.integer);
-      tsdb.errno = TSDB_NO_HISTORY_ITEM_ERROR;
+      tsdb.error = TSDB_NO_HISTORY_ITEM_ERROR;
       return((Tsdb_selection *)NULL);
     } /* if */
     history = foo->result;
@@ -1520,7 +1520,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 #endif
     attributes = (char **)malloc(s_attributes * sizeof(char *));
     if (!attributes) {
-      tsdb.errno = TSDB_OS_ERROR;
+      tsdb.error = TSDB_OS_ERROR;
       return((Tsdb_selection *)NULL);
     }
     memset(attributes,'\0',s_attributes*sizeof(char*));
@@ -1528,7 +1528,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
       = tsdb_condition_attributes(conditions, attributes, &s_attributes);
     /* attribute check is done in tsdb_condition_attributes!! */
     if (!attributes) {
-      tsdb.errno = TSDB_OS_ERROR;
+      tsdb.error = TSDB_OS_ERROR;
       return((Tsdb_selection *)NULL);
     } /* if */
   } /* if conditions */
@@ -1552,7 +1552,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
       if (attributes) {
         free(attributes);
       } /* if */
-      tsdb.errno = TSDB_UNKNOWN_ATTRIBUTE_ERROR;
+      tsdb.error = TSDB_UNKNOWN_ATTRIBUTE_ERROR;
       return((Tsdb_selection *)NULL);
     } /* if */
   } /* if */
@@ -1571,7 +1571,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
       if (attributes) {
         free(attributes);
       } /* if */
-      tsdb.errno = TSDB_UNKNOWN_RELATION_ERROR;
+      tsdb.error = TSDB_UNKNOWN_RELATION_ERROR;
       return((Tsdb_selection *)NULL);
     } /* if */
   } /* else */ 
@@ -1782,7 +1782,7 @@ int tsdb_project(Tsdb_selection *selection,
           fprintf(tsdb_error_stream, ":%s", selection->relations[i]->name);
         } /* for */
         fprintf(tsdb_error_stream, ".\n");
-        tsdb.errno = TSDB_UNKNOWN_ATTRIBUTE_ERROR;
+        tsdb.error = TSDB_UNKNOWN_ATTRIBUTE_ERROR;
         return(-1);
       }      
     } /* for */ 
@@ -1814,7 +1814,7 @@ int tsdb_project(Tsdb_selection *selection,
          list!=NULL; list=list->next,n++) {
       projection[n]=tsdb_sprint_key_list(list,r,f,n_attributes);
       if (!projection[n]) {
-        tsdb.errno = TSDB_UNKNOWN_ERROR;
+        tsdb.error = TSDB_UNKNOWN_ERROR;
         return(-1);
       } /* if */
     } /* for key_list */

@@ -41,7 +41,7 @@ Tsdb tsdb = {
   (char *)NULL,            /* output */
   (char *)NULL,            /* error output */
 
-  TSDB_OK,                 /* errno */
+  TSDB_OK,                 /* error */
 #ifdef COMPRESSED_DATA
   (char *)NULL,            /* compress */
   (char *)NULL,            /* uncompress */

@@ -363,7 +363,7 @@ typedef struct tsdb {
   char *output;
   char *error_output;
 
-  int errno;
+  int error;
 
 #ifdef COMPRESSED_DATA
   char *compress;

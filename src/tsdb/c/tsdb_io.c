@@ -813,7 +813,7 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
 
   if((file = fopen(path, mode)) != NULL) {
     free(path);
-    tsdb.errno = TSDB_OK;
+    tsdb.error = TSDB_OK;
     return(file);
   } /* if */
   else {
@@ -829,7 +829,7 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
         free(path);
         free(command);
         tsdb.status |= TSDB_READ_ONLY;
-        tsdb.errno = TSDB_OK;
+        tsdb.error = TSDB_OK;
         return(stream);
       } /* if */
       free(command);
@@ -844,7 +844,7 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
             (mode[0] == 'r' ? "read" : "write"), path, errno);
 #endif
     tsdb_free(path);
-    tsdb.errno = TSDB_NO_DATA_ERROR;
+    tsdb.error = TSDB_NO_DATA_ERROR;
     return((FILE *)NULL);
   } /* else */
 
@@ -866,11 +866,11 @@ char *tsdb_data_backup_file(char* name) {
   
   r = rename(path,tmpnam);
   if (r==-1) {
-    tsdb.errno = TSDB_FILE_CREATION_ERROR;
+    tsdb.error = TSDB_FILE_CREATION_ERROR;
     return(NULL);
   } /* if */
   else {
-    tsdb.errno = TSDB_OK;
+    tsdb.error = TSDB_OK;
     return(tmpnam);
   } /* else */
 }
@@ -1152,7 +1152,7 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
 
   if(fgets(&buf[1], 2047, input) != NULL) {
     if(tsdb_check_potential_command(&buf[0])) {
-      if(tsdb.errno) {
+      if(tsdb.error) {
          fprintf(tsdb_error_stream,
                  "read_relation(): ignoring invalid tsdb(1) command.\n");
       } /* if */
@@ -1299,18 +1299,18 @@ int tsdb_write_table(Tsdb_selection *selection, BOOL raw) {
   bar = selection->key_lists[0];
   if((output = tsdb_find_data_file(selection->relations[0]->name, "r"))
      == NULL) {
-    return(tsdb.errno);
+    return(tsdb.error);
   } /* if */
   
   if((foo = tsdb_data_backup_file(selection->relations[0]->name)) 
      == NULL) {
-    return(tsdb.errno);
+    return(tsdb.error);
   } /* if */ 
 
   fclose(output);
   if((output = tsdb_find_data_file(selection->relations[0]->name, "w"))
      == NULL) {
-    return(tsdb.errno);
+    return(tsdb.error);
   } /* if */
     
   for(i = 0, n = 1;
@@ -1410,14 +1410,14 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
     fflush(tsdb_debug_stream);
   } /* if */
 #endif
-    tsdb.errno = TSDB_OK;
+    tsdb.error = TSDB_OK;
     return(selection);
   } /* if */
   else {
     fprintf(tsdb_error_stream,
             "read_table(): no data file for `%s'.\n", relation->name);
     fflush(tsdb_error_stream);
-    tsdb.errno = TSDB_NO_DATA_ERROR;
+    tsdb.error = TSDB_NO_DATA_ERROR;
     return((Tsdb_selection *)NULL);
   } /* else */
 
@@ -1526,7 +1526,7 @@ int tsdb_save_changes(BOOL implicit) {
 #endif
         } /* if */
         else {
-          status = tsdb.errno;
+          status = tsdb.error;
         } /* else */
       } /* if */
       else {
