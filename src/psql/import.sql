@@ -186,7 +186,7 @@ CREATE VIEW scratch_revision AS
   name,
   NULL::VARCHAR AS userid,
   NULL::INTEGER AS version,
-  'infinity'::TIMESTAMP AS modstamp
+  'infinity'::TIMESTAMP AS modstamp,
   type,
   orthography,
   orthkey,
