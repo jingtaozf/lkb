@@ -244,8 +244,7 @@
 				   (first-only-p *first-only-p*))
   (if (> (length user-input) *chart-limit*)
       (error "Sentence ~A too long" user-input)
-    (let ((*safe-not-to-copy-p* t)
-	  (*executed-tasks* 0) (*successful-tasks* 0)
+    (let ((*executed-tasks* 0) (*successful-tasks* 0)
 	  (*contemplated-tasks* 0) (*filtered-tasks* 0)
           (*parser-rules* (get-matching-rules nil nil))
           (*parser-lexical-rules* (get-matching-lex-rules nil)))
@@ -256,20 +255,21 @@
         (setf *parse-record* nil)
         (setf *parse-times* (list (get-internal-run-time)))
 	#+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
-	(add-morphs-to-morphs user-input)
-	(unless 
-	    (catch 'first
-	      (add-words-to-chart (when first-only-p 
-				    (cons 0 (length user-input))))
-	      (loop 
-		  until (empty-heap *agenda*)
-		  do (funcall (heap-extract-max *agenda*))))
-          (unless first-only-p
-            ;;
-            ;; we have done this already (incrementally) in the parse loop
-            ;;
-            (setf *parse-record*
-              (find-spanning-edges 0 (length user-input)))))
+	(let ((*safe-not-to-copy-p* t))
+	  (add-morphs-to-morphs user-input)
+	  (unless 
+	      (catch 'first
+		(add-words-to-chart (when first-only-p 
+				      (cons 0 (length user-input))))
+		(loop 
+		    until (empty-heap *agenda*)
+		    do (funcall (heap-extract-max *agenda*))))
+	    (unless first-only-p
+	      ;;
+	      ;; we have done this already (incrementally) in the parse loop
+	      ;;
+	      (setf *parse-record*
+		(find-spanning-edges 0 (length user-input))))))
         (push (get-internal-run-time) *parse-times*))
 	(when show-parse-p (show-parse))
 	(values *executed-tasks* *successful-tasks* *contemplated-tasks*
