@@ -32,16 +32,16 @@
           num  (sg|pl|u) #IMPLIED
           pers (1|2|3|1-or-3|u) #IMPLIED
           gender (m|f|n|m-or-f|u) #IMPLIED
-          divisible (+|-|u) #IMPLIED
-          cogn-st (type-id|uniq-id|fam|activ|in-foc|uniq-or-less|uniq-or-fam|fam-or-activ|active-or-more|fam-or-less|uniq-or-fam-or-activ|fam-or-more|activ-or-less|uniq-or-more|u) 
+          divisible (plus|minus|u) #IMPLIED
+          cogn-st (type-id|uniq-id|fam|activ|in-foc|uniq-or-less|uniq-or-fam|fam-or-activ|active-or-more|fam-or-less|uniq-or-fam-or-activ|fam-or-more|activ-or-less|uniq-or-more|u) #IMPLIED
           tense (past|present|future|non-past|u) #IMPLIED
-          telic (+|-|u) #IMPLIED
-          protracted (+|-|u) #IMPLIED
-          stative (+|-|u) #IMPLIED
-          incept (+|-|u) #IMPLIED
-          imr (+|-|u) #IMPLIED
-          boundedness (+|-|u) #IMPLIED
-          refdistinct (+|-|u) #IMPLIED >
+          telic (plus|minus|u) #IMPLIED
+          protracted (plus|minus|u) #IMPLIED
+          stative (plus|minus|u) #IMPLIED
+          incept (plus|minus|u) #IMPLIED
+          imr (plus|minus|u) #IMPLIED
+          boundedness (plus|minus|u) #IMPLIED
+          refdistinct (plus|minus|u) #IMPLIED >
 
 
 <!ELEMENT rarg (rargname, label, (var|constant))>
