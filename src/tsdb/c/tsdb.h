@@ -43,6 +43,7 @@ extern void free(void *);
 #define TSDB_POSITION 5
 #define TSDB_CONNECTIVE 6
 #define TSDB_OPERATOR 7
+#define TSDB_DESCRIPTOR 8
 
 #define TSDB_VALUE_INCOMPATIBLE 0 
 #define TSDB_EQUAL 1
@@ -51,8 +52,8 @@ extern void free(void *);
 #define TSDB_LESS_OR_EQUAL_THAN 4
 #define TSDB_GREATER_THAN 5
 #define TSDB_GREATER_OR_EQUAL_THAN 6
-#define TSDB_SUBSTRING 7
-#define TSDB_NOT_SUBSTRING 8
+#define TSDB_MATCH 7
+#define TSDB_NOT_MATCH 8
 
 #define TSDB_NOT 0
 #define TSDB_AND 1
@@ -118,7 +119,7 @@ extern void free(void *);
 #endif
 
 #ifndef TSDB_HISTORY_SIZE
-#  define TSDB_HISTORY_SIZE 100
+#  define TSDB_HISTORY_SIZE 20
 #endif
 
 #ifndef TSDB_TEMPORARY_FILE
@@ -171,6 +172,7 @@ typedef struct tsdb_value {
     char *position;
     BYTE connective;
     BYTE operator;
+    int *descriptor;
   } value;
 } Tsdb_value;
 
@@ -274,6 +276,7 @@ Tsdb_value *tsdb_date(char *);
 Tsdb_value *tsdb_position(char *);
 Tsdb_value *tsdb_connective(BYTE);
 Tsdb_value *tsdb_operator(BYTE);
+Tsdb_value *tsdb_descriptor(int r,int f);
 Tsdb_value **tsdb_singleton_value_array(Tsdb_value *);
 Tsdb_value **tsdb_value_array_append(Tsdb_value **, Tsdb_value *);
 Tsdb_field **tsdb_singleton_field_array(Tsdb_field *);
@@ -339,7 +342,6 @@ int tsdb_alter_table(Tsdb_value *, Tsdb_field **);
 int tsdb_insert(Tsdb_value *, Tsdb_value **, Tsdb_value **);
 int tsdb_delete(Tsdb_value *, Tsdb_node *);
 int tsdb_update(Tsdb_value *, Tsdb_node *);
-int tsdb_retrieve(Tsdb_value **, Tsdb_node *);
 
 
 void tsdb_project(Tsdb_selection*,Tsdb_value **,char*,FILE* );
@@ -382,6 +384,7 @@ void tsdb_free_tsdb_values(Tsdb_value**);
 Tsdb_selection *tsdb_create_selection(int, int);
 void tsdb_free_selection(Tsdb_selection*);
 void tsdb_free_selections(Tsdb_selection** );
+Tsdb_selection* tsdb_clean_selection(Tsdb_selection* ,Tsdb_tuple*);
 Tsdb_selection *tsdb_copy_selection(Tsdb_selection*);
 Tsdb_selection *tsdb_find_table(Tsdb_relation *);
 Tsdb_selection *tsdb_find_tables(Tsdb_relation**);
@@ -393,7 +396,7 @@ void tsdb_free_char_array(char** ,int);
 Tsdb_selection *tsdb_add_relations(Tsdb_selection* , Tsdb_relation** );
 Tsdb_selection *tsdb_join(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_select(Tsdb_selection *, Tsdb_node **,BYTE);
-Tsdb_selection *tsdb_complex_select(Tsdb_node *node,Tsdb_value ** );
+Tsdb_selection *tsdb_complex_select(Tsdb_node *node,Tsdb_value **,Tsdb_selection* );
 Tsdb_selection *tsdb_complex_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_simple_join(Tsdb_selection *, Tsdb_selection *);
@@ -403,6 +406,14 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **, int,
 Tsdb_selection *tsdb_simple_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **, Tsdb_value **,
                                       Tsdb_node *, char *);
+Tsdb_selection *tsdb_retrieve(Tsdb_value **, Tsdb_value **,Tsdb_node *, 
+                              char *);
+
+
+Tsdb_selection* tsdb_get_history(int);
+void tsdb_add_to_history(Tsdb_selection*);
+void tsdb_set_history_size(int);
+int tsdb_init_history(Tsdb*);
 
 int tsdb_server_initialize(void);
 void tsdb_server(void);
