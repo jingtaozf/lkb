@@ -68,8 +68,8 @@ the phrase to be checked minus the LISZT (leave this for now)
               (when (idiom-phrase-match idiom-mrs phrase-mrs)
                 (return t))))))))
 
-(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
-	   #-:ansi-eval-when (load eval compile)
+(eval-when #+:ansi-eval-when (:load-toplevel :execute)
+	   #-:ansi-eval-when (load eval)
   (setf *additional-root-condition* #'idiom-check))
 
 (defun idiom-phrase-match (ipmrs testmrs)
