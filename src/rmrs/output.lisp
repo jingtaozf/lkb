@@ -38,8 +38,8 @@
 
 (defmethod rmrs-output-start-fn ((rmrsout xml) cfrom cto)
   (with-slots (stream) rmrsout
-    (format stream "~%<rmrs cfrom='~A' cto='~A'>~%" (or cfrom 0)
-	    (or cto 0))))
+    (format stream "~%<rmrs cfrom='~A' cto='~A'>~%" (or cfrom -1)
+	    (or cto -1))))
 
 (defmethod rmrs-output-end-fn ((rmrsout xml))
   (with-slots (stream) rmrsout
@@ -54,8 +54,8 @@
 
 (defmethod rmrs-output-start-ep ((rmrsout xml) cfrom cto)
   (with-slots (stream) rmrsout
-    (format stream "~%<ep cfrom='~A' cto='~A'>" (or cfrom 0)
-	    (or cto 0))))
+    (format stream "~%<ep cfrom='~A' cto='~A'>" (or cfrom -1)
+	    (or cto -1))))
 
 #|
 <!ELEMENT realpred EMPTY>
@@ -410,8 +410,9 @@ for gram.dtd and tag.dtd
 (defun output-rmrs1 (rmrs-instance device stream)
   (def-rmrs-print-operations device stream)
   (cond ((rmrs-p rmrs-instance)         
-         (rmrs-output-start-fn *rmrs-display-structure* 0 0)
-         ;;; to be fixed when we have characters
+         (rmrs-output-start-fn *rmrs-display-structure* 
+			       (rmrs-cfrom rmrs-instance)
+			       (rmrs-cto rmrs-instance))
          (print-rmrs rmrs-instance)
          (rmrs-output-end-fn *rmrs-display-structure*))
         (t (rmrs-output-error-fn *rmrs-display-structure* 
@@ -452,10 +453,10 @@ for gram.dtd and tag.dtd
           (rmrs-output-start-ep *rmrs-display-structure*
                                 (if (char-rel-p ep)
                                     (char-rel-cfrom ep)
-                                  0)
+                                  -1)
                                 (if (char-rel-p ep)
                                     (char-rel-cto ep)
-                                  0))
+                                  -1))
           (let ((pred (rel-pred ep)))
             (if (realpred-p pred)
                 (rmrs-output-realpred *rmrs-display-structure*

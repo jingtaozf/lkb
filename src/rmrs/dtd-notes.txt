@@ -4,7 +4,19 @@ but much too frequent for the DTD.
 I am not sure that Realpred should be empty - possibly the lemma
 should be an element rather than an attribute
 
-Possibly there should be a default POS: we may need to add more POSs
+Note that the LKB code does not treat pred case as significant - the only
+place where case is respected is string-valued arguments (CARG and ??)
+
+POS - now lowercase and obligatory
+(v|n|j|r|p|q|x|u)
+v - verb
+n - noun
+j - adjective
+r - adverb
+p - preposition
+q - quantifier (needs to be distinguished for scoping code)
+x - other closed class
+u - unknown
 
 Labels are always implicitly of the same sort (i.e., label)
 
@@ -20,10 +32,12 @@ there's lots of things that have to be checked outside the DTD anyway
 Rargnames should be enumerated in the SEM-I, but I don't propose to do this in
 the DTD
 
-cfrom and cto are on eps - they might also end up on the other main elements
-(in-groups, hcons, rargs).  Having them on preds seems too
-restrictive/cumbersome - they should be associated with minimal information
-units.
+cfrom and cto are on eps and rmrs - they might also end up on the other
+main elements (in-groups, hcons, rargs).  Having them on preds seems
+too restrictive/cumbersome - they should be associated with minimal
+information units.
+
+cfrom and cto default to -1 if unknown
 
 I am still not entirely happy with in-groups.
 

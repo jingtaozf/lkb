@@ -3,7 +3,7 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;; FIX - not dealing with optional elements in rules
-;;; FIX - ned anchors when dealing with scopal modifiers
+;;; FIX - need anchors when dealing with scopal modifiers
 ;;; FIX - share-var-info
 
 (in-package :mrs)
@@ -13,7 +13,9 @@
 (defstruct (rmrs (:include basemrs))
   rmrs-args 
   in-groups
-  bindings)
+  bindings
+  cfrom
+  cto)
 
 (defstruct rmrs-arg
   arg-type
@@ -36,8 +38,8 @@
 
 (defstruct (semstruct (:include rmrs))
   hook
-;;;  holes
-)
+;;;  holes / anchors
+  )
 
 ;;; hook has an indices structure as a value
 ;;;
@@ -176,6 +178,8 @@
                    :rmrs-args (semstruct-rmrs-args semstruct)
                    :in-groups (semstruct-in-groups semstruct) 
                    :h-cons (semstruct-h-cons semstruct) 
+		   :cfrom (semstruct-cfrom semstruct)
+		   :cto (semstruct-cto semstruct)
                   :bindings canonical-bindings)
                  *rmrs-output-type* ostream)))
 
@@ -292,8 +296,31 @@
                       append (semstruct-in-groups dtr)))
         (dtr-hcons (loop for dtr in dtrs
                       append (semstruct-h-cons dtr)))
-	(dtr-binding-list (loop for dtr in dtrs
-		     append (semstruct-bindings dtr)))
+	(dtr-binding-list 
+	 (loop for dtr in dtrs
+	     append (semstruct-bindings dtr)))
+	(cfrom (let ((current-min 1000000))
+		     ;; FIX should be maximum integer
+		     ;; but don't have CL book here
+		 (dolist (dtr dtrs)
+		   (let ((dtr-cfrom (semstruct-cfrom dtr)))
+		     (when (and dtr-cfrom
+				(< dtr-cfrom
+				   current-min))
+		       (setf current-min dtr-cfrom))))
+		 (if (eql current-min 1000000)
+		     NIL
+		   current-min)))
+	(cto (let ((current-max -1))
+	       (dolist (dtr dtrs)
+		 (let ((dtr-cto (semstruct-cto dtr)))
+		   (when (and dtr-cto
+			      (> dtr-cto
+				 current-max))
+		     (setf current-max dtr-cto))))
+	       (if (< current-max 0)
+		   NIL
+		 current-max)))
 	(semhead nil)
 	(semstruct nil)
 	(equalities nil))      	 
@@ -307,7 +334,10 @@
       (setf semstruct 
 	(when (rmrs-rule-semstruct rule-instruction)
 	  (construct-new-semstruct
-	   (rmrs-rule-semstruct rule-instruction))))
+	   (rmrs-rule-semstruct rule-instruction)
+	   cfrom
+	   cto
+	   nil)))
       ;;; if semstruct has been computed - this affects the
       ;;; equality computation via *local-var-context*
       (setf equalities 
@@ -348,7 +378,9 @@
                                 (semstruct-h-cons semstruct) dtr-hcons)
                              dtr-hcons)
                            :bindings 
-                           (append equalities dtr-binding-list))))
+                           (append equalities dtr-binding-list)
+			   :cfrom cfrom
+			   :cto cto)))
       (when *trace-rmrs-composition*
         (format t "~%Applying rule ~A" rule-name)
         (unless rule-instruction
@@ -367,7 +399,9 @@
      (rmrs-tag-template-semstruct
        (or tag-template
 	   *default-template*))
-       lexeme)))
+     (word-info-from lexeme)
+     (word-info-to lexeme)
+     lexeme)))
 
 ;;; A new semstruct may be created either for a lexical tag or for
 ;;; a semstruct contributed by a grammar rule.  In either case,
@@ -460,7 +494,7 @@ goes to
 	varstruct)))
 
 
-(defun construct-new-semstruct (semstruct &optional lex)
+(defun construct-new-semstruct (semstruct cfrom cto lex)
   ;;; this is only called when we have a structure
   ;;; corresponding to a read-in rule or tag
   ;;; *local-var-context* gets used when interpreting the eqs
@@ -491,8 +525,8 @@ goes to
                        (loop for old-arg in (rel-flist old-ep)
                            collect
                              (generate-new-var old-arg))
-		       :cfrom (if lex (word-info-from lex))
-		       :cto (if lex (word-info-to lex))))
+		       :cfrom cfrom
+		       :cto cto))
      :rmrs-args
      (loop for old-rarg in (semstruct-rmrs-args semstruct)
          collect
@@ -519,7 +553,9 @@ goes to
            (make-hcons
 	    :relation (hcons-relation old-hcons)
             :scarg (generate-new-var (hcons-scarg old-hcons))
-	    :outscpd (generate-new-var (hcons-outscpd old-hcons)))))))
+	    :outscpd (generate-new-var (hcons-outscpd old-hcons))))
+     :cfrom cfrom
+     :cto cto)))
 
 (defun generate-new-hook (old-hook)
   (make-indices 
