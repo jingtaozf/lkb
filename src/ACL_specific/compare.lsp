@@ -630,7 +630,7 @@
       (dolist (tree (compare-frame-trees window))
         (let ((ink (cond ((member (ptree-top tree) 
                                   (compare-frame-out-parses window)
-                                  :test #'eq)
+                                  :test #'eq)X
                           clim:+red+)
                          ((and (not (cdr (compare-frame-in-parses window)))
                                (eq (car (compare-frame-in-parses window))
@@ -667,8 +667,7 @@
       (when (and foo (not (equal foo "")))
         (clim:updating-output (stream)
           (format stream "~a~%~%" (compare-frame-version window)))))
-    (clim:updating-output 
-        (stream :cache-value (compare-frame-confidence window)) 
+    (clim:updating-output (stream)
       (let ((foo (compare-frame-confidence window)))
         (format 
          stream 
