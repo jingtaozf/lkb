@@ -445,7 +445,7 @@
         (loop for p in params
             for r in result
             do
-              (format ostream "~%(defparameter ~S ~S)"
+              (format ostream "~%(defparameter ~S '~S)"
                       (read-from-string (car p))
                       (read-from-string r)))))))
 
