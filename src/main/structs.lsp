@@ -323,6 +323,9 @@
 ;;; Code that walks over an existing dag looking for subdags
 ;;; introduced by the feature parameter.  Returns an a-list
 ;;; with the subdag associated with all the paths that lead to it
+;;; ignore-feats are ignored whereever they occur
+;;; ignore-paths are ignored when there's a match on the path
+;;; starting from the root node of the FS
 
 (defun collect-subdags-for-feature (fs feature ignore-feats ignore-paths)
   (collect-subdags-for-feature-aux fs feature ignore-feats 
