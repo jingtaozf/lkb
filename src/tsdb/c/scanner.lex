@@ -302,6 +302,20 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   } /* if */
   return(Y_NOT_TILDA);
 }
+
+"~~" {
+ if(verbose_mode) {
+    fprintf(stderr, "D_TILDA\n");
+  } /* if */
+  return(Y_TILDA);
+}
+
+"!~~" {
+ if(verbose_mode) {
+    fprintf(stderr, "NOT_D_TILDA\n");
+  } /* if */
+  return(Y_NOT_D_TILDA);
+}
         
 ({a}{n}{d})|"&"|"&&" {
   if(verbose_mode) {
