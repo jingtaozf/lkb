@@ -136,3 +136,4 @@
 (defun lkb-y-or-n-p (strg)
   ;;; define so it uses y-or-n-p-dialog 
   (y-or-n-p-general strg))
+

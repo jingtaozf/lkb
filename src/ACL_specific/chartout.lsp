@@ -5,123 +5,121 @@
 (in-package :user)
 
 ;;; Graphical display of generator chart (show-gen-chart) (show-gen-chart t)
- 
+
 (defun show-gen-chart (&optional all-p) 
-  (let ((root (make-symbol "")))
-    (create-gen-chart-pointers root all-p)
-    (draw-chart-lattice root
-			(format nil "Generator Chart (~A edges)" 
-				(if all-p "all" "inactive"))
-			t)
-    root))
- 
- 
+   (let ((root (make-symbol "")))
+      (create-gen-chart-pointers root all-p)
+      (draw-chart-lattice root
+         (format nil "Generator Chart (~A edges)" (if all-p "all" "inactive"))
+         t)
+      root))
+
+
 (defun create-gen-chart-pointers (root all-p)
-  (let ((edge-symbols nil))
-    (dolist (entry *gen-chart*)
-      (dolist (e (cdr entry))
-	(push
-	 (list* (gen-chart-edge-id e)
-		(make-symbol (write-to-string (gen-chart-edge-id e)))
-		(gen-chart-edge-needed e))
-	 edge-symbols)))
-    (dolist (entry *gen-chart*)
-      (let ((chart-index (string-downcase (symbol-name (car entry)))))
-	(dolist (e (cdr entry))
-	  (let ((edge-symbol
-		 (cadr (assoc (gen-chart-edge-id e) edge-symbols))))
-	    (setf (get edge-symbol 'chart-edge-span)
-	      (if (gen-chart-edge-needed e)
-		  (concatenate 'string chart-index " A") chart-index))
-	    (setf (get edge-symbol 'chart-edge-contents) e)
-	    (if (gen-chart-edge-children e)
-		(dolist (c (gen-chart-edge-children e))
-		  (when c
-		    (push edge-symbol
-			  (get (cadr (assoc (gen-chart-edge-id c) edge-symbols))
-			       'chart-edge-descendents))))
-	      (push edge-symbol (get root 'chart-edge-descendents)))))))
-    (unless all-p
-      (dolist (pair edge-symbols)
-	(setf (get (cadr pair) 'chart-edge-descendents)
-	  (create-gen-chart-pointers-collapse
-	   (get (cadr pair) 'chart-edge-descendents)
-	   edge-symbols))))))
+   (let ((edge-symbols nil))
+      (dolist (entry *gen-chart*)
+         (dolist (e (cdr entry))
+            (push
+               (list* (gen-chart-edge-id e)
+                  (make-edge-symbol (gen-chart-edge-id e))
+                  (gen-chart-edge-needed e))
+               edge-symbols)))
+      (dolist (entry *gen-chart*)
+         (let ((chart-index (string-downcase (symbol-name (car entry)))))
+            (dolist (e (cdr entry))
+               (let ((edge-symbol
+                        (cadr (assoc (gen-chart-edge-id e) edge-symbols))))
+                  (setf (get edge-symbol 'chart-edge-span)
+                     (if (gen-chart-edge-needed e)
+                        (concatenate 'string chart-index " A") chart-index))
+                  (setf (get edge-symbol 'chart-edge-contents) e)
+                  (if (gen-chart-edge-children e)
+                     (dolist (c (gen-chart-edge-children e))
+                        (when c
+                           (push edge-symbol
+                              (get (cadr (assoc (gen-chart-edge-id c) edge-symbols))
+                                 'chart-edge-descendents))))
+                     (push edge-symbol (get root 'chart-edge-descendents)))))))
+      (unless all-p
+         ;; remove intermediate links consisting of active edges
+         (dolist (pair edge-symbols)
+            (setf (get (cadr pair) 'chart-edge-descendents)
+               (create-gen-chart-pointers-collapse
+                  (get (cadr pair) 'chart-edge-descendents)
+                  edge-symbols))))))
 
 
 (defun create-gen-chart-pointers-collapse (nodes edge-symbols)
-  (mapcan
-   #'(lambda (node)
-       (if (cddr (find node edge-symbols :key #'cadr))
-	   (create-gen-chart-pointers-collapse
-	    (get node 'chart-edge-descendents) edge-symbols)
-	 (list node)))
-   nodes))
- 
+   (mapcan
+      #'(lambda (node)
+          (if (cddr (find node edge-symbols :key #'cadr))
+             (create-gen-chart-pointers-collapse
+                (get node 'chart-edge-descendents) edge-symbols)
+             (list node)))
+      nodes))
+
+
 ;;; Graphical display of parse chart (show-chart)
 
 (defun show-chart nil 
-  (unwind-protect
-      (let ((root (make-symbol "")))
-	(setf (get root 'chart-edge-descendents)
-	  (make-array *chart-limit* :initial-element nil))
-	(let*
+   (let ((root (make-symbol "")))
+         (setf (get root 'chart-edge-descendents)
+            (make-array *chart-limit* :initial-element nil))
+         (let*
             ((end (create-chart-pointers root))
              (word-alt-sets
-	      ;; each element is a set to allow for multi-word lexical
-	      ;; entries at each position in input
-	      (coerce (subseq (get root 'chart-edge-descendents) 0 end) 
-		      'list)))
-	  (setf (get root 'chart-edge-descendents) 
-	    (apply #'append word-alt-sets))
-	  (draw-chart-lattice root
-			      (format nil "Parse Chart for \"~A...\"" 
-				      (car (get root 'chart-edge-descendents)))
-			      t)
-	  root))))
+                ;; each element is a set to allow for multi-word lexical entries
+                ;; at each position in input
+                (coerce (subseq (get root 'chart-edge-descendents) 0 end) 'list)))
+            (setf (get root 'chart-edge-descendents) (apply #'append word-alt-sets))
+            (draw-chart-lattice root
+               (format nil "Parse Chart for \"~A...\""
+                  (car (get root 'chart-edge-descendents)))
+               t)
+            root)))
 
 
 (defun create-chart-pointers (root)
-  (dotimes (vertex (1- *chart-limit*))
-    (if (aref *chart* (1+ vertex)) 
-	(dolist (span (chart-entry-configurations (aref *chart* (1+ vertex))))
-	  (create-chart-pointers1 span (1+ vertex) root))
-      (return vertex))))
-
-(defun create-chart-pointers1 (span right-vertex root)
-  (let*
-      ((edge (chart-configuration-edge span))
-       (edge-id (make-edge-symbol (edge-id edge))))
-    (setf (get edge-id 'chart-edge-span)
-      (format nil "~A-~A" (chart-configuration-begin span) right-vertex))
-    (if (edge-children edge)
-	(dolist (child (edge-children edge))
-	  (push edge-id
-		(get (make-edge-symbol (edge-id child)) 
-		     'chart-edge-descendents)))
-      (progn
-	(dolist (lex (edge-leaves edge))
-	  (push edge-id (get (intern lex) 'chart-edge-descendents)))
-	(pushnew (intern (car (last (edge-leaves edge))))
-		 (aref (get root 'chart-edge-descendents) (1- right-vertex)))))
-    (setf (get edge-id 'chart-edge-contents) edge)))
+   ;; create a global mapping from edge-ids to symbols, and also (below) a local
+   ;; one (per-string position) from lexical items to symbols, neither set
+   ;; of symbols interned - so we don't end up hanging on to old edges
+   (let ((edge-symbols nil))
+      (dotimes (vertex (1- *chart-limit*))
+         (when (aref *chart* (1+ vertex))
+            (dolist (span (chart-entry-configurations (aref *chart* (1+ vertex))))
+               (let ((e (chart-configuration-edge span)))
+                  (push
+                     (cons (edge-id e) (make-edge-symbol (edge-id e)))
+                     edge-symbols)))))
+      (dotimes (vertex (1- *chart-limit*))
+         (if (aref *chart* (1+ vertex)) 
+            (create-chart-pointers1 (1+ vertex) root edge-symbols)
+            (return vertex)))))
 
 
-(defun clear-chart-pointers ()
-  (dotimes (vertex (1- *chart-limit*))
-    (if (aref *chart* (1+ vertex)) 
-	(dolist (span (chart-entry-configurations (aref *chart* (1+ vertex))))
-	  (let ((edge (chart-configuration-edge span)))
-	    (if (edge-children edge)
-		(dolist (child (edge-children edge))
-		  (setf (get (make-edge-symbol (edge-id child)) 
-			     'chart-edge-descendents)
-		    nil))
-	      (dolist (lex (edge-leaves edge))
-		(setf (get (intern lex) 'chart-edge-descendents) nil)))
-	    (setf (get (make-edge-symbol (edge-id edge)) 'chart-edge-contents)
-	      nil)))
-      (return nil))))
+(defun create-chart-pointers1 (right-vertex root edge-symbols)
+   (let ((lex-pairs nil))
+      (dolist (span (chart-entry-configurations (aref *chart* right-vertex)))
+         (let*
+            ((e (chart-configuration-edge span))
+             (edge-symbol (cdr (assoc (edge-id e) edge-symbols))))
+            (setf (get edge-symbol 'chart-edge-span)
+               (format nil "~A-~A" (chart-configuration-begin span) right-vertex))
+            (setf (get edge-symbol 'chart-edge-contents) e)
+            (if (edge-children e)
+               (dolist (c (edge-children e))
+                  (when c
+                     (push edge-symbol
+                        (get (cdr (assoc (edge-id c) edge-symbols))
+                           'chart-edge-descendents))))
+               (let*
+                  ((lex (car (edge-leaves e)))
+                   (pair (assoc lex lex-pairs :test #'equal)))
+                  (unless pair
+                     (push (setq pair (cons lex (make-symbol lex))) lex-pairs))
+                  (push edge-symbol (get (cdr pair) 'chart-edge-descendents))
+                  (pushnew (cdr pair)
+                     (aref (get root 'chart-edge-descendents) (1- right-vertex)))))))))
 
 ;;; dialect specific from this point
 
@@ -153,9 +151,8 @@
 
 (define-parse-chart-command (com-exit-chart-window :menu "Close")
     ()
-  (clear-chart-pointers)
   (setq *chart-frame* nil)
-  (unhighlight-edge *standard-output*)
+  (unhighlight-edges *standard-output*)
   (clim:frame-exit clim:*application-frame*))
 
 ;;; use *parse-tree-font-size* from globals.lsp
@@ -219,7 +216,7 @@
 (define-parse-chart-command (com-edge-menu)
     ((edge-rec 'edge :gesture :select)) 
   (when (edge-p edge-rec)
-    (unhighlight-edge *standard-output*)
+    (unhighlight-edges *standard-output*)
     (let ((command (clim:menu-choose
 		    (append '(("Feature structure" :value fs))
 			    `((,(format nil "Edge ~A" (edge-id edge-rec))
@@ -257,10 +254,18 @@
     (clim:enable-frame *chart-frame*)
     (clim:raise-frame *chart-frame*)
     (let* ((stream (clim:frame-standard-output *chart-frame*))
-	   (record (find-edge stream (edge-id edge))))
-      (when record
-	(scroll-to record stream)
-	(highlight-edge record stream)))))
+	   (records (collect-records edge stream)))
+      (when records
+	(scroll-to (car records) stream))
+      (highlight-edges records stream))))
+
+(defun collect-records (edge stream)
+  (when edge
+    (let ((record (find-edge stream (edge-id edge))))
+      (append (when record 
+		(list record))
+	      (mapcan #'(lambda (x) (collect-records x stream))
+		      (edge-children edge))))))
 
 ;;; Center the viewport on object
 
@@ -297,22 +302,24 @@
 	 (find-edge-1 q stream id)))
    rec))
 
-;;; Show a highlighted edge.
+;;; Show a list of highlighted edges
 
-(defun highlight-edge (edge stream)
-  (unhighlight-edge stream)
+(defun highlight-edge (edges stream)
+  (unhighlight-edges stream)
   (setq *chart-selected* 
     (clim:with-new-output-record (stream)
       (clim:with-output-recording-options (stream :record t)
-	(multiple-value-bind (x1 y1 x2 y2)
-	    (clim:bounding-rectangle* 
-	     (clim:output-record-parent edge))
-	  (clim:draw-rectangle* stream x1 y1 x2 y2 :
-				ink clim:+flipping-ink+ :filled t))))))
+	(dolist (edge edges)
+	  (when edge
+	    (multiple-value-bind (x1 y1 x2 y2)
+		(clim:bounding-rectangle* 
+		 (clim:output-record-parent edge))
+	      (clim:draw-rectangle* stream x1 y1 x2 y2 :
+				    ink clim:+flipping-ink+ :filled t))))))))
 
-(defun unhighlight-edge (stream)
+(defun unhighlight-edges (stream)
   (when *chart-selected*
-    (clim:erase-output-record *chart-selected* stream )))
+    (clim:erase-output-record *chart-selected* stream)))
 
 ;;; -----------------------------------------------------------------
 ;;; Draw chart as a shared forest
@@ -342,7 +349,6 @@
 
 (define-parse-forest-command (com-exit-forest-window :menu "Close")
     ()
-  (clear-chart-pointers)
   (clim:frame-exit clim:*application-frame*))
 
 (defstruct node label daughters)
