@@ -201,7 +201,7 @@
   "not user settable - has to be here because it's
    used in lisp specific stuff as well as elsewhere")
 
-(defparameter *lexicon* nil)
+(defvar *lexicon* nil)
 
 ;;; generator globals (should be moved eventually)
 
