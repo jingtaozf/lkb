@@ -279,8 +279,10 @@
 		     :direction :output :if-exists :append
 		     :if-does-not-exist :create)
       (write (list timestamp 
-                   #+:allegro-v5.0 (system:user-name)
-                   #-:allegro-v5.0 (system:getenv "USER")
+                   #+(and :allegro-version>= (version>= 5 0))
+                   (sys:user-name)
+                   #-(and :allegro-version>= (version>= 5 0))
+                   (system:getenv "USER")
                    sentence result)
 	     :stream stream :level nil :length nil)
       (write-char #\lf stream))))

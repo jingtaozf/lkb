@@ -321,12 +321,12 @@
                         (eval restart))))))
 	  (when (find-package "MAIN")
 	    (eval (read-from-string "(setf main::*page-initialized-p* nil)")))
-          #+(and :allegro (not (or :allegro-v4.3 :allegro-v4.3.1 :allegro-v5.0)))
+          #+(and :allegro (not (and :allegro-version>= (version>= 4 3))))
           (excl::dumplisp
            :name file
            :read-init-file t
            :restart-function restart-function)
-          #+(or :allegro-v4.3 :allegro-v4.3.1 :allegro-v5.0)
+          #+(and :allegro-version>= (version>= 4 3))
           (progn
             (setf excl:*restart-init-function* restart-function)
             (setf excl:*read-init-files* t)
