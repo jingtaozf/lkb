@@ -4,34 +4,6 @@
 ;;; CSLI, Stanford University, USA
 
 (in-package :cl-user)
-(in-package :mrs)
-(defun variables-equal (var1 var2 syntactic-p)
-  (or (eq var1 var2)
-      (and (var-p var1) (var-p var2)
-        (if syntactic-p
-           (equal (var-type var1) (var-type var2))
-           (compatible-types (var-type var1) (var-type var2)))
-        (if syntactic-p
-            (equal-extra-vals
-              (var-extra var1) 
-              (var-extra var2))
-            (compatible-extra-vals 
-              (var-extra var1) 
-              (var-extra var2)))
-         (bindings-equal (get-var-num var1)
-                         (get-var-num var2)))))
-(defun compatible-types (type1 type2)
-  (if (and (null type1) (null type2)) t ; fudge
-      (user::find-gcsubtype type1 type2)))
-(defun sort-mrs-struct-liszt (liszt)
-   (sort (copy-list liszt)
-      #'(lambda (rel1 rel2)
-          (or (string-lessp (rel-sort rel1) (rel-sort rel2))
-              (and (string-equal (rel-sort rel1) (rel-sort rel2))
-                   (< (get-var-num (rel-handel rel1))
-                      (get-var-num (rel-handel rel2))))))))
-(in-package :cl-user)
-
 
 (defun more-robust-mrs-equalp (mrs1 mrs2 &optional syntactic-p)
    ;; *** make sure any errors in mrs-equalp don't stop the show
@@ -77,7 +49,7 @@
 (defvar *gen-chart-fails* 0)
 
 (defparameter *gen-filter-debug* nil)
-(defparameter *gen-adjunction-debug* t)
+(defparameter *gen-adjunction-debug* nil)
 
 
 (defparameter *semantics-index-path* '(synsem local cont index)
@@ -199,15 +171,22 @@
 
 
 ;;; Interface to generator - take an input MRS, ask for instantiated lexical items
-;;; and other items that might be applicable, and call generator proper
+;;; and other items that might be applicable, and call generator proper. Clear
+;;; chart and analyses record before entry in case we don't make it into generation
+;;; proper. Do it also in chart-generate since that is also an entry point
 
 (defun generate-from-mrs (input-sem)
+   (clear-gen-chart)
    (let*
       ((found-lex-list
           (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
        (filtered
-          ;; *** remove 1 'that' and its no-afix_infl_rule variant
-          (remove 'THAT_C found-lex-list :key #'mrs::found-lex-lex-id :count 2))
+          (remove '(ER_COMP_ADJ_INFL_RULE)
+             (remove-if #'(lambda (x) (member x '(AN EQUAL_A1) :test #'eq))
+                ;; *** remove 1 'that' and its no-afix_infl_rule variant
+                (remove 'THAT_C found-lex-list :key #'mrs::found-lex-lex-id :count 2)
+                :key #'mrs::found-lex-lex-id)
+             :key #'mrs::found-lex-rule-list :test #'equal))
        (empty (mrs::possibly-applicable-null-semantics input-sem))
           ;nil
           )
@@ -240,16 +219,14 @@
 ;;; of inactive, total number of chart edges
 
 (defun chart-generate (input-sem found-lex-items)
-   (setq *edge-id* 0)
-   (setq *gen-chart* nil)
-   (setq *gen-record* nil)
-   (when (> (length found-lex-items) 80)
-      (format t "~%More than 80 initial lexical items - skipping")
-      (return-from chart-generate nil))
+   (clear-gen-chart) ; also an entry point so ensure chart is clear
+   ;(when (> (length found-lex-items) 80)
+   ;   (format t "~%More than 80 initial lexical items - skipping")
+   ;   (return-from chart-generate nil))
    (let ((*safe-not-to-copy-p* t)
          (*gen-chart-unifs* 0) (*gen-chart-fails* 0)
-         (*input-rels* (mrs::psoa-liszt input-sem)))
-      (declare (special *input-rels*))
+         (*input-sem-liszt* (mrs::psoa-liszt input-sem)))
+      (declare (special *input-sem-liszt*))
       #+(and mcl powerpc) (setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
       (dolist (found found-lex-items)
          (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
@@ -287,6 +264,11 @@
             (mapcar #'g-edge-leaves *gen-record*)
             *gen-chart-unifs* *gen-chart-fails*
             act-tot inact-tot (+ act-tot inact-tot)))))
+
+(defun clear-gen-chart nil
+   (setq *edge-id* 0)
+   (setq *gen-chart* nil)
+   (setq *gen-record* nil))
 
 
 ;;; Finish off syntactically complete analyses, and return those that cover all
@@ -589,6 +571,27 @@
    ;; can't detect them as yet, unfortunately
    ;; (setf (g-edge-rels-covered act)
    ;;    (nconc (gen-chart-extra-rels-covered act) (g-edge-rels-covered act)))
+   ;; *** I must find the pron_rel introduced by IMPER - this is a very ugly hack
+   ;; but I must make sure I consume it, otherwise I may be looking for it later
+   ;; in adjuncts and of course failing to find it
+   (when (eq (g-edge-rule-number act) 'IMPER)
+      (let ((sem-fs
+               (existing-dag-at-end-of (tdfs-indef (g-edge-dag act))
+                   mrs::*initial-semantics-path*)))
+         (if (mrs::is-valid-fs sem-fs)
+            (let ((mrs (mrs::construct-mrs sem-fs nil t)))
+               (declare (special *input-sem-liszt*))
+               (dolist (rel (mrs::psoa-liszt mrs))
+                  (when (eq (mrs::rel-sort rel) 'PRON_REL)
+                     (let ((found (find-if
+                                   #'(lambda (x)
+                                       (and (eq (mrs::rel-sort x) 'PRON_REL)
+                                         (eql (mrs::var-id (mrs::rel-handel x))
+                                           (mrs::var-id (mrs::rel-handel rel)))))
+                                   *input-sem-liszt*)))
+                        (when found
+                           (push found (g-edge-rels-covered act))
+                           (return nil)))))))))
    (setf (g-edge-leaves act)
       (apply #'append (g-edge-leaves act)))
    act)
@@ -682,7 +685,7 @@
                   (remove-if
                      #'(lambda (r)
                          (when (some #'(lambda (type) (or (eq r type) (subtype-p r type)))
-                                     '(MESSAGE ABSTR_E_REL SUPPORT_REL))
+                                     '(MESSAGE ABSTR_E_REL SUPPORT_REL UDEF_REL))
                             (pushnew r *optional-rel-names* :test #'eq)
                             t))
                      (gen-chart-set-difference
