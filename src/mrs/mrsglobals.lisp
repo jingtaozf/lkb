@@ -13,12 +13,6 @@
 ;; mrscorpus and mrsfns - causes results to be checked against
 ;; previous stored results.  Currently non-operational.
 
-(defparameter *mrs-scoping* nil)
-;; interface control - causes scoping code to be run when set
-
-(defparameter *mrs-output-p* nil)
-;; interface control - causes MRS code to be run
-
 ;;; Following are needed to construct an MRS feature
 ;;; structure, or to create an MRS Lisp structure from a 
 ;;; feature structure
