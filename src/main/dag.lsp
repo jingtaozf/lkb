@@ -509,21 +509,6 @@
                                           (cdr labels-chain)))
                   (t nil))))))
 
-;;;
-;;; to simplify interaction with the quick check, viz. to avoid prediction of
-;;; unification failure where partial unification would in fact succeed, the
-;;; minimal appropriate constraint for a feature is returned when partially
-;;; unifying values for that feature.                      (27-sep-99  -  oe)
-;;;
-
-(defun minimal-type-for (feature)
-  (or (get feature :constraint)
-      (let* ((introduction (maximal-type-of feature))
-             (constraint (and introduction (constraint-of introduction)))
-             (type (and constraint 
-                        (type-of-fs (get-dag-value constraint feature)))))
-        (setf (get feature :constraint) type))))
-
 
 ;;; **********************************************************************
 ;;; Unify

@@ -21,14 +21,6 @@
 ;;; experimental active parser; tries to minimize changes to existing LKB code
 ;;; --- will need some reorganization, should it prove feasible.
 ;;;
-;;; among other things, task priority computation is naive as it stands: since
-;;; lexical processing is done separately (using the existing LKB procedures),
-;;; priority computation in the active (key-driven) parser currently ignores
-;;; whatever lexical priorities were assigned to words.  i guess one would have
-;;; to add a slot to the edge structure to pass up priority values (and then
-;;; call a user-supplied function to compute the task priority from the 
-;;; arguments, i.e. rule or active plus passive item).
-;;;
 
 ;;;
 ;;; while playing with various strategies, some of the extra functionality
