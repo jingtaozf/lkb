@@ -172,7 +172,8 @@
              for feature = (code-to-symbol i table)
              for weight across (mem-weights model)
              while feature do
-               (format stream "[~{~s~^ ~}] ~,10f~%" feature weight))
+               (unless (= weight 0.0)
+                 (format stream "[~{~s~^ ~}] ~,20f~%" feature weight)))
          (format stream "~%:end :features.~%~%:end :mem.~%"))))))
 
 (defun estimate-mem (items &key (stream *tsdb-io*) model (estimatep t))

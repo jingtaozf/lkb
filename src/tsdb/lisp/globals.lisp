@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (1-jun-03)")
+(defparameter *tsdb-version* "2.0 (4-jun-03)")
 
 (defparameter
   *tsdb-application*
@@ -110,7 +110,9 @@
 
 (defparameter *tsdb-ignore-output-p* nil)
 
-(defparameter *tsdb-maximal-number-of-edges* 0)
+(defparameter *tsdb-maximal-number-of-edges* 100000)
+
+(defparameter *tsdb-maximal-number-of-analyses* 0)
 
 (defparameter *tsdb-maximal-number-of-derivations* 0)
 
@@ -157,6 +159,12 @@
 (defparameter *pvm-cpus* nil)
 
 (defparameter *pvm-clients* nil)
+
+(defparameter *redwoods-export-values* :all)
+
+(defparameter *redwoods-thinning-export-p* t)
+
+(defparameter *redwoods-thinning-normalize-p* t)
 
 (defvar *reconstruct-cache* nil)
 

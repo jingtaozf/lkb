@@ -18,13 +18,14 @@
 ;;; - add print button: include edge id in display and print out;
 ;;;
 
-(defparameter *redwoods-export-values* :all)
+(defparameter *redwoods-semantix-hook* "mrs::get-mrs-string")
 
-(defparameter *redwoods-export-bad-trees-p* t)
+(defparameter *redwoods-trees-hook* nil)
 
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
-                          gold strip inspect
+                          gold strip inspect 
+                          (bestp *redwoods-thinning-normalize-p*)
                           (cache *tsdb-cache-database-writes-p*)
                           (verbose t) interactive
                           (stream *tsdb-io*)
@@ -36,7 +37,9 @@
   (when strip
     (unless (do-import-database (find-tsdb-directory data) strip 
                                 :meter (when meter (make-meter 0 1))
-                                :except '("tree" "decision" "preference"))
+                                :except (append
+                                         '("tree" "decision" "preference")
+                                         (and bestp '("result"))))
       (return-from browse-trees nil)))
 
   (let* ((condition (if (and condition (not (equal condition "")))
@@ -110,12 +113,14 @@
                           (excl:tenuring
                            (browse-tree 
                             data i-id frame 
-                            :gold gold :strip strip :inspect inspect
+                            :gold gold :strip strip :bestp bestp 
+                            :inspect inspect
                             :cache cache :title title
                             :verbose verbose :stream stream)))
                         (browse-tree 
                          data i-id frame 
-                         :gold gold :strip strip :inspect inspect
+                         :gold gold :strip strip :bestp bestp 
+                         :inspect inspect
                          :cache cache :title title
                          :verbose verbose :stream stream)))
         for action = (get-field :status status)
@@ -168,7 +173,7 @@
       (status :text (format nil "~a done" message) :duration 10)
       (meter :value 1))))
 
-(defun browse-tree (data i-id frame &key gold strip inspect 
+(defun browse-tree (data i-id frame &key gold strip bestp inspect 
                                          title cache verbose stream)
   
   (declare (special %client%))
@@ -382,7 +387,41 @@
                                        data)
             for preference in preferences
             do 
-              (write-preference strip preference :cache cache))
+              (write-preference strip preference :cache cache)
+            finally
+              (when (and trees bestp)
+                (let* ((ids (loop
+                                for preference in preferences
+                                collect (get-field :result-id preference)))
+                       (condition (format
+                                   nil
+                                   "parse-id == ~a~
+                                    ~@[ && (~{result-id == ~a~^ ||~})~]"
+                                   parse-id ids))
+                       (schema (read-database-schema data))
+                       (relation (loop
+                                     for (relation . structure) in schema
+                                     when (string= relation "result")
+                                     return structure))
+                       (fields (loop
+                                   for field in relation 
+                                   collect (first field)))
+                       (types (loop
+                                  for field in relation 
+                                  collect (second field)))
+                       (results (select fields types "result" condition data)))
+                  (when (or *redwoods-semantix-hook* *redwoods-trees-hook*)
+                    (loop
+                        for result in results
+                        for derivation = (get-field :derivation result)
+                        for edge = (when derivation (reconstruct derivation))
+                        for mrs = (when (and edge *redwoods-semantix-hook*)
+                                    (call-hook *redwoods-semantix-hook* edge))
+                        for tree = (when (and edge *redwoods-trees-hook*)
+                                     (call-hook *redwoods-trees-hook* edge))
+                        when mrs do (setf (get-field :mrs result) mrs)
+                        when tree do (setf (get-field :tree result) tree)))
+                  (write-results parse-id results strip :cache cache))))
         (if trees
           (write-tree strip (first trees) :cache cache)
           (let* ((user (current-user))
@@ -1145,7 +1184,7 @@
           
           (setf (get-field :results item) (nreverse results))
           (export-tree item active :offset offset :stream stream)
-          (when *redwoods-export-bad-trees-p*
+          (unless *redwoods-thinning-export-p*
             (export-tree item active 
                          :complementp t :offset offset :stream stream))
 
@@ -1502,6 +1541,9 @@
          (gaggregates (aggregate-by-analogy gitems aggregates :loosep t))
          results)
 
+    #+:debug
+    (setf %aggregates% aggregates %gaggregates% gaggregates)
+    
     (loop
         with tnitems = 0
         with tnscores = 0
@@ -1539,7 +1581,7 @@
 				  (let ((foo (get-field :i-id (first gdata))))
 				    (when (and foo (= foo i-id))
 				      (pop gdata)))))
-              do
+              when gitem do
                 (multiple-value-bind (i score loosep)
                     (score-item item gitem :test test :n n :loosep loosep)
                   (incf anitems)
@@ -1863,7 +1905,7 @@
 (defun rank-profile (source 
                      &optional (target source)
                      &key (condition *statistics-select-condition*)
-                          (nfold 10) (type :mem)
+                          (nfold 10) (type :mem) model
                           (stream *tsdb-io*) (cache :raw) (verbose t)
                           interrupt meter)
   
@@ -1885,7 +1927,7 @@
       with data = (analyze source 
                            :thorough '(:derivation)
                            :condition condition :gold source :readerp nil)
-      with nfold = (min (length data) nfold)
+      with nfold = (if model 1 (min (length data) nfold))
       #+:debug initially #+:debug (setf %data% data)
       for i from 1 to (if (>= nfold 1) nfold 1)
       when (interrupt-p interrupt) do
@@ -1906,7 +1948,8 @@
              "~&[~a] rank-profile:() iteration # ~d (~d against ~d)~%"
              (current-time :long :short) i (length test) (length train))
             (loop
-                with items = (train-and-rank train test :type type)
+                with items = (train-and-rank 
+                              train test :type type :model model)
                 for item in items
                 for parse-id = (get-field :parse-id item)
                 for ranks = (get-field :ranks item)
@@ -1935,15 +1978,16 @@
         (purge-profile-cache target)))
 
 (defun train-and-rank (train test 
-                       &key (type :mem) (stream *tsdb-io*))
+                       &key (type :mem) model (stream *tsdb-io*))
 
   #+:debug
   (setf %train% train %test% test)
   (loop
-      with model = (case type
-                     (:pcfg (estimate-cfg train))
-                     (:mem (estimate-mem train))
-                     (:chance "chance"))
+      with model = (or model
+                       (case type
+                         (:pcfg (estimate-cfg train))
+                         (:mem (estimate-mem train))
+                         (:chance "chance")))
       for item in test
       for iid = (get-field :i-id item)
       for readings = (get-field :readings item)

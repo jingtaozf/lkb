@@ -285,6 +285,17 @@ proc tsdb_option {name} {
         }; # else
       }; # if
     }
+    analyses {
+      if {![integer_input "maximal number of analyses" \
+                          $globals(maximal_number_of_analyses)]} {
+        if {$globals(integer,lvalue) == ""} {
+          set globals(integer,lvalue) 0;
+        }; # if
+        set globals(maximal_number_of_analyses) $globals(integer,lvalue);
+        tsdb_set "*tsdb-maximal-number-of-analyses*" \
+                 $globals(maximal_number_of_analyses);
+      }; # if
+    }
     pedges {
       if {![integer_input "maximal number of (passive) edges" \
                           $globals(maximal_number_of_edges)]} {

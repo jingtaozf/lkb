@@ -466,6 +466,9 @@ proc main {} {
     -label "Chart Size Limit" \
     -command {tsdb_option pedges};
   .menu.process.menu.variables add command \
+    -label "Analyses Limit" \
+    -command {tsdb_option analyses};
+  .menu.process.menu.variables add command \
     -label "Result Storage Limit" \
     -command {tsdb_option results};
 
@@ -867,6 +870,15 @@ proc main {} {
   .menu.trees.menu.switches add checkbutton \
     -label "Ambiguous Trees" \
     -variable globals(tree,loosep);
+  .menu.trees.menu.switches add separator;
+  .menu.trees.menu.switches add checkbutton \
+    -label "Thinning Normalize" \
+    -variable globals(tree,thinning_normalize) \
+    -command {tsdb_set thinning_normalize_p};
+  .menu.trees.menu.switches add checkbutton \
+    -label "Thinning Export" \
+    -variable globals(tree,thinning_export) \
+    -command {tsdb_set thinning_export_p};
 
   menu .menu.trees.menu.variables -tearoff 0;
   .menu.trees.menu.variables add command \

@@ -91,10 +91,13 @@
       set globals(write_syntax_chart_p) ~:[0~;1~]~%~
       set globals(write_lexicon_chart_p) ~:[0~;1~]~%~
       set globals(process,protocol) ~d~%~
+      set globals(maximal_number_of_analyses) ~d~%~
       set globals(maximal_number_of_edges) ~d~%~
       set globals(maximal_number_of_derivations) ~d~%~
       set globals(tree,updatep) ~:[0~;1~]~%~
       set globals(tree,delay) ~a~%~
+      set globals(tree,thinning_normalize_p) ~:[0~;1~]~%~
+      set globals(tree,thinning_export_p) ~:[0~;1~]~%~
       set globals(cache_connections_p) ~:[0~;1~]~%~
       set globals(gc_p) ~(~a~)~%~
       set globals(tenure_p) ~:[0~;1~]~%~%"
@@ -117,8 +120,12 @@
      *tsdb-rule-statistics-p*
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
      *pvm-protocol*
-     *tsdb-maximal-number-of-edges* *tsdb-maximal-number-of-derivations*
+     *tsdb-maximal-number-of-analyses*
+     *tsdb-maximal-number-of-edges* 
+     *tsdb-maximal-number-of-derivations*
      delay (if (numberp delay) delay 0)
+     *redwoods-thinning-normalize-p*
+     *redwoods-thinning-export-p*
      *tsdb-cache-connections-p*
      *tsdb-gc-p*
      *tsdb-tenure-p*)
