@@ -514,8 +514,10 @@
 (defun kristina (data &key condition path prefix)
   
   (loop
-      with target = (or path 
-                        (format nil "/home/tmp/~a" (substitute #\. #\/ data)))
+      with target = (format 
+                     nil 
+                     "~a/~a"
+                     (or path "/lingo/oe/tmp") (substitute #\. #\/ data))
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       with items = (analyze data :thorough '(:derivation) 
                             :condition condition)
@@ -544,12 +546,11 @@
                            for bar in foo 
                            collect (get-field :result-id bar))))
       initially 
-        #+(and :null :allegro) (excl::delete-directory-and-files target)
-        #+:allegro (mkdir target)
+        #+:allegro (ignore-errors (mkdir target))
       do
         (format 
          t 
-         "kristina(): ~a active tree~@[s~] (of ~d) for item # ~d.~%" 
+         "kristina(): ~a active tree~:[~;s~] (of ~d) for item # ~d.~%" 
          (if version (length active) "all")
          (or (null version) (> (length active) 1))
          (length results) i-id)
@@ -567,7 +568,6 @@
            i-id 
            (if version (length active) "all")
            (length results) input #\page)
-          #-:null
           (loop
               with *package* = (find-package lkb::*lkb-package*)
 	      with lkb::*deleted-daughter-features* = nil
@@ -577,13 +577,19 @@
               for derivation = (when (member id active :test #'eql)
                                  (get-field :derivation result))
               for edge = (and derivation (reconstruct derivation))
+              for tree = (and edge (lkb::parse-tree-structure edge))
               for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
+              for mrs = (and edge (mrs::extract-mrs edge))
               when dag do
-                (format stream "~s~%" derivation)
+                (setf lkb::*cached-category-abbs* nil)
+                (format stream "~s~%~%" derivation)
+                (if tree
+                  (format stream "~a~%" tree)
+                  (format stream "()~%"))
                 (lkb::display-dag1 dag 'lkb::tdl stream)
-                (format stream "~%")
+                (format stream "~%~%")
+                (mrs::mrs-output-psoa mrs :stream stream)
                 (format stream "~c~%" #\page))
-          #-:null
           (loop
               with *package* = (find-package lkb::*lkb-package*)
 	      with lkb::*deleted-daughter-features* = nil
@@ -592,11 +598,18 @@
               for derivation = (unless (member id active :test #'eql)
                                  (get-field :derivation result))
               for edge = (and derivation (reconstruct derivation))
+              for tree = (and edge (lkb::parse-tree-structure edge))
               for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
+              for mrs = (and edge (mrs::extract-mrs edge))
               when dag do
-                (format stream "~s~%" derivation)
+                (setf lkb::*cached-category-abbs* nil)
+                (format stream "~s~%~%" derivation)
+                (if tree
+                  (format stream "~a~%" tree)
+                  (format stream "()~%"))
                 (lkb::display-dag1 dag 'lkb::tdl stream)
-                (format stream "~%")
+                (format stream "~%~%")
+                (mrs::mrs-output-psoa mrs :stream stream)
                 (format stream "~c~%" #\page)))))
 
 (defun semantic-equivalence (data &key condition (file "/tmp/equivalences"))

@@ -574,6 +574,8 @@
                        extras trees
                        (format :latex)
                        meter)
+  (declare (ignore trees))
+           
   (when meter (meter :value (get-field :start meter)))
   (let* ((imeter (madjust * meter 0.9))
          (items (if (stringp language) 

@@ -36,8 +36,9 @@
 
     :finally-do
     #+(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave))
-    (when (system:getenv "DISPLAY") 
-      (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium))
+    (let ((display (system:getenv "DISPLAY")))
+      (when (and display (not (equal display "")))
+        (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium)))
     #-(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave))
     nil
 
@@ -104,19 +105,18 @@
        (:file "server")
        (:file "statistics")
        (:file "podium")
-       #+(and :lkb :allegro :clim)
-       (:file "redwoods")
-       (:file "ptb")
        #+:allegro
        (:file "allegro")
        #+:allegro
        (:file "gc")
-       #+:yy
        (:file "yy")
        #+:page 
        (:file "page-interface")
        (:file "derivations")
-       (:file "tnt-interface")))
+       (:file "tnt-interface")
+       #+(and :lkb :allegro :clim)
+       (:file "redwoods")
+       (:file "ptb")))
      
      #+:dfki
      (:module "podium"
