@@ -332,7 +332,8 @@
 
 
 (defun clear-gen-chart nil
-   (setq *edge-id* 0)
+  (setq *edge-id* 0)
+  (setf %edge-allowance% 0)
    (setq *gen-chart* nil)
    (setq *gen-record* nil))
 
@@ -906,8 +907,9 @@
                                     (list act)))))
                          (cdr entry)))))
             possible-grules))
-       ;; (mapcan #'(lambda (e) (unpack-edge! nil e)) intersective-edges)
-       intersective-edges))
+        #+:null
+        (mapcan #'(lambda (e) (unpack-edge! nil e)) intersective-edges)
+        intersective-edges))
 
 
 ;;;
@@ -927,12 +929,17 @@
          
          
 (defun gen-chart-try-adjunction (act edge)
-   (let ((rule (g-edge-rule act))
-         (rule-tdfs (g-edge-dag act))
-         (daughter-path (first (g-edge-needed act)))
-         (daughter-restricted (g-edge-dag-restricted act))
-         (daughter-index (g-edge-mod-index act))
-         (fs (g-edge-dag edge)))
+;;  (format t "~&gen-chart-try-adjunction(): ~a + ~a~%" act edge)
+;;  (when (= (edge-id edge) 82) (break))
+   (let* ((rule (g-edge-rule act))
+          (rule-tdfs (g-edge-dag act))
+          (daughter-path (first (g-edge-needed act)))
+          (daughter-restricted (g-edge-dag-restricted act))
+          (daughter-index 
+           (position daughter-path (cdr (rule-order rule)) :test #'eq)
+           #+:null
+           (g-edge-mod-index act))
+          (fs (g-edge-dag edge)))
       (if (and (check-rule-filter rule (g-edge-rule edge) daughter-index)
                (restrictors-compatible-p daughter-restricted 
                                          (g-edge-dag-restricted edge)))
