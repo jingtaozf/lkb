@@ -407,7 +407,7 @@ void tsdb_usage() {
           "  `-max-results[={_0_ | 1 | ...}]' "
           "--- maximum of stored query results;\n");
   fprintf(tsdb_error_stream,
-          "  `-history-size=size' --- size of history buffer;\n");
+          "  `-history-size=[={_0_ | 1 | ...}]' --- size of query storage;\n");
 #ifdef DEBUG
   fprintf(tsdb_error_stream,
           "  `-debug-file=file' --- output file for debug information;\n");

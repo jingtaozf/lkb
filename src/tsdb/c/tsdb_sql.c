@@ -125,7 +125,7 @@ void tsdb_info(Tsdb_value **value_list) {
              || !strncmp(value_list[i]->value.identifier, "history-size", 11)
              || !strcmp(value_list[i]->value.identifier, "all")) {
             fprintf(output,
-                    "tsdb maximum size of query result storage: %d.\n",
+                    "tsdb size of query result storage: %d.\n",
                     tsdb.history_size);
             match = TRUE;
           } /* if */
