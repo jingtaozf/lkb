@@ -177,7 +177,7 @@ int main(int argc, char **argv) {
   } /* if */
 
   tsdb_parse_options(argc, argv);
-  if((status = tsdb_initialize())) {
+  if((status = tsdb_initialize()) || (tsdb.status & TSDB_VERIFY)) {
 #ifdef DEBUG
     tsdb_close_debug(tsdb_debug_stream);
 #endif
@@ -378,6 +378,7 @@ void tsdb_parse_options(int argc, char **argv) {
     {"ofs", required_argument, 0, TSDB_OFS_OPTION},
     {"output", required_argument, 0, TSDB_OUTPUT_OPTION},
     {"query", required_argument, 0, TSDB_QUERY_OPTION},
+    {"verify", no_argument, 0, TSDB_VERIFY_OPTION},
     {"usage", no_argument, 0, TSDB_USAGE_OPTION},
     {"help", no_argument, 0, TSDB_USAGE_OPTION},
     {"version", no_argument, 0, TSDB_VERSION_OPTION},
@@ -565,7 +566,10 @@ void tsdb_parse_options(int argc, char **argv) {
           } /* if */
         } /* if */
         break;
-       case TSDB_USAGE_OPTION:
+      case TSDB_VERIFY_OPTION:
+        tsdb.status |= (TSDB_VERIFY | TSDB_READ_ONLY);
+        break;
+      case TSDB_USAGE_OPTION:
         tsdb_usage();
         exit(0);
         break;
@@ -727,6 +731,9 @@ void tsdb_usage() {
   fprintf(tsdb_error_stream,
           "  `-{ro | read-only}' --- "
           "open database in read-only mode;\n");
+  fprintf(tsdb_error_stream,
+          "  `-verify' --- "
+          "verify database directory (in read-only mode) only;\n");
 #ifdef DEBUG
   fprintf(tsdb_error_stream,
           "  `-debug-file=file' --- output file for debug information;\n");

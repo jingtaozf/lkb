@@ -52,8 +52,9 @@
 #define TSDB_LISP_ESCAPE_OUTPUT 2048
 #define TSDB_QUIET 4096
 #define TSDB_READ_ONLY 8192
+#define TSDB_VERIFY 16384
 #ifdef ALEP
-#  define TSDB_TX_OUTPUT 16384
+#  define TSDB_TX_OUTPUT 32768
 #endif
 
 #ifdef ALEP
@@ -141,6 +142,7 @@
 #define TSDB_STRING_ESCAPE_OPTION 27
 #define TSDB_QUIET_OPTION 28
 #define TSDB_READ_ONLY_OPTION 29
+#define TSDB_VERIFY_OPTION 30
 #ifdef ALEP
 #  define TSDB_TX_OPTION 255
 #endif
@@ -457,7 +459,7 @@ BOOL tsdb_is_attribute(Tsdb_value *);
 BOOL tsdb_are_attributes(Tsdb_value **, Tsdb_relation *);
 BOOL tsdb_is_relation(Tsdb_value *value);
 BOOL tsdb_relations_are_equal(Tsdb_relation *, Tsdb_relation *);
-BOOL tsdb_initialize(void);
+BYTE tsdb_initialize(void);
 void tsdb_parse_environment(void);
 BOOL tsdb_satisfies_condition(Tsdb_tuple *, Tsdb_node *, Tsdb_relation *);
 
