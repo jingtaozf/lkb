@@ -18,6 +18,7 @@
 	 (ocompkey (extract-field s :ocompkey fields-map))
 	 (type (extract-field s :type fields-map))
 	 (orthography (extract-field s :orthography fields-map))
+	 (pronunciation (extract-field s :pronunciation fields-map))
 
 	 (orth-list (string-2-str-list-on-spc orthography))
 	 (multi-base-name (and 
@@ -33,7 +34,7 @@
 		   type
 		   orthography 
 		   (get-orthkey orth-list)
-		   ""  ;;pronunciation
+		   pronunciation
 		   keyrel
 		   altkey
 		   alt2key
@@ -89,6 +90,7 @@
 	 (ocompkey (extract-field s :ocompkey fields-map))	 
 	 (type (extract-field s :type fields-map))
 	 (orthography (extract-field s :orthography fields-map))
+	 (pronunciation (extract-field s :pronunciation fields-map))
 	 
 	 (orth-list (string-2-str-list-on-spc orthography))
 	 (psql-le
@@ -97,6 +99,7 @@
 	   :type type
 	   :orthography orth-list	;list
 	   :orthkey (get-orthkey orth-list)
+           :pronunciation pronunciation
 	   :keyrel keyrel
 	   :altkey altkey
 	   :alt2key alt2key

@@ -16,3 +16,4 @@ erg	unifs	altkeytag	(synsem lkeys altkeyrel carg)	string
 erg	unifs	alt2key	(synsem lkeys alt2keyrel pred)	mixed
 erg	unifs	compkey	(synsem lkeys --compkey)	symbol
 erg	unifs	ocompkey	(synsem lkeys --ocompkey)	symbol
+erg	unifs	pronunciation	(synsem phon onset)	symbol

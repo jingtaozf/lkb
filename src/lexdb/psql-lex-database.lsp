@@ -451,7 +451,7 @@
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-version psql-le lexicon) 
   (if *postgres-export-timestamp* (set-val psql-le :modstamp *postgres-export-timestamp*))
-  (let* ((symb-list '(:type :orthography :orthkey :keyrel :altkey :alt2key :keytag :altkeytag :compkey :ocompkey :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
+  (let* ((symb-list '(:type :orthography :orthkey :pronunciation :keyrel :altkey :alt2key :keytag :altkeytag :compkey :ocompkey :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
 	 (symb-list (remove-if #'(lambda (x) (or (null x) 
 						 (and (stringp x)
 						      (string= x ""))))

@@ -29,6 +29,7 @@ INSERT INTO defn VALUES ( 'erg', 'id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'erg', 'orth', 'orthography', '', 'string-list' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'type', 'nil', 'symbol' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'orthography', '(stem)', 'string-fs' );
+INSERT INTO defn VALUES ( 'erg', 'unifs', 'pronunciation', '(synsem phon onset)', 'symbol' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'mixed' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); 
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'mixed' );
