@@ -1322,6 +1322,8 @@
 
 (defparameter *sentence* nil)
 
+(defparameter *parse-input* nil)
+
 (defparameter *ostream* nil)
 
 (defun batch-parse-sentences (istream ostream raw-sentence &optional access-fn)
@@ -1379,6 +1381,7 @@
                          (reset-pools #+:gdebug t)
                          (parse user-input nil)
                          (setf *sentence* sentence)
+                         (setf *parse-input* user-input)
                          (setf *ostream* ostream)
                          (when (fboundp *do-something-with-parse*)
                            (funcall *do-something-with-parse*)))
