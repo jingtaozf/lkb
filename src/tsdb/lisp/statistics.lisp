@@ -1513,7 +1513,7 @@
                          oitems :restrictor (or orestrictor restrictor)))
              (naverages (summarize-performance-parameters 
                          nitems :restrictor (or nrestrictor restrictor)))
-             (naggregates (- (length oitems) 1))
+             (naggregates (- (length oaverages) 1))
              (*print-circle* nil)
              (alabel (if (eq *statistics-aggregate-dimension* :phenomena)
                        "Phenomenon"

@@ -31,12 +31,19 @@ proc copyleft {action} {
       label $copyleft.third -bg $bg -fg green -font [concat $normalsize] \
         -text "$globals(name) is available free of royalties\
                for research purposes."
-      frame $copyleft.fourth -bg $bg -height 6
-      label $copyleft.fifth -bg $bg -fg grey -font [concat $normalsize] \
-        -text "Until registered, after 10 minutes of continuous use\
-               a log entry will be generated and\n\
-               automatically filed at a central protocol server\
-               (at Saarbruecken University)."
+      if {[info exists globals(copyleft,key)]
+          && [oe copyleft $globals(copyleft,key)]} {
+        frame $copyleft.fourth -bg $bg -height 8
+        label $copyleft.fifth -bg $bg -fg grey -font [concat $normalsize] \
+          -text [format {-  Registered Copy [%s]  -} $globals(copyleft,key)];
+      } else {
+        frame $copyleft.fourth -bg $bg -height 6
+        label $copyleft.fifth -bg $bg -fg grey -font [concat $normalsize] \
+          -text "Until registered, after 10 minutes of continuous use\
+                 a log entry will be generated and\n\
+                 automatically sent to a central protocol server\
+                 (at Saarbruecken University)."
+      }; # else
       pack $copyleft.title \
         $copyleft.zero $copyleft.first $copyleft.second $copyleft.third \
         $copyleft.fourth $copyleft.fifth
@@ -48,7 +55,6 @@ proc copyleft {action} {
       #
       set globals(copyleft,status) pending;
       set globals(copyleft) [expr {[clock seconds] + 5}];
-      set globals(copyleft,key) 43;
     } 
     hide { 
       if {[winfo exists .list.copyleft] && [info exists globals(copyleft)]} {
@@ -62,10 +68,10 @@ proc copyleft {action} {
       #
       # trap valid keys and suppress all messages.  note however, that all the
       # actual decision making and communication is done by swish(1) itself
-      # --- hence chaning the Tcl code will not prevent registration.
+      # --- thus changing the Tcl code here will not prevent registration.
       #
       if {[oe copyleft $globals(copyleft,key)]} {
-        oe reape;
+        oe reap;
         return; 
       }; # if
       set status $globals(status);

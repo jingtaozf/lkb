@@ -134,8 +134,10 @@
 
 
 (defun reset-podium ()
+  #+:debug
   (mp:process-add-arrest-reason *tsdb-wish-process* :reset)
   (setf %tsdb-podium-pending-events% nil)
+  #+:debug
   (mp:process-reset *tsdb-wish-process*))
   
 (defun podium-loop ()
@@ -698,6 +700,7 @@
 
 (defun send-to-podium (string &key (wait nil) (quiet nil) recursive)
   (unless recursive
+    #+:debug
     (when (and *tsdb-wish-process*
                (not (eq mp:*current-process* *tsdb-wish-process*)))
       (mp:process-add-arrest-reason *tsdb-wish-process* :send-to-podium))
@@ -724,17 +727,20 @@
             (send-to-podium nil :recursive t))
            (t
             form))))
+    #+:debug
     (when (and *tsdb-wish-process*
                (not (eq mp:*current-process* *tsdb-wish-process*)))
       (mp:process-revoke-arrest-reason *tsdb-wish-process* :send-to-podium))))
 
 (defun process-pending-events ()
+  #+:debug
   (when (and *tsdb-wish-process*
              (not (eq mp:*current-process* *tsdb-wish-process*)))
     (mp:process-add-arrest-reason *tsdb-wish-process* :pending-events))
   (loop
       while (and (streamp *tsdb-wish-stream*) %tsdb-podium-pending-events%)
       do (evaluate-remote-command (pop %tsdb-podium-pending-events%)))
+  #+:debug
   (when (and *tsdb-wish-process*
              (not (eq mp:*current-process* *tsdb-wish-process*)))
     (mp:process-revoke-arrest-reason *tsdb-wish-process* :pending-events)))

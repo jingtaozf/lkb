@@ -159,10 +159,10 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
 
   #
   # as this is one of the more frequently called functions, place the safenet
-  # for the registrar background process here; just to make sure that poor
+  # for the registrar background process here; just to make sure that the poor
   # zombie can eventually free its resources ...
   #
-  oe reape;
+  oe reap;
 
 }; # update_ts_list()
 
