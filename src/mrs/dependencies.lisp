@@ -42,7 +42,7 @@
     "HINST" "NHINST"))
 
 (defstruct eds
-  top relations hcons status)
+  top relations hcons raw status)
 
 (defmethod print-object ((object eds) stream)
   (if *eds-pretty-print-p*
@@ -74,7 +74,7 @@
     (call-next-method)))
 
 (defstruct ed
-  handle id type
+  handle id type variable
   predicate arguments carg
   raw status mark)
 
@@ -115,7 +115,7 @@
         with index = (psoa-index psoa)
         with name = (when (var-p index) (var-string index))
         with hcons = (psoa-h-cons psoa)
-        with eds = (make-eds :top name :hcons hcons)
+        with eds = (make-eds :top name :hcons hcons :raw psoa)
         initially (ed-reset)
         for relation in (psoa-liszt psoa)
         for ed = (ed-convert-relation relation)
@@ -183,6 +183,8 @@
             for representative = (when value 
                                    (ed-find-representative eds value))
             when representative do
+              (when (ed-p representative)
+                (setf (ed-variable representative) value))
               (push (cons (if (eq key old) (vsym "CARG") key) representative)
                     (ed-arguments ed)))
         (setf (ed-arguments ed) (nreverse (ed-arguments ed)))))
@@ -411,20 +413,39 @@
           (return return))))
 
 (defun ed-explode (eds)
-  (loop
-      for ed in (eds-relations eds)
-      unless (and (null (ed-status ed)) 
-                  (or (ed-bleached-p ed) (ed-vacuous-p ed)))
-      nconc
-        (loop
-            with functor = (ed-predicate ed)
-            for (role . value) in (ed-arguments ed)
-            when (ed-p value) collect
-              (let ((argument (format
-                               nil
-                               "~a~@[(~a)~]"
-                               (ed-predicate value) (ed-carg value))))
-                (list functor role argument)))))
+  ;;
+  ;; _fix_me_
+  ;; to be more informative, particularly when predicates occur more than once
+  ;; in an MRS, this would have to include characterization.   (23-jan-04; oe)
+  ;;
+  (nconc
+   (loop
+       for ed in (eds-relations eds)
+       unless (and (null (ed-status ed)) 
+                   (or (ed-bleached-p ed) (ed-vacuous-p ed)))
+       nconc
+         (loop
+             with functor = (ed-predicate ed)
+             for (role . value) in (ed-arguments ed)
+             when (ed-p value) collect
+               (let ((argument (format
+                                nil
+                                "~a~@[(~a)~]"
+                                (ed-predicate value) (ed-carg value))))
+                 (list functor role argument))))
+   #+:null
+   (loop
+       for ed in (eds-relations eds)
+       unless (or (and (null (ed-status ed)) 
+                       (or (ed-bleached-p ed) (ed-vacuous-p ed)))
+                  (not (var-p (ed-variable ed))))
+       nconc
+         (loop
+             with id = (ed-predicate ed)
+             for extra in (var-extra (ed-variable ed))
+             for value = (format nil "~(~a~)" (extrapair-value extra))
+             collect 
+               (list id (extrapair-feature extra) value)))))
 
 (defun ed-reset ()
   (setf %eds-variable-counter% 0)
