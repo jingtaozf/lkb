@@ -141,7 +141,11 @@
   (defun LKB::CACHE-ALL-LEX-RECORDS nil)
   (defun LKB::RELOAD-ROOTS-MWE nil)
   (defun LKB::SET-LEX-ENTRY nil)
-  (defun LKB::MAKE-INSTANCE-PSQL-LEX-ENTRY nil))
+  (defun LKB::MAKE-INSTANCE-PSQL-LEX-ENTRY nil)
+  (defun LKB::ORDERED-SYMB-VAL-LIST nil)
+  (defun LKB::GRAMMAR-FIELDS nil)
+  (defun LKB::BUILD-LEX-AUX nil)
+)
 
 (defun psql-initialize ()
   ;;
