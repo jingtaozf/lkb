@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.public.next_version(text) RETURNS integer AS '
+CREATE OR REPLACE FUNCTION public.next_version(text) RETURNS integer AS '
     SELECT COALESCE(1 + max(version),0) FROM revision_all 
 	       WHERE name LIKE $1 AND user=user;
  ' LANGUAGE SQL;
