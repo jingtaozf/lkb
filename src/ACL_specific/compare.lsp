@@ -482,15 +482,6 @@
      (mp:process-revoke-arrest-reason (compare-frame-controller frame) :wait)
      (clim:frame-exit frame))))
 
-(define-compare-frame-command (com-save-compare-frame :menu "Save")
-    ()
-  (clim:with-application-frame (frame)
-    (frame-cursor frame :horizontal-scroll)
-    (record-decision (make-decision :type :save))
-    (when (compare-frame-controller frame) 
-      (mp:process-revoke-arrest-reason 
-       (compare-frame-controller frame) :wait))))
-
 #+:null
 (define-compare-frame-command (com-first-compare-frame :menu "First")
     ()
@@ -563,14 +554,14 @@
     (setf (compare-frame-display frame) nil)
     (update-trees frame)))
 
-(define-compare-frame-command (com-toggle-compare-frame :menu "Toggle")
+(define-compare-frame-command (com-save-compare-frame :menu "Save")
     ()
   (clim:with-application-frame (frame)
-    (if (and (integerp *tree-display-threshold*)
-             (= *tree-display-threshold* (compare-frame-threshold frame)))
-      (setf *tree-display-threshold* nil)
-      (setf *tree-display-threshold* (compare-frame-threshold frame)))
-    (update-trees frame)))
+    (frame-cursor frame :horizontal-scroll)
+    (record-decision (make-decision :type :save))
+    (when (compare-frame-controller frame) 
+      (mp:process-revoke-arrest-reason 
+       (compare-frame-controller frame) :wait))))
 
 (define-compare-frame-command (com-confidence-compare-frame :menu "Confidence")
     ()
@@ -583,6 +574,15 @@
       (when command
         (setf (compare-frame-confidence frame) command)))
     (clim::redisplay-frame-pane frame 'top :force-p t)))
+
+(define-compare-frame-command (com-toggle-compare-frame :menu "Toggle")
+    ()
+  (clim:with-application-frame (frame)
+    (if (and (integerp *tree-display-threshold*)
+             (= *tree-display-threshold* (compare-frame-threshold frame)))
+      (setf *tree-display-threshold* nil)
+      (setf *tree-display-threshold* (compare-frame-threshold frame)))
+    (update-trees frame)))
 
 (defun draw-top-window (frame stream &rest rest)
 
