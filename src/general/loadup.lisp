@@ -27,8 +27,7 @@
 
 (defparameter %athome% nil)
 (defparameter %sys-home%
-  #-:mcl (rest (butlast (pathname-directory *load-truename*) 2))
-  #+:mcl '("macintosh hd" "newlkb"))
+  (rest (butlast (pathname-directory *load-truename*) 2)))
 
 (defparameter %sys-host%
   (pathname-host *load-truename*))
@@ -57,7 +56,7 @@
 ;;;
 ;;; analogously, we now have one patch file per Lisp environment that we know
 ;;; of; although these files are somewhat smaller these days, it seems we still
-;;; require some small amount of vedor-specific tweaking (2-jun-00  -  oe)
+;;; require some small amount of vendor-specific tweaking (2-jun-00  -  oe)
 ;;;
 
 #+:cmu
