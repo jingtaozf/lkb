@@ -646,3 +646,29 @@
          (if edge
             (morph-tree-structure nil (edge-morph-history edge))))))
 
+
+;; Find the children of a node, respecting various conditional display flags
+
+(defun find-children (node)
+  (let ((edge-record (get node 'edge-record))
+        (dtrs (get node 'daughters)))
+    (cond ((and (or *dont-show-morphology*
+                    *dont-show-lex-rules*)
+                (null edge-record))
+           ;; Leaf node
+           nil)
+          ((and *dont-show-lex-rules*
+                edge-record
+                (lexical-rule-p (edge-rule edge-record)))
+           ;; Lexical rule node
+           (mapcar #'find-leaf dtrs))
+          (t dtrs))))
+
+;; Given a node, return the first leaf node dominated by it.  Assumes
+;; that this node and all nodes under it are unary branching.
+
+(defun find-leaf (node)
+  (if (null (get node 'edge-record))
+      node
+    (find-leaf (car (get node 'daughters)))))
+

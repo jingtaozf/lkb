@@ -1,0 +1,17 @@
+(in-package "MAKE")
+
+(defsystem "www"
+    :device (make-pathname :device cl-user::%sys-device%)
+    :source-pathname (get-sources-dir "lkb")
+    :binary-pathname (get-binaries-dir "lkb")
+    :source-extension "lisp"
+    :depends-on ("mrs")
+    :components
+    ((:module "www"
+      :source-pathname "www"
+      :binary-pathname "www"
+      :components
+      ((:file "gd")
+       (:file "giftrees")
+       (:file "lkb-demo")))))
+

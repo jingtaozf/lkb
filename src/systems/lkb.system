@@ -2,6 +2,7 @@
 
 (defparameter *lisp-specific-directory*
     #+(and :allegro :clim) "ACL_specific"
+    #+(and :allegro :tty) "ACL_specific"
     #+(and :allegro :common-graphics) "ACL-CG_specific"
     #+:mcl "MCL_specific")
 

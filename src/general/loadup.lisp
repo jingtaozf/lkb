@@ -91,7 +91,8 @@
 (reset-system-paths)
 
 (pushnew :lkb *features*)
-#+(not (or :mcl :clim :common-graphics))(pushnew :tty *features*)
+#+(or :cl-http (not (or :mcl :clim :common-graphics))) 
+   (pushnew :tty *features*)
 
 ;;; graphics currently assumes mcl or clim,
 ;;; with common graphics under development
