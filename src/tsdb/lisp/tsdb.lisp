@@ -773,4 +773,26 @@
                     parse-id d-type (or d-key "") (or d-value "") 
                     d-start d-end (or d-date ""))))
         (call-tsdb query data :cache cache)))))
-
+
+(defun write-preference (data record &key cache)
+  (let* ((*print-circle* nil)
+         (*print-level* nil)
+         (*print-length* nil)
+         (rawp (and cache (eq (get-field :protocol cache) :raw)))
+         (parse-id (get-field :parse-id record))
+         (t-version (get-field :t-version record))
+         (result-id (get-field :result-id record)))
+    (if rawp
+      (let ((stream (get-field :preference cache))
+            (ofs *tsdb-ofs*))
+        (write parse-id :stream stream) (write-char ofs stream)
+        (write t-version :stream stream) (write-char ofs stream)
+        (write result-id :stream stream)
+        (terpri stream)
+        (force-output stream)
+        (incf (get-field :count cache)))
+      (let ((query (format
+                    nil
+                    "insert into preference values ~d ~d ~d"
+                    parse-id t-version result-id)))
+        (call-tsdb query data :cache cache)))))

@@ -78,7 +78,7 @@
   (initialize-tsdb)
   (let* ((*tsdb-gc-message-p* nil)
          (condition (if (equal condition "") nil condition))
-         (loadp (not (member load (list nil :off :no :none :fuck))))
+         (loadp (not (member load (list nil :off :no :none))))
          (whitespace '(#\Space #\Newline #\Tab))
          (garbage (append whitespace 
                           (loop

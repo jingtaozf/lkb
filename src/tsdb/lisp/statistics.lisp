@@ -247,17 +247,18 @@
      ((find "end" (rest run) :key #'first :test #'string=) 9902)
      (t 9808))))
 
-(defun analyze (language &key condition meter message thorough extras)
+(defun analyze (language &key condition meter message thorough trees extras)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
   (let* ((message (when message
                     (format nil "retrieving `~a' data ..." language)))
          (extras (and extras t))
+         (trees (and trees t))
          (key (format 
                nil 
-               "~a @ ~a~@[ # ~{~(~a~)~^#~}~]~@[~* : extras~]" 
-               language condition thorough extras))
+               "~a @ ~a~@[ # ~{~(~a~)~^#~}~]~@[~* : trees~]~@[~* : extras~]" 
+               language condition thorough trees extras))
          (relations (read-database-schema language))
          (parse (rest (find "parse" relations :key #'first :test #'string=)))
          pfields ptypes data)
@@ -291,7 +292,9 @@
         ;; tsdb(1) breaks when used in conjuction with a `report' format (as is
         ;; the case in our current select() implementation.  hence, sort the
         ;; `error' field to the back where it happens not to break :-{.
-        ;;                                                 (22-nov-99  -  oe)
+        ;;                                                    (22-nov-99; oe)
+        ;; i believe this has been fixed sometime in 2001?    (20-jan-02; oe)
+        ;;          
         (let* ((pfields (nreverse pfields))
                (ptypes (nreverse ptypes))
                (pmeter (and meter (madjust * meter (if thorough 0.4 0.5))))
@@ -322,6 +325,10 @@
                                                        symbol)))
                                   nil "result" condition language 
                                   :meter rmeter :sort :parse-id)))
+               (trees (when trees
+                        (select '("parse-id" "t-active" "t-version")
+                                nil "tree" condition language
+                                :sort :parse-id)))
                (all (njoin parse item :i-id :meter ameter)))
           (setf data all)
           (when extras
@@ -371,7 +378,30 @@
                                    (eql key (get-field :parse-id result)))
                         collect (pop results)))
                 when matches
-                do (nconc item (acons :results matches nil)))))
+                do (nconc item (acons :results matches nil))))
+          ;;
+          ;;
+          ;;
+          (when trees
+            (loop
+                with all = (copy-list all)
+                for item in (sort all #'< :key #'(lambda (foo)
+                                                   (get-field :parse-id foo)))
+                for key = (get-field :parse-id item)
+                for tree = (loop
+                               with result = nil
+                               for tree = (first trees)
+                               for parse-id = (get-field :parse-id tree)
+                               for version = (get-field :t-version tree)
+                               while (eql parse-id key) do
+                                 (pop trees)
+                                 (when (or (null result)
+                                           (> version 
+                                              (get-field :t-version result)))
+                                   (setf result tree))
+                               finally (return result))
+                when tree
+                do (nconc item tree))))
                   
         (setf (gethash key *tsdb-profile-cache*) data)))
     (when meter 
@@ -381,13 +411,14 @@
     data))
 
 (defun analyze-aggregates (language
-                           &key condition phenomena extras
+                           &key condition phenomena extras trees
                                 (dimension *statistics-aggregate-dimension*)
                                 (format :latex) meter)
 
   (if (not (eq dimension :phenomena))
     (aggregate language 
-               :condition condition :dimension dimension :extras extras
+               :condition condition :dimension dimension 
+               :trees trees :extras extras
                :format format :meter meter)
     (let* ((phenomena (or phenomena
                           (gethash language *tsdb-phenomena*)
@@ -404,7 +435,7 @@
         (status :text message)
         (meter :value (get-field :start meter)))
       (let* ((idata (analyze language :condition condition 
-                             :extras extras :meter imeter)))
+                             :extras extras :trees trees :meter imeter)))
         (loop while (eq (setf pdata (gethash key *tsdb-profile-cache*)) 
                         :seized))
         (unless pdata
@@ -753,73 +784,136 @@
               result)
         (return (delete :all result :key #'first))))
 
-(defun summarize-competence-parameters (items
-                                        &key restrictor)
+(defun summarize-competence-parameters (aggregates &key restrictor)
+  
+  (loop
+      with titems = 0
+      with tritems = 0
+      with tlength = 0
+      with twords = 0
+      with tlstasks = 0
+      with treadings = 0
+      with tresults = 0
+      with trreadings = 0
+      with trresults = 0
+      with tureadings = 0
+      with turesults = 0
+      with tareadings = 0
+      with taresults = 0
+      with result = nil
+      for aggregate in aggregates
+      for items = (rest (rest aggregate))
+      for nitems = (length items)
+      for ritems = (if restrictor (remove-if restrictor items) items)
+      for nritems = (length ritems)
+      do
+        (loop
+            with alength = 0
+            with awords = 0
+            with alstasks = 0
+            with areadings = 0
+            with aresults = 0
+            with arreadings = 0
+            with arresults = 0
+            with aureadings = 0
+            with auresults = 0
+            with aareadings = 0
+            with aaresults = 0
+            for item in ritems
+            for ilength = (get-field :i-length item)
+            for iwords = (get-field :words item)
+            for ilstasks = (get-field+ :l-stasks item -1)
+            for ireadings = (get-field :readings item)
+            for active = (get-field :t-active item)
+            do
+              (incf alength ilength)
+              (incf awords iwords)
+              (incf alstasks ilstasks)
+              (when (and (numberp ireadings) (>= ireadings 1))
+                (incf areadings ireadings)
+                (incf aresults)
+                (cond
+                 ((eql active 0) 
+                  (incf arreadings ireadings)
+                  (incf arresults))
+                 ((eql active 1)
+                  (incf aureadings ireadings)
+                  (incf auresults))
+                 ((and (numberp active) (> active 1))
+                  (incf aareadings ireadings)
+                  (incf aaresults))))
+            finally
+              (push (cons (first aggregate)
+                          (pairlis '(:items :restricted 
+                                     :i-length 
+                                     :words 
+                                     :l-stasks 
+                                     :lambiguity 
+                                     :analyses 
+                                     :results
+                                     :ranalyses 
+                                     :rresults
+                                     :uanalyses 
+                                     :uresults
+                                     :aanalyses 
+                                     :aresults)
+                                   (list nitems nritems
+                                         (divide alength nritems)
+                                         (divide awords nritems)
+                                         (divide alstasks nritems)
+                                         (divide awords alength)
+                                         (divide areadings aresults)
+                                         aresults
+                                         (divide arreadings arresults)
+                                         arresults
+                                         (divide aureadings auresults)
+                                         auresults
+                                         (divide aareadings aaresults)
+                                         aaresults)))
+                    result)
+              (incf titems nitems)
+              (incf tritems nritems)
+              (incf tlength alength)
+              (incf twords awords)
+              (incf tlstasks alstasks)
+              (incf treadings areadings)
+              (incf tresults aresults)
+              (incf trreadings arreadings)
+              (incf trresults arresults)
+              (incf tureadings aureadings)
+              (incf turesults auresults)
+              (incf tareadings aareadings)
+              (incf taresults aaresults))
 
-  (let ((itemtotal 0)
-        (restrictedtotal 0)
-        (lengthtotal 0)
-        (wordstotal 0)
-        (lstaskstotal 0)
-        (parsestotal 0)
-        (readingstotal 0)
-        result)
-    (dolist (phenomenon items)
-      (let* ((data (rest (rest phenomenon)))
-             (items (length data))
-             (data (if restrictor
-                     (remove-if restrictor data)
-                     data))
-             (restricted (length data))
-             (lengths (map 'list #'(lambda (foo)
-                                    (get-field :i-length foo))
-                           data))
-             (wordss (map 'list #'(lambda (foo)
-                                    (get-field :words foo))
-                          data))
-             (lstaskss (map 'list #'(lambda (foo)
-                                      (get-field+ :l-stasks foo -1))
-                            data))
-             (parses (remove-if-not #'(lambda (foo)
-                                    (>= (get-field :readings foo) 1))
-                                    data))
-             (readingss (map 'list #'(lambda (foo)
-                                       (get-field+ :readings foo -1))
-                             parses)))
-        (push (cons (first phenomenon)
-                    (pairlis '(:items :restricted 
-                               :i-length :words 
-                               :l-stasks 
-                               :lambiguity 
-                               :analyses :results)
-                             (list items restricted 
-                                   (average lengths) (average wordss) 
-                                   (average lstaskss)
-                                   (divide (sum wordss) (sum lengths))
-                                   (average readingss) (length parses))))
+      finally
+        (push (cons :total
+                    (pairlis '(:items :restricted
+                               :i-length
+                               :words :l-stasks
+                               :lambiguity
+                               :analyses
+                               :results
+                               :ranalyses 
+                               :rresults
+                               :uanalyses 
+                               :uresults
+                               :aanalyses 
+                               :aresults)
+                             (list titems tritems
+                                   (divide tlength tritems)
+                                   (divide twords tritems)
+                                   (divide tlstasks tritems)
+                                   (divide twords tlength)
+                                   (divide treadings tresults)
+                                   tresults 
+                                   (divide trreadings trresults)
+                                   trresults
+                                   (divide tureadings turesults)
+                                   turesults
+                                   (divide tareadings taresults)
+                                   taresults)))
               result)
-        (incf itemtotal items)
-        (incf restrictedtotal restricted)
-        (incf lengthtotal (sum lengths))
-        (incf wordstotal (sum wordss))
-        (incf lstaskstotal (sum lstaskss))
-        (incf parsestotal (length parses))
-        (incf readingstotal (sum readingss))))
-    (cons (cons :total
-                (pairlis '(:items :restricted
-                           :i-length
-                           :words :l-stasks
-                           :lambiguity
-                           :analyses
-                           :results)
-                         (list itemtotal restrictedtotal
-                               (divide lengthtotal restrictedtotal)
-                               (divide wordstotal restrictedtotal)
-                               (divide lstaskstotal restrictedtotal)
-                               (divide wordstotal lengthtotal)
-                               (divide readingstotal parsestotal)
-                               parsestotal)))
-          (delete :all result :key #'first))))
+        (return (delete :all result :key #'first))))
 
 (defun analyze-competence (&optional (language *tsdb-data*)
                            &key (condition *statistics-select-condition*)

@@ -3,6 +3,7 @@
 ;;;
 ;;; ToDo
 ;;;
+;;; - protect against saving with an empty `decision' set;
 ;;; - confidence menu;
 ;;; - `Reset' button: re-instantiate original, preset state;
 ;;; - reorder trees: active at top;
@@ -62,9 +63,12 @@
       (status :text message)
       (meter :value 0))
 
+    (when (or purge #+:expand t)
+      (install-gc-strategy nil :tenure nil :burst t :verbose t))
+    
     (loop
         with increment = (and meter (/ 1 (if items (length items) 1)))
-        with frame = (unless purge
+        with frame = (unless #-:expand purge #+:expand nil
                        (clim:make-application-frame 'lkb::compare-frame))
         with title = (format 
                       nil 
@@ -75,7 +79,7 @@
         initially
           #+:debug
           (setf *frame* frame)
-          (unless purge
+          (unless #-:expand purge #+:expand nil
             (setf (lkb::compare-frame-current-chart frame) nil)
             (setf (clim:frame-pretty-name frame) title)
             (setf (lkb::compare-frame-controller frame) *current-process*))
@@ -103,7 +107,7 @@
              (when (eq action :save) (incf (aref annotated position)))
              (setf position 
                (if (= position (- nitems 1))
-                 (if purge nil (- nitems 1))
+                 (if #+:expand t #-:expand purge nil (- nitems 1))
                  (+ position offset))))
             (:last (setf position (- nitems 1))))
         finally
@@ -112,7 +116,8 @@
             (mp:process-kill %client%)))
   
     (when cache (flush-cache cache :verbose verbose))
-
+    (purge-profile-cache data)
+    
     (when meter
       (status :text (format nil "~a done" message) :duration 10)
       (meter :value 1))))
@@ -163,7 +168,7 @@
                          foo confidence version date user)
                         "")))
            (results (get-field :results item))
-           (edges (unless purge
+           (edges (unless (or #-:expand purge #+:expand (null trees))
                     (loop
                         with edges
                         for result in results
@@ -191,7 +196,8 @@
                                  "parse-id == ~a && version == ~a" 
                                  parse-id version) 
                                 data)))
-           (discriminants (unless purge (reconstruct-discriminants decisions)))
+           (discriminants (unless #-:expand purge #+:expand nil
+                            (reconstruct-discriminants decisions)))
            (lkb::*parse-record* edges))
       (declare (ignore active))
 
@@ -201,6 +207,7 @@
         (loop
             for decision in decisions
             do (write-decision purge decision :cache cache))
+        #-:expand
         (return-from browse-tree (acons :status :save nil)))
 
       (when (null edges)
@@ -231,7 +238,11 @@
                           (ignore-errors 
                            (process-revoke-arrest-reason 
                             *current-process* :wait))))))
+      
       (let ((status (lkb::set-up-compare-frame lkb::*parse-record* frame))) 
+        #+:expand
+        (lkb::record-decision (lkb::make-decision :type :save) frame)
+        #-:expand
         (unless (eq status :skip)
           (clim:redisplay-frame-panes frame :force-p t)
           (process-add-arrest-reason *current-process* :wait)))
@@ -240,8 +251,11 @@
              (status (lkb::decision-type (first decisions)))
              (recent (second decisions)))
         (when (eq status :save)
-          (let* ((version (if version (incf version) 1))
-                 (active (length (lkb::compare-frame-in-parses frame)))
+          (let* ((version (if version 
+                            #-:expand (incf version) #+:expand version
+                            1))
+                 (trees (lkb::compare-frame-in-parses frame))
+                 (active (length trees))
                  (foo (lkb::compare-frame-confidence frame))
                  (confidence (if (and (integerp foo)
                                       (>= foo 0) (<= foo 3))
@@ -260,13 +274,26 @@
                           (if end 
                             (decode-time end :long t)
                             (current-time :long t)))))
+            #-:expand
             (write-tree data (pairlis '(:parse-id 
                                         :t-version :t-active :t-confidence
                                         :t-author :t-start :t-end :t-comment)
                                       (list parse-id 
                                             version active confidence
                                             t-author t-start t-end ""))
-                        :cache cache))
+                        :cache cache)
+
+            (loop
+                for tree in trees
+                for edge = (get tree 'lkb::edge-record)
+                for id = (when (lkb::edge-p edge) (lkb::edge-score edge))
+                do
+                  (write-preference (or purge data)
+                                    (pairlis '(:parse-id 
+                                               :t-version :result-id)
+                                             (list parse-id
+                                                   version id))
+                                    :cache cache)))
 
           (when (and (lkb::decision-p recent)
                      (member (lkb::decision-type recent) '(:reject :select)))
@@ -279,6 +306,7 @@
                            (if time
                              (decode-time time :long t)
                              (current-time)))))
+              #-:expand
               (write-decision data 
                               (pairlis '(:parse-id :version 
                                          :d-state :d-type :d-key :d-value 
@@ -303,6 +331,8 @@
                              (current-time)))
               unless (= state 5)
               do
+                #+:expand nil
+                #-:expand
                 (write-decision data 
                                 (pairlis '(:parse-id :version 
                                            :d-state :d-type :d-key :d-value 
@@ -378,8 +408,282 @@
                      :key key :value value 
                      :start start :end end
                      :toggle toggle :state state)))
+
+(defun analyze-trees (&optional (data *tsdb-data*)
+                      &key (condition *statistics-select-condition*)
+                           file append (format :latex)
+                           restrictor meter)
+  (declare (ignore restrictor))
 
+  (let* ((stream (create-output-stream file append))
+         (items (if (stringp data) 
+                  (analyze-aggregates data :condition condition :trees t
+                                      :meter meter :format format) 
+                  data))
+         (averages 
+          (summarize-competence-parameters items))
+         (naggregates (- (length averages) 1))
+         (ncolumns 8)
+         (alabel (if (eq *statistics-aggregate-dimension* :phenomena)
+                   "Phenomenon"
+                   "Aggregate"))
+         (caption (format 
+                   nil "(generated by ~a at ~a)"
+                   *tsdb-name* (current-time :long :pretty))))
+                   
+    (case format
+      (:latex
+        (format
+         stream
+         "\\begin{tabular}{@{}|l|c|c|c|c|c|c|c|@{}}~%  ~
+          \\hline~%  ~
+          \\multicolumn{~d}{|c|}~%    {\\bf `~a' ~a Profile}\\\\~%  ~
+          \\hline\\hline~%  ~
+          & {\\bf  total} & {\\bf ~a} & {\\bf word} & {\\bf lexical}~%    ~
+            & {\\bf parser} & {\\bf total} & {\\bf overall}\\\\~%  ~
+          {\\bf ~a} & {\\bf items} & {\\bf items} & {\\bf string}~%    ~
+            & {\\bf items} & {\\bf analyses} & {\\bf results}~%    ~
+            & {\\bf coverage}\\\\~%  ~
+          & $\\sharp$ & $\\sharp$ & $\\phi$ & $\\phi$ & $\\phi$~%    ~
+            & $\\sharp$ & $\\%$\\\\~%  ~
+          \\hline~%  ~
+          \\hline~%"
+         ncolumns
+         (if (stringp data) data "")
+         (if (= wf 1) "Coverage" "Overgeneration")
+         (if (= wf 1) "positive" "negative")
+         alabel))
+      (:tcl
+       (format stream *statistics-tcl-formats*)
+       (format
+        stream
+        "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+         layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
+         layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
+         layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
+         layout col 8 -m1 5 -r 2 -m2 5 -c black -j right~%~
+         layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
+         layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%~
+         layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+         layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~%"
+        (+ naggregates 1) (+ naggregates 2))
+       (format
+        stream
+        "cell 1 1 -contents {~a} -format title~%~
+         cell 1 2 -contents \"total\\nitems\\n#\" -format title~%~
+         cell 1 3 -contents \"~a\\nitems\\n#\" -format title~%~
+         cell 1 4 -contents \"word\\nstring\\n\\330\" -format title~%~
+         cell 1 5 -contents \"lexical\\nitems\\n\\330\" -format title~%~
+         cell 1 6 -contents \"parser\\nanalyses\\n\\330\" -format title~%~
+         cell 1 7 -contents \"total\\nresults\\n#\" -format title~%~
+         cell 1 8 -contents \"overall\\ncoverage\\n%\" -format title~%~%"
+        alabel (if (= wf 1) "positive" "negative"))))
+    (loop
+        for aggregate in items
+        for i from 2
+        for data = (rest (assoc (first aggregate) averages))
+        when data do
+          (let* ((name (if (equal format :latex)
+                         (latexify-string (second aggregate))
+                         (second aggregate)))
+                 (items (get-field :items data))
+                 (restricted (get-field :restricted data))
+                 (length (get-field :i-length data))
+                 (words (get-field :words data))
+                 (analyses (get-field :analyses data))
+                 (results (get-field :results data))
+                 (coverage (if (zerop restricted)
+                             0
+                             (float (* 100 (/ results restricted))))))
+            (case format
+              (:latex
+                (format
+                 stream
+                 "  ~a & ~d & ~d & ~,2f & ~,2f & ~,2f & ~d & ~,1f\\\\~%"
+                 name items restricted length words analyses results coverage))
+              (:tcl
+               (format
+                stream
+                "cell ~d 1 -contents {~a} -format aggregate~%~
+                 cell ~d 2 -contents ~d -format data~%~
+                 cell ~d 3 -contents ~d -format data~%~
+                 cell ~d 4 -contents ~,2f -format data~%~
+                 cell ~d 5 -contents ~,2f -format data~%~
+                 cell ~d 6 -contents ~,2f -format data~%~
+                 cell ~d 7 -contents ~d -format data~%~
+                 cell ~d 8 -contents ~,1f -format data~%~%"
+                i name
+                i items
+                i restricted
+                i length
+                i words
+                i analyses
+                i results
+                i coverage)))))
+    
+    (let* ((data (rest (assoc :total averages)))
+           (name "Total")
+           (items (get-field :items data))
+           (restricted (get-field :restricted data))
+           (length (get-field :i-length data))
+           (words (get-field :words data))
+           (analyses (get-field :analyses data))
+           (results (get-field :results data))
+           (coverage (if (zerop restricted)
+                       100
+                       (float (* 100 (/ results restricted))))))
+      (case format
+        (:latex
+          (format
+           stream
+           "  \\hline~%  \\hline~%  ~
+            {\\bf ~a} & {\\bf ~d} & {\\bf ~d} & {\\bf ~,2f} & {\\bf ~,2f}~%    ~
+            & {\\bf ~,2f} & {\\bf ~d} & {\\bf ~,1f}\\\\~%  \\hline~%"
+           name items restricted length words analyses results coverage)
+          (format
+           stream
+           "  \\multicolumn{~d}{r}{\\tiny ~%    ~a}~%~
+            \\end{tabular}~%"
+           ncolumns caption))
+        (:tcl
+         (format
+            stream
+            "cell ~d 1 -contents {~a} -format total~%~
+             cell ~d 2 -contents ~d -format total~%~
+             cell ~d 3 -contents ~d -format total~%~
+             cell ~d 4 -contents ~,2f -format total~%~
+             cell ~d 5 -contents ~,2f -format total~%~
+             cell ~d 6 -contents ~,2f -format total~%~
+             cell ~d 7 -contents ~d -format total~%~
+             cell ~d 8 -contents ~,1f -format total~%~%"
+            (+ naggregates 2) name
+            (+ naggregates 2) items
+            (+ naggregates 2) restricted
+            (+ naggregates 2) length
+            (+ naggregates 2) words
+            (+ naggregates 2) analyses
+            (+ naggregates 2) results
+            (+ naggregates 2) coverage))))
+    (when (or (stringp file) (stringp append)) (close stream))))
+
+(defun marty (data &key condition)
+  
+  (loop
+      with items = (analyze data :thorough '(:derivation) 
+                            :condition condition)
+      for item in items
+      for input = (or (get-field :o-input item) (get-field :i-input item))
+      for i-id = (get-field :i-id item)
+      for parse-id = (get-field :parse-id item)
+      for trees = (select '("t-version") '(:integer) "tree" 
+                          (format nil "parse-id == ~a" parse-id) 
+                          data
+                          :sort :parse-id)
+      for version = (loop
+                        for tree in trees
+                        maximize (get-field :t-version tree))
+      for active = (let ((foo (select '("result-id") '(:integer) "preference" 
+                                      (format 
+                                       nil 
+                                       "parse-id == ~a && t-version == ~d" 
+                                       parse-id version) 
+                                      data)))
+                     (loop for bar in foo collect (get-field :result-id bar)))
+      for results = (get-field :results item)
+      do
+        (format 
+         t 
+         "marty(): ~d tree~p for item # ~d.~%" 
+         (length active) (length active) i-id)
+        
+        (loop
+            for i from 1
+            for result in results
+            for id = (get-field :result-id result)
+            for derivation = (when (member id active :test #'eql)
+                               (get-field :derivation result))
+            for edge = (and derivation (reconstruct derivation))
+            for foo = (when edge
+                        (with-standard-io-syntax
+                          (let ((*package* lkb::*lkb-package*))
+                            (write-to-string
+                             (lkb::compute-derivation-tree edge) 
+                             :case :downcase))))
+            for mrs = (and edge (mrs::extract-mrs edge))
+            for bar = (and edge (mrs::get-mrs-string edge))
+            when edge do
+              (format
+               t
+               "~d (~d); derivation:~%~a~%~d (~d); MRS string:~%~a~%~%"
+               id i foo id i bar))))
+
+(defun kristina (data &key condition path)
+  
+  (loop
+      with target = (or path 
+                        (format nil "/home/tmp/~a" (substitute #\. #\/ data)))
+                  
+      with items = (analyze data :thorough '(:derivation) 
+                            :condition condition)
+      for item in items
+      for input = (or (get-field :o-input item) (get-field :i-input item))
+      for i-id = (get-field :i-id item)
+      for parse-id = (get-field :parse-id item)
+      for trees = (select '("t-version") '(:integer) "tree" 
+                          (format nil "parse-id == ~a" parse-id) 
+                          data
+                          :sort :parse-id)
+      for version = (loop
+                        for tree in trees
+                        maximize (get-field :t-version tree))
+      for active = (let ((foo (select '("result-id") '(:integer) "preference" 
+                                      (format 
+                                       nil 
+                                       "parse-id == ~a && t-version == ~d" 
+                                       parse-id version) 
+                                      data)))
+                     (loop for bar in foo collect (get-field :result-id bar)))
+      for results = (get-field :results item)
+      initially 
+        #+:allegro (excl::delete-directory-and-files target)
+        #+:allegro (mkdir target)
+      do
+        (format 
+         t 
+         "kristina(): ~d active tree~p (of ~d) for item # ~d.~%" 
+         (length active) (length active) (length results) i-id)
 
-
-
-
+        (with-open-file (stream (format nil "~a/~d" target i-id)
+                         :direction :output
+                         :if-exists :supersede :if-does-not-exist :create)
+          (format 
+           stream
+           "[~d: ~d of ~d] `~a'~%~a~%"
+           i-id (length active) (length results) input #\page)
+          (loop
+              with *package* = (find-package lkb::*lkb-package*)
+              for i from 1
+              for result in results
+              for id = (get-field :result-id result)
+              for derivation = (when (member id active :test #'eql)
+                                 (get-field :derivation result))
+              for edge = (and derivation (reconstruct derivation))
+              for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
+              when dag do
+                (format stream "~s~%" derivation)
+                (lkb::display-dag1 dag 'lkb::tdl stream)
+                (format stream "~%")
+                (format stream "~c~%" #\page))
+          (loop
+              with *package* = (find-package lkb::*lkb-package*)
+              for result in results
+              for id = (get-field :result-id result)
+              for derivation = (unless (member id active :test #'eql)
+                                 (get-field :derivation result))
+              for edge = (and derivation (reconstruct derivation))
+              for dag = (and edge (lkb::tdfs-indef (lkb::edge-dag edge)))
+              when dag do
+                (format stream "~s~%" derivation)
+                (lkb::display-dag1 dag 'lkb::tdl stream)
+                (format stream "~%")
+                (format stream "~c~%" #\page)))))
