@@ -30,6 +30,9 @@ PRIMARY KEY (mwe_id)
 --- embedded code
 ---
 
+DELETE FROM qry WHERE fn ILIKE 'mwe-%'
+DELETE FROM qrya WHERE fn ILIKE 'mwe-%'
+
 INSERT INTO qry VALUES 
        ( 'mwe-retrieve-id-set', 0, 
          'SELECT mwe_id FROM mwe_type_all');

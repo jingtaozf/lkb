@@ -1,4 +1,26 @@
+---
+--- first, get rid of existing user schemas
+--- (user schema USER is renamed to tmpUSER,
+---  hence data is not _immediately_ lost)
+---
+
+CREATE OR REPLACE FUNCTION public.kill_namespace (text) RETURNS text AS
+'
+delete from public.meta where var=''kill_namespace'';
+insert into public.meta values (''kill_namespace'', (select count(*)
+FROM pg_catalog.pg_class c
+     LEFT JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+     where nspname= $1));
+delete from pg_catalog.pg_class where relnamespace=(select oid from pg_catalog.pg_namespace where nspname= ''tmp''|| $1);
+delete from pg_catalog.pg_namespace where nspname= ''tmp''|| $1;
+update pg_catalog.pg_namespace set nspname=''tmp''|| $1 where nspname= $1 ;
+select val from public.meta where var=''kill_namespace'' limit 1;
+' 
+LANGUAGE SQL;
+
+SELECT kill_namespace(val) FROM public.meta WHERE var='user';
 DELETE FROM public.meta WHERE var='user';
+--DROP FUNCTION public.kill_namespace(text);
 
 ---
 --- sql queries embedded in db
@@ -225,6 +247,26 @@ COPY revision_new TO $1 DELIMITERS '','' WITH NULL AS '''';
 SELECT count(*) FROM revision_new;
       ' );
 
+INSERT INTO qrya VALUES ( 'merge-defn', 0, 'text' );
+INSERT INTO qry VALUES 
+       ( 'merge-defn', 1, 
+       '
+CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL;
+COPY temp_defn FROM $0;
+
+CREATE TABLE temp_defn_new AS 
+	SELECT * FROM (SELECT mode, slot, field FROM temp_defn EXCEPT
+			SELECT mode, slot, field FROM defn) AS t1 
+			NATURAL JOIN temp_defn;
+INSERT INTO defn
+	SELECT * FROM temp_defn_new;
+DELETE FROM meta WHERE var=''tmp-merge-defn'';
+INSERT INTO meta VALUES (''tmp-merge-defn'',(SELECT count(*) FROM temp_defn_new));
+DROP TABLE temp_defn_new;
+DROP TABLE temp_defn;
+SELECT val FROM meta WHERE var=''tmp-merge-defn'';
+      ' );
+
 INSERT INTO qrya VALUES ( 'merge-multi-into-db', 0, 'text' );
 INSERT INTO qry VALUES 
        ( 'merge-multi-into-db', 1, 
@@ -237,13 +279,19 @@ INSERT INTO public.multi
        ' );
 
 INSERT INTO qrya VALUES ( 'dump-db', 0, 'text' );
+INSERT INTO qrya VALUES ( 'dump-db', 1, 'text' );
 INSERT INTO qry VALUES 
-       ( 'dump-db', 1, 
+       ( 'dump-db', 2, 
        '
 DELETE FROM temp;
 INSERT INTO temp
  (SELECT * FROM public.revision ORDER BY name, userid, version);
 COPY temp TO $0 DELIMITERS '','' WITH NULL AS '''';
+
+CREATE TABLE temp_defn AS 
+ SELECT * FROM defn ORDER BY mode,slot,field;
+COPY temp_defn TO $1;
+DROP TABLE temp_defn;
 ' );
 
 INSERT INTO qrya VALUES ( 'dump-scratch-db', 0, 'text' );

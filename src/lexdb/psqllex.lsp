@@ -63,7 +63,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "3.01")
+(defvar *psql-db-version* "3.02")
 (defvar *psql-port-default* nil)
 (defvar *psql-lexicon-parameters*) ;; define in GRAMMAR/globals.lsp
 
@@ -537,8 +537,8 @@
 	(unless (string>= (get-db-version lexicon) 
 			  *psql-db-version*)
 	  (if (string>= dbversion "3.00")
-	      (error "Your database structures (v. ~a) are out of date. Please see files update-~a.sql and above in dir lkb/src/psql" dbversion dbversion)
-	    (error "Your database structures (v. ~a) are too out of date. You must reinitialize the database. See lkb/src/psql/import.sql" dbversion dbversion)))
+	      (error "Your database structures (v. ~a) are out of date. Use PSQL tool to import file lkb/src/psql/import.sql. Ignore WARNING/ERROR messages. (NOTE: existing private schemas will be removed.)" dbversion dbversion)
+	    (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then import file lkb/src/psql/import.sql using PSQL tool, and finally merge dumped LexDB into new database." dbversion (dbname lexicon))))
 	(make-field-map-slot lexicon)
 	(retrieve-fn-defns lexicon)
 	
@@ -627,8 +627,12 @@
 	   (first rest))
 	  (t
 	   (error "too many arguments")))))
+    (if (and
+	 (> (- (length filename) 4) 0)
+	 (equal (subseq filename (- (length filename) 4)) ".csv"))
+	(setf filename (subseq filename 0 (- (length filename) 4))))
     (when filename
-      (format t "Merging file ~a into lexical database ~a" filename (dbname *psql-lexicon*))
+      (format t "~%Merging files ~a.* into lexical database ~a" filename (dbname *psql-lexicon*))
       (merge-into-psql-lexicon2 *psql-lexicon* filename)
       (lkb-beep))))
   
@@ -641,8 +645,12 @@
 	   (first rest))
 	  (t
 	   (error "too many arguments")))))
+    (if (and
+	 (> (- (length filename) 4) 0)
+	 (equal (subseq filename (- (length filename) 4)) ".csv"))
+	(setf filename (subseq filename 0 (- (length filename) 4))))
     (when filename
-      (format t "Dumping lexical database ~a to file ~a" (dbname *psql-lexicon*) filename)
+      (format t "Dumping lexical database ~a to files ~a.*" (dbname *psql-lexicon*) filename)
       (dump-psql-lexicon filename)
       (lkb-beep))))
   

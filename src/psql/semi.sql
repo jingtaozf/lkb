@@ -38,7 +38,7 @@ CREATE INDEX ddd_argkey on ddd (argkey);
 --copy arg from '/home/bmw20/tmp/semi.obj.arg';
 --copy ddd from '/home/bmw20/tmp/semi.obj.ddd';
 
-create view obj_semi as select lexid, pred, lex, pos, sense, carg, arg, 
+create or replace view obj_semi as select lexid, pred, lex, pos, sense, carg, arg, 
 	(select val from ddd where argkey=t1.argkey and feat='gen') as gen,
 	(select val from ddd where argkey=t1.argkey and feat='pn') as pn, 
 	(select val from ddd where argkey=t1.argkey and feat='aspect.perf') as aspect_perf, 
