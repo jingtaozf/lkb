@@ -223,33 +223,32 @@
       (if (eql loop-return :cancel) nil loop-return))))
 
 
-(defun ask-for-lisp-movable (title prompt-init-pairs 
-                             &optional expected-width choices)
+(defun ask-for-lisp-movable (title prompt-init-pairs &optional expected-width choices)
    ;; Procyon version called a special dialog item - no known equivalnet in MCL
    ;; so coerce the cdrs of the prompt-init pairs to strings and coerce the
    ;; results back to s-expressions
-  (with-package (:lkb)
-    (let ((new-prompt-init-pairs 
-           (mapcar #'(lambda (p-i-p)
-                       (cons (car p-i-p)
-                             (cond
-                                ((eq (cdr p-i-p) :check-box)
-                                  :check-box)
-                                ;; ugly way of passing in multiple choices - convert
-                                ;; to a typein-menu
-                                ((or choices (eq (cadr p-i-p) :typein-menu))
-                                  (cons :typein-menu
-                                     (mapcar #'(lambda (x) (format nil "~S" x))
-                                        (or choices (cddr p-i-p)))))
-                                (t (format nil "~A" (cdr p-i-p))))))
-              prompt-init-pairs))) 
-      (mapcar
-         #'(lambda (x)
-             (cond
-                ((symbolp x) x)
-                ((equal x "") nil)
-                (t (read-from-string x))))
-         (ask-for-strings-movable title new-prompt-init-pairs expected-width)))))
+   (let ((new-prompt-init-pairs 
+          (mapcar #'(lambda (p-i-p)
+                      (cons (car p-i-p)
+                            (cond
+                               ((eq (cdr p-i-p) :check-box)
+                                 :check-box)
+                               ;; ugly way of passing in multiple choices - convert
+                               ;; to a typein-menu
+                               ((or choices
+                                    (and (consp (cdr p-i-p)) (eq (cadr p-i-p) :typein-menu)))
+                                 (cons :typein-menu
+                                    (mapcar #'(lambda (x) (format nil "~S" x))
+                                       (or choices (cddr p-i-p)))))
+                               (t (format nil "~A" (cdr p-i-p))))))
+             prompt-init-pairs))) 
+     (mapcar
+        #'(lambda (x)
+            (cond
+               ((symbolp x) x)
+               ((equal x "") nil)
+               (t (read-from-string x))))
+        (ask-for-strings-movable title new-prompt-init-pairs expected-width))))
 
 
 ;;; Bernie kludgy code rewritten for MCL
