@@ -130,6 +130,7 @@
 
 (defun do-parse-tty (sentence)
   (when sentence
+    (setf *sentence* sentence)
     (close-existing-chart-windows)
     ;; this is sometimes called when not in tty mode
     ;; so make sure we remove unwanted charts
