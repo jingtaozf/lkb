@@ -159,12 +159,12 @@
     (labels ((dagify-variable (variable)
                (if (var-p variable)
                  (if (gethash variable cache)
-                   (format stream "<~(~a~)>" (var-string variable))
+                   (format stream "<~(~s~)>" (var-string variable))
                    (loop
                        initially
                          (format
                           stream
-                          "<~(~a~)>=~:[~;#D[~]~(~a~)"
+                          "<~(~s~)>=~:[~;#D[~]~(~a~)"
                           (var-string variable) 
                           (var-extra variable) (var-type variable))
                        for extra in (var-extra variable)
@@ -206,7 +206,7 @@
                     (format stream " ~a: " feature)
                     (dagify-variable value)
                   else do
-                    (format stream "~a: ~a" feature value))
+                    (format stream " ~a: ~a" feature value))
               (format stream "] ~a:" rest)
               (incf n)
             finally 

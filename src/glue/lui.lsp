@@ -276,12 +276,13 @@
         (format %lui-stream% "~a" (get-output-stream-string stream)))
   (force-output %lui-stream%))
 
-(defun lui-show-gen-result (&optional (edges *gen-record*)
-                                      (chart (copy-tree *gen-chart*)))
+(defun lui-show-gen-result (&optional edges chart)
 
   (declare (special *gen-record* *gen-chart* *generator-input*))
   
   (loop
+      with edges (or edges *gen-record*)
+      with chart (or chart (copy-tree *gen-chart*))
       with stream = (make-string-output-stream)
       initially 
         (lui-parameters :tree)
@@ -508,7 +509,7 @@
         (:chart (streamp %lui-stream%))
         #-:null
         (:realization (streamp %lui-stream%))
-        #+:null
+        #-:null
         (:mrs (streamp %lui-stream%))))))
 
 (defun copy-array (array)
