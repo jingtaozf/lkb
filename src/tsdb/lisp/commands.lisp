@@ -206,7 +206,7 @@
 
 (defun tsdb (&optional action argument 
              &key condition run skeleton load 
-                  (file nil filep) (reset nil resetp))
+                  (file nil filep) (reset nil resetp) count)
   
   (initialize-tsdb)
   (if (stringp action)
@@ -237,17 +237,17 @@
          (t
            (cond
             ((and filep resetp)
-             (initialize-cpus :classes argument 
-                              :file file :reset reset 
+             (initialize-cpus :classes argument :count count
+                              :file file :reset reset
                               :stream *tsdb-io* :prefix "  "))
             (filep 
-             (initialize-cpus :classes argument 
+             (initialize-cpus :classes argument :count count  
                               :file file :stream *tsdb-io* :prefix "  "))
             (resetp
-             (initialize-cpus :classes argument 
+             (initialize-cpus :classes argument :count count
                               :reset reset :stream *tsdb-io* :prefix "  "))
             (t
-             (initialize-cpus :classes argument 
+             (initialize-cpus :classes argument :count count 
                               :stream *tsdb-io* :prefix "  ")))))
          (format *tsdb-io* "~&~%"))
          
@@ -861,14 +861,16 @@
   (when (member command (list :all :cpus :cpu :cp))
     (format
      *tsdb-io*
-     "    - :cpus [ _keyword_ ] [ :file _string_ ] [ :reset _bool_ ]
+     "    - :cpus [ _name_ ] [ :file _string_ ] [ :reset _bool_ ] ~
+                  [ :count _n_ ]
 
         list or activate [incr tsdb()] cpus; _keyword_ is a class name (used
         in the cpu definition) that identifies which cliet(s) to start; write
         client output to file _string_ (defaults to `/tmp/pvm.debug.user' --- 
         where `user' is the active account name; `t' as the :file argument
         means client output goes to standard out); :reset defaults to `t' and
-        shuts down all existing cpus before initialization; 
+        shuts down all existing cpus before initialization; :count defaults to
+        `1' and determines the number of instances of the cpu to be started;
         no _keyword_ argument (or `:active') lists currently active clients;
         `:list' provides a summary of all available client definitions; and
         `:kill' shuts down all existing clients.~%~%")) 

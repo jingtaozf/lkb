@@ -445,15 +445,15 @@
                 (sort (copy-list all) 
                       #'< :key #'(lambda (foo) (get-field :parse-id foo)))))
             (rank-items sorted :gold gold :score score :condition condition 
-                        :sloppyp sloppyp :scorep scorep)))
+                        :sloppyp sloppyp :scorep scorep))
         
-        (when filter
-          (setf result 
-            (loop
-                for item in result
-                for foo = (funcall *statistics-result-filter* item)
-                when foo collect foo))
-        (setf (gethash key *tsdb-profile-cache*) result))))
+          (when filter
+            (setf result 
+              (loop
+                  for item in result
+                  for foo = (funcall *statistics-result-filter* item)
+                  when foo collect foo))))
+        (setf (gethash key *tsdb-profile-cache*) result)))
 
     (when meter 
       (meter :value (get-field :end meter))

@@ -28,6 +28,7 @@
 (defun initialize-cpus (&key cpus
                              (classes '(:all))
                              (reset t)
+                             count
                              block
                              (file (format 
                                     nil 
@@ -57,23 +58,26 @@
       for cpu in (or cpus *pvm-cpus*)
       for class = (let ((class (cpu-class cpu)))
                     (if (listp class) class (list class)))
-      for tid = (when (or allp (intersection class classes))
-                  (pvm_create (cpu-spawn cpu) (cpu-options cpu)
-                              :host (cpu-host cpu) 
-                              :architecture (cpu-architecture cpu)))
-      for task = (when (and (integerp tid) (> tid 0)) (tid-status tid))
-      when (and tid (null task))
       do
-        (format
-         stream
-         "~ainitialize-cpus(): `~a' communication error [~d].~%"
-         prefix (cpu-host cpu) tid)
-      when task
-      do
-        (push (make-client :tid tid :task task :cpu cpu :status :start)
-              *pvm-clients*)
-        (when block
-          (wait-for-clients :block tid :prefix prefix :stream stream)))
+        (loop
+            for i from 1 to (or count 1)
+            for tid = (when (or allp (intersection class classes))
+                        (pvm_create (cpu-spawn cpu) (cpu-options cpu)
+                                    :host (cpu-host cpu) 
+                                    :architecture (cpu-architecture cpu)))
+            for task = (when (and (integerp tid) (> tid 0)) (tid-status tid))
+            when (and tid (null task))
+            do
+              (format
+               stream
+               "~ainitialize-cpus(): `~a' communication error [~d].~%"
+               prefix (cpu-host cpu) tid)
+            when task
+            do
+              (push (make-client :tid tid :task task :cpu cpu :status :start)
+                    *pvm-clients*)
+              (when block
+                (wait-for-clients :block tid :prefix prefix :stream stream))))
   ;;
   ;; ... then, wait for them to register (start talking) with us.
   ;;
