@@ -28,7 +28,12 @@
     (cl-user::set-up-lkb-interaction :big)
     #+tty nil
     :components
-    ((:module "for"
+    ((:module "version"
+              :source-pathname ""
+	      :binary-pathname ""
+	      :components
+	      ((:file "version")))
+     (:module "for"
               :source-pathname "mrs"
 	      :binary-pathname "mrs"
 	      :components
@@ -67,6 +72,7 @@
                (:file "leaf")       ; leaf types - for efficiency not
                                     ; expanded at load time
 	       (:file "lex")        ; lexical structures, also templates etc
+	       #+plob (:file "plex"); lexical database 
                (:file "rules")      ; grammar and lexical rules
 	       (:file "parse")      ; chart parser
                (:file "generate")   ; chart generator (requires mrs)
