@@ -3,6 +3,8 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;; modifications by bmw (aug-03)
+;;; - lexicon loading code
+;;; - db scratch space
 ;;; - fixed code broken by *lexicon*-related changes
 ;;; - default types of embedded sql fn args may be overridden
 
@@ -46,7 +48,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "2.0")
+(defvar *psql-db-version* "2.1")
 (defvar *psql-port-default* nil)
 
 (defvar *tmp-lexicon* nil)
@@ -55,7 +57,7 @@
 (defvar *export-counter*) ;;; see lexport.lsp
 (defvar *export-timestamp*) ;;; see lexport.lsp
 
-(defvar *current-source* nil)
+(defvar *current-source* "?")
 (defvar *current-user* nil)
 (defvar *current-lang* nil)
 (defvar *current-country* nil)
@@ -64,11 +66,6 @@
 (defun open-psql-lex (&rest rest)
   (apply 'initialize-psql-lexicon rest))
 
-					;: set up connection
-					;: make-field-map-slot
-					;: replace existing *psql-lexicon*
-					;: clear lexical entries of *lexicon*
-					;: link to lexicon
 (defun initialize-psql-lexicon (&key
                                 (db "lingo")
                                 (host "localhost")
@@ -77,37 +74,16 @@
 					 (typep *psql-lexicon* 'psql-database)
 					 (fields-tb *psql-lexicon*)) 
 					"erg")))
-  
-  (format t "~%Connecting to lexical database ~a" db)
-  (let* ((lexicon (make-instance 'psql-lex-database 
+    (let* ((lexicon (make-instance 'psql-lex-database 
                     :dbname db :host host
                     :lex-tb table ;;unused 
-		    :fields-tb table))
-	 (connection (connect lexicon)))
-    (if *tmp-lexicon* (clear-lex *tmp-lexicon*))
-    (setf *tmp-lexicon* lexicon)
-    (cond
-     (connection
-      (unless (string>= (server-version lexicon) "7.3")
-	(format *trace-output* 
-		"~%WARNING: PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." (server-version lexicon)))
-      (unless (string>= (get-db-version lexicon) *psql-db-version*)
-	(error "Your database structures (v. ~a) are out of date. See the latest script import.sql." (get-db-version lexicon)))
-      (make-field-map-slot lexicon)
-      (retrieve-fn-defns lexicon)
-      (when *psql-lexicon* (clear-lex *psql-lexicon*))
-      (setf *psql-lexicon* lexicon)
-      (fn-get-records lexicon 
-		      ''set-current-view 
-		      (get-filter *psql-lexicon*)
-		      )
-      (fn-get-records lexicon ''initialize-current-grammar)
-	(setf *lexicon* *psql-lexicon*))
-     (t
-      (error 
-       "unable to connect to ~s: ~a"
-       (pg:db (connection lexicon)) (pg:error-message (connection lexicon)))))
-    (setf *tmp-lexicon* nil)
+		    :fields-tb table)))
+    (initialize-lex lexicon)
+    (when *psql-lexicon* 
+      (mapcar #'(lambda (x) (link lexicon x))
+	      (part-of *psql-lexicon*))
+      (clear-lex *psql-lexicon*))
+    (setf *psql-lexicon* lexicon)
     lexicon))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -120,9 +96,7 @@
    (host :initform "localhost" :accessor host :initarg :host)
    (user :initform (sys:user-name) :accessor user :initarg :user)
    (password :initform "" :accessor password :initarg :password)
-   (port :initform (num-2-str *psql-port-default*) :accessor port :initarg :port)
-   
-   ))
+   (port :initform (num-2-str *psql-port-default*) :accessor port :initarg :port)))
 
 (defclass external-lex-database (lex-database)
   (
@@ -184,8 +158,8 @@
 ;;; --- sql-database methods
 ;;;
 
-(defmethod clear-lex ((lexicon sql-database) &optional no-delete)
-  (declare (ignore no-delete))
+(defmethod clear-lex ((lexicon sql-database) &rest rest)
+  (declare (ignore rest))
   (setf (dbname lexicon) nil)
   (setf (host lexicon) nil)
   (setf (user lexicon) nil)
@@ -196,12 +170,16 @@
 ;;; --- psql-database methods
 ;;;
 
-(defmethod load-lexicon ((lexicon psql-database))
-  (unless (typep (catch 'abort (initialize-psql-lexicon)) 'psql-database)
+(defmethod load-lex ((lexicon psql-database) &rest rest)
+  (declare (ignore rest))
+  (cond
+   ((typep (catch 'abort (setf lexicon (initialize-psql-lexicon))) 'psql-database)
+    lexicon)
+   (t
     (format t "~%... attempting to fall back to .tdl lexicon")
-    (setf *lexicon* (make-instance 'cdb-lex-database))
-    (load-lexicon *lexicon*)
-    ))
+    (setf lexicon (make-instance 'cdb-lex-database))
+    (load-cached-lexicon-if-available lexicon)
+    lexicon)))
 
 (defmethod connect ((lexicon psql-database)) 
   (let ((user *current-user*))
@@ -411,8 +389,7 @@
    ((null symb) "")
    ((numberp symb) (num-2-str symb))
    ((stringp symb) symb)
-   (t (string-downcase (string symb)))
-   ))
+   (t (string-downcase (string symb)))))
     
 
 (defun num-2-str (num)
@@ -450,8 +427,8 @@
   ;(error "collect-expanded-lex-ids(): invalid method on PostGreSQL lexicon")
   )
 
-(defmethod clear-lex ((lexicon external-lex-database) &optional no-delete)
-  (declare (ignore no-delete))
+(defmethod clear-lex ((lexicon external-lex-database) &key no-delete psorts-temp-file)
+  (declare (ignore no-delete psorts-temp-file))
   (setf (lex-tb lexicon) nil) ;; unused
   (setf (fields-map lexicon) nil)
   (setf (fields-tb lexicon) nil))
@@ -624,6 +601,11 @@
    (t
     (make-u-value :type x))))
 
+(defmethod set-lexical-entry ((lexicon psql-lex-database) orth-string lex-id new-entry)
+  (declare (ignore orth-string))
+  (declare (ignore lex-id))
+  (to-db-scratch new-entry lexicon))
+  
 ;;; redo later...
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
@@ -640,19 +622,66 @@
                               (fn lexicon 'update-entry (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le))
                  )))))
 
-(defmethod clear-lex ((lexicon psql-database) &optional no-delete)
-  (declare (ignore no-delete))
+(defmethod set-lex-entry-scratch ((lexicon psql-lex-database) (psql-le psql-lex-entry))
+  ;(set-version psql-le lexicon) 
+  ;(if *export-timestamp* (setf (modstamp psql-le) *export-timestamp*))
+  (let* ((symb-list 
+	  (mapcan 
+	   #'(lambda (x) (unless (null (slot-value psql-le x)) (list x))) 
+	   '(type orthography orthkey keyrel altkey alt2key keytag compkey ocompkey)))) 
+    (run-query 
+     lexicon 
+     (make-instance 'sql-query
+       :sql-string (format nil
+			   (fn lexicon 'update-entry-scratch (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le))
+			   )))))
+
+(defmethod clear-scratch ((lexicon psql-database))
+  (fn-get-records lexicon ''clear-scratch))
+
+(defmethod clear-lex ((lexicon psql-database) &key no-delete psorts-temp-file)
+  (declare (ignore no-delete psorts-temp-file))
   (disconnect lexicon))
 
-(defmethod read-cached-lex ((lexicon psql-lex-database) filenames)
-  (declare (ignore filenames))
-  ;(error "read-cached-lex(): invalid method on PostGreSQL lexicon")
-  )
+(defmethod initialize-lex ((lexicon psql-database) &key no-delete psorts-temp-file)
+  (declare (ignore no-delete psorts-temp-file))
+  (clear-lex lexicon)
+  (format t "~%Connecting to lexical database ~a" (dbname lexicon))
+    (let* ((connection (connect lexicon)))
+      (if *tmp-lexicon* (clear-lex *tmp-lexicon*))
+      (setf *tmp-lexicon* lexicon)
+      (format t "~%Initializing lexical database ~a" (dbname lexicon))
+      (cond
+       (connection
+	(unless (string>= (server-version lexicon) "7.3")
+	  (format *trace-output* 
+		  "~%WARNING: PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." (server-version lexicon)))
+	(unless (string>= (get-db-version lexicon) *psql-db-version*)
+	  (error "Your database structures (v. ~a) are out of date. See the latest script import.sql." (get-db-version lexicon)))
+	(make-field-map-slot lexicon)
+	(format t ".")
+	(retrieve-fn-defns lexicon)
+	(clear-scratch lexicon)
+	(format t ".")
+	(fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
+	(format t ".")
+	)
+       (t
+	(error 
+	 "unable to connect to ~s: ~a"
+	 (pg:db (connection lexicon)) (pg:error-message (connection lexicon)))))
+      (setf *tmp-lexicon* nil)
+      lexicon))
+  
+;(defmethod read-cached-lex ((lexicon psql-lex-database) filenames)
+;  (declare (ignore filenames))
+;  (error "read-cached-lex(): invalid method on PostGreSQL lexicon")
+;  )
 
-(defmethod unexpand-psort ((lexicon psql-lex-database) id)
-  (declare (ignore id))
-  ;(error "unexpand-psort(): invalid method on PostGreSQL lexicon")
-  )
+;(defmethod unexpand-psort ((lexicon psql-lex-database) id)
+;  (declare (ignore id))
+;  (error "unexpand-psort(): invalid method on PostGreSQL lexicon")
+;  )
 
 ;;; hack (psql-lex-database does not use temporary lexicon files)
 (defmethod delete-temporary-lexicon-files ((lexicon psql-lex-database))
@@ -698,7 +727,9 @@
 	((equal type "string-diff-fs")
 	 (expand-string-list-to-fs-diff-list (orth-string-to-str-list value) :path path))
 	((equal type "list") (unless (equal value "")
-			       (read-from-string value)))
+			       ;;(read-from-string value) ;;this behaves strangely!
+			       (str-2-symb value)
+			       ))
 	(t (error "unhandled type during database access"))))
 
 ;;; eg. ("w1" "w2") -> ((FIRST "w1") (REST FIRST "w2") (REST REST *NULL*)) 
@@ -757,7 +788,7 @@
 (defmethod get-records ((lexicon psql-lex-database) sql-string)
   (make-column-map-record 
    (run-query 
-    *psql-lexicon* 
+    lexicon 
     (make-instance 'sql-query :sql-string sql-string))))
 
 (defmethod fn-get-records ((lexicon psql-lex-database) fn-name &rest rest)
@@ -870,7 +901,6 @@
 	 (format-cmd (append '(format nil) (car tmp)))
 	 (args (cdr tmp))
 	 (fn-defn (list 'defun fn-name args format-cmd)))
-    (print fn-defn)
     (eval fn-defn)))
 
 (defun new-fn-name (str)
@@ -987,14 +1017,15 @@
                          (cons "New filter?" (get-filter lexicon)))))
     (when filter
       (if (catch 'pg:sql-error 
-            (fn-get-records lexicon ''set-current-view filter)
+            (fn-get-records lexicon ''initialize-current-grammar filter)
             )
 	  (set-filter lexicon))
       )))
 
 (defun set-filter-psql-lexicon nil
   (set-filter *psql-lexicon*)
-  (initialize-psql-lexicon))
+  ;(initialize-psql-lexicon)
+  )
 
 (defun sql-embedded-text (str)
   (cond
@@ -1008,5 +1039,5 @@
 ;;;
 ;;; set (uninitialized) lexicon
 ;;;
-(setf *lexicon* (make-instance 'psql-lex-database))
+(setf *psql-lexicon* (make-instance 'psql-lex-database))
 
