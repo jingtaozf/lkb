@@ -1,27 +1,37 @@
 #!/bin/bash
 
-ROOT=/eo/e8nb/oe/www/src
-TSDBHOME=/lingo/oe/tsdb/home
-TARGET=/lingo/attic/oe
-TSDB=/user/oe/lbin/tsdb
-
-if [ ! -d ${TARGET} ]; then
-  mkdir $TARGET
+if [ -z "${DELPHINHOME}" ]; then
+  DELPHINHOME=${HOME}/delphin
 fi
+TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home
+TARGET=${DELPHINHOME}/tmp
+TSDB=${DELPHINHOME}/lkb/bin/linux/tsdb
+GRAMMAR=${DELPHINHOME}/erg.jun-04
 
-log=$(echo ${1} | sed "s@/@.@g")
+[ -d ${TARGET} ] || mkdir $TARGET;
+[ -d ${TSDBHOME}/log ] || mkdir ${TSDBHOME}/log;
+
+log="$(echo ${1} | sed "s@/@.@g")"
 
 if [ ! -z "${2}" ]; then
   extra="${2}";
 fi
+
+increment=200;
+if echo ${1} | egrep "ecoc|ecos|ecpa|ecpr" > /dev/null; then
+  increment=100000;
+fi
+
+unset DISPLAY
 
 {
   low=0;
   DB=${TSDBHOME}/${1}
   all=$(${TSDB} -home ${DB} -query 'select i-id from item' \
         | sort -n | tail -1);
+
   while [ ${low} -le ${all} ]; do
-    high=$[${low} + 100000];
+    high=$[${low} + ${increment}];
     echo
     echo "exporting \`${1}' [$low -- $high]";
     echo
@@ -31,29 +41,33 @@ fi
     fi
     condition="${condition} && (readings >= 1 && t-active == 1)";
     low=${high};
+
     ( \
+      echo "(system:resize-areas :old (* 128 1024 1024) "; \
+      echo "                     :new (* 256 1024 1024))"; \
       echo "(setf (sys:gsgc-switch :print) t)"; \
       echo "(setf (sys:gsgc-switch :stats) t)"; \
       echo "(setf (sys:gsgc-switch :verbose) t)"; \
       echo "(setf (sys:gsgc-parameter :auto-step) nil)"; \
-      echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
-      echo "(pushnew :lkb *features*)"; \
-      echo "(pushnew :mrs *features*)"; \
       echo "(setf (system:getenv \"DISPLAY\") nil)"; \
+      echo "(load \"${DELPHINHOME}/lkb/src/general/loadup.lisp\")"; \
+      echo "(pushnew :lkb *features*)"; \
       echo "(compile-system \"tsdb\")"; \
+
+      echo "(load \"${DELPHINHOME}/lkb/src/general/itsdb.lisp\")"; \
+
       echo "(setf mrs::*eds-include-quantifiers-p* nil)"; \
       echo "(setf mrs::*eds-include-vacuous-relations-p* nil)"; \
-#      echo "(push 'lkb::discourse_rel mrs::*eds-bleached-relations*)"; \
       echo "(setf tsdb::*redwoods-export-values* :all)"; \
-#      echo "(setf tsdb::*redwoods-export-values* '(:dependencies))"; \
       echo "(setf tsdb::*redwoods-thinning-export-p* nil)"; \
-#      echo "(read-script-file-aux \"${ROOT}/erg.oct-02/lkb/script\")"; \
-      echo "(read-script-file-aux \"/lingo/oe/src/grammars/feb-03/lkb/script\")"; \
-#      echo "(read-script-file-aux \"/lingo/oe/src/grammars/erg/lkb/script\")"; \
+      echo "(read-script-file-aux \"${GRAMMAR}/lkb/script\")"; \
+
+      echo "(excl:gc :tenure) (excl:gc t) (excl:gc)"; \
+
       echo "(tsdb:tsdb :home \"$TSDBHOME\")"; \
       echo "(tsdb::export-trees \"${1}\" :path \"${TARGET}\""; \
       echo "  :condition \"${condition}\")"; \
       echo "(excl:exit)"; \
-    ) | ( cd /lingo/local/acl; ./alisp -I bclim.dxl -qq && touch ${ROOT}/.yes; )
+    ) | ${DELPHINHOME}/bin/lkb -qq
   done
-} 2>&1 | tee ${TSDBHOME}/${log}.$$.log
+} 2>&1 | tee ${TSDBHOME}/log/${log}.$$.log
