@@ -142,8 +142,9 @@
 (defparameter %edge-allowance% 0)
 
 (defun next-edge (&optional type)
-  #+:null
-  (when (eq type :unpack) (incf %edge-allowance%))
+  (when (eq type :unpack)
+    (when (> (incf %edge-allowance%) 50000)
+      (error "edge allowance overrun (~a)" *edge-id*)))
   (when (> *edge-id* (+ *maximum-number-of-edges* %edge-allowance%))
     (error "~%Probable runaway rule: parse/generate aborted 
              (see documentation of *maximum-number-of-edges*)"))
