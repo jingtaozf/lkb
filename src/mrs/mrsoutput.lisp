@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.12  1998/10/06 03:02:59  aac
+;; cheap and cheerful leqs for fragments
+;;
 ;; Revision 1.11  1998/09/10 02:24:19  aac
 ;; bug fixes
 ;;
@@ -199,9 +202,9 @@
                  :handel (create-variable (if (mrs-language '(english))
                                               top-h-fs
                                             handel-fs)
-                                          variable-generator)
+                                          variable-generator *handle-type*)
                  :top-h (create-variable top-h-fs
-                                         variable-generator)
+                                         variable-generator *handle-type*)
                  :index (if (is-valid-fs event-fs)
                             (create-variable event-fs
                                              variable-generator))
@@ -234,7 +237,10 @@
 ;;; WK: the extras for the VIT simply collect the feature structures associated
 ;;; with the INDEXes for VIT conversion
 ;;; this works presently nice for the German grammar but not English
-(defun create-variable (fs gen)
+(defun create-variable (fs gen &optional type)
+  ;; AAC put in an optional type feature to allow for
+  ;; the case where PAGE doesn't type the top-handel
+  ;; as a handel
   (when (is-valid-fs fs)
     #-pagelite
     (SETQ fs (deref fs))
@@ -243,7 +249,7 @@
         (let* ((idletter (determine-variable-type fs))
                (idnumber (funcall gen))
                (variable-name (format nil "~A~A" idletter idnumber))
-               (var-type (fs-type fs))
+               (var-type (or type (fs-type fs)))
                (extra (create-index-property-list fs))
 ;;; create-index-property list is defived
 ;;; differently for LKB and PAGE versions - abbreviations are
