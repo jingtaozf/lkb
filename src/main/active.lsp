@@ -750,7 +750,7 @@
        context begin end label id children open forwardp argument)))
   (when argument (print-trace nil argument)))
 
-(defun count-nodes (edge &key (mark (gensym)) ignorep packingp)
+(defun count-nodes (edge &key (mark (gensym)) ignorep packingp chartp)
   (let* ((current (cond
                    (ignorep
                     (setf (edge-dag-restricted edge) mark)
@@ -758,22 +758,24 @@
                    ((eq (edge-dag-restricted edge) mark) 0)
                    (t
                     (setf (edge-dag-restricted edge) mark)
-                    1)))
+                    (if chartp
+                      (if (find-edge-given-id (edge-id edge)) 1 0)
+                      1))))
          (children (loop
                        for edge in (edge-children edge)
-                       sum (count-nodes edge :mark mark 
+                       sum (count-nodes edge :mark mark :chartp chartp
                                         :packingp packingp)))
          (packings (if packingp
                      (+ (loop
                             for edge in (edge-packed edge)
                             sum (count-nodes edge :mark mark 
                                              :packingp packingp
-                                             :ignorep t))
+                                             :ignorep t :chartp chartp))
                         (loop
                             for edge in (edge-equivalent edge)
                             sum (count-nodes edge :mark mark 
                                              :packingp packingp
-                                             :ignorep t)))
+                                             :ignorep t :chartp chartp)))
                      0)))
     (+ current children packings)))
 
@@ -893,7 +895,7 @@
           (do-parse-tty "so we will have an evening there to go over things or relax.")))
   (format
    t
-   "~&~d trees; (=~d, >~d, <~d) packings; ~d readings; ~d edges~%"
+   "~&~d trees; (=~d, >~d, <~d) packings; ~d readings; ~d [~d] edges~%"
    (length *parse-record*)
    (packings-equivalent *packings*)
    (packings-proactive *packings*)
@@ -904,7 +906,8 @@
           for edge in *parse-record*
           sum (length (unpack-edge! nil edge))))
      (length *parse-record*))
-   (tsdb::get-field :pedges (summarize-chart))))
+   (tsdb::get-field :pedges (summarize-chart))
+   (count-nodes (first *parse-record*) :packingp *chart-packing-p* :chartp t)))
 
 #+:test
 (let* ((results (select '("i-id" "i-input" "readings" "tcpu" "tgc" "comment")

@@ -186,22 +186,21 @@
 ;;;                                                       (7-sep-99  -  oe)
 ;;;
 
-(pushnew :recycling *features*)
-
 (eval-when (:compile-toplevel :load-toplevel :execute)
-(defstruct pool
-  (size 0 :type fixnum)
-  (position 0 :type fixnum)
-  (constructor #'(lambda ()) :type function)
-  (data #(nil) :type simple-vector)
-  (garbage 0 :type fixnum))
-)
+  (defstruct pool
+    (size 0 :type fixnum)
+    (position 0 :type fixnum)
+    (constructor #'(lambda ()) :type function)
+    (data #(nil) :type simple-vector)
+    (garbage 0 :type fixnum)))
 
+#+:pooling
 (defmacro with-verified-pool ((pool) &body body)
    `(locally (declare ,@(if (symbolp pool) `((type pool ,pool)))
                       (optimize (speed 3) (safety 0) (space 0)))
        ,@body))
 
+#+:pooling
 (defun create-pool (size constructor)
   (#+allegro excl:tenuring #-allegro progn
       (let ((pool (make-pool :size size :constructor constructor))
@@ -214,10 +213,12 @@
         (setf (pool-data pool) data)
         pool)))
 
+#+:pooling
 (defparameter *dag-pool* (create-pool 
                           *dag-pool-size*
                           #'(lambda () (make-safe-dag-x nil nil))))
 
+#+:pooling
 (defun reset-pool (pool &key forcep compressp)
   (when (or forcep compressp)
     (loop
@@ -232,12 +233,14 @@
   (setf (pool-garbage pool) 0))
   
 
+#+:pooling
 (defun reset-pools (&key forcep compressp)
   (loop
       for pool in (list *dag-pool*)
       do (reset-pool pool :forcep forcep :compressp compressp)))
 
 
+#+:pooling
 (defmacro pool-next (pool)
    `(let* ((position (pool-position ,pool))
            (next
@@ -268,11 +271,15 @@
   ;; True during parsing and generation - assumes that the same derived
   ;; constituent can't be used more than once in a single analysis
   `(if *safe-not-to-copy-p*
+      #+:pooling 
       (if *dag-recycling-p*
-         (make-safe-recycled-dag-x ,type ,arcs)
-         (make-safe-dag-x ,type ,arcs))
+        (make-safe-recycled-dag-x ,type ,arcs)
+        (make-safe-dag-x ,type ,arcs))
+      #-:pooling
+      (make-safe-dag-x ,type ,arcs)
       (make-dag-x ,type ,arcs)))
 
+#+:pooling 
 (defun make-safe-recycled-dag-x (type arcs)
   (let* ((pool *dag-pool*)
          (new (pool-next pool)))

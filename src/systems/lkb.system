@@ -33,11 +33,15 @@
 ;;; what each feature does); with features added in individual files, we still
 ;;; need to worry about load() order.
 ;;;
+;;;   - :ltemplates -- lexical templates: see `src/main/ltemplates.lsp';
+;;;   - :pooling -- enable recycling of high-frequency objects (currently dags);
 ;;;   - :packing -- enable code for chart packing under (partial) subsumption;
 ;;; 
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
+  (pushnew :ltemplates *features*)
+  (pushnew :pooling *features*)
   (pushnew :packing *features*))
 
 

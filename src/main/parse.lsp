@@ -1250,6 +1250,7 @@ Setting *first-only-p* to nil")
                     #+:gdebug
                     progn
                        (progn
+                         #+:pooling
                          (reset-pools #+:gdebug t)
                          (parse user-input nil)
                          (setf *sentence* sentence)
