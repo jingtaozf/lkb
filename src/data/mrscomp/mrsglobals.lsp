@@ -46,3 +46,36 @@ order in an MRS")
 (defparameter *bv-feature* (vsym "BV"))
 
 (defparameter *scope-feat* (vsym "BODY"))
+
+(defparameter *rule-algebra-table*
+    '((head-complement-rule-0  1 nil)
+      (head-complement-rule-1  1 (COMPS1))
+      (head-complement-rule-2  1 (COMPS1 COMPS2) (2 3))
+      (head-specifier-rule  2 (SPR1))
+      (determiner-head-rule  1 (SPEC))
+      (head-modifier-rule 2 (MOD))
+      (modifier-head-rule 1 (MOD))
+      (noun-modifier-rule 1 nil)
+      (bare-pl-noun-rule 0 (DTR1))
+      (passive-rule 1 nil) ; modifies slots
+      (inversion-rule 1 nil)		; ditto
+      (coord-rule 1 nil)		; wrong ...
+      (head-gap-rule-1 1 nil) ; modifies slots
+      (head-gap-rule-2 1 (COMP2))		; modifies slots
+      (head-gap-rule-3 1 (COMP1))	; modifies slots
+      (head-filler-rule 2 (GAP))))
+      
+;;;  rule-name   semhead slot
+
+;;; parameters for slot detection
+
+(defparameter *algebra-ignore-feats* '(lkb::arg-s lkb::kcmp))
+
+(defparameter *algebra-ignore-paths*
+    '((lkb::args) (lkb::c-cont)
+      (lkb::sem)
+      (lkb::synsem lkb::local lkb::cont)))
+
+;;; following is for naming of slots
+(defparameter *non-slot-features* '(lkb::SEM lkb::cont lkb::HOOK lkb::SYNSEM 
+				    lkb::LOCAL lkb::cat lkb::val lkb::head))
