@@ -142,9 +142,13 @@
           (when default-gc-after-hook
             (funcall default-gc-after-hook 
                      global scavenged tenured foo bar)))))
-  (setf excl:*global-gc-behavior* nil))
-
-
-
-
-
+  (setf excl:*global-gc-behavior* nil)
+  ;;
+  ;; ensure that podium(1) process (talking to wish(1)) terminates gracefully;
+  ;; apparently, the EOF that wish(1) should see once the lisp stream is gone,
+  ;; is insufficient to make wish(1) exit.
+  ;;
+  (excl:advise mp:process-kill :before nil nil 
+               (when (and *tsdb-wish-process*
+                          (eq (first excl:arglist) *tsdb-wish-process*))
+                 (shutdown-podium))))
