@@ -21,7 +21,7 @@
 ;;;                  Type { Avm-def | Subtype-def} Status .
 ;;; Type  -> identifier
 ;;; Subtype-def ->  :< type 
-;;; Avm-def -> := Conjunction
+;;; Avm-def -> := Conjunction | Comment Conjunction
 ;;; Conjunction -> Term { & Term } *
 ;;; Term -> Type | Feature-term | Diff-list | List | Coreference | Templ-call
 ;;; Feature-term -> [] | [ Attr-val {, Attr-val}* ]
@@ -197,7 +197,7 @@
 ;;;             Type { Avm-def | Subtype-def} Status .
 ;;; Type  -> identifier
 ;;; Subtype-def ->  :< type 
-;;; Avm-def -> := Conjunction
+;;; Avm-def -> := Conjunction | Comment Conjunction
   (let* (#+:allegro
          (position (1+ (file-position istream)))
 	 (name (lkb-read istream nil))
@@ -245,49 +245,117 @@
 (defparameter *tdl-default-coreference-table* (make-hash-table))
 
 (defun read-tdl-avm-def (istream name &optional augment)
-  ;;; Avm-def -> := Conjunction
+  ;;; Avm-def -> := Parents Conjunction | Parents Comment Conjunction |
+  ;;;               Parents | Parents Comment
   ;;; for the lkb type files we need to distinguish between
   ;;; the list of parents i.e. single types
   ;;; which are listed in the conjunction, and a constraint,
   ;;; expressed as a list of unifications
-  (clrhash *tdl-coreference-table*)
-  (clrhash *tdl-default-coreference-table*)
-  (let ((parents nil)
-        (constraint nil)
-        (def-alist nil))
+    (clrhash *tdl-coreference-table*)
+    (clrhash *tdl-default-coreference-table*)
+    (let ((parents nil)
+	  (comment nil)
+	  (constraint nil)
+	  (def-alist nil))
+      (setf parents (read-tdl-type-parents istream name))
+      ;;; the above absorbs the final & if it's there
+      (let ((next-char (peek-char t istream nil 'eof)))
+	    (when (eql next-char #\")
+	      (setf comment (read-tdl-type-comment istream name))))
+      (let ((next-char (peek-char t istream nil 'eof)))
+	    (unless (or (eql next-char #\.) (eql next-char #\,))
       ;;; read-tdl-conjunction returns a list of path constraints.
       ;;; In some cases the element may be nil.  If there is a
       ;;; path constraint with an empty path, for the special case of
       ;;; types we want to extract the type and put it on the parents
-      ;;; list
-      (loop for unif in (read-tdl-conjunction istream name nil nil)
-           do
-           (cond ((unification-p unif)
-                  (if (null (path-typed-feature-list (unification-lhs unif)))
-                      (push (u-value-type (unification-rhs unif)) parents)
-                    (push unif constraint)))
-                 ((consp unif)
-                  (let ((entry (assoc (car unif) def-alist)))
-                    (if entry
-                        (push (cadr unif) (cdr entry))
-                      (push unif def-alist))))
-                 (t (error "~%Program error: unexpected unif in ~A" name))))
-      (dolist (coref (make-tdl-coreference-conditions istream
-                      *tdl-coreference-table* nil))
-        (push coref constraint))
-      (dolist (coref (make-tdl-coreference-conditions istream 
-                      *tdl-default-coreference-table* t))
-        (let ((entry (assoc (car coref) def-alist)))
-          (if entry
-              (push (cadr coref) (cdr entry))
-            (push coref def-alist))))
+      ;;; list.
+      ;;; AAC - 2004 - this behaviour isn't strictly speaking needed given
+      ;;; the modifications above, but I've left the code in place
+      ;;; in case anyone has mixed parents and constraint specs 
+		(loop for unif in (read-tdl-conjunction istream name nil nil)
+		    do
+		      (cond ((unification-p unif)		   
+			     (if (null (path-typed-feature-list (unification-lhs unif)))
+				 (push (u-value-type (unification-rhs unif)) parents)
+			       (push unif constraint)))
+			    ((consp unif)
+			     (let ((entry (assoc (car unif) def-alist)))
+			       (if entry
+				   (push (cadr unif) (cdr entry))
+				 (push unif def-alist))))
+			    (t (error "~%Program error: unexpected unif in ~A" name))))
+		(dolist (coref (make-tdl-coreference-conditions 
+				istream
+				*tdl-coreference-table* nil))
+		  (push coref constraint))
+		(dolist (coref (make-tdl-coreference-conditions 
+				istream 
+				*tdl-default-coreference-table* t))
+		  (let ((entry (assoc (car coref) def-alist)))
+		    (if entry
+			(push (cadr coref) (cdr entry))
+		      (push coref def-alist)))))
       (if augment
-        (unless
-          (amend-type-from-file name parents constraint def-alist nil)
-          (setf *amend-error* t))
-        (add-type-from-file name parents constraint def-alist nil))
+	  (unless
+	      (amend-type-from-file name parents constraint def-alist comment)
+	    (setf *amend-error* t))
+        (add-type-from-file name parents constraint def-alist comment))
       (when (eql (peek-char t istream nil 'eof) #\,)
-          (read-tdl-status-info istream name))))
+	(read-tdl-status-info istream name)))))
+
+(defun read-tdl-type-parents (istream name)
+  ;;; Type & | Type (& Type)* & | Type | Type (& Type)*
+  (let ((parents nil))
+    (loop
+      (let ((next-char (peek-char t istream nil 'eof)))
+	;; read a type
+	(cond ((eql next-char 'eof) 
+	       (lkb-read-cerror istream
+				"Unexpected eof when reading ~A" name)
+	       (ignore-rest-of-entry istream name)
+	       (return))
+	      (t (push (lkb-read istream nil)
+		       parents)))
+	;; check for & and get rid of it
+	(let ((next-char2 (peek-char t istream nil 'eof)))
+	  (unless (eql next-char2 #\&)
+	    (return))
+	  (read-char istream)
+	  ;; look to see what's next - return if it isn't the start
+	  ;; of a type
+	  (let ((next-char3 (peek-char t istream nil 'eof)))
+	      (when (member next-char3 '(#\" #\[ #\/ #\. #\< #\# #\'))
+		(return))
+	      (when (eql next-char 'eof)
+		(lkb-read-cerror istream
+				 "Unexpected eof when reading ~A" name)
+		(ignore-rest-of-entry istream name)
+		(return))))))
+    parents))
+    
+    
+
+(defun read-tdl-type-comment (istream name)
+  ;;; enclosed in ""s - called when we've just peeked a "
+  (let ((start-position (file-position istream))
+	(comment-res nil))
+    ;; record this in case the comment isn't closed
+    (read-char istream)
+    (loop 
+      (let ((new-char (peek-char nil istream nil 'eof)))
+	(cond ((eql new-char 'eof)
+	       (lkb-read-cerror 
+		istream 
+		"File ended in middle of type comment for ~A (comment start at ~A)" 
+		name start-position)
+	       (return))
+	      ((eql new-char #\")
+	       (read-char istream)
+	       (return))
+	      (t (push (read-char istream) comment-res)))))
+    (coerce (nreverse comment-res) 'string)))
+
+
 
 (defun read-tdl-status-info (istream name)
   ;;; 
