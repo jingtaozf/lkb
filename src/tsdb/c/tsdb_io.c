@@ -207,7 +207,7 @@ FILE *tsdb_open_debug() {
               (date != NULL ? date : ""));
     } /* else */
     fprintf(output,
-            "tsdb(1) %s (%s) [%s] --- (c) oe@tsnlp.dfki.uni-sb.de.\n\n",
+            "tsdb(1) %s (%s) [%s] --- (c) oe@coli.uni-sb.de.\n\n",
             tsdb_version,
             tsdb_rcs_strip(&tsdb_revision[0], "Revision"),
             tsdb_rcs_strip(&tsdb_revision_date[0], "Date"));
@@ -252,8 +252,8 @@ void tsdb_close_debug(FILE *stream) {
 } /* tsdb_close_debug() */
 
 /*--------------------------- print functions ------------------------------*/
-char* tsdb_sprint_value(Tsdb_value *value ) {
-  char* result;
+char* tsdb_sprint_value(Tsdb_value *value, BOOL raw) {
+  char *result, *foo;
   
   switch(value->type) {
     case TSDB_INTEGER:
@@ -264,16 +264,24 @@ char* tsdb_sprint_value(Tsdb_value *value ) {
       result = strdup(value->value.identifier);
       break;
     case TSDB_STRING:
-#ifdef ALEP
-      if(tsdb.status & TSDB_PROLOG_ESCAPE_OUTPUT) {
-        result = tsdb_prolog_escape_string(value->value.string);
+      if(!raw) {
+        foo = tsdb_denormalize_string(value->value.string);
+        if(tsdb.status & TSDB_PROLOG_ESCAPE_OUTPUT) {
+          result = tsdb_prolog_escape_string(foo);
+        } /* if */
+        else {
+          if(tsdb.status & TSDB_LISP_ESCAPE_OUTPUT) {
+            result = tsdb_lisp_escape_string(foo);
+          } /* if */
+          else {
+            result = strdup(foo);
+          } /* else */
+        } /* else */
+        tsdb_free(foo);
       } /* if */
       else {
         result = strdup(value->value.string);
       } /* else */
-#else
-      result = strdup(value->value.string);
-#endif
       break;
     case TSDB_DATE:
       result = tsdb_canonical_date(value->value.date);
@@ -358,8 +366,9 @@ char* tsdb_sprint_key_list(Tsdb_key_list* list,int* r,int* f,
   len = 0;
 
   for (k=0; k<n_attributes ; k++ ) {
-    if (r[k]!=-1) {
-      cat = tsdb_sprint_value(list->tuples[r[k]]->fields[f[k]]);
+    if (r[k]!=-1
+        && ((cat = tsdb_sprint_value(list->tuples[r[k]]->fields[f[k]], FALSE))
+            != NULL)) {
       if ((len+strlen(cat)+2)<blen) {
         strcat(&buf[len],cat);
       } /* if */
@@ -381,104 +390,25 @@ char* tsdb_sprint_key_list(Tsdb_key_list* list,int* r,int* f,
 } /* tsdb_sprint_key_list() */
 
 
-
 /*--------------------------- print functions ------------------------------*/
-BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
+BOOL tsdb_print_value(Tsdb_value *value, FILE *stream, BOOL raw) {
+
   char *foo;
-  int r;
 
-  switch(value->type) {
-    case TSDB_INTEGER:
-      r=fprintf(stream, "%d", value->value.integer);
-      break;
-    case TSDB_IDENTIFIER:
-      r=fprintf(stream, "%s", value->value.identifier);
-      break;
-    case TSDB_STRING:
-      r=fprintf(stream, "%s", value->value.string);
-      break;
-    case TSDB_DATE:
-      if((foo = tsdb_canonical_date(value->value.date)) != NULL) {
-        r=fprintf(stream, "%s", foo);
-        free(foo);
-      } /* if */
-      else {
-        r = EOF;
-      } /* else */
-      break;
-    case TSDB_POSITION:
-      r=fprintf(stream, "%s", value->value.position);
-      break;
-    case TSDB_CONNECTIVE:
-      switch(value->value.connective) {
-        case TSDB_AND:
-          r=fprintf(stream, "&&");
-          break;
-        case TSDB_OR:
-          r=fprintf(stream, "||");
-          break;
-        case TSDB_NOT:
-          r=fprintf(stream, "!");
-          break;
-        case TSDB_NOT_NOT:
-          r=fprintf(stream, " ");
-          break;
-      } /* switch */
-      break;
-    case TSDB_OPERATOR:
-      switch(value->value.operator) {
-        case TSDB_EQUAL:
-          r=fprintf(stream, "==");
-          break;
-        case TSDB_NOT_EQUAL:
-          r=fprintf(stream, "!=");
-          break;
-        case TSDB_LESS_THAN:
-          r=fprintf(stream, "<");
-          break;
-        case TSDB_LESS_OR_EQUAL_THAN:
-          r=fprintf(stream, "<=");
-          break;
-        case TSDB_GREATER_THAN:
-          r=fprintf(stream, ">");
-          break;
-        case TSDB_GREATER_OR_EQUAL_THAN:
-          r=fprintf(stream, ">=");
-          break;
-        case TSDB_MATCH:
-          r=fprintf(stream, "~");
-          break;
-        case TSDB_NOT_MATCH:
-          r=fprintf(stream, "!~");
-          break;
-        case TSDB_INSENSITIVE_MATCH:
-          r=fprintf(stream, "~~");
-          break;
-        case TSDB_NOT_INSENSITIVE_MATCH:
-          r=fprintf(stream, "!~~");
-          break;  
-      } /* switch */
-      printf("%c", value->value.operator);
-      break;
-    default:
-      fprintf(tsdb_error_stream,
-              "print_value(): unknown type: %d.\n", value->type);
-      fflush(tsdb_error_stream);
-  } /* switch */
+  if((foo = tsdb_sprint_value(value, raw)) != NULL) {
+    fprintf(stream, foo);
+    return((fflush(stream) != EOF));
+  } /* if */
+  return(FALSE);
 
-  fflush(stream);
-  if (r==EOF)
-    return FALSE;
-  else 
-    return TRUE;
 } /* tsdb_print_value() */
 
 void tsdb_print_array(Tsdb_value **array, FILE *stream) {
 
-  tsdb_print_value(*array, stream);
+  tsdb_print_value(*array, stream, FALSE);
   for(array++; *array != NULL; array++) {
     fprintf(stream, ", ");
-    tsdb_print_value(*array, stream);
+    tsdb_print_value(*array, stream, FALSE);
   } /* for */
   fprintf(stream, " \n");
   fflush(stream);
@@ -761,7 +691,7 @@ void tsdb_print_node(Tsdb_node *node, FILE *stream) {
     tsdb_print_node(node->left, stream);
     fprintf(stream, " ");
   } /* if */
-  tsdb_print_value(node->node, stream);
+  tsdb_print_value(node->node, stream, FALSE);
   if(node->right != NULL) {
     fprintf(stream, " ");
     tsdb_print_node(node->right, stream);
@@ -777,10 +707,10 @@ void tsdb_print_tuple(Tsdb_tuple *tuple, FILE *stream) {
 
   if(tuple != NULL) {
     for(i = 0; i < tuple->n_fields - 1; i++) {
-      tsdb_print_value(tuple->fields[i], stream);
+      tsdb_print_value(tuple->fields[i], stream, FALSE);
       fprintf(stream, "%c", tsdb.fs);
     } /* for */
-    tsdb_print_value(tuple->fields[i], stream);
+    tsdb_print_value(tuple->fields[i], stream, FALSE);
   } /* if */
   else {
     fprintf(tsdb_error_stream,
@@ -862,13 +792,19 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
   char *path;
   FILE *file;
 #ifdef COMPRESSED_DATA
-  char *command;
+  char *command, *foo;
   FILE *stream;
 #endif
 
-  path = strdup(tsdb.data_path);
-  path = (char *)realloc(path, strlen(tsdb.data_path) + strlen(name) + 1);
-  path = strcat(path, name);
+#ifdef COMPRESSED_DATA
+  path = (char *)malloc(strlen(tsdb.data_path) + strlen(name) 
+                        + strlen(tsdb.suffix) + 1);
+#else
+  path = (char *)malloc(strlen(tsdb.data_path) + strlen(name) + 1);
+#endif
+
+  (void)strcpy(path, tsdb.data_path);
+  (void)strcat(path, name);
 
   if((file = fopen(path, mode)) != NULL) {
     free(path);
@@ -877,7 +813,7 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
   } /* if */
   else {
 #ifdef COMPRESSED_DATA
-    path = (char *)realloc(path, strlen(path) + strlen(tsdb.suffix) + 1);
+    foo = strdup(path);
     path = strcat(path, tsdb.suffix);
     if(!access(path, R_OK)) {
       command = (char *)malloc(strlen(tsdb.uncompress) + strlen(path) + 2);
@@ -887,16 +823,22 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
       if((stream = popen(command, "r")) != NULL) {
         free(path);
         free(command);
+        tsdb.status |= TSDB_READ_ONLY;
         tsdb.errno = TSDB_OK;
         return(stream);
       } /* if */
       free(command);
     } /* if */
-#endif
     fprintf(tsdb_error_stream,
-            "find_data_file(): unable to open `%s' [%d].\n",
-            path, errno);
-    free(path);
+            "find_data_file(): unable to %s `%s[%s]' [%d].\n",
+            (mode[0] == 'r' ? "read" : "write"), foo, tsdb.suffix, errno);
+    tsdb_free(foo);
+#else
+    fprintf(tsdb_error_stream,
+            "find_data_file(): unable to %s `%s' [%d].\n",
+            (mode[0] == 'r' ? "read" : "write"), path, errno);
+#endif
+    tsdb_free(path);
     tsdb.errno = TSDB_NO_DATA_ERROR;
     return((FILE *)NULL);
   } /* else */
@@ -904,28 +846,28 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
 } /* tsdb_find_data_file() */
 
 char *tsdb_data_backup_file(char* name) {
- char* path;
- char* tmpnam;
- int r,l;
-
- l = strlen(tsdb.data_path)+strlen(name)+2;
- path = malloc(l-1);
- tmpnam = malloc(l);
- strcpy(path,tsdb.data_path);
- path = (char*)realloc(path,strlen(tsdb.data_path) + strlen(name) + 2);
- path = strcat(path,name);
- tmpnam = strdup(path);
- strcat(tmpnam,TSDB_BACKUP_SUFFIX);
-
- r = rename(path,tmpnam);
- if (r==-1) {
-   tsdb.errno = TSDB_FILE_CREATION_ERROR;
-   return(NULL);
- } /* if */
- else {
-   tsdb.errno = TSDB_OK;
-   return(tmpnam);
- } /* else */
+  char* path;
+  char* tmpnam;
+  int r,l;
+  
+  l = strlen(tsdb.data_path)+strlen(name)+2;
+  path = malloc(l-1);
+  tmpnam = malloc(l);
+  strcpy(path,tsdb.data_path);
+  path = (char*)realloc(path,strlen(tsdb.data_path) + strlen(name) + 2);
+  path = strcat(path,name);
+  tmpnam = strdup(path);
+  strcat(tmpnam,TSDB_BACKUP_SUFFIX);
+  
+  r = rename(path,tmpnam);
+  if (r==-1) {
+    tsdb.errno = TSDB_FILE_CREATION_ERROR;
+    return(NULL);
+  } /* if */
+  else {
+    tsdb.errno = TSDB_OK;
+    return(tmpnam);
+  } /* else */
 }
 
 int tsdb_restore_data_file(char*temp, char *name) {
@@ -940,17 +882,17 @@ int tsdb_restore_data_file(char*temp, char *name) {
   if (r==-1) return 0 ; else return(1);
 }
 
-BOOL tsdb_write_tuple(Tsdb_key_list* bar,FILE *output)
-{
-  int  r,i;
+BOOL tsdb_write_tuple(Tsdb_key_list *bar, FILE *output, BOOL raw) {
+
+  int r, i;
   
-  for (i=0;i<bar->tuples[0]->n_fields-1;i++) {
-    r=tsdb_print_value(bar->tuples[0]->fields[i],output);
+  for (i = 0; i < bar->tuples[0]->n_fields - 1; i++) {
+    r = tsdb_print_value(bar->tuples[0]->fields[i], output, raw);
     if (!r) return FALSE;
-    r=fputc(tsdb.fs,output);
+    r = fputc(tsdb.fs,output);
     if (!r) return FALSE;
   }
-  r=tsdb_print_value(bar->tuples[0]->fields[i],output);
+  r = tsdb_print_value(bar->tuples[0]->fields[i], output, raw);
   if (!r) return FALSE;
 
   r=fputc('\n',output);
@@ -980,7 +922,8 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
   Tsdb_value *value;
   static char *buf = (char *)NULL;
   static int buf_size = 1024;
-  int i, n, foo;
+  int i, n;
+  long int foo;
   char *field, *fs, *bar;
 
   if (buf == NULL) {
@@ -1068,7 +1011,7 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
         } /* if */
       } /* if */
       if(relation->types[n] == TSDB_INTEGER) {
-        if((foo = (int)strtol(field, &bar, 10)) != 0 || field != bar) {
+        if((foo = strtol(field, &bar, 10)) != 0 || field != bar) {
           value->type = TSDB_INTEGER;
           value->value.integer = foo;
         } /* if */
@@ -1203,7 +1146,23 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
   buf[0] = (char)c;
 
   if(fgets(&buf[1], 2047, input) != NULL) {
-    if((foo = strrchr(&buf[0], ':')) == NULL) {
+    if(tsdb_check_potential_command(&buf[0])) {
+      if(tsdb.errno) {
+         fprintf(tsdb_error_stream,
+                 "read_relation(): ignoring invalid tsdb(1) command.\n");
+      } /* if */
+      tsdb_free_relation(relation);
+      if(!feof(input) && (relation = tsdb_read_relation(input)) != NULL) {
+        return(relation);
+      } /* if */
+    } /* if */
+    else if(buf[0] == TSDB_COMMENT_CHRARACTER) {
+      tsdb_free_relation(relation);
+      if(!feof(input) && (relation = tsdb_read_relation(input)) != NULL) {
+        return(relation);
+      } /* if */
+    } /* if */
+    else if((foo = strchr(&buf[0], ':')) == NULL) {
       if((foo = strchr(&buf[0], '\n')) != NULL) {
         *foo = 0;
       } /* if */
@@ -1226,7 +1185,7 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
     
     while(fgets(&buf[0], 2048, input) != NULL && buf[0] != '\n') {
       for(foo = &buf[0]; isspace(*foo); foo++);
-      
+      /* _fixme_: hier fehlt was */
       if(relation->fields == NULL) {
         relation->fields = (char **)malloc(sizeof(char *));
         relation->types = (BYTE *)malloc(sizeof(BYTE));
@@ -1307,14 +1266,14 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
 
 } /* tsdb_read_relation() */
 
-int tsdb_write_table(Tsdb_selection* selection) {
+int tsdb_write_table(Tsdb_selection *selection, BOOL raw) {
 
 /*****************************************************************************\
 |*        file: 
 |*      module: tsdb_write_table()
 |*     version: 
 |*  written by: tom fettig, dfki saarbruecken
-|* last update: 7-aug-96
+|* last update: 15-apr-97
 |*  updated by: oe, coli saarbruecken
 |*****************************************************************************|
 |*
@@ -1345,7 +1304,7 @@ int tsdb_write_table(Tsdb_selection* selection) {
   for(i = 0, n = 1;
       i < selection->length && n == 1;
       i++) {
-    n = tsdb_write_tuple(bar, output);
+    n = tsdb_write_tuple(bar, output, raw);
     bar = bar->next;
   } /* for */
   fclose(output);
@@ -1507,7 +1466,7 @@ void tsdb_tree_print(Tsdb_node* node, FILE* stream)
  insert++;
  for (i=0;i<insert;i++)
    putc(' ',stream);
- tsdb_print_value(node->node,stream);
+ tsdb_print_value(node->node,stream, FALSE);
  fprintf(stream,"\n");
  if (node->left)
    tsdb_tree_print(node->left,stream);
@@ -1534,11 +1493,19 @@ int tsdb_save_changes(BOOL implicit) {
   char c;
   Tsdb_selection *selection;
 
+  if(tsdb.status & TSDB_READ_ONLY) {
+    fprintf(tsdb_error_stream,
+            "save_changes(): `%s' is read-only.\n",
+            tsdb.data_path);
+    fflush(tsdb_error_stream);
+    return(TSDB_READ_ONLY_ERROR);
+  } /* if */
+
   for (i = 0, status = TSDB_OK; tsdb.relations[i] != NULL; i++) {
     if (tsdb.relations[i]->status != TSDB_CLEAN) {
       selection = tsdb_find_table(tsdb.relations[i]);
       if(implicit || (tsdb.status & TSDB_IMPLICIT_COMMIT)) {
-        if(tsdb_write_table(selection) == TSDB_OK) {
+        if(tsdb_write_table(selection, TRUE) == TSDB_OK) {
           tsdb.relations[i]->status = TSDB_CLEAN;
 #if defined(DEBUG) && defined(COMMIT)
           fprintf(tsdb_debug_stream,
@@ -1584,6 +1551,10 @@ int tsdb_lock(BOOL flag) {
 |*****************************************************************************|
 |*
 \*****************************************************************************/
+
+  char *user, *host;
+
+  user = tsdb_user();
 
   /*
    * _fix_me_

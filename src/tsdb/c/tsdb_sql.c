@@ -156,6 +156,18 @@ int tsdb_info(Tsdb_value **value_list, char *redirection) {
                     (tsdb.status & TSDB_UNIQUELY_PROJECT ? "on" : "off"));
             match = TRUE;
           } /* if */
+          if(!strncmp(value_list[i]->value.identifier,
+                      "tsdb_implicit_commit", 20)
+             || !strncmp(value_list[i]->value.identifier,
+                         "implicit-commit", 15)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(output,
+                    "implicit commit (and save) for new data is %s.\n",
+                    (tsdb.status & TSDB_IMPLICIT_COMMIT 
+                     ? "enabled" 
+                     : "disabled"));
+            match = TRUE;
+          } /* if */
 #ifdef ALEP
           if(!strncmp(value_list[i]->value.identifier,
                       "tsdb_tx_output", 14)
@@ -172,19 +184,19 @@ int tsdb_info(Tsdb_value **value_list, char *redirection) {
                       "tsdb_status", 11)
              || !strncmp(value_list[i]->value.identifier,
                          "status", 6)) {
-            fprintf(output, "current tsdb status: %d.\n", tsdb.status);
+            fprintf(output, "current tsdb status: %d (0%o).\n",
+                    tsdb.status, tsdb.status);
             match = TRUE;
           } /* if */
-#ifdef WORKING_RCS_STRIP
-          if(!strcmp(value_list[i]->value.identifier, "all")) {
+          if(!strncmp(value_list[i]->value.identifier,
+                         "version", 7)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
             fprintf(output,
-                    "tsdb(1) %s (%s) [%s] --- (c) oe@tsnlp.dfki.uni-sb.de.\n\n",
-                    tsdb_version,
-                    tsdb_rcs_strip(&tsdb_revision[0], "Revision"),
-                    tsdb_rcs_strip(&tsdb_revision_date[0], "Date"));
+                    "tsdb(1) %s (%s) [%s] --- "
+                    "(c) oe@coli.uni-sb.de.\n",
+                    tsdb_version, &tsdb_revision[0], &tsdb_revision_date[0]);
             match = TRUE;
           } /* if */
-#endif
           if(!match) {
             fprintf(tsdb_error_stream,
                     "info(): invalid argument `%s'.\n",
@@ -365,6 +377,39 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
       } /* else */
     } /* if */
   } /* if */
+  else if(!strncmp(variable->value.identifier, "tsdb_implicit_commit", 20)
+          || !strncmp(variable->value.identifier, "implicit-commit", 15)) {
+    if(value->type != TSDB_STRING) {
+      if(value->type != TSDB_IDENTIFIER) {
+        fprintf(tsdb_error_stream, 
+                "set(): invalid type for `implicit-commit'; "
+                "should be `on' or `off'.\n");
+        foo = (char *)NULL;
+        fflush(tsdb_error_stream);
+      } /* if */
+      else {
+        foo = value->value.identifier;
+      } /* else */
+    } /* if */
+    else {
+      foo = value->value.string;
+    } /* else */
+    
+    if(foo != NULL) {
+      if(!strcmp(foo, "on")) {
+        tsdb.status |=  TSDB_IMPLICIT_COMMIT;
+      } /* if */
+      else if(!strcmp(foo, "off")) {
+        tsdb.status &= ~TSDB_IMPLICIT_COMMIT;
+      } /* if */
+      else {
+        fprintf(tsdb_error_stream, 
+                "set(): invalid value for `implicit-commit': "
+                "should be `on' or `off'.\n");
+        fflush(tsdb_error_stream);
+      } /* else */
+    } /* if */
+  } /* if */
   else if(!strncmp(variable->value.identifier, "tsdb_uniquely_project", 21)
           || !strncmp(variable->value.identifier, "uniquely-project", 16)) {
     if(value->type != TSDB_STRING) {
@@ -407,8 +452,23 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
     } /* if */
     else {
       free(tsdb.ofs);
-      tsdb.ofs = value->value.string;
+      tsdb.ofs = tsdb_denormalize_string(value->value.string);
     } /* else */
+  } /* if */
+  else if(!strncmp(variable->value.identifier, "fs", 2)) {
+    if(value->type != TSDB_STRING
+       || (foo = tsdb_denormalize_string(value->value.string)) == NULL
+       || strlen(foo) != 1) {
+      fprintf(tsdb_error_stream,
+              "set(): invalid (non-character) type for `fs'.\n");
+      fflush(tsdb_error_stream);
+    } /* if */
+    else {
+      tsdb.fs = foo[0];
+    } /* else */
+    if(foo != NULL) {
+      tsdb_free(foo);
+    } /* if */
   } /* if */
 #ifdef ALEP
   else if(!strncmp(variable->value.identifier, "tsdb_tx_output", 14)
@@ -602,10 +662,19 @@ int tsdb_insert(Tsdb_value *table,
   Tsdb_relation *relation;
   Tsdb_selection *selection;
   Tsdb_tuple *tuple, **foo;
+  Tsdb_value *value, **values;
   int m, n, n_values, n_attributes;
   char *bar;
   BOOL success;
   
+  if(tsdb.status & TSDB_READ_ONLY) {
+    fprintf(tsdb_error_stream,
+            "insert(): `%s' is read-only.\n",
+            tsdb.data_path);
+    fflush(tsdb_error_stream);
+    return(TSDB_READ_ONLY_ERROR);
+  } /* if */
+
   if(!tsdb_is_relation(table)) {
     fprintf(tsdb_error_stream,
             "insert(): unknown relation `%s'.\n", table->value.identifier);
@@ -648,15 +717,15 @@ int tsdb_insert(Tsdb_value *table,
     } /* if */
   } /* if */
 
-  if(tsdb.status & TSDB_IMPLICIT_COMMIT) {
-    if((data = tsdb_find_data_file(relation->name, "a+")) == NULL) {
-      fprintf(tsdb_error_stream,
+  if((data = tsdb_find_data_file(relation->name, "a+")) == NULL) {
+    fprintf(tsdb_error_stream,
               "insert(): no data file for relation `%s'.\n",
-              relation->name);
-      fflush(tsdb_error_stream);
-      return(TSDB_NO_DATA_ERROR);
-    } /* if */
+            relation->name);
+    fflush(tsdb_error_stream);
+    fclose(data);
+    return(TSDB_NO_DATA_ERROR);
   } /* if */
+  fclose(data);
 
   (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
                                    (Tsdb_tuple **)NULL);
@@ -696,12 +765,6 @@ int tsdb_insert(Tsdb_value *table,
     } /* else */
   } /* for */
 
-  if(tsdb.status & TSDB_IMPLICIT_COMMIT) {
-    tsdb_print_tuple(tuple, data);
-    fprintf(data, "\n");
-    fclose(data);
-  } /* if */
-
   if((selection = tsdb_find_table(relation)) != NULL) {
     foo = (Tsdb_tuple **)malloc(2 * sizeof(Tsdb_tuple *));
     foo[0] = tuple;
@@ -718,10 +781,14 @@ int tsdb_insert(Tsdb_value *table,
     fflush(tsdb_error_stream);
   } /* else */
 
+  if(tsdb.status & TSDB_IMPLICIT_COMMIT) {
+    tsdb_commit(tsdb_singleton_value_array(table));
+  } /* if */
+
   return(TSDB_OK);
 } /* tsdb_insert() */
 
-int tsdb_commit(Tsdb_value  **relations) {
+int tsdb_commit(Tsdb_value **relations) {
 
 /*****************************************************************************\
 |*        file: 
@@ -737,6 +804,16 @@ int tsdb_commit(Tsdb_value  **relations) {
   int i, status;
   Tsdb_relation *relation;
   Tsdb_selection *selection;
+
+  if(tsdb.status & TSDB_READ_ONLY) {
+    fprintf(tsdb_error_stream,
+            "commit(): `%s' is read-only.\n",
+            tsdb.data_path);
+    fflush(tsdb_error_stream);
+    return(TSDB_READ_ONLY_ERROR);
+
+    return(TSDB_READ_ONLY_ERROR);
+  } /* if */
 
   if(relations == NULL) {
     return(tsdb_save_changes(TRUE));
@@ -757,7 +834,7 @@ int tsdb_commit(Tsdb_value  **relations) {
       continue;
     } /* if */
     if(relation->status != TSDB_CLEAN) {
-      if(tsdb_write_table(selection) == TSDB_OK) {
+      if(tsdb_write_table(selection, TRUE) == TSDB_OK) {
         relation->status = TSDB_CLEAN;
 #if defined(DEBUG) && defined(COMMIT)
         fprintf(tsdb_debug_stream,
@@ -1203,9 +1280,7 @@ int tsdb_do(char *file, char *redirection) {
   while(!(tsdb.status & TSDB_QUIT) 
         && !status 
         && fgets(&buffer[0], 4096, input) != NULL) {
-    if(buffer[strlen(buffer) - 1] == '\n') {
-      buffer[strlen(buffer) - 1] = 0;
-    } /* if */
+#ifdef 0
     for(foo = &buffer[0]; *foo && isspace(*foo); foo++);
     if(*foo) {
       for(bar = &foo[strlen(foo) - 1];
@@ -1229,8 +1304,43 @@ int tsdb_do(char *file, char *redirection) {
 #endif     
       } /* if */
     } /* if */
+#else
+    if(command == NULL) {
+      command = strdup(&buffer[0]);
+    } /* if */
+    else {
+      command
+        = (char *)realloc(command, strlen(command) + strlen(&buffer[0]) + 1);
+      command = strcat(command, &buffer[0]);
+    } /* else */
+    if(command != NULL) {
+      for(foo = &command[strlen(command) - 1];
+          foo >= &command[0] && isspace(*foo);
+          foo--);
+      if(foo > &command[0] 
+         && tsdb_quotes_are_balanced(&command[0]) == -1
+         && *foo == '.') {
+        for(foo++; *foo; foo++) {
+          *foo = (char)0;
+        } /* for */
+        status = tsdb_parse(command, input);
+        tsdb_free(command);
+        command = (char *)NULL;    
+#ifdef DEBUG
+        n_commands++;
+#endif     
+      } /* if */
+    } /* if */
+#endif
   } /* while */
-  
+
+  if(command != NULL) {
+    fprintf(tsdb_error_stream,
+            "do(): ignoring incomplete last command from `%s'.\n",
+            path);
+    fflush(tsdb_error_stream);
+  } /* if */
+
   tsdb.status &= ~TSDB_QUIT;
   fclose(input);
 

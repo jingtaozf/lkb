@@ -83,14 +83,18 @@ char *tsdb_keywords[] = {
 char *tsdb_constants[] = {
   "home",
   "tsdb_home",
+  "relations",
   "relations-file",
   "tsdb_relations_file",
   "data-path",
   "tsdb_data_path",
+  "fs",
+  "tsdb_fs",
+  "version",
   (char *)NULL
 };
 
-#define TSDB_CONST_NUM 6
+#define TSDB_CONST_NUM 10
 
 char *tsdb_variables[] = {
   "result-path",
@@ -103,6 +107,8 @@ char *tsdb_variables[] = {
   "tsdb_history_size",
   "uniquely-project",
   "tsdb_uniquely_project",
+  "implicit-commit",
+  "tsdb_implicit_commit",
   "tsdb_status",
   "status",
   "tsdb_lock",
@@ -117,9 +123,9 @@ char *tsdb_variables[] = {
 };
 
 #ifndef ALEP
-#  define TSDB_VAR_NUM 16
-#else
 #  define TSDB_VAR_NUM 18
+#else
+#  define TSDB_VAR_NUM 20
 #endif
 
 char *tsdb_rest_generate(char *, int) ;
@@ -145,7 +151,7 @@ int main(int argc, char **argv) {
   char *input = NULL;
   char host[512 + 1], prompt[80 + 1], *foo, *bar;
   int status;
-  struct termios termios;
+  struct termios *termios, *t_termios;
 
 #ifdef _DEBUG_MALLOC_INC
   int baz;
@@ -244,9 +250,15 @@ int main(int argc, char **argv) {
       sprintf(prompt, "tsdb@%s (%d) # ", host, tsdb.command);
     } /* if */
 
-    if(!tcgetattr(fileno(stdout), &termios)) {
-      termios.c_lflag &= ~ECHO;
-      tcsetattr(fileno(stdout), TCSANOW, &termios);
+    t_termios = (struct termios *)NULL;
+    if(tsdb.status & TSDB_QUIET) {
+      termios = (struct termios *)malloc(sizeof(struct termios));
+      if(!tcgetattr(fileno(stdout), termios)) {
+        t_termios = (struct termios *)malloc(sizeof(struct termios));
+        (void)memcpy(t_termios, termios, sizeof(struct termios));
+        t_termios->c_lflag &= ~ECHO;
+        tcsetattr(fileno(stdout), TCSANOW, t_termios);
+      } /* if */
     } /* if */
 
     while(!(tsdb.status & TSDB_QUIT) 
@@ -287,7 +299,12 @@ int main(int argc, char **argv) {
         } /* else */
       } /* if */
     } /* while */
-    
+
+    if(t_termios != NULL) {
+      tcsetattr(fileno(stdout), TCSANOW, termios);
+      tsdb_free(t_termios);
+      tsdb_free(termios);
+    } /* if */
     if(write_history(TSDB_HISTORY_FILE)) {
       fprintf(tsdb_error_stream,
               "main(): unable to write to history file `%s'.\n",
@@ -295,7 +312,9 @@ int main(int argc, char **argv) {
     } /* if */
   } /* else */
 
-  (void)tsdb_save_changes(FALSE);
+  if(!(tsdb.status & TSDB_READ_ONLY)) {
+    (void)tsdb_save_changes(FALSE);
+  } /* if */
 
 #ifdef DEBUG
   tsdb_close_debug(tsdb_debug_stream);
@@ -348,6 +367,8 @@ void tsdb_parse_options(int argc, char **argv) {
     {"pager", optional_argument, 0, TSDB_PAGER_OPTION},
     {"quiet", optional_argument, 0, TSDB_QUIET_OPTION},
     {"poll", optional_argument, 0, TSDB_QUIET_OPTION},
+    {"read-only", no_argument, 0, TSDB_READ_ONLY_OPTION},
+    {"ro", no_argument, 0, TSDB_READ_ONLY_OPTION},
 #ifdef COMPRESSED_DATA
     {"compress", optional_argument, 0, TSDB_COMPRESS_OPTION},
     {"uncompress", required_argument, 0, TSDB_UNCOMPRESS_OPTION},
@@ -515,6 +536,9 @@ void tsdb_parse_options(int argc, char **argv) {
             tsdb.status &= ~TSDB_QUIET;
           } /* else */
         } /* else */
+        break;
+      case TSDB_READ_ONLY_OPTION:
+        tsdb.status |= TSDB_READ_ONLY;
         break;
       case TSDB_UNIQUELY_PROJECT_OPTION:
         if(optarg == NULL) {
@@ -700,6 +724,9 @@ void tsdb_usage() {
   fprintf(tsdb_error_stream,
           "  `-{quiet | poll}[={_on_ | off}]' --- "
           "quiet (non-prompting) mode;\n");
+  fprintf(tsdb_error_stream,
+          "  `-{ro | read-only}' --- "
+          "open database in read-only mode;\n");
 #ifdef DEBUG
   fprintf(tsdb_error_stream,
           "  `-debug-file=file' --- output file for debug information;\n");
