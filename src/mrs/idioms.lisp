@@ -68,7 +68,9 @@ the phrase to be checked minus the LISZT (leave this for now)
               (when (idiom-phrase-match idiom-mrs phrase-mrs)
                 (return t))))))))
 
-(defparameter *additional-root-condition* #'idiom-check)
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+	   #-:ansi-eval-when (load eval compile)
+  (setf *additional-root-condition* #'idiom-check))
 
 (defun idiom-phrase-match (ipmrs testmrs)
   (multiple-value-bind
@@ -91,4 +93,6 @@ the phrase to be checked minus the LISZT (leave this for now)
   (cdr (assoc id *idiom-phrases*)))
 
 ; Added stub for function now called in lexinput.lsp
-(defun clear-idioms-entries () nil)
+(defun clear-idioms-entries ()
+  (setf *idiom-phrases* nil)
+  (setf *idiom-phrases-expanded* nil))
