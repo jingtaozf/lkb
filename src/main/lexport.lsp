@@ -7,6 +7,8 @@
 ;;;
 
 ;;; bmw (aug-03)
+;;; - merge-tdl-into-psql-lexicon
+;;; - db scratch space
 ;;; - csv export creates multi entries from implicit info in tdl
 
 ;;; bmw (jul-03)
@@ -130,8 +132,14 @@
     (setf output-lexicon (initialize-psql-lexicon)))
   
   (setf *export-output-lexicon* output-lexicon)
-  (setf *current-source* (get-current-source))
-  (setf *export-timestamp* (extract-date-from-source *current-source*))
+  ;(setf *current-source* (get-current-source))
+  (setf *current-source* 
+    (ask-user-for-x 
+     "Export Lexicon" 
+     (cons "Source?" *current-source*)))
+  (unless *current-source* (throw 'abort 'source))
+  ;(setf *export-timestamp* (extract-date-from-source *current-source*))
+  (setf *export-timestamp* "NOW") ;;hack!! fixme!!
   (unless *current-lang* 
     (setf *current-lang* 
       (ask-user-for-x 
@@ -144,14 +152,14 @@
        "Export Lexicon" 
        (cons "Country code?" "US"))))
   (unless *current-country* (throw 'abort 'country))
-  (setf *current-user* 
-    (ask-user-for-x 
-     "Export Lexicon" 
-     (cons "Username?" "guest")))
-  (unless *current-user* (throw 'abort 'user))
+;  (setf *current-user* 
+;    (ask-user-for-x 
+;     "Export Lexicon" 
+;     (cons "Username?" "guest")))
+;  (unless *current-user* (throw 'abort 'user))
   
   (format *trace-output* 
-	  "~%Exporting lexicon to DB ~a" 
+	  "~%Exporting lexical entries to DB ~a" 
 	  (dbname output-lexicon))  
   (export-to-db lexicon output-lexicon))
   
@@ -697,7 +705,7 @@
   (mapc
    #'(lambda (x) (to-db (read-psort lexicon x :recurse nil) output-lexicon))
    (collect-psort-ids lexicon :recurse nil))
-  (fn-get-records output-lexicon ''initialize-current-grammar))
+  (fn-get-records output-lexicon ''initialize-current-grammar (get-filter output-lexicon)))
 
 (defmethod to-db ((x lex-entry) (lexicon psql-lex-database))  
   (let* ((fields-map (fields-map lexicon))
@@ -745,6 +753,53 @@
       (format *trace-output* "~%skipping super-rich entry: `~a'~%"  name)
       nil))))
 
+(defmethod to-db-scratch ((x lex-entry) (lexicon psql-lex-database))  
+  (let* ((fields-map (fields-map lexicon))
+
+	 (keyrel (extract-field x "keyrel" fields-map))      
+	 (keytag (extract-field x "keytag" fields-map))
+	 (altkey (extract-field x "altkey" fields-map))
+	 (alt2key (extract-field x "alt2key" fields-map))
+	 (compkey (extract-field x "compkey" fields-map))
+	 (ocompkey (extract-field x "ocompkey" fields-map))
+	 
+	 (orth-list (extract-field2 x :orth nil "list"))
+	 (name (extract-field x "name" fields-map))
+	 (count (+ 2 (length orth-list)))
+	 (total (+ count
+		   (if (string> keyrel "") 1 0)
+		   (if (string> keytag "") 1 0) 
+		   (if (string> altkey "") 1 0)
+		   (if (string> alt2key "") 1 0) 
+		   (if (string> compkey "") 1 0) 
+		   (if (string> ocompkey "") 1 0)))
+	 
+	 (type (extract-field x "type" fields-map))
+	 
+	 (psql-le
+	  (make-instance 'psql-lex-entry
+	    :name name
+	    :type type
+	    :orthography orth-list
+	    :orthkey (first orth-list)
+	    :keyrel keyrel
+	    :altkey altkey
+	    :alt2key alt2key
+	    :keytag keytag
+	    :compkey compkey
+	    :ocompkey ocompkey
+	    ;:country *current-country*
+	    ;:lang *current-lang*
+	    ;:source *current-source*
+	    :flags 1)))
+    (cond
+     ((= total (length (lex-entry-unifs x)))
+      (set-lex-entry-scratch lexicon psql-le))
+     (t
+      (format *trace-output* "~%skipping super-rich entry: `~a'~%"  name)
+      nil)))
+  )
+
 (defun get-current-source nil
   (cond
    ((boundp '*grammar-version*)
@@ -754,3 +809,20 @@
    (t
     (format *trace-output* "WARNING: no *GRAMMAR-VERSION* defined!")
    )))
+
+(defun merge-tdl-into-psql-lexicon2 (file-in)
+  (let ((tmp-lex (create-empty-cdb-lex))
+	(file-out (get-new-filename "~/tmp/lexicon")))
+    (unless (probe-file file-in)
+      (error "~%file not found (~a)" file-in))
+    (load-lex tmp-lex :filename file-in)
+    (export-lexicon-to-file :lexicon tmp-lex :file file-out)
+    (merge-into-psql-lexicon (namestring (probe-file (format nil "~a.csv" file-out))))))
+
+(defun merge-tdl-into-psql-lexicon (file-in)
+  (let ((tmp-lex (create-empty-cdb-lex)))
+  (unless (probe-file file-in)
+    (error "~%file not found (~a)" file-in))
+  (load-lex tmp-lex :filename file-in)
+  (export-lexicon-to-db :lexicon tmp-lex :output-lexicon *psql-lexicon*)
+  (clear-lex tmp-lex)))
