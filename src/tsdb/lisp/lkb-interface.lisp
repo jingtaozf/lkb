@@ -22,7 +22,12 @@
      (:GRAMMAR . ,(if (boundp '*grammar-version*) 
                       (symbol-value '*grammar-version*)
                       "unknown"))
-     (:APPLICATION . ,(format nil "LKB (~A mode)" *lkb-system-version*))))
+     (:APPLICATION . ,(format nil "LKB (~A mode; version)" 
+                              *lkb-system-version* 
+                              (and (find-symbol "*CVS-VERSION*")
+                                   (boundp (find-symbol "*CVS-VERSION*"))
+                                   (symbol-value 
+                                    (find-symbol "*CVS-VERSION*")))))))
 
 
 (defun parse-word (word &key load trace)
@@ -146,8 +151,8 @@
                           (:TOTAL . ,tcpu) (:FIRST . ,tcpu) 
                           (:READINGS . ,(let ((readings
                                                (length *parse-record*)))
-                                          (if (and (equal output "")
-                                                   (> readings 0))
+                                          (if (or (equal output "")
+                                                  (> readings 0))
                                             readings
                                             -1)))
                           (:ERROR .
