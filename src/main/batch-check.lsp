@@ -22,8 +22,9 @@
 (defun batch-check-lexicon (&optional (unexpandp t))
   (let ((*batch-mode* t)
 	(start-path (get-semantics-path)))
-    (format t "~%(caching all lexical entries)")
-    (cache-all-lex-entries *lexicon*)
+    (when (typep *lexicon* 'psql-lex-database)
+      (format t "~%(caching all lexical entries)")
+      (cache-all-lex-entries *lexicon*))
     (format t "~%Checking lexicon")
     (format t "~%  - difference-list check starts at path ~a" start-path)
     (dolist (id (collect-psort-ids *lexicon*))
@@ -46,8 +47,9 @@
 		      (reverse start-path)))))
       (when unexpandp (unexpand-psort *lexicon* id))))
   (format t "~%Lexicon checked")
-  (format *postgres-debug-stream* "~%(clearing cache)")
-  (empty-cache *lexicon*))
+  (when (typep *lexicon* 'psql-lex-database)
+    (format *postgres-debug-stream* "~%(clearing cache)")
+    (empty-cache *lexicon*)))
 
 
 (defun sanitize (dag-instance id path &optional (ostream t))

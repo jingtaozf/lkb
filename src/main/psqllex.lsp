@@ -1353,6 +1353,8 @@
   (lkb-beep))
 
 (defun command-generate-semi nil
+  (unless (typep *lexicon* 'psql-lex-database)
+    (error "You need to load the LexDB before generating the SEMI..."))
   (format t "~%Generating SEM-I. See files ~asemi.*" *postgres-user-temp-dir*)
   (format *postgres-debug-stream* "~%(caching all lexical entries)")
   (cache-all-lex-entries *lexicon*)
