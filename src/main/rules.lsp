@@ -45,6 +45,8 @@
   (clrhash *lexical-rules*))
 
 (defstruct (rule (:include lex-or-psort))
+  ;;; NOTE - any changes to slots here have to be mirrored
+  ;;; in mrs/lexlookup.lsp make-new-found-rule
    daughters-restricted
    daughters-restricted-reversed
    daughters-apply-order
