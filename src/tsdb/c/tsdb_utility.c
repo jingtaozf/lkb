@@ -1,14 +1,13 @@
-/*File: tsdb_utility.c                                                       *
- *Author: tom (fettig@dfki.uni-sb.de), former part of tsdb.c,                *
- *slaughtered on 17th August nineteen ninety four                            *
- *tsdb.c: Started by Andrew P. White (apwhite@unix1.tcd.ie), memory managment*
- *data_structures, chauffering services, volleyball coaching, marriage       *
- *guidance counselling & german styling by the lovely oe (oe@dfki.uni-sb.de) *
- *Completed: 13th September 1993 by oe :-)                                   *
- *Fixed and turned into somthing useful by tom (fettig@dfki.uni-sb.de)       *
- *Comment: Contains many smaller tsdb library functions                      *
- *Date (creation): 17th August 1994                                          */
- 
+/*****************************************************************************\
+|*        file: tsdb_utility.c
+|*      module: 
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
 
 #include <signal.h>
 #include <stdio.h>
@@ -1372,7 +1371,8 @@ float tsdb_timer(BYTE action) {
       return((float)-1);
     } /* if */
     running = FALSE;
-    return((stop.time - start.time) + ((stop.millitm - start.millitm) * 0.001));
+    return((stop.time - start.time)
+           + ((stop.millitm - start.millitm) * 0.001));
   } /* if */
   else {
     fprintf(TSDB_ERROR_STREAM,
