@@ -6,11 +6,11 @@
 
 ;;; Add an LKB menu to the emacs menu bar
 
-(defvar *handled-types* '(list number string))
+(defvar *handled-types* '(list number string symbol))
 
 ;; unusual return values cause system to hang...
 (defun eval-in-lisp (str)
-	 (fi:eval-in-lisp "(let ((x (eval %s))) (if (or (eq x t) (eval (cons 'or (mapcar #'(lambda (y) (typep x y)) '%s)))) x '!!!unhandled-type!!!))" str *handled-types*))
+	 (fi:eval-in-lisp "(let ((x %s)) (if (eval (cons 'or (mapcar #'(lambda (y) (typep x y)) '%s))) x '!!!unhandled-type!!!))" str *handled-types*))
 
 (defun name-keymap (str) 
   (cons str (make-sparse-keymap str)))
