@@ -40,12 +40,3 @@
 (defun vsym (str) 
   ;;; allow mrsglobals files to be system independent
   (intern (string-upcase str) :lkb))
-
-
-
-
-
-
-
-
-
