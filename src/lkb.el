@@ -325,15 +325,30 @@
 			  (buffer-substring-no-properties beg (min (1+ end) (point-max)))))
     (goto-char pos)))
 
-; following are commented out because they may overlap with other commands
-; which people use
-; however, I can't see any way of making this non-global unless
-; we agree an extension for rmrs files etc
+;;; By putting
+;;; (add-to-list 'auto-mode-alist '("\\.mrs\\'" . sgml-mode))
+;;; (add-to-list 'auto-mode-alist '("\\.rmrs\\'" . sgml-mode))
+;;; in the .emacs, SGML mode will be invoked for .(r)mrs extensions
+
+;;; The following makes these commands available via keystrokes
+;;; in sgml mode (includes .xml files)
+
+(add-hook 'sgml-mode-hook
+	  (function (lambda ()
+		      (define-key sgml-mode-map 
+			  "\C-cr" 'display-rmrs)
+		      (define-key sgml-mode-map 
+			  "\C-cs" 'select-rmrs)
+		      (define-key sgml-mode-map 
+			  "\C-cg" 'generate-from-rmrs)
+		      )))
+
+;;; following would make them global but should remain commented
+;;; out because of possible overlap with other commands
 
 ; (global-set-key "\C-cr" 'display-rmrs)
 ; (global-set-key "\C-cs" 'select-rmrs)
 ; (global-set-key "\C-cg" 'generate-from-rmrs)
-
 
 ;;; MRS display utility
 
@@ -359,9 +374,12 @@
     (or (re-search-forward "</mrs>" nil t)
                  (point-max)))
 
-; following is commented out because it may overlap with other commands
-; which people use
-; however, I can't see any way of making this non-global unless
-; we agree an extension for mrs files etc
+; as above
+
+
+(add-hook 'sgml-mode-hook
+	  (function (lambda ()
+		      (define-key sgml-mode-map 
+			  "\C-cm" 'display-mrs))))
 
 ; (global-set-key "\C-cm" 'display-mrs)
