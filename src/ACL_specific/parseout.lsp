@@ -122,12 +122,10 @@
                             *chart-generation-counter*))))
        (,(format nil "Rule ~A" (or rule-name ""))
 	:value rule)
-       #|
        (,(format nil "Sement" (edge-id edge-record))
 	:value sement)
        (,(format nil "Check algebra" (edge-id edge-record))
        :value check-algebra)
-       |#
        ("Generate from edge" :value generate
                              :active ,(and *mrs-loaded*
                                        (not (g-edge-p edge-record))))
@@ -182,20 +180,22 @@
 	      (display-fs alternative 
                           (format nil "~A" item)
                           item))))))
+     #|
      (sement       
       (let ((parse-tdfs (and (edge-p edge-record) (edge-dag edge-record))))
         (when (tdfs-p parse-tdfs)
 	  (show-mrs-sement-window parse-tdfs edge-record
-				  (format nil "Edge ~A ~A - Tree FS" 
+				  (format nil "Edge ~A ~A - Sement" 
 					  (edge-id edge-record)
 					  (if (g-edge-p edge-record) "G" "P"))))))
      (check-algebra       
       (let ((parse-tdfs (and (edge-p edge-record) (edge-dag edge-record))))
         (when (tdfs-p parse-tdfs)
 	  (show-mrs-sement-check-window parse-tdfs edge-record
-				  (format nil "Edge ~A ~A - Tree FS" 
+				  (format nil "Edge ~A ~A - algebra check" 
 					  (edge-id edge-record)
-					  (if (g-edge-p edge-record) "G" "P"))))))
+					  (if (g-edge-p edge-record) "G" "P")))))) 
+					  |#
      (generate (funcall 'really-generate-from-edge edge-record)))))
 
 ;;; ***** Single parse display window ********

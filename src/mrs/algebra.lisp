@@ -19,9 +19,8 @@
 ;;; There's also an issue about the interaction between this and the standard
 ;;; MRS extraction code, again ignored for now.
 
-(defun extract-sement (parse-fs edge-record)
-  (declare (ignore edge-record))
-  (initialise-algebra)
+(defun extract-sement (parse-fs &optional start-num)
+  (initialise-algebra start-num)
   (let ((sement 
 	 (extract-algebra-from-fs (lkb::tdfs-indef parse-fs))))
     sement))
@@ -32,12 +31,12 @@
 	 (extract-algebra-from-fs (lkb::tdfs-indef parse-fs))))
     (check-algebra sement edge-record)))
 
-(defun initialise-algebra nil
+(defun initialise-algebra (&optional dtr-num)
   (unless (and *hook-path*
 	       *psoa-liszt-path*
 	       *psoa-rh-cons-path*)
     (error "Grammar parameters not set for algebra use"))
-  (setf *variable-generator* (init-variable-generator))
+  (setf *variable-generator* (create-variable-generator dtr-num))
   (setf *all-nodes* nil)
   (setf *named-nodes* nil))
 
@@ -204,30 +203,42 @@
 
 (defun check-algebra (sement edge-record)
   (setf *mrs-comparison-output-messages* nil)
-  (let* ((*mrs-comparison-output-control* :save)
-	 (rule (lkb::rule-id (lkb::edge-rule edge-record)))
-	 (rule-record (assoc rule *rule-algebra-table* 
-			     :test #'string-equal))) ; lose packages
-    (if rule-record
-	(let* ((dtrs (lkb::edge-children edge-record))
-	       (edge-sements (loop for dtr in dtrs
-				 when (lkb::edge-p dtr)
-				 collect
-				   (extract-sement
-				    (lkb::edge-dag dtr) nil)))
-	       (head (cadr rule-record))
-	       (slots (caddr rule-record))
-	       (order (cadddr rule-record))
-	       (reconstructed-sement 
-		(reconstruct-sement edge-sements
-				    head slots order)))
-	  (if reconstructed-sement
-	      (compare-sements reconstructed-sement sement
-			       (sement-equalities reconstructed-sement))
-	    (mrs-comparison-output "Cannot reconstruct semet")))
+  (let ((reconstructed-sement nil)
+	(count 0))
+    (if (lkb::edge-p edge-record)
+	(let* ((rule-struct (lkb::edge-rule edge-record))
+	       (*mrs-comparison-output-control* :save)
+	       (rule (if (lkb::rule-p rule-struct) (lkb::rule-id rule-struct))) 
+	       (rule-record (if rule (assoc rule *rule-algebra-table* 
+					    :test #'string-equal)))) ; lose packages
+	  (if rule
+	      (let ((dtrs (lkb::edge-children edge-record)))
+		(if rule-record
+		    (let* ((edge-sements (loop for dtr in dtrs
+					     when (lkb::edge-p dtr)
+					     collect
+					       (progn
+						 (setf count (+ count 1000))
+						 (extract-sement
+						  (lkb::edge-dag dtr) count))))
+			   (head (cadr rule-record))
+			   (slots (caddr rule-record))
+			   (order (cadddr rule-record)))
+		      (setf reconstructed-sement
+			(reconstruct-sement edge-sements
+						head slots order))
+		      (if reconstructed-sement
+			  (compare-sements reconstructed-sement sement)
+			(mrs-comparison-output "Cannot reconstruct sement")))
+		  (if (cdr dtrs)
       ;;; can't find rule
-      (mrs-comparison-output "No rule ~A in rule table for algebra" rule)))
-  *mrs-comparison-output-messages*)
+		      (mrs-comparison-output 
+		       "Warning: Non-unary rule ~A missing from algebra table" rule)
+		    (mrs-comparison-output 
+		     "Unary rule ~A not in algebra table: algebra OK unless C-CONT" rule))))
+	    (mrs-comparison-output 
+	     "Sement corresponds to lexical entry: no check done"))))
+    (values *mrs-comparison-output-messages* reconstructed-sement)))
 	  
 
 (defun reconstruct-sement (dtr-sements head slots order)
@@ -267,38 +278,55 @@
 			   :key #'slot-name :test #'string-equal)))
     (if slot-record
 	(let* ((slot-hook (slot-hook slot-record))
-	       (bindings (sement-hooks-equal-p 
-			  slot-hook (sement-hook non-head-dtr) 
-			  (sement-equalities head-dtr))))
-	  (if bindings
-	      (make-sement :hook (sement-hook head-dtr)
-			   :slots (remove slot-record (sement-slots head-dtr))
-			   :liszt
-			    (append (sement-liszt head-dtr)
-				    (sement-liszt non-head-dtr))
-			   :h-cons 
-			    (append (sement-h-cons head-dtr)
-				    (sement-h-cons non-head-dtr))
-			    :equalities bindings)
+	       (equalities (equate-sement-hooks 
+			    slot-hook (sement-hook non-head-dtr)))
+	       (head-eqs (cadr equalities))
+	       (non-head-eqs (car equalities)))
+	  (if equalities
+	      (make-sement :hook (canonicalise-sement-hook
+				  (sement-hook head-dtr)
+				  head-eqs)
+			   :slots 
+			   (canonicalise-sement-slots
+			    (remove slot-record (sement-slots head-dtr))
+			    head-eqs)
+			    :liszt
+			    (append (canonicalise-sement-liszt
+				     (sement-liszt head-dtr)
+				     head-eqs)
+				    (canonicalise-sement-liszt
+				     (sement-liszt non-head-dtr)
+				     non-head-eqs))
+			    :h-cons 
+			    (append (canonicalise-sement-hcons-list
+				     (sement-h-cons head-dtr)
+				     head-eqs)
+				    (canonicalise-sement-hcons-list
+				     (sement-h-cons non-head-dtr)
+				     non-head-eqs)))
 	    (mrs-comparison-output "Hook and slot incompatible")))
       (mrs-comparison-output "Slot not found"))))
 
-(defun compare-sements (sement1 sement2 bindings)
+(defun compare-sements (sement1 sement2)
+  (let ((bindings nil))
     (if (setf bindings (sement-hooks-equal-p (sement-hook sement1)
 					     (sement-hook sement2) bindings))
 	(if (setf bindings (mrs-liszts-equal-p (sement-liszt sement1)
 					       (sement-liszt sement2) 
-					       t bindings))
+					       nil bindings))
+	    ;;; should be t here instead of nil
+	    ;;; to make the check `syntactic' (i.e. fussy)
+	    ;;; but FIX to make `u's into `x's is needed first
 	    (if (setf bindings
 		  (hcons-equal-p (sement-h-cons sement1)
 				 (sement-h-cons sement2)
 				 bindings))
 		bindings
 	      (mrs-comparison-output "~%hcons difference ~A ~A"
-		      (sement-h-cons sement1)
-		      (sement-h-cons sement2)))
+				     (sement-h-cons sement1)
+				     (sement-h-cons sement2)))
 	  nil)				; message comes from mrs-liszt-equal-p
-      nil))
+      nil)))
 
 
 (defun sement-hooks-equal-p (hook1 hook2 bindings)
@@ -319,8 +347,103 @@
 		 nil
 		 bindings))
 	      bindings
-	    (mrs-comparison-output "Mismatch in xarg"))
+	      (mrs-comparison-output "Mismatch in xarg"))
 	(mrs-comparison-output "Mismatch in ltop"))
     (mrs-comparison-output "Mismatch in index")))
 
+(defun equate-sement-hooks (head-hook non-head-hook)
+  ;;; this checks for compatibility of variable types (via variables-equal)
+  ;;; and returns two lists of equalities, which are later interpreted as 
+  ;;; replacement instructions. first is for the non-head-dtr
+  ;;; second (generally empty) for the head-dtr
+  ;;; a) h1 x2 x3 maps to h4 x5 x6
+  ;;;    (((4 . 1) (5 . 2) (6 . 3)) nil)
+  ;;; b) h1 x2 x2 maps to h4 x5 x5
+  ;;;    (((4 . 1) (5 . 2) (5 . 2)) nil)
+  ;;; second 5 . 2 is redundant but not harmful
+  ;;; c) h1 x2 x2 maps to h4 x5 x6
+  ;;;    (((4 . 1) (5 . 2) (6 . 2)))
+  ;;; d) h1 x2 x3 maps to h4 x5 x5
+  ;;;    (((4 . 1) (5 . 2))  ((3 . 2)))
+  ;;; note this could be
+  ;;;    h1 x2 x3 maps to h1 x2 x2
+  ;;;    giving
+  ;;;    (((1 . 1) (2 . 2)) (3 . 2))
+  ;;; this code uses the MRS comparison code but treats each variable
+  ;;; as distinct.  The bindings 
+  ;;; returned by the MRS code are lists of assoc lists
+  ;;; to allow for alternatives - but here can assume just
+  ;;; one possible binding
+  ;;; Note the order of the variables in the call to variables-equal
+  (let* ((index-bindings (variables-equal 
+			  (hook-index non-head-hook)
+			  (hook-index head-hook)
+			  nil nil))
+	 (ltop-bindings (variables-equal
+			 (hook-ltop non-head-hook)
+			 (hook-ltop head-hook)
+			 nil nil))
+	 (xarg-bindings (variables-equal 
+			 (hook-xarg non-head-hook)
+			 (hook-xarg head-hook)
+			 nil nil)))
+    (cond ((null index-bindings)     
+	   (mrs-comparison-output "Mismatch in index variables"))
+	  ((null xarg-bindings)
+	   (mrs-comparison-output "Mismatch in xarg variables"))
+	  ((null ltop-bindings)
+	   (mrs-comparison-output "Mismatch in ltop variables"))
+	  ((eql-var-id (hook-index non-head-hook) (hook-xarg non-head-hook))
+	   ;;; case d - the more complicated one
+	   ;;; take index as canonical
+	   (list (append (car index-bindings) 
+			 (car ltop-bindings))
+		 (list (cons (get-var-num (hook-xarg head-hook))
+			     (get-var-num (hook-index head-hook))))))
+	  (t (list (append (car index-bindings) 
+			   (car xarg-bindings) 
+			   (car ltop-bindings))
+		   nil)))))
+
+
+;;; ******** Code to reset variables to canonical ids *********
+;;; cf rmrs/comp.lisp 
+;;; destrctive
+
+(defun canonicalise-sement-hook (hook bindings)
+  (canonicalise-sement-variable (hook-index hook) bindings)
+  (canonicalise-sement-variable (hook-xarg hook) bindings)
+  (canonicalise-sement-variable (hook-ltop hook) bindings)
+  hook)
+
+(defun canonicalise-sement-slots (slots bindings)
+  (dolist (slot slots)
+    (canonicalise-sement-hook (slot-hook slot) bindings))
+  slots)
+
+(defun canonicalise-sement-liszt (liszt bindings)
+  (dolist (ep liszt)
+    (canonicalise-sement-variable (rel-handel ep) bindings)
+    (dolist (fvp (rel-flist ep))
+      (let ((value (fvpair-value fvp)))
+	(when (var-p value) 
+	  (canonicalise-sement-variable value bindings)))))
+  liszt)
+
+
+(defun canonicalise-sement-variable (var bindings)
+  (let* ((var-id (var-id var))
+	 (replace-value (cdr (assoc var-id bindings))))
+    (when replace-value
+	(setf (var-id var) replace-value))))
+
+(defun canonicalise-sement-hcons-list (hcons-list bindings)
+  (dolist (hcons hcons-list)
+    (canonicalise-sement-variable
+     (hcons-scarg hcons) bindings)
+    (canonicalise-sement-variable
+     (hcons-outscpd hcons) bindings))
+  hcons-list)
+  
+        
 

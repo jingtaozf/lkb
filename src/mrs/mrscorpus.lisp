@@ -292,13 +292,14 @@
 
 (defun mrs-relation-set-equal-p (relset1 relset2 syntactic-p bindings)
   (and (eql (length relset1) (length relset2))
-       (loop for rel-alt1 in relset1
-            append
-            (loop for rel-alt2 in relset2
-                 append
-                 (let ((new-bindings (copy-tree bindings)))
-                   (mrs-relations-equal-p rel-alt1 rel-alt2
-                                          syntactic-p new-bindings))))))
+       (let ((*mrs-comparison-output-control* nil))
+	 (loop for rel-alt1 in relset1
+	     append
+	       (loop for rel-alt2 in relset2
+		   append
+		     (let ((new-bindings (copy-tree bindings)))
+		       (mrs-relations-equal-p rel-alt1 rel-alt2
+					      syntactic-p new-bindings)))))))
 
 (defun mrs-relations-equal-p (rel1 rel2 syntactic-p bindings)
   (if (equal (rel-pred rel1) (rel-pred rel2))

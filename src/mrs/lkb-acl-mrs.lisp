@@ -29,7 +29,9 @@
 
 (define-lkb-frame mrs-sement-check
     ((messages :initform nil
-	    :accessor mrs-sement-algebra-messages))
+	       :accessor mrs-sement-algebra-messages)
+     (sement :initform nil
+	    :accessor mrs-sement-algebra-sement))
   :display-function 'show-mrs-sement-messages
   :width *parse-window-width* 
   :height *parse-window-height*)
@@ -125,7 +127,8 @@
     (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-sement-window (parse-fs edge-record title)
-  (let ((sement (mrs::extract-sement parse-fs edge-record)))
+  (declare (ignore edge-record))
+  (let ((sement (mrs::extract-sement parse-fs)))
     (mp:run-function "Sement MRS"
      #'show-mrs-sement-window-really sement title)))
 
@@ -137,14 +140,18 @@
     (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-sement-check-window (parse-fs edge-record title)
-  (let ((messages (mrs::extract-and-check-sement parse-fs edge-record)))
+  (multiple-value-bind (messages sement)
+      (mrs::extract-and-check-sement parse-fs edge-record)
     (mp:run-function "Sement check"
-     #'show-mrs-sement-check-window-really messages title)))
+		     #'show-mrs-sement-check-window-really 
+		     messages sement title)))
 
-(defun show-mrs-sement-check-window-really (messages title)
+(defun show-mrs-sement-check-window-really (messages sement title)
   (let ((mframe (clim:make-application-frame 'mrs-sement-check)))
     (setf (mrs-sement-algebra-messages mframe) 
       messages)
+    (setf (mrs-sement-algebra-sement mframe) 
+      sement)
     (setf (clim:frame-pretty-name mframe) (or title "Check algebra"))
     (clim:run-frame-top-level mframe)))
 
@@ -231,8 +238,13 @@
 
 (defun show-mrs-sement-messages (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
-  (let ((messages (mrs-sement-algebra-messages mframe)))
+  (let ((messages (mrs-sement-algebra-messages mframe))
+	(sement (mrs-sement-algebra-sement mframe)))
     (clim:with-text-style (stream (lkb-parse-tree-font))
+      (if sement
+	  (clim:with-text-style (stream (lkb-parse-tree-font))
+	    (mrs::output-algebra-sement1 sement 'mrs::simple-indexed stream))
+	(format stream "~%::: Sement structure could not be extracted~%"))
       (if messages
 	  (dolist (message messages)
 	    (format stream "~A~%" message stream))
