@@ -29,14 +29,17 @@
  ((:path . "vm13") (:content . "VerbMobil CD # 13"))
  ((:path . "vm31") (:content . "VerbMobil CD # 31"))
  ((:path . "vm32") (:content . "VerbMobil CD # 32"))
+ ((:path . "demo") (:content . "VerbMobil Sample Dialogue"))
  ((:path . "fuse") (:content . "Balanced Fuse of Corpora Extracts"))
  ((:path . "blend") (:content . "Balanced Blend of Corpora Extracts"))
  ((:path . "aged") (:content . "Aged VerbMobil Data"))
  ((:path . "parc") (:content . "Wall Street Journal (PTB; PARC DB)"))
  ((:path . "wsj00") (:content . "Wall Street Journal (PTB; Section 0)"))
  ((:path . "cell") (:content . "DT Cell Phone Groups (Development Section)"))
+ ((:path . "ecpa") (:content . "Ecommerce Email (Produce Availability)"))
  ((:path . "ecos") (:content . "Ecommerce Email (Order Status)"))
- ((:path . "demo") (:content . "VerbMobil Sample Dialogue")))
+ ((:path . "ecoc") (:content . "Ecommerce Email (Order Cancellation)"))
+ ((:path . "ecpr") (:content . "Ecommerce Email (Product Return)")))
 
 
 
