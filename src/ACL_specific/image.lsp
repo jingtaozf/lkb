@@ -16,7 +16,7 @@
 
    :lisp-files (list :srecord
 		     :eli
-		     (merge-pathnames #p"src/ACL_specific/build-psql.lsp" 
+		     (merge-pathnames #p"src/ACL_specific/build.lsp" 
 				      sys-home))
    
    :opt-speed 3
