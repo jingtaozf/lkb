@@ -116,7 +116,7 @@
        (:file "xml-utils")
        (:file "readgram")
        (:file "readtag")))
-     #+:nil
+
      (:module "redwoods"
       :source-pathname "mrs"
       :binary-pathname "mrs"
