@@ -24,13 +24,15 @@
   (fset 'lisp-mode (symbol-function 'common-lisp-mode))
   (setq fi:common-lisp-image-name 
     (format
-     "%s/%s/lkb"
+     "%s/%s/lkb%s"
      lingo-home
      (cond
       ((string-match "solaris" system-configuration) "solaris")
       ((string-match "linux" system-configuration) "linux")
-      ((string-match "windows" system-configuration) "windows"))))
+      ((string-match "windows" system-configuration) "windows"))
+     (if (string-match "windows" system-configuration) ".exe" "")))
 
+  (setq fi:common-lisp-directory lingo-home)
   (setq fi:lisp-evals-always-compile nil)
   (setq
     fi:lisp-mode-hook
