@@ -9,12 +9,25 @@ systematically going through semtestsuite adding grammar preds etc
 <lex>
 <le>
 <tag>APP$</tag>
-<comment>his,her,its,...</comment>
+<comment>his,her,its,...
+see sem ex 13
+</comment>
 <semstruct>
-<hook><index>X</index><label>H</label></hook>
-<ep><pred/><label>H</label><var>X</var></ep>
+<hook><index>X7</index><label>H4</label></hook>
+<ep><gpred>DEF_EXPLICIT_Q_REL</gpred><label>H4</label><var>X7</var></ep>
+<rarg><rargname>RSTR</rargname><label>H4</label><var>H6</var></rarg>
+<ep><gpred>PRO_POSS_REL</gpred><label>H8</label><var>U</var></ep>
+<rarg><rargname>ARG1</rargname><label>H8</label><var>X9</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H8</label><var>X7</var></rarg>
+<ep><gpred>PRONOUN_Q_REL</gpred><label>H11</label><var>X9</var></ep>
+<rarg><rargname>RSTR</rargname><label>H11</label><var>H12</var></rarg>
+<rarg><rargname>BODY</rargname><label>H11</label><var>H13</var></rarg>
+<ep><gpred>PRON_REL</gpred><label>H14</label><var>X9</var></ep>
+<hcons hreln='qeq'><hi><var>H12</var></hi><lo><var>H14</var></lo></hcons>
+<hcons hreln='qeq'><hi><var>H6</var></hi><lo><var>H8</var></lo></hcons>
 </semstruct>
 </le>
+
 
 <le>
 <tag>AT</tag>
@@ -40,7 +53,19 @@ systematically going through semtestsuite adding grammar preds etc
 ; CS
 ; CSA ;  though, unless, when,...
 ; CSN  ; than
-; CST ; that
+-->
+
+<le>
+<tag>CST</tag>
+<comment>that - although this supplies the prpstn rel in the ERG,
+the prpstn is coming from the construction in RASP, hence semantically
+empty (and hope this works ...)</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<!--
 ; CSW ; whether
 ; DA ; same, former, latter, such, own
 ; DA1 ; little, much
@@ -389,18 +414,19 @@ systematically going through semtestsuite adding grammar preds etc
 <tag>PP$</tag>
 <comment>hers, theirs ...</comment>
 <semstruct>
-<hook><index>X1</index><label>H8</label></hook>
+<hook><index>X1</index><label>H10</label></hook>
 <ep><gpred>DEF_Q_REL</gpred><label>H4</label><var>X1</var></ep>
 <rarg><rargname>RSTR</rargname><label>H4</label><var>H6</var></rarg>
 <rarg><rargname>BODY</rargname><label>H4</label><var>H7</var></rarg>
 <ep><gpred>GENERIC_NOM_REL</gpred><label>H5</label><var>X1</var></ep>
-<ep><gpred>BASIC_POSS_REL</gpred><label>H5</label><var>E</var></ep>
-<rarg><rargname>ARG1</rargname><label>H4</label><var>X</var></rarg>
-<rarg><rargname>ARG2</rargname><label>H4</label><var>X1</var></rarg>
+<ep><gpred>BASIC_POSS_REL</gpred><label>H9</label><var>E</var></ep>
+<rarg><rargname>ARG1</rargname><label>H9</label><var>X</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H9</label><var>X1</var></rarg>
 <ep><gpred>PRONOUN_Q_REL</gpred><label>H0</label><var>X</var></ep>
 <rarg><rargname>RSTR</rargname><label>H0</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H0</label><var>H3</var></rarg>
 <ep><gpred>PRON_REL</gpred><label>H1</label><var>X</var></ep>
+<ing><ing-a><var>H9</var></ing-a><ing-b><var>H8</var></ing-b></ing>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>
@@ -852,21 +878,109 @@ systematically going through semtestsuite adding grammar preds etc
 </le>
 
 <!--
-; punctuation
-, 
-\;
-:
-!
-?
--
-(
-)
-.
-\.\.\. 
-/
-"
+; punctuation - we want this all to be semantically empty
+-->
 
-; 20 tags only needed for training on pretagged data -- not in
+<le>
+<tag>,</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>;</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>:</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>!</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>?</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+
+<le>
+<tag>-</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>(</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>)</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>.</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>...</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>/</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<le>
+<tag>"</tag>
+<comment>!</comment>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+</semstruct>
+</le>
+
+<!--
+
+; 20 tags only needed for training on pretagged data. not in
 ; seclarge.lex so not assigned to untagged data
 
 AAC - I'm assuming I don't need these?
