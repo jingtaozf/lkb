@@ -64,7 +64,7 @@
 	 (orth-raw-value-mapping (fourth orth-raw-mapping))
 	 (raw-orth-field (second orth-raw-mapping))
 	 (values 
-	  (if (string> (lexdb-version lexicon) "3.11")
+	  (if (string> (lexdb-version lexicon) "3.12")
 	      (get-value-set lexicon (2-str raw-orth-field))
 	    (mapcar #'cdar (fn-get-records *lexicon* ''orthography-set)))))
     (mapcan 
