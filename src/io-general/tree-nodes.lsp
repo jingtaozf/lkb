@@ -4,8 +4,41 @@
 ;;; 
 ;;; Ann Copestake
 
-;;; parse output functions which are not dialect specific
+;;; generator output functions which are not dialect specific
 
+(defun show-gen-result nil
+   (if *gen-record*
+      (for edge in *gen-record*
+         do
+         (display-parse-tree edge nil))
+      (let ((possible-edge-name
+               (ask-for-lisp-movable "Current Interaction" 
+                  `(("No generation results - specify an edge number" . ,*edge-id*)) 60)))
+         (when possible-edge-name
+            (let* ((edge-id (car possible-edge-name))
+                   (edge-record (find-gen-edge-given-id edge-id)))
+               (when edge-record 
+                  (display-parse-tree edge-record nil)))))))
+            
+(defun show-gen-edge nil
+   (let ((possible-edge-name
+            (ask-for-lisp-movable "Current Interaction" 
+               `(("Specify an edge number" . ,*edge-id*)) 60)))
+      (when possible-edge-name
+         (let* ((edge-id (car possible-edge-name))
+                (edge-record (find-gen-edge-given-id edge-id)))
+            (when edge-record 
+               (display-parse-tree edge-record t))))))
+
+
+(defun find-gen-edge-given-id (edge-id)
+   (dolist (entry *gen-chart*)
+      (dolist (edge (cdr entry))
+         (when (eql edge-id (edge-id edge))
+            (return-from find-gen-edge-given-id edge)))))
+
+
+;;; parse output functions which are not dialect specific
 
 (defun show-parse nil
    (if *parse-record*
