@@ -1176,15 +1176,22 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   ;;  VAR -> VARNAME | VARNAME [ VARTYPE EXTRAPAIR* ]
   ;; note that the type and extra values are assumed
   ;; to only occur once (or if repeated, to be consistent)
+  ;;
+  ;; LFG-derived MRSs (and in principle any MRS not constructed by ourselves)
+  ;; may contain things like [ ... ARG0 nil ... ]; make the code below treat
+  ;; nil like an "u" variable, even though probably we should complain bitterly
+  ;; to our colleagues.                                         (27-jan-04; oe)
+  ;;
   (let* ((varname (read-mrs-atom istream))
          (name (and varname (string varname)))
          (type (and name (string-downcase (subseq name 0 1))))
          (id (and name (parse-integer name :start 1 :junk-allowed t)))
-         (existing (assoc varname *already-read-vars*))
+         (existing (and name (assoc varname *already-read-vars*)))
          (var (or (cdr existing)
-                  (make-var :id (when varname 
-                                  (or id (funcall *variable-generator*)))
-                            :type type))))
+                  (make-var :id (if varname 
+                                  (or id (funcall *variable-generator*))
+                                  (funcall *variable-generator*))
+                            :type (or type "u")))))
     (unless existing 
       (push (cons varname var) *already-read-vars*))
     (let ((next-char (peek-char t istream nil 'eof)))
@@ -1439,7 +1446,8 @@ VAR -> VARNAME[:CONSTNAME]*
   'DUMMY)
 
 ;;;
-;;; interim solution for MRS `unfilling' until we construct a proper SEMI
+;;; interim solution for MRS `unfilling' until we construct a proper SEMI; note
+;;; that unfill-mrs() _destructively_ modifies its input.
 ;;;
 (defparameter %mrs-extras-filter% nil)
 
@@ -1452,8 +1460,10 @@ VAR -> VARNAME[:CONSTNAME]*
                        for extra in (var-extra variable)
                        for feature = (extrapair-feature extra)
                        for value = (extrapair-value extra)
-                       for match = (find feature filter :key #'first)
-                       unless (and match (eq value (rest match)))
+                       unless (loop
+                                  for (key . match) in filter
+                                  thereis (and (eq feature key) 
+                                               (eq value match)))
                        collect extra)))))
       (unfill-variable (psoa-index mrs))
       (loop
