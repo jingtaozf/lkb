@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2001 -- 2004
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
-;;   see `licence.txt' for conditions.
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;;   see `licence.txt' for conditions.
 
 ;;;
 ;;; generate tdl code for lexical entry
@@ -83,7 +83,6 @@
    (t
     (mapcan #'(lambda (x) (and (cdr x) (list x))) packed))))
 
-
 (defun pack (l2)
   (loop
       for x in l2
@@ -101,8 +100,7 @@
 	     (if (atom x)
 		 x
 	       (cons (car x) (pack (cdr x)))))
-	     (sort p #'pack-order)
-	     ))))
+	     (sort p #'pack-order)))))
 
 ;; list components ordered according to their printed representation
 ;; non-list components come first (non-deterministic ordering)
@@ -510,7 +508,6 @@
 							     :path path
 							     :elt-path elt-path))))))   
 
-
 (defun sql-embedded-text (str)
   (format nil "'~a'" (sql-embedded-text-aux str)))
 
@@ -526,8 +523,7 @@
     (format nil "~a~a" (char str 0) (sql-embedded-text-aux (subseq str 1))))))
 
 (defun sql-like-text (str)
-  (format nil "'~a'" (sql-like-text-aux str))
-  )
+  (format nil "'~a'" (sql-like-text-aux str)))
 
 (defun sql-like-text-aux (str)
   (cond
@@ -543,4 +539,3 @@
     (format nil "\\\\\\\\~a" (sql-like-text-aux (subseq str 1))))
    (t
     (format nil "~a~a" (char str 0) (sql-like-text-aux (subseq str 1))))))
-

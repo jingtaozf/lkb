@@ -1,7 +1,6 @@
 ;;; Copyright (c) 2002-2003 
-;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
-
 
 (in-package :lkb)
 
@@ -92,8 +91,8 @@
 	      (setf flag t))
 	     (T
 	      (push c word-chars)))
-      finally (return (reverse (push (implode-from-chars (reverse word-chars)) res)))
-	      ))
+      finally (return (reverse (push (implode-from-chars (reverse word-chars)) res)))))
+
 ;;;
 ;;; misc
 ;;;
@@ -148,6 +147,7 @@
 ;;; temp
 ;;;
 
+#+:bmw20
 (defun time-parse (str)
   (time
    (parse
@@ -158,8 +158,9 @@
 ;;;
 ;;;
 ;;;
-
+#+:bmw20
 (defvar *rc-file* nil)
+#+:bmw20
 (defun rc (&optional file)
   (if file
       (setf *rc-file* file))
@@ -186,3 +187,38 @@
 		  :sep-c *postgres-export-separator*
 		  :null-str "?"))
 
+;;;
+;;; misc
+;;;
+
+(defun get-assoc-val (x assoc-list)
+  (cdr (assoc x assoc-list)))
+
+
+;;;
+;;; generate TDL code for MWE entries
+;;;
+
+(defun mwe-build-P-list (type keyrel-list)
+  (append
+   (list (list type))
+   (list (cons 'SEM 
+	       (list (cons 'IDRELS
+			   (build-PD-list keyrel-list 1)))))))
+
+(defun build-PD-list (d-list coindex)
+  (append
+   (list (cons 'LAST (build-PD-list-aux-LIST nil coindex)))
+   (list (cons 'LIST (build-PD-list-aux-LIST d-list coindex)))))
+
+(defun build-PD-list-aux-LIST (d-list coindex)
+  (cond
+   ((null d-list)
+    (list (list (str-2-symb (get-coindex-symb coindex)))))
+   (t
+    (append
+     (list (cons 'FIRST (list (car d-list))))
+     (list (cons 'REST (build-PD-list-aux-LIST (cdr d-list) coindex)))))))
+
+(defun get-coindex-symb (i)
+  (format nil "#~a" i))

@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2001 -- 2004
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
-;;   see `licence.txt' for conditions.
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;;   see `licence.txt' for conditions.
 
 ;;;
 ;;; extract field values from lexical entries
@@ -90,7 +90,7 @@
     
     (list
      (extract-raw-list x key path))
-    
+
     (nil
      (encode-mixed-as-str 
       (extract-atom-by-path x key path)))
@@ -191,8 +191,7 @@
     (when (unification-p unification)
        (setf (cdr (assoc :unifs x))
 	(remove unification constraint))
-     (extract-value-from-unification unification)
-      )))
+     (extract-value-from-unification unification))))
 
 (defun extract-fs-list (x key path)
   (extract-fs-list-complex x key path))
@@ -212,8 +211,7 @@
 
 (defun extract-fs-list-complex-aux (unifs path o-list &key e-path
 							   (top '*))
-  (let* (
-	 (end-match (find path
+  (let* ((end-match (find path
 			  unifs
 			  :key #'extract-key-from-unification
 			  :test #'equal))
@@ -294,8 +292,7 @@
 			    :key #'extract-key-from-unification
 			    :test #'equal))
 	 (top-match)
-	 (val (extract-value-from-unification first-match))
-	 )
+	 (val (extract-value-from-unification first-match)))
    (cond
     ((equal path
 	    last)
@@ -372,4 +369,3 @@
     (format nil "\"~a\"" val))
    (t
     (error "unhandled type: ~a" val))))
-

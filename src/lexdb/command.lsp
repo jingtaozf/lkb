@@ -1,3 +1,7 @@
+;;; Copyright (c) 2001 -- 2004
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;;   see `licence.txt' for conditions.
+
 (in-package :lkb)
 
 ;;; LexDB menu commands

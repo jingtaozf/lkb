@@ -1,10 +1,8 @@
 ;;; Copyright (c) 2001 -- 2004
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
-;;   see `licence.txt' for conditions.
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;;   see `licence.txt' for conditions.
 
-;;;
 ;;; export lexicon in various formats
-;;;   (high level functions)
 
 ;;; bmw (oct-03)
 ;;; - 'mixed' type to handle mix of string/symbol values in field mapping
@@ -34,48 +32,51 @@
 
 (defun export-lexicon-to-file (&rest rest)
   (catch 'abort 
-    (apply 'export-lexicon-to-file2 rest)))
+    (apply 'export-lexicon-to-file-aux rest)))
 
-(defun export-lexicon-to-file2 (&key 
+(defun export-lexicon-to-file-aux (&key 
 				(dir (postgres-user-temp-dir))
 				file 
 				(separator *postgres-export-separator*)
 				(lexicon *lexicon*)
 				use-defaults
 				(recurse t))
+  "export to db dump file format"
   (when (and file recurse)
     (format t "ignoring :recurse (ommit :file to enable :recurse)")
     (setf recurse nil))
-  (unless file
-    (if (name lexicon)
-	(setf file (format nil "~a/~a" dir (name lexicon)))
-      (setf file (format nil "~a/unknown" dir))))
+  (when (null file)
+    (setf file (format nil "~a/~a" dir 
+                       (or (name lexicon) "unknown"))))
   (when (typep lexicon 'psql-lex-database)
-    (error "use Merge command to export LExDB"))
+    (error "use 'merge' command to export LexDB"))
   (setf file (namestring (pathname file)))
   (setf *postgres-export-separator* separator)
   (unless use-defaults
     ;; extra data in db entries
     (setf *postgres-current-source* (get-current-source))
     (setf *postgres-export-timestamp* (extract-date-from-source *postgres-current-source*))
-    (setf *postgres-export-timestamp* 
-      (ask-user-for-x 
-       "Export Lexicon" 
-       (cons "Modstamp?" (or *postgres-export-timestamp* "1990-01-01"))))
-    (unless *postgres-export-timestamp* (throw 'abort 'modstamp))
-    
-    (setf *postgres-current-user* 
-      (ask-user-for-x 
-       "Export Lexicon" 
-       (cons "Username?" (or *postgres-current-user* "danf"))))
-    (unless *postgres-current-user* (throw 'abort 'user))
+
+;    (setf *postgres-export-timestamp* 
+;      (ask-user-for-x 
+;       "Export Lexicon" 
+;       (cons "Modstamp?" (or *postgres-export-timestamp* "1990-01-01"))))
+;    (unless *postgres-export-timestamp* (throw 'abort 'modstamp))
+;    
+;    (setf *postgres-current-user* 
+;      (ask-user-for-x 
+;       "Export Lexicon" 
+;       (cons "Username?" (or *postgres-current-user* "danf"))))
+;    (unless *postgres-current-user* (throw 'abort 'user))
+
+    (query-for-modstamp-username)
     (query-for-meta-fields)
     (get-export-version))
 
   (let ((csv-file (format nil "~a.csv" file))
 	(skip-file (format nil "~a.skip" file))
 	(multi-file (format nil "~a.multi.csv" file)))
-    (format t "~%Exporting lexicon ~a to CSV file ~a" (name lexicon) csv-file)
+    (format t "~%~%Please wait: exporting lexicon ~a to CSV file ~a" (name lexicon) csv-file)
     (format t "~%   (skip file: ~a)" skip-file)
     
     (if *postgres-export-multi-separately*
@@ -96,7 +97,7 @@
 		       :direction :output 
 		       :if-exists :supersede :if-does-not-exist :create)
 	(export-to-csv-to-file lexicon csv-file))))
-  (format t "~%Export complete")
+  (format t "~%export complete")
   (when recurse
     (mapcar #'(lambda (x) (export-lexicon :lexicon x 
 					  :dir dir
@@ -114,10 +115,60 @@
 				   file 
 				   (lexicon *lexicon*))
   (when (null file)
-    (let ((lex-name (or (name lexicon) "unknown")))
-      (setf file (namestring (pathname (format nil "~a/~a.tdl" dir lex-name))))))
+    (setf file (namestring 
+                (pathname 
+                 (format nil "~a/~a.tdl" dir 
+                         (or (name lexicon) "unknown"))))))
   (format t "~%(export filename: ~a)" file)
   (export-to-tdl-to-file lexicon file))
+
+;;;
+;;; DB standard io
+;;;
+
+(defun get-new-filename (filename)
+  (loop
+      until (not (probe-file filename))
+      do
+	(setf filename (format nil "~aX" filename))
+      finally
+	(return filename)))
+
+(defun load-scratch-lex (&key filename)
+  (let ((lexicon (make-instance 'cdb-lex-database)))
+    (unless
+        (open-lex lexicon 
+                  :parameters (list (make-nice-temp-file-pathname ".tx")
+                                    (make-nice-temp-file-pathname ".tx-index")))
+      (return-from load-scratch-lex))
+    (load-lex-from-files lexicon (list filename) :tdl)
+    lexicon))
+
+(defun close-scratch-lex nil
+  (let ((lexicon *psql-lexicon*))
+    (fn-get-val lexicon ''clear-scratch)
+    (reconnect lexicon) ;; work around server bug
+    (fn-get-records lexicon 
+                    ''initialize-current-grammar 
+                    (get-filter *psql-lexicon*))))
+
+(defun commit-scratch-lex nil
+  (fn-get-val *psql-lexicon* ''commit-scratch)
+  (empty-cache *psql-lexicon*))
+
+(defun load-tdl-from-scratch (filename)
+  (let ((psql-lexicon *psql-lexicon*))
+    (catch 'abort 
+      (unless psql-lexicon
+	(error "~%psql-lexicon is NULL"))
+      (let ((lexicon (load-scratch-lex :filename filename)))
+	(query-for-meta-fields)
+	(reconnect psql-lexicon);; work around server bug
+	(time 
+         (export-to-db lexicon psql-lexicon))
+	(close-lex lexicon)
+	(format t "~%(private space: ~a entries)" 
+		(length (show-scratch psql-lexicon)))))))
 
 ;;;
 ;;; get meta-level fields
@@ -164,53 +215,6 @@
     (if (and version (boundp version))
 	(symbol-value version)
       (format t "WARNING: no *GRAMMAR-VERSION* defined!"))))
-    
-;;;
-;;; DB standard io
-;;;
-
-(defun get-new-filename (filename)
-  (loop
-      until (not (probe-file filename))
-      do
-	(setf filename (format nil "~aX" filename))
-      finally
-	(return filename)))
-
-(defun load-scratch-lex (&key filename)
-  (let ((lexicon (make-instance 'cdb-lex-database)))
-    (unless
-        (open-lex lexicon 
-                  :parameters (list (make-nice-temp-file-pathname ".tx")
-                                    (make-nice-temp-file-pathname ".tx-index")))
-      (return-from load-scratch-lex))
-    (load-lex-from-files lexicon (list filename) :tdl)
-    lexicon))
-
-(defun close-scratch-lex nil
-  (let ((lexicon *psql-lexicon*))
-    (fn-get-val lexicon ''clear-scratch)
-    (reconnect lexicon) ;; work around server bug
-    (fn-get-records lexicon ''initialize-current-grammar (get-filter *psql-lexicon*))
-    ))
-
-(defun commit-scratch-lex nil
-  (fn-get-val *psql-lexicon* ''commit-scratch)
-  (empty-cache *psql-lexicon*))
-
-(defun load-tdl-from-scratch (filename)
-  (let ((psql-lexicon *psql-lexicon*))
-    (catch 'abort 
-      (unless psql-lexicon
-	(error "~%psql-lexicon is NULL"))
-      (let ((lexicon (load-scratch-lex :filename filename)))
-	(query-for-meta-fields)
-	(reconnect psql-lexicon);; work around server bug...
-	(time 
-         (export-to-db lexicon psql-lexicon))
-	(close-lex lexicon)
-	(format t "~%(private space: ~a entries)" 
-		(length (show-scratch psql-lexicon)))))))
 
 (defun query-for-meta-fields nil
   (setf *postgres-current-source* 
@@ -229,3 +233,14 @@
      (cons "Country code?" (or *postgres-current-country* "UK"))))
   (unless *postgres-current-country* (throw 'abort 'country))) 
 
+(defun query-for-modstamp-username nil
+  (setf *postgres-export-timestamp* 
+    (ask-user-for-x 
+     "Export Lexicon" 
+     (cons "Modstamp?" (or *postgres-export-timestamp* "1990-01-01"))))
+  (unless *postgres-export-timestamp* (throw 'abort 'modstamp))
+  (setf *postgres-current-user* 
+    (ask-user-for-x 
+     "Export Lexicon" 
+     (cons "Username?" (or *postgres-current-user* (sys:user-name)))))
+  (unless *postgres-current-user* (throw 'abort 'user)))

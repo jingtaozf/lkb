@@ -100,7 +100,7 @@
     (setf *lexicon* *psql-lexicon*)))
   
 (defun open-psql-lex (&rest rest)
-  "obsolete"
+  "obsolete (keep for script file compatibility)"
   (apply 'open-psql-lexicon rest))
 
 (defun lookup-word-aux (query-res lexicon)
@@ -168,6 +168,7 @@
 
 #+:bmw20
 (defun i (&optional (slot 'record-cache)) (inspect (slot-value *lexicon* slot)))
+
 (defun index-new-lex-entries (lexicon)
   (let ((semi-out-of-date (semi-out-of-date lexicon)))
     (format t "~%(indexing ~a entries)" (length semi-out-of-date))

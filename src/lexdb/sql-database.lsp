@@ -16,3 +16,20 @@
   (if (next-method-p) (call-next-method)))
 
 
+(defmethod true-port ((lexicon sql-database))
+  (let* ((port (or
+		(port lexicon)
+		(car (excl.osi::command-output "echo $PGPORT")))))
+    (if (equal port "")
+	5432
+      port)))
+ 
+(defmethod get-records ((lexicon sql-database) sql-string)
+  (make-column-map-record
+   (get-raw-records lexicon sql-string)))
+
+(defmethod get-raw-records ((lexicon sql-database) sql-string)
+   (run-query 
+    lexicon 
+    (make-instance 'sql-query :sql-string sql-string)))
+

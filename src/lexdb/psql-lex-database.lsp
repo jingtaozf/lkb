@@ -1,3 +1,7 @@
+;;; Copyright (c) 2001 -- 2004
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;;   see `licence.txt' for conditions.
+
 (in-package :lkb)
 
 ;;;
@@ -378,7 +382,10 @@
 						(fields-tb lexicon))))))
      #'(lambda (x y) (declare (ignore y)) (eq (car x) :unifs))))
     (if (null (fields-map lexicon))
-	(format t "~%WARNING: No definitions for mode='~a' found in table public.defn of database ~a. (Hint: check the value of :table in *psql-lexicon-parameters*, ensure DB table public.defn matches the definitions in lexicon.dfn. If necessary 'Merge new entries' from LexDB menu)" 
+	(format t "~%WARNING: No definitions for mode='~a' found in table public.defn of database ~a.
+ (Hint: check the value of :table in *psql-lexicon-parameters*,
+ ensure DB table public.defn matches the definitions in lexicon.dfn.
+ If necessary 'Merge new entries' from LexDB menu)" 
 	       (fields-tb lexicon) (dbname lexicon))
       )
     (fields-map lexicon))
@@ -612,7 +619,8 @@
 	(error "Unable to determine LexDB version"))
        ((string> (compat-version lexdb-version)
 		 *psql-lexdb-compat-version*)
-	(error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary." lexdb-version *psql-lexdb-compat-version*))
+	(error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax).
+ Try obtaining a more recent LKB binary." lexdb-version *psql-lexdb-compat-version*))
        ((string< (compat-version lexdb-version)
 		 *psql-lexdb-compat-version*)
        (error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax).
@@ -657,10 +665,163 @@
       (format t "~%~%Please wait: vacuuming public table")
       (force-output)
       (connect l2)
-      (run-command l2 command))))
+      (run-command l2 command)
+      (disconnect l2))))
 
 (defmethod connect ((lexicon psql-lex-database)) 
   (if (next-method-p) (call-next-method))
   (setf (lexdb-version lexicon) 
     (get-db-version lexicon)))	
- 
+
+;;;
+;;;
+;;;
+
+(defmethod clear-scratch ((lexicon psql-lex-database))
+  (fn-get-records lexicon ''clear-scratch))
+
+(defmethod get-db-version ((lexicon psql-lex-database))
+  (let* 
+      ((sql-str "SELECT val FROM public.meta WHERE var='db-version' LIMIT 1;"))
+    (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
+    
+(defmethod get-filter ((lexicon psql-lex-database))
+  (let* 
+      ((sql-str "SELECT val FROM meta WHERE var='filter' LIMIT 1;"))
+    (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
+    
+(defmethod next-version (id (lexicon psql-lex-database))
+  (let* ((sql-str (sql-next-version lexicon (string-downcase id)))
+	 (res (caar (records (run-query 
+			      lexicon 
+			      (make-instance 'sql-query :sql-string sql-str))))))
+    (str-2-num res 0)))
+
+(defmethod build-lex ((lexicon psql-lex-database) &key (semi t))
+  (build-lex-aux lexicon)
+  (if semi
+      (cond
+       ((semi-up-to-date-p lexicon)
+	(format t "~%(loading SEM-I into memory)")
+	(unless (mrs::semi-p 
+		 (catch 'pg::sql-error
+		   (mrs::populate-*semi*-from-psql)))
+	  (format t "~% (unable to retrieve database SEM-I)"))
+	(index-lexical-rules)
+	(index-grammar-rules))
+       (t
+	(format t "~%WARNING: no lexical entries indexed for generator"))))
+  lexicon)
+
+(defmethod build-lex-aux ((lexicon psql-lex-database))
+  (reconnect lexicon) ;; work around server bug
+  (cond 
+   ((not (user-read-only-p lexicon))
+    (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon)))
+   (t
+    (format t "~%(user ~a has read-only privileges)" (user lexicon))))    
+  (format t "~%(LexDB filter: ~a )" (get-filter lexicon))
+  (let ((size (fn-get-val lexicon ''size-current-grammar)))
+    (if (string= "0" size)
+	(format t "~%WARNING: 0 entries passed the LexDB filter" size)
+      (format t "~%(active lexical entries: ~a )" size)))
+  (empty-cache lexicon))
+
+
+;;;
+;;;
+;;;
+
+(defmethod sql-next-version ((lexicon psql-lex-database) id)
+  (fn lexicon 'next-version id))
+
+(defmethod sql-orthography-set ((lexicon psql-lex-database))
+  (fn lexicon 'orthography-set))
+
+(defmethod sql-lex-id-set ((lexicon psql-lex-database))
+  (fn lexicon 'lex-id-set))
+
+(defmethod sql-lookup-word ((lexicon psql-lex-database) word)
+  (fn lexicon 'lookup-word (string-downcase word)))
+
+(defmethod sql-retrieve-entries-by-orthkey ((lexicon psql-lex-database) select-list word)
+  (fn lexicon 'retrieve-entries-by-orthkey select-list (string-downcase word)))
+
+(defmethod sql-retrieve-entry ((lexicon psql-lex-database) select-list word)
+  (fn lexicon 'retrieve-entry select-list word))
+
+(defmethod sql-retrieve-all-entries ((lexicon psql-lex-database) select-list)
+  (fn lexicon 'retrieve-all-entries select-list))
+
+(defmethod user-read-only-p ((lexicon psql-lex-database))
+  (or (string= "t" (fn-get-val lexicon ''user-read-only-p (user lexicon)))
+      (string= "T" (fn-get-val lexicon ''user-read-only-p (user lexicon)))))
+
+(defmethod dump-db ((lexicon psql-lex-database))  
+    (fn-get-val lexicon ''dump-db))
+
+(defmethod dump-scratch-db ((lexicon psql-lex-database) filename)  
+  (setf filename (namestring (pathname filename)))
+  (fn-get-records lexicon ''dump-scratch-db filename))
+
+(defmethod show-scratch ((lexicon psql-lex-database))
+  (fn-get-records lexicon ''show-scratch))
+
+
+(defmethod merge-into-db ((lexicon psql-lex-database) 
+			  rev-filename)  
+  (run-command-stdin lexicon 
+		     (format nil "~a;~%~a;" 
+			     "DELETE FROM temp" 
+			     "COPY temp FROM stdin DELIMITERS ',' WITH NULL AS ''") 
+		     rev-filename)
+  (let ((count-new
+	 (str-2-num
+	  (fn-get-val lexicon ''merge-into-db2)))) 
+    (format t "~%(~a new entries)" count-new)
+    (unless (equal 0 count-new)
+      (vacuum-public-revision lexicon))
+    count-new))
+
+(defmethod merge-defn ((lexicon psql-lex-database) 
+		       dfn-filename)  
+  (when (catch 'pg:sql-error 
+	  (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL;"))
+    (run-command lexicon "DROP TABLE temp_defn")
+    (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL ;"))
+  (run-command-stdin lexicon 
+		     "COPY temp_defn FROM stdin" 
+		     dfn-filename)
+  (let ((count-new-dfn 
+	 (str-2-num (fn-get-val lexicon ''merge-defn))))
+    (run-command lexicon "DROP TABLE temp_defn")
+    (format t "~%(~a new field mappings)" count-new-dfn)
+    count-new-dfn))
+
+(defmethod initialize-userschema ((lexicon psql-lex-database))
+  (unless
+      (fn-get-val lexicon ''test-user (user lexicon))
+    (format t "~%(creating private space for user ~a)" (user lexicon))
+    (fn-get-val lexicon ''create-schema (user lexicon))
+    (if *postgres-mwe-enable*
+	(mwe-initialize-userschema lexicon))))
+
+(defmethod semi-setup-1 ((lexicon psql-lex-database))  
+  (fn-get-records lexicon ''semi-setup-1))
+
+(defmethod semi-setup-2 ((lexicon psql-lex-database))  
+  (fn-get-records lexicon ''semi-setup-2))
+
+(defmethod semi-up-to-date-p ((lexicon psql-lex-database))  
+  (string= "t" (fn-get-val lexicon ''semi-up-to-date-p)))
+
+(defmethod semi-out-of-date ((lexicon psql-lex-database))  
+  (mapcar #'(lambda (x) (2-symb (car x))) 
+	  (records 
+	   (fn-get-raw-records lexicon ''semi-out-of-date))))
+
+(defun compat-version (lexdb-version)
+  (when (stringp lexdb-version)
+    (subseq lexdb-version 0 3)))  
+    
+

@@ -1,3 +1,7 @@
+;;; Copyright (c) 2001 -- 2004
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;;   see `licence.txt' for conditions.
+
 (in-package :lkb)
 
 (defvar *psql-lexicon-parameters*) ;; define in GRAMMAR/globals.lsp
@@ -76,3 +80,18 @@
   (defun LKB::RELOAD-ROOTS-MWE nil)
   (defun LKB::SET-LEX-ENTRY nil)
   (defun LKB::MAKE-INSTANCE-PSQL-LEX-ENTRY nil))
+
+(defun psql-initialize ()
+  ;;
+  ;; make sure we `mark' the current universe as PSQL-enabled.
+  ;;
+  (pushnew :psql *features*)
+  (handler-case (load "libpq.so") 
+    (file-error () 
+      ;; some feedback to user
+      (format t ";   Warning: cannot load libpq.so")
+      (format t "~%;            (PSQL lexicon functionality will be unavailable)")
+      (format t "~%;            (hint: are the PostgreSQL libraries installed on your machine?)")
+      ;; need this for backward compatibility with ERG script
+      ;; (also a good idea anyway)
+      (setf *features* (remove :psql *features*)))))
