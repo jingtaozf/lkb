@@ -583,7 +583,8 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
 
 Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
                                       Tsdb_value **attribute_list,
-                                      Tsdb_node* conditions) {
+                                      Tsdb_node* conditions,
+                                      char *report) {
 
 /*****************************************************************************\
 |*        file: 

@@ -228,6 +228,7 @@ typedef struct tsdb {
 #endif
 
   Tsdb_history **history;
+  int history_position;
 } Tsdb;
 
 #if !defined(TSDB_C)
@@ -385,7 +386,7 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **, int,
                                      Tsdb_relation *, int);
 Tsdb_selection *tsdb_simple_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **, Tsdb_value **,
-                                      Tsdb_node *);
+                                      Tsdb_node *, char *);
 
 int tsdb_server_initialize(void);
 void tsdb_server(void);

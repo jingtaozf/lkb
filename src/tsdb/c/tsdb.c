@@ -40,8 +40,10 @@ Tsdb tsdb = {
   (char *)NULL,            /* pager */
   (char *)NULL,            /* query */
 #ifdef DEBUG
-  (char *)NULL             /* debug_file */
+  (char *)NULL,            /* debug_file */
 #endif
+  (Tsdb_history **)NULL,   /* history */
+  -1                       /* history_position */
 }; /* tsdb */
 
 FILE *tsdb_default_stream = TSDB_DEFAULT_STREAM;

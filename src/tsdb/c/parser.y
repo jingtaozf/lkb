@@ -53,6 +53,7 @@
        Y_RELATIONS
        Y_TABLE
        Y_WHERE
+       Y_REPORT
        Y_ADD
        Y_FROM
        Y_INTO
@@ -73,6 +74,7 @@
 %token <integer> Y_INTEGER
 
 %type <string> y_special
+               y_retrieve_report
 
 %type <tsdb_value_array> y_attribute_list
                          y_value_list
@@ -173,31 +175,52 @@ y_deletion :
 
 y_retrieval :
   Y_RETRIEVE y_attribute_list {
-    tsdb_complex_retrieve(NULL, $2, NULL);
+    tsdb_complex_retrieve((Tsdb_value **)NULL, $2,
+                          (Tsdb_node *)NULL, (char *)NULL);
   }
 |
   Y_RETRIEVE y_attribute_list Y_WHERE y_condition {
-    tsdb_complex_retrieve(NULL, $2, $4);
+    tsdb_complex_retrieve((Tsdb_value **)NULL, $2, $4, (char *)NULL);
   }
 |
   Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list {
-    tsdb_complex_retrieve($4, $2, NULL);
+    tsdb_complex_retrieve($4, $2, (Tsdb_node *)NULL, (char *)NULL);
   }
 |
   Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list Y_WHERE y_condition {
-    tsdb_complex_retrieve($4, $2, $6);
+    tsdb_complex_retrieve($4, $2, $6, (char *)NULL);
+  }
+|
+  Y_RETRIEVE y_attribute_list y_retrieve_report {
+    tsdb_complex_retrieve((Tsdb_value **)NULL, $2, (Tsdb_node *)NULL, $3);
+  }
+|
+  Y_RETRIEVE y_attribute_list Y_WHERE y_condition y_retrieve_report {
+    tsdb_complex_retrieve((Tsdb_value **)NULL, $2, $4, $5);
+  }
+|
+  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list y_retrieve_report {
+    tsdb_complex_retrieve($4, $2, (Tsdb_node *)NULL, $5);
+  }
+|
+  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list
+    Y_WHERE y_condition
+    y_retrieve_report {
+    tsdb_complex_retrieve($4, $2, $6, $7);
   }
 |
   Y_RETRIEVE '*' Y_WHERE y_condition {
-    tsdb_complex_retrieve(NULL, NULL , $4);
+    tsdb_complex_retrieve((Tsdb_value **)NULL, (Tsdb_value **)NULL,
+                          $4, (char *)NULL);
   }
 |
   Y_RETRIEVE '*' Y_FROM y_attribute_list {
-    tsdb_complex_retrieve($4, NULL, NULL);
+    tsdb_complex_retrieve($4, (Tsdb_value **)NULL,
+                          (Tsdb_node *)NULL, (char *)NULL);
   }
 |
   Y_RETRIEVE '*' Y_FROM y_attribute_list Y_WHERE y_condition {
-    tsdb_complex_retrieve($4, NULL, $6);
+    tsdb_complex_retrieve($4, (Tsdb_value **)NULL, $6, (char *)NULL);
   }
 |
   Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER {
@@ -205,7 +228,7 @@ y_retrieval :
     from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
     from[1] = tsdb_integer($4);
     from[2] = (Tsdb_value *)NULL;
-    tsdb_complex_retrieve(&from[0], $2, (Tsdb_node *)NULL);
+    tsdb_complex_retrieve(&from[0], $2, (Tsdb_node *)NULL, (char *)NULL);
   }
 |
   Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER Y_WHERE y_condition {
@@ -213,7 +236,25 @@ y_retrieval :
     from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
     from[1] = tsdb_integer($4);
     from[2] = (Tsdb_value *)NULL;
-    tsdb_complex_retrieve(&from[0], $2, $6);
+    tsdb_complex_retrieve(&from[0], $2, $6, (char *)NULL);
+  }
+|
+  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER y_retrieve_report {
+    Tsdb_value **from;
+    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
+    from[1] = tsdb_integer($4);
+    from[2] = (Tsdb_value *)NULL;
+    tsdb_complex_retrieve(&from[0], $2, (Tsdb_node *)NULL, $5);
+  }
+|
+  Y_RETRIEVE y_attribute_list Y_FROM Y_INTEGER
+    Y_WHERE y_condition
+    y_retrieve_report {
+    Tsdb_value **from;
+    from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
+    from[1] = tsdb_integer($4);
+    from[2] = (Tsdb_value *)NULL;
+    tsdb_complex_retrieve(&from[0], $2, $6, $7);
   }
 |
   Y_RETRIEVE '*' Y_FROM Y_INTEGER {
@@ -221,7 +262,8 @@ y_retrieval :
     from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
     from[1] = tsdb_integer($4);
     from[2] = (Tsdb_value *)NULL;
-    tsdb_complex_retrieve(&from[0], (Tsdb_value **)NULL, (Tsdb_node *)NULL);
+    tsdb_complex_retrieve(&from[0], (Tsdb_value **)NULL,
+                          (Tsdb_node *)NULL, (char *)NULL);
   }
 |
   Y_RETRIEVE '*' Y_FROM Y_INTEGER Y_WHERE y_condition {
@@ -229,7 +271,13 @@ y_retrieval :
     from = (Tsdb_value **)malloc(2 * sizeof(Tsdb_value *));
     from[1] = tsdb_integer($4);
     from[2] = (Tsdb_value *)NULL;
-    tsdb_complex_retrieve(&from[0], (Tsdb_value **)NULL, $6);
+    tsdb_complex_retrieve(&from[0], (Tsdb_value **)NULL, $6, (char *)NULL);
+  }
+;
+
+y_retrieve_report :
+  Y_REPORT Y_STRING {
+    $$ = $2;
   }
 ;
 
