@@ -184,10 +184,12 @@
   (when (and dbitem (semdbitem-extra dbitem))
     (let ((class (first (semdbitem-extra dbitem))))
       (case class
+#|        
 	(qua (if (vit-hole-var-p (second arglist))
 		 (setf (second arglist) 
 		   (make-vit-label-var :id (vit-var-id 
-					    (second arglist))))))
+                   (second arglist))))))
+|#                   
 	(coord (setf (rest arglist)
 		 (filter-coordination-args (rest arglist))))
 	(t t)
