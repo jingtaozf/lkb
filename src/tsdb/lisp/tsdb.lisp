@@ -86,7 +86,7 @@
   (when verbose
     (format
      *tsdb-io*
-     "close-connection(): `~a' expiry."
+     "close-connection(): `~a' expiry.~%"
      (connection-data connection))))
 
 (defun initialize-tsdb (&optional cache &key action background name pattern)
@@ -227,14 +227,12 @@
                (let ((result (loop
                                  for form = (read stream nil :eof)
                                  until (eq form :eof)
-;                                 do (pprint form)
                                  collect form)))
                  (when pid 
                    (close stream)
                    #+:allegro
                    (loop until (sys:os-wait nil pid)))
-                 (unless *tsdb-debug-mode-p*
-                   (delete-file file))
+                 (unless *tsdb-debug-mode-p* (delete-file file))
                  result)))))))))
 
 (defun create-cache (data &key (protocol :cooked) (verbose t) schema allp)

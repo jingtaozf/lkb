@@ -838,7 +838,11 @@
          (*unify-debug* :return)
          (%failure% nil)
          (status 0)
-         (result (when dagp (rule-full-fs rule)))
+         (result (when dagp 
+                   #+:restrict
+                   (if *chart-packing-p* (rule-rtdfs rule) (rule-full-fs rule))
+                   #-:restrict
+                   (rule-full-fs rule)))
          (paths (rule-order rule)))
     (when result
       (with-unification-context (foo)
@@ -879,7 +883,13 @@
     (let* ((dagp (smember dagp '(:irule :word t)))
            (*unify-debug* :return)
            (%failure% nil)
-           (rtdfs (when dagp (rule-full-fs mrule)))
+           (rtdfs (when dagp 
+                    #+:restrict
+                    (if *chart-packing-p* 
+                      (rule-rtdfs mrule) 
+                      (rule-full-fs mrule))
+                    #-:restrict
+                    (rule-full-fs mrule)))
            (tdfs (when dagp (edge-dag preterminal)))
            (result (when (and rtdfs tdfs)
                      (uday rtdfs tdfs '(args first))))

@@ -364,7 +364,7 @@
         with length = (length string)
         for key in *import-email-headers*
         for end = (min length (+ offset (length key)))
-        when (string-equal string key :start1 offset :end1 end) do
+        when (string= string key :start1 offset :end1 end) do
           (push (cons :category "EH") result)
           (push (cons :header t) result)
           (when (string-equal key "From " :start1 offset :end1 end)

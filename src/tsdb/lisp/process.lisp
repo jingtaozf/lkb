@@ -735,7 +735,7 @@
                                interactive burst)
 
   (cond
-   ((and client (client-p client))
+   ((and client (eq type :parse) (client-p client))
     (let* ((tid (client-tid client))
            (status (if (eq (client-protocol client) :lisp)
                      (revaluate 
