@@ -75,6 +75,25 @@
        (:file "genpredict")))           ; LKB specific - null semantics
 
      #+:nil
+      (:module "information-structure"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :components
+      ((:file "infostr")))
+
+     #+:nil
+      (:module "theorem-proving"
+      :source-pathname "tproving"
+      :binary-pathname "tproving"
+      :components
+      ((:file "gq")
+       (:file "gq-to-fol")                           
+       (:file "fol-to-nf")
+       (:file "dtp-interface")
+       (:file "nf-to-fol")
+       (:file "fol-to-mrs")))
+
+     #+:nil
       (:module "extensions"
        :source-pathname "mrs"
        :binary-pathname "mrs"
