@@ -1,5 +1,5 @@
 ;;; Copyright (c) 2003-2004 Ben Waldron
-;;; see licence.txt for conditions
+;;; see licence.txt for conditions\
 
 ;; Portions copyright (c) 1996, 1997, 1999, 2000, 2001 Free Software Foundation, Inc.
 
@@ -10,7 +10,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.00")
+(defvar *lexdb-pg-interface-version* "2.01")
 
 (require 'widget)
 
@@ -148,11 +148,13 @@
 (defvar *lexdb-record-features*)
 (defvar *lexdb-field-mask*)
 (defvar *lexdb-read-only*)
+(defvar *lexdb-hidden*)
 (defvar *lexdb-minibuffer-max*)
 (defvar *lexdb-active-id-ring*)
 (defvar *new-entries-buffer*)
 
 (setf *lexdb-read-only* '(:version :userid :modstamp :orthkey))
+(setf *lexdb-hidden* '(:jlink :semclasses))
 (setf *lexdb-minibuffer-max* 80)
 (setf *lexdb-active-id-ring* nil)
 (setf *new-entries-buffer* "*new-entries*")
@@ -365,15 +367,11 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (switch-to-buffer buffer)))
 
 (defun lexdb-commit-record-aux (buffer)
-  (lexdb-update-record-from-buffer buffer)
-  (lexdb-display-record buffer)
-  (cond 
-   ((y-or-n-p "Confirm commit record: ")
+  (lexdb-normalize-buffer buffer)
+  (when (y-or-n-p "Confirm commit record: ")
     (lexdb-store-record (car lexdb-record))
     (lexdb-load-record-aux (cdr (assoc :name (car lexdb-record)))))
-   (t
-    (lexdb-normalize-buffer buffer)))
-    (with-current-buffer buffer
+  (with-current-buffer buffer
     t))
 
 (defun lexdb-complete-field-aux nil
@@ -417,7 +415,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (with-current-buffer (get-buffer-create buffer)
       (lexdb-mode)
       (setf lexdb-record record)
-      (setf lexdb-tdl tdl)
+      (setf lexdb-tdl (or (cle-record-to-tdl (car record)) ""))
       (lexdb-display-record buffer)
       (goto-char pos))))
 
@@ -472,11 +470,15 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (let ((fields (cle-retrieve-record-fields id))
 	(sizes (cle-retrieve-record-sizes)))
     (setf *lexdb-field-mask* (cle-retrieve-field-mask))
-    (setf *lexdb-record-features* (cle-retrieve-record-features))
-    (setf lexdb-tdl (cle-retrieve-tdl (cdr (assoc :name fields))))
+    (setf *lexdb-record-features* (reverse 
+				   (set-difference
+				    (cle-retrieve-record-features)
+				    *lexdb-hidden*)))
     (unless fields
       (princ (format "%s not found! " id))
       (setf fields (l:make-empty-record id)))
+    (setf lexdb-tdl (or (cle-retrieve-tdl (cdr (assoc :name fields)))
+			""))
     (setf lexdb-record
 	  (cons
 	   fields
@@ -486,9 +488,6 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (if (equal (cdr (assoc :name record-in))
 	     "")
       (error "cannot commit record with no NAME"))
-;  (push 
-;   (cons :orthkey (first (split-string (cdr (assoc :orthography record-in)))))
-;   record-in)
   (princ "please wait... ")
   ;;(terpri)
   (cle-store-record record-in)
@@ -546,7 +545,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun l:prepare-record (full-record)
   (mapcar #'(lambda (x) (cons x 
 			      (l:field-val-str (assoc x full-record))))
-			      *lexdb-record-features*))
+	  *lexdb-record-features*))
 
 (defun l:field-val-str (record-elt)
   (l:val-str (cdr record-elt)))
@@ -686,11 +685,14 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
    (cle-eval-lexdb 'mneum-f))
 
 (defun cle-retrieve-record-features nil
-   (cle-eval-lexdb 'record-features))
+   (cle-eval-lexdb 'fields))
 
 (defun cle-store-record (record-in)
   (cle-eval-lexdb 'set-lex-entry 
 		  (format "(make-instance 'psql-lex-entry :fv-pairs '%S))" record-in)))
+
+(defun cle-record-to-tdl (record-in)
+  (cle-eval-lexdb 'record-to-tdl (format "'%S" record-in)))
 
 (defun cle-empty-psql-cache nil
   (cle-eval-lexdb 'empty-cache))

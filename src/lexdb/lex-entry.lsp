@@ -7,125 +7,76 @@
 (defmethod orthkey ((x lex-entry))
   (car (last (slot-value x 'orth))))
   
-(defmethod to-csv ((x lex-entry) fields-map)
+(defmethod to-csv ((x lex-entry) lexicon)
   "provide line entry for lexicon db import file"
-  (let* ((s (copy-slots x fields-map))
-
-	 (name (extract-field s :name fields-map))
-	 (f1 (extract-field s :f1 fields-map))
-	 (f2 (extract-field s :f2 fields-map))
-	 (f3 (extract-field s :f3 fields-map))      
-	 (f6 (extract-field s :f6 fields-map))
-	 (f4 (extract-field s :f4 fields-map))
-	 (f7 (extract-field s :f7 fields-map))
-	 (f5 (extract-field s :f5 fields-map))
-	 (f8 (extract-field s :f8 fields-map))
-	 (f9 (extract-field s :f9 fields-map))
-	 (orthkey (orthkey x))
-	 (pronunciation (extract-field s :pronunciation fields-map))
-;	 (orth-list (string-2-str-list-on-spc f2))
-	 (multi-base-name (and 
-			   *postgres-export-multi-separately* 
-			   (multi-p :name name :type f1)))
-	 (line 
-	  (format nil "~a~%"
-		  (csv-line
-		   name
-		   *postgres-current-user* ;;userid
-		   (num-2-str *postgres-export-version*) ;;version
-		   *postgres-export-timestamp* ;;modstamp
-		   f1
-		   f2 
-;		   (get-orthkey orth-list)
-		   orthkey
-		   pronunciation
-		   f3
-		   f4
-		   f5
-		   f6
-		   f7
-		   f8
-		   f9
-		   "" ;;complete
-		   "" ;;semclasses
-		   "" ;;preferences
-		   "" ;;classifier
-		   "" ;;selectrest
-		   "" ;;jlink
-		   "" ;;comments
-		   "" ;;exemplars
-		   "" ;;usages
-		   *postgres-current-lang* ;;lang
-		   *postgres-current-country* ;;country
-		   "" ;;dialect
-		   "" ;;domains
-		   "" ;;genres
-		   "" ;;register
-		   "1";;confidence
-		   *postgres-current-source* ;;source
-		   "1" ;;flags: 1 = not deleted
-		   ))))
-    (cond 
-     ((null (cdr (assoc :unifs s)))
-      (if multi-base-name
-	  (to-multi-csv-line :name name
-			     :base-name multi-base-name
-			     :particle f8
-			     :type f1
-			     :keyrel f3)
-      line))
-     (t
-      (format *postgres-export-skip-stream* "~a" (to-tdl x))
-      ""))))
+  (with-slots (fields-map fields) lexicon
+    (let* ((s (copy-slots x fields-map))
+	   (extraction-fields (remove-duplicates
+			       (cons :name (grammar-fields lexicon))))
+	   (field-vals (append
+			(mapcar 
+			 #'(lambda (x) 
+			     (cons x
+				   (extract-field s x fields-map)))
+			 extraction-fields)
+			(list
+			 (cons :orthkey (orthkey x))
+			 (cons :userid *postgres-current-user*)
+			 (cons :version (num-2-str *postgres-export-version*))
+			 (cons :modstamp *postgres-export-timestamp*)
+			 (cons :lang *postgres-current-lang*)
+			 (cons :country *postgres-current-country*)
+			 (cons :confidence 1)
+			 (cons :source *postgres-current-source*)
+			 (cons :flags 1))))
+	   (ordered-field-vals (ordered-symb-val-list fields field-vals))
+	   (line 
+	    (format nil "~a~%" 
+		    (str-list-2-str
+		     (mapcar
+		      #'(lambda (x)
+			  (let ((val (cdr x)))
+			    (if val
+				(2-str val)
+			      nil)))
+		      ordered-field-vals)
+		     :sep-c #\tab
+		     :null-str "\\N"))))
+      (cond 
+       ((null (cdr (assoc :unifs s)))
+	line)
+       (t
+	(format *postgres-export-skip-stream* "~a" (to-tdl x))
+	"")))))
 
 (defmethod to-db ((x lex-entry) (lexicon psql-lex-database))
   "insert lex-entry into lexicon db (user scratch space)"
-  (let* ((fields-map (fields-map lexicon))
-
-	 (s (copy-slots x fields-map))
-
-	 (name (extract-field s :name fields-map))
-	 (f1 (extract-field s :f1 fields-map))
-	 (f2 (extract-field s :f2 fields-map))
-	 (f3 (extract-field s :f3 fields-map))      
-	 (f6 (extract-field s :f6 fields-map))
-	 (f4 (extract-field s :f4 fields-map))
-	 (f7 (extract-field s :f7 fields-map))
-	 (f5 (extract-field s :f5 fields-map))
-	 (f8 (extract-field s :f8 fields-map))
-	 (f9 (extract-field s :f9 fields-map))	 
-	 (pronunciation (extract-field s :pronunciation fields-map))
+  (with-slots (fields-map) lexicon
+    (let* ((s (copy-slots x fields-map))
+	   (extraction-fields (remove-duplicates
+			       (cons :name (grammar-fields lexicon))))
+	   (extracted-fields
+	    (mapcan 
+	     #'(lambda (x) (list x (extract-field s x fields-map)))
+	     extraction-fields))
 	 
-;	 (orth-list (string-2-str-list-on-spc f2))
-	 (psql-le
-	  (make-instance-psql-lex-entry
-	   :name name
-	   :f1 f1
-;	   :f2 orth-list	;list
-	   :f2 f2	;list
-;	   :orthkey (get-orthkey orth-list)
-	   :f3 f3
-	   :f4 f4
-	   :f5 f5
-	   :f6 f6
-	   :f7 f7
-	   :f8 f8
-	   :f9 f9
-           :pronunciation pronunciation
-	   :country *postgres-current-country*
-	   :lang *postgres-current-lang*
-	   :source (extract-pure-source-from-source *postgres-current-source*)
-	   :confidence 1
-	   :flags 1
-	   )))
-    (cond
-     ((null (cdr (assoc :unifs s)))
-      (set-lex-entry lexicon psql-le)
-       (empty-cache lexicon))
-     (t
+	   (psql-le
+	    (apply #'make-instance-psql-lex-entry
+		   (append extracted-fields
+			   (list :country *postgres-current-country*
+				 :lang *postgres-current-lang*
+				 :source (extract-pure-source-from-source *postgres-current-source*)
+				 :confidence 1
+				 :flags 1
+				 )))))
+      (cond
+       ((null (cdr (assoc :unifs s)))
+	(set-lex-entry lexicon psql-le)
+	(empty-cache lexicon))
+       (t
        (format t "~%skipping super-rich entry:~%~a" (to-tdl x))
-      nil))))
-
+       nil)))))
+  
 (defmethod copy-slots ((x lex-entry) fields-map)
   "copy slots for use in destructive operations"
   (let* ((slot-names
@@ -151,6 +102,8 @@
    (tdl-val-str (lex-entry-id x))
    (to-tdl-body x)))
 	  
+(defmethod to-tdl ((x null)) nil)
+
 (defmethod to-tdl-body ((x lex-entry))
   (p-2-tdl (pack-unifs (lex-entry-unifs x))))
 	  

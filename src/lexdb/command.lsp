@@ -12,7 +12,7 @@
 	   (typep *psql-lexicon* 'psql-lex-database)
 	   (connection *psql-lexicon*))
     (error "please initialize PSQL lexicon"))
-  (let ((filename (get-filename rest :ending ".csv" :existing t)))
+  (let ((filename (get-filename rest :ending ".tsv" :existing t)))
     (when filename
       (format t 
 	      "~%~%Please wait: merging files ~a.* into lexical database ~a" 
@@ -27,7 +27,7 @@
 	   (typep *psql-lexicon* 'psql-lex-database)
 	   (connection *psql-lexicon*))
     (error "please initialize PSQL lexicon"))
-  (let ((filename (get-filename rest :ending ".csv" :existing nil)))
+  (let ((filename (get-filename rest :ending ".tsv" :existing nil)))
     (when filename
       (format t 
 	      "~%~%Please wait: dumping lexical database ~a to files ~a.*" 

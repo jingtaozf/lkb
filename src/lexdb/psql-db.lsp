@@ -15,22 +15,27 @@
 	(progn
 	  (get-postgres-temp-filename)
 	  (let* ((revision-filename 
-		 (namestring (pathname (format nil "~a.csv" filename))))
-		(defn-filename 
-		    (namestring (pathname (format nil "~a.dfn" filename))))
+		  (namestring (pathname (format nil "~a.tsv" filename))))
+		 (defn-filename 
+		     (namestring (pathname (format nil "~a.dfn" filename))))
+		 (fld-filename 
+		     (namestring (pathname (format nil "~a.fld" filename))))
 		 (pg-files 
 		  (string-2-str-list-on-spc
-;		   (dump-db *psql-lexicon*)
 		   (caar (sql-fn-get-raw-records *psql-lexicon* :dump_db))
 		   :esc nil))
 		 (pg-rev (first pg-files))
-		 (pg-dfn (second pg-files)))
+		 (pg-dfn (second pg-files))
+		 (pg-fld (third pg-files)))
 	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
 							 pg-rev
 							 revision-filename))
 	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
 							 pg-dfn
 							 defn-filename))
+	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
+							 pg-fld
+							 fld-filename))
 	    nil)))
     (format t "~%Dump aborted...")))
 
@@ -66,7 +71,7 @@
 	    (progn
 	      (get-postgres-temp-filename)
 	      (let* ((rev-filename 
-		      (absolute-namestring "~a.csv" 
+		      (absolute-namestring "~a.tsv" 
 					   filename))
 		     (dfn-filename 
 		      (absolute-namestring "~a.dfn" 

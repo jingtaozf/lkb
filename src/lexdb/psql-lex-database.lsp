@@ -149,8 +149,11 @@
 (defmethod id-to-tdl ((lexicon psql-lex-database) id)
   (to-tdl (read-psort lexicon id)))
 
-(defmethod read-psort 
-    ((lexicon psql-lex-database) id &key (cache t) (recurse t) (new-instance nil))
+(defmethod grammar-fields ((lexicon psql-lex-database))
+  (remove-duplicates
+   (mapcar #'second (fields-map lexicon))))
+
+(defmethod read-psort ((lexicon psql-lex-database) id &key (cache t) (recurse t) (new-instance nil))
   (declare (ignore recurse))
   (with-slots (psorts) lexicon
     (let ((hashed 
@@ -161,21 +164,28 @@
 			 :EMPTY)
 	       hashed))
 	    (t
-	     (let* ((record 
-		     (retrieve-record 
-		      lexicon id 
-		      :reqd-fields (make-requested-fields-as-list lexicon)
-		      :cache cache))
-		    (entry 
-		     (if record 
-			 (make-psort-struct lexicon record))))
+	     (let ((entry (read-psort-aux lexicon id :cache cache)))
 	       (when cache
 		 (setf (gethash id psorts)
 		   (or entry 
 		       :EMPTY)))
 	       entry))))))
 
-(defmethod make-psort-struct ((lexicon psql-lex-database) query-res)
+(defmethod read-psort-aux ((lexicon psql-lex-database) id &key (cache t))
+  (with-slots (psorts) lexicon
+    (let* ((record 
+	    (retrieve-record 
+	     lexicon id 
+	     :reqd-fields (make-requested-fields-as-list lexicon)
+	     :cache cache)))
+      (if record 
+	  (make-psort-struct lexicon record)))))
+
+(defmethod make-psort-struct ((lexicon psql-lex-database) record)
+  (apply #'make-lex-entry 
+	 (make-strucargs lexicon record)))
+
+(defmethod make-strucargs ((lexicon psql-lex-database) record)
   (let* 
       ((strucslots 
 	(loop 
@@ -183,19 +193,14 @@
 	    for slot-value-list = 
 	      (work-out-value 
 	       slot-type 
-	       (get-val slot-field query-res)
+	       (get-val slot-field record)
 	       :path (work-out-value 
 		      'list 
-		      slot-path)
-	       )		
-	      ;; if empty third argument (ie. path), 
-	      ;; then add (:key "field")
+		      slot-path))
 	    when slot-value-list
 	    append (mapcar 
 		    #'(lambda (x) 
-			(make-psort-struct-aux 
-			 slot-key x slot-path
-			 )) 
+			(make-strucargs-aux slot-key x slot-path)) 
 		    slot-value-list)))
        ;; groups slots with same key together in a list
        (strucargs 
@@ -210,11 +215,6 @@
 			       in strucslots
 			       when (eql psort-slot unique-slot)
 			       collect psort-value)))
-		      ;;
-		      ;; _fix_me_
-		      ;; pretty bad fix to avoid getting lists where 
-		      ;; they are not needed
-		      ;;
 		      (if (> (list-length values) 1)
 			  values
 			(car values)))))))
@@ -227,8 +227,11 @@
 	     (list :infl-pos
 		   (find-infl-pos nil orth-str nil))
 	     strucargs))))
-    (apply #'make-lex-entry strucargs)))
+    strucargs))
 
+(defmethod record-to-tdl ((lexicon psql-lex-database) record)
+  (to-tdl (make-psort-struct lexicon record)))
+  
 ;; lexicon is open
 (defmethod load-lex-from-files ((lexicon psql-lex-database) file-names syntax)
   ;;  (setf *lex-file-list* file-names) ;;fix_me
@@ -324,35 +327,16 @@
      (retrieve-all-records lexicon 
 			   (make-requested-fields-as-list lexicon)))))
 
-(defmethod make-mneum-f-slot ((lexicon psql-lex-database))
-  (with-slots (mneum-f) lexicon
-    (setf mneum-f
-      (mapcar 
-       #'(lambda (x)
-	   (cons (first x) (second x)))
-       (sql-fn-get-raw-records lexicon 
-			       :mneum_f_map 
-			       :args (list (fields-tb lexicon)))))
-    (unless mneum-f
-      (format t "~%WARNING: no field-name mappings defined in LexDB ~a (mode = `~a'~% Using following backwards-compatibility mapping:~%~a"
-	      (dbname lexicon) (fields-tb lexicon) *psql-mneum-f-back-compat-map*)
-      (setf mneum-f *psql-mneum-f-back-compat-map*)
-    mneum-f)))
-
-(defmethod mneum-2-f ((lexicon psql-lex-database) mneum)
-  (or 
-   (cdr (assoc mneum (mneum-f lexicon) :test #'string=))
-   mneum))
-
 (defmethod make-field-map-slot ((lexicon psql-lex-database))
   "stores the mapping of fields to lex-entry structure slots"
-  (setf (record-features lexicon) *postgres-record-features*)
-  (make-mneum-f-slot lexicon)
+  (setf (fields lexicon) (get-fields lexicon))
+  ;(make-mneum-f-slot lexicon)
   (setf (fields-map lexicon)
     (sort
      (mapcar #'(lambda (x) 
 		 (list (str-2-keyword (first x))
-		       (str-2-keyword (mneum-2-f lexicon (second x)))
+		       ;(str-2-keyword (mneum-2-f lexicon (second x)))
+		       (str-2-keyword (second x))
 		       (third x)
 		       (2-symb-or-list (fourth x))))
 	     (records (run-query lexicon 
@@ -426,7 +410,8 @@
   (set-version psql-le lexicon) 
   (if *postgres-export-timestamp* 
       (set-val psql-le :modstamp *postgres-export-timestamp*))
-  (let* ((symb-list (copy-list *postgres-record-features*))
+;  (let* ((symb-list (copy-list *postgres-record-features*))
+  (let* ((symb-list (copy-list (fields lexicon)))
 	 (symb-list (remove :name symb-list))
 	 (symb-list (remove-duplicates symb-list))
 	 (symb-list (remove-if 
@@ -741,6 +726,12 @@
 ;;;
 ;;;
 
+(defmethod get-fields ((lexicon psql-lex-database))
+  (mapcar 
+   #'(lambda (x) (intern (string-upcase (car x)) :keyword))
+   (sql-fn-get-raw-records lexicon 
+			   :list_fields)))
+
 (defmethod user-read-only-p ((lexicon psql-lex-database) user-str)
   (string= "t" 
 	   (sql-fn-get-val lexicon 
@@ -754,7 +745,7 @@
   (run-command-stdin lexicon 
 		     (format nil "~a;~%~a;" 
 			     "DELETE FROM temp" 
-			     "COPY temp FROM stdin DELIMITERS ',' WITH NULL AS ''") 
+			     "COPY temp FROM stdin") 
 		     rev-filename)
   (let ((count-new
 	 (str-2-num

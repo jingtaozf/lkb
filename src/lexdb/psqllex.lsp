@@ -158,7 +158,7 @@
 ;	 collect id))))
 
 ;;; create slot entry
-(defun make-psort-struct-aux (slot-key slot-value slot-path)
+(defun make-strucargs-aux (slot-key slot-value slot-path)
   (cond
    ;;: nil path => no unification
    ((equal slot-path "")

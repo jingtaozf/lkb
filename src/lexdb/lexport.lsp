@@ -24,7 +24,7 @@
 (in-package :lkb)
 
 ;;;
-;;; export to .csv file
+;;; export to .tsv file
 ;;;
 
 (defun export-lexicon (&rest rest)
@@ -57,25 +57,13 @@
     (setf *postgres-current-source* (get-current-source))
     (setf *postgres-export-timestamp* (extract-date-from-source *postgres-current-source*))
 
-;    (setf *postgres-export-timestamp* 
-;      (ask-user-for-x 
-;       "Export Lexicon" 
-;       (cons "Modstamp?" (or *postgres-export-timestamp* "1990-01-01"))))
-;    (unless *postgres-export-timestamp* (throw 'abort 'modstamp))
-;    
-;    (setf *postgres-current-user* 
-;      (ask-user-for-x 
-;       "Export Lexicon" 
-;       (cons "Username?" (or *postgres-current-user* "danf"))))
-;    (unless *postgres-current-user* (throw 'abort 'user))
-
     (query-for-modstamp-username)
     (query-for-meta-fields)
     (get-export-version))
 
-  (let ((csv-file (format nil "~a.csv" file))
+  (let ((csv-file (format nil "~a.tsv" file))
 	(skip-file (format nil "~a.skip" file))
-	(multi-file (format nil "~a.multi.csv" file)))
+	(multi-file (format nil "~a.multi.tsv" file)))
     (format t "~%~%Please wait: exporting lexicon ~a to CSV file ~a" (name lexicon) csv-file)
     (format t "~%   (skip file: ~a)" skip-file)
     

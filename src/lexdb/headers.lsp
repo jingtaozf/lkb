@@ -35,20 +35,6 @@
 
 (defvar *postgres-debug-stream*)
 
-;; temporary
-(defvar *postgres-record-features* '(:name :f1 :f2 :f3 :f4 :f5 :f6 :f7 :f8 :f9 :source :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp :orthkey))
-
-(defvar *psql-mneum-f-back-compat-map* 
-    '(("type" . "f1")
-      ("orthography" . "f2")
-      ("keyrel" . "f3") 
-      ("altkey" . "f4") 
-      ("alt2key" . "f5") 
-      ("keytag" . "f6")
-      ("altkeytag" . "f7")
-      ("compkey" . "f8") 
-      ("ocompkey" . "f9")))
-
 (defvar *postgres-sql-fns*)
 (setf *postgres-sql-fns*
   '(
@@ -63,6 +49,7 @@
     :initialize_current_grammar
     :lex_id_set 
     :lexdb_version
+    :list_fields
     :lookup_general
     :lookup_general_null
     :lookup_word
@@ -107,19 +94,18 @@
 
 (defclass external-lex-database (lex-database)
   ((record-cache :initform (make-hash-table :test #'eq))
-   ;(lex-tb :initform nil :accessor lex-tb :initarg :lex-tb)
-   ;; table for mapping the lexicon-table fields to the psort-or-lex structure
    (fields-tb 
     :initform nil :accessor fields-tb :initarg :fields-tb)
    ;; a-list for mapping the lexicon-table fields to the psort-or-lex structure
    (fields-map :initform nil :accessor fields-map)
-   (record-features :initform nil :accessor record-features)
-   (mneum-f :initform nil :accessor mneum-f)))
+   (mneum-f :initform nil :accessor mneum-f)
+   (fields :initform nil :accessor fields)   
+   ))
 
 (defclass psql-database (sql-database)
   ((connection :initform nil :accessor connection :initarg connection)
    (server-version :initform nil :accessor server-version)
-   (fns :initform nil :accessor fns)))
+   ))
 
 (defclass psql-lex-database (psql-database external-lex-database)
   ((lexdb-version :initform nil :accessor lexdb-version)
