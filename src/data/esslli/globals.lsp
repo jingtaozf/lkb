@@ -20,6 +20,16 @@
 
 (defparameter *list-head* '(first))
 
+(def-lkb-parameter *empty-list-type* '*null*)
+
+(def-lkb-parameter *list-type* '*list*)
+
+(def-lkb-parameter *diff-list-type* '*diff-list*)
+
+(def-lkb-parameter *diff-list-list* 'list)
+
+(def-lkb-parameter *diff-list-last* 'last)
+
 (defparameter *lex-rule-suffix* ""
  "creates the inflectional rule name from the information
    in irregs.tab - for PAGE compatability")

@@ -1,16 +1,7 @@
-(let ((data-dir1 (make-pathname 
-               :directory (pathname-directory *load-truename*))))
-    (load (merge-pathnames
-          (make-pathname :name "globals.lsp")
-          data-dir1))
-   (read-type-files-aux
+(setf *lkb-system-version* nil)
+(lkb-load-lisp (this-directory) "globals.lsp")
+(read-type-files-aux
       (list
-         (merge-pathnames
-            (make-pathname :name "path.types")
-            data-dir1)
-         ))
-   (setf *current-language* 'english)
-   (read-tdl-lex-file-aux (merge-pathnames
-         (make-pathname :name "path.lex")
-         data-dir1) t)
-   )
+         (lkb-pathname (this-directory) "path.types")))
+(read-lex-file-aux (lkb-pathname (this-directory) "path.lex"))
+
