@@ -42,13 +42,13 @@
 #|
 (defun expand-tsdb-results (result-file dest-file &optional (vitp nil))
   (let ((sent-list
-	 (tsdb::select "(parse-id i-input)" :string "(item result)" nil 
+	 (tsdb::select "(parse-id i-input)" nil "(item result)" nil 
 		       result-file))
 	(tree-list
-	 (tsdb::select "(parse-id tree)" :string "(item result)" nil 
+	 (tsdb::select "(parse-id tree)" nil "(result)" nil 
 		       result-file))
 	(mrs-list
-	 (tsdb::select "(parse-id mrs)" :string "(item result)" nil result-file))
+	 (tsdb::select "(parse-id mrs)" nil "(result)" nil result-file))
 	(*raw-mrs-output-p* nil))
     (with-open-file 
 	(ostream dest-file :direction :output :if-exists :supersede)
@@ -64,7 +64,8 @@
 		  (mrs (subseq mrsstr (1+ (position #\@ mrsstr)))))
 	     (format t "~%~A" sent)
 	     (format ostream "~%String: ~A~%" sent)
-	     (output-parse-tree tree ostream)
+	     (pprint tree ostream)
+	     ;(user::output-parse-tree tree ostream)
 	     (if vitp
 	    #|
 	    (progn
@@ -78,9 +79,10 @@
 	    (progn
 	      (format ostream "~A~%~%" mrs)
 	      (finish-output ostream)
-	      (check-vit mrs t ostream)
+	      (when *mrs-to-vit* 
+	       (check-vit mrs t ostream))
 	      (format ostream "~%"))
-	  (format ostream "~%~A~%" mrs)))))))
+	    (output-mrs1 (read-from-string mrs) 'indexed ostream)))))))
 |#
 
 #+page
