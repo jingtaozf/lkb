@@ -330,9 +330,11 @@
            (cons str (remove str *last-parses* :test #'equal))
            (max 0 (- (length *last-parses*) 12))))
                                         ; limit number of sentences retained
-        (parse
-         (split-into-words 
-          (preprocess-sentence-string str)))))))
+
+        (with-output-to-top ()
+	  (parse
+	   (split-into-words 
+	    (preprocess-sentence-string str))))))))
 
 
 ;;; "Generate"
