@@ -51,7 +51,7 @@ output results
                             strings))
                   (errorp (elt res 2))
                   (edges (elt res 3))
-                  (time (elt res 6)))
+                  (time (elt res 5)))
               (if errorp
                 (format t 
                         "~%Error when generating from ~A - results ignored" 

@@ -42,7 +42,7 @@
 
 (defparameter *gen-filter-debug* nil)
 (defparameter *gen-adjunction-debug* nil)
-
+(defparameter *gen-equality-debug* nil)
 
 (eval-when
  (compile load eval)    
@@ -98,11 +98,12 @@
       ((found-lex-list
           (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
        (filtered
-          (remove '(ER_COMP_ADJ_INFL_RULE) ; *** e.g. small -> smaller etc
+          ; (remove '(ER_COMP_ADJ_INFL_RULE) ; *** e.g. small -> smaller etc
              (remove-if #'(lambda (x) (member x '(AN) :test #'eq)) ; *** e.g. a -> an
                 found-lex-list
                 :key #'mrs::found-lex-lex-id)
-             :key #'mrs::found-lex-rule-list :test #'equal))
+          ;   :key #'mrs::found-lex-rule-list :test #'equal)
+          )
        (empty
           (mrs::possibly-applicable-null-semantics input-sem)
           ;; this must be called after mrs::collect-lex-entries-from-mrs since the
@@ -225,6 +226,8 @@
                     ~%Partial edges: ~:A"
             (mapcar #'g-edge-id complete) (mapcar #'g-edge-id incompatible)
             (mapcar #'g-edge-id partial)))
+      (when *gen-equality-debug* 
+        (format t "~%Complete incompatible edges: ~:A" (mapcar #'g-edge-id incompatible)))
       (values complete partial)))
 
 
@@ -250,11 +253,14 @@
    (let ((sem-fs
             (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
                 mrs::*initial-semantics-path*)))
-      (if (and sem-fs (dag-p sem-fs))
-         (let ((mrs (mrs::construct-mrs sem-fs nil t)))
-            ;; (mrs::output-mrs input-sem 'mrs::simple)
-            ;; (mrs::output-mrs mrs 'mrs::simple)
-            (mrs::mrs-equalp mrs input-sem nil *debugging*)))))
+     (when (and sem-fs (dag-p sem-fs))
+       (let ((mrs (mrs::construct-mrs sem-fs nil t)))
+;;         (when *debugging*
+;;           (display-fs sem-fs "semstructure"))
+;;        (when *debugging*
+;;           (mrs::output-mrs input-sem 'mrs::simple)
+;;           (mrs::output-mrs mrs 'mrs::simple))        
+         (mrs::mrs-equalp mrs input-sem nil *debugging*)))))
 
 #|
    ;; make sure any errors in mrs-equalp don't stop the show
@@ -293,9 +299,7 @@
    ;; c.f. filter-root-edges in parse.lsp
    (dolist (start-symbol start-symbols)
       (let ((root-spec (get-tdfs-given-id start-symbol)))
-         (when (and root-spec
-                    (not (stringp (g-edge-rule edge)))
-                    (eq (rule-id (g-edge-rule edge)) 'ROOT_CL)) ; *** until grammar fixed
+         (when root-spec
             (when (yadu root-spec (g-edge-dag edge))
                (return (list edge)))))))
 
