@@ -14,10 +14,12 @@
 ;;; - think of a nice, declarative way to delete properties from indices.
 ;;;
 
-(defparameter *transfer-edge-limit* 20000)
+(defparameter *transfer-edge-limit* 2000)
 
 (defparameter *transfer-debug-stream* 
   (or #+:allegro excl:*initial-terminal-io* t))
+
+(defparameter *transfer-filter-p* t)
 
 (defparameter *transfer-postprocess-p* t)
 
@@ -61,6 +63,10 @@
      (list (mrs::vsym "3") (mrs::vsym "sg") (mrs::vsym "3sg"))
      (list (mrs::vsym "3") (mrs::vsym "pl") (mrs::vsym "3pl"))
      (list (mrs::vsym "3") nil (mrs::vsym "3per"))
+     ;;
+     ;; _fix_me_
+     ;; the second `nil' in the following seems superfluous.    (8-feb-04; oe)
+     ;;
      (list nil (mrs::vsym "sg") nil (mrs::vsym "pernum"))
      (list nil (mrs::vsym "pl") nil (mrs::vsym "pernum"))))
    (cons 
@@ -76,6 +82,7 @@
     (list
      (list (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
      (list (mrs::vsym "pres") (mrs::vsym "present"))
+     (list (mrs::vsym "notense") (mrs::vsym "untensed"))
      (list nil (mrs::vsym "tense"))))
    (cons
     (mrs::vsym "e")
@@ -103,6 +110,7 @@
    (cons (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
    (cons (mrs::vsym "PROG") (mrs::vsym "E.ASPECT.PROGR"))
    (cons (mrs::vsym "PERF") (mrs::vsym "E.ASPECT.PERF"))
+   (cons (mrs::vsym "SCRATCH") nil)
    (cons (mrs::vsym "ASPECT-PROTRACTED") nil)
    (cons (mrs::vsym "ASPECT-STATIVE") nil)
    (cons (mrs::vsym "ASPECT-TELIC") nil)
@@ -130,9 +138,9 @@
     (call-next-method)
     (format
      stream
-     "~@[!~a ~]~@[@~a ~]~@[~a ~]-> ~a~@[ / ~a~]"
-     (mtr-filter object) (mtr-context object)
-     (mtr-input object) (mtr-output object) (mtr-defaults object))))
+     "~@[@~a : ~]~@[~a ~]~@[! ~a ~]-> ~a~@[ / ~a~]"
+     (mtr-context object) (mtr-input object) (mtr-filter object) 
+     (mtr-output object) (mtr-defaults object))))
 
 (defstruct (edge (:constructor make-edge-x))
   (id (let ((n %transfer-edge-id%)) (incf %transfer-edge-id%) n))
@@ -263,8 +271,15 @@
   (let ((*readtable* (copy-readtable)))
     (lkb::read-tdl-type-files-aux files settings)))
 
-(defun read-transfer-rules (files &optional name &key flags)
+(defun read-transfer-rules (files &optional name 
+                            &key filter optional postprocess)
 
+  ;;
+  ;; _fix_me_
+  ;; actually implement :filter et al.                        (10-feb-04; oe)
+  ;;
+  (declare (ignore filter optional postprocess))
+  
   ;;
   ;; _fix_me_
   ;; make top variable type (`u') customizable, one day.       (22-jan-04; oe)
@@ -299,12 +314,12 @@
         unless (probe-file file) do
           (format
            t
-           "read-transfer-rules(): ignoring invalid file `~a~@[.~a~]'.~%"
+           "~&read-transfer-rules(): ignoring invalid file `~a~@[.~a~]'.~%"
            (pathname-name file) (pathname-type file))
         else do
           (format 
            t 
-           "read-transfer-rules(): reading file `~a~@[.~a~]'.~%"
+           "~&read-transfer-rules(): reading file `~a~@[.~a~]'.~%"
            (pathname-name file) (pathname-type file))
           (with-open-file (stream file :direction :input)
             (loop
@@ -373,7 +388,7 @@
           (setf *transfer-rule-sets*
             (append 
              *transfer-rule-sets*
-             (list (make-mtrs :id id :mtrs (nreverse rules) :flags flags)))))))
+             (list (make-mtrs :id id :mtrs (nreverse rules))))))))
 
 (defun discriminate-mtr-unifications (unifications)
   ;;
@@ -499,7 +514,8 @@
         ;;
         (format
          t
-         "convert-dag-to-mtr(): `~(~a~)' has an empty output specification.~%"
+         "~&convert-dag-to-mtr(): ~
+          `~(~a~)' has an empty output specification.~%"
          id))
       ;;
       ;; _fix_me_
@@ -509,7 +525,7 @@
       (if filter
         (format
          t
-         "convert-dag-to-mtr(): ~
+         "~&convert-dag-to-mtr(): ~
           ignoring `~(~a~)' because it contains a FILTER.~%"
          id)
         (let* ((vector (ash 1 %transfer-rule-id%))
@@ -531,11 +547,14 @@
 
 (defun convert-dag-to-flags (dag)
   (let* ((optional (mrs::path-value dag *mtr-optional-path*))
+         (copy (mrs::path-value dag *mtr-copy-path*))
          flags)
     (when (lkb::bool-value-true optional)
       (pushnew :optional flags))
     (when (lkb::bool-value-false optional)
       (pushnew :obligatory flags))
+    (when (lkb::bool-value-true copy)
+      (pushnew :copy flags))
     flags))
 
 (defun vacuous-constraint-p (path dag)
@@ -555,7 +574,7 @@
   (setf %transfer-generation% 0)
   (setf %transfer-variable-features% nil))
 
-(defun transfer-mrs (mrs &key (filterp t) 
+(defun transfer-mrs (mrs &key (filterp *transfer-filter-p*) 
                               (postprocessp *transfer-postprocess-p*))
   #+:debug
   (setf %mrs% mrs)
@@ -572,7 +591,7 @@
       (clim:beep)
       (format
        *transfer-debug-stream*
-       "transfer-mrs(): `~a'~%" condition))
+       "~&transfer-mrs(): `~a'~%" condition))
     (if postprocessp
       (loop
           for edge in result
@@ -719,8 +738,7 @@
 ;;; - HCONS, it seems impossible to fail on HCONS, right now.
 ;;;
 ;;; _fix_me_
-;;;; complete tracing { and | or } failure accumulation.        (22-jan-04; oe)
-
+;;; complete tracing { and | or } failure accumulation.        (22-jan-04; oe)
 ;;;
 ;;; to simplify the treatment of constants, where the rule may use a variable
 ;;; to bind a constant, all of the following assume that the second parameter
@@ -742,16 +760,6 @@
          (context (mtr-context mtr))
          (input (mtr-input mtr))
          solutions)
-    (transfer-trace :component :filter)
-    ;;
-    ;; _fix_me_
-    ;; move filter test towards the end.                       (22-jan-04; oe)
-    ;;
-    (when (and filter (unify-mtr-component mrs filter))
-      ;;
-      ;; trace
-      ;;
-      (return-from unify-mtr))
     (transfer-trace :component :context)
     (setf solutions (unify-mtr-component mrs context))
     (unless solutions
@@ -814,6 +822,18 @@
         ;; trace
         ;;
         (return-from unify-mtr)))
+    (when filter
+      (transfer-trace :component :filter)
+      (setf solutions
+        (loop
+            for solution in solutions
+            unless (unify-mtr-component mrs filter solution) 
+            collect solution
+            else do
+              ;;
+              ;; trace
+              ;;
+              nil)))   
     solutions))
 
 (defun unify-mtr-component (mrs1 mrs2 &optional solution)
@@ -1119,7 +1139,8 @@
        (loop
            with defaults = (when (mrs::psoa-p (mtr-defaults mtr))
                              (mrs:psoa-liszt (mtr-defaults mtr)))
-           for ep in (and (mtr-output mtr) (mrs:psoa-liszt (mtr-output mtr)))
+           for ep in (and (mtr-output mtr) 
+                          (mrs:psoa-liszt (mtr-output mtr)))
            for default = (pop defaults)
            collect (merge-eps (expand-ep ep solution) default))))
     (setf (mrs:psoa-h-cons result)
@@ -1346,6 +1367,8 @@
             for ep in (mrs:psoa-liszt mrs)
             for copy = (mrs::copy-rel ep)
             do
+              (setf (mrs:rel-handel copy) 
+                (postprocess-variable (mrs:rel-handel ep)))
               (setf (mrs::rel-flist copy)
                 (loop
                     for role in (mrs:rel-flist ep)
@@ -1357,7 +1380,7 @@
                                 (postprocess-variable value)
                                 value))))
             collect copy))
-      (mrs::fill-mrs mrs %transfer-properties-defaults%))))
+      (mrs::fill-mrs (mrs::unfill-mrs mrs) %transfer-properties-defaults%))))
 
 (defun merge-and-copy-mrss (mrs1 mrs2)
   ;;

@@ -39,5 +39,6 @@
      (:file "globals")
      (:file "patches")
      (:file "transfer")
+     (:file "translate")
      (:file "clim")
      (:file "semi")))))

@@ -247,7 +247,7 @@
                      (format 
                       stream 
                       "~%Invalid MRS Object~%")))))
-            (when (edge-source edge)
+            (when (and (edge-source edge) *transfer-filter-p*)
               (lkb::recolor-record record clim:+red+))))
         (when (edge-rule edge)
           (clim:formatting-row (stream)
