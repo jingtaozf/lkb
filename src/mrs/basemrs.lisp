@@ -639,7 +639,8 @@ higher and lower are handle-variables
   ((id :initform 0)
    (nrels :initform nil)
    (i :initform nil)
-   (nrows :initform nil)))
+   (nrows :initform nil)
+   (hconss :initform nil)))
 
 (defmethod initialize-display-structure ((class html) mrs &optional n)
   (with-slots (id nrels nrows i) class
@@ -751,28 +752,45 @@ higher and lower are handle-variables
       <td class=mrsValueHcons>{ ")))
 
 (defmethod mrs-output-outscopes ((mrs html) relation higher lower firstp)
-  (with-slots (id stream) mrs
+  (with-slots (id hconss stream) mrs
     (unless firstp (format stream ", "))
     (format 
      stream 
-     "<span class=\"mrsVariable~a~:(~a~)\"~
-            onMouseOver=\"mrsVariableSelect('~a~:(~a~)', '')\"~
-            onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span> ~
+     "<span class=\"mrsVariable~a~:(~a~)\" ~
+            onMouseOver=\"mrsVariableSelect('~a~:(~a~)', '')\" ~
+            onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span>~%~
       ~a ~
-      <span class=\"mrsVariable~a~:(~a~)\"~
-            onMouseOver=\"mrsVariableSelect('~a~:(~a~)', '')\"~
-            onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span>"
+      <span class=\"mrsVariable~a~:(~a~)\" ~
+            onMouseOver=\"mrsVariableSelect('~a~:(~a~)', '')\" ~
+            onMouseOut=\"mrsVariableUnselect('~a~:(~a~)')\">~(~a~)</span>~%"
      id higher id higher id higher higher 
-     relation 
-     id lower id lower id lower lower)))
+     (if (string-equal (string relation) "qeq")
+       "=q"
+       relation)
+     id lower id lower id lower lower)
+    (push (cons higher lower) hconss)))
 
 (defmethod mrs-output-end-h-cons ((mrs html))
   (with-slots (stream) mrs
     (format stream " }</td>~%")))
 
 (defmethod mrs-output-end-psoa ((mrs html))
-  (with-slots (stream) mrs
-    (format stream "</table>")))
+  (with-slots (id hconss stream) mrs
+    (format stream "</table>")
+    ;;
+    ;; generate JavaScript arrays for bi-directional HCONS indexing
+    ;;
+    (loop
+        initially (format stream "<script>~%")
+        for (high . low) in hconss
+        do
+          (format
+           stream
+           "  mrsHCONSsForward['~a~:(~a~)'] = '~a~:(~a~)';~%  ~
+              mrsHCONSsBackward['~a~:(~a~)'] = '~a~:(~a~)';~%"
+           id high id low id low id high)
+        finally (format stream "</script>~%"))))
+     
 
 ;;; 
 ;;; maximally compact debugging output-type class
@@ -1677,19 +1695,6 @@ VAR -> VARNAME[:CONSTNAME]*
 
 (defparameter %mrs-extras-defaults% nil)
 
-;;; commented out the settings because they are grammar-specific and are
-;;; set in the ERG mrsglobals file, which seems like the right place.
-;;; AAC Apr 2004
-
-#|
-  (list
-   #-:null
-   (list (vsym "E") 
-         (cons (vsym "E.ASPECT.PROGR") (vsym "-"))
-         (cons (vsym "E.ASPECT.PERF") (vsym "-"))
-	 (cons (vsym "E.TENSE") (vsym "NO_TENSE")))))
-|#
-
 (defun fill-mrs (mrs &optional (defaults %mrs-extras-defaults%))
   (when defaults
     (labels ((fill-variable (variable)
@@ -1719,3 +1724,13 @@ VAR -> VARNAME[:CONSTNAME]*
                 for value = (fvpair-value role)
                 do (fill-variable value)))))
   mrs)
+
+
+(defun sort-mrs (mrs)
+  (when (psoa-p mrs)
+    (let ((copy (copy-psoa mrs)))
+      (setf (mrs:psoa-liszt copy)
+        (stable-sort 
+         (copy-list (mrs:psoa-liszt mrs))
+         #'string-lessp :key #'mrs:rel-pred))
+      copy)))
