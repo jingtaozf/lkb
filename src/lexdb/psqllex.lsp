@@ -557,7 +557,11 @@
 (defmethod open-lex ((lexicon psql-database) &key name parameters)
   (declare (ignore parameters)) ;; for_now 
   (close-lex lexicon)
-  (format t "~%Connecting to lexical database ~a as user ~a" (dbname lexicon) (user lexicon))
+  (format t "~%Connecting to lexical database ~a@~a:~a as user ~a" 
+          (dbname lexicon)
+          (host lexicon)
+          (port lexicon)
+          (user lexicon))
   (let* ((connection (connect lexicon))
 	 (dbversion))
       (setf *postgres-tmp-lexicon* lexicon)
