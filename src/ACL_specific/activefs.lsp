@@ -40,6 +40,10 @@
 ;;; style lexical rules can be displayed in the type -> type format
 ;;; with the full fs associated with full-tdfs
 
+(defparameter *bold* nil)
+(defparameter *normal* nil)
+
+
 (defun add-type-and-active-fs-region (stream start-pos 
 				      type-label-list val shrunk-p atomic-p 
 				      &optional top-box full-tdfs)
@@ -49,7 +53,7 @@
                           :type-label-list type-label-list
                           :shrunk-p shrunk-p
                           :full-tdfs full-tdfs)))
-    (clim:with-text-style (stream '(nil :bold nil))
+    (clim:with-text-style (stream *bold*)
       (clim:with-output-as-presentation 
 	  (stream type-rec 'type-thing)
 	(write-string (string-downcase val) stream)))))
@@ -81,13 +85,15 @@
   (let ((fs-window 
           (clim:make-application-frame 'active-fs-window)))
     (setf (active-fs-window-fs fs-window) 
-              (make-fs-display-record :fs fs :title title :paths paths 
-                                      :parents parents
-				      :type-fs-display *type-fs-display*))
-	(setf (clim:frame-pretty-name fs-window) title)
-	(mp:process-run-function "FS" 
-                                 #'clim:run-frame-top-level
-                                 fs-window)))
+      (make-fs-display-record :fs fs :title title :paths paths 
+			      :parents parents
+			      :type-fs-display *type-fs-display*))
+    (setf (clim:frame-pretty-name fs-window) title)
+    (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
+    (setf *bold* (clim:merge-text-styles '(nil :bold nil) *normal*))
+    (mp:process-run-function "FS" 
+			     #'clim:run-frame-top-level
+			     fs-window)))
 
 (defun display-fs (fs title)
   (display-basic-fs fs title))
@@ -124,7 +130,7 @@
            (fudge 20)
 	   (max-width 0))
       (silica:inhibit-updating-scroll-bars (stream)
-        (clim:with-text-style (stream (make-active-fs-type-font-spec))
+        (clim:with-text-style (stream *normal*)
 	  (clim:with-output-recording-options (stream :draw nil :record t)
 	    (draw-active-title stream fs title parents paths)
 	    (when parents 
@@ -210,23 +216,22 @@
     (highlight-objects (clim:output-record-children sel) frame)))
 
 (defun try-unify-fs (frame type-thing)
-  (let* ((fs2 (frame-dag frame))
-	 (path2 (reverse (type-thing-type-label-list type-thing)))
-         (result nil))
-    (with-output-to-top ()
-      (setf result
-        (unify-paths-with-fail-messages 
-         (create-path-from-feature-list *path1*)
-         *fs1*
-         (create-path-from-feature-list path2)
-         fs2
-     ;;; was copied, but shouldn't be necessary
-         :selected1 *path1* :selected2 path2))
-        (terpri))
-    (when result
-      (display-fs result "Unification result"))
-    (setq *fs1* nil)
-    (unhighlight-class frame)))
+  (with-output-to-top ()
+    (let* ((fs2 (frame-dag frame))
+	   (path2 (reverse (type-thing-type-label-list type-thing)))
+	   (dag (unify-paths-with-fail-messages 
+		 (create-path-from-feature-list *path1*)
+		 *fs1*
+		 (create-path-from-feature-list path2)
+		 fs2
+		 ;; was copied, but shouldn't be necessary
+		 :selected1 *path1* :selected2 path2))
+	   (result (when dag (make-tdfs :indef dag))))
+      (terpri)
+      (when result
+	(display-fs result "Unification result"))))
+  (setq *fs1* nil)
+  (unhighlight-class frame))
 
 ;;; Search for coreferences in a feature structure
 
@@ -235,12 +240,13 @@
 
 (defun add-active-pointer (stream position pointer valuep)
   (declare (ignore position))
-  (clim:with-output-as-presentation (stream (make-pointer :label pointer
-							  :valuep valuep)
-					    'pointer)
-    (format stream "<~A>" pointer))
-  (when valuep
-    (write-string " = " stream)))
+  (let ((string (concatenate 'string 
+		 "<" (write-to-string pointer) ">"
+		 (when valuep " = "))))
+    (clim:with-output-as-presentation (stream (make-pointer :label pointer
+							    :valuep valuep)
+					      'pointer)
+      (write-string string stream))))
 
 (define-active-fs-window-command (com-pointer-menu)
     ((pointer 'pointer :gesture :select))
@@ -437,7 +443,7 @@
 				   `(("Lex-id?" . ,psort-name))
 				   150)))
       (when psort-name
-	(or (store-temporary-psort psort-name fs)
+	(or (store-temporary-psort *lexicon* psort-name fs)
 	    (progn
 	      (clim:notify-user clim:*application-frame* 
 				"Psort name already used")
