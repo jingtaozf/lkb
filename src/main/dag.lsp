@@ -1154,19 +1154,20 @@
 	(copy-dag dag-instance)))))
 
 (defun replace-dag-types-aux (dag-instance replace-alist)
-;;; walks over a dag, looking for types which are equal to the car
-;;; values in the replace-alist and resets them to the cdr values
+  ;;; as revised by Bernd
+  ;;; walks over a dag, looking for types which are equal to *toptype*
+  ;;; if the feature pointing to the substructure with *toptype* is the in the
+  ;;; replace-alist reset the type to the cdr value
   (let* ((real-dag (deref-dag dag-instance))
-         (dag-type (dag-type real-dag))
-	 (replaceable (assoc dag-type replace-alist :test #'equal)))
-    (when replaceable
-      (setf (dag-new-type real-dag) (cdr replaceable)))
+         (sub-dag nil)
+         (replaceable nil))
     (dolist (arc (dag-arcs real-dag))
-      (replace-dag-types-aux
-       (dag-arc-value arc)
-       replace-alist))
+      (setq sub-dag (replace-dag-types-aux (dag-arc-value arc) replace-alist))
+      (when (and (eq (dag-type sub-dag) *toptype*)
+                 (setq replaceable
+                   (assoc (dag-arc-attribute arc) replace-alist)))
+        (setf (dag-new-type sub-dag) (cdr replaceable))))
     real-dag))
-
 
 ;;; **********************************************************************
 
