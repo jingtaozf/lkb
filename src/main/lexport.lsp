@@ -141,7 +141,7 @@
 ;;keytag
 (defun extract-tag-from-unifications (constraint)
   (extract-value-by-path-from-unifications 
-   constraint '(SYNSEM LOCAL KEYS KEY CONST_VALUE)))
+   constraint '(SYNSEM LOCAL KEYS KEY CARG)))
 
 ;;altkey
 (defun extract-altkey-from-unifications (constraint)
@@ -156,13 +156,13 @@
 ;;compkey
 (defun extract-comp-from-unifications (constraint)
   (extract-value-by-path-from-unifications constraint 
-                                           '(SYNSEM LOCAL KEYS --COMPKEY)))
+                                           '(SYNSEM LKEYS --COMPKEY)))
 
 
 ;;ocompkey
 (defun extract-ocomp-from-unifications (constraint)
   (extract-value-by-path-from-unifications constraint 
-                                           '(SYNSEM LOCAL KEYS --OCOMPKEY)))
+                                           '(SYNSEM LKEYS --OCOMPKEY)))
 
 
 ;;orthography
