@@ -707,11 +707,11 @@
 ;;; the internal format, which uses the same structures
 ;;; as general MRSs
 
-(defparameter *mrs-rule-input-path* '(user::input))
+(defparameter *mrs-rule-input-path* '(cl-user::input))
 
-(defparameter *mrs-rule-output-path* '(user::output))
+(defparameter *mrs-rule-output-path* '(cl-user::output))
 
-(defparameter *mrs-rule-condition-path* '(user::lcondition))
+(defparameter *mrs-rule-condition-path* '(cl-user::lcondition))
 
 (defun construct-munge-rule-from-fs (id fs funny-unifs)
   ;;; input and output are constructed using construct-mrs
