@@ -654,15 +654,15 @@
                          ((null tail)
                           (setq daughters (delete nil daughters))
                           (unless replacedp (push entry daughters)))
-                        (when (bit-code-subsume-p
-                                 (type-bit-code entry) (type-bit-code (car tail)))
-                           (setf (car tail) (if replacedp nil entry))
-                           (setq replacedp t))
-                        (when
-                           (and (not replacedp)
-                              (bit-code-subsume-p
-                                 (type-bit-code (car tail)) (type-bit-code entry)))
-                           (return))))
+                        (cond
+                           ((bit-code-subsume-p
+                               (type-bit-code entry) (type-bit-code (car tail)))
+                              (setf (car tail) (if replacedp nil entry))
+                              (setq replacedp t))
+                           ((and (not replacedp)
+                               (bit-code-subsume-p
+                                  (type-bit-code (car tail)) (type-bit-code entry)))
+                              (return)))))
                   ((bit-code-subsume-p (type-bit-code entry) (type-bit-code glbtype-entry))
                      ;; entry is an ancestor of glbtype - try and add it to lowest
                      ;; disjoint set of ancestors
@@ -671,15 +671,15 @@
                          ((null tail)
                           (setq parents (delete nil parents))
                           (unless replacedp (push entry parents)))
-                        (when (bit-code-subsume-p
-                                 (type-bit-code (car tail)) (type-bit-code entry))
-                           (setf (car tail) (if replacedp nil entry))
-                           (setq replacedp t))
-                        (when
-                           (and (not replacedp)
-                              (bit-code-subsume-p
-                                 (type-bit-code entry) (type-bit-code (car tail))))
-                           (return)))))))
+                        (cond
+                           ((bit-code-subsume-p
+                               (type-bit-code (car tail)) (type-bit-code entry))
+                              (setf (car tail) (if replacedp nil entry))
+                              (setq replacedp t))
+                           ((and (not replacedp)
+                               (bit-code-subsume-p
+                                  (type-bit-code entry) (type-bit-code (car tail))))
+                              (return))))))))
          (insert-new-type-into-hieriarchy
             (type-name glbtype-entry) glbtype-entry parents daughters))))
 
