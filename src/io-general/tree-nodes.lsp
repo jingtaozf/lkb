@@ -493,11 +493,14 @@
 	 ;; path from e recursively through children to edge?
 	 (and e				; don't blow up on active edges
 	      (or (eq e edge)
-		  (some #'super-chart-edge-path-p (edge-children e)))))
+		  (eq edge (edge-morph-history e))
+		  (some #'super-chart-edge-path-p 
+			(edge-children e)))))
        (sub-chart-edge-path-p (e edge)
 	 ;; path from edge recursively through children to e?
 	 (and edge
 	      (or (eq e edge)
+		  (eq e (edge-morph-history edge))
 		  (some #'(lambda (c) (sub-chart-edge-path-p e c)) 
 			(edge-children edge))))))
     (cond
