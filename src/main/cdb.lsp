@@ -107,8 +107,11 @@
 	  (format t "~%~A" condition)
 	  (error "~%Can't open database file ~A" filename)))
       ;; Write blank header
-      (unless (file-position stream 8)
-	(close stream)
+      (unless (write-string (make-string 8 :initial-element #\space) stream)
+	;; was (file-position stream 8) - but stream is zero length so
+        ;; it has to write out padding and mcl appears to try to use
+        ;; write-byte which won't work on a character stream
+        (close stream)
 	(error "~%Error writing database file ~A" filename)))
     (setf (cdb-mode cdb) :output)
     cdb))
@@ -213,6 +216,18 @@
 	  (setf (cdb-num cdb) count))))
     (setf (cdb-mode cdb) :input)
     cdb))
+
+
+#+mcl
+(eval-when (compile load eval)
+  ;; read-sequence isn't present in MCL4.0
+  (unless (fboundp 'common-lisp::read-sequence)
+     (defun cdb::read-sequence (s stream)
+       ;; read (length s) chars into string s from stream
+       (dotimes (n (length s))
+         (setf (char s n) (read-char stream)))
+       s)))
+
 
 ;; If the file is open for reading, close it.  If not, don't do anything.
 
