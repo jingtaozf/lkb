@@ -364,7 +364,7 @@
   ;; on certain platforms (notably Linux), Allegro CL 6.2 will fail to detect a
   ;; stack overflow in (certain) recursive functions; this was pointed out to
   ;; Franz as [spr27625] in apr-03, and soon my favourite tech person, Lois 
-  ;; Wolf, suggested to make those function not-inline.        (19-may-03; oe)
+  ;; Wolf, suggested to make those functions not-inline.       (19-may-03; oe)
   ;;
   (declare (notinline foo))
   (unless (and startp (member (ed-id ed) start))
