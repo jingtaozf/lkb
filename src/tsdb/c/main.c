@@ -21,7 +21,7 @@
 
 #define TSDB_HISTORY_FILE ".tsdb_history"
 
-char tsdb_version[] = "0.0";
+char tsdb_version[] = "0.0 ($Revision$";
 char tsdb_date[] = "$Date$";
 
 BOOL quit = FALSE;
