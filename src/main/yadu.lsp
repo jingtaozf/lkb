@@ -489,6 +489,8 @@
 
 (defun search-combinations (fixed-fs start combo state)
   (unify-combinations fixed-fs start combo state)
+  (when (null *success*)
+    (error "This shouldn't happen!"))
   *success*)
   
 (defun unify-combinations (fixed-fs start combo state) 
@@ -500,7 +502,7 @@
       ;; Every subset of combo that we generate from this point will be a
       ;; superset of v, so if we know v will fail there's no point in
       ;; continuing.
-      (unless (unify-in fixed-fs v state)
+      (when (or (< start 1) (unify-in fixed-fs v state))
 	(loop for pos from (1- (length combo)) downto (1+ start)
 	    do
 	      (setf (sbit combo pos) 0)
@@ -533,32 +535,38 @@
 			     :initial-element 0)))
       (with-unification-context (nil)
 	(dolist (def (defaults state))
-	  (let ((res (unless (zerop (sbit combo (cdr def)))
-		       ;; Skip if not in set
-		       (setf (sbit added (cdr def)) 1)
-		       (if (yadu-pv-p (car def))
-			   (unify-paths (yadu-pv-path (car def))
-					indef-fs
-					(make-u-value
-					 :types (yadu-pv-value (car def)))
-					nil)
-			 (let* ((paths (yadu-pp-paths (car def)))
-				(initial-path (car paths)))
-			   (dolist (path2 (cdr paths) t)
-			     (unless (unify-paths initial-path       
-						  indef-fs
-						  path2
-						  indef-fs)
-			       (return))))))))
-	    (cond ((and res (not (cyclic-dag-p indef-fs)))
-		   ;; So far so good, now try the next constraint
-		   (setq indef-fs (fix-dag indef-fs)))
-		  (t 
-		   ;; Failed: add set so far to *failure-list*
-		   (push added (failures state))
-		   (setf (defaults state) 
-		     (cons def (delete def (defaults state) :test #'eq)))
-		   (return-from unify-in nil)))))
+	  (unless (zerop (sbit combo (cdr def)))
+	    (let ((res (progn
+		   ;; Skip if not in set
+		   (setf (sbit added (cdr def)) 1)
+		   (if (yadu-pv-p (car def))
+		       (unify-paths (yadu-pv-path (car def))
+				    indef-fs
+				    (make-u-value
+				     :types (yadu-pv-value (car def)))
+				    nil)
+		     (let* ((paths (yadu-pp-paths (car def)))
+			    (initial-path (car paths)))
+		       (dolist (path2 (cdr paths) t)
+			 (unless (unify-paths initial-path       
+					      indef-fs
+					      path2
+					      indef-fs)
+			   (return))))))))
+	      (cond ((and res (not (cyclic-dag-p indef-fs)))
+		     ;; So far so good, now try the next constraint
+		     (setq indef-fs (fix-dag indef-fs)))
+		    (t 
+		     ;; Failed: add set so far to *failure-list*, and move
+		     ;; constraint that caused the failure to the front of the
+		     ;; list of constraints.  That way, we should wind up with
+		     ;; the mutually inconsistent constraints at the front of
+		     ;; the list, and we should be able to catch failures
+		     ;; early.
+		     (push added (failures state))
+		     (setf (defaults state) 
+		       (cons def (delete def (defaults state) :test #'eq)))
+		     (return-from unify-in nil))))))
 	;; Unifications all successful, now try to copy
 	(copy-dag indef-fs)))))
 
