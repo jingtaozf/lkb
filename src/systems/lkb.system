@@ -77,8 +77,6 @@
       :load-only t
       :components
                ((:file "lkb-package")
-                #+:psql
-                (:file "lexdb-package")
                 (:file "mrs-package")))
 
      (:module "version"
