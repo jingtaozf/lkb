@@ -64,8 +64,6 @@ at this point).
 (defun found-lex-inst-fs-fn (item)
   (found-lex-inst-fs item))
 
-(defvar *possible-grules* nil)
-
 (defun collect-lex-entries-from-mrs (psoa)
   #|
   (setf *top-handel* (make-instance-type (psoa-handel psoa)))
@@ -95,14 +93,16 @@ at this point).
             ;;; lexical rules are possible if they have no effect
             ;;; on semantics or if they contribute relations
             ;;; which are on the list to be accounted for
-          (setf *possible-grules*
-            (find-possible-rules grammar-rels nil))
-          (append 
-           (instantiate-null-semantic-items psoa lrules)
-           (for possible in possibles
-                append
+          (values
+           (append 
+            (instantiate-null-semantic-items psoa lrules)
+            (for possible in possibles
+                 append
                                         ; check unification etc
-                (create-instantiated-structures possible lrules)))))))
+                 (create-instantiated-structures possible lrules)))
+           (find-possible-rules grammar-rels nil))))))
+           
+           
                                          
 
 (defun find-lexical-candidates (lex-rels lex-rule-rels grammar-rels

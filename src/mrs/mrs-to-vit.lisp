@@ -369,41 +369,9 @@
 
 ;;; ***** Main code *******
 
-;;; (mrs-to-vit-file "Macintosh HD:lkb96:mrs:mrs-vit-tests")
-
-(defun mrs-to-vit-file (file-name)
-  (with-open-file
-   (istream file-name :direction :input)
-   (do* ((sentence (read istream nil 'eof) (read istream nil 'eof ))
-         (mrsstruct (read istream nil 'eof) (read istream nil 'eof)))
-        ((or (eql sentence 'eof) (eql mrsstruct 'eof)) nil)
-        (when (and mrsstruct (psoa-p mrsstruct))
-          (multiple-value-bind 
-            (vit binding-sets)
-            (mrs-to-vit mrsstruct)
-            (setf *canonical-bindings* nil)
-            (format t "~%~A" sentence)
-            (format t "~%FSs")
-            (output-mrs mrsstruct 'simple)
-            (format t "~%Unscoped form")
-            (output-mrs mrsstruct 'indexed)
-            ;;; then try and find sets of bindings which will give a fully scoped 
-            ;;; structure, and output the results
-            (if binding-sets
-              (format t "~%Scoped form(s)")
-              (format t "~%WARNING: Invalid MRS structure"))
-            (for binding in binding-sets
-                 do
-                 (setf *canonical-bindings* (canonical-bindings binding))
-                 (output-connected-mrs mrsstruct 'indexed)
-                 (output-scoped-mrs mrsstruct))
-            (when vit
-              (write-vit-pretty t (horrible-hack-2 vit)))
-            (format t "~%****************************************"))))))
-
 ;;; function to call from PAGE or LKB interface
 
-(defun mrs-to-vit-convert (mrs-psoa &optional (standalone t))
+(defun mrs-to-vit-convert (mrs-psoa &optional (standalone t) (stream t))
   (when mrs-psoa
     (if (eq *mrs-for-language* 'english)
         (let ((mrsstruct
@@ -415,26 +383,26 @@
               (mrs-to-vit mrsstruct)
             (setf *canonical-bindings* nil)
             (when standalone
-              (format t "~%Premunged form")
-              (output-mrs mrs-psoa 'indexed)
-              (format t "~%Unscoped form")
-              (output-mrs mrsstruct 'simple)
-              (output-mrs mrsstruct 'indexed)
+              (format stream "~%Premunged form")
+              (output-mrs1 mrs-psoa 'indexed stream)
+              (format stream "~%Unscoped form")
+              (output-mrs1 mrsstruct 'simple stream)
+              (output-mrs1 mrsstruct 'indexed stream)
             ;;; then try and find sets of bindings which will give a fully scoped 
             ;;; structure, and output the results
-              (show-some-scoped-structures mrsstruct binding-sets))
+              (show-some-scoped-structures mrsstruct binding-sets stream))
           (when (and vit standalone)
-            (write-vit-pretty t (horrible-hack-2 vit))
-            (format t "~%"))
-	  (check-vit vit)
+            (write-vit-pretty stream (horrible-hack-2 vit))
+            (format stream "~%"))
+	  (check-vit vit nil stream)
           vit))
     (let ((vit (german-mrs-to-vit mrs-psoa)))
       (when standalone
-        (format t "~%Unscoped form")
-        (output-mrs mrs-psoa 'indexed))
+        (format stream "~%Unscoped form")
+        (output-mrs1 mrs-psoa 'indexed stream))
       (when (and vit standalone)
-        (write-vit-pretty t vit)
-        (format t "~%"))
+        (write-vit-pretty stream vit)
+        (format stream "~%"))
       vit))))
 
 ;; Sends output from a Unix command to an arbitrary stream.  Unlike
@@ -460,7 +428,10 @@
   (warn "function run-command needs customising for this Lisp"))
 
 
-(defun check-vit (vit &optional (as-string nil) (stream *standard-output*))
+(defun check-vit (vit &optional (as-string nil) (stream *terminal-io*))
+  ;;; AAC - won't work with a CLIM window, so change 
+  ;;; *standard-output* to *terminal-io*
+  (when (eql stream t) (setf stream *terminal-io*))
   #+(and :allegro :clim)
   (progn
    (with-open-file (vit-out "~/tmp/vitcheck" :direction :output
@@ -1062,7 +1033,10 @@
     (let* ((smood (rel-sort mrsrel))
 	   (pslist (assoc pmood *prosodic-syntactic-mood-table*)))
       (when (and pslist (member smood (rest pslist)))
-	(setf (rel-sort mrsrel) pval))))
+	(setf (rel-sort mrsrel) (first pslist)))))
+  ;; AAC - removed unbound var
+  ;; WK's code has pval instead of (first pslist)
+  ;; this seems best guess
   mrsrel)
 
 ;;; ******* Code for finding leqs and equalities from scoped structures ********

@@ -289,19 +289,6 @@
 ;;; ******** Main code entry point  **********
 ;;;
 
-;;; (check-mrs-results-file "Macintosh HD:lkb96:mrs:mrs-vit-tests")
-
-(defun check-mrs-results-file (file-name)
-  ;;; the file has the same format as that output by the mrs batch checking stuff
-  ;;; however, it is necessary to manually remove the package symbols first
-  (with-open-file
-   (istream file-name :direction :input)
-   (do* ((sentence (read istream nil 'eof) (read istream nil 'eof ))
-         (mrsstruct (read istream nil 'eof) (read istream nil 'eof)))
-        ((or (eql sentence 'eof) (eql mrsstruct 'eof)) nil)
-        (when (and mrsstruct (psoa-p mrsstruct))
-              (check-mrs-struct mrsstruct sentence)))))
-
 #|
 (defvar *canonical-bindings* nil
 "global variable which is set to the current set of bindings for the
@@ -310,44 +297,22 @@ printing routines -  convenient to make this global to keep printing generic")
 ; moved to mrsglobals.lisp
 |#
 
-(defun check-mrs-struct (mrsstruct &optional sentence)
-  ;;; first output the existing structure in the indexed notation
-  (setf *canonical-bindings* nil)
-  (when sentence
-    (format t "~%~A" sentence)
-    (format t "~%FSs"))
-  (output-mrs mrsstruct 'simple)
-  (format t "~%Unscoped form")
-  (output-mrs mrsstruct 'indexed)
-  ;;; then try and find sets of bindings which will give a fully scoped 
-  ;;; structure, and output the results
-  (let ((binding-sets (make-scoped-mrs mrsstruct)))
-    (show-some-scoped-structures mrsstruct binding-sets)))
-
-
-(defun show-all-scoped-structures (mrsstruct binding-sets)
-    (if binding-sets
-      (format t "~%Scoped form(s)")
-      (format t "~%WARNING: Invalid MRS structure"))
-    (for binding in binding-sets
-          do
-          (setf *canonical-bindings* (canonical-bindings binding))
-          (output-connected-mrs mrsstruct 'indexed)
-          (output-scoped-mrs mrsstruct)))
-
-(defun show-some-scoped-structures (mrsstruct binding-sets)                
+(defun show-some-scoped-structures (mrsstruct binding-sets 
+                                    &optional (stream t) (max 10))
   (if binding-sets
-      (format t "~%~A scoped form(s) ~A~%" (length binding-sets)
-              (if (> (length binding-sets) 10)
-                  "only printing first 10" 
-                ""))
-    (format t "~%WARNING: No valid scopes~%"))
-  (for binding in (subseq binding-sets 0 
-                          (min (length binding-sets) 10))
+      (progn 
+        (format stream "~%~A scoped form(s) ~A~%" (length binding-sets))
+        (when (and max (> (length binding-sets) max))
+          (format stream "only printing first ~A" max)))
+    (format stream "~%WARNING: No valid scopes~%"))
+  (for binding in (if max
+                      (subseq binding-sets 0 
+                              (min (length binding-sets) max))
+                    binding-sets)
        do
        (setf *canonical-bindings* (canonical-bindings binding))
-       (output-connected-mrs mrsstruct 'indexed)
-       (output-scoped-mrs mrsstruct)))
+       (output-connected-mrs1 mrsstruct 'indexed stream)
+       (output-scoped-mrs mrsstruct :stream stream)))
   
 
 ;;; slight variant on the above for PAGE toplevel
@@ -502,7 +467,7 @@ printing routines -  convenient to make this global to keep printing generic")
 
 (defvar *quant-rels* nil)
 
-(defvar *scoping-call-limit* 10000)
+(defparameter *scoping-call-limit* 10000)
 
 (defvar *top-top* nil)
 

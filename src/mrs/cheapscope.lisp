@@ -72,7 +72,8 @@
                (let ((quant-var (get-bv-value qrel)))
                  (if (eql quant-var (get-var-num var))
                      (let ((restr-handel (get-restr-value qrel)))
-                       (if (eql rel-handel restr-handel)
+                       (if (or (eql rel-handel restr-handel)
+                               (satisfy-qeq-p restr-handel rel-handel))
                            nil
                          (if (get-scope-value qrel)
                              (cons 

@@ -68,6 +68,12 @@
 (defun qeq-equal (x y) 
   (and (eql (qeq-left x) (qeq-left y))
        (eql (qeq-right x) (qeq-right y))))
+
+(defun satisfy-qeq-p (x y) 
+  (for qeq in *qeqs*
+       some-satisfy
+       (and (eql (qeq-left qeq) x)
+            (eql (qeq-right qeq) y))))
     
             
 ;;;

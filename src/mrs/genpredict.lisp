@@ -7,7 +7,8 @@
 
 
 (defun predict-for-gen nil
-  (format t "~%~{~A ~}" cl-user::*sentence*)
+  ;;; for debugging
+  (format t "~%~A " cl-user::*sentence*)
   (dolist (mrs-struct (extract-mrs cl-user::*parse-record*))
     (when mrs-struct
       (unless cl-user::*gen-rule-list*

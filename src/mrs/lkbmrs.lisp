@@ -21,7 +21,9 @@
 ;;; page version calls kh-parse-tree
 
 (defun get-last-sentence nil
-  (car CL-USER::*last-parses*))  
+  cl-user::*sentence*)
+;; *last-parses* is not defined for tty version
+;;  (car CL-USER::*last-parses*))  
 
 (defun deref (fs)
   ;;; just a guess, but can't do any harm ...

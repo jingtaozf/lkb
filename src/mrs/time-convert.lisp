@@ -104,11 +104,11 @@
 (defparameter *nhr-min-feature* (vsym "MIN"))
 (defparameter *min-min-feature* (vsym "MINUTE"))
 (defparameter *min-index-feature* (vsym "INST"))
-(defparameter *ampm-index-feature* (vsym "INST")) ; needs to be checked
+(defparameter *ampm-index-feature* (vsym "INST")) 
 (defparameter *inst-feature* (vsym "INST"))
 (defparameter *rel-hour-feature* (vsym "HOUR-IND"))
 (defparameter *rel-minute-feature* (vsym "MINUTE-IND"))
-(defparameter *prep-prep-feature* (vsym "PREP"))
+(defparameter *prep-prep-feature* (vsym "ARG3"))
 (defparameter *prep-arg-feature* (vsym "ARG"))
 
 
@@ -134,13 +134,13 @@
   (eql sort (vsym "MINUTE_REL")))
 
 (defun ampmrel-p (sort)
-  (member sort `(,(vsym "AM_REL"),(vsym "PM_REL"))))
+  (member sort `(,(vsym "_AM_REL"),(vsym "_PM_REL"))))
 
 (defun pm-rel-p (sort)
-  (eql sort (vsym "PM_REL")))
+  (eql sort (vsym "_PM_REL")))
 
 (defun am-rel-p (sort)
-  (eql sort (vsym "AM_REL")))
+  (eql sort (vsym "_AM_REL")))
 
 (defun past-rel-p (sort)
   (eql sort (vsym "_AFTER_HOUR_REL")))
