@@ -99,8 +99,9 @@
     (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-indexed-window (edge &optional mrs title)
-  (mp:run-function "Indexed MRS"
-   #'show-mrs-indexed-window-really edge mrs title))
+  (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
+    (mp:run-function "Indexed MRS"
+     #'show-mrs-indexed-window-really edge mrs title)))
 
 (defun show-mrs-indexed-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-indexed)))
@@ -110,8 +111,9 @@
     (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-prolog-window (edge &optional mrs title)
-  (mp:run-function "Prolog MRS"
-   #'show-mrs-prolog-window-really edge mrs title))
+  (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
+    (mp:run-function "Prolog MRS"
+     #'show-mrs-prolog-window-really edge mrs title)))
 
 (defun show-mrs-prolog-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-prolog)))
@@ -121,8 +123,9 @@
     (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-scoped-window (edge &optional mrs title)
-  (mp:run-function "Scoped MRS"
-   #'show-mrs-scoped-window-really edge mrs title))
+  (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
+    (mp:run-function "Scoped MRS"
+     #'show-mrs-scoped-window-really edge mrs title)))
   
 (defun show-mrs-scoped-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-scoped))
@@ -148,8 +151,9 @@
 
 
 (defun show-mrs-dependencies-window (edge &optional mrs title)
-  (mp:run-function "Elementary Dependencies"
-   #'show-mrs-dependencies-window-really edge mrs title))
+  (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
+    (mp:run-function "Elementary Dependencies"
+     #'show-mrs-dependencies-window-really edge mrs title)))
   
 (defun show-mrs-dependencies-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-dependencies))
