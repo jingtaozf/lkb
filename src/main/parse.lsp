@@ -1002,6 +1002,8 @@
                    (let ((n (length *parse-record*)))
                      (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
                      (finish-output ostream)))))
+             (clear-expanded-lex)       ; try and avoid image increasing
+                                        ; at some speed cost
              (setq raw-sentence (read-line istream nil 'eof))))
         (format ostream "Total elapsed time: ~A msecs~%" 
                 (- (get-internal-run-time) start-time))

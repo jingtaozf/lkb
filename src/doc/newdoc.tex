@@ -18,6 +18,8 @@
 \setlength{\topmargin}{-0.5in}
 \setlength{\textheight}{9in}
 
+\newcommand{\itsdb}{{\sf \lbrack incr tsdb()\rbrack}}
+
 \newcommand{\lispcommand}[1]{\noindent\rm #1}%
 \newcommand{\ldescnl}{\\}
 \newenvironment{error}%
@@ -222,7 +224,8 @@ of parsing reasonable length sentences with a large grammar.
 \item Default unification is based on YADU, defined in Lascarides and
 Copestake (in press).
 \item Automatic computation of greatest lower bounds in the type hierarchy.
-\item Integration with the TSDB test suite machinery.
+\item Integration with the \itsdb\ test suite machinery 
+(Oepen and Flickinger, in press).
 \item Integration with MRS semantics (Copestake et al, 1997).
 \item Tactical generation from MRS input (experimental). 
 \item Many new user interface features.
@@ -3706,7 +3709,7 @@ to which the results will be output.  The output simply tells you
 the number of parses found (if any) for each sentence in the
 input file, and gives a time for the whole set at the end.
 This is a very simple form of test suite: vastly 
-more functionality is available from the TSDB machinery which
+more functionality is available from the \itsdb\ machinery which
 can be run in conjunction with the LKB (see \ref{tsdb}).
 
 
@@ -4290,9 +4293,9 @@ to extend using a predefined feature structure architecture).
 There are many practical aspects to grammar engineering, many of which
 are similar to good practise in other forms of programming.
 One aspect which is to some extent peculiar to grammar writing is the
-use of test suites (see e.g., Flickinger and Oepen (19??)).
-%FIX
-The LKB system is compatible with the TSDB system.
+use of test suites (see e.g., Oepen and Flickinger, in press).
+The LKB system is compatible with the \itsdb\  system, as discussed
+in \S\ref{tsdb}.
 You should use a test-suite of sentences as soon as you have got
 anything to parse, to
 help you tell quickly when something breaks.  You should also
@@ -4787,14 +4790,50 @@ representation will be implemented at some point.)
 
 % FIX - whatever ...
 
-\section{TSDB}
+\section{Testing and Diagnosis}
 \label{tsdb}
 
 The batch parsing support which is distributed with the
 LKB is very simple.  For extensive grammar development,
-much more sophisticated test-suite support is available
-by using the TSDB system.  See FIX ref whatever
+more sophisticated tools
+are available through the \itsdb\ package that was recently
+integrated with the LKB.  The following description is by Stephan Oepen.
 
+\itsdb\ builds on the following components and modules
+\begin{itemize}
+
+\item test and reference data stored with annotations in a structured database;
+annotations can range from minimal information (unique test item
+identifier, item origin, length et al.) to fine-grained linguistic
+classifications (e.g., regarding grammaticality and linguistic
+phenomena presented in an item) as represented by the TSNLP test
+suites (Oepen et al, 1997).
+
+\item tools to browse the available data, identify suitable subsets and feed
+them through the analysis component of a processing system like
+the LKB system or PAGE;
+
+\item the ability to gather a multitude of precise and fine-grained system
+performance measures (like the number of readings obtained per test
+item, various time and memory usage metrics, ambiguity and
+non-determinism parameters, and salient properties of the result
+structures) and store them as a {\em competence and performance
+profile\/} into the database;
+
+\item graphical facilities to inspect the resulting profiles, analyze
+system competence (i.e., grammatical coverage and
+overgeneration) and performance at highly variable
+granularities, aggregate, correlate, and visualize the data,
+and compare profiles obtained from previous grammar or system
+versions or other platforms.
+\end{itemize}
+
+While \itsdb\ is not yet available for public download, the LKB
+distribution contains a bundled beta version of the complete
+package.  See the draft user manual (`{\tt manual.ps}') in the
+`{\tt src/tsdb/doc/}' subdirectory of the LKB source tree.
+PostScript copies of Oepen et al, 1997 and Oepne and Flickinger, in press, in
+the same directory provide additional background reading.
 
 \appendix
 \chapter{The tty interface}
@@ -5706,7 +5745,7 @@ FIX - Rob's
   Cambridge, England} 
 {1992}
 
-%carpenter 1993 in book
+%FIX carpenter 1993 in book
 
 \procart{Copestake, A.}
 {The ACQUILEX LKB: representation issues in semi-automatic
@@ -5722,7 +5761,7 @@ acquisition of large lexicons}
 University of Cambridge Computer Laboratory}
 {1993}
 
-%MRS semantics (Copestake et al, 1997)
+%FIX MRS semantics (Copestake et al, 1997)
 
 \procart{Kasper, R.~T. and  W.~C. Rounds}
 {A logical semantics for feature structures}
@@ -5752,6 +5791,22 @@ for Computational Linguistics (EACL-89)}
   {66--71}
   {1989}
 
+\bookart{Oepen, Stephan, Klaus Netter and Judith Klein}
+{{\sc tsnlp} --- {T}est {S}uites for {N}atural {L}anguage {P}rocessing}
+{13 -- 36}
+{Linguistic Databases}
+{John Nerbonne}
+{CSLI Lecture Notes 77, CSLI Publications, Stanford CA}
+{1997}
+
+\forthjournart{Oepen, Stephan and Daniel P. Flickinger}
+{Towards Systematic Grammar Profiling.
+               {T}est Suite Technology Ten Years After}
+{Journal of Computer Speech and Language:
+Special Issue on Evaluation}
+{in press}
+
+
 \procart{Pereira, F. C.~N. and S.~M. Shieber}
 {The semantics of grammar formalisms seen as computer languages}
 {10th International Conference on Computational Linguistics
@@ -5771,7 +5826,7 @@ Volume~1 fundamentals}
     {Chicago University Press, Chicago}
     {1994}
 
-%Sag and Wasow (in press)
+%FIX Sag and Wasow (in press)
 
 \book{Shieber, S.~M.}
 {An introduction to unification-based approaches to grammar}

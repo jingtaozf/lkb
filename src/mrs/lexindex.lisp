@@ -78,16 +78,32 @@
                                                   (list (deasterisk value)))))))))
 
 (defun deasterisk (value)
-  ;;; disgusting hack - have to push e.g. masc* to masc
-  ;;; need to do this properly somewhere/how
-  (if (or (symbolp value) (stringp value))
-      (let ((new-val
-             (intern (string-right-trim '(#\*) value))))
-        (if (is-valid-type new-val)
-            new-val
-          value))
-    value))
-  
+  (or
+   (and (not (stringp value))
+        (let* ((ancestors (mapcar #'type-name (retrieve-ancestors value)))
+               (strict-type
+                (if ancestors
+                    (find-strict-type (cons value ancestors)))))
+          (if strict-type
+              (find-gcsubtype strict-type value))))
+   value))
+
+(defparameter *strict-pairs*
+    '((pernum . strict_pn)
+      (gender . strict_gen)
+      (mood . strict_mood)
+      (conj . strict-conj) ; sic - dash not underscore
+      (tense . strict_tense)))
+      
+(defun find-strict-type (types)
+  (dolist (type types)
+    (let ((strict-type
+           (dolist (strp *strict-pairs*)
+             (when (eq type (car strp))
+               (return (cdr strp))))))
+      (when strict-type
+        (return strict-type)))))
+       
 
 
 (in-package "MRS")

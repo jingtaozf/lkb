@@ -34,7 +34,7 @@
 
 
 ;;; ?
-(defparameter *start-symbol* '(root frag frag-msg fin_frag)
+(defparameter *start-symbol* '(root)
    "specifing valid parses")
 
 ;;; ?

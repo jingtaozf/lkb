@@ -14,15 +14,17 @@ so morphology and lexical rules can be ignored
 
 (output-grules :lilfes "~aac/lilfes/grules.lil")
 
+(output-root :lilfes "~aac/lilfes/root.lil")
+
 to run lilfes (in the lilfes directory)
 
 setenv LD_LIBRARY_PATH /eo/e5/danf/nishiken/bin
 
-lilfes defs.lil types.lil lex.lil grules.lil test.lil -
+lilfes defs.lil types.lil lex.lil grules.lil root.lil test.lil -
 
 This doesn't deal with constraints on types which don't
 end up in the full form lexicon / grammar rules.
-Nor does it deal with root.
+
 Parse nodes need to be added so we can understand the display.
 
 
@@ -139,7 +141,7 @@ Parse nodes need to be added so we can understand the display.
             (convert-lilfes-type (if (listp value) (car value)
                                         value))))
 
-(defun output-instance-as-lilfes (name entry stream)
+(defun output-instance-as-lilfes (name entry stream &optional class)
   (let ((def (tdfs-indef (lex-or-psort-full-fs entry))))
     ;; assume no defaults
     ;; assume either a grammar rule, in which case
@@ -156,7 +158,9 @@ Parse nodes need to be added so we can understand the display.
                (format stream "~%ternary_rule(\"~A\", " name))
               (t (error "Rule order in ~A is ~A: only unary, binary or ternary expected"
                         name order-length))))
-      (format stream "~%lex(\"~A\", " name))
+      (if (eql class :root)
+          (format stream "~%root(")
+        (format stream "~%lex(\"~A\", " name)))
     (display-dag1 def 'lilfes stream)
     (format stream ").~%")))
 

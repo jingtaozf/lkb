@@ -33,8 +33,8 @@
 (with-check-path-list-collection "~aac/checkpaths.lsp"
   (tsdb::tsdb-do-process "csli3"))
 
-(with-check-path-list-collection "data/textbook/lkb/checkpaths.lsp"
-  (parse-sentences "data/textbook/test.items" "data/textbook/test2.out"))
+(with-check-path-list-collection "data/textbook/lkb/checkpaths2.lsp"
+  (parse-sentences "data/textbook/well-formed.txt" "data/textbook/test.out"))
 |#
 
 (defmacro with-check-path-list-collection (output-file &body forms)

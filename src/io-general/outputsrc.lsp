@@ -76,18 +76,21 @@
                (progn (clear-expanded-lex)
                       (setf count 0))
                (incf count))
-             (let ((entry (get-psort-entry lex-name)))                  
-               (case syntax
-                 (:tdl (output-instance-as-tdl lex-name entry
-                                               ostream local-p))
-                 (:lilfes 
-                  (when local-p
-                    (error "Local only output not supported with LiLFeS"))
-                  (output-instance-as-lilfes 
-                           lex-name entry
-                           ostream))
-                 (t (error "Unsupported syntax specifier ~A"
-                           syntax)))))))))
+             (let ((entry (get-psort-entry lex-name)))
+               (if entry
+                   (case syntax
+                     (:tdl (output-instance-as-tdl lex-name entry
+                                                   ostream local-p))
+                     (:lilfes 
+                      (when local-p
+                        (error "Local only output not supported with LiLFeS"))
+                      (output-instance-as-lilfes 
+                       lex-name entry
+                       ostream))
+                     (t (error "Unsupported syntax specifier ~A"
+                               syntax)))
+                 (format t "~%Warning ~A not found" lex-name))))))))
+
 
 (defun output-lex-and-derived (syntax &optional file-name)
   ;;; lexicon and everything that can be derived from it
@@ -212,6 +215,25 @@
                            syntax))))))))
 
 
+(defun output-root (syntax &optional file-name)
+  (unless file-name 
+    (setf file-name
+         (ask-user-for-new-pathname "Output file?")))
+  (when file-name 
+    (with-open-file 
+        (ostream file-name :direction :output :if-exists :supersede)
+      (for root-symbol in (if (listp *start-symbol*) *start-symbol*
+                            (list *start-symbol*))
+             do
+             (let ((entry (get-psort-entry root-symbol)))   
+               (if entry 
+                   (case syntax
+                     (:lilfes 
+                      (output-instance-as-lilfes root-symbol entry
+                                                 ostream :root))
+                     (t (error "Unsupported syntax specifier ~A"
+                               syntax)))
+                 (format t "~%Warning ~A not found" root-symbol)))))))
 
 ;;; Support functions
 

@@ -4,13 +4,14 @@
 
 #+page
 (defpackage "MRS"
-  #+acl(:use "COMMON-LISP" "COMMON-LISP-USER" "USER" "LEX")
-  #-acl(:use "COMMON-LISP" "COMMON-LISP-USER")
+  (:use "COMMON-LISP" "COMMON-LISP-USER" "USER" "LEX")
   )
 
 #+lkb
 (defpackage "MRS"
-  (:use "COMMON-LISP" "COMMON-LISP-USER" "USER"))
+  #+acl(:use "COMMON-LISP" "COMMON-LISP-USER" "USER")
+  #-acl(:use "COMMON-LISP" "COMMON-LISP-USER")
+  )
 
 (in-package "MRS")
 
