@@ -318,10 +318,11 @@
 ;;; ***** pop up menu actions for types ******
 
 (defun shrink-fs-action (window action path)
+  (setq x window)
   (set-dag-display-value (fs-display-record-fs (active-fs-window-fs window))
 			 (reverse path)
 			 action
-			 (fs-display-record-type-fs-display window))
+			 (fs-display-record-type-fs-display (active-fs-window-fs window)))
   (clim:redisplay-frame-panes window :force-p t))
 
 
