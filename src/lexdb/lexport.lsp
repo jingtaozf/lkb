@@ -25,7 +25,7 @@
 
 (in-package :lkb)
 
-(defvar *current-lex-id*) 
+;;(defvar *current-lex-id*) 
 
 (defvar *postgres-temp-filename* nil)
 
