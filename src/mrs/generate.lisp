@@ -228,11 +228,13 @@
 ;;; it into generation proper. Do it also in chart-generate since that is also
 ;;; an entry point
 (defun generate-from-mrs (mrs &key signal)
-  (handler-case (generate-from-mrs-internal mrs)
-    (condition (condition)
-      (if signal
-        (error condition)
-        (warn (format nil "~a" condition))))))
+  (if (mrs::fragmentp mrs)
+    (mt::generate-from-fragmented-mrs mrs :signal signal)
+    (handler-case (generate-from-mrs-internal mrs)
+      (condition (condition)
+        (if signal
+          (error condition)
+          (warn (format nil "~a" condition)))))))
 
 (defun generate-from-mrs-internal (input-sem)
 
@@ -243,9 +245,9 @@
   (populate-found-configs)
   
   (setf input-sem (mrs::fill-mrs (mrs::unfill-mrs input-sem)))
+  (setf *generator-input* input-sem)
   (when *gen-equate-qeqs-p*
     (setf input-sem (mrs::equate-all-qeqs input-sem)))
-  (setf *generator-input* input-sem)
   (with-package (:lkb)
     (clear-gen-chart)
     (setf *cached-category-abbs* nil)
@@ -331,17 +333,18 @@
           (setq input-rels
             (logior input-rels (ash 1 (getf rel-indexes rel)))))
 
+        #+:debug
+        (setf %input-sem input-sem
+              %rel-indexes rel-indexes %input-rels input-rels)
+        
         (chart-generate
          input-sem input-rels lex-items grules lex-orderings rel-indexes)))))
 
 
 (defun filter-generator-lexical-items (lex-items grules lex-orderings)
-   ;; (values lex-items grules lex-orderings))
    (values
       (remove-if
-          #'(lambda (x) 
-              (or #-ignore (search "_CX" (string x)) ; contracted forms
-                  (member x *duplicate-lex-ids* :test #'eq))) ; e.g. a -> an
+          #'(lambda (x) (gethash x *duplicate-lex-ids*))
           lex-items :key #'mrs::found-lex-lex-id)
       grules lex-orderings))
 
@@ -509,10 +512,11 @@
 
 
 (defun extract-strings-from-gen-record nil
-   (loop for edge in *gen-record*
-      collect
-      (fix-spelling ; in spell.lsp
-         (g-edge-leaves edge))))
+  (loop 
+      for edge in *gen-record*
+      for string = (fix-spelling (g-edge-leaves edge)) ;; in spell.lsp
+      do (setf (edge-string edge) string)
+      collect string))
 
 
 (defun clear-gen-chart nil
@@ -1301,7 +1305,7 @@
          (format nil " / ~{~A~^ ~}" (g-edge-needed e))
          "")
       (g-edge-leaves e)
-      (if *gen-filtering-p*
+      (if (and *gen-filtering-p* *gen-filtering-debug*)
          (format nil " a~:A-i~:A "
             (sort (copy-list (g-edge-accessible e)) #'<)
             (sort (copy-list (g-edge-inaccessible e)) #'<))
