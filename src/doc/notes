@@ -16,6 +16,9 @@ so
 mv newdoc.pdf ~aac/WWW
 
 
+To print two-up:
+
+pstops '2:0L@.7(9in,-.42in)+1L@.7(9in,4.785in)' newdoc.ps >newdoc2.ps
 
 Remaining (known) problems
 
