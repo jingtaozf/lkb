@@ -15,7 +15,7 @@
    ;; category: not used
    ;; id, rule-number, leaves: filled in, not used by generation
    ;; algorithm itself, but needed for chart display etc
-   lex-used ; indices to sets of generator lexical alternatives used so far
+   rels-covered ; set of relations generated so far
    )
 
 
@@ -56,7 +56,11 @@
    ;; is lst1 a (not necessarily strict) subset of lst2?
    (every #'(lambda (x) (member x lst2 :test #'eq)) lst1))
 
-   
+(defun gen-chart-set-equal-p (lst1 lst2)
+   ;; do the two sets have exactly the same (eq) members?
+   (and (eql (length lst1) (length lst2))
+      (gen-chart-subset-p lst1 lst2)))
+
 ;;;
 
 (defun generate-from-mrs (input-sem)
@@ -64,7 +68,7 @@
       ((found-lex-list
           (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
        (filtered
-          (remove 'THAT_C found-lex-list :key #'mrs::found-lex-lex-id))
+          (remove 'THAT_C found-lex-list :key #'mrs::found-lex-lex-id :count 1))
        (empty (mrs::possibly-applicable-null-semantics input-sem))
           ;nil
           )
@@ -102,7 +106,7 @@
    (let ((*safe-not-to-copy-p* t)
          (*gen-chart-unifs* 0) (*gen-chart-fails* 0)
          (start-time (get-internal-run-time)))
-      #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
+      #+(and mcl powerpc) (setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
       (dolist (found found-lex-items)
          (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
                 (word (extract-orth-from-fs lex-entry-fs)))
@@ -111,7 +115,7 @@
                   :id (next-edge) :rule-number word
                   :dag lex-entry-fs
                   :needed nil
-                  :lex-used
+                  :rels-covered
                   (append (mrs::found-lex-main-rels found)
                           (mrs::found-lex-alternative-rels found)
                           (mrs::found-lex-message-rels found))
@@ -127,6 +131,8 @@
              (act-tot
                 (length (gen-chart-retrieve-with-index *toptype* t))))
          (values
+            ;; !!! assume that final orthography is purely the concatenation of
+            ;; the orthographies of the lexical entries passed in
             (mapcar #'gen-chart-edge-leaves *gen-record*)
             total-time *gen-chart-unifs* *gen-chart-fails*
             act-tot inact-tot (+ act-tot inact-tot)))))
@@ -136,47 +142,46 @@
 ;;; cover all of input semantics 
 
 (defun gen-chart-find-complete-edges (input-sem)
-   ;; from edges that use an entry from each of input lex-entry-alts, try to
-   ;; derive all possible inactive edges with 'root' rule - from these retain
-   ;; ones which have correct top category, and don't have any semantics missing.
-   ;; Finally add these edges to chart, and return their realisations (leaves)
-   ;; !!! assume that final orthography is purely the concatenation of the
-   ;; orthographies of the lex entries passed in
    (let ((res nil)
          (start-symbols
             (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
       (dolist (e (gen-chart-retrieve-with-index *toptype* nil))
-         ;; process has so far checked that we have not generated any relation that
-         ;; is not in input semantics - now check that we have generated them all
-         (when (eql (length (gen-chart-edge-lex-used e))
-                  (1- (length (mrs::psoa-liszt input-sem)))) ; *** prpstn_rel / int_rel
-            (dolist
-               (new
-                  (if *substantive-roots-p*
-                     (gen-chart-root-edges e start-symbols)
-                     (gen-filter-root-edges e start-symbols)))
-               (when (gen-chart-check-complete new input-sem)
-                  (push new res)))))
+         ;; process has so far ensured that we have not generated any edge containing
+         ;; a relation that is not in input semantics, and that no edge contains
+         ;; duplicates of exactly the same relation - now check that we have generated
+         ;; all relations, bearing in mind that rules may introduce semantics
+         (dolist
+            (new
+               (if *substantive-roots-p*
+                  (gen-chart-root-edges e start-symbols)
+                  (gen-filter-root-edges e start-symbols)))
+            (when (gen-chart-check-complete new input-sem)
+               (push new res))))
       (nreverse res)))
 
 
 (defun gen-chart-check-complete (edge input-sem)
-   (let ((sem-fs
-          (existing-dag-at-end-of (tdfs-indef (gen-chart-edge-dag edge))
-             mrs::*initial-semantics-path*)))
-      (if (mrs::is-valid-fs sem-fs)
-         (let ((mrs (mrs::construct-mrs sem-fs nil t)))
-            ;; (mrs::output-mrs mrs 'mrs::simple)
-            (and ; *** how do you check mrs for equality properly? (handel values
-                 ; may be variously fully instantiated or not, or have different
-                 ; names but refer to same relation if instantiated)
-                 ; this is just a crude top-level check
-                (equal (mrs::var-name (mrs::psoa-handel mrs))
-                   (mrs::var-name (mrs::psoa-handel input-sem)))
-                (equal (mrs::var-name (mrs::psoa-index mrs))
-                   (mrs::var-name (mrs::psoa-index input-sem)))
-                (eql (length (mrs::psoa-liszt mrs))
-                   (length (mrs::psoa-liszt input-sem))))))))
+   ;; check that semantics of edge is equivalent to input-sem
+   ;; first do quick check verifying set equality of relation names, then if
+   ;; that succeeds construct the MRS and check equality of that
+   (and
+      (gen-chart-set-equal-p (gen-chart-relation-names edge)
+         (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem)))
+      (let ((sem-fs
+               (existing-dag-at-end-of (tdfs-indef (gen-chart-edge-dag edge))
+                   mrs::*initial-semantics-path*)))
+         (if (mrs::is-valid-fs sem-fs)
+            (let ((mrs (mrs::construct-mrs sem-fs nil t)))
+               ;; (mrs::output-mrs mrs 'mrs::simple)
+               ;; *** (mrs::mrs-equalp mrs input-sem t) ; or nil?
+               (and ; *** how do you check mrs for equality properly? (handel values
+                    ; may be variously fully instantiated or not, or have different
+                    ; names but refer to same relation if instantiated)
+                    ; this is just a crude top-level check
+                   (equal (mrs::var-name (mrs::psoa-handel mrs))
+                      (mrs::var-name (mrs::psoa-handel input-sem)))
+                   (equal (mrs::var-name (mrs::psoa-index mrs))
+                      (mrs::var-name (mrs::psoa-index input-sem)))))))))
 
 
 (defun gen-chart-root-edges (edge start-symbols)
@@ -196,7 +201,8 @@
                                      :children (list edge)
                                      :leaves (gen-chart-edge-leaves edge))))
                       (gen-chart-add-with-index new-edge
-                         (gen-chart-dag-index (tdfs-indef (gen-chart-edge-dag new-edge))))
+                         (gen-chart-dag-index (tdfs-indef (gen-chart-edge-dag new-edge))
+                            (gen-chart-edge-id new-edge)))
                       new-edge)))))))
 
 (defun gen-filter-root-edges (edge start-symbols)
@@ -211,26 +217,30 @@
 ;;; Chart indexing - on *semantics-index-path* values. May be full types or
 ;;; instance types. Seem to be mostly disjoint if not eq, so don't bother using
 ;;; a tree-like representation
+;;; Apart from these fns, show-gen-chart (below), and find-gen-edge-given-id
+;;; (tree-nodes.lsp) are the only functions that need to know the internal
+;;; representation of chart
 
-(defun gen-chart-dag-index (dag)
+(defun gen-chart-dag-index (dag edge-id)
    (let ((index-dag (existing-dag-at-end-of dag *semantics-index-path*)))
       (if index-dag
          (let ((index (type-of-fs index-dag)))
             (when (and (consp index) (null (cdr index)))
-               ;; simplify single-item disjunction
+               ;; simplify single-item disjunction - doesn't need to be stored as
+               ;; an atomic type and will speed up subsequent gcsubtype lookup
                (setq index (car index)))
             index)
          (progn
             ;(cerror (format nil "use type ~A" *toptype*) ; ***
-            ;   "unexpectedly missing index for edge dag: ~S" dag)
-            (warn "unexpectedly missing index for edge dag - using ~A" *toptype*)
+            ;   "unexpectedly missing index for edge ~A: ~S" edge-id dag)
+            (warn "unexpectedly missing index for edge ~A - using ~A" edge-id *toptype*)
             *toptype*))))
 
 
 (defun gen-chart-add-with-index (edge index)
-   ;; apart from these fns, show-gen-chart is only fn that needs to know the
-   ;; internal representation of chart
-   (let ((entry (assoc index *gen-chart* :test #'equal))) ; index type could be string
+   (let ((entry
+          (assoc index *gen-chart* :test #'equal))) ; index type could be string or a
+                                                    ; disjunction of atomic types
       (unless entry
          (push (setq entry (cons index nil)) *gen-chart*))
       (push edge (cdr entry))))
@@ -256,7 +266,7 @@
       (position (car (rule-daughters-apply-order rule)) (cdr (rule-order rule)))))
 
 
-;;; Extract list of relations in semantic portion of an edge FS
+;;; Extract list of relation names in semantic portion of an edge FS
 
 (defun gen-chart-relation-names (edge)
    (let ((sem-fs
@@ -304,7 +314,8 @@
       (return-from gen-chart-add-inactive nil))
    (let
       ((index
-          (gen-chart-dag-index (tdfs-indef (gen-chart-edge-dag edge)))))
+          (gen-chart-dag-index (tdfs-indef (gen-chart-edge-dag edge))
+             (gen-chart-edge-id edge))))
       (gen-chart-add-with-index edge index)
       (setf (gen-chart-edge-dag-restricted edge)
          (restrict-fs (tdfs-indef (gen-chart-edge-dag edge))))
@@ -313,7 +324,9 @@
          (gen-chart-test-active edge e input-sem))
       ;; see if we can create new active edges by instantiating the head
       ;; daughter of a rule
-      (dolist (rule (get-indexed-rules (gen-chart-edge-dag edge) #'spelling-change-rule-p))
+      (dolist (rule
+                 (get-indexed-rules (gen-chart-edge-dag edge)
+                    #'spelling-change-rule-p))
          (when *debugging*
             (format t "~&Trying to create new active edge from rule ~A and inactive edge ~A"
                (rule-id rule) (gen-chart-edge-id edge)))
@@ -335,7 +348,7 @@
                         :dag unified-dag
                         :res (first (rule-order rule)) ; path of mother in fs
                         :needed (rest gen-daughter-order)
-                        :lex-used (gen-chart-edge-lex-used edge)
+                        :rels-covered (gen-chart-edge-rels-covered edge)
                         :children
                         (cond
                            ((null (cdr gen-daughter-order)) (list edge))
@@ -350,8 +363,8 @@
 (defun gen-chart-test-active (inact act input-sem)
    ;; can extend active edge with inactive? First check to make sure new edge
    ;; would not use any initial lexical item more than once
-   (when (not (gen-chart-intersection-p (gen-chart-edge-lex-used act)
-                 (gen-chart-edge-lex-used inact)))
+   (when (not (gen-chart-intersection-p (gen-chart-edge-rels-covered act)
+                 (gen-chart-edge-rels-covered inact)))
       (when *debugging*
          (format t "~&Trying to extend active edge ~A with inactive edge ~A"
             (gen-chart-edge-id act) (gen-chart-edge-id inact)))
@@ -373,9 +386,9 @@
                         :dag unified-dag
                         :res (gen-chart-edge-res act)
                         :needed (rest (gen-chart-edge-needed act))
-                        :lex-used
-                        (append (gen-chart-edge-lex-used act)
-                           (gen-chart-edge-lex-used inact))
+                        :rels-covered
+                        (append (gen-chart-edge-rels-covered act)
+                           (gen-chart-edge-rels-covered inact))
                         :children
                         (let ((combined ; *** not very clean, really need an index
                                (if (car (gen-chart-edge-children act))
@@ -404,7 +417,8 @@
           (index
              (gen-chart-dag-index
                 (existing-dag-at-end-of (tdfs-indef (gen-chart-edge-dag act))
-                   daughter-path)))) 
+                   daughter-path)
+                (gen-chart-edge-id act))))
          (gen-chart-add-with-index act index)
          (dolist (e (gen-chart-retrieve-with-index index nil))
             (gen-chart-test-active e act input-sem)))
@@ -417,7 +431,7 @@
       (let
          ((dag (gen-chart-edge-dag act)))
          (unless (gen-chart-inaccessible-needed-p
-                    dag input-sem (gen-chart-edge-lex-used act)
+                    dag input-sem (gen-chart-edge-rels-covered act)
                     (gen-chart-edge-leaves act))
             (setf (gen-chart-edge-dag act) dag)
             (setf (gen-chart-edge-res act) nil)
@@ -433,7 +447,7 @@
 ;;; in *semantics-index-path* or rest of dag. (The only access we allow to
 ;;; semantics in rules is to *semantics-index-path*)
 
-(defun gen-chart-inaccessible-needed-p (dag input-sem lex-used leaves)
+(defun gen-chart-inaccessible-needed-p (dag input-sem rels-covered leaves)
    (let
       ((sem-fs
           (existing-dag-at-end-of (tdfs-indef dag)
@@ -445,7 +459,7 @@
               (gen-chart-present-inaccessible-variables-in (tdfs-indef dag) sem-fs))
           (not-yet-generated-lvs nil))
          (dolist (rel (mrs::psoa-liszt input-sem))
-            (unless (member rel lex-used :test #'eq)
+            (unless (member rel rels-covered :test #'eq)
                (dolist (fvpair (mrs::rel-flist rel))
                   (when (mrs::var-p (mrs::fvpair-value fvpair))
                      (pushnew
@@ -453,7 +467,7 @@
                         (mrs::make-instance-type (mrs::fvpair-value fvpair))
                         not-yet-generated-lvs)))))
          ;(print sem-fs)
-         ;(print (list lex-used present-inaccessible-lvs not-yet-generated-lvs))
+         ;(print (list rels-covered present-inaccessible-lvs not-yet-generated-lvs))
          (let ((to-be-generated-but-inaccessible-p
                   (gen-chart-intersection-p
                      present-inaccessible-lvs not-yet-generated-lvs)))
@@ -539,7 +553,6 @@
             (yadu rule-tdfs
                   (create-temp-parsing-tdfs
                    fs daughter-index)))
-;         (yadu-features daughter-index rule-tdfs nil fs)
          (incf *gen-chart-fails*)
          (return-from gen-chart-evaluate-unification nil))
       (if completedp
