@@ -1389,6 +1389,7 @@
                            :condition condition :gold source)
       with nfold = (min (length data) nfold)
       initially #+:debug (setf %data% data) #-:debug nil
+      for i from 1 to (+ nfold 1)
       when (interrupt-p interrupt) do
         (format 
          stream
@@ -1397,7 +1398,6 @@
         (flush-cache cache :verbose verbose)
         (restore-gc-strategy gc)
         (return)
-      for i from 1 to (+ nfold 1)
       do
         (multiple-value-bind (test train) (ith-nth data i nfold)
           (when (null train) (setf train test))
