@@ -127,10 +127,22 @@
         (mrsstruct (or mrs (mrs::extract-mrs edge))))
     (setf (mrs-scoped-mrsstruct mframe) 
       mrsstruct)
-    (setf (mrs-scoped-scoped mframe) 
-      (mrs::make-scoped-mrs mrsstruct))
-    (setf (clim:frame-pretty-name mframe) (or title "Scoped MRS"))
-    (clim:run-frame-top-level mframe)))
+    ;;
+    ;; _fix_me_
+    ;; the error reporting, probably, should move into struggle-on-error() and
+    ;; distinguish an additional mode, where we _do_ report but not cerror().
+    ;;                                                           (5-mar-04; oe)
+    (multiple-value-bind (result condition)
+        (ignore-errors (mrs::make-scoped-mrs mrsstruct))
+      (when condition
+        (format
+         #+:allegro excl:*initial-terminal-io* #-:allegro t
+         "make-scoped-mrs(): `~a'~%" 
+         (normalize-string (format nil "~a" condition)))
+        (return-from show-mrs-scoped-window-really))
+      (setf (mrs-scoped-scoped mframe) result)
+      (setf (clim:frame-pretty-name mframe) (or title "Scoped MRS"))
+      (clim:run-frame-top-level mframe))))
 
 
 (defun show-mrs-dependencies-window (edge &optional mrs title)
