@@ -897,8 +897,7 @@
                                     (vitval 
                                      (convert-mrs-val-to-vit val labels)))
                                  (when (and (var-p val) sort
-					    (or (vit-instance-var-p vitval)
-					     (vit-label-var-p vitval)))
+					    (vit-instance-var-p vitval))
                                    (push (construct-vit-sort vitval sort) 
                                              *vit-sorts*))
                                  vitval))
@@ -915,8 +914,7 @@
                                (vitval 
                                 (convert-mrs-val-to-vit var labels)))
                           (when (and sort 
-				     (or (vit-label-var-p vitval)
-					 (vit-instance-var-p vitval)))
+                                     (vit-instance-var-p vitval))
                             (push (construct-vit-sort vitval sort) 
                                   *vit-sorts*))
                           (make-p-term 
@@ -1370,7 +1368,7 @@
          (vitrified-feature (last-path-feature current-fvp-feature)))
     ;;; last-path-feature is a no-op for atomic features
     ;;; but returns the last feature for paths
-    (if (member current-fvp-feature *string-valued-features*)
+    (if (member current-fvp-feature *vit-string-valued-features*)
         fvp
       (make-fvpair :feature (mrs-unstring-value vitrified-feature)
                    :value (mrs-unstring-value (fvpair-value fvp))))))

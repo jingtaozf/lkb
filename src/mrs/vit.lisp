@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.8  1999/10/14 00:46:32  danf
+;; Patches for better sorts
+;;
 ;; Revision 1.7  1999/09/29 18:21:49  aac
 ;; adding sorts
 ;;
@@ -564,7 +567,7 @@
         ((p-term-p form)
          (output-p-term vit-out form))
         ((disj-sort-p form)
-         (output-disj-sort vit-out form))
+         (output-disj-sort vit-out (disj-sort-args form)))
         ((whg-id-p form)
          (format vit-out "~A" form))
         ((stringp form)
@@ -573,15 +576,18 @@
          (format vit-out "~(~A~)" form))
         (t (format vit-out "~(~S~)" form))))
 
-(defun output-disj-sort (vit-out form)
-  (format vit-out ";(")
-  (let ((need-comma nil)) 
-    (dolist (current-form (disj-sort-args form))
-      (when need-comma
-        (format vit-out ","))
-      (setf need-comma t)
-      (output-p-form vit-out current-form))
-  (format vit-out ")")))
+(defun output-disj-sort (vit-out args)
+  (let ((argno (length args)))
+    (format vit-out ";(")
+    (output-p-form vit-out (car args))
+    (cond ((= argno 2)
+           (format vit-out ",")
+           (output-p-form vit-out (cadr args)))
+          ((> argno 2)
+           (format vit-out ",")
+           (output-disj-sort vit-out (cdr args)))
+          (t nil)) ; shouldn't happen, but no point screaming ...
+    (format vit-out ")")))
 
 (defun output-p-list (vit-out form)
   (format vit-out "[")
