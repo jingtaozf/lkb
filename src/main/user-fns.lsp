@@ -1,6 +1,9 @@
 ;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
 ;;; see licence.txt for conditions
 
+;;; bmw (aug-03)
+;;; - *psorts-temp-file* etc. moved into lexion slots
+
 ;;; User defined functions - from old globals file
 
 (in-package :lkb)
@@ -214,13 +217,16 @@
 ;;; functions which returns a directory etc for LKB temporary files.
 
 
-(defparameter *psorts-temp-file* nil  
+;(defparameter *psorts-temp-file* nil  
+(defparameter *psorts-temp-file* "~/tmp/DefaultLexicon"  
    "a temporary file for the lexicon")
 
-(defparameter *psorts-temp-index-file* nil
+(defparameter *psorts-temp-index-file* "~/tmp/DefaultLexicon-index"
+;(defparameter *psorts-temp-index-file* nil
    "a file to index the lexicon")
 
-(defparameter *leaf-temp-file* nil
+(defparameter *leaf-temp-file* "~/tmp/DefaultLexicon-rels"
+;(defparameter *leaf-temp-file* nil
    "a temporary file for leaf types")
 
 (defun lkb-tmp-dir nil 
