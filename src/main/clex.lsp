@@ -88,9 +88,10 @@
   (with-slots (psorts-temp-file) lexicon
     (set-temporary-lexicon-filenames)
     (when (up-to-date-p filenames
-                        (list psorts-temp-file 
-                              (psorts-temp-index-file lexicon)))
+                        (list *psorts-temp-file* 
+                              *psorts-temp-index-file*))
       (format t "~%Reading in cached lexicon")
+      (set-temporary-lexicon-filenames)
       (clear-lex *lexicon* 
                  :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)
                  :no-delete t)
@@ -100,7 +101,7 @@
                     (cdb:open-read psorts-temp-file))
                   (setf (orth-db lexicon) 
                     (cdb:open-read (psorts-temp-index-file lexicon)))
-                  (unless (> (cdb:num-entries (psort-db lexicon)) 1) (error "no lexicon cached"))
+                  ;;(unless (> (cdb:num-entries (psort-db lexicon)) 1) (error "no lexicon cached"))
                   t)
               (error (condition)
                 (format t "~%Error: ~A~%" condition)
@@ -154,7 +155,8 @@
 	 (psorts-temp-files (get-keyword-val :psorts-temp-files rest))
          (new-psorts-temp-file)
          (new-psorts-temp-index-file)
-	 (lexicon-size 0))
+	 ;;(lexicon-size 0)
+	 )
 
     ;; extract psorts-temp-file and psorts-temp-index-file
     (if (and (car psorts-temp-files)
@@ -181,14 +183,15 @@
       (cdb:close-read (orth-db lexicon))
       (setf (orth-db lexicon) nil))
     (when (psort-db lexicon)
-      (setf lexicon-size 
-	(cdb:num-entries (psort-db lexicon)))
+;;      (setf lexicon-size 
+;;	(cdb:num-entries (psort-db lexicon)))
       (cdb:close-read (psort-db lexicon))
       (setf (psort-db lexicon) nil))
     (unless 
-	(and 
-	     no-delete 
-	     (> lexicon-size 1))
+	no-delete
+;;	(and 
+;;	     no-delete 
+;;	     (> lexicon-size 1))
       (delete-temporary-lexicon-files lexicon))
     
     ;; set new temporary lexicon filenames    

@@ -99,6 +99,7 @@
   (setf *lex-file-list* file-names)
   (cond
    ((null file-names)                   ;: no files
+    (set-temporary-lexicon-filenames)
     (clear-lex *lexicon* 
                :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)
                :no-delete t)
@@ -106,11 +107,12 @@
    ((not (check-load-names file-names 'lexical)) ;: files not found
     (cerror "Continue with script" "Lexicon file not found"))
    (t                                   ;: files found
-    (clear-lex *lexicon* 
-               :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)
-               :no-delete t)
     (unless (read-cached-lex *lexicon* file-names)
       (let ((*syntax-error* nil))
+	(set-temporary-lexicon-filenames)
+	(clear-lex *lexicon* 
+		   :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)
+		   :no-delete t)
 	(setf *ordered-lex-list* nil)
 	(dolist (file-name file-names)
 	  (if (eql *lkb-system-version* :page)
@@ -150,9 +152,12 @@
   #+:psql
   (if (typep *lexicon* 'psql-lex-database)
       (initialize-lex *lexicon*)
-    (clear-lex *lexicon* 
-	       :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*)))
+    (progn
+      (set-temporary-lexicon-filenames)
+      (clear-lex *lexicon* 
+		 :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*))))
   #-:psql
+  (set-temporary-lexicon-filenames)
   (clear-lex *lexicon* 
 	     :psorts-temp-files (cons *psorts-temp-file* *psorts-temp-index-file*))
   (setf *ordered-lex-list* nil)
