@@ -1,7 +1,14 @@
 cvs update: Updating .
 M Version.lisp
+U characterize.tdl
+U preprocessor.fsr
 cvs update: Updating data
 cvs update: Updating lkb
+U lkb/char-script
+U lkb/globals.lsp
+U lkb/mrsglobals.lsp
+U lkb/script
+U lkb/xmlify.lsp
 cvs update: Updating pet
 cvs update: Updating .
 cvs update: Updating doc
@@ -22,11 +29,13 @@ cvs update: Updating bin/linux
 cvs update: Updating bin/solaris
 cvs update: Updating etc
 cvs update: Updating include
+U include/mrs.h
 cvs update: Updating lib
 cvs update: Updating lib/Tktable2.7
 cvs update: Updating lib/blt2.4
 cvs update: Updating lib/blt2.4/dd_protocols
 cvs update: Updating lib/linux
+U lib/linux/libmrs.a
 cvs update: Updating lib/solaris
 cvs update: Updating lib/solaris/blt2.4
 cvs update: Updating lib/solaris/blt2.4/dd_protocols
@@ -83,145 +92,80 @@ U src/version.lsp
 ? src/.sacl
 cvs update: Updating src/.aasl
 cvs update: Updating src/.aasl/ACL_specific
-cvs update: src/.aasl/ACL_specific/.preserve is no longer in the repository
 cvs update: Updating src/.aasl/io-general
-cvs update: src/.aasl/io-general/.preserve is no longer in the repository
 cvs update: Updating src/.aasl/io-lilfes
-cvs update: src/.aasl/io-lilfes/.preserve is no longer in the repository
 cvs update: Updating src/.aasl/io-paths
-cvs update: src/.aasl/io-paths/.preserve is no longer in the repository
 cvs update: Updating src/.aasl/io-tdl
-cvs update: src/.aasl/io-tdl/.preserve is no longer in the repository
 cvs update: Updating src/.aasl/main
-cvs update: src/.aasl/main/.preserve is no longer in the repository
 cvs update: Updating src/.aasl/mrs
-cvs update: src/.aasl/mrs/.preserve is no longer in the repository
 cvs update: Updating src/.aasl/pvm
-cvs update: src/.aasl/pvm/.preserve is no longer in the repository
 cvs update: Updating src/.aasl/tsdb
-cvs update: src/.aasl/tsdb/.preserve is no longer in the repository
 cvs update: Updating src/.aasl/tty
-cvs update: src/.aasl/tty/.preserve is no longer in the repository
 cvs update: Updating src/.basl
 cvs update: Updating src/.basl/ACL_specific
-cvs update: src/.basl/ACL_specific/.preserve is no longer in the repository
 cvs update: Updating src/.basl/io-general
-cvs update: src/.basl/io-general/.preserve is no longer in the repository
 cvs update: Updating src/.basl/io-lilfes
-cvs update: src/.basl/io-lilfes/.preserve is no longer in the repository
 cvs update: Updating src/.basl/io-paths
-cvs update: src/.basl/io-paths/.preserve is no longer in the repository
 cvs update: Updating src/.basl/io-tdl
-cvs update: src/.basl/io-tdl/.preserve is no longer in the repository
 cvs update: Updating src/.basl/main
-cvs update: src/.basl/main/.preserve is no longer in the repository
 cvs update: Updating src/.basl/mrs
-cvs update: src/.basl/mrs/.preserve is no longer in the repository
 cvs update: Updating src/.basl/pvm
-cvs update: src/.basl/pvm/.preserve is no longer in the repository
 cvs update: Updating src/.basl/tsdb
-cvs update: src/.basl/tsdb/.preserve is no longer in the repository
 cvs update: Updating src/.basl/tty
-cvs update: src/.basl/tty/.preserve is no longer in the repository
 cvs update: Updating src/.basl/www
-cvs update: src/.basl/www/.preserve is no longer in the repository
 cvs update: Updating src/.fasl
 cvs update: Updating src/.fasl/ACL_specific
-cvs update: src/.fasl/ACL_specific/.preserve is no longer in the repository
 cvs update: Updating src/.fasl/io-general
-cvs update: src/.fasl/io-general/.preserve is no longer in the repository
 cvs update: Updating src/.fasl/io-lilfes
-cvs update: src/.fasl/io-lilfes/.preserve is no longer in the repository
 cvs update: Updating src/.fasl/io-paths
-cvs update: src/.fasl/io-paths/.preserve is no longer in the repository
 cvs update: Updating src/.fasl/io-tdl
-cvs update: src/.fasl/io-tdl/.preserve is no longer in the repository
 cvs update: Updating src/.fasl/main
-cvs update: src/.fasl/main/.preserve is no longer in the repository
 cvs update: Updating src/.fasl/mrs
-cvs update: src/.fasl/mrs/.preserve is no longer in the repository
 cvs update: Updating src/.fasl/pvm
-cvs update: src/.fasl/pvm/.preserve is no longer in the repository
 cvs update: Updating src/.fasl/tsdb
-cvs update: src/.fasl/tsdb/.preserve is no longer in the repository
 cvs update: Updating src/.fasl/tty
-cvs update: src/.fasl/tty/.preserve is no longer in the repository
 cvs update: Updating src/.fasl/www
-cvs update: src/.fasl/www/.preserve is no longer in the repository
 cvs update: Updating src/.lasl
 cvs update: Updating src/.lasl/ACL_specific
-cvs update: src/.lasl/ACL_specific/.preserve is no longer in the repository
 cvs update: Updating src/.lasl/io-general
-cvs update: src/.lasl/io-general/.preserve is no longer in the repository
 cvs update: Updating src/.lasl/io-lilfes
-cvs update: src/.lasl/io-lilfes/.preserve is no longer in the repository
 cvs update: Updating src/.lasl/io-paths
-cvs update: src/.lasl/io-paths/.preserve is no longer in the repository
 cvs update: Updating src/.lasl/io-tdl
-cvs update: src/.lasl/io-tdl/.preserve is no longer in the repository
 cvs update: Updating src/.lasl/main
-cvs update: src/.lasl/main/.preserve is no longer in the repository
 cvs update: Updating src/.lasl/mrs
-cvs update: src/.lasl/mrs/.preserve is no longer in the repository
 cvs update: Updating src/.lasl/pvm
-cvs update: src/.lasl/pvm/.preserve is no longer in the repository
 cvs update: Updating src/.lasl/tsdb
-cvs update: src/.lasl/tsdb/.preserve is no longer in the repository
 cvs update: Updating src/.lasl/tty
-cvs update: src/.lasl/tty/.preserve is no longer in the repository
 cvs update: Updating src/.lasl/www
-cvs update: src/.lasl/www/.preserve is no longer in the repository
 cvs update: Updating src/.masl
 cvs update: Updating src/.masl/MCL_specific
-cvs update: src/.masl/MCL_specific/.preserve is no longer in the repository
 cvs update: Updating src/.masl/io-general
-cvs update: src/.masl/io-general/.preserve is no longer in the repository
 cvs update: Updating src/.masl/io-lilfes
-cvs update: src/.masl/io-lilfes/.preserve is no longer in the repository
 cvs update: Updating src/.masl/io-paths
-cvs update: src/.masl/io-paths/.preserve is no longer in the repository
 cvs update: Updating src/.masl/io-tdl
-cvs update: src/.masl/io-tdl/.preserve is no longer in the repository
 cvs update: Updating src/.masl/main
-cvs update: src/.masl/main/.preserve is no longer in the repository
 cvs update: Updating src/.masl/mrs
-cvs update: src/.masl/mrs/.preserve is no longer in the repository
 cvs update: Updating src/.masl/pvm
-cvs update: src/.masl/pvm/.preserve is no longer in the repository
 cvs update: Updating src/.masl/tsdb
-cvs update: src/.masl/tsdb/.preserve is no longer in the repository
 cvs update: Updating src/.masl/tty
-cvs update: src/.masl/tty/.preserve is no longer in the repository
 cvs update: Updating src/.masl/www
-cvs update: src/.masl/www/.preserve is no longer in the repository
 cvs update: Updating src/.mfasl
 cvs update: Updating src/.nasl
 cvs update: Updating src/.nasl/ACL_specific
-cvs update: src/.nasl/ACL_specific/.preserve is no longer in the repository
 cvs update: Updating src/.nasl/io-general
-cvs update: src/.nasl/io-general/.preserve is no longer in the repository
 cvs update: Updating src/.nasl/io-lilfes
-cvs update: src/.nasl/io-lilfes/.preserve is no longer in the repository
 cvs update: Updating src/.nasl/io-paths
-cvs update: src/.nasl/io-paths/.preserve is no longer in the repository
 cvs update: Updating src/.nasl/io-tdl
-cvs update: src/.nasl/io-tdl/.preserve is no longer in the repository
 cvs update: Updating src/.nasl/main
-cvs update: src/.nasl/main/.preserve is no longer in the repository
 cvs update: Updating src/.nasl/mrs
-cvs update: src/.nasl/mrs/.preserve is no longer in the repository
 cvs update: Updating src/.nasl/pvm
-cvs update: src/.nasl/pvm/.preserve is no longer in the repository
 cvs update: Updating src/.nasl/tsdb
-cvs update: src/.nasl/tsdb/.preserve is no longer in the repository
 cvs update: Updating src/.nasl/tty
-cvs update: src/.nasl/tty/.preserve is no longer in the repository
 cvs update: Updating src/.nasl/www
-cvs update: src/.nasl/www/.preserve is no longer in the repository
 cvs update: Updating src/ACL-CG_specific
 cvs update: Updating src/ACL_specific
-U src/ACL_specific/chartout.lsp
-U src/ACL_specific/parseout.lsp
+U src/ACL_specific/graphics.lsp
+U src/ACL_specific/topmenu.lsp
 cvs update: Updating src/MCL_specific
 cvs update: Updating src/data
 cvs update: Updating src/data/Dikran
@@ -321,16 +265,26 @@ cvs update: Updating src/fasl/main
 cvs update: Updating src/fasl/mrs
 cvs update: Updating src/general
 cvs update: Updating src/glue
+U src/glue/lui.lsp
 cvs update: Updating src/io-general
-U src/io-general/tree-nodes.lsp
 cvs update: Updating src/io-lilfes
 cvs update: Updating src/io-paths
-U src/io-paths/lexinput.lsp
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-U src/main/clex.lsp
+U src/main/cdb.lsp
+U src/main/dag.lsp
+U src/main/parse.lsp
+U src/main/preprocess.lsp
 cvs update: Updating src/mrs
+U src/mrs/basemrs.lisp
+U src/mrs/dependencies.lisp
+U src/mrs/dummy-interface.lisp
+U src/mrs/lkb-acl-mrs.lisp
+U src/mrs/lkb-interface.lisp
+U src/mrs/mrsglobals.lisp
+U src/mrs/mrsoutput.lisp
+U src/mrs/pet-interface.lisp
 cvs update: Updating src/mrs/data
 cvs update: Updating src/non-core
 cvs update: Updating src/ppcre
@@ -341,6 +295,11 @@ cvs update: Updating src/pvm
 cvs update: Updating src/pvm/linux
 cvs update: Updating src/pvm/solaris
 cvs update: Updating src/rmrs
+U src/rmrs/basermrs.lisp
+U src/rmrs/comp.lisp
+U src/rmrs/compare.lisp
+U src/rmrs/convert.lisp
+U src/rmrs/output.lisp
 cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
@@ -375,6 +334,8 @@ cvs update: Updating src/tsdb/home/trees/vm32/ezra/01-07-17
 cvs update: Updating src/tsdb/html
 cvs update: Updating src/tsdb/linux
 cvs update: Updating src/tsdb/lisp
+U src/tsdb/lisp/commands.lisp
+U src/tsdb/lisp/globals.lisp
 cvs update: Updating src/tsdb/lisp/RCS
 cvs update: Updating src/tsdb/skeletons
 cvs update: Updating src/tsdb/skeletons/csli
@@ -435,6 +396,7 @@ cvs update: Updating src/tsdb/solaris
 cvs update: Updating src/tsdb/tcl
 cvs update: Updating src/tty
 cvs update: Updating src/www
+U src/www/demo.lisp
 cvs update: Updating src/www/linux
 cvs update: Updating src/xml
 **********
@@ -446,7 +408,7 @@ cvs update: Updating src/xml
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.259; previous revision: 1.258
+new revision: 1.261; previous revision: 1.260
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1410,7 +1372,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Sep 22, 2003 22:46)
+6.2 [Linux (x86)] (Oct 1, 2003 7:15)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2025,6 +1987,8 @@ T
 ;   Libfasl loading
 ;      /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/rules.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/parse.lsp
+; While compiling MAKE-EDGE:
+Warning: Variable TMP-HACK is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/parse.fasl
 ;;; Fasl write complete
@@ -2461,7 +2425,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x444537c2> 
+#<EQUAL hash-table with 0 entries @ #x444537b2> 
  #|
 ; Libfasl from bundle code/who.fasl.
  (DISCARD-LOCAL-NAME-INFO)
@@ -2472,7 +2436,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-90083760 bytes have been tenured, next gc will be global.
+89646992 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2814,6 +2778,8 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/rules.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/parse.lsp
+; While compiling MAKE-EDGE:
+Warning: Variable TMP-HACK is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/parse.fasl
 ;;; Fasl write complete
@@ -3057,9 +3023,9 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsglobals.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/basemrs.lisp
-8502856 bytes have been tenured, next gc will be global.
+8507568 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/basemrs.lisp
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/basemrs.fasl
 ;;; Fasl write complete
@@ -3328,6 +3294,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/yy.fasl
+gc-after-hook(): local; new: 550600; old: 52336; pending: 72; efficiency: 95.
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/derivations.lisp
 ;;; Writing fasl file
@@ -3342,10 +3309,9 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tnt-interface.fasl
-gc-after-hook(): local; new: 1097624; old: 3688; pending: 5392; efficiency: 91.
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1144712; old: 10760; pending: 0; efficiency: 94.
+gc-after-hook(): local; new: 1579968; old: 10936; pending: 128; efficiency: 92.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
@@ -3361,12 +3327,12 @@ gc-after-hook(): local; new: 1144712; old: 10760; pending: 0; efficiency: 94.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/ptb.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/rasp.lisp
+gc-after-hook(): local; new: 1031472; old: 4352; pending: 0; efficiency: 94.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/rasp.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/rasp.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/pcfg.lisp
-gc-after-hook(): local; new: 1247208; old: 2936; pending: 0; efficiency: 93.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
@@ -3468,13 +3434,13 @@ area  address(bytes)        cons        symbols        other bytes
 Top #x4f06000
 New #x4c86000(2621440)    982:1056      254:0        2531528:12848
 New #x4a06000(2621440)     -----         -----            -----
-Old #x4003858(10495912)   374:30196     259:9572     9322632:684656
+Old #x4003858(10495912)   374:30196     259:9572     9322648:684640
 Root pages: 12
  Lisp heap base: #x4000000  position: #x4f06000 reserved: 805306368
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (9/22/3 22:50)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (10/1/3 7:18)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -3769,14 +3735,16 @@ Warning: Variable #:G20658 is never used.
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/clex.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/rules.lsp
 ; While compiling RULES-TO-XML:
-Warning: Variable #:G25195 is never used.
-Warning: Variable #:G25196 is never used.
-Warning: Variable #:G25181 is never used.
-Warning: Variable #:G25182 is never used.
+Warning: Variable #:G25200 is never used.
+Warning: Variable #:G25201 is never used.
+Warning: Variable #:G25186 is never used.
+Warning: Variable #:G25187 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/parse.lsp
+; While compiling MAKE-EDGE:
+Warning: Variable TMP-HACK is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/parse.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/parse.fasl
@@ -3834,9 +3802,9 @@ Warning: Variable #:G25182 is never used.
 ;      /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputtdfs.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/io-general/outputsrc.lsp
 ; While compiling (LABELS OUTPUT-RULES-FOR-EBL OUTPUT-RULES):
-Warning: Variable #:G30283 is never used.
-Warning: Variable #:G30279 is never used.
-Warning: Variable #:G30280 is never used.
+Warning: Variable #:G30406 is never used.
+Warning: Variable #:G30402 is never used.
+Warning: Variable #:G30403 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputsrc.fasl
 ;;; Fasl write complete
@@ -4124,14 +4092,14 @@ NIL
 [Current process: Initial Lisp Listener]
 USER(22): NIL
 [Current process: Initial Lisp Listener]
-USER(23): #<EQUAL hash-table with 0 entries @ #x4310eb2>
+USER(23): #<EQUAL hash-table with 0 entries @ #x4310eaa>
 [Current process: Initial Lisp Listener]
 USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 ; Libfasl from bundle code/who.fasl.
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-33817536 bytes have been tenured, next gc will be global.
+33088720 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4327,7 +4295,7 @@ Warning: Variable #:G25549 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
-7708008 bytes have been tenured, next gc will be global.
+7707184 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/yadu.fasl
@@ -4372,14 +4340,16 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/clex.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/rules.lsp
 ; While compiling RULES-TO-XML:
-Warning: Variable #:G30098 is never used.
-Warning: Variable #:G30099 is never used.
-Warning: Variable #:G30084 is never used.
-Warning: Variable #:G30085 is never used.
+Warning: Variable #:G30103 is never used.
+Warning: Variable #:G30104 is never used.
+Warning: Variable #:G30089 is never used.
+Warning: Variable #:G30090 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/parse.lsp
+; While compiling MAKE-EDGE:
+Warning: Variable TMP-HACK is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/parse.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/parse.fasl
@@ -4433,9 +4403,9 @@ Warning: Variable #:G30085 is never used.
 ;    /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputtdfs.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/io-general/outputsrc.lsp
 ; While compiling (LABELS OUTPUT-RULES-FOR-EBL OUTPUT-RULES):
-Warning: Variable #:G35198 is never used.
-Warning: Variable #:G35194 is never used.
-Warning: Variable #:G35195 is never used.
+Warning: Variable #:G35321 is never used.
+Warning: Variable #:G35317 is never used.
+Warning: Variable #:G35318 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputsrc.fasl
 ;;; Fasl write complete
@@ -4752,8 +4722,8 @@ Warning: Variable ENCODING is never used.
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/import.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/statistics.lisp
 ; While compiling PURGE-PROFILE-CACHE:
-Warning: Variable #:G51600 is never used.
-Warning: Variable #:G51601 is never used.
+Warning: Variable #:G51860 is never used.
+Warning: Variable #:G51861 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/statistics.fasl
 ;;; Fasl write complete
@@ -4795,7 +4765,7 @@ Warning: Variable #:G51601 is never used.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tnt-interface.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 2105144; old: 416000; pending: 0; efficiency: 98.
+gc-after-hook(): local; new: 2985264; old: 391744; pending: 0; efficiency: 97.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
@@ -4893,6 +4863,8 @@ erg/lkb/mrsmunge.tdl
 erg/lkb/script
 erg/lkb/settings.lsp
 erg/lkb/user-fns.lsp
+erg/lkb/char-script
+erg/lkb/xmlify.lsp
 erg/pet/
 erg/pet/english.set
 erg/pet/flop.set
@@ -4904,13 +4876,13 @@ erg/ptblex.tdl
 erg/vm6p.mem
 erg/lexicon.csv
 erg/ecommerce.fsr
+erg/characterize.tdl
 ( \
   cd /eo/e7/apache/htdocs/src; \
   tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/matrix.tgz \
       --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-      --exclude="pet*" --exclude="tsdb*" \
-      --exclude="*.fasl" \
+      --exclude="doc*" --exclude="*.fasl" \
       matrix; \
 )
 matrix/
