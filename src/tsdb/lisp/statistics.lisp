@@ -68,8 +68,6 @@
 
 (defvar *tsdb-profile-cache* (make-hash-table :size 42 :test #'equal))
 
-(defparameter *statistics-select-condition* nil)
-
 (defparameter *statistics-time-fields* 
   '(:first :total :tcpu :tgc :treal :utcpu))
 

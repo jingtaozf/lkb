@@ -418,8 +418,9 @@
 
 (defparameter *bleu-binary* 
   (let* ((root (system:getenv "LOGONROOT"))
-         (root (namestring (parse-namestring root))))
-    (format nil "~a/ntnu/bleu/bleu.pl" root)))
+         (root (and root (namestring (parse-namestring root)))))
+    (when root
+      (format nil "~a/ntnu/bleu/bleu.pl" root))))
 
 (defparameter *bleu-punctuation-characters* '(#\. #\! #\? #\, #\: #\|))
 

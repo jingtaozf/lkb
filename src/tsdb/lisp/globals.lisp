@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (30-oct-04; beta)")
+(defparameter *tsdb-version* "2.0 (25-nov-04; beta)")
 
 (defparameter
   *tsdb-application*
@@ -167,6 +167,8 @@
 (defparameter *pvm-cpus* nil)
 
 (defparameter *pvm-clients* nil)
+
+(defparameter *statistics-select-condition* nil)
 
 (defparameter *redwoods-export-values* :all)
 

@@ -952,8 +952,8 @@
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
                    :dag tdfs :from start :to end
-                   :cfrom nil #-:logon (find-cfrom-hack start)
-                   :cto nil #-:logon (find-cto-hack start))))))
+                   :cfrom nil #-:logon (mrs::find-cfrom-hack start)
+                   :cto nil #-:logon (mrs::find-cto-hack start))))))
 
 (defun tsdb::find-affix (type)
   (let* ((*package* *lkb-package*)

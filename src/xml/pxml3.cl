@@ -148,7 +148,7 @@
 
 (defun next-dtd-token (tokenbuf
 		       external include-count external-callback)
-  (declare (:fbound parse-default-value) (optimize (speed 3) (safety 1)))
+  (declare #+:null (:fbound parse-default-value) (optimize (speed 3) (safety 1)))
   (macrolet ((add-to-entity-buf (entity-symbol p-value)
 	       `(progn
 		  (push (make-tokenbuf :cur 0 :max (length ,p-value) :data ,p-value)
@@ -2397,7 +2397,7 @@
     ))
 
 (defun external-param-reference (tokenbuf old-coll external-callback)
-  (declare (:fbound next-token) (ignorable old-coll) (optimize (speed 3) (safety 1)))
+  (declare #+:null (:fbound next-token) (ignorable old-coll) (optimize (speed 3) (safety 1)))
   (setf (iostruct-seen-parameter-reference tokenbuf) t)
   (macrolet ((add-to-entity-buf (entity-symbol p-value)
 	       `(progn

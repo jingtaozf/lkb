@@ -79,15 +79,15 @@
 ;;; temporary
 #-:psql
 (progn
-  (defun MRS::DUMP-SEMI-TO-PSQL nil)
-  (defun LKB::CACHE-ALL-LEX-RECORDS-ORTH nil)
-  (defun LKB::CACHE-ALL-LEX-RECORDS nil)
-  (defun LKB::RELOAD-ROOTS-MWE nil)
-  (defun LKB::SET-LEX-ENTRY nil)
-  (defun LKB::MAKE-INSTANCE-PSQL-LEX-ENTRY nil)
-  (defun LKB::TO-DB-DUMP nil
+  (defun MRS::DUMP-SEMI-TO-PSQL (&rest foo) (declare (ignore foo)))
+  (defun LKB::CACHE-ALL-LEX-RECORDS-ORTH (&rest foo) (declare (ignore foo)))
+  (defun LKB::CACHE-ALL-LEX-RECORDS (&rest foo) (declare (ignore foo)))
+  (defun LKB::RELOAD-ROOTS-MWE (&rest foo) (declare (ignore foo)))
+  (defun LKB::SET-LEX-ENTRY (&rest foo) (declare (ignore foo)))
+  (defun LKB::MAKE-INSTANCE-PSQL-LEX-ENTRY (&rest foo) (declare (ignore foo)))
+  (defun LKB::TO-DB-DUMP (&rest foo) (declare (ignore foo))
     (error "Please compile with :psql"))
-  (defun LKB::LOAD-PSQL-LEXICON-FROM-SCRIPT nil
+  (defun LKB::LOAD-PSQL-LEXICON-FROM-SCRIPT (&rest foo) (declare (ignore foo))
     (error "Please set *psql-lexicon-parameters* to NIL"))
   )
 
