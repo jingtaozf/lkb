@@ -17,6 +17,7 @@
 #include <pwd.h>
 #include <string.h>
 #include <dirent.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <errno.h>
@@ -225,7 +226,7 @@ FILE *tsdb_open_debug() {
               (date != NULL ? date : ""));
     } /* else */
     fprintf(output,
-            "tsdb(1) %s (%s) [%s] --- (c) oe@coli.uni-sb.de.\n\n",
+            "tsdb(1) %s (%s) [%s] --- (c) oe@csli.stanford.edu.\n\n",
             tsdb_version,
             tsdb_rcs_strip(&tsdb_revision[0], "Revision"),
             tsdb_rcs_strip(&tsdb_revision_date[0], "Date"));
@@ -270,6 +271,27 @@ void tsdb_close_debug(FILE *stream) {
 } /* tsdb_close_debug() */
 
 /*--------------------------- print functions ------------------------------*/
+char *tsdb_postprocess_string(char *string) {
+
+  char *foo, *bar;
+
+  foo = tsdb_denormalize_string(string);
+  if(tsdb.status & TSDB_PROLOG_ESCAPE_OUTPUT) {
+    bar = tsdb_prolog_escape_string(foo);
+  } /* if */
+  else {
+    if(tsdb.status & TSDB_LISP_ESCAPE_OUTPUT) {
+      bar = tsdb_lisp_escape_string(foo);
+    } /* if */
+    else {
+      bar = strdup(foo);
+    } /* else */
+  } /* else */
+  tsdb_free(foo);
+  return(bar);
+
+} /* tsdb_postprocess_string() */
+
 char* tsdb_sprint_value(Tsdb_value *value, BOOL raw) {
   char *result, *foo;
   
@@ -385,7 +407,7 @@ char* tsdb_sprint_key_list(Tsdb_key_list* list,int* r,int* f,
 
   for (k=0; k<n_attributes ; k++ ) {
     if (r[k]!=-1
-        && ((cat = tsdb_sprint_value(list->tuples[r[k]]->fields[f[k]], FALSE))
+        && ((cat = tsdb_sprint_value(list->tuples[r[k]]->fields[f[k]], TRUE))
             != NULL)) {
       if ((len+strlen(cat)+2)<blen) {
         strcat(&buf[len],cat);
@@ -544,6 +566,7 @@ int find_next_format(char* format,int *pos) {
 void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
   int k,i=0,j,l,size,where=0,typ,result;
   char **bar=NULL,*foo,*tmp,*praefix=NULL,*suffix=NULL;
+  char *baz;
   /* report: 
      %s \
      %i | - %s here output
@@ -637,7 +660,9 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
         }
         else {
           *tmp='\0';
-          result = fputs(foo,stream);
+          baz = tsdb_postprocess_string(foo);
+          result = fputs(baz,stream);
+          tsdb_free(baz);
           if (result==EOF)
             break;
           *tmp=tsdb.fs;
@@ -645,7 +670,9 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
           fputs(bar[k],stream);
         }
       } /* for */
-      result = fputs(foo,stream);
+      baz = tsdb_postprocess_string(foo);
+      result = fputs(baz,stream);
+      tsdb_free(baz);
       if (result==EOF)
         break;
       fputs(suffix,stream);

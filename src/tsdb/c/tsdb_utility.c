@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <regex.h>
+#include <time.h>
 #include <memory.h>
 #include <sys/types.h>
 #include <sys/param.h>
@@ -3172,9 +3173,12 @@ char *tsdb_denormalize_string(char *string) {
       } /* else */
     } /* for */
     foo[j] = (char)0;
+    return(foo);
+#ifdef WASTE
     bar = strdup(foo);
     tsdb_free(foo);
     return(bar);
+#endif
   } /* if */
   else {
     return((char *)NULL);

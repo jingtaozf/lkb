@@ -196,7 +196,7 @@ int tsdb_info(Tsdb_value **value_list, char *redirection) {
              || !strcmp(value_list[i]->value.identifier, "all")) {
             fprintf(output,
                     "tsdb(1) %s (%s) [%s] --- "
-                    "(c) oe@coli.uni-sb.de.\n",
+                    "(c) oe@csli.stanford.edu.\n",
                     tsdb_version, &tsdb_revision[0], &tsdb_revision_date[0]);
             match = TRUE;
           } /* if */
@@ -2124,7 +2124,7 @@ Tsdb_relation **tsdb_join_path(Tsdb_relation **sources,
             fprintf(tsdb_debug_stream, "join_path(): path: ");
             tsdb_print_join_path(path, tsdb_debug_stream);
             fflush(tsdb_debug_stream);
-#endif DEBUG
+#endif
           } /* if */
           else {
             free(paths[k]);

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <dirent.h>
 #include <string.h>
@@ -7,22 +8,24 @@
 #include <sys/time.h>
 #include <sys/utsname.h>
 
-#define CLIENT_C
-#  include "itsdb.h"
-#undef CLIENT_C
-#include "pvm3.h"
+#include "mfile.h"
 
+#include "itsdb.h"
+#include "pvm3.h"
 
 extern double load_average(void);
 extern int pvm_quit(void);
 extern int pvm_file_transmit(int, int, char *);
+extern int pvm_mfile_transmit(int, int, struct MFILE *);
 
 int slave(void);
 int client_register(int, int);
-char *client_create_run(void);
-char *client_process_item(void);
-char *client_reconstruct_item(void);
-char *client_complete_run(void);
+
+struct MFILE *client_create_run(void);
+struct MFILE *client_process_item(void);
+struct MFILE *client_reconstruct_item(void);
+struct MFILE *client_complete_run(void);
+
 int redirect_stdout(FILE *);
 char *make_tmp_file(char *);
 char *current_user(void);
@@ -37,11 +40,11 @@ static int (*callbacks[4])() = {
   (int (*)())NULL,
   (int (*)())NULL
 }; /* callbacks */
+static struct MFILE *client_output;
 static int self = 0;
 
 int capi_register(int (*create_run)(char *, int, char *, int, char *),
-                  int (*process_item)(int, char *, int, int,
-                                      int, int, int),
+                  int (*process_item)(int, char *, int, int, int, int, int),
                   int (*reconstruct_item)(char *),
                   int (*complete_run)(int, char *)) {
 
@@ -82,7 +85,7 @@ int slave(void) {
   int id, size, tag, remote;
   int code;
   struct timeval timeout;
-  char *file;
+  struct MFILE *file;
 
   timeout.tv_sec = 1;
   timeout.tv_usec = 0;
@@ -134,10 +137,13 @@ int slave(void) {
       case C_RECONSTRUCT_ITEM:
         file = client_reconstruct_item();
         break;
+      default:
+        file = (struct MFILE *)NULL;
       } /* switch */
 
-      if(file != NULL && !access(file, F_OK|R_OK)) {
-        pvm_file_transmit(remote, LISP_MESSAGE, file);
+      if(file != NULL ) {
+        pvm_mfile_transmit(remote, LISP_MESSAGE, file);
+	mclose(file);
       } /* if */
     } /* if */
   } /* for */
@@ -163,18 +169,17 @@ int client_register(int self, int master) {
 
 } /* client_register() */
 
-char *client_create_run() {
+struct MFILE *client_create_run() {
 
   int run_id, interactive, length;
-  char *data, *comment, *custom, *file;
-  FILE *output;
+  char *data, *comment, *custom;
 
   if(pvm_upkint(&length, 1, 1) < 0) {
     pvm_perror("create_run()");
     fprintf(stderr, "create_run(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    return((char *)NULL);
+    return 0;
   } /* if */
   data = (char *)malloc(length + 1);
   if(pvm_upkstr(data) < 0) {
@@ -183,7 +188,7 @@ char *client_create_run() {
     fflush(stderr);
     pvm_quit();
     free(data);
-    return((char *)NULL);
+    return 0;
   } /* if */
 
   if(pvm_upkint(&run_id, 1, 1) < 0) {
@@ -192,7 +197,7 @@ char *client_create_run() {
     fflush(stderr);
     pvm_quit();
     free(data);
-    return((char *)NULL);
+    return 0;
   } /* if */
 
   if(pvm_upkint(&length, 1, 1) < 0) {
@@ -201,7 +206,7 @@ char *client_create_run() {
     fflush(stderr);
     pvm_quit();
     free(data);
-    return((char *)NULL);
+    return 0;
   } /* if */
   comment = (char *)malloc(length + 1);
   if(pvm_upkstr(comment) < 0) {
@@ -210,7 +215,7 @@ char *client_create_run() {
     fflush(stderr);
     pvm_quit();
     free(data); free(comment);
-    return((char *)NULL);
+    return 0;
   } /* if */
 
   if(pvm_upkint(&interactive, 1, 1) < 0) {
@@ -219,7 +224,7 @@ char *client_create_run() {
     fflush(stderr);
     pvm_quit();
     free(data); free(comment);
-    return((char *)NULL);
+    return 0;
   } /* if */
 
   if(pvm_upkint(&length, 1, 1) < 0) {
@@ -228,7 +233,7 @@ char *client_create_run() {
     fflush(stderr);
     pvm_quit();
     free(data);
-    return((char *)NULL);
+    return 0;
   } /* if */
   custom = (char *)malloc(length + 1);
   if(pvm_upkstr(custom) < 0) {
@@ -237,52 +242,46 @@ char *client_create_run() {
     fflush(stderr);
     pvm_quit();
     free(data); free(custom);
-    return((char *)NULL);
+    return 0;
   } /* if */
 
-  file = make_tmp_file(".pvm.cio");
-  if((output = fopen(file, "w")) == NULL) {
-    fprintf(stderr, "create_run(): unable to create output file.\n");
+  if((client_output = mopen()) == NULL) {
+    fprintf(stderr, "create_run(): unable to create output mfile.\n");
     free(data); free(comment); free(custom);
-    return((char *)NULL);
+    return ((struct MFILE *)NULL);
   } /* if */
 
-  fprintf(output,
-          "\n (:return :create-run (\n"
-          "  (:data . \"%s\") (:run-id . %d) (:interactive . %d)\n"
-          "  (:comment . \"%s\") (:start . \"%s\")\n"
-          "  (:custom . \"%s\")\n"
-          "  (:user . \"%s\")  (:host . \"%s\") (:os . \"%s\")\n",
-          data, run_id, interactive,
-          comment, current_time(),
-          custom,
-          current_user(), current_host(), current_os());
+  capi_printf("\n (:return :create-run (\n"
+              "  (:data . \"%s\") (:run-id . %d) (:interactive . %d)\n"
+              "  (:comment . \"%s\") (:start . \"%s\")\n"
+              "  (:custom . \"%s\")\n"
+              "  (:user . \"%s\")  (:host . \"%s\") (:os . \"%s\")\n",
+              data, run_id, interactive,
+              comment, current_time(),
+              custom,
+              current_user(), current_host(), current_os());
   if(callbacks[C_CREATE_RUN] != NULL) {
-    redirect_stdout(output);
     if(callbacks[C_CREATE_RUN](data, run_id, comment, interactive) < 0) {
       fprintf(stderr, "create_run(): erroneous client return value.\n");
     } /* if */
-    redirect_stdout((FILE *)NULL);
   } /* if */
-  fprintf(output, "))");
+  capi_printf("))");
   free(data); free(comment); free(custom);
-  fclose(output);
-  return(file);
+  return client_output;
 
 } /* client_create_run() */
 
-char *client_process_item() {
+struct MFILE *client_process_item() {
 
   int i_id, parse_id, edges, exhaustive, derivationp, interactive, length;
-  char *i_input, *file;
-  FILE *output;
+  char *i_input;
 
   if(pvm_upkint(&i_id, 1, 1) < 0) {
     pvm_perror("process_item()");
     fprintf(stderr, "process_item(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    return((char *)NULL);
+    return 0;
   } /* if */
 
   if(pvm_upkint(&length, 1, 1) < 0) {
@@ -290,7 +289,7 @@ char *client_process_item() {
     fprintf(stderr, "process_item(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    return((char *)NULL);
+    return 0;
   } /* if */
   i_input = (char *)malloc(length + 1);
   if(pvm_upkstr(i_input) < 0) {
@@ -299,7 +298,7 @@ char *client_process_item() {
     fflush(stderr);
     pvm_quit();
     free(i_input);
-    return((char *)NULL);
+    return 0;
   } /* if */
 
   if(pvm_upkint(&parse_id, 1, 1) < 0) {
@@ -308,7 +307,7 @@ char *client_process_item() {
     fflush(stderr);
     pvm_quit();
     free(i_input);
-    return((char *)NULL);
+    return 0;
   } /* if */
 
   if(pvm_upkint(&edges, 1, 1) < 0) {
@@ -317,7 +316,7 @@ char *client_process_item() {
     fflush(stderr);
     pvm_quit();
     free(i_input);
-    return((char *)NULL);
+    return 0;
   } /* if */
 
   if(pvm_upkint(&exhaustive, 1, 1) < 0) {
@@ -326,7 +325,7 @@ char *client_process_item() {
     fflush(stderr);
     pvm_quit();
     free(i_input);
-    return((char *)NULL);
+    return 0;
   } /* if */
   
   if(pvm_upkint(&derivationp, 1, 1) < 0) {
@@ -335,7 +334,7 @@ char *client_process_item() {
     fflush(stderr);
     pvm_quit();
     free(i_input);
-    return((char *)NULL);
+    return 0;
   } /* if */
   
   if(pvm_upkint(&interactive, 1, 1) < 0) {
@@ -344,61 +343,53 @@ char *client_process_item() {
     fflush(stderr);
     pvm_quit();
     free(i_input);
-    return((char *)NULL);
+    return 0;
   } /* if */
   
-  file = make_tmp_file(".pvm.cio");
-  if((output = fopen(file, "w")) == NULL) {
-    fprintf(stderr, "process_item(): unable to create output file.\n");
+  if((client_output = mopen()) == NULL) {
+    fprintf(stderr, "process_item(): unable to create output mfile.\n");
     free(i_input);
-    return((char *)NULL);
+    return 0;
   } /* if */
   
-  fprintf(output,
-          "\n (:return :process-item (\n"
-          "  (:i-id . %d) (:parse-id . %d)\n"
-          "  (:i-input . \"%s\")\n"
-          "  (:edges . %d) (:exhaustive . %d)"
-          "  (:derivationp . %d) (:interactive . %d)\n"
-          "  (:i-load . %f)\n",
-          i_id, parse_id,
-          i_input, 
-          edges, exhaustive, 
-          derivationp, interactive,
-          load_average());
+  capi_printf("\n (:return :process-item (\n"
+              "  (:i-id . %d) (:parse-id . %d)\n"
+              "  (:edges . %d) (:exhaustive . %d)"
+              "  (:derivationp . %d) (:interactive . %d)\n"
+              "  (:i-load . %f)\n",
+              i_id, parse_id,
+              edges, exhaustive, 
+              derivationp, interactive,
+              load_average());
   if(callbacks[C_PROCESS_ITEM] != NULL) {
-    redirect_stdout(output);
     if(callbacks[C_PROCESS_ITEM](i_id, i_input, parse_id, edges, 
                                  exhaustive, derivationp, interactive) < 0) {
       fprintf(stderr, "process_item(): erroneous client return value.\n");
     } /* if */
-    redirect_stdout((FILE *)NULL);
   } /* if */
-  fprintf(output, "  (:a-load . %f)))", load_average());
-  fclose(output);
+  capi_printf("  (:a-load . %f)))", load_average());
   free(i_input);
-  return(file);
+  return(client_output);
   
 } /* client_process_item() */
 
-char *client_reconstruct_item() {
+struct MFILE *client_reconstruct_item() {
 
-  return((char *)NULL);
+  return((struct MFILE *)NULL);
 
 } /* client_reconstruct_item() */
 
-char *client_complete_run() {
+struct MFILE *client_complete_run() {
 
   int run_id, length;
-  char *custom, *file;
-  FILE *output;
+  char *custom;
   
   if(pvm_upkint(&run_id, 1, 1) < 0) {
     pvm_perror("complete_run()");
     fprintf(stderr, "complete_run(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    return((char *)NULL);
+    return 0;
   } /* if */
 
   if(pvm_upkint(&length, 1, 1) < 0) {
@@ -406,7 +397,7 @@ char *client_complete_run() {
     fprintf(stderr, "complete_run(): unable to read receive buffer.\n");
     fflush(stderr);
     pvm_quit();
-    return((char *)NULL);
+    return 0;
   } /* if */
   custom = (char *)malloc(length + 1);
   if(pvm_upkstr(custom) < 0) {
@@ -415,31 +406,138 @@ char *client_complete_run() {
     fflush(stderr);
     pvm_quit();
     free(custom);
-    return((char *)NULL);
+    return 0;
   } /* if */
   
-  file = make_tmp_file(".pvm.cio");
-  if((output = fopen(file, "w")) == NULL) {
-    fprintf(stderr, "complete_run(): unable to create output file.\n");
+  if((client_output = mopen()) == NULL) {
+    fprintf(stderr, "complete_run(): unable to create output mfile.\n");
     free(custom);
-    return((char *)NULL);
+    return 0;
   } /* if */
-  fprintf(output,
-          "\n (:return :complete-run (\n"
-          "  (:run-id . %d)\n"
-          "  (:custom . \"%s\")\n",
-          run_id, custom);
+  capi_printf("\n (:return :complete-run (\n"
+              "  (:run-id . %d)\n"
+              "  (:custom . \"%s\")\n",
+              run_id, custom);
   if(callbacks[C_COMPLETE_RUN] != NULL) {
     if(callbacks[C_COMPLETE_RUN](run_id) < 0) {
       fprintf(stderr, "complete_run(): erroneous client return value.\n");
     } /* if */
   } /* if */
-  fprintf(output, "  (:end . \"%s\")))", current_time());
-  fclose(output);
+  capi_printf("  (:end . \"%s\")))", current_time());
   free(custom);
-  return(file);
+  return(client_output);
 
 } /* client_complete_run() */
+
+int client_open_item_summary() {
+
+  if((client_output = mopen()) == NULL) {
+    return -1;
+  } /* if */
+  if (pvm_recvinfo("itsdb", 0, PvmMboxDefault) < 0) {
+    mclose(client_output);
+    return -1;
+  } /* if */
+  capi_printf("\n (:account :item-summary (\n"
+              "  (:time . \"%s\")\n"
+              "  (:user . \"%s\")  (:host . \"%s\") (:os . \"%s\")\n",
+              current_time(),
+              current_user(), current_host(), current_os());
+  return 0;
+} /* client_open_item_summary() */
+
+int client_send_item_summary() {
+
+  int buffer, remote;
+
+  if(client_output == NULL) return -1;
+
+  if ((buffer = pvm_recvinfo("itsdb", 0, PvmMboxDefault)) < 0) {
+    mclose(client_output);
+    return -1;
+  } /* if */
+
+  if(pvm_setrbuf(buffer) < 0) {
+    mclose(client_output);
+    return -1;
+  } /* if */
+  if(pvm_upkint(&remote, 1, 1) < 0) {
+    mclose(client_output);
+    return -1;
+  } /* if */
+
+  if(client_output != NULL &&
+     mlength(client_output) > 0) {
+    capi_printf("  (:a-load . %f)))", load_average());
+    pvm_mfile_transmit(remote, LISP_MESSAGE, client_output);
+    mclose(client_output);
+  } /* if */
+  return 0;
+
+} /* client_send_item_summary() */
+
+int capi_printf(char *format, ...) {
+  va_list ap;
+  int n;
+
+  va_start(ap, format);
+  n = vmprintf(client_output, format, ap);
+  va_end(ap);
+  return(n);
+
+} /* capi_printf() */
+
+int pvm_mfile_transmit(int tid, int tag, struct MFILE *file) {
+
+  int length, n;
+  double load;
+
+  length = mlength(file);
+  
+  if(pvm_initsend(PvmDataDefault) < 0) {
+    pvm_perror("pvm_transmit()");
+    fprintf(stderr, "pvm_transmit(): unable to initialize virtual machine.\n");
+    fflush(stderr);
+    pvm_quit();
+    return(-1);
+  } /* if */
+
+  if(pvm_pkint(&length, 1, 1) < 0) {
+    pvm_perror("pvm_transmit()");
+    fprintf(stderr, "pvm_transmit(): unable to write send buffer.\n");
+    fflush(stderr);
+    pvm_quit();
+    return(-1);
+  } /* if */
+  
+  if(pvm_pkstr(file->buff) < 0) {
+    pvm_perror("pvm_transmit()");
+    fprintf(stderr, "pvm_transmit(): unable to write send buffer.\n");
+    fflush(stderr);
+    pvm_quit();
+    return(-1);
+  } /* if */
+
+  load = load_average();
+  if(pvm_pkdouble(&load, 1, 1) < 0) {
+    pvm_perror("pvm_transmit()");
+    fprintf(stderr, "pvm_transmit(): unable to write send buffer.\n");
+    fflush(stderr);
+    pvm_quit();
+    return(-1);
+  } /* if */
+
+  if((n = pvm_send(tid, tag)) < 0 ) {
+    pvm_perror("pvm_transmit()");
+    fprintf(stderr, "pvm_transmit(): unable to send message.\n");
+    fflush(stderr);
+    pvm_quit();
+    return(-1);
+  } /* if */
+
+  return(n);
+
+} /* pvm_mfile_transmit() */
 
 int redirect_stdout(FILE *stream) {
 

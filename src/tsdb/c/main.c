@@ -585,7 +585,7 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
       case TSDB_VERSION_OPTION:
         fprintf(tsdb_error_stream,
-                "tsdb(1) %s (%s) [%s] --- (c) oe@coli.uni-sb.de.\n",
+                "tsdb(1) %s (%s) [%s] --- (c) oe@csli.stanford.edu.\n",
                 tsdb_version, tsdb_revision, tsdb_revision_date);
         exit(0);
         break;

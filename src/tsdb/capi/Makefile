@@ -10,23 +10,24 @@ OSF_LIBS = \
     olib/getloadavg.o -Lolib -lpvm3 -lc
 
 CP = cp
-CC = gcc -Wall -g -fpic
+CC = gcc -Wall -fpic -O6 -I../../../include
 LD = ld -G -z defs 
 AR = ar -cr
 RANLIB = ranlib
 
-solaris: acl.o gc.o capi.o client.o itsdb.h
+solaris: acl.o gc.o capi.o client.o mfile.o ../../../include/itsdb.h
 	$(LD) -o ../../pvm/solaris/pvm.so acl.o $(SOLARIS_LIBS)
 	$(LD) -o ../solaris/capi.so capi.o acl.o $(SOLARIS_LIBS)
 	$(LD) -o ../solaris/gc.so gc.o
 	$(LD) -o ../../../lib/solaris/libitsdb.so \
-	  client.o acl.o $(SOLARIS_LIBS)
+	  client.o acl.o mfile.o $(SOLARIS_LIBS)
 	$(AR) ../../../lib/solaris/libitsdb.a \
-	  client.o acl.o 5lib/getloadavg.o 5lib/libpvm3.a
+	  client.o acl.o mfile.o 5lib/getloadavg.o 5lib/libpvm3.a
 
 linux: 
 	make clean;
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) acl.c
+	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) mfile.c
 	$(LD) -o ../../pvm/linux/pvm.so acl.o $(LINUX_LIBS)
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) gc.c
 	$(LD) -o ../linux/gc.so gc.o
@@ -34,9 +35,9 @@ linux:
 	$(LD) -o ../linux/capi.so capi.o acl.o $(LINUX_LIBS)
 	$(CC) $(LINUX_CFLAGS) -c $(CC_SWITCHES) client.c
 	$(LD) -o ../../../lib/linux/libitsdb.so \
-	  client.o acl.o $(LINUX_LIBS)
+	  client.o acl.o mfile.o $(LINUX_LIBS)
 	$(AR) ../../../lib/linux/libitsdb.a \
-	  client.o acl.o llib/getloadavg.o
+	  client.o acl.o mfile.o llib/getloadavg.o
 	$(RANLIB) ../../../lib/linux/libitsdb.a
 
 osf: 
@@ -53,9 +54,9 @@ osf:
 	$(AR) ../../../olib/libitsdb.a \
           client.o acl.o olib/getloadavg.o olib/libpvm3.a
 
-client: client.c itsdb.h
-	gcc -Wall -g -DMAIN -c client.c
-	gcc -DMAIN -o client client.o acl.o $(SOLARIS_LIBS)
+client: client.c ../../../include/itsdb.h
+	$(CC) -DMAIN -c client.c
+	$(CC) -DMAIN -o client client.o acl.o $(SOLARIS_LIBS)
 
 client.o: client.c
 	rm -f client.o

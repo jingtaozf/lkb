@@ -103,6 +103,94 @@ int pvm_register(char *file, int debug) {
 
 } /* pvm_register() */
 
+int pvm_announce(char *class, char *version, char *user) {
+
+  int tid;
+  if((tid = pvm_mytid()) < 0) {
+    pvm_perror("pvm_announce()");
+    fprintf(stderr, "pvm_announce(): unable to initialize virtual machine.\n");
+    fflush(stderr);
+    pvm_exit();
+    return(-1);
+  } /* if */
+
+  if(pvm_initsend(PvmDataDefault) < 0) {
+    pvm_perror("pvm_announcet()");
+    fprintf(stderr, "pvm_announce(): unable to register announce message.\n");
+    fflush(stderr);
+    return -1;
+  }; /* if */
+  if(pvm_pkint(&tid, 1, 1) < 0) {
+    pvm_perror("pvm_announcet()");
+    fprintf(stderr, "pvm_announce(): unable to register announce message.\n");
+    fflush(stderr);
+    return -1;
+  }; /* if */
+  if(pvm_pkstr(version) < 0) {
+    pvm_perror("pvm_announcet()");
+    fprintf(stderr, "pvm_announce(): unable to register announce message.\n");
+    fflush(stderr);
+    return -1;
+  }; /* if */
+  if(pvm_pkstr(user) < 0) {
+    pvm_perror("pvm_announcet()");
+    fprintf(stderr, "pvm_announce(): unable to register announce message.\n");
+    fflush(stderr);
+    return -1;
+  }; /* if */
+  if(pvm_putinfo(class, pvm_getsbuf(), PvmMboxDefault) < 0) {
+    pvm_perror("pvm_announcet()");
+    fprintf(stderr, "pvm_announce(): unable to register announce message.\n");
+    fflush(stderr);
+    return -1;
+  } /* if */
+  return 0;
+
+} /* pvm_announce() */
+
+int pvm_lookup(char *class, char *version, int vsize, char *user, int usize) {
+
+  int buffer, tid;
+
+  if ((buffer = pvm_recvinfo(class, 0, PvmMboxFirstAvail)) >= 0) {
+    if(pvm_setrbuf(buffer) < 0) {
+      pvm_perror("pvm_lookup()");
+      fprintf(stderr, 
+              "pvm_lookup(): unable to read (announce) message buffer.\n");
+      fflush(stderr);
+      pvm_quit();
+      return -1;
+    } /* if */
+    if(pvm_upkint(&tid, 1, 1) < 0) {
+      pvm_perror("pvm_lookup()");
+      fprintf(stderr, 
+              "pvm_lookup(): unable to read (announce) message buffer.\n");
+      fflush(stderr);
+      pvm_quit();
+      return -1;
+    } /* if */
+    if(pvm_upkstr(version) < 0) {
+      pvm_perror("pvm_lookup()");
+      fprintf(stderr, 
+              "pvm_lookup(): unable to read (announce) message buffer.\n");
+      fflush(stderr);
+      pvm_quit();
+      return -1;
+    } /* if */
+    if(pvm_upkstr(user) < 0) {
+      pvm_perror("pvm_lookup()");
+      fprintf(stderr, 
+              "pvm_lookup(): unable to read (announce) message buffer.\n");
+      fflush(stderr);
+      pvm_quit();
+      return -1;
+    } /* if */
+    return tid;
+  } /* if */
+  return 0;
+
+} /* pvm_lookup() */ 
+
 int pvm_quit(void) {
 
   if(self > 0) {
@@ -139,11 +227,17 @@ int pvm_create(char *task, char **argv, char *host, char *architecture) {
   } else if(*architecture) {
     flag = PvmTaskArch;
     where = architecture;
+  } else {
+    where = (char *)NULL;
+  } /* else */
+
+  if(where != NULL) {
+    if(pvm_spawn(task, argv, flag, where, 1, &tids[0]) == 1) {
+      pvm_notify(PvmTaskExit, TASK_FAIL, 1, &tids[0]);
+    } /* if */
+    return(tids[0]);
   } /* if */
-  if(pvm_spawn(task, argv, flag, where, 1, &tids[0]) == 1) {
-    pvm_notify(PvmTaskExit, TASK_FAIL, 1, &tids[0]);
-  } /* if */
-  return(tids[0]);
+  return(-42);
 
 } /* pvm_create() */
 
