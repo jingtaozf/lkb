@@ -7,8 +7,8 @@ exec /coli/apps/tcl+tk/bin/wish++ "$0" "$@"
 #
 if {![info exists itsdb_root]} {
   set itsdb_root [expr {[info exists env(HOSTNAME)] 
-                        && ![string first "cp" $env(HOSTNAME)]
-                        ? "/home/oe/src/itsdb" 
+                        && ![string first "mt" $env(HOSTNAME)]
+                        ? "/logon/oe/src/lkb" 
                         : "/home/oe/src/lkb"}];
 }; # if
 #
@@ -29,6 +29,9 @@ if {![info exists globals(home)]} {
 }; # if
 if {![info exists globals(data)]} {
   set globals(data) "";
+}; # if
+if {![info exists globals(encoding)]} {
+  set globals(encoding) "";
 }; # if
 if {![info exists globals(balloons)]} {
   set globals(balloons) "$globals(podium_home)balloons";

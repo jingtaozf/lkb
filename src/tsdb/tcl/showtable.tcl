@@ -495,7 +495,7 @@ proc read_table_file {file} {
     ## Reads the description of a table from 'file' and stores it in global
     ## variables.
     ##
-    global flags format layout region cell viewer titlerows titlecols
+    global globals flags format layout region cell viewer titlerows titlecols
 
     catch {unset format}
     catch {unset layout}
@@ -507,7 +507,9 @@ proc read_table_file {file} {
     set titlecols 0;			# default value
     set titlerows 1;			# default value
 
-#    catch {fconfigure $file -encoding iso8859-1};
+    if {$globals(encoding) != ""} {
+      catch {fconfigure $file -encoding $globals(encoding)};
+    }; # if
     while { ![eof $file] } {
 	
 	## Read next line

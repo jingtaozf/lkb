@@ -1245,7 +1245,8 @@
        (format stream *statistics-tcl-formats*)
        (format
         stream
-        "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+        "flags 1~%~
+         layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
          layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
          layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
          layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
@@ -1431,7 +1432,8 @@
             (format stream *statistics-tcl-formats*))
           (format
            stream
-           "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+           "flags 1~%~
+            layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
             layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
             layout col 0 -m1 5 -r 2 -m2 5 -c black -j right~%~
             layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
@@ -1681,7 +1683,8 @@
          (format stream *statistics-tcl-formats*))
        (format
         stream
-        "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+        "flags 1~%~
+         layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
          layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
          layout col 0 -m1 5 -r 2 -m2 5 -c black -j right~%~
          layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
@@ -2159,7 +2162,8 @@
          (format stream *statistics-tcl-formats*))
        (format
         stream
-        "layout col def -m1 5 -r 1 -m2 5 -c black -j center~%~
+        "flags 1~%~
+         layout col def -m1 5 -r 1 -m2 5 -c black -j center~%~
          layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
          layout col 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
          layout col 2 -m1 5 -r 2 -m2 5 -c black -j left~%~
@@ -2312,7 +2316,8 @@
                   (format stream *statistics-tcl-formats*))
                 (format
                  stream
-                 "layout col def -m1 5 -r 2 -m2 5 -c black -j center~%~
+                 "flags 0~%~
+                  layout col def -m1 5 -r 2 -m2 5 -c black -j center~%~
                   layout row def -m1 5 -r 1 -m2 5 -c black -j center~%~
                   layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%"))
               (if (stringp clashes)
@@ -2521,7 +2526,8 @@
          (:performance
           (format
            stream
-           "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+           "flags 1~%~
+            layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
             layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
             layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
             layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
@@ -2885,7 +2891,8 @@
             (format stream *statistics-tcl-formats*))
           (format
            stream
-           "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+           "flags 1~%~
+            layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
             layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
             layout col 0 -m1 5 -r 2 -m2 5 -c black -j right~%~
             layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
@@ -3488,7 +3495,8 @@
            (format stream *statistics-tcl-formats*))
          (format
           stream
-          "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+          "flags 0~%~
+           layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
            layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
            layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
            layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
