@@ -230,6 +230,12 @@ char* tsdb_sprint_value(Tsdb_value *value ) {
         case TSDB_NOT_MATCH:
           result = strdup("!~");
           break;
+        case TSDB_IMATCH:
+          result = strdup("~~");
+          break;
+        case TSDB_NOT_IMATCH:
+          result = strdup("!~~");
+          break; 
       } /* switch */
       break;
     default:
@@ -352,6 +358,12 @@ BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
         case TSDB_NOT_MATCH:
           r=fprintf(stream, "!~");
           break;
+        case TSDB_IMATCH:
+          r=fprintf(stream, "~~");
+          break;
+        case TSDB_NOT_IMATCH:
+          r=fprintf(stream, "!~~");
+          break;  
       } /* switch */
       printf("%c", value->value.operator);
       break;
