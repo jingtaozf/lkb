@@ -82,13 +82,16 @@
 (defmethod print-object ((object edge) stream)
   (if %transfer-raw-output-p%
     (call-next-method)
-    (format
-     stream
-     "~<#D[~;~a~:[~2*~; ~(~a~) ~_~a~]~;]~:>"
-     (list
-      (edge-id object) 
-      (and (mtr-p (edge-rule object)) (edge-p (edge-daughter object)))
-      (mtr-id (edge-rule object)) (edge-daughter object)))))
+    (let ((recursep (and (mtr-p (edge-rule object))
+                         (edge-p (edge-daughter object)))))
+      (format
+       stream
+       "~<#D[~;~a~:[~2*~; ~(~a~) ~_~a~]~;]~:>"
+       (list
+        (edge-id object) 
+        recursep
+        (and recursep (mtr-id (edge-rule object)))
+        (and recursep (edge-daughter object)))))))
 
 (defun print-edges ()
   (loop
