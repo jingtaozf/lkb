@@ -1,5 +1,6 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 
 (in-package :lkb)
@@ -43,7 +44,7 @@
 ;;; where the first element (e.g. `math' is a type name that identifies the
 ;;; template and keywords like `:referents' are features appropriate for that
 ;;; type.  template instantiation recursively walks through the structure and
-;;; returns a typed features structure corresponding to the input.
+;;; returns a typed feature structure corresponding to the input.
 ;;;
 ;;; to simplify the interface to morphological and lexical processing, 
 ;;; template calls in the input are replaced with placeholders (of the form
