@@ -124,15 +124,20 @@
   (dolist (id (collect-expanded-lex-ids *lexicon*))
     (unexpand-psort *lexicon* id)))
 
+(defun clear-non-parents nil
+  (format t "~%Removing cached lexical entries")
+  (clear-expanded-lex))
 
+#|
 (defun clear-non-parents nil
   (format t "~%Removing cached lexical entries")
   (dolist (psort (collect-psort-ids *lexicon*))
-    (let ((entry (get-psort-entry psort)))
+    (let ((entry (get-unexpanded-psort-entry psort)))
       (when entry
 	(unless (and (lex-or-psort-p entry)
 		     (lex-or-psort-mother-p entry))
-	  (unexpand-psort *lexicon* psort))))))         
+	  (unexpand-psort *lexicon* psort))))))       
+|#
 
 (defun get-psort-value (psort) 
   (let ((psort-entry (get-psort-entry psort)))
