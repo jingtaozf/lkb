@@ -141,7 +141,12 @@ if [ "${os%%.*}" == "linux" -o "$os" == "solaris" ]; then
     echo -n "install: \`${i}' ...";
     ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
     ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
-    echo " done.";
+    if [ -f Archives/${i} ]; then
+      ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
+      echo " done.";
+    else
+      echo " missing.";
+    fi
   done
 fi
 
@@ -159,8 +164,12 @@ echo " done.";
 for i in erg.tgz matrix.tgz spanish.tgz; do
   echo -n "install: \`${i}' ...";
   ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
-  ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR};
-  echo " done.";
+  if [ -f Archives/${i} ]; then
+    ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
+    echo " done.";
+  else
+    echo " missing.";
+  fi
 done
 
 #
@@ -178,10 +187,14 @@ if [ -n "${TSDBHOME}" ]; then
     ( \
       cd Archives; \
       ${WGET} http://redwoods.stanford.edu/ftp/5th/${file}; \
-      cd ${TSDBHOME}; \
-      ${GUNZIP} ${DELPHINHOME}/Archives/${file} | ${TAR}; \
+      if [ -f Archives/${file} ]; then \
+        cd ${TSDBHOME}; \
+        ${GUNZIP} ${DELPHINHOME}/Archives/${file} | ${TAR}; \
+        echo " done."; \
+      else; \
+        echo " missing."; \
+      fi; \
     )
-    echo " done.";
   done
 fi
 
