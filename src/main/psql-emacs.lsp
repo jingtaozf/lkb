@@ -30,7 +30,7 @@
 
 (defun field-len (typname atttypmod)
   (cond
-   ((string= typname "_varchar")
+   ((and (string= typname "_varchar") (> atttypmod 5))
     (- atttypmod 4))
    (t
     50)))
