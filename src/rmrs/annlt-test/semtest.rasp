@@ -1003,6 +1003,130 @@
      (|NP/n1_n1-name/+| (|N1/n| |<w s="2721" e="2726">bother_NN1</w>|)
       (|N1/n| |<w s="2728" e="2733">Browne_NP1</w>|)))))))
 
+<<<<<<< semtest.rasp
+("Three" "dogs" "bark" "on" "Tuesday" "in" "June") 9 ; (-17.618 -17.680 -18.100 -18.137 -18.564 -19.782 -19.820 -20.667 -20.705)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1-plu|
+   (|N1/np-num_n1| (|NP/num| |<w s="1" e="5">Three:1_MC</w>|)
+    (|N1/n| |<w s="7" e="10">dog+s:2_NN2</w>|)))
+  (|V1/vp_pp|
+   (|V1/vp_pp| (|V1/v| |<w s="12" e="15">bark:3_VV0</w>|)
+    (|PP/p1|
+     (|P1/p_np-nt| |<w s="17" e="18">on:4_II</w>|
+      (|NP/n1-nt| (|N1/n| |<w s="20" e="26">Tuesday:5_NPD1</w>|)))))
+   (|PP/p1|
+    (|P1/p_np-nt| |<w s="28" e="29">in:6_II</w>|
+     (|NP/n1-nt| (|N1/n| |<w s="31" e="34">June:7_NPM1</w>|)))))))
+
+("Three" "dogs" "bark") 1 ; (-6.350)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1-plu|
+   (|N1/np-num_n1| (|NP/num| |<w s="1" e="5">Three:1_MC</w>|)
+    (|N1/n| |<w s="7" e="10">dog+s:2_NN2</w>|)))
+  (|V1/v| |<w s="12" e="15">bark:3_VV0</w>|)))
+
+("Abrams" "is" "a" "dog") 2 ; (-4.182 -4.744)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1" e="6">Abrams:1_NP1</w>|))
+  (|V1/be_np/---| |<w s="8" e="9">be+s:2_VBZ</w>|
+   (|NP/det_n1| |<w s="11" e="11">a:3_AT1</w>|
+    (|N1/n| |<w s="13" e="15">dog:4_NN1</w>|)))))
+
+("The" "dog" "which" "barked" "ran") 2 ; (-8.491 -8.856)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1" e="3">The:1_AT</w>|
+   (|N1/n_s| |<w s="5" e="7">dog:2_NN1</w>|
+    (|S/np-wh_vp| |<w s="9" e="13">which:3_DDQ</w>|
+     (|V1/v| |<w s="15" e="20">bark+ed:4_VVD</w>|))))
+  (|V1/v| |<w s="22" e="24">run+ed:5_VVD</w>|)))
+
+("Some" "bark") 0 ; ()
+(|T/frag|
+ (|Tph/np/--|
+  (|NP/det_n1| |<w s="1" e="4">Some:1_DD</w>|
+   (|N1/n| |<w s="6" e="9">bark:2_NN1</w>|))))
+
+("The" "third" "dog" "barks") 3 ; (-4.285 -5.620 -6.292)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_n1| |<w s="1" e="3">The:1_AT</w>|
+   (|N1/ap_n1/-| (|AP/a1| (|A1/a| |<w s="5" e="9">third:2_MD</w>|))
+    (|N1/n| |<w s="11" e="13">dog:3_NN1</w>|)))
+  (|V1/v| |<w s="15" e="19">bark+s:4_VVZ</w>|)))
+
+("June" "1993" "arrived") 6 ; (-7.375 -8.062 -8.390 -8.886 -9.077 -9.573)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/date/---| |<w s="1" e="4">June:1_NPM1</w>|
+   (|NP/num| |<w s="6" e="9">1993:2_MC</w>|))
+  (|V1/v| |<w s="11" e="17">arrive+ed:3_VVD</w>|)))
+
+("Probably" "the" "dog" "barked") 6 ; (-5.373 -6.038 -6.225 -6.890 -7.455 -8.120)
+(|T/txt-sc1/----|
+ (|S/adv_s/-| (|AP/a1| (|A1/a| |<w s="1" e="8">Probably:1_RR</w>|))
+  (|S/np_vp|
+   (|NP/det_n1| |<w s="10" e="12">the:2_AT</w>|
+    (|N1/n| |<w s="14" e="16">dog:3_NN1</w>|))
+   (|V1/v| |<w s="18" e="23">bark+ed:4_VVD</w>|))))
+
+("It" "is" "something" "we" "could" "understand") 1 ; (-8.304)
+(|T/txt-sc1/----|
+ (|S/np_vp| |<w s="1" e="2">It:1_PPH1</w>|
+  (|V1/be_np/---| |<w s="4" e="5">be+s:2_VBZ</w>|
+   (|NP/np-pro_s| |<w s="7" e="15">something:3_PN1</w>|
+    (|S/np_vp| |<w s="17" e="18">we:4_PPIS2</w>|
+     (|V1/modal_bse/-| |<w s="20" e="24">could:5_VM</w>|
+      (|V1/v| |<w s="26" e="35">understand:6_VV0</w>|)))))))
+
+("Boys" "kind" "of" "suck") 0 ; ()
+(|T/frag|
+ (|N1/n_n1/-| |<w s="1" e="4">Boy+s:1_NN2</w>|
+  (|N1/n| |<w s="6" e="9">kind:2_NN1</w>|))
+ |<w s="11" e="12">of:3_IO</w>|
+ (|S/imp| (|V1/v| |<w s="14" e="17">suck:4_VV0</w>|)))
+
+("The" "one" "cat" "barked") 6 ; (-5.301 -5.382 -5.966 -5.973 -6.047 -6.639)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/det_det_n1| |<w s="1" e="3">The:1_AT</w>|
+   |<w s="5" e="7">one:2_MC1</w>|
+   (|N1/n| |<w s="9" e="11">cat:3_NN1</w>|))
+  (|V1/v| |<w s="13" e="18">bark+ed:4_VVD</w>|)))
+
+("Browne" "the" "farmer" "chased" "the" "dog") 1 ; (-8.088)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1-name_np| (|N1/n| |<w s="1" e="6">Browne:1_NP1</w>|)
+   (|NP/det_n1| |<w s="8" e="10">the:2_AT</w>|
+    (|N1/n| |<w s="12" e="17">farmer:3_NN1</w>|)))
+  (|V1/v_np| |<w s="19" e="24">chase+ed:4_VVD</w>|
+   (|NP/det_n1| |<w s="26" e="28">the:5_AT</w>|
+    (|N1/n| |<w s="30" e="32">dog:6_NN1</w>|)))))
+
+("Abrams" "likes" "June" "mornings") 4 ; (-6.807 -9.726 -10.882 -12.660)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/n1_n1-name/-| (|N1/n| |<w s="1" e="6">Abrams:1_NP1</w>|))
+  (|V1/v_np| |<w s="8" e="12">like+s:2_VVZ</w>|
+   (|NP/n1-plu|
+    (|N1/n|
+     (|N/n1-nt_n| (|N1/n| |<w s="14" e="17">June:3_NPM1</w>|)
+      |<w s="19" e="26">morning+s:4_NN2</w>|))))))
+
+("Abrams" "," "and" "Browne" "arrived") 4 ; (-7.627 -7.850 -8.421 -9.710)
+(|T/txt-sc1/----|
+ (|S/np_vp|
+  (|NP/np_np-coord/+|
+   (|NP/n1_n1-name/-| (|N1/n| |<w s="1" e="6">Abrams:1_NP1</w>|))
+   |<w s="7" e="7">,:2_,</w>|
+   (|NP/cj-end_np/---| |<w s="9" e="11">and:3_CC</w>|
+    (|NP/n1_n1-name/-| (|N1/n| |<w s="13" e="18">Browne:4_NP1</w>|))))
+  (|V1/v| |<w s="20" e="26">arrive+ed:5_VVD</w>|)))
+=======
 ("Three" "dogs" "bark" "on" "Tuesday" "in" "June") 9 ; (-17.618 -17.680 -18.100 -18.137 -18.564 -19.782 -19.820 -20.667 -20.705)
 (|T/txt-sc1/----|
  (|S/np_vp|
@@ -1126,6 +1250,7 @@
    (|NP/cj-end_np/---| |<w s="9" e="11">and:3_CC</w>|
     (|NP/n1_n1-name/-| (|N1/n| |<w s="13" e="18">Browne:4_NP1</w>|))))
   (|V1/v| |<w s="20" e="26">arrive+ed:5_VVD</w>|)))
+>>>>>>> 1.3
 
 ("Even" "the" "dog" "barked") 6 ; (-5.694 -6.359 -6.546 -7.211 -7.775 -8.441)
 (|T/txt-sc1/----|
