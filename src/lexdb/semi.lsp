@@ -90,6 +90,7 @@
 		      *prd-key*
 		      (setf *arg-key* (1+ *arg-key*))
 		      n ;;arg
+		      (dag-path-type nil dagN)
 		      )
 		     )))
 	   
