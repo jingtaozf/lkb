@@ -1,5 +1,6 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 
 ;;; Modified Jan 1995 to avoid unnecessary duplication in code
@@ -127,7 +128,7 @@
     (clim:run-frame-top-level fs-window)))
 
 (defun display-fs (fs title &optional id)
-  (if #+:lui (streamp %lui-stream%) #-:lui nil
+  (if #+:lui (lui-status-p :avm) #-:lui nil
     #+:lui (lui-display-fs fs title id) #-:lui nil
     (display-basic-fs fs title nil nil id)))
 

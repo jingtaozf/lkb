@@ -44,9 +44,17 @@
   (lui-shutdown)
   (let (foo)
     (multiple-value-setq (%lui-stream% foo %lui-pid%)
+      #-:openmcl
       (run-process *lui-application*
                    :wait nil
-                   :output :stream :input :stream :error-output nil))
+                   :output :stream :input :stream :error-output nil)
+      #+:openmcl
+      (let ((process (run-program "yzlui" nil :wait nil :input :stream
+                                  :output :stream)))
+        (values (make-two-way-stream 
+                 (external-process-input-stream process)
+                 (external-process-input-stream process)))))
+                    
     (when foo (setf foo foo))
     (format
      %lui-stream%
@@ -179,3 +187,8 @@
       (format %lui-stream% string))
     (format %lui-stream% " ~s ~a~%" title #\page))
   (force-output %lui-stream%))
+
+(defun lui-status-p (key)
+  (case key
+    (:tree (streamp %lui-stream%))
+    (:avm (streamp %lui-stream%))))

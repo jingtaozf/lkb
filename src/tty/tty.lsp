@@ -205,7 +205,7 @@
   (declare (ignore title))
   (let ((edges (or edges *parse-record*)))
     (if edges
-      (if #+:lui (streamp %lui-stream%) #-:lui nil
+      (if #+:lui (lui-status-p :tree) #-:lui nil
         #+:lui (lui-show-parses edges *sentence*) #-:lui
         (loop 
             for edge in edges
