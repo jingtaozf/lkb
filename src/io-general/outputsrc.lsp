@@ -188,7 +188,7 @@
           (unless (or ids-used *ordered-lex-list*)
             (cerror "Continue without lexicon" 
                     "No lexicon list - lexicon must be read in from scratch"))
-          (for lex-name in (or ids-used (reverse *ordered-lex-list*))
+          (loop for lex-name in (or ids-used (reverse *ordered-lex-list*))
                do            
                (if (> count 100)
                  (progn (clear-expanded-lex)
@@ -211,7 +211,7 @@
 				      when (not (inflectional-rule-p rule))
 				      collect (rule-id rule))))))
                       (idno 0))
-                 (for result-pair in result-list
+                 (loop for result-pair in result-list
                       do
                       (let* ((derivation 
                               (append (first result-pair) (list lex-name)))
