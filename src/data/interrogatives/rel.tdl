@@ -1,8 +1,5 @@
 ;;;This file contains relations
 
-resolution := feat-struct &
-[ FACT-ARG fact,
-  QUEST-ARG question ].
 
 ;;;Illocutionary relations
 
