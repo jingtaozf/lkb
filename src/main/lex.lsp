@@ -22,7 +22,7 @@
 ;;;
 
 (in-package :lkb)
-
+	   
 ;;; Lexical entries, storage etc
 
 ;;; Lexical entries are indexed by orthography (string)

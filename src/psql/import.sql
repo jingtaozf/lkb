@@ -5,7 +5,7 @@ CREATE TABLE public.meta (
   var varchar,
   val varchar
 );
-INSERT INTO public.meta VALUES ('db-version', '3.00');
+INSERT INTO public.meta VALUES ('db-version', '3.01');
 INSERT INTO public.meta VALUES ('filter', 'TRUE');
 
 ---

@@ -15,14 +15,6 @@
 ;;;  Interface to an off-line hash table lexical cache
 ;;;
 
-(defun get-new-filename (filename)
-  (loop
-      until (not (probe-file filename))
-      do
-	(setf filename (format nil "~aX" filename))
-      finally
-	(return filename)))
-
 (defclass cdb-lex-database (lex-database)
   ((psort-db :initform nil :accessor psort-db)
    (orth-db :initform nil :accessor orth-db)

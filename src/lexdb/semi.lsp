@@ -5,7 +5,8 @@
 (in-package :lkb)
 
 (defvar *current-lex-id*) 
-(defvar *obj-semi-lex-pred-n* 0) ;; counter must be reset at start of dump
+(defvar *prd-key*) ;; counter must be reset at start of dump
+(defvar *arg-key*) ;; counter must be reset at start of dump
 
 (defmethod dump-obj-semi ((lexicon psql-lex-database))
   (format t "~%Generating object-level SEM-I. See files ~asemi.obj.*" *postgres-user-temp-dir*)
@@ -14,24 +15,30 @@
        (format nil "~asemi.obj.arg" *postgres-user-temp-dir*)
        :direction :output :if-exists :supersede)
     (with-open-file 
-	(carg-stream
-	 (format nil "~asemi.obj.carg" *postgres-user-temp-dir*)
+	(prd-stream
+	 (format nil "~asemi.obj.prd" *postgres-user-temp-dir*)
+	 :direction :output :if-exists :supersede)
+    (with-open-file 
+	(ddd-stream
+	 (format nil "~asemi.obj.ddd" *postgres-user-temp-dir*)
 	 :direction :output :if-exists :supersede)
       (with-open-file 
-	  (docu-stream
-	   (format nil "~asemi.obj.docu" *postgres-user-temp-dir*)
+	  (doc-stream
+	   (format nil "~asemi.obj.doc" *postgres-user-temp-dir*)
 	   :direction :output :if-exists :supersede)
-	(setf *obj-semi-lex-pred-n* 0)
+	(setf *prd-key* 0)
+	(setf *arg-key* 0)
 	(mapc 
 	 #'(lambda (x) (get-obj-semi-info x 
-					  :arg-stream arg-stream
-					  :carg-stream carg-stream
-					  :docu-stream docu-stream))
-	 (collect-psort-ids lexicon))))))
+					  (list (cons :doc doc-stream)
+						(cons :prd prd-stream)
+						(cons :arg arg-stream)
+						(cons :ddd ddd-stream)
+						)))
+	 (collect-psort-ids lexicon)))))))
     
 
-(defun get-obj-semi-info (lex-id &key (arg-stream t) (carg-stream t) (docu-stream t))
-  (declare (ignore docu-stream)) ;;do later!!!
+(defun get-obj-semi-info (lex-id base)
   (let* ((entry (get-lex-entry-from-id lex-id))
 	 (dag (and
 	       entry
@@ -42,20 +49,35 @@
     (loop
 	for x in cont-rels
 	do
-	  (get-obj-semi-pred-info lex-id x 
-				  :arg-stream arg-stream
-				  :carg-stream carg-stream
+	  (get-obj-semi-pred-info lex-id x base
 				  )) 
     (unexpand-psort *lexicon* entry)))
     
-(defun get-obj-semi-pred-info (lex-id dag &key (arg-stream t) (carg-stream t))
-   (let* ((pred-str (2-str (dag-path-type '(pred) dag)))
+;;(defun get-obj-semi-pred-info (lex-id dag &key (arg-stream t) (carg-stream t))
+(defun get-obj-semi-pred-info (lex-id dag base)
+  (let* (
+	 (prd-stream (cdr (assoc :prd base)))
+	 (arg-stream (cdr (assoc :arg base)))
+	 (ddd-stream (cdr (assoc :ddd base)))
+	 (pred-str (2-str (dag-path-type '(pred) dag)))
 	  (pred-fields (get-lex-pred-fields pred-str))
-	  (carg (dag-path-type '(carg) dag))
 	  (n 0)
 	  (argN 'arg0)
 	  (dagN))
-     (setf *obj-semi-lex-pred-n* (1+ *obj-semi-lex-pred-n*))
+
+     ;; prd table
+     (format prd-stream "~a~%"
+	     (tsv-line 
+	      (append
+	       (list
+		lex-id ;; lex-id
+		(setf *prd-key* (1+ *prd-key*))
+		pred-str ;; pred
+		(nth 0 pred-fields) ;; lexeme
+		(nth 1 pred-fields) ;; pos
+		(nth 2 pred-fields) ;; sense
+		(dag-path-type '(carg) dag) ;; carg
+		))))
      (loop
        ;; for arg0, arg1, etc.
 	 while (setf dagN (dag-path-val (list argN) dag))
@@ -65,28 +87,25 @@
 		   (tsv-line 
 		    (append
 		     (list
-		      *obj-semi-lex-pred-n* ;; counter
-		      lex-id ;; lex-id
-		      pred-str ;; pred
-		      (nth 0 pred-fields) ;; lexeme
-		      (nth 1 pred-fields) ;; pos
-		      (nth 2 pred-fields) ;; sense
+		      *prd-key*
+		      (setf *arg-key* (1+ *arg-key*))
 		      n ;;arg
-		      (dag-path-type (list) dagN) ;;type
 		      )
-		     (dag-2-txts (dag-path-val '(e) dagN)) ;; move to separate table!!!
-		     (dag-2-txts (dag-path-val '(png) dagN)))
-		    ))	
-	   (when carg
-	     ;; carg table
-	     (format carg-stream "~a~%"
-		     (tsv-line 
-		      (list
-		       *obj-semi-lex-pred-n* ;; counter
-		       lex-id ;; lex-id
-		       pred-str ;; pred
-		       (dag-path-type '(carg) dag) ;; carg
-		       ))))
+		     )))
+	   
+	   (mapc #'(lambda (x)
+		     (format ddd-stream "~a~%"
+			     (tsv-line 
+			      (append
+			       (list
+				*arg-key*
+				(car x)
+				(cdr x)
+				)))))
+		 (append 
+		  (dag-2-fields (dag-path-val '(e) dagN)) 
+		  (dag-2-fields (dag-path-val '(png) dagN))))
+		  
 	   (setf n (1+ n))
 	   (setf argN (str-2-symb (format nil "arg~a" n))))))
 

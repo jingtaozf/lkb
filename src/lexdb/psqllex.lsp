@@ -4,10 +4,11 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;;  Interface to a Postgres database
+;;;  PSQL lexical source
 ;;;
 
 ;;; bmw (nov-03)
+;;; - move lexdb code to lexdb directory and split large files
 ;;; - support for generator indexing;
 ;;; - SEMI
 ;;; - RH9 default-locale bug workaround
@@ -62,15 +63,15 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "3.00")
+(defvar *psql-db-version* "3.01")
 (defvar *psql-port-default* nil)
-(defvar *psql-lexicon-parameters*)
+(defvar *psql-lexicon-parameters*) ;; define in GRAMMAR/globals.lsp
 
 (defvar *postgres-tmp-lexicon* nil)
 (defvar *psql-lexicon* nil)
 (defvar *psql-verbose-query* nil) ;;; flag
-(defvar *postgres-export-timestamp*) ;;; see lexport.lsp
 
+(defvar *postgres-export-timestamp*) ;;; see lexport.lsp
 (defvar *postgres-current-source* "?")
 (defvar *postgres-current-user* nil)
 (defvar *postgres-current-lang* nil)
@@ -220,7 +221,7 @@
 	 (if password (format nil "password='~a'" (sql-escape-string password))
 					""))))
     (setf decoded-status (pg:decode-connection-status (pg:status connection)))
-    (unless (eq decoded-status :connection-ok) ;: temporary hack
+    (unless (eq decoded-status :connection-ok) ;: in case postgres is running locally w/o TCPIP...
       (setf connection 
 	(pg:connect-db
 	 (concatenate 'string 
@@ -260,167 +261,6 @@
     (loop 
         for element in (records query)
         collect (mapcar #'cons (columns query) element)))
-
-(defun sql-escape-string (string)
-  (if (and string (stringp string))
-      (loop
-          with padding = 128
-          with length = (+ (length string) padding)
-          with result = (make-array length
-                                    :element-type 'character
-                                    :adjustable nil :fill-pointer 0)
-          for c across string
-          when (char= c #\') do
-            (vector-push #\\ result)
-            (vector-push c result)
-            (when (zerop (decf padding))              (setf padding 42)
-              (incf length padding)
-              (setf result (adjust-array result length)))
-          else do
-            (vector-push c result)
-          finally
-            (return result))
-    string))
-
-;;; prepare field list for SQL INSERT INTO query
-(defun sql-field-list-str (symb-list)
-  (concatenate 'string "(" (sql-select-list-str symb-list) ")"))
-  
-;;; prepare select list for SQL query
-(defun sql-select-list-str (symb-list)
-  (if (null symb-list) (error (format nil "non-null list expected")))
-  (let ((stream (make-string-output-stream)))
-    (format stream "~a" (symb-2-str (pop symb-list)))
-    (loop 
-	while symb-list
-	do 
-	  (format stream ",~a" (symb-2-str (pop symb-list))))
-    (get-output-stream-string stream)))
-
-;;; prepare val list for SQL INSERT INTO query
-(defun sql-val-list-str (symb-list psql-le)
-  (if (null symb-list) (error (format nil "non-null list expected")))
-  (let ((stream (make-string-output-stream)))
-    (format stream "~a" (make-sql-val-str 
-			 (retr-val psql-le (pop symb-list))))
-    (loop 
-	while symb-list
-	do 
-	  (format stream ",~a" (make-sql-val-str 
-				(retr-val psql-le (pop symb-list)))))
-    (get-output-stream-string stream)))
-
-;;; create val string for SQL query
-(defun make-sql-val-str (x)
-  (cond 
-   ((null x)
-    "")
-   ((listp x)
-    (format nil "'~a'" (sql-escape-string (str-list-2-str x))))
-   ((stringp x)
-    (format nil "'~a'" (sql-escape-string x)))
-   ((numberp x)
-    (format nil "~a" x))
-   ((symbolp x)
-    (format nil "~a" x))
-   (t
-    (error (format nil "unhandled data type")))))
-
-;;;
-;;; format conversion
-;;;
-
-(defun str-2-symb (str)
-  (unless (stringp str)
-    (error "string exected"))
-  (intern (string-upcase str) :lkb))
-
-(defun str-2-keyword (str)
-  (unless (stringp str)
-    (error "string exected"))
-  (intern (string-upcase str) :keyword))
-
-;; currently 'str-2-lisp-object' ...
-(defun str-2-list (str)
-  (with-package (:lkb)
-    (let ((item (read-from-string str)))
-      (cond
-       ((listp item)
-	item)
-       (t
-	(error "list expected"))))))
-
-;; use (parse-integer X :junk-allowed t) for integers
-(defun str-2-num (str &optional default)
-  (with-package (:lkb)
-    (let ((item (read-from-string str)))
-      (cond
-       ((numberp item)
-	item)
-       ((eq default t)
-	(error "number expected"))
-       (t default)))))
-
-(defun str-2-numstr (str &optional default)
-  (let ((num (str-2-num str)))
-    (cond
-     ((numberp num) 
-      (format nil "~a" num))
-     ((eq default t)
-      (error "number expected"))
-     (t default))))
-
-(defun str-list-2-str (str-list &optional (separator " "))
-  (unless (listp str-list)
-    (error "list expected"))
-  (cond
-   ((null str-list) "")
-   (t (apply 'concatenate
-	     (cons
-	      'string
-	      (cons
-	       (pop str-list)
-	       (mapcan #'(lambda (x) (list separator x)) str-list)))))))
-  
-(defun symb-2-str (symb)
-  (unless (symbolp symb)
-    (error "symbol expected"))
-  (cond
-   ((null symb) "")
-   (t (string-downcase (string symb)))))
-
-(defun num-2-str (num)
-  (if (null num)
-      (return-from num-2-str))
-  (unless (numberp num)
-    (error "number expected"))
-  (format nil "~a" num))
-  
-(defun char-2-symb (c)
-  (unless (characterp c)
-    (error "character expected"))
-  (str-2-symb (string c)))
-
-(defun char-2-num (c)
-  (unless (characterp c)
-    (error "character expected"))
-  (str-2-num (string c)))
-
-(defun 2-symb (x)
-  (cond
-   ((symbolp x) x)
-   ((stringp x) (str-2-symb x))
-   (t (error "unhandled type"))))
-
-(defun 2-str (x)
-  (cond
-   ((stringp x) x)
-   ((symbolp x) (symb-2-str x))
-   ((numberp x) (num-2-str x))
-   (t (error "unhandled type"))))
-
-(defun get-val (field record)
-  (cdr (assoc field record :test #'equal)))
 
 ;;;
 ;;; --- external-lex-database methods
@@ -473,8 +313,7 @@
 (defun lookup-word-psql-lex-database (lexicon orth)
   (declare (ignore cache))
   (if (connection lexicon)
-      ;;(let* ((orthstr (string-downcase orth))
-      (let* ((orthstr orth)
+       (let* ((orthstr orth)
 	     (sql-str (sql-retrieve-entries-by-orthkey lexicon 
 						       (make-requested-fields lexicon) 
 						       orthstr))
@@ -504,8 +343,7 @@
 ;;; (used to index for generator)
 ;;; fix_me: inefficient implementation
 (defmethod lex-words ((lexicon psql-lex-database))
-  (let* (
-	 (sql-str (sql-orthography-set lexicon))
+  (let* ((sql-str (sql-orthography-set lexicon))
          (query-res (run-query 
                      lexicon 
                      (make-instance 'sql-query :sql-string sql-str))))
@@ -514,8 +352,7 @@
 
 (defmethod collect-psort-ids ((lexicon psql-lex-database)  &key (recurse t))
   (declare (ignore recurse))
-  (let* (
-	 (sql-str (sql-lex-id-set lexicon))
+  (let* ((sql-str (sql-lex-id-set lexicon))
           (query-res (run-query 
                      lexicon 
                      (make-instance 'sql-query :sql-string sql-str))))
@@ -556,55 +393,16 @@
   (declare (ignore recurse))
   (with-slots (psorts) lexicon
     (let ((hashed (gethash id psorts)))
-      ;;    (cond ((gethash id psorts))
       (cond (hashed
 	     (unless (eq hashed 'EMPTY)
 	       hashed))
 	    (t
 	     (let* ((record (retrieve-record lexicon id (make-requested-fields lexicon)))
 		    (entry (if record (make-psort-struct lexicon record))))
-	       ;;(when (and entry cache)
-	       ;;  (setf (gethash id psorts) entry))
 	       (when cache
 		 (setf (gethash id psorts)
 		   (or entry 'EMPTY)))
 	       entry))))))
-
-(defun record-id (record)
-  (str-2-symb (cdr (assoc :name record))))
-
-(defun record-orth (record)
-  (cdr (assoc :orthography record)))
-
-(defmethod cache-all-lex-entries ((lexicon psql-lex-database))
-  (with-slots (psorts) lexicon
-    (mapc 
-     #'(lambda (x) 
-	 (let ((id (record-id x)))
-	   (unless (gethash id psorts) 
-	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
-     (retrieve-all-records lexicon (make-requested-fields lexicon)))))
-
-(defmethod cache-all-lex-entries-orth ((lexicon psql-lex-database))
-  (with-slots (psorts lexical-entries) lexicon
-    (clrhash lexical-entries)
-    (mapc 
-     #'(lambda (x) 
-	 (let* ((id (record-id x))
-	       (orth (record-orth x))
-	       ;;(orth-entries (gethash orth lexical-entries))
-		)
-	   (mapc 
-	    #'(lambda (y)
-		(setf (gethash y lexical-entries) 
-		  (cons id (gethash y lexical-entries))))
-	    (split-into-words orth))
-	   
-	   (unless (gethash id psorts) 
-	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
-     (retrieve-all-records lexicon (make-requested-fields lexicon)))))
-
-;; (store-psort) not required 
 
 (defmethod make-psort-struct ((lexicon psql-lex-database) query-res)
   (let* ((strucslots 
@@ -690,8 +488,7 @@
   (set-val psql-le :userid *postgres-current-user*)
   (set-val psql-le :flags 1)
   
-  (set-lex-entry-aux lexicon psql-le)
-  )
+  (set-lex-entry-aux lexicon psql-le))
   
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-version psql-le lexicon) 
@@ -725,7 +522,9 @@
   (if *postgres-tmp-lexicon* 
       (clear-lex *postgres-tmp-lexicon*))
   (format t "~%Connecting to lexical database ~a as user ~a" (dbname lexicon) (user lexicon))
-    (let* ((connection (connect lexicon)))
+  (let* ((connection (connect lexicon))
+	 (dbversion)
+	 )
       (setf *postgres-tmp-lexicon* lexicon)
       (format t "~%(Re)initializing ~a" (dbname lexicon))
       (cond
@@ -733,10 +532,13 @@
 	(unless (string>= (server-version lexicon) 
 			  "7.3")
 	  (error *trace-output* 
-		  "PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." (server-version lexicon)))
+		 "PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." (server-version lexicon)))
+	(setf dbversion (get-db-version lexicon))
 	(unless (string>= (get-db-version lexicon) 
 			  *psql-db-version*)
-	  (error "Your database structures (v. ~a) are out of date. See the latest script import.sql." (get-db-version lexicon)))
+	  (if (string>= dbversion "3.00")
+	      (error "Your database structures (v. ~a) are out of date. Please see files update-~a.sql and above in dir lkb/src/psql" dbversion dbversion)
+	    (error "Your database structures (v. ~a) are too out of date. You must reinitialize the database. See lkb/src/psql/import.sql" dbversion dbversion)))
 	(make-field-map-slot lexicon)
 	(retrieve-fn-defns lexicon)
 	
@@ -759,439 +561,6 @@
   ;;; does nothing
   )
 
-(defun orth-string-to-str-list (string)
-  ;;
-  ;; break orthography string returned from DB at (one or more) spaces
-  ;;
-  (unless (stringp string)
-    (error "string exected"))
-
-  (loop
-      with result = nil
-      with word = (make-array 42
-                              :element-type 'character
-                              :adjustable t :fill-pointer 0)
-      with stream = (make-string-input-stream string)
-      for c = (read-char stream nil nil)
-      while c
-      when (and (eql c #\space) (not (zerop (length word)))) do
-        (push (copy-seq word) result)
-        (setf (fill-pointer word) 0)
-      when (not (eql c #\space)) do
-        (vector-push-extend c word)
-      finally
-        (when (not (zerop (length word))) (push word result))
-        (return (nreverse result))))
-
-;;; returns _list_ of values of appropriate type
-(defun work-out-value (type value &key path)
-  (cond ((equal type "symbol") 
-	 (unless (equal value "")
-	   (list (str-2-symb value))))
-	((equal type "string")
-	 (unless (equal value "")
-	   (list (str-to-string value))))
-	((equal type "mixed")
-	 (unless (equal value "")
-	   (list (str-to-mixed value))))
-	((equal type "string-list")
-	 (list (orth-string-to-str-list value)))
-	((equal type "string-fs")
-	 (expand-string-list-to-fs-list (orth-string-to-str-list value)))
-	((equal type "string-diff-fs")
-	 (expand-string-list-to-fs-diff-list (orth-string-to-str-list value) :path path))
-	((equal type "list") (unless (equal value "")
-			       (str-2-list value) ))
-	(t (error "unhandled type during database access"))))
-
-(defun str-to-mixed (val-str)
-  (let ((len (length val-str)))
-    (cond 
-     ((eq (aref val-str 0) #\")
-      (unless (eq (aref val-str (1- len)) #\")
-	(error "STRING val must be of form \\\"STR\\\""))
-      (subseq val-str 1 (1- len)))
-     ((and (eq (aref val-str 0) #\\)
-	  (eq (aref val-str 1) #\"))
-      (str-2-symb (format nil "\"~a" (subseq val-str 2 len))))
-     (t
-      (str-2-symb val-str)))))
-
-(defun str-to-string (val-str)
-  (let ((len (length val-str)))
-    (cond 
-     ((eq (aref val-str 0) #\")
-      (unless (eq (aref val-str (1- len)) #\")
-	(error "STRING val must be of form \\\"STR\\\""))
-      (subseq val-str 1 (1- len)))
-     (t
-      (error "bad format")))))
-
-;;; eg. ("w1" "w2") -> ((FIRST "w1") (REST FIRST "w2") (REST REST *NULL*)) 
-(defun expand-string-list-to-fs-list (string-list)
-  (cond
-   ((equal string-list nil) 
-    (list (list '*NULL*)))
-   (t
-    (cons (list 'FIRST (first string-list)) 
-	  (mapcar #'(lambda (x) (cons 'REST x))
-	  (expand-string-list-to-fs-list (cdr string-list)))))))   
-
-;;; eg. ("w1" "w2") path -> ((LIST FIRST "w1") (LIST REST FIRST "w2") (LIST REST REST path)) 
-(defun expand-string-list-to-fs-diff-list (string-list &key path)
-   (mapcar #'(lambda (x) (cons 'LIST x))
-	   (expand-string-list-to-fs-diff-list-aux string-list :path path)))
-
-;;; eg. ("w1" "w2") path -> ((FIRST "w1") (REST FIRST "w2") (REST REST path)) 
-(defun expand-string-list-to-fs-diff-list-aux (string-list &key path)
-  (cond
-   ((equal string-list nil) 
-    (list 
-     (list 
-      (append (work-out-value "list" path) 
-	      (list 'LAST)))))
-   (t
-    (cons (list 'FIRST (first string-list)) 
-	  (mapcar #'(lambda (x) (cons 'REST x))
-		  (expand-string-list-to-fs-diff-list-aux (cdr string-list) :path path))))))   
-;;;
-;;; Postgres interface
-;;;
-
-(defmethod make-field-map-slot ((lexicon psql-lex-database))
-  ;; stores the mapping of fields to lex-entry structure slots
-  (setf (fields-map lexicon)
-    (mapcar #'(lambda (x) 
-		(append (list (str-2-keyword (first x))
-			      (str-2-keyword (second x)))
-			(cddr x)))
-            (records (run-query lexicon 
-                                (make-instance 'sql-query
-                                  :sql-string (format 
-                                               nil 
-                                               "SELECT slot,field,path,type FROM defn WHERE mode='~a';"
-                                               (fields-tb lexicon)))))))
-  (if (null (fields-map lexicon))
-      (format t "~%WARNING: empty fields map in ~a mode ~a !!!" 
-              (dbname lexicon) (fields-tb lexicon)))
-  (fields-map lexicon))
-
-;;; returns version, eg. "7.3.2"
-(defmethod get-server-version ((lexicon psql-lex-database))
-  (let* 
-      ((sql-str "SELECT version();")
-       (version-str (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
-    (second (split-on-char version-str))))
-    
-(defmethod get-db-version ((lexicon psql-lex-database))
-  (let* 
-      ((sql-str "SELECT val FROM meta WHERE var='db-version' LIMIT 1;"))
-    (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
-    
-(defmethod get-filter ((lexicon psql-lex-database))
-  (let* 
-      ((sql-str "SELECT val FROM meta WHERE var='filter' LIMIT 1;"))
-    (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
-    
-(defmethod next-version (id (lexicon psql-lex-database))
-  (let* (
-	 (sql-str (sql-next-version lexicon (string-downcase id)))
-	 (res (caar (records (run-query 
-			      lexicon 
-			      (make-instance 'sql-query :sql-string sql-str))))))
-    (str-2-num res 0)))
-
-(defmethod get-records ((lexicon psql-lex-database) sql-string)
-  (make-column-map-record 
-   (run-query 
-    lexicon 
-    (make-instance 'sql-query :sql-string sql-string))))
-
-(defmethod fn-get-records ((lexicon psql-lex-database) fn-name &rest rest)
-  (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
-
-(defmethod fn-get-record ((lexicon psql-lex-database) fn-name &rest rest)
-  (let ((res (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest)))))
-    (if (> (length res) 1)
-        (error "too many records returned")
-      (first res))))
-  
-(defmethod fn-get-val ((lexicon psql-lex-database) fn-name &rest rest)
-  (let* ((res (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
-         (rec (first res)))
-    (if (> (length res) 1)
-        (error "too many records returned")
-      (if (> (length rec) 1)
-          (error "multiple columns returned")
-        (cdar rec)))))
-  
-  
-(defmethod fn ((lexicon psql-lex-database) fn-name &rest rest)
-  (let ((lex-fn (assoc fn-name (fns lexicon))))
-    (if lex-fn
-	(eval (append (list (cdr lex-fn)) rest))
-      (error "Embedded-SQL fn ~a not defined. Is the latest embedded-code.sql loaded into the LexDB?" fn-name))))
-  
-(defmethod sql-next-version ((lexicon psql-lex-database) id)
-  (fn lexicon 'next-version id))
-
-(defmethod sql-orthography-set ((lexicon psql-lex-database))
-  (fn lexicon 'orthography-set))
-
-(defmethod sql-lex-id-set ((lexicon psql-lex-database))
-  (fn lexicon 'lex-id-set))
-
-(defmethod sql-lookup-word ((lexicon psql-lex-database) word)
-  (fn lexicon 'lookup-word word))
-
-(defmethod sql-retrieve-entries-by-orthkey ((lexicon psql-lex-database) select-list word)
-  (fn lexicon 'retrieve-entries-by-orthkey select-list word))
-
-(defmethod sql-retrieve-entry ((lexicon psql-lex-database) select-list word)
-  (fn lexicon 'retrieve-entry select-list word))
-
-(defmethod sql-retrieve-all-entries ((lexicon psql-lex-database) select-list)
-  (fn lexicon 'retrieve-all-entries select-list))
-
-(defun build-current-grammar (lexicon)
-  (fn-get-records  lexicon ''build-current-grammar)
-  (empty-cache lexicon))
-  
-(defmethod dump-db ((lexicon psql-lex-database) filename)  
-  (setf filename (namestring (pathname filename)))
-  (fn-get-records lexicon ''dump-db filename))
-
-(defmethod dump-scratch-db ((lexicon psql-lex-database) filename)  
-  (setf filename (namestring (pathname filename)))
-  (fn-get-records lexicon ''dump-scratch-db filename))
-
-(defmethod show-scratch ((lexicon psql-lex-database))
-  (fn-get-records lexicon ''show-scratch))
-
-(defmethod merge-into-db ((lexicon psql-lex-database) filename)  
-  (setf filename (namestring (pathname filename)))
-  (fn-get-records lexicon ''merge-into-db filename))
-
-(defmethod add-to-db ((lexicon psql-lex-database) filename)  
-  (setf filename (namestring (pathname filename)))
-  (if (catch 'pg:sql-error 
-	(fn-get-records lexicon ''add-to-db filename))
-      (error "cannot update lexical database ~a. Check that ~~/tmp/lexdb.new_entries does not contain attempts to redefine existing entries. No tuple of the form <name,userid,version,...> should correspond to an existing entry. [In particular, the MODSTAMP of a tuple cannot change.]" (dbname lexicon))))
-      
-(defun dump-psql-lexicon (filename)
-  (get-postgres-temp-filename)
-  (setf filename (namestring (pathname filename)))
-  (dump-db *psql-lexicon* *postgres-temp-filename*)
-  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-					       *postgres-temp-filename*
-					       filename)))
-
-(defun dump-scratch (filename)
-  (get-postgres-temp-filename)
-  (setf filename (namestring (pathname filename)))
-  (dump-scratch-db *psql-lexicon* *postgres-temp-filename*)
-  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-					       *postgres-temp-filename*
-					       filename)))
-
-(defun normalize-csv-lexicon (filename-in filename-out)
-  (get-postgres-temp-filename)
-  (setf filename-in (namestring (pathname filename-in)))
-  (setf filename-out (namestring (pathname filename-out)))
-  (fn-get-records *psql-lexicon* ''normalize-csv-lexicon filename-in *postgres-temp-filename*)
-  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-					       *postgres-temp-filename*
-					       filename-out)))
-
-(defun merge-into-psql-lexicon (filename)
-  (setf filename (namestring (pathname filename)))
-  (let* ((dump-filename (format nil "~a/lexdb-temp.merge" *postgres-user-temp-dir*))
-	 (filename-normalized (format nil "~a.new" dump-filename))
-	 (filename-sorted (format nil "~a.s" filename-normalized))
-	 (dump-filename-sorted (format nil "~a.s" dump-filename))
-	 (add-filename (format nil "~a.add" dump-filename))
-	 (command-str-sort-file (format nil "LANG=c sort ~a > ~a" filename-normalized filename-sorted))
-	 (command-str-sort-dumpfile (format nil "LANG=c sort ~a > ~a" dump-filename dump-filename-sorted))
-	 (command-str-add (format nil "LANG=c diff ~a ~a | LANG=c grep -e '^> ' | LANG=c sed 's/^> //' > ~a" dump-filename-sorted filename-sorted add-filename))
-	 (command-str-rm-files (format nil "rm ~a*" dump-filename))
-	 )
-    (unless
-	(and *psql-lexicon* (connection *psql-lexicon*))
-      (initialize-psql-lexicon))
-    (format *postgres-debug-stream* "~%(dumping current lexicon)")
-    (dump-psql-lexicon dump-filename)
-    (format *postgres-debug-stream* "~%(normalizing new lexicon)")
-    (normalize-csv-lexicon filename filename-normalized)
-    (format *postgres-debug-stream* "~%(sorting files)")
-    (common-lisp-user::run-shell-command command-str-sort-file)
-    (common-lisp-user::run-shell-command command-str-sort-dumpfile)
-    (format *postgres-debug-stream* "~%(updating db)")
-    (common-lisp-user::run-shell-command command-str-add)
-    (add-to-db *psql-lexicon* add-filename)
-    (common-lisp-user::run-shell-command (format nil "mv ~a ~a/lexdb.new_entries" add-filename *postgres-user-temp-dir*))
-    (common-lisp-user::run-shell-command command-str-rm-files)
-    (format *postgres-debug-stream* "~%(building current_grammar)")
-    (build-current-grammar *psql-lexicon*)))
-
-(defmethod initialize-userschema ((lexicon psql-database))
-  (unless
-      (fn-get-val lexicon ''test-user *postgres-current-user*)
-    (format *postgres-debug-stream* "~%(initializing schema ~a)" *postgres-current-user*)
-    (fn-get-val lexicon ''create-schema *postgres-current-user*)
-    (if *postgres-mwe-enable*
-	(mwe-initialize-userschema lexicon))
-    ))
-
-(defmethod retrieve-fn-defns ((lexicon psql-lex-database))
-  (let* ((sql-str (format nil "SELECT * FROM qry;"))
-	 (records (make-column-map-record (run-query 
-                     lexicon 
-                     (make-instance 'sql-query :sql-string sql-str)))))
-    (loop
-      for record in records
-	do
-	  (retrieve-fn-defn lexicon record))))
-
-(defmethod retrieve-fn-defn ((lexicon psql-lex-database) record)
-  (let* ((fn (get-val :fn record))
-	 (arity (str-2-num (get-val :arity record)))
-	 (sql-code (get-val :sql_code record))
-	 (sql-str (format nil "SELECT * FROM qrya WHERE fn='~a';" fn))
-	 (ergqa-records 
-	  (make-column-map-record 
-	   (run-query 
-	    lexicon 
-	    (make-instance 'sql-query :sql-string sql-str))))
-	 (type-list 
-	  (mapcar #'(lambda (record) 
-		      (cons 
-		       (str-2-num (get-val :arg record))
-		       (str-2-symb (get-val :type record))))
-		  ergqa-records)))
-    (unless (= arity (length type-list))
-      (error "wrong number of argument defns for embedded SQL fn ~a in lexical database ~a" fn (dbname lexicon)))
-    (push (cons (str-2-symb fn) 
-		(make-db-access-fn fn sql-code type-list))
-	  (fns lexicon))))
-
-(defun make-db-access-fn (str-fn-name-in str type-list)
-  (let* ((fn-name (new-fn-name (concatenate 'string "sql-query-string-" (string str-fn-name-in))))
-	 (tmp (prepare-db-access-fn str type-list str-fn-name-in))
-	 (format-cmd (append '(format nil) (car tmp)))
-	 (args (cdr tmp))
-	 (fn-defn (list 'defun fn-name args format-cmd)))
-    (eval fn-defn)))
-
-(defun new-fn-name (str)
-  (loop
-      with i = 0
-      with fn-name
-      do
-	(setf fn-name (str-2-symb (concatenate 'string str (num-2-str i))))
-	(unless (fboundp fn-name)
-	  (return fn-name))
-	(setf i (1+ i))))
-	
-(defun prepare-db-access-fn (str type-list str-fn-name)
-  (let ((stream (make-string-output-stream))
-	(args)
-	(arg-vars '(a b c d e f g h i j))
-	(arity (length type-list)))
-  (loop
-      with max = (1- (length str))
-      and c
-      for i from 0 to max
-      with max-arg = -1
-      and arg
-      and type
-      and explicit-type-str
-      do
-	(setf c (aref str i))
-	(cond 
-	 ((eq c #\~)
-	  (format stream "~~~~"))
-	 ((eq c #\\)
-	  (if (= i max)
-	      (error "invalid string ('\\' cannot be string final)"))
-	  (format stream "~a" (aref str (1+ i)))
-	  (setf i (1+ i)))
-	 ((eq c #\$)
-	  (if (= i max)
-	      (error "invalid string ('$' cannot be string final)"))
-;	  (unless (numberp (char-2-symb (aref str (1+ i))))
-	  (setf arg (char-2-num (aref str (1+ i))))
-	  (unless arg
-	    (error "invalid string ('$' can only preceed a digit)"))
-	  (if (> arg (1- arity))
-	      (error "whilst compiling embedded SQL function ~a(~a). Argument $~a is not valid in 
-~%~a~a~a" 
-		     str-fn-name 
-		     (str-list-2-str (get-$-args arity) ",") 
-		     arg 
-		     (if (> (- i 20) 0) "..." "")
-		     (subseq str 
-			     (max 0 (- i 20)) 
-			     (min (length str) (+ i 20)))
-		     (if (< (+ i 20) (length str)) "..." "")
-		     ))
-	  (setf max-arg (max max-arg arg))
-	  (setf type (cdr (assoc arg type-list)))
-	  (setf explicit-type-str (get-explicit-type str (1+ i)))
-	  (when explicit-type-str
-	    (setf type (str-2-symb explicit-type-str))
-	    (setf i (+ i 1 (length explicit-type-str))))
-	  (cond
-	   ((equal type 'text)
-	    (format stream "'~~a'")
-	    (push (list 'sql-embedded-text (nth arg arg-vars)) args))
-	   ((equal type 'like-text)
-	    (format stream "~~a")
-	    (push (list 'sql-like-text (nth arg arg-vars)) args))
-	   ((equal type 'int)
-	    (format stream "~~a"))
-	   ((equal type 'select-list)
-	    (format stream "~~a")
-	    (push (nth arg arg-vars) args))
-	   ((equal type 'value-list)
-	    (format stream "~~a")
-	    (push (nth arg arg-vars) args))
-	   ((equal type 'where-subcls)
-	    (format stream "~~a")
-	    (push (nth arg arg-vars) args))
-	   (t
-	    (error "unknown type: ~A" type)))
-	  (setf i (1+ i)))
-	 (t
-	  (format stream "~a" (aref str i)))))
-  (cons (cons (get-output-stream-string stream) (reverse args)) 
-	(subseq arg-vars 0 arity))))
-
-(defun get-$-args (arity)
-    (loop
-	for i from 1 to arity
-	collect (format nil "$~a" (1- i))))
-
-(defun get-explicit-type (str i)
-  (let* ((j (1+ i))
-	 (end-char-set '(#\Space #\Newline #\Return))
-	 (type-str
-	  (and (< (1+ j) (length str))
-	       (eq (aref str j) #\:)
-	       (not 
-		 (member (aref str (1+ j)) end-char-set))
-	       (subseq str (1+ j) (position-char-set end-char-set str :start j)))))
-    type-str))
-
-(defun position-char-set (char-set string &key (start 0))
-  (loop
-      for i from start to (1- (length string))
-      do
-	
-      (if 
-	  (member (aref string i) char-set)
-	  (return-from position-char-set i)))
-      nil)
-      
 ;;;
 ;;; --- psql-lex-entry methods
 ;;;
@@ -1221,23 +590,6 @@
 	    (retr-val psql-le :name) 
 	    lexicon)))
 
-(defun split-on-char (string &optional (char #\Space))
-;  (unless char (setf char #\Space))
-  (loop for i = 0 then (1+ j)
-      as j = (position char string :start i)
-      collect (subseq string i j)
-      while j))
-
-;;;
-;;; temp
-;;;
-
-(defun time-parse (str)
-  (time
-   (parse
-    (split-into-words 
-     (preprocess-sentence-string str)))))
-
 ;;;
 ;;; db filter
 ;;;
@@ -1262,34 +614,6 @@
 (defun set-filter-psql-lexicon nil
   (set-filter *psql-lexicon*))
 
-(defun sql-embedded-text (str)
-  (cond
-   ((equal str "")
-    "")
-   ((eq (char str 0) #\')
-    (format nil "''~a" (sql-embedded-text (subseq str 1))))
-   (t
-    (format nil "~a~a" (char str 0) (sql-embedded-text (subseq str 1))))))
-
-(defun sql-like-text (str)
-  (format nil "'~a'" (sql-like-text-aux str))
-  )
-
-(defun sql-like-text-aux (str)
-  (cond
-   ((equal str "")
-    "")
-   ((eq (char str 0) #\')
-    (format nil "''~a" (sql-like-text-aux (subseq str 1))))
-   ((eq (char str 0) #\_)
-    (format nil "\\\\_~a" (sql-like-text-aux (subseq str 1))))
-   ((eq (char str 0) #\%)
-    (format nil "\\\\%~a" (sql-like-text-aux (subseq str 1))))
-   ((eq (char str 0) #\\)
-    (format nil "\\\\\\\\~a" (sql-like-text-aux (subseq str 1))))
-   (t
-    (format nil "~a~a" (char str 0) (sql-like-text-aux (subseq str 1))))))
-
 ;;;
 ;;; LexDB menu commands
 ;;;
@@ -1302,10 +626,10 @@
 	  ((= (length rest) 1)
 	   (first rest))
 	  (t
-	   (error "to many arguments")))))
+	   (error "too many arguments")))))
     (when filename
       (format t "Merging file ~a into lexical database ~a" filename (dbname *psql-lexicon*))
-      (merge-into-psql-lexicon filename)
+      (merge-into-psql-lexicon2 *psql-lexicon* filename)
       (lkb-beep))))
   
 (defun command-dump-psql-lexicon (&rest rest)
@@ -1316,7 +640,7 @@
 	  ((= (length rest) 1)
 	   (first rest))
 	  (t
-	   (error "to many arguments")))))
+	   (error "too many arguments")))))
     (when filename
       (format t "Dumping lexical database ~a to file ~a" (dbname *psql-lexicon*) filename)
       (dump-psql-lexicon filename)
@@ -1330,7 +654,7 @@
 	  ((= (length rest) 1)
 	   (first rest))
 	  (t
-	   (error "to many arguments")))))
+	   (error "too many arguments")))))
     (when filename
       ;;(format t "Dumping lexical database ~a to (TDL format) file ~a" (dbname *psql-lexicon*) filename)
       (export-lexicon-to-tdl :file filename)
@@ -1352,20 +676,16 @@
 	     "Export Lexicon" 
 	     (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
 	  (unless *postgres-current-source* (throw 'abort 'source))
-	  
 	  (setf *postgres-current-lang* 
 	    (ask-user-for-x 
 	     "Export Lexicon" 
 	     (cons "Language code?" (or *postgres-current-lang* "EN"))))
 	  (unless *postgres-current-lang* (throw 'abort 'lang))
-	  
 	  (setf *postgres-current-country* 
 	    (ask-user-for-x 
 	     "Export Lexicon" 
 	     (cons "Country code?" (or *postgres-current-country* "UK"))))
 	  (unless *postgres-current-country* (throw 'abort 'country))
-	  
-	  
 	  (export-to-db lexicon *psql-lexicon*)
 	  (clear-lex lexicon)
 	  (lkb-beep))))))
@@ -1398,21 +718,32 @@
   (lkb-beep))
 
 ;;;
-;;; misc
+;;; cache
 ;;;
 
-(defun extract-param (param param-list)
-  (second (assoc param param-list)))
+(defmethod cache-all-lex-entries ((lexicon psql-lex-database))
+  (with-slots (psorts) lexicon
+    (mapc 
+     #'(lambda (x) 
+	 (let ((id (record-id x)))
+	   (unless (gethash id psorts) 
+	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
+     (retrieve-all-records lexicon (make-requested-fields lexicon)))))
 
-(defun kwl2alist (l)
-  (loop
-      while l
-      collect (let ((kw (pop l))
-		    (v (pop l)))
-		(unless (keywordp kw)
-		  (error "kwl2alist input format"))
-		(cons kw v))))
+(defmethod cache-all-lex-entries-orth ((lexicon psql-lex-database))
+  (with-slots (psorts lexical-entries) lexicon
+    (clrhash lexical-entries)
+    (mapc 
+     #'(lambda (x) 
+	 (let* ((id (record-id x))
+	       (orth (record-orth x)))
+	   (mapc 
+	    #'(lambda (y)
+		(setf (gethash y lexical-entries) 
+		  (cons id (gethash y lexical-entries))))
+	    (split-into-words orth))
+	   
+	   (unless (gethash id psorts) 
+	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
+     (retrieve-all-records lexicon (make-requested-fields lexicon)))))
 
-(defun recomp (x)
-  (compile-file x)
-  (load x))

@@ -1,5 +1,5 @@
 ;;; Copyright (c) 2001 -- 2003 
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;   see `licence.txt' for conditions.
 
 ;;;
@@ -289,12 +289,6 @@
 	      separator type
 	      separator keyrel))
     ""))
-
-(defun subseq-from-end (seq rev-end &optional (rev-start 0))
-  (let* ((len (length seq))
-	 (start (- len rev-end))
-	 (end (- len rev-start)))
-    (subseq seq start end)))
 
 (defmethod multi-p (&key name type)
   (cond
@@ -841,6 +835,14 @@
 ;;; DB standard io
 ;;;
 
+(defun get-new-filename (filename)
+  (loop
+      until (not (probe-file filename))
+      do
+	(setf filename (format nil "~aX" filename))
+      finally
+	(return filename)))
+
 (defun merge-tdl-into-psql-lexicon2 (file-in)
   (setf file-in (namestring (pathname file-in)))
   (let ((tmp-lex (create-empty-cdb-lex))
@@ -881,15 +883,4 @@
 (defun commit-scratch-lex nil
   (fn-get-val *psql-lexicon* ''commit-scratch)
   (empty-cache *psql-lexicon*))
-
-;;;
-;;; misc
-;;;
-
-(defun get-postgres-temp-filename nil
-  (setf *postgres-temp-filename*
-    (format nil "~a.~a" "/tmp/postgres-temp" (sys:user-name))))
-
-(defun un-keyword (keyword-symb)
-  (str-2-symb (symb-2-str keyword-symb)))
 

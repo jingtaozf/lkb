@@ -1,5 +1,5 @@
 ;;; Copyright (c) 1991--2003
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
 ;;;   see `licence.txt' for conditions.
 
 (in-package :make)
@@ -77,6 +77,8 @@
       :load-only t
       :components
                ((:file "lkb-package")
+                #+:psql
+                (:file "lexdb-package")
                 (:file "mrs-package")))
 
      (:module "version"
@@ -106,7 +108,7 @@
                (:file "topmenu")     ; main interaction window/menu
                (:file "dialog")))    ; querying user
 
-     (:module "main functionality"
+    (:module "main functionality"
       :source-pathname "main"
       :binary-pathname "main"
       :components
@@ -138,18 +140,19 @@
                #+:preprocessor       
                (:file "preprocess")))
 
-     #+:psql  
+      #+:psql  
      (:module "lexdb"
       :source-pathname "lexdb"
       :binary-pathname "lexdb"
       :components
-	      (
-               (:file "psqllex")      ; Postgres interface for lexicon
+	      ((:file "psqllex")      ; Postgres lexical source
+               (:file "psql-msc")     ; misc lexdb functions
+               (:file "psql-db")      ; Postgres DB interface
                (:file "psql-emacs")   ; Postgres-Emacs interface
                (:file "psql-mwe")     ; Postgres MWE extensions
                (:file "semi")         ; SEM-I DB
                (:file "lexport")      ; export lexicon in various formats
-		))  
+	))  
 
      (:module "various io"
       :source-pathname "io-general"
