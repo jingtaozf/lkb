@@ -33,10 +33,11 @@
           (if (member rel quant-rels)
               nil
             (find-necessary-scope-relationships rel quant-rels)))
-     (for outscpd in *outscopes*
+     ;;; fix - probably needs to be label label relationship
+     (for outscpd in *qeqs*
           collect
-          (cons (outscopes-h2 outscpd)
-                (outscopes-h1 outscpd))))))
+          (cons (qeq-right outscpd)
+                (qeq-left outscpd))))))
 
 (defun get-restr-value (rel)
   ;;; returns the integer value of the handel corresponding to the
@@ -75,13 +76,7 @@
                               (get-scope-value qrel)))))))))))
     scopes))
 
-(defun find-cheap-equalities nil
-  ;;; just for the case where there's an is-one-of with a single element
-  (for is-one-of in *is-one-ofs*
-       filter
-       (unless (cdr (possible-binding-hset is-one-of))
-         (cons (car (possible-binding-hset is-one-of))
-	       (possible-binding-h1 is-one-of)))))
+
 
 
   

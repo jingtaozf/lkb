@@ -321,7 +321,7 @@
 (defun vit-quant-rel-p (mrsrel)
   (eq *bv-feature* (fvpair-feature (first (rel-flist mrsrel)))))
 
-(defun vit-var-p (var)
+(defun vit-variable-p (var)
   (and (symbolp var)
        (member (subseq (symbol-name var) 0 2) 
                '("IH" "HH" "LH") :test #'equal)))
@@ -336,7 +336,7 @@
           (unless (member (p-term-predicate rel) *top-level-rel-types*)
             (loop for arg in (cdr (p-term-args rel))
                 do
-                  (when (and (vit-var-p arg)
+                  (when (and (vit-variable-p arg)
                              (not (member arg *bound-vit-vars* :test #'equalp)))
                     (pushnew arg free :test #'equalp)))))
     free))
@@ -562,9 +562,8 @@
           ;;; at least some leqs and equalities
           (progn 
             (set-up-cheap-hcons mrs-psoa)
-            ;; sets globals for is-one-ofs and leqs
-            (setf leqs (find-cheap-leqs mrs-psoa))
-            (setf equalities (find-cheap-equalities))))
+            ;; sets globals for leqs
+            (setf leqs (find-cheap-leqs mrs-psoa))))
         (let* ((labels (if (or (not (var-p (psoa-handel mrs-psoa)))
                              (assoc (var-id (psoa-handel mrs-psoa)) label-vars))
                          label-vars

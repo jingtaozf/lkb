@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.17  1999/04/09 23:20:56  danf
+;; Merged WK's changes
+;;
 ;; Revision 1.16  1999/01/16 05:12:16  aac
 ;; minor fixes because of PC version, generator changes
 ;;
@@ -197,6 +200,7 @@
 ;;; cycles should not occur but they seem to arise occasionally in lattice
 ;;; parsing
 (defun construct-mrs (fs &optional existing-variable-generator generator-p)
+  (declare (ignore generator-p))
   (when #-pagelite (not (cyclic-p fs))
         #+pagelite t
         (if existing-variable-generator
@@ -559,7 +563,6 @@
       (let* ((label-list (fs-arcs fs))
              (rel (create-type (fs-type fs)))
              (scarg (assoc  *sc-arg-feature* label-list))
-             (cands (assoc  *cands-feature* label-list))
              (outscpd (assoc *outscpd-feature* label-list))
              (prec (assoc *prec-feature* label-list)))
         (if prec
@@ -571,47 +574,8 @@
           (make-hcons 
            :scarg (when scarg
                     (create-variable (cdr scarg) variable-generator))
-           :cands (when cands 
-                    (construct-cands-list (cdr cands)
-                                          nil
-                                          variable-generator))
            :outscpd (when outscpd
                       (create-variable (cdr outscpd) variable-generator)))))))
-
-
-;; In mrsoutput.lisp, modify CONSTRUCT-CANDS-LIST to accommodate now treating
-;; CANDS attribute as taking a diff-list, so we can distinguish local from
-;; non-local values for the attribute.
-
-(defun construct-cands-list (fs cands-list variable-generator)
-  (let ((real-list-fs (path-value fs *list-path*))
-        (last-pointer (path-value fs *last-path*)))
-    #-pagelite
-    (when (is-valid-fs real-list-fs)
-      (setf real-list-fs (deref real-list-fs)))
-    (construct-cands-list-aux real-list-fs cands-list variable-generator 
-                              last-pointer)))
-
-(defun construct-cands-list-aux (real-list-fs cands-list variable-generator
-				 last-pointer)
-  (if (and (is-valid-fs real-list-fs)
-           (not (eql real-list-fs last-pointer)))
-      (let ((label-list (fs-arcs real-list-fs)))
-        (if label-list
-            (let ((first-part (assoc (car *liszt-first-path*)
-                                     label-list))
-                  (rest-part (assoc (car *liszt-rest-path*)
-                                    label-list)))
-              (if (and first-part rest-part)
-                  (progn
-                    (push (create-variable (cdr first-part) variable-generator)
-                          cands-list)
-                    (construct-cands-list-aux
-                     (cdr rest-part)
-                     cands-list variable-generator last-pointer))
-                cands-list))
-          cands-list))
-    cands-list))
 
 
 

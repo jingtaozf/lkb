@@ -22,6 +22,6 @@
           var-name var-extra var-id
           handle-var-name handle-var-extra handel-var-id
           group-var-name group-var-extra group-var-id
-          hcons-scarg hcons-cands hcons-outscpd
+          hcons-scarg hcons-outscpd
           leq-sc-scarg leq-sc-cands leq-sc-outscpd leq-sc-relation
           whg-id-id whg-id-word whg-id-handel))

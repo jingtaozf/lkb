@@ -21,6 +21,7 @@
       (treat-mrs mrs-struct nil))))
 
 (defun treat-mrs (mrs-struct extra-param)
+  (declare (ignore extra-param))
   (cond (*mrs-to-vit*
          (mrs-to-vit-convert mrs-struct))
         (*alex-munge*

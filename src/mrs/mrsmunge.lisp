@@ -420,13 +420,7 @@
     (let ((ihcon (car remaining-hcons))
           (results nil))
       (dolist (hcons hcons-list)
-        (if (and (eql (length (hcons-cands hcons)) 
-                      (length (hcons-cands ihcon)))
-                 (not (member hcons matching-hcons)))
-            ;; if the MRS is well-formed, the hcons
-            ;; is either an outscpd (in which case cands is 0)
-            ;; or an is-one-of (in which case we only wnat to match
-            ;; things with identical length candidates lists
+        (if (not (member hcons matching-hcons))
           (let ((local-bindings (copy-alist bindings)))
             (setf local-bindings
                 (bindings-match (get-var-num (hcons-scarg ihcon))
@@ -450,22 +444,7 @@
                                           local-bindings
                                           constant-bindings)))
                       (when local-results
-                        (setf results (append local-results results))))))
-                ; else - an is-one-of constraint - may be
-                ; multiple possible bindings ...
-                (for new-bindings in (compatible-hcons-values
-                                      (hcons-cands ihcon)
-                                      (hcons-cands hcons) 
-                                      local-bindings nil)
-                     do
-                     (let ((local-results (match-mrs-rule-hcons 
-                                           (cdr remaining-hcons)
-                                           hcons-list
-                                           (cons hcons matching-hcons)
-                                           new-bindings
-                                           constant-bindings)))
-                       (when local-results
-                         (setf results (append local-results results))))))))))
+                        (setf results (append local-results results)))))))))))
         results)))
 
            
@@ -597,10 +576,6 @@
                            (if (hcons-outscpd hcons)
                                (convert-var-to-new-bindings 
                                 (hcons-outscpd hcons) bindings)))
-                     (setf (hcons-cands new-hcons)
-                           (for var in (hcons-cands hcons)
-                                collect
-                                (convert-var-to-new-bindings var bindings)))
                      new-hcons)))
     old-hcons))
 

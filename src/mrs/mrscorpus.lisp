@@ -477,9 +477,7 @@
   (and (variables-equal (hcons-scarg hc1)
                         (hcons-scarg hc2) t bindings)
        (variables-equal (hcons-outscpd hc1)
-                        (hcons-outscpd hc2) t bindings)
-       (variable-set-equal (hcons-cands hc1)
-                           (hcons-cands hc2) bindings)))
+                        (hcons-outscpd hc2) t bindings)))
 
 (defun variable-set-equal (l1 l2 bindings)
   (or (and (null l1) (null l2))

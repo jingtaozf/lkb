@@ -64,7 +64,6 @@
 
 (defstruct (hcons)
   scarg
-  cands
   outscpd)
 
 (defstruct (leq-sc (:include hcons))
@@ -482,10 +481,6 @@
                (mrs-output-leq *mrs-display-structure*
                                (get-print-name (leq-sc-scarg hcons)) 
                                 (get-print-name (leq-sc-outscpd hcons))))
-              ((hcons-cands hcons)
-               (mrs-output-is-one-of *mrs-display-structure*
-                                     (get-print-name (hcons-scarg hcons)) 
-                                     (mapcar #'get-print-name (hcons-cands hcons))))
               (t (mrs-output-outscopes *mrs-display-structure*
 		   (get-print-name (hcons-scarg hcons)) 
                    (get-print-name (hcons-outscpd hcons))))))
