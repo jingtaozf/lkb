@@ -372,7 +372,8 @@
               for directory in directories
               for suffix = (when (string= *tsdb-home* directory :end2 prefix)
                              (subseq directory prefix))
-              when (and (or (null name) (string= name suffix))
+              when (and suffix
+                        (or (null name) (string= name suffix))
                         (or (null pattern) (search pattern suffix)))
               collect suffix))
          (dmeter (madjust * meter 0.2))

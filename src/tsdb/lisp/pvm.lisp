@@ -18,10 +18,6 @@
 
 (in-package "TSDB")
 
-(defparameter *pvm-cpus* nil)
-
-(defparameter *pvm-clients* nil)
-
 (defparameter *pvm-master* nil)
 
 (defun client-idle-p (client)

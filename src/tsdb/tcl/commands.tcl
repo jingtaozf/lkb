@@ -104,7 +104,7 @@ proc tsdb_file {action {index -1}} {
           status "deleting file `$file' ... failed";
           after 1000;
         }; # if
-        if {"$globals(user)" != "ebender"} {
+        if {"$globals(user)" != "bender"} {
           after 300;
         }; # if
       }; # foreach
@@ -398,9 +398,7 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
   if {$profile == ""} {
     if {[verify_ts_selection]} {return 1};
     set profile $globals(data);
-  } else {
-    if {[verify_ts_selection]} {return 1};
-  }; # else
+  }; # if
 
   if {$code != "runs" && $code != "errors"
       && $globalp && $globals(condition) != ""} {
@@ -809,6 +807,52 @@ proc tsdb_compare_in_detail {} {
   send_to_lisp :event $command;
  
 }; # tsdb_compare_in_detail()
+
+proc tsdb_evolution {code} {
+
+  global globals test_suites;
+
+  set list [.list subwidget hlist];
+
+  set selection "";
+  foreach i [lsort -integer [array names test_suites]] {
+    if {![$list info hidden $i]} {
+      set item $test_suites($i);
+      set name [lindex $item 0];
+      if {$globals($name)} {
+      set selection "$selection \"$name\"";
+      }; # if
+    }; # if
+  }; #foreach
+
+  if {$selection == ""} {
+    tsdb_beep;
+    status "no test suite database(s) active; make up your mind ... |:-\}" 5;
+    return 1;
+  }; # if
+
+  set attributes "";
+  foreach attribute $globals(evolution,all) {
+    if {$globals(evolution,$attribute)} {
+      set attributes "$attributes :$attribute";
+    }; # if
+  }; # foreach
+
+  if {$attributes == ""} {
+    tsdb_beep;
+    status "no evolutionary attributes active; make up your mind ... |:-\}" 5;
+    return 1;
+  }; # if
+  
+  set command "(evolution ($selection)";
+  if {$globals(division) != ""} {
+    set command "$command :division \"$globals(division)\"";
+  }; # if
+  set command "$command :attributes ($attributes))";
+
+  send_to_lisp :event $command;
+
+}; # tsdb_evolution()
 
 proc toggle_balloon_help {} {
 

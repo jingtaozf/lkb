@@ -26,17 +26,15 @@
    "*TSDB-TREES-HOOK*" "*TSDB-SEMANTIX-HOOK*"
    "TSDB"))                
 
+#+:page
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
 	   #-:ansi-eval-when (load eval compile)
   (unless (find-package "CSLI")
     (make-package "CSLI" :use (list "COMMON-LISP" "MAKE")))
   (unless (find-package "CSLI-UNIFY")
-    (make-package "CSLI-UNIFY" :use (list "COMMON-LISP" "MAKE"))))
-
-(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
-	   #-:ansi-eval-when (load eval compile)
-  (unless (find-class 'csli-unify::fs nil)
-    (defstruct csli-unify::fs)))
+    (make-package "CSLI-UNIFY" :use (list "COMMON-LISP" "MAKE")))
+  (unless (find-class (intern "FS" :csli-unify) nil)
+    (defstruct (intern "FS" :csli-unify))))
   
 
 

@@ -68,6 +68,9 @@ if {![info exists globals(graph_lower)]} {
 if {![info exists globals(graph_upper)]} {
   set globals(graph_upper) "";
 }; # if
+
+set globals(menu_font) {Helvetica 14 bold};
+
 set globals(graph,by) :i-length;
 set globals(graph,scatterp) 1;
 set globals(graph,extras) 0;
@@ -100,9 +103,10 @@ set globals(special_menues) {
   .menu.analyze.menu.division
   .menu.analyze.menu.phenomena
   .menu.analyze.menu.rvalues
-  .menu.detail.menu.decoration
-  .menu.detail.menu.intersection
-  .menu.detail.menu.options
+  .menu.compare.menu.decoration
+  .menu.compare.menu.intersection
+  .menu.compare.menu.options
+  .menu.evolution.menu.values
   .menu.options.menu.condition
   .menu.options.menu.phenomena
   .menu.options.menu.switches
@@ -135,6 +139,13 @@ set globals(critical_cell_threshold) 2000;
 #
 set globals(relations) {};
 set globals(attributes) {};
+
+set globals(evolution,all) {
+  coverage overgeneration words readings
+  types rules lexicon
+  first total tcpu tgc p-ftasks p-etasks p-stasks aedges pedges raedges rpedges
+}; # globals(evolution,all)
+set globals(evolution,coverage) 1;
 
 #
 # determine defaults for (display) options local to the podium(1) universe
@@ -226,29 +237,41 @@ proc main {} {
   pack .menu -side top -fill x
 
   menubutton .menu.file \
-             -text "File" -underline 0 -menu .menu.file.menu
+             -text "File" -font $globals(menu_font) \
+             -underline 0 -menu .menu.file.menu 
   menubutton .menu.browse \
-             -text "Browse" -underline 0 -menu .menu.browse.menu
+             -text "Browse" -font $globals(menu_font) \
+             -underline 0 -menu .menu.browse.menu
   menubutton .menu.process \
-             -text "Process" -underline 0 -menu .menu.process.menu
+             -text "Process" -font $globals(menu_font) \
+             -underline 0 -menu .menu.process.menu
   menubutton .menu.analyze \
-             -text "Analyze" -underline 0 -menu .menu.analyze.menu
+             -text "Analyze" -font $globals(menu_font) \
+             -underline 0 -menu .menu.analyze.menu
   menubutton .menu.compare \
-             -text "Compare" -underline 0 -menu .menu.compare.menu
-  menubutton .menu.detail \
-             -text "Detail" -underline 0 -menu .menu.detail.menu
+             -text "Compare" -font $globals(menu_font) \
+             -underline 0 -menu .menu.compare.menu
+  menubutton .menu.evolution \
+             -text "Evolution" -font $globals(menu_font) \
+             -underline 0 -menu .menu.evolution.menu
   menubutton .menu.options \
-             -text "Options" -underline 0 -menu .menu.options.menu
+             -text "Options" -font $globals(menu_font) \
+             -underline 0 -menu .menu.options.menu
   menubutton .menu.help \
-             -text "Help" -underline 0 -menu .menu.help.menu
+             -text "Help" -font $globals(menu_font) \
+             -underline 0 -menu .menu.help.menu
   pack .menu.file .menu.browse .menu.process \
-       .menu.analyze .menu.compare .menu.detail .menu.options -side left
+       .menu.analyze .menu.compare .menu.evolution \
+       .menu.options -side left
   pack .menu.help -side right
 
   #
   # `File' menu (and embedded cascades)
   #
   menu .menu.file.menu -tearoff 0
+  .menu.file.menu add cascade -label "Selection" \
+    -menu .menu.file.menu.selection;
+  .menu.file.menu add separator
   .menu.file.menu add command -label "Copy" \
     -command {tsdb_file copy} -state disabled
   .menu.file.menu add command -label "Rename" \
@@ -280,12 +303,28 @@ proc main {} {
   .menu.file.menu add command -label "Quit" -command tsdb_quit
 
   #
+  # `File -- Selection' cascade
+  #
+  menu .menu.file.menu.selection -tearoff 0
+  .menu.file.menu.selection add command -label "Select Pattern" \
+    -command {list_select "" pattern};
+  .menu.file.menu.selection add command -label "Select All" \
+    -command {list_select "" all};
+  .menu.file.menu.selection add command -label "Unselect All" \
+    -command {list_select "" none};
+  .menu.file.menu.selection add separator;
+  .menu.file.menu.selection add command -label "Zoom In" \
+    -command {list_select "" in};
+  .menu.file.menu.selection add command -label "Zoom Out" \
+    -command {list_select "" out};
+  
+  #
   # the `File.Create' (cascaded) menu will be filled in dynamically
   #
   menu .menu.file.menu.create -tearoff 0
 
   #
-  # `File.Import' cascade
+  # `File -- Import' cascade
   #
   menu .menu.file.menu.import -tearoff 0
   .menu.file.menu.import add command -label "tsdb(1) Database" \
@@ -549,48 +588,110 @@ proc main {} {
   .menu.compare.menu add command -label "Performance" \
     -command {tsdb_compare performance};
   .menu.compare.menu add separator
-  .menu.compare.menu add cascade -label "Source Database" \
-    -menu .menu.detail.menu.compare
-
-  #
-  # `Detail' menu (and embedded cascades)
-  #
-  menu .menu.detail.menu -tearoff 0
-  .menu.detail.menu add command -label "Compare" \
+  .menu.compare.menu add command -label "Detail" \
     -command tsdb_compare_in_detail
-  .menu.detail.menu add separator
-  .menu.detail.menu add cascade -label "Decoration" \
-    -menu .menu.detail.menu.decoration
-  .menu.detail.menu add cascade -label "Intersection" \
-    -menu .menu.detail.menu.intersection
-  .menu.detail.menu add separator
-  .menu.detail.menu add cascade -label "Source Database" \
-    -menu .menu.detail.menu.compare
-  .menu.detail.menu add separator
-  .menu.detail.menu add cascade -label "Switches" \
-    -menu .menu.detail.menu.switches
+  .menu.compare.menu add separator
+  .menu.compare.menu add cascade -label "Decoration" \
+    -menu .menu.compare.menu.decoration
+  .menu.compare.menu add cascade -label "Intersection" \
+    -menu .menu.compare.menu.intersection
+  .menu.compare.menu add separator
+  .menu.compare.menu add cascade -label "Source Database" \
+    -menu .menu.compare.menu.compare
+  .menu.compare.menu add cascade -label "Switches" \
+    -menu .menu.compare.menu.switches
 
-  menu .menu.detail.menu.decoration -tearoff 0
-  .menu.detail.menu.decoration add checkbutton -label "i-wf" \
+  menu .menu.compare.menu.decoration -tearoff 0
+  .menu.compare.menu.decoration add checkbutton -label "i-wf" \
     -variable compare_in_detail(show,i-wf)
-  .menu.detail.menu.decoration add checkbutton -label "i-input" \
+  .menu.compare.menu.decoration add checkbutton -label "i-input" \
     -variable compare_in_detail(show,i-input)
-  .menu.detail.menu.decoration add checkbutton -label "i-category" \
+  .menu.compare.menu.decoration add checkbutton -label "i-category" \
     -variable compare_in_detail(show,i-category)
 
-  menu .menu.detail.menu.intersection -tearoff 0
+  menu .menu.compare.menu.intersection -tearoff 0
   foreach attribute $compare_in_detail(compare,all) {
-    .menu.detail.menu.intersection add checkbutton -label $attribute \
+    .menu.compare.menu.intersection add checkbutton -label $attribute \
       -variable compare_in_detail(compare,$attribute)
   }; # foreach
 
-  menu .menu.detail.menu.compare -tearoff 0
+  menu .menu.compare.menu.compare  -tearoff 0
 
-  menu .menu.detail.menu.switches -tearoff 0
-  .menu.detail.menu.switches add checkbutton \
+  menu .menu.compare.menu.switches -tearoff 0
+  .menu.compare.menu.switches add checkbutton \
     -label "Sloppy Alignment" \
     -variable compare_in_detail(options,sloppy_alignment) \
     -command {tsdb_set detail_sloppy_alignment_p};
+
+  #
+  # `Evolution' menu (and embedded cascades)
+  #
+  menu .menu.evolution.menu -tearoff 0;
+  .menu.evolution.menu add command -label "Tabulate" \
+    -command {tsdb_evolution tabulate} -state disabled;
+  .menu.evolution.menu add command -label "Graph" \
+    -command {tsdb_evolution graph};
+  .menu.evolution.menu add separator;
+  .menu.evolution.menu add cascade -label "Value(s)" \
+    -menu .menu.evolution.menu.values;
+
+  menu .menu.evolution.menu.values -tearoff 0;
+  .menu.evolution.menu.values add checkbutton \
+    -label "Grammatical Coverage" \
+    -variable globals(evolution,coverage);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Grammatical Overgeneration" \
+    -variable globals(evolution,overgeneration);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Lexical Ambiguity (`words')" \
+    -variable globals(evolution,words);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Phrasal Ambiguity (`readings')" \
+    -variable globals(evolution,readings);
+  .menu.evolution.menu.values add separator;
+  .menu.evolution.menu.values add checkbutton \
+    -label "Grammar Types" \
+    -variable globals(evolution,types);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Grammar Rules" \
+    -variable globals(evolution,rules);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Lexical Entries" \
+    -variable globals(evolution,lexicon);
+  .menu.evolution.menu.values add separator;
+  .menu.evolution.menu.values add checkbutton \
+    -label "Time For First Reading (`first')" \
+    -variable globals(evolution,first);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Time For All Readings (`total')" \
+    -variable globals(evolution,total);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Overall Processing Time (`tcpu')" \
+    -variable globals(evolution,tcpu);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Garbage Collection Time (`tgc')" \
+    -variable globals(evolution,tgc);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Filtered Tasks (`p-ftasks')" \
+    -variable globals(evolution,p-ftasks);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Executed Tasks (`p-etasks')" \
+    -variable globals(evolution,p-etasks);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Successful Tasks (`p-stasks')" \
+    -variable globals(evolution,p-stasks);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Active Chart Items (`aedges')" \
+    -variable globals(evolution,aedges);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Passive Chart Items (`pedges')" \
+    -variable globals(evolution,pedges);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Active Result Items (`raedges')" \
+    -variable globals(evolution,raedges);
+  .menu.evolution.menu.values add checkbutton \
+    -label "Passive Result Items (`rpedges')" \
+    -variable globals(evolution,rpedges);
 
   #
   # `Options' menu (and embedded cascades)
@@ -776,9 +877,6 @@ proc main {} {
   .menu.help.menu add command -label "$globals(name) ToDo List" \
     -command tsdb_todo;
 
-  tk_menuBar .menu .menu.file .menu.analyze .menu.help
-  focus .menu
-
   frame .body -width 19.1c -height 5c
   pack .body -side top -expand yes -fill y;
 
@@ -786,7 +884,7 @@ proc main {} {
   # the bottom line: podium status display 
   #
   frame .status -relief raised -bd 2;
-  tixMeter .status.meter -value 1;
+  tixMeter .status.meter -value 1 -bd 1 -relief sunken;
   frame .status.meter.blind -relief sunken -bd 1;
   label .status.meter.blind.label -relief sunken -bd 0 -anchor c \
     -font [linsert $globals(status_font) end bold];
@@ -857,10 +955,37 @@ proc main {} {
   lower .status.aggregate;
 
   #
+  # entry pane for one or two integers, side by side
+  #
+  frame .status.integer -bd 0 -bg $grey;
+  frame .status.integer.fill0 -bd 0 -bg $grey;
+  frame .status.integer.fill1 -bd 0 -bg $grey;
+  frame .status.integer.fill2 -bd 0 -bg $grey;
+
+  set loptions [list -font $globals(status_font) -padx 0 -pady 0 -bg $grey];
+  set eoptions [list -justify right -font $globals(input_font) \
+                     -bd 1 -relief solid -width 7 -highlightthickness 0 \
+                     -bg white];
+  eval label .status.integer.lprompt -text "lprompt" $loptions;
+  eval entry .status.integer.lvalue $eoptions;
+  eval label .status.integer.rprompt -text "rprompt" $loptions;
+  eval entry .status.integer.rvalue $eoptions;
+
+  place .status.integer -in .status.dummy -relwidth 1 -relheight 1;
+  pack .status.integer.fill0 -side left -fill both -expand yes;
+  pack .status.integer.lprompt -side left;
+  pack .status.integer.lvalue -side left;
+  pack .status.integer.fill1 -side left -fill both -expand yes;
+  pack .status.integer.rprompt -side left;
+  pack .status.integer.rvalue -side left;
+  pack .status.integer.fill2 -side left -fill both -expand yes;
+  lower .status.integer;
+
+  #
   # body of tsdb(1) podium: a scrolled multi-column listbox
   #
-  tixScrolledHList .list -width 19c -scrollbar "auto +y" \
-          -options { hlist.columns 5 hlist.height 8 \
+  tixScrolledHList .list -width 19.4c -scrollbar "auto +y" \
+          -options { hlist.columns 6 hlist.height 8 \
                      hlist.header true hlist.itemtype text
                      hlist.background white };
   set list [.list subwidget hlist];
@@ -888,29 +1013,32 @@ proc main {} {
   bind $list <Shift-Double-Button-1> [bind $list <Control-Double-Button-1>];
   bind $list <Alt-Double-Button-1> [bind $list <Control-Double-Button-1>];
 
+  bind $list <Control-a> {list_select all};
   bind $list <Enter> {
     balloon post "<Button-1> selects active test suite; \
                   <Button-2> selects (gold standard) comparison source"
   }; # bind
   bind $list <Leave> {balloon unpost};
 
-  $list column width 0 10c
-  $list column width 1 2c
+  $list column width 0 0.4c
+  $list column width 1 10c
   $list column width 2 2c
   $list column width 3 2c
   $list column width 4 2c
+  $list column width 5 2c
 
   set hleft [tixDisplayStyle text -font {Helvetica 12 bold} -anchor w -padx 5]
   set hcenter [tixDisplayStyle text -font {Helvetica 12 bold} -anchor c]
 
-  $list header create 0 -itemtype text \
-          -text "Test Suite Instance" -style $hleft
-  $list header create 1 -itemtype text -text "Status" -style $hcenter
-  $list header create 2 -itemtype text -text "Items" -style $hcenter
-  $list header create 3 -itemtype text -text "Parses" -style $hcenter
-  $list header create 4 -itemtype text -text "Options" -style $hcenter
+  $list header create 1 -itemtype text \
+          -text "Test Suite Instance" -style $hleft;
+  $list header create 2 -itemtype text -text "Status" -style $hcenter;
+  $list header create 3 -itemtype text -text "Items" -style $hcenter;
+  $list header create 4 -itemtype text -text "Parses" -style $hcenter;
+  $list header create 5 -itemtype text -text "Options" -style $hcenter;
 
   pack .list -in .body -side bottom -padx 0.1c -pady 0.1c -expand yes -fill y;
+  focus $list;
 
   #
   # another scrolled multi-column listbox; pops up for completions on demand

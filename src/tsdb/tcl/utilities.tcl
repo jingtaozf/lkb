@@ -24,6 +24,7 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
   global globals test_suites compare_in_detail;
 
   set list [.list subwidget hlist];
+  set ccenter [tixDisplayStyle window -fg white -bg white -anchor c]
   set wleft [tixDisplayStyle text -bg white -anchor w -padx 5]
   set wcenter [tixDisplayStyle text -bg white -anchor c]
   set gleft [tixDisplayStyle text -bg gold -anchor w -padx 5]
@@ -32,7 +33,7 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
   if {$action == "update"} {
     if {$name == "all"} {
       $list delete all
-      .menu.detail.menu.compare delete 0 end;
+      .menu.compare.menu.compare delete 0 end;
       foreach i [lsort -integer [array names test_suites]] {
         set item $test_suites($i);
         set left $wleft;
@@ -40,31 +41,46 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
 
         set selection $globals(selection);
 
-        if {[lindex $item 0] == $compare_in_detail(source)} {
+        set name [lindex $item 0];
+        if {$name == $compare_in_detail(source)} {
           set left $gleft;
           set center $gcenter;
           if {$selection == -1} {
             set selection $i;
           }; # if
         }; # if
-        if {[lindex $item 0] == $globals(data)} {
+        if {$name == $globals(data)} {
           set active $i;
           if {$globals(selection) == -1} {
             set selection $i;
           }; # if
         }; # if
-        $list add $i -at $i -text [lindex $item 0] -style $left;
-        $list item create $i 1  -text [lindex $item 1] -style $center;
-        $list item create $i 2  -text [lindex $item 2] -style $center;
-        $list item create $i 3  -text [lindex $item 3] -style $center;
+        set foo ${list}.${i};
+        catch { destroy $foo };
+        set button [checkbutton $foo -bg white -padx 0 -pady 0 \
+                      -highlightbackground white -activebackground white \
+                      -font {Helvetica 5} -variable globals($name)];
+        bind $button <Button-1> \
+          "list_select $name; break;"
+        bind $button <Shift-Button-1> \
+          "list_select $name shift; break;"
+        bind $button <Control-Button-1> \
+          "list_select $name control; break;"
+          
+        $list add $i -at $i -itemtype window -window $button -style $ccenter;
+        $list item create $i 1 -text $name -style $left;
+        $list item create $i 2 -text [lindex $item 1] -style $center;
+        $list item create $i 3 -text [lindex $item 2] -style $center;
+        $list item create $i 4 -text [lindex $item 3] -style $center;
         set status "";
         set status "$status[expr {[lindex $item 4] ? "r" : "-"}]";
         set status "$status[expr {[lindex $item 5] ? "r" : "-"}]";
         set status "$status[expr {[lindex $item 6] ? "t" : "-"}]";
-        $list item create $i 4  -text $status -style $center;
-        .menu.detail.menu.compare add radiobutton -label "[lindex $item 0]" \
+        $list item create $i 5  -text $status -style $center;
+        .menu.compare.menu.compare add radiobutton -label "$name" \
           -selectcolor gold \
           -variable compare_in_detail(source) \
+          -columnbreak [expr {($i % 25) == 0}] \
           -command "update_source_database $i"
       }; # foreach
       if {[info exists active]} {
@@ -168,6 +184,100 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
   oe reap;
 
 }; # update_ts_list()
+
+
+proc list_select {profile {modifier ""}} {
+
+  global globals test_suites;
+
+  set list [.list subwidget hlist];
+
+  switch $modifier {
+    all {
+      foreach i [lsort -integer [array names test_suites]] {
+        if {![$list info hidden $i]} {
+          set item $test_suites($i);
+          set name [lindex $item 0];
+          set globals($name) 1;
+        }; # if
+      }; # foreach
+    }
+    none {
+      foreach i [lsort -integer [array names test_suites]] {
+        if {![$list info hidden $i]} {
+          set item $test_suites($i);
+          set name [lindex $item 0];
+          set globals($name) 0;
+        }; # if
+      }; # foreach
+    }
+    in {
+      foreach i [lsort -integer [array names test_suites]] {
+        if {![$list info hidden $i]} {
+          set item $test_suites($i);
+          set name [lindex $item 0];
+          if {!$globals($name)} {
+            $list hide entry $i;
+          }; # if
+        }; # if
+      }; # foreach
+    }
+    out {
+      foreach i [lsort -integer [array names test_suites]] {
+        $list show entry $i;
+      }; # foreach
+    }
+    pattern {
+      if {![input "regular expression:" "" "" pattern]} {
+        set pattern $globals(input);
+        history_add pattern $pattern;
+        foreach i [lsort -integer [array names test_suites]] {
+          if {![$list info hidden $i]} {
+            set item $test_suites($i);
+            set name [lindex $item 0];
+            if {[regexp $pattern $name]} {
+              set globals($name) 1;
+            }; # if
+          }; # if
+        }; # foreach
+      }; # if
+    }
+    shift {
+      set state -1;
+      foreach i [lsort -integer [array names test_suites]] {
+        if {![$list info hidden $i]} {
+          set item $test_suites($i);
+          set name [lindex $item 0];
+          if {$name == $profile} {
+            set globals($name) 1;
+            set state 0;
+          } else {
+            if {($state == -1) && $globals($name)} {
+              set state 1;
+            }; # if
+            if {$state >= 0} {
+              set globals($name) $state;
+            }; # if
+          }; # else
+        }; # if
+      }; # foreach
+    }
+    control {
+      set globals($profile) [expr {! $globals($profile)}];
+    }
+    default {
+      set current $globals($profile);
+      foreach i [lsort -integer [array names test_suites]] {
+        if {![$list info hidden $i]} {
+          set item $test_suites($i);
+          set name [lindex $item 0];
+          set globals($name) 0;
+        }; # if
+      }; # foreach
+      set globals($profile) [expr {! $current }];
+    }
+  }; # switch
+}; # list_select
 
 
 proc update_source_database {index} {

@@ -417,7 +417,7 @@
 (defun analyze-aggregates (language
                            &key condition phenomena extras trees
                                 (dimension *statistics-aggregate-dimension*)
-                                (format :latex) meter)
+                                (format :latex) meter message)
 
   (if (not (eq dimension :phenomena))
     (aggregate language 
@@ -433,11 +433,11 @@
            (increment (when meter
                         (* (mduration meter)
                            (/ (if phenomena 0.2 0.5) (length phenomena)))))
-           (message (format nil "retrieving `~a' data ..." language))
+           (message (when message
+                      (format nil "retrieving `~a' data ..." language)))
            pdata items)
-      (when meter
-        (status :text message)
-        (meter :value (get-field :start meter)))
+      (when meter (meter :value (get-field :start meter)))
+      (when message (status :text message))
       (let* ((idata (analyze language :condition condition 
                              :extras extras :trees trees :meter imeter)))
         (loop while (eq (setf pdata (gethash key *tsdb-profile-cache*)) 
@@ -472,9 +472,8 @@
                       items)))
             (when meter (meter-advance increment)))
           (push (cons :all (cons "All" idata)) items)))
-      (when meter
-        (meter :value (get-field :end meter))
-        (status :text (format nil "~a done" message :duration 2)))
+      (when meter (meter :value (get-field :end meter)))
+      (when message (status :text (format nil "~a done" message :duration 2)))
       items)))
 
 (defun analyze-rules (language &key condition (format :tcl) meter)
@@ -728,7 +727,8 @@
       with result
       for iaggregate in items
       for idata = (rest (rest iaggregate))
-      for daggregate in division
+      for daggregate = (when (eql (first iaggregate) (first (first division)))
+                         (pop division))
       for ddata = (rest (rest daggregate))
       for ridata = (if restrictor (remove-if restrictor idata) idata)
       for rddata = (if restrictor (remove-if restrictor ddata) ddata)

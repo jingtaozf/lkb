@@ -9,7 +9,7 @@
 ;;; - `Reset' button: re-instantiate original, preset state;
 ;;; - reorder trees: active at top;
 ;;; - pairwise comparison of trees;
-;;; - highlighting of discriminats on tree select;
+;;; - highlighting of discriminants on tree select;
 ;;; - highlighting of trees on discriminant select;
 ;;; - utilize status vector to, e.g. fast-forward to first unannotated;
 ;;; - record all :select decisions, valid at `Save' time;
@@ -26,6 +26,7 @@
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
+  (initialize-tsdb)
   (when strip
     (unless (do-import-database (find-tsdb-directory data) strip 
                                 :meter (when meter (make-meter 0 1))
@@ -514,20 +515,20 @@
              (format
               stream
               "cell ~d 1 -contents {~a} -format aggregate~%~
-               cell ~d 2 -contents ~,2f -format data~%~
+               cell ~d 2 -contents ~d -format data~%~
                cell ~d 3 -contents ~,2f -format data~%~
                cell ~d 4 -contents ~,1f -format data~%~
-               cell ~d 5 -contents ~,1f -format data~%~
+               cell ~d 5 -contents ~d -format data~%~
                cell ~d 6 -contents ~,2f -format data~%~
-               cell ~d 7 -contents ~,2f -format data~%~
-               cell ~d 8 -contents ~,1f -format data~%~
-               cell ~d 9 -contents ~,1f -format data~%~
+               cell ~d 7 -contents ~,1f -format data~%~
+               cell ~d 8 -contents ~d -format data~%~
+               cell ~d 9 -contents ~,2f -format data~%~
                cell ~d 10 -contents ~,1f -format data~%~
-               cell ~d 11 -contents ~,1f -format data~%~
-               cell ~d 12 -contents ~,1f -format data~%~
+               cell ~d 11 -contents ~d -format data~%~
+               cell ~d 12 -contents ~,2f -format data~%~
                cell ~d 13 -contents ~,1f -format data~%~
-               cell ~d 14 -contents ~,1f -format data~%~
-               cell ~d 15 -contents ~,1f -format data~%~
+               cell ~d 14 -contents ~d -format data~%~
+               cell ~d 15 -contents ~,2f -format data~%~
                cell ~d 16 -contents ~,1f -format data~%"
               i name
               i (get-field :results data) i (get-field :i-length data)
@@ -548,20 +549,20 @@
          (format
           stream
           "cell ~d 1 -contents {~a} -format aggregate~%~
-           cell ~d 2 -contents ~,2f -format data~%~
+           cell ~d 2 -contents ~d -format data~%~
            cell ~d 3 -contents ~,2f -format data~%~
            cell ~d 4 -contents ~,1f -format data~%~
-           cell ~d 5 -contents ~,1f -format data~%~
+           cell ~d 5 -contents ~d -format data~%~
            cell ~d 6 -contents ~,2f -format data~%~
-           cell ~d 7 -contents ~,2f -format data~%~
-           cell ~d 8 -contents ~,1f -format data~%~
-           cell ~d 9 -contents ~,1f -format data~%~
+           cell ~d 7 -contents ~,1f -format data~%~
+           cell ~d 8 -contents ~d -format data~%~
+           cell ~d 9 -contents ~,2f -format data~%~
            cell ~d 10 -contents ~,1f -format data~%~
-           cell ~d 11 -contents ~,1f -format data~%~
-           cell ~d 12 -contents ~,1f -format data~%~
+           cell ~d 11 -contents ~d -format data~%~
+           cell ~d 12 -contents ~,2f -format data~%~
            cell ~d 13 -contents ~,1f -format data~%~
-           cell ~d 14 -contents ~,1f -format data~%~
-           cell ~d 15 -contents ~,1f -format data~%~
+           cell ~d 14 -contents ~d -format data~%~
+           cell ~d 15 -contents ~,2f -format data~%~
            cell ~d 16 -contents ~,1f -format data~%"
           n name
           n (get-field :results total) n (get-field :i-length total)
@@ -573,7 +574,47 @@
           n (get-field :aresults total) n (get-field :alength total)
           n (get-field :aanalyses total)
           n (get-field :sresults total) n (get-field :slength total)
-          n (get-field :sanalyses total)))))
+          n (get-field :sanalyses total))))
+      
+      #-:debug
+      (format
+       t
+       "`~a'~%~%  ~
+        ~d items; ~d results; ~
+        ~,2f tokens; ~,2f words (~,2f); ~,2f readings;~%    ~
+        rejected: ~d [~,2f ~,2f (~,2f) ~,2f]~%    ~
+        unambiguous: ~d [~,2f ~,2f (~,2f) ~,2f]~%    ~
+        ambiguous: ~d [~,2f ~,2f (~,2f) ~,2f]~%    ~
+        unannotated: ~d [~,2f ~,2f (~,2f) ~,2f]~%"
+       data
+       (get-field :items total)
+       (get-field :results total)
+       (get-field :i-length total)
+       (get-field :words total)
+       (divide (get-field :words total) (get-field :i-length total))
+       (get-field :analyses total)
+       (get-field :rresults total)
+       (get-field :rlength total)
+       (get-field :rwords total)
+       (divide (get-field :rwords total) (get-field :rlength total))
+       (get-field :ranalyses total)
+       (get-field :uresults total)
+       (get-field :ulength total)
+       (get-field :uwords total)
+       (divide (get-field :uwords total) (get-field :ulength total))
+       (get-field :uanalyses total)
+       (get-field :aresults total)
+       (get-field :alength total)
+       (get-field :awords total)
+       (divide (get-field :awords total) (get-field :alength total))
+       (get-field :aanalyses total)
+       (get-field :sresults total)
+       (get-field :slength total)
+       (get-field :swords total)
+       (divide (get-field :swords total) (get-field :slength total))
+       (get-field :sanalyses total)))
+
+    
     (when (or (stringp file) (stringp append)) (close stream))
     0))
 

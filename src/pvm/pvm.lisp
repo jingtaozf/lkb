@@ -23,7 +23,11 @@
 (defparameter *pvm-debug-p* nil)
 (defparameter *pvm-pending-events* nil)
 
-(defstruct cpu host spawn options architecture class threshold create complete)
+(defstruct cpu 
+  host spawn options 
+  architecture class threshold name template 
+  create complete)
+
 (defstruct client tid cpu task protocol form status load)
 
 (defun current-user ()

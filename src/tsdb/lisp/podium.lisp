@@ -820,6 +820,38 @@
                   (status :text (format nil "~a abort" message) 
                           :duration 2))))))
            
+           (evolution
+            (let* ((profiles (first arguments))
+                   (attributes (find-key-argument :attributes arguments))
+                   (title (format 
+                           nil 
+                           "Evolution Graph of [~{~(~a~)~^ ~}]~
+                            ~@[ [~a]~]"
+                           attributes *statistics-select-condition*))
+                   (message "computing graph layout and geometry ...")
+                   (meter (make-meter 0 1)))
+              
+              (evolution profiles :attributes attributes 
+                         :file file :format :tcl :meter meter)
+              (when (probe-file file)
+                (status :text message)
+                (let ((return 
+                        (send-to-podium 
+                         (format 
+                          nil 
+                          "showgraph ~s \".~(~a~)\" ~s {~a} ~:[0~;1~]" 
+                          file (gensym "") "foo" title 1)
+                         :wait t)))
+                  (when (and (equal (first return) :ok) 
+                             (equal (first (second return)) :graph))
+                    (push (append (second return)
+                                  (pairlis 
+                                   '(:profiles :command)
+                                   (list profiles
+                                         (cons 'evolution arguments))))
+                          *tsdb-podium-windows*)))
+                (status :text (format nil "~a done" message) :duration 2))))
+           
            (results
             (let* ((data (first arguments))
                    (meter (make-meter 0 1))
@@ -869,7 +901,7 @@
             (status :text "generating LaTeX output ...")
             (let* ((window (find-podium-window (second command)))
                    (properties (rest window))
-                   (data (get-field :data properties))
+                   (data (or (get-field :data properties) "evolution"))
                    (command (get-field :command properties))
                    (command (remove-key-argument :file command))
                    (command (remove-key-argument :format command))

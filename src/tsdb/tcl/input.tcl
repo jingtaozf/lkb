@@ -442,6 +442,189 @@ proc graph_parameter_input {} {
 }; # graph_parameter_input()
 
 
+proc integer_input {lprompt {ldefault 0} {rprompt ""} {rdefault ""}} {
+
+  global globals;
+
+  .status.integer.lprompt config -text $lprompt;
+  .status.integer.lvalue delete 0 end;
+  .status.integer.lvalue insert 0 $ldefault;
+  .status.integer.rprompt config -text $rprompt;
+  .status.integer.rvalue delete 0 end;
+  .status.integer.rvalue insert 0 $rdefault
+
+  #
+  # <Tab> and shifted variants cycle (both directions) through entry fields
+  #
+  bind .status.integer.lvalue <Tab> {
+    if {[entry_validate .status.integer.lvalue]} {
+      focus .status.integer.rvalue;
+    }; # if
+  }; # bind
+  bind .status.integer.rvalue <Tab> {
+    if {[entry_validate .status.integer.rvalue]} {
+      focus .status.integer.lvalue;
+    }; # if
+  }; # bind
+
+  bind .status.integer.lvalue <Control-Tab> {
+    if {[entry_valdate .status.integer.lvalue]} {
+      focus .status.integer.rvalue;
+    }; # if
+  }; # bind
+  bind .status.integer.lvalue <Alt-Tab> \
+    [bind .status.integer.lvalue <Control-Tab>];
+  bind .status.integer.lvalue <Shift-Tab> \
+    [bind .status.integer.lvalue <Control-Tab>];
+  catch {
+    bind .status.integer.lvalue <ISO_Left_Tab> \
+      [bind .status.integer.lvalue <Control-Tab>];
+  }; # catch
+
+  bind .status.integer.rvalue <Control-Tab> {
+    if {[entry_validate .status.integer.rvalue]} {
+      focus .status.integer.lvalue;
+    }; # if
+  }; # bind
+  bind .status.integer.rvalue <Alt-Tab> \
+    [bind .status.integer.rvalue <Control-Tab>];
+  bind .status.integer.rvalue <Alt-Tab> \
+    [bind .status.integer.rvalue <Control-Tab>];
+  bind .status.integer.rvalue <Shift-Tab> \
+    [bind .status.integer.rvalue <Control-Tab>];
+  catch {
+    bind .status.integer.rvalue <ISO_Left_Tab> \
+     [bind .status.integer.rvalue <Control-Tab>];
+  }; # catch
+
+  #
+  # cursor <Up> and <Down> increment and decrement values; shifted variants
+  # give steps of 10
+  #
+  bind .status.integer.lvalue <Up> {
+    entry_incr .status.integer.lvalue 1 1 "";
+    raise .status.integer;
+  }; # bind
+  bind .status.integer.lvalue <Down> {
+    entry_incr .status.integer.lvalue -1 1 "";
+    raise .status.integer;
+  }; # bind
+  bind .status.integer.lvalue <Shift-Up> {
+    entry_incr .status.integer.lvalue 10 1 "";
+    raise .status.integer;
+  }; # bind
+  bind .status.integer.lvalue <Shift-Down> {
+    entry_incr .status.integer.lvalue -10 1 "";
+    raise .status.integer;
+  }; # bind
+  bind .status.integer.lvalue <Control-Down> \
+    [bind .status.integer.lvalue <Shift-Down>];
+  bind .status.integer.lvalue <Control-Up> \
+    [bind .status.integer.lvalue <Shift-Up>];
+  bind .status.integer.lvalue <Alt-Down> \
+    [bind .status.integer.lvalue <Shift-Down>];
+  bind .status.integer.lvalue <Alt-Up> \
+    [bind .status.integer.lvalue <Shift-Up>];
+
+  bind .status.integer.rvalue <Up> {
+    entry_incr .status.integer.rvalue 1 1 "";
+    raise .status.integer;
+  }; # bind
+  bind .status.integer.rvalue <Down> {
+    entry_incr .status.integer.rvalue -1 1 "";
+    raise .status.integer;
+  }; # bind
+  bind .status.integer.rvalue <Shift-Up> {
+    entry_incr .status.integer.rvalue 10 1 "";
+    raise .status.integer;
+  }; # bind
+  bind .status.integer.rvalue <Shift-Down> {
+    entry_incr .status.integer.rvalue -10 1 "";
+    raise .status.integer;
+  }; # bind
+  bind .status.integer.rvalue <Control-Down> \
+    [bind .status.integer.rvalue <Shift-Down>];
+  bind .status.integer.rvalue <Control-Up> \
+    [bind .status.integer.rvalue <Shift-Up>];
+  bind .status.integer.rvalue <Alt-Down> \
+    [bind .status.integer.rvalue <Shift-Down>];
+  bind .status.integer.rvalue <Alt-Up> \
+    [bind .status.integer.rvalue <Shift-Up>];
+
+  #
+  # attach additional tag to all integer input widgets; makes life easier
+  #
+  foreach widget {lprompt lvalue rprompt rvalue} {
+    bindtags .status.integer.$widget \
+      [concat [bindtags .status.integer.$widget] integer_input];
+  }; # foreach
+
+  #
+  # <Return> terminates aggregate parameter input: read out values from entry
+  # fields, validate, and store into global variables. <Control-G> aborts.
+  #
+  bind integer_input <Return> { 
+    if {[entry_validate .status.integer.lvalue]
+        && [entry_validate .status.integer.rvalue]} {
+      set globals(integer,lvalue) [.status.integer.lvalue get];
+      set globals(integer,rvalue) [.status.integer.rvalue get];
+      set globals(errno) 0;
+    }; # if
+    break;
+  }; # bind
+
+  bind integer_input <Control-g> {
+    set globals(errno) 1;
+  }; # bind
+  bind integer_input <Control-G> [bind integer_input <Control-g>];
+
+  #
+  # produce reminder of input modality if necessary
+  #
+  bind .status.integer <ButtonPress> {
+    if {[winfo containing %X %Y] != ".status.integer.lvalue"
+        && [winfo containing %X %Y] != ".status.integer.rvalue"} {
+      tsdb_beep;
+      status [format "%%s %%s" \
+              "<Return> completes parameter input;" \
+              "<Control-G> aborts"];
+      after 1500;
+      status "";
+      raise .status.integer;
+      update idletasks;
+    }; # if
+  }; # bind
+  bind .status.integer.fill0 <ButtonPress> \
+    [bind .status.integer <ButtonPress>];
+  bind .status.integer.lprompt <ButtonPress> \
+    [bind .status.integer <ButtonPress>];
+  bind .status.integer.fill1 <ButtonPress> \
+    [bind .status.integer <ButtonPress>];
+  bind .status.integer.rprompt <ButtonPress> \
+    [bind .status.integer <ButtonPress>];
+  bind .status.integer.fill2 <ButtonPress> \
+    [bind .status.integer <ButtonPress>];
+
+  #
+  # activate integer parameter input pane
+  #
+  set focus [focus -displayof .];
+  focus .status.integer.lvalue;
+  grab set .status.integer;
+  raise .status.integer;
+  tkwait variable globals(errno);
+
+  #
+  # restore previous state
+  #
+  grab release .status.integer;
+  focus $focus;
+  raise .status.label;
+  return $globals(errno);
+
+}; # integer_input()
+
+
 proc file_completion {entry {base ""} {mode ""}} {
 
   set prefix "$base[$entry get]";

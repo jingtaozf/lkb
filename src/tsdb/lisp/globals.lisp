@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.8 (13-jun-02)")
+(defparameter *tsdb-version* "1.9 (30-sep-02)")
 
 (defparameter
   *tsdb-application*
@@ -144,5 +144,9 @@
 (defparameter *tsdb-slash* #\/)
 
 (defparameter *tsdb-debug-mode-p* nil)
+
+(defparameter *pvm-cpus* nil)
+
+(defparameter *pvm-clients* nil)
 
 (defparameter %tsdb-lexical-preterminals% nil)

@@ -218,7 +218,15 @@
            :key key))
 
 (defun current-application ()
-  (cond ((and (member :page *features* :test #'eq) 
+  (cond ((and *pvm-clients*
+              (let* ((names (loop
+                                for client in *pvm-clients*
+                                for cpu = (client-cpu client)
+                                for name = (cpu-name cpu)
+                                when name collect name))
+                     (names (remove-duplicates names :test #'string-equal)))
+                (when (= (length names) 1) (first names)))))
+        ((and (member :page *features* :test #'eq) 
               (not (member :lkb *features* :test #'eq)))
          "PAGE")
         ((and (member :lkb *features* :test #'eq) 
@@ -320,6 +328,34 @@
         (format
          nil "~a-~a-~a (~2,'0d:~2,'0d:~2,'0d)"
          day month year hour minute second))))))
+
+(defun parse-date (date)
+  (multiple-value-bind (day offset) (parse-integer date :junk-allowed t)
+    (let* ((month (subseq date (+ offset 1) (+ offset 4)))
+           (month (cond
+                   ((string-equal month "jan") 1)
+                   ((string-equal month "feb") 2)
+                   ((string-equal month "mar") 3)
+                   ((string-equal month "apr") 4)
+                   ((string-equal month "may") 5)
+                   ((string-equal month "jun") 6)
+                   ((string-equal month "jul") 7)
+                   ((string-equal month "aug") 8)
+                   ((string-equal month "sep") 9)
+                   ((string-equal month "oct") 10)
+                   ((string-equal month "nov") 11)
+                   ((string-equal month "dec") 12))))
+      (multiple-value-bind (year offset)
+          (parse-integer date :start (+ offset 5) :junk-allowed t)
+        (multiple-value-bind (hour offset)
+            (parse-integer date :start (+ offset 1) :junk-allowed t)
+          (multiple-value-bind (minutes offset)
+              (parse-integer date :start (+ offset 1) :junk-allowed t)
+            (multiple-value-bind (seconds)
+                (parse-integer date :start (+ offset 1) :junk-allowed t)
+              (encode-universal-time 
+               (or seconds 0) (or minutes 0) (or hour 0)
+               day month year))))))))
 
 (defun pprint-memory-usage (result &optional (separator #\Space))
   (let* ((conses (get-field+ :conses result 0))
@@ -513,17 +549,26 @@
          (grammar (string-downcase (string-trim '(#\Space) grammar)))
          (date (current-time :long :usa))
          (system (current-application))
+         (template (or (let* ((templates (loop
+                                             for client in *pvm-clients*
+                                             for cpu = (client-cpu client)
+                                             for template = (cpu-template cpu)
+                                             when template collect template))
+                              (templates (remove-duplicates 
+                                          templates :test #'string-equal)))
+                         (when (= (length templates) 1) (first templates)))
+                       *tsdb-instance-template*))
          (result (make-array 42 
                              :element-type 'character 
                              :adjustable t
                              :fill-pointer 0)))
-    (if (stringp *tsdb-instance-template*)
+    (if (stringp template)
       (loop
           initially (loop
                         for c across *tsdb-home*
                         do (vector-push-extend c result 42))
           with skip = 0
-          for c across *tsdb-instance-template*
+          for c across template
           for special = (if control
                           (case c
                             (#\g grammar)

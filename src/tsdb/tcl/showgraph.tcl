@@ -291,7 +291,6 @@ proc read_graph_file {file graph} {
 
 	## Process command in line
         regsub -all "\\." $graph "_" prefix
-        set prefix "v$prefix"
 
 	set command [lindex $line 0]
 	switch $command {
@@ -302,6 +301,7 @@ proc read_graph_file {file graph} {
             }
 	    data     { set data([lindex $line 1]) [lindex $line 2] }
 	    axis     { set axis([lindex $line 1]) [lrange $line 2 end] }
+            ids { upvar #0 "${prefix}_ids" ids; set ids [lindex $line 1]; }
 	    element  { 
               set e [lindex $line 1];
               set args [lrange $line 2 end];
@@ -309,8 +309,8 @@ proc read_graph_file {file graph} {
               set ydata [expr [lsearch $args "-ydata"] + 1];
               set xname [lindex $args $xdata];
               set yname [lindex $args $ydata];
-              set args [lreplace $args $xdata $xdata "${prefix}_$xname"];
-              set args [lreplace $args $ydata $ydata "${prefix}_$yname"];
+              set args [lreplace $args $xdata $xdata "v${prefix}_$xname"];
+              set args [lreplace $args $ydata $ydata "v${prefix}_$yname"];
               set element($e) $args;
             }
 	    legend   { set legend [lrange $line 1 end] }
@@ -330,7 +330,7 @@ proc make_graph {graph scatterp} {
     ## Uses the information in the global variables to make either a graph or a
     ## barchart.  'graph' is the name to be used for the graph/barchart.
     ##
-    global globals graphtype graphoptions data axis element labels legend
+    global globals graphtype graphoptions data axis element labels legend ids
 
     ## Create BLT "graph" or "barchart" according to 'graphtype'
 
@@ -338,9 +338,9 @@ proc make_graph {graph scatterp} {
 
     ## Make data vectors
 
+    regsub -all "\\." $graph "_" prefix;
     foreach index [array names data] {
-      regsub -all "\\." $graph "_" vname
-      set vname "v${vname}_$index"
+      set vname "v${prefix}_$index"
       uplevel #0 "vector $vname";
       $vname set $data($index)
     }
@@ -573,9 +573,9 @@ proc overlay_regression {graph {mode linear} {action "plot"} {xx ""} {yy ""}} {
   global globals;
 
   if {$action == "plot"} {
-#    busy hold $graph;
-#    busy config $graph -cursor $globals(busy_cursor);
-#    update idletasks;
+    busy hold $graph;
+    busy config $graph -cursor $globals(busy_cursor);
+    update idletasks;
   }; # if
 
   regsub -all "\\." $graph "_" name;
@@ -847,22 +847,37 @@ proc find_graph_point {action graph button x y balloon} {
 
   if {[$graph element closest $x $y point -halo 5]} {
     set i [string range $point(name) 2 end];
+    set x [format "%.2f" $point(x)];
+    set y [format "%.2f" $point(y)];
     regsub -all "\\." $graph "_" name
-    set ids "v${name}_ids$i"
-    if {![catch {$ids variable vector}]} {
+    #
+    # for now, runs have a global list with an `_ids' suffix; this calls for
+    # a proper generalization, one day.                     (3-jul-02; oe@uio)
+    #
+    upvar #0 "${name}_ids" foo;
+    if {[info exists foo]} {
+      set id [lindex $foo $point(index)];
       if {$action == "post"} {
-        set x [format "%.2f" $point(x)];
-        set y [format "%.2f" $point(y)];
-        set id [expr round($vector($point(index)))];
         local_balloon $balloon post \
-          "data point ($x  $y) corresponds to item \# $id"
+          "this data point corresponds to profile `$id'";
       } elseif {$action == "browse"} {
-        tsdb_browse parses \
-          "i-id = [expr round($vector($point(index)))]" \
-          0 $globals($graph,data);
+        tsdb_browse runs "" 1 "$id";
       }; # if
-      return;
-    }; # if
+    } else {
+      set ids "v${name}_ids$i"
+      if {![catch {$ids variable vector}]} {
+        if {$action == "post"} {
+          set id [expr round($vector($point(index)))];
+          local_balloon $balloon post \
+            "data point ($x  $y) corresponds to item \# $id"
+        } elseif {$action == "browse"} {
+          tsdb_browse parses \
+            "i-id = [expr round($vector($point(index)))]" \
+            0 $globals($graph,data);
+        }; # if
+      }; # if
+    }; # else
+    return;
   }; # if
   if {$action == "post"} {
     local_balloon $balloon unpost;

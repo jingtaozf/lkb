@@ -774,7 +774,7 @@
                                  :burst burst)))
 
       #+:allegro
-      (when (and (= (get-field :readings result) -1)
+      (when (and (= (get-field+ :readings result -1) -1)
                  (equal (class-of 
                          (get-field :condition result))
                         (find-class 'excl:interrupt-signal)))
@@ -989,6 +989,7 @@
          (copies (get-field+ :copies result 0))
          (gc (get-field :gc result))
          (gcs (get-field :gcs result))
+         (error (get-field :error result))
          (corpse (get-field :corpse result)))
 
     (cond
@@ -1009,7 +1010,7 @@
        unifications copies 
        (pprint-memory-usage result) 
        gcs gc gcs))
-     ((eql readings -1)
+     ((or (and (null readings) error) (eql readings -1))
       (format 
        stream 
        " --- error: ~a.~%" 
@@ -1164,7 +1165,10 @@
       (apply hook arguments))))
 
 (defun result-hook (result)
+
+  (declare (special *reconstruct-cache*))
   (loop
+      with *reconstruct-cache* = (make-hash-table :test #'eql)
       for parse in (get-field :results result)
       for derivation = (get-field :derivation parse)
       for tree = (get-field :tree parse)

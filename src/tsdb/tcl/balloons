@@ -41,16 +41,15 @@
 #
 
 .menu.compare                           compare competence or performance profiles across test runs (i.e. databases)
+{.menu.compare.menu Source Database}    select (g)old standard database to compare to
+{.menu.compare.menu Detail}             compute and display detail comparison
+{.menu.compare.menu Decoration}         select attributes (with common values in both databases) to decorate display
+{.menu.compare.menu Intersection}       select attrbutes for intersection: display pairs of test items with at least one mismatch
 
-# 
-# `Detail' menu (and embedded cascades)
 #
-.menu.detail                            compare test runs on per-item basis; select attributes for intersection and decoration
-{.menu.detail.menu Compare}             compute and display detail comparison
-{.menu.detail.menu Source Database}     select (g)old standard database to compare to
-{.menu.detail.menu Phenomena}           select phenomena to restrict comparison to subset from both databases
-{.menu.detail.menu Decoration}          select attributes (with common values in both databases) to decorate display
-{.menu.detail.menu Intersection}        select attrbutes for intersection: display pairs of test items with at least one mismatch
+# `Evolution' menu (and embedded cascades)
+#
+.menu.evolution                         tabulate or graph multiple competence and performance profiles over extended period
 
 # 
 # `Options' menu (and embedded cascades)

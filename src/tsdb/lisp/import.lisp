@@ -317,7 +317,7 @@
         (multiple-value-setq (foo n) 
           (call-safe-hook *tsdb-preprocessing-hook* string)))
       (setf foo foo)
-      (values (string-right-trim '(#\Space) result) n))))
+      (values (string-right-trim '(#\Space) result) (or n -1)))))
             
 
 
