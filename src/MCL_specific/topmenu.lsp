@@ -98,6 +98,8 @@
                                         ; installation, but only if
                                         ; we don't have a grammar
     )
+  (when *current-grammar-load-file* 
+    (enable-type-interactions))
   (pushnew 'lkb-exit-function *lisp-cleanup-functions*))
 
 (defun lkb-exit-function (&optional dump)
