@@ -750,7 +750,11 @@
 
   (cond
    ((and client (eq type :parse) (client-p client))
-    (let* ((nanalyses (or nanalyses (if exhaustive 0 1)))
+    (let* ((nanalyses (if exhaustive 
+                        0 
+                        (if (and (integerp nanalyses) (>= nanalyses 1))
+                          nanalyses
+                          1)))
            (tid (client-tid client))
            (status (if (eq (client-protocol client) :lisp)
                      (revaluate 
