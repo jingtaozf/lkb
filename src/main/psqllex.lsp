@@ -217,35 +217,53 @@
       
 (defmethod connect-aux ((lexicon psql-database) &key (user "guest"))
   (with-slots (host dbname connection) lexicon
-    (let ((properties (format nil 
-		       "host='~a' dbname='~a' user='~a'"
-		       (sql-escape-string host)
-		       (sql-escape-string dbname)
-		       (sql-escape-string user)))
-	  (decoded-status nil)
+    (let ((decoded-status nil)
 	  (password nil))
-      ;: attempt connection w/o pwd
-      (setf connection (pg:connect-db properties))
+					;: attempt connection w/o pwd
+      (print "conn wo pwd")
+      (setf connection (connect-aux2 :host host :dbname dbname :user user))
       (setf decoded-status (pg:decode-connection-status (pg:status connection)))
       (unless (eq decoded-status :connection-ok)
 	;: attempt connection w/ default pwd
-	(setf connection (pg:connect-db 
-			  (concatenate 'string properties "password='" user "'")))
+	(print "conn w def pwd")
+	(setf connection (connect-aux2 :host host :dbname dbname :user user :password user))
 	(setf decoded-status (pg:decode-connection-status (pg:status connection)))
 	(unless (eq decoded-status :connection-ok)
+      (print "conn w pwd")
 	;: attempt connection w/ pwd
 	  (setf password (ask-user-for-x "Connect to PostgreSQL lexicon" 
 					 (cons (format nil "Password for ~a?" user) user)))
 	  (when password
-	    (setf properties 
-	      (concatenate 'string properties " password='" (sql-escape-string password) "'"))
-	    (setf connection (pg:connect-db properties)))))
+	    (setf connection (connect-aux2 :host host :dbname dbname :user user :password password)))))
       (setf decoded-status (pg:decode-connection-status (pg:status connection)))
       (when (eq decoded-status :connection-ok)
 	  (setf (server-version lexicon) (get-server-version lexicon))
 	  (setf (user lexicon) user))
       decoded-status)))
 
+(defun connect-aux2 (&key (host) (dbname) (user) (password))
+  (let ((connection)
+	(properties)
+	(decoded-status))
+    (setf connection 
+      (pg:connect-db 
+       (concatenate 'string 
+	 (format nil "host='~a' " (sql-escape-string host))
+	 (format nil "dbname='~a' " (sql-escape-string dbname))
+	 (format nil "user='~a' " (sql-escape-string user))
+	 (if password (format nil "password='~a'" (sql-escape-string password))
+					""))))
+    (setf decoded-status (pg:decode-connection-status (pg:status connection)))
+    (unless (eq decoded-status :connection-ok) ;: temporary hack
+      (setf connection 
+	(pg:connect-db
+	 (concatenate 'string 
+	   (format nil "dbname='~a' " (sql-escape-string dbname))
+	   (format nil "user='~a' " (sql-escape-string user))
+	   (if password (format nil "password='~a'" (sql-escape-string password))
+	    "")))))
+    connection))
+    
 (defmethod disconnect ((lexicon psql-database))
   (with-slots (connection) lexicon
   ;:close connection cleanly
