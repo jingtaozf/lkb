@@ -535,9 +535,12 @@
 
 ;;; todo: cache
 (defmethod read-psort :around ((lexicon lex-database) id &key (cache t) (recurse t))
-  (cond ((and (next-method-p) (call-next-method)))
-	(recurse (some #'(lambda (lex) (read-psort lex id :cache cache))
-		       (extra-lexicons lexicon)))))
+  (cond ((and (next-method-p) 
+	      (call-next-method)))
+	(recurse 
+	 (some #'(lambda (lex) 
+		   (read-psort lex id :cache cache))
+	       (extra-lexicons lexicon)))))
 
 (defmethod close-lex :around ((lexicon lex-database) &key in-isolation delete)
   (declare (ignore delete))

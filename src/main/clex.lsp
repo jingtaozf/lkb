@@ -295,19 +295,21 @@
 
 (defmethod read-psort ((lexicon cdb-lex-database) id &key (cache t) (recurse t))
   (declare (ignore recurse))
-  (with-slots (psort-db) lexicon
-    (with-slots (psorts) lexicon
-      (cond 
-       ((gethash id psorts))
-       (t
-	;; In case multiple entries are returned, we take the last one
-	(let* ((rec (car (last (cdb:read-record psort-db 
-						(string id)))))
-	       (entry (when rec 
-			(with-package (:lkb) (read-from-string rec)))))
-	  (when (and entry cache)
-	    (setf (gethash id psorts) entry))
-	  entry))))))
+  (with-slots (psorts psort-db) lexicon
+    (let ((hashed (gethash id psorts)))
+      (cond (hashed
+	     (unless (eq hashed :empty)
+	       hashed))
+	    (t
+	     ;; In case multiple entries are returned, we take the last one
+	     (let* ((rec (car (last (cdb:read-record psort-db 
+						     (string id)))))
+		    (entry (when rec 
+			     (with-package (:lkb) (read-from-string rec)))))
+	       (when cache
+		 (setf (gethash id psorts) 
+		   (or entry :empty)))
+	       entry))))))
 
 ;;
 ;; writing
