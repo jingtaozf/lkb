@@ -7,7 +7,9 @@
 #+:allegro 
 (setf excl:*enable-package-locked-errors* nil)
 
-(defparameter *lkb-source-dir* (pathname-directory mk::tmp-dir))
+(defparameter *lkb-source-dir* (pathname-directory (get-sources-dir "lkb")))
+
+(defparameter *lkb-fasl-dir* (pathname-directory (get-binaries-dir "lkb")))
 
 (defparameter *psorts-temp-file* 
   (make-pathname :name "templex" 
