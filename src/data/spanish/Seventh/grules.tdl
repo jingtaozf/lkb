@@ -1,0 +1,506 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;; grules.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+:begin :instance.
+head-specifier-rule := birule-headfinal &
+ [ SYN [ SPR < > ],
+
+   NH1 #1, 
+   H [ SYN [ HEAD norv,
+	     SPR < #1 & [ SYN [ SPR < > ] ] > ] ] ].
+:end :instance.
+
+:begin :instance.
+head-specifier-rule-postvsubj := birule-headfirst &
+ [ SYN [ SPR < > ],
+
+   H [ SYN [ HEAD verb,
+	     SPR < #1 & [ SYN [ SPR < > ] ] > ] ],
+   NH1 #1  ].
+:end :instance.
+
+
+:begin :instance.
+head-complement-rule-none := unary-COMPS-rule & 
+ [ SYN [ SPR #spr,  
+	 COMPS < > ], 
+
+   H [ SYN [ SPR #spr,
+	     COMPS < > ] ] ].
+:end :instance.
+
+:begin :instance.
+head-complement-rule-1 := binary-COMPS-rule & 
+ [ SYN [ SPR #spr,  
+	 COMPS < > ], 
+
+   H [ SYN [ SPR #spr,
+	     COMPS < #1 > ] ],
+   NH1 #1 ].
+:end :instance.
+
+:begin :instance.
+1st-head-complement-rule-2 := trinary-COMPS-rule & 
+ [ SYN [ SPR #spr,  
+	 COMPS < > ], 
+
+   H [ SYN [ SPR #spr,
+	     COMPS < #1, #2 > ] ],
+   NH1 #1,
+   NH2 #2 ].
+:end :instance.
+
+:begin :instance.
+2nd-head-complement-rule-2 := trinary-COMPS-rule & 
+ [ SYN [ SPR #spr,  
+	 COMPS < > ], 
+
+   H [ SYN [ SPR #spr,
+	     COMPS < #1, #2 > ] ],
+   NH1 #2,
+   NH2 #1 ].
+:end :instance.
+
+
+;;;this one is for PP's
+;;;SPR changed for "hay" 03/29
+;;;two rules specified - one with empty specifier 03/31
+
+:begin :instance.
+e-head-adjunct-rule := birule-headfirst &
+ [ SYN [ SPR < > ],
+   H #1 & [ SYN [ SPR < > ] ],
+   NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
+:end :instance.
+
+
+:begin :instance.
+ne-head-adjunct-rule := birule-headfirst &
+ [ SYN [ SPR < #spr > ],
+   H #1 & [ SYN [ SPR < #spr > ] ],
+   NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
+:end :instance.
+
+;:begin :instance.
+;head-adjunct-rule := birule-headfirst &
+; [ H #1, 
+;   NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
+;:end :instance.
+
+;:begin :instance.
+;e-spec-head-adjunct-rule := head-adjunct-rule &
+; [ SYN [ SPR  < > ],
+;   H [ SYN [ SPR  < > ] ] ]. 
+;:end :instance.
+
+;:begin :instance.
+;ne-spec-head-adjunct-rule := head-adjunct-rule &
+; [ SYN [ SPR  <  #spr > ],
+;   H [ SYN [ SPR  < #spr > ] ] ]. 
+;:end :instance.
+
+
+
+;;;SPR changed for "hay" 03/29
+;
+;:begin :instance.
+;head-adjunct-rule := birule-headfirst &
+; [ SYN [ SPR  < /l #spr > ],
+;   H #1 & [ SYN [ SPR  < /l #spr > ] ],
+;   NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
+;:end :instance.
+
+;:begin :instance.
+;head-adjunct-rule := birule-headfirst &
+; [ SYN [ SPR < #spr > ],
+;   H #1 & [ SYN [ SPR < #spr > ] ],
+;   NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
+;:end :instance.
+
+
+;;;coordination rules
+;;;changed 02/01, in order to account for gender in noun coordinations.
+;;;four rules implemented 02/03, in order to account explicitly for all possible 
+;;;gender combinations. 
+;;;probably it is better to solve the gender of the coordinated phrase on the
+;;;type hierarchy, though.
+;;;does not account for binding
+
+:begin :instance.
+fem-noun-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 3plurfem,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 3rd,
+                                             GEND fem ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 3rd,
+                                             GEND fem ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+:begin :instance.
+1st_masc-noun-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 3plurmasc,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 3rd,
+                                             GEND masc ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 3rd,
+                                             GEND fem ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+:begin :instance.
+2nd_masc-noun-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 3plurmasc ,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 3rd,
+                                             GEND fem ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 3rd,
+                                             GEND masc ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+:begin :instance.
+2-masc-noun-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 3plurmasc,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 3rd,
+                                             GEND masc ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 3rd,
+                                             GEND masc ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+:begin : instance.
+1st-1stpro-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 1plur,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 1st ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat,
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+:begin : instance.
+2nd-1stpro-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 1plur,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat,
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 1st ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+;;;;will apply for "yo y yo"
+;;;; really necessary...?
+
+:begin : instance.
+2-1stpro-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 1plur,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 1st ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 1st ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+
+:begin : instance.
+1st-2ndpro-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 2plur,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 2nd ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 3rd ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+:begin : instance.
+2nd-2ndpro-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 2plur,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 3rd ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 2nd ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+;;;;will apply for "yo y yo"
+;;;; really necessary...?
+
+:begin : instance.
+2-2ndpro-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 2plur,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 2nd ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ PER 2nd ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+
+ #|
+:begin :instance.
+fem-noun-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 3plurfem,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ GEND fem ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ GEND fem ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+:begin :instance.
+1st_masc-noun-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 3plurmasc,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ GEND masc ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ GEND fem ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+:begin :instance.
+2nd_masc-noun-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 3plurmasc ,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ GEND fem ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ GEND masc ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+
+:begin :instance.
+2-masc-noun-coordination-rule := trirule-nonheaded &
+ [ SYN [ HEAD noun & [ AGR 3plurmasc,
+		       CASE #case ],
+	 SPR #spr,
+	 COMPS #comps],
+   SEM [ INDEX #and-index ],
+
+   NH1 [ SYN [ HEAD noun & [ AGR agr-cat & [ GEND masc ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]],
+ 
+   NH2 [ SYN [ HEAD conj ],
+	 SEM [ INDEX ref-index & #and-index ] ],
+
+   NH3 [ SYN [ HEAD noun & [ AGR agr-cat & [ GEND masc ],
+                             CASE #case ],
+	       SPR #spr,
+	       COMPS #comps ]]].
+:end :instance.
+ |#
+
+;;;check this one
+;;;changed 02/03
+;;;semantics added 03/16, from the textbook grammar.
+;;;(is the semantics doing any difference?)
+
+:begin :instance.
+verb-coordination-rule := trirule-nonheaded &
+[ SYN [ HEAD verb & [FORM #form],
+	SPR #spr,
+	COMPS #comps ],
+  SEM [ MODE prop,
+	INDEX #and-sit-index ],
+ 
+    NH1 [ SYN [ HEAD verb & [FORM #form],
+		SPR #spr,
+		COMPS #comps ],
+	  SEM [ MODE prop ] ],
+
+    NH2 [ SYN [ HEAD conj ],
+	  SEM [ INDEX sit-index & #and-sit-index ] ],
+		
+    NH3 [ SYN [ HEAD verb & [FORM #form],
+		SPR #spr,
+		COMPS #comps ],
+	  SEM [ MODE prop ] ] ].
+:end :instance.
+
+:begin :instance.
+bare-plural-rule := unary-grule-headed &
+[ SYN [ SPR < >,
+	COMPS #comps],
+  SEM #sem,
+ 
+  H  [SYN [HEAD noun & [AGR [NUM plur] ],
+	     SPR < [ ] >,
+	     COMPS #comps],
+	SEM #sem ] ].
+:end :instance.
+
+:begin :instance.
+subject_pro-drop-rule := unary-grule-headed &
+[ SYN [ SPR < > ],
+  SEM #sem,
+ 
+  H  [SYN [HEAD verb,
+	   SPR < [ ] >,
+	   COMPS < > ],
+      SEM #sem ] ].
+:end :instance.

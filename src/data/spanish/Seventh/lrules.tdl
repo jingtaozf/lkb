@@ -1,0 +1,37 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;lrules.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;in this file rules like passive are to be defined
+
+
+:begin :instance.
+arg_real-principle-spr-NE := word+arg_real &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST < #spr . #comps >,
+
+  ARGS < word & [ SYN #syn & [ SPR < #spr >,
+			       COMPS #comps ],
+		  SEM #sem,
+		  ARG-ST < #spr . #comps > ] > ].
+:end :instance.
+
+:begin :instance.
+arg_real-principle-spr-empty := word+arg_real &
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST #comps,
+
+  ARGS < word & [ SYN #syn & [ SPR <  >,
+			       COMPS #comps ],
+		  SEM #sem,
+		  ARG-ST #comps] > ].
+:end :instance.
+
+
+
+
+

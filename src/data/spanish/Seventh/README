@@ -1,0 +1,31 @@
+#|
+
+;the first time you try and run the LKB do:
+;
+
+(load "~/newlkb/src/general/loadup")
+(compile-system "mrs" :force t) 
+
+;
+;on subsequent sessions, the files will be compiled, so do
+;
+
+(load "~/newlkb/src/general/loadup")
+(load-system "mrs")
+
+
+; to redisplay the LKB top window in ACL/CLIM if it has
+; been closed accidentally
+
+(in-package :clim-user)
+(set-up-lkb-interaction :core) 
+(in-package :cl-user)
+(enable-type-interactions)
+
+;; To check lexicon for well-formedness,
+
+(batch-check-lexicon)
+
+|#
+
+

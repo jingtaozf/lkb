@@ -1,0 +1,28 @@
+;;;this was directly taken from the textbook grammar.
+
+;;; Definitions of those types which are needed but defined in
+;;; TDL built ins rather than in the main type file
+
+
+*cons* := *list* &
+  [ FIRST *top*,
+    REST *list* ].
+
+
+*diff-list* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+dl-append := *top* & [APPARG1 [LIST #first,       
+                            LAST #between],
+                      APPARG2 [LIST #between,
+                            LAST #last],
+                      RES  [LIST #first,
+                             LAST #last]].
+
+symbol :< *top*.
+
+string := symbol.
+
+
+

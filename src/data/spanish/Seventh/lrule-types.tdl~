@@ -1,0 +1,157 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; lrule-types.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;defined like that  in the textbook grammar.
+lrule-super :< lex-item.
+ 
+word+arg_real := lrule-super &
+[ ORTH #orth,
+  ARGS < [ ORTH #orth ] > ].
+ 
+lrule := lrule-super & 
+  [ ARGS < lexeme & [ AFFIX #affix,
+		      ARGS < [ AFFIX #affix ] > ] >,
+
+    NEEDS-AFFIX boolean ],
+status: lex-rule.
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;changed 04/25
+;;;default arg-st added
+lrule-general := lrule & word & 
+[ SYN #syn,
+  SEM #sem,
+  ARG-ST /l #arg-st,
+
+  ARGS < [SYN #syn,
+	  SEM #sem,
+	  ARG-ST /l #arg-st ] > ]. 
+
+
+;;; <<>> LEXICAL RULES
+
+pres-verb-lex-rule := lrule & word &
+[ SYN #syn,
+  SEM [ MODE #mode,
+	INDEX #1,
+	RESTR [ LIST < [RELN r_t-overlap,
+			 ARG1 #1,
+			 ARG2 now] . #restr >,
+                LAST #semlast ]],
+  ARG-ST #arg-st,
+  ARGS < lexeme & [  SYN #syn,
+		     SEM [ MODE #mode,
+			   RESTR [ LIST #restr,
+                                   LAST #semlast ]],
+		     ARG-ST #arg-st ] > ].
+
+
+
+
+
+;;; <<>> NOMINAL LEXICAL TYPES
+
+
+;;; two rules for 3rd-sing-nouns: 
+;;; they will define Gender, when it is underspecified in the lexical entry, 
+;;; and otherwise they won't unify.
+;;; changed to define MORPHGEND false in the lexical entries underspecified for MORPHGEND (01/25).
+
+
+3rd-sing-noun-masc := affix & 
+[ SYN [ HEAD noun & [ AGR 3singmasc & [ NUM sing,
+				        PER 3rd,
+                                        GEND masc,
+					MORPHGEND /l false ] ] ] ].
+
+
+
+3rd-sing-noun-fem := affix & 
+[ SYN [ HEAD noun & [ AGR 3singfem & [ NUM sing,
+				       PER 3rd, 
+                                       GEND fem,
+				       MORPHGEND /l false ] ] ] ].
+
+
+
+plur-noun := affix &
+[ SYN [ HEAD noun & [ AGR [ NUM plur ] ] ] ].
+
+
+;;;number underspecified
+
+singandplur-noun := affix &
+[ SYN [ HEAD noun & [ AGR [ NUM singandplur ] ] ] ].
+
+
+;  <<>> VERBAL LEXICAL TYPES
+
+
+inf-verb := affix &
+[ SYN [ HEAD verb & [ FORM inf,
+		      PRED false ] ] ].
+
+pres-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false ] ] ].
+
+1st-sing-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 1sing & [PER 1st,
+				       NUM sing ] ] ] ], ... > ].
+
+;;; added 02/08
+
+2nd-sing-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 2sing ] ] ], ... > ].
+
+3rd-sing-verb := affix &  
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false ] ] ]. 
+
+3rd-sing-masc-verb := 3rd-sing-verb &
+[ ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 3singmasc ] ] ], ... > ]. 
+
+3rd-sing-fem-verb := 3rd-sing-verb &
+[ ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 3singfem ] ] ], ... > ]. 
+
+;3rd-sing-verb := affix &  
+;[ SYN [ HEAD verb & [ FORM fin,
+;		      PRED false ] ],
+;  ARG-ST < [ SYN [ HEAD [ CASE nom,
+;			  AGR 3sing ] ] ], ... > ]. 
+
+1st-plur-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 1plur ] ] ], ... > ].
+
+2nd-plur-verb := affix &
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 2plur ] ] ], ... > ].
+
+3rd-plur-verb := affix &  
+[ SYN [ HEAD verb & [ FORM fin,
+		      PRED false ] ],
+  ARG-ST < [ SYN [ HEAD [ CASE nom,
+			  AGR 3plur ] ] ], ... > ]. 
+
+
+;;;should there be a distinction between 3sing and the others?
+;;;pro-drop of third person sing seems to be more restrictive.
+
+

@@ -1,0 +1,41 @@
+"
+soy 2CONJ-1ST-SING-VERB ser
+eres 2CONJ-2ND-SING-VERB ser
+es 2CONJ-3RD-SING-VERB ser
+somos 2CONJ-1ST-PLUR-VERB ser
+sois 2CONJ-2ND-PLUR-VERB ser
+son 2CONJ-3RD-PLUR-VERB ser
+
+voy 3CONJ-1ST-SING-VERB ir
+vas 3CONJ-2ND-SING-VERB ir
+va 3CONJ-3RD-SING-VERB ir
+vamos 3CONJ-1ST-PLUR-VERB ir
+vais 3CONJ-2ND-PLUR-VERB ir
+van 3CONJ-3RD-PLUR-VERB ir
+
+estoy 1CONJ-1ST-SING-VERB estar
+estás 1CONJ-2ND-SING-VERB estar
+está 1CONJ-3RD-SING-VERB estar
+están 1CONJ-3RD-PLUR-VERB estar
+
+doy 1CONJ-1ST-SING-VERB dar
+dais 1CONJ-2ND-PLUR-VERB dar
+
+duermo 3CONJ-1ST-SING-VERB dormir
+duermes 3CONJ-2ND-SING-VERB dormir
+duerme 3CONJ-3RD-SING-VERB dormir
+duermen 3CONJ-3RD-PLUR-VERB dormir
+
+miento 3CONJ-1ST-SING-VERB mentir
+mientes 3CONJ-2ND-SING-VERB mentir
+miente 3CONJ-3RD-SING-VERB mentir
+mienten 3CONJ-3RD-PLUR-VERB mentir
+
+sirvo 3CONJ-1ST-SING-VERB servir
+sirves 3CONJ-2ND-SING-VERB servir
+sirve 3CONJ-3RD-SING-VERB servir
+sirven 3CONJ-3RD-PLUR-VERB servir
+
+hay 2CONJ-3RD-SING-VERB haver
+
+"

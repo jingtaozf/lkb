@@ -1,0 +1,1025 @@
+;;;proper nouns
+
+:begin :instance.
+Kim_1 := pn-lxm &
+[ ORTH <! "Kim" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ NAME 'Kim ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Sandy_1 := pn-lxm &
+[ ORTH <! "Sandy" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ NAME 'Sandy ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Pat_1 := pn-lxm &
+[ ORTH <! "Pat" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ NAME 'Pat ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Chris_1 := pn-lxm &
+[ ORTH <! "Chris" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ NAME 'Chris ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Chris_2 := pn-lxm &
+[ ORTH <! "Chris" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ NAME 'Chris ] !> ] ].
+:end :instance.
+
+; <<>>
+
+
+:begin :instance.
+Fido_1 := pn-lxm &
+[ ORTH <! "Fido" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ NAME 'Fido ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Dana_1 := pn-lxm &
+[ ORTH <! "Dana" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ NAME 'Dana ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Ana_1 := pn-lxm &
+[ ORTH <! "Ana" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ NAME 'Ana ] !> ] ].
+:end :instance.
+
+; <<>>
+
+
+:begin :instance.
+Maria_1 := pn-lxm &
+[ ORTH <! "Maria" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Maria ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Hannibal_1 := pn-lxm &
+[ ORTH <! "Hannibal" !>,
+  SYN [ HEAD [ AGR [ GEND masc] ] ],
+  SEM [ RESTR <! [ NAME 'Hannibal ] !> ] ].
+:end :instance.
+
+; <<>>
+
+
+:begin :instance.
+Chicago_1 := pn-lxm &
+[ ORTH <! "Chicago" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ NAME 'Chicago ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Cleveland_1 := pn-lxm &
+[ ORTH <! "Cleveland" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ NAME 'Cleveland ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+America_1 := pn-lxm &
+[ ORTH <! "America" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ NAME 'America ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Mafalda_1 := pn-lxm &
+[ ORTH <! "Mafalda" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Mafalda ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Alfredo_1 := pn-lxm &
+[ ORTH <! "Alfredo" !>,
+  SYN [ HEAD [ AGR [ GEND masc] ] ],
+  SEM [ RESTR <! [ NAME 'Alfredo ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Romeo_1 := pn-lxm &
+[ ORTH <! "Romeo" !>,
+  SYN [ HEAD [ AGR [ GEND masc] ] ],
+  SEM [ RESTR <! [ NAME 'Romeo ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Julieta_1 := pn-lxm &
+[ ORTH <! "Julieta" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Julieta ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Roma_1 := pn-lxm &
+[ ORTH <! "Roma" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Rome ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Milano_1 := pn-lxm &
+[ ORTH <! "Milano" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Milan ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Moscow_1 := pn-lxm &
+[ ORTH <! "Moscow" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Moscow ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Romania_1 := pn-lxm &
+[ ORTH <! "Romania" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Romania ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Argentina_1 := pn-lxm &
+[ ORTH <! "Argentina" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Argentina ] !> ] ].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+Buenos_Aires_1 := pn-lxm &
+[ ORTH <! "Buenos", "Aires" !>,
+  SYN [ HEAD [ AGR [ GEND fem] ] ],
+  SEM [ RESTR <! [ NAME 'Buenos_Aires ] !> ] ].
+:end :instance.
+
+; <<>>
+
+
+;;; <<>> ----- PRONOUNS -----
+
+
+:begin :instance.
+yo_1 := pron-lxm &
+[ ORTH <! "yo" !>,
+  SYN [ HEAD noun & [ AGR 1sing,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_speaker] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tú_1 := pron-lxm &
+[ ORTH <! "tú" !>,
+  SYN [ HEAD noun & [ AGR 2sing,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_listener] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+tu_1 := pron-lxm &
+[ ORTH <! "tu" !>,
+  SYN [ HEAD noun & [ AGR 2sing,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_listener] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+él_1 := pron-lxm &
+[ ORTH <! "él" !>,
+  SYN [ HEAD noun & [ AGR 3singmasc,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_male] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+el_2 := pron-lxm &
+[ ORTH <! "el" !>,
+  SYN [ HEAD noun & [ AGR 3singmasc,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_male] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ella_1 := pron-lxm &
+[ ORTH <! "ella" !>,
+  SYN [ HEAD noun & [ AGR 3singfem,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_female] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+nosotros_1 := pron-lxm &
+[ ORTH <! "nosotros" !>,
+  SYN [ HEAD noun & [ AGR 1plurmasc,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_speakers] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+nosotras_1 := pron-lxm &
+[ ORTH <! "nosotras" !>,
+  SYN [ HEAD noun & [ AGR 1plurfem,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_speakers] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+vosotros_1 := pron-lxm &
+[ ORTH <! "vosotros" !>,
+  SYN [ HEAD noun & [ AGR 2plurmasc,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_listeners] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+vosotras_1 := pron-lxm &
+[ ORTH <! "vosotras" !>,
+  SYN [ HEAD noun & [ AGR 2plurfem ,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_listeners] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ellos_1 := pron-lxm &
+[ ORTH <! "ellos" !>,
+  SYN [ HEAD noun & [ AGR 3plurmasc,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_malegroup] !> ]].
+:end :instance.
+
+; <<>>
+
+:begin :instance.
+ellas_1 := pron-lxm &
+[ ORTH <! "ellas" !>,
+  SYN [ HEAD noun & [ AGR 3plurfem,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_femalegroup] !> ]].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+usted_1 := pron-lxm &
+[ ORTH <! "usted" !>,
+  SYN [ HEAD noun & [ AGR 3sing,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_listener] !> ]].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+ustedes_1 := pron-lxm &
+[ ORTH <! "ustedes" !>,
+  SYN [ HEAD noun & [ AGR 3plur,
+		      CASE nom ] ],
+  SEM [ RESTR <! [RELN r_listeners] !> ]].
+:end :instance.
+
+; ; <<>>
+
+;;; ; <<>> ----- DETERMINERS  -----
+
+:begin :instance.
+el_1 := det-lxm & 
+[ ORTH <! "el" !>,
+  SYN [ HEAD [ AGR [ GEND masc,
+                     NUM sing ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+la_1 := det-lxm & 
+[ ORTH <! "la" !>,
+  SYN [ HEAD [ AGR [ GEND fem,
+                     NUM sing ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+los_1 := det-lxm & 
+[ ORTH <! "los" !>,
+  SYN [ HEAD [ AGR [ GEND masc,
+                     NUM plur ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+las_1 := det-lxm & 
+[ ORTH <! "las" !>,
+  SYN [ HEAD [ AGR [ GEND fem,
+                     NUM plur ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+un_1 := det-lxm & 
+[ ORTH <! "un" !>,
+  SYN [ HEAD [ AGR [ GEND masc,
+                     NUM sing ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+una_1 := det-lxm & 
+[ ORTH <! "una" !>,
+  SYN [ HEAD [ AGR [ GEND fem,
+                     NUM sing ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+unos_1 := det-lxm & 
+[ ORTH <! "unos" !>,
+  SYN [ HEAD [ AGR [ GEND masc,
+                     NUM plur ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+unas_1 := det-lxm & 
+[ ORTH <! "unas" !>,
+  SYN [ HEAD [ AGR [ GEND fem,
+                     NUM plur ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+;;; ; <<>>  POSSESSIVE PRONOUNS  -----
+
+
+:begin :instance.
+mi_1 := det-lxm & 
+[ ORTH <! "mi" !>,
+  SYN [ HEAD [ AGR [ NUM sing ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+mis_1 := det-lxm & 
+[ ORTH <! "mis" !>,
+  SYN [ HEAD [ AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+tu_1 := det-lxm & 
+[ ORTH <! "tu" !>,
+  SYN [ HEAD [ AGR [ NUM sing ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+tus_1 := det-lxm & 
+[ ORTH <! "tus" !>,
+  SYN [ HEAD [ AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+su_1 := det-lxm & 
+[ ORTH <! "su" !>,
+  SYN [ HEAD [ AGR [ NUM sing ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+sus_1 := det-lxm & 
+[ ORTH <! "sus" !>,
+  SYN [ HEAD [ AGR [ NUM plur ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+nuestro_1 := det-lxm & 
+[ ORTH <! "nuestro" !>,
+  SYN [ HEAD [ AGR [ NUM sing,
+		     GEND masc ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+nuestra_1 := det-lxm & 
+[ ORTH <! "nuestra" !>,
+  SYN [ HEAD [ AGR [ NUM sing,
+		     GEND fem ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+nuestros_1 := det-lxm & 
+[ ORTH <! "nuestros" !>,
+  SYN [ HEAD [ AGR [ NUM sing,
+		     GEND masc ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+nuestras_1 := det-lxm & 
+[ ORTH <! "nuestras" !>,
+  SYN [ HEAD [ AGR [ NUM sing,
+		     GEND fem ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+vuestro_1 := det-lxm & 
+[ ORTH <! "vuestro" !>,
+  SYN [ HEAD [ AGR [ NUM sing,
+		     GEND masc ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+vuestra_1 := det-lxm & 
+[ ORTH <! "vuestra" !>,
+  SYN [ HEAD [ AGR [ NUM sing,
+		     GEND fem ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+vuestros_1 := det-lxm & 
+[ ORTH <! "vuestros" !>,
+  SYN [ HEAD [ AGR [ NUM sing,
+		     GEND masc ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+vuestras_1 := det-lxm & 
+[ ORTH <! "vuestras" !>,
+  SYN [ HEAD [ AGR [ NUM sing,
+		     GEND fem ] ] ] ].
+:end :instance.
+
+; ; <<>>
+
+
+
+;;; ; <<>>  CONJUNCTIONS...  -----
+:begin :instance.
+y_1 := conj-lxm &
+[ ORTH <! "y" !>,
+  SYN [ HEAD [ FORM f_and ] ],
+  SEM [ RESTR <! [ RELN r_and ] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+
+;;; ; <<>> ----- VERBS -----
+
+:begin :instance.
+ser_1 := stv-lxm &
+[ ORTH <! "ser" !>,
+  SEM [ RESTR <! [ RELN r_be ] !> ] ]. 
+
+
+;; added 11/09/99 for testing purposes
+
+:begin :instance.
+amar_1 := stv-lxm &
+[ ORTH <! "amar" !>,
+  SEM [ RESTR <! [ RELN r_love] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+;;;temporarily implemented as piv'lxm. Doens't cover predicational use, though.
+;;;02/15.
+:begin :instance.
+estar_1 := piv-lxm &
+[ ORTH <! "estar" !>,
+  SEM [ RESTR <! [ RELN r_be ] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+estar_2 := iv-lxm &
+[ ORTH <! "estar" !>,
+  SEM [ RESTR <! [ RELN r_be ] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+dar_1 := dtv-lxm &
+[ ORTH <! "dar" !>,
+  SEM [ RESTR <! [ RELN r_give] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+comer_1 := iv-lxm &
+[ ORTH <! "comer" !>,
+  SEM [ RESTR <! [ RELN r_eat] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+comer_2 := stv-lxm &
+[ ORTH <! "comer" !>,
+  SEM [ RESTR <! [ RELN r_eat] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+vivir_1 := piv-lxm &
+[ ORTH <! "vivir" !>,
+  SEM [ RESTR <! [ RELN r_live] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+dormir_1 := iv-lxm &
+[ ORTH <! "dormir" !>,
+  SEM [ RESTR <! [ RELN r_sleep] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+mentir_1 := iv-lxm &
+[ ORTH <! "mentir" !>,
+  SEM [ RESTR <! [ RELN r_lie] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+;;;temporarily implemented as piv-lxm, will combine with modifiers
+;;;but not with NP's
+:begin :instance.
+servir_1 := piv-lxm &
+[ ORTH <! "servir" !>,
+  SEM [ RESTR <! [ RELN r_serve] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+ir_1 := piv-lxm &
+[ ORTH <! "mentir" !>,
+  SEM [ RESTR <! [ RELN r_lie] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+ir_1 := piv-lxm &
+[ ORTH <! "ir" !>,
+  SEM [ RESTR <! [ RELN r_go] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+;;;implemented 03/29 for "hay un niño en la casa".
+;;;probably better to implement as unique form "hay",
+;;;since only 3sing.
+
+:begin :instance.
+haver_1 := no-subj-stv-lxm &
+[ ORTH <! "haver" !>,
+  SEM [ RESTR <! [ RELN r_be] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+
+
+;;; NOUNS (cn-lxm´s)
+
+
+:begin :instance.
+chico_1 := cn-lxm &
+[ ORTH <! "chico" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ RELN r_boy] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+chica_1 := cn-lxm &
+[ ORTH <! "chica" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ RELN r_girl] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+abuelo_1 := cn-lxm &
+[ ORTH <! "abuelo" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ RELN r_grandfather] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+abuela_1 := cn-lxm &
+[ ORTH <! "abuela" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ RELN r_grandmother ] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+;;; common nouns with morphologically marked gender
+;;; feature 'MORPHGEND' created for the lexical rule to apply (01/21):
+;;; GEND defined as masc 01/25
+;;; ´perra´ and ´gata´ added manually 02/08
+
+
+:begin :instance.
+gato_1 := cn-lxm &
+[ ORTH <! "gato" !>,
+  SYN [ HEAD [ AGR [ GEND masc,
+                     MORPHGEND true ] ] ],
+  SEM [ RESTR <! [ RELN r_cat ] !> ] ].
+:end :instance.
+
+ ; <<>>
+
+:begin :instance.
+gata_1 := cn-lxm &
+[ ORTH <! "gata" !>,
+  SYN [ HEAD [ AGR [ GEND fem,
+                     MORPHGEND true ] ] ],
+  SEM [ RESTR <! [ RELN r_cat ] !> ] ].
+:end :instance.
+
+ ; <<>>
+
+:begin :instance.
+perro_1 := cn-lxm &
+[ ORTH <! "perro" !>,
+  SYN [ HEAD [ AGR [ GEND masc,
+                     MORPHGEND true ] ] ],
+  SEM [ RESTR <! [ RELN r_dog ] !> ] ].
+:end :instance.
+
+ ; <<>>
+
+:begin :instance.
+perra_1 := cn-lxm &
+[ ORTH <! "perra" !>,
+  SYN [ HEAD [ AGR [ GEND fem,
+                     MORPHGEND true ] ] ],
+  SEM [ RESTR <! [ RELN r_dog ] !> ] ].
+:end :instance.
+
+ ; <<>>
+
+;:begin :instance.
+;gato_1 := cn-lxm &
+;[ ORTH <! "gato" !>,
+;  SYN [ HEAD [ AGR [ GEND morphgend ] ] ],
+;  SEM [ RESTR <! [ RELN r_cat ] !> ] ].
+;:end :instance.
+
+; ; <<>>
+
+;;;
+
+:begin :instance.
+manzana_1 := cn-lxm &
+[ ORTH <! "manzana" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ RELN r_apple] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+mesa_1 := cn-lxm &
+[ ORTH <! "mesa" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ RELN r_table] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+corbata_1 := cn-lxm &
+[ ORTH <! "corbata" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ RELN r_tie] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+vestido_1 := cn-lxm &
+[ ORTH <! "vestido" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ RELN r_dress] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+libro_1 := cn-lxm &
+[ ORTH <! "libro" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ RELN r_book] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+revista_1 := cn-lxm &
+[ ORTH <! "revista" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ RELN r_magazine] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+casa_1 := cn-lxm &
+[ ORTH <! "casa" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ RELN r_house] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+jardín_1 := cn-lxm &
+[ ORTH <! "jardín" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ RELN r_garden] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+jardin_1 := cn-lxm &
+[ ORTH <! "jardin" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ RELN r_garden] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+unicornio_1 := cn-lxm &
+[ ORTH <! "unicornio" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ RELN r_unicorn] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+universidad_1 := cn-lxm &
+[ ORTH <! "universidad" !>,
+  SYN [ HEAD [ AGR [ GEND fem ] ] ],
+  SEM [ RESTR <! [ RELN r_university] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+avión_1 := cn-lxm &
+[ ORTH <! "avión" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ RELN r_airplane] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+;;;These nouns are underspecified for GEND, since they can be both masculine and feminine
+;;;
+
+:begin :instance.
+estudiante_1 := cn-lxm &
+[ ORTH <! "estudiante" !>,
+  SEM [ RESTR <! [ RELN r_student] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+pianista_1 := cn-lxm &
+[ ORTH <! "pianista" !>,
+  SEM [ RESTR <! [ RELN r_pianist] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+
+:begin :instance.
+artista_1 := cn-lxm &
+[ ORTH <! "artista" !>,
+  SEM [ RESTR <! [ RELN r_artist] !> ] ].
+:end :instance.
+
+; ; <<>>
+
+
+;;; MASS NOUNS
+
+:begin :instance.
+pan_1 := mn-lxm &
+[ ORTH <! "pan" !>,
+  SYN [ HEAD [ AGR [ GEND masc ] ] ],
+  SEM [ RESTR <! [ RELN r_bread ] !> ] ].
+:end :instance.
+
+;;; ; <<>> ----- PREPOSITIONS -----
+
+;;;deleted 02/11
+
+:begin :instance.
+en_1 := mkp-lxm &
+[ ORTH <! "en" !>,
+  SYN [ HEAD [ FORM f_in ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+en_2 := vpdp-lxm &
+[ ORTH <! "en" !>,
+  SYN [ HEAD [ FORM f_in ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+nel_1 := masc-vpdp-lxm &
+[ ORTH <! "nel" !>,
+  SYN [ HEAD [ FORM f_in ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+a_1 := mkp-lxm &
+[ ORTH <! "a" !>,
+  SYN [ HEAD [ FORM f_to ] ] ].
+:end :instance.
+
+; ; <<>>
+
+
+;;;changed 02/11 
+
+:begin :instance.
+con_1 := mkp-lxm &
+[ ORTH <! "con" !>,
+  SYN [ HEAD [ FORM f_with ] ] ].
+:end :instance.
+
+; ; <<>>
+
+;;; changed 02/11 in order to avoid overgeneration. 
+;;; rechanged to pdp-lxm 02/24
+
+:begin :instance.
+con_2 := pdp-lxm &
+[ ORTH <! "con" !>,
+  SYN [ HEAD [ FORM f_with ] ] ].
+:end :instance.
+
+; ; <<>>
+
+;;;changed from npdp-lxm to pdp-lxm on 02/24
+
+:begin :instance.
+de_1 := npdp-lxm &
+[ ORTH <!  "de" !>,
+  SYN [ HEAD [ FORM f_of ] ] ].
+:end :instance.
+
+; ; <<>>
+
+:begin :instance.
+del_1 := masc-npdp-lxm &
+[ ORTH <!  "del" !>,
+  SYN [ HEAD [ FORM f_of ] ] ].
+:end :instance.
+
+; ; <<>>
+
+
+
+
+
+
