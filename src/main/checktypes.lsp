@@ -716,24 +716,26 @@
          (insert-new-type-into-hierarchy
             (type-name glbtype-entry) glbtype-entry parents daughters))))
 
-         
+
 (defun insert-new-type-into-hierarchy (new-type new-type-entry parents daughters)
    ;; ancestors and descendants are updated later in a single pass
-   (create-mark-field new-type-entry)
-   (set-type-entry new-type new-type-entry)   
-   (setf (type-daughters new-type-entry) (mapcar #'type-name daughters))
-   (setf (type-parents new-type-entry) (mapcar #'type-name parents))
-   (dolist (daughter daughters)
-      (setf (type-parents daughter)
-	    (cons new-type (set-difference (type-parents daughter) 
-				           parents :test #'eq))))
-   (dolist (parent parents)
-      (setf (type-daughters parent)
-	    (cons new-type (set-difference (type-daughters parent) 
-                                           daughters :test #'eq))))
-   (push new-type *ordered-glbtype-list*)
-   (push new-type *type-names*)
-   new-type-entry)
+   (let ((daughter-names (mapcar #'type-name daughters))
+         (parent-names (mapcar #'type-name parents)))
+      (create-mark-field new-type-entry)
+      (set-type-entry new-type new-type-entry)   
+      (setf (type-daughters new-type-entry) daughter-names)
+      (setf (type-parents new-type-entry) parent-names)
+      (dolist (daughter daughters)
+         (setf (type-parents daughter)
+            (set-difference (type-parents daughter) parent-names :test #'eq))
+         (pushnew new-type (type-parents daughter) :test #'eq))
+      (dolist (parent parents)
+         (setf (type-daughters parent)
+            (set-difference (type-daughters parent) daughter-names :test #'eq))
+         (pushnew new-type (type-daughters parent) :test #'eq))
+      (push new-type *ordered-glbtype-list*)
+      (push new-type *type-names*)
+      new-type-entry))
 
 
 (defun make-glb-name (dtrs)
