@@ -537,7 +537,7 @@
 	(unless (string>= (get-db-version lexicon) 
 			  *psql-db-version*)
 	  (if (string>= dbversion "3.00")
-	      (error "Your database structures (v. ~a) are out of date. Use PSQL tool to import file lkb/src/psql/import.sql. Ignore WARNING/ERROR messages. (NOTE: existing private schemas will be renamed tmpSCHEMANAME.)" dbversion dbversion)
+	      (error "Your database structures (v. ~a) are out of date. Change to directory lkb/src/psql/ and use PSQL tool to import file import.sql. Ignore WARNING/ERROR messages. (NOTE: existing private schemas will be renamed tmpSCHEMANAME.)" dbversion dbversion)
 	    (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then import file lkb/src/psql/import.sql using PSQL tool, and finally merge dumped LexDB into new database." dbversion (dbname lexicon))))
 	(make-field-map-slot lexicon)
 	(retrieve-fn-defns lexicon)
