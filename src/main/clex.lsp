@@ -15,8 +15,6 @@
 ;;;  Interface to an off-line hash table lexical cache
 ;;;
 
-;;(defvar *lexicon-tdl-files* (list "~/tmp/lexicon.tdl"))
-
 (defun get-new-filename (filename)
   (loop
       until (not (probe-file filename))
@@ -217,9 +215,10 @@
     (store-cached-lex lexicon)
     lexicon))
 
-(eval-when #+:ansi-eval-when (:load-toplevel :execute)
-           #-:ansi-eval-when (load eval)
-  (set-temporary-lexicon-filenames)
-  (setf *lexicon*
-    (initialize-lex (or *lexicon* (make-instance 'cdb-lex-database)))))
+;(eval-when #+:ansi-eval-when (:load-toplevel :execute)
+;;           #-:ansi-eval-when (load eval)
+;;  (set-temporary-lexicon-filenames)
+;;  (setf *lexicon*
+;;    (initialize-lex (or *lexicon* (make-instance 'cdb-lex-database)))))
 
+(setf *lexicon* (make-instance 'cdb-lex-database))
