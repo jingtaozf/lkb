@@ -3,10 +3,13 @@
 --- see `licence.txt' for conditions.
 
 --- postgres optimization is poor...
-ALTER DATABASE lingo SET enable_seqscan TO off;
+---- change to 'SET enable_seqscan TO off' to be run at the start of each session
+---ALTER DATABASE lingo SET enable_seqscan TO off;
 
-CREATE FUNCTION "plpgsql_call_handler" () RETURNS LANGUAGE_HANDLER AS '$libdir/plpgsql' LANGUAGE C;
-CREATE TRUSTED LANGUAGE "plpgsql" HANDLER "plpgsql_call_handler";
+
+---- the superuser has to run this!
+----CREATE FUNCTION "plpgsql_call_handler" () RETURNS LANGUAGE_HANDLER AS '$libdir/plpgsql' LANGUAGE C;
+----CREATE TRUSTED LANGUAGE "plpgsql" HANDLER "plpgsql_call_handler";
 
 CREATE OR REPLACE FUNCTION check_version(text) RETURNS boolean AS '
 DECLARE
@@ -99,4 +102,4 @@ CREATE INDEX public_revision_name_modstamp ON public.revision (name, modstamp);
 \i mwe.sql
 \i semi.sql
 \i defn.sql
-
+\i permissions.sql

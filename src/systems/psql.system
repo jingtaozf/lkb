@@ -34,9 +34,11 @@
      :source-pathname ""
      :source-extension "cl"
      :components
-     ((:file "pg-package")
-      (:file "bind-libpq")
-      (:file "sql")))))
+     ((:file "pg-package.cl")
+      (:file "bind-libpq.cl")
+      (:file "sql.cl")
+      (:file "sql2.cl")
+      ))))
 
 (defsystem "libpq"
    :source-pathname "~/tmp"

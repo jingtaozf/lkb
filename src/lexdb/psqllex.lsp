@@ -87,20 +87,24 @@
 (defun initialize-psql-lexicon (&key
                                 (db (extract-param :db *psql-lexicon-parameters*))
                                 (host (extract-param :host *psql-lexicon-parameters*))
-                                (table (extract-param :table *psql-lexicon-parameters*)))
+                                (table (extract-param :table *psql-lexicon-parameters*))
+                                (port (extract-param :port *psql-lexicon-parameters*))
+                                (user (extract-param :user *psql-lexicon-parameters*))
+				)
   (unless (and db host table)
     (error "please instantiate db+host+table in *psql-lexicon-parameters*"))
-  (if (extract-param :user *psql-lexicon-parameters*)
-      (setf *postgres-current-user* (extract-param :user *psql-lexicon-parameters*))
-    (setf *postgres-current-user* (sys:user-name)))
   (let ((part-of))   
     (if *psql-lexicon*
         (setf part-of (part-of *psql-lexicon*))
-      (setf *psql-lexicon* (make-instance 'psql-lex-database)))
-    (setf (dbname *psql-lexicon*) db)
-    (setf (host *psql-lexicon*) host)
-    (setf (lex-tb *psql-lexicon*) table) ;;unused
-    (setf (fields-tb *psql-lexicon*) table)
+      (setf *psql-lexicon* 
+	(make-instance 'psql-lex-database)))
+    
+    (if user (setf (user *psql-lexicon*) user))
+    (if db (setf (dbname *psql-lexicon*) db))
+    (if host (setf (host *psql-lexicon*) host))
+    (if port (setf (port *psql-lexicon*) port))
+    ;;(setf (lex-tb *psql-lexicon*) table) ;;unused
+    (if table (setf (fields-tb *psql-lexicon*) table))
     (initialize-lex *psql-lexicon*)
     (mapcar #'(lambda (x) (link *psql-lexicon* x)) part-of)
     *psql-lexicon*))
@@ -169,12 +173,8 @@
 ;;; --- psql-database methods
 ;;;
 
-; check unused!!!
-;(defmethod load-lex ((lexicon psql-database) &rest rest)
-;  (apply 'open-psql-lexicon rest))
-
 (defmethod connect ((lexicon psql-database)) 
-  (let ((user *postgres-current-user*))
+  (let ((user (user lexicon)))
     (cond
      ((and user (eq (connect-aux lexicon :user user) :connection-ok)))
      (t
@@ -183,31 +183,34 @@
       (unless user 
 	(throw 'abort 'connect))
       (when user
-	(setf *postgres-current-user* user)
+	(setf (user lexicon) user)
 	(connect lexicon))))))
       
 (defmethod connect-aux ((lexicon psql-database) &key (user "guest"))
   (with-slots (port host dbname connection) lexicon
-    (let ((decoded-status nil)
-	  (password nil))
-      ;; attempt connection w/o pwd
-      (setf connection (connect-aux2 :port port :host host :dbname dbname :user user))
+    (let (decoded-status password)
+      ;; attempt connection w/ default pwd
+      (setf connection (connect-aux2 :port port 
+				     :host host 
+				     :dbname dbname 
+				     :user user 
+				     :password user))
       (setf decoded-status (pg:decode-connection-status (pg:status connection)))
       (unless (eq decoded-status :connection-ok)
-	;: attempt connection w/ default pwd
-	(setf connection (connect-aux2 :port port :host host :dbname dbname :user user :password user))
-	(setf decoded-status (pg:decode-connection-status (pg:status connection)))
-	(unless (eq decoded-status :connection-ok)
-	;: attempt connection w/ pwd
-	  (setf password (ask-user-for-x "Connect to PostgreSQL lexicon" 
-					 (cons (format nil "Password for ~a?" user) user)))
-	  (when password
-	    (setf connection (connect-aux2 :host host :dbname dbname :user user :password password)))))
-      (setf decoded-status (pg:decode-connection-status (pg:status connection)))
-      (when (eq decoded-status :connection-ok)
-	  (setf (server-version lexicon) (get-server-version lexicon))
-	  (setf (user lexicon) user))
-      decoded-status)))
+	;; attempt connection w/ pwd
+	(setf password (ask-user-for-x "Connect to PostgreSQL lexicon" 
+				       (cons (format nil "Password for ~a?" user) user)))
+	(when password
+	  (setf connection (connect-aux2 :port port 
+					 :host host 
+					 :dbname dbname 
+					 :user user 
+					 :password password))))
+    (setf decoded-status (pg:decode-connection-status (pg:status connection)))
+    (when (eq decoded-status :connection-ok)
+      (setf (server-version lexicon) (get-server-version lexicon))
+      (setf (user lexicon) user))
+    decoded-status)))
 
 (defun connect-aux2 (&key (host) (dbname) (user) (password) (port))
   (let ((connection)
@@ -244,6 +247,15 @@
 ;;; --- sql-query methods and functions
 ;;;
 
+(defmethod run-command-stdin ((database psql-database) command filename)
+  (let ((connection (connection database)))
+    (unless connection
+      (error "database ~s has no active connection." database))
+    (pg::stdin-command-file connection command filename)))
+
+(defmethod run-command ((database psql-database) command)
+  (run-query database (make-instance 'sql-query :sql-string command)))
+
 (defmethod run-query ((database psql-database) (query sql-query))
   (let ((connection (connection database)))
     (unless connection
@@ -253,8 +265,6 @@
       (setf (records query) recs 
             (columns query) (mapcar #'str-2-keyword cols)
             (count-recs query) recs-count))
-    (if *psql-verbose-query*
-	(format *trace-output* "~%~a~%=>~%~a" (sql-string query) (records query)))
     query))
 
 ;;; returns _association list_
@@ -513,7 +523,7 @@
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-val psql-le :modstamp "NOW")
-  (set-val psql-le :userid *postgres-current-user*)
+  (set-val psql-le :userid (user lexicon))
   ;;(set-val psql-le :flags 1)
   
   (set-lex-entry-aux lexicon psql-le))
@@ -646,7 +656,12 @@
 	    nil)
       (lkb-beep)
       (set-filter lexicon))
-    (format *postgres-debug-stream* "~%(new filter: ~a )" filter)))
+    (format *postgres-debug-stream* 
+	    "~%(lexicon filter: ~a )" 
+	    (get-filter lexicon))
+    (format *postgres-debug-stream* 
+	    "~%(active lexical entries: ~a )" 
+	    (fn-get-val lexicon ''size-current-grammar))))
 
 (defmethod set-filter-text-only ((lexicon psql-database) filter)
   (fn-get-records lexicon ''initialize-current-grammar filter)
@@ -763,7 +778,7 @@
   (format *postgres-debug-stream* "~%(dumping semi files)")
   (dump-obj-semi *lexicon*)
   (format *postgres-debug-stream* "~%(loading semi into db)")
-  (fn-get-record *lexicon* ''load-semi)
+  (load-semi-from-files *lexicon*)
   
   (format *postgres-debug-stream* "~%(clearing cache)")
   (empty-cache *lexicon*)

@@ -108,7 +108,7 @@
   (format *postgres-debug-stream* "~%(building current_grammar)")
   (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
   (format *postgres-debug-stream* "~%(vacuuming current_grammar)")
-  (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM"))
+  (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar"))
   (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
   (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
   lexicon)
@@ -117,7 +117,7 @@
   (format *postgres-debug-stream* "~%(building current_grammar)")
   (fn-get-records  lexicon ''build-current-grammar)
   (format *postgres-debug-stream* "~%(vacuuming current_grammar)")
-  (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM"))
+  (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar"))
   (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
   (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
   (empty-cache lexicon))
@@ -132,56 +132,70 @@
 (defmethod show-scratch ((lexicon psql-lex-database))
   (fn-get-records lexicon ''show-scratch))
 
-(defmethod merge-into-db ((lexicon psql-lex-database) 
-			  revision-filename 
-			  new-entries-filename)  
+(defmethod load-semi-from-files ((lexicon psql-lex-database))  
   (format t "~%")
-  (let ((num-new-entries (fn-get-val lexicon ''merge-into-db 
-				     revision-filename 
-				     new-entries-filename)))
-;    (format *postgres-debug-stream* "~%(vacuuming)")
-;    (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM"))
+  (run-command-stdin lexicon 
+		     (format nil "~a;~%~a;" 
+			     "DELETE FROM prd" 
+			     "COPY prd FROM stdin") 
+		     "~/tmp/semi.obj.prd")
+  (run-command-stdin lexicon 
+		     (format nil "~a;~%~a;" 
+			     "DELETE FROM arg" 
+			     "COPY arg FROM stdin") 
+		     "~/tmp/semi.obj.arg")
+  (run-command-stdin lexicon 
+		     (format nil "~a;~%~a;" 
+			     "DELETE FROM ddd" 
+			     "COPY ddd FROM stdin") 
+		     "~/tmp/semi.obj.ddd"))
+
+(defmethod merge-into-db ((lexicon psql-lex-database) 
+			  revision-filename)  
+  (format t "~%")
+  (run-command-stdin lexicon 
+		     (format nil "~a;~%~a;" 
+			     "DELETE FROM temp" 
+			     "COPY temp FROM stdin DELIMITERS ',' WITH NULL AS ''") 
+		     revision-filename)
+  (let ((num-new-entries 
+	 (fn-get-val lexicon '
+		     'merge-into-db))) 
+    (format *postgres-debug-stream* "~%(vacuuming public.revision)")
+    (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM public.revision"))
     num-new-entries))
 
 (defmethod merge-defn ((lexicon psql-lex-database) 
-			  defn-filename)  
-  (fn-get-val lexicon ''merge-defn 
-	      defn-filename))
+		       defn-filename)  
+  (when (catch 'pg:sql-error 
+	  (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL;"))
+    (format t "(recreating temp_defn)")
+    (run-command lexicon "DROP TABLE temp_defn")
+    (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL ;"))
+	
+  (run-command-stdin lexicon 
+		     "COPY temp_defn FROM stdin" 
+		     defn-filename)
+  (fn-get-val lexicon ''merge-defn))
 
-;(defmethod merge-into-db ((lexicon psql-lex-database) 
-;			  revision-filename 
-;			  filename-new-entries
-;;			  defn_filename)  
-;  (get-postgres-temp-filename)
-;  (setf filename (namestring (pathname filename)))
-;  (setf filename-new-entries (namestring (pathname filename-new-entries)))
-;  (format t "~%")
-;  (let ((out (fn-get-val lexicon ''merge-into-db filename *postgres-temp-filename*)))
-;    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-;						 *postgres-temp-filename*
-;						 filename-new-entries))
-;    out))
 
-;;(defmethod add-to-db ((lexicon psql-lex-database) filename)  
-;;  (setf filename (namestring (pathname filename)))
-;;  (if (catch 'pg:sql-error 
-;;	(fn-get-records lexicon ''add-to-db filename))
-;;      (error "cannot update lexical database ~a. Check that ~~/tmp/lexdb.new_entries does not contain attempts to redefine existing entries. No tuple of the form <name,userid,version,...> should correspond to an existing entry. [In particular, the MODSTAMP of a tuple cannot change.]" (dbname lexicon))))
-      
 (defun dump-psql-lexicon (filename)
-  (get-postgres-temp-filename)
-  (let ((revision-filename (namestring (pathname (format nil "~a.csv" filename))))
-	(defn-filename (namestring (pathname (format nil "~a.dfn" filename))))
-	(postgres-tmp1 (format nil "~a.1" *postgres-temp-filename*))
-	(postgres-tmp2 (format nil "~a.2" *postgres-temp-filename*)))
-  (dump-db *psql-lexicon* postgres-tmp1 postgres-tmp2)
-  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-					       postgres-tmp1
-					       revision-filename))
-  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-					       postgres-tmp2
-					       defn-filename))
-  ))
+  (when
+      (catch 'pg:sql-error
+	(progn
+	  (get-postgres-temp-filename)
+	  (let ((revision-filename (namestring (pathname (format nil "~a.csv" filename))))
+		(defn-filename (namestring (pathname (format nil "~a.dfn" filename))))
+		(postgres-tmp1 (format nil "~a.1" *postgres-temp-filename*))
+		(postgres-tmp2 (format nil "~a.2" *postgres-temp-filename*)))
+	    (dump-db *psql-lexicon* postgres-tmp1 postgres-tmp2)
+	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
+							 postgres-tmp1
+							 revision-filename))
+	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
+							 postgres-tmp2
+							 defn-filename)))))
+    (format t "~%Dump aborted... (do you have the appropriate db permissions?")))
 
 (defun dump-scratch (filename)
   (get-postgres-temp-filename)
@@ -191,76 +205,70 @@
 					       *postgres-temp-filename*
 					       filename)))
 
-;;(defun normalize-csv-lexicon (filename-in filename-out)
-;;  (get-postgres-temp-filename)
-;;  (setf filename-in (namestring (pathname filename-in)))
-;;  (setf filename-out (namestring (pathname filename-out)))
-;;  (fn-get-records *psql-lexicon* ''normalize-csv-lexicon filename-in *postgres-temp-filename*)
-;;  (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-;;					       *postgres-temp-filename*
-;;					       filename-out)))
+(defun absolute-namestring (format str)
+  (namestring (pathname (format nil format str))))
 
-;;(defun merge-into-psql-lexicon (filename)
-;;  (setf filename (namestring (pathname filename)))
-;;  (let* ((dump-filename (format nil "~a/lexdb-temp.merge" *postgres-user-temp-dir*))
-;;	 (filename-normalized (format nil "~a.new" dump-filename))
-;;	 (filename-sorted (format nil "~a.s" filename-normalized))
-;;	 (dump-filename-sorted (format nil "~a.s" dump-filename))
-;;	 (add-filename (format nil "~a.add" dump-filename))
-;;	 (command-str-sort-file (format nil "LANG=c sort ~a > ~a" filename-normalized filename-sorted))
-;;	 (command-str-sort-dumpfile (format nil "LANG=c sort ~a > ~a" dump-filename dump-filename-sorted))
-;;	 (command-str-add (format nil "LANG=c diff ~a ~a | LANG=c grep -e '^> ' | LANG=c sed 's/^> //' > ~a" dump-filename-sorted filename-sorted add-filename))
-;;	 (command-str-rm-files (format nil "rm ~a*" dump-filename))
-;;	 )
-;;    (unless
-;;	(and *psql-lexicon* (connection *psql-lexicon*))
-;;      (initialize-psql-lexicon))
-;;    (format *postgres-debug-stream* "~%(dumping current lexicon)")
-;;    (dump-psql-lexicon dump-filename)
-;;    (format *postgres-debug-stream* "~%(normalizing new lexicon)")
-;;    (normalize-csv-lexicon filename filename-normalized)
-;;    (format *postgres-debug-stream* "~%(sorting files)")
-;;    (common-lisp-user::run-shell-command command-str-sort-file)
-;;    (common-lisp-user::run-shell-command command-str-sort-dumpfile)
-;;    (format *postgres-debug-stream* "~%(updating db)")
-;;    (common-lisp-user::run-shell-command command-str-add)
-;;    (add-to-db *psql-lexicon* add-filename)
-;;    (common-lisp-user::run-shell-command (format nil "mv ~a ~a/lexdb.new_entries" add-filename *postgres-user-temp-dir*))
-;;    (common-lisp-user::run-shell-command command-str-rm-files)
-;;    (format *postgres-debug-stream* "~%(building current_grammar)")
-;;    (build-current-grammar *psql-lexicon*)))
+;(defun merge-into-psql-lexicon2 (lexicon filename)
+;  (get-postgres-temp-filename)
+;;  (let ((revision-filename 
+;;	 (namestring (pathname (format nil "~a.csv" filename))))
+;;	(new-entries-filename 
+;;	 (namestring (pathname (format nil "~a/lexdb.new_entries" *postgres-user-temp-dir*))))
+;;	(defn-filename (namestring (pathname (format nil "~a.dfn" filename)))))
+;  (let ((revision-filename 
+;	 (absolute-namestring "~a.csv" 
+;			      filename))
+;	(new-entries-filename 
+;	 (absolute-namestring "~a/lexdb.new_entries" 
+;			      *postgres-user-temp-dir*))
+;	(defn-filename 
+;	    (absolute-namestring "~a.dfn" 
+;				 filename)))
+;    (format t "~%(~a new revision entries)"
+;	    (merge-into-db lexicon 
+;			   revision-filename
+;			    *postgres-temp-filename*))
+;    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
+;						 *postgres-temp-filename*
+;						 new-entries-filename))
+;    
+;    (if (probe-file defn-filename)
+;	(format t "~%(~a new defn entries)"
+;		(merge-defn lexicon 
+;			    defn-filename)))
+;    (build-current-grammar *psql-lexicon*)
+;    ))
 
 (defun merge-into-psql-lexicon2 (lexicon filename)
-  (get-postgres-temp-filename)
-  (let ((revision-filename (namestring (pathname (format nil "~a.csv" filename))))
-	(new-entries-filename 
-	 (namestring (pathname (format nil "~a/lexdb.new_entries" *postgres-user-temp-dir*))))
-	(defn-filename (namestring (pathname (format nil "~a.dfn" filename))))
-	)
-    
-    (format t "~%(~a new revision entries)"
-	    (merge-into-db lexicon 
-			   revision-filename
-			    *postgres-temp-filename*))
-    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-						 *postgres-temp-filename*
-						 new-entries-filename))
-    
-    (if (probe-file defn-filename)
-	(format t "~%(~a new defn entries)"
-		(merge-defn lexicon 
-			    defn-filename)))
-    (build-current-grammar *psql-lexicon*)
-    ))
-
+  (when
+      (catch 'pg:sql-error
+	(progn
+	  (get-postgres-temp-filename)
+	  (let ((revision-filename 
+		 (absolute-namestring "~a.csv" 
+				      filename))
+		(defn-filename 
+		    (absolute-namestring "~a.dfn" 
+					 filename)))
+	    ;; postgres universe
+	    (format t "~%(~a new revision entries)"
+		    (merge-into-db lexicon 
+				   revision-filename))
+	    ;; feedback
+	    (if (probe-file defn-filename)
+		(format t "~%(~a new defn entries)"
+			(merge-defn lexicon 
+				    defn-filename)))
+	    (build-current-grammar *psql-lexicon*))))
+    (format t "Merge new entries aborted... (do you have the appropriate db permissions?)")))
+	
 (defmethod initialize-userschema ((lexicon psql-database))
   (unless
-      (fn-get-val lexicon ''test-user *postgres-current-user*)
-    (format *postgres-debug-stream* "~%(initializing schema ~a)" *postgres-current-user*)
-    (fn-get-val lexicon ''create-schema *postgres-current-user*)
+      (fn-get-val lexicon ''test-user (user lexicon))
+    (format *postgres-debug-stream* "~%(initializing schema ~a)" (user lexicon))
+    (fn-get-val lexicon ''create-schema (user lexicon))
     (if *postgres-mwe-enable*
-	(mwe-initialize-userschema lexicon))
-    ))
+	(mwe-initialize-userschema lexicon))))
 
 (defmethod retrieve-fn-defns ((lexicon psql-lex-database))
   (let* ((sql-str (format nil "SELECT * FROM qry;"))

@@ -164,11 +164,11 @@ SELECT show_scratch();
 
  
 -- work around bug in postgres server (v 7.4)
-INSERT INTO qrya VALUES ( 'merge-into-db', 0, 'text' );
-INSERT INTO qrya VALUES ( 'merge-into-db', 1, 'text' );
 INSERT INTO qry VALUES 
-       ( 'merge-into-db', 2, 
+       ( 'merge-into-db', 0, 
        '
+---- n o t e : must copy file to temp before invoking this code
+----           eg. COPY TO stdin from frontend
  DROP INDEX public_orthkey;
  DROP INDEX name_modstamp;
  DROP INDEX public_revision_name_modstamp;
@@ -176,8 +176,6 @@ INSERT INTO qry VALUES
  DROP INDEX public_revision_name_pattern;
  ALTER TABLE public.revision DROP CONSTRAINT revision_pkey;
 
- DELETE FROM temp;
- COPY temp FROM $0 DELIMITERS '','' WITH NULL AS '''';
  DELETE FROM revision_new;
 
  CREATE INDEX temp_name_userid_version on temp (name, userid, version);
@@ -194,24 +192,29 @@ INSERT INTO qry VALUES
  CREATE UNIQUE INDEX name_modstamp ON public.revision (name,modstamp); 
  CREATE INDEX public_revision_name_modstamp ON public.revision (name, modstamp);
 
-CREATE UNIQUE INDEX public_revision_name
+CREATE INDEX public_revision_name
  ON public.revision (name varchar_ops); 
-SELECT if_version(''7.4'',''CREATE UNIQUE INDEX public_revision_name_pattern ON public.revision (name varchar_pattern_ops)'',''CREATE UNIQUE INDEX public_revision_name_pattern ON public.revision (name)'');
+SELECT if_version(''7.4'',''CREATE INDEX public_revision_name_pattern ON public.revision (name varchar_pattern_ops)'',''CREATE INDEX public_revision_name_pattern ON public.revision (name)'');
 
- COPY revision_new TO $1 DELIMITERS '','' WITH NULL AS '''';
  SELECT count(*) FROM revision_new;
 ' );
 
-----INSERT INTO qrya VALUES ( 'merge-into-db', 0, 'e-text' );
-----INSERT INTO qrya VALUES ( 'merge-into-db', 1, 'e-text' );
-----INSERT INTO qry VALUES 
-----       ( 'merge-into-db', 2, 
-----       'SELECT merge_into_db($0,$1)' );
-
-INSERT INTO qrya VALUES ( 'merge-defn', 0, 'e-text' );
+-- work around bug in postgres server (v 7.4)
 INSERT INTO qry VALUES 
-       ( 'merge-defn', 1, 
-       'SELECT merge_defn($0)' );
+       ( 'merge-defn', 0,
+'---- n o t e : must copy file to temp_defn before invoking this code
+----           eg. COPY TO stdin from frontend
+ CREATE TABLE temp_defn_new AS 
+  SELECT * FROM (SELECT mode, slot, field FROM temp_defn EXCEPT
+   SELECT mode, slot, field FROM defn) AS t1 
+   NATURAL JOIN temp_defn;
+ INSERT INTO defn
+  SELECT * FROM temp_defn_new;
+ DELETE FROM meta WHERE var=''tmp-merge-defn'';
+ INSERT INTO meta VALUES (''tmp-merge-defn'',(SELECT count(*) FROM temp_defn_new));
+ DROP TABLE temp_defn_new;
+ DROP TABLE temp_defn;
+ SELECT val FROM meta WHERE var=''tmp-merge-defn'';' );
 
 INSERT INTO qrya VALUES ( 'merge-multi-into-db', 0, 'e-text' );
 INSERT INTO qry VALUES 
@@ -390,67 +393,6 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
--- scrapped: work around bug in postgres server (v 7.4)
--- CREATE OR REPLACE FUNCTION merge_into_db(text,text) RETURNS integer AS '
--- BEGIN
---  DROP INDEX public_orthkey;
---  DROP INDEX name_modstamp;
---  DROP INDEX public_revision_name_modstamp;
---  DROP INDEX public_revision_name;
---  DROP INDEX public_revision_name_pattern;
---  ALTER TABLE public.revision DROP CONSTRAINT revision_pkey;
-
---  DELETE FROM temp;
---  EXECUTE ''COPY temp FROM '' || $1 || '' DELIMITERS '''','''' WITH NULL AS '''''''' '';
---  DELETE FROM revision_new;
--- 
---  CREATE INDEX temp_name_userid_version on temp (name, userid, version);
--- 
---  INSERT INTO revision_new
---   SELECT * FROM (SELECT DISTINCT name,userid,version FROM temp EXCEPT SELECT name,userid,version FROM public.revision) AS t1 NATURAL JOIN temp;
--- 
---  DROP INDEX temp_name_userid_version;
---  DELETE FROM temp;
---  INSERT INTO public.revision SELECT * FROM revision_new;
---  
---  ALTER TABLE public.revision ADD PRIMARY KEY (name,version,userid);
---  CREATE INDEX public_orthkey ON public.revision (orthkey); 
---  CREATE UNIQUE INDEX name_modstamp ON public.revision (name,modstamp); 
---  CREATE INDEX public_revision_name_modstamp ON public.revision (name, modstamp);
--- 
--- CREATE UNIQUE INDEX public_revision_name
---  ON public.revision (name varchar_ops); 
--- IF check_version(''7.4'') THEN
--- 	CREATE UNIQUE INDEX public_revision_name_pattern ON public.revision (name varchar_pattern_ops);
--- ELSE
--- 	CREATE UNIQUE INDEX public_revision_name_pattern ON public.revision (name); 
--- END IF;
--- 
---  EXECUTE '' COPY revision_new TO '' || $2 || '' DELIMITERS '''','''' WITH NULL AS '''''''' '';
---  RETURN (SELECT count(*) FROM revision_new);
--- END;
--- ' LANGUAGE plpgsql;
--- 
-
-CREATE OR REPLACE FUNCTION merge_defn(text) RETURNS text AS '
-BEGIN
- CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL;
- EXECUTE ''COPY temp_defn FROM'' || $1;
- CREATE TABLE temp_defn_new AS 
-  SELECT * FROM (SELECT mode, slot, field FROM temp_defn EXCEPT
-   SELECT mode, slot, field FROM defn) AS t1 
-   NATURAL JOIN temp_defn;
- INSERT INTO defn
-  SELECT * FROM temp_defn_new;
- DELETE FROM meta WHERE var=''tmp-merge-defn'';
- INSERT INTO meta VALUES (''tmp-merge-defn'',(SELECT count(*) FROM temp_defn_new));
- DROP TABLE temp_defn_new;
- DROP TABLE temp_defn;
- RETURN (SELECT val FROM meta WHERE var=''tmp-merge-defn'');
-END;
-' LANGUAGE plpgsql;
-
-
 CREATE OR REPLACE FUNCTION merge_multi_into_db(text) RETURNS boolean AS '
 BEGIN
  DELETE FROM temp_multi;
@@ -586,19 +528,6 @@ CREATE OR REPLACE FUNCTION remove_schema(text) RETURNS boolean AS
 BEGIN
  EXECUTE ''DROP SCHEMA '' || $1 || '' CASCADE'';
  EXECUTE ''DELETE FROM public.meta WHERE var=''''user'''' and val= '' || quote_literal($1) ;
-RETURN true;
-END;' 
-LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION load_semi() RETURNS boolean AS
-'
-BEGIN
- DELETE FROM prd;
- DELETE FROM arg;
- DELETE FROM ddd;
- COPY prd FROM ''/home/bmw20/tmp/semi.obj.prd'';
- COPY arg FROM ''/home/bmw20/tmp/semi.obj.arg'';
- COPY ddd FROM ''/home/bmw20/tmp/semi.obj.ddd'';
 RETURN true;
 END;' 
 LANGUAGE plpgsql;
