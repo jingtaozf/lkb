@@ -226,11 +226,14 @@
 
 
 (defun show-parse nil
-   (if *parse-record*
-      (for edge in *parse-record*
-         do
-         (format t "~&Edge ~A P:" (edge-id edge))
-         (pprint (parse-tree-structure edge)))
+  (if *parse-record*
+      (progn
+        (for edge in *parse-record*
+             do
+             (format t "~&Edge ~A P:" (edge-id edge))
+             (pprint (parse-tree-structure edge)))
+        (when (fboundp 'mrs::output-mrs-after-parse)
+          (funcall 'mrs::output-mrs-after-parse *parse-record*)))
       (format t "~&No parses")))
 
 (defun show-gen-result nil
