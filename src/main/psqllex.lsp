@@ -497,7 +497,7 @@
 
 ;(defmethod set-lexical-entry (name constraint)
 
-(defmethod set-lexical-entry ((lexicon lex-database) orth-string lex-id new-entry)
+(defmethod set-lexical-entry ((lexicon psql-lex-database) orth-string lex-id new-entry)
 (error (format nil "METHOD UNDER CONSTRUCTION"))
 ;  (unless lex-id
 ;    (setf lex-id (if orth (make-lex-id orth sense-id) sense-id))
