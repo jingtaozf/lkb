@@ -3,6 +3,8 @@
 ;;; but are repeated to allow for the case where this is read in after 
 ;;; another grammar
 
+(defparameter *lkb-system-version* nil)
+
 (defparameter *templates* nil 
    "types which are treated as templates to avoid excessive glbs")
 
@@ -60,4 +62,6 @@
   "controls whether user is asked for type display options file")
 
 (defparameter *feature-ordering*
- '(arg-str orth syn sem))
+    '(arg-str orth syn sem))
+
+

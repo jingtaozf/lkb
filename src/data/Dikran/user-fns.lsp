@@ -46,3 +46,24 @@
                                    fs) 
                                'productive)))
     (and affix (equal (type-of-fs affix) '(false)))))
+
+
+(defun make-orth-tdfs (orth)
+  (let ((unifs nil)
+        (tmp-orth-path *orth-path*))
+    (for orth-value in (split-into-words orth)
+         do
+         (let ((opath (create-path-from-feature-list 
+                       (append tmp-orth-path *list-head*))))
+           (push (make-unification :lhs opath                    
+                                   :rhs
+                                   (make-u-value 
+                                    :types (list orth-value)))
+                 unifs)
+           (setq tmp-orth-path (append tmp-orth-path *list-tail*))))
+    (let ((indef (process-unifications unifs)))
+      (when indef
+        (setf indef (create-wffs indef))
+        (make-tdfs :indef indef)))))
+
+
