@@ -18,6 +18,16 @@
                  "~%Inserting ~A" character)
          character))))
 
+(defun check-for-string (str istream)
+  (loop for character in (coerce str 'list)
+      do
+	(let ((next-char (peek-char t istream nil 'eof)))
+	  (if (char= next-char character)
+	      (read-char istream)
+	      (error 
+                 "~%Syntax error: ~A expected and not found at position ~A" 
+                 character (file-position istream))))))
+
 
 (defun lkb-read-cerror (istream string &rest rest)
   (setf *syntax-error* t)
