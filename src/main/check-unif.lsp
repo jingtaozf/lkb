@@ -2,43 +2,119 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
+;;; *check-paths* is the parameter set in user file. This is used to construct value
+;;; of *check-paths-optimised* which is what is used internally
+
+(defparameter *check-paths* nil)
+(defparameter *check-paths-optimised* nil)
+
+
+;;; Macro for wrapping around some call to parse a sentence or a set of sentences -
+;;; collects stats on all feature paths that fail in unification, and computes
+;;; best set for checking values of before unifications. Writes out set to specified
+;;; file
+;;;
+;;; NB existing set of checking paths is left untouched
 
 #|
-;;; find ALL failing paths, then order them
+(with-check-path-list-collection "Macintosh HD:lkb99-expt:big:grammar:lkb:checkpaths1.lsp"
+   (parse-tsdb-sentences "Macintosh HD:lkb99-expt:big:itemsamp30"
+      "Macintosh HD:lkb99-expt:big:parsesamp30" "Macintosh HD:lkb99-expt:big:resultsamp30"))
 
+(with-check-path-list-collection "Macintosh HD:lkb99-expt:big:grammar:lkb:checkpaths1.lsp"
+   (parse '("Devito" "manages" "a" "programmer" "Abrams" "interviewed" "and" "Browne" "hired")))
+|#
+
+(defmacro with-check-path-list-collection (output-file &body forms)
+   `(let ((.saved-names-and-fns. (install-unify-check-paths-functions))
+          (.completedp. nil))
+      (declare (special *fail-path-list*))
+      (unwind-protect
+         (prog1
+            (let ((*check-paths-optimised* nil)) ; disable any path checking in force
+               ,@forms)
+            (setq .completedp. t))
+         (dolist (name-and-fn .saved-names-and-fns.)
+            (setf (symbol-function (car name-and-fn)) (cdr name-and-fn)))
+         (when .completedp.
+            (with-open-file (.str. ,output-file :direction :output :if-exists :supersede
+                                   :if-does-not-exist :create)
+               (let ((*print-pretty* nil))
+                  (format .str. "#|~%Check paths from~%~{  ~S~%~}|#~%" ',forms))
+               (write
+                  `(defparameter *check-paths* ',(extract-check-paths *fail-path-list*))
+                  :stream .str. :escape t :pretty t :length nil :level nil)
+               (terpri .str.)
+               (format t "~%Wrote file ~A" (truename ,output-file)))))))
+      
+
+(defun extract-check-paths (fail-path-list)
+   (when fail-path-list
+      (let ((max 0) (max-item nil))
+         (dolist (item fail-path-list)
+            (when (> (hash-table-count (cdr item)) max)
+               (setq max (hash-table-count (cdr item)))
+               (setq max-item item)))
+         (cons (cons (car max-item) max)
+            (extract-check-paths
+               (mapcan
+                  #'(lambda (item)
+                      (let ((item-table (cdr item)))
+                         (maphash
+                            #'(lambda (key val)
+                                (declare (ignore val))
+                                (remhash key item-table))
+                            (cdr max-item))
+                         (when (> (hash-table-count item-table) 0)
+                            (list (cons (car item) item-table)))))
+                  (remove max-item fail-path-list :test #'eq)))))))
+
+
+;;; find ALL failing paths, not just first
+;;;
 ;;; performs similar function to reordering features so most common failing
 ;;; features come first - here, the most commonly failing paths are appended to
 ;;; front of feature structures, in order of most commonly failing first
+;;;
+;;; Only collects when actually parsing - as long as other bits of code don't
+;;; call unify-dags, but unifiable-dags-p etc instead
+;;;
+;;; NB If unify-dags or unify2 change, then the code below had better be
+;;; updated accordingly!!!
 
-;;; NB must make sure only to collect when actually parsing
-
-(defvar *inside-unify-dags* nil)
-(defvar *unify-dags-fail* nil)
-
-(defparameter *fail-path-list* nil)
-(defparameter *unify-dags-fail-count* 0)
-
-(defun unify-dags (dag1 dag2)
+(defun install-unify-check-paths-functions nil
+   (declare (special *unify-dags-fail-count* *fail-path-list*))
+   (prog1
+      (mapcar #'(lambda (name) (cons name (symbol-function name))) '(unify-dags unify2))
+      (setq *unify-dags-fail-count* 0)
+      (setq *fail-path-list* nil)
+;
+(setf (symbol-function 'unify-dags)
+#'(lambda (dag1 dag2)
    (if *within-unification-context-p*
-      (progn #+:mcl(decf bb (CCL::%HEAP-BYTES-ALLOCATED))
-             (prog1
-                (let ((*inside-unify-dags* t)
-                      (*unify-dags-fail* nil))
-                   (incf *unify-dags-fail-count*)
-                   (catch '*fail*
-                      (unify1 dag1 dag2 nil)
-                      (if *unify-dags-fail* nil dag1)))
-                #+:mcl(incf bb (CCL::%HEAP-BYTES-ALLOCATED))
-                ))
+      (let ((*collecting-check-paths-p* t)
+            (*unify-dags-failed-p* nil))
+         (declare
+            (special *collecting-check-paths-p* *unify-dags-failed-p*
+               *unify-dags-fail-count*))
+         (incf *unify-dags-fail-count*)
+         (catch '*fail*
+            (unify1 dag1 dag2 nil)
+            (if *unify-dags-failed-p* nil dag1)))
       (with-unification-context (dag1) (when (unify-dags dag1 dag2) (copy-dag dag1)))))
-
-(defun unify2 (dag1 dag2 path)
+)
+;
+(setf (symbol-function 'unify2)
+#'(lambda (dag1 dag2 path)
+   (declare
+      (special *collecting-check-paths-p* *unify-dags-failed-p* *unify-dags-fail-count*
+         *fail-path-list*))
    (multiple-value-bind (new-type constraintp)
          (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
-      (if (or new-type *inside-unify-dags*)
+      (if (or new-type *collecting-check-paths-p*)
          (progn
             (unless new-type
-               (setq *unify-dags-fail* t)
+               (setq *unify-dags-failed-p* t)
                (let* ((p (reverse path))
                       (item (assoc p *fail-path-list* :test #'equal)))
                   (unless item
@@ -95,146 +171,66 @@
                (format t "~%Unification of ~A and ~A failed at path ~:A" 
                   (unify-get-type dag1) (unify-get-type dag2) (reverse path)))
             (throw '*fail* nil)))))
-
-;;;
-
-(setq *check-paths* nil)
-(setq *fail-path-list* nil)
-(setq *unify-dags-fail-count* 0)
-
-;run parser
-
-(parse-tsdb-sentences "Macintosh HD:lkb99-expt:big:itemsamp30"
-     "Macintosh HD:lkb99-expt:big:resultsamp30")
-
-;;;
-
-(defun extract-check-paths (fail-path-list)
-   (when fail-path-list
-      (let ((max 0) (max-item nil))
-         (dolist (item fail-path-list)
-            (when (> (hash-table-count (cdr item)) max)
-               (setq max (hash-table-count (cdr item)))
-               (setq max-item item)))
-         (cons (cons (car max-item) max)
-            (extract-check-paths
-               (mapcan
-                  #'(lambda (item)
-                      (let ((item-table (cdr item)))
-                         (maphash
-                            #'(lambda (key val)
-                                (declare (ignore val))
-                                (remhash key item-table))
-                            (cdr max-item))
-                         (when (> (hash-table-count item-table) 0)
-                            (list (cons (car item) item-table)))))
-                  (remove max-item fail-path-list :test #'eq)))))))
-
-(setq *check-paths* (extract-check-paths *fail-path-list*))
-
-(mapc #'print *check-paths*)
-
-|#
-
-
-;;;
-
-(defparameter *check-paths* nil)
-
-(setq *check-paths* '(
-((SYNSEM LOCAL CAT HEAD) . 250690) 
-((SYNSEM LOCAL CAT VALENCE COMPS FIRST OPT) . 144867) 
-((INFLECTED) . 100348) 
-((SYNSEM LOCAL CONT KEY) . 87957) 
-((SYNSEM LOCAL CAT VALENCE COMPS) . 76012) 
-((SYNSEM LOCAL CAT VALENCE SUBJ) . 44495) 
-((SYNSEM LOCAL CAT ROOT) . 27268) 
-((SYNSEM LOCAL CAT VALENCE SUBJ FIRST LOCAL CAT HEAD CASE) . 25531) 
-((SYNSEM LOCAL CONJ) . 23818) 
-((SYNSEM LOCAL CAT HEAD MOD) . 16292) 
-((SYNSEM NON-LOCAL SLASH LAST) . 13786) 
-((SYNSEM LOCAL CAT HEAD VFORM) . 12790) 
-((SYNSEM LOCAL CAT VALENCE SPR FIRST LOCAL CONT KEY) . 8029) 
-((SYNSEM LOCAL CONT MESSAGE) . 7206) 
-((SYNSEM LOCAL CAT VALENCE SUBJ FIRST OPT) . 5612) 
-((SYNSEM LOCAL CAT VALENCE SPR FIRST OPT) . 5480) 
-((SYNSEM LOCAL CAT VALENCE SPR) . 3967) 
-((SYNSEM LOCAL CAT HEAD INV) . 3562) 
-((SYNSEM) . 3490) 
-((SYNSEM NON-LOCAL SLASH LIST) . 3302) 
-((SYNSEM LOCAL CAT VALENCE SUBJ FIRST) . 1991) 
-((SYNSEM NON-LOCAL SLASH LIST FIRST CAT HEAD) . 1601) 
-((SYNSEM LOCAL CAT HEAD MOD CAT HEAD) . 1474) 
-((SYNSEM NON-LOCAL SLASH LIST FIRST CAT HEAD MOD CAT HEAD) . 1409) 
-((SYNSEM LOCAL CAT POSTHEAD) . 1263) 
-((SYNSEM LOCAL CAT VALENCE SUBJ FIRST LOCAL CONT INDEX) . 1124) 
-((SYNSEM LOCAL CONT INDEX) . 1099) 
-((SYNSEM LOCAL CAT VALENCE COMPS FIRST) . 1005) 
-;180
-((SYNSEM NON-LOCAL SLASH LIST FIRST CAT HEAD MOD) . 897) 
-((ARGS FIRST AFFIX) . 845) 
-;179
-;((SYNSEM LOCAL CTXT ACTIVATED) . 534) 
-;((SYNSEM NON-LOCAL SLASH LIST REST) . 487) 
-;((SYNSEM LOCAL CAT VALENCE SUBJ FIRST NON-LOCAL SLASH LAST) . 453) 
-;180
-;((SYNSEM LOCAL CAT VALENCE SUBJ FIRST NON-LOCAL SLASH LIST) . 394) 
-;((SYNSEM LOCAL CAT VALENCE COMPS FIRST LOCAL CAT HEAD) . 381) 
-;((SYNSEM LOCAL CAT VALENCE COMPS REST FIRST OPT) . 376) 
-;((SYNSEM LOCAL CAT HEAD PRD) . 283) 
-;((SYNSEM LOCAL CAT HEAD MOOD) . 266) 
-;((SYNSEM LOCAL ARG-S) . 266) 
-;((SYNSEM LOCAL CAT HEAD MOD CONT INDEX) . 253) 
-;((SYNSEM LOCAL CAT VALENCE SPR FIRST LOCAL CAT HEAD) . 244) 
-;(NIL . 202) 
-;192
-;((SYNSEM LOCAL CAT VALENCE SUBJ FIRST NON-LOCAL SLASH LAST REST) . 200) 
-;((SYNSEM LOCAL CONT --STEMLISZT LIST FIRST INST PNG PN) . 191) 
-;((SYNSEM LOCAL CAT VALENCE COMPS REST) . 172) 
-;((SYNSEM LOCAL CAT HEAD MOD CAT VALENCE SPR) . 167) 
-;((SYNSEM LOCAL CAT VALENCE SUBJ FIRST LOCAL CAT HEAD) . 153) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST CAT HEAD MOD CONT KEY) . 131) 
-;((SYNSEM LOCAL CAT VALENCE COMPS FIRST NON-LOCAL SLASH LAST REST) . 125) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST AGR PNG PN) . 120) 
-;((SYNSEM LOCAL CAT VALENCE SUBJ FIRST LOCAL AGR PNG PN) . 117) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST CAT VALENCE SUBJ) . 104) 
-;((SYNSEM LOCAL CAT VALENCE COMPS FIRST LOCAL CAT HEAD CASE) . 74) 
-;((SYNSEM LOCAL CAT HEAD MOD CAT VALENCE SUBJ) . 53) 
-;((SYNSEM LOCAL CONT LISZT LAST FIRST) . 31) 
-;((SYNSEM LOCAL CONJ CHEAD LEFT FIRST) . 30) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST CONT KEY) . 30) 
-;((SYNSEM LOCAL CAT VALENCE SPR FIRST LOCAL CONT KEY BV DIVISIBLE) . 29) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST CAT HEAD PRD) . 28) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST CAT HEAD CASE) . 27) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST CONT INDEX) . 21) 
-;((SYNSEM LOCAL CAT HEAD POSS) . 19) 
-;((SYNSEM LOCAL CAT HEAD MOD CONT KEY) . 17) 
-;((SYNSEM LOCAL CONJ CHEAD LEFT REST) . 16) 
-;((SYNSEM LOCAL CONT LISZT LIST FIRST) . 14) 
-;((SYNSEM LOCAL CONT INDEX DIVISIBLE) . 14) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST CAT HEAD MOD CAT VALENCE SPR) . 12) 
-;((SYNSEM LOCAL CAT VALENCE SUBJ FIRST NON-LOCAL SLASH LIST FIRST CAT HEAD) . 10) 
-;((SYNSEM LOCAL CONT ECONT KEY) . 8) 
-;((SYNSEM LOCAL CAT HEAD CASE) . 7) 
-;((SYNSEM LOCAL CAT HEAD MOD CAT HEAD TENSE) . 5) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST CAT HEAD MOD CONT LISZT LIST REST REST REST FIRST) . 5) 
-;((SYNSEM LOCAL CAT HEAD MOD CONT INDEX PNG PN) . 5) 
-;((SYNSEM LOCAL CAT VALENCE COMPS FIRST LOCAL CONT ECONT LISZT LAST REST FIRST) . 4) 
-;((SYNSEM LOCAL AGR PNG PN) . 4) 
-;((SYNSEM LOCAL STEMHEAD) . 4) 
-;((SYNSEM LOCAL CONT INDEX VIT VITMOOD) . 3) 
-;((SYNSEM LOCAL CONJ CHEAD LEFT REST FIRST) . 2) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST CAT POSTHEAD) . 2) 
-;((SYNSEM LOCAL CONT --STEMLISZT LIST FIRST) . 2) 
-;((SYNSEM LOCAL CAT VALENCE COMPS FIRST LOCAL CAT VALENCE SUBJ FIRST LOCAL CONT LISZT LAST REST REST FIRST INST PNG PN) . 1) 
-;((SYNSEM NON-LOCAL SLASH LIST FIRST CAT VALENCE SUBJ FIRST LOCAL CONT KEY) . 1) 
-;((SYNSEM LOCAL CONT INDEX PNG PN) . 1) 
-;((SYNSEM LOCAL CAT VALENCE COMPS REST FIRST) . 1) 
+)
+;
 ))
 
 
-#|
+;;; called from check-type-table, once constraints have been expanded. Needs to be
+;;; kept in synch with type hierarchy and constraints
 ;;;
+;;; daughters-restricted field of rules must be kept in synch with optimised paths.
+;;; This is done when a rule is read in
+;;;
+;;; (optimise-check-unif-paths)
+
+(defun optimise-check-unif-paths nil
+   (let ((freq-threshold (truncate (cdr (first *check-paths*)) 1000)))
+      ;; keep all paths whose freq is within a factor of 1000 of most frequent - but
+      ;; there's certainly scope here for experimenting with how many paths are kept
+      (setq *check-paths-optimised*
+         (mapcan
+            #'(lambda (path-and-freq)
+                (let
+                   ((data
+                      (cond
+                         ((not (and (listp (car path-and-freq)) (integerp (cdr path-and-freq))))
+                            (format t "~%Incorrect format for check path list")
+                            (return-from optimise-check-unif-paths nil))
+                         ((< (cdr path-and-freq) freq-threshold) nil)
+                         ((null (car path-and-freq)) ; null path
+                            (cdr path-and-freq))
+                         (t
+                            (let*
+                               ((feat (car (last (car path-and-freq))))
+                                (fs (constraint-of (maximal-type-of feat)))
+                                (type (type-of-fs (get-dag-value fs feat))))
+                               (when (consp type) (setq type (car type))) ; atomic type
+                               (let*
+                                  ((types (cons type (retrieve-descendants type)))
+                                   (len (length types)))
+                                  (if (<= len (integer-length most-positive-fixnum))
+                                     (mapcar
+                                        #'(lambda (d)
+                                            (cons d
+                                               (let ((val 0))
+                                                  (dolist
+                                                     (x (cons d (retrieve-descendants d))
+                                                        val)
+                                                     (setq val
+                                                        ;; set bit corresponding to pos
+                                                        ;; of x in types list
+                                                        (dpb 1 (byte 1 (position x types))
+                                                           val))))))
+                                        types)
+                                     (cdr path-and-freq))))))))
+                   (if data (list (cons (car path-and-freq) data)) nil)))
+            *check-paths*))
+      t))
+
+
+#|
+;;; update rules in situ with unif paths
 
 (dolist (table (list *rules* *lexical-rules*))
    (maphash
@@ -248,45 +244,65 @@
                    (restrict-fs (existing-dag-at-end-of (tdfs-indef fs) path)))
                (cdr f-list)))))
       table))
-(clear-type-cache)
-(gc)
-(parse-tsdb-sentences "Macintosh HD:lkb99-expt:big:itemsamp30"
-   "Macintosh HD:lkb99-expt:big:parsesamp30" "Macintosh HD:lkb99-expt:big:resultsamp30")
-
 |#
 
-
-;;;
+;;; Statically compute set of restrictor values for a tdfs or dag, and check two
+;;; sets of values for compatibility
 
 (defun restrict-fs (fs)
    (when (tdfs-p fs) (setq fs (tdfs-indef fs)))
    (mapcar
       #'(lambda (path-spec)
           (let ((v (existing-dag-at-end-of fs (car path-spec))))
-             (if v (type-of-fs v) nil)))
-      *check-paths*))
+             (if v
+                (let ((type (type-of-fs v)))
+                   (when type
+                      (if (consp (cdr path-spec))
+                         (or (cdr (assoc (if (consp type) (car type) type) (cdr path-spec)))
+                            (break "inconsistency"))
+                         type)))
+                nil)))
+      *check-paths-optimised*))
 
 
 (defun restrictors-compatible-p (daughter-restricted child-restricted)
    (dolist (dt daughter-restricted t)
       (let ((ct (pop child-restricted)))
-         ;; pull eq to avoid function call if true
-         (when (and dt ct (not (eq dt ct)) (not (find-gcsubtype dt ct)))
-            (return-from restrictors-compatible-p nil)))))
+         (cond
+            ((or (eql dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
+            ((not (integerp dt))
+               (unless (find-gcsubtype dt ct)
+                  (return-from restrictors-compatible-p nil)))
+            ((eql (logand dt ct) 0)
+               (return-from restrictors-compatible-p nil))))))
 
 
+;;; Versions called dynamically inside the scope of a set of unifications
 
-
-#|
-;;; for calling dynamically inside the scope of a set of unifications
-
-(defun x-restrict-fs (fs)
+(defun x-restrict-and-compatible-p (fs child-restricted)
    (when (tdfs-p fs) (setq fs (tdfs-indef fs)))
-   (mapcar
-        #'(lambda (path-spec)
-            (let ((v (x-existing-dag-at-end-of fs (car path-spec))))
-               (if v (unify-get-type v) nil)))
-        *check-paths*))
+   (dolist (path-spec *check-paths-optimised* t)
+      (let ((dt
+              (let ((v (x-existing-dag-at-end-of fs (car path-spec))))
+                 (if v
+                    (let ((type (dag-new-type v)))
+                       (when type
+                          (if (consp (cdr path-spec))
+                             (or
+                                (cdr
+                                   (assoc (if (consp type) (car type) type) (cdr path-spec)))
+                                (break "inconsistency"))
+                             type)))
+                    nil)))
+            (ct (pop child-restricted)))
+         (cond
+            ((or (null dt) (null ct) (eq dt ct))) ; eq possibly avoids a function call
+            ((not (integerp dt))
+               (unless (find-gcsubtype dt ct)
+                  (return-from x-restrict-and-compatible-p nil)))
+            ((eql (logand dt ct) 0)
+               (return-from x-restrict-and-compatible-p nil))))))
+
 
 (defun x-existing-dag-at-end-of (real-dag labels-chain)
    (cond 
@@ -308,4 +324,3 @@
    (dolist (arc (dag-comp-arcs dag) nil)
       (when (eql attribute (dag-arc-attribute arc))
          (return-from x-get-dag-value (dag-arc-value arc)))))
-|#
