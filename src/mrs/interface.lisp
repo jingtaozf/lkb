@@ -159,7 +159,7 @@
   (ignore-errors
    (let ((browser (fboundp (find-symbol "SHOW-MRS-WINDOW" :lkb))))
      (if (functionp browser)
-         (apply browser (list nil mrs title))
+       (apply browser (list nil mrs title))
        (output-mrs mrs 'simple)))))
 
 #|

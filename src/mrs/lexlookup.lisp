@@ -468,7 +468,7 @@ at this point).
                     (cons
                      (make-pv-unif (append new-path *instloc-path*)
                                    (make-instance-type value))
-                     (LKB::make-mrs-unifs (var-extra value) new-path))
+                     (lkb::make-mrs-unifs (var-extra value) new-path))
                   (list (make-pv-unif new-path
                                       value)))))))
   (if handel-unif (cons handel-unif other-unifs)

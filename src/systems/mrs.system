@@ -123,13 +123,17 @@
       :components
       ((:file "dependencies")))
      
+     (:module "translation"
+       :source-pathname "mrs"
+       :binary-pathname "mrs"
+       :components
+       ((:file "translate")))           ; collection of crude MT functions
+
      #+:nil
       (:module "extensions"
        :source-pathname "mrs"
        :binary-pathname "mrs"
        :components
-       ((:file "translate")             ; crude interlingual translation
-                                        ; not working 
-        (:file "time-convert")))))      ; may be useful to have a version of
+       ((:file "time-convert")))))      ; may be useful to have a version of
                                         ; this for non-VM apps
                                         ; currently VM specific
