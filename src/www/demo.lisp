@@ -307,11 +307,7 @@
         The parser encountered an (unexpected) error: ~
         &lsquo;~a&rsquo;~%</div>~%"
        error)))
-    (format 
-     stream 
-     "<div id=version>[ERG: ~a &mdash; LKB CVS: ~a]</div>~%"
-     (tsdb::current-grammar) 
-     (subseq lkb::*cvs-version* 6 (- (length lkb::*cvs-version*) 2)))))
+    (www-version stream)))
 
 (defun www-browse (request entity &key edges)
   #+:debug
@@ -524,7 +520,16 @@
                   ((:input :type "hidden" :name "frame" :value index))
                   :newline
                   (when frame
-                    (lkb::html-compare frame :stream *html-stream*)))))))))))
+                    (lkb::html-compare frame :stream *html-stream*))
+                  (www-version *html-stream*))))))))))
+
+(defun www-version (stream)
+  (format
+   stream 
+   "<div id=version>[ERG: ~a &mdash; LKB: ~a &mdash; ~a: ~a]</div>~%"
+   (tsdb::current-grammar) 
+   (subseq lkb::*cvs-version* 6 (- (length lkb::*cvs-version*) 2))
+   tsdb::*tsdb-name* tsdb::*tsdb-version*))
 
 (defun www-log (request input readings time edges error)
   (mp:with-process-lock (%www-log-lock%)
