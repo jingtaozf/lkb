@@ -61,8 +61,6 @@
 
 (defun create-mini-lkb-system-menu nil
   ;;; cut down system for teaching purposes
-;;  (unless (eql *lkb-system-version* :lkb4)
-;;    (error "LKB4 functions are probably not loaded"))
    (setf *lkb-menu*
    (make-instance 'menu :menu-title "Lkb" :menu-items
                   (list
@@ -74,7 +72,7 @@
                                                            :available-p :always)
                                            (make-menu-item :name "Reload grammar"
                                                            :value 'reload-script-file 
-                                                           :available-p :grammar))
+                                                           :available-p :grammar-file))
                                           :available-p :always)
                    (make-lkb-submenu-item :menu-title "View"
                                           :menu-items
