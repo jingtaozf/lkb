@@ -9,11 +9,17 @@
 
 (defparameter *www-port* 8000)
 
+(defparameter *www-lkb-css*
+  (make-pathname
+   :directory (pathname-directory 
+               (dir-append (get-sources-dir "www") '(:relative "www")))
+   :name "lkb.css"))
+
 (defparameter *www-maximal-number-of-results* 10)
 
 (defun lingo-publish ()
   (start :port *www-port*)
-  (publish-file :path "/lkb.css" :file "/home/oe/src/lkb/src/www/lkb.css")
+  (publish-file :path "/lkb.css" :file *www-lkb-css*)
   (publish :path "/erg"
     :content-type "text/html"
     :function #'(lambda (request entity) (www-run request entity))))
