@@ -401,7 +401,13 @@
     (loop
         with return = nil
         for ed in (eds-relations eds)
-        when (and (not (ed-bleached-p ed)) (not (eq (ed-mark ed) mark)))
+        when (and (not (ed-bleached-p ed)) 
+                  (not (eq (ed-mark ed) mark))
+                  (not (and (ed-quantifier-p ed)
+                            (loop
+                                with id = (ed-id ed)
+                                for ed in (eds-relations eds)
+                                thereis (equal (ed-id ed) id)))))
         do 
           (pushnew :fragmented (ed-status ed))
           (setf return t)
