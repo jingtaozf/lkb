@@ -15,7 +15,7 @@
                :directory (namestring
                            (dir-append 
                             (get-sources-dir "mt") '(:relative "mt")))
-               :name "bnc3.blm")))
+               :name "bnc.blm")))
 
 (defparameter *lm-input* nil)
 

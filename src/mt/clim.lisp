@@ -149,15 +149,11 @@
          (let* ((mrs (nth (mrs-transfer-i frame) 
                           (or (mrs-transfer-stack frame) 
                               (mrs-transfer-edges frame))))
-                (mrs (if (edge-p mrs) (clone-mrs (edge-mrs mrs)) mrs))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
                 (title 
                  (format nil "~a [sorted]" (transfer-title frame))))
            (when mrs
-             (setf (mrs:psoa-liszt mrs)
-               (stable-sort 
-                (mrs:psoa-liszt mrs) 
-                #'string-lessp :key #'mrs:rel-pred))
-             (browse-mrss (list mrs) title))))
+             (browse-mrss (list (mrs::sort-mrs mrs)) title))))
         
         (:step
          (let* ((edge (nth (mrs-transfer-i frame) 
@@ -325,6 +321,7 @@
                     (or (mrs-transfer-stack frame) 
                         (mrs-transfer-edges frame))))
          (mrs (edge-mrs edge))
+         (*package* (find-package :lkb))
          (*print-right-margin* 80))
     (clim:formatting-table (stream)
       (clim:with-text-style (stream (mrs-transfer-font))

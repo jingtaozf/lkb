@@ -41,6 +41,8 @@
      (:file "mrs")
      (:file "transfer")
      (:file "translate")
+     #+:clim
      (:file "clim")
      (:file "semi")
+     #+:multiprocessing
      (:file "lm")))))

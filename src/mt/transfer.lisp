@@ -14,7 +14,7 @@
 ;;; - think of a nice, declarative way to delete properties from indices.
 ;;;
 
-(defparameter *transfer-edge-limit* 100)
+(defparameter *transfer-edge-limit* 200)
 
 (defparameter *transfer-debug-stream* 
   (or #+:allegro excl:*initial-terminal-io* t))
@@ -24,6 +24,8 @@
 (defparameter *transfer-debug-p* t)
 
 (defparameter *transfer-postprocess-p* t)
+
+(defparameter *transfer-skolemize-p* nil)
 
 (defparameter %transfer-generation% 0)
 
@@ -112,6 +114,7 @@
   (list
    (list (mrs::vsym "e") 
          (cons (mrs::vsym "E.ASPECT.PERF") (mrs::vsym "-"))
+         #+:null
          (cons (mrs::vsym "E.MOOD") (mrs::vsym "indicative")))))
 
 (defparameter %transfer-properties-filter%
@@ -120,6 +123,7 @@
    (cons (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
    (cons (mrs::vsym "PROG") (mrs::vsym "E.ASPECT.PROGR"))
    (cons (mrs::vsym "PERF") (mrs::vsym "E.ASPECT.PERF"))
+   (cons (mrs::vsym "STATIVE") (mrs::vsym "E.ASPECT.STATIVE"))
    (cons *mtr-skolem-property* nil)
    (cons (mrs::vsym "MARK") nil)
    (cons (mrs::vsym "DITCH") nil)
@@ -185,7 +189,7 @@
      ((> (edge-id edge) *transfer-edge-limit*)
       (when *transfer-debug-p* (print-edges))
       (error 
-       "make-edge(): transfer edge limit exhausted (~a)."
+       "make-edge(): transfer edge limit exhausted (~a)"
        *transfer-edge-limit*))
      (t
       edge))))
@@ -691,7 +695,7 @@
          (%transfer-edge-id% 0)
          (%transfer-clones% nil)
          (%transfer-original-variables% nil)
-         (mrs (clone-mrs mrs))
+         (mrs (let ((*transfer-skolemize-p* t)) (clone-mrs mrs)))
          (n (loop
                 for variable in %transfer-clones%
                 maximize (or (mrs:var-id (first variable)) 0)
@@ -702,6 +706,7 @@
           (list (make-edge :mrs mrs :n n)) 
           *transfer-rule-sets*))
       (when condition
+        (unless debug (error condition))
         #+:clim
         (clim:beep)
         (format
@@ -1628,15 +1633,17 @@
       (let ((copy (mrs::make-var 
                    :type (mrs:var-type variable) :id (mrs:var-id variable))))
         (setf (mrs:var-extra copy)
-          (cons
+          (loop
+              for extra in (mrs:var-extra variable)
+              collect (mrs::make-extrapair 
+                       :feature (mrs::extrapair-feature extra)
+                       :value (mrs::extrapair-value extra))))
+        (when *transfer-skolemize-p*
+          (push
            (mrs::make-extrapair 
             :feature *mtr-skolem-property*
             :value (mrs::var-string variable))
-           (loop
-               for extra in (mrs:var-extra variable)
-               collect (mrs::make-extrapair 
-                        :feature (mrs::extrapair-feature extra)
-                        :value (mrs::extrapair-value extra)))))
+           (mrs:var-extra copy)))
         (push (cons variable copy) %transfer-clones%)
         copy)))
 
