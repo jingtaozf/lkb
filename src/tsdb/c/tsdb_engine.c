@@ -501,14 +501,25 @@ Tsdb_selection *tsdb_simple_join(Tsdb_selection *selection_1,
             } /* for */
             tuples[i] = (Tsdb_tuple *)NULL;
 #ifdef BIG_INSERT
-            success = tsdb_collect_tuples(result,tuples,lists,last,&size);
-            if (success) 
-              last++;
+            if (lists) {
+              success = tsdb_collect_tuples(result,tuples,lists,last,&size);
+              if (success) 
+                last++;
+              else {
+                free(tuples);
+                /* free arrays!!! */
+                return (Tsdb_selection*)NULL;
+              } /* else */
+            } /* if */
             else {
-              free(tuples);
-              /* free arrays!!! */
-              return (Tsdb_selection*)NULL;
-            } /* else */
+              if(tsdb_insert_into_selection(result, &tuples[0])) {
+                result->length++;
+              } /* if */
+              else {
+                free(tuples);
+                return NULL;
+              } /* else */
+            }
 #else
             /* in the first run we could count here! */
             if(tsdb_insert_into_selection(result, &tuples[0])) {
@@ -704,6 +715,8 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
  int index_1, index_2, key_1, key_2, offset_1, offset_2, *order;
  int  i, j, k, l;
  BOOL kaerb = FALSE,empty_1;
+ Tsdb_key_list*** lists=NULL;
+ int last, n_lists,size,success;
  
  
  for(offset_1 = 0, i = 0; !kaerb && i < selection_1->n_relations; i++) {
@@ -750,6 +763,20 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
  } /* if */
  result->length = 0;
 
+#ifdef FAST_INSERT
+ if (result->n_key_lists>1) {
+   lists = (Tsdb_key_list ***)malloc((result->n_key_lists+1)*
+                                     sizeof(Tsdb_key_list*)); 
+   size = 4000;
+   for (i=0;i<result->n_key_lists;i++) {
+     lists[i] = (Tsdb_key_list**)malloc((size+1)*sizeof(Tsdb_key_list*));
+   } /* for */
+ } /* if */
+ else
+   lists = NULL;
+ last = 0;
+#endif
+
 #if defined(DEBUG) && defined(TOM) && defined(CRAZY)
  fprintf(tsdb_debug_stream,"vor match\n");
  tsdb_print_selection(selection_1,tsdb_debug_stream); 
@@ -776,8 +803,24 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
                                     sizeof(Tsdb_tuple*));
      memcpy(tuples,next_1->tuples,
             (result->n_relations+1)*sizeof(Tsdb_tuple*));
-     if(tsdb_insert_into_selection(result, &tuples[0])) 
-       { result->length++; } /* if */
+     if (lists) {
+       if(tsdb_collect_tuples(result,tuples,lists,last,&size)) {
+         last ++;
+       }           
+       else {
+         free(tuples);
+         return (Tsdb_selection*)NULL;
+       } /* else */
+     } /* lists */
+     else {
+       if(tsdb_insert_into_selection(result, &tuples[0])) {
+         result->length++;
+       } /* if */
+       else {
+         free(tuples);
+         return (Tsdb_selection*)NULL;
+       } /* else */
+     } /* else lists */
    } /* for */
 
    if(next_1 != NULL) {
@@ -791,8 +834,21 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
        for (i=0; i<selection_2->n_relations ; i++)
          ordered_tuple[order[i]] = next_2->tuples[i];
        ordered_tuple[i]=NULL;
-       if(tsdb_insert_into_selection(result, &ordered_tuple[0])) 
-         result->length++;
+       if (lists)
+         if(tsdb_collect_tuples(result,ordered_tuple,lists,last,&size)) {
+           last ++;
+         }           
+         else {
+           free(ordered_tuple);
+           return (Tsdb_selection*)NULL;
+         } /* else */
+       else
+         if(tsdb_insert_into_selection(result, &ordered_tuple[0])) 
+           result->length++;
+         else {
+           free(ordered_tuple);
+           return (Tsdb_selection*)NULL;
+         } /* else */
      } /* for */
    } /* if */
 
@@ -824,9 +880,24 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
            ordered_tuple[order[i]]=bar->tuples[i];
          } /* for */
          ordered_tuple[i]=NULL;
-         if(tsdb_insert_into_selection(result, &ordered_tuple[0])) {
-           result->length++;
-         } /* if */
+         if (lists) {
+           if(tsdb_collect_tuples(result,ordered_tuple,lists,last,&size)) {
+             last ++;
+           }           
+           else {
+             free(ordered_tuple);
+             return (Tsdb_selection*)NULL;
+           } /* else */
+         }
+         else {
+           if(tsdb_insert_into_selection(result, &ordered_tuple[0])) {
+             result->length++;
+           }
+           else {
+             free(ordered_tuple);
+             return (Tsdb_selection*)NULL;
+           } /* else */
+         } /* else */
        } /* if */
      } /* for bar */
      
@@ -835,9 +906,23 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
                                       sizeof(Tsdb_tuple *));
        memcpy(tuples,foo->tuples,(result->n_relations + 1)*
               sizeof(Tsdb_tuple *)); 
-       if(tsdb_insert_into_selection(result, &tuples[0])) 
-         result->length++;  /* if */
-       else  free(tuples); 
+       if (lists) {
+         if(tsdb_collect_tuples(result,tuples,lists,last,&size)) {
+           last ++;
+         }           
+         else {
+           free(tuples);
+           return (Tsdb_selection*)NULL;
+         } /* else */
+       } 
+       else {
+         if(tsdb_insert_into_selection(result, &tuples[0])) 
+           result->length++;  /* if */
+         else {
+           free(tuples); 
+           return (Tsdb_selection*)NULL;
+         }
+       }
      } /* for */
      next_1 = last_1;
      next_2 = last_2;
@@ -866,11 +951,32 @@ Tsdb_selection *tsdb_simple_merge(Tsdb_selection *selection_1,
      else
        memcpy(tuples,foo->tuples,(result->n_relations + 1)*
               sizeof(Tsdb_tuple *));
-     if(tsdb_insert_into_selection(result, &tuples[0])) 
-       result->length++;  /* if */
-     else  free(tuples); 
+     if (lists)
+       if(tsdb_collect_tuples(result,tuples,lists,last,&size)) {
+         last ++;
+       }           
+       else {
+         free(tuples);
+         return (Tsdb_selection*)NULL;
+       } /* else */
+     else
+       if(tsdb_insert_into_selection(result, &tuples[0])) 
+         result->length++;  /* if */
+       else {
+         free(tuples); 
+         return (Tsdb_selection*)NULL;
+       }
    } /* for */
  } /* if */
+
+#ifdef FAST_INSERT
+ if (lists) {
+   success = tsdb_sort_tuples(lists,last,result->n_key_lists);
+   if (success) {
+     success = tsdb_array_to_lists(result,lists,last,size);
+   }
+ } /* if */
+#endif
  
  free(order);
  return(result);

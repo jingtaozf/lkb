@@ -2062,6 +2062,8 @@ BOOL tsdb_array_to_lists(Tsdb_selection* bar,Tsdb_key_list*** lists,
   int i,j;
   Tsdb_key_list* foo;
 
+  if (last==0)
+    return TRUE;
   for (i=0;i<bar->n_key_lists;i++) {
     foo = lists[i][0];
     bar->key_lists[i] = foo;
@@ -2090,14 +2092,34 @@ int tsdb_keylist_compare(Tsdb_key_list** foo,Tsdb_key_list** bar) {
   }
   return 0;
 } /* tsdb_keylist_compare() */
+
+int is_sorted(char* field,int num,int size, int(*compar)()) {
+  int i,sorted = 1;
+  char * obj_1,*obj_2;
+  
+  obj_2 = field;
+  for (i=0;sorted && i<num-1;i++) {
+    obj_1=obj_2;
+    obj_2=obj_2+size;
+    if (compar(obj_1,obj_2)>0)
+      sorted = 0;
+  } /* for */
+  return sorted;
+} /* is_sorted() */
 
 
 BOOL tsdb_sort_tuples(Tsdb_key_list*** lists,int last,int n_lists) {
   int i;
   
+  if (last==0)
+    return TRUE;
   for (i=0;i<n_lists;i++ ) {
-    qsort((char*)lists[i],last,sizeof(Tsdb_key_list*),
-          tsdb_keylist_compare);
+    if (!is_sorted((char*)lists[i],last,sizeof(Tsdb_key_list*),
+                   tsdb_keylist_compare))
+      qsort((char*)lists[i],last,sizeof(Tsdb_key_list*),
+            tsdb_keylist_compare);
+    else {
+    }
   } /* for () */
   return TRUE;
 } /* tsdb_sort_tuples () */
