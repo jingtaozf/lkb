@@ -184,7 +184,11 @@
   (setf *psorts-temp-index-file* 
     (make-pathname :name "templex-index" 
                    :device (pathname-device (lkb-tmp-dir))
-                   :directory (pathname-directory (lkb-tmp-dir)))))  
+                   :directory (pathname-directory (lkb-tmp-dir))))
+  (setf *leaf-temp-file* 
+    (make-pathname :name "biglex-rels" 
+                   :directory (pathname-directory (lkb-tmp-dir)))))
+
   
 
 
