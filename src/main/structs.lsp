@@ -151,7 +151,7 @@
             (or res
                 (progn 
                   (format t
-                          "~%Unifications specified are invalid or do not unify~%")
+                          "~%Unifications specified are invalid or do not unify")
                   nil)))))
 
 (defun unify-paths (lhs-path lhs-dag rhs-path rhs-dag)

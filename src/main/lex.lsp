@@ -440,8 +440,8 @@
 		  incorp-fs))))
 	(progn
 	  (if fs
-	      (format t "~%Structure for ~A could not be made well formed" lex-id)
-	    (format t "~%Structure for ~A could not be created" lex-id))
+	      (format t "~%Structure for ~A could not be made well formed~%" lex-id)
+	    (format t "~%Structure for ~A could not be created~%" lex-id))
 	  nil)))))
 
 ;; Check to see if compiled files match originals

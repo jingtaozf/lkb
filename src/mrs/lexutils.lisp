@@ -70,7 +70,7 @@
 	  (let ((new-fs (lex-entry-full-fs entry)))
 	    (if (and new-fs (not (eq new-fs :fail)))
 		(mrs::extract-lexical-relations entry)
-	      (format t "~%No feature structure for ~A" 
+	      (format t "~%No feature structure for ~A~%" 
 		      (lex-entry-id entry))))
 	  (unexpand-psort *lexicon* (lex-entry-id entry))))
      (mrs::check-for-redundant-filter-rules)

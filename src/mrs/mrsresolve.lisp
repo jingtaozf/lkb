@@ -241,7 +241,7 @@ printing routines -  convenient to make this global to keep printing generic")
       (progn 
         (format stream "~%~A scoped form(s)" (length binding-sets))
         (when (and max (> (length binding-sets) max))
-          (format stream "only printing first ~A" max)))
+          (format stream "only printing first ~A~%" max)))
     (if *fragment-p*
         (format stream "~%Treated as fragment~%")
       (format stream "~%WARNING: No valid scopes~%")))
@@ -251,30 +251,11 @@ printing routines -  convenient to make this global to keep printing generic")
                     binding-sets)
        do
        (setf *canonical-bindings* (canonical-bindings binding))
-       (output-connected-mrs1 mrsstruct 'indexed stream)
+       ;;; (output-connected-mrs1 mrsstruct 'indexed stream)
        (output-scoped-mrs mrsstruct :stream stream)
        (format stream "~%--------------------------~%"))
   (format stream "~%"))
   
-
-;;; slight variant on the above for PAGE toplevel
-
-(defun scope-mrs-struct (mrsstruct)
-  ;;; first output the existing structure in the indexed notation
-  (setf *canonical-bindings* nil)
-  (format t "~%Unscoped form")
-  (output-mrs mrsstruct 'indexed)
-  ;;; then try and find sets of bindings which will give a fully scoped 
-  ;;; structure, and output the results
-  (let ((binding-sets (make-scoped-mrs mrsstruct)))
-    (if binding-sets
-      (format t "~%Scoped form(s)")
-      (format t "~%WARNING: Invalid MRS structure"))
-    (loop for binding in binding-sets
-          do
-          (setf *canonical-bindings* (canonical-bindings binding))
-          (output-connected-mrs mrsstruct 'indexed)
-          (output-scoped-mrs mrsstruct))))
 
 ;;; ****** Functions for manipulating bindings *******
 
