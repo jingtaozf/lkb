@@ -353,7 +353,7 @@
 	     (list 
               (make-menu-item :name "Shrink menu"
                                     :value 'shrink-lkb-menu :available-p :always)
-	      (make-menu-item :name "Set options"
+	      (make-menu-item :name "Set options ..."
 			      :available-p :always
 			      :value 'get-parameters)
               (make-menu-item :name "Save display settings..."
