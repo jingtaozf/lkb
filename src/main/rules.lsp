@@ -498,3 +498,43 @@
 	      (rule-apply-index test)
 	      arg)
       t)))
+
+
+(defun rules-to-xml  (&key (stream t) file)
+  (let ((stream (if file
+                  (open file
+                        :direction :output :if-exists :supersede
+                        :if-does-not-exist :create)
+                  stream)))
+    (loop
+        for rule being each hash-value in *rules*
+        for id = (rule-id rule)
+        for tdfs = (rule-full-fs rule)
+        for type = (and tdfs (indef-type-of-tdfs tdfs))
+        for key = (first (rule-rhs rule))
+        for head = (let* ((daughters (rest (rule-order rule)))
+                          (dag (tdfs-indef tdfs))
+                          (head (existing-dag-at-end-of dag '(head-dtr))))
+                     (when head
+                       (loop
+                           for path in daughters
+                           for i from 0
+                           for daughter = (existing-dag-at-end-of dag path)
+                           when (eq daughter head)
+                           return i)))
+        when (and id type key) do
+          (format
+           stream
+           "<instance name=\"~(~a~)\" type=\"~(~a~)\" ~
+             ~@[head=\"~d\" ~] key=\"~d\" status=\"rule\"/>~%"
+           id type head key))
+    (loop
+        for rule being each hash-value in *lexical-rules*
+        for id = (rule-id rule)
+        for tdfs = (rule-full-fs rule)
+        for type = (and tdfs (indef-type-of-tdfs tdfs))
+        when (and id type) do
+          (format
+           stream
+           "<instance name=\"~(~a~)\" type=\"~(~a~)\" status=\"~a\"/>~%"
+           id type (if (inflectional-rule-p id) "irule" "lrule")))))

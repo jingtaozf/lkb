@@ -598,3 +598,27 @@
 		   ;; (setf (type-constraint type) nil)
 		   (setf (type-tdfs type) nil)))
 	     *types*)))
+
+(defun types-to-xml (&key (stream t) file)
+  (loop
+      with stream = (if file
+                      (open file
+                            :direction :output :if-exists :supersede
+                            :if-does-not-exist :create)
+                      stream)
+      for type being each hash-value in *types*
+      for name = (type-name type)
+      for parents = (type-parents type)
+      for daughters = (type-daughters type)
+      do
+        (format stream "<type name=\"~(~a~)\">~%  <parents>~%" name)
+        (loop
+            for parent in parents
+            do
+              (format stream "    <type name=\"~(~a~)\"/>~%" parent))
+        (format stream "  </parents>~%  <children>~%")
+        (loop
+            for daughter in daughters
+            do
+              (format stream "    <type name=\"~(~a~)\"/>~%" daughter))
+        (format stream "  </children>~%</type>~%")))

@@ -705,3 +705,22 @@
     (delete-file *psorts-temp-index-file*)))
 
 
+(defun lexicon-to-xml (&key (stream t) file)
+  (loop
+      with stream = (if file
+                      (open file
+                            :direction :output :if-exists :supersede
+                            :if-does-not-exist :create)
+                      stream)
+      with *batch-mode* = t
+      for id in (collect-psort-ids *lexicon*)
+      for entry = (read-psort *lexicon* id)
+      for tdfs = (and entry (lex-or-psort-local-fs entry))
+      for type = (and tdfs (indef-type-of-tdfs tdfs))
+      for stem = (and entry (lex-or-psort-orth entry))
+      when (and id type stem) do
+        (format
+         stream
+         "<instance name=\"~(~a~)\" type=\"~(~a~)\" ~
+           stem=\"~(~{~a~^ ~}~)\" status=\"lexicon\"/>~%"
+         id type stem)))
