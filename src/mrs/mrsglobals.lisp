@@ -335,3 +335,16 @@ set in the code")
       )
   "used to define the conversion of extra values between MRS and RMRS
    - specified by the grammar")
+
+
+;;; for algebra
+
+(defparameter *rule-algebra-table* nil)
+
+(defparameter *algebra-ignore-feats* nil)
+
+(defparameter *algebra-ignore-paths* nil)
+
+(defparameter *non-slot-features* nil)
+
+    

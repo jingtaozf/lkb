@@ -105,13 +105,13 @@
          (rule-name (if (rule-p item) (rule-id item) item)))
     (pop-up-menu
      `(
-       (,(format nil "Feature structure" (edge-id edge-record))
+       ("Feature structure"
 	:value fs)
-       (,(format nil "Unfilled feature structure" (edge-id edge-record))
+       ("Unfilled feature structure"
 	:value ufs)
-       (,(format nil "Feature structure - Edge ~A" (edge-id edge-record))
+       (,(format nil "Feature structure - Chart edge ~A" (edge-id edge-record))
 	:value edge-fs)
-       (,(format nil "Unfilled feature structure - Edge ~A" (edge-id edge-record))
+       (,(format nil "Unfilled feature structure - Chart edge ~A" (edge-id edge-record))
 	:value edge-ufs)
        ("Show edge in chart" 
         :value edge
@@ -122,11 +122,12 @@
                             *chart-generation-counter*))))
        (,(format nil "Rule ~A" (or rule-name ""))
 	:value rule)
-       #|
-       (,(format nil "Sement" (edge-id edge-record))
-	:value sement)
-       (,(format nil "Check algebra" (edge-id edge-record))
-       :value check-algebra) |#
+       ("Sement"
+	:value sement
+	:active ,(mrs::algebra-available-p))
+       ("Check algebra"
+	:value check-algebra
+	:active ,(mrs::algebra-available-p)) 
        ("Generate from edge" :value generate
                              :active ,(and *mrs-loaded*
                                        (not (g-edge-p edge-record))))

@@ -10,6 +10,9 @@
 
 (in-package :mrs)
 
+(defun algebra-available-p nil
+  *rule-algebra-table*)
+
 ;;; FIX
 ;;; variable naming - we would like this to be constant over a parse
 ;;; this implies calling the algebra construction code in such a way
@@ -110,11 +113,9 @@
   ;;; C-CONT is an issue
   (let ((slot-alist
 	 (lkb::collect-subdags-for-type fs 
-					   *hook-type* 
-					   '(lkb::arg-s lkb::kcmp)
-					   '((lkb::args) (lkb::c-cont)
-					     (lkb::sem)
-					     (lkb::synsem lkb::local lkb::cont)))))
+					*hook-type* 
+					*algebra-ignore-feats*
+					*algebra-ignore-paths*)))
     (loop for slot in slot-alist
 	for slot-hook = (construct-algebra-hook (car slot) t)
 			;;; returns nil if slot hook isn't coindexed with
@@ -129,8 +130,6 @@
 
 ;;; for mrscomp grammar we want (lkb::sem) in the ignore-paths list
 
-(defparameter *non-slot-features* '(lkb::SEM lkb::cont lkb::HOOK lkb::SYNSEM 
-				    lkb::LOCAL lkb::cat lkb::val lkb::head))
 
 (defun create-slot-name (paths)
   ;;; slot naming
@@ -180,26 +179,8 @@
 ;;; Checking that the algebra is obeyed
 
 ;;; Check an individual rule application
-
-(defparameter *rule-algebra-table*
-    '((head-complement-rule-0  1 nil)
-      (head-complement-rule-1  1 (COMPS1))
-      (head-complement-rule-2  1 (COMPS1 COMPS2) (2 3))
-      (head-specifier-rule  2 (SPR1))
-      (determiner-head-rule  1 (SPEC))
-      (head-modifier-rule 2 (MOD))
-      (modifier-head-rule 1 (MOD))
-      (noun-modifier-rule 1 nil)
-      (bare-pl-noun-rule 0 (DTR1))
-      (passive-rule 1 nil) ; modifies slots
-      (inversion-rule 1 nil)		; ditto
-      (coord-rule 1 nil)		; wrong ...
-      (head-gap-rule-1 1 nil) ; modifies slots
-      (head-gap-rule-2 1 (COMP2))		; modifies slots
-      (head-gap-rule-3 1 (COMP1))	; modifies slots
-      (head-filler-rule 2 (GAP))))
-      
-;;;  rule-name   semhead slot
+;;; this relies on *rule-algebra-table* which should be specified
+;;; in the mrsglobals file for the grammar for now
 
 (defun check-algebra (sement edge-record)
   (setf *mrs-comparison-output-messages* nil)
