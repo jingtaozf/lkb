@@ -56,7 +56,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (export '(open-write close-write open-read close-read write-record 
-	    read-record all-keys)))
+	    read-record all-keys num-entries)))
 
 (defparameter *cdb-ascii-p* t)
 
@@ -69,6 +69,9 @@
 
 (defmethod common-lisp:print-object ((instance cdb) stream)
     (format stream "#<cdb with ~A entries>" (cdb-num instance)))
+
+(defmethod num-entries ((instance cdb))
+  (cdb-num instance))
 
 ;; Write a four-byte integer as four consecutive characters
 

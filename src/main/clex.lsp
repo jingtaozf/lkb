@@ -81,7 +81,7 @@
 		  (cdb:open-read psorts-temp-file))
 		(setf (orth-db lexicon) 
 		  (cdb:open-read (psorts-temp-index-file lexicon)))
-		(unless (collect-psort-ids lexicon) (error "cached lexicon empty"))
+		(unless (> (cdb:num-entries (psort-db lexicon)) 1) (error "cached lexicon empty"))
 		t)
 	    (error (condition)
 	      (format t "~%Error: ~A~%" condition)
@@ -91,7 +91,7 @@
       (return-from read-cached-lex t)))
   (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
   nil))
-
+  
 (defmethod store-cached-lex ((lexicon cdb-lex-database))
   (cdb:close-write (psort-db lexicon))
   (cdb:close-write (orth-db lexicon))

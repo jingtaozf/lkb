@@ -147,9 +147,12 @@
   (unless (listp file-names) 
     (setf file-names (list file-names)))
   (setf *lex-file-list* file-names)
+  #+:psql
   (if (typep *lexicon* 'psql-lex-database)
       (initialize-lex *lexicon*)
     (clear-lex *lexicon*))
+  #-:psql
+  (clear-lex *lexicon*)
   (setf *ordered-lex-list* nil)
   (if (check-load-names file-names 'lexical)
       (progn
