@@ -666,57 +666,64 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
 
   Tsdb_tuple *tuple;
   Tsdb_value *value;
-  static char *buf=NULL;
-  static int s_buf = 1024;
+  static char *buf = (char *)NULL;
+  static int buf_size = 1024;
   int n, foo;
-  char *field, *fs, *bar,*baz;
+  char *field, *fs, *bar, *baz;
 
 
-  if (!buf) {
-    buf = malloc(s_buf);
-    if (!buf) {
+  if (buf == NULL) {
+    if((buf = (char *)malloc(buf_size)) == NULL) {
       fprintf(tsdb_error_stream,"read_tuple(): out of memory\n");
-      return NULL;
+      fflush(tsdb_error_stream);
+      return((Tsdb_tuple *)NULL);
     } /* if */
   } /* if */
-  
-  baz = fgets(buf,s_buf, input);
-  if (!baz)
-    return NULL;
-  n = strlen(baz);
-  while (baz[n-1]!='\n') {
-    s_buf+=s_buf;
-    buf = realloc(buf,s_buf);
-    if (!buf) {
-      fprintf(tsdb_error_stream,"read_tuple(): out of memory\n");
-      return NULL;
+
+  if(fgets(buf, buf_size, input) == NULL) {
+    return((Tsdb_tuple *)NULL);
+  } /* if */
+
+  n = strlen(buf);
+  while(buf[n - 1] != '\n') {
+    buf_size += buf_size;
+    if((buf = (char *)realloc(buf, buf_size)) == NULL) {
+      fprintf(tsdb_error_stream, "read_tuple(): out of memory\n");
+      fflush(tsdb_error_stream);
+      return((Tsdb_tuple *)NULL);
     } /* if */
-    fgets(buf+n,s_buf/2,input);
-    n = n+strlen(buf+n);
+    if(fgets(&buf[n], buf_size / 2, input) == NULL) {
+      return((Tsdb_tuple *)NULL);
+    } /* if */
+    n += strlen(&buf[n]);
   } /* while() */
 
-  
-  for (baz=strchr(baz,TSDB_FS),n=0 ; baz ; baz=strchr(baz+1,TSDB_FS), n++) 
- ;
-  if (n+1!=relation->n_fields) {
+  for(bar = strchr(buf ,TSDB_FS), n = 0;
+      bar != NULL;
+      bar = strchr(bar + 1, TSDB_FS), n++);
+  if(n + 1 != relation->n_fields) {
     fprintf(tsdb_error_stream,
-            "read_tuple(): relation %s has %d fields, tuple has %d fields\n",
-            relation->name,relation->n_fields,n+1);
-    fprintf(tsdb_error_stream,"in set: %s",buf);
-    return NULL;
+            "read_tuple(): arity mismatch (%d vs. %d) for `%s'",
+            n + 1, relation->n_fields, relation->name);
+    if((bar = strchr(buf, TSDB_FS)) != NULL) {
+      *bar = 0;
+    } /* if */
+    fprintf(tsdb_error_stream, " (%s).\n", buf);
+    fflush(tsdb_error_stream);
+    return((Tsdb_tuple *)NULL);
   } /* if */
   
-  
-  tuple = (Tsdb_tuple *)malloc(sizeof(Tsdb_tuple));
-  if (!tuple) {
+  if((tuple = (Tsdb_tuple *)malloc(sizeof(Tsdb_tuple))) == NULL) {
     fprintf(tsdb_error_stream,"read_tuple(): out of memory\n");
-    return NULL;
+    fflush(tsdb_error_stream);
+    return((Tsdb_tuple *)NULL);
   } /* if */
-  tuple->n_fields = n+1;
-  tuple->fields = (Tsdb_value **)malloc(sizeof(Tsdb_value*)*(n+2));
-  if (!tuple->fields) {
+  tuple->n_fields = n + 1;
+  if((tuple->fields =
+      (Tsdb_value **)malloc(sizeof(Tsdb_value*)*(n+2))) == NULL) {
     fprintf(tsdb_error_stream,"read_tuple(): out of memory\n");
-    return NULL;
+    fflush(tsdb_error_stream);
+    return((Tsdb_tuple *)NULL);
   } /* if */
   
   if(buf[0] != '\n') {
