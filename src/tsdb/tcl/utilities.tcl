@@ -896,15 +896,29 @@ proc tsdb_set {variable {value ""}} {
       }
       update_exact_p {
         set variable "*redwoods-update-exact-p*";
-        set value [lispify_truth_value $globals(tree,exactp)];
+        set value [lispify_truth_value $globals(tree,update,exactp)];
+      }
+      compare_exact_p {
+        set variable "*redwoods-agreement-exact-p*";
+        set value [lispify_truth_value $globals(tree,compare,exactp)];
       }
       thinning_normalize_p {
         set variable "*redwoods-thinning-normalize-p*";
-        set value [lispify_truth_value $globals(tree,thinning_normalize_p)];
+        if {$globals(tree,random_thinning_p)
+            && $globals(tree,thinning_normalize_p)} {
+          set value :random;
+        } else {
+          set value [lispify_truth_value $globals(tree,thinning_normalize_p)];
+        }; #else
       }
       thinning_export_p {
         set variable "*redwoods-thinning-export-p*";
-        set value [lispify_truth_value $globals(tree,thinning_export_p)];
+        if {$globals(tree,random_thinning_p)
+            && $globals(tree,thinning_export_p)} {
+          set value :random;
+        } else {
+          set value [lispify_truth_value $globals(tree,thinning_export_p)];
+        }; #else
       }
       cache_connections_p {
         set variable "*tsdb-cache-connections-p*";

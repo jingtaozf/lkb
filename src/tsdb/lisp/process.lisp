@@ -18,6 +18,8 @@
 
 (in-package "TSDB")
 
+(defparameter *process-default-task* :parse)
+
 (defparameter *process-suppress-duplicates* '(:mrs))
 
 (defparameter *process-exhaustive-inputs-p* nil)
@@ -41,7 +43,7 @@
                              (cache *tsdb-cache-database-writes-p*)
                              (gc *tsdb-gc-p*)
                              (stream *tsdb-io*)
-                             (type :parse) gold
+                             (type *process-default-task*) gold
                              overwrite interactive 
                              meter podium interrupt)
   (declare (ignore podium))

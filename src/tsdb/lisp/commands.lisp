@@ -205,7 +205,7 @@
     (length items)))
 
 (defun tsdb (&optional action argument 
-             &key condition run skeleton load 
+             &key condition run skeleton load gold
                   (file nil filep) (reset nil resetp) count target)
   
   (initialize-tsdb)
@@ -286,7 +286,8 @@
                                   (member argument (list nil t "")))
                             *tsdb-data*
                             argument)
-                          :condition condition :run-id run :overwrite t))
+                          :condition condition :gold gold
+                          :run-id run :overwrite t))
         
         ((:vocabulary :voc :vo :v)
          (format *tsdb-io* "~&~%")

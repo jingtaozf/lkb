@@ -142,7 +142,11 @@
   ;; that is the grammar, mostly) and then keep everything in newspace.
   ;;
   #+:allegro
-  (excl:gc :mark-for-tenure)
+  (excl:gc :tenure)
+  #+:allegro
+  (excl:gc)
+  #+:allegro
+  (excl:gc t)
   #+:allegro
   (setf (sys:gsgc-parameter :auto-step) nil)
 

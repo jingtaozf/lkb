@@ -18,7 +18,7 @@
 
 (defstruct discriminant
   type key value start end in out top toggle state hidep
-  time record preset gold)
+  time record preset gold blaze tag)
 
 (defun find-discriminants (edges 
                            &key (mode *tree-discriminants-mode*)
@@ -83,6 +83,14 @@
                                              (discriminant-start bar)))
                                        (equal (discriminant-in bar) in)))))
           unless match collect foo))
+    #+:null
+    (format 
+     t 
+     "find-discriminants(): ~a discriminants of ~a blazed~%"
+     (loop
+         for discriminant in %discriminants%
+         when (discriminant-toggle discriminant) count 1)
+     (length %discriminants%))
     ;;
     ;; compute out parses from in parses
     ;;
@@ -353,8 +361,9 @@
           when (and (is-valid-type type) (numberp confidence)
                     (or (eq key type) (subtype-p key type))) do
             (unless (zerop confidence)
-               (setf (discriminant-toggle discriminant) 
-                 (> confidence 0.0)))
+              (setf (discriminant-toggle discriminant) 
+                (> confidence 0.0))
+              (setf (discriminant-blaze discriminant) tag))
 	    (format
 	     (or #+:allegro excl:*initial-terminal-io* t)
              "[~a] blaze-discriminant(): ~

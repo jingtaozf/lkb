@@ -71,6 +71,18 @@
             for daughter in daughters
             nconc (derivation-leafs daughter))))))
 
+(defun derivation-nodes (derivation)
+  (unless (null derivation)
+    (let ((id (derivation-id derivation))
+          (root (derivation-root derivation))
+          (score (derivation-score derivation))
+          (start (derivation-start derivation))
+          (end (derivation-end derivation)))
+      (cons (list id root score start end)
+            (loop
+                for daughter in (derivation-daughters derivation)
+                nconc (derivation-nodes daughter))))))
+
 (defun inflectional-rule-p (derivation)
   (let* ((root (cond
                 ((stringp derivation) derivation)

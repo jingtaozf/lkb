@@ -835,6 +835,8 @@ proc main {} {
      -label "Annotate" -command {tsdb_browse trees ""};
   .menu.trees.menu add command \
     -label "Update" -command {tsdb_browse trees "" 1 "" 1};
+  .menu.trees.menu add command \
+    -label "Compare" -command {tsdb_trees compare};
   .menu.trees.menu add cascade \
     -label "Summarize" -menu .menu.trees.menu.summarize;
   .menu.trees.menu add separator;
@@ -875,7 +877,12 @@ proc main {} {
     -variable globals(tree,updatep) -command {tsdb_set automatic_update_p};
   .menu.trees.menu.switches add checkbutton \
     -label "Update Exact Match" \
-    -variable globals(tree,exactp) -command {tsdb_set update_exact_p};
+    -variable globals(tree,update,exactp) \
+    -command {tsdb_set update_exact_p};
+  .menu.trees.menu.switches add checkbutton \
+    -label "Compare Exact Match" \
+    -variable globals(tree,compare,exactp) \
+     -command {tsdb_set compare_exact_p};
   .menu.trees.menu.switches add separator;
   .menu.trees.menu.switches add radiobutton \
     -label "Maximum Entropy" \
@@ -916,6 +923,10 @@ proc main {} {
     -label "Thinning Export" \
     -variable globals(tree,thinning_export_p) \
     -command {tsdb_set thinning_export_p};
+  .menu.trees.menu.switches add checkbutton \
+    -label "Random Thinning" \
+    -variable globals(tree,random_thinning_p) \
+    -command {tsdb_set thinning_normalize_p};
 
   menu .menu.trees.menu.variables -tearoff 0;
   .menu.trees.menu.variables add command \

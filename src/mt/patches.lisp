@@ -21,3 +21,9 @@
        ;;
        ((equal-or-subtype type (mrs::vsym "a")) "a")
        (t "u")))))
+
+;;;
+;;; add `LNK' role, recording surface order, to constant-value features.
+;;;
+(eval-when (:load-toplevel :execute)
+  (push (vsym "LNK") *value-feats*))

@@ -18,6 +18,8 @@
 
 (defparameter *maxent-frequency-threshold* 0)
 
+(defparameter *maxent-random-sample-size* 1000)
+
 (defparameter *maxent-options*
   '(*maxent-collapse-irules-p*
     *maxent-use-preterminal-types-p*
@@ -26,7 +28,8 @@
     *maxent-ngram-size*
     *maxent-ngram-tag*
     *maxent-ngram-back-off-p*
-    *maxent-frequency-threshold*))
+    *maxent-frequency-threshold*
+    *maxent-random-sample-size*))
     
 (defparameter *maxent-debug-p* t)
 
@@ -259,70 +262,98 @@
 
   (loop
       with model = (or model 
-                       (let ((model (make-mem)))
-                         (initialize-mem model)
-                         model))
+		       (let ((model (make-mem)))
+			 (initialize-mem model)
+			 model))
       for item in items
       for iid = (get-field :i-id item)
       for readings = (get-field :readings item)
       when (and (integerp readings) (> readings 0)) do
-        (format 
-         stream
-         "~&[~a] estimate-mem(): item # ~a (~a reading~p);~%"
-         (current-time :long :short) iid readings readings)
-        (loop
+	(format 
+	 stream
+	 "~&[~a] estimate-mem(): item # ~a (~a reading~p);~%"
+	 (current-time :long :short) iid readings readings)
+	(loop
+	    with results = (get-field :results item)
+	    with n = (length results)
+	    with i = 0
+            with low = (loop
+                           for result in (get-field :results item)
+                           minimize (get-field :result-id result))
+	    with active = (loop
+                              for rank in (get-field :ranks item)
+                              for i = (get-field :rank rank)
+                              for id = (get-field :result-id rank)
+                              when (= i 1) collect id)
+	    with sample = (when (and *maxent-random-sample-size*
+                                     (< *maxent-random-sample-size* 
+                                        (- n (length active))))
+                            (random-sample 
+                             low (if (zerop low) (- n 1) n)
+                             (min 
+                              (- n (length active)) 
+                              *maxent-random-sample-size*)
+                             active))
             with context = (make-context :id iid)
-            with *reconstruct-cache* = (make-hash-table :test #'eql)
-            for result in (get-field :results item)
-            for rid = (get-field :result-id result)
-            for frequency = (loop
-                                for rank in (get-field :ranks item)
-                                for i = (get-field :rank rank)
-                                for id = (get-field :result-id rank)
-                                when (and (= i 1) (= id rid)) do (return 1)
-                                finally (return 0))
-            for derivation = (get-field :derivation result)
-            for edge = (or (get-field :edge result)
-                           (reconstruct derivation nil))
-            for event = (when edge (edge-to-event edge model))
-            when (null edge) do
-              (format
-               stream
-               "[~a] estimate-mem(): ignoring item # ~d (no edge for ~d)~%"
-               (current-time :long :short) iid rid)
-              (return)
-            when event do 
-              (setf (event-id event) rid)
-              (setf (event-frequency event) frequency)
-              (record-event event context)
-            finally
-              (record-context context model))
-      finally 
-        (when estimatep
-          (let* ((out (format nil "/tmp/.mem.~a.mew" (current-user)))
-                 (command (format 
-                           nil 
-                           "estimate -events_in ~a -params_out ~a"
-                           (mem-file model) out))
-                 (output (if *maxent-debug-p* nil "/dev/null")))
-            (force-output (mem-stream model))
-            (close (mem-stream model))
-            (setf (mem-stream model) nil)
-            (when (probe-file out) (ignore-errors (delete-file out)))
-            (when (and (zerop (run-process 
-                               command :wait t 
-                               :output output :if-output-exists :append))
-                       (probe-file out))
-              (read-weights model out))))
-        (return model)))
-
+	    with *reconstruct-cache* = (make-hash-table :test #'eql)
+	    for result in results
+	    for rid = (get-field :result-id result)
+	    for frequency = (if (member rid active :test #'=) 1 0)
+	    for derivation = (when  (or (not sample)
+                                        (or (not (zerop frequency))
+                                            (member rid sample :test #'=)))
+                               (get-field :derivation result))
+	    for edge = (when derivation
+			 (or (get-field :edge result)
+			     (reconstruct derivation nil)))
+	    for event = (when edge (edge-to-event edge model))
+	    while (or (not sample) 
+                      (<= i *maxent-random-sample-size*))		  
+	    when (and derivation (null edge)) do
+	      (format
+	       stream
+	       "~&[~a] estimate-mem(): ignoring item # ~d (no edge for ~d)~%"
+	       (current-time :long :short) iid rid)
+	      (return)
+	    when event do 
+	      (setf (event-id event) rid)
+	      (setf (event-frequency event) frequency)
+	      (record-event event context)
+              (incf i)
+	    finally
+            (record-context context model)
+	    (format 
+	     stream
+	     "~&[~a] estimate-mem(): ~d ~@[[of ~a] ~]~
+              event~p (~d active) for item # ~d;~%" 
+	     (current-time :long :short) i (and sample n) 
+             i (length active) iid)) 
+      finally
+	(when estimatep
+	  (let* ((out (format nil "/tmp/.mem.~a.mew" (current-user)))
+		 (command (format 
+			   nil 
+			   "estimate -events_in ~a -params_out ~a"
+			   (mem-file model) out))
+		 (output (if *maxent-debug-p* nil "/dev/null")))
+	    (force-output (mem-stream model))
+	    (close (mem-stream model))
+	    (setf (mem-stream model) nil)
+	    (when (probe-file out) (ignore-errors (delete-file out)))
+	    (when (and (zerop (run-process 
+			       command :wait t 
+			       :output output :if-output-exists :append))
+		       (probe-file out))
+	      (read-weights model out))))
+	(return model)))
+
 (defun edge-to-event (edge model &key (event (make-event) eventp))
 
   (loop
       for edge in (lkb::edge-children edge)
       do
         (edge-to-event edge model :event event))
-
+  
   (let* ((codes (edge-to-codes edge model))
          (ngrams (unless eventp (edge-to-ngrams edge model))))
     (loop
@@ -532,5 +563,19 @@
       for p in probabilities
       do (incf h (* p (log p 2d0)))
       finally (return (- h))))
+
+(defun random-sample (low high size &optional sample)
+  ;;
+  ;; returns a set of .size. unique random integers from [.low. -- .high.], not
+  ;; including elements of the initial .sample., when supplied.
+  ;;
+  (loop
+      with n = (+ (- high low) 1)
+      for i = (+ low (random n))
+      unless (smember i sample) do
+        (push i sample)
+        (decf size)
+      while (> size 0)
+      finally (return sample)))
 
                  

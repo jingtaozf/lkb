@@ -101,7 +101,8 @@
       set globals(maximal_number_of_results) ~d~%~
       set globals(tree,updatep) ~:[0~;1~]~%~
       set globals(tree,delay) ~a~%~
-      set globals(tree,exactp) ~:[0~;1~]~%~
+      set globals(tree,update,exactp) ~:[0~;1~]~%~
+      set globals(tree,compare,exactp) ~:[0~;1~]~%~
       set globals(tree,thinning_normalize_p) ~:[0~;1~]~%~
       set globals(tree,thinning_export_p) ~:[0~;1~]~%~
       ~@[set globals(readers,mrs) {~s}~%~]~
@@ -137,6 +138,7 @@
      *tsdb-maximal-number-of-results*
      delay (if (numberp delay) delay 0)
      *redwoods-update-exact-p*
+     *redwoods-agreement-exact-p*
      *redwoods-thinning-normalize-p*
      *redwoods-thinning-export-p*
      (gethash :mrs *statistics-readers*)
@@ -698,13 +700,15 @@
                           *tsdb-podium-windows*)))
                 (status :text (format nil "~a done" message) :duration 2))))
 
-           ((analyze-errors analyze-trees analyze-update analyze-decisions)
+           ((analyze-errors analyze-trees analyze-update 
+             analyze-decisions analyze-agreement)
             (let* ((data (first arguments))
                    (meter (make-meter 0 1))
                    (type (case action
                            (analyze-errors "Error")
                            (analyze-trees "Tree")
-                           (analyze-update "Update")))
+                           (analyze-update "Update")
+                           (analyze-agreement "Agreement")))
                    (title (format 
                            nil 
                            "tsdb(1) `~a' ~a Summary~

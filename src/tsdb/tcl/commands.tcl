@@ -1189,14 +1189,17 @@ proc tsdb_trees {action} {
        [lispify_truth_value $spartanp] \
        $globals(tree,beam) $globals(tree,comparison) \
        [lispify_truth_value $globals(tree,loosep)]];
-  } else {
-    if {$action == "rank"} {
+  } elseif {$action == "compare"} {
+    set command \
+      [format \
+       "(analyze-agreement \"%s\" \"%s\")" \
+       $target $source];
+  } elseif {$action == "rank"} {
       set command \
         [format \
          "(rank-profile \"%s\" \"%s\" :nfold %d :type %s)" \
          $source $target $globals(tree,nfold) $globals(tree,model)];
-    }; # if
-  }; # else
+  }; # elseif
 
   if {$command != ""} {
     send_to_lisp :event $command;
