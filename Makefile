@@ -185,7 +185,7 @@ spanish:
 #
 
 itsdb: itsdb_binaries itsdb_libraries itsdb_source \
-       itsdb_data itsdb_trees itsdb_documentation
+       itsdb_data itsdb_documentation
 
 itsdb_binaries:
 	( \
