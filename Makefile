@@ -162,7 +162,7 @@ lkb_linux@ar:
               --exclude=".nfs*" \
 	      linux.x86.64 bin/linux.x86.64/yzlui; \
 	  scp /tmp/lkb_linux.x86.64.tgz \
-            oe@lingo.stanford.edu:${TARGET}/builds/${DATE}; \
+            oe@lingo.stanford.edu:${TARGET}/builds/latest; \
 	)
 
 lkb_solaris:
@@ -186,7 +186,7 @@ lkb_solaris:
               --exclude=".nfs*" \
 	      solaris; \
 	  /usr/pubsw/bin/scp /tmp/lkb_solaris.tgz \
-            oe@lingo:${TARGET}/builds/${DATE}; \
+            oe@lingo:${TARGET}/builds/latest; \
 	)
 
 lkb_windows:
@@ -210,7 +210,7 @@ lkb_windows:
 	  ${RM} -f /c/tmp/lkb_windows.zip; \
           zip -r /c/tmp/lkb_windows.zip windows; )
 	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip \
-          oe@lingo.stanford.edu:/tmp;
+          oe@lingo.stanford.edu:/lingo/www/lingo/ftp/builds/latest;
 
 lkb_documentation:
 	( \
@@ -301,7 +301,7 @@ itsdb_linux_x86_64:
 	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
 	      src/.l7c4/pvm src/.l7c4/tsdb; \
 	  scp /tmp/itsdb_linux.x86.64.tgz \
-	    oe@lingo.stanford.edu:${TARGET}/builds/${DATE}; \
+	    oe@lingo.stanford.edu:${TARGET}/builds/latest \
 	)
 
 itsdb_solaris:
@@ -316,7 +316,7 @@ itsdb_solaris:
 	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
 	      src/.s6cl/pvm src/.s6cl/tsdb; \
 	  /usr/pubsw/bin/scp /tmp/itsdb_solaris.tgz \
-	    oe@lingo.stanford.edu:${TARGET}/builds/${DATE}; \
+	    oe@lingo.stanford.edu:${TARGET}/builds/latest; \
 	)
 
 itsdb_libraries:
