@@ -132,7 +132,8 @@
 #+:xml       (:file "xml-utils")
        (:file "readgram")
        (:file "readtag")
-       (:file "input")))
+       (:file "input")
+       (:file "interface")))
 
      (:module "redwoods"
       :source-pathname "mrs"
