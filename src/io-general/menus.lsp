@@ -50,6 +50,7 @@
                       lkb::command-load-tdl-to-scratch
                       lkb::command-clear-scratch
                       lkb::command-commit-scratch		      
+                      lkb::command-show-scratch		      
                       lkb::command-set-filter-psql-lexicon		      
                       ;; generate
                       lkb::show-gen-result
@@ -336,6 +337,11 @@
                   #+:psql
                   (make-menu-item :name "Load TDL entries"
                                   :value 'command-load-tdl-to-scratch
+                                  ;:available-p :always
+				  )
+                  #+:psql
+                  (make-menu-item :name "Show scratch"
+                                  :value 'command-show-scratch
                                   ;:available-p :always
 				  )
                   #+:psql

@@ -57,7 +57,7 @@
     ;; level 1
     (define-key map [menu-bar LexDB view-scratch]
       '(menu-item "View scratch" lexdb-view-scratch 
-		  :keys "M-v"
+		  :keys "M-vs"
 		  :enable (cle-eval-lexdb 'connection)))
     (define-key map [menu-bar LexDB next-id]
       '(menu-item "Next id" lexdb-advance-id 
@@ -91,7 +91,8 @@
 
 (defun make-lexdb-keymap nil
   (let ((map (make-sparse-keymap)))
-    (define-key map "\M-v" 'lexdb-view-scratch)
+    (define-key map "\M-vs" 'lexdb-view-scratch)
+    (define-key map "\M-va" 'lexdb-view-merge-add)
     (define-key map "\C-l" 'lexdb-load-record)
     (define-key map "\C-c" 'lexdb-commit-record)
     (define-key map "\C-n" 'lexdb-normalize-buffer)
@@ -167,6 +168,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (interactive)
   (lexdb-view-scratch-aux))
 
+(defun lexdb-view-merge-add ()
+  (interactive)
+  (lexdb-view-merge-add-aux))
+
 (defun lexdb-search-field-val (val-str)
   (interactive 
    (list 
@@ -197,6 +202,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun lexdb-view-scratch-aux nil
   (let ((filename "~/tmp/lexdb-scratch.csv"))
     (cle-dump-scratch filename)
+    (find-file filename)))    
+
+(defun lexdb-view-merge-add-aux nil
+  (let ((filename "~/tmp/lexdb.new_entries"))
     (find-file filename)))    
 
 (defun lexdb-commit-record-aux (buffer)

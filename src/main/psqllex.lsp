@@ -910,7 +910,7 @@
   (setf filename (namestring (pathname filename)))
   (if (catch 'pg:sql-error 
 	(fn-get-records lexicon ''add-to-db filename))
-      (error "cannot update lexical database ~a. Check that ~~/tmp/lexdb.new_entries does not contain attempts to redefine existing entries. No tuple of the form <name,userid,version,...> should correspond to an existing entry." (dbname lexicon))))
+      (error "cannot update lexical database ~a. Check that ~~/tmp/lexdb.new_entries does not contain attempts to redefine existing entries. No tuple of the form <name,userid,version,...> should correspond to an existing entry. [In particular, the TIMESTAMP of a tuple cannot change.]" (dbname lexicon))))
       
 (defmethod merge-multi-into-db ((lexicon psql-lex-database) filename)  
   (setf filename (namestring (pathname filename)))
