@@ -31,11 +31,11 @@
   (if (connection lexicon)
       (let* ((orthstr orth)
 	     (table (sql-fn-get-records lexicon 
-					  :retrieve_entries_by_orthkey 
-					  :args (list (sql-like-text orthstr)) 
-					  :fields (grammar-fields lexicon)))
-	      (ids (lookup-word-aux2 lexicon table)))
-	 ids)))
+					:retrieve_entries_by_orthkey 
+					:args (list (sql-like-text orthstr)) 
+					:fields (grammar-fields lexicon)))
+	     (ids (lookup-word-aux2 lexicon table)))
+	ids)))
 
 (defmethod lookup-word-aux2 ((lexicon psql-lex-database) table)
   (with-slots (psorts record-cache fields-map) lexicon
@@ -987,6 +987,7 @@
        (format t "~%skipping super-rich entry:~%~a" (to-tdl x))
        nil)))))
   
+;; WARNING: not suited to batch import!
 ;; import lexicon to LexDB
 (defmethod export-to-db ((lexicon lex-database) (lexdb psql-lex-database))
   (mapc

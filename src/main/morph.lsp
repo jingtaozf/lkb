@@ -506,24 +506,24 @@
 	((null current-combinations) (cdr definites-list))
       (nconc definites-list
 	     (loop for morphological-possibility in current-combinations
-		  when 
-		  (or
-		   (equal morphological-possibility 
-			  (remove-duplicates morphological-possibility 
-					     :test #'equal))
-                   (or
-		    (setf current-combinations 
-		      (remove morphological-possibility 
-			      current-combinations :test #'equal)) 
-		    nil))
-		  nconc
-		  (let* 
-		      ((root 
-                        (implode (car morphological-possibility))) 
-		       (lexical (lookup-word *lexicon* root)))
-		    (if lexical
+		 when 
+		   (or
+		    (equal morphological-possibility 
+			   (remove-duplicates morphological-possibility 
+					      :test #'equal))
+		    (or
+		     (setf current-combinations 
+		       (remove morphological-possibility 
+			       current-combinations :test #'equal)) 
+		     nil))
+		 nconc
+		   (let* 
+		       ((root 
+			 (implode (car morphological-possibility))) 
+			(lexical (lookup-word *lexicon* root)))
+		     (if lexical
 			 (list (cons root 
-			       (cdr morphological-possibility))))))))))
+				     (cdr morphological-possibility))))))))))
 
 (defun remove-suffix (input-words)
    (loop for entry in input-words
