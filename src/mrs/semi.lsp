@@ -13,14 +13,25 @@
 (defconstant *semi-i-type* "i")
 (defconstant *semi-e-type* "e")
 (defconstant *semi-x-type* "x")
-
 (defstruct semi
   signature
   (roles (make-hash-table))
   (properties (make-hash-table))
   (predicates (make-hash-table :test #'equal))
-  (lexicon (make-hash-table)))
+  (lexicon (make-hash-table))
+  (pred-names (make-hash-table :test #'equal))
+  (lex-preds (make-hash-table :test #'equal))
+  (pos-preds (make-hash-table :test #'equal))
+  )
 
+(defclass pred-name ()
+  ((key :accessor key :initarg :key)
+   (name :accessor name :initarg :name)
+   (string-p :accessor string-p :initarg :string-p)
+   (lex :accessor lex :initarg :lex)
+   (pos :accessor pos :initarg :pos)
+   (id :accessor id :initarg :id)))
+  
 (unless *semi* (setf *semi* (make-semi)))
 
 (defmethod print-object ((object semi) stream)
@@ -126,7 +137,16 @@
   (pushnew value (gethash feature (semi-roles semi)) :test #'eq))
 
 (defun record-predicate (pred rel semi)
-  (pushnew rel (gethash pred (semi-predicates semi)) :test #'eq))
+  (pushnew rel (gethash pred (semi-predicates semi)) :test #'eq)
+  (unless (gethash pred (semi-pred-names semi))
+    (let ((pred-name (get-pred-name pred)))
+      (setf (gethash pred (semi-pred-names semi)) pred-name)
+      (pushnew pred-name 
+	       (gethash (lex pred-name) (semi-lex-preds semi))
+	       :test #'eq)
+      (pushnew pred-name 
+	       (gethash (pos pred-name) (semi-pos-preds semi))
+	       :test #'eq))))
 
 (defun record-property (type fvpair semi)
   (with-slots (feature value) fvpair
@@ -672,7 +692,12 @@
 	for frame = (rel-base-flist rel)
 	for frame-hashed = (gethash frame frame-h)
 	for frame-id = (or frame-hashed (next-counter frame-t))
-	for pred-row = (list lex-id pred frame-id)
+		       ;bmw
+	for pred-row = (list lex-id 
+			     pred 
+			     frame-id 
+			     (2-symb pred) 
+			     (if (stringp pred) 'T 'F))
 	do
 	  (sdbt-rows-hash pred-row pred-r)
 	unless frame-hashed
@@ -1010,3 +1035,72 @@
 ;;			   (mapcar #'str-to-mixed2 row)
 ;			   (sdbt-rows sdbt)))
 ;	  (lkb::records sql-query))
+
+(defun str-2-symb (str)
+  (unless (stringp str)
+    (error "string exected"))
+  (intern (string-upcase str)))
+
+(defun 2-symb (x)
+  (typecase x
+    (string
+     (str-2-symb x))
+    (symbol
+     x)
+    (t
+     (error "unhandled type"))))
+
+(defun get-lex-pred-fields (pred-str)
+  (when (eq (aref pred-str 0) 
+	    #\_)
+    (let* ((split-pred (split-on-char pred-str #\_))
+	   (len (length split-pred)))
+      (cond
+       ((< len 4)
+	(format t "~%malformed pred: ~a" pred-str)
+	nil)
+       ((= len 4)
+	(subseq split-pred 1 3))
+       (t
+	(subseq split-pred 1 4))))))
+
+(defun split-on-char (string &optional (char #\Space))
+  (loop for i = 0 then (1+ j)
+      as j = (position char string :start i)
+      collect (subseq string i j)
+      while j))
+
+(defun get-pred-name (pred)
+  (let* ((pred-fields (if (stringp pred)
+			  (get-lex-pred-fields pred))))
+    (make-instance 'pred-name
+      :key pred
+      :name (if (stringp pred) pred (string-downcase (string pred)))
+      :string-p (stringp pred)
+      :lex (nth 0 pred-fields)
+      :pos (nth 1 pred-fields)
+      :id (nth 2 pred-fields))))
+
+(defun info-from-semi-by-pred (pred &key (semi *semi*))
+  (let* ((pred-name (gethash pred (semi-pred-names semi)))
+	 (predicate (gethash pred (semi-predicates semi)))
+	 
+	 (args (mapcar
+		#'rel-base-flist
+		predicate)))
+    (cons (string-p pred-name)
+	  args)))
+
+(defun lookup-preds (lex &key pos id (semi *semi*))
+  (mapcar #'key
+	  (loop
+	      for pred-name in (gethash lex (semi-lex-preds semi))
+	      if 
+		(and
+		 (or (null pos)
+		     (string= (pos pred-name)
+			      pos))
+		 (or (null id)
+		     (string= (id pred-name)
+			      id)))
+	      collect pred-name)))
