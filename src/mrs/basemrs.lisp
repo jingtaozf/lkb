@@ -176,7 +176,7 @@
 (defmethod mrs-output-rel-handel ((mrsout simple) handel)
   (if handel
       (with-slots (stream indentation) mrsout
-        (format stream "~%~VT~A: ~A" (+ indentation 2) 'hndl handel))))
+        (format stream "~%~VT~A: ~A" (+ indentation 2) 'lbl handel))))
 
 (defmethod mrs-output-label-fn  ((mrsout simple) label)
   (with-slots (stream indentation) mrsout
