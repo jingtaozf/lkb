@@ -70,6 +70,7 @@ if {![info exists globals(graph_upper)]} {
 }; # if
 set globals(graph,by) :i-length;
 set globals(graph,scatterp) 1;
+set globals(graph,extras) 0;
 
 set globals(rules,actives) 1;
 set globals(rules,passives) 1;
@@ -87,6 +88,7 @@ if {$globals(user) == ""} {
   set globals(user) \
     [expr {[info exists env(USER)] ? $env(USER) : "anonymous"}];
 }; # if
+
 set globals(balloon_p) [expr {$globals(user) != "oe"}];
 set globals(balloon) "";
 set globals(interrupt) "";

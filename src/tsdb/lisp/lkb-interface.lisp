@@ -237,19 +237,25 @@
                           (round (* (- (first times) start) 1000) 
                                  internal-time-units-per-second)
                           (if (> readings 0) total -1)))
+                 #+:pooling
                  (pool (and (find-symbol "*DAG-POOL*")
                             (boundp (find-symbol "*DAG-POOL*"))
                             (symbol-value (find-symbol "*DAG-POOL*"))))
+                 #+:pooling
                  (position (when pool
                             (funcall 
                              (symbol-function (find-symbol "POOL-POSITION"))
                              pool)))
+                 #+:pooling
                  (garbage (when pool
                             (funcall 
                              (symbol-function (find-symbol "POOL-GARBAGE"))
                              pool)))
                  (comment 
-                  (format nil "(:pool . ~d) (:garbage . ~d)" position garbage))
+                  #+:pooling
+                  (format nil "(:pool . ~d) (:garbage . ~d)" position garbage)
+                  #-:pooling
+                  "")
                  #+:packing
                  (comment
                   (if packingp
@@ -348,8 +354,8 @@
            (intern 
             (typecase (edge-rule edge)
               (string (string-upcase (edge-rule edge)))
-              (symbol (symbol-name (edge-rule edge)))
-              (rule (string (rule-id (edge-rule edge))))
+              (symbol (edge-rule edge))
+              (rule (rule-id (edge-rule edge)))
               (t :unknown))
             :common-lisp-user)))
     (let* ((configuration (and (null (edge-children edge))
@@ -361,18 +367,17 @@
       (cond
        ((and (edge-morph-history edge) (edge-spelling-change edge))
         (let* ((daughter (edge-morph-history edge))
-               (leave (edge-label daughter))
                (preterminal (first (edge-lex-ids daughter))))
           (list (edge-label edge)
                 start end
-                (list (format nil "~(~a~)" preterminal)
+                (list preterminal
                       start end
-                      (list (format nil "~(~a~)" leave) 
+                      (list (edge-rule daughter)
                             start end)))))
        ((null (edge-children edge))
-        (list (format nil "~(~a~)" (first (edge-lex-ids edge)))
+        (list (first (edge-lex-ids edge))
               start end
-              (list (edge-label edge) 0 1)))
+              (list (edge-rule edge) 0 1)))
        (t
         (let* ((start *chart-limit*)
                (end 0)
@@ -545,7 +550,7 @@
 (defun release-temporary-storage ()
   (invalidate-marks)
   (invalidate-visit-marks)
-  #+:recycling
+  #+:pooling
   (reset-pools :compressp t)
   (loop
       for i from 0 to (- *chart-limit* 1)

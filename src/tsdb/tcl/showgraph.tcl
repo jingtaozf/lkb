@@ -61,7 +61,8 @@ set noOfGraphWindows 0;			# Counter for number of toplevel windows
 ##   Main procedure
 ## ------------------
 
-proc showgraph {FileName {Toplevel ""} {output "unknown"} {Title ""} {scatterp 0}} {
+proc showgraph {FileName {Toplevel ""} {output "unknown"} {Title ""} \
+                {scatterp 0}} {
 
     ## Displays a new graph that is read from 'FileName'.  A new toplevel window
     ## is created with title 'Title'.  If 'Title' is empty, "Graph Viewer"
@@ -209,6 +210,11 @@ proc showgraph {FileName {Toplevel ""} {output "unknown"} {Title ""} {scatterp 0
       }; # if
     }; # foreach
 
+
+    #
+    # remember underlying profile; it must be the active one right now
+    #
+    set globals($graph,data) $globals(data);
 
     ## Display toplevel
 
@@ -836,6 +842,9 @@ proc local_balloon {balloon action {text ""}} {
 
 
 proc find_graph_point {action graph button x y balloon} {
+
+  global globals;
+
   if {[$graph element closest $x $y point -halo 5]} {
     set i [string range $point(name) 2 end];
     regsub -all "\\." $graph "_" name
@@ -848,7 +857,9 @@ proc find_graph_point {action graph button x y balloon} {
         local_balloon $balloon post \
           "data point ($x  $y) corresponds to item \# $id"
       } elseif {$action == "browse"} {
-        tsdb_browse parses "i-id = [expr round($vector($point(index)))]" 0;
+        tsdb_browse parses \
+          "i-id = [expr round($vector($point(index)))]" \
+          0 $globals($graph,data);
       }; # if
       return;
     }; # if

@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.6 (14-feb-00)")
+(defparameter *tsdb-version* "1.6 (10-mar-00)")
 
 (defparameter
   *tsdb-application*

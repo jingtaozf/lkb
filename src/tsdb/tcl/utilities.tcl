@@ -455,7 +455,7 @@ proc update_graph_cascade {code} {
 
   set globals(graph_values) "(";
   foreach field $fields {
-    if {$globals(graph,$field)} {
+    if {[info exists globals(graph,$field)] && $globals(graph,$field)} {
       set globals(graph_values) "$globals(graph_values) :$field";
     }; # if
   }; # foreach
