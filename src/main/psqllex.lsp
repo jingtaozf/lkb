@@ -1234,11 +1234,11 @@
    ((eq (char str 0) #\')
     (format nil "''~a" (sql-like-text-aux (subseq str 1))))
    ((eq (char str 0) #\_)
-    (format nil "\\_~a" (sql-like-text-aux (subseq str 1))))
+    (format nil "\\\\_~a" (sql-like-text-aux (subseq str 1))))
    ((eq (char str 0) #\%)
-    (format nil "\\%~a" (sql-like-text-aux (subseq str 1))))
+    (format nil "\\\\%~a" (sql-like-text-aux (subseq str 1))))
    ((eq (char str 0) #\\)
-    (format nil "\\\\~a" (sql-like-text-aux (subseq str 1))))
+    (format nil "\\\\\\\\~a" (sql-like-text-aux (subseq str 1))))
    (t
     (format nil "~a~a" (char str 0) (sql-like-text-aux (subseq str 1))))))
 
