@@ -144,9 +144,12 @@
                           (:P-FTASKS . ,f-tasks) (:P-CTASKS . ,c-tasks) 
                           (:L-STASKS . ,l-s-tasks) (:WORDS . ,words)
                           (:TOTAL . ,tcpu) (:FIRST . ,tcpu) 
-                          (:READINGS . ,(if (equal output "")
-                                          (length *parse-record*)
-                                          -1))
+                          (:READINGS . ,(let ((readings
+                                               (length *parse-record*)))
+                                          (if (and (equal output "")
+                                                   (> readings 0))
+                                            (length *parse-record*)
+                                            -1)))
                           (:ERROR .
                            ,(substitute #\; #\newline
                              (remove 
