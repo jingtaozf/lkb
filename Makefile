@@ -90,7 +90,7 @@ lkb_data:
 	      --exclude="src/data/spanish*" \
 	      --exclude="src/data/interrogatives*" \
 	      --exclude="src/data/aline2*" \
-	      src/data src/*.el; \
+	      src/data src/*.el lexdb; \
 	)
 
 lkb_binaries: lkb_linux # lkb_solaris
