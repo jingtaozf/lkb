@@ -117,7 +117,7 @@ Tsdb_selection *tsdb_clean_selection(Tsdb_selection* selection,Tsdb_tuple* fuck)
 
 int* tsdb_double_relations(Tsdb_selection *selection_1, 
                            Tsdb_selection *selection_2,int* d){
-  BOOL kaerb,basic_1=FALSE,basic_2=FALSE;
+  BOOL kaerb;
   Tsdb_tuple fuck;
   Tsdb_relation *relation_1, *relation_2, *foo;
   Tsdb_key_list *first, *next_1, *next_2, *bar, *baz;
@@ -131,28 +131,18 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
 
   for(i = 0;
       i < selection_1->n_relations;
-      i++,basic_1=FALSE) {
+      i++) {
     for(j = 0;
         j < selection_2->n_relations;
-        j++,basic_2=FALSE) {
+        j++) {
 
       if(tsdb_relations_are_equal(selection_1->relations[i],
                                   selection_2->relations[j])) {
 
         relation_1 = tsdb_find_relation(selection_1->relations[i]->name);
-        /*        
-           if (!common)
-           common =strdup(selection_1->relations[i]->name);
-           tsdb_find_relation gives the real thing */
 
-        if (relation_1 == selection_1->relations[i]) {
-          basic_1=TRUE;
-        }
         relation_2 = tsdb_find_relation(selection_2->relations[j]->name);
-        
-        if (relation_2 == selection_2->relations[j]) {
-          basic_2=TRUE;
-        }    
+       
         /* relation_1 and relation_2 have same name */
         delete[j]=TRUE;
         (*d)++;
@@ -223,9 +213,7 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
              and copy!!*/
 
           if (tsdb_key_list_not_copied(relation_1,m,next_1)) {
-            /* this should be comparing keynames... 
-             if key_list(index_in_relation_1)(key(m) == next_1 */
-            next_1 = selection_1->key_lists[index_1] =
+             next_1 = selection_1->key_lists[index_1] =
               tsdb_copy_key_list(next_1);
             /* hey thats copy on demand! */
           } /* if */
@@ -233,20 +221,18 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
             next_2 = selection_2->key_lists[index_2] =
               tsdb_copy_key_list(next_2);
           }
-              
+          
           /* tuples in the common relation only stay there if
              they are contained in both ! */
           while(next_1 != NULL && next_2 != NULL) {
-            for(;
-                next_1 != NULL &&
+            for(; next_1 != NULL &&
                 (tsdb_value_compare(next_1->key,
                                     next_2->key) == TSDB_LESS_THAN);
                 next_1 = next_1->next)
-               next_1->tuples[0] = (Tsdb_tuple *)NULL;
+              next_1->tuples[0] = (Tsdb_tuple *)NULL;
 
             if(next_1 != NULL) {
-              for(;
-                  next_2 != NULL &&
+              for(; next_2 != NULL &&
                   (tsdb_value_compare(next_2->key,
                                       next_1->key) == TSDB_LESS_THAN);
                   next_2 = next_2->next)
@@ -313,8 +299,8 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
                 for (;next_1;next_1->tuples[0]=NULL, next_1=next_1->next);
               if (next_2)
                 for (;next_2;next_2->tuples[0]=NULL, next_2=next_2->next);
-            }
-          }
+            } /* else */
+          } /* if */
           
         } /* if */ /* if (kaerb) */
 
