@@ -11,12 +11,14 @@ TEE=/bin/tee
 
 update:
 	( \
+	  cd ${ROOT}/spanish; \
+	  ${CVS} update -P -d -R; \
 	  cd ${ROOT}/lkb; \
 	  ${CVS} update -P -d -R; \
 	  ${MAKE} all; \
-	) | ${TEE} /tmp/build.${USER}
+	) 2>&1 | ${TEE} /tmp/build.${USER}
 
-all: lkb erg
+all: lkb erg spanish itsdb
 
 #
 # LKB grammar development environment
@@ -132,7 +134,7 @@ lkb_documentation:
 	)
 
 #
-# LinGO English Resource Grammar
+# LinGO English Resource Grammar (Dan Flickinger)
 #
 
 erg:
@@ -144,6 +146,21 @@ erg:
 	      --exclude="pet*" --exclude="tsdb*" \
 	      --exclude="*.fasl" \
 	      erg; \
+	)
+
+#
+# Spanish HPSG (Ana Paula Quirino Simoes)
+#
+
+spanish:
+	( \
+	  cd ${ROOT}; \
+	  ${TAR} Svczf ${TARGET}/${DATE}/spanish.tgz \
+	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+	      --exclude="pet*" --exclude="tsdb*" \
+	      --exclude="*.fasl" \
+	      spanish; \
 	)
 
 #
