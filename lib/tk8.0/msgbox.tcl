@@ -161,8 +161,15 @@ proc tkMessageBox {args} {
 
     option add *Dialog.msg.wrapLength 3i widgetDefault
     label $w.msg -justify left -text $data(-message)
-    catch {$w.msg configure -font \
-		-Adobe-Times-Medium-R-Normal--*-180-*-*-*-*-*-*
+    if { [ string length [ info command kanji ] ] > 0 } {
+	if { [ lsearch [ font names ] Mincho:Times-18 ] < 0 } {
+	    font create Mincho:Times-18 -compound {{Times 18} kanji16}
+	}
+	catch { $w.msg configure -font Mincho:Times-18 }
+    } else {
+	catch {$w.msg configure -font \
+	    -Adobe-Times-Medium-R-Normal--*-180-*-*-*-*-*-*
+	}
     }
     pack $w.msg -in $w.top -side right -expand 1 -fill both -padx 3m -pady 3m
     if {$data(-icon) != ""} {

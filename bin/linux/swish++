@@ -5,18 +5,14 @@
 # to locate suitable include files.
 #
 
-binary=`basename $0`
 path=`dirname $0`
-
 if [ "{path}" = "." ]; then
   path=`pwd`
 fi
-home=`echo $path | sed "s@/bin/solaris@@"`
+home=`echo $path | sed "s@/bin/linux@@"`
 TCL_LIBRARY=${home}/lib/tcl8.0
-TK_LIBRARY=${home}/lib/tk8.0
 BLT_LIBRARY=${home}/lib/blt2.4
 export TCL_LIBRARY
-export TK_LIBRARY
 export BLT_LIBRARY
 
 if [ -f ${home}/lib/XKeysymDB ]; then
@@ -24,4 +20,4 @@ if [ -f ${home}/lib/XKeysymDB ]; then
   export XKEYSYMDB
 fi
 
-exec ${path}/.${binary} $*
+exec ${path}/.swish++ $*

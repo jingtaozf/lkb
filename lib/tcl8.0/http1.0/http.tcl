@@ -343,6 +343,12 @@ proc http_formatQuery {args} {
 # 4 "subst" the result, doing all the array substitutions
  
  proc httpMapReply {string} {
+    set isKanji 0
+    if {[string length [info command kanji]] > 0} {
+        set isKanji 1
+	set sc [kanji scanKanji]
+	kanji scanKanji no
+    }
     global httpFormMap
     set alphanumeric	a-zA-Z0-9
     if {![info exists httpFormMap]} {
@@ -362,7 +368,13 @@ proc http_formatQuery {args} {
     regsub -all \n $string {\\n} string
     regsub -all \t $string {\\t} string
     regsub -all {[][{})\\]\)} $string {\\&} string
-    return [subst $string]
+    if {$isKanji == 0} {
+        return [subst $string]
+    } else {
+        set ret [subst $string]
+        kanji scanKanji $sc
+        return $ret
+    }
 }
 
 # Default proxy filter. 

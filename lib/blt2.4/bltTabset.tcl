@@ -1,5 +1,51 @@
+#
+# bltTabset.tcl
+#
+# ----------------------------------------------------------------------
+# Bindings for the BLT tabset widget
+# ----------------------------------------------------------------------
+#   AUTHOR:  George Howlett
+#            Bell Labs Innovations for Lucent Technologies
+#            gah@bell-labs.com
+#            http://www.tcltk.com/blt
+# ----------------------------------------------------------------------
+# Copyright (c) 1998  Lucent Technologies, Inc.
+# ======================================================================
+#
+# Permission to use, copy, modify, and distribute this software and its
+# documentation for any purpose and without fee is hereby granted,
+# provided that the above copyright notice appear in all copies and that
+# both that the copyright notice and warranty disclaimer appear in
+# supporting documentation, and that the names of Lucent Technologies
+# any of their entities not be used in advertising or publicity
+# pertaining to distribution of the software without specific, written
+# prior permission.
+#
+# Lucent Technologies disclaims all warranties with regard to this
+# software, including all implied warranties of merchantability and
+# fitness.  In no event shall Lucent be liable for any special, indirect
+# or consequential damages or any damages whatsoever resulting from loss
+# of use, data or profits, whether in an action of contract, negligence
+# or other tortuous action, arising out of or in connection with the use
+# or performance of this software.
+#
+# ======================================================================
+
+#
+# Indicates whether to activate (highlight) tabs when the mouse passes
+# over them.  This is turned off during scan operations.
+#
 set bltTabset(activate) yes
 
+# ----------------------------------------------------------------------
+# 
+# ButtonPress assignments
+#
+#   <ButtonPress-2>	Starts scan mechanism (pushes the tabs)
+#   <B2-Motion>		Adjust scan
+#   <ButtonRelease-2>	Stops scan
+#
+# ----------------------------------------------------------------------
 bind Tabset <B2-Motion> {
     %W scan dragto %x %y
 }
@@ -17,6 +63,24 @@ bind Tabset <ButtonRelease-2> {
     %W activate @%x,%y
 }
 
+# ----------------------------------------------------------------------
+# 
+# KeyPress assignments
+#
+#   <KeyPress-Up>	Moves focus to the tab immediately above the 
+#			current.
+#   <KeyPress-Down>	Moves focus to the tab immediately below the 
+#			current.
+#   <KeyPress-Left>	Moves focus to the tab immediately left of the 
+#			currently focused tab.
+#   <KeyPress-Right>	Moves focus to the tab immediately right of the 
+#			currently focused tab.
+#   <KeyPress-space>	Invokes the commands associated with the current
+#			tab.
+#   <KeyPress-Return>	Same as above.
+#   <KeyPress>		Go to next tab starting with the ASCII character.
+#
+# ----------------------------------------------------------------------
 bind Tabset <KeyPress-Up> {
     %W see tabUp
     %W focus tabUp
@@ -51,6 +115,20 @@ bind Tabset <KeyPress> {
     }
 }
 
+# ----------------------------------------------------------------------
+#
+# FirstMatchingTab --
+#
+#	Find the first tab (from the tab that currently has focus) 
+#	starting with the same first letter as the tab.  It searches
+#	in order of the tab positions and wraps around. If no tab
+#	matches, it stops back at the current tab.
+#
+# Arguments:	
+#	widget		Tabset widget.
+#	key		ASCII character of key pressed
+#
+# ----------------------------------------------------------------------
 proc blt::FindMatchingTab { widget key } {
     set key [string tolower $key]
     set index [$widget index tabFocus]
@@ -68,7 +146,19 @@ proc blt::FindMatchingTab { widget key } {
     $widget see tabFocus
 }
 
-proc blt::SelectTab { widget } {
+# ----------------------------------------------------------------------
+#
+# SelectTab --
+#
+#	Invokes the command for the tab.  If the widget associated tab 
+#	is currently torn off, the tearoff is raised.
+#
+# Arguments:	
+#	widget		Tabset widget.
+#	x y		Unused.
+#
+# ----------------------------------------------------------------------
+proc blt::SelectTab { widget x y } {
     $widget see tabSelect
     set w [$widget tab tearoff tabSelect]
     if { ($w != "") && ($w != "$widget") } {
@@ -77,40 +167,138 @@ proc blt::SelectTab { widget } {
     $widget invoke tabSelect
 }
 
-proc blt::MendTearoff { widget tab } {
-    set top $widget.[$widget index $tab]
+# ----------------------------------------------------------------------
+#
+# DestroyTearoff --
+#
+#	Destroys the toplevel window and the container tearoff 
+#	window holding the embedded widget.  The widget is placed
+#	back inside the tab.
+#
+# Arguments:	
+#	widget		Tabset widget.
+#	tabName		Tab selected.
+#
+# ----------------------------------------------------------------------
+proc blt::DestroyTearoff { widget tabName } {
+    set top "$widget.toplevel-$tabName"
     if { [winfo exists $top] } {
 	wm withdraw $top
 	update
-	$widget tab tearoff $tab $widget
+	$widget tab tearoff $tabName $widget
 	destroy $top
     }
 }
 
-proc blt::MakeTearoff { widget x y } {
-    set tab [$widget get tabSelect]
-    set top $widget.[$widget index $tab]
+# ----------------------------------------------------------------------
+#
+# CreateTearoff --
+#
+#	Creates a new toplevel window and moves the embedded widget
+#	into it.  The toplevel is placed just below the tab.  The
+#	DELETE WINDOW property is set so that if the toplevel window 
+#	is requested to be deleted by the window manager, the embedded
+#	widget is placed back inside of the tab.  Note also that 
+#	if the tabset container is ever destroyed, the toplevel is
+#	also destroyed.  
+#
+# Arguments:	
+#	widget		Tabset widget.
+#	tabName		Tab selected.
+#	x y		The coordinates of the mouse pointer.
+#
+# ----------------------------------------------------------------------
+proc blt::CreateTearoff { widget tabName rootX rootY } {
+
+    # ------------------------------------------------------------------
+    # When reparenting the window contained in the tab, check if the
+    # window or any window in its hierarchy currently has focus.
+    # Since we're reparenting windows behind its back, Tk can
+    # mistakenly activate the keyboard focus when the mouse enters the
+    # old toplevel.  The simplest way to deal with this problem is to
+    # take the focus off the window and set it to the tabset widget
+    # itself.
+    # ------------------------------------------------------------------
+
+    set focus [focus]
+    set window [$widget tab cget $tabName -window]
+    if { ($focus == $window) || ([string match  $window.* $focus]) } {
+	focus -force $widget
+    }
+
+    set top "$widget.toplevel-$tabName"
     toplevel $top
-    $widget tab tearoff $tab $top.tearoff
-    table $top $top.tearoff -fill both
-    incr x 10 ; incr y 10
-    wm geometry $top +$x+$y
-    wm title $top "[wm title .]: [$widget tab cget $tab -text]"
-    wm protocol $top WM_DELETE_WINDOW [list blt::MendTearoff $widget $tab]
-    bind $top.tearoff <Destroy> "destroy $top"
+    $widget tab tearoff $tabName $top.container
+    table $top $top.container -fill both
+
+    incr rootX 10 ; incr rootY 10
+    wm geometry $top +$rootX+$rootY
+    wm title $top "[wm title .]: [$widget tab cget $tabName -text]"
+    wm transient $top .
+
+    # 
+    # If the user tries to delete the toplevel, put the window back
+    # into the tab folder.  
+    #
+    wm protocol $top WM_DELETE_WINDOW [list blt::DestroyTearoff $widget $tabName]
+    # 
+    # If the container is ever destroyed, automatically destroy the
+    # toplevel too.  
+    #
+    bind $top.container <Destroy> [list destroy $top]
 }
 
+# ----------------------------------------------------------------------
+#
+# Tearoff --
+#
+#	Toggles the tab tearoff.  If the tab contains a embedded widget, 
+#	it is placed inside of a toplevel window.  If the widget has 
+#	already been torn off, the widget is replaced back in the tab.
+#
+# Arguments:	
+#	widget		tabset widget.
+#	x y		The coordinates of the mouse pointer.
+#
+# ----------------------------------------------------------------------
 proc blt::Tearoff { widget x y  } {
-    set w [$widget tab tearoff tabSelect]
-    if { $w == "$widget" } {
-	blt::MakeTearoff $widget $x $y
+    set tabName [$widget get tabActive]
+    if { $tabName == "" } {
+	return
+    }
+    set container [$widget tab tearoff $tabName]
+    if { $container == "$widget" } {
+	blt::CreateTearoff $widget $tabName $x $y
     } else {
-	blt::MendTearoff $widget [$widget get tabSelect]
+	blt::DestroyTearoff $widget $tabName
     }
 }
 
-
-proc blt::InitTabBindings { widget } {
+# ----------------------------------------------------------------------
+#
+# TabsetInit
+#
+#	Invoked from C whenever a new tabset widget is created.
+#	Sets up the default bindings for the all tab entries.  
+#	These bindings are local to the widget, so they can't be 
+#	set through the usual widget class bind tags mechanism.
+#
+#	<Enter>		Activates the tab.
+#	<Leave>		Deactivates all tabs.
+#	<ButtonPress-1>	Selects the tab and invokes its command.
+#	<ButtonPress-3>	Toggles the tab tearoff.  If the tab contains
+#			a embedded widget, it is placed inside of a
+#			toplevel window.  If the widget has already
+#			been torn off, the widget is replaced back
+#			in the tab.
+#	<Control-ButtonPress-1>	
+#			Same as above.
+#
+# Arguments:	
+#	widget		tabset widget
+#
+# ----------------------------------------------------------------------
+proc blt::TabsetInit { widget } {
     $widget bind all <Enter> { 
 	if { $bltTabset(activate) } {
 	    %W activate tabSelect 
@@ -119,8 +307,13 @@ proc blt::InitTabBindings { widget } {
     $widget bind all <Leave> { 
         %W activate "" 
     }
-    $widget bind all <ButtonRelease-1> { blt::SelectTab %W }
-    $widget bind all <ButtonRelease-3> { blt::Tearoff %W %X %Y }
-    $widget bind all <Control-ButtonRelease-1> { blt::Tearoff %W %X %Y }
+    $widget bind all <ButtonPress-1> { 
+	blt::SelectTab %W %x %y 
+    }
+    $widget bind all <ButtonPress-3> { 
+	blt::Tearoff %W %X %Y 
+    }
+    $widget bind all <Control-ButtonPress-1> { 
+	blt::Tearoff %W %X %Y 
+    }
 }
-

@@ -99,7 +99,10 @@ proc http::config {args} {
 		set state(status) error
 	    }
 	}
-	unset state(-command)
+	if {[info exist state(-command)]} {
+	    # Command callback may already have unset our state
+	    unset state(-command)
+	}
     }
 }
 
@@ -360,9 +363,10 @@ proc http::size {token} {
     if {[info exists state(-progress)]} {
 	eval $state(-progress) {$token $state(totalsize) $state(currentsize)}
     }
+    # At this point the token may have been reset
     if {([string length $error] != 0)} {
 	Finish $token $error
-    } elseif {[::eof $s]} {
+    } elseif {[catch {::eof $s} iseof] || $iseof} {
 	Eof $token
     } else {
 	CopyStart $s $token
@@ -439,13 +443,25 @@ proc http::formatQuery {args} {
 # 4 "subst" the result, doing all the array substitutions
  
  proc http::mapReply {string} {
+    set isKanji 0
+    if {[string length [info command kanji]] > 0} {
+        set isKanji 1
+	set sc [kanji scanKanji]
+	kanji scanKanji no
+    }
     variable formMap
     set alphanumeric	a-zA-Z0-9
     regsub -all \[^$alphanumeric\] $string {$formMap(&)} string
     regsub -all \n $string {\\n} string
     regsub -all \t $string {\\t} string
     regsub -all {[][{})\\]\)} $string {\\&} string
-    return [subst $string]
+    if {$isKanji == 0} {
+        return [subst $string]
+    } else {
+        set ret [subst $string]
+        kanji scanKanji $sc
+        return $ret
+    }
 }
 
 # Default proxy filter. 

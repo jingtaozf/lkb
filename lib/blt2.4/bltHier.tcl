@@ -8,9 +8,11 @@
 #            http://www.tcltk.com/blt
 #
 #      RCS:  $Id$
+#
 # ----------------------------------------------------------------------
 # Copyright (c) 1998  Lucent Technologies, Inc.
 # ======================================================================
+#
 # Permission to use, copy, modify, and distribute this software and its
 # documentation for any purpose and without fee is hereby granted,
 # provided that the above copyright notice appear in all copies and that
@@ -27,6 +29,7 @@
 # of use, data or profits, whether in an action of contract, negligence
 # or other tortuous action, arising out of or in connection with the use
 # or performance of this software.
+#
 # ======================================================================
 
 array set bltHierbox {
@@ -172,7 +175,8 @@ bind Hierbox <KeyPress-F2> {
 
 
 # ----------------------------------------------------------------------
-# USAGE: blt::HierboxInitBindings <hierbox> 
+#
+# USAGE: blt::HierboxInit <hierbox> 
 #
 # Invoked by internally by Hierbox_Init routine.  Initializes the 
 # default bindings for the hierbox widget entries.  These are local
@@ -182,7 +186,7 @@ bind Hierbox <KeyPress-F2> {
 # Arguments:	hierbox		hierarchy widget
 #
 # ----------------------------------------------------------------------
-proc blt::HierboxInitBindings { widget } {
+proc blt::HierboxInit { widget } {
     $widget bind all <Enter> { 
 	%W entry activate current 
     }

@@ -32,7 +32,12 @@
 # The code below creates the default class bindings for entries.
 #-------------------------------------------------------------------------
 bind Entry <<Cut>> {
-    if {![catch {set data [string range [%W get] [%W index sel.first]\
+    if {[info commands kstring] != {}} {
+	set stringCmd kstring
+    } else {
+	set stringCmd string
+    }
+    if {![catch {set data [$stringCmd range [%W get] [%W index sel.first]\
 	    [expr {[%W index sel.last] - 1}]]}]} {
 	clipboard clear -displayof %W
 	clipboard append -displayof %W $data
@@ -40,7 +45,12 @@ bind Entry <<Cut>> {
     }
 }
 bind Entry <<Copy>> {
-    if {![catch {set data [string range [%W get] [%W index sel.first]\
+    if {[info commands kstring] != {}} {
+	set stringCmd kstring
+    } else {
+	set stringCmd string
+    }
+    if {![catch {set data [$stringCmd range [%W get] [%W index sel.first]\
 	    [expr {[%W index sel.last] - 1}]]}]} {
 	clipboard clear -displayof %W
 	clipboard append -displayof %W $data
@@ -554,7 +564,12 @@ proc tkEntryTranspose w {
     if {$first < 0} {
 	return
     }
-    set new [string index [$w get] [expr {$i-1}]][string index [$w get] $first]
+    if {[info commands kstring] != {}} {
+	set stringCmd kstring
+    } else {
+	set stringCmd string
+    }
+    set new [$stringCmd index [$w get] [expr {$i-1}]][$stringCmd index [$w get] $first]
     $w delete $first $i
     $w insert insert $new
     tkEntrySeeInsert $w

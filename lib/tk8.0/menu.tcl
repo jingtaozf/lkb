@@ -881,10 +881,19 @@ proc tkMenuNextEntry {menu count} {
 
 proc tkMenuFind {w char} {
     global tkPriv
+    if {[info commands kstring] != {}} {
+	set stringCmd kstring
+    } else {
+	set stringCmd string
+    }
     set char [string tolower $char]
     set windowlist [winfo child $w]
 
     foreach child $windowlist {
+	# Don't descend into other toplevels.
+        if {[winfo toplevel [focus]] != [winfo toplevel $child] } {
+	    continue
+	}
 	switch [winfo class $child] {
 	    Menu {
 		if {[$child cget -type] == "menubar"} {
@@ -896,9 +905,9 @@ proc tkMenuFind {w char} {
 			if {[$child type $i] == "separator"} {
 			    continue
 			}
-			set char2 [string index [$child entrycget $i -label] \
+			set char2 [$stringCmd index [$child entrycget $i -label] \
 				[$child entrycget $i -underline]]
-			if {([string compare $char [string tolower $char2]] \
+			if {([$stringCmd compare $char [$stringCmd tolower $char2]] \
 				== 0) || ($char == "")} {
 			    if {[$child entrycget $i -state] != "disabled"} {
 				return $child
@@ -911,11 +920,15 @@ proc tkMenuFind {w char} {
     }
 
     foreach child $windowlist {
+	# Don't descend into other toplevels.
+        if {[winfo toplevel [focus]] != [winfo toplevel $child] } {
+	    continue
+	}
 	switch [winfo class $child] {
 	    Menubutton {
-		set char2 [string index [$child cget -text] \
+		set char2 [$stringCmd index [$child cget -text] \
 			[$child cget -underline]]
-		if {([string compare $char [string tolower $char2]] == 0)
+		if {([$stringCmd compare $char [$stringCmd tolower $char2]] == 0)
 			|| ($char == "")} {
 		    if {[$child cget -state] != "disabled"} {
 			return $child
@@ -1019,8 +1032,13 @@ proc tkTraverseWithinMenu {w char} {
     if {$last == "none"} {
 	return
     }
+    if {[info commands kstring] != {}} {
+	set stringCmd kstring
+    } else {
+	set stringCmd string
+    }
     for {set i 0} {$i <= $last} {incr i} {
-	if {[catch {set char2 [string index \
+	if {[catch {set char2 [$stringCmd index \
 		[$w entrycget $i -label] \
 		[$w entrycget $i -underline]]}]} {
 	    continue

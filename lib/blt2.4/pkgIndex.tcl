@@ -1,14 +1,18 @@
 # Tcl package index file, version 1.0
 
 proc Blt_MakePkgIndex { dir } {
-    set suffix .so.2
-    set soext [lindex [split $suffix "."] 1]
-    set library libBLT$suffix
+    set suffix [info sharedlibextension]
+    set version 2.4
+    regsub {\.} $version {} version_no_dots
     foreach lib {  } {
-	catch { load $lib.$soext BLT }
+	catch { load ${lib}${suffix} BLT }
     }
-    set path [file dirname $dir]
-    package ifneeded BLT 2.4 [list load [file join $path $library] BLT]
+    set library BLT${version_no_dots}${suffix}
+    global tcl_platform
+    if { $tcl_platform(platform) == "unix" } {
+	set library [file join [file dirname $dir] lib${library}]
+    } 
+    package ifneeded BLT ${version} [list load $library BLT]
 }
 
 Blt_MakePkgIndex $dir

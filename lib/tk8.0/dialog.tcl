@@ -68,8 +68,22 @@ proc tk_dialog {w title text bitmap default args} {
     label $w.msg -justify left -text $text
     if {$tcl_platform(platform) == "macintosh"} {
 	$w.msg configure -font system
+    } elseif {$tcl_platform(platform) == "windows"} {
+	if { [ string length [ info command kanji ] ] > 0 } {
+	    # use default font family
+	    $w.msg configure -font [lreplace [$w.msg cget -font] end end 18]
+	} else {
+	    $w.msg configure -font {Times 18}
+	}
     } else {
-	$w.msg configure -font {Times 18}
+	if { [ string length [ info command kanji ] ] > 0 } {
+	    if { [ lsearch [ font names ] Mincho:Times-18 ] < 0 } {
+		font create Mincho:Times-18 -compound {{Times 18} kanji16}
+	    }
+	    $w.msg configure -font Mincho:Times-18
+	} else {
+	    $w.msg configure -font {Times 18}
+	}
     }
     pack $w.msg -in $w.top -side right -expand 1 -fill both -padx 3m -pady 3m
     if {$bitmap != ""} {

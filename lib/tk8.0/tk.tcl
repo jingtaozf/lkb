@@ -7,6 +7,7 @@
 #
 # Copyright (c) 1992-1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -189,4 +190,132 @@ proc tkTabToWindow {w} {
 	$w icur end
     }
     focus $w
+}
+
+
+# For Japanese text input and font definition.
+
+proc mkOptionFont {} {
+    set def [option get . tkDefineFont *]
+    if {[string length $def] == 0} {
+	return
+    }
+    set def [split $def ","]
+    foreach i $def {
+	set name [lindex $i 0]
+	set fonts [lindex $i 1]
+	catch {font create $name -compound $fonts}
+    }
+
+    set def [option get . tkDefaultFont *]
+    if {[string length $def] == 0} {
+	return
+    }
+    set c ""
+    catch {set c [font conf $def -compound]}
+    if {[string length $c] > 0} {
+	option add *font $def userDefault
+    }
+}
+
+
+if {[string compare [info commands kanji] kanji] == 0} {
+    set isUnix 0
+    if {[string compare $tcl_platform(platform) "unix"] == 0} {
+	set isUnix 1
+    }
+    set src ""
+    set haveKinput 0
+    if {$isUnix && [string compare [info commands kanjiInput] kanjiInput] == 0} {
+	set haveKinput 1
+    }
+    set haveXIM 0
+    if {[string compare [info commands imconfigure] imconfigure] == 0} {
+	set haveXIM 1
+    }
+    if {$haveKinput == 1 && $haveXIM == 0} {
+	set src kinput.tcl
+    } elseif {$haveKinput == 0 && $haveXIM == 1} {
+	set src xim.tcl
+    } elseif {$haveKinput == 1 && $haveXIM == 1} {
+	if {$isUnix == 1} {
+	    global env
+	    set TK_KCPROTO ""
+	    catch {set TK_KCPROTO [string tolower [lindex $env(TK_KCPROTO) 0]]}
+	    if {[string length $TK_KCPROTO] <= 0} {
+		set TK_KCPROTO [string tolower [lindex [option get . tkKanjiConversionProtocol *] 0]]
+	    }
+	    if {[string length $TK_KCPROTO] > 0} {
+		switch "$TK_KCPROTO" {
+		    "kinput" {
+			set src kinput.tcl
+			set haveXIM 0
+		    }
+		    "kinput2" {
+			set src kinput.tcl
+			set haveXIM 0
+		    }
+		    "xim" {
+			set src xim.tcl
+			set haveKinput 0
+		    }
+		}
+	    }
+	    if {[string length $src] == 0} {
+		set XMODIFIERS ""
+		catch {set XMODIFIERS $env(XMODIFIERS)}
+		if {[string length $XMODIFIERS] > 0} {
+		    set src xim.tcl
+		    set haveKinput 0
+		}
+	    }
+	    if {[string length $src] == 0} {
+		set src kinput.tcl
+		set haveXIM 0
+	    }
+	    if {$haveKinput == 0} {
+		if {[string compare [info commands kanjiInput] "kanjiInput"] == 0} {
+		    rename kanjiInput ""
+		}
+	    }
+	    if {$haveXIM == 0} {
+		if {[string compare [info commands imconfigure] "imconfigure"] == 0} {
+		    rename imconfigure ""
+		}
+	    }
+	}
+    }
+    if {[string length $src] > 0} {
+	source [file join $tk_library $src]
+    }
+    
+    if {$isUnix == 0} {
+	if {[string compare $tcl_platform(platform) "macintosh"] == 0} {
+	    toplevel .x
+	    set str "Hi, Mac user, I think you are trying to compile Tk $tk_version japanized version on your machine. You hacker, I like it :) If you need any help about Tk's japanization, feel free to e-mail:
+
+	tcl-jp-bugs@sra.co.jp
+
+Anyway, the first thing you have to do for japanization is:
+
+	Shutting this stupid messages off :)
+
+Happy hacking!"
+	    message .x.t -text $str
+	    pack .x.t
+	    bind .x.t <1> {destroy .x}
+	    update
+	}
+    }
+
+    if {[string length [info command kinsoku]] > 0} {
+	source [file join $tk_library kinsoku.tcl]
+    }
+    mkOptionFont
+    rename mkOptionFont ""
+    catch {unset isUnix}
+    catch {unset haveKinput}
+    catch {unset haveXIM}
+    catch {unset src}
+    catch {unset TK_KCPROTO}
 }

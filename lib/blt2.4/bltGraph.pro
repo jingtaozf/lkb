@@ -189,16 +189,19 @@ systemdict /ISOLatin1Encoding known not {
 % Each stipple dot is assumed to be about one unit across in the
 % current user coordinate system.
 
-/StippleFill {
-  % Turn the path into a clip region that we can then cover with
-  % lots of images corresponding to the stipple pattern.  Warning:
-  % some Postscript interpreters get errors during strokepath for
-  % dashed lines.  If this happens, turn off dashes and try again.
+% width height string StippleFill --
+%
+% Given a path already set up and a clipping region generated from
+% it, this procedure will fill the clipping region with a stipple
+% pattern.  "String" contains a proper image description of the
+% stipple pattern and "width" and "height" give its dimensions.  Each
+% stipple dot is assumed to be about one unit across in the current
+% user coordinate system.  This procedure trashes the graphics state.
 
-  gsave
-    {eoclip}
-    {{strokepath} stopped {grestore gsave [] 0 setdash strokepath} if clip}
-    ifelse
+/StippleFill {
+    % The following code is needed to work around a NeWSprint bug.
+
+    /tmpstip 1 index def
 
     % Change the scaling so that one user unit in user coordinates
     % corresponds to the size of one stipple dot.
@@ -206,12 +209,14 @@ systemdict /ISOLatin1Encoding known not {
 
     % Compute the bounding box occupied by the path (which is now
     % the clipping region), and round the lower coordinates down
-    % to the nearest starting point for the stipple pattern.
+    % to the nearest starting point for the stipple pattern.  Be
+    % careful about negative numbers, since the rounding works
+    % differently on them.
 
     pathbbox
     4 2 roll
-    5 index div cvi 5 index mul 4 1 roll
-    6 index div cvi 6 index mul 3 2 roll
+    5 index div dup 0 lt {1 sub} if cvi 5 index mul 4 1 roll
+    6 index div dup 0 lt {1 sub} if cvi 6 index mul 3 2 roll
 
     % Stack now: width height string y1 y2 x1 x2
     % Below is a doubly-nested for loop to iterate across this area
@@ -220,20 +225,19 @@ systemdict /ISOLatin1Encoding known not {
     % each position
 
     6 index exch {
-      2 index 5 index 3 index {
-	% Stack now: width height string y1 y2 x y
+	2 index 5 index 3 index {
+	    % Stack now: width height string y1 y2 x y
 
-	gsave
-	  1 index exch translate
-	  5 index 5 index true matrix {3 index} imagemask
-	grestore
-      } for
-      pop
+	    gsave
+	    1 index exch translate
+	    5 index 5 index true matrix tmpstip imagemask
+	    grestore
+	} for
+	pop
     } for
     pop pop pop pop pop
-  grestore
-  newpath
 } bind def
+
 
 /LS {	% Stack: x1 y1 x2 y2
   newpath 4 2 roll moveto lineto stroke

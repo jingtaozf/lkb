@@ -251,6 +251,11 @@ proc blt::PushZoom { graph } {
     } $graph [$graph xaxis cget -min] [$graph xaxis cget -max] \
 		 $graph [$graph yaxis cget -min] [$graph yaxis cget -max] ]
 
+    set zoomInfo($graph,stack) [linsert $zoomInfo($graph,stack) 0 $cmd]
+
+    busy hold $graph 
+    update
+
     if { $x1 > $x2 } { 
 	$graph xaxis configure -min $x2 -max $x1 
     } elseif { $x1 < $x2 } {
@@ -261,10 +266,10 @@ proc blt::PushZoom { graph } {
     } elseif { $y1 < $y2 } {
 	$graph yaxis configure -min $y1 -max $y2
     } 
-    set zoomInfo($graph,stack) [linsert $zoomInfo($graph,stack) 0 $cmd]
 
-    busy hold $graph
+    # This "update" forces the graph to be redrawn
     update
+    
     busy release $graph
 }
 
@@ -281,9 +286,9 @@ proc blt::ResetZoom { graph } {
     }
 }
 
-option add *zoomTitle.font	  -*-helvetica-bold-o-*-*-18-*-*-*-*-*-*-* 
-option add *zoomTitle.shadow	  black
-option add *zoomTitle.foreground  yellow
+option add *zoomTitle.font	  -*-helvetica-medium-R-*-*-18-*-*-*-*-*-*-* 
+option add *zoomTitle.shadow	  yellow4
+option add *zoomTitle.foreground  yellow1
 option add *zoomTitle.coords	  "-Inf Inf"
 
 proc blt::ZoomTitleNext { graph } {
@@ -333,10 +338,10 @@ proc blt::SetZoomPoint { graph x y } {
 
 option add *zoomOutline.dashes		4	
 option add *zoomTitle.anchor		nw
-option add *zoomOutline.lineWidth	1
+option add *zoomOutline.lineWidth	2
 option add *zoomOutline.xor		yes
 
-proc blt::ChangeDashes { graph  offset } {
+proc blt::ChangeDashes { graph offset } {
     global zoomInfo
     incr offset
     if { [$graph marker exists zoomOutline] } {

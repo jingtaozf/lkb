@@ -230,7 +230,7 @@ systemdict /ISOLatin1Encoding known not {
 
     % Compute the baseline offset and the actual font height.
 
-    0 0 moveto (TXygqPZ) false charpath
+    0 0 moveto (TXygqPZÄ) false charpath
     pathbbox dup /baseline exch def
     exch pop exch sub /height exch def pop
     newpath
@@ -280,5 +280,120 @@ systemdict /ISOLatin1Encoding known not {
 	0 spacing neg translate
     } forall
 } bind def
+
+
+% Japanization stuff.
+
+% This eucfont came from fixeucfont-1.2 by Mr. Norio Katayama
+% (katayama@rd.nacsis.ac.jp). Thank you :)
+% Modified: Feb 10 1999 for hankaku kana support.
+% Special thanks to Mr. Toyohisa Kameyama (kameyama@sra.co.jp).
+
+/CIDeucfont {
+    /KanaFont exch dup type /nametype eq { findfont } if def
+    userdict /fixeucfont_dict known not {
+	userdict begin
+	    /fixeucfont_dict 2 dict begin
+		/UpperByteEncoding [
+		    16#00 1 16#0D { pop 0 } for
+		    78 % 0x0e SS2 kanaFont map. adding to last of basefont vector.
+		    16#0f 1 16#20 { pop 0 } for
+		    16#21 1 16#28 { 16#20 sub } for
+		    16#29 1 16#2F { pop 0 } for
+		    16#30 1 16#74 { 16#27 sub } for
+		    16#75 1 16#FF { pop 0 } for
+		] def
+	        /LowerByteEncoding [
+		    16#00 1 16#A0 { pop /.notdef } for
+		    16#A1 1 16#FE { 16#80 sub 16 2 string cvrs
+				    (cXX) dup 1 4 -1 roll
+				    putinterval cvn } for
+		    /.notdef
+		] def
+		currentdict
+	    end def
+	end
+    } if
+    12 dict begin
+	dup type /nametype eq { findfont } if
+	dup /WMode known {
+	    dup /WMode get /WMode exch def
+	    WMode 1 eq {
+		[0.0 1.0 -1.0 0.0 0.0 0.30] makefont
+	    } if
+	} if
+	%
+	% 7+8 bit EUC font
+	%
+	12 dict begin
+	    /EUCFont exch def
+	    /FontInfo (7+8 bit EUC font) readonly def
+	    /PaintType 0 def
+	    /FontType 0 def
+	    /FontMatrix matrix def
+	    % /FontName
+	    /Encoding fixeucfont_dict /UpperByteEncoding get def
+	    /FMapType 2 def
+	    EUCFont /WMode known
+	    { EUCFont /WMode get /WMode exch def }
+	    { /WMode 0 def } ifelse
+	    /FDepVector [
+		EUCFont /FDepVector get 0 get
+		[ 16#21 1 16#28 {} for 16#30 1 16#74 {} for ]
+		{
+		    13 dict begin
+			/EUCFont EUCFont def
+			/UpperByte exch 16#80 add def	
+			% /FontName
+			/FontInfo (EUC lower byte font) readonly def
+			/PaintType 0 def
+			/FontType 3 def
+			/FontMatrix matrix def
+			/FontBBox {0 0 0 0} def
+			/Encoding fixeucfont_dict /LowerByteEncoding get def
+			% /UniqueID
+			% /WMode
+			/BuildChar {
+			    gsave
+			    exch dup /EUCFont get setfont
+			    /UpperByte get
+			    2 string
+			    dup 0 4 -1 roll put
+			    dup 1 4 -1 roll put
+			    dup stringwidth setcharwidth
+			    0 0 moveto show
+			    grestore
+			} bind def
+			currentdict
+		    end
+		    /lowerbytefont exch definefont
+		} forall
+		KanaFont
+	    ] def
+	    currentdict
+	end
+	/kanjifont exch definefont
+	exch
+
+	dup type /nametype eq { findfont } if
+	exch
+
+	/FDepVector [ 4 2 roll ] def
+	/FontType 0 def
+	/FMapType 4 def
+	/FontMatrix matrix def
+	/Encoding [ 0 1 ] def
+	/FontBBox {0 0 0 0} def
+	dup /FontName exch def
+	currentdict
+    end
+    definefont pop
+} def
+
+/eucfont {
+    3 index FontDirectory exch known not {
+        CIDeucfont
+    } { pop pop pop pop } ifelse
+} def
 
 %%EndProlog

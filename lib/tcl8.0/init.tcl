@@ -7,6 +7,7 @@
 #
 # Copyright (c) 1991-1993 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
+# Copyright (c) 1998-1999 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -41,9 +42,11 @@ if {![info exists auto_path]} {
 	set auto_path ""
     }
 }
-foreach __dir [list [info library] [file dirname [info library]]] {
-    if {[lsearch -exact $auto_path $__dir] < 0} {
-	lappend auto_path $__dir
+if {[string compare [info library] {}]} {
+    foreach __dir [list [info library] [file dirname [info library]]] {
+	if {[lsearch -exact $auto_path $__dir] < 0} {
+	    lappend auto_path $__dir
+	}
     }
 }
 if {[info exist tcl_pkgPath]} {
@@ -53,7 +56,9 @@ if {[info exist tcl_pkgPath]} {
 	}
     }
 }
-unset __dir
+if {[info exists __dir]} {
+    unset __dir
+}
 
 # Windows specific initialization to handle case isses with envars
 
@@ -255,6 +260,32 @@ proc unknown args {
 	}
     }
     return -code error "invalid command name \"$name\""
+}
+
+# unknown_kanji --
+
+proc unknown_kanji args {
+    global auto_convload errorCode
+    if { ![ info exists auto_convload ] } {
+	set conv [ kanji convertWhenCompile ]
+	kanji convertWhenCompile no
+	set code [ catch { set ret [ uplevel __org_unknown $args ] } msg ]
+	kanji convertWhenCompile $conv
+	if { $code != 0 } {
+	    return -code $code -errorcode $errorCode $msg
+	} else {
+	    return $ret
+	}
+    } else {
+	uplevel __org_unknown $args
+    }
+}
+
+if { [ string length [ info command kanji ] ] > 0 } {
+    if { [ string length [ info command __org_unknown ] ] == 0 } {
+	rename unknown __org_unknown
+	rename unknown_kanji unknown
+    }
 }
 
 # auto_load --
@@ -610,10 +641,14 @@ proc tcl_findLibrary {basename version patch initScript enVarName varName} {
 
     # The C application may have hardwired a path, which we honor
     
-    if {[info exist the_library]} {
+    if {[info exist the_library] && [string compare $the_library {}]} {
 	lappend dirs $the_library
     } else {
-
+	if {[string compare kanji [info command kanji]] == 0} {
+	    if {[string match {*jp} $version] != 1} {
+		append version jp
+	    }
+	}
 	# Do the canonical search
 
 	# 1. From an environment variable, if it exists
@@ -624,7 +659,8 @@ proc tcl_findLibrary {basename version patch initScript enVarName varName} {
 
 	# 2. Relative to the Tcl library
 
-        lappend dirs [file join [file dirname [info library]] $basename$version]
+        lappend dirs [file join [file dirname [info library]] \
+		$basename$version]
 
 	# 3. Various locations relative to the executable
 	# ../lib/foo1.0		(From bin directory in install hierarchy)
@@ -640,9 +676,7 @@ proc tcl_findLibrary {basename version patch initScript enVarName varName} {
         lappend dirs [file join $grandParentDir lib $basename$version]
         lappend dirs [file join $parentDir library]
         lappend dirs [file join $grandParentDir library]
-        if {[string match {*[ab]*} $patch]} {
-            set ver $patch
-        } else {
+        if {![regexp {.*[ab][0-9]*} $patch ver]} {
             set ver $version
         }
         lappend dirs [file join $grandParentDir $basename$ver library]
@@ -717,6 +751,7 @@ if {! [interp issafe]} {
 	if {$args == ""} {
 	    set args *.tcl
 	}
+
 	auto_mkindex_parser::init
 	foreach file [eval glob $args] {
 	    if {[catch {auto_mkindex_parser::mkindex $file} msg] == 0} {
@@ -803,9 +838,11 @@ if {! [interp issafe]} {
 	variable contextStack ""    ;# stack of namespace scopes
 	variable imports ""         ;# keeps track of all imported cmds
 	variable initCommands ""    ;# list of commands that create aliases
+
 	proc init {} {
 	    variable parser
 	    variable initCommands
+	    
 	    if {![interp issafe]} {
 		set parser [interp create -safe]
 		$parser hide info
@@ -901,7 +938,7 @@ if {! [interp issafe]} {
     proc auto_mkindex_parser::slavehook {cmd} {
 	variable initCommands
 
-	lappend initCommands "\$parser eval [list $cmd]"
+	lappend initCommands [list \$parser eval $cmd]
     }
 
     # auto_mkindex_parser::command --
@@ -952,7 +989,7 @@ if {! [interp issafe]} {
 	    set exportCmd [list _%@namespace export [namespace tail $name]]
 	    $parser eval [list _%@namespace eval $ns $exportCmd]
 	    set alias [namespace tail $fakeName]
-	    $parser invokehidden proc $name {args} "_%@eval $alias \$args"
+	    $parser invokehidden proc $name {args} [list _%@eval $alias \$args]
 	    $parser alias $alias $fakeName
 	} else {
 	    $parser alias $name $fakeName
@@ -1003,8 +1040,37 @@ if {! [interp issafe]} {
     auto_mkindex_parser::command proc {name args} {
 	variable index
 	variable scriptFile
-	append index "set [list auto_index([fullname $name])]"
-	append index " \[list source \[file join \$dir [list $scriptFile]\]\]\n"
+	append index [list set auto_index([fullname $name])] \
+		" \[list source \[file join \$dir [list $scriptFile]\]\]\n"
+    }
+
+    # Conditionally add support for Tcl byte code files.  There are some
+    # tricky details here.  First, we need to get the tbcload library
+    # initialized in the current interpreter.  We cannot load tbcload into the
+    # slave until we have done so because it needs access to the tcl_patchLevel
+    # variable.  Second, because the package index file may defer loading the
+    # library until we invoke a command, we need to explicitly invoke auto_load
+    # to force it to be loaded.  This should be a noop if the package has
+    # already been loaded
+
+    auto_mkindex_parser::hook {
+	if {![catch {package require tbcload}]} {
+	    if {[info commands tbcload::bcproc] == ""} {
+		auto_load tbcload::bcproc
+	    }
+	    load {} tbcload $auto_mkindex_parser::parser
+
+	    # AUTO MKINDEX:  tbcload::bcproc name arglist body
+	    # Adds an entry to the auto index list for the given pre-compiled
+	    # procedure name.  
+
+	    auto_mkindex_parser::commandInit tbcload::bcproc {name args} {
+		variable index
+		variable scriptFile
+		append index [list set auto_index([fullname $name])] \
+			" \[list source \[file join \$dir [list $scriptFile]\]\]\n"
+	    }
+	}
     }
 
     # AUTO MKINDEX:  namespace eval name command ?arg arg...?
@@ -1029,11 +1095,7 @@ if {! [interp issafe]} {
 		set args [lrange $args 1 end]
 
 		set contextStack [linsert $contextStack 0 $name]
-		if {[llength $args] == 1} {
-		    $parser eval [lindex $args 0]
-		} else {
-		    eval $parser eval $args
-		}
+		$parser eval [list _%@namespace eval $name] $args
 		set contextStack [lrange $contextStack 1 end]
 	    }
 	    import {
@@ -1044,7 +1106,7 @@ if {! [interp issafe]} {
 			lappend imports $pattern
 		    }
 		}
-		catch {$parser eval "_%@namespace import $args"}
+		catch {$parser eval [list _%@namespace import] $args}
 	    }
 	}
     }
@@ -1424,7 +1486,7 @@ proc tclPkgSetup {dir pkg version files} {
 	    if {$type == "load"} {
 		set auto_index($cmd) [list load [file join $dir $f] $pkg]
 	    } else {
-		set auto_index($cmd) [list source [file join $dir $f]]
+		set auto_index($cmd) [list $type [file join $dir $f]]
 	    } 
 	}
     }
