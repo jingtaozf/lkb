@@ -21,6 +21,7 @@
 
 (((:path . "english") (:content . "TSNLP Test Suite"))
  ((:path . "csli") (:content . "CSLI (LinGO) Test Suite"))
+ ((:path . "mrs") (:content . "LinGO MRS Test Suite"))
  ((:path . "vm97") (:content . "VerbMobil 97"))
  ((:path . "vm97p") (:content . "VerbMobil 97 (Partials)"))
  ((:path . "vm98") (:content . "VerbMobil 98"))
