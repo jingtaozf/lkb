@@ -144,3 +144,12 @@
    (for submenu in *lkb-menu-disabled-list*
         do (menu-item-disable submenu)))
  
+;;; functions called from top level menu which are time
+;;; consuming - don't need to do anything special for MCL?
+
+(defun parse-sentences-batch nil
+  (parse-sentences))
+
+(defun do-parse-batch nil
+  (do-parse))
+

@@ -254,4 +254,14 @@
   (dolist (command *lkb-menu-disabled-list*)
     (setf (command-enabled command *lkb-top-frame*) nil)))
 
+;;; functions called from top level menu which are time
+;;; consuming 
+    
+(defun parse-sentences-batch nil
+  ;;; for MCL this can just be parse-sentences
+  (mp:process-run-function "Batch parse" #'cl-user::parse-sentences))
+
+(defun do-parse-batch nil
+  ;;; for MCL this can just be do-parse
+  (mp:process-run-function "Parse" #'cl-user::do-parse))
 

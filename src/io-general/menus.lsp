@@ -21,10 +21,8 @@
 		      cl-user::show-grammar-rule 
 		      cl-user::show-lex-rule 
 		      ;; parse
-		      cl-user::do-parse 
 		      cl-user::show-parse 
 		      cl-user::show-chart 
-		      cl-user::parse-sentences 
 		      cl-user::compare-parses
                       ;; generate
 		      cl-user::generate-from-edge
@@ -92,13 +90,13 @@
                                           :menu-items                       
                                           (list 
                                            (make-menu-item :name "Parse input..."
-                                                           :value 'do-parse)
+                                                           :value 'do-parse-batch)
                                            (make-menu-item :name "Redisplay parse"
                                                            :value 'show-parse)
                                            (make-menu-item :name "Show chart"
                                                            :value 'show-chart)
                                            (make-menu-item :name "Batch parse..."
-                                                           :value 'parse-sentences))
+                                                           :value 'parse-sentences-batch))
                                           :available-p nil)
                    (make-lkb-submenu-item :menu-title "Tests"
                                           :menu-items                       
@@ -186,13 +184,13 @@
                  :menu-items                       
                   (list 
                      (make-menu-item :name "Parse input..."
-                        :value 'do-parse)
+                        :value 'do-parse-batch)
                      (make-menu-item :name "Redisplay parse"
                         :value 'show-parse)
                      (make-menu-item :name "Show chart"
                         :value 'show-chart)
                      (make-menu-item :name "Batch parse..."
-  		        :value 'parse-sentences)
+  		        :value 'parse-sentences-batch)
 		     (make-menu-item :name "Compare..."
                         :value 'compare-parses))
                :available-p nil)
