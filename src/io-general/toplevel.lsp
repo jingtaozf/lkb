@@ -349,8 +349,10 @@
          (setf *last-generate-from-edge* (car possible-edge-name))
          (let ((parser-edge (find-edge-given-id (car possible-edge-name))))
             (when parser-edge
-               (let ((input-sem
-                        (car (mrs::extract-mrs (list parser-edge)))))
+               (let* ((main::*VM-arg-roles-only-p* nil) ; *** needs sorting out
+                      (input-sem
+                         (car (mrs::extract-mrs (list parser-edge)))))
+                  (declare (special main::*VM-arg-roles-only-p*)) ; ***
                   (if (mrs::psoa-liszt input-sem)
                      (when
                         (generate-from-mrs input-sem)
