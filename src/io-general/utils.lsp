@@ -153,12 +153,30 @@
 ;;; no reliable way of stripping punctuation.  For now, specify
 ;;; explicitly what is to be stripped.
 
-(defun alphanumeric-or-extended-p (char)
-  (and (graphic-char-p char)
-       (not (member char '(#\space #\! #\" #\# #\$ #\% #\& #\' #\(
-                           #\) #\* #\+ #\, #\- #\. #\/ #\: #\;
-                           #\< #\= #\> #\? #\@ #\[ #\\ #\] #\^
-                           #\_ #\` #\{ #\| #\} #\~)))))
+;;;
+;;; characters dropped in preprocessing (wide-character ones only with ICS)
+;;;
+(defparameter *punctuation-characters*
+  (append
+   '(#\! #\" #\& #\' #\(
+     #\) #\* #\+ #\, #\- #\. #\/ #\: #\;
+     #\< #\= #\> #\? #\@ #\[ #\\ #\] #\^
+     #\_ #\` #\{ #\| #\} #\~)
+   #+:ics
+   '(#\ideographic_full_stop #\fullwidth_question_mark 
+     #\horizontal_ellipsis #\fullwidth_full_stop
+     #\fullwidth_exclamation_mark
+     #\fullwidth_comma #\ideographic_space)))
+
+(defun alphanumeric-or-extended-p (c)
+  (and (graphic-char-p c) 
+       (not (member c *punctuation-characters* :test #'eql))))
+
+(defun punctuationp (thing)
+  (let ((string (string thing)))
+    (loop
+        for c across string
+        always (member c *punctuation-characters*))))
 
 ;;;  Loading and reloading - called by the tty version as well
 ;;; as the menu driven version
