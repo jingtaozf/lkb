@@ -157,6 +157,8 @@
 (defparameter *psorts-temp-index-file* nil
    "a file to index the lexicon")
 
+(defparameter *leaf-temp-file* nil
+   "a temporary file for leaf types")
 
 (defun lkb-tmp-dir nil 
   ;;; This should be a function, rather than a global, because we 

@@ -34,6 +34,8 @@
 
 (defstruct (unification (:include basic-unification)))
 
+(defstruct (inequality (:include basic-unification)))
+
 ;;; following substructures are semi-obsolete, but retaining them
 ;;; would make it easier to reintegrate old version of the LKB
 ;;; if anyone ever decides to do this
@@ -138,29 +140,20 @@
         ((u-value-p path-or-value) 
          (for type in (u-value-types path-or-value)
               do
-              (eval-possible-leaf-type type)))
+              (eval-possible-leaf-type *leaf-types* type)))
         ((typed-path-p path-or-value)
          (for fvp in (typed-path-typed-feature-list path-or-value)
               do
-              (eval-possible-leaf-type
+              (eval-possible-leaf-type *leaf-types*
                (type-feature-pair-type fvp))))
         (t nil)))
-
-(defun eval-possible-leaf-type (type)
-  (when type
-    (let ((type-entry (get-type-entry type)))
-      (when type-entry
-        (when (leaf-type-p type-entry)
-          (unless (leaf-type-expanded-p type-entry)
-            (add-in-leaf-type-entry type-entry)))))))
 
 (defvar *debug* nil)
 
 (defun process-unifications (specific-list &optional debugging)
    ;; if create-wffs-p then create-wffs is called to finish off - if
   ;; it fails then second value of just the non-wff fs is returned
-  (when *leaf-types*
-    (eval-any-leaf-types specific-list))
+  (eval-any-leaf-types specific-list)
   (if specific-list
       (let ((new-dag (create-dag)))
         (if debugging

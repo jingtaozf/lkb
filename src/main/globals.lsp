@@ -205,6 +205,7 @@
    used in lisp specific stuff as well as elsewhere")
 
 (defvar *lexicon* nil)
+(defvar *leaf-types* nil)
 
 ;;; generator globals (should be moved eventually)
 

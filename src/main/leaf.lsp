@@ -13,8 +13,6 @@
 ;;; whose addition has no effect on the other types in the hierarchy
 ;;; with the exception of the daughters and descendants features
 
-; *leaf-types* is defined in types.lsp
-
 ;;; add-leaf-type will only work properly under certain (quite restrictive)
 ;;; conditions
 ;;; 1. The type is a leaf type in the hierarchy - i.e. it has no
@@ -27,9 +25,150 @@
 ;;; 4. The type only has one (genuine) parent - it may
 ;;;    have a template-parent.  
 
-#|
-(add-leaf-type 'foo '(rel) nil nil nil)
-|#
+(defclass leaf-database () 
+  ((leaf-types :initform nil)))
+
+(defgeneric read-cached-leaf-types (leaf-db filenames))
+
+(defgeneric store-cached-leaf-types (leaf-db))
+
+(defgeneric is-leaf-type (leaf-db name))
+
+(defgeneric store-leaf-type (leaf-db name type-def))
+
+(defgeneric remove-leaf-type (leaf-db name))
+
+(defgeneric clear-leaf-types (leaf-db))
+
+(defgeneric eval-possible-leaf-type (leaf-db type))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defmethod remove-leaf-type ((leaf-db leaf-database) name)
+  ;; defined either for the case where the leaf type turns out to be invalid,
+  ;; or when we have leaf types in a file and want to delete the cached
+  ;; entries completely
+  (clear-type-cache)  
+  ;; assumes this won't be called in places where this is going to severely
+  ;; impair efficiency
+  (let ((type-entry (get-type-entry name)))
+    (when (leaf-type-p type-entry)
+      (remove-type-entry name)
+      (setf (slot-value leaf-db 'leaf-types) (delete name *leaf-types*))
+      (setf *type-names* (delete name *type-names*))
+      (delete-non-local-uses name type-entry))))
+
+(defmethod clear-leaf-types ((leaf-db leaf-database))
+  (dolist (leaf-type (slot-value leaf-db 'leaf-types))
+    (when (gethash leaf-type *types*)
+      (setf (gethash leaf-type *types*) nil)))
+  (setf (slot-value leaf-db 'leaf-types) nil))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass trivial-leaf-database (leaf-database)
+  ())
+
+#+ignore
+(setf *leaf-types* (make-instance 'trivial-leaf-database))
+
+(defmethod read-cached-leaf-types ((leaf-db trivial-leaf-database) filenames)
+  (declare (ignore filenames))
+  (format t "~%Cached leaf types corrupt: reading leaf type source files.")
+  nil)
+
+(defmethod store-cached-leaf-types ((leaf-db trivial-leaf-database))
+  t)
+
+(defmethod is-leaf-type ((leaf-db trivial-leaf-database) name)
+  (member name (slot-value leaf-db 'leaf-types) :test #'eq))
+
+(defmethod store-leaf-type ((leaf-db trivial-leaf-database) name type-def)
+  (with-slots (leaf-types) leaf-db
+    (pushnew name *type-names* :test #'eq)
+    (pushnew name leaf-types :test #'eq)    
+    (set-type-entry name type-def)))
+
+(defmethod eval-possible-leaf-type ((leaf-db trivial-leaf-database) type)
+  (when type
+    (let ((type-entry (get-type-entry type)))
+      (when type-entry
+        (when (leaf-type-p type-entry)
+          (unless (leaf-type-expanded-p type-entry)
+	    (add-in-leaf-type-entry type-entry)))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defclass cdb-leaf-database (leaf-database)
+  ((leaf-db :initform nil :accessor leaf-db)
+   (ready-p :initform nil :accessor leaf-db-ready-p)))
+
+(setf *leaf-types* (make-instance 'cdb-leaf-database))
+
+(defmethod read-cached-leaf-types ((leaf-db cdb-leaf-database) filenames)
+  (unless *leaf-temp-file*
+    (set-temporary-lexicon-filenames))
+  (when (up-to-date-p filenames (list *leaf-temp-file*))
+    (format t "~%Reading in cached leaf types")
+    (when (handler-case 
+	      (setf (leaf-db leaf-db) (cdb:open-read *leaf-temp-file*))
+	    (error (condition)
+	      (format t "~%Error: ~A~%" condition)
+	      (delete-temporary-lexicon-files)
+	      nil))
+      (setf (leaf-db-ready-p leaf-db) t)
+      (format t "~%Cached leaf types read")
+      (return-from read-cached-leaf-types t)))
+  (format t "~%Cached leaf types corrupt: reading leaf type source files")
+  nil)
+
+(defmethod clear-leaf-types :after ((leaf-db cdb-leaf-database))
+  (when (leaf-db leaf-db)
+    (cdb:close-read (leaf-db leaf-db))
+  (setf (leaf-db-ready-p leaf-db) nil)
+  (setf (leaf-db leaf-db) nil)))
+
+(defmethod store-cached-leaf-types ((leaf-db cdb-leaf-database))
+  (cdb:close-write (leaf-db leaf-db))
+  (setf (leaf-db-ready-p leaf-db) t)
+  (setf (leaf-db leaf-db) nil))
+
+(defmethod is-leaf-type ((leaf-db cdb-leaf-database) name)
+  (preload-leaf-type leaf-db name)
+  (member name (slot-value leaf-db 'leaf-types) :test #'eq))
+
+(defmethod store-leaf-type ((leaf-db cdb-leaf-database) name type-def)
+  (unless (leaf-db leaf-db)
+    (setf (leaf-db leaf-db) (cdb:open-write *leaf-temp-file*)))
+  (let ((*print-pretty* nil)
+	(*print-readably* t))
+    (cdb:write-record (leaf-db leaf-db) (string name) 
+		      (write-to-string type-def))))
+
+(defmethod eval-possible-leaf-type ((leaf-db cdb-leaf-database) type)
+  (when (and type (preload-leaf-type leaf-db type))
+    (let ((type-entry (get-type-entry type)))
+      (when type-entry
+        (when (leaf-type-p type-entry)
+          (unless (leaf-type-expanded-p type-entry)
+	    (add-in-leaf-type-entry type-entry)))))))
+
+(defun preload-leaf-type (leaf-db type)
+  (when (leaf-db-ready-p leaf-db)
+    (unless (leaf-db leaf-db)
+      (setf (leaf-db leaf-db) (cdb:open-read *leaf-temp-file*)))
+    (with-slots (leaf-types) leaf-db
+      (unless (get-type-entry type)
+	;; We take the last entry that's returned
+	(let ((entry (car (last (cdb:read-record (leaf-db leaf-db) 
+						 (string type)))))
+	      (*readtable* excl::std-lisp-readtable))
+	  (when entry
+	    (pushnew type *type-names* :test #'eq)
+	    (pushnew type leaf-types :test #'eq)    
+	    (set-type-entry type (read-from-string entry))))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun add-leaf-type (name parents constraint default comment daughters)
   (if daughters
@@ -37,66 +176,60 @@
     (let ((existing-type (get-type-entry name))
           (real-parents nil)
           (template-parents nil))
-      (if (null parents)
-          (format t "~%Error: type ~A has no parents specified")
-        (if (and existing-type
-                 (not (member name *leaf-types*)))
-            (format t "~%Error: attempt to redefine non-leaf type ~
-~A as leaf type" name)
-          (progn
-            (when existing-type
-              (remove-leaf-type name)
-              (format t "~%Type ~A redefined" name))
-            ;; template parents are allowed, because templates
-            ;; are guaranteed not to introduce features
-            (when (and *templates* (cdr parents))
-              (for parent in parents
-                   do
-                   (if (member parent *templates* :test #'eq)
-                       (push parent template-parents)
-                     (push parent real-parents)))
-              (unless real-parents
-                (setf real-parents (list (car template-parents)))
-                (setf template-parents (cdr template-parents))))
-            (unless real-parents
-              (setf real-parents parents))
-            (if (cdr real-parents)
-                (format t "~%Error: type ~A cannot be a leaf type - it has ~
+      (cond ((null parents)
+	     (format t "~%Error: type ~A has no parents specified"))
+	    ((and existing-type
+		  (not (is-leaf-type *leaf-types* name)))
+	     (format t "~%Error: attempt to redefine non-leaf type ~A as leaf type" name))
+	    (t 
+	     (when existing-type
+	       (remove-leaf-type *leaf-types* name)
+	       (format t "~%Type ~A redefined" name))
+	     ;; template parents are allowed, because templates are guaranteed
+	     ;; not to introduce features
+	     (when (and *templates* (cdr parents))
+	       (dolist (parent parents)
+		 (if (member parent *templates* :test #'eq)
+		     (push parent template-parents)
+		   (push parent real-parents)))
+	       (unless real-parents
+		 (setf real-parents (list (car template-parents)))
+		 (setf template-parents (cdr template-parents))))
+	     (unless real-parents
+	       (setf real-parents parents))
+	     (if (cdr real-parents)
+		 (format t "~%Error: type ~A cannot be a leaf type - it has ~
 multiple parents ~A" name real-parents)
-              (if (not (get-type-entry (car real-parents)))
-                  (format t "~%Error: type ~A has non-existant parent ~A" 
-                          name (car real-parents))
-                (let ((new-features (append (new-features-in constraint)
-                                            (new-features-in default))))
-                  (if new-features
-                      (format t "~%Error: type ~A cannot be a leaf type - it ~
+	       (if (not (get-type-entry (car real-parents)))
+		   (format t "~%Error: type ~A has non-existant parent ~A" 
+			   name (car real-parents))
+		 (let ((new-features (append (new-features-in constraint)
+					     (new-features-in default))))
+		   (if new-features
+		       (format t "~%Error: type ~A cannot be a leaf type - it ~
 introduces new features ~A" name new-features)
-                    (let ((new-type
-                           (make-leaf-type :name name 
-                                           :parents real-parents
-                                           :real-parents real-parents
-                                           :template-parents template-parents
-                                           :daughters nil
-                                           :comment comment
-                                           :constraint-spec constraint
-                                           :default-spec default
-                                           :enumerated-p nil)))
-                      (pushnew name *type-names* :test #'eq)
-                      (pushnew name *leaf-types* :test #'eq)    
-                      (set-type-entry name new-type))))))))))))
+		     (store-leaf-type *leaf-types*
+				      name
+				      (make-leaf-type :name name 
+						      :parents real-parents
+						      :real-parents real-parents
+						      :template-parents template-parents
+						      :daughters nil
+						      :comment comment
+						      :constraint-spec constraint
+						      :default-spec default
+						      :enumerated-p nil)))))))))))
                       
 (defun add-in-leaf-type-entry (new-type)   
   (let ((name (type-name new-type)))
     (create-mark-field new-type)
-   ;;; we're going to use some of the same code as in
-   ;;; checktypes.lsp and assume all the real types are marked
-   ;;; as seen           
-    (if (expand-leaf-type-entry 
-         name (car (type-parents new-type)) new-type)
+    ;; we're going to use some of the same code as in checktypes.lsp and
+    ;; assume all the real types are marked as seen
+    (if (expand-leaf-type-entry name (car (type-parents new-type)) new-type)
         (setf (leaf-type-expanded-p new-type) t)
       (progn 
         (format t "~%Invalid type ~A not added")
-        (remove-leaf-type name)
+        (remove-leaf-type *leaf-types* name)
         nil))))
 
 (defun unexpand-leaf-types nil
@@ -115,20 +248,6 @@ introduces new features ~A" name new-features)
                    (setf (leaf-type-constraint-mark v) nil)
                    (setf (leaf-type-expanded-p v) nil))))
            *types*))
-
-(defun remove-leaf-type (name)
-  ;; defined either for the case where the leaf type turns out
-  ;; to be invalid, or when we have leaf types in a file and
-  ;; want to delete the cached entries completely 
-  (clear-type-cache)  
-  ;; assumes this won't be called in places where this is going to severely
-  ;; impair efficiency         
-  (let ((type-entry (get-type-entry name)))
-    (when (leaf-type-p type-entry)
-      (remove-type-entry name)
-      (setf *leaf-types* (delete name *leaf-types*))
-      (setf *type-names* (delete name *type-names*))
-      (delete-non-local-uses name type-entry))))
 
 (defun delete-non-local-uses (name type-entry)
   (let* ((parent (car (type-parents type-entry)))
