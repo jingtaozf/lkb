@@ -255,7 +255,7 @@
          (break-char (read istream))
          (status-type (read istream)))
     (push (cons name
-                (format nil "~%~A ~A ~A" 
+                (format nil "~%~A~A ~A" 
                         status-indicator break-char status-type))
           *tdl-status-info*)))
 
