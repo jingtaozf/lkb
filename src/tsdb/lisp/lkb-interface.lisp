@@ -556,7 +556,7 @@
             for configuration in (chart-entry-configurations entry)
             for edge = (chart-configuration-edge configuration)
             for tdfs = #+:packing 
-                       (if *chart-packing-p* (edge-odag edge) (edge-dag edge))
+                       (or (edge-odag edge) (edge-dag edge))
                        #-:packing
                        (edge-dag edge)
             for dag = (tdfs-indef tdfs)
