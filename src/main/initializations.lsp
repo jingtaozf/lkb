@@ -30,6 +30,9 @@
      for package = (find-package name)
      unless (eq key package) collect name))
 
+;;; not used in LKB code but required by some grammar loading stuff
+(defparameter *grammar-directory* nil)
+
 #-:allegro
 (defparameter *lkb-background-stream* *terminal-io*)
 
