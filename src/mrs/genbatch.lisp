@@ -88,7 +88,9 @@ output results
   ;;; takes a file of output results from generation, and produces
   ;;; averages etc
   (let ((sentence-count 0)
-        (total-sentence-length 0)
+        (total-input-sentence-length 0)
+        (total-success-sentence-length 0)
+        (total-output-sentence-length 0)
         (total-strings 0)
         (total-edges 0)
         (total-time 0))
@@ -111,8 +113,8 @@ output results
                                        (add-spaces str))))
                             strings))
                   (errorp (elt res 2))
-                  (edges (elt res 3))
-                  (time (elt res 5)))
+                  (edges (and (elt res 3) (+ (elt (elt res 3) 4) (elt (elt res 3) 5))))
+                  (time (elt res 4)))
               (if errorp
                 (format t 
                         "~%Error when generating from ~A - results ignored" 
@@ -129,19 +131,29 @@ output results
                          "~%No strings generated from ~A" 
                                 input-sentence-text))
                   (setf sentence-count (+ sentence-count 1))
-                  (setf total-sentence-length 
-                    (+ total-sentence-length (length input-sentence)))
+                  (setf total-input-sentence-length 
+                    (+ total-input-sentence-length (length input-sentence)))
+                  (when strings
+                    (setf total-success-sentence-length 
+                      (+ total-success-sentence-length (length input-sentence)))
+                    (setf total-output-sentence-length 
+                      (+ total-output-sentence-length
+                         (/ (reduce #'+ (mapcar #'length strings)) (length strings)))))
+                  (print (/ total-output-sentence-length (float sentence-count)))
                   (setf total-strings (+ total-strings (length strings)))
                   (setf total-edges (+ total-edges edges))
                   (setf total-time (+ total-time time)))))))
     (format t 
-         "~%Mean length ~,2F Mean strings ~,2F Mean edges ~,1F Mean time ~,1F secs"
-            (/ total-sentence-length sentence-count)
+         "~%Mean input length ~,2F Mean input when output ~,2F Mean output length ~,2F
+Mean strings/sentence ~,2F Mean edges ~,1F Mean time ~,1F secs"
+            (/ total-input-sentence-length sentence-count)
+            (/ total-success-sentence-length sentence-count)
+            (/ total-output-sentence-length sentence-count)
             (/ total-strings sentence-count)
             (/ total-edges sentence-count)
             (/ (/ total-time sentence-count) 1000)))))
 
-(defun pick-from-gen-test-file (file-name)
+(defun pick-from-gen-test-file1 (file-name)
   ;;; takes a file of output results from generation, and produces
   ;;; averages etc
   (with-open-file (istream file-name :direction :input)
@@ -150,8 +162,8 @@ output results
  ;           (format t "~%~S" res)
             (let* ((input-sentence (elt res 0))
                    (input-sentence-text
-                    (apply #'concatenate 'string 
-                           (add-spaces input-sentence)))
+                    input-sentence ;; (apply #'concatenate 'string (add-spaces input-sentence))
+                    )
 ;                   (strings (elt res 1))
                    #|
                    (strings-text 
@@ -163,8 +175,8 @@ output results
                                        strings))
                                        |#
                   (errorp (elt res 2))
-                  (edges (elt res 3))
-                  (time (elt res 5)))
+                  (edges (and (elt res 3) (+ (elt (elt res 3) 4) (elt (elt res 3) 5))))
+                  (time (elt res 4)))
               (if (and (not errorp) (> time 10000))
                 (format t 
                         "~%~A time ~A edges ~A" 
@@ -232,8 +244,8 @@ output results
                     (strings2 (elt res2 1))
                     (errorp1 (elt res1 2))
                     (errorp2 (elt res2 2))
-                    (time1 (elt res1 5))
-                    (time2 (elt res2 5)))
+                    (time1 (elt res1 4))
+                    (time2 (elt res2 4)))
                    (unless (equal errorp1 errorp2)
                      (format t "~%Differences in error in ~A" input-sentence-text)
                      (format t "~%1 ~A" res1)
@@ -258,6 +270,42 @@ output results
             (member x set2 :test #'equal))))
 
 
+(defun read-gen-test-file-stats1 (file-name)
+  ;;; produces averages of internal stats and time/space
+  (let ((items 0)
+        (internal-totals (make-list 7 :initial-element 0))
+        (time-totals (make-list 4 :initial-element 0)))
+   (with-open-file (istream file-name :direction :input)
+      (loop
+         (let ((res (read istream nil nil)))
+            (unless res
+               (setq items (float items))
+               (dolist (final-totals (list internal-totals time-totals))
+                  (mapl #'(lambda (totals) (setf (car totals) (/ (car totals) items)))
+                        final-totals))
+               (format t "~&~:{~^ ~A=~,2F~}~%"
+                  (mapcar #'list
+                     (list "items" "filter" "etasks" "stasks" "unifs" "copies"
+                        "aedges" "pedges" "tcpu" "tgc" "treal" "space")
+                     (list* items
+                        (* 100
+                           (/ (car internal-totals)
+                              (+ (cadr internal-totals) (car internal-totals))))
+                        (append (cdr internal-totals) time-totals))))
+               (return))
+            (unless (elt res 2) ; error?
+               (print (elt res 3))
+               (incf items)
+               (mapl
+                  #'(lambda (stats totals)
+                      (incf (car totals) (car stats)))
+                  (elt res 3) internal-totals)
+               (mapl
+                  #'(lambda (stats totals)
+                      (incf (car totals) (car stats)))
+                  (nthcdr 4 res) time-totals)))))))
+
+
 ;;; **************************************************************
 
 (defun check-generate nil
@@ -268,9 +316,7 @@ output results
     (for parse-res in *parse-record*
          do
          (let ((mrs (mrs::extract-mrs parse-res t))
-               (tgc nil)
-               (tcpu nil)
-               (treal nil)
+               (tgc nil) (tcpu nil) (treal nil) (space nil)
                (errorp nil))
            ;;
            ;; when generating from a parse, dag recycling caused a serious
@@ -289,15 +335,15 @@ output results
              (format ostream 
                      "~%#| Setting mrs::*null-semantics-hack-p* to nil |#")
              (setf mrs::*null-semantics-hack-p* nil))
-           #+(and :pooling :gdebug)
+           ;; *** #+(and :pooling :gdebug)
            (reset-pools #+:gdebug :forcep #+:gdebug t)
            (if (not (mrs::make-scoped-mrs mrs))
                (format ostream "~%#| Scope failure: ~A |#" sentence)  
              ;;; check for scoping, because incorrect MRS often
              ;;; causes serious problems for generator
                (multiple-value-bind
-                   (strings unifs-tried unifs-failed active inactive)
-                   (excl::time-a-funcall
+                   (strings ftasks etasks stasks unifs copies aedges pedges)
+                   (time-a-funcall
                     #'(lambda () 
                         (#-:gdebug 
                          handler-case 
@@ -314,25 +360,24 @@ output results
                                     "~%Error in generation: ~A caused by ~A~%" condition sentence)
                             (setf errorp t))))
                     #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
-                        (declare (ignore ignore sother ssym scons))
+                        (declare (ignore ignore))
                         (setq tgc (+ tgcu tgcs))
                         (setq tcpu (+ tu ts))
                         (setq treal tr)
-                        ))
+                        (setq space (+ (* scons 8) (* ssym 24) sother))))
                  (declare (ignore unifs-tried unifs-failed))
                  (clear-gen-chart) ; prevent any recycled dags from hanging around
-                 (unless (and (integerp active)
-                              (integerp inactive))
+                 (unless (and (integerp aedges)
+                              (integerp pedges))
                    (setf errorp t)
                    (format t "~%Problem in generation caused by missing relation?"))
-                 (format ostream "~%(")
-                 (format ostream "~A" sentence)
-                 (format ostream "~%~S" (if (listp strings) strings nil))
-                 (format ostream " ~A " errorp)
-                 (format ostream "~A " (if errorp -1 (+ active inactive)))
-                 (format ostream "~A " (if errorp -1 tgc))
-                 (format ostream "~A " (if errorp -1 tcpu))
-                 (format ostream "~A)~%" (if errorp -1 treal))
+                 (let ((*print-escape* t) (*print-length* nil) (*print-level* nil))
+                    (format ostream "~%(~S~%~:S ~S~{~^ ~:S~})~%"
+                       sentence (if (listp strings) strings nil) errorp
+                       (list
+                          (if errorp nil (list ftasks etasks stasks unifs copies aedges pedges))
+                          (if errorp -1 tcpu) (if errorp -1 tgc) (if errorp -1 treal)
+                          (if errorp -1 space))))
                  (finish-output ostream)))))))
 
 
@@ -360,7 +405,7 @@ output results
              ;;; causes serious problems for generator
              (multiple-value-bind
                  (strings unifs-tried unifs-failed active inactive)
-                 (excl::time-a-funcall
+                 (time-a-funcall
                   #'(lambda () 
                       (#-:gdebug 
                        handler-case 
@@ -389,7 +434,7 @@ output results
                  (setf errorp t)
                  (format t "~%Problem in generation caused by missing relation?"))
                (format ostream "~%(")
-               (format ostream "~A" "Unknown sentence")
+               (format ostream "~S" "Unknown sentence")
                (format ostream "~%~S" (if (listp strings) strings nil))
                (format ostream " ~A " errorp)
                (format ostream "~A " (if errorp -1 (+ active inactive)))
