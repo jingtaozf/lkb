@@ -38,22 +38,23 @@ CREATE OR REPLACE FUNCTION public.hide_schemas () RETURNS boolean AS
 '
  LANGUAGE SQL SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION public.drop_fn_dump_db() RETURNS boolean AS
+'
+	SELECT public.hide_schemas2();
+'
+ LANGUAGE SQL SECURITY DEFINER;
+
 CREATE OR REPLACE FUNCTION public.dump_db_su(text) RETURNS text AS '
 DECLARE
 	dump_file_rev text;
-	dump_file_dfn text;
-	dump_file_fld text;
 	lexdb_versn real;
+	base text;
 BEGIN
-	dump_file_rev := \'/tmp/lexdb-temp.rev.\' || $1;
-	dump_file_dfn := \'/tmp/lexdb-temp.dfn.\' || $1;
-	dump_file_fld := \'/tmp/lexdb-temp.fld.\' || $1;
+	base := \'/tmp/lexdb-temp.\' || $1;
+	dump_file_rev := base || \'.rev\';
 
  	lexdb_versn := lexdb_version()::real;
-
 	RAISE INFO \'EXISTING LEXDB_VERSION: %\', lexdb_versn;
-
-	DELETE FROM temp;
 
 	IF (lexdb_versn > 3.20) THEN
 		CREATE TABLE temp_dump AS
@@ -72,23 +73,42 @@ BEGIN
 	EXECUTE \'COPY temp_dump TO \' || quote_literal(dump_file_rev) ;
 	DROP TABLE temp_dump; 
 
+	RETURN dump_file_rev || \' \' || dump_db_dfn_fld_su($1);
+END;
+' LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.dump_db_dfn_fld_su(text) RETURNS text AS '
+DECLARE
+	dump_file_dfn text;
+	dump_file_fld text;
+	lexdb_versn real;
+	base text;
+BEGIN
+	base := \'/tmp/lexdb-temp.\' || $1;
+	dump_file_dfn := base || \'.dfn\';
+	dump_file_fld := base || \'.fld\';
+
 	CREATE TABLE temp_defn AS 
   		SELECT * FROM defn ORDER BY mode,slot,field;
-	RAISE INFO \'Dumping public.defn to file %\', dump_file_rev;
+	RAISE INFO \'Dumping public.defn to file %\', dump_file_dfn;
 	EXECUTE \'COPY temp_defn TO \' || quote_literal(dump_file_dfn);
 	DROP TABLE temp_defn;
 
 	RAISE INFO \'Dumping public.fields to file %\', dump_file_fld;
 	EXECUTE \'COPY public.fields TO \' || quote_literal(dump_file_fld);
-	RETURN dump_file_rev || \' \' || dump_file_dfn || \' \' || dump_file_fld;
+
+	RETURN dump_file_dfn || \' \' || dump_file_fld;
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION public.restore_public_revision_su(text) RETURNS text AS '
 DECLARE
 	dump_file_rev text;
+	base text;
 BEGIN
-	dump_file_rev := \'/tmp/lexdb-temp.rev.\' || $1;
+	base := \'/tmp/lexdb-temp.\' || $1;
+	dump_file_rev := base || \'.rev\';
+
 	RAISE INFO \'Restoring public.revision from file %\', dump_file_rev;
 	EXECUTE \'COPY public.revision FROM \' || quote_literal(dump_file_rev) ;
 	RETURN dump_file_rev;
@@ -98,25 +118,32 @@ END;
 CREATE OR REPLACE FUNCTION public.restore_public_defn_su(text) RETURNS text AS '
 DECLARE
 	dump_file_dfn text;
+	base text;
 BEGIN
- dump_file_dfn := \'/tmp/lexdb-temp.dfn.\' || $1;
- RAISE INFO \'Restoring public.defn from file %\', dump_file_dfn;
- EXECUTE \'COPY public.defn FROM \' || quote_literal(dump_file_dfn);
- RETURN dump_file_dfn;
+	base := \'/tmp/lexdb-temp.\' || $1;
+	dump_file_dfn := base || \'.dfn\';
+
+	RAISE INFO \'Restoring public.defn from file %\', dump_file_dfn;
+	EXECUTE \'COPY public.defn FROM \' || quote_literal(dump_file_dfn);
+	RETURN dump_file_dfn;
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE OR REPLACE FUNCTION public.restore_public_fields_su(text) RETURNS text AS '
 DECLARE
 	dump_file_fld text;
+	base text;
 BEGIN
- dump_file_fld := \'/tmp/lexdb-temp.fld.\' || $1;
- RAISE INFO \'Restoring public.fields from file %\', dump_file_fld;
- EXECUTE \'COPY public.fields FROM \' || quote_literal(dump_file_fld);
- RETURN dump_file_fld;
+	base := \'/tmp/lexdb-temp.\' || $1;
+	dump_file_fld := base || \'.fld\';
+
+	RAISE INFO \'Restoring public.fields from file %\', dump_file_fld;
+	EXECUTE \'COPY public.fields FROM \' || quote_literal(dump_file_fld);
+	RETURN dump_file_fld;
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 
+--fix me
 CREATE OR REPLACE FUNCTION public.dump_multi_db(text) RETURNS boolean AS '
 BEGIN
 DELETE FROM temp_multi;
@@ -127,6 +154,7 @@ EXECUTE \'COPY temp_multi TO \' || $1 ;
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 
+--fix me
 CREATE OR REPLACE FUNCTION public.merge_multi_into_db(text) RETURNS boolean AS '
 BEGIN
  DELETE FROM temp_multi;

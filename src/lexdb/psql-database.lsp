@@ -49,8 +49,6 @@
        (concatenate 'string 
 	 (and port 
 	      (format nil "port='~a' " (sql-escape-string port)))
-	 ;;; if postgres running locally w/o TCPIP
-	 ;;; then set host = nil
 	 (and host
 	      (format nil "host='~a' " (sql-escape-string host)))
 	 (format nil "dbname='~a' " (sql-escape-string dbname))
@@ -62,8 +60,7 @@
 	    (pg:status connection))))
       (when (eq :connection-ok status)
 	  (setf (server-version lexicon) 
-	    (get-server-version lexicon))
-	))))
+	    (get-server-version lexicon))))))
 
 (defmethod disconnect ((lexicon psql-database))
   (with-slots (connection) lexicon
@@ -90,6 +87,7 @@
             (columns query) (mapcar #'str-2-keyword cols)))
     query))
 
+;; run command with stdin = filename
 (defmethod run-command-stdin ((database psql-database) command filename)
   (with-slots (connection) database
     (unless connection
@@ -115,6 +113,8 @@
 ;;; 
 ;;;
 
+;; return sql code to call db function and return
+;; appropriate fields
 (defun sql-fn-string (fn &key args fields)
   (unless (member fn *postgres-sql-fns*)
     (error "~a not in *postgres-sql-fns*" fn))
@@ -162,7 +162,14 @@
 ;;
 ;;
 
+;;; returns version, eg. "7.3.2"
+(defmethod get-server-version ((lexicon psql-database))
+  (let ((version-str 
+	 (sql-fn-get-val lexicon
+			 :version)))
+    (second (split-on-char version-str))))
 
+;; unused?
 (defmethod update-pgpass-file ((lexicon psql-database))
   (let ((entry
 	 (format nil "~a:~a:~a:~a:~a"
@@ -201,13 +208,34 @@
 	  while (not (eq line :eof))
 	  collect line))))
 
-(defmethod current-timestamp ((lexicon psql-database))
-  (sql-fn-get-val lexicon 
-		  :retrieve_current_timestamp))
+;;;
+;;; defuns
+;;;
 
-;;; returns version, eg. "7.3.2"
-(defmethod get-server-version ((lexicon psql-database))
-  (let ((version-str 
-	 (sql-fn-get-val lexicon
-			 :version)))
-    (second (split-on-char version-str))))
+(defun sql-embedded-text (str)
+  (format nil "'~a'" (sql-embedded-text-aux str)))
+
+(defun sql-embedded-text-aux (str)
+  (cond
+   ((equal str "")
+    "")
+   ((eq (char str 0) #\')
+    (format nil "\\'~a" (sql-embedded-text-aux (subseq str 1))))
+   ((eq (char str 0) #\\)
+    (format nil "\\\\~a" (sql-embedded-text-aux (subseq str 1))))
+   (t
+    (format nil "~a~a" (char str 0) (sql-embedded-text-aux (subseq str 1))))))
+
+(defun sql-like-text (id)
+  (format nil "~a" (sql-like-text-aux (2-str id))))
+
+(defun sql-like-text-aux (str)
+  (cond
+   ((equal str "")
+    "")
+   ((eq (char str 0) #\_)
+    (format nil "\\_~a" (sql-like-text-aux (subseq str 1))))
+   ((eq (char str 0) #\%)
+    (format nil "\\%~a" (sql-like-text-aux (subseq str 1))))
+   (t
+    (format nil "~a~a" (char str 0) (sql-like-text-aux (subseq str 1))))))

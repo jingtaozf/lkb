@@ -17,7 +17,7 @@
 	  (format t "~%(dumping LexDB)")
 	  (force-output)
 	  (let* ((revision-filename 
-		  (namestring (pathname (format nil "~a.tsv" filename))))
+		  (namestring (pathname (format nil "~a.rev" filename))))
 		 (defn-filename 
 		     (namestring (pathname (format nil "~a.dfn" filename))))
 		 (fld-filename 
@@ -47,6 +47,33 @@
 	    nil)))
     (format t "~%Dump aborted...")))
 
+(defmethod dump-dfn-fld ((lexicon psql-lex-database) filename)
+  (unless (string>= (lexdb-version lexicon) "3.32")
+    (error "operation requires LexDB version 3.32 or above"))
+  (when
+      (catch 'pg:sql-error
+	(progn
+	  (get-postgres-temp-filename)
+	  (format t "~%(dumping LexDB .dfn .fld)")
+	  (force-output)
+	  (let* ((pg-files 
+		  (string-2-str-list-on-spc
+		   (caar (sql-fn-get-raw-records *psql-lexicon* :dump_db_dfn_fld))
+		   :esc nil))
+		 (pg-dfn (first pg-files))
+		 (pg-fld (second pg-files)))
+	    (common-lisp-user::run-shell-command 
+	     (format nil "cp ~a ~a" 
+		     pg-dfn 
+		     (namestring (pathname (format nil "~a.dfn" filename)))))
+	    (common-lisp-user::run-shell-command 
+	     (format nil "cp ~a ~a" 
+		     pg-fld 
+		     (namestring (pathname (format nil "~a.fld" filename)))))
+	    nil)))
+    (format t "~%Dump aborted...")
+    :dump_aborted))
+
 (defun dump-scratch (filename)
   (get-postgres-temp-filename)
   (setf filename (namestring (pathname filename)))
@@ -70,16 +97,14 @@
 			   :port port
 			   :user (sql-fn-get-val lexicon
 						 :db_owner)))
-;			   :user (raw-get-val lexicon "SELECT db_owner()")))
 	  (count-new 0))
       (connect conn-db-owner)
-      ;(retrieve-fn-defns conn-db-owner)
       (when
 	  (catch 'pg:sql-error
 	    (progn
 	      (get-postgres-temp-filename)
 	      (let* ((rev-filename 
-		      (absolute-namestring "~a.tsv" 
+		      (absolute-namestring "~a.rev" 
 					   filename))
 		     (dfn-filename 
 		      (absolute-namestring "~a.dfn" 

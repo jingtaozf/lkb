@@ -91,9 +91,9 @@ BEGIN
 	END IF;
 	sql_qry := \'CREATE TABLE public.revision (
 		name TEXT NOT NULL,
-		userid TEXT DEFAULT user,
-		version INTEGER DEFAULT 0,
-		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		userid TEXT DEFAULT user NOT NULL,
+		version INTEGER DEFAULT 0 NOT NULL,
+		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		orthkey TEXT NOT NULL,
 		flags INTEGER DEFAULT 0 NOT NULL
 		\' || field_defn_text() || \' ) \';

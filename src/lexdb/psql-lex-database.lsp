@@ -341,10 +341,7 @@
 		       (or (cdr (assoc (car type) *field-map-type-mneum*))
 			   (car type)))
 		     (list slot field path type)))
-	       (records (run-query lexicon 
-				   (make-instance 'sql-query
-				     :sql-string (format nil "SELECT slot,field,path,type FROM defn WHERE mode='~a';"
-							 (fields-tb lexicon))))))
+	       (get-raw-records lexicon (format nil "SELECT slot,field,path,type FROM defn WHERE mode='~a';" (fields-tb lexicon))))
        #'(lambda (x y) (declare (ignore y)) (eq (car x) :unifs))))
     (if (null fields-map)
 	(complain-no-fields-map lexicon))
@@ -361,7 +358,8 @@
     (if (string>= (lexdb-version lexicon)
 		  "3.31")
 	(sql-fn-get-records *lexicon* :return_field_info2 :args (list "public" "revision"))
-      (make-column-map-record (run-query lexicon (make-instance 'sql-query :sql-string "SELECT attname, typname, atttypmod FROM pg_catalog.pg_attribute AS attribute JOIN (SELECT * FROM pg_catalog.pg_class WHERE relname='revision') AS class ON attribute.attrelid=class.relfilenode JOIN pg_catalog.pg_type AS type ON (type.typelem=attribute.atttypid);")))))
+      (get-records lexicon 
+		   "SELECT attname, typname, atttypmod FROM pg_catalog.pg_attribute AS attribute JOIN (SELECT * FROM pg_catalog.pg_class WHERE relname='revision') AS class ON attribute.attrelid=class.relfilenode JOIN pg_catalog.pg_type AS type ON (type.typelem=attribute.atttypid);")))
    (t
     (error "PostgreSQL major version 7.3 or greater required"))))
 
@@ -396,6 +394,10 @@
 				  :revision_new
 				  :fields '(:userid :version :name))))
     (cons (list "userid" "version" "name") records)))
+
+(defmethod current-timestamp ((lexicon psql-lex-database))
+  (sql-fn-get-val lexicon 
+		  :retrieve_current_timestamp))
 
 ;;;
 ;;; low-level
@@ -520,39 +522,6 @@
     (mwe-read-roots lexicon)
     (format  t "~%MWE roots reloaded from lexical database ~a" (dbname lexicon)))
 
-;;;
-;;; export to DB
-;;;
-
-(defmethod export-to-db ((lexicon lex-database) output-lexicon)
-  (mapc
-   #'(lambda (x) 
-       (to-db (read-psort lexicon x :recurse nil :new-instance t) 
-	      output-lexicon))
-   (collect-psort-ids lexicon :recurse nil))
-  (build-lex-aux output-lexicon))
-
-(defmethod export-to-tdl ((lexicon lex-database) stream)
-  (when (typep lexicon 'psql-lex-database)
-    (format t "~%(caching all lexical records)")
-    (cache-all-lex-records lexicon)
-    (format t "~%(caching complete)"))
-  (mapc
-   #'(lambda (id)
-       (format stream "~a" (to-tdl (read-psort lexicon id :new-instance t)))
-       (unexpand-psort lexicon id))
-   (sort (collect-psort-ids lexicon) 
-	 #'(lambda (x y) (string< (2-str x) (2-str y)))))
-  (when (typep lexicon 'psql-lex-database)
-    (format t "~%(emptying cache)")
-    (empty-cache lexicon)))
-
-(defmethod export-to-tdl-to-file ((lexicon lex-database) filename)
-  (setf filename (namestring (pathname filename)))
-  (with-open-file 
-      (ostream filename :direction :output :if-exists :supersede)
-    (export-to-tdl lexicon ostream)))
-
 (defmethod close-lex ((lexicon psql-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
   (with-slots (lexdb-version semi) lexicon
@@ -632,7 +601,7 @@
 ;;;
 
 (defmethod get-db-version ((lexicon psql-lex-database))
-  (caar (records (run-query lexicon (make-instance 'sql-query :sql-string "SELECT val FROM public.meta WHERE var=\'db-version\' LIMIT 1")))))
+  (caar (records (run-command lexicon "SELECT val FROM public.meta WHERE var=\'db-version\' LIMIT 1"))))
   ;(sql-fn-get-val lexicon :lexdb_version))
     
 (defmethod get-filter ((lexicon psql-lex-database))
@@ -676,6 +645,35 @@
 	(format t "~%WARNING: 0 entries passed the LexDB filter" size)
       (format t "~%(active lexical entries: ~a )" size)))
   (empty-cache lexicon))
+
+;;;
+;; semi
+;;;
+
+(defmethod index-new-lex-entries ((lexicon psql-lex-database))
+  (let ((semi-out-of-date (semi-out-of-date lexicon)))
+    (format t "~%(indexing ~a entries)" (length semi-out-of-date))
+    (when semi-out-of-date
+      (mrs::populate-*semi*-from-psql)
+      (index-lexical-rules)
+      (index-grammar-rules)
+      (mapc 
+       #'(lambda (x)
+	   (update-semi-entry lexicon x))
+       semi-out-of-date)
+      (mrs::dump-*semi*-to-psql))))
+  
+(defmethod update-semi-entry ((lexicon psql-lex-database) lexid)
+  (let* ((entry (read-psort lexicon lexid :cache nil))
+	 (new-fs (and
+		  (expand-psort-entry entry)
+		  (lex-entry-full-fs entry))))
+    (if (and new-fs 
+	     (not (eq new-fs :fail)))
+	(mrs::extract-lexical-relations entry)
+      (format t "~%No feature structure for ~A~%" 
+	      (lex-entry-id entry))))
+    (forget-psort lexicon lexid))
 
 ;;;
 ;;;

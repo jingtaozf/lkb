@@ -34,13 +34,14 @@
 
 (defvar *postgres-debug-stream*)
 
+;; keep track of LexDB fns called from Lisp
 (defvar *postgres-sql-fns*
-  '(
-    :clear_scratch
+  '(:clear_scratch
     :commit_scratch
     :complete
     :db_owner
     :dump_db
+    :dump_db_dfn_fld
     :dump_scratch_db
     :filter
     :initialize_current_grammar
@@ -77,14 +78,16 @@
     :update_entry
     :user_read_only_p
     :value_set
-    :version
-    ))
+    :version))
 
+;; set this to nil to prevent tdl dump accompanying lexdb dump
 (defvar *lexdb-dump-tdl* t)
+
 (defvar *lexdb-message-old-server* "PostgreSQL server version is ~a. Please upgrade to version ~a or above.")
 (defvar *lexdb-message-old-lkb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary.")
 (defvar *lexdb-message-old-lexdb* "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). You must load updated setup files. See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html")
 
+;; map from obsolete names of field-map types
 (defvar *field-map-type-mneum*
     '((string . str)
       (symbol . sym)
@@ -99,7 +102,7 @@
 ;;;
 
 (defclass sql-database ()
-  ((dbname :initform nil :accessor dbname	:initarg :dbname)
+  ((dbname :initform nil :accessor dbname :initarg :dbname)
    (host :initform "localhost" :accessor host :initarg :host)
    (user :initform (sys:user-name) :accessor user :initarg :user)
    (password :initform "" :accessor password :initarg :password)
@@ -111,24 +114,22 @@
     :initform nil :accessor fields-tb :initarg :fields-tb)
    ;; a-list for mapping the lexicon-table fields to the psort-or-lex structure
    (fields-map :initform nil :accessor fields-map)
-   (fields :initform nil :accessor fields)   
-   ))
+   (fields :initform nil :accessor fields)))
 
 (defclass psql-database (sql-database)
   ((connection :initform nil :accessor connection :initarg connection)
-   (server-version :initform nil :accessor server-version)
-   ))
+   (server-version :initform nil :accessor server-version)))
 
 (defclass psql-lex-database (psql-database external-lex-database)
   ((lexdb-version :initform nil :accessor lexdb-version)
-   (semi :initform nil :accessor semi)
-   ))
+   (semi :initform nil :accessor semi)))
 
 (defclass sql-query ()
   ((sql-string :accessor sql-string :initarg :sql-string :initform nil)
    (records :initform :unknown :accessor records)
    (columns :initform :unknown :accessor columns)))
 
+;; this should be replaced with a-list records
 (defclass psql-lex-entry ()
   ((fv-pairs :initarg :fv-pairs)))
 

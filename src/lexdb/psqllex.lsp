@@ -66,6 +66,14 @@
 (defun postgres-user-temp-dir nil  
     (make-pathname :directory (pathname-directory (lkb-tmp-dir))))
 
+;; call from script file
+(defun load-psql-lexicon-from-script nil
+  (close-lex *lexicon*)
+  (when *psql-lexicon-parameters*
+    (unless (initialize-psql-lexicon)
+      (error "~%Load lexicon aborted"))
+    (setf *lexicon* *psql-lexicon*)))
+  
 (defun initialize-psql-lexicon 
     (&key
      (db (extract-param :db *psql-lexicon-parameters*))
@@ -76,36 +84,34 @@
      (semi (extract-param :semi *psql-lexicon-parameters*)))
   (unless db
     (error "please set :db in *psql-lexicon-parameters*"))
-  (let ((part-of))   
+  (let ((part-of))
+    ;; we will create a new lexicon then insert it into the lexicon hierarchy as
+    ;; a replacement for *psql-lexicon*
     (if *psql-lexicon*
         (setf part-of (part-of *psql-lexicon*))
-      (setf *psql-lexicon* 
-	(make-instance 'psql-lex-database)))    
+      (setf *psql-lexicon*
+	(make-instance 'psql-lex-database)))
     (setf (dbname *psql-lexicon*) db)
     (if host (setf (host *psql-lexicon*) host))
     (if user (setf (user *psql-lexicon*) user))
     (if port (setf (port *psql-lexicon*) port))
+    (setf (semi *psql-lexicon*) semi)
+    ;; use of table is obsolete
     (cond 
      (table
       (setf (fields-tb *psql-lexicon*) table))
      (t
       (setf (fields-tb *psql-lexicon*) (dbname *psql-lexicon*))))
-    (setf (semi *psql-lexicon*) semi)
+    ;; insert into lexicon hierarchy
     (when (initialize-lex *psql-lexicon*)
       (mapcar #'(lambda (x) (link *psql-lexicon* x)) part-of)
       *psql-lexicon*)))
 
-(defun load-psql-lexicon-from-script nil
-  (close-lex *lexicon*)
-  (when *psql-lexicon-parameters*
-    (unless (initialize-psql-lexicon)
-      (error "~%Load lexicon aborted"))
-    (setf *lexicon* *psql-lexicon*)))
-  
 (defun open-psql-lex (&rest rest)
   "obsolete (keep for script file compatibility)"
   (apply 'open-psql-lexicon rest))
 
+;; read-psort ->
 ;;; create slot entry
 (defun make-strucargs-aux (slot-key slot-value slot-path)
   (cond
@@ -139,35 +145,6 @@
    (t
     (make-u-value :type x))))
 
-(defun set-filter-psql-lexicon (&rest rest)
-  (apply #'set-filter 
-	 (cons *psql-lexicon* rest)))
-
 #+:bmw20
 (defun i (&optional (slot 'record-cache)) (inspect (slot-value *lexicon* slot)))
-
-(defun index-new-lex-entries (lexicon)
-  (let ((semi-out-of-date (semi-out-of-date lexicon)))
-    (format t "~%(indexing ~a entries)" (length semi-out-of-date))
-    (when semi-out-of-date
-      (mrs::populate-*semi*-from-psql)
-      (index-lexical-rules)
-      (index-grammar-rules)
-      (mapc 
-       #'(lambda (x)
-	   (update-semi-entry lexicon x))
-       semi-out-of-date)
-      (mrs::dump-*semi*-to-psql))))
-  
-(defun update-semi-entry (lexicon lexid)
-  (let* ((entry (read-psort lexicon lexid :cache nil))
-	 (new-fs (and
-		  (expand-psort-entry entry)
-		  (lex-entry-full-fs entry))))
-    (if (and new-fs 
-	     (not (eq new-fs :fail)))
-	(mrs::extract-lexical-relations entry)
-      (format t "~%No feature structure for ~A~%" 
-	      (lex-entry-id entry))))
-    (forget-psort lexicon lexid))
 

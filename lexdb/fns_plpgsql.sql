@@ -17,7 +17,7 @@ BEGIN
 	IF NOT(reln_exists(\'public\',\'fields\')) THEN
 		CREATE TABLE public.fields (defn text);
 	END IF;
-	IF (reln_exists(\'public\',\'meta\')) THEN
+	IF (reln_exists(\'public\',\'revision\')) THEN
 		backup_file_base := \'BACKUP-BEFORE-LEXDB-UPDATE\';
 		PERFORM dump_db_su(backup_file_base);
 		DELETE FROM public.backup;
@@ -277,6 +277,12 @@ END;
 CREATE OR REPLACE FUNCTION dump_db() RETURNS text AS '
 BEGIN
  RETURN dump_db_su(user);
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION dump_db_dfn_fld() RETURNS text AS '
+BEGIN
+ RETURN dump_db_dfn_fld_su(user);
 END;
 ' LANGUAGE plpgsql;
 

@@ -2,6 +2,20 @@
 --- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
+CREATE OR REPLACE FUNCTION fn_exists(text,text) RETURNS boolean AS '
+BEGIN
+RETURN
+	(SELECT (SELECT count(*)
+		FROM pg_catalog.pg_proc p
+     		LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+		WHERE p.prorettype <> \'pg_catalog.cstring\'::pg_catalog.regtype
+      		AND p.proargtypes[0] <> \'pg_catalog.cstring\'::pg_catalog.regtype
+      		AND NOT p.proisagg
+      		AND n.nspname = $1
+      		AND p.proname = $2) > 0);
+END;
+' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION reln_exists(text,text) RETURNS boolean AS '
 BEGIN
 RETURN

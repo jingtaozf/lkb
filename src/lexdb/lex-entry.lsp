@@ -7,7 +7,7 @@
 (defmethod orthkey ((x lex-entry))
   (car (last (slot-value x 'orth))))
   
-(defmethod to-csv ((x lex-entry) lexicon)
+(defmethod to-db-dump ((x lex-entry) lexicon)
   "provide line entry for lexicon db import file"
   (with-slots (fields-map fields) lexicon
     (let* ((s (copy-slots x fields-map))

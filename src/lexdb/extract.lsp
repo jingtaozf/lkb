@@ -9,50 +9,32 @@
 (in-package :lkb)
 
 ;;;
-;;; MWE stuff
+;;; encode atoms
 ;;;
 
-#+:mwe
-(defmethod multi-p (&key name type)
+(defun encode-mixed-as-str (val)
   (cond
-   ((equal (subseq type 0 10) "idiomatic-")
-    (multi-idiom-base-name name))
-   ((equal (subseq-from-end type 12) "_particle_le")
-    (multi-vpc-base-name name))
+   ((null val)
+    "")
+   ((symbolp val)
+    (let ((val-str (symb-2-str val)))
+      (if (and (> (length val-str) 0)
+	       (eq (aref val-str 0) #\"))
+	  (format nil "\\~a" val-str)
+	val-str)))
+   ((stringp val)
+    (format nil "\"~a\"" val))
    (t
-    nil)))
+    (error "unhandled type: ~a" val))))
 
-#+:mwe
-(defun remove-sense-id-substr (name)
-  (if (and (find #\_ name)
-	   (numberp
-	    (2-symb 
-	     (subseq name (1+ (position #\_ name :from-end t))))))
-      (subseq name 0 (position #\_ name :from-end t))
-    name))
-
-#+:mwe
-(defun multi-idiom-base-name (name-full)
-  (let (( name (remove-sense-id-substr name-full)))
-    (cond
-     ((equal (subseq name 0 2) "i_")
-      (subseq name 2))
-     (t
-      (format t "WARNING: cannot generate base name for idiom ~a~%" name-full)
-      (format nil "UNKNOWN_BASE_~a" name)))))
-
-#+:mwe
-(defun multi-vpc-base-name (name-full)
-  (let ((name (remove-sense-id-substr name-full)))
-    (cond
-     ((and
-       (not (equal (subseq name 0 1) "_"))
-       (position #\_ name))
-    (subseq name 0 (position #\_ name)))
-     (t
-      (format t "WARNING: cannot generate base name for vpc ~a~%" name-full)
-      (format nil "UNKNOWN_BASE_~a" name)))))
-
+(defun encode-string-as-str (val)
+  (cond
+   ((null val)
+    "")
+   ((stringp val)
+    (format nil "\"~a\"" val))
+   (t
+    (error "unhandled type: ~a" val))))
 ;;;
 ;;; extract grammatical fields
 ;;;
@@ -327,35 +309,249 @@
    (t
     (error "unhandled value: ~a" path-str))))
 
+;; unused?
 (defun get-orthkey (orth-list)
   (string-downcase 
    (or (car (last orth-list))
        "")))
 
 ;;;
-;;; encode atoms
+;;; MWE stuff
 ;;;
 
-(defun encode-mixed-as-str (val)
+#+:mwe
+(defmethod multi-p (&key name type)
   (cond
-   ((null val)
-    "")
-   ((symbolp val)
-    (let ((val-str (symb-2-str val)))
-      (if (and (> (length val-str) 0)
-	       (eq (aref val-str 0) #\"))
-	  (format nil "\\~a" val-str)
-	val-str)))
-   ((stringp val)
-    (format nil "\"~a\"" val))
+   ((equal (subseq type 0 10) "idiomatic-")
+    (multi-idiom-base-name name))
+   ((equal (subseq-from-end type 12) "_particle_le")
+    (multi-vpc-base-name name))
    (t
-    (error "unhandled type: ~a" val))))
+    nil)))
 
-(defun encode-string-as-str (val)
+#+:mwe
+(defun remove-sense-id-substr (name)
+  (if (and (find #\_ name)
+	   (numberp
+	    (2-symb 
+	     (subseq name (1+ (position #\_ name :from-end t))))))
+      (subseq name 0 (position #\_ name :from-end t))
+    name))
+
+#+:mwe
+(defun multi-idiom-base-name (name-full)
+  (let (( name (remove-sense-id-substr name-full)))
+    (cond
+     ((equal (subseq name 0 2) "i_")
+      (subseq name 2))
+     (t
+      (format t "WARNING: cannot generate base name for idiom ~a~%" name-full)
+      (format nil "UNKNOWN_BASE_~a" name)))))
+
+#+:mwe
+(defun multi-vpc-base-name (name-full)
+  (let ((name (remove-sense-id-substr name-full)))
+    (cond
+     ((and
+       (not (equal (subseq name 0 1) "_"))
+       (position #\_ name))
+    (subseq name 0 (position #\_ name)))
+     (t
+      (format t "WARNING: cannot generate base name for vpc ~a~%" name-full)
+      (format nil "UNKNOWN_BASE_~a" name)))))
+
+;;;
+
+(defun work-out-mixed (val)
+  (unless (equal val "")
+    (list (str-to-mixed val))))
+
+(defun work-out-str (val)
+  (unless (equal val "")
+    (list (str-to-string val))))
+
+(defun work-out-sym (val)
+  (unless (equal val "")
+    (list (str-2-symb val))))
+
+(defun work-out-mixed-rawlst (val)
+  (list (string-2-mxd-list-on-spc val)))
+
+(defun work-out-str-rawlst (val)
+  (list (string-2-str-list-on-spc val)))
+
+(defun work-out-rawlst (val)
+  (unless (equal val "")
+    (str-2-list val)))
+
+(defun work-out-str-lst (val)
+  (unless (equal val "")
+    (expand-string-list-to-fs-list
+     (string-2-str-list-on-spc val))))
+
+(defun work-out-str-dlst (val &key path)
+  (unless (equal val "")
+    (expand-string-list-to-fs-diff-list (string-2-str-list-on-spc val)
+					:path path)))
+
+(defun work-out-lst-t (val &key elt-path top)
+  (unless (equal val "")
+    (expand-string-list-to-fs-list-complex (string-2-mxd-list-on-spc val)
+					   :top top
+					   :elt-path elt-path))) 
+
+(defun work-out-lst(val &key elt-path)
+  (unless (equal val "")
+    (expand-string-list-to-fs-list-complex (string-2-mxd-list-on-spc val)
+					   :elt-path elt-path))) 
+
+(defun work-out-dlst-t (val &key elt-path top path)
+  (unless (equal val "")
+    (expand-string-list-to-fs-diff-list-complex (string-2-mxd-list-on-spc val)
+						:top top
+						:elt-path elt-path
+						:path path))) 
+
+(defun work-out-dlst (val &key elt-path path)
+  (unless (equal val "")
+    (expand-string-list-to-fs-diff-list-complex (string-2-mxd-list-on-spc val)
+						:elt-path elt-path
+						:path path))) 
+
+;; see also extract-value-by-path
+;;; returns _list_ of values of appropriate type
+(defun work-out-value (typel val &key path)
+  (case (first typel)
+    (mixed
+     (work-out-mixed val))
+    (str
+     (work-out-str val))
+    (sym
+     (work-out-sym val))
+    (mixed-rawlst
+     (work-out-mixed-rawlst val))
+    (str-rawlst
+     (work-out-str-rawlst val))
+    (rawlst
+     (work-out-rawlst val))
+    (str-lst
+     (work-out-str-lst val))
+    (str-dlst
+     (work-out-str-dlst val :path path))     
+    (lst-t
+     (work-out-lst-t val :top (second typel) :elt-path (cddr typel)))
+    (lst
+     (work-out-lst val :elt-path (cdr typel)))
+    (dlst-t
+     (work-out-dlst-t val :top (second typel) :elt-path (cddr typel) :path path))
+    (dlst-t
+     (work-out-dlst val :elt-path (cdr typel) :path path))
+    (t
+     (error "~%unhandled field-map type: ~a" (first typel)))))
+
+(defun str-to-mixed (val-str)
+  (let ((len (length val-str)))
+    (cond 
+     ((eq (aref val-str 0) #\")
+      (unless (eq (aref val-str (1- len)) #\")
+	(error "STRING val must be of form \\\"STR\\\""))
+      (subseq val-str 1 (1- len)))
+     ((and (eq (aref val-str 0) #\\)
+	  (eq (aref val-str 1) #\"))
+      (str-2-symb (format nil "\"~a" (subseq val-str 2 len))))
+     (t
+      (str-2-symb val-str)))))
+
+(defun str-to-string (val-str)
+  (let ((len (length val-str)))
+    (cond 
+     ((eq (aref val-str 0) #\")
+      (unless (eq (aref val-str (1- len)) #\")
+	(error "STRING val must be of form \\\"STR\\\""))
+      (subseq val-str 1 (1- len)))
+     (t
+      (error "invalid format")))))
+
+;;; eg. ("w1" "w2") -> ((FIRST "w1") (REST FIRST "w2") (REST REST *NULL*)) 
+(defun expand-string-list-to-fs-list (string-list)
   (cond
-   ((null val)
-    "")
-   ((stringp val)
-    (format nil "\"~a\"" val))
+   ((equal string-list nil) 
+    (list (list *empty-list-type*)))
    (t
-    (error "unhandled type: ~a" val))))
+    (cons (append *list-head* (list (first string-list))) 
+	  (mapcar #'(lambda (x) (append *list-tail* x))
+		  (expand-string-list-to-fs-list (cdr string-list)))))))   
+
+;;; eg. ("w1" "w2") (A B)-> ((FIRST A B "w1") (REST FIRST A B "w2") (REST REST *NULL*)) 
+(defun expand-string-list-to-fs-list-complex (string-list &key elt-path (top '*))
+  (cond
+   ((equal string-list nil) 
+    (list (list *empty-list-type*)))
+   ((equal (first string-list)
+	   top)
+    (cons (append *list-head* 
+		  elt-path
+		  (list *toptype*)) 
+	  (mapcar #'(lambda (x) (append *list-tail* x))
+		  (expand-string-list-to-fs-list-complex (cdr string-list)
+							 :elt-path elt-path))))
+   (t
+    (cons (append *list-head* 
+		  elt-path
+		  (list (first string-list))) 
+	  (mapcar #'(lambda (x) (append *list-tail* x))
+		  (expand-string-list-to-fs-list-complex (cdr string-list)
+							 :elt-path elt-path))))))   
+
+;;; eg. ("w1" "w2") path -> ((LIST FIRST "w1") (LIST REST FIRST "w2") (LIST REST REST path)) 
+(defun expand-string-list-to-fs-diff-list (string-list &key path)
+   (mapcar #'(lambda (x) (cons *diff-list-list* x))
+	   (expand-string-list-to-fs-diff-list-aux string-list :path path)))
+
+;;; eg. ("w1" "w2") path -> ((FIRST "w1") (REST FIRST "w2") (REST REST path)) 
+(defun expand-string-list-to-fs-diff-list-aux (string-list &key path)
+  (cond
+   ((equal string-list nil) 
+    (list 
+     (list 
+      (append path 
+	      (list *diff-list-last*)))))
+   (t
+    (cons (append *list-head* (list (first string-list))) 
+	  (mapcar #'(lambda (x) (append *list-tail* x))
+		  (expand-string-list-to-fs-diff-list-aux (cdr string-list) :path path))))))   
+
+;;; eg. ("w1" "w2") path (A B)-> ((LIST FIRST A B "w1") (LIST REST FIRST A B "w2") (LIST REST REST path)) 
+(defun expand-string-list-to-fs-diff-list-complex (string-list &key path elt-path)
+   (mapcar #'(lambda (x) (cons *diff-list-list* x))
+	   (expand-string-list-to-fs-diff-list-complex-aux string-list 
+							   :path path
+							   :elt-path elt-path)))
+
+;;; eg. ("w1" "w2") path (A B) -> ((FIRST A B "w1") (REST FIRST A B "w2") (REST REST path)) 
+(defun expand-string-list-to-fs-diff-list-complex-aux (string-list &key path elt-path (top '*))
+  (cond
+   ((equal string-list nil) 
+    (list 
+     (list 
+      (append path 
+	      (list *diff-list-last*)))))
+   ((equal (first string-list)
+	top)
+    (cons 
+     (append *list-head*
+	     (list *toptype*)) 
+     (mapcar #'(lambda (x) (append *list-tail* x))
+	     (expand-string-list-to-fs-diff-list-complex-aux (cdr string-list) 
+							     :path path
+							     :elt-path elt-path))))
+   (t
+    (cons 
+     (append *list-head*
+	     elt-path
+	     (list (first string-list))) 
+     (mapcar #'(lambda (x) (append *list-tail* x))
+	     (expand-string-list-to-fs-diff-list-complex-aux (cdr string-list) 
+							     :path path
+							     :elt-path elt-path))))))   
+

@@ -24,7 +24,7 @@
 (in-package :lkb)
 
 ;;;
-;;; export to .tsv file
+;;; export to .rev file
 ;;;
 
 (defun export-lexicon (&rest rest)
@@ -61,39 +61,44 @@
     (query-for-meta-fields)
     (get-export-version))
 
-  (let ((csv-file (format nil "~a.tsv" file))
+  (let ((rev-file (format nil "~a.rev" file))
 	(skip-file (format nil "~a.skip" file))
-	(multi-file (format nil "~a.multi.tsv" file)))
-    (format t "~%~%Please wait: exporting lexicon ~a to CSV file ~a" (name lexicon) csv-file)
+	;(multi-file (format nil "~a.multi.rev" file))
+	)
+    (format t "~%~%Please wait: exporting lexicon ~a to REV file ~a" (name lexicon) rev-file)
     (format t "~%   (skip file: ~a)" skip-file)
     
-    (if *postgres-export-multi-separately*
-	;; set multi stream
-	(with-open-file (*postgres-export-multi-stream* 
-			 multi-file
-			 :direction :output 
-			 :if-exists :supersede :if-does-not-exist :create)
-	  (with-open-file (*postgres-export-skip-stream* 
-			   skip-file
-			   :direction :output 
-			   :if-exists :supersede :if-does-not-exist :create)
-	    (format t "~%   (multi file: ~a)" multi-file)
-	    (export-to-csv-to-file lexicon csv-file)))	  
-      ;; no multi stream
+;    (if *postgres-export-multi-separately*
+;	;; set multi stream
+;	(with-open-file (*postgres-export-multi-stream* 
+;			 multi-file
+;			 :direction :output 
+;			 :if-exists :supersede :if-does-not-exist :create)
+;	  (with-open-file (*postgres-export-skip-stream* 
+;			   skip-file
+;			   :direction :output 
+;			   :if-exists :supersede :if-does-not-exist :create)
+;	    (format t "~%   (multi file: ~a)" multi-file)
+;	    (export-to-db-dump-to-file lexicon rev-file)))	  
+;      ;; no multi stream
       (with-open-file (*postgres-export-skip-stream* 
 		       skip-file
 		       :direction :output 
 		       :if-exists :supersede :if-does-not-exist :create)
-	(export-to-csv-to-file lexicon csv-file))))
+	(unless (typep *psql-lexicon* 'psql-lex-database)
+	  (error "please initialize *psql-lexicon*"))
+	(when (string>= (lexdb-version *psql-lexicon*) "3.32")
+	  (dump-dfn-fld *psql-lexicon* file))
+	(export-to-db-dump-to-file lexicon rev-file)
+	)
+      ;)
+    )
   (format t "~%export complete")
   (when recurse
-    (mapcar #'(lambda (x) (export-lexicon :lexicon x 
-					  :dir dir
-					  :separator separator
-					  :recurse t
-					  :use-defaults t))
-	    (extra-lexicons lexicon))))
-
+    (mapcar 
+     #'(lambda (x) 
+	 (export-lexicon :lexicon x :dir dir :separator separator :recurse t :use-defaults t))
+     (extra-lexicons lexicon))))
 
 ;;;
 ;;; export to .tdl file
