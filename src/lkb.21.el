@@ -58,7 +58,7 @@
   ;; begin level 1
   (define-key map [menu-bar lkb redefine-type]
     (fi::menu "Redefine type"
-	      'redefine-type :enable '(eval-in-lisp "*current-grammar-load-file*")))  
+	      'redefine-type))  
   (define-key map [menu-bar lkb break] (name-keymap "---"))
   (define-key map [menu-bar lkb generate] (name-keymap "Generate"))
   (define-key map [menu-bar lkb parse] (name-keymap "Parse"))
@@ -69,61 +69,61 @@
   ;; (generate)
   (define-key map [menu-bar lkb generate index]
     (fi::menu "Index"
-	      'index-for-generator :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'index-for-generator))
   (define-key map [menu-bar lkb generate show_chart]
     (fi::menu "Show chart"
-	      'show-gen-chart :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-gen-chart))
   (define-key map [menu-bar lkb generate redisplay]
     (fi::menu "Redisplay realization"
-	      'show-gen-result :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-gen-result))
   (define-key map [menu-bar lkb generate from_edge]
     (fi::menu "Generate..."
-	      'generate-from-edge :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'generate-from-edge))
   ;; (parse)
   (define-key map [menu-bar lkb parse batch_parse]
     (fi::menu "Batch parse..."
-	      'parse-sentences-batch :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'parse-sentences-batch))
   (define-key map [menu-bar lkb parse print_chart]
     (fi::menu "Print chart"
-	      'print-chart :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'print-chart))
   (define-key map [menu-bar lkb parse show_chart]
     (fi::menu "Show chart"
-	      'show-chart :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-chart))
   (define-key map [menu-bar lkb parse redisplay_parse]
     (fi::menu "Redisplay parse"
-	      'show-parse :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-parse))
   (define-key map [menu-bar lkb parse parse_input]
     (fi::menu "Parse input..."
-	      'clim-user::do-parse-batch :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'clim-user::do-parse-batch))
   ;; (view)
   (define-key map [menu-bar lkb view lexical_rule]
     (fi::menu "Lexical rule..."
-	      'show-lex-rule :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-lex-rule))
   (define-key map [menu-bar lkb view grammar_rule]
     (fi::menu "Grammar rule..."
-	      'show-grammar-rule :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-grammar-rule))
   (define-key map [menu-bar lkb view word_entries]
     (fi::menu "Word entries..."
-	      'show-words :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-words))
   (define-key map [menu-bar lkb view lex_entry]
     (fi::menu "Lex entry..."
-	      'show-lex :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-lex))
   (define-key map [menu-bar lkb view type_expanded]
     (fi::menu "Expanded type..."
-	      'show-type :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-type))
   (define-key map [menu-bar lkb view type_definition]
     (fi::menu "Type definition..."
-	      'show-type-spec :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-type-spec))
   (define-key map [menu-bar lkb view type_hierarchy]
     (fi::menu "Type hierarchy..."
-	      'show-type-tree :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'show-type-tree))
   ;; (load)
   (define-key map [menu-bar lkb load reload]
     (fi::menu "Reload grammar"
-	      'reload-script-file :enable '(eval-in-lisp "*current-grammar-load-file*")))
+	      'reload-script-file))
   (define-key map [menu-bar lkb load complete]
     (fi::menu "Complete grammar..."
-	      'read-script-file :enable t)))
+	      'read-script-file)))
 
 (defun name-keymap (str) 
   (cons str (make-sparse-keymap str)))
