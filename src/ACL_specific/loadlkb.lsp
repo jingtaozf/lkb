@@ -2,12 +2,17 @@
 
 (defparameter *lkb-system-version* :page)
 
-(defparameter *lkb-source-dir* 
-               '(:absolute "eon" "e2" "users" "aac" "lkb"))
+;;(defparameter *lkb-source-dir* 
+;;              '(:absolute "user" "malouf" "lkb"))
 
+;;(defparameter *lkb-fasl-dir* 
+;;              '(:absolute "user" "malouf" "lkb" "fasl"))
+
+(defparameter *lkb-source-dir* 
+  (butlast (pathname-directory *load-truename*)))
 
 (defparameter *lkb-fasl-dir* 
-               '(:absolute "eon" "e2" "users" "aac" "lkb" "fasl"))
+  (append *lkb-source-dir* '("fasl")))
 
 (defparameter *psorts-temp-file* 
   (make-pathname :name "templex" 

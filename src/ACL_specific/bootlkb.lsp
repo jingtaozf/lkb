@@ -19,13 +19,17 @@
 
 ;;; change *lkb-source-dir* and *lkb-fasl-dir* for a different file system
 
+;;(defparameter *lkb-source-dir* 
+;;              '(:absolute "user" "malouf" "lkb"))
+
+;;(defparameter *lkb-fasl-dir* 
+;;              '(:absolute "user" "malouf" "lkb" "fasl"))
+
 (defparameter *lkb-source-dir* 
-              '(:absolute "eon" "e2" "users" "aac" "lkb"))
+  (butlast (pathname-directory *load-truename*)))
 
 (defparameter *lkb-fasl-dir* 
-              '(:absolute "eon" "e2" "users" "aac" "lkb" "fasl"))
-
-
+  (append *lkb-source-dir* '("fasl")))
 
 (defparameter *psorts-temp-file* 
   (make-pathname :name "templex" 
@@ -85,7 +89,7 @@
          ))
       (let ((dir (car dir-and-file))
             (file (cadr dir-and-file)))
-      (compile-file  
+      (excl:compile-file-if-needed
             (make-pathname :name file :type "lsp"
                :directory (append *lkb-source-dir* (list dir)))
             :output-file 
