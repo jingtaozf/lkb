@@ -780,6 +780,12 @@
               (make-decision :type :unknown :value discriminant))
              (setf (discriminant-state discriminant) :unknown)
              (setf (discriminant-toggle discriminant) :unknown))
+            ;;
+            ;; _fix_me_
+            ;; in concise mode, at least, make these only show trees that are
+            ;; still available globally, i.e. ignore all trees that have become
+            ;; out already.                                    (20-jan-03; oe)
+            ;;
             (in (show-parse-tree-frame (discriminant-in discriminant)))
             (out (show-parse-tree-frame (discriminant-out discriminant))))
 	(error (condition) 

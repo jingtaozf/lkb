@@ -59,6 +59,12 @@
 (defun read-preprocessor (file)
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
+      (let* ((path (pathname file))
+             (type (pathname-type path)))
+        (format 
+         t 
+         "~&Reading preprocessor rules `~a~@[.~a~]'~%" 
+         (pathname-name path) type))
       (loop
           with fspp = (make-fspp)
           with separator = (ppcre:create-scanner "\\t+")
@@ -93,7 +99,12 @@
                   (format
                    t
                    "read-preprocessor(): [~d] invalid `~a'~%"
-                   n line)))))
+                   n line)))
+               (t
+                (format
+                 t
+                 "read-preprocessor(): [~d] ignoring unknown rule type `~a'~%"
+                 n c))))
           when (null line) do
             (setf (fspp-global fspp)
               (nreverse (fspp-global fspp)))
