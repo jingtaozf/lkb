@@ -196,6 +196,10 @@
   (let ((bindings (variables-equal (psoa-handel mrs1)
                                    (psoa-handel mrs2) syntactic-p nil)))
     (if bindings
+        ; hack for case where no handels
+        (progn
+          (unless (listp bindings)
+            (setf bindings nil))
        (if (setf bindings (variables-equal (psoa-index mrs1)
                             (psoa-index mrs2) syntactic-p bindings))
            (if (setf bindings (mrs-liszts-equal-p (psoa-liszt mrs1)
@@ -221,7 +225,7 @@
              (format t "~%index difference ~A ~A"
                      (psoa-index mrs1)
                      (psoa-index mrs2))
-             nil)))
+             nil))))
     (progn 
       (when noisy-p
         (format t "~%handel difference ~A ~A"
@@ -260,9 +264,12 @@
 (defun mrs-relations-equal-p (rel1 rel2 syntactic-p noisy-p bindings)
   (if (eql (rel-sort rel1) (rel-sort rel2))
       (if (setf bindings 
-            (variables-equal 
-             (rel-handel rel1) 
-             (rel-handel rel2) syntactic-p bindings))
+            (if 
+                (and (rel-handel rel1) (rel-handel rel2))
+                (variables-equal 
+                 (rel-handel rel1) 
+                 (rel-handel rel2) syntactic-p bindings)
+              bindings))
           (let ((fv1 (rel-flist rel1))
                 (fv2 (rel-flist rel2)))
             (if (eql (length fv1) (length fv2))
