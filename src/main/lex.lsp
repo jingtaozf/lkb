@@ -228,15 +228,23 @@
   (let ((fs (tdfs-indef tdfs))
         (current-orth-path *orth-path*)
         (orth-strings nil))
-    (loop 
-      (let ((current-orth (get-value-at-end-of fs (append current-orth-path *list-head*))))
-        (when (or (null current-orth) (eql current-orth 'no-way-through)
-                  (not (stringp (car current-orth))))
-          (return))
-        (setf current-orth-path (append current-orth-path *list-tail*))
-        (push (car current-orth) orth-strings)
-        (push " " orth-strings)))
-    (apply #'concatenate 'string (nreverse (cdr orth-strings)))))
+    (let ((simple-value (get-value-at-end-of fs current-orth-path)))
+      (if (and simple-value 
+               (listp simple-value)
+               (stringp (car simple-value)))
+          (car simple-value)
+        (progn
+          (loop 
+            (let ((current-orth 
+                   (get-value-at-end-of fs 
+                                (append current-orth-path *list-head*))))
+              (when (or (null current-orth) (eql current-orth 'no-way-through)
+                        (not (stringp (car current-orth))))
+                (return))
+              (setf current-orth-path (append current-orth-path *list-tail*))
+              (push (car current-orth) orth-strings)
+              (push " " orth-strings)))
+          (apply #'concatenate 'string (nreverse (cdr orth-strings))))))))
 
 
 
