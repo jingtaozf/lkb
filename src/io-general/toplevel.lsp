@@ -242,10 +242,15 @@
                  *lexical-rules*)
         (setf rule-names (sort rule-names #'string-lessp))
         (let ((possible-rule-name
-               (with-package (:lkb)
-                 (ask-for-lisp-movable "Current Interaction" 
-                                       `(("Lexical Rule?" . ,*last-lex-rule-id*))
-                                       150 rule-names))))
+               (if *last-lex-rule-id*
+                   (with-package (:lkb)
+                     (ask-for-lisp-movable "Current Interaction" 
+                                           `(("Lexical Rule?" . ,*last-lex-rule-id*))
+                                           150 rule-names))
+                 (with-package (:lkb)
+                   (ask-for-lisp-movable "Current Interaction" 
+                                         `(("Lexical Rule?" . ,(car rule-names)))
+                                         150 rule-names))))) 
           (when possible-rule-name
             (let* ((name (car possible-rule-name))
                    (rule-entry (get-lex-rule-entry name)))
