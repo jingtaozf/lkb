@@ -20,11 +20,13 @@
            (pushnew (get-var-num var) labels)))
     (for rel in rels
          do
-           (for handel-var in (get-handel-args rel)
+           (for full-handel-var in (get-full-handel-args rel)
                 do
-                (when (member handel-var labels)
-                    (push handel-var equated-list))
-                (pushnew handel-var holes)))
+                (let ((handel-var (var-id full-handel-var)))
+                  (if (member handel-var labels)
+                      (push handel-var equated-list)
+                    (push full-handel-var *unbound-holes*))
+                  (pushnew handel-var holes))))
     (pushnew top-handel holes) ;; this may be wrong, given the use of prpstn etc
     (process-hcons hcons labels holes equated-list)))
 

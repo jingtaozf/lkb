@@ -52,13 +52,27 @@
 (defun get-handel-args (rel)
   ;;; returns a list of ids of any handels which are values
   ;;; of roles in the rel 
-  (mapcar #'cdr (get-handel-args-with-features rel)))
+  (mapcar #'(lambda (res)
+              (var-id (cdr res))) 
+          (get-full-handel-args-with-features rel)))
+
+(defun get-full-handel-args (rel)
+  ;;; returns a list of any handels which are values
+  ;;; of roles in the rel 
+  (mapcar #'cdr 
+          (get-full-handel-args-with-features rel)))
 
 
 (defun get-handel-args-with-features (rel)
   ;;; returns a list of ids of any handels which are values
   ;;; of roles in the rel as a dotted pair, with the role
   ;;; as car
+  (for res in 
+       (get-full-handel-args-with-features rel)
+       collect
+       (cons (car res) (var-id (cdr res)))))
+
+(defun get-full-handel-args-with-features (rel)
   (let ((existing (assoc rel *rel-handel-store* :test #'eq)))
     (if existing (cdr existing)
         (let ((res
@@ -67,16 +81,16 @@
                     (let ((val (fvpair-value fvp))
                           (feature (fvpair-feature fvp)))
                       (cond ((is-handel-var val)
-                             (list (cons feature (var-id val))))
+                             (list (cons feature val)))
                             ((is-conj-var val)
-                             (for val-id in (extract-handels-from-conj val)
+                             (for conj-val in (extract-handels-from-conj val)
                                   collect
-                                  (cons feature val-id)))
+                                  (cons feature conj-val)))
                             ((listp val) 
                              (for val-el in val
                                   filter
                                   (if (and (var-p val-el) (is-handel-var val-el))
-                                      (cons (fvpair-feature fvp) (var-id val-el)))))
+                                      (cons (fvpair-feature fvp) val-el))))
                             (t nil))))))
           (push (cons rel res) *rel-handel-store*)
           res))))
@@ -91,7 +105,7 @@
               :VALUE (#S(MRS::HANDLE-VAR :NAME "h11" :TYPE (HANDLE) :EXTRA NIL :ID 11)
               #S(MRS::HANDLE-VAR :NAME "h17" :TYPE (HANDLE) :EXTRA NIL :ID 17)))) :ID 16))
                                                 |#
-  ;;; returns list of ids of any handel variables
+  ;;; returns list any handel variables
     (let ((existing (assoc val *conj-handel-val-store* :test #'eq)))
       (if existing (cdr existing)
         (let ((res
@@ -105,7 +119,7 @@
                                     (for var-el in new-val
                                          filter
                                          (if (is-handel-var var-el)
-                                             (var-id var-el)))))))))))
+                                             var-el))))))))))
           (push (cons val res) *conj-handel-val-store*)
           res))))
   
