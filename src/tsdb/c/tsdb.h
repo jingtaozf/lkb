@@ -146,6 +146,7 @@
 #define TSDB_QUIET_OPTION 28
 #define TSDB_READ_ONLY_OPTION 29
 #define TSDB_VERIFY_OPTION 30
+#define TSDB_EOF_OPTION 31
 #ifdef ALEP
 #  define TSDB_TX_OPTION 255
 #endif
@@ -355,6 +356,8 @@ typedef struct tsdb {
 
   char fs;
   char *ofs;
+
+  char *eof;
 
   char *server;
   int port;

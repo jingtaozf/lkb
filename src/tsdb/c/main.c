@@ -367,6 +367,7 @@ void tsdb_parse_options(int argc, char **argv) {
     {"debug-file", required_argument, 0, TSDB_DEBUG_FILE_OPTION},
     {"history-size", required_argument, 0, TSDB_HISTORY_OPTION},
     {"string-escape", optional_argument, 0, TSDB_STRING_ESCAPE_OPTION},
+    {"eof", optional_argument, 0, TSDB_EOF_OPTION},
     {"uniquely-project", optional_argument, 0, TSDB_UNIQUELY_PROJECT_OPTION},
     {"pager", optional_argument, 0, TSDB_PAGER_OPTION},
     {"quiet", optional_argument, 0, TSDB_QUIET_OPTION},
@@ -625,6 +626,14 @@ void tsdb_parse_options(int argc, char **argv) {
         tsdb.status &= ~(TSDB_LISP_ESCAPE_OUTPUT | TSDB_PROLOG_ESCAPE_OUTPUT);
       } /* else */
       break;
+    case TSDB_EOF_OPTION:
+      if(optarg != NULL) {
+        tsdb.eof = strdup(optarg);
+      } /* if */
+      else {
+        tsdb.eof = (char *)NULL;
+      } /* else */
+      break;
       case TSDB_FS_OPTION:
         if(optarg != NULL) {
           tsdb.fs = optarg[0];
@@ -732,6 +741,9 @@ void tsdb_usage() {
   fprintf(tsdb_error_stream,
           "  `-string-escape[={lisp | prolog | _off_}]' --- "
           "string output conventions;\n");
+  fprintf(tsdb_error_stream,
+          "  `-eof[={string | _off_}]' --- "
+          "EOF marker in projections;\n");
   fprintf(tsdb_error_stream,
           "  `-uniquely-project[={on | _off_}]' --- "
           "remove duplicates from projections;\n");

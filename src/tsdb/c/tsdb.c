@@ -29,6 +29,7 @@ Tsdb tsdb = {
   -1,                      /* max_results */
   TSDB_FS,                 /* fs */
   (char *)NULL,            /* ofs */
+  (char *)NULL,            /* eof */
   (char *)NULL,            /* server */
   0,                       /* port */
   (char *)NULL,            /* pager */

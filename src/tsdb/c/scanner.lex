@@ -130,13 +130,6 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
   return(Y_COUNT);
 }
 
-{u}{p}{d}{a}{t}{e} {
-  if(verbose_mode) {
-    fprintf(stderr, "UPDATE\n");
-  } /* if */
-  return(Y_UPDATE);
-}
-
 {i}{n}{s}{e}{r}{t} {
   if(verbose_mode) {
     fprintf(stderr, "INSERT\n");

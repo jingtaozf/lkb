@@ -1679,6 +1679,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
       fflush(tsdb_default_stream);
     } /* else */
   } /* else */
+
   return(selection);
 
 } /* tsdb_complex_retrieve */
