@@ -104,6 +104,7 @@
     (format stream "~a~%" (ed-convert-psoa psoa))
     (format stream "{}~%")))
 
+#+:lkb
 (defun ed-convert-edge (edge)
   (when (lkb::edge-p edge)
     (ed-convert-psoa (extract-mrs edge))))
@@ -178,6 +179,7 @@
                             for fvpair in flist
                             thereis 
                               (when (eq (fvpair-feature fvpair) key)
+                                (pprint fvpair)
                                 (fvpair-value fvpair)))
             for representative = (when value 
                                    (ed-find-representative eds value))
@@ -295,7 +297,7 @@
       with name = (if (stringp handle) handle (when (ed-handle-p handle)
                                                 (var-string handle)))
       for hcons in (eds-hcons eds)
-      for scarg = (when (equal (hcons-relation hcons) "qeq")
+      for scarg = (when (string-equal (hcons-relation hcons) "qeq")
                     (var-string (hcons-scarg hcons)))
       thereis 
         (when (equal name scarg) (hcons-outscpd hcons))))
@@ -349,10 +351,10 @@
       for ed in (eds-relations eds)
       unless (or (ed-bleached-p ed) (null (ed-arguments ed))) do
         (unless (ed-walk ed)
-          (push :cyclic (ed-status ed))
+          (pushnew :cyclic (ed-status ed))
           (setf return t))
       finally 
-        (when return (push :cyclic (eds-status eds)))
+        (when return (pushnew :cyclic (eds-status eds)))
         (return return)))
 
 (defun ed-walk (ed &optional (start (list (ed-id ed)) startp))
@@ -400,13 +402,13 @@
         for ed in (eds-relations eds)
         when (and (not (ed-bleached-p ed)) (not (eq (ed-mark ed) mark)))
         do 
-          (push :fragmented (ed-status ed))
+          (pushnew :fragmented (ed-status ed))
           (setf return t)
         finally 
           (loop
               for ed in (eds-relations eds)
               when (eq (ed-type ed) :fragment) do (setf return nil))
-          (when return (push :fragmented (eds-status eds)))
+          (when return (pushnew :fragmented (eds-status eds)))
           (return return))))
 
 (defun ed-explode (eds)
