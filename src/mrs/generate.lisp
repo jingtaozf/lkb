@@ -291,22 +291,23 @@
 
       (time-a-funcall
          #'(lambda () 
-            ;; Perform adjunction phase if there are partial results, and unpack
-            (setq *gen-record*
-               (mapcan
-                  #'(lambda (e)
-                      (delete-if-not
-                         #'(lambda (u)
-                             (and (gen-chart-check-covering u input-rels) ; redundant for consistent
-                                  (gen-chart-check-compatible u input-sem)))
-                         (if (or *gen-packing-p* (and *intersective-rule-names* partial))
-                            ;; may need to un-adjoin even when packing is off
-                            (unpack-edge! nil e)
-                            (list e))))
-                  (nconc consistent
-                     (if (and *intersective-rule-names* partial)
-                        (gen-chart-adjoin-modifiers partial input-rels
-                           possible-grules))))))
+            ;; Perform adjunction phase and unpack
+            (unless *gen-first-only-p*
+               (setq *gen-record*
+                  (mapcan
+                     #'(lambda (e)
+                         (delete-if-not
+                            #'(lambda (u)
+                               (and (gen-chart-check-covering u input-rels) ; redundant for consistent
+                                    (gen-chart-check-compatible u input-sem)))
+                            (if (or *gen-packing-p* (and *intersective-rule-names* partial))
+                               ;; may need to un-adjoin even when packing is off
+                               (unpack-edge! nil e)
+                               (list e))))
+                     (nconc consistent
+                        (if (and *intersective-rule-names* partial)
+                           (gen-chart-adjoin-modifiers partial input-rels
+                              possible-grules)))))))
          #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
              (declare (ignore tr ignore))
              (setq tgc (+ tgcu tgcs) tcpu (+ tu ts)
@@ -332,8 +333,7 @@
 
 
 (defun clear-gen-chart nil
-  (setq *edge-id* 0)
-  (setf %edge-allowance% 0)
+   (setq *edge-id* 0)
    (setq *gen-chart* nil)
    (setq *gen-record* nil))
 
@@ -540,7 +540,11 @@
     ;; did we just find a result?
     (when *gen-first-only-p*
       (let ((complete
-              (gen-chart-find-complete-edges (list edge) input-sem input-rels)))
+              (delete-if-not
+                 #'(lambda (u)
+                     (and (gen-chart-check-covering u input-rels)
+                          (gen-chart-check-compatible u input-sem)))
+                 (if *gen-packing-p* (unpack-edge! nil edge) (list edge)))))
         (when complete
            (setq *gen-record* complete)
            (throw 'first t))))
@@ -907,9 +911,8 @@
                                     (list act)))))
                          (cdr entry)))))
             possible-grules))
-        #+:null
-        (mapcan #'(lambda (e) (unpack-edge! nil e)) intersective-edges)
-        intersective-edges))
+       ;; (mapcan #'(lambda (e) (unpack-edge! nil e)) intersective-edges)
+       intersective-edges))
 
 
 ;;;
@@ -929,17 +932,12 @@
          
          
 (defun gen-chart-try-adjunction (act edge)
-;;  (format t "~&gen-chart-try-adjunction(): ~a + ~a~%" act edge)
-;;  (when (= (edge-id edge) 82) (break))
-   (let* ((rule (g-edge-rule act))
-          (rule-tdfs (g-edge-dag act))
-          (daughter-path (first (g-edge-needed act)))
-          (daughter-restricted (g-edge-dag-restricted act))
-          (daughter-index 
-           (position daughter-path (cdr (rule-order rule)) :test #'eq)
-           #+:null
-           (g-edge-mod-index act))
-          (fs (g-edge-dag edge)))
+   (let ((rule (g-edge-rule act))
+         (rule-tdfs (g-edge-dag act))
+         (daughter-path (first (g-edge-needed act)))
+         (daughter-restricted (g-edge-dag-restricted act))
+         (daughter-index (g-edge-mod-index act))
+         (fs (g-edge-dag edge)))
       (if (and (check-rule-filter rule (g-edge-rule edge) daughter-index)
                (restrictors-compatible-p daughter-restricted 
                                          (g-edge-dag-restricted edge)))
