@@ -171,3 +171,21 @@
   (loop
       while a
       collect (cons (pop a) (pop b))))
+
+(defun myremdup (list pred< pred=)
+  (when list
+    (loop
+	with slist = (sort (copy-list list) pred<)
+	with last = (not (car slist))
+	for x in slist
+	unless (funcall pred= x last)
+	collect x
+	do
+	  (setf last x))))
+
+(defun add-w-empty (val list-w-empty)
+  (if (or (null list-w-empty) 
+	  (equal :empty list-w-empty))
+      (list val)
+    (cons val list-w-empty)))
+

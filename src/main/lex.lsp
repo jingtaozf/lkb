@@ -493,7 +493,7 @@
 ;;;
 
 (defmethod lookup-word :around ((lexicon lex-database) orth &key (cache t))
-    (let* ((value (if (next-method-p) (call-next-method)))
+  (let* ((value (if (next-method-p) (call-next-method)))
 	   (mode (extra-mode lexicon))
 	   (extra 
 	    ;:if no vals in lexicon (or union mode) ...

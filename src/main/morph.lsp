@@ -495,6 +495,7 @@
                  hypotheses)
       hypotheses)))
 
+;;(setf *lexdb-lookup-words-union* t)
 (defun remove-morphemes (word &key (lexicon *lexicon*))
   (let ((definites-list (copy-list '(nil))))
     (do ((current-combinations
@@ -504,9 +505,13 @@
 	   (remove-infix current-combinations)
 	   (remove-suffix current-combinations))))
 	((null current-combinations) (cdr definites-list))
-      (when (typep lexicon 'psql-lex-database)
-	(let ((words (mapcar #'(lambda (x) (implode (car x))) current-combinations)))
-	  (when words (lookup-words lexicon words))))
+      ;;;
+      ;;; lexdb caching of all words looked up below provides not gain 
+      ;;;
+      ;;(when (and (typep lexicon 'psql-lex-database) *lexdb-lookup-words-union*)
+      ;;	(let ((words (myremdup (mapcar #'(lambda (x) (implode (car x))) current-combinations) #'string< #'equal)))
+      ;;  (when words 
+      ;;    (cache-words lexicon words))))
       (nconc definites-list
 	     (loop for morphological-possibility in current-combinations
 		 when 
@@ -523,7 +528,7 @@
 		   (let* 
 		       ((root 
 			 (implode (car morphological-possibility))) 
-			(lexical (lookup-word *lexicon* root)))
+			(lexical (lookup-word lexicon root)))
 		     (if lexical
 			 (list (cons root 
 				     (cdr morphological-possibility))))))))))
