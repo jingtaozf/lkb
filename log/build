@@ -19,6 +19,7 @@ cvs server: Updating lkb
 ? src/tsdb/capi
 ? src/tsdb/home/redwoods
 cvs server: Updating .
+M Makefile
 cvs server: Updating bin
 cvs server: Updating bin/linux
 cvs server: Updating bin/solaris
@@ -365,4 +366,1204 @@ cvs server: Updating src/tty
 cvs server: Updating src/www
 cvs server: Updating src/www/linux
 cvs server: Updating src/xml
-absolute pathname `/eo/e7/apache/htdocs/src/lkb/src' illegal for server
+**********
+
+  Remember to update the version number:
+
+		cvs commit -f -m "" version.lsp
+
+**********
+Checking in ./src/version.lsp;
+/lingo/CVS/newlkb/src/version.lsp,v  <--  version.lsp
+new revision: 1.273; previous revision: 1.272
+done
+( \
+  cd /eo/e7/apache/htdocs/src/lkb; \
+  if [ ! -d /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"` ]; then mkdir /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`; fi; \
+  tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/lkb_source.tgz \
+      --exclude=Makefile \
+      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+      --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+      --exclude="src/.???l*" --exclude="src/fasl*" \
+      --exclude="*.fasl" \
+      --exclude="src/doc*" --exclude="src/data*" \
+      --exclude="linux*" --exclude="solaris*" --exclude="windows*" \
+      --exclude="src/www*" --exclude=src/systems/www.system \
+      --exclude="bin*" --exclude="include*" --exclude="lib*" \
+      --exclude="man*" --exclude="doc*" --exclude="log*" \
+      --exclude="etc*" --exclude=src/general/itsdb.lisp \
+      --exclude="src/tsdb*" --exclude="src/pvm*" \
+      --exclude=src/systems/tsdb.system \
+      --exclude=src/systems/pvm.system \
+      .; \
+)
+./
+src/
+src/lkb-package.lsp
+src/licence.txt
+src/lkb.lpr
+src/lkb.el
+src/mrs-package.lsp
+src/mrs.lpr
+src/pg-interface.el
+src/pg.el
+src/pg.elc
+src/tdl-mode.el
+src/version.lsp
+src/ACL-CG_specific/
+src/ACL-CG_specific/activefs.lsp
+src/ACL-CG_specific/chartout.lsp
+src/ACL-CG_specific/dialog.lsp
+src/ACL-CG_specific/emacs.lsp
+src/ACL-CG_specific/fsclasses.lsp
+src/ACL-CG_specific/graphics.lsp
+src/ACL-CG_specific/listout.lsp
+src/ACL-CG_specific/misc.lsp
+src/ACL-CG_specific/parseout.lsp
+src/ACL-CG_specific/topmenu.lsp
+src/ACL-CG_specific/tree.lsp
+src/ACL_specific/
+src/ACL_specific/activefs.lsp
+src/ACL_specific/build.lsp
+src/ACL_specific/chartout.lsp
+src/ACL_specific/compare.lsp
+src/ACL_specific/deliver.lsp
+src/ACL_specific/dialog.lsp
+src/ACL_specific/emacs.lsp
+src/ACL_specific/files.lsp
+src/ACL_specific/graph.lsp
+src/ACL_specific/graphics.lsp
+src/ACL_specific/image.lsp
+src/ACL_specific/listout.lsp
+src/ACL_specific/misc.lsp
+src/ACL_specific/parseout.lsp
+src/ACL_specific/topmenu.lsp
+src/ACL_specific/tree.lsp
+src/MCL_specific/
+src/MCL_specific/activefs.lsp
+src/MCL_specific/chartout.lsp
+src/MCL_specific/demo.lsp
+src/MCL_specific/dialog.lsp
+src/MCL_specific/graphics.lsp
+src/MCL_specific/listout.lsp
+src/MCL_specific/misc.lsp
+src/MCL_specific/parseout.lsp
+src/MCL_specific/picfield.lsp
+src/MCL_specific/picwin.lsp
+src/MCL_specific/topmenu.lsp
+src/MCL_specific/tree.lsp
+src/general/
+src/general/allegro-patches.lisp
+src/general/clisp-patches.lsp
+src/general/cmucl-patches.lisp
+src/general/defsystem.lisp
+src/general/ecl-patches.lsp
+src/general/lispworks-patches.lisp
+src/general/loadup-library.lisp
+src/general/loadup.lisp
+src/general/lucid-patches.lisp
+src/general/mcl-patches.lisp
+src/general/openmcl-patches.lisp
+src/glue/
+src/glue/lsp.lsp
+src/glue/lui.lsp
+src/glue/sppp.lsp
+src/io-general/
+src/io-general/outputfs.lsp
+src/io-general/async.lsp
+src/io-general/graph.lsp
+src/io-general/menus.lsp
+src/io-general/outputsrc.lsp
+src/io-general/outputtdfs.lsp
+src/io-general/toplevel.lsp
+src/io-general/tree-nodes.lsp
+src/io-general/utils.lsp
+src/io-lilfes/
+src/io-lilfes/lilout.lsp
+src/io-paths/
+src/io-paths/lexinput.lsp
+src/io-paths/pathout.lsp
+src/io-paths/ruleinput.lsp
+src/io-paths/typeinput.lsp
+src/io-tdl/
+src/io-tdl/tdllexinput.lsp
+src/io-tdl/tdloutput.lsp
+src/io-tdl/tdlruleinput.lsp
+src/io-tdl/tdltypeinput.lsp
+src/lexdb/
+src/lexdb/lexport.lsp
+src/lexdb/psql-db.lsp
+src/lexdb/psql-emacs.lsp
+src/lexdb/psql-msc.lsp
+src/lexdb/psql-mwe.lsp
+src/lexdb/psqllex.lsp
+src/lexdb/semi.lsp
+src/main/
+src/main/batch-check.lsp
+src/main/active.lsp
+src/main/discriminants.lsp
+src/main/brackets.lsp
+src/main/cdb.lsp
+src/main/check-unif.lsp
+src/main/checktypes.lsp
+src/main/clex.lsp
+src/main/dag.lsp
+src/main/debug.lsp
+src/main/globals.lsp
+src/main/gen.lsp
+src/main/initializations.lsp
+src/main/leaf.lsp
+src/main/lex.lsp
+src/main/ltemplates.lsp
+src/main/marks.lsp
+src/main/morph.lsp
+src/main/parse.lsp
+src/main/plex.lsp
+src/main/preprocess.lsp
+src/main/rules.lsp
+src/main/slex.lsp
+src/main/ssp.lsp
+src/main/structs.lsp
+src/main/types.lsp
+src/main/user-fns.lsp
+src/main/yadu.lsp
+src/mrs/
+src/mrs/basemrs.lisp
+src/mrs/after.lisp
+src/mrs/dummy-interface.lisp
+src/mrs/cheapscope.lisp
+src/mrs/dependencies.lisp
+src/mrs/genbatch.lisp
+src/mrs/ecl.lisp
+src/mrs/genpredict.lisp
+src/mrs/generate.lisp
+src/mrs/lkb-acl-mrs.lisp
+src/mrs/idioms.lisp
+src/mrs/infostr.lisp
+src/mrs/interface.lisp
+src/mrs/lexindex.lisp
+src/mrs/lexlookup.lisp
+src/mrs/lexutils.lisp
+src/mrs/lkb-interface.lisp
+src/mrs/lkb-mcl-mrs.lisp
+src/mrs/lsp.lisp
+src/mrs/mrscons.lisp
+src/mrs/mrscorpus.lisp
+src/mrs/mrsglobals.lisp
+src/mrs/mrsmunge.lisp
+src/mrs/mrsoutput.lisp
+src/mrs/mrsresolve.lisp
+src/mrs/mrsruleinput.lisp
+src/mrs/mrstoplevel.lisp
+src/mrs/pet-interface.lisp
+src/mrs/spell.lisp
+src/mrs/time-convert.lisp
+src/mrs/translate.lisp
+src/ppcre/
+src/ppcre/closures.lisp
+src/ppcre/api.lisp
+src/ppcre/regex-class.lisp
+src/ppcre/convert.lisp
+src/ppcre/lexer.lisp
+src/ppcre/optimize.lisp
+src/ppcre/packages.lisp
+src/ppcre/parser.lisp
+src/ppcre/ppcre.html
+src/ppcre/repetition-closures.lisp
+src/ppcre/scanner.lisp
+src/ppcre/specials.lisp
+src/ppcre/util.lisp
+src/psql/
+src/psql/bind-libpq.cl
+src/psql/License
+src/psql/import-7.1.sql
+src/psql/defn.sql
+src/psql/import-patch-7-1.sql
+src/psql/embedded-code.sql
+src/psql/pg-package.cl
+src/psql/import.sql
+src/psql/mwe.sql
+src/psql/semi.sql
+src/psql/sql.cl
+src/psql/test.txt
+src/psql/solaris/
+src/psql/solaris/libpq.so
+src/rmrs/
+src/rmrs/annlt.lisp
+src/rmrs/README
+src/rmrs/lkb-acl-rmrs.lisp
+src/rmrs/basermrs.lisp
+src/rmrs/comp.lisp
+src/rmrs/compare.lisp
+src/rmrs/convert.lisp
+src/rmrs/dtd-notes.txt
+src/rmrs/gram.dtd
+src/rmrs/input.lisp
+src/rmrs/standalone.lisp
+src/rmrs/output.lisp
+src/rmrs/readgram.lisp
+src/rmrs/readtag.lisp
+src/rmrs/rmrs.dtd
+src/rmrs/xml-utils.lisp
+src/rmrs/tag.dtd
+src/rmrs/annlt-test/
+src/rmrs/annlt-test/gram14.1.rmrs
+src/rmrs/annlt-test/gram.rmrs
+src/rmrs/annlt-test/lex14.1.rmrs
+src/rmrs/annlt-test/lex.rmrs
+src/rmrs/annlt-test/ques.parses-ti-ph-st
+src/rmrs/annlt-test/t1.data
+src/rmrs/annlt-test/t2.data
+src/rmrs/test1/
+src/rmrs/test1/fns.lisp
+src/rmrs/test1/gram.rmrs
+src/rmrs/test1/lex.rmrs
+src/rmrs/test1/test.data
+src/systems/
+src/systems/ppcre.system
+src/systems/lkb.system
+src/systems/mrs.system
+src/systems/psql.system
+src/systems/pxml.system
+src/systems/rmrs.system
+src/tproving/
+src/tproving/dtp-interface.lisp
+src/tproving/fol-to-mrs.lisp
+src/tproving/fol-to-nf.lisp
+src/tproving/gq-to-fol.lisp
+src/tproving/gq.lisp
+src/tproving/nf-to-fol.lisp
+src/tty/
+src/tty/tty.lsp
+src/xml/
+src/xml/phtml.cl
+src/xml/phtml.html
+src/xml/pxml.html
+src/xml/pxml0.cl
+src/xml/pxml1.cl
+src/xml/pxml2.cl
+src/xml/pxml3.cl
+( \
+  cd /eo/e7/apache/htdocs/src/lkb; \
+  tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/lkb_data.tgz \
+      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+      --exclude="src/data/spanish*" \
+      --exclude="src/data/interrogatives*" \
+      --exclude="src/data/aline2*" \
+      src/data src/*.el; \
+)
+src/data/
+src/data/Dikran/
+src/data/Dikran/test-sentences2
+src/data/Dikran/globals.lsp
+src/data/Dikran/irregs.tab
+src/data/Dikran/new.qc
+src/data/Dikran/sag.lex
+src/data/Dikran/sag.lrules
+src/data/Dikran/sag.qc
+src/data/Dikran/sag.rules
+src/data/Dikran/sag.tmpl
+src/data/Dikran/sag.types
+src/data/Dikran/script
+src/data/Dikran/test.sentences-mod1
+src/data/Dikran/test.sentences
+src/data/Dikran/test.sentences3
+src/data/Dikran/user-fns.lsp
+src/data/avmmacros
+src/data/aline/
+src/data/aline/common.types
+src/data/aline/cat.grules
+src/data/aline/globals.lsp
+src/data/aline/linking.types
+src/data/aline/linking3.types
+src/data/aline/main.types
+src/data/aline/main3.types
+src/data/aline/mrs.types
+src/data/aline/noun.lrules
+src/data/aline/script
+src/data/aline/test.lex
+src/data/aline/user-fns.lsp
+src/data/bugtest/
+src/data/bugtest/tdl.types
+src/data/esslli/
+src/data/esslli/buggy/
+src/data/esslli/buggy/infl-rules.tdl
+src/data/esslli/buggy/grules.tdl
+src/data/esslli/buggy/lexicon.tdl
+src/data/esslli/buggy/irregs.txt
+src/data/esslli/buggy/parse-nodes.tdl
+src/data/esslli/buggy/roots.tdl
+src/data/esslli/buggy/script
+src/data/esslli/buggy/test.items
+src/data/esslli/buggy/types.tdl
+src/data/esslli/toy/
+src/data/esslli/toy/lexicon.tdl
+src/data/esslli/toy/grules.tdl
+src/data/esslli/toy/parse-nodes.tdl
+src/data/esslli/toy/roots.tdl
+src/data/esslli/toy/script
+src/data/esslli/toy/test.items
+src/data/esslli/toy/types.tdl
+src/data/esslli/globals.lsp
+src/data/esslli/user-fns.lsp
+src/data/esslli/enddayfour/
+src/data/esslli/enddayfour/infl-rules.tdl
+src/data/esslli/enddayfour/grules.tdl
+src/data/esslli/enddayfour/lexicon.tdl
+src/data/esslli/enddayfour/irregs.txt
+src/data/esslli/enddayfour/parse-nodes.tdl
+src/data/esslli/enddayfour/lrules.tdl
+src/data/esslli/enddayfour/roots.tdl
+src/data/esslli/enddayfour/script
+src/data/esslli/enddayfour/test.items
+src/data/esslli/enddayfour/types.tdl
+src/data/esslli/enddayone/
+src/data/esslli/enddayone/lexicon.tdl
+src/data/esslli/enddayone/grules.tdl
+src/data/esslli/enddayone/parse-nodes.tdl
+src/data/esslli/enddayone/roots.tdl
+src/data/esslli/enddayone/script
+src/data/esslli/enddayone/test.items
+src/data/esslli/enddayone/types.tdl
+src/data/esslli/enddaythree/
+src/data/esslli/enddaythree/infl-rules.tdl
+src/data/esslli/enddaythree/grules.tdl
+src/data/esslli/enddaythree/lexicon.tdl
+src/data/esslli/enddaythree/irregs.txt
+src/data/esslli/enddaythree/parse-nodes.tdl
+src/data/esslli/enddaythree/roots.tdl
+src/data/esslli/enddaythree/script
+src/data/esslli/enddaythree/test.items
+src/data/esslli/enddaythree/types.tdl
+src/data/esslli/enddaytwo/
+src/data/esslli/enddaytwo/infl-rules.tdl
+src/data/esslli/enddaytwo/grules.tdl
+src/data/esslli/enddaytwo/lexicon.tdl
+src/data/esslli/enddaytwo/irregs.txt
+src/data/esslli/enddaytwo/parse-nodes.tdl
+src/data/esslli/enddaytwo/roots.tdl
+src/data/esslli/enddaytwo/script
+src/data/esslli/enddaytwo/test.items
+src/data/esslli/enddaytwo/types.tdl
+src/data/esslli/exercises/
+src/data/esslli/exercises/dayfour.tex
+src/data/esslli/exercises/dayone.tex
+src/data/esslli/exercises/daythree.tex
+src/data/esslli/exercises/daytwo.tex
+src/data/esslli/pacifier/
+src/data/esslli/pacifier/infl-rules.tdl
+src/data/esslli/pacifier/grules.tdl
+src/data/esslli/pacifier/lexicon.tdl
+src/data/esslli/pacifier/irregs.txt
+src/data/esslli/pacifier/parse-nodes.tdl
+src/data/esslli/pacifier/lrules.tdl
+src/data/esslli/pacifier/roots.tdl
+src/data/esslli/pacifier/script
+src/data/esslli/pacifier/test.items
+src/data/esslli/pacifier/types.tdl
+src/data/esslli/rattle/
+src/data/esslli/rattle/infl-rules.tdl
+src/data/esslli/rattle/grules.tdl
+src/data/esslli/rattle/lexicon.tdl
+src/data/esslli/rattle/irregs.txt
+src/data/esslli/rattle/parse-nodes.tdl
+src/data/esslli/rattle/roots.tdl
+src/data/esslli/rattle/script
+src/data/esslli/rattle/test.items
+src/data/esslli/rattle/types.tdl
+src/data/esslli/toy-glb/
+src/data/esslli/toy-glb/lexicon.tdl
+src/data/esslli/toy-glb/grules.tdl
+src/data/esslli/toy-glb/parse-nodes.tdl
+src/data/esslli/toy-glb/roots.tdl
+src/data/esslli/toy-glb/script
+src/data/esslli/toy-glb/test.items
+src/data/esslli/toy-glb/types.tdl
+src/data/esslli2k/
+src/data/esslli2k/exercises/
+src/data/esslli2k/exercises/cgloss4e.sty
+src/data/esslli2k/exercises/avm.sty
+src/data/esslli2k/exercises/tree-dvips91.pro
+src/data/esslli2k/exercises/dayeight.tex
+src/data/esslli2k/exercises/dayfive.tex
+src/data/esslli2k/exercises/dayfour.tex
+src/data/esslli2k/exercises/daynine.tex
+src/data/esslli2k/exercises/dayone.tex
+src/data/esslli2k/exercises/dayseven.tex
+src/data/esslli2k/exercises/daysix.tex
+src/data/esslli2k/exercises/daythree.tex
+src/data/esslli2k/exercises/daytwo.tex
+src/data/esslli2k/exercises/gb4e.sty
+src/data/esslli2k/exercises/tree-dvips.pro
+src/data/esslli2k/exercises/tree-dvips.sty
+src/data/esslli2k/grammars/
+src/data/esslli2k/grammars/esperanto/
+src/data/esslli2k/grammars/esperanto/endings.items
+src/data/esslli2k/grammars/esperanto/all.items
+src/data/esslli2k/grammars/esperanto/case.items
+src/data/esslli2k/grammars/esperanto/globals.lsp
+src/data/esslli2k/grammars/esperanto/extras.tdl
+src/data/esslli2k/grammars/esperanto/lexicon.tdl
+src/data/esslli2k/grammars/esperanto/hard.items
+src/data/esslli2k/grammars/esperanto/inf.items
+src/data/esslli2k/grammars/esperanto/inflr.tdl
+src/data/esslli2k/grammars/esperanto/parse-nodes.tdl
+src/data/esslli2k/grammars/esperanto/poss.items
+src/data/esslli2k/grammars/esperanto/roots.tdl
+src/data/esslli2k/grammars/esperanto/rules.tdl
+src/data/esslli2k/grammars/esperanto/script
+src/data/esslli2k/grammars/esperanto/types.tdl
+src/data/esslli2k/grammars/esperanto/user-fns.lsp
+src/data/esslli2k/grammars/grammar1/
+src/data/esslli2k/grammars/grammar1/globals.lsp
+src/data/esslli2k/grammars/grammar1/lexicon.tdl
+src/data/esslli2k/grammars/grammar1/rules.tdl
+src/data/esslli2k/grammars/grammar1/script
+src/data/esslli2k/grammars/grammar1/test.items
+src/data/esslli2k/grammars/grammar1/types.tdl
+src/data/esslli2k/grammars/grammar1/user-fns.lsp
+src/data/esslli2k/grammars/grammar2/
+src/data/esslli2k/grammars/grammar2/globals.lsp
+src/data/esslli2k/grammars/grammar2/agr.items
+src/data/esslli2k/grammars/grammar2/lexicon.tdl
+src/data/esslli2k/grammars/grammar2/inflr.tdl
+src/data/esslli2k/grammars/grammar2/user-fns.lsp
+src/data/esslli2k/grammars/grammar2/lrules.tdl
+src/data/esslli2k/grammars/grammar2/mod.items
+src/data/esslli2k/grammars/grammar2/rules.tdl
+src/data/esslli2k/grammars/grammar2/script
+src/data/esslli2k/grammars/grammar2/test.items
+src/data/esslli2k/grammars/grammar2/types.tdl
+src/data/esslli2k/grammars/grammar3/
+src/data/esslli2k/grammars/grammar3/globals.lsp
+src/data/esslli2k/grammars/grammar3/agr.items
+src/data/esslli2k/grammars/grammar3/lexicon.tdl
+src/data/esslli2k/grammars/grammar3/inflr.tdl
+src/data/esslli2k/grammars/grammar3/user-fns.lsp
+src/data/esslli2k/grammars/grammar3/lrules.tdl
+src/data/esslli2k/grammars/grammar3/mods.items
+src/data/esslli2k/grammars/grammar3/rules.tdl
+src/data/esslli2k/grammars/grammar3/script
+src/data/esslli2k/grammars/grammar3/test.items
+src/data/esslli2k/grammars/grammar3/types.tdl
+src/data/esslli2k/grammars/grammar4/
+src/data/esslli2k/grammars/grammar4/globals.lsp
+src/data/esslli2k/grammars/grammar4/agr.items
+src/data/esslli2k/grammars/grammar4/lexicon.tdl
+src/data/esslli2k/grammars/grammar4/inflr.tdl
+src/data/esslli2k/grammars/grammar4/user-fns.lsp
+src/data/esslli2k/grammars/grammar4/lrules.tdl
+src/data/esslli2k/grammars/grammar4/mods.items
+src/data/esslli2k/grammars/grammar4/rules.tdl
+src/data/esslli2k/grammars/grammar4/script
+src/data/esslli2k/grammars/grammar4/test.items
+src/data/esslli2k/grammars/grammar4/types.tdl
+src/data/esslli2k/grammars/grammar5/
+src/data/esslli2k/grammars/grammar5/globals.lsp
+src/data/esslli2k/grammars/grammar5/agr.items
+src/data/esslli2k/grammars/grammar5/lexicon.tdl
+src/data/esslli2k/grammars/grammar5/inflr.tdl
+src/data/esslli2k/grammars/grammar5/options.lisp
+src/data/esslli2k/grammars/grammar5/lrules.tdl
+src/data/esslli2k/grammars/grammar5/mods.items
+src/data/esslli2k/grammars/grammar5/user-fns.lsp
+src/data/esslli2k/grammars/grammar5/rules.tdl
+src/data/esslli2k/grammars/grammar5/script
+src/data/esslli2k/grammars/grammar5/test.items
+src/data/esslli2k/grammars/grammar5/types.tdl
+src/data/esslli2k/grammars/grammar6/
+src/data/esslli2k/grammars/grammar6/globals.lsp
+src/data/esslli2k/grammars/grammar6/extras.tdl
+src/data/esslli2k/grammars/grammar6/lexicon.tdl
+src/data/esslli2k/grammars/grammar6/inflr.tdl
+src/data/esslli2k/grammars/grammar6/mrsglobals.lsp
+src/data/esslli2k/grammars/grammar6/lrules.tdl
+src/data/esslli2k/grammars/grammar6/parse-nodes.tdl
+src/data/esslli2k/grammars/grammar6/roots.tdl
+src/data/esslli2k/grammars/grammar6/rules.tdl
+src/data/esslli2k/grammars/grammar6/script
+src/data/esslli2k/grammars/grammar6/test.items
+src/data/esslli2k/grammars/grammar6/types.tdl
+src/data/esslli2k/grammars/grammar6/user-fns.lsp
+src/data/esslli2k/grammars/grammar7/
+src/data/esslli2k/grammars/grammar7/globals.lsp
+src/data/esslli2k/grammars/grammar7/gap.items
+src/data/esslli2k/grammars/grammar7/lexicon.tdl
+src/data/esslli2k/grammars/grammar7/inflr.tdl
+src/data/esslli2k/grammars/grammar7/mrsglobals.lsp
+src/data/esslli2k/grammars/grammar7/lrules.tdl
+src/data/esslli2k/grammars/grammar7/parse-nodes.tdl
+src/data/esslli2k/grammars/grammar7/roots.tdl
+src/data/esslli2k/grammars/grammar7/rules.tdl
+src/data/esslli2k/grammars/grammar7/script
+src/data/esslli2k/grammars/grammar7/test.items
+src/data/esslli2k/grammars/grammar7/types.tdl
+src/data/esslli2k/grammars/grammar7/user-fns.lsp
+src/data/esslli2k/grammars/grammar9/
+src/data/esslli2k/grammars/grammar9/globals.lsp
+src/data/esslli2k/grammars/grammar9/gap.items
+src/data/esslli2k/grammars/grammar9/lexicon.tdl
+src/data/esslli2k/grammars/grammar9/inflr.tdl
+src/data/esslli2k/grammars/grammar9/mrsglobals.lsp
+src/data/esslli2k/grammars/grammar9/lrules.tdl
+src/data/esslli2k/grammars/grammar9/parse-nodes.tdl
+src/data/esslli2k/grammars/grammar9/roots.tdl
+src/data/esslli2k/grammars/grammar9/rules.tdl
+src/data/esslli2k/grammars/grammar9/script
+src/data/esslli2k/grammars/grammar9/test.items
+src/data/esslli2k/grammars/grammar9/types.tdl
+src/data/esslli2k/grammars/grammar9/user-fns.lsp
+src/data/itfs/
+src/data/itfs/an1/
+src/data/itfs/an1/globals.lsp
+src/data/itfs/an1/script
+src/data/itfs/an1/types.tdl
+src/data/itfs/README
+src/data/itfs/an2/
+src/data/itfs/an2/globals.lsp
+src/data/itfs/an2/script
+src/data/itfs/an2/types.tdl
+src/data/itfs/an3/
+src/data/itfs/an3/parse-nodes.tdl
+src/data/itfs/an3/globals.lsp
+src/data/itfs/an3/lexicon.tdl
+src/data/itfs/an3/user-fns.lsp
+src/data/itfs/an3/rules.tdl
+src/data/itfs/an3/script
+src/data/itfs/an3/start.tdl
+src/data/itfs/an3/types.tdl
+src/data/itfs/an4/
+src/data/itfs/an4/parse-nodes.tdl
+src/data/itfs/an4/globals.lsp
+src/data/itfs/an4/lexicon.tdl
+src/data/itfs/an4/user-fns.lsp
+src/data/itfs/an4/rules.tdl
+src/data/itfs/an4/script
+src/data/itfs/an4/start.tdl
+src/data/itfs/an4/types.tdl
+src/data/itfs/an5/
+src/data/itfs/an5/parse-nodes.tdl
+src/data/itfs/an5/globals.lsp
+src/data/itfs/an5/lexicon.tdl
+src/data/itfs/an5/user-fns.lsp
+src/data/itfs/an5/rules.tdl
+src/data/itfs/an5/script
+src/data/itfs/an5/start.tdl
+src/data/itfs/an5/types.tdl
+src/data/itfs/an6/
+src/data/itfs/an6/parse-nodes.tdl
+src/data/itfs/an6/globals.lsp
+src/data/itfs/an6/lexicon.tdl
+src/data/itfs/an6/test.parsed
+src/data/itfs/an6/rules.tdl
+src/data/itfs/an6/script
+src/data/itfs/an6/start.tdl
+src/data/itfs/an6/test.items
+src/data/itfs/an6/user-fns.lsp
+src/data/itfs/an6/types.tdl
+src/data/itfs/an7/
+src/data/itfs/an7/parse-nodes.tdl
+src/data/itfs/an7/globals.lsp
+src/data/itfs/an7/lexicon.tdl
+src/data/itfs/an7/test.parsed
+src/data/itfs/an7/rules.tdl
+src/data/itfs/an7/script
+src/data/itfs/an7/start.tdl
+src/data/itfs/an7/test.items
+src/data/itfs/an7/user-fns.lsp
+src/data/itfs/an7/types.tdl
+src/data/itfs/an8/
+src/data/itfs/an8/parse-nodes.tdl
+src/data/itfs/an8/globals.lsp
+src/data/itfs/an8/lexicon.tdl
+src/data/itfs/an8/test.parsed
+src/data/itfs/an8/rules.tdl
+src/data/itfs/an8/script
+src/data/itfs/an8/start.tdl
+src/data/itfs/an8/test.items
+src/data/itfs/an8/user-fns.lsp
+src/data/itfs/an8/types.tdl
+src/data/itfs/catgram/
+src/data/itfs/catgram/parse-nodes.tdl
+src/data/itfs/catgram/globals.lsp
+src/data/itfs/catgram/lexicon.tdl
+src/data/itfs/catgram/test.parsed
+src/data/itfs/catgram/rules.tdl
+src/data/itfs/catgram/script
+src/data/itfs/catgram/start.tdl
+src/data/itfs/catgram/test.items
+src/data/itfs/catgram/user-fns.lsp
+src/data/itfs/catgram/types.tdl
+src/data/itfs/g1cfg/
+src/data/itfs/g1cfg/parse-nodes.tdl
+src/data/itfs/g1cfg/globals.lsp
+src/data/itfs/g1cfg/lexicon.tdl
+src/data/itfs/g1cfg/user-fns.lsp
+src/data/itfs/g1cfg/rules.tdl
+src/data/itfs/g1cfg/script
+src/data/itfs/g1cfg/start.tdl
+src/data/itfs/g1cfg/types.tdl
+src/data/itfs/g2agr/
+src/data/itfs/g2agr/parse-nodes.tdl
+src/data/itfs/g2agr/globals.lsp
+src/data/itfs/g2agr/lexicon.tdl
+src/data/itfs/g2agr/user-fns.lsp
+src/data/itfs/g2agr/rules.tdl
+src/data/itfs/g2agr/script
+src/data/itfs/g2agr/start.tdl
+src/data/itfs/g2agr/types.tdl
+src/data/itfs/g3nodes/
+src/data/itfs/g3nodes/parse-nodes.tdl
+src/data/itfs/g3nodes/globals.lsp
+src/data/itfs/g3nodes/lexicon.tdl
+src/data/itfs/g3nodes/user-fns.lsp
+src/data/itfs/g3nodes/rules.tdl
+src/data/itfs/g3nodes/script
+src/data/itfs/g3nodes/start.tdl
+src/data/itfs/g3nodes/types.tdl
+src/data/itfs/g4diff/
+src/data/itfs/g4diff/parse-nodes.tdl
+src/data/itfs/g4diff/globals.lsp
+src/data/itfs/g4diff/lexicon.tdl
+src/data/itfs/g4diff/user-fns.lsp
+src/data/itfs/g4diff/rules.tdl
+src/data/itfs/g4diff/script
+src/data/itfs/g4diff/start.tdl
+src/data/itfs/g4diff/types.tdl
+src/data/itfs/g5lex/
+src/data/itfs/g5lex/parse-nodes.tdl
+src/data/itfs/g5lex/globals.lsp
+src/data/itfs/g5lex/lexicon.tdl
+src/data/itfs/g5lex/user-fns.lsp
+src/data/itfs/g5lex/rules.tdl
+src/data/itfs/g5lex/script
+src/data/itfs/g5lex/start.tdl
+src/data/itfs/g5lex/test.items
+src/data/itfs/g5lex/types.tdl
+src/data/itfs/g6morph/
+src/data/itfs/g6morph/parse-nodes.tdl
+src/data/itfs/g6morph/globals.lsp
+src/data/itfs/g6morph/inflr.tdl
+src/data/itfs/g6morph/lexicon.tdl
+src/data/itfs/g6morph/lrules.tdl
+src/data/itfs/g6morph/user-fns.lsp
+src/data/itfs/g6morph/rules.tdl
+src/data/itfs/g6morph/script
+src/data/itfs/g6morph/start.tdl
+src/data/itfs/g6morph/test.items
+src/data/itfs/g6morph/types.tdl
+src/data/itfs/g7sem/
+src/data/itfs/g7sem/parse-nodes.tdl
+src/data/itfs/g7sem/globals.lsp
+src/data/itfs/g7sem/inflr.tdl
+src/data/itfs/g7sem/lexicon.tdl
+src/data/itfs/g7sem/lrules.tdl
+src/data/itfs/g7sem/mrsglobals.lsp
+src/data/itfs/g7sem/user-fns.lsp
+src/data/itfs/g7sem/rules.tdl
+src/data/itfs/g7sem/script
+src/data/itfs/g7sem/start.tdl
+src/data/itfs/g7sem/test.items
+src/data/itfs/g7sem/types.tdl
+src/data/itfs/g8gap/
+src/data/itfs/g8gap/parse-nodes.tdl
+src/data/itfs/g8gap/globals.lsp
+src/data/itfs/g8gap/inflr.tdl
+src/data/itfs/g8gap/lexicon.tdl
+src/data/itfs/g8gap/lrules.tdl
+src/data/itfs/g8gap/mrsglobals.lsp
+src/data/itfs/g8gap/user-fns.lsp
+src/data/itfs/g8gap/rules.tdl
+src/data/itfs/g8gap/script
+src/data/itfs/g8gap/start.tdl
+src/data/itfs/g8gap/test.items
+src/data/itfs/g8gap/types.tdl
+src/data/itfs/g8gap/user-prefs.lsp
+src/data/mrscomp/
+src/data/mrscomp/parse-nodes.tdl
+src/data/mrscomp/globals.lsp
+src/data/mrscomp/inflr.tdl
+src/data/mrscomp/irregs.lisp
+src/data/mrscomp/lexicon.tdl
+src/data/mrscomp/lrules.tdl
+src/data/mrscomp/mrsglobals.lsp
+src/data/mrscomp/options
+src/data/mrscomp/pparse-nodes.tdl
+src/data/mrscomp/roots.tdl
+src/data/mrscomp/rules.tdl
+src/data/mrscomp/script
+src/data/mrscomp/txbk-inflr.tdl
+src/data/mrscomp/types.tdl
+src/data/mrscomp/user-fns.lsp
+src/data/mrscomp/user-params.lsp
+src/data/textbook/
+src/data/textbook/binding.tdl
+src/data/textbook/README
+src/data/textbook/binding/
+src/data/textbook/binding/arg_real-rules.tdl
+src/data/textbook/binding/b-type.tdl
+src/data/textbook/binding/binding.tdl
+src/data/textbook/lkb/
+src/data/textbook/lkb/script+GAP+binding
+src/data/textbook/lkb/checkpaths.lsp
+src/data/textbook/lkb/extra.tdl
+src/data/textbook/lkb/globals.lsp
+src/data/textbook/lkb/inflr.tdl
+src/data/textbook/lkb/script
+src/data/textbook/lkb/lkb-code-patches.lsp
+src/data/textbook/lkb/mrs-globals-ygg.lisp
+src/data/textbook/lkb/script+binding
+src/data/textbook/lkb/user-fns.lsp
+src/data/textbook/grule-types.tdl
+src/data/textbook/grules.tdl
+src/data/textbook/ill-formed.txt
+src/data/textbook/irregs.lisp
+src/data/textbook/lexicon.tdl
+src/data/textbook/lrule-types.tdl
+src/data/textbook/lrules.tdl
+src/data/textbook/parse-nodes.tdl
+src/data/textbook/roots.tdl
+src/data/textbook/semantics.tdl
+src/data/textbook/types.tdl
+src/data/textbook/well-formed.txt
+src/data/textbook/chapters/
+src/data/textbook/chapters/cprog.sty
+src/data/textbook/chapters/README
+src/data/textbook/chapters/grammar1/
+src/data/textbook/chapters/grammar1/lkb/
+src/data/textbook/chapters/grammar1/lkb/globals.lsp
+src/data/textbook/chapters/grammar1/lkb/script
+src/data/textbook/chapters/grammar1/lkb/startup
+src/data/textbook/chapters/grammar1/lkb/mrs-globals-ygg.lisp
+src/data/textbook/chapters/grammar1/lkb/user-fns.lsp
+src/data/textbook/chapters/grammar1/EXERCISES.TXT
+src/data/textbook/chapters/grammar1/exercises.tex
+src/data/textbook/chapters/grammar1/lexicon.tdl
+src/data/textbook/chapters/grammar1/rules.tdl
+src/data/textbook/chapters/grammar1/types.tdl
+src/data/textbook/chapters/grammar1/solutions/
+src/data/textbook/chapters/grammar1/solutions/lkb/
+src/data/textbook/chapters/grammar1/solutions/lkb/globals.lsp
+src/data/textbook/chapters/grammar1/solutions/lkb/script
+src/data/textbook/chapters/grammar1/solutions/lkb/startup
+src/data/textbook/chapters/grammar1/solutions/lkb/mrs-globals-ygg.lisp
+src/data/textbook/chapters/grammar1/solutions/lkb/user-fns.lsp
+src/data/textbook/chapters/grammar1/solutions/SOLUTIONS.TXT
+src/data/textbook/chapters/grammar1/solutions/lexicon.tdl
+src/data/textbook/chapters/grammar1/solutions/rules.tdl
+src/data/textbook/chapters/grammar1/solutions/types.tdl
+src/data/textbook/chapters/grammar-lessons.tex
+src/data/textbook/chapters/introduction.tex
+src/data/textbook/chapters/solutions.tex
+src/data/textbook/chapters/grammar2/
+src/data/textbook/chapters/grammar2/lkb/
+src/data/textbook/chapters/grammar2/lkb/globals.lsp
+src/data/textbook/chapters/grammar2/lkb/script
+src/data/textbook/chapters/grammar2/lkb/startup
+src/data/textbook/chapters/grammar2/lkb/mrs-globals-ygg.lisp
+src/data/textbook/chapters/grammar2/lkb/user-fns.lsp
+src/data/textbook/chapters/grammar2/EXERCISES.TXT
+src/data/textbook/chapters/grammar2/exercises.tex
+src/data/textbook/chapters/grammar2/lexicon.tdl
+src/data/textbook/chapters/grammar2/rules.tdl
+src/data/textbook/chapters/grammar2/types.tdl
+src/data/textbook/chapters/grammar2/solutions/
+src/data/textbook/chapters/grammar2/solutions/lkb/
+src/data/textbook/chapters/grammar2/solutions/lkb/globals.lsp
+src/data/textbook/chapters/grammar2/solutions/lkb/script
+src/data/textbook/chapters/grammar2/solutions/lkb/startup
+src/data/textbook/chapters/grammar2/solutions/lkb/mrs-globals-ygg.lisp
+src/data/textbook/chapters/grammar2/solutions/lkb/user-fns.lsp
+src/data/textbook/chapters/grammar2/solutions/SOLUTIONS.TXT
+src/data/textbook/chapters/grammar2/solutions/lexicon.tdl
+src/data/textbook/chapters/grammar2/solutions/rules.tdl
+src/data/textbook/chapters/grammar2/solutions/test-sentences
+src/data/textbook/chapters/grammar2/solutions/texput.log
+src/data/textbook/chapters/grammar2/solutions/types.tdl
+src/data/textbook/chapters/grammar3/
+src/data/textbook/chapters/grammar3/lkb/
+src/data/textbook/chapters/grammar3/lkb/globals.lsp
+src/data/textbook/chapters/grammar3/lkb/script
+src/data/textbook/chapters/grammar3/lkb/startup
+src/data/textbook/chapters/grammar3/lkb/mrs-globals-ygg.lisp
+src/data/textbook/chapters/grammar3/lkb/user-fns.lsp
+src/data/textbook/chapters/grammar3/EXERCISES.TXT
+src/data/textbook/chapters/grammar3/exercises.tex
+src/data/textbook/chapters/grammar3/lexicon.tdl
+src/data/textbook/chapters/grammar3/rules.tdl
+src/data/textbook/chapters/grammar3/sem-types.tdl
+src/data/textbook/chapters/grammar3/test-sentences
+src/data/textbook/chapters/grammar3/types.tdl
+src/data/textbook/chapters/grammar3/solutions/
+src/data/textbook/chapters/grammar3/solutions/lkb/
+src/data/textbook/chapters/grammar3/solutions/lkb/globals.lsp
+src/data/textbook/chapters/grammar3/solutions/lkb/script
+src/data/textbook/chapters/grammar3/solutions/lkb/startup
+src/data/textbook/chapters/grammar3/solutions/lkb/mrs-globals-ygg.lisp
+src/data/textbook/chapters/grammar3/solutions/lkb/user-fns.lsp
+src/data/textbook/chapters/grammar3/solutions/SOLUTIONS.TXT
+src/data/textbook/chapters/grammar3/solutions/lexicon.tdl
+src/data/textbook/chapters/grammar3/solutions/rules.tdl
+src/data/textbook/chapters/grammar3/solutions/sem-types.tdl
+src/data/textbook/chapters/grammar3/solutions/test-sentences
+src/data/textbook/chapters/grammar3/solutions/types.tdl
+src/data/textbook/chapters/grammar4/
+src/data/textbook/chapters/grammar4/lexicon.tdl
+src/data/textbook/chapters/grammar4/inflr.tdl
+src/data/textbook/chapters/grammar4/rules.tdl
+src/data/textbook/chapters/grammar4/notes
+src/data/textbook/chapters/grammar4/lkb/
+src/data/textbook/chapters/grammar4/lkb/globals.lsp
+src/data/textbook/chapters/grammar4/lkb/options
+src/data/textbook/chapters/grammar4/lkb/script
+src/data/textbook/chapters/grammar4/lkb/mrs-globals-ygg.lisp
+src/data/textbook/chapters/grammar4/lkb/startup
+src/data/textbook/chapters/grammar4/lkb/user-fns.lsp
+src/data/textbook/chapters/grammar4/sem-types.tdl
+src/data/textbook/chapters/grammar4/test-sentences
+src/data/textbook/chapters/grammar4/types.tdl
+src/data/textbook/chapters/grammar4/solutions/
+src/data/textbook/chapters/grammar4/solutions/lexicon.tdl
+src/data/textbook/chapters/grammar4/solutions/inflr.tdl
+src/data/textbook/chapters/grammar4/solutions/rules.tdl
+src/data/textbook/chapters/grammar4/solutions/notes
+src/data/textbook/chapters/grammar4/solutions/lkb/
+src/data/textbook/chapters/grammar4/solutions/lkb/globals.lsp
+src/data/textbook/chapters/grammar4/solutions/lkb/options
+src/data/textbook/chapters/grammar4/solutions/lkb/script
+src/data/textbook/chapters/grammar4/solutions/lkb/mrs-globals-ygg.lisp
+src/data/textbook/chapters/grammar4/solutions/lkb/startup
+src/data/textbook/chapters/grammar4/solutions/lkb/user-fns.lsp
+src/data/textbook/chapters/grammar4/solutions/sem-types.tdl
+src/data/textbook/chapters/grammar4/solutions/test-sentences
+src/data/textbook/chapters/grammar4/solutions/types.tdl
+src/data/tiniest/
+src/data/tiniest/answers/
+src/data/tiniest/answers/globals.lsp
+src/data/tiniest/answers/script
+src/data/tiniest/answers/types.tdl
+src/data/tiniest/globals.lsp
+src/data/tiniest/user-fns.lsp
+src/data/tiniest/grammar1/
+src/data/tiniest/grammar1/lexicon.tdl
+src/data/tiniest/grammar1/rules.tdl
+src/data/tiniest/grammar1/script
+src/data/tiniest/grammar1/types.tdl
+src/data/tiniest/grammar2/
+src/data/tiniest/grammar2/lexicon.tdl
+src/data/tiniest/grammar2/rules.tdl
+src/data/tiniest/grammar2/script
+src/data/tiniest/grammar2/types.tdl
+src/data/yadu_data/
+src/data/yadu_data/common.types
+src/data/yadu_data/cat.grules
+src/data/yadu_data/globals.lsp
+src/data/yadu_data/linking.types
+src/data/yadu_data/main.types
+src/data/yadu_data/mrs.types
+src/data/yadu_data/noun.lrules
+src/data/yadu_data/script
+src/data/yadu_data/test.lex
+src/data/yadu_data/user-fns.lsp
+src/data/yadu_test/
+src/data/yadu_test/globals.lsp
+src/data/yadu_test/path-script
+src/data/yadu_test/path.lex
+src/data/yadu_test/path.types
+src/data/yadu_test/tdl-script
+src/data/yadu_test/tdl.lex
+src/data/yadu_test/tdl.types
+src/lkb.el
+src/pg-interface.el
+src/pg.el
+src/tdl-mode.el
+rm -f /eo/e7/apache/htdocs/src/.yes;
+rsh cypriot "cd /eo/e7/apache/htdocs/src/lkb && make lkb_linux@cypriot";
+( \
+  echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp\")"; \
+  echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp\")"; \
+  echo "(pushnew :lkb *features*)"; \
+  echo "(pushnew :mrs *features*)"; \
+  echo "(setf make::*building-image-p* t)"; \
+  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
+  echo "(compile-system \"tsdb\" :force t)"; \
+  echo "(excl:exit)"; \
+) | ( cd /lingo/local/acl; \
+              ACL_LOCALE=C ./alisp -I clim.dxl -qq && touch /eo/e7/apache/htdocs/src/.yes; )
+International Allegro CL Enterprise Edition
+6.2 [Linux (x86)] (Sep 19, 2003 16:10)
+Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
+
+This development copy of Allegro CL is licensed to:
+   [TC7227] Stanford University, CSLI
+
+;; Optimization settings: safety 1, space 1, speed 1, debug 2.
+;; For a complete description of all compiler switches given the
+;; current optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
+CL-USER(1): ; Loading /eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp
+;   Loading
+;      /eo/e7/apache/htdocs/src/lkb/src/general/allegro-patches.lisp
+;     Loading /eo/e7/apache/htdocs/src/lkb/src/general/defsystem.lisp
+;   Loading /eo/e7/apache/htdocs/src/lkb/src/general/loadup-library.lisp
+T
+CL-USER(2): ; Loading /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+;   Fast loading /lingo/local/acl/code/fileutil.006
+;;; Installing fileutil patch, version 6
+;   Fast loading /lingo/local/acl/code/genapp.fasl
+;     Fast loading /lingo/local/acl/code/build.fasl
+;;; Installing build patch, version 1
+Bundle is up to date.
+The open of acli623.pll failed.
+Error: image creation failed
+  [condition type: SIMPLE-ERROR]
+
+Restart actions (select using :continue):
+ 0: retry the load of /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+ 1: skip loading /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+ 2: recompile /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+ 3: Return to Top Level (an "abort" restart).
+ 4: Abort entirely from this process.
+[1] CL-USER(3): :pop
+CL-USER(3): EOF
+Really exit lisp [n]? 
+; killing "Initial Lisp Listener"
+; Exiting Lisp
+( \
+  if [ ! -f /eo/e7/apache/htdocs/src/.yes ]; then exit 1; fi; \
+  cd /eo/e7/apache/htdocs/src/lkb; \
+  tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/lkb_linux.tgz \
+              --exclude=".nfs*" \
+      linux; \
+)
+linux/
+linux/acli623.pll
+linux/lkb
+linux/lkb.lic
+linux/files.bu
+rm -f /eo/e7/apache/htdocs/src/.yes;
+( \
+  echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp\")"; \
+  echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp\")"; \
+  echo "(pushnew :lkb *features*)"; \
+  echo "(pushnew :mrs *features*)"; \
+  echo "(setf make::*building-image-p* t)"; \
+  echo "(setf (system:getenv \"DISPLAY\") nil)"; \
+  echo "(compile-system \"tsdb\" :force t)"; \
+  echo "(excl:exit)"; \
+) | ( cd /eo/e7/apache/htdocs/src/acl; ./clim -qq && touch /eo/e7/apache/htdocs/src/.yes; )
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (9/17/1 0:30)
+Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
+;; Optimization settings: safety 1, space 1, speed 3, debug 2.
+;; For a complete description of all compiler switches given the current
+;; optimization settings evaluate (EXPLAIN-COMPILER-SETTINGS).
+USER(1): ; Loading /eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp
+;   Loading /eo/e7/apache/htdocs/src/lkb/src/general/allegro-patches.lisp
+;     Loading /eo/e7/apache/htdocs/src/lkb/src/general/defsystem.lisp
+;   Loading /eo/e7/apache/htdocs/src/lkb/src/general/loadup-library.lisp
+T
+USER(2): ; Loading /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+; Autoloading for DELETE-DIRECTORY-AND-FILES:
+;   Fast loading from bundle code/fileutil.fasl.
+; Removing /eo/e7/apache/htdocs/src/lkb/solaris/...
+; Autoloading for GENERATE-APPLICATION:
+;   Fast loading from bundle code/genapp.fasl.
+;     Fast loading /eo/e8nb/oe/www/src/acl/code/build.fasl
+;;; Installing build patch, version 1
+Error: path doesn't exist: acl5016.epll
+  [condition type: FILE-ERROR]
+
+Restart actions (select using :continue):
+ 0: retry the load of /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+ 1: skip loading /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp
+ 2: Return to Top Level (an "abort" restart)
+ 3: Abort #<PROCESS Initial Lisp Listener>
+[1] USER(3): :pop
+USER(3): EOF
+Really exit lisp [n]? 
+; Exiting Lisp
+( \
+  if [ ! -f /eo/e7/apache/htdocs/src/.yes ]; then exit 1; fi; \
+  cd /eo/e7/apache/htdocs/src/lkb; \
+  tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/lkb_solaris.tgz \
+              --exclude=".nfs*" \
+      solaris; \
+)
+solaris/
+( \
+  cd /eo/e7/apache/htdocs/src; \
+  tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/erg.tgz \
+      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+      --exclude="tsdb*" --exclude="*.fasl" \
+      erg; \
+)
+erg/
+erg/characterize.tdl
+erg/Version.lisp
+erg/auxverbs.tdl
+erg/data/
+erg/data/genrules.mrs
+erg/data/alex.rules
+erg/data/csli.items
+erg/gold/
+erg/gold/csli/
+erg/gold/csli/item-phenomenon.gz
+erg/gold/csli/analysis.gz
+erg/gold/csli/daughter.gz
+erg/gold/csli/decision.gz
+erg/gold/csli/edge.gz
+erg/gold/csli/item-set.gz
+erg/gold/csli/item.gz
+erg/gold/csli/output.gz
+erg/gold/csli/parameter.gz
+erg/gold/csli/parse.gz
+erg/gold/csli/phenomenon.gz
+erg/gold/csli/preference.gz
+erg/gold/csli/relations
+erg/gold/csli/result.gz
+erg/gold/csli/rule
+erg/gold/csli/run.gz
+erg/gold/csli/score
+erg/gold/csli/set.gz
+erg/gold/csli/tree.gz
+erg/gold/csli/update.gz
+erg/gold/mrs/
+erg/gold/mrs/item-phenomenon.gz
+erg/gold/mrs/analysis.gz
+erg/gold/mrs/decision.gz
+erg/gold/mrs/edge.gz
+erg/gold/mrs/item-set.gz
+erg/gold/mrs/item.gz
+erg/gold/mrs/output.gz
+erg/gold/mrs/parameter.gz
+erg/gold/mrs/parse.gz
+erg/gold/mrs/phenomenon.gz
+erg/gold/mrs/preference.gz
+erg/gold/mrs/relations
+erg/gold/mrs/result.gz
+erg/gold/mrs/rule
+erg/gold/mrs/run.gz
+erg/gold/mrs/score
+erg/gold/mrs/set.gz
+erg/gold/mrs/tree.gz
+erg/gold/mrs/update.gz
+erg/constructions.tdl
+erg/ecommerce.fsr
+erg/english.tdl
+erg/fundamentals.tdl
+erg/gen-lex.tdl
+erg/inflr.tdl
+erg/irregs.tab
+erg/letypes.tdl
+erg/lexicon.csv
+erg/lexicon.tdl
+erg/lexrinst.tdl
+erg/lexrules.tdl
+erg/lextypes.tdl
+erg/parse-nodes.tdl
+erg/preprocessor.fsr
+erg/ptblex.tdl
+erg/robustlex.tdl
+erg/roots.tdl
+erg/semrels.tdl
+erg/syntax.tdl
+erg/vm6p.mem
+erg/lkb/
+erg/lkb/checkpaths.items
+erg/lkb/char-script
+erg/lkb/checkpaths.lsp
+erg/lkb/comlex.lsp
+erg/lkb/globals.lsp
+erg/lkb/mrsglobals.lsp
+erg/lkb/lkb-code-patches.lsp
+erg/lkb/mrs-initialization.lsp
+erg/lkb/mrsmunge.tdl
+erg/lkb/script
+erg/lkb/settings.lsp
+erg/lkb/user-fns.lsp
+erg/lkb/xmlify.lsp
+erg/pet/
+erg/pet/english.set
+erg/pet/flop.set
+erg/pet/global.set
+erg/pet/k2y.set
+erg/pet/qc.tdl
+( \
+  cd /eo/e7/apache/htdocs/src; \
+  tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/matrix.tgz \
+      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+      --exclude="matrix/doc*" --exclude="*.fasl" \
+      matrix; \
+)
+matrix/
+matrix/Version.lsp
+matrix/README
+matrix/lexicon.tdl
+matrix/irregs.tab
+matrix/irules.tdl
+matrix/labels.tdl
+matrix/my_language.tdl
+matrix/lrules.tdl
+matrix/matrix.tdl
+matrix/lkb/
+matrix/lkb/mrsglobals.lisp
+matrix/lkb/globals.lsp
+matrix/lkb/mrsmunge.tdl
+matrix/lkb/script
+matrix/lkb/user-fns.lsp
+matrix/pet.tdl
+matrix/roots.tdl
+matrix/rules.tdl
+matrix/pet/
+matrix/pet/flop.set
+matrix/pet/global.set
+matrix/pet/pet.set
+( \
+  cd /eo/e7/apache/htdocs/src; \
+  tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/spanish.tgz \
+      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
+      --exclude="pet*" --exclude="tsdb*" \
+      --exclude="*.fasl" \
+      spanish; \
+)
+spanish/
+spanish/grule-types.tdl
+spanish/banca.items
+spanish/lexicon.tdl
+spanish/grules.tdl
+spanish/inflr.tdl
+spanish/irregs.tab
+spanish/lrule-types.tdl
+spanish/license.txt
+spanish/parse-nodes.tdl
+spanish/lrules.tdl
+spanish/semantics.tdl
+spanish/roots.tdl
+spanish/lkb/
+spanish/lkb/mrs-globals.lisp
+spanish/lkb/checkpaths.lsp
+spanish/lkb/extra.tdl
+spanish/lkb/globals.lsp
+spanish/lkb/script
+spanish/lkb/lkb-code-patches.lsp
+spanish/lkb/user-fns.lsp
+spanish/lkb/user-prefs.lsp
+spanish/types.tdl
+( \
+  cd /eo/e7/apache/htdocs/src/lkb; \
+  find src/.sacl -type f -exec touch {} \; ; \
+  tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/itsdb_solaris.tgz \
+      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" \
+      bin/solaris/tsdb bin/solaris/swish++ \
+      bin/solaris/pvmd3 bin/solaris/pvm \
+      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
+      src/.sacl/pvm src/.sacl/tsdb; \
+)
+find: cannot open src/.sacl: No such file or directory
+*** Error code 1
+make: Fatal error: Command failed for target `itsdb_binaries'
+Current working directory /eo/e8nb/oe/www/src/lkb
