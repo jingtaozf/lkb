@@ -3006,7 +3006,7 @@ int *tsdb_parse_date(char *date) {
   if(bar != foo && result[2] >= 1 && result[2] <= 99) {
     result[2] += 1900;
   } /* if */
-  if(bar == foo || result[2] < 1900 || result[2] > 1999) {
+  if(bar == foo || result[2] < 1900) {
     fprintf(tsdb_error_stream,
             "parse_date(): invalid date expression `%s'.\n", date);
     fflush(tsdb_error_stream);

@@ -73,7 +73,7 @@ STRING ({QUOTE}([^"]|\\\")*{QUOTE})|`([^']|\\')*'
 TWENTYNINE (0?[1-9])|([12][0-9])
 THIRTY (0?[1-9])|([12][0-9])|(30)
 THIRTYONE (0?[1-9])|([12][0-9])|(3[01])
-YEAR (19)?{DIGIT}{DIGIT}
+YEAR (19|20)?{DIGIT}{DIGIT}
 HOUR (0?[0-9])|(1[0-9])|(2[0-3])
 MINUTE (0?[0-9])|([1-5][0-9])
 SECOND {MINUTE}
