@@ -249,7 +249,7 @@ int tsdb_server_initialize() {
 #if !defined(NOFORK)
   if((i = fork()) < 0) {
     fprintf(tsdb_error_stream,
-            "server_initialize(): unable to fork(2) server; errno: %d.\n",
+            "server_initialize(): unable to fork(2) server [%d].\n",
             errno);
     return(1);
   } /* if */
@@ -261,7 +261,7 @@ int tsdb_server_initialize() {
   if(setpgrp(0, getpid()) == -1) {
     fprintf(tsdb_error_stream,
             "server_initialize(): "
-            "unable to change process group; errno: %d.\n",
+            "unable to change process group [%d].\n",
             errno);
     return(TSDB_OS_ERROR);
   } /* if */
@@ -273,13 +273,13 @@ int tsdb_server_initialize() {
   if(setsid() == -1) {
     fprintf(tsdb_error_stream,
             "server_initialize(): "
-            "unable to change process group; errno: %d.\n", errno);
+            "unable to change process group [%d].\n", errno);
     return(TSDB_OS_ERROR);
   } /* if */
   signal(SIGHUP, SIG_IGN);
   if((i = fork()) < 0) {
     fprintf(tsdb_error_stream,
-            "server_initialize(): unable to fork(2) server; errno: %d.\n",
+            "server_initialize(): unable to fork(2) server [%d].\n",
             errno);
     return(TSDB_OS_ERROR);
   } /* if */
@@ -562,6 +562,8 @@ int tsdb_server_child(int socket) {
               "server_child(): [%d] emergency exit.\n", getpid());
       fflush(tsdb_debug_stream);
 #endif      
+      fclose(tsdb_default_stream);
+      fclose(tsdb_error_stream);
       return(TSDB_SOCKET_IO_ERROR);
     } /* if */
     
@@ -619,6 +621,8 @@ int tsdb_server_child(int socket) {
   fflush(tsdb_debug_stream);
 #endif
 
+  fclose(tsdb_default_stream);
+  fclose(tsdb_error_stream);
   return(TSDB_OK);
 
 } /* tsdb_server_child() */
@@ -673,7 +677,7 @@ int tsdb_socket_write(int socket, char *string) {
     if((written = write(socket, string, left)) == -1) {
 #if defined(DEBUG) && defined(SERVER)
       fprintf(tsdb_debug_stream,
-              "socket_write(): [%d] write() error; errno: %d.\n",
+              "socket_write(): [%d] write() error [%d].\n",
               getpid(), errno);
       fflush(tsdb_debug_stream);
 #endif
@@ -728,7 +732,7 @@ int tsdb_socket_readline(int socket, char *string, int length) {
   if(i == -1) {
 #if defined(DEBUG) && defined(SERVER)
     fprintf(tsdb_debug_stream,
-            "socket_readline(): [%d] read() error; errno: %d.\n",
+            "socket_readline(): [%d] read() error [%d].\n",
             getpid(), errno);
     fflush(tsdb_debug_stream);
 #endif

@@ -19,6 +19,8 @@
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <errno.h>
+extern int errno;
 
 #include "globals.h"
 #include "tsdb.h"
@@ -84,8 +86,8 @@ FILE *tsdb_open_output(char *path) {
   if((output = fopen(foo, (path[0] == TSDB_REDIRECTION_OVERWRITE ?
                             "w" : "a"))) == NULL) {
     fprintf(tsdb_error_stream,
-            "open_output(): unable to open output file `%s'.\n", 
-            foo);
+            "open_output(): unable to open output file `%s' [%d].\n", 
+            foo, errno);
     fflush(tsdb_error_stream);
     return((FILE *)NULL);
   } /* if */
@@ -192,10 +194,18 @@ FILE *tsdb_open_debug() {
   } /* if */
 
   if((output = fopen(tsdb.debug_file, "w")) != NULL) {
-    fprintf(output,
-            "TSDB debug file opened by %s on %s.\n\n",
-            (user != NULL ? user : ""),
-            (date != NULL ? date : ""));
+    if(tsdb.status & TSDB_SERVER_MODE) {
+      fprintf(output,
+              "TSDB debug file opened for port %s on %s.\n\n",
+              (user != NULL ? user : ""),
+              (date != NULL ? date : ""));
+    } /* if */
+    else {
+      fprintf(output,
+              "TSDB debug file opened by %s on %s.\n\n",
+              (user != NULL ? user : ""),
+              (date != NULL ? date : ""));
+    } /* else */
     fprintf(output,
             "tsdb(1) %s (%s) [%s] --- (c) oe@tsnlp.dfki.uni-sb.de.\n\n",
             tsdb_version,
@@ -206,7 +216,8 @@ FILE *tsdb_open_debug() {
   } /* if */
 
   fprintf(tsdb_error_stream,
-          "open_debug(): unable to open `%s'.\n", tsdb.debug_file);
+          "open_debug(): unable to open `%s' [%d].\n",
+          tsdb.debug_file, errno);
   return((FILE *)NULL);
 
 } /* tsdb_open_debug() */
@@ -837,8 +848,8 @@ FILE *tsdb_find_relations_file(char *mode) {
 
   if((file = fopen(tsdb.relations_file, mode )) == NULL) {
     fprintf(tsdb_error_stream,
-            "find_relations_file(): unable to open `%s'.\n",
-            tsdb.relations_file);
+            "find_relations_file(): unable to open `%s' [%d].\n",
+            tsdb.relations_file, errno);
     fflush(tsdb_error_stream);
     return((FILE *)NULL);
   } /* if */
@@ -883,7 +894,8 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
     } /* if */
 #endif
     fprintf(tsdb_error_stream,
-            "find_data_file(): unable to open `%s'.\n", path);
+            "find_data_file(): unable to open `%s' [%d].\n",
+            path, errno);
     free(path);
     tsdb.errno = TSDB_NO_DATA_ERROR;
     return((FILE *)NULL);
@@ -1478,7 +1490,8 @@ FILE* tsdb_open_result() {
   
   if((output = fopen(&old[0], "w")) == NULL) {
     fprintf(tsdb_error_stream,
-            "open_result(): unable to create \%s'.\n", &old[0]);
+            "open_result(): unable to create \%s' [%d].\n", 
+            &old[0], errno);
     return((FILE *)NULL);
   } /* if */
   

@@ -18,10 +18,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "globals.h"
-#include "tsdb.h"
+#include <errno.h>
+extern int errno;
 #include <readline/readline.h>
 #include <readline/history.h>
+#include "globals.h"
+#include "tsdb.h"
 
 #define TSDB_HISTORY_FILE ".tsdb_history"
 
@@ -558,8 +560,9 @@ void tsdb_parse_options(int argc, char **argv) {
 
           if((output = fopen(path, "w")) == NULL) {
             fprintf(tsdb_error_stream,
-                    "parse_options(): unable to open output file `%s'.\n", 
-                    path);
+                    "parse_options(): "
+                    "unable to open output file `%s'. [%d]\n", 
+                    path, errno);
             fflush(tsdb_error_stream);
             break;
           } /* if */

@@ -31,7 +31,7 @@
 #  include <malloc.h>
 #endif
 
-#define TSDB_VERSION "0.4"
+#define TSDB_VERSION "0.5"
 
 #define TSDB_DEFAULT_STREAM stdout
 #define TSDB_ERROR_STREAM stderr

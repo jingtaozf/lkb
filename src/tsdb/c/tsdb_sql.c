@@ -15,6 +15,9 @@
 #include <pwd.h>
 #include <string.h>
 #include <limits.h>
+#include <errno.h>
+extern int errno;
+
 #include "globals.h"
 #include "tsdb.h"
 #include "errors.h"
@@ -461,8 +464,8 @@ int tsdb_drop_table(Tsdb_value *table) {
 
     if((outfp = fopen(TSDB_TEMPORARY_FILE,"w")) == NULL) {
       fprintf(tsdb_error_stream,
-              "drop_table(): unable to create temporary file `%s'.\n",
-              TSDB_TEMPORARY_FILE);
+              "drop_table(): unable to create temporary file `%s' [%d].\n",
+              TSDB_TEMPORARY_FILE, errno);
       return(TSDB_FILE_CREATION_ERROR);
     } /* if */
     
@@ -535,8 +538,8 @@ int tsdb_alter_table(Tsdb_value *table, Tsdb_field **fields) {
   
     if((output = fopen(TSDB_TEMPORARY_FILE, "w")) == NULL) {
       fprintf(tsdb_error_stream,
-              "alter_table(): unable to create temporary file `%s'.\n",
-              TSDB_TEMPORARY_FILE);
+              "alter_table(): unable to create temporary file `%s' [%d].\n",
+              TSDB_TEMPORARY_FILE, errno);
       return(TSDB_FILE_CREATION_ERROR);
     } /* if */
 
@@ -1173,8 +1176,8 @@ int tsdb_do(char *file, char *redirection) {
   
   if((input = fopen(path, "r")) == NULL) {
     fprintf(tsdb_error_stream,
-            "do(): unable to open file name `%s'.\n", 
-            path);
+            "do(): unable to open file name `%s' [%d].\n", 
+            path, errno);
     fflush(tsdb_error_stream);
     return(TSDB_FILE_NOT_FOUND_ERROR);
   } /* if */
@@ -1299,8 +1302,8 @@ int tsdb_retrieve(Tsdb_value **relation_list,
   tsdb.errno = TSDB_OK;
 
   if((result = tsdb_complex_retrieve(relation_list,
-                                       attribute_list, conditions,
-                                       report, redirection)) != NULL) {
+                                     attribute_list, conditions,
+                                     report, redirection)) != NULL) {
     tsdb_add_to_history(result);
   } /* if */
 
@@ -1315,7 +1318,6 @@ int tsdb_retrieve(Tsdb_value **relation_list,
 
 } /* tsdb_retrieve() */
 
-
 Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
                                       Tsdb_value **attribute_list,
                                       Tsdb_node* conditions,
@@ -1352,13 +1354,6 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 
 #if defined(ALEP)
   if(tsdb.status & TSDB_TX_OUTPUT) {
-    /* _hack_
-     * free(3)ing .attribute_list. for Linux (at least) gives us a core(5)
-     * that refuses debugging (gdb(1) complains about missing register
-     * information.  what shall we do?  after all, it is only 1:30 h in the
-     * morning; but without a working debugger ... |:-{).
-     *                                             (6-aug-96  -  oe@coling)
-     */
     if(attribute_list != NULL) {
       tsdb_free_tsdb_values(attribute_list);
     } /* if */
