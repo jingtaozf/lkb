@@ -134,11 +134,11 @@
    (let ((current 0))
       (dolist (word user-input)
          (let* ((new (+ current 1))
-                (morph-poss (progn #+:mcl(decf gg (CCL::%HEAP-BYTES-ALLOCATED))
+                (morph-poss (progn #+(and mcl powerpc)(decf gg (CCL::%HEAP-BYTES-ALLOCATED))
                                    (prog1
                                      (append (morph-analyse word)
                                        (find-irregular-morphs word))
-                                     #+:mcl(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
+                                     #+(and mcl powerpc)(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
            (unless morph-poss (format t "Word ~A is not in lexicon~%" word)
                    (return))
            (setf (aref *morphs* current)
