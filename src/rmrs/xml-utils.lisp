@@ -1,60 +1,38 @@
+;;; Copyright (c) 2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
+
+
 (in-package :mrs)
 
-(defun define-break-characters (char-list)
-   (let ((temporary-readtable (copy-readtable *readtable*)))
-      (dolist (break-char char-list)
-         (set-macro-character break-char
-            #'(lambda (stream x) (declare (ignore stream)) x)
-            nil
-            temporary-readtable))
-      temporary-readtable))
+;;; Utility functions for use with xml package
 
-(defun make-xml-break-table nil 
-  (define-break-characters '(#\< #\>)))
+(defun whitespacep (char)
+  (member char '(#\space #\tab #\newline #\page #\return #\linefeed)))
 
-(defun read-next-tag (istream)
-  (let ((token (peek-char t istream nil nil))
-	(tag nil))
-    (when (eql token #\<) 
-      (read-char istream)
-      (setf tag (read istream))
-      (setf token (peek-char t istream nil nil))
-      (unless (eql token #\>)
-        (error "> expected and not found at position ~A" 
-               (file-position istream)))
-      (read-char istream)
-      tag)))
-		
-(defun check-for-end-tag (expected-tag istream)
-  (let ((tag (read-next-tag istream)))
-    (unless tag (error "end tag ~A expected and not found at position ~A" 
-                       expected-tag (file-position istream)))
-    (let ((str (string tag)))
-      (unless (and (char-equal (elt str 0) #\/)
-                   (string-equal (subseq str 1) (string expected-tag)))
-        (error "end tag ~A expected and not found at position ~A" 
-               expected-tag (file-position istream))))))
-        
-(defun read-string-to-tag (istream)
-  ;;; reads characters up until a < as a string
-  (let ((letter-bag nil))
-    (loop 
-      (let ((next-char (peek-char nil istream nil nil)))
-	(when (or (null next-char)
-		  (char-equal next-char #\<))
-	  (return))
-	(push next-char letter-bag)
-	(read-char istream)))
-    (coerce (nreverse letter-bag) 'string)))
+(defun xml-whitespace-string-p (str)
+  (every 
+   #'(lambda (char) 
+       (whitespacep char))
+   (coerce str 'list)))
 
-(defun read-symbols-to-tag (istream)
-  ;;; reads symbols up until a < - returns a list
-  (let ((symbols nil))
-    (loop 
-      (let ((next-char (peek-char t istream nil nil)))
-	(when (or (null next-char)
-		  (char-equal next-char #\<))
-	  (return))
-	(push (read istream nil nil) symbols)))
-    (nreverse symbols)))
+;;; Minimal error checking because we assume that the
+;;; XML has been validated syntactically
 
+(defun read-rmrs-simple (expected-tag content)
+  ;;; for the simple case
+  ;;; (tag "str")
+  (unless (eql (car content) expected-tag)
+    (error "~A expected and not found" expected-tag))
+  (cadr content))
+
+(defun parse-xml-removing-junk (istream)
+  ;;; parser insists on tree of `proper' elements
+  ;;; so we just need to find this
+  (let ((raw-xml (xml:parse-xml istream)))
+    (dolist (xml-el raw-xml)
+      (unless (member (car xml-el) '(:XML :DOCTYPE :COMMENT))
+        (return xml-el)))))
+
+          
+    

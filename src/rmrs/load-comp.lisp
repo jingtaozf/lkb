@@ -1,16 +1,35 @@
+;;; Copyright (c) 2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
+
+
 (in-package :cl-user)
 
 #| code for construction of `robust' MRSs, from trees
 produced by robust parsers of various types.  
 |#
 
-;;; the idea is that the code can either be used in an
+;;; the idea is that the RMRS code can either be used in an
 ;;; LKB image, or standalone.  The load-comp.lisp file
 ;;; itself is intended for the standalone case.  The
 ;;; standalone.lisp file replicates some LKB stuff, including
 ;;; the MRS package definition
 ;;; But the standalone code won't convert MRSs to RMRSs
 ;;; (this is only available with the LKB)
+
+;;; first load the xml stuff 
+
+(compile-file "../xml/pxml0.cl")
+(load "../xml/pxml0.fasl")
+(compile-file "../xml/pxml1.cl")
+(load "../xml/pxml1.fasl")
+(compile-file "../xml/pxml3.cl")
+(load "../xml/pxml3.fasl")
+(compile-file "../xml/pxml2.cl")
+(load "../xml/pxml2.fasl")
+
+
+;;; then the standalone file
 
 (compile-file "standalone.lisp")
 (load "standalone.fasl")
@@ -33,8 +52,7 @@ produced by robust parsers of various types.
 (compile-file "output.lisp")
 (load "output.fasl")
 
-;;; file with some utilities for reading XML style tags
-;;; (very flakily right now)
+;;; file with some utilities for XML parser
 (compile-file "xml-utils.lisp")
 (load "xml-utils.fasl")
 
@@ -49,33 +67,27 @@ produced by robust parsers of various types.
 (compile-file "readtag.lisp")
 (load "readtag.fasl")
 
+;;; loads the underlying rmrs input code
+(compile-file "input.lisp")
+(load "input.fasl")
 ;;; Examples of how to use the code
-
-#|
-;;; Simple test
-
- :pa :mrs
- (read-rmrs-grammar "rmrs/test1/gram.rmrs")
- (read-rmrs-tag-templates "rmrs/test1/lex.rmrs")
- (load "rmrs/test1/fns.lisp") ;;; overrides the fns in annlt.lisp
- (rmrs-from-file "rmrs/test1/test.data")
- 
-|#
-
 
 #|
 ;;; ANNLT tree output
 
  :pa :mrs
- (read-rmrs-grammar "../annlt-data/gram.rmrs")
- (read-rmrs-tag-templates "../annlt-data/lex.rmrs")
+ (read-rmrs-grammar "annlt-test/gram14.1.rmrs")
+ (read-rmrs-tag-templates "annlt-test/lex14.1.rmrs")
   ;;; functions for ANNLT version are in annlt.lisp
-  (rmrs-from-file "/usr/groups/corpora/trec8qa/parses/14.parses-st" 
-  "../results/14.rmrsout")
-
 
   :pa :mrs
-  (process-rasp-files)
-  ;;; pathnames hard-wired - see annlt.lisp
+  (rmrs-from-file "annlt-test/test-select.rasp"
+  "annlt-test/test-select.rmrs")
+
+  (construct-sem-for-tree
+  '(|T/txt-sc1/----|
+     (|S/np_vp| (|NP/n1_n1-name/-| (|N1/n| |Abrams_NP1|))
+      (|V1/v| |bark+ed_VVD|))))
+
 |#
 

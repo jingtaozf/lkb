@@ -1,3 +1,8 @@
+;;; Copyright (c) 2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
+
+
 (in-package :mrs)
 
 ;;; final output structure
@@ -17,6 +22,11 @@
 
 ;;; the variables are replaced by canonical forms when 
 ;;; the structure is printed
+
+(defstruct realpred
+  lemma
+  pos
+  sense)
 
 
 ;;; Building semantic structures via an algebra
@@ -42,6 +52,8 @@
 (defstruct indices
   index
   label
+  default                   ;; don't want to output hooks 
+                            ;; which have been created by defaul
   ;;; extarg
   )
 
@@ -72,25 +84,20 @@
   name
   semstruct)
 
-(defparameter *DEFAULT-TEMPLATE*
-    (MAKE-RMRS-TAG-TEMPLATE
-     :NAME "DEFAULT"
-     :SEMSTRUCT
-     (MAKE-SEMSTRUCT 
-      :HOOK (make-indices :index "U" :label "H") 
-      :LISZT (LIST (MAKE-REL :sort "DUMMY-PRED"
-                            :handel "H"
-                          :flist (LIST "U"))))))
+;;; information from a parse tree
+;;; constructing this will be formalism specific
 
-(defun dummy-pred-p (str)
-  (equal str "DUMMY-PRED"))
+(defstruct word-info
+  lemma ;; need to downcase
+  pos
+  from
+  to)
 
-(defun make-dummy-pred nil
-  "DUMMY-PRED")
+;;;;
 
-(defun make-default-hook nil
-  ;;; while reading in
-  (make-indices :index "U" :label "H"))
+(defun construct-grammar-var (var-string)
+  (make-grammar-var :type (find-var-type var-string)
+                    :id var-string))
 
 (defparameter *rmrs-var-types*
     '((#\h . :handle)
@@ -116,6 +123,37 @@
   (or (car (rassoc type *rmrs-var-types* :test #'equal))
       (car (rassoc (string type) *rmrs-var-types* :test #'equal))
       #\u))
+
+
+(defparameter *DEFAULT-TEMPLATE*
+    (MAKE-RMRS-TAG-TEMPLATE
+     :NAME "DEFAULT"
+     :SEMSTRUCT
+     (MAKE-SEMSTRUCT 
+      :HOOK (make-indices :index (construct-grammar-var "U") 
+                          :label (construct-grammar-var "H")) 
+      :LISZT (LIST (MAKE-REL :sort "DUMMY-PRED"
+                            :handel (construct-grammar-var "H")
+                          :flist (LIST (construct-grammar-var "U")))))))
+
+(defun dummy-pred-p (str)
+  (equal str "DUMMY-PRED"))
+
+(defun make-dummy-pred nil
+  "DUMMY-PRED")
+
+(defun dummy-constant-p (str)
+  (equal str "DUMMY-CONSTANT"))
+
+(defun make-dummy-constant nil
+  "DUMMY-CONSTANT")
+
+(defun make-default-hook nil
+  ;;; while reading in
+  (make-indices :index (construct-grammar-var "U") 
+                :label (construct-grammar-var "H") :default t))
+
+
 
 ;;; Main entry point
 
@@ -328,14 +366,7 @@
 ;;; is also created
 
 ;;; In the case of tag lookup, the pred corresponding to
-;;; the lexeme will be substituted.  For instance:
-;;;
-;;; <index> e
-;;; <ep> <pred><arg>e</ep>
-;;;
-;;; <index> e44
-;;; <ep> cat<arg>e44</ep>
-;;;
+;;; the lexeme will be substituted.  
 
 #|
  In the case of a rule, when a new semstruct is created,
@@ -399,24 +430,25 @@ goes to
                         *rmrs-variable-generator*)))
 
 
-(defun generate-new-var (name)
+(defun generate-new-var (old-var-struct)
   ;;; called from construct-new-semstruct
-  ;;; name is a string - e.g. "e2"
-  ;;; takes a string and creates a new variable of the same type
-  (or (rest (assoc name *local-var-context* :test #'equal))
-      (let* ((var-type (find-var-type name))
+  ;;; takes a var-struct with a dummy id 
+  ;;; and creates a new variable of the same type
+  (or (rest (assoc old-var-struct *local-var-context* :test #'rmrs-var-equal))
+      (let* ((var-type (var-type old-var-struct))
              (varstruct (create-new-rmrs-var var-type 
                         *rmrs-variable-generator*)))
-	(push (cons name varstruct) *local-var-context*)
+	(push (cons old-var-struct varstruct) *local-var-context*)
 	varstruct)))
 
 
-(defun construct-new-semstruct (semstruct &optional pred)
+(defun construct-new-semstruct (semstruct &optional lex)
   ;;; this is only called when we have a structure
   ;;; corresponding to a read-in rule or tag
   ;;; *local-var-context* gets used when interpreting the eqs
   ;;; in the case of a rule
-  ;;; pred should only be set in the case of a new tag
+  ;;; lex should only be set in the case of a new tag
+  ;;; when it will be a word-info structure
   (setf *local-var-context* nil)
   (let* ((new-hook (generate-new-hook (semstruct-hook semstruct))))
     (make-semstruct 
@@ -431,7 +463,9 @@ goes to
                        :sort 
                        (let ((old-pred (rel-sort old-ep)))
                          (if (dummy-pred-p old-pred)
-                             pred
+                             (make-realpred 
+                              :lemma (string-downcase (word-info-lemma lex))
+                              :pos (word-info-pos lex))
                            old-pred))
                        :flist
                        (loop for old-arg in (rel-flist old-ep)
@@ -440,10 +474,15 @@ goes to
      :rmrs-args
      (loop for old-rarg in (semstruct-rmrs-args semstruct)
          collect
-           (make-rmrs-arg 
-            :arg-type (rmrs-arg-arg-type old-rarg)
-            :label (generate-new-var (rmrs-arg-label old-rarg))
-            :val (generate-new-var (rmrs-arg-val old-rarg))))
+           (let ((val (rmrs-arg-val old-rarg)))
+             (make-rmrs-arg 
+              :arg-type (rmrs-arg-arg-type old-rarg)
+              :label (generate-new-var (rmrs-arg-label old-rarg))
+              :val (if (var-p val)
+                       (generate-new-var val)
+                     (if (dummy-constant-p val)
+                         (word-info-lemma lex) ; for constants in names etc
+                     val)))))
      :in-groups
      (loop for old-ing in (semstruct-in-groups semstruct)
          collect
@@ -472,12 +511,16 @@ goes to
 	  (let  ((new-var 
 		  (if (pointer-p el)
 		      (get-var-for-pointer el dtr-hooks)
-		    (rest (assoc el *local-var-context* :test #'equal)))))
+		    (rest (assoc el *local-var-context* 
+                                 :test #'rmrs-var-equal)))))
 	    (when new-var
 	      (push new-var new-els))))
 	(when new-els
 	  (push new-els real-eqs))))
     real-eqs))
+
+(defun rmrs-var-equal (v1 v2)
+  (equal (var-id v1) (var-id v2)))
 	      
 (defun get-var-for-pointer (pointer dtr-hooks)
   (let* ((dtr-num (pointer-dtrnum pointer))

@@ -1,3 +1,7 @@
+;;; Copyright (c) 2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
+
 (in-package :mrs)
 
 ;;; convert an MRS structure to an RMRS  

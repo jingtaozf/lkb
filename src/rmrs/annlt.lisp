@@ -1,6 +1,10 @@
+;;; Copyright (c) 2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
+
 (in-package :mrs)
 
-;;; for annlt - start ANNLT specific
+;;; ANNLT specific
 
 ;;; called from comp.lisp - data structures within trees
 
@@ -20,32 +24,32 @@
 
 (defun get-lexeme (node)
   (let* ((str (string node))
-;;;         (str1 (de-xml-str raw))
          (uscore-pos (position #\_ str))
-         (notag (string-downcase (subseq str 0 uscore-pos)))
+         (notag (subseq str 0 uscore-pos))
          (tag (subseq str uscore-pos))
          (colon-pos (position #\: notag :from-end t))
          (suffix-pos (position #\+ notag)))
-    (concatenate 'string
-      "_"
+    (make-word-info
+      :lemma 
       (if suffix-pos
           (subseq notag 0 suffix-pos)
         (if (and colon-pos (> uscore-pos (+ 1 colon-pos)))
             (subseq notag 0 colon-pos)
           notag))
-      (tag-letters tag)
-      "_rel")))
+      :pos
+      (tag-letters tag))))
 
 (defun tag-letters (tag)
   ;;; e.g., _NP1
   (cond ((and (eql (elt tag 1) #\N) (eql (elt tag 2) #\P)) tag)
         ;;; various sorts of NPs - will correspond to named_rel etc
         ;;; in ERG
-        ((eql (elt tag 1) #\N) "_N")
-        ((eql (elt tag 1) #\V) "_V")
-        ((eql (elt tag 1) #\J) "_J")
-        ((eql (elt tag 1) #\R) "_R")
-        (t "")))
+        ((eql (elt tag 1) #\N) "N")
+        ((eql (elt tag 1) #\V) "V")
+        ((eql (elt tag 1) #\J) "J")
+        ((eql (elt tag 1) #\R) "R")
+        ((eql (elt tag 1) #\P) "P")
+        (t NIL)))
 
 
 #|
@@ -81,8 +85,8 @@
  (let* ((ifiles
          ;;; (directory "~aac10/lingo/newlkb/src/rmrs/annlt-test/jan28/*"))
          ;;; (directory "/local/scratch/sht25/parses/*"))
-         (directory "/local/scratch/aac10/parses/*"))
-        (ofiles (directory "/local/scratch/aac10/trec8qa/rmrs/*"))
+         (directory "/local/scratch/aac10/qatest/parses/*"))
+        (ofiles (directory "/local/scratch/aac10/qatest/rmrs/*"))
         (ofile-qnos (loop for ofile in ofiles
                         collect
                           (extract-qa-file-identifier 
@@ -102,14 +106,14 @@
                (concatenate 
                    'string "gunzip -c < " 
                    ;;; "/local/scratch/sht25/parses/"
-                   "/local/scratch/aac10/parses/"
+                   "/local/scratch/aac10/qatest/parses/"
                    namestring "> /tmp/pfile"))
               (let ((new-file (concatenate 'string 
-                                "/local/scratch/aac10/trec8qa/rmrs/"
+                                "/local/scratch/aac10/qatest/rmrs/"
                                 "top_docs."
                                 qno "." "rmrs"))
                     (err-file (concatenate 'string 
-                                "/local/scratch/aac10/trec8qa/rmrs-errs/" 
+                                "/local/scratch/aac10/qatest/rmrs-errs/" 
                                 "top_docs."
                                 qno "." "errors")))
                 (rmrs-from-xmlified-file "/tmp/pfile" 
@@ -158,6 +162,22 @@
             "/homes/sht25/Clconversion/chg_dtd.p \"/homes/sht25/QA/unified\" \"/usr/groups/mphil/qa03/dtd/analysis\" CORPUS CORPUS /tmp/rfile > " new-file)))
        (excl::shell "rm /tmp/rfile")))))
 
+#|
+(simple-process-rasp-file "~aac10/lingo/newlkb/src/rmrs/annlt-test/test.parses" "~aac10/lingo/newlkb/src/rmrs/annlt-test/test.rmrs")
+|#
+
+(defun simple-process-rasp-file (ifile ofile)
+ (clear-rule-record)
+ (read-rmrs-grammar "~aac10/lingo/newlkb/src/rmrs/annlt-test/gram14.1.rmrs")
+ (read-rmrs-tag-templates "~aac10/lingo/newlkb/src/rmrs/annlt-test/lex14.1.rmrs")
+ (rmrs-from-xmlified-file ifile ofile t))
+
+(defun simple-process-rasp-non-xml-file (ifile ofile)
+ (clear-rule-record)
+ (read-rmrs-grammar "~aac10/lingo/newlkb/src/rmrs/annlt-test/gram14.1.rmrs")
+ (read-rmrs-tag-templates "~aac10/lingo/newlkb/src/rmrs/annlt-test/lex14.1.rmrs")
+ (rmrs-from-file ifile ofile))
+
 (defun revalidate-rmrs-files nil
   (let* ((ifiles
           (directory "/local/scratch/aac10/trec8qa/rmrs/*")))
@@ -193,6 +213,39 @@
 
 ;;; File wrapper - note use of handler-case
 
+(defun rmrs-from-file (filename output)
+  (with-open-file (istream filename :direction :input)
+    (with-open-file (ostream output :direction :output
+                     :if-exists :supersede
+                     :if-does-not-exist :create)
+      (format ostream "<?xml version='1.0'?> <!DOCTYPE rmrs-list SYSTEM \"/homes/aac10/lingo/newlkb/src/rmrs/rmrs.dtd\" >")
+      (format ostream "~%<rmrs-list>")
+      (loop (let* ((original (read istream nil nil))
+                   (id (read istream nil nil))
+                   (tree (read istream nil nil)))
+              (declare (ignore id))
+              (unless tree
+                (return))
+              (when original
+                #|
+                blank lines in RASP cause the following
+                () 0 ; ()
+                
+                (X)
+                so we ignore cases where there's no sentence
+                |#
+                  (handler-case
+                      (progn
+                        (unless (equal tree '(X))
+                          (construct-sem-for-tree tree ostream))
+                        (finish-output ostream))
+                    (storage-condition (condition)
+                      (format ostream "~%Memory allocation problem: ~A~%" condition))
+                    (error (condition)
+                      (format ostream "~%Error: ~A~%" condition))
+                    (serious-condition (condition)
+                      (format ostream "~%Something nasty: ~A~%" condition))))))
+      (format ostream "~%</rmrs-list>~%"))))
 
 (defun rmrs-from-xmlified-file (filename output xml-p)
   (with-open-file (istream filename :direction :input)
@@ -210,7 +263,7 @@
               (unless tree
                 (unless (and markup
                              (dolist (char (coerce markup 'list))
-                               (unless (lkb::whitespacep char)
+                               (unless (whitespacep char)
                                  (return t))))
                   ;; hack round lack of markup at end when RASP
                   ;; misbehaves
@@ -290,7 +343,7 @@
                                      (cond ((null input-char-inner) (return :eof))
                                            ((eql input-char-inner #\()
                                             (return :read))
-                                           ((lkb::whitespacep input-char-inner)
+                                           ((whitespacep input-char-inner)
                                             (read-char istream nil nil)
                                             (push input-char-inner stuff))
                                            (t (read-char istream nil nil)
@@ -306,8 +359,6 @@
   (when markup
     (format ostream "~A" markup)))
 
-
-;;; end ANNLT tree specific
 
 #|
 (construct-sem-for-tree

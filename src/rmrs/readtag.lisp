@@ -1,3 +1,7 @@
+;;; Copyright (c) 2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
+
 (in-package :mrs)
 
 (defparameter *tag-templates* nil)
@@ -10,16 +14,18 @@
 ;;; Reading
 
 (defun read-rmrs-tag-templates (file-name)
+  ;;; <!ELEMENT lex (le)*>
   (setf *tag-templates* nil)
-  (let ((*readtable* (make-xml-break-table)))
-    (with-open-file (istream file-name :direction :input)
-      (loop
-        (let ((next-char (peek-char t istream nil 'eof)))
-          (when (eql next-char 'eof) (return))
-          (if (eql next-char #\;) 
-              (read-line istream)
-            (let ((next-tag-template (read-rmrs-tag-template istream)))
-              (when (null next-tag-template) (return))
+  (with-open-file (istream file-name :direction :input)
+    (let ((templates (parse-xml-removing-junk istream)))
+      (unless (equal (car templates) '|lex|)
+        (error "~A is not a valid lexical tags file" file-name))
+      (loop for template in (cdr templates)
+          do
+            (unless (xml-whitespace-string-p template)
+            (let ((next-tag-template
+                   (read-rmrs-tag-template template)))
+              (when next-tag-template
               (add-rmrs-tag-template next-tag-template)))))))
   (setf *tag-templates*
     (nreverse *tag-templates*))
@@ -35,46 +41,34 @@
    (progn (push tag-name *unknown-tags*)
           nil)))
 
-(defun read-rmrs-tag-template (istream)
-  #|
-<le>
-<tag>N</tag>
-<semstruct>
-<hook><index>x</index></hook>
-<ep><pred></pred><arg>x</arg></ep> 
-</semstruct>
-</le>
-|#
-  (let ((tag (read-next-tag istream)))
-    (if (eq tag 'LE)
+(defun read-rmrs-tag-template (real-xml)
+;;;  <!ELEMENT le (tag, semstruct)>
+  (let* ((tag (car real-xml)))
+    (if (eq tag '|le|)
 	(let ((name nil) 
 	      (semstruct nil))
-	  (loop
-	    (let  
-		((next-tag (read-next-tag istream)))
-	      (ecase next-tag
-		(TAG (setf name (read-rmrs-tag-name istream)))
-		(SEMSTRUCT (setf semstruct (read-rmrs-semstruct istream)))
-		(/LE (return)))))
+              (loop for next-el in (cdr real-xml)
+                 do
+                 (unless (xml-whitespace-string-p next-el)
+                   (let ((next-tag (car next-el)))    
+                     (ecase next-tag
+		       (|tag| (setf name (cadr next-el)))
+                       (|semstruct| 
+                           (setf semstruct 
+                            (read-rmrs-semstruct (cdr next-el))))))))
 	  (make-rmrs-tag-template :name name
 				  :semstruct semstruct)))))
-
-(defun read-rmrs-tag-name (istream)
-;;;  <tag>N</tag>
-  (let ((tag
-	 (read istream)))
-    (check-for-end-tag 'tag istream)
-    (string tag)))
-
 
 ;;; output
 
 (defun write-rmrs-tags (filename)
   (with-open-file (ostream filename :direction :output
                    :if-exists :supersede)
+    (format ostream "~%<lex>")
     (loop for tag in *tag-templates*
         do
-          (output-rmrs-tag tag ostream))))
+          (output-rmrs-tag tag ostream))
+    (format ostream "~%</lex>~%")))
 
 (defun output-rmrs-tag (tag ostream)
   (let ((semstruct (rmrs-tag-template-semstruct tag)))
