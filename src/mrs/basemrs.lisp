@@ -100,7 +100,10 @@
   ;;; always constructed from the type and the id
   (unless (var-p var)
     (error "var expected ~A found" var))
-  (format nil "~(~A~)~A" (or (var-type var) "u") (var-id var)))
+  (format 
+   nil 
+   "~@[~(~A~)~]~A" 
+   (when (var-id var) (or (var-type var) "u")) (var-id var)))
 
 ;;; macros moved from mrsresolve
 
@@ -1052,10 +1055,13 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   ;; note that the type and extra values are assumed
   ;; to only occur once (or if repeated, to be consistent)
   (let* ((varname (read-mrs-atom istream))
-         (type (string-downcase (subseq (string varname) 0 1)))
+         (name (and varname (string varname)))
+         (type (and name (string-downcase (subseq name 0 1))))
+         (id (and name (parse-integer name :start 1 :junk-allowed t)))
          (existing (assoc varname *already-read-vars*))
          (var (or (cdr existing)
-                  (make-var :id (funcall *variable-generator*)
+                  (make-var :id (when varname 
+                                  (or id (funcall *variable-generator*)))
                             :type type))))
     (unless existing 
       (push (cons varname var) *already-read-vars*))
@@ -1083,7 +1089,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   (let* ((varname (read-mrs-atom istream))
          (existing (assoc varname *already-read-vars*))
          (var (or (cdr existing)
-                  (make-var :id (gensym (string varname))))))
+                  (make-var :id nil))))
     (unless existing 
       (push (cons varname var) *already-read-vars*))
     var))
