@@ -1,0 +1,17 @@
+#!/bin/sh
+
+#
+# wrapper script around statically linked wish(1) (with blt and tix included)
+# to locate suitable include files.
+#
+
+path=`dirname $0`
+if [ "{path}" = "." ]; then
+  path=`pwd`
+fi
+home=`echo $path | sed "s@/bin/solaris@@"`
+TCL_LIBRARY=${home}/lib/solaris/tcl8.0
+BLT_LIBRARY=${home}/lib/solaris/blt2.4
+export TCL_LIBRARY
+
+exec ${path}/.swish++ $*
