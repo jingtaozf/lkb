@@ -22,7 +22,7 @@
                  &key (file (format nil "/tmp/.transfer.~a" (current-user))))
   (let* ((*package* (find-package :lkb))
          (rules (reverse *ordered-mrs-rule-list*))
-         (input (mrs::extract-mrs edge))
+         (input (or (edge-mrs edge) (mrs::extract-mrs edge)))
          (output (and input (mrs::munge-mrs-struct input rules))))
     (when output
       (with-open-file (stream file :direction :output

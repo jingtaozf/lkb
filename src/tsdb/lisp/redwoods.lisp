@@ -212,12 +212,14 @@
            (lkb::*tree-automatic-update-p* 
             (when gold lkb::*tree-automatic-update-p*))
            (condition (format nil "i-id = ~a" i-id))
-           (items (analyze data :thorough '(:derivation :mrs) 
-                           :condition condition))
+           (items (analyze 
+                   data :thorough '(:derivation :mrs) 
+                   :commentp t :condition condition))
            (item (and (null (rest items)) (first items)))
            (input (or (get-field :o-input item) (get-field :i-input item)))
            (i-id (get-field :i-id item))
            (i-length (get-field :i-length item))
+           (i-comment (get-field :i-comment item))
            (readings (get-field :readings item))
            (parse-id (get-field :parse-id item))
            (results (get-field :results item))
@@ -491,6 +493,7 @@
         (loop
             for result in results collect (get-field :derivation result)))
       (setf (lkb::compare-frame-version frame) history)
+      (setf (lkb::compare-frame-comment frame) i-comment)
       (setf (lkb::compare-frame-confidence frame) confidence)
       (setf (lkb::compare-frame-preset frame) discriminants)
       (setf (lkb::compare-frame-gold frame) gdiscriminants)

@@ -38,6 +38,8 @@
 
 (def-lkb-parameter *tree-display-semantics-p* t)
 
+(defparameter *tree-completion-hook* nil)
+
 (defstruct ctree 
   edge
   id
@@ -289,6 +291,7 @@
   ;; 
   (when runp
     (clim::redisplay-frame-pane frame 'top :force-p t)
+    (clim::redisplay-frame-pane frame 'comment :force-p t)
     (clim::redisplay-frame-pane frame 'status :force-p t))
   (update-trees frame)
 
@@ -330,6 +333,9 @@
 (defun comparison-dependencies-font ()
   (list :sans-serif :roman (or *comparison-dependencies-font-size* 10)))
 
+(defun comparison-comment-font ()
+  (list :sans-serif :roman (or *comparison-discriminant-font-size* 10)))
+
 (defun comparison-status-font ()
   (list :sans-serif :roman (or *comparison-discriminant-font-size* 10)))
 
@@ -362,6 +368,7 @@
     :initform *tree-display-threshold* :accessor compare-frame-threshold)
    (tstream :initform nil :accessor compare-frame-tstream)
    (chart :initform nil :accessor  compare-frame-chart)
+   (comment :initform nil :accessor compare-frame-comment)
    (version :initform nil :accessor compare-frame-version)
    (gversion :initform nil :accessor compare-frame-gversion)
    (gactive :initform nil :accessor compare-frame-gactive)
@@ -403,9 +410,24 @@
 			  :display-time nil
 			  :background clim:+white+
 			  :foreground clim:+black+)))))
+   (comment 
+    (clim:outlining (:thickness 1)
+      (clim:spacing (:thickness 1)  
+        (clim:make-pane 'clim:application-pane
+                        :display-function 'draw-comment-window
+                        :text-cursor nil
+                        :text-style (comparison-comment-font)
+                        :height :compute
+                        :end-of-line-action :allow
+                        :end-of-page-action :allow
+                        :borders nil
+                        :incremental-redisplay nil
+                        :display-time nil
+                        :background clim:+white+
+                        :foreground clim:+black+))))
    (status 
     (clim:outlining (:thickness 1)
-      (clim:spacing (:thickness 2)  
+      (clim:spacing (:thickness 1)  
         (clim:make-pane 'clim:application-pane
                         :display-function 'draw-status-window
                         :text-cursor nil
@@ -426,7 +448,7 @@
 			  :display-function 'draw-discriminants-window
 			  :text-cursor nil
 			  :width 430
-			  :height 640
+			  :height 630
 			  :text-style (comparison-discriminant-font)
 			  :end-of-line-action :allow
 			  :end-of-page-action :allow
@@ -439,7 +461,7 @@
                top
                (clim:horizontally () 
                  trees 
-                 (clim:vertically () status discriminants))))))
+                 (clim:vertically () comment status discriminants))))))
 
 (define-compare-frame-command (com-exit-compare-frame :menu "Close")
     ()
@@ -653,64 +675,9 @@
                                :within-generation-separation 7
                                :center-nodes nil)))))
                       (terpri stream)))))))
-      (when (and *tree-display-semantics-p*
-                 (compare-frame-trees frame)
+      (when (and (compare-frame-trees frame)
                  (null (rest (compare-frame-trees frame))))
-        (let* ((extract (when (find-package :mrs)
-                          (find-symbol "EXTRACT-MRS" :mrs)))
-               (extract (when (and extract (fboundp extract))
-                          (symbol-function extract)))
-               (tree (first (compare-frame-trees frame)))
-               (edge (ctree-edge tree))
-               (mrs (when extract
-                      (ignore-errors (funcall extract edge))))
-               (convert (when (find-package :mrs)
-                         (find-symbol "ED-CONVERT-PSOA" :mrs)))
-               (convert (when (and convert (fboundp convert))
-                          (symbol-function convert)))
-               (eds (when (and mrs convert) 
-                      (ignore-errors (funcall convert mrs))))
-               (predicate (when (find-package :mrs)
-                             (find-symbol "ED-SUSPICIOUS-P" :mrs)))
-               (predicate (when (and predicate (fboundp predicate))
-                          (symbol-function predicate))))
-          (when eds
-            (clim:formatting-row (stream)
-              (clim:formatting-cell 
-                  (stream :align-x :center :align-y :top)
-                (format stream " ~% ")))
-            (let ((record 
-                   (clim:with-new-output-record (stream)
-                     (clim:formatting-row (stream)
-                       (clim:formatting-cell 
-                           (stream :align-x :center :align-y :top)
-                         (clim:with-text-style 
-                             (stream 
-                              (clim:parse-text-style '(:sans-serif :bold 12)))
-                           (format stream "[~a]" (ctree-id tree))))
-                       (clim:formatting-cell 
-                           (stream :align-x :left :align-y :top)
-                         (clim:formatting-row (stream)
-                           (clim:formatting-cell 
-                               (stream :align-x :left :align-y :top)
-                             (format stream "~@[(~a)~]~%" (ctree-score tree)))
-                           (clim:formatting-cell 
-                               (stream :align-x :center :align-y :top)
-                             (clim:with-text-style 
-                                 (stream (comparison-dependencies-font))
-                               (format stream "~a" eds)))))))))
-              (recolor-record 
-               record
-               (let ((status (and predicate (funcall predicate eds)))
-                     (orange (or (clim:find-named-color
-                                  "orange" (clim:frame-palette frame) 
-                                  :errorp nil)
-                                 clim:+yellow+)))
-                 (cond
-                  ((member :cyclic status) clim:+red+)
-                  ((member :fragmented status) orange)
-                  (t (if (update-match-p frame) clim:+magenta+ clim:+blue+)))))
-              (clim:replay record stream))))))
+        (draw-trees-window-completion frame stream)))
     (update-tree-colours frame)))
 
 (define-compare-frame-command (com-tree-popup)
@@ -795,11 +762,149 @@
           (with-output-to-top ()
             (format t "~%Something nasty: ~A~%" condition)))))))
 
+(defun draw-trees-window-completion (frame stream)
+  (let* ((hook *tree-completion-hook*)
+         (hook (typecase hook
+                 (null nil)
+                 (function hook)
+                 (symbol (and (fboundp hook) (symbol-function hook)))
+                 (string (ignore-errors 
+                          (symbol-function (read-from-string hook))))))
+         (extract (when (find-package :mrs)
+                    (find-symbol "EXTRACT-MRS" :mrs)))
+         (extract (when (and extract (fboundp extract))
+                    (symbol-function extract)))
+         (tree (first (compare-frame-trees frame)))
+         (edge (ctree-edge tree))
+         (mrs (when extract (ignore-errors (funcall extract edge))))
+         (convert (when (find-package :mrs) 
+                    (find-symbol "ED-CONVERT-PSOA" :mrs)))
+         (convert (when (and convert (fboundp convert)) 
+                    (symbol-function convert)))
+         (eds (when (and mrs convert) (ignore-errors (funcall convert mrs))))
+         (predicate (when (find-package :mrs)
+                      (find-symbol "ED-SUSPICIOUS-P" :mrs)))
+         (predicate (when (and predicate (fboundp predicate))
+                      (symbol-function predicate)))
+         (extract (when (and (functionp hook) (find-package :mrs))
+                    (find-symbol "EXTRACT-MRS" :mrs)))
+         (extract (when (and extract (fboundp extract)) 
+                    (symbol-function extract)))
+         (tree (first (compare-frame-trees frame)))
+         (edge (ctree-edge tree))
+         (mrs (or (edge-mrs edge)
+                  (when extract (ignore-errors (funcall extract edge))))))
+    (when (functionp hook)
+      (multiple-value-bind (result condition) 
+          (ignore-errors (funcall hook edge mrs))
+        (when condition
+          (clim:beep)
+          (format
+           excl:*initial-terminal-io*
+           "tree-completion-hook(): error `~a'.~%"
+           (normalize-string (format nil "~a" condition))))
+        (let* ((comment (if (stringp result)
+                          result
+                          (rest (assoc :comment result))))
+               (result (unless (stringp result) result))
+               (font (rest (assoc :font result)))
+               (face (rest (assoc :face result)))
+               (size (rest (assoc :size result)))
+               (style (clim:merge-text-styles
+                       (list font face size) '(:sans-serif :bold 12)))
+               (color (rest (assoc :color result)))
+               (color (ignore-errors (apply #'clim:make-rgb-color color)))
+               (bottomp (rest (assoc :bottom result)))
+               (align (or (rest (assoc :align result)) :center)))
+          (when (and comment (null bottomp))
+            (clim:formatting-row (stream)
+              (clim:formatting-cell 
+                  (stream :align-x :center :align-y :top)
+                (format stream " ")))
+            (let ((record
+                   (clim:with-new-output-record (stream)
+                     (clim:formatting-row (stream)
+                       (clim:formatting-cell 
+                           (stream :align-x :center :align-y :top)
+                         (format stream "" (ctree-id tree)))
+                       (clim:formatting-cell (stream :align-x align)
+                         (clim:with-text-style 
+                             (stream style)
+                           (format stream "~%~a" comment)))))))
+              (when color (recolor-record record color))
+              (clim:replay record stream)))
+          (when eds
+            (clim:formatting-row (stream)
+              (clim:formatting-cell 
+                  (stream :align-x :center :align-y :top)
+                (format stream " ")))
+            (let ((record 
+                   (clim:with-new-output-record (stream)
+                     (clim:formatting-row (stream)
+                       (clim:formatting-cell 
+                           (stream :align-x :center :align-y :top)
+                         (clim:with-text-style 
+                             (stream 
+                              (clim:parse-text-style '(:sans-serif :bold 12)))
+                           (format stream "[~a]" (ctree-id tree))))
+                       (clim:formatting-cell 
+                           (stream :align-x :left)
+                         (clim:formatting-column (stream)
+                           (clim:formatting-cell 
+                               (stream :align-x :left)
+                             (format stream "~@[(~a)~]~%" (ctree-score tree)))
+                           (clim:formatting-cell 
+                               (stream :align-x :center)
+                             (clim:with-text-style 
+                                 (stream (comparison-dependencies-font))
+                               (format stream "~a" eds)))))))))
+              (recolor-record 
+               record
+               (let ((status (and predicate (funcall predicate eds)))
+                     (orange (or (clim:find-named-color
+                                  "orange" (clim:frame-palette frame) 
+                                  :errorp nil)
+                                 clim:+yellow+)))
+                 (cond
+                  ((member :cyclic status) clim:+red+)
+                  ((member :fragmented status) orange)
+                  (t (if (update-match-p frame) clim:+magenta+ clim:+blue+)))))
+              (clim:replay record stream)))
+          (when (and comment bottomp)
+            (clim:formatting-row (stream)
+              (clim:formatting-cell 
+                  (stream :align-x :center :align-y :top)
+                (format stream " ")))
+            (let ((record
+                   (clim:with-new-output-record (stream)
+                     (clim:formatting-row (stream)
+                       (clim:formatting-cell 
+                           (stream :align-x :center :align-y :top)
+                         (format stream "" (ctree-id tree)))
+                       (clim:formatting-cell (stream :align-x align)
+                         (clim:with-text-style 
+                             (stream style)
+                           (format stream "~%~a" comment)))))))
+              (when color (recolor-record record color))
+              (clim:replay record stream))))))))
+
+(defun draw-comment-window (frame stream &rest rest)
+  
+  (declare (ignore rest))
+
+  (clim:with-text-style (stream (comparison-comment-font))
+    (clim:formatting-table (stream)
+      (clim:formatting-row (stream)
+        (clim:formatting-cell (stream :align-x :center :min-width 410)
+          (let ((comment (compare-frame-comment frame)))
+            (when (and comment (not (equal comment "")))
+              (format stream "~a" comment))))))))
+
 (defun draw-status-window (frame stream &rest rest)
   
   (declare (ignore rest))
 
-  (clim:with-text-style (stream (comparison-discriminant-font))
+  (clim:with-text-style (stream (comparison-status-font))
     (clim:formatting-table (stream)
       (clim:formatting-row (stream)
         (clim:formatting-cell (stream :align-x :center :min-width 410)

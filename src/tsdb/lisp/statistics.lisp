@@ -264,7 +264,7 @@
 (defun analyze (data 
                 &key condition meter message thorough trees extras 
                      (readerp t) filter
-                     score gold sloppyp scorep)
+                     score gold commentp sloppyp scorep)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
@@ -346,8 +346,12 @@
                                      (mduration imeter)))))
                (parse (select pfields ptypes "parse" condition data
                               :meter pmeter :sort :i-id))
-               (item (select '("i-id" "i-input" "i-length" "i-wf")
-                             '(:integer :string :integer :integer)
+               (item (select (append
+                              '("i-id" "i-input" "i-length" "i-wf")
+                              (when commentp '("i-comment")))
+                             (append
+                              '(:integer :string :integer :integer)
+                              (when commentp '(:string)))
                              "item" condition data 
                              :meter imeter :sort :i-id))
                (results (when thorough

@@ -82,9 +82,10 @@
 
 
 (defun show-mrs-window (edge &optional mrs title)
-  (if #+:lui (lui-status-p :mrs) #-:lui nil
-    (lui-display-mrs (or mrs (mrs::extract-mrs edge)))
-    (mp:run-function "Simple MRS" #'show-mrs-window-really edge mrs title)))
+  (let ((mrs (or mrs (edge-mrs edge) (mrs::extract-mrs edge))))
+    (if #+:lui (lui-status-p :mrs) #-:lui nil
+      (lui-display-mrs mrs)
+      (mp:run-function "Simple MRS" #'show-mrs-window-really edge mrs title))))
 
 (defun show-mrs-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-simple)))
