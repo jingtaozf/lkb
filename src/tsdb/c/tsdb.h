@@ -284,6 +284,7 @@ Tsdb_field **tsdb_field_array_append(Tsdb_field **, Tsdb_field *);
 
 BYTE tsdb_value_compare(Tsdb_value *, Tsdb_value *);
 BYTE tsdb_tuple_compare(Tsdb_tuple *, Tsdb_tuple *);
+BOOL tsdb_verify_tuple(Tsdb_node* , Tsdb_tuple** );
 
 BOOL tsdb_tuple_equal(Tsdb_tuple* , Tsdb_tuple* );
 BYTE tsdb_value_match(Tsdb_value *, Tsdb_value *,void *);
@@ -307,6 +308,7 @@ void tsdb_print_selection(Tsdb_selection *, FILE *);
 void tsdb_test_negation(Tsdb_value ** _list,Tsdb_node* );
 int tsdb_uniq_projection(char** ,int );
 Tsdb_node *tsdb_leaf(Tsdb_value *);
+Tsdb_node* tsdb_prepare_tree(Tsdb_node* node,Tsdb_selection* selection);
 
 void tsdb_save_changes(void);
 
@@ -355,6 +357,8 @@ char *tsdb_canonical_date(char *);
 int *tsdb_parse_date(char *);
 
 Tsdb_node **tsdb_linearize_conditions(Tsdb_node *);
+
+BOOL  tsdb_selection_tree(Tsdb_node *,Tsdb_selection*);
 
 Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *, FILE *);
 
