@@ -6,7 +6,7 @@
 are NON3SG-V_IRULE be
 were NON3SG-V_IRULE be
 is 3SG-V_IRULE be
-was 3SG-V_IRULE be
+was PAST-V_IRULE be
 been PAST-PART-V_IRULE be
 					;;; `am' not covered
 
