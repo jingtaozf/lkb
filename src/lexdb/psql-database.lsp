@@ -289,12 +289,14 @@
 
 (defun putline (conn line)
   (unless (= 0 (pq:putline conn (format nil "~a~%" line)))
-    (format t "~%PSQL ~a" error-message)
+    ;; fix_me
+    ;;(format t "~%PSQL ~a" error-message)
     (throw :sql-error (cons :putline "unable to send string")))) 
 
 (defun endcopy (conn)
   (unless (= 0 (pq:endcopy conn))
-    (format t "~%PSQL ~a" error-message)
+    ;;fix_me
+    ;;(format t "~%PSQL ~a" error-message)
     (throw :sql-error (cons :putline "endcopy failed")))) 
 
 (defun copy-out-filename (conn filename)
