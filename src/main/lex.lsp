@@ -121,8 +121,18 @@
 		(rule-full-fs lr-entry)
 	      (lex-expansion-error 
 	       "Return nil" 
-	       (format nil "~A is not a valid psort" psort)))))))))
+	       (format nil "~A is not a valid structure identifier" psort)))))))))
 
+(defun get-type-from-lex-id (id)
+  ;;; Utility function for MPhillies
+  ;;; just returns nil if it doesn't find anything suitable
+  ;;; since they may perhaps want to call it on things
+  ;;; which may not be valid
+  (let ((entry (get-psort-entry id)))
+    (if entry
+        (let ((tdfs (lex-or-psort-full-fs entry)))
+          (if (tdfs-p tdfs)
+              (indef-type-of-tdfs tdfs))))))
 
 (defun get-lex-entry (orth)
   (loop for psort in (remove-duplicates (lookup-word *lexicon* orth))
@@ -175,7 +185,7 @@
                     (general-path-match 
                      (unification-lhs (car matching-unifs))
                      *orth-path* t))
-               (u-value-type (unification-rhs (car matching-unifs))))
+               (list (u-value-type (unification-rhs (car matching-unifs)))))
               (t 
                (loop
                  (let ((exact-match
