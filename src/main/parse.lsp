@@ -212,6 +212,17 @@
 (defvar *cached-category-abbs* nil
   "variable used in output to avoid recomputation of tree nodes")
 
+#+allegro
+(defvar *parser-lock* (mp:make-process-lock))
+
+(defmacro with-parser-lock (() &body body)
+  #+allegro
+  `(mp:with-process-lock (*parser-lock*)
+     ,@body)
+  #-allegro
+  `,@body)
+  
+
 (defun parse (user-input &optional (show-parse-p t) 
 				   (first-only-p *first-only-p*))
   (if (> (length user-input) *chart-limit*)
@@ -219,23 +230,24 @@
     (let ((*safe-not-to-copy-p* t)
 	  (*executed-tasks* 0) (*successful-tasks* 0)
 	  (*contemplated-tasks* 0) (*filtered-tasks* 0))
-      (flush-heap *agenda*)
-      (clear-chart)
-      (setf *cached-category-abbs* nil)
-      #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
-      (add-morphs-to-morphs user-input)
-      (unless 
-	  (catch 'first
-	    (add-words-to-chart (when first-only-p 
-				  (cons 0 (length user-input))))
-	    (loop 
-		until (empty-heap *agenda*)
-		do (funcall (heap-extract-max *agenda*))))
-	(setf *parse-record*
-	  (find-spanning-edges 0 (length user-input))))
-      (when show-parse-p (show-parse))
-      (values *executed-tasks* *successful-tasks* *contemplated-tasks*
-	      *filtered-tasks*))))
+      (with-parser-lock ()
+	(flush-heap *agenda*)
+	(clear-chart)
+	(setf *cached-category-abbs* nil)
+	#+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
+	(add-morphs-to-morphs user-input)
+	(unless 
+	    (catch 'first
+	      (add-words-to-chart (when first-only-p 
+				    (cons 0 (length user-input))))
+	      (loop 
+		  until (empty-heap *agenda*)
+		  do (funcall (heap-extract-max *agenda*))))
+	  (setf *parse-record*
+	    (find-spanning-edges 0 (length user-input)))))
+	(when show-parse-p (show-parse))
+	(values *executed-tasks* *successful-tasks* *contemplated-tasks*
+		*filtered-tasks*))))
 
 (defun add-morphs-to-morphs (user-input)
    (let ((current 0))

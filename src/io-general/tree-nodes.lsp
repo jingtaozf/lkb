@@ -63,19 +63,18 @@
 
 (defun show-parse nil
   (if *parse-record*
-     (progn
-       #+(and :allegro :clim)(show-parse-tree-frame *parse-record*)
-       #-(and :allegro :clim) 
-         (for edge in *parse-record*
-              do
-              (display-parse-tree edge nil))
-      ;;; replace old tree display with new frame in ACL CLIM
-      ;;; FIX need to replicate in MCL and CG
-      (when (fboundp 'mrs::output-mrs-after-parse)
-         (funcall 'mrs::output-mrs-after-parse *parse-record*)))
-     (progn
-       (lkb-beep)
-       (format t "~%No parses found"))))
+      (with-parser-lock ()
+	#+(and :allegro :clim)(show-parse-tree-frame *parse-record*)
+	#-(and :allegro :clim) 
+	(dolist (edge *parse-record*)
+	  (display-parse-tree edge nil))
+	;; replace old tree display with new frame in ACL CLIM
+	;; FIX need to replicate in MCL and CG
+	(when (fboundp 'mrs::output-mrs-after-parse)
+	  (funcall 'mrs::output-mrs-after-parse *parse-record*)))
+    (progn
+      (lkb-beep)
+      (format t "~%No parses found"))))
 
 #|     
      (let ((possible-edge-name
