@@ -217,7 +217,7 @@
         (values
          ;; extract-string-from-gen-record looks after changes like
          ;; e.g. "a apple" -> "an apple"
-         (extract-strings-from-gen-record found-lex-items)
+         (extract-strings-from-gen-record)
          *filtered-tasks* *executed-tasks* *successful-tasks* *unifications* *copies*
          act-tot inact-tot)))))
 
