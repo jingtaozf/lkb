@@ -595,9 +595,6 @@
     (find-leaf (car (get node 'daughters)))))
 
 
-
-
-
 ;;; variant on above, which gives the ids of lexical items
 ;;; This always shows the complete tree, i.e. with any lexical
 ;;; rules etc
@@ -615,6 +612,13 @@
 (defun parse-tree-structure-with-ids (edge)
    (parse-tree-structure1-with-ids (make-new-parse-tree edge 1) nil))
 
+;;; The following fn is a bit convoluted because the tree display
+;;; has `pseudo-nodes' corresponding to the input strings
+;;; and we want to ignore these.  Furthermode we need the lex ids
+;;; at the terminal points, which are stored in a slot on the edges
+;;; but have to be retrieved correctly.  The following is a bit
+;;; hacky and might not work for all grammars.
+
 (defun parse-tree-structure1-with-ids (node lex-ids)
   (let ((daughters (get node 'daughters)))
     (multiple-value-bind 
@@ -626,25 +630,33 @@
               (progn
               (when (cdr daughters) 
                 (error "~%Multiple daughters under pseudonode ~A" node))
-              (parse-tree-structure1-with-ids (car daughters) new-lex-ids))
+              (parse-tree-structure1-with-ids (car daughters) lex-ids))
             (progn
               (when (cdr lex-ids) 
                 (error "~%Multiple lex-ids under pseudonode ~A" node))
               (car lex-ids)))
-          (cons str
-                (loop for dtr in daughters
-                    collect 
-                      (parse-tree-structure1-with-ids dtr new-lex-ids)))))))
+        (cons str
+              (if daughters
+                  (loop for dtr in daughters
+                      collect 
+                        (parse-tree-structure1-with-ids dtr new-lex-ids))
+                (progn
+                  (when (cdr lex-ids) 
+                    (error "~%Multiple lex-ids under leaf node ~A" node))
+                  lex-ids)))))))
 
 (defun get-string-for-edge-with-ids (edge-symbol)
   (let* ((edge-record (get edge-symbol 'edge-record))
          (edge-fs (get edge-symbol 'edge-fs)))
-     (if edge-record
+    (if edge-record
+        ;; for a real node, return its category, as for the
+        ;; usual display, and the lex ids
 	 (progn
 	   (values 
-		    (or (when edge-fs (find-category-abb edge-fs))
-			(edge-category edge-record))
-                   nil
-                   (edge-lex-ids edge-record)))     
+            (or (when edge-fs (find-category-abb edge-fs))
+                (edge-category edge-record))
+            nil
+            (edge-lex-ids edge-record)))
+       ;; return nothing much for a pseudonode
        (values nil t nil))))
 
