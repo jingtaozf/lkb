@@ -927,6 +927,25 @@ Tsdb_key_list *tsdb_copy_key_list(Tsdb_key_list *key_list) {
 
 } /* tsdb_copy_key_list() */
 
+/*---------------------------------------------------------------------------*/
+
+Tsdb_key_list *tsdb_new_copy_key_list(Tsdb_key_list *key_list) {
+
+  Tsdb_key_list *new;
+  int i;
+
+  new = (Tsdb_key_list *)malloc(sizeof(Tsdb_key_list));
+  new->key = key_list->key;
+  new->n_tuples = key_list->n_tuples;
+  new->tuples = (Tsdb_tuple**) key_list->tuples[new->n_tuples];
+  new->tuples[new->n_tuples]=NULL;
+  new->next = key_list->next;
+
+  return(new);
+
+} /* tsdb_new_copy_key_list() */
+
+
 Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
 
 /*****************************************************************************\
@@ -1278,6 +1297,9 @@ void tsdb_free_tsdb_value(Tsdb_value* foo) {
   case TSDB_IDENTIFIER: 
     if (foo->value.identifier) free(foo->value.identifier);
     break;
+  case TSDB_DESCRIPTOR:
+    if (foo->value.descriptor) free(foo->value.descriptor);
+    break;
   };
   free(foo);
 }
@@ -1302,6 +1324,16 @@ Tsdb_value **tsdb_singleton_value_array(Tsdb_value *value) {
   return(bar);
 
 } /* tsdb_singleton_value_array() */
+
+Tsdb_tuple ** tsdb_tuples_dup(Tsdb_tuple ** foo,int n) {
+  Tsdb_tuple** bar;
+  
+  bar = (Tsdb_tuple**)malloc((n+1)*sizeof(Tsdb_tuple*));
+  memcpy(bar,foo,(n+1)*(sizeof(Tsdb_tuple*)));
+  
+  return bar;
+} /* tsdb_tuples_dup() */
+
 
 Tsdb_relation *tsdb_create_relation() {
 
@@ -1372,27 +1404,63 @@ Tsdb_selection* tsdb_create_selection(int n_relations, int n_key_lists) {
   return(foo);
 } /* tsdb_create_selection() */
 
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_copy_selection()
+|*     version: 
+|*  written by: tom, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* this one is a bit harder than it might look: the tuples-field in each
+|* keylist is sharef, ie. it exists in any keylist. As we want to copy
+|* them, we first patch the copy in them. They are copied by taking
+|* the duplicate from the original!!
+\*****************************************************************************/
+
 Tsdb_selection* tsdb_copy_selection(Tsdb_selection* source) {
   Tsdb_selection* target;
-  int i,j;
+  int i,j, n_tuples ;
   Tsdb_key_list* foo,*bar;
+  Tsdb_tuple ** patch;
 
   target = tsdb_create_selection(source->n_relations,source->n_key_lists);
   for(i = 0; i < source->n_relations; i++) {
     target->relations[i] = tsdb_copy_relation(source->relations[i]);
   } /* for*/
   
+  foo = source->key_lists[0];
+  n_tuples = foo->n_tuples;
+
+  for (i=0;i<source->length;i++,foo=foo->next) {
+    patch = tsdb_tuples_dup(foo->tuples,n_tuples);
+    foo->tuples[n_tuples]= (Tsdb_tuple*)patch;
+  } /* for */
+  
   for(i = 0;i < source->n_key_lists; i++) {
-    target->key_lists[i] = tsdb_copy_key_list(source->key_lists[i]);
+    target->key_lists[i] = tsdb_new_copy_key_list(source->key_lists[i]);
     foo = target->key_lists[i];
     bar = source->key_lists[i]->next;
     for(j = 1; j < source->length; foo = foo->next, bar= bar->next, j++) {
-      foo->next = tsdb_copy_key_list(bar);
+      if (!bar) {
+         fprintf(TSDB_ERROR_STREAM,"copy_selection: selection to short\n");
+         fflush(TSDB_ERROR_STREAM);
+         break;
+       }
+      else
+        foo->next = tsdb_new_copy_key_list(bar);
     } /* for */
     foo->next = NULL;
   } /* for */
   target->length = source->length;
-
+  
+  foo = source->key_lists[0];
+  
+  for (i=0;i<source->length;i++,foo=foo->next) {
+    foo->tuples[n_tuples]=(Tsdb_tuple*)NULL;
+  } /* for */
+  
   return(target);
 } /* tsdb_copy_selection() */
 
