@@ -83,4 +83,8 @@ INSERT INTO ergd VALUES ( 'orth', 'orthography', '', 'string' );
 INSERT INTO ergd VALUES ( 'unifs', 'type', 'nil', 'symbol' );
 INSERT INTO ergd VALUES ( 'unifs', 'orthography', '(stem first)', 'string' );
 INSERT INTO ergd VALUES ( 'unifs', 'keyrel', '(synsem local keys key)', 'symbol' );
-
+INSERT INTO ergd VALUES ( 'unifs', 'keytag', '(synsem local keys key const_value)', 'string' );
+INSERT INTO ergd VALUES ( 'unifs', 'altkey', '(synsem local keys altkey)', 'symbol' );
+INSERT INTO ergd VALUES ( 'unifs', 'alt2key', '(synsem local keys alt2key)', 'symbol' );
+INSERT INTO ergd VALUES ( 'unifs', 'compkey', '(synsem local keys --compkey)', 'symbol' );
+INSERT INTO ergd VALUES ( 'unifs', 'ocompkey', '(synsem local keys --ocompkey)', 'symbol' );

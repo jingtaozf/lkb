@@ -1,4 +1,6 @@
-;;; Copyright (c) 2002 Ann Copestake, Fabre Lambeau
+;;; Copyright (c) 2002 
+;;;   Ann Copestake, Fabre Lambeau;
+;;;   see `licence.txt' for conditions.
 
 ;;;
 ;;; minor modifications by oe (27-mar-02):
@@ -24,12 +26,21 @@
 
 (in-package :lkb)
 
+;;;
+;;; for now, assume there can be at most one (P)SQL-based lexicon at a time:
+;;; whenever a request to (re-)initialize is performed, make sure to shut down
+;;; an open (P)SQL lexical database (if available) first.
+;;;
+
+(defvar *psql-lexicon* nil)
+
 (defun initialize-psql-lexicon (&key (db "lingo")
                                      (host "localhost")
-                                     (user "lingo")
-                                     (password "")
+                                     (user "guest")
+                                     (password "guest")
                                      (table "erg")
                                      (definition "ergd"))
+  
   (let* ((lexicon (make-instance 'psql-lex-database 
                     :dbname db :host host
                     :user user :password password
@@ -47,17 +58,35 @@
      ((eq status :connection-ok)
       (setf (connection lexicon) connection)
       (make-field-map-slot lexicon)
-      (setf *lexicon* lexicon))
+      (close-psql-lexicon)
+      (setf *psql-lexicon* lexicon)
+      (clrhash (slot-value *lexicon* 'lexical-entries))
+      (setf (extra-lexicons *lexicon*) 
+        (nconc (extra-lexicons *lexicon*) (list lexicon))))
      (t
       (error 
-       "BAD CONNECTION TO ~s: ~a" 
+       "unable to connect to ~s: ~a" 
        (pg:db lexicon) (pg:error-message lexicon))))))
-    
-(defun close-psql-lexicon ()
-  (let ((connection (connection *lexicon*)))
-    (when connection 
-      (pg:finish connection)
-      (setf (connection *lexicon*) nil))))
+
+(defun close-psql-lexicon (&optional (lexicon *psql-lexicon*))
+  (when (eq (type-of lexicon) 'psql-lex-database)
+    ;;
+    ;; shut down connection to PostGreSQL server
+    ;;
+    (let ((connection (connection lexicon)))
+      (when connection 
+        (pg:finish connection)
+        (setf (connection lexicon) nil)))
+    ;;
+    ;; attempt to unlink from list of secondary lexica
+    ;;
+    (if (eq (extra-lexicons *lexicon*) lexicon)
+      (setf (extra-lexicons *lexicon*) (rest (extra-lexicons *lexicon*)))
+      (loop
+          for foo on (extra-lexicons *lexicon*)
+          when (eq (first (rest foo)) lexicon) do
+            (setf (rest foo) (rest (rest foo)))))))
+      
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -75,7 +104,8 @@
    ;; flat-table containing the lexical database
    (lexicon-table :initform nil :accessor lex-tb :initarg :lex-tb)
    ;; table for mapping the lexicon-table fields to the psort-or-lex structure
-   (slot-to-fields-mapping-table :initform nil :accessor fields-tb :initarg :fields-tb)
+   (slot-to-fields-mapping-table 
+    :initform nil :accessor fields-tb :initarg :fields-tb)
    ;; a-list for mapping the lexicon-table fields to the psort-or-lex structure
    (slot-to-fields-mapping :initform nil :accessor fields-map)))
 
@@ -91,8 +121,6 @@
    (columns :accessor columns)
    (count-records :accessor count-recs)
    (mapped-recs :accessor mapped-recs)))
-
-(defvar *slots-with-list* '(:ORTH))
 
 ;;;
 ;; --- String, Sql-query and Generic Sql-database methods and functions ---
@@ -115,7 +143,7 @@
               (incf length padding)
               (setf result (adjust-array result length)))
           else do
-               (vector-push c result)
+            (vector-push c result)
           finally
             (return result))
     string))
@@ -126,15 +154,40 @@
   (intern (string-upcase expr) :keyword))
 (defun str-to-symbol-format (expr)
   (intern (string-upcase expr) :lkb))
-(defun put-in-list (key value)
-  (if (member key *slots-with-list*)
-      (list value)
-    value))
+
+(defun orth-string-to-str-list (string)
+  ;;
+  ;; break orthography string returned from DB at (one or more) spaces
+  ;;
+  (loop
+      with result = nil
+      with word = (make-array 42
+                              :element-type 'character
+                              :adjustable t :fill-pointer 0)
+      with stream = (make-string-input-stream string)
+      for c = (read-char stream nil nil)
+      while c
+      when (and (eql c #\space) (not (zerop (length word)))) do
+        (push (copy-seq word) result)
+        (setf (fill-pointer word) 0)
+      when (not (eql c #\space)) do
+        (vector-push-extend c word)
+      finally
+        (when (not (zerop (length word))) (push word result))
+        (return (nreverse result))))
+
 
 (defun work-out-value (key type value)
-  (put-in-list key (cond ((equal type "symbol") (str-to-symbol-format value))
-                         ((equal type "list") (read-from-string value))
-                         (t value))))
+  (cond ((equal type "symbol") 
+	 (unless (equal value "")
+	   (str-to-symbol-format value)))
+	((equal type "string")
+	 (unless (equal value "")
+	   (if (equal key :orth)
+	     (orth-string-to-str-list value)
+             value)))
+	((equal type "list") (read-from-string value))
+	(t value)))
 
 (defmethod run-query ((database psql-database) (query sql-query))
   (let ((connection (connection database)))
@@ -165,8 +218,10 @@
                 (cons (str-to-keyword-format (car x)) (cdr x)))
             (records (run-query lexicon 
                                 (make-instance 'sql-query
-                                  :sql-string (format nil "select * from ~a;"
-                                                      (fields-tb lexicon))))))))
+                                  :sql-string (format 
+                                               nil 
+                                               "select * from ~a;"
+                                               (fields-tb lexicon))))))))
 
 (defmethod make-requested-fields ((lexicon external-lex-database))
   ;; constructs the argument string to sql SELECT with all necessary fields
@@ -182,16 +237,22 @@
   (let* ((query-res (first (mapped-recs query)))
          (strucslots 
           (loop 
-              for (slot-key slot-field slot-path slot-type) in (fields-map lexicon)
-              for slot-value = (work-out-value slot-key slot-type 
-                                               (second (assoc slot-field query-res :test #'equal)))
-                               ;; if empty third argument (ie. path), then add (:key "field")
+              for (slot-key slot-field slot-path slot-type) 
+              in (fields-map lexicon)
+              for slot-value = (work-out-value 
+                                slot-key slot-type 
+                                (second (assoc slot-field query-res 
+                                               :test #'equal)))
+                               ;; if empty third argument (ie. path), 
+                               ;; then add (:key "field")
+	      when slot-value
               collect (if (equal slot-path "")
-                          (list slot-key slot-value) 
+                        (list slot-key slot-value) 
                         (list slot-key
                               (make-unification
                                :lhs (make-path :typed-feature-list 
-                                               (work-out-value slot-key "list" slot-path))
+                                               (work-out-value 
+                                                slot-key "list" slot-path))
                                :rhs (make-u-value :type slot-value))))))
          ;; groups slots with same key together in a list
          (strucargs 
@@ -199,12 +260,17 @@
               for unique-slot in (remove-duplicates (mapcar #'car strucslots))
               append (list unique-slot 
                            (let ((values (loop 
-                                             for (psort-slot psort-value) in strucslots
+                                             for (psort-slot psort-value) 
+                                             in strucslots
                                              when (eql psort-slot unique-slot)
                                              collect psort-value)))
-                             ;; pretty bad fix `to avoid getting lists where they are not needed
+                             ;;
+                             ;; _fix_me_
+                             ;; pretty bad fix to avoid getting lists where 
+                             ;; they are not needed
+                             ;;
                              (if (> (list-length values) 1)
-                                 values
+                               values
                                (car values)))))))
     (apply #'make-lex-or-psort strucargs)))
 
@@ -212,84 +278,97 @@
 ;;;   lexicon database manipulation 
 ;;;
 
-
 (defmethod lookup-word ((lexicon psql-lex-database) orth &key (cache t))
   (declare (ignore cache))
   (let* ((orthography (sql-escape-string orth))
-         (sql-str (format nil "select ~a from ~a where ~a='~a';"
-                          (second (assoc :ID (fields-map lexicon)))
-                          (lex-tb lexicon)
-                          (second (assoc :ORTH (fields-map lexicon)))
-                          (symbol-to-str-format orthography)))
-         (query-res (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
-    (mapcar 'str-to-symbol-format 
-            (mapcar 'car (records query-res)))))
-
+	 (orthfield (second (assoc :orth (fields-map lexicon))))
+	 (orthstr (symbol-to-str-format orthography))
+         (sql-str (format 
+                   nil 
+                   "select ~a from ~a ~
+                    where (~a='~a' or ~a like '~a %' or ~a like '% ~a' ~
+                           or ~a like '% ~a %');"
+                   (second (assoc :id (fields-map lexicon)))
+                   (lex-tb lexicon)
+                   orthfield orthstr
+                   orthfield orthstr
+                   orthfield orthstr
+                   orthfield orthstr))
+         (query-res (run-query 
+                     lexicon 
+                     (make-instance 'sql-query :sql-string sql-str))))
+    (mapcar #'str-to-symbol-format (mapcar #'car (records query-res)))))
 
 ; to be used to control whether the table exists
 (defmethod table-existing-p ((lexicon psql-lex-database) tablename)
-  (let* ((sql-str (format nil "select * from pg_tables where tablename='~a';" tablename))
-         (query-res (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
-    (if (records query-res)
-        tablename
-      nil)))
+  (let* ((sql-str (format 
+                   nil 
+                   "select * from pg_tables where tablename='~a';" 
+                   tablename))
+         (query-res (run-query 
+                     lexicon 
+                     (make-instance 'sql-query :sql-string sql-str))))
+    (when (records query-res) tablename)))
 
-                                        ; really necessary?
+;;; really necessary?
+;;; (used to index for generator)
+;;; _fix_me_
+;;; for compliance with other lexical sources, lex-words() is expected to
+;;; return "ad" and "hoc" separately, rather than just "ad hoc"; would need 
+;;; to break orthography strings from DB into components and then uniq(1).
+;;;                                                        (4-oct-02; oe)
 (defmethod lex-words ((lexicon psql-lex-database))
-  (let* ((sql-str (format nil "select distinct ~a from ~a;" 
-                          (second (assoc :ORTH (fields-map lexicon)))
-                          (lex-tb lexicon)))
-         (query-res (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
+  (let* ((sql-str (format 
+                   nil 
+                   "select distinct ~a from ~a;" 
+                   (second (assoc :orth (fields-map lexicon)))
+                   (lex-tb lexicon)))
+         (query-res (run-query 
+                     lexicon 
+                     (make-instance 'sql-query :sql-string sql-str))))
     (mapcar #'(lambda (x) (string-upcase (car x)))
             (records query-res))))
 
 (defmethod collect-psort-ids ((lexicon psql-lex-database))
-  (let* ((sql-str (format nil "select distinct ~a from ~a;" 
-                          (second (assoc :ID (fields-map lexicon)))
-                          (lex-tb lexicon)))
-         (query-res (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
+  (let* ((sql-str (format 
+                   nil 
+                   "select distinct ~a from ~a;" 
+                   (second (assoc :id (fields-map lexicon)))
+                   (lex-tb lexicon)))
+         (query-res (run-query 
+                     lexicon 
+                     (make-instance 'sql-query :sql-string sql-str))))
     (mapcar #'(lambda (x) (str-to-symbol-format (car x)))
             (records query-res))))
-
 
 (defmethod read-psort ((lexicon psql-lex-database) id &key (cache nil))
   (declare (ignore cache))
   (let* ((sql-str (format nil "select ~a from ~a where ~a='~a';" 
                           (make-requested-fields lexicon)
                           (lex-tb lexicon)
-                          (second (assoc :ID (fields-map lexicon)))
+                          (second (assoc :id (fields-map lexicon)))
                           (symbol-to-str-format id)))
-         (query-res (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
-    ;; contrary to comment in clex.lsp, here only ONE record returned
-    ;; as the id is primary key with unique index!
-    ;; so no problem in taking the car
-    (car (make-psort-struct lexicon (make-column-map-record query-res)))))
+         (query-res (run-query 
+                     lexicon 
+                     (make-instance 'sql-query :sql-string sql-str))))
+    (when (records query-res)
+      (make-psort-struct lexicon (make-column-map-record query-res)))))
 
 ;; TODO
 ;; rewrite the set-lexical-entry and store-psort, 
 ;; with sql statement "insert into", if needed.
 
-;; this is to avoid being anoyed when word not in the database.
+;; this is to avoid being annoyed when word not in the database.
 (defmethod collect-expanded-lex-ids ((lexicon external-lex-database))
-  nil)
+  (error "read-cached-lex(): invalid method on PostGreSQL lexicon"))
 
+(defmethod clear-lex ((lexicon psql-lex-database) &optional no-delete)
+  (declare (ignore no-delete)))
 
-;; ----
-;; TEST SET 
-;; to be loaded after everything else, on top of the existing cdb grammar loaded the normal way with LKB
-#|
-(setf *lexicon* (make-instance 'psql-lex-database 
-                  :dbname "ergDB" :host "localhost" :user "faml2" :password ""
-                  :lex-tb "gr9lexicon"
-                  :fields-tb "gr9lexdef"))
+(defmethod read-cached-lex ((lexicon psql-lex-database) filenames)
+  (declare (ignore filenames))
+  (error "read-cached-lex(): invalid method on PostGreSQL lexicon"))
 
-(make-field-map-slot *lexicon*)
-|#
-
-;; TEST QUERY
-#|
-(setf *qq* (make-column-map-record 
-            (run-query *lexicon2* 
-                       (make-instance 'sql-query :sql-string "select * from gr9lexicon where lexid='dog_k'"))))
-|#
-;;; ----
+(defmethod unexpand-psort ((lexicon psql-lex-database) id)
+  (declare (ignore id))
+  (error "read-cached-lex(): invalid method on PostGreSQL lexicon"))
