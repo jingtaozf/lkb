@@ -23,6 +23,8 @@
 (defparameter *lkb-exe-p* nil
   "controls the appearance of the LKB interface")
 
+(defvar *lkb-menu-type* :core)
+
 (defvar *lkb-menu* nil)
 
 (defvar *lkb-real-menu* nil)

@@ -16,6 +16,7 @@
 ;;; mods to: set-up-lkb-interaction  (extra menu items added)
 ;;;          apply-lex
 
+(defvar *lkb-menu-type* :core)
 
 (defvar *lkb-menu-disabled-list* nil
   "Kludge because of MCL bug!!!!")
