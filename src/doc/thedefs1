@@ -122,7 +122,7 @@
        {\setlength{\topsep}{0in}
        	\setlength{\leftmargin}{.25in}
 	       \setlength{\labelsep}{0.125in}}
-       \item \begin{minipage}[t]{4.75in} % was 4.25
+       \item \begin{minipage}[t]{5.75in} % was 4.25
    }%
    {\end{minipage}
     \end{list}\vspace{.2in}}
