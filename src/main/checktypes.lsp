@@ -184,6 +184,8 @@
             (when (expand-and-inherit-constraints)
               (format t "~%Making constraints well formed")
               (when (strongly-type-constraints)
+                (format t "~%Optimising unification check paths") 
+                (optimise-check-unif-paths)
                 ;;; YADU --- extra expansion stage
                 ;;; earlier stages are unchanged
                 (format t "~%Expanding defaults") 
