@@ -65,7 +65,7 @@
 (defstruct (var)
   type
   extra ; e.g. agreement values
-  id)
+  id name)
 
 (defstruct (extrapair)
   feature
@@ -1055,7 +1055,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
          (existing (assoc varname *already-read-vars*))
          (var (or (cdr existing)
                   (make-var :id (funcall *variable-generator*)
-                            :type (char varname 0)))))
+                            :type (char-downcase (char (string varname) 0))))))
     (unless existing 
       (push (cons varname var) *already-read-vars*))
     (let ((next-char (peek-char t istream nil 'eof)))
