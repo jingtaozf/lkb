@@ -21,7 +21,7 @@
 ;;; set LKB version
 ;;;
 
-(defvar *lkb-version* "5.3")
+(defvar *lkb-version* "5.4 (beta)")
 
 ;;; see also below - *features*
 
