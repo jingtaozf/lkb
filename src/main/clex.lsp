@@ -11,7 +11,8 @@
 
 (setf *lexicon* (make-instance 'cdb-lex-database))
 
-(defmethod lookup-word ((lexicon cdb-lex-database) orth)
+(defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache t))
+  (declare (ignore cache))
   (unless (orth-db lexicon)
     (setf (orth-db lexicon) 
       (cdb:open-read *psorts-temp-index-file*)))
@@ -19,6 +20,9 @@
 
 (defmethod lexicon-loaded-p ((lexicon cdb-lex-database))
   (not (null (psort-db lexicon))))
+
+(defmethod lex-words ((lexicon cdb-lex-database))
+  (cdb:all-keys (orth-db *lexicon*)))
 
 (defmethod read-cached-lex ((lexicon cdb-lex-database) filenames)
   (unless (or *psorts-temp-file* *psorts-temp-index-file*)

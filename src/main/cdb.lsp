@@ -48,7 +48,7 @@
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (export '(open-write close-write open-read close-read write-record 
-	    read-record)))
+	    read-record all-keys)))
 
 (defstruct (cdb)
   (stream nil)
@@ -279,3 +279,34 @@
 			  (push r result)
 			(return))))))
 	  result)))))
+
+;; Collect all keys in a hash table and return as a list of strings
+
+(defun all-keys (cdb)
+  (unless (eq (cdb-mode cdb) :input)
+    (error "Database not open for input."))
+  (with-slots (stream tables) cdb
+    (let ((end (car (aref (cdb-tables cdb) 0)))
+	  (keys (make-hash-table :test #'equal 
+				 #+allegro :values #+allegro nil))
+	  (key-list nil))
+      (file-position stream 8)
+      (loop while (< (file-position stream) end)
+	  do 
+	    (let ((key (make-string (read-fixnum stream)))
+		  (data-len (read-fixnum stream)))
+	      (read-sequence key stream)
+	      #-allegro
+	      (setf (gethash key keys) t)
+	      #+allegro
+	      (excl:puthash-key key keys)
+	      (dotimes (x data-len)
+		(read-char stream))))
+      (maphash #'(lambda (x y) 
+		   (declare (ignore y))
+		   (push x key-list))
+	       keys)
+      key-list)))
+
+	    
+	    

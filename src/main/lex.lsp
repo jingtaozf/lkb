@@ -25,7 +25,7 @@
    (psorts :initform (make-hash-table :test #'eq))
    (temp-psorts :initform (make-hash-table :test #'eq))))
 
-(defgeneric lookup-word (lexicon orth))
+(defgeneric lookup-word (lexicon orth &key (cache t)))
 
 (defgeneric lex-words (lexicon))
 
@@ -361,20 +361,14 @@
 ;;;  General lexicon methods
 ;;;
 
-(defmethod lookup-word :around ((lexicon lex-database) orth)
+(defmethod lookup-word :around ((lexicon lex-database) orth &key (cache t))
   (cond ((gethash orth (slot-value lexicon 'lexical-entries)))
 	(t 
 	 (let ((value (call-next-method)))
-	   (setf (gethash orth (slot-value lexicon 'lexical-entries)) 
-	     value)))))
-
-(defmethod lex-words ((lexicon lex-database))
-  (let ((words nil))
-    (maphash #'(lambda (k v)
-		 (declare (ignore v))
-		 (push k words))
-	     (slot-value lexicon 'lexical-entries))
-    words))
+	   (when cache
+	     (setf (gethash orth (slot-value lexicon 'lexical-entries)) 
+	       value))
+	   value))))
 
 (defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry)
   (store-psort lexicon id new-entry orth)
@@ -429,6 +423,14 @@
 (defmethod lexicon-loaded-p ((lexicon simple-lex-database))
   (and (streamp (slot-value lexicon 'psorts-stream))
        (open-stream-p (slot-value lexicon 'psorts-stream))))
+
+(defmethod lex-words ((lexicon simple-lex-database))
+  (let ((words nil))
+    (maphash #'(lambda (k v)
+		 (declare (ignore v))
+		 (push k words))
+	     (slot-value lexicon 'lexical-entries))
+    words))
 
 (defmethod read-cached-lex ((lexicon simple-lex-database) filenames)
   (unless (or *psorts-temp-file* *psorts-temp-index-file*)
