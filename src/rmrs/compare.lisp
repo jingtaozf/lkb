@@ -518,7 +518,7 @@ the canonical order is fully defined.
 	  ;;; 2 is more specific
 	  ((and (gpred-subsumes-gpred-p pred2 pred1)
 		(not (rel-parameter-strings rel2))) :sub1)
-	  ((and (gpred-compatible-gred-p pred1 pred2)
+	  ((and (gpred-compatible-gpred-p pred1 pred2)
 		(not (or (rel-parameter-strings rel1)
 			 (rel-parameter-strings rel2)))) :comp)
 	  (t nil))))
@@ -539,11 +539,11 @@ the canonical order is fully defined.
 	(type2 (vsym gpred2)))
     (and (is-valid-type type1)
 	 (is-valid-type type2)
-	 (equal-or-subtype type1 type2)))
+	 (equal-or-subtype type2 type1)))
   #-:lkb (declare (ignore gpred1 gpred2))
   #-:lkb nil)
 
-(defun gpred-compatible-gred-p (gpred1 gpred2)
+(defun gpred-compatible-gpred-p (gpred1 gpred2)
   ;;; currently only called if not equal
   ;;; or subsuming
   ;;; returns t if gpred1 and gpred2 are compatible
