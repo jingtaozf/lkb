@@ -225,6 +225,21 @@
   `(progn ,@body))
 
 
+;;;
+;;; satisfy measurement fetish: list used to store (cpu) time used to find
+;;; individual readings: bottom element is start time for parse(), topmost is
+;;; end time; when *first-only-p* is :best-first-all, additional elements
+;;; record time for finding an analyses, one per reading.  (24-feb-99  -  oe)
+;;;
+(defparameter *parse-times* nil)
+
+;;;
+;;; restrict best-first parsing to some upper limit of readings; this default
+;;; preserves the former behaviour (i.e. find just one reading); i guess, this
+;;; variable should really go someplace else ...           (24-feb-99  -  oe)
+;;;
+(defparameter *maximal-number-of-readings* 1)
+
 (defun parse (user-input &optional (show-parse-p t) 
 				   (first-only-p *first-only-p*))
   (if (> (length user-input) *chart-limit*)
@@ -238,6 +253,8 @@
 	(flush-heap *agenda*)
 	(clear-chart)
 	(setf *cached-category-abbs* nil)
+        (setf *parse-record* nil)
+        (setf *parse-times* (list (get-internal-run-time)))
 	#+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
 	(add-morphs-to-morphs user-input)
 	(unless 
@@ -247,8 +264,13 @@
 	      (loop 
 		  until (empty-heap *agenda*)
 		  do (funcall (heap-extract-max *agenda*))))
-	  (setf *parse-record*
-	    (find-spanning-edges 0 (length user-input)))))
+          (unless first-only-p
+            ;;
+            ;; we have done this already (incrementally) in the parse loop
+            ;;
+            (setf *parse-record*
+              (find-spanning-edges 0 (length user-input)))))
+        (push (get-internal-run-time) *parse-times*))
 	(when show-parse-p (show-parse))
 	(values *executed-tasks* *successful-tasks* *contemplated-tasks*
 		*filtered-tasks*))))
@@ -656,10 +678,14 @@
 	    (make-chart-entry :configurations (list config))))))
     ;; Did we just find a parse?
     (when (and f (eql left (car f))
-	       (eql right (cdr f))
-	       (setf *parse-record* (find-spanning-edge config (car f) 
-							(cdr f))))
-      (throw 'first t))))
+	       (eql right (cdr f)))
+      (let ((result (find-spanning-edge config (car f) (cdr f))))
+        (when result
+          (push (get-internal-run-time) *parse-times*)
+          (setf *parse-record* (nconc result *parse-record*))
+          (when (>= (length *parse-record*) *maximal-number-of-readings*)
+            (throw 'first t)))))))
+
 
 (defun try-grammar-rule-left (rule rule-restricted-list left-vertex 
 			      right-vertex child-edge-list f n)
