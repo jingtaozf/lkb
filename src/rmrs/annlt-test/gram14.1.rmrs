@@ -408,10 +408,12 @@
 
 <rule>
 <name>S/pp_s</name>
+<comment>testing anchor</comment>
 <dtrs><dtr>PP</dtr><dtr>OPT</dtr><dtr>S</dtr></dtrs>
 <head>S</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
+<slots><noanchor/></slots>
 <rarg><rargname>ARGN</rargname><label>H</label><var>U</var></rarg>
 </semstruct>
 <equalities><rv>U</rv><dh><dtr>PP</dtr><he>INDEX</he></dh></equalities>
@@ -629,11 +631,12 @@
 <semstruct>
 <hook><index>E</index><label>H1</label></hook>
 <ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
-<rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG1</rargname><label>H2</label><var>X</var></rarg>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H2</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
@@ -2403,8 +2406,19 @@
 
 <rule>
 <name>V1/not_vp</name>
+<comment>need anchor here</comment>
 <dtrs><dtr>NG</dtr><dtr>VP</dtr></dtrs>
 <head>NG</head>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<slots><anchor>H3</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
+</semstruct>
+<equalities><rv>H1</rv><dh><dtr>NG</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
 <rule>
@@ -2678,8 +2692,14 @@
 
 <rule>
 <name>V1/have_past</name>
+<comment>equate events so that tense appears in the right place</comment>
 <dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -2816,7 +2836,17 @@
 <rule>
 <name>V1/modal_bse</name>
 <dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
-<head>VP</head>
+<head>V</head>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<slots><anchor>H3</anchor></slots>
+<rarg><rargname>ARG1</rargname><label>H1</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
+</semstruct>
+<equalities><rv>H1</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
 <rule>

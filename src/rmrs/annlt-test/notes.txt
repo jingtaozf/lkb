@@ -12,12 +12,41 @@ for `do the dishes' etc).  There is also a contentful `be' in the ERG for
 
 Test suite examples:
 
-1. RASP has no chance of distinguishing expletive `it' in `it rains'
+1. It rained
 
-3. open_v_1 vs open_v
+RASP has no chance of distinguishing expletive `it'
+
+2. Abrams barked 
+
+3. The window opened
+   open_v_1 in ERG vs open_v
    (note that `Abrams opened the window' gives `open_v_cause' (ARG1 ARG2)
 
+4. Abrams chased Browne
 
+5. Abrams handed Browne the cigarette 
+
+6. Abrams handed the cigarette to Browne
+ARG1, ARG2, ARG3 FIX
+
+7. Abrams bet Browne a cigarette that it rained
+8. Abrams knew that it rained
+9. Abrams intended to bark 
+10. Abrams intended Browne to bark
+11. Every cat barked
+12. Every cat chased some dog
+13. My cat barked
+14. It barked
+15. The cat chased it
+16. The cat chased itself
+17. The cat chased one
+
+this is the pronoun `one' (I think) - in RASP it has the same tag as somebody
+and everybody - which means we have to treat it as very underspecified
+
+18. Mine barked
+19. That opened
+20. Cats bark
 
 
 
