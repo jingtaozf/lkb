@@ -124,7 +124,7 @@
              ;; transfer.                                        (4-mar-04; oe)
              ;;
              (*process-exhaustive-inputs-p* (if (eq type :transfer)
-                                              100
+                                              50
                                               *process-exhaustive-inputs-p*))
              (*tsdb-trees-hook*
               (unless interactive
@@ -784,6 +784,7 @@
                                 (if *tsdb-write-passive-edges-p*
                                   -1
                                   *tsdb-maximal-number-of-results*))
+                               result-id
                                interactive burst)
 
   (cond
@@ -821,15 +822,23 @@
                         (get-field :p-input item)
                         (get-field :i-input item)))
            (reader (find-attribute-reader :mrs))
-           (mrs (when (and (smember type '(:transfer :generate))
-                           (null *process-exhaustive-inputs-p*))
-                  (let* ((ranks (get-field :ranks item))
-                         (top (loop
-                                  for rank in ranks
-                                  for foo = (get-field :rank rank)
-                                  thereis (when (eql foo 1) rank)))
-                         (mrs (get-field :mrs top))
-                         (derivation (get-field :derivation top))
+           (mrs (when (smember type '(:transfer :generate))
+                  (let* ((id
+                          (if (numberp result-id)
+                            result-id
+                            (unless *process-exhaustive-inputs-p*
+                              (loop
+                                  for rank in (get-field :ranks item)
+                                  when (eql (get-field :rank rank) 1)
+                                  return (get-field :result-id rank)))))
+                         (result
+                          (when id
+                            (loop
+                                for result in (get-field :results item)
+                                when (eql (get-field :result-id result) id)
+                                return result)))
+                         (mrs (get-field :mrs result))
+                         (derivation (get-field :derivation result))
                          (edge (and derivation
                                     (ignore-errors (reconstruct derivation)))))
                     (when edge (setf %graft-aligned-generation-hack% edge))
@@ -846,8 +855,8 @@
       (gc-statistics-reset)
       (setf i-load (unless interactive #+:pvm (load_average) #-:pvm nil))
       (setf result 
-        (if (and *process-exhaustive-inputs-p*
-                 (smember type '(:transfer :generate)))
+        (if (and (smember type '(:transfer :generate))
+                 (null mrs))
           (loop
               for inputs in (get-field :results item)
               for i from 1 to (if (numberp *process-exhaustive-inputs-p*)
@@ -1193,9 +1202,9 @@
   
   (let* ((readings (get-field :readings result))
          (results (get-field :results result)))
-    
-    (when *process-suppress-duplicates*
-      (nconc result (acons :unique (length results) nil)))
+
+    (nconc result (acons :unique (length results) nil))
+
     ;;
     ;; _fix_me_
     ;; find a reasonably efficient way of constructing a `score' relation when
@@ -1220,6 +1229,7 @@
 
 (defun print-result (result &key (stream *tsdb-io*))
   (let* ((readings (get-field :readings result))
+         (unique (get-field :unique result))
          (words (get-field :words result))
          (tcpu (/ (get-field+ :tcpu result 0) 1000))
          (tgc (/ (get-field+ :tgc result 0) 1000))
@@ -1266,13 +1276,13 @@
      ((and (integerp readings) (> readings 0))
       (format 
        stream 
-       " ---~:[~; time up:~] ~a ~
+       " ---~:[~; time up:~] ~:[~*~a~;~a [~a]~] ~
         (~,2f~:[~*~;:~,2f~]|~,2f:~,2f s) ~
         <~@[~d~]:~@[~d~]>~
         ~:[ {~d:~d}~;~2*~] ~
         (~a)~
         ~:[~*~*~; [~:[~;=~]~d]~].~%" 
-       timeup readings 
+       timeup (and unique (not (eql unique readings))) unique readings 
        tcpu (>= tgc 0.1) tgc first total 
        words edges 
        (or (= unifications copies 0)

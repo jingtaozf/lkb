@@ -143,6 +143,12 @@
 
 (defparameter *statistics-browsers* (make-hash-table))
 
+(defun per-cent (count base)
+  (when (and (numberp count) (numberp base))
+    (if (zerop base)
+      0
+      (* 100 (/ count base)))))
+
 (defun latexify-string (string)
   (if (and (stringp string) (>= (length string) 1))
     (let ((prefix (elt string 0)))

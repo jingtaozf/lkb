@@ -585,30 +585,33 @@
   (case action
     (:list
      (loop 
-             for cpu in (sort 
-                         (copy-list *pvm-cpus*) #'string< 
-                         :key #'(lambda (cpu) 
-                                  (let ((class (cpu-class cpu)))
-                                    (symbol-name
-                                     (typecase class
-                                       (cons (first class))
-                                       (t class))))))
-
-             for host = (cpu-host cpu)
-             for spawn = (cpu-spawn cpu)
-             for options = (cpu-options cpu)
-             for class = (cpu-class cpu)
-             do
-               (case format
-                 (:ascii
-                  (format
-                   stream
-                   "~&~%~a- `~(~:[~a~;~{~a~^ | ~}~]~)' (`~a');~%~
-                    ~a  command: `~a';~%~
-                    ~a  options: `~{~a~^ ~}';~%~%"
-                   prefix (consp class) class host
-                   prefix spawn
-                   prefix options)))))
+         for cpu in (sort 
+                     (copy-list *pvm-cpus*) #'string< 
+                     :key #'(lambda (cpu) 
+                              (let ((class (cpu-class cpu)))
+                                (symbol-name
+                                 (typecase class
+                                   (cons (first class))
+                                   (t class))))))
+                    
+         for host = (cpu-host cpu)
+         for task = (cpu-task cpu)
+         for spawn = (cpu-spawn cpu)
+         for options = (cpu-options cpu)
+         for class = (cpu-class cpu)
+         do
+           (case format
+             (:ascii
+              (format
+               stream
+               "~&~%~a- `~(~:[~a~;~{~a~^ | ~}~]~)' (`~a') ~
+                [~(~:[~a~;~{~a~^ | ~}~]~)]~%~
+                ~a  command: `~a';~%~
+                ~a  options: `~{~a~^ ~}';~%~%"
+               prefix (consp class) class host 
+               (consp task) task
+               prefix spawn
+               prefix options)))))
     (:kill
      (format stream "~atsdb(): performing full PVM reset ..." prefix)
      (pvm_halt :user (current-user))
@@ -630,6 +633,7 @@
            for cpu = (client-cpu client)
            for host = (cpu-host cpu)
            for spawn = (cpu-spawn cpu)
+           for type = (cpu-task cpu)
            for task = (client-task client)
            for tid = (get-field :tid task)
            for pid = (get-field :pid task)
@@ -639,10 +643,12 @@
            do
              (format
                  stream
-                 "~&~%~a- `~(~a~)' (pid: ~a --- tid: <~a>);~%~
+                 "~&~%~a- `~(~a~)' (pid: ~a --- tid: <~a>) ~
+                  [~(~:[~a~;~{~a~^ | ~}~]~)]~%~
                   ~a  command: `~a';~%~
                   ~a  status: ~(~a~) --- protocol: ~(~a~);~%"
                  prefix host pid tid
+                 (consp type) type
                  prefix spawn
                  prefix status protocol))))))
 

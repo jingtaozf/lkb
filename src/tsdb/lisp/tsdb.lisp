@@ -146,13 +146,15 @@
         (setf *tsdb-skeletons* (with-open-file (stream index 
                                                 :direction :input)
                                  (read stream nil nil))))
-      (when (and (find-package :mrs) 
-                 (null (gethash :mrs *statistics-readers*)))
-        (setf (gethash :mrs *statistics-readers*) "mrs::read-mrs-from-string")
-        (setf (gethash :mrs *statistics-browsers*) 
-          (if (and (find-package :mt) (find-symbol "BROWSE-MRSS" :mt))
-            "mt::browse-mrss"
-            "mrs::browse-mrs"))
+      (when (find-package :mrs)
+        (when (null (gethash :mrs *statistics-readers*))
+          (setf (gethash :mrs *statistics-readers*) 
+            "mrs::read-mrs-from-string"))
+        (when (null (gethash :mrs *statistics-browsers*))
+          (setf (gethash :mrs *statistics-browsers*) 
+            (if (and (find-package :mt) (find-symbol "BROWSE-MRSS" :mt))
+              "mt::browse-mrss"
+              "mrs::browse-mrs")))
         (setf (gethash :mrs *statistics-predicates*) "mrs::safe-mrs-unequalp"))
       (when (and (or (null action) (member action '(:cache :all))) cache)
         (load-cache :background background :name name :pattern pattern))))

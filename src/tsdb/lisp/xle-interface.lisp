@@ -5,7 +5,7 @@
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  (or (tsdb::clients-grammar) "norgram (mar-04)"))
+  (or (tsdb::clients-grammar) "norgram (jul-04)"))
 
 (defun tsdb::initialize-run (&key interactive 
                             exhaustive nanalyses
@@ -33,7 +33,7 @@
   ;; a field :context can be included in the run structure and will be passed
   ;; as the first parameter to finalize-run() upon completion.
   ;;
-  (parse "sov!" nil)
+  (parse "Sov!" nil)
   nil)
   
 (defun tsdb::finalize-run (context &key custom)
@@ -109,8 +109,9 @@
 		  #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
 		      (declare (ignore scons ssym sother ignore))
 		      (setf utcpu (- (+ tu ts) (+ tgcu tgcs)))
-		      (incf treal tr)))))
-           (pairlis '(:treal :total :tcpu :tgc :readings :results)
+		      (incf treal tr))))
+                (fragments 0))
+           (pairlis '(:treal :total :tcpu :tgc :readings :results :fragments)
                     (list treal (+ tcpu utcpu) tcpu tgc
                           readings
                           (loop
@@ -131,6 +132,8 @@
                                                   mrs mrss 
                                                   :test 
                                                   #'tsdb::safe-mrs-equal-p))
+                                      (when (mrs::fragmentp mrs)
+                                        (incf fragments))
                                       (push mrs mrss)
                                       (with-output-to-string (stream)
                                         (mrs::output-mrs1 
@@ -143,7 +146,8 @@
 			      finally 
 				(unless (zerop (solution graph))
 				  (free-graph-solution 
-				   (graph-address graph)))))))))
+				   (graph-address graph))))
+                          fragments)))))
 
     (append
      (when condition

@@ -16,7 +16,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(in-package "TSDB")
+(in-package :tsdb)
 
 (defparameter *pvm-master* nil)
 
@@ -24,6 +24,15 @@
 
 (defun client-idle-p (client)
   (eq (client-status client) :ready))
+
+(defun kill-client (client &key (prefix "") (stream *tsdb-io*))
+  (if (client-p client)
+    (let ((tid (client-tid client)))
+      (pvm_kill tid))
+    (format
+     stream
+     "~&~akill-client(): ignoring invalid client `~a'.~%"
+     prefix client)))
 
 (defun initialize-cpus (&key cpus
                              (classes '(:all))
@@ -38,12 +47,31 @@
                              (stream *tsdb-io*))
 
   (initialize-tsdb)
-  (when reset                           
-    (pvm_quit)
-    (pvm_start :user (current-user))
-    (sleep 2)
-    (setf *pvm-master* (pvm_register file *pvm-debug-p*))
-    (setf *pvm-clients* nil))
+  (when reset
+    (setf *pvm-clients*
+      (case reset
+        (:class
+         (loop
+             with classes = (if (consp classes) classes (list classes))
+             with allp = (member :all classes :test #'eq)
+             for client in *pvm-clients*
+             for cpu = (client-cpu client)
+             for class = (let ((class (cpu-class cpu)))
+                           (if (listp class) class (list class)))
+             when (or allp (intersection class classes))
+             do (kill-client client)
+             else collect client))
+        ;;
+        ;; _fix_me_
+        ;; add :task mode, killing off everything that intersects in its :task
+        ;; slot with one of the target cpus identified by .classes.
+        ;;                                                      (4-jul-04; oe)
+        (t
+         (pvm_quit)
+         (pvm_start :user (current-user))
+         (sleep 2)
+         (setf *pvm-master* (pvm_register file *pvm-debug-p*))
+         nil))))
   (when (and file (null reset))
     (format
      stream
@@ -214,3 +242,106 @@
                 (force-output)))))
       (pvm_quit)
       (excl:exit 1 :no-unwind t :quiet t))))
+
+(defun pvm-process (item &optional (type :parse)
+                    &key (exhaustive *tsdb-exhaustive-p*)
+                         (nanalyses *tsdb-maximal-number-of-analyses*)
+                         (nresults 
+                          (if *tsdb-write-passive-edges-p*
+                            -1
+                            *tsdb-maximal-number-of-results*)) 
+                         (i-id 0) (parse-id 0)
+                         result-id
+                         rankp
+                         (wait 5))
+
+  ;;
+  ;; zero out :edge fields, if any, since they are not remote readable
+  ;;
+  (when (listp item)
+    (loop
+        for result in (get-field :results item)
+        for edge = (assoc :edge result)
+        when edge do (setf (rest edge) nil)))
+
+  (let* ((item (if (stringp item)
+                 (pairlis '(:i-id :parse-id :i-input) 
+                          (list i-id parse-id item))
+                 item))
+         (client (allocate-client item :task type :wait wait))
+         (cpu (and client (pvm::client-cpu client)))
+         (tid (and client (client-tid client)))
+         (protocol (and client (client-protocol client)))
+         (p-input (when (eq type :parse)
+                    (let ((input (get-field :i-input item)))
+                      (cond
+                       ((and (cpu-p cpu) (cpu-preprocessor cpu))
+                        (call-hook (cpu-preprocessor cpu) input))
+                       (*tsdb-preprocessing-hook*
+                        (call-hook *tsdb-preprocessing-hook* input))))))
+         (item (acons :p-input p-input item))
+         (status (if tid 
+                   (case protocol
+                     (:raw
+                      (process_item tid item nanalyses nresults nil))
+                     (:lisp
+                      (revaluate 
+                       tid 
+                       `(process-item
+                         (quote ,item)
+                         :type ,type
+                         :result-id ,result-id
+                         :exhaustive ,exhaustive
+                         :nanalyses ,nanalyses
+                         :nresults ,nresults
+                         :verbose nil :interactive nil :burst t)
+                       nil
+                       :key :process-item
+                       :verbose nil)))
+                   :null))
+         (item 
+          (case status
+            (:ok 
+             (let ((status (process-queue nil :client client)))
+               (if (rest (assoc :pending status))
+                 (pairlis '(:readings :error)
+                          (list -1 
+                                (format nil "PVM client exit (tid # ~a)" tid)))
+                 ;;
+                 ;; _fix_me_
+                 ;; this is how things used to be in the web demo; is it really
+                 ;; necessary to put the original item back on?  (3-jul-04; oe)
+                 ;;
+                 (append (rest (assoc :result status)) 
+                         (when (eq type :parse) item)))))
+            (:error 
+             (setf (client-status client) :error)
+             (pairlis '(:readings :error)
+                      (list 
+                       -1 (format nil "PVM internal error (tid # ~a)" tid))))
+            (:null
+             (pairlis '(:readings :error)
+                      (list 
+                       -1 
+                       (format 
+                        nil 
+                        "maximum number of active sessions exhausted"))))))
+         (results (get-field :results item))
+         (results (if (and rankp (eq type :generate))
+                    (let* ((strings
+                            (loop
+                                for result in results
+                                collect (get-field :tree result)))
+                           (strings (mt::lm-score-strings strings)))
+                      (loop
+                          for result in results
+                          for foo in strings
+                          do (nconc result (acons :score (rest foo) nil)))
+                      (stable-sort
+                       results
+                       #'< :key #'(lambda (foo) 
+                                    (or (get-field :score foo) 0))))
+                    results)))
+    (when results
+      (setf (get-field :results item) results))
+    item))

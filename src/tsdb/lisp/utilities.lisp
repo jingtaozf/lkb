@@ -307,8 +307,18 @@
 #+(and (not :pvm) (not :allegro-version>=))
 (defun getpid () (random (expt 2 15)))
 
-(defun current-time (&key long)
-  (decode-time (get-universal-time) :long long))
+(defun current-time (&key long treal tcpu)
+  (case long
+    (:since
+     (let ((ncpu (get-internal-run-time))
+           (nreal (get-internal-real-time)))
+       (format 
+        nil
+        "~@[~,2f:~]~,2f"
+        (when tcpu (/ (- ncpu tcpu) internal-time-units-per-second))
+        (/ (- nreal treal) internal-time-units-per-second))))
+    (t
+     (decode-time (get-universal-time) :long long))))
 
 (defun decode-time (time &key long)
   (multiple-value-bind (second minute hour day month year foo bar baz)

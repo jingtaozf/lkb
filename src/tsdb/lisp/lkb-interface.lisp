@@ -524,6 +524,8 @@
         (ignore-errors
          (when (or (null mrs) (not (mrs::psoa-p mrs)))
            (error "null or malformed input MRS"))
+         (when (mrs::fragmentp mrs)
+           (error "fragmented input MRS"))
          (let* ((edges
                  (tsdb::time-a-funcall
                   #'(lambda () 
