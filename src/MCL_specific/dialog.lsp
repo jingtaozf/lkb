@@ -36,7 +36,8 @@
     (if (eql filename :cancel) nil
         filename)))
 
-(defun ask-user-for-new-pathname (prompt)
+(defun ask-user-for-new-pathname (prompt &optional protected)
+  (declare (ignore protected))
   ; to match Procyon def
   (let ((filename 
          (catch-cancel
