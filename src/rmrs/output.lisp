@@ -136,7 +136,8 @@
 
 ;;; <!ELEMENT rarg (rargname, label, var)>
 
-(defmethod rmrs-output-start-rmrs-arg ((rmrsout xml) predname)
+(defmethod rmrs-output-start-rmrs-arg ((rmrsout xml) predname with-ep-p)
+  (declare (ignore with-ep-p))
   (with-slots (stream) rmrsout
     (format stream "~%<rarg><rargname>~A</rargname>" predname)))
 
@@ -316,9 +317,11 @@ for gram.dtd and tag.dtd
 
 ;;; Parsonian arguments
 
-(defmethod rmrs-output-start-rmrs-arg ((rmrsout compact) predname)
+(defmethod rmrs-output-start-rmrs-arg ((rmrsout compact) predname with-ep-p)
   (with-slots (stream indentation) rmrsout
-    (format stream "~VT          ~A(" indentation predname)))
+    (if with-ep-p
+	(format stream "~VT          ~A(" indentation predname)
+      (format stream "~VT~A(" indentation predname))))
 
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -518,7 +521,7 @@ for gram.dtd and tag.dtd
       (loop for arg in rmrs-args
 	  unless (member arg *already-seen-rmrs-args*)
 	  do
-	    (print-rmrs-arg arg bindings rmrs-display-structure))
+	    (print-rmrs-arg arg bindings nil rmrs-display-structure))
       (print-rmrs-in-groups rmrs-in-groups bindings rmrs-display-structure)
       (print-rmrs-hcons rmrs-h-cons bindings rmrs-display-structure)
       positions)))
@@ -555,14 +558,14 @@ for gram.dtd and tag.dtd
 		(loop for arg in rmrs-args
 		    when (eql-var-id (rmrs-arg-label arg) (rel-handel ep))
 		    do		
-		      (print-rmrs-arg arg bindings rmrs-display-structure)
+		      (print-rmrs-arg arg bindings t rmrs-display-structure)
 		      (push arg *already-seen-rmrs-args*)))
 	      (if position
 		  (record-rmrs-position position ep))))))
 
-(defun print-rmrs-arg (arg bindings rmrs-display-structure)
-  (rmrs-output-start-rmrs-arg rmrs-display-structure
-			      (rmrs-arg-arg-type arg))
+(defun print-rmrs-arg (arg bindings with-ep-p rmrs-display-structure)
+  (rmrs-output-start-rmrs-arg rmrs-display-structure 
+			      (rmrs-arg-arg-type arg) with-ep-p)
   (let ((label (rmrs-arg-label arg)))
     (rmrs-output-label rmrs-display-structure 
 		       (find-rmrs-var-id

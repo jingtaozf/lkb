@@ -459,7 +459,7 @@ goes to
   ;;; takes a var-struct with a dummy id 
   ;;; and creates a new variable of the same type
   (or (let  ((existing-var
-	      (rest (assoc old-var-struct *local-var-context* :test #'rmrs-var-equal))))
+	      (rest (assoc old-var-struct *local-var-context* :test #'eql-var-id))))
 	(when (and existing-var (var-extra old-var-struct)
 		   (not (var-extra existing-var)))
 	  (setf (var-extra existing-var) (var-extra old-var-struct)))
@@ -557,7 +557,7 @@ goes to
 		  (if (pointer-p el)
 		      (get-var-for-pointer el dtr-hooks)
 		    (rest (assoc el *local-var-context* 
-                                 :test #'rmrs-var-equal)))))
+                                 :test #'eql-var-id)))))
 	    (when new-var
 	      (dolist (el1 new-els)
 		(share-var-info new-var el1))
@@ -565,9 +565,6 @@ goes to
 	(when new-els
 	  (push new-els real-eqs))))
     real-eqs))
-
-(defun rmrs-var-equal (v1 v2)
-  (equal (var-id v1) (var-id v2)))
 
 (defun share-var-info (v1 v2)
   ;;; FIX

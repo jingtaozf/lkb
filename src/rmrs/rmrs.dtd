@@ -15,7 +15,7 @@
 
 <!ATTLIST realpred
           lemma CDATA #REQUIRED
-          pos (v|n|j|r|p|q|x|u) #REQUIRED
+          pos (v|n|j|r|p|q|c|x|u) #REQUIRED
           sense CDATA #IMPLIED >
 
 <!ELEMENT gpred (#PCDATA)>
@@ -29,11 +29,20 @@
 <!ATTLIST var
           sort (x|e|h|u|l) #REQUIRED
           vid  CDATA #REQUIRED 
-          num  CDATA #IMPLIED
-          pers CDATA #IMPLIED
-          gender CDATA #IMPLIED
-          tense CDATA #IMPLIED
-          aspect CDATA #IMPLIED >
+          num  (sg|pl|u) #IMPLIED
+          pers (1|2|3|1or3|u) #IMPLIED
+          gender (m|f|n|u) #IMPLIED
+          divisible (+|-|u) #IMPLIED
+          cogn-st (type-id|uniq-id|fam|activ|in-foc|uniq-or-less|uniq-or-fam|fam-or-activ|active-or-more|fam-or-less|uniq-or-fam-or-activ|fam-or-more|activ-or-less|uniq-or-more|u) 
+          tense (past|present|future|non-past|u) #IMPLIED
+          telic (+|-|u) #IMPLIED
+          protracted (+|-|u) #IMPLIED
+          stative (+|-|u) #IMPLIED
+          incept (+|-|u) #IMPLIED
+          imr (+|-|u) #IMPLIED
+          boundedness (+|-|u) #IMPLIED
+          refdistinct (+|-|u) #IMPLIED >
+
 
 <!ELEMENT rarg (rargname, label, (var|constant))>
 

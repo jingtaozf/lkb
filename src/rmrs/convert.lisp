@@ -7,7 +7,13 @@
 ;;; convert an MRS structure to an RMRS  
 
 ;;; (defparameter lkb::*do-something-with-parse* 'mrs::batch-output-rmrs)
-  
+
+(defparameter *mrs-to-rmrs-conversion-warnings* nil)
+
+(defun warn-rmrs-problem (str)
+#+:lkb  (push lkb::*parse-input* *mrs-to-rmrs-conversion-warnings*)
+  (push str *mrs-to-rmrs-conversion-warnings*))
+
 #+:lkb
 (defun batch-output-rmrs nil
   (let ((sentence lkb::*parse-input*)
@@ -87,7 +93,12 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 (defun parsonify-rel (rel labels)
   (let* ((pred (rmrs-convert-pred (rel-pred rel)))
          (flist (rel-flist rel))
-         (main-arg (fvpair-value (car flist)))
+	 (main-arg (fvpair-value (car flist)))
+         (converted-main-arg (if (var-p main-arg)
+				 (rmrs-convert-variable main-arg)
+			       (progn (warn-rmrs-problem 
+				       (format nil "~A as main argument" main-arg))
+				      main-arg)))
          (label (rel-handel rel))
          (new-label (if (member (var-id label) labels) ;; conjunction
                         (create-new-rmrs-var 
@@ -101,20 +112,23 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
                           (val (fvpair-value fvpair)))
                       (unless (or 
                                (and (var-p val) 
-                                    (eql (var-type val) 'lkb::non_expl))
+                                    (equal (var-type val) "u"))
+			       ;;; remove any optional arguments
                                (member (string feat) *rmrs-ignore-features*
                                        :test #'equal))
                         (list (make-rmrs-arg 
                                :arg-type (string feat)
                                :label new-label
-                               :val val)))))))
+                               :val (if (var-p val)
+					(rmrs-convert-variable val)
+				      val))))))))
          (ep 
           (make-char-rel
            :handel new-label
            :parameter-strings (rel-parameter-strings rel)
            :extra (rel-extra rel)
            :pred pred 
-           :flist (list main-arg)
+           :flist (list converted-main-arg)
 	   :cfrom (if (char-rel-p rel)
 		      (char-rel-cfrom rel))
 	   :cto (if (char-rel-p rel)
@@ -123,9 +137,6 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
                        (make-in-group :labels (list label new-label)))))
     (values ep rmrs-args in-group
             (cons (var-id new-label) labels))))
-
-
-(defparameter *do-not-convert-preds* '("_cop_id_rel"))
 
 (defun rmrs-convert-pred (pred)
   ;;; the pred should obey the format:
@@ -138,8 +149,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
   ;;; is not decomposed
   (let* ((str (string-downcase (string pred))))
     ;;; parse the string - hacky ...
-    (if (or (not (eql (elt str 0) #\_))
-         (member str *do-not-convert-preds* :test #'string-equal))
+    (if (not (eql (elt str 0) #\_))
         str
       (let*
           ((uscore-pos2 (position #\_ str :start 1))
@@ -157,12 +167,74 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
         (if (not (equal remainder "_rel"))
               ;;; we're missing the _rel
               ;;; nasty so just output what we've got
-            str
+	    (progn (warn-rmrs-problem str)
+		   str)
           (make-realpred :lemma (subseq str 1 uscore-pos2)
                          :pos (subseq str (+ 1 uscore-pos2) uscore-pos3)
                          :sense (if uscore-pos4
                                    (subseq str (+ 1 uscore-pos3) uscore-pos4))))))))
 
 
-               
+
+(defun rmrs-convert-variable (var)
+  (make-var :type (var-type var)
+	    :id (var-id var)))
+	    
+;;;	    :extra (rmrs-convert-var-extra (var-extra var))))
+
+;;; conversion of extra values is going to be grammar specific
+;;; and there's no guarantee that it can be done one-to-one
+;;;
+;;; for now, code below works for current ERG - rationalize 
+;;; this when we've got a better idea of what's going on
+
+#|
+
+(defparameter *var-extra-conversion-table-simple*
+'(
+ (divisible . divisible)
+ (e.aspect.perf . refdistinct)
+ (e.aspect.progr . imr)
+ (e.tense . tense)))
+
+(defparameter *var-extra-conversion-table-complex*
+'(
+ ((png.gen fem) . (gender f))
+ ((png.gen masc) . (gender m))
+ ((png.gen andro) . (gender m-or-f))
+ ((png.gen neut) . (gender n))
+ ((png.pn 3sg) . (pers 3))
+ ((png.pn 3sg) .  (num sg))
+ ((png.pn 3pl) . (pers 3))
+ ((png.pn 3pl) . (num pl))
+ ((png.pn 2per) .  (pers 2))
+ ((png.pn 1pl) . (pers 1))
+ ((png.pn 1pl) . (num pl))
+ ((png.pn 1sg) . (pers 1))
+ ((png.pn 1sg) . (num sg))
+ ))
+
+
+(defun rmrs-convert-var-extra (extras)
+  (let ((converted nil))
+    (dolist (extra extras)
+      (let* ((feat (extrapair-feature extra))
+	     (val (extrapair-value extra))
+	     (simple-transfer
+	      (assoc feat *var-extra-conversion-table-simple*)))
+	(if simple-transfer
+	    (push (make-extrapair :feature 
+				  (cdr simple-transfer)
+				  :value val)
+		  converted)
+	  (if (and (member feat *var-extra-conversion-table-complex*
+			   :key #'caar)
+		   )))))))
+			   
+|#		  
+ 
+ 
+
+
+
 

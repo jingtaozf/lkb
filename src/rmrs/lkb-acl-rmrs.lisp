@@ -76,7 +76,7 @@
   (let ((rmrs (mrs-rmrs-rmrs mframe)))
     (if rmrs
       (clim:with-text-style (stream (lkb-parse-tree-font))
-        (mrs::output-rmrs1 rmrs 'mrs::compact stream))
+        (mrs::output-rmrs1 rmrs 'mrs::compact stream t))
       (format stream "~%::: RMRS structure could not be extracted~%"))))
 
 (defun show-mrs-rmrs-compare (mframe stream &key max-width max-height)
