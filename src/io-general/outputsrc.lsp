@@ -301,14 +301,15 @@
      "  {\"~(~a~)\", ~(~s~), NULL, ~:[NULL~*~;\"~(~a~)\"~], ~d, ~d},~%"
      instance form irule irule ipos length)))
 
+
 (defun output-entry-for-tnt (stream forms type irule)
-  ;;
-  ;; filter out `unk-' VerbMobil default lexical entries (25-mar-00  -  oe)
-  ;;
   (format
    stream
    "~{~(~a~)~^_~}~c~(~a~)~c~@[~(~a~)~]~%"
    forms #\tab type #\tab irule))
+
+(defun output-entry-for-tim (stream forms)
+  (format stream "~{~(~a~)~^ ~}~%" forms))
 
 (defun output-lexicon-for-pet (file 
                                &optional (format :pet)
@@ -380,6 +381,8 @@
                   (let* ((orth (split-into-words form))
                          (form (nth (if ipos (- ipos 1) 0) orth)))
                     (case format
+		      (:tim
+                       (output-entry-for-tim stream orth))
                       (:pet
                        (output-entry-for-pet
                         stream
