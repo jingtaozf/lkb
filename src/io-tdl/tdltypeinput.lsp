@@ -285,12 +285,13 @@
           ((eql next-char #\@) (read-tdl-templ-call istream name path-so-far))
           ((eql next-char #\() (read-tdl-lkb-disj istream name path-so-far))
           ((eql next-char #\') (read-tdl-symbol istream name path-so-far))
-          ((eql next-char #\^) (if (and (boundp 
-                                         *tdl-expanded-syntax-function*)
-                                        *tdl-expanded-syntax-function*)
-                                   (apply *tdl-expanded-syntax-function*
-                                      (list istream name path-so-far))))
-                                 
+          ((eql next-char #\^) 
+           (if *tdl-expanded-syntax-function*
+               (apply *tdl-expanded-syntax-function*
+                      (list istream name path-so-far))
+             (progn (cerror "~%Treat as type" 
+                            "~% ^ syntax used without expanded-syntax-function")
+                    (read-tdl-type istream name path-so-far))))             
   ;;; AAC - April 1998
   ;;; The idea is to allow the TDL reading code to be specialized
   ;;; for different applications by allowing the appropriate function to
