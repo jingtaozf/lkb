@@ -306,7 +306,7 @@
                   (node-pos (type-hier-record-position record))
                   (view-pos (view-scroll-position pane)))
                  (create-type-hierarchy-tree  
-                    (top-type-node pane) (view-container pane)) (untrace)
+                    (top-type-node pane) (view-container pane))
                  (reposition-type-in-window
                     node pane nil (subtract-points node-pos view-pos))))
        :disabled (null (type-daughters type-entry)))
