@@ -313,7 +313,7 @@
               (push edge (edge-packed oedge))
               (incf *packings*)
               (return configuration))
-            +:bug
+            #+:bug
             (when backwardp
               #+:pdebug
               (format 
