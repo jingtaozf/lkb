@@ -50,7 +50,8 @@
 
 
 (defpackage :mp (:use "COMMON-LISP")
-   (:intern "RUN-FUNCTION" "PROCESS-WAIT" "PROCESS-KILL"))
+   (:intern "RUN-FUNCTION" "PROCESS-WAIT" "PROCESS-KILL" "WITH-PROCESS-LOCK"
+            "MAKE-PROCESS-LOCK"))
 (in-package :mp)
 
 (eval-when (:execute :load-toplevel :compile-toplevel)
@@ -62,4 +63,10 @@
         (symbol-function 'ccl:process-wait))
   (export 'process-kill)
   (setf (symbol-function 'process-kill) 
-        (symbol-function 'ccl:process-kill)))
+        (symbol-function 'ccl:process-kill))
+  (export 'with-process-lock)
+  (defmacro with-process-lock ((lock) &body body) 
+     `(ccl:with-lock-grabbed (,lock) ,@body))
+  (export 'make-process-lock)
+  (setf (symbol-function 'make-process-lock) 
+        (symbol-function 'ccl:make-lock)))

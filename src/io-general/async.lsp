@@ -2,14 +2,14 @@
 
 ;; A thread-safe first-in first-out queue
 
-#+(or :allegro :lispworks)
+#+(or :allegro :lispworks :mcl)
 (defmacro with-queue-lock ((queue) &body body)
   (let ((lock (gensym)))
     `(let ((,lock (queue-lock ,queue)))
        (mp:with-process-lock (,lock)
 	 ,@body))))
 
-#-(or :allegro :lispworks)
+#-(or :allegro :lispworks :mcl)
 (defmacro with-queue-lock ((queue) &body body)
   (declare (ignore queue))
   `(progn
@@ -22,7 +22,7 @@
 
 (defun make-queue ()
   (let ((queue (x-make-queue)))
-    #+(or :allegro :lispworks) (setf (queue-lock queue) (mp:make-process-lock))
+    #+(or :allegro :lispworks :mcl) (setf (queue-lock queue) (mp:make-process-lock))
     (setf (queue-head queue) (cons nil nil))
     (setf (queue-tail queue) (queue-head queue))
     queue))
