@@ -90,11 +90,14 @@
 ;;; funcall()s .semantix-hook. and .trees-hook. to obtain MRS and tree
 ;;; representations (strings); all times in thousands of secs
 
+;; DPF (16-Apr-99) - Modified PARSE-ITEM to also allow parse trees and MRS
+;; structures to be captured.
+
 (defun parse-item (string 
                    &key exhaustive trace
                         readings edges derivations semantix-hook trees-hook
                         burst derivationp)
-  (declare (ignore derivations semantix-hook trees-hook))
+  (declare (ignore derivations trees-hook))
   
   (multiple-value-bind (return condition)
     (ignore-errors
@@ -115,6 +118,7 @@
                                   (make-broadcast-stream *standard-output* str)
                                   str))
              tgc tcpu treal conses symbols others)
+        (setf cl-user::*sentence* string)
         (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks)
             #+allegro
             (excl::time-a-funcall
@@ -201,13 +205,17 @@
                        for r-redges = (length 
                                        (parse-tsdb-distinct-edges parse nil))
                        for size = (parse-tsdb-count-nodes parse)
+                       for mrs = (or (and semantix-hook
+					  (ignore-errors 
+					   (funcall semantix-hook parse)))
+				     "")
                        collect
-                         (pairlis '(:result-id :mrs :tree
+                         (pairlis '(:result-id :mrs ""
                                     :derivation :r-redges :size
                                     :r-stasks :r-etasks 
                                     :r-ftasks :r-ctasks
                                     :time)
-                                  (list i "" ""
+                                  (list i mrs trees
                                         derivation r-redges size
                                         -1 -1 
                                         -1 -1 
