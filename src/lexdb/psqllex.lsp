@@ -69,7 +69,7 @@
 (defvar *postgres-user-temp-dir* 
     (make-pathname :directory (pathname-directory (lkb-tmp-dir))))
 
-(defvar *psql-db-version* "3.06")
+(defvar *psql-db-version* "3.07")
 (defvar *psql-fns-version* "1.00")
 (defvar *psql-port-default* nil)
 
@@ -292,9 +292,13 @@
        ))))
 
 (defmethod run-command-stdin ((database psql-database) command filename)
-  (let ((connection (connection database)))
+  (let ((connection (connection database))
+	(host (host database)))
     (unless connection
-      (error "database ~s has no active connection." database))
+      (error "Database ~s has no active connection." database))
+    (unless (equal host
+		   "localhost")
+      (error "Operation requires db host = \"localhost\""))
     (pg::stdin-command-file connection command filename)))
 
 (defmethod run-command ((database psql-database) command)
@@ -700,16 +704,17 @@
 (defmethod open-lex ((lexicon psql-database) &key name parameters)
   (declare (ignore parameters)) ;; for_now 
   (close-lex lexicon)
-  (format t "~%Connecting to lexical database ~a@~a:~a as user ~a" 
+  (format t "~%Connecting to lexical database ~a@~a:~a" 
           (dbname lexicon)
           (host lexicon)
-          (port lexicon)
-          (user lexicon))
+          (port lexicon))
   (let* ((connection (connect lexicon))
 	 (dbversion))
     (setf *postgres-tmp-lexicon* lexicon)
     (cond
      (connection
+      (format t "~%Connected as user ~a" 
+	      (user lexicon))
       (format t "~%Opening ~a" (dbname lexicon))
       (unless (string>= (server-version lexicon) "7.3")
         (error *trace-output* 
@@ -720,8 +725,8 @@
       (unless (string>= (get-db-version lexicon) 
                         *psql-db-version*)
         (if (string>= dbversion "3.00")
-            (error "Your database structures (v. ~a) are out of date. Change to directory lkb/src/psql/ and use PSQL tool to import file import.sql. Ignore WARNING/ERROR messages. (NOTE: existing private schemas will be renamed tmpSCHEMANAME.)" dbversion dbversion)
-          (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then import file lkb/src/psql/import.sql using PSQL tool, and finally merge dumped LexDB into new database." dbversion (dbname lexicon))))
+            (error "Your database structures (v. ~a) are out of date. Change to directory lkb/lexdb/ and use PSQL tool to import file import.sql as DB owner. Ignore WARNING/ERROR messages. (NOTE: existing private schemas will be renamed tmpSCHEMANAME.)" dbversion dbversion)
+          (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then change to directory lkb/lexdb and import file import.sql as DB owner using PSQL tool, and finally merge dumped LexDB into new database." dbversion (dbname lexicon))))
       (make-field-map-slot lexicon)
       (retrieve-fn-defns lexicon)
       (initialize-userschema lexicon)

@@ -83,7 +83,7 @@
 (defun record-orth (record)
   (cdr (assoc :orthography record)))
 
-(defun string-2-str-list-on-spc (string)
+(defun string-2-str-list-on-spc (string &key (esc t))
   (loop
       with res
       with flag
@@ -97,8 +97,8 @@
 	     ((eq #\Space c)
 	      (push (implode-from-chars (reverse word-chars)) res)
 	      (setf word-chars nil))
-	     ((eq #\\ c)
-		 (setf flag t))
+	     ((and (eq #\\ c) esc)
+	      (setf flag t))
 	     (T
 	      (push c word-chars)))
       finally (return (reverse (push (implode-from-chars (reverse word-chars)) res)))

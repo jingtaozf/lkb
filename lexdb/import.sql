@@ -33,7 +33,7 @@ CREATE TABLE public.meta (
 );
 DELETE FROM public.meta WHERE var='db-version';
 DELETE FROM public.meta WHERE var='filter';
-INSERT INTO public.meta VALUES ('db-version', '3.06');
+INSERT INTO public.meta VALUES ('db-version', '3.07');
 INSERT INTO public.meta VALUES ('filter', 'TRUE');
 
 ---

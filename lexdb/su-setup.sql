@@ -28,17 +28,22 @@ RETURN true;
 END;' 
 LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION dump_db(text,text) RETURNS boolean AS '
+CREATE OR REPLACE FUNCTION dump_db_su(text) RETURNS text AS '
+DECLARE
+	dump_file_rev text;
+	dump_file_dfn text;
 BEGIN
+ dump_file_rev := ''/tmp/lexdb-temp.rev.'' || $1;
+ dump_file_dfn := ''/tmp/lexdb-temp.dfn.'' || $1;
  DELETE FROM temp;
  INSERT INTO temp
   (SELECT * FROM public.revision ORDER BY name, userid, version);
- EXECUTE ''COPY temp TO '' || $1 || '' DELIMITERS '''','''' WITH NULL AS '''''''''';
+ EXECUTE ''COPY temp TO '' || quote_literal(dump_file_rev) || '' DELIMITERS '''','''' WITH NULL AS '''''''''';
  CREATE TABLE temp_defn AS 
   SELECT * FROM defn ORDER BY mode,slot,field;
- EXECUTE ''COPY temp_defn TO '' || $2;
+ EXECUTE ''COPY temp_defn TO '' || quote_literal(dump_file_dfn);
  DROP TABLE temp_defn;
- RETURN true;
+ RETURN dump_file_rev || '' '' || dump_file_dfn;
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 

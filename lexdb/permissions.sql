@@ -11,5 +11,6 @@ GRANT INSERT ON public.meta TO PUBLIC;
 RETURN true;
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
+GRANT ALL ON public.temp TO PUBLIC;
 
 SELECT public.set_permissions();

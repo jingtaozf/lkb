@@ -88,6 +88,15 @@
           (error "multiple columns returned")
         (cdar rec)))))
   
+(defmethod raw-get-val ((lexicon psql-lex-database) sql-str)
+  (let* ((res (get-records lexicon sql-str))
+         (rec (first res)))
+    (if (> (length res) 1)
+        (error "too many records returned")
+      (if (> (length rec) 1)
+          (error "multiple columns returned")
+        (cdar rec)))))
+  
   
 (defmethod fn ((lexicon psql-lex-database) fn-name &rest rest)
   (unless (connection lexicon)
@@ -149,8 +158,8 @@
   (or (string= "t" (fn-get-val lexicon ''user-read-only-p (user lexicon)))
       (string= "T" (fn-get-val lexicon ''user-read-only-p (user lexicon)))))
 
-(defmethod dump-db ((lexicon psql-lex-database) revision-filename defn-filename)  
-    (fn-get-records lexicon ''dump-db revision-filename defn-filename))
+(defmethod dump-db ((lexicon psql-lex-database))  
+    (fn-get-val lexicon ''dump-db))
 
 (defmethod dump-scratch-db ((lexicon psql-lex-database) filename)  
   (setf filename (namestring (pathname filename)))
@@ -178,52 +187,57 @@
 		     "~/tmp/semi.obj.ddd"))
 
 (defmethod merge-into-db ((lexicon psql-lex-database) 
-			  revision-filename)  
+			  rev-filename)  
   (format t "~%")
   (run-command-stdin lexicon 
 		     (format nil "~a;~%~a;" 
 			     "DELETE FROM temp" 
 			     "COPY temp FROM stdin DELIMITERS ',' WITH NULL AS ''") 
-		     revision-filename)
+		     rev-filename)
   (let ((num-new-entries 
 	 (fn-get-val lexicon '
-		     'merge-into-db))) 
+		     'merge-into-db2))) 
     (format *postgres-debug-stream* "~%(vacuuming public.revision)")
     (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM public.revision"))
     num-new-entries))
 
 (defmethod merge-defn ((lexicon psql-lex-database) 
-		       defn-filename)  
+		       dfn-filename)  
   (when (catch 'pg:sql-error 
 	  (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL;"))
-    ;;(format t "(recreating temp_defn)")
     (run-command lexicon "DROP TABLE temp_defn")
     (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL ;"))
 	
   (run-command-stdin lexicon 
 		     "COPY temp_defn FROM stdin" 
-		     defn-filename)
-  (fn-get-val lexicon ''merge-defn))
-
+		     dfn-filename)
+  (fn-get-val lexicon ''merge-defn)
+  (run-command lexicon "DROP TABLE temp_defn")
+  )
 
 (defun dump-psql-lexicon (filename)
   (when
       (catch 'pg:sql-error
 	(progn
 	  (get-postgres-temp-filename)
-	  (let ((revision-filename (namestring (pathname (format nil "~a.csv" filename))))
-		(defn-filename (namestring (pathname (format nil "~a.dfn" filename))))
-		(postgres-tmp1 (format nil "~a.1" *postgres-temp-filename*))
-		(postgres-tmp2 (format nil "~a.2" *postgres-temp-filename*)))
-	    (dump-db *psql-lexicon* postgres-tmp1 postgres-tmp2)
+	  (let* ((revision-filename 
+		 (namestring (pathname (format nil "~a.csv" filename))))
+		(defn-filename 
+		    (namestring (pathname (format nil "~a.dfn" filename))))
+		 (pg-files 
+		  (string-2-str-list-on-spc
+		   (dump-db *psql-lexicon*)
+		   :esc nil))
+		 (pg-rev (first pg-files))
+		 (pg-dfn (second pg-files)))
 	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-							 postgres-tmp1
+							 pg-rev
 							 revision-filename))
 	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-							 postgres-tmp2
+							 pg-dfn
 							 defn-filename))
 	    nil)))
-    (format t "~%Dump aborted... (do you have the appropriate db permissions?")))
+    (format t "~%Dump aborted...")))
 
 (defun dump-scratch (filename)
   (get-postgres-temp-filename)
@@ -237,30 +251,34 @@
   (namestring (pathname (format nil format str))))
 
 (defun merge-into-psql-lexicon2 (lexicon filename)
-  (when
-      (catch 'pg:sql-error
-	(progn
-	  (get-postgres-temp-filename)
-	  (let ((revision-filename 
-		 (absolute-namestring "~a.csv" 
-				      filename))
-		(defn-filename 
-		    (absolute-namestring "~a.dfn" 
-					 filename)))
-	    ;; postgres universe
-	    (format t "~%(~a new revision entries)"
-		    (merge-into-db lexicon 
-				   revision-filename))
-	    ;; feedback
-	    (if (probe-file defn-filename)
-		(format t "~%(~a new defn entries)"
-			(merge-defn lexicon 
-				    defn-filename)))
-	    (build-current-grammar *psql-lexicon*))
-	  nil
-	  ))
-    (format t "Merge new entries aborted... (do you have the appropriate db permissions? Hint: log in as the db owner)")))
-	
+  "reconnect as db owner and merge new data into lexdb"
+  (unless (equal (host lexicon)
+		 "localhost")
+    (error "Operation requires db host = \"localhost\""))
+  (let ((db-user (user lexicon))
+	(db-owner (raw-get-val lexicon "SELECT db_owner()")))
+    (when
+	(initialize-psql-lexicon :user db-owner)
+      (when
+	  (catch 'pg:sql-error
+	    (progn
+	      (get-postgres-temp-filename)
+	      (let* ((rev-filename 
+		      (absolute-namestring "~a.csv" 
+					   filename))
+		     (dfn-filename 
+		      (absolute-namestring "~a.dfn" 
+					   filename)))
+		(merge-into-db lexicon 
+			       rev-filename)
+		(merge-defn lexicon 
+			    dfn-filename)
+		nil
+		)))
+	(format t "Merge new entries aborted..."))
+	(initialize-psql-lexicon :user db-user)
+      )))
+  
 (defmethod initialize-userschema ((lexicon psql-database))
   (unless
       (fn-get-val lexicon ''test-user (user lexicon))
