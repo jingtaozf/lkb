@@ -292,7 +292,7 @@ Parse nodes need to be added so we can understand the display.
       (format 
        stream 
        "~&~%compiled_lexical_entry(~
-        \"~(~a~)\", \"~(~a~)\", [~{~(~s~)~^ ~}], \"~{~(~a~)~^ ~}\", "
+        \"~(~a~)\", \"~(~a~)\", [~{~(~s~)~^, ~}], \"~{~(~a~)~^ ~}\", "
        id form stem derivation)
       (format stream "~%lexical_entry(\"~A\", " (string-downcase form)))
     (display-dag1 dag 'lilfes stream)
