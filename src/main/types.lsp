@@ -472,7 +472,10 @@
 
 (defvar *feature-list* (make-hash-table :test #'eq))
 
+(defvar *feature-minimal-type* (make-hash-table :test #'eq))
+
 (defun clear-feature-table nil
+   (clrhash *feature-minimal-type*)
    (clrhash *feature-list*))
 
 (defun maximal-type-of (feature)
@@ -500,8 +503,22 @@
             (reduce #'(lambda (x y)
                   (unless (or (null x) (null y))
                      (greatest-common-subtype x y)))
-               (mapcar #'maximal-type-of features))))
-      
+                    (mapcar #'maximal-type-of features))))
+
+;;; We also need to know about minimal types for feature values
+;;; for packing.  The following code caches the values as accessed
+;;; (moved from dag.lsp and replaced property lists with hash table)
+
+(defun minimal-type-for (feature)
+  (or (gethash feature *feature-minimal-type*)
+      (let* ((introduction (maximal-type-of feature))
+             (constraint (and introduction (constraint-of introduction)))
+             (type (or (and constraint 
+                            (type-of-fs (get-dag-value constraint feature)))
+                       *toptype*)))
+        (setf (gethash feature *feature-minimal-type*) type)
+        type)))
+
 ;; Remove obsolete pointers from type constraints so that the garbage
 ;; collector can purge the structures they point to.
 
