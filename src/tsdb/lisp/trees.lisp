@@ -465,7 +465,6 @@
       with items = (analyze data :thorough '(:derivation) 
                             :condition condition)
       for item in items
-      for input = (or (get-field :o-input item) (get-field :i-input item))
       for i-id = (get-field :i-id item)
       for parse-id = (get-field :parse-id item)
       for trees = (select '("t-version") '(:integer) "tree" 
@@ -502,7 +501,6 @@
                             (write-to-string
                              (lkb::compute-derivation-tree edge) 
                              :case :downcase))))
-            for mrs = (and edge (mrs::extract-mrs edge))
             for bar = (and edge (mrs::get-mrs-string edge))
             when edge do
               (format
