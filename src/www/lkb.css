@@ -19,6 +19,22 @@
     color: #1a04a5;
     background: #d8d6d6;
   }
+  table.mrsFragmentMrs {
+    padding: 0.2em;
+    border: solid;
+    border-width: thin;
+    border-color: red;
+    color: #1a04a5;
+    background: #d8d6d6;
+  }
+  table.mrsTokenMrs {
+    padding: 0.2em;
+    border: solid;
+    border-width: thin;
+    border-color: yellow;
+    color: #1a04a5;
+    background: #d8d6d6;
+  }
   table.mrsRelation {
     padding-right: 2px;
     padding-left: 1px;
@@ -30,6 +46,30 @@
     border-top: none;
     border-bottom: none;
   }
+  table.mrsFragmentRelation {
+    padding-right: 2px;
+    padding-left: 1px;
+    color: #1a04a5;
+    border-left: solid;
+    border-right: solid;
+    border-left-width: thin;
+    border-right-width: thin;
+    border-top: none;
+    border-bottom: none;
+    border-color: red;
+  }
+  table.mrsTokenRelation {
+    padding-right: 2px;
+    padding-left: 1px;
+    color: #1a04a5;
+    border-left: solid;
+    border-right: solid;
+    border-left-width: thin;
+    border-right-width: thin;
+    border-top: none;
+    border-bottom: none;
+    border-color: yellow;
+  }
   td.mrsFeatureTop, td.mrsFeatureIndex, 
   td.mrsFeatureRels, td.mrsFeatureHcons {
     font-size: 10pt; 
@@ -40,6 +80,12 @@
   }
   td.mrsPredicate { 
     font-size: 10pt; font-style: italic; 
+  }
+  .mrsFragmentRelation td.mrsPredicate { 
+    font-size: 10pt; font-style: italic; color: red;
+  }
+  .mrsTokenRelation td.mrsPredicate { 
+    font-size: 10pt; font-style: italic; color: yellow;
   }
   td.mrsLabel { 
     font-size: 10pt; font-style: normal; text-align: left; 
@@ -117,16 +163,25 @@
     border: solid; border-width: thin; width: compute;
   }
 
-  td.generatorOutput a:link, td.generatorOutput a:visited {
-    text-decoration: none;
-    background: #d8d6d6;
-    color: #2d2d2b;
-  }
-
+  td.generatorOutput a:link, td.generatorOutput a:visited,
   td.generatorOutput a:active, td.generatorOutput a:hover {
     text-decoration: none;
-    color: #d8d6d6;
-    background: #2d2d2b;
+    color: #2d2d2b;
+    background: #d8d6d6;
+  }
+
+  td.generatorFragmentOutput a:link, td.generatorFragmentOutput a:visited,
+  td.generatorFragmentOutput a:active, td.generatorFragmentOutput a:hover {
+    text-decoration: none;
+    color: red;
+    background: #d8d6d6;
+  }
+
+  td.generatorTokenOutput a:link, td.generatorTokenOutput a:visited,
+  td.generatorTokenOutput a:active, td.generatorTokenOutput a:hover {
+    text-decoration: none;
+    color: yellow;
+    background: #d8d6d6;
   }
 
   td.generatorOutputIndex {
@@ -142,6 +197,26 @@
   td.generatorOutput {
     background: #d8d6d6;
     color: #2d2d2b;
+    text-align: left; vertical-align: middle;
+    padding: 0.2em;
+    border none;
+    font-weight: normal; font-size: 14pt;
+    font-family: helvetica, arial, sans-serif;
+  }
+
+  td.generatorFragmentOutput {
+    background: #d8d6d6;
+    color: red;
+    text-align: left; vertical-align: middle;
+    padding: 0.2em;
+    border none;
+    font-weight: normal; font-size: 14pt;
+    font-family: helvetica, arial, sans-serif;
+  }
+
+  td.generatorTokenOutput {
+    background: #d8d6d6;
+    color: yellow;
     text-align: left; vertical-align: middle;
     padding: 0.2em;
     border none;
