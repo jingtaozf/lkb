@@ -187,7 +187,7 @@
 		       defn-filename)  
   (when (catch 'pg:sql-error 
 	  (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL;"))
-    (format t "(recreating temp_defn)")
+    ;;(format t "(recreating temp_defn)")
     (run-command lexicon "DROP TABLE temp_defn")
     (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL ;"))
 	
