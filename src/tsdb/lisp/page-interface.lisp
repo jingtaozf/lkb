@@ -140,8 +140,7 @@
             (pushnew (list name index key arity) result :test #'equal)))))
 
 (defun initialize-test-run (&key interactive exhaustive)
-  (declare (special pg::*maximal-number-of-edges*)
-           (ignore exhaustive))
+  (declare (ignore exhaustive))
   
   (let* ((storage (gensym ""))
          (parser (pg::get-parser :syntax))
@@ -149,17 +148,17 @@
           (pairlis '(tdl::*verbose-reader-p*
                      tdl::*verbose-definition-p*
                      main::*draw-chart-p*
+                     main::add-keys
                      pg::stat-rules
-                     pg::combo-parser-external-signal-fn
-                     pg::*maximal-number-of-edges*)
+                     pg::combo-parser-external-signal-fn)
                    (list tdl::*verbose-reader-p*
                          tdl::*verbose-definition-p*
                          main::*draw-chart-p*
+                         (main::add-keys main::*parser*)
                          (and parser
                            (pg::parser-stat-rules parser))
                          (and parser 
-                           (pg::combo-parser-external-signal-fn parser))
-                         pg::*maximal-number-of-edges*))))
+                           (pg::combo-parser-external-signal-fn parser))))))
 
     (unless interactive
       (setf main::*draw-chart-p* nil)
@@ -178,6 +177,8 @@
          (environment (get :environment storage)))
      (dolist (pair environment)
        (case (first pair)
+         (main::add-keys
+          (setf (main::add-keys main::*parser*) (rest pair)))
          (pg::parser-stat-rules
           (when parser
             (setf (pg::parser-stat-rules parser) (rest pair))))
@@ -192,8 +193,7 @@
                                semantix-hook trees-hook
                                derivationp
                                burst)
-  (declare (special pg::*maximal-number-of-edges*)
-           (ignore readings derivations derivationp))
+  (declare (ignore readings derivations derivationp))
 
   (let* ((string (remove-and-insert-punctuation string))
          (tracep (main::trace-p main::*parser*))
@@ -205,14 +205,9 @@
          result tcpu tgc treal conses symbols others)
 
     (setf (main::trace-p main::*parser*) trace)
-    (setf pg::*maximal-number-of-edges*
-      (if (and (integerp edges) (> edges 0)) edges nil))
-    (setf pg::*edge-id-counter* 0)
-    (setf (pg::combo-parser-external-signal-fn (pg::get-parser :syntax))
-      (if (> edges 0)
-        #'pg::maximal-number-of-edges-exceeded-p
-        #'(lambda (parser) (declare (ignore parser)))))
-    (setf pg::*edge-id-counter* 0)
+    (when (and (integerp edges) (> edges 0))
+      (setf (main::add-keys main::*parser*)
+        (nconc (list :itemslice edges) (main::add-keys main::*parser*))))
     (udine::reset-costs)
     (setf (main::output-stream main::*lexicon*) nil)
     (setf (main::output-stream main::*parser*) nil)
@@ -356,10 +351,7 @@
                             results)))))))))))
 
 (defun get-test-run-information ()
-  (let* ((application (if (boundp 'make::*page-version*)
-                        (format nil "PAGE (~a)" make::*page-version*)
-                        "PAGE"))
-         (grammar (current-grammar))
+  (let* ((grammar (current-grammar))
          (avms (tdl::get-global :avms))
          (avms (when (hash-table-p avms) (hash-table-count avms)))
          (sorts (tdl::get-global :sorts))
@@ -370,7 +362,17 @@
          (lparser (pg::get-parser :syntax))
          (parser (pg::get-parser :syntax))
          (lrules (and lparser (length (pg::combo-parser-lex-rules lparser))))
-         (rules (and parser (length (pg::combo-parser-syn-rules parser)))))
+         (rules (and parser (length (pg::combo-parser-syn-rules parser))))
+         (glbs (and (find-package :csli-unify)
+                    (find-symbol "*GLB-TYPES*" :csli-unify)))
+         (glbs (and glbs (boundp glbs) (symbol-value glbs)))
+         (glbs (when (hash-table-p glbs) (hash-table-count glbs)))
+         (application (format 
+                       nil 
+                       "PAGE (~a) [~(~a~); ~@[~d glbs~]]" 
+                       make::*page-version* 
+                       (symbol-name (type-of parser)) 
+                       glbs)))
     (append (and avms (list (cons :avms avms)))
             (and sorts (list (cons :sorts sorts)))
             (and templates (list (cons :templates templates)))
@@ -595,40 +597,44 @@
                      (rest (assoc :rule *legal-combinations*)))
         collect item)))
 
-;;;
-;;; maximal-number-of-tasks-exceeded-p() is installed as external-signal-fn()
-;;; in the syntax parser (because the :taskslice mechanism) is not readily
-;;; accessible to us)
-;;;
-
-;;;
-;;; for LKB comparability we want to restrict the number of edges rather than
-;;; attempts to build edges (tasks).                   (24-sep-98  -  oe)
-;;;
-(defparameter *maximal-number-of-edges* 0)
-(defparameter *maximal-number-of-edges-exceeded-p* nil)
-
 (defun maximal-number-of-edges-exceeded-p (parser)
-  (declare (ignore parser))
-  (and (integerp *maximal-number-of-edges*) (integerp *edge-id-counter*)
-       (when (>= *edge-id-counter* *maximal-number-of-edges*)
-         (format nil "edge limit (~a)" *edge-id-counter*))))
+  (let ((slice (loop
+                   with all = (main::add-keys main::*parser*) 
+                   for keys = all then (rest (rest keys))
+                   while keys
+                   thereis (and (eq (first keys) :itemslice)
+                                (second keys)))))
+    (when (and slice (integerp slice))
+      (let* ((statistics (parser-global-stats parser))
+             (successful (and statistics (stats-successful statistics))))
+        (when (and (integerp successful) (>= successful slice))
+          (format nil "item limit (~a)" successful))))))
 
 (defun maximal-number-of-tasks-exceeded-p (parser)
-  (when (eq (first (main::add-keys main::*parser*)) :taskslice)
-    (let* ((limit (second (main::add-keys main::*parser*)))
-           (statistics (parser-global-stats parser))
-           (executed (and statistics (stats-executed statistics))))
-      (when (and (integerp limit) (integerp executed) (>= executed limit))
-        (format nil "task limit (~a)" executed)))))
+  (let ((slice (loop
+                   with all = (main::add-keys main::*parser*)
+                   for keys = all then (rest (rest keys))
+                   while keys
+                   thereis (and (eq (first keys) :taskslice)
+                                (second keys)))))
+    (when (and slice (integerp slice))
+      (let* ((statistics (parser-global-stats parser))
+             (executed (and statistics (stats-executed statistics))))
+        (when (and (integerp executed) (>= executed slice))
+          (format nil "task limit (~a)" executed))))))
 
 (defun time-exceeded-p (parser)
-  (when (eq (first (main::add-keys main::*parser*)) :timeslice)
-    (let* ((limit (second (main::add-keys main::*parser*)))
-           (statistics (parser-global-stats parser))
+  (let ((slice (loop
+                   with all = (main::add-keys main::*parser*)
+                   for keys = all then (rest (rest keys))   
+                   while keys
+                   thereis (and (eq (first keys) :timeslice)
+                                (second keys)))))
+  (when (and slice (integerp slice))
+    (let* ((statistics (parser-global-stats parser))
            (total (and statistics (stats-time statistics))))
-      (when (and (integerp limit) (integerp total) (>= total limit))
-        (format nil "time limit (~a)" total)))))
+      (when (and (integerp total) (>= total slice))
+        (format nil "time limit (~a)" total))))))
 
 ;;;
 ;;; interface functions for reconstruction of derivations (in UDF --- unified
@@ -650,7 +656,7 @@
                        lex::*lex-package*))
          (instance (and (tdl::get-infon name *lex-package* :instances)
                         (first (tdl::get-instance name))))
-         (cfs (and instance (create-cfs-from-instance name instance nil))))
+         (cfs (and instance (create-cfs-from-instance instance))))
     (when cfs
       (make-combo-item
        :itype :lex-entry
@@ -713,8 +719,7 @@
        :key (item-key rule)
        :label (item-label rule)
        :index (combo-item-index rule)
-       :itype itype
-       :ruletype (item-ruletype rule))
+       :itype itype)
       (values status csli-unify::%failure%))))
 
 (defun instantiate-preterminal (preterminal affix)

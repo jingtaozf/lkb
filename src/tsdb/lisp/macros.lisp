@@ -21,10 +21,6 @@
 (defmacro get-field+ (field alist &optional default)
   `(or (rest (assoc ,field ,alist)) ,default))
 
-(defmacro tsdb-ignore-p (&rest foo)
-  (declare (ignore foo))
-  t)
-
 (defmacro find-tsdb-directory (language)
   `(let* ((data (dir-append (make-pathname :directory *tsdb-home*)
                             (list :relative ,language))))
@@ -66,6 +62,14 @@
            (:old 3)
            (:efficiency 4))))
   
+(defmacro convert-time (time granularity)
+  `(if (eql ,time -1)
+     -1
+     (/ ,time (cond
+               ((zerop ,granularity) 10)
+               ((= ,granularity 9808) 100)
+               ((>= ,granularity 9902) 1000)))))
+
 (defmacro make-meter (start end)
   `(pairlis (list :start :end) (list ,start ,end)))
 

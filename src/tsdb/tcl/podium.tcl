@@ -69,6 +69,7 @@ if {![info exists globals(graph_upper)]} {
   set globals(graph_upper) "";
 }; # if
 set globals(graph,by) :i-length;
+set globals(graph,scatterp) 1;
 
 set globals(rules,actives) 1;
 set globals(rules,passives) 1;
@@ -668,6 +669,18 @@ proc main {} {
   .menu.options.menu.switches add checkbutton \
     -label "Autoload Vocabulary" \
     -variable globals(autoload_vocabulary);
+   .menu.options.menu.switches add separator
+  .menu.options.menu.switches add checkbutton \
+    -label "Exclude GC Time" \
+    -variable globals(exclude_tgc_p) \
+    -command {tsdb_set exclude_tgc_p}; 
+  .menu.options.menu.switches add checkbutton \
+    -label "Analogy Aggregation" \
+    -variable globals(analogy_aggregation_p) \
+    -command {tsdb_set analogy_aggregation_p}; 
+  .menu.options.menu.switches add checkbutton \
+    -label "Scatter Plots" \
+    -variable globals(graph,scatterp);
   .menu.options.menu.switches add checkbutton \
     -label "Logarithmic Scales" \
     -variable globals(logscale);

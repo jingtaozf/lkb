@@ -420,12 +420,10 @@
            (i-id (get-field :i-id item)) 
            (i-input (get-field :i-input item))
            (i-wf (get-field :i-wf item))
-           (o-ignore (get-field :o-ignore item))
-           (o-ignore 
-            (and o-ignore (not (equal o-ignore "")) o-ignore)))
+           (o-ignore (get-field :o-ignore item)))
 
       (cond 
-       ((and o-ignore (tsdb-ignore-p))
+       ((and o-ignore (tsdb-ignore-p o-ignore))
         (when verbose
           (format
            stream
@@ -565,12 +563,14 @@
              (scavenge (gc-statistics :scavenge))
              (new (gc-statistics :new))
              (old (gc-statistics :old))
+             (total (length (gc-statistics :efficiency)))
              (efficiency (round (average (gc-statistics :efficiency))))
              (comment (format 
                        nil 
-                       "~a (global ~d) (scavenge ~d) ~
-                        (new ~d) (old ~d) (efficiency ~d)"
-                       comment global scavenge new old efficiency))
+                       "~a (:global ~d) (:scavenge ~d) ~
+                        (:new ~d) (:old ~d) ~
+                        (:efficiency ~d) (:total ~d)"
+                       comment global scavenge new old efficiency total))
              (a-load #+:pvm (load_average) #-:pvm nil))
         (push (cons :i-load i-load) result)
         (push (cons :a-load a-load) result)
@@ -805,7 +805,7 @@
   (declare (ignore burstp))
   #+:allegro
   (sys:gsgc-step-generation)
-  #+:fallegro
+  #+:gcdebug
   (let ((*terminal-io* excl:*initial-terminal-io*)
         (*standard-output* excl:*initial-terminal-io*))
     (sys:gsgc-parameters)
@@ -868,6 +868,10 @@
           (when gc-strategy (restore-gc-strategy gc-strategy))
           (cons (cons :end (current-time :long t)) finalization)))))))
 
+(defun tsdb-ignore-p (o-ignore)
+  (unless (or (null o-ignore) (equal o-ignore ""))
+    o-ignore))
+
 (defun call-hook (hook &rest arguments)
   (when hook
     (let* ((hook (typecase hook
@@ -889,8 +893,8 @@
       for tree = (get-field :tree parse)
       for mrs = (get-field :mrs parse)
       for edge = (when (and derivation
-                            (or *tsdb-trees-hook* (null tree))
-                            (or *tsdb-semantix-hook* (null mrs)))
+                            (or (and *tsdb-trees-hook* (null tree))
+                                (and *tsdb-semantix-hook* (null mrs))))
                    (reconstruct derivation))
       when edge do
         (let ((tree (call-hook *tsdb-trees-hook* edge))

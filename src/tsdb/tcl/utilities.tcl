@@ -356,14 +356,19 @@ proc update_phenomena_cascade {{code ""}} {
 
   global globals phenomena;
 
-  if {$code == "all" || $code == "reset" || $globals(phenomena,all)} {
+  if {[regexp {^[0-9]+$} $code]} {
+    set globals(phenomena,all) 1;
+    foreach i [lsort -integer [array names phenomena]] {
+      if {$globals(phenomena,$i)} {
+        set globals(phenomena,all) 0;
+      }; # if
+    }; # foreach
+  } elseif {$code == "all" || $code == "reset" || $globals(phenomena,all)} {
     set globals(phenomena,all) 1;
     foreach i [lsort -integer [array names phenomena]] {
       set globals(phenomena,$i) 0;
     }; # foreach
-  } elseif {$code != ""} {
-    set globals(phenomena,all) 0;
-  }; # if
+  }; # else
 
   if {$code == "reset"} {
     #
@@ -558,6 +563,23 @@ proc tsdb_set {variable {value ""}} {
       tenure_p {
         set variable "*tsdb-tenure-p*";
         set value [lispify_truth_value $globals(tenure_p)];
+      }
+      exclude_tgc_p {
+        set variable "*statistics-exclude-tgc-p*";
+        #
+        # _fix_me_
+        # this hardwires the set of time-measuring attributes for which gc()
+        # time will be discounted; should be configurable  (17-oct-99  -  oe)
+        #
+        if {$globals(exclude_tgc_p)} {
+          set value "(:first :total :tcpu)";
+        } else {
+          set value "nil";
+        }; # else
+      }
+      analogy_aggregation_p {
+        set variable "*statistics-analogy-aggregation-p*";
+        set value [lispify_truth_value $globals(analogy_aggregation_p)];
       }
     }; # switch
   }; # if

@@ -19,6 +19,7 @@
 (defmacro uday (tdfs1 tdfs2 path)
   `(yadu ,tdfs1 (create-temp-parsing-tdfs ,tdfs2 ,path)))
 
+
 (defun get-test-run-information ()
   (let* ((*package* (find-package :common-lisp-user))
          (exhaustivep (null *first-only-p*))
@@ -30,10 +31,7 @@
                                 (boundp (find-symbol "*HYPER-ACTIVITY-P*"))
                                 (symbol-value 
                                  (find-symbol "*HYPER-ACTIVITY-P*"))))
-         (chart-packing-p (and (find-symbol "*CHART-PACKING-P*")
-                              (boundp (find-symbol "*CHART-PACKING-P*"))
-                              (symbol-value 
-                               (find-symbol "*CHART-PACKING-P*"))))
+         (chart-packing-p #+:packing *chart-packing-p* #-:packing nil)
          (aagenda (and active-parsing-p
                        (find :agenda *features*)
                        (find-symbol "*AAGENDA*")
@@ -160,18 +158,16 @@
          ;; this really ought to be done in the parser ...  (30-aug-99  -  oe)
          ;;
          (setf *sentence* string)
-         (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks packings)
+         #+:packing
+         (reset-packings)
+         (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks)
              #+allegro
              (excl::time-a-funcall
               #'(lambda () (parse-tsdb-sentence sent trace))
               #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                  (declare (ignore ignore))
-                 (setq tgc (+ tgcu tgcs)
-                       tcpu (+ tu ts)
-                       treal tr
-                       conses (* scons 8)
-                       symbols (* ssym 24)
-                       others sother)))
+                 (setq tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
+                       conses (* scons 8) symbols (* ssym 24) others sother)))
              #-allegro
              (multiple-value-prog1
                  (progn
@@ -185,9 +181,8 @@
                        others
                        (- #+mcl (ccl::total-bytes-allocated) #-mcl -1 others)
                        tcpu
-                       (round 
-                        (* (- (get-internal-run-time) tcpu #+mcl rawgc) 1000)
-                        internal-time-units-per-second)
+                       (round (* (- (get-internal-run-time) tcpu) 1000)
+                              internal-time-units-per-second)
                        treal
                        (round (* (- (get-internal-real-time) treal) 1000)
                               internal-time-units-per-second)
@@ -196,17 +191,18 @@
                        #-mcl -1)))
           (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                  (output (get-output-stream-string str))
-                 (packingp (and (find-symbol "*CHART-PACKING-P*")
-                                (boundp (find-symbol "*CHART-PACKING-P*"))
-                                (symbol-value 
-                                 (find-symbol "*CHART-PACKING-P*"))))
-                 (readings (if packingp
-                             (let ((function (symbol-function 
-                                              (find-symbol "UNPACK-EDGE"))))
-                               (loop
-                                   for edge in *parse-record*
-                                   sum (length (funcall function edge))))
-                             (length *parse-record*)))
+                 (unifications *unifications*)
+                 (copies *copies*)
+                 #+:packing
+                 (packingp *chart-packing-p*)
+                 (readings #+:packing
+                           (if packingp
+                             (loop
+                                 for edge in *parse-record*
+                                 sum (length (unpack-edge! edge)))
+                             (length *parse-record*))
+                           #-:packing
+                           (length *parse-record*))
                  (readings (if (or (equal output "") (> readings 0))
                               readings
                              -1))
@@ -220,7 +216,6 @@
                           (round (* (- (first times) start) 1000) 
                                  internal-time-units-per-second)
                           (if (> readings 0) total -1)))
-                 (packings (and packingp packings))
                  (pool (and (find-symbol "*DAG-POOL*")
                             (boundp (find-symbol "*DAG-POOL*"))
                             (symbol-value (find-symbol "*DAG-POOL*"))))
@@ -228,29 +223,41 @@
                             (funcall 
                              (symbol-function (find-symbol "POOL-GARBAGE"))
                              pool)))
+                 (comment (format nil "(:garbage ~d)" garbage))
+                 #+:packing
                  (comment
                   (if packingp
                     (format 
                      nil 
-                     "(s ~d) (p ~d) (g ~d)" 
-                     *subsumptions* packings garbage)
-                    ""))
+                     "(:subsumptions ~d) ~
+                      (:proactive ~d) (:retroactive ~d) (:equivalence ~d) ~
+                      (:trees ~d) (:frozen ~d) (:failures ~d) ~a"
+                     *subsumptions*
+                     (packings-proactive *packings*)
+                     (packings-retroactive *packings*)
+                     (packings-equivalent *packings*)
+                     (length *parse-record*)
+                     (packings-frozen *packings*) 
+                     (packings-failures *packings*)
+                     comment)
+                    comment))
                  (summary (summarize-chart :derivationp derivationp)))
             (multiple-value-bind (l-s-tasks redges words)
                 (parse-tsdb-count-lrules-edges-morphs)
               (declare (ignore l-s-tasks words))
               `((:others . ,others) (:symbols . ,symbols) 
                 (:conses . ,conses)
-                (:treal . ,treal) (:tcpu . ,(+ tcpu tgc)) 
+                (:treal . ,treal) (:tcpu . ,tcpu)
                 (:tgc . ,tgc)
                 (:rpedges . ,redges) 
                 (:pedges . ,(rest (assoc :pedges summary)))
+                (:aedges . ,(rest (assoc :aedges summary)))
                 (:p-stasks . ,s-tasks) (:p-etasks . ,e-tasks) 
                 (:p-ftasks . ,f-tasks) (:p-ctasks . ,c-tasks) 
                 (:l-stasks . ,(rest (assoc :l-stasks summary)))
                 (:words . ,(rest (assoc :words summary)))
                 (:total . ,total) (:first . ,first) 
-                (:unifications . ,*unifications*) (:copies . ,*copies*)
+                (:unifications . ,unifications) (:copies . ,copies)
                 (:readings . ,readings)
                 (:error . ,output)
                 (:comment . ,comment)
@@ -405,6 +412,7 @@
       with derivations = nil
       for i from 0 to (- *chart-limit* 1)
       for entry = (aref *chart* i 0)
+      sum (length (aref *achart* i 0)) into aedges
       when (chart-entry-p entry)
       do
         (loop
@@ -443,9 +451,9 @@
                 (when derivationp 
                   (push (compute-derivation-tree edge) derivations))
                 (when (lexical-rule-p rule) (incf l-stasks)))))
-      finally (return (pairlis '(:pedges :words :l-stasks 
+      finally (return (pairlis '(:pedges :aedges :words :l-stasks 
                                  :derivations)
-                               (list (+ pedges words) words l-stasks 
+                               (list (+ pedges words) aedges words l-stasks 
                                      derivations)))))
               
                            

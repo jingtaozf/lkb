@@ -39,7 +39,8 @@
                                     (sys:gsgc-switch :verbose)
                                     (sys:gsgc-parameter :auto-step))))
         (statsp (member :stats verbosity :test #'eq))
-        (verbosep (member :verbose verbosity :test #'eq)))
+        (verbosep (member :verbose verbosity :test #'eq))
+        (*tsdb-tenured-bytes-limit* nil))
     (setf (system:gsgc-switch :dump-on-error) t)
     (setf (sys:gsgc-switch :print) (or verbosep statsp))
     (setf (sys:gsgc-switch :verbose) verbosep)
@@ -52,7 +53,7 @@
         (format
          *tsdb-io*
          "install-gc-strategy(): ~
-        disabling tenure; global garbage collection ..."))
+          disabling tenure; global garbage collection ..."))
       #-(version>= 5 0)
       (busy :gc :start)
       (excl:gc :tenure)
@@ -65,8 +66,7 @@
        *tsdb-io*
        "install-gc-strategy(): ~
         tenure disabled; supressing preliminary gc()s.~%"))
-    (cons (cons :gc (if (and (null tenure) (eq gc :global)) nil gc)) 
-          environment)))
+    (acons :gc (if (and (null tenure) (eq gc :global)) nil gc) environment)))
 
 (defun restore-gc-strategy (strategy)
   (when strategy

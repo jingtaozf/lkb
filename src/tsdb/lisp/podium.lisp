@@ -76,6 +76,8 @@
       set globals(aggregate_threshold) \"~@[~d~]\"~%~
       set globals(aggregate_lower) \"~@[~d~]\"~%~
       set globals(aggregate_upper) \"~@[~d~]\"~%~
+      set globals(analogy_aggregation_p) ~:[0~;1~]~%~
+      set globals(exclude_tgc_p) ~:[0~;1~]~%~
       set globals(exhaustive_p) ~:[0~;1~]~%~
       set globals(write_run_p) ~:[0~;1~]~%~
       set globals(write_parse_p) ~:[0~;1~]~%~
@@ -96,6 +98,8 @@
      *statistics-aggregate-threshold*
      *statistics-aggregate-lower*
      *statistics-aggregate-upper*
+     *statistics-analogy-aggregation-p*
+     *statistics-exclude-tgc-p*
      *tsdb-exhaustive-p*
      *tsdb-write-run-p* *tsdb-write-parse-p* 
      *tsdb-write-result-p* *tsdb-write-output-p*
@@ -518,6 +522,9 @@
            ((graph chart)
             (let* ((database (first arguments))
                    (dimension (find-key-argument :dimension arguments))
+                   (attributes (find-key-argument :attributes arguments))
+                   (scatterp (and (find-key-argument :scatterp arguments)
+                                  (= (length attributes) 1)))
                    (title (format 
                            nil 
                            "tsdb(1) `~a' by `~(~a~)'~
@@ -533,8 +540,8 @@
                         (send-to-podium 
                          (format 
                           nil 
-                          "showgraph ~s \".~(~a~)\" ~s {~a}" 
-                          file (gensym "") database title)
+                          "showgraph ~s \".~(~a~)\" ~s {~a} ~:[0~;1~]" 
+                          file (gensym "") database title scatterp)
                          :wait t)))
                   (when (and (equal (first return) :ok) 
                              (equal (first (second return)) :graph))
@@ -542,8 +549,8 @@
                                   (pairlis 
                                    '(:data :command)
                                    (list database (cons 'graph arguments))))
-                          *tsdb-podium-windows*))))
-              (status :text (format nil "~a done" message) :duration 2)))
+                          *tsdb-podium-windows*)))
+                (status :text (format nil "~a done" message) :duration 2))))
 
            (rules
             (let* ((data (first arguments))
@@ -638,15 +645,15 @@
                  (beep)
                  (status :text (format
                                 nil
-                                "one (or both) data sets ~
-                                 in comparison are empty")
+                                "one (or both) data sets are empty ~
+                                 (e.g. by condition or aggregation)")
                          :duration 10))
                 (2
                  (beep)
                  (status :text (format
                                 nil
-                                "profiles are incompatible ~
-                                 (e.g. in phenomena classification)")
+                                "data sets are incompatible ~
+                                 (i.e. by aggregation dimension)")
                          :duration 10))
                 (t
                  (status :text message)

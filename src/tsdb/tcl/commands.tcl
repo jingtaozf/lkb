@@ -324,7 +324,7 @@ proc tsdb_browse_vocabulary {{load 0}} {
 }; # tsdb_browse_vocabulary()
 
 
-proc tsdb_browse {code {condition ""}} {
+proc tsdb_browse {code {condition ""} {globalp 1}} {
 
   global globals;
 
@@ -342,6 +342,7 @@ proc tsdb_browse {code {condition ""}} {
     runs {
       set attributes "(\"run-id\" \"comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\" \"items\" \"status\")";
       set relations "(\"run\")";
+      set condition "";
     }
     parses {
       set attributes "(\"i-id\" \"i-input\" \"readings\" \"words\" \"first\" \"total\" \"tcpu\" \"tgc\" \"p-ftasks\" \"p-etasks\" \"p-stasks\" \"aedges\" \"pedges\"  \"raedges\" \"rpedges\" \"comment\")";
@@ -363,7 +364,8 @@ proc tsdb_browse {code {condition ""}} {
      }
   }; # switch
 
-  if {$code != "run" && $code != "errors" && $globals(condition) != ""} {
+  if {$code != "runs" && $code != "errors"
+      && $globalp && $globals(condition) != ""} {
     if {$condition != ""} {
       set condition "$globals(condition) and ($condition)";
     } else {
@@ -587,6 +589,10 @@ proc tsdb_graph {{code "graph"}} {
   if {$globals(graph_upper) != ""} {
     set command "$command :upper $globals(graph_upper)";
   }; # if
+  if {$globals(graph,scatterp)} {
+    set command "$command :scatterp t";
+  }; # if
+
   if {$code == "chart"} {
     set command "$command :title \"Aggregate Size (Number of Test Items)\"";
   } else {
