@@ -103,6 +103,9 @@
 
 ;;; Other varieties of files
 
+(defun read-tdl-start-file-aux (file-name)
+  (read-tdl-psort-file-aux file-name))
+
 (defun read-tdl-parse-node-file-aux (file-name)
   (read-tdl-psort-file-aux file-name t))
 
