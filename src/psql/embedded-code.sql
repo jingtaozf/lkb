@@ -110,9 +110,6 @@ INSERT INTO qrya VALUES ( 'initialize-current-grammar', 0, 'where-subcls' );
 INSERT INTO qry VALUES 
        ( 'initialize-current-grammar', 1, 
 '
--- DROP VIEW active;
--- DROP VIEW filtered;
--- DROP VIEW revision_all;
 
 CREATE OR REPLACE VIEW filtered
 AS SELECT * 
@@ -120,42 +117,21 @@ AS SELECT *
      WHERE flags = 1
       AND $0;
 
---CREATE VIEW active
--- AS SELECT fil.*
--- FROM 
---  (filtered AS fil
---  NATURAL JOIN 
---   (SELECT name, max(modstamp) AS modstamp 
---     FROM filtered
---     GROUP BY name) AS t1
---); 
-
 UPDATE meta SET val=$0:text WHERE var=''filter'';
 
 --
 -- build current_grammar
 --
 
---DELETE FROM current_grammar; 
---INSERT INTO current_grammar 
---	SELECT * FROM active;
---DELETE FROM meta WHERE var=''build_time'';
---INSERT INTO meta VALUES (''build_time'',current_timestamp);
-
 SELECT build_current_grammar();
 
 VACUUM ANALYZE current_grammar;
+
 ' );
 
 INSERT INTO qry VALUES 
        ( 'build-current-grammar', 0, 
 '
---DELETE FROM current_grammar; 
---INSERT INTO current_grammar 
---	SELECT * FROM active; 
---DELETE FROM meta WHERE var=''build_time'';
---INSERT INTO meta VALUES (''build_time'',current_timestamp);
-
 SELECT build_current_grammar();
 ' );
 
@@ -408,6 +384,52 @@ INSERT INTO meta VALUES (''''build_time'''',current_timestamp);
 SELECT true;'' 
 LANGUAGE SQL;
 
+--Drop TABLE prd;
+CREATE TABLE prd 
+	(
+	lexid text,
+	predkey integer,
+	pred text,
+	lex text,
+	pos text,
+	sense text,
+	carg text,
+PRIMARY KEY (predkey)
+	);
+
+CREATE INDEX prd_lexid on prd (lexid);
+
+--DROP TABLE arg;
+CREATE TABLE arg
+	(
+	predkey int,
+	argkey int,
+	arg int,
+	type text,
+PRIMARY KEY (argkey)
+	);
+
+CREATE INDEX arg_predkey on arg (predkey);
+
+--DROP TABLE ddd;
+CREATE TABLE ddd
+	(
+	argkey int,
+	feat text,
+	val text
+	);
+
+CREATE INDEX ddd_argkey on ddd (argkey);
+
+create or replace view obj_semi as select lexid, pred, lex, pos, sense, carg, arg, type, 
+	(select val from ddd where argkey=t1.argkey and feat=''gen'') as gen,
+	(select val from ddd where argkey=t1.argkey and feat=''pn'') as pn, 
+	(select val from ddd where argkey=t1.argkey and feat=''aspect.perf'') as aspect_perf, 
+	(select val from ddd where argkey=t1.argkey and feat=''aspect.progr'') as aspect_progr, 
+	(select val from ddd where argkey=t1.argkey and feat=''mood'') as mood, 
+	(select val from ddd where argkey=t1.argkey and feat=''tense'') as tense
+	from (arg natural join prd) as t1;
+
 ' );
 
 INSERT INTO qrya VALUES ( 'remove-schema', 0, 'select-list' );
@@ -428,4 +450,13 @@ INSERT INTO qry VALUES
        ( 'test-user', 1, 
        'SELECT val FROM public.meta WHERE var=''user'' AND val=$0' );
 
-
+INSERT INTO qry VALUES 
+       ( 'load-semi', 0, 
+       '
+DELETE FROM prd;
+DELETE FROM arg;
+DELETE FROM ddd;
+copy prd from ''/home/bmw20/tmp/semi.obj.prd'';
+copy arg from ''/home/bmw20/tmp/semi.obj.arg'';
+copy ddd from ''/home/bmw20/tmp/semi.obj.ddd'';
+');

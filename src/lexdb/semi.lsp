@@ -5,8 +5,8 @@
 (in-package :lkb)
 
 (defvar *current-lex-id*) 
-(defvar *prd-key*) ;; counter must be reset at start of dump
-(defvar *arg-key*) ;; counter must be reset at start of dump
+(defvar *prd-key*)
+(defvar *arg-key*)
 
 (defmethod dump-obj-semi ((lexicon psql-lex-database))
   (format t "~%Generating object-level SEM-I. See files ~asemi.obj.*" *postgres-user-temp-dir*)
@@ -45,7 +45,7 @@
 	       (tdfs-indef (lex-entry-full-fs entry))))
 	 (*current-lex-id* lex-id)
 	 (cont-rels (dag-diff-list-2-list 
-		     (dag-path-val '(synsem local cont rels) dag))))
+		     (dag-path-val (append mrs::*initial-semantics-path* '(rels)) dag))))
     (loop
 	for x in cont-rels
 	do

@@ -1,13 +1,16 @@
 --- postgres optimization is poor...
 ALTER DATABASE lingo SET enable_seqscan TO off;
 
+CREATE FUNCTION "plpgsql_call_handler" () RETURNS LANGUAGE_HANDLER AS '$libdir/plpgsql' LANGUAGE C;
+CREATE TRUSTED LANGUAGE "plpgsql" HANDLER "plpgsql_call_handler";
+
 CREATE TABLE public.meta (
   var varchar,
   val varchar
 );
 DELETE FROM public.meta WHERE var='db-version';
 DELETE FROM public.meta WHERE var='filter';
-INSERT INTO public.meta VALUES ('db-version', '3.02');
+INSERT INTO public.meta VALUES ('db-version', '3.03');
 INSERT INTO public.meta VALUES ('filter', 'TRUE');
 
 ---

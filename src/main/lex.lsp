@@ -31,6 +31,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+(defvar mrs::*initial-semantics-path*)
+
 (defvar *lexicon-in*)
 (defvar *verbose-lex-lookup-word* nil)
 (defvar *psql-lexicon*)

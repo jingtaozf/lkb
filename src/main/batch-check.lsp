@@ -8,7 +8,6 @@
 (defvar *grammar-specific-batch-check-fn* nil)
 (defvar *batch-check-diff-list-strict* nil)
 (defvar *batch-check-diff-list*)
-(defvar mrs::*initial-semantics-path*)
 
 (defun get-diff-list-start-path nil
   (cond

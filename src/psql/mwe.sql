@@ -8,6 +8,7 @@ CREATE TABLE public.multi (
   particle VARCHAR,
   type VARCHAR,
   keyrel VARCHAR,
+  paraphrase text,
 PRIMARY KEY (name)
 );
 
@@ -16,7 +17,7 @@ CREATE TABLE public.mwe_components (
   slot integer,
   keyrel VARCHAR,
   pred VARCHAR,
-  flag boolean,
+  optional boolean,
 PRIMARY KEY (mwe_id, slot)
 );
 
@@ -55,7 +56,51 @@ INSERT INTO qry VALUES
 ---
 
 CREATE TABLE multi AS (SELECT * FROM public.multi);
+-- constraints on table multi
+ALTER TABLE revision ADD CONSTRAINT revision_name UNIQUE (name);
+ALTER TABLE multi ADD FOREIGN KEY (verb_id) REFERENCES revision (name);
+
+ALTER TABLE multi ADD FOREIGN KEY (paraphrase) REFERENCES revision (name);
+
+-- (cannot use foreign key here)
+CREATE OR REPLACE FUNCTION multi_check_pred() RETURNS trigger AS ''
+     DECLARE
+      predv varchar;
+      flag boolean;
+     BEGIN
+         predv := btrim(NEW.keyrel,''''\\"'''');
+         flag :=  NOT(predv LIKE ''''i\\\\\\\\_%'''' OR predv IN (SELECT distinct pred FROM prd));
+         -- Check 
+         IF flag THEN
+             RAISE EXCEPTION ''''pred % must be of form i_... or \\"i_...\\" or be an existing simplex pred'''', predv;
+         END IF;
+         RETURN NEW;
+     END;
+ '' LANGUAGE plpgsql;
+ 
+ CREATE TRIGGER check_pred BEFORE INSERT OR UPDATE ON multi
+     FOR EACH ROW EXECUTE PROCEDURE multi_check_pred();
+
 CREATE TABLE mwe_components AS (SELECT * FROM public.mwe_components);
+-- constraints on table mwe_components
+CREATE OR REPLACE FUNCTION mwe_components_check_pred() RETURNS trigger AS ''
+     BEGIN
+         -- Check 
+         IF  (btrim(NEW.keyrel,''''\\"'''') = ''''prep-rel'''') THEN
+             RETURN NEW;
+         ELSE 
+           IF NOT(btrim(NEW.keyrel,''''\\"'''') IN (SELECT distinct pred FROM prd)) THEN
+             RAISE EXCEPTION ''''pred % must be an existing pred'''', NEW.keyrel;
+           END IF;
+        END IF;
+         RETURN NEW;
+     END;
+ '' LANGUAGE plpgsql;
+
+
+ CREATE TRIGGER check_pred BEFORE INSERT OR UPDATE ON mwe_components
+     FOR EACH ROW EXECUTE PROCEDURE mwe_components_check_pred();
+
 CREATE TABLE mwe_type AS (SELECT * FROM public.mwe_type);
 
 ---
@@ -139,5 +184,6 @@ AS SELECT * FROM public.revision
    SELECT * FROM revision
    	UNION 
 	SELECT * FROM revision_multi;
+
 ' );
 

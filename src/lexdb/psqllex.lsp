@@ -63,7 +63,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "3.02")
+(defvar *psql-db-version* "3.03")
 (defvar *psql-port-default* nil)
 (defvar *psql-lexicon-parameters*) ;; define in GRAMMAR/globals.lsp
 
@@ -719,7 +719,10 @@
   (format *postgres-debug-stream* "~%(caching all lexical entries)")
   (cache-all-lex-entries *lexicon*)
 
+  (format *postgres-debug-stream* "~%(dumping semi files)")
   (dump-obj-semi *lexicon*)
+  (format *postgres-debug-stream* "~%(loading semi into db)")
+  (fn-get-record *lexicon* ''load-semi)
   
   (format *postgres-debug-stream* "~%(clearing cache)")
   (empty-cache *lexicon*)
