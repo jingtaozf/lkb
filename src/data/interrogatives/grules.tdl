@@ -58,6 +58,11 @@ pred-ph-rule := pred-ph.
 
 ;;;decl-hs-rule := decl-hs-cl.
 
+;;;JTB and IAS 04/15/02 - Split decl-hs-rule into two types: [IC +]
+;;;things may not have anything on the store of the first DTR (the
+;;;subject) and [IC -] things may.  The point is to prevent "spurious"
+;;;ambiguities of "Who left?" as both dir-is-int and reprise.
+
 decl-hs-rule-1 := decl-hs-cl &
 [ SS.LOC.CAT.HEAD.IC false ].
 
