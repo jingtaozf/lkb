@@ -489,7 +489,7 @@ int find_next_format(char* format,int *pos) {
 }  /* find_next_format() */
 
 void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
-  int k,i=0,j,l,size,where=0,typ;
+  int k,i=0,j,l,size,where=0,typ,result;
   char **bar=NULL,*foo,*tmp,*praefix=NULL,*suffix=NULL;
   /* report: 
      %s \
@@ -574,7 +574,9 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
   for (j=0,l=0;j<n;l++) {
     if (projection[l]) {
       foo = projection[l];
-      fputs(praefix,stream);
+      result = fputs(praefix,stream);
+      if (result==EOF) 
+        break;
       for (k=0;k<i;k++) {
         tmp = strchr(foo,TSDB_FS);
         if (!tmp) {
@@ -582,13 +584,17 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
         }
         else {
           *tmp='\0';
-          fputs(foo,stream);
+          result = fputs(foo,stream);
+          if (result==EOF)
+            break;
           *tmp=TSDB_FS;
           foo = tmp+1;
           fputs(bar[k],stream);
         }
       } /* for */
-      fputs(foo,stream);
+      result = fputs(foo,stream);
+      if (result==EOF)
+        break;
       fputs(suffix,stream);
       fputc('\n',stream);
       j++;
@@ -840,7 +846,7 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
   static char *buf = (char *)NULL;
   static int buf_size = 1024;
   int i, n, foo;
-  char *field, *fs, *bar, *baz;
+  char *field, *fs, *bar;
 
   if (buf == NULL) {
     if((buf = (char *)malloc(buf_size)) == NULL) {
