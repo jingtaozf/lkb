@@ -3,6 +3,7 @@
 ;;;   see `licence.txt' for conditions.
 
 ;;; modifications by bmw (aug-03)
+;;; - load-lexicon-from-script
 ;;; - fixed code broken by *lexicon*-related changes
 
 ;;; aac (aug-03)
@@ -27,7 +28,10 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+(defvar *lexicon-in*) ;; ugly
 (defvar *verbose-lex-lookup-word* nil)
+(defvar *psql-lexicon*)
 
 (defclass lex-database () 
   ((lexical-entries :initform (make-hash-table :test #'equal))
@@ -63,7 +67,8 @@
 	(push lexicon part-of)
 	(push sub-lexicon extra-lexicons))))
   ; cache becomes invalid if lexicon is altered
-  (clear-cache lexicon))
+  (clear-cache lexicon)
+  lexicon)
 
 (defmethod unlink ((sub-lexicon lex-database) (lexicon lex-database))
   (with-slots (extra-lexicons) lexicon
@@ -71,7 +76,8 @@
       (setf part-of (remove lexicon part-of))
       (setf extra-lexicons (remove sub-lexicon extra-lexicons))))
   ; cache becomes invalid if lexicon is altered
-  (clear-cache lexicon))
+  (clear-cache lexicon)
+  lexicon)
 
 ;;;
 ;;; given the orthography (string in all upper case), look up all lexical
@@ -94,7 +100,7 @@
 
 (defgeneric set-lexical-entry (lexicon orth id new-entry))
 
-(defgeneric clear-lex (lexicon &optional no-delete))
+(defgeneric clear-lex (lexicon &rest rest))
 
 (defgeneric collect-expanded-lex-ids (lexicon))
 
@@ -237,14 +243,17 @@
   (let* ((lex-id (if orth (make-lex-id orth sense-id) sense-id))
          (orth-string (if (and orth *sense-unif-fn*)
                           (format nil "~A" orth) 
-			(extract-orth-from-unifs fs-or-type)))
+			(extract-orth-from-unifs fs-or-type)
+			))
          (infl-pos (if (and (listp orth-string) (cdr orth-string))
 		       ;; infl-pos is only relevant for multi-word entries
                        (find-infl-pos fs-or-type orth-string sense-id))))
     ;; adapted for the case where the orthography is only specified
     ;; in the FS; extract-orth-from-unifs must be defined on a
     ;; per-grammar basis
-    (set-lexical-entry *lexicon* orth-string lex-id 
+
+    (set-lexical-entry *lexicon-in* orth-string lex-id 
+    ;(set-lexical-entry *lexicon* orth-string lex-id 
 		       (make-lex-entry
 			:orth orth-string
 			:infl-pos infl-pos                  
@@ -556,7 +565,8 @@
 	(recurse (some #'(lambda (lex) (read-psort lex id :cache cache))
 		       (extra-lexicons lexicon)))))
 
-(defmethod clear-lex :around ((lexicon lex-database) &optional no-delete)
+(defmethod clear-lex :around ((lexicon lex-database) &rest rest)
+  (let ((in-isolation (get-keyword-val :in-isolation rest)))
   (when (fboundp 'clear-generator-lexicon)
     (funcall 'clear-generator-lexicon))
   (clrhash (slot-value lexicon 'lexical-entries))
@@ -564,30 +574,24 @@
   (when (fboundp 'clear-lexicon-indices)
     (funcall 'clear-lexicon-indices))
   (call-next-method)
-   ;:unlink from sub-lexicons
-  (mapcar 
-   #'(lambda (lex) 
-       (unlink lex lexicon)
-       ;:clear sub-lexicon if poss
-       (if (null (part-of lex))
-	   (clear-lex lex no-delete))) 
-   (extra-lexicons lexicon))  
-  ;:unlink from super-lexicons
-  (mapcar #'(lambda (lex) (unlink lexicon lex)) (part-of lexicon))
-  (unless no-delete
-    (delete-temporary-lexicon-files lexicon)))
+  (unless in-isolation
+					;:unlink from sub-lexicons
+    (mapcar 
+     #'(lambda (lex) 
+	 (unlink lex lexicon)
+					;:clear sub-lexicon if poss
+	 (if (null (part-of lex))
+	     (apply #'clear-lex (cons lex rest)))) 
+     (extra-lexicons lexicon))  
+					;:unlink from super-lexicons
+    (mapcar #'(lambda (lex) (unlink lexicon lex)) (part-of lexicon)))
+    lexicon
+  ))
+  
 
 ;;; End of general methods
 
 ;;; Utility function - called from leaf.lsp and clex.lsp
-
-(defun delete-temporary-lexicon-files-aux nil
-  (when (and *psorts-temp-file*
-	     (probe-file *psorts-temp-file*))
-    (delete-file *psorts-temp-file*))
-  (when (and *psorts-temp-index-file*
-	     (probe-file *psorts-temp-index-file*))
-    (delete-file *psorts-temp-index-file*)))
 
 ;;; dunno what this is - looks like oe code
 
@@ -627,3 +631,25 @@
 (defmethod unexpand-psort ((lexicon lex-database) id)
   (setf (gethash id (slot-value lexicon 'psorts)) nil))
 
+;;--
+
+(defun load-lexicon-from-script nil
+  (if (member :psql *features*)
+      (load-psql-lexicon-from-script)
+  (load-cdb-lexicon-from-script)))
+
+(defun load-cdb-lexicon-from-script nil
+  (clear-lex *lexicon* :psorts-temp-file *psorts-temp-file* :no-delete t)
+  (load-cached-lexicon-if-available *lexicon*))
+
+(defun load-psql-lexicon-from-script nil
+  (clear-lex *lexicon* :psorts-temp-file "~/tmp/templex")
+  (setf *psql-lexicon* (make-instance 'psql-lex-database))
+  (link (load-lex *psql-lexicon*) *lexicon*))
+
+(defun get-keyword-val (keyword list)
+  (second (member keyword list)))
+
+(defun load-lexicon (lexicon)
+  (declare (ignore lexicon))
+  (load-lexicon-from-script))
