@@ -132,42 +132,45 @@
   (let* ((no-delete (get-keyword-val :no-delete rest))
 	 (psorts-temp-files (get-keyword-val :psorts-temp-files rest))
 	 (psorts-temp-file (car psorts-temp-files))
-	 (psorts-temp-index-file (cdr psorts-temp-files)))
+	 (psorts-temp-index-file (cdr psorts-temp-files))
+	 (lexicon-size 0))
+
+    ;; extract psorts-temp-file and psorts-temp-index-file
     (if (and psorts-temp-file
 	     (not psorts-temp-index-file))
 	(error "both psorts-temp-file and psorts-temp-index-file must be specified"))
-    
     (unless psorts-temp-files 
       (setf psorts-temp-file (psorts-temp-file lexicon))
       (setf psorts-temp-index-file (psorts-temp-index-file lexicon)))
       
-    ;; Close temporary lexicon files
+    ;; close (old) temporary lexicon files
+    (setf (psort-db lexicon) 
+      (and
+       (probe-file (psorts-temp-file lexicon))
+       (cdb:open-read (psorts-temp-file lexicon))))
+    
     (when (orth-db lexicon)
       (cdb:close-read (orth-db lexicon))
       (setf (orth-db lexicon) nil))
     (when (psort-db lexicon)
+      (setf lexicon-size 
+	(cdb:num-entries (psort-db lexicon)))
       (cdb:close-read (psort-db lexicon))
       (setf (psort-db lexicon) nil))
-    (unless no-delete
-      (delete-temporary-lexicon-files lexicon))
-    (loop
-	until (not 
-	       (or
-		(member psorts-temp-file
-			(remove lexicon (all-cdb-lex-dbs lexicon))
-			:key #'psorts-temp-file
-			:test 'equal)
-		(member psorts-temp-index-file
-			(remove lexicon (all-cdb-lex-dbs lexicon))
-			:key #'psorts-temp-index-file
-			:test 'equal)))
-	do
-	  (setf psorts-temp-file (format nil "~a-" psorts-temp-file))
-	  (setf psorts-temp-index-file (format nil "~a-" psorts-temp-index-file))
-	  (format *trace-output* "~%WARNING: temp lexicon filename(s) conflict with existing lexicon.~%Trying new filenames ~a ~a" psorts-temp-file psorts-temp-index-file))
+    (unless 
+	(and 
+	     no-delete 
+	     (> lexicon-size 1))
+      (delete-temporary-lexicon-files lexicon)
+      ;;(setf (psorts-temp-file lexicon) nil)
+      ;;(setf (psorts-temp-index-file lexicon) nil)
+      )
     
+    ;; prepare (new) temporary lexicon filenames    
     (setf (psorts-temp-file lexicon) psorts-temp-file)
     (setf (psorts-temp-index-file lexicon) psorts-temp-index-file)
+    
+    ;; if files do not both exist create new ones
     (unless
 	(and 
 	 (probe-file (psorts-temp-file lexicon))
@@ -182,16 +185,18 @@
    :psorts-temp-files psorts-temp-files))
 
 (defmethod delete-temporary-lexicon-files ((lexicon cdb-lex-database))
-
-  (setf (all-cdb-lex-dbs lexicon)
-    (remove (psorts-temp-file lexicon) (all-cdb-lex-dbs lexicon) :key #'psorts-temp-file :test 'equal))
-(with-slots (psorts-temp-file) lexicon
+;;  (setf (all-cdb-lex-dbs lexicon)
+;;    (remove (psorts-temp-file lexicon) (all-cdb-lex-dbs lexicon) :key #'psorts-temp-file :test 'equal))
+  (with-slots (psorts-temp-file psorts-temp-index-file) lexicon
     (when (and psorts-temp-file
-	     (probe-file psorts-temp-file))
-    (delete-file psorts-temp-file))
-  (when (and (psorts-temp-index-file lexicon)
-	     (probe-file (psorts-temp-index-file lexicon)))
-    (delete-file (psorts-temp-index-file lexicon)))))
+	       (probe-file psorts-temp-file))
+      (delete-file psorts-temp-file))
+    (when (and (psorts-temp-index-file lexicon)
+	       (probe-file (psorts-temp-index-file lexicon)))
+      (delete-file (psorts-temp-index-file lexicon)))
+    ;;(setf (psorts-temp-file lexicon) nil)
+    ;;(setf (psorts-temp-index-file lexicon) nil)
+    (cons psorts-temp-file psorts-temp-index-file)))
 
 (defun create-empty-cdb-lex nil
   (create-empty-cdb-lex-aux (make-instance 'cdb-lex-database)))
@@ -214,11 +219,5 @@
       (error "Lexicon file not found"))
     (store-cached-lex lexicon)
     lexicon))
-
-;(eval-when #+:ansi-eval-when (:load-toplevel :execute)
-;;           #-:ansi-eval-when (load eval)
-;;  (set-temporary-lexicon-filenames)
-;;  (setf *lexicon*
-;;    (initialize-lex (or *lexicon* (make-instance 'cdb-lex-database)))))
 
 (setf *lexicon* (make-instance 'cdb-lex-database))
