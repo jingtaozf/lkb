@@ -14,6 +14,11 @@
 
 (in-package "MAKE")
 
+;;;
+;;; the latest defsystem() defaults the object extension to `.so', which seems
+;;; to break our ecl-compile-file() and load() interactions.   (18-feb-05; oe)
+;;;
+(setf *filename-extensions* (cons "lsp" "fas"))
 
 ;;;
 ;;; we use ECL primarily for embedded Lisp in PET; add some support for library
@@ -97,11 +102,11 @@
 ;;; accordingly (6-feb-96 -- oe@csli)
 ;;;
 (defvar %system-binaries%
-  #+(and (or :i386 :i686 :pentium4) :unix) "linux.x86.32"
-  #+(and (not (or :i386 :i686 :pentium4)) :unix) "ppc"
-  #+(and (or :i386 :i686 :pentium4) (not :unix)) "windows"
-  #-(or (or :i386 :i686 :pentium4) 
-        (and (not (or :i386 :i686 :pentium4)) :unix))
+  #+(and (or :i386 :i686 :pentium3 :pentium4) :unix) "linux.x86.32"
+  #+(and (not (or :i386 :i686 :pentium3 :pentium4)) :unix) "ppc.x86.32"
+  #+(and (or :i386 :i686 :pentium3 :pentium4) (not :unix)) "windows"
+  #-(or (or :i386 :i686 :pentium3 :pentium4) 
+        (and (not (or :i386 :i686 :pentium3 :pentium4)) :unix))
   (error "~&loadup: unable to determine system type; see file ~
           `ecl-patches.lisp'.~%"))
 

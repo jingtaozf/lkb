@@ -172,7 +172,7 @@
      ;;
      ;; _fix_me_
      ;; not sure the shadowing of type and feature tables is necessary: it will
-     ;; restrict caching to calls within on structure, but given the overall
+     ;; restrict caching to calls within a structure, but given the overall
      ;; architecture of PET, the mapping of integers to types and features will
      ;; never change over time.  resolve, once efficiency of MRS generation
      ;; becomes an issue.                                      (9-sep-03; oe)
