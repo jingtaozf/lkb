@@ -108,15 +108,21 @@
 
 ;;; linear print is used by the following
 
+(defparameter *pprint-abbreviate-dags-p* t)
+
 (defmethod print-object ((object dag) (stream t))
   ;; default dag structure output during lisp code tracing etc
   ;; effectively ignores *print-level* etc since control never passes out
   ;; to lisp printer again
-  (if *print-readably*
-      ;; print so object can be read back into lisp
-      (call-next-method)
+  (cond
+   (*print-readably*
+    ;; print so object can be read back into lisp
+    (call-next-method))
+   (*pprint-abbreviate-dags-p*
+    (format stream "#D[~(~a~) ...]" (dag-type object)))
+   (t
     ;; usual case
-    (display-dag1 object 'linear stream)))
+    (display-dag1 object 'linear stream))))
 
 
 ;;; ******  TDL printing operations  **********
