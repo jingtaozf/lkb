@@ -440,6 +440,7 @@
 	   :lang *postgres-current-lang*
 	   :source (extract-pure-source-from-source *postgres-current-source*)
 	   :confidence 1
+	   :flags 1
 	   )
 	  ))
     (cond
