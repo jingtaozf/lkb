@@ -374,7 +374,7 @@
                     when (equal (ed-id ed) top) collect ed)))
     (loop
         for ed = (pop agenda)
-        for id = (ed-id ed)
+        for id = (and ed (ed-id ed))
         while ed do
           (unless (or (eq (ed-mark ed) mark) (ed-bleached-p ed))
             (setf (ed-mark ed) mark)
