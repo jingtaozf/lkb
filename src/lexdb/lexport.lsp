@@ -488,7 +488,11 @@
 					 'update-entry 
 					 (retr-val psql-le :name) 
 					 (sql-select-list-str symb-list) 
-					 (sql-val-list-str symb-list psql-le)))))))
+					 (sql-val-list-str symb-list psql-le)))))
+    (unless
+	(check-lex-entry (str-2-symb (retr-val psql-le :name)))
+      (error "Invalid lexical entry -- see Lisp buffer output"))
+    ))
 
 ;;;
 ;;; top-level commands

@@ -33,21 +33,10 @@
     (dolist (id (collect-psort-ids *lexicon*))
       ;; alternatively - for lexicon only
       ;; (collect-psort-ids *lexicon*) 
-      (let* ((entry (read-psort *lexicon* id :cache (not unexpandp)))
-             (lex-id (lex-entry-id entry)))
-        (expand-psort-entry entry)
-        (let ((new-fs (lex-entry-full-fs entry)))
-          (unless new-fs
-            (format lkb::*lkb-background-stream*
-                    "~%No feature structure for ~A~%" lex-id))
-          (when (and new-fs
-                     *grammar-specific-batch-check-fn*)
-            (funcall *grammar-specific-batch-check-fn* new-fs id))   
-	  (when new-fs
-	    (sanitize (existing-dag-at-end-of (tdfs-indef new-fs) start-path)
-		      lex-id
-		      (reverse start-path)))
-	  ))))
+      (check-lex-entry id
+		       :unexpandp unexpandp
+		       :start-path start-path)
+      ))
   #+:psql
   (when check-duplicates
     (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")
@@ -56,6 +45,26 @@
   (format t "~%(emptying cache)")
   (empty-cache *lexicon*)
   (format t "~%Lexicon checked"))
+
+(defun check-lex-entry (id &key unexpandp
+				start-path)
+  (let* ((entry (read-psort *lexicon* id :cache (not unexpandp)))
+	 (lex-id (lex-entry-id entry)))
+    
+    (expand-psort-entry entry)
+    (let ((new-fs (lex-entry-full-fs entry)))
+      (unless new-fs
+	(format lkb::*lkb-background-stream*
+		"~%No feature structure for ~A~%" lex-id))
+      (when (and new-fs
+		 *grammar-specific-batch-check-fn*)
+	(funcall *grammar-specific-batch-check-fn* new-fs id))   
+      (when new-fs
+	(sanitize (existing-dag-at-end-of (tdfs-indef new-fs) start-path)
+		  lex-id
+		  (reverse start-path)))
+      new-fs
+      )))
 
 (defun sanitize (dag-instance id path &optional (ostream t))
   ;;; walks over a fs, looking for things of type

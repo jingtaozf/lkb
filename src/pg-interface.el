@@ -475,7 +475,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   ;;(terpri)
   (cle-store-record record-in)
   (cle-empty-psql-cache)
-  (princ (format "record saved to lexdb %s. " (cle-dbname))))
+  (princ (format " record saved to lexdb %s. " (cle-dbname))))
 
 (defun lexdb-lookup-aux2 (field-kw val-str)
   (let ((ids (cle-lookup field-kw val-str)))
