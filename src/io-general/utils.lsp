@@ -173,6 +173,7 @@
           #+mcl (ccl::*suppress-compiler-warnings* t)
           (*syntax-error* nil))
       (setf *current-grammar-load-file* file-name)
+      #-:tty
       (enable-grammar-reload-interactions)
     (clear-almost-everything)
        (let ((*package* (find-package "CL-USER")))
