@@ -44,11 +44,20 @@ int tsdb_parse(char *command, FILE *stream) {
   tsdb.query = strdup(command);
 
   tsdb.input = command;
+  tsdb.error = 0;
   foo = yyparse();
   if(stream != NULL && !(tsdb.status & TSDB_SERVER_MODE)) {
     yyrestart(stream);
   } /* if */
 
+#if defined(DEBUG) && defined(MYSTERY)
+  if(foo && tsdb.error) {
+    fprintf(stderr,
+            "tsdb_parse(): `%s'.\n",
+            command);
+    fflush(stderr);
+  } /* if */
+#endif
   return(foo);
 
 } /* tsdb_parse() */
@@ -373,7 +382,7 @@ char* tsdb_sprint_key_list(Tsdb_key_list* list,int* r,int* f,
         strcat(&buf[len],cat);
       } /* if */
       else {
-        blen+=blen;
+        blen+=strlen(cat)+2;
         buf = realloc(buf,blen);
         strcat(&buf[len],cat);
       } /* else */

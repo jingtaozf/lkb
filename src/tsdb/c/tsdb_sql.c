@@ -1355,6 +1355,9 @@ int tsdb_do(char *file, char *redirection) {
     fprintf(tsdb_error_stream,
             "do(): ignoring incomplete last command from `%s'.\n",
             path);
+#if defined(DEBUG) && defined(MYSTERY)
+    fprintf(tsdb_error_stream, "do(): `%s'.\n", command);
+#endif
     fflush(tsdb_error_stream);
   } /* if */
 
