@@ -45,34 +45,39 @@ Tsdb_selection *tsdb_clean_selection(Tsdb_selection* selection,Tsdb_tuple* fuck)
         for (first=selection->key_lists[i], next=first->next;
              next!=NULL &&
              first->tuples[0] == (Tsdb_tuple*)NULL;
-             free(first), first=next , next=next->next)
+             free(first), first = NULL , first=next , next=next->next)
           if (i==(selection->n_key_lists-1)) { 
             free(first->tuples);
+            first->tuples=NULL;
             selection->length--;
           }
 
         if (first->tuples[0] == (Tsdb_tuple*)NULL) {
            if (i==selection->n_key_lists-1) {
              free(first->tuples);
+             first->tuples=NULL;
              selection->length=0;
            }
            free(first);
+           first=NULL;
            selection->key_lists[i]=NULL;
          } /* if */
         else {
           selection->key_lists[i] = first;
         
           for (previous=selection->key_lists[i],
-               first=next=previous?previous->next:NULL;
+               first=next=previous ? previous->next : NULL;
                next != (Tsdb_key_list*)NULL;
                first = next)  {
             if (next->tuples[0] == (Tsdb_tuple*)NULL) {
               next = next->next;
               if (i==selection->n_key_lists-1) {
                 free(first->tuples);
+                first->tuples=NULL;
                 selection->length--;
               }
               free(first);
+              first = NULL;
             } /*if */
             else {
               previous->n_tuples = tsdb_shorten_tuple(previous->tuples,fuck);
@@ -588,6 +593,7 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
     } /* if */
     else {
       /* selection_2 disappeared completely */
+      /*result = tsdb_copy_selection(selection_1);*/
       return(selection_1);
     } /* else */
   } /* if */
