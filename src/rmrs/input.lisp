@@ -113,7 +113,7 @@
         (body (cdr content)))
     (cond 
      ((eql tag '|pred|) (make-dummy-pred))
-     ((eql tag '|gpred|) (car body))
+     ((eql tag '|gpred|) (string-downcase (car body)))
          ;;; <!ELEMENT gpred (#PCDATA)>
      ((atom tag)
       (error "Unexpected element ~A" content))
@@ -134,7 +134,7 @@
       (error "Malformed realpred ~A" tag))
     (let ((pos-rest (member '|pos| tag))
           (sense-rest (member '|sense| tag)))
-      (make-realpred :lemma (third tag)
+      (make-realpred :lemma (string-downcase (third tag))
                       :pos (cadr pos-rest)
                       :sense (cadr sense-rest))))
 
