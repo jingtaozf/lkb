@@ -497,7 +497,7 @@
       (write-vit vit-out vit))
     (format vit-out ",vitCheck(V).~%~%halt.~%"))
    (excl::run-shell-command "cd /eo/e1/vm2/vitADT/lib/Vit_Adt;/opt/quintus/bin3.2/sun4-5/prolog < ~/tmp/vitcheck" :output "~/tmp/vitout" :if-output-exists :supersede :error-output "~/tmp/viterror" :if-error-output-exists :supersede)
-   (excl::run-shell-command "tail +58 ~/tmp/viterror | tail -r | tail +2 | tail -r" :output stream :error-output "~/tmp/realerrorout" :if-output-exists :supersede :if-error-output-exists :supersede)
+   (excl::run-shell-command "/bin/tail +58 ~/tmp/viterror | /bin/tail -r | /bin/tail +2 | /bin/tail -r" :output stream :error-output "~/tmp/realerrorout" :if-output-exists :supersede :if-error-output-exists :supersede)
    (format stream "~%"))
   #-(and :allegro :clim)
   (warn "function check-vit needs customising for this Lisp"))
@@ -626,44 +626,63 @@
             (append groups scope (vit-scope *current-vit*)))
           (add-unbounds-to-vit *current-vit*)
           (convert-psoa-extras-to-vit (psoa-extras mrs-psoa) *current-vit* group-list labels)
-          (for sort-info in (make-sorts-consistent *vit-sorts*)
-               do
-               (push (make-vit_sort 
-                      :instance (car sort-info)
-                      :args 
-                       (if (cdr (cdr sort-info))
-                           (list (make-disj-sort 
-                                        :args (cdr sort-info)))
-                         (cdr sort-info)))
-                     (vit-sorts *current-vit*)))
+          (setf (vit-sorts *current-vit*)
+            (combine-sort-specs 
+             (append *vit-sorts*
+                     (vit-sorts *current-vit*))))
           (values *current-vit*
                   binding-sets)))))))
 
-(defun make-sorts-consistent (sorts)
+(defun construct-vit-sort (inst args)
+  (make-vit_sort 
+   :instance inst
+   :args 
+   (if (cdr args)
+       (list (make-disj-sort 
+              :args args))
+     args)))
+
+(defun combine-sort-specs (sorts)
   (let ((done nil)
         (res nil))
     (loop 
       (let ((sort-info (car sorts)))
         (unless sort-info (return))
         (setf sorts (cdr sorts))
-        (unless (member (car sort-info) done)
-          (push (car sort-info) done)
-          (let ((equiv (list (cdr sort-info))))
+        (unless (or (not (vit_sort-p sort-info))
+                    (member (vit_sort-instance sort-info) done))
+          (push (vit_sort-instance sort-info) done)
+          (let ((equiv (list (vit_sort-args sort-info))))
             (for rem in sorts
                  do
-                 (when (eql (car sort-info)
-                            (car rem))
-                   (push (cdr rem) equiv)))
-            (let ((new-sorts (reduce #'merge-sorts equiv)))
-              (setf new-sorts (delete-if 
-                               #'(lambda (x) (member x *vm-ignored-sort-list*))
-                               new-sorts))
-              (when new-sorts 
+                 (when (eql (vit_sort-instance sort-info)
+                            (vit_sort-instance rem))
+                   (push (vit_sort-args rem) equiv)))
+            (if (cdr equiv)
+                (let ((new-sorts 
+                       (reduce #'merge-sorts 
+                               (for sort-spec in equiv
+                                    collect
+                                    (if (disj-sort-p (car sort-spec))
+                                        (disj-sort-args (car sort-spec))
+                                      sort-spec)))))
+                  (setf new-sorts 
+                    (for sort in new-sorts
+                         filter
+                         (unless (member sort *vm-ignored-sort-list*)
+                           sort)))
+                  (when new-sorts 
               ;;; ignored sorts are dropped
-                (push (cons (car sort-info)
-                            (reduce #'merge-sorts equiv))
-                      res)))))))
-      res))
+                    (push (make-vit_sort 
+                           :instance 
+                           (vit_sort-instance sort-info)
+                           :args (if (cdr new-sorts)
+                                   (list (make-disj-sort 
+                                          :args new-sorts))
+                                   new-sorts))
+                          res)))
+              (push sort-info res))))))
+        res))
 
 (defun merge-sorts (sorts1 sorts2)
   (for sort1 in sorts1
@@ -879,7 +898,7 @@
                                     (vitval 
                                      (convert-mrs-val-to-vit val labels)))
                                  (when (and (var-p val) sort)
-                                   (push (cons vitval sort) 
+                                   (push (construct-vit-sort vitval sort) 
                                              *vit-sorts*))
                                  vitval))
                          dbitem))))
@@ -895,7 +914,8 @@
                                (vitval 
                                 (convert-mrs-val-to-vit var labels)))
                           (when sort
-                            (push (cons vitval sort) *vit-sorts*))
+                            (push (construct-vit-sort vitval sort) 
+                                  *vit-sorts*))
                           (make-p-term 
                            :predicate
                            truearg
@@ -1099,8 +1119,9 @@
 (defun add-rels-to-vit (slot rels vit)
   (if rels
       (case slot
-       (vit-sorts (setf (vit-sorts vit) 
-                                   (append (vit-sorts vit) rels)))
+        (vit-sorts (setf 
+                       (vit-sorts vit) 
+                     (combine-sort-specs (append (vit-sorts vit) rels))))
        (vit-syntax (setf (vit-syntax vit) 
                      (append (vit-syntax vit) rels)))
        (vit-tenseandaspect 
