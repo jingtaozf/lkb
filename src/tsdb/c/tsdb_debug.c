@@ -36,9 +36,8 @@ BOOL tsdb_verify_selection(Tsdb_selection *selection) {
 \*****************************************************************************/
 
 #ifdef DEBUG
-  Tsdb_relation *foo;
   Tsdb_key_list *next;
-  int i, j, k;
+  int i, j;
 
   if(selection != NULL) {
     fprintf(tsdb_debug_stream,
@@ -222,7 +221,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
                                          selections_1[i])) == NULL) {
         fprintf(tsdb_error_stream,
                 "debug_simple_join(): empty selection after join with `%s'.\n",
-                relations_1[i]);
+                relations_1[i]->name);
         tsdb_free_tsdb_values(attribute_list_1);
         tsdb_free_tsdb_values(attribute_list_2);
         free(relations_1);
@@ -275,7 +274,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
                                          selections_2[i])) == NULL) {
         fprintf(tsdb_error_stream,
                 "debug_simple_join(): empty selection after join with `%s'.\n",
-                relations_2[i]);
+                relations_2[i]->name);
         tsdb_free_tsdb_values(attribute_list_1);
         tsdb_free_tsdb_values(attribute_list_2);
         free(relations_1);
