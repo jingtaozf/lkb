@@ -18,6 +18,16 @@
 
 (in-package "MAKE")
 
+;;;
+;;; the Alvey Tools package, unfortunately, comes without a unique feature to
+;;; identify it; invent one and hope for integration with future releases.
+;;;                                                      (22-nov-99  -  oe)
+;;;
+(eval-when (:load-toplevel :execute)
+  (when (and (find-symbol "*GDE-VERSION-NO" :common-lisp-user)
+             (boundp (find-symbol "*GDE-VERSION-NO" :common-lisp-user)))
+    (pushnew :anlt *features*)))
+
 (defsystem "tsdb"
     :source-pathname (dir-append (get-sources-dir "tsdb")
 				 '(:relative "tsdb"))
@@ -25,12 +35,10 @@
 				 '(:relative "tsdb"))
 
     :finally-do
-    #+(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave)
-           (not :tty))
+    #+(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave))
     (when (system:getenv "DISPLAY") 
       (funcall (symbol-function (read-from-string "tsdb::tsdb")) :podium))
-    #-(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave)
-           (not :tty))
+    #-(and :allegro (or :linux (and :sparc :svr4) :alpha) (not :slave))
     nil
 
     :components
@@ -75,6 +83,8 @@
        (:file "tdl-patches")
        #+:lkb 
        (:file "lkb-interface")
+       #+:anlt 
+       (:file "anlt-interface")
        (:file "globals")
        (:file "utilities")
        #+(and :allegro (or :linux (and :sparc :svr4) :alpha)) 
