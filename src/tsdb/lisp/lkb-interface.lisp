@@ -1038,3 +1038,43 @@
 ;;;
 (defun tsdb::reconstruct-mrs (id mrs length)
   (make-edge :id id :mrs mrs :from 0 :to length))
+
+;;;
+;;; RMRS comparison
+;;; 
+;;; this stuff can't go in LKB files because the tsdb package isn't available
+;;; when LKB is loaded
+
+
+(defun get-test-suite-sentences nil
+  (loop
+      for item in (tsdb::analyze *tsdb-directory1*)
+      for id = (tsdb::get-field :i-id item)
+      for input = (tsdb::get-field :i-input item)
+      collect
+        (cons 
+         (format nil "~a: ~a" id input)
+         id)))
+
+;;; FIX - add some error checking!
+
+(defun get-tsdb-selected-rasp-rmrs (item)
+  (let* ((data *tsdb-directory2*)
+         (frame (tsdb::browse-trees data :runp nil)))
+    (tsdb::browse-tree 
+     data item frame :runp nil)
+    (let ((tsdb-rasp-tree (edge-bar (first (compare-frame-edges frame)))))
+      (let ((mrs::*initial-rasp-num* nil)
+            (mrs::*rasp-xml-word-p* t)) ; FIX - RASP `script'
+        (mrs::construct-sem-for-tree tsdb-rasp-tree :rasp :quiet)))))
+
+(defun get-tsdb-selected-erg-rmrs (item)
+  (let* ((data *tsdb-directory1*)
+         (frame (tsdb::browse-trees data :runp nil)))
+    (setf (lkb::compare-frame-mode frame) :modern)
+    ;;; force reconstruction of dags by browse-tree
+    (tsdb::browse-tree 
+     data item frame :runp nil)
+    (mrs::mrs-to-rmrs (mrs::extract-mrs
+                       (first (compare-frame-edges frame))))))
+    
