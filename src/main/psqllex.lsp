@@ -499,7 +499,7 @@
 ;;; todo: DB fn instead
 (defmethod retrieve-record ((lexicon psql-lex-database) id)
   (let* (
-	 (sql-str (sql-retrieve-entries lexicon (symbol-to-str-format id)))
+	 (sql-str (sql-retrieve-entries lexicon (make-requested-fields lexicon) (symbol-to-str-format id)))
 	 ;(sql-str (format nil "SELECT ~a FROM ~a WHERE ~a='~a';" 
 		;	  (make-requested-fields lexicon)
 			;  "erg_max_version"
@@ -743,23 +743,35 @@
 (defmethod next-id ((lexicon psql-lex-database))
   (let* (
 	 (sql-str (sql-next-id lexicon))
-	 ;(sql-str (format nil "SELECT next_id();"))
 	 (res (caar (records (run-query 
-                     *psql-lexicon* 
-                     (make-instance 'sql-query :sql-string sql-str))))))
+			      lexicon 
+			      (make-instance 'sql-query :sql-string sql-str))))))
     (str-2-num res)))
 
 ;;; calls DB fn
 (defmethod next-version (id (lexicon psql-lex-database))
   (let* (
 	 (sql-str (sql-next-version lexicon (string-downcase id)))
-	 ;(sql-str (format nil 
-		;	  "SELECT next_version('~a');"
-		;	  (string-downcase id)))
 	 (res (caar (records (run-query 
-                     *psql-lexicon* 
-                     (make-instance 'sql-query :sql-string sql-str))))))
+			      lexicon 
+			      (make-instance 'sql-query :sql-string sql-str))))))
     (str-2-num res)))
+
+(defmethod fn-get-records ((lexicon psql-lex-database) fn-name &rest rest)
+  (let* (
+	 (sql-str (eval (append (list 'fn lexicon fn-name) rest)))
+	 (res)
+	 )
+    
+    ;(time
+    
+    (setf res (run-query 
+       *psql-lexicon* 
+       (make-instance 'sql-query :sql-string sql-str)))
+    
+    ;)
+    
+     (make-column-map-record res)))
 
 (defmethod fn ((lexicon psql-lex-database) fn-name &rest rest)
   (eval (append (list (cdr (assoc fn-name (fns lexicon)))) rest)))
