@@ -125,6 +125,7 @@
 	(filter (get-filter lexicon)))
     (sql-fn-get-records lexicon 
 			:clear_scratch)
+    (empty-cache *lexicon*)
     (reconnect lexicon) ;; work around server bug
     (sql-fn-get-records lexicon 
 			:initialize_current_grammar 
