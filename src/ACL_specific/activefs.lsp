@@ -245,7 +245,8 @@
 (defun display-type-comment (type comment-string &optional parent-stream)
   (declare (ignore parent-stream type))
   (when comment-string
-    (format clim-user:*lkb-top-stream* "~%~A" comment-string)))
+    (with-output-to-top ()
+      (format t "~%~A" comment-string))))
 
 ;;; *** the title or top pop up menu ****
 
@@ -299,8 +300,8 @@
 	    (exp (display-fs (lex-or-psort-full-fs lex-entry) 
 			     (format nil "~(~A~) - expanded" psort)))) 
 	(error (condition)
-	  (format clim-user:*lkb-top-stream*  
-		  "~%Error: ~A~%" condition))))))
+	  (with-output-to-top ()
+	    (format t "~%Error: ~A~%" condition)))))))
 
 
 (defun pop-up-lex-rule-menu-items (psort rule-entry)
@@ -313,8 +314,8 @@
 	    (rule (display-fs (rule-full-fs rule-entry) 
 			      (format nil "~(~A~)" (rule-id rule-entry)))))
 	(error (condition)
-	  (format clim-user:*lkb-top-stream*  
-		  "~%Error: ~A~%" condition))))))
+	  (with-output-to-top ()
+	    (format t "~%Error: ~A~%" condition)))))))
 
 ;;;  ***** TeX macros  ******
 
@@ -368,15 +369,15 @@
 
 (defun try-unify-fs (frame type-thing)
   (let* ((fs2 (frame-dag frame))
-	 (path2 (reverse (type-thing-type-label-list type-thing)))
-	 (*standard-output* clim-user:*lkb-top-stream*))
-    (unify-paths-with-fail-messages 
-     (create-path-from-feature-list *path1*)
-     *fs1*
-     (create-path-from-feature-list path2)
-     fs2
+	 (path2 (reverse (type-thing-type-label-list type-thing))))
+    (with-output-to-top ()
+      (unify-paths-with-fail-messages 
+       (create-path-from-feature-list *path1*)
+       *fs1*
+       (create-path-from-feature-list path2)
+       fs2
      ;;; was copied, but shouldn't be necessary
-     :selected1 *path1* :selected2 path2)
-    (terpri)
+       :selected1 *path1* :selected2 path2)
+      (terpri))
     (unhighlight-class frame)))
 

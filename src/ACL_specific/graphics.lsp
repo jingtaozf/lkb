@@ -141,6 +141,19 @@
 ;;; ========================================================================
 ;;; Macros for pop-up menus
 
+(defmacro with-output-to-top (() &body body)
+  `(let ((*standard-output* clim-user::*lkb-top-stream*))
+     (unwind-protect
+	 (progn
+	   (when (not (eq mp:*current-process* 
+			  clim-user::*lkb-top-process*))
+	     (mp:process-add-arrest-reason clim-user::*lkb-top-process* 
+					   :output))
+	   (setf (clim-user::stream-recording-p *standard-output*) t)
+	   ,@body)
+       (mp:process-revoke-arrest-reason clim-user::*lkb-top-process* 
+					:output))))
+
 (defmacro pop-up-menu (menu &body cases)
   (let ((command (gensym)))
     `(let ((,command (clim:menu-choose ,menu)))
@@ -149,8 +162,8 @@
 	     (ecase ,command
 	       ,@cases)
 	   (error (condition)
-	     (format clim-user:*lkb-top-stream* 
-		     "~%Error: ~A~%" condition)))))))
+	     (with-output-to-top ()
+	       (format t "~%Error: ~A~%" condition))))))))
 
 ;;; ========================================================================
 ;;; Define general frame class for LKB frames

@@ -1,4 +1,4 @@
-;;; Copyright Ann Copestake 1992-1997. All Rights Reserved.
+>;;; Copyright Ann Copestake 1992-1997. All Rights Reserved.
 ;;; No use or redistribution without permission.
 ;;; 
 
@@ -23,6 +23,8 @@
 (defvar *lkb-top-frame* nil)
 
 (defvar *lkb-top-stream* nil)
+
+(defvar *lkb-top-process* nil)
 
 ;;; Top level menus etc
 
@@ -87,9 +89,9 @@
            (clim:standard-application-frame) 
            (:panes 
 	    (display
-	     (clim:outlining (:thickness 1)
-	       (clim:spacing (:thickness 1)  
-		 (clim:scrolling (:scroll-bars :both)
+	     (clim:outlining (:thickness 1 :record-p t)
+	       (clim:spacing (:thickness 1 :record-p t)  
+		 (clim:scrolling (:scroll-bars :both :record-p t)
 		   (clim:make-pane 'clim:application-pane
 				   :name "lkb-pane"
 				   :text-cursor nil
@@ -98,7 +100,7 @@
 				   :background clim:+white+
 				   :foreground clim:+black+
 				   :draw t
-				   :record t
+				   :record-p t
 				   :display-time t))))))
            (:layouts
             (default display))
@@ -142,8 +144,9 @@
                                 '(com-quit)))
   (let ((frame (make-application-frame 'lkb-top)))
     (setf *lkb-top-frame* frame)
-    (mp:process-run-function "start-lkb-frame" #'run-lkb-top-menu frame)
-    (setf *lkb-top-stream* (get-frame-pane *lkb-top-frame* 'display))))
+    (setf *lkb-top-stream* (get-frame-pane *lkb-top-frame* 'display))
+    (setf *lkb-top-process*
+      (mp:process-run-function "start-lkb-frame" #'run-lkb-top-menu frame))))
 
 (defun run-lkb-top-menu (frame)
   ;;; define this function so that stuff can be called on exit
@@ -190,6 +193,4 @@
 (defun do-parse-batch nil
   ;;; for MCL this can just be do-parse
   (mp:process-run-function "Parse" #'do-parse))
-
-
 

@@ -112,7 +112,7 @@
      (edge (display-fs edge-fs
 		       (format nil "Edge ~A ~A - Tree FS" 
 			       (edge-id edge-record)
-			       (if (gen-chart-edge-p edge-record) 
+			       (if (g-edge-p edge-record) 
 				   "G" 
 				 "P")))
 	   (display-edge-in-chart edge-record))
