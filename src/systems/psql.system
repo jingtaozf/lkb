@@ -3,50 +3,31 @@
 
 (in-package :make)
 
-;;;
-;;; ensure current libpq.so.* can be found at ~/tmp/libpq.so
-;;; 
-#+(and allegro-version>= (version>= 6 0) (or :linux (and :sparc :svr4)))
-(let ((libpq-file (or
-		   (probe-file "/usr/lib/libpq.so.3")
-		   (probe-file "/usr/lib/libpq.so.2"))))
-(cond 
- (libpq-file
-  (format t ";   Copying ~a to  ~~/tmp/libpq.so" libpq-file)
-  (if (probe-file "~/tmp/libpq.so")
-      (common-lisp-user::run-shell-command "rm ~/tmp/libpq.so"))
-  (common-lisp-user::run-shell-command (format nil "ln -s ~a ~~/tmp/libpq.so" libpq-file)))
- (t
-  (format t "WARNING: Unable to determine current version of library libpq
-         Please copy current version libpq.so.* to ~~/tmp/libpq.so"))))
-
-
 (defsystem "psql"
    :source-pathname (dir-append (get-sources-dir "psql")
                                 '(:relative "psql"))
    :binary-pathname (dir-append (get-binaries-dir "psql")
                                 '(:relative "psql"))
-   :depends-on ("libpq")
+
    :components
-   (
+   (#+(and allegro-version>= (version>= 6 0) (or :linux (and :sparc :svr4)))
+    (:module "so"
+     :source-pathname %system-binaries%
+     :source-extension "so"
+     :load-only t
+     :components
+     ((:file "libpq3")))
+
     #+(and :allegro-version>= (version>= 6 0))
     (:module "interface"
      :source-pathname ""
      :source-extension "cl"
      :components
-     ((:file "pg-package.cl")
-      (:file "bind-libpq.cl")
-      (:file "sql.cl")
-      (:file "sql2.cl")
-      ))))
+     ((:file "pg-package")
+      (:file "bind-libpq")
+      (:file "sql")))))
 
-(defsystem "libpq"
-   :source-pathname "~/tmp"
-   :components
-   (#+(and allegro-version>= (version>= 6 0) (or :linux (and :sparc :svr4)))
-    (:module "so"
-     :source-pathname ""
-     :source-extension "so"
-     :load-only t
-     :components
-     ((:file "libpq")))))
+
+
+
+
