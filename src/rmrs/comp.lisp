@@ -281,7 +281,7 @@
 	(dtr-binding-list 
 	 (loop for dtr in dtrs
 	     append (semstruct-bindings dtr)))
-	(cfrom (let ((current-min 1000000))
+	(cfrom (let ((current-min most-positive-fixnum))
 		     ;; FIX should be maximum integer
 		     ;; but don't have CL book here
 		 (dolist (dtr dtrs)
@@ -290,7 +290,7 @@
 				(< dtr-cfrom
 				   current-min))
 		       (setf current-min dtr-cfrom))))
-		 (if (eql current-min 1000000)
+		 (if (eql current-min most-positive-fixnum)
 		     NIL
 		   current-min)))
 	(cto (let ((current-max -1))
