@@ -7,6 +7,7 @@
 			  '("general"))
        :name "loadup"))
 
+(require 'streama)
 (setq make::*building-image-p* t)
 (setq make:*compile-during-load* t)
 ;;(sys:record-strings "/tmp/lkb.str" 
