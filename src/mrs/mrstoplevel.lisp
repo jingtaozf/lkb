@@ -177,17 +177,29 @@
           :none
           :base
           :rmrs
+          :rmrs-compact
           :scoped)))
     (case output-level
       (:none (setf mrs::*mrs-output-p* nil)
-             (setf mrs::*mrs-scoping* nil))
+             (setf mrs::*mrs-scoping* nil)
+             (setf mrs::*rmrs-xml* nil)
+             (setf mrs::*rmrs-compact* nil))
       (:base (setf mrs::*mrs-output-p* t)
-             (setf mrs::*mrs-scoping* nil))
+             (setf mrs::*mrs-scoping* nil)
+             (setf mrs::*rmrs-xml* nil)
+             (setf mrs::*rmrs-compact* nil))
       (:rmrs (setf mrs::*mrs-output-p* t)
              (setf mrs::*rmrs-xml* t)
+             (setf mrs::*rmrs-compact* nil)
              (setf mrs::*mrs-scoping* nil))
-      (:scoped (setf mrs::*mrs-output-p* nil)
-             (setf mrs::*mrs-scoping* t)))))
+      (:rmrs-compact (setf mrs::*mrs-output-p* t)
+                     (setf mrs::*rmrs-xml* nil)
+                     (setf mrs::*rmrs-compact* t)
+                     (setf mrs::*mrs-scoping* nil))
+      (:scoped (setf mrs::*rmrs-xml* nil)
+               (setf mrs::*rmrs-compact* nil)
+               (setf mrs::*mrs-output-p* nil)
+               (setf mrs::*mrs-scoping* t)))))
 
                                                     
 

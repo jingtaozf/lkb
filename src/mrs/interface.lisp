@@ -11,6 +11,8 @@
 
 (defvar *rmrs-xml* nil)
 
+(defvar *rmrs-compact* nil)
+
 (defun output-mrs-after-parse (&optional edges stream)
   ;;; for ACL this is most likely to be useful in an emacs window
   ;;; the need to use *lkb-background-stream* is because 
@@ -18,7 +20,8 @@
   ;;; it's set in topmenu.lsp
   (when (or *mrs-scoping*
             *mrs-output-p*
-            *rmrs-xml*)
+            *rmrs-xml*
+            *rmrs-compact*)
     (unless stream
       (setf stream lkb::*lkb-background-stream*))
     (unless edges (setf edges *parse-record*))
@@ -52,6 +55,8 @@
 	   (output-mrs1 mrs-struct 'prolog pro-out)))
         (*rmrs-xml* 
          (output-rmrs1 (mrs-to-rmrs mrs-struct) 'xml stream))
+        (*rmrs-compact* 
+         (output-rmrs1 (mrs-to-rmrs mrs-struct) 'compact stream))
         (*regurgitate*
          (output-mrs1 mrs-struct 'simple-indexed stream))
         (t (output-mrs1 mrs-struct 'simple stream))))
