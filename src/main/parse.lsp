@@ -493,27 +493,29 @@
    ;;  The actual process of unification 
    (let*
       ((rule-tdfs (rule-full-fs rule))
-       (rule-feats (rule-order rule))
-       (head-first-p (rule-head-first-p rule))
-       (child-fses (if head-first-p (nreverse child-fs-list) child-fs-list)))
+       (rule-daughter-order (cdr (rule-order rule)))
+       (rule-apply-order (rule-daughters-apply-order rule))
+       (n 0))
       (with-unification-context (ignore)
-         (let ((n 0)
-               (child-edges-tail
-                  (cdr (if head-first-p (reverse child-edges) child-edges))))
-            (dolist (rule-feat (if head-first-p (reverse (cdr rule-feats)) (cdr rule-feats)))
-               (unless
-                  (or (eql (incf n) 1)
-                     (x-restrict-and-compatible-p
+         (dolist (rule-feat rule-apply-order)
+            (unless
+               (or (eql (incf n) 1)
+                  (x-restrict-and-compatible-p
+                     (if (listp rule-feat)
                         (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) rule-feat)
-                        (edge-dag-restricted (pop child-edges-tail))))
-                  (return-from evaluate-unifications nil))
-               (incf *parse-unifs*)
-               (unless (yadu-features rule-feat rule-tdfs nil (pop child-fses))
-                  (incf *parse-fails*)
-                  (return-from evaluate-unifications nil))))
-         ;; if (car rule-feats) is NIL - tdfs-at-end-of
+                        (x-get-dag-value (tdfs-indef rule-tdfs) rule-feat))
+                     (edge-dag-restricted
+                        (nth (position rule-feat rule-daughter-order) child-edges))))
+               (return-from evaluate-unifications nil))
+            (incf *parse-unifs*)
+            (unless
+               (yadu-features rule-feat rule-tdfs nil
+                  (nth (position rule-feat rule-daughter-order) child-fs-list))
+               (incf *parse-fails*)
+               (return-from evaluate-unifications nil)))
+         ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of
          ;; will return the entire structure
-         (let ((result (tdfs-at-end-of (car rule-feats) rule-tdfs)))
+         (let ((result (tdfs-at-end-of (car (rule-order rule)) rule-tdfs)))
             (when nu-orth
                (let ((tmp-orth-path *orth-path*))
                   (for orth-value in (split-into-words nu-orth)
@@ -632,11 +634,11 @@
 
 (defun print-chart-configuration (span right-vertex)
    (let ((e (chart-configuration-edge span)))
-      (format t "~A-~A [~A] ~A => ~A~A  [~{~A~^ ~}]~%"
+      (format t "~A-~A [~A] ~A ~25,5T=> ~A~A  [~{~A~^ ~}]~%"
          (chart-configuration-begin span)
          right-vertex
          (edge-id e)
-         (edge-category e)
+         (edge-rule-number e)
          (edge-leaves e)
          (if (chart-configuration-roots span) "*" "")
          (mapcar #'edge-id (edge-children e)))))
