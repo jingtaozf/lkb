@@ -1,5 +1,6 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998--2004
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 (in-package "MRS")
 
@@ -132,7 +133,8 @@ at this point).
            lexres
            (find-possible-rules grammar-rels nil)
            (find-linear-order-spec lexres)
-           unknown)))))
+           unknown))
+      (values nil nil nil unknown))))
 
 ;;; third value is an ordering specification 
 ;;; given as a list of lex-ids 
@@ -200,7 +202,7 @@ at this point).
           ; union, because initial-match can include things
           ; we've found already
           ; else - generation fails
-          (format t "~%Not found ~S" (rel-pred initial-rel))))
+          (error "unknown predicates: |~(~a~)|" (ep-shorthand initial-rel))))
     results-so-far))
 
 (defun find-lex-entries-from-rel (lex-rels results-so-far)
@@ -394,8 +396,8 @@ at this point).
                            *main-semantics-path*))
 
 (defun apply-rels-to-base (lex-id base-fs rel-list path)
-  ;;; _fix_me_
   ;;;
+  ;;; _fix_me_
   ;;; for `variable-arity' predicates (like give and preprositions that are in
   ;;; the lexicon as adverbs too, e.g. around) investigate skolemizing keyed
   ;;; off the lexical entry, or some other way of making sure that roles in the
@@ -425,10 +427,6 @@ at this point).
 	    (cerror "Ignore this entry/rule" 
 		    "~%Problem in create-liszt-fs-from-rels")))
 	collect it))
-
-#+:oe
-(defun apply-rels-to-base (id fs rels path)
-  )
 
 (defun create-all-rel-sequences (rels)
   ;;; we have an ordered list of lists

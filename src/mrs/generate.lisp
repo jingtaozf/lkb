@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2002
+;;; Copyright (c) 1998--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -67,7 +67,8 @@
 (defun gen-chart-ordering-allowed-p (left right)
   ;; ordering will already have been checked within both left and right
   (flet ((lexeme-set-intersection-p (lst1 lst2)
-            (dolist (x1 lst1 nil) (when (member x1 lst2 :test #'eq) (return t)))))
+           (dolist (x1 lst1 nil) 
+             (when (member x1 lst2 :test #'eq) (return t)))))
      (dolist (ordering *lexemes-allowed-orderings* t)
         (do ((rtail (cdr ordering) (cdr rtail)))
            ((null rtail))
@@ -92,93 +93,99 @@
 
 (defun generate-from-mrs (input-sem)
 
-   (setf input-sem (mrs::fill-mrs (mrs::unfill-mrs input-sem)))
-   (setf *generator-input* input-sem)
-   (with-package (:lkb)
-      (clear-gen-chart)
-      (setf *cached-category-abbs* nil)
-      (let (lex-results lex-items grules lex-orderings tgc tcpu conses symbols others
-            (input-rels 0))
-         (time-a-funcall
-            #'(lambda () 
-               (multiple-value-setq (lex-results grules lex-orderings
-                                     %generator-unknown-eps%)
-                  (mrs::collect-lex-entries-from-mrs input-sem))
-               (multiple-value-setq (lex-items grules lex-orderings)
-                  (filter-generator-lexical-items 
-                     (apply #'append lex-results) grules lex-orderings)))
-            #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
-               (declare (ignore tr ignore))
-               (setf tgc (+ tgcu tgcs) tcpu (+ tu ts)
-                     conses (* scons 8) symbols (* ssym 24) others sother)))
-         (setq %generator-statistics%
-            (pairlis '(:ltgc :ltcpu :lconses :lsymbols :lothers)
-                      (list tgc tcpu conses symbols others)))
-#|
-         (dolist (lex lex-items)
-            (format t "~%Id ~A, Index ~A, Lexical rules ~:A, Main rel sorts ~:A"
-              (mrs::found-lex-lex-id lex)
-              #+:gen-index
-              (gen-chart-dag-index
-                 (existing-dag-at-end-of
-                    (tdfs-indef (mrs::found-lex-inst-fs lex)) *semantics-index-path*)
-                 nil)
-              #-:gen-index *toptype*
-              (mrs::found-lex-rule-list lex)
-              (mapcar #'mrs::rel-pred (mrs::found-lex-main-rels lex))))
-         (print
-            (sort (remove-duplicates (mapcar #'mrs::found-lex-lex-id lex-items))
-              #'string-lessp))
-         (finish-output)
-         (dolist (grule grules)
-            (when (mrs::found-rule-p grule)
-              (format t "~%Id ~A, Index ~A, Main rel sorts ~:A"
-                 (mrs::found-rule-id grule)
-                 #+:gen-index
-                 (gen-chart-dag-index
-                    (existing-dag-at-end-of
-                       (tdfs-indef (mrs::found-rule-full-fs grule)) *semantics-index-path*)
-                    nil)
-                 #-:gen-index *toptype*
-                 (mapcar #'mrs::rel-pred (mrs::found-rule-main-rels grule)))))
-|#
-         (let ((rel-indexes nil) (rel-indexes-n -1))
-            (dolist (lex lex-items)
-               (dolist (rel (mrs::found-lex-main-rels lex))
-                  (unless (getf rel-indexes rel)
-                     (setf (getf rel-indexes rel) (incf rel-indexes-n)))))
-            (dolist (grule grules)
-               (when (mrs::found-rule-p grule)
-                  (dolist (rel (mrs::found-rule-main-rels grule))
-                     (unless (getf rel-indexes rel)
-                        (setf (getf rel-indexes rel) (incf rel-indexes-n))))))
-            (dolist (rel (mrs::psoa-liszt input-sem))
-               (unless (getf rel-indexes rel)
-                  (setf (getf rel-indexes rel) (incf rel-indexes-n))))
-            (dolist (lex lex-items)
-               (let ((rel-list (mrs::found-lex-main-rels lex)))
-                  (setf (mrs::found-lex-main-rels lex) 0)
-                  (dolist (rel rel-list)
-                     (setf (mrs::found-lex-main-rels lex)
-                        (logior (mrs::found-lex-main-rels lex) (ash 1 (getf rel-indexes rel)))))))
-            (dolist (grule grules)
-               (when (mrs::found-rule-p grule)
-                  (let ((rel-list (mrs::found-rule-main-rels grule)))
-                     (setf (mrs::found-rule-main-rels grule) 0)
-                     (dolist (rel rel-list)
-                        (setf (mrs::found-rule-main-rels grule)
-                           (logior (mrs::found-rule-main-rels grule) (ash 1 (getf rel-indexes rel))))))))
-            (dolist (rel (mrs::psoa-liszt input-sem))
-               (setq input-rels
-                  (logior input-rels (ash 1 (getf rel-indexes rel)))))
-            (if lex-items
-               (chart-generate
-                  input-sem input-rels lex-items grules lex-orderings rel-indexes)
-               (progn
-                  (format t "~%Some lexical entries could not be found from MRS ~
-                             relations - has function index-for-generator been run ~
-                             yet?")
-                  nil))))))
+  (setf input-sem (mrs::fill-mrs (mrs::unfill-mrs input-sem)))
+  (setf *generator-input* input-sem)
+  (with-package (:lkb)
+    (clear-gen-chart)
+    (setf *cached-category-abbs* nil)
+    (let (lex-results lex-items grules lex-orderings 
+          tgc tcpu conses symbols others
+          (input-rels 0))
+      (time-a-funcall
+       #'(lambda () 
+           (multiple-value-setq (lex-results grules lex-orderings
+                                 %generator-unknown-eps%)
+             (mrs::collect-lex-entries-from-mrs input-sem))
+           (multiple-value-setq (lex-items grules lex-orderings)
+             (filter-generator-lexical-items 
+              (apply #'append lex-results) grules lex-orderings)))
+       #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+           (declare (ignore tr ignore))
+           (setf tgc (+ tgcu tgcs) tcpu (+ tu ts)
+                 conses (* scons 8) symbols (* ssym 24) others sother)))
+      (setq %generator-statistics%
+        (pairlis '(:ltgc :ltcpu :lconses :lsymbols :lothers)
+                 (list tgc tcpu conses symbols others)))
+      
+      (when %generator-unknown-eps%
+        (error 
+         "unknown predicates: ~{|~(~a~)|~^, ~}"
+         (loop
+             for ep in %generator-unknown-eps%
+             collect (mrs::ep-shorthand ep))))
+      (unless lex-items (error "no lexical entries found"))
+      (when *debugging* (print-generator-lookup-summary lex-items grules))
+      
+      (let ((rel-indexes nil) (rel-indexes-n -1))
+        ;;
+        ;; _fix_me_
+        ;; why do this in two passes, rather than computing the indices as we
+        ;; go along?                                          (23-apr-04; oe)
+        ;;
+        (dolist (lex lex-items)
+          (dolist (rel (mrs::found-lex-main-rels lex))
+            (unless (getf rel-indexes rel)
+              (setf (getf rel-indexes rel) (incf rel-indexes-n)))))
+        (dolist (grule grules)
+          (when (mrs::found-rule-p grule)
+            (dolist (rel (mrs::found-rule-main-rels grule))
+              (unless (getf rel-indexes rel)
+                (setf (getf rel-indexes rel) (incf rel-indexes-n))))))
+        (loop
+            for ep in (mrs::psoa-liszt input-sem)
+            unless (getf rel-indexes ep) collect ep into unknown
+            finally
+              (error 
+               "unknown predicates: ~{|~(~a~)|~^, ~}"
+               (loop
+                   for ep in unknown
+                   collect (mrs::ep-shorthand ep))))
+        ;;
+        ;; _fix_me_
+        ;; i believe the following should never happen, i.e. we rightly fail
+        ;; in the loop() above.                                (23-apr-04; oe)
+        ;;
+        #+:null
+        (dolist (rel (mrs::psoa-liszt input-sem))
+          (unless (getf rel-indexes rel)
+            (setf (getf rel-indexes rel) (incf rel-indexes-n))))
+        (dolist (lex lex-items)
+          (setf (mrs::found-lex-main-rels lex) 0)
+          (loop
+              for ep in (mrs::found-lex-main-rels lex)
+              for index = (ash 1 (getf rel-indexes ep))
+              do 
+                (setf (mrs::found-lex-main-rels lex)
+                  (logior (mrs::found-lex-main-rels lex) index))))
+        (dolist (grule grules)
+          (when (mrs::found-rule-p grule)
+            (setf (mrs::found-rule-main-rels grule) 0)
+            (loop
+                for ep in (mrs::found-rule-main-rels grule)
+                for index = (ash 1 (getf rel-indexes ep))
+                do
+                  (setf (mrs::found-rule-main-rels grule)
+                    (logior (mrs::found-rule-main-rels grule) index)))))
+        (dolist (rel (mrs::psoa-liszt input-sem))
+          (setq input-rels
+            (logior input-rels (ash 1 (getf rel-indexes rel)))))
+        ;;
+        ;; _fix_me_
+        ;; use bitvectors to test for lexical gaps, i.e. relations from the
+        ;; input MRS that are not provided by any of the elements.
+        ;;                                                     23-apr-04; oe)
+        (chart-generate
+         input-sem input-rels lex-items grules lex-orderings rel-indexes)))))
 
 
 (defun filter-generator-lexical-items (lex-items grules lex-orderings)
@@ -217,9 +224,7 @@
 (defun chart-generate (input-sem input-rels found-lex-items possible-grules
                        *lexemes-allowed-orderings* *gen-rel-indexes*
                        &optional (*gen-first-only-p* *gen-first-only-p*))
-  ;;(when (> (length found-lex-items) 80)
-  ;;   (format t "~%More than 80 initial lexical items - skipping")
-  ;;   (return-from chart-generate nil))
+
   (setq %generator-lexical-items% found-lex-items)
   (unless *intersective-rule-names*
     (format t "~%Warning: no intersective rules defined") (force-output t))
@@ -227,19 +232,19 @@
         (*filtered-tasks* 0) (*executed-tasks* 0) (*successful-tasks* 0) 
         (*unifications* 0) (*copies* 0) 
         (*non-intersective-rules*
-          ;; this is all rules for best-first mode
-          (remove-if
-            #'(lambda (r)
-                (or (and (not *gen-first-only-p*)
-                         (some
-                            #'(lambda (p)
-                               (cond ((atom p) (eq p (rule-id r)))
-                                     (t (eq (car p) (rule-id r)))))
-                            *intersective-rule-names*))
-                   (spelling-change-rule-p r)))
-            possible-grules))
-       tgc tcpu conses symbols others (consistent nil) (partial nil))
-    #+(and mcl powerpc) (setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
+         ;; this is all rules for best-first mode
+         (remove-if
+          #'(lambda (r)
+              (or (and (not *gen-first-only-p*)
+                       (some
+                        #'(lambda (p)
+                            (cond ((atom p) (eq p (rule-id r)))
+                                  (t (eq (car p) (rule-id r)))))
+                        *intersective-rule-names*))
+                  (spelling-change-rule-p r)))
+          possible-grules))
+        tgc tcpu conses symbols others (consistent nil) (partial nil))
+    
     (with-parser-lock ()
       (clear-gen-chart)
       (setf *cached-category-abbs* nil)
@@ -247,118 +252,103 @@
       (flush-heap *agenda*)
 
       (time-a-funcall
-         #'(lambda () 
-             (catch 'first
-                ;; Add lexical edges
-                (dolist (found found-lex-items)
-                   (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
-                          (word (extract-orth-from-fs lex-entry-fs))
-                          (edge
-                            (make-g-edge
-                               :id (next-edge) 
-                               :category (indef-type-of-tdfs lex-entry-fs)
-                               :rule word
-                               :dag lex-entry-fs
-                               :needed nil
-                               :rels-covered (mrs::found-lex-main-rels found)
-                               :children nil
-                               :leaves (list word)
-                               :lex-ids (list (mrs::found-lex-lex-id found))
-                               :lexemes (list found))))
-                         (when *gen-packing-p*
-                            (setf (g-edge-odag edge) lex-entry-fs)
-                            (setf (g-edge-dag edge) (copy-tdfs-partially lex-entry-fs)))
-                         (setf (g-edge-dag-restricted edge)
-                            (restrict-fs (tdfs-indef (g-edge-dag edge))))
-                         (incf *copies*) ; each lex entry will be a copy
-                         (with-agenda (when *gen-first-only-p* 
-                                         (gen-lex-priority lex-entry-fs))
-                            (gen-chart-add-inactive edge input-sem input-rels))))
-                ;; Process tasks
-                (loop 
-                   until (empty-heap *agenda*)
-                   do (funcall (heap-extract-max *agenda*)))
-                ;; Look for results
-                (unless *gen-first-only-p*
-                   (multiple-value-setq (consistent partial)
-                      (gen-chart-find-covering-edges
-                         (gen-chart-retrieve-with-index *toptype* 'inactive)
-                         input-rels)))))
-         #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
-             (declare (ignore tr ignore))
-             (setq tgc (+ tgcu tgcs) tcpu (+ tu ts)
-                conses (* scons 8) symbols (* ssym 24) others sother)))
-         (setq %generator-statistics%
-            (nconc %generator-statistics%
+       #'(lambda () 
+           (catch 'first
+             ;; Add lexical edges
+             (dolist (found found-lex-items)
+               (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
+                      (word (extract-orth-from-fs lex-entry-fs))
+                      (edge
+                       (make-g-edge
+                        :id (next-edge) 
+                        :category (indef-type-of-tdfs lex-entry-fs)
+                        :rule word
+                        :dag lex-entry-fs
+                        :needed nil
+                        :rels-covered (mrs::found-lex-main-rels found)
+                        :children nil
+                        :leaves (list word)
+                        :lex-ids (list (mrs::found-lex-lex-id found))
+                        :lexemes (list found))))
+                 (when *gen-packing-p*
+                   (setf (g-edge-odag edge) lex-entry-fs)
+                   (setf (g-edge-dag edge) (copy-tdfs-partially lex-entry-fs)))
+                 (setf (g-edge-dag-restricted edge)
+                   (restrict-fs (tdfs-indef (g-edge-dag edge))))
+                 (incf *copies*)        ; each lex entry will be a copy
+                 (with-agenda (when *gen-first-only-p* 
+                                (gen-lex-priority lex-entry-fs))
+                   (gen-chart-add-inactive edge input-sem input-rels))))
+             ;; Process tasks
+             (loop 
+                 until (empty-heap *agenda*)
+                 do (funcall (heap-extract-max *agenda*)))
+             ;; Look for results
+             (unless *gen-first-only-p*
+               (multiple-value-setq (consistent partial)
+                 (gen-chart-find-covering-edges
+                  (gen-chart-retrieve-with-index *toptype* 'inactive)
+                  input-rels)))))
+       #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+           (declare (ignore tr ignore))
+           (setq tgc (+ tgcu tgcs) tcpu (+ tu ts)
+                 conses (* scons 8) symbols (* ssym 24) others sother)))
+      (setq %generator-statistics%
+        (nconc %generator-statistics%
                (pairlis '(:gtgc :gtcpu :gconses :gsymbols :gothers)
-                         (list tgc tcpu conses symbols others))))
+                        (list tgc tcpu conses symbols others))))
 
       (time-a-funcall
-         #'(lambda () 
-            ;; Perform adjunction phase and unpack
-             (unless *gen-first-only-p*
-               (setq *gen-record*
-                 #+:null
-                 (let* ((candidates
-                         (nconc consistent
-                                (and *intersective-rule-names* partial)
+       #'(lambda () 
+           ;; Perform adjunction phase and unpack
+           (unless *gen-first-only-p*
+             (setq *gen-record*
+               (let* ((candidates
+                       (nconc consistent
+                              (when (and *intersective-rule-names* partial)
                                 (gen-chart-adjoin-modifiers 
-                                 partial input-rels possible-grules)))
-                        (complete
-                         (loop
-                             with unpackp = (or *gen-packing-p* 
-                                                (and *intersective-rule-names*
-                                                     partial))
-                             for edge in candidates
-                             when unpackp
-                             nconc
-                               (loop
-                                   for edge in (unpack-edge! nil edge)
-                                   when (gen-chart-check-covering 
-                                         edge input-rels)
-                                  collect edge)
-                             else when (gen-chart-check-covering 
-                                        edge input-rels)
-                             collect edge))
-                        (consistent
-                         (loop
-                             for edge in complete
-                             when (gen-chart-check-compatible edge input-sem)
-                             collect edge)))
-                   (if (null *bypass-equality-check*)
-                     consistent
-                     (if (eq *bypass-equality-check* :filter)
-                       (or consistent complete)
-                       complete)))
-                 (mapcan
-                  #'(lambda (e)
-                      (delete-if-not
-                       #'(lambda (u)
-                           (and (gen-chart-check-covering u input-rels) ; redundant for consistent
-                                (gen-chart-check-compatible u input-sem)))
-                       (if (or *gen-packing-p* (and *intersective-rule-names* partial))
-                           ;; may need to un-adjoin even when packing is off
-                           (unpack-edge! nil e)
-                         (list e))))
-                  (nconc consistent
-                         (if (and *intersective-rule-names* partial)
-                             (gen-chart-adjoin-modifiers partial input-rels
-                                                         possible-grules)))))))
-         #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
-             (declare (ignore tr ignore))
-             (setq tgc (+ tgcu tgcs) tcpu (+ tu ts)
-                   conses (* scons 8) symbols (* ssym 24) others sother)))
+                                 partial input-rels possible-grules))))
+                      (complete
+                       (loop
+                           with unpackp = (or *gen-packing-p* 
+                                              (and *intersective-rule-names*
+                                                   partial))
+                           for edge in candidates
+                           when unpackp
+                           nconc
+                             (loop
+                                 for edge in (unpack-edge! nil edge)
+                                 when (gen-chart-check-covering 
+                                       edge input-rels)
+                                 collect edge)
+                           else when (gen-chart-check-covering 
+                                      edge input-rels)
+                           collect edge))
+                      (consistent
+                       (loop
+                           for edge in complete
+                           when (gen-chart-check-compatible edge input-sem)
+                           collect edge)))
+                 (if (null *bypass-equality-check*)
+                   consistent
+                   (if (eq *bypass-equality-check* :filter)
+                     (or consistent complete)
+                     complete))))))
+       #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+           (declare (ignore tr ignore))
+           (setq tgc (+ tgcu tgcs) tcpu (+ tu ts)
+                 conses (* scons 8) symbols (* ssym 24) others sother)))
       (setq %generator-statistics%
-         (nconc %generator-statistics%
-            (pairlis '(:atgc :atcpu :aconses :asymbols :aothers)
-                      (list tgc tcpu conses symbols others))))
-
+        (nconc %generator-statistics%
+               (pairlis '(:atgc :atcpu :aconses :asymbols :aothers)
+                        (list tgc tcpu conses symbols others))))
+      
       (values
-         (extract-strings-from-gen-record) ; also spelling e.g. "a apple" -> "an apple"
-         *filtered-tasks* *executed-tasks* *successful-tasks*
-         *unifications* *copies*
-         (length (gen-chart-retrieve-with-index *toptype* 'active))
-         (length (gen-chart-retrieve-with-index *toptype* 'inactive))))))
+       (extract-strings-from-gen-record) ; also spelling e.g. "a" -> "an"
+       *filtered-tasks* *executed-tasks* *successful-tasks*
+       *unifications* *copies*
+       (length (gen-chart-retrieve-with-index *toptype* 'active))
+       (length (gen-chart-retrieve-with-index *toptype* 'inactive))))))
 
 
 (defun extract-strings-from-gen-record nil
@@ -1057,5 +1047,38 @@
                (print-edge p stream concise)))))
       (format stream "~%")))
 
+
+(defun print-generator-lookup-summary (lex-items grules)
+  ;;
+  ;; code formerly commented out in body of generate-from-mrs(); move here for
+  ;; better readability of the main function.                  (19-apr-04; oe)
+  ;;
+  (dolist (lex lex-items)
+    (format t "~%Id ~A, Index ~A, Lexical rules ~:A, Main rel sorts ~:A"
+            (mrs::found-lex-lex-id lex)
+            #+:gen-index
+            (gen-chart-dag-index
+             (existing-dag-at-end-of
+              (tdfs-indef (mrs::found-lex-inst-fs lex)) *semantics-index-path*)
+             nil)
+            #-:gen-index *toptype*
+            (mrs::found-lex-rule-list lex)
+            (mapcar #'mrs::rel-pred (mrs::found-lex-main-rels lex))))
+  (print
+   (sort (remove-duplicates (mapcar #'mrs::found-lex-lex-id lex-items))
+         #'string-lessp))
+  (finish-output)
+  (dolist (grule grules)
+    (when (mrs::found-rule-p grule)
+      (format t "~%Id ~A, Index ~A, Main rel sorts ~:A"
+              (mrs::found-rule-id grule)
+              #+:gen-index
+              (gen-chart-dag-index
+               (existing-dag-at-end-of
+                (tdfs-indef (mrs::found-rule-full-fs grule)) 
+                *semantics-index-path*)
+               nil)
+              #-:gen-index *toptype*
+              (mapcar #'mrs::rel-pred (mrs::found-rule-main-rels grule))))))
 
 ;;; End of file
