@@ -6,7 +6,7 @@
           type-of-fs tdfs-indef lex-or-psort-id lex-or-psort-full-fs 
           dag-arcs subtype-p extend-typed-path path-p typed-path-p
           path-typed-feature-list typed-path-typed-feature-list
-          type-feature-pair-p type-feature-pair-feature
+          type-feature-pair-p type-feature-pair-feature type-feature-pair-type
 ; for vitrification
           *ordered-mrs-rule-list*
 ; for lexlookup

@@ -70,6 +70,7 @@
   (setf *lkb-menu-disabled-list* nil)
   (ecase system-type
     (:core (create-mini-lkb-system-menu))
+    (:big  (create-big-lkb-system-menu))   
 ;;;    (:full (create-lkb-system-menu))
 ;;;    (:yadu (create-yadu-system-menu))
     )

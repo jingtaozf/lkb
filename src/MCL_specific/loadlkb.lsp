@@ -81,7 +81,7 @@
 ;;; (set-up-lkb-interaction :full)
 ;;;
 ;;; if the argument is :core - the "mini" menu is set up
-(set-up-lkb-interaction :core) 
+(set-up-lkb-interaction :big) 
 
 
 

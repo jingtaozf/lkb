@@ -48,50 +48,10 @@
 
 
 (defun read-tdl-type-file-aux (file-name &optional settings-file)
-   (clear-types)
-   (setf *toptype* 'top) ; *top*
-   (add-type-from-file *toptype* nil nil nil nil)
-   (let ((*readtable* (make-tdl-break-table)))
-      (with-open-file 
-         (istream file-name :direction :input)
-         (format t "~%Reading in type file")
-         (read-tdl-type-stream istream))) 
-   ;; check-type-table is in checktypes.lsp           
-   (when (check-type-table) 
-      (canonicalise-feature-order)
-      (when settings-file
-         (set-up-display-settings settings-file))           
-      (set-up-type-interactions)
-      t))
-
-(defun read-tdl-type-patch-file nil 
-  (clear-types-for-patching-constraints)
-   (let* ((file-name 
-            (ask-user-for-existing-pathname "Type patch file?")))      
-      (when file-name
-         (read-tdl-patch-file-aux file-name))))
-
-(defun read-tdl-patch-file-aux (file-name)
-   (let ((*readtable* (make-tdl-break-table)))
-      (with-open-file 
-         (istream file-name :direction :input)
-         (format t "~%Reading in patch file")
-         (read-tdl-type-stream istream t)))
-   ;; patch-type-table is in checktypes.lsp           
-   (when (patch-type-table) 
-      (canonicalise-feature-order)           
-      (set-up-type-interactions)
-      t))
-
-(defun read-tdl-leaf-type-file-aux (file-name)
-  (let ((*readtable* (make-tdl-break-table))
-        (*leaf-type-addition* t))
-      (with-open-file 
-         (istream file-name :direction :input)
-         (format t "~%Reading in leaf type file")
-         (read-tdl-type-stream istream))))
+  (read-tdl-type-files-aux (list file-name) settings-file))
 
 (defun read-tdl-type-files-aux (file-names &optional settings-file)
+   (setf *type-file-list* file-names)
    (clear-types)
    (setf *toptype* '*top*)
    (add-type-from-file '*top* nil nil nil nil)
@@ -109,24 +69,14 @@
          (set-up-display-settings settings-file))           
       (set-up-type-interactions)
       t))
-             
-(defun read-tdl-type-patch-file-with-name (file-name) 
-  (clear-types-for-patching-constraints)
-  (when file-name
-    (read-tdl-patch-file-aux file-name)))
 
-(defun read-tdl-type-patch-files-with-name (file-names) 
-  (clear-types-for-patching-constraints)
-  (when file-names
-    (read-tdl-patch-files-aux file-names)))
-
-(defun read-tdl-type-patch-files nil  
-   (let* ((file-names 
-            (ask-user-for-existing-pathnames 
-               "Type file? (Cancel to finish)")))
-       (clear-types-for-patching-constraints)
-      (when file-names
-         (read-tdl-patch-files-aux file-names))))
+(defun read-tdl-leaf-type-file-aux (file-name)
+  (let ((*readtable* (make-tdl-break-table))
+        (*leaf-type-addition* t))
+      (with-open-file 
+         (istream file-name :direction :input)
+         (format t "~%Reading in leaf type file")
+         (read-tdl-type-stream istream))))
 
 (defun read-tdl-patch-files-aux (file-names)
     (let ((*readtable* (make-tdl-break-table)))
@@ -141,6 +91,9 @@
       (canonicalise-feature-order)           
       (set-up-type-interactions)
       t))    
+
+
+;;; main functions
 
 (defun read-tdl-type-stream (istream &optional augment) 
    (loop
@@ -264,7 +217,8 @@
   (read-char istream)
   (let* ((status-indicator (read istream))
          (break-char (read istream))
-         (status-type (read istream)))))
+         (status-type (read istream)))
+    (declare (ignore status-indicator break-char status-type))))
 ;    (format t "~%~A ~A ~A" status-indicator break-char status-type)))
 
 (defun make-tdl-coreference-conditions (coref-table)

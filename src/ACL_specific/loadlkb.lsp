@@ -87,7 +87,7 @@
           (load compiled-file))))))
 
 (in-package :clim-user)
-(set-up-lkb-interaction :core) 
+(set-up-lkb-interaction :big) 
 (in-package :cl-user)
 
 

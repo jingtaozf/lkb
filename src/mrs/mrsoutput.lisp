@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.4  1998/07/19 03:08:41  aac
+;; reduced size of cached lexicon
+;;
 ;; Revision 1.3  1998/07/06 01:09:09  aac
 ;; mostly fixes to lexical lookup for generation
 ;;
@@ -205,7 +208,7 @@
 
 ;; Allow NIL argument to get-var-num
 (defun get-var-num (var-struct)
-  (when var-struct
+  (when (var-p var-struct)
     (var-id var-struct)))
 
 ;;; WK: the extras for the VIT simply collect the feature structures associated

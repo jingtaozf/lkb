@@ -204,22 +204,26 @@
   (for name in *type-names*
          do
          (let* ((type-entry (get-type-entry name)))
+           (when (leaf-type-p type-entry)
+             (setf (leaf-type-expanded-p type-entry) nil))
            (setf (type-constraint type-entry) nil)
-           (setf (type-atomic-p  type-entry) nil)
+           (setf (type-atomic-p type-entry) nil)
            (setf (type-tdfs type-entry) nil)
            (setf (type-appfeats type-entry) nil)
+           (setf (type-constraint-mark type-entry) nil)          
            (setf (type-local-constraint type-entry) nil)))
   (unmark-type-table)  
-   (format t "~%Expanding constraints")
-   (when (expand-and-inherit-constraints)
-     (format t "~%Making constraints well formed")
-     (when (strongly-type-constraints)
+  (gc t) ; try and force it to reclaim space before we refill it
+  (format t "~%Expanding constraints")
+  (when (expand-and-inherit-constraints)
+    (format t "~%Making constraints well formed")
+    (when (strongly-type-constraints)
        ;;; YADU --- extra expansion stage
        ;;; earlier stages are unchanged
-       (format t "~%Expanding defaults") 
-       (when (expand-type-hierarchy-defaults)
-         (format t "~%Type file checked successfully")
-         t))))
+      (format t "~%Expanding defaults") 
+      (when (expand-type-hierarchy-defaults)
+        (format t "~%Type file checked successfully")
+        t))))
 
 
 ;;; First we need to check that the type hierarchy itself is OK
@@ -673,9 +677,10 @@
       (for node in *type-names*
          do
          (let ((type-entry (get-type-entry node)))
+           (unless (leaf-type-p type-entry)
             (unless 
                (expand-constraint node type-entry)
-               (setf ok nil))))
+               (setf ok nil)))))
       (when ok 
          (check-feature-table))))
          
@@ -801,12 +806,12 @@
    (let ((ok t))
       (unmark-type-table)
       (for type-name in *type-names*
-         do
-         (unless 
-               (nth-value 1 (wf-constraint-of type-name))
-           ;;; i.e. just looks at boolean ok/not-ok
-;               (format t "~%Type ~A has an invalid constraint specification" type-name)
-                  (setf ok nil)))
+           do
+           (unless (leaf-type-p (get-type-entry type-name))
+             (unless 
+                 (nth-value 1 (wf-constraint-of type-name))
+ ;;; i.e. just looks at boolean ok/not-ok
+                  (setf ok nil))))
          (unmark-type-table)
 ; !!! can't create cyclic dags so don't check for them
          ok))
@@ -915,9 +920,10 @@
       (for node in *type-names*
          do
          (let ((type-entry (get-type-entry node)))
-            (unless 
-               (expand-default-constraint node type-entry)
-               (setf ok nil))))
+           (unless (leaf-type-p type-entry)
+             (unless 
+                 (expand-default-constraint node type-entry)
+               (setf ok nil)))))
       ok))
 
 (defun expand-default-constraint (node type-entry)

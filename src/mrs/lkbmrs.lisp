@@ -77,5 +77,9 @@
         ((path-p path) (car (last (path-typed-feature-list path))))
         (t path)))
 
+(defun compatible-types (type1 type2)
+  (user::find-gcsubtype type1 type2))
+
+
 
 

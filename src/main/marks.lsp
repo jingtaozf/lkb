@@ -36,8 +36,9 @@
       (setf (mark-field-active (type-marks type-record)) nil))
    
 (defun clear-marks (type-record)
+  (when (type-marks type-record)
       (setf (mark-field-active (type-marks type-record)) nil)
-      (setf (mark-field-seen (type-marks type-record)) nil))
+      (setf (mark-field-seen (type-marks type-record)) nil)))
    
 (defun create-mark-field (type-record)
    (setf (type-marks type-record) (make-mark-field)))

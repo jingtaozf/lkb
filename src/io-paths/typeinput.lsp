@@ -47,7 +47,13 @@
 ;;; 
 ;;; Syntactic sugar for lists is still to be defined
 
+(defun make-path-notation-break-table nil
+  (define-break-characters 
+                         '(#\; #\< #\> #\= #\: #\. #\/)))
+
 (defparameter *ordered-type-list* nil)
+
+(defvar *type-file-list* nil)
 
 (defun read-type-file nil  
    (let* ((file-name 
@@ -61,24 +67,6 @@
          (read-tdl-type-file-aux file-name settings-file)
          (read-type-file-aux file-name settings-file)))))
 
-(defun read-type-file-aux (file-name &optional settings-file)
-   (setf *ordered-type-list* nil)
-   (clear-types)
-   (let ((*readtable*
-            (define-break-characters 
-               '(#\; #\< #\> #\= #\: #\. #\/))))
-      (with-open-file 
-         (istream file-name :direction :input)
-         (format t "~%Reading in type file")
-         (read-type-stream istream))) 
-   ;; check-type-table is in checktypes.lsp           
-   (when (check-type-table) 
-      (canonicalise-feature-order)
-      (when settings-file
-         (set-up-display-settings settings-file))           
-      (set-up-type-interactions)
-      t))
-
 (defun read-type-files nil  
    (let* ((file-names 
             (ask-user-for-existing-pathnames 
@@ -91,12 +79,14 @@
          (read-tdl-type-files-aux file-names settings-file)   
          (read-type-files-aux file-names settings-file)))))
 
+(defun read-type-file-aux (file-name &optional settings-file)
+   (read-type-files-aux (list file-name) settings-file))
+
 (defun read-type-files-aux (file-names &optional settings-file)
+   (setf *type-file-list* file-names)
    (setf *ordered-type-list* nil)
    (clear-types)
-   (let ((*readtable*
-            (define-break-characters 
-               '(#\; #\< #\> #\= #\: #\. #\/))))
+   (let ((*readtable* (make-path-notation-break-table)))
       (for file-name in file-names
          do
          (format t "~%Reading in type file ~A" file-name)
@@ -120,14 +110,25 @@
         (read-leaf-type-file-aux file-name)))))
 
 (defun read-leaf-type-file-aux (file-name)
-  (let ((*readtable* (define-break-characters 
-                         '(#\; #\< #\> #\= #\: #\. #\/)))
+  (let ((*readtable* (make-path-notation-break-table))
         (*leaf-type-addition* t))
       (with-open-file 
          (istream file-name :direction :input)
          (format t "~%Reading in leaf type file")
          (read-type-stream istream))))
-             
+
+(defun read-type-patch-files nil 
+  (when *type-file-list*
+    (unless (eql *lkb-system-version* :page)
+      (error "~%Patching currently only available for TDL syntax"))
+    (clear-types-for-patching-constraints)
+    (read-tdl-patch-files-aux *type-file-list*)
+    (check-for-open-psorts-stream)))
+
+
+
+;;; All the above functions eventually call the following
+
 (defun read-type-stream (istream)
    (loop
       (let ((next-char (peek-char t istream nil 'eof)))
