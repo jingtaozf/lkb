@@ -32,8 +32,9 @@
 
 (proclaim
    '(special *edge-id* *safe-not-to-copy-p* *orth-path* *toptype*
-       *start-symbol* *debugging*
-       mrs::*initial-semantics-path* mrs::*psoa-liszt-path*))
+       *start-symbol* *debugging* *substantive-roots-p*
+       mrs::*initial-semantics-path* mrs::*psoa-liszt-path*
+       mrs::*null-semantics-found-items*))
 
 
 ;;; utility functions
@@ -60,20 +61,17 @@
        (filtered
           (remove 'THAT_C found-lex-list :key #'mrs::found-lex-lex-id))
        (empty
-          (mapcar
-            #'(lambda (x)
-                (mrs::make-found-lex
-                   :lex-id x
-                   :inst-fs (lex-or-psort-full-fs (get-psort-entry x))))
-            (remove "CONJ" mrs::*empty-semantics-lexical-entries* :key #'string
-               :test #'search))))
+          (remove-if-not #'(lambda (x) (member (mrs::found-lex-lex-id x) '(l_str r_str)))
+             (apply #'append mrs::*null-semantics-found-items*))
+          ;nil
+          ))
       (if filtered
          (chart-generate input-sem (append filtered empty))
-         (format t "~%No lexical entries could be found from MRS relations - have ~
-                    functions index-lexicon and index-lexical-rules been run yet?"))))
+         (format t "~%No lexical entries could be found from MRS relations - has ~
+                    function index-for-generator been run yet?"))))
 
 
-;;; generate from an input MRS and a sequence of bags of lexical entry FSs
+;;; generate from an input MRS and a bag of lexical entry FSs
 ;;;
 ;;; constraints on generation:
 ;;;
@@ -82,9 +80,8 @@
 ;;; maximal alternative phrase containing modifiers is available for
 ;;; incorporation into larger phrases)
 ;;;
-;;; extending an active edge with an inactive must not result in the use
-;;; of more than one entry derived from the same original rel (prevents e.g.
-;;; same modifier being added repeatedly)
+;;; extending an active edge with an inactive must not result in the duplication
+;;; of any relation (prevents e.g. same modifier being added repeatedly)
 ;;;
 ;;; final analysis must not have any semantics missing (e.g. makes sure
 ;;; all relevant modifiers have been realised)
@@ -140,7 +137,9 @@
    ;; Finally add these edges to chart, and return their realisations (leaves)
    ;; !!! assume that final orthography is purely the concatenation of the
    ;; orthographies of the lex entries passed in
-   (let ((res nil))
+   (let ((res nil)
+         (start-symbols
+            (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
       (dolist (e (gen-chart-retrieve-with-index *toptype* nil))
          ;; process has so far checked that we have not generated any relation more
          ;; than once - now check that we have generated them all
@@ -148,9 +147,9 @@
                     (1- (length (mrs::psoa-liszt input-sem)))) ; *** prpstn_rel
             (dolist
                (new
-                  (gen-chart-root-edges e
-                     (if (listp *start-symbol*) *start-symbol*
-                        (list *start-symbol*))))
+                  (if *substantive-roots-p*
+                     (gen-chart-root-edges e start-symbols)
+                     (gen-filter-root-edges e start-symbols)))
                (when (gen-chart-check-complete new input-sem)
                   (gen-chart-add-with-index new
                      (gen-chart-dag-index (tdfs-indef (gen-chart-edge-dag new))))
@@ -195,6 +194,14 @@
                                      :leaves (gen-chart-edge-leaves edge))))
                       new-edge)))))))
 
+(defun gen-filter-root-edges (edge start-symbols)
+   ;; c.f. filter-root-edges in parse.lsp
+   (dolist (start-symbol start-symbols)
+      (let ((root-spec (get-tdfs-given-id start-symbol)))
+         (when root-spec
+            (when (yadu root-spec (gen-chart-edge-dag edge))
+               (return (list edge)))))))
+
 
 ;;; Chart indexing - on *semantics-index-path* values. May be full types or
 ;;; instance types. Seem to be mostly disjoint if not eq, so don't bother using
@@ -203,14 +210,15 @@
 (defun gen-chart-dag-index (dag)
    (let ((index-dag (existing-dag-at-end-of dag *semantics-index-path*)))
       (if index-dag
-         (let ((index (dag-type index-dag)))
+         (let ((index (type-of-fs index-dag)))
             (when (and (consp index) (null (cdr index)))
                ;; simplify single-item disjunction
                (setq index (car index)))
             index)
          (progn
-            (cerror (format nil "use type ~A" *toptype*)
-               "unexpectedly missing index for edge dag: ~S" dag)
+            ;(cerror (format nil "use type ~A" *toptype*) ; ***
+            ;   "unexpectedly missing index for edge dag: ~S" dag)
+            (warn "unexpectedly missing index for edge dag - using ~A" *toptype*)
             *toptype*))))
 
 
@@ -378,10 +386,8 @@
 (defun gen-chart-inaccessible-needed-p (dag input-sem lex-used leaves)
    (let
       ((sem-fs
-        (or (existing-dag-at-end-of (tdfs-indef dag)
-               (append mrs::*initial-semantics-path* mrs::*psoa-liszt-path*)) ; RLISZT ***
-            (existing-dag-at-end-of (tdfs-indef dag)
-               (append mrs::*initial-semantics-path* '(LISZT LIST)))))) ; when not root ***
+          (existing-dag-at-end-of (tdfs-indef dag)
+             (append mrs::*initial-semantics-path* mrs::*psoa-liszt-path*))))
       (unless sem-fs
          (error "could not find semantics in ~A" 'gen-chart-inaccessible-needed-p))
       (let
