@@ -57,21 +57,29 @@
                  ;;
                  ;; work around values() return from generate-from-mrs() ...
                  ;;
-                 (let ((strings (generate-from-mrs mrs)))
+                 (let* ((stream (make-string-output-stream))
+                        (*standard-output* stream)
+                        (strings (generate-from-mrs mrs))
+                        (output (get-output-stream-string stream)))
+                   (when (and (stringp output) (not (string= output "")))
+                     (format
+                      log
+                      "~&[~a] translate(): message `~a'.~%"
+                      (current-time :long :short)
+                      (normalize-string output)))
                    strings))
-              (when result
+              (if condition
+                (format
+                 log
+                 "~&[~a] translate(): error `~a'.~%"
+                 (current-time :long :short)
+                 (normalize-string (format nil "~a" condition)))
                 (format
                  log
                  "~&[~a] translate(): ~a generation result~p.~%"
                  (current-time :long :short)
                  (length result) (length result)))
-              (when condition
-                (format
-                 log
-                 "~&[~a] translate(): error `~a'.~%"
-                 (current-time :long :short)
-                 (normalize-string condition))))
-            (show-gen-result))
+              (when result (show-gen-result))))
            (t
             (format
              log
