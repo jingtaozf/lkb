@@ -84,8 +84,9 @@
   (multiple-value-bind (return condition)
     (ignore-errors
      (let* ((*package* (find-package "COMMON-LISP-USER"))
-            (*maximum-number-of-edges* 
-             (if (or (null edges) (zerop edges)) (expt 2 42) edges))
+            (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
+                                         *maximum-number-of-edges*
+                                         edges))
              (sent
               (split-into-words (preprocess-sentence-string string)))
              (str (make-string-output-stream)) ; capture any warning messages
