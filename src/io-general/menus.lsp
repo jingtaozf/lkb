@@ -239,7 +239,7 @@
                                 (list
                                  (make-menu-item :name "Check lexicon"
                                                  :value 'batch-check-lexicon :available-p :grammar)
-                                 (make-menu-item :name "Find features' type"
+                                 (make-menu-item :name "Find features' type..."
                                                  :value 'find-type-from-features :available-p :grammar)
                                  (make-menu-item :name "Print parser chart"
                                                  :value 'print-chart :available-p :grammar)
@@ -248,12 +248,12 @@
          (make-lkb-submenu-item :menu-title "Advanced"
                  :menu-items 
                    (list                     
-                      (make-menu-item :name "Dump system..."
-                                      :value 'dump-lkb :available-p :always)
+;;;                      (make-menu-item :name "Dump system..."
+;;;                                      :value 'dump-lkb :available-p :always)
                       (make-menu-item :name "Tidy up"
                                       :value 'clear-non-parents
                                       :available-p :grammar)
-                      (make-menu-item :name "Create quick check file"
+                      (make-menu-item :name "Create quick check file..."
                                       :value 'interactive-create-check-paths
                                       :available-p :grammar)
 ;                     (make-menu-item :name "Types with glbs..."
