@@ -6,6 +6,8 @@
         
 ;;; ACL version
 
+(in-package :user)
+
 (defparameter *parse-window-width* 400
   "Initial width of tree window")
 
@@ -13,7 +15,8 @@
   "Initial height of tree window")
 
 (defparameter *ptree-text-style* 
-  (clim:parse-text-style (list :sans-serif :roman (or *parse-tree-font-size* 9)))
+    (clim:parse-text-style (list :sans-serif :roman 
+				 (or *parse-tree-font-size* 9)))
   "Text style for node labels.")
 
 (defparameter *ptree-node-sep* 6
@@ -25,26 +28,20 @@
 (defstruct ptree-node
   "Data structure for parse-tree nodes."
   (name "")				; Node label
-  (pstruct nil)			; record for node
+  (pstruct nil)				; record for node
   (children nil))
-               
+
       
-(defun display-parse-tree (edge &optional jac-param)
-  ;;; JAC added an extra arg to this - need to find out why
-  ;;; but meanwhile, just allow it so that tree-nodes.lsp stays
-  ;;; graphics independent
-   ;;; takes an edge and builds the tree below it for input
-   ;;; to ACL graph package - then displays it
-   ;;; with active nodes
-  (declare (ignore jac-param))
-   (let* ((edge-id (edge-id edge))
-         (edge-symbol 
-            (make-edge-symbol
-               edge-id))
-         (top-ptree-node 
-            (make-new-parse-tree edge-symbol edge)))
-       (draw-new-parse-tree top-ptree-node 
-                            (format nil "Edge ~A" edge-id))))
+
+(defun display-parse-tree (edge display-in-chart-p)
+  ;; takes an edge and builds the tree below it for input to ACL graph
+  ;; package - then displays it with active nodes
+  (let* ((edge-id (edge-id edge))
+         (edge-symbol (make-edge-symbol edge-id))
+         (top-ptree-node (make-new-parse-tree edge-symbol edge)))
+    (when display-in-chart-p (display-edge-in-chart edge))
+    (draw-new-parse-tree top-ptree-node 
+			 (format nil "Edge ~A" edge-id))))
 
 ;;; make-edge-symbol is in tree-nodes.lsp   
 
@@ -80,16 +77,16 @@
 
 (defun make-morph-tree (edge-symbol edge-record)
   (list
-  (make-ptree-node :name edge-symbol
-                   :pstruct edge-record
-                   :children
-                   (if edge-record
-                       (let ((mdaughter (edge-morph-history edge-record)))
-                         (if mdaughter
-                             (let ((daughter-edge-symbol 
-                                    (make-edge-symbol (edge-id mdaughter) t)))
-                               (make-morph-tree daughter-edge-symbol
-                                                mdaughter))))))))
+   (make-ptree-node :name edge-symbol
+		    :pstruct edge-record
+		    :children
+		    (when edge-record
+		      (let ((mdaughter (edge-morph-history edge-record)))
+			(when mdaughter
+			  (let ((daughter-edge-symbol 
+				 (make-edge-symbol (edge-id mdaughter) t)))
+			    (make-morph-tree daughter-edge-symbol
+					     mdaughter))))))))
 
     
 
@@ -113,7 +110,8 @@
 			  :height *parse-window-height*
 			  :text-style *ptree-text-style*
 			  :borders nil
-			  :background (clim:make-rgb-color 1 1 1)
+			  :background clim:+white+
+			  :foreground clim:+black+
 			  :display-time nil))))))
   (:layouts
     (:default display)))
@@ -153,12 +151,9 @@
 
 ;;; menus
 
-
-
 ;; 
 ;; Add [EXIT] button
 ;;
-
 
 (define-parse-tree-command (com-exit-parse-tree :menu "Close")
     ()
@@ -176,23 +171,23 @@
                    '(("Feature Structure" :value fs)
                      ("Rule" :value rule)))))
     (when command
-          (handler-case
-            (ecase command
-                   (fs (display-fs (edge-dag edge-record)
-                          (format nil "Edge ~A" (edge-id edge-record))))
-                   (rule 
-                    (let* ((rule-name (edge-rule-number edge-record))
-                           (rule (or (get-grammar-rule-entry rule-name)
-                                     (get-lex-rule-entry rule-name))))
-                      (if rule
-                            (display-fs (rule-full-fs rule)
-                                        (format nil "~A" rule-name))
-                        (let ((alternative (get-tdfs-given-id rule-name)))
-                          (when alternative
-                            (display-fs alternative
-                                        (format nil "~A" rule-name))))))))
-            (error (condition)
-                   (format clim-user:*lkb-top-stream*  
-                           "~%Error: ~A~%" condition))))))
+      (handler-case
+	  (ecase command
+	    (fs (display-fs (edge-dag edge-record)
+			    (format nil "Edge ~A" (edge-id edge-record))))
+	    (rule 
+	     (let* ((rule-name (edge-rule-number edge-record))
+		    (rule (or (get-grammar-rule-entry rule-name)
+			      (get-lex-rule-entry rule-name))))
+	       (if rule
+		   (display-fs (rule-full-fs rule)
+			       (format nil "~A" rule-name))
+		 (let ((alternative (get-tdfs-given-id rule-name)))
+		   (when alternative
+		     (display-fs alternative
+				 (format nil "~A" rule-name))))))))
+	(error (condition)
+	  (format clim-user:*lkb-top-stream*  
+		  "~%Error: ~A~%" condition))))))
 
 

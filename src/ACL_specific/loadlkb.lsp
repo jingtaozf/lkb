@@ -52,7 +52,7 @@
          ("io-paths" "ruleinput")       ; generic CL
          ("main" "parse")       ; generic CL
          ("ACL_specific" "parseout")    ; some dialect specific - parse tree fns
-;         ("ACL_specific" "chartout") no ACL variant yet
+         ("ACL_specific" "chartout") ; some dialect specific
          ("main" "morph")       ; generic CL
          ("ACL_specific" "dialog")
          ("ACL_specific" "tree") ; some dialect specific - type hierarchy fns

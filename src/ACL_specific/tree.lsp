@@ -2,6 +2,8 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
+(in-package :user)
+
 ;;; 1995 modified for MCL port
 
 ;;; 1996 modified to allow trees to be displayed without automatically
@@ -48,46 +50,54 @@
 ;; Open a type-hierarchy-window
 ;;
 
-(defun create-type-hierarchy-tree (&optional hide-glb-types-p)
-  (declare (ignore hide-glb-types-p))
-  ; to do - hide-glb-types option
-  (for type in *type-names*
-       do
-       (let ((type-entry (get-type-entry type)))
-         (when type-entry
-               (setf (mark-field-seen (type-marks type-entry)) nil))))
-  (let ((top-hierarchy-node 
-         (construct-type-hier-node *toptype*)))
-; side effect is to construct children node
-    (display-type-hierarchy top-hierarchy-node)
-    nil))
+(defun create-type-hierarchy-tree (&optional (type *toptype*) old-window)
+  (for name in *type-names*
+       do 
+       (unless (symbolp name)
+         (let ((real-thing name))
+	   (setq name (intern (princ-to-string name)))
+	   (setf (get name 'real-thing) real-thing))) 
+       (setf (get name 'daughters) nil))
+  (clear-type-visibility)
+  (propagate-visibility-in-type-tree type)
+  (let ((node (car (make-new-type-tree type))))
+    (display-type-hierarchy node
+			(format nil "Type hierarchy below ~(~A~)" type) 
+			t old-window)))
 
+;;; initially all nodes are marked not visible. If we're not a shrunk node, go
+;;; on to attempt to mark each daughter as visible If we're marked as visible
+;;; then daughters must have been done already
 
+(defun propagate-visibility-in-type-tree (type)
+   (let ((type-record (get-type-entry type)))
+      (when (and (not (type-shrunk-p type-record))
+                 (not (type-visible-p type-record)))
+         (for daughter in (type-daughters type-record)
+            do
+            (propagate-visibility-in-type-tree daughter)))
+      (setf (type-visible-p type-record) t)))
 
-(defun construct-type-hier-node (name)
-  (let ((type-entry (get-type-entry name)))
-    (or (mark-field-seen (type-marks type-entry))
-        (let ((node
-               (make-hier-node :name (type-hier-print-name name)
-                               :type-entry type-entry
-                               :children 
-                               (if type-entry
-                                   (for child in 
-                                        (type-daughters type-entry)
-                                        collect
-                                        (construct-type-hier-node child))))))
-          (setf (mark-field-seen (type-marks type-entry))
-                node)
-          node))))
-
-
-
-(defun type-hier-print-name (name)
-  (let ((strung (princ-to-string name)))
-    (when (> (length strung) 20)
-           (setf strung (concatenate 'string (subseq strung 0 19) "...")))
-   (string-downcase strung)))
-
+(defun make-new-type-tree (type)
+   (let ((type-record (get-type-entry type)))
+      (cond
+         ((not (type-visible-p type-record))
+            nil)
+         ((and (fboundp 'hide-in-type-hierarchy-p)
+             (funcall (symbol-function 'hide-in-type-hierarchy-p) type))
+            (mapcan #'make-new-type-tree (type-daughters type-record)))
+         (t
+            (let ((node
+                   (if (symbolp type) type
+                      (let ((new (intern (princ-to-string type))))
+                         (setf (get new 'real-thing) type)
+                         new))))
+               (unless (get node 'daughters)
+                  (setf (get node 'daughters)
+                     (delete-duplicates
+                        (mapcan #'make-new-type-tree
+                           (type-daughters type-record)) :test #'eq)))
+               (list node))))))
 
 ;;
 ;; Define a frame class for our tree window
@@ -95,88 +105,93 @@
 
 (clim:define-application-frame type-hierarchy ()
   ((nodes :initform nil
-   :accessor type-hierarchy-nodes))
+	  :accessor type-hierarchy-nodes))
   (:panes
-   (display :application
-	    :display-function 'draw-type-hierarchy
-	    :text-cursor nil
-	    :width *window-width* :height *window-height*
-	    :text-style *tree-text-style*
-	    :borders nil
-            :display-after-commands nil))
+   (display 
+    (clim:outlining (:thickness 1)
+      (clim:spacing (:thickness 1)  
+	(clim:scrolling (:scroll-bars :both)
+	  (clim:make-pane 'clim:application-pane
+			  :display-function 'draw-type-hierarchy
+			  :text-cursor nil
+			  :width *window-width* 
+			  :height *window-height*
+			  :text-style *tree-text-style*
+			  :borders nil
+			  :background clim:+white+
+			  :foreground clim:+black+
+			  :display-time nil))))))
   (:layouts
-    (:default display)))
+   (:default display)))
 
-(defparameter *node-positions* (make-hash-table :test #'equal))
-
-(defun display-type-hierarchy (node)
-  (when (and *type-hier-frame* 
-             (eql (clim:frame-state *type-hier-frame*) :shrunk))
-        (clim:note-frame-deiconified 
-         (clim:frame-manager *type-hier-frame*)
-         *type-hier-frame*))
-  (if (and *type-hier-frame* 
-           (eql (clim:frame-state *type-hier-frame*) :enabled))
+(defun display-type-hierarchy (node title horizontalp existing)
+  (declare (ignore horizontalp))
+  (if existing
       (progn
-        (clim:window-clear *type-hier-pane*)
-        (setf (type-hierarchy-nodes *type-hier-frame*) node)
-        (clim:redisplay-frame-panes *type-hier-frame* :force-p t))
+	(clim:enable-frame existing)
+	(clim:raise-frame existing)
+        (setf (type-hierarchy-nodes existing) node)
+	(setf (clim:frame-pretty-name existing) title)
+        (clim:redisplay-frame-panes existing :force-p t))
     (progn
       (setf *type-hier-frame* nil)
       (setf *type-hier-pane* nil)
-      (clrhash *node-positions*)
       (let ((thframe (clim:make-application-frame 'type-hierarchy)))
         (setf (type-hierarchy-nodes thframe) node)
         (mp:process-run-function "Type Hierarchy" 
                                  #'clim:run-frame-top-level thframe)
-        (setf *type-hier-frame* thframe)
+	(setf (clim:frame-pretty-name thframe) title)
+	(setf *type-hier-frame* thframe)
         (setf *type-hier-pane* (clim:get-frame-pane thframe 'display))))))
-    
 
 
-(defun draw-type-hierarchy (type-hierarchy
-                                stream &key max-width max-height)
+(defun draw-type-hierarchy (type-hierarchy stream &key max-width max-height)
   (declare (ignore max-width max-height))
-  (let ((node-tree (type-hierarchy-nodes type-hierarchy)))
-    (clim:format-graph-from-root
-     node-tree
-     #'(lambda (node s)
-	 (if (hier-node-type-entry node)
-	     (clim:with-output-as-presentation (stream node 'hier-node)
-	       (write-string (hier-node-name node) s))
-	   (write-string (hier-node-name node) s)))
-     #'hier-node-children
-     :stream stream 
-     :merge-duplicates t
-;;; CLIM bug -  duplicate-key duplicate-test are missing
-     :arc-drawer #'store-and-draw
-     :orientation :horizontal 
-     :generation-separation *tree-level-sep*
-     :within-generation-separation *tree-node-sep*
-     :center-nodes nil)))
+  (let ((node-tree (type-hierarchy-nodes type-hierarchy))
+	(x (clim:bounding-rectangle-min-x (clim:pane-viewport stream)))
+	(y (clim:bounding-rectangle-min-x (clim:pane-viewport stream))))
+    (silica:inhibit-updating-scroll-bars (stream)
+      (clim:format-graph-from-root
+       node-tree
+       #'(lambda (node s)
+	   (clim:with-output-as-presentation (stream node 'hier-node)
+	     (clim:with-drawing-options (stream :ink clim:+red+)
+	       (write-string (type-node-text-string node) s))))
+       #'(lambda (node) (get node 'daughters))
+       :stream stream 
+       :merge-duplicates t
+       ;; CLIM bug -  duplicate-key duplicate-test are missing
+       ;; :arc-drawer #'store-and-draw
+       :orientation :horizontal 
+       :generation-separation *tree-level-sep*
+       :within-generation-separation *tree-node-sep*
+       :center-nodes nil))
+    (clim:scroll-extent stream x y)))
 
+;;; Fix this?
 
+(defparameter *node-text-scratch-string*
+    (make-array 30 :element-type 'character :fill-pointer 0))
 
-(defun store-and-draw (stream from-node to-node x1 y1 x2 y2
-                              &rest drawing-options)
-  (declare (ignore from-node))
-; store positions so we can scroll
-; to a given type
-  (when (hier-node-p to-node)
-   (setf (gethash (hier-node-name to-node) *node-positions*)
-         (list x2 y2)))
-  (apply #'clim:draw-line* stream x1 y1 x2 y2 drawing-options))
-
+(defun type-node-text-string (node)
+   (without-interrupts ; the code in here isn't re-entrant
+      (let* ((str *node-text-scratch-string*)
+             (full-string (symbol-name node))
+             (full-length (length full-string))
+             (len (min full-length 30)))
+         (setf (fill-pointer str) len)
+         (dotimes (n len)
+            (setf (char str n) (char-downcase (char full-string n))))
+         (when (> full-length 30) (setf (char str 29) (code-char 201))) ; '...'
+         str)))
 
 ;; 
 ;; Add [EXIT] button
 ;;
 
-
 (define-type-hierarchy-command (com-exit-tree :menu "Close")
     ()
   (clim:frame-exit clim:*application-frame*))
-
 
 ;;
 ;; Make nodes active
@@ -184,89 +199,107 @@
 
 (define-type-hierarchy-command (com-type-hier-menu)
     ((node 'hier-node :gesture :select))
-  (let* ((type-entry (hier-node-type-entry node))
+  (let* ((type-entry (get-type-entry node))
          (type (type-name type-entry))
-         (command (clim:menu-choose
+	 (command (clim:menu-choose
                    '(("Help" :value help)
                      ("Shrink/expand" :value shrink)
                      ("Type definition" :value def)
-                     ("Expanded type" :value exp)))))
+                     ("Expanded type" :value exp)
+		     ("New hierarchy" :value new)))))
     (when command
           (handler-case
             (ecase command
-                   (help (display-type-comment type 
-                                  (type-comment type-entry)))
-                   (shrink (lkb-beep))
-                   (def                      
-                     (if (type-constraint type-entry)
-                         (display-fs-and-parents 
-                          (type-local-constraint type-entry) 
-                          (format nil 
-                                  "~(~A~)  - definition" 
-                                  type)
-                          (type-parents type-entry))
-                       (format clim-user:*lkb-top-stream* 
-                               "~%No constraint for type ~A" type)))
-                   (exp (if (type-constraint type-entry)
-                            (display-fs-and-parents 
-                             (type-constraint type-entry) 
-                                   (format nil 
-                                           "~(~A~) - expanded" 
-                                           type)
-                                   (type-parents type-entry))
-                          (format clim-user:*lkb-top-stream* 
-                                  "~%No constraint for type ~A" type))))
-            (error (condition)
-                   (format clim-user:*lkb-top-stream*  
-                           "~%Error: ~A~%" condition))))))
+	      (help 
+	       (display-type-comment node (type-comment type-entry)))
+	      (shrink   
+	       (setf (type-shrunk-p type-entry) 
+		 (not (type-shrunk-p type-entry)))
+	       (create-type-hierarchy-tree 
+		(type-hierarchy-nodes clim:*application-frame*)
+		clim:*application-frame*))
+	      (def                      
+		  (if (type-constraint type-entry)
+		      (display-fs-and-parents 
+		       (type-local-constraint type-entry) 
+		       (format nil 
+			       "~(~A~)  - definition" 
+			       node)
+		       (type-parents type-entry))
+		    (format t "~%No constraint for type ~A" node)))
+	      (exp (if (type-constraint type-entry)
+		       (display-fs-and-parents 
+			(type-constraint type-entry) 
+			(format nil 
+				"~(~A~) - expanded" 
+				type)
+			(type-parents type-entry))
+		     (format clim-user:*lkb-top-stream* 
+			     "~%No constraint for type ~A" type)))
+	      (new
+	       (create-type-hierarchy-tree (type-name type-entry) nil)))
+	    (error (condition)
+	      (format clim-user:*lkb-top-stream*  
+		      "~%Error: ~A~%" condition))))))
  
-;;; called from top level menu commands etc
+;;; NB Problems caused by having only 1 field per type for shrunk and visible
+;;; flags and allowing multiple type windows on screen at once:
+;;; shrinking/expanding a type in one window will give inconsistent
+;;; expand/shrink behavour of that type if it appears in another window.  A
+;;; type may be expanded automatically in the process of highlighting one of
+;;; its descendents, which could also cause confusion wrt another window
 
-(defun display-type-in-tree (type)
-  (let ((type-entry (get-type-entry type)))
-    (when type-entry
-; eventually need to treat shrunk types
-          (let ((type-name (type-hier-print-name type)))
-            (when (and *type-hier-frame*
-                   (eql (clim:frame-state *type-hier-frame*) :shrunk))
-                   (clim:note-frame-deiconified 
-                    (clim:frame-manager *type-hier-frame*)
-                    *type-hier-frame*))
-                    ; fn documented in release notes for 4.3
-            (if (and *type-hier-frame*
-                  (eql (clim:frame-state *type-hier-frame*) :enabled))
-                (progn
-                   (scroll-to-type type-name *type-hier-pane*)
-                   (clim:window-expose *type-hier-pane*))
-              (create-type-hierarchy-tree))))))
-; we're not scrolling because it's likely that the scrolling won't happen
-; at the right time because of multiprocessing.  But this is
-; only a problem if the damnfool user has closed the window
+;;; called from top level menu commands etc. Try to make type visible by
+;;; unshrinking any ancestors if necessary - up to top type for this window if
+;;; we currently have one on screen, and ask for type hierarchy window to be
+;;; scrolled so given type is visible in centre, and the type highlighted. If
+;;; we're looking in an existing window and the type isn't a descendent of the
+;;; window's top type then we give up immediately. If there's not a hierarchy
+;;; onscreen give up. User can always open one up from toplevel view menu
 
+(defun display-type-in-tree (node)
+  (let* ((type-entry
+	  (or (get-type-entry node)
+	      (get-type-entry (get node 'real-thing))))
+	 (type (type-name type-entry))
+	 (top-type (if *type-hier-frame* 
+		       (type-hierarchy-nodes *type-hier-frame*) 
+		     *toptype*)))
+    (when (and type-entry
+	       *type-hier-frame*
+	       (or (eq type top-type)
+		   (member type (retrieve-descendants top-type))))
+      ;; ensure the type will be visible, whether or not it is now
+      (unshrink-ancestors type-entry top-type)
+      (let* ((stream (clim:frame-standard-output *type-hier-frame*))
+	     (record (find-type stream type)))
+	(when record
+	  (scroll-to record stream))))))
 
-(defun scroll-to-type (type-name pane)
-  (let* ((bounding-rect (clim:pane-viewport-region pane))
-         (width (clim:bounding-rectangle-width bounding-rect))
-         (height (clim:bounding-rectangle-height bounding-rect))
-         (position (gethash type-name *node-positions*))
-         (half-text-height (floor (text-font-height pane) 2)))
-    (when position
-          (clim:scroll-extent pane
-                  (max 0 (- (car position) (floor width 2)))
-                  (max 0 (- (cadr position) (floor height 2))))
-; next stuff highlights temporarily - too difficult to
-; get a more permanent reverse and remove it at the right time
-          (clim:draw-rectangle* pane
-                   (car position) 
-                   (max 0 (- (cadr position) half-text-height))
-                   (+ (clim:stream-string-width pane type-name) (car position)) 
-                   (+ (cadr position) half-text-height)
-                   :filled t :ink clim:+flipping-ink+)
-          (sleep 1)
-          (clim:draw-rectangle* pane
-                   (car position) 
-                   (max 0 (- (cadr position) half-text-height))
-                   (+ (clim:stream-string-width pane type-name) (car position)) 
-                   (+ (cadr position) half-text-height)
-                   :filled t :ink clim:+flipping-ink+))))
-      
+(defun unshrink-ancestors (type-entry top-type)
+  ;; can't just use type-ancestors list since we have to stop at top-type arg
+  (unless (eql (type-name type-entry) top-type)
+    (for parent in (type-parents type-entry)
+         do
+         (let ((parent-entry (get-type-entry parent)))
+	   (setf (type-shrunk-p parent-entry) nil)
+	   (unshrink-ancestors parent-entry top-type)))
+    (create-type-hierarchy-tree (type-hierarchy-nodes *type-hier-frame*)
+				*type-hier-frame*)))
+
+;;; Search the display list for a type
+
+(defun find-type (stream type)
+  (catch 'found-type
+    (find-type-1 (slot-value stream 'clim:output-record) stream type)))
+
+(defun find-type-1 (rec stream type)
+  (clim:map-over-output-records 
+   #'(lambda (rec)
+       (when (and (clim:presentationp rec) 
+		  (eq type (clim:presentation-object rec)))
+	 (throw 'found-type rec))
+       (dolist (q (clim:output-record-children rec)) 
+	 (find-type-1 q stream type)))
+   rec))
+

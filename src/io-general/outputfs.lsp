@@ -195,7 +195,7 @@
          (incf indentation))))))
 
 (defun make-output-label (real-name)
-   (let* ((real-string (symbol-name real-name))
+   (let* ((real-string (write-to-string real-name))
 	  (real-length (length real-string)))
       (or (cdr (assoc-if 
                #'(lambda (test-string)
