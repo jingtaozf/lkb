@@ -174,8 +174,7 @@ they have never used a grammar development environment before,
 but we do assume some knowledge of constraint-based formalisms,
 such as HPSG.  The grammars distributed with the LKB are
 linked to a textbook which introduces this sort of approach
-to formal syntax: Sag and Wasow (in press).
-%UPDATE point
+to formal syntax: Sag and Wasow (1999).
 There are some places where to fully understand
 the documentation a knowledge of some NLP concepts, such as chart parsing,
 will be helpful, but this should not be essential to use the system.
@@ -190,9 +189,13 @@ system, but we've tried to avoid this being essential.
  
 The rest of this chapter contains a few more brief details
 of the LKB system and how it has been developed.
-The second chapter is intended for first time users: it gives
+The following chapter describes installation of the LKB.
+The third chapter
+is intended for first time users: it gives
 a fairly detailed tour through some of the LKB's functionality.
-The third chapter contains a formal description
+The fourth chapter is a basic
+and informal introduction to typed feature structures.
+Chapter~5 contains a formal description
 of typed feature structures as used in the LKB.
 The subsequent three chapters are the reference manual proper --- they
 are not intended to be read straight through, but to act as 
@@ -842,12 +845,21 @@ It covers the basics of:
 \begin{enumerate}
 \item The LKB top menu
 \item Loading an example grammar
-\item Examining feature structures and types
+\item Examining feature structures and type constraints
 \item Parsing sentences
 \item Adding a lexical entry
-\item Adding a type
+\item Adding a type with a constraint
 \end{enumerate}
-
+The intention is that this chapter should be useful
+to readers who have no previous exposure to
+typed feature structure formalisms as well as
+to people who have some knowledge of typed feature structure
+formalisms and who want an introduction to the LKB's user
+interface and functionality.  But if you are in the first
+category, you will probably find that you don't fully understand all the
+terminology and notation used here.  A detailed introduction
+is contained in Chapter~\ref{easy}, but we expect that for most people
+that chapter will be easier to digest after this guided tour.
 
 \section{The LKB top menu}
 \label{topmenu}.
@@ -886,7 +898,8 @@ It may be reopened by evaluating
 \label{gramload}
 
 The first step in this guided tour is to load an existing grammar: i.e.,
-a set of files containing types, lexical entries, grammar rules etc.  
+a set of files containing types and constraints, 
+lexical entries, grammar rules etc.  
 The LKB comes supplied with a series of grammars,
 all of which are in the directory \verb+data+.  In this section, we
 will assume that you are working with the smallest, which is called
@@ -928,18 +941,24 @@ and a type hierarchy window is displayed (as shown in Figure~\ref{typehier}).
 \end{figure}
 
 
-\section{Examining feature structures and types}
+\section{Examining feature structures and type constraints}
 
 In this section we will go through some of the ways in which
 you can look at the data structures in the grammar, such as the types,
+type constraints,
 lexical entries and grammar rules.
 
 \subsection{The type hierarchy window}
-The type hierarchy window is shown 
+The backbone of any grammar in the LKB is the type system,
+which consists of a hierarchy of types, each of which has a
+constraint which is expressed as a feature structure.
+The type hierarchy allows for inheritance of constraints.
+In the LKB system, the type hierarchy window is shown 
 with the most
 general type displayed at the left of the window.  In the toy grammar, 
-this is {\bf *top*}.  The hierarchy indicates inheritance.
-You will notice that there is some multiple inheritance in the hierarchy.
+this is {\bf *top*}.  
+You will notice that there is some multiple inheritance in the hierarchy
+(i.e., some types have more than one parent).
 
 Click on the type {\bf ne-list}
 which is a daughter of {\bf *list*}, which is a daughter of {\bf *top*},
@@ -948,7 +967,7 @@ as shown in Figure~\ref{ne-list}.
 \begin{figure}
 \epsfxsize=1in
 \epsfbox[0 0 200 200]{figs/ne-list.ps}
-\caption{An expanded type window}
+\caption{An expanded type constraint window}
 \label{ne-list}
 \end{figure}
 This window shows the constraint on type {\bf ne-list}: it has
@@ -969,22 +988,28 @@ ne-list := *list* &
  [ FIRST *top*,
    REST *list* ].
 \end{verbatim}
-The syntax of the language in which the type is defined (the
+The syntax of the language in which the type and its constraint
+are defined (the
 {\it description language}) is detailed in \S\ref{typesyntax}.
+The type definition obligatorily
+specifies the parent or parents of a type (in this case,
+{\bf *list*}) and optionally gives a constraint definition.
 In this particular case, the constraint described in the file corresponds
 very closely to the expanded constraint shown in the
 feature structure window, because the only parent of {\bf ne-list} is
-{\bf *list*} and this does not have a complex constraint.
-However, in general, types inherit a lot more information from
-their ancestors.
+{\bf *list*} and this does not have any features in its constraint.
+However, in general, type constraints inherit a lot of information from
+the ancestors of the type so the description of a constraint is very compact
+compared to the expanded constraint.
 
-To see a more complex type, click on {\bf grule} (grammar rule)
+To see a more complicated type constraint, 
+click on {\bf grule} (grammar rule)
 in the type hierarchy 
 window (follow the path {\bf feat-struc}, {\bf synsem-struc}, {\bf phrase}
 from {\bf *top*}).  The feature structure window is shown in
 Figure~\ref{grule}.  {\bf grule} illustrates that types can have
-complex constraints: that is the value of a feature can be
-a feature structure.  
+complex constraints: that is the value of a feature in a constraint
+can be a feature structure.  
 \begin{figure}
 \epsfxsize=1in
 \epsfbox[0 0 200 400]{figs/grule.ps}
@@ -996,9 +1021,11 @@ Look at the definition of {\bf grule} in the source file:
 grule := phrase &
  [ ARGS *list* ].
 \end{verbatim}
-In contrast to {\bf ne-list}, {\bf grule} has inherited a lot of
-information from its ancestors: you can see how this inheritance
-operates by looking at the constraints of its ancestors in the
+In contrast to {\bf ne-list}, the constraint on
+{\bf grule} has inherited a lot of
+information from types higher in the
+hierarchy: you can see how this inheritance
+operates by looking at the constraints of {\bf grule}'s ancestors in the
 type hierarchy window.
 
 You will find that
@@ -1014,7 +1041,7 @@ are given in \S\ref{thier}.
 \subsection{The View commands}
 
 The view commands let you get at entities such as lexical entries which cannot
-be accessed from the type hierarchy window.
+be accessed from the type hierarchy window.  
 
 Select {\bf View} from the LKB top menu and then select {\bf Word entries}.
 You will be prompted for a word which corresponds to a lexical entry.
@@ -1034,8 +1061,8 @@ give a unique lexical entry.
 
 You might like 
 to compare the feature structures shown with the actual lexical
-entries in the file toy/lexicon.tdl, to see how the inheritance from types
-operates.  For instance, the actual entry for {\it Kim} is
+entries in the file toy/lexicon.tdl, to see how the inheritance from type
+constraints operates.  For instance, the actual entry for {\it Kim} is
 simply:
 \begin{verbatim}
 kim_1 := pn-lxm & 
@@ -1059,7 +1086,7 @@ and choosing the menu option {\bf Shrink/expand}).
 A feature structure that encodes a rule can be thought of
 as consisting of a number of `slots', into which the phrases for
 the daughters and the mother fit.  To see how this works,
-try parsing a sentence.
+we will next describe how to parse a sentence.
 
 \section{Parsing}
 
@@ -1069,7 +1096,7 @@ accept this default. You will get a window with one tiny parse
 tree, as shown in Figure~\ref{kimsleeps}.\footnote{The reason for the
 small size is that with non-trivial grammars and sentences, the parse 
 trees can be very large and numerous \ldots} If you click on the parse
-tree itself you will get a menu with and option to {\bf Show enlarged tree}.
+tree itself you will get a menu with an option to {\bf Show enlarged tree}.
 If you choose this, you will see a window with a more readable version
 of the tree, as shown in Figure~\ref{ptree}.
 \begin{figure}
@@ -1113,6 +1140,8 @@ defined in the file {\tt parse-nodes.tdl}.
 If you now try parsing the sentence {\it Kim likes Sandy}
 and examining the trees and the feature structures as before, you
 will see that the daughter structures may themselves have daughters.
+We will go into a lot more detail about how grammar rules work
+in the next chapter.
 
 Now try {\bf Parse} / {\bf Batch Parse}.  You will be prompted for the
 name of a file which contains a test suite: i.e. a list of sentences
@@ -1130,8 +1159,11 @@ sentences.  In the next sections, we'll expand that coverage slightly.
 
 In this section and the next one, we illustrate the basics of how you can
 modify an existing grammar.
-In this section, we describe how to add a new lexical entry.
-First open the file {\tt toy/lexicon.tdl} in your text editor.
+In this section, we describe how to add a new lexical entry.\footnote{You 
+may want to make a backup copy of the toy
+directory at this point before you start editing the files.}
+First open the file {\tt toy/lexicon.tdl} in your text 
+editor.
 You will see that
 the toy grammar has four lexical entries: two proper names and two verbs.
 Suppose you want to add another proper name,
@@ -1154,27 +1186,29 @@ ann_1 := pn-lxm &
  [ ORTH <! "ann" !>,
    SEM [ RESTR <! [ NAME 'ann ] !> ] ].
 \end{verbatim}
+
 Save the file, and then select {\bf Load}
 followed by {\bf Reload grammar}.  This will reload the script file that
 you loaded before, this time loading the changed version of the lexicon.
 You may get some error messages in the LKB interaction window
 at this point, if you have left
-off a character, for example.  If you cannot see what is wrong, the
+out a character, for example.  If you cannot see what is wrong, the
 description of the error messages in \S\ref{synwf} may help you
 track it down.  When you have successfully reloaded the system,
 you should be able to parse some additional sentences, such as:
 \begin{verbatim}
 Ann sleeps
 \end{verbatim}
-You could add these sentences to the list of test sentences.
-
 If you find that a sentence won't parse, and you do not understand
 why a grammar rule is not applying to a particular lexical
 item, there are some tools to help you.  In particular,
 \S\ref{unifcheck} describes an interactive tool for 
 showing why unification is failing.
 
-\section{Adding a type}
+Once you have successfully parsed some new sentences,
+you could add them to the list of test sentences for batch parsing.
+
+\section{Adding a type and its constraint}
 
 The way the toy grammar is set up, although you could add a lexical
 entry for a proper name by just adding a description to the lexicon file,
@@ -1186,46 +1220,56 @@ the entry for the relation for sleeps, {\bf r\_sleep}.  Then add a new
 entry for {\bf r\_snore}.  You can then save the file, and add a new entry
 to the lexicon file.  As with the previous entry, you can basically do
 this by copying the existing entry for {\it sleeps},
-but this time you have to change the relation to be the type you have just added.
+but this time you have to 
+change the relation to be the type you have just added.
 Change the orthography and the identifier for the entry as before.
 Save the file.  Then select {\bf Reload grammar}.  As before, check
-the LKB interaction window to make sure reloading was successful and try parsing
+the LKB interaction window to make sure reloading was successful 
+and try parsing
 some new sentences.
 
 
 \section{Next steps}
 
-If you have worked through this chapter, and
-are a beginner to the use of typed feature
-structure systems, we have now to admit that we've led you gently to the edge
-of a small but steep cliff and are not going to provide much in the
-way of climbing equipment.\footnote{There is the possibility of
-Copestake and Flickinger (next millennium), which would be an introduction
-to linguistic engineering using typed feature structure systems, and the LKB
-in particular.  If you think this would be a worthwhile enterprise, please send
-encouraging email, cash donations etc to us at CSLI.}  If you want to learn more
-about a linguistic framework that uses this formalism, 
-then Sag and Wasow (in press) is an introductory textbook.  Some of the
-grammars provided with the LKB system implement the grammars described there.  
-Sag and Wasow provide an introduction to a typed feature structure formalism
-and an explanation of some of the concepts we have been assuming here.
+If you have worked through this chapter, and are a beginner to the use of typed
+feature structure systems, we have now to admit that we've led you gently to
+the edge of a small but steep cliff and are not going to provide much in the
+way of climbing equipment.\footnote{There is the possibility of Copestake and
+Flickinger (next millennium), which would be an introduction to linguistic
+engineering using typed feature structure systems, and the LKB in particular.
+If you think this would be a worthwhile enterprise, please send encouraging
+email, cash donations etc to us at CSLI.}  
+A very basic introduction to the notion of typed feature structure
+grammars is in the next chapter.
+The formal exposition of types and typed feature structures as used in the LKB
+is in Chapter~\ref{formal}.  
+This is designed for readers who have some familiarity
+with feature structures and are happy with a fairly technical exposition.  
+Many people will be happier investigating the properties of the
+system informally first and then checking Chapter~\ref{formal} 
+to understand the precise behaviour.  With
+the exception of those chapters, the rest of this document is intended as a
+reference manual.  
 
-The formal exposition
-of types and typed feature structures as used in the LKB is in the next chapter.
-It is designed for readers
-who have some familiarity with feature structures and are happy with
-a fairly technical exposition.
-With the exception of that chapter, the rest of this
-document is intended as a reference manual.  Ideally, in order to learn 
-to use the system
-to develop your own grammar, you would investigate the capabilities 
-of the LKB further
-by working through some of the details of the example grammars,
-referring to the relevant sections in the next two chapters in
-the manual when problems arise or when you need to know the details of some
-facility.  Then \S\ref{own}, gives some hints as to how to go about
-building your own grammar.  Some of the advanced capabilities discussed in 
-Chapter~\ref{advanced} will become relevant at this point.
+Ideally, once you understand the basics of the formalism to the level presented
+in Chapter~\ref{easy}, you would investigate the capabilities of the LKB
+further by working through some of the details of the example grammars, and try
+extending them, first by adding lexical entries as we did in this chapter, and
+then by extending the coverage by adding new lexical types.  You should refer
+to the relevant sections in chapters~\ref{formal}, \ref{srcfiles} and \ref{ui}
+when problems arise or when you need to know the details of some facility.
+Then \S\ref{own}, gives some hints as to how to go about building your own
+grammar.  Some of the advanced capabilities discussed in Chapter~\ref{advanced}
+will become relevant at this point.
+
+If you want to learn more about a
+linguistic framework that uses the typed feature
+structure formalism, then Sag and Wasow (1999) is
+an introductory textbook.  Some of the grammars provided with the LKB system
+implement the grammars described there.
+
+\chapter{To be added}
+\label{easy}
 
 \chapter{Feature structures and types in the LKB system}
 \label{formal}
@@ -1695,7 +1739,8 @@ appropriate} for a particular type. In a well-formed feature structure
 each node must have
 all the features appropriate to its type and no others.  Constraints 
 are inherited by
-all subtypes of a type, but a subtype may introduce new features
+all subtypes of a type, but a constraint on a 
+subtype may introduce new features
 (which will be inherited as appropriate features by all its subtypes).
 A constraint on a type is a well-formed feature structure of that
 type; all constraints must therefore be mutually consistent.
@@ -1746,7 +1791,9 @@ The type {\bf intrans} might have the constraint:
 (Note: we will pretend for the sake of this example that
 {\bf np} is an atomic type.  Of course this wouldn't 
 really work, {\bf np} would
-have to be a subtype of {\bf sign} with {\sc pos} equal to {\bf noun}
+have to be a subtype of {\bf sign} with a constraint such that the
+value of
+{\sc pos} was {\bf noun}
 and so on.)
 
 The constraint on {\bf
@@ -2029,7 +2076,7 @@ subscript.
 \section{Description language}
 \label{syntax}
 
-In order to specify types, lexical entries and so on, we require
+In order to specify types, constraints, lexical entries and so on, we require
 a {\it description language}.
 The LKB allows a variety of description languages to be used: the one
 specified here adopts a simplified version of the TDL syntax from the PAGE
@@ -2037,7 +2084,7 @@ system (Uszkoreit et al, 1994).
 We will introduce the syntax by
 going through some examples, in increasing order of complexity.
 
-\subsection{Syntax of type descriptions}
+\subsection{Syntax of type and constraint descriptions}
 \label{typesyntax}
 
 \paragraph{Example 1}
@@ -2054,7 +2101,8 @@ the type {\bf feat-struc} to inherit from the single
 parent {\bf *top*}, i.e., $\top$,
 which is the only built-in type 
 in the LKB system (the name can be specified as a 
-system parameter).\footnote{In the TDL syntax, the symbol {\tt :<} is 
+system parameter).\footnote{In the full 
+TDL syntax, the symbol {\tt :<} is 
 used to indicate simple inheritance
 from a single type when there is no constraint specification.
 In the LKB, {\tt :<} is allowed in this situation (and only in this situation)
@@ -2064,7 +2112,8 @@ not possible to specify a constraint for {\bf *top*},
 $C(\mbox{\bf feat-struc})= \mbox{\tiny $\avmplus{\att{feat-struc}}$}$.
 Note that:
 \begin{enumerate}
-\item the type definition, and in fact all descriptions,  is terminated by a `.'
+\item the type 
+definition, and in fact all descriptions,  is terminated by a `.'
 \item new lines and spaces are not significant, except that spaces
 may not occur in identifiers, such as type names
 \item case is not significant, though we follow the
@@ -2153,7 +2202,6 @@ is equivalent to:
 To formally express the syntax of the description language, we
 use Backus-Naur Form (BNF) basically following the typographic conventions used
 in Aho et al (1982).
-%FIX
 As there, alternative right-hand sides of productions are indicated by
 $|$.  
 However, we follow the convention that both non-terminals and
@@ -2211,7 +2259,7 @@ beginning with {\tt ;} or they are bracketed by {\tt \#|} {\tt |\#}.
 \subsection{Lexical entries}
 \label{lexsyntax}
 The syntactic description for lexical entries is
-very similar to that for types.  For example:
+very similar to that for type constraints.  For example:
 \begin{verbatim}
 me_1 := pron-lxm & 
 [ ORTH "me",
@@ -2239,7 +2287,7 @@ The BNF for lexical entries is as follows:
 \bnfitem{{\it LexID} $\rightarrow$ {\it identifier}}
 \end{list}
 Note that, although it is legal syntax to define a 
-lexical entry as inheriting from multiple types,
+lexical entry with multiple types on a node,
 this will not be valid unless the types have an
 existing type as their greatest lower bound.
 Thus it is normal to specify this type directly
@@ -2750,17 +2798,24 @@ This often enhances modularity.
 The main classes of object within the LKB system 
 are:
 \begin{description}
-\item[Types]
+\item[Types and constraints]
 \item[Lexical entries]
 \item[Grammar rules]
 \item[Lexical and morphological rules]
 \end{description}
-Apart from types, all the rest of the objects are generically referred to
-as {\it instances} (they are all instances of types).  
-They are all typed feature structures which are associated with an identifier.
-They are distinguished because of their function within the system, with respect to
+Apart from types and
+their constraints, all the rest of the objects are generically referred to
+as {\it entries}.
+They are all typed feature structures which are associated 
+with an identifier.\footnote{By {\it entry} we mean roughly
+what was meant by {\it psort} in the old LKB documentation,
+and what is sometime referred to as an {\it instance}.  
+We've changed the terminology because {\it psort}
+was just confusing and {\it instance} is somewhat inaccurate.}
+They are distinguished because of their 
+function within the system, with respect to
 parsing, for example.
-Two further categories of instance are also used in the sample
+Two further categories of entry are also used in the sample
 grammars:
 \begin{description}
 \item[Root descriptions]
@@ -2768,11 +2823,11 @@ grammars:
 \end{description}
 
 If you have worked through Chapter~\ref{firstsession}, you have seen
-examples of types, lexical entries and grammar rules.
+examples of types, type constraints, lexical entries and grammar rules.
 Lexical and morphological rules were not used in the `toy' grammar,
 but are introduced in a slightly more complex grammar
 `rattle', so where necessary we will use examples from 
-that.\footnote{There are further ways to use instances in the LKB which are
+that.\footnote{There are further ways to use entries in the LKB which are
 not described in this document.  These include 
 translation equivalences (sometimes referred to
 a bilexical entries) and rules for semantic conversion.}
@@ -2814,13 +2869,14 @@ easier.  These are discussed in detail in \S\ref{script-adv}.
 
 The first three lines read in some Lisp files which parameterize the
 system in various ways, as briefly discussed in \S\ref{ancil}.
-The following lines read in the types and the instances of the various
+The following lines read in the types with their constraints
+and the entries of the various
 classes listed above.  Note there is also a file for irregular
 forms, as discussed in \S\ref{irregs}.  All these files are read
 in by functions which take as an argument the pathname for the file.
 
 
-\section{Types and type files}
+\section{Types, constraints and type files}
 
 The type system is defined in one or more type files.  It is necessary
 to have a valid type system before anything else will work.
@@ -2952,6 +3008,19 @@ Inserting ]
 Here the system diagnosed the error incorrectly, since in fact
 a comma was missing rather than a `]'.  
 
+\begin{verbatim}
+head-feature-principle := hd-grule & 
+ [ SYN [ HEAD #head ],
+   H [ SYN [ HEAD #headd ] ] ].
+\end{verbatim}
+\begin{error}
+Syntax error at position 3802: Coreference (HEADD) only used once
+Syntax error at position 3802: Coreference (HEAD) only used once
+\end{error}
+In this example, the system warns that the coreference was only used 
+once: it is assumed that this would only be due to an error on the part of 
+the user.
+
 You may also get syntax errors such as the following:
 \begin{error}
 Unexpected eof when reading X
@@ -2977,7 +3046,7 @@ daughters in the file, this is not required, and order of type definition
 in general has no significance for the system.
 Note however that it is possible to redefine types, and if this is done, the
 actual definition will be the last one the system reads.
-If a type is redefined
+If two definitions for types of the same name occur,
 a warning message will be generated, e.g.,:
 \begin{warning}
 Type FEAT-STRUC redefined
@@ -3114,7 +3183,8 @@ Type AGR-CAT has an invalid constraint specification
 Type NON-3SING's constraint specification clashes with its parents'
 Type 3SING's constraint specification clashes with its parents'
 \end{verbatim}
-Note that the error propagates because the descendant types cannot
+Note that the error propagates because the descendants'
+constraints cannot
 be constructed either.
 
 Another similar error is to declare two nodes to be reentrant which
@@ -3164,12 +3234,15 @@ Type X's constraint specification clashes with its parents
 As described in \S\ref{formcons},
 there is a condition on the type system that any feature
 must be introduced at a single point in the hierarchy.
-That is, if a feature, F, is mentioned on a type, t, and 
-not on any of the ancestors of t, then all places where
-F is used must be descendants of t.
+That is, if a feature, F, is mentioned at the top level of
+a constraint on a type, t, and 
+not on any of the constraints of
+ancestors of t, then all constraints where
+F is used must be constraints on descendants of t.
 For example, the following would be an error because {\sc per}
-is mentioned on both {\bf agr-cat} and {\bf pos} but not on
-any of their ancestors:
+is a top level feature on both the constraint for
+{\bf agr-cat} and {\bf pos} but not on the constraints
+of any of their ancestors:
 \begin{verbatim}
 feat-struc :< *top*.
 
@@ -3216,7 +3289,8 @@ ne-list := *list* &
  [ FIRST *top*,
    REST ne-list ].
 \end{verbatim}
-The reason for this is that type expansion would create an infinite 
+The reason for this is that expansion of the constraint 
+would create an infinite 
 structure:
 \begin{verbatim}
  [ ne-list
@@ -3234,7 +3308,7 @@ Error in NE-LIST:
 \end{error}
 Similarly it is an error to mention a daughter of a type in its
 constraint.  It is also an error to make two types mutually
-recursive
+recursive:
 \begin{verbatim}
 foo := *top* &
 [ F bar ].
@@ -3250,7 +3324,9 @@ FOO is used in expanding its own constraint
 
 
 Note that it {\em is} 
-possible to define recursive types.  For example, a correct
+possible to define recursive constraints on
+types as long as they specify an ancestor of their type.
+For example, a correct
 definition of {\bf list} is:
 \begin{verbatim} 
 *list* :< *top*.
@@ -3315,7 +3391,7 @@ Error in SYNSEM-STRUC:
   Type of fs GRAM-CAT at path (SYN) is incompatible with features (MODE) which have maximal type SEM-STRUC
 \end{error}
 Note that, because the system attempts to expand other
-types after detecting this error,
+type constraints after detecting this error,
 there are a lot of similar error messages from the types for which
 {\bf synsem-struc} is an ancestor.
 
@@ -3583,9 +3659,9 @@ type.  Root types are treated like any other type with respect to loading,
 viewing etc.
  
 In the sample {\tt toy} grammar, the root symbols are 
-instances.  For convenience, root instances
+entries.  For convenience, root entries
 can be stored in a separate file.
-Root instances may be viewed via {\bf View} 
+Root entries may be viewed via {\bf View} 
 {\bf Lex Entry}.
 
 \section{Parse tree node labels}
@@ -3715,6 +3791,7 @@ Details are given in Appendix~\ref{glob}.
 
 
 \chapter{LKB user interface}
+\label{ui}
 
 In this chapter, we explain the details of the menu commands
 and other aspects of the graphical user interface.
@@ -3808,7 +3885,7 @@ includes morphological rules
 
 \paragraph{Reload tree nodes*}
 
-\paragraph{Reload other instances*}
+\paragraph{Reload other entries*}
 
 
 \subsection{View}
@@ -3826,7 +3903,8 @@ displayed if set.  Details of the type hierarchy window are in
 
 \paragraph{Type definition}
 \label{type-def}
-Shows the definition of a type.
+Shows the definition of a type constraint plus the type's 
+parents.
 
 Prompts for the name of a type. 
 If the type hierarchy window is displayed, scrolls the
@@ -4091,10 +4169,11 @@ an outline box.  Any subtypes of a shrunk type which are also subtypes
 of an unshrunk type will still be displayed.  Selecting this option on
 a shrunk type reverses the process.
 \item[Type definition] 
-Display the definition for that type (see Section~\ref{view},
+Display the definition for the constraint on that 
+type (see Section~\ref{view},
 above).
 \item[Expanded type]
-Display the expanded definition for that type (see
+Display the expanded constraint for that type (see
 Section~\ref{view}, above).
 \item[New hierarchy]
 Displays the type hierarchy under the clicked-on node in a new
@@ -4151,13 +4230,14 @@ shrunken feature structure, will also be displayed with equivalent
 parts hidden.  Thus if the {\em expanded} constraint on a type has
 parts shrunk, any lexical entry which involves that type, which is
 expanded subsequent to any shrinking on the type, will also be
-displayed with parts hidden.  Since types are evaluated when they are
+displayed with parts hidden.  Since type constaints 
+are evaluated when they are
 read in, shrinking parts of the constraint on a type will not affect
 the daughters of that type.
 
 If this option is chosen on an already shrunken feature structure then
-the feature structure will be expanded.  Again this modifies the
-actual feature structure.
+the feature structure will be expanded.  Again this can affect the
+display of other structures.
 
 The shrunkenness state may be saved via and loaded via the
 {\bf Save/Load display settings} commands on the {\bf Options} menu
@@ -4729,16 +4809,17 @@ only one such file in a grammar.
 
 \lispcommand{read-tdl-parse-node-file-aux {\it file-name}}
 
-Reads in a file containing instances which define parse nodes.
+Reads in a file containing entries which define parse nodes.
 
 \lispcommand{read-tdl-psort-file-aux {\it file-name}}
 
-Reads in a file containing any other sort of instance.  
-This file simply defines the instances, without giving them
+Reads in a file containing any other sort of entry.  
+This file simply defines the entries, without giving them
 any particular functionality.
 This command is used
 in the example grammars for the
-roots file, but note that this is possible only because root instances
+roots file, but note that this is possible only because root entry
+identifiers
 are enumerated in the globals file.
 
 \subsection{Utility functions}
@@ -4908,11 +4989,12 @@ lexical entries.
 
 The notion of a leaf type is defined for efficiency.  A leaf type
 is a type which is not required for the valid definition or expansion of
-any other type.  Specifically this means that a leaf type
+any other type or type constraint.  
+Specifically this means that a leaf type
 must meet the following criteria:
 \begin{enumerate}
 \item A leaf type has no daughters.
-\item A leaf type may not introduce any new features.
+\item A leaf type may not introduce any new features on its constraint.
 \item A leaf type may not be used in the constraint of another type.
 \item A leaf type only has one `real' parent type --- it may have one or more
 template parents (see \ref{thierglob}).
@@ -4962,7 +5044,7 @@ language by {\tt /}, followed by an indication of the persistence
 of the default.  In terms of the current implementation,
 the supported distinctions in persistence are between defaults
 which are fully persistent and those which become non-default
-when an instance is constructed (referred to as description
+when an entry feature structure is constructed (referred to as description
 persistence).  The value of the
 description persistence indicator is given by the global
 {\tt *description-persistence*} --- the default is {\tt l}.
@@ -4995,7 +5077,7 @@ verb := *top* &
 regverb := verb &
 [ PAST /l "ed" ] .
 \end{verbatim}
-Any instance using these types will be completely indefeasible,
+Any entry using these types will be completely indefeasible,
 since the defaults have description persistence.
 Further examples of the use of defaults, following the examples in
 L+C, are given in the files in {\tt data/yadu\_test}.
@@ -5202,7 +5284,7 @@ As with the menu command, this also loads morphological rules.
 See {\bf Load} / {\bf Reload tree nodes} (\S\ref{load})
 
 \lispcommand{reload-psort-files}
-See {\bf Load} / {\bf Reload other instances} (\S\ref{load})
+See {\bf Load} / {\bf Reload other entries} (\S\ref{load})
 
 
 \section{View commands}
@@ -5424,7 +5506,7 @@ expands out into the equivalent of:
 {\bf false} ({\bf boolean}).
 \end{quote}
 
-\section{Instance descriptions}
+\section{Entry descriptions}
 
 The syntactic description for lexical entries is as follows:
 \begin{list}{}
@@ -5654,7 +5736,8 @@ See \S\ref{defaults}.
 \begin{description}
 \item[ *description-persistence*, l]
 The symbol used to indicate that a default should be
-made hard (if possible) when an instance is constructed.
+made hard (if possible) when an entry is expanded into a complete
+feature structure.
 \end{description}
 
 \section{Grammar specific parameters}
@@ -5669,7 +5752,7 @@ feature structure used to abbreviate a description of another structure
 This is used in the LinGO ERG to reduce multiple inheritance
 and to allow the bottommost lexical types to be treated as leaf types
 (\S\ref{leaftypes}).  This facility has only been included to allow
-compatibility with and existing grammar, in a context where
+compatibility with an existing grammar, in a context where
 multiple type inheritance was being used for implementation-specific 
 purposes rather than for any linguistically motivated reason.
 It should not be used when developing a new grammar.
@@ -6125,8 +6208,12 @@ Volume~1 fundamentals}
     {Chicago University Press, Chicago}
     {1994}
 
-%FIX Sag and Wasow (in press)
-
+\book{Sag, I.A. and T.~Wasow}
+     {Syntactic Theory --- a formal introduction}
+     {CSLI Publications, Stanford CA (also distributed by 
+Cambridge University Press)}
+     {1999}
+    
 \book{Shieber, S.~M.}
 {An introduction to unification-based approaches to grammar}
 {CSLI Lecture Notes 4, Stanford CA}
