@@ -9,7 +9,7 @@
 (defun set-up-cheap-hcons (mrsstruct)
   (let* ((rels (psoa-liszt mrsstruct))
          (hcons (psoa-h-cons mrsstruct))
-         (labels nil) (holes nil) 
+         (labels nil) (holes nil) (equated-list nil)
          (top-handel (get-var-num (psoa-handel mrsstruct))))
     (for rel in rels
          do
@@ -17,12 +17,16 @@
            (unless (is-handel-var var)
              (struggle-on-error "~%Relation ~A has incorrect handel ~A"
                                 (rel-sort rel) var))
-           (pushnew (get-var-num var) labels) 
+           (pushnew (get-var-num var) labels)))
+    (for rel in rels
+         do
            (for handel-var in (get-handel-args rel)
                 do
-                (pushnew handel-var holes))))
+                (when (member handel-var labels)
+                    (push handel-var equated-list))
+                (pushnew handel-var holes)))
     (pushnew top-handel holes) ;; this may be wrong, given the use of prpstn etc
-    (process-hcons hcons labels holes)))
+    (process-hcons hcons labels holes equated-list)))
 
 (defun find-cheap-leqs (mrsstruct)
   (let* ((rels (psoa-liszt mrsstruct)) 
