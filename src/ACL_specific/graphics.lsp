@@ -150,7 +150,8 @@
 	     (mp:process-add-arrest-reason clim-user::*lkb-top-process* 
 					   :output))
 	   (setf (clim-user::stream-recording-p *standard-output*) t)
-	   ,@body)
+	   ,@body
+	   (terpri))
        (mp:process-revoke-arrest-reason clim-user::*lkb-top-process* 
 					:output))))
 

@@ -22,13 +22,12 @@
 				thing file))))
 
 (defun redefine-type (definition)
-  (let ((*readtable* (make-tdl-break-table))
-	#-:tty(*standard-output* clim-user::*lkb-top-stream*))
-    (with-input-from-string (istream definition)
-      (read-tdl-type-stream istream t)))
-  (let ((*standard-output* #-:tty clim-user:*lkb-top-stream*
-                           #+:tty *standard-output*))
+  (with-output-to-top ()
+    (let ((*readtable* (make-tdl-break-table)))
+      (with-input-from-string (istream definition)
+	(read-tdl-type-stream istream t)))
     (when (patch-type-table) 
       (canonicalise-feature-order)           
       (set-up-type-interactions)
+      (format t "~%Done.")
       t)))
