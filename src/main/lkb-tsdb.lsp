@@ -165,9 +165,11 @@ e.g.
      (uncache-lexical-entries)))
 
 (defun parse-tsdb-sentences-progress (id)
-   (let ((str
-            (or (find-symbol "*LKB-TOP-STREAM*" (find-package "CLIM-USER"))
-               *standard-output*)))
+   (let* ((clim-stream-symbol
+             (find-symbol "*LKB-TOP-STREAM*" (find-package "CLIM-USER")))
+          (str
+             (if clim-stream-symbol (symbol-value clim-stream-symbol)
+                *standard-output*)))
       (format str " ~A" id)
       (finish-output str)))
 
