@@ -97,7 +97,7 @@
 
 
 (defun attribs-to-edit nil
-  '("name" "type" "orthography" "orthkey" "pronunciation" "keyrel" "altkey" "alt2key" "keytag" "compkey" "ocompkey" "complete" "semclasses" "preferences" "classifier" "selectrest" "jlink" "comments" "exemplars" "usages" "lang" "country" "dialect" "domains" "genres" "register" "confidence" "flags"))
+  '("name" "type" "orthography" "orthkey" "pronunciation" "keyrel" "altkey" "alt2key" "keytag" "compkey" "ocompkey" "complete" "semclasses" "preferences" "classifier" "selectrest" "comments" "exemplars" "usages" "lang" "country" "dialect" "domains" "genres" "register" "confidence" "flags"))
 
 (defun x-to-str (x)
   (cond
@@ -115,10 +115,7 @@
       (let* (
 	     (record (mapcan '(lambda (x) (if (cdr x) (list x))) record-in))
 	     (record (set-val "version" (next-version (val "name" record)) record))
-	     (record (set-val "id" (next-id) record)) 
 	     (record (set-val "source" "Emacs" record))
-	     (record (set-val "moddate" 'CURRENT_DATE record))
-	     (record (set-val "userid" (user-login-name) record))
 	     (fields (mapconcat #'(lambda (x) (car x)) record ", "))
 	     (vals (mapconcat #'(lambda (x) (make-sql-val (cdr x))) record ", "))
 	     (sql-str (format "INSERT INTO erg (%s) VALUES (%s)" fields vals))
@@ -156,10 +153,7 @@
 	  default))))
 
 (defun next-version (id)
-  (retrieve-val (format "SELECT next_version('%s')" id) 0))
-
-(defun next-id nil
-  (retrieve-val (format "SELECT next_id()") 0))
+  (retrieve-val (format "SELECT COALESCE(1 + max(version),0) FROM erg WHERE name = '%s'" id) 0))
 
 (defun val (field record)
   (cdr (assoc (upcase field) record)))
