@@ -28,6 +28,8 @@
   #-:mcl (rest (butlast (pathname-directory *load-truename*) 2))
   #+:mcl '("macintosh hd" "newlkb"))
 
+;;; #+mcl (defpackage :common-lisp-user (:nicknames :user :cl-user))
+
 (defparameter %sys-device%
   (pathname-device *load-truename*))
     
