@@ -179,8 +179,7 @@
 (defun ask-user-for-lex nil
    (let ((possible-name
             (ask-for-lisp-movable "Current Interaction" 
-               `(("Lex-id?" . ,(or *last-lex-id*
-                        (car (collect-psort-ids *lexicon*)))))
+               `(("Lex-id?" . ,*last-lex-id*))
                          150)))
       (when possible-name
          (let* ((lex (car possible-name))
@@ -192,11 +191,10 @@
             lex))))
 
 (defun ask-user-for-psort nil
-   (let ((possible-name
-            (ask-for-lisp-movable "Current Interaction" 
-               `(("Psort-id?" . ,(or *last-lex-id*
-                        (car (collect-psort-ids *lexicon*)))))
-                         150)))
+  (let ((possible-name
+	 (ask-for-lisp-movable "Current Interaction" 
+			       `(("Psort-id?" . ,*last-lex-id*))
+			       150)))
       (when possible-name
          (let* ((lex (car possible-name))
                (lex-entry (get-psort-entry lex)))
