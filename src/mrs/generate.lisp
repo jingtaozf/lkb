@@ -38,7 +38,7 @@
 ;;; Functions on sets (of MRS relations)
 
 (defun gen-chart-set-intersection-p (lst1 lst2)
-   (dolist (x lst1) (when (member x lst2 :test #'eq) (return t))))
+   (dolist (x lst1 nil) (when (member x lst2 :test #'eq) (return t))))
 
 (defun gen-chart-subset-p (lst1 lst2)
    (dolist (x lst1 t) (unless (member x lst2 :test #'eq) (return nil))))
@@ -85,25 +85,29 @@
         (dolist (lex lex-items)
            (format t "~%Id ~A, Index ~A, Lexical rules ~:A, Main rel sorts ~:A"
               (mrs::found-lex-lex-id lex)
+              #+:gen-index
               (gen-chart-dag-index
                  (existing-dag-at-end-of
                     (tdfs-indef (mrs::found-lex-inst-fs lex)) *semantics-index-path*)
                  nil)
+              #-:gen-index *toptype*
               (mrs::found-lex-rule-list lex)
               (mapcar #'mrs::rel-pred (mrs::found-lex-main-rels lex))))
-         (print
-            (sort (remove-duplicates (mapcar #'mrs::found-lex-lex-id lex-items))
-               #'string-lessp))
-         (finish-output)
-         (dolist (grule grules)
-            (when (mrs::found-rule-p grule)
-               (format t "~%Id ~A, Index ~A, Main rel sorts ~:A"
-                  (mrs::found-rule-id grule)
-                  (gen-chart-dag-index
-                     (existing-dag-at-end-of
-                        (tdfs-indef (mrs::found-rule-full-fs grule)) *semantics-index-path*)
-                     nil)
-                  (mapcar #'mrs::rel-pred (mrs::found-rule-main-rels grule)))))
+        (print
+           (sort (remove-duplicates (mapcar #'mrs::found-lex-lex-id lex-items))
+              #'string-lessp))
+        (finish-output)
+        (dolist (grule grules)
+           (when (mrs::found-rule-p grule)
+              (format t "~%Id ~A, Index ~A, Main rel sorts ~:A"
+                 (mrs::found-rule-id grule)
+                 #+:gen-index
+                 (gen-chart-dag-index
+                    (existing-dag-at-end-of
+                       (tdfs-indef (mrs::found-rule-full-fs grule)) *semantics-index-path*)
+                    nil)
+                 #-:gen-index *toptype*
+                 (mapcar #'mrs::rel-pred (mrs::found-rule-main-rels grule)))))
 |#
          (if lex-items
             (chart-generate input-sem lex-items grules lex-orderings)
@@ -161,7 +165,11 @@
           (remove-if
             #'(lambda (r)
                 (or (and (not *gen-first-only-p*)
-                         (member (rule-id r) *intersective-rule-names* :test #'eq))
+                         (some
+                            #'(lambda (p)
+                               (cond ((atom p) (eq p (rule-id r)))
+                                     (t (eq (car p) (rule-id r)))))
+                            *intersective-rule-names*))
                    (spelling-change-rule-p r)))
             possible-grules)))
     #+(and mcl powerpc) (setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
@@ -247,22 +255,20 @@
         (partial nil)
         (start-symbols
          (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
-    (dolist (e candidate-edges)
-      ;; process has so far ensured that we have not generated any edge
-      ;; containing a relation name that is not in input semantics, and that
-      ;; no edge contains duplicates of exactly the same relation - now check
-      ;; that we have generated all relations
-      (dolist
-          (new
-              (if *substantive-roots-p*
-                 (gen-chart-root-edges e start-symbols)
-                 (gen-filter-root-edges e start-symbols)))
+    (dolist (new
+               (if *substantive-roots-p*
+                 (gen-chart-root-edges candidate-edges start-symbols)
+                 (gen-filter-root-edges candidate-edges start-symbols)))
+        ;; process has so far ensured that we have not generated any edge
+        ;; containing a relation name that is not in input semantics, and that
+        ;; no edge contains duplicates of exactly the same relation - now check
+        ;; that we have generated all relations
         (cond
            ((not (gen-chart-check-complete new input-sem))
               (push new partial))
            ((gen-chart-check-compatible new input-sem)
               (push new complete))
-           (t (push new incompatible)))))
+           (t (push new incompatible))))
     (when *gen-adjunction-debug*
       (format t "~&Complete compatible edges: ~:A~%Complete incompatible edges: ~:A~
                     ~%Partial edges: ~:A"
@@ -304,41 +310,43 @@
              (mrs::mrs-equalp mrs input-sem nil *debugging*))))))
 
 
-(defun gen-chart-root-edges (edge start-symbols)
-  ;; c.f. create-new-root-edges in parse.lsp
+(defun gen-chart-root-edges (edges start-symbols)
+   ;; c.f. create-new-root-edges in parse.lsp
    (loop for start-symbol in start-symbols        
        nconc
-       (let ((tdfs (get-tdfs-given-id 
-                    start-symbol)))
+       (let ((tdfs (get-tdfs-given-id start-symbol)))
          (if tdfs
-             (let ((unif 
-                    (yadu tdfs (g-edge-dag edge))))
-               (if unif
-                   (let ((new-edge
-                          (make-g-edge :dag unif
-                                       :id (next-edge)
-                                       :category (indef-type-of-tdfs unif)
-                                       :rule 'root
-                                       :needed nil
-                                       :dag-restricted
-                                       (restrict-fs (tdfs-indef unif))
-                                       :children (list edge)
-                                       :leaves (g-edge-leaves edge)
-                                       :lex-ids (g-edge-lex-ids edge)
-                                       :lexemes (g-edge-lexemes edge))))
-                     (gen-chart-add-with-index new-edge)
-                     (list
-                      new-edge))))))))
+            (loop for edge in edges
+               nconc
+               (let ((unif 
+                       (yadu tdfs (g-edge-dag edge))))
+                  (if unif
+                      (let ((new-edge
+                             (make-g-edge :dag unif
+                                          :id (next-edge)
+                                          :category (indef-type-of-tdfs unif)
+                                          :rule 'root
+                                          :needed nil
+                                          :dag-restricted
+                                          (restrict-fs (tdfs-indef unif))
+                                          :children (list edge)
+                                          :leaves (g-edge-leaves edge)
+                                          :lex-ids (g-edge-lex-ids edge)
+                                          :lexemes (g-edge-lexemes edge))))
+                        (gen-chart-add-with-index new-edge)
+                        (list new-edge)))))))))
 
-(defun gen-filter-root-edges (edge start-symbols)
+(defun gen-filter-root-edges (edges start-symbols)
    ;; c.f. filter-root-edges in parse.lsp
-   (dolist (start-symbol start-symbols)
+   (loop for start-symbol in start-symbols
+      nconc
       (let ((root-spec (get-tdfs-given-id start-symbol)))
-         (when
-            (and root-spec
-               (unifiable-wffs-p
-                  (tdfs-indef root-spec) (tdfs-indef (g-edge-dag edge))))
-            (return (list edge))))))
+         (if root-spec
+            (loop for edge in edges
+               nconc
+               (if (unifiable-wffs-p
+                      (tdfs-indef root-spec) (tdfs-indef (g-edge-dag edge)))
+                  (list edge)))))))
 
 
 ;;; Chart indexing - on *semantics-index-path* values. May be full types or
@@ -349,6 +357,7 @@
 ;;; create-gen-chart-pointers are the only functions that need to know the
 ;;; internal representation of chart
 
+#+:gen-index
 (defun gen-chart-dag-index (index-dag edge-id)
    (if index-dag
       (unify-get-type index-dag) ; may be called inside unif context
@@ -357,10 +366,16 @@
          ;;   "unexpectedly missing index for edge ~A: ~S" edge-id dag)
          (warn "unexpectedly missing index for edge ~A - using ~A" edge-id *toptype*)
          *toptype*)))
+#-:gen-index
+(defun gen-chart-dag-index (index-dag edge-id)
+   (declare (ignore index-dag edge-id))
+   *toptype*)
 
 
 (defun gen-chart-add-with-index (edge &optional chart-index)
-   (let ((index
+  #-:gen-index (declare (ignore chart-index))
+  (let ((index
+           #+:gen-index
            (or chart-index
               (gen-chart-dag-index
                (or 
@@ -370,7 +385,8 @@
                     (existing-dag-at-end-of
                      (tdfs-indef (g-edge-dag edge)) 
                      *alt-semantics-index-path*)))
-                 (g-edge-id edge)))))
+                 (g-edge-id edge)))
+           #-:gen-index *toptype*))
       (setf (g-edge-index edge) index)
       (let ((entry (assoc index *gen-chart* :test #'equal))) ; may be a cons
          (unless entry
@@ -384,9 +400,11 @@
 
 (defun gen-chart-retrieve-with-index (index mode)
   ;; return all active/inactive edges in chart keyed by a type compatible with index
+  #-:gen-index (declare (ignore index))
   (let ((res nil))
     (dolist (entry *gen-chart* res)
-      (when (greatest-common-subtype (car entry) index)
+      (when #+:gen-index (greatest-common-subtype (car entry) index)
+            #-:gen-index t
          (let ((edges (if (eq mode 'active) (cadr entry) (cddr entry))))
             (setq res
                (if res (append edges res) edges)))))))
@@ -614,10 +632,12 @@
               (values dag
                  (restrict-fs
                     (existing-dag-at-end-of (tdfs-indef dag) (first needed)))
+                 #+:gen-index
                  (gen-chart-dag-index
                     (existing-dag-at-end-of
                        (tdfs-indef dag) (append (first needed) *semantics-index-path*))
-                    nil))))
+                    nil)
+                 #-:gen-index *toptype*)))
         #-:gen-immediate-copy
         (values
            ;; return a closure which when funcalled will replay the unification and
@@ -629,10 +649,12 @@
                         (create-temp-parsing-tdfs fs daughter-path)))))
            (x-restrict-fs
               (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) (first needed)))
+           #+:gen-index
            (gen-chart-dag-index
               (x-existing-dag-at-end-of (tdfs-indef rule-tdfs)
                  (append (first needed) *semantics-index-path*))
-              nil))
+              nil)
+           #-:gen-index *toptype*)
         (let ((dag (gen-chart-restrict-and-copy
                       (tdfs-at-end-of mother-path rule-tdfs))))
            (when dag (values dag (restrict-fs (tdfs-indef dag))))))))
@@ -684,57 +706,65 @@
 ;;; to retrieve them from the chart
 
 (defun gen-chart-adjoin-modifiers (partial-edges input-sem possible-grules)
-  (unless partial-edges (return-from gen-chart-adjoin-modifiers nil))
-  (let ((*gen-modifier-active-edges* nil) 
-        (*gen-composed-modifier-edges* (make-hash-table :test #'equal))
-        (mod-candidate-edges (gen-chart-intersective-inactive-edges))
-        (intersective-rules
-          (remove-if-not
-             #'(lambda (r)
-                 (member (rule-id r) *intersective-rule-names* :test #'eq))
-             possible-grules))
-        (res nil))
-    (declare (special *gen-modifier-active-edges* *gen-composed-modifier-edges*))
-    (when *gen-adjunction-debug*
-      (format t "~%Candidate modifier edges ~:A" 
-              (mapcar #'edge-id mod-candidate-edges)))
-    (dolist (partial partial-edges)
+   (unless partial-edges (return-from gen-chart-adjoin-modifiers nil))
+   (let
+      ((intersective-edges (gen-chart-intersective-inactive-edges))
+       (intersective-rules-and-daughters
+         (mapcar
+            #'(lambda (p)
+               (if (consp p) p
+                  (let ((rule (get-grammar-rule-entry p)))
+                     (cons p
+                        (if rule
+                           (loop for i from 1 to (1- (length (rule-order rule)))
+                                 collect i))))))
+            *intersective-rule-names*)))
       (when *gen-adjunction-debug*
-        (format t "~&---~%Partial edge [~A] spanning ~:A" (g-edge-id partial)
-                (g-edge-leaves partial)))
-      (let ((missing-rels
-             (gen-chart-set-difference
-              (mrs::psoa-liszt input-sem) (g-edge-rels-covered partial))))
-        (when *gen-adjunction-debug*
-          (format t "~&Missing relations ~(~:A~)" 
-                  (mapcar #'mrs::rel-pred missing-rels)))
-        (let ((mod-alt-list
-               (gen-chart-mod-edge-partitions missing-rels 
-                                              mod-candidate-edges)))
-          (when (and *gen-adjunction-debug* (null mod-alt-list))
-            (format t "~&No relation partitions found"))
-          (dolist (mod-alt mod-alt-list)
+         (format t "~%Intersective inactive edges ~:A" 
+            (mapcar #'edge-id intersective-edges)))
+      (let
+         ((mod-candidate-edges
+            (gen-chart-active-mod-candidate-edges
+               intersective-edges possible-grules intersective-rules-and-daughters))
+          (res nil))
+         (dolist (partial partial-edges)
             (when *gen-adjunction-debug*
-              (format t "~&Trying relation partition ~(~:A~)"
-                 (mapcar
-                    #'(lambda (rels-and-edges)
-                         (cons (mapcar #'mrs::rel-pred (car rels-and-edges))
-                               (mapcar #'g-edge-id (cdr rels-and-edges))))
-                    mod-alt)))
-            (setq mod-alt
-               (gen-chart-create-active-mod-edges mod-alt intersective-rules))
-            (when (every #'identity (mapcar #'cdr mod-alt))
-              (setq res
-                (nconc
-                  (gen-chart-find-complete-edges
-                    (mapcan
-                      #'(lambda (edge-and-mods)
-                          (if (null (cddr edge-and-mods))
-                             (list (car edge-and-mods))))
-                      (gen-chart-try-modifiers (list* partial nil (mapcar #'cdr mod-alt))))
-                    input-sem)
-                  res)))))))
-    res))
+               (format t "~&---~%Partial edge [~A] spanning ~:A" (g-edge-id partial)
+                  (g-edge-leaves partial)))
+            (let ((missing-rels
+                    (gen-chart-set-difference
+                       (mrs::psoa-liszt input-sem) (g-edge-rels-covered partial))))
+               (when *gen-adjunction-debug*
+                  (format t "~&Missing relations ~(~:A~)" 
+                     (mapcar #'mrs::rel-pred missing-rels)))
+               (let
+                  ((*gen-composed-modifier-edges* (make-hash-table :test #'equal))
+                   (mod-alt-list
+                     (gen-chart-mod-edge-partitions missing-rels mod-candidate-edges)))
+                  (declare (special *gen-composed-modifier-edges*))
+                  (when (and *gen-adjunction-debug* (null mod-alt-list))
+                     (format t "~&No relation partitions found"))
+                  (dolist (mod-alt mod-alt-list)
+                     (when *gen-adjunction-debug*
+                        (format t "~&Trying relation partition ~(~:A~)"
+                           (mapcar
+                              #'(lambda (rels-and-edges)
+                                  (cons (mapcar #'mrs::rel-pred (car rels-and-edges))
+                                     (mapcar #'g-edge-id (cdr rels-and-edges))))
+                              mod-alt)))
+                     (when (every #'identity (mapcar #'cdr mod-alt))
+                        (setq res
+                           (nconc
+                              (gen-chart-find-complete-edges
+                                 (mapcan
+                                    #'(lambda (edge-and-mods)
+                                        (if (null (cddr edge-and-mods))
+                                           (list (car edge-and-mods))))
+                                    (gen-chart-try-modifiers
+                                        (list* partial nil (mapcar #'cdr mod-alt))))
+                                  input-sem)
+                               res)))))))
+         res)))
 
 
 (defun gen-chart-intersective-inactive-edges nil
@@ -752,7 +782,7 @@
 
 ;;; Compute sets of partitions of input relations with each partition
 ;;; containing the set of modifier edges that cover those relations: e.g.
-;;; ( (((r1 r2) e1 e2) ((r3 r4) e3)) (((r1) e4 e5 e6) ((r2 r3 r4) e5)) )
+;;; ( (((r1 r2) e1 e2) ((r3 r4) e3)) (((r1) e4 e5 e6) ((r2 r3 r4) e7)) )
 
 (defun gen-chart-mod-edge-partitions (rels edges)
   (let ((cache nil))
@@ -798,48 +828,42 @@
         (return-from gen-disjoint-p nil)))))
 
   
-;;; Make active edges from inactive modifier edges, when not already done
+;;; Make active edges from inactive intersective modifier edges
 
-(defun gen-chart-create-active-mod-edges (mod-alt intersective-rules)
-  (declare (special *gen-modifier-active-edges*))
-  (flet
-      ((active-from-inactive (inact)
+(defun gen-chart-active-mod-candidate-edges (intersective-edges possible-grules
+      intersective-rules-and-daughters)
+   (mapcan
+      #'(lambda (inact)
          (mapcan
-          #'(lambda (rule)
-              (mapcan
-                 #'(lambda (path)
-                     (multiple-value-bind (act index-dag)
-                            (gen-chart-create-active 
-                             rule inact
-                             (cons path
-                                (remove path (cdr (rule-order rule)) :test #'eq))
-                             (position path (cdr (rule-order rule)) :test #'eq))
-                       (when act
-                         (unless (eql (length (g-edge-needed act)) 1)
-                           (error "Intersective modification rule ~A is not ~
-                                   binary branching" (rule-id rule)))
-                         (setf (g-edge-mod-index act)
-                            (position path (cdr (rule-order rule)) :test #'eq))
-                         (gen-chart-add-with-index act index-dag)
-                         (when *gen-adjunction-debug*
-                           (format t "~&Inactive [~A] -> active [~A]"
-                                   (g-edge-id inact) (g-edge-id act)))
-                         (list act))))
-                 (cdr (rule-order rule))))
-          intersective-rules)))
-    (mapcar
-     #'(lambda (rels-and-edges)
-         (cons (car rels-and-edges)
-               (mapcan
-                #'(lambda (inact)
-                    (let ((mods (getf *gen-modifier-active-edges* inact t)))
-                      (copy-list
-                       (if (eq mods t)
-                           (setf (getf *gen-modifier-active-edges* inact)
-                             (active-from-inactive inact))
-                         mods))))
-                (cdr rels-and-edges))))
-     mod-alt)))
+            #'(lambda (rule)
+               (let ((entry
+                       (assoc (rule-id rule) intersective-rules-and-daughters :test #'eq)))
+                  (when entry
+                     (mapcan
+                        #'(lambda (index) ; index is 1 for 1st daughter, etc
+                           (let ((path (nth index (rule-order rule))))
+                              (unless path
+                                 (error "No daughter ~A in rule ~A" index (rule-id rule)))
+                              (multiple-value-bind (act index-dag)
+                                    (gen-chart-create-active 
+                                       rule inact
+                                       (cons path
+                                          (remove path (cdr (rule-order rule)) :test #'eq))
+                                       (position path (cdr (rule-order rule)) :test #'eq))
+                                 (when act
+                                    (unless (eql (length (g-edge-needed act)) 1)
+                                       (error "Intersective modification rule ~A is not ~
+                                          binary branching" (rule-id rule)))
+                                    (setf (g-edge-mod-index act)
+                                       (position path (cdr (rule-order rule)) :test #'eq))
+                                    (gen-chart-add-with-index act index-dag)
+                                    (when *gen-adjunction-debug*
+                                       (format t "~&Inactive [~A] -> active [~A]"
+                                          (g-edge-id inact) (g-edge-id act)))
+                                    (list act)))))
+                         (cdr entry)))))
+            possible-grules))
+       intersective-edges))
 
 
 ;;; Take set of possible modifier edges and try to apply each at every node in
