@@ -132,7 +132,7 @@
                                (length (make-scoped-mrs mrs-struct))))))))
 
 (defun read-mrs-from-string (string)
-  (let ((*package* (find-package :mrs)))
+  (let ((*package* (find-package :lkb)))
     (ignore-errors 
      (with-input-from-string (stream string)
        (read-mrs stream)))))

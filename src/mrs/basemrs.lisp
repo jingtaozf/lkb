@@ -162,11 +162,16 @@
   (with-slots (stream) mrsout
     (format stream "~S" atomic-value)))
 
-(defmethod mrs-output-start-rel ((mrsout simple) sort first-p)
+(defmethod mrs-output-start-rel ((mrsout simple) type sort first-p)
   (declare (ignore first-p))
   (with-slots (stream indentation) mrsout
-  (format stream "~%")
-    (format stream "~VT[ ~A" indentation (string-downcase sort))))
+    (format stream "~%")
+    (if (not (eq type sort))
+      (format
+       stream
+       "~VT[ ~a ~s" 
+       indentation (string-downcase type) sort)
+      (format stream "~VT[ ~A" indentation (string-downcase sort)))))
 
 (defmethod mrs-output-rel-handel ((mrsout simple) handel)
   (if handel
@@ -239,8 +244,8 @@
 (defclass active-t (simple)
   ())
 
-(defmethod mrs-output-start-rel ((mrsout active-t) sort first-p)
-  (declare (ignore first-p))
+(defmethod mrs-output-start-rel ((mrsout active-t) type sort first-p)
+  (declare (ignore type first-p))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
     (format stream "~VT[ " indentation)
@@ -291,7 +296,8 @@
   (with-slots (stream) mrsout
     (format stream "~S" atomic-value)))
 
-(defmethod mrs-output-start-rel ((mrsout indexed) sort first-p)
+(defmethod mrs-output-start-rel ((mrsout indexed) type sort first-p)
+  (declare (ignore type))
   (with-slots (stream temp-sort) mrsout
     (setf temp-sort sort)
     (unless first-p (format stream ",~%"))))
@@ -454,7 +460,8 @@ higher and lower are handle-variables
         (format stream "'~A')" atomic-value)
       (format stream "~A)" atomic-value))))
 
-(defmethod mrs-output-start-rel ((mrsout prolog) sort first-p)
+(defmethod mrs-output-start-rel ((mrsout prolog) type sort first-p)
+  (declare (ignore type))
   (with-slots (stream) mrsout
     (unless first-p (format stream ","))
     (format stream "rel('~A'," 
@@ -577,7 +584,7 @@ higher and lower are handle-variables
     (loop for rel in (psoa-liszt psoa)
         do
           (mrs-output-start-rel *mrs-display-structure*
-                                (rel-sort rel) first-rel)
+                                (rel-reltype rel) (rel-sort rel) first-rel)
           (mrs-output-rel-handel
            *mrs-display-structure* 
            (find-var-name (rel-handel rel) connected-p))
@@ -821,7 +828,9 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 ;;; or
 ;;; REL -> [ PREDNAMEFEATPAIR* ]
   (mrs-check-for #\[ istream)
-  (let ((predname (read-mrs-atom istream)))
+  (let* ((reltype (read-mrs-atom istream))
+         (next (peek-char t istream nil nil))
+         (sort (if (eql next #\") (read-mrs-atom istream) reltype)))
     (when *rel-handel-path*
       (mrs-check-for #\h istream)
       (mrs-check-for #\a istream)
@@ -840,7 +849,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
             (return))
           (push (read-mrs-featpair istream)
                 featpairs)))
-      (make-rel :sort predname
+      (make-rel :reltype reltype :sort sort
                 :handel hvar
                 :flist (sort featpairs #'feat-sort-func)))))
           
