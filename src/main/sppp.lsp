@@ -164,9 +164,10 @@
     (loop
         for element in segment
         for token = (when (consp element) (sppp-process-token element))
+        for form = (rest (assoc :form token))
         for from = (rest (assoc :from token))
         for to = (rest (assoc :to token))
-        when (and from to) do 
+        when (and from to (not (punctuationp form))) do 
           (push token (aref *sppp-input-chart* from 0))
           (push token (aref *sppp-input-chart* to 1)))
     (loop
