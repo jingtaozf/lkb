@@ -1417,41 +1417,38 @@ int tsdb_retrieve(Tsdb_value **relation_list,
   unique_tuples = 0;
   tsdb.error = TSDB_OK;
 
-  if((result = tsdb_complex_retrieve(relation_list,
-                                     attribute_list, conditions,
-                                     report, redirection,
-                                     &unique_tuples)) != NULL) {
+  result = tsdb_complex_retrieve(relation_list, attribute_list, conditions,
+                                 report, redirection, &unique_tuples);
 
-    if(redirection != NULL 
-       && (output = tsdb_open_output(redirection)) != NULL) {
+  if(redirection != NULL 
+     && (output = tsdb_open_output(redirection)) != NULL) {
+    if(result != NULL) {
+      unique_tuples =
+        tsdb_project(result, attribute_list, report, output);
+    } /* if */
+    if(tsdb.eof != NULL) fprintf(output, "%s\n", tsdb.eof);
+    fclose(output);
+  } /* if */
+  else {
+    if(tsdb.output == NULL 
+       && (output = tsdb_open_pager()) != NULL) {
       if(result != NULL) {
-        unique_tuples =
+        unique_tuples = 
           tsdb_project(result, attribute_list, report, output);
       } /* if */
       if(tsdb.eof != NULL) fprintf(output, "%s\n", tsdb.eof);
-      fclose(output);
+      pclose(output);
     } /* if */
     else {
-      if(tsdb.output == NULL 
-         && (output = tsdb_open_pager()) != NULL) {
-        if(result != NULL) {
-          unique_tuples = 
-            tsdb_project(result, attribute_list, report, output);
-        } /* if */
-        if(tsdb.eof != NULL) fprintf(output, "%s\n", tsdb.eof);
-        pclose(output);
+      if(result != NULL) {
+        unique_tuples = 
+          tsdb_project(result, attribute_list, report, tsdb_default_stream);
       } /* if */
-      else {
-        if(result != NULL) {
-          unique_tuples = 
-            tsdb_project(result, attribute_list, report, tsdb_default_stream);
-        } /* if */
-        if(tsdb.eof != NULL) fprintf(output, "%s\n", tsdb.eof);
-        fflush(tsdb_default_stream);
-      } /* else */
+      if(tsdb.eof != NULL) fprintf(tsdb_default_stream, "%s\n", tsdb.eof);
+      fflush(tsdb_default_stream);
     } /* else */
-    tsdb_add_to_history(result, unique_tuples);
-  } /* if */
+  } /* else */
+  if(result != NULL) tsdb_add_to_history(result, unique_tuples);
 
   return((result == NULL ? tsdb.error : TSDB_OK));
 

@@ -681,9 +681,6 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
     } /* if */
   } /* for */
   
-  if(tsdb.eof != NULL) {
-    fprintf(stream, "%s\n", tsdb.eof);
-  } /* if */
   fflush(stream);
   free(suffix);
   free(praefix);
