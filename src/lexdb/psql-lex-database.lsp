@@ -830,9 +830,11 @@
       (mwe-initialize-userschema lexicon)))
 
 (defmethod semi-setup-pre ((lexicon psql-lex-database))  
+  (reconnect lexicon)
   (sql-fn-get-val lexicon :semi_setup_pre))
   
 (defmethod semi-setup-post ((lexicon psql-lex-database))  
+  (reconnect lexicon)
   (sql-fn-get-val lexicon :semi_setup_post))
  
 (defmethod semi-up-to-date-p ((lexicon psql-lex-database))  
@@ -993,7 +995,8 @@
 		  (format t "~%WARNING: no file ~a" dfn-filename)))
 		nil
 		)))
-	(format t "Merge new entries aborted..."))
+	(format t "~%Merge new entries aborted...")
+	(lkb-beep))
       (if (equal count-new 0)
 	  (empty-cache lexicon)
 	(initialize-psql-lexicon))

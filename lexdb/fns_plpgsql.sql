@@ -530,7 +530,7 @@ CREATE OR REPLACE FUNCTION semi_setup_post() RETURNS boolean AS '
 BEGIN
 	PERFORM semi_create_indices();
 
-	INSERT INTO semi_mod (SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM current_grammar JOIN semi_pred ON name=lex_id);
+	INSERT INTO semi_mod (SELECT DISTINCT name,userid,current_grammar.modstamp,CURRENT_TIMESTAMP FROM current_grammar JOIN semi_pred ON name=lex_id);
 
 	-- coz merge join is faster
 	SET ENABLE_HASHJOIN TO false;
