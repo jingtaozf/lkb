@@ -307,6 +307,9 @@
                  (object (lsp-retrieve-object id location)))
             (when (and (second object) (member format '(:avm :tree)))
               (lsp-browse id (first object) (rest object) format))))
+         (quit
+          #+:glue
+          (glue-shutdown))
          (t
           (setf return %lsp-invalid-command%))))
       (declare (ignore foo))
