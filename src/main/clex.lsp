@@ -41,11 +41,15 @@
       (cdb:open-read *psorts-temp-index-file*)))
   (cdb:all-keys (orth-db lexicon)))
 
-(defmethod collect-psort-ids ((lexicon cdb-lex-database))
+(defmethod collect-psort-ids ((lexicon cdb-lex-database) &key (recurse t))
+  (declare (ignore recurse))
   (unless (psort-db lexicon)
     (setf (psort-db lexicon) 
       (cdb:open-read *psorts-temp-file*)))
-   (cdb:all-keys (psort-db lexicon)))
+;bmw
+  (let ((res (cdb:all-keys (psort-db lexicon))))
+    (unless (equal res '("NIL"))
+      res)))
 
 (defmethod read-cached-lex ((lexicon cdb-lex-database) filenames)
   (set-temporary-lexicon-filenames)
@@ -92,7 +96,8 @@
   id)
 
 
-(defmethod read-psort ((lexicon cdb-lex-database) id &key (cache t))
+(defmethod read-psort ((lexicon cdb-lex-database) id &key (cache t) (recurse t))
+  (declare (ignore recurse))
   (unless (psort-db lexicon)
     (setf (psort-db lexicon) 
       (cdb:open-read *psorts-temp-file*)))
