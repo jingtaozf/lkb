@@ -279,6 +279,7 @@ char **tsdb_common_keys(Tsdb_relation *, Tsdb_relation *);
 char** tsdb_key_names(Tsdb_selection* );
 char** tsdb_all_attribute_names();
 char** tsdb_all_relation_names();
+BOOL tsdb_attribute_in_relation(Tsdb_relation *,char *);
 void tsdb_info_relations(void);
 int tsdb_drop_table(Tsdb_value *);
 int tsdb_create_table(Tsdb_value *, Tsdb_field **);
