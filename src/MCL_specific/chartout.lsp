@@ -39,6 +39,7 @@
                                  'chart-edge-descendents))))
                      (push edge-symbol (get root 'chart-edge-descendents)))))))
       (unless all-p
+         ;; remove intermediate links consisting of active edges
          (dolist (pair edge-symbols)
             (setf (get (cadr pair) 'chart-edge-descendents)
                (create-gen-chart-pointers-collapse
@@ -293,23 +294,29 @@
                          (format nil "~A" rule-name)))))))) 
 
 
-;;; Highlight current edge, if there is one at the moment
+;;; Highlight current edge, if there is one at the moment - and any ancestor
+;;; edges that are visible
 
 (defmethod view-draw-contents ((pane active-chart-window-pane))
    (call-next-method)
-   (let ((edge-record (current-chart-edge pane)))
-      (when edge-record 
-         (highlight-current-chart-edge edge-record pane))))
+   (view-draw-edge-highlighting pane))
 
-(defun highlight-current-chart-edge (edge-record pane)
-   (invert-text-box pane
-      (chart-record-position edge-record)
-      (+ (chart-record-position edge-record)
-         (chart-record-width edge-record)))
-   (dolist (parent-edge (edge-children (chart-record-edge edge-record)))
-      (let ((parent-record (display-chart-edge-record parent-edge pane)))
-         (when parent-record
-            (highlight-current-chart-edge parent-record pane)))))
+(defun view-draw-edge-highlighting (pane)
+   (let ((record (current-chart-edge pane)))
+      (when record 
+         (highlight-current-chart-edge (chart-record-edge record) pane))))
+
+
+(defun highlight-current-chart-edge (edge pane)
+   (let ((record (display-chart-edge-record edge pane)))
+      (when record
+         (invert-text-box pane
+            (chart-record-position record)
+            (+ (chart-record-position record)
+               (chart-record-width record)))))
+   (dolist (subsumed-edge (edge-children edge))
+      (when subsumed-edge
+         (highlight-current-chart-edge subsumed-edge pane))))
 
 
 ;;; called from display-parse-tree - when it is called to display an edge
@@ -354,10 +361,10 @@
          (progn
             (when (current-chart-edge pane)
                ;; remove existing highlighting
-               (highlight-current-chart-edge (current-chart-edge pane) pane))
+               (view-draw-edge-highlighting pane))
             (setf (current-chart-edge pane) edge-record)
             ;; make new highlighting appear
-            (highlight-current-chart-edge edge-record pane)
+            (view-draw-edge-highlighting pane)
             ))))
 
 
