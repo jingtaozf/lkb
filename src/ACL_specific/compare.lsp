@@ -6,7 +6,8 @@
 ;;;
 ;;; ToDO
 ;;;
-;;; - undo `Concise' and `Ordered' toggling; make them one-time only effect
+;;; - undo `Concise' and `Ordered' toggling; make them one-time only effect;
+;;; - Shift and Ctrl accelerators on `Next' et al.
 ;;;
 
 (in-package :lkb)
@@ -249,6 +250,8 @@
 	 :accessor compare-frame-item)
    (stream :initform nil
 	   :accessor compare-frame-stream)
+   (start :initform nil :accessor compare-frame-start)
+   (end :initform nil :accessor compare-frame-end)
    (current-chart :initform nil
                   :accessor  compare-frame-current-chart)
    (input :initform nil :accessor compare-frame-input)
@@ -321,6 +324,19 @@
              (type-tree tree))))))
 
 
+(define-compare-frame-command (com-reject-compare-frame :menu "Reject")
+    ()
+  (clim:with-application-frame (frame)
+    (record-decision (make-decision :type :reject) frame)
+    (recompute-in-and-out frame t)
+    (record-decision (make-decision :type :save) frame)
+    (update-trees frame t)
+    (if (compare-frame-controller frame)
+      (mp:process-revoke-arrest-reason 
+       (compare-frame-controller frame) :wait)
+      (update-trees frame))))
+
+
 (define-compare-frame-command (com-first-compare-frame :menu "First")
     ()
   (clim:with-application-frame (frame)
@@ -328,7 +344,8 @@
     (when (compare-frame-controller frame)
       (mp:process-revoke-arrest-reason 
        (compare-frame-controller frame) :wait))))
-      
+
+
 (define-compare-frame-command (com-pervious-compare-frame :menu "Previous")
     ()
   (clim:with-application-frame (frame)
@@ -372,13 +389,6 @@
       (update-trees frame t))))
 
 
-(define-compare-frame-command (com-reject-compare-frame :menu "Reject")
-    ()
-  (clim:with-application-frame (frame)
-    (record-decision (make-decision :type :reject) frame)
-    (recompute-in-and-out frame t)
-    (update-trees frame t)))
-
 
 #+:debug
 (define-compare-frame-command (com-invertr-compare-frame :menu "Invert")
@@ -397,34 +407,35 @@
       (update-trees frame t)))
 
 
-(define-compare-frame-command (com-concise-compare-frame :menu "Concise")
-    ()
-  (clim:with-application-frame (frame)
-    (let ((mode (compare-frame-mode frame)))
-      (if (eq mode :concise)
-        (setf (compare-frame-mode frame) nil)
-        (setf (compare-frame-mode frame) :concise))
-      (update-trees frame t))))
-
-
 (define-compare-frame-command (com-ordered-compare-frame :menu "Ordered")
     ()
   (clim:with-application-frame (frame)
-    (let ((mode (compare-frame-mode frame)))
-      (if (eq mode :ordered)
-        (setf (compare-frame-mode frame) nil)
-        (setf (compare-frame-mode frame) :ordered))
-      (update-trees frame t))))
+    (setf (compare-frame-mode frame) :ordered)
+    (update-trees frame t)))
+
+
+(define-compare-frame-command (com-concise-compare-frame :menu "Concise")
+    ()
+  (clim:with-application-frame (frame)
+    (setf (compare-frame-mode frame) :concise)
+    (update-trees frame t)))
+
+
+(define-compare-frame-command (com-full-compare-frame :menu "Full")
+    ()
+  (clim:with-application-frame (frame)
+    (setf (compare-frame-mode frame) nil)
+    (update-trees frame t)))
 
 
 (define-compare-frame-command (com-confidence-compare-frame :menu "Confidence")
     ()
   (clim:with-application-frame (frame)
     (let ((command (clim:menu-choose
-                    '(("High" :value 3 :active t)
-                      ("Fair" :value 2 :active t)
-                      ("Low" :value 1 :active t)
-                      ("Zero" :value 0 :active t)))))
+                    '(("High (3)" :value 3 :active t)
+                      ("Fair (2)" :value 2 :active t)
+                      ("Low (1)" :value 1 :active t)
+                      ("Zero (0)" :value 0 :active t)))))
       (when command
         (setf (compare-frame-confidence frame) command)))))
 
@@ -658,11 +669,15 @@
           (format stream "~a~%~%" (compare-frame-version window)))))
     (clim:updating-output 
         (stream :cache-value (compare-frame-confidence window)) 
-      (format 
-       stream "~a parse~:p in; ~a parse~:p out~@[; ~a confidence~]~%~%" 
-       (length (compare-frame-in-parses window))
-       (length (compare-frame-out-parses window))
-       (let ((foo (compare-frame-confidence window)))
+      (let ((foo (compare-frame-confidence window)))
+        (format 
+         stream 
+         "~a parse~:p in; ~a parse~:p out~
+          ~:[~*~*~;; ~a (~a) confidence~]~%~%" 
+         (length (compare-frame-in-parses window))
+         (length (compare-frame-out-parses window))
+         (and (integerp foo) (>= foo 0) (<= foo 3))
+         foo
          (when (and (integerp foo) (>= foo 0) (<= foo 3))
            (aref #("zero" "low" "fair" "high") foo)))))
     
@@ -734,7 +749,7 @@
 	  (declare (ignore condition) )
 		   nil))
       (recompute-in-and-out clim:*application-frame* t)
-      (update-trees clim:*application-frame* t))))
+      (update-trees clim:*application-frame*))))
 
 ;; Apply inference rules from Carter (1997) until nothing changes
 

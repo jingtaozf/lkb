@@ -63,7 +63,7 @@
         initially
           (setf *frame* frame)
           (setf (lkb::compare-frame-current-chart frame) nil)
-          (setf (clim:frame-pretty-name frame) "[incr tsdb()] Tree Selection")
+          (setf (clim:frame-pretty-name frame) title)
           (setf (lkb::compare-frame-controller frame) *current-process*)
         for item = (nth position items)
         for i-id = (get-field :i-id item)
@@ -140,23 +140,27 @@
                       (if (and (> version 0) user date)
                         (format
                          nil
-                         "(~a confidence; version ~d on ~a by `~a')"
-                         confidence version date user)
+                         "~a (~a) confidence; version ~d on ~a by `~a'"
+                         foo confidence version date user)
                         "")))
            (results (get-field :results item))
            (edges (loop
                       with edges
                       for result in results
                       for derivation = (get-field :derivation result)
-                      do
-                        (let ((edge (and derivation (reconstruct derivation))))
-                          (push edge edges))
+                      for edge = (and derivation (reconstruct derivation))
+                      when edge do (push edge edges)
                       finally (return (nreverse edges))))
+           (foo (first edges))
+           (start (and foo (lkb::edge-from foo)))
+           (end (and foo (lkb::edge-to foo)))
            (discriminants (reconstruct-discrimininants data parse-id version))
            (lkb::*parse-record* edges))
       (declare (ignore active))
       (setf (lkb::compare-frame-input frame) input)
       (setf (lkb::compare-frame-item frame) i-id)
+      (setf (lkb::compare-frame-start frame) start)
+      (setf (lkb::compare-frame-end frame) end)
       (setf (lkb::compare-frame-version frame) history)
       (setf (lkb::compare-frame-confidence frame) confidence)
       (setf (lkb::compare-frame-preset frame) discriminants)
@@ -176,7 +180,8 @@
       (clim:redisplay-frame-panes frame :force-p t)
       (process-add-arrest-reason *current-process* :wait)
       (let* ((decisions (lkb::compare-frame-decisions frame))
-             (status (lkb::decision-type (first decisions))))
+             (status (lkb::decision-type (first decisions)))
+             (recent (second decisions)))
         (when (eq status :save)
           (let* ((version (if version (incf version) 1))
                  (active (length (lkb::compare-frame-in-parses frame)))
@@ -201,6 +206,15 @@
             (write-tree data parse-id version active confidence
                         t-author t-start t-end "" 
                         :cache cache))
+          #+:debug
+          (when (and (lkb::decision-p recent)
+                     (member (lkb::decision-type recent) '(:reject :select)))
+            (let* ((version (or version 1))
+                   (state (encode-discriminant-state recent))
+                   (type (encode-discriminant-type recent))
+                   (start (lkb::compare-frame-start frame))
+                   (end (lkb::compare-frame-end frame)))))
+                   
           (loop
               with version = (or version 1)
               for discriminant in (lkb::compare-frame-discrs frame)
@@ -223,21 +237,33 @@
         (pairlis '(:status) (list status))))))
 
 (defun encode-discriminant-state (discriminant)
-  (let ((toggle (lkb::discr-toggle discriminant))
-        (state (lkb::discr-state discriminant)))
-    (cond
-     ((eq toggle t) 1)
-     ((null toggle) 2)
-     ((eq state t) 3)
-     ((null state) 4)
-     (t 5))))
+  (cond
+   ((lkb::discr-p discriminant)
+    (let ((toggle (lkb::discr-toggle discriminant))
+          (state (lkb::discr-state discriminant)))
+      (cond
+       ((eq toggle t) 1)
+       ((null toggle) 2)
+       ((eq state t) 3)
+       ((null state) 4)
+       (t 5))))
+   ((lkb::decision-p discriminant)
+    -1)))
 
 (defun encode-discriminant-type (discriminant)
-  (case (lkb::discr-type discriminant)
-    (:rel 1)
-    (:type 2)
-    (:constituent 3)
-    (t 0)))
+  (cond
+   ((lkb::discr-p discriminant)
+    (case (lkb::discr-type discriminant)
+      (:rel 1)
+      (:type 2)
+      (:constituent 3)
+      (t 0)))
+   ((lkb::decision-p discriminant)
+    (case (lkb::decision-type discriminant)
+      (:select 4)
+      (:revert 5)
+      (t -1)))
+   (t -1)))
 
 (defun reconstruct-discrimininants (data parse-id version)
   (loop
@@ -260,6 +286,7 @@
       for start = (get-field :d-start decision)
       for end = (get-field :d-end decision)
       for discriminant = (and state type key value start end
+                              (not (minus-one-p type))
                               (or (= state 1) (= state 2))
                               (reconstruct-discriminant 
                                state type key value start end))
