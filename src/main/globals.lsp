@@ -249,8 +249,7 @@
 
 ;;;
 ;;; connection parameters for lexical database, an association list with fields
-;;; `:host', `:user', `:password', `:db', and `:table' (and maybe `:encoding',
-;;; one day).
+;;; `:host', `:user' (optional), `:db', and `:table' 
 ;;;
 (defparameter *psql-lexicon-parameters* nil)
 
