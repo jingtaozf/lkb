@@ -69,8 +69,9 @@ where this isn't the right behaviour.
 
 10. Abrams intended Browne to bark
 
-why does bark have u not e??
-can we bind Browne?
+At the moment, these differ because the subject for Browne is missing.
+It would need further investigation to see whether the V1/v_np_inf 
+rule could make the np the subject of the inf or not.
 
 11. Every cat barked
 
@@ -83,7 +84,6 @@ properly is for the code to recognise that we've got a RSTR from the
 DEF_EXPLICIT_Q_REL already with a qeq, and when we get another one for
 the N, it'd have to merge them ... Leave it like this for now, but see
 if a better idea emerges!
-
 
 14. It barked
 
@@ -110,17 +110,174 @@ rule.
 
 21. Tobacco arrived.
 
-S/n1_vp 
+This one works because of the S/n1_vp rule - probably OK to
+fix by putting construction semantics on it, but need to come back to this
+after looking in the larger corpora to see where the rule applies.
+
+Jan 1 - application is a mixed bag - seem to be a lot of errors.  But overall,
+putting the quantifier on here looks like the right thing to do.
 
 22. Some bark.
+
+RASP doesn't give the correct parse here.  But cf 19 anyway.
+
 23. Some of the cats bark.
+
+NP/np-pro_pp-of rule - maybe OK to fix by putting construction
+semantics on it, but need to come back to this.
+
+Jan 1 - sampling NP/np-pro_pp-of
+
+occurs with `some, most, one, much, many, any, several, none' which
+have this semantics in ERG
+(also `those' - generic-nom_rel (see above)
+`who' and `that' - don't parse in ERG)
+Looks like it's worth adding the semantics to the construction,
+but the ARG1 of part_of binds the index of the NP within the PP.  
+So getting a proper match to the ERG here would either require 
+a special treatment of `of' PPs (which requires features, but seems a 
+plausible thing to do since `of' is nearly always treated differently
+from ordinary PPs), or a fudge, where the repetition of the ARG2 
+causes X1 to be bound to the NP index (cf 13).  If we allow this, it makes the 
+semantics much less constrained.
+
 24. No cat barked.
+
 25. Did the dog bark?
-26. Which dog barked? 
+
+Wrong parse from RASP
+
+26. Which dog barked?
+
+The ERG gives both an int_m_rel and a prpstn_rel here.  S/np-wh_vp is
+set to give an underspecified message relation prop_ques_m_rel: this
+would subsume either of those relations, and is thus OK for the
+relative clause case too.
+
 27. Whose dog barked?
+
+whose = `which person' in the ERG - fix RASP later via SEM-I
+
 28. Chase Browne!
+
 29. Abrams wondered which dog barked.
+
+see 26
+
 30. Abrams wondered whether Browne barked.
+
+Subordinating conjunctions like `whether' and `if' end up looking like
+PPs in RASP, which makes it difficult to produce any sort of sensible
+semantics.  Revisit this.
+
+31. The dog that Browne chased barked.
+
+N1/n_s is used both for relative clauses starting with that and for Ns
+like belief which subcat for a sentence.  There's no way currently of
+underspecifying the attachment, so the S is currently not attached at
+all in RASP.  Revisit this.
+
+Actually the comments in the tsg14.1 file suggest that the
+N1/n_s rule should only apply to complements - ask ejb?
+
+32. The dog to chase is barking.
+
+Same as above but with N1/n_inf - N could subcat for the `to-' VP
+or be intersective, as here.  Comments in tsg14.1 confirm intention
+that this covers both cases.
+
+33. The dog was chased by Browne.
+
+Right now, this really doesn't work.  RASP-RMRS treats `the dog' as
+the ARG1 and the only way of fixing this would be to make the
+semantics sensitive to the class of V (either by making the semantics
+conditional on some syntactic feature, or perhaps more easily, making
+it conditional on an aspect marker on the event).
+
+34. The dog chased by Browne barked.
+35. The dog is barking.
+
+There are two issues with auxiliaries: the first is that we haven't agreed a 
+set of values for tense etc yet ...
+
+The second is that the auxiliary will contribute a rel in RASP because all
+have a contentful equivalent which isn't straightforward to distinguish.
+
+36. The dog has barked. 
+37. The dog has been barking.
+38. The dog had been barking.
+39. The dog will bark.
+40. The dog is going to bark.
+41. The dog could bark.
+
+
+
+42. The dog couldn't bark. 
+43. The old dog barked.
+44. The dog barked softly.
+45. The dog probably barked.
+46. The dog barked in the garden. 
+47. The dog barks now.
+48. The garden dog barked.
+49. The tobacco garden dog barked.
+50. The cat is old.
+51. The cat is in the garden. ; 51
+52. The barking dog chased Browne.
+53. Chased dogs bark.
+54. Chasing the cat is old.
+55. That the cat chases Browne is old.
+56. Dogs chase whatever barks.
+57. The dog barked every day.
+58. When did the dog bark?
+59. Three of the dogs bark.
+60. Three bark.
+61. Browne's dog barks.
+62. Browne's barks.
+63. Twenty three dogs bark.
+64. Two hundred twenty dogs bark.
+65. Abrams arrived by car.
+66. Abrams kept barking.
+67. Browne squeezed the cat in.
+68. Browne squeezed in the cat.
+69. The picture of Abrams arrived.
+70. Abrams wiped the table clean.
+71. Abrams put Browne in the garden.
+72. The dog will bark if Browne arrives.
+73. Abrams and Browne arrived.
+74.Abrams, Browne and the dog arrived.
+75. The dog arrived and barked.
+76. The dog arrived and Browne barked.
+77. The dog barked, didn't it?
+78. It is obvious that the dog barked.
+79. Abrams promised Browne to bark.
+80. Abrams seems to bark.
+81. Abrams believes Browne to be barking.
+82. It bothered Abrams that Browne barked.
+83. It took Abrams ten minutes to arrive.
+84. Abrams left it to Browne to bark.
+85. Abrams strikes Browne as old.
+86. Browne considers Abrams old.
+87. Abrams liked the idea that Browne could bark.
+88. Abrams barked from ten to three.
+89. Abrams was very old.
+90. Nearly every dog barked.
+91. Abrams barked very softly.
+92. Browne's chasing of cats bothered Abrams.
+93. It bothered Browne that Abrams chased cats.
+94. June third arrived.
+95. Abrams arrived at three twenty.
+96. Browne arrived on Tuesday morning.
+97. The cats found a way to bark.
+98. The happier dog chased Browne.
+99. There were cats in the garden.
+100. That dog chased Browne.
+101. Somebody chased Abrams.
+102. How happy was Abrams?
+103. The number five bothers Browne.
+104. Abrams could.
+105. Browne tried to.
+106. Don't bark!
+107. The dog arrived barking.
 
 
 

@@ -839,8 +839,8 @@ empty (and hope this works ...)</comment>
 </le>
 
 <le>
-<tag>VVO</tag>
-<comment>2.5k verb</comment>
+<tag>VV0</tag>
+<comment>2.5k verb - NOTE VV0! not VVO</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <ep><pred/><label>H</label><var>E</var></ep>

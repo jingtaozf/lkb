@@ -744,15 +744,23 @@ semantics.
 
 <rule>
 <name>S/n1_vp</name>
+<comment>like a combination of the s/np_vp rule and the NP/n1-plu 
+rule</comment>
 <dtrs><dtr>N</dtr><dtr>VP</dtr></dtrs>
 <head>VP</head>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
+<hook><index>E</index><label>H1</label></hook>
 <slots><noanchor/></slots>
 <ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
 <rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
+<ep><gpred>BARE_DIV_Q_REL</gpred><label>H5</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H5</label><var>H6</var></rarg>
+<rarg><rargname>BODY</rargname><label>H5</label><var>H7</var></rarg>
+<hcons hreln='qeq'><hi><var>H6</var></hi><lo><var>H8</var></lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H8</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 <equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
@@ -919,9 +927,23 @@ semantics.
 
 <rule>
 <name>S/np-wh_vp</name>
+<comment>uniformly giving this an int_rel won't work
+because it's used for relative clauses</comment>
 <dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
-<head>VP</head>
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<slots><noanchor/></slots>
+<ep><gpred>PROP_QUES_M_REL</gpred><label>H1</label><var>H2</var></ep>
+<rarg><rargname>ARG1</rargname><label>H3</label><var>X</var></rarg>
+<hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H</var></lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
 </rule>
+
 
 <rule>
 <name>S/pp-wh_s</name>
@@ -3005,7 +3027,7 @@ semantics.
 </semstruct>
 <equalities><rv>H1</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
-<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H3</rv><dh><dtr>VP</dtr><he>ANCHOR</he></dh></equalities>
 </rule>
 
@@ -3422,9 +3444,30 @@ semantics.
 
 <rule>
 <name>NP/np-pro_pp-of</name>
-<comment>AUTO</comment>
+<comment>Semtestsuite example 23
+The ARG1 of part_of binds the index of the NP within the PP.  
+So getting a proper match to the ERG here would either require 
+a special treatment of `of' PPs (which requires features, but seems a 
+plausible thing to do since `of' is nearly always treated differently
+from ordinary PPs), or a fudge, where the repetition of the ARG2 
+causes X1 to be bound to the NP index.  If we allow this, it makes the 
+semantics much less constrained.
+<rarg><rargname>ARG1</rargname><label>H5</label><var>X1</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H9</label><var>X1</var></rarg>
+ARG1 of the PP is left unbound.</comment>
 <dtrs><dtr>NP-PRO</dtr><dtr>PP-OF</dtr></dtrs>
 <head>NP-PRO</head>
+<semstruct>
+<hook><index>X</index><label>H1</label></hook>
+<ep><gpred>PART_OF_REL</gpred><label>H5</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H1</label><var>H6</var></rarg>
+<rarg><rargname>BODY</rargname><label>H1</label><var>H4</var></rarg>
+<hcons hreln='qeq'><hi><var>H6</var></hi><lo><var>H5</var></lo></hcons>
+<ing><ing-a><var>H5</var></ing-a><ing-b><var>H9</var></ing-b></ing>
+</semstruct>
+<equalities><rv>H9</rv><dh><dtr>PP-OF</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>NP-PRO</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>X</rv><dh><dtr>NP-PRO</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -3730,7 +3773,7 @@ extended correctly if necessary
 <head>N</head>
 <semstruct>
 <hook><index>X</index><label>H2</label></hook>
-<ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
+<ing><ing-a><var>H2</var></ing-a><ing-b><var>H1</var></ing-b></ing>
 </semstruct>
 <equalities><dh><dtr>N</dtr><he>INDEX</he></dh><dh><dtr>ADJ</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
@@ -3920,7 +3963,7 @@ FIXed head to RULE
 <head>N</head>
 <semstruct>
 <hook><index>X</index><label>H2</label></hook>
-<ing><ing-a><var>H1</var></ing-a><ing-b><var>H2</var></ing-b></ing>
+<ing><ing-a><var>H2</var></ing-a><ing-b><var>H1</var></ing-b></ing>
 </semstruct>
 <equalities><rv>H1</rv><dh><dtr>NP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H2</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
@@ -4105,7 +4148,9 @@ FIXed head to RULE
 
 <rule>
 <name>N1/n_s</name>
-<comment>AUTO</comment>
+<comment>This is used both for relative clauses starting
+with that and for Ns like belief which subcat for a sentence.
+There's no way currently of underspecifying the attachment</comment>
 <dtrs><dtr>N</dtr><dtr>S</dtr></dtrs>
 <head>N</head>
 </rule>
@@ -4449,11 +4494,24 @@ FIXed head to RULE
 </rule>
 
 <rule>
+<name>P1/p_s</name>
+<comment>AUTO</comment>
+<dtrs><dtr>P</dtr><dtr>S-R</dtr></dtrs>
+<head>P</head>
+</rule>
+
+<!--
+
+FIX - version control! looks like this replaced P1/p_s ??
+
+<rule>
 <name>P1/p_s-r</name>
 <comment>AUTO</comment>
 <dtrs><dtr>P</dtr><dtr>S-R</dtr></dtrs>
 <head>P</head>
 </rule>
+
+-->
 
 <rule>
 <name>P1/p_s-wh</name>
@@ -4461,6 +4519,8 @@ FIXed head to RULE
 <dtrs><dtr>P</dtr><dtr>S-WH</dtr></dtrs>
 <head>P</head>
 </rule>
+
+
 
 <rule>
 <name>P1/p_pp</name>

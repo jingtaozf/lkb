@@ -158,6 +158,7 @@
 
 
 ("Some" "bark") 0 ; ()
+;;; WRONG
 (|T/frag|
  (|Tph/np/--|
   (|NP/det_n1| |<w s="461" e="464">Some_DD</w>|
@@ -181,6 +182,7 @@
   (|V1/v| |<w s="502" e="507">bark+ed_VVD</w>|)))
 
 ("Did" "the" "dog" "bark" "?") 1 ; (-8.950)
+;;; WRONG
 (|T/txt-ph1|
  (|Tph/vp/-|
   (|V1/do_np/-| |<w s="510" e="512">do+ed_VDD</w>|
