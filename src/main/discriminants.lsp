@@ -110,13 +110,13 @@
        (format nil "~(~a~)" (type-of-fs (tdfs-indef tdfs))) 
        yield :type top start end)
       (when (and tdfs *discriminant-path*)
-        (add-discriminant 
-         (format 
-          nil 
-          "~(~a~)" 
-          (type-of-fs (existing-dag-at-end-of 
-                       (tdfs-indef tdfs) *discriminant-path*)))
-         rule :relation top start end)))
+        (let* ((dag (existing-dag-at-end-of 
+                     (tdfs-indef tdfs) *discriminant-path*))
+               (type (and dag (type-of-fs dag))))
+          (when type
+            (add-discriminant 
+             (format nil "~(~a~)" type)
+             rule :relation top start end)))))
      ((rule-p rule)
       ;;
       ;; all other nodes of the derivation: record rule identifier.
