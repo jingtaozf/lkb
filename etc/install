@@ -187,11 +187,11 @@ if [ -n "${TSDBHOME}" ]; then
     ( \
       cd Archives; \
       ${WGET} http://redwoods.stanford.edu/ftp/5th/${file}; \
-      if [ -f Archives/${file} ]; then \
+      if [ -f ${file} ]; then \
         cd ${TSDBHOME}; \
         ${GUNZIP} ${DELPHINHOME}/Archives/${file} | ${TAR}; \
         echo " done."; \
-      else; \
+      else \
         echo " missing."; \
       fi; \
     )
