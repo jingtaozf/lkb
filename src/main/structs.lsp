@@ -171,9 +171,9 @@
                (progn 
                   (format t
 "~%Unifications specified are invalid or do not unify~%")
-                  (for unif in specific-list
-                     do
-                     (output-unif unif t nil))
+;                  (for unif in specific-list
+;                     do
+;                     (output-unif unif t nil))
                   nil))))))
 
 (defun unify-paths (lhs-path lhs-dag rhs-path rhs-dag)

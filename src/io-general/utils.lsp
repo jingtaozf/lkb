@@ -8,7 +8,7 @@
 (defun check-for (character istream name)
    (let ((next-char (peek-char t istream nil 'eof)))
       (unless (char= next-char character)
-         (error "~%~AExpected and not found in ~A" character name))
+         (error " ~A expected and not found in ~A" character name))
       (read-char istream)))
 
 

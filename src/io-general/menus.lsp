@@ -73,12 +73,12 @@
                                                            :value 'show-type-spec)
                                            (make-menu-item :name "Expanded type..."
                                                            :value 'show-type)
-                                           (make-menu-item :name "Lex definition..."
-                                                           :value 'show-lex-def)
+;                                  (make-menu-item :name "Lex definition..."
+;                                                   :value 'show-lex-def)
                                            (make-menu-item :name "Lex entry..."
                                                            :value 'show-lex)
-                                           (make-menu-item :name "Word definitions..."
-                                                           :value 'show-word-defs)
+;                                  (make-menu-item :name "Word definitions..."
+;                                                  :value 'show-word-defs)
                                            (make-menu-item :name "Word entries..."
                                                            :value 'show-words)
                                            (make-menu-item :name "Grammar rule..."

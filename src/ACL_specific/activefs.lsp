@@ -21,9 +21,9 @@
 
 ;;; This is the font for the pop up menu and the display windows
 
-(def-lkb-parameter *type-font-spec* '(:sans-serif :roman 9))
+(def-lkb-parameter *type-font-spec* '(:sans-serif :roman 12))
 
-(def-lkb-parameter *title-font-spec* '(:fix :roman 12))
+(def-lkb-parameter *title-font-spec* '(:fix :roman 14))
 
 ;;; ***** active types *****
 
@@ -285,8 +285,8 @@
        `(("Hierarchy" :value hier
 		      :active ,(getf (class-frames frame) 
 				     (find-class 'type-hierarchy)))
-	 ("Help" :value help
-		 :active ,(type-comment type-entry))
+;	 ("Help" :value help
+;		 :active ,(type-comment type-entry))
 	 ("Shrink/expand" :value shrink)
 	 ("Show source" :value source
 			:active ,(source-available-p type))
@@ -295,8 +295,8 @@
 			    ,(type-constraint type-entry))
 	 ("Expanded type" :value exp
 			  :active ,(type-constraint type-entry))
-	 ("Full structure" :value full
-			   :active full-tdfs)
+;	 ("Full structure" :value full
+;			   :active full-tdfs)
 	 ("Select" :value select)
 	 ("Unify" :value unify
 		  :active ,(and *fs1* (highlighted-class frame))))

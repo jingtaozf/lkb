@@ -1,10 +1,9 @@
 (in-package :cl-user)
 
-#|
-(dolist (type *type-names*)
-  (find-redundancy type))
+(defun find-all-redundancies nil
+  (dolist (type *type-names*)
+    (find-redundancy type)))
 
-|#
 
 (defun find-redundancy (type)
   (let ((parents (type-parents (get-type-entry type))))

@@ -20,7 +20,9 @@
 (defconstant *window-height* 400
   "Initial height of tree window")
 
-(defconstant *tree-text-style* (clim:parse-text-style '(:sans-serif :roman 9))
+(defvar *tree-text-style* (clim:parse-text-style 
+                           (list 
+                            :sans-serif :roman *type-tree-font-size*))
   "Text style for node labels.")
 
 (defconstant *tree-node-sep* 6

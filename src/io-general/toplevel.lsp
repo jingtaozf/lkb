@@ -28,8 +28,9 @@
   (let ((file-name 
          (ask-user-for-existing-pathname "Script file?")))
     (when file-name
-      (clear-grammar)                   ; should clear everything that might not be
-      (setf  *check-paths* nil)         ; overridden, this should do for now
+      (clear-grammar)              ;; should clear everything that might not be
+      (clear-lex-rules)            ;; overridden, this should do for now    
+      (setf  *check-paths* nil)    
       (load file-name))))
 
 
@@ -153,7 +154,7 @@
         
 ;;; 
 ;;; View utilities
-(defparameter *last-type-name* 'cat)
+(defparameter *last-type-name* 'synsem-struc)
 
 (defun ask-user-for-type (&optional qstring check-box-spec)
    (let ((res
@@ -205,7 +206,7 @@
             (setf *last-lex-id* lex)
             lex))))
 
-(defparameter *last-rule-id* 'r1)
+(defparameter *last-rule-id* 'head-specifier-rule)
 
 (defun ask-user-for-rule nil
    (let ((possible-name
@@ -220,7 +221,7 @@
             (setf *last-rule-id* name)
             rule-entry))))
 
-(defparameter *last-lex-rule-id* 'plur-noun)
+(defparameter *last-lex-rule-id* '3rd-sing-verb_infl_rule)
 
 (defun ask-user-for-lexical-rule nil
    (let ((possible-rule-name
@@ -464,10 +465,11 @@
   (let ((filename (ask-user-for-new-pathname 
                    "Save type display settings to?")))
     (when filename
+      (unmark-type-table)
       (with-open-file (stream filename :direction :output)
-        (output-type-display type stream)
-        (unmark-type-table)))))
-         
+        (output-type-display *toptype* stream))
+      (unmark-type-table))))
+
 (defun output-type-display (type ostream)
    (let ((type-record (get-type-entry type)))
       (unless (seen-node-p type-record) 
@@ -486,5 +488,5 @@
 (defun load-display-settings nil
    (let ((filename (ask-user-for-existing-pathname 
                     "Load type display settings from?")))
-     (when filenmae
+     (when filename
        (set-up-display-settings filename))))

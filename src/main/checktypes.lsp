@@ -188,11 +188,12 @@
          (when (expand-and-inherit-constraints)
            (format t "~%Making constraints well formed")
            (when (strongly-type-constraints)
-             (format t "~%Optimising unification check paths") 
-             (optimise-check-unif-paths)
+             (when *check-paths*
+                 (format t "~%Optimising unification check paths") 
+                 (optimise-check-unif-paths))
                 ;;; YADU --- extra expansion stage
                 ;;; earlier stages are unchanged
-             (format t "~%Expanding defaults") 
+;             (format t "~%Expanding defaults") 
              (when (expand-type-hierarchy-defaults)
                (format t "~%Type file checked successfully")
                (clear-type-cache) ; not for consistency, but for efficiency
@@ -258,16 +259,15 @@
                            (format t
                               "~%~A specified to have non-existent parent ~A"
                               name parent)))))))
-      (when ok
-        (set-up-descendants *toptype*)
-        (add-ancestors-to-type-table *toptype*))
       ok))
 
 (defun check-for-cycles-etc (top)
-   (let ((top-entry (get-type-entry top)))
+  (let ((top-entry (get-type-entry top)))
       (mark-node-active top-entry)
       (when (mark-for-cycles top-entry)
-         (scan-table))))
+        (unmark-type-table)
+        (when (mark-for-redundancy top-entry)
+          (scan-table)))))
    
 ;;; John's algorithm for marking a graph to check for cycles 
 ;;; 1. start from top - mark node as active and seen
@@ -290,6 +290,29 @@
 ;;; marks.lsp contains the marking structures and functions
 
 (defun mark-for-cycles (type-record)
+    (let ((ok t))
+      (unless (seen-node-p type-record) 
+        (mark-node-seen type-record)
+        (setf ok 
+          (for daughter in 
+               (type-daughters type-record)
+               all-satisfy
+               (let ((daughter-entry (get-type-entry daughter)))
+                 (if (active-node-p daughter-entry)
+                     (progn
+                       (format t "~%Cycle involving ~A" 
+                               daughter)
+                       nil)
+                   (progn
+                     (mark-node-active daughter-entry)
+                     (let ((inner-ok 
+                            (mark-for-cycles daughter-entry)))
+                       (unmark-node-active daughter-entry)
+                       inner-ok)))))))
+      ok))
+
+(defun mark-for-redundancy (type-record)
+  ; assumes no cycles
    (let ((ok t)
          (daughters (mapcar #'(lambda (d) (get-type-entry d))
                                 (type-daughters type-record))))
@@ -299,18 +322,19 @@
           (if (active-node-p daughter)
               (progn 
                 (setf ok nil)
-                (format t "~%Cycle or redundancy involving ~A" 
+                (format t "~%Redundancy involving ~A" 
                         (type-name daughter)))
             (mark-node-active daughter)))
      (when ok
        (setf ok 
          (for daughter in daughters
               all-satisfy
-              (mark-for-cycles daughter)))
+              (mark-for-redundancy daughter)))
        (for daughter in daughters
             do
             (unmark-node-active daughter)))
      ok))
+
 
 (defun scan-table nil
    (let ((ok t))
@@ -335,8 +359,11 @@
             (format t "~%Warning: ~A specified to have single daughter ~A"
                         name
                         (car (type-daughters type-entry))))))
-               *types*)
-            ok))
+      *types*)
+   (when ok
+     (set-up-descendants *toptype*)
+     (add-ancestors-to-type-table *toptype*))
+   ok))
 
 (defun set-up-descendants (type)
   (let* ((type-entry (get-type-entry type))

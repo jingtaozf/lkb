@@ -114,13 +114,13 @@
 (def-lkb-parameter *dont-show-lex-rules* nil
   "if set, applications of lexical rules are not shown in parse trees")
 
-(def-lkb-parameter *parse-tree-font-size* 9)
+(def-lkb-parameter *parse-tree-font-size* 12)
 
-(def-lkb-parameter *fs-type-font-size* 9)
+(def-lkb-parameter *fs-type-font-size* 12)
 
-(def-lkb-parameter *fs-title-font-size* 9)
+(def-lkb-parameter *fs-title-font-size* 12)
 
-(def-lkb-parameter *type-tree-font-size* 9)
+(def-lkb-parameter *type-tree-font-size* 12)
 
 (def-lkb-parameter *dialog-font-size* 12)
 
@@ -185,3 +185,4 @@
 (def-lkb-parameter *label-fs-path* '(SYNSEM))
 
 (def-lkb-parameter *label-template-type* 'label)
+
