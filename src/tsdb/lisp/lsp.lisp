@@ -23,7 +23,6 @@
 
 (defun lsp-process-event (id command stream)
 
-  (format t "~%~%~a~%~%" clim:*default-server-path*)
   (let ((action (intern (string (pop command)) :tsdb))
         (return lkb::%lsp-ok%))
     (case action
