@@ -94,9 +94,10 @@
 
 (defun load-psql-lexicon-from-script nil
   (close-lex *lexicon*)
-  (unless (initialize-psql-lexicon)
-    (error "~%Load lexicon aborted"))
-  (setf *lexicon* *psql-lexicon*))
+  (when *psql-lexicon-parameters*
+    (unless (initialize-psql-lexicon)
+      (error "~%Load lexicon aborted"))
+    (setf *lexicon* *psql-lexicon*)))
   
 (defun open-psql-lex (&rest rest)
   "obsolete"

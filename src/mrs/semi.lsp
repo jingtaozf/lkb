@@ -436,7 +436,7 @@
   sdbt)
 
 (defun print-sdbt (sdbt &key (stream t))
-  (format t " ~a" (sdbt-rows sdbt))
+  (format t "~%~a" (sdbt-rows sdbt))
   (maphash #'(lambda (key rows)
 	       (declare (ignore key))
 	       (mapc #'(lambda (row)
