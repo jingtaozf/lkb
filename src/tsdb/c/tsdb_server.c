@@ -153,6 +153,16 @@ int tsdb_server_initialize() {
 
   int i;
 
+  for(i = 0; tsdb.relations[i] != NULL; i++) {
+    if(tsdb_find_table(tsdb.relations[i]) == NULL) {
+      fprintf(tsdb_error_stream,
+              "server_initialize(): no data for relation `%s'.\n",
+              tsdb.relations[i]->name);
+      fflush(tsdb_error_stream);
+      return(1);
+    } /* if */
+  } /* for */
+
 #ifdef SIGTTOU
   signal(SIGTTOU, SIG_IGN);
 #endif

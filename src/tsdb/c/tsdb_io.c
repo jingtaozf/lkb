@@ -1083,8 +1083,7 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
   float time = tsdb_timer(TSDB_START_TIMER);
 #endif
 
-  if(((input = tsdb_find_data_file(relation->name, "r")) != NULL) &&
-     ((tuple = tsdb_read_tuple(relation, input)) != NULL)) {
+  if(((input = tsdb_find_data_file(relation->name, "r")) != NULL)) {
 
     (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
                                      (Tsdb_tuple **)NULL);
@@ -1104,7 +1103,7 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
     selection->length = 0;
 
     i = 0;
-    do {
+    while((tuple = tsdb_read_tuple(relation, input)) != NULL) {
       i++;
       if(condition == NULL ||
          tuple->n_fields &&
@@ -1120,7 +1119,7 @@ Tsdb_selection *tsdb_read_table(Tsdb_relation *relation,
           free(foo);
         } /* else */
       } /* if */
-    } while((tuple = tsdb_read_tuple(relation, input)) != NULL);
+    } /* while */
 
     fclose(input);
 #if defined(DEBUG) && defined(READ_TABLE)

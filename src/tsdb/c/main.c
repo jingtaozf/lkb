@@ -121,7 +121,10 @@ int main(int argc, char **argv) {
 
   if(tsdb.status & TSDB_SERVER_MODE) {
     if(tsdb_server_initialize()) {
-      exit(-1);
+#ifdef DEBUG
+      tsdb_close_debug(tsdb_debug_stream);
+#endif
+      exit(1);
     } /* if */
     tsdb_server();
   } /* if */

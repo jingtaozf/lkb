@@ -1340,15 +1340,21 @@ void tsdb_free_leaf(Tsdb_value *value) {
 
 void tsdb_free_key_list_chain(Tsdb_key_list *foo, BOOL tuples) {
 
-  Tsdb_key_list *next;
+  Tsdb_key_list *node, *next;
 
   if(foo != NULL) {
-    for(next = foo->next; foo != NULL; foo = next, next = foo->next) {
-      if(tuples && foo->tuples != NULL) {
-        free(foo->tuples);
+    for(node = foo, next = node->next;
+        next != NULL;
+        node = next, next = node->next) {
+      if(tuples && node->tuples != NULL) {
+        free(node->tuples);
       } /* if */
-      free(foo);
+      free(node);
     } /* for */
+    if(tuples && node->tuples != NULL) {
+      free(node->tuples);
+    } /* if */
+    free(node);
   } /* if */
 } /* tsdb_free_key_list_chain() */
 
@@ -1756,7 +1762,7 @@ float tsdb_timer(BYTE action) {
     } /* if */
 #if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
     return((stop[n_timers].tv_sec - start[n_timers].tv_sec) +
-           ((stop[n_timers].tv_usec - start[n_timers].tv_usec) / 1000000));
+           ((stop[n_timers].tv_usec - start[n_timers].tv_usec) * .000001));
 #else
     return(((stop[n_timers].tms_utime - start[n_timers].tms_utime) +
             (stop[n_timers].tms_stime - start[n_timers].tms_stime)) / 60);
@@ -2433,7 +2439,7 @@ int *tsdb_parse_date(char *date) {
     result[1] = 11;
   } /* if */
   else if(!strncasecmp(foo, "dec", 3)) {
-    result[1] = 11;
+    result[1] = 12;
   } /* if */
   else {
     result[1] = strtol(foo, &bar, 10);
