@@ -149,15 +149,13 @@
   (cond 
    ((not (user-read-only-p lexicon))
     (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
-    ;;(format *postgres-debug-stream* "~%(vacuuming current_grammar)")
-    ;;(run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar"))
     )
    (t
     (format t "~%(user ~a has read-only privileges)" (user lexicon))))    
   (format t "~%(LexDB filter: ~a )" (get-filter lexicon))
   (let ((size (fn-get-val lexicon ''size-current-grammar)))
     (if (string= "0" size)
-	(format t "~%WARNING: no entries passed the LexDB filter! " size)
+	(format t "~%WARNING: 0 entries passed the LexDB filter" size)
       (format t "~%(active lexical entries: ~a )" size)))
 
   (if semi
@@ -171,7 +169,7 @@
 	(index-lexical-rules)
 	(index-grammar-rules))
        (t
-	(format t "~%(WARNING: no index for generator)"))))
+	(format t "~%WARNING: no lexical entries indexed for generator"))))
   
   lexicon)
 
@@ -205,17 +203,18 @@
 
 (defmethod merge-into-db ((lexicon psql-database) 
 			  rev-filename)  
-  (format t "~%")
   (run-command-stdin lexicon 
 		     (format nil "~a;~%~a;" 
 			     "DELETE FROM temp" 
 			     "COPY temp FROM stdin DELIMITERS ',' WITH NULL AS ''") 
 		     rev-filename)
-  (let ((num-new-entries 
-	 (fn-get-val lexicon ''merge-into-db2))) 
-    (format t "~%please wait while I vacuum the database...")
-    (vacuum-public-revision lexicon)
-    num-new-entries))
+  (let ((count-new
+	 (str-2-num
+	  (fn-get-val lexicon ''merge-into-db2)))) 
+    (format t "~%(~a new entries)" count-new)
+    (unless (equal 0 count-new)
+      (vacuum-public-revision lexicon))
+    count-new))
 
 (defmethod merge-defn ((lexicon psql-database) 
 		       dfn-filename)  
@@ -227,9 +226,11 @@
   (run-command-stdin lexicon 
 		     "COPY temp_defn FROM stdin" 
 		     dfn-filename)
-  (fn-get-val lexicon ''merge-defn)
-  (run-command lexicon "DROP TABLE temp_defn")
-  )
+  (let ((count-new-dfn 
+	 (str-2-num (fn-get-val lexicon ''merge-defn))))
+    (run-command lexicon "DROP TABLE temp_defn")
+    (format t "~%(~a new field mappings)" count-new-dfn)
+    count-new-dfn))
 
 (defun dump-psql-lexicon (filename)
   (when
@@ -266,17 +267,16 @@
 (defun absolute-namestring (format str)
   (namestring (pathname (format nil format str))))
 
-(defun merge-into-psql-lexicon2 (lexicon filename)
+(defun merge-into-psql-lexicon (lexicon filename)
   "reconnect as db owner and merge new data into lexdb"
-  (unless (equal (host lexicon)
-		 "localhost")
-    (error "Operation requires db host = \"localhost\""))
   (with-slots (dbname host port) lexicon
     (let ((conn-db-owner (make-instance 'psql-database
 			   :dbname dbname
 			   :host host
 			   :port port
-			   :user (raw-get-val lexicon "SELECT db_owner()"))))
+			   :user (raw-get-val lexicon "SELECT db_owner()")))
+	  (count-new-dfn 0)
+	  (count-new 0))
       (connect conn-db-owner)
       (retrieve-fn-defns conn-db-owner)
       (when
@@ -289,15 +289,21 @@
 		     (dfn-filename 
 		      (absolute-namestring "~a.dfn" 
 					   filename)))
-		(merge-into-db conn-db-owner 
-			       rev-filename)
+		(setf count-new 
+		  (merge-into-db conn-db-owner 
+				 rev-filename))
 		(if (probe-file dfn-filename)
-		    (merge-defn conn-db-owner 
-				dfn-filename))
+		    (setf count-new-dfn
+		      (merge-defn conn-db-owner 
+				  dfn-filename)))
 		nil
 		)))
-	(format t "Merge new entries aborted..."))))
-  (initialize-psql-lexicon))
+	(format t "Merge new entries aborted..."))
+      (if (and 
+	   (equal count-new 0)
+	   (equal count-new-dfn 0))
+	  nil
+	(initialize-psql-lexicon)))))
 
 (defmethod initialize-userschema ((lexicon psql-database))
   (unless

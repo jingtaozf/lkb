@@ -842,10 +842,10 @@
 			       (- (length filename) 4))))
     (when filename
       (format t 
-	      "~%Please wait: merging files ~a.* into lexical database ~a~%" 
+	      "~%Please wait: merging files ~a.* into lexical database ~a" 
 	      filename 
 	      (dbname *psql-lexicon*))
-      (merge-into-psql-lexicon2 *psql-lexicon* filename)
+      (merge-into-psql-lexicon *psql-lexicon* filename)
       (lkb-beep))))
   
 (defun command-dump-psql-lexicon (&rest rest)
@@ -871,7 +871,7 @@
 		     4))))
     (when filename
       (format t 
-	      "~%Dumping lexical database ~a to files ~a.*" 
+	      "~%Please wait: dumping lexical database ~a to files ~a.*" 
 	      (dbname *psql-lexicon*) 
 	      filename)
       (dump-psql-lexicon filename)
@@ -984,10 +984,13 @@
   (lkb-beep))
 
 (defmethod vacuum-current-grammar ((lexicon psql-database) &key verbose)
-  (if verbose
-      (run-command lexicon "vacuum full analyze verbose current_grammar")
-    (run-command lexicon "vacuum full analyze current_grammar"))
-  (lkb-beep))
+  (let ((command
+	 (if verbose
+	     "vacuum full analyze verbose current_grammar"
+	   "vacuum full analyze current_grammar")))
+    (format t "~%Please wait: vacuuming private table")
+    (run-command lexicon command)
+    (lkb-beep)))
 
 (defmethod vacuum-public-revision ((lexicon psql-database) &key verbose)
   (with-slots (dbname host port) lexicon
@@ -995,8 +998,11 @@
 		:dbname dbname
 		:host host
 		:port port
-		:user (raw-get-val lexicon "SELECT db_owner()"))))
+		:user (raw-get-val lexicon "SELECT db_owner()")))
+	  (command
+	   (if verbose
+	       "vacuum full analyze verbose public.revision"    
+	     "vacuum full analyze public.revision")))
+      (format t "~%Please wait: vacuuming public table")
       (connect l2)
-      (if verbose
-	  (run-command l2 "vacuum full analyze verbose public.revision")      
-	(run-command l2 "vacuum full analyze public.revision")))))
+      (run-command l2 command))))
