@@ -11,11 +11,12 @@
 ;;;
 ;;; ToDO
 ;;;
+;;; - at least one-level of `Undo';
 ;;; - Shift and Ctrl accelerators on `Next' et al.;
-;;; - define equivalence classes of discriminators (possibly based on equality
+;;; - define equivalence classes of discriminants (possibly based on equality
 ;;;   of in and out sets), so that `yes' selections can propagate;
 ;;; - group equivalent discrimnators somehow;
-;;; - add info bar: show numbers of in and out trees per discriminator
+;;; - add info bar: show numbers of in and out trees per discriminant
 ;;; - bug fix: identify multiple applications of unary rule at same position;
 ;;; - investigate lack of edge for leafs in tree in interactive mode;
 ;;;
@@ -24,7 +25,7 @@
 
 (def-lkb-parameter *preference-file* nil)
 
-(def-lkb-parameter *tree-comparison-threshold* 50)
+(def-lkb-parameter *tree-comparison-threshold* 100)
 
 (def-lkb-parameter *tree-inhibit-tree-display-p* nil)
 
@@ -34,7 +35,8 @@
 ;;; Collect differences among a set of parses
 
 (defstruct discr 
-  key value start end in out toggle state hidep type time record preset)
+  key value start end in out toggle state hidep type 
+  colour time record preset)
 
 (defvar *discrs*)
 
@@ -173,6 +175,45 @@
               *discrs*)))))
 
 
+(defun preset-discriminants (frame)
+  (format
+   excl:*initial-terminal-io*
+   "~&~%[~a] `~a'~%~%"
+   (compare-frame-item frame) (compare-frame-input frame))
+  (loop
+      for old in (compare-frame-gold frame)
+      for matches = (loop 
+                        for new in (compare-frame-discrs frame)
+                        when (discriminant-equal old new) collect new)
+      when matches do
+        (loop
+            for new in matches do
+              (setf (discr-toggle new) (discr-toggle old))
+              (setf (discr-state new) (discr-state old))
+              (setf (discr-colour new) clim:+green+))
+      else do 
+        (push old (compare-frame-lead frame))
+        (format
+         excl:*initial-terminal-io*
+         "  [~2,'0d ~2,'0d] ~a ~a | ~a `~a'~%"
+         (discr-start old) (discr-end old)
+         (state-to-string (discr-state old))
+         (state-to-string (discr-toggle old))
+         (discr-key old) (discr-value old))))
+
+
+(defun state-to-string (state)
+  (cond ((eq state t) "+") ((null state) "-") (t "?")))
+
+
+(defun discriminant-equal (foo bar)
+  (and (equal (discr-key foo) (discr-key bar))
+       (equal (discr-value foo) (discr-value bar))
+       (equal (discr-type foo) (discr-type bar))
+       (equal (discr-start foo) (discr-start bar))
+       (equal (discr-end foo) (discr-end bar))))
+
+
 ;;; **********************************************************************
 ;;; Main entry points
 
@@ -248,6 +289,9 @@
               parses)))
   (setf (compare-frame-otrees frame) (copy-list (compare-frame-trees frame)))
   (setf (compare-frame-discrs frame) (find-discriminants frame))
+  (setf (compare-frame-lead frame) nil)
+  (preset-discriminants frame)
+  
   (recompute-in-and-out frame t)
   (when (find :select (compare-frame-preset frame)
               :key #'(lambda (foo) (discr-type foo)))
@@ -293,16 +337,19 @@
 (defun comparison-tree-font ()
   (list :sans-serif :roman (or *comparison-tree-font-size* 7)))
 
-(defun comparison-discriminator-font ()
-  (list :sans-serif :roman (or *comparison-discriminator-font-size* 10)))
+(defun comparison-discriminant-font ()
+  (list :sans-serif :roman (or *comparison-discriminant-font-size* 10)))
 
 (clim:define-application-frame compare-frame ()
   ((discrs :initform nil
 	   :accessor compare-frame-discrs)
    (preset :initform nil :accessor compare-frame-preset)
+   (gold :initform nil :accessor compare-frame-gold)
+   (lead :initform nil :accessor compare-frame-lead)
    (decisions :initform nil :accessor compare-frame-decisions)
    (confidence :initform nil :accessor compare-frame-confidence)
    (trees :initform nil :accessor compare-frame-trees)
+   (derivations :initform nil :accessor compare-frame-derivations)
    (otrees :initform nil :accessor compare-frame-otrees)
    (in :initform nil
        :accessor compare-frame-in-parses)
@@ -349,7 +396,7 @@
 			  :text-cursor nil
 			  :width 420
 			  :height 660
-			  :text-style (comparison-discriminator-font)
+			  :text-style (comparison-discriminant-font)
 			  :end-of-line-action :allow
 			  :end-of-page-action :allow
 			  :borders nil
@@ -563,43 +610,50 @@
   id)
   
 (defun draw-trees-window (window stream)
-  (setf (compare-frame-trees-stream window) stream)
 
+  (setf (compare-frame-trees-stream window) stream)
   (unless *tree-inhibit-tree-display-p*
     (clim:formatting-table (stream :x-spacing "XX")
-      (dolist (tree (compare-frame-trees window))
-        (setf (ptree-ink tree) clim:+foreground-ink+)
-        (setf (ptree-output-record tree)
-          (clim:with-new-output-record (stream)
-            (clim:with-text-style (stream (comparison-tree-font))
-              (clim:with-output-recording-options (stream :record t)
-                (clim:formatting-row (stream)
-                  (clim:formatting-cell (stream :align-x :center :align-y :top)
-                    (clim:with-text-style (stream (clim:parse-text-style 
-                                                   '(:sans-serif :bold 14)))
-                      (format stream "~%[~a]" (ptree-id tree))))
-                  (clim:formatting-cell (stream 
-                                         :align-x :left :align-y :center)
-                    (clim:with-output-as-presentation 
-                        (stream tree 'ptree :single-box t)
-                      (clim:format-graph-from-root
-                       (ptree-top tree)
-                       #'(lambda (node stream)
-                           (multiple-value-bind (s bold-p) 
-                               (get-string-for-edge node)
-                             (clim:with-text-face (stream 
-                                                   (if bold-p :bold :roman))
-                               (write-string s stream))))
-                       #'(lambda (node) (get node 'daughters))
-                       :graph-type :parse-tree
-                       :stream stream 
-                       :merge-duplicates nil
-                       :orientation :vertical
-                       :generation-separation 7
-                       :move-cursor t
-                       :within-generation-separation 7
-                       :center-nodes nil)))
-                (terpri stream))))))))
+      (loop
+          for tree in (compare-frame-trees window)
+          when (or (null (compare-frame-gold window))
+                   (not (member (ptree-top tree)
+                                (compare-frame-out-parses window) :test #'eq)))
+          do
+            (setf (ptree-ink tree) clim:+foreground-ink+)
+            (setf (ptree-output-record tree)
+              (clim:with-new-output-record (stream)
+                (clim:with-text-style (stream (comparison-tree-font))
+                  (clim:with-output-recording-options (stream :record t)
+                    (clim:formatting-row (stream)
+                      (clim:formatting-cell 
+                          (stream :align-x :center :align-y :top)
+                        (clim:with-text-style 
+                            (stream 
+                             (clim:parse-text-style '(:sans-serif :bold 14)))
+                          (format stream "~%[~a]" (ptree-id tree))))
+                      (clim:formatting-cell 
+                          (stream :align-x :left :align-y :center)
+                        (clim:with-output-as-presentation 
+                            (stream tree 'ptree :single-box t)
+                          (clim:format-graph-from-root
+                           (ptree-top tree)
+                           #'(lambda (node stream)
+                               (multiple-value-bind (s bold-p) 
+                                   (get-string-for-edge node)
+                                 (clim:with-text-face
+                                     (stream (if bold-p :bold :roman))
+                                   (write-string s stream))))
+                           #'(lambda (node) (get node 'daughters))
+                           :graph-type :parse-tree
+                           :stream stream 
+                           :merge-duplicates nil
+                           :orientation :vertical
+                           :generation-separation 7
+                           :move-cursor t
+                           :within-generation-separation 7
+                           :center-nodes nil)))
+                      (terpri stream))))))))
     (update-trees window)))
 
 (defun propagate-discriminants (frame top toggle)
@@ -690,7 +744,8 @@
       (loop
           for tree in (compare-frame-trees window)
           when (ptree-output-record tree) do
-            (clim:clear-output-record (ptree-output-record tree)))
+            (clim:clear-output-record (ptree-output-record tree))
+            (setf (ptree-output-record tree) nil))
       (loop
           for discriminant in (compare-frame-discrs window)
           for record = (discr-record discriminant)
@@ -723,6 +778,11 @@
              for discriminant in (compare-frame-discrs window)
              do
                (setf (discr-hidep discriminant)
+                 ;;
+                 ;; _fix_me_
+                 ;; probably also hide entaileld decisions, i.e. those where
+                 ;; :toggle is not :unknown.                   (9-oct-02; oe)
+                 ;;
                  (not (eq (discr-state discriminant) :unknown)))))
         (t
          (setf (compare-frame-trees window) 
@@ -735,25 +795,30 @@
       (draw-trees-window window stream)
       (draw-compare-window window stream)
       (clim:redisplay-frame-panes window :force-p t))
-    (let (; (done-p nil)
-          (stream (compare-frame-trees-stream window)))
-      (dolist (tree (compare-frame-trees window))
-        (let ((ink (cond ((member (ptree-top tree) 
-                                  (compare-frame-out-parses window)
-                                  :test #'eq)
-                          clim:+red+)
-                         ((and (not (cdr (compare-frame-in-parses window)))
-                               (eq (car (compare-frame-in-parses window))
-                                   (ptree-top tree)))
-                          clim:+green+)
-                         (t clim:+foreground-ink+))))
-          (unless (or *tree-inhibit-tree-display-p* (eq ink (ptree-ink tree)))
+
+    (let ((stream (compare-frame-trees-stream window)))
+      (loop
+          for tree in (compare-frame-trees window)
+          for ink = (cond ((member (ptree-top tree) 
+                                   (compare-frame-out-parses window)
+                                   :test #'eq)
+                           clim:+red+)
+                          ((and (not (cdr (compare-frame-in-parses window)))
+                                (eq (car (compare-frame-in-parses window))
+                                    (ptree-top tree)))
+                           clim:+green+)
+                          (t clim:+foreground-ink+))
+          for record = (ptree-output-record tree)
+          unless (or (null record) 
+                     *tree-inhibit-tree-display-p* 
+                     (eq ink (ptree-ink tree)))
+          do
             (setf (ptree-ink tree) ink)
-            (recolor-tree (ptree-output-record tree) ink)
-            (clim:replay (ptree-output-record tree) stream)))))))
+            (recolor-record (ptree-output-record tree) ink)
+            (clim:replay (ptree-output-record tree) stream)))))
 
     
-(defun recolor-tree (record ink)
+(defun recolor-record (record ink)
   (labels ((recolor-node (node) 
 	     (when (clim:displayed-output-record-p node)
 	       (setf (clim:displayed-output-record-ink node) ink))
@@ -766,12 +831,11 @@
 ;;; Stuff for constituent pane
 
 (defun draw-compare-window (window stream)
-  (let ((discrs (compare-frame-discrs window)))
+  (let ((discriminants (compare-frame-discrs window)))
     (clim:updating-output (stream)
       (format 
        stream 
-       "~@[[item# ~a] ~]`~a'~%~%" 
-       (compare-frame-item window)
+       "`~a'~%~%" 
        (compare-frame-input window)))
     (let ((foo (compare-frame-version window)))
       (when (and foo (not (equal foo "")))
@@ -781,8 +845,9 @@
       (let ((foo (compare-frame-confidence window)))
         (format 
          stream 
-         "~a parse~:p in; ~a parse~:p out~
+         "~@[[item# ~a] ~]~a parse~:p in; ~a parse~:p out~
           ~:[~*~*~;; ~a (~a) confidence~]~%~%" 
+         (compare-frame-item window)
          (length (compare-frame-in-parses window))
          (length (compare-frame-out-parses window))
          (and (integerp foo) (>= foo 0) (<= foo 3))
@@ -791,39 +856,47 @@
            (aref #("zero" "low" "fair" "high") foo)))))
     
     (clim:formatting-table (stream :x-spacing "X")
-      (clim:with-text-style (stream (comparison-discriminator-font))
-        (dolist (d discrs)
-          (unless (discr-hidep d)
-            (clim:formatting-row (stream)
-              (setf (discr-record d)
-                (clim:with-new-output-record (stream)
-                  (clim:with-output-recording-options (stream :record t)
-                    (clim:with-output-as-presentation
-                        (stream d 'discr)
-                      #+:null
-                      (clim:formatting-cell (stream :align-x :center)
-                        (format stream "~a" (discr-start d)))
-                      #+:null
-                      (clim:formatting-cell (stream :align-x :center)
-                        (format stream "~a" (discr-end d)))
-                      (clim:updating-output (stream 
-                                             :cache-value (discr-state d))
+      (clim:with-text-style (stream (comparison-tree-font))
+        (loop
+            for item in discriminants
+            unless (discr-hidep item) do
+              (clim:formatting-row (stream)
+                (setf (discr-record item)
+                  (clim:with-new-output-record (stream)
+                    (clim:with-output-recording-options (stream :record t)
+                      (clim:with-output-as-presentation
+                          (stream item 'discr)
+                        (clim:updating-output 
+                            (stream :cache-value (discr-state item))
+                          (clim:formatting-cell 
+                              (stream :align-x :center)
+                            (write-string (cond ((eq (discr-state item) t) "+")
+                                                ((null (discr-state item)) "-")
+                                                (t "?"))
+                                          stream)))
+                        (clim:updating-output 
+                            (stream :cache-value (discr-toggle item))
                         (clim:formatting-cell (stream :align-x :center)
-                          (write-string (cond ((eq (discr-state d) t) "+")
-                                              ((null (discr-state d)) "-")
+                          (write-string (cond ((eq (discr-toggle item) t) "+")
+                                              ((null (discr-toggle item)) "-")
                                               (t "?"))
                                         stream)))
-                      (clim:updating-output (stream 
-                                             :cache-value (discr-toggle d))
-                        (clim:formatting-cell (stream :align-x :center)
-                          (write-string (cond ((eq (discr-toggle d) t) "+")
-                                          ((null (discr-toggle d)) "-")
-                                          (t "?"))
-                                        stream)))
-                      (clim:formatting-cell (stream :align-x :left)
-                        (format stream "~A" (discr-key d)))
-                      (clim:formatting-cell (stream :align-x :left)
-                        (format stream "~A" (discr-value d))))))))))))))
+                        (clim:formatting-cell (stream :align-x :left)
+                          (format stream "~A" (discr-key item)))
+                        (clim:formatting-cell (stream :align-x :left)
+                          (format stream "~A" (discr-value item)))))))))))
+    ;;
+    ;; _fix_me_
+    ;; there ought to be a way of drawing things in the intended colour from
+    ;; the start; apparently, neither rob nor i could work that out so easily;
+    ;; CLIM can be a bitch to work with :-(.                (9-oct-02; oe)
+    ;;
+    (loop for item in discriminants
+        for record = (discr-record item)
+        when (and record (discr-colour item))
+        do 
+          (recolor-record record (discr-colour item))
+          (clim:replay record stream))))
 
 
 (define-compare-frame-command (com-discr-menu)

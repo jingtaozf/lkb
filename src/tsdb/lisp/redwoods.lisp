@@ -3,6 +3,8 @@
 ;;;
 ;;; ToDo
 ;;;
+;;; - no need to save yield (`value') for discriminants; recompute from start
+;;;   and end indices into full string;
 ;;; - protect against saving with an empty `decision' set;
 ;;; - fill in `preference' relation;
 ;;; - confidence menu;
@@ -19,6 +21,7 @@
 
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
+                          gold
                           (cache *tsdb-cache-database-writes-p*)
                           (verbose t) interactive
                           (stream *tsdb-io*)
@@ -71,7 +74,7 @@
 
     (loop
         with increment = (and meter (/ 1 (if items (length items) 1)))
-        with frame = (unless #-:expand strip #+:expand nil
+        with frame = (unless strip
                        (clim:make-application-frame 'lkb::compare-frame))
         with title = (format 
                       nil 
@@ -80,9 +83,9 @@
         with annotated = (make-array nitems :initial-element 0)
         with position = 0
         initially
-          #+:debug
+          #-:debug
           (setf *frame* frame)
-          (unless #-:expand strip #+:expand nil
+          (unless strip
             (setf (lkb::compare-frame-current-chart frame) nil)
             (setf (clim:frame-pretty-name frame) title)
             (setf (lkb::compare-frame-controller frame) *current-process*))
@@ -91,6 +94,7 @@
         for status = (when (integerp i-id) 
                        (browse-tree 
                         data i-id frame 
+                        :gold gold
                         :cache cache :title title :strip strip
                         :verbose verbose :stream stream))
         for action = (get-field :status status)
@@ -110,7 +114,7 @@
              (when (eq action :save) (incf (aref annotated position)))
              (setf position 
                (if (= position (- nitems 1))
-                 (if #+:expand t #-:expand strip nil (- nitems 1))
+                 (if strip nil (- nitems 1))
                  (+ position offset))))
             (:last (setf position (- nitems 1))))
         finally
@@ -126,7 +130,7 @@
       (status :text (format nil "~a done" message) :duration 10)
       (meter :value 1))))
 
-(defun browse-tree (data i-id frame &key title cache strip verbose stream)
+(defun browse-tree (data i-id frame &key gold title cache strip verbose stream)
   
   (declare (special %client%))
 
@@ -173,7 +177,7 @@
                          foo confidence version date user)
                         "")))
            (results (get-field :results item))
-           (edges (unless (or #-:expand strip #+:expand (null trees))
+           (edges (unless strip
                     (loop
                         with edges
                         for result in results
@@ -201,8 +205,42 @@
                                  "parse-id == ~a && version == ~a" 
                                  parse-id version) 
                                 data)))
-           (discriminants (unless #-:expand strip #+:expand nil
+           (discriminants (unless strip
                             (reconstruct-discriminants decisions)))
+           (gtrees (when (and gold parse-id (null strip))
+                     (select '("parse-id" "t-version" 
+                               "t-active" "t-confidence" 
+                              "t-author" "t-start" "t-end" "t-comment")
+                             '(:integer :integer 
+                               :integer :integer 
+                               :string :date :date :string)
+                             "tree" 
+                             (format nil "parse-id == ~a" parse-id) 
+                             gold
+                             :sort :parse-id)))
+           (gversion (loop
+                         for tree in gtrees
+                         maximize (get-field :t-version tree)))
+           #+:null
+           (gtrees (loop
+                       for tree in gtrees
+                       when (eq gversion (get-field :t-version tree))
+                       collect tree))
+           (gdecisions (when (and gold parse-id gversion)
+                         (select '("parse-id" "version"
+                                   "d-state" "d-type" "d-key" "d-value" 
+                                   "d-start" "d-end" "d-date")
+                                 '(:integer :integer
+                                   :integer :integer :string :string 
+                                   :integer :integer :date)
+                                 "decision" 
+                                 (format 
+                                  nil 
+                                  "parse-id == ~a && version == ~a" 
+                                  parse-id gversion) 
+                                 gold)))
+           (gdiscriminants (when gdecisions
+                             (reconstruct-discriminants gdecisions)))
            (lkb::*parse-record* edges))
       (declare (ignore active))
 
@@ -236,9 +274,13 @@
       (setf (lkb::compare-frame-item frame) i-id)
       (setf (lkb::compare-frame-start frame) start)
       (setf (lkb::compare-frame-end frame) end)
+      (setf (lkb::compare-frame-end frame) 
+        (loop
+            for result in results collect (get-field :derivation result)))
       (setf (lkb::compare-frame-version frame) history)
       (setf (lkb::compare-frame-confidence frame) confidence)
       (setf (lkb::compare-frame-preset frame) discriminants)
+      (setf (lkb::compare-frame-gold frame) gdiscriminants)
       (when (null %client%)
         (setf %client%
           (mp:run-function 

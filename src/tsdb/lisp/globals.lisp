@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.9 (3-oct-02)")
+(defparameter *tsdb-version* "1.9 (9-oct-02)")
 
 (defparameter
   *tsdb-application*
@@ -108,6 +108,8 @@
 
 (defparameter *tsdb-maximal-number-of-edges* 0)
 
+(defparameter *tsdb-maximal-number-of-derivations* 0)
+
 (defparameter *tsdb-default-skeleton* "english")
 
 (defparameter *tsdb-skeleton-index* "Index.lisp")
@@ -131,6 +133,9 @@
 (defparameter *tsdb-profile-files*
   '("daughter" "edge" "parse" "result" "rule" "run" 
     "tree" "decision" "preference"))
+
+(defparameter *tsdb-redwoods-files*
+  '("tree" "decision" "preference"))
 
 (defparameter *tsdb-id-attributes*
   '(:i-id :p-id :ip-id :s-id :run-id :parse-id :result-id))

@@ -584,12 +584,27 @@ proc update_condition_cascade {{active ""} {context "condition"}} {
     }; # for
   }; # if
 
+  set globals($context) [normalize_condition $globals($context)];
+
   if {$context == "condition"} {
     tsdb_set "*statistics-select-condition*" "\"$globals(condition)\"";
   }; # if  
   history_move $context end 1;
 
 }; # update_condition_cascade()
+
+
+proc normalize_condition {condition} {
+
+  if {[regexp {^\(.*\)$} $condition]} {
+    set condition \
+      [string range $condition 1 [expr {[string length $condition] - 2}]];
+    return [normalize_condition $condition];
+  }; # if
+
+  return $condition;
+
+}; # normalize_condition()
 
 
 proc update_phenomena_cascade {{code ""} {context "condition"}} {

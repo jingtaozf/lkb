@@ -143,7 +143,7 @@
 (defun parse-item (string 
                    &key id exhaustive trace
                         readings edges derivations semantix-hook trees-hook
-                        burst derivationp)
+                        burst nderivations)
   (declare (ignore derivations #-:packing id))
   
   (multiple-value-bind (return condition)
@@ -260,7 +260,7 @@
                      (packings-failures *packings*)
                      comment)
                     comment))
-                 (summary (summarize-chart :derivationp derivationp)))
+                 (summary (summarize-chart :derivationp (< nderivations 0))))
             (multiple-value-bind (l-s-tasks redges words)
                 (parse-tsdb-count-lrules-edges-morphs)
               (declare (ignore l-s-tasks words))
@@ -285,6 +285,9 @@
                    (unless #+:packing packingp #-:packing nil
                      (loop
                          with *package* = *lkb-package*
+                         with nderivations = (if (<= nderivations 0)
+                                               (length *parse-record*)
+                                               nderivations)
                          for i from 0
                          for parse in (reverse *parse-record*)
                          for time = (if (integerp (first times))
@@ -301,7 +304,7 @@
                          for size = (parse-tsdb-count-nodes parse)
                          for tree = (tsdb::call-hook trees-hook parse)
                          for mrs = (tsdb::call-hook semantix-hook parse)
-                         collect
+                         while (>= (decf nderivations) 0) collect
                            (pairlis '(:result-id :mrs :tree
                                       :derivation :r-redges :size
                                       :r-stasks :r-etasks 
@@ -312,7 +315,7 @@
                                           -1 -1 
                                           -1 -1 
                                           time))))
-                   (when derivationp
+                   (when (< nderivations 0)
                      (loop
                          for i from (length *parse-record*)
                          for derivation in (rest (assoc :derivations summary))

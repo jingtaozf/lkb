@@ -86,6 +86,8 @@
       set globals(write_rule_p) ~:[0~;1~]~%~
       set globals(write_syntax_chart_p) ~:[0~;1~]~%~
       set globals(write_lexicon_chart_p) ~:[0~;1~]~%~
+      set globals(maximal_number_of_edges) ~d~%~
+      set globals(maximal_number_of_derivations) ~d~%~
       set globals(gc_p) ~(~a~)~%~
       set globals(tenure_p) ~:[0~;1~]~%~
       set globals(yy_p) ~:[0~;1~]~%"
@@ -106,6 +108,7 @@
      *tsdb-write-result-p* *tsdb-write-output-p*
      *tsdb-rule-statistics-p*
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
+     *tsdb-maximal-number-of-edges* *tsdb-maximal-number-of-derivations*
      *tsdb-gc-p*
      *tsdb-tenure-p*
      #-:yy nil #+:yy t)
@@ -351,7 +354,7 @@
                             "mysterious problem creating `~a'"
                             target)))))
                    (status :text message :duration 5)
-                   (sleep 2)))
+                   (sleep 1)))
                 (:database
                  (let* ((result (apply #'do-import-database 
                                       (append (list source target)
@@ -372,7 +375,7 @@
                             "mysterious problem creating `~a'"
                             target)))))
                    (status :text message :duration 5)
-                   (sleep 2))))
+                   (sleep 1))))
               (let* ((new (tsdb-do-list 
                            *tsdb-home* :stream nil
                            :format :list :name target 
@@ -417,7 +420,7 @@
                                 target)))
                   (beep)
                   (status :text message :duration 5)
-                  (sleep 2))
+                  (sleep 1))
                 (let* ((new (tsdb-do-list 
                              *tsdb-home* :stream nil
                              :format :list :name target)))
@@ -430,7 +433,7 @@
            (purge
             (let* ((action (third arguments)))
               (apply #'purge-test-run arguments)
-              (when (eq action :purge)
+              (when (member action '(:purge :trees) :test #'eq)
                 (send-to-podium "tsdb_update selection" :wait t))))
            
            (relations
@@ -533,6 +536,7 @@
                                    (list :meter meter :podium t 
                                          :interrupt interrupt))))
               (unless interactive
+                #+:null
                 (sleep 1)
                 (send-to-podium (format 
                                  nil 
@@ -895,7 +899,11 @@
            (trees
             (let* ((meter (make-meter 0 1)))
               (apply #'browse-trees
-                     (append arguments (list :meter meter)))))
+                     (append arguments (list :meter meter))))
+            (send-to-podium 
+             (format nil "update_ts_list update ~a" (first arguments)) 
+             :wait t))
+
 
            (latex
             (status :text "generating LaTeX output ...")
@@ -911,7 +919,7 @@
                              (list :file output :format :latex)))
               (run-meter 500)
               (status :text "generating LaTeX output ... done")
-              (sleep 0.5)
+              (sleep 1)
               (status :text (format nil "wrote `~a'" output) :duration 5)))
 
            (quit

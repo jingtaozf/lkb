@@ -703,7 +703,10 @@
                                (verbose t)
                                client
                                (exhaustive *tsdb-exhaustive-p*)
-                               (derivationp *tsdb-write-passive-edges-p*)
+                               (nderivations 
+                                (if *tsdb-write-passive-edges-p*
+                                  -1
+                                  *tsdb-maximal-number-of-derivations*))
                                interactive burst)
 
   (cond
@@ -716,13 +719,13 @@
                         (quote ,item)
                         :trees-hook ,trees-hook 
                         :semantix-hook ,semantix-hook
-                        :derivationp ,derivationp
+                        :nderivations ,nderivations
                         :verbose nil :interactive nil :burst t)
                       nil
                       :key :process-item
                       :verbose nil)
                      (process_item 
-                      tid item exhaustive derivationp interactive))))
+                      tid item exhaustive nderivations interactive))))
       (case status
         (:ok (setf (client-status client) item) :ok)
         (:error (setf (client-status client) :error) :error))))
@@ -749,7 +752,7 @@
                                :exhaustive exhaustive
                                :trees-hook trees-hook
                                :semantix-hook semantix-hook
-                               :derivationp derivationp
+                               :nderivations nderivations
                                :burst burst))
       (when (and (not *tsdb-minimize-gcs-p*) (not (eq gc :global))
                  (not interactive)
@@ -770,7 +773,7 @@
                                  :exhaustive exhaustive
                                  :trees-hook trees-hook
                                  :semantix-hook semantix-hook
-                                 :derivationp derivationp
+                                 :nderivations nderivations
                                  :burst burst)))
 
       #+:allegro

@@ -176,8 +176,8 @@
   "size of font in tree comparison (tree pane)"
   :user)
 
-(def-lkb-parameter *comparison-discriminator-font-size* 10
-  "size of font in tree comparison (discriminator pane)"
+(def-lkb-parameter *comparison-discriminant-font-size* 10
+  "size of font in tree comparison (discriminant pane)"
   :user)
 
 (def-lkb-parameter *maximum-list-pane-items* 150

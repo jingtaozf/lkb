@@ -519,16 +519,18 @@
   (unless (eq data :all)
     (let* ((directory (find-tsdb-directory data)))
       (case action
-        (:purge
-         (dolist (file *tsdb-profile-files*)
-           (let* ((name (concatenate 'string directory file))
-                  (compressed (concatenate 'string name ".gz")))
-             (when (probe-file name)
-               (delete-file name))
-             (when (probe-file compressed)
-               (delete-file compressed))
-             (with-open-file (foo name :direction :output 
-                              :if-exists :supersede)))))
+        ((:purge :trees)
+         (loop
+             for file in (if (eq action :purge)
+                           *tsdb-profile-files*
+                           *tsdb-redwoods-files*)
+             for name = (concatenate 'string directory file)
+             for compressed = (concatenate 'string name ".gz")
+             when (probe-file name) do (delete-file name)
+             when (probe-file compressed) do (delete-file compressed)
+             do
+               (with-open-file (foo name :direction :output 
+                                :if-exists :supersede))))
         (:empty
          (loop
              with pattern = (make-pathname :directory directory :name :wild)

@@ -446,13 +446,30 @@ proc integer_input {lprompt {ldefault 0} {rprompt ""} {rdefault ""}} {
 
   global globals;
 
-  .status.integer.lprompt config -text $lprompt;
+
+  .status.integer.lprompt config -text " $lprompt ";
   .status.integer.lvalue delete 0 end;
   .status.integer.lvalue insert 0 $ldefault;
-  .status.integer.rprompt config -text $rprompt;
+  .status.integer.rprompt config -text "$rprompt ";
   .status.integer.rvalue delete 0 end;
   .status.integer.rvalue insert 0 $rdefault
 
+  foreach slave [pack slaves .status.integer] {
+    pack forget $slave;
+  }; # foreach
+  if {$rprompt == ""} {
+    pack .status.integer.fill0 -side left -fill both -expand yes;
+  }; # if
+  pack .status.integer.lprompt -side left;
+  pack .status.integer.lvalue -side left;
+  pack .status.integer.fill1 -side left -fill both -expand yes;
+  if {$rprompt != ""} {
+    pack .status.integer.rprompt -side left;
+    pack .status.integer.rvalue -side left;
+  } else {
+    pack .status.integer.fill2 -side left -fill both -expand yes;
+  }; # else
+  
   #
   # <Tab> and shifted variants cycle (both directions) through entry fields
   #
@@ -502,19 +519,19 @@ proc integer_input {lprompt {ldefault 0} {rprompt ""} {rdefault ""}} {
   # give steps of 10
   #
   bind .status.integer.lvalue <Up> {
-    entry_incr .status.integer.lvalue 1 1 "";
+    entry_incr .status.integer.lvalue 1;
     raise .status.integer;
   }; # bind
   bind .status.integer.lvalue <Down> {
-    entry_incr .status.integer.lvalue -1 1 "";
+    entry_incr .status.integer.lvalue -1;
     raise .status.integer;
   }; # bind
   bind .status.integer.lvalue <Shift-Up> {
-    entry_incr .status.integer.lvalue 10 1 "";
+    entry_incr .status.integer.lvalue 10;
     raise .status.integer;
   }; # bind
   bind .status.integer.lvalue <Shift-Down> {
-    entry_incr .status.integer.lvalue -10 1 "";
+    entry_incr .status.integer.lvalue -10;
     raise .status.integer;
   }; # bind
   bind .status.integer.lvalue <Control-Down> \
@@ -527,19 +544,19 @@ proc integer_input {lprompt {ldefault 0} {rprompt ""} {rdefault ""}} {
     [bind .status.integer.lvalue <Shift-Up>];
 
   bind .status.integer.rvalue <Up> {
-    entry_incr .status.integer.rvalue 1 1 "";
+    entry_incr .status.integer.rvalue 1;
     raise .status.integer;
   }; # bind
   bind .status.integer.rvalue <Down> {
-    entry_incr .status.integer.rvalue -1 1 "";
+    entry_incr .status.integer.rvalue -1;
     raise .status.integer;
   }; # bind
   bind .status.integer.rvalue <Shift-Up> {
-    entry_incr .status.integer.rvalue 10 1 "";
+    entry_incr .status.integer.rvalue 10;
     raise .status.integer;
   }; # bind
   bind .status.integer.rvalue <Shift-Down> {
-    entry_incr .status.integer.rvalue -10 1 "";
+    entry_incr .status.integer.rvalue -10;
     raise .status.integer;
   }; # bind
   bind .status.integer.rvalue <Control-Down> \

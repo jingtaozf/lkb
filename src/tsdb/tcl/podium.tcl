@@ -254,15 +254,18 @@ proc main {} {
   menubutton .menu.evolution \
              -text "Evolution" -font $globals(menu_font) \
              -underline 0 -menu .menu.evolution.menu
+  menubutton .menu.trees \
+             -text "Trees" -font $globals(menu_font) \
+             -underline 0 -menu .menu.trees.menu
   menubutton .menu.options \
              -text "Options" -font $globals(menu_font) \
              -underline 0 -menu .menu.options.menu
   menubutton .menu.help \
-             -text "Help" -font $globals(menu_font) \
+             -text "?" -font $globals(menu_font) \
              -underline 0 -menu .menu.help.menu
   pack .menu.file .menu.browse .menu.process \
        .menu.analyze .menu.compare .menu.evolution \
-       .menu.options -side left
+       .menu.trees .menu.options -side left
   pack .menu.help -side right
 
   #
@@ -282,8 +285,6 @@ proc main {} {
     -command {tsdb_file swap} -state disabled
   .menu.file.menu add command -label "Compress" \
     -command {tsdb_file compress} -state disabled
-  .menu.file.menu add command -label "Strip" \
-    -command {tsdb_file strip}
   .menu.file.menu add command -label "Purge" \
     -command {tsdb_file purge}
   .menu.file.menu add command -label "Delete" \
@@ -327,10 +328,10 @@ proc main {} {
   # `File -- Import' cascade
   #
   menu .menu.file.menu.import -tearoff 0
-  .menu.file.menu.import add command -label "tsdb(1) Database" \
-    -command {tsdb_import database};
   .menu.file.menu.import add command -label "Test Items" \
     -command {tsdb_import items};
+  .menu.file.menu.import add command -label "tsdb(1) Database" \
+    -command {tsdb_import database};
   .menu.file.menu.import add separator
   .menu.file.menu.import add command -label "Skeleton Data" \
     -state disabled;
@@ -354,8 +355,6 @@ proc main {} {
       -label "Parses" -command {tsdb_browse parses ""}
   .menu.browse.menu add command \
       -label "Results" -command {tsdb_browse results ""}
-  .menu.browse.menu add command \
-      -label "Trees" -command {tsdb_browse trees ""}
   .menu.browse.menu add command \
     -label "Errors" -command {tsdb_browse errors ""}
   .menu.browse.menu add separator
@@ -393,8 +392,6 @@ proc main {} {
           -label "Performance" -command {analyze_performance}
   .menu.analyze.menu add command \
           -label "Processor" -command {analyze_performance parser}
-  .menu.analyze.menu add command \
-          -label "Annotations" -command {analyze_trees}
   .menu.analyze.menu add separator
   .menu.analyze.menu add cascade \
           -label "Divison" \
@@ -694,6 +691,23 @@ proc main {} {
     -variable globals(evolution,rpedges);
 
   #
+  # `Trees' menu (and embedded cascades)
+  #
+  menu .menu.trees.menu -tearoff 0;
+  .menu.trees.menu add command \
+     -label "Browse" -state disabled -command {tsdb_browse trees ""};
+  .menu.trees.menu add command \
+     -label "Annotate" -command {tsdb_browse trees ""};
+  .menu.trees.menu add command \
+    -label "Summarize" -command {analyze_trees};
+  .menu.trees.menu add command \
+    -label "Update" -command {tsdb_browse trees "" 1 "" 1};
+  .menu.trees.menu add command \
+    -label "Normalize" -command {tsdb_file strip};
+  .menu.trees.menu add command \
+    -label "Clear-Cut" -command {tsdb_file purge trees};
+
+  #
   # `Options' menu (and embedded cascades)
   #
   menu .menu.options.menu -tearoff 0
@@ -795,6 +809,12 @@ proc main {} {
   .menu.options.menu.switches add checkbutton \
     -label "Exhaustive Search" \
     -variable globals(exhaustive_p) -command {tsdb_set exhaustive_p};
+  .menu.options.menu.switches add command \
+    -label "Chart Size Limit" \
+    -command {tsdb_option pedges};
+  .menu.options.menu.switches add command \
+    -label "Result Storage Limit" \
+    -command {tsdb_option results};
   .menu.options.menu.switches add separator
   .menu.options.menu.switches add checkbutton \
     -label "Write `run' Relation" \
@@ -964,7 +984,7 @@ proc main {} {
 
   set loptions [list -font $globals(status_font) -padx 0 -pady 0 -bg $grey];
   set eoptions [list -justify right -font $globals(input_font) \
-                     -bd 1 -relief solid -width 7 -highlightthickness 0 \
+                     -bd 1 -relief solid -width 8 -highlightthickness 0 \
                      -bg white];
   eval label .status.integer.lprompt -text "lprompt" $loptions;
   eval entry .status.integer.lvalue $eoptions;
@@ -972,13 +992,6 @@ proc main {} {
   eval entry .status.integer.rvalue $eoptions;
 
   place .status.integer -in .status.dummy -relwidth 1 -relheight 1;
-  pack .status.integer.fill0 -side left -fill both -expand yes;
-  pack .status.integer.lprompt -side left;
-  pack .status.integer.lvalue -side left;
-  pack .status.integer.fill1 -side left -fill both -expand yes;
-  pack .status.integer.rprompt -side left;
-  pack .status.integer.rvalue -side left;
-  pack .status.integer.fill2 -side left -fill both -expand yes;
   lower .status.integer;
 
   #
@@ -989,7 +1002,7 @@ proc main {} {
                      hlist.header true hlist.itemtype text
                      hlist.background white };
   set list [.list subwidget hlist];
-  $list config -selectmode single \
+  $list config -selectmode single -selectbackground cyan \
           -browsecmd tsdb_list_select -command tsdb_list_run
 
   bind $list <Button-2> {

@@ -83,9 +83,15 @@ proc tsdb_file {action {index -1}} {
     }; # if
   } elseif {$action == "purge"} {
     if {[verify_ts_selection]} {return 1};
+    set prompt [format "purge `%s'%s" $globals(data) \
+                [expr {$index == "trees" ? " trees" : ""}]];
     if {[file isdirectory $globals(home)$globals(data)] 
-        && [yes-or-no-p "purge `$globals(data)'"] == 1} {
-      set command "(purge \"$globals(data)\" :action :purge)";
+        && [yes-or-no-p $prompt] == 1} {
+      if {$index == "trees"} {
+        set command "(purge \"$globals(data)\" :action :trees)";
+      } else {
+        set command "(purge \"$globals(data)\" :action :purge)";
+      }; # else
       send_to_lisp :event $command;
     }; # if
   } elseif {$action == "delete"} {
@@ -253,7 +259,30 @@ proc tsdb_option {name} {
         }; # else
       }; # if
     }
+    pedges {
+      if {![integer_input "maximal number of (passive) edges" \
+                          $globals(maximal_number_of_edges)]} {
+        if {$globals(integer,lvalue) == ""} {
+          set globals(integer,lvalue) 0;
+        }; # if
+        set globals(maximal_number_of_edges) $globals(integer,lvalue);
+        tsdb_set "*tsdb-maximal-number-of-edges*" \
+                 $globals(maximal_number_of_edges);
+      }; # if
+    }
+    results {
+      if {![integer_input "maximal number of result details" \
+                          $globals(maximal_number_of_derivations)]} {
+        if {$globals(integer,lvalue) == ""} {
+          set globals(integer,lvalue) 0;
+        }; # if
+        set globals(maximal_number_of_derivations) $globals(integer,lvalue);
+        tsdb_set "*tsdb-maximal-number-of-derivations*" \
+                 $globals(maximal_number_of_edges);
+      }; # if
+    }
   }; # switch
+
 }; # tsdb_option()
 
 
@@ -391,9 +420,9 @@ proc tsdb_capture {} {
 }; # tsdb_capture()
 
 
-proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
+proc tsdb_browse {code {condition ""} {globalp 1} {profile ""} {goldp 0}} {
 
-  global globals;
+  global globals test_suites compare_in_detail;
 
   if {$profile == ""} {
     if {[verify_ts_selection]} {return 1};
@@ -433,9 +462,31 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
       return 0;
     }
     trees {
-      set command [format "(trees \"%s\" :condition \"%s\" :interactive %s)" \
+      set command [format "(trees \"%s\" :condition \"%s\" :interactive %s" \
                      $profile $condition \
-                     [lispify_truth_value [expr {! $globalp}]]];
+                     [lispify_truth_value [expr {!$globalp}]]];
+      if {$goldp} {
+        if {[verify_ts_selection both]} {return 1};
+        set gold $compare_in_detail(source);
+        #
+        # _fix_me_ 
+        # we somehow still need something like `ts_list find'  (8-oct-02)
+        #
+        for {set i 0} {$i < [array size test_suites]} {incr i} {
+          if {![string compare $gold [lindex $test_suites($i) 0]]} {
+            set index $i;
+            break;
+          }; # if
+        }; # for
+        if {![info exists index] 
+            || ![lindex $test_suites($index) 6]} {
+          tsdb_beep;
+          status [format "no tree data available for `%s' ... |:-\{" $gold] 10;
+          return 1;
+        }; # if
+        set command "$command :gold \"$gold\"";
+      }; # if
+      set command "$command)";
       send_to_lisp :event $command;
       return 0;
     }
@@ -609,7 +660,7 @@ proc analyze_performance {{code "performance"}} {
 }; # analyze_performance()
 
 
-proc analyze_trees {} {
+proc analyze_trees {{code ""}} {
 
   global globals test_suites;
 
@@ -636,7 +687,7 @@ proc analyze_trees {} {
     send_to_lisp :event $command;
   }; # else
 
-}; # analyze_performance()
+}; # analyze_trees()
 
 
 proc analyze_rules {view} {
@@ -853,6 +904,13 @@ proc tsdb_evolution {code} {
   send_to_lisp :event $command;
 
 }; # tsdb_evolution()
+
+proc tsdb_switch {code} {
+
+  global globals;
+
+  
+}; # tsdb_switch()
 
 proc toggle_balloon_help {} {
 
