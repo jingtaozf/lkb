@@ -304,3 +304,6 @@
 (def-lkb-parameter *pos-sensitive-rmrs-p* nil
   "Controls whether the interactive RMRS comparison is sensitive to character position")
 
+(def-lkb-parameter *psql-lexicon-parameters* nil
+  "settings specific to lexical database"
+  :user)
