@@ -59,7 +59,7 @@
 \vspace*{1in}
 \begin{center}
 {\Huge\bf The (new) LKB system}\\[0.2in]
-Version 5.1\\[0.2in]
+Version 5.2\\[0.2in]
 \today\\[1in]
 system development by\\[0.2in]
 {\Large Ann Copestake, John Carroll, Rob Malouf, Stephan Oepen\\ 
@@ -337,9 +337,7 @@ you need a machine with adequate amounts of memory.
 We would suggest 32 Meg of RAM as a minimum on MCL, 
 and 64 Meg for ACL with CLIM.
 To run larger grammars
-you will need larger amount of memory.  The size of the source
-files is about 3.5 Meg.  The documentation is about 8 MBytes
-(because of Postscript bitmaps).
+you will need larger amount of memory.  
 The Solaris image should run on recent versions of SunOS.
 The Linux image was made for Red Hat 6.0 with Metrolink Motif 1.2
 (glibc version).  It should run on some other versions of Linux, but
@@ -403,30 +401,30 @@ as gzipped Unix tar files.
 Download the appropriate file, making sure you are using binary mode.
 Then:
 \begin{verbatim}
-gunzip climimage5-1.tar.gz
+gunzip climimage5-2.tar.gz
 \end{verbatim}
 or
 \begin{verbatim}
-gunzip linuximage5-1.tar.gz
+gunzip linuximage5-2.tar.gz
 \end{verbatim}
-this should give you a file called \filename{climimage5-1.tar} or
-\filename{linuximage5-1.tar}
+this should give you a file called \filename{climimage5-2.tar} or
+\filename{linuximage5-2.tar}
 Put this in a directory where you want the LKB system to reside
 and extract the LKB image directory by:
 \begin{verbatim}
-tar xf climimage5-1.tar
+tar xf climimage5-2.tar
 \end{verbatim}
 or
 \begin{verbatim}
-tar xf linuximage5-1.tar
+tar xf linuximage5-2.tar
 \end{verbatim}
 This will create the new directory called \filename{lkb} containing
 several files. 
 
 Also download the data files, and unzip etc in the same way:
 \begin{verbatim}
-gunzip data5-1.tar.gz
-tar xf data5-1.tar
+gunzip data5-2.tar.gz
+tar xf data5-2.tar
 \end{verbatim}
 This will create a new directory tree called \filename{data} containing
 various sample grammars.
@@ -447,13 +445,13 @@ A single file is used for all systems, since most of the code is shared.
 Download the file, making sure you are using binary mode.
 Then:
 \begin{verbatim}
-gunzip lkbsrc5-1.tar.gz
+gunzip lkbsrc5-2.tar.gz
 \end{verbatim}
-this should give you a file called \filename{lkbsrc5-1.tar}.  
+this should give you a file called \filename{lkbsrc5-2.tar}.  
 Make sure this in a directory where you want the LKB system to reside
 and extract the LKB by:
 \begin{verbatim}
-tar xf lkbsrc5-1.tar
+tar xf lkbsrc5-2.tar
 \end{verbatim}
 This will create the new directory and various subdirectories.
 It may take a few minutes to do this.  At this point, you have 
@@ -463,8 +461,8 @@ and \filename{main/userfns}
 to be appropriate for your system
 (especially if you wish to run the system using MCL).
 
-Now follow the instructions in \S\ref{acl-src} to compile the
-files.
+Now follow the instructions in \S\ref{acl-src} or \S\ref{mcl-src}
+to compile the files.
 
 \subsection{Running the LKB at CSLI}
 \label{run-csli}
@@ -563,14 +561,14 @@ To compile the LKB system files do the following:
 open the \filename{src:general:loadup.lisp} file (Open is in the File menu 
 in MCL) and edit the definition of \verb+%sys-home%+ to be appropriate
 for your machine.  For instance, if your hard disk is called \filename{carrot},
-and you want to use the folder name \filename{lkb5.1}
+and you want to use the folder name \filename{lkb5.2}
 rather than \filename{newlkb},
 the definition would look like:
 \begin{verbatim}
 (defparameter %sys-home%
   #-:mcl (rest (butlast 
                 (pathname-directory *load-truename*) 2))
-  #+:mcl '("carrot" "lkb5.1"))
+  #+:mcl '("carrot" "lkb5.2"))
 \end{verbatim}
 Save the file.
 You may also need to edit the file \filename{src:main:user-fns.lsp} to
@@ -951,6 +949,14 @@ set-temporary-lexicon-filenames.  Then reload grammar.
 \end{verbatim}
 This is a problem with the temporary files: see \S\ref{tempdir}.
 
+\subsection{Multiple grammars}
+
+You may get problems if you load a grammar into a non-fresh system
+(i.e., one into which an old grammar has already been loaded).
+While this should work with grammars which share the same parameters,
+it may not work in other cases.  So if something seems to be
+going wrong, try restarting the LKB system and reloading the grammar.
+
 \chapter{A first session}
 \label{firstsession}
 The following chapter takes the new user through an initial session
@@ -988,7 +994,6 @@ is on the top menu-bar.
 \caption{The LKB interaction window in ACL/CLIM}
 \label{lunix2}
 \end{figure}
-% FIX - new bitmaps
 The main difference between the Mac and ACL/CLIM versions of the
 LKB is the appearance of the top-level interaction menu.
 The Mac version makes use of the Mac main menu-bar, and adds an LKB
@@ -1238,7 +1243,7 @@ of the tree, as shown in Figure~\ref{ptree}. In MCL you will just get the
 large tree immediately.
 \begin{figure}
 \epsfxsize=2in
-\epsfbox[0 0 400 400]{figs/kimsleeps.ps}
+\epsfbox[0 0 400 100]{figs/kimsleeps.ps}
 \caption{The parse result window in ACL/CLIM}
 \label{kimsleeps}
 \end{figure}
@@ -7752,7 +7757,7 @@ be determined.
 The parameter \lkbparam{*discriminant-path*} can be set to
 identify a useful discriminating position in a structure: the
 default value corresponds to the location of the key relation
-in the semantic structure used by the LinGO grammar.
+in the semantic structure used by the LinGO ERG.
 
 \subsection{MRS*}
 \label{mrsmenu}
@@ -7763,8 +7768,8 @@ Chapter~\ref{installation}.  The MRS commands are loaded into the
 distributed images.
 
 The MRS commands relate to semantic representation, but they assume 
-a particular style of semantic encoding, as is used in the LinGO grammar
-and also in the textbook grammars.  MRS is 
+a particular style of semantic encoding, as is used in the LinGO ERG.
+The textbook grammars use a simplified version of MRS.  MRS is 
 briefly discussed in \S\ref{mrs}.  MRS output can be displayed in
 various ways by clicking on the result of a parse in the compact parse tree
 representation (ACL/CLIM only, see \S\ref{parseout}), 
@@ -7823,10 +7828,10 @@ but is currently in a fairly early stage of development.
 It operates in a very similar manner to the parser
 but relies on the use of an MRS style semantics,
 thus it will only work with grammars that produce 
-such semantics.  
+such semantics: currently just the LinGO ERG
+and the textbook grammar (though the latter has several problems at
+the time of writing).
 % UPDATE POINT
-The textbook grammar distributed with
-the system will work with some sentences.
 Before the generator can be used,
 the command \lkbmenucommand{Index} must be run from this menu.
 At the moment,
@@ -9153,9 +9158,9 @@ No further documentation is available at this time.
 \label{generator}
 
 The generator requires a grammar which is using MRS or a relatively
-similar formalism.  It will work in a somewhat rudimentary way on the
-textbook grammar and more consistently
-on the LinGO grammar.  The generator is described in 
+similar formalism: currently just the LinGO ERG, though
+it will also work in a somewhat rudimentary way on the
+textbook grammar.  The generator is described in 
 \href{http://www-csli.stanford.edu/~aac/papers/generation.ps.gz}{Carroll et al (1999)}.
 
 The following notes are VERY sketchy.
