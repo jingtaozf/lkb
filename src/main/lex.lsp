@@ -2,7 +2,10 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
-;;; modifications by bmw (aug-03)
+;;; bmw (aug-03)
+;;; - lookup-word now caches for each lexicon separately
+
+;;; bmw (aug-03)
 ;;; - fixed code broken by *lexicon*-related changes
 
 ;;; aac (aug-03)
@@ -65,8 +68,6 @@
 	   (member lexicon part-of))
 	(push lexicon part-of)
 	(push sub-lexicon extra-lexicons))))
-  ; cache becomes invalid if lexicon is altered
-  (clear-cache lexicon)
   lexicon)
 
 (defmethod unlink ((sub-lexicon lex-database) (lexicon lex-database))
@@ -74,8 +75,6 @@
     (with-slots (part-of) sub-lexicon
       (setf part-of (remove lexicon part-of))
       (setf extra-lexicons (remove sub-lexicon extra-lexicons))))
-  ; cache becomes invalid if lexicon is altered
-  (clear-cache lexicon)
   lexicon)
 
 ;;;
@@ -496,16 +495,7 @@
 ;;;  General lexicon methods
 ;;;
 
-;;; null values now also cached
 (defmethod lookup-word :around ((lexicon lex-database) orth &key (cache t))
-  (let ((hashed (gethash orth (slot-value lexicon 'lexical-entries))))
-  (cond 
-   (hashed
-    (if (eq hashed 'EMPTY)
-	(setf hashed nil))
-    (if *verbose-lex-lookup-word* (format *trace-output* "~%lookup-word(~a): [HASHED] ~a~%~a" orth (length hashed) hashed))
-    hashed)
-   (t 
     (let* ((value (if (next-method-p) (call-next-method)))
 	   (mode (extra-mode lexicon))
 	   (extra 
@@ -514,20 +504,21 @@
 	      (loop
 		  with result = nil
 		  for lexicon in (extra-lexicons lexicon)		
-		  for value = (and lexicon (lookup-word lexicon orth :cache nil))
+		  for value = (and lexicon 
+				   (lookup-word lexicon orth :cache cache))
 		  ;:shadow mode returns first set of vals found
-		  when (and value (eq mode :shadow)) do
+		  when (and value 
+			    (eq mode :shadow)) 
+		  do
 		    (return value)
-		  else when value do
-		    (setf result (nconc result value))
-		  finally (return result))))
+		  else when value 
+		  do
+		    (setf result 
+		      (nconc result value))
+		  finally 
+		    (return result))))
 	   (value (nconc value extra)))
-      ;:if caching, add entry to cache...
-      (when cache
-	(setf (gethash orth (slot-value lexicon 'lexical-entries)) 
-	  (if value value 'EMPTY)))
-      (if *verbose-lex-lookup-word* (format *trace-output* "~%lookup-word(~a): ~a~%~a" orth (length value) value))
-      value)))))
+     value))
 
 (defmethod lex-words :around ((lexicon lex-database))
   (let* ((words (if (next-method-p) (call-next-method)))
@@ -565,26 +556,35 @@
 
 (defmethod clear-lex :around ((lexicon lex-database) &rest rest)
   (let ((in-isolation (get-keyword-val :in-isolation rest)))
+;  (when (fboundp 'clear-generator-lexicon)
+;    (funcall 'clear-generator-lexicon))
+;  (clrhash (slot-value lexicon 'lexical-entries))
+;  (clrhash (slot-value lexicon 'psorts))
+;  (when (fboundp 'clear-lexicon-indices)
+;    (funcall 'clear-lexicon-indices))
+    (empty-cache lexicon)
+    (call-next-method)
+    (unless in-isolation
+      ;;unlink from sub-lexicons
+      (mapcar 
+       #'(lambda (lex) 
+	   (unlink lex lexicon)
+	   ;;clear sub-lexicon
+	   (if (null (part-of lex))
+	       (apply #'clear-lex (cons lex rest)))) 
+       (extra-lexicons lexicon))  
+      ;;unlink from super-lexicons
+      (mapcar #'(lambda (lex) (unlink lexicon lex)) (part-of lexicon)))
+    lexicon))
+
+(defmethod empty-cache ((lexicon lex-database))
   (when (fboundp 'clear-generator-lexicon)
     (funcall 'clear-generator-lexicon))
   (clrhash (slot-value lexicon 'lexical-entries))
   (clrhash (slot-value lexicon 'psorts))
   (when (fboundp 'clear-lexicon-indices)
     (funcall 'clear-lexicon-indices))
-  (call-next-method)
-  (unless in-isolation
-					;:unlink from sub-lexicons
-    (mapcar 
-     #'(lambda (lex) 
-	 (unlink lex lexicon)
-					;:clear sub-lexicon if poss
-	 (if (null (part-of lex))
-	     (apply #'clear-lex (cons lex rest)))) 
-     (extra-lexicons lexicon))  
-					;:unlink from super-lexicons
-    (mapcar #'(lambda (lex) (unlink lexicon lex)) (part-of lexicon)))
-    lexicon))
-  
+    lexicon)
 
 ;;; End of general methods
 

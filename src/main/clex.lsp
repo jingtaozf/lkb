@@ -35,16 +35,36 @@
    (all-cdb-lex-dbs :allocation :class :initform nil :accessor all-cdb-lex-dbs)))
 
 (defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache t))
-  (declare (ignore cache))
+  (let ((hashed (gethash orth 
+			 (slot-value lexicon 'lexical-entries))))
+  (cond 
+   (hashed
+    (if (eq hashed 'EMPTY)
+	(setf hashed nil))
+    hashed)
+   (t 
+    (let ((value (lookup-word-cdb-lex-database lexicon orth)))
+      ;:if caching, add entry to cache...
+      (when cache
+	(setf (gethash orth 
+		       (slot-value lexicon 'lexical-entries)) 
+	  (if value 
+	      value 
+	    'EMPTY)))
+      value)))))
+
+(defun lookup-word-cdb-lex-database (lexicon orth)
   (with-slots (orth-db) lexicon
-  (unless (stringp orth)
-    (error "~a is not a string." orth))
-  (when (and (null orth-db) (psorts-temp-index-file lexicon))
-    (setf orth-db (cdb:open-read (psorts-temp-index-file lexicon))))
-  (when orth-db
-    (loop
-     for record in (cdb:read-record orth-db orth)
-     collect (intern record :lkb)))))
+    (unless (stringp orth)
+      (error "~a is not a string." orth))
+    (when (and (null orth-db) 
+	       (psorts-temp-index-file lexicon))
+      (setf orth-db (cdb:open-read 
+		     (psorts-temp-index-file lexicon))))
+    (when orth-db
+      (loop
+	  for record in (cdb:read-record orth-db orth)
+	  collect (intern record :lkb)))))
 
 (defmethod lexicon-loaded-p ((lexicon cdb-lex-database))
   (not (null (psort-db lexicon))))

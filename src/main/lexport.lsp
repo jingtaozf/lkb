@@ -219,11 +219,13 @@
       (when (u-value-p rhs)
         (u-value-type rhs)))))
 
-(defun extract-field (x field-str &optional fields-map)
+(defun extract-field (x field-kw &optional fields-map)
+  (if (stringp field-kw)
+      (setf field-kw (str-to-keyword-format field-kw)))
   (unless (typep x 'lex-entry)
     (error "unexpected type"))
   (let* ((fields-map (or fields-map (fields-map *psql-lexicon*)))
-	 (mapping (find field-str fields-map :key #'second :test 'equal)))
+	 (mapping (find field-kw fields-map :key #'second :test 'equal)))
     (extract-field2 x (first mapping) (third mapping) (fourth mapping))))
 	 
 (defun 2-symb (x)
@@ -598,17 +600,17 @@
 (defmethod to-csv ((x lex-entry) fields-map)
   (let* ((separator (string *export-separator*))
 
-	 (keyrel (extract-field x "keyrel" fields-map))      
-	 (keytag (extract-field x "keytag" fields-map))
-	 (altkey (extract-field x "altkey" fields-map))
-	 (alt2key (extract-field x "alt2key" fields-map))
-	 (compkey (extract-field x "compkey" fields-map))
-	 (ocompkey (extract-field x "ocompkey" fields-map))
+	 (keyrel (extract-field x :keyrel fields-map))      
+	 (keytag (extract-field x :keytag fields-map))
+	 (altkey (extract-field x :altkey fields-map))
+	 (alt2key (extract-field x :alt2key fields-map))
+	 (compkey (extract-field x :compkey fields-map))
+	 (ocompkey (extract-field x :ocompkey fields-map))
 	 
-	 (type (extract-field x "type" fields-map))
+	 (type (extract-field x :type fields-map))
 	 (orth-list (extract-field2 x :orth nil "list"))
-	 (orthography (extract-field x "orthography" fields-map))
-	 (name (extract-field x "name" fields-map))
+	 (orthography (extract-field x :orthography fields-map))
+	 (name (extract-field x :name fields-map))
 	 (count (+ 2 (length orth-list)))
 	 (total (+ count
 		   (if (string> keyrel "") 1 0) 
@@ -732,15 +734,15 @@
 (defmethod to-db ((x lex-entry) (lexicon psql-lex-database))  
   (let* ((fields-map (fields-map lexicon))
 
-	 (keyrel (extract-field x "keyrel" fields-map))      
-	 (keytag (extract-field x "keytag" fields-map))
-	 (altkey (extract-field x "altkey" fields-map))
-	 (alt2key (extract-field x "alt2key" fields-map))
-	 (compkey (extract-field x "compkey" fields-map))
-	 (ocompkey (extract-field x "ocompkey" fields-map))
+	 (keyrel (extract-field x :keyrel fields-map))      
+	 (keytag (extract-field x :keytag fields-map))
+	 (altkey (extract-field x :altkey fields-map))
+	 (alt2key (extract-field x :alt2key fields-map))
+	 (compkey (extract-field x :compkey fields-map))
+	 (ocompkey (extract-field x :ocompkey fields-map))
 	 
 	 (orth-list (extract-field2 x :orth nil "list"))
-	 (name (extract-field x "name" fields-map))
+	 (name (extract-field x :name fields-map))
 	 (count (+ 2 (length orth-list)))
 	 (total (+ count
 		   (if (string> keyrel "") 1 0) 
@@ -750,25 +752,26 @@
 		   (if (string> compkey "") 1 0) 
 		   (if (string> ocompkey "") 1 0)))
 	 
-	 (type (extract-field x "type" fields-map))
+	 (type (extract-field x :type fields-map))
 	 
 	 (psql-le
-	  (make-instance 'psql-lex-entry
-	    :name name
-	    :type type
-	    :orthography orth-list		;list
-	    :orthkey (first orth-list)
-	    :keyrel keyrel
-	    :altkey altkey
-	    :alt2key alt2key
-	    :keytag keytag
-	    :compkey compkey
-	    :ocompkey ocompkey
-	    :country *current-country*
-	    :lang *current-lang*
-	    :source (extract-pure-source-from-source *current-source*)
-	    :confidence 1
-	    :flags 1)))
+	  (make-instance-psql-lex-entry
+	   :name name
+	   :type type
+	   :orthography orth-list	;list
+	   :orthkey (first orth-list)
+	   :keyrel keyrel
+	   :altkey altkey
+	   :alt2key alt2key
+	   :keytag keytag
+	   :compkey compkey
+	   :ocompkey ocompkey
+	   :country *current-country*
+	   :lang *current-lang*
+	   :source (extract-pure-source-from-source *current-source*)
+	   :confidence 1
+	   :flags 1)
+	  ))
     (cond
      ((= total (length (lex-entry-unifs x)))
       (set-lex-entry lexicon psql-le))
@@ -779,15 +782,15 @@
 (defmethod to-db-scratch ((x lex-entry) (lexicon psql-lex-database))  
   (let* ((fields-map (fields-map lexicon))
 
-	 (keyrel (extract-field x "keyrel" fields-map))      
-	 (keytag (extract-field x "keytag" fields-map))
-	 (altkey (extract-field x "altkey" fields-map))
-	 (alt2key (extract-field x "alt2key" fields-map))
-	 (compkey (extract-field x "compkey" fields-map))
-	 (ocompkey (extract-field x "ocompkey" fields-map))
+	 (keyrel (extract-field x :keyrel fields-map))      
+	 (keytag (extract-field x :keytag fields-map))
+	 (altkey (extract-field x :altkey fields-map))
+	 (alt2key (extract-field x :alt2key fields-map))
+	 (compkey (extract-field x :compkey fields-map))
+	 (ocompkey (extract-field x :ocompkey fields-map))
 	 
 	 (orth-list (extract-field2 x :orth nil "list"))
-	 (name (extract-field x "name" fields-map))
+	 (name (extract-field x :name fields-map))
 	 (count (+ 2 (length orth-list)))
 	 (total (+ count
 		   (if (string> keyrel "") 1 0)
@@ -797,24 +800,21 @@
 		   (if (string> compkey "") 1 0) 
 		   (if (string> ocompkey "") 1 0)))
 	 
-	 (type (extract-field x "type" fields-map))
+	 (type (extract-field x :type fields-map))
 	 
 	 (psql-le
-	  (make-instance 'psql-lex-entry
-	    :name name
-	    :type type
-	    :orthography orth-list
-	    :orthkey (first orth-list)
-	    :keyrel keyrel
-	    :altkey altkey
-	    :alt2key alt2key
-	    :keytag keytag
-	    :compkey compkey
-	    :ocompkey ocompkey
-	    ;:country *current-country*
-	    ;:lang *current-lang*
-	    ;:source *current-source*
-	    :flags 1)))
+	  (make-instance-psql-lex-entry
+	   :name name
+	   :type type
+	   :orthography orth-list
+	   :orthkey (first orth-list)
+	   :keyrel keyrel
+	   :altkey altkey
+	   :alt2key alt2key
+	   :keytag keytag
+	   :compkey compkey
+	   :ocompkey ocompkey
+	   :flags 1)))
     (cond
      ((= total (length (lex-entry-unifs x)))
       (set-lex-entry-scratch lexicon psql-le))
@@ -859,8 +859,3 @@
     
     (load-lex *lexicon* :filename filename)
     (setf *scratch-tdl-file* filename))
-
-;(defun load-psql-lexicon-from-script nil
-;  (clear-lex *lexicon* :no-delete t)
-;  (initialize-psql-lexicon)
-;  (setf *lexicon* *psql-lexicon*))

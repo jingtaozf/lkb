@@ -5,7 +5,7 @@ CREATE TABLE meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO meta VALUES ('db-version', '2.2');
+INSERT INTO meta VALUES ('db-version', '2.4');
 INSERT INTO meta VALUES ('filter', 'TRUE');
 
 ---
@@ -259,6 +259,17 @@ INSERT INTO qry VALUES
        ( 'lookup-word', 1, 
          'SELECT name FROM current_grammar WHERE orthkey=$0' );
 
+INSERT INTO qrya VALUES ( 'lookup-general', 0, 'select-list' );
+INSERT INTO qrya VALUES ( 'lookup-general', 1, 'text' );
+INSERT INTO qry VALUES 
+       ( 'lookup-general', 2, 
+         'SELECT name FROM current_grammar WHERE $0 = $1' );
+
+INSERT INTO qrya VALUES ( 'lookup-general-null', 0, 'select-list' );
+INSERT INTO qry VALUES 
+       ( 'lookup-general-null', 1,
+         'SELECT name FROM current_grammar WHERE $0 IS NULL' );
+
 INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 0, 'select-list' );
 INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 1, 'text' );
 INSERT INTO qry VALUES 
@@ -424,6 +435,11 @@ INSERT INTO multi_temp
 COPY multi_temp TO $0 DELIMITERS '','';
 ' );
 
+INSERT INTO qrya VALUES ( 'value-set', 0, 'select-list' );
+INSERT INTO qry VALUES 
+       ( 'value-set', 1, 
+       'SELECT DISTINCT $0 FROM revision WHERE $0 IS NOT NULL;' );
+
 ---
 --- views
 ---
@@ -482,3 +498,16 @@ INSERT INTO defn VALUES ( 'mwe', 'unifs', 'altkey', '(sem keys altkey)', 'symbol
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'alt2key', '(sem keys alt2key)', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'compkey', '(sem keys --compkey)', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'ocompkey', '(sem keys --ocompkey)', 'symbol' );
+
+DELETE FROM defn WHERE mode = 'erg2';
+INSERT INTO defn VALUES ( 'erg2', 'id', 'name', '', 'symbol' );
+INSERT INTO defn VALUES ( 'erg2', 'orth', 'orthography', '', 'string-list' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'type', 'nil', 'symbol' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'orthography', '(stem)', 'string-fs' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keyrel', '(synsem lkeys keyrel pred)', 'string' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'keytag', '(synsem lkeys keyrel carg)', 'string' ); -- or symbol?
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'altkey', '(synsem lkeys altkeyrel pred)', 'symbol' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'alt2key', '(synsem lkeys alt2keyrel pred)', 'symbol' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
+INSERT INTO defn VALUES ( 'erg2', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
+
