@@ -113,7 +113,7 @@ CREATE FUNCTION psort_id_set() RETURNS SETOF text
 
 DROP FUNCTION lookup_word(text);
 CREATE FUNCTION lookup_word (text) RETURNS SETOF text 
-	AS 'SELECT name FROM erg_max_version WHERE (orthography LIKE $1 OR orthography LIKE $1 || \' %\' OR orthography LIKE \'% \' || $1 || \' %\' OR orthography LIKE \'% \' || $1);' LANGUAGE SQL;
+	AS 'SELECT name FROM erg_max_version WHERE orthkey=$1;' LANGUAGE SQL;
 
 DROP FUNCTION next_version(text);
 CREATE FUNCTION next_version (text) RETURNS int 
