@@ -1460,10 +1460,10 @@ void tsdb_parse_environment() {
   if(tsdb.home == NULL) {
     if((name = getenv("TSDB_HOME")) != NULL || 
        (name = tsdb_pseudo_user()) != NULL) {
-      tsdb.home = tsdb_expand_directory(name);
+      tsdb.home = tsdb_expand_directory((char *)NULL, name);
     } /* if */
     else {
-      tsdb.home = tsdb_expand_directory(TSDB_HOME);
+      tsdb.home = tsdb_expand_directory((char *)NULL, TSDB_HOME);
     } /* else */
   } /* if */
   
@@ -1500,7 +1500,7 @@ void tsdb_parse_environment() {
   if(tsdb.data_path == NULL) {
     if((name = getenv("TSDB_DATA_PATH")) != NULL) {
       if(name[0] == TSDB_DIRECTORY_DELIMITER[0]) {
-        tsdb.data_path = tsdb_expand_directory(name);
+        tsdb.data_path = tsdb_expand_directory(tsdb.home, name);
       } /* if */
       else {
         tsdb.data_path = strdup(tsdb.home);
@@ -1521,16 +1521,18 @@ void tsdb_parse_environment() {
 
   if(tsdb.result_path == NULL) {
     if((name = getenv("TSDB_RESULT_PATH")) != NULL) {
-      tsdb.result_path = tsdb_expand_directory(name);
+      tsdb.result_path = tsdb_expand_directory((char *)NULL, name);
       if(access(tsdb.result_path, W_OK | X_OK)) {
         fprintf(tsdb_error_stream,
                 "initialize(): unable to write directory `%s'.\n",
                 tsdb.result_path);
-        tsdb.result_path = tsdb_expand_directory(TSDB_RESULT_PATH);
+        tsdb.result_path
+          = tsdb_expand_directory((char *)NULL, TSDB_RESULT_PATH);
       } /* if */
     } /* if */
     else {
-      tsdb.result_path = tsdb_expand_directory(TSDB_RESULT_PATH);
+      tsdb.result_path
+        = tsdb_expand_directory((char *)NULL, TSDB_RESULT_PATH);
     } /* else */
   } /* if */
 
@@ -2014,7 +2016,7 @@ char *tsdb_rcs_strip(char *s1, char *s2) {
   } /* else */
 } /* tsdb_rcs_strip() */
 
-char *tsdb_expand_directory(char *name) {
+char *tsdb_expand_directory(char *base, char *name) {
 
 /*****************************************************************************\
 |*        file: 
@@ -2057,30 +2059,45 @@ char *tsdb_expand_directory(char *name) {
 #endif
       return((char *)NULL);
     } /* if */
-    return(tsdb_expand_directory(&foo[0]));
+    return(tsdb_expand_directory((char *)NULL, &foo[0]));
   } /* if */
   else {
+    if(base == NULL) {
 #if defined(SUNOS)
-    if(getwd(&foo[0]) == NULL) {
-      fprintf(tsdb_error_stream,
-              "expand_directory(): getpw(3) error; errno: %d.\n", errno);
+      if(getwd(&foo[0]) == NULL) {
+        fprintf(tsdb_error_stream,
+                "expand_directory(): getpw(3) error; errno: %d.\n", errno);
 #else
-    if(getcwd(&foo[0], MAXPATHLEN + 1) == NULL) {
-      fprintf(tsdb_error_stream,
-              "expand_directory(): getcwd(3) error; errno: %d.\n", errno);
+      if(getcwd(&foo[0], MAXPATHLEN + 1) == NULL) {
+        fprintf(tsdb_error_stream,
+                "expand_directory(): getcwd(3) error; errno: %d.\n", errno);
 #endif
-      return((char *)NULL);
-    } /* if */
-    if(foo[strlen(foo) - 1] != TSDB_DIRECTORY_DELIMITER[0]) {
-      (void)strcat(&foo[0], TSDB_DIRECTORY_DELIMITER);
-    } /* if */
-    if(name[0] == '.' && name[1] == TSDB_DIRECTORY_DELIMITER[0]) {
-      (void)strcat(&foo[0], &name[2]);
+        return((char *)NULL);
+      } /* if */
+      if(foo[strlen(foo) - 1] != TSDB_DIRECTORY_DELIMITER[0]) {
+        (void)strcat(&foo[0], TSDB_DIRECTORY_DELIMITER);
+      } /* if */
+      if(name[0] == '.' && name[1] == TSDB_DIRECTORY_DELIMITER[0]) {
+        (void)strcat(&foo[0], &name[2]);
+      } /* if */
+      else {
+        (void)strcat(&foo[0], &name[0]);
+      } /* else */
+        return(tsdb_expand_directory((char *)NULL, &foo[0]));
     } /* if */
     else {
-      (void)strcat(&foo[0], &name[0]);
+      (void)strcpy(&foo[0], &base[0]);
+      if(foo[strlen(foo) - 1] != TSDB_DIRECTORY_DELIMITER[0]) {
+        (void)strcat(&foo[0], TSDB_DIRECTORY_DELIMITER);
+      } /* if */
+      if(name[0] == '.' && name[1] == TSDB_DIRECTORY_DELIMITER[0]) {
+        (void)strcat(&foo[0], &name[2]);
+      } /* if */
+      else {
+        (void)strcat(&foo[0], &name[0]);
+      } /* else */
+        return(tsdb_expand_directory((char *)NULL, &foo[0]));
     } /* else */
-    return(tsdb_expand_directory(&foo[0]));
   } /* else */
   return(NULL);
 } /* tsdb_expand_directory() */
