@@ -1074,16 +1074,20 @@
                                          tsdb-rasp-tree most-positive-fixnum))))
       (if tsdb-rasp-tree
           (mrs::construct-sem-for-tree tsdb-rasp-tree :rasp :quiet)))))
-
+          
 (defun get-tsdb-selected-erg-rmrs (item dir)
   (let* ((data dir)
          (frame (tsdb::browse-trees data :runp nil :verbose nil)))
-    (setf (lkb::compare-frame-mode frame) :modern)
     ;;; force reconstruction of dags by browse-tree
     (tsdb::browse-tree 
      data item frame :runp nil :verbose nil)
     (let ((edges (or (compare-frame-in frame) (compare-frame-edges frame))))
       (if edges
-        (mrs::mrs-to-rmrs (mrs::extract-mrs
-                           (first edges)))))))
+          (let ((chosen (first edges)))
+            (mrs::mrs-to-rmrs 
+             (mrs::extract-mrs
+              (tsdb::reconstruct (compute-derivation-tree chosen) t))))))))
+
+
+
     
