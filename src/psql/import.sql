@@ -8,7 +8,7 @@ CREATE TABLE public.meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO public.meta VALUES ('db-version', '2.7');
+INSERT INTO public.meta VALUES ('db-version', '2.8');
 INSERT INTO public.meta VALUES ('filter', 'TRUE');
 
 ---

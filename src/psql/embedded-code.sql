@@ -30,6 +30,7 @@ SELECT COALESCE(1 + max(version),0) FROM revision_all
 	WHERE name ~* $0 AND user=user; 
 ');
 
+
 INSERT INTO qry VALUES 
        ( 'orthography-set', 0, 
          'SELECT DISTINCT orthography FROM current_grammar' );
@@ -65,6 +66,7 @@ INSERT INTO qrya VALUES ( 'retrieve-entry', 1, 'like-text' );
 INSERT INTO qry VALUES 
        ( 'retrieve-entry', 2, 
          'SELECT $0 FROM current_grammar WHERE name ILIKE $1' );
+
 
 INSERT INTO qrya VALUES ( 'initialize-current-grammar', 0, 'where-subcls' );
 INSERT INTO qry VALUES 
@@ -127,6 +129,7 @@ INSERT INTO qry VALUES
 CLUSTER current_grammar_name ON current_grammar; 
 ' );
 
+
 INSERT INTO qrya VALUES ( 'update-entry', 0, 'text' );
 INSERT INTO qrya VALUES ( 'update-entry', 1, 'select-list' );
 INSERT INTO qrya VALUES ( 'update-entry', 2, 'value-list' );
@@ -159,6 +162,12 @@ INSERT INTO qry VALUES
        '
 INSERT INTO public.revision (SELECT * FROM revision);
 DELETE FROM revision;
+       ' );
+
+INSERT INTO qry VALUES 
+       ( 'show-scratch', 0, 
+       '
+SELECT distinct name FROM revision;
        ' );
 
 INSERT INTO qrya VALUES ( 'add-to-db', 0, 'text' );

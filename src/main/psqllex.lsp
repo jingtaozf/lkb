@@ -2,7 +2,13 @@
 ;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;  Interface to a Postgres database
+;;;
+
 ;;; bmw (oct-03)
+;;; - public and private database schemas
 ;;; - 'mixed' type to handle mix of string/symbol values in field mapping
 
 ;;; modifications by bmw (sep-03)
@@ -55,36 +61,24 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "2.7")
+(defvar *psql-db-version* "2.8")
 (defvar *psql-port-default* nil)
+(defvar *psql-lexicon-parameters*)
 
-(defvar *tmp-lexicon* nil)
+(defvar *postgres-tmp-lexicon* nil)
 (defvar *psql-lexicon* nil)
 (defvar *psql-verbose-query* nil) ;;; flag
-(defvar *export-counter*) ;;; see lexport.lsp
-(defvar *export-timestamp*) ;;; see lexport.lsp
+(defvar *postgres-export-timestamp*) ;;; see lexport.lsp
 
-(defvar *current-source* "?")
-(defvar *current-user* nil)
-(defvar *current-lang* nil)
-(defvar *current-country* nil)
+(defvar *postgres-current-source* "?")
+(defvar *postgres-current-user* nil)
+(defvar *postgres-current-lang* nil)
+(defvar *postgres-current-country* nil)
 
-(defvar *dump-dir* "/tmp")
 (defvar *postgres-temp-filename*)
-(defvar *user-temp-dir*)
-    
-(defun lexdb-fn (fn-name &rest rest)
-  (if *psql-lexicon*
-      (apply fn-name (cons *psql-lexicon* rest))))
+(defvar *postgres-user-temp-dir*)
 
-(defun load-psql-lexicon-from-script nil
-  (clear-lex *lexicon* :no-delete t)
-  (initialize-psql-lexicon)
-  (setf *lexicon* *psql-lexicon*))
-  
-;; obsolete...
-(defun open-psql-lex (&rest rest)
-  (apply 'initialize-psql-lexicon rest))
+(defvar *postgres-debug-stream* t)
 
 (defun initialize-psql-lexicon (&key
                                 (db (extract-param :db *psql-lexicon-parameters*))
@@ -93,8 +87,8 @@
   (unless (and db host table)
     (error "please instantiate db+host+table in *psql-lexicon-parameters*"))
   (if (extract-param :user *psql-lexicon-parameters*)
-      (setf *current-user* (extract-param :user *psql-lexicon-parameters*))
-    (setf *current-user* (sys:user-name)))
+      (setf *postgres-current-user* (extract-param :user *psql-lexicon-parameters*))
+    (setf *postgres-current-user* (sys:user-name)))
   (let ((part-of))   
     (if *psql-lexicon*
         (setf part-of (part-of *psql-lexicon*))
@@ -107,12 +101,17 @@
     (mapcar #'(lambda (x) (link *psql-lexicon* x)) part-of)
     *psql-lexicon*))
 
-(defun extract-param (param param-list)
-  (second (assoc param param-list)))
+(defun load-psql-lexicon-from-script nil
+  (clear-lex *lexicon* :no-delete t)
+  (initialize-psql-lexicon)
+  (setf *lexicon* *psql-lexicon*))
+  
+;; obsolete
+(defun open-psql-lex (&rest rest)
+  (apply 'initialize-psql-lexicon rest))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;;  Interface to a Postgres database
+;;; class declarations
 ;;;
 
 (defclass sql-database ()
@@ -150,32 +149,6 @@
 (defclass psql-lex-entry ()
   ((fv-pairs :initarg :fv-pairs)))
 
-(defun kwl2alist (l)
-  (loop
-      while l
-      collect (let ((kw (pop l))
-		    (v (pop l)))
-		(unless (keywordp kw)
-		  (error "kwl2alist input format"))
-		(cons kw v))))
-
-(defun make-instance-psql-lex-entry (&rest rest)
-  (make-instance 'psql-lex-entry
-    :fv-pairs (kwl2alist rest)))
-
-(defmethod clear-vals ((le psql-lex-entry))
-  (setf (slot-value le 'fv-pairs) nil))
-
-(defmethod retr-val ((le psql-lex-entry) f)
-  (cdr (assoc f (slot-value le 'fv-pairs))))
-
-(defmethod set-val ((le psql-lex-entry) f v)
-  (with-slots (fv-pairs) le
-    (let ((fv-pair (assoc f fv-pairs)))
-      (if fv-pair
-	  (setf (cdr fv-pair) v)
-	(push (cons f v) fv-pairs)))))
-
 ;;;
 ;;; --- sql-database methods
 ;;;
@@ -193,11 +166,10 @@
 ;;;
 
 (defmethod load-lex ((lexicon psql-database) &rest rest)
-  ;;(declare (ignore rest))
   (apply 'initialize-psql-lexicon rest))
 
 (defmethod connect ((lexicon psql-database)) 
-  (let ((user *current-user*))
+  (let ((user *postgres-current-user*))
     (cond
      ((and user (eq (connect-aux lexicon :user user) :connection-ok)))
      (t
@@ -206,7 +178,7 @@
       (unless user 
 	(throw 'abort 'connect))
       (when user
-	(setf *current-user* user)
+	(setf *postgres-current-user* user)
 	(connect lexicon))))))
       
 (defmethod connect-aux ((lexicon psql-database) &key (user "guest"))
@@ -340,7 +312,7 @@
   (cond 
    ((null x)
     "")
-   ((listp x) ;hack! case orthography
+   ((listp x)
     (format nil "'~a'" (sql-escape-string (str-list-2-str x))))
    ((stringp x)
     (format nil "'~a'" (sql-escape-string x)))
@@ -568,7 +540,7 @@
 	       (setf (gethash id psorts) entry))
 	     entry)))))
 	     
-;; (store-psort): not required 
+;; (store-psort) not required 
 
 (defmethod make-psort-struct ((lexicon psql-lex-database) query-res)
   (let* ((strucslots 
@@ -648,15 +620,10 @@
    (t
     (make-u-value :type x))))
 
-;(defmethod set-lexical-entry ((lexicon psql-lex-database) orth-string lex-id new-entry)
-;  (declare (ignore orth-string))
-;  (declare (ignore lex-id))
-;  (to-db-scratch new-entry lexicon))
-  
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-val psql-le :modstamp "NOW")
-  (set-val psql-le :userid *current-user*)
+  (set-val psql-le :userid *postgres-current-user*)
   (set-val psql-le :flags 1)
   
   (set-lex-entry-aux lexicon psql-le)
@@ -664,7 +631,7 @@
   
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-version psql-le lexicon) 
-  (if *export-timestamp* (set-val psql-le :modstamp *export-timestamp*))
+  (if *postgres-export-timestamp* (set-val psql-le :modstamp *postgres-export-timestamp*))
   (set-val psql-le :flags 1)
   (let* ((symb-list '(:type :orthography :orthkey :keyrel :altkey :alt2key :keytag :altkeytag :compkey :ocompkey :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
 	 (symb-list (remove-if #'(lambda (x) (or (null x) 
@@ -691,11 +658,11 @@
 (defmethod initialize-lex ((lexicon psql-database) &key no-delete psorts-temp-file)
   (declare (ignore no-delete psorts-temp-file))
   (clear-lex lexicon)
-  (if *tmp-lexicon* 
-      (clear-lex *tmp-lexicon*))
+  (if *postgres-tmp-lexicon* 
+      (clear-lex *postgres-tmp-lexicon*))
   (format t "~%Connecting to lexical database ~a as user ~a" (dbname lexicon) (user lexicon))
     (let* ((connection (connect lexicon)))
-      (setf *tmp-lexicon* lexicon)
+      (setf *postgres-tmp-lexicon* lexicon)
       (format t "~%(Re)initializing ~a" (dbname lexicon))
       (cond
        (connection
@@ -713,14 +680,14 @@
 	
 	;;(clear-scratch lexicon)
 	
-	(format t "~%building current_grammar")
+	(format *postgres-debug-stream* "~%(building current_grammar)")
 	(fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
 	)
        (t
 	(error 
 	 "unable to connect to ~s: ~a"
 	 (pg:db (connection lexicon)) (pg:error-message (connection lexicon)))))
-      (setf *tmp-lexicon* nil)
+      (setf *postgres-tmp-lexicon* nil)
       lexicon))
   
 ;;; hack (psql-lex-database does not use temporary lexicon files)
@@ -770,8 +737,7 @@
 	((equal type "string-diff-fs")
 	 (expand-string-list-to-fs-diff-list (orth-string-to-str-list value) :path path))
 	((equal type "list") (unless (equal value "")
-			       (str-2-list value)
-			       ))
+			       (str-2-list value) ))
 	(t (error "unhandled type during database access"))))
 
 (defun str-to-mixed (val-str)
@@ -917,6 +883,10 @@
 (defmethod sql-retrieve-entry ((lexicon psql-lex-database) select-list word)
   (fn lexicon 'retrieve-entry select-list word))
 
+(defun build-current-grammar (lexicon)
+  (fn-get-records  lexicon ''build-current-grammar)
+  (empty-cache lexicon))
+  
 (defmethod dump-db ((lexicon psql-lex-database) filename)  
   (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''dump-db filename))
@@ -924,6 +894,9 @@
 (defmethod dump-scratch-db ((lexicon psql-lex-database) filename)  
   (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''dump-scratch-db filename))
+
+(defmethod show-scratch ((lexicon psql-lex-database))
+  (fn-get-records lexicon ''show-scratch))
 
 (defmethod dump-multi-db ((lexicon psql-lex-database) filename)  
   (setf filename (namestring (pathname filename)))
@@ -935,8 +908,10 @@
 
 (defmethod add-to-db ((lexicon psql-lex-database) filename)  
   (setf filename (namestring (pathname filename)))
-  (fn-get-records lexicon ''add-to-db filename))
-
+  (if (catch 'pg:sql-error 
+	(fn-get-records lexicon ''add-to-db filename))
+      (error "cannot update lexical database ~a. Check that ~~/tmp/lexdb.new_entries does not contain attempts to redefine existing entries. No tuple of the form <name,userid,version,...> should correspond to an existing entry." (dbname lexicon))))
+      
 (defmethod merge-multi-into-db ((lexicon psql-lex-database) filename)  
   (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''merge-multi-into-db filename))
@@ -977,7 +952,7 @@
 
 (defun merge-into-psql-lexicon (filename)
   (setf filename (namestring (pathname filename)))
-  (let* ((dump-filename (format nil "~a/lexdb-temp.merge" *user-temp-dir*))
+  (let* ((dump-filename (format nil "~a/lexdb-temp.merge" *postgres-user-temp-dir*))
 	 (filename-normalized (format nil "~a.new" dump-filename))
 	 (filename-sorted (format nil "~a.s" filename-normalized))
 	 (dump-filename-sorted (format nil "~a.s" dump-filename))
@@ -990,21 +965,20 @@
     (unless
 	(and *psql-lexicon* (connection *psql-lexicon*))
       (initialize-psql-lexicon))
-    (format t "~%dumping current lexicon...")
+    (format *postgres-debug-stream* "~%(dumping current lexicon)")
     (dump-psql-lexicon dump-filename)
-    (format t "~%normalizing new lexicon...")
+    (format *postgres-debug-stream* "~%(normalizing new lexicon)")
     (normalize-csv-lexicon filename filename-normalized)
-    (format t "~%sorting files...")
+    (format *postgres-debug-stream* "~%(sorting files)")
     (common-lisp-user::run-shell-command command-str-sort-file)
     (common-lisp-user::run-shell-command command-str-sort-dumpfile)
-    (format t "~%updating db...")
+    (format *postgres-debug-stream* "~%(updating db)")
     (common-lisp-user::run-shell-command command-str-add)
     (add-to-db *psql-lexicon* add-filename)
-    (common-lisp-user::run-shell-command (format nil "mv ~a ~a/lexdb.new_entries" add-filename *user-temp-dir*))
+    (common-lisp-user::run-shell-command (format nil "mv ~a ~a/lexdb.new_entries" add-filename *postgres-user-temp-dir*))
     (common-lisp-user::run-shell-command command-str-rm-files)
-    (format t "~%building current_grammar...")
+    (format *postgres-debug-stream* "~%(building current_grammar)")
     (build-current-grammar *psql-lexicon*)))
-;;    (fn-get-records *psql-lexicon* ''build-current-grammar)))
 
 (defun merge-multi-into-psql-lexicon (filename)
   (setf filename (namestring (pathname filename)))
@@ -1013,6 +987,12 @@
     (initialize-psql-lexicon))
   (merge-multi-into-db *psql-lexicon* filename)
   (initialize-psql-lexicon))
+
+(defmethod initialize-userschema ((lexicon psql-database))
+  (unless
+      (fn-get-val lexicon ''test-user *postgres-current-user*)
+    (format *postgres-debug-stream* "~%(initializing schema ~a)" *postgres-current-user*)
+    (fn-get-val lexicon ''create-schema *postgres-current-user*)))
 
 (defmethod retrieve-fn-defns ((lexicon psql-lex-database))
   (let* ((sql-str (format nil "SELECT * FROM qry;"))
@@ -1165,8 +1145,25 @@
       nil)
       
 ;;;
-;;; --- psql-lex-entry methods and funtions
+;;; --- psql-lex-entry methods
 ;;;
+
+(defun make-instance-psql-lex-entry (&rest rest)
+  (make-instance 'psql-lex-entry
+    :fv-pairs (kwl2alist rest)))
+
+(defmethod clear-vals ((le psql-lex-entry))
+  (setf (slot-value le 'fv-pairs) nil))
+
+(defmethod retr-val ((le psql-lex-entry) f)
+  (cdr (assoc f (slot-value le 'fv-pairs))))
+
+(defmethod set-val ((le psql-lex-entry) f v)
+  (with-slots (fv-pairs) le
+    (let ((fv-pair (assoc f fv-pairs)))
+      (if fv-pair
+	  (setf (cdr fv-pair) v)
+	(push (cons f v) fv-pairs)))))
 
 ;;; set version to next val
 (defmethod set-version ((psql-le psql-lex-entry) (lexicon psql-lex-database))
@@ -1188,7 +1185,6 @@
 ;;;
 
 (defun time-parse (str)
-  ;(setf *psql-verbose-query* t)
   (time
    (parse
     (split-into-words 
@@ -1203,16 +1199,17 @@
 	(filter
          (ask-user-for-x "Alter filter" 
                          (cons "New filter?" old-filter))))
-    (when (and filter (string/= filter old-filter))
-      (if (catch 'pg:sql-error 
-            (format t "~%Updating filter")
-	    (fn-get-records lexicon ''initialize-current-grammar filter)
-	    ;;bmw!!! 2909
-	    (empty-cache lexicon)
-	    (format t "~%New filter active")
-            )
-	  (set-filter lexicon))
-      )))
+    (when (or (null filter) (string= filter old-filter))
+      (format t "Database filter unchanged")
+      (return-from set-filter))
+    (when (catch 'pg:sql-error
+	  (format *postgres-debug-stream* "~%(applying new filter to db and rebuilding current grammar)")
+	  (fn-get-records lexicon ''initialize-current-grammar filter)
+	  (empty-cache lexicon)
+	  nil)
+      (lkb-beep)
+      (set-filter lexicon))
+    (format *postgres-debug-stream* "~%(new filter: ~a )" filter)))
 
 (defun set-filter-psql-lexicon nil
   (set-filter *psql-lexicon*))
@@ -1259,6 +1256,7 @@
 	  (t
 	   (error "to many arguments")))))
     (when filename
+      (format t "Merging file ~a into lexical database ~a" filename (dbname *psql-lexicon*))
       (merge-into-psql-lexicon filename)
       (lkb-beep))))
   
@@ -1272,6 +1270,7 @@
 	  (t
 	   (error "to many arguments")))))
     (when filename
+      (format t "Dumping lexical database ~a to file ~a" (dbname *psql-lexicon*) filename)
       (dump-psql-lexicon filename)
       (lkb-beep))))
   
@@ -1285,6 +1284,7 @@
 	  (t
 	   (error "to many arguments")))))
     (when filename
+      ;;(format t "Dumping lexical database ~a to (TDL format) file ~a" (dbname *psql-lexicon*) filename)
       (export-lexicon-to-tdl :file filename)
       (lkb-beep))))
   
@@ -1293,33 +1293,34 @@
   (lkb-beep))
 
 (defun command-load-tdl-to-scratch nil
-  (unless *psql-lexicon*
-    (error "~%no *psql-lexicon*!"))
-  (let ((filename (ask-user-for-existing-pathname "TDL file?")))
-    (when filename
-      (let ((lexicon (load-scratch-lex :filename filename)))
-	(setf *current-source* 
-	  (ask-user-for-x 
-	   "Export Lexicon" 
-	   (cons "Source?" (or (extract-pure-source-from-source *current-source*) ""))))
-	(unless *current-source* (throw 'abort 'source))
-	
-	(setf *current-lang* 
-	  (ask-user-for-x 
-	   "Export Lexicon" 
-	   (cons "Language code?" (or *current-lang* "EN"))))
-	(unless *current-lang* (throw 'abort 'lang))
-	
-	(setf *current-country* 
-	  (ask-user-for-x 
-	   "Export Lexicon" 
-	   (cons "Country code?" (or *current-country* "UK"))))
-	(unless *current-country* (throw 'abort 'country))
-	
-	
-	(export-to-db lexicon *psql-lexicon*)
-	(clear-lex lexicon)
-	(lkb-beep)))))
+  (catch 'abort 
+    (unless *psql-lexicon*
+      (error "~%no *psql-lexicon*!"))
+    (let ((filename (ask-user-for-existing-pathname "TDL file?")))
+      (when filename
+	(let ((lexicon (load-scratch-lex :filename filename)))
+	  (setf *postgres-current-source* 
+	    (ask-user-for-x 
+	     "Export Lexicon" 
+	     (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
+	  (unless *postgres-current-source* (throw 'abort 'source))
+	  
+	  (setf *postgres-current-lang* 
+	    (ask-user-for-x 
+	     "Export Lexicon" 
+	     (cons "Language code?" (or *postgres-current-lang* "EN"))))
+	  (unless *postgres-current-lang* (throw 'abort 'lang))
+	  
+	  (setf *postgres-current-country* 
+	    (ask-user-for-x 
+	     "Export Lexicon" 
+	     (cons "Country code?" (or *postgres-current-country* "UK"))))
+	  (unless *postgres-current-country* (throw 'abort 'country))
+	  
+	  
+	  (export-to-db lexicon *psql-lexicon*)
+	  (clear-lex lexicon)
+	  (lkb-beep))))))
 
 (defun command-clear-scratch nil
   (format t "~%Clearing scratch entries")
@@ -1331,59 +1332,24 @@
   (commit-scratch-lex)
   (lkb-beep))
 
+(defun command-show-scratch (&rest rest)
+  (format t "~%Contents of scratch: ~a"
+	  (mapcar #'(lambda (x) (cdr (first x))) (show-scratch *psql-lexicon*)))
+  (lkb-beep))
+
 ;;;
-;;; Emacs-Postgres interface
+;;; misc
 ;;;
 
-(defmethod get-internal-table-defn ((lexicon psql-lex-database))
-  (unless (string>= (server-version lexicon) "7.3")
-    (return-from get-internal-table-defn nil))
-  
-  (let* 
-      ((sql-str "SELECT attname, typname, atttypmod FROM pg_catalog.pg_attribute AS attribute JOIN (SELECT * FROM pg_catalog.pg_class WHERE relname='revision') AS class ON attribute.attrelid=class.relfilenode JOIN pg_catalog.pg_type AS type ON (type.typelem=attribute.atttypid);"))
-       (make-column-map-record (run-query lexicon (make-instance 'sql-query :sql-string sql-str)))))
+(defun extract-param (param param-list)
+  (second (assoc param param-list)))
 
-(defmethod get-field-size-map ((lexicon psql-lex-database))
-  (mapcar 
-   #'field-size-elt
-   (get-internal-table-defn lexicon)))
-
-(defun field-size-elt (x)
-  (let ((attname (get-val :ATTNAME x))
-	(typname (get-val :TYPNAME x))
-	(atttypmod (str-2-num (get-val :ATTTYPMOD x)
-			      0)))
-    (list (str-2-keyword attname) typname (field-len typname atttypmod))))
-
-(defun field-len (typname atttypmod)
-  (cond
-   ((string= typname "_varchar")
-    (- atttypmod 4))
-   (t
-    50)))
-
-(defmethod get-value-set ((lexicon psql-lex-database) field)
-  (let* 
-      ((sql-str (fn lexicon 'value-set field)))
-       (mapcar #'car (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
-
-(defmethod lookup ((lexicon psql-lex-database) field-kw val-str)
-  (cond
-   (val-str
-    (mapcar 'cdar 
-	    (fn-get-records *psql-lexicon* 
-			    ''lookup-general 
-			    (symb-2-str field-kw)
-			    val-str)))
-   (t
-    (mapcar 'cdar 
-	    (fn-get-records *psql-lexicon* 
-			    ''lookup-general-null
-			    (symb-2-str field-kw))))))
-
-(defmethod initialize-userschema ((lexicon psql-database))
-  (unless
-      (fn-get-val lexicon ''test-user *current-user*)
-    (format t "~%initializing schema ~a" *current-user*)
-    (fn-get-val lexicon ''create-schema *current-user*)))
+(defun kwl2alist (l)
+  (loop
+      while l
+      collect (let ((kw (pop l))
+		    (v (pop l)))
+		(unless (keywordp kw)
+		  (error "kwl2alist input format"))
+		(cons kw v))))
 

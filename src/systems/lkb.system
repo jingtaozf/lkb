@@ -130,6 +130,8 @@
 	       (:file "clex")         ; constant lexical database 
                #+:psql  
                (:file "psqllex")      ; Postgres interface for lexicon
+               #+:psql  
+               (:file "psql-emacs")   ; Postgres-Emacs interface
                #+:psql
                (:file "lexport")      ; export of lexicon to file/db
                (:file "rules")        ; grammar and lexical rules
