@@ -287,25 +287,26 @@
 (defmacro cached-greatest-common-subtype (type1 type2 type1-atomic-p)
   `(let ((t1 ,(if type1-atomic-p `(car ,type1) `,type1))
 	 (t2 ,type2))
-      (when (eq t1 *toptype*)
-         ;; avoid caching on top type - but we can't just return t2 here since
-         ;; it might have a constraint that we must flag
-         (rotatef t1 t2))
-      (let* ((entry (get t1 :type-cache))
-             (found (cdr (assoc t2 entry :test #'eq))))
-         (if found
-	    (values (car found) (cdr found))
+      (if (eq t1 *toptype*)
+         ;; avoid caching on top type - result will always be other type
+          t2
+        (if (eq t2 *toptype*)
+            t1
+        (let* ((entry (get t1 :type-cache))
+               (found (cdr (assoc t2 entry :test #'eq))))
+          (if found
+              (values (car found) (cdr found))
             (multiple-value-bind (subtype constraintp)
-	          (full-greatest-common-subtype t1 t2)
-	       ,@(when type1-atomic-p
+                (full-greatest-common-subtype t1 t2)
+              ,@(when type1-atomic-p
 	          `((when subtype (setq subtype (list subtype)))))
-	       (setf (get t1 :type-cache) 
-	          ;; put new result at end of cache - very slightly faster than failures
-                  ;; at start and successes at end. Other 2 alternatives are appreciably
-                  ;; slower
-                  (nconc entry
-		     (list (cons t2 (cons subtype constraintp)))))
-	       (values subtype constraintp))))))
+              (setf (get t1 :type-cache) 
+                ;; put new result at end of cache - very slightly faster than failures
+                ;; at start and successes at end. Other 2 alternatives are appreciably
+                ;; slower
+                (nconc entry
+                       (list (cons t2 (cons subtype constraintp)))))
+              (values subtype constraintp))))))))
 
 #|
 ;;; investigate effectiveness of subtype cache
