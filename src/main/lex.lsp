@@ -646,8 +646,11 @@
 (defun load-psql-lexicon-from-script nil
   ;;(format t "~%Loading lexicon")
   (clear-lex *lexicon* 
-	     :psorts-temp-file (make-pathname :name "templex"
+	     :psorts-temp-files (cons
+				 (make-pathname :name "templex"
 					      :directory (pathname-directory (lkb-tmp-dir))) 
+				 (make-pathname :name "templex-index"
+					      :directory (pathname-directory (lkb-tmp-dir)))) 
 	     :no-delete t)
   (setf *psql-lexicon* (make-instance 'psql-lex-database))
   (link (load-lex *psql-lexicon*) *lexicon*)
