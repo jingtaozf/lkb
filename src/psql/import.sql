@@ -5,7 +5,7 @@ CREATE TABLE meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO meta VALUES ('db-version', '2.0');
+INSERT INTO meta VALUES ('db-version', '2.1');
 INSERT INTO meta VALUES ('filter', 'TRUE');
 
 ---
@@ -49,6 +49,9 @@ CREATE TABLE revision (
 
 CREATE INDEX orthkey
 ON revision (orthkey); 
+
+CREATE UNIQUE INDEX name_modstamp
+ON revision (name,modstamp); 
 
 CREATE INDEX revision_name_modstamp ON revision (name, modstamp);
 
@@ -123,6 +126,62 @@ ON current_grammar (orthkey);
 CREATE TABLE temp AS SELECT * FROM revision WHERE NULL;
 CREATE TABLE multi_temp AS SELECT * FROM multi WHERE NULL;
 
+CREATE TABLE scratch (
+  name VARCHAR(95),
+  type VARCHAR(95),
+  orthography VARCHAR(200),
+  orthkey VARCHAR(200),
+  pronunciation VARCHAR(200),
+  keyrel VARCHAR(50),
+  altkey VARCHAR(50),
+  alt2key VARCHAR(50),
+  keytag VARCHAR(50),
+  compkey VARCHAR(50),
+  ocompkey VARCHAR(50),
+ PRIMARY KEY (name)
+);
+
+CREATE VIEW scratch_revision AS 
+	SELECT 
+  name,
+  type,
+  orthography,
+  orthkey,
+  NULL::VARCHAR AS pronunciation,
+  keyrel,
+  altkey,
+  alt2key,
+  keytag,
+  compkey,
+  ocompkey,
+
+  NULL::VARCHAR AS complete,
+  NULL::VARCHAR AS semclasses,
+  NULL::VARCHAR AS preferences,
+
+  NULL::VARCHAR AS classifier,
+  NULL::VARCHAR AS selectrest,
+  NULL::VARCHAR AS jlink,
+  NULL::VARCHAR AS comments,
+  NULL::VARCHAR AS exemplars,
+  NULL::VARCHAR AS usages,
+  NULL::VARCHAR AS lang,
+  NULL::VARCHAR AS country,
+  NULL::VARCHAR AS dialect,
+  NULL::VARCHAR AS domains,
+  NULL::VARCHAR AS genres,
+  NULL::VARCHAR AS register,
+
+  NULL::REAL AS confidence,
+  NULL::INTEGER AS version,
+
+  'scratch'::VARCHAR AS source,
+  NULL::INTEGER AS flags,
+  NULL::VARCHAR AS userid,
+  'infinity'::TIMESTAMP AS modstamp
+
+	FROM scratch;
+
 ---
 --- sql queries embedded in db
 ---
@@ -176,9 +235,61 @@ INSERT INTO qry VALUES
        ( 'retrieve-entry', 2, 
          'SELECT $0 FROM current_grammar WHERE name=$1' );
 
+INSERT INTO qrya VALUES ( 'initialize-current-grammar', 0, 'where-subcls' );
 INSERT INTO qry VALUES 
-       ( 'initialize-current-grammar', 0, 
-'VACUUM ANALYZE revision; 
+       ( 'initialize-current-grammar', 1, 
+'
+DROP VIEW active;
+DROP VIEW revision_active;
+DROP VIEW revision_filtered_union_scratch_revision;
+DROP VIEW revision_filtered;
+DROP VIEW multi_revision_active;
+DROP VIEW multi_revision_filtered;
+
+CREATE VIEW revision_filtered
+AS SELECT * 
+     FROM revision
+     WHERE flags = 1
+      AND $0;
+
+CREATE VIEW revision_filtered_union_scratch_revision
+AS SELECT * FROM revision_filtered 
+   UNION 
+   SELECT * FROM scratch_revision;
+
+CREATE VIEW revision_active
+ AS SELECT rev.*
+ FROM 
+  (revision_filtered_union_scratch_revision AS rev
+  NATURAL JOIN 
+   (SELECT name, max(modstamp) AS modstamp 
+     FROM revision_filtered_union_scratch_revision
+     GROUP BY name) AS t1
+); 
+
+CREATE VIEW multi_revision_filtered
+AS SELECT * 
+     FROM multi_revision
+     WHERE flags = 1
+      AND $0;
+
+CREATE VIEW multi_revision_active
+ AS SELECT rev.* 
+ FROM 
+  (multi_revision_filtered AS rev 
+  NATURAL JOIN 
+   (SELECT name, max(modstamp) AS modstamp 
+     FROM multi_revision_filtered
+      GROUP BY name) AS t1
+); 
+
+CREATE VIEW active
+ AS SELECT * FROM revision_active 
+  UNION SELECT * FROM multi_revision_active;
+
+UPDATE meta SET val=$0:text WHERE var=''filter'';
+
+VACUUM ANALYZE revision; 
 BEGIN; 
 DELETE FROM current_grammar; 
 INSERT INTO current_grammar SELECT * FROM active; 
@@ -216,43 +327,25 @@ INSERT INTO current_grammar
   WHERE name = $0
    LIMIT 1;' );
 
-INSERT INTO qrya VALUES ( 'set-current-view', 0, 'where-subcls' );
--- INSERT INTO qrya VALUES ( 'set-current-view', 1, 'text' );
+INSERT INTO qrya VALUES ( 'update-entry-scratch', 0, 'text' );
+INSERT INTO qrya VALUES ( 'update-entry-scratch', 1, 'select-list' );
+INSERT INTO qrya VALUES ( 'update-entry-scratch', 2, 'value-list' );
 INSERT INTO qry VALUES 
-       ( 'set-current-view', 1, 
+       ( 'update-entry-scratch', 3, 
        '
-DROP VIEW active;
-DROP VIEW revision_active;
-DROP VIEW multi_revision_active;
+INSERT INTO scratch (name, $1) VALUES ($0, $2); 
+DELETE FROM current_grammar 
+ WHERE name=$0; 
+INSERT INTO current_grammar 
+ SELECT * FROM active
+  WHERE name = $0
+   LIMIT 1;' );
 
-CREATE VIEW revision_active
- AS SELECT revision.* 
- FROM 
-  (revision 
-  NATURAL JOIN 
-   (SELECT name, max(modstamp) AS modstamp 
-     FROM revision
-     WHERE flags = 1
-      AND $0
-     GROUP BY name) AS t1
-); 
-
-CREATE VIEW multi_revision_active
- AS SELECT rev.* 
- FROM 
-  (multi_revision AS rev 
-  NATURAL JOIN 
-   (SELECT name, max(modstamp) AS modstamp 
-     FROM multi_revision
-      WHERE flags = 1
-       AND $0
-      GROUP BY name) AS t1
-); 
-
-CREATE VIEW active
- AS SELECT * FROM revision_active UNION SELECT * FROM multi_revision_active;
-UPDATE meta SET val=$0:text WHERE var=''filter'';
-' );
+INSERT INTO qry VALUES 
+       ( 'clear-scratch', 0, 
+       '
+DELETE FROM scratch;
+       ' );
 
 INSERT INTO qrya VALUES ( 'merge-into-db', 0, 'text' );
 INSERT INTO qry VALUES 
@@ -299,31 +392,12 @@ COPY multi_temp TO $0 DELIMITERS '','';
 --- views
 ---
 
-CREATE VIEW revision_active
-	AS SELECT revision.* 
-	FROM 
-		(revision 
-		NATURAL JOIN 
-		(SELECT name, max(modstamp) AS modstamp 
-                        FROM revision
-                        WHERE flags = 1
-                        GROUP BY name) AS t1
-		 ); 
-
-CREATE VIEW multi_revision_active
-	AS SELECT rev.* 
-	FROM 
-		(multi_revision AS rev 
-		NATURAL JOIN 
-		(SELECT name, max(modstamp) AS modstamp 
-                        FROM multi_revision
-                        WHERE flags = 1
-                        GROUP BY name) AS t1
-		 ); 
-
-CREATE VIEW active
-	AS SELECT * FROM revision_active UNION SELECT * FROM multi_revision_active;
-
+CREATE VIEW active AS SELECT * FROM revision WHERE NULL;
+CREATE VIEW revision_active AS SELECT * FROM revision WHERE NULL;
+CREATE VIEW revision_filtered AS SELECT * FROM revision WHERE NULL;
+CREATE VIEW revision_filtered_union_scratch_revision AS SELECT * FROM revision WHERE NULL;
+CREATE VIEW multi_revision_active AS SELECT * FROM revision WHERE NULL;
+CREATE VIEW multi_revision_filtered AS SELECT * FROM revision WHERE NULL;
 
 CREATE VIEW new_pkeys 
        AS SELECT t2.* from 
