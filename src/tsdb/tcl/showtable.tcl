@@ -605,44 +605,50 @@ proc make_table {table} {
 }
 
 proc make_new_item {canvas row col optionarrayname {tags ""} } {
-    ##
-    ## Usage: make_new_item canvas optionarrayname
-    ## 
-    ## Creates a new item on 'canvas' according to the options stored in the
-    ## array with name 'optionarrayname'.
-    ##
-    global format
+  ##
+  ## Usage: make_new_item canvas optionarrayname
+  ## 
+  ## Creates a new item on 'canvas' according to the options stored in the
+  ## array with name 'optionarrayname'.
+  ##
+  global format;
 
-    upvar $optionarrayname o
+  upvar $optionarrayname o;
 
-    ## Process contents
+  ## Process contents
 
-    set c "$o(contents)"
-    
-    set item [eval $canvas create text -100 -100 -text \$c \
-		  $format($o(format)) -tag \"$o(format) $tags\" \
-		  -anchor w]
-    if {[info exists o(key)] && [info exists o(source)]} {
-	$canvas bind $item <Double-Button> \
-	    [list tsdb_process selection $o(source) $o(key)];
-      if {[info exists o(action)] && [info exists o(stag)]} {
-        $canvas itemconfigure $item -fill tomato;
-      } else {
-        $canvas itemconfigure $item -fill red;
-      }; # else
-    }; # if
+  set c "$o(contents)";
+
+  set item [eval $canvas create text -100 -100 -text \$c \
+                         $format($o(format)) -tag \"$o(format) $tags\" \
+                         -anchor w];
+
+  if {[info exists o(key)] && [info exists o(source)]} {
+    $canvas bind $item <Double-Button> \
+      [list tsdb_process selection $o(source) $o(key)];
+    $canvas bind $item <Control-Double-Button> \
+      [list tsdb_browse trees "i-id == $o(key)" 0 $o(source)];
+
     if {[info exists o(action)] && [info exists o(stag)]} {
+      $canvas itemconfigure $item -fill tomato;
+    } else {
       $canvas itemconfigure $item -fill red;
-      $canvas bind $item <Shift-Double-Button> \
-        [list tsdb_execute $o(action) $o(stag)];
-    }; # if
+    }; # else
+  }; # if
 
-    if {[info exists o(action)] && [info exists o(tag)]} {
-      $canvas itemconfigure $item -fill red;
-      $canvas bind $item <Double-Button> \
-        [list tsdb_execute $o(action) $o(tag)];
-    }; # if
-     return $item
+  if {[info exists o(action)] && [info exists o(stag)]} {
+    $canvas itemconfigure $item -fill red;
+    $canvas bind $item <Shift-Double-Button> \
+      [list tsdb_execute $o(action) $o(stag)];
+  }; # if
+
+  if {[info exists o(action)] && [info exists o(tag)]} {
+    $canvas itemconfigure $item -fill red;
+    $canvas bind $item <Double-Button> \
+      [list tsdb_execute $o(action) $o(tag)];
+  }; # if
+
+  return $item
 }
 
 proc make_regions {table} {

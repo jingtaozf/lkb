@@ -197,7 +197,7 @@
                          (cond
                           ((and interrupt abort)
                            (loop
-                               with end = (current-time :long t)
+                               with end = (current-time :long :tsdb)
                                for run in runs
                                when (get-field :status run) do
                                  (setf (get-field :status run) :abort)
@@ -237,7 +237,7 @@
                         ((eq result :ok))
                         ((eq result :error)
                          (let ((client (get-field :client run))
-                               (end (current-time :long t)))
+                               (end (current-time :long :tsdb)))
                            (when client (setf (client-status client) :error))
                            (nconc run `((:end . ,end)))))
                         ((consp result)
@@ -323,7 +323,7 @@
          (run (pairlis (list :data :run-id :comment
                              :user :host :os :start)
                        (list data run-id comment
-                             nil nil nil (current-time :long t))))
+                             nil nil nil (current-time :long :tsdb))))
          (run (enrich-run run))
          (mode "passive mode (<Control-G> to abort)")
          (nitems 0)
@@ -472,7 +472,7 @@
                 (store-result data result :cache cache))))
 
       (let* ((run (append (pairlis '(:end :status)
-                                   (list (current-time :long t) :capture))
+                                   (list (current-time :long :tsdb) :capture))
                           run)))
         (complete-runs 
          data (list run)
@@ -608,7 +608,7 @@
   
   (let* ((environment (initialize-test-run :interactive interactive 
                                            :exhaustive exhaustive))
-         (start (current-time :long t))
+         (start (current-time :long :tsdb))
          (gc-strategy (unless interactive 
                         (install-gc-strategy 
                          gc :tenure tenure :verbose verbose)))
@@ -854,7 +854,7 @@
                 (print-item item :stream stream :result fail)
                 (print-result fail :stream stream))))
           (when run
-            (nconc run `((:end . ,(current-time :long t))))
+            (nconc run `((:end . ,(current-time :long :tsdb))))
             (when (client-p client)
               (setf (client-status client) :exit))))
                  
@@ -1126,14 +1126,14 @@
               external interrupt signal.~%")
             (force-output stream)
             (setf (client-status client) :interrupt)
-            (acons :end (current-time :long t) nil))
+            (acons :end (current-time :long :tsdb) nil))
            (t
             (setf (client-status client) :error)
-            (acons :end (current-time :long t) nil)))))
+            (acons :end (current-time :long :tsdb) nil)))))
        (t
         (let ((finalization (finalize-test-run environment)))
           (when gc-strategy (restore-gc-strategy gc-strategy))
-          (cons (cons :end (current-time :long t)) finalization)))))))
+          (cons (cons :end (current-time :long :tsdb)) finalization)))))))
 
 (defun tsdb-ignore-p (o-ignore)
   (unless (or (null o-ignore) (equal o-ignore ""))

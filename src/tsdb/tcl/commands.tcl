@@ -402,6 +402,15 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
     if {[verify_ts_selection]} {return 1};
   }; # else
 
+  if {$code != "runs" && $code != "errors"
+      && $globalp && $globals(condition) != ""} {
+    if {$condition != ""} {
+      set condition "$globals(condition) and ($condition)";
+    } else {
+      set condition "$globals(condition)";
+    }; # else
+  }; # if
+
   switch $code {
     items {
       set attributes "(\"i-id\" \"i-input\" \"i-length\" \"i-wf\" \"i-category\")";
@@ -426,7 +435,8 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
       return 0;
     }
     trees {
-      set command [format "(trees \"%s\")" $profile];
+      set command [format "(trees \"%s\" :condition \"%s\")" \
+                     $profile $condition];
       send_to_lisp :event $command;
       return 0;
     }
@@ -440,15 +450,6 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
       set relations "(\"item\" \"parse\")";
      }
   }; # switch
-
-  if {$code != "runs" && $code != "errors"
-      && $globalp && $globals(condition) != ""} {
-    if {$condition != ""} {
-      set condition "$globals(condition) and ($condition)";
-    } else {
-      set condition "$globals(condition)";
-    }; # else
-  }; # if
 
   if {[info exists attributes]} {
     set command [format "(select \"%s\" %s nil %s \"%s\")" \

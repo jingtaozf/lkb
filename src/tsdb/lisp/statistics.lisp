@@ -2022,6 +2022,7 @@
           (incf separator)
         do
           (when increment (meter-advance increment))
+          ;;
           ;; _fix_me_ this creates a potential memory leak: as soon as the
           ;; window for this table is destroyed, there will be no further
           ;; reference to the (tag) symbols used to store data on the lisp

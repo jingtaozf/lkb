@@ -32,7 +32,7 @@
                                 :except '("tree" "decision"))
       (return-from browse-trees nil)))
 
-  (let* ((condition (if condition
+  (let* ((condition (if (and condition (not (equal condition "")))
                       (concatenate 'string "(readings >= 1) && " condition)
                       "readings >= 1"))
          (items
@@ -43,7 +43,7 @@
          (message (format 
                    nil 
                    "~a `~a' trees ..." 
-                   data (if purge "purging" "browsing")))
+                   (if purge "purging" "browsing") data))
          (items (sort (copy-seq items) 
                       #'< :key #'(lambda (foo) (get-field :i-id foo))))
          (schema (read-database-schema data))
@@ -164,7 +164,7 @@
                             (if (and (integerp foo) (>= foo 0) (<= foo 3))
                               (aref #("zero" "low" "fair" "high") foo)
                               "unknown")))
-                      (if (and (> version 0) user date)
+                      (if (and (>= version 0) user date)
                         (format
                          nil
                          "~a (~a) confidence; version ~d on ~a by `~a'"
@@ -205,8 +205,17 @@
       (declare (ignore active))
 
       (when purge
-        (when trees
-          (write-tree purge (first trees) :cache cache))
+        (if trees
+          (write-tree purge (first trees) :cache cache)
+          (let* ((user (current-user))
+                 (time (current-time :long :tsdb))
+                 (tree (pairlis '(:parse-id 
+                                  :t-version :t-active :t-confidence
+                                  :t-author :t-start :t-end :t-comment)
+                                (list parse-id 
+                                      0 -1 -1
+                                      user time time ""))))
+            (write-tree purge tree :cache cache)))
         (loop
             for decision in decisions
             do (write-decision purge decision :cache cache))
@@ -269,14 +278,14 @@
                                  (start (when (lkb::decision-p start)
                                           (lkb::decision-time start))))
                             (if start 
-                              (decode-time start :long t)
-                              (current-time :long t))))
+                              (decode-time start :long :tsdb)
+                              (current-time :long :tsdb))))
                  (t-end (let* ((end (first decisions))
                                (end (when (lkb::decision-p end)
                                       (lkb::decision-time end))))
                           (if end 
-                            (decode-time end :long t)
-                            (current-time :long t)))))
+                            (decode-time end :long :tsdb)
+                            (current-time :long :tsdb)))))
             #-:expand
             (write-tree data (pairlis '(:parse-id 
                                         :t-version :t-active :t-confidence
@@ -307,7 +316,7 @@
                    (end (lkb::compare-frame-end frame))
                    (time (let ((time (lkb::decision-time recent)))
                            (if time
-                             (decode-time time :long t)
+                             (decode-time time :long :tsdb)
                              (current-time)))))
               #-:expand
               (write-decision data 
@@ -330,7 +339,7 @@
               for end = (lkb::discr-end discriminant)
               for time = (let ((time (lkb::discr-time discriminant)))
                            (if time
-                             (decode-time time :long t)
+                             (decode-time time :long :tsdb)
                              (current-time)))
               unless (= state 5)
               do

@@ -308,6 +308,10 @@
         (format nil "~a-~a-~a" day month year))
        ((member long '(:usa :us :reverse))
         (format nil "~2,'0d-~2,'0d-~2,'0d" (mod year 100) month day))
+       ((member long '(:tsdb))
+        (format
+         nil "~a-~a-~a ~2,'0d:~2,'0d" 
+         day (nth (- month 1) months) year hour minute))
        ((member long '(:pretty :readable))
         (format
          nil "~a-~a-~a (~2,'0d:~2,'0d h)" 
