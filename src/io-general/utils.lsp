@@ -236,6 +236,7 @@
 ;;;                                                       (1-apr-99  -  oe)
 ;;;
 (defun lkb-load-lisp (directory name &optional optional (compile t))
+  (declare (ignore-if-unused compile))
   (let ((file (merge-pathnames (make-pathname :name name) 
                                directory)))
     (if (probe-file file)
