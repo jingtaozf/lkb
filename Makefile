@@ -94,12 +94,10 @@ lkb_data:
 
 lkb_binaries: lkb_linux lkb_solaris
 
-lkb_linux: lkb_linux
-
 lkb_linux:
 	${RM} -f ${ROOT}/.yes;
 #	rsh lineara "cd ${ROOT}/lkb && make lkb_linux@lineara";
-	rsh cypriot "cd ${ROOT}/lkb && make lkb_linux@remote";
+	rsh cypriot "cd ${ROOT}/lkb && make lkb_linux@cypriot";
 	( \
 	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
 	  cd ${ROOT}/lkb; \
@@ -108,7 +106,7 @@ lkb_linux:
 	      linux; \
 	)
 	  
-lkb_linux@remote:
+lkb_linux@cypriot:
 	( \
 	  echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
 	  echo "(load \"${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
@@ -119,7 +117,7 @@ lkb_linux@remote:
 	  echo "(compile-system \"tsdb\" :force t)"; \
 	  echo "(excl:exit)"; \
 	) | ( cd /lingo/local/acl; \
-              ACL_LOCALE=C ./alisp -qq && touch ${ROOT}/.yes; )
+              ACL_LOCALE=C ./alisp -I clim.dxl -qq && touch ${ROOT}/.yes; )
 
 lkb_linux@lineara:
 	( \

@@ -1,30 +1,38 @@
 #!/bin/bash
 
 ROOT=/eo/e8nb/oe/www/src
-TSDBHOME=/eo/e8nb/oe/www/src/lkb/src/tsdb/home
-TARGET=/lingo/oe/kristina
+#TSDBHOME=/eo/e8nb/oe/www/src/lkb/src/tsdb/home
+TSDBHOME=/lingo/oe/tsdb/home
+#TARGET=/export/c2/oe/kristina
+TARGET=/lingo/attic/oe
 TSDB=/user/oe/lbin/tsdb
 
 if [ ! -d ${TARGET} ]; then
   mkdir $TARGET
 fi
 
-if [ -z "${2}" ]; then
-  low=0;
-else
-  low=${2};
+log=$(echo ${1} | sed "s@/@.@g")
+
+if [ ! -z "${2}" ]; then
+  extra="${2}";
 fi
 
 {
+  low=0;
   DB=${TSDBHOME}/${1}
   all=$(${TSDB} -home ${DB} -query 'select i-id from item' \
         | sort -n | tail -1);
   while [ ${low} -le ${all} ]; do
-    high=$[${low} + 200];
+    high=$[${low} + 100];
     echo
     echo "exporting \`${1}' [$low -- $high]";
     echo
-    condition="i-id >= ${low} && i-id < ${high} && t-active == 1";
+    condition="i-id >= ${low} && i-id < ${high}";
+    if [ ! -z "${extra}" ]; then
+      condition="${condition} && (${extra})";
+    fi
+    condition="${condition} && (readings >= 1 && t-active == 1)";
+    low=${high};
     ( \
       echo "(setf (sys:gsgc-switch :print) t)"; \
       echo "(setf (sys:gsgc-switch :stats) t)"; \
@@ -35,12 +43,16 @@ fi
       echo "(pushnew :mrs *features*)"; \
       echo "(setf (system:getenv \"DISPLAY\") nil)"; \
       echo "(compile-system \"tsdb\")"; \
-      echo "(read-script-file-aux \"${ROOT}/erg.20-jun-01/lkb/script\")"; \
+      echo "(setf mrs::*eds-include-quantifiers-p* nil)"; \
+      echo "(setf mrs::*eds-include-vacuous-relations-p* nil)"; \
+      echo "(push 'lkb::discourse_rel mrs::*eds-bleached-relations*)"; \
+      echo "(setf tsdb::*redwoods-export-values* '(:dependencies))"; \
+      echo "(setf tsdb::*redwoods-export-bad-trees-p* t)"; \
+      echo "(read-script-file-aux \"${ROOT}/erg.oct-02/lkb/script\")"; \
       echo "(tsdb:tsdb :home \"$TSDBHOME\")"; \
       echo "(tsdb::export-trees \"${1}\" :path \"${TARGET}\""; \
       echo "  :condition \"${condition}\")"; \
       echo "(excl:exit)"; \
     ) | ( cd /lingo/local/acl; ./clim -qq && touch ${ROOT}/.yes; )
-    low=${high};
   done
-} 2>&1 | tee /tmp/export.$$.log
+} 2>&1 | tee ${TSDBHOME}/${log}.$$.log
