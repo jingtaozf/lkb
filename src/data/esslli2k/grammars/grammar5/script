@@ -5,7 +5,6 @@
      (list (lkb-pathname (this-directory) "types.tdl")))
 (read-tdl-lex-file-aux 
      (lkb-pathname (this-directory) "lexicon.tdl"))
-(read-morph-file-aux (lkb-pathname (this-directory) "inflr.tdl"))
 (batch-check-lexicon)
 (read-tdl-grammar-file-aux 
      (lkb-pathname (this-directory) "rules.tdl"))
