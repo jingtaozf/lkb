@@ -110,8 +110,8 @@ BEGIN
 	----           eg. COPY TO stdin from frontend
 
  	num_new := (SELECT count(*) FROM 
-             		(SELECT mode, slot, field FROM temp_defn EXCEPT
-               			SELECT mode, slot, field FROM defn) AS t1
+             		(SELECT * FROM temp_defn EXCEPT
+               			SELECT * FROM defn) AS t1
              			NATURAL JOIN temp_defn);
 
  	RAISE INFO \'% new field mappings\', num_new;
