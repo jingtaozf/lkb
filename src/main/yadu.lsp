@@ -9,6 +9,8 @@
 
 (in-package :cl-user)
 
+(defparameter *yadu-debug* nil)
+
 ;;; YADU
 
 ;;; YADU data structures
@@ -97,9 +99,13 @@
 
 
 (defun yadu-general-merge-tails (tail1 tail2 indef)
-  (if (and tail1 tail2)
-      (merge-tails tail1 tail2 indef)
-    (or tail1 tail2)))
+  (cond ((and tail1 tail2)
+         (merge-tails tail1 tail2 indef))
+        (tail1 
+         (filter-tail tail1 indef))
+        (tail2
+         (filter-tail tail2 indef))
+        (t nil)))
 
 
 ;;; YADU
@@ -231,6 +237,15 @@
                     (atomic-unifiable-dags-p tail-atfs indef-fs)))))
       (union-tails tail1 tail2)))
 
+(defun filter-tail (tail indef-fs)
+  ;;; for the case where only one TDFS has a tail, we still want to remove
+  ;;; stuff that's incompatible with the indefeasible structure
+  (for tail-element in tail
+       filter
+       (let ((tail-atfs (tail-element-path-rep tail-element)))
+         (if (atomic-unifiable-dags-p tail-atfs indef-fs)
+             tail-element))))
+
 (defun atomic-dag-subsumes-p (atomic-fs fs)
   (if (yadu-pv-p atomic-fs)
       (let* ((path (yadu-pv-path atomic-fs))
@@ -251,12 +266,30 @@
                     (existing-dag-at-end-of fs 
                                             (path-typed-feature-list path))))))))
 
-(defun atomic-unifiable-dags-p (atomic-fs fs)
-  ;;; FIX - this is complicated because of the need to 
-  ;;; check that features are compatible with types on the
-  ;;; main fs - basically we have to do full unification
-  (declare (ignore atomic-fs fs))
-  t)
+(defun atomic-unifiable-dags-p (atomic-fs indef-fs)
+  (with-unification-context (nil)
+    (if (yadu-pv-p atomic-fs)
+        (unify-paths (yadu-pv-path atomic-fs)
+                     indef-fs
+                     (make-u-value 
+                      :types (yadu-pv-value atomic-fs))
+                     nil)
+      (let* ((paths (yadu-pp-paths atomic-fs))
+             (initial-path (car paths))
+             (ok nil))
+        (dolist (path2 (cdr paths))
+          (setf ok
+            (unify-paths initial-path       
+                         indef-fs
+                         path2
+                         indef-fs))
+          (unless ok
+            (return)))
+        ok))))
+
+
+
+
 
 (defun union-tails (tail1 tail2)
    (when (> (length tail2) (length tail1))
@@ -346,6 +379,9 @@
 
 
 (defun yadu-unify (fixed-fss partition &optional second-call-p)
+  (when *yadu-debug* 
+    (format t "~%No of fixed fs ~A next tail length ~A second-call-p ~A"
+    (length fixed-fss) (length (car partition)) second-call-p))
    (if partition
       (yadu-unify
          (for fixed-fs in fixed-fss
@@ -387,11 +423,17 @@
   ;; def-fs-set is using path representation
   ;; check-ind-defs-p is true if the fixed-fs might contain
   ;; some defeasible material
-  (declare (ignore check-ind-defs-p))
-  ;; FIX - should be able to improve matters by chucking out
+  (when check-ind-defs-p
+    (setf def-fs-set 
+      (for fs in def-fs-set
+           filter
+           (if (atomic-unifiable-dags-p fs fixed-fs)
+               fs))))
+  ;; we improve matters by chucking out
   ;; structures which were incompatible with the fixed-fs when
   ;; check-ind-defs-p is true - if it isn't, we're doing the first
   ;; round and the tails are guaranteed to be compatible
+  ;; because the tail elements have already been filtered
   (setf *failure-list* nil)
   (let ((all-ok (unify-in fixed-fs def-fs-set nil)))
     (if all-ok (list all-ok)
