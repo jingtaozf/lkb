@@ -82,9 +82,9 @@ ON ergd (slot);
 
 INSERT INTO ergd VALUES ( 'id', 'name', '', 'symbol' );
 INSERT INTO ergd VALUES ( 'sense-id', 'name', '', 'symbol' );
-INSERT INTO ergd VALUES ( 'orth', 'orthography', '', 'string' );
+INSERT INTO ergd VALUES ( 'orth', 'orthography', '', 'string-list' );
 INSERT INTO ergd VALUES ( 'unifs', 'type', 'nil', 'symbol' );
-INSERT INTO ergd VALUES ( 'unifs', 'orthography', '(stem first)', 'string' );
+INSERT INTO ergd VALUES ( 'unifs', 'orthography', '(stem)', 'string-fs' );
 INSERT INTO ergd VALUES ( 'unifs', 'keyrel', '(synsem local keys key)', 'symbol' );
 INSERT INTO ergd VALUES ( 'unifs', 'keytag', '(synsem local keys key carg)', 'string' );
 INSERT INTO ergd VALUES ( 'unifs', 'altkey', '(synsem local keys altkey)', 'symbol' );

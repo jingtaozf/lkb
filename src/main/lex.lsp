@@ -1,7 +1,10 @@
-;;; Copyright (c) 1991--2001 
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;; Copyright (c) 1991--2003 
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
+;;; bmw (jun-03)
+;;; - link/unlink replace (setf extra-lexicons)
+;;;
 
 ;;; April 1997 - modified for YADU
 ;;;            - output-lexicon etc removed
@@ -18,12 +21,72 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+					;bmw
+(setf *no-cache* nil)
+
 (defclass lex-database () 
   ((lexical-entries :initform (make-hash-table :test #'equal))
    (psorts :initform (make-hash-table :test #'eq))
    (temp-psorts :initform (make-hash-table :test #'eq))
-   (extra-lexicons :initform nil :accessor extra-lexicons)
-   (extra-mode :initform :union :accessor extra-mode)))
+   (extra-lexicons :initform nil :reader extra-lexicons) ;: use link/unlink to write
+   (extra-mode :initform :union :accessor extra-mode)
+   (part-of :initform nil :accessor part-of)
+   )
+  )
+
+;: obsolete: use link instead
+(defmethod (setf extra-lexicons) (lexicon-list (lexicon lex-database))
+  (print "WARNING: using obsolete method (setf extra-lexicons)")
+  (mapcar #'(lambda (lex)
+	      (unless (member lex lexicon-list)
+		(unlink lex lexicon)))
+	  (extra-lexicons lexicon)
+	  )
+  (mapcar #'(lambda (lex)
+	      (unless (member lex (extra-lexicons lexicon))
+		(link lex lexicon)))
+	  lexicon-list
+	  )
+  )
+
+(defmethod clear-cache ((lexicon lex-database))
+  (clrhash (slot-value lexicon 'lexical-entries))
+  )
+
+
+;: include one lexicon in another
+(defmethod link ((sub-lexicon lex-database) (lexicon lex-database))
+					;(print (format t "link ~a ~a" sub-lexicon lexicon))
+  (if (eq sub-lexicon lexicon)
+      (error "cannot link a lexicon to itself!"))
+  (with-slots (extra-lexicons) lexicon
+    (with-slots (part-of) sub-lexicon
+      (unless 
+	  (and
+	   (member sub-lexicon extra-lexicons)
+	   (member lexicon part-of)
+	   )
+	(push lexicon part-of)
+	(push sub-lexicon extra-lexicons)
+	)
+      )
+    )
+  ; cache becomes invalid if lexicon is altered
+  (clear-cache lexicon)  
+  )
+
+;: remove sub lexicon
+(defmethod unlink ((sub-lexicon lex-database) (lexicon lex-database))
+  (with-slots (extra-lexicons) lexicon
+    (with-slots (part-of) sub-lexicon
+      (setf part-of (remove lexicon part-of))
+      (setf extra-lexicons (remove sub-lexicon extra-lexicons))
+      )
+    )
+  ; cache becomes invalid if lexicon is altered
+  (clear-cache lexicon)
+  )
+
 
 ;;;
 ;;; given the orthography (string in all upper case), look up all lexical
@@ -408,24 +471,38 @@
 ;;;
 
 (defmethod lookup-word :around ((lexicon lex-database) orth &key (cache t))
-  (cond ((gethash orth (slot-value lexicon 'lexical-entries)))
-	(t 
-	 (let* ((value (if (next-method-p) (call-next-method)))
-                (mode (extra-mode lexicon))
-                (extra (when (or (null value) (eq mode :union))
-                         (loop
-                             with result = nil
-                             for lexicon in (extra-lexicons lexicon)
-                             for value = (lookup-word lexicon orth :cache nil)
-                             when (and value (eq mode :shadow)) do
-                             (return value)
-                             else when value do
-                               (setf result (nconc result value))
-                             finally (return result))))
-                (value (nconc value extra)))
-	   (when (and cache value)
-	     (setf (gethash orth (slot-value lexicon 'lexical-entries)) value))
-	   value))))
+  (cond 
+   ;:use cached value if available
+   ((and (not *no-cache*) (gethash orth (slot-value lexicon 'lexical-entries))))
+   ;:use lexicon(s)
+   (t 
+    (let* (
+	   ;:get vals from main lexicon
+	   (value (if (next-method-p) (call-next-method)))
+	   (mode (extra-mode lexicon))
+	   ;bmw
+	   (active-lexicons (extra-lexicons lexicon))
+	   (extra 
+	    ;:if no vals in lexicon (or union mode) ...
+	    (when (or (null value) (eq mode :union))
+	      (loop
+		  with result = nil
+		  ;:try sublexicon
+		  for lexicon in (extra-lexicons lexicon)
+		
+		  for value = (and lexicon (lookup-word lexicon orth :cache nil))
+		  ;:shadow mode returns first set of vals found
+		  when (and value (eq mode :shadow)) do
+		    (return value)
+		  else when value do
+		    (setf result (nconc result value))
+		  finally (return result))))
+	   ;:append extra results to value
+	   (value (nconc value extra)))
+      ;:if caching, add entry to cache...
+      (when (and cache value)
+	(setf (gethash orth (slot-value lexicon 'lexical-entries)) value))
+      value))))
 
 (defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry)
   (store-psort lexicon id new-entry orth)
@@ -472,6 +549,7 @@
 	  (setf (lex-or-psort-full-fs entry) nil)
 	(call-next-method)))))
 
+;:clear lexicon along with its extra lexicons
 (defmethod clear-lex :around ((lexicon lex-database) &optional no-delete)
   (when (fboundp 'clear-generator-lexicon)
     (funcall 'clear-generator-lexicon))
@@ -481,10 +559,22 @@
   (when (fboundp 'clear-lexicon-indices)
     (funcall 'clear-lexicon-indices))
   (call-next-method)
-  (mapcar #'(lambda (lex) (clear-lex lex no-delete)) (extra-lexicons lexicon))
-  (setf (extra-lexicons lexicon) nil) ; AAC - seems to be needed
+   ;:unlink from sub lexicons
+  (mapcar 
+   #'(lambda (lex) 
+       (unlink lex lexicon)
+       ;:clear sub lexicon if part of no other lexicon
+       (if (null (part-of lex))
+	   (clear-lex lex no-delete)
+	 )
+       ) 
+   (extra-lexicons lexicon)
+   )  
+  ;:unlink from super lexicons
+  (mapcar #'(lambda (lex) (unlink lexicon lex)) (part-of lexicon))
   (unless no-delete
-    (delete-temporary-lexicon-files)))
+    (delete-temporary-lexicon-files))
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;

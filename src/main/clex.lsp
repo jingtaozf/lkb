@@ -20,12 +20,25 @@
 
 (defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache t))
   (declare (ignore cache))
-  (unless (orth-db lexicon)
-    (setf (orth-db lexicon) 
-      (cdb:open-read *psorts-temp-index-file*)))
-  (loop
-      for record in (cdb:read-record (orth-db lexicon) orth)
-      collect (intern record :lkb)))
+					;bmw
+  (with-slots (orth-db) lexicon
+  ;bmw
+  (if (not(stringp orth)) 
+      (error (format  nil "~a is not a string."orth))
+    )
+  (unless orth-db
+    ;bmw
+    (if *psorts-temp-index-file*
+    (setf orth-db 
+      (cdb:open-read *psorts-temp-index-file*))))
+  ;bmw
+  (if orth-db
+      (loop
+	  for record in (cdb:read-record orth-db orth)
+	  collect (intern record :lkb))
+    )
+  )
+  )
 
 (defmethod lexicon-loaded-p ((lexicon cdb-lex-database))
   (not (null (psort-db lexicon))))
