@@ -291,3 +291,8 @@
                 (t (error  "~%Paths are not lists")))))
       (error  "~&Need to specify both feature structures")))))
 
+;; This macro takes care of synchonization problems in the CLIM version
+
+(defmacro with-output-to-top (() &body body)
+  ,@body
+  (terpri))
