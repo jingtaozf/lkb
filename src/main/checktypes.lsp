@@ -55,7 +55,7 @@
       (add-leaf-type name parents constraint default comment daughters)
   (let ((existing-type (get-type-entry name)))
       (when existing-type
-        (format t "~%Type ~A redefined" name)
+        (format t "~%WARNING: Type `~A' redefined." name)
         (push name *type-redefinitions*))
       (let ((new-type 
                (make-type :name name 

@@ -216,7 +216,7 @@
     (setf (rule-unifs entry) non-def)
     (setf (rule-def-unifs entry) def)
     (when (gethash id (if lexical-p *lexical-rules* *rules*))
-      (format t "~%Rule ~A redefined" id))
+      (format t "~%WARNING: Rule `~A' redefined." id))
     (expand-rule id entry non-def def rule-persistence lexical-p)))
 
 ;;; expanding rules - also called from type redefinition functions

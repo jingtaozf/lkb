@@ -195,7 +195,7 @@
 	    (t 
 	     (when existing-type
 	       (remove-leaf-type *leaf-types* name)
-	       (format t "~%Type ~A redefined" name))
+	       (format t "WARNING: ~%Type `~A' redefined." name))
 	     (if (cdr parents)
 		 (format t "~%Error: type ~A cannot be a leaf type - it has ~
 multiple parents ~A" name parents)
