@@ -1,4 +1,4 @@
-ROOT = /lingo/www/build/
+ROOT = /lingo/build/
 SROOT= ${HOME}/class/src
 WROOT = c:/src
 DATE = `date "+%Y-%m-%d"`
