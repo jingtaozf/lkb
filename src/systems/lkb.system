@@ -464,7 +464,8 @@
      ;;
      
      (:module "mt"
-      :proclamations (optimize (safety 3) (speed 0) (debug 3) (space 0))
+      #+:logon :proclamations 
+      #+:logon (optimize (safety 3) (speed 0) (debug 3) (space 0))
       :source-pathname "mt"
       :binary-pathname "mt"
       :source-extension "lisp"
