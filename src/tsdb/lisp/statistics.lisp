@@ -433,7 +433,7 @@
         (status :text (format nil "~a done" message) :duration 2)))
     result))
 
-(defun rank-items (items &key gold score condition)
+(defun rank-items (items &key gold score condition sloppyp)
   
   (declare (ignore condition))
 
@@ -490,7 +490,7 @@
         (nconc item (acons :ranks matches nil))
       else do
         (nconc item
-               (unless (or (stringp score) gold)
+               (unless (and (null sloppyp) (or (stringp score) gold))
                  (let ((results (sort (copy-seq results) #'<
                                       :key #'(lambda (foo) 
                                                (get-field :result-id foo)))))

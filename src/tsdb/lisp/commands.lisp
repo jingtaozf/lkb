@@ -80,7 +80,7 @@
                                         matches))))
       (setf all (sort (copy-list all) #'< 
                       :key #'(lambda (foo) (get-field :parse-id foo))))
-      (rank-items items :gold mrs))
+      (rank-items items :gold mrs :sloppyp t))
     (when verbose
       (format
        stream 
