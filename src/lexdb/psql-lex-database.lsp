@@ -139,15 +139,14 @@
   (cond
    ((connection lexicon)
     (let* ((id-str (2-str id))
-	   (records (sql-fn-get-records lexicon
+	   (table (sql-fn-get-records lexicon
 					:retrieve_head_entry
 					:fields reqd-fields
 					:args (list (sql-like-text id-str)))))
       
-      (if (> (length records) 
-	     1)
+      (if (> (length (recs table)) 1)
 	  (error (format nil "too many records returned"))
-	(first records))))
+	(dot (cols table) (first (recs table))))))
    (t
     (format t "~%WARNING: no connection to psql-lex-database"))))
 
@@ -228,8 +227,8 @@
     strucargs))
 
 (defmethod record-to-tdl ((lexicon psql-lex-database) record)
-  (let ((rec (mapcar #'car record))
-	(cols (mapcar #'cdr record)))
+  (let ((cols (mapcar #'car record))
+	(rec (mapcar #'cdr record)))
     (raw-record-to-tdl lexicon rec cols)))
   
 (defmethod raw-record-to-tdl ((lexicon psql-lex-database) rec cols)

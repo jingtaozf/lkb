@@ -172,3 +172,9 @@
       while ordered-symb-list
       collect (assoc (pop ordered-symb-list) symb-val-list)))
 
+(defun dot (a b)
+  (unless (= (length a) (length b))
+    (error "unequal input list lengths"))
+  (loop
+      while a
+      collect (cons (pop a) (pop b))))

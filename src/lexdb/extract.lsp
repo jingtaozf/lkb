@@ -444,7 +444,7 @@
      (work-out-lst val :elt-path (cdr typel)))
     (dlst-t
      (work-out-dlst-t val :top (second typel) :elt-path (cddr typel) :path path))
-    (dlst-t
+    (dlst
      (work-out-dlst val :elt-path (cdr typel) :path path))
     (t
      (error "~%unhandled field-map type: ~a" (first typel)))))
