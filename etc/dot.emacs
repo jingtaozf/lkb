@@ -25,6 +25,9 @@
 (defconst allegro-home 
   (or (getenv "ALLEGROHOME") "/usr/local/acl"))
 
+(defconst allegro-locale
+  (or (getenv "ACL_LOCALE") "en_US.UTF-8"))
+
 (defmacro when (condition &rest body)
   (list 'and condition (cons 'progn body)))
 
@@ -159,7 +162,7 @@
   (setq fi:common-lisp-image-file 
     (format "%s/clim.dxl" allegro-home))
 
-  (setq fi:common-lisp-image-arguments (list "-locale" "no_NO.UTF-8"))
+  (setq fi:common-lisp-image-arguments (list "-locale" allegro-locale))
 
   (let ((process-connection-type nil))
     (fi:common-lisp)))
