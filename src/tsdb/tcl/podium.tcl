@@ -9,7 +9,7 @@ if {![info exists itsdb_root]} {
   set itsdb_root [expr {[info exists env(HOSTNAME)] 
                         && ![string first "cp" $env(HOSTNAME)]
                         ? "/home/oe/src/itsdb" 
-                        : "/home/oe/src/itsdb"}];
+                        : "/home/oe/src/lkb"}];
 }; # if
 #
 # import BLT library (for `table' and `graph' widgets)
