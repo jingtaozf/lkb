@@ -130,7 +130,8 @@
 
   (when (or (null %client%)
             (and (mp:process-p %client%) (mp:process-active-p %client%)))
-    (let* ((condition (format nil "i-id = ~a" i-id))
+    (let* ((*reconstruct-cache* (make-hash-table :test #'eql))
+           (condition (format nil "i-id = ~a" i-id))
            (items (analyze data :thorough '(:derivation) :condition condition))
            (item (and (null (rest items)) (first items)))
            (input (or (get-field :o-input item) (get-field :i-input item)))
@@ -598,37 +599,43 @@
                 (format stream "~%")
                 (format stream "~c~%" #\page)))))
 
-(defun semantic-equivalence (data &key condition)
+(defun semantic-equivalence (data &key condition (file "/tmp/equivalences"))
   
   (loop
+      with stream = (open file :direction :output :if-exists :supersede)
       with *reconstruct-cache* = (make-hash-table :test #'eql)
-      with items = (analyze data :thorough '(:derivation) 
-                            :condition condition)
+      with items = (analyze data :thorough '(:derivation) :condition condition)
       for item in items
       for i-id = (get-field :i-id item)
-      for results = (get-field :results item)
-      for edges =
+      for input = (or (get-field :o-input item) (get-field :i-input item))
+      for results = (nreverse (copy-list (get-field :results item)))
+      do
+        (clrhash *reconstruct-cache*)
+        (format t "~a: [~a] `~a'~%" i-id (length results) input)
+        (format stream "~a: [~a] `~a'~%" i-id (length results) input)
         (loop
             with *package* = (find-package lkb::*lkb-package*)
             for result in results
-            for id = (get-field :result-id result)
             for derivation = (get-field :derivation result)
-            for edge = (when derivation
-                         (clrhash *reconstruct-cache*)
-                         (reconstruct derivation))
-            when edge 
-            do (setf (lkb::edge-score edge) id)
-            and collect edge)
-      for mrss =
+            for edge = (when derivation (reconstruct derivation))
+            for id = (when edge (lkb::edge-id edge))
+            for mrs = (when edge (mrs::extract-mrs edge))
+            do (nconc result (pairlis '(:id :mrs) (list id mrs))))
         (loop
-            for edge in edges
-            for mrs = (mrs::extract-mrs edge)
-            collect mrs)
-      do
-        (format 
-         t 
-         "semantic-equivalence(): ~d: ~d MRSs; ~d edges; ~d results.~%" 
-         i-id (length mrss) (length edges) (length results))))
+            for result = (pop results)
+            for id1 = (get-field :id result)
+            for mrs1 = (get-field :mrs result)
+            while result do
+              (format stream "~a:"id1)
+              (loop
+                  for foo in results
+                  for id2 = (get-field :id foo)
+                  for mrs2 = (get-field :mrs foo)
+                  when (apply #'mrs::mrs-equalp mrs1 mrs2 '(t nil)) do
+                    (format stream " ~a" id2))
+              (format stream "~%"))
+        (format stream "~a~%" #\page)
+      finally (close stream)))
 
 (defun score-heuristics (&key (profiles '("trees/vm6/ezra/01-07-19"
                                           "trees/vm13/ezra/01-07-30"

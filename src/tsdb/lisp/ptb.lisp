@@ -96,8 +96,9 @@
    ((string-equal token "-rrb-") ")")
    (t token)))
 
-(defun preprocess-ptb-string (string &key (posp *ptb-use-pos-tags-p*))
-  (let (result)
+(defun preprocess-ptb-string (string &key plainp (posp *ptb-use-pos-tags-p*))
+  (let ((length 0)
+        (result nil))
     (loop
         with tree = (read-ptb-from-string string)
         with leaves = (extract-ptb-leaves tree)
@@ -108,12 +109,21 @@
         for raw = (second leaf)
         for form = (rewrite-ptb-token raw pos)
         unless (string-equal pos "-none-") do
-          (push (format 
-                 nil 
-                 "(~d, ~d, ~d, 1, \"~a\", 0, null~:[~*~;, ~a 1.00~])" 
-                 (incf id) i (incf i) form posp pos)
-                result))
-    (format nil "~{~a~^ ~}" (nreverse result))))
-
-
+          (if plainp
+            (push form result)
+            (push (format 
+                   nil 
+                   "(~d, ~d, ~d, 1, \"~a\", 0, null~:[~*~;, ~a 1.00~])" 
+                   (incf id) i (incf i) form posp pos)
+                  result))
+          (unless (lkb::punctuationp form) (incf length)))
+    (values (format nil "~{~a~^ ~}" (nreverse result)) length)))
+
+#+:null         
+(eval-when #+:ansi-eval-when (:load-toplevel :execute)
+	   #-:ansi-eval-when (load eval)
+  (setf (gethash :i-input *statistics-readers*)
+    #'(lambda (string)
+        (let ((*package* (find-package :tsdb)))
+          (preprocess-ptb-string string :plainp t)))))
 

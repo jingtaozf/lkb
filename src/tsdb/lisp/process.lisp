@@ -1153,6 +1153,16 @@
         (string result)
         (t (write-to-string result :escape t))))))
 
+(defun call-safe-hook (hook &rest arguments)
+  (when hook
+    (let* ((hook (typecase hook
+                   (null nil)
+                   (function hook)
+                   (symbol (and (fboundp hook) (symbol-function hook)))
+                   (string (ignore-errors 
+                            (symbol-function (read-from-string hook)))))))
+      (apply hook arguments))))
+
 (defun result-hook (result)
   (loop
       for parse in (get-field :results result)

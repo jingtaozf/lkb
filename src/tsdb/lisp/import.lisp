@@ -277,34 +277,35 @@
        (nreverse item) (nreverse phenomenon) (nreverse item-phenomenon)))))
 
 (defun normalize-item (string)
-  (flet ((punctuation-p (char)
+  (flet ((punctuationp (char)
            (and *import-tsnlp-style-p*
                 (member char *import-punctuation* :test #'char=)))
-         (whitespace-p (char)
+         (whitespacep (char)
            (member char '(#\Space #\Tab #\Newline) :test #'char=)))
     (let ((string (string-trim '(#\Space #\Tab #\Newline) string))
           (result (make-array 4096
                               :element-type 'character
                               :adjustable t :fill-pointer 0))
           (n 0)
-          (previous :whitespace))
+          (previous :whitespace)
+          foo)
       (loop
           for i from 0 to (- (length string) 1) by 1
           for current = (char string i)
           do
             (cond
-             ((and (whitespace-p current) (eq previous :regular))
+             ((and (whitespacep current) (eq previous :regular))
               (vector-push-extend #\Space result 1024)
               (setf previous :whitespace)
               (incf n))
-             ((and (whitespace-p current) (eq previous :whitespace)))
-             ((and (punctuation-p current) (eq previous :regular))
+             ((and (whitespacep current) (eq previous :whitespace)))
+             ((and (punctuationp current) (eq previous :regular))
               (vector-push-extend #\Space result 1024)
               (vector-push-extend current result 1024)
               (vector-push-extend #\Space result 1024)
               (setf previous :whitespace)
               (incf n))
-             ((and (punctuation-p current) (eq previous :whitespace))
+             ((and (punctuationp current) (eq previous :whitespace))
               (vector-push-extend current result 1024)
               (vector-push-extend #\Space result 1024)
               (setf previous :whitespace))
@@ -312,5 +313,12 @@
               (vector-push-extend current result 1024)
               (setf previous :regular))))
       (when (eq previous :regular) (incf n))
+      (when *tsdb-preprocessing-hook*
+        (multiple-value-setq (foo n) 
+          (call-safe-hook *tsdb-preprocessing-hook* string)))
+      (setf foo foo)
       (values (string-right-trim '(#\Space) result) n))))
             
+
+
+

@@ -673,6 +673,7 @@
            (tree (nconc (list label) children)))
       tree))))
 
+#+:null
 (eval-when #+:ansi-eval-when (:load-toplevel :execute)
 	   #-:ansi-eval-when (load eval)
   (setf (gethash :i-input *statistics-readers*)
@@ -692,23 +693,3 @@
   (setf (gethash :mrs *statistics-predicates*) 
     #'(lambda (gold blue) (not (yy-k2y-equal gold blue))))
   (setf *statistics-result-filter* #'yy-result-filter))
-
-(defun julia (&optional (data *tsdb-data*) &key (file t))
-  (let ((tuples 
-         (select '("i-id" "i-input" "comment") nil "ranking" nil data))
-        (stream (cond
-                 ((stringp file)
-                  (open file :direction :output 
-                        :if-exists :supersede 
-                        :if-does-not-exist :create))
-                 ((or (streamp file) (eq file t))
-                  file)
-                 (t t))))
-    (loop
-        for tuple in tuples
-        for i-id = (get-field :i-id tuple)
-        for o-input = (get-field :o-input tuple)
-        for comment = (get-field :comment tuple)
-        do
-          (format t "(~d) `~a' ~a~%" i-id o-input comment))
-    (when (stringp file) (close stream))))
