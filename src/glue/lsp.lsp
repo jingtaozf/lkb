@@ -193,9 +193,9 @@
 (defun lsp-process-event (id event stream)
   #+:lui
   (declare (special %lui-stream% %lui-eoc%))
-  (let* ((client  (loop
-                      for client in %lsp-clients%
-                      when (= (client-id client) id) return client))
+  (let* ((client (loop
+                     for client in %lsp-clients%
+                     when (= (client-id client) id) return client))
          #+:clim
          (display clim:*default-server-path*)
          #+:clim
@@ -429,7 +429,7 @@
     n))
 
 (defun lsp-retrieve-object (id n)
-  (when (and (numberp n) (< n (array-total-size %lsp-attic%)))
+  (when (and (numberp n) (>= n 0) (< n (array-total-size %lsp-attic%)))
     (let ((bucket (aref %lsp-attic% n)))
       (when (or (equal (first bucket) -1) (equal (first bucket) id))
         (rest bucket)))))
@@ -450,7 +450,11 @@
        (if (eq view :local)
          (when (edge-p (lspb-edge object))
            (display-fs (edge-dag (lspb-edge object)) title))
-         (display-fs (lspb-dag object) title)))
+         (display-fs 
+          (if (edge-p (lspb-edge object))
+            (edge-dag (lspb-edge object)) 
+            (lspb-dag object))
+          title)))
       ((:edge :edges)
        (when (and (lspb-morphs object) (lspb-chart object))
          (let ((*morphs* (lspb-morphs object))

@@ -162,6 +162,11 @@
     #+:lui (lui-display-fs fs title id) #-:lui nil
     (display-fs-tty fs)))
 
+#+:lui
+(defun show-chart ()
+  (when (and (aref *morphs* 0) (lui-status-p :chart))
+    (lui-show-chart)))
+  
 (defun display-fs-and-paths-tty (fs paths)
   (display-fs-tty fs)
   (loop for path in paths

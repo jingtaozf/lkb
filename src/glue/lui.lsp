@@ -33,7 +33,7 @@
     MARG L-INDEX R-INDEX L-HNDL R-HNDL L-HANDEL R-HANDEL 
     MAIN SUBORD ROLE HINST NHINST))
 
-(defparameter *lui-debug-p* t)
+(defparameter *lui-debug-p* nil)
 
 (defparameter %lui-stream% nil)
 
@@ -272,6 +272,129 @@
     (format %lui-stream% "~a" %lui-eoc%))
   (force-output %lui-stream%))
 
+(defun lui-show-chart (&optional (input *sentence*)
+                                 (chart (copy-array *chart*))
+                                 (morphs (copy-array *morphs*)))
+  
+  (let ((stream (make-string-output-stream))
+        (nvertices (loop 
+                       for i from 0 for foo across morphs 
+                       when (null foo) return i)))
+    (format 
+     stream 
+     "parameter chart-word-font #F[Helvetica ~a oblique black]~a~%~
+      parameter chart-edge-font #F[Helvetica ~a roman black]~a~%~
+      chart ~d ~d ~s~%"
+     *parse-tree-font-size* %lui-eoc%
+     *parse-tree-font-size* %lui-eoc%
+     -1 nvertices
+     (if input (format nil "`~a' (Chart)" input) "Chart View"))
+
+    (loop
+        for key downfrom -1
+        for from from 0
+        for morph across morphs
+        while morph do
+          (format 
+           stream
+           "  #E[~a ~a ~a ~a ~s \"\" []]~%"
+           key key from #+:null (+ from 1) -1 (morph-edge-word morph)))
+
+    ;;
+    ;; given the (archaic) treatment of orthography-changing rules in the LKB,
+    ;; some edges are more equal than others (i.e. not in the chart).
+    ;;
+    (loop
+        for edge in *morph-records*
+        for to = (edge-to edge)
+        for from = (edge-from edge)
+        for lspb = (make-lspb
+                    :input input :morphs morphs :chart chart :edge edge)
+        for key = (lsp-store-object nil lspb)
+        for id = (edge-id edge)
+        for name = (tree-node-text-string (find-category-abb (edge-dag edge)))
+        for label = (typecase (edge-rule edge)
+                      (string (first (edge-lex-ids edge)))
+                      (symbol (edge-rule edge))
+                      (rule (rule-id (edge-rule edge)))
+                      (t :unknown))
+        when (and (numberp from) (numberp to)) do
+          (format 
+           stream
+           "  #E[~a ~:[-1~;~a~] ~a ~a ~s \"~(~a~)\" []"
+           key id id from to name label)
+          (loop
+              for child in (edge-children edge)
+              do (format stream " ~a" (edge-id child)))
+          (when (edge-morph-history edge)
+            (format stream " ~a"(edge-id (edge-morph-history edge))))
+          ;;
+          ;; for lexemes, generate pseudo daughters list in terms of token ids
+          ;;
+          (when (stringp (edge-rule edge))
+            (loop
+                for i from (- (+ from 1)) downto (- to)
+                do (format stream " ~a" i)))
+          (format stream "]~%"))
+                    
+    (loop
+        for to from 0 to (min nvertices *chart-limit*)
+        for configurations 
+        = (let ((entry (aref chart to 0)))
+            (when (chart-entry-p entry)
+              (sort (copy-list (chart-entry-configurations entry))
+                    #'(lambda (span1 span2)
+                        (cond
+                         ((eql (chart-configuration-begin span1)
+                               (chart-configuration-begin span2))
+                          (< (edge-id (chart-configuration-edge span1))
+                             (edge-id (chart-configuration-edge span2))))
+                         (t
+                          (< (chart-configuration-begin span1)
+                             (chart-configuration-begin span2))))))))
+        do
+          (loop
+              for configuration in configurations
+              for edge = (if (edge-p configuration) 
+                           configuration
+                           (chart-configuration-edge configuration))
+              for from = (if (edge-p configuration)
+                           (edge-from configuration)
+                           (chart-configuration-begin configuration))
+              for lspb = (make-lspb
+                          :input input :morphs morphs :chart chart
+                          :edge edge)
+              for key = (lsp-store-object nil lspb)
+              for id = (edge-id edge)
+              for name = (tree-node-text-string
+                          (find-category-abb (edge-dag edge)))
+              for label = (typecase (edge-rule edge)
+                            (string (first (edge-lex-ids edge)))
+                            (symbol (edge-rule edge))
+                            (rule (rule-id (edge-rule edge)))
+                            (t :unknown))
+              when (and (numberp from) (numberp to)) do
+                (format 
+                 stream
+                 "  #E[~a ~:[-1~;~a~] ~a ~a ~s \"~(~a~)\" []"
+                 key id id from to name label)
+                (loop
+                    for child in (edge-children edge)
+                    do (format stream " ~a" (edge-id child)))
+                (when (edge-morph-history edge)
+                  (format stream " ~a"(edge-id (edge-morph-history edge))))
+                ;;
+                ;; for lexemes, generate pseudo daughters list again
+                ;;
+                (when (stringp (edge-rule edge))
+                  (loop
+                      for i from (- (+ from 1)) downto (- to)
+                      do (format stream " ~a" i)))
+                (format stream "]~%")))
+    (format stream "~a" %lui-eoc%)
+    (format %lui-stream% "~a" (get-output-stream-string stream)))
+  (force-output %lui-stream%))
+
 (defun lui-display-mrs (mrs)
   (let* ((id (lsp-store-object nil (make-lspb :mrs mrs)))
          (dag (mrs::psoa-to-dag mrs))
@@ -302,6 +425,8 @@
       (:tree (streamp %lui-stream%))
       #-:null
       (:avm (streamp %lui-stream%))
+      #-:null
+      (:chart (streamp %lui-stream%))
       #-:null
       (:mrs (streamp %lui-stream%)))))
 

@@ -312,22 +312,27 @@
 #-tty
 (defun show-chart nil 
   (if (aref *morphs* 0) ; anything in chart?
-    (let ((root (make-symbol "")))
-      (setf (get root 'root) t)
-      (setf (get root 'chart-edge-descendents)
-        (make-array *chart-limit* :initial-element nil))
-      (let*
-	  ((end (create-chart-pointers root))
-	   (word-alt-sets
-	    ;; each element is a set to allow for multi-word lexical entries at
-	    ;; each position in input
-	    (coerce (subseq (get root 'chart-edge-descendents) 0 end) 'list)))
-        (setf (get root 'chart-edge-descendents) (apply #'append word-alt-sets))
-        (adjust-chart-pointers root)
-        (draw-chart-lattice root
-			    (format nil "Parse Chart for \"~A...\""
-				    (car (get root 'chart-edge-descendents))))
-        root))
+    (if #+:lui (lui-status-p :chart) #-:lui nil
+      #+:lui (lui-show-chart) #-:lui nil
+      (let ((root (make-symbol "")))
+        (setf (get root 'root) t)
+        (setf (get root 'chart-edge-descendents)
+          (make-array *chart-limit* :initial-element nil))
+        (let*
+            ((end (create-chart-pointers root))
+             (word-alt-sets
+              ;; each element is a set to allow for multi-word lexical entries 
+              ;; at each position in input
+              (coerce 
+               (subseq (get root 'chart-edge-descendents) 0 end) 'list)))
+          (setf (get root 'chart-edge-descendents)
+            (apply #'append word-alt-sets))
+          (adjust-chart-pointers root)
+          (draw-chart-lattice 
+           root
+           (format nil "Parse Chart for \"~A...\""
+                   (car (get root 'chart-edge-descendents))))
+          root)))
     (lkb-beep)))
 
 
