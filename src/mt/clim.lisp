@@ -7,6 +7,7 @@
    (edges :initform nil :accessor mrs-transfer-edges)
    (i :initform 0 :accessor mrs-transfer-i)
    (stack :initform nil :accessor mrs-transfer-stack)
+   (master :initform nil :accessor mrs-transfer-master)
    (title :initform "" :accessor mrs-transfer-title)
    (mode :initform nil :accessor mrs-transfer-mode)
    (stream :initform nil :accessor mrs-transfer-stream))
@@ -23,8 +24,8 @@
            :borders nil
            :incremental-redisplay t
            :display-function 'show-mrs-transfer
-           :width 550 
-           :height 500)))))))
+           :width 450 
+           :height 600)))))))
 
 (let ((lock (mp:make-process-lock)))
   
@@ -68,17 +69,6 @@
       (clim::redisplay-frame-panes frame :force-p t))))
 
 
-(define-mrs-transfer-command (com-scope-mrs-transfer :menu "Scope")
-    ()
-  (clim:with-application-frame (frame)
-    (let* ((mrs (nth (mrs-transfer-i frame) 
-                     (or (mrs-transfer-stack frame) 
-                         (mrs-transfer-edges frame))))
-           (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
-           (title (format nil "~a - Scopes" (transfer-title frame))))
-      (lkb::show-mrs-scoped-window nil mrs title))))
-
-
 (define-mrs-transfer-command (com-transfer-mrs-transfer :menu "Transfer")
     ()
   (clim:with-application-frame (frame)
@@ -88,29 +78,6 @@
            (mrs (edge-mrs edge))
            (edges (transfer-mrs mrs :filterp nil)))
       (when edges (browse-mrss edges "Transfer Output")))))
-
-
-(define-mrs-transfer-command (com-transfer-mrs-clone :menu "Clone")
-    ()
-  (clim:with-application-frame (frame)
-    ;;
-    ;; _fix_me_
-    ;; use class copier instead and invoke run-function() directly on it.
-    ;;                                                         (8-jan-04; oe)
-    (if (mrs-transfer-stack frame)
-      (browse-mrss
-       (first (mrs-transfer-edges frame)) (mrs-transfer-title frame)
-       :stack (mrs-transfer-stack frame) :i (mrs-transfer-i frame))
-      (browse-mrss (mrs-transfer-edges frame) (mrs-transfer-title frame)))))
-
-
-(define-mrs-transfer-command (com-transfer-mrs-debug :menu "Debug")
-    ()
-  (clim:with-application-frame (frame)
-    (let* ((edge (nth (mrs-transfer-i frame) 
-                      (or (mrs-transfer-stack frame)
-                          (mrs-transfer-edges frame)))))
-      (browse-mrss edge "Transfer Debug"))))
 
 
 (define-mrs-transfer-command (com-generate-mrs-transfer :menu "Generate")
@@ -126,41 +93,124 @@
         (mrs::output-mrs1 mrs 'mrs::simple stream)))))
 
 
-(define-mrs-transfer-command (com-print-mrs-transfer :menu "Print") 
+(define-mrs-transfer-command (com-transfer-mrs-debug :name "Debug" :menu t)
     ()
   (clim:with-application-frame (frame)
-    (multiple-value-bind (destination orientation scale name)
-        (lkb::get-print-options)
-      (case destination
-        (:printer (format t "~%Direct Printing Not Yet Supported"))
-        (:file	
-         (when (or (not (probe-file name))
-                   (clim:notify-user 
-                    frame
-                    (format 
-                     nil 
-                     "File ~a exists.~%Overwrite?" 
-                     name)
-                    :style :question))
-           (handler-case
-               (with-open-file (output name 
-                                :direction :output 
-                                :if-exists :supersede)
-                 (clim:with-output-to-postscript-stream 
-                     (stream output 
-                             :scale-to-fit (not scale) 
-                             :multi-page scale
-                             :orientation orientation)
-                   (funcall (clim-internals::pane-display-function 
-                             (clim-internals::find-frame-pane-of-type 
-                              frame 'clim:application-pane))
-                            frame stream)))
-             (storage-condition (condition)
-               (format t "~%Memory allocation problem: ~A~%" condition))
-             (error (condition)
-               (format t "~%Error: ~A~%" condition))
-             (serious-condition (condition)
-               (format t "~%Something nasty: ~A~%" condition)))))))))
+    (let ((command (clim:menu-choose
+                    '(("Scope" :value :scope :active t)
+                      ("Step" :value :step :active t)
+                      ("Clone" :value :clone :active t)
+                      ("Save" :value :save :active t)
+                      #+:null
+                      ("Read" :value :read :active t)
+                      ("Print" :value :print :active t)
+                      ("Rule" :value :rule :active t)
+                      #+:null
+                      ("Apply" :value :apply :active t)
+                      #+:null
+                      ("Trace" :value :trace :active t)
+                      #+:null
+                      ("Untrace" :value :untrace :active t)))))
+      (case command
+
+        (:scope
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+                (title (format nil "~a - Scopes" (transfer-title frame))))
+           (lkb::show-mrs-scoped-window nil mrs title)))
+
+        (:step
+         (let* ((edge (nth (mrs-transfer-i frame) 
+                           (or (mrs-transfer-stack frame)
+                               (mrs-transfer-edges frame)))))
+           (browse-mrss edge "Transfer Debug")))
+
+        (:clone
+         (let ((meta (class-of frame))
+               (new (clim:make-application-frame 'mrs-transfer)))
+           (loop
+               for slot in '(edges i stack title mode)
+               do
+                 (setf (clos:slot-value-using-class meta new slot)
+                   (clos:slot-value-using-class meta frame slot)))
+           (setf (mrs-transfer-master new) frame)
+           (mp:run-function 
+            (format nil "~a [clone]" (mrs-transfer-title new))
+            #'(lambda ()
+                (setf (clim:frame-pretty-name new) 
+                  (or (transfer-title new) "Transfer Input"))
+                (push frame (mrs-transfer-frames new))
+                (clim:run-frame-top-level new))))
+         ;;
+         ;; _fix_me_
+         ;; use class copier instead and invoke run-function() directly on it.
+         ;;                                                     (8-jan-04; oe)
+         #+:null
+         (if (mrs-transfer-stack frame)
+           (browse-mrss
+            (first (mrs-transfer-edges frame)) (mrs-transfer-title frame)
+            :stack (mrs-transfer-stack frame) :i (mrs-transfer-i frame))
+           (browse-mrss 
+            (mrs-transfer-edges frame) (mrs-transfer-title frame))))
+
+        (:save
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+                (file 
+                 (format nil "/tmp/transfer.debug.~a" (lkb::current-user))))
+           (ignore-errors
+            (with-open-file (stream file
+                             :direction :output :if-exists :supersede)
+              (format
+               stream
+               ";;;~%;;; ~a --- ~a @ ~a~%;;;~%"
+               (mrs-transfer-title frame) 
+               (lkb::current-user) (lkb::current-time :long :pretty))
+              (mrs::output-mrs1 mrs 'mrs::simple stream)
+              (format 
+               excl:*initial-terminal-io*
+               "~&browse-mrss(): saved current view to `~a'.~%"
+               file)))))
+
+        (:print
+         (multiple-value-bind (destination orientation scale name)
+             (lkb::get-print-options)
+           (case destination
+             (:printer (format t "~%Direct Printing Not Yet Supported"))
+             (:file	
+              (when (or (not (probe-file name))
+                        (clim:notify-user 
+                         frame
+                         (format 
+                          nil 
+                          "File ~a exists.~%Overwrite?" 
+                          name)
+                         :style :question))
+                (handler-case
+                    (with-open-file (output name 
+                                     :direction :output 
+                                     :if-exists :supersede)
+                      (clim:with-output-to-postscript-stream 
+                          (stream output 
+                                  :scale-to-fit (not scale) 
+                                  :multi-page scale
+                                  :orientation orientation)
+                        (funcall (clim-internals::pane-display-function 
+                                  (clim-internals::find-frame-pane-of-type 
+                                   frame 'clim:application-pane))
+                                 frame stream)))
+                  (storage-condition (condition)
+                    (format t "~%Memory allocation problem: ~A~%" condition))
+                  (error (condition)
+                    (format t "~%Error: ~A~%" condition))
+                  (serious-condition (condition)
+                    (format t "~%Something nasty: ~A~%" condition))))))))
+        (:rule (interactively-browse-mtr frame))))))
+
 
 (defun show-mrs-transfer (frame stream &rest rest)
   (declare (ignore rest))
@@ -193,35 +243,39 @@
               (format stream "~a~%" edge))))))))
 
 (defun transfer-title (frame)
-  (let ((edge (nth (mrs-transfer-i frame) (mrs-transfer-stack frame))))
-    (case (mrs-transfer-mode frame)
-      (:mtr
-       (format
-        nil 
-        "~a @ ~a"
-        (mrs-transfer-title frame)
-        (aref 
-         #("FILTER" "CONTEXT" "INPUT" "OUTPUT" "DEFAULT")
-         (mrs-transfer-i frame))))
-      (t
-       (format 
-        nil 
-        "~a (# ~a of ~:[~a~@[+~a~]~;~a~*~])~@[ [~(~a~)]~]" 
-        (mrs-transfer-title frame)
-        (mrs-transfer-i frame)
-        edge
-        (if edge 
-          (length (mrs-transfer-stack frame))
-          (loop
-              for edge in (mrs-transfer-edges frame)
-              when (zerop (edge-source edge)) count 1))
-        (unless edge
-          (let ((n (loop
-                       for edge in (mrs-transfer-edges frame)
-                       unless (zerop (edge-source edge)) count 1)))
-            (unless (zerop n) n)))
-        (when (and (edge-p edge) (mtr-p (edge-rule edge)))
-          (mtr-id (edge-rule edge))))))))
+  (let* ((edge (nth (mrs-transfer-i frame) (mrs-transfer-stack frame)))
+         (string
+          (case (mrs-transfer-mode frame)
+            (:mtr
+             (format
+              nil 
+              "~a @ ~a"
+              (mrs-transfer-title frame)
+              (aref 
+               #("FILTER" "CONTEXT" "INPUT" "OUTPUT" "DEFAULT")
+               (mrs-transfer-i frame))))
+            (t
+             (format 
+              nil 
+              "~a (# ~a of ~:[~a~@[+~a~]~;~a~*~])~@[ [~(~a~)]~]" 
+              (mrs-transfer-title frame)
+              (mrs-transfer-i frame)
+              edge
+              (if edge 
+                (length (mrs-transfer-stack frame))
+                (loop
+                    for edge in (mrs-transfer-edges frame)
+                    when (zerop (edge-source edge)) count 1))
+              (unless edge
+                (let ((n (loop
+                             for edge in (mrs-transfer-edges frame)
+                             unless (zerop (edge-source edge)) count 1)))
+                  (unless (zerop n) n)))
+              (when (and (edge-p edge) (mtr-p (edge-rule edge)))
+                (mtr-id (edge-rule edge))))))))
+    (if (mrs-transfer-master frame)
+      (format nil "~a [clone]" string)
+      string)))
 
 (defun browse-mrss (edges 
                     &optional (title "Transfer Input") 
@@ -255,12 +309,16 @@
             ;; the two components for visualization, or at least `shrink' the
             ;; DEFAULTS part, so that variables without properties disappear.
             ;;                                                 (8-jan-04; oe)
+            ;; although we now do the overlay part, shrinking may still be a
+            ;; good idea.                                      (9-jan-04; oe)
+            ;;
             (setf (mrs-transfer-edges frame) 
               (list
                (make-edge :mrs (mtr-filter edges))
                (make-edge :mrs (mtr-context edges))
                (make-edge :mrs (mtr-input edges))
-               (make-edge :mrs (mtr-output edges))
+               (make-edge :mrs (merge-and-copy-mrss 
+                                (mtr-output edges) (mtr-defaults edges)))
                (make-edge :mrs (mtr-defaults edges))))
             (loop
                 for edge in (mrs-transfer-edges frame)
@@ -279,9 +337,40 @@
          (push frame (mrs-transfer-frames frame))
          (clim:run-frame-top-level frame)))))
 
+(let (previous)
+  (defun interactively-browse-mtr (frame)
+    (let* ((rules
+            (loop
+                for mtrs in *transfer-rule-sets*
+                append (loop for mtr in (mtrs-mtrs mtrs) collect mtr)))
+           (names (loop for rule in rules collect (mtr-id rule)))
+           (names (sort names #'string-lessp)))
+      (declare (dynamic-extent rules names))
+      (let ((selection
+             (lkb::with-package (:lkb)
+               (lkb::ask-for-lisp-movable 
+                "Transfer Rule Selection" 
+                `(("MTR Identifier" . ,(or previous (first names))))
+                150 names))))
+        (when selection
+          (let* ((id (first selection))
+                 (mtr (loop 
+                          for mtr in rules 
+                          when (eq (mtr-id mtr) id) return mtr)))
+            (unless mtr
+              (clim:beep)
+              (format
+               excl:*initial-terminal-io*
+               "~&interactively-browse-mtr(): `~a' undefined.~%"
+               id)
+              (return-from interactively-browse-mtr
+                (interactively-browse-mtr frame)))
+            (browse-mrss mtr)
+            (setf previous id)))))))
+
 #+:tsdb
 (eval-when (:load-toplevel :execute)
   (setf (gethash :mrs tsdb::*statistics-browsers*) "mt::browse-mrss"))
 
 (defun mrs-transfer-font ()
-  '(:sans-serif :roman 12))
+  '(:sans-serif :roman 10))

@@ -442,6 +442,26 @@
                :rule mtr :mrs (postprocess-mrs mrs) :daughter edge 
                :solution solution :n %transfer-variable-id%)))
 
+(defparameter %transfer-trace-p% nil)
+
+(defparameter %transfer-trace-context% nil)
+
+(defparameter %transfer-trace-failure% nil)
+
+(defmacro transfer-trace (type value)
+  `(when %transfer-trace-p% 
+     (setf (getf %transfer-trace-context% ,type) ,value)))
+
+;;;
+;;; for debugging purposes, record failure condition during unification; there
+;;; could be a number of distinct failure types:
+;;;
+;;; - :top or :index, variable type or extra
+;;; - unifying two EPs, 
+;;;   PRED or role, variable vs. constant; variable type or extra
+;;; - HCONS, it seems impossible to fail on HCONS, right now
+;;;
+
 ;;;
 ;;; to simplify the treatment of constants, where the rule may use a variable
 ;;; to bind a constant, all of the following assume that the second parameter
@@ -457,15 +477,18 @@
   (format
    *transfer-debug-stream*
    "unify-mtr(): `~(~a~)' @ ~a~%" (mtr-id mtr) mrs)
+  (transfer-trace :mtr mtr)
   (let* ((filter (mtr-filter mtr))
          (context (mtr-context mtr))
          (input (mtr-input mtr))
          solutions)
+    (transfer-trace :component :filter)
     (when (and filter (unify-mtr-component mrs filter))
       ;;
       ;; trace
       ;;
       (return-from unify-mtr))
+    (transfer-trace :component :context)
     (setf solutions (unify-mtr-component mrs context))
     (unless solutions
       ;;
@@ -473,6 +496,7 @@
       ;;
       (return-from unify-mtr))
     (when input
+      (transfer-trace :component :input)
       (setf solutions
         (loop
             for solution in solutions
@@ -490,6 +514,7 @@
     (let* ((solution (if solution (copy-solution solution) (make-solution)))
            (top1 (mrs:psoa-top-h mrs1))
            (top2 (mrs:psoa-top-h mrs2)))
+      (transfer-trace :part :top)
       (unless (unify-values top1 top2 solution)
         ;;
         ;; trace
@@ -497,6 +522,7 @@
         (return-from unify-mtr-component))
       (let* ((index1 (mrs:psoa-index mrs1))
              (index2 (mrs:psoa-index mrs2)))
+        (transfer-trace :part :index)
         (unless (unify-values index1 index2 solution)
           ;;
           ;; trace
@@ -548,6 +574,7 @@
 ;;; one EP in the input MRS) spread out over those two.       (23-oct-03; oe)
 ;;;
 (defun unify-eps (ep1 ep2 solution)
+  (transfer-trace :part (cons ep1 ep2))
   (unless (or (retrieve-ep ep1 solution) (retrieve-ep ep2 solution))
     (let* ((solution (copy-solution solution))
            (pred (unify-preds 
@@ -564,8 +591,7 @@
             for role1 = (find feature flist1 :key #'mrs:fvpair-feature)
             for role2 = (find feature flist2 :key #'mrs:fvpair-feature)
             unless (unify-values 
-                    (mrs:fvpair-value role1) (mrs:fvpair-value role2)
-                    solution)
+                    (mrs:fvpair-value role1) (mrs:fvpair-value role2) solution)
             do (return-from unify-eps))
         (align-eps ep1 ep2 solution)
         solution))))
@@ -809,6 +835,11 @@
   ;; apparently, we assume we can frob the input .value., presumably we know
   ;; it to be a copy at this point.  better confirm this ...    (8-jan-04; oe)
   ;;
+  ;;
+  ;; merge in properties from .default. but keep .variable. identity.  also,
+  ;; take care to not overwrite using `vacuous' constraints, i.e. ones that
+  ;; were introducing by well-typing only.
+  ;;
   (loop
       with defaults = (mrs:var-extra default)
       for extra in (mrs:var-extra variable)
@@ -871,6 +902,38 @@
                 do 
                 (setf (mrs:fvpair-value role) (postprocess-variable value)))))
     mrs))
+
+(defun merge-and-copy-mrss (mrs1 mrs2)
+  ;;
+  ;; _fix_me_
+  ;; this function is a little overly eager in making copies, thus breaking 
+  ;; eq-ness() of variables in the result; for now, we only use it for display
+  ;; purposes (to overlay the OUTPUT and DEFAULT parts of MTRs), hence no need
+  ;; to loose sleep yet.                                       (9-jan-04; oe)
+  ;;
+  (let* ((top (when (mrs:psoa-top-h mrs1)
+                (merge-values 
+                 (mrs::copy-var (mrs:psoa-top-h mrs1)) (mrs:psoa-top-h mrs2))))
+         (index (when (mrs:psoa-index mrs1) 
+                  (merge-values 
+                   (mrs::copy-var (mrs:psoa-index mrs1))
+                   (mrs:psoa-index mrs2))))
+         (result (mrs::make-psoa :top-h top :index index)))
+    (setf (mrs:psoa-liszt result)
+      (loop
+          with defaults = (mrs:psoa-liszt mrs2)
+          for ep in (mrs:psoa-liszt mrs1)
+          for default = (pop defaults)
+          collect (merge-eps ep default)))
+    (setf (mrs:psoa-h-cons result)
+      (loop
+          for hcons in (mrs:psoa-h-cons mrs1)
+          collect 
+            (mrs::make-hcons 
+             :relation (mrs:hcons-relation hcons)
+             :scarg (mrs::copy-var (mrs:hcons-scarg hcons))
+             :outscpd (mrs::copy-var (mrs:hcons-outscpd hcons)))))
+    result))
 
 (defun intersect (set1 set2 &key (key #'identity) (test #'eql))
   ;;

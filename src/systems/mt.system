@@ -38,4 +38,5 @@
      (:file "mrsglobals" :load-only t)
      (:file "globals")
      (:file "transfer")
-     (:file "clim")))))
+     (:file "clim")
+     (:file "semi")))))
