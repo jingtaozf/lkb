@@ -105,13 +105,15 @@
     (if port (setf (port *psql-lexicon*) port))
     ;;(setf (lex-tb *psql-lexicon*) table) ;;unused
     (if table (setf (fields-tb *psql-lexicon*) table))
-    (initialize-lex *psql-lexicon*)
-    (mapcar #'(lambda (x) (link *psql-lexicon* x)) part-of)
-    *psql-lexicon*))
+    (when (initialize-lex *psql-lexicon*)
+      (mapcar #'(lambda (x) (link *psql-lexicon* x)) part-of)
+      *psql-lexicon*)))
 
 (defun load-psql-lexicon-from-script nil
   (close-lex *lexicon*)
-  (initialize-psql-lexicon)
+  (unless (initialize-psql-lexicon)
+    (error "~%Load lexicon aborted"))
+;    (format t "~%WARNING: Load lexicon aborted"))
   (setf *lexicon* *psql-lexicon*))
   
 ;; obsolete
@@ -180,8 +182,8 @@
      (t
       (setf user (ask-user-for-x "Connect to PostgreSQL lexicon" 
 				 (cons "Username?" (or user "guest"))))
-      (unless user 
-	(throw 'abort 'connect))
+;      (unless user 
+;	(setf (connection lexicon) nil))
       (when user
 	(setf (user lexicon) user)
 	(connect lexicon))))))
@@ -564,32 +566,33 @@
           (user lexicon))
   (let* ((connection (connect lexicon))
 	 (dbversion))
-      (setf *postgres-tmp-lexicon* lexicon)
+    (setf *postgres-tmp-lexicon* lexicon)
+     (cond
+     (connection
       (format t "~%Opening ~a" (dbname lexicon))
-      (cond
-       (connection
-	(unless (string>= (server-version lexicon) "7.3")
-	  (error *trace-output* 
-		 "PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." (server-version lexicon)))
-	(setf dbversion (get-db-version lexicon))
-	(unless (string>= (get-db-version lexicon) 
-			  *psql-db-version*)
-	  (if (string>= dbversion "3.00")
-	      (error "Your database structures (v. ~a) are out of date. Change to directory lkb/src/psql/ and use PSQL tool to import file import.sql. Ignore WARNING/ERROR messages. (NOTE: existing private schemas will be renamed tmpSCHEMANAME.)" dbversion dbversion)
-	    (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then import file lkb/src/psql/import.sql using PSQL tool, and finally merge dumped LexDB into new database." dbversion (dbname lexicon))))
-	(make-field-map-slot lexicon)
-	(retrieve-fn-defns lexicon)
-	(initialize-userschema lexicon)
-	(setf (name lexicon) name))
-       (t
-	(error 
-	 "unable to connect to ~s: ~a"
-	 (pg:db (connection lexicon)) (pg:error-message (connection lexicon)))))
-      lexicon))
+      (unless (string>= (server-version lexicon) "7.3")
+        (error *trace-output* 
+               "PostgreSQL server version is ~a. Please upgrade to version 7.3 or above." (server-version lexicon)))
+      (setf dbversion (get-db-version lexicon))
+      (unless (string>= (get-db-version lexicon) 
+                        *psql-db-version*)
+        (if (string>= dbversion "3.00")
+            (error "Your database structures (v. ~a) are out of date. Change to directory lkb/src/psql/ and use PSQL tool to import file import.sql. Ignore WARNING/ERROR messages. (NOTE: existing private schemas will be renamed tmpSCHEMANAME.)" dbversion dbversion)
+          (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then import file lkb/src/psql/import.sql using PSQL tool, and finally merge dumped LexDB into new database." dbversion (dbname lexicon))))
+      (make-field-map-slot lexicon)
+      (retrieve-fn-defns lexicon)
+      (initialize-userschema lexicon)
+      (setf (name lexicon) name)
+      lexicon)
+     (t
+      (format t "~%unable to connect to ~s:~%  ~a"
+              (pg:db (connection lexicon)) (pg:error-message (connection lexicon)))
+      nil))))
   
 (defmethod initialize-lex ((lexicon psql-database))
-  (open-lex lexicon)	
-  (build-lex lexicon))
+  (when
+      (open-lex lexicon)
+    (build-lex lexicon)))
   
 ;; lexicon is open
 (defmethod load-lex-from-files ((lexicon psql-lex-database) file-names syntax)

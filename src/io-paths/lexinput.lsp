@@ -52,12 +52,14 @@
     )
    (t		
     (let ((lex (make-instance 'cdb-lex-database)))
-      (open-lex lex
-		:name name
-		:parameters (list (make-nice-temp-file-pathname 
-				   (format nil "~a-~a.lex" (get-grammar-version) name))
-				  (make-nice-temp-file-pathname 
-				   (format nil "~a-~a.idx" (get-grammar-version) name))))
+      (unless
+          (open-lex lex
+                    :name name
+                    :parameters (list (make-nice-temp-file-pathname 
+                                       (format nil "~a-~a.lex" (get-grammar-version) name))
+                                      (make-nice-temp-file-pathname 
+                                       (format nil "~a-~a.idx" (get-grammar-version) name))))
+        (error "Cannot open new lexicon instance"))
       (unless (read-cached-lex lex filenames)
 	(let ((syntax (if (eql *lkb-system-version* :page) :tdl :path)))
 	  (load-lex-from-files lex filenames syntax)))
@@ -77,9 +79,12 @@
           (ask-user-for-existing-pathname "Entry file?")))
     (when file-name
       (set-temporary-lexicon-filenames)
-      (open-lex *lexicon* 
-		:parameters (list *psorts-temp-file* *psorts-temp-index-file*))
-      (load-lex-from-files *lexicon* (list file-name) :path))))
+      (unless
+          (open-lex *lexicon* 
+                    :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
+        (return-from read-lex-file))
+      (load-lex-from-files *lexicon* (list file-name) :path)))
+  t)
 
 (defun reload-lex-files (&key (allp t))
   (when (typep *lexicon* 'psql-lex-database)
@@ -92,8 +97,10 @@
     (if (check-load-names lex-source-files 'lexical)
 	(progn
 	  (set-temporary-lexicon-filenames)
-	  (open-lex *lexicon* 
-		    :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
+	  (unless
+              (open-lex *lexicon* 
+                        :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
+            (return-from reload-lex-files))
 ;;	  (load-lex-from-files *lexicon* (reverse *lex-file-list*)
 	  (load-lex-from-files *lexicon* lex-source-files
 			       (if (eql *lkb-system-version* :page) :tdl :path))
@@ -107,11 +114,11 @@
 		     (mwe-lexicon-enabled-p))
 	    (reload-roots-mwe *lexicon*))
 	  (when (and allp *idiom-file*)
-	    (reload-idiom-file))
-	  )
+	    (reload-idiom-file)))
       (progn
 	#-:tty(format t "~%Use Load Complete Grammar instead")
-	#+:tty(format t "~%Use (read-script-file-aux file-name) instead")))))
+	#+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
+  t)
 
 (defun reload-template-file nil
   (setf *syntax-error* nil)
@@ -146,25 +153,22 @@
    ((null filenames)
     (error "no file names supplied"))
    ((not (check-load-names filenames 'lexical))
-    (error "Lexicon file not found")
-;    (set-temporary-lexicon-filenames)
-;    (open-lex *lexicon* 
-;	      :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
-;    (write-empty-lex *lexicon*)
-;    (open-read *lexicon*)
-    )
+    (error "Lexicon file not found"))
    (t		
     (set-temporary-lexicon-filenames)
-    (open-lex *lexicon*
-	      :name "main_lexicon"
-	      :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
+    (unless
+        (open-lex *lexicon*
+                  :name "main_lexicon"
+                  :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
+      (error "Operation aborted"))
     (unless (read-cached-lex *lexicon* filenames)
       (let (
 	    ;(*syntax-error* nil)
 	    (syntax (if (eql *lkb-system-version* :page)
 			:tdl
 		      :path)))
-	(load-lex-from-files *lexicon* filenames syntax))))))
+	(load-lex-from-files *lexicon* filenames syntax)))))
+  t)
 	
 ;; entry fn
 (defun read-tdl-lex-file-aux (filenames &optional overwrite-p)
@@ -178,9 +182,12 @@
   (unless (listp filenames) 
     (setf filenames (list filenames)))  
   (set-temporary-lexicon-filenames)
-  (open-lex *lexicon* 
-	    :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
-  (load-lex-from-files *lexicon* filenames :tdl))
+  (unless
+      (open-lex *lexicon* 
+                :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
+    (return-from read-tdl-lex-file-aux))
+  (load-lex-from-files *lexicon* filenames :tdl)
+  t)
 
 ;; entry fn
 (defun read-lex-file-aux (filenames &optional overwrite-p)
@@ -195,8 +202,10 @@
   (unless (listp filenames) 
     (setf filenames (list filenames)))  
   (set-temporary-lexicon-filenames)
-  (open-lex *lexicon* 
-	    :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
+  (unless
+      (open-lex *lexicon* 
+                :parameters (list *psorts-temp-file* *psorts-temp-index-file*))
+    (return-from read-lex-file-aux))
   (load-lex-from-files *lexicon* filenames :path))
 
 (defun read-lex-file-aux-internal (file-name)

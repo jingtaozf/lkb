@@ -927,21 +927,27 @@
 (defun merge-tdl-into-psql-lexicon (file-in)
   (setf file-in (namestring (pathname file-in)))
   (let ((tmp-lex (make-instance 'cdb-lex-database)))
-    (open-lex tmp-lex
-	      :parameters (list (make-nice-temp-file-pathname ".tx")
-				(make-nice-temp-file-pathname ".tx-index")))
+    (unless
+        (open-lex tmp-lex
+                  :parameters (list (make-nice-temp-file-pathname ".tx")
+                                    (make-nice-temp-file-pathname ".tx-index")))
+      (format t "~%Operation aborted")
+      (return-from merge-tdl-into-psql-lexicon))
     (unless (probe-file file-in)
       (error "~%file not found (~a)" file-in))
     (load-lex-from-files tmp-lex (list file-in) :tdl)
     (export-lexicon-to-db :lexicon tmp-lex :output-lexicon *psql-lexicon*)
-    (close-lex tmp-lex)))
+    (close-lex tmp-lex))
+  t)
 
 ;; assumes *lexicon* eq *psql-lexicon*
 (defun load-scratch-lex (&key filename)
   (let ((lexicon (make-instance 'cdb-lex-database)))
-    (open-lex lexicon 
-	      :parameters (list (make-nice-temp-file-pathname ".tx")
-				(make-nice-temp-file-pathname ".tx-index")))
+    (unless
+        (open-lex lexicon 
+                  :parameters (list (make-nice-temp-file-pathname ".tx")
+                                    (make-nice-temp-file-pathname ".tx-index")))
+      (return-from load-scratch-lex))
     (load-lex-from-files lexicon (list filename) :tdl)
     lexicon))
 

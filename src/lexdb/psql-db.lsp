@@ -78,6 +78,8 @@
   
   
 (defmethod fn ((lexicon psql-lex-database) fn-name &rest rest)
+  (unless (connection lexicon)
+    (error "no connection to psql lexicon"))
   (let ((lex-fn (assoc fn-name (fns lexicon))))
     (if lex-fn
 	(eval (append (list (cdr lex-fn)) rest))
