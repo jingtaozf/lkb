@@ -1,5 +1,6 @@
-;;; Copyright (c) 1999-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1999--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 (in-package :common-lisp-user)
 
@@ -332,7 +333,7 @@
 
 ;; Collect all keys in a hash table and return as a list of strings
 
-(defun all-keys (cdb)
+(defun all-keys (cdb &optional (asciip *cdb-ascii-p*))
   (unless (eq (cdb-mode cdb) :input)
     (error "Database not open for input."))
   (with-slots (stream tables) cdb
@@ -351,9 +352,12 @@
 	      #+(and :allegro (version>= 5 0))
 	      (excl:puthash-key key keys)
 	      (dotimes (x dlength)
-		(read-byte stream))))
+		(read-byte stream)
+                (unless asciip (read-byte stream)))))
       (maphash #'(lambda (x y) 
 		   (declare (ignore y))
 		   (push x key-list))
 	       keys)
       key-list)))
+
+
