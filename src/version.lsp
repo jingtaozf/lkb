@@ -1,3 +1,3 @@
-(in-package :cl-user)
+(in-package :lkb)
 
 (defconstant *cvs-version* "$Date$")
