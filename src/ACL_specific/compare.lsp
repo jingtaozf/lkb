@@ -21,7 +21,7 @@
 
 (in-package :lkb)
 
-(def-lkb-parameter *preference-file* "~/grammar/parses.txt")
+(def-lkb-parameter *preference-file* nil)
 
 (def-lkb-parameter *tree-comparison-threshold* 50)
 
@@ -519,17 +519,18 @@
 	     (get-decoded-time)
 	   (format nil "~a-~a-~a ~a:~a:~a" year month date hour min sec)))
 	(*print-pretty* nil))
-    (with-open-file (stream *preference-file* 
-		     :direction :output :if-exists :append
-		     :if-does-not-exist :create)
-      (write (list timestamp 
-                   #+(and :allegro-version>= (version>= 5 0))
-                   (sys:user-name)
-                   #-(and :allegro-version>= (version>= 5 0))
-                   (system:getenv "USER")
-                   sentence result)
-	     :stream stream :level nil :length nil)
-      (write-char #\lf stream))))
+    (when *preference-file*
+      (with-open-file (stream *preference-file* 
+                              :direction :output :if-exists :append
+                              :if-does-not-exist :create)
+        (write (list timestamp 
+                     #+(and :allegro-version>= (version>= 5 0))
+                     (sys:user-name)
+                     #-(and :allegro-version>= (version>= 5 0))
+                     (system:getenv "USER")
+                     sentence result)
+               :stream stream :level nil :length nil)
+        (write-char #\lf stream)))))
 
 
 ;;; **********************************************************************
