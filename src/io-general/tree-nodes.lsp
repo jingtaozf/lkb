@@ -220,7 +220,7 @@
 (defun match-label (fs)
   (or
    (dolist (tmpl *label-display-templates*)
-     (when (template-match-p (label-template-fs tmpl) fs t)
+     (when (template-match-p (label-template-fs tmpl) fs)
        (return (label-template-label tmpl))))
    "?"))
 
@@ -238,18 +238,18 @@
     (if (null meta-fs)
         ""
       (dolist (meta-tmpl *meta-display-templates*)
-        (when (template-match-p (meta-template-fs meta-tmpl) fs nil)
+        (when (template-match-p (meta-template-fs meta-tmpl) fs)
           (return (concatenate 'string 
                                (meta-template-prefix meta-tmpl) 
                                (match-meta-label meta-fs)
                                (meta-template-suffix meta-tmpl))))))))
 
 
-(defun template-match-p (tmpl-fs fs label-p)
+(defun template-match-p (tmpl-fs fs)
   ;;; the test is whether all the `real' parts of the
   ;;; template fs (i.e. the bits apart from e.g. LABEL-NAME)
   ;;; unify with the node
-  (for feat in (get-real-templ-feats tmpl-fs label-p)
+  (for feat in (get-real-templ-feats tmpl-fs)
        all-satisfy
        (let ((real-templ-fs (get-dag-value tmpl-fs feat))
              (sub-fs (get-dag-value fs feat)))
@@ -257,19 +257,22 @@
               (unifiable-dags-p real-templ-fs sub-fs)))))
 
 (defun meta-template-match-p (tmpl-fs fs)
-  ;;; the test is whether all the `real' parts of the
+  ;;; the test is whether all the parts of the
   ;;; template fs after the *local-path*
-  ;;; unify with the node
-  (let ((real-templ-fs (existing-dag-at-end-of tmpl-fs *local-path*)))
-    (if real-templ-fs
-        (unifiable-dags-p real-templ-fs fs))))
+  ;;; unify with the node or, if there is a null *local-path*,
+  ;;; whether the `real' parts of the template unify
+  (if *local-path*
+      (let ((real-templ-fs (existing-dag-at-end-of tmpl-fs *local-path*)))
+        (if real-templ-fs
+            (unifiable-dags-p real-templ-fs fs)))
+    (template-match-p tmpl-fs fs)))
   
 
-(defun get-real-templ-feats (tmpl-fs label-p)
+(defun get-real-templ-feats (tmpl-fs)
   (let ((feats (top-level-features-of tmpl-fs)))
-    (set-difference feats (if label-p (list (car *label-path*))
-                            (list (car *prefix-path*)
-                                  (car *suffix-path*))))))
+    (set-difference feats (list (car *label-path*)
+                                (car *prefix-path*)
+                                (car *suffix-path*)))))
                               
 ;;; JAC added the following to parseout.lsp, but better here
 
