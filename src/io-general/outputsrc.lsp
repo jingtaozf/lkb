@@ -91,6 +91,7 @@
                                syntax)))
                  (format t "~%Warning ~A not found" lex-name))))))))
 
+#|
 (defun output-lex-and-derived (syntax &optional file-name ids-used)
   ;;; lexicon and everything that can be derived from it
   ;;; via lexical rule.  Ordered by base form.
@@ -133,6 +134,84 @@
                               nil)))
                       (idno 0))
                  (loop for result-pair in result-list
+                      do
+                      (let* ((derivation 
+                              (append (first result-pair) (list lex-name)))
+                             (id (format nil "~(~a~)_~d" lex-name idno))
+                             (fs (cdr result-pair))
+                             (orth (extract-orth-from-fs fs)))
+                        (case syntax
+                          (:tdl 
+                           (output-derived-instance-as-tdl orth fs ostream 
+                                                           lex-name idno))
+                          (:lilfes 
+                           (output-derived-instance-as-lilfes 
+                            orth fs ostream id stem derivation))
+                          (:ebl
+                           (output-for-ebl orth fs ostream (car result-pair)
+					   lex-name lex-entry-fs eblstream))
+                          (:chic
+                           (output-for-chic orth fs ostream (car result-pair) 
+                                            lex-name lex-entry-fs 
+                                            (lex-or-psort-infl-pos lex-entry)
+                                            stem))
+                          (:uc
+                           (output-for-uc orth fs ostream (car result-pair) 
+                                           lex-name lex-entry-fs 
+                                           (lex-or-psort-infl-pos lex-entry)))
+                          (t (error "Unsupported syntax specifier ~A"
+                                    syntax))))
+                      (incf idno))))
+	  (when (eq syntax :ebl)
+	    (output-rules-for-ebl eblstream)))))))
+|#
+
+(defun output-lex-and-derived (syntax &optional file-name ids-used)
+  ;;; lexicon and everything that can be derived from it
+  ;;; via lexical rule.  Ordered by base form.
+  (unless file-name 
+    (setf file-name
+      (ask-user-for-new-pathname "Output file?")))
+  (if (eq syntax :pet)
+    (if ids-used
+      (output-lexicon-for-pet file-name ids-used)
+      (output-lexicon-for-pet file-name))
+    (when file-name 
+      (with-open-file 
+          (ostream file-name :direction :output :if-exists :supersede)
+        (let ((count 0)
+	      (eblstream (when (eq syntax :ebl)
+                         (open (concatenate 'string file-name ".lextypes")
+                               :direction :output
+                               :if-exists :supersede
+                               :if-does-not-exist :create))))
+          (unless (or ids-used *ordered-lex-list*)
+            (cerror "Continue without lexicon" 
+                    "No lexicon list - lexicon must be read in from scratch"))
+          (for lex-name in (or ids-used (reverse *ordered-lex-list*))
+               do            
+               (if (> count 100)
+                 (progn (clear-expanded-lex)
+                        (setf count 0))
+                 (incf count))
+               (setf *number-of-applications* 0)
+               (let* ((lex-entry (get-psort-entry lex-name))
+                      (lex-entry-fs 
+                       (if lex-entry
+                         (lex-or-psort-full-fs lex-entry)
+                         (error "Entry for ~A not found" lex-name)))
+                      (stem (lex-or-psort-orth lex-entry))
+                      (result-list
+                       (cons (cons nil lex-entry-fs)
+                             (try-all-lexical-rules 
+                              (list (cons nil lex-entry-fs)) 
+                              (if (eq syntax :ebl)
+				    (loop
+				      for rule in (get-indexed-lrules nil nil)
+				      when (not (inflectional-rule-p rule))
+				      collect (rule-id rule))))))
+                      (idno 0))
+                 (for result-pair in result-list
                       do
                       (let* ((derivation 
                               (append (first result-pair) (list lex-name)))
@@ -297,12 +376,16 @@
                          (entry (cons type (if result t :fail))))
                     (push entry (aref caches j))))))))
 
+
 (defun output-for-ebl (orth fs ostream rule-list base-id base-fs ostream2)
+  (declare (ignore fs))
   (let* ((type (type-of-fs (tdfs-indef base-fs)))
          (category (find-possibly-cached-cat type fs))
          (infl-rules nil)
          (other-rules nil))
-    (when (and category (not (equal category "?")))
+    (when (and category 
+	       (not (equal category "?"))
+	       (not (equal category "STEM")))
       (loop for rule in rule-list 
            do
            (if (inflectional-rule-p rule)
