@@ -31,6 +31,12 @@
                (dir-append (get-sources-dir "www") '(:relative "www")))
    :name "introduction.html"))
 
+(defparameter *www-rmrs-dtd*
+  (make-pathname
+   :directory (pathname-directory
+               (dir-append (get-sources-dir "www") '(:relative "rmrs")))
+   :name "rmrs.dtd"))
+
 (defparameter *www-maximal-number-of-edges* 20000)
 
 (defparameter *www-maximal-number-of-results* 10)
@@ -73,6 +79,7 @@
     
   (publish-file :path "/lkb.css" :file *www-lkb-css*)
   (publish-file :path "/lkb.js" :file *www-lkb-js*)
+  (publish-file :path "/rmrs.dtd" :file *www-rmrs-dtd*)
 
   (publish :path "/compare"
    :content-type "text/html"
