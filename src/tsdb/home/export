@@ -5,7 +5,7 @@ if [ -z "${DELPHINHOME}" ]; then
 fi
 TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home
 TARGET=${DELPHINHOME}/tmp
-TSDB=${DELPHINHOME}/lkb/bin/linux/tsdb
+TSDB=${DELPHINHOME}/lkb/bin/linux.x86.32/tsdb
 GRAMMAR=${DELPHINHOME}/erg.jun-04
 
 [ -d ${TARGET} ] || mkdir $TARGET;
