@@ -67,6 +67,9 @@
 (defparameter *hack-parameters* nil
   "something to pass infos some hack might need")
 
+(defvar *unbound-holes* nil)
+;;; for fragments
+
 ;;; **** General purpose utility functions ****
 
 ;;; general purpose functions for creating new atoms ...
@@ -533,9 +536,6 @@
 (defvar *topvit* nil)
 
 (defvar *newmainlabel* nil)
-
-(defvar *unbound-holes* nil)
-;;; for fragments
 
 (defun mrs-to-vit (vitrified-mrs)
   (setf *mrs-to-vit-variables* nil)
@@ -1290,21 +1290,38 @@
       (for rel in top-rels
            do
            (for feat-val in (rel-flist rel)
-                do     
-                (let ((var (fvpair-value feat-val)))
-                  (if (listp var)
-                      (for val in var
-                           do
-                           (if (is-handel-var val)
-                               (collect-leqs-from-rels 
-                                (get-var-num val) rel-list bindings
-                                (cons (get-var-num val) holes-so-far)
-                                (cons top-handel labels-so-far))))
-                    (if (is-handel-var var)
-                        (collect-leqs-from-rels 
-                         (get-var-num var) rel-list bindings
-                         (cons (get-var-num var) holes-so-far)
-                         (cons top-handel labels-so-far))))))))))
+                do  
+                (collect-leqs-from-feat-val 
+                 feat-val 
+                 rel-list bindings holes-so-far
+                 top-handel labels-so-far))))))
+           
+(defun collect-leqs-from-feat-val (feat-val rel-list bindings holes-so-far
+                                   top-handel labels-so-far) 
+  (when (fvpair-p feat-val)
+    (let ((var (fvpair-value feat-val)))
+      (if (and (var-p var)
+               (var-extra var))
+          (for feat-val2 in (var-extra var)
+               do
+               (collect-leqs-from-feat-val 
+                feat-val2
+                rel-list bindings holes-so-far
+                top-handel labels-so-far)))
+      (if (listp var)
+          (for val in var
+               do
+               (if (is-handel-var val)
+                   (collect-leqs-from-rels 
+                    (get-var-num val) rel-list bindings
+                    (cons (get-var-num val) holes-so-far)
+                    (cons top-handel labels-so-far))))
+        (if (is-handel-var var)
+            (collect-leqs-from-rels 
+             (get-var-num var) rel-list bindings
+             (cons (get-var-num var) holes-so-far)
+             (cons top-handel labels-so-far)))))))
+                    
 
 (defun is-locally-equivalent (h1 h2 bindings)
   (member h2 (get-bindings-for-handel h1 bindings)))
