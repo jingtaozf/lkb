@@ -267,7 +267,7 @@ typedef struct tsdb_field {
 typedef struct tsdb_value {
   BYTE type;
   union {
-    int integer;
+    long int integer;
     char *identifier;
     char *string;
     char *date;
