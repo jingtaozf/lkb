@@ -157,7 +157,7 @@
                         :value 'reload-lexical-rules :available-p nil)
                      (make-menu-item :name "Reload tree nodes"
                         :value 'reload-template-files :available-p nil)
-                     (make-menu-item :name "Reload other instances"
+                     (make-menu-item :name "Reload other entries"
                         :value 'reload-psort-files :available-p nil)
                      )
                   :available-p t)
