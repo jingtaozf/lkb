@@ -19,6 +19,8 @@
     (error "please set *batch-check-diff-list*"))))
    
 (defun batch-check-lexicon (&optional (unexpandp t) &key (check-duplicates t))
+  #-:psql
+  (declare (ignore check-duplicates))
   (let ((*batch-mode* t)
 	(start-path (get-diff-list-start-path)))
     #+:psql
@@ -46,6 +48,7 @@
 		      lex-id
 		      (reverse start-path)))))
       (when unexpandp (unexpand-psort *lexicon* id))))
+  #+:psql
   (when check-duplicates
     (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")
     (display-tdl-duplicates *lexicon*)
