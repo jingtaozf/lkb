@@ -165,7 +165,7 @@
           (setf mk::sys-home (merge-pathnames home sys))
           (mk::reset-system-paths)))
       
-      #+:allegr
+      #+:allegro
       (tpl:setq-default *package* 
         (find-package (if (system:getenv "SSP") :ssp :lkb)))
       
