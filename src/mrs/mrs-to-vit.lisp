@@ -297,7 +297,7 @@
 
 ;;; function to call from PAGE or LKB interface
 
-(defun mrs-to-vit-convert (mrs-psoa &optional (standalone t) fragment-p)
+(defun mrs-to-vit-convert (mrs-psoa &optional (standalone t))
   (when mrs-psoa
     (if (eq *mrs-for-language* 'english)
         (let ((mrsstruct
@@ -306,7 +306,7 @@
                  mrs-psoa)))
           (multiple-value-bind 
               (vit binding-sets)
-              (mrs-to-vit mrsstruct fragment-p)
+              (mrs-to-vit mrsstruct)
             (setf *canonical-bindings* nil)
             (when standalone
               (format t "~%Premunged form")
@@ -316,13 +316,13 @@
             ;;; then try and find sets of bindings which will give a fully scoped 
             ;;; structure, and output the results
             (if binding-sets
-                (format t "~%~A scoped form(s) ~A" (length binding-sets)
+                (format t "~%~A scoped form(s) ~A~%" (length binding-sets)
                         (if (> (length binding-sets) 10)
                             "only printing first 10" 
                           ""))
-              (unless fragment-p
-                (format t "~%WARNING: No valid scopes - invalid MRS structure ")))
-            (for binding in (subseq binding-sets 0 (min (length binding-sets) 10))
+              (format t "~%WARNING: No valid scopes~%"))
+            (for binding in (subseq binding-sets 0 
+                                    (min (length binding-sets) 10))
                  do
                  (setf *canonical-bindings* (canonical-bindings binding))
                  (output-connected-mrs mrsstruct 'indexed)
@@ -397,10 +397,9 @@
     (setf (vit-scope vit) new-scope)
     vit))
 
-(defun mrs-to-vit (vitrified-mrs &optional fragment-p)
+(defun mrs-to-vit (vitrified-mrs)
   ;;; first we produce all scoped structures, using the code in mrsresolve.lsp
   ;;; we also collect up all the var structures for the handels
-;  (when *testing-fragments* (setf fragment-p t))
   (clear-temporary-dbs)
   (setf *current-vit* (make-vit))
   (let* ((unstrung-psoa (mrs-unstring-psoa vitrified-mrs))
@@ -413,56 +412,57 @@
          (mrs-psoa (if (mrs-language '(english))
 		       (time-convert-mrs-struct unstrung-psoa)
 		     unstrung-psoa))
-	 (binding-sets (unless fragment-p (make-scoped-mrs mrs-psoa)))
+	 (binding-sets (make-scoped-mrs mrs-psoa))
          ; fragments have unbound variables so can't really be scoped
 	 (equalities)
 	 (leqs))
     (multiple-value-bind 
         (label-vars group-list)
         (collect-all-handel-vars (psoa-liszt mrs-psoa))
-      (if fragment-p
-          ;;; for fragments we use whatever information we can to get
-          ;;; at least some leqs and equalities
-          (progn 
-            (set-up-cheap-hcons mrs-psoa)
-            ; sets globals for is-one-ofs and leqs
-            (setf leqs (find-cheap-leqs mrs-psoa))
-            (setf equalities (find-cheap-equalities)))
-        (when binding-sets
+      (if binding-sets
             ;;; if we're dealing with a complete sentence
             ;;; we work out which equalities and leqs are common to
             ;;; all of the scoped structures
-              (multiple-value-setq (equalities leqs)
-                (work-out-scoping-restrictions mrs-psoa (car binding-sets)))
-              (for binding-set in (cdr binding-sets)
-                   do
-                   (multiple-value-bind (new-eqs new-leqs)
-                       (work-out-scoping-restrictions mrs-psoa binding-set)
-		     (setf equalities 
-                           (delete-if-not   
-                            #'(lambda (equality)
-                                (member equality new-eqs 
-                                        :test #'(lambda (new old)
-                                                  (or (equal new old)
-                                                      (and (eql (car new) 
-                                                                (cdr old))
-                                                           (eql (cdr new) 
-                                                                (car old)))))))  
-                            equalities))
-                     (setf leqs (delete-if-not  
-                                 #'(lambda (leq)
-                                     (member leq new-leqs :test #'equal)) 
-                                 leqs))))))
+          (progn 
+            (multiple-value-setq (equalities leqs)
+              (work-out-scoping-restrictions mrs-psoa (car binding-sets)))
+            (for binding-set in (cdr binding-sets)
+                 do
+                 (multiple-value-bind (new-eqs new-leqs)
+                     (work-out-scoping-restrictions mrs-psoa binding-set)
+                   (setf equalities 
+                     (delete-if-not   
+                      #'(lambda (equality)
+                          (member equality new-eqs 
+                                  :test #'(lambda (new old)
+                                            (or (equal new old)
+                                                (and (eql (car new) 
+                                                          (cdr old))
+                                                     (eql (cdr new) 
+                                                          (car old)))))))  
+                      equalities))
+                   (setf leqs (delete-if-not  
+                               #'(lambda (leq)
+                                   (member leq new-leqs :test #'equal)) 
+                               leqs)))))
+          ;;; for fragments or other cases where there are no valid scopes 
+          ;;; we use whatever information we can to get
+          ;;; at least some leqs and equalities
+          (progn 
+            (set-up-cheap-hcons mrs-psoa)
+            ;; sets globals for is-one-ofs and leqs
+            (setf leqs (find-cheap-leqs mrs-psoa))
+            (setf equalities (find-cheap-equalities))))
       (let* ((labels (if (assoc (var-id (psoa-handel mrs-psoa)) label-vars)
-                       label-vars
-                     (push (list (var-id (psoa-handel mrs-psoa))) label-vars)))
+                         label-vars
+                       (push (list (var-id (psoa-handel mrs-psoa))) label-vars)))
              (rels (psoa-liszt mrs-psoa))
              (scope (construct-vit-scope equalities leqs labels))
              (converted-rels (convert-mrs-rels-to-vit rels 
                                                       *current-vit* 
-                                   group-list labels))
-;; *group-members* is constructed as a side effect of converting rels
-;; in the english grammar the 'message' is included in liszt
+                                                      group-list labels))
+;;; *group-members* is constructed as a side effect of converting rels
+;;; in the english grammar the 'message' is included in liszt
              (mood nil)
              (groups (construct-vit-groups *group-members*)))
         (setf (vit-utterance-id *current-vit*) (construct-segment-description
