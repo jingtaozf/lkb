@@ -68,17 +68,11 @@ e.g.
       (and input-file
          (or (probe-file input-file) (error "Input file ~A does not exist" input-file)))
       (when
-         (or parse-file
-            (progn
-               (setq parse-file (ask-user-for-new-pathname "Parse file?"))
-               (and parse-file
-                  (or (not (probe-file parse-file)) (delete-file parse-file)))))
+         (setq parse-file
+            (parse-tsdb-sentences-get-filename "Parse file?" parse-file))
          (when
-            (or result-file
-               (progn
-                  (setq result-file (ask-user-for-new-pathname "Result file?"))
-                  (and result-file
-                     (or (not (probe-file result-file)) (delete-file result-file)))))
+            (setq result-file
+               (parse-tsdb-sentences-get-filename "Result file?" result-file))
             (format t "~%~A: ~A -> ~A, ~A..." 'parse-tsdb-sentences
                input-file parse-file result-file)
             (finish-output)
@@ -95,6 +89,13 @@ e.g.
                   (round (- (gctime) start-gc-time)
                      internal-time-units-per-second))
                )))))
+
+
+(defun parse-tsdb-sentences-get-filename (prompt file)
+   (unless file
+      (setq file (ask-user-for-new-pathname prompt)))
+   (when file
+      (if (probe-file file) (and (delete-file file) file) file)))
 
 
 (defun parse-tsdb-sentences1 (istream parse-file result-file &aux (nsent 0))
