@@ -72,7 +72,8 @@
 (defvar *scratch-tdl-file* nil)
 
 (defvar *dump-filename* "~/tmp/lexicon.tmp.csv")
-
+(defvar *postgres-temp-filename*)
+    
 (defun lexdb-fn (fn-name &rest rest)
   (if *psql-lexicon*
       (apply fn-name (cons *psql-lexicon* rest))))
