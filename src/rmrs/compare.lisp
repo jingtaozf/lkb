@@ -39,6 +39,7 @@ Should be possible to reuse this as MRS code
 ;;; to use the character position information 
 
 (defun compare-rmrs (rmrs1 rmrs2 same-source-p input-string)
+  (declare (ignore input-string))
   ;;; returns a list of comparison records 
   (unless (and (rmrs-p rmrs1) (rmrs-p rmrs2))
     (error "Arguments to compare-rmrs are not valid RMRSs"))
@@ -380,9 +381,11 @@ realpreds.
 	 "u"))
 
 (defun compare-rmrs-vars (var1 var2 comparison-record)
+  (declare (ignore var1 var2))
   comparison-record)
 
 (defun compare-rmrs-labels (var1 var2 comparison-record)
+  (declare (ignore var1 var2))
   comparison-record)
 
 #|
