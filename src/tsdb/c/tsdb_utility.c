@@ -58,6 +58,7 @@ BYTE tsdb_value_compare(Tsdb_value *foo, Tsdb_value *bar) {
       else 
         fprintf(tsdb_error_stream,
                 "tsdb_value_compare: invalid value type in comparison.\n");
+      fflush(tsdb_error_stream);
       return(TSDB_VALUE_INCOMPATIBLE);
     } /* switch */
   } /* if */
@@ -68,6 +69,7 @@ BYTE tsdb_value_compare(Tsdb_value *foo, Tsdb_value *bar) {
     else 
       fprintf(tsdb_error_stream,
               "tsdb_value_compare: incompatible types in comparison.\n");
+    fflush(tsdb_error_stream);
     return(TSDB_VALUE_INCOMPATIBLE);
   } /* else */
 
@@ -108,6 +110,7 @@ BOOL tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,void* bar_pat) {
            char a[s+1];
            regerror(result,pattern,&a[0],s+1);
            fprintf(tsdb_error_stream,"Regex Error: %s \n",a);
+           fflush(tsdb_error_stream);
          }
          answer = FALSE;
        } /* if */
@@ -219,6 +222,7 @@ BOOL tsdb_are_attributes(Tsdb_value **attribute_list, Tsdb_relation *relation){
       else
         fprintf(tsdb_error_stream, "No such attribute: %s\n",
                 attribute_list[i]->value.identifier);
+      fflush(tsdb_error_stream);
       return(FALSE);
     } /* if */
   } /* for */
@@ -435,6 +439,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
   }
   else {
     fprintf(tsdb_error_stream, "tsdb: bad tsdb_type.\n");
+    fflush(tsdb_error_stream);
     if (attribute)
       free(attribute);
     return(FALSE);
@@ -509,6 +514,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
   } /* switch */
   
   printf("returning %d.\n", answer);
+  fflush(tsdb_error_stream);
   if (attribute)
     free(attribute);
   if (string)
@@ -791,6 +797,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
   if(relation == NULL || relation->name == NULL || tsdb_relations == NULL) {
     fprintf(tsdb_error_stream,
             "find_table(): invalid context or parameter call.\n");
+    fflush(tsdb_error_stream);
     return((Tsdb_selection *)NULL);
   } /* if */
   for(i = 0;
@@ -801,6 +808,7 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
     fprintf(tsdb_error_stream,
             "find_table(): unknown relation `%s'.\n",
             relation->name);
+    fflush(tsdb_error_stream);
     return((Tsdb_selection *)NULL);
   } /* if */
 
@@ -1635,7 +1643,8 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
 #endif
 
   if(selection == NULL && tuples == NULL) {
-    free(last);
+    if (last)
+      free(last);
     last = (Tsdb_key_list **)NULL;
     n_key_lists = 0;
 #if defined(DEBUG) && defined(INSERT_INTO_SELECTION)

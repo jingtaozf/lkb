@@ -230,7 +230,9 @@ BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
         fprintf(tsdb_error_stream, "Never fucking heard of tsdb_value: %d\n",value->type);
       else
         fprintf(tsdb_error_stream, "tsdb: unknown tsdb_value type: %d\n", value->type);
+      fflush(tsdb_error_stream);
     } /* switch */
+  fflush(stream);
   if (r==EOF)
     return FALSE;
   else 
@@ -246,6 +248,7 @@ void tsdb_print_array(Tsdb_value **array, FILE *stream) {
     tsdb_print_value(*array, stream);
   } /* for */
   fprintf(stream, " \n");
+  fflush(stream);
 
 } /* tsdb_print_array() */
 
@@ -315,6 +318,7 @@ void tsdb_print_selection(Tsdb_selection *selection, FILE *stream) {
     tsdb_print_key_list(selection->key_lists[i],stream);
   }
 #endif
+  fflush(stream);
 
 } /* tsdb_print_selection */
 
@@ -339,7 +343,8 @@ void tsdb_print_relation(Tsdb_relation *relation, FILE *stream) {
     } /* for */
     fprintf(stream, "\n");
   } /* if */
-  
+  fflush(stream);
+
 } /* tsdb_print_relation() */
 
 void tsdb_print_node(Tsdb_node *node, FILE *stream) {
@@ -355,6 +360,7 @@ void tsdb_print_node(Tsdb_node *node, FILE *stream) {
     tsdb_print_node(node->right, stream);
     fprintf(stream, (node->left != NULL ? ")" : ""));
   } /* if */
+  fflush(stream);
 
 } /* tsdb_print_node() */
 
@@ -386,6 +392,7 @@ void tsdb_print_tuples(Tsdb_tuple **tuples,FILE* stream){
         fprintf(stream,"|");
     } /* if */
   }
+  fflush(stream);
 } /* tsdb_print_tuples() */
 
 void tsdb_print_key_list(Tsdb_key_list *list, FILE *stream) {
@@ -402,7 +409,8 @@ void tsdb_print_key_list(Tsdb_key_list *list, FILE *stream) {
     } /* for */
     fprintf(stream, "\n");
   } /* for */
- 
+  fflush(stream);
+  
 } /* tsdb_print_key_list() */
 
 void tsdb_print_join_path(Tsdb_relation **path, FILE *stream) {
@@ -439,6 +447,7 @@ FILE *tsdb_find_relations_file(char *mode) {
     else 
       fprintf(tsdb_error_stream, "tsdb: unable to open relations file %s.\n",
             tsdb_relations_file);
+    fflush(tsdb_error_stream);
     return((FILE *)NULL);
   } /* if */
   return(file);
@@ -623,6 +632,7 @@ int tsdb_write_relations() {
   } /* for */
   
   r = rename(temp_name,tsdb_relations_file);
+  fclose(file);
   if (r==-1) {
     perror();
     return 0;
@@ -782,7 +792,7 @@ BOOL tsdb_write_table(Tsdb_selection* selection) {
     f = tsdb_write_tuple(bar,output);
     bar = bar->next;
   } /* for */
-
+  fclose(output);
   if (!f) {
     perror(NULL);
     tsdb_restore_data_file(selection->relations[0]->name,temp);
