@@ -109,7 +109,7 @@
   (format 
    nil 
    "~@[~(~A~)~]~A" 
-   (when (var-id var) (or (var-type var) "u")) (var-id var))))
+   (when (var-id var) (or (var-type var) "v")) (var-id var))))
 
 ;;; macros moved from mrsresolve
 
@@ -1179,7 +1179,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   ;;
   ;; LFG-derived MRSs (and in principle any MRS not constructed by ourselves)
   ;; may contain things like [ ... ARG0 nil ... ]; make the code below treat
-  ;; nil like an "u" variable, even though probably we should complain bitterly
+  ;; nil like an "v" variable, even though probably we should complain bitterly
   ;; to our colleagues.                                         (27-jan-04; oe)
   ;;
   (let* ((varname (read-mrs-atom istream))
@@ -1191,7 +1191,7 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
                   (make-var :id (if varname 
                                   (or id (funcall *variable-generator*))
                                   (funcall *variable-generator*))
-                            :type (or type "u")))))
+                            :type (or type "v")))))
     (unless existing 
       (push (cons varname var) *already-read-vars*))
     (let ((next-char (peek-char t istream nil 'eof)))
