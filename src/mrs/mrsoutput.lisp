@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.22  1999/06/18 00:20:24  aac
+;; avoid running scoping machinery when we have a fragment, change extract-mrs to take a single edge
+;;
 ;; Revision 1.21  1999/06/12 04:41:43  aac
 ;; adding hack to allow for preposition fragments
 ;;
@@ -431,15 +434,17 @@
 (defun determine-variable-type (fs)
   (let ((type (create-type (fs-type fs))))
     (cond ((equal-or-subtype type *event-type*) "e")
+          ((equal-or-subtype type *conj-ind-type*) "e")
           ((equal-or-subtype type *ref-ind-type*) "x")
           ((equal-or-subtype type *full_ref-ind-type*) "x")
+          ((equal-or-subtype type *deg-ind-type*) "d")
+          ((equal-or-subtype type *non_expl-ind-type*) "v")
           ((equal-or-subtype type *event_or_index-type*) "e")
           ((equal-or-subtype type *eventtime-type*) "t")
           ((equal-or-subtype type *handle-type*) "h")  
           ((equal-or-subtype type *hole-type*) "h")
           ((equal-or-subtype type *label-type*) "h")
-          ((equal-or-subtype type *deg-ind-type*) "d")
-          ((equal-or-subtype type *individual-type*) "d")
+          ;((equal-or-subtype type *individual-type*) "d")
           ((equal-or-subtype type *difference-list-type*) "c") 
           ;; Assume coordination structure
           (t "v"))))
