@@ -467,6 +467,8 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
 |*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |* tom said: ``final retrieve() function'' --- i suppose he is mistaken |:-}.
+|* if the attributre_list should be empty, the user gave '*', which means
+|* show all attributes of the relations that are in the selection.
 \*****************************************************************************/
 
   FILE *output;
@@ -546,7 +548,9 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
 #endif
   
   for(i = 0; relation_list && relation_list[i]; i++) ;
-  for(j = 0; attribute_list && attribute_list[j]; j++) ;
+  j=0;
+  if (attribute_list)
+    for(;attribute_list && attribute_list[j]; j++) ;
   
   /* check from relations */
   for (i=0;attribute_list && attribute_list[i];i++) {
@@ -591,7 +595,9 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
       tsdb_free_selection(selection);
     return(selection->length);
   } /* if */
-  
+  else { /* selection with '*': show all attributes in the selection */
+    tsdb_project(selection,NULL,tsdb_default_stream);
+  }
   if (!from_find)
     tsdb_free_selection(selection);
   return(0);
@@ -601,51 +607,77 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
 void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream)
 {
   /* print attributes in order */
-  int i, j, k, n, n_attributes, offset;
+  int i, j, k,h,l,m, n, n_attributes,sum_attr=0, offset;
   Tsdb_relation *relation;
   Tsdb_key_list *list;
   char **fields;
   int *r, *f;
   BOOL kaerb;
 
-  for (n_attributes = 0; attributes[n_attributes]; n_attributes++);
-  r = (int *)malloc(n_attributes * sizeof(int));
-  f = (int *)malloc(n_attributes * sizeof(int));
-  
-  for (k = 0; k < n_attributes; k++) {
-    kaerb = FALSE; /* not found */
-    r[k] = -1;
-#if defined(DEBUG) && defined(TOM)
-    fprintf(tsdb_debug_stream,"Looking for Attribute %s \n",attributes[k]->value.string);
-#endif    
-    for (i=0;!kaerb && i<selection->n_relations;i++) {
-      relation = selection->relations[i];
-#if defined(DEBUG) && defined(TOM)
-      fprintf(tsdb_debug_stream,"in relation: %s\n",selection->relations[i]->name);
-#endif
-      fields = selection->relations[i]->fields;
-      for (j=0; !kaerb && j<relation->n_fields; j++) {
-        if (!strcmp(fields[j],attributes[k]->value.string)) {
-          r[k] = i;
-          f[k] = j;
-          kaerb = TRUE;
-        } /* if */
-      } /* for */
+  if (attributes) {
+    for (n_attributes = 0; attributes[n_attributes]; n_attributes++);
+    r = (int *)malloc(n_attributes * sizeof(int));
+    f = (int *)malloc(n_attributes * sizeof(int));
+  } /* if */
+  else {
+    for (l=0;l<selection->n_relations;l++) {
+      sum_attr += selection->relations[l]->n_fields;
     } /* for */
-    if (!kaerb) {
-      /* error! attribute not found */
-      fprintf(tsdb_error_stream,
-              "project(): no attribute `%s' in relation %s",
-              attributes[k]->value.string, selection->relations[0]->name);
-      for(i = 1; i < selection->n_relations; i++) {
-        fprintf(tsdb_error_stream, ":%s", selection->relations[i]->name);
+    r = (int *)malloc(sum_attr * sizeof(int));
+    f = (int *)malloc(sum_attr * sizeof(int));
+    n_attributes = 0;
+    for (l=0;l<selection->n_relations;l++) {
+      relation = selection->relations[l];
+      for (h=0;h<relation->n_fields;h++) {
+        for (kaerb=FALSE,m=0; (m<l-1) && (!kaerb) ; m++) {
+          if (tsdb_attribute_in_relation(selection->relations[m],
+                                          relation->fields[h]))
+            kaerb = TRUE;
+        } /* for m */
+        if (!kaerb) {
+          r[n_attributes] = l;
+          f[n_attributes] = h;
+          n_attributes++;
+        } /* if */
+      } /* for h */
+    } /* for */
+  } /* else */
+  
+  if (attributes) {
+    for (k = 0; k < n_attributes; k++) {
+      kaerb = FALSE; /* not found */
+      r[k] = -1;
+#if defined(DEBUG) && defined(TOM)
+      fprintf(tsdb_debug_stream,"Looking for Attribute %s \n",attributes[k]->value.string);
+#endif    
+      for (i=0;!kaerb && i<selection->n_relations;i++) {
+        relation = selection->relations[i];
+#if defined(DEBUG) && defined(TOM)
+        fprintf(tsdb_debug_stream,"in relation: %s\n",selection->relations[i]->name);
+#endif
+        fields = selection->relations[i]->fields;
+        for (j=0; !kaerb && j<relation->n_fields; j++) {
+          if (!strcmp(fields[j],attributes[k]->value.string)) {
+            r[k] = i;
+            f[k] = j;
+            kaerb = TRUE;
+          } /* if */
+        } /* for */
       } /* for */
-      fprintf(tsdb_error_stream, ".\n");
-      return;
+      if (!kaerb) {
+        /* error! attribute not found */
+        fprintf(tsdb_error_stream,
+                "project(): no attribute `%s' in relation %s",
+                attributes[k]->value.string, selection->relations[0]->name);
+        for(i = 1; i < selection->n_relations; i++) {
+          fprintf(tsdb_error_stream, ":%s", selection->relations[i]->name);
+        } /* for */
+        fprintf(tsdb_error_stream, ".\n");
+        return;
       }      
-  } /* for */ 
-  /* attribute[k] will be printed from relation r[k] and field f[k] */
-
+    } /* for */ 
+    /* attribute[k] will be printed from relation r[k] and field f[k] */
+  } /* if */
 #if defined(DEBUG) && defined(TOM)
   for (i=0;i<selection->n_key_lists;i++) {
     fprintf(tsdb_debug_stream," Key list %ld\n",i);
