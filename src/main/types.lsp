@@ -380,11 +380,14 @@
       type2)			;; ditto
      ((or ptype1 ptype2)
       nil)
-     ((member t2 (retrieve-ancestors type1) :test #'eq)
+     ((member t2 (type-ancestors t1) :test #'eq)
       type1)
-     ((member t1 (retrieve-ancestors type2) :test #'eq)
+     ((member t1 (type-ancestors t2) :test #'eq)
       type2)
-     (t (let ((common-subtypes (retrieve-common-descendants type1 type2)))
+     (t (let* ((type1-desc (type-descendants t1))
+               (type2-desc (type-descendants t2))
+               (common-subtypes 
+                (intersection type1-desc type2-desc :test #'eq)))
 	  (when common-subtypes
 	    (let ((greatest-common-subtype-list
 		   (intersection
@@ -393,18 +396,39 @@
 			    (mapcar #'(lambda (subtype)
 					(cons subtype 
 					      (type-ancestors subtype)))
-				    common-subtypes)))))
-	      (cond ((eql (length greatest-common-subtype-list) 1)
-		     (let ((gcsubtype (type-name (car greatest-common-subtype-list))))
-		       (values gcsubtype (if (constraint-of gcsubtype) t))))
+				    common-subtypes))
+                    :test #'eq)))
+	      (cond ((not (cdr greatest-common-subtype-list))
+		     (let* ((gcsubtype-entry (car greatest-common-subtype-list))
+                           (gcsubtype (type-name gcsubtype-entry)))
+		       (values gcsubtype
+                               (if (extra-constraint-p 
+                                    gcsubtype-entry
+                                    t1 t2) t))))
 		    ;; return true as the second value if there is a
 		    ;; constraint that may have to be unified in
 		    (greatest-common-subtype-list
 		     (error "~%~A and ~B have multiple common subtypes "
-			    (mapcar #'(lambda (x) (type-name x)) greatest-common-subtype-list)))
+			    (mapcar #'(lambda (x) (type-name x)) 
+                                    greatest-common-subtype-list)))
 		    (t (error 
 			"~%Error found in type hierarchy"))))))))))
 
+(defun extra-constraint-p (gcsubtype t1 t2)
+  ;;; test is whether any ancestor of the gcsubtype which
+  ;;; isn't also an ancestor of the types being unified
+  ;;; or the gcsubtype itself introduce any extra information 
+  ;;; on the constraint.
+  (or (type-local-constraint gcsubtype)
+      (let ((t1ancs (type-ancestors t1))
+            (t2ancs (type-ancestors t2)))
+      (for type in (type-ancestors gcsubtype)
+           some-satisfy
+           (and (not (eq type t1))
+                (not (eq type t2))
+                (type-local-constraint type)
+                (not (member type t1ancs :test #'eq))
+                (not (member type t2ancs :test #'eq)))))))
 
 ;;; when called from generalisation this should only take non-atomic types 
 ;;; as arguments and so disjunctions are not taken into consideration
@@ -456,10 +480,6 @@
 
 
 ;;; The following utility functions assume that no cycles are present
-
-(defun retrieve-common-descendants (type1 type2)
-  (intersection (retrieve-descendants type1)
-		(retrieve-descendants type2)))
 
 (defun get-real-types (type)
   (let ((type-entry (get-type-entry type)))
