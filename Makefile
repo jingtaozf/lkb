@@ -4,10 +4,10 @@ WROOT = c:/src
 DATE = `date "+%Y-%m-%d"`
 TARGET = /lingo/www/lingo/ftp
  
-LINKS = lkb_data.tgz lkb_linux_x86_32.tgz lkb_solaris.tgz \
+LINKS = lkb_data.tgz lkb_linux.x86.32.tgz lkb_solaris.tgz \
         lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
         itsdb_data.tgz itsdb_documentation.tgz itsdb_libraries.tgz \
-        itsdb_linux_x86_32.tgz itsdb_solaris.tgz itsdb_source.tgz \
+        itsdb_linux.x86.32.tgz itsdb_solaris.tgz itsdb_source.tgz \
         erg.tgz matrix.tgz spanish.tgz
 
 CP=cp
@@ -111,7 +111,7 @@ lkb_linux_x86_32:
 	( \
 	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
 	  cd ${ROOT}/lkb; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_linux_x86_32.tgz \
+	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_linux.x86.32.tgz \
               --exclude=".nfs*" \
 	      linux.x86.32 bin/linux.x86.32/yzlui; \
 	)
@@ -246,7 +246,7 @@ itsdb_linux_x86_32:
 	( \
 	  cd ${ROOT}/lkb; \
 	  find src/.l6cl -type f -exec touch {} \; ; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_linux_x86_32.tgz \
+	  tar Svczf ${TARGET}/${DATE}/itsdb_linux.x86.32.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \

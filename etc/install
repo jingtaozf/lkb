@@ -46,7 +46,8 @@ RM=rm
 LN="ln -s"
 GREP=grep
 WGET="wget --quiet --timestamping"
-TAR="tar zxf"
+GUNZIP="gunzip -c"
+TAR="tar xf -"
 SED=sed
 
 #
@@ -64,7 +65,17 @@ fi
 # (sparc), or `windows' (x86); anything else will require manual installation.
 #
 if [ "$OSTYPE" = "linux" -o "$OSTYPE" = "linux-gnu" ]; then
-  os="linux";
+  case $(uname -i) in
+    i386)
+      os="linux.x86.32"
+      ;;
+    x86_64)
+      os="linux.x86.64"
+      ;;
+    *)
+      echo "lkb: unknown Linux variant (check \`uname -i'); exit."
+      exit 1;
+  esac
 elif [ "$OSTYPE" = "solaris" -o "${OSTYPE%%?.?}" = "solaris" ]; then
   os="solaris";
 elif [ "$OSTYPE" = "cygwin" ]; then
@@ -74,7 +85,7 @@ fi
 #
 # for the LKB, make sure there is a temporary directory available.
 #
-if [ "$os" == "linux" -o "$os" == "solaris" ]; then
+if [ "${os%%.*}" == "linux" -o "$os" == "solaris" ]; then
   [ -d ${HOME}/tmp ] || ${MKDIR} ${HOME}/tmp;
 fi
 
@@ -91,7 +102,7 @@ cd ${DELPHINHOME}
 for i in lkb_data.tgz lkb_${os}.tgz lkb_source.tgz; do
   echo -n "install: \`${i}' ...";
   ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
-  ( cd lkb; ${TAR} ${DELPHINHOME}/Archives/${i}; )
+  ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
   echo " done.";
   if [ -f ${DELPHINHOME}/lkb/etc/lkb ]; then
     [ -f ${DELPHINHOME}/bin/lkb ] && ${RM} ${DELPHINHOME}/bin/lkb;
@@ -103,13 +114,13 @@ done
 # the [incr tsdb()] software, for now, is only available on Linux and Solaris
 # and shares a source directory with the LKB
 #
-if [ "$os" == "linux" -o "$os" == "solaris" ]; then
+if [ "${os%%.*}" == "linux" -o "$os" == "solaris" ]; then
   for i in itsdb_libraries.tgz itsdb_tsdb.tgz itsdb_capi.tgz \
            itsdb_${os}.tgz itsdb_data.tgz itsdb_documentation.tgz \
            itsdb_source.tgz; do
     echo -n "install: \`${i}' ...";
     ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
-    ( cd lkb; ${TAR} ${DELPHINHOME}/Archives/${i}; )
+    ( cd lkb; ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR}; )
     echo " done.";
   done
 fi
@@ -119,7 +130,7 @@ fi
 #
 echo -n "install: \`eli.tgz' ...";
 ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/etc/eli.tgz )
-${TAR} ${DELPHINHOME}/Archives/eli.tgz
+${GUNZIP} ${DELPHINHOME}/Archives/eli.tgz | ${TAR}
 echo " done.";
 
 #
@@ -128,7 +139,7 @@ echo " done.";
 for i in erg.tgz matrix.tgz spanish.tgz; do
   echo -n "install: \`${i}' ...";
   ( cd Archives; ${WGET} http://lingo.stanford.edu/ftp/latest/${i}; )
-  ${TAR} ${DELPHINHOME}/Archives/${i};
+  ${GUNZIP} ${DELPHINHOME}/Archives/${i} | ${TAR};
   echo " done.";
 done
 
@@ -139,7 +150,7 @@ done
 if [ -n "${TSDBHOME}" ]; then
   echo -n "install: \`erg.jun-04.tgz' ...";
   ( cd Archives; ${WGET} http://redwoods.stanford.edu/ftp/5th/erg.jun-04.tgz; )
-  ${TAR} ${DELPHINHOME}/Archives/erg.jun-04.tgz;
+  ${GUNZIP} ${DELPHINHOME}/Archives/erg.jun-04.tgz | ${TAR};
   echo " done.";
   for i in vm6 vm13 vm31 vm32 ecoc ecos ecpa ecpr; do
     file="itsdb_${i}.tgz"
@@ -148,7 +159,7 @@ if [ -n "${TSDBHOME}" ]; then
       cd Archives; \
       ${WGET} http://redwoods.stanford.edu/ftp/5th/${file}; \
       cd ${TSDBHOME}; \
-      ${TAR} ${DELPHINHOME}/Archives/${file}; \
+      ${GUNZIP} ${DELPHINHOME}/Archives/${file} | ${TAR}; \
     )
     echo " done.";
   done
@@ -160,7 +171,7 @@ fi
 # if it were right, install our own and suggest that the user that they tell
 # their shell how to find it.  this all is a little iffy ...
 #
-if [ "${os}" == "linux" ]; then
+if [ "${os}" == "linux.x86.32" ]; then
   if [ -e /usr/X11R6/lib/libXm.so.2 ]; then
     link=$(${LS} -l /usr/X11R6/lib/libXm.so.2 | grep -i "lesstif")
     if [ -n "${link}" ]; then
@@ -174,7 +185,7 @@ if [ "${os}" == "linux" ]; then
   [ -d ${DELPHINHOME}/lib ] || ${MKDIR} ${DELPHINHOME}/lib;
   [ -d ${DELPHINHOME}/lib/linux ] || ${MKDIR} ${DELPHINHOME}/lib/linux;
   ( \
-    cd lib/linux; \
+    cd lib/${os}; \
     ${WGET} http://lingo.stanford.edu/ftp/lib/linux/libXm.so.2; \
   )
 fi

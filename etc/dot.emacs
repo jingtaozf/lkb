@@ -30,6 +30,17 @@
 (defmacro unless (condition &rest body)
   (list 'or condition (cons 'progn body)))
 
+(defun system-binaries ()
+  (cond
+   ((string-match "solaris" system-configuration) "solaris")
+   ((string-match "linux" system-configuration) 
+    (if (string-match "x86_64" system-configuration)
+      "linux.x86.64"
+      "linux.x86.32"))
+   ((or (string-match "windows" system-configuration)
+        (string-match "mingw-nt" system-configuration)
+        (string-match "msvc" system-configuration)) "windows")))
+
 (defun lkb (&optional prefix)
   (interactive "P")
 
@@ -48,12 +59,9 @@
     (format
      "%s/lkb/%s/lkb%s"
      lingo-home
-     (cond
-      ((string-match "solaris" system-configuration) "solaris")
-      ((string-match "linux" system-configuration) "linux")
-      ((or (string-match "windows" system-configuration)
-           (string-match "msvc" system-configuration)) "windows"))
+     (system-binaries)
      (if (or (string-match "windows" system-configuration)
+             (string-match "mingw-nt" system-configuration)
              (string-match "msvc" system-configuration))
        ".exe"
        "")))
