@@ -1280,7 +1280,7 @@ int tsdb_do(char *file, char *redirection) {
   while(!(tsdb.status & TSDB_QUIT) 
         && !status 
         && fgets(&buffer[0], 4096, input) != NULL) {
-#ifdef 0
+#ifdef MUELL
     for(foo = &buffer[0]; *foo && isspace(*foo); foo++);
     if(*foo) {
       for(bar = &foo[strlen(foo) - 1];

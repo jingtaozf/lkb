@@ -34,15 +34,15 @@
 
 extern int errno;
 #if defined(SUNOS) || defined(LINUX)
-
-void sigcld(int);
+static void _sigcld(int);
 #endif
 
-void sighup_server(int);
-void sigterm_server(int);
-void sigterm_client(int);
-void sigsegv_server(int);
-void sigsegv_client(int);
+static void _sighup_server(int);
+static void _sigterm_server(int);
+static void _sigterm_client(int);
+static void _sigsegv_server(int);
+static void _sigsegv_client(int);
+static void _sigalrm_client(int);
 
 static int _server;
 static int _n_clients;
@@ -77,7 +77,7 @@ void tsdb_server() {
 
   _n_clients = 0;
   signal(SIGPIPE, SIG_IGN);
-  signal(SIGHUP, sighup_server);
+  signal(SIGHUP, _sighup_server);
 
   n = TRUE;
   setsockopt(_server, SOL_SOCKET, SO_KEEPALIVE, (char *)&n, sizeof(n));
@@ -113,7 +113,7 @@ void tsdb_server() {
                          (struct sockaddr *)&client_address, &n)) < 0) {
 #if defined(DEBUG) && defined(SERVER)
       fprintf(tsdb_debug_stream,
-              "server(): [%d] failed (invalid) accept(2); errno: %d.\n",
+              "server(): [%d] failed (invalid) accept(2) [%d].\n",
               getpid(), errno);
       fflush(tsdb_debug_stream);
 #endif
@@ -157,9 +157,9 @@ void tsdb_server() {
       _n_clients++;
     } /* else */
     else {
-      signal(SIGTERM, sigterm_client);
-      signal(SIGSEGV, sigsegv_client);
-      signal(SIGBUS, sigsegv_client);
+      signal(SIGTERM, _sigterm_client);
+      signal(SIGSEGV, _sigsegv_client);
+      signal(SIGBUS, _sigsegv_client);
       status = tsdb_server_child(_client);
       close(_client);
       kill(getppid(), SIGHUP);
@@ -217,7 +217,7 @@ int tsdb_server_initialize() {
    * _fix_me_ 
    * try to see whether there actually is a tsdb(1) server on that port (it
    * might be a white mouse or worse |:-); set alarm() and make an attempt to
-   * obtaining tsdb(1) server status information.
+   * obtain tsdb(1) server status information.
    *                                              (31-jul-96 -- oe)
    */
   close(foo);
@@ -310,31 +310,31 @@ int tsdb_server_initialize() {
   umask(0);
 
 #if defined(SUNOS) || defined(LINUX)
-  signal(SIGCLD, sigcld);
+  signal(SIGCLD, _sigcld);
 #else
   signal(SIGCLD, SIG_IGN);
 #endif
 
-  signal(SIGTERM, sigterm_server);
-  signal(SIGSEGV, sigsegv_server);
-  signal(SIGBUS, sigsegv_server);
+  signal(SIGTERM, _sigterm_server);
+  signal(SIGSEGV, _sigsegv_server);
+  signal(SIGBUS, _sigsegv_server);
 
   return(TSDB_OK);
 
 } /* tsdb_server_initialize() */
 #if defined(SUNOS) || defined(LINUX)
 
-void sigcld(int signal) {
+static void _sigcld(int signal) {
 
 /*****************************************************************************\
 |*        file: 
-|*      module: sigcld()
+|*      module: _sigcld()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
 |* last update: 
 |*  updated by: 
 |*****************************************************************************|
-|* sigcld() is installed as the handler for SIGCLD signals to the TSDB server.
+|* _sigcld() is installed as the handler for SIGCLD signals to the TSDB server.
 \*****************************************************************************/
 
   int pid;
@@ -347,20 +347,20 @@ void sigcld(int signal) {
     fflush(tsdb_debug_stream);
 #endif
   } /* while */
-} /* sigcld() */
+} /* _sigcld() */
 #endif
 
-void sighup_server(int foo) {
+static void _sighup_server(int foo) {
 
 /*****************************************************************************\
 |*        file: 
-|*      module: sighup_server()
+|*      module: _sighup_server()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
 |* last update: 
 |*  updated by: 
 |*****************************************************************************|
-|* sighup() is installed as the handler for SIGHUP signals to the TSDB
+|* _sighup() is installed as the handler for SIGHUP signals to the TSDB
 |* server.
 \*****************************************************************************/
 
@@ -373,7 +373,7 @@ void sighup_server(int foo) {
     fflush(tsdb_debug_stream);
     _n_clients--;
 #endif
-    signal(SIGHUP, sighup_server);
+    signal(SIGHUP, _sighup_server);
   } /* if */
   else {
     close(_server);
@@ -388,19 +388,19 @@ void sighup_server(int foo) {
 #endif
     exit(TSDB_OK);
   } /* else */
-} /* sighup_server() */
+} /* _sighup_server() */
 
-void sigterm_server(int signal) {
+static void _sigterm_server(int signal) {
 
 /*****************************************************************************\
 |*        file: 
-|*      module: sigterm_server()
+|*      module: _sigterm_server()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
 |* last update: 
 |*  updated by: 
 |*****************************************************************************|
-|* sigterm() is installed as the handler for SIGTERM signals to the TSDB
+|* _sigterm() is installed as the handler for SIGTERM signals to the TSDB
 |* server.
 \*****************************************************************************/
 
@@ -415,19 +415,19 @@ void sigterm_server(int signal) {
   tsdb_close_debug(tsdb_debug_stream);
 #endif
   exit(TSDB_OK);
-} /* sigterm_server() */
+} /* _sigterm_server() */
 
-void sigterm_client(int signal) {
+static void _sigterm_client(int signal) {
 
 /*****************************************************************************\
 |*        file: 
-|*      module: sigterm_client()
+|*      module: _sigterm_client()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
 |* last update: 
 |*  updated by: 
 |*****************************************************************************|
-|* sigterm() is installed as the handler for SIGTERM signals to the childs of
+|* _sigterm() is installed as the handler for SIGTERM signals to the childs of
 |* the TSDB server (clients, in a sense).
 \*****************************************************************************/
 
@@ -438,19 +438,19 @@ void sigterm_client(int signal) {
   fflush(tsdb_debug_stream);
 #endif
   exit(TSDB_OK);
-} /* sigterm_client() */
+} /* _sigterm_client() */
 
-void sigsegv_server(int signal) {
+static void _sigsegv_server(int signal) {
 
 /*****************************************************************************\
 |*        file: 
-|*      module: sigsegv_server()
+|*      module: _sigsegv_server()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
 |* last update: 2-aug-96
 |*  updated by: oe, coli saarbruecken
 |*****************************************************************************|
-|* sigsegv() is installed as the handler for SIGSEGV and SIGBUS signals to the
+|* _sigsegv() is installed as the handler for SIGSEGV and SIGBUS signals to the
 |* TSDB server.
 \*****************************************************************************/
 
@@ -478,19 +478,19 @@ void sigsegv_server(int signal) {
   sleep(1);
   abort();
 
-} /* sigsegv_server() */
+} /* _sigsegv_server() */
 
-void sigsegv_client(int signal) {
+static void _sigsegv_client(int signal) {
 
 /*****************************************************************************\
 |*        file: 
-|*      module: sigsegv_client()
+|*      module: _sigsegv_client()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
 |* last update: 
 |*  updated by: 
 |*****************************************************************************|
-|* sigsegv() is installed as the handler for SIGSEGV and SIGBUS signals to
+|* _sigsegv() is installed as the handler for SIGSEGV and SIGBUS signals to
 |* childs of the TSDB server (clients, in a sense).
 \*****************************************************************************/
 
@@ -509,7 +509,7 @@ void sigsegv_client(int signal) {
   fflush(tsdb_debug_stream);
 #endif
   exit(TSDB_OS_ERROR);
-} /* sigsegv_client() */
+} /* _sigsegv_client() */
 
 int tsdb_server_child(int socket) {
 
@@ -753,6 +753,29 @@ int tsdb_socket_readline(int socket, char *string, int length) {
 } /* tsdb_socket_readline() */
 #ifdef ALEP
 
+static void _sigalrm_client(int signal) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: _sigalrm_client()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* _sigalrm() is installed as the handler for SIGALRM signals to a client to
+|* the TSDB server to guarantee (proper) termination even if something wedges.
+\*****************************************************************************/
+
+  close(_client);
+#if defined(DEBUG)
+  fprintf(tsdb_debug_stream,
+          "sigalrm(): client going down on SIGALRM.\n");
+  fflush(tsdb_debug_stream);
+#endif
+  exit(TSDB_SERVER_CONNECTION_ERROR);
+} /* _sigalrm_client() */
+
 int tsdb_alep_client(char *query) {
 
 /*****************************************************************************\
@@ -766,7 +789,7 @@ int tsdb_alep_client(char *query) {
 |* 
 \*****************************************************************************/
 
-  int client, status, n;
+  int status, n;
   struct hostent *server;
   struct sockaddr_in server_address;
   struct linger linger;
@@ -782,7 +805,7 @@ int tsdb_alep_client(char *query) {
 
   if((server = gethostbyname(tsdb.server)) == NULL) {
     fprintf(tsdb_error_stream,
-            "client(): unknown server host `%s'.\n", tsdb.server);
+            "alep_client(): unknown server host `%s'.\n", tsdb.server);
     fflush(tsdb_error_stream);
     return(TSDB_SERVER_CONNECTION_ERROR);
   } /* if */
@@ -792,18 +815,18 @@ int tsdb_alep_client(char *query) {
   server_address.sin_addr.s_addr = *(unsigned long int *)server->h_addr;
   server_address.sin_port = htons(tsdb.port);
 
-  if((client = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+  if((_client = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
     perror("socket()");
     return(TSDB_SERVER_CONNECTION_ERROR);
   } /* if */
   
-  setsockopt(client, SOL_SOCKET, SO_KEEPALIVE, (char *)&n, sizeof(n));
-  setsockopt(client, SOL_SOCKET, SO_REUSEADDR, (char *)&n, sizeof(n));
+  setsockopt(_client, SOL_SOCKET, SO_KEEPALIVE, (char *)&n, sizeof(n));
+  setsockopt(_client, SOL_SOCKET, SO_REUSEADDR, (char *)&n, sizeof(n));
   linger.l_onoff = TRUE;
   linger.l_linger = 2;
-  setsockopt(client, SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
+  setsockopt(_client, SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
 
-  if(connect(client,
+  if(connect(_client,
              (struct sockaddr *)&server_address,
              sizeof(server_address)) < 0) {
     if(!(tsdb.status & TSDB_STATUS)) {
@@ -812,7 +835,7 @@ int tsdb_alep_client(char *query) {
               tsdb.server, tsdb.port);
       fflush(tsdb_error_stream);
     } /* if */
-    close(client);
+    close(_client);
     return(TSDB_SERVER_CONNECTION_ERROR);
   } /* if */
 
@@ -827,59 +850,64 @@ int tsdb_alep_client(char *query) {
                  | (tsdb.status & TSDB_IMPLICIT_COMMIT)
                  | (tsdb.status & TSDB_UNIQUELY_PROJECT)
                  | (tsdb.status & TSDB_TX_OUTPUT)));
-  if(tsdb_socket_write(client, command) != strlen(command)) {
+
+  signal(SIGALRM, _sigalrm_client);
+  alarm(TSDB_SERVER_CONNECT_TIMEOUT);
+  if(tsdb_socket_write(_client, command) != strlen(command)) {
     fprintf(tsdb_error_stream,
             "alep_client(): incomplete write on server socket.\n");
     fflush(tsdb_error_stream);
-    close(client);
+    close(_client);
     tsdb_free(command);
     return(TSDB_SOCKET_IO_ERROR);
   } /* if */
-  if((status = tsdb_client_clear_stream(client, TRUE))) {
-    tsdb_client_close(client);
+  if((status = tsdb_client_clear_stream(_client, TRUE))) {
+    tsdb_client_close(_client);
     tsdb_free(command);
     return(status);
   } /* if */
 
   (void)sprintf(command, "set ofs \"%s\".\n", tsdb.ofs);
-  if(tsdb_socket_write(client, command) != strlen(command)) {
+  if(tsdb_socket_write(_client, command) != strlen(command)) {
     fprintf(tsdb_error_stream,
             "alep_client(): incomplete write on server socket.\n");
     fflush(tsdb_error_stream);
-    close(client);
+    close(_client);
     tsdb_free(command);
     return(TSDB_SOCKET_IO_ERROR);
   } /* if */
-  if((status = tsdb_client_clear_stream(client, TRUE))) {
-    tsdb_client_close(client);
+  if((status = tsdb_client_clear_stream(_client, TRUE))) {
+    tsdb_client_close(_client);
     tsdb_free(command);
     return(status);
   } /* if */
+  alarm(0);
+  signal(SIGALRM, SIG_IGN);
 
   status = TSDB_OK;
   if(tsdb.status & (TSDB_QUIT | TSDB_HANGUP)) {
     (void)sprintf(command, 
                   "%s.\n",
                   ((tsdb.status & TSDB_QUIT) ? "shutdown" : "hangup"));
-    if(tsdb_socket_write(client, command) != strlen(command)) {
+    if(tsdb_socket_write(_client, command) != strlen(command)) {
       fprintf(tsdb_error_stream,
               "alep_client(): incomplete write on server socket.\n");
       fflush(tsdb_error_stream);
       status = TSDB_SOCKET_IO_ERROR;
     } /* if */
-    close(client);
+    close(_client);
     tsdb_free(command);
     return(status);
   } /* if */
 
   if(tsdb.home != NULL
-     && (foo = tsdb_obtain_server_home(client)) != NULL) {
+     && (foo = tsdb_obtain_server_home(_client)) != NULL) {
     if(strcmp(tsdb.home, foo)) {
       fprintf(tsdb_error_stream,
               "alep_client(): database mismatch (`%s').\n",
               foo);
       fflush(tsdb_error_stream);
-      tsdb_client_close(client);
+      tsdb_client_close(_client);
       tsdb_free(command);
       return(TSDB_SERVER_HOME_MISMATCH);
     } /* if */
@@ -889,8 +917,8 @@ int tsdb_alep_client(char *query) {
   } /* if */
 
   if(tsdb.status & TSDB_STATUS) {
-    status = tsdb_obtain_server_status(client);
-    tsdb_client_close(client);
+    status = tsdb_obtain_server_status(_client);
+    tsdb_client_close(_client);
     tsdb_free(command);
     return(((status & TSDB_LOCK) ? TSDB_LOCK_ERROR : TSDB_OK));
   } /* if */
@@ -913,21 +941,21 @@ int tsdb_alep_client(char *query) {
                   query, 
                   (tsdb.output != NULL ? tsdb.output : "/dev/null"));
   } /* else */
-  if(tsdb_socket_write(client, command) != strlen(command)) {
+  if(tsdb_socket_write(_client, command) != strlen(command)) {
     fprintf(tsdb_error_stream,
             "alep_client(): incomplete write on server socket.\n");
     fflush(tsdb_error_stream);
-    close(client);
+    close(_client);
     tsdb_free(command);
     return(TSDB_SOCKET_IO_ERROR);
   } /* if */
-  if((status = tsdb_client_clear_stream(client, FALSE))) {
-    tsdb_client_close(client);
+  if((status = tsdb_client_clear_stream(_client, FALSE))) {
+    tsdb_client_close(_client);
     tsdb_free(command);
     return(status);
   } /* if */
 
-  tsdb_client_close(client);
+  tsdb_client_close(_client);
   tsdb_free(command);
   return(TSDB_OK);
 

@@ -61,7 +61,6 @@ FILE *tsdb_error_stream = TSDB_ERROR_STREAM;
 #endif
 
 char tsdb_version[] = TSDB_VERSION;
-char tsdb_revision[] = "$Revision$";
-char tsdb_revision_date[] = "$Date$";
-
+char *tsdb_revision;
+char *tsdb_revision_date;
 

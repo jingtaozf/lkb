@@ -32,7 +32,7 @@ int tsdb_shorten_tuple(Tsdb_tuple** tuples,Tsdb_tuple* fuck)
     }
   tuples[j]=NULL;
   return(j);
-}
+} /* tsdb_shorten_tuple() */
 
 /*****************************************************************************\
 |*        file: 

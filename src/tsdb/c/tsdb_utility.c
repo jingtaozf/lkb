@@ -429,13 +429,17 @@ Tsdb_relation** tsdb_attribute_relations(Tsdb_value *value)
 
 /*--------------------------------------------------------------------------*/
 
-BOOL tsdb_is_relation(Tsdb_value *value) { /* True if value is the name of a relation */
+BOOL tsdb_is_relation(Tsdb_value *value) {
   
   int i;
 
-  for(i = 0; tsdb.relations[i] != NULL; i++)
-    if(!strcmp(tsdb.relations[i]->name, value->value.identifier))
-      return(TRUE);
+  if(tsdb.relations != NULL) {
+    for(i = 0; tsdb.relations[i] != NULL; i++) {
+      if(!strcmp(tsdb.relations[i]->name, value->value.identifier)) {
+        return(TRUE);
+      } /* if */
+    } /* for */
+  } /* if */
   return(FALSE);
   
 } /* tsdb_is_relation() */
@@ -485,7 +489,7 @@ Tsdb_key_list* tsdb_first_other_key(Tsdb_key_list* key_list)
 |*        file: 
 |*      module: tsdb_value_satisfies()
 |*     version: 
-|*  written by: tom fettig @ dfki saarbruecken
+|*  written by: tom, dfki saarbruecken
 |* last update: 
 |*  updated by: 
 |*****************************************************************************|
@@ -822,7 +826,6 @@ Tsdb_relation *tsdb_field_2_relation(char *table, Tsdb_field **fields) {
 
 } /* tsdb_field_2_relation() */
 
-     
 Tsdb_relation *tsdb_find_relation(char *name) {
 
   int i;
@@ -1601,7 +1604,8 @@ BOOL tsdb_initialize() {
   tsdb_parse_environment();
 
   if(tsdb.port
-     && !(tsdb.status & (TSDB_SERVER_MODE | TSDB_CLIENT_MODE))) {
+     && !(tsdb.status & (TSDB_SERVER_MODE | TSDB_CLIENT_MODE))
+     && getenv("TSDB_PORT") == NULL) {
     fprintf(tsdb_error_stream,
             "initialize(): `-port' option invalid in non-server mode.\n");
     fflush(tsdb_error_stream);
@@ -1741,6 +1745,7 @@ BOOL tsdb_initialize() {
     if(tsdb_all_relations() == NULL) {
       return(TSDB_NO_RELATIONS_ERROR);
     } /* if */
+
 #ifdef ALEP
   } /* if */
 #endif
@@ -1987,6 +1992,18 @@ void tsdb_parse_environment() {
     else {
       tsdb.max_results = TSDB_MAX_RESULTS;
     } /* else */
+  } /* if */
+
+  if(!tsdb.port) {
+    if((name = getenv("TSDB_PORT")) != NULL) {
+      if(!(tsdb.port = (int)strtol(name, &foo, 10)) &&
+         name == foo) {
+        fprintf(tsdb_error_stream,
+                "initialize(): "
+                "non-integer (`%s') for `TSDB_PORT'.\n", name);
+        tsdb.port = 0;
+      } /* if */
+    } /* if */
   } /* if */
 
   if(tsdb.pager == NULL) {
@@ -2579,7 +2596,8 @@ char *tsdb_rcs_strip(char *s1, char *s2) {
 
   if(s1 != NULL && s2 != NULL) {
     if(*s1 && (foo = strchr(s1, '$')) != NULL) {
-      for(foo++; *foo && *foo == *s2; foo++, s2++);
+      foo = strdup(++foo);
+      for(; *foo && *foo == *s2; foo++, s2++);
       if(!*foo || *foo++ != ':') {
         return(s1);
       } /* if */
@@ -2640,11 +2658,11 @@ char *tsdb_expand_directory(char *base, char *name) {
 #if defined(SUNOS)
     if(getwd(&foo[0]) == NULL) {
       fprintf(tsdb_error_stream,
-              "expand_directory(): getpw(3) error; errno: %d.\n", errno);
+              "expand_directory(): getpw(3) error [%d].\n", errno);
 #else
     if(getcwd(&foo[0], MAXPATHLEN + 1) == NULL) {
       fprintf(tsdb_error_stream,
-              "expand_directory(): getcwd(3) error; errno: %d.\n", errno);
+              "expand_directory(): getcwd(3) error [%d].\n", errno);
 #endif
       return((char *)NULL);
     } /* if */
@@ -2656,11 +2674,11 @@ char *tsdb_expand_directory(char *base, char *name) {
 #if defined(SUNOS)
       if(getwd(&foo[0]) == NULL) {
         fprintf(tsdb_error_stream,
-                "expand_directory(): getpw(3) error; errno: %d.\n", errno);
+                "expand_directory(): getpw(3) error [%d].\n", errno);
 #else
       if(getcwd(&foo[0], MAXPATHLEN + 1) == NULL) {
         fprintf(tsdb_error_stream,
-                "expand_directory(): getcwd(3) error; errno: %d.\n", errno);
+                "expand_directory(): getcwd(3) error [%d].\n", errno);
 #endif
         return((char *)NULL);
       } /* if */
@@ -3021,20 +3039,157 @@ char *tsdb_normalize_string(char *string) {
   char *foo, *bar;
   int i, j;
 
-  foo = (char *)strdup(string);
-  for(i = j = 0; foo[i]; i++, j++) {
-    if(foo[i] == '\\' && foo[i + 1] == '\'' || foo[i + 1] == '"') {
-      i++;
-    } /* if */
-    foo[j] = foo[i];
-  } /* for */
-  foo[j] = 0;
+  if(string != NULL) {
+    for(i = 0, foo = string; *foo; foo++) {
+      if(*foo == tsdb.fs || *foo == '\n' || *foo == '\\') {
+        i++;
+      } /* if */
+    } /* for */
 
-  bar = strdup(foo);
-  free(foo);
-  return(bar);
+    foo = (char *)malloc(strlen(string) + i + 1);
+    for(i = j = 0; string[i]; i++, j++) {
+      if(string[i] == '\\' 
+         && string[i + 1] == '\'' || string[i + 1] == '"') {
+        i++;
+        foo[j] = string[i];
+      } /* if */
+      else if(string[i] == tsdb.fs) {
+        foo[j++] = '\\';
+        foo[j] = 's';
+      } /* if */
+      else if(string[i] == '\n') {
+        foo[j++] = '\\';
+        foo[j] = 'n';
+      } /* if */
+      else if(string[i] == '\\') {
+        if(string[i + 1] == '\\'
+           || string[i + 1] == 'n' 
+           || string[i + 1] == 's') {
+          i++;
+        } /* if */
+        foo[j++] = '\\';
+        foo[j] = string[i];
+      } /* if */
+      else {
+        foo[j] = string[i];
+      } /* else */
+    } /* for */
+    foo[j] = 0;
+
+    bar = strdup(foo);
+    free(foo);
+    return(bar);
+  } /* if */
+  else {
+    return((char *)NULL);
+  } /* else */
 
 } /* tsdb_normalize_string() */
+
+char *tsdb_denormalize_string(char *string) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_denormalize_string()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 11-apr-97
+|*  updated by: oe, coli saarbruecken
+|*****************************************************************************|
+|* 
+\*****************************************************************************/
+
+  char *foo, *bar;
+  int i, j;
+
+  if(string != NULL) {
+    foo = (char *)malloc(strlen(string) + 1);
+    for(i = j = 0; string[i]; i++, j++) {
+      if(string[i] == '\\') {
+        i++;
+        switch(string[i]) {
+          case 's':
+            foo[j] = tsdb.fs;
+            break;
+          case 'n':
+            foo[j] = '\n';
+            break;
+          case '\\':
+            foo[j] = '\\';
+            break;
+          default:
+            fprintf(tsdb_error_stream,
+                    "denormalize_string(): invalid escape character `\\%c'.\n",
+                    string[i]);
+            fflush(tsdb_error_stream);
+            j--;
+        } /* switch */
+      } /* if */
+      else {
+        foo[j] = string[i];
+      } /* else */
+    } /* for */
+    foo[j] = (char)0;
+    bar = strdup(foo);
+    tsdb_free(foo);
+    return(bar);
+  } /* if */
+  else {
+    return((char *)NULL);
+  } /* else */
+
+} /* tsdb_denormalize_string() */
+
+int tsdb_quotes_are_balanced(char *string) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_quotes_are_balanced()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 11-apr-97
+|*  updated by: oe, coli saarbruecken
+|*****************************************************************************|
+|* 
+\*****************************************************************************/
+
+  char *foo;
+  char lookahead;
+  int position;
+  BOOL escape;
+
+  if(string != NULL) {
+    for(lookahead = (char)0, escape = FALSE, foo = string; *foo; foo++) {
+      if(!lookahead) {
+        if(*foo == '`') {
+          lookahead = '\'';
+          position = foo - string;
+        } /* if */
+        else if(*foo == '"') {
+          lookahead = '"';
+          position = foo - string;
+        } /* if */
+      } /* if */
+      else {
+        if(*foo == '\\') {
+          escape = !escape;
+        } /* if */
+        else if(*foo == lookahead && !escape) {
+          lookahead = (char)0;
+          escape = FALSE;
+        } /* if */
+        else {
+          escape = FALSE;
+        } /* else */
+      } /* else */
+    } /* for */
+    return((lookahead ? position : -1));
+  } /* if */
+  else {
+    return(-1);
+  } /* else */
+
+} /* tsdb_quotes_are_balanced() */
 
 char *tsdb_prolog_escape_string(char *string) {
 
@@ -3071,3 +3226,84 @@ char *tsdb_prolog_escape_string(char *string) {
   } /* else */
 
 } /* tsdb_prolog_escape_string() */
+
+char *tsdb_lisp_escape_string(char *string) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_lisp_escape_string()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 10-apr-97
+|*  updated by: oe, coli saarbruecken
+|*****************************************************************************|
+|* 
+\*****************************************************************************/
+
+  char *foo;
+  int i, j;
+
+  for(i = 0, foo = string; foo != NULL && *foo; foo++) {
+    if(*foo == '\\' || *foo == '"') {
+      i++;
+    } /* if */
+  } /* for */
+
+  if(i) {
+    foo = (char *)malloc(strlen(string) + i + 1);
+    for(i = j = 0; string[i]; i++, j++) {
+      if(string[i] == '\\' || string[i] == '"') {
+        foo[j++] = '\\';
+      } /* if */
+      foo[j] = string[i];
+    } /* for */
+    foo[j] = (char)0;
+    return(foo);
+  } /* if */
+  else {
+    return(string != NULL ? strdup(string) : string);
+  } /* else */
+
+} /* tsdb_lisp_escape_string() */
+
+BOOL tsdb_check_potential_command(char *string) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_check_potential_command()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 15-apr-97
+|*  updated by: oe, coli saarbruecken
+|*****************************************************************************|
+|* 
+\*****************************************************************************/
+
+  char *foo, *bar, *baz;
+
+  if(string != NULL
+     && (foo = strchr(string, '\n')) != NULL) {
+    *foo = (char)0;
+    for(foo = string; *foo && isspace(*foo); foo++);
+    if(*foo) {
+      for(bar = &foo[strlen(foo) - 1]; 
+          bar > foo && *bar && isspace(*bar); 
+          bar--);
+      if(bar > foo
+         && *bar == '.'
+         && (!strncmp(foo, "set", 3)
+             || !strncmp(foo, "info", 4))) {
+        baz = (char *)NULL;
+        if(tsdb.query != NULL) {
+          baz = strdup(tsdb.query);
+        } /* if */
+        tsdb.errno = tsdb_parse(foo, (FILE *)NULL);
+        tsdb_free(tsdb.query);
+        tsdb.query = baz;
+        return(TRUE);
+      } /* if */
+    } /* if */
+  } /* if */
+  return(FALSE);
+
+} /* tsdb_check_potential_command() */
