@@ -440,7 +440,7 @@
                     (let ((local-results (match-mrs-rule-hcons 
                                           (cdr remaining-hcons)
                                           hcons-list
-                                          (cons ihcon matching-hcons)
+                                          (cons hcons matching-hcons)
                                           local-bindings
                                           constant-bindings)))
                       (when local-results
