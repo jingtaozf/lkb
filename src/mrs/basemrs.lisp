@@ -1415,33 +1415,26 @@ VAR -> VARNAME[:CONSTNAME]*
 ;;;
 ;;; interim solution for MRS `unfilling' until we construct a proper SEMI
 ;;;
-(defparameter %mrs-extras-filter%
-  (list
-   (cons (mrs::vsym "E.TENSE") (mrs::vsym "BASIC_TENSE"))
-   (cons (mrs::vsym "E.ASPECT.PROGR") (mrs::vsym "LUK"))
-   (cons (mrs::vsym "E.ASPECT.PERF") (mrs::vsym "LUK"))
-   (cons (mrs::vsym "E.MOOD") (mrs::vsym "MOOD"))
-   (cons (mrs::vsym "PNG.GEN") (mrs::vsym "REAL_GENDER"))
-   (cons (mrs::vsym "DIVISIBLE") (mrs::vsym "BOOL"))
-   (cons (mrs::vsym "PRONTYPE") (mrs::vsym "PRONTYPE"))))
+(defparameter %mrs-extras-filter% nil)
 
 (defun unfill-mrs (mrs &optional (filter %mrs-extras-filter%))
-  (labels ((unfill-variable (variable)
-             (when (var-p variable)
-               (setf (var-extra variable)
-                 (loop
-                     for extra in (var-extra variable)
-                     for feature = (extrapair-feature extra)
-                     for value = (extrapair-value extra)
-                     for match = (find feature filter :key #'first)
-                     unless (and match (eq value (rest match)))
-                     collect extra)))))
-    (unfill-variable (psoa-index mrs))
-    (loop
-        for ep in (psoa-liszt mrs)
-        do
-          (loop
-              for role in (rel-flist ep)
-              for value = (fvpair-value role)
-              do (unfill-variable value))))
-  mrs)
+  (when filter
+    (labels ((unfill-variable (variable)
+               (when (var-p variable)
+                 (setf (var-extra variable)
+                   (loop
+                       for extra in (var-extra variable)
+                       for feature = (extrapair-feature extra)
+                       for value = (extrapair-value extra)
+                       for match = (find feature filter :key #'first)
+                       unless (and match (eq value (rest match)))
+                       collect extra)))))
+      (unfill-variable (psoa-index mrs))
+      (loop
+          for ep in (psoa-liszt mrs)
+          do
+            (loop
+                for role in (rel-flist ep)
+                for value = (fvpair-value role)
+                do (unfill-variable value))))
+    mrs))
