@@ -269,8 +269,9 @@
 					   filename)))
 		(merge-into-db lexicon 
 			       rev-filename)
-		(merge-defn lexicon 
-			    dfn-filename)
+		(if (probe-file dfn-filename)
+		    (merge-defn lexicon 
+				dfn-filename))
 		nil
 		)))
 	(format t "Merge new entries aborted..."))
