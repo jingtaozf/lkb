@@ -1,0 +1,139 @@
+<style type="text/css">
+  body { 
+    margin-left: 10%; margin-right: 10%;
+    font-weight: normal; font-family: Helvetica;
+    color: #1a04a5;
+  }
+  td { 
+    font-weight: normal; font-family: Helvetica;
+    color: #1a04a5;
+  }
+  td.center {
+    text-align: center;
+  }
+  table.mrs {
+    padding: 0.2em;
+    border: solid;
+    border-width: thin;
+    color: #1a04a5;
+    background: #d8d6d6;
+  }
+  table.relation {
+    padding-right: 0.2em;
+    padding-left: 0.2em;
+    color: #1a04a5;
+    border-left: solid;
+    border-right: solid;
+    border-left-width: thin;
+    border-right-width: thin;
+    border-top: none;
+    border-bottom: none;
+  }
+  td#top, td#rels, td#index, td#hcons {
+    font-size: 10pt; 
+  }
+  td.top, td.index, td.label, td.hcons {
+    font-size: 10pt; 
+  }
+  td.predicate { 
+    font-size: 10pt; font-style: italic; 
+  }
+  td.value { 
+    font-size: 10pt; font-style: italic; text-align: right; 
+  }
+  span.bracket { 
+    font-size: 150%; 
+  }
+
+  table.tree {
+    padding: 0.2em;
+    border: none;
+    border-width: thin;
+    color: #1a04a5;
+    background: #d8d6d6;
+  }
+  td.branch {
+    padding: 0.2ex;
+    color: #1a04a5;
+    border-top: solid;
+    border-top-width: thin;
+    border-left: solid;
+    border-left-width: thin;
+    border-right: solid;
+    border-right-width: thin;
+    text-align: center;
+    vertical-align: top;
+  }
+  td.leaf {
+    padding: 0.2ex;
+    border-left: solid;
+    border-left-width: thin;
+    border-right: solid;
+    border-right-width: thin;
+    text-align: center;
+    vertical-align: top;
+  }
+  td.margin {
+    padding: 0em;
+  }
+  div.label {
+    font-weight: normal; font-size: 10pt; font-family: Helvetica;
+  }
+  div.form {
+    font-weight: normal; font-size: 10pt; font-family: Helvetica;
+    font-style: italic; 
+  }
+
+  table.results {
+    border-collapse: collapse;
+    vertical-align: top;
+  }
+  td.tree, td.mrs {
+    background: #d8d6d6;
+    text-align: center; vertical-align: top;
+    padding: 0.2em;
+    border-top: solid;
+    border-bottom: solid;
+    border-width: thin;
+    color: #2d2d2b;
+  }
+
+  table.navigation {
+    border-collapse: collapse;
+    vertical-align: top;
+    height: 100%;
+  }
+  td.navigation {
+    background: #d8d6d6;
+    text-align: center; vertical-align: middle;
+    padding: 0.2em;
+    border: solid;
+    border-width: thin;
+    color: #2d2d2b;
+  }
+  div.id {
+    font-weight: normal; font-size: 10pt; font-family: Helvetica;
+    margin-bottom: 2em;
+    color: #2d2d2b;
+  }
+  div.action {
+    font-weight: normal; font-size: 8pt; font-family: Helvetica;
+    text-transform: uppercase;
+    color: #d8d6d6;
+    background: #2d2d2b;
+    padding: 0.5ex;
+    border: none;
+    border-width thin;
+  }
+  td.buttons { 
+    font-weight: normal; font-size: 80%; font-family: Helvetica;
+    color: black; vertical-align: middle;
+  }
+  div#summary { 
+    font-weight: normal; font-size: 100%; font-family: Helvetica; 
+    bottom-margin: 2em;
+  }
+
+</style>
+
+
