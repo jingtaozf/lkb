@@ -91,6 +91,7 @@
            (pairlis '(:others :symbols :conses :treal :tcpu :tgc
                       :readings :results)
                     (list others symbols conses treal tcpu tgc
+                          readings
                           (loop
                               with nresults = (if (<= nresults 0)
                                                 readings nresults)
