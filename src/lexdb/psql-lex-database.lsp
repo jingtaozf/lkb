@@ -715,7 +715,13 @@
 				   :args (list user-str))))
 
 (defmethod show-scratch ((lexicon psql-lex-database))
-  (sql-fn-get-raw-records lexicon :show_scratch))
+  (sql-fn-get-raw-records lexicon 
+			  :retrieve_private_revisions
+			  :fields (list :name :userid :version)))
+
+(defmethod scratch-records ((lexicon psql-lex-database))
+  (sql-fn-get-raw-records lexicon 
+			  :retrieve_private_revisions))
 
 (defmethod merge-into-db ((lexicon psql-lex-database) rev-filename)  
   (run-command-stdin lexicon 

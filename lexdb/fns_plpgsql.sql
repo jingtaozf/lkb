@@ -349,19 +349,6 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.show_scratch() RETURNS SETOF text AS '
-DECLARE
-	x RECORD;
-BEGIN
-	FOR x IN
-		SELECT distinct name FROM revision
-		LOOP
-		RETURN NEXT x.name;
-	END LOOP;
-	RETURN;
-END;
-' LANGUAGE plpgsql;
-
 CREATE OR REPLACE FUNCTION public.complete(text,text) RETURNS SETOF text AS '
 DECLARE
 	x RECORD;

@@ -1,5 +1,5 @@
 ;;; Copyright (c) 2003-2004 Ben Waldron
-;;; see licence.txt for conditions\
+;;; see licence.txt for conditions
 
 ;; Portions copyright (c) 1996, 1997, 1999, 2000, 2001 Free Software Foundation, Inc.
 
@@ -10,7 +10,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.01")
+(defvar *lexdb-pg-interface-version* "2.02")
 
 (require 'widget)
 
@@ -151,13 +151,17 @@
 (defvar *lexdb-hidden*)
 (defvar *lexdb-minibuffer-max*)
 (defvar *lexdb-active-id-ring*)
-(defvar *new-entries-buffer*)
+(defvar *lexdb-new-entries-buffer*)
+(defvar *lexdb-scratch-buffer*)
+(defvar *lexdb-slot-len*)
 
 (setf *lexdb-read-only* '(:version :userid :modstamp :orthkey))
 (setf *lexdb-hidden* '(:jlink :semclasses))
 (setf *lexdb-minibuffer-max* 80)
 (setf *lexdb-active-id-ring* nil)
-(setf *new-entries-buffer* "*new-entries*")
+(setf *lexdb-new-entries-buffer* "*lexdb-merged*")
+(setf *lexdb-scratch-buffer* "*lexdb-scratch*")
+(setf *lexdb-slot-len* 13)
 
 ;;;
 ;;; buffer local vbles
@@ -342,13 +346,46 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (princ *lexdb-active-id-ring*)
     t))
     
+(defun lexdb-collect-field-lines (records fields)
+  (let ((pos -1))
+    (mapcar '(lambda (x)
+		  (setf pos (1+ pos))
+		  (lexdb-collect-field-line records x pos))
+	       fields)))
+
+(defun lexdb-string-slot (str len)
+  (cond 
+   ((> (length str) (- len 3))
+    (format "%s.. " (substring str 0 (- len 4))))
+   (t
+    (format "%s%s" str (make-string (max 0 (- len (length str))) ? )))))
+
+(defun lexdb-collect-field-line (records field pos)
+  (format "%s%s" 
+	  (lexdb-string-slot (symbol-name field) 20)
+	  (mapconcat '(lambda (x) 
+		     (let ((val (nth pos x)))
+		       (lexdb-string-slot val *lexdb-slot-len*) 
+		       )) 
+		     records
+		     "")))
+
 (defun lexdb-view-scratch-aux nil
-  (let ((filename "~/tmp/lexdb-scratch.csv"))
-    (cle-dump-scratch filename)
-    (find-file filename)))    
+  (let ((buffer *lexdb-scratch-buffer*)
+	(priv-recs (cle-get-private-revisions)))
+    (if (get-buffer buffer)
+	(kill-buffer buffer))
+    (with-current-buffer (get-buffer-create buffer)
+      (lexdb-mode)
+ 
+      (insert (mapconcat 'identity
+			 (lexdb-collect-field-lines priv-recs *lexdb-record-features*)
+			 "\n")))
+	      
+    (switch-to-buffer buffer)))
 
 (defun lexdb-view-merge-add-aux nil
-  (let ((buffer *new-entries-buffer*))
+  (let ((buffer *lexdb-new-entries-buffer*))
     (if (get-buffer buffer)
 	(kill-buffer buffer))
     (with-current-buffer (get-buffer-create buffer)
@@ -711,8 +748,8 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 		 field-kw
 		 val-str))
   
-(defun cle-dump-scratch (filename)
-  (cle-eval (format "(dump-scratch \"%s\")" (cle-force-str filename))))
+(defun cle-get-private-revisions ()
+  (cle-eval-lexdb 'scratch-records))
 
 (defun cle-complete (field-kw val-str)
   (if (or (string= val-str "") (null val-str))

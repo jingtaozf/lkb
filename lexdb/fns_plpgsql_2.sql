@@ -45,3 +45,16 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION public.retrieve_private_revisions() RETURNS SETOF revision AS '
+DECLARE
+	x RECORD;
+BEGIN
+	FOR x IN
+		SELECT * FROM revision
+		LOOP
+		RETURN NEXT x;
+	END LOOP;
+	RETURN;
+END;
+' LANGUAGE plpgsql;
+

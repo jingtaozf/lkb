@@ -64,6 +64,7 @@
     :retrieve_entry
     :retrieve_head_entry
     :revision_new
+    :retrieve_private_revisions
     :retrieve_semi_extra
     :retrieve_semi_frame
     :retrieve_semi_pred
@@ -72,7 +73,6 @@
     :semi_setup_post
     :semi_setup_pre
     :semi_up_to_date_p
-    :show_scratch
     :size_current_grammar
     :test_user
     :update_entry
