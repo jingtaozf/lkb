@@ -6,7 +6,7 @@
 ;;;
 ;;; using standard text editing (Fred) windows
 
-(defparameter *show-mrs-prolog-p* t)
+(defparameter *show-mrs-prolog-p* nil)
 
 (defun show-mrs-window (edge)
   (let ((mrsstruct (mrs::extract-mrs edge))

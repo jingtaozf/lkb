@@ -76,27 +76,50 @@
     (setf *cached-category-abbs* nil)
     (multiple-value-bind (lex-results grules lex-orderings)
         (mrs::collect-lex-entries-from-mrs input-sem)
-      (let*
-         ((found-lex-list
-            (apply #'append lex-results))
-          (filtered
-            (remove-if
-             #'(lambda (x) 
-                 (or ;(search "_CX" (string x)) ; *** contracted forms
-                  (member x *duplicate-lex-ids* :test #'eq))) ; *** e.g. a -> an
-              found-lex-list
-              :key #'mrs::found-lex-lex-id)))
-         ;; (loop for lex in filtered
-         ;;    do
-         ;;    (format t "~%Id ~A, Lexical rules ~:A" (mrs::found-lex-lex-id lex)
-         ;;       (mrs::found-lex-rule-list lex)))
-        (if filtered
-            (chart-generate input-sem filtered grules lex-orderings)
-          (progn
-            (format t "~%Some lexical entries could not be found from MRS ~
-                       relations - has function index-for-generator been run ~
-                       yet?")
-            nil))))))
+      (multiple-value-bind (lex-items grules lex-orderings)
+          (filter-generator-lexical-items (apply #'append lex-results)
+             grules lex-orderings)
+#|
+        (dolist (lex lex-items)
+           (format t "~%Id ~A, Index ~A, Lexical rules ~:A, Main rel sorts ~:A"
+              (mrs::found-lex-lex-id lex)
+              (gen-chart-dag-index
+                 (existing-dag-at-end-of
+                    (tdfs-indef (mrs::found-lex-inst-fs lex)) *semantics-index-path*)
+                 nil)
+              (mrs::found-lex-rule-list lex)
+              (mapcar #'mrs::rel-sort (mrs::found-lex-main-rels lex))))
+         (print
+            (sort (remove-duplicates (mapcar #'mrs::found-lex-lex-id lex-items))
+               #'string-lessp))
+         (finish-output)
+         (dolist (grule grules)
+            (when (mrs::found-rule-p grule)
+               (format t "~%Id ~A, Index ~A, Main rel sorts ~:A"
+                  (mrs::found-rule-id grule)
+                  (gen-chart-dag-index
+                     (existing-dag-at-end-of
+                        (tdfs-indef (mrs::found-rule-full-fs grule)) *semantics-index-path*)
+                     nil)
+                  (mapcar #'mrs::rel-sort (mrs::found-rule-main-rels grule)))))
+|#
+         (if lex-items
+            (chart-generate input-sem lex-items grules lex-orderings)
+            (progn
+               (format t "~%Some lexical entries could not be found from MRS ~
+                          relations - has function index-for-generator been run ~
+                          yet?")
+               nil))))))
+
+
+(defun filter-generator-lexical-items (lex-items grules lex-orderings)
+   (values
+      (remove-if
+          #'(lambda (x) 
+              (or #+ignore (search "_CX" (string x))) ; contracted forms
+                 (member x *duplicate-lex-ids* :test #'eq)) ; e.g. a -> an
+          lex-items :key #'mrs::found-lex-lex-id)
+      grules lex-orderings))
 
 
 ;;; generate from an input MRS and a set of lexical entry FSs. Each entry
@@ -194,9 +217,10 @@
         (values
          ;; extract-string-from-gen-record looks after changes like
          ;; e.g. "a apple" -> "an apple"
-         (extract-strings-from-gen-record)
+         (extract-strings-from-gen-record found-lex-items)
          *filtered-tasks* *executed-tasks* *successful-tasks* *unifications* *copies*
          act-tot inact-tot)))))
+
 
 (defun extract-strings-from-gen-record nil
   (loop for edge in *gen-record*
@@ -205,6 +229,7 @@
          (fix-spelling
           ;; in spell.lsp
           (g-edge-leaves edge)))))
+
 
 (defun clear-gen-chart nil
    (setq *edge-id* 0)
@@ -225,7 +250,6 @@
       ;; containing a relation name that is not in input semantics, and that
       ;; no edge contains duplicates of exactly the same relation - now check
       ;; that we have generated all relations
-      (gen-chart-check-complete e input-sem)
       (dolist
           (new
               (if *substantive-roots-p*
@@ -271,9 +295,9 @@
        (let ((mrs (mrs::construct-mrs sem-fs nil t)))
 ;;         (when *debugging*
 ;;           (display-fs sem-fs "semstructure"))
-;;        (when *sem-debugging*
+;;         (when *sem-debugging*
 ;;           (mrs::output-mrs input-sem 'mrs::simple)
-         ;;           (mrs::output-mrs mrs 'mrs::simple))  
+;;           (mrs::output-mrs mrs 'mrs::simple))  
          (or *bypass-equality-check*
              (mrs::mrs-equalp mrs input-sem nil *debugging*))))))
 
@@ -567,6 +591,9 @@
    ;; false return mother portion of rule-tdfs. Return as second value
    ;; the quick-check restrictor for the result, and if needed is true
    ;; return third value of semantic index for next needed daughter
+   (unless rule-tdfs
+      ;; a previous delayed copy stuffed back into edge failed
+      (return-from gen-chart-evaluate-unification nil))
    (when (functionp rule-tdfs)
       ;; redo the unification and delayed copy, stuffing result it back into
       ;; the active edge. Copy might fail due to circularity
