@@ -46,16 +46,8 @@
 ;;;                                                        (15-sep-99  -  oe)
 ;;;
 
+#+:packing
 (defparameter *partial-dag-interpretation* nil)
-
-;;;
-;;; [incr tsdb()] support: global counters for calls to unify-dags() and
-;;; copy-dag().
-;;;
-
-(defparameter *unifications* 0)
-(defparameter *copies* 0)
-(declaim (type fixnum *unifications* *copies*))
 
 (eval-when (:compile-toplevel :load-toplevel)
   (proclaim '(type fixnum *unify-generation* *unify-generation-max*
@@ -511,7 +503,6 @@
        #-:uprofile
        progn
        #+(and mcl powerpc)(decf bb (CCL::%HEAP-BYTES-ALLOCATED))
-       (incf *unifications*)
        (prog1
            (catch '*fail*
              (progn
@@ -584,6 +575,7 @@
          "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
          (reverse path))))
     (throw '*fail* nil))
+   #+:packing
    ((and *partial-dag-interpretation*
          (smember (first path) *partial-dag-interpretation*))
     (let ((type (minimal-type-for (first path))))
@@ -827,7 +819,6 @@
 
 (defun copy-dag (dag)
   #+(and mcl powerpc)(decf aa (CCL::%HEAP-BYTES-ALLOCATED))
-  (incf *copies*)
   (#+:cprofile
    prof:with-sampling #+:cprofile nil
    #-:cprofile

@@ -32,9 +32,8 @@
 (defvar *successful-tasks* 0)
 (defvar *contemplated-tasks* 0)
 (defvar *filtered-tasks* 0)
-(defvar *packings* 0)
 (declaim (type fixnum *executed-tasks* *successful-tasks* 
-	       *contemplated-tasks* *filtered-tasks* *packings*))
+	       *contemplated-tasks* *filtered-tasks*))
 
 (defvar *parser-rules* nil)
 (defvar *parser-lexical-rules* nil)
@@ -280,7 +279,7 @@ Setting *first-only-p* to nil")
       (error "Sentence ~A too long - ~A words maximum (*chart-limit*)" 
              user-input *chart-limit*)
     (let ((*executed-tasks* 0) (*successful-tasks* 0)
-	  (*contemplated-tasks* 0) (*filtered-tasks* 0) (*packings* 0)
+	  (*contemplated-tasks* 0) (*filtered-tasks* 0)
           (*parser-rules* (get-matching-rules nil nil))
           (*parser-lexical-rules* (get-matching-lex-rules nil))
           ;;
@@ -318,8 +317,8 @@ Setting *first-only-p* to nil")
               (find-spanning-edges 0 (length user-input)))))
         (push (get-internal-run-time) *parse-times*))
 	(when show-parse-p (show-parse))
-	(values *executed-tasks* *successful-tasks* *contemplated-tasks*
-		*filtered-tasks* *packings*))))
+	(values *executed-tasks* *successful-tasks* 
+                *contemplated-tasks* *filtered-tasks*))))
 
 (defun add-morphs-to-morphs (user-input)
    (let ((current 0))

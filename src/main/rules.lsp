@@ -262,17 +262,18 @@
                     (cons key-path
                        (nconc (nreverse (ldiff (cdr f-list) tail)) (cdr tail))))
                  (cdr f-list))))
-            ;;
-            ;; compute list of indices into `order' slot; these are used in
-            ;; key-driven parsing (using the new (hyper-)active parser); there
-            ;; seems to be some overlap with `daughters-apply-order' used in
-            ;; the generator.  however, the parser really needs the numerical
-            ;; encoding to decide wheter an edge wants to extend forwards or
-            ;; backwards.  brief inspection of the generation code suggests
-            ;; that `daughters-apply-order' currently is only used to compute
-            ;; a numerical index of the (linguistic) head daughter.  --- so, 
-            ;; maybe the two mechanisms could be joined.     (19-jul-99  -  oe)
-            ;;
+          ;;
+          ;; compute list of indices into `order' slot; these are used in
+          ;; key-driven parsing (using the new (hyper-)active parser); there
+          ;; seems to be some overlap with `daughters-apply-order' used in
+          ;; the generator.  however, the parser really needs the numerical
+          ;; encoding to decide wheter an edge wants to extend forwards or
+          ;; backwards.  brief inspection of the generation code suggests
+          ;; that `daughters-apply-order' currently is only used to compute
+          ;; a numerical index of the (linguistic) head daughter.  --- so, 
+          ;; maybe the two mechanisms could be joined.     (19-jul-99  -  oe)
+          ;;
+          #-:head-first
             (let* ((daughters (rest (rule-order rule)))
                    (arity (length daughters))
                    (dag (tdfs-indef fs))
@@ -283,6 +284,26 @@
                              for daughter = (existing-dag-at-end-of dag path)
                              when (key-daughter-p daughter)
                              return i)
+                         0)))
+              (setf (rule-rhs rule)
+                (cons
+                 key
+                 (nconc
+                  (loop for i from 0 to (- key 1) collect i)
+                  (loop for i from (+ key 1) to (- arity 1) collect i)))))
+            #+:head-first
+            (let* ((daughters (rest (rule-order rule)))
+                   (arity (length daughters))
+                   (dag (tdfs-indef fs))
+                   (head (existing-dag-at-end-of dag '(head-dtr)))
+                   (key (or
+                         (when head
+                           (loop
+                               for path in daughters
+                               for i from 0
+                               for daughter = (existing-dag-at-end-of dag path)
+                               when (eq daughter head)
+                               return i))
                          0)))
               (setf (rule-rhs rule)
                 (cons
@@ -301,7 +322,6 @@
     (when type
       (or (eq type *key-daughter-type*) 
           (and (consp type) (eq (first type) *key-daughter-type*))))))
-
 
 ;;; The following is called from the code which redefines types
 
@@ -420,7 +440,8 @@
 
 (defun build-rule-filter nil
   (unless (find :vanilla *features*)
-    (let ((*partial-dag-interpretation* '(cont))
+    (let (#+:packing
+          (*partial-dag-interpretation* '(cont))
           (max-arity 0)
           (nrules 0)
           (rule-list nil))

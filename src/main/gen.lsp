@@ -275,6 +275,7 @@
   ;; forwardp, backwardp are true when it's possible that dag1 subsumes dag2
   ;; and vice-versa respectively. When the possibility has been ruled out the
   ;; appropriate variable is set to false. Fail as soon as they are both false
+  #+:packing
   (when (and *partial-dag-interpretation*
            (member feature *partial-dag-interpretation* :test #'eq))
     (return-from subsume-wffs-p (values forwardp backwardp)))

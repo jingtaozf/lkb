@@ -14,6 +14,16 @@
 
 (defparameter *yadu-debug* nil)
 
+;;;
+;;; [incr tsdb()] support: global counters for calls to unify-dags() and
+;;; copy-dag().
+;;;
+
+(defparameter *unifications* 0)
+(defparameter *copies* 0)
+(declaim (type fixnum *unifications* *copies*))
+
+
 ;;; YADU
 
 ;;; YADU data structures
@@ -66,20 +76,22 @@
 
 (defun copy-tdfs-elements (old-tdfs)
   ;; nothing destructive now happens to tail-elements
-   (let ((indef (copy-dag (tdfs-indef old-tdfs))))
-      (when indef
-         (make-tdfs :indef indef
-                    :tail 
-                    (for element in (tdfs-tail old-tdfs)
-                         collect
-                         element)))))
+  (incf *copies*)
+  (let ((indef (copy-dag (tdfs-indef old-tdfs))))
+    (when indef
+      (make-tdfs :indef indef
+                 :tail 
+                 (for element in (tdfs-tail old-tdfs)
+                      collect
+                      element)))))
 
 (defun copy-tdfs-completely (old-tdfs)
   ;; nothing destructive now happens to tail-elements
-   (let ((indef (copy-dag-completely (tdfs-indef old-tdfs))))
-     (when indef
-       (make-tdfs :indef indef
-		  :tail (copy-list (tdfs-tail old-tdfs))))))
+  (incf *copies*)
+  (let ((indef (copy-dag-completely (tdfs-indef old-tdfs))))
+    (when indef
+      (make-tdfs :indef indef
+                 :tail (copy-list (tdfs-tail old-tdfs))))))
 
 ;;; Utility
 
@@ -127,8 +139,9 @@
 ; (defparameter *unif-count* 0)
 
 (defun yadu (tdfs1 tdfs2)
-   (yadu1 (tdfs-indef tdfs1) (tdfs-indef tdfs2) (tdfs-tail tdfs1)
-      (tdfs-tail tdfs2)))
+  (incf *unifications*)
+  (yadu1 (tdfs-indef tdfs1) (tdfs-indef tdfs2) (tdfs-tail tdfs1)
+         (tdfs-tail tdfs2)))
 
 (defun yadu1 (indef1 indef2 tail1 tail2)
    (let ((indef12 (unify-wffs indef1 indef2)))

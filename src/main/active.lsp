@@ -39,15 +39,11 @@
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   (pushnew :agenda *features*)
-  (pushnew :packing *features*)
-  (pushnew :excursion *features*)
-  (pushnew :hyper-activity *features*))
+  (pushnew :hyper-activity *features*)
+  (pushnew :excursion *features*))
 
 (defparameter *hyper-activity-p* t)
-
-#+:packing
-(defparameter *chart-packing-p* nil)
-
+
 ;;;
 ;;; chart packing under (partial) subsumption is experimental; known problems
 ;;;
@@ -57,7 +53,30 @@
 ;;;
 ;;;   - when computing the rule filter and quick check vectors, the paths that
 ;;;     are ignored in packing mode (i.e. in subsumption and unification) need
-;;;     to be excluded.
+;;;     to be excluded (solved preliminaryly --- 23-oct-99 -- oe).
+;;;
+
+#+:packing
+(defparameter *chart-packing-p* nil)
+
+#+:packing
+(defstruct packings
+  (equivalent 0 :type fixnum)
+  (proactive 0 :type fixnum)
+  (retroactive 0 :type fixnum)
+  (frozen 0 :type fixnum)
+  (failures 0 :type fixnum))
+
+#+:packing
+(defparameter *packings* (make-packings))
+
+#+:packing
+(defun reset-packings (&optional (packings *packings*))
+  (setf (packings-equivalent packings) 0)
+  (setf (packings-proactive packings) 0)
+  (setf (packings-retroactive packings) 0)
+  (setf (packings-frozen packings) 0)
+  (setf (packings-failures packings) 0))
 
 (defstruct (active-chart-configuration (:include chart-configuration))
   open
@@ -106,6 +125,14 @@
                  (chart-entry-configurations by-end)
                  :test #'eq :count 1)))))
 
+(defmacro inapplicablep (rule arule position)
+  `(unless (check-rule-filter ,rule ,arule ,position)
+     (incf *filtered-tasks*)))
+
+(defmacro incompatiblep (vector avector)
+  `(unless (restrictors-compatible-p ,vector ,avector)
+     (incf *filtered-tasks*)))
+
 (defmacro rule-and-passive-task (rule passive)
   #+:agenda
   `(if *maximal-number-of-readings*
@@ -116,6 +143,8 @@
   `(process-rule-and-passive ,rule ,passive))
 
 (defmacro active-and-passive-task (active passive arule)
+  #-:agenda
+  (declare (ignore arule))
   #+:agenda
   `(if *maximal-number-of-readings*
      (let ((priority (rule-priority ,arule)))
@@ -125,11 +154,13 @@
   `(process-active-and-passive ,active ,passive))
   
 
-(defun complete-chart (begin end &optional (packingp *chart-packing-p*))
+(defun complete-chart (begin end 
+                       &optional #+:packing (packingp *chart-packing-p*))
 
   (let ((*active-edge-id* 0)
         (*minimal-vertex* begin)
         (*maximal-vertex* end)
+        #+:packing
         (*partial-dag-interpretation* (and packingp '(cont))))
     (declare (special *active-edge-id* *minimal-vertex* *maximal-vertex*))
     ;;
@@ -342,7 +373,7 @@
 ;;;
 ;;;   - edges that were frozen to block further processing because they were
 ;;;     packed retroactively;
-;;;   - edges that were globally invalidated because one of their childres was
+;;;   - edges that were globally invalidated because one of their children was
 ;;;     packed retroactively.
 ;;;
 ;;; the second class is marked with a negative `frozen' value and ignored in
@@ -359,7 +390,8 @@
                 t
                 "~&freeze(): freezing <~d> for <~d>.~%"
                 (edge-id edge) id)
-               (setf (edge-frozen edge) id))
+               (setf (edge-frozen edge) id)
+               (when (minusp id) (incf (packings-frozen *packings*))))
              (loop 
                  with id = (if recursivep id (- id))
                  for parent in (edge-parents edge) do
@@ -379,8 +411,10 @@
                  "~&packed-edge-p(): ~
                   packing <~d> into <~d>.~%"
                  (edge-id edge) (edge-id oedge))
+                (if backwardp
+                  (incf (packings-equivalent *packings*))
+                  (incf (packings-proactive *packings*)))
                 (push edge (edge-packed oedge))
-                (incf *packings*)
                 (return configuration))
               (when backwardp
                 #+:pdebug
@@ -389,6 +423,7 @@
                  "~&packed-edge-p(): ~
                   ~:[~;(re)~]packing <~d> into <~d> (backwards).~%"
                  (edge-frozen oedge) (edge-id oedge) (edge-id edge))
+                (incf (packings-retroactive *packings*))
                 (setf (edge-packed edge) 
                   (nconc (edge-packed edge) (edge-packed oedge)))
                 (setf (edge-packed oedge) nil)
@@ -429,9 +464,12 @@
                             tdfs (nth (first open) daughters))
                            (tdfs-qc-vector root)))
                  (copy (if open
+                         #+:hyper-activity
                          (if *hyper-activity-p*
                            t
                            (copy-tdfs-elements tdfs))
+                         #-:hyper-activity
+                         (copy-tdfs-elements tdfs)
                          (restrict-and-copy-tdfs root))))
             (when copy
               #+(and :hyper-activity :excursion)
@@ -494,14 +532,11 @@
           (when *chart-packing-p*
             (loop
                 for edge in (edge-children nedge) do
-                  (push nedge (edge-parents edge))))
-          (unless #+:packing
-                  (and *chart-packing-p* (packed-edge-p begin end nedge))
-                  #-:packing
-                  nil
-            (fundamental4passive
-             (make-chart-configuration
-              :begin begin :end end :edge nedge)))))))))
+                  (push nedge (edge-parents edge)))
+            (when (packed-edge-p begin end nedge)
+              (return-from process-rule-and-passive nil)))
+          (fundamental4passive
+           (make-chart-configuration :begin begin :end end :edge nedge))))))))
 
 (defun process-active-and-passive #+:agenda (task &optional atdfs)
                                   #-:agenda (active passive &optional atdfs)
@@ -556,9 +591,12 @@
                                   tdfs (nth (first open) daughters))
                                  (tdfs-qc-vector root)))
                        (copy (if open
+                               #+:hyper-activity
                                (if *hyper-activity-p*
                                  t
                                  (copy-tdfs-elements tdfs))
+                               #-:hyper-activity
+                               (copy-tdfs-elements tdfs)
                                (restrict-and-copy-tdfs root))))
                   (when copy
                     (let* ((category (indef-type-of-tdfs 
@@ -598,19 +636,17 @@
           (when *chart-packing-p*
             (loop
                 for edge in (edge-children nedge) do
-                  (push nedge (edge-parents edge))))
-          (unless #+:packing
-                  (and *chart-packing-p* (packed-edge-p begin end nedge))
-                  #-:packing
-                  nil
-            (fundamental4passive
-             (make-chart-configuration
-              :begin begin :end end :edge nedge)))))))))
+                  (push nedge (edge-parents edge)))
+            (when (packed-edge-p begin end nedge)
+              (return-from process-active-and-passive nil)))
+          (fundamental4passive
+           (make-chart-configuration :begin begin :end end :edge nedge))))))))
 
 (defun restrict-and-copy-tdfs (tdfs)
   (let* ((dag (deref-dag (tdfs-indef tdfs)))
          (new (clone-dag dag))
          (arcs nil))
+    (incf *copies*)
     (flet ((member-with-cyclic-check (arc)
              (when (member (dag-arc-attribute arc) 
                            *deleted-daughter-features* :test #'eq)
@@ -690,6 +726,7 @@
                   for bar in rests
                   collect (cons foo bar)))))
 
+#+:packing
 (defun unpack-edge! (edge &optional insidep)
   (labels ((instantiate (edge children i n)
              #+:udebug
@@ -705,7 +742,7 @@
              (let* ((cache (edge-dag-restricted edge))
                     (entry (aref cache i)))
                (cond
-                ((eq entry :bottom) nil)
+                ((eq entry :bottom) (incf (packings-failures *packings*)) nil)
                 ((tdfs-p entry) entry)
                 (t
                  (with-unification-context (ignore)
@@ -725,6 +762,7 @@
                                (restrict-and-copy-tdfs result)))
                             (t
                              (setf (aref cache i) :bottom)
+                             (incf (packings-failures *packings*))
                              nil))))))))))
 
     (let ((children (edge-children edge))
@@ -925,6 +963,6 @@
      (time
       (loop
           for edge in *parse-record*
-          sum (length (unpack-edge edge))))
+          sum (length (unpack-edge! edge))))
      (length *parse-record*))
    (tsdb::get-field :pedges (summarize-chart))))

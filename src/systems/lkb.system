@@ -27,6 +27,20 @@
   #+(or :cl-http (not (or :mcl :clim :common-graphics))) 
   (pushnew :tty *features*))
 
+;;;
+;;; ultimately, all compile-time configurations (by means of *features*) that
+;;; affect more than just one file should go here (together with a comment on
+;;; what each feature does); with features added in individual files, we would
+;;; needto worry about load() order.
+;;;
+;;;   - :packing -- enable code for chart packing under (partial) subsumption;
+;;; 
+
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (pushnew :packing *features*))
+
+
 (defparameter *lisp-specific-directory*
     #+(and :allegro :clim) "ACL_specific"
     #+(and :allegro :tty) "ACL_specific"
