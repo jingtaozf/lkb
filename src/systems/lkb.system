@@ -44,7 +44,7 @@
            #-:ansi-eval-when (load eval compile)
   (pushnew :ltemplates *features*)
   (pushnew :pooling *features*)
-  (pushnew :packing *features*))
+  #+:oe (pushnew :packing *features*))
 
 
 (defparameter *lisp-specific-directory*
