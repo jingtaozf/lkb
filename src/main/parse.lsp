@@ -778,7 +778,7 @@
 		 (remove-if-not #'mrecord-rules transformed-entries) f)))))
 
 
-(defun apply-morph-rule (rule fs fs-restricted new-orth daughter)
+(defun apply-morph-rule (rule fs fs-restricted new-orth &optional daughter)
   #-:debug 
   (declare (ignore daughter))
   ;;
