@@ -75,9 +75,9 @@
 
 (defparameter *statistics-exclude-tgc-p* '(:tcpu))
 
-(defparameter *statistics-aggregate-dimension* :phenomena)
+(defparameter *statistics-aggregate-dimension* :i-length)
 
-(defparameter *statistics-aggregate-size* 1)
+(defparameter *statistics-aggregate-size* 5)
 
 (defparameter *statistics-aggregate-threshold* 1)
 

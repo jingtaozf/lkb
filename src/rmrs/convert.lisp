@@ -189,7 +189,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 
 (defun simple-mrs-to-rmrs (mrs)
   (let ((lzt (psoa-liszt mrs)))
-    (make-rmrs :eps
+    (make-rmrs :liszt
                (loop for rel in lzt
                      append
                      (simple-parsonify-rel rel)))))

@@ -188,6 +188,8 @@
       while c do (vector-push c buffer)))
 
 (defun lsp-process-event (id event stream)
+  #+:lui
+  (declare (special %lui-stream% %lui-eoc%))
   (let* ((client  (loop
                       for client in %lsp-clients%
                       when (= (client-id client) id) return client))
@@ -255,9 +257,9 @@
                id (or (third (client-display client)) "local")))))
          (grammar
           (let ((script (pop command)))
-            (format t "grammar(): `~a'~%" script)
             (when (probe-file script)
-              (read-script-file-aux script))))
+              (read-script-file-aux script)))
+          (unless id (format %lui-stream% "status ready~a~%" %lui-eoc%)))
          (parse
           (let* ((input (pop command))
                  (set (let ((foo (pop command))) 
@@ -385,15 +387,15 @@
                   (show-mrs-dependencies-window nil mrs title)))))))))
 
 (defun lsp-return (id stream edges format)
-  (declare (ignore id))
+
   (loop
       with *package* = (find-package :lkb)
       for edge in edges
       when (null edge) do
         (format
          t
-         "[~a] lsp-return(): null edge for `~a' (~(~a~))~%"
-         id input format)
+         "[~a] lsp-return(): null edge (~(~a~))~%"
+         id format)
       else do
         (case format
           (:avm

@@ -172,7 +172,7 @@
 ;;;
 (defun display-fs-tty (fs)
   (if #+:lui (lui-status-p :avm) #-:lui nil
-    #+:lui (lui-display-fs fs nil) 
+    #+:lui (lui-display-fs fs nil nil) 
     (display-dag fs 'simple)))
 
 #+:lui

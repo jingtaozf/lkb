@@ -93,6 +93,7 @@
      (sleep 2)
      (close %lui-stream%)
      (setf %lui-stream% nil)))
+  #-:clisp
   (when %lui-pid%
     (ignore-errors
      (run-process "kill -HUP ~d" %lui-pid% 
