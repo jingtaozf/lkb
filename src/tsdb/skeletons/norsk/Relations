@@ -157,7 +157,7 @@ edge:
   parse-id :integer :key                # parse for this edge
   e-parser :string                      # `lexicon' or `syntax'
   e-name :string                        # edge label (as in `derivation')
-  e-type :string                        # item-tiype() of this edge
+  e-type :string                        # item-itype() of this edge
   e-status :integer                     # 0 : passive; 1 : active
   e-result :integer                     # 0 : nope; 1 : yup, result
   e-start :integer                      # start vertex for this edge
@@ -190,3 +190,21 @@ decision:
   d-start :integer
   d-end :integer
   d-date :date
+
+preference:
+  parse-id :integer :key
+  version :integer
+  result-id :integer
+
+update:
+  parse-id :integer :key
+  version :integer
+  u-matches :integer
+  u-mismatches :integer
+  u-new :integer
+  u-gin :integer
+  u-gout :integer
+  u-pin :integer
+  u-pout :integer
+  u-in :integer
+  u-out :integer

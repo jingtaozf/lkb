@@ -195,3 +195,16 @@ preference:
   parse-id :integer :key
   version :integer
   result-id :integer
+
+update:
+  parse-id :integer :key
+  version :integer
+  u-matches :integer
+  u-mismatches :integer
+  u-new :integer
+  u-gin :integer
+  u-gout :integer
+  u-pin :integer
+  u-pout :integer
+  u-in :integer
+  u-out :integer
