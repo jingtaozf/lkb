@@ -1213,19 +1213,23 @@
          layout col 0 -m1 5 -r 2 -m2 5 -c black -j right~%~
          layout col 1 -m1 5 -r 2 -m2 5 -c black -j right~%~
          layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
-         layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
-         layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
          layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
          layout row 2 -m1 5 -r 2 -m2 5 -c black -j center~%~
-         cell 1 1 -contents \"i-id\" -format title~%~
-         region 1 1 2 1 -contents \"i-id\" -format title -hor_justify center~%~
-         region 1 ~d 1 ~d -contents \"~a\" -format title ~
-           -hor_justify center~%~
-         region 1 ~d 1 ~d -contents \"~a\" -format title ~
-           -hor_justify center~%"
-        shows (+ shows compares) (+ shows compares compares)
-        (+ shows 1) (+ shows compares) olabel
-        (+ shows compares 1) (+ shows compares compares) nlabel)
+         cell 1 1 -contents {i-id} -format title~%~
+         region 1 1 2 1 -contents {i-id} -format title -hor_justify center~%"
+        shows)
+       (unless (zerop compares)
+         (format
+          stream
+          "layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
+           layout col ~d -m1 5 -r 2 -m2 5 -c black -j right~%~
+           region 1 ~d 1 ~d -contents {~a} -format title ~
+             -hor_justify center~%~
+           region 1 ~d 1 ~d -contents {~a} -format title ~
+             -hor_justify center~%"
+          (+ shows compares) (+ shows compares compares)
+          (+ shows 1) (+ shows compares) olabel
+          (+ shows compares 1) (+ shows compares compares) nlabel))
           
        (do ((show show (rest show))
             (i 1 (+ i 1)))
