@@ -271,7 +271,7 @@ SELECT val FROM meta WHERE var=''filter'' LIMIT 1;
 ' LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION test_user(text) RETURNS SETOF text AS '
-SELECT val FROM public.meta WHERE var=''user'' AND val=$1;
+SELECT val FROM public.meta WHERE var=''user'' AND val = $1;
 ' LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION build_current_grammar () RETURNS boolean AS
