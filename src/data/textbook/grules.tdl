@@ -9,29 +9,24 @@
 
 ;; The head verb phrase was put int to prevent pdp's from taking specifiers
 ;; as with "There was a book on the table".  All we lose is absolutives.
-:begin :instance.
 head-specifier-rule := birule-headfinal &
  [ SYN [ SPR < > ],
 
    NH1 #1, 
    H [ SYN [ HEAD norv,
 	     SPR < #1 & [ SYN [ SPR < > ] ] > ] ] ].
-:end :instance.
 
 
 ;; Do we really want three head compliment rules?  Does this also require
 ;; two head-filler rules?  Why don't we go back to just one binary branching
 ;; rule?  
-:begin :instance.
 head-complement-rule-0 := unary-COMPS-rule & 
  [ SYN [ SPR #spr,  
 	 COMPS < > ], 
 
    H [ SYN [ SPR #spr,
 	     COMPS < > ] ] ].
-:end :instance.
 
-:begin :instance.
 head-complement-rule-1 := binary-COMPS-rule & 
  [ SYN [ SPR #spr,  
 	 COMPS < > ], 
@@ -39,9 +34,7 @@ head-complement-rule-1 := binary-COMPS-rule &
    H [ SYN [ SPR #spr,
 	     COMPS < #1 > ] ],
    NH1 #1 ].
-:end :instance.
 
-:begin :instance.
 head-complement-rule-2 := trinary-COMPS-rule & 
  [ SYN [ SPR #spr,  
 	 COMPS < > ], 
@@ -50,18 +43,14 @@ head-complement-rule-2 := trinary-COMPS-rule &
 	     COMPS < #1, #2 > ] ],
    NH1 #1,
    NH2 #2 ].
-:end :instance.
 
-:begin :instance.
 head-modifier-rule := birule-headfirst &
  [ SYN [ SPR < #spr > ],
    
    H #1 & [ SYN [ SPR < #spr > ] ],
    NH1 [ SYN [ HEAD [ MOD < #1 > ] ] ] ].
-:end :instance.
 
 
-:begin :instance.
 imperative-rule := unary-grule &
  [ SYN [ HEAD verb & [ FORM fin ],
 	 SPR < > ],
@@ -71,9 +60,7 @@ imperative-rule := unary-grule &
    NH1 [ SYN [ HEAD verb & [ FORM inf ],
 	       SPR < [ SYN [ HEAD noun & [ AGR [ PER 2nd ] ] ] ] > ],
 	 SEM [ INDEX #ind ] ] ].
-:end :instance.
 
-:begin :instance.
 bare-plural-rule := unary-grule-headed &
 [ SYN [ SPR < >,
 	COMPS #comps],
@@ -83,11 +70,9 @@ bare-plural-rule := unary-grule-headed &
 	     SPR < [ ] >,
 	     COMPS #comps],
 	SEM #sem ] ].
-:end :instance.
 ;; See Change File #9
 
 
-:begin :instance.
 bare-mass-noun-rule := unary-grule-headed &
 [ SYN [	SPR < >,
 	COMPS #comps],
@@ -96,13 +81,11 @@ bare-mass-noun-rule := unary-grule-headed &
   H  [SYN [ SPR < [SYN [HEAD [COUNT false] ] ] >,
 	     COMPS #comps],
 	SEM #sem ] ].
-:end :instance.
 ;; See Changes File #10
 
 
 #|
 ;;; This head filler rule allows for multiple extractions.
-:begin :instance.
 head-filler-rule := birule-headfinal-minusGAP &
 [  SYN [ SPR < >,
 	 COMPS < >,
@@ -116,11 +99,9 @@ head-filler-rule := birule-headfinal-minusGAP &
 		      GAP [ LIST *cons* & < #1 . #rest>,
 			    LAST *null* & #last ] ],
        SEM [MODE prop ] ] ].
-:end :instance.
 |#
 
 
-:begin :instance.
 head-filler-rule := birule-headfinal-minusGAP &
 [  SYN [ SPR < >,
 	 COMPS < >,
@@ -132,13 +113,11 @@ head-filler-rule := birule-headfinal-minusGAP &
 		      COMPS < >,
 		      GAP <! #1 !> ],
        SEM [MODE prop ] ] ].
-:end :instance.
 
 
 ;; This version of the noun coordination rule does not account for binding...
 ;; I'm not even sure the book accounts for it since it seems to want the 
 ;; index for conjuctions to be a sit-index, not a ref-index.  
-:begin :instance.
 noun-coordination-rule := trirule-nonheaded &
  [ SYN [ HEAD noun & [ AGR non-3sing & [ NUM plur ],
 		       CASE #case ],
@@ -156,11 +135,9 @@ noun-coordination-rule := trirule-nonheaded &
    NH3 [ SYN [ HEAD noun & [CASE #case ],
 	       SPR #spr,
 	       COMPS #comps ]]].
-:end :instance.
  
 
 ;; In order for it to be accurate we need to add a list of ANDARGS to NH2.
-:begin :instance.
 verb-coordination-rule := trirule-nonheaded &
 [ SYN [ HEAD verb & [FORM #form],
 	SPR #spr,
@@ -183,7 +160,6 @@ verb-coordination-rule := trirule-nonheaded &
 		COMPS #comps,
 		GAP #gap ],
 	  SEM [ MODE prop ] ] ].
-:end :instance.
 
 ;		INDEX #1 ] ],
 ;     	RESTR <! [ANDARG < #1 . #2 > ] !>] ],
@@ -191,7 +167,6 @@ verb-coordination-rule := trirule-nonheaded &
 
 
 #|
-:begin :instance.
 verb-coordination-rule2 := trirule-nonheaded &
 [ SYN #syn,
 
@@ -207,5 +182,4 @@ verb-coordination-rule2 := trirule-nonheaded &
 		
     NH3 [ SYN #syn,
 	  SEM [ MODE #mode ] ] ].
-:end :instance.
 |#

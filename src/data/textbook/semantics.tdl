@@ -125,6 +125,10 @@ srv-sem := verb-sem &
 [ SEM [ RESTR <! srv_pred & [ ARG #3 ] !> ],
   ARG-ST < [ ] ,  [ SEM [INDEX #3] ] > ].
 
+srv-to-sem := verb-sem &
+[ SEM [ RESTR <! ocv_pred & [ UND #2, ARG #3 ] !> ],
+  ARG-ST < [ ] ,  [ SEM [INDEX #2] ], [ SEM [INDEX #3] ] > ].
+
 scv-sem := verb-sem &
 [ SEM [ RESTR <! scv_pred & [ ACT #1,
 			      ARG #3 ] !> ],
@@ -234,6 +238,7 @@ r_today :< reln.
 r_slowly :< reln.
 
 r_happy :< reln.
+r_unhappy :< reln.
 r_fond :< reln.
 r_mere :< reln.
 r_angry :< reln.

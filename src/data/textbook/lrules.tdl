@@ -8,7 +8,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-:begin :instance.
 negation-lexical-rule := word+arg_real+ana_agr &
 [ SYN [ HEAD verb & [ FORM fin, PRED #pred, 
 		      INV #inv, NEG true, 
@@ -27,10 +26,8 @@ negation-lexical-rule := word+arg_real+ana_agr &
 					 GAP #gap],
 				   SEM #sem,
 				   ARG-ST < #spr . #comps > ] > ].
-:end :instance.
 
 
-:begin :instance.
 inversion-lexical-rule := word+arg_real+ana_agr &
 [ SYN [ HEAD verb & [ FORM fin, PRED #pred, 
 		      INV true, NEG #neg, 
@@ -53,11 +50,9 @@ inversion-lexical-rule := word+arg_real+ana_agr &
 					 INDEX #index,
 					 RESTR #restr ],
 				   ARG-ST < #spr . #comps > ] > ].
-:end :instance.
 
 ;; The verb value was added to prevent "to" from undergoing the 
 ;; extraposition rule and producing an extra "It continues to".
-:begin :instance.
 extraposition-lexical-rule := word & 
 [ SYN [ HEAD #head ],
   SEM #sem,
@@ -66,12 +61,9 @@ extraposition-lexical-rule := word &
   ARGS < word & [ SYN [ HEAD #head & verb ],
 		      SEM #sem,
 		      ARG-ST < #a & [SYN CP-fin] , #b > ] > ].
-:end :instance.
-
 
 ;; The additional #b was added to require at least two real elements
 ;; so as to prevent an infinite loop of rule application.  
-:begin :instance.
 ellipsis-lexical-rule := word & 
 [ SYN [ HEAD #head,
 	SPR < #1 >,
@@ -85,23 +77,19 @@ ellipsis-lexical-rule := word &
 			COMPS < #b . #a > ],
 		  SEM #sem,
 		  ARG-ST < #1 . < #b . #a > > ] > ]. 
-:end :instance.
 
 
 ;  Half of the passive rules below could be removed if we institute code for optionality of 
-;  compliments.  SMG
+;  complements.  SMG
 ;
-:begin :instance.
 tv-pass-rule-short := general-passive-lrule &
  [ ARG-ST < [SYN [HEAD noun],
 	     SEM [INDEX #und ] ] >,
    
    ARGS < [ ARG-ST < [ ], [SYN [HEAD noun],
 			   SEM [INDEX #und ] ] > ] > ].
-:end :instance.
 
 
-:begin :instance.
 tv-pass-rule-long := general-passive-lrule &
  [ ARG-ST < [SYN [HEAD noun],
 	     SEM [INDEX #und] ], [SYN [HEAD prep & [FORM f_by ] ],
@@ -109,10 +97,8 @@ tv-pass-rule-long := general-passive-lrule &
 	      
    ARGS < [ ARG-ST < [SEM [INDEX #act ] ], [SYN [HEAD noun ],
 					   SEM [INDEX #und] ] > ] > ].
-:end :instance.
 
 
-:begin :instance.
 dtv-pass-rule-und-short := general-passive-lrule &
  [ ARG-ST < [SYN [HEAD noun],
 	    SEM [INDEX #und ] ], [SYN [HEAD noun],
@@ -120,10 +106,8 @@ dtv-pass-rule-und-short := general-passive-lrule &
 	  
    ARGS < [ ARG-ST < [ ], [SEM [INDEX #und ] ], [SYN [HEAD noun],
 						  SEM [INDEX #thm] ] > ] > ].
-:end :instance.
 
 
-:begin :instance.
 dtv-pass-rule-und-long := general-passive-lrule & 
  [ ARG-ST < [SYN [HEAD noun],
 	    SEM [INDEX #und ] ], [SYN [HEAD noun],
@@ -132,10 +116,8 @@ dtv-pass-rule-und-long := general-passive-lrule &
 
    ARGS < [ ARG-ST < [ SEM [INDEX #act] ], [ SEM [INDEX #und ] ], [SYN [HEAD noun],
 								   SEM [INDEX #thm] ] > ] > ].
-:end :instance.
 
 
-:begin :instance.
 dtv-pass-rule-thm-short := general-passive-lrule & 
 [ ARG-ST < [SYN [HEAD noun],
 	    SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
@@ -143,10 +125,8 @@ dtv-pass-rule-thm-short := general-passive-lrule &
   
    ARGS < [ ARG-ST < *top*, [SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
 								  SEM [INDEX #und] ] > ] > ].
-:end :instance.  
 
 
-:begin :instance.
 dtv-pass-rule-thm-long := general-passive-lrule & 
  [ ARG-ST < [SYN [HEAD noun],
 	    SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
@@ -155,7 +135,6 @@ dtv-pass-rule-thm-long := general-passive-lrule &
   
    ARGS < [ ARG-ST < [SEM [INDEX #act ] ], [SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
 								  SEM [INDEX #und] ] > ] > ].
-:end :instance.  
 
 
 

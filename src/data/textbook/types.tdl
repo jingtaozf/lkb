@@ -7,7 +7,6 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-:begin :type.
 
 feat-struc :< *top*.
 
@@ -210,6 +209,8 @@ pdp-lxm := prep-lxm &
 ;; If the ARG-ST isn't limited to things of type NP then that info
 ;; must be placed on the the ARG-ST of verbs using P-OBJ.
 ;; The semantics are left empty in the book, do we need any?
+
+#|
 mkp-lxm := prep-lxm &  
  [ SYN [ HEAD [ MOD < >,
 		P-OBJ < #1 > ],
@@ -219,6 +220,15 @@ mkp-lxm := prep-lxm &
 ;   ARG-ST < #1 & [SEM [INDEX #2] ] > ].
 ;   SEM [ MODE ref,
 ;	 INDEX #2 & ref-index ] ].
+|#
+mkp-lxm := prep-lxm &  
+ [ SYN [ HEAD [ MOD < >,
+		P-OBJ < #1 > ],
+	 SPR < > ],
+   SEM [ INDEX #2 & ref-index,
+         RESTR <! !> ],
+   ARG-ST < #1 & [ SYN NP,
+                   SEM [INDEX #2] ] > ].
 
 adv-lxm := const-lxm & modifier-sem &
  [ SYN [ HEAD adv & [ FORM /l normal,
@@ -286,7 +296,13 @@ pron-lxm := const-lxm & noun-sem &
 cn-lxm := noun-lxm & 
  [ SYN [ HEAD [ AGR #agr & [ GEND /l neut ] ],
 	 SPR < [ ] > ],
-   ARG-ST /l < [ SYN [ HEAD det & [AGR #agr, COUNT /l true] ] ] > ].
+   ARG-ST < [ SYN [ HEAD det & [AGR #agr, COUNT /l true] ] ] > ].
+
+cn-pp-lxm := noun-lxm & 
+ [ SYN [ HEAD [ AGR #agr & [ GEND /l neut ] ],
+	 SPR < [ ] > ],
+   ARG-ST < [ SYN [ HEAD det & [AGR #agr, COUNT /l true] ] ],
+            [ SYN [ HEAD prep, COMPS < > ] ] > ].
 
 pn-lxm := noun-lxm & pn-sem &
  [ SYN [ HEAD [ AGR 3sing ] ],
@@ -389,6 +405,10 @@ srv-lxm := verb-lxm & srv-sem &
 
 auxv-lxm := srv-lxm &
 [ SYN [ HEAD verb & [ AUX true ] ] ].
+
+;; "appear" is an example...
+srv-to-lxm := verb-lxm & srv-to-sem &
+[ ARG-ST < #1 , [SYN [HEAD prep & [FORM f_to] ] ], [SYN [ SPR < #1 > ] ] > ]. 
 
 ;; "try" is an example...
 scv-lxm := verb-lxm & scv-sem &

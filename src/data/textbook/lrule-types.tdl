@@ -180,13 +180,15 @@ non-3rd-sing-verb := affix &
 general-passive-lrule := word & 
 [ ORTH #orth,
   SYN [ HEAD verb & [ FORM pass,
-		      PRED true ],
+		      PRED true,
+                      AUX false ],
 	SPR < [ ] > ],
   SEM #sem,
   
   ARGS < word & [ ORTH #orth,
                   SYN [ HEAD verb & [ FORM psp,
-				      PRED false ] ],
+				      PRED false,
+                                      AUX false ] ],
 		  SEM #sem ] > ].
 
 
