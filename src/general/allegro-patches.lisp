@@ -72,7 +72,7 @@
   #+:sunos4 "sunos"
   #+(and :sun :svr4) "solaris"
   #+:alpha "osf"
-  #+:mswindows "mswindows"
+  #+:mswindows "windows"
   #-(or :prism :linux86 :sunos4 (and :sun :svr4) :alpha :mswindows)
   (error "~&loadup: unable to determine system type; see file ~
           `allegro-patches.lisp'.~%"))

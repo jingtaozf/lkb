@@ -1,13 +1,13 @@
 ROOT = /eo/e7/apache/htdocs/src
-DATE=`/bin/date "+%Y-%m-%d"`
+DATE=`date "+%Y-%m-%d"`
 TARGET=/usr/local/apache/htdocs/lingo/ftp
 
-RM=/bin/rm
-MKDIR=/bin/mkdir
-CVS=/usr/pubsw/bin/cvs
-TAR=/usr/local/bin/tar
-MAKE=/usr/ccs/bin/make
-TEE=/bin/tee
+RM=rm
+MKDIR=mkdir
+CVS=cvs
+TAR=tar
+MAKE=make
+TEE=tee
 
 update:
 	( \
@@ -17,7 +17,6 @@ update:
 	  ${CVS} update -P -d -R; \
 	  ${CVS} commit -f -m "auto-update for build" \
             ${ROOT}/lkb/src/version.lsp; \
-	  ${MAKE} all; \
 	) 2>&1 | ${TEE} /tmp/build.${USER}
 
 all: lkb erg spanish itsdb
@@ -125,6 +124,21 @@ lkb_solaris:
 	)
 
 lkb_windows:
+	${RM} -f ${ROOT}/.yes;
+	( \
+	  echo "(load \"d:${ROOT}/lkb/src/general/loadup.lisp\")"; \
+	  echo "(load \"d:${ROOT}/lkb/src/ACL_specific/deliver.lsp\")"; \
+	) > d:/tmp/build.lisp
+	( cd e:/acl501; ./clim -qq -L d:/tmp/build.lisp \
+          && touch ${ROOT}/.yes; )
+	( \
+	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
+	  cd ${ROOT}/lkb; \
+	  ${TAR} Svczf /d/tmp/lkb_windows.tgz \
+              --exclude=".nfs*" \
+	      windows; \
+	  scp /d/tmp/lkb_windows.tgz eo:${TARGET}/${DATE}; \
+	)
 
 lkb_documentation:
 	( \
