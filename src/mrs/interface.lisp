@@ -220,6 +220,18 @@
        (apply browser (list nil mrs title))
        (output-mrs mrs 'simple)))))
 
+
+;;;
+;;; (LOGON) fragment detection; see comment in `mrsglobals.lisp'.
+;;;
+(defun fragmentp (mrs)
+  (when (psoa-p mrs)
+    (loop
+        for ep in (psoa-liszt mrs)
+        when (member (rel-pred ep) *semi-fragment-relations* :test #'equal)
+        count 1 into n
+        finally (return (unless (zerop n) n)))))
+
 ;;;
 ;;; a couple of RMRS interface functions (mostly) for [incr tsdb()]; we started
 ;;; this collection in `rmrs/interface.lisp', but the ECL -- PET linking would

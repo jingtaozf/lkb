@@ -208,6 +208,15 @@ set in the code")
 (defvar *false-type* nil)
 (defvar *true-type* nil)
 
+;;;
+;;; in LOGON, we have an addtional notion of `fragmented' MRSs, viz. in cases
+;;; where the parser resolved to `gleaning' (or `starring' in XLE lingo), i.e.
+;;; ended up combining a sequence of chunks from the chart, lacking a global
+;;; solution.  the following is to enable detection of `fragmentary' MRSs.
+;;;
+(defconstant *semi-fragment-relations*
+  (list "fragment_rel" (mrs::vsym "unspec_conj_rel")))
+
 (defparameter *alex-mode* nil
   "if t, allows scope to have specified relations")
 
