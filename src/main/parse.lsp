@@ -74,12 +74,13 @@
 (defstruct
    (edge
       (:constructor make-edge
-                    (&key id category rule dag 
+                    (&key id category rule dag odag 
                           (dag-restricted (restrict-fs (tdfs-indef dag)))
                           leaves lex-ids parents children morph-history 
                           spelling-change packed frozen)))
-   id category rule dag dag-restricted leaves lex-ids
-   parents children morph-history spelling-change packed frozen)
+   id category rule dag odag dag-restricted leaves lex-ids
+   parents children morph-history spelling-change 
+   #+:packing packed #+:packing equivalent #+:packing frozen)
 
 (defstruct
    (mrecord
@@ -802,6 +803,7 @@ Setting *first-only-p* to nil")
                    (rule-id rule) (length rule-restricted-list)
                    (loop for e in  child-edge-list collect (edge-id e))
                    left-vertex right-vertex)
+                  #-:vanilla
                   (return-from try-grammar-rule-left nil)))))
 	;; we've got all the bits
 	(with-agenda (when f (rule-priority rule))
@@ -831,6 +833,7 @@ Setting *first-only-p* to nil")
                    (chart-configuration-end config)
                    (cons (chart-configuration-edge config) child-edge-list)
                    f (1+ n))
+                  #-:vanilla
                   (return-from try-grammar-rule-right nil)))))
 	;; we've got all the bits
 	(with-agenda (when f (rule-priority rule))
@@ -1118,15 +1121,27 @@ Setting *first-only-p* to nil")
       ;;
       ;; if applicable, print out compact summary of packings (9-aug-99  -  oe)
       ;;
-      (when (edge-packed edge)
-        (let ((edge (first (edge-packed edge))))
+      #+:packing
+      (when (or (edge-equivalent edge) (edge-packed edge))
+        (let ((edge (first (or (edge-equivalent edge) (edge-packed edge)))))
           (format 
            t 
            " { [~d < ~{~d~^ ~}" 
            (edge-id edge) 
            (loop for child in (edge-children edge) collect (edge-id child))))
         (loop
-            for edge in (rest (edge-packed edge)) do
+            for edge in (rest (edge-equivalent edge)) do
+              (format 
+               t 
+               "; ~d < ~{~d~^ ~}"
+               (edge-id edge) 
+               (loop 
+                   for child in (edge-children edge) 
+                   collect (edge-id child))))
+        (loop
+            for edge in (if (edge-equivalent edge)
+                          (edge-packed edge)   
+                          (rest (edge-packed edge))) do
               (format 
                t 
                "; ~d < ~{~d~^ ~}"

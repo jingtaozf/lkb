@@ -267,18 +267,13 @@
   ;; assume not circular, and not called within a unification context
   (incf *subsumptions*)
   (with-unification-context (dag1)
-    (catch '*fail* (subsume-wffs-p dag1 dag2 nil t t))))
+    (catch '*fail* (subsume-wffs-p dag1 dag2 t t))))
 
 
-(defun subsume-wffs-p (real-dag1 real-dag2 feature forwardp backwardp)
-  (declare (special *chart-packing-p*))
+(defun subsume-wffs-p (real-dag1 real-dag2 forwardp backwardp)
   ;; forwardp, backwardp are true when it's possible that dag1 subsumes dag2
   ;; and vice-versa respectively. When the possibility has been ruled out the
   ;; appropriate variable is set to false. Fail as soon as they are both false
-  #+:packing
-  (when (and *partial-dag-interpretation*
-           (member feature *partial-dag-interpretation* :test #'eq))
-    (return-from subsume-wffs-p (values forwardp backwardp)))
   (when forwardp
     (cond
      ((null (dag-copy real-dag1))
@@ -316,8 +311,7 @@
         (when existing-dag2
           (multiple-value-setq (forwardp backwardp)
             (subsume-wffs-p
-             (dag-arc-value arc1) existing-dag2 label
-             forwardp backwardp)))))
+             (dag-arc-value arc1) existing-dag2 forwardp backwardp)))))
     (values forwardp backwardp)))
 
 (defun subsume-types (type1 type2)

@@ -256,7 +256,8 @@
 ;;; paths.  This is done when a rule is read in
 
 (defun optimise-check-unif-paths nil
-  (unless *check-paths*
+  (when (or (null *check-paths*)
+            (find :vanilla *features*))
     (setq *check-paths-optimised* nil)
     (return-from optimise-check-unif-paths nil))
   (let ((nseen 0))
@@ -272,10 +273,7 @@
             ;; ((and (< (cdr path-and-freq) 1000) (> nseen 40))
             ;;  ;; keep all paths whose freq is within a factor of 1000 of most frequent
             ;;  nil)
-;	    ((> nseen 45)
-;             ;; keep 45 paths - if there are that many
-;             nil)
-            ((> nseen 30)
+            ((> nseen #+:oe 45 #-:oe 30)
              ;; AAC - for ACL/Linux at least, 45 seems 
              ;; suboptimal
              nil)

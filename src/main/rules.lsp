@@ -55,14 +55,15 @@
 (defstruct (rule (:include lex-or-psort))
   ;;; NOTE - any changes to slots here have to be mirrored
   ;;; in mrs/lexlookup.lsp make-new-found-rule
-   daughters-restricted
-   daughters-restricted-reversed
-   daughters-apply-order
-   order
-   rhs ;; list of indices into `order' --- for key-driven parsing
-   daughters-order-reversed
-   apply-filter
-   apply-index)
+  #+:packing rtdfs ;; restricted feature structure for improved packing
+  daughters-restricted
+  daughters-restricted-reversed
+  daughters-apply-order
+  order
+  rhs ;; list of indices into `order' --- for key-driven parsing
+  daughters-order-reversed
+  apply-filter
+  apply-index)
 
 ;;; order is an ordered list of the paths that get at mother and daughters
 ;;; e.g. 0 1 2
@@ -223,94 +224,97 @@
 (defun expand-rule (id rule non-def def rule-persistence lexical-p)
   (process-unif-list id non-def def rule rule-persistence)
   (let ((fs (rule-full-fs rule)))  
-     (when fs
-        (if lexical-p 
-           (pushnew id *ordered-lrule-list*)
-           (pushnew id *ordered-rule-list*))
-        (let ((f-list
-               (mapcar #'(lambda (x) (if (listp x) x (list x)))
-                       (establish-linear-precedence (tdfs-indef fs)))))
-          (setf (rule-order rule) f-list)
-          ;; note that generator requires all slots related to rule-order
-          ;; to contain paths that are eq when they are equal
-          (setf (rule-daughters-order-reversed rule) (reverse (cdr f-list)))
-          (setf (rule-daughters-restricted rule)
-            (mapcar
-             #'(lambda (path)
-                 (restrict-fs
-                   (existing-dag-at-end-of (tdfs-indef fs) path)))
-             (cdr f-list)))
-          (setf (rule-daughters-restricted-reversed rule)
-             (reverse (rule-daughters-restricted rule)))
-          (let ((key-path
-                 (some
-                  #'(lambda (path)
-                      (let ((dag
-                             (existing-dag-at-end-of 
-                              (tdfs-indef fs)
-                              (append path *key-daughter-path*))))
-                        (and dag
-                          (member (type-of-fs dag) '(+ (+)) :test #'equal)
-                          path)))
-                  (cdr f-list))))
-            ;; if there is a key daughter, remaining daughters ordered to be
-            ;; processed r->l before key-path, then l->r after - generator
-            ;; assumes this
-            (setf (rule-daughters-apply-order rule)
-              (if key-path
-                 (let ((tail (member key-path (cdr f-list) :test #'eq)))
-                    (cons key-path
-                       (nconc (nreverse (ldiff (cdr f-list) tail)) (cdr tail))))
-                 (cdr f-list))))
-          ;;
-          ;; compute list of indices into `order' slot; these are used in
-          ;; key-driven parsing (using the new (hyper-)active parser); there
-          ;; seems to be some overlap with `daughters-apply-order' used in
-          ;; the generator.  however, the parser really needs the numerical
-          ;; encoding to decide wheter an edge wants to extend forwards or
-          ;; backwards.  brief inspection of the generation code suggests
-          ;; that `daughters-apply-order' currently is only used to compute
-          ;; a numerical index of the (linguistic) head daughter.  --- so, 
-          ;; maybe the two mechanisms could be joined.     (19-jul-99  -  oe)
-          ;;
-          #-:head-first
-            (let* ((daughters (rest (rule-order rule)))
-                   (arity (length daughters))
-                   (dag (tdfs-indef fs))
-                   (key (or
-                         (loop
-                             for path in daughters
-                             for i from 0
-                             for daughter = (existing-dag-at-end-of dag path)
-                             when (key-daughter-p daughter)
-                             return i)
-                         0)))
-              (setf (rule-rhs rule)
-                (cons
-                 key
-                 (nconc
-                  (loop for i from 0 to (- key 1) collect i)
-                  (loop for i from (+ key 1) to (- arity 1) collect i)))))
-            #+:head-first
-            (let* ((daughters (rest (rule-order rule)))
-                   (arity (length daughters))
-                   (dag (tdfs-indef fs))
-                   (head (existing-dag-at-end-of dag '(head-dtr)))
-                   (key (or
-                         (when head
-                           (loop
-                               for path in daughters
-                               for i from 0
-                               for daughter = (existing-dag-at-end-of dag path)
-                               when (eq daughter head)
-                               return i))
-                         0)))
-              (setf (rule-rhs rule)
-                (cons
-                 key
-                 (nconc
-                  (loop for i from 0 to (- key 1) collect i)
-                  (loop for i from (+ key 1) to (- arity 1) collect i)))))
+    (when fs
+      #+:packing
+      (setf (rule-rtdfs rule) (copy-tdfs-partially fs))
+      (if lexical-p 
+        (pushnew id *ordered-lrule-list*)
+        (pushnew id *ordered-rule-list*))
+      (let ((f-list
+             (mapcar #'(lambda (x) (if (listp x) x (list x)))
+                     (establish-linear-precedence (tdfs-indef fs)))))
+        (setf (rule-order rule) f-list)
+        ;; note that generator requires all slots related to rule-order
+        ;; to contain paths that are eq when they are equal
+        (setf (rule-daughters-order-reversed rule) (reverse (cdr f-list)))
+        (setf (rule-daughters-restricted rule)
+          (mapcar
+           #'(lambda (path)
+               (restrict-fs
+                (existing-dag-at-end-of (tdfs-indef fs) path)))
+           (cdr f-list)))
+        (setf (rule-daughters-restricted-reversed rule)
+          (reverse (rule-daughters-restricted rule)))
+        (let ((key-path
+               (some
+                #'(lambda (path)
+                    (let ((dag
+                           (existing-dag-at-end-of 
+                            (tdfs-indef fs)
+                            (append path *key-daughter-path*))))
+                      (and dag
+                           (member (type-of-fs dag) '(+ (+)) :test #'equal)
+                           path)))
+                (cdr f-list))))
+          ;; if there is a key daughter, remaining daughters ordered to be
+          ;; processed r->l before key-path, then l->r after - generator
+          ;; assumes this
+          (setf (rule-daughters-apply-order rule)
+            (if key-path
+                (let ((tail (member key-path (cdr f-list) :test #'eq)))
+                  (cons key-path
+                        (nconc (nreverse (ldiff (cdr f-list) tail)) 
+                               (cdr tail))))
+              (cdr f-list))))
+        ;;
+        ;; compute list of indices into `order' slot; these are used in
+        ;; key-driven parsing (using the new (hyper-)active parser); there
+        ;; seems to be some overlap with `daughters-apply-order' used in
+        ;; the generator.  however, the parser really needs the numerical
+        ;; encoding to decide wheter an edge wants to extend forwards or
+        ;; backwards.  brief inspection of the generation code suggests
+        ;; that `daughters-apply-order' currently is only used to compute
+        ;; a numerical index of the (linguistic) head daughter.  --- so, 
+        ;; maybe the two mechanisms could be joined.     (19-jul-99  -  oe)
+        ;;
+        #-:head-first
+        (let* ((daughters (rest (rule-order rule)))
+               (arity (length daughters))
+               (dag (tdfs-indef fs))
+               (key (or
+                     (loop
+                         for path in daughters
+                         for i from 0
+                         for daughter = (existing-dag-at-end-of dag path)
+                         when (key-daughter-p daughter)
+                         return i)
+                     0)))
+          (setf (rule-rhs rule)
+            (cons
+             key
+             (nconc
+              (loop for i from 0 to (- key 1) collect i)
+              (loop for i from (+ key 1) to (- arity 1) collect i)))))
+        #+:head-first
+        (let* ((daughters (rest (rule-order rule)))
+               (arity (length daughters))
+               (dag (tdfs-indef fs))
+               (head (existing-dag-at-end-of dag '(head-dtr)))
+               (key (or
+                     (when head
+                       (loop
+                           for path in daughters
+                           for i from 0
+                           for daughter = (existing-dag-at-end-of dag path)
+                           when (eq daughter head)
+                           return i))
+                     0)))
+          (setf (rule-rhs rule)
+            (cons
+             key
+             (nconc
+              (loop for i from 0 to (- key 1) collect i)
+              (loop for i from (+ key 1) to (- arity 1) collect i)))))
         (setf (gethash id (if lexical-p *lexical-rules* *rules*)) rule)))))
 
 
@@ -441,7 +445,6 @@
 (defun build-rule-filter nil
   (unless (find :vanilla *features*)
     (let (#+:packing
-          (*partial-dag-interpretation* '(cont))
           (max-arity 0)
           (nrules 0)
           (rule-list nil))
@@ -462,25 +465,27 @@
 
 
 (defun fill-rule-filter (rule filter test-list)
-   (let ((rule-tdfs (rule-full-fs rule))
-         (rule-daughters (cdr (rule-order rule))))
-      (loop for test in test-list
-         do
-         (let ((test-tdfs (rule-full-fs test))
-               (test-index (rule-apply-index test)))
+  (let ((rule-tdfs #+:packing (rule-rtdfs rule) 
+                   #-:packing (rule-full-fs rule))
+        (rule-daughters (cdr (rule-order rule))))
+    (loop for test in test-list
+        do
+          (let ((test-tdfs #+:packing (rule-rtdfs test)
+                           #-:packing (rule-full-fs test))
+                (test-index (rule-apply-index test)))
             (loop for arg from 0 to (1- (length rule-daughters))
-                  for dtr in rule-daughters
-                  do
+                for dtr in rule-daughters
+                do
                   (with-unification-context (ignore)
-                     (when
+                    (when
                         (yadu rule-tdfs
-                           (create-temp-parsing-tdfs
-                              (if (eq test-tdfs rule-tdfs)
+                              (create-temp-parsing-tdfs
+                               (if (eq test-tdfs rule-tdfs)
                                  (copy-tdfs-completely test-tdfs)
                                  test-tdfs)
-                              dtr))
-                        (setf (aref filter test-index arg) t))))))
-      filter))
+                               dtr))
+                      (setf (aref filter test-index arg) t))))))
+    filter))
 
 
 (defun check-rule-filter (rule test arg)

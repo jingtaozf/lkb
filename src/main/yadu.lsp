@@ -93,6 +93,13 @@
       (make-tdfs :indef indef
                  :tail (copy-list (tdfs-tail old-tdfs))))))
 
+#+:packing
+(defun copy-tdfs-partially (old)
+  (let ((dag (copy-dag-partially (tdfs-indef old))))
+    (when dag
+      (make-tdfs :indef dag
+                 :tail (copy-list (tdfs-tail old))))))
+
 ;;; Utility
 
 (defun indef-type-of-tdfs (tdfs)

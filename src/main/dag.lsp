@@ -36,19 +36,6 @@
 (defvar *visit-generation* 1)
 (defvar *visit-generation-max* 1)
 
-;;;
-;;; when packing the chart, we want to be able to exclude certain parts of the
-;;; structures from the subsumption test; accordingly, those parts need to be
-;;; ignored in unification: otherwise we risk packing a less specific edge into
-;;; a more specific host (and sacrifice completeness).  our current best way to
-;;; ignore parts of feature structures is to specifiy a list of features (not
-;;; paths); e.g. wherever `CONT' is seen in a structure, its value is ignored.
-;;;                                                        (15-sep-99  -  oe)
-;;;
-
-#+:packing
-(defparameter *partial-dag-interpretation* nil)
-
 (eval-when (:compile-toplevel :load-toplevel)
   (proclaim '(type fixnum *unify-generation* *unify-generation-max*
                 *visit-generation* *visit-generation-max*)))
@@ -403,7 +390,6 @@
                   (return)))
             ,dag-var))))
 
-
 (defun follow-pointers (dag)
    (cond
       ((not (dag-p dag))
@@ -480,21 +466,6 @@
                      (get-value-at-end-of one-step-down
                                           (cdr labels-chain)))
                   (t nil))))))
-
-;;;
-;;; to simplify interaction with the quick check, viz. to avoid prediction of
-;;; unification failure where partial unification would in fact succeed, the
-;;; minimal appropriate constraint for a feature is returned when partially
-;;; unifying values for that feature.                      (27-sep-99  -  oe)
-;;;
-
-(defun minimal-type-for (feature)
-  (or (get feature :constraint)
-      (let* ((introduction (maximal-type-of feature))
-             (constraint (and introduction (constraint-of introduction)))
-             (type (and constraint 
-                        (type-of-fs (get-dag-value constraint feature)))))
-        (setf (get feature :constraint) type))))
 
 
 ;;; **********************************************************************
@@ -603,22 +574,10 @@
          "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
          (reverse path))))
     (throw '*fail* nil))
-   #+:packing
-   ((and *partial-dag-interpretation*
-         (smember (first path) *partial-dag-interpretation*))
-    (let ((type (minimal-type-for (first path))))
-      (cond
-       ((eq (dag-type dag1) type)
-        (setf (dag-forward dag2) dag1))
-       ((eq (dag-type dag2) type)
-        (setf (dag-forward dag1) dag2))
-       (t
-        (let ((new (may-copy-constraint-of type)))
-          (setf (dag-forward dag1) new)
-          (setf (dag-forward dag2) new))))))
    ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
   dag1)
 
+                    
 (defparameter *recording-constraints-p* nil
   "needed for LilFes conversion")
 
@@ -1047,6 +1006,44 @@
             (setf (dag-visit dag) new-instance)
             new-instance))))
 
+;;;
+;;; functions to facilitate ambiguity packing: currently, hard-wire which parts
+;;; of the structure are deleted: everything below `CONT' (at all levels) except
+;;; for `CONT|MESSAGE'.  this badly needs a generalization using both PAGE-type
+;;; restrictors as well as a mechanism to extinct all occurences of a feature.
+;;;                                                          (12-nov-99  -  oe)
+;;;
+
+#+:packing
+(defun copy-dag-partially (dag)
+  (invalidate-visit-marks)
+  (copy-dag-partially1 dag nil))
+
+#+:packing
+(defun copy-dag-partially1 (old path)
+  (if (dag-visit old)
+    (dag-visit old)
+    (let* ((type (if (eq (first path) 'cont) 'cont (dag-type old)))
+           (arcs (if (eq (first path) 'cont)
+                   (let ((message (unify-arcs-find-arc
+                                   'message (dag-arcs old) (dag-comp-arcs old)))
+                         (path (cons 'message path)))
+                     (declare (dynamic-extent path))
+                     (when message
+                       (list (make-dag-arc 
+                              :attribute 'message
+                              :value (copy-dag-partially1
+                                      (dag-arc-value message) path)))))
+                   (loop
+                       for arc in (dag-arcs old)
+                       for label = (dag-arc-attribute arc)
+                       collect 
+                         (let ((path (cons label path)))
+                           (declare (dynamic-extent path))
+                           (make-dag-arc :attribute label
+                                         :value (copy-dag-partially1
+                                                 (dag-arc-value arc) path)))))))
+      (setf (dag-visit old) (make-dag :type type :arcs arcs)))))
 
 ;;; **********************************************************************
 
