@@ -29,14 +29,13 @@
 
 ;;; moved from outputfs.lsp to make that Lisp-independent
 
-;;; for ACL it appears that we need things of a particular
-;;; type for presentations, and the easiest way of doing this 
-;;; is with a struct
+;;; for ACL it appears that we need things of a particular type for
+;;; presentations, and the easiest way of doing this is with a struct
 
 (defstruct type-thing value type-label-list shrunk-p full-tdfs)
 
-;;; YADU - here and below, the slot full-tdfs is needed so that
-;;; B+C96 style lexical rules can be displayed in the type -> type format
+;;; YADU - here and below, the slot full-tdfs is needed so that B+C96
+;;; style lexical rules can be displayed in the type -> type format
 ;;; with the full fs associated with full-tdfs
 
 (defun add-type-and-active-fs-region (stream start-pos 
@@ -65,8 +64,8 @@
 ;;
 
 (define-lkb-frame active-fs-window 
-    ((fs :initform nil
-	 :accessor active-fs-window-fs))
+    ((fs  :initform nil
+	  :accessor active-fs-window-fs))
   :display-function 'draw-active-fs
   :width :compute 
   :height :compute
@@ -76,8 +75,7 @@
 ;;; **** display function entry points ****
 
 (defun display-basic-fs (fs title &optional parents paths output-fs)
-  (when output-fs
-    (error "!"))
+  (declare (ignore output-fs))
   (let ((fs-window 
           (clim:make-application-frame 'active-fs-window)))
         (setf (active-fs-window-fs fs-window) 
@@ -197,7 +195,6 @@
          (full-tdfs (type-thing-full-tdfs type-thing))
 	 (frame clim:*application-frame*))
     (when (and (atom type) type-entry)
-      (setq *frame* frame)
       (pop-up-menu
        `(("Hierarchy" :value hier
 		      :active ,(getf (class-frames frame) 
@@ -216,7 +213,7 @@
 			   :active full-tdfs)
 	 ("Select" :value select)
 	 ("Unify" :value unify
-		  :active ,(highlighted-class frame)))
+		  :active ,(and *fs1* (highlighted-class frame))))
        (hier (display-type-in-tree type))
        (help (display-type-comment type (type-comment type-entry)))
        (source (edit-source type))
@@ -379,5 +376,38 @@
      ;;; was copied, but shouldn't be necessary
        :selected1 *path1* :selected2 path2)
       (terpri))
+    (setq *fs1* nil)
     (unhighlight-class frame)))
 
+;;; **********************************************************************
+
+(defstruct pointer
+  label valuep)
+
+(defun add-active-pointer (stream position pointer valuep)
+  (declare (ignore position))
+  (clim:with-output-as-presentation (stream (make-pointer :label pointer
+							  :valuep valuep)
+					    'pointer)
+    (format stream "<~A>" pointer))
+  (when valuep
+    (write-string " = " stream)))
+
+(define-active-fs-window-command (com-pointer-menu)
+    ((pointer 'pointer :gesture :select))
+  (clim:with-application-frame (frame)
+    (pop-up-menu
+     (append (unless (pointer-valuep pointer)
+	       '(("Find value" :value value)))
+	     '(("Find next" :value next)))
+     (value (let ((sel (clim:output-record-children
+			(find-object (clim:frame-standard-output frame) 
+				     #'(lambda (p) 
+					 (and (pointer-p p)
+					      (and (eql (pointer-label pointer)
+							(pointer-label p))
+						   (pointer-valuep p))))))))
+	      (scroll-to (car sel) (clim:frame-standard-output frame))
+	      (setq *fs1* nil)
+	      (highlight-objects sel frame)))
+     (next))))

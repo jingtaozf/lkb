@@ -224,19 +224,17 @@
       :reentrant-value-fn                 
       #'(lambda (reentrant-pointer)
           (move-to-x-y stream indentation (current-position-y stream))
-         (with-bold-output stream 
-                           (format stream
-                                   "<~A> = "
-                                   reentrant-pointer))
-         (setf indentation (current-position-x stream))
-         (setf max-width (max indentation max-width)))
+	  (with-bold-output stream 
+	    (let ((start-pos (current-position stream)))
+	      (add-active-pointer stream start-pos reentrant-pointer t))) 
+	  (setf indentation (current-position-x stream))
+	  (setf max-width (max indentation max-width)))
       :reentrant-fn
       #'(lambda (reentrant-pointer)
          (move-to-x-y stream indentation (current-position-y stream))
          (with-bold-output stream
-                           (format stream
-                                   "<~A>"
-                                   reentrant-pointer))
+	   (let ((start-pos (current-position stream)))
+	     (add-active-pointer stream start-pos reentrant-pointer nil))) 
          (setf max-width (max (current-position-x stream) max-width))
          (pop type-label-list))
       :atomic-fn
