@@ -71,6 +71,8 @@ if {![info exists globals(graph_upper)]} {
 
 set globals(menu_font) {Helvetica 14 bold};
 
+set globals(process,type) :parse;
+
 set globals(graph,by) :i-length;
 set globals(graph,scatterp) 1;
 set globals(graph,extras) 0;
@@ -382,6 +384,74 @@ proc main {} {
       -command {tsdb_browse_vocabulary 1}
   .menu.process.menu add separator;
   .menu.process.menu add command -label "Passive Mode" -command {tsdb_capture};
+  .menu.process.menu add separator;
+  .menu.process.menu add cascade -label "Switches" \
+    -menu .menu.process.menu.switches;
+  .menu.process.menu add cascade \
+    -label "Variables" -menu .menu.process.menu.variables;
+
+  menu .menu.process.menu.switches -tearoff 0;
+  .menu.process.menu.switches add radiobutton \
+    -label "Parsing" \
+    -variable globals(process,type) -value :parse;
+  .menu.process.menu.switches add radiobutton \
+    -label "Generation" \
+    -variable globals(process,type) -value :generate;
+  .menu.process.menu.switches add separator;
+  .menu.process.menu.switches add checkbutton \
+    -label "Autoload Vocabulary" \
+    -variable globals(autoload_vocabulary);
+  .menu.process.menu.switches add checkbutton \
+    -label "Overwrite Test Run" \
+    -variable globals(overwrite);
+  .menu.process.menu.switches add checkbutton \
+    -label "Exhaustive Search" \
+    -variable globals(exhaustive_p) -command {tsdb_set exhaustive_p};
+  .menu.process.menu.switches add separator;
+  .menu.process.menu.switches add checkbutton \
+    -label "Write `run' Relation" \
+    -variable globals(write_run_p) -command {tsdb_set write_run_p};
+  .menu.process.menu.switches add checkbutton \
+    -label "Write `parse' Relation" \
+    -variable globals(write_parse_p) -command {tsdb_set write_parse_p};
+  .menu.process.menu.switches add checkbutton \
+    -label "Write `result' Relation" \
+    -variable globals(write_result_p) -command {tsdb_set write_result_p};
+  .menu.process.menu.switches add checkbutton \
+    -label "Write `output' Relation" \
+    -variable globals(write_output_p) -command {tsdb_set write_output_p};
+  .menu.process.menu.switches add checkbutton \
+    -label "Write `rule' Relation" \
+    -variable globals(write_rule_p) -command {tsdb_set write_rule_p};
+  .menu.process.menu.switches add checkbutton \
+    -label "Write Lexicon Chart" \
+    -variable globals(write_lexicon_chart_p) \
+    -command {tsdb_set write_lexicon_chart_p};
+  .menu.process.menu.switches add checkbutton \
+    -label "Write Syntax Chart" \
+    -variable globals(write_syntax_chart_p) \
+    -command {tsdb_set write_syntax_chart_p};
+  .menu.process.menu.switches add separator;
+  .menu.process.menu.switches add radiobutton \
+    -label "On Demand Garbage Collect" \
+    -variable globals(gc_p) -value nil -command {tsdb_set gc_p};
+  .menu.process.menu.switches add radiobutton \
+    -label "Preliminary  Scavenge" \
+    -variable globals(gc_p) -value :local -command {tsdb_set gc_p};
+  .menu.process.menu.switches add radiobutton \
+    -label "Preliminary Garbage Collect" \
+    -variable globals(gc_p) -value :global -command {tsdb_set gc_p};
+  .menu.process.menu.switches add checkbutton \
+    -label "Enable Tenuring" \
+    -variable globals(tenure_p) -command {tsdb_set tenure_p};
+
+  menu .menu.process.menu.variables -tearoff 0
+  .menu.process.menu.variables add command \
+    -label "Chart Size Limit" \
+    -command {tsdb_option pedges};
+  .menu.process.menu.variables add command \
+    -label "Result Storage Limit" \
+    -command {tsdb_option results};
 
   #
   # `Analyze' menu (and embedded cascades)
@@ -804,8 +874,6 @@ proc main {} {
   .menu.options.menu add separator;
   .menu.options.menu add cascade \
     -label "Switches" -menu .menu.options.menu.switches;
-  .menu.options.menu add cascade \
-    -label "Variables" -menu .menu.options.menu.variables;
 
   menu .menu.options.menu.update -tearoff 0
   .menu.options.menu.update add command -label "Skeleton List" \
@@ -877,54 +945,6 @@ proc main {} {
 
   menu .menu.options.menu.switches -tearoff 0
   .menu.options.menu.switches add checkbutton \
-    -label "Exhaustive Search" \
-    -variable globals(exhaustive_p) -command {tsdb_set exhaustive_p};
-  .menu.options.menu.switches add separator;
-  .menu.options.menu.switches add checkbutton \
-    -label "Write `run' Relation" \
-    -variable globals(write_run_p) -command {tsdb_set write_run_p};
-  .menu.options.menu.switches add checkbutton \
-    -label "Write `parse' Relation" \
-    -variable globals(write_parse_p) -command {tsdb_set write_parse_p};
-  .menu.options.menu.switches add checkbutton \
-    -label "Write `result' Relation" \
-    -variable globals(write_result_p) -command {tsdb_set write_result_p};
-  .menu.options.menu.switches add checkbutton \
-    -label "Write `output' Relation" \
-    -variable globals(write_output_p) -command {tsdb_set write_output_p};
-  .menu.options.menu.switches add checkbutton \
-    -label "Write `rule' Relation" \
-    -variable globals(write_rule_p) -command {tsdb_set write_rule_p};
-  .menu.options.menu.switches add checkbutton \
-    -label "Write Lexicon Chart" \
-    -variable globals(write_lexicon_chart_p) \
-    -command {tsdb_set write_lexicon_chart_p};
-  .menu.options.menu.switches add checkbutton \
-    -label "Write Syntax Chart" \
-    -variable globals(write_syntax_chart_p) \
-    -command {tsdb_set write_syntax_chart_p};
-  .menu.options.menu.switches add separator;
-  .menu.options.menu.switches add radiobutton \
-    -label "On Demand Garbage Collect" \
-    -variable globals(gc_p) -value nil -command {tsdb_set gc_p};
-  .menu.options.menu.switches add radiobutton \
-    -label "Preliminary  Scavenge" \
-    -variable globals(gc_p) -value :local -command {tsdb_set gc_p};
-  .menu.options.menu.switches add radiobutton \
-    -label "Preliminary Garbage Collect" \
-    -variable globals(gc_p) -value :global -command {tsdb_set gc_p};
-  .menu.options.menu.switches add checkbutton \
-    -label "Enable Tenuring" \
-    -variable globals(tenure_p) -command {tsdb_set tenure_p};
-  .menu.options.menu.switches add separator;
-  .menu.options.menu.switches add checkbutton \
-    -label "Overwrite Test Run" \
-    -variable globals(overwrite);
-  .menu.options.menu.switches add checkbutton \
-    -label "Autoload Vocabulary" \
-    -variable globals(autoload_vocabulary);
-   .menu.options.menu.switches add separator;
-  .menu.options.menu.switches add checkbutton \
     -label "Exclude GC Time" \
     -variable globals(exclude_tgc_p) \
     -command {tsdb_set exclude_tgc_p}; 
@@ -947,14 +967,6 @@ proc main {} {
       -label "Custom Fields" \
       -variable globals(graph,extras);
   }; # if
-
-  menu .menu.options.menu.variables -tearoff 0
-  .menu.options.menu.variables add command \
-    -label "Chart Size Limit" \
-    -command {tsdb_option pedges};
-  .menu.options.menu.variables add command \
-    -label "Result Storage Limit" \
-    -command {tsdb_option results};
 
   #
   # `Help' menu (and embedded cascades)

@@ -598,9 +598,14 @@ proc tsdb_select {} {
 
 proc tsdb_process {code {data ""} {key ""}} {
 
-  global globals test_suites;
+  global globals test_suites compare_in_detail;
 
   if {$data == "" && [verify_ts_selection "" "write"]} {return 1};
+
+  if {$globals(process,type) == ":generate" 
+      && [verify_ts_selection both]} {
+    return 1;
+  }; # if
 
   switch $code {
     all {set condition ""}
@@ -637,12 +642,18 @@ proc tsdb_process {code {data ""} {key ""}} {
   } else {
     set overwrite nil;
   }; # else
+  set source "";
+  if {$globals(process,type) == ":generate"} {
+    set source " :gold \"$compare_in_detail(source)\"";
+  }; # if
   set command \
     [format \
-     "(process \"%s\" :condition \"%s\" :comment \"%s\" \
-               :overwrite %s :interactive %s :vocabulary %s)" \
-      $data $condition $comment $overwrite $interactive \
-      [lispify_truth_value $globals(autoload_vocabulary)]];
+     "(process \"%s\" :condition \"%s\" :comment \"%s\" :type %s \
+               :overwrite %s :interactive %s :vocabulary %s%s)" \
+      $data $condition $comment $globals(process,type) \
+      $overwrite $interactive \
+      [lispify_truth_value $globals(autoload_vocabulary)] \
+      $source];
   send_to_lisp :event $command 0 $force;
  
 }; # tsdb_process()

@@ -19,7 +19,7 @@
 (in-package "TSDB")
 
 (defun retrieve (&optional condition (data *tsdb-data*)
-                 &key (stream *tsdb-io*) (verbose t) meter)
+                 &key mrs (stream *tsdb-io*) (verbose t) meter)
 
   (initialize-tsdb)
   (when meter
@@ -44,23 +44,43 @@
                         data
                         :unique nil :sort :i-id
                         :meter ometer)))
-         (all (if *tsdb-ignore-output-p*
-                (map 'list
-                  #'(lambda (foo)
-                      (append foo (pairlis '(:o-ignore :o-wf :o-gc :o-edges)
-                                           '("" -1 -1 -1))))
-                  items)
-                (loop
-                    for item in items
-                    for output = (or (find (get-field :i-id item)
+         (results (when mrs
+                    (select '("i-id" "parse-id" "result-id" "mrs")
+                            '(:integer :integer :integer :string)
+                            '("parse" "result")
+                            nil
+                            mrs
+                            :unique nil :sort :i-id)))
+         (all (loop
+                  for item in items
+                  for output = (or (unless *tsdb-ignore-output-p*
+                                     (find (get-field :i-id item)
                                            outputs
                                            :key #'(lambda (foo)
-                                                    (get-field :i-id foo)))
-                                     (pairlis '(:o-ignore :o-wf :o-gc :o-edges)
-                                              '("" -1 -1 -1)))
-                    do 
-                      (setf (rest (last item)) output)
-                    collect item))))
+                                                    (get-field :i-id foo))))
+                                   (pairlis '(:o-ignore :o-wf :o-gc :o-edges)
+                                            '("" -1 -1 -1)))
+                  do (nconc item output)
+                  collect item)))
+    (when results
+      (loop
+          for item in all
+          for key = (get-field :i-id item)
+          for matches =
+            (when (eql key (get-field :i-id (first results)))
+              (loop
+                  for result = (first results)
+                  while (and result 
+                             (eql key (get-field :i-id result)))
+                  collect (pop results)))
+          when matches
+          do (nconc item (pairlis '(:parse-id 
+                                    :results)
+                                  (list (get-field :parse-id (first matches))
+                                        matches))))
+      (setf all (sort (copy-list all) #'< 
+                      :key #'(lambda (foo) (get-field :parse-id foo))))
+      (rank-items items :gold mrs))
     (when verbose
       (format
        stream 

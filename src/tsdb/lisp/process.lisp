@@ -27,13 +27,14 @@
                              (cache *tsdb-cache-database-writes-p*)
                              (gc *tsdb-gc-p*)
                              (stream *tsdb-io*)
+                             (type :parse) gold
                              overwrite interactive 
                              meter podium interrupt)
   (declare (ignore podium))
   
   (initialize-tsdb)
   
-  (unless (or (null vocabulary) interactive
+  (unless (or (null vocabulary) (eq type :generate) interactive
               (and (find :pvm *features*)
                    (find-symbol "*PVM-CLIENTS*")
                    (symbol-value (find-symbol "*PVM-CLIENTS*"))))
@@ -65,7 +66,9 @@
       (meter :value (get-field :start imeter))
       (status :text imessage))
 
-    (when (setf items (retrieve condition data :verbose verbose))
+    (when (setf items (retrieve condition data 
+                                :mrs (when (eq type :generate) gold)
+                                :verbose verbose))
       (let* ((schema (read-database-schema data))
              (cache (when (and cache (not interactive))
                       (create-cache data 
@@ -228,6 +231,7 @@
                                      :stream stream :interactive interactive))
                        (setf result
                          (process-item item
+                                       :type type
                                        :trees-hook *tsdb-trees-hook* 
                                        :semantix-hook *tsdb-semantix-hook*
                                        :stream stream
@@ -705,6 +709,7 @@
     (force-output stream)))
 
 (defun process-item (item &key trees-hook semantix-hook 
+                               (type :parse)
                                (stream *tsdb-io*)
                                (verbose t)
                                client
@@ -743,6 +748,16 @@
            (i-input (or (and interactive (get-field :o-input item))
                         (get-field :p-input item)
                         (get-field :i-input item)))
+           (mrs (when (eq type :generate)
+                  (let* ((reader (find-attribute-reader :mrs))
+                         (ranks (get-field :ranks item))
+                         (top (loop
+                                  for rank in ranks
+                                  for foo = (get-field :rank rank)
+                                  thereis (when (eql foo 1) rank)))
+                         (string (get-field :mrs top)))
+                    (when (and reader (stringp string))
+                      (funcall reader string)))))
            (gc (get-field :gc item))
            (edges (get-field :edges item))
            result i-load)
@@ -752,14 +767,25 @@
         (:global #+:allegro (excl:gc t)))
       (gc-statistics-reset)
       (setf i-load (unless interactive #+:pvm (load_average) #-:pvm nil))
-      (setf result (parse-item i-input 
-                               :edges edges
-                               :trace interactive
-                               :exhaustive exhaustive
-                               :trees-hook trees-hook
-                               :semantix-hook semantix-hook
-                               :nderivations nderivations
-                               :burst burst))
+      (setf result 
+        (if (eq type :parse)
+          (parse-item i-input 
+                      :edges edges
+                      :trace interactive
+                      :exhaustive exhaustive
+                      :trees-hook trees-hook
+                      :semantix-hook semantix-hook
+                      :nderivations nderivations
+                      :burst burst)
+          (generate-item mrs 
+                         :string i-input
+                         :edges edges
+                         :trace interactive
+                         :exhaustive exhaustive
+                         :trees-hook trees-hook
+                         :semantix-hook semantix-hook
+                         :nderivations nderivations
+                         :burst burst)))
       (when (and (not *tsdb-minimize-gcs-p*) (not (eq gc :global))
                  (not interactive)
                  (>= (gc-statistics :global) 1) (<= (gc-statistics :global) 3))
@@ -774,13 +800,24 @@
           (print-item item :stream stream :interactive interactive))
         (gc-statistics-reset)
         (setf i-load #+:pvm (load_average) #-:pvm nil)
-        (setf result (parse-item i-input :edges edges
-                                 :trace interactive
-                                 :exhaustive exhaustive
-                                 :trees-hook trees-hook
-                                 :semantix-hook semantix-hook
-                                 :nderivations nderivations
-                                 :burst burst)))
+        (setf result 
+          (if (eq type :parse)
+            (parse-item i-input :edges edges
+                        :trace interactive
+                        :exhaustive exhaustive
+                        :trees-hook trees-hook
+                        :semantix-hook semantix-hook
+                        :nderivations nderivations
+                        :burst burst)
+            (generate-item mrs
+                           :string i-input 
+                           :edges edges
+                           :trace interactive
+                           :exhaustive exhaustive
+                           :trees-hook trees-hook
+                           :semantix-hook semantix-hook
+                           :nderivations nderivations
+                           :burst burst))))
 
       #+:allegro
       (when (and (= (get-field+ :readings result -1) -1)
@@ -1007,7 +1044,7 @@
        stream 
        " ---~:[~; time up:~] ~
         (~,2f~:[~*~;:~,2f~]|~,2f s) ~
-        <~d:~d>~
+        <~@[~d~]:~d>~
         ~:[ {~d:~d}~;~2*~] ~
         (~a)~
         ~:[~*~*~; [~:[~;=~]~d]~].~%" 
@@ -1029,7 +1066,7 @@
        stream 
        " ---~:[~; time up:~] ~a ~
         (~,2f~:[~*~;:~,2f~]|~,2f:~,2f s) ~
-        <~d:~d>~
+        <~@[~d~]:~d>~
         ~:[ {~d:~d}~;~2*~] ~
         (~a)~
         ~:[~*~*~; [~:[~;=~]~d]~].~%" 

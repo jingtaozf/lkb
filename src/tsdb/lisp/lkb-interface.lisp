@@ -345,6 +345,130 @@
 
 
 
+
+(defun generate-item (mrs
+                      &key id string exhaustive trace
+                           readings edges derivations semantix-hook trees-hook
+                           burst (nderivations 0))
+  (declare (ignore derivations string id trees-hook))
+
+
+  (multiple-value-bind (return condition)
+      (ignore-errors
+       (let* ((*package* *lkb-package*)
+              (*maximum-number-of-edges* (if (or (null edges) (zerop edges))
+                                           *maximum-number-of-edges*
+                                           edges))
+              (*first-only-p* (unless exhaustive
+                                (if (integerp readings)
+                                  readings
+                                  (if (integerp *first-only-p*)
+                                    *first-only-p*
+                                    1))))
+              (*do-something-with-parse* nil)
+              (stream (make-string-output-stream))
+              (*standard-output* 
+               (if trace
+                 (make-broadcast-stream *standard-output* stream)
+                 stream))
+              (*unifications* 0)
+              (*copies* 0)
+              (*subsumptions* 0)
+              tgc tcpu treal conses symbols others error)
+         (multiple-value-bind (strings f-tasks e-tasks s-tasks
+                               unifications copies aedges pedges)
+             (if (mrs::make-scoped-mrs mrs)
+               (tsdb::time-a-funcall
+                #'(lambda ()
+                    (handler-case (generate-from-mrs mrs)
+                      (storage-condition (condition)
+                        (setf error 
+                          (format nil "storage condition: `~a'" condition)))
+                      (error (condition)
+                        (setf error
+                          (format nil "error: `~a'" condition)))))
+                #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+                   (declare (ignore ignore))
+                   (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
+                         conses (* scons 8) symbols (* ssym 24) 
+                         others sother)))
+               (setf error "input MRS does not scope"))
+
+           (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
+                  (output (get-output-stream-string stream))
+                  (readings (length strings))
+                  (readings (if (and (null error)
+                                     (or (equal output "") (> readings 0)))
+                              readings
+                              -1))
+                  #+:pooling
+                  (pool (and (find-symbol "*DAG-POOL*")
+                             (boundp (find-symbol "*DAG-POOL*"))
+                             (symbol-value (find-symbol "*DAG-POOL*"))))
+                  #+:pooling
+                  (position (when pool
+                              (funcall 
+                               (symbol-function (find-symbol "POOL-POSITION"))
+                               pool)))
+                  #+:pooling
+                  (garbage (when pool
+                             (funcall 
+                              (symbol-function (find-symbol "POOL-GARBAGE"))
+                              pool)))
+                  (comment 
+                   #+:pooling
+                   (format nil "(:pool . ~d) (:garbage . ~d)" position garbage)
+                   #-:pooling
+                   ""))
+             `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
+                (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
+                (:pedges . ,pedges) (:aedges . ,aedges)
+                (:p-stasks . ,s-tasks) (:p-etasks . ,e-tasks)
+                (:p-ftasks . ,f-tasks)
+                (:unifications . ,unifications) (:copies . ,copies)
+                (:readings . ,readings)
+                (:error . ,output)
+                (:comment . ,comment)
+                (:results .
+                 ,(loop
+                      with *package* = *lkb-package*
+                      with nderivations = (if (<= nderivations 0)
+                                            (length *gen-record*)
+                                            nderivations)
+                      for i from 1
+                      for parse in *gen-record*
+                      for string in strings
+                      for derivation = (with-standard-io-syntax
+                                         (let ((*package* *lkb-package*))
+                                           (write-to-string
+                                            (compute-derivation-tree parse) 
+                                            :case :downcase)))
+                      for size = (parse-tsdb-count-nodes parse)
+                      for tree = #-:null (format nil "~{~a~^ ~}" string)
+                                 #+:null (tsdb::call-hook trees-hook parse)
+                      for mrs = (tsdb::call-hook semantix-hook parse)
+                      while (>= (decf nderivations) 0) collect
+                        (pairlis '(:result-id :mrs :tree :string
+                                   :derivation :size)
+                                 (list i mrs tree string
+                                       derivation size)))))))))
+    (unless trace 
+      (clear-gen-chart)
+      (reset-pools :forcep t)
+      (release-temporary-storage))
+    (append
+     (when condition
+       (pairlis '(:readings 
+                  :condition 
+                  :error
+                  :timeup)
+                (list -1 
+                      (unless burst condition)
+                      (format nil "~a" condition)
+                      (when (> *edge-id* *maximum-number-of-edges*)
+                        (format nil "edge limit (~a)" *edge-id*)))))
+     return)))
+
 (defun compute-derivation-tree (edge)
   (flet ((edge-label (edge)
            (intern 
@@ -360,10 +484,12 @@
                                (find-chart-configuration :edge edge)))
            (start (or (edge-from edge)
                       (when configuration 
-                        (chart-configuration-begin configuration))))
+                        (chart-configuration-begin configuration))
+                      -1))
            (end (or (edge-to edge)
                     (when configuration 
-                      (chart-configuration-end configuration)))))
+                      (chart-configuration-end configuration))
+                    -1)))
       (cond
        ((edge-morph-history edge)
         (list id (edge-label edge) score start end
@@ -476,7 +602,51 @@
                                      words i-stasks l-stasks
                                      derivations)))))
               
-                           
+
+(defun summarize-generator-chart (&key derivationp)
+  (loop
+      with pedges = 0
+      with i-stasks = 0
+      with words = 0
+      with l-stasks = 0
+      with derivations = nil
+      for i from 0 to (- *chart-limit* 1)
+      for entry = (aref *chart* i 0)
+      sum (length (aref *achart* i 0)) into aedges
+      when (chart-entry-p entry)
+      do
+        (loop
+            for configuration in (chart-entry-configurations entry)
+            for edge = (chart-configuration-edge configuration)
+            for rule = (edge-rule edge)
+            for tdfs = (edge-dag edge)
+            for dag = (and tdfs (tdfs-indef tdfs))
+            do 
+              (when derivationp 
+                (when (and dag (dag-inflected-p dag))             
+                  (push (compute-derivation-tree edge) derivations)))
+              (cond
+               ((and (rule-p rule) (tsdb::inflectional-rule-p (rule-id rule)))
+                (incf i-stasks)
+                (incf words)
+                (when (edge-morph-history edge)
+                  (let* ((child (edge-morph-history edge))
+                         (tdfs (edge-dag child))
+                         (dag (and tdfs (tdfs-indef tdfs))))
+                    (when (and dag (dag-inflected-p dag))
+                      (incf words)))))
+               ((rule-p rule)
+                (incf pedges)
+                (when (lexical-rule-p rule) (incf l-stasks)))
+               ((not (rule-p rule))
+                (when (and dag (dag-inflected-p dag)) (incf words)))))
+      finally (return (pairlis '(:pedges :aedges 
+                                 :words :i-stasks :l-stasks
+                                 :derivations)
+                               (list (+ pedges words) aedges 
+                                     words i-stasks l-stasks
+                                     derivations)))))
+
 (defun parse-tsdb-distinct-edges (edge found)
    ;; collect edge for top lrule on each branch and all above
    (pushnew edge found :test #'eq)
@@ -701,7 +871,7 @@
             parse-word
             initialize-test-run
             finalize-test-run
-            parse-item
+            parse-item generate-item
             uncache-lexicon
             *reconstruct-hook*
             find-lexical-entry find-affix find-rule
