@@ -322,8 +322,7 @@
 
 
 (defun do-parse nil
-  (let* ((*standard-input* clim-user::*lkb-top-frame*)
-	 (sentence 
+  (let* ((sentence 
             (ask-for-strings-movable "Current Interaction" 
                `(("Sentence" . ,*last-parse*)) 400)))
       (when sentence
