@@ -29,7 +29,7 @@
       (cache-all-lex-records *lexicon*))
     (format t "~%Checking lexicon")
     (format t "~%  - difference-list check starts at path ~a" start-path)
-    (dolist (id (collect-psort-ids *lexicon*))
+    (dolist (id (collect-psort-ids *lexicon* :cache nil))
       ;; alternatively - for lexicon only
       ;; (collect-psort-ids *lexicon*) 
       (let* ((entry (read-psort *lexicon* id))
@@ -41,13 +41,15 @@
                     "~%No feature structure for ~A~%" lex-id))
           (when (and new-fs
                      *grammar-specific-batch-check-fn*)
-            (funcall *grammar-specific-batch-check-fn*
-                     new-fs id))   
+            (funcall *grammar-specific-batch-check-fn* new-fs id))   
 	  (when new-fs
 	    (sanitize (existing-dag-at-end-of (tdfs-indef new-fs) start-path)
 		      lex-id
-		      (reverse start-path)))))
-      (when unexpandp (unexpand-psort *lexicon* id))))
+		      (reverse start-path)))
+	  )
+	)
+      (when unexpandp (unexpand-psort *lexicon* id))
+      ))
   #+:psql
   (when check-duplicates
     (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")

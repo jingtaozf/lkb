@@ -324,7 +324,8 @@
     (setf fields-tb nil)
     ))
 
-(defmethod empty-cache ((lexicon external-lex-database))
+(defmethod empty-cache ((lexicon external-lex-database) &key recurse)
+  (declare (ignore recurse))
   (with-slots (record-cache) lexicon
     (clrhash record-cache)
     ))

@@ -198,7 +198,8 @@
     (setf temp-file nil)
     (setf temp-index-file nil)))
 
-(defmethod empty-cache ((lexicon cdb-lex-database))
+(defmethod empty-cache ((lexicon cdb-lex-database) &key recurse)
+  (declare (ignore recurse))
   )
 
 ;; lexicon is open...

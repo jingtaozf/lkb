@@ -562,7 +562,7 @@
       (mapcar #'(lambda (lex) (unlink lexicon lex)) part-of))
     lexicon))
 
-(defmethod empty-cache :around ((lexicon lex-database))
+(defmethod empty-cache :around ((lexicon lex-database) &key (recurse))
   (with-slots (lexical-entries psorts cache-lex-list) lexicon
     (when (fboundp 'clear-generator-lexicon)
       (funcall 'clear-generator-lexicon))
@@ -574,6 +574,9 @@
     (setf cache-lex-list nil)
     (when (fboundp 'clear-lexicon-indices)
       (funcall 'clear-lexicon-indices))
+    (when recurse 
+      (mapcar #'(lambda (x) (empty-cache x :recurse recurse))
+	      (extra-lexicons lexicon)))
     lexicon))
 
 ;;; End of general methods
@@ -588,8 +591,20 @@
     ids))
 
 (defmethod unexpand-psort ((lexicon lex-database) id)
-  ;;  (setf (gethash id (slot-value lexicon 'psorts)) nil))
-  (remhash id (slot-value lexicon 'psorts)))
+  (let* ((id-lexicon (lexicon-for-id lexicon id))
+	 (psorts 
+	  (cond
+	   (id-lexicon
+	    (slot-value id-lexicon 'psorts))
+	   (t 
+	    (return-from unexpand-psort)))))
+    (remhash id psorts)
+    psorts))
+
+(defmethod lexicon-for-id ((lexicon lex-database) id)
+  (if (read-psort lexicon id :recurse nil) 
+      lexicon
+    (some #'(lambda (x) (lexicon-for-id x id)) (extra-lexicons lexicon))))
 
 ;;--
 
