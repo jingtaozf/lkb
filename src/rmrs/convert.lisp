@@ -614,13 +614,13 @@ Errors won't be devastating anyway ...
 (defun make-meta-level-semi nil
   (setf *meta-semi* nil)
   (loop for type in (lkb::retrieve-descendants 'lkb::predsort)
-      unless (or (lkb::type-daughters type)
-		 (let ((name (lkb::type-name type)))
+      unless (or (lkb::ltype-daughters type)
+		 (let ((name (lkb::ltype-name type)))
 		   (char-equal (elt (string name) 0) #\_)))
       do
-	(push (make-meta-semi-entry :pred (lkb::type-name type)
+	(push (make-meta-semi-entry :pred (lkb::ltype-name type)
 				    :str (string-downcase 
-					  (string (lkb::type-name type))))
+					  (string (lkb::ltype-name type))))
 	      *meta-semi*)))
 
 ;;; Generation

@@ -423,7 +423,7 @@
 	      (setf (tdfs-tail interim-fs)
 		(yadu-general-merge-tails
 		 (tdfs-tail interim-fs)
-		 (tdfs-tail (type-tdfs (get-type-entry (type-of-fs indef))))
+		 (tdfs-tail (ltype-tdfs (get-type-entry (type-of-fs indef))))
 		 indef))
 	      (let ((incorp-fs 
 		     (if persistence

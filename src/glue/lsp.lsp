@@ -63,7 +63,7 @@
 (defstruct lspb
   id context input morphs chart edge dag mrs)
 
-#-:clisp
+#-(or :clisp :sbcl)
 (defun lsp-initialize ()
   (lsp-shutdown)
   (setf %lsp-socket%
@@ -72,7 +72,7 @@
   (setf %lsp-attic% (make-array 512))
   %lsp-socket%)
 
-#-:clisp
+#-(or :clisp :sbcl)
 (defun lsp-shutdown ()
   (loop
       for client in %lsp-clients%
@@ -89,8 +89,8 @@
     (ignore-errors (close %lsp-socket%)))
   (setf %lsp-socket% nil))
 
-#-:clisp
 (defun lsp-shutdown-client (client)
+  #-(or :clisp :sbcl)
   (cond
    ((numberp client)
     (loop
@@ -109,7 +109,7 @@
         (ignore-errors (force-output (client-stream client))
         (ignore-errors (close (client-stream client)))))))))
 
-#-:clisp 
+#-(or :clisp :sbcl)
 (defun lsp-server (&key wait)
   (if wait
     (unwind-protect
@@ -154,7 +154,6 @@
                      "[~a] lsp-loop(): premature end of file ~
                       (read ~a characters)~%" 
                      id n)
-                    #-:clisp
                     (lsp-shutdown-client id)
                     (return)
                   when (= n size) do
@@ -464,7 +463,6 @@
          (let ((*morphs* (lspb-morphs object))
                (*chart* (lspb-chart object)))
            (show-chart)
-           (mp:process-wait-with-timeout "Waiting" 5 #'chart-ready)
            (when (edge-p (lspb-edge object)) 
              (display-edge-in-chart (lspb-edge object))))))
       (:entity

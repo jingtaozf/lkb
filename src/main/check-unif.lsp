@@ -284,12 +284,12 @@
 		;; (format t "~%Feature ~A, number of possible types ~A" feat len)
 		(if (and (<= len (integer-length most-positive-fixnum)) ; restrict to fixnum
                        (or (null *string-type*)
-                           (not (member *string-type* types :key #'type-name))))
+                           (not (member *string-type* types :key #'ltype-name))))
 		    (mapcar
 		     #'(lambda (d)
-			 (cons (type-name d)
+			 (cons (ltype-name d)
 			       (let ((val 0))
-				 (dolist (x (cons d (type-descendants d)) val)
+				 (dolist (x (cons d (ltype-descendants d)) val)
 				   (setq val
 				     ;; set bit corresponding to pos of x in
 				     ;; types list

@@ -10,8 +10,8 @@
 
 (defun output-type-as-tdl (name type-struct stream)
   (let* ((status (assoc name *tdl-status-info*))
-         (def (type-local-constraint type-struct))
-         (parents (type-parents type-struct)))
+         (def (ltype-local-constraint type-struct))
+         (parents (ltype-parents type-struct)))
     (format stream "~%~A :" (string-downcase name))
     (if (null def)
         (if (cdr parents)

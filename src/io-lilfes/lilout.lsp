@@ -122,8 +122,8 @@ Parse nodes need to be added so we can understand the display.
   '("list" "nil" "cons" "bot" "string"))
     
 (defun output-type-as-lilfes (name type-struct stream)
-  (let* ((def (type-local-constraint type-struct))
-         (parents (type-parents type-struct))
+  (let* ((def (ltype-local-constraint type-struct))
+         (parents (ltype-parents type-struct))
          (lilfes-name (convert-lilfes-type name)))
     (unless 
       (member lilfes-name *lilfes-builtins* :test #'equal)

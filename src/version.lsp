@@ -1,3 +1,3 @@
 (in-package :lkb)
 
-(defconstant *cvs-version* "$Date$")
+(defparameter *cvs-version* "$Date$")

@@ -104,6 +104,10 @@
 (defun run-process (&rest arguments)
   (apply #'excl:run-shell-command arguments))
 
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (export 'getenv)
+  (setf (symbol-function 'getenv) (symbol-function 'system:getenv)))
+
 (in-package :mp)
 
 (eval-when (:execute :load-toplevel :compile-toplevel)

@@ -112,15 +112,15 @@
       (pop-up-menu
        `(("Type hierarchy" :value hier
 			    :active 
-			    ,(type-constraint type-entry))
+			    ,(ltype-constraint type-entry))
          #+:allegro
          ("Show source" :value source
 			:active ,(source-available-p type))
 	 ("Type definition" :value def
 			    :active 
-			    ,(type-constraint type-entry))
+			    ,(ltype-constraint type-entry))
 	 ("Expanded type" :value exp
-			  :active ,(type-constraint type-entry)))
+			  :active ,(ltype-constraint type-entry)))
        (hier (display-type-in-tree type))
        #+:allegro
        (source (edit-source type))

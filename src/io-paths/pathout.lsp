@@ -11,12 +11,12 @@
 
 (defun output-type-as-paths (type type-record ostream)
   (format ostream 
-          "~%~(~A~) ~(~A~) " type (type-parents type-record))
-  (when (type-comment type-record)
-    (format ostream "~%~S" (type-comment type-record)))
-  (if (type-enumerated-p type-record)
-    (format ostream "~%(OR~{~( ~A~)~}).~%" (type-daughters type-record))
-    (let ((local-constraint (type-local-constraint type-record)))
+          "~%~(~A~) ~(~A~) " type (ltype-parents type-record))
+  (when (ltype-comment type-record)
+    (format ostream "~%~S" (ltype-comment type-record)))
+  (if (ltype-enumerated-p type-record)
+    (format ostream "~%(OR~{~( ~A~)~}).~%" (ltype-daughters type-record))
+    (let ((local-constraint (ltype-local-constraint type-record)))
       (if (null local-constraint)
         (format ostream ".~%")
         (display-dag1 local-constraint

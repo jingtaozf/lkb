@@ -33,6 +33,7 @@ char *current_time(void);
 char *current_host(void);
 char *current_os(void);
 void copy_file(char *, FILE *);
+void monitor(void);
 
 static int (*callbacks[4])() = { 
   (int (*)())NULL,
@@ -89,6 +90,14 @@ int slave(void) {
 
   timeout.tv_sec = 1;
   timeout.tv_usec = 0;
+
+  //
+  // to monitor resource use of PVM clients, create a `big brother' thread to
+  // periodically check on its period, assemble a special-purpose PVM message,
+  // and send it over to the PVM controller; we hope control messages will be
+  // seen as coming from the same PVM tid.                      (5-oct-04; oe)
+  //
+  if(!fork()) monitor();
 
   while(1) {
     if((id = pvm_trecv(-1, -1, &timeout)) < 0) {
@@ -671,6 +680,12 @@ void copy_file(char *file, FILE *output) {
   } /* if */
   
 } /* copy_file() */
+
+void monitor() {
+  while(1) {
+    sleep(1);
+  } // while
+} // monitor()
 
 #ifdef MAIN
 int main() {

@@ -16,11 +16,11 @@
 
 (defparameter *mtr-flags-path* (list (mrs::vsym "FLAGS")))
 
-(defconstant *mtr-optional-path* (list (mrs::vsym "OPTIONAL")))
+(defparameter *mtr-optional-path* (list (mrs::vsym "OPTIONAL")))
 
-(defconstant *mtr-equal-path* (list (mrs::vsym "EQUAL")))
+(defparameter *mtr-equal-path* (list (mrs::vsym "EQUAL")))
 
-(defconstant *mtr-subsume-path* (list (mrs::vsym "SUBSUME")))
+(defparameter *mtr-subsume-path* (list (mrs::vsym "SUBSUME")))
 
 (defconstant *mtr-skolem-property* (mrs::vsym "SKOLEM"))
 
@@ -40,15 +40,15 @@
 
 (defconstant *mtr-false-type* (mrs::vsym "-"))
 
-(defconstant *semi-u-type* "u")
+(defparameter *semi-u-type* "u")
 
-(defconstant *semi-h-type* "h")
+(defparameter *semi-h-type* "h")
 
-(defconstant *semi-i-type* "i")
+(defparameter *semi-i-type* "i")
 
-(defconstant *semi-e-type* "e")
+(defparameter *semi-e-type* "e")
 
-(defconstant *semi-x-type* "x")
+(defparameter *semi-x-type* "x")
 
 (defparameter *semi-fragment-left* (mrs::vsym "L-HNDL"))
 

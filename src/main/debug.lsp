@@ -9,7 +9,7 @@
 
 
 (defun find-redundancy (type)
-  (let ((parents (type-parents (get-type-entry type))))
+  (let ((parents (ltype-parents (get-type-entry type))))
     (when (cdr parents)
       (loop for parent in parents
            do
@@ -23,7 +23,7 @@
 (defun get-ancestors (type-entry)
   ;;; general function - returns list
   ;;; of types not entries - should be fairly safe, but slow
-   (let ((parents (type-parents type-entry)))
+   (let ((parents (ltype-parents type-entry)))
       (if parents
          (union parents
             (reduce #'union
@@ -37,7 +37,7 @@
    (let ((type-entry (get-type-entry node)))
      (when type-entry
        (let*
-          ((constraint-spec (type-constraint-spec type-entry))
+          ((constraint-spec (ltype-constraint-spec type-entry))
            (local-constraint 
                   (if constraint-spec 
                      (process-unifications 
@@ -56,7 +56,7 @@
                           node node))
                         (setq local-constraint 
                               (destructively-retype-dag local-constraint node))
-                        (setf (type-local-constraint type-entry)
+                        (setf (ltype-local-constraint type-entry)
                                 local-constraint)
                         )
                      ; no need to do inheritance when checking
@@ -67,9 +67,9 @@
                                  local-constraint)))
                         (cond 
                            (full-constraint
-                            (setf (type-constraint type-entry)
+                            (setf (ltype-constraint type-entry)
                               full-constraint)
-                            (setf (type-appfeats type-entry)
+                            (setf (ltype-appfeats type-entry)
                               (top-level-features-of full-constraint))
                             full-constraint)
                            (t (format t "~%Type ~A's constraint 

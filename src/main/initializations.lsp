@@ -34,6 +34,9 @@
 #+:clisp
 (setf (ext:package-lock "LISP") nil)
 
+#+:sbcl
+(sb-ext:unlock-package :common-lisp)
+
 ;;; not used in LKB code but required by some grammar loading stuff
 (defparameter *grammar-directory* nil)
 
@@ -170,7 +173,7 @@
         (find-package (if (system:getenv "SSP") :ssp :lkb)))
       
       #+:lui
-      (when (system:getenv "LUI") (lui-initialize runtimep))
+      (when (getenv "LUI") (lui-initialize runtimep))
 
       ;;
       ;; in the following, the featurep() test makes sense, since our run-time

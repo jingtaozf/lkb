@@ -1,5 +1,6 @@
-;;; Copyright (c) 1991-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991--2004 
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 
 ;;; modifications for YADU - April 1997
@@ -22,8 +23,6 @@
 (defmacro smember (element list)
   `(loop for foo in (the list ,list) thereis (eq ,element foo)))
 
-
-;;(defmethod print-object ((obj type) stream) (write-char #\~ stream) (prin1 (type-name obj) stream))
 ;;;
 ;;; For each type we need:
 ;;; 
@@ -58,7 +57,7 @@
 ;;; May 1997
 ;;; descendants - for glb stuff
 
-(defstruct type 
+(defstruct ltype 
            name parents constraint (constraint-mark nil) tdfs
            comment
            daughters appfeats enumerated-p ancestors marks
@@ -70,18 +69,18 @@
            bit-code               ; for glb computation
            )
            
-(defmethod common-lisp:print-object ((instance type) stream)
+(defmethod common-lisp:print-object ((instance ltype) stream)
   (if *print-readably*
       ;; print so object can be read back into lisp
       (call-next-method)
     ;; usual case
     (progn 
       (write-string "#Type<" stream)
-      (write-string (string (type-name instance)) stream)
+      (write-string (string (ltype-name instance)) stream)
       (write-char #\> stream))))
 
 
-(defstruct (leaf-type (:include type))
+(defstruct (leaf-type (:include ltype))
   (expanded-p nil))
         
 (defvar *types* (make-hash-table :test #'eq))
@@ -120,7 +119,7 @@
    (maphash 
       #'(lambda (key entry)
           (declare (ignore key))
-         (setf (type-visible-p entry) nil))
+         (setf (ltype-visible-p entry) nil))
       *types*))
 
 (defun collect-type-names nil
@@ -161,56 +160,56 @@
 (defun constraint-spec-of (type-name)
    (let ((type-record (get-type-entry type-name)))
       (if type-record 
-         (type-constraint-spec type-record)
+         (ltype-constraint-spec type-record)
          (error "~%~A is not a valid type" type-name))))
 
 (defun constraint-of (type-name)
    (let ((type-record (get-type-entry type-name)))
       (if type-record 
-         (type-constraint type-record)
+         (ltype-constraint type-record)
          (error "~%~A is not a valid type" type-name))))
 
 (defun tdfs-of (type-name)
    (let ((type-record (get-type-entry type-name)))
       (if type-record 
-         (type-tdfs type-record)
+         (ltype-tdfs type-record)
          (error "~%~A is not a valid type" type-name))))
 
 (defun default-spec-of (type-name)
    (let ((type-record (get-type-entry type-name)))
       (if type-record 
-         (type-default-spec type-record)
+         (ltype-default-spec type-record)
          (error "~%~A is not a valid type" type-name))))
 
 
 (defun appropriate-features-of (type-name)
    (let ((type-record (get-type-entry type-name)))
       (if type-record 
-         (type-appfeats type-record)
+         (ltype-appfeats type-record)
          (error "~%~A is not a valid type" type-name))))
 
 (defun retrieve-ancestors (type-name)
   (let ((type-record (get-type-entry type-name)))
     (if type-record 
-	(type-ancestors type-record)
+	(ltype-ancestors type-record)
       (error "~%~A is not a valid type" type-name))))
 
 (defun retrieve-descendants (type-name)
   (let ((type-record (get-type-entry type-name)))
     (if type-record 
-	(type-descendants type-record)
+	(ltype-descendants type-record)
       (error "~%~A is not a valid type" type-name))))
 
 (defun retrieve-parents (type-name)
   (let ((type-record (get-type-entry type-name)))
     (if type-record 
-	(type-parents type-record)
+	(ltype-parents type-record)
       (error "~%~A is not a valid type" type-name))))
 
 (defun retrieve-daughters (type-name)
   (let ((type-record (get-type-entry type-name)))
     (if type-record 
-	(type-daughters type-record)
+	(ltype-daughters type-record)
       (error "~%~A is not a valid type" type-name))))
 
 (defun subtype-p (type1 type2)
@@ -229,7 +228,7 @@
   (or (stringp type-name)
       (let ((type-record (get-type-entry type-name)))
 	(if type-record 
-            (type-atomic-p type-record)
+            (ltype-atomic-p type-record)
 	  (error "~%~A is not a valid type" type-name)))))
 
 ;;; glb computation - entry point is greatest-common-subtype
@@ -366,12 +365,12 @@
 	(t2 (get-type-entry type2)))
     (cond 
      ((eq type1 type2) type1)
-     ((member t2 (type-ancestors t1) :test #'eq)
+     ((member t2 (ltype-ancestors t1) :test #'eq)
       type1)
-     ((member t1 (type-ancestors t2) :test #'eq)
+     ((member t1 (ltype-ancestors t2) :test #'eq)
       type2)
-     (t (let* ((type1-desc (type-descendants t1))
-               (type2-desc (type-descendants t2))
+     (t (let* ((type1-desc (ltype-descendants t1))
+               (type2-desc (ltype-descendants t2))
                (common-subtypes 
                 (intersection type1-desc type2-desc :test #'eq)))
 	  (when common-subtypes
@@ -381,12 +380,12 @@
 		    (reduce #'intersection 
 			    (mapcar #'(lambda (subtype)
 					(cons subtype 
-					      (type-ancestors subtype)))
+					      (ltype-ancestors subtype)))
 				    common-subtypes))
                     :test #'eq)))
 	      (cond ((not (cdr greatest-common-subtype-list))
 		     (let ((gcsubtype-entry (car greatest-common-subtype-list)))
-		       (values (type-name gcsubtype-entry)
+		       (values (ltype-name gcsubtype-entry)
                                (if (extra-constraint-p 
                                     gcsubtype-entry
                                     t1 t2) t))))
@@ -395,7 +394,7 @@
 		    (greatest-common-subtype-list
 		     (error "~%~A and ~A have multiple common subtypes ~A"
 			    type1 type2
-                            (mapcar #'(lambda (x) (type-name x)) 
+                            (mapcar #'(lambda (x) (ltype-name x)) 
                                     greatest-common-subtype-list)))
 		    (t (error 
 			"~%Error found in type hierarchy"))))))))))
@@ -405,14 +404,14 @@
   ;;; isn't also an ancestor of the types being unified
   ;;; or the gcsubtype itself introduce any extra information 
   ;;; on the constraint.
-  (or (type-local-constraint gcsubtype)
-      (let ((t1ancs (type-ancestors t1))
-            (t2ancs (type-ancestors t2)))
-        (dolist (type (type-ancestors gcsubtype))
+  (or (ltype-local-constraint gcsubtype)
+      (let ((t1ancs (ltype-ancestors t1))
+            (t2ancs (ltype-ancestors t2)))
+        (dolist (type (ltype-ancestors gcsubtype))
           (when 
               (and (not (eq type t1))
                    (not (eq type t2))
-                   (type-local-constraint type)
+                   (ltype-local-constraint type)
                    (not (member type t1ancs :test #'eq))
                    (not (member type t2ancs :test #'eq)))
             (return t))))))
@@ -431,8 +430,9 @@
    ((subtype-p x y) y)
    ((subtype-p y x) x)
    (t
-    (let ((z (intersection (cons x (mapcar #'type-name (retrieve-ancestors x)))
-			   (cons y (mapcar #'type-name (retrieve-ancestors y))))))
+    (let ((z (intersection 
+              (cons x (mapcar #'ltype-name (retrieve-ancestors x)))
+              (cons y (mapcar #'ltype-name (retrieve-ancestors y))))))
       (cond ((null z) 
 	     (error "~%Types ~A and ~A have no common ancestor" x y))
 	    ((= (length z) 1) (car z))
@@ -450,8 +450,8 @@
    (do* ((done nil (cons initial done))
          (initial (car int-list) (car (set-difference new-int-list done)))
          (new-int-list
-            (set-difference int-list (mapcar #'type-name (retrieve-ancestors initial)))
-            (set-difference new-int-list (mapcar #'type-name (retrieve-ancestors initial)))))
+            (set-difference int-list (mapcar #'ltype-name (retrieve-ancestors initial)))
+            (set-difference new-int-list (mapcar #'ltype-name (retrieve-ancestors initial)))))
       ((null (set-difference new-int-list (cons initial done)))
          new-int-list)))
 
@@ -460,8 +460,8 @@
 
 (defun get-real-types (type)
   (let ((type-entry (get-type-entry type)))
-    (if (type-glbp type-entry)
-        (loop for parent in (type-parents type-entry)
+    (if (ltype-glbp type-entry)
+        (loop for parent in (ltype-parents type-entry)
              append
              (get-real-types parent))
       (list type))))
@@ -512,10 +512,10 @@
 (defun gc-types nil
   (maphash #'(lambda (name type)
 	       (declare (ignore name))
-	       (when (type-tdfs type)
-		 (compress-dag (tdfs-indef (type-tdfs type))))
-	       (compress-dag (type-constraint type))
-	       (compress-dag (type-local-constraint type)))
+	       (when (ltype-tdfs type)
+		 (compress-dag (tdfs-indef (ltype-tdfs type))))
+	       (compress-dag (ltype-constraint type))
+	       (compress-dag (ltype-local-constraint type)))
 	   *types*))
 
 ;;; Try to reduce the amount of space used by the expanded type hierarchy
@@ -524,13 +524,13 @@
   (gc-types)
   (maphash #'(lambda (name type)
 	       (when (search "GLBTYPE" (symbol-name name))
-		 (setf (type-constraint type) nil)
-		 (setf (type-tdfs type) nil)))
+		 (setf (ltype-constraint type) nil)
+		 (setf (ltype-tdfs type) nil)))
 	   *types*))
 
 (defun used-types (type)
   (let ((used (mapcar #'(lambda (x) (u-value-type (unification-rhs x)))
-		      (type-constraint-spec type))))
+		      (ltype-constraint-spec type))))
     (when used
       (remove-duplicates used))))
 
@@ -539,14 +539,14 @@
   (let* ((leaves (mapcar #'(lambda (x) (gethash x *types*)) 
 			 (slot-value *leaf-types* 'leaf-types)))
 	 (parents 
-	  (reduce #'union (mapcar #'type-parents leaves)))
+	  (reduce #'union (mapcar #'ltype-parents leaves)))
 	 (referred
 	  (reduce #'union (mapcar #'used-types leaves)))
 	 (save (union parents referred)))
     (maphash #'(lambda (name type)
 		 (unless (member (symbol-name name) save)
-		   ;; (setf (type-constraint type) nil)
-		   (setf (type-tdfs type) nil)))
+		   ;; (setf (ltype-constraint type) nil)
+		   (setf (ltype-tdfs type) nil)))
 	     *types*)))
 
 (defun types-to-xml (&key (stream t) file)
@@ -557,9 +557,9 @@
                             :if-does-not-exist :create)
                       stream)
       for type being each hash-value in *types*
-      for name = (type-name type)
-      for parents = (type-parents type)
-      for daughters = (type-daughters type)
+      for name = (ltype-name type)
+      for parents = (ltype-parents type)
+      for daughters = (ltype-daughters type)
       do
         (format stream "<type name=\"~(~a~)\">~%  <parents>~%" name)
         (loop

@@ -774,13 +774,13 @@
 
 (defun may-copy-constraint-of (type-name)
   (let* ((type-record (get-type-entry type-name))
-	 (constraint (type-constraint type-record))
-	 (cache (type-constraint-mark type-record))
+	 (constraint (ltype-constraint type-record))
+	 (cache (ltype-constraint-mark type-record))
          (*safe-not-to-copy-p* nil)
          (*dag-recycling-p* nil))
     (unless (consp cache)
       (setq cache (list* 0 nil nil))    ; mark, unused, used
-      (setf (type-constraint-mark type-record) cache))
+      (setf (ltype-constraint-mark type-record) cache))
     (cond
      ((not (= (the fixnum (car cache)) *unify-generation*))
       #+:cdebug

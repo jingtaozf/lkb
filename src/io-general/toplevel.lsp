@@ -34,11 +34,11 @@
     (when type
       (if
           (or ignore-limit-p
-	      (< (length (type-descendants (get-type-entry type))) 300))
+	      (< (length (ltype-descendants (get-type-entry type))) 300))
 	  (create-type-hierarchy-tree type nil show-all-p)
 	(show-message-window 
 	 (format nil "Type has ~A descendants, display stopped~%Use check box to override" 
-		 (length (type-descendants (get-type-entry type)))))))))
+		 (length (ltype-descendants (get-type-entry type)))))))))
 
 
 
@@ -52,12 +52,12 @@
 (defun show-type-spec-aux (type type-entry)
    (let ((*type-fs-display* t))
      (display-fs-and-parents 
-      (type-local-constraint type-entry) 
+      (ltype-local-constraint type-entry) 
       (format nil "~(~A~) - definition" type)
-      (loop for parent in (type-parents type-entry)
+      (loop for parent in (ltype-parents type-entry)
            append
            (let ((parent-entry (get-type-entry parent)))
-             (if (type-glbp parent-entry)
+             (if (ltype-glbp parent-entry)
                  (list parent (remove-duplicates (get-real-types parent)))
                (list parent))))
       type)))
@@ -71,9 +71,9 @@
          (show-type-aux type type-entry))))
 
 (defun show-type-aux (type type-entry)
-   (if (type-tdfs type-entry)
+   (if (ltype-tdfs type-entry)
       (let ((*type-fs-display* t))
-         (display-fs (type-tdfs type-entry) 
+         (display-fs (ltype-tdfs type-entry) 
                      (format nil "~(~A~) - expanded" type)
                      type))
       (format t "~%No tdfs for type ~A" type)))

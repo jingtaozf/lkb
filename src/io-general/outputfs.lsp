@@ -1051,7 +1051,7 @@ for PAGE and LiLFeS")
 
 (defun canonical-order (type dag-attributes)
   (let* ((type (get-type-entry type))
-         (ordered-attributes (when type (type-appfeats type))))
+         (ordered-attributes (when type (ltype-appfeats type))))
     (stable-sort (copy-list dag-attributes)
           #'(lambda (x y)
               (member y (member x ordered-attributes))))))

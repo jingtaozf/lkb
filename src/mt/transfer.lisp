@@ -318,7 +318,7 @@
   (when (lkb::is-valid-type (mrs::vsym *semi-u-type*))
     (loop
         for type in (lkb::retrieve-descendants (mrs::vsym *semi-u-type*))
-        for name = (lkb::type-name type)
+        for name = (lkb::ltype-name type)
         do
           (loop
               for feature in (lkb::appropriate-features-of name)

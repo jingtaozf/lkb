@@ -17,7 +17,7 @@
 ;;;
 ;;; Author contact: Frederik.Fouvry@coli.uni-saarland.de
 ;;;                 Saarland University, FR 4.7 Allgemeine Linguistik,
-;;;                 PO Box 15 11 50, D-66041 Saarbrücken, Germany
+;;;                 PO Box 15 11 50, D-66041 Saarbruecken, Germany
 
 ;;; see licence.txt for conditions
 

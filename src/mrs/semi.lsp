@@ -8,11 +8,11 @@
 
 (defvar *semi* nil)
 
-(defconstant *semi-u-type* "u")
-(defconstant *semi-h-type* "h")
-(defconstant *semi-i-type* "i")
-(defconstant *semi-e-type* "e")
-(defconstant *semi-x-type* "x")
+(defparameter *semi-u-type* "u")
+(defparameter *semi-h-type* "h")
+(defparameter *semi-i-type* "i")
+(defparameter *semi-e-type* "e")
+(defparameter *semi-x-type* "x")
 
 (defstruct semi
   signature

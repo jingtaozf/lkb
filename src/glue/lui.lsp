@@ -57,19 +57,13 @@
          :directory (pathname-directory make::bin-dir) :name "yzlui")))))
   (let (foo)
     (multiple-value-setq (%lui-stream% foo %lui-pid%)
-      #-(or :openmcl :clisp)
+      #-:clisp
       (run-process *lui-application*
                    :wait nil
                    :output :stream :input :stream 
-                   #-:clisp :error-output #-:clisp nil)
+                   #-:sbcl :error-output #-:sbcl nil)
       #+:clisp
-      (ext:make-pipe-io-stream *lui-application* :buffered nil)
-      #+:openmcl
-      (let ((process (run-program "yzlui" nil :wait nil :input :stream
-                                  :output :stream)))
-        (values (make-two-way-stream 
-                 (external-process-input-stream process)
-                 (external-process-input-stream process)))))
+      (ext:make-pipe-io-stream *lui-application* :buffered nil))
                     
     (when foo (setf foo foo))
     #+:allegro
@@ -102,6 +96,10 @@
     (force-output %lui-stream%)
     #-:clisp
     (setf %lui-process%
+      #+:sbcl 
+      (sb-thread:make-thread 
+       #'(lambda () (lsp-loop nil %lui-stream%)))
+      #-:sbcl
       (mp:run-function '(:name "LUI") #'lsp-loop nil %lui-stream%))
     #+:clisp
     (lsp-loop nil %lui-stream%)
@@ -137,13 +135,11 @@
     (let ((process %lui-process%))
       (setf %lui-process% nil)
       (ignore-errors
-       (mp:process-kill process)))))
+       #+:sbcl (sb-thread:terminate-thread process)
+       #-:sbcl (mp:process-kill process)))))
 
 (defun send-to-lui (string &key (wait nil) recursive)
   (unless recursive
-    #+:debug
-    (when (and %lui-process% (not (eq mp:*current-process* %lui-process%)))
-      (mp:process-add-arrest-reason %lui-process% :send-to-lui))
     (when *lui-debug-p*
       (format t "~&send-to-lui(): [send] `~a'.~%" string))
     (format %lui-stream% "~@[wait ~*~]~a~a" wait string %lui-eoc%)
@@ -166,10 +162,7 @@
               (append %lui-pending-events% (list form)))
             (send-to-lui nil :recursive t))
            (t
-            form))))
-    #+:debug
-    (when (and %lui-process% (not (eq mp:*current-process* %lui-process%)))
-      (mp:process-revoke-arrest-reason %lui-process% :send-to-lui))))
+            form))))))
 
 (defun process-pending-events ()
   #+:debug
@@ -366,8 +359,12 @@
                           :edge edge)
               for key = (lsp-store-object nil lspb)
               for id = (edge-id edge)
-              for name = (tree-node-text-string
-                          (find-category-abb (edge-dag edge)))
+              for name 
+              = (format 
+                 nil 
+                 "~a[~a]"
+                 (tree-node-text-string (find-category-abb (edge-dag edge)))
+                 id)
               for label = (typecase (edge-rule edge)
                             (string (first (edge-lex-ids edge)))
                             (symbol (edge-rule edge))

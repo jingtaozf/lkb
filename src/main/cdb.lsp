@@ -50,7 +50,8 @@
 ;; This all could be much more efficient and robust, but it seems to work well
 ;; enough for now.
 
-(defpackage "CDB")
+(defpackage "CDB" 
+  (:use :common-lisp #-:ecl :make #+mcl :ccl))
 
 (in-package :cdb)
 

@@ -407,7 +407,7 @@
                 else unless cache do
                   (incf failures)
                   (let* ((parent (get-type-entry type))
-                         (tdfs (type-tdfs parent))
+                         (tdfs (ltype-tdfs parent))
                          (dag (tdfs-indef tdfs))
                          (vector (nth daughter 
                                       (rule-daughters-restricted rule)))
@@ -584,13 +584,13 @@
   (setf *res* nil)
   (let ((type-entry (get-type-entry type)))
     (when type-entry 
-      (let ((type-local-fs (type-local-constraint type-entry)))
+      (let ((type-local-fs (ltype-local-constraint type-entry)))
         (when type-local-fs
           (loop for feat in (top-level-features-of type-local-fs)
                do
                (let ((internal-fs (get-dag-value type-local-fs feat)))
                  (collect-types-from-fs internal-fs))))
-        (loop for parent in (type-parents type-entry)
+        (loop for parent in (ltype-parents type-entry)
              do 
              (pushnew parent *res*))
         *res*))))
@@ -628,7 +628,7 @@
 
 (defun expand-local-only-constraint (node type-entry)
   (let* ((*unify-debug-cycles* t)       ; turn on cyclic dag warning messages
-         (constraint-spec (type-constraint-spec type-entry))
+         (constraint-spec (ltype-constraint-spec type-entry))
          (local-constraint 
           (if constraint-spec (process-unifications constraint-spec))))
     (if (and constraint-spec (null local-constraint))
@@ -636,7 +636,7 @@
           (format t "~%Type ~A has an invalid constraint specification" node)
           nil)
      (progn
-       (setf (type-local-constraint type-entry) local-constraint)
+       (setf (ltype-local-constraint type-entry) local-constraint)
        t))))
 
 

@@ -84,12 +84,12 @@
 
 (defun propagate-visibility-in-type-tree (type)
    (let ((type-record (get-type-entry type)))
-      (when (and (not (type-shrunk-p type-record))
-                 (not (type-visible-p type-record)))
-         (loop for daughter in (type-daughters type-record)
+      (when (and (not (ltype-shrunk-p type-record))
+                 (not (ltype-visible-p type-record)))
+         (loop for daughter in (ltype-daughters type-record)
             do
             (propagate-visibility-in-type-tree daughter)))
-      (setf (type-visible-p type-record) t)))
+      (setf (ltype-visible-p type-record) t)))
 
 
 (defun make-new-type-tree (type show-all-p toplevel-p)
@@ -98,7 +98,7 @@
    ;; displaying no hierarchy at all (if all descendents are hidden), or just
    ;; one branch rather than all
    (let ((type-record (get-type-entry type)))
-      (when (type-visible-p type-record)
+      (when (ltype-visible-p type-record)
          (let ((node
                  (if (symbolp type) type
                     (intern (princ-to-string type)))))
@@ -107,7 +107,7 @@
                   (delete-duplicates
                      (mapcan
                         #'(lambda (d) (copy-list (make-new-type-tree d show-all-p nil)))
-                        (type-daughters type-record))
+                        (ltype-daughters type-record))
                      :test #'eq)))
             (if (and (not toplevel-p) (not show-all-p)
                    (fboundp 'hide-in-type-hierarchy-p)
@@ -163,7 +163,7 @@
 	     (clim:with-output-as-presentation (stream node 'hier-node)
 	       (clim:with-drawing-options (stream :ink clim:+red+)
 		 (write-string (type-node-text-string node) s)))
-	     (when (type-shrunk-p
+	     (when (ltype-shrunk-p
 		    (or (get-type-entry node) 
 			(get-type-entry (get node 'real-thing))))
 	       (frame-text-box s pos (current-position s)))))
@@ -209,21 +209,21 @@
     (let ((type-entry (get-type-entry node)))
       (pop-up-menu 
        `(;; ("Help" :value help 
-	 ;;  :active ,(type-comment type-entry))
+	 ;;  :active ,(ltype-comment type-entry))
 	 ("Shrink/expand" :value shrink
-			  :active ,(type-daughters type-entry))
+			  :active ,(ltype-daughters type-entry))
 	 ("Type definition" :value def)
 	 ("Expanded type" :value exp)
 	 ("New hierarchy" :value new))
-       (help (display-type-comment node (type-comment type-entry)))
-       (shrink (setf (type-shrunk-p type-entry) 
-		 (not (type-shrunk-p type-entry)))
+       (help (display-type-comment node (ltype-comment type-entry)))
+       (shrink (setf (ltype-shrunk-p type-entry) 
+		 (not (ltype-shrunk-p type-entry)))
 	       (create-type-hierarchy-tree (type-hierarchy-nodes frame) frame
 					   (type-hierarchy-show-all-p frame)))
        (def (show-type-spec-aux node type-entry))
        (exp (show-type-aux node type-entry))
        (new
-	(let ((*last-type-name* (type-name type-entry)))
+	(let ((*last-type-name* (ltype-name type-entry)))
 	  (declare (special *last-type-name*))
 	  (multiple-value-bind (type show-all-p)
 	      (ask-user-for-type nil 
@@ -255,7 +255,7 @@
 	 (type-entry
 	  (or (get-type-entry node)
 	      (get-type-entry (get node 'real-thing))))
-	 (type (type-name type-entry))
+	 (type (ltype-name type-entry))
 	 (top-type (if frame
 		       (type-hierarchy-nodes frame) 
 		     *toptype*))
@@ -281,13 +281,13 @@
 
 (defun unshrink-ancestors (type-entry top-type)
   ;; can't just use type-ancestors list since we have to stop at top-type arg
-  (unless (eql (type-name type-entry) top-type)
-    (loop for parent in (type-parents type-entry)
+  (unless (eql (ltype-name type-entry) top-type)
+    (loop for parent in (ltype-parents type-entry)
          do
          (let ((parent-entry (get-type-entry parent)))
-	   (when (type-shrunk-p parent-entry)
+	   (when (ltype-shrunk-p parent-entry)
 	     (setq *needs-redisplay* t))
-	   (setf (type-shrunk-p parent-entry) nil)
+	   (setf (ltype-shrunk-p parent-entry) nil)
 	   (unshrink-ancestors parent-entry top-type)))))
 
 

@@ -345,25 +345,25 @@
     (when (and (atom type) type-entry)
       (pop-up-menu
        `(("Hierarchy" :value hier
-		      :active ,(type-constraint type-entry))
+		      :active ,(ltype-constraint type-entry))
 ;	 ("Help" :value help
-;		 :active ,(type-comment type-entry))
+;		 :active ,(ltype-comment type-entry))
 	 ("Shrink/expand" :value shrink)
          #+:allegro
 	 ("Show source" :value source
 			:active ,(source-available-p type))
 	 ("Type definition" :value def
 			    :active 
-			    ,(type-constraint type-entry))
+			    ,(ltype-constraint type-entry))
 	 ("Expanded type" :value exp
-			  :active ,(type-constraint type-entry))
+			  :active ,(ltype-constraint type-entry))
 ;	 ("Full structure" :value full
 ;			   :active full-tdfs)
 	 ("Select" :value select)
 	 ("Unify" :value unify
 		  :active ,(and *fs1* (highlighted-class frame))))
        (hier (display-type-in-tree type))
-       (help (display-type-comment type (type-comment type-entry)))
+       (help (display-type-comment type (ltype-comment type-entry)))
        #+:allegro
        (source (edit-source type))
        (shrink (shrink-fs-action frame

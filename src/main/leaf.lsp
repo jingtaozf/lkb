@@ -284,11 +284,11 @@ introduces new features ~A" name new-features)
 						      :enumerated-p nil)))))))))))
                       
 (defun add-in-leaf-type-entry (new-type)   
-  (let ((name (type-name new-type)))
+  (let ((name (ltype-name new-type)))
     (create-mark-field new-type)
     ;; we're going to use some of the same code as in checktypes.lsp and
     ;; assume all the real types are marked as seen
-    (if (expand-leaf-type-entry name (car (type-parents new-type)) new-type)
+    (if (expand-leaf-type-entry name (car (ltype-parents new-type)) new-type)
         (setf (leaf-type-expanded-p new-type) t)
       (progn 
         (format t "~%Invalid type ~A not added" name)
@@ -313,18 +313,18 @@ introduces new features ~A" name new-features)
            *types*))
 
 (defun delete-non-local-uses (name type-entry)
-  (let* ((parent (car (type-parents type-entry)))
+  (let* ((parent (car (ltype-parents type-entry)))
          (parent-entry (get-type-entry parent)))
     (when parent-entry
-      (setf (type-daughters parent-entry)
-        (delete name (type-daughters parent-entry)))
-      (setf (type-descendants parent-entry)
-        (delete type-entry (type-descendants parent-entry) :test #'eq))
-      (loop for ancestor-entry in (type-ancestors parent-entry)
+      (setf (ltype-daughters parent-entry)
+        (delete name (ltype-daughters parent-entry)))
+      (setf (ltype-descendants parent-entry)
+        (delete type-entry (ltype-descendants parent-entry) :test #'eq))
+      (loop for ancestor-entry in (ltype-ancestors parent-entry)
            do
-           (setf (type-descendants ancestor-entry)
+           (setf (ltype-descendants ancestor-entry)
              (delete type-entry 
-                     (type-descendants ancestor-entry)
+                     (ltype-descendants ancestor-entry)
                      :test #'eq))))))
 
 (defun new-features-in (unif-list)
@@ -339,13 +339,13 @@ introduces new features ~A" name new-features)
   (let ((parent-entry (get-type-entry parent)))
     (add-leaf-to-hierarchy name parent parent-entry type-entry)
     ; no new features, so got to be the same as parent
-    (setf (type-appfeats type-entry) (type-appfeats parent-entry))
-  (if (and (null (type-constraint-spec type-entry))
-           (null (type-default-spec type-entry)))
+    (setf (ltype-appfeats type-entry) (ltype-appfeats parent-entry))
+  (if (and (null (ltype-constraint-spec type-entry))
+           (null (ltype-default-spec type-entry)))
       ;; the easy case
       (copy-parent-fs-slots name type-entry parent-entry)
     ;; there is a local constraint
-    (if (type-atomic-p parent-entry)
+    (if (ltype-atomic-p parent-entry)
         (progn 
           (format t 
                   "~%Error: leaf type ~A introduces features not found on ~A"
@@ -357,28 +357,28 @@ introduces new features ~A" name new-features)
 (defun add-leaf-to-hierarchy (name parent parent-entry entry)
   (declare (ignore parent))
   ;; deals with all the slots relating to the hierarchy itself
-  (pushnew name (type-daughters parent-entry) :test #'eq)
-  (pushnew entry (type-descendants parent-entry) :test #'eq)
-  (let ((ancestors (type-ancestors parent-entry)))
+  (pushnew name (ltype-daughters parent-entry) :test #'eq)
+  (pushnew entry (ltype-descendants parent-entry) :test #'eq)
+  (let ((ancestors (ltype-ancestors parent-entry)))
     (dolist (ancestor ancestors)
-      (pushnew entry (type-descendants ancestor) :test #'eq))
-    (setf (type-ancestors entry) (cons parent-entry ancestors))))
+      (pushnew entry (ltype-descendants ancestor) :test #'eq))
+    (setf (ltype-ancestors entry) (cons parent-entry ancestors))))
 
 
 (defun copy-parent-fs-slots (name entry parent-entry)
-  (setf (type-atomic-p entry) (type-atomic-p parent-entry))
-  (setf (type-constraint entry)
+  (setf (ltype-atomic-p entry) (ltype-atomic-p parent-entry))
+  (setf (ltype-constraint entry)
     (retype-dag
-     (type-constraint parent-entry) name))
-  (setf (type-tdfs entry)
-    (make-tdfs :indef (type-constraint entry)
-               :tail (loop for element in (tdfs-tail (type-tdfs parent-entry))
+     (ltype-constraint parent-entry) name))
+  (setf (ltype-tdfs entry)
+    (make-tdfs :indef (ltype-constraint entry)
+               :tail (loop for element in (tdfs-tail (ltype-tdfs parent-entry))
                           collect
                            element))))
      
 (defun expand-leaf-type-constraint (node type-entry parent-entry)
   (let* ((*unify-debug-cycles* t)       ; turn on cyclic dag warning messages
-         (constraint-spec (type-constraint-spec type-entry))
+         (constraint-spec (ltype-constraint-spec type-entry))
          (local-constraint 
           (process-unifications constraint-spec)))
     (if (and constraint-spec (null local-constraint))
@@ -395,10 +395,10 @@ introduces new features ~A" name new-features)
                     node node))
           (setq local-constraint 
             (destructively-retype-dag local-constraint node))
-          (setf (type-local-constraint type-entry) local-constraint))
+          (setf (ltype-local-constraint type-entry) local-constraint))
         (if (and local-constraint
                  (not (subsetp (top-level-features-of local-constraint)
-                               (type-appfeats parent-entry))))
+                               (ltype-appfeats parent-entry))))
             (progn
               (format t "~%Error: ~A introduces features not on its parent" 
                       node)
@@ -408,7 +408,7 @@ introduces new features ~A" name new-features)
                                          parent-entry)))
           (if full-constraint
               (progn
-                (setf (type-inherited-constraint type-entry) full-constraint)
+                (setf (ltype-inherited-constraint type-entry) full-constraint)
                 (if (progn (setf *well-formed-trace* nil)
                            (wf-constraint-of node))
                     (progn (clear-marks type-entry)
@@ -426,7 +426,7 @@ introduces new features ~A" name new-features)
 (defun inherit-leaf-constraints (node local-constraint
                                  parent-entry)
     (let ((parent-constraint
-           (type-constraint parent-entry)))
+           (ltype-constraint parent-entry)))
       ;; unify-dags itself will put this inside a unification context
       (unify-dags (or local-constraint (create-typed-dag node))
                   ;; retype-dag also does a copy - I don't think

@@ -387,13 +387,13 @@
      :menu-item-action
      #'(lambda ()
          (display-type-in-tree type))
-     :disabled (not (type-constraint type-entry)))
+     :disabled (not (ltype-constraint type-entry)))
    (make-instance 'menu-item
      :menu-item-title "Help"
      :menu-item-action
      #'(lambda ()
-         (display-type-comment type (type-comment type-entry)))
-     :disabled (not (type-comment type-entry)))
+         (display-type-comment type (ltype-comment type-entry)))
+     :disabled (not (ltype-comment type-entry)))
    (make-instance 'menu-item
      :menu-item-title "Shrink/expand"
                :menu-item-action #'(lambda ()

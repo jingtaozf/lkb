@@ -511,15 +511,15 @@ at this point).
 
 (defun instantiate-null-semantic-items (input-sem lrules)
   (let* ((real-ids (if lkb::*gen-rule-list*
-                       (genpredict-mrs-struct input-sem 
-                                              lkb::*gen-rule-list*)
+                     (genpredict-mrs-struct input-sem lkb::*gen-rule-list*)
                      (if *null-semantics-hack-p*
-                         (let ((found-list 
-                                (apply #'append 
-                                       (lkb::retrieve-lex-from-parses))))
-                           (loop for empty in *empty-semantics-lexical-entries*
-                                when (member empty found-list)
-                                collect empty))
+                       (let ((found-list 
+                              (apply #'append 
+                                     (lkb::retrieve-lex-from-parses))))
+                         (loop
+                             for empty in *empty-semantics-lexical-entries*
+                             when (member empty found-list)
+                             collect empty))
                        *empty-semantics-lexical-entries*)))
         (instantiated-sets
           (loop for lex-id in real-ids

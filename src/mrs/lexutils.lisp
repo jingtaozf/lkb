@@ -93,20 +93,20 @@
              (return-value
               (if type-entry
                   (let ((return-types (list type-entry)))
-                    (loop for desc in (type-descendants type-entry)
+                    (loop for desc in (ltype-descendants type-entry)
                         do
                           (pushnew desc return-types :test #'eq)
-                          (loop for desc-anc in (type-ancestors desc)
+                          (loop for desc-anc in (ltype-ancestors desc)
                               do
                                 (when (member mrs::*top-semantics-entry*
-                                              (type-ancestors desc-anc) :test #'eq)
+                                              (ltype-ancestors desc-anc) :test #'eq)
                                   (pushnew desc-anc return-types :test #'eq))))
-                    (loop for anc in (type-ancestors type-entry)
+                    (loop for anc in (ltype-ancestors type-entry)
                         do
                           (when (member mrs::*top-semantics-entry*
-                                        (type-ancestors anc) :test #'eq)
+                                        (ltype-ancestors anc) :test #'eq)
                             (pushnew anc return-types :test #'eq)))
-                    (mapcar #'type-name return-types))
+                    (mapcar #'ltype-name return-types))
                 (list reltype))))
         (setf (gethash reltype *get-compatible-rels-memo*)
           return-value))))
@@ -178,7 +178,7 @@
   #|
   (or
    (and (not (stringp value))
-        (let* ((ancestors (mapcar #'type-name (retrieve-ancestors value)))
+        (let* ((ancestors (mapcar #'ltype-name (retrieve-ancestors value)))
                (strict-type
                 (if ancestors
                     (find-strict-type (cons value ancestors)))))

@@ -57,7 +57,7 @@
         (format t "~%WARNING: Type `~A' redefined." name)
         (push name *type-redefinitions*))
       (let ((new-type 
-               (make-type :name name 
+               (make-ltype :name name 
                   :parents parents 
                   :daughters daughters
                   :comment comment
@@ -77,11 +77,11 @@
   (let ((ok t)
         (existing-type (get-type-entry name)))    
     (if existing-type
-	(if (type-parents-equal parents (type-parents existing-type))
+	(if (type-parents-equal parents (ltype-parents existing-type))
 	    (progn 
-	      (setf (type-constraint-spec existing-type) constraint)
-	      (setf (type-default-spec existing-type) default)
-	      (setf (type-comment existing-type) comment))
+	      (setf (ltype-constraint-spec existing-type) constraint)
+	      (setf (ltype-default-spec existing-type) default)
+	      (setf (ltype-comment existing-type) comment))
           (progn
             (unless (member name *type-redefinitions*)
               (format t "~%Warning - ~A ignored - patch cannot change type hierarchy"
@@ -100,10 +100,10 @@
   (let ((existing-type (get-type-entry name)))
     (unless existing-type
       (cerror "Cancel load" "Cannot add information to type ~a as it is not already defined" name))
-    (let* ((existing-parents (type-parents existing-type))
-	   (existing-constraint (type-constraint-spec existing-type))
-	   (existing-default (type-default-spec existing-type))
-	   (existing-comment (type-comment existing-type))
+    (let* ((existing-parents (ltype-parents existing-type))
+	   (existing-constraint (ltype-constraint-spec existing-type))
+	   (existing-default (ltype-default-spec existing-type))
+	   (existing-comment (ltype-comment existing-type))
 	   (redundant-parents (when (listp existing-parents)
 				(loop for parent in parents
 				      if (member parent existing-parents)
@@ -116,10 +116,10 @@
 	    (new-comment (if existing-comment
 			     (concatenate 'string existing-comment " " comment)
 			   comment)))
-	(setf (type-parents existing-type) new-parents)
-	(setf (type-constraint-spec existing-type) new-constraint)
-	(setf (type-default-spec existing-type) new-default)
-	(setf (type-comment existing-type) new-comment)))))
+	(setf (ltype-parents existing-type) new-parents)
+	(setf (ltype-constraint-spec existing-type) new-constraint)
+	(setf (ltype-default-spec existing-type) new-default)
+	(setf (ltype-comment existing-type) new-comment)))))
 
 
 
@@ -190,12 +190,12 @@
          (let* ((type-entry (get-type-entry name)))
            (when (leaf-type-p type-entry)
              (setf (leaf-type-expanded-p type-entry) nil))
-           (setf (type-constraint type-entry) nil)
-           (setf (type-atomic-p type-entry) nil)
-           (setf (type-tdfs type-entry) nil)
-           (setf (type-appfeats type-entry) nil)
-           (setf (type-constraint-mark type-entry) nil)          
-           (setf (type-local-constraint type-entry) nil)))
+           (setf (ltype-constraint type-entry) nil)
+           (setf (ltype-atomic-p type-entry) nil)
+           (setf (ltype-tdfs type-entry) nil)
+           (setf (ltype-appfeats type-entry) nil)
+           (setf (ltype-constraint-mark type-entry) nil)          
+           (setf (ltype-local-constraint type-entry) nil)))
   (unmark-type-table)  
   #+:allegro (when *gc-before-reload* (excl:gc t))
   ;; try and force it to reclaim space before we refill it
@@ -240,7 +240,7 @@
       (loop for name in *type-names*
          do
          (let* ((type-entry (get-type-entry name))
-                (parents (type-parents type-entry)))
+                (parents (ltype-parents type-entry)))
            ;;; type-parents gets reset by glb code
            (loop for parent in parents
                 do
@@ -248,7 +248,7 @@
                   (cond 
                    (parent-entry 
                     (pushnew name 
-                             (type-daughters parent-entry)
+                             (ltype-daughters parent-entry)
                              :test #'eq))
                    (t (setf ok nil)
                       (format t
@@ -285,7 +285,7 @@
       (progn
         (mark-node-seen type-record)
         (not
-         (dolist (daughter (type-daughters type-record))
+         (dolist (daughter (ltype-daughters type-record))
            (unless 
                (let ((daughter-entry (get-type-entry daughter)))
                  (if (active-node-p daughter-entry)
@@ -317,7 +317,7 @@
   ;; this is here because it's used in the next phase
   ;; of checking
   (let ((ok t)
-        (daughters (loop for d in (type-daughters type-record)
+        (daughters (loop for d in (ltype-daughters type-record)
                          collect (get-type-entry d))))
     (loop for daughter in daughters
          do
@@ -325,7 +325,7 @@
              (progn 
                (setf ok nil)
                (format t "~%Redundancy involving ~A" 
-                       (type-name daughter)))
+                       (ltype-name daughter)))
            (mark-node-active daughter)))
     (when ok
       (setf ok 
@@ -367,8 +367,8 @@
    (maphash 
       #'(lambda (node type-entry)
           (declare (ignore node))
-          (setf (type-ancestors type-entry) nil)
-          (setf (type-descendants type-entry) nil))
+          (setf (ltype-ancestors type-entry) nil)
+          (setf (ltype-descendants type-entry) nil))
       *types*)
    (maphash 
       #'(lambda (node type-entry)
@@ -378,8 +378,8 @@
    (set-up-descendants (get-type-entry *toptype*)))
 
 (defun set-up-ancestors (type-entry)
-  (or (type-ancestors type-entry)
-      (let ((parents (type-parents type-entry))
+  (or (ltype-ancestors type-entry)
+      (let ((parents (ltype-parents type-entry))
             (ancestors nil))
         (when parents
            (setq ancestors
@@ -389,12 +389,12 @@
 	      (pushnew (get-type-entry parent) ancestors :test #'eq)
 	      (dolist (ancestor (set-up-ancestors (get-type-entry parent)))
 	         (pushnew ancestor ancestors :test #'eq))))
-        (setf (type-ancestors type-entry) ancestors)
+        (setf (ltype-ancestors type-entry) ancestors)
         ancestors)))
 
 (defun set-up-descendants (type-entry)
-  (or (type-descendants type-entry)
-      (let ((daughters (type-daughters type-entry))
+  (or (ltype-descendants type-entry)
+      (let ((daughters (ltype-daughters type-entry))
             (descendants nil))
          (when daughters
             (setq descendants
@@ -404,7 +404,7 @@
 	       (pushnew (get-type-entry daughter) descendants :test #'eq)
 	       (dolist (descendant (set-up-descendants (get-type-entry daughter)))
 	          (pushnew descendant descendants :test #'eq))))
-         (setf (type-descendants type-entry) descendants)
+         (setf (ltype-descendants type-entry) descendants)
          descendants)))
 
 
@@ -418,23 +418,23 @@
 (defun find-good-partitions (type)
   ;; AAC - Oct 12 1998 - faster version
   (let* ((type-entry (get-type-entry type))
-         (daughters (type-daughters type-entry)))
+         (daughters (ltype-daughters type-entry)))
     (when (and (not (active-node-p type-entry))
                (not (seen-node-p type-entry)))
       (mark-node-active type-entry)
       (when daughters
         (dolist (daughter daughters)
 	   (find-good-partitions daughter))
-        (let* ((descendants (type-descendants type-entry))
-               (desc-names (mapcar #'type-name descendants)))
+        (let* ((descendants (ltype-descendants type-entry))
+               (desc-names (mapcar #'ltype-name descendants)))
           (when
               (not
                (dolist (descendant descendants)
                  (unless
                      (or (seen-node-p descendant)
-                         (null (cdr (type-parents descendant)))
+                         (null (cdr (ltype-parents descendant)))
                          (subsetp
-                          (type-parents descendant) desc-names :test #'eq))
+                          (ltype-parents descendant) desc-names :test #'eq))
                    (return t))))
             (let ((partition-nodes
                    (loop for descendant in descendants
@@ -450,8 +450,8 @@
    (let ((partition-types (cons top others))
          (filtered nil))
        (dolist (type partition-types)
-          (when (cdr (type-parents type)) ; multiple parents
- 	     (dolist (ancestor (type-ancestors type))
+          (when (cdr (ltype-parents type)) ; multiple parents
+ 	     (dolist (ancestor (ltype-ancestors type))
 	        (when (member ancestor partition-types :test #'eq)
 	           (pushnew type filtered :test #'eq)
                    (pushnew ancestor filtered :test #'eq)))))
@@ -611,13 +611,13 @@
 (defun lookup-type-from-bits (code)
    ;; hash code and check for equal one in bucket
    (dolist (type (get-bit-coded-type *bit-coded-type-table* code) nil)
-      (when (bit-code-equal (type-bit-code type) code)
+      (when (bit-code-equal (ltype-bit-code type) code)
          (return type))))
 
 
 (defun external-single-parent-type-p (type-entry)
-   (and (null (type-daughters type-entry))
-        (null (cdr (type-parents type-entry)))))
+   (and (null (ltype-daughters type-entry))
+        (null (cdr (ltype-parents type-entry)))))
 
 (defun compute-and-add-glbtypes (types glbp)
    (let*
@@ -635,7 +635,7 @@
                   ;; (force-output t)
                   (insert-glbtypes-into-hierarchy internal-types glbtypes))
                (dolist (type (append glbtypes internal-types))
-                  (setf (type-bit-code type) nil))
+                  (setf (ltype-bit-code type) nil))
                (or glbp glbtypes)))
          glbp)))
 
@@ -647,11 +647,11 @@
    (let ((n ntypes))
       (labels
          ((assign-type-bit-codes1 (type)
-            (let ((code (type-bit-code type)))
+            (let ((code (ltype-bit-code type)))
                (unless code
                   (setq code (make-bit-code ntypes))
-                  (setf (type-bit-code type) code)
-                  (dolist (d-name (type-daughters type))
+                  (setf (ltype-bit-code type) code)
+                  (dolist (d-name (ltype-daughters type))
                      (let ((d (get-type-entry d-name)))
                         (when (member d types :test #'eq)
                            (setq code
@@ -681,15 +681,15 @@
                  ((null t2))
                (setq code-zero-p
                   (bit-code-and-zero-p
-                     (type-bit-code (car t1)) (type-bit-code (car t2)) temp))
+                     (ltype-bit-code (car t1)) (ltype-bit-code (car t2)) temp))
                (when (and (not code-zero-p)
                           (not (lookup-type-from-bits temp)))
                   (let* ((name (make-glb-name nil))
-                         (new-type-entry (make-type :name name :glbp t)))
+                         (new-type-entry (make-ltype :name name :glbp t)))
                      (when *display-glb-messages*
 	                (format t "~%Fixing ~A and ~A with ~A" 
 		           (car t1) (car t2) new-type-entry))
-                     (setf (type-bit-code new-type-entry) temp)
+                     (setf (ltype-bit-code new-type-entry) temp)
                      (push new-type-entry
                         (get-bit-coded-type *bit-coded-type-table* temp))
                      (push new-type-entry glbtypes)
@@ -707,7 +707,7 @@
          (dolist (entry all-types)
             (unless (eq entry glbtype-entry)
                (cond
-                  ((bit-code-subsume-p (type-bit-code glbtype-entry) (type-bit-code entry))
+                  ((bit-code-subsume-p (ltype-bit-code glbtype-entry) (ltype-bit-code entry))
                      ;; entry is a descendent of glbtype - try and add it to the current
                      ;; highest disjoint set of descendants. If it subsumes any elements
                      ;; of the set, replace one of them and delete rest. If it's subsumed
@@ -719,14 +719,14 @@
                           (unless replacedp (push entry daughters)))
                         (cond
                            ((bit-code-subsume-p
-                               (type-bit-code entry) (type-bit-code (car tail)))
+                               (ltype-bit-code entry) (ltype-bit-code (car tail)))
                               (setf (car tail) (if replacedp nil entry))
                               (setq replacedp t))
                            ((and (not replacedp)
                                (bit-code-subsume-p
-                                  (type-bit-code (car tail)) (type-bit-code entry)))
+                                  (ltype-bit-code (car tail)) (ltype-bit-code entry)))
                               (return)))))
-                  ((bit-code-subsume-p (type-bit-code entry) (type-bit-code glbtype-entry))
+                  ((bit-code-subsume-p (ltype-bit-code entry) (ltype-bit-code glbtype-entry))
                      ;; entry is an ancestor of glbtype - try and add it to lowest
                      ;; disjoint set of ancestors
                      (do ((tail parents (cdr tail))
@@ -736,33 +736,33 @@
                           (unless replacedp (push entry parents)))
                         (cond
                            ((bit-code-subsume-p
-                               (type-bit-code (car tail)) (type-bit-code entry))
+                               (ltype-bit-code (car tail)) (ltype-bit-code entry))
                               (setf (car tail) (if replacedp nil entry))
                               (setq replacedp t))
                            ((and (not replacedp)
                                (bit-code-subsume-p
-                                  (type-bit-code entry) (type-bit-code (car tail))))
+                                  (ltype-bit-code entry) (ltype-bit-code (car tail))))
                               (return))))))))
          (insert-new-type-into-hierarchy
-            (type-name glbtype-entry) glbtype-entry parents daughters))))
+            (ltype-name glbtype-entry) glbtype-entry parents daughters))))
 
 
 (defun insert-new-type-into-hierarchy (new-type new-type-entry parents daughters)
    ;; ancestors and descendants are updated later in a single pass
-   (let ((daughter-names (mapcar #'type-name daughters))
-         (parent-names (mapcar #'type-name parents)))
+   (let ((daughter-names (mapcar #'ltype-name daughters))
+         (parent-names (mapcar #'ltype-name parents)))
       (create-mark-field new-type-entry)
       (set-type-entry new-type new-type-entry)   
-      (setf (type-daughters new-type-entry) daughter-names)
-      (setf (type-parents new-type-entry) parent-names)
+      (setf (ltype-daughters new-type-entry) daughter-names)
+      (setf (ltype-parents new-type-entry) parent-names)
       (dolist (daughter daughters)
-         (setf (type-parents daughter)
-            (set-difference (type-parents daughter) parent-names :test #'eq))
-         (pushnew new-type (type-parents daughter) :test #'eq))
+         (setf (ltype-parents daughter)
+            (set-difference (ltype-parents daughter) parent-names :test #'eq))
+         (pushnew new-type (ltype-parents daughter) :test #'eq))
       (dolist (parent parents)
-         (setf (type-daughters parent)
-            (set-difference (type-daughters parent) daughter-names :test #'eq))
-         (pushnew new-type (type-daughters parent) :test #'eq))
+         (setf (ltype-daughters parent)
+            (set-difference (ltype-daughters parent) daughter-names :test #'eq))
+         (pushnew new-type (ltype-daughters parent) :test #'eq))
       (push new-type *ordered-glbtype-list*)
       (push new-type *type-names*)
       new-type-entry))
@@ -777,7 +777,7 @@
                      (loop for dtr in dtrs
                          append
                          (let ((dtr-entry (get-type-entry dtr)))
-                           (if (type-glbp dtr-entry)
+                           (if (ltype-glbp dtr-entry)
                              (find-other-daughters dtr-entry)
                              (list dtr))))))                         
          (new-name-str
@@ -822,27 +822,27 @@
 (defun determine-atomic-types nil 
   (dolist (node *type-names*)
     (let ((type-entry (get-type-entry node)))
-      (let ((constraint-spec (type-constraint-spec type-entry)))
+      (let ((constraint-spec (ltype-constraint-spec type-entry)))
 	(unless (leaf-type-p type-entry)
-	  (setf (type-atomic-p type-entry)
+	  (setf (ltype-atomic-p type-entry)
 	    (not 
 	     (or constraint-spec
-		 (some #'type-constraint-spec
-		       (type-ancestors type-entry))
+		 (some #'ltype-constraint-spec
+		       (ltype-ancestors type-entry))
 		 (some #'(lambda (daughter)
-			   (or (type-constraint-spec daughter)
-			       (some #'type-constraint-spec
-				     (type-ancestors daughter))))
-		       (type-descendants type-entry))))))))))
+			   (or (ltype-constraint-spec daughter)
+			       (some #'ltype-constraint-spec
+				     (ltype-ancestors daughter))))
+		       (ltype-descendants type-entry))))))))))
 
 
 (defun expand-constraint (node type-entry)
    (cond
-      ((seen-node-p type-entry) (type-inherited-constraint type-entry))
+      ((seen-node-p type-entry) (ltype-inherited-constraint type-entry))
       (t
          (mark-node-seen type-entry)
          (let* ((*unify-debug-cycles* t) ; turn on cyclic dag warning messages
-                (constraint-spec (type-constraint-spec type-entry))
+                (constraint-spec (ltype-constraint-spec type-entry))
                 (local-constraint 
                   (if constraint-spec (process-unifications constraint-spec))))
             (cond ((and constraint-spec (null local-constraint))
@@ -858,7 +858,7 @@
                               node node))
                         (setq local-constraint 
                           (destructively-retype-dag local-constraint node))
-                        (setf (type-local-constraint type-entry) 
+                        (setf (ltype-local-constraint type-entry) 
                           local-constraint)
                         (let ((local-appfeats 
                                  (top-level-features-of local-constraint)))
@@ -871,8 +871,8 @@
                               (inherit-constraints node type-entry local-constraint)))
                         (cond 
                            (full-constraint
-                              (setf (type-inherited-constraint type-entry) full-constraint)
-                              (setf (type-appfeats type-entry)
+                              (setf (ltype-inherited-constraint type-entry) full-constraint)
+                              (setf (ltype-appfeats type-entry)
                                  (top-level-features-of full-constraint))
                               full-constraint)
                            (t (format t "~%Type ~A's constraint ~
@@ -881,12 +881,12 @@
 
 
 (defun inherit-constraints (node type-entry local-constraint)
-  (if (type-atomic-p type-entry)
+  (if (ltype-atomic-p type-entry)
       (create-typed-dag node)
     (let ((supers 
 	   (mapcar #'(lambda (parent)
 		       (expand-constraint parent (get-type-entry parent)))
-                   (type-parents type-entry))))
+                   (ltype-parents type-entry))))
       (with-unification-context (nil)
         (let ((result
 	 (reduce #'(lambda (x y) (when (and x y) 
@@ -963,8 +963,8 @@
                     expansion sequence: ~A"  type-name
                  *well-formed-trace*))
         (push type-name *well-formed-trace*)
-        (if (type-appfeats type-entry)
-          (let ((new-dag (type-inherited-constraint type-entry)))
+        (if (ltype-appfeats type-entry)
+          (let ((new-dag (ltype-inherited-constraint type-entry)))
             ;; !!! outside here must stay within current generation
             (let ((*unify-generation* *unify-generation*)
                   (*within-unification-context-p* t))
@@ -975,22 +975,22 @@
                   (if (really-make-features-well-formed new-dag nil type-name)
                       (let ((res (copy-dag new-dag)))
                         (if res
-                            (setf (type-constraint type-entry) res)
+                            (setf (ltype-constraint type-entry) res)
                           (format t "~%Warning: cycle in well-formed constraint for ~A" type-name)))
                     nil)
                     ;; (format t "~%Warning: cannot make constraint for ~A well-formed" type-name))
                     ;; warning msg is excessive
                 (invalidate-marks)
                 )))
-          (setf (type-constraint type-entry)
-            (type-inherited-constraint type-entry)))
+          (setf (ltype-constraint type-entry)
+            (ltype-inherited-constraint type-entry)))
         (mark-node-seen type-entry))
     ;; (print (list '< 'wf-constraint-of type-name))
-    (when (type-constraint type-entry)
-      (setf (type-inherited-constraint type-entry) nil))
+    (when (ltype-constraint type-entry)
+      (setf (ltype-inherited-constraint type-entry) nil))
     ;;; strong typing has worked, so save some space - otherwise leave 
     ;;; the old structure around for debugging
-    (type-constraint type-entry)))                   
+    (ltype-constraint type-entry)))                   
 
 ;;; Make appfeats order equivalent so that display is consistent. Mostly
 ;;; will have same features as parent and be ordered the same already. If not,
@@ -1007,10 +1007,10 @@
    (let* ((type-record (get-type-entry type))
           (already-ordered-p t)
           (ordered-features 
-             (if (every #'eq (type-appfeats type-record) parent-feature-order)
-                (type-appfeats type-record)
+             (if (every #'eq (ltype-appfeats type-record) parent-feature-order)
+                (ltype-appfeats type-record)
                 (let ((parent-ordered nil)
-                      (appfeats (cons nil (type-appfeats type-record))))
+                      (appfeats (cons nil (ltype-appfeats type-record))))
                    (setq already-ordered-p nil)
                    (dolist
                       (parent-feat parent-feature-order
@@ -1029,15 +1029,15 @@
                (fix-feature-ordering ordered-features
                                      *feature-ordering*)
              ordered-features)))
-      (setf (type-appfeats type-record) sorted-ordered-features)
+      (setf (ltype-appfeats type-record) sorted-ordered-features)
       ;; don't process children if this type 
       ;; has been visited previously and its
       ;; feature ordering wasn't changed this time around
       ;(print (list type already-ordered-p (seen-node-p type-record)))
       (unless (and already-ordered-p (seen-node-p type-record))
          (mark-node-seen type-record)
-         (unless (type-enumerated-p type-record)
-            (loop for daughter in (type-daughters type-record)
+         (unless (ltype-enumerated-p type-record)
+            (loop for daughter in (ltype-daughters type-record)
                do
                (inherit-display-ordering daughter sorted-ordered-features))))))
 
@@ -1088,12 +1088,12 @@
       ok))
 
 (defun expand-default-constraint (node type-entry)
-   (cond ((seen-node-p type-entry) (type-tdfs type-entry))
+   (cond ((seen-node-p type-entry) (ltype-tdfs type-entry))
       (t
          (mark-node-seen type-entry)
-         (let* ((indef (type-constraint type-entry))
+         (let* ((indef (ltype-constraint type-entry))
                 (full-tdfs nil)
-                (default-specs (type-default-spec type-entry))
+                (default-specs (ltype-default-spec type-entry))
                 (default-fss
                     (loop for default-spec in default-specs
                          collect
@@ -1104,7 +1104,7 @@
                        (construct-tdfs 
                         indef
                         default-fss)))
-               (setf (type-tdfs type-entry) full-tdfs)
+               (setf (ltype-tdfs type-entry) full-tdfs)
                full-tdfs))))
 
 (defun make-equivalent-persistence-defaults (indef persistence default-spec node)
@@ -1145,11 +1145,11 @@
   (let* ((type (type-of-fs dag))
 	 (type-entry (get-type-entry type)))
     (when type-entry
-      (let ((tdfs (type-tdfs type-entry)))
+      (let ((tdfs (ltype-tdfs type-entry)))
 	(when (and tdfs
 		   (tdfs-tail tdfs))
 	  (format t "~%Default constraint on ~A ignored in ~A"
-		  (type-name type-entry) node)))
+		  (ltype-name type-entry) node)))
       (dolist (arc (dag-arcs dag))
 	(collect-tails node (dag-arc-value arc))))))
 
@@ -1157,7 +1157,7 @@
 ;;;  (collect-tails node (tdfs-indef local-tdfs))
   (declare (ignore node))
   (let ((current-tail (tdfs-tail local-tdfs)))
-    (loop for parent in (type-parents type-entry)
+    (loop for parent in (ltype-parents type-entry)
          do
          (let ((parent-tdfs (expand-default-constraint parent
                                  (get-type-entry parent))))
