@@ -1,0 +1,25 @@
+#!/bin/sh
+#
+# wrapper script around LKB binary to set LD_ASSUME_KERNEL environment
+# variable on RedHat 9.x (and similar distributions) systems; may or may
+# not work on earlier Linux versions.  see 
+#
+#   http://www.franz.com/support/patches/log/#update_fasl_7
+#
+# for a discussion of the issues involved.  as of 15-jul-03, LKB binaries for
+# Linux are built with patch `p8a007.001' only (further investigation of the
+# portability issues pending).
+#
+# _fix_me_
+# there should be a portable way of working out the libc version and deciding
+# on whether this is necessary or not, such that the same script could be used
+# on all (Un*x) platforms.                                   (15-jul-03; oe)
+#
+
+LD_ASSUME_KERNEL=2.2.5
+
+path=`dirname $0`
+if [ "{path}" = "." ]; then
+  path=`pwd`
+fi
+exec ${path}/lkb "$@"
