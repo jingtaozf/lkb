@@ -77,7 +77,8 @@
 ;;; constructing this will be formalism specific
 
 (defstruct word-info
-  lemma ;; need to downcase
+  lemma ;; preserves case in this structure
+        ;; currently always downcased before use
   pos
   from
   to)
@@ -533,8 +534,11 @@ goes to
               :val (if (var-p val)
                        (generate-new-var val)
                      (if (dummy-constant-p val)
-                         (word-info-lemma lex) ; for constants in names etc
-                     val)))))
+                         (string-downcase (word-info-lemma lex))
+					; for constants in names etc
+					; downcased, but may revisit
+		                        ; this
+		       val)))))
      :in-groups
      (loop for old-ing in (semstruct-in-groups semstruct)
          collect
