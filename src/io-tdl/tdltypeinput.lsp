@@ -83,6 +83,13 @@
       (set-up-type-interactions)
       t))
 
+(defun read-tdl-leaf-type-file-aux (file-name)
+  (let ((*readtable* (make-tdl-break-table))
+        (*leaf-type-addition* t))
+      (with-open-file 
+         (istream file-name :direction :input)
+         (format t "~%Reading in leaf type file")
+         (read-tdl-type-stream istream))))
 
 (defun read-tdl-type-files-aux (file-names &optional settings-file)
    (clear-types)

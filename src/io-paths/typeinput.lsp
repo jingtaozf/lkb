@@ -111,7 +111,22 @@
       (set-up-type-interactions)
       t))
 
+(defun read-leaf-type-file nil
+  (let* ((file-name 
+          (ask-user-for-existing-pathname "Leaf type file?")))
+    (when file-name
+      (if (eql *lkb-system-version* :page)
+          (read-tdl-leaf-type-file-aux file-name)
+        (read-leaf-type-file-aux file-name)))))
 
+(defun read-leaf-type-file-aux (file-name)
+  (let ((*readtable* (define-break-characters 
+                         '(#\; #\< #\> #\= #\: #\. #\/)))
+        (*leaf-type-addition* t))
+      (with-open-file 
+         (istream file-name :direction :input)
+         (format t "~%Reading in leaf type file")
+         (read-type-stream istream))))
              
 (defun read-type-stream (istream)
    (loop

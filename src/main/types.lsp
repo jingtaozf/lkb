@@ -16,12 +16,12 @@
 ;;; constraint - a feature structure stored either in a fully
 ;;;              expanded form or just as the feature structure 
 ;;;              specific to the type
-;;; constraint-mark - unification generation last time the constraint
-;;;                   was returned not completely-copied
 ;;; tdfs -       the full typed default feature structure constraint
 ;;;
 ;;; For implementation purposes we also have:
 ;;;
+;;; constraint-mark - unification generation last time the constraint
+;;;                   was returned not completely-copied
 ;;; daughters - immediate subtypes - a set of types.
 ;;; appfeats - appropriate features - a set of features which can be
 ;;; derived from the constraint (top-level-features-of constraint)
@@ -31,17 +31,18 @@
 ;;; constraint-spec - the user specified unifications
 ;;; default-spec - the user specified default unifications
 ;;; local constraint - the fs derived from the user specified 
-;;; unifications
+;;;                    unifications
 ;;; atomic-p - t if the type has no appropriate features and none of
-;;; its subtypes have any appropriate features
+;;;            its subtypes have any appropriate features
 ;;; July 1996 
 ;;; glbp - t if type was automatically created
 ;;; May 1997
 ;;; descendants - for glb stuff
 ;;; Feb 1998
 ;;; template-parents - hack so that if multiple parents are
-;;; specified, all but one of them can be treated as a template
-;;; thus simplifying the hierarchy
+;;;        specified, under certain conditions (user-controlled global) 
+;;;        all but one of them can be treated as a template
+;;;        thus simplifying the hierarchy
 
 
 (defstruct type 
@@ -51,7 +52,10 @@
            constraint-spec default-spec local-constraint atomic-p glbp
            descendants
            template-parents
-           shrunk-p visible-p) ; for display in type hierarchy
+           shrunk-p visible-p)          ; for display in type hierarchy
+
+(defstruct (leaf-type (:include type))
+  (expanded-p nil))
         
 (defvar *types* (make-hash-table :test #'eq))
 
@@ -61,11 +65,14 @@
 (defvar *lexicon-changed* nil)
 (defvar *sign-types* nil)
 
+(defvar *leaf-types* nil)
+
 (defun clear-types nil
    (disable-type-interactions)
    (setf *toptype* nil)
    (setf *sign-types* nil)
    (clrhash *types*)
+   (setf *leaf-types* nil)
    (clear-type-cache)
    (clear-feature-table)
    (clear-expanded-lex))
@@ -154,6 +161,11 @@
 
 (defun set-type-entry (name new-entry)
    (setf (gethash name *types*) new-entry))
+
+(defun remove-type-entry (name)
+  ;;; effectively invalidates type but
+  ;;; assumes all the tricky stuff is taken care of elsewhere ...
+   (setf (gethash name *types*) nil))
 
 (defun constraint-spec-of (type-name)
    (let ((type-record (get-type-entry type-name)))

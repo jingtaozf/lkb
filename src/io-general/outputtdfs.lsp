@@ -35,9 +35,12 @@
                  (apply #'max
                        (for tail-element in tail
                             collect
-                            (display-tail tail-element stream)))))
-         (max indef-width def-width
-                tail-width)))
+                            (display-tail tail-element stream))))) 
+         (apply #'max 
+                (cons 0 (for val in (list indef-width def-width
+                                          tail-width)
+                             filter
+                             (if (integerp val) val))))))
 
 ;;; tails are displayed as
 ;;; specificity:  < path > = type

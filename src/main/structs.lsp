@@ -106,9 +106,52 @@
      (append old-tvp-list (list new-tvp)))))
    
 
+(defun get-unif-features (unif)
+  (if (basic-unification-p unif)
+      (append (get-path-features (basic-unification-lhs unif))
+              (get-path-features (basic-unification-rhs unif)))))
+
+(defun get-path-features (path)
+  ;;; returns nil if called on a non-path
+  (if (path-p path)
+      (path-typed-feature-list path)
+    (if (typed-path-p path)
+        (for fvp in (typed-path-typed-feature-list path)
+             collect
+             (type-feature-pair-feature fvp)))))
+
+(defun eval-any-leaf-types (unifs)
+  (for unif in unifs
+       do
+       (when (basic-unification-p unif)
+              (eval-unif-half-types (basic-unification-lhs unif))
+              (eval-unif-half-types (basic-unification-rhs unif)))))
+
+(defun eval-unif-half-types (path-or-value)
+  (cond ((path-p path-or-value) nil)
+        ((u-value-p path-or-value) 
+         (for type in (u-value-types path-or-value)
+              do
+              (eval-possible-leaf-type type)))
+        ((typed-path-p path-or-value)
+         (for fvp in (typed-path-typed-feature-list path-or-value)
+              do
+              (eval-possible-leaf-type
+               (type-feature-pair-type fvp))))
+        (t nil)))
+
+(defun eval-possible-leaf-type (type)
+  (let ((type-entry (get-type-entry type)))
+    (when type-entry
+      (when (leaf-type-p type-entry)
+        (unless (leaf-type-expanded-p type-entry)
+          (add-in-leaf-type-entry type-entry))))))
+
 (defun process-unifications (specific-list)
    ;; if create-wffs-p then create-wffs is called to finish off - if
-   ;; it fails then second value of just the non-wff fs is returned
+  ;; it fails then second value of just the non-wff fs is returned
+  (when *leaf-types*
+    (eval-any-leaf-types specific-list))
    (if specific-list
       (let ((new-dag (create-dag)))
          (with-unification-context (new-dag)

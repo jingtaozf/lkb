@@ -1,9 +1,6 @@
 ;;; Copyright Ann Copestake 1991-1997 All Rights Reserved.
 ;;; No use or redistribution without permission.
 ;;; 
-;;; April 1997 - combined glb check and YADU functionality
-;;;            - removed expand-type-table (redundant since
-;;;              checking is so quick
 
 ;;; Checking the type hierarchy to see if it meets 
 ;;; the various constraints
@@ -46,8 +43,12 @@
 
 ;;; Functions to set up type hierarchy from an input file
 
+(defparameter *leaf-type-addition* nil)
+
 (defun add-type-from-file (name parents constraint default comment &optional daughters)
   ;;; YADU --- extra arg needed
+  (if *leaf-type-addition*
+      (add-leaf-type name parents constraint default comment daughters)
   (let ((existing-type (get-type-entry name))
         (real-parents nil)
         (template-parents nil))
@@ -78,7 +79,7 @@
                   *toptype* name))
             (setf *toptype* name))
          (set-type-entry name
-            new-type))))
+            new-type)))))
 
 (defun amend-type-from-file (name parents constraint default comment)
    (declare (ignore parents))
@@ -331,19 +332,6 @@
                         (car (type-daughters type-entry))))))
                *types*)
             ok))
-
-#|
-(defun set-up-descendants (type)
-  (let ((type-entry (get-type-entry type)))
-    (setf (type-descendants type-entry)
-          (get-descendants type-entry))
-    (for daughter in (type-daughters type-entry)
-         do 
-         (set-up-descendants daughter))))
-|#
-
-;;; The original version of this runs in quadratic time, but it ought
-;;; to be linear.
 
 (defun set-up-descendants (type)
   (let* ((type-entry (get-type-entry type))
@@ -727,10 +715,12 @@
                            (or (eq (type-of-fs local-constraint) *toptype*)
                               (eq (type-of-fs local-constraint) node))
                            (format t 
-                              "~%Warning: setting constraint of ~A to have ~A as type"
+                                   "~%Warning: setting constraint of ~A to have ~A as type"
                               node node))
-                        (setq local-constraint (retype-dag local-constraint node))
-                        (setf (type-local-constraint type-entry) local-constraint)
+                        (setq local-constraint 
+                          (destructively-retype-dag local-constraint node))
+                        (setf (type-local-constraint type-entry) 
+                          local-constraint)
                         (let ((local-appfeats 
                                  (top-level-features-of local-constraint)))
                            (for feature in local-appfeats

@@ -190,15 +190,7 @@
                             (pushnew id 
                                      (gethash (string-upcase orth-el) 
                                               *lexical-entries*))))))
-    (setf *psorts-stream*
-          (open *psorts-temp-file* 
-                :direction :io
-                :if-exists :append
-                :if-does-not-exist :create))
-    (unless (and (input-stream-p *psorts-stream*)
-                 (output-stream-p *psorts-stream*))
-      (error "~%Failed to open temporary file correctly" 
-             *psorts-temp-file*))))
+    (check-for-open-psorts-stream)))
 
 
 

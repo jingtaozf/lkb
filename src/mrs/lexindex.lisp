@@ -117,24 +117,16 @@
 
 (defun extract-lex-rule-rels (id fs)
   (let* ((main-semantics-fs (path-value fs *main-semantics-path*))
-         (main-semantics-last (path-value fs
-                                           (append (butlast *main-semantics-path*)
-                                                   *last-path*)))
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 
-                         main-semantics-fs id main-semantics-last
-                        *main-semantics-path*)))
+                         main-semantics-fs id)))
 ; alternate semantics should never be relevant for
 ; lexical or grammar rules
          (message-semantics-fs (path-value fs *message-semantics-path*))
-         (message-semantics-last (path-value fs
-                                             (append (butlast *message-semantics-path*)
-                                                     *last-path*)))
          (message-rels
           (if message-semantics-fs
               (extract-relations-from-liszt 
-               message-semantics-fs id message-semantics-last 
-               *message-semantics-path*))))
+               message-semantics-fs id))))
     (if (or main-rels message-rels)
         (let* ((new-record
                 (make-semantics-record
@@ -168,33 +160,22 @@
   (setf *grule-rel-index* nil))
 
 (defun extract-grammar-rule-rels (id fs)
-  (let* ((construction-semantics-fs (path-value fs *construction-semantics-path*))
-         (construction-semantics-last (path-value fs
-                                           (append (butlast *construction-semantics-path*)
-                                                   *last-path*)))
+  (let* ((construction-semantics-fs 
+          (path-value fs *construction-semantics-path*))
          (construction-rels (if construction-semantics-fs
                         (extract-relations-from-liszt 
-                         construction-semantics-fs id construction-semantics-last
-                        *construction-semantics-path*)))
+                         construction-semantics-fs id)))
          (main-semantics-fs (path-value fs *main-semantics-path*))
-         (main-semantics-last (path-value fs
-                                           (append (butlast *main-semantics-path*)
-                                                   *last-path*)))
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 
-                         main-semantics-fs id main-semantics-last
-                        *main-semantics-path*)))
+                         main-semantics-fs id)))
 ; alternate semantics should never be relevant for
 ; lexical or grammar rules
          (message-semantics-fs (path-value fs *message-semantics-path*))
-         (message-semantics-last (path-value fs
-                                             (append (butlast *message-semantics-path*)
-                                                     *last-path*)))
          (message-rels
           (if message-semantics-fs
               (extract-relations-from-liszt 
-               message-semantics-fs id message-semantics-last 
-               *message-semantics-path*))))
+               message-semantics-fs id))))
     (if (or main-rels message-rels construction-rels)
         (let* ((new-record
                 (make-semantics-record

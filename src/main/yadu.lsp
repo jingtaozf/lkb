@@ -173,7 +173,7 @@
                   (break "inside yadu defaults")
                   result)
               (make-tdfs :indef indef12
-                         :tail nil)))))
+                         :tail (or tail1 tail2))))))
 
 (defun yadu-winner (tdfs)
   (let ((indef (tdfs-indef tdfs))

@@ -547,41 +547,41 @@ at this point).
 |#
 
 (defun check-lex-retrieval nil
-  (setf main::*VM-arg-roles-only-p* nil)
-  (time
-   (for parse-res in *parse-record*
-        do
-        (let* ((lrules-and-entries-used (collect-parse-base parse-res))
-               (mrs (car (mrs::extract-mrs (list parse-res)))))
-          (let
-               ((identified-entry-sets
-                (mrs::collect-lex-entries-from-mrs mrs)))
-          (mrs::output-mrs mrs 'mrs::simple)
-          (let ((retrieved-ids
-                 (for res in identified-entry-sets
-                      collect
-                      (mrs::found-lex-lex-id (car res))))
-                (overgen nil)
-                (undergen nil))
-            (for id in retrieved-ids
-                 do
-                 (unless
-                     (member id lrules-and-entries-used :key #'car)
-                   (push id overgen)))
-            (for id-and-rules in lrules-and-entries-used
-                 do
-                 (unless
-                     (member (car id-and-rules) retrieved-ids)
-                   (push (car id-and-rules) undergen)))
-            (when undergen
-                (format t "~%Entries not retrieved ~{~A ~}" undergen)) 
-            (when overgen
-                (format t "~%Extra entries retrieved  ~{~A ~}" overgen))))))))
+  (let ((main::*VM-arg-roles-only-p* nil))
+    (time
+     (for parse-res in *parse-record*
+          do
+          (let* ((lrules-and-entries-used (collect-parse-base parse-res))
+                 (mrs (car (mrs::extract-mrs (list parse-res)))))
+            (let
+                ((identified-entry-sets
+                  (mrs::collect-lex-entries-from-mrs mrs)))
+              (mrs::output-mrs mrs 'mrs::simple)
+              (let ((retrieved-ids
+                     (for res in identified-entry-sets
+                          collect
+                          (mrs::found-lex-lex-id (car res))))
+                    (overgen nil)
+                    (undergen nil))
+                (for id in retrieved-ids
+                     do
+                     (unless
+                         (member id lrules-and-entries-used :key #'car)
+                       (push id overgen)))
+                (for id-and-rules in lrules-and-entries-used
+                     do
+                     (unless
+                         (member (car id-and-rules) retrieved-ids)
+                       (push (car id-and-rules) undergen)))
+                (when undergen
+                  (format t "~%Entries not retrieved ~{~A ~}" undergen)) 
+                (when overgen
+                  (format t "~%Extra entries retrieved  ~{~A ~}" overgen)))))))))
 
 ;;; needs to be made more sophisticated to deal with lex rules etc
 
 (defun quick-check-lex-retrieval nil
-     (setf main::*VM-arg-roles-only-p* nil)
+   (let ((main::*VM-arg-roles-only-p* nil))
      (for parse-res in *parse-record*
         do
         (let ((mrs (car (mrs::extract-mrs (list parse-res)))))
@@ -594,9 +594,17 @@ at this point).
                (for item in res
                     do
                     (format t "~A ~A " (mrs::found-lex-lex-id item)
-                                       (mrs::found-lex-rule-list item))))))))
-;                    (display-basic-fs (mrs::found-lex-inst-fs item)
-;                                      (string (mrs::found-lex-lex-id item)))
+                                       (mrs::found-lex-rule-list item))
+                    (display-dag 
+                     (existing-dag-at-end-of 
+                      (tdfs-indef (mrs::found-lex-inst-fs item)) 
+                      mrs::*main-semantics-path*) 'simple))))))))
+
+
+
+                    
+
+
 
 
 

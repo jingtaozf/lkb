@@ -816,6 +816,9 @@
          dag)
       (with-unification-context (dag) (retype-dag dag new-type) (copy-dag dag))))
 
+(defun destructively-retype-dag (dag new-type)
+  (setf (dag-type dag) new-type)
+  dag)
 
 
 ;;; **********************************************************************
