@@ -1,25 +1,11 @@
--- DROP TABLE meta CASCADE;
--- DROP TABLE revision CASCADE;
--- DROP TABLE multi CASCADE;
--- DROP TABLE current_grammar CASCADE;
--- DROP TABLE temp CASCADE;
--- DROP TABLE multi_temp CASCADE;
--- DROP TABLE qry CASCADE;
--- DROP TABLE qrya CASCADE;
-
--- DROP VIEW revision_active CASCADE;
--- DROP VIEW multi_revision_active CASCADE;
--- DROP VIEW active CASCADE;
-
 --- postgres optimization is poor...
 ALTER DATABASE lingo SET enable_seqscan TO off;
-
 
 CREATE TABLE meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO meta VALUES ('db-version', '1.8');
+INSERT INTO meta VALUES ('db-version', '1.9');
 INSERT INTO meta VALUES ('filter', 'TRUE');
 
 ---
@@ -232,9 +218,9 @@ INSERT INTO current_grammar
    LIMIT 1;' );
 
 INSERT INTO qrya VALUES ( 'set-current-view', 0, 'where-subcls' );
-INSERT INTO qrya VALUES ( 'set-current-view', 1, 'text' );
+-- INSERT INTO qrya VALUES ( 'set-current-view', 1, 'text' );
 INSERT INTO qry VALUES 
-       ( 'set-current-view', 2, 
+       ( 'set-current-view', 1, 
        '
 DROP VIEW active;
 DROP VIEW revision_active;
@@ -266,7 +252,7 @@ CREATE VIEW multi_revision_active
 
 CREATE VIEW active
  AS SELECT * FROM revision_active UNION SELECT * FROM multi_revision_active;
-UPDATE meta SET val=$1 WHERE var=''filter'';
+UPDATE meta SET val=$0:text WHERE var=''filter'';
 ' );
 
 INSERT INTO qrya VALUES ( 'merge-into-db', 0, 'text' );
@@ -365,7 +351,6 @@ PRIMARY KEY (mode,slot, field)
 
 DELETE FROM defn WHERE mode = 'erg';
 INSERT INTO defn VALUES ( 'erg', 'id', 'name', '', 'symbol' );
--- INSERT INTO defn VALUES ( 'erg', 'sense-id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'erg', 'orth', 'orthography', '', 'string-list' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'type', 'nil', 'symbol' );
 INSERT INTO defn VALUES ( 'erg', 'unifs', 'orthography', '(stem)', 'string-fs' );
@@ -379,7 +364,6 @@ INSERT INTO defn VALUES ( 'erg', 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)
 
 DELETE FROM defn WHERE mode = 'mwe';
 INSERT INTO defn VALUES ( 'mwe', 'id', 'name', '', 'symbol' );
--- INSERT INTO defn VALUES ( 'mwe', 'sense-id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'orth', 'orthography', '', 'string-list' ); 
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'type', 'nil', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'orthography', '(orth)', 'string-diff-fs' ); -- DIFF LIST

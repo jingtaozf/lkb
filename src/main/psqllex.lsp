@@ -4,7 +4,7 @@
 
 ;;; modifications by bmw (aug-03)
 ;;; - fixed code broken by *lexicon*-related changes
-;;; - elaboration of embedded sql code
+;;; - default types of embedded sql fn args may be overridden
 
 ;;; aac (aug-12-03)
 ;;; initialisation now sets to *lexicon* regardless 
@@ -46,7 +46,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "1.8")
+(defvar *psql-db-version* "1.9")
 (defvar *psql-port-default* nil)
 
 (defvar *tmp-lexicon* nil)
@@ -60,10 +60,8 @@
 (defvar *current-lang* nil)
 (defvar *current-country* nil)
 
+;; obsolete...
 (defun open-psql-lex (&rest rest)
-  ;; should no longer be required
-  ;;(set-temporary-lexicon-filenames)
-  ;;(read-cached-lex-if-available nil)
   (apply 'initialize-psql-lexicon rest))
 
 					;: set up connection
@@ -99,17 +97,11 @@
       (retrieve-fn-defns lexicon)
       (when *psql-lexicon* (clear-lex *psql-lexicon*))
       (setf *psql-lexicon* lexicon)
-;      (when 
-;          (equal (fn-get-val lexicon ''current-grammar-up-to-date-p) "t")
       (fn-get-records lexicon 
 		      ''set-current-view 
 		      (get-filter *psql-lexicon*)
-		      ;(sql-embedded-str (get-filter *psql-lexicon*))
-		      (get-filter *psql-lexicon*)
 		      )
-      ;(fn-get-records lexicon ''update-current-grammar)
       (fn-get-records lexicon ''initialize-current-grammar)
-;	)
 	(setf *lexicon* *psql-lexicon*))
      (t
       (error 
@@ -198,7 +190,7 @@
   (setf (host lexicon) nil)
   (setf (user lexicon) nil)
   (setf (password lexicon) nil)
-  (setf (fns lexicon) nil)) ;:todo: unbind function
+  (setf (fns lexicon) nil)) ;:todo: unbind functions
 
 ;;;
 ;;; --- psql-database methods
@@ -228,7 +220,7 @@
   (with-slots (port host dbname connection) lexicon
     (let ((decoded-status nil)
 	  (password nil))
-					;: attempt connection w/o pwd
+      ;; attempt connection w/o pwd
       (setf connection (connect-aux2 :port port :host host :dbname dbname :user user))
       (setf decoded-status (pg:decode-connection-status (pg:status connection)))
       (unless (eq decoded-status :connection-ok)
@@ -362,7 +354,6 @@
 (defun sql-val-list-str (symb-list psql-le)
   (if (null symb-list) (error (format nil "non-null list expected")))
   (let ((stream (make-string-output-stream)))
-    ;(format stream "(")
     (format stream "~a" (make-sql-val-str 
 			 (slot-value psql-le (pop symb-list))))
     (loop 
@@ -370,7 +361,6 @@
 	do 
 	  (format stream ",~a" (make-sql-val-str 
 				(slot-value psql-le (pop symb-list)))))
-    ;(format stream ")")
     (get-output-stream-string stream)))
 
 ;;; create val string for SQL query
@@ -509,8 +499,6 @@
 
 ;;; really necessary?
 ;;; (used to index for generator)
-;;; for compliance with other lexical sources, lex-words() is expected to
-;;; return "ad" and "hoc" separately, rather than just "ad hoc"; (done)
 ;;; fix_me: inefficient implementation
 (defmethod lex-words ((lexicon psql-lex-database))
   (let* (
@@ -639,7 +627,6 @@
 ;;; redo later...
 ;;; insert lex entry into db
 (defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
-  ;(set-id psql-le lexicon)
   (set-version psql-le lexicon) 
   (if *export-timestamp* (setf (modstamp psql-le) *export-timestamp*))
   (let* ((symb-list 
@@ -883,7 +870,7 @@
 	 (format-cmd (append '(format nil) (car tmp)))
 	 (args (cdr tmp))
 	 (fn-defn (list 'defun fn-name args format-cmd)))
-    ;(print fn-defn)
+    (print fn-defn)
     (eval fn-defn)))
 
 (defun new-fn-name (str)
@@ -908,6 +895,7 @@
       with max-arg = -1
       and arg
       and type
+      and explicit-type-str
       do
 	(setf c (aref str i))
 	(cond 
@@ -928,6 +916,10 @@
 	      (error "too many arguments"))
 	  (setf max-arg (max max-arg arg))
 	  (setf type (cdr (assoc arg type-list)))
+	  (setf explicit-type-str (get-explicit-type str (1+ i)))
+	  (when explicit-type-str
+	    (setf type (str-2-symb explicit-type-str))
+	    (setf i (+ i 1 (length explicit-type-str))))
 	  (cond
 	   ((equal type 'text)
 	    (format stream "'~~a'")
@@ -943,20 +935,22 @@
 	   ((equal type 'where-subcls)
 	    (format stream "~~a")
 	    (push (nth arg arg-vars) args))
-	   ;((equal type 'embedded-str)
-	   ; (format stream "~~a"))
 	   (t
-	    (error "unknown type: ~a" type)))
-	  ;(push (nth arg arg-vars) args)
+	    (error "unknown type: ~A" type)))
 	  (setf i (1+ i)))
 	 (t
 	  (format stream "~a" (aref str i)))))
   (cons (cons (get-output-stream-string stream) (reverse args)) 
-;  (cons (cons (get-output-stream-string stream) 
-;	      (mapcar #'(lambda (x) (list 'sql-embedded-str x)) (reverse args))
-;	      ) 
 	(subseq arg-vars 0 arity))))
 
+(defun get-explicit-type (str i)
+  (let* ((j (1+ i))
+	 (type-str
+	  (and (< (1+ j) (length str))
+	       (eq (aref str j) #\:)
+	       (not (eq (aref str (1+ j)) #\Space))
+	       (subseq str (1+ j) (position #\Space str :start j)))))
+    type-str))
 ;;;
 ;;; --- psql-lex-entry methods and funtions
 ;;;
@@ -993,11 +987,9 @@
                          (cons "New filter?" (get-filter lexicon)))))
     (when filter
       (if (catch 'pg:sql-error 
-            ;(fn-get-records lexicon ''set-current-view filter (sql-embedded-str filter))
-            (fn-get-records lexicon ''set-current-view filter filter)
+            (fn-get-records lexicon ''set-current-view filter)
             )
 	  (set-filter lexicon))
-      ;(fn-get-records lexicon ''initialize-current-grammar)
       )))
 
 (defun set-filter-psql-lexicon nil
