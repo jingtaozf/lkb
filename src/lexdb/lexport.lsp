@@ -358,6 +358,7 @@
     (if (equal (subseq file (- (length file) 4)) ".tdl")
 	(setf tdl-file file))
     (format t "~%Exporting lexicon to TDL file ~a" tdl-file)
+    (force-output)
     (export-to-tdl-to-file lexicon tdl-file))
   (format t "~%Export complete~%"))
 

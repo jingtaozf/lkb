@@ -70,7 +70,7 @@
 (defun postgres-user-temp-dir nil  
     (make-pathname :directory (pathname-directory (lkb-tmp-dir))))
 
-(defvar *psql-db-version* "3.10")
+(defvar *psql-lexdb-compat-version* "3.1")
 (defvar *psql-fns-version* "1.00")
 (defvar *psql-port-default* 5432)
 
@@ -99,7 +99,6 @@
     (if host (setf (host *psql-lexicon*) host))
     (if user (setf (user *psql-lexicon*) user))
     (if port (setf (port *psql-lexicon*) port))
-    ;;(setf (lex-tb *psql-lexicon*) table) ;;unused
     (cond 
      (table
       (setf (fields-tb *psql-lexicon*) table))
@@ -143,6 +142,7 @@
 (defclass psql-database (sql-database)
   ((connection :initform nil :accessor connection :initarg connection)
    (server-version :initform nil :accessor server-version)
+   (lexdb-version :initform nil :accessor lexdb-version)
    (fns :initform nil :accessor fns)))
 
 (defclass psql-lex-database (psql-database external-lex-database)
@@ -225,9 +225,12 @@
     (let ((status 
 	   (pg:decode-connection-status 
 	    (pg:status connection))))
-      (if (eq :connection-ok status)
+      (when (eq :connection-ok status)
 	  (setf (server-version lexicon) 
-	    (get-server-version lexicon))))))
+	    (get-server-version lexicon))
+	  (setf (lexdb-version lexicon) 
+	    (get-db-version lexicon))	
+	))))
 
 (defmethod disconnect ((lexicon psql-database))
   (with-slots (connection) lexicon
@@ -653,7 +656,7 @@
 		  (reverse (cdr (reverse slot-value)))))
 	   :rhs (make-rhs-val (car (last slot-value))))))
    (T (error "unhandled input"))))
-
+  
 (defun make-rhs-val (x)
   (cond
    ((listp x)
@@ -675,54 +678,46 @@
     (if (equal port "")
 	5432
       port)))
-
+ 
 (defmethod open-lex ((lexicon psql-database) &key name parameters)
-  (declare (ignore parameters)) ;; for_now 
-  (close-lex lexicon)    
-  (format t "~%Connecting to lexical database ~a@~a:~a" 
-          (dbname lexicon)
-          (host lexicon)
-          (true-port lexicon))
-  (setf *postgres-tmp-lexicon* lexicon)
-  (cond
-   ((connect lexicon)
-    (format t "~%Connected as user ~a" 
-	    (user lexicon))
-    (format t "~%Opening ~a" (dbname lexicon))
-    (unless (string>= (server-version lexicon) "7.3")
-      (error *trace-output* 
-	     "PostgreSQL server version is ~a. Please upgrade to version 7.4 or above." 
-	     (server-version lexicon)))
-    (let ((dbversion 
-	   (get-db-version lexicon)))
-      (unless (string>= (get-db-version lexicon) 
-                        *psql-db-version*)
-        (if (string>= dbversion "3.00")
-            (error "Your database structures (v. ~a) are out of date.
+  (declare (ignore parameters)) 
+  (with-slots (lexdb-version server-version dbname host user connection) lexicon
+    (close-lex lexicon)    
+    (format t "~%Connecting to lexical database ~a@~a:~a" 
+	    dbname
+	    host
+	    (true-port lexicon))
+    (force-output)
+    (setf *postgres-tmp-lexicon* lexicon)
+    (cond
+     ((connect lexicon)
+      (format t "~%Connected as user ~a" user)
+      (format t "~%Opening ~a" dbname)
+      (unless (string>= server-version "7.3")
+	(error *trace-output* 
+	       "PostgreSQL server version is ~a. Please upgrade to version 7.4 or above." 
+	       server-version))
+      (cond
+       ((not (stringp lexdb-version))
+	(error "Unable to determine LexDB version"))
+       ((string> (compat-version lexdb-version)
+		 *psql-lexdb-compat-version*)
+	(error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax). Try obtaining a more recent LKB binary." lexdb-version *psql-lexdb-compat-version*))
+       ((string< (compat-version lexdb-version)
+		 *psql-lexdb-compat-version*)
+       (error "Your LexDB version (~a) is incompatible with this LKB version (requires v. ~ax).
  You must load updated setup files.
- See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html" 
-		   dbversion 
-		   dbversion)
-          (error "Your database structures (v. ~a) are too out of date.
- You must recreate the database:
-   dump the LexDB entries
-   dropdb ~a
-   follow instructions at http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html
-   merge dumped entries into new database
-" 
-		 dbversion 
-		 (dbname lexicon))))
+ See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html" lexdb-version *psql-lexdb-compat-version*)))
       (make-field-map-slot lexicon)
       (retrieve-fn-defns lexicon)
       (initialize-userschema lexicon)
       (setf (name lexicon) name)
-      lexicon))
-    (t
-     (format t "~%unable to connect to ~s:~%  ~a"
-	     (pg:db 
-	      (connection lexicon)) 
-	     (pg:error-message (connection lexicon)))
-     nil)))
+      lexicon)
+     (t
+      (format t "~%unable to connect to ~s:~%  ~a" 
+	      (pg:db connection) 
+	      (pg:error-message connection))
+      nil))))
 
 (defmethod initialize-lex ((lexicon psql-database) &key semi)
   (when (open-lex lexicon)
@@ -794,7 +789,7 @@
     (when (catch 'pg:sql-error
 	    (format *postgres-debug-stream* 
 		    "~%Please wait: recreating database cache for new filter")
-
+	    (force-output)
 	    (unless (set-filter-aux lexicon filter)
 	      (format t "~%(LexDB filter unchanged)")
 	      (return-from set-filter))
@@ -811,8 +806,10 @@
 (defmethod set-filter-aux ((lexicon psql-database) filter)
   (unless (or (null filter) 
 	      (equal (get-filter lexicon) filter))
-    (initialize-psql-lexicon) ;; must reconnect to avoid server bug...
+    (reconnect lexicon) ;; must reconnect to avoid server bug...
+    (force-output)
     (fn-get-records lexicon ''initialize-current-grammar filter)
+
     (empty-cache lexicon)))
 
 (defun set-filter-psql-lexicon (&rest rest)
@@ -848,6 +845,7 @@
 	       "~%Please wait: merging files ~a.* into lexical database ~a" 
 	       filename 
 	       (dbname *psql-lexicon*))
+       (force-output)
        (merge-into-psql-lexicon *psql-lexicon* filename)
        (lkb-beep)))))
   
@@ -874,12 +872,13 @@
 		   (- (length filename) 
 		      4))))
      (when filename
-       (format t 
+        (format t 
 	       "~%Please wait: dumping lexical database ~a to files ~a.*" 
 	       (dbname *psql-lexicon*) 
 	       filename)
-       (dump-psql-lexicon filename)
-       (lkb-beep)))))
+	(force-output)
+	(dump-psql-lexicon filename)
+	(lkb-beep)))))
   
 (defun command-export-lexicon-to-tdl (&rest rest)
   (time
@@ -902,15 +901,17 @@
 
 (defun command-clear-scratch nil
   (let ((count-priv (length (show-scratch *psql-lexicon*))))
-    (format t "~%Clearing ~a entries from private space" count-priv)
+    (format t "~%Please wait: clearing ~a entries from private space" count-priv)
+    (force-output)
     (time
      (close-scratch-lex))
     (lkb-beep)))
 
 (defun command-commit-scratch nil
   (let ((count-priv (length (show-scratch *psql-lexicon*))))
-    (format t "~%Moving ~a private entries to public space"
+    (format t "~%Please wait: moving ~a private entries to public space"
 	    count-priv)
+    (force-output)
     (time
      (commit-scratch-lex))
     (lkb-beep)))
@@ -960,7 +961,8 @@
 
 (defun i (&optional (slot 'record-cache)) (inspect (slot-value *lexicon* slot)))
 (defun command-index-new-lex-entries nil
-  (format t "~%Indexing new lexical entries for generator")
+  (format t "~%Please wait: indexing new lexical entries for generator")
+  (force-output)
   (time
    (index-new-lex-entries *lexicon*))
   (lkb-beep))
@@ -1005,6 +1007,7 @@
 	     "vacuum full analyze verbose current_grammar"
 	   "vacuum full analyze current_grammar")))
     (format t "~%Please wait: vacuuming private table")
+    (force-output)
     (run-command lexicon command)
     (lkb-beep)))
 
@@ -1020,6 +1023,7 @@
 	       "vacuum full analyze verbose public.revision"    
 	     "vacuum full analyze public.revision")))
       (format t "~%Please wait: vacuuming public table")
+      (force-output)
       (connect l2)
       (run-command l2 command))))
 

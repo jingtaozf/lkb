@@ -63,6 +63,10 @@
       ((sql-str "SELECT val FROM public.meta WHERE var='db-version' LIMIT 1;"))
     (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
     
+(defun compat-version (lexdb-version)
+  (when (stringp lexdb-version)
+    (subseq lexdb-version 0 3)))  
+    
 (defmethod get-filter ((lexicon psql-database))
   (let* 
       ((sql-str "SELECT val FROM meta WHERE var='filter' LIMIT 1;"))
@@ -176,10 +180,7 @@
 (defun build-current-grammar (lexicon)
   (cond 
    ((not (user-read-only-p lexicon))
-    (fn-get-records  lexicon ''build-current-grammar)
-    ;;(format *postgres-debug-stream* "~%(vacuuming current_grammar)")
-    ;;(run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar"))
-    )
+    (fn-get-records  lexicon ''build-current-grammar))
    (t
     (format t "~%(user ~a had read-only privileges)" (user lexicon))))
   (format *postgres-debug-stream* "~%(LexDB filter: ~a )" (get-filter lexicon))
