@@ -109,6 +109,20 @@ cl-user::*lkb-system-version*)))
                      (make-menu-item :name "Batch parse..."
                         :value 'parse-sentences))
                :available-p nil)
+         (make-lkb-submenu-item :menu-title "Generate"
+                 :menu-items                       
+                  (list 
+                     (make-menu-item :name "Generate..."
+                        :value 'generate-from-edge)
+                     (make-menu-item :name "Show result"
+                        :value 'show-gen-result)
+                     (make-menu-item :name "Show edge..."
+                        :value 'show-gen-edge)
+                     (make-menu-item :name "Show chart"
+                        :value 'show-gen-chart)
+                     (make-menu-item :name "Print chart"
+                        :value 'print-gen-chart))
+               :available-p nil)
          (make-lkb-submenu-item :menu-title "Links"
                  :menu-items                       
                   (list 
