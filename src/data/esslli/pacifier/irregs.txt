@@ -1,3 +1,4 @@
+"
 arisen PPRT-V_IRULE arise
 arose PAST-V_IRULE arise
 ate PAST-V_IRULE eat
@@ -177,4 +178,4 @@ wives PL-N-IRULE wife
 women PL-N-IRULE woman
 written PPRT-V_IRULE write
 wrote PAST-V_IRULE write
-
+"
