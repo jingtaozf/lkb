@@ -3,6 +3,7 @@ can 3RD-SING-VERB can
 could 3RD-SING-VERB could
 am NON-3RD-SING-VERB be
 are NON-3RD-SING-VERB be
+being PRES-PART-VERB be
 is 3RD-SING-VERB be
 was PAST-VERB be
 were PAST-VERB be 
@@ -71,9 +72,11 @@ gave PAST-VERB give
 geese PLUR-NOUN goose
 gentlemen PLUR-NOUN gentleman
 given PAST-PART-VERB give
+goes 3RD-SING-VERB go
 gone PAST-PART-VERB go
 got PAST-VERB get
 gotten PAST-PART-VERB get
+had PAST-VERB have
 halves PLUR-NOUN half
 has 3RD-SING-VERB have
 heard PAST-VERB hear
@@ -88,12 +91,14 @@ laid PAST-VERB lay
 laid PAST-PART-VERB lay
 lain PAST-PART-VERB lie
 lay PAST-VERB lie
+leaves PLUR-NOUN leaf
 led PAST-VERB lead
 led PAST-PART-VERB lead
 left PAST-VERB leave
 left PAST-PART-VERB leave
 let PAST-VERB let
 let PAST-PART-VERB let
+lives PLUR_NOUN life
 lost PAST-VERB lose
 lost PAST-PART-VERB lose
 made PAST-VERB make
@@ -125,6 +130,7 @@ run PAST-PART-VERB run
 rung PAST-PART-VERB ring
 said PAST-VERB say
 said PAST-PART-VERB say
+sang PAST-VERB sing
 sat PAST-VERB sit
 sat PAST-PART-VERB sit
 saw PAST-VERB see
@@ -155,11 +161,13 @@ struck PAST-VERB strike
 struck PAST-PART-VERB strike
 stuck PAST-VERB stick
 stuck PAST-PART-VERB stick
+sung PAST-PART-VERB sing
 swam PAST-VERB swim
 swum PAST-PART-VERB swim
 taken PAST-PART-VERB take
 taught PAST-VERB teach
 taught PAST-PART-VERB teach
+thieves PLUR-NOUN thief
 thought PAST-VERB think
 thought PAST-PART-VERB think
 threw PAST-VERB throw
@@ -178,6 +186,7 @@ will 3RD-SING-VERB will
 wives PLUR-NOUN wife
 women PLUR-NOUN woman
 won PAST-VERB win
+won PAST-PART-VERB win
 written PAST-PART-VERB write
 wrote PAST-VERB write
 "

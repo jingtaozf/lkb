@@ -106,7 +106,7 @@ past-verb morph-rule
 < 0 : ARG-STR > = < 1 : ARG-STR >.
 
 pres-part-verb morph-rule
-%suffix (!a !aing) (e ing) (ie ying) 
+%suffix (!a !aing) (e ing) (ee eeing) (ie ying) 
 < NEEDS-AFFIX > = true
 < 0 : SYN : HEAD : FORM > = pres-p
 < 0 : SYN : HEAD : AUX > = < 1 : SYN : HEAD : AUX >

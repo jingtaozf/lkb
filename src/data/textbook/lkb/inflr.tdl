@@ -10,14 +10,14 @@
 
 
 plur-noun_infl_rule :=
-%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (f ves) (tch tches) (sh shes)
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
 lrule-general &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX plur-noun ]]] .
 
 
 3rd-sing-verb_infl_rule := 
-%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (f ves) (tch tches) (sh shes)
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
 3rd-sing-verb-lexical-rule &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX 3rd-sing-verb ]]].
@@ -41,7 +41,7 @@ lrule-general &
   ARGS [ FIRST [ AFFIX past-part-verb]]].
 
 pres-part-verb_infl_rule :=
-%suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ie ying)
+%suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ee eeing) (ie ying)
 lrule-general &
 [ NEEDS-AFFIX true,
   ARGS [ FIRST [ AFFIX pres-part-verb]]].

@@ -2244,7 +2244,7 @@ appear_1 := srv-lxm &
 
 :begin :instance.
 appeal_1 := scv-lxm &
-[ ORTH <! "appeal  scv-lxm" !>,
+[ ORTH <! "appeal" !>,
   SEM [ RESTR <! [ RELN r_appeal] !> ] ].
 :end :instance.
 

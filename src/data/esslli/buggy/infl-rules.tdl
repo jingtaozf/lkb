@@ -9,7 +9,7 @@
 
 
 3sg-v-irule :=
-%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (f ves) (tch tches) (sh shes)
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
 lrule-infl &
  [ SYN [ HEAD  verb & [ FORM fin ],
          SPR < [ SYN [ HEAD [ AGR 3sing,
@@ -31,7 +31,7 @@ lrule-infl &
  [ SYN [ HEAD verb & [ FORM psp ] ] ].
 
 prprt-v_irule :=
-%suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ie ying)
+%suffix (!t!v!c !t!v!c!cing) (* ing) (e ing) (ee eeing) (ie ying)
 lrule-infl &
  [ SYN [ HEAD verb & [ FORM prp ] ] ].
 
@@ -42,7 +42,7 @@ sg-n-irule := lrule-no-aff &
  [ SYN [ HEAD [ AGR 3sing ] ] ].
 
 pl-n-irule := 
-%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (f ves) (tch tches) (sh shes)
+%suffix (!s !ss) (!ss !ssses) (ss sses) (!ty !ties) (ch ches) (sh shes) (x xes) (z zes)
 lrule-infl &
  [ SYN [ HEAD [ AGR [ NUM plur ] ] ] ].
 
