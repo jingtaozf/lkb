@@ -402,40 +402,19 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
 }
 
 :{n}{o}{w} {
-  struct tm *now;
-  time_t foo;
-  char bar[256 + 1];
-  
   if(verbose_mode) {
     fprintf(stderr, "NOW\n");
   } /* if */
-
-  if((foo = time(&foo)) > 0 && (now = localtime(&foo)) != NULL) {
-    (void)sprintf(&bar[0],
-                  "%d-%d-%d %d:%d:%d",
-                  now->tm_mday, now->tm_mon, now->tm_year,
-                  now->tm_hour, now->tm_min, now->tm_sec);
-    lvalp->string = tsdb_canonical_date(&bar[0]);
-    return(Y_DATE);
-  } /* if */
+  lvalp->string = tsdb_canonical_date("now");
+  return(Y_DATE);
 }
 
 :{t}{o}{d}{a}{y} {
-  struct tm *now;
-  time_t foo;
-  char bar[256 + 1];
-
   if(verbose_mode) {
     fprintf(stderr, "TODAY\n");
   } /* if */
-
-  if((foo = time(&foo)) > 0 && (now = localtime(&foo)) != NULL) {
-    (void)sprintf(&bar[0],
-                  "%d-%d-%d",
-                  now->tm_mday, now->tm_mon, now->tm_year);
-    lvalp->string = tsdb_canonical_date(&bar[0]);
-    return(Y_DATE);
-  } /* if */
+  lvalp->string = tsdb_canonical_date("today");
+  return(Y_DATE);
 }
 
 ({TWENTYNINE}[-/])?(({f}{e}{b})|(0?2))[-/]{YEAR}({WHITESPACE}{TIME})? {

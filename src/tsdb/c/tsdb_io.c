@@ -672,9 +672,12 @@ void tsdb_print_relation(Tsdb_relation *relation, FILE *stream) {
       for(j = 0; j < relation->n_keys && i != relation->keys[j] ; j++);
       if(j != relation->n_keys) {
         fprintf(stream, " :key");
-        if(!relation->total[j]) {
+        if(relation->types[i] & TSDB_PARTIAL) {
           fprintf(stream, " :partial");
         } /* if */
+      } /* if */
+      if(relation->types[i] & TSDB_UNIQUE) {
+        fprintf(stream, " :unique");
       } /* if */
       fprintf(stream, "\n");
     } /* for */
@@ -1010,7 +1013,7 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
           } /* if */
         } /* if */
       } /* if */
-      if(relation->types[n] == TSDB_INTEGER) {
+      if((relation->types[n] & TSDB_TYPE_MASK) == TSDB_INTEGER) {
         if((foo = strtol(field, &bar, 10)) != 0 || field != bar) {
           value->type = TSDB_INTEGER;
           value->value.integer = foo;
@@ -1035,17 +1038,17 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
         } /* else */
       } /* if */
       else {
-        switch(relation->types[n]) {
+        switch(relation->types[n] & TSDB_TYPE_MASK) {
           case TSDB_STRING:
             value->type = relation->types[n];
             value->value.string = strdup(field);
             break;
           case TSDB_DATE:
-            value->type = relation->types[n];
+            value->type = TSDB_DATE;
             value->value.date = strdup(field);
             break;
           case TSDB_POSITION:
-            value->type = relation->types[n];
+            value->type = TSDB_POSITION;
             value->value.position = strdup(field);
             break;
         } /* switch */
@@ -1080,7 +1083,7 @@ int tsdb_write_relations() {
     if (r==EOF) return 0;
     for (j=0,k=0;j<relation->n_fields;j++) {
       r=fprintf(file,"  %s ",relation->fields[j]);
-      switch (relation->types[j]) {
+      switch (relation->types[j] & TSDB_TYPE_MASK) {
       case TSDB_INTEGER:
         r=fputs(":integer ",file);  
         if (r==EOF) return 0;
@@ -1185,7 +1188,6 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
     
     while(fgets(&buf[0], 2048, input) != NULL && buf[0] != '\n') {
       for(foo = &buf[0]; isspace(*foo); foo++);
-      /* _fixme_: hier fehlt was */
       if(relation->fields == NULL) {
         relation->fields = (char **)malloc(sizeof(char *));
         relation->types = (BYTE *)malloc(sizeof(BYTE));
@@ -1199,6 +1201,9 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
                            (relation->n_fields + 1) * sizeof(BYTE));
        } /* else */
       if((bar = strchr(foo , '\n')) != NULL) {
+        *bar = 0;
+      } /* if */
+      if((bar = strchr(foo , TSDB_COMMENT_CHRARACTER)) != NULL) {
         *bar = 0;
       } /* if */
       for(bar = foo; *bar && !isspace(*bar) && *bar != ':'; bar++);
@@ -1235,24 +1240,29 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
       if(strstr(bar, "key") != NULL) { 
         if(relation->keys == NULL) {
           relation->keys = (int *)malloc(sizeof(int));
-          relation->total = (BYTE *)malloc(sizeof(BYTE));
         } /* if */
         else {
           relation->keys
             = (int *)realloc(relation->keys, 
                              (relation->n_keys + 1) * sizeof(int));
-          relation->total
-            = (BYTE *)realloc(relation->total, 
-                              (relation->n_keys + 1) * sizeof(BYTE));
         } /* else */
         relation->keys[relation->n_keys] = relation->n_fields;
         if(strstr(bar, "partial") != NULL) {
-          relation->total[relation->n_keys] = FALSE;
+          relation->types[relation->n_keys] |= TSDB_PARTIAL;
+        } /* if */
+        relation->n_keys++;
+      } /* if */
+      if(strstr(bar, "unique") != NULL) { 
+        if(relation->types[relation->n_fields] != TSDB_INTEGER) {
+          fprintf(tsdb_error_stream,
+                  "read_relation(): illegal attribute (`unique') for "
+                  "non-integer field `%s'.\n",
+                  foo);
+          fflush(tsdb_error_stream);
         } /* if */
         else {
-          relation->total[relation->n_keys] = TRUE;
+          relation->types[relation->n_fields] |= TSDB_UNIQUE;
         } /* else */
-        relation->n_keys++;
       } /* if */
       relation->fields[relation->n_fields] = strdup(foo);
       relation->n_fields++;

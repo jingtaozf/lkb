@@ -677,7 +677,8 @@ int tsdb_insert(Tsdb_value *table,
 
   if(!tsdb_is_relation(table)) {
     fprintf(tsdb_error_stream,
-            "insert(): unknown relation `%s'.\n", table->value.identifier);
+            "insert(): unknown relation `%s'.\n",
+            table->value.identifier);
     fflush(tsdb_error_stream);
     return(TSDB_UNKNOWN_RELATION_ERROR);
   } /* if */
@@ -742,9 +743,17 @@ int tsdb_insert(Tsdb_value *table,
         } /* if */
       } /* for */
       if(m == n_attributes) {
-        tuple->fields[n] = (Tsdb_value *)malloc(sizeof(Tsdb_value *));
-        tuple->fields[n]->value.string = strdup(TSDB_DEFAULT_VALUE);
-        tuple->fields[n]->type = TSDB_STRING;
+        if((tuple->fields[n] = tsdb_generate_default_value(relation, n)) 
+           == NULL) {
+          fprintf(tsdb_error_stream,
+                  "insert(): "
+                  "no (default) value for field `%s' in `%s'.\n",
+                  relation->fields[n], relation->name);
+          fflush(tsdb_error_stream);
+          tsdb_free(tuple->fields);
+          tsdb_free(tuple);
+          return(TSDB_MISSING_VALUE_ERROR);
+        } /* if */
       } /* if */
     } /* if */
     else {
@@ -752,15 +761,17 @@ int tsdb_insert(Tsdb_value *table,
         tuple->fields[n] = value_list[n];
       } /* if */
       else {
-        /* 
-         * _fix_me_
-         * make tuple of appropriate type; find some bogus default value for
-         * :integer and :date types.  
-         *                                           (26-jul-96  -  oe)
-         */
-        tuple->fields[n] = (Tsdb_value *)malloc(sizeof(Tsdb_value *));
-        tuple->fields[n]->value.string = strdup(TSDB_DEFAULT_VALUE);
-        tuple->fields[n]->type = TSDB_STRING;
+        if((tuple->fields[n] = tsdb_generate_default_value(relation, n)) 
+           == NULL) {
+          fprintf(tsdb_error_stream,
+                  "insert(): "
+                  "no (default) value for field `%s' in `%s'.\n",
+                  relation->fields[n], relation->name);
+          fflush(tsdb_error_stream);
+          tsdb_free(tuple->fields);
+          tsdb_free(tuple);
+          return(TSDB_MISSING_VALUE_ERROR);
+        } /* if */
       } /* else */
     } /* else */
   } /* for */

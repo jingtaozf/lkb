@@ -31,7 +31,7 @@
 #  include <malloc.h>
 #endif
 
-#define TSDB_VERSION "0.7"
+#define TSDB_VERSION "0.8"
 #define TSDB_REVISION "$Revision$"
 #define TSDB_REVISION_DATE "$Date$"
 
@@ -81,6 +81,10 @@
 #define TSDB_CONNECTIVE 6
 #define TSDB_OPERATOR 7
 #define TSDB_DESCRIPTOR 8
+
+#define TSDB_TYPE_MASK 0x0f
+#define TSDB_PARTIAL 16
+#define TSDB_UNIQUE 32
 
 #define TSDB_VALUE_INCOMPATIBLE 0 
 #define TSDB_EQUAL 1
@@ -218,8 +222,13 @@
 #  define TSDB_BACKUP_SUFFIX "~"
 #endif
 
-#ifndef TSDB_DEFAULT_VALUE
-#  define TSDB_DEFAULT_VALUE ""
+
+#ifndef TSDB_DEFAULT_STRING_VALUE
+#  define TSDB_DEFAULT_STRING_VALUE ""
+#endif
+
+#ifndef TSDB_DEFAULT_INTEGER_VALUE
+#  define TSDB_DEFAULT_INTEGER_VALUE -1
 #endif
 
 #ifndef TSDB_COMPRESS
@@ -288,12 +297,12 @@ typedef struct tsdb_node {
 
 typedef struct tsdb_relation {
   char *name;
+  char *path;
   int n_fields;
   char **fields;
   BYTE *types;
   int n_keys;
   int *keys;
-  BYTE *total;
   BYTE status;
 } Tsdb_relation;
 
@@ -486,6 +495,7 @@ int tsdb_quotes_are_balanced(char *);
 char *tsdb_prolog_escape_string(char *);
 char *tsdb_lisp_escape_string(char *);
 BOOL tsdb_check_potential_command(char *);
+Tsdb_value *tsdb_generate_default_value(Tsdb_relation *, int);
 
 Tsdb_node **tsdb_linearize_conditions(Tsdb_node *);
 

@@ -929,7 +929,6 @@ Tsdb_relation *tsdb_copy_relation(Tsdb_relation *relation) {
   new->fields = (char **)malloc((relation->n_fields + 1) * sizeof(char *));
   new->types = (BYTE *)malloc((relation->n_fields + 1) * sizeof(BYTE));
   new->keys = (int *)malloc((relation->n_keys + 1) * sizeof(int));
-  new->total = (BYTE *)malloc((relation->n_keys + 1) * sizeof(BYTE));
 
   new->name = strdup(relation->name);
   for(i = 0; i < relation->n_fields; i++) {
@@ -939,7 +938,6 @@ Tsdb_relation *tsdb_copy_relation(Tsdb_relation *relation) {
   new->n_fields = relation->n_fields;
   for(i = 0; i < relation->n_keys; i++) {
     new->keys[i] = relation->keys[i];
-    new->total[i] = relation->total[i];
   } /* for */
   new->n_keys = relation->n_keys;
   new->keys[new->n_keys]=0L;
@@ -1388,12 +1386,12 @@ Tsdb_relation *tsdb_create_relation() {
 
   foo = (Tsdb_relation *)malloc(sizeof(Tsdb_relation));
   foo->name = (char *)NULL;
+  foo->path = (char *)NULL;
   foo->n_fields = 0;
   foo->n_keys = 0;
   foo->fields = (char **)NULL;
   foo->types = (BYTE *)NULL;
   foo->keys = (int *)NULL;
-  foo->total = (BYTE *)NULL;
   foo->status = TSDB_CLEAN;
 
   return(foo);
@@ -1407,6 +1405,9 @@ void tsdb_free_relation(Tsdb_relation *relation) {
   if(relation->name != NULL) {
     free(relation->name);
   } /* if */
+  if(relation->path != NULL) {
+    free(relation->path);
+  } /* if */
   if(relation->fields != NULL) {
     for(i = 0; i < relation->n_fields && relation->fields[0] != NULL; i++) {
       free(relation->fields[i]);
@@ -1418,9 +1419,6 @@ void tsdb_free_relation(Tsdb_relation *relation) {
   } /* if */
   if(relation->keys != NULL) {
     free(relation->keys);
-  } /* if */
-  if(relation->total != NULL) {
-    free(relation->total);
   } /* if */
   free(relation);
 } /* tsdb_free_relation() */
@@ -2118,7 +2116,6 @@ float tsdb_timer(BYTE action) {
 
 } /* tsdb_timer() */
 
-
 /*****************************************************************************\
 |*        file: 
 |*      module: tsdb_collect_tuples()
@@ -2173,7 +2170,6 @@ BOOL tsdb_collect_tuples(Tsdb_selection* selection,Tsdb_tuple** tuples,
 } /* tsdb_collect_tuples */
 
 
-
 BOOL tsdb_array_to_lists(Tsdb_selection* bar,Tsdb_key_list*** lists,
                         int last,int size) {
   int i,j;
@@ -2196,7 +2192,6 @@ BOOL tsdb_array_to_lists(Tsdb_selection* bar,Tsdb_key_list*** lists,
   return TRUE;
 } /* tsdb_array_2_lists() */
 
-
 int tsdb_keylist_compare(Tsdb_key_list** foo,Tsdb_key_list** bar) {
   int i = tsdb_value_compare((*foo)->key,(*bar)->key);
 
@@ -2241,10 +2236,6 @@ BOOL tsdb_sort_tuples(Tsdb_key_list*** lists,int last,int n_lists) {
   return TRUE;
 } /* tsdb_sort_tuples () */
 
-
-BOOL tsdb_init_insert(Tsdb_selection* selection) {
-  
-} /* tsdb_init_insert() */
 
 BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
                                 Tsdb_tuple **tuples) {
@@ -2787,9 +2778,42 @@ void tsdb_quit(void) {
 
 char *tsdb_canonical_date(char *date) {
 
+  struct tm *now;
+  time_t foo;
+  char bar[256 + 1];
+  
   int *numeric, position;
   char *result;
 
+  if(!strcmp(date, "now") || !strcmp(date, ":now")) {
+    if((foo = time(&foo)) > 0 && (now = localtime(&foo)) != NULL) {
+      (void)sprintf(&bar[0],
+                    "%d-%d-%d %d:%d:%d",
+                    now->tm_mday, now->tm_mon, now->tm_year,
+                    now->tm_hour, now->tm_min, now->tm_sec);
+      return(tsdb_canonical_date(&bar[0]));
+    } /* if */
+    else {
+      fprintf(tsdb_error_stream,
+              "canonical_date(): unable to determine current time.\n");
+      fflush(tsdb_error_stream);
+    } /* else */
+  } /* if */
+  
+  if(!strcmp(date, "today") || !strcmp(date, "today")) {
+    if((foo = time(&foo)) > 0 && (now = localtime(&foo)) != NULL) {
+      (void)sprintf(&bar[0],
+                    "%d-%d-%d",
+                    now->tm_mday, now->tm_mon, now->tm_year);
+      return(tsdb_canonical_date(&bar[0]));
+    } /* if */
+    else {
+      fprintf(tsdb_error_stream,
+              "canonical_date(): unable to determine current time.\n");
+      fflush(tsdb_error_stream);
+    } /* else */
+  } /* if */
+  
   if((numeric = tsdb_parse_date(date)) == NULL) {
     return((char *)NULL);
   } /* if */
@@ -3022,6 +3046,8 @@ int *tsdb_parse_date(char *date) {
   return(result);
 
 } /* tsdb_parse_date() */
+
+
 
 char *tsdb_normalize_string(char *string) {
 
@@ -3307,3 +3333,60 @@ BOOL tsdb_check_potential_command(char *string) {
   return(FALSE);
 
 } /* tsdb_check_potential_command() */
+
+Tsdb_value *tsdb_generate_default_value(Tsdb_relation *relation, int i) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_generate_default_value()
+|*     version: 
+|*  written by: oe, coli saarbruecken
+|* last update: 14-mar-98
+|*  updated by: oe, coli saarbruecken
+|*****************************************************************************|
+|* 
+\*****************************************************************************/
+
+  Tsdb_value *new;
+  Tsdb_selection *table;
+  Tsdb_key_list *current;
+  int max;
+
+  new = (Tsdb_value *)malloc(sizeof(Tsdb_value));
+  switch(relation->types[i] & TSDB_TYPE_MASK) {
+    case TSDB_INTEGER:
+      if(relation->types[i] & TSDB_UNIQUE) {
+        if ((table = tsdb_find_table(relation)) == NULL) {
+          tsdb_free(new);
+          return((Tsdb_value *)NULL);
+        } /* if */
+        for(max = TSDB_DEFAULT_INTEGER_VALUE, current = table->key_lists[0];
+            current != NULL;
+            current = current->next) {
+          max = (current->tuples[0]->fields[i]->value.integer > max
+                 ? current->tuples[0]->fields[i]->value.integer
+                 : max);
+        } /* for */
+        new->value.integer = max + 1;
+      } /* if */
+      else {
+        new->value.integer = TSDB_DEFAULT_INTEGER_VALUE;
+      } /* else */
+      new->type = TSDB_INTEGER;
+      break;
+    case TSDB_STRING:
+      new->value.string = strdup(TSDB_DEFAULT_STRING_VALUE);
+      new->type = TSDB_STRING;
+      break;
+    case TSDB_DATE:
+      new->value.date = tsdb_canonical_date("now");
+      new->type = TSDB_DATE;
+      break;
+    default:
+      tsdb_free(new);
+      return((Tsdb_value *)NULL);
+  } /* switch */
+
+  return(new);
+
+} /* tsdb_generate_default_value() */
