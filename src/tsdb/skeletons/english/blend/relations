@@ -40,7 +40,7 @@ parameter:
   attribute :string
   value :string
   instance :string
-  comment :string
+  pa-comment :string
 
 set:
   s-id :integer :key
@@ -62,7 +62,7 @@ item-set:
 
 run:
   run-id :integer :key                  # unique test run identifier
-  comment :string                       # descriptive narrative
+  r-comment :string                     # descriptive narrative
   platform :string                      # implementation platform (version)
   tsdb :string                          # tsdb(1) (version) used
   application :string                   # application (version) used
