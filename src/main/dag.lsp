@@ -597,45 +597,61 @@
                            (make-dag-arc
                               :attribute (dag-arc-attribute (car tail))
                               :value v))))))
-            (do* ((arcs (dag-arcs dag) (cdr arcs))
-                  (new-vals (make-list (length arcs)))
-                  (vals new-vals (cdr vals))
-                  (lower-copied-p nil))
-                 ((null arcs)
-                  (cond
-                     (lower-copied-p
-                        ;; need to make a copy of arcs here - but (cdr lower-copied-p)
-                        ;; is a tail that we can re-use
-                        (setq copy-p t)
-                        (do ((arcs-tail (dag-arcs dag) (cdr arcs-tail))
-                             (shared-tail (cdr lower-copied-p))
-                             (copied-arcs nil))
-                            ((eq arcs-tail shared-tail)
-                               (setq new-arcs
-                                  (nreconc copied-arcs (nconc new-arcs shared-tail))))
-                            (let ((old-arc (car arcs-tail))
-                                  (v (pop new-vals)))
-                               (push
-                                  (if (eq v (dag-arc-value old-arc))
-                                     old-arc
-                                     (make-dag-arc :attribute (dag-arc-attribute old-arc)
-                                        :value v))
-                                  copied-arcs))))
-                     (new-arcs
-                        (setq new-arcs (nconc new-arcs (dag-arcs dag))))
-                     (copy-p (setq new-arcs (dag-arcs dag)))))
-                 (declare (dynamic-extent new-vals))
-                 (let* ((arc (car arcs))
-                        (new-path (cons (dag-arc-attribute arc) path)))
-                    (declare (dynamic-extent new-path))
-                    (let ((v (copy-dag1 (dag-arc-value arc) new-path)))
-                       (unless (eq v (dag-arc-value arc))
-                          (setq lower-copied-p arcs)) ; a lower-level dag was copied
-                       (setf (car vals) v))))
+            (setq new-arcs
+               (copy-dag-arcs (dag-arcs dag) nil path nil (dag-arcs dag) new-arcs))
+            (unless copy-p
+               (setq copy-p (not (eq new-arcs (dag-arcs dag)))))
             (setf (dag-copy dag)
                (if copy-p
                   (make-dag :type (unify-get-type dag) :arcs new-arcs)
                   dag))))))
+
+
+;; compiler must not convert recursive function into interative otherwise
+;; stack allocation will break. Allegro 4.3 (at least) must be stopped
+#+allegro
+(eval-when (compile)
+   (defparameter old-tail-call-self-merge-switch compiler:tail-call-self-merge-switch)
+   (setq compiler:tail-call-self-merge-switch nil))
+
+(defun copy-dag-arcs (arcs-tail vals path lower-copied-p arcs new-arcs)
+   (cond
+      (arcs-tail
+         (let* ((arc (car arcs-tail))
+                (new-path (cons (dag-arc-attribute arc) path))
+                (new-vals (cons nil vals)))
+            (declare (dynamic-extent new-path new-vals))
+            (let ((v (copy-dag1 (dag-arc-value arc) new-path)))
+               (unless (eq v (dag-arc-value arc))
+                  (setq lower-copied-p arcs-tail)) ; a lower-level dag was copied
+               (setf (car new-vals) v)
+               (copy-dag-arcs
+                  (cdr arcs-tail) new-vals new-path lower-copied-p arcs new-arcs))))
+      (lower-copied-p
+         ;; need to make a copy of arcs here - but (cdr lower-copied-p)
+         ;; is a tail that we can re-use
+         (setq vals (nreverse vals))
+         (do ((arcs-tail arcs (cdr arcs-tail))
+              (shared-tail (cdr lower-copied-p))
+              (copied-arcs nil))
+             ((eq arcs-tail shared-tail)
+                (setq new-arcs
+                   (nreconc copied-arcs (nconc new-arcs shared-tail))))
+             (let ((old-arc (car arcs-tail))
+                   (v (pop vals)))
+                  (push
+                     (if (eq v (dag-arc-value old-arc))
+                        old-arc
+                        (make-dag-arc :attribute (dag-arc-attribute old-arc)
+                           :value v))
+                     copied-arcs))))
+      (new-arcs
+         (nconc new-arcs arcs))
+      (t arcs)))
+
+#+allegro
+(eval-when (compile)
+   (setq compiler:tail-call-self-merge-switch old-tail-call-self-merge-switch))
 
 
 #|
