@@ -431,7 +431,6 @@
   (when display-in-chart-p 
     (display-edge-in-chart edge))
   (let ((edge-symbol (make-new-parse-tree edge 1)))
-    (break)
     (draw-new-parse-tree edge-symbol 
 			 (format nil "Edge ~A ~A" (edge-id edge) 
 				 (if (g-edge-p edge) "G" "P"))
