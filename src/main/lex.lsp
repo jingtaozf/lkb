@@ -280,10 +280,10 @@
          (lex-id (lex-or-psort-id entry))
          (language (lex-or-psort-language entry))
          (fs (append (lex-or-psort-unifs entry)
-		     (if (and orth *sense-unif-fn*)
-			 (apply *sense-unif-fn* 
-				(list orth 
-				      (format nil "~A" lex-id) language))))))
+		     (when (and orth *sense-unif-fn*)
+		       (apply *sense-unif-fn* 
+			      (list orth 
+				    (format nil "~A" lex-id) language))))))
     (process-unif-list lex-id fs (lex-or-psort-def-unifs entry) entry
 		       *description-persistence* *bc96lrules* 
 		       local-p interim-p)))
@@ -351,10 +351,10 @@
 #-plob 
 (setf *lexicon* (make-instance 'simple-lex-database))
 
-(defmethod lookup-word ((lexicon simple-lex-database) orth)
+(defmethod lookup-word ((lexicon lex-database) orth)
   (gethash orth (slot-value lexicon 'lexical-entries)))
 
-(defmethod lex-words ((lexicon simple-lex-database))
+(defmethod lex-words ((lexicon lex-database))
   (let ((words nil))
     (maphash #'(lambda (k v)
 		 (declare (ignore v))
@@ -433,7 +433,7 @@
 	    (when (probe-file *psorts-temp-index-file*)
 	      (delete-file *psorts-temp-index-file*))))))))
 
-(defmethod set-lexical-entry ((lexicon simple-lex-database) orth id new-entry)
+(defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry)
   (store-psort lexicon id new-entry orth)
   (with-slots (lexical-entries) lexicon
     (dolist (orth-el orth)
@@ -599,190 +599,4 @@
   (when (and *psorts-temp-index-file*
 	     (probe-file *psorts-temp-index-file*))
     (delete-file *psorts-temp-index-file*)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;  Interface to a persistent object store lexical cache
-;;;
-
-#+plob 
-(defclass plob-lex-database (lex-database)
-  ((lexical-entries :initform (make-hash-table :test #'equal))
-   (psorts-stream :initform nil)
-   (psorts :initform (make-hash-table :test #'eq))))
-
-#+plob 
-(setf *lexicon* (make-instance 'plob-lex-database))
-
-#+plob 
-(defmethod lookup-word ((lexicon plob-lex-database) orth)
-  (gethash orth (slot-value lexicon 'lexical-entries)))
-
-#+plob 
-(defmethod lex-words ((lexicon plob-lex-database))
-  (let ((words nil))
-    (maphash #'(lambda (k v)
-		 (declare (ignore v))
-		 (push k words))
-	     (slot-value lexicon 'lexical-entries))
-    words))
-
-#+plob 
-(defmethod lexicon-loaded-p ((lexicon plob-lex-database))
-  (and (streamp (slot-value lexicon 'psorts-stream))
-       (open-stream-p (slot-value lexicon 'psorts-stream))))
-
-#+plob 
-(defmethod read-cached-lex ((lexicon plob-lex-database) filenames)
-  (unless (or *psorts-temp-file* *psorts-temp-index-file*)
-    (set-temporary-lexicon-filenames))
-  (let* ((ok nil)
-	 (cache-date
-	  (if (and *psorts-temp-file* 
-		   (probe-file *psorts-temp-file*))
-	      (file-write-date *psorts-temp-file*)))
-	 (cache-index-date 
-	  (if 
-	      (and
-	       *psorts-temp-index-file*
-	       (probe-file *psorts-temp-index-file*))
-	      (file-write-date *psorts-temp-index-file*)))
-	 (last-file-date
-	  (apply #'max (for file in filenames
-			    filter
-			    (file-write-date file)))))
-    (when (and cache-date last-file-date cache-index-date
-	       (> cache-date last-file-date) 
-	       (> cache-index-date last-file-date))
-      (format t "~%Reading in cached lexicon")
-      (clear-lex *lexicon* t)
-      (handler-case 
-	  (read-psort-index-file)
-	(error (condition)
-	  (format t "~%Error: ~A~%" condition)
-	  (delete-temporary-lexicon-files)
-	  (setf ok nil)))
-      (cond (ok (format t "~%Cached lexicon read")
-		t)
-	    (t (format t "~%Cached lexicon corrupt: reading lexicon source files")
-	       nil)))))
-
-#+plob 
-(defmethod store-cached-lex ((lexicon plob-lex-database))
-  ;; assume that this is only going to be called after a user has
-  ;; successfully done a psorts-temp-file and by an advanced user, so
-  ;; don't bother with fancy error checking
-  (let ((ok nil))
-    (with-slots (psorts psorts-stream) lexicon
-      (when *psorts-temp-index-file* 
-	(unwind-protect
-	    (progn
-	      (with-open-file (ostream *psorts-temp-index-file* 
-			       :direction :output
-			       :if-exists :supersede)
-		(maphash #'(lambda (id value)
-			     (prin1 id ostream)
-			     (write-string " " ostream)
-			     (prin1 (car value) ostream)
-			     (write-string " " ostream)
-			     (prin1 (cadr value) ostream)
-			     (terpri ostream)
-			     )
-			 psorts))
-	      (setf ok t))
-	  ;; if there's an error during the writing of the index file,
-	  ;; delete it
-	  (when (and (streamp psorts-stream)
-		     (open-stream-p psorts-stream))
-	    (finish-output psorts-stream)
-	    (close psorts-stream))
-	  (unless ok
-	    (when (probe-file *psorts-temp-index-file*)
-	      (delete-file *psorts-temp-index-file*))))))))
-
-#+plob 
-(defmethod set-lexical-entry ((lexicon plob-lex-database) orth id new-entry)
-  (store-psort lexicon id new-entry orth)
-  (with-slots (lexical-entries) lexicon
-    (dolist (orth-el orth)
-      (pushnew id (gethash (string-upcase orth-el) lexical-entries)))))
-
-
-#+plob 
-(defmethod clear-lex ((lexicon plob-lex-database) &optional no-delete)
-  (when (fboundp 'reset-cached-lex-entries)
-    (funcall 'reset-cached-lex-entries))
-  ;; reset-cached-lexical entries is in constraints.lsp, which isn't
-  ;; part of the core lkb distribution.  The use of funcall here is
-  ;; just to prevent compiler warnings
-  (clrhash (slot-value lexicon 'lexical-entries))
-  (clrhash (slot-value lexicon 'psorts))
-  (when (fboundp 'clear-lexicon-indices)
-    (funcall 'clear-lexicon-indices))
-  ;; (setf *language-lists* nil)
-  ;; Close temporary lexicon file
-  (with-slots (psorts-stream) lexicon
-      (when (and (streamp psorts-stream)
-		 (open-stream-p psorts-stream))
-	(close psorts-stream)))
-  (unless no-delete
-    (delete-temporary-lexicon-files)))
-
-#+plob 
-(defmethod collect-expanded-lex-ids ((lexicon plob-lex-database))
-  ;; useful for creating a subset of a lexicon which corresponds to a
-  ;; particular test suite
-  (let ((ids nil))
-    (maphash #'(lambda (id value)
-                 (if (and (cddr value)
-                          (lex-or-psort-full-fs (cddr value)))
-                     (push id ids)))
-	     (slot-value lexicon 'psorts))
-    ids))
-
-#+plob 
-(defmethod store-psort ((lexicon plob-lex-database) id entry &optional orth)
-  ;; write new entry to the end of the file
-  ;; update the hash table entry with the new file pointer
-  (with-slots (psorts-stream psorts) lexicon
-    (unless (and (streamp psorts-stream)
-		 (open-stream-p psorts-stream))
-      (open-psorts-stream lexicon))
-    (let ((current-file-end (file-length psorts-stream))
-	  (specified-entry (cons id entry))
-	  (*print-pretty* nil))
-      (file-position psorts-stream current-file-end)
-      (write specified-entry :stream psorts-stream :level nil :length nil)
-      (terpri psorts-stream)
-      (when (gethash id psorts)
-	(format t "~%Redefining ~A" id))
-      (setf (gethash id psorts)
-	(list orth current-file-end)))))
-
-#+plob 
-(defmethod read-psort ((lexicon plob-lex-database) id)
-  (with-slots (psorts) lexicon
-    (let ((hash-table-entry (gethash id psorts)))
-      (when hash-table-entry
-	(or (cddr hash-table-entry)	; cached
-	    (let* ((file-pointer (cadr hash-table-entry))
-		   (file-entry (cdr (read-psort-entry-from-file 
-				     (slot-value lexicon 'psorts-stream)
-				     file-pointer id))))
-	      (setf (cddr (gethash id psorts)) file-entry)
-	      file-entry))))))
-
-#+plob 
-(defmethod unexpand-psort ((lexicon plob-lex-database) id)
-  (setf (cddr (gethash id (slot-value lexicon 'psorts))) nil))
-
-#+plob 
-(defmethod collect-psort-ids ((lexicon plob-lex-database))
-  (let ((ids nil))
-    (maphash 
-     #'(lambda (name val)
-	 (declare (ignore val))
-	 (push name ids))
-     (slot-value lexicon 'psorts))
-    ids))
 
