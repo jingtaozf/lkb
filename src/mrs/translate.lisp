@@ -32,13 +32,36 @@
 
 (defun translate (&key serverp 
                        (file (format nil "/tmp/.transfer.~a" (current-user))))
-  (when serverp (loop until (probe-file file) do (sleep 1)))
+  (when serverp 
+    (when (probe-file file) (delete-file file))
+    (loop until (probe-file file) do (sleep 1)))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (let* ((mrs (mrs::read-mrs-from-file file))
              (*bypass-equality-check* t))
-        (generate-from-mrs mrs)
-        (show-gen-result))))
+        (cond
+         ((mrs::psoa-p mrs)
+          (format
+           t
+           "translate(): read one MRS (~a EP~p) as generator input.~%"
+           (length (mrs:psoa-liszt mrs)) (length (mrs:psoa-liszt mrs)))
+          (multiple-value-bind (result condition)
+              (ignore-errors (generate-from-mrs mrs))
+            (when result
+              (format
+               t
+               "translate(): ~a generation result~p.~%"
+               (length result) (length result)))
+            (when condition
+              (format
+               t
+               "translate(): error `~a'.~%"
+               condition)))
+          (show-gen-result))
+         (t
+          (format
+           t
+           "translate(): ignoring null or illformed MRS.~%"))))))
   (when serverp 
     (delete-file file)
     (translate :serverp serverp :file file)))
