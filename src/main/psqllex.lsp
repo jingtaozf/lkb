@@ -920,6 +920,10 @@
       collect (subseq string i j)
       while j))
 
+;;;
+;;; temp
+;;;
+
 (defun time-parse (str)
   (setf *psql-verbose-query* t)
   (time

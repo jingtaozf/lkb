@@ -88,16 +88,13 @@ INSERT INTO ergd VALUES ( 'unifs', 'alt2key', '(synsem local keys alt2key)', 'sy
 INSERT INTO ergd VALUES ( 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
 INSERT INTO ergd VALUES ( 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
 
-CREATE VIEW max_version 
-	AS SELECT erg.name AS "key", max(erg."version") AS max 
-	FROM erg
-	WHERE erg.flags=1 
-	GROUP BY erg.name;
-
 CREATE VIEW erg_max_version 
 	AS SELECT erg.* 
-	FROM (erg JOIN max_version ON 
-	(((erg.name = max_version."key") AND (erg."version" = max_version.max))));
+	FROM 
+		(erg 
+		JOIN 
+		(SELECT name AS nm, max(version) AS vn FROM erg GROUP BY name) AS tmp
+		 ON (erg.name, erg.version) = (nm, vn) ); 
 
 CREATE TABLE ergq (
   fn VARCHAR(50),
@@ -106,14 +103,14 @@ CREATE TABLE ergq (
 PRIMARY KEY (fn)
 );
 
-INSERT INTO ergq VALUES ( 'orthography-set', 0, 'SELECT DISTINCT orthography FROM erg_max_version' );
-INSERT INTO ergq VALUES ( 'psort-id-set', 0, 'SELECT DISTINCT name FROM erg_max_version');
-INSERT INTO ergq VALUES ( 'lookup-word', 1, 'SELECT name FROM erg_max_version WHERE orthkey = $0' );
+INSERT INTO ergq VALUES ( 'orthography-set', 0, 'SELECT DISTINCT orthography FROM ((SELECT name, version, orthography FROM erg) AS tmp1 JOIN (SELECT name, max(version) AS version FROM erg GROUP BY name) AS tmp2 USING (name, version))' );
+INSERT INTO ergq VALUES ( 'psort-id-set', 0, 'SELECT DISTINCT name FROM erg');
+INSERT INTO ergq VALUES ( 'lookup-word', 1, 'SELECT name FROM ((SELECT name, version FROM erg WHERE orthkey=$0) AS tmp1 JOIN (SELECT name, max(version) AS version FROM erg GROUP BY name) AS tmp2 USING (name, version))' );
 INSERT INTO ergq VALUES ( 'next-version', 1, 'SELECT 1 + max(version) FROM erg WHERE name = $0');
 INSERT INTO ergq VALUES ( 'next-id', 0, 'SELECT 1 + max(id) FROM erg');
-INSERT INTO ergq VALUES ( 'retrieve-entries', 2, 'SELECT $0 FROM erg_max_version WHERE name IN (SELECT name FROM erg_max_version WHERE orthkey = $1)' );
-INSERT INTO ergq VALUES ( 'retrieve-entry', 2, 'SELECT $0 FROM erg_max_version WHERE name IN (SELECT name FROM erg_max_version WHERE name = $1)' );
--- INSERT INTO ergq VALUES ( 'test', 1, '$0' );
+INSERT INTO ergq VALUES ( 'retrieve-entries', 2, 'SELECT $0 FROM ((SELECT version, $0 FROM erg WHERE orthkey=$1) AS tmp JOIN (SELECT name, max(version) AS version FROM erg GROUP BY name) AS tmp2 USING (name,version))' );
+INSERT INTO ergq VALUES ( 'retrieve-entry', 2, 'SELECT $0 FROM erg WHERE (name,version) = ($1, (SELECT max(version) FROM erg WHERE name=$1))' );
+INSERT INTO ergq VALUES ( 'test', 1, '$0' );
 
 CREATE TABLE ergqa (
   fn VARCHAR(50),
@@ -128,4 +125,5 @@ INSERT INTO ergqa VALUES ( 'retrieve-entries', 0, 'select-list' );
 INSERT INTO ergqa VALUES ( 'retrieve-entries', 1, 'text' );
 INSERT INTO ergqa VALUES ( 'retrieve-entry', 0, 'select-list' );
 INSERT INTO ergqa VALUES ( 'retrieve-entry', 1, 'text' );
--- INSERT INTO ergqa VALUES ( 'test', 0, 'select-list' );
+INSERT INTO ergqa VALUES ( 'test', 0, 'select-list' );
+
