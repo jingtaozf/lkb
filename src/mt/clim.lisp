@@ -2,6 +2,8 @@
 
 (defvar %edges%)
 
+(defvar %mrs%)
+
 (clim:define-application-frame mrs-transfer ()
   ((frames :initform nil :accessor mrs-transfer-frames :allocation :class)
    (edges :initform nil :accessor mrs-transfer-edges)
@@ -101,7 +103,6 @@
                       ("Step" :value :step :active t)
                       ("Clone" :value :clone :active t)
                       ("Save" :value :save :active t)
-                      #+:null
                       ("Read" :value :read :active t)
                       ("Print" :value :print :active t)
                       ("Rule" :value :rule :active t)
@@ -176,6 +177,21 @@
                "~&browse-mrss(): saved current view to `~a'.~%"
                file)))))
 
+        (:read
+         (let ((file 
+                (format nil "/tmp/transfer.debug.~a" (lkb::current-user))))
+           (if (probe-file file)
+             (ignore-errors
+              (with-open-file (stream file :direction :input)
+                (let ((mrs (mrs::read-mrs-from-file file)))
+                  (when (mrs::psoa-p mrs)
+                    #-:debug
+                    (setf %mrs% mrs)
+                    (browse-mrss (list mrs))))))
+             (format
+              excl:*initial-terminal-io*
+              "~&browse-mrss(): unable to open `~a'.~%"
+              file))))
         (:print
          (multiple-value-bind (destination orientation scale name)
              (lkb::get-print-options)
@@ -252,7 +268,7 @@
               "~a @ ~a"
               (mrs-transfer-title frame)
               (aref 
-               #("FILTER" "CONTEXT" "INPUT" "OUTPUT" "DEFAULT")
+               #("FILTER" "CONTEXT" "INPUT" "OUTPUT" "DEFAULT" "OUTPUT (RAW)")
                (mrs-transfer-i frame))))
             (t
              (format 
@@ -317,8 +333,11 @@
                (make-edge :mrs (mtr-filter edges))
                (make-edge :mrs (mtr-context edges))
                (make-edge :mrs (mtr-input edges))
+               #-:debug
                (make-edge :mrs (merge-and-copy-mrss 
                                 (mtr-output edges) (mtr-defaults edges)))
+               #+:debug
+               (make-edge :mrs (mtr-output edges))
                (make-edge :mrs (mtr-defaults edges))))
             (loop
                 for edge in (mrs-transfer-edges frame)

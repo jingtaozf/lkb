@@ -37,6 +37,7 @@
      (:file "version" :load-only t)
      (:file "mrsglobals" :load-only t)
      (:file "globals")
+     (:file "patches")
      (:file "transfer")
      (:file "clim")
      (:file "semi")))))

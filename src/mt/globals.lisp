@@ -11,3 +11,8 @@
 (defparameter *mtr-input-path* (list (mrs::vsym "INPUT")))
 
 (defparameter *mtr-output-path* (list (mrs::vsym "OUTPUT")))
+
+(defparameter *mtr-flags-path* (list (mrs::vsym "FLAGS")))
+
+(defconstant *mtr-optional-path* (list (mrs::vsym "OPTIONAL")))
+
