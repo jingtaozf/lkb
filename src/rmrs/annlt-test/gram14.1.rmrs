@@ -2567,6 +2567,14 @@ because it's used for relative clauses</comment>
 <name>V1/vp_advp</name>
 <dtrs><dtr>VP</dtr><dtr>ADV</dtr></dtrs>
 <head>VP</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<ing><ing-a><var>H</var></ing-a><ing-b><var>H1</var></ing-b></ing>
+</semstruct>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><dh><dtr>VP</dtr><he>INDEX</he></dh><dh><dtr>ADV</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>ADV</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>

@@ -152,6 +152,7 @@
 #|
 
 ;;; Temporary
+;;; FIX this to read from ERG file
 
 (defun compare-eg (egnum strpos-p)
   (let* ((eg (nth (- egnum 1)
@@ -162,9 +163,9 @@
           (nth (- egnum 1)
                (mrs::read-rmrs-file "semtest-rasp.rmrs" :rasp)))
 	 (erg-rmrs
-	  (rmrs-for-sentence input parse-number)))
+	  (lkb::rmrs-for-sentence input parse-number)))
     (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs strpos-p))
-      (show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
+      (lkb::show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
 				    comparison-record input))))
 
 ;;; older than above

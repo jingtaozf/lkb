@@ -200,16 +200,32 @@ set of values for tense etc yet ...
 The second is that the auxiliary will contribute a rel in RASP because all
 have a contentful equivalent which isn't straightforward to distinguish.
 
-End of comparison notes!
 
 36. The dog has barked. 
 37. The dog has been barking.
 38. The dog had been barking.
 39. The dog will bark.
 40. The dog is going to bark.
+
+all these concern tense - not sorted out yet
+
 41. The dog could bark.
 42. The dog couldn't bark. 
+
+a) characterization differences RASP/ERG - RASP treats as could not
+b) could scopes over not in RASP - inverse in ERG
+c) BUG - ARG1 in neg_rel - return to this when we've decided 
+proper approach
+
+
+
 43. The old dog barked.
+
+mostly OK but RESTR doesn't match because qeq hasn't had ING var replaced.
+FIX compare.lisp
+
+End of comparison notes!
+
 44. The dog barked softly.
 45. The dog probably barked.
 46. The dog barked in the garden. 
