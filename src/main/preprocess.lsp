@@ -153,10 +153,11 @@
                     ignoring unknown rule type `~a'~%"
                    n c))))
             when (null line) do
-              (setf (fspp-global fspp)
-                (nreverse (fspp-global fspp)))
-              (setf (fspp-local fspp)
-                (nreverse (fspp-local fspp)))
+              (unless fsppp
+                (setf (fspp-global fspp)
+                  (nreverse (fspp-global fspp)))
+                (setf (fspp-local fspp)
+                  (nreverse (fspp-local fspp))))
               (unless fsppp (format t "~a~%" fspp))
               (return (if fsppp fspp (setf *preprocessor* fspp))))))))
 
