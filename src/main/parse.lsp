@@ -70,7 +70,7 @@
 ;;;                                                           (28-oct-02; oe)
 (defstruct
    (edge
-      (:constructor make-edge
+      (:constructor make-edge-x
                     (&key id score category rule dag odag 
                           (dag-restricted (when dag
                                             (restrict-fs (tdfs-indef dag))))
@@ -88,12 +88,6 @@
 				   (edge-cto (first (last children)))
 				 -1))
                           foo bar baz
-			  (tmp-hack
-			   (set-characterization dag
-						     cfrom
-						     cto))
-			  ;;; a nasty hack to make sure that cfrom
-			  ;;; and cto are set in the rels in dag
                           #+:packing packed #+:packing equivalent 
                           #+:packing frozen)))
    id score category rule dag odag dag-restricted leaves lex-ids
@@ -101,6 +95,18 @@
    cfrom cto
    foo bar baz
    #+:packing packed #+:packing equivalent #+:packing frozen)
+
+(defparameter *characterize-p* nil)
+
+(defun make-edge (&rest rest)
+  (let ((new-edge
+	 (apply #'make-edge-x rest)))
+    (when *characterize-p*
+      (set-characterization (edge-dag new-edge)
+			    (edge-cfrom new-edge)
+			    (edge-cto new-edge)))
+    new-edge))
+
 
 (defmethod print-object ((instance edge) stream)
   (format 
@@ -556,6 +562,7 @@
 	     :cfrom cfrom
 	     :cto cto))
 
+
 (defun get-senses (stem-string)
   (let ((entries
          (loop for entry in (get-unexpanded-lex-entry stem-string)
@@ -570,7 +577,8 @@
                      (list
                       (cons id
                             (cond
-                             ((smember tdfs *lexical-entries-used*)
+                             ((or *characterize-p*
+				  (smember tdfs *lexical-entries-used*))
                               (copy-tdfs-completely tdfs))
                              (t 
                               (push tdfs *lexical-entries-used*)

@@ -988,8 +988,8 @@
 ;;; Use -visit field not -copy since may be called from within unify
 
 (defun copy-dag-completely (dag)
-   #+(and mcl powerpc)(decf dd (CCL::%HEAP-BYTES-ALLOCATED))
-   (invalidate-visit-marks)
+  #+(and mcl powerpc)(decf dd (CCL::%HEAP-BYTES-ALLOCATED))
+  (invalidate-visit-marks)
    (prog1 (copy-dag-completely1 dag (create-dag))
       #+(and mcl powerpc)(incf dd (CCL::%HEAP-BYTES-ALLOCATED))
       ))
@@ -1012,6 +1012,7 @@
                         (dag-arcs dag)))))
             (setf (dag-visit dag) new-instance)
             new-instance))))
+
 
 ;;;
 ;;; functions to facilitate ambiguity packing: currently, hard-wire which parts
@@ -1137,32 +1138,19 @@
   dag)
 
 
-(defun destructively-replace-types (dag-instance replace-alist)
-;;; walks over a dag, looking for types which are equal to the car
-;;; values in the replace-alist and resets them to the cdr values
-;;;
-;;; tried doing this properly, within a unification context
-;;; but not working, so copy-completely first  
-  (let* ((real-dag (follow-pointers dag-instance))
-         (dag-type (dag-type real-dag))
-	 (replaceable (assoc dag-type replace-alist :test #'equal)))
-    (when replaceable
-      (setf (dag-type real-dag) (cdr replaceable)))
-    (dolist (arc (dag-arcs real-dag))
-      (destructively-replace-types
-       (dag-arc-value arc)
-       replace-alist))
-    real-dag))
+(defun replace-dag-types (dag-instance path replace-alist)
+  (if *within-unification-context-p*
+      (let
+	  ((dag (unify-paths-dag-at-end-of1 dag-instance path)))
+	(replace-dag-types-aux dag replace-alist)
+	dag-instance)
+    (with-unification-context (dag-instance)
+      (let
+	  ((dag (unify-paths-dag-at-end-of1 dag-instance path)))
+	(replace-dag-types-aux dag replace-alist)
+	(copy-dag dag-instance)))))
 
-
-#|
-
-(defun destructively-replace-types-top (dag-instance replace-alist)
-  (with-unification-context (dag-instance)
-    (destructively-replace-types dag-instance replace-alist)
-    (copy-dag dag-instance)))
-
-(defun destructively-replace-types (dag-instance replace-alist)
+(defun replace-dag-types-aux (dag-instance replace-alist)
 ;;; walks over a dag, looking for types which are equal to the car
 ;;; values in the replace-alist and resets them to the cdr values
   (let* ((real-dag (deref-dag dag-instance))
@@ -1171,11 +1159,11 @@
     (when replaceable
       (setf (dag-new-type real-dag) (cdr replaceable)))
     (dolist (arc (dag-arcs real-dag))
-      (destructively-replace-types
+      (replace-dag-types-aux
        (dag-arc-value arc)
        replace-alist))
     real-dag))
-|#
+
 
 ;;; **********************************************************************
 
