@@ -15,7 +15,7 @@
   (batch-output-rmrs-aux nil))
   
 (defun batch-output-rmrs-aux (simple-p)  
-  (let ((sentence lkb::*sentence*)
+  (let ((sentence lkb::*parse-input*)
         (ostream (if (and lkb::*ostream* 
                           (streamp lkb::*ostream*) 
                           (output-stream-p lkb::*ostream*)) 
