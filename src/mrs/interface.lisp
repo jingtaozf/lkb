@@ -169,8 +169,8 @@
                      "every daughter of a daughter of a daughter of a daughter sees most daughters of a daughter of a daughter of a daughter")
                      
        do
-       (let  ((user-input (cl-user::split-into-words sentence)))
-         (cl-user::parse user-input nil)
+       (let  ((user-input (lkb::split-into-words sentence)))
+         (lkb::parse user-input nil)
   (when *parse-record*
   (let* ((edges *parse-record*)
          (mrs (extract-mrs (car edges))))
