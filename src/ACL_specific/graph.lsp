@@ -1,5 +1,5 @@
 ;;; Define :parse-tree, a new graph type for use with format-graph-from-root,
-;;; that draws things that look more like traditional parse trees that what's
+;;; that draws things that look more like traditional parse trees than what's
 ;;; produced by the :tree graph type.
 
 (in-package :clim-internals)
