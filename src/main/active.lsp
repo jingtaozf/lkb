@@ -98,38 +98,19 @@
         (*maximal-vertex* end))
     (declare (special *minimal-vertex* *maximal-vertex*))
     ;;
-    ;; since lexical processing is left to the regular LKB devices (at least
-    ;; for the time being), check for parsing results that may have been found
-    ;; already.
-    ;;
-    (let ((results (find-spanning-edges begin end)))
-      (when results
-        ;;
-        ;; it seems there is no way to ignore a variable in our beloved loop()
-        ;;
-        (loop
-            with i = (length results)
-            do
-              (push (get-internal-run-time) *parse-times*)
-            until (zerop (decf i)))
-        (setf *parse-record* (nconc results *parse-record*))
-        (when *maximal-number-of-readings*
-          (decf *maximal-number-of-readings* (length results))
-          (when (zerop *maximal-number-of-readings*)
-            (throw :best-first t)))))
-    ;;
     ;; initialize *aagenda* through postulation of rules over all passive items
     ;; obtained from regular LKB lexical processing (i.e. words); the active
     ;; parser will share the LKB chart but use its own agenda (storing tasks).
     ;; additionally, we have to initialize the second *chart* dimension indexed
-    ;; by start positions.
+    ;; by start positions, but not duplicate the entry in the first dimension;
+    ;; therefore the second argument to fundamental4passive().
     ;;
-    #+:agenda
-    (flush-heap *aagenda*)
     (loop 
       for i from 0 to (1- *chart-limit*)
       do 
         (setf (aref *achart* i 0) nil (aref *achart* i 1) nil))
+    #+:agenda
+    (flush-heap *aagenda*)
     (loop
         for i from 0 to (- *chart-limit* 1)
         for entry = (aref *chart* i 0)
@@ -139,12 +120,7 @@
               for passive in configurations
               for begin = (chart-configuration-begin passive)
               do
-                (if (aref *chart* begin 1)
-                  (push passive 
-                        (chart-entry-configurations (aref *chart* begin 1)))
-                  (setf (aref *chart* begin 1)
-                    (make-chart-entry :configurations (list passive))))
-                (postulate passive)))
+                (fundamental4passive passive :old)))
     ;;
     ;; now run the main parser loop: until we empty the agenda (or hell freezes
     ;; over) apply the fundamental rule of chart parsing.
@@ -229,7 +205,7 @@
         else do
           (incf *filtered-tasks*))))
 
-(defun fundamental4passive (passive)
+(defun fundamental4passive (passive &optional oldp)
   (declare (special *minimal-vertex* *maximal-vertex*))
 
   #+:adebug
@@ -243,12 +219,15 @@
          (preceding (aref *achart* begin 0))
          (following (aref *achart* end 1)))
     ;;
-    ;; add .passive. to chart (indexed by start and end vertex)
+    ;; add .passive. to chart (indexed by start and end vertex); .oldp is only
+    ;; used in initialization to prevent duplication of passive edges obtained
+    ;; from (regular) LKB lexical processing.
     ;;
-    (if (aref *chart* end 0)
-      (push passive (chart-entry-configurations (aref *chart* end 0)))
-      (setf (aref *chart* end 0)
-        (make-chart-entry :configurations (list passive))))
+    (unless oldp
+      (if (aref *chart* end 0)
+        (push passive (chart-entry-configurations (aref *chart* end 0)))
+        (setf (aref *chart* end 0)
+          (make-chart-entry :configurations (list passive)))))
     (if (aref *chart* begin 1)
       (push passive (chart-entry-configurations (aref *chart* begin 1)))
       (setf (aref *chart* begin 1)
@@ -264,8 +243,7 @@
           (push (get-internal-run-time) *parse-times*)
           (setf *parse-record* (nconc result *parse-record*))
           (when *maximal-number-of-readings*
-            (decf *maximal-number-of-readings*)
-            (when (zerop *maximal-number-of-readings*)
+            (when (zerop (decf *maximal-number-of-readings*))
               (throw :best-first t))))))
     ;;
     ;; create new tasks through postulation of rules over .passive.
@@ -315,24 +293,15 @@
   
   (let* ((rule (first task))
          (rtdfs (rule-full-fs rule))
-         (rhs (arule-rhs rule))
-         (open (rest rhs))
-         (key (first rhs))
-         (daughters (rest (rule-order rule)))
-         (path (nth key daughters))
+         (rhs (arule-rhs rule)) (open (rest rhs)) (key (first rhs))
+         (daughters (rest (rule-order rule))) (path (nth key daughters))
          (passive (rest task))
-         (edge (chart-configuration-edge passive))
-         (ptdfs (edge-dag edge))
+         (edge (chart-configuration-edge passive)) (ptdfs (edge-dag edge))
          (nedge
           (with-unification-context (ignore)
             (incf *executed-tasks*)
             (let* ((tdfs (yadu rtdfs (create-temp-parsing-tdfs ptdfs path))))
               (when tdfs
-                ;;
-                ;; _fix_me_
-                ;; tdfs-at-end-of() is not guaranteed to work within a
-                ;; unification context.
-                ;;
                 (let* ((root (tdfs-at-end-of (first (rule-order rule)) tdfs))
                        (vector (if open
                                  (tdfs-qc-vector
@@ -345,8 +314,8 @@
                                (restrict-and-copy-tdfs root))))
                   (when copy
                     (make-edge :id (next-edge)
-                               :category (indef-type-of-tdfs (if (eq copy t)
-                                                               tdfs copy))
+                               :category (indef-type-of-tdfs
+                                          (if (eq copy t) tdfs copy))
                                :rule rule :children (list edge)
                                :dag copy :dag-restricted vector
                                :lex-ids (copy-list (edge-lex-ids edge))
@@ -377,13 +346,10 @@
          (forwardp (active-chart-configuration-forwardp active))
          (aedge (chart-configuration-edge active))
          (achildren (edge-children aedge))
-         (atdfs (edge-dag aedge))
-         (arule (edge-rule aedge))
-         (daughters (rest (rule-order arule)))
-         (path (nth key daughters))
+         (atdfs (edge-dag aedge)) (arule (edge-rule aedge))
+         (daughters (rest (rule-order arule))) (path (nth key daughters))
          (passive (rest task))
-         (pedge (chart-configuration-edge passive))
-         (ptdfs (edge-dag pedge))
+         (pedge (chart-configuration-edge passive)) (ptdfs (edge-dag pedge))
          (nedge
           (with-unification-context (ignore)
             (incf *executed-tasks*)
@@ -415,9 +381,8 @@
                                  (copy-tdfs-elements tdfs))
                                (restrict-and-copy-tdfs root))))
                   (when copy
-                    (let* ((category (indef-type-of-tdfs (if (eq copy t)
-                                                           tdfs
-                                                           copy)))
+                    (let* ((category (indef-type-of-tdfs 
+                                      (if (eq copy t) tdfs copy)))
                            (children (if forwardp
                                        (append achildren (list pedge))
                                        (cons pedge achildren)))
