@@ -23,6 +23,8 @@
 
 (in-package :lkb)
 
+(defparameter *preprocessor-debug-p* t)
+
 (defparameter *preprocessor* nil)
 
 #+:null
@@ -110,9 +112,10 @@
               (nreverse (fspp-global fspp)))
             (setf (fspp-local fspp)
               (nreverse (fspp-local fspp)))
-            (return fspp)))))
+            (return (setf *preprocessor* fspp))))))
 
-(defun preprocess (string &key (preprocessor *preprocessor*) verbose)
+(defun preprocess (string &key (preprocessor *preprocessor*) 
+                               (verbose *preprocessor-debug-p*))
 
   (when (null preprocessor)
     (return-from preprocess string))
@@ -193,4 +196,3 @@
         finally 
           (return
             (values (format nil "~{~a~^ ~}" (nreverse result)) length)))))
-
