@@ -1049,9 +1049,8 @@ for PAGE and LiLFeS")
 ;;; We want a standard order on the features - otherwise the output becomes 
 ;;; very difficult to read. 
 
-
 (defun canonical-order (type dag-attributes)
-  (let* ((type (get-any-type-entry type))
+  (let* ((type (get-type-entry type))
          (ordered-attributes (when type (type-appfeats type))))
     (stable-sort (copy-list dag-attributes)
           #'(lambda (x y)
