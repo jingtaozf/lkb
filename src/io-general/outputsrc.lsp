@@ -326,13 +326,13 @@
           for inflectedp = (and tdfs (dag-inflected-p (tdfs-indef tdfs)))
           for ipos = (and entry (lex-or-psort-infl-pos entry))
           when (zerop (mod i 100)) do (clear-expanded-lex)
-          when inflectedp do
+          do
             (let* ((orth (lex-or-psort-orth entry))
                    (form (nth (if ipos (- ipos 1) 0) orth)))
               (output-entry-for-pet
                stream
                id form nil (or ipos 0) (length orth)))
-          else when entry do
+          unless (or inflectedp (not entry)) do
             (loop
                 with dag = (tdfs-indef tdfs)
                 with type = (type-of-fs dag)
