@@ -21,9 +21,9 @@
           [ _a_q_rel
             LBL: h4
             ARG0: x5 [ REF-IND
-                         PNG.GEN:  REAL_GENDER
-                         PNG.PN:  3SG
-                         DIVISIBLE:  - ]
+                        PNG.GEN:  REAL_GENDER
+                        PNG.PN:  3SG
+                        DIVISIBLE:  - ]
             RSTR: h6
             BODY: h7 ]
           [ _dog_n_rel
@@ -91,7 +91,8 @@
                    &key id exhaustive nanalyses trace
                         edges derivations semantix-hook trees-hook
                         burst (nresults 0))
-  (declare (ignore id edges derivations semantix-hook trees-hook burst))
+  (declare (ignore string id exhaustive nanalyses trace
+                   edges derivations semantix-hook trees-hook burst))
   ;;
   ;; send string through processor (i.e. parser) and return processing results.
   ;; the parameters are:
@@ -134,7 +135,6 @@
                                                 (min readings nresults))
                               for i from 1
                               for mrs = %dummy-mrs%
-                              do (pprint (list i nresults))
                               while (>= (decf nresults) 0) collect
                                 (pairlis '(:result-id :mrs) (list i mrs))))))))
     (append

@@ -294,6 +294,6 @@
   (setf (gethash :derivation *statistics-readers*)
     #'(lambda (string)
         (let ((*package* (find-package :tsdb)))
-          (read-from-string string))))
+          (unless (equal string "") (read-from-string string)))))
   (setf (gethash :derivation *statistics-predicates*)
     #'(lambda (gold blue) (not (derivation-equal gold blue)))))

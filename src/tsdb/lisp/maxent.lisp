@@ -178,7 +178,7 @@
          (format stream ":begin :features ~d.~%~%" (mem-count model))
          (loop
              with *print-case* = :downcase
-             with *package* = (find-package lkb::*lkb-package*)
+             with *package* = (find-package :lkb)
              with table = (mem-table model)
              for i from 0
              for feature = (code-to-symbol i table)

@@ -1215,7 +1215,7 @@
   #+:debug
   (setf %item% item %active% active)
   (loop
-      with *package* = (find-package lkb::*lkb-package*)
+      with *package* = (find-package :lkb)
       with lkb::*deleted-daughter-features* = 
         (if (or (eq *redwoods-export-values* :all)
                 (smember :avm *redwoods-export-values*))
@@ -1285,7 +1285,7 @@
         (format t "~a: [~a] `~a'~%" i-id (length results) input)
         (format stream "~a: [~a] `~a'~%" i-id (length results) input)
         (loop
-            with *package* = (find-package lkb::*lkb-package*)
+            with *package* = (find-package :lkb)
             for result in results
             for derivation = (get-field :derivation result)
             for edge = (when derivation (reconstruct derivation))

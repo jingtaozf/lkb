@@ -224,7 +224,7 @@
                           while daughter
                           collect (edge-root daughter)))
                (extra (format nil "~:@(~a~)#~{~:@(~a~)~^#~}" irulep extra))
-               (root (intern extra lkb::*lkb-package*))
+               (root (intern extra :lkb))
                (lhs (symbol-to-code root table)))
           (setf (lkb::edge-foo edge)
             (make-cfr :type :irule :lhs lhs :rhs rhs))))

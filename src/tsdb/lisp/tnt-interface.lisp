@@ -137,7 +137,7 @@
   (let* ((target (or path 
 		     (format nil "/eo/e5/users/sshieber/tnt/data/~a/" 
 			     (substitute #\. #\/ data))))
-	 (*package* (find-package lkb::*lkb-package*)))
+	 (*package* (find-package :lkb)))
     ;; delete any previous results and make a new directory for these
     #+:allegro (ignore-errors (mkdir target))
     (loop 

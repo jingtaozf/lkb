@@ -94,7 +94,8 @@
                           readings
                           (loop
                               with nresults = (if (<= nresults 0)
-                                                readings nresults)
+                                                readings
+                                                (min readings nresults))
                               for i from 1
                               for result in %results%
                               for mrs = (extract-mrs result)

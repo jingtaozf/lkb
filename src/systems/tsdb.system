@@ -86,16 +86,16 @@
        (:file "macros")
        #+:page 
        (:file "tdl-patches")
-       #+(and (or :lkb :mrs) (not :sltg) (not :xle) (not :dummy))
+       #+(and :lkb (not (or :page :annlt :sltg :xle :dummy)))
        (:file "lkb-interface")
-       #+:xle
-       (:file "xle-interface")
-       #+:dummy
-       (:file "dummy-interface")
        #+:anlt 
        (:file "anlt-interface")
        #+:sltg
        (:file "sltg-interface")
+       #+:xle
+       (:file "xle-interface")
+       #+(or :dummy (not (or :lkb :page :annlt :sltg :xle :dummy)))
+       (:file "dummy-interface")
        (:file "globals")
        (:file "utilities")
        #+(and :allegro (or :linux (and :sparc :svr4) :alpha)) 
@@ -120,19 +120,19 @@
        #+:page 
        (:file "page-interface")
        (:file "derivations")
-       #+(or :lkb :mrs)
+       #+:lkb
        (:file "tnt-interface")
-       #+(and (or :lkb :mrs) :allegro :clim)
+       #+(and :lkb :allegro :clim)
        (:file "redwoods")
        #+:lkb
        (:file "lsp")
-       #+(or :lkb :mrs)
+       #+:lkb
        (:file "ptb")
-       #+(or :lkb :mrs)
+       #+:lkb
        (:file "rasp")
-       #+(or :lkb :mrs)
+       #+:lkb
        (:file "pcfg")
-       #+(or :lkb :mrs)
+       #+:lkb
        (:file "maxent")))
      
      #+:dfki
