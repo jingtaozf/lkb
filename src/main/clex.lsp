@@ -28,7 +28,7 @@
 (defclass cdb-lex-database (lex-database)
   ((psort-db :initform nil :accessor psort-db)
    (orth-db :initform nil :accessor orth-db)
-   (psorts-temp-file :initform (get-new-filename "~/tmp/templex") :accessor psorts-temp-file)
+   (psorts-temp-file :initform "~/tmp/templex" :accessor psorts-temp-file)
    (psorts-temp-index-file :initform nil :reader psorts-temp-index-file)
    (all-cdb-lex-dbs :allocation :class :initform nil :accessor all-cdb-lex-dbs)))
 
@@ -155,7 +155,7 @@
 			 :test 'equal))
       do
 	(setf psorts-temp-file (format nil "~a-" psorts-temp-file))
-	(format *trace-output* "WARNING: temp lexicon filename conflicts with existing lexicon.~%Attempting new filename (~a)" psorts-temp-file))
+	(format *trace-output* "~%WARNING: temp lexicon filename conflicts with existing lexicon.~%Attempting new filename (~a)" psorts-temp-file))
   (when psorts-temp-file
     (setf (psorts-temp-file lexicon) psorts-temp-file))
   ;(setf (psorts-temp-index-file lexicon) (format nil "~a-index" (psorts-temp-file lexicon)))
@@ -170,7 +170,10 @@
   (clear-lex lexicon :no-delete no-delete :psorts-temp-file psorts-temp-file))
 
 (defmethod delete-temporary-lexicon-files ((lexicon cdb-lex-database))
-  (with-slots (psorts-temp-file) lexicon
+
+  (setf (all-cdb-lex-dbs lexicon)
+    (remove (psorts-temp-file lexicon) (all-cdb-lex-dbs lexicon) :key #'psorts-temp-file :test 'equal))
+(with-slots (psorts-temp-file) lexicon
     (when (and psorts-temp-file
 	     (probe-file psorts-temp-file))
     (delete-file psorts-temp-file))
