@@ -32,6 +32,9 @@
 
 ;;; #+mcl (defpackage :common-lisp-user (:nicknames :user :cl-user))
 
+(defparameter %sys-host%
+  (pathname-host *load-truename*))
+
 (defparameter %sys-device%
   (pathname-device *load-truename*))
     
@@ -39,7 +42,8 @@
 ;;; --------------- END SITE-SPECIFIC INSTALLATION PARAMETERS -----------------
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defparameter sys-home (make-pathname :device %sys-device%
+(defparameter sys-home (make-pathname :host %sys-host%
+                        :device %sys-device%
                          :directory (cons #-:lucid :absolute 
                                       #+:lucid :root %sys-home%)))
 ;;; AAC - turned this into a pathname, so it can include the device
@@ -82,8 +86,14 @@
 (load
  (make-pathname :directory general-dir :name "clisp-patches"))
 
+#+:lispworks
 (load
- (make-pathname :device %sys-device%
+ (make-pathname :host %sys-host%
+                :device %sys-device%
+                :directory general-dir :name "lispworks-patches"))
+
+(load
+ (make-pathname :host %sys-host% :device %sys-device%
    :directory general-dir :name "loadup-library"))
 
 (in-package "MAKE")

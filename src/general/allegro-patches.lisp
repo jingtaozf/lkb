@@ -73,7 +73,7 @@
   (let ((excl:*enable-package-locked-errors* nil))
     (shadowing-import
       '(make:defsystem make:undefsystem
-        make:load-system make:compile-system)
+        make:load-system make:compile-system make:clean-system)
       "EXCL")))
 
 (defun run-process (&rest arguments)

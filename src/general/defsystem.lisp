@@ -2289,13 +2289,35 @@ D
 	(eval (component-pathname component :binary)))
 
   ;; Pass along the host and devices
+
+  #|
   (setf (component-host component)
 	(or (component-host component)
 	    (when parent (component-host parent))))
   (setf (component-device component)
 	(or (component-device component)
 	    (when parent (component-device parent))))
-
+  |#
+  ;; AAC - the device really has to be evaluated to be of much use
+   (setf (component-device component)
+         (or 
+             (if (pathnamep (component-device component))
+                (component-device component)
+                (eval (component-device component)))
+             (if parent
+                (if (pathnamep (component-device parent))
+                   (component-device parent)
+                   (eval (component-device parent))))))
+   (setf (component-host component)
+         (or 
+             (if (pathnamep (component-host component))
+                (component-host component)
+                (eval (component-host component)))
+             (if parent
+                (if (pathnamep (component-host parent))
+                   (component-host parent)
+                  (eval (component-host parent))))))  
+  
   ;; Set up extension defaults
   (setf (component-extension component :source)
 	(or (component-extension component :source :local t) ; local default
@@ -2802,7 +2824,12 @@ D
 			       (minimal-load *minimal-load*))
   (unwind-protect
       ;; Protect the undribble.
-      (progn
+      (#+(not (and :allegro (not :compiler)))
+       with-compilation-unit 
+       #+(not (and :allegro (not :compiler)))
+       nil
+       #-(not (and :allegro (not :compiler)))
+       progn
 	(when *reset-full-pathname-table* (clear-full-pathname-tables))
 	(when dribble (dribble dribble))
 	(when test (setq verbose t))
