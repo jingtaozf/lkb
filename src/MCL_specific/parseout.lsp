@@ -17,7 +17,8 @@
       (when display-in-chart-p (display-edge-in-chart edge))
       (make-new-parse-tree edge-symbol edge)
       (draw-new-parse-tree edge-symbol 
-         (format nil "Edge ~A" edge-id) nil)))
+         (format nil "Edge ~A ~A" edge-id (if (gen-chart-edge-p edge) "G" "P"))
+         nil)))
    
 (defun make-new-parse-tree (edge-symbol edge-record)
    (setf (get edge-symbol 'daughters)
@@ -177,7 +178,8 @@
      :menu-item-action
      #'(lambda ()
          (display-fs (edge-dag edge-record)
-                     (format nil "Edge ~A" (edge-id edge-record)))))
+            (format nil "Edge ~A ~A - FS" (edge-id edge-record)
+               (if (gen-chart-edge-p edge-record) "G" "P")))))
    (make-instance 'menu-item
      :menu-item-title (format nil "Edge ~A" (edge-id edge-record))
      :menu-item-action
