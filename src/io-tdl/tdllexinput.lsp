@@ -2,6 +2,10 @@
 ;;; see licence.txt for conditions
 
 
+;;; modifications by bmw (nov-03)
+;;; - internal reworking of cdb-lex-database + cdb-leaf-database classes 
+;;;   and associated script functions
+
 (in-package :lkb)
 
 ;;; Input from lexical entry and psort/template files

@@ -4,6 +4,10 @@
 
 (in-package :lkb)
 
+;;; modifications by bmw (nov-03)
+;;; - internal reworking of cdb-lex-database + cdb-leaf-database classes 
+;;;   and associated script functions
+
 ;;;
 ;;; Leaf types - these functions are effectively simplified versions
 ;;; of those in checktypes.lsp, but that file was getting too large

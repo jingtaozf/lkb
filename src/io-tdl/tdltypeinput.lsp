@@ -3,6 +3,10 @@
 
 (in-package :lkb)
 
+;;; modifications by bmw (nov-03)
+;;; - internal reworking of cdb-lex-database + cdb-leaf-database classes 
+;;;   and associated script functions
+
 ;;; 1997 - added status stuff so that we can read files without
 ;;; modification to get rid of this
 
