@@ -38,10 +38,16 @@
 ;;;
 ;;; Status -> status: status-name
 ;;;
+;;; Type-addendum -> Type Avm-addendum .
+;;; Avm-addendum -> :+ Parents Conjunction | Parents Comment Conjunction |
+;;;                    Parents | Parents Comment | Comment Conjunction |
+;;;                    Comment | Conjunction
+;;;
 ;;; special characters are
 ;;; . : < = & , # [ ] @ $ ( ) > ! ^
 ;;; ^ - added - indicates `expanded syntax'
 ;;; / - added - indicates default
+;;; + - added - indicates type addendum; not a break character (ERB 2004-08-10)
 ;;; also note that % indicates an instance type
 
 ;;; Modification for defaults
@@ -198,6 +204,7 @@
 ;;; Type  -> identifier
 ;;; Subtype-def ->  :< type 
 ;;; Avm-def -> := Conjunction | Comment Conjunction
+;;; Type-addendum -> Type Avm-addendum .
   (let* (#+:allegro
          (position (1+ (file-position istream)))
 	 (name (lkb-read istream nil))
@@ -224,6 +231,12 @@
          (read-char istream)
          (read-tdl-subtype-def istream name augment)
          (check-for #\. istream name))
+	;;;ERB 2004-08-10 New case to allow for addition of 
+	;;;information to existing types.
+	((eql next-char2 #\+)
+         (read-char istream)
+         (read-tdl-avm-def istream name 'add-info)
+         (check-for #\. istream name))
         (t (lkb-read-cerror istream
             "~%Syntax error following type name ~A" name)
            (ignore-rest-of-entry istream name))))))
@@ -244,9 +257,24 @@
 (defparameter *tdl-coreference-table* (make-hash-table))
 (defparameter *tdl-default-coreference-table* (make-hash-table))
 
+;;; ERB (2004-08-10) Allow users to add information to a type
+;;; defined previously.  Must be monotonic addition of information.
+;;; Parents, conjunctions, comments can all be added.
+;;; Try reusing "augment" parameter with new value to handle
+;;; this case, since it will mostly be the same as the
+;;; ordinary case.
+
+;;; ERB (2004-08-10) := requires the presence of a parent.
+;;; :+ doesn't.  Need to parameterize on augment here to 
+;;; only call tdl-read-type-parents if there's really a parent
+;;; there or if we're in the := case, I think.
+
 (defun read-tdl-avm-def (istream name &optional augment)
   ;;; Avm-def -> := Parents Conjunction | Parents Comment Conjunction |
   ;;;               Parents | Parents Comment
+  ;;; Avm-addendum -> :+ Parents Conjunction | Parents Comment Conjunction |
+  ;;;                    Parents | Parents Comment | Comment Conjunction |
+  ;;;                    Comment | Conjunction
   ;;; for the lkb type files we need to distinguish between
   ;;; the list of parents i.e. single types
   ;;; which are listed in the conjunction, and a constraint,
@@ -257,7 +285,13 @@
 	  (comment nil)
 	  (constraint nil)
 	  (def-alist nil))
-      (setf parents (read-tdl-type-parents istream name))
+      ;;; ERB 2004-08-10 If we're in add-info mode, there may not be parents.  
+      ;;; If that's the case, the next character will be [ (for a conjunction) or
+      ;;; " (for a comment string).
+      (unless (and (eql augment 'add-info) 
+		   (or (eql (peek-char t istream nil 'eof) #\[)
+		       (eql (peek-char t istream nil 'eof) #\")))
+	(setf parents (read-tdl-type-parents istream name)))
       ;;; the above absorbs the final & if it's there
       (let ((next-char (peek-char t istream nil 'eof)))
 	    (when (eql next-char #\")
@@ -295,11 +329,13 @@
 		    (if entry
 			(push (cadr coref) (cdr entry))
 		      (push coref def-alist)))))
-      (if augment
-	  (unless
-	      (amend-type-from-file name parents constraint def-alist comment)
+      (cond ((eql augment 'add-info)
+	     (add-info-to-type-from-file name parents constraint def-alist comment))
+	    (augment
+	     (amend-type-from-file name parents constraint def-alist comment)
 	    (setf *amend-error* t))
-        (add-type-from-file name parents constraint def-alist comment))
+	    (t (add-type-from-file name parents constraint def-alist comment)))
+	    
       (when (eql (peek-char t istream nil 'eof) #\,)
 	(read-tdl-status-info istream name)))))
 

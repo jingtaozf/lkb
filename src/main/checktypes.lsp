@@ -93,6 +93,34 @@
                 name)))
     ok))
 
+;;; ERB (2004-08-10) Allow users to add info to a type that's
+;;; already been defined.  
+
+(defun add-info-to-type-from-file (name parents constraint default comment)
+  (let ((existing-type (get-type-entry name)))
+    (unless existing-type
+      (cerror "Cancel load" "Cannot add information to type ~a as it is not already defined" name))
+    (let* ((existing-parents (type-parents existing-type))
+	   (existing-constraint (type-constraint-spec existing-type))
+	   (existing-default (type-default-spec existing-type))
+	   (existing-comment (type-comment existing-type))
+	   (redundant-parents (when (listp existing-parents)
+				(loop for parent in parents
+				      if (member parent existing-parents)
+				      collect parent))))
+      (unless (null redundant-parents)
+	(cerror "Cancel load" "Cannot add redundant parents ~a to type ~a" redundant-parents name))
+      (let ((new-parents (append existing-parents parents))
+	  (new-constraint (append existing-constraint constraint))
+	  (new-default (append existing-default default))
+	  (new-comment (concatenate 'string existing-comment " " comment)))
+	(setf (type-parents existing-type) new-parents)
+	(setf (type-constraint-spec existing-type) new-constraint)
+	(setf (type-default-spec existing-type) new-default)
+	(setf (type-comment existing-type) new-comment)))))
+
+
+
 (defun type-parents-equal (new-parents old-parents)
     (and (null (set-difference new-parents old-parents))
          (null (set-difference old-parents new-parents))))
