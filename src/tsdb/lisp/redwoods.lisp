@@ -82,7 +82,7 @@
          %client%)
     (declare (special %client%))
 
-    #-:debug
+    #+:debug
     (setf lkb::%frame% frame)
     (setf (lkb::compare-frame-ids frame) 
       (loop for item in items collect (get-field :i-id item)))

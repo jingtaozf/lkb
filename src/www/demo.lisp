@@ -343,7 +343,7 @@
       (www-compare request entity :edges edges)))))
 
 (defun www-compare (request entity &key profile edges)
-  #-:debug
+  #+:debug
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
          (body (when (eq method :post) (get-request-body request)))
@@ -386,7 +386,6 @@
     (when (member action '("back" "next") :test #'string-equal)
       (let ((backp (string-equal action "back"))
             (id (lkb::compare-frame-item frame)))
-        (setf %id% id %ids% (lkb::compare-frame-ids frame))
         (loop
             for ids on (lkb::compare-frame-ids frame)
             when (or (and (null backp) (eql id (first ids)) (second ids))

@@ -729,11 +729,11 @@
 (defun size-of-lexicon ()
   (let ((*package* *lkb-package*))
     (cond
-     ((and (find-symbol "*PSORTS*") (boundp (find-symbol "*PSORTS*")))
-      (hash-table-count (symbol-value (find-symbol "*PSORTS*"))))
      ((and (find-symbol "*LEXICON*") (boundp (find-symbol "*LEXICON*")))
       (length (collect-expanded-lex-ids 
                (symbol-value (find-symbol "*LEXICON*")))))
+     ((and (find-symbol "*PSORTS*") (boundp (find-symbol "*PSORTS*")))
+      (hash-table-count (symbol-value (find-symbol "*PSORTS*"))))
      (t
       -1))))
     
