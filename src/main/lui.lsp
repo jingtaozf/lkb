@@ -22,8 +22,6 @@
 (in-package :lkb)
 
 (defparameter *lui-application*
-  #+:null
-  "exec /home/oe/lbin/nc localhost 4712"
   (format
    nil 
    "exec ~a"
@@ -236,7 +234,7 @@
   (case key
     #+:null
     (:tree (streamp %lui-stream%))
-    #+:null
+    #-:null
     (:avm (streamp %lui-stream%))
     #-:null
     (:mrs (streamp %lui-stream%))))
