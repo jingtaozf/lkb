@@ -71,8 +71,9 @@
         (if rule-entry (rule-full-fs rule-entry)
           (let ((lex-rule-entry (get-lex-rule-entry fs-id)))
             (if lex-rule-entry (rule-full-fs lex-rule-entry)
-              (let ((type (get-type-entry fs-id)))
-                (if type (tdfs-of fs-id))))))))))
+              (progn (eval-possible-leaf-type fs-id)
+                     (let ((type (get-type-entry fs-id)))
+                       (if type (tdfs-of fs-id)))))))))))
 
 (defun split-into-words (sentence-string)
   ; split-into-words is used in various places 

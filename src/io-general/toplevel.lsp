@@ -148,14 +148,15 @@
                  ,@(if check-box-spec `(,check-box-spec)))
                150)))
       (when res
-         (let* ((type (car res))
-                (show-all-p (cadr res))
-                (type-entry (get-type-entry type)))
+        (let ((type (car res))
+              (show-all-p (cadr res)))
+          (eval-possible-leaf-type type)
+          (let ((type-entry (get-type-entry type)))
             (unless type-entry
                (format t "~%Type ~A is not defined" type)
                (setf type (ask-user-for-type)))
             (setf *last-type-name* type)
-            (values type show-all-p)))))
+            (values type show-all-p))))))
 
 
 ;;; display-fs is in outputfs.lsp

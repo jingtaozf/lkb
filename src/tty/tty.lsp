@@ -9,6 +9,7 @@
 ;;;                        :value #'show-type-spec)
 
 (defun show-type-spec-tty (type)
+  (eval-possible-leaf-type type)
   (let* ((type-entry (if type (get-type-entry type))))
     (when type-entry
       (display-fs-and-parents-tty (type-local-constraint type-entry)
@@ -19,6 +20,7 @@
 ;;;                        :value #'show-type)
 
 (defun show-type-tty (type)
+  (eval-possible-leaf-type type)
   (let* ((type-entry (if type (get-type-entry type))))
     (when type-entry
       (display-fs-and-parents-tty (type-constraint type-entry)

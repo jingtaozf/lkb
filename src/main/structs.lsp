@@ -141,11 +141,12 @@
         (t nil)))
 
 (defun eval-possible-leaf-type (type)
-  (let ((type-entry (get-type-entry type)))
-    (when type-entry
-      (when (leaf-type-p type-entry)
-        (unless (leaf-type-expanded-p type-entry)
-          (add-in-leaf-type-entry type-entry))))))
+  (when type
+    (let ((type-entry (get-type-entry type)))
+      (when type-entry
+        (when (leaf-type-p type-entry)
+          (unless (leaf-type-expanded-p type-entry)
+            (add-in-leaf-type-entry type-entry)))))))
 
 (defun process-unifications (specific-list)
    ;; if create-wffs-p then create-wffs is called to finish off - if
