@@ -152,7 +152,10 @@
       (or (not top-edge-p) (not *mrs-loaded*) (g-edge-p edge-record)))
     (make-instance 'menu-item
       :menu-item-title 
-      (format nil "Lex ids ~A" (edge-lex-ids edge-record))
+      (let ((str (format nil "Lex ids~{~^  ~A~}" (edge-lex-ids edge-record))))
+         (when (> (length str) 253)
+            (setq str (concatenate 'string (subseq str 0 252) (string (code-char 201)))))
+         str)
       :menu-item-action #'(lambda () nil)
       :disabled t)
     (if top-edge-p

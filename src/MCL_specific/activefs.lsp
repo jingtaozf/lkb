@@ -567,7 +567,7 @@
                   150))))
             (if psort-name
               (or 
-               (store-temporary-psort psort-name fs)
+               (store-temporary-psort *lexicon* psort-name fs)
                (cerror "Try Again" "Name already used"))))))
 
 
