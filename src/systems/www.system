@@ -8,13 +8,14 @@
 
 (pushnew :lkb *features*)
 (pushnew :mrs *features*)
+(pushnew :tsdb *features*)
 (pushnew :www *features*)
 
 (defsystem "www"
     :source-pathname (dir-append (get-sources-dir "www") '(:relative "www"))
     :binary-pathname (dir-append (get-binaries-dir "www") '(:relative "www"))
     :source-extension "lisp"
-    :depends-on ("tsdb")
+    :depends-on (#+:mt "mt" #-:mt "tsdb")
     :components
     ((:module "aserve"
       :source-pathname %system-binaries%
