@@ -333,7 +333,6 @@
                t
                "[~d] lsp-process-event(): invalid type identifier `~a'~%" 
                id name))))
-         
          (unify
           (let* ((tdfs1 (let ((n (pop command)))
                           (when (numberp n) 
@@ -344,25 +343,23 @@
                             (second (lsp-retrieve-object id n)))))
                  (path2 (convert-path (pop command))))
             (if (and (tdfs-p tdfs1) path1 (tdfs-p tdfs2) path2)
-              (with-unification-context (ignore)
-                (let* ((tdfs (tdfs-at-end-of path1 tdfs1))
-                       (*unify-debug* :return)
-                       (%failures% nil)
-                       (result (yadu! tdfs2 tdfs path2))
-                       (failures %failures%))
-                  (lui-display-fs 
-                   (if result
-                     (copy-tdfs-elements result)
-                     tdfs1)
-                   "Unification Result"
-                   42
-                   failures)))
+              (let* ((tdfs (tdfs-at-end-of path1 (copy-tdfs-elements tdfs1)))
+                     (*unify-debug* :return)
+                     (%failures% nil)
+                     (result (debug-yadu! tdfs2 tdfs path2))
+                     (failures %failures%))
+                (lui-display-fs 
+                 result
+                 (if failures 
+                   (format nil "Unification Failure~p" (length failures))
+                   "Unification Result")
+                 42
+                 failures))
 
               (format
                t
                "[~d] lsp-process-event(): invalid unify arguments~%" 
                id))))
-         
          (quit
           #+:lui
           (lui-shutdown))
@@ -397,7 +394,8 @@
       while (not (eq form :eof)) collect form))
 
 (defun lsp-make-readtable ()
-  (copy-readtable))
+  (let ((readtable (copy-readtable)))
+    (set-syntax-from-char #\. #\- readtable)))
 
 (defun lsp-find-client (id)
   (loop

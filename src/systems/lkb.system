@@ -1,6 +1,6 @@
-;;; Copyright (c) 1991--2003
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron;
-;;;   see `licence.txt' for conditions.
+;;; Copyright (c) 1991--2004
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, 
+;;;   Benjamin Waldron; see `licence.txt' for conditions.
 
 (in-package :make)
 
@@ -176,6 +176,8 @@
                (:file "lsp")          ; socket-based LKB server mode
                #+:lui
                (:file "lui" )         ; Linguistic User Interface
+               #+:lui
+               (:file "dag" )         ; instrumented unifier for LUI use
                #+:xml
                (:file "sppp")))       ; Simple (XML-base) PreProcessor Protocol
 
