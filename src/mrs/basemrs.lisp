@@ -792,9 +792,10 @@ higher and lower are handle-variables
 (defmethod mrs-output-start-rel ((mrs debug) pred firstp)
   (declare (ignore firstp))
   (with-slots (stream memory) mrs
-    (setf memory (if (stringp pred) 
-                   (format nil "~(~s~)" pred)
-                   (format nil "~(~a~)" pred)))
+    (setf memory (when pred
+                   (if (stringp pred) 
+                     (format nil "~(~s~)" pred)
+                     (format nil "~(~a~)" pred))))
     (format stream " ")))
 
 (defmethod mrs-output-rel-handel ((mrs debug) handle)
@@ -1227,9 +1228,16 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
 (defun read-mrs-atom (istream)
   (let* ((*package* (find-package *mrs-package*))
          (atomsym (read istream nil 'eof)))
-    (when (eq atomsym 'eof)
-      (error "Unexpected eof"))
-    atomsym))
+    (when (eq atomsym 'eof) (error "Unexpected eof"))
+    ;;
+    ;; because LKB type names are either symbols or strings, make sure that
+    ;; we return with either one.  convert to symbols, where necessary, since
+    ;; TDL allows a specification like [ PERS 1 ], where internally we end up
+    ;; using |1| as the type name.                            (8-jan-04; oe)
+    ;;
+    (if (or (symbolp atomsym) (stringp atomsym))
+      atomsym
+      (intern (format nil "~a" atomsym) *mrs-package*))))
 
 ;;; Reading in an MRS that was written out in the `indexed' format
 
@@ -1445,4 +1453,52 @@ VAR -> VARNAME[:CONSTNAME]*
                 for role in (rel-flist ep)
                 for value = (fvpair-value role)
                 do (unfill-variable value)))))
+  mrs)
+
+;;;
+;;; another interim solution: fill in `default' values for a range of index
+;;; features that are not specified in an input MRS to generation, e.g. assume
+;;; that the lack of information about progessive does mean something.
+;;;
+;;; _fix_me_
+;;; i believe one should probably use (generator input) munging rules for this
+;;; purpose, but then i would rather build them on the new MRS transfer code,
+;;; and for now i hesitate to deploy that in the generator.    (12-dec-03; oe)
+;;;
+(defparameter %mrs-extras-defaults% 
+  (list
+   #-:null
+   (list (vsym "E") 
+         (cons (vsym "E.ASPECT.PROGR") (vsym "-"))
+         (cons (vsym "E.ASPECT.PERF") (vsym "-"))
+         (cons (vsym "E.TENSE") (vsym "NO_TENSE")))))
+
+(defun fill-mrs (mrs &optional (defaults %mrs-extras-defaults%))
+  (when defaults
+    (labels ((fill-variable (variable)
+               (when (var-p variable)
+                 (loop
+                     with result = nil
+                     with extras = (var-extra variable)
+                     with type = (var-type variable)
+                     with defaults = (loop
+                                         for (key . defaults) in defaults
+                                         when (string-equal type key) 
+                                         return defaults)
+                     for (feature . value) in defaults
+                     unless (find feature extras :key #'extrapair-feature) do
+                       (push 
+                        (make-extrapair :feature feature :value value)
+                        result)
+                     finally
+                       (when result
+                         (setf (var-extra variable)
+                           (append (var-extra variable) result)))))))
+      (loop
+          for ep in (psoa-liszt mrs)
+          do
+            (loop
+                for role in (rel-flist ep)
+                for value = (fvpair-value role)
+                do (fill-variable value)))))
   mrs)
