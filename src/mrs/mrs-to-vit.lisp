@@ -114,6 +114,7 @@
         *used-handel-labels* nil
         *top-level-variables* nil
         *bound-vit-vars* nil
+        *unbound-holes* nil
         *hack-parameters* nil))
 
 ;;; n-ary 'and', 'or' are transformend into binary ones
@@ -532,6 +533,9 @@
 (defvar *topvit* nil)
 
 (defvar *newmainlabel* nil)
+
+(defvar *unbound-holes* nil)
+;;; for fragments
 
 (defun mrs-to-vit (vitrified-mrs)
   (setf *mrs-to-vit-variables* nil)
@@ -1142,15 +1146,28 @@
         (return (first group)))))
 
 (defun add-unbounds-to-vit (vit)
-  (let ((unbound (collect-unbound-vars vit)))
+  (let ((unbound (collect-unbound-vars vit))
+        (unbound-holes *unbound-holes*))
     (when unbound
-      (setf (vit-discourse vit)
-        (append 
-         (for var in unbound
-           collect
-           (make-p-term :predicate 'unbound
-                        :args  (list var)))
-         (vit-discourse vit))))))
+      (for var in unbound
+           do
+           (push
+            (make-p-term :predicate 'unbound
+                         :args  (list var))
+            (vit-discourse vit))))
+    (when unbound-holes
+      (let ((done nil))
+        (for var in unbound-holes
+             do
+             (let ((converted-var (convert-mrs-val-to-vit var nil)))
+               (unless (member converted-var done)
+                 (push
+                  (make-p-term :predicate 'unbound
+                               :args  (list converted-var))
+                ;; we know this is a hole so we don't need to
+                ;; pass any labels
+                  (vit-discourse vit))
+                 (push converted-var done))))))))
 
 ;; ********* Construction of scope and of groupings ***********
 
