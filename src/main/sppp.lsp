@@ -43,16 +43,17 @@
 
 (defun initialize-sppp ()
 
-  (shutdown-sppp)
-  (let (foo)
-    (multiple-value-setq (*sppp-stream* foo *sppp-pid*)
-      (run-process *sppp-application*
-                   :wait nil
-                   :output :stream :input :stream :error-output nil))
-    ;;
-    ;; this may seem silly: suppress compiler warning about unused .foo.
-    ;;
-    (when foo (setf foo foo))))
+  (when *sppp-application*
+    (shutdown-sppp)
+    (let (foo)
+      (multiple-value-setq (*sppp-stream* foo *sppp-pid*)
+        (run-process *sppp-application*
+                     :wait nil
+                     :output :stream :input :stream :error-output nil))
+      ;;
+      ;; this may seem silly: suppress compiler warning about unused .foo.
+      ;;
+      (when foo (setf foo foo)))))
 
 (defun shutdown-sppp ()
 
