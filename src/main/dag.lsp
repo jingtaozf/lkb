@@ -36,6 +36,19 @@
 (defvar *visit-generation* 1)
 (defvar *visit-generation-max* 1)
 
+;;;
+;;; when packing the chart, we want to be able to exclude certain parts of the
+;;; structures from the subsumption test; accordingly, those parts need to be
+;;; ignored in unification: otherwise we risk packing a less specific edge into
+;;; a more specific host (and sacrifice completeness).  our current best way to
+;;; ignore parts of feature structures is to specifiy a list of features (not
+;;; paths); e.g. wherever `CONT' is seen in a structure, its value is ignored.
+;;;                                                        (15-sep-99  -  oe)
+;;;
+
+#+:packing
+(defparameter *partial-dag-interpretation* nil)
+
 (eval-when (:compile-toplevel :load-toplevel)
   (proclaim '(type fixnum *unify-generation* *unify-generation-max*
                 *visit-generation* *visit-generation-max*)))
@@ -71,24 +84,24 @@
 
 ;;; **********************************************************************
 ;;; This is the structure for representing feature structures. Slots prefixed
-;;; with x- must be accessed only via macros, not directly
+;;; with x- must be accessed only via macros below, not directly
+;;; Size: 40 bytes (MCL), 48 bytes (Allegro)
 
 (defstruct (dag
              (:constructor make-dag-x (type arcs))
              (:copier copy-dag-x))
    (type nil)
    (arcs nil)
+   ;; generation counter for all temporary slots
+   (x-generation 0 :type fixnum)
    ;; new type computed during a unification
    (x-new-type nil)
-   (x-new-type-mark 0 :type fixnum)
    ;; new arcs computed during a unification
-   (x-comp-arcs-slot nil)
+   (x-comp-arcs nil)
    ;; pointer to a copy of this fs
    (x-copy nil)
-   (x-copy-mark 0 :type fixnum)
    ;; pointer to representative for this fs's equivalence class
    (x-forward nil)
-   (x-forward-mark 0 :type fixnum)
    ;; flag used when traversing a fs doing interleaved unifications
    (x-visit-slot nil))
 
@@ -97,9 +110,23 @@
              (:constructor make-safe-dag-x (type arcs))
              (:copier copy-safe-dag-x))
    ;; save a boolean slot in dag structure by making 'safe' dags a different
-   ;; type. We likely save 8 bytes per dag if structure then gets an even
-   ;; number of slots
+   ;; type. We want to keep an even number of slots otherwise we likely
+   ;; waste 4 bytes
    )
+
+
+(defmacro with-dag-optimize ((dag) &body body)
+   #-lkb-nochecks (declare (ignore dag))
+   `(locally (declare (type fixnum *unify-generation*))
+       #+lkb-nochecks (declare ,@(if (symbolp dag) `((type dag ,dag)))
+                               (optimize (speed 3) (safety 0) (space 0)))
+      ,@body))
+
+(defmacro with-verified-dag ((dag) &body body)
+   `(locally (declare ,@(if (symbolp dag) `((type dag ,dag)))
+                      (optimize (speed 3) (safety 0) (space 0)))
+       ,@body))
+
 
 ;;;
 ;;; first attempt at dag recycling.  to reduce creation of garbage, keep a pool
@@ -177,6 +204,11 @@
   (data #(nil) :type simple-vector)
   (garbage 0 :type fixnum))
 
+(defmacro with-verified-pool ((pool) &body body)
+   `(locally (declare ,@(if (symbolp pool) `((type pool ,pool)))
+                      (optimize (speed 3) (safety 0) (space 0)))
+       ,@body))
+
 (defun create-pool (size constructor)
   (#+allegro excl:tenuring #-allegro progn
       (let ((pool (make-pool :size size :constructor constructor))
@@ -205,7 +237,6 @@
   (setf (pool-position pool) 0)
   (setf (pool-garbage pool) 0))
   
-
 (defun reset-pools (&optional forcep)
   (loop
       for pool in (list *dag-pool*)
@@ -213,16 +244,24 @@
 
 
 (defmacro pool-next (pool)
-  (declare (type pool pool))
-  `(let ((next (svref (the simple-vector (pool-data ,pool))
-                      (the fixnum (pool-position ,pool)))))
-     (cond
-      ((null next)
-       (incf (pool-garbage ,pool))
-       (funcall (pool-constructor ,pool)))
-      (t
-       (incf (pool-position ,pool))
-       next))))
+   `(let* ((position (pool-position ,pool))
+           (next
+            (svref (the simple-vector (with-verified-pool (,pool) (pool-data ,pool)))
+               (the fixnum position))))
+       (cond
+          (next
+             (with-verified-pool (,pool)
+                (setf (pool-position ,pool)
+                   (the fixnum (1+ (the fixnum position)))))
+             next)
+          (t
+             (with-verified-pool (,pool)
+                (setf (pool-garbage ,pool)
+                   (the fixnum (1+ (the fixnum (pool-garbage ,pool))))))
+             (funcall (with-verified-pool (,pool) (pool-constructor ,pool)))))))
+
+
+;;; Dag creation
 
 (defparameter *dag-recycling-p* nil)
 
@@ -233,83 +272,98 @@
   ;; True during parsing and generation - assumes that the same derived
   ;; constituent can't be used more than once in a single analysis
   `(if *safe-not-to-copy-p*
-     (if *dag-recycling-p*
-       (let ((new (pool-next *dag-pool*)))
-         (declare (type safe-dag new))
-         (setf (safe-dag-type new) ,type (safe-dag-arcs new) ,arcs)
-         new)
-       (make-safe-dag-x ,type ,arcs))
-     (make-dag-x ,type ,arcs)))
+      (if *dag-recycling-p*
+         (make-safe-recycled-dag-x ,type ,arcs)
+         (make-safe-dag-x ,type ,arcs))
+      (make-dag-x ,type ,arcs)))
 
-;; (pushnew :lkb-nochecks *features*)
+(defun make-safe-recycled-dag-x (type arcs)
+   (let* ((pool *dag-pool*)
+          (new (pool-next pool)))
+      ;; set type and arcs slots. Clear out others - some cpu overhead, but
+      ;; reduces dynamic store footprint
+      (setf (dag-type new) type)
+      (with-verified-dag (new) ; it must really be a dag if we've got here
+         (setf (dag-arcs new) arcs)
+         (setf (dag-x-generation new) 0)
+         (setf (dag-x-new-type new) nil)
+         (setf (dag-x-comp-arcs new) nil)
+         (setf (dag-x-copy new) nil)
+         (setf (dag-x-forward new) nil)
+         (setf (dag-x-visit-slot new) nil)
+         new)))
 
-(defmacro with-dag-optimize ((dag) &body body)
-   #-lkb-nochecks (declare (ignore dag))
-   `(locally (declare (type fixnum *unify-generation*))
-       #+lkb-nochecks (declare ,@(if (symbolp dag) `((type dag ,dag)))
-                               (optimize (speed 3) (safety 0) (space 0)))
-      ,@body))
 
-(defmacro with-verified-dag ((dag) &body body)
-   `(locally (declare ,@(if (symbolp dag) `((type dag ,dag)))
-                      (optimize (speed 3) (safety 0) (space 0)))
-       ,@body))
-
+;;; Dag access
 
 (defmacro dag-safe-p (dag)
-   `(with-dag-optimize (,dag) (safe-dag-p ,dag)))
+   ;; argument must be known already to be some type of dag structure
+   `(with-dag-optimize (,dag)
+      #-mcl (safe-dag-p ,dag)
+      #+mcl (eq (car (uvref ,dag 0)) 'safe-dag))) ; safe, and much quicker
 
 
 (defmacro dag-new-type (dag)
   `(with-dag-optimize (,dag)
-     (when (= (the fixnum (dag-x-new-type-mark ,dag)) *unify-generation*)
+     (when (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
         (with-verified-dag (,dag) (dag-x-new-type ,dag)))))
 
 (defsetf dag-new-type (dag) (new)
   `(with-dag-optimize (,dag)
-     (setf (dag-x-new-type-mark ,dag) *unify-generation*)
+     (unless (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+       (with-verified-dag (,dag) 
+         (setf (dag-x-generation ,dag) *unify-generation*)
+         (setf (dag-x-comp-arcs ,dag) nil)
+         (setf (dag-x-copy ,dag) nil)
+         (setf (dag-x-forward ,dag) nil)))
      (with-verified-dag (,dag) (setf (dag-x-new-type ,dag) ,new))))
 
 
 (defmacro dag-comp-arcs (dag)
   `(with-dag-optimize (,dag)
-     (when (and (consp (dag-x-comp-arcs-slot ,dag))
-                (= (the fixnum
-                     (with-verified-dag (,dag) (car (the cons (dag-x-comp-arcs-slot ,dag)))))
-                   *unify-generation*))
-        (with-verified-dag (,dag) (cdr (the cons (dag-x-comp-arcs-slot ,dag)))))))
+     (when (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+        (with-verified-dag (,dag) (dag-x-comp-arcs ,dag)))))
 
 (defsetf dag-comp-arcs (dag) (new)
   `(with-dag-optimize (,dag)
-     (if (consp (dag-x-comp-arcs-slot ,dag))
-        (with-verified-dag (,dag)
-           (setf (car (the cons (dag-x-comp-arcs-slot ,dag))) *unify-generation*
-                 (cdr (the cons (dag-x-comp-arcs-slot ,dag))) ,new))
-        (progn
-           (with-verified-dag (,dag)
-              (setf (dag-x-comp-arcs-slot ,dag) (cons *unify-generation* ,new)))
-           ,new))))
+     (unless (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+       (with-verified-dag (,dag) 
+         (setf (dag-x-generation ,dag) *unify-generation*)
+         (setf (dag-x-new-type ,dag) nil)
+         (setf (dag-x-copy ,dag) nil)
+         (setf (dag-x-forward ,dag) nil)))
+     (with-verified-dag (,dag) (setf (dag-x-comp-arcs ,dag) ,new))))
 
 
 (defmacro dag-copy (dag)
   `(with-dag-optimize (,dag)
-     (when (= (the fixnum (dag-x-copy-mark ,dag)) *unify-generation*)
+     (when (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
         (with-verified-dag (,dag) (dag-x-copy ,dag)))))
 
 (defsetf dag-copy (dag) (new)
   `(with-dag-optimize (,dag)
-     (setf (dag-x-copy-mark ,dag) *unify-generation*)
+     (unless (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+       (with-verified-dag (,dag) 
+         (setf (dag-x-generation ,dag) *unify-generation*)
+         (setf (dag-x-new-type ,dag) nil)
+         (setf (dag-x-comp-arcs ,dag) nil)
+         (setf (dag-x-forward ,dag) nil)))
      (with-verified-dag (,dag) (setf (dag-x-copy ,dag) ,new))))
 
 
 (defmacro dag-forward (dag)
   `(with-dag-optimize (,dag)
-     (when (= (the fixnum (dag-x-forward-mark ,dag)) *unify-generation*)
+     (when (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
         (with-verified-dag (,dag) (dag-x-forward ,dag)))))
 
 (defsetf dag-forward (dag) (new)
   `(with-dag-optimize (,dag)
-     (setf (dag-x-forward-mark ,dag) *unify-generation*)
+     (unless (= (the fixnum (dag-x-generation ,dag)) *unify-generation*)
+       (with-verified-dag (,dag) 
+         (setf (dag-x-generation ,dag) *unify-generation*)
+         (setf (dag-x-new-type ,dag) nil)
+         (setf (dag-x-comp-arcs ,dag) nil)
+         (setf (dag-x-copy ,dag) nil)))
      (with-verified-dag (,dag) (setf (dag-x-forward ,dag) ,new))))
 
 
@@ -384,11 +438,15 @@
       `(let ,(if (consp dag) `((,dag-var ,dag)) nil)
          (with-dag-optimize (,dag-var)
             (loop
-               (if (= (the fixnum (dag-x-forward-mark ,dag-var)) *unify-generation*)
-                  (setq ,dag-var
-                     (with-verified-dag (,dag-var) (dag-x-forward ,dag-var)))
-                  (return)))
+               (cond
+                 ((not (= (the fixnum (dag-x-generation ,dag)) *unify-generation*))
+                    (return))
+                 ((with-verified-dag (,dag-var) (dag-x-forward ,dag-var))
+                    (setq ,dag-var
+                       (with-verified-dag (,dag-var) (dag-x-forward ,dag-var))))
+                 (t (return))))
             ,dag-var))))
+
 
 (defun follow-pointers (dag)
    (cond
@@ -403,7 +461,7 @@
 
 ;;; **********************************************************************
 
-;;; Creation of dags
+;;; Convenient macros for dag creation
 
 (defmacro create-typed-dag (type)
   `(make-dag :type ,type :arcs nil))
@@ -466,6 +524,21 @@
                      (get-value-at-end-of one-step-down
                                           (cdr labels-chain)))
                   (t nil))))))
+
+;;;
+;;; to simplify interaction with the quick check, viz. to avoid prediction of
+;;; unification failure where partial unification would in fact succeed, the
+;;; minimal appropriate constraint for a feature is returned when partially
+;;; unifying values for that feature.                      (27-sep-99  -  oe)
+;;;
+
+(defun minimal-type-for (feature)
+  (or (get feature :constraint)
+      (let* ((introduction (maximal-type-of feature))
+             (constraint (and introduction (constraint-of introduction)))
+             (type (and constraint 
+                        (type-of-fs (get-dag-value constraint feature)))))
+        (setf (get feature :constraint) type))))
 
 
 ;;; **********************************************************************
@@ -574,10 +647,22 @@
          "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
          (reverse path))))
     (throw '*fail* nil))
+   #+:packing
+   ((and *partial-dag-interpretation*
+         (smember (first path) *partial-dag-interpretation*))
+    (let ((type (minimal-type-for (first path))))
+      (cond
+       ((eq (dag-type dag1) type)
+        (setf (dag-forward dag2) dag1))
+       ((eq (dag-type dag2) type)
+        (setf (dag-forward dag1) dag2))
+       (t
+        (let ((new (may-copy-constraint-of type)))
+          (setf (dag-forward dag1) new)
+          (setf (dag-forward dag2) new))))))
    ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
   dag1)
 
-                    
 (defparameter *recording-constraints-p* nil
   "needed for LilFes conversion")
 
@@ -667,21 +752,23 @@
   ;; find arc in arcs or comp-arcs with given attribute - also used in
   ;; structs.lsp
   (let ((v (gensym)))
-    `(macrolet ((find-attribute (v arcs)
-		  (let ((a (gensym)))
-		    `(block find-attribute
-		       (dolist (,a ,arcs nil)
-			 (when (eq (dag-arc-attribute ,a) ,v)
-			   (return-from find-attribute ,a)))))))
-       (let ((,v ,attribute))
-	 (or (find-attribute ,v ,arcs) (find-attribute ,v ,comp-arcs))))))
+    `(let ((,v ,attribute))
+        (block find-attribute
+           (macrolet ((find-attribute (v as)
+                        (let ((a (gensym)))
+                           `(dolist (,a ,as)
+                              (when (eq (dag-arc-attribute ,a) ,v)
+                                (return-from find-attribute ,a))))))
+              (find-attribute ,v ,arcs)
+              (find-attribute ,v ,comp-arcs)
+              nil)))))
 
 (defun unify-arcs (dag1 dag2 path)
-  (let ((arcs1 (dag-arcs dag1))
-        (comp-arcs1 (dag-comp-arcs dag1))
-        (new-arcs1 (dag-comp-arcs dag1)))
-    (macrolet ((process-arcs (arcs)
-                 `(dolist (elem2 ,arcs)
+  (let* ((arcs1 (dag-arcs dag1))
+         (comp-arcs1 (dag-comp-arcs dag1))
+         (new-arcs1 comp-arcs1))
+    (macrolet ((process-arcs (arcs2)
+                 `(dolist (elem2 ,arcs2)
                      (let ((elem1
                              (unify-arcs-find-arc (dag-arc-attribute elem2) arcs1
                                 comp-arcs1)))
@@ -1006,44 +1093,6 @@
             (setf (dag-visit dag) new-instance)
             new-instance))))
 
-;;;
-;;; functions to facilitate ambiguity packing: currently, hard-wire which parts
-;;; of the structure are deleted: everything below `CONT' (at all levels) except
-;;; for `CONT|MESSAGE'.  this badly needs a generalization using both PAGE-type
-;;; restrictors as well as a mechanism to extinct all occurences of a feature.
-;;;                                                          (12-nov-99  -  oe)
-;;;
-
-#+:packing
-(defun copy-dag-partially (dag)
-  (invalidate-visit-marks)
-  (copy-dag-partially1 dag nil))
-
-#+:packing
-(defun copy-dag-partially1 (old path)
-  (if (dag-visit old)
-    (dag-visit old)
-    (let* ((type (if (eq (first path) 'cont) 'cont (dag-type old)))
-           (arcs (if (eq (first path) 'cont)
-                   (let ((message (unify-arcs-find-arc
-                                   'message (dag-arcs old) (dag-comp-arcs old)))
-                         (path (cons 'message path)))
-                     (declare (dynamic-extent path))
-                     (when message
-                       (list (make-dag-arc 
-                              :attribute 'message
-                              :value (copy-dag-partially1
-                                      (dag-arc-value message) path)))))
-                   (loop
-                       for arc in (dag-arcs old)
-                       for label = (dag-arc-attribute arc)
-                       collect 
-                         (let ((path (cons label path)))
-                           (declare (dynamic-extent path))
-                           (make-dag-arc :attribute label
-                                         :value (copy-dag-partially1
-                                                 (dag-arc-value arc) path)))))))
-      (setf (dag-visit old) (make-dag :type type :arcs arcs)))))
 
 ;;; **********************************************************************
 
@@ -1251,13 +1300,20 @@
     (unify-wffs dag1 dag2)))
 
 
-;;; End of file
+;;; Get rid of pointers to any temporary dag structure
 
 (defun compress-dag (dag)
-  (when (dag-p dag)
-    (setq dag (deref-dag dag))
-    (setf (dag-x-comp-arcs-slot dag) nil)
-    (setf (dag-x-copy dag) nil)
-    (setf (dag-x-forward dag) nil)
-    (dolist (arc (dag-arcs dag))
+  ;; no point in derefing dag since we don't expect to be called within
+  ;; a unification context (so if there's a forward pointer it won't be
+  ;; valid anyway)
+  (when dag
+    (setf (dag-x-comp-arcs dag) nil)
+    (with-verified-dag (dag) ; it's definitely a dag
+      (setf (dag-x-copy dag) nil)
+      (setf (dag-x-forward dag) nil)
+      (setf (dag-x-visit-slot dag) nil)) ; copy-dag-completely can put a dag in this
+    (dolist (arc (with-verified-dag (dag) (dag-arcs dag)))
       (compress-dag (dag-arc-value arc)))))
+
+
+;;; End of file
