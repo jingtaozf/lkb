@@ -108,7 +108,7 @@
   (let ((ids nil))
     (maphash #'(lambda (id value)
                  (if (and (cddr value)
-                          (lex-or-psort-full-fs (cddr value)))
+                          (lex-entry-full-fs (cddr value)))
                      (push id ids)))
 	     (slot-value lexicon 'psorts))
     ids))

@@ -517,12 +517,12 @@
      :menu-item-title "Apply lex rule ..."
      :menu-item-action 
      #'(lambda () (eval-enqueue `(apply-lex ',id)))
-     :disabled (not (and id (get-psort-entry id))))
+     :disabled (not (and id (get-lex-entry-from-id id))))
    (make-instance 'menu-item
      :menu-item-title "Apply all lex rules"
      :menu-item-action 
      #'(lambda () (eval-enqueue `(apply-lex-rules ',id)))
-     :disabled (not (and id (get-psort-entry id))))
+     :disabled (not (and id (get-lex-entry-from-id id))))
 ;;;   (make-instance 'menu-item
 ;;;     :menu-item-title "Store fs..."
 ;;;     :menu-item-action 
@@ -587,7 +587,7 @@
                  :item-display (format nil "~A" psort)
                  :view-font (cons :bold (lkb-type-font)))))
     (apply #'add-menu-items menu
-      (let ((lex-entry (if psort (get-psort-entry psort))))
+      (let ((lex-entry (if psort (get-lex-entry-from-id psort))))
         (if lex-entry 
           (pop-up-psort-menu-items psort lex-entry)
           (let ((lex-rule-entry 
@@ -610,7 +610,7 @@
      :menu-item-title "Expanded entry"
      :menu-item-action 
      #'(lambda ()
-         (display-fs (lex-or-psort-full-fs lex-entry) 
+         (display-fs (lex-entry-full-fs lex-entry) 
                      (format nil "~(~A~) - expanded" psort)
                      psort))))) 
 

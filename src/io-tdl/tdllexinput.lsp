@@ -14,8 +14,6 @@
 ;;; rather than reading them in
 
 
-;;; *category-display-templates* is in io-paths/lexinput
-
 (defun read-tdl-lex-file-aux-internal (file-name)
   (let ((*readtable* (make-tdl-break-table)))
     (with-open-file 
@@ -107,39 +105,33 @@
 ;;; Other varieties of files
 
 (defun read-tdl-start-file-aux (file-name)
-  (read-tdl-psort-file-aux file-name))
+  (read-tdl-psort-file-aux file-name :root))
 
 (defun read-tdl-parse-node-file-aux (file-name)
-  (read-tdl-psort-file-aux file-name t))
+  (read-tdl-psort-file-aux file-name :nodes))
 
 (defun read-tdl-idioms-file-aux (file-name)
   (read-tdl-psort-file-aux file-name :idioms))
 
 (defun read-tdl-psort-file-aux (file-name &optional file-type)
-  (let ((templates-p (eql file-type t)))
-    (if templates-p
-        (pushnew file-name *template-file-list* :test #'equal)
-      (pushnew file-name *psort-file-list* :test #'equal))
-    (when templates-p (setf *category-display-templates* nil))
-    (when (eql file-type :idioms) 
-      (setf *idiom-phrases* nil))
-    (let ((*readtable* (make-tdl-break-table)))
-      (with-open-file 
-          (istream file-name :direction :input)
-        (format t "~%Reading in ~A file ~A"
-                (cond (templates-p "parse node")
-                      (file-type file-type)
-                      (t "entry"))
-                (pathname-name file-name))
-        (read-tdl-psort-stream istream file-type)))
-    (when (eql file-type :idioms) 
-      (expand-idioms-phrases))
-    (when (and templates-p *simple-tree-display*)
-      (setf *category-display-templates* 
-        (nreverse *category-display-templates*)))
-    (if templates-p (split-up-templates))))
+  ;;; file-type shouldn't really be optional, but
+  ;;; need this for backward compatibility with old grammar scripts
+  (unless file-type
+    (setf file-type :root))
+  (initialise-psort-file file-name file-type)
+  ;; in lexinput.lsp
+  (let ((*readtable* (make-tdl-break-table)))
+    (with-open-file 
+	(istream file-name :direction :input)
+      (format t "~%Reading in ~A file ~A"
+	      (cond ((eql file-type :nodes) "parse node")
+		    (file-type file-type)
+		    (t "entry"))
+	      (pathname-name file-name))
+      (read-tdl-psort-stream istream file-type)))
+  (finalize-psort-file file-type))
 
-(defun read-tdl-psort-stream (istream &optional file-type)
+(defun read-tdl-psort-stream (istream file-type)
    (loop
       (let ((next-char (peek-char t istream nil 'eof)))
          (when (eql next-char 'eof) (return))
@@ -155,35 +147,27 @@
                 (catch 'syntax-error
                   (read-tdl-psort-entry istream file-type)))))))
 
-(defun read-tdl-psort-entry (istream &optional file-type)
-  (let ((templates-p (eql file-type t)))
-   (let* ((name (lkb-read istream nil))
-          (next-char (peek-char t istream nil 'eof)))
-     (unless (eql next-char #\:)
-       (lkb-read-cerror 
-        istream 
-        "~%Incorrect syntax following template name ~A" name)
-       (ignore-rest-of-entry istream name))
-     (read-char istream)
-     (let ((next-char2 (peek-char t istream nil 'eof)))
-       (unless (eql next-char2 #\=)
-         (lkb-read-cerror 
-          istream 
-          "~%Incorrect syntax following template name ~A" name)
-         (ignore-rest-of-entry istream name))
-       (read-char istream)
-       (multiple-value-bind
-           (constraint default)
-           (read-tdl-lex-avm-def istream name)
-         (check-for #\. istream name)
-         (progn 
-           (add-psort-from-file name constraint default)
-           (when (and file-type 
-                      (not templates-p)
-                      (eql file-type :idioms))
-             (pushnew name
-                      *idiom-phrases*))
-           (when templates-p (pushnew name *category-display-templates*))))))))
+(defun read-tdl-psort-entry (istream file-type)
+  (let* ((name (lkb-read istream nil))
+	 (next-char (peek-char t istream nil 'eof)))
+    (unless (eql next-char #\:)
+      (lkb-read-cerror 
+       istream 
+       "~%Incorrect syntax following ~A" name)
+      (ignore-rest-of-entry istream name))
+    (read-char istream)
+    (let ((next-char2 (peek-char t istream nil 'eof)))
+      (unless (eql next-char2 #\=)
+	(lkb-read-cerror 
+	 istream 
+	 "~%Incorrect syntax following ~A" name)
+	(ignore-rest-of-entry istream name))
+      (read-char istream)
+      (multiple-value-bind
+	  (constraint default)
+	  (read-tdl-lex-avm-def istream name)
+	(check-for #\. istream name)
+      (add-psort-file-entry name constraint default file-type)))))
 
  
 

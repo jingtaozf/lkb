@@ -305,8 +305,8 @@ at this point).
   ;;; likely to weed out some entries without having to put
   ;;; more grammar specific stuff in the filtering code
   (let* ((lex-id (base-lex-lex-id lex-res))
-         (lex-e (lkb::get-psort-entry lex-id))
-         (base-fs (lkb::lex-or-psort-full-fs lex-e))
+         (lex-e (lkb::get-lex-entry-from-id lex-id))
+         (base-fs (lkb::lex-entry-full-fs lex-e))
          (new-found-lex-list 
           (instantiate-semantic-indices 
            lex-id lex-e base-fs 
@@ -525,10 +525,10 @@ at this point).
         (instantiated-sets
           (loop for lex-id in real-ids
                nconc
-               (let ((lex-e (lkb::get-psort-entry lex-id)))
+               (let ((lex-e (lkb::get-lex-entry-from-id lex-id)))
                  (if lex-e
                    (let*
-                      ((base-fs (lkb::lex-or-psort-full-fs lex-e))
+                      ((base-fs (lkb::lex-entry-full-fs lex-e))
                        (new-found-str
                         (make-found-lex 
                          :lex-id lex-id :inst-fs base-fs))

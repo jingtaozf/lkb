@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991--2002
+;;; Copyright (c) 1991--2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -27,24 +27,21 @@
 ;;; LexID -> orth sense-id
 ;;; Path_spec and Default are defined in the type file
 
-(defparameter *category-display-templates* nil
-  "used in parseout.lsp")
-
-(defparameter *idiom-phrases* nil
-  "used in mrs/idioms.lisp")
-
 (defvar *lex-file-list* nil)
 
-(defvar *template-file-list* nil)
+(defvar *template-file* nil)
 
-(defvar *psort-file-list* nil)
+(defvar *root-file* nil)
+
+(defvar *idiom-file* nil)
 
 (defun clear-lex-load-files nil
   (setf *ordered-lex-list* nil)         ; adding this makes
                                         ; the fn name a bit of a misnomer
   (setf *lex-file-list* nil)
-  (setf *template-file-list* nil)
-  (setf *psort-file-list* nil))
+  (setf *template-file* nil)
+  (setf *idiom-file* nil)
+  (setf *root-file* nil))
  
 
 (defun read-lex-file nil
@@ -61,33 +58,40 @@
          (reverse *lex-file-list*)
          (if (eql *lkb-system-version* :page) :tdl :path))
         (format t "~%Lexicon reload complete")
-        (when (and allp *template-file-list*)
-          (reload-template-files))
-        (when (and allp *psort-file-list*)
-          (reload-psort-files)))
+        (when (and allp *template-file*)
+          (reload-template-file))
+	(when (and allp *root-file*)
+          (reload-root-file))
+        (when (and allp *idiom-file*)
+	  (reload-idiom-file))
+	)
     (progn
       #-:tty(format t "~%Use Load Complete Grammar instead")
       #+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
 
-(defun reload-template-files nil
+(defun reload-template-file nil
   (setf *syntax-error* nil)
-  (when (check-load-names *template-file-list* 'template)
-    (loop for template-file in *template-file-list*
-         do
-         (if (eql *lkb-system-version* :page)
-           (read-tdl-psort-file-aux template-file t)
-           (read-psort-file-aux template-file t)))
+  (when (check-load-name *template-file*)
+    (if (eql *lkb-system-version* :page)
+	(read-tdl-psort-file-aux *template-file* :nodes)
+        (read-psort-file-aux *template-file* :nodes))
     (format t "~%Template reload complete")))
 
-(defun reload-psort-files nil
+(defun reload-idiom-file nil
   (setf *syntax-error* nil)
-  (when (check-load-names *psort-file-list* 'psort)
-    (loop for psort-file in *psort-file-list*
-         do
-         (if (eql *lkb-system-version* :page)
-           (read-tdl-psort-file-aux psort-file nil)
-           (read-psort-file-aux psort-file nil)))
-    (format t "~%File reload complete")))
+  (when (check-load-name *idiom-file*)
+    (if (eql *lkb-system-version* :page)
+	(read-tdl-psort-file-aux *idiom-file* :idiom)
+      (read-psort-file-aux *idiom-file* :idiom))
+    (format t "~%Idiom file reload complete")))
+
+(defun reload-root-file nil
+  (setf *syntax-error* nil)
+  (when (check-load-name *root-file*)
+    (if (eql *lkb-system-version* :page)
+	(read-tdl-psort-file-aux *root-file* :root)
+      (read-psort-file-aux *root-file* :root))
+    (format t "~%Root file reload complete")))
 
 
 (defun read-cached-lex-if-available (file-names)
@@ -176,50 +180,68 @@
          (read-psort-unifications id istream)
          (add-lex-from-file orth id non-def defs))))
 
-(defun read-psort-file nil  
-   (let ((file-name 
-            (ask-user-for-existing-pathname "File?")))
-      (when file-name
-        (if (eql *lkb-system-version* :page)
-         (read-tdl-psort-file-aux file-name)
-         (read-psort-file-aux file-name)))))
+;;; other sorts of entry
 
 (defun read-parse-nodes-file nil  
    (let ((file-name 
             (ask-user-for-existing-pathname "Node name file?")))
       (when file-name
         (if (eql *lkb-system-version* :page)
-         (read-tdl-psort-file-aux file-name t)
-         (read-psort-file-aux file-name t)))))
+         (read-tdl-psort-file-aux file-name :nodes)
+         (read-psort-file-aux file-name :nodes)))))
 
-(defun read-psort-file-aux (file-name &optional templates-p)
-  (if templates-p
-      (pushnew file-name *template-file-list* :test #'equal)
-    (pushnew file-name *psort-file-list* :test #'equal))
-  (when templates-p (setf *category-display-templates* nil))
+;;; general functions for psorts files
+
+(defun initialise-psort-file (file-name file-type)
+  (ecase file-type
+    (:nodes (setf *template-file* file-name)
+	    (clear-category-display-templates))
+;    (:idioms
+;     (setf *idiom-file* file-name)
+;     (clear-idioms-entries))
+    (:root 
+     (setf *root-file* file-name)
+     (clear-root-entries))))
+
+(defun finalize-psort-file (file-type)  
+;  (when (eql file-type :idioms) 
+;    (expand-idioms-phrases))
+  (when (eql file-type :nodes) 
+    (split-up-templates)))
+
+(defun add-psort-file-entry (name constraint default file-type)
+  (ecase file-type
+;    (:idioms
+;     (add-idiom-entry name constraint default))
+    (:nodes
+     (add-category-display-template name constraint default))
+    (:root 
+     (add-root-entry name constraint default))))
+
+;;; actual reading of path notation
+
+(defun read-psort-file-aux (file-name file-type)
+  (initialise-psort-file file-name file-type)
   (let ((*readtable* (make-path-notation-break-table)))
     (with-open-file 
 	(istream file-name :direction :input)
       (format t "~%Reading in ~A file ~A"
-	      (cond (templates-p "templates")
-		    (t "entry")) 
+	      (cond ((eql file-type :nodes) "parse node")
+		    (file-type file-type)
+		    (t "entry"))
 	      (pathname-name file-name))
       (loop
 	(let ((next-char (peek-char t istream nil 'eof)))
 	  (when (eql next-char 'eof) (return))
 	  (if (eql next-char #\;) 
 	      (read-line istream)
-	    (read-psort-entry istream templates-p)))))))
+	    (read-psort-entry istream file-type)))))))
 
-(defun read-psort-entry (istream &optional templates-p)
+(defun read-psort-entry (istream file-type)
    (let ((id (lkb-read istream nil)))
-      (multiple-value-bind 
-         (non-def defs)
+      (multiple-value-bind (non-def defs)
          (read-psort-unifications id istream)
-          (progn 
-            (add-psort-from-file id non-def defs)            
-            (if templates-p (pushnew id *category-display-templates*))))))
- 
+         (add-psort-file-entry id non-def defs file-type))))
 
 (defun read-psort-unifications (orth istream &optional type)
    (let ((next-char (peek-char t istream nil 'eof))

@@ -23,6 +23,7 @@
 		      lkb::show-type 
 		      lkb::show-lex
 		      lkb::show-words 
+		      lkb::show-other
 		      lkb::show-grammar-rule 
 		      lkb::show-lex-rule
                       lkb::display-lex-words
@@ -98,6 +99,8 @@
                                                            :value 'show-lex)
                                            (make-menu-item :name "Word entries..."
                                                            :value 'show-words)
+					   (make-menu-item :name "Other entry..."
+                                                           :value 'show-other)
                                            (make-menu-item :name "Grammar rule..."
                                                            :value 'show-grammar-rule)
                                            (make-menu-item :name "Lexical rule..."
@@ -188,7 +191,9 @@
                      (make-menu-item :name "Lex entry..."
                         :value 'show-lex)
                      (make-menu-item :name "Word entries..."
-                        :value 'show-words)
+			:value 'show-words)
+		     (make-menu-item :name "Other entry..."
+                        :value 'show-other)
                      (make-menu-item :name "Grammar rule..."
                         :value 'show-grammar-rule)
                      (make-menu-item :name "Lexical rule..."

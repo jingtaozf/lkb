@@ -124,7 +124,7 @@
   (let ((ids nil))
     (maphash #'(lambda (id value)
                  (when (and value
-			    (lex-or-psort-full-fs value))
+			    (lex-entry-full-fs value))
 		   (push id ids)))
 	     (slot-value lexicon 'psorts))
     ids))

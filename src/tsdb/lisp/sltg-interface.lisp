@@ -218,10 +218,10 @@
                          (string-upcase instance)
                          instance)
                        *lkb-package*))
-         (instance (ignore-errors (get-psort-entry name))))
+         (instance (ignore-errors (get-lex-entry-from-id name))))
     (when instance 
-      (let ((tdfs (copy-tdfs-completely (lex-or-psort-full-fs instance)))
-            (id (lex-or-psort-sense-id instance)))
+      (let ((tdfs (copy-tdfs-completely (lex-entry-full-fs instance)))
+            (id (lex-entry-sense-id instance)))
         (make-edge :id 0 :category (indef-type-of-tdfs tdfs)
                    :rule form :leaves (list form) :lex-ids (list id)
                    :dag tdfs)))))

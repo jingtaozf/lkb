@@ -185,7 +185,7 @@
         (u-value-type rhs)))))
 
 (defun extract-field (x field-str &optional fields-map)
-  (unless (typep x 'lex-or-psort)
+  (unless (typep x 'lex-entry)
     (error "unexpected type"))
   (let* ((fields-map (or fields-map (fields-map *psql-lexicon*)))
 	 (mapping (find field-str fields-map :key #'second :test 'equal)))
@@ -201,7 +201,7 @@
     (error "unhandled value"))))
     
 (defun extract-field2 (x key2 path2 type2)
-  (unless (typep x 'lex-or-psort)
+  (unless (typep x 'lex-entry)
     (error "unexpected type"))
   (let* ((key (un-keyword key2))
 	 (path (get-path path2))
@@ -288,11 +288,11 @@
 			   unifs))
     ",~%    ")))
 
-(defmethod to-unpacked-tdl ((x lex-or-psort))
+(defmethod to-unpacked-tdl ((x lex-entry))
   (format 
    nil "~a := ~a~%~%"
-   (tdl-val-str (lex-or-psort-id x))
-   (unifs-to-unpacked-tdl (lex-or-psort-unifs x))))
+   (tdl-val-str (lex-entry-id x))
+   (unifs-to-unpacked-tdl (lex-entry-unifs x))))
 	  
 (defmethod export-to-unpacked-tdl ((lexicon lex-database) stream)
   (mapc
@@ -402,11 +402,11 @@
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-tdl lexicon ostream)))
 
-(defmethod to-tdl ((x lex-or-psort))
+(defmethod to-tdl ((x lex-entry))
   (format 
    nil "~%~a := ~a.~%"
-   (tdl-val-str (lex-or-psort-id x))
-   (p-2-tdl (pack-unifs (lex-or-psort-unifs x)))))
+   (tdl-val-str (lex-entry-id x))
+   (p-2-tdl (pack-unifs (lex-entry-unifs x)))))
 	  
 ;; copy of p-2-tdl w/o root
 (defun p-2-tdl (branches)
@@ -564,7 +564,7 @@
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-csv lexicon ostream)))
 
-(defmethod to-csv ((x lex-or-psort) fields-map)
+(defmethod to-csv ((x lex-entry) fields-map)
   (let* ((separator (string *export-separator*))
 
 	 (keyrel (extract-field x "keyrel" fields-map))      
@@ -626,7 +626,7 @@
 		separator *export-timestamp* ;;modstamp
 		))))
     (cond 
-     ((= total (length (lex-or-psort-unifs x)))
+     ((= total (length (lex-entry-unifs x)))
       (if multi-base-name
 	  (to-multi-csv-line :name name
 			     :base-name multi-base-name
@@ -699,7 +699,7 @@
    (collect-psort-ids lexicon :recurse nil))
   (fn-get-records output-lexicon ''initialize-current-grammar))
 
-(defmethod to-db ((x lex-or-psort) (lexicon psql-lex-database))  
+(defmethod to-db ((x lex-entry) (lexicon psql-lex-database))  
   (let* ((fields-map (fields-map lexicon))
 
 	 (keyrel (extract-field x "keyrel" fields-map))      
@@ -739,7 +739,7 @@
 	    :source *current-source*
 	    :flags 1)))
     (cond
-     ((= total (length (lex-or-psort-unifs x)))
+     ((= total (length (lex-entry-unifs x)))
       (set-lex-entry lexicon psql-le))
      (t
       (format *trace-output* "~%skipping super-rich entry: `~a'~%"  name)

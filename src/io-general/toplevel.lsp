@@ -96,41 +96,43 @@
       ; entries indexed by all elements
     (loop for word-entry in lex-entries
          do
-         (when (equal (mapcar #'string-upcase (lex-or-psort-orth word-entry))
+         (when (equal (mapcar #'string-upcase (lex-entry-orth word-entry))
                     orth-list)
            (if exp-p
-             (display-fs (lex-or-psort-full-fs word-entry) 
+             (display-fs (lex-entry-full-fs word-entry) 
                          (format nil "~(~A~) - ~A - expanded" word-string
-                                 (lex-or-psort-id word-entry))
-                         (lex-or-psort-id word-entry))
+                                 (lex-entry-id word-entry))
+                         (lex-entry-id word-entry))
              (display-unexpanded-lex-entry word-string word-entry
-                                 (lex-or-psort-id word-entry)))))))          
+                                 (lex-entry-id word-entry)))))))          
 
   
-;;; "Lex or other entry" show-lex
+;;; "Lex entry" show-lex
 (defun show-lex nil
   (let* ((lex (ask-user-for-lex))
-        (lex-entry (if lex (get-psort-entry lex))))
+        (lex-entry (if lex (get-lex-entry-from-id lex))))
       (when lex-entry 
-            (display-fs (lex-or-psort-full-fs lex-entry) 
+            (display-fs (lex-entry-full-fs lex-entry) 
                         (format nil "~(~A~) - expanded" lex)
                         lex))))
-         
 
-(defun show-lex-def nil
-   (let* ((lex (ask-user-for-lex))
-         (lex-entry (if lex (get-psort-entry lex))))
-      (when lex-entry 
-         (display-unexpanded-lex-entry lex lex-entry))))
+(defun show-other nil
+  (multiple-value-bind
+      (other-id other-entry)
+      (ask-user-for-other-id)
+      (when other-entry 
+            (display-fs (psort-full-fs other-entry) 
+                        (format nil "~(~A~) - expanded" other-id)
+                        other-id))))
 
 (defun display-unexpanded-lex-entry (lex lex-entry &optional id)
-   (display-fs (lex-or-psort-local-fs lex-entry) 
-               (if id
-                   (format nil "~(~A~) - ~A - definition (indef)" lex
-                                 id)
-                 (format nil "~(~A~) - definition (indef)" lex))))
+  (display-fs 
+   (lex-entry-local-fs lex-entry) 
+   (if id
+       (format nil "~(~A~) - ~A - definition (indef)" lex id)
+     (format nil "~(~A~) - definition (indef)" lex))))
 
-         
+
 (defun show-grammar-rule nil
   (let* ((rule-entry (ask-user-for-rule)))
       (when rule-entry 
@@ -184,27 +186,29 @@
             150))))
     (when possible-name
       (let* ((lex (car possible-name))
-             (lex-entry (get-psort-entry lex)))
+             (lex-entry (get-lex-entry-from-id lex)))
         (unless lex-entry
           (format t "~%~A is not defined" lex)
           (setf lex (ask-user-for-lex)))
         (when lex (setf *last-lex-id* lex))
         lex))))
 
-(defun ask-user-for-psort nil
+(defparameter *last-other-id* 'root)
+
+(defun ask-user-for-other-id nil
   (let ((possible-name
          (with-package (:lkb)
  	  (ask-for-lisp-movable "Current Interaction" 
-		 	        `(("Entry id?" . ,*last-lex-id*))
+		 	        `(("Entry id?" . ,*last-other-id*))
 			        150))))
       (when possible-name
-         (let* ((lex (car possible-name))
-               (lex-entry (get-psort-entry lex)))
-            (unless lex-entry
-               (format t "~%~A is not defined" lex)
-               (setf lex (ask-user-for-lex)))
-            (when lex (setf *last-lex-id* lex))
-            lex))))
+         (let* ((id (car possible-name))
+               (id-entry (get-other-entry id)))
+            (unless id-entry
+               (format t "~%~A is not defined" id)
+               (setf id (ask-user-for-other-id)))
+            (when id (setf *last-other-id* id))
+            (values id id-entry)))))
 
 (defparameter *last-rule-id* 'head-specifier-rule)
 
@@ -283,9 +287,9 @@
 
 (defun apply-lex (&optional id)
    (let* ((lex (or id (ask-user-for-lex)))
-         (lex-entry (if lex (get-psort-entry lex)))
+         (lex-entry (if lex (get-lex-entry-from-id lex)))
          (lex-entry-fs
-            (if lex-entry (lex-or-psort-full-fs lex-entry))))
+            (if lex-entry (lex-entry-full-fs lex-entry))))
       (when lex-entry-fs 
          (let 
             ((lex-rule (ask-user-for-lexical-rule)))
@@ -303,9 +307,9 @@
 
 (defun apply-lex-rules (&optional id)
    (let* ((lex (or id (ask-user-for-lex)))
-         (lex-entry (if lex (get-psort-entry lex)))
+         (lex-entry (if lex (get-lex-entry-from-id lex)))
          (lex-entry-fs
-            (if lex-entry (lex-or-psort-full-fs lex-entry))))
+            (if lex-entry (lex-entry-full-fs lex-entry))))
       (when lex-entry-fs 
          (setf *number-of-applications* 0)
          (let ((result-list
@@ -398,7 +402,7 @@
                     (create-path-from-feature-list path2) 
                     fs2 fs1-id path1 fs2-id path2))
                     (format t "~%Unification successful")
-                    (if resname (store-temporary-psort *lexicon* resname resdag))))
+                    (if resname (store-temporary-psort-entry resname resdag))))
               (cond ((null fs1) 
                      (progn (cerror  "~%Try again" "~%~A is not a valid FS identifier" fs1-id)
                             (interactive-unification-check)))

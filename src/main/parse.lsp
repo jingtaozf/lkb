@@ -523,12 +523,12 @@
   (let ((entries
          (loop for entry in (get-unexpanded-lex-entry stem-string)
              nconc
-               (when (not (cdr (lex-or-psort-orth entry)))
+               (when (not (cdr (lex-entry-orth entry)))
                  ;; exclude multi-words
-                 (let* ((id (lex-or-psort-id entry))
-                        (expanded-entry (get-psort-entry id))
+                 (let* ((id (lex-entry-id entry))
+                        (expanded-entry (get-lex-entry-from-id id))
                         (tdfs (when expanded-entry 
-                                (lex-or-psort-full-fs expanded-entry))))
+                                (lex-entry-full-fs expanded-entry))))
                    (when tdfs
                      (list
                       (cons id
@@ -606,21 +606,21 @@
 (defun get-multi-senses (stem-string right-vertex)
   (let* ((entries (get-unexpanded-lex-entry stem-string)))
     (loop for entry in (sort entries #'(lambda (x y) 
-                                    (> (length (lex-or-psort-orth x))
-                                       (length (lex-or-psort-orth y)))))
+                                    (> (length (lex-entry-orth x))
+                                       (length (lex-entry-orth y)))))
          append
-         (if (cdr (lex-or-psort-orth entry))
+         (if (cdr (lex-entry-orth entry))
 	     (check-multi-word stem-string entry right-vertex
-			       (lex-or-psort-id entry))))))
+			       (lex-entry-id entry))))))
 
 
 (defun check-multi-word (stem unexpanded-entry right-vertex id)
-  (let ((entry-orth (lex-or-psort-orth unexpanded-entry))
+  (let ((entry-orth (lex-entry-orth unexpanded-entry))
         (ok t)
         (rules nil)
         (amalgamated-stems nil)
         (amalgamated-words nil)
-        (inflection-position (lex-or-psort-infl-pos unexpanded-entry))) 
+        (inflection-position (lex-entry-infl-pos unexpanded-entry))) 
     (when (< right-vertex (length entry-orth))
       (return-from check-multi-word nil)) ; too near start of sentence
     (when (string-equal (car (last entry-orth)) stem)
@@ -668,7 +668,7 @@
 	    (incf current-vertex)
 	    (incf current-position)))
 	(when ok
-	  (let ((expanded-entry (get-psort-entry id)))
+	  (let ((expanded-entry (get-lex-entry-from-id id)))
 	    (when expanded-entry
 	      (let* ((full-stem-string 
 		      (apply #'concatenate 'string 
@@ -692,9 +692,9 @@
 ;;; the effect will be to put the fully inflected form on all of
 ;;; them.  FIX sometime.                                            
                                             (list full-stem-string))
-                                          :lex-ids (list (lex-or-psort-id
+                                          :lex-ids (list (lex-entry-id
                                                           expanded-entry))
-                                          :fs (lex-or-psort-full-fs 
+                                          :fs (lex-entry-full-fs 
 					       expanded-entry))))))))))))
 
 
@@ -1169,7 +1169,9 @@
       with edge = (if (edge-p item) item (chart-configuration-edge item))
       with tdfs = (edge-dag edge)
       for root in roots
-      for rtdfs = (get-tdfs-given-id root)
+      for rtdfs = (get-tdfs-given-id root) 
+		  ;; might be a type
+		  ;; or a root entry
       thereis (when 
                   (and rtdfs 
                        (yaduablep rtdfs tdfs)

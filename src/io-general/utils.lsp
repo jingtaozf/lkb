@@ -104,16 +104,19 @@
 
 (defun get-tdfs-given-id (fs-id)
   ;;; this accepts type names and rule names as well as lexical ids
-  (let ((lex-entry (get-psort-entry fs-id)))
-    (if lex-entry (lex-or-psort-full-fs lex-entry)
-      (let ((rule-entry (get-grammar-rule-entry fs-id)))
-        (if rule-entry (rule-full-fs rule-entry)
-          (let ((lex-rule-entry (get-lex-rule-entry fs-id)))
-            (if lex-rule-entry (rule-full-fs lex-rule-entry)
-              (progn (eval-possible-leaf-type *leaf-types* fs-id)
-                     (let ((type (get-type-entry fs-id)))
-                       (if type (tdfs-of fs-id)))))))))))
+  (let ((lex-entry (get-lex-entry-from-id fs-id)))
+    (if lex-entry (lex-entry-full-fs lex-entry)
+      (let ((other-entry (get-other-entry fs-id)))
+	(if other-entry (psort-full-fs other-entry)
+	  (let ((rule-entry (get-grammar-rule-entry fs-id)))
+	    (if rule-entry (rule-full-fs rule-entry)
+	      (let ((lex-rule-entry (get-lex-rule-entry fs-id)))
+		(if lex-rule-entry (rule-full-fs lex-rule-entry)
+		  (progn (eval-possible-leaf-type *leaf-types* fs-id)
+			 (let ((type (get-type-entry fs-id)))
+			   (if type (tdfs-of fs-id)))))))))))))
 
+	  
 (defun split-into-words (sentence-string)
   (if (listp sentence-string)
     sentence-string
@@ -320,9 +323,13 @@
         (format t "~%Error - no ~A files found" 
                 (if filetype (string filetype) ""))
         (setf ok nil)))
-      ok))
+    ok))
 
-
+(defun check-load-name (file)
+  (or (probe-file file)
+      (progn 
+	(format t "~%Error - file ~A does not exist" file)
+        nil)))
 
 (defun display-lex-words nil
   (let ((stream lkb::*lkb-background-stream*))

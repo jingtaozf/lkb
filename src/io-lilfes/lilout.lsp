@@ -192,7 +192,7 @@ Parse nodes need to be added so we can understand the display.
 
 (defun output-instance-as-lilfes (name entry stream &optional class)
   (when entry
-  (let ((def (tdfs-indef (lex-or-psort-full-fs entry))))
+  (let ((def (tdfs-indef (lex-entry-full-fs entry))))
     ;; assume no defaults
     ;; assume either a grammar rule, in which case
     ;; we want to know unary or binary

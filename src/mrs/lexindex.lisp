@@ -351,15 +351,9 @@ we assume that there will generally only be one feature
 ;;; Note that rels are kept in the order they have in the entries
 
 
-;;; (mrs::extract-lexical-relations (get-psort-entry 'andes_1))
-;;; (mrs::extract-lexical-relations (get-psort-entry 'kim_1))
-;;; (mrs::extract-lexical-relations (get-psort-entry 'to_do_with))
-
-
-
 (defun extract-lexical-relations (lex-entry)
-  (let* ((fs (tdfs-indef (lex-or-psort-full-fs lex-entry)))
-         (id  (lex-or-psort-id lex-entry))
+  (let* ((fs (tdfs-indef (lex-entry-full-fs lex-entry)))
+         (id  (lex-entry-id lex-entry))
          (main-semantics-fs (path-value fs *main-semantics-path*))
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 

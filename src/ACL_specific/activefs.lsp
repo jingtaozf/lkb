@@ -406,11 +406,11 @@
      `(("Output TeX ..." :value tex)
        ("Apply lex rule ..." :value lexrule
                              :active ,(and id
-                                           (get-psort-entry id)
+                                           (get-lex-entry-from-id id)
                                            *ordered-lrule-list*))
        ("Apply all lex rules" :value allrules
                               :active ,(and id
-                                            (get-psort-entry id)
+                                            (get-lex-entry-from-id id)
                                             *ordered-lrule-list*))
        #+:allegro
        ("Show source" :value source 
@@ -440,7 +440,7 @@
 (define-active-fs-window-command (com-psort-menu)
     ((psort-thing 'psort-thing :gesture :select))
   (let* ((psort (psort-thing-value psort-thing))
-         (lex-entry (if psort (get-psort-entry psort))))
+         (lex-entry (if psort (get-lex-entry-from-id psort))))
         (if lex-entry 
           (pop-up-psort-menu-items psort lex-entry)
           (let ((lex-rule-entry 
@@ -457,7 +457,7 @@
       (handler-case
 	  (ecase command
 	    (def (display-unexpanded-lex-entry psort lex-entry))  
-	    (exp (display-fs (lex-or-psort-full-fs lex-entry) 
+	    (exp (display-fs (lex-entry-full-fs lex-entry) 
 			     (format nil "~(~A~) - expanded" psort)
                              psort)))
         (storage-condition (condition)
@@ -515,7 +515,7 @@
 				   `(("Lex-id?" . ,psort-name))
 				   150))))
       (when psort-name
-	(or (store-temporary-psort *lexicon* psort-name fs)
+	(or (store-temporary-psort-entry psort-name fs)
 	    (progn
 	      (clim:notify-user clim:*application-frame* 
 				"Entry name already used")

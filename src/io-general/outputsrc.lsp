@@ -79,7 +79,7 @@
                (progn (clear-expanded-lex)
                       (setf count 0))
                (incf count))
-             (let ((entry (get-psort-entry lex-name)))
+             (let ((entry (get-lex-entry-from-id lex-name)))
                (if entry
                    (case syntax
                      (:tdl (output-instance-as-tdl lex-name entry
@@ -124,12 +124,12 @@
                         (setf count 0))
                  (incf count))
                (setf *number-of-applications* 0)
-               (let* ((lex-entry (get-psort-entry lex-name))
+               (let* ((lex-entry (get-lex-entry-from-id lex-name))
                       (lex-entry-fs 
                        (if lex-entry
-                         (lex-or-psort-full-fs lex-entry)
+                         (lex-entry-full-fs lex-entry)
                          (error "Entry for ~A not found" lex-name)))
-                      (stem (lex-or-psort-orth lex-entry))
+                      (stem (lex-entry-orth lex-entry))
                       (result-list
                        (cons (cons nil lex-entry-fs)
                              (try-all-lexical-rules 
@@ -156,12 +156,12 @@
                           (:chic
                            (output-for-chic orth fs ostream (car result-pair) 
                                             lex-name lex-entry-fs 
-                                            (lex-or-psort-infl-pos lex-entry)
+                                            (lex-entry-infl-pos lex-entry)
                                             stem))
                           (:uc
                            (output-for-uc orth fs ostream (car result-pair) 
                                            lex-name lex-entry-fs 
-                                           (lex-or-psort-infl-pos lex-entry)))
+                                           (lex-entry-infl-pos lex-entry)))
                           (t (error "Unsupported syntax specifier ~A"
                                     syntax))))
                       (incf idno))))
@@ -198,12 +198,12 @@
                         (setf count 0))
                  (incf count))
                (setf *number-of-applications* 0)
-               (let* ((lex-entry (get-psort-entry lex-name))
+               (let* ((lex-entry (get-lex-entry-from-id lex-name))
                       (lex-entry-fs 
                        (if lex-entry
-                         (lex-or-psort-full-fs lex-entry)
+                         (lex-entry-full-fs lex-entry)
                          (error "Entry for ~A not found" lex-name)))
-                      (stem (lex-or-psort-orth lex-entry))
+                      (stem (lex-entry-orth lex-entry))
                       (result-list
                        (cons (cons nil lex-entry-fs)
                              (try-all-lexical-rules 
@@ -235,7 +235,7 @@
                            (output-for-chic orth fs ostream 
                                             (car result-pair) 
                                             lex-name lex-entry-fs 
-                                            (lex-or-psort-infl-pos lex-entry)
+                                            (lex-entry-infl-pos lex-entry)
                                             stem))
                           (t (error "Unsupported syntax specifier ~A"
                                     syntax))))
@@ -339,14 +339,14 @@
           finally (return (cons successes failures))
           for id in (remove-duplicates ids)
           for i from 1
-          for entry = (get-psort-entry id)
-          for tdfs = (and entry (lex-or-psort-full-fs entry))
+          for entry = (get-lex-entry-from-id id)
+          for tdfs = (and entry (lex-entry-full-fs entry))
           for type = (and tdfs (indef-type-of-tdfs tdfs))
           for inflectedp = (and tdfs (dag-inflected-p (tdfs-indef tdfs)))
-          for ipos = (and entry (lex-or-psort-infl-pos entry))
+          for ipos = (and entry (lex-entry-infl-pos entry))
           when (zerop (mod i 100)) do (clear-expanded-lex)
           do
-            (let* ((orth (lex-or-psort-orth entry))
+            (let* ((orth (lex-entry-orth entry))
                    (form (nth (if ipos (- ipos 1) 0) orth)))
               (case format
                 (:pet
@@ -374,7 +374,7 @@
                 for rid = (rule-id rule)
                 for spellingp = (spelling-change-rule-p rule)
                 for rtdfs = (rule-full-fs rule)
-                for orth = (lex-or-psort-orth entry)
+                for orth = (lex-entry-orth entry)
                 for stem = (let* ((orth (loop
                                             for foo on orth
                                             collect (first foo)
@@ -526,7 +526,7 @@
       (loop for root-symbol in (if (listp *start-symbol*) *start-symbol*
                             (list *start-symbol*))
              do
-             (let ((entry (get-psort-entry root-symbol)))   
+             (let ((entry (get-root-entry root-symbol)))   
                (if entry 
                    (case syntax
                      (:lilfes 

@@ -51,7 +51,7 @@
     (funcall 'clear-generator-lrules))
   (clrhash *lexical-rules*))
 
-(defstruct (rule (:include lex-or-psort))
+(defstruct (rule (:include psort))
   ;;; NOTE - any changes to slots here have to be mirrored
   ;;; in mrs/lexlookup.lsp make-new-found-rule
   #+:packing rtdfs ;; restricted feature structure for improved packing

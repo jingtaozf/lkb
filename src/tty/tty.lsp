@@ -35,28 +35,20 @@
                                   (type-parents type-entry))
       (format t "~%Type ~A not found" type))))
 
-;;;                     (make-menu-item :name "Lex definition"
-;;;                        :value #'show-lex-def)
-
-(defun show-lex-def-tty (lex)
-   (let ((lex-entry (if lex (get-psort-entry lex))))
-      (if lex-entry 
-          (display-unexpanded-lex-entry-tty lex lex-entry)
-        (format t "~%Entry ~A not found" lex))))
-
-
-(defun display-unexpanded-lex-entry-tty (lex lex-entry)
-  (declare (ignore lex))
-  (display-fs-tty (lex-or-psort-local-fs lex-entry)))
-                   
 ;;;                     (make-menu-item :name "Lex entry"
 ;;;                        :value #'show-lex)
 
 (defun show-lex-tty (lex)
-  (let ((lex-entry (if lex (get-psort-entry lex))))
+  (let ((lex-entry (if lex (get-lex-entry-from-id lex))))
       (if lex-entry 
-        (display-fs-tty (lex-or-psort-full-fs lex-entry))
+        (display-fs-tty (lex-entry-full-fs lex-entry))
         (format t "~%Entry ~A not found" lex))))
+
+(defun show-other-tty (other-id)
+  (let ((other-entry (if other-id (get-other-entry other-id))))
+      (if other-entry 
+        (display-fs-tty (psort-full-fs other-entry))
+        (format t "~%Entry ~A not found" other-id))))
 
 ;;;                     (make-menu-item :name "Word definitions"
 ;;;                        :value #'show-word-defs)
@@ -79,10 +71,10 @@
       (format t "~%No entry found for ~A" word-string))
     (loop for word-entry in lex-entries
          do
-         (when (equal (mapcar #'string-upcase (lex-or-psort-orth word-entry))
+         (when (equal (mapcar #'string-upcase (lex-entry-orth word-entry))
                     orth-list)
            (if exp-p
-             (display-fs-tty (lex-or-psort-full-fs word-entry))
+             (display-fs-tty (lex-entry-full-fs word-entry))
              (display-unexpanded-lex-entry-tty word-string word-entry))))))
 
 ;;;                     (make-menu-item :name "Grammar rule"
@@ -119,9 +111,9 @@
 
 (defun apply-lex-tty (lex lex-rule-name)
    (let* ((lex-rule (get-lex-rule-entry lex-rule-name))
-         (lex-entry (if lex (get-psort-entry lex)))
+         (lex-entry (if lex (get-lex-entry-from-id lex)))
          (lex-entry-fs
-            (if lex-entry (lex-or-psort-full-fs lex-entry))))
+            (if lex-entry (lex-entry-full-fs lex-entry))))
       (when lex-entry-fs 
             (when lex-rule
                (let 
@@ -137,9 +129,9 @@
 
 
 (defun apply-lex-rules-tty (lex)
-   (let* ((lex-entry (if lex (get-psort-entry lex)))
+   (let* ((lex-entry (if lex (get-lex-entry-from-id lex)))
          (lex-entry-fs
-            (if lex-entry (lex-or-psort-full-fs lex-entry))))
+            (if lex-entry (lex-entry-full-fs lex-entry))))
       (when lex-entry-fs 
          (setf *number-of-applications* 0)
          (let ((result-list
@@ -275,7 +267,7 @@
                     fs2 
                     fs1-id path1 fs2-id path2))
              (format t "~&Unification successful")
-             (if resname (store-temporary-psort *lexicon* resname resdag))))
+             (if resname (store-temporary-psort-entry resname resdag))))
           (cond ((null fs1) 
                  (error  "~&~A is not a valid FS identifier" fs1-id))
                 ((null fs2) 

@@ -360,7 +360,7 @@
 ;;; **** pop up menus for psorts (called when paths are displayed) *****
 
 (defun view-psort-action (stream psort)
-   (let ((lex-entry (if psort (get-psort-entry psort))))
+   (let ((lex-entry (if psort (get-lex-entry-from-id psort))))
       (if lex-entry 
          (pop-up-psort-menu stream psort lex-entry)
          (let ((lex-rule-entry 
@@ -381,7 +381,7 @@
                         (display-unexpanded-lex-entry psort lex-entry)))
                   (make-instance 'cg:menu-item :name "Expanded entry"
                      :value #'(lambda ()
-                        (display-fs (lex-or-psort-full-fs lex-entry) 
+                        (display-fs (lex-entry-full-fs lex-entry) 
                                     (format nil "~(~A~) - expanded" psort)
                                     psort
                                     ))))     
@@ -425,12 +425,12 @@
                      #'(lambda ()
                          (output-fs-in-tex fs-record)))
                   (make-instance 'cg:menu-item :name "Apply lex rule"
-                     :available-p (and id (get-psort-entry id))
+                     :available-p (and id (get-lex-entry-from-id id))
                      :value 
                      #'(lambda ()
                          (apply-lex id)))
                   (make-instance 'cg:menu-item :name "Apply lex rules"
-                     :available-p (and id (get-psort-entry id))
+                     :available-p (and id (get-lex-entry-from-id id))
                      :value 
                      #'(lambda ()
                           (apply-lex-rules id)))

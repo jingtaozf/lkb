@@ -823,8 +823,8 @@
     (when instance 
       (let ((tdfs (when (smember dagp '(:word t))
                     (copy-tdfs-completely 
-                     (lex-or-psort-full-fs (get-psort-entry name)))))
-            (ids (list (lex-or-psort-sense-id instance))))
+                     (lex-entry-full-fs (get-lex-entry-from-id name)))))
+            (ids (list (lex-entry-sense-id instance))))
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
                    :dag tdfs :from start :to end)))))

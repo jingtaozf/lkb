@@ -70,6 +70,25 @@
      edge-id
      (format nil "~A~A" (if morph-p 'medge 'edge) edge-id))))
 
+;;; labelling parse tree nodes --- code for handling the
+;;; templates
+
+;;; templates are stored in *category-display-templates*
+;;; which is an association list
+
+(defparameter *category-display-templates* nil
+  "used in parseout.lsp")
+
+(defun get-display-template-entry (id)
+  (cdr (assoc id *category-display-templates*)))
+
+(defun clear-category-display-templates nil
+  (setf *category-display-templates* nil))
+
+(defun add-category-display-template (id non-def defs)
+  (push (cons id
+	      (make-non-lex-psort-entry id non-def defs))
+	*category-display-templates*))
 
 (defun find-category-abb (fs)
   ;;; Two versions of this - one as in the original LKB and another 
@@ -96,9 +115,10 @@
        (let ((abb
               (if (not *simple-tree-display*)
                  (calculate-tdl-label fs)
-                 (dolist (tmpl *category-display-templates*)
-                    (let* ((tmpl-entry (get-psort-entry tmpl))
-                           (tmpl-fs (if tmpl-entry (tdfs-indef (lex-or-psort-full-fs tmpl-entry)))))
+                 (dolist (tmpl-pair *category-display-templates*)
+		   (let* ((tmpl (car tmpl-pair))
+			  (tmpl-entry (cdr tmpl-pair))
+			  (tmpl-fs (if tmpl-entry (tdfs-indef (psort-full-fs tmpl-entry)))))
                        (when (and tmpl-fs (dag-subsumes-p tmpl-fs (tdfs-indef fs)))
                           (return tmpl)))))))
           (push (cons fs abb) *cached-category-abbs*)
@@ -124,32 +144,35 @@
 ;;; Initialisation stuff
 
 (defun split-up-templates nil
-  (unless *simple-tree-display*
-  ; called when *category-display-templates*
-  ; is set up by the code in tdllexinput.lsp
-    (setf *label-display-templates* nil)
-    (setf *meta-display-templates* nil)
-    (loop for tmpl in *category-display-templates*
-        do
-          (let* ((tmpl-entry (get-psort-entry tmpl))
-                 (tmpl-fs (if tmpl-entry 
-                              (tdfs-indef 
-                               (lex-or-psort-full-fs tmpl-entry)))))
-            (if tmpl-fs 
-                (if (label-template-fs-p tmpl-fs)
-                    (push (make-label-template
-                           :fs tmpl-fs 
-                           :label (get-string-path-value tmpl-fs *label-path*
-                                                         tmpl))
-                          *label-display-templates*)
-                  (push (make-meta-template
-                         :fs tmpl-fs 
-                         :prefix (get-string-path-value tmpl-fs *prefix-path*
-                                                        tmpl)
-                         :suffix (get-string-path-value tmpl-fs *suffix-path*
-                                                        tmpl))
-                        *meta-display-templates*))
-              (format t "~%Warning: no valid fs for ~A" tmpl))))))
+  (if *simple-tree-display*
+      (setf *category-display-templates* 
+	(nreverse *category-display-templates*))
+  ;;; called from (tdl)lexinput.lsp
+    (progn 
+      (setf *label-display-templates* nil)
+      (setf *meta-display-templates* nil)
+      (loop for tmpl-pair in *category-display-templates*
+	  do
+	    (let* ((tmpl (car tmpl-pair))
+		   (tmpl-entry (cdr tmpl-pair))
+		   (tmpl-fs (if tmpl-entry 
+				(tdfs-indef 
+				 (psort-full-fs tmpl-entry)))))
+	      (if tmpl-fs 
+		  (if (label-template-fs-p tmpl-fs)
+		      (push (make-label-template
+			     :fs tmpl-fs 
+			     :label (get-string-path-value tmpl-fs *label-path*
+							   tmpl))
+			    *label-display-templates*)
+		    (push (make-meta-template
+			   :fs tmpl-fs 
+			   :prefix (get-string-path-value tmpl-fs *prefix-path*
+							  tmpl)
+			   :suffix (get-string-path-value tmpl-fs *suffix-path*
+							  tmpl))
+			  *meta-display-templates*))
+		(format t "~%Warning: no valid fs for ~A" tmpl)))))))
   
 
 (defun label-template-fs-p (fs)

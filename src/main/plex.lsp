@@ -49,7 +49,7 @@
   (let ((ids nil))
     (maphash #'(lambda (id value)
                  (if (and value
-                          (lex-or-psort-full-fs value))
+                          (lex-entry-full-fs value))
                      (push id ids)))
 	     (slot-value lexicon 'psorts))
     ids))
@@ -68,7 +68,7 @@
 	  (t (let ((stored-entry (gethash id stored-psorts)))
 	       (when stored-entry
 		 (setf (gethash id psorts) 
-		   (copy-lex-or-psort stored-entry))))))))
+		   (copy-lex-entry stored-entry))))))))
 
 (defmethod unexpand-psort ((lexicon plob-lex-database) id)
   (setf (gethash id (slot-value lexicon 'psorts)) nil))

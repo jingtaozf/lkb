@@ -14,9 +14,9 @@
       ;; alternatively - for lexicon only
       ;; (reverse *ordered-lex-list*) 
       (let* ((entry (read-psort *lexicon* id))
-             (lex-id (lex-or-psort-id entry)))
+             (lex-id (lex-entry-id entry)))
         (expand-psort-entry entry)
-        (let ((new-fs (lex-or-psort-full-fs entry)))
+        (let ((new-fs (lex-entry-full-fs entry)))
           (unless new-fs
             (format lkb::*lkb-background-stream*
                     "~%No feature structure for ~A~%" lex-id))
@@ -33,12 +33,6 @@
       (when unexpandp (unexpand-psort *lexicon* id))))
   (format t "~%Lexicon checked"))
 
-#|
-(sanitize (existing-dag-at-end-of (tdfs-indef (lex-or-psort-full-fs
-                                   (get-psort-entry 'SCHEYTT_N1)))
-'(synsem local cont))
- 'SCHEYTT_N1)
-|#
 
 (defun sanitize (dag-instance id &optional (ostream t))
   ;;; walks over a fs, looking for things of type
@@ -65,11 +59,6 @@
               (sanitize-aux (get-dag-value real-dag label)
                             id (cons label path-so-far) ostream))))))
 
-#|
-(check-diff-list (mrs::path-value (tdfs-indef (lex-or-psort-full-fs (get-psort-entry 'dial_v1))) 
-                                  '(SYNSEM NON-LOCAL SLASH)) 
-                 'dial_v1 '(SYNSEM NON-LOCAL SLASH))
-|#
 
 (defun check-diff-list (fs id path &optional (ostream t))
   ;;; all-diff-lists should have 
@@ -114,14 +103,14 @@
 
 (defun batch-check-morphology (&optional plus-ids)
   ;;; generates all morphological forms
-  (loop for psort in *ordered-lex-list*
+  (loop for lexid in *ordered-lex-list*
        do
-       (gen-all-morphs psort (get-psort-entry psort) plus-ids)))   
+       (gen-all-morphs lexid (get-lex-entry-from-id lexid) plus-ids)))   
 
 (defun gen-all-morphs (id entry &optional plus-ids)
   (when entry
     (setf *number-of-applications* 0)
-    (try-all-morph-rules (list (lex-or-psort-full-fs entry))
+    (try-all-morph-rules (list (lex-entry-full-fs entry))
                          (if plus-ids id))
     (unexpand-psort *lexicon* id)))
     

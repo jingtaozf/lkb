@@ -3,8 +3,14 @@
 
 (in-package :lkb)
 
-;;; (defparameter *idiom-phrases* nil)
-;;; set in io-paths/lexinput.lsp
+;;; need to uncomment stuff in lexinput.lsp
+
+(defparameter *idiom-phrases* nil)
+
+(defun add-idiom-entry (name constraint default)
+  (push 
+   (cons name (make-non-lex-psort-entry name constraint default))
+   *idiom-phrases*))
 
 (defparameter *idiom-phrases-expanded* nil)
 

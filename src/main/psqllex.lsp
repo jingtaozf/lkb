@@ -2,6 +2,8 @@
 ;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
+;;; aac (aug-12-03)
+;;; initialisation now sets to *lexicon* regardless 
 
 ;;; modifications by bmw (jul-03)
 ;;; - db dump and merge
@@ -101,12 +103,7 @@
       ;(fn-get-records lexicon ''update-current-grammar)
       (fn-get-records lexicon ''initialize-current-grammar)
 ;	)
-      (cond
-       ((null *lexicon*)
 	(setf *lexicon* *psql-lexicon*))
-       (t
-	(clrhash (slot-value *lexicon* 'lexical-entries))
-	(link *psql-lexicon* *lexicon*))))
      (t
       (error 
        "unable to connect to ~s: ~a"
@@ -562,7 +559,7 @@
 ;; (store-psort): not required 
 
 (defmethod make-field-map-slot ((lexicon psql-lex-database))
-  ;; stores the mapping of fields to lex-or-psort structure slots
+  ;; stores the mapping of fields to lex-entry structure slots
   (setf (fields-map lexicon)
     (mapcar #'(lambda (x) 
                 (cons (str-to-keyword-format (car x)) (cdr x)))
@@ -609,7 +606,7 @@
                              (if (> (list-length values) 1)
                                values
                                (car values)))))))
-    (apply #'make-lex-or-psort strucargs)))
+    (apply #'make-lex-entry strucargs)))
 
 ;;; create slot entry
 (defun make-psort-struct-aux (slot-key slot-value slot-path)

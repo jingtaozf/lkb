@@ -78,8 +78,8 @@
 ;;; Stephan Oepen.
 
 (defun type-of-lexical-entry (instance)
-  (let* ((instance (lkb::get-psort-entry instance))
-	 (tdfs (and instance (lkb::lex-or-psort-full-fs instance)))
+  (let* ((instance (lkb::get-lex-entry-from-id instance))
+	 (tdfs (and instance (lkb::lex-entry-full-fs instance)))
 	 (dag (and tdfs (lkb::tdfs-indef tdfs)))
 	 (type (when dag (lkb::type-of-fs dag))))
       (if (null type)

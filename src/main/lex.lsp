@@ -2,24 +2,25 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
+;;; aac (aug-03)
+;;; - moved old flat file stuff to slex.lsp - added to cvs
+;;;   but not loaded by lkb.system
+;;; - removed `other' entries from *lexicon*
+;;;   (code for handling them is either here or in 
+;;;   specific files)
+
 ;;; bmw (jun-03)
 ;;; - lex-words looks in sublexicons too
 ;;; - (partial) caching of null values
 ;;; - link/unlink replace (setf extra-lexicons)
 ;;;
 
-;;; April 1997 - modified for YADU
-;;;            - output-lexicon etc removed
-;;;            - get-psort-type removed (not called)
-
 (in-package :lkb)
 
-;;; Lexical entries and psort storage etc
+;;; Lexical entries, storage etc
 
 ;;; Lexical entries are indexed by orthography (string)
-;;; They are also all potential psorts indexed
-;;; by a combination of orthography
-;;; plus sense identifier
+;;; They are also all indexed by an identifier
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -28,7 +29,6 @@
 (defclass lex-database () 
   ((lexical-entries :initform (make-hash-table :test #'equal))
    (psorts :initform (make-hash-table :test #'eq))
-   (temp-psorts :initform (make-hash-table :test #'eq))
    (extra-lexicons :initform nil :reader extra-lexicons) ;: use link/unlink to write
    (extra-mode :initform :union :accessor extra-mode)
    (part-of :initform nil :accessor part-of)))
@@ -97,8 +97,6 @@
 
 (defgeneric store-psort (lexicon id entry &optional orth))
 
-(defgeneric store-temporary-psort (lexicon id entry))
-
 (defgeneric read-psort (lexicon id &key (cache) (recurse t)))
 
 (defgeneric unexpand-psort (lexicon id))
@@ -124,37 +122,35 @@
    signalled as continuable errors, rather than written
    to a file.")
 
-(defstruct (lex-or-psort) 
+(defstruct (psort)
+   id 
+   unifs
+   def-unifs
+   full-fs
+   language)
+
+(defstruct (lex-entry (:include psort)) 
    orth
    infl-pos ; for a multi-word entry only - a number
             ; indicating the element that can be inflected
             ; or NIL - no inflection
-   sense-id
-   id ; for a lexical entry this is an
-      ; atom formed by combining the strings
-   language
-   unifs
-   def-unifs
-   full-fs)
-
-;; interim-fs is removed from the structure since it's redundant -
-;; there are calls to it in non-core, but these are just for display
-;; so if it's wanted it can be recalculated; also local-fs
+   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
 ;;;  Database-independent lexical access functions
 ;;;
 
-(defun get-psort-entry (id)
+(defun get-lex-entry-from-id (id)
+  ;;; now lexical entries only
   (let ((entry (get-unexpanded-psort-entry id)))
     ;; if we haven't previously expanded then
     ;; destructively modify entry
     (when entry
-      (cond ((eql (lex-or-psort-full-fs entry) :fail) nil)
-	    ((lex-or-psort-full-fs entry) entry)
+      (cond ((eql (lex-entry-full-fs entry) :fail) nil)
+	    ((lex-entry-full-fs entry) entry)
 	    ((expand-psort-entry entry) entry)
-	    (t (setf (lex-or-psort-full-fs entry) :fail)
+	    (t (setf (lex-entry-full-fs entry) :fail)
 	       nil)))))
                    
 (defun get-unexpanded-psort-entry (id)
@@ -172,36 +168,39 @@
   (clear-expanded-lex))
 
 (defun get-psort-value (psort) 
-  (let ((psort-entry (get-psort-entry psort)))
+  (let ((psort-entry (get-lex-entry-from-id psort)))
     (if psort-entry 
-	(lex-or-psort-full-fs psort-entry)
-      (let ((gr-entry (get-grammar-rule-entry psort)))
-	(if gr-entry
-	    (rule-full-fs gr-entry)
-	  (let ((lr-entry (get-lex-rule-entry psort)))
-	    (if lr-entry 
-		(rule-full-fs lr-entry)
-	      (lex-expansion-error 
-	       "Return nil" 
-	       (format 
-                nil 
-                "~A is not a valid structure identifier" psort)))))))))
+	(lex-entry-full-fs psort-entry)
+      (let ((other-entry (get-other-entry psort)))
+	(if other-entry
+	    (psort-full-fs other-entry)
+	  (let ((gr-entry (get-grammar-rule-entry psort)))
+	    (if gr-entry
+		(rule-full-fs gr-entry)
+	      (let ((lr-entry (get-lex-rule-entry psort)))
+		(if lr-entry 
+		    (rule-full-fs lr-entry)
+		  (lex-expansion-error 
+		   "Return nil" 
+		   (format 
+		    nil 
+		    "~A is not a valid structure identifier" psort)))))))))))
 
 (defun get-type-from-lex-id (id)
   ;;; Utility function for MPhillies
   ;;; just returns nil if it doesn't find anything suitable
   ;;; since they may perhaps want to call it on things
   ;;; which may not be valid
-  (let ((entry (get-psort-entry id)))
+  (let ((entry (get-lex-entry-from-id id)))
     (if entry
-        (let ((tdfs (lex-or-psort-full-fs entry)))
+        (let ((tdfs (lex-entry-full-fs entry)))
           (if (tdfs-p tdfs)
               (indef-type-of-tdfs tdfs))))))
 
 (defun get-lex-entry (orth)
   (loop 
       for psort in (remove-duplicates (lookup-word *lexicon* orth))
-      for entry = (get-psort-entry psort)
+      for entry = (get-lex-entry-from-id psort)
       when entry collect entry))
 
 (defun get-unexpanded-lex-entry (orth)
@@ -243,10 +242,9 @@
     ;; in the FS; extract-orth-from-unifs must be defined on a
     ;; per-grammar basis
     (set-lexical-entry *lexicon* orth-string lex-id 
-		       (make-lex-or-psort
+		       (make-lex-entry
 			:orth orth-string
 			:infl-pos infl-pos                  
-			:sense-id sense-id 
 			:id lex-id
 			:unifs fs-or-type 
 			:def-unifs defs))))
@@ -359,13 +357,6 @@
 
 (defun make-lex-id (orth sense-id)
    (intern (format nil "~A_~A" orth sense-id)))
- 
-(defun add-psort-from-file (id fs-or-type defs)
-  (store-temporary-psort *lexicon*
-			 id 
-			 (make-lex-or-psort :id id
-					    :unifs fs-or-type
-					    :def-unifs defs)))
 
 ;;; When expanding a lexical entry we want to eventually produce a
 ;;; tdfs which then has the non-persistent defaults incorporated.  As
@@ -378,66 +369,68 @@
       (format t "~%~A" string2)
     (cerror string1 string2)))
 
-(defun expand-psort-entry (entry &optional local-p interim-p)
+(defun lex-entry-local-fs (entry)
+  (expand-psort-entry entry t))
+
+(defun expand-psort-entry (entry &optional local-p)
   (let* ((*safe-not-to-copy-p* nil)
-	 (orth (lex-or-psort-orth entry))
-         (lex-id (lex-or-psort-id entry))
-         (language (lex-or-psort-language entry))
-         (fs (append (lex-or-psort-unifs entry)
+	 (orth (lex-entry-orth entry))
+         (lex-id (lex-entry-id entry))
+         (language (lex-entry-language entry))
+         (fs (append (lex-entry-unifs entry)
 		     (when (and orth *sense-unif-fn*)
 		       (apply *sense-unif-fn* 
 			      (list orth 
 				    (format nil "~A" lex-id) language))))))
-    (process-unif-list lex-id fs (lex-or-psort-def-unifs entry) entry
-		       *description-persistence* nil 
-		       local-p interim-p)))
-         
+    (process-unif-list lex-id fs (lex-entry-def-unifs entry) entry
+		       *description-persistence* local-p)))
+
+(defun make-non-lex-psort-entry (name constraint default)
+  ;;; called for category templates, roots, idioms etc
+  ;;; expansion happens at load time
+  (let* ((*safe-not-to-copy-p* nil)
+	 (entry (make-psort :id name 
+				 :unifs constraint 
+				 :def-unifs default)))
+    (process-unif-list (psort-id entry) 
+		       (psort-unifs entry)
+		       (psort-def-unifs entry) 
+		       entry
+		       *description-persistence*)
+    entry))
+
 (defun process-unif-list (lex-id indef-list default-specs entry persistence
-			  &optional linking-p local-p interim-p)
-  ;; linking-p is only true with the bc96 version of lexical rules
-  ;; local-p and interim-p are called for display, to avoid storing
-  ;; unneeded structure
+			  &optional local-p)
   (let* ((fs (process-unifications indef-list))
 	 (indef (if fs (create-wffs fs))))
-    (if indef
-        (let* ((default-fss
-		   (loop for default-spec in default-specs
-			collect
-			(make-equivalent-persistence-defaults 
-			 indef (car default-spec) (cdr default-spec) lex-id)))
-               (local-tdfs (construct-tdfs indef default-fss t)))
-          (if local-p 
-              local-tdfs
-            (let ((interim-fs local-tdfs))
-              (setf (tdfs-tail interim-fs)
-                (yadu-general-merge-tails
-                 (tdfs-tail interim-fs)
-                 (tdfs-tail (type-tdfs (get-type-entry (type-of-fs indef))))
-                 indef))
-              (if interim-p 
-                  interim-fs
-                (let ((incorp-fs 
-                       (if persistence
-                           (make-indefeasible interim-fs (list persistence))
-                         interim-fs)))
-		  ;; Cut off useless pointers, to help garbage collection
-		  (compress-dag (tdfs-indef incorp-fs))
-                  (setf (lex-or-psort-full-fs entry)
-                    (if (and linking-p (fboundp 'link-lex-entry))
-                        (funcall 'link-lex-entry incorp-fs)
-                      incorp-fs)))))))
-      (progn
-	(if fs
-	    (format t "~%Structure for ~A could not be made well formed" lex-id)
-	  (format t "~%Structure for ~A could not be created" lex-id))
-	nil))))
-
-;; Never called
-;;(defun lex-or-psort-interim-fs (entry)
-;;  (expand-psort-entry entry nil t))
-
-(defun lex-or-psort-local-fs (entry)
-  (expand-psort-entry entry t nil))
+    (if local-p
+	fs
+      (if indef
+	  (let* ((default-fss
+		     (loop for default-spec in default-specs
+			 collect
+			   (make-equivalent-persistence-defaults 
+			    indef (car default-spec) (cdr default-spec) lex-id)))
+		 (local-tdfs (construct-tdfs indef default-fss t)))
+	    (let ((interim-fs local-tdfs))
+	      (setf (tdfs-tail interim-fs)
+		(yadu-general-merge-tails
+		 (tdfs-tail interim-fs)
+		 (tdfs-tail (type-tdfs (get-type-entry (type-of-fs indef))))
+		 indef))
+	      (let ((incorp-fs 
+		     (if persistence
+			 (make-indefeasible interim-fs (list persistence))
+		       interim-fs)))
+		;; Cut off useless pointers, to help garbage collection
+		(compress-dag (tdfs-indef incorp-fs))
+		(setf (psort-full-fs entry)
+		  incorp-fs))))
+	(progn
+	  (if fs
+	      (format t "~%Structure for ~A could not be made well formed" lex-id)
+	    (format t "~%Structure for ~A could not be created" lex-id))
+	  nil)))))
 
 ;; Check to see if compiled files match originals
 
@@ -446,6 +439,46 @@
     (let ((in-date (apply #'max (mapcar #'file-write-date in-files)))
 	  (out-date (apply #'min (mapcar #'file-write-date out-files))))
       (> out-date in-date))))
+
+
+;;; Code for `other' entries
+
+;;; utility function
+
+(defun get-other-entry (fs-id)
+  (or (get-root-entry fs-id)
+      (get-display-template-entry fs-id)
+;      (get-idiom-entry fs-id)
+      (get-temporary-entry fs-id)))
+
+;;; temporary storage of structures created by unification check
+
+(defparameter *temporary-entries* nil)
+
+(defun store-temporary-psort-entry (name fs)
+  (push (cons name
+	      (make-psort :id name :full-fs fs))
+	*temporary-entries*))
+
+(defun get-temporary-entry (id)
+  (cdr (assoc id *temporary-entries*)))
+
+;;; root stuff goes here, for want of anywhere better
+
+(defparameter *root-entries* nil)
+
+(defun clear-root-entries nil
+  (setf *root-entries* nil))
+
+(defun add-root-entry (id non-def defs)
+  (push (cons id
+	      (make-non-lex-psort-entry id non-def defs))
+	*root-entries*))
+
+(defun get-root-entry (id)
+  (cdr (assoc id *root-entries*)))
+
+;;; end code for `other' entries
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
@@ -513,51 +546,18 @@
     (dolist (orth-el orth)
       (pushnew id (gethash (string-upcase orth-el) lexical-entries)))))
 
-(defmethod store-temporary-psort ((lexicon lex-database) id 
-				  (entry lex-or-psort))
-  ;; add to hash but don't store in database
-  (with-slots (temp-psorts psorts) lexicon
-    (when (or (gethash id psorts)
-	      (gethash id temp-psorts))
-      (format t "~%Redefining ~A" id))
-    (setf (gethash id temp-psorts) entry)))
-
-(defmethod store-temporary-psort ((lexicon lex-database) id 
-				  (entry t))
-  (store-temporary-psort lexicon id 
-			 (make-lex-or-psort 
-			  :id id
-			  :full-fs entry)))
 
 ;;; todo: cache
 (defmethod read-psort :around ((lexicon lex-database) id &key (cache t) (recurse t))
-  (cond ((gethash id (slot-value lexicon 'temp-psorts)))
-	((and (next-method-p) (call-next-method)))
+  (cond ((and (next-method-p) (call-next-method)))
 	(recurse (some #'(lambda (lex) (read-psort lex id :cache cache))
 		       (extra-lexicons lexicon)))))
-
-(defmethod collect-expanded-lex-ids :around ((lexicon lex-database))
-  (let ((ids nil))
-    (maphash #'(lambda (id value)
-                 (when (and value (lex-or-psort-full-fs value)
-			    (lex-or-psort-orth value))
-		   (push id ids)))
-	     (slot-value lexicon 'temp-psorts))
-    (nconc ids (call-next-method))))
-
-(defmethod unexpand-psort :around ((lexicon lex-database) id)
-  (with-slots (temp-psorts) lexicon
-    (let ((entry (gethash id temp-psorts)))
-      (if entry
-	  (setf (lex-or-psort-full-fs entry) nil)
-	(call-next-method)))))
 
 (defmethod clear-lex :around ((lexicon lex-database) &optional no-delete)
   (when (fboundp 'clear-generator-lexicon)
     (funcall 'clear-generator-lexicon))
   (clrhash (slot-value lexicon 'lexical-entries))
   (clrhash (slot-value lexicon 'psorts))
-  (clrhash (slot-value lexicon 'temp-psorts))
   (when (fboundp 'clear-lexicon-indices)
     (funcall 'clear-lexicon-indices))
   (call-next-method)
@@ -574,242 +574,9 @@
   (unless no-delete
     (delete-temporary-lexicon-files lexicon)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;  Interface to a simple flat-file lexical cache
-;;;
+;;; End of general methods
 
-(defclass simple-lex-database (lex-database)
-  ((psorts-stream :initform nil)))
-
-#+:null
-(setf *lexicon* (make-instance 'simple-lex-database))
-
-(defmethod lexicon-loaded-p ((lexicon simple-lex-database))
-  (and (streamp (slot-value lexicon 'psorts-stream))
-       (open-stream-p (slot-value lexicon 'psorts-stream))))
-
-(defmethod lex-words ((lexicon simple-lex-database))
-  (let ((words nil))
-    (maphash #'(lambda (k v)
-		 (declare (ignore v))
-		 (push k words))
-	     (slot-value lexicon 'lexical-entries))
-    words))
-
-(defmethod read-cached-lex ((lexicon simple-lex-database) filenames)
-  (set-temporary-lexicon-filenames)
-  (let* ((ok nil)
-	 (cache-date
-	  (if (and *psorts-temp-file* 
-		   (probe-file *psorts-temp-file*))
-	      (file-write-date *psorts-temp-file*)))
-	 (cache-index-date 
-	  (if 
-	      (and
-	       *psorts-temp-index-file*
-	       (probe-file *psorts-temp-index-file*))
-	      (file-write-date *psorts-temp-index-file*)))
-	 (last-file-date
-	  (apply #'max (loop for file in filenames
-                           nconc
-                             (let ((date (file-write-date file)))
-                               (if date (list date)))))))
-    (when (and cache-date last-file-date cache-index-date
-	       (> cache-date last-file-date) 
-	       (> cache-index-date last-file-date))
-      (setf ok t)
-      (format t "~%Reading in cached lexicon")
-      (clear-lex lexicon t)
-      (handler-case 
-	  (read-psort-index-file)
-	(error (condition)
-	  (format t "~%Error: ~A" condition)
-	  (delete-temporary-lexicon-files lexicon)
-	  (setf ok nil)))
-      (cond (ok (format t "~%Cached lexicon read")
-		t)
-	    (t (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
-	       nil)))))
-
-
-(defmethod store-cached-lex ((lexicon simple-lex-database))
-  ;; assume that this is only going to be called after a user has
-  ;; successfully done a psorts-temp-file and by an advanced user, so
-  ;; don't bother with fancy error checking
-  (let ((ok nil))
-    (with-slots (psorts psorts-stream) lexicon
-      (when *psorts-temp-index-file* 
-	(unwind-protect
-	    (progn
-	      (with-open-file (ostream *psorts-temp-index-file* 
-			       :direction :output
-			       :if-exists :supersede)
-		(maphash #'(lambda (id value)
-			     (prin1 id ostream)
-			     (write-string " " ostream)
-			     (prin1 (car value) ostream)
-			     (write-string " " ostream)
-			     (prin1 (cadr value) ostream)
-			     (terpri ostream)
-			     )
-			 psorts))
-	      (setf ok t))
-	  ;; if there's an error during the writing of the index file,
-          ;; delete it
-          #|
-	  (when (and (streamp psorts-stream)
-		     (open-stream-p psorts-stream))
-	    (finish-output psorts-stream)
-            (close psorts-stream))
-            |#
-	  (unless ok
-	    (when (probe-file *psorts-temp-index-file*)
-	      (delete-file *psorts-temp-index-file*))))))))
-
-(defmethod clear-lex ((lexicon simple-lex-database) &optional no-delete)
-  (declare (ignore no-delete))
-  ;; Close temporary lexicon file
-  (with-slots (psorts-stream) lexicon
-      (when (and (streamp psorts-stream)
-		 (open-stream-p psorts-stream))
-	(close psorts-stream))))
-
-(defmethod collect-expanded-lex-ids ((lexicon simple-lex-database))
-  ;; useful for creating a subset of a lexicon which corresponds to a
-  ;; particular test suite
-  (let ((ids nil))
-    (maphash #'(lambda (id value)
-                 (if (and (cddr value)
-                          (lex-or-psort-full-fs (cddr value)))
-                     (push id ids)))
-	     (slot-value lexicon 'psorts))
-    ids))
-
-(defmethod store-psort ((lexicon simple-lex-database) id entry &optional orth)
-  ;; write new entry to the end of the file
-  ;; update the hash table entry with the new file pointer
-  (with-slots (psorts-stream psorts) lexicon
-    (unless (and (streamp psorts-stream)
-		 (open-stream-p psorts-stream))
-      (open-psorts-stream lexicon))
-    (let ((current-file-end (file-length psorts-stream))
-	  (specified-entry (cons id entry))
-	  (*print-pretty* nil))
-      (file-position psorts-stream current-file-end)
-      (write specified-entry :stream psorts-stream :level nil :length nil)
-      (terpri psorts-stream)
-      (when (gethash id psorts)
-	(format t "~%Redefining ~A" id))
-      (setf (gethash id psorts)
-	(list orth current-file-end))))
-  id)
-
-;;; todo: cache
-(defmethod read-psort ((lexicon simple-lex-database) id &key (cache t)  (recurse t))
-  (declare (ignore cache recurse))
-  (with-slots (psorts) lexicon
-    (let ((hash-table-entry (gethash id psorts)))
-      (when hash-table-entry
-	(or (cddr hash-table-entry)	; cached
-	    (let* ((file-pointer (cadr hash-table-entry))
-		   (file-entry (cdr (read-psort-entry-from-file 
-				     (slot-value lexicon 'psorts-stream)
-				     file-pointer id))))
-	      (setf (cddr (gethash id psorts)) file-entry)
-	      file-entry))))))
-
-(defmethod unexpand-psort ((lexicon simple-lex-database) id)
-  (setf (cddr (gethash id (slot-value lexicon 'psorts))) nil))
-
-(defmethod collect-psort-ids ((lexicon simple-lex-database) &key (recurse t))
-  (declare (ignore recurse))
-  (let ((ids nil))
-    (maphash 
-     #'(lambda (name val)
-	 (declare (ignore val))
-	 (push name ids))
-     (slot-value lexicon 'psorts))
-    ids))
-
-;; Utilities for flat-file lexical database
-
-(defun open-psorts-stream (lexicon)
-  (with-slots (psorts-stream) lexicon
-    (unless (and (streamp psorts-stream)
-		 (open-stream-p psorts-stream))
-      (set-temporary-lexicon-filenames)
-      (handler-case
-	  (setf psorts-stream
-	    (open *psorts-temp-file* 
-		  :direction :io
-		  :if-exists :append
-		  :if-does-not-exist :create))
-	(error (condition)
-	  (format t "~%Error ~A in opening temporary lexicon file" condition)))
-      (unless (and psorts-stream
-		   (input-stream-p psorts-stream)
-		   (output-stream-p psorts-stream))
-	(error "~%Failure to open temporary lexicon file ~A correctly.
-               Please create the appropriate directory 
-               if it does not currently exist or redefine
-               the user functions lkb-tmp-dir and/or
-               set-temporary-lexicon-filenames.  Then reload grammar."
-	       *psorts-temp-file*)))))
-
-(defun flush-psorts-stream (lexicon)
-  (with-slots (psorts-stream) lexicon
-    (unless (and (streamp psorts-stream)
-		 (output-stream-p psorts-stream))
-      (error "Temporary file ~A unexpectedly closed" 
-	     *psorts-temp-file*))
-    (finish-output psorts-stream)))
-
-(defun read-psort-entry-from-file (psorts-stream file-pointer id)
-   #+(and mcl powerpc)(decf ee (CCL::TOTAL-BYTES-ALLOCATED))
-   (finish-output psorts-stream)
-   (prog1
-      (let ((successful-positioning 
-            (file-position psorts-stream file-pointer)))
-         (unless successful-positioning 
-            (error "~%Can't retrieve entry for ~A" id))
-         (with-package (:lkb) (read psorts-stream t)))
-     #+(and mcl powerpc)(incf ee (CCL::TOTAL-BYTES-ALLOCATED))))
-
-;; Never called?
-;;(defun uncache-psort-entry (id)
-;;   (let ((hash-table-entry 
-;;            (gethash id *psorts*)))
-;;      (when hash-table-entry
-;;         (setf (cddr hash-table-entry) nil))))
-
-(defun read-psort-index-file nil
-  (with-slots (psorts psorts-stream lexical-entries) *lexicon*
-    (when (and (streamp psorts-stream)
-	       (open-stream-p psorts-stream))
-      (finish-output psorts-stream)
-      (close psorts-stream))
-    (when (and *psorts-temp-file* 
-	       *psorts-temp-index-file*
-	       (probe-file *psorts-temp-file*)
-	       (probe-file *psorts-temp-index-file*))
-      (with-open-file (istream *psorts-temp-index-file* :direction :input)
-	(unless (input-stream-p istream)
-	  (error "~%Failed to open temporary file correctly" 
-		 *psorts-temp-index-file*))
-	(clrhash lexical-entries)
-        (with-package (:lkb)
-          (loop
-            for id = (read istream nil nil)
-            for orth = (and id (read istream nil nil))
-            for file-pos = (and orth (read istream nil nil))
-            while id
-            do
-              (setf (gethash id psorts) (list orth file-pos))
-              (dolist (orth-el orth)
-                (pushnew id (gethash (string-upcase orth-el) 
-                                     lexical-entries))))))
-      (open-psorts-stream *lexicon*))))
+;;; Utility function - called from leaf.lsp and clex.lsp
 
 (defun delete-temporary-lexicon-files-aux nil
   (when (and *psorts-temp-file*
@@ -818,6 +585,8 @@
   (when (and *psorts-temp-index-file*
 	     (probe-file *psorts-temp-index-file*))
     (delete-file *psorts-temp-index-file*)))
+
+;;; dunno what this is - looks like oe code
 
 (defun lexicon-to-xml (&key (stream t) file)
   (loop
@@ -829,9 +598,9 @@
       with *batch-mode* = t
       for id in (collect-psort-ids *lexicon*)
       for entry = (read-psort *lexicon* id)
-      for tdfs = (and entry (lex-or-psort-local-fs entry))
+      for tdfs = (and entry (lex-entry-local-fs entry))
       for type = (and tdfs (indef-type-of-tdfs tdfs))
-      for stem = (and entry (lex-or-psort-orth entry))
+      for stem = (and entry (lex-entry-orth entry))
       when (and id type stem) do
         (format
          stream

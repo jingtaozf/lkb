@@ -34,8 +34,8 @@
 
 
 (defun output-instance-as-tdl (name lex-struct stream local-p)
-  (let ((fs (if local-p (lex-or-psort-local-fs lex-struct)
-                (tdfs-indef (lex-or-psort-full-fs lex-struct)))))
+  (let ((fs (if local-p (lex-entry-local-fs lex-struct)
+                (tdfs-indef (lex-entry-full-fs lex-struct)))))
     ;;; assume no defaults
     (format stream "~%:begin :instance.~%")
     (format stream "~%~A :=" (string-downcase name))
