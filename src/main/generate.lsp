@@ -145,7 +145,7 @@
 ;;; of inactive, total number of chart edges
 
 (defun chart-generate (input-sem found-lex-items possible-grules
-		       &optional (first-only-p *first-only-p*))
+		       &optional (first-only-p *gen-first-only-p*))
   ;; also an entry point so ensure chart is clear
   (clear-gen-chart) 
   (flush-heap *agenda*)
@@ -154,7 +154,7 @@
   ;;   (return-from chart-generate nil))
   (let ((*safe-not-to-copy-p* t)
 	(*gen-chart-unifs* 0) (*gen-chart-fails* 0)
-	(*first-only-p* first-only-p)
+	(*gen-first-only-p* first-only-p)
 	(*non-intersective-rules*
 	 (remove-if
 	  #'(lambda (r)
@@ -169,7 +169,7 @@
 	      (mapc #'(lambda (found) 
 			(let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
 			       (word (extract-orth-from-fs lex-entry-fs)))
-			  (with-agenda (when *first-only-p* 
+			  (with-agenda (when *gen-first-only-p* 
 					 (gen-lex-priority lex-entry-fs))
 			    (gen-chart-add-inactive 
 			     (make-g-edge
@@ -405,7 +405,7 @@
 				    (g-edge-id edge))))
     (gen-chart-add-with-index edge index)
     ;; Did we just find a result?
-    (when *first-only-p*
+    (when *gen-first-only-p*
       (multiple-value-bind (complete partial)
 	  (gen-chart-find-complete-edges (list edge) input-sem)
 	(setq *gen-record*
@@ -418,7 +418,7 @@
 	  (format t "~&Warning: continuing after adjunction!"))))
     ;; see if this new inactive edge can extend any existing active edges
     (mapc #'(lambda (e) 
-	      (with-agenda (when *first-only-p* 
+	      (with-agenda (when *gen-first-only-p* 
 			     (gen-rule-priority (edge-rule e)))
 		(gen-chart-test-active edge e input-sem)))
 	  (gen-chart-retrieve-active-with-index index))
@@ -429,7 +429,7 @@
 		(format t "~&Trying to create new active edge from rule ~A ~
                      and inactive edge ~A"
 			(rule-id rule) (g-edge-id edge)))
-	      (with-agenda (when *first-only-p* (gen-rule-priority rule))
+	      (with-agenda (when *gen-first-only-p* (gen-rule-priority rule))
 		(multiple-value-bind (gen-daughter-order head-index) ; zero-based on daughters
 		    (gen-chart-rule-ordered-daughters rule)
 		  (let ((act (gen-chart-create-active rule edge 
