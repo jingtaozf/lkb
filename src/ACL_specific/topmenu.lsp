@@ -151,6 +151,7 @@
     (setf excl:*restart-init-function* #'restart-lkb-function) 
     (user::write-psort-index-file)
     (excl:dumplisp :name image-location)
+    (user::check-for-open-psorts-stream)
     (user::lkb-beep)
     (format t "~%Image saved~%")
     nil))
