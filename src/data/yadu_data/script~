@@ -1,0 +1,37 @@
+(let ((data-dir1 (pathname "Macintosh HD:yadu:data:yadu_data:")))
+;;;    (load (merge-pathnames
+;;;          (make-pathname :name "globals.lsp")
+;;;          data-dir1))
+   (read-type-files-aux
+      (list
+         (merge-pathnames
+            (make-pathname :name "common.types")
+            data-dir1)
+         (merge-pathnames
+            (make-pathname :name "linking.types")
+            data-dir1)
+         (merge-pathnames
+            (make-pathname :name "mrs.types")
+            data-dir1)
+         (merge-pathnames
+            (make-pathname :name "main.types")
+            data-dir1))
+;;;       (merge-pathnames
+;;;             (make-pathname :name "full.display")
+;;;             data-dir1)
+         )
+   (setf *current-language* 'english)
+   (read-lex-file-aux (merge-pathnames
+         (make-pathname :name "test.lex")
+         data-dir1) t)
+   (read-grammar-file-aux (merge-pathnames 
+         (make-pathname :name "cat.grules")
+         data-dir1) t)  
+;   (read-lex-rule-file-aux (merge-pathnames 
+;         (make-pathname :name "verb.lrules")
+;         data-dir1) t)
+   (read-lex-rule-file-aux (merge-pathnames 
+         (make-pathname :name "noun.lrules")
+         data-dir1) t)
+;   (collect-all-lexical-items)
+   )

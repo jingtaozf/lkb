@@ -1,0 +1,35 @@
+boolean := *top*.
+
+string := *top*.
+
+
+diff-list := *top* &
+[ LST list,
+  LAST list ] .
+
+list := *top*.
+
+e-list := list.
+
+ne-list := list &
+[ HD *top*,
+  TL list ].
+
+;;; L+C section 2.
+
+verb := *top* &
+[ PAST *top* /lex #pp,
+  PASTP #p /lex #pp,
+  PASSP #p /lex #pp ].
+
+regverb := verb &
+[ PAST /lex "ed" ] .
+
+;;; slash position before or after feature -
+;;; the effect should be basically the same
+;;; given that PAST is an appropriate feature
+
+pst-t-vb := regverb &
+/lex
+[ PAST "t" ] .
+

@@ -1,0 +1,142 @@
+Top ().
+
+boolean (Top) (OR true false).
+
+string (top)
+"A special type which any lisp string will unify".
+
+
+diff-list (top)
+"Do append eqvnt without recursive types"
+< LST > = list
+< LAST > = list .
+
+list (top).
+
+e-list (list).
+
+ne-list (list)
+< HD > = top
+< TL > = list.
+
+
+;;; L+C section 2.
+
+verb (top)
+< PAST > = top
+< PASTP > = < PASSP >
+
+/ lex
+< PASSP > = < PAST >
+< PASTP > = < PAST > .
+
+regverb (verb)
+/ lex
+< PAST > = "ed" .
+
+pst-t-vb (regverb)
+/ lex
+< PAST > = "t" .
+
+;;; L+C 3.6.1
+
+c (top).
+
+a (c).
+
+b (c).
+
+fgtype (top)
+< F > = top
+< G > = top .
+
+t1 (fgtype)
+/ lex
+< F > = < G > .
+
+t (t1)
+/ lex
+< F > = a
+< G > = b .
+
+;;; L+C 3.6.2
+
+
+t-a (fgtype)
+/ lex
+< F > = a
+< G > = b .
+
+
+t1-a (fgtype)
+/ lex
+< F > = < G >.
+
+t2-a (t-a t1-a).
+
+;;; L+C 3.6.3
+
+fftype (top)
+< FF > = top.
+
+u (top)
+<GG> = b.
+
+t1-b (fftype)
+/lex
+< FF > = u.
+
+t-b (t1-b)
+/ lex
+< FF > = a .
+
+;;; L+C section 3.7 
+
+ac (top).
+bc (top).
+cc (top).
+
+tc3 (fgtype)
+/ lex
+< F > = cc.
+
+tc2 (tc3)
+/ lex
+< F > = ac
+< G > = bc.
+
+tc1 (tc2)
+/ lex
+< F > = < G >.
+
+
+;;; L+C 4.1 modals
+
+sign (top)
+< SYNSEM > = synsem.
+
+synsem (top)
+< HEAD > = head
+< VAL > = val.
+
+head (top)
+< AUX > = boolean
+< VFORM > = vform .
+
+vform (top).
+
+bse (vform).
+
+inf (vform).
+
+val (top)
+< COMPS > = list.
+
+modal (sign)
+< SYNSEM : HEAD : AUX > = true
+< SYNSEM : VAL : COMPS : TL > = e-list
+< SYNSEM : VAL : COMPS : HD : VAL : COMPS > = e-list
+/ lex
+< SYNSEM : VAL : COMPS : HD : HEAD : VFORM > = bse .
+
+

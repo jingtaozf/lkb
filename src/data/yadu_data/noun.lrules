@@ -1,0 +1,40 @@
+pluralise 
+lex-count-noun 
+   < sem : liszt : lst : hd : plmod > = false
+   < sem : liszt : lst : hd : quant > = true 
+-> lex-plural .
+
+portioning
+lex-mass
+   < sem : liszt : lst : hd : inst : qualia > = comestible
+->
+lex-portion.
+
+;;; test has to be on inst of rel rather than index, because
+;;; index will not be linked at the point lex rule is applied
+
+;;; ignore the orthography for now
+;;; though accumulation of (derivational) affixes
+;;; would seem to require some recursive mechanism
+;;; and thus something like the semantic shift operation
+  
+;;; grinding-process 
+;;; :shift metonymic
+;;; lex-individ 
+;;;   < sem : index : qualia > = physical
+;;; -> lex-mass
+;;;    < sem : liszt : lst : hd > = grind_rel
+;;;   < sem : liszt : lst : hd : arg2 > =
+;;;       < sem : liszt : lst : tl : hd : inst > .
+   
+;;; metonymic is a shifting operation which moves the
+;;; semantics in the LISZT along one leaving an empty slot
+
+     
+;;; grind_rel would have to be a relational nominal
+;;; not defined yet but
+;;; [ grind_rel
+;;;   INST : ref-ind ; coindexed with MRS INDEX
+;;;   ARG2 : ref-ind ; coindexed with INST of another nom_rel ]
+;;;
+;;; note that sister etc would also be of this type

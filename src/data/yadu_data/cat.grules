@@ -1,0 +1,34 @@
+
+forward-application
+  <> = phrase
+  < NODE > = < 1 : node : cat : result >
+  < 1 : node : cat : direction > = forward
+  < 1 : node : cat : active > = < 2 : node > .
+  
+backward-application
+  <> = phrase
+  < NODE > = < 2 : node : cat : result >
+  < 1 : node : cat : direction > = backward
+  < 2 : node : cat : active > = < 1 : node >.
+     
+backward-wrapping
+  <> = phrase
+  < NODE > = < 2 : node : cat : result >
+  < 1 : node : cat : result : cat : active > = 
+       < 2 : node : cat : active : cat : active >
+  < 1 : node : cat : result : cat : result > = 
+       < 2 : node : cat : active : cat : result : cat : result >
+  < 1 : node : cat : result : sem > = 
+       < 2 : node : cat : active : cat : result : sem >
+  < 1 : node : cat : direction > = 
+       < 2 : node: cat : active : cat : result : cat : direction > 
+  < 1 : node : cat : active > = 
+       < 2 : node: cat : active : cat : result : cat : active >
+  < 1 : node : cat : result : cat : direction > = backward-wrap.
+
+
+make-node
+   <> = word
+   < NODE > = < 1 >
+   < 1 > = lex-sign.
+   

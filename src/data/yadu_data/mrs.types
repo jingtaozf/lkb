@@ -1,0 +1,304 @@
+
+thing (top).
+
+handle (thing).
+
+individual (thing).
+
+event (individual).
+
+sem (top)
+< HANDEL > = handle.
+
+;;; ref-ind (individual).
+
+index (thing)
+< AGR > = agr 
+< QUALIA > = nomqualia.
+
+agr (top) 
+	< pers > = person
+	< num > = number
+   < gender > = gender.  
+   
+gender (top) (OR male female neuter).   
+
+person (top) 
+	(OR 1 2 3).
+
+number (Top) 
+	(OR sg pl).
+   
+;;; Playing with thesis stuff in mrs ...
+   
+
+nomqualia (Top)
+< form > = form
+< telic > = verb_rel.
+
+animal (nomqualia)
+< form > = normal_ind.
+
+comestible (nomqualia).
+
+c_natural (comestible) .
+
+ref-ind (index).
+it-ind (index).
+there-ind (index).
+
+
+; The basic semantic structure, a CONT, is just something with a handel.
+; Conts are further classified into mrss (i.e., things with liszts) and
+; relations (i.e., things that go on liszts).  Conts are divided into psoas
+; (with an distinguished event) and nom-objs (with a distinguished index).
+; 
+; instead of CONT, we've got sem
+
+mrs (sem)
+< INDEX > = thing
+< LISZT > = diff-list.
+
+empty-sem (mrs)
+< LISZT : LST > = < LISZT : LAST >.
+
+
+psoa (mrs)
+< INDEX > = event.
+
+nom-obj (mrs)
+< INDEX > = index .
+
+common-nom-obj (nom-obj).
+
+relation (sem).
+
+; Relations are classified according to the types of arguments they take.  All
+; relations have a handel.  In addition, quantifier relations have a bound
+; variable and a restriction, nominal relations have an instance, and event
+; relations have an event.  Furthermore, nominal relations and event relations
+; can have addition roles, depending on their meaning.
+
+quant_rel (relation)
+ < BV > = ref-ind
+ < RESTR > = handle .
+
+the_rel (quant_rel).
+which_rel (quant_rel).
+
+;;; More playing with thesis stuff 
+;;; almost certainly don't really want to do plurals and 
+;;; quantisation this way ...
+
+basic_nom_rel (relation)
+   < INST > = ref-ind
+   < QUANT > = boolean
+   < PLMOD > = boolean.
+   
+   
+nom_rel (basic_nom_rel).
+
+tempnom_rel (basic_nom_rel).
+
+day_rel (tempnom_rel).
+non_day_rel (tempnom_rel).
+
+verb_prep_rel (relation).
+
+event_rel (verb_prep_rel)
+< EVENT > = event .
+
+temp_prec_rel (event_rel)
+< BEFORE > = event.
+
+no_role_rel (event_rel). 
+; E.g., weather verbs
+
+
+
+;;; MRS translation of Sanfilippo style semantics
+;;; do verbs differently as in Ant's version - all arguments are
+;;; related by thematic role types to the event
+;;; 
+
+
+arg_rel (event_rel)
+< ARG > = thing .
+
+role_rel (arg_rel)
+< ARG > = ref-ind .
+
+verb_rel (event_rel)
+"rel for the verb-pred itself".
+
+
+;;; roles (obviously Ant used lots lots more!)
+
+p-agt_rel (role_rel).
+
+p-pat_rel (role_rel).
+
+prep_rel (role_rel).
+
+;;; verb semantic types
+
+verb-sem (psoa)
+< LISZT : LST : HD > = verb_rel
+< INDEX > = < LISZT : LST : HD : EVENT >
+< HANDEL > = < LISZT : LST : HD : HANDEL >.
+
+;;; ignore pleonastic subjects etc for now.
+
+theta-sem (verb-sem)
+< LISZT : LST : TL : HD > = role_rel
+< LISZT : LST : TL : HD : EVENT > = 
+        < LISZT : LST : HD : EVENT >
+< LISZT : LST : TL : HD : HANDEL > = 
+        < LISZT : LST : HD : HANDEL >.
+        
+;;; The following are minimal adaptations of Antonio's types -
+;;; it might be possible to do this more neatly
+        
+
+strict-intrans-sem (theta-sem)
+"The formula which describes the semantics of a strict intransitive 
+verb is exactly as 'verb-sem', with the exception that the second 
+argument of the liszt encodes a thematic formula 
+whose predicate instantiates a proto-agent role. In linear notation:
+   [e1] [V-Pred(e1), p-agt(e1,x)]"
+< LISZT : LST : TL : HD > = p-agt_rel
+< LISZT : LST : TL : TL > = < LISZT : LAST >.
+
+
+
+trans-or-intrans-sem (theta-sem)
+"Intermediate type.
+The type 'trans-or-intrans-sem' describes the semantics of any verb which 
+is associated with at least two formulae --- either two thematic formulae, 
+or a thematic formula and a formula describing the semantics of a 'comp' 
+(e.g. sentential complement) or 'xcomp' (e.g. VP complement). The first 
+argument role is always a formula whose predicate is either a proto-agent 
+or non thematic; the latter specification is used for extraposition
+and subject raising verbs where the subject argument is non thematic, e.g. 
+   'John seems to be tired' 
+   'It bothers Bill that Mary snores'
+In linear notation: 
+   [e1][V-Pred(e1), p-agt-or-no-theta(e1,x), Formula]".
+
+
+trans-or-intrans-no-comp-or-xcomp-sem (trans-or-intrans-sem)
+"Intermediate type.
+'trans/intrans-no-comp/xcomp-sem' characterizes the semantics of verbs of type
+'trans/intrans-sem' which have no 'comp' or 'xcomp' complements.  
+   'Bill thought that Mary would come'. 
+'trans/intrans-no-comp/xcomp-sem' verbs have a thematic subject. 
+In linear notation: 
+   [e1][V-Pred(e1), p-agt(e1,x), ??))"
+< LISZT : LST : TL : HD > = p-agt_rel.
+
+strict-trans-sem (trans-or-intrans-no-comp-or-xcomp-sem)
+"The semantics of a strict transitive inherits all specifications from the type
+'trans/intrans-no-comp/xcomp-sem', and instantiates a proto-patient formula as 
+the second and last argument role. In linear notation: 
+   [e1][V-Pred(e1), p-agt(e1,x), p-pat(e1,y)]" 
+< LISZT : LST : TL : TL : HD > = p-pat_rel
+< LISZT : LST : TL : TL : HD : EVENT > = 
+        < LISZT : LST : HD : EVENT >
+< LISZT : LST : TL : TL : HD : HANDEL > = 
+        < LISZT : LST : HD : HANDEL >        
+< LISZT : LST : TL : TL : TL > = < LISZT : LAST >.       
+
+intrans-obl-sem (trans-or-intrans-no-comp-or-xcomp-sem)
+"For intransitive verbs that have a prepositional complement, e.g. 
+   'John talked to Bill'. 
+The second and last argument role is a prep_rel
+In linear notation: 
+   [e1][V-Pred(e1), p-agt(e1,x), prep(e1,y)]"
+   < LISZT : LST : TL : TL : HD > = prep_rel
+< LISZT : LST : TL : TL : HD : EVENT > = 
+        < LISZT : LST : HD : EVENT >
+< LISZT : LST : TL : TL : HD : HANDEL > = 
+        < LISZT : LST : HD : HANDEL >  
+< LISZT : LST : TL : TL : TL > = < LISZT : LAST >.       
+        
+intrans-or-trans-obl-trans-or-ditrans-sem (trans-or-intrans-sem)
+"Intermediate type.
+This type, a subset of 'trans/intrans-sem', characterizes the semantics 
+of verbs which take three complements. In linear notation: 
+   [e1][V-Pred(e1), p-agt-or-no-theta(e1,x), ??".
+   
+trans-or-obl-trans-or-ditrans-sem (intrans-or-trans-obl-trans-or-ditrans-sem)
+"Intermediate type.
+For transitive and ditransitive verbs. The argument list of the conjunctive 
+formula which follows the subject argument role in 'intrans/trans/intrans-sem' 
+has as its first member a thematic formula which instantiates either a 
+proto-patient or a non thematic role; the latter specification is for object 
+raising verbs, e.g. 
+'Jon believes Mary to be right'. 
+In linear notation: 
+   [e1][V-Pred(e1), p-agt-or-no-theta(e1,x), 
+                p-pat-or-no-theta(e1,y), Formula]".
+    
+obl-trans-or-ditrans-sem (trans-or-obl-trans-or-ditrans-sem)
+"For transitives taking an oblique complement and ditransitives, e.g 
+   'Mary gave a book to Bill'
+   'Mary gave Bill a book'. 
+The object role is thematic and it is followed by a prepositional 
+formula. In linear notation: 
+   [e1][V-Pred(e1), p-agt(e1,x), p-pat(e1,y),prep-pat(e1,z)]"
+< LISZT : LST : TL : HD > = p-agt_rel 
+< LISZT : LST : TL : HD : EVENT > = 
+        < LISZT : LST : HD : EVENT > 
+< LISZT : LST : TL : HD : HANDEL > = 
+        < LISZT : LST : HD : HANDEL >  
+< LISZT : LST : TL : TL : HD > = p-pat_rel  
+< LISZT : LST : TL : TL : HD : EVENT > = 
+        < LISZT : LST : HD : EVENT >
+< LISZT : LST : TL : TL : HD : HANDEL > = 
+        < LISZT : LST : HD : HANDEL >  
+< LISZT : LST : TL : TL : TL : HD > = prep_rel 
+< LISZT : LST : TL : TL : TL : HD : EVENT > = 
+        < LISZT : LST : HD : EVENT > 
+< LISZT : LST : TL : TL : TL : HD : HANDEL > = 
+        < LISZT : LST : HD : HANDEL >  
+< LISZT : LST : TL : TL : TL : TL > = < LISZT : LAST > .
+
+;;; Stuff after this point is just for test purposes
+
+
+
+reg-raised-np-sem (nom-obj)
+< LISZT : LST : HD > = name_rel
+< LISZT : LST : TL > = < LISZT : LAST >
+< HANDEL > = < LISZT : LST : HD : HANDEL >
+< INDEX > = < LISZT : LST : HD : INST >.
+
+p-agt-cause-transfer_rel (p-agt_rel).
+
+p-pat-recip_rel (prep_rel).
+
+name_rel (basic_nom_rel)
+< NAME > = string .
+
+give_rel (verb_rel).
+
+flap_rel (verb_rel).
+
+wave_rel (verb_rel).
+
+eat_rel (verb_rel).
+
+
+rabbit_rel (nom_rel)
+< INST : QUALIA > = animal.
+
+cheese_rel (nom_rel)
+< INST : QUALIA > = comestible.
+
+
+
+
+
+
+
+

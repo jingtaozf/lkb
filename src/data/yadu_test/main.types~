@@ -1,0 +1,41 @@
+Top ().
+
+boolean (Top) (OR true false).
+
+string (top)
+"A special type which any lisp string will unify".
+
+
+diff-list (top)
+"Do append eqvnt without recursive types"
+< LST > = list
+< LAST > = list .
+
+list (top).
+
+e-list (list).
+
+ne-list (list)
+< HD > = top
+< TL > = list.
+
+
+;;; 
+
+verb (top)
+< PAST > = top
+< PASTP > = top
+< PASSP > = top
+
+/ lex
+
+< PASTP > = < PASSP >
+< PASTP > = < PAST > .
+
+regverb (verb)
+/ lex
+< PAST > = "ed" .
+
+pst-t-vb (regverb)
+/ lex
+< PAST > = "t" .

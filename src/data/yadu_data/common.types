@@ -1,0 +1,20 @@
+Top ().
+
+boolean (Top) (OR true false).
+
+string (top)
+"A special type which any lisp string will unify".
+
+
+diff-list (top)
+"Do append eqvnt without recursive types"
+< LST > = list
+< LAST > = list .
+
+list (top).
+
+e-list (list).
+
+ne-list (list)
+< HD > = top
+< TL > = list.
