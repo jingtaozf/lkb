@@ -8,6 +8,53 @@
 
 (in-package :user)
 
+(defun display-parse-tree (edge display-in-chart-p)
+   ;;; takes an edge and builds the tree below it for input
+   ;;; to John's graph package - then displays it
+   ;;; with active nodes
+   (when display-in-chart-p (display-edge-in-chart edge))
+   (let ((edge-symbol (make-new-parse-tree edge 1)))
+      (draw-new-parse-tree edge-symbol 
+         (format nil "Edge ~A ~A" (edge-id edge) (if (gen-chart-edge-p edge) "G" "P"))
+         nil)))
+   
+
+(defun make-new-parse-tree (edge level)
+   ;; show active edge nodes at first level but not thereafter
+   (when edge
+      (if (and (> level 1) (gen-chart-edge-p edge) (gen-chart-edge-needed edge))
+         (some #'(lambda (c) (make-new-parse-tree c (1+ level)))
+            (edge-children edge))
+         (let
+            ((edge-symbol (make-edge-symbol (edge-id edge)))
+             (daughters (edge-children edge))
+             (daughter-list nil))
+            (setf (get edge-symbol 'edge-record) edge)
+            (if daughters
+               (dolist (daughter daughters
+                          (progn
+                             (setf (get edge-symbol 'daughters) (nreverse daughter-list))
+                             edge-symbol))
+                  (if daughter
+                     (push (make-new-parse-tree daughter (1+ level)) daughter-list)
+                     (push (make-symbol "") daughter-list))) ; active chart edge daughter
+                  (make-lex-and-morph-tree edge-symbol edge 1))))))
+
+
+(defun make-lex-and-morph-tree (edge-symbol edge level)
+   (let
+      ((leaf-symbol (make-edge-symbol (car (edge-leaves edge)))))
+      (setf (get edge-symbol 'daughters) (list leaf-symbol))
+      (when (> level 1) (setf (get leaf-symbol 'edge-record) edge))
+      (unless *dont-show-morphology*
+         (let ((mdaughter (edge-morph-history edge)))
+            (if mdaughter
+               (make-lex-and-morph-tree leaf-symbol mdaughter (1+ level)))))
+      edge-symbol))
+
+
+;; Dialect specific stuff
+
 (defparameter *parse-window-width* 400
   "Initial width of tree window")
 
@@ -25,75 +72,6 @@
 (defparameter *ptree-level-sep* 12
   "Spacing between levels in the tree.")                    
     
-(defstruct ptree-node
-  "Data structure for parse-tree nodes."
-  (name "")				; Node label
-  (pstruct nil)				; record for node
-  (children nil))
-
-      
-
-(defun display-parse-tree (edge display-in-chart-p)
-  ;; takes an edge and builds the tree below it for input to ACL graph
-  ;; package - then displays it with active nodes
-  (let* ((edge-id (edge-id edge))
-         (edge-symbol (make-edge-symbol edge-id))
-         (top-ptree-node (make-new-parse-tree edge-symbol edge)))
-    (when display-in-chart-p (display-edge-in-chart edge))
-    (draw-new-parse-tree top-ptree-node 
-			 (format nil "Edge ~A ~A" 
-				 edge-id 
-				 (if (gen-chart-edge-p edge) "G" "P"))
-			 nil)))
-
-;;; make-edge-symbol is in tree-nodes.lsp   
-
-(defun make-new-parse-tree (edge-symbol edge-record)
-  (make-ptree-node 
-   :name edge-symbol
-   :pstruct edge-record
-   :children 
-   (if edge-record
-       (let ((daughters (edge-children edge-record)))
-         (if daughters
-             (for daughter in daughters
-                  collect
-                  (let ((daughter-edge-symbol 
-                         (make-edge-symbol 
-                          (edge-id daughter))))
-                    (make-new-parse-tree 
-                     daughter-edge-symbol daughter)))
-           (let ((leaf-node (make-edge-symbol 
-                             (car (edge-leaves edge-record)))))
-             (list (make-ptree-node :name leaf-node
-                              :pstruct nil 
-                              :children
-                              (if *dont-show-morphology* nil
-                                (let ((mdaughter 
-                                       (edge-morph-history edge-record)))
-                                  (if mdaughter
-                                      (let ((daughter-edge-symbol 
-                                             (make-edge-symbol 
-                                              (edge-id mdaughter) t)))         
-                                        (make-morph-tree daughter-edge-symbol
-                                                         mdaughter)))))))))))))
-
-(defun make-morph-tree (edge-symbol edge-record)
-  (list
-   (make-ptree-node :name edge-symbol
-		    :pstruct edge-record
-		    :children
-		    (when edge-record
-		      (let ((mdaughter (edge-morph-history edge-record)))
-			(when mdaughter
-			  (let ((daughter-edge-symbol 
-				 (make-edge-symbol (edge-id mdaughter) t)))
-			    (make-morph-tree daughter-edge-symbol
-					     mdaughter))))))))
-
-    
-
-
 ;;
 ;; Define a frame class for our parse tree window
 ;;
@@ -131,19 +109,20 @@
 (defun draw-parse-tree (ptree-frame stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((node-tree (parse-tree-nodes ptree-frame)))
+    (setq x node-tree)
     (clim:format-graph-from-root
      node-tree
-     #'(lambda (node s)
-	 (if (ptree-node-pstruct node)
-	     (clim:with-output-as-presentation (stream node 'ptree-node)
-                   (write-string
-                      (princ-to-string (or 
-                        (find-category-abb 
-                         (edge-dag (ptree-node-pstruct node)))
-                        (edge-category 
-                         (ptree-node-pstruct node)))) s))
-	   (write-string (princ-to-string (ptree-node-name node)) s)))
-     #'ptree-node-children
+     #'(lambda (node stream)
+	 (multiple-value-bind (s bold-p) 
+	     (get-string-for-edge node)
+	   (clim:with-text-face (stream (if bold-p :bold :roman))
+	     (let ((cont (get node 'edge-record)))
+	       (if cont
+		   (clim:with-output-as-presentation 
+		       (stream cont 'edge)
+		     (write-string s stream))
+		 (write-string s stream))))))
+     #'(lambda (node) (get node 'daughters))
      :graph-type :parse-tree
      :stream stream 
      :merge-duplicates nil
@@ -152,6 +131,13 @@
      :within-generation-separation *ptree-node-sep*
      :center-nodes nil)))
 
+(defun get-string-for-edge (edge-symbol)
+   (let ((edge-record (get edge-symbol 'edge-record)))
+      (if edge-record
+         (values (tree-node-text-string (or 
+                                    (find-category-abb (edge-dag edge-record))
+                                    (edge-category edge-record))) nil)
+         (values (tree-node-text-string edge-symbol) t))))
 
 ;;; menus
 
@@ -169,11 +155,10 @@
 ;;
 
 (define-parse-tree-command (com-parse-tree-menu)
-    ((node 'ptree-node :gesture :select))
-  (let* ((edge-record (ptree-node-pstruct node))
-         (command (clim:menu-choose
-                   '(("Feature Structure" :value fs)
-                     ("Rule" :value rule)))))
+    ((edge-record 'edge :gesture :select))
+  (let ((command (clim:menu-choose
+		  '(("Feature Structure" :value fs)
+		    ("Rule" :value rule)))))
     (when command
       (handler-case
 	  (ecase command
