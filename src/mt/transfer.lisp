@@ -8,14 +8,24 @@
 ;;;   analyses in cases where the same rule can be unified onto an input MRS in
 ;;;   more than one way; what about analyses that differ only in the order of
 ;;;   rule applications (if that was allowed) ... some kind of normal form?
-;;; - add `Scope' and `Generate' buttons to transfer MRS browser.
+;;; + add `Scope' and `Generate' buttons to transfer MRS browser.
 ;;; - provide `negation' switch on result filter.
+;;; - investiage `filter' processing further: is it actually correct?
+;;; - think of a nice, declarative way to delete properties from indices.
+;;;
 
 (defparameter %transfer-edge-id% 100)
 
 (defparameter %transfer-variable-id% 100)
 
 (defparameter %transfer-raw-output-p% nil)
+
+(defparameter %transfer-edges% nil)
+
+(defparameter *transfer-edge-limit* 20000)
+
+(defparameter *transfer-debug-stream* 
+  (or #+:allegro excl:*initial-terminal-io* t))
 
 (defparameter %transfer-properties-filter%
   (list
@@ -28,10 +38,10 @@
    (cons (mrs::vsym "ASPECT-TELIC") nil)
    (cons (mrs::vsym "ASPECT-BOUNDED") nil)
    (cons (mrs::vsym "ASPECT-INCHOATIVE") nil)))
-
 
 (defparameter %transfer-values-filter%
   (list
+   #+:null
    (cons (mrs::vsym "pres") (mrs::vsym "present"))))
 
 (defstruct mtrs
@@ -40,7 +50,7 @@
 (defstruct mtr
   id
   context filter
-  input output
+  input output defaults
   variables)
 
 (defmethod print-object ((object mtr) stream)
@@ -52,19 +62,38 @@
      (mtr-filter object) (mtr-context object)
      (mtr-input object) (mtr-output object))))
 
-(defstruct edge
+(defstruct (edge (:constructor make-edge-x))
   (id (let ((n %transfer-edge-id%)) (incf %transfer-edge-id%) n))
-  rule mrs daughter n)
+  rule mrs daughter n 
+  (source 0))
 
+(defun make-edge (&rest rest)
+  (let ((edge (apply #'make-edge-x rest)))
+    (push edge %transfer-edges%)
+    (cond
+     ((> (edge-id edge) *transfer-edge-limit*)
+      (print-edges)
+      (error 
+       "make-edge(): transfer edge limit exhausted (~a)."
+       *transfer-edge-limit*))
+     (t
+      edge))))
+    
 (defmethod print-object ((object edge) stream)
   (if %transfer-raw-output-p%
     (call-next-method)
     (format
      stream
-     "#D[~a~:[~2*~; ~(~a~) ~a~]]"
-     (edge-id object) 
-     (and (mtr-p (edge-rule object)) (edge-p (edge-daughter object)))
-     (mtr-id (edge-rule object)) (edge-daughter object))))
+     "~<#D[~;~a~:[~2*~; ~(~a~) ~_~a~]~;]~:>"
+     (list
+      (edge-id object) 
+      (and (mtr-p (edge-rule object)) (edge-p (edge-daughter object)))
+      (mtr-id (edge-rule object)) (edge-daughter object)))))
+
+(defun print-edges ()
+  (loop
+      for edge in %transfer-edges%
+      do (format *transfer-debug-stream* "~a~%" edge)))
 
 (defstruct (solution (:copier x-copy-solution))
   variables eps hconss)
@@ -159,19 +188,86 @@
                           syntax error following rule id `~(~a~)'."
                          id))
                       (read-char stream)
-                      (let* ((unifications (lkb::read-expanded-avm-def 
-                                            stream id))
-                             (dag (when (lkb::check-for #\. stream id)
-                                    (lkb::process-unifications unifications)))
-                             (dag (when dag (lkb::create-wffs dag)))
-                             (rule (when dag
-                                     (convert-dag-to-mtr dag id))))
-                        (push rule rules)))))))
+                      (let ((unifications 
+                             (lkb::read-expanded-avm-def stream id))
+                            lhs rhs)
+                        (when (lkb::check-for #\. stream id)
+                          (loop
+                              with n = (length *mtr-output-path*)
+                              for unification in unifications
+                              for foo = (lkb::unification-lhs unification)
+                              for bar = (lkb::unification-rhs unification)
+                              when (and (lkb::path-p foo)
+                                        (null
+                                         (mismatch
+                                          *mtr-output-path*
+                                          (lkb::path-typed-feature-list foo)
+                                          :end2 n))
+                                        (lkb::u-value-p bar))
+                              do 
+                                (push unification rhs)
+                                (push 
+                                 (lkb::make-unification :lhs foo :rhs foo)
+                                 lhs)
+                              else do 
+                                (push unification lhs)
+                                (let ((lhsp
+                                       (when (lkb::path-p foo)
+                                         (null
+                                          (mismatch
+                                           *mtr-output-path*
+                                           (lkb::path-typed-feature-list foo)
+                                           :end2 n))))
+                                      (rhsp
+                                       (when (lkb::path-p bar)
+                                         (null
+                                          (mismatch
+                                           *mtr-output-path*
+                                           (lkb::path-typed-feature-list bar)
+                                           :end2 n)))))
+                                  (cond
+                                   ((and lhsp rhsp)
+                                    (push unification rhs))
+                                   (lhsp
+                                    (push
+                                     (lkb::make-unification :lhs foo :rhs foo)
+                                     rhs))
+                                   (rhsp
+                                    (push
+                                     (lkb::make-unification :lhs bar :rhs bar)
+                                     rhs)))))
+                          (setf lhs (lkb::process-unifications lhs))
+                          (unless lhs
+                            (error 
+                             "read-transfer-rules(): ~
+                              `~(~a~)' is incoherent.~%"
+                             id))
+                          (setf lhs (lkb::create-wffs lhs))
+                          (unless lhs
+                            (error 
+                             "read-transfer-rules(): ~
+                              `~(~a~)' is not wellformed.~%"
+                             id))
+                          (when rhs
+                            (setf rhs (lkb::process-unifications rhs))
+                            (unless rhs
+                              (error 
+                               "read-transfer-rules(): ~
+                              `~(~a~)' is incoherent.~%"
+                               id))
+                            (setf rhs (lkb::create-wffs rhs))
+                            (unless rhs
+                              (error 
+                               "read-transfer-rules(): ~
+                              `~(~a~)' is not wellformed.~%"
+                               id)))
+                          (let ((rule (convert-dag-to-mtr lhs rhs id)))
+                            (when rule (push rule rules))))))))))
         finally (push 
                  (make-mtrs :id id :mtrs (nreverse rules))
                  *transfer-rule-sets*))))
 
-(defun convert-dag-to-mtr (dag id)
+(defun convert-dag-to-mtr (lhs rhs id)
   ;;
   ;; _fix_me_
   ;; give some thought to variable types: authors of transfer rules might well
@@ -180,32 +276,39 @@
   ;; access to the original tag names) and add :type information to each node.
   ;;
   #+:debug
-  (setf %dag% dag)
+  (setf %lhs% lhs)
   (let* ((generator (let ((n 0)) #'(lambda () (decf n))))
          (mrs::*named-nodes* nil)
-         (filter (mrs::path-value dag *mtr-filter-path*))
+         (filter (mrs::path-value lhs *mtr-filter-path*))
          (filter (and filter 
                       (not (vacuous-constraint-p *mtr-filter-path* filter))
                       (mrs::construct-mrs filter generator)))
-         (context (mrs::path-value dag *mtr-context-path*))
+         (context (mrs::path-value lhs *mtr-context-path*))
          (context (and context 
                        (not (vacuous-constraint-p *mtr-context-path* context))
                        (mrs::construct-mrs context generator)))
-         (input (mrs::path-value dag *mtr-input-path*))
+         (input (mrs::path-value lhs *mtr-input-path*))
          (input (and input
                      (not (vacuous-constraint-p *mtr-input-path* input))
                      (mrs::construct-mrs input generator)))
-         (output (mrs::path-value dag *mtr-output-path*))
+         (output (mrs::path-value lhs *mtr-output-path*))
          (output (and output
                       (not (vacuous-constraint-p *mtr-output-path* output))
-                      (mrs::construct-mrs output generator))))
-    (unless output
+                      (mrs::construct-mrs output generator)))
+         (defaults (and rhs (mrs::path-value rhs *mtr-output-path*)))
+         (defaults (and defaults
+                        (not (vacuous-constraint-p *mtr-output-path* defaults))
+                        (mrs::construct-mrs defaults generator))))
+    (unless (or output rhs)
       ;;
       ;; warn: rule with no output specification
       ;;
-      )
+      (format
+       *transfer-debug-stream*
+       "convert-dag-to-mtr(): `~(~a~)' has an empty output specification.~%"
+       id))
     (make-mtr :id id :filter filter :context context
-              :input input :output output 
+              :input input :output output :defaults defaults
               :variables (nreverse mrs::*named-nodes*))))
 
 (defun vacuous-constraint-p (path dag)
@@ -220,11 +323,24 @@
 (defun initialize-transfer ()
   (setf *transfer-rule-sets* nil))
 
-(defun transfer-mrs (mrs &key (filterp nil))
-  (transfer-mrs2 
-   (list (make-edge :mrs mrs :n 42)) 
-   *transfer-rule-sets*
-   :filterp filterp))
+(defun transfer-mrs (mrs &key (filterp t))
+  #+:debug
+  (setf %mrs% mrs)
+  (setf %transfer-edges% nil)
+  (setf %transfer-edge-id% 0)
+  (multiple-value-bind (result condition)
+      (ignore-errors 
+       (transfer-mrs2 
+        (list (make-edge :mrs mrs :n 42)) 
+        *transfer-rule-sets*
+        :filterp filterp))
+    (when condition
+      #+:clim
+      (clim:beep)
+      (format
+       *transfer-debug-stream*
+       "transfer-mrs(): `~a'~%" condition))
+    result))
 
 (defun transfer-mrs2 (edges mtrss &key (filterp nil))
   (if (null mtrss)
@@ -241,7 +357,6 @@
   (when (or (null edge) (null mtrs)) (return-from apply-mtrs))
   
   (loop
-      with %transfer-edge-id% = 0
       with result
       with agenda = (list edge)
       with all = (mtrs-mtrs mtrs)
@@ -261,19 +376,15 @@
                   do (push task agenda)))
       finally 
         (let ((eps (mrs:psoa-liszt (edge-mrs edge))))
-          (setf result
-            (stable-sort result #'< 
-                  :key #'(lambda (edge)
-                           (length 
-                            (intersection 
-                             (mrs:psoa-liszt (edge-mrs edge)) eps 
-                             :key #'mrs::rel-pred :test #'equal))))))
+          (loop
+              for edge in result
+              do (setf (edge-source edge)
+                   (length 
+                    (intersection 
+                     (mrs:psoa-liszt (edge-mrs edge)) eps 
+                     :key #'mrs::rel-pred :test #'equal))))
+          (setf result (stable-sort result #'< :key #'edge-source)))
         (if filterp
-          ;;
-          ;; _fix_me_
-          ;; this is not the right way of filtering, since we create new EPs
-          ;; already when one of the roles has changed. (27-oct-03; oe)
-          ;;
           (return
             (loop
                 with eps = (mrs:psoa-liszt (edge-mrs edge))
@@ -305,6 +416,10 @@
 ;;; we are reasonably close to a notion of unification now     (24-oct-03; oe)
 ;;;
 (defun unify-mtr (mrs mtr)
+  #+:debug
+  (format
+   *transfer-debug-stream*
+   "unify-mtr(): `~(~a~)' @ ~a~%" (mtr-id mtr) mrs)
   (let* ((filter (mtr-filter mtr))
          (context (mtr-context mtr))
          (input (mtr-input mtr))
@@ -568,8 +683,11 @@
            unless (and ep2 (find ep2 input)) 
            collect (expand-ep ep1 solution))
        (loop
+           with defaults = (when (mrs::psoa-p (mtr-defaults mtr))
+                             (mrs:psoa-liszt (mtr-defaults mtr)))
            for ep in (mrs:psoa-liszt (mtr-output mtr))
-           collect (expand-ep ep solution))))
+           for default = (pop defaults)
+           collect (merge-eps (expand-ep ep solution) default))))
     (setf (mrs:psoa-h-cons result)
       (nconc
        ;;
@@ -616,6 +734,39 @@
   (if (mrs::var-p value)
     (retrieve-variable value solution)
     value))
+
+(defun merge-eps (ep default)
+  (unless default
+    (return-from merge-eps ep))
+  (when (mrs::rel-pred default)
+    (setf (mrs::rel-pred ep) (mrs::rel-pred default)))
+  (loop
+      with defaults = (mrs:rel-flist default)
+      for role in (mrs:rel-flist ep)
+      for feature = (mrs:fvpair-feature role)
+      for value = (mrs:fvpair-value role)
+      for default = (find feature defaults :key #'mrs:fvpair-feature)
+      when (and value default) do 
+        (let ((default (mrs:fvpair-value default)))
+          (if (and (mrs::var-p value) (mrs::var-p default))
+            (merge-values value default)
+            (setf (mrs:fvpair-value role) default))) 
+      else when default do
+        (push (mrs::copy-fvpair default) (mrs:rel-flist ep)))
+  ep)
+
+(defun merge-values (value default)
+  (loop
+      with defaults = (mrs:var-extra default)
+      for extra in (mrs:var-extra value)
+      for feature = (mrs::extrapair-feature extra)
+      for value = (mrs::extrapair-value extra)
+      for default = (find feature defaults :key #'mrs::extrapair-feature)
+      when (and value default) do 
+        (setf (mrs::extrapair-value extra) (mrs::extrapair-value default))
+      else when default do
+        (push (mrs::copy-extrapair default) (mrs:var-extra value)))
+  value)
 
 (defun new-variable (type extras)
   (let ((id %transfer-variable-id%))

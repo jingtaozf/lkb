@@ -2,8 +2,9 @@
 
 (clim:define-application-frame mrs-transfer ()
   ((frames :initform nil :accessor mrs-transfer-frames :allocation :class)
-   (mrss :initform nil :accessor mrs-transfer-mrss)
+   (edges :initform nil :accessor mrs-transfer-edges)
    (i :initform 0 :accessor mrs-transfer-i)
+   (stack :initform nil :accessor mrs-transfer-stack)
    (title :initform "" :accessor mrs-transfer-title)
    (stream :initform nil :accessor mrs-transfer-stream))
   (:panes
@@ -42,64 +43,75 @@
               (clim:execute-frame-command brother '(com-close-mrs-transfer)))
         (clim:execute-frame-command frame '(com-close-mrs-transfer))))))
 
+
 (define-mrs-transfer-command (com-previous-mrs-transfer :menu "Previous")
     ()
   (clim:with-application-frame (frame)
     (when (> (mrs-transfer-i frame) 0)
       (decf (mrs-transfer-i frame))
-      (let ((title (format 
-                    nil 
-                    "~a (# ~a of ~a)" 
-                    (mrs-transfer-title frame)
-                    (mrs-transfer-i frame)
-                    (length (mrs-transfer-mrss frame)))))
-        (setf (clim:frame-pretty-name frame) title))
+      (setf (clim:frame-pretty-name frame) (transfer-title frame))
       (clim::redisplay-frame-panes frame :force-p t))))
+      
 
 (define-mrs-transfer-command (com-next-mrs-transfer :menu "Next")
     ()
   (clim:with-application-frame (frame)
-    (when (< (mrs-transfer-i frame) (- (length (mrs-transfer-mrss frame)) 1))
+    (when (< (mrs-transfer-i frame) 
+             (- (length (or (mrs-transfer-stack frame) 
+                            (mrs-transfer-edges frame))) 1))
       (incf (mrs-transfer-i frame))
-      (let ((title (format 
-                    nil 
-                    "`~a' (# ~a of ~a)" 
-                    (mrs-transfer-title frame)
-                    (mrs-transfer-i frame)
-                    (length (mrs-transfer-mrss frame)))))
-        (setf (clim:frame-pretty-name frame) title))
+      (setf (clim:frame-pretty-name frame) (transfer-title frame))
       (clim::frame-replay frame (mrs-transfer-stream frame))
       (clim::redisplay-frame-panes frame :force-p t))))
+
 
 (define-mrs-transfer-command (com-scope-mrs-transfer :menu "Scope")
     ()
   (clim:with-application-frame (frame)
-    (let ((mrs (nth (mrs-transfer-i frame) (mrs-transfer-mrss frame)))
+    (let ((mrs (nth (mrs-transfer-i frame) 
+                    (or (mrs-transfer-stack frame) 
+                        (mrs-transfer-edges frame))))
           (title (format 
                   nil 
                   "`~a' (# ~a of ~a) - Scopes" 
                   (mrs-transfer-title frame)
                   (mrs-transfer-i frame)
-                  (length (mrs-transfer-mrss frame)))))
+                  (length (mrs-transfer-edges frame)))))
       (lkb::show-mrs-scoped-window nil mrs title))))
+
 
 (define-mrs-transfer-command (com-transfer-mrs-transfer :menu "Transfer")
     ()
   (clim:with-application-frame (frame)
-    (let* ((mrs (nth (mrs-transfer-i frame) (mrs-transfer-mrss frame)))
-           (edges (mt::transfer-mrs mrs)))
-      (browse-mrss
-       (loop for edge in edges collect (mt::edge-mrs edge))
-       "Transfer Output"))))
+    (let* ((edge (nth (mrs-transfer-i frame) 
+                      (or (mrs-transfer-stack frame)
+                          (mrs-transfer-edges frame))))
+           (mrs (edge-mrs edge))
+           (edges (transfer-mrs mrs :filterp nil)))
+      (when edges (browse-mrss edges "Transfer Output")))))
+
+
+(define-mrs-transfer-command (com-transfer-mrs-debug :menu "Debug")
+    ()
+  (clim:with-application-frame (frame)
+    (let* ((edge (nth (mrs-transfer-i frame) 
+                      (or (mrs-transfer-stack frame)
+                          (mrs-transfer-edges frame)))))
+      (browse-mrss edge "Transfer Debug"))))
+
 
 (define-mrs-transfer-command (com-generate-mrs-transfer :menu "Generate")
     ()
   (clim:with-application-frame (frame)
-    (let ((mrs (nth (mrs-transfer-i frame) (mrs-transfer-mrss frame)))
-          (file (format nil "/tmp/.transfer.~a" (lkb::current-user)))
-          (*package* (find-package :lkb)))
+    (let* ((edge (nth (mrs-transfer-i frame) 
+                      (or (mrs-transfer-stack frame)
+                          (mrs-transfer-edges frame))))
+           (mrs (edge-mrs edge))
+           (file (format nil "/tmp/.transfer.~a" (lkb::current-user)))
+           (*package* (find-package :lkb)))
       (with-open-file (stream file :direction :output :if-exists :supersede)
         (mrs::output-mrs1 mrs 'mrs::simple stream)))))
+
 
 (define-mrs-transfer-command (com-print-mrs-transfer :menu "Print") 
     ()
@@ -141,28 +153,74 @@
   (declare (ignore rest))
 
   (setf (mrs-transfer-stream frame) stream)
-  (let ((mrs (nth (mrs-transfer-i frame) (mrs-transfer-mrss frame))))
+  (let* ((edge (nth (mrs-transfer-i frame) 
+                    (or (mrs-transfer-stack frame) 
+                        (mrs-transfer-edges frame))))
+         (mrs (edge-mrs edge))
+         (*print-right-margin* 80))
     (clim:formatting-table (stream)
       (clim:with-text-style (stream (mrs-transfer-font))
         (clim:formatting-row (stream)
           (let ((record 
                  (clim:formatting-cell (stream :align-x :left)
                    (if mrs
-                     (mrs::output-mrs1 mrs 'mrs::active-t stream)
+                     (mrs::output-mrs1 mrs 'mrs::simple stream)
                      (format 
                       stream 
                       "~%Invalid MRS Object~%")))))
-            (declare (ignore record))))))))
+            (unless (and (numberp (edge-source edge))
+                         (zerop (edge-source edge)))
+              (lkb::recolor-record record clim:+red+))))
+        (clim:formatting-row (stream)
+          (clim:formatting-cell (stream :align-x :left)
+            (format stream "~%~%")))
+        (clim:formatting-row (stream)
+          (clim:formatting-cell (stream :align-x :left)
+            (format stream "~a~%" edge)))))))
 
-(defun browse-mrss (mrss &optional (title "Transfer Input"))
+(defun transfer-title (frame)
+  (let ((edge (nth (mrs-transfer-i frame) (mrs-transfer-stack frame))))
+    (format 
+     nil 
+     "~a (# ~a of ~:[~a~@[+~a~]~;~a~*~])~@[ [~(~a~)]~]" 
+     (mrs-transfer-title frame)
+     (mrs-transfer-i frame)
+     edge
+     (if edge 
+       (length (mrs-transfer-stack frame))
+       (loop
+           for edge in (mrs-transfer-edges frame)
+           when (zerop (edge-source edge)) count 1))
+     (unless edge
+       (let ((n (loop
+                    for edge in (mrs-transfer-edges frame)
+                    unless (zerop (edge-source edge)) count 1)))
+         (unless (zerop n) n)))
+     (when (and (edge-p edge) (mtr-p (edge-rule edge)))
+       (mtr-id (edge-rule edge))))))
+
+(defun browse-mrss (edges &optional (title "Transfer Input"))
   (mp:run-function 
    title 
    #'(lambda ()
-       (let ((full (format nil "`~a' (# ~a of ~a)" title 0 (length mrss)))
-             (frame (clim:make-application-frame 'mrs-transfer)))
-         (setf (mrs-transfer-mrss frame) mrss)
+       (let ((frame (clim:make-application-frame 'mrs-transfer)))
+         (typecase edges
+           (edge
+            (setf (mrs-transfer-edges frame) (list edges))
+            (loop
+                for edge = edges then (edge-daughter edge)
+                while edge do (push edge (mrs-transfer-stack frame)))
+            (setf (mrs-transfer-stack frame) 
+              (nreverse (mrs-transfer-stack frame))))
+           (list
+            (setf (mrs-transfer-edges frame) 
+              (loop
+                  for edge in edges
+                  when (edge-p edge) collect edge
+                  else collect (make-edge :mrs edge)))))
          (setf (mrs-transfer-title frame) title)
-         (setf (clim:frame-pretty-name frame) (or full "Transfer Input"))
+         (setf (clim:frame-pretty-name frame) 
+           (or (transfer-title frame) "Transfer Input"))
          (push frame (mrs-transfer-frames frame))
          (clim:run-frame-top-level frame)))))
 
