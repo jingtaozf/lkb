@@ -181,11 +181,12 @@
 
 
 (defun ask-user-for-type (&optional qstring check-box-spec)
-   (let ((res
-            (ask-for-lisp-movable "Current Interaction" 
-               `((,(or qstring "Type?") . ,*last-type-name*)
-                 ,@(if check-box-spec `(,check-box-spec)))
-               150 *type-names*)))
+  (let ((res
+         (with-package (:lkb)
+           (ask-for-lisp-movable "Current Interaction" 
+             `((,(or qstring "Type?") . ,*last-type-name*)
+               ,@(if check-box-spec `(,check-box-spec)))
+             150 *type-names*))))
       (when res
         (let ((type (car res))
               (show-all-p (cadr res)))
@@ -201,24 +202,26 @@
 ;;; display-fs is in outputfs.lsp
 
 (defun ask-user-for-lex nil
-   (let ((possible-name
-            (ask-for-lisp-movable "Current Interaction" 
-               `(("Lex-id?" . ,*last-lex-id*))
-                         150)))
-      (when possible-name
-         (let* ((lex (car possible-name))
-               (lex-entry (get-psort-entry lex)))
-            (unless lex-entry
-               (format t "~%~A is not defined" lex)
-               (setf lex (ask-user-for-lex)))
-            (setf *last-lex-id* lex)
-            lex))))
+  (let ((possible-name
+         (with-package (:lkb)
+           (ask-for-lisp-movable "Current Interaction" 
+            `(("Lex-id?" . ,*last-lex-id*))
+            150))))
+    (when possible-name
+      (let* ((lex (car possible-name))
+             (lex-entry (get-psort-entry lex)))
+        (unless lex-entry
+          (format t "~%~A is not defined" lex)
+          (setf lex (ask-user-for-lex)))
+        (setf *last-lex-id* lex)
+        lex))))
 
 (defun ask-user-for-psort nil
   (let ((possible-name
-	 (ask-for-lisp-movable "Current Interaction" 
-			       `(("Psort-id?" . ,*last-lex-id*))
-			       150)))
+         (with-package (:lkb)
+ 	  (ask-for-lisp-movable "Current Interaction" 
+		 	        `(("Psort-id?" . ,*last-lex-id*))
+			        150))))
       (when possible-name
          (let* ((lex (car possible-name))
                (lex-entry (get-psort-entry lex)))
