@@ -253,8 +253,11 @@
       :source-pathname "tty"
       :binary-pathname "tty"
       :components
-	      ((:file "tty")))))     
-
-
-
-
+      ((:file "tty")))
+     
+     #+:arboretum
+     (:module "Arboretum"                  ; CALL grammar checking functions
+      :source-pathname "graft"
+      :binary-pathname "graft"
+      :components
+      ((:file "arboretum")))))

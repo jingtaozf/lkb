@@ -14,6 +14,8 @@
 (defvar *non-intersective-rules* nil)
 (defvar *lexemes-allowed-orderings* nil)
 
+(defparameter *gen-scoring-hook* nil)
+
 (defparameter *generator-input* nil)
 (defparameter *gen-adjunction-debug* nil)
 (defparameter *gen-equality-debug* nil)
@@ -93,6 +95,12 @@
 
 (defun generate-from-mrs (input-sem)
 
+  ;; (ERB 2003-10-08) For aligned generation -- if we're in first only
+  ;; mode, break up the tree in *parse-record* for reference by
+  ;; ag-gen-lex-priority and ag-gen-rule-priority.  Store in *found-configs*.
+  #+:arboretum
+  (populate-found-configs)
+  
   (setf input-sem (mrs::fill-mrs (mrs::unfill-mrs input-sem)))
   (setf *generator-input* input-sem)
   (with-package (:lkb)
@@ -145,11 +153,12 @@
             for ep in (mrs::psoa-liszt input-sem)
             unless (getf rel-indexes ep) collect ep into unknown
             finally
-              (error 
-               "unknown predicates: ~{|~(~a~)|~^, ~}"
-               (loop
-                   for ep in unknown
-                   collect (mrs::ep-shorthand ep))))
+              (when unknown
+                (error 
+                 "unknown predicates: ~{|~(~a~)|~^, ~}"
+                 (loop
+                     for ep in unknown
+                     collect (mrs::ep-shorthand ep)))))
         ;;
         ;; _fix_me_
         ;; i believe the following should never happen, i.e. we rightly fail
@@ -160,18 +169,20 @@
           (unless (getf rel-indexes rel)
             (setf (getf rel-indexes rel) (incf rel-indexes-n))))
         (dolist (lex lex-items)
-          (setf (mrs::found-lex-main-rels lex) 0)
           (loop
-              for ep in (mrs::found-lex-main-rels lex)
+              with eps = (mrs::found-lex-main-rels lex)
+              initially (setf (mrs::found-lex-main-rels lex) 0)
+              for ep in eps
               for index = (ash 1 (getf rel-indexes ep))
               do 
                 (setf (mrs::found-lex-main-rels lex)
                   (logior (mrs::found-lex-main-rels lex) index))))
         (dolist (grule grules)
           (when (mrs::found-rule-p grule)
-            (setf (mrs::found-rule-main-rels grule) 0)
             (loop
-                for ep in (mrs::found-rule-main-rels grule)
+                with eps = (mrs::found-rule-main-rels grule)
+                initially (setf (mrs::found-rule-main-rels grule) 0)
+                for ep in eps
                 for index = (ash 1 (getf rel-indexes ep))
                 do
                   (setf (mrs::found-rule-main-rels grule)
@@ -277,7 +288,11 @@
                    (restrict-fs (tdfs-indef (g-edge-dag edge))))
                  (incf *copies*)        ; each lex entry will be a copy
                  (with-agenda (when *gen-first-only-p* 
-                                (gen-lex-priority lex-entry-fs))
+                                (if *gen-scoring-hook*
+                                  (funcall 
+                                   *gen-scoring-hook*
+                                   (list :lexicon edge))
+                                  (gen-lex-priority lex-entry-fs)))
                    (gen-chart-add-inactive edge input-sem input-rels))))
              ;; Process tasks
              (loop 
@@ -450,7 +465,24 @@
 
 
 (defun gen-filter-root-edges (edges start-symbols)
-   ;; c.f. filter-root-edges in parse.lsp
+  (loop
+      with roots = (loop
+                       for start-symbol in start-symbols
+                       for root = (get-tdfs-given-id start-symbol)
+                       when root collect root)
+      for edge in edges
+      for match = (loop
+                      for root in roots
+                      thereis (unifiable-wffs-p
+                               (tdfs-indef root)
+                               (tdfs-indef (g-edge-dag edge))))
+      when match collect edge)
+  ;; c.f. filter-root-edges in parse.lsp
+  ;;
+  ;; _fix_me_
+  ;; this version gives us duplicate results with multiple start symbols.
+  ;;                                                          (23-apr-04; oe)
+  #+:null
    (loop for start-symbol in start-symbols
       nconc
       (let ((root-spec (get-tdfs-given-id start-symbol)))
@@ -582,7 +614,11 @@
     (mapc
        #'(lambda (act)
            (with-agenda (when *gen-first-only-p* 
-                          (gen-rule-priority (edge-rule act)))
+                          (if *gen-scoring-hook*
+                            (funcall 
+                             *gen-scoring-hook*
+                             (list :active act edge))
+                            (gen-rule-priority (edge-rule act))))
              (gen-chart-test-active edge act input-sem input-rels)))
        (gen-chart-retrieve-with-index index 'active))
     ;; see if we can create new active edges by instantiating the head
@@ -592,7 +628,12 @@
                 (format t "~&Trying to create new active edge from rule ~A ~
                      and inactive edge ~A"
                         (rule-id rule) (g-edge-id edge)))
-              (with-agenda (when *gen-first-only-p* (gen-rule-priority rule))
+              (with-agenda (when *gen-first-only-p* 
+                             (if *gen-scoring-hook*
+                               (funcall 
+                                *gen-scoring-hook*
+                                (list :rule rule edge))
+                               (gen-rule-priority rule)))
                 (multiple-value-bind (gen-daughter-order head-index) ; zero-based on daughters
                     (gen-chart-rule-ordered-daughters rule)
                   (multiple-value-bind (act chart-index)
@@ -700,7 +741,17 @@
                      (append (g-edge-lexemes act) (g-edge-lexemes inact))
                      :mod-index (g-edge-mod-index act))))
                (if one-off-p new-act
-                 (gen-chart-extend-active new-act input-sem input-rels index-dag))))))))
+                 ;; (ERB 2003-10-22) There originally wasn't any reference to
+                 ;; the agenda here, but I'm not getting my hands on all of the
+                 ;; edges.
+                 (with-agenda (when *gen-first-only-p* 
+                                (if *gen-scoring-hook*
+                                  (funcall 
+                                   *gen-scoring-hook*
+                                   (list :active act inact))
+                                  (gen-rule-priority inact)))
+                   (gen-chart-extend-active 
+                    new-act input-sem input-rels index-dag)))))))))
 
 
 (defun gen-chart-extend-active (act input-sem input-rels act-chart-index)

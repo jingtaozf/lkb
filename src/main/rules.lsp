@@ -173,17 +173,37 @@
     
 
 (defun get-matching-rules (rhd-fs &optional no-unary)
+  #+:arboretum
+  (declare (special *mal-active-p*))
   ;;; the test which stops the parser applying a rule
   ;;; with orthographic effects is now
   ;;; spelling-change-rule-p which is defined in the
   ;;; globals file
   ;;; AAC Feb 1996
-  (if no-unary
-    (get-indexed-rules rhd-fs
-       #'(lambda (rule) (<= (length (rule-order rule)) 2)))
-    (union (get-indexed-lrules rhd-fs #'spelling-change-rule-p)
-           (get-indexed-rules rhd-fs #'spelling-change-rule-p)
-           :test #'eq)))
+  (let ((all (if no-unary
+               (get-indexed-rules
+                rhd-fs
+                #'(lambda (rule) (<= (length (rule-order rule)) 2)))
+               (union (get-indexed-lrules rhd-fs #'spelling-change-rule-p)
+                      (get-indexed-rules rhd-fs #'spelling-change-rule-p)
+                      :test #'eq))))
+    ;;
+    ;; _fix_me_
+    ;; incorporate support for grammar checking application, using an
+    ;; additional set of `mal' rules that detect and correct certain errors
+    ;; types, hence want to be available in parsing at times but probably never
+    ;; in generation.  this would seem to call for a better generalization,
+    ;; allowing grammars to tag rules according to various contexts for use,
+    ;; e.g. in a phased parsing set-up, if we were to move that direction.
+    ;;                                                    (23-apr-04; erb & oe)
+    #+:arboretum
+    (loop
+        for rule in all 
+        for mal-rule-p = (mal-rule-p rule)
+        when (or (null mal-rule-p) *mal-active-p*)
+        collect rule)
+    #-:arboretum
+    all))
 
 (defun get-matching-lex-rules (rhd-fs)
    (get-indexed-lrules rhd-fs #'spelling-change-rule-p))

@@ -575,6 +575,8 @@
 
 
 (defun get-senses (stem-string)
+  #+:arboretum
+  (declare (special *mal-active-p*))
   (let ((entries
          (loop for entry in (get-unexpanded-lex-entry stem-string)
              nconc
@@ -584,7 +586,10 @@
                         (expanded-entry (get-lex-entry-from-id id))
                         (tdfs (when expanded-entry 
                                 (lex-entry-full-fs expanded-entry))))
-                   (when tdfs
+                   (when (and tdfs
+                              #+:arboretum
+                              (or *mal-active-p* 
+                                  (not (mal-lex-entry-p expanded-entry))))
                      (list
                       (cons id
                             (cond

@@ -89,6 +89,7 @@ at this point).
 ;;; *********************************************************
 
 (defun collect-lex-entries-from-mrs (psoa)
+
   (let* ((all-rels (psoa-liszt psoa))
          (lex-rule-rels (loop for rel in all-rels
                             when (lex-rule-rel-p (rel-pred rel))
@@ -124,10 +125,17 @@ at this point).
                (nullsem (instantiate-null-semantic-items psoa lrules))
             ;;; nullsem items are ones we have to postulate without
             ;;; direct evidence from the MRS
-               (nonnull (loop for possible in possibles
-                             append
-                                        ; check unification etc
-                             (create-instantiated-structures possible lrules)))
+               (nonnull (loop 
+                            for possible in possibles
+                            #+:arboretum
+                            when
+                            #+:arboretum
+                            (or lkb::*gen-mal-active-p*
+                                (not (lkb::mal-lex-entry-p possible)))
+                            append
+                              ;; check unification etc
+                              (create-instantiated-structures 
+                               possible lrules)))
                (lexres (append nullsem nonnull)))
           (values
            lexres
@@ -360,31 +368,31 @@ at this point).
   ;; applied plus result
   (incf *number-of-lrule-applications*)
   (when (> *number-of-lrule-applications* 
-	   lkb::*maximal-lex-rule-applications*)
+           lkb::*maximal-lex-rule-applications*)
     (error "~%Probable circular lexical rule"))
   (let ((transformed-entries 
-	 (loop for entry in entries
-	     append
-	       (let* ((fs (cdr entry))
-		      (fs-restricted (lkb::restrict-fs (tdfs-indef fs))))
-		 (loop for rule in rules
-		      nconc
-		      (let* ((spelling-rule-p 
-			      (lkb::spelling-change-rule-p rule))
-			     (new-morph 
-			      (when spelling-rule-p
-				(lkb::construct-new-morph entry rule)))
-			     (result
-			      (when (or (not spelling-rule-p) new-morph)
-				;; allow morphographemics to block generation
-				(lkb::apply-morph-rule 
-				 rule fs fs-restricted new-morph))))
-			(if result
+         (loop for entry in entries
+             append
+               (let* ((fs (cdr entry))
+                      (fs-restricted (lkb::restrict-fs (tdfs-indef fs))))
+                 (loop for rule in rules
+                      nconc
+                      (let* ((spelling-rule-p 
+                              (lkb::spelling-change-rule-p rule))
+                             (new-morph 
+                              (when spelling-rule-p
+                                (lkb::construct-new-morph entry rule)))
+                             (result
+                              (when (or (not spelling-rule-p) new-morph)
+                                ;; allow morphographemics to block generation
+                                (lkb::apply-morph-rule 
+                                 rule fs fs-restricted new-morph))))
+                        (if result
                             (list
                              (cons (cons rule (car entry)) result)))))))))
     (when transformed-entries
       (append transformed-entries
-	      (apply-instantiated-lexical-rules transformed-entries rules)))))
+              (apply-instantiated-lexical-rules transformed-entries rules)))))
 
 (defun instantiate-semantic-indices (lex-id lex-e base-fs main-rels)
 ;;; produces found-lex structures
@@ -412,21 +420,21 @@ at this point).
       when
        ;; needs fixing - unnecessary expense since we repeat this on the same
        ;; rels for multiple ids
-	(let ((new-fs (create-liszt-fs-from-rels rel-sequence path)))
-	  (if new-fs 
-	      (let* (; (lkb::*unify-debug* t)
+        (let ((new-fs (create-liszt-fs-from-rels rel-sequence path)))
+          (if new-fs 
+              (let* (; (lkb::*unify-debug* t)
                      (result (yadu base-fs new-fs)))
-		(if result
-		    (if lex-id
-			(make-found-lex 
-			 :lex-id lex-id
-			 :inst-fs result
-			 :main-rels rel-sequence)
-		      ;; if null lex-id assume it's a rule
-		      (cons result rel-sequence))))
-	    (cerror "Ignore this entry/rule" 
-		    "~%Problem in create-liszt-fs-from-rels")))
-	collect it))
+                (if result
+                    (if lex-id
+                        (make-found-lex 
+                         :lex-id lex-id
+                         :inst-fs result
+                         :main-rels rel-sequence)
+                      ;; if null lex-id assume it's a rule
+                      (cons result rel-sequence))))
+            (cerror "Ignore this entry/rule" 
+                    "~%Problem in create-liszt-fs-from-rels")))
+        collect it))
 
 (defun create-all-rel-sequences (rels)
   ;;; we have an ordered list of lists
@@ -435,19 +443,19 @@ at this point).
   (if (null rels)
       nil
     (loop for rel in (car rels)
-	nconc
-	  (let ((combinations (create-all-rel-sequences (cdr rels))))
-	    (if combinations
-		(loop for combination in combinations
-		    collect (cons rel combination))
-	      (list (list rel)))))))
+        nconc
+          (let ((combinations (create-all-rel-sequences (cdr rels))))
+            (if combinations
+                (loop for combination in combinations
+                    collect (cons rel combination))
+              (list (list rel)))))))
 
 (defun match-rels (a b)
   (and (equal (second a)
-	      (second b))
+              (second b))
        (loop for x in (first a)
-	   for y in (first b)
-	   always (eq x y))))
+           for y in (first b)
+           always (eq x y))))
 
 ;;; ********************************************************
 ;;;
@@ -460,18 +468,18 @@ at this point).
   ;; inverse direction to mrsoutput functions, here we're creating a FS from a
   ;; Lisp structure
   (let* ((path-list nil)
-	 (current-path sem-path))
+         (current-path sem-path))
     (loop for rel in rels
-	do
-	  (let ((first-path (append current-path *first-path*)))
-	    (loop for unif in (create-unifs-for-rel rel first-path)
-		do
-		  (push unif path-list))
-	    (setf current-path (append current-path *rest-path*))))
+        do
+          (let ((first-path (append current-path *first-path*)))
+            (loop for unif in (create-unifs-for-rel rel first-path)
+                do
+                  (push unif path-list))
+            (setf current-path (append current-path *rest-path*))))
     (let* (; (lkb::*unify-debug* t)
            (fs (process-unifications path-list))
-	   (wffs (when fs (create-wffs fs)))
-	   (tdfs (when wffs (construct-tdfs wffs nil nil))))
+           (wffs (when fs (create-wffs fs)))
+           (tdfs (when wffs (construct-tdfs wffs nil nil))))
       tdfs)))
 
 (defun create-unifs-for-rel (rel-str path)
@@ -548,7 +556,14 @@ at this point).
           (loop for lex-id in real-ids
                nconc
                (let ((lex-e (lkb::get-lex-entry-from-id lex-id)))
-                 (if lex-e
+                 (if (and lex-e
+                          #+:arboretum
+                          ;; (ERB 2003-10-22)
+                          ;; switch to keep (semantically null) mal lex entries
+                          ;; out of generation, unless we explicitly ask for
+                          ;; them 
+                          (or lkb::*gen-mal-active-p*
+                              (not (lkb::mal-lex-entry-p lex-e))))
                    (let*
                       ((base-fs (lkb::lex-entry-full-fs lex-e))
                        (new-found-str
@@ -585,39 +600,51 @@ at this point).
 
 
 (defun find-possible-rules (rel-set lexicalp)
-  (append 
-   (loop for rule-record in (if lexicalp *contentful-lrs* *contentful-grs*)
-        append
-        (let ((rule (if lexicalp 
-                        (lkb::get-lex-rule-entry 
-                         (semantics-record-id rule-record))
-                      (lkb::get-grammar-rule-entry 
-                       (semantics-record-id rule-record))))
-              (main-rels
-               (semantics-record-relations rule-record)))
-          (let ((rel-list
-                 (loop for main-rel-rec in main-rels
-                      collect
-                      (let ((matching-rels
-                             (loop for rel in rel-set
-                                  when
-                                   (matches-rel-record rel main-rel-rec)
-                                  collect rel)))
-                        (unless matching-rels (return nil))
-                        matching-rels))))
-            (if rel-list
-                (loop for rel-comb-and-fs in 
-                     (apply-rels-to-base nil (lkb::rule-full-fs rule)
-                                         rel-list *construction-semantics-path*)
-                     collect
-                     (make-new-found-rule rule (car rel-comb-and-fs)
-                                          (cdr rel-comb-and-fs)))
-              (if (null main-rels)
-                  (list (make-new-found-rule 
-                         rule (lkb::rule-full-fs rule)
-                         nil)))))))
-  (if lexicalp *contentless-lrs* *contentless-grs*)))
-
+  (let ((all
+         (append 
+          (loop 
+              for rule-record in (if lexicalp 
+                                   *contentful-lrs*
+                                   *contentful-grs*)
+              append
+                (let ((rule (if lexicalp 
+                                (lkb::get-lex-rule-entry 
+                                 (semantics-record-id rule-record))
+                              (lkb::get-grammar-rule-entry 
+                               (semantics-record-id rule-record))))
+                      (main-rels
+                       (semantics-record-relations rule-record)))
+                  (let ((rel-list
+                         (loop for main-rel-rec in main-rels
+                             collect
+                               (let ((matching-rels
+                                      (loop for rel in rel-set
+                                          when
+                                            (matches-rel-record
+                                             rel main-rel-rec)
+                                          collect rel)))
+                                 (unless matching-rels (return nil))
+                                 matching-rels))))
+                    (if rel-list
+                        (loop for rel-comb-and-fs in 
+                              (apply-rels-to-base 
+                               nil (lkb::rule-full-fs rule)
+                               rel-list *construction-semantics-path*)
+                            collect
+                              (make-new-found-rule rule (car rel-comb-and-fs)
+                                                   (cdr rel-comb-and-fs)))
+                      (if (null main-rels)
+                        (list (make-new-found-rule 
+                               rule (lkb::rule-full-fs rule)
+                               nil)))))))
+         (if lexicalp *contentless-lrs* *contentless-grs*))))
+    #-:arboretum
+    all
+    #+:arboretum
+    (loop for rule in all 
+        for mal-rule-p = (lkb::mal-rule-p rule)
+        when (or (null mal-rule-p) lkb::*gen-mal-active-p*)
+        collect rule)))
 
 (defun make-new-found-rule (rule new-fs rels)
   (make-found-rule
