@@ -240,7 +240,6 @@
 
 (defun connect-aux2 (&key (host) (dbname) (user) (password))
   (let ((connection)
-	(properties)
 	(decoded-status))
     (setf connection 
       (pg:connect-db 
