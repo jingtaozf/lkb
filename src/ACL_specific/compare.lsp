@@ -32,7 +32,7 @@
 (def-lkb-parameter *tree-display-height* 630)
 
 ;;;
-;;; switch to control auto-advance in update mode: set to non-nil to enable
+;;; a switch to control auto-advance in update mode: set to non-nil to enable
 ;;; auto-save in updates; set to a (positive) number to cause that many seconds
 ;;; delay before the auto-save and only auto-save (and -advance) on unambiguous
 ;;; items (i.e. where the recorded decisions completely disambiguate the new
