@@ -329,8 +329,9 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
   ;;; extract 19
   (if *rasp-xml-word-p*
       (let ((first-s (position #\s str)))
-	(if (and (char= (elt str (+ 1 first-s)) #\=)
-		 (char= (elt str (+ 2 first-s)) #\"))
+	(if (and first-s ; *** jac 8/11/04
+	         (char= (elt str (+ 1 first-s)) #\=)
+		 (member (elt str (+ 2 first-s)) '(#\" #\'))) ; *** jac 22/9/04
 	    (let ((spec-num
 		   (parse-integer (subseq str (+ 3 first-s)) :junk-allowed t)))
 	      (if (and spec-num 
@@ -347,7 +348,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
   (if *rasp-xml-word-p*
       (let ((first-e (position #\e str)))
 	(if (and (char= (elt str (+ 1 first-e)) #\=)
-		 (char= (elt str (+ 2 first-e)) #\"))
+		 (member (elt str (+ 2 first-e)) '(#\" #\'))) ; *** jac 22/9/04
 	    (let ((spec-num
 		   (parse-integer (subseq str (+ 3 first-e)) :junk-allowed t)))
 	      (if (and spec-num 
