@@ -92,9 +92,7 @@ BEGIN
  
  		PERFORM public.index_public_revision();
 
-		RAISE INFO \'Updating timestamps...\';
-		DELETE FROM public.meta WHERE var=\'mod_time\';
-		INSERT INTO public.meta VALUES (\'mod_time\',current_timestamp);
+		PERFORM update_modstamp_pub();
 	ELSE
 		RAISE INFO \'0 new entries\';
 	END IF;
@@ -180,6 +178,9 @@ DECLARE
 BEGIN
 	current_filter := (SELECT val FROM meta WHERE var=\'filter\');
 	new_filter := $1;
+	IF new_filter=\'\' THEN
+		new_filter := current_filter;
+	ENd IF;
 	m_time := (SELECT mod_time());	
 	b_time := (SELECT build_time());	
 
@@ -239,73 +240,69 @@ END;
 
 CREATE OR REPLACE FUNCTION public.create_schema(text) RETURNS boolean AS '
 BEGIN
-  EXECUTE ''CREATE SCHEMA '' || $1;
-  EXECUTE ''INSERT INTO public.meta VALUES (''''user'''', '' || quote_literal($1) || '')'';
- CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=''filter'';
--- scratch
- CREATE TABLE revision AS SELECT * FROM public.revision WHERE NULL;
- EXECUTE ''CREATE UNIQUE INDEX user_'' || user || ''_name_revision_userid
-  ON revision (name,version,userid)''; 
--- current_grammar
- CREATE TABLE current_grammar AS SELECT * FROM public.revision WHERE NULL;
+	EXECUTE ''CREATE SCHEMA '' || $1;
+	EXECUTE ''INSERT INTO public.meta VALUES (''''user'''', '' || quote_literal($1) || '')'';
+	CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=''filter'';
+	
+	-- scratch
+ 	CREATE TABLE revision AS SELECT * FROM public.revision WHERE NULL;
+ 	EXECUTE ''CREATE UNIQUE INDEX user_'' || user || ''_name_revision_userid ON revision (name,version,userid)''; 
 
- PERFORM public.index_current_grammar();
+	-- current_grammar
+ 	CREATE TABLE current_grammar AS SELECT * FROM public.revision WHERE NULL;
 
--- views
- CREATE VIEW filtered AS SELECT * FROM public.revision WHERE NULL;
- CREATE VIEW active
-  AS SELECT fil.*
-  FROM 
-   (filtered AS fil
-   NATURAL JOIN 
-    (SELECT name, max(modstamp) AS modstamp 
-      FROM filtered
-      GROUP BY name) AS t1)
-  WHERE flags=1;
- CREATE VIEW revision_all
-  AS SELECT * FROM public.revision 
-   UNION 
-   SELECT * FROM revision;
+ 	PERFORM public.index_current_grammar();
 
--- mod time
-DELETE FROM meta WHERE var=''mod_time'';
-INSERT INTO meta VALUES (''mod_time'',current_timestamp);
+	-- views
+ 	CREATE VIEW filtered AS SELECT * FROM public.revision WHERE NULL;
+ 	CREATE VIEW active
+		AS SELECT fil.*
+ 			FROM 
+ 			(filtered AS fil
+ 			NATURAL JOIN 
+ 				(SELECT name, max(modstamp) AS modstamp 
+ 					FROM filtered
+					GROUP BY name) AS t1)
+			WHERE flags=1;
+	CREATE VIEW revision_all
+		AS SELECT * FROM public.revision 
+			UNION 
+ 			SELECT * FROM revision;
 
--- semi
+	-- mod time
+	PERFORM update_modstamp_priv();
 
-CREATE TABLE semi_pred (
- lex_id text NOT NULL,
- pred_id text NOT NULL,
- frame_id int NOT NULL,
- pred_txt text NOT NULL,
- string_p boolean NOT NULL,
- modstamp TIMESTAMP WITH TIME ZONE
-);
+	-- semi
 
-CREATE TABLE semi_frame (
- frame_id int NOT NULL,
- slot text NOT NULL,
- str text,
- symb text,
- var_id int,
- type text
-);
+	CREATE TABLE semi_pred (
+		lex_id text NOT NULL,
+		pred_id text NOT NULL,
+		frame_id int NOT NULL,
+		pred_txt text NOT NULL,
+		string_p boolean NOT NULL,
+		modstamp TIMESTAMP WITH TIME ZONE);
 
-CREATE TABLE semi_var (
- var_id int NOT NULL,
- extra_id int NOT NULL
-);
+	CREATE TABLE semi_frame (
+		frame_id int NOT NULL,
+		slot text NOT NULL,
+		str text,
+		symb text,
+		var_id int,
+		type text);
 
-CREATE TABLE semi_extra (
- extra_id int NOT NULL,
- feat text NOT NULL,
- val text NOT NULL
-);
+	CREATE TABLE semi_var (
+		var_id int NOT NULL,
+		extra_id int NOT NULL);
 
--- semi mod time
-DELETE FROM meta WHERE var=''semi_build_time'';
+	CREATE TABLE semi_extra (
+		extra_id int NOT NULL,
+		feat text NOT NULL,
+		val text NOT NULL);
 
-RETURN true;
+	-- semi mod time
+	DELETE FROM meta WHERE var=''semi_build_time'';
+
+	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
@@ -424,3 +421,79 @@ BEGIN
 END;'
 LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION public.update_modstamp_priv() RETURNS text AS '
+DECLARE
+	mod_time text;
+BEGIN
+	RAISE INFO \'Updating timestamps...\';
+	DELETE FROM meta WHERE var=\'mod_time\';
+	mod_time := current_timestamp;
+	INSERT INTO meta VALUES (\'mod_time\',mod_time);
+	RETURN mod_time;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.update_modstamp_pub() RETURNS text AS '
+DECLARE
+	mod_time text;
+BEGIN
+	RAISE INFO \'Updating timestamps...\';
+	DELETE FROM public.meta WHERE var=\'mod_time\';
+	mod_time := current_timestamp;
+	INSERT INTO public.meta VALUES (\'mod_time\',mod_time);
+	RETURN mod_time;
+END;
+' LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.clear_scratch() RETURNS boolean AS '
+BEGIN
+	DELETE FROM revision;
+	PERFORM update_modstamp_priv();
+	RETURN TRUE;
+END;
+' LANGUAGE plpgsql;
+
+--CREATE OR REPLACE FUNCTION public.update_meta_mod_time_public() RETURNS boolean AS '
+--DELETE FROM public.meta WHERE var=''mod_time'';
+--INSERT INTO public.meta VALUES (''mod_time'',current_timestamp);
+--SELECT true;
+--' LANGUAGE SQL SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.commit_scratch() RETURNS boolean AS '
+BEGIN
+	INSERT INTO public.revision (SELECT * FROM revision);
+	PERFORM update_modstamp_pub();
+	PERFORM clear_scratch();
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.mod_time_private() RETURNS text AS '
+BEGIN
+	RETURN COALESCE((SELECT val FROM meta WHERE var=\'mod_time\' LIMIT 1),\'-infin\');
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.mod_time_public() RETURNS text AS '
+BEGIN
+	RETURN COALESCE((SELECT val FROM public.meta WHERE var=\'mod_time\' LIMIT 1),\'-infin\');
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.mod_time() RETURNS text AS '
+BEGIN
+	RETURN max(t) FROM (SELECT mod_time_private() AS t UNION SELECT mod_time_public() AS t) AS foo;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.build_time() RETURNS text AS '
+BEGIN
+	RETURN COALESCE((SELECT val FROM meta WHERE var=\'build_time\' LIMIT 1),\'\');
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.semi_build_time_private() RETURNS text AS '
+BEGIN
+	RETURN COALESCE((SELECT val FROM meta WHERE var=\'semi_build_time\' LIMIT 1),\'\');
+END;
+' LANGUAGE plpgsql;

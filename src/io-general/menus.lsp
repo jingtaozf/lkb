@@ -313,7 +313,7 @@
                      )
                    :available-p :always))
          #+:psql
-         (when (find :psql *features*)
+         (when lkb::*psql-lexicon-parameters*
            ;;
            ;; in case loading the PSQL library failed at start-up, an image may
            ;; have reverted itself to a sans-PSQL state.
