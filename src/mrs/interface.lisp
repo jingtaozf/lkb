@@ -7,7 +7,65 @@
   (format t "~%~A" user::*sentence*) 
   (for res in user::*parse-record* 
        do 
-       (format t " ~A" (length (make-scoped-mrs (car (extract-mrs (list res) t)))))))
+       (let ((current-time (get-internal-run-time)))
+         (format t " scopes ~A time ~A" 
+                 (length (make-scoped-mrs 
+                          (car (extract-mrs (list res) t))))
+                 (- (get-internal-run-time) current-time)))))
+
+(defun show-all nil 
+  (format t "~%~A" user::*sentence*) 
+  (for res in user::*parse-record* 
+       do 
+       (let ((mrsstruct (car (extract-mrs (list res) t))))
+        (show-all-scoped-structures mrsstruct (make-scoped-mrs mrsstruct)))))
+
+(defun time-first nil 
+  (format t "~%~A" user::*sentence*) 
+  (format t " ~A" (length (make-scoped-mrs (car (extract-mrs (list (car user::*parse-record*)) t))))))
+
+(defun test-cache nil 
+  (let ((current-cache *cache-on*))
+    (format t "~%~A" user::*sentence*) 
+    (for res in user::*parse-record* 
+         do 
+         (let* ((mrs (car (extract-mrs (list res) t)))
+                (uncached-result (progn (setf *cache-on* nil)
+                                        (make-scoped-mrs mrs)))
+                (cached-result (progn (setf *cache-on* t)
+                                      (make-scoped-mrs mrs)))
+                (uncached-canonical 
+                 (for res in uncached-result
+                      collect
+                      (canonical-bindings res)))
+                (cached-canonical 
+                 (for res in cached-result
+                      collect
+                      (canonical-bindings res))))
+           (if (eql (length uncached-result)
+                    (length cached-result))
+               (when 
+                   (for thing in uncached-canonical
+                        all-satisfy
+                        (if
+                            (member thing cached-canonical 
+                                    :test #'bindings-equivalent)
+                            t
+                          (format t "~%WARNING cached contains ~A" 
+                                  thing)))
+                 (format t " ~A" (length cached-result)))
+             (format t "~%WARNING cache results differ uncached: ~A cached: ~A"
+                     (length uncached-result) (length cached-result)))))
+    (setf *cache-on* current-cache)))
+
+
+(defun bindings-equivalent (b1 b2)
+  (and (eql (length b1)
+            (length b2))
+       (for thing in b1
+            all-satisfy
+            (member thing b2 
+                    :test #'equal))))
 
 (defparameter *alex-munge* nil)
 
@@ -62,5 +120,7 @@
 (defparameter *do-something-with-parse* 'mrs::show-mrs)
 
 (defparameter *do-something-with-parse* 'mrs::time-scope)
+
+(defparameter *do-something-with-parse* 'mrs::test-cache)
 
 |#

@@ -421,18 +421,7 @@
               (output-mrs mrsstruct 'indexed)
             ;;; then try and find sets of bindings which will give a fully scoped 
             ;;; structure, and output the results
-            (if binding-sets
-                (format t "~%~A scoped form(s) ~A~%" (length binding-sets)
-                        (if (> (length binding-sets) 10)
-                            "only printing first 10" 
-                          ""))
-	      (format t "~%WARNING: No valid scopes~%"))
-            (for binding in (subseq binding-sets 0 
-                                    (min (length binding-sets) 10))
-                 do
-                 (setf *canonical-bindings* (canonical-bindings binding))
-                 (output-connected-mrs mrsstruct 'indexed)
-                 (output-scoped-mrs mrsstruct)))
+              (show-some-scoped-structures mrsstruct binding-sets))
           (when (and vit standalone)
             (write-vit-pretty t (horrible-hack-2 vit))
             (format t "~%"))

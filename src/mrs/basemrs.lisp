@@ -469,7 +469,7 @@
 
 ;;; error messages
 
-(defparameter *giving-demo-p* t)
+(defparameter *giving-demo-p* nil)
 
 (defun struggle-on-error (&rest rest)
   (unless *giving-demo-p*
