@@ -301,7 +301,8 @@ at this point).
                (let ((res-fs-and-rules 
                       (user::try-all-lexical-rules 
                        (list (cons nil (found-lex-inst-fs new-found-str)))
-                       *contentful-lrs*)))
+                       (set-difference *contentful-lrs*
+                                       lrules))))
          ;;; the ignored list - temporary measure to
          ;;; to take advantage of existing try-all-lexical-rules
                  (for pair in res-fs-and-rules
@@ -310,15 +311,6 @@ at this point).
                         (setf (found-lex-inst-fs lr-str) (cdr pair))
                         (setf (found-lex-rule-list lr-str) (car pair))
                         lr-str)))))))
-
-(defun apply-possible-lexical-rules (potential-rules fs)
-  ;;; ideally we would maintain a list of the lexical rules
-  ;;; which could apply to a particular lex id
-  ;;; rather than check each time
-  ;;; but ignore this for now
-  (declare (ignore potential-rules fs))
-  nil)
-
 
 (defun instantiate-semantic-indices (lex-id lex-e base-fs main-rels
                                             alt-rels message-rels)
@@ -519,7 +511,17 @@ at this point).
                                 (setf (found-lex-rule-list lr-str) (car pair))
                                 lr-str)))))))))
 
-
+(defun possibly-applicable-null-semantics (input-sem)
+  ;;; eventually this has to filter the null semantics items
+  ;;; on the basis of the input semantics
+  ;;; but for now we cheat ...
+  (declare (ignore input-sem))
+  (let* ((lex-ids-used (apply #'append (user::retrieve-lex-from-parses)))
+         (desirable-items (or lex-ids-used '(user::l_str user::r_str))))
+    (remove-if-not #'(lambda (x) (member
+                                      (mrs::found-lex-lex-id x) 
+                                      desirable-items))
+             (apply #'append mrs::*null-semantics-found-items*))))
 
 
 ;;; Grammar rules

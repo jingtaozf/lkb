@@ -91,7 +91,7 @@
 
 
 (defun def-tdl-print-operations (indentation stream)
-   (let ((indentation-vector (make-array '(30)))
+   (let ((indentation-vector (make-array '(3000)))
          (new-fs-p t))
   (setf *display-structure*
    (make-fs-output 
@@ -152,7 +152,7 @@
 
          
 (defun def-simple-print-operations (indentation stream)
-   (let ((indentation-vector (make-array '(30))))
+   (let ((indentation-vector (make-array '(3000))))
   (setf *display-structure*
    (make-fs-output 
       :name 'simple
@@ -209,7 +209,7 @@
 
 (defun def-edit-print-operations (indentation stream)
    (let ((type-label-list nil)
-         (indentation-vector (make-array '(30)))
+         (indentation-vector (make-array '(3000)))
          (max-width 0))  ; was 100 - changed to 0 for tdfs
   (setf *display-structure*
    (make-fs-output 
@@ -300,7 +300,7 @@
 ;;; \ has to be inserted into the format as a character ~C
                      
 (defun def-tex-print-operations (indentation stream)
-   (let ((indentation-vector (make-array '(30)))
+   (let ((indentation-vector (make-array '(3000)))
          (bracket-stack nil)
          (unoutput-label nil))
       ;; need to keep the last label around to use
@@ -418,7 +418,7 @@
 
 (defun def-path-print-operations (stream)
    (let ((type-label-list nil)
-         (reentrant-vector (make-array '(30))))
+         (reentrant-vector (make-array '(3000))))
     ;;; keep the current path
     ;;; also keep the path to each reentrant node
   (setf *display-structure*
@@ -474,7 +474,7 @@
 
 (defun def-path2-print-operations (stream)
    (let ((type-label-list nil)
-         (reentrant-vector (make-array '(30))))
+         (reentrant-vector (make-array '(3000))))
     ;;; keep the current path
     ;;; also keep the path to each reentrant node
   (setf *display-structure*
@@ -594,7 +594,7 @@
 
 (defun def-tail-print-operations (indentation stream)
    (let ((type-label-list nil)
-         (reentrant-vector (make-array '(30)))
+         (reentrant-vector (make-array '(3000)))
          (max-width 0))
     ;;; keep the current path
     ;;; also keep the path to each reentrant node

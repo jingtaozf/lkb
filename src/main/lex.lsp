@@ -168,6 +168,10 @@
         
 
 (defun read-psort-index-file nil
+  (when (and (streamp *psorts-stream*)
+             (open-stream-p *psorts-stream*))
+    (finish-output *psorts-stream*)
+    (close *psorts-stream*))
   (when (and (probe-file *psorts-temp-file*)
              (probe-file *psorts-temp-index-file*))
     (with-open-file (istream *psorts-temp-index-file* 

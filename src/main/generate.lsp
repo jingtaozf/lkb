@@ -65,11 +65,9 @@
           (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
        (filtered
           (remove 'THAT_C found-lex-list :key #'mrs::found-lex-lex-id))
-       (empty
-          (remove-if-not #'(lambda (x) (member (mrs::found-lex-lex-id x) '(l_str r_str)))
-             (apply #'append mrs::*null-semantics-found-items*))
+       (empty (mrs::possibly-applicable-null-semantics input-sem))
           ;nil
-          ))
+          )
       (if filtered
          (chart-generate input-sem (append filtered empty))
          (progn

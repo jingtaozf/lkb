@@ -20,13 +20,11 @@
                            enable-type-interactions disable-type-interactions))
 )
 
-(defparameter *lkb-top-frame* nil)
+(defvar *lkb-top-frame* nil)
 
-(defparameter *lkb-top-stream* nil)
+(defvar *lkb-top-stream* nil)
 
 ;;; Top level menus etc
-
-(defvar *lkb-menu-items* nil)
 
 (defvar *lkb-menu-disabled-list* nil
   "Kludge because of MCL bug!!!!")
@@ -81,7 +79,7 @@
 ; in this version most of the work has to be done
 ; by messing around with the values in *lkb-menu*
   (lkb-menu-install *lkb-menu*) 
-  (setf *lkb-top-frame* nil)
+;  (setf *lkb-top-frame* nil)
   (start-lkb-frame))
 
 (defun lkb-menu-install (menu)
@@ -139,8 +137,10 @@
 
 
 (defun start-lkb-frame ()
-  (let ((frame (or *lkb-top-frame*
-                   (make-application-frame 'lkb-top))))
+  (when *lkb-top-frame*
+    (execute-frame-command *lkb-top-frame* 
+                                '(com-quit)))
+  (let ((frame (make-application-frame 'lkb-top)))
     (setf *lkb-top-frame* frame)
     (mp:process-run-function "start-lkb-frame" #'run-lkb-top-menu frame)
     (setf *lkb-top-stream* (get-frame-pane *lkb-top-frame* 'display))))
