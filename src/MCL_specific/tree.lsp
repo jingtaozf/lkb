@@ -345,7 +345,7 @@
                                      (type-parents type-entry))
              (format t "~%No constraint for type ~A" node))))
      (make-instance 'menu-item
-       :menu-item-title "New hierarchy"
+       :menu-item-title "New hierarchy..."
        :menu-item-action
        #'(lambda ()
            (let ((*last-type-name* (type-name type-entry)))
@@ -381,34 +381,40 @@
    (front-window :class 'active-type-hier-window))
 
 (defun display-type-in-tree (node)
-   (let* ((type-entry
-             (or (get-type-entry node)
-                 (get-type-entry (get node 'real-thing))))
-          (type (type-name type-entry)))
+   (let ((type-entry
+            (or (get-type-entry node)
+                (get-type-entry (get node 'real-thing)))))
       (when type-entry
-         (let* ((existing (front-type-hierarchy-window))
+         (let* ((type (type-name type-entry))
+                (existing (front-type-hierarchy-window))
                 (pane (and existing (ccl::my-scroller existing)))
                 (top-type
                    (if existing (top-type-node pane) *toptype*)))
             (when existing
                (if (or (eq type top-type)
-                       (member type (retrieve-descendants top-type)))
+                       (member type (retrieve-descendants top-type) :test #'eq))
                   (progn
-                     ;; ensure the type will be visible, whether or not it is now
-                     (unshrink-ancestors type-entry top-type)
-                     (when
-                        ;; we want to see if type is not visible in this window.
-                        ;; We can't just test for visible-p on the type since another
-                        ;; part of the hierarchy in which this type is not present may
-                        ;; have just been drawn in another window (so visible-p will be
-                        ;; false, whether it's visible or not in the current window).
-                        ;; We also can't test to see if an ancestor is shrunk since the
-                        ;; ancestor might have been expanded again since this window was
-                        ;; drawn. Only way is to see if we have a node record for the type
-                        ;; from the last time the window was drawn
-                        (display-type-node-record node pane)
-                        (reposition-type-in-window
-                           node (ccl::my-scroller existing) t nil)))
+                     ;; we want to see if type is not visible in this window.
+                     ;; We can't just test for visible-p on the type since another
+                     ;; part of the hierarchy in which this type is not present may
+                     ;; have just been drawn in another window (so visible-p will be
+                     ;; false, whether it's visible or not in the current window).
+                     ;; We also can't test to see if an ancestor is shrunk since the
+                     ;; ancestor might have been expanded again since this window was
+                     ;; drawn. But checking for node record for the type from the last
+                     ;; time the window was drawn is reliable
+                     (unless (display-type-node-record node pane)
+                        ;; it's a descendent of shrunk node(s) and no others, and/or
+                        ;; a 'hidden' node (if so change window to a show-all-p) -
+                        ;; we can't tell which is the case
+                        (unshrink-ancestors type-entry top-type)
+                        (when (and (not (show-all-p pane))
+                                 (fboundp 'hide-in-type-hierarchy-p)
+                                 (funcall (symbol-function 'hide-in-type-hierarchy-p)
+                                    type))
+                           (setf (show-all-p pane) t))
+                        (create-type-hierarchy-tree top-type existing))
+                     (reposition-type-in-window node pane t nil))
                   (lkb-beep)))))))
 
 (defun unshrink-ancestors (type-entry top-type)
