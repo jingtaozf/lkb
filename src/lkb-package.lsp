@@ -1,4 +1,5 @@
-;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: COMMON-LISP-USER -*-
+;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
 
 (in-package :common-lisp-user)
 

@@ -1,3 +1,6 @@
+;;; Copyright (c) 2000-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 (in-package :lkb)
 
 ;;; Allow for partially bracketed input to constrain parses found

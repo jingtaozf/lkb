@@ -1,11 +1,6 @@
-;;; Copyright Ann Copestake 1994/1995 All Rights Reserved.
-;;; No use or redistribution without permission.
-;;; 
-;;; Ann Copestake
-;;; Computer Laboratory, University of Cambridge
-;;; Pembroke Street
-;;; Cambridge, UK
-;;; and several other places ...
+;;; Copyright (c) 1996-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 
 (in-package :lkb)
 

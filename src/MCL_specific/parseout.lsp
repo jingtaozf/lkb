@@ -1,8 +1,6 @@
-;;; Copyright Ann Copestake 1992-8 
-;;; All Rights Reserved.
-;;; No use or redistribution without permission.
-;;; 
-;;; Ann Copestake / John Carroll
+;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 
 ;;; parse output functions - split from parse.lsp
 ;;; and extensively rewritten for MCL

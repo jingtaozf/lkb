@@ -1,12 +1,7 @@
-;;;; A COMMON LISP GRAPHICAL GRAPH PACKAGE
+;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
 
-;;; Copyright John Carroll 1991. All Rights Reserved.
-;;; No use or redistribution without permission.
-;;; 
-;;; John Carroll
-;;; Computer Laboratory, University of Cambridge
-;;; Pembroke Street
-;;; Cambridge, UK
+;;;; A COMMON LISP GRAPHICAL GRAPH PACKAGE
 
 (in-package :lkb)
 

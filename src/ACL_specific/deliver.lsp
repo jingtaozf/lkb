@@ -1,3 +1,7 @@
+;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
+
 ;; Create a runtime image suitable for distribution
 
 (in-package :common-lisp-user)

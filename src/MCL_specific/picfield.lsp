@@ -1,3 +1,6 @@
+;;; Copyright (c) 1993-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen,
+;;; John Bowler - see licence.txt for conditions
+
 ;;; The class of a pop-up field.  This is implemented as a "pop-up-menu" which has menu items
 ;;; as given by the passed in list (a menu-items list).  The instance arguments are:-
 ;;;

@@ -1,3 +1,6 @@
+;;; Copyright (c) 2000-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: LKB -*-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

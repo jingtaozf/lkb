@@ -1,19 +1,6 @@
-;;; -*- Mode: LISP; Package: COMMON-LISP-USER -*-
+;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;        file: loadup.lisp
-;;;      module: unified LKB and PAGE loadup environment
-;;;     version: 2.1 -- 26-jul-1994
-;;;  written by: bernd kiefer, dfki saarbruecken
-;;; last update: 14-aug-98
-;;;  updated by: oe, csli stanford
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; author            | date        | modification
-;;; ------------------|-------------|------------------------------------------
-;;;                   |             |
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package :common-lisp-user)
 

@@ -1,3 +1,6 @@
+;;; Copyright (c) 1996-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 ;;; Draw fancy parse trees
 ;;;   Rob Malouf, 8-May-1996
 

@@ -1,10 +1,4 @@
-;;; Copyright Bernard Jones 1993. All Rights Reserved.
-;;; No use or redistribution without permission.
-;;; 
-;;; Bernard Jones
-;;; Computer Laboratory, University of Cambridge
-;;; Pembroke Street
-;;; Cambridge, UK
+;;; Copyright (c) 1993 Bernard Jones - see licence.txt for conditions
 
 (in-package :lkb)
 

@@ -1,3 +1,7 @@
+;;; Copyright (c) 1999-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
+
 ;;;**************************************************************************
 ;;; Provide a World-Wide-Web interface for the LKB.
 ;;;

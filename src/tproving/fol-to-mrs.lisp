@@ -1,3 +1,6 @@
+;;; Copyright (c) 2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 (in-package "MRS")
 
 ;;; Functions for taking a FOL representation and converting

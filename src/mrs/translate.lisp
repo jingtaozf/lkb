@@ -1,3 +1,6 @@
+;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 (in-package :lkb)
 
 ;;; functions that allow for translation (using interlingua)

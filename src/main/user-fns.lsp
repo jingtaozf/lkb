@@ -1,3 +1,6 @@
+;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 ;;; User defined functions - from old globals file
 
 (in-package :lkb)

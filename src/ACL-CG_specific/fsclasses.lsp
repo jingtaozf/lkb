@@ -1,3 +1,7 @@
+;;; Copyright (c) 1997-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
+
 ;;; Classes and methods for various types of graphical
 ;;; object in ACL 5.0 with common graphics.
 ;;; Kept in a separate file, because it's easier if these

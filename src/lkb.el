@@ -1,3 +1,6 @@
+;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 ;;; Add an LKB menu to the emacs menu bar
 
 (defconst lkb-menu

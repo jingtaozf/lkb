@@ -1,3 +1,6 @@
+;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 ;;; Functions for checking MRS stuctures and outputting
 ;;; the possible scoped structures in a linearised notation
 

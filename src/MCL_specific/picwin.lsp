@@ -1,3 +1,7 @@
+;;; Copyright (c) 1993-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen,
+;;; John Bowler, see licence.txt for conditions
+
+
 (in-package :ccl)
 
 (Require 'quickdraw)

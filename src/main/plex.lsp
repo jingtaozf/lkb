@@ -1,6 +1,6 @@
-;;; Copyright Ann Copestake 1991-1997. All Rights Reserved.
-;;; No use or redistribution without permission.
-;;; 
+;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 
 (in-package :lkb)
 

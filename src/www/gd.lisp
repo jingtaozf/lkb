@@ -1,4 +1,6 @@
-;;;-*- Syntax: Common-Lisp; Base: 10; Mode: lisp; Package: gd -*-
+;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 
 ;;;**************************************************************************
 ;;; Provide a lisp interface to gd 1.2 

@@ -1,3 +1,7 @@
+;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
+
 ;;; Define :parse-tree, a new graph type for use with format-graph-from-root,
 ;;; that draws things that look more like traditional parse trees than what's
 ;;; produced by the :tree graph type.

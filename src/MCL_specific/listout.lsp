@@ -1,8 +1,6 @@
-;;; Copyright John Carroll 1998
-;;; All Rights Reserved.
-;;; No use or redistribution without permission.
-;;; 
-;;; Ann Copestake / John Carroll
+;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 
 ;;; outputing active lists in a window - pass in an alist of string / data pairs,
 ;;; a window title, and an alist of menu command string / function pairs.

@@ -1,14 +1,6 @@
-;;; Copyright Ann Copestake 1992. All Rights Reserved.
-;;; No use or redistribution without permission.
-;;; 
-;;; Ann Copestake
-;;; Computer Laboratory, University of Cambridge
-;;; Pembroke Street
-;;; Cambridge, UK
-;;;
-;;; John Carroll 1998
-;;; CSLI, Stanford University
-;;;
+;;; Copyright (c) 1992-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; see licence.txt for conditions
+
 ;;; Rewritten for new unifier
 
 (in-package :lkb)
