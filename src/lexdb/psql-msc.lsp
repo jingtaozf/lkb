@@ -48,19 +48,6 @@
 	  (format stream ",~a" (symb-2-str (pop symb-list))))
     (get-output-stream-string stream)))
 
-;;; prepare val list for SQL INSERT INTO query
-(defun sql-val-list-str (symb-list psql-le)
-  (if (null symb-list) (error (format nil "non-null list expected")))
-  (let ((stream (make-string-output-stream)))
-    (format stream "~a" (make-sql-val-str 
-			 (retr-val psql-le (pop symb-list))))
-    (loop 
-	while symb-list
-	do 
-	  (format stream ",~a" (make-sql-val-str 
-				(retr-val psql-le (pop symb-list)))))
-    (get-output-stream-string stream)))
-
 ;;; create val string for SQL query
 (defun make-sql-val-str (x)
   (cond 
@@ -107,254 +94,6 @@
 	      (push c word-chars)))
       finally (return (reverse (push (implode-from-chars (reverse word-chars)) res)))
 	      ))
-
-;; see also extract-value-by-path
-;;; returns _list_ of values of appropriate type
-(defun work-out-value (type value &key path)
-  (case type
-    (nil
-     (unless (equal value "")
-       (list (str-to-mixed value))))
-    ('mixed
-     (unless (equal value "")
-       (list (str-to-mixed value))))
-    
-    ('str
-     (unless (equal value "")
-       (list (str-to-string value))))
-    ('string
-     (unless (equal value "")
-       (list (str-to-string value))))
-
-    ('sym
-     (unless (equal value "")
-       (list (str-2-symb value))))
-    ('symbol 
-     (unless (equal value "")
-       (list (str-2-symb value))))
-
-    ('str-rawlst
-     (list (string-2-str-list-on-spc value)))
-    ('string-list
-     (list (string-2-str-list-on-spc value)))
-    
-;    ('rawlst
-;     (unless (equal value "")
-;       (str-2-list value) ))
-    ('list 
-     (unless (equal value "")
-       (str-2-list value) ))
-    
-    ('str-lst
-     (unless (equal value "")
-       (expand-string-list-to-fs-list 
-	(string-2-str-list-on-spc value))))
-    ('string-fs
-     (unless (equal value "")
-       (expand-string-list-to-fs-list 
-	(string-2-str-list-on-spc value))))
-    
-    ('str-dlst
-     (unless (equal value "")
-       (expand-string-list-to-fs-diff-list 
-	(string-2-str-list-on-spc value) :path path)))
-    ('string-diff-fs
-     (unless (equal value "")
-       (expand-string-list-to-fs-diff-list 
-	(string-2-str-list-on-spc value) :path path)))
-    (T
-     (typecase type
-       (list
-	(case (first type)
-
-	  ('lst-t
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :elt-path (cddr type)
-	      :top (cadr type))))
-
-	  ('lst
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :elt-path (cdr type))))
-	  ('mixed-fs
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :elt-path (cdr type))))
-
-	  ('dlst-t
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-diff-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :path path
-	      :elt-path (cddr type)
-	      :top (cadr type))))
-
-	  ('dlst
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-diff-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :path path
-	      :elt-path (cdr type))))
-	  ('mixed-diff-fs
-	   (unless (equal value "")
-	     (expand-string-list-to-fs-diff-list-complex 
-	      (string-2-mxd-list-on-spc value)
-	      :path path
-	      :elt-path (cdr type))))
-	  (t
-	   (error "unhandled (list) type: ~a" (first type)))))
-       (T
-	(error "unhandled type"))))))
-
-
-(defun str-to-mixed (val-str)
-  (let ((len (length val-str)))
-    (cond 
-     ((eq (aref val-str 0) #\")
-      (unless (eq (aref val-str (1- len)) #\")
-	(error "STRING val must be of form \\\"STR\\\""))
-      (subseq val-str 1 (1- len)))
-     ((and (eq (aref val-str 0) #\\)
-	  (eq (aref val-str 1) #\"))
-      (str-2-symb (format nil "\"~a" (subseq val-str 2 len))))
-     (t
-      (str-2-symb val-str)))))
-
-(defun str-to-string (val-str)
-  (let ((len (length val-str)))
-    (cond 
-     ((eq (aref val-str 0) #\")
-      (unless (eq (aref val-str (1- len)) #\")
-	(error "STRING val must be of form \\\"STR\\\""))
-      (subseq val-str 1 (1- len)))
-     (t
-      (error "bad format")))))
-
-;;; eg. ("w1" "w2") -> ((FIRST "w1") (REST FIRST "w2") (REST REST *NULL*)) 
-(defun expand-string-list-to-fs-list (string-list)
-  (cond
-   ((equal string-list nil) 
-    (list (list *empty-list-type*)))
-   (t
-    (cons (append *list-head* (list (first string-list))) 
-	  (mapcar #'(lambda (x) (append *list-tail* x))
-		  (expand-string-list-to-fs-list (cdr string-list)))))))   
-
-;;; eg. ("w1" "w2") (A B)-> ((FIRST A B "w1") (REST FIRST A B "w2") (REST REST *NULL*)) 
-(defun expand-string-list-to-fs-list-complex (string-list &key elt-path
-							       (top '*))
-  (cond
-   ((equal string-list nil) 
-    (list (list *empty-list-type*)))
-   ((equal (first string-list)
-	   top)
-    (cons (append *list-head* 
-		  elt-path
-		  (list *toptype*)) 
-	  (mapcar #'(lambda (x) (append *list-tail* x))
-		  (expand-string-list-to-fs-list-complex (cdr string-list)
-							 :elt-path elt-path))))
-   (t
-    (cons (append *list-head* 
-		  elt-path
-		  (list (first string-list))) 
-	  (mapcar #'(lambda (x) (append *list-tail* x))
-		  (expand-string-list-to-fs-list-complex (cdr string-list)
-							 :elt-path elt-path))))))   
-
-;;; eg. ("w1" "w2") path -> ((LIST FIRST "w1") (LIST REST FIRST "w2") (LIST REST REST path)) 
-(defun expand-string-list-to-fs-diff-list (string-list &key path)
-   (mapcar #'(lambda (x) (cons *diff-list-list* x))
-	   (expand-string-list-to-fs-diff-list-aux string-list :path path)))
-
-;;; eg. ("w1" "w2") path -> ((FIRST "w1") (REST FIRST "w2") (REST REST path)) 
-(defun expand-string-list-to-fs-diff-list-aux (string-list &key path)
-  (cond
-   ((equal string-list nil) 
-    (list 
-     (list 
-      (append path 
-	      (list *diff-list-last*)))))
-   (t
-    (cons (append *list-head* (list (first string-list))) 
-	  (mapcar #'(lambda (x) (append *list-tail* x))
-		  (expand-string-list-to-fs-diff-list-aux (cdr string-list) :path path))))))   
-
-;;; eg. ("w1" "w2") path (A B)-> ((LIST FIRST A B "w1") (LIST REST FIRST A B "w2") (LIST REST REST path)) 
-(defun expand-string-list-to-fs-diff-list-complex (string-list &key path elt-path)
-   (mapcar #'(lambda (x) (cons *diff-list-list* x))
-	   (expand-string-list-to-fs-diff-list-complex-aux string-list 
-							   :path path
-							   :elt-path elt-path)))
-
-;;; eg. ("w1" "w2") path (A B) -> ((FIRST A B "w1") (REST FIRST A B "w2") (REST REST path)) 
-(defun expand-string-list-to-fs-diff-list-complex-aux (string-list 
-						       &key path 
-							    elt-path
-							    (top '*))
-  (cond
-   ((equal string-list nil) 
-    (list 
-     (list 
-      (append path 
-	      (list *diff-list-last*)))))
-   ((equal (first string-list)
-	top)
-    (cons 
-     (append *list-head*
-	     (list *toptype*)) 
-     (mapcar #'(lambda (x) (append *list-tail* x))
-	     (expand-string-list-to-fs-diff-list-complex-aux (cdr string-list) 
-							     :path path
-							     :elt-path elt-path))))
-   (t
-    (cons 
-     (append *list-head*
-	     elt-path
-	     (list (first string-list))) 
-     (mapcar #'(lambda (x) (append *list-tail* x))
-	     (expand-string-list-to-fs-diff-list-complex-aux (cdr string-list) 
-							     :path path
-							     :elt-path elt-path))))))   
-
-
-(defun sql-embedded-text (str)
-  (format nil "'~a'" (sql-embedded-text-aux str)))
-
-(defun sql-embedded-text-aux (str)
-  (cond
-   ((equal str "")
-    "")
-   ((eq (char str 0) #\')
-    (format nil "\\'~a" (sql-embedded-text-aux (subseq str 1))))
-   ((eq (char str 0) #\\)
-    (format nil "\\\\~a" (sql-embedded-text-aux (subseq str 1))))
-   (t
-    (format nil "~a~a" (char str 0) (sql-embedded-text-aux (subseq str 1))))))
-
-(defun sql-like-text (str)
-  (format nil "'~a'" (sql-like-text-aux str))
-  )
-
-(defun sql-like-text-aux (str)
-  (cond
-   ((equal str "")
-    "")
-   ((eq (char str 0) #\')
-    (format nil "''~a" (sql-like-text-aux (subseq str 1))))
-   ((eq (char str 0) #\_)
-    (format nil "\\\\_~a" (sql-like-text-aux (subseq str 1))))
-   ((eq (char str 0) #\%)
-    (format nil "\\\\%~a" (sql-like-text-aux (subseq str 1))))
-   ((eq (char str 0) #\\)
-    (format nil "\\\\\\\\~a" (sql-like-text-aux (subseq str 1))))
-   (t
-    (format nil "~a~a" (char str 0) (sql-like-text-aux (subseq str 1))))))
-
 ;;;
 ;;; misc
 ;;;
@@ -420,63 +159,30 @@
 ;;;
 ;;;
 
-(defun duplicates (l &key (test #'equal) (key #'identity))
-  (let ((out))
-    (loop
-        for x in l
-        with x-key
-        with prev
-        with prev-key
-        with dup-set
-        do
-          (setf x-key (apply key (list x)))
-          (setf prev-key (apply key (list prev)))
-          (cond
-           ((apply test (list x-key prev-key))
-            (unless dup-set (setf dup-set (list prev)))
-            (push x dup-set))
-           (t
-            (if dup-set
-                (push dup-set out))
-            (setf dup-set nil)))
-          (setf prev x)
-        finally
-          (if dup-set
-              (push dup-set out)))
-    out))
-
-(defun join-tdl (x &key (stream nil))
-  (format stream "~a := ~a~%" (car x) (cdr x)))
-
-(defun display-tdl-duplicates (lexicon)
-  (let* ((tdl-lex
-          (mapcar #'(lambda (x) 
-		      (let* ((x (read-psort lexicon x :cache nil))
-			     (val-dot-body
-			      (cons (tdl-val-str (lex-entry-id x))
-				    (to-tdl-body x))))
-			(forget-psort lexicon x)
-			val-dot-body))
-                  (collect-psort-ids lexicon)))
-         (tdl-lex-sort 
-          (sort tdl-lex #'string< :key #'cdr))
-         (tdl-lex-dup
-          (duplicates  
-           tdl-lex-sort 
-           :key #'cdr 
-           :test #'string=)))
-    (loop
-        for dup-set in tdl-lex-dup
-        do
-          (format t "~%")
-          (loop
-              for x in dup-set
-              do
-                (join-tdl x :stream t)
-                ))))
-
 (defvar *rc-file* nil)
 (defun rc (&optional file)
   (if file
       (setf *rc-file* file))
   (lkb::recomp *rc-file*))
+
+(defun 2-symb-or-list (x)
+  (if (and (stringp x) (eq (aref x 0) #\())
+      (work-out-value 'list x)
+    (2-symb x)))
+
+(defun to-multi-csv-line (&key name base-name particle type keyrel)
+  (let ((separator (string *postgres-export-separator*)))
+    (format *postgres-export-multi-stream* "~a~%"
+	    (concatenate 'string
+	      name
+	      separator base-name
+	      separator particle
+	      separator type
+	      separator keyrel))
+    ""))
+
+(defun csv-line (&rest str-list)
+  (str-list-2-str str-list
+		  :sep-c *postgres-export-separator*
+		  :null-str "?"))
+

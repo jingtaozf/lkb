@@ -21,39 +21,3 @@
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-csv lexicon ostream)))
 
-;;;
-;;; export to DB
-;;;
-
-(defmethod export-to-db ((lexicon lex-database) output-lexicon)
-  (mapc
-   #'(lambda (x) (to-db (read-psort lexicon x 
-				    :recurse nil
-				    :new-instance t) output-lexicon))
-   (collect-psort-ids lexicon :recurse nil))
-  (build-lex-aux *psql-lexicon*))
-
-(defmethod export-to-tdl ((lexicon lex-database) stream)
-  #+:psql
-  (when (typep *lexicon* 'psql-lex-database)
-    (format t "~%(caching all lexical records)")
-    (cache-all-lex-records *lexicon*)
-    (format t "~%(caching complete)")
-    )
-  (mapc
-   #'(lambda (id)
-       (format stream "~a" (to-tdl (read-psort lexicon id
-					       :new-instance t)))
-       (unexpand-psort lexicon id))
-   (collect-psort-ids lexicon))
-  #+:psql
-  (when (typep *lexicon* 'psql-lex-database)
-    (format t "~%(emptying cache)")
-    (empty-cache *lexicon*)))
-
-(defmethod export-to-tdl-to-file ((lexicon lex-database) filename)
-  (setf filename (namestring (pathname filename)))
-  (with-open-file 
-      (ostream filename :direction :output :if-exists :supersede)
-    (export-to-tdl lexicon ostream)))
-

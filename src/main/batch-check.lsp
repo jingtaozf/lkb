@@ -20,11 +20,8 @@
     (error "please set *batch-check-diff-list*"))))
    
 (defun batch-check-lexicon (&optional (unexpandp t) &key (check-duplicates t))
-  #-:psql
-  (declare (ignore check-duplicates))
   (let ((*batch-mode* t)
 	(start-path (get-diff-list-start-path)))
-    #+:psql
     (when (typep *lexicon* 'psql-lex-database)
       (format t "~%(caching all lexical records)")
       (cache-all-lex-records *lexicon*))
@@ -37,7 +34,6 @@
 		       :unexpandp unexpandp
 		       :start-path start-path)
       ))
-  #+:psql
   (when check-duplicates
     (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")
     (display-tdl-duplicates *lexicon*)
@@ -45,6 +41,33 @@
   (format t "~%(emptying cache)")
   (empty-cache *lexicon*)
   (format t "~%Lexicon checked"))
+
+(defun display-tdl-duplicates (lexicon)
+  (let* ((tdl-lex
+          (mapcar #'(lambda (x) 
+		      (let* ((x (read-psort lexicon x :cache nil))
+			     (val-dot-body
+			      (cons (tdl-val-str (lex-entry-id x))
+				    (to-tdl-body x))))
+			(forget-psort lexicon x)
+			val-dot-body))
+                  (collect-psort-ids lexicon)))
+         (tdl-lex-sort 
+          (sort tdl-lex #'string< :key #'cdr))
+         (tdl-lex-dup
+          (duplicates  
+           tdl-lex-sort 
+           :key #'cdr 
+           :test #'string=)))
+    (loop
+        for dup-set in tdl-lex-dup
+        do
+          (format t "~%")
+          (loop
+              for x in dup-set
+              do
+                (join-tdl x :stream t)
+                ))))
 
 (defun check-lex-entry (id &key unexpandp
 				start-path)

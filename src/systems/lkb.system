@@ -153,7 +153,6 @@
                #+:preprocessor       
                (:file "preprocess")))
 
-     #+:psql  
      (:module "lexdb"
       :source-pathname "lexdb"
       :binary-pathname "lexdb"
@@ -161,19 +160,19 @@
 	      ((:file "headers")
 	       (:file "lex-database")
 	       (:file "lex-entry")
-	       (:file "sql-database")
-	       (:file "sql-query")
-	       (:file "psql-database")
-	       (:file "external-lex-database")
-	       (:file "psql-lex-database")
-	       (:file "psql-lex-entry")
-	       (:file "command")
-	       (:file "psqllex")      ; Postgres lexical source
+	       #+:psql (:file "sql-database")
+	       #+:psql (:file "sql-query")
+	       #+:psql (:file "psql-database")
+	       #+:psql (:file "external-lex-database")
+	       #+:psql (:file "psql-lex-database")
+	       #+:psql (:file "psql-lex-entry")
+	       #+:psql (:file "command")
+	       #+:psql (:file "psqllex")      ; Postgres lexical source
                (:file "psql-msc")     ; misc lexdb functions
-               (:file "psql-db")      ; Postgres DB interface
-               (:file "psql-emacs")   ; Postgres-Emacs interface
-               (:file "psql-mwe")     ; Postgres MWE extensions
-               (:file "lexport")      ; export lexicon in various formats
+               #+:psql (:file "psql-db")      ; Postgres DB interface
+               #+:psql (:file "psql-emacs")   ; Postgres-Emacs interface
+               #+:psql (:file "psql-mwe")     ; Postgres MWE extensions
+               #+:psql (:file "lexport")      ; export lexicon in various formats
                (:file "extract")      ; extract fields for export 
                (:file "gentdl")       ; extract tdl for export
 	))  

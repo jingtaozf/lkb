@@ -70,3 +70,11 @@
 (defclass psql-lex-entry ()
   ((fv-pairs :initarg :fv-pairs)))
 
+#-:psql
+(progn
+  (defun MRS::DUMP-SEMI-TO-PSQL nil)
+  (defun LKB::CACHE-ALL-LEX-RECORDS-ORTH nil)
+  (defun LKB::CACHE-ALL-LEX-RECORDS nil)
+  (defun LKB::RELOAD-ROOTS-MWE nil)
+  (defun LKB::SET-LEX-ENTRY nil)
+  (defun LKB::MAKE-INSTANCE-PSQL-LEX-ENTRY nil))

@@ -37,7 +37,6 @@
 ;;; retrieve SEM-I from psql-lexicon if possible
 ;;; if not, recompile semantic indices as per normal
 (defun index-lexicon nil
-  #+:psql
   (when (typep *lexicon* 'psql-lex-database)
     (format t "~%(caching all lexical records)")
     (cache-all-lex-records-orth *lexicon*))
@@ -84,10 +83,8 @@
 	   ))
       (mrs::check-for-redundant-filter-rules)))
   (setf *batch-mode* nil)
-  #+:psql
   (when (typep *lexicon* 'psql-lex-database)
-    (mrs::dump-semi-to-psql mrs::*semi*))
-  )
+    (mrs::dump-semi-to-psql mrs::*semi*)))
 
 (defun get-compatible-rels (reltype)
   (or (gethash reltype *get-compatible-rels-memo*)

@@ -142,3 +142,11 @@
 (defmethod to-tdl-body ((x lex-entry))
   (p-2-tdl (pack-unifs (lex-entry-unifs x))))
 	  
+(defun extract-pure-source-from-source (source)
+  (let* ((end (position #\( source :test #'equal))
+	 (pure-source (and end (< 1 end)
+			   (subseq source 0 end))))
+    (if pure-source
+	(string-trim '(#\Space) pure-source)
+      source)))
+

@@ -66,6 +66,8 @@
         (u-value-type rhs)))))
 
 (defun extract-field (x field-kw &optional fields-map)
+  (unless *psql-lexicon*
+    (error "*psql-lexicon* is unset"))
   (if (stringp field-kw)
       (setf field-kw (str-2-keyword field-kw)))
   (let* ((fields-map (or fields-map (fields-map *psql-lexicon*)))

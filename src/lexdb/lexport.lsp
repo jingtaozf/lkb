@@ -106,22 +106,6 @@
 	    (extra-lexicons lexicon))))
 
 
-(defun csv-line (&rest str-list)
-  (str-list-2-str str-list
-		  :sep-c *postgres-export-separator*
-		  :null-str "?"))
-
-(defmethod to-multi-csv-line (&key name base-name particle type keyrel)
-  (let ((separator (string *postgres-export-separator*)))
-    (format *postgres-export-multi-stream* "~a~%"
-	    (concatenate 'string
-	      name
-	      separator base-name
-	      separator particle
-	      separator type
-	      separator keyrel))
-    ""))
-
 ;;;
 ;;; export to .tdl file
 ;;;
@@ -180,14 +164,6 @@
 	  date
 	(format t "WARNING: unable to determine modstamp for grammar")))))
       
-(defun extract-pure-source-from-source (source)
-  (let* ((end (position #\( source :test #'equal))
-	 (pure-source (and end (< 1 end)
-			   (subseq source 0 end))))
-    (if pure-source
-	(string-trim '(#\Space) pure-source)
-      source)))
-
 (defun get-current-source nil
   (let ((version (or (and (find-package :lkb)
 			  (find-symbol "*GRAMMAR-VERSION*" :lkb))

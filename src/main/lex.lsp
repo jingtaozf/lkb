@@ -580,7 +580,6 @@
   (with-slots (lexical-entries psorts cache-lex-list) lexicon
     (when (fboundp 'clear-generator-lexicon)
       (funcall 'clear-generator-lexicon))
-    #+:psql
     (if (typep lexicon 'external-lex-database)
 	(call-next-method))
     (clrhash lexical-entries)
@@ -779,12 +778,6 @@
    ((symbolp x) x)
    ((stringp x) (str-2-symb x))
    (t (error "unhandled type"))))
-
-#+:psql
-(defun 2-symb-or-list (x)
-  (if (and (stringp x) (eq (aref x 0) #\())
-      (work-out-value 'list x)
-    (2-symb x)))
 
 (defun 2-str (x)
   (cond
