@@ -590,14 +590,13 @@ QEQ -> VARNAME RELNNAME VARNAME
 
 
 (defun read-mrs-files-aux (file-names)
-   (let ((*readtable* (make-mrs-break-table)))
-      (for file-name in file-names
-         append
-         (format t "~%Reading in MRS file ~A" (pathname-name file-name))
-         (force-output t)
-         (with-open-file 
-            (istream file-name :direction :input)
-           (read-mrs-stream istream)))))
+  (for file-name in file-names
+       append
+       (format t "~%Reading in MRS file ~A" (pathname-name file-name))
+       (force-output t)
+       (with-open-file 
+           (istream file-name :direction :input)
+         (read-mrs-stream istream))))
 
 (defun read-mrs-stream (istream) 
   (let ((psoas nil))
@@ -615,20 +614,21 @@ QEQ -> VARNAME RELNNAME VARNAME
   "temporary storage of variables read in in one MRS")
 
 (defun read-mrs (istream)
+  (let ((*readtable* (make-mrs-break-table)))
 ;;;  MRS -> [ LTOP INDEX LISZT HCONS ]
-  (setf *already-read-vars* nil)
-  (mrs-check-for #\[ istream)
-  (let* ((ltop (read-mrs-ltop istream))
-         (index (read-mrs-index istream))
-         (liszt (read-mrs-liszt istream))
-         (hcons (read-mrs-hcons istream))
-         (psoa
-          (make-psoa :top-h ltop
-                     :index index
-                     :liszt liszt
-                     :h-cons hcons)))
-    (mrs-check-for #\] istream)
-    psoa))
+    (setf *already-read-vars* nil)
+    (mrs-check-for #\[ istream)
+    (let* ((ltop (read-mrs-ltop istream))
+           (index (read-mrs-index istream))
+           (liszt (read-mrs-liszt istream))
+           (hcons (read-mrs-hcons istream))
+           (psoa
+            (make-psoa :top-h ltop
+                       :index index
+                       :liszt liszt
+                       :h-cons hcons)))
+      (mrs-check-for #\] istream)
+      psoa)))
 
 (defun read-mrs-ltop (istream)
 ;;;  LTOP -> top: VAR
