@@ -190,7 +190,7 @@
 					  (edge-id edge-record)
 					  (if (g-edge-p edge-record) "G" "P"))))))
      (check-algebra       
-      (let ((parse-tdfs (and (edge-p edge-record) (edge-dag edge-record))))
+      (let ((parse-tdfs (if (edge-p edge-record) (edge-dag edge-record))))
         (when (tdfs-p parse-tdfs)
 	  (show-mrs-sement-check-window parse-tdfs edge-record
 				  (format nil "Edge ~A ~A - algebra check" 

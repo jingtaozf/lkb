@@ -63,7 +63,18 @@ order in an MRS")
       (head-gap-rule-1 1 nil) ; modifies slots
       (head-gap-rule-2 1 (COMP2))		; modifies slots
       (head-gap-rule-3 1 (COMP1))	; modifies slots
-      (head-filler-rule 2 (GAP))))
+      (head-filler-rule 2 (GAP1))
+      (dative-shift-lrule 1 nil)	; modifies slots
+      (past-v_irule 1 nil)
+      (non3sg-v_irule 1 nil)
+      (non3sg-v-regular_irule 1 nil)
+      (3sg-v_irule 1 nil)
+      (pres-part-v_irule 1 nil)
+      (past-part-v_irule 1 nil)
+      (infl-v_irule 1 nil)
+      (pl-noun_irule 1 nil) 
+      (sg-noun_irule 1 nil)
+      (const-pump 1 nil)))
       
 ;;;  rule-name   semhead slot
 

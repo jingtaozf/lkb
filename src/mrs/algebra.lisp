@@ -128,13 +128,10 @@
 	  (make-slot :hook slot-hook
 		     :name (create-slot-name (cdr slot))))))
 
-;;; for mrscomp grammar we want (lkb::sem) in the ignore-paths list
-
-
 (defun create-slot-name (paths)
   ;;; slot naming
   ;;; a slot gets named after the list of features on the trimmed path
-  ;;; LIST features are interpreted so that we get
+  ;;; list features are interpreted so that we get
   ;;; COMPS1 etc
   ;;;
   ;;; in the case of multiple paths leading to the same 
@@ -150,7 +147,10 @@
 	  (loop for path in paths
 	      collect
 		(let* ((trimmed-path
-			(remove-if #'(lambda (x) (member x *non-slot-features*)) path))
+			(remove-if #'(lambda (x)
+				       (or (eql x lkb::*diff-list-list*)
+					   (member x *non-slot-features*))) 
+				   path))
 		       (path-with-counts
 			(reverse
 			 (trimmed-path-name trimmed-path 0 nil first-feat rest-feat))))
@@ -161,8 +161,6 @@
 					    (< (length x) (length y))))))
 	  (format nil "~A/~{~A~}" (car sorted-names) (cdr sorted-names)))
       (car names))))
-
-;;; FIX - GAP is a difference list
 
 (defun trimmed-path-name (path count name-so-far first-feat rest-feat)
   (if (null path) name-so-far
@@ -178,25 +176,37 @@
 
 ;;; Checking that the algebra is obeyed
 
-;;; Check an individual rule application
-;;; this relies on *rule-algebra-table* which should be specified
+;;; Check an individual rule application.
+;;; This relies on *rule-algebra-table* which should be specified
 ;;; in the mrsglobals file for the grammar for now
+;;;
+;;; We reconstruct the daughter sements and then see if the
+;;; mother sement we construct according to the algebra matches the
+;;; sement we actually get from the feature structure.
 
 (defun check-algebra (sement edge-record)
   (setf *mrs-comparison-output-messages* nil)
   (let ((reconstructed-sement nil)
 	(count 0))
+    ;;; count is used as a starting count for variable numbering -
+    ;;; the first daughter variables start at 1000, next at 2000 and so
+    ;;; on.  This prevents name clashes.
     (if (lkb::edge-p edge-record)
 	(let* ((rule-struct (lkb::edge-rule edge-record))
 	       (*mrs-comparison-output-control* :save)
+	       ;;; comparison messages are stored up and output
+	       ;;; in a window etc at the end
 	       (rule (if (lkb::rule-p rule-struct) (lkb::rule-id rule-struct))) 
 	       (rule-record (if rule (assoc rule *rule-algebra-table* 
 					    :test #'string-equal)))) ; lose packages
 	  (if rule
-	      (let ((dtrs (lkb::edge-children edge-record)))
-		(if rule-record
+	      (let ((dtrs (if (lkb::edge-morph-history edge-record)
+			      (list (lkb::edge-morph-history edge-record))
+			    (lkb::edge-children edge-record))))
+		(if rule-record    
 		    (let* ((edge-sements (loop for dtr in dtrs
-					     when (lkb::edge-p dtr)
+					     when (and (lkb::edge-p dtr)
+						       (lkb::edge-dag dtr))
 					     collect
 					       (progn
 						 (setf count (+ count 1000))
@@ -205,18 +215,19 @@
 			   (head (cadr rule-record))
 			   (slots (caddr rule-record))
 			   (order (cadddr rule-record)))
-		      (setf reconstructed-sement
-			(reconstruct-sement edge-sements
-						head slots order))
+		      (when edge-sements
+			(setf reconstructed-sement
+			  (reconstruct-sement edge-sements
+					      head slots order)))
 		      (if reconstructed-sement
 			  (compare-sements reconstructed-sement sement)
 			(mrs-comparison-output "Cannot reconstruct sement")))
 		  (if (cdr dtrs)
       ;;; can't find rule
 		      (mrs-comparison-output 
-		       "Warning: Non-unary rule ~A missing from algebra table" rule)
+		       "Warning: Non-unary rule ~A missing ~%from algebra table" rule)
 		    (mrs-comparison-output 
-		     "Unary rule ~A not in algebra table: algebra OK unless C-CONT" rule))))
+		     "Unary rule ~A not in algebra table: ~%algebra OK unless C-CONT" rule))))
 	    (mrs-comparison-output 
 	     "Sement corresponds to lexical entry: no check done"))))
     (values *mrs-comparison-output-messages* reconstructed-sement)))
@@ -434,5 +445,69 @@
      (hcons-outscpd hcons) bindings))
   hcons-list)
   
-        
+;;; Checking an entire parse
+;;;
+;;; The code is called on each edge in a chart
+;;; this is designed to be called while going through some test suite
+;;; lkb::*do-something-with-parse*
 
+#|
+(defparameter lkb::*do-something-with-parse* 'mrs::check-algebra-on-chart)
+|#
+
+(defun check-algebra-on-chart nil
+  ;;; packing must not be used
+  (let ((sentence lkb::*sentence*)
+        (ostream (if (and lkb::*ostream* 
+                          (streamp lkb::*ostream*) 
+                          (output-stream-p lkb::*ostream*)) 
+                     lkb::*ostream*  t)))
+    (format ostream "~%~A~%" sentence)
+    (loop
+	for i from 1 to lkb::*chart-limit*
+	while (check-algebra-chart-entry i (aref lkb::*chart* i 0) 
+					 ostream))))
+  
+
+(defun check-algebra-chart-entry (vertex item stream)
+  (if item 
+    (progn
+      (dolist
+         (configuration
+            (sort (copy-list (lkb::chart-entry-configurations item))
+               #'(lambda (span1 span2)
+                   (cond
+                      ((eql (lkb::chart-configuration-begin span1)
+                          (lkb::chart-configuration-begin span2))
+                         (< (lkb::edge-id (lkb::chart-configuration-edge span1))
+                            (lkb::edge-id (lkb::chart-configuration-edge span2))))
+                      (t
+                        (< (lkb::chart-configuration-begin span1)
+                           (lkb::chart-configuration-begin span2)))))))
+        (check-algebra-chart-item configuration stream))
+      t)
+    (aref lkb::*morphs* vertex)))
+
+(defun check-algebra-chart-item (item stream)
+  (let* ((edge (if (lkb::edge-p item) 
+		   item 
+		 (lkb::chart-configuration-edge item)))
+	 (edge-id (if (lkb::edge-p edge) (lkb::edge-id edge)))
+	 (parse-fs (if (and (lkb::edge-p edge) 
+			      (lkb::edge-dag edge)
+			      (lkb::tdfs-p (edge-dag edge)))
+			 (lkb::edge-dag edge)))
+	 (rule-struct (lkb::edge-rule edge)))
+    (when (and parse-fs (lkb::rule-p rule-struct))
+      (initialise-algebra)
+      (let ((sement 
+	     (extract-algebra-from-fs (lkb::tdfs-indef parse-fs))))
+	(if sement
+	  (let ((messages
+		 (check-algebra sement edge)))
+	    (when messages
+		(format stream "Edge ~A~%" edge-id)
+		(dolist (message messages)
+		  (format stream "~A~%" message stream))))
+	  (format stream 
+		  "~%Edge ~A: Sement structure could not be extracted" edge-id))))))
