@@ -46,6 +46,17 @@
 
 #+:packing
 (defparameter *chart-packing-p* nil)
+
+;;;
+;;; chart packing under (partial) subsumption is experimental; known problems
+;;;
+;;;   - because packing is only attempted within the active parser, it cannot 
+;;;     (yet) apply to lexical processing; thus, similar lexical items may well
+;;;     proliferate and make life harder than necessary.
+;;;
+;;;   - when computing the rule filter and quick check vectors, the paths that
+;;;     are ignored in packing mode (i.e. in subsumption and unification) need
+;;;     to be excluded.
 
 (defstruct (active-chart-configuration (:include chart-configuration))
   open
@@ -94,11 +105,12 @@
                  (chart-entry-configurations by-end)
                  :test #'eq :count 1)))))
 
-(defun complete-chart (begin end)
+(defun complete-chart (begin end &optional (packingp *chart-packing-p*))
 
   (let ((*active-edge-id* 0)
         (*minimal-vertex* begin)
-        (*maximal-vertex* end))
+        (*maximal-vertex* end)
+        (*partial-dag-interpretation* (and packingp '(cont))))
     (declare (special *active-edge-id* *minimal-vertex* *maximal-vertex*))
     ;;
     ;; initialize *aagenda* through postulation of rules over all passive
@@ -292,47 +304,89 @@
               (process-active-and-passive active passive)
               (incf *filtered-tasks*))))))
 
+;;;
+;;; packing is substantially more complex in retroactive mode: when a new edge
+;;; (.edge.) is found to subsume an existing edge (.oedge.), we need to
+;;;
+;;;   - pack .oedge. into .edge. (unless .oedge. is frozen, see below);
+;;;   - raise all packings from .oedge. into .edge.;
+;;;   - delete .oedge. from the chart;
+;;;   - make sure .oedge. will not be processed further (including pending 
+;;;     tasks on the agenda that involve .oedge.);
+;;;   - block further processing for all edges that were already derived from
+;;;     .oedge. (since .edge. is guaranteed to derive host edges for them).
+;;;
+;;; given the `release' (jul-99) grammar and the input `then, i guess that is
+;;; settled' we get the following situation:
+;;;
+;;;   [62] { [158 < 157; 150 < 149] and [157] { [149 < 74 148]
+;;;
+;;; because [150] is packed already when [149] gets packed retroactively.  this
+;;; situation requires that we further complicate our notion of edge freezing.
+;;;
+;;; to block processing of edges and their derivatives when they are packed
+;;; retroactively, the `frozen' slot in the edge structure is used.  any edge
+;;; that was frozen is ignored by the parser.  however, in the unpacking phase
+;;; [149] still represents a valid reading, while [150] is a spurious duplicate
+;;; of the tree [158 < 149].  hence, the following distinction is made:
+;;;
+;;;   - edges that were frozen to block further processing because they were
+;;;     packed retroactively;
+;;;   - edges that were globally invalidated because one of their childres was
+;;;     packed retroactively.
+;;;
+;;; the second class is marked with a negative `frozen' value and ignored in
+;;; the unpacking phase.  this was hard to debug.          (17-sep-99  -  oe)
+;;;
 #+:packing
-
 (defun packed-edge-p (start end edge)
-  (loop
-      with dag = (tdfs-indef (edge-dag edge))
-      for configuration in (passives-by-start start)
-      when (= (chart-configuration-end configuration) end) do
-        (let* ((oedge (chart-configuration-edge configuration))
-               (odag  (tdfs-indef (edge-dag oedge))))
-          (multiple-value-bind (forwardp backwardp)
-              (dag-subsumes-p odag dag)
-            (when forwardp
-              #+:pdebug
-              (format 
-               t 
-               "~&packed-edge-p(): ~
-                packing <~d> into <~d>.~%"
-               (edge-id edge) (edge-id oedge))
-              (push edge (edge-packed oedge))
-              (incf *packings*)
-              (return configuration))
-            #+:bug
-            (when backwardp
-              #+:pdebug
-              (format 
-               t 
-               "~&packed-edge-p(): ~
-                ~:[~;(re)~]packing <~d> into <~d> (backwards).~%"
-               (edge-frozen oedge) (edge-id oedge) (edge-id edge))
-              (setf (edge-packed edge) (edge-packed oedge))
-              (passives-delete configuration)
-              (unless (edge-frozen oedge)
-                (push oedge (edge-packed edge))
-                (labels ((freeze (edge)
-                           (unless (edge-frozen edge)
-                             (setf (edge-frozen edge) t)
-                             (loop 
-                                 for parent in (edge-parents edge) do
-                                   (freeze parent)))))
-                  (freeze oedge))))))
-      finally (return nil)))
+  (labels ((freeze (edge id &optional recursivep)
+             (when (or (null (edge-frozen edge))
+                       (plusp (edge-frozen edge))
+                       (minusp id))
+               #+:pdebug
+               (format
+                t
+                "~&freeze(): freezing <~d> for <~d>.~%"
+                (edge-id edge) id)
+               (setf (edge-frozen edge) id))
+             (loop 
+                 with id = (if recursivep id (- id))
+                 for parent in (edge-parents edge) do
+                   (freeze parent id t))))
+    (loop
+        with dag = (tdfs-indef (edge-dag edge))
+        for configuration in (passives-by-start start)
+        when (= (chart-configuration-end configuration) end) do
+          (let* ((oedge (chart-configuration-edge configuration))
+                 (odag  (tdfs-indef (edge-dag oedge))))
+            (multiple-value-bind (forwardp backwardp)
+                (dag-subsumes-p odag dag)
+              (when (and forwardp (null (edge-frozen oedge)))
+                #+:pdebug
+                (format 
+                 t 
+                 "~&packed-edge-p(): ~
+                  packing <~d> into <~d>.~%"
+                 (edge-id edge) (edge-id oedge))
+                (push edge (edge-packed oedge))
+                (incf *packings*)
+                (return configuration))
+              (when backwardp
+                #+:pdebug
+                (format 
+                 t 
+                 "~&packed-edge-p(): ~
+                  ~:[~;(re)~]packing <~d> into <~d> (backwards).~%"
+                 (edge-frozen oedge) (edge-id oedge) (edge-id edge))
+                (setf (edge-packed edge) 
+                  (nconc (edge-packed edge) (edge-packed oedge)))
+                (setf (edge-packed oedge) nil)
+                (passives-delete configuration)
+                (unless (edge-frozen oedge)
+                  (push oedge (edge-packed edge)))
+                (freeze oedge (edge-id edge)))))
+        finally (return nil))))
 
 (defun process-rule-and-passive #+:agenda (task)
                                 #-:agenda (rule passive)
@@ -428,11 +482,15 @@
                 (process-active-and-passive active passive atdfs)))
             (fundamental4active active)))
          (t
+          #+:packing
+          (when *chart-packing-p*
+            (loop
+                for edge in (edge-children nedge) do
+                  (push nedge (edge-parents edge))))
           (unless #+:packing
                   (and *chart-packing-p* (packed-edge-p begin end nedge))
                   #-:packing
                   nil
-            (push nedge (edge-parents edge))
             (fundamental4passive
              (make-chart-configuration
               :begin begin :end end :edge nedge)))))))))
@@ -448,8 +506,13 @@
                #+:agenda (rest task) #-:agenda passive)
 
   #+:packing
-  (when (edge-frozen (chart-configuration-edge #+:agenda (rest task)
-                                               #-:agenda passive))
+  (when (or (edge-frozen (chart-configuration-edge 
+                          #+:agenda (rest task) #-:agenda passive))
+            (loop
+                for edge in (edge-children 
+                             (chart-configuration-edge 
+                              #+:agenda (first task) #-:agenda active))
+                thereis (edge-frozen edge)))
     (return-from process-active-and-passive nil))
 
   (let* (#+:agenda (active (first task))
@@ -527,11 +590,15 @@
             :begin begin :end end :edge nedge
             :open open :forwardp (< key (first open)))))
          (t
+          #+:packing
+          (when *chart-packing-p*
+            (loop
+                for edge in (edge-children nedge) do
+                  (push nedge (edge-parents edge))))
           (unless #+:packing
                   (and *chart-packing-p* (packed-edge-p begin end nedge))
                   #-:packing
                   nil
-            (push nedge (edge-parents pedge))
             (fundamental4passive
              (make-chart-configuration
               :begin begin :end end :edge nedge)))))))))
@@ -560,13 +627,9 @@
 (defun tdfs-qc-vector (tdfs &optional path)
   (let* ((dag (x-existing-dag-at-end-of (deref-dag (tdfs-indef tdfs)) path))
          (vector (x-restrict-fs dag)))
-    #+:adebug
-    (when *adebugp*
-      (format t "tdfs-qc-vector(): ~s;~%" vector))
+    #+:qcdebug
+    (format t "tdfs-qc-vector(): ~s;~%" vector)
     vector))
-
-#+:adebug
-(defparameter *adebugp* t)
 
 #+:adebug
 (defun debug-label (object)
@@ -586,31 +649,40 @@
 
 #+:adebug
 (defun print-trace (context object)
-  (when *adebugp*
-    (if (rule-p object)
-      (let* ((label (debug-label object))
-             (open (rule-rhs object)))
-        (format
-         t
-         "~(~a~)(): `~(~a~)' [open: ~{~a~^ ~}];~%"
-         context label open))
-      (let* ((begin (chart-configuration-begin object))
-             (end (chart-configuration-end object))
-             (label (debug-label object))
-             (edge (chart-configuration-edge object))
-             (id (edge-id edge))
-             (children (loop 
-                           for child in (edge-children edge)
-                           collect (edge-id child)))
-             (open (when (active-chart-configuration-p object)
-                     (active-chart-configuration-open object)))
-             (forwardp (when (active-chart-configuration-p object)
-                         (active-chart-configuration-forwardp object))))
-        (format 
-         t
-         "~(~a~)(): ~d-~d: ~a (~a < ~{~a~^ ~})~
-          ~@[ [open: ~{~a~^ ~} - ~:[backwards~;forward~]]~];~%"
-         context begin end label id children open forwardp)))))
+  (if (rule-p object)
+    (let* ((label (debug-label object))
+           (open (rule-rhs object)))
+      (format
+       t
+       "~(~a~)(): `~(~a~)' [open: ~{~a~^ ~}];~%"
+       context label open))
+    (let* ((begin (chart-configuration-begin object))
+           (end (chart-configuration-end object))
+           (label (debug-label object))
+           (edge (chart-configuration-edge object))
+           (id (edge-id edge))
+           (children (loop 
+                         for child in (edge-children edge)
+                         collect (edge-id child)))
+           (open (when (active-chart-configuration-p object)
+                   (active-chart-configuration-open object)))
+           (forwardp (when (active-chart-configuration-p object)
+                       (active-chart-configuration-forwardp object))))
+      (format 
+       t
+       "~(~a~)(): ~d-~d: ~a (~a < ~{~a~^ ~})~
+        ~@[ [open: ~{~a~^ ~} - ~:[backwards~;forward~]]~];~%"
+       context begin end label id children open forwardp))))
+
+(defun mark (edge &optional (id (edge-id edge)))
+  (unless (and (edge-frozen edge) (minusp (edge-frozen edge)))
+    (setf (edge-frozen edge) id)
+    (loop
+        for edge in (edge-children edge) do
+          (mark edge id))
+    (loop
+        for edge in (edge-packed edge) do
+          (mark edge id))))
 
 #+:cray
 (defun unpack-edge (edge &optional insidep)
@@ -645,18 +717,17 @@
                                                 (restrict-and-copy-tdfs 
                                                  result)))))
           when instantiation collect instantiation)))))
-
+
 ;;;
 ;;; the unfolding of packed edges still takes substantially more time than we
 ;;; would like it to.  this version behaves exactly like the existing code for
 ;;; tree drawing (modulo the matching of nodes against tree node labels).
 ;;;
-;;; once thing we should try is to maintain a reference counter on rules (per
+;;; one thing we should try is to maintain a reference counter on rules (per
 ;;; derivation); then, only rules that were used more than just once, had to be
 ;;; copied out.  however, it is not obvious how (and whether) the counting
 ;;; could be done in just one pass.
 ;;;
-
 (defun unpack-edge (edge)
   ;;
   ;; unfold tree structure below .edge.  we have to do two passes to be able
@@ -664,134 +735,160 @@
   ;; context; since the edges may share children, each recursive level would
   ;; have to return copies otherwise.
   ;;
-  (labels ((unpack-edge! (edge &optional insidep)
-             (let ((children (edge-children edge)))
-               (cond
-                #+:bug ((edge-frozen edge) nil)
-                ((and (edge-packed edge) (null insidep))
-                 (nconc (unpack-edge! edge t)
-                        (loop
-                            for edge in (edge-packed edge)
-                            nconc (unpack-edge! edge))))
-                ((null children)
-                 (list edge))
-                (t
+  (let* ((*chart-packing-p* nil)
+         (nrules 
+          (+ (hash-table-count *lexical-rules*) (hash-table-count *rules*)))
+         (counter (make-array nrules :element-type 'fixnum)))
+    (labels ((cross-product (lists)
+               (if (null (rest lists))
                  (loop
-                     with daughters = (loop
-                                          for edge in children
-                                          collect (unpack-edge! edge))
-                     with decompositions = (cross-product daughters)
-                     for decomposition in decompositions
-                     collect (cons edge decomposition))))))
-           (instantiate (derivation)
-             (if (edge-p derivation)
-               ;;
-               ;; a leaf node: for now ignore spelling change (`morph-history')
-               ;; and just copy the corresponding feature structure; if lexical
-               ;; rules delete daughter features (which they probably do), then
-               ;; this should be refined some day.           (19-jul-99  -  oe)
-               ;;
-               (copy-tdfs-completely (edge-dag derivation))
-               ;;
-               ;; descend recursively into all children; then reapply the rule
-               ;; originally used to build this edge to all resulting feature
-               ;; structures; needs to copy rule because it may be used more
-               ;; than just once in this derivation.
-               ;;
-               (let ((edge (first derivation))
-                     (children (rest derivation)))
+                     for foo in (first lists) collect (list foo))
                  (loop
-                     with rule = (edge-rule edge)
-                     with paths = (rest (rule-order rule))
-                     with result = (copy-tdfs-completely (rule-full-fs rule))
-                     for child in children
-                     for tdfs = (instantiate child)
-                     for path in paths
-                     unless tdfs return nil
-                     while result do
-                       (setf result (yadu! result tdfs path))
-                     finally (return result))))))
-    ;;
-    ;; first unfold all packed nodes into a list of derivations; a derivation
-    ;; is represented as a list of edges here, where the first() is the root
-    ;; node at each level
-    ;;
-    (let ((derivations (unpack-edge! edge)))
-      (loop
-          for derivation in derivations 
-          for instantiation = (with-unification-context (ignore)
-                                (let ((result (instantiate derivation)))
-                                  (when result
-                                    (copy-tdfs-elements result))))
-          when instantiation collect instantiation))))
-
-(defstruct extension
-  id
-  position
-  path
-  edge)
-
-#+:fixme
-(defun validate-edge (edge)
-  (labels ((embed (extensions path)
-             (cond
-              ((extension-p extensions)
-               (setf (extension-path extensions)
-                 (append path (extension-path extensions))))
-              ((consp extensions)
-               (embed (first extensions) path)
-               (embed (first extensions) path))))
-           (instantiate (edge)
-             (if (edge-children edge)
-               (let* ((rule (edge-rule edge))
-                      (paths (rest (rule-order rule)))
-                      (result (copy-tdfs-completely (rule-full-fs rule)))
-                      extensions)
+                     with rests = (cross-product (rest lists))
+                     for foo in (first lists)
+                     nconc (loop
+                               for bar in rests
+                               collect (cons foo bar)))))
+
+             (unpack-edge! (edge &optional insidep)
+               (let ((children (edge-children edge))
+                     (morphology (edge-morph-history edge)))
+                 (cond
+                  ((and (edge-frozen edge) (minusp (edge-frozen edge)))
+                   (format t "ignoring <~d>~%" (edge-id edge))nil)
+                  ((and (edge-packed edge) (null insidep))
+                   (nconc (unpack-edge! edge t)
+                          (loop
+                              for edge in (edge-packed edge)
+                              nconc (unpack-edge! edge))))
+                  (children
+                   (loop
+                       with daughters = (loop
+                                            for edge in children
+                                            collect (unpack-edge! edge))
+                       with decompositions = (cross-product daughters)
+                       for decomposition in decompositions
+                       collect (cons edge decomposition)))
+                  (morphology
+                   (loop
+                       with decompositions = (unpack-edge! morphology)
+                       for decomposition in decompositions
+                       collect (list edge decomposition)))                
+                  ((null children)
+                   (list edge))
+                  (t
+                   (error 
+                    "unpack-edge!(): implausible edge # ~d." 
+                    (edge-id edge))))))
+
+             (count (action &optional rule)
+               (if (eq action :reset)
                  (loop
-                     for child in (edge-children edge)
-                     for path in paths
-                     while result do
-                       (multiple-value-bind (tdfs overlays)
-                           (instantiate child)
+                     for i from 0 to (- nrules 1) do
+                       (setf (aref counter i) 0))
+                 (let ((index (and (rule-p rule) (rule-apply-index rule))))
+                   (cond
+                    ((null index) 0)
+                    ((eq action :add)
+                     (incf (aref counter index)))
+                    (t 
+                     (aref counter index))))))
+
+             (edge-label (edge)
+               (if (rule-p (edge-rule edge))
+                 (rule-id (edge-rule edge)) 
+                 (first (edge-lex-ids edge))))
+
+             (recode (tree &optional reset)
+               (when reset (count :reset))
+               (if (edge-p tree)
+                 (list (edge-label tree))
+                 (let ((edge (first tree))
+                       (children (rest tree)))
+                   (count :add (edge-rule edge))
+                   (cons (edge-label edge)
+                         (loop 
+                             for edge in children
+                             collect (recode edge))))))
+             
+             (instantiate (tree)
+               (if (edge-p tree)
+                 ;;
+                 ;; a leaf node: for the time being ignore spelling change
+                 ;; (`morph-history') and just copy the corresponding feature
+                 ;; structure; if inflectional rules delete daughter features
+                 ;; (which they probably do), then this should be refined some
+                 ;; day soon.
+                 ;;                                         (19-jul-99  -  oe)
+                 ;;
+                 (copy-tdfs-completely (edge-dag tree))
+                 ;;
+                 ;; descend recursively into all children; then reapply the
+                 ;; rule originally used to build this edge to all resulting
+                 ;; feature structures; needs to copy rule because it may be
+                 ;; used more than just once in this derivation.
+                 ;;
+                 (let ((edge (first tree))
+                       (children (rest tree)))
+                   (loop
+                       with rule = (edge-rule edge)
+                       with fs = (rule-full-fs rule)
+                       with paths = (rest (rule-order rule))
+                       with count = (count :get rule)
+                       with result = (if (> count 1)
+                                       (copy-tdfs-completely fs)
+                                       fs)
+                       for child in children
+                       for tdfs = (instantiate child)
+                       unless tdfs return nil
+                       for path in paths
+                       while result do
                          (setf result (yadu! result tdfs path))
-                         (when overlays
-                           (embed overlays path)
-                           (push overlays extensions))))
-                 (let* ((id (edge-id edge))
-                        (overlays
-                         (loop
-                             for edge in (edge-packed edge)
-                             for i from 0
-                             for overlay = (make-extension
-                                            :id id :position i 
-                                            :path nil :edge edge)
-                             collect (list overlay))))
-                   (unless result
-                     (error 
-                      "instantiate(): ~
-                       reconstruction of edge # ~d failed."
-                      id))
-                   (values result 
-                           (cross-product (cons overlays extensions)))))
-               (copy-tdfs-completely (edge-dag edge)))))
-    (let (skeleton extensions)
-      (with-unification-context (ignore)
-        (multiple-value-bind (result overlays)
-            (instantiate edge)
-          (setf skeleton (copy-tdfs-elements result))
-          (setf extensions overlays)))
-      (values skeleton extensions))))
+                       finally (return result)))))
+
+             (rootp (tdfs)
+               (loop 
+                   for root in (if (listp *start-symbol*)
+                                 *start-symbol*
+                                 (list *start-symbol*))
+                   for rtdfs = (get-tdfs-given-id root)
+                   thereis (and rtdfs (yaduablep tdfs rtdfs)))))
+      ;;
+      ;; first unfold all packed nodes into a list of derivations; a derivation
+      ;; is represented as a list of edges here, where the first() is the root
+      ;; node at each level
+      ;;
+      (let ((trees (unpack-edge! edge)))
+        (loop
+            for tree in trees for i from 0
+            for derivation = (recode tree :reset)
+            for instantiation = (with-unification-context (ignore)
+                                  (let ((result (instantiate tree)))
+                                    (when (and result
+                                               (rootp result))
+                                      result
+                                      #+:foo
+                                      (copy-tdfs-elements result))))
+            when instantiation collect derivation)))))
 
-(defun cross-product (lists)
-  ;;
-  ;; ((a b) (1 2)) --> ((A 1) (A 2) (B 1) (B 2))
-  ;;
-  (if (null (rest lists))
-    (loop
-        for foo in (first lists) collect (list foo))
-    (loop
-        with rests = (cross-product (rest lists))
-        for foo in (first lists)
-        nconc (loop
-                  for list in rests
-                  collect (cons foo list)))))
+#+:test
+(let ((*active-parsing-p* t)
+      (*show-parse-p* nil)
+      (*first-only-p* nil)
+      (*chart-packing-p* t)
+      contemplated filtered executed successful packings)
+  (time (multiple-value-setq (contemplated filtered
+                              executed successful
+                              packings)
+          (do-parse-tty "it is cafeteria style.")))
+  (format
+   t
+   "~&~d trees; ~d packings; ~d readings; ~d edges~%"
+   (length *parse-record*)
+   packings
+   (if *chart-packing-p*
+     (loop
+         for edge in *parse-record*
+         sum (length (unpack-edge edge)))
+     (length *parse-record*))
+   (tsdb::get-field :pedges (summarize-chart))))

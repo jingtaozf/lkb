@@ -37,6 +37,17 @@
 (defvar *visit-generation-max* 1)
 
 ;;;
+;;; when packing the chart, we want to be able to exclude certain parts of the
+;;; structures from the subsumption test; accordingly, those parts need to be
+;;; ignored in unification: otherwise we risk packing a less specific edge into
+;;; a more specific host (and sacrifice completeness).  our current best way to
+;;; ignore parts of feature structures is to specifiy a list of features (not
+;;; paths); e.g. wherever `CONT' is seen in a structure, its value is ignored.
+;;;                                                        (15-sep-99  -  oe)
+;;;
+(defparameter *partial-dag-interpretation* nil)
+
+;;;
 ;;; [incr tsdb()] support: global counters for calls to unify-dags() and
 ;;; copy-dag().
 ;;;
@@ -564,12 +575,8 @@
 (defvar *type-constraint-list* nil)
 
 (defun unify2 (dag1 dag2 path)
-  (declare (special *chart-packing-p*))
-  ;;
-  ;; _hack_
-  ;; simulate effect of ignoring `CONT' inside the packing parser
-  ;;
-  (if (and *chart-packing-p* (eq (first path) 'cont))
+  (if (and *partial-dag-interpretation*
+           (member (first path) *partial-dag-interpretation* :test #'eq))
     (setf (dag-forward dag1) dag2)
     (multiple-value-bind (new-type constraintp)
         (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
@@ -699,23 +706,35 @@
          (*safe-not-to-copy-p* nil)
          (*dag-recycling-p* nil))
     (unless (consp cache)
-      (setq cache (list* 0 nil nil))	; mark, unused, used
+      (setq cache (list* 0 nil nil))    ; mark, unused, used
       (setf (type-constraint-mark type-record) cache))
     (cond
-     ((not (= (car cache) *unify-generation*))
-      ;; (print (list "not copying constraint for" type-name))
+     ((not (= (the fixnum (car cache)) *unify-generation*))
+      #+:cdebug
+      (format 
+       t 
+       "~&may-copy-constraint-of(): `~(~a~)' cache hit; new cycle;~%"
+       type-name)
       (setf (car cache) *unify-generation*)
       (setf (cadr cache)
 	(nconc (cadr cache) (cddr cache))) ; old used copies become ready for use
       (setf (cddr cache) nil)
       constraint)			; first return constraint itself
      ((cadr cache)
-      ;; (print (list "not copying constraint for" type-name))
+      #+:cdebug
+      (format 
+       t 
+       "~&may-copy-constraint-of(): `~(~a~)' cache hit;~%"
+       type-name)
       (let ((pre (pop (cadr cache))))
 	(push pre (cddr cache))		; previously computed copy becomes used
 	pre))
      (t
-      ;; (print (list "copying constraint for" type-name))
+      #+:cdebug
+      (format 
+       t 
+       "~&may-copy-constraint-of(): `~(~a~)' cache miss (~d);~%"
+       type-name (+ (length (cadr cache)) (length (cddr cache))))
       (let ((new (copy-dag-completely constraint)))
 	(push new (cddr cache))		; new copy becomes used
 	new)))))

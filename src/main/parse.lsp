@@ -176,7 +176,9 @@
   (let ((max (shiftf (fast-aref a 1) (fast-aref a (heap-size a)))))
     (decf (heap-size a))
     (heapify a 1)
-    (cdr max)))
+    (let ((entry (rest max)))
+      (setf (rest max) nil)
+      entry)))
 
 (defun make-heap ()
   (let ((heap (make-array (list *maximum-number-of-tasks*))))
@@ -305,7 +307,8 @@ Setting *first-only-p* to nil")
             (loop 
                 until (empty-heap *agenda*)
                 do (funcall (heap-extract-max *agenda*)))
-            (when *active-parsing-p* (complete-chart 0 (length user-input))))
+            (when *active-parsing-p* 
+              (complete-chart 0 (length user-input))))
           (unless first-only-p
             ;;
             ;; best-first (passive or active mode) has already done this
@@ -1061,15 +1064,14 @@ Setting *first-only-p* to nil")
 ;;; TTY printout of chart
 ;;; chart edges are ordered on: right vertex, left vertex, edge id
 
-(defun print-chart nil 
-   (format t "~% > chart dump:~%")
-   (dotimes (vertex (- *chart-limit* 2))
-      (unless 
-         (print-chart-entry (+ 1 vertex) (aref *chart* (+ 1 vertex) 0))
-         (return nil)))
-   (terpri))
+(defun print-chart (&key frozen)
+  (format t "~% > chart dump:~%")
+  (loop
+      for i from 1 to *chart-limit*
+      while (print-chart-entry i (aref *chart* i 0) :frozen frozen))
+  (terpri))
 
-(defun print-chart-entry (vertex item)
+(defun print-chart-entry (vertex item &key frozen)
   (if item 
     (progn
       (terpri)
@@ -1085,21 +1087,25 @@ Setting *first-only-p* to nil")
                       (t
                         (< (chart-configuration-begin span1)
                            (chart-configuration-begin span2)))))))
-         (print-chart-configuration configuration vertex))
+         (print-chart-configuration configuration vertex :frozen frozen))
       t)
     (aref *morphs* vertex)))      ; return t if we might be in the middle
                                   ; of a multi word
 
-(defun print-chart-configuration (span right-vertex)
-   (let ((e (chart-configuration-edge span)))
-      (format t "~A-~A [~A] ~A => ~A~A  [~{~A~^ ~}]"
-         (chart-configuration-begin span)
-         right-vertex
-         (edge-id e)
-         (edge-category e)
-         (edge-leaves e)
-         (if (chart-configuration-roots span) "*" "")
-         (mapcar #'edge-id (edge-children e)))
+(defun print-chart-configuration (span right-vertex &key (frozen nil frozenp))
+  (let ((e (chart-configuration-edge span)))
+    (when (or (null frozenp) (eq (edge-frozen e) frozen))
+      (format 
+       t 
+       "~&~A-~A [~A] ~A => ~A~A  [~{~A~^ ~}]~@[ +~d~]"
+       (chart-configuration-begin span)
+       right-vertex
+       (edge-id e)
+       (edge-category e)
+       (edge-leaves e)
+       (if (chart-configuration-roots span) "*" "")
+       (mapcar #'edge-id (edge-children e))
+       (edge-frozen e))
       ;;
       ;; if applicable, print out compact summary of packings (9-aug-99  -  oe)
       ;;
@@ -1107,7 +1113,7 @@ Setting *first-only-p* to nil")
         (let ((edge (first (edge-packed e))))
           (format 
            t 
-           "[~d < ~{~d~^ ~}" 
+           " { [~d < ~{~d~^ ~}" 
            (edge-id edge) 
            (loop for child in (edge-children edge) collect (edge-id child))))
         (loop
@@ -1120,7 +1126,7 @@ Setting *first-only-p* to nil")
                    for child in (edge-children edge) 
                    collect (edge-id child))))
         (format t "]"))
-      (format t "~%")))
+      (format t "~%"))))
       
 
 

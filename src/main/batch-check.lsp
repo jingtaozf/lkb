@@ -4,32 +4,31 @@
 
 (defvar *grammar-specific-batch-check-fn* nil)
 
-(defun batch-check-lexicon nil
+(defun batch-check-lexicon (&optional (unexpandp t))
   (format t "~%Checking lexicon")
-  (setf *batch-mode* t)
-  (dolist (id (collect-psort-ids *lexicon*))
-    ;; alternatively - for lexicon only
-    ;; (reverse *ordered-lex-list*) 
-    (let* ((entry (read-psort *lexicon* id))
-           (lex-id (lex-or-psort-id entry)))
-      (expand-psort-entry entry)
-      (let ((new-fs (lex-or-psort-full-fs entry)))
-        (unless new-fs
-          (format cl-user::*lkb-background-stream*
-                  "~%No feature structure for ~A" lex-id))
-        (when (and new-fs
-                   *grammar-specific-batch-check-fn*)
-          (funcall *grammar-specific-batch-check-fn*
-                   new-fs id))                
-;;;                     (when new-fs
-;;;                       (sanitize (existing-dag-at-end-of 
-;;;                                  (tdfs-indef new-fs) 
-;;;                                  mrs::*initial-semantics-path*)
-;;;                                 lex-id ostream))))
-        ))
-    (unexpand-psort *lexicon* id))
-  (format t "~%Lexicon checked")
-  (setf *batch-mode* nil))
+  (let ((*batch-mode* t))
+    (dolist (id (collect-psort-ids *lexicon*))
+      ;; alternatively - for lexicon only
+      ;; (reverse *ordered-lex-list*) 
+      (let* ((entry (read-psort *lexicon* id))
+             (lex-id (lex-or-psort-id entry)))
+        (expand-psort-entry entry)
+        (let ((new-fs (lex-or-psort-full-fs entry)))
+          (unless new-fs
+            (format cl-user::*lkb-background-stream*
+                    "~%No feature structure for ~A" lex-id))
+          (when (and new-fs
+                     *grammar-specific-batch-check-fn*)
+            (funcall *grammar-specific-batch-check-fn*
+                     new-fs id))                
+  ;;;                     (when new-fs
+  ;;;                       (sanitize (existing-dag-at-end-of 
+  ;;;                                  (tdfs-indef new-fs) 
+  ;;;                                  mrs::*initial-semantics-path*)
+  ;;;                                 lex-id ostream))))
+          ))
+      (when unexpandp (unexpand-psort *lexicon* id))))
+  (format t "~%Lexicon checked"))
 
 #|
 (sanitize (existing-dag-at-end-of (tdfs-indef (lex-or-psort-full-fs

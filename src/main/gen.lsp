@@ -270,12 +270,13 @@
     (catch '*fail* (subsume-wffs-p dag1 dag2 nil t t))))
 
 
-(defun subsume-wffs-p (real-dag1 real-dag2 path forwardp backwardp)
+(defun subsume-wffs-p (real-dag1 real-dag2 feature forwardp backwardp)
   (declare (special *chart-packing-p*))
   ;; forwardp, backwardp are true when it's possible that dag1 subsumes dag2
   ;; and vice-versa respectively. When the possibility has been ruled out the
   ;; appropriate variable is set to false. Fail as soon as they are both false
-  (when (and *chart-packing-p* (eq path 'cont))
+  (when (and *partial-dag-interpretation*
+           (member feature *partial-dag-interpretation* :test #'eq))
     (return-from subsume-wffs-p (values forwardp backwardp)))
   (when forwardp
     (cond
