@@ -355,17 +355,16 @@
   (or (eq var1 var2)
       (and (var-p var1) (var-p var2)
            (if syntactic-p
-               (equal (var-type var1) (var-type var2))
-             (compatible-types (var-type var1) (var-type var2)))
+             (equal (var-type var1) (var-type var2))
+             (if (and (var-type var1) (var-type var2))
+               (compatible-types (var-type var1) (var-type var2))
+               t))
            (if syntactic-p
-               (equal-extra-vals
-                (var-extra var1) 
-                (var-extra var2))
-             (compatible-extra-vals 
-              (var-extra var1) 
-              (var-extra var2)))
+             (equal-extra-vals (var-extra var1) (var-extra var2))
+             (compatible-extra-vals (var-extra var1) (var-extra var2)))
            (bindings-equal (get-var-num var1)
                            (get-var-num var2) bindings))))
+
 
 (defun compatible-extra-vals (extra1 extra2)
   ;;; this version is for generation, where we assume we need

@@ -137,6 +137,13 @@
      (with-input-from-string (stream string)
        (read-mrs stream)))))
 
+(defun read-mrs-from-file (file)
+  (when (probe-file file)
+    (ignore-errors 
+     (with-open-file (stream file :direction :input)
+       (let ((*package* (find-package :lkb)))
+         (read-mrs stream))))))
+
 (defun read-indexed-mrs-from-string (string)
   (let ((*package* (find-package :mrs)))
      (with-input-from-string (stream string)
