@@ -383,104 +383,111 @@
 
 (defparameter *failure-list* nil)
 
-
-
 (defun carp-unify (fixed-fs def-fs-set check-ind-defs-p)
   ;; def-fs-set is using path representation
   ;; check-ind-defs-p is true if the fixed-fs might contain
   ;; some defeasible material
   (declare (ignore check-ind-defs-p))
-  ;;; FIX - should be able to improve matters by chucking out
-  ;;; structures which were incompatible with the fixed-fs
-  ;;; when check-ind-defs-p is true - if it isn't, we're doing the
-  ;;; first round and the tails are guaranteed to be compatible
-   (setf *failure-list* nil)
-   (let ((all-ok (unify-in fixed-fs def-fs-set nil)))
-      (if all-ok (list all-ok)
-         (or
-            (unify-combinations fixed-fs def-fs-set nil nil 
-               (- (length def-fs-set) 1))
-            (list fixed-fs)))))
+  ;; FIX - should be able to improve matters by chucking out
+  ;; structures which were incompatible with the fixed-fs when
+  ;; check-ind-defs-p is true - if it isn't, we're doing the first
+  ;; round and the tails are guaranteed to be compatible
+  (setf *failure-list* nil)
+  (let ((all-ok (unify-in fixed-fs def-fs-set nil)))
+    (if all-ok (list all-ok)
+      (or
+       (unify-combinations fixed-fs def-fs-set nil nil 
+			   (- (length def-fs-set) 1))
+       (list fixed-fs)))))
 
+(defmacro fast-subsetp (l1 l2)
+  (let ((elt (gensym))
+	(list1 (gensym))
+	(list2 (gensym)))
+    `(let ((,list1 ,l1)
+	   (,list2 ,l2))
+       (dolist (,elt ,list1 t)
+	 (unless (member ,elt ,list2 :test #'eq)
+	   (return nil))))))
 
-(defun unify-combinations (fixed-fs def-fs-list existing-combs successful comb-length)
-   (if (eql comb-length 0)
+(defun unify-combinations (fixed-fs def-fs-list existing-combs 
+			   successful comb-length)
+  (if (zerop comb-length)
       successful
-      (let ((success t)
-            (combinations (generate-combinations def-fs-list comb-length)))
-         (for combination in combinations
-            do
-            (cond ((some #'(lambda (old-comb) 
-                        (subsetp combination old-comb))
-                     existing-combs) nil) ;;; successful but non-maximal
-               ((some #'(lambda (old-comb) 
-                        (subsetp old-comb combination))
-                     *failure-list*)
-                  (setf success nil)) ;;; bound to fail
-               (t
-                  (let ((unif-result 
-                           (unify-in fixed-fs combination nil)))
+    (let ((success t)
+	  (combinations (generate-combinations def-fs-list comb-length)))
+      (loop for combination in combinations
+	  do
+            (cond ((dolist (old-comb existing-combs) 
+		     (when (fast-subsetp combination old-comb)
+		       (return t)))
+		   nil)			; successful but non-maximal
+		  ((dolist (old-comb *failure-list*)
+		     (when (fast-subsetp old-comb combination)
+		       (return t)))
+		   (setf success nil))	; bound to fail
+		  (t
+		   (let ((unif-result (unify-in fixed-fs combination nil)))
                      (if unif-result
-                        (progn
+			 (progn
                            (push unif-result successful)
                            (push combination existing-combs))
-                        (setf success nil))))))
-         (if success
-            successful
-            (unify-combinations fixed-fs def-fs-list existing-combs successful 
-               (- comb-length 1))))))
-
+		       (setf success nil))))))
+      (if success
+	  successful
+	(unify-combinations fixed-fs def-fs-list existing-combs successful 
+			    (1- comb-length))))))
 
 (defun generate-combinations (elements clength)
-   (cond ((or (> clength (length elements)) (< clength 1))
-         (error "Incorrect length input"))
-      ((eql (length elements) clength) (list elements))
-      ((eql clength 1) (for element in elements collect (list element)))
-      (t 
-         (append (generate-combinations (cdr elements) clength)
-            (for comb in (generate-combinations (cdr elements) (- clength 1))
-               collect
-               (cons (car elements) comb))))))
-   
-
+  (declare (type fixnum clength))
+  (let ((elength (length elements)))
+    (cond ((or (> clength elength) (< clength 1))
+	   (error "Incorrect length input"))
+	  ((eql elength clength) 
+	   (list elements))
+	  ((eql clength 1) 
+	   (mapcar #'list elements ))
+	  (t 
+	   (nconc (generate-combinations (cdr elements) clength)
+		   (loop for comb in (generate-combinations (cdr elements) 
+							    (1- clength))
+		       collect (cons (car elements) comb)))))))
 
 (defun unify-in (indef-fs def-fs-list added)
-  ;;; FIX - need to check for well-formedness
-   (if def-fs-list
-;         (incf *unif-count*)
-       (let* ((first-def (car def-fs-list))
-              (res 
-               (with-unification-context (indef-fs)
-                 (if (yadu-pv-p first-def)
-                       (if 
-                           (unify-paths 
-                            (yadu-pv-path first-def)
-                            indef-fs
-                            (make-u-value :types (yadu-pv-value first-def))
-                            nil)
-                           (copy-dag indef-fs))
-                   (let* ((paths (yadu-pp-paths first-def))
-                          (initial-path 
-                           (car paths))
-                          (ok nil))
-                     (dolist (path2 (cdr paths))
-                       (setf ok
-                         (unify-paths initial-path       
-                                      indef-fs
-                                      path2
-                                      indef-fs))
-                       (unless ok
-                         (return)))
-                     (if ok
-                         (copy-dag indef-fs)))))))
-         (if res
-             (unify-in res (cdr def-fs-list)
-                       (cons (car def-fs-list) added))
-           (progn
-             (push (cons (car def-fs-list) added) *failure-list*) 
-             nil)))
-     indef-fs))
-   
+  (with-unification-context (nil)
+    (when (unify-in1 indef-fs def-fs-list added)
+      (copy-dag indef-fs))))
+      
+(defun unify-in1 (indef-fs def-fs-list added)
+  ;; FIX - need to check for well-formedness
+  (if def-fs-list
+      ;; (incf *unif-count*)
+      (let* ((first-def (car def-fs-list))
+	     (res (if (yadu-pv-p first-def)
+		      (unify-paths (yadu-pv-path first-def)
+				   indef-fs
+				   (make-u-value 
+				    :types (yadu-pv-value first-def))
+				   nil)
+		    (let* ((paths (yadu-pp-paths first-def))
+			   (initial-path (car paths))
+			   (ok nil))
+		      (dolist (path2 (cdr paths))
+			(setf ok
+			  (unify-paths initial-path       
+				       indef-fs
+				       path2
+				       indef-fs))
+			(unless ok
+			  (return)))
+		      ok))))
+	(if res
+	    (unify-in1 indef-fs (cdr def-fs-list) 
+		       (cons (car def-fs-list) added))
+	  (progn
+	    (push (cons (car def-fs-list) added) *failure-list*) 
+	    nil)))
+    indef-fs))
 
 
 ;;; incorporating all the defaults of a given persistence
@@ -501,25 +508,24 @@
 ;;; could show up in the indefeasible structure.
 
 (defun make-indefeasible (tdfs persistence)
-   (if (tdfs-tail tdfs)
-      (multiple-value-bind
-         (persistent non-persistent)
-         (split-tail persistence (tdfs-tail tdfs))
-         (let* ((indef (tdfs-indef tdfs))
+  (if (tdfs-tail tdfs)
+      (multiple-value-bind (persistent non-persistent)
+	  (split-tail persistence (tdfs-tail tdfs))
+	(let* ((indef (tdfs-indef tdfs))
                (partition (partition-tail non-persistent nil))
                (non-persistent-def 
                 (generalise-set (yadu-unify (list indef) partition)))
-                (result (unify-dags indef non-persistent-def)))
-            (unless result
-               (error "Default is inconsistent with indef"))
-            (let ((new-indef (create-wffs result)))
-               (unless new-indef
-                  (cerror "The result of incorporating the persistent defaults
+	       (result (unify-dags indef non-persistent-def)))
+	  (unless result
+	    (error "Default is inconsistent with indef"))
+	  (let ((new-indef (create-wffs result)))
+	    (unless new-indef
+	      (cerror "The result of incorporating the persistent defaults
                      cannot be made well-formed" "Ignore defaults")
-                     (setf new-indef indef))
-               (make-tdfs :indef new-indef
-                          :tail persistent))))
-         tdfs))
+	      (setf new-indef indef))
+	    (make-tdfs :indef new-indef
+		       :tail persistent))))
+    tdfs))
 
 
 (defun split-tail (persistence tail)
