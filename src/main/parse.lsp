@@ -1064,14 +1064,15 @@ Setting *first-only-p* to nil")
 ;;; TTY printout of chart
 ;;; chart edges are ordered on: right vertex, left vertex, edge id
 
-(defun print-chart (&key frozen)
+(defun print-chart (&key frozen concise)
   (format t "~% > chart dump:~%")
   (loop
       for i from 1 to *chart-limit*
-      while (print-chart-entry i (aref *chart* i 0) :frozen frozen))
+      while (print-chart-entry i (aref *chart* i 0) 
+                               :frozen frozen :concise concise))
   (terpri))
 
-(defun print-chart-entry (vertex item &key frozen)
+(defun print-chart-entry (vertex item &key frozen concise)
   (if item 
     (progn
       (terpri)
@@ -1087,37 +1088,43 @@ Setting *first-only-p* to nil")
                       (t
                         (< (chart-configuration-begin span1)
                            (chart-configuration-begin span2)))))))
-         (print-chart-configuration configuration vertex :frozen frozen))
+        (print-chart-item configuration vertex 
+                          :frozen frozen :concise concise))
       t)
     (aref *morphs* vertex)))      ; return t if we might be in the middle
                                   ; of a multi word
 
-(defun print-chart-configuration (span right-vertex &key (frozen nil frozenp))
-  (let ((e (chart-configuration-edge span)))
-    (when (or (null frozenp) (eq (edge-frozen e) frozen))
+(defun print-chart-item (item 
+                         &optional end 
+                         &key (frozen nil frozenp)
+                              concise)
+  (let ((edge (if (edge-p item) item (chart-configuration-edge item)))
+        (begin (unless (edge-p item) (chart-configuration-begin item)))
+        (roots (unless (edge-p item) (chart-configuration-roots item))))
+    (when (or (null frozenp) (eq (edge-frozen edge) frozen))
       (format 
        t 
-       "~&~A-~A [~A] ~A => ~A~A  [~{~A~^ ~}]~@[ +~d~]"
-       (chart-configuration-begin span)
-       right-vertex
-       (edge-id e)
-       (edge-category e)
-       (edge-leaves e)
-       (if (chart-configuration-roots span) "*" "")
-       (mapcar #'edge-id (edge-children e))
-       (edge-frozen e))
+       "~&~:[~2*~;~A-~A ~][~A] ~A => ~A~A  [~{~A~^ ~}]~:[~2*~; ~:[+~;~]~d~]"
+       (and begin end) begin end
+       (edge-id edge)
+       (if concise (concise-edge-label edge) (edge-category edge))
+       (edge-leaves edge)
+       (if roots "*" "")
+       (loop for child in (edge-children edge) collect (edge-id child))
+       (edge-frozen edge) (and (edge-frozen edge) (minusp (edge-frozen edge)))
+       (edge-frozen edge))
       ;;
       ;; if applicable, print out compact summary of packings (9-aug-99  -  oe)
       ;;
-      (when (edge-packed e)
-        (let ((edge (first (edge-packed e))))
+      (when (edge-packed edge)
+        (let ((edge (first (edge-packed edge))))
           (format 
            t 
            " { [~d < ~{~d~^ ~}" 
            (edge-id edge) 
            (loop for child in (edge-children edge) collect (edge-id child))))
         (loop
-            for edge in (rest (edge-packed e)) do
+            for edge in (rest (edge-packed edge)) do
               (format 
                t 
                "; ~d < ~{~d~^ ~}"
@@ -1128,7 +1135,10 @@ Setting *first-only-p* to nil")
         (format t "]"))
       (format t "~%"))))
       
-
+(defun concise-edge-label (edge)
+  (if (rule-p (edge-rule edge))
+    (rule-id (edge-rule edge)) 
+    (first (edge-lex-ids edge))))
 
 ;;; Parsing sentences from file
 
