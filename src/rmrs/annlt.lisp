@@ -220,6 +220,7 @@
 
 ;;; Example of use with QA experiments
 
+#+:excl
 (defun process-rasp-files nil
   ;;; clear and load the grammars
  (clear-rule-record)
@@ -278,6 +279,7 @@
                 (excl::shell "rm /tmp/rfile")))))))
 
 
+#+:excl
 (defun revalidate-rmrs-files nil
   (let* ((ifiles
           (directory "/local/scratch/aac10/trec8qa/rmrs/*")))
