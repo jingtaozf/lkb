@@ -19,12 +19,10 @@
 ;;; NB existing set of checking paths is left untouched
 
 #|
-(with-check-path-list-collection "Macintosh HD:lkb99-expt:big:grammar:lkb:checkpaths1.lsp"
-   (parse-tsdb-sentences "Macintosh HD:lkb99-expt:big:itemsamp30"
-      "Macintosh HD:lkb99-expt:big:parsesamp30" "Macintosh HD:lkb99-expt:big:resultsamp30"
-      "Macintosh HD:lkb99-expt:big:runsamp30"))
+(with-check-path-list-collection "Macintosh HD:mylkb:checkpaths1.lsp"
+   (parse-sentences "Macintosh HD:mylkb:checkpaths-sample.txt" "Macintosh HD:mylkb:checkpaths-out.txt"))
 
-(with-check-path-list-collection "Macintosh HD:lkb99-expt:big:grammar:lkb:checkpaths1.lsp"
+(with-check-path-list-collection "Macintosh HD:mylkb:checkpaths1.lsp"
    (parse '("Devito" "manages" "a" "programmer" "Abrams" "interviewed" "and" "Browne" "hired") nil))
 
 (with-check-path-list-collection "Macintosh HD:lkb99-expt:big:grammar:lkb:checkpaths1.lsp"
@@ -91,6 +89,47 @@
 		    (when (> (hash-table-count item-table) 0)
 		      (list (cons (car item) item-table)))))
 	      (remove max-item fail-path-list :test #'eq)))))))
+
+#|
+(defun extract-check-paths (fail-path-list)
+  ;; simple-minded version which just returns paths in order of decreasing
+  ;; number of fails
+  (sort
+     (mapcar #'(lambda (item) (cons (car item) (hash-table-count (cdr item))))
+        fail-path-list)
+     #'> :key #'cdr))
+
+;;; # paths   naive(no bv)  lkb(no bv)
+;;;            (secs)        (secs)
+;;;   20        68            70
+;;;   30        62            58
+;;;   45        58            58
+;;;   55        57(60)        59(61)
+;;;   60        58            60
+
+|#
+
+#|
+(load "Macintosh HD:grammar:lkb:checkpaths.lsp")
+
+(optimise-check-unif-paths)
+(length *check-paths-optimised*)
+(dolist (table (list *lexical-rules* *rules*))
+  (maphash
+    #'(lambda (id rule)
+       (declare (ignore id))
+       (let ((fs (rule-full-fs rule))
+             (f-list (rule-order rule)))  
+        (setf (rule-daughters-restricted rule)
+          (mapcar
+           #'(lambda (path)
+               (restrict-fs
+                (existing-dag-at-end-of 
+                 (tdfs-indef fs)
+                 (if (listp path) path (list path)))))
+           (cdr f-list)))))
+    table))
+|#
 
 
 ;;; find ALL failing paths, not just first
@@ -233,7 +272,7 @@
 	   (cond
 	    ((not (and (listp (car path-and-freq)) (integerp (cdr path-and-freq))))
 	     (error "Incorrect format for check path list"))
-	    ((and (< (cdr path-and-freq) freq-threshold) (> nseen 40)) nil)
+            ((and (< (cdr path-and-freq) freq-threshold) (> nseen 40)) nil)
 	    (t
 	     (list
 	      (optimise-check-unif-path
@@ -257,7 +296,9 @@
 				  (retrieve-descendants type)))
 		     (len (length types)))
 		;; (format t "~%Feature ~A, number of possible types ~A" feat len)
-		(if (<= len (integer-length most-positive-fixnum)) ; restrict to fixnum
+		(if (and (<= len (integer-length most-positive-fixnum)) ; restrict to fixnum
+                       (or (null *string-type*)
+                           (not (member *string-type* types :key #'type-name))))
 		    (mapcar
 		     #'(lambda (d)
 			 (cons (type-name d)
@@ -304,24 +345,27 @@
 ;;; !!! Won't work for type disjunctions
 
 (defun restrict-fs (fs)
-  (mapcar
-   #'(lambda (path-spec)
-       (let ((v (existing-dag-at-end-of fs (car path-spec))))
-	 (if v
-	     (let ((type (type-of-fs v)))
-	       (when type
-		 (if (consp (cdr path-spec))
-		     (let ((real-type (if (consp type) (car type) type)))
-		       (or
-			(cdr (assoc real-type (cdr path-spec) :test #'eq))
-			(cdr (assoc (instance-type-parent real-type) (cdr path-spec)
-				    :test #'eq))
-			(error "Inconsistency - could not find restrictor bit vector ~
-                                       for type ~A" type)))
-		   type)))
-	   nil)))
+   (mapcar
+      #'(lambda (path-spec)
+          (let ((v (existing-dag-at-end-of fs (car path-spec))))
+	     (if v
+	        (let ((type (type-of-fs v)))
+	           (when type
+		      ;; check for atomic type and pop out name - if there was a
+                      ;; disjunction it will be lost at this point
+                      (when (consp type) (setq type (car type)))
+                      (if (consp (cdr path-spec))
+		         ;; there is a bit-vector encoding for the possible values
+                         ;; of this path, so use it instead of the type name
+		         (or
+			    (cdr (assoc type (cdr path-spec) :test #'eq))
+			    (cdr (assoc (instance-type-parent type)
+                                    (cdr path-spec) :test #'eq))
+			    (error "Inconsistency - ~A could not find restrictor bit vector ~
+                                    for type ~A at path ~A" 'restrict-fs type (car path-spec)))
+		         type)))
+	        nil)))
    *check-paths-optimised*))
-
 
 (defun restrictors-compatible-p (daughter-restricted child-restricted)
   (loop for dt in daughter-restricted
@@ -330,45 +374,46 @@
 	(cond
 	 ;; eq possibly avoids a function call
 	 ((or (eq dt ct) (null dt) (null ct))) 
-	 ;; a type - i.e. a symbol or disjunction (list)
 	 ((not (type-bit-representation-p dt)) 
-	  (unless (find-gcsubtype dt ct)
+	  ;; a type - i.e. a symbol or disjunction (list)
+	  ;; not bit vector encoding, so do type unification the hard way
+          (unless (greatest-common-subtype dt ct)
 	    (return-from restrictors-compatible-p nil)))
 	 ;; a bit vector
 	 ((zerop (logand (the fixnum dt) (the fixnum ct)))
 	  (return-from restrictors-compatible-p nil))))
   t)
 
+
 ;;; Versions called dynamically inside the scope of a set of unifications
 
 (defun x-restrict-and-compatible-p (fs child-restricted)
-  (dolist (path-spec *check-paths-optimised* t)
-    (let ((dt
-	   (let ((v (x-existing-dag-at-end-of fs (car path-spec))))
-	     (when v
-	       (let ((type (dag-new-type v)))
-		 (when type
-		   (if (consp (cdr path-spec))
-		       ;; There is a bit-vector encoding for the possible
-		       ;; values of this path, so use it instead of the type
-		       ;; name
-		       (let ((real-type (if (consp type) (car type) type)))
-			 (or
-			  (cdr (assoc real-type (cdr path-spec) :test #'eq))
-			  (cdr (assoc (instance-type-parent real-type) (cdr path-spec)
-				      :test #'eq))
-			  (error "Inconsistency - could not find restrictor bit vector ~
-                                           for type ~A" type)))
-		     type))))))
-	  (ct (pop child-restricted)))
-      (cond
-       ((or (eq dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
-       ((not (type-bit-representation-p dt))
-	;; No bit vector encoding, so do type unification the hard way
-	(unless (find-gcsubtype dt ct)
-	  (return-from x-restrict-and-compatible-p nil)))
-       ((zerop (logand (the fixnum dt) (the fixnum ct)))
-	(return-from x-restrict-and-compatible-p nil))))))
+  (loop for path-spec in *check-paths-optimised*
+      for ct in child-restricted
+      do
+      (let ((dt
+	     (let ((v (x-existing-dag-at-end-of fs (car path-spec))))
+	       (when v
+	         (let ((type (dag-new-type v)))
+	           (when type
+		      (when (consp type) (setq type (car type)))
+                      (if (consp (cdr path-spec))
+		         (or
+			    (cdr (assoc type (cdr path-spec) :test #'eq))
+			    (cdr (assoc (instance-type-parent type)
+                                    (cdr path-spec) :test #'eq))
+			    (error "Inconsistency - ~A could not find restrictor bit vector ~
+                                   for type ~A at path ~A" 'x-restrict-and-compatible-p
+                                   type (car path-spec)))
+		         type)))))))
+        (cond
+         ((or (eq dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
+         ((not (type-bit-representation-p dt))
+	  (unless (greatest-common-subtype dt ct) 
+	    (return-from x-restrict-and-compatible-p nil)))
+         ((zerop (logand (the fixnum dt) (the fixnum ct)))
+	  (return-from x-restrict-and-compatible-p nil)))))
+  t)
 
 (defun x-existing-dag-at-end-of (dag labels-chain)
   (let ((real-dag (deref-dag dag)))
@@ -387,6 +432,7 @@
   (dolist (arc (dag-comp-arcs dag) nil)
     (when (eq attribute (dag-arc-attribute arc))
       (return-from x-get-dag-value (dag-arc-value arc)))))
+
 
 ;;; The following function needs to be called if there is a disrepancy between
 ;;; the checkpaths construction and application

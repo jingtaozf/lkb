@@ -46,8 +46,10 @@
 
 (defstruct (rule (:include lex-or-psort))
    daughters-restricted
+   daughters-restricted-reversed
    daughters-apply-order
-   order)
+   order
+   daughters-order-reversed)
 
 ;;; order is an ordered list of the paths that get at mother and daughters
 ;;; e.g. 0 1 2
@@ -200,6 +202,7 @@
         (pushnew id *ordered-rule-list*))
       (let ((f-list (establish-linear-precedence (tdfs-indef fs))))
         (setf (rule-order rule) f-list)
+        (setf (rule-daughters-order-reversed rule) (reverse (cdr f-list)))
         (setf (rule-daughters-restricted rule)
           (mapcar
            #'(lambda (path)
@@ -208,6 +211,8 @@
                  (tdfs-indef fs)
                  (if (listp path) path (list path)))))
            (cdr f-list)))
+        (setf (rule-daughters-restricted-reversed rule)
+           (reverse (rule-daughters-restricted rule)))
         (flet ((listify (x) (if (listp x) x (list x))))
           (let*
               ((mother-value

@@ -275,94 +275,48 @@
    ;; it's probably best to clear this out occasionally - definitely after
    ;; loading a grammar and before parsing since different pairs of types will
    ;; be exercised
-   (setf *type-cache* nil))
+   (maphash
+      #'(lambda (type defn)
+          (declare (ignore defn))
+          (remprop type :type-cache))
+      *types*))
 
-
-
-(defun cached-greatest-common-subtype (type1 type2 type1-atomic-p)
-  ;; NB as implemented only works for types which satisfy eq test for
-  ;; equality i.e.  symbols - types which are integers etc are not cached
-  ;; Also minimal extension to deal with first type arg being an atomic
-  ;; type, but restricted to containing a single disjuct which itself is
-  ;; just a symbol, signalled by 3rd arg being true.  In this case the
-  ;; subtype if it exists must necessarily be atomic with a single disjunct
-  ;; Index first on potentially atomic type, since there are many of more
-  ;; of these Implemented as first a hash table, with each bucket being
-  ;; either an alist - or if more than 30 entries, a hash table itself
-  ;; Returns two values: greatest common subtype of type1 and type2 (or
-  ;; nil) and true if subtype result has a constraint which needs to be
-  ;; unified in
-  (unless *type-cache*
-    ;; try to minimise number of collisions by giving table a generous
-    ;; initial size - we really need speed here
-    (setq *type-cache*
-      (make-hash-table :test #'eq :size (* (hash-table-count *types*) 2))))
-  ;; many subtype results are same as type2 - so we could perhaps use
-  ;; a more compact storage representation for these cases
-  (let*
-      ((type1-index (if type1-atomic-p (car type1) type1))
-       (entry (gethash type1-index *type-cache*))
-       (found (typecase entry
-		(null nil)
-		(cons (cdr (assoc type2 entry :test #'eq)))
-		(t (gethash type2 entry)))))
-    (if found
-	(values (car found) (cdr found))
-      (multiple-value-bind (subtype constraintp)
-	  (full-greatest-common-subtype type1-index type2)
-	(when (and subtype type1-atomic-p) (setq subtype (list subtype)))
-	(typecase entry
-	  ((or cons null)		; entry is an alist
-	   (if (> (length entry) 10000)
-	       ;; convert alist into a hash table since it's got
-	       ;; bigger than an average empirical break-even point
-	       ;; for gethash vs assoc
-	       (let ((new (make-hash-table :test #'eq 
-					   :size (* (length entry) 2))))
-		 (dolist (item entry)
-		   (setf (gethash (car item) new) (cdr item)))
-		 (setf (gethash type2 new) (cons subtype constraintp))
-		 (setf (gethash type1-index *type-cache*) new))
-	     ;; add to end of list since it's likely to be less
-	     ;; frequent (maybe)
-	     (setf (gethash type1-index *type-cache*)
-	       (nconc entry
-		      (list (cons type2 (cons subtype constraintp)))))))
-	  (t				; entry is a hash table
-	   (setf (gethash type2 entry) (cons subtype constraintp))))
-	(values subtype constraintp)))))
-
-#+ignore
 (defmacro cached-greatest-common-subtype (type1 type2 type1-atomic-p)
-  `(let* ((t1 ,(if type1-atomic-p 
-		   `(car ,type1) 
-		 `,type1))
-	  (t2 ,type2)
-	  (entry (get t1 :type-cache))
-	  (found (cdr (assoc t2 entry :test #'eq))))
-     (if found
-	 (values (car found) (cdr found))
-       (multiple-value-bind (subtype constraintp)
-	   (full-greatest-common-subtype t1 t2)
-	 ,(when type1-atomic-p
-	    '(when subtype
-	       (setq subtype (list subtype))))
-	 (setf (get t1 :type-cache) 
-	   (nconc entry
-		  (list (cons t2 (cons subtype constraintp)))))
-	   (values subtype constraintp)))))
+  `(let ((t1 ,(if type1-atomic-p `(car ,type1) `,type1))
+	 (t2 ,type2))
+      (when (eq t1 *toptype*)
+         ;; avoid caching on top type - but we can't just return t2 here since
+         ;; it might have a constraint that we must flag
+         (rotatef t1 t2))
+      (let* ((entry (get t1 :type-cache))
+             (found (cdr (assoc t2 entry :test #'eq))))
+         (if found
+	    (values (car found) (cdr found))
+            (multiple-value-bind (subtype constraintp)
+	          (full-greatest-common-subtype t1 t2)
+	       ,@(when type1-atomic-p
+	          `((when subtype (setq subtype (list subtype)))))
+	       (setf (get t1 :type-cache) 
+	          ;; put new result at end of cache - very slightly faster than failures
+                  ;; at start and successes at end. Other 2 alternatives are appreciably
+                  ;; slower
+                  (nconc entry
+		     (list (cons t2 (cons subtype constraintp)))))
+	       (values subtype constraintp))))))
 
 #|
 ;;; investigate effectiveness of subtype cache
 (let ((max 0) (longest nil))
    (maphash
-      #'(lambda (key entry)
-           (when (hash-table-p entry) (print (list key entry)))
-           (when (and (consp entry) (> (length entry) max))
-              (setq max (length entry) longest (cons key entry))))
-      *type-cache*)
+      #'(lambda (type defn)
+          (declare (ignore defn))
+          (let ((entry (get type :type-cache)))
+             (when (> (length entry) max)
+                (setq max (length entry) longest (cons type entry)))))
+      *types*)
    (values max longest))
 |#
+
 
 (defun greatest-common-subtype (type1 type2)
   ;; implemented as a memo function. In practice we won't see anything

@@ -5,18 +5,6 @@
 
 (in-package :cl-user)
 
-(defun more-robust-mrs-equalp (mrs1 mrs2 &optional syntactic-p)
-  (mrs::mrs-equalp mrs1 mrs2 syntactic-p *debugging*))
-#|
-  ;; *** make sure any errors in mrs-equalp don't stop the show
-   (handler-case 
-         (mrs::mrs-equalp mrs1 mrs2 syntactic-p t)
-      (error (condition)
-         (warn "Error '~A' occurred in ~A - returning true"
-            condition 'mrs::mrs-equalp)
-         t)))
-|#
-
 ;;;
 
 (defstruct (dotted-edge (:include edge))
@@ -50,6 +38,7 @@
 (defvar *gen-record* nil)
 (defvar *gen-chart-unifs* 0)
 (defvar *gen-chart-fails* 0)
+(defvar *non-intersective-rules* nil)
 
 (defparameter *gen-filter-debug* nil)
 (defparameter *gen-adjunction-debug* nil)
@@ -171,21 +160,21 @@
 ;;; proper. Do it also in chart-generate since that is also an entry point
 
 (defun generate-from-mrs (input-sem)
-  (clear-gen-chart)
-  (setf *cached-category-abbs* nil)
+   (clear-gen-chart)
+   (setf *cached-category-abbs* nil)
    (let*
       ((found-lex-list
           (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
        (filtered
-          (remove '(ER_COMP_ADJ_INFL_RULE)
-             (remove-if #'(lambda (x) (member x '(AN EQUAL_A1) :test #'eq))
-                ;; *** remove 1 'that' and its no-afix_infl_rule variant
-                (remove 'THAT_C found-lex-list :key #'mrs::found-lex-lex-id :count 2)
+          (remove '(ER_COMP_ADJ_INFL_RULE) ; *** e.g. small -> smaller etc
+             (remove-if #'(lambda (x) (member x '(AN) :test #'eq)) ; *** e.g. a -> an
+                found-lex-list
                 :key #'mrs::found-lex-lex-id)
              :key #'mrs::found-lex-rule-list :test #'equal))
-       (empty (mrs::possibly-applicable-null-semantics input-sem))
-          ;nil
-          )
+       (empty
+          (mrs::possibly-applicable-null-semantics input-sem)
+          ;; *** (apply #'append mrs::*null-semantics-found-items*)
+          ))
       (if filtered
          (chart-generate input-sem (append filtered empty))
          (progn
@@ -221,7 +210,12 @@
    ;   (return-from chart-generate nil))
    (let ((*safe-not-to-copy-p* t)
          (*gen-chart-unifs* 0) (*gen-chart-fails* 0)
-         (*input-sem-liszt* (mrs::psoa-liszt input-sem)))
+         (*input-sem-liszt* (mrs::psoa-liszt input-sem))
+         (*non-intersective-rules*
+            (get-indexed-rules nil
+               #'(lambda (r)
+                   (or (member (rule-id r) *intersective-rule-names* :test #'eq)
+                      (spelling-change-rule-p r))))))
       (declare (special *input-sem-liszt*))
       #+(and mcl powerpc) (setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
       (dolist (found found-lex-items)
@@ -330,8 +324,18 @@
          (let ((mrs (mrs::construct-mrs sem-fs nil t)))
             ;; (mrs::output-mrs input-sem 'mrs::simple)
             ;; (mrs::output-mrs mrs 'mrs::simple)
-            ;; *** trap errors
-            (more-robust-mrs-equalp mrs input-sem nil)))))
+            (mrs::mrs-equalp mrs input-sem nil *debugging*)))))
+
+#|
+   ;; make sure any errors in mrs-equalp don't stop the show
+   (handler-case 
+         (mrs::mrs-equalp mrs input-sem nil *debugging*)
+      (error (condition)
+         (warn "Error '~A' occurred in ~A - returning true"
+            condition 'mrs::mrs-equalp)
+         t)))
+|#
+
 
 
 (defun gen-chart-root-edges (edge start-symbols)
@@ -378,20 +382,19 @@
          (let ((index (type-of-fs index-dag)))
             (when (and (consp index) (null (cdr index)))
                ;; simplify single-item disjunction - doesn't need to be stored as
-               ;; an atomic type and will speed up subsequent gcsubtype lookup
+               ;; an atomic type and will speed up subsequent type lookup
                (setq index (car index)))
             index)
          (progn
             ;(cerror (format nil "use type ~A" *toptype*) ; ***
             ;   "unexpectedly missing index for edge ~A: ~S" edge-id dag)
-            ;(warn "unexpectedly missing index for edge ~A - using ~A" edge-id *toptype*)
+            (warn "unexpectedly missing index for edge ~A - using ~A" edge-id *toptype*)
             *toptype*))))
 
 
 (defun gen-chart-add-with-index (edge index)
    (let ((entry
-          (assoc index *gen-chart* :test #'equal))) ; index type could be string or a
-                                                    ; disjunction of atomic types
+          (assoc index *gen-chart* :test #'equal)))
       (unless entry
          (push (setq entry (cons index nil)) *gen-chart*))
       (push edge (cdr entry))))
@@ -402,13 +405,14 @@
    ;; index
    (let ((res nil))
       (dolist (entry *gen-chart* res)
-         (when (find-gcsubtype (car entry) index)
+         (when (greatest-common-subtype (car entry) index)
             (dolist (e (cdr entry))
                (when (eq activep (not (null (g-edge-needed e))))
                   (push e res)))))))
 
 
-;;; Daughter features of rule, in order that they should be instantiated.
+;;; Daughter paths in a rule, in the order that they should be instantiated. Second
+;;; value is the zero-based index of the head daughter
 
 (defun gen-chart-rule-ordered-daughters (rule)
    (values (rule-daughters-apply-order rule)
@@ -421,8 +425,8 @@
    ;; check that we haven't generated any relation that is not in input semantics
    ;; assume that once a relation has been put in liszt it won't be removed. This
    ;; filter is needed as well as less expensive one that lexical items are used
-   ;; only once since some rules can introduce relations
-   ;; *** a stronger - and more expensive - filter would also check indices for
+   ;; only once since some rules can introduce relations.
+   ;; A stronger - and more expensive - filter would also check indices for
    ;; compatibility
    (unless (gen-chart-subbag-p (gen-chart-relation-names edge)
                (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem)))
@@ -443,11 +447,7 @@
          (gen-chart-test-active edge e input-sem))
       ;; see if we can create new active edges by instantiating the head
       ;; daughter of a rule
-      (dolist (rule
-                 (get-indexed-rules (g-edge-dag edge)
-                    #'(lambda (r)
-                        (or (member (rule-id r) *intersective-rule-names* :test #'eq)
-                            (spelling-change-rule-p r)))))
+      (dolist (rule *non-intersective-rules*)
          (when *debugging*
             (format t "~&Trying to create new active edge from rule ~A and inactive edge ~A"
                (rule-id rule) (g-edge-id edge)))
@@ -461,25 +461,23 @@
 (defun gen-chart-create-active (rule edge gen-daughter-order head-index)
    (let
       ((unified-dag
-          (gen-chart-try-unification (rule-full-fs rule)
-             (first gen-daughter-order) ; pick out head daughter
+          (gen-chart-try-unification (rule-id rule)
+             (rule-full-fs rule)
+             (first gen-daughter-order) ; head daughter path
              (nth head-index (rule-daughters-restricted rule)) ; head restrictor
-             (g-edge-dag edge)
-             (g-edge-dag-restricted edge)
+             head-index edge
              (not (rest gen-daughter-order))
              (first (rule-order rule)))))
       (when unified-dag
          (make-g-edge
             :id (next-edge) :rule-number (rule-id rule)
             :dag unified-dag
-            :res (first (rule-order rule)) ; path of mother in fs
+            :res rule
             :needed (rest gen-daughter-order)
             :rels-covered (g-edge-rels-covered edge)
             :children
-            (cond
-               ((null (cdr gen-daughter-order)) (list edge))
-               ((eql head-index 0) (list edge nil))
-               (t (list nil edge)))
+            (gen-make-list-and-insert (length gen-daughter-order)
+               edge (1+ head-index))
             :leaves
             (gen-make-list-and-insert (length gen-daughter-order)
                (g-edge-leaves edge) (1+ head-index))))))
@@ -495,13 +493,15 @@
          (format t "~&Trying to extend active edge ~A with inactive edge ~A"
             (g-edge-id act) (g-edge-id inact)))
       (let ((unified-dag
-               (gen-chart-try-unification (g-edge-dag act)
+               (gen-chart-try-unification (g-edge-rule-number act)
+                  (g-edge-dag act)
                   (first (g-edge-needed act))
                   (g-edge-dag-restricted act)
-                  (g-edge-dag inact)
-                  (g-edge-dag-restricted inact)
+                  (position (first (g-edge-needed act))
+                     (rest (rule-order (g-edge-res act))) :test #'eq)
+                  inact
                   (not (rest (g-edge-needed act)))
-                  (g-edge-res act))))
+                  (first (rule-order (g-edge-res act))))))
          (when unified-dag
             ;; remaining non-head daughters in active edge are filled in
             ;; left-to-right order
@@ -516,14 +516,8 @@
                         (append (g-edge-rels-covered act)
                            (g-edge-rels-covered inact))
                         :children
-                        (let ((combined ; *** not very clean, really need an index
-                               (if (car (g-edge-children act))
-                                  (list act inact) (list inact act))))
-                           (if (rest (g-edge-needed act))
-                              ;; empty branch always on right, though if head was 3rd
-                              ;; or subsequent daughter there will also/instead be
-                              ;; interspersed unfilled arg slots
-                              (nconc combined (list nil)) combined))
+                        (gen-copy-list-and-insert (g-edge-children act)
+                           inact)
                         :leaves
                         (gen-copy-list-and-insert (g-edge-leaves act)
                            (g-edge-leaves inact)))))
@@ -588,13 +582,18 @@
 
 ;;; Unification routines, entered only through gen-chart-try-unification
 
-(defun gen-chart-try-unification (rule-tdfs daughter-index daughter-restricted
-      fs fs-restricted completedp mother-path)
+(defun gen-chart-try-unification (rule-id rule-tdfs daughter-path
+      daughter-restricted daughter-index edge completedp mother-path)
    ;; attempt to apply a grammar rule - c.f. apply-immediate-grammar-rule
    ;; in parse.lsp
-   (when (restrictors-compatible-p daughter-restricted fs-restricted)
-      (gen-chart-evaluate-unification rule-tdfs daughter-index fs completedp
-         mother-path)))
+   (when
+      (and
+         (check-filter
+            rule-id (g-edge-rule-number edge) daughter-index)
+         (restrictors-compatible-p
+            daughter-restricted (g-edge-dag-restricted edge)))
+      (gen-chart-evaluate-unification
+         rule-tdfs daughter-path (g-edge-dag edge) completedp mother-path)))
 
 
 (defun gen-chart-evaluate-unification (rule-tdfs daughter-index fs completedp
@@ -685,7 +684,7 @@
             (when *gen-adjunction-debug*
                (format t "~&Missing relations ~:A" (mapcar #'mrs::rel-sort missing-rels))
                (when *optional-rel-names*
-                   (format t "~&'Optional' relations ~:A" *optional-rel-names*)))
+                  (format t "~&'Optional' relations ~:A" *optional-rel-names*)))
             (dolist (mod-alt
                       (gen-chart-mod-edge-partitions
                          (list (car missing-rels)) (cdr missing-rels) (cdr missing-rels)

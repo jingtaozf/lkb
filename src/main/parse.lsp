@@ -41,6 +41,7 @@
 (defvar *successful-tasks* 0)
 (defvar *contemplated-tasks* 0)
 (defvar *filtered-tasks* 0)
+(defvar *parser-rules* nil)
 
 (defvar *cached-orth-str-list* nil)
 
@@ -220,8 +221,8 @@
   `(mp:with-process-lock (*parser-lock*)
      ,@body)
   #-allegro
-  `,@body)
-  
+  `(progn ,@body))
+
 
 (defun parse (user-input &optional (show-parse-p t) 
 				   (first-only-p *first-only-p*))
@@ -229,7 +230,8 @@
       (error "Sentence ~A too long" user-input)
     (let ((*safe-not-to-copy-p* t)
 	  (*executed-tasks* 0) (*successful-tasks* 0)
-	  (*contemplated-tasks* 0) (*filtered-tasks* 0))
+	  (*contemplated-tasks* 0) (*filtered-tasks* 0)
+          (*parser-rules* (get-matching-rules nil nil)))
       (with-parser-lock ()
 	(flush-heap *agenda*)
 	(clear-chart)
@@ -608,16 +610,16 @@
 
 
 (defun activate-context (left-vertex edge right-vertex f)
-  (let ((no-unary nil))
     (add-to-chart left-vertex edge right-vertex f)
-    (dolist (rule (get-matching-rules (edge-dag edge) no-unary))
+    (dolist (rule *parser-rules*)
       ;; grammar rule application is attempted when we've got all the bits
       (try-grammar-rule-left rule
-			     (reverse (rule-daughters-restricted rule))
-			     left-vertex
+			     ;; avoid a call to reverse here in a fairly tight loop
+                             (rule-daughters-restricted-reversed rule)
+                             left-vertex
 			     right-vertex
 			     (list edge)
-			     f)
+			     f (1- (length (rule-daughters-apply-order rule))))
       ;; when we don't build up the chart in strict left-to-right
       ;; order (as when we're doing a best-first search), we need to
       ;; check for rule applying to the right as well as to the left.
@@ -629,7 +631,7 @@
 				left-vertex
 				right-vertex
 				(list edge)
-				f)))))
+				f 0))))
 
 
 (defun add-to-chart (left edge right f)
@@ -658,7 +660,7 @@
       (throw 'first t))))
 
 (defun try-grammar-rule-left (rule rule-restricted-list left-vertex 
-			      right-vertex child-fs-list f &optional n)
+			      right-vertex child-edge-list f n)
   ;; Application of a grammar rule: Every time an edge is added to the chart,
   ;; a check is made to see whether its addition triggers a rule application.
   ;; (That is whether it has a category corresponding to the rightmost
@@ -669,131 +671,139 @@
   ;; unification(s) succeed, create a new edge (for the mother), record its
   ;; dag and associated information, add this to the chart, and invoke the
   ;; same process recursively.
-  (unless n
-    (setq n (1- (length (rule-daughters-apply-order rule)))))
   (incf *contemplated-tasks*)
   (if (and (check-filter (rule-id rule) 
-			 (edge-rule-number (car child-fs-list))
+			 (edge-rule-number (car child-edge-list))
 			 n)
 	   (restrictors-compatible-p (car rule-restricted-list) 
-				     (edge-dag-restricted (car child-fs-list))))
+				     (edge-dag-restricted (car child-edge-list))))
       (if (cdr rule-restricted-list)
-	  (let ((entry (aref *chart* left-vertex 0)))
+         (let ((entry (aref *chart* left-vertex 0)))
 	    (when entry
 	      (dolist (config (chart-entry-configurations entry))
-		(try-grammar-rule-left rule
-				       (cdr rule-restricted-list)
-				       (chart-configuration-begin config)
-				       right-vertex
-				       (cons (chart-configuration-edge config) 
-					     child-fs-list)
-				       f
-				       (1- n)))))
-	;; we've got all the bits
-	(with-agenda (f (when f (rule-priority rule)))
-	  (apply-immediate-grammar-rule rule left-vertex right-vertex
-					child-fs-list f)))
-    (incf *filtered-tasks*)))
+		(unless
+                  (try-grammar-rule-left rule
+				         (cdr rule-restricted-list)
+				         (chart-configuration-begin config)
+				         right-vertex
+				         (cons (chart-configuration-edge config) 
+					       child-edge-list)
+				         f (1- n))
+                  (return-from try-grammar-rule-left nil)))))
+         ;; we've got all the bits
+	 (with-agenda (f (when f (rule-priority rule)))
+            (apply-immediate-grammar-rule rule left-vertex right-vertex
+					  child-edge-list f t)))
+      (progn (incf *filtered-tasks*) t)))
 
 (defun try-grammar-rule-right (rule rule-restricted-list left-vertex 
-			       right-vertex child-fs-list f &optional (n 0))
+			       right-vertex child-edge-list f n)
   (incf *contemplated-tasks*)
   (if (and (check-filter (rule-id rule) 
-			 (edge-rule-number (car child-fs-list))
+			 (edge-rule-number (car child-edge-list))
 			 n)
 	   (restrictors-compatible-p (car rule-restricted-list)
-				     (edge-dag-restricted (car child-fs-list))))
+				     (edge-dag-restricted (car child-edge-list))))
       (if (cdr rule-restricted-list)
 	  (let ((entry (aref *chart* right-vertex 1)))
 	    (when entry
 	      (dolist (config (chart-entry-configurations entry))
-		(try-grammar-rule-right rule
-					(cdr rule-restricted-list)
-					left-vertex
-					(chart-configuration-end config)
-					(cons (chart-configuration-edge config)
-					      child-fs-list)
-					f (1+ n)))))
+		(unless
+                  (try-grammar-rule-right rule
+					  (cdr rule-restricted-list)
+					  left-vertex
+					  (chart-configuration-end config)
+					  (cons (chart-configuration-edge config)
+					        child-edge-list)
+					  f (1+ n))
+                  (return-from try-grammar-rule-right nil)))))
 	;; we've got all the bits
 	(with-agenda (f (when f (rule-priority rule)))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex 
-					(reverse child-fs-list) f)))
+					child-edge-list f nil)))
     (incf *filtered-tasks*)))
 
 
 (defparameter *debugging* nil)
 
 (defun apply-immediate-grammar-rule (rule left-vertex right-vertex 
-				     child-fs-list f)
+				     child-edge-list f backwardp)
   ;; attempt to apply a grammar rule when we have all the parts which match
   ;; its daughter categories
   #+ignore
   (format t "~%Try Rule id ~A left ~A right ~A dtrs ~A" (rule-id rule)  
-	  left-vertex right-vertex (mapcar #'edge-id child-fs-list))
-  (let ((unification-result
-	 (evaluate-unifications rule (mapcar #'edge-dag child-fs-list)
-				nil child-fs-list)))
-    (if unification-result
-	(let ((new-edge (make-edge :id (next-edge)
-                                   :category (indef-type-of-tdfs 
-                                              unification-result)
-                                   :rule-number (rule-id rule)
-                                   :children child-fs-list
-                                   :dag unification-result
-                                   :lex-ids 
-                                   (mapcan
-                                    #'(lambda (child)
-                                        (copy-list (edge-lex-ids child)))
-                                    child-fs-list)
-                                   :leaves
-                                   (mapcan
-                                    #'(lambda (child)
-                                        (copy-list (edge-leaves child)))
-                                    child-fs-list))))
-	  #+ignore (format t " Succeed.")
-	  (activate-context left-vertex new-edge right-vertex f))
-      (progn
-	#+ignore (format t " Fail.")
-	(when *debugging*
-	  #+ignore (format t "~%~A" *filtered-tasks*)
-	  (format t "~%Unification failure on rule ~A and edges ~:A" 
-		  (rule-id rule) (mapcar #'edge-id child-fs-list)))))))
+	  left-vertex right-vertex (mapcar #'edge-id child-edge-list))
+  (let ((child-edge-list-reversed (reverse child-edge-list)))
+    (multiple-value-bind (unification-result first-failed-p)
+	 (evaluate-unifications rule (mapcar #'edge-dag child-edge-list-reversed)
+				nil child-edge-list-reversed backwardp)
+      (if unification-result
+	  (let* ((edge-list
+                    (if backwardp child-edge-list child-edge-list-reversed))
+                 (new-edge (make-edge :id (next-edge)
+                                     :category (indef-type-of-tdfs 
+                                                unification-result)
+                                     :rule-number (rule-id rule)
+                                     :children edge-list
+                                     :dag unification-result
+                                     :lex-ids 
+                                     (mapcan
+                                      #'(lambda (child)
+                                          (copy-list (edge-lex-ids child)))
+                                      edge-list)
+                                     :leaves
+                                     (mapcan
+                                      #'(lambda (child)
+                                          (copy-list (edge-leaves child)))
+                                      edge-list))))
+	    #+ignore (format t " Succeed.")
+	    (activate-context left-vertex new-edge right-vertex f)
+            t)
+        (progn
+	  #+ignore (format t " Fail.")
+	  (when *debugging*
+	    #+ignore (format t "~%~A" *filtered-tasks*)
+	    (format t "~%Unification failure on rule ~A and edges ~:A" 
+		  (rule-id rule) (mapcar #'edge-id child-edge-list)))
+          (if first-failed-p nil t))))))
 
 
-(defun evaluate-unifications (rule child-fs-list &optional nu-orth child-edges)
+(defun evaluate-unifications (rule child-fs-list &optional nu-orth child-edge-list backwardp)
   ;; An additional optional argument is given. This is the new orthography if
   ;; the unification relates to a morphological process. If it is present, it
   ;; is inserted in the resulting fs
   (let*
       ((current-tdfs (rule-full-fs rule))
-       (rule-daughter-order (cdr (rule-order rule)))
-       (rule-apply-order (rule-daughters-apply-order rule))
-       (n 0)
+       (rule-daughter-order
+          (if backwardp (rule-daughters-order-reversed rule) (cdr (rule-order rule))))
+       (n -1)
        (new-orth-fs (if nu-orth (get-orth-tdfs nu-orth))))
     ;; shouldn't strictly do this here because we may not need it but
     ;; otherwise we get a nested unification context error - cache the values
     ;; for a word, so it's not reconstructed only wasted if the morphology is
     ;; wrong
     (with-unification-context (ignore)
-      (dolist (rule-feat rule-apply-order)
-	(let ((dtr (position rule-feat rule-daughter-order :test #'eq)))
-	  (cond
-	   ((eql (incf n) 1))
-	   ((x-restrict-and-compatible-p
-	     (if (listp rule-feat)
-		 (x-existing-dag-at-end-of 
-		  (tdfs-indef current-tdfs) rule-feat)
-	       (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
-	     (edge-dag-restricted (nth dtr child-edges))))
-	   (t (incf *filtered-tasks*)
-	      (return-from evaluate-unifications nil)))
-	  (incf *executed-tasks*)
-	  (if (setq current-tdfs
+      (dolist (rule-feat rule-daughter-order)
+         (incf n)
+         (let ((child-edge (pop child-edge-list)))
+           (cond
+	     ((eql n 0))
+             ((x-restrict-and-compatible-p
+	       (if (listp rule-feat)
+		   (x-existing-dag-at-end-of 
+		    (tdfs-indef current-tdfs) rule-feat)
+	         (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
+	       (edge-dag-restricted child-edge)))
+	     (t (incf *filtered-tasks*)
+	        (return-from evaluate-unifications nil))))
+         (incf *executed-tasks*)
+         (if (setq current-tdfs
 		(yadu current-tdfs
-		      (create-temp-parsing-tdfs (nth dtr child-fs-list)
+		      (create-temp-parsing-tdfs (pop child-fs-list)
 						rule-feat)))
-	      (incf *successful-tasks*)
-	    (return-from evaluate-unifications nil))))
+	     (incf *successful-tasks*)
+	     (return-from
+                evaluate-unifications (values nil (eql n 0))))) ; first attempt failed?
       ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of will return the
       ;; entire structure
       (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
@@ -832,7 +842,8 @@
 
 
 (defun create-temp-parsing-tdfs (tdfs flist)
-  (if (null flist) tdfs
+  #+:powerpc (decf hh (CCL::%HEAP-BYTES-ALLOCATED))
+  (prog1 (if (null flist) tdfs
     (let ((indef-dag (create-dag))
           (tail nil))
       (unify-list-path flist indef-dag (tdfs-indef tdfs))
@@ -842,7 +853,8 @@
           (for tail-element in (tdfs-tail tdfs)
                do
                (push (add-path-to-tail path tail-element) tail))))
-      (make-tdfs :indef indef-dag :tail tail))))
+      (make-tdfs :indef indef-dag :tail tail)))
+    #+:powerpc (incf hh (CCL::%HEAP-BYTES-ALLOCATED))))
 
 (defun get-orth-tdfs (str)
   (or (cdr (assoc str *cached-orth-str-list* :test #'equal))
@@ -1005,13 +1017,19 @@
   (setf *lex-ids-used* nil)
   (let* ((output-file 
             (or parse-file (ask-user-for-new-pathname "Output file?")))
+         (nsent 0)
          (start-time (get-internal-run-time)))
      (unless output-file (return-from batch-parse-sentences nil))
+     (clear-type-cache)
      (with-open-file (ostream output-file :direction :output
                       :if-exists :supersede :if-does-not-exist :create)
-       (format t "~%Parsing test file")
+        (format t "~%;;; Parsing test file") (finish-output t)
         (loop
            (when (eql raw-sentence 'eof) (return))
+           (incf nsent)
+           (when (eql (rem nsent 50) 1)
+              (clear-expanded-lex))      ; try and avoid image increasing
+                                         ; at some speed cost
            (let ((interim-sentence (if access-fn (apply access-fn (list raw-sentence))
                                      raw-sentence)))
              (unless (fboundp *do-something-with-parse*)
@@ -1033,7 +1051,7 @@
                               (when (fboundp *do-something-with-parse*)
                                 (funcall *do-something-with-parse*)))
                        (error (condition)
-                              (format t  "~%Error: ~A caused by ~A~%" condition user-input)))                  
+                              (format t  "~%Error: ~A caused by ~A~%" condition user-input))) 
                    (unless (fboundp *do-something-with-parse*)
                      ;;; if we're doing something else, let that function
                      ;;; control the output
@@ -1043,12 +1061,9 @@
              (for lex-id in (collect-expanded-lex-ids *lexicon*)
                   do
                   (pushnew lex-id *lex-ids-used*))
-             (clear-expanded-lex)       ; try and avoid image increasing
-                                        ; at some speed cost
              (setq raw-sentence (read-line istream nil 'eof))))
-        (format ostream ";;; Total elapsed time: ~A msecs~%" 
+        (format t "~%;;; Finished test file~%;;; Total CPU time: ~A msecs~%" 
                 (- (get-internal-run-time) start-time))
-        (format t "~%Finished test file")
         (lkb-beep))))
 
 
@@ -1093,26 +1108,24 @@
 
 ;;; DISCO-style rule filter
 
-(defparameter *rule-filter* nil)
+(defvar *rule-filter* nil)
 
 (defun init-filter nil
-  (let ((names (make-hash-table :test #'eq))
-	(max-arity 0)
+  (let ((max-arity 0)
 	(rule-no 0)
 	(rule-list NIL))
     (flet ((process-rule (name rule)
 	     (setq max-arity (max max-arity (1- (length (rule-order rule)))))
 	     (push (list rule-no (rule-full-fs rule) (cdr (rule-order rule)))
 		   rule-list)
-	     (setf (gethash name names) rule-no)
+	     (setf (get name 'filter-index) rule-no)
 	     (incf rule-no)))
       (maphash #'process-rule *rules*)
       (maphash #'process-rule *lexical-rules*))
     (values
      (setf *rule-filter*
-       (cons names
-	     (make-array (list rule-no rule-no max-arity)
-			 :initial-element nil)))
+       (make-array (list rule-no rule-no max-arity)
+			 :initial-element nil))
      rule-list)))
 
 (defun build-filter nil
@@ -1131,7 +1144,7 @@
 				       (copy-tdfs-completely test-tdfs)
 				     test-tdfs)
 				   (nth arg rule-dtrs)))
-			    (setf (aref (cdr filter)
+			    (setf (aref filter
 					rule-index test-index arg) t)
 			  nil)))))
     t))
@@ -1139,8 +1152,8 @@
 (defun check-filter (rule test arg)
   (if (and *rule-filter*
 	   (symbolp test))
-      (aref (cdr *rule-filter*)
-	    (gethash rule (car *rule-filter*))
-	    (gethash test (car *rule-filter*))
+      (aref *rule-filter*
+	    (get rule 'filter-index)
+	    (get test 'filter-index)
 	    arg)
     t))
