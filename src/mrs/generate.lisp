@@ -139,7 +139,7 @@
   (with-package (:lkb)
     (clear-gen-chart)
     (setf *cached-category-abbs* nil)
-    
+
     ;;
     ;; no need to even try generating when there is no relation index
     ;;
@@ -147,7 +147,8 @@
                  (> (hash-table-count mrs::*relation-index*) 0))
       (error 'generator-uninitialized))
     
-    (let (lex-results lex-items grules lex-orderings 
+    (let ((*gen-packing-p* (if *gen-first-only-p* nil *gen-packing-p*))
+          lex-results lex-items grules lex-orderings 
           tgc tcpu conses symbols others
           (input-rels 0))
       (time-a-funcall
