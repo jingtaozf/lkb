@@ -12,6 +12,7 @@
    (master :initform nil :accessor mrs-transfer-master)
    (title :initform "" :accessor mrs-transfer-title)
    (mode :initform nil :accessor mrs-transfer-mode)
+   (target :initform nil :accessor mrs-transfer-target :allocation :class)
    (stream :initform nil :accessor mrs-transfer-stream))
   (:panes
    (top
@@ -78,7 +79,7 @@
                       (or (mrs-transfer-stack frame)
                           (mrs-transfer-edges frame))))
            (mrs (edge-mrs edge))
-           (edges (transfer-mrs mrs :filterp nil)))
+           (edges (transfer-mrs mrs :filter nil)))
       (when edges (browse-mrss edges "Transfer Output")))))
 
 
@@ -100,12 +101,17 @@
   (clim:with-application-frame (frame)
     (let ((command (clim:menu-choose
                     '(("Scope" :value :scope :active t)
+                      ("Indexed" :value :indexed :active t)
+                      ("Dependencies" :value :dependencies :active t)
+                      ("Sort" :value :sort :active t)
                       ("Step" :value :step :active t)
                       ("Clone" :value :clone :active t)
                       ("Save" :value :save :active t)
                       ("Read" :value :read :active t)
                       ("Print" :value :print :active t)
                       ("Rule" :value :rule :active t)
+                      ("Select" :value :select :active t)
+                      ("Compare" :value :compare :active t)
                       #+:null
                       ("Apply" :value :apply :active t)
                       #+:null
@@ -122,6 +128,37 @@
                 (title (format nil "~a - Scopes" (transfer-title frame))))
            (lkb::show-mrs-scoped-window nil mrs title)))
 
+        (:indexed
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+                (title (format nil "~a - Indexed" (transfer-title frame))))
+           (lkb::show-mrs-indexed-window nil mrs title)))
+
+        (:dependencies
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs))
+                (title 
+                 (format nil "~a - Dependencies" (transfer-title frame))))
+           (lkb::show-mrs-dependencies-window nil mrs title)))
+        
+        (:sort
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (clone-mrs (edge-mrs mrs)) mrs))
+                (title 
+                 (format nil "~a [sorted]" (transfer-title frame))))
+           (when mrs
+             (setf (mrs:psoa-liszt mrs)
+               (stable-sort 
+                (mrs:psoa-liszt mrs) 
+                #'string-lessp :key #'mrs:rel-pred))
+             (browse-mrss (list mrs) title))))
+        
         (:step
          (let* ((edge (nth (mrs-transfer-i frame) 
                            (or (mrs-transfer-stack frame)
@@ -192,6 +229,7 @@
               excl:*initial-terminal-io*
               "~&browse-mrss(): unable to open `~a'.~%"
               file))))
+
         (:print
          (multiple-value-bind (destination orientation scale name)
              (lkb::get-print-options)
@@ -225,7 +263,58 @@
                     (format t "~%Error: ~A~%" condition))
                   (serious-condition (condition)
                     (format t "~%Something nasty: ~A~%" condition))))))))
-        (:rule (interactively-browse-mtr frame))))))
+        (:rule (interactively-browse-mtr frame))
+
+        (:select
+         (let* ((mrs (nth (mrs-transfer-i frame) 
+                          (or (mrs-transfer-stack frame) 
+                              (mrs-transfer-edges frame))))
+                (mrs (if (edge-p mrs) (edge-mrs mrs) mrs)))
+           (when (mrs::psoa-p mrs)
+             (setf (mrs-transfer-target frame) mrs)
+             (setf %mrs% mrs)
+             (format
+              excl:*initial-terminal-io*
+              "~&browse-mrss(): current view now active as selection.~%"))))
+
+        (:compare
+         (cond
+          ((mrs-transfer-target frame)
+           (let* ((mrs (nth (mrs-transfer-i frame) 
+                            (or (mrs-transfer-stack frame) 
+                                (mrs-transfer-edges frame))))
+                  (mrs (if (edge-p mrs) (edge-mrs mrs) mrs)))
+             (when (mrs::psoa-p mrs)
+               (let* ((stream (make-string-output-stream)))
+                 (multiple-value-bind (result condition)
+                     (ignore-errors
+                      (let ((*standard-output* stream))
+                        (mrs::mrs-equalp 
+                         mrs (mrs-transfer-target frame) nil t nil)))
+                   (cond
+                    (condition
+                      (clim:beep)
+                      (format
+                       excl:*initial-terminal-io*
+                       "~&browse-mrss(): mrs-equalp() error `~a'.~%"
+                       (lkb::normalize-string (format nil "~a" condition))))
+                    (t
+                     (format
+                      excl:*initial-terminal-io*
+                      "~&browse-mrss(): the equivalence comparison was ~
+                       ~:[negative~;positive~].~%"
+                      result)
+                     (unless result
+                       (format
+                        excl:*initial-terminal-io*
+                        "~%~%~a~%~%"
+                        (get-output-stream-string stream))))))))))
+          (t
+           (clim:beep)
+           (format
+            excl:*initial-terminal-io*
+            "~&browse-mrss(): no active MRS selection.~%"))))))))
+
 
 
 (defun show-mrs-transfer (frame stream &rest rest)
@@ -247,7 +336,9 @@
                      (format 
                       stream 
                       "~%Invalid MRS Object~%")))))
-            (when (and (edge-source edge) *transfer-filter-p*)
+            (when (and (mrs::fragmentp mrs) (not (edge-source edge)))
+              (lkb::recolor-record record clim::+blue+))
+            (when (edge-source edge)
               (lkb::recolor-record record clim:+red+))))
         (when (edge-rule edge)
           (clim:formatting-row (stream)
@@ -302,7 +393,8 @@
   (mp:run-function 
    title 
    #'(lambda ()
-       (let ((frame (clim:make-application-frame 'mrs-transfer)))
+       (let ((frame (clim:make-application-frame 'mrs-transfer))
+             (%transfer-edge-id% 0))
          (setf (mrs-transfer-title frame) title)
          (typecase edges
            (edge

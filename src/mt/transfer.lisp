@@ -14,12 +14,14 @@
 ;;; - think of a nice, declarative way to delete properties from indices.
 ;;;
 
-(defparameter *transfer-edge-limit* 2000)
+(defparameter *transfer-edge-limit* 100)
 
 (defparameter *transfer-debug-stream* 
   (or #+:allegro excl:*initial-terminal-io* t))
 
 (defparameter *transfer-filter-p* t)
+
+(defparameter *transfer-debug-p* t)
 
 (defparameter *transfer-postprocess-p* t)
 
@@ -28,6 +30,14 @@
 (defparameter %transfer-edge-id% 100)
 
 (defparameter %transfer-rule-id% 0)
+
+(defparameter %transfer-copy-eps% nil)
+
+(defparameter %transfer-unique-variables% nil)
+
+(defparameter %transfer-equal-elements% nil)
+
+(defparameter %transfer-subsume-elements% nil)
 
 (defparameter %transfer-optional-rules% 0)
 
@@ -40,6 +50,12 @@
 (defparameter %transfer-recursive-output-p% t)
 
 (defparameter %transfer-edges% nil)
+
+(defparameter %transfer-chart% nil)
+
+(defparameter %transfer-clones% nil)
+
+(defparameter %transfer-original-variables% nil)
 
 ;;;
 ;;; _fix_me_
@@ -90,18 +106,12 @@
      (list (mrs::vsym "PROG") (mrs::vsym "E.ASPECT.PROGR"))
      (list (mrs::vsym "+") (mrs::vsym "+"))
      (list (mrs::vsym "-") (mrs::vsym "-"))
-     (list nil (mrs::vsym "-"))))
-   (cons
-    (mrs::vsym "e")
-    (list
-     (list (mrs::vsym "PERF") (mrs::vsym "E.ASPECT.PERF"))
-     (list (mrs::vsym "+") (mrs::vsym "+"))
-     (list (mrs::vsym "-") (mrs::vsym "-"))
      (list nil (mrs::vsym "-"))))))
 
 (defparameter %transfer-properties-defaults% 
   (list
    (list (mrs::vsym "e") 
+         (cons (mrs::vsym "E.ASPECT.PERF") (mrs::vsym "-"))
          (cons (mrs::vsym "E.MOOD") (mrs::vsym "indicative")))))
 
 (defparameter %transfer-properties-filter%
@@ -110,7 +120,9 @@
    (cons (mrs::vsym "TENSE") (mrs::vsym "E.TENSE"))
    (cons (mrs::vsym "PROG") (mrs::vsym "E.ASPECT.PROGR"))
    (cons (mrs::vsym "PERF") (mrs::vsym "E.ASPECT.PERF"))
-   (cons (mrs::vsym "SCRATCH") nil)
+   (cons *mtr-skolem-property* nil)
+   (cons (mrs::vsym "MARK") nil)
+   (cons (mrs::vsym "DITCH") nil)
    (cons (mrs::vsym "ASPECT-PROTRACTED") nil)
    (cons (mrs::vsym "ASPECT-STATIVE") nil)
    (cons (mrs::vsym "ASPECT-TELIC") nil)
@@ -138,14 +150,20 @@
     (call-next-method)
     (format
      stream
-     "~@[@~a : ~]~@[~a ~]~@[! ~a ~]-> ~a~@[ / ~a~]"
+     "~@[~a : ~]~@[~a ~]~@[! ~a ~]-> ~a~@[ / ~a~]"
      (mtr-context object) (mtr-input object) (mtr-filter object) 
      (mtr-output object) (mtr-defaults object))))
+
+(defmacro mtrs-filter-p (mtr)
+  `(getf (mtrs-flags ,mtr) :filter))
+
+(defmacro mtr-optional-p (mtr)
+  `(getf (mtr-flags ,mtr) :optional))
 
 (defstruct (edge (:constructor make-edge-x))
   (id (let ((n %transfer-edge-id%)) (incf %transfer-edge-id%) n))
   rule mrs daughter solution n (vector 0)
-  source)
+  source (depth 0))
 
 (defun make-edge (&rest rest)
   (let* ((edge (apply #'make-edge-x rest))
@@ -157,10 +175,15 @@
        ((edge-p daughter) (edge-vector daughter))
        ((mtr-p (edge-rule edge)) (mtr-vector (edge-rule edge)))
        (t (edge-vector edge))))
+    (setf (edge-depth edge) 
+      (if (edge-p daughter)
+        (+ 1 (edge-depth daughter))
+        1))
+    (when (edge-p daughter) (setf (edge-source edge) (edge-source daughter)))
     (push edge %transfer-edges%)
     (cond
      ((> (edge-id edge) *transfer-edge-limit*)
-      (print-edges)
+      (when *transfer-debug-p* (print-edges))
       (error 
        "make-edge(): transfer edge limit exhausted (~a)."
        *transfer-edge-limit*))
@@ -272,14 +295,9 @@
     (lkb::read-tdl-type-files-aux files settings)))
 
 (defun read-transfer-rules (files &optional name 
-                            &key filter optional postprocess)
+                            &key (filter nil filterp)
+                                 optional)
 
-  ;;
-  ;; _fix_me_
-  ;; actually implement :filter et al.                        (10-feb-04; oe)
-  ;;
-  (declare (ignore filter optional postprocess))
-  
   ;;
   ;; _fix_me_
   ;; make top variable type (`u') customizable, one day.       (22-jan-04; oe)
@@ -347,9 +365,10 @@
                       (read-char stream)
                       (let ((unifications 
                              (lkb::read-expanded-avm-def stream id))
-                            lhs rhs constants)
+                            lhs constants copies equals subsumes rhs)
                         (when (lkb::check-for #\. stream id)
-                          (multiple-value-setq (lhs rhs constants)
+                          (multiple-value-setq (lhs constants 
+                                                copies equals subsumes rhs)
                             (discriminate-mtr-unifications unifications))
                           (setf lhs (lkb::process-unifications lhs))
                           (unless lhs
@@ -377,18 +396,16 @@
                               `~(~a~)' is not wellformed.~%"
                                id)))
                           (let ((rule (convert-dag-to-mtr 
-                                       lhs rhs constants id)))
-                            ;;
-                            ;; _fix_me_
-                            ;; maybe inherit flags from MTRS defaults and do a
-                            ;; normalization of :obligatory ([ OPTIONAL - ]).
-                            ;;                                 (25-jan-04; oe)
+                                       lhs constants copies 
+                                       equals subsumes rhs id
+                                       :optional optional)))
                             (when rule (push rule rules))))))))))
         finally 
-          (setf *transfer-rule-sets*
-            (append 
-             *transfer-rule-sets*
-             (list (make-mtrs :id id :mtrs (nreverse rules))))))))
+          (let ((mtrs (make-mtrs :id id :mtrs (nreverse rules))))
+            (setf (getf (mtrs-flags mtrs) :filter)
+              (if filterp filter t))
+            (setf *transfer-rule-sets* 
+              (append *transfer-rule-sets* (list mtrs)))))))
 
 (defun discriminate-mtr-unifications (unifications)
   ;;
@@ -398,14 +415,29 @@
   ;; its first component.                                      (27-jan-04; oe)
   ;;
   (loop
-      with lhss with constants with rhss
+      with lhss with constants with copies with equals with subsumes with rhss
       with n = (length *mtr-output-path*)
       for unification in unifications
       for lhs = (lkb::unification-lhs unification)
       for path = (and (lkb::path-p lhs) (lkb::path-typed-feature-list lhs))
       for outputp = (null (mismatch *mtr-output-path* path :end2 n))
       for rhs = (lkb::unification-rhs unification)
-      when (and outputp (lkb::u-value-p rhs))
+      when (and path (lkb::u-value-p rhs)
+                (or (eq (lkb::u-value-type rhs) *mtr-copy-operator*)
+                    (eq (lkb::u-value-type rhs) *mtr-equal-operator*)
+                    (eq (lkb::u-value-type rhs) *mtr-subsume-operator*)))
+      do 
+        (cond
+         ((eq (lkb::u-value-type rhs) *mtr-copy-operator*)
+          (push path copies))
+         ((eq (lkb::u-value-type rhs) *mtr-equal-operator*)
+          (push path equals))
+         ((eq (lkb::u-value-type rhs) *mtr-subsume-operator*)
+          (push path subsumes)))
+        (push 
+         (lkb::make-unification :lhs lhs :rhs lhs)
+         lhss)
+      else when (and outputp (lkb::u-value-p rhs))
       do 
         #+:debug
         (format t "rhs: ~a~%" unification)
@@ -444,9 +476,10 @@
       finally 
         #+:debug
         (setf %lhss lhss %rhss rhss)
-        (return (values lhss rhss constants))))
+        (return (values lhss constants copies equals subsumes rhss))))
 
-(defun convert-dag-to-mtr (lhs rhs constants id)
+(defun convert-dag-to-mtr (lhs constants copies equals subsumes
+                           rhs id &key optional)
   ;;
   ;; _fix_me_
   ;; give some thought to variable types: authors of transfer rules might well
@@ -470,15 +503,20 @@
   ;; nodes more, e.g. handle an additional type appropriately, since constants
   ;; cannot have sub-structures, at least :-).                 (27-jan-04; oe)
   ;;
-  #+:debug
-  (setf %lhs lhs %rhs rhs %constants constants)
+  ;; _fix_me_
+  ;; i now more or less believe we should stop using construct-mrs(), and build
+  ;; our own MRS-like data structure instead ... later.        (15-feb-04; oe)
+  ;;
+  #-:debug
+  (setf %lhs lhs %constants constants %copies copies %rhs rhs)
   (let ((generator (let ((n 0)) #'(lambda () (decf n))))
-        (mrs::*named-nodes* nil))
+        (mrs::*named-nodes* nil)
+        (mrs::*all-nodes* nil))
     ;;
     ;; to allow use of `standard' MRS variables as (meta-level) variables on
     ;; `constant' MRS elements (like PRED, CARG, and extras), work around the
     ;; default construct-mrs() behaviour; maybe we should move to doing all MRS
-    ;; construction ourselves, or maybe not use MRS variables for meta-leval
+    ;; construction ourselves, or maybe not use MRS variables for meta-level
     ;; variables.
     ;;
     (when constants (convert-constants-to-variables lhs constants generator))
@@ -504,10 +542,69 @@
                (and defaults
                     (not (vacuous-constraint-p *mtr-output-path* defaults))
                     (mrs::construct-mrs defaults generator)))
-           (flags (and lhs (mrs::path-value lhs *mtr-flags-path*)))
-           (flags (and flags
-                       (not (vacuous-constraint-p *mtr-flags-path* flags))
-                       (convert-dag-to-flags flags))))
+           (dag (and lhs (mrs::path-value lhs *mtr-flags-path*)))
+           (flags (and dag
+                       (not (vacuous-constraint-p *mtr-flags-path* dag))
+                       (convert-dag-to-flags dag)))
+           (flags (if (and optional (not (member :obligatory flags)))
+                    (adjoin :optional flags)
+                    (remove :obligatory flags)))
+           (unique (and dag
+                        (not (vacuous-constraint-p *mtr-flags-path* dag))
+                        (convert-dag-to-unique dag))))
+      ;;
+      ;; for later postprocessing, look up relations that were requested for
+      ;; OUTPUT copy, and record them in their MTR.
+      ;;
+      (loop
+          for path in copies
+          for dag = (mrs::path-value lhs path)
+          for ep = (rest (assoc dag mrs::*all-nodes* :test #'eq))
+          unless ep do
+            (format
+             t
+             "~&convert-dag-to-mtr(): no EP for +copy+ path `~{~(~a~)~^ ~}'.~%"
+             path)
+          else do (push ep %transfer-copy-eps%))
+      ;;
+      ;; do roughly the same for +equal+ and +subsume+ variables.
+      ;;
+      ;; _fix_me_
+      ;; these latter operators might be useful for PRED and CARG values too,
+      ;; i presume; look for generalization here.              (4-mar-04; oe)
+      ;;
+      (loop
+          for path in equals
+          for dag = (mrs::path-value lhs path)
+          for ep = (rest (assoc dag mrs::*all-nodes* :test #'eq))
+          unless ep do
+            (format
+             t
+             "~&convert-dag-to-mtr(): ~
+              no variable for +equal+ path `~{~(~a~)~^ ~}'.~%"
+             path)
+          else do (push ep %transfer-equal-elements%))
+      (loop
+          for path in subsumes
+          for dag = (mrs::path-value lhs path)
+          for ep = (rest (assoc dag mrs::*all-nodes* :test #'eq))
+          unless ep do
+            (format
+             t
+             "~&convert-dag-to-mtr(): ~
+              no variable for +subsume+ path `~{~(~a~)~^ ~}'.~%"
+             path)
+          else do (push ep %transfer-subsume-elements%))
+      ;;
+      ;; read out variables that are constrained to be `unique' i.e. not be
+      ;; equated with other variables during unification.
+      ;;
+      (loop
+          for dag in unique
+          for variable = (rest (assoc dag mrs::*all-nodes* :test #'eq))
+          when (mrs::var-p variable) 
+          do (push variable %transfer-unique-variables%))
+      
       (unless (or output rhs)
         ;;
         ;; warn: rule with no output specification
@@ -522,7 +619,7 @@
       ;; since our current treatment of FILTER components is wrong anyway, give
       ;; a warning and ignore rules that try to use filters.    (8-jan-04; oe)
       ;; 
-      (if filter
+      (if (and nil filter)
         (format
          t
          "~&convert-dag-to-mtr(): ~
@@ -547,15 +644,22 @@
 
 (defun convert-dag-to-flags (dag)
   (let* ((optional (mrs::path-value dag *mtr-optional-path*))
-         (copy (mrs::path-value dag *mtr-copy-path*))
          flags)
     (when (lkb::bool-value-true optional)
       (pushnew :optional flags))
     (when (lkb::bool-value-false optional)
       (pushnew :obligatory flags))
-    (when (lkb::bool-value-true copy)
-      (pushnew :copy flags))
     flags))
+
+(defun convert-dag-to-unique (dag)
+  (let* ((unique (lkb::existing-dag-at-end-of dag *mtr-unique-path*)))
+    (when (lkb::dag-p unique)
+      (loop
+          for list = unique 
+          then (lkb::existing-dag-at-end-of list lkb::*list-tail*)
+          for first = (when list
+                        (lkb::existing-dag-at-end-of list lkb::*list-head*))
+          while first collect first))))
 
 (defun vacuous-constraint-p (path dag)
   (let* ((feature (if (consp path) (first (last path)) path))
@@ -572,66 +676,78 @@
   (setf *transfer-rule-sets* nil)
   (setf %transfer-rule-id% 0)
   (setf %transfer-generation% 0)
+  (setf %transfer-copy-eps% nil)
+  (setf %transfer-equal-elements% nil)
+  (setf %transfer-subsume-elements% nil)
   (setf %transfer-variable-features% nil))
 
-(defun transfer-mrs (mrs &key (filterp *transfer-filter-p*) 
-                              (postprocessp *transfer-postprocess-p*))
+(defun transfer-mrs (mrs &key (filter *transfer-filter-p*) (debug t))
   #+:debug
   (setf %mrs% mrs)
   (setf %transfer-edges% nil)
-  (setf %transfer-edge-id% 0)
-  (multiple-value-bind (result condition)
-      (#-:debug ignore-errors #+:debug progn
-       (transfer-mrs2 
-        (list (make-edge :mrs mrs :n 1000)) 
-        *transfer-rule-sets*
-        :filterp filterp))
-    (when condition
-      #+:clim
-      (clim:beep)
-      (format
-       *transfer-debug-stream*
-       "~&transfer-mrs(): `~a'~%" condition))
-    (if postprocessp
-      (loop
-          for edge in result
-          for clone = (copy-edge edge)
-          do (setf (edge-mrs clone) (postprocess-mrs (edge-mrs edge)))
-          collect clone)
-      result)))
+  (setf %transfer-chart% nil)
+  (let* ((*transfer-filter-p* filter)
+         (*transfer-debug-p* debug)
+         (%transfer-edge-id% 0)
+         (%transfer-clones% nil)
+         (%transfer-original-variables% nil)
+         (mrs (clone-mrs mrs))
+         (n (loop
+                for variable in %transfer-clones%
+                maximize (or (mrs:var-id (first variable)) 0)
+                do (push (rest variable) %transfer-original-variables%))))
+    (multiple-value-bind (result condition)
+        (#-:debug ignore-errors #+:debug progn
+         (transfer-mrs2 
+          (list (make-edge :mrs mrs :n n)) 
+          *transfer-rule-sets*))
+      (when condition
+        #+:clim
+        (clim:beep)
+        (format
+         *transfer-debug-stream*
+         "~&transfer-mrs(): `~a'~%" condition))
+      (if *transfer-postprocess-p*
+        (loop
+            for edge in result
+            for clone = (copy-edge edge)
+            do (setf (edge-mrs clone) (postprocess-mrs (edge-mrs edge)))
+            collect clone)
+      result))))
 
-(defun transfer-mrs2 (edges mtrss &key (filterp nil))
+(defun transfer-mrs2 (edges mtrss)
   (if (null mtrss)
     edges
     (transfer-mrs2 
      (loop
          for edge in edges
-         append (apply-mtrs edge (first mtrss) :filterp filterp))
-     (rest mtrss)
-     :filterp filterp)))
+         append (apply-mtrs edge (first mtrss)))
+     (rest mtrss))))
 
-(defun adjoin-edge (new edges)
-  (labels ((subsumesp (edge1 edge2)
-             ;;
-             ;; true if .edge1. (by MTR vector) subsumes .edge2.
-             ;;
-             (let* ((mask (lognot %transfer-optional-rules%))
-                    (vector1 (logand (edge-vector edge1) mask))
-                    (vector2 (logand (edge-vector edge2) mask)))
-               (= (logior vector2 vector1) vector2))))
-    (loop
-        with result
-        for old in edges
-        when (subsumesp old new) return edges
-        unless (subsumesp new old) do (push old result)
-        finally (return (cons new result)))))
+(defun equivalentp (edge1 edge2)
+  (let* ((mask (lognot %transfer-optional-rules%))
+         (vector1 (logand (edge-vector edge1) mask))
+         (vector2 (logand (edge-vector edge2) mask))
+         (mrs1 (edge-mrs edge1))
+         (mrs2 (edge-mrs edge2)))
+    (and (= (edge-depth edge1) (edge-depth edge2))
+         (= (logior vector2 vector1) vector2)
+         (ignore-errors
+           (mrs::mrs-equalp mrs1 mrs2 t nil)))))
 
-(defun apply-mtrs (edge mtrs &key (filterp t))
+(defun packed-edge-p (edge)
+  (loop
+      for old in %transfer-chart%
+      thereis (unless (eq edge old) (equivalentp edge old))))
+
+(defun apply-mtrs (edge mtrs &key filter)
 
   (when (or (null edge) (null mtrs)) (return-from apply-mtrs))
   
+  (push edge %transfer-chart%)
   (loop
       with result
+      with filter = (or filter (mtrs-filter-p mtrs))
       with agenda = (list edge)
       with all = (mtrs-mtrs mtrs)
       for task = (pop agenda)
@@ -655,17 +771,21 @@
             with resultp = t
             for mtr in mtrs
             for optionalp = (member :optional (mtr-flags mtr))
-            for edges = (apply-mtr task mtr)
             while resultp
+            for edges = (apply-mtr task mtr)
             when (and edges (not optionalp)) do (setf resultp nil)
             do (loop 
                    for edge in edges 
+                   unless (packed-edge-p edge)
                    do 
                      #+:debug
                      (format
                       *transfer-debug-stream*
                       "apply-mtrs(): >> ~a~%"
                       edge)
+                     #+:null
+                     (unless optionalp (setf resultp nil))
+                     (push edge %transfer-chart%)
                      (push edge agenda))
             finally 
               (when resultp 
@@ -676,38 +796,31 @@
                  task)
                 (push task result)))
       finally 
-        ;;
-        ;; sort resulting derivations by `edit distance' to the original MRS,
-        ;; measured in terms of the size of overlap of predicates names; also
-        ;; see comment on filtering below.
-        ;;
-        (let ((eps (mrs:psoa-liszt (edge-mrs edge))))
-          (loop
-              for edge in result
-              do (setf (edge-source edge)
-                   (intersection 
-                    (mrs:psoa-liszt (edge-mrs edge)) eps 
-                    :key #'mrs::rel-pred :test #'equal))))
-        (setf result 
-          (stable-sort 
-           result #'< :key #'(lambda (edge) (length (edge-source edge)))))
-        (if filterp
-          ;;
-          ;; when filtering is requested, suppress all derivations that have a
-          ;; non-emtpy overlap (in terms of predicate names) with the input MRS
-          ;; ... for now, this assumes that the SL and TL predicate sets are
-          ;; fully disjoint, but mid-term we should use `color coding' instead.
-          ;;
+        (if filter
           (return
-            (loop
-                with eps = (mrs:psoa-liszt (edge-mrs edge))
-                for edge in result
-                for mrs = (edge-mrs edge)
-                when (null (intersection 
-                            (mrs:psoa-liszt mrs) eps 
-                            :key #'mrs::rel-pred :test #'equal))
-                collect edge))
-          (return result))))
+            (stable-sort 
+             (loop
+                 with eps = (mrs:psoa-liszt (edge-mrs edge))
+                 for edge in result
+                 for source = (intersection 
+                               (mrs:psoa-liszt (edge-mrs edge)) eps 
+                               :key #'mrs::rel-pred :test #'equal)
+                 do
+                   (loop
+                       for foo in source
+                       do (pushnew foo (edge-source edge)))
+                 unless (and source *transfer-filter-p*) collect edge)
+             #'(lambda (foo bar)
+                 (if (or (and (null (edge-source foo)) 
+                              (null (edge-source bar)))
+                         (and (edge-source foo) (edge-source bar)))
+                   (> (edge-depth foo) (edge-depth bar))
+                   (null (edge-source foo))))))
+          ;;
+          ;; sort resulting derivations by `edit distance' to the original MRS,
+          ;; measured in terms of the number of MTRs that we have applied.
+          ;;
+          (return (stable-sort result #'> :key #'edge-depth)))))
 
 (defun apply-mtr (edge mtr)
   (loop
@@ -827,13 +940,8 @@
       (setf solutions
         (loop
             for solution in solutions
-            unless (unify-mtr-component mrs filter solution) 
-            collect solution
-            else do
-              ;;
-              ;; trace
-              ;;
-              nil)))   
+            unless (unify-mtr-component mrs filter solution)
+            collect solution)))
     solutions))
 
 (defun unify-mtr-component (mrs1 mrs2 &optional solution)
@@ -925,7 +1033,9 @@
         (loop
             with flist1 = (mrs:rel-flist ep1)
             with flist2 = (mrs:rel-flist ep2)
-            for role in (intersect flist1 flist2 :key #'mrs:fvpair-feature)
+            with intersection 
+            = (intersect flist1 flist2 :key #'mrs:fvpair-feature)
+            for role in intersection
             for feature = (mrs:fvpair-feature role)
             for role1 = (find feature flist1 :key #'mrs:fvpair-feature)
             for role2 = (find feature flist2 :key #'mrs:fvpair-feature)
@@ -970,14 +1080,14 @@
         (when solutions
           (loop
               for solution in solutions
-              nconc (unify-hconss hconss2 (rest hconss2) solution)))))
+              nconc (unify-hconss hconss1 (rest hconss2) solution)))))
     (unless hconss2 (list solution))))
 
 (defun unify-hcons (hcons1 hcons2 solution)
   ;;
   ;; okay, here is the current (22-jan-04) rationale about HCONS unification;
   ;; all handles in HCONS must occur somewhere else in the input MRS (this is
-  ;; enforced by the MRS reader0; in the MTR, HCONS elements that do not link
+  ;; enforced by the MRS reader); in the MTR, HCONS elements that do not link
   ;; up with other parts of the rule, could only be used to unconditionally
   ;; ditch all HCONS elements, maybe of a certain type, from the input MRS.
   ;; when unifying HCONSs, we disallow the creation of additional equations for
@@ -1003,11 +1113,26 @@
                    (retrieve-variable variable1 solution)
                    variable1))
          (forwardp1 (not (eq variable1 value1)))
+         #+:null
+         (uniquep (or (and forwardp1 (mrs::var-p value1)
+                           (find value1 %transfer-unique-variables%))
+                      (and (mrs::var-p variable2) 
+                           (find variable2 %transfer-unique-variables%))))
          (value2 (if (mrs::var-p variable2)
                    (retrieve-variable variable2 solution)
                    variable2))
          (forwardp2 (not (eq variable2 value2))))
+    #+:null
+    (when uniquep
+      (format
+       t
+       "unify-values(): ~a :~a vs. ~a : ~a -> ~(~a~).~%"
+       variable1 value1 variable2 value2
+       (and uniquep (or forwardp1 forwardp2) (not (eq value1 value2)))))
+    
     (cond
+     #+:null
+     ((and uniquep (or forwardp1 forwardp2) (not (eq value1 value2))) nil)
      ((or (eq value1 value2) (null value2))
       value1)
      ((and (numberp value1) (numberp value2))
@@ -1022,15 +1147,6 @@
            (or (stringp value2) (symbolp value2)))
       (unify-types value1 value2))
      ((null value1) 
-      value2)
-     ;;
-     ;; _fix_me_
-     ;; is the following actually correct?  an object-level variable against a
-     ;; constant?  i think probably the next one was intended.  (27-jan-04; oe)
-     ;;
-     #+:null
-     ((and (mrs::var-p value1) (not (mrs::var-p value2)))
-      (forward-variable value1 value2 solution)
       value2)
      ((and (not (mrs::var-p value1)) (mrs::var-p value2))
       (forward-variable value2 value1 solution)
@@ -1137,12 +1253,33 @@
            unless (and ep2 (find ep2 input)) 
            collect (expand-ep ep1 solution))
        (loop
+           with input = (and (mtr-input mtr) (mrs:psoa-liszt (mtr-input mtr)))
            with defaults = (when (mrs::psoa-p (mtr-defaults mtr))
                              (mrs:psoa-liszt (mtr-defaults mtr)))
-           for ep in (and (mtr-output mtr) 
-                          (mrs:psoa-liszt (mtr-output mtr)))
+           for ep in (when (mtr-output mtr) 
+                       (mrs:psoa-liszt (mtr-output mtr)))
+           for i from 0
+           for copyp = (member ep %transfer-copy-eps% :test #'eq)
+           for original = (when copyp
+                            (let ((ep1 (nth i input)))
+                              (and ep1 (retrieve-ep ep1 solution))))
            for default = (pop defaults)
-           collect (merge-eps (expand-ep ep solution) default))))
+           when (and copyp (null original))
+           do
+             (format
+              t
+              "expand-solution(): unmatched +copy+ EP # ~a in `~(~a~)'.~%"
+              i (mtr-id mtr))
+           else when copyp
+           collect
+             ;;
+             ;; _fix_me_
+             ;; for the time being, we disallow variable bindings in +copy+
+             ;; OUTPUT EPs, so that we can assert that all information is in
+             ;; the DEFAULTS component.                        (15-feb-04; oe)
+             ;;
+             (merge-eps (expand-ep original solution) default)
+           else collect (merge-eps (expand-ep ep solution) default))))
     (setf (mrs:psoa-h-cons result)
       (nconc
        ;;
@@ -1168,9 +1305,13 @@
               :scarg (expand-value (mrs:hcons-scarg hcons) solution)
               :outscpd (expand-value
                         (mrs:hcons-outscpd hcons) solution)))))
-    result))
+    (eliminate-scratch result)))
 
 (defun expand-ep (ep solution)
+  ;;
+  ;; at this stage, we expand variable bindings and should make sure to _not_
+  ;; share any structure with either the input MRS or MTR used.
+  ;;
   (let* ((label (expand-value (mrs:rel-handel ep) solution))
          (pred (let ((pred (mrs:rel-pred ep)))
                   (if (mrs::var-p pred)
@@ -1182,25 +1323,36 @@
           for role in (mrs:rel-flist ep)
           for feature = (mrs:fvpair-feature role)
           for value = (expand-value (mrs:fvpair-value role) solution)
+          when value 
           collect (mrs::make-fvpair :feature feature :value value)))
     result))
 
 (defun expand-value (value solution)
   (if (mrs::var-p value)
     (let ((foo (retrieve-variable value solution)))
-      (if (and (mrs::var-p foo) (< (mrs::var-id foo) 0))
-        (let ((new (new-variable (mrs::var-type foo) (mrs::var-extra foo))))
-          (forward-variable foo new solution)
-          new)
-        foo))
+      (unless (variable-delete-p foo)
+        (if (and (mrs::var-p foo) 
+                 (or (member foo %transfer-original-variables% :test #'eq)
+                     (< (mrs::var-id foo) 0)))
+          (let ((new (new-variable (mrs::var-type foo) (mrs::var-extra foo))))
+            (forward-variable foo new solution)
+            new)
+          foo)))
     value))
 
 (defun merge-eps (ep default)
+  ;;
+  ;; apparently, we assume we can destructively modify .ep. at this point.  we
+  ;; better make sure it not share any variables with the original ...
+  ;;
+  #+:debug
+  (setf %ep ep %default default)
   (unless default (return-from merge-eps ep))
   (when (mrs::rel-pred default)
     (setf (mrs::rel-pred ep) (mrs::rel-pred default)))
   (loop
       with defaults = (mrs:rel-flist default)
+      with used
       for role in (mrs:rel-flist ep)
       for feature = (mrs:fvpair-feature role)
       for value = (mrs:fvpair-value role)
@@ -1212,6 +1364,7 @@
         ;; there could be non-variable defaults that are more general than the
         ;; actual value, for CARGs, say.                        (8-jan-04; oe)
         ;;
+        (push default used)
         (let ((default (mrs:fvpair-value default)))
           (if (and (mrs::var-p value) (mrs::var-p default))
             (merge-values value default)
@@ -1220,11 +1373,40 @@
                 (merge-values value default)
                 default))))
       else when default do
-        (push (mrs::copy-fvpair default) (mrs:rel-flist ep)))
+        ;;
+        ;; _fix_me_
+        ;; this seems wrong: just copy in the actual `value' part from the MTR;
+        ;; i suspect we should (a) copy and (b) ensure variable uniqueness.
+        ;;                                                     (19-feb-04; oe)
+        (push default used)
+        (push (mrs::copy-fvpair default) (mrs:rel-flist ep))
+      finally
+        (loop
+            for default in defaults
+            for value = (let ((foo (mrs:fvpair-value default)))
+                          (if (mrs::var-p foo)
+                            (new-variable
+                             (mrs::var-type foo) (mrs::var-extra foo))
+                            foo))
+            unless (member default used :test #'eq) do
+              (push 
+               (mrs::make-fvpair 
+                :feature (mrs:fvpair-feature default) :value value)
+               (mrs:rel-flist ep))))
   ep)
 
 (defun mtr-operator-p (value)
   (or (eq value *mtr-upcase-operator*) (eq value *mtr-downcase-operator*)))
+
+(defun variable-delete-p (variable)
+  (when (mrs::var-p variable)
+    (let ((properties (mrs:var-extra variable)))
+      (loop
+          for property in properties
+          thereis (and (eq (mrs::extrapair-feature property)
+                           *mtr-ditch-property*)
+                       (eq (mrs::extrapair-value property) 
+                           *mtr-true-type*))))))
 
 (defun merge-values (variable default)
   ;;
@@ -1266,15 +1448,27 @@
           collect (mrs::make-extrapair :feature feature :value value))
       (loop
           with defaults = (mrs:var-extra default)
+          with used
           for extra in (mrs:var-extra variable)
           for feature = (mrs::extrapair-feature extra)
           for default = (let ((default (find feature defaults 
                                              :key #'mrs::extrapair-feature)))
-                          (and default (mrs::extrapair-value default)))
+                          (when default 
+                            (push default used)
+                            (mrs::extrapair-value default)))
           when (or (null default) (vacuous-constraint-p feature default))
           collect (mrs::make-extrapair 
                    :feature feature :value (mrs::extrapair-value extra))
-          else collect (mrs::make-extrapair :feature feature :value default))))
+          into result
+          else 
+          collect (mrs::make-extrapair :feature feature :value default)
+          into result
+          finally
+            (loop
+                for default in defaults
+                unless (member default used :test #'eq)
+                do (push (mrs::copy-extrapair default) result))
+            (return result))))
   variable)
 
 (defun new-variable (type extras)
@@ -1284,6 +1478,28 @@
 
 (defun constant-role-p (role)
   (member role mrs::*value-feats* :test #'eq))
+
+(defun eliminate-scratch (mrs)
+  (labels ((process-variable (variable)
+             (when (mrs::var-p variable)
+               (setf (mrs:var-extra variable)
+                 (loop
+                     for extra in (mrs:var-extra variable)
+                     for feature = (mrs::extrapair-feature extra)
+                     unless (eq feature *mtr-scratch-property*)
+                     collect extra)))
+             variable))
+    (process-variable (mrs:psoa-top-h mrs))
+    (process-variable (mrs:psoa-index mrs))
+    (loop
+        for ep in (mrs:psoa-liszt mrs)
+        do
+          (process-variable (mrs:rel-handel ep))
+          (loop
+              for role in (mrs:rel-flist ep)
+              for value = (mrs:fvpair-value role)
+              do (process-variable value)))
+    mrs))
 
 ;;;
 ;;; _fix_me_
@@ -1375,6 +1591,8 @@
                 (loop
                     for role in (mrs:rel-flist ep)
                     for value = (mrs:fvpair-value role)
+                    unless (and (mrs::var-p value)
+                                (variable-delete-p value))
                     collect 
                       (mrs::make-fvpair 
                        :feature (mrs:fvpair-feature role)
@@ -1383,6 +1601,61 @@
                                 value))))
             collect copy))
       (mrs::fill-mrs (mrs::unfill-mrs mrs) %transfer-properties-defaults%))))
+
+(defun clone-mrs (mrs)
+  (let ((copy (mrs::make-psoa)))
+    (setf (mrs:psoa-top-h copy) (clone-variable (mrs:psoa-top-h mrs)))
+    (setf (mrs:psoa-index copy) (clone-variable (mrs:psoa-index mrs)))
+    (setf (mrs:psoa-liszt copy)
+      (loop
+          for ep in (mrs:psoa-liszt mrs)
+          collect (clone-ep ep)))
+    (setf (mrs:psoa-h-cons copy)
+      (loop
+          for hcons in (mrs:psoa-h-cons mrs)
+          collect (clone-hcons hcons)))
+    copy))
+
+(defun clone-variable (variable)
+  (or (rest (assoc variable %transfer-clones%))
+      (let ((copy (mrs::make-var 
+                   :type (mrs:var-type variable) :id (mrs:var-id variable))))
+        (setf (mrs:var-extra copy)
+          (cons
+           (mrs::make-extrapair 
+            :feature *mtr-skolem-property*
+            :value (mrs::var-string variable))
+           (loop
+               for extra in (mrs:var-extra variable)
+               collect (mrs::make-extrapair 
+                        :feature (mrs::extrapair-feature extra)
+                        :value (mrs::extrapair-value extra)))))
+        (push (cons variable copy) %transfer-clones%)
+        copy)))
+
+(defun clone-ep (ep)
+  (let ((copy (mrs::make-rel 
+               :handel (clone-variable (mrs:rel-handel ep))
+               :pred (mrs:rel-pred ep))))
+    (setf (mrs:rel-flist copy)
+      (loop
+          for role in (mrs:rel-flist ep)
+          for value = (mrs:fvpair-value role)
+          when (mrs::var-p value)
+          collect (mrs::make-fvpair 
+                   :feature (mrs:fvpair-feature role) 
+                   :value (clone-variable value))
+          else
+          collect (mrs::make-fvpair 
+                   :feature (mrs:fvpair-feature role) 
+                   :value value)))
+    copy))
+
+(defun clone-hcons (hcons)
+  (mrs::make-hcons 
+   :relation (mrs:hcons-relation hcons) 
+   :scarg (clone-variable (mrs:hcons-scarg hcons))
+   :outscpd (clone-variable (mrs:hcons-outscpd hcons))))
 
 (defun merge-and-copy-mrss (mrs1 mrs2)
   ;;
@@ -1418,7 +1691,6 @@
     result))
 
 (defun intersect (set1 set2 &key (key #'identity) (test #'eql))
-  ;;
   ;; much like intersection(), except guarantee that all elements returned are
   ;; taken from .set1.
   ;;
@@ -1430,6 +1702,30 @@
       for foo in set1
       when (member (funcall key foo) intersection :key key :test test)
       collect foo))
+
+(defun read-derivation-from-string (string)
+  (let ((*readtable* (copy-readtable))
+        (*package* (find-package :lkb)))
+    (set-syntax-from-char #\] #\space *readtable*)
+    (with-input-from-string (stream string)
+      (read-derivation stream))))
+
+(defun read-derivation (stream)
+  (let* ((c (peek-char t stream nil nil))
+         (c (when (and c (char= c #\#))
+              (read-char stream)
+              (peek-char t stream nil nil)))
+         (c (when (and c (char= c #\D))
+              (read-char stream)
+              (peek-char t stream nil nil)))
+         (id (when (and c (char= c #\[))
+               (read-char stream)
+               (read stream nil nil)))
+         (mtr (when (numberp id)
+                (read stream nil nil)))
+         (daughter (when (and mtr (symbolp mtr))
+                     (read-derivation stream))))
+    (when id (make-edge :id id :rule mtr :daughter daughter))))
 
 (defun browse (object)
   (typecase object

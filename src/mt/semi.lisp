@@ -5,16 +5,6 @@
 
 (defparameter *semis* nil)
 
-(defconstant *semi-u-type* "u")
-
-(defconstant *semi-h-type* "h")
-
-(defconstant *semi-i-type* "i")
-
-(defconstant *semi-e-type* "e")
-
-(defconstant *semi-x-type* "x")
-
 (defstruct semi
   signature
   (roles (make-hash-table))

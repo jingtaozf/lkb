@@ -5,6 +5,7 @@
 (defpackage :mt
   (:use :common-lisp #-:ecl :make #+mcl :ccl) 
   (:export 
+   %TRANSFER-PROPERTIES-ACCUMULATOR%
    "INITIALIZE-TRANSFER" 
    "READ-TRANSFER-RULES" "READ-TRANSFER-TYPES"
    "TRANSFER-MRS")) 
