@@ -18,7 +18,9 @@
                (pathname-directory
                 COMMON-LISP-USER::*grammar-directory*) 
                '("data"))
-            :name "new-rules.mrs"
+             :name "new-rules.mrs"
+             :host (pathname-host
+                COMMON-LISP-USER::*grammar-directory*)
             :device (pathname-device
                 COMMON-LISP-USER::*grammar-directory*)))))))
 

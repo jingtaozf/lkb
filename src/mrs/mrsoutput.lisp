@@ -128,11 +128,12 @@
                    (create-index-property-list 
                     next-fs
                     new-path))))
-          (list
-           (make-extrapair 
-            :feature (make-mrs-feature (reverse path-so-far))
-            :value (create-type 
-                    (fs-type fs))))))))
+          (if path-so-far
+              (list
+               (make-extrapair 
+                :feature (make-mrs-feature (reverse path-so-far))
+                :value (create-type 
+                        (fs-type fs)))))))))
 
 
 
@@ -140,24 +141,6 @@
   (if (cdr flist)
       (intern (format nil "~A~{.~A~}" (car flist) (cdr flist)))
     (car flist)))
-
-#+page
-(defun determine-variable-type (fs)
-  (let ((type (fs-type fs)))
-    (case type
-          (disco::event "e")
-          (disco::ref-ind "x")
-          (disco::full_ref-ind "x")
-          (disco::event_or_index "e")
-          (disco::eventtime "t")
-          (disco::handle "h")
-          (disco::hole "h")
-          (disco::label "h")
-          (disco::deg-ind "d")
-          (disco::individual "d")
-	  (disco::0-dlist "c")
-          (tdl::*diff-list* "c")  ;; Assume coordination structure
-          (t "v"))))
 
 #+lkb
 (defun determine-variable-type (fs)
@@ -242,11 +225,6 @@
   ;;; base-create-type is the LKB/PAGE specific function
   (horrible-hack-3 (base-create-type sort)))
 
-#+page
-(defun create-type (sort)
-  ;;; base-create-type is the LKB/PAGE specific function
-  (horrible-hack-3 (vm-create-type sort)))
-
 (defun vm-create-type (type)
   (if (and (consp type) (eq (first type) :atom))
       (second type)
@@ -296,18 +274,6 @@
             val
           (funcall gen)))
     (funcall gen)))
-
-#+page
-(defun create-word-identifier (id gen)
-  (if (keywordp id)
-      id
-    (let ((val (if (fs-atomic-p (rest id))
-                       (get-atom-name (rest id)))))
-        (if (or (numberp val) 
-                (and (symbolp val)
-                     (member (elt (string-downcase val) 0) '(#\r))))
-            val
-          (funcall gen)))))
 
 (defun construct-h-cons (fs constr-list variable-generator)
   (if (is-valid-fs fs)

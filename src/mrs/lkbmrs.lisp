@@ -65,7 +65,10 @@
 
 (defun fs-type (fs)
   ;;; also defined for PAGE
-  (type-of-fs fs))
+  (let ((type (type-of-fs fs)))
+    (if (listp type)
+        (car type)
+      type)))
 
 (defun base-create-type (type)
   ;;; also defined for PAGE

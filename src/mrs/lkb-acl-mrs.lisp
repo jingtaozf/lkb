@@ -61,24 +61,36 @@
 
 
 (defun show-mrs-window (edge)
+  (mp:process-run-function "Simple MRS"
+                           #'show-mrs-window-really edge))
+
+(defun show-mrs-window-really (edge)
   (let ((mframe (clim:make-application-frame 'mrs-simple)))
     (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
     (setf *bold* (clim:merge-text-styles '(nil :bold nil) *normal*))
     (setf (mrs-simple-mrsstruct mframe) 
       (mrs::extract-mrs edge))
     (setf (clim:frame-pretty-name mframe) "Simple MRS")
-    (mp:process-run-function "Simple MRS"
-                             #'clim:run-frame-top-level mframe)))
+    (clim:run-frame-top-level mframe)))
+
+
 
 (defun show-mrs-indexed-window (edge)
+  (mp:process-run-function "Indexed MRS"
+                           #'show-mrs-indexed-window-really edge))
+
+(defun show-mrs-indexed-window-really (edge)
   (let ((mframe (clim:make-application-frame 'mrs-indexed)))
     (setf (mrs-indexed-mrsstruct mframe) 
       (mrs::extract-mrs edge))
     (setf (clim:frame-pretty-name mframe) "Indexed MRS")
-    (mp:process-run-function "Indexed MRS"
-                             #'clim:run-frame-top-level mframe)))
+    (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-scoped-window (edge)
+  (mp:process-run-function "Scoped MRS"
+                           #'show-mrs-scoped-window-really edge))
+  
+(defun show-mrs-scoped-window-really (edge)
   (let ((mframe (clim:make-application-frame 'mrs-scoped))
         (mrsstruct (mrs::extract-mrs edge)))
     (setf (mrs-scoped-mrsstruct mframe) 
@@ -86,8 +98,7 @@
     (setf (mrs-scoped-scoped mframe) 
       (mrs::make-scoped-mrs mrsstruct))
     (setf (clim:frame-pretty-name mframe) "Scoped MRS")
-    (mp:process-run-function "Scoped MRS"
-                             #'clim:run-frame-top-level mframe)))
+    (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-simple (mframe stream &key max-width max-height)
   (declare (ignore max-width max-height))
