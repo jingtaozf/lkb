@@ -153,7 +153,6 @@ cvs update: Updating src/.nasl/tty
 cvs update: Updating src/.nasl/www
 cvs update: Updating src/ACL-CG_specific
 cvs update: Updating src/ACL_specific
-U src/ACL_specific/compare.lsp
 cvs update: Updating src/MCL_specific
 cvs update: Updating src/data
 cvs update: Updating src/data/Dikran
@@ -259,12 +258,7 @@ cvs update: Updating src/io-paths
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-U src/main/lsp.lsp
 cvs update: Updating src/mrs
-U src/mrs/dependencies.lisp
-U src/mrs/interface.lisp
-U src/mrs/lkb-acl-mrs.lisp
-U src/mrs/lsp.lisp
 cvs update: Updating src/mrs/data
 cvs update: Updating src/non-core
 cvs update: Updating src/ppcre
@@ -272,17 +266,12 @@ cvs update: Updating src/psql
 cvs update: Updating src/psql/linux
 cvs update: Updating src/psql/solaris
 cvs update: Updating src/pvm
-U src/pvm/pvm.lisp
 cvs update: Updating src/pvm/linux
-U src/pvm/linux/pvm.so
 cvs update: Updating src/pvm/solaris
 cvs update: Updating src/rmrs
 cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
-U src/systems/lkb.system
-U src/systems/mrs.system
-U src/systems/tsdb.system
 cvs update: Updating src/tproving
 cvs update: Updating src/tsdb
 ? src/tsdb/c
@@ -312,15 +301,7 @@ cvs update: Updating src/tsdb/home/trees/vm32
 cvs update: Updating src/tsdb/home/trees/vm32/ezra
 cvs update: Updating src/tsdb/home/trees/vm32/ezra/01-07-17
 cvs update: Updating src/tsdb/linux
-U src/tsdb/linux/capi.so
 cvs update: Updating src/tsdb/lisp
-U src/tsdb/lisp/allegro.lisp
-U src/tsdb/lisp/globals.lisp
-U src/tsdb/lisp/lsp.lisp
-U src/tsdb/lisp/podium.lisp
-U src/tsdb/lisp/process.lisp
-U src/tsdb/lisp/ptb.lisp
-U src/tsdb/lisp/redwoods.lisp
 cvs update: Updating src/tsdb/lisp/RCS
 cvs update: Updating src/tsdb/skeletons
 cvs update: Updating src/tsdb/skeletons/csli
@@ -359,6 +340,24 @@ cvs update: Updating src/tsdb/skeletons/francaise
 cvs update: Updating src/tsdb/skeletons/francaise/french
 cvs update: Updating src/tsdb/skeletons/french
 cvs update: Updating src/tsdb/skeletons/german
+cvs update: Updating src/tsdb/skeletons/nihongo
+U src/tsdb/skeletons/nihongo/Index.lisp
+U src/tsdb/skeletons/nihongo/Relations
+cvs update: Updating src/tsdb/skeletons/nihongo/banira
+U src/tsdb/skeletons/nihongo/banira/item
+U src/tsdb/skeletons/nihongo/banira/relations
+cvs update: Updating src/tsdb/skeletons/nihongo/dates
+U src/tsdb/skeletons/nihongo/dates/item
+U src/tsdb/skeletons/nihongo/dates/relations
+cvs update: Updating src/tsdb/skeletons/nihongo/faqs
+U src/tsdb/skeletons/nihongo/faqs/item
+U src/tsdb/skeletons/nihongo/faqs/relations
+cvs update: Updating src/tsdb/skeletons/nihongo/ginkougyou
+U src/tsdb/skeletons/nihongo/ginkougyou/item
+U src/tsdb/skeletons/nihongo/ginkougyou/relations
+cvs update: Updating src/tsdb/skeletons/nihongo/numbers
+U src/tsdb/skeletons/nihongo/numbers/item
+U src/tsdb/skeletons/nihongo/numbers/relations
 cvs update: Updating src/tsdb/skeletons/norsk
 cvs update: Updating src/tsdb/skeletons/norsk/enkel
 cvs update: Updating src/tsdb/skeletons/s+w
@@ -377,7 +376,7 @@ cvs update: Updating src/xml
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.225; previous revision: 1.224
+new revision: 1.226; previous revision: 1.225
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1333,7 +1332,7 @@ Root pages: 2
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (May 19, 2003 23:54)
+6.0 [Linux (x86)] (May 20, 2003 23:18)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -3305,7 +3304,7 @@ Root pages: 12
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (5/19/3 23:47)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (5/20/3 23:11)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -3957,14 +3956,14 @@ NIL
 [Current process: Initial Lisp Listener]
 USER(22): NIL
 [Current process: Initial Lisp Listener]
-USER(23): #<EQUAL hash-table with 0 entries @ #x4310e02>
+USER(23): #<EQUAL hash-table with 0 entries @ #x4310e1a>
 [Current process: Initial Lisp Listener]
 USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 ; Libfasl from bundle code/who.fasl.
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-33309072 bytes have been tenured, next gc will be global.
+34804448 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4628,7 +4627,7 @@ Warning: Variable #:G49449 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
-gc-after-hook(): local; new: 2181392; old: 432672; pending: 576; efficiency: 98.
+gc-after-hook(): local; new: 1952440; old: 432672; pending: 576; efficiency: 98.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/lsp.lisp
 ; While compiling LSP-PROCESS-EVENT:
 Warning: Free reference to undeclared variable LKB::%LSP-OK% assumed special.
@@ -6981,6 +6980,24 @@ src/tsdb/skeletons/espanol/Relations
 src/tsdb/skeletons/espanol/banca/
 src/tsdb/skeletons/espanol/banca/item
 src/tsdb/skeletons/espanol/banca/relations
+src/tsdb/skeletons/nihongo/
+src/tsdb/skeletons/nihongo/Index.lisp
+src/tsdb/skeletons/nihongo/Relations
+src/tsdb/skeletons/nihongo/banira/
+src/tsdb/skeletons/nihongo/banira/item
+src/tsdb/skeletons/nihongo/banira/relations
+src/tsdb/skeletons/nihongo/dates/
+src/tsdb/skeletons/nihongo/dates/item
+src/tsdb/skeletons/nihongo/dates/relations
+src/tsdb/skeletons/nihongo/faqs/
+src/tsdb/skeletons/nihongo/faqs/item
+src/tsdb/skeletons/nihongo/faqs/relations
+src/tsdb/skeletons/nihongo/ginkougyou/
+src/tsdb/skeletons/nihongo/ginkougyou/item
+src/tsdb/skeletons/nihongo/ginkougyou/relations
+src/tsdb/skeletons/nihongo/numbers/
+src/tsdb/skeletons/nihongo/numbers/item
+src/tsdb/skeletons/nihongo/numbers/relations
 src/tsdb/home/
 src/tsdb/home/lingo/
 src/tsdb/home/lingo/nov-98/
