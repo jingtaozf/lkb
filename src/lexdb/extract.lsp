@@ -101,6 +101,10 @@
 (defun extract-value-by-path (x key path type)
   (case type
     ;; todo: move LIST to separate fn
+    ('rawlst
+     (mixed-list-2-str
+      (extract-raw-list x key path)))
+    
     ('list
      (extract-raw-list x key path))
     
@@ -132,10 +136,6 @@
      (str-list-2-str
       (extract-raw-list x key path)))
     
-    ('rawlst
-     (mixed-list-2-str
-      (extract-raw-list x key path)))
-    
     ('str-lst
      (str-list-2-str (extract-fs-list x key path)))
     ('string-fs
@@ -150,6 +150,11 @@
      (typecase type
        (list
 	(case (first type)
+	  ('lst-t
+	   (mixed-list-2-str 
+	    (extract-fs-list-complex x key path 
+				     :e-path (cddr type)
+				     :top (cadr type))))
 	  ('lst
 	   (mixed-list-2-str 
 	    (extract-fs-list-complex x key path 
@@ -159,6 +164,11 @@
 	    (extract-fs-list-complex x key path 
 				     :e-path (cdr type))))
 	  
+	  ('dlst-t
+	   (mixed-list-2-str 
+	    (extract-fs-diff-list-complex x key path 
+					  :e-path (cddr type)
+					  :top (cadr type))))
 	  ('dlst
 	   (mixed-list-2-str 
 	    (extract-fs-diff-list-complex x key path 
@@ -217,7 +227,8 @@
      (t
       nil))))
 
-(defun extract-fs-list-complex-aux (unifs path o-list &key e-path)
+(defun extract-fs-list-complex-aux (unifs path o-list &key e-path
+							   (top '*))
   (let* (
 	 (end-match (find path
 			  unifs
@@ -227,6 +238,7 @@
 			    unifs
 			    :key #'extract-key-from-unification
 			    :test #'equal))
+	 (top-match)
 	 (val (extract-value-from-unification first-match)))
     (cond
      ((and end-match 
@@ -234,14 +246,30 @@
 	       *empty-list-type*))
       (setf unifs (remove end-match unifs))
       (cons (reverse o-list) unifs))
+     ((eq *toptype*
+	  (extract-value-from-unification
+	   (setf top-match
+	     (find (append path (list 'first))
+		   unifs
+		   :key #'extract-key-from-unification
+		   :test #'equal))))
+      (setf unifs 
+	(remove top-match
+		unifs))
+      (extract-fs-list-complex-aux 
+       unifs 
+       (append path (list 'REST))
+       (cons top o-list)
+       :e-path e-path))
      ((null val)
       :fail)
      (t
       (setf unifs (remove first-match unifs))
-      (extract-fs-list-complex-aux unifs 
-			   (append path (list 'REST))
-			   (cons val o-list)
-			   :e-path e-path)))))
+      (extract-fs-list-complex-aux 
+       unifs 
+       (append path (list 'REST))
+       (cons val o-list)
+       :e-path e-path)))))
 
 (defun extract-fs-diff-list (x key path)
   (extract-fs-diff-list-complex x key path))
@@ -274,26 +302,47 @@
       (setf (cdr (assoc key x)) (cdr res))
       (car res)))))
 
-(defun extract-fs-diff-list-complex-aux (unifs path o-list &key last e-path)
+(defun extract-fs-diff-list-complex-aux (unifs path o-list 
+					 &key last 
+					      e-path
+					      (top '*))
   (let* ((first-match (find (append path (list 'first) e-path)
 			    unifs
 			    :key #'extract-key-from-unification
 			    :test #'equal))
-	 (val (extract-value-from-unification first-match)))
+	 (top-match)
+	 (val (extract-value-from-unification first-match))
+	 )
    (cond
     ((equal path
 	    last)
      (cons (reverse o-list) unifs))
-     ((null val)
-      :fail)
-     (t
-      (setf unifs (remove first-match unifs))
-      (extract-fs-diff-list-complex-aux 
-       unifs 
-       (append path (list 'REST))
-       (cons val o-list)
-       :last last
-       :e-path e-path)))))
+    ((eq *toptype*
+	 (extract-value-from-unification
+	  (setf top-match
+	    (find (append path (list 'first))
+		  unifs
+		  :key #'extract-key-from-unification
+		  :test #'equal))))
+     (setf unifs 
+       (remove top-match
+	       unifs))
+     (extract-fs-diff-list-complex-aux 
+      unifs 
+      (append path (list 'REST))
+      (cons top o-list)
+      :last last
+      :e-path e-path))    
+    ((null val)
+     :fail)
+    (t
+     (setf unifs (remove first-match unifs))
+     (extract-fs-diff-list-complex-aux 
+      unifs 
+      (append path (list 'REST))
+      (cons val o-list)
+      :last last
+      :e-path e-path)))))
 
 (defun get-path (path-str)
   (cond
