@@ -966,6 +966,7 @@
                              (append (edge-lex-ids passive) foo)))
                 :lexemes (append (g-edge-lexemes active) 
                                  (g-edge-lexemes passive))
+                :mod-index (g-edge-mod-index active)
                 :rels-covered (logior (g-edge-rels-covered active)
                                       (g-edge-rels-covered passive))))
        when new append (explode! new adjuncts))))
@@ -1038,12 +1039,13 @@
                              (setf (aref cache i)
                                (if (g-edge-p edge)
                                  (make-g-edge
-                                  :id (next-edge :unpack) 
+                                  :id (next-edge :unpack)
                                   :rule rule :dag result
                                   :category (indef-type-of-tdfs result)
                                   :children children 
                                   :leaves leaves :lex-ids lex-ids
                                   :index (g-edge-index edge)
+                                  :mod-index (g-edge-mod-index edge)
                                   :rels-covered rels :lexemes lexemes)
                                  (make-edge
                                   :id (next-edge :unpack) 
@@ -1120,6 +1122,7 @@
                                    (list (edge-lex-ids child) nil)
                                    (list nil (edge-lex-ids child)))
                         :lexemes (g-edge-lexemes child)
+                        :mod-index (g-edge-mod-index edge)
                         :rels-covered (logior (g-edge-rels-covered edge)
                                               (g-edge-rels-covered child)))))))
   

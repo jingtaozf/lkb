@@ -30,8 +30,8 @@
 
 (defun show-type-tree nil
   (multiple-value-bind (type show-all-p ignore-limit-p)
-      (ask-user-for-type nil '(("Show all types?" . :check-box)
-			       ("Ignore 300 descendant limit" . :check-box)))
+      (ask-user-for-type nil '("Show all types?" . :check-box)
+	 '("Ignore 300 descendant limit?" . :check-box))
     (when type
       (if
           (or ignore-limit-p
@@ -158,12 +158,14 @@
 ;;; View utilities
 
 
-(defun ask-user-for-type (&optional qstring check-box-spec)
+(defun ask-user-for-type (&optional qstring check-box-spec show-all-types-spec)
   (let ((res
          (with-package (:lkb)
            (ask-for-lisp-movable "Current Interaction" 
-             (cons (cons (or qstring "Type?") *last-type-name*)
-                   check-box-spec)
+             (append
+                (list (cons (or qstring "Type?") *last-type-name*))
+                (if check-box-spec (list check-box-spec) nil)
+                (if show-all-types-spec (list show-all-types-spec) nil))
              150 *type-names*))))
       (when res
         (let ((type (car res))

@@ -27,13 +27,13 @@
                #'(lambda (edge)
                    (display-fs (g-edge-dag edge)
                       (format nil "Edge ~A G - Tree FS" (g-edge-id edge)))))
-            (cons "Edge"
+            (cons "Tree"
                #'(lambda (edge)
                    (display-parse-tree edge nil)))
             (cons "MRS"
                 #'(lambda (edge)
                     (show-mrs-window edge)))))
-      (format t "~%No strings generated")))
+      (show-message-window "No strings generated")))
 
 #|     
       (let ((possible-edge-name
@@ -154,7 +154,7 @@
       (let ((parser-edge (find-edge-given-id (car possible-edge-name))))
 	(if parser-edge
 	    (really-generate-from-edge parser-edge)
-	  (format t "~%No parser edge ~A" (car possible-edge-name)))))))
+	  (show-message-window (format nil "No parser edge ~A" (car possible-edge-name))))))))
 
 #-tty
 (defun really-generate-from-edge (parser-edge)    
@@ -166,8 +166,9 @@
 	    (close-existing-chart-windows)
 	    (generate-from-mrs input-sem)
 	    (show-gen-result))
-	(format t "~%Could not extract valid MRS from edge ~A"
-		(edge-id parser-edge))))))
+	(show-message-window
+           (format nil "Could not extract valid MRS from edge ~A"
+	      (edge-id parser-edge)))))))
 
 #-tty
 (defun toggle-mrs-base nil

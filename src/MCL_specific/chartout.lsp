@@ -9,10 +9,10 @@
 ;;; can change font sizes after code has loaded
 
 (defun lkb-chart-font nil
-   (list "Helvetica" (or *parse-tree-font-size* 9)))
+   (list (if (ccl:osx-p) "Lucida Grande" "Helvetica") *parse-tree-font-size*))
 
 (defun lkb-chart-bold-font nil
-   (list "Helvetica" (or *parse-tree-font-size* 9) :bold))
+   (list (if (ccl:osx-p) "Lucida Grande" "Helvetica") *parse-tree-font-size* :bold))
 
 
 (defvar *chart-font* nil)
@@ -136,8 +136,9 @@
      (if edge-record
         (let* ((menu (make-instance 'active-chart-pop-up-field
                        :view-position view-pos
-                       :item-display (chart-node-text-string edge-symbol)
-                       :view-font (lkb-chart-bold-font))))
+                       :item-string (chart-node-text-string edge-symbol)
+                       :item-font (lkb-chart-font)
+                       :view-font (lkb-dialog-font))))
            (apply #'add-menu-items menu
               (pop-up-chart-menu-items edge-record))
            (push menu (fields stream))

@@ -9,6 +9,7 @@
 
 #-:tty
 (defun show-parse (&optional edges title)
+  #-(and :allegro :clim) (declare (ignore title))
   (let ((edges (or edges *parse-record*)))
     (if edges
       (with-parser-lock ()
@@ -36,8 +37,9 @@
       (when possible-edge-name
          (let* ((edge-id (car possible-edge-name))
                (edge-record (find-edge-given-id edge-id)))
-            (when edge-record 
-               (display-parse-tree edge-record t))))))
+            (if edge-record 
+               (display-parse-tree edge-record t)
+               (show-message-window (format nil "No parser edge ~A" edge-id)))))))
 
 
 (defun find-edge-given-id (edge-id)
@@ -491,7 +493,8 @@
 	  (make-lex-and-morph-tree edge 1)))
       (when (and (g-edge-p edge) (g-edge-mod-index edge))
          (setf (get edge-symbol 'edge-mod-edge)
-            (nth (g-edge-mod-index edge) (get edge-symbol 'daughters))))
+            ;; !!! assume modification is only binary branching
+            (nth (if (eql (g-edge-mod-index edge) 0) 1 0) (get edge-symbol 'daughters))))
       (list edge-symbol))))
   
 (defun make-lex-and-morph-tree (edge level)

@@ -42,19 +42,10 @@
      (#_Move :long (make-point 0 y)))
   nil)
 
-;;; shouldn't get called in lkb
-;(defun draw-circular-link-x-y (stream centre-x center-y radius horizontalp)
-;  (if horizontalp
-;    (frame-arc stream -120 240
-;              (- centre-x radius)
-;              (- center-y (truncate (* radius 3) 5))
-;              (+ centre-x radius)
-;              (+ center-y (truncate (* radius 3) 5)))
-;    (frame-arc stream (+ -120 90) 240
-;               (- centre-x (truncate (* radius 3) 5))
-;               (- center-y radius)
-;               (+ centre-x (truncate (* radius 3) 5))
-;               (+ center-y radius))))
+(defun draw-circular-link-x-y (stream centre-x center-y radius horizontalp)
+   ;; shouldn't get called in lkb
+   (declare (ignore stream centre-x center-y radius horizontalp))
+   (error "~A shouldn't have been called" 'draw-circular-link-x-y))
 
 
 (defun current-position-y (stream)
@@ -170,14 +161,16 @@
 ;;;
 
 (defun lkb-y-or-n-p (strg)
-   ;; define so it uses y-or-n-p-dialog 
    (y-or-n-dialog strg :cancel-text nil))
+
 
 ;;;
 
-;;; FIX - add this sometime
-
 (defun show-message-window (message)
-  (declare (ignore message))
-  nil)
+   ;; could do this by (message-dialog message :title "") but dialog
+   ;; box wouldn't match the y/n one
+   (y-or-n-dialog message :yes-text "OK" :no-text nil :cancel-text nil)
+   nil)
+
+
 

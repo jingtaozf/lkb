@@ -14,25 +14,28 @@
 ;;; can change font sizes after code has loaded
 
 (defun lkb-list-font nil
-   (list :bold "Helvetica" (or *parse-tree-font-size* 9)))
+   (list (if (ccl:osx-p) "Lucida Grande" "Helvetica") *parse-tree-font-size* :bold))
 
 
 (defclass active-list-pop-up-field (ccl::pop-up-field)
   ())
 
-(defclass active-list-window  (ccl::picture-window) () )
+(defclass active-list-window (ccl::picture-window) ())
+
+
+;;;
 
 (defun draw-active-list (string-and-item-list title menu-command-and-action-list)
    (let*
       ((font (lkb-list-font))
-       (line-spacing (* (font-height (font-info font)) 2))
+       (line-spacing (truncate (* (font-height (font-info font)) 3) 2))
        (max-x
           (reduce #'max string-and-item-list :key
              #'(lambda (string-and-item)
                  (string-width (car string-and-item) font))))
        (max-y
           (* (1+ (length string-and-item-list)) line-spacing))
-       (offset-x 2)
+       (offset-x 4)
        (fake-window 
           (make-instance 'picture-field-window
              :view-font font :view-size (make-point (+ max-x offset-x) max-y)))
@@ -57,7 +60,7 @@
                      (min (max (+ 50 max-x) 150) (- *screen-width* 100)) 
                      (min (+ 50 max-y) (- *screen-height* 100)))
                   :close-box-p t
-                  :view-font font)))
+                  :view-font (lkb-dialog-font))))
       (apply #'add-subviews (cons (ccl::my-scroller real-window) fields))
       (invalidate-view real-window)
       real-window)))
@@ -77,8 +80,9 @@
 (defun create-list-menu (string-and-item view-pos menu-command-and-action-list)
    (let* ((menu (make-instance 'active-list-pop-up-field
                        :view-position view-pos
-                       :item-display (car string-and-item)
-                       :view-font (cons :bold (lkb-type-font)))))
+                       :item-font (lkb-list-font)
+                       :item-string (car string-and-item)
+                       :view-font (lkb-dialog-font))))
       (apply #'add-menu-items menu
          (pop-up-list-menu-items (cdr string-and-item) menu-command-and-action-list))
       menu))
@@ -98,3 +102,4 @@
              #'(lambda ()
                  (funcall (cdr command-and-action) item))))
       menu-command-and-action-list))
+

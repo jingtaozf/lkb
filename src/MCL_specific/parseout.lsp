@@ -12,7 +12,7 @@
 ;;; can change font sizes after code has loaded
 
 (defun lkb-parse-tree-font nil
-   (list "Helvetica" (or *parse-tree-font-size* 9)))
+   (list (if (ccl:osx-p) "Lucida Grande" "Helvetica") *parse-tree-font-size*))
 
 (defvar *tree-records* nil)
 
@@ -90,7 +90,7 @@
              (make-instance 'active-parse-tree-window
                 :window-title title
                 :pict pict
-                :view-font font
+                :view-font (lkb-dialog-font)
                 :field-size (make-point max-x max-y)
                 :close-box-p t
                 :view-size
@@ -142,8 +142,9 @@
          (display (parse-tree-record-display record))
          (menu (make-instance 'active-tree-pop-up-field
                  :view-position menu-pos
-                 :item-display display
-                 :view-font (cons :bold (lkb-parse-tree-font)))))
+                 :item-font (lkb-parse-tree-font)
+                 :item-string display
+                 :view-font (lkb-dialog-font))))
      (apply #'add-menu-items menu
         (create-parse-tree-menu-items node edge-record menu))
      menu))

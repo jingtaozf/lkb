@@ -41,8 +41,11 @@
 ;;; This is the font for the pop up menu and the display windows. They
 ;;; are functions so users can change font sizes after code has loaded
 
-(defun lkb-type-font nil (list "Helvetica" *fs-type-font-size*))
-(defun lkb-title-font nil (list "Chicago" *fs-title-font-size*))
+(defun lkb-type-font nil
+   (list (if (ccl:osx-p) "Lucida Grande" "Helvetica") *fs-type-font-size*))
+
+(defun lkb-title-font nil
+   (if (ccl:osx-p) (list "Lucida Grande" 13) (list "Chicago" *fs-title-font-size*)))
 
 
 ;;; ***** Records and classes *******
@@ -246,7 +249,7 @@
              (page-width 
               (min (- *screen-width* 100)
                  (max (+ 30 max-width)
-                    (+ 80 (string-width title (lkb-title-font))))))
+                    (+ (if (ccl:osx-p) 110 80) (string-width title (lkb-title-font))))))
              (fields (fields fs-window))
              (pict (window-close fs-window))
              (real-window
@@ -354,8 +357,9 @@
          (type-p (if atomic-p :atomic :fs))
         (menu (make-instance 'active-fs-pop-up-field
                  :view-position menu-pos
-                 :item-display (format nil "~(~A~)" type)
-                 :view-font (cons :bold (lkb-type-font))
+                 :item-font (lkb-type-font)
+                 :item-string (format nil "~(~A~)" type)
+                 :view-font (lkb-dialog-font)
                  :shrunk-p shrunk-p)))
     (apply #'add-menu-items menu
           (pop-up-fs-menu-items (if (listp type) (car type) type) field
@@ -490,7 +494,9 @@
          (menu
             (make-instance 'active-fs-pop-up-field
                            :view-position menu-pos
-                           :item-display (format nil "~A" title))))
+                           :item-font (lkb-list-font)
+                           :item-string (format nil "~A" title)
+                           :view-font (lkb-dialog-font))))
      (apply #'add-menu-items menu
             (top-fs-action fs-record))
      menu))
@@ -584,8 +590,9 @@
   (let* ((psort (psort-click-field-psort field))
          (menu (make-instance 'active-fs-pop-up-field
                  :view-position menu-pos
-                 :item-display (format nil "~A" psort)
-                 :view-font (cons :bold (lkb-type-font)))))
+                 :item-string (format nil "~A" psort)
+                 :item-font (cons :bold (lkb-type-font))
+                 :view-font (lkb-dialog-font))))
     (apply #'add-menu-items menu
       (let ((lex-entry (if psort (get-lex-entry-from-id psort))))
         (if lex-entry 
@@ -682,8 +689,9 @@
          (valuep (reentrancy-click-field-valuep field))
          (menu (make-instance 'active-fs-pop-up-field
                   :view-position menu-pos
-                  :item-display (format nil "<~A>" label)
-                  :view-font (cons :bold (lkb-type-font)))))
+                  :item-string (format nil "<~A>" label)
+                  :item-font (cons :bold (lkb-type-font))
+                  :view-font (lkb-dialog-font))))
       (apply #'add-menu-items menu
          (list
             (make-instance 'menu-item

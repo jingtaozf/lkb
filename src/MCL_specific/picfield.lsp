@@ -22,14 +22,14 @@
     :view-font '("Helvetica" 9 :bold)))
 
 (defmethod initialize-instance :after ((self pop-up-field)
-                                       &rest initargs
-                                       &key item-display view-position shrunk-p other-junk)
+                                        &rest initargs
+                                        &key item-string item-font view-position shrunk-p other-junk)
   (declare (ignore initargs view-position))
   (setf (other-junk self) other-junk)
   (setf (shrunk-p self) shrunk-p)
   (set-view-size self
-                 (string-width (or item-display "") (view-font self))
-                 (+ (lkb::font-ascent self) (lkb::font-descent self))))
+    (+ (string-width (or item-string "") (or item-font (view-font self))) 5) ; kludge otherwise stops short
+    (+ (lkb::font-ascent self) (lkb::font-descent self))))
 
 
 ;;; Annie wants not a triangle

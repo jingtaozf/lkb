@@ -13,7 +13,8 @@
 ;;; This is a function so users can change font sizes after code has loaded
 
 (defun lkb-dialog-font nil
-   (list "Chicago" *dialog-font-size* :srccopy :plain))
+   (if (ccl:osx-p) (ccl::sys-font-spec)
+      (list "Chicago" *dialog-font-size* :srccopy :plain)))
 
 
 (defun ask-user-for-existing-pathnames (prompt)
@@ -67,7 +68,9 @@
   (with-package (:lkb)
     (let* ((font (lkb-dialog-font))
            (ascent (font-info font))
-           (spacing (+ ascent 4)) (button-height (+ ascent 6)) (button-width 74) 
+           (spacing (+ ascent 4))
+           (button-height 20)
+           (button-width 74) 
            (prompt-width
               (+ 20
                  (find-maximum-string-width font 
@@ -180,6 +183,8 @@
                             (truncate (- *screen-width* window-width) 2) 60)
             :view-size (make-point window-width window-height)
             :view-font font
+            :back-color (if (ccl:osx-p) *tool-back-color* *white-color*)
+            (if (ccl:osx-p) :theme-background :ignore) t
             :close-box-p nil
             :view-subviews
             (list*
@@ -269,10 +274,10 @@
            (remainder (mapcar #'(lambda (arg) (format nil "~S" arg)) args))
            (button-width 
             (max 60 
-                 (+ 10
+                 (+ (if (ccl:osx-p) 40 10) ; take account of rounded ends
                     (find-maximum-string-width font remainder))))
            (spacing 10)
-           (button-height 18)
+           (button-height 20)
            (request-dialog nil) (return-value nil)
             (value nil) (count 0) (max-width 0)
            (buttons nil) 
@@ -317,6 +322,8 @@
                                (+ (string-width question-string font) 20))
                           (+ current-height button-height spacing spacing))
               :view-font font
+              :back-color (if (ccl:osx-p) *tool-back-color* *white-color*)
+              (if (ccl:osx-p) :theme-background :ignore) t
               :close-box-p nil
               :view-subviews
               (nreverse buttons)))

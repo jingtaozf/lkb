@@ -333,9 +333,19 @@
                            (* separation 2)
                            separation) 
                         horizontalp -1))))))
-      ;; shift x coords back down to zero
-      (let ((min-x most-positive-fixnum)
-            (max-first-width 0))
+      ;; if possible move unary children on right fringe and leaves directly under parent
+      (loop for depth from 1 to total-depth
+         do
+         (setq max-width
+            (max max-width
+               (graph-assign-x-positions-fringe depth node-depths-table
+                  node-width-function
+                  (if (and *type-display* (<= depth 2))
+                     (* separation 2)
+                     separation)))))
+       ;; shift x coords back down to zero
+       (let ((min-x most-positive-fixnum)
+             (max-first-width 0))
          (loop for depth from 0 to total-depth
             do
             (unless horizontalp
@@ -355,6 +365,29 @@
                (decf (graph-node-x node) min-x)))
          (decf max-width min-x))
       (+ max-width separation)))
+
+
+(defun graph-assign-x-positions-fringe (depth node-depths-table node-width-function
+      separation &aux (max-width 0))
+   (loop for node in (reverse (svref node-depths-table depth))
+      with fringep = t
+      with last-x = 0
+      for half-width = (if (dummy-graph-node-p node) 0
+                           (truncate (get-node-width node node-width-function) 2))
+      do
+      (cond
+         ((or (cdr (graph-node-parents node))
+              (>= (graph-node-x node) (graph-node-x (car (graph-node-parents node))))))
+         (fringep
+            (setf (graph-node-x node) (graph-node-x (car (graph-node-parents node)))))
+         ((and (null (graph-node-daughters node))
+               (< (graph-node-x node) (- last-x half-width)))
+            (setf (graph-node-x node)
+               (min (- last-x half-width) (graph-node-x (car (graph-node-parents node)))))))
+      (setq max-width (max max-width (+ (graph-node-x node) half-width)))
+      (setq fringep nil)
+      (setq last-x (- (graph-node-x node) half-width separation)))
+   max-width)
 
 
 (defun graph-assign-x-positions-up/down (depth node-depths-table
