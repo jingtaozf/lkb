@@ -273,13 +273,16 @@
 		  (expand-string-list-to-fs-diff-list-aux (cdr string-list) :path path))))))   
 
 (defun sql-embedded-text (str)
+  (format nil "'~a'" (sql-embedded-text-aux str)))
+
+(defun sql-embedded-text-aux (str)
   (cond
    ((equal str "")
     "")
    ((eq (char str 0) #\')
-    (format nil "''~a" (sql-embedded-text (subseq str 1))))
+    (format nil "''~a" (sql-embedded-text-aux (subseq str 1))))
    (t
-    (format nil "~a~a" (char str 0) (sql-embedded-text (subseq str 1))))))
+    (format nil "~a~a" (char str 0) (sql-embedded-text-aux (subseq str 1))))))
 
 (defun sql-like-text (str)
   (format nil "'~a'" (sql-like-text-aux str))

@@ -843,16 +843,16 @@
       finally
 	(return filename)))
 
-(defun merge-tdl-into-psql-lexicon2 (file-in)
-  (setf file-in (namestring (pathname file-in)))
-  (let ((tmp-lex (create-empty-cdb-lex))
-	(file-out (get-new-filename (make-pathname :name "lexicon"
-                     :directory (pathname-directory (lkb-tmp-dir))))))
-    (unless (probe-file file-in)
-      (error "~%file not found (~a)" file-in))
-    (load-lex tmp-lex :filename file-in)
-    (export-lexicon-to-file :lexicon tmp-lex :file file-out)
-    (merge-into-psql-lexicon (namestring (probe-file (format nil "~a.csv" file-out))))))
+;;(defun merge-tdl-into-psql-lexicon2 (file-in)
+;;  (setf file-in (namestring (pathname file-in)))
+;;  (let ((tmp-lex (create-empty-cdb-lex))
+;;	(file-out (get-new-filename (make-pathname :name "lexicon"
+;;                     :directory (pathname-directory (lkb-tmp-dir))))))
+;;    (unless (probe-file file-in)
+;;      (error "~%file not found (~a)" file-in))
+;;    (load-lex tmp-lex :filename file-in)
+;;    (export-lexicon-to-file :lexicon tmp-lex :file file-out)
+;;    (merge-into-psql-lexicon (namestring (probe-file (format nil "~a.csv" file-out))))))
 
 (defun merge-tdl-into-psql-lexicon (file-in)
   (setf file-in (namestring (pathname file-in)))
@@ -873,12 +873,12 @@
   (fn-get-val *psql-lexicon* ''clear-scratch)
   (build-current-grammar *psql-lexicon*))
 
-(defun clear-scratch2-lex nil
-  (format *postgres-debug-stream* "~%(clearing scratch)")
-  (time (fn-get-records *psql-lexicon* ''clear-scratch2))
-  (format  *postgres-debug-stream* "~%(clustering current_grammar)")
-  (time (fn-get-records *psql-lexicon* ''cluster-current-grammar))
-  (empty-cache *psql-lexicon*))
+;;(defun clear-scratch2-lex nil
+;;  (format *postgres-debug-stream* "~%(clearing scratch)")
+;;  (time (fn-get-records *psql-lexicon* ''clear-scratch2))
+;;  (format  *postgres-debug-stream* "~%(clustering current_grammar)")
+;;  (time (fn-get-records *psql-lexicon* ''cluster-current-grammar))
+;;  (empty-cache *psql-lexicon*))
 
 (defun commit-scratch-lex nil
   (fn-get-val *psql-lexicon* ''commit-scratch)
