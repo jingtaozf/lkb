@@ -112,7 +112,51 @@
                 (format ostream "~%~A has a gap in its ~A list" id (reverse path))
                 nil)
             fs))))))
-                
+
+;;;; Morphology
+
+
+(defun batch-check-morphology nil
+  ;;; generates all morphological forms
+  (for psort in *ordered-lex-list*
+       do
+       (gen-all-morphs psort (get-psort-entry psort))))   
+
+(defun gen-all-morphs (id entry)
+  (when entry
+    (setf *number-of-applications* 0)
+    (try-all-morph-rules (list (lex-or-psort-full-fs entry)))
+    (unexpand-psort *lexicon* id)))
+    
+
+(defun try-all-morph-rules (entries)
+   (incf *number-of-applications*)
+   (when (> *number-of-applications* *maximal-lex-rule-applications*)
+      (error "~%Probable circular lexical rule"))
+   (let ((transformed-entries 
+            (for entry in entries
+               append
+               (for rule in 
+                  (get-indexed-lrules entry)
+                  filter
+                  (let* ((spelling-rule-p
+                                        (spelling-change-rule-p rule))
+                         (new-morph 
+                          (if spelling-rule-p
+                                    (car (mapcar #'car 
+                                     (full-morph-generate
+                                       (extract-orth-from-fs entry)
+                                       (rule-id rule))))))
+                         (result
+                          (if (or new-morph (not spelling-rule-p))
+                        ; allow morphographemics to block generation
+                              (evaluate-unifications rule
+                                                     (list entry)
+                                                     new-morph))))
+                    (when (and result new-morph) (format t "~%~A" new-morph))
+                    result)))))
+      (if transformed-entries
+          (try-all-morph-rules transformed-entries))))
 
 
 
