@@ -1,8 +1,13 @@
 \documentclass[12pt]{report}
 
+% lacunae etc indicated by FIX
+% places which need to be checked for current 
+% truth are indicated by UPDATE
+
 \usepackage{latexsym}
 \usepackage{times}
-% should use times but too many missing fonts
+% use the time fonts for better results with
+% pdf (CM fonts don't index correctly)
 \usepackage[dvips]{hyperref}
 
 %- comment out epsf box for TeXtures
@@ -170,7 +175,7 @@ but we do assume some knowledge of constraint-based formalisms,
 such as HPSG.  The grammars distributed with the LKB are
 linked to a textbook which introduces this sort of approach
 to formal syntax: Sag and Wasow (in press).
-%FIX can we add URL?
+%UPDATE point
 There are some places where to fully understand
 the documentation a knowledge of some NLP concepts, such as chart parsing,
 will be helpful, but this should not be essential to use the system.
@@ -277,30 +282,32 @@ the conditions placed on redistribution are described on the
 We encourage users to make enhancements and upgrades to the system,
 and will be happy to make any improvements available from the Web site.
 
-The full LKB system is available in four configurations:
+The full LKB system is available in three configurations:
 \begin{enumerate}
 \item Solaris image
-\item Mac image
+%\item Mac image
 \item Source files for Allegro Common Lisp and CLIM
 \item Source files for Macintosh Common Lisp (MCL)
 \end{enumerate}
 To use any version of the LKB, you need a machine with adequate amounts of memory.
-We would suggest 32 Meg of RAM as a minimum on MCL, and 64 Meg for ACL with CLIM.
+We would suggest 32 Meg of RAM as a minimum on MCL, 
+and 64 Meg for ACL with CLIM.
 To run larger grammars
 you will need larger amount of memory.  The size of the source
-files is about (FIX whatever ...)
-The Solaris image will run on (FIX what?)
-The Mac image will run on (FIX what?)
+files is about 3.5 Meg.  The documentation is about 8 MBytes
+(because of Postscript bitmaps).
+The Solaris image should run on recent versions of SunOS.
+%The Mac image will run on (FIX what?)
 If you have Allegro Common Lisp with CLIM or Macintosh Common Lisp, you 
 can download the source files
 and compile them and/or make an image yourself.  This will be necessary
 if you want to modify the LKB source code, and is likely to be
 advantageous in any case, since we are likely to make minor bug fixes available
 as source, rather than providing new images.
-We have tested the system on Allegro Common Lisp 4.3 and 5.0 on Sun Solaris 
-(FIX), 
+% UPDATE POINT
+We have tested the system on Allegro Common Lisp 4.3 and 5.0 on SunOS 5.6
 and on 
-Macintosh Common Lisp 2.0.1, 3.9 and 4.0, under MacOS (what? FIX).
+Macintosh Common Lisp 2.0.1, 3.9 and 4.0, under MacOS 7.1 and 7.5.
 
 If you do not have access to a machine for which we provide an image,
 and do not have either Allegro Common Lisp with CLIM or Macintosh Common
@@ -330,13 +337,13 @@ gzipped Unix tar file which is available from the
 Download the file, making sure you are using binary mode.
 Then:
 \begin{verbatim}
-gunzip newlkb.tar.gz
+gunzip lkbsrc5-0.tar.gz
 \end{verbatim}
 this should give you a file called {\tt newlkb.tar}.  
 Make sure this in a directory where you want the LKB system to reside
 and extract the LKB by:
 \begin{verbatim}
-tar xf newlkb.tar
+tar xf lkbsrc5-0.tar
 \end{verbatim}
 This will create the new directory and various subdirectories.
 It may take a few minutes to do this.  At this point, you have 
@@ -355,17 +362,27 @@ make an image.
 \subsection{Downloading an image}
 \label{down-images}
 
-The image files are available from the
-\href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}.
+The image files for are available from the
+\href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}
+as a gzipped Unix tar file.
 Download the file, making sure you are using binary mode.
 Then:
 \begin{verbatim}
-gunzip newlkb.gz
+gunzip climimage5-0.tar.gz
 \end{verbatim}
-this should give you an image file called {\tt newlkb}.  
+this should give you a file called climimage5-0.tar.
+Put this in a directory where you want the LKB system to reside
+and extract the LKB image directory by:
+\begin{verbatim}
+tar xf climimage5-0.tar
+\end{verbatim}
+This will create the new directory called {\tt lkb} containing
+several files. 
 
-Now follow the instructions in \S\ref{clim-image} or 
-\S\ref{mcl-image} to start the LKB.
+Now follow the instructions in \S\ref{emacs-clim-image}
+or \S\ref{clim-image}
+%or \S\ref{mcl-image} 
+to start the LKB.
 
 \subsection{Getting a local copy of the LKB at CSLI}
 \label{down-csli}
@@ -405,11 +422,6 @@ To compile the LKB system files, and optionally make an image
 in ACL/CLIM, do the following:
 \begin{enumerate}
 \item cd to \verb+newlkb/src+.  
-\item Construct a fasl directory tree.  The system assumes that there
-is a directory named according to the type of system you have
-(search for {\tt BINARY-DIR-NAME} in the {\tt general} files).
-If you don't do this in advance, Lisp will give error messages, but
-you can continue from these after creating the files.
 \item Start ACL/CLIM.  The command needed will vary with your local
 installation.  For instance,
 at CSLI, the command to start ACL with CLIM is \verb+/usr/acl/bin/acl+.
@@ -436,19 +448,18 @@ and examine the warning messages.}
 You
 should now see the LKB interaction window, as shown in 
 Figure~\ref{lkbtop-unix}.
-\item At this point, you have a choice:
-if you want to make a Lisp image, execute \verb+(dump-lkb)+.
+\item At this point, you may simply exit Lisp:
+you can restart the system from the compiled files
+as described in \S\ref{acl-emacs}.
+Alternatively, if you want to make a Lisp image, execute \verb+(dump-lkb)+.
 This simplifies and speeds up starting the LKB slightly, at the cost of
 using a lot of file space.
 On the whole, you should only do this if you don't expect
 frequent changes in the code or if you are setting up the LKB for
 a group of users who won't be modifying the code.
-The LKB system can be started from the image as described in 
-\S\ref{emacs-image}.
-% FIX ??
-Otherwise, once you have exited Lisp,
-you can restart the system from the compiled files
-as described in \S\ref{acl-emacs}.
+See the instructions in \S\ref{dumplkb} for details.
+The LKB system can be started from the saved image as described in 
+\S\ref{emacs-clim-image}.
 \end{enumerate}
 
 
@@ -456,12 +467,6 @@ as described in \S\ref{acl-emacs}.
 To compile the LKB system files, and optionally make an image
 in MCL, do the following:
 \begin{enumerate}
-\item Construct a fasl directory.  The system assumes that there
-is a directory named according to the type of system you have
-(search for {\tt BINARY-DIR-NAME} in the {\tt general} files).
-On the version of MCL we have tested this on,
-the directories are constructed automatically if they don't exist,
-so you may not need to bother with this step.
 \item Double-click on the MCL icon to start MCL
 \item Use the Load menu option to load \verb+newlkb:sre:general:loadup+
 \item Once the loadup files have been loaded, enter the following into the
@@ -477,22 +482,18 @@ warning messages.}
 You
 should now see LKB on the menu-bar.
 \item
-At this point, you have a choice:
-if you want to make an image,
-execute {\tt (dump-lkb)}.  
+At this point, you may simply exit Lisp:
+you can restart the system from the compiled files
+as described in \S\ref{mcl-comp}.
+Alternatively, if you want to make a Lisp image, execute \verb+(dump-lkb)+.
 This simplifies and speeds up starting the LKB slightly, at the cost of
 using a lot of file space.
 On the whole, you should only do this if you don't expect
 frequent changes in the code or if you are setting up the LKB for
 a group of users who won't be modifying the code.
-Calling {\tt (dump-lkb)} will end your Lisp session.
-You can restart the LKB from the image as described in \S\ref{mcl-image}.
-% may not on later versions of MCL?
-% FIX ??
-Otherwise, once you have exited Lisp 
-you can restart the system from the compiled files
-as described in 
-\S\ref{mcl-comp}.
+See the instructions in \S\ref{dumplkb} for details.
+The LKB system can be started from the saved image as described in 
+\S\ref{mcl-image}.
 \end{enumerate}
 
 
@@ -504,15 +505,21 @@ as described in
 \label{acl-emacs}
 
 To use the LKB commands for interacting with source
-files in ACL/CLIM, you must use the emacs text editor. 
+files in ACL/CLIM, you must use the emacs text editor and
+run a command that allows the linkage.  We suggest
+the use of {\tt fi:common-lisp} which is available
+from \href{ftp: //ftp.franz.com/pub/emacs/eli/eli-2.0.21.16.2/}{ftp: //ftp.franz.com/pub/emacs/eli/eli-2.0.21.16.2/}.  The following
+instructions assume that this is installed on your system.
+You can run the LKB from emacs in a shell using the standard
+emacs commands, but the commands to show the grammar files
+will not work.
 
 \begin{enumerate}
 \item The first time you use the system,
 add the following lines to the bottom of your {\tt .emacs}
-file
+file, with the pathnames modified as appropriate for your
+installation.
 \begin{verbatim}
-FIX - don't know whether we can give instructions
-to do something adequate outside CSLI?
 
 (if (not (member "/usr/acl/fi" load-path))
     (setq load-path (cons "/usr/acl/fi" load-path)))
@@ -528,11 +535,12 @@ create a temporary directory (see \S\ref{tempdir}).  By default, this is
 a directory called {\tt tmp} in your home directory.
 \item Start emacs.  We will assume you
 do this in the {\tt newlkb/src} directory.
-\item Start ACL/CLIM from within emacs.
-At CSLI, the command is \verb+fi:common-lisp+ which takes a number
+\item Start ACL/CLIM from within emacs using the 
+command \verb+fi:common-lisp+ which takes a number
 of arguments. The
 default values should be accepted with the exception
-of the image name, as follows:
+of the image name (the Lisp image appropriate for your
+system should be specified), as follows:
 \begin{quote}
 \verb+M-x fi:common-lisp+\\
 {\bf Buffer:} \verb+<RET>+\\
@@ -616,25 +624,61 @@ To continue, see Chapter~\ref{firstsession}.
 
 
 \subsection{ACL/CLIM from emacs}
-\label{emacs-image}
+\label{emacs-clim-image}
 To use the LKB commands for interacting with source
-files in ACL/CLIM, you must use the emacs text editor. 
+files in ACL/CLIM, you must use the emacs text editor with 
+a command that allows the linkage.  We suggest
+the use of {\tt fi:common-lisp} which is available
+from \href{ftp: //ftp.franz.com/pub/emacs/eli/eli-2.0.21.16.2/}{ftp: //ftp.franz.com/pub/emacs/eli/eli-2.0.21.16.2/}.  The following
+instructions assume that this is installed on your system.
+You can run the LKB from emacs in a shell using the standard
+emacs commands, but the commands to show the grammar files
+will not work.
 
 \begin{enumerate}
 \item The first time you use the system,
 add the following lines to the bottom of your {\tt .emacs}
-file
+file, with the pathnames modified as appropriate for your
+installation.
 \begin{verbatim}
-% FIX - as above
+
+(if (not (member "/usr/acl/fi" load-path))
+    (setq load-path (cons "/usr/acl/fi" load-path)))
+(if (not (member "~/newlkb/src" load-path))
+    (setq load-path (cons "~/newlkb/src" load-path)))
+	
+(load "fi-site-init")
+(load "tdl-mode")
+(load "lkb")
 \end{verbatim}
 \item The first time you run the system,
 create a temporary directory (see \S\ref{tempdir}).  By default, this is
 a directory called {\tt tmp} in your home directory.
 \item Start emacs
-\item Start the LKB image by (whatever FIX)
+\item Start the LKB from within emacs using the 
+command \verb+fi:common-lisp+ which takes a number
+of arguments.  If you have downloaded the image from our website
+and stored it in the directory {\tt lkb}, accept all the default
+suggestions, with the exception of the {\bf Executable image name:}
+as follows:
+\begin{quote}
+\verb+M-x fi:common-lisp+\\
+{\bf Buffer:} \verb+<RET>+\\
+{\bf Host:} \verb+<RET>+\\
+{\bf Process directory:} \verb+<RET>+\\
+{\bf Executable image name:} \verb+/lkb/lkb+\\
+{\bf Lisp image:}  \verb+<RET>+\\
+{\bf Image arguments:}  \verb+<RET>+
+\end{quote}
+(if you are working with an image you have saved via {\bf Dump lkb}, 
+specify the standard executable at
+{\bf Executable image name:} and the image file at {\bf Lisp image:}).
+You should then get a new buffer called \verb+*common-lisp*+ with
+a running Lisp process (without a compiler, if you are using our
+image).
 \end{enumerate}
 You
-should now see the LKB interaction window, as shown in 
+should now also see the LKB interaction window, as shown in 
 Figure~\ref{lkbtop-unix}.
 To continue, see Chapter~\ref{firstsession}.
 
@@ -643,7 +687,8 @@ To continue, see Chapter~\ref{firstsession}.
 \label{clim-image}
 
 If you cannot use emacs, or do not wish to for some reason,
-simply start the saved image by running {\tt newlkb} (or whatever
+simply start the saved image by running the executable
+{\tt lkb} within the lkb directory (or whatever
 other name you chose for it in the earlier stages).
 You
 should now see the LKB interaction window, as shown in 
@@ -713,6 +758,20 @@ documentation, please look at the instructions on the
 fixes for known problems available there.  The Web site also contains details
 of how to report bugs that you find: note that it's important that you give us
 enough information, so the Web site describes what information we need.
+
+\subsection{Compilation: file writing problems}
+
+If you get an error while compiling the system to the effect that
+a fasl file cannot be written, this is probably because a directory it
+expects is missing.
+The system assumes that there
+is a directory tree named according to the type of system you have
+(search for {\tt BINARY-DIR-NAME} in the {\tt general} files).
+The source tree contains some empty fasl directory trees, but you
+may have to construct you own.
+If you don't do this in advance, Lisp will give error messages, but
+you can continue from these after creating the files.
+
 
 \subsection{Temporary directory missing}
 
@@ -3625,7 +3684,8 @@ In this section the LKB menu
 commands will be briefly described in the order in
 which they appear in the `mini' interface.
 Commands which are only in the `advanced' version are indicated by
-an asterisk.
+an asterisk.  To switch between versions, use the {\bf Shrink menu}
+or {\bf Expand menu} commands under {\bf Options}.
 
 \subsection{Quit}
 
@@ -3849,7 +3909,9 @@ Show edge}.
 asterisked commands are added/removed.
 
 \paragraph{Set options} Allows interactive setting of some system
-parameters.  FIX --- more details.
+parameters.  
+FIX --- more details.
+See Appendix~\ref{glob} for full details of all parameters.
 
 Note that the values of the boolean parameters are specified 
 in the standard way for Common Lisp: that is, {\tt t} indicates
@@ -3865,7 +3927,13 @@ true and {\tt nil} indicates false.
 The generator is described in more detail in \S\ref{generator},
 but is currently in a fairly early stage of development.
 It operates in a very similar manner to the parser
-and relies on the use of an MRS style semantics.  At the moment,
+but relies on the use of an MRS style semantics,
+thus it will only work with grammars that produce 
+such semantics.  
+% UPDATE POINT
+The textbook grammar distributed with
+the system will work with some sentences.
+At the moment,
 there is no way of entering an MRS input other than by parsing
 a sentence which produces that MRS.
 
@@ -3884,6 +3952,10 @@ Displays a chart from the generation process (see \S\ref{chart}).  Note that
 the ordering of items on the chart is controlled by their semantic
 indices.  
 
+\paragraph{Index}
+Indexes the lexicon and the rules for the generator.  Has to
+be run before anything can be generated.
+
 \subsection{Tidy up*}
 \label{tidy}
 This command clears expanded lexical entries which are cached.  
@@ -3900,17 +3972,19 @@ feature structure windows, and especially the Type Hierarchy window.
 \subsection{Output*}
 
 \paragraph{Dump system}
+\label{dumplkb}
 This creates an image file, which will essentially save the state of
 the current system.  It can be used before a grammar is loaded, in which
 case the image may be used by multiple people, or to save state after a 
 grammar has been loaded, though because of the handling of the temporary 
 lexicon files (see \S\ref{sysglob}), it really only makes sense to do this 
 for a single user.  
-The dumped system relies on the cached lexicon, so if the templex
+The dumped system 
+relies on the cached lexicon, so if the templex
 or templex-index files are deleted or modified, the saved image will
 not work correctly.
 
-The behaviour is very different in MCL and ACL:
+The behaviour is quite different in MCL and ACL:
 
 In MCL, choosing {\bf Dump system} will prompt for a file name for the saved
 image and then save the image, finishing the Lisp session.  
@@ -4871,6 +4945,7 @@ representation will be implemented at some point.)
 \section{MRS}
 \label{mrs}
 
+FIX
 % FIX - though this should maybe be just a pointer
 % to the paper plus a distinct document describing
 % munging, vitrification etc
@@ -4891,7 +4966,8 @@ contains the appropriate code.
 global parameters which is loaded if the mrs code is available.
 \item Before generating, the lexicon and lexical and grammar rules
 must be indexed.  The function which does this, {\tt index-for-generator},
-can be run from the {\bf Generate} menu.
+can be also be run with the {\bf Index} command
+from the {\bf Generate} menu.
 \item To generate, first parse a sentence.  
 Then use the parse tree display to find the number associated with the topmost
 edge in the tree for the analysis you are interested in

@@ -27,12 +27,13 @@
 		      cl-user::show-chart 
 		      cl-user::parse-sentences 
 		      cl-user::compare-parses
-		      ;; generate
+                      ;; generate
 		      cl-user::generate-from-edge
                       cl-user::show-gen-result
                       cl-user::show-gen-edge
 		      cl-user::show-gen-chart
 		      cl-user::print-gen-chart
+                      cl-user::index-for-generator
 		      ;; link
 		      cl-user::apply-lex 
 		      cl-user::apply-lex-rules 
@@ -111,7 +112,7 @@
                                            )
                                           :available-p nil) 
                    (make-lkb-submenu-item :menu-title "Debug"
-                                          :available-p t
+                                          :available-p nil
                                           :menu-items
                                           (list
                                            (make-menu-item :name "Check lexicon"
@@ -128,7 +129,8 @@
                                            (make-menu-item :name "Save display settings..."
                                                            :value 'output-display-settings)
                                            (make-menu-item :name "Load display options..."
-                                                           :value 'load-display-settings)))))))
+                                                           :value 'load-display-settings))
+                                          :available-p t)))))
 
 
 (defun create-big-lkb-system-menu nil
@@ -197,13 +199,15 @@
                :available-p nil)
          (make-lkb-submenu-item :menu-title "Generate"
                  :menu-items                       
-                  (list 
+                 (list 
                      (make-menu-item :name "Generate..."
                         :value 'generate-from-edge)
                      (make-menu-item :name "Redisplay result"
                         :value 'show-gen-result)
                      (make-menu-item :name "Show chart"
-                        :value 'show-gen-chart))
+                                     :value 'show-gen-chart)
+                     (make-menu-item :name "Index"
+                        :value 'index-for-generator))
                :available-p nil)
          (make-lkb-submenu-item :menu-title "Tests"
                  :menu-items                       
@@ -215,7 +219,7 @@
                      )
                   :available-p nil)           
          (make-lkb-submenu-item :menu-title "Debug"
-                                :available-p t
+                                :available-p nil
                                 :menu-items
                                 (list
                                  (make-menu-item :name "Check lexicon"

@@ -25,6 +25,8 @@
 (output-lrules :tdl)
 
 (output-lex-and-derived :lilfes "Macintosh HD:foo3")
+(output-lex-and-derived :lilfes "~aac/lilfes/lingo/lex.lil" *lex-ids-used*)
+
 (output-lex-and-derived :tdl "Macintosh HD:foo4")
 
 (output-lex-and-derived :ebl "~aac/ebl.lex")
@@ -32,7 +34,7 @@
 ;;; and :path
 |#
 
-
+(defvar *cached-type-order* nil)
 
 (defun output-types (syntax &optional file-name sig-only-p)
   (unless (member syntax '(:tdl :path :lilfes))
@@ -46,23 +48,26 @@
   (when file-name 
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
-      (for type-name in (sort-by-appearance-order
-                         (copy-list (append *ordered-type-list*
-                                *ordered-glbtype-list*)) sig-only-p)
-           do
-           (let ((entry (get-type-entry type-name)))                  
-             (ecase syntax
-               (:tdl (output-type-as-tdl type-name entry
-                                         ostream))
-               (:path (output-type-as-paths type-name entry
-                                         ostream))
-               (:lilfes (output-type-as-lilfes type-name entry
-                                         ostream sig-only-p))))))))
+      (let ((type-order (or *cached-type-order*
+               (sort-by-appearance-order
+                (copy-list (append *ordered-type-list*
+                                   *ordered-glbtype-list*)) sig-only-p))))
+        (setf *cached-type-order* type-order)
+        (for type-name in type-order
+             do
+             (let ((entry (get-type-entry type-name)))                  
+               (ecase syntax
+                 (:tdl (output-type-as-tdl type-name entry
+                                           ostream))
+                 (:path (output-type-as-paths type-name entry
+                                              ostream))
+                 (:lilfes (output-type-as-lilfes type-name entry
+                                                 ostream sig-only-p)))))))))
 
 ;;; Neither of these lexical output functions
 ;;; will work from a cached lexicon
 
-(defun output-lex (syntax &optional file-name local-p)
+(defun output-lex (syntax &optional file-name local-p lex-ids)
   (unless file-name 
     (setf file-name
          (ask-user-for-new-pathname "Output file?")))
@@ -70,7 +75,7 @@
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
       (let ((count 0))
-        (for lex-name in (reverse *ordered-lex-list*)
+        (for lex-name in (or lex-ids (reverse *ordered-lex-list*))
              do
              (if (> count 100)
                (progn (clear-expanded-lex)
@@ -92,7 +97,7 @@
                  (format t "~%Warning ~A not found" lex-name))))))))
 
 
-(defun output-lex-and-derived (syntax &optional file-name)
+(defun output-lex-and-derived (syntax &optional file-name lex-ids)
   ;;; lexicon and everything that can be derived from it
   ;;; via lexical rule.  Ordered by base form.
   (unless file-name 
@@ -102,7 +107,7 @@
     (with-open-file 
         (ostream file-name :direction :output :if-exists :supersede)
       (let ((count 0))
-        (for lex-name in (reverse *ordered-lex-list*)
+        (for lex-name in (or lex-ids (reverse *ordered-lex-list*))
              do            
              (if (> count 100)
                (progn (clear-expanded-lex)
@@ -125,10 +130,11 @@
                            (orth (extract-orth-from-fs fs)))
                       (case syntax
                         (:tdl 
-                         (output-derived-instance-as-tdl orth fs ostream idno))
+                         (output-derived-instance-as-tdl orth fs ostream 
+                                                         lex-name idno))
                         (:lilfes 
                          (output-derived-instance-as-lilfes 
-                          orth fs ostream idno))
+                          orth fs ostream lex-name idno))
                         (:ebl
                          (output-for-ebl orth fs ostream (car result-pair)
                                          lex-name lex-entry-fs))

@@ -12,6 +12,9 @@ LaTeX as normal
 dvips -Ptype1 -file newdoc.dvi > newdoc.ps
 distill newdoc.ps (on turing, or eoan, accidentally ...)
 web files are on ~aac/WWW
+so 
+cp newdoc.pdf ~aac/WWW
+
 
 
 Remaining (known) problems
@@ -19,6 +22,3 @@ Remaining (known) problems
 Generally missing stuff is indicated by FIX (either as LaTeX comment,
 or visible in the text).
 
-~ doesn't show up in verbatim
-
-Downloading and installation instructions have lacuna.

@@ -972,7 +972,10 @@
 
 (defparameter *do-something-with-parse* nil)
 
+(defparameter *lex-ids-used* nil)
+
 (defun batch-parse-sentences (istream raw-sentence parse-file &optional access-fn)
+  (setf *lex-ids-used* nil)
   (let* ((output-file 
             (or parse-file (ask-user-for-new-pathname "Output file?")))
          (start-time (get-internal-run-time)))
@@ -1002,6 +1005,9 @@
                    (let ((n (length *parse-record*)))
                      (format ostream "  ~R parse~:[s~;~] found~%" n (= n 1))
                      (finish-output ostream)))))
+             (for lex-id in (expanded-lex-ids)
+                  do
+                  (pushnew lex-id *lex-ids-used*))
              (clear-expanded-lex)       ; try and avoid image increasing
                                         ; at some speed cost
              (setq raw-sentence (read-line istream nil 'eof))))

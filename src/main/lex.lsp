@@ -259,7 +259,20 @@
                (declare (ignore id))
                (setf (cddr value) nil))
            *psorts*))
-   
+
+(defun expanded-lex-ids nil
+  ;;; useful for creating a subset of a lexicon which
+  ;;; corresponds to a particular test suite
+  (let ((ids nil))
+    (maphash #'(lambda (id value)
+                 (if (and (cddr value)
+                          (lex-or-psort-full-fs (cddr value)))
+                     (push id ids)))
+             *psorts*)
+    ids))
+
+
+
 (defun clear-non-parents nil
   (format t "~%Removing cached lexical entries")
    (maphash 

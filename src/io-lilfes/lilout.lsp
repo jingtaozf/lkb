@@ -6,15 +6,20 @@ load in the grammar as usual
 
 check the feature names in this file are set correctly
 
-(output-types :lilfes "~aac/lilfes/types.lil" t)
-(output-lex-and-derived :lilfes "~aac/lilfes/lex.lil")
+(output-types :lilfes "~aac/lilfes/lingo/types.lil" t)
+(output-lex-and-derived :lilfes "~aac/lilfes/lingo/lex.lil")
+or 
+(output-lex-and-derived :lilfes "~aac/lilfes/lingo/lex.lil" *lex-ids-used*)
 
 this outputs a full form lexicon, with all lexical rules applied
 so morphology and lexical rules can be ignored
 
-(output-grules :lilfes "~aac/lilfes/grules.lil")
+optional argument is a list of lexical ids - this is set by 
+batch parsing
 
-(output-root :lilfes "~aac/lilfes/root.lil")
+(output-grules :lilfes "~aac/lilfes/lingo/grules.lil")
+
+(output-root :lilfes "~aac/lilfes/lingo/root.lil")
 
 to run lilfes (in the lilfes directory)
 
@@ -32,11 +37,8 @@ Parse nodes need to be added so we can understand the display.
 
 ;;; very preliminary
 
-;;; types can be in '' in the LilFeS syntax, but this doesn't
-;;; seem to work for features
-;;; note that `-' (and `*'?) are not allowed in features,
-;;; but this code doesn't deal with this (yet)
-
+;;; types can be in '' in the LilFeS syntax
+;;; in LilFeS 0.71, so can features
 
 (defun convert-lilfes-type (type)
   (string-downcase
@@ -59,6 +61,9 @@ Parse nodes need to be added so we can understand the display.
          ((eq type '-) 'minus)
          ((eq type '+) 'plus)
          ((eq type 'symbol) 'string)
+         ;;; these are for LinGO
+         ((eq type 'follow) 'lingo_follow)
+         ((eq type 'integer) 'lingo_integer)
          (t type))))
 
 (defun convert-lilfes-feature (feat)
@@ -68,32 +73,37 @@ Parse nodes need to be added so we can understand the display.
         
 
 (defun convert-iffy-characters (val)
-   (let ((str (string val))
-         (char-bag nil))
-     (for char in (coerce str 'list)
-          do
-          (cond ((char= char #\-)
-                 (setf char-bag 
-                       (append (nreverse (coerce "HYPHEN" 'list))
-                               char-bag)))
-                ((char= char #\*)
-                 (setf char-bag 
-                       (append (nreverse (coerce "ASTERIX" 'list))
-                               char-bag)))
-                ((digit-char-p char) 
-                 (setf char-bag 
-                      (append 
-                       (nreverse 
-                        (coerce 
-                         (string-upcase
-                         (format nil "~R" 
-                                        (- (char-code char) 48))) 'list))
-                       char-bag)))
-                ;;; alas, cannot use ~:@R here, because 0
-                ;;; hadn't been invented then ...
-                (t (push char char-bag))))
-     (coerce (nreverse char-bag) 'string)))
+  #|
+  ;;; for LilFeS 0.71 just escape the feature
+  (format nil "'~A'" val))
+  |#
+  (let ((str (string val))
+          (char-bag nil))
+      (for char in (coerce str 'list)
+           do
+           (cond ((char= char #\-)
+                  (setf char-bag 
+                        (append (nreverse (coerce "HYPHEN" 'list))
+                                char-bag)))
+                 ((char= char #\*)
+                  (setf char-bag 
+                        (append (nreverse (coerce "ASTERIX" 'list))
+                                char-bag)))
+                 ((digit-char-p char) 
+                  (setf char-bag 
+                       (append 
+                        (nreverse 
+                         (coerce 
+                          (string-upcase
+                          (format nil "~R" 
+                                         (- (char-code char) 48))) 'list))
+                        char-bag)))
+                 ;;; alas, cannot use ~:@R here, because 0
+                 ;;; hadn't been invented then ...
+                 (t (push char char-bag))))
+      (coerce (nreverse char-bag) 'string)))
 
+  
 (defparameter *lilfes-builtins*
   '("list" "nil" "cons" "bot" "string"))
     
@@ -166,9 +176,9 @@ Parse nodes need to be added so we can understand the display.
 
 
 
-(defun output-derived-instance-as-lilfes (string fs stream id)
+(defun output-derived-instance-as-lilfes (string fs stream id1 id2)
   (let ((def (tdfs-indef fs)))
     ;; assume no defaults
-    (format stream "~%lex(\"~A_~A\", " string id)
+    (format stream "~%lex(\"~A_~A\", " id1 id2)
     (display-dag1 def 'lilfes stream)
     (format stream ").~%")))                 

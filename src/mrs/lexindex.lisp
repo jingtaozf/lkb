@@ -5,10 +5,12 @@
   (index-lexical-rules)
   (index-grammar-rules)
   (mrs::instantiate-null-semantic-items)
+  (format t "~%Indexing complete")
   nil)
  
 
 (defun index-lexicon nil
+  (check-for-open-psorts-stream)
   (mrs::clear-semantic-indices)
    (setf *batch-mode* t)
    (let ((ids nil))

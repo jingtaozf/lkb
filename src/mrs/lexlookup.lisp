@@ -15,8 +15,19 @@
 
 
 (defun find-possible-lrules (rel-set)
-  (declare (ignore rel-set))
-  *contentless-lrs*)
+  (append
+   (for rel in rel-set
+        filter
+        (let* ((rel-name (rel-sort rel))
+               (rule (cdr (assoc rel-name *lrule-rel-index*))))
+          (if (and rule
+                   (semantics-record-main-relations rule)
+                   (null (cdr (semantics-record-main-relations rule)))
+                   (eql (relation-record-relation
+                         (car (semantics-record-main-relations rule)))
+                        rel-name))
+              (semantics-record-id rule))))
+   *contentless-lrs*))
 
 
 
