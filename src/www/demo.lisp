@@ -609,6 +609,9 @@
                 :newline
                 ((:script
                   :src "/lkb.js" :language "javascript" 
+                  :type "text/javascript"))
+                ((:script
+                  :src "/alttxt.js" :language "javascript" 
                   :type "text/javascript")))
                :newline
                (:body
