@@ -79,6 +79,7 @@
 (defvar *type-reload-p* nil)
 
 (defun clear-types nil
+   (clear-type-cache) ; must be done before types table is cleared
    (disable-type-interactions)
    (setf *toptype* nil)
    (clrhash *types*) 
@@ -87,7 +88,6 @@
    (setf *ordered-type-list* nil)
    (setf *ordered-glbtype-list* nil)
    (setf *leaf-types* nil)
-   (clear-type-cache)
    (clear-feature-table)
    (clear-expanded-lex)
 #+:allegro (when (and *gc-before-reload* *type-reload-p*) (gc t))
