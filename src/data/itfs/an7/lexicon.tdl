@@ -1,0 +1,179 @@
+;;; lexical entries modified for exercise 5.1.1-4
+
+the := word &
+[ ORTH  [ LIST [ FIRST  "the"]],
+  HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+this := word &
+[ ORTH  [ LIST [ FIRST   "this" ]],
+  HEAD det &
+	[ NUMAGR sg],
+  SPR < >,
+  COMPS < > ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+these := word &
+[ ORTH  [ LIST [ FIRST   "these" ]],
+  HEAD det &
+	[ NUMAGR pl],
+  SPR < >,
+  COMPS < > ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+dog := word &
+[ ORTH  [ LIST [ FIRST   "dog" ]],
+  HEAD noun &
+	[ NUMAGR sg & #agr],
+  SPR < phrase & [HEAD det &
+			[NUMAGR #agr]] >,
+  COMPS < > ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+dogs := word &
+[ ORTH  [ LIST [ FIRST   "dogs" ]],
+  HEAD noun &
+	[ NUMAGR pl & #agr],
+  SPR < phrase & [HEAD det &
+			[NUMAGR #agr]] >,
+  COMPS < >  ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+cat := word &
+[ ORTH  [ LIST [ FIRST   "cat" ]],
+  HEAD noun &
+	[ NUMAGR sg & #agr],
+  SPR < phrase & [HEAD det &
+			[NUMAGR #agr]] >,
+  COMPS < > ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+aardvark := word &
+[ ORTH  [ LIST [ FIRST   "aardvark" ]],
+  HEAD noun &
+	[ NUMAGR sg & #agr],
+  SPR < phrase & [HEAD det &
+			[NUMAGR #agr]] >,
+  COMPS < > ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+barks := word &
+[ ORTH  [ LIST [ FIRST   "barks" ]],
+  HEAD verb  &
+	[ NUMAGR sg & #agr],
+  SPR < phrase &
+        [HEAD noun &
+		[ NUMAGR #agr],
+         SPR <>] >,
+  COMPS < > ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+bark := word &
+[ ORTH  [ LIST [ FIRST   "bark" ]],
+  HEAD verb &
+	[ NUMAGR pl & #agr],
+  SPR < phrase &
+        [HEAD noun &
+		[ NUMAGR #agr],
+         SPR <>] >,
+  COMPS < > ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+sleeps := word &
+[ ORTH  [ LIST [ FIRST   "sleeps" ]],
+  HEAD verb &
+	[ NUMAGR sg & #agr],
+  SPR < phrase &
+        [HEAD noun &
+		[ NUMAGR #agr],
+         SPR <>] >,
+  COMPS < > ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+sleep := word &
+[ ORTH  [ LIST [ FIRST   "sleep" ]],
+  HEAD verb &
+	[ NUMAGR pl & #agr],
+  SPR < phrase &
+        [HEAD noun &
+		[ NUMAGR #agr],
+         SPR <>] >,
+  COMPS < > ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+chased_1 := word &
+[ ORTH  [ LIST [ FIRST   "chased" ]],
+  HEAD verb &
+	[ NUMAGR #agr],
+  SPR < phrase & 
+       [ HEAD noun &
+		[ NUMAGR #agr],
+         SPR <>] >,
+  COMPS < phrase & 
+          [HEAD noun,
+           SPR <>] > ].
+
+;;; added as answer to exercise 5.1.1 - 3
+;;; modified as answer to exercise 5.1.1 - 5
+chased_2  := word &
+[ ORTH  [ LIST [ FIRST   "chased" ]],
+  HEAD verb &
+	[ NUMAGR #agr],
+  SPR < phrase & 
+       [ HEAD noun &
+		[ NUMAGR #agr],
+         SPR <>],
+ 	phrase & 
+       [ HEAD noun,
+         SPR <>] >,
+  COMPS < phrase & 
+          [HEAD noun,
+           SPR <>] > ].
+
+;;; added as answer to exercise 5.1.1 - 1
+;;; modified as answer to exercise 5.1.1 - 5
+gave_1 := word &
+[ ORTH  [ LIST [ FIRST   "gave" ]],
+  HEAD verb &
+	[ NUMAGR #agr],
+  SPR < phrase & 
+       [ HEAD noun &
+		[ NUMAGR #agr],
+         SPR <>] >,
+  COMPS < phrase & 
+          [HEAD noun,
+           SPR <>],
+	  phrase & 
+          [HEAD noun,
+           SPR <>] > ].
+
+;;; added as answer to exercise 5.1.1 - 2
+;;; modified as answer to exercise 5.1.1 - 5
+gave_2 := word &
+[ ORTH  [ LIST [ FIRST   "gave" ]],
+  HEAD verb &
+	[ NUMAGR #agr],
+  SPR < phrase & 
+       [ HEAD noun &
+		[ NUMAGR #agr],
+         SPR <>] >,
+  COMPS < phrase & 
+          [HEAD noun,
+           SPR <>],
+	  phrase & 
+          [HEAD prep,
+           SPR <>,
+	   COMPS <>] > ].
+
+;;; added as answer to exercise 5.1.1 - 2
+to := word &
+[ ORTH  [ LIST [ FIRST   "to" ]],
+  HEAD prep,
+  SPR <>,
+  COMPS < phrase & 
+          [HEAD noun,
+           SPR <>] > ].
+
+

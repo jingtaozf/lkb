@@ -1,0 +1,29 @@
+sign := *top* & 
+[ HEAD pos,
+  SPR *list*,
+  COMPS *list* ].
+
+pos := *top*.
+noun := pos.
+verb := pos.
+det := pos.
+
+phrase := sign &
+[ ARGS *list* ].
+
+word := sign &
+[ ORTH string ].
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+

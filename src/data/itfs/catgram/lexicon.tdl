@@ -1,0 +1,60 @@
+this := word &
+[ ORTH "this",
+  CAT [ RESULT [ CAT np],
+	DIRECTION forward,
+	ACTIVE [ CAT n]]].	
+
+these := word &
+[ ORTH "these",
+  CAT [ RESULT [ CAT np],
+	DIRECTION forward,
+	ACTIVE [ CAT n]]].	
+
+dog := word &
+[ ORTH "dog",
+  CAT n].
+
+dogs := word &
+[ ORTH "dogs",
+  CAT n].
+
+cat := word &
+[ ORTH "cat",
+  CAT n].
+
+barks := word &
+[ ORTH "barks",
+  CAT [ RESULT [ CAT s],
+	DIRECTION backward,
+	ACTIVE [ CAT np]]].
+
+bark := word &
+[ ORTH "bark",
+  CAT [ RESULT [ CAT s],
+	DIRECTION backward,
+	ACTIVE [ CAT np]]].
+
+sleeps := word &
+[ ORTH "sleeps",
+  CAT [ RESULT [ CAT s],
+	DIRECTION backward,
+	ACTIVE [ CAT np]]].
+
+
+sleep := word &
+[ ORTH "sleep",
+  CAT [ RESULT [ CAT s],
+	DIRECTION backward,
+	ACTIVE [ CAT np]]].
+
+chased := word &
+[ ORTH "chased",
+  CAT [ RESULT [ CAT [ 	RESULT [ CAT s],
+			DIRECTION backward,
+			ACTIVE [ CAT np]]],
+   	DIRECTION forward,
+	ACTIVE [ CAT np]]].
+
+
+
+

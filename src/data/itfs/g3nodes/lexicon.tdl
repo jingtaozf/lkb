@@ -1,0 +1,36 @@
+;;; Lexicon
+this := sg-word &
+[ ORTH "this",
+  CATEG det ].
+
+these := pl-word &
+[ ORTH "these",
+  CATEG det ].
+
+the := word &
+[ ORTH "the",
+  CATEG det ].
+
+sleep := pl-word &
+[ ORTH "sleep",
+  CATEG vp ].
+
+sleeps := sg-word &
+[ ORTH "sleeps",
+  CATEG vp ].
+
+dog := sg-word &
+[ ORTH "dog",
+  CATEG n ].
+
+dogs := pl-word &
+[ ORTH "dogs",
+  CATEG n ].
+
+sheep := word &
+[ ORTH "sheep",
+  CATEG n ].
+
+slept := word &
+[ ORTH "slept",
+  CATEG vp ].

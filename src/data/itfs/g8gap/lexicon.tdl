@@ -1,0 +1,51 @@
+the := det-lxm &
+[ ORTH.LIST.FIRST "the",
+  SEM.RELS.LIST.FIRST.PRED "the_rel" ].
+
+this := sg-det-lxm &
+[ ORTH.LIST.FIRST "this",
+  SEM.RELS.LIST.FIRST.PRED "this_rel" ].
+
+that := sg-det-lxm &
+[ ORTH.LIST.FIRST "that",
+  SEM.RELS.LIST.FIRST.PRED "that_rel" ].
+
+these := pl-det-lxm &
+[ ORTH.LIST.FIRST "these",
+  SEM.RELS.LIST.FIRST.PRED "these_rel" ].
+
+those := pl-det-lxm &
+[ ORTH.LIST.FIRST "those",
+  SEM.RELS.LIST.FIRST.PRED "those_rel" ].
+
+aardvark := noun-lxm &
+[ ORTH.LIST.FIRST "aardvark",
+  SEM.RELS.LIST.FIRST.PRED "aardvark_rel" ].
+
+dog := noun-lxm &
+[ ORTH.LIST.FIRST "dog",
+  SEM.RELS.LIST.FIRST.PRED "dog_rel" ].
+
+cat := noun-lxm &
+[ ORTH.LIST.FIRST "cat",
+  SEM.RELS.LIST.FIRST.PRED "cat_rel" ].
+
+bark := intrans-verb &
+[ ORTH.LIST.FIRST "bark",
+  SEM.RELS.LIST.FIRST.PRED "bark_rel" ].
+
+chase := trans-verb &
+[ ORTH.LIST.FIRST "chase",
+  SEM.RELS.LIST.FIRST.PRED "chase_rel" ].
+
+to := prep-lxm &
+[ ORTH.LIST.FIRST "to",
+  SEM.RELS.LIST.FIRST.PRED "to_rel" ].
+
+near := prep-lxm &
+[ ORTH.LIST.FIRST "near",
+  SEM.RELS.LIST.FIRST.PRED "near_rel" ].
+
+give := ditransnp-verb &
+[ ORTH.LIST.FIRST "give",
+  SEM.RELS.LIST.FIRST.PRED "give_rel" ].

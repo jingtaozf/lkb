@@ -1,0 +1,31 @@
+head-complement-rule-0 := unary-head-initial & 
+[ SPR #spr,
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < > ] >  ].
+
+
+head-complement-rule-1 := binary-head-initial &
+[ SPR #spr, 
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1 > ],
+         #1 >  ].
+
+
+head-complement-rule-2 := ternary-head-initial &
+[ SPR #spr, 
+  ARGS < word & 
+         [ SPR #spr, 
+           COMPS < #1, #2> ],  
+         #1, #2 > ].
+
+
+head-specifier-rule := head-second &
+[ SPR < >,
+  COMPS #comps,
+  ARGS < phrase & #1,
+         phrase & 
+         [ SPR < #1 >,
+           COMPS #comps ] > ]. 
+

@@ -1,0 +1,48 @@
+;;; Types
+
+syn-struc := *top* &
+[ CATEG cat,
+  NUMAGR agr ].
+
+cat := *top*.
+
+s := cat.
+
+np := cat.
+
+vp := cat.
+
+det := cat.
+
+n := cat.
+
+agr := *top*.
+
+sg := agr.
+
+pl := agr.
+
+phrase := syn-struc &
+[ ARGS *list* ].
+
+word := syn-struc &
+[ ORTH string ].
+
+sg-word := word &
+[ NUMAGR sg ].
+
+pl-word := word &
+[ NUMAGR pl ].
+
+;;; standard types
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+

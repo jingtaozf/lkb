@@ -1,0 +1,38 @@
+the := det-lxm &
+[ ORTH.LIST.FIRST "the" ].
+
+this := sg-det-lxm &
+[ ORTH.LIST.FIRST "this" ].
+
+that := sg-det-lxm &
+[ ORTH.LIST.FIRST "that" ].
+
+these := pl-det-lxm &
+[ ORTH.LIST.FIRST "these" ].
+
+those := pl-det-lxm &
+[ ORTH.LIST.FIRST "those" ].
+
+aardvark := noun-lxm &
+[ ORTH.LIST.FIRST "aardvark" ].
+
+dog := noun-lxm &
+[ ORTH.LIST.FIRST "dog" ].
+
+cat := noun-lxm &
+[ ORTH.LIST.FIRST "cat" ].
+
+bark := intrans-verb &
+[ ORTH.LIST.FIRST "bark" ].
+
+chase := trans-verb &
+[ ORTH.LIST.FIRST "chase" ].
+
+to := prep-lxm &
+[ ORTH.LIST.FIRST "to" ].
+
+near := prep-lxm &
+[ ORTH.LIST.FIRST "near" ].
+
+give := ditransnp-verb &
+[ ORTH.LIST.FIRST "give" ].

@@ -1,0 +1,57 @@
+;;; answer to exercise 3.5.10 - 3 
+
+;;; Types
+
+syn-struc := *top* &
+[ CATEG cat,
+  NUMAGR agr ].
+
+cat := *top*.
+
+s := cat.
+
+np := cat.
+
+vp := cat.
+
+det := cat.
+
+n := cat.
+
+agr := *top*.
+
+sg := agr.
+
+pl := agr.
+
+phrase := syn-struc &
+[ ARGS *list* ].
+
+
+agr-phrase := phrase & 
+[ NUMAGR #1,
+  ARGS [ FIRST [ NUMAGR #1 ],
+         REST [ FIRST [ NUMAGR #1 ],
+                REST *null* ]]] .
+
+word := syn-struc &
+[ ORTH string ].
+
+sg-word := word &
+[ NUMAGR sg ].
+
+pl-word := word &
+[ NUMAGR pl ].
+
+;;; standard types
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+

@@ -1,0 +1,12 @@
+;;; Rules
+s_rule := phrase &
+[ CATEG s,
+  ARGS [ FIRST [ CATEG np ],
+         REST [ FIRST [ CATEG vp ],
+                REST *null* ]]] .
+
+np_rule := phrase &
+[ CATEG np,
+  ARGS [ FIRST [ CATEG det ],
+         REST [ FIRST [ CATEG n ],
+                REST *null* ]]] .

@@ -1,0 +1,137 @@
+the := word &
+[ ORTH "the",
+  HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+this := word &
+[ ORTH "this",
+  HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+these := word &
+[ ORTH "these",
+  HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+dog := word &
+[ ORTH "dog",
+  HEAD noun,
+  SPR < phrase & [HEAD det] >,
+  COMPS < > ].
+
+dogs := word &
+[ ORTH "dogs",
+  HEAD noun,
+  SPR < phrase & [HEAD det] >,
+  COMPS < >  ].
+
+cat := word &
+[ ORTH "cat",
+  HEAD noun,
+  SPR < phrase & [HEAD det] >,
+  COMPS < > ].
+
+aardvark := word &
+[ ORTH "aardvark",
+  HEAD noun,
+  SPR < phrase & [HEAD det] >,
+  COMPS < > ].
+
+barks := word &
+[ ORTH "barks",
+  HEAD verb,
+  SPR < phrase &
+        [HEAD noun,
+         SPR <>] >,
+  COMPS < > ].
+
+bark := word &
+[ ORTH "bark",
+  HEAD verb,
+  SPR < phrase &
+        [HEAD noun,
+         SPR <>] >,
+  COMPS < > ].
+
+sleeps := word &
+[ ORTH "sleeps",
+  HEAD verb,
+  SPR < phrase &
+        [HEAD noun,
+         SPR <>] >,
+  COMPS < > ].
+
+sleep := word &
+[ ORTH "sleep",
+  HEAD verb,
+  SPR < phrase &
+        [HEAD noun,
+         SPR <>] >,
+  COMPS < > ].
+
+chased_1 := word &
+[ ORTH "chased",
+  HEAD verb,
+  SPR < phrase & 
+       [ HEAD noun,
+         SPR <>] >,
+  COMPS < phrase & 
+          [HEAD noun,
+           SPR <>] > ].
+
+;;; added as answer to exercise 5.1.1 - 3
+chased_2  := word &
+[ ORTH "chased",
+  HEAD verb,
+  SPR < phrase & 
+       [ HEAD noun,
+         SPR <>],
+ 	phrase & 
+       [ HEAD noun,
+         SPR <>] >,
+  COMPS < phrase & 
+          [HEAD noun,
+           SPR <>] > ].
+
+;;; added as answer to exercise 5.1.1 - 1
+gave_1 := word &
+[ ORTH "gave",
+  HEAD verb,
+  SPR < phrase & 
+       [ HEAD noun,
+         SPR <>] >,
+  COMPS < phrase & 
+          [HEAD noun,
+           SPR <>],
+	  phrase & 
+          [HEAD noun,
+           SPR <>] > ].
+
+;;; added as answer to exercise 5.1.1 - 2
+gave_2 := word &
+[ ORTH "gave",
+  HEAD verb,
+  SPR < phrase & 
+       [ HEAD noun,
+         SPR <>] >,
+  COMPS < phrase & 
+          [HEAD noun,
+           SPR <>],
+	  phrase & 
+          [HEAD prep,
+           SPR <>,
+	   COMPS <>] > ].
+
+;;; added as answer to exercise 5.1.1 - 2
+to := word &
+[ ORTH "to",
+  HEAD prep,
+  SPR <>,
+  COMPS < phrase & 
+          [HEAD noun,
+           SPR <>] > ].
+
+

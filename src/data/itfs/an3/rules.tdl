@@ -1,0 +1,18 @@
+;;; Rules
+
+;;; answer to exercise 3.5.10 - 1 
+;;; AV - modified from grammars/g2agr
+
+s_rule := agr-phrase &
+[ CATEG s,
+  ARGS [ FIRST [ CATEG np ],
+         REST [ FIRST [ CATEG vp]]]].
+
+
+;;; answer to exercise 3.5.10 - 1 
+;;; AV - modified from grammars/g2agr
+
+np_rule := agr-phrase &
+[ CATEG np,
+  ARGS [ FIRST [ CATEG det ],
+         REST [ FIRST [ CATEG n ]]]].

@@ -1,0 +1,13 @@
+forward-application := phrase &
+[ CAT #cat,
+  ARGS < [CAT [ RESULT [ CAT #cat],
+		DIRECTION forward,
+		ACTIVE [ CAT #cat2]]],
+	 [CAT #cat2]>].
+
+backward-application := phrase &
+[ CAT #cat,
+  ARGS < [ CAT #cat2],
+	 [ CAT [ RESULT [ CAT #cat],
+		 DIRECTION backward,
+		 ACTIVE [ CAT #cat2]]]>].

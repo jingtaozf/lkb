@@ -1,0 +1,33 @@
+;;; Types
+syn-struc := *top* &
+[ CATEG cat ].
+
+cat := *top*.
+
+s := cat.
+
+np := cat.
+
+vp := cat.
+
+det := cat.
+
+n := cat.
+
+phrase := syn-struc &
+[ ARGS *list* ].
+
+word := syn-struc &
+[ ORTH string ].
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+

@@ -1,0 +1,3 @@
+(lkb-load-lisp (this-directory) "globals.lsp")
+(read-tdl-type-files-aux
+     (list (lkb-pathname (this-directory) "types.tdl")))

@@ -1,0 +1,37 @@
+sign := *top* & 
+[ CAT cat].
+
+
+cat := *top*.
+complex-cat := cat &
+[ RESULT sign,
+  DIRECTION direction,
+  ACTIVE sign ].
+
+s := cat.
+np := cat.
+n := cat.
+
+direction := *top*.
+backward := direction.
+forward := direction.
+
+phrase := sign &
+[ ARGS *list*].
+
+word := sign &
+[ ORTH string ].
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+

@@ -1,0 +1,157 @@
+sign := *top* & 
+[ ORTH *dlist*,
+  HEAD pos,
+  SPR *list*,
+  COMPS *list*, 
+  ARGS *list* ].
+
+agr := *top*.
+
+sg := agr.
+
+pl := agr.
+
+pos := *top*.
+
+nominal := pos &
+       [ NUMAGR agr ].
+
+noun := nominal.
+
+verb := pos.
+
+det := nominal.
+
+prep := pos.
+
+phrase := sign &
+[ COMPS <> ].
+
+head-initial := phrase &
+[ HEAD #head,
+  ARGS < [ HEAD #head ], ... > ].
+
+unary-rule := phrase &
+[ ORTH #orth,
+  ARGS < [ ORTH #orth ] > ].
+
+binary-rule := phrase &
+[ ORTH [LIST #ofront, LAST #otail],
+  ARGS < [ ORTH [LIST #ofront, LAST #omiddle ]],
+         [ ORTH [LIST #omiddle, LAST #otail ]] > ].
+
+ternary-rule := phrase &
+[ ORTH [LIST #ofront, LAST #otail],
+  ARGS < [ ORTH [LIST #ofront, LAST #omiddle1 ]],
+         [ ORTH [LIST #omiddle1, LAST #omiddle2 ]],
+         [ ORTH [LIST #omiddle2, LAST #otail ]] >].
+
+unary-head-initial := unary-rule & head-initial.
+binary-head-initial := binary-rule & head-initial.
+ternary-head-initial := ternary-rule & head-initial.
+
+head-second := binary-rule &
+[ HEAD #head,
+  ARGS < sign, [ HEAD #head ] > ].
+
+lex-item := sign &
+[ ORTH [ LIST [ REST #rest ], LAST #rest ] ].
+
+lexeme := lex-item.
+
+const-lxm := lexeme.
+
+word := lex-item &
+[ HEAD #head,
+  SPR #spr,
+  COMPS #comps,
+  ARGS < lexeme &
+         [ HEAD #head,
+           SPR #spr,
+           COMPS #comps ] > ].
+
+det-lxm := const-lxm &
+[ HEAD det,
+  SPR < >,
+  COMPS < > ].
+
+sg-det-lxm := det-lxm &
+[ HEAD [ NUMAGR sg ]].
+
+pl-det-lxm := det-lxm &
+[ HEAD [ NUMAGR pl ]].
+
+noun-lxm := lexeme &
+[ HEAD noun & [NUMAGR #agr],
+  SPR < [HEAD det & [NUMAGR #agr]] >,
+  COMPS < > ].
+
+noun-form := word &
+ [ ARGS < noun-lxm > ].
+
+sing-noun := noun-form &
+[ HEAD.NUMAGR sg ].
+
+plur-noun := noun-form &
+[ HEAD.NUMAGR pl ].
+
+verb-lxm := lexeme &
+[ HEAD verb,
+  SPR < phrase & [HEAD noun, SPR <>] > ].
+
+verb-form := word &
+ [ ARGS < verb-lxm > ].
+
+past-verb := verb-form.
+
+sing-verb := verb-form &
+[ SPR < [HEAD.NUMAGR sg ] > ].
+
+plur-verb := verb-form &
+[ SPR < [HEAD.NUMAGR pl ] > ].
+
+intrans-verb := verb-lxm &
+[ COMPS <> ].
+
+trans-verb := verb-lxm &
+[ COMPS < phrase & [HEAD noun, SPR <>] > ].
+
+ditranspp-verb := verb-lxm &
+[ COMPS < phrase & [HEAD noun, SPR <>],
+          phrase & [HEAD prep, SPR <>] > ].
+
+ditransnp-verb := verb-lxm &
+[ COMPS < phrase & [HEAD noun, SPR <>],
+          phrase & [HEAD noun, SPR <>] > ].
+
+prep-lxm := const-lxm &
+[ HEAD prep,
+  SPR < >,
+  COMPS < phrase & [HEAD noun, SPR <>] > ].
+
+;;;
+;;; standard types
+;;;
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+*dlist* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+*null-dlist* := *dlist* &
+[ LIST #last,
+  LAST #last ].
+
+*ne-dlist* := *dlist* &
+[LIST *ne-list* ].
+
+

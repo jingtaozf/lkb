@@ -1,0 +1,11 @@
+;;; parse node labels
+
+S := [ CATEG S ].
+
+NP := [ CATEG NP ].
+
+VP := [ CATEG VP ].
+
+Det := [ CATEG Det ].
+
+N := [ CATEG N ].

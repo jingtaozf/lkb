@@ -1,0 +1,78 @@
+;;; added as answer to exercise 5.1.1 - 4
+sign := *top* & 
+[ ORTH *diff-list*,
+  HEAD pos,
+  SPR *list*,
+  COMPS *list* ].
+
+;;; modified as answer to exercise 5.1.1 - 5
+pos := *top* &
+[NUMAGR agr].
+
+noun := pos.
+verb := pos.
+det := pos.
+;;; added as answer to exercise 5.1.1 - 2
+prep := pos.
+
+;;; added as answer to exercise 5.1.1 - 5
+agr := *top*.
+;;; added as answer to exercise 5.1.1 - 5
+sg := agr.
+;;; added as answer to exercise 5.1.1 - 5
+pl := agr.
+
+phrase := sign &
+[ ARGS *list*].
+
+unary-phrase := phrase &
+[ ORTH #orth,
+  ARGS [  FIRST [ ORTH #orth]]].
+
+binary-phrase := phrase &
+[ ORTH [ LIST #first,
+	 LAST #last ],
+  ARGS [  FIRST [ ORTH [ LIST #first,
+                         LAST #middle ] ], 
+          REST [ FIRST [ ORTH [ LIST #middle,
+                                LAST #last ]]]]].
+
+ternary-phrase := phrase &
+[ ORTH [ LIST #first,
+	 LAST #last ],
+  ARGS [  FIRST [ ORTH [ LIST #first,
+                         LAST #middle1 ] ], 
+          REST [ FIRST [ ORTH [ LIST #middle1,
+                                LAST #middle2 ]],
+          	 REST [ FIRST [ ORTH [ 	LIST #middle2,
+                                	LAST #last ]]]]]].
+
+word := sign &
+[ ORTH [ LIST [ FIRST string,
+                REST #end ],
+         LAST #end ]].
+
+;;; added as answer to exercise 5.1.1 - 5
+sg-word := word &
+[ HEAD [ NUMAGR sg ]].
+
+;;; added as answer to exercise 5.1.1 - 5
+pl-word := word &
+[ HEAD [ NUMAGR pl ]].
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+*diff-list* := *top* &
+ [ LIST *list*,
+   LAST *list* ].
+

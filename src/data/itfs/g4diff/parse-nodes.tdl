@@ -1,0 +1,41 @@
+;;; parse node labels
+
+S-sg := [ CATEG S,
+          NUMAGR sg ].
+
+S-pl := [ CATEG S,
+          NUMAGR pl ].
+
+S := [ CATEG S ].
+
+NP-sg := [ CATEG NP,
+           NUMAGR sg ]. 
+
+NP-pl := [ CATEG NP,
+           NUMAGR pl ].
+
+NP := [ CATEG NP ].
+
+VP-sg := [ CATEG VP,
+           NUMAGR sg ].
+
+VP-pl := [ CATEG VP,
+           NUMAGR pl ].
+
+VP := [ CATEG VP ].
+
+Det-sg := [ CATEG Det,
+            NUMAGR sg ].
+
+Det-pl := [ CATEG Det,
+            NUMAGR pl ].
+
+Det := [ CATEG Det ].
+
+N-sg := [ CATEG N,
+          NUMAGR sg ].
+
+N-pl := [ CATEG N,
+          NUMAGR pl ].
+
+N := [ CATEG N ].

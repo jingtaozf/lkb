@@ -1,0 +1,4 @@
+;;; Start structure
+
+start := phrase &
+[ CAT s].

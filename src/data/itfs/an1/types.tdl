@@ -1,0 +1,13 @@
+;;; an answer to the glb exercise
+
+a := *top*.
+b := *top*.
+c := *top*.
+ab := a & b.
+abc := ab & c.
+x := ab.
+y := abc.
+z := abc.
+
+
+

@@ -1,0 +1,59 @@
+;;; Types
+
+sign := *top* &
+[ ORTH *diff-list*,
+  CATEG cat,
+  NUMAGR agr ].
+
+cat := *top*.
+
+s := cat.
+
+np := cat.
+
+vp := cat.
+
+det := cat.
+
+n := cat.
+
+agr := *top*.
+
+sg := agr.
+
+pl := agr.
+
+phrase := sign &
+[ ORTH [ LIST #first,
+	 LAST #last ],
+   ARGS [ FIRST [ ORTH [ LIST #first,
+                         LAST #middle ] ], 
+          REST [ FIRST [ ORTH [ LIST #middle,
+                                LAST #last ]]]]].
+
+word := sign &
+[ ORTH [ LIST [ FIRST string,
+                REST #end ],
+         LAST #end ]].
+
+sg-word := word &
+[ NUMAGR sg ].
+
+pl-word := word &
+[ NUMAGR pl ].
+
+;;; standard types
+
+string := *top*.
+
+*list* := *top*.
+
+*ne-list* := *list* &
+ [ FIRST *top*,
+   REST *list* ].
+
+*null* := *list*.
+
+*diff-list* := *top* &
+ [ LIST *list*,
+   LAST *list* ].

@@ -1,0 +1,77 @@
+;;; Lexicon
+this := sg-word &
+[ ORTH "this",
+  CATEG det ].
+
+these := pl-word &
+[ ORTH "these",
+  CATEG det ].
+
+the := word &
+[ ORTH "the",
+  CATEG det ].
+
+sleep := pl-word &
+[ ORTH "sleep",
+  CATEG vp ].
+
+sleeps := sg-word &
+[ ORTH "sleeps",
+  CATEG vp ].
+
+roar_1 := pl-word &
+[ ORTH "roar",
+  CATEG vp ].
+
+roars_1 := sg-word &
+[ ORTH "roars",
+  CATEG vp ].
+
+echo_1 := pl-word &
+[ ORTH "echo",
+  CATEG vp ].
+
+echoes_1 := sg-word &
+[ ORTH "echoes",
+  CATEG vp ].
+
+dog := sg-word &
+[ ORTH "dog",
+  CATEG n ].
+
+dogs := pl-word &
+[ ORTH "dogs",
+  CATEG n ].
+
+lion := sg-word &
+[ ORTH "lion",
+  CATEG n ].
+
+hunter := sg-word &
+[ ORTH "hunter",
+  CATEG n ].
+
+opponent := sg-word &
+[ ORTH "opponent",
+  CATEG n ].
+
+mountain := sg-word &
+[ ORTH "mountain",
+  CATEG n ].
+
+roar_2 := sg-word &
+[ ORTH "roar",
+  CATEG n ].
+
+roars_2 := pl-word &
+[ ORTH "roars",
+  CATEG n ].
+
+echo_2 := sg-word &
+[ ORTH "echo",
+  CATEG n ].
+
+echoes_2 := pl-word &
+[ ORTH "echoes",
+  CATEG n ].
+

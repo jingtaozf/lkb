@@ -1,0 +1,6 @@
+dative-shift-lrule := ditranspp-verb &
+[ ORTH #orth,
+  SEM.RELS.LIST.FIRST #key,
+  ARGS < ditransnp-verb & 
+         [ ORTH #orth,
+           SEM.RELS.LIST.FIRST #key ] >].

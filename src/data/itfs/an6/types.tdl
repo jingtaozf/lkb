@@ -1,0 +1,44 @@
+;;; added as answer to exercise 5.1.1 - 3: SPR *list* --> SPR max-one-list
+sign := *top* & 
+[ HEAD pos,
+  SPR max-one-list,
+  COMPS *list* ].
+
+pos := *top*.
+noun := pos.
+verb := pos.
+det := pos.
+;;; added as answer to exercise 5.1.1 - 2
+prep := pos.
+
+phrase := sign &
+[ ARGS *list* ].
+
+word := sign &
+[ ORTH string ].
+
+;;;;;;;;;;;;;;;;;;;;;;;
+
+string := *top*.
+
+*list* := *top*.
+
+;;; modified as answer to exercise 5.1.1 - 3
+*ne-list* := *list* &
+[ FIRST *top*,
+  REST *top* ].
+
+;;; added as answer to exercise 5.1.1 - 3
+one-plus-list := *ne-list* &
+[ REST *ne-list*].
+
+;;; added as answer to exercise 5.1.1 - 3
+max-one-list := *list*.
+
+;;; added as answer to exercise 5.1.1 - 3
+one-list := max-one-list & *ne-list* &
+[ REST *null* ].
+
+;;; modified as answer to exercise 5.1.1 - 3
+*null* := max-one-list.
+

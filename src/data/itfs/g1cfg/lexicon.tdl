@@ -1,0 +1,26 @@
+;;; Lexicon
+this := word &
+[ ORTH "this",
+  CATEG det ].
+
+these := word &
+[ ORTH "these",
+  CATEG det ].
+
+sleep := word &
+[ ORTH "sleep",
+  CATEG vp ].
+
+sleeps := word &
+[ ORTH "sleeps",
+  CATEG vp ].
+
+dog := word &
+[ ORTH "dog",
+  CATEG n ].
+
+dogs := word &
+[ ORTH "dogs",
+  CATEG n ].
+
+

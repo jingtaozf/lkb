@@ -1,0 +1,17 @@
+1 This dog barks. 1 8
+2 *Dog barks. 0 4
+3 *This dog bark. 0 7
+4 This dog chased this cat. 1 15
+5 *This dog chased cat. 0 9
+6 *This dog chased. 0 7
+7 *This dog barked this cat. 0 10
+8 The dog gave the cat the aardvark. 1 19
+9 *The dog gave the cat. 0 12
+10 The dog gave the aardvark to the cat. 1 21
+11 *The dog gave to the cat. 0 14
+
+;;; Total CPU time: 40 msecs
+
+;;; Mean edges: 11.45
+
+;;; Mean parses: 0.36

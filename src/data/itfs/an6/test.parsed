@@ -1,0 +1,13 @@
+1 This dog barks. 1 8
+2 *Dog barks. 0 4
+3 *This dog bark. 1 8
+4 This dog chased this cat. 1 13
+5 *This dog chased cat. 0 8
+6 *This dog chased. 0 6
+7 *This dog barked this cat. 0 10
+
+;;; Total CPU time: 20 msecs
+
+;;; Mean edges: 8.14
+
+;;; Mean parses: 0.43

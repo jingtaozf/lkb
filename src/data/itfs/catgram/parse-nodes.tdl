@@ -1,0 +1,18 @@
+s := [ HEAD verb, SPR <>, COMPS <> ].
+
+vp := [ HEAD verb, SPR < [] >, COMPS <> ].
+
+v := [ HEAD verb ].
+
+np := [ HEAD noun, SPR <>, COMPS <> ].
+
+n := [ HEAD noun, SPR < [] > ].
+
+det := [ HEAD det ].
+
+pp := [ HEAD prep, SPR <>, COMPS <> ].
+
+p := [ HEAD prep ].
+
+
+

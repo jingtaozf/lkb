@@ -1,0 +1,48 @@
+s := phrase & [ HEAD verb, SPR <>, COMPS <>, GAP <! !> ].
+
+s-np := phrase & [ HEAD verb, SPR <>, COMPS <>, 
+          GAP <! [ HEAD noun, SPR <>, COMPS <> ] !> ].
+
+s-pp := phrase & [ HEAD verb, SPR <>, COMPS <>, 
+          GAP <! [ HEAD prep, SPR <>, COMPS <> ] !> ].
+
+vp := phrase & [ HEAD verb, SPR < [] >, COMPS <>, GAP <! !> ].
+
+vp-np := phrase & [ HEAD verb, SPR < [] >, COMPS <>, 
+          GAP <! [ HEAD noun, SPR <>, COMPS <> ] !> ].
+
+vp-pp := phrase & [ HEAD verb, SPR < [] >, COMPS <>,
+          GAP <! [ HEAD prep, SPR <>, COMPS <> ] !> ].
+
+v := [ HEAD verb ].
+
+np := phrase & [ HEAD noun, SPR <>, COMPS <>, GAP <! !> ].
+
+np-np := phrase & [ HEAD noun, SPR <>, COMPS <>, 
+           GAP <! [ HEAD noun, SPR <>, COMPS <> ] !> ].
+
+np-pp := phrase & [ HEAD noun, SPR <>, COMPS <>, 
+           GAP <! [ HEAD prep, SPR <>, COMPS <> ] !> ].
+
+n := [ HEAD noun, SPR < [] >, GAP <! !> ].
+
+n-np := [ HEAD noun, SPR < [] >,
+          GAP <! [ HEAD noun, SPR <>, COMPS <> ] !> ].
+
+n-pp := [ HEAD noun, SPR < [] >,
+          GAP <! [ HEAD prep, SPR <>, COMPS <> ] !> ].
+
+det := [ HEAD det ].
+
+pp := phrase & [ HEAD prep, SPR <>, COMPS <>, GAP <! !> ].
+
+pp-np := phrase & [ HEAD prep, SPR <>, COMPS <>, 
+           GAP <! [ HEAD noun, SPR <>, COMPS <> ] !> ].
+
+pp-pp := phrase & [ HEAD prep, SPR <>, COMPS <>, 
+           GAP <! [ HEAD prep, SPR <>, COMPS <> ] !> ].
+
+p := [ HEAD prep ].
+
+
+
