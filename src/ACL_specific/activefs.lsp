@@ -69,6 +69,7 @@
 ;; Define a frame class for our FS windows
 ;;
 
+#|
 (define-lkb-frame active-fs-window 
     ((fs  :initform nil
 	  :accessor active-fs-window-fs))
@@ -76,7 +77,76 @@
   :width 500 ;:compute 
   :height 500; :compute
   :output-record (make-instance 'clim:standard-tree-output-history))
-    
+|#
+
+
+(clim:define-application-frame active-fs-window (lkb-frame)
+  ((fs  :initform nil
+	:accessor active-fs-window-fs)
+   (doc-pane :initform nil
+	     :accessor active-fs-window-doc-pane))
+  (:command-table (active-fs-window :inherit-from (lkb-frame)
+				    :inherit-menu t))
+  (:panes
+   (display  
+	(clim:vertically ()
+    (clim:outlining (:thickness 1)
+      (clim:spacing (:thickness 1)  
+
+	  (clim:scrolling (:scroll-bars :both)
+	    (clim:make-pane 'clim:application-pane
+			    :name :lkb-pane
+			    :text-cursor nil
+			    :end-of-line-action :allow
+			    :end-of-page-action :allow
+			    :borders nil
+			    :background clim:+white+
+			    :foreground clim:+black+
+			    :display-time nil
+			    :display-function 'draw-active-fs
+			    :width 500	
+			    :height 500	
+			    :output-record 
+			    (make-instance 
+				'clim:standard-tree-output-history)))))
+	  (clim:spacing (:thickness 1)
+	    (clim:make-pane 'clim:application-pane
+			    :name :path
+			    :text-cursor nil
+			    ;; :background clim:+white+
+			    ;; :foreground clim:+black+
+			    :end-of-line-action :allow
+			    :end-of-page-action :allow
+			    :borders nil
+			    :record nil
+			    :scroll-bars nil)))))
+  (:layouts
+   (default  display)))
+
+
+;; Update the path window when we are over a type name
+
+(clim:define-presentation-method clim:highlight-presentation 
+    ((type type-thing) record stream state)
+  state
+  (multiple-value-bind (xoff yoff)
+      (clim:convert-from-relative-to-absolute-coordinates 
+        stream (clim:output-record-parent record))
+    (let* ((path (reverse (type-thing-type-label-list 
+			   (clim:presentation-object record))))
+	   (pane (active-fs-window-doc-pane (clim:pane-frame stream))))
+      (declare (dynamic-extent path))
+      (if (eq state :highlight)
+	  (dolist (feat path)
+	    (write-string (string-downcase (symbol-name feat)) pane)
+	    (write-char #\space pane))
+	(clim:window-clear pane)))
+    (clim:with-bounding-rectangle* (left top right bottom) record
+      (clim:draw-rectangle* stream
+                       (+ left xoff) (+ top yoff)
+                       (+ right xoff) (+ bottom yoff)
+		       :filled nil
+                       :ink clim:+flipping-ink+))))
 
 ;;; **** display function entry points ****
 
@@ -89,8 +159,20 @@
 			      :parents parents
 			      :type-fs-display *type-fs-display*))
     (setf (clim:frame-pretty-name fs-window) title)
+    ;; Initialize fonts
     (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
     (setf *bold* (clim:merge-text-styles '(nil :bold nil) *normal*))
+    ;; Set up path display
+    (let ((path-pane 
+	   (find :path (clim:frame-current-panes fs-window)
+		 :test #'eq :key #'clim:pane-name)))
+      (setf (active-fs-window-doc-pane fs-window) path-pane)
+      (clim:change-space-requirements 
+       path-pane
+       :resize-frame t
+       :height (clim:text-style-height *normal* path-pane)
+       :max-height (clim:text-style-height *normal* path-pane)))
+    ;; Run it    
     (mp:process-run-function "FS" 
 			     #'clim:run-frame-top-level
 			     fs-window)))
