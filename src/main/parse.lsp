@@ -1387,14 +1387,21 @@
       (setq input-file (ask-user-for-existing-pathname "Sentence file?")))
    (when
       (and input-file
-         (or (probe-file input-file)
-            (error "~%Input file `~a' does not exist" input-file)))
+           (or (probe-file input-file)
+               (progn
+                 (show-message-window 
+                  (format nil "Input file `~a' does not exist" input-file))
+                 (return-from parse-sentences))))
       (with-open-file (istream input-file :direction :input)
-         (when (eq output-file 'unspec)
-            (setq output-file (ask-user-for-new-pathname "Output file?"))
-            (when (equal input-file output-file)
-              (error "~%Attempt to overwrite input file `~a'" input-file))
-            (unless output-file (return-from parse-sentences)))
+         (if (eq output-file 'unspec)
+           (setq output-file 
+             (ask-user-for-new-pathname "Output file?" input-file))
+           (if (equal input-file output-file)
+               (progn
+                 (show-message-window 
+                  (format nil "Attempt to overwrite input file `~a'"input-file))
+                 (return-from parse-sentences))))
+         (unless output-file (return-from parse-sentences))
          (let ((line (read-line istream nil 'eof)))
             (if (and output-file (not (eq output-file t)))
                (with-open-file (ostream output-file :direction :output
