@@ -88,13 +88,13 @@
 ;;; where am/pmdeterminer is morning_rel, etc
 
 ;;; UTILITY FN
-   
+
 (defun get-rel-feature-value (rel feature)
   ;;; assumes only occurs once
-  (dolist (fvpair (rel-flist  rel))
-    (when (eql (fvpair-feature fvpair) feature)
-      (return (fvpair-value fvpair)))))
-
+  (when (rel-p rel)
+    (dolist (fvpair (rel-flist  rel))
+      (when (eql (fvpair-feature fvpair) feature)
+        (return (fvpair-value fvpair))))))
 
 ;;; GRAMMAR SPECIFIC GLOBALS AND UTILITIES
 
@@ -102,8 +102,8 @@
 (defparameter *nhr-ampm-feature* (vsym "AM-PM"))
 (defparameter *nhr-hour-feature* (vsym "HOUR"))
 (defparameter *nhr-min-feature* (vsym "MIN"))
-(defparameter *min-min-feature* (vsym "MINUTE"))
-(defparameter *min-index-feature* (vsym "INST"))
+(defparameter *min-min-feature* (vsym "CONST_VALUE"))
+(defparameter *min-index-feature* (vsym "ARG"))
 (defparameter *ampm-index-feature* (vsym "INST")) 
 (defparameter *inst-feature* (vsym "INST"))
 (defparameter *rel-hour-feature* (vsym "HOUR-IND"))
@@ -216,7 +216,7 @@
          (am-pm-value (or (get-coindexed-ampm-rels am-pm ampmrels)
                          (am-pm-heuristics inst others base-hour)))
                 ; returns 'am 'pm nil 
-        (direct-rel-rels (get-coindexed-rel-rels inst relrels)))            
+	 (direct-rel-rels (get-coindexed-rel-rels inst relrels)))            
     (cond ((and (null direct-mins) (null direct-rel-rels)) 
            (ctime-case1 handel label inst 
                         (create-ctime-hour base-hour am-pm-value)))
@@ -286,9 +286,19 @@
 
 
 (defun create-ctime-hour (base-hour am-pm)
-  (cond ((eql am-pm 'am) base-hour)
-        ((eql am-pm 'pm) (+ 12 base-hour))
-        ((null am-pm) (format nil "~A/~A" base-hour (+ 12 base-hour)))
+  (cond ((eql am-pm 'am) 
+	 (if (eql base-hour 12) 
+	     (+ 12 base-hour)
+	   base-hour))
+        ((eql am-pm 'pm) 
+	 (if (eql base-hour 12) 
+	     base-hour
+	   (+ 12 base-hour)))
+        ((null am-pm) 
+	 ;(format nil "~A/~A" base-hour (+ 12 base-hour))
+	 (if (< base-hour 8)
+	     (format nil "~A" base-hour (+ 12 base-hour))
+	     (format nil "~A" base-hour)))
         (t (struggle-on-error "~%Unexpected value for am/pm: ~A" am-pm)))) 
 
 
@@ -390,18 +400,18 @@
                'pm)
               (t (horrible-unmotivated-hack base-hour))))))
 
-#|
 (defun horrible-unmotivated-hack (base-hour)
         (if (integerp base-hour)
           (if (or (< base-hour 8)
-                  (> base-hour 12))
+                  (> base-hour 11))
               'pm 
               'am)))
-|#
+#|
 (defun horrible-unmotivated-hack (base-hour)
         (if (and (integerp base-hour)
-		 (< base-hour 13))
+		 (< base-hour 12))
             'am))
+|#
 
 
 
@@ -413,6 +423,7 @@
 (defparameter *nc-plus_rel* (vsym "PLUS_REL"))
 (defparameter *nc-const_rel* (vsym "CONST_REL"))
 (defparameter *nc-integer_rel* (vsym "INTEGER_REL"))
+(defparameter *nc-min-const_rel* (vsym "MINUTE_REL"))
 (defparameter *nc-term1* (vsym "TERM1"))
 (defparameter *nc-term2* (vsym "TERM2"))
 (defparameter *nc-factor1* (vsym "FACTOR1"))
@@ -431,8 +442,13 @@
 ;;; if PAGE was slightly more appropriate, this would be unnecessary.
 ;;;
 
+(defun const_min_rel-p (sort)
+  (eq sort *nc-min-const_rel*))
+
 (defun const_rel-p (sort)
-  (or (eq sort *nc-const_rel*) (eq sort *nc-integer_rel*)))
+  (or (eq sort *nc-const_rel*) 
+      (eq sort *nc-min-const_rel*)
+      (eq sort *nc-integer_rel*)))
 
 (defun number-convert (mrs)
   (let ((liszt (psoa-liszt mrs))
@@ -442,7 +458,7 @@
         for sort = (rel-sort relation)
         when (plus_rel-p sort) do (push relation operators)
         when (times_rel-p sort) do (push relation operators)
-        when (const_rel-p sort) do (push relation constants))
+        when (const_rel-p sort)	do (push relation constants))
     (loop
         for stable = t
         for i from 0
@@ -469,7 +485,9 @@
                        (value (and value1 value2
                                    (compute-value operator value1 value2))))
                   (when value
-                    (push (make-constant handel label arg value) additions)
+                    (push (make-constant handel label arg value
+					 (const_min_rel-p (rel-sort const1)))
+			  additions)
                     (push operator deletions)
                     (push const1 deletions)
                     (push const2 deletions)
@@ -508,9 +526,11 @@
      ((plus_rel-p sort) (+ term1 term2))
      ((times_rel-p sort) (* term1 term2)))))
 
-(defun make-constant (handel label arg value)
+(defun make-constant (handel label arg value minute-p)
   (make-rel
-   :sort *nc-const_rel* 
+   :sort (if minute-p 
+	     *nc-min-const_rel*
+	   *nc-const_rel*)
    :handel handel :label label
    :flist (list  
            (make-fvpair :feature *nc-arg* :value arg)
