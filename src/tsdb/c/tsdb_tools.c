@@ -134,3 +134,15 @@ Tsdb_node* tsdb_prepare_tree(Tsdb_node* node,Tsdb_selection* selection) {
 
   return node;
 } /* tsdb_prepare_tree() */
+
+char* tsdb_translate_table() {
+  unsigned i;
+  char* translate = (char *) malloc (CHAR_SET_SIZE);
+  
+  /* Map uppercase characters to corresponding lowercase ones.  */
+  for (i = 0; i < CHAR_SET_SIZE; i++) {
+    translate[i] = ISUPPER (i) ? tolower (i) : i;
+  }
+  return translate;
+} /* tsdb_translate_table() */
+      
