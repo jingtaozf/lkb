@@ -95,5 +95,7 @@
       (user::find-gcsubtype type1 type2)))
 
 
+(defun is-valid-type (val)
+  (USER::is-valid-type val))
 
 
