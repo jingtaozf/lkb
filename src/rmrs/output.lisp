@@ -270,9 +270,12 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-realpred ((rmrsout compact) lemma pos sense)
   (with-slots (stream indentation) rmrsout
-    (format stream "~VT_~(~a_~a~@[~a~]~)(" 
-	    indentation lemma (or pos "U") sense)))
-
+    (if sense
+	(format stream "~VT_~(~a_~a_~@[~a~]~)(" 
+		indentation lemma (or pos "U") sense)
+      (format stream "~VT_~(~a_~a~)(" 
+	      indentation lemma (or pos "U")))))
+  
 (defmethod rmrs-output-gpred ((rmrsout compact) predname)
   (with-slots (stream indentation) rmrsout
     (format stream "~VT~(~a~)(" indentation predname)))
@@ -416,8 +419,11 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-realpred ((rmrsout compact-chars) lemma pos sense)
   (with-slots (stream) rmrsout
-    (format stream "_~(~a_~a~@[~a~]~)(" 
-	    lemma (or pos "U") sense)))
+    (if sense
+	(format stream "_~(~a_~a_~@[~a~]~)(" 
+		lemma (or pos "U") sense)
+      (format stream "_~(~a_~a~)(" 
+	      lemma (or pos "U")))))
 
 (defmethod rmrs-output-gpred ((rmrsout compact-chars) predname)
   (with-slots (stream) rmrsout
