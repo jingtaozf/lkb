@@ -36,6 +36,7 @@ output results
   (with-open-file (istream file-name :direction :input)
     (loop (let ((res (read istream nil nil)))
             (unless res (return))
+ ;           (format t "~%~S" res)
             (let* ((input-sentence (elt res 0))
                    (input-sentence-text
                     (apply #'concatenate 'string 
@@ -116,6 +117,10 @@ output results
                     (setq treal tr)
                     (setq conses scons)))
              (declare (ignore unifs-tried unifs-failed))
+             (unless (and (integerp active)
+                          (integerp inactive))
+               (setf errorp t)
+               (format t "~%Problem in generation caused by missing relation?"))
              (format ostream "~%(")
              (format ostream "~S" sentence)
              (format ostream "~%~S" (if (listp strings) strings nil))
