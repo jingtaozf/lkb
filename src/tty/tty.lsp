@@ -1,5 +1,6 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 (in-package :lkb)
 
@@ -171,14 +172,14 @@
 ;;; day, so that these functions dispatch appropriately.       (8-jun-03; oe)
 ;;;
 (defun display-fs-tty (fs)
-  (if #+:lui (lui-status-p :avm) #-:lui nil
-    #+:lui (lui-display-fs fs nil nil) 
+  (if #+:glue (glue-status-p :avm) #-:glue nil
+    #+:glue (glue-display-fs fs nil nil) 
     (display-dag fs 'simple)))
 
-#+:lui
+#+:glue
 (defun display-fs (fs title &optional id)
-  (if #+:lui (lui-status-p :avm) #-:lui nil
-    #+:lui (lui-display-fs fs title id) #-:lui nil
+  (if #+:glue (glue-status-p :avm) #-:glue nil
+    #+:glue (glue-display-fs fs title id) #-:glue nil
     (display-fs-tty fs)))
 
 (defun display-fs-and-paths-tty (fs paths)
@@ -217,8 +218,8 @@
   (declare (ignore title))
   (let ((edges (or edges *parse-record*)))
     (if edges
-      (if #+:lui (lui-status-p :tree) #-:lui nil
-        #+:lui (lui-show-parses edges *sentence*) #-:lui nil
+      (if #+:glue (glue-status-p :tree) #-:glue nil
+        #+:glue (glue-show-parses edges *sentence*) #-:glue nil
         (loop 
             for edge in edges
             do
