@@ -699,10 +699,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (format "'%S" list))
 
 (defun cle-retrieve-record-fields (id)
-  (cle-eval-lexdb 'retrieve-head-record (cle-lisp-symb id)))
+  (cle-eval-lexdb 'retrieve-head-record-str (cle-lisp-str id)))
 
 (defun cle-retrieve-tdl (id)
-  (cle-eval-lexdb 'id-to-tdl (cle-lisp-symb id)))
+  (cle-eval-lexdb 'id-to-tdl-str (cle-lisp-str id)))
 
 (defun cle-retrieve-record-sizes nil
    (cle-eval-lexdb 'get-field-size-map))
@@ -745,4 +745,3 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 
 (defun cle-initialize-psql nil
   (cle-eval "(initialize-psql-lexicon)"))
-

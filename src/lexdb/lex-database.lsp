@@ -46,6 +46,9 @@
     (format t "~%(emptying cache)")
     (empty-cache lexicon)))
 
+(defmethod id-to-tdl-str ((lexicon lex-database) id)
+  (id-to-tdl lexicon (str-2-symb id)))
+
 (defmethod id-to-tdl ((lexicon lex-database) id)
   (to-tdl (read-psort lexicon id)))
 

@@ -21,8 +21,9 @@
   (str-2-symb (get-val :name raw-record cols)))  
 ;(str-2-symb (cdr (assoc :name record))))
 
-(defun record-orth (record)
-  (cdr (assoc :orthography record)))
+(defun record-orth (raw-record cols)
+  (get-val :orthography raw-record cols))
+;  (cdr (assoc :orthography record)))
 
 (defun string-2-mxd-list-on-spc (&rest rest)
   (mapcar #'str-to-mixed
@@ -173,7 +174,7 @@
       collect (assoc (pop ordered-symb-list) symb-val-list)))
 
 (defun dot (a b)
-  (unless (= (length a) (length b))
+  (unless (or (null b) (= (length a) (length b)))
     (error "unequal input list lengths"))
   (loop
       while a

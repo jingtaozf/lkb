@@ -135,6 +135,9 @@
    (t
     (format t "~%WARNING: no connection to psql-lex-database"))))
 
+(defmethod retrieve-head-record-str ((lexicon psql-lex-database) id &optional reqd-fields)
+  (retrieve-head-record lexicon (str-2-symb id) reqd-fields))
+
 (defmethod retrieve-head-record ((lexicon psql-lex-database) id &optional reqd-fields)
   (cond
    ((connection lexicon)
@@ -306,27 +309,29 @@
 	   (setf (gethash (record-id rec cols) record-cache) 
 	     rec))
        recs))))
-;(retrieve-all-records lexicon 
-;		      (grammar-fields lexicon)))))
 
 (defmethod cache-all-lex-records-orth ((lexicon psql-lex-database))
-  (with-slots (record-cache lexical-entries) lexicon
-    (clrhash lexical-entries)
-    (mapc 
-     #'(lambda (record) 
-	 (let* ((id (record-id record))
-		(orth (record-orth record)))
-	   (mapc 
-	    #'(lambda (y)
-		(setf (gethash y lexical-entries) 
-		  (cons id 
-			(gethash y lexical-entries))))
-	    (split-into-words orth))
-	   (setf (gethash (record-id record) 
-			  record-cache) 
-	     record) ))
-     (retrieve-all-records lexicon 
-			   (grammar-fields lexicon)))))
+  (let ((table (retrieve-all-records lexicon (grammar-fields lexicon))))
+    (with-slots (recs cols) table
+      (with-slots (record-cache lexical-entries) lexicon
+	;; clear cache
+	(clrhash lexical-entries)
+	(clrhash record-cache)
+	;; for each record...
+	(mapc
+	 #'(lambda (rec)
+	     (let* ((id (record-id rec cols))
+		    (orth (record-orth rec cols)))
+	       ;; update cache for each component word...
+	       (mapc
+		#'(lambda (y)
+		    (setf (gethash y lexical-entries) 
+		      (cons id (gethash y lexical-entries))))
+		(split-into-words orth))
+	       ;; update record cache
+	       (setf (gethash id record-cache)
+		 rec)))
+	 recs)))))
 
 (defmethod make-field-map-slot ((lexicon psql-lex-database))
   "stores the mapping of fields to lex-entry structure slots"
