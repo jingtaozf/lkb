@@ -5,6 +5,8 @@
 
 (defvar *qeqs* nil)
 
+(defvar *quant-qeqs* nil)
+
 (defstruct (qeq)
   left
   right)
@@ -13,6 +15,7 @@
 
 (defun process-hcons (hcons labels holes)
   (setf *qeqs* nil)
+  (setf *quant-qeqs* nil)
   (for constr in hcons
        do
        (let ((left (get-var-num (hcons-scarg constr)))
@@ -60,7 +63,14 @@
                    (pushnew current problems)
                    (pushnew qeq2 problems))
                    (t nil)))))
-    (setf *qeqs* (set-difference *qeqs* problems))))
+    (setf *qeqs* (set-difference *qeqs* problems)))
+  (for pair in *temp-q-rel-store*
+       do
+       (let* ((associated-quantifier (car pair))
+              (rel (cdr pair))
+              (rel-qeq (find-rel-qeq rel)))
+         (if rel-qeq
+             (add-to-quant-qeqs associated-quantifier rel-qeq)))))
 
             
 ;;;
@@ -90,12 +100,55 @@ scopes of quantifiers.
                     filter
                     (if (eql h (qeq-left qeq))
                         (qeq-right qeq))))))
-    (if (cdr qeqs)
+    (when (cdr qeqs)
         (error "Multiple qeqs - condition should have been checked for"))
-      (car qeqs)))
+    (car qeqs)))
 
+(defun find-rel-qeq (rel)
+  ;;; called in pre-processing, before bindings are relevant
+  (let* ((h (get-var-num (rel-handel rel)))
+         (qeqs (for qeq in *qeqs*
+                    filter
+                    (if (eql h (qeq-right qeq))
+                        qeq))))
+    (when (cdr qeqs)
+        (error "Multiple qeqs - condition should have been checked for"))
+    (car qeqs)))
+
+(defun add-to-quant-qeqs (quantifier qeq)
+  (let ((existing (assoc quantifier *quant-qeqs*)))
+    (if existing
+        (pushnew qeq (cdr existing))
+      (setf *quant-qeqs*
+        (push (list quantifier qeq) *quant-qeqs*)))))
+
+(defun check-quant-qeqs (previous-holes pending-qeq quantifier bindings)
+  ;;; we are trying to see whether a quantifier will go in the
+  ;;; current location.  It won't if there is some h1 qeq h2
+  ;;; where we have found h1 on this branch, but haven't found h2
+  ;;; where the relation labelled h2 contains a variable 
+  ;;; bound by the quantifier and where h2 is NOT the
+  ;;; pending qeq (i.e. we're off down a side branch).
+  ;;; We don't need to check that h2 hasn't been found, 
+  ;;; since we couldn't have h2 before the quantifier
+  (let ((bound-previous nil))
+    (for previous in previous-holes
+         do
+         (for h in (get-bindings-for-handel previous bindings)
+              do
+              (pushnew h bound-previous)))
+    (let ((quant-qeqs (for qeq in (cdr (assoc quantifier *quant-qeqs*))
+                           filter
+                           (if (member (qeq-left qeq) bound-previous)
+                               (qeq-right qeq)))))
+      (or (not quant-qeqs)
+          (and pending-qeq
+               (let ((bound-pending (get-bindings-for-handel pending-qeq bindings)))
+                 (for qeq in quant-qeqs
+                      some-satisfy
+                      (member qeq bound-pending))))))))
     
-
+                  
 (defun not-qeq-p (pending-qeq handel-to-check bindings)
   ;; pending-qeq may be nil, in which case there's a violation
   ;; if there's any qeq with handel-to-check

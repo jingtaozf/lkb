@@ -145,6 +145,8 @@
     (when (eql (fvpair-feature fvpair) *bv-feature*)
       (return (get-var-num (fvpair-value fvpair))))))
 
+(defvar *temp-q-rel-store* nil)
+
 (defun find-unbound-vars (rels quant-rels)
   ;;; this is just called once, as part of the preprocessing of the
   ;;; MRS structure.
@@ -157,7 +159,12 @@
   ;;; As a side effect, pushes variables associated with pronouns or
   ;;; proper names, which are NOT explicitly bound by quantifiers
   ;;; onto *top-level-variables*
-  (let ((quant-vars nil))
+  ;;;
+  ;;; It also creates a structure which relates quantifiers
+  ;;; to qeqs involving relations which contain a variable they bind
+  (setf *temp-q-rel-store* nil) ; needed because we haven't got qeqs yet
+  (let ((quant-vars nil)
+        (var-q-assoc nil))
     (for rel in quant-rels
          do
          (let ((quant-var (get-bv-value rel)))
@@ -168,14 +175,22 @@
            (when (member quant-var quant-vars)
              (struggle-on-error "~%Rel ~A has a duplicate bound variable"
                     (rel-sort rel)))
-           (if quant-var
-               (push quant-var quant-vars))))
+           (when quant-var
+             (push quant-var quant-vars)
+             (push (cons quant-var rel) var-q-assoc))))
     (remove-if #'(lambda (value)
                    (or (member (get-var-num value) quant-vars)
                        (member (get-var-num value) *top-level-variables*)))
                (for rel in rels
                     append
                     (let ((rel-vars (collect-vars-from-rel rel)))
+                      (unless (member rel quant-rels)
+                        (for var in rel-vars
+                             do
+                             (let ((associated-quantifier (cdr (assoc (get-var-num var) var-q-assoc))))
+                               (when associated-quantifier
+                                 (push (cons associated-quantifier rel)
+                                       *temp-q-rel-store*)))))
                       (when (proper-name-or-pronoun-rel (rel-sort rel))
                         (for var in rel-vars
                              do
@@ -446,7 +461,8 @@ printing routines -  convenient to make this global to keep printing generic")
     (if free-variables
         (progn
           (unless *giving-demo-p*
-            (format t "~%Free variables in MRS: ~A" free-variables))
+            (format t "~%Free variables in MRS: ~A" 
+                    (mapcar #'var-name free-variables)))
           nil)
 ;;; variables must be bound by quantifiers unless they are in relations
 ;;; which license implicit existential binding
@@ -508,6 +524,8 @@ or modulo some number of quantifiers
                                  scoping-handels pending-qeq scoped-p)
   (incf *scoping-calls*)
   (when (> *scoping-calls* *scoping-call-limit*)
+    (unless *giving-demo-p* 
+      (format t "~%Maximum scoping calls exceeded"))
     (throw 'up nil))
   (setf pending-qeq
     (let ((new-qeq (find-qeq top-handel bindings)))
@@ -615,22 +633,23 @@ or modulo some number of quantifiers
  ;;; or which are outscoped by a handel which is not on the list
  ;;; of scoping-handels
  ;;; or which are qeq something which is not the pending-qeq
-  (declare (ignore scoping-handels top-handel))
+  (declare (ignore top-handel))
   (for rel in rels
        filter 
        (let ((handel-num (get-var-num (rel-handel rel))))
          (if (or (member handel-num handel-args)
-#|                 
-                 (violates-outscopes-p  
-                  handel-num
-                  top-handel scoping-handels bindings)
-                                        ; violates-outscopes-p is in mrscons.lsp
-                                        ; currently redundant
-|#                                        
-             (let ((vars (collect-unbound-vars-from-rel rel)))
-               (and vars (not (subsetp vars bvs))))
-             (not-qeq-p pending-qeq handel-num
-                        bindings))
+                 ;; (violates-outscopes-p  
+                 ;;  handel-num
+                 ;;  top-handel scoping-handels bindings)
+                 ;; violates-outscopes-p is in mrscons.lsp
+                 ;; currently redundant                                        
+                 (let ((vars (collect-unbound-vars-from-rel rel)))
+                   (and vars (not (subsetp vars bvs))))
+                 (not-qeq-p pending-qeq handel-num
+                            bindings)
+                 (and (is-quant-rel rel)
+                     (not (check-quant-qeqs scoping-handels 
+                                          pending-qeq rel bindings))))
              rel))))
 
 
