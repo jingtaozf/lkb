@@ -72,8 +72,7 @@
    (setf *type-file-list* file-names)
    (clear-types)
    (setf *tdl-status-info* nil)
-   (setf *toptype* '*top*)
-   (add-type-from-file '*top* nil nil nil nil)
+   (add-type-from-file *toptype* nil nil nil nil)
    (let ((*readtable* (make-tdl-break-table)))
       (loop for file-name in file-names
          do

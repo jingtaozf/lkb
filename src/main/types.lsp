@@ -100,10 +100,7 @@
 (defun clear-types nil
    (clear-type-cache) ; must be done before types table is cleared
    (disable-type-interactions)
-   (setf *toptype* nil)
    (clrhash *types*) 
-;   (setf *types* (make-hash-table :test #'eq))
-   ; don't build large type table to start off with
    (setf *ordered-type-list* nil)
    (setf *ordered-glbtype-list* nil)
    (clear-leaf-types *leaf-types*)
