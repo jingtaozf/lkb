@@ -1762,7 +1762,10 @@ BYTE tsdb_initialize() {
 #ifdef COMPRESSED_DATA
         baz = strcpy(baz, foo);
         baz = strcat(baz, tsdb.suffix);
-        if(access(baz, R_OK)) {
+        if(!access(baz, R_OK)) {
+          tsdb.status |= TSDB_READ_ONLY;
+        } /* if */
+        else {
 #endif      
           if(tsdb.status & TSDB_READ_ONLY) {
             if(!(tsdb.status & TSDB_QUIET)) {
@@ -1790,7 +1793,7 @@ BYTE tsdb_initialize() {
             fflush(tsdb_error_stream);
           } /* else */
 #ifdef COMPRESSED_DATA
-        } /* if */
+        } /* else */
 #endif
       } /* if */
     } /* for */
