@@ -1,4 +1,4 @@
-;;; Copyright Ann Copestake 1992-1998
+;; Copyright Ann Copestake 1992-1998
 ;;; All Rights Reserved.
 ;;; No use or redistribution without permission.
 ;;; 
@@ -305,11 +305,12 @@
       (let ((lex-ids (mrecord-lex-ids mrec))
 	    (sense (mrecord-fs mrec))
 	    (history (mrecord-history mrec)))
-	(activate-context (- right-vertex 1) 
-			  (construct-lex-edge sense history local-word
-					      lex-ids)
-			  right-vertex
-			  f)))
+	(with-agenda (f (when f (lex-priority mrec)))
+	  (activate-context (- right-vertex 1) 
+			    (construct-lex-edge sense history local-word
+						lex-ids)
+			    right-vertex
+			    f))))
     ;; add-multi-words is mostly for side effects, but want to check if we've
     ;; found something, and produce correct error messages, so we return the
     ;; strings found
@@ -406,10 +407,11 @@
 	  (let ((sense (mrecord-fs mrec))
 		(lex-ids (mrecord-lex-ids mrec))
 		(history (mrecord-history mrec)))
-	    (activate-context left-vertex 
-			      (construct-lex-edge sense history word
-						  lex-ids)      
-			      right-vertex f)))))
+	    (with-agenda (f (when f (lex-priority mrec)))
+	      (activate-context left-vertex 
+				(construct-lex-edge sense history word
+						    lex-ids)      
+				right-vertex f))))))
     ;; return multi-strings, so we know what's been found
     multi-strings))
 

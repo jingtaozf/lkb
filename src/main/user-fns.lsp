@@ -144,3 +144,6 @@
   (declare (ignore rule))
   1)
 
+(defun lex-priority (mrec)
+  (declare (ignore mrec))
+  1)
