@@ -87,13 +87,13 @@
                           (cto (if (edge-p (first (last children)))
 				   (edge-cto (first (last children)))
 				 -1))
+                          mrs
                           foo bar baz
                           #+:packing packed #+:packing equivalent 
                           #+:packing frozen)))
    id score category rule dag odag dag-restricted leaves lex-ids
    parents children morph-history spelling-change orth-tdfs from to label head
-   cfrom cto
-   foo bar baz
+   cfrom cto mrs foo bar baz
    #+:packing packed #+:packing equivalent #+:packing frozen)
 
 (defparameter *characterize-p* nil)

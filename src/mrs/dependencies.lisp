@@ -107,7 +107,7 @@
 #+:lkb
 (defun ed-convert-edge (edge)
   (when (lkb::edge-p edge)
-    (ed-convert-psoa (extract-mrs edge))))
+    (ed-convert-psoa (or (lkb::edge-mrs edge) (extract-mrs edge)))))
 
 (defun ed-convert-psoa (psoa)
   (when (psoa-p psoa)

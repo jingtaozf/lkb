@@ -1225,7 +1225,8 @@
                            (null (rest (compare-frame-trees frame))))
                   (let ((edge (ctree-edge 
                                (first (compare-frame-trees frame)))))
-                    (when (edge-dag edge) (mrs::extract-mrs edge))))))
+                    (or (edge-mrs edge)
+                        (when (edge-dag edge) (mrs::extract-mrs edge)))))))
       (format
        stream
        "~v,0t    <td class=compare~:[Discriminants~;Mrs~] ~
