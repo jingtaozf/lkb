@@ -46,13 +46,6 @@
 ;;; class declarations
 ;;;
 
-(defclass sql-database ()
-  ((dbname :initform nil :accessor dbname :initarg :dbname)
-   (host :initform "localhost" :accessor host :initarg :host)
-   (user :initform (sys:user-name) :accessor user :initarg :user)
-   (password :initform "" :accessor password :initarg :password)
-   (port :initform (or (system:getenv "PGPORT") *psql-database-port*) :accessor port :initarg :port)))
-
 (defclass external-lex-database (lex-database)
   ((record-cache :initform (make-hash-table :test #'eq))
    (fields-tb 
@@ -61,8 +54,14 @@
    (fields-map :initform nil :accessor fields-map)
    (fields :initform nil :accessor fields)))
 
-(defclass psql-database (sql-database)
-  ((connection :initform nil :accessor connection :initarg connection)))
+(defclass psql-database ()
+  (
+   (dbname :initform nil :accessor dbname :initarg :dbname)
+   (host :initform "localhost" :accessor host :initarg :host)
+   (user :initform (sys:user-name) :accessor user :initarg :user)
+   (password :initform "" :accessor password :initarg :password)
+   (port :initform (or (system:getenv "PGPORT") *psql-database-port*) :accessor port :initarg :port)
+   (connection :initform nil :accessor connection :initarg connection)))
 
 (defclass psql-lex-database (psql-database external-lex-database)
   ((lexdb-version :initform nil :accessor lexdb-version)

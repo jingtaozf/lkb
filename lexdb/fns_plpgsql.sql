@@ -261,18 +261,28 @@ CREATE OR REPLACE FUNCTION public.merge_into_db2() RETURNS integer AS
 '
 DECLARE
 	count_new int;
+	num_dups int;
 BEGIN
 	PERFORM assert_db_owner();	
-	---- n o t e : must copy file to temp before invoking this code
+	---- n o t e : must copy file to public.temp before invoking this code
 	----           eg. COPY TO stdin from frontend
 
 	RAISE INFO \'Selecting new entries to merge...\';
- 	CREATE INDEX temp_name_userid_version on temp (name, userid, version);
+ 	CREATE INDEX public.temp_name_userid_version on public.temp (name, userid, version);
+
+	-- check for duplicates in public.temp
+	num_dups := (SELECT count(*) FROM (SELECT name,userid,version, count(*) FROM public.temp GROUP BY name,userid,version HAVING count(*)>1) AS foo);
+	IF (num_dups=1) THEN
+		RAISE EXCEPTION \'Entries to merge contain % duplicated instance of <name,userid,version>\', num_dups;
+	ELSIF (num_dups>1) THEN
+		RAISE EXCEPTION \'Entries to merge contain % duplicated instances of <name,userid,version>\', num_dups;
+	END IF;
+
  	DELETE FROM revision_new;
 	INSERT INTO revision_new
-		SELECT * FROM (SELECT DISTINCT name,userid,version FROM temp EXCEPT SELECT name,userid,version FROM public.revision) AS t1 NATURAL JOIN temp;
-	DROP INDEX temp_name_userid_version;
-	DELETE FROM temp;
+		SELECT * FROM (SELECT DISTINCT name,userid,version FROM public.temp EXCEPT SELECT name,userid,version FROM public.revision) AS t1 NATURAL JOIN public.temp;
+	DROP INDEX public.temp_name_userid_version;
+	DELETE FROM public.temp;
 	count_new := (SELECT count(*) FROM revision_new);
 
 	IF count_new > 0 THEN
@@ -297,21 +307,21 @@ DECLARE
 	num_new int;
 BEGIN
  	PERFORM assert_db_owner();	
-	---- n o t e : must copy file to temp_defn before invoking this code
+	---- n o t e : must copy file to public.temp_defn before invoking this code
 	----           eg. COPY TO stdin from frontend
 
  	num_new := (SELECT count(*) FROM 
-             		(SELECT * FROM temp_defn EXCEPT
+             		(SELECT * FROM public.temp_defn EXCEPT
                			SELECT * FROM defn) AS t1
-             			NATURAL JOIN temp_defn);
+             			NATURAL JOIN public.temp_defn);
 
  	RAISE INFO \'% new field mappings\', num_new;
 
 	IF num_new > 0 THEN
  		RAISE INFO \'Updating table...\';
- 		DELETE FROM defn WHERE mode IN (SELECT DISTINCT mode FROM temp_defn);
+ 		DELETE FROM defn WHERE mode IN (SELECT DISTINCT mode FROM public.temp_defn);
 		INSERT INTO defn
-  			SELECT * FROM temp_defn; 
+  			SELECT * FROM public.temp_defn; 
  		RAISE DEBUG \'Updating timestamps...\';
  		DELETE FROM public.meta WHERE var=\'mod_time\';
  		INSERT INTO public.meta VALUES (\'mod_time\',current_timestamp);

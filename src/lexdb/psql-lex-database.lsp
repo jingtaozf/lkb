@@ -150,9 +150,6 @@
    (t
     (format t "~%WARNING: no connection to psql-lex-database"))))
 
-(defmethod id-to-tdl ((lexicon psql-lex-database) id)
-  (to-tdl (read-psort lexicon id)))
-
 (defmethod grammar-fields ((lexicon psql-lex-database))
   (unless (fields-map lexicon)
     (complain-no-fields-map lexicon)
@@ -607,7 +604,9 @@
 	    :connection-ok)
     (setf (lexdb-version lexicon) 
       (get-db-version lexicon))
-    (get-ext-fns lexicon)))	
+    (when (string>= (lexdb-version lexicon) "3.34")
+      (get-ext-fns lexicon))
+    t))	
 
 (defmethod get-ext-fns ((lexicon psql-lex-database)) 
   (setf (ext-fns lexicon)

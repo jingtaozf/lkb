@@ -162,7 +162,6 @@
 	      ((:file "headers")
 	       (:file "lex-database")
 	       (:file "lex-entry")
-	       #+:psql (:file "sql-database")
 	       #+:psql (:file "sql-query")
 	       #+:psql (:file "psql-database")
 	       #+:psql (:file "external-lex-database")

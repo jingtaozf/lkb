@@ -46,3 +46,6 @@
     (format t "~%(emptying cache)")
     (empty-cache lexicon)))
 
+(defmethod id-to-tdl ((lexicon lex-database) id)
+  (to-tdl (read-psort lexicon id)))
+

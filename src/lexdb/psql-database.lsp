@@ -81,6 +81,14 @@
 ;;; execute db queries/commands
 ;;;
 
+(defmethod get-records ((lexicon psql-database) sql-string)
+  (make-column-map-record (run-command lexicon sql-string)))
+
+(defmethod get-raw-records ((lexicon psql-database) sql-string)
+  (records (run-command lexicon sql-string)))
+
+;;;
+
 (defmethod run-query ((database psql-database) (query sql-query))
   (let ((connection (connection database)))
     (unless connection
@@ -108,12 +116,27 @@
 
 (defmethod close-lex ((lexicon psql-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
+  (with-slots (dbname host user password port) lexicon
+    ;(setf dbname nil)
+    ;(setf host nil)
+    ;(setf user nil)
+    ;(setf password nil)
+    ;(setf port nil)
+    )
   (disconnect lexicon)
   (if (next-method-p) (call-next-method)))
 
 ;;;
 ;;; 
 ;;;
+
+(defmethod true-port ((lexicon psql-database))
+  (let* ((port (or
+		(port lexicon)
+		(car (excl.osi::command-output "echo $PGPORT")))))
+    (if (equal port "")
+	5432
+      port)))
 
 ;;; returns version, eg. "7.3.2"
 (defmethod get-server-version ((lexicon psql-database))

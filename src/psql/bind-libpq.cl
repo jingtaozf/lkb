@@ -7,69 +7,51 @@
 ;; (http://opensource.franz.com/preamble.html),
 ;; known as the LLGPL.
 
+;; modified for versions 7.3,7.5,8.0: Ben Waldron 18Aug04
+
 (in-package :pg)
 
 ;;; from postgres_ext.h
 (def-foreign-type Oid :unsigned-int)
-(defvar NAMEDATALEN 32)
 
 ;;; Application-visible enum types
 
 (def-foreign-type ConnStatusType :int)
-(defvar CONNECTION_OK 0)
-(defvar CONNECTION_BAD 1)
-(defvar CONNECTION_STARTED 2) ;Waiting for connection to be made.
-(defvar CONNECTION_MADE 3) ; Connection OK; waiting to send.
-(defvar	CONNECTION_AWAITING_RESPONSE 4) ; Waiting for a response from the postmaster.
-(defvar CONNECTION_AUTH_OK 5)	; Received authentication; waiting for backend startup.
-(defvar	CONNECTION_SETENV 6)		; Negotiating environment.
-
 (defun DECODE-CONNECTION-STATUS (status-type)
   (case status-type
     (0 :connection-ok)
     (1 :connection-bad)
-    (2 :connection-started)
-    (3 :connection-made)
-    (4 :connection-awaiting-response)
-    (5 :connection-auth-ok)
-    (6 :connection-setenv)
+    (2 :connection-started)           ;Waiting for connection to be made.
+    (3 :connection-made)              ; Connection OK; waiting to send.
+    (4 :connection-awaiting-response) ; Waiting for a response from the postmaster.
+    (5 :connection-auth-ok)	      ; Received authentication; waiting for backend startup.
+    (6 :connection-setenv)	      ; Negotiating environment.
+    (7 :connection-ssl-startup)       ; Negotiating SSL
+    (8 :connection-needed)	      ; Internal state: connect() needed
     (otherwise :unknown)))
 
 (def-foreign-type PostgresPollingStatusType :int)
-(defvar PGRES_POLLING_FAILED 0)
-(defvar	PGRES_POLLING_READING 1) ; These two indicate that one may
-(defvar PGRES_POLLING_WRITING 2)	; use select before polling again.   
-(defvar PGRES_POLLING_OK 3)
-(defvar PGRES_POLLING_ACTIVE 4)		; Can call poll function immediately.
-
 (defun DECODE-POSTGRES-POLLING-STATUS (status-type)
   (case status-type
     (0 :pgres-polling-failed)
-    (1 :pgres-polling-reading)
-    (2 :pgres-polling-writing)
+    (1 :pgres-polling-reading) ; These two indicate that one may
+    (2 :pgres-polling-writing) ; use select before polling again.
     (3 :pgres-polling-ok)
-    (4 :pgres-polling-active)
+    (4 :pgres-polling-active)  ; (7.3) Can call poll function immediately.
     (otherwise :unknown)))
 
 (def-foreign-type ExecStatusType :int)
-(defvar PGRES_EMPTY_QUERY 0)
-(defvar	PGRES_COMMAND_OK 1) ; a query command that doesn't return anything was executed properly by the backend 
-(defvar	PGRES_TUPLES_OK 2) ; a query command that returns tuples was executed properly by the backend,
-								 ; PGresult contains the result tuples 
-(defvar	PGRES_COPY_OUT 3) ; Copy Out data transfer in progress 
-(defvar	PGRES_COPY_IN 4)	; Copy In data transfer in progress 
-(defvar PGRES_BAD_RESPONSE 5)		; an unexpected response was recv'd from the backend 
-(defvar	PGRES_NONFATAL_ERROR 6)
-(defvar	PGRES_FATAL_ERROR 7)
-
 (defun DECODE-EXEC-STATUS (status-type)
   (case status-type
-    (0 :pgres-empty-query)
-    (1 :pgres-command-ok)
-    (2 :pgres-tuples-ok)
-    (3 :pgres-copy-out)
-    (4 :pgres-copy-in)
-    (5 :pgres-bad-response)
+   ((0 :pgres-empty-query))
+    (1 :pgres-command-ok)	; a query command that doesn't return anything 
+                                ; was executed properly by the backend 
+    (2 :pgres-tuples-ok)	; a query command that returns tuples was executed 
+                                ;properly by the backend,
+				; PGresult contains the result tuples
+    (3 :pgres-copy-out)         ; Copy Out data transfer in progress
+    (4 :pgres-copy-in)          ; Copy In data transfer in progress 
+    (5 :pgres-bad-response)     ; an unexpected response was recv'd from the backend
     (6 :pgres-nonfatal-error)
     (7 :pgres-fatal-error)
     (otherwise :unknown)))
@@ -77,10 +59,7 @@
 (def-foreign-type PGconn (:struct))
 (def-foreign-type PGresult (:struct))
 
-(def-foreign-type PGnotify
-    (:struct
-     (relname (:array :char 32)) ; NAMEDATALEN=32
-     (be_pid  :int)))
+(def-foreign-type PGnotify (:struct))
 
 (def-foreign-type PQnoticeProcessor
     (:function
@@ -89,19 +68,7 @@
      :void))
 
 (def-foreign-type pqbool :char)
-
-(def-foreign-type PQprintOpt
-    (:struct
-     (header   pqbool)
-     (align    pqbool)
-     (standard pqbool)
-     (html3    pqbool)
-     (expanded pqbool)
-     (pager    pqbool)
-     (fieldSep (* :char))
-     (tableOpt (* :char))
-     (caption  (* :char))
-     (fieldName (* (* :char)))))
+(def-foreign-type PQprintOpt (:struct))
 
 (def-foreign-type PQconninfoOption 
     (:struct
@@ -115,15 +82,10 @@
 					; Display entered value as is "*"
 					; Password field - hide value "D"	Debug
 					; option - don't show by default 
-     (dispsize :int)))			; Field size in characters for dialog
- 
-(def-foreign-type PQArgBlock
-    (:struct
-     (len   :int)
-     (isint :int)
-     (u     (:union
-	     (ptr (* :int))
-	     (integer :int)))))
+     (dispsize :int)			; Field size in characters for dialog
+     ))
+
+(def-foreign-type PQArgBlock (:struct))
 
 ;;;------------------------------------------------------------------------------------
 ;;; FUNCTIONS
@@ -237,17 +199,6 @@
   :returning :int
   :strings-convert t)
 
-;;; Besides the fact that (* FILE) doesn't have meaning,
-;;;  trace and untrace are reserved common lisp names.
-;;;(def-foreign-call (trace "PQtrace")
-;;;    ((conn (* PGconn))
-;;;     (debug_port (* FILE)))
-;;;  :returning :void)
-
-;;;(def-foreign-call (untrace "PQuntrace")
-;;;    ((conn (* PGconn)))
-;;;  :returning :void)
-
 (def-foreign-call (set-notice-processor "PQsetNoticeProcessor")
     ((conn (* PGconn))
      (proc PQnoticeProcessor)
@@ -330,18 +281,6 @@
 (def-foreign-call (flush "PQflush")
     ((conn (* PGconn)))
   :returning :int)
-
-;;; "Fast path" interface --- not really recommended for application use
-;;;
-(def-foreign-call (fn "PQfn")
-    ((conn (* PGconn))
-     (fnid :int)
-     (result-buf (* :int))
-     (result-len (* :int))
-     (result-is-int :int)
-     (args (* PQArgBlock))
-     (nargs :int))
-  :returning ((* PGresult)))
 
 ;;; Accessor functions for PGresult objects
 (def-foreign-call (result-status "PQresultStatus")
@@ -442,15 +381,6 @@
      (status ExecStatusType))
   :returning ((* PGresult)))
   
-;;; === in fe-print.c === 
-
-;;;(def-foreign-call (print "PQprint")
-;;;    ((fout (* FILE *fout)) ;output stream
-;;;     (res (* PGresult))
-;;;     (ps (* PQprintOpt))) ; option structure
-;;;  :returning :void)
-
-
 ;;; === in fe-lobj.c === 
 
 ;;; Large-object access routines 
@@ -464,22 +394,6 @@
     ((conn (* PGconn))
      (fd :int))
   :returning :int)
-
-;;;(def-foreign-call (lo-read "lo_read")
-;;;    ((conn (* PGconn)) 
-;;;     (fd :int) 
-;;;     (buf (* :char)) 
-;;;     (len size_t))
-;;;  :returning :int
-;;;  :strings-convert t)
-
-;;;(def-foreign-call (lo-write "lo_write")
-;;;    ((conn (* PGconn)) 
-;;;     (fd :int) 
-;;;     (buf (* :char)) 
-;;;     (len size_t))
-;;;  :returning :int
-;;;  :strings-convert t)
 
 (def-foreign-call (lo-lseek "lo_lseek")
     ((conn (* PGconn)) 
