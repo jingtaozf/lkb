@@ -54,7 +54,9 @@
   (let ((type-entry (get-type-entry name)))
     (when (leaf-type-p type-entry)
       (remove-type-entry name)
-      (setf (slot-value leaf-db 'leaf-types) (delete name *leaf-types*))
+      (setf (slot-value leaf-db 'leaf-types) 
+        (slot-value leaf-db 'leaf-types))
+      ;;; FIX ? is this right
       (setf *type-names* (delete name *type-names*))
       (delete-non-local-uses name type-entry))))
 
@@ -232,7 +234,7 @@ introduces new features ~A" name new-features)
     (if (expand-leaf-type-entry name (car (type-parents new-type)) new-type)
         (setf (leaf-type-expanded-p new-type) t)
       (progn 
-        (format t "~%Invalid type ~A not added")
+        (format t "~%Invalid type ~A not added" name)
         (remove-leaf-type *leaf-types* name)
         nil))))
 
