@@ -1,4 +1,4 @@
-;;; Copyright (c) 1996-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
+;;; Copyright (c) 1996-2004 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 (in-package :lkb)
@@ -100,24 +100,14 @@
        (unless ok (cerror "Continue loading script anyway" 
         "Problems in type file")))))
 
-(defun read-tdl-leaf-type-file-aux (filename)
-  (close-leaf-db *leaf-types*)
-  (set-temporary-lexicon-filenames)
-  (open-leaf-db *leaf-types* *leaf-temp-file*)
-  (read-tdl-leaf-type-file-aux-internal filename))
+(defun read-GENERAL-leaf-type-file-aux (filename)
+  (read-GENERAL-leaf-type-file-aux filename))
 
-;; takes open *leaf-types* obj
+(defun read-tdl-leaf-type-file-aux (filenames)
+  (read-GENERAL-leaf-type-files-aux filenames))
+  
 (defmethod read-tdl-leaf-type-file-aux-internal (filename)
-  (open-write *leaf-types*)
-  (pushnew filename *leaf-type-file-list* :test #'equal)
-  (let ((*readtable* (make-tdl-break-table))
-        (*leaf-type-addition* t))
-      (with-open-file 
-         (istream filename :direction :input)
-        (format t "~%Reading in leaf type file ~A" 
-                (pathname-name filename))
-	(read-tdl-type-stream istream)))
-  (open-read *leaf-types*))
+  (read-GENERAL-leaf-type-file-aux-internal filename))
 
 ;(defun read-tdl-patch-files-aux (file-names)
 ;    (let ((*readtable* (make-tdl-break-table)))

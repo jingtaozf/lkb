@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
+;;; Copyright (c) 1991-2004 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 
@@ -116,24 +116,36 @@
           (read-tdl-leaf-type-file-aux file-name)
         (read-leaf-type-file-aux file-name)))))
 
-(defun read-leaf-type-file-aux (filename)
-  ;(close-lex *leaf-types*)
+(defun read-GENERAL-leaf-type-files-aux (filenames)
+  (unless (listp filenames)
+    (setf filenames (list filenames)))
+  (close-leaf-db *leaf-types*)
   (set-temporary-lexicon-filenames)
   (open-leaf-db *leaf-types* *leaf-temp-file*)
-  (read-leaf-type-file-aux-internal filename))
+  (open-write *leaf-types*)
+  (mapc #'read-GENERAL-leaf-type-file-aux-internal filenames)  
+  (open-read *leaf-types*))
 
 ;; takes open *leaf-types* obj
-(defun read-leaf-type-file-aux-internal (filename)
-  (open-write *leaf-types*)
+(defmethod read-GENERAL-leaf-type-file-aux-internal (filename)
+  (unless (open-write-p *leaf-types*)
+    (error "leaf db ~a not open for writing" *leaf-types*))
   (pushnew filename *leaf-type-file-list* :test #'equal)
-  (let ((*readtable* (make-path-notation-break-table))
+  (let ((*readtable* (make-tdl-break-table))
         (*leaf-type-addition* t))
       (with-open-file 
          (istream filename :direction :input)
         (format t "~%Reading in leaf type file ~A" 
                 (pathname-name filename))
-	(read-type-stream istream)))
-  (open-read *leaf-types*))
+	(if (eql *lkb-system-version* :page)
+	    (read-tdl-type-stream istream)
+	  (read-type-stream istream)))))
+
+(defun read-leaf-type-file-aux (filenames)
+  (read-GENERAL-leaf-type-files-aux filenames))
+ 
+(defun read-leaf-type-file-aux-internal (filename)
+  (read-GENERAL-leaf-type-file-aux-internal filename))
 
 (defun read-cached-leaf-types-if-available (filenames)
   (unless (listp filenames) 
@@ -153,10 +165,7 @@
     (set-temporary-lexicon-filenames)
     (open-leaf-db *leaf-types* *leaf-temp-file*)
     (unless (read-cached-leaf-types *leaf-types* filenames)
-      (dolist (file-name filenames)
-	(if (eql *lkb-system-version* :page)
-	    (read-tdl-leaf-type-file-aux-internal file-name)
-	  (read-leaf-type-file-aux-internal file-name)))))))
+      (read-GENERAL-leaf-type-files-aux filenames)))))
 
   (defun reload-leaf-files nil
   (setf *syntax-error* nil)
