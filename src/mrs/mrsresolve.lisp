@@ -336,6 +336,12 @@ printing routines -  convenient to make this global to keep printing generic")
 ;;; Non-terminal nodes in the tree are relations which have handel
 ;;; arguments - we recurse on each of these
 
+(defvar *scoping-calls* 0)
+
+(defvar *max-scoping-calls* 0)
+
+(defvar *scoping-call-limit* 10000)
+
 (defun make-scoped-mrs (mrsstruct)
   (setf *top-level-variables* nil)
   (let* ((rels (psoa-liszt mrsstruct))
@@ -358,6 +364,9 @@ printing routines -  convenient to make this global to keep printing generic")
 ;;; Note that, as far as I can tell, MRS does not have the equivalent
 ;;; of VIT `free labels'
       (let ((top-handel (get-var-num (psoa-top-h mrsstruct))))
+        (setf *max-scoping-calls* (max *max-scoping-calls* *scoping-calls*))
+        (setf *scoping-calls* 0)
+        (catch 'up
           (for result in (create-scoped-structures top-handel nil 
                                  (construct-initial-bindings 
                                   (psoa-handel mrsstruct) 
@@ -370,7 +379,7 @@ printing routines -  convenient to make this global to keep printing generic")
                ;;; other-rels is a set of `left over' rels
                ;;; we don't want any of these at the top level
                (unless (res-struct-other-rels result) 
-                 (res-struct-bindings result)))))) )
+                 (res-struct-bindings result))))))))
 
 (defstruct bindings-and-sisters
   bindings sisters)
@@ -388,6 +397,9 @@ printing routines -  convenient to make this global to keep printing generic")
   ;;; scoping-handels - handels which will outscope the handels we're
   ;;;        about to incorporate (nil on first call) - added for outscopes
   ;;;        constraint
+  (incf *scoping-calls*)
+  (when (> *scoping-calls* *scoping-call-limit*)
+    (throw 'up nil))
   (if rels
     ; fail immediately if we're going to be left with
     ; an unsatisfiable handel arg
