@@ -8,40 +8,47 @@
 |#
 
 
-(defun output-tdl-types nil
-  (let ((file-name 
+(defun output-tdl-types (&optional file-name)
+  (unless file-name 
+    (setf file-name
          (ask-user-for-new-pathname "Output file?")))
-    (when file-name 
-      (with-open-file 
-        (ostream file-name :direction :output)
-        (for type-name in (reverse *ordered-type-list*)
-             do
-             (output-type-as-tdl (get-type-entry type-name)
-                                 ostream)
-             (format ostream "~%"))))))
+  (when file-name 
+    (with-open-file 
+        (ostream file-name :direction :output :if-exists :supersede)
+      (for type-name in (append (reverse *ordered-type-list*)
+                                *ordered-glbtype-list*)
+           ;; because glbtypes are effectively defined bottom up
+           ;; there will be fewer warnings from PAGE if we don't reverse
+           ;; them
+           do
+           (output-type-as-tdl (get-type-entry type-name)
+                               ostream)))))
+   ;; don't want this to be especially readable ...
+   ;;             (format ostream "~%")))))
       
 
 
 (defun output-type-as-tdl (type-struct stream)
-  (let ((name (type-name type-struct))
-        (def (type-local-constraint type-struct))
-        (parents (type-parents type-struct)))
+  (let* ((name (type-name type-struct))
+         (status (assoc name *tdl-status-info*))
+         (def (type-local-constraint type-struct))
+         (parents (type-parents type-struct)))
     (format stream "~%~A :" (string-downcase name))
     (if (null def)
-      (if (cdr parents)
-        (progn (format stream "= ~A" (string-downcase (car parents)))
-               (for parent in (cdr parents)
-                    do
-                    (format stream " & ~A" (string-downcase parent)))
-               (format stream "."))
-        (format stream "< ~A." (string-downcase (car parents))))
+        (if (cdr parents)
+            (progn (format stream "= ~A" (string-downcase (car parents)))
+                   (for parent in (cdr parents)
+                        do
+                        (format stream " & ~A" (string-downcase parent))))
+          (format stream "< ~A" (string-downcase (car parents))))
       (progn (format stream "= ~A" (string-downcase (car parents)))
              (for parent in (cdr parents)
                   do
                   (format stream " & ~A" (string-downcase parent)))
              (format stream " &")
-             (display-dag1 def 'tdl stream)
-             (format stream ".")))))
+             (display-dag1 def 'tdl stream)))
+    (when status (format stream ", ~A" (cdr status)))
+    (format stream ".")))
 
 (defun output-tdl-lex nil
   (let ((file-name 
@@ -91,3 +98,30 @@
              (output-lex-as-tdl (get-lex-rule-entry rule-name)
                                  ostream)
              (format ostream "~%"))))))
+
+
+(defun expand-local-only-constraints nil
+   (let ((ok t))
+     (unmark-type-table)
+     (determine-atomic-types)
+     (for node in *type-names*
+          do
+          (let ((type-entry (get-type-entry node)))
+            (unless 
+                (expand-local-only-constraint node type-entry)
+              (setf ok nil))))
+     ok))
+         
+
+(defun expand-local-only-constraint (node type-entry)
+  (declare (ignore node))
+  (let* ((*unify-debug-cycles* t)       ; turn on cyclic dag warning messages
+         (constraint-spec (type-constraint-spec type-entry))
+         (local-constraint 
+          (if constraint-spec (process-unifications constraint-spec))))
+    (if (and constraint-spec (null local-constraint))
+     nil
+     (setf (type-local-constraint type-entry) local-constraint))))
+
+
+                  

@@ -21,6 +21,7 @@
 ;;; For VITs we need the top-handel and wgliszt
 
 (defstruct (psoa)
+  extras
   handel
   top-h
   index

@@ -11,7 +11,6 @@
           type-feature-pair-p type-feature-pair-feature type-feature-pair-type
           *parse-record* *toptype*
 ; for vitrification
-          *ordered-mrs-rule-list*
           make-funny-unification funny-unification-rhs
           funny-unification-lhs funny-unification-p
           mrs-rule-sexp-p  mrs-rule-sexp-value

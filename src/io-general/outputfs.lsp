@@ -102,7 +102,8 @@
             "~%::: ~A is not a dag...~%"
             dag-instance))
       :start-fn #'(lambda nil (format stream "~V%" 1))      
-      :end-fn #'(lambda nil (format stream "~V%" 1))
+      :end-fn #'(lambda nil nil)
+      ;; was (format stream "~V%" 1))
       :reentrant-value-fn                 
       #'(lambda (reentrant-pointer)
          (format stream

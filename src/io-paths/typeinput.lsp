@@ -54,8 +54,6 @@
   (define-break-characters 
                          '(#\; #\< #\> #\= #\: #\. #\/)))
 
-(defparameter *ordered-type-list* nil)
-
 (defvar *type-file-list* nil)
 
 (defun read-type-file nil  
@@ -87,7 +85,6 @@
 
 (defun read-type-files-aux (file-names &optional settings-file)
    (setf *type-file-list* file-names)
-   (setf *ordered-type-list* nil)
    (clear-types)
    (let ((*readtable* (make-path-notation-break-table)))
       (for file-name in file-names

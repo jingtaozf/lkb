@@ -13,7 +13,6 @@
                         (make-pathname :name "mrsglobals-eng.lisp")
                     COMMON-LISP-USER::*grammar-directory*)))
       (when (and COMMON-LISP-USER::*grammar-directory*
-                 mrs::*mrs-to-vit* 
                  (fboundp 'read-mrs-rule-file-aux))
         (read-mrs-rule-file-aux 
                 (merge-pathnames

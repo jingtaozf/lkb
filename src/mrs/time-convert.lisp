@@ -156,11 +156,7 @@
     ((eql sort (vsym "_MORNING_REL")) 'am)
     ((eql sort (vsym "_AFTERNOON_REL")) 'pm)
     ((eql sort (vsym "_EVENING_REL")) 'pm)
-    (t 'pm)
-    ;(t (error "Error in derive-am-pm-spec"))
-    (t (error "Error in derive-am-pm-spec"))))
-
-
+    (t 'pm)))
 
 ;;; Main function
 
@@ -183,11 +179,12 @@
                           nhrels minrels ampmrels relrels others)))
           (if new-liszt
                 (setf (psoa-liszt mrsstruct) new-liszt)
-            ;(format t 
-            ;  "~%Warning: error in time conversion, structure unchanged")
+            (unless *giving-demo-p*
+              (format t 
+             "~%Warning: error in time conversion, structure unchanged"))
 	    ))
       (if (or minrels ampmrels)
-            (cerror "~%Leave structure unchanged"
+            (struggle-on-error
 "~%Error in time conversion: no numbered_hour or after/before_hour relations")))
     mrsstruct))
 
@@ -200,9 +197,8 @@
             (construct-ctime nhrel minrels ampmrels relrels others))
        (reverse others))
     (if ampmrels
-	t
-        ;(cerror "Ignore the time expression" 
-        ;        "~%am/pm specified but no hour")
+        (struggle-on-error 
+                "~%am/pm specified but no hour")
       (append 
               (for relrel in relrels
                    collect
@@ -343,7 +339,7 @@
                           nil
                           (car direct-mins)))
      ((to-rel-p past-or-to)
-        (create-ctime-rel handel inst 
+        (create-ctime-rel handel label inst 
                           nil
                           (- 60 (car direct-mins))))
      (t (struggle-on-error "~%Problem with after/to specification")))))

@@ -60,6 +60,10 @@
         
 (defvar *types* (make-hash-table :test #'eq))
 
+(defparameter *ordered-type-list* nil)
+
+(defparameter *ordered-glbtype-list* nil)
+
 (defparameter *default-abbreviations* nil)
 
 (defvar *types-changed* nil)
@@ -73,6 +77,8 @@
    (disable-type-interactions)
    (setf *toptype* nil)
    (clrhash *types*)
+   (setf *ordered-type-list* nil)
+   (setf *ordered-glbtype-list* nil)
    (setf *leaf-types* nil)
    (clear-type-cache)
    (clear-feature-table)
@@ -436,8 +442,10 @@
       (if parents
          (union parents
             (reduce #'union
-               (mapcar #'(lambda (parent)
-                     (get-ancestors (get-type-entry parent)))
+                    (mapcar #'(lambda (parent)
+                                (let ((parent-entry (get-type-entry parent)))
+                                  (or (type-ancestors parent-entry)
+                                    (get-ancestors parent-entry))))
                   parents))))))
 
 (defun get-descendants (type-entry)

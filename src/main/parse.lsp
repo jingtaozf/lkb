@@ -816,13 +816,13 @@
          (let ((line (read-line istream nil 'eof)))
             (cond
                ((eq line 'eof))
-               ((eql (count #\@ line) 11)
-                                        ; must be 12 fields in tsdb input
-                (if (fboundp 'get-test-run-information)
-                    (parse-tsdb-sentences1
-                     istream line parse-file result-file run-file)
-                  (batch-parse-sentences istream line parse-file
-                                         #'get-tsdb-sentence)))
+;;               ((eql (count #\@ line) 11)
+;;                                        ; must be 12 fields in tsdb input
+;;                (if (fboundp 'get-test-run-information)
+;;                    (parse-tsdb-sentences1
+;;                     istream line parse-file result-file run-file)
+;;                 (batch-parse-sentences istream line parse-file
+;;                                         #'get-tsdb-sentence)))
                (t
                   (batch-parse-sentences istream line parse-file)))))))
 

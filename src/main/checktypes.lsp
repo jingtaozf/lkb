@@ -121,6 +121,8 @@
   ;;; 3') adds the ancestors and descendants to the type entry
   ;;; 4) adds the new type to the descendants list of all its ancestors
   ;;; 5) adds the new type to the ancestors list of all its descendants
+  ;;; 5')  pushes the new type onto the list of ordered glbtypes
+  ;;; (used for output)
   ;;; 6) pushes the new type onto the list of *type-names*
   (let ((ancestors nil)
         (descendants nil))
@@ -152,6 +154,7 @@
     (for descendant in descendants
          do
          (push new-type (type-ancestors (get-type-entry descendant))))
+    (push new-type *ordered-glbtype-list*)
     (push new-type *type-names*)))
         
 ;;; Checking
@@ -159,6 +162,8 @@
 (defparameter *partition* nil)
 
 (defparameter *glbsets* nil)
+
+(defparameter *hierarchy-only-p* nil)
 
 (defun check-type-table nil
    (scratch 'glbtype)
@@ -184,20 +189,22 @@
                            (length partition))
                    (fix-mglbs)))
          (unmark-type-table)
-         (format t "~%Expanding constraints")
-         (when (expand-and-inherit-constraints)
-           (format t "~%Making constraints well formed")
-           (when (strongly-type-constraints)
-             (when *check-paths*
+         (if *hierarchy-only-p*
+             (expand-local-only-constraints)
+           (progn
+             (format t "~%Expanding constraints")
+           (when (expand-and-inherit-constraints)
+             (format t "~%Making constraints well formed")
+             (when (strongly-type-constraints)
+               (when *check-paths*
                  (format t "~%Optimising unification check paths") 
                  (optimise-check-unif-paths))
                 ;;; YADU --- extra expansion stage
                 ;;; earlier stages are unchanged
-;             (format t "~%Expanding defaults") 
-             (when (expand-type-hierarchy-defaults)
-               (format t "~%Type file checked successfully")
-               (clear-type-cache) ; not for consistency, but for efficiency
-               t)))))))
+               (when (expand-type-hierarchy-defaults)
+                 (format t "~%Type file checked successfully")
+                 (clear-type-cache)     ; not for consistency, but for efficiency
+                 t)))))))))
 
 
 (defun patch-type-table nil
@@ -367,22 +374,28 @@
    ok))
 
 (defun set-up-descendants (type)
-  (let* ((type-entry (get-type-entry type))
-	 (daughters (type-daughters type-entry)))
-    (when daughters
-      (setf (type-descendants type-entry)
-	(union daughters
-	       (reduce #'union
-		       (mapcar #'(lambda (daughter)
-				   (set-up-descendants daughter))
-			       daughters)))))))
+  (let ((type-entry (get-type-entry type)))
+    (or (type-descendants type-entry)
+        (let ((daughters (type-daughters type-entry)))
+          (if daughters
+              (setf (type-descendants type-entry)
+                (union daughters
+                       (reduce #'union
+                               (mapcar #'set-up-descendants
+                                       daughters)))))))))
 
 (defun add-ancestors-to-type-table (top-node)
-  (for type in (retrieve-descendants top-node)
-       do
-       (let ((type-entry (get-type-entry type)))
-         (setf (type-ancestors type-entry)
-               (get-ancestors type-entry)))))
+  (let* ((type-entry (get-type-entry top-node))
+         (daughters (type-daughters type-entry)))
+    (for daughter in daughters
+         do
+         (let ((daughter-entry (get-type-entry daughter)))
+           (unless (type-ancestors daughter-entry)
+             (setf (type-ancestors daughter-entry)
+               (get-ancestors daughter-entry)))))
+    (for daughter in daughters
+         do
+         (add-ancestors-to-type-table daughter)))) 
 
 (defun unmark-type-table nil
    (maphash 
@@ -764,12 +777,13 @@
 		   (append (type-template-parents type-entry)
 			   (type-parents type-entry)))))
       (with-unification-context (nil)
-	(copy-dag
+        (let ((result
 	 (reduce #'(lambda (x y) (when (and x y) 
 				   (unify-dags x (retype-dag y *toptype*))))
 		 supers
 		 :initial-value (or local-constraint 
-				    (create-typed-dag node))))))))
+				    (create-typed-dag node)))))
+          (if result (copy-dag result)))))))
 
 (defun add-maximal-type (feature type)
    ;; a feature may only be introduced at one

@@ -773,7 +773,7 @@
          (unless (and (> (length path) 2)
                       (eql (car path)  (vsym "LISZT"))
                       (eql (cadr path)  (vsym "LIST")))
-           (error "~A is not a valid path in add-funny-stuff" path))
+           (struggle-on-error "~A is not a valid path in add-funny-stuff" path))
          (multiple-value-bind (rel rel-feat)
              (find-relevant-rel liszt real-path)
            (when rel
@@ -786,12 +786,12 @@
   (when (and liszt path)
     (if (eql (car path) 'FIRST)
         (if (cddr path)
-            (error "Too many components ~A in path" (cdr path))
+            (struggle-on-error "Too many components ~A in path" (cdr path))
           ; should be single feature or nil
           (values (car liszt) (cadr path)))
       (if (eql (car path) 'REST)
           (find-relevant-rel (cdr liszt) (cdr path))
-        (error "Unexpected component ~A in path" (car path))))))
+        (struggle-on-error "Unexpected component ~A in path" (car path))))))
                
          
        

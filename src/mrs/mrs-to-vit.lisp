@@ -106,7 +106,9 @@
         *vit-instances* nil
         *hole-label-eqs* nil
         *used-handel-labels* nil
-        *top-level-variables* nil))
+        *top-level-variables* nil
+        *bound-vit-vars* nil))
+
 
 ;;; provisions for binary operators required?
 (defun convert-complex-types (type)
@@ -256,19 +258,17 @@
 
 ;;; use simply presence of feature BV as indicator of quantifier
 (defun vit-quant-rel-p (mrsrel)
-  (eq 'disco::bv (fvpair-feature (first (rel-flist mrsrel)))))
+  (eq *bv-feature* (fvpair-feature (first (rel-flist mrsrel)))))
 
 (defun vit-var-p (var)
   (and (symbolp var)
        (member (subseq (symbol-name var) 0 2) 
                '("IH" "HH" "LH") :test #'equal)))
 
-; This definition of COLLECT-UNBOUND-VARS temporarily replaced by the one
-; following, for Fall 98 Integration:
+
+
 ;;; returns list of free "individual" variables
-;;; only x and v variables are candidates, not e's and d's
-;;; perhaps to 'logical' for Vits: it might be that a variable which is used
-;;; more than once in Vits counts as unbound
+
 (defun collect-unbound-vars (vit)
   (let* ((rels (vit-semantics vit))
          (free nil))
@@ -281,6 +281,7 @@
                              (not (member arg *bound-vit-vars*)))
                     (pushnew arg free)))))
     free))
+
 
 ;;; ***** Main code *******
 
@@ -418,54 +419,61 @@
     (setf (vit-scope vit) new-scope)
     vit))
 
+;; defines some minimal requirements on MRS for preventing bad partial analyses from breaking the system
+(defun check-instantiated-mrs (mrs)
+  (and (var-p (psoa-handel mrs))
+       (var-p (psoa-top-h mrs))
+       (var-p (psoa-index mrs))))
+
 (defun mrs-to-vit (vitrified-mrs)
   ;;; first we produce all scoped structures, using the code in mrsresolve.lsp
   ;;; we also collect up all the var structures for the handels
-  (clear-temporary-dbs)
-  (setf *current-vit* (make-vit))
-  (let* ((unstrung-psoa (mrs-unstring-psoa vitrified-mrs))
-         ; Because VIT stuff doesn't like strings.
-         ; The old code assumed string types would be converted to
-         ; symbols on construction of the MRS, but this 
-         ; loses information
-         ; this function also converts the path values in the
-         ; `extra' property lists into single feature values
-         (mrs-psoa (if (mrs-language '(english))
-		       (time-convert-mrs-struct unstrung-psoa)
-		     unstrung-psoa))
-	 (binding-sets (make-scoped-mrs mrs-psoa))
-         ; fragments have unbound variables so can't really be scoped
-	 (equalities)
-	 (leqs))
-    (multiple-value-bind 
-        (label-vars group-list)
-        (collect-all-handel-vars (psoa-liszt mrs-psoa))
-      (if binding-sets
+  (when (check-instantiated-mrs vitrified-mrs)
+    (clear-temporary-dbs)
+    (setf *current-vit* (make-vit))
+    (let* ((unstrung-psoa (mrs-unstring-psoa vitrified-mrs))
+        ;; Because VIT stuff doesn't like strings.
+        ;; The old code assumed string types would be converted to
+        ;; symbols on construction of the MRS, but this 
+        ;; loses information
+        ;; this function also converts the path values in the
+        ;; `extra' property lists into single feature values
+           (mrs-psoa (if (mrs-language '(english))
+                         (time-convert-mrs-struct unstrung-psoa)
+                       unstrung-psoa))
+           (binding-sets (make-scoped-mrs mrs-psoa))
+           (equalities)
+           (leqs))
+      (multiple-value-bind 
+          (label-vars group-list)
+          (collect-all-handel-vars (psoa-liszt mrs-psoa))
+        (if binding-sets 
             ;;; if we're dealing with a complete sentence
+            ;;; or in general a sentence that can be scoped
             ;;; we work out which equalities and leqs are common to
             ;;; all of the scoped structures
-          (progn 
-            (multiple-value-setq (equalities leqs)
-              (work-out-scoping-restrictions mrs-psoa (car binding-sets)))
-            (for binding-set in (cdr binding-sets)
-                 do
-                 (multiple-value-bind (new-eqs new-leqs)
-                     (work-out-scoping-restrictions mrs-psoa binding-set)
-                   (setf equalities 
-                     (delete-if-not   
-                      #'(lambda (equality)
-                          (member equality new-eqs 
-                                  :test #'(lambda (new old)
-                                            (or (equal new old)
-                                                (and (eql (car new) 
-                                                          (cdr old))
-                                                     (eql (cdr new) 
-                                                          (car old)))))))  
-                      equalities))
-                   (setf leqs (delete-if-not  
-                               #'(lambda (leq)
-                                   (member leq new-leqs :test #'equal)) 
-                               leqs)))))
+            (progn 
+              (multiple-value-setq (equalities leqs)
+                (work-out-scoping-restrictions mrs-psoa (car binding-sets)))
+              (for binding-set in (cdr binding-sets)
+                   do
+                   (multiple-value-bind (new-eqs new-leqs)
+                       (work-out-scoping-restrictions mrs-psoa binding-set)
+                     (setf equalities 
+                       (delete-if-not   
+                        #'(lambda (equality)
+                            (member equality new-eqs 
+                                    :test #'(lambda (new old)
+                                              (or (equal new old)
+                                                  (and (eql (car new) 
+                                                            (cdr old))
+                                                       (eql (cdr new) 
+                                                            (car old)))))))  
+                        equalities))
+                     (setf leqs (delete-if-not  
+                                 #'(lambda (leq)
+                                     (member leq new-leqs :test #'equal)) 
+                                 leqs)))))
           ;;; for fragments or other cases where there are no valid scopes 
           ;;; we use whatever information we can to get
           ;;; at least some leqs and equalities
@@ -474,27 +482,28 @@
             ;; sets globals for is-one-ofs and leqs
             (setf leqs (find-cheap-leqs mrs-psoa))
             (setf equalities (find-cheap-equalities))))
-      (let* ((labels (if (assoc (var-id (psoa-handel mrs-psoa)) label-vars)
+        (let* ((labels (if (assoc (var-id (psoa-handel mrs-psoa)) label-vars)
                          label-vars
-                       (push (list (var-id (psoa-handel mrs-psoa))) label-vars)))
-             (rels (psoa-liszt mrs-psoa))
-             (scope (construct-vit-scope equalities leqs labels))
-             (converted-rels (convert-mrs-rels-to-vit rels 
-                                                      *current-vit* 
-                                                      group-list labels))
+                         (push (list (var-id (psoa-handel mrs-psoa))) label-vars)))
+               (rels (psoa-liszt mrs-psoa))
+               (scope (construct-vit-scope equalities leqs labels))
+               (converted-rels (convert-mrs-rels-to-vit rels 
+                                                        *current-vit* 
+                                                        group-list labels))
 ;;; *group-members* is constructed as a side effect of converting rels
 ;;; in the english grammar the 'message' is included in liszt
-             (mood nil)
-             (groups (construct-vit-groups *group-members*)))
-        (setf (vit-utterance-id *current-vit*) (construct-segment-description
-                                                mrs-psoa)
-              (vit-main-condition *current-vit*) (construct-main-label 
-                                                  mrs-psoa
-                                                  *current-vit* mood labels)
-              (vit-scope *current-vit*) (append groups scope (vit-scope *current-vit*)))
-      (add-unbounds-to-vit mrs-psoa *current-vit*)
-        (values *current-vit*
-                binding-sets)))))
+               (mood nil)
+               (groups (construct-vit-groups *group-members*)))
+          (setf (vit-utterance-id *current-vit*) (construct-segment-description
+                                                  mrs-psoa)
+                (vit-main-condition *current-vit*) (construct-main-label 
+                                                    mrs-psoa
+                                                    *current-vit* mood labels)
+                (vit-scope *current-vit*) (append groups scope (vit-scope *current-vit*)))
+          (add-unbounds-to-vit *current-vit*)
+          (convert-psoa-extras-to-vit (psoa-extras mrs-psoa) *current-vit* group-list labels)
+          (values *current-vit*
+                  binding-sets))))))
 
 (defun german-mrs-to-vit (mrs)
   (clear-temporary-dbs)
@@ -529,8 +538,10 @@
                                   *current-vit* mood labels)
             (vit-scope *current-vit*) (append groups scope 
                                               (vit-scope *current-vit*)))
-      (add-unbounds-to-vit mrs *current-vit*)
-      *current-vit*)))
+      (add-unbounds-to-vit *current-vit*)
+      (convert-psoa-extras-to-vit (psoa-extras mrs) *current-vit* 
+                                  group-list labels)
+     *current-vit*)))
 
 ;;; for VM sid comes from the parser and is stored in *segment-id*
 (defun construct-segment-description (mrs)
@@ -559,9 +570,9 @@
                                                     (rassoc (var-id l) 
                                                         *used-handel-labels*))))
                                       (if hand
-                                          (intern (format nil "L~A" 
+                                          (intern (format nil "LH~A" 
                                                           (first hand)))
-                                        (intern (format nil "L~A" (var-id l)))))))
+                                        (intern (format nil "LH~A" (var-id l)))))))
                       (existp (find id res :key #'whg-id-id)))
                  (if existp
                      (setf (whg-id-handel existp)
@@ -589,8 +600,10 @@
 ;;          ((consp (vit-semantics vit))
 ;;           (setf tophole (first (p-term-args (first (vit-semantics vit))))))
           (t nil ; (setf tophole 
-             ; (intern (format nil "H~A" (funcall *variable-generator*))))
-          ))
+             ; (intern (format nil "HH~A" (funcall *variable-generator*))))
+             ))
+    (setf *bound-vit-vars* (union (list tophole mainlabel index) 
+                                  *bound-vit-vars*))
     (make-p-term :predicate 'index
                  :args (list tophole mainlabel index))))
 
@@ -616,8 +629,9 @@
             (if (and (eq (elt (symbol-name labelarg) 0) #\H)
                      (mrs-language '(german)))
                 nil
-              (list (make-p-term :predicate relation
-                                 :args (list labelarg handelarg))))))))
+              (progn (pushnew handelarg *bound-vit-vars*)
+                     (list (make-p-term :predicate relation
+                                        :args (list labelarg handelarg)))))))))
 
 (defun get-vit-instance-from-rel (pterm)
   ;; assume that instance is always second arg for ordinary relations
@@ -678,6 +692,8 @@
 						  (rest arg)
 						  labels))))))))
     (convert-mrs-var-extra (second args) vit inst groups labels)
+    (when (vit-bind-inst-rel-p rel)
+      (pushnew inst *bound-vit-vars*))
     (when (rel-extra rel)
       (convert-mrs-rel-extra (rel-extra rel) vit inst label groups labels))
     (when *relation-type-check*
@@ -706,18 +722,18 @@
                  (fvpair-value 
                   (find 'list (var-extra val) :key #'fvpair-feature))
                  labels))
-               (t (intern (format nil "I~A" (var-id val))))))
+               (t (intern (format nil "IH~A" (var-id val))))))
         ((is-top-type val) nil)
         (t val)))
 
 (defun convert-handel-to-label (val)
   (if (var-p val)
-      (intern (format nil "L~A" (var-id val)))))
+      (intern (format nil "LH~A" (var-id val)))))
 
 (defun convert-handel-to-vit (val labels)
    (if (assoc (var-id val) labels)
-     (intern (format nil "L~A" (var-id val)))
-     (intern (format nil "H~A" (var-id val)))))
+     (intern (format nil "LH~A" (var-id val)))
+     (intern (format nil "HH~A" (var-id val)))))
 
 (defun convert-label-to-vit (val groups labels &optional (label nil))   
   (let* ((id (var-id val))
@@ -725,12 +741,13 @@
                       (find (cons id (var-id label)) labels :test #'equal)
                     (assoc id labels))))
     (unless lh-pair
-       (struggle-on-error "Treat as label anyway" "Val ~A is supposed to be a label but is not on label list" val))
+      (struggle-on-error 
+       "Val ~A is supposed to be a label but is not on label list" val))
    (if (member id groups)
        (let ((new-var (cond ((and label (rest lh-pair))
-                             (intern (format nil "L~A" (rest lh-pair))))
+                             (intern (format nil "LH~A" (rest lh-pair))))
                             (t (intern 
-                                (format nil "L~A" 
+                                (format nil "LH~A" 
                                         (funcall *variable-generator*))) )))
            (previous-members (assoc id *group-members*)))
          (if previous-members
@@ -739,19 +756,19 @@
          new-var)
      (progn (if label
                 (push lh-pair *used-handel-labels*))
-            (intern (format nil "L~A" id))))))
+            (intern (format nil "LH~A" id))))))
 
 ;;; since the VIT specification forbids that leq(l1,l2)
 ;;; we introduce an additional eq(l1,h2)
 (defun convert-handle-to-hole (var vit labels)
   (let* ((id (var-id var))
-         (hole (intern (format nil "H~A" id)))
+         (hole (intern (format nil "HH~A" id)))
          (lab-id (assoc id labels)))
     (if lab-id
         (unless (member id *hole-label-eqs*)
           (push id *hole-label-eqs*)
           (push (make-p-term :predicate 'eq
-                             :args (list (intern (format nil "L~A" id))
+                             :args (list (intern (format nil "LH~A" id))
                                          hole))
                 (vit-scope vit))))
     hole))
@@ -888,40 +905,43 @@
     (if (member label (rest group))
         (return (first group)))))
 
-(defun add-unbounds-to-vit (mrs vit)
-  (let ((unbound (collect-unbound-vars mrs)))
+(defun add-unbounds-to-vit (vit)
+  (let ((unbound (collect-unbound-vars vit)))
     (when unbound
       (setf (vit-discourse vit)
         (append 
          (for var in unbound
            collect
            (make-p-term :predicate 'unbound
-                        :args (list (intern (format nil "I~A" (var-id var))))))
+                        :args  (list var))) 
          (vit-discourse vit))))))
 
 ;; ********* Construction of scope and of groupings ***********
 
 (defun make-vit-handel (id labels)   
    (if (assoc id labels)
-     (intern (format nil "L~A" id))
-     (intern (format nil "H~A" id))))
+     (intern (format nil "LH~A" id))
+     (intern (format nil "HH~A" id))))
 
 (defun construct-vit-scope (equalities leqs labels)
   (append
    (for equ in equalities
         collect
+        (progn (pushnew (make-vit-handel (car equ) labels) *bound-vit-vars*)
         (make-p-term :predicate 'eq :args (list (make-vit-handel (car equ) labels) 
-                                                (make-vit-handel (cdr equ) labels))))
+                                                (make-vit-handel (cdr equ) labels)))))
    (for leq in leqs
         collect
-        (make-p-term :predicate 'leq :args (list (make-vit-handel (car leq) labels) 
-                                                (make-vit-handel (cdr leq) labels))))))
+        (progn (pushnew (make-vit-handel (cdr leq) labels) *bound-vit-vars*)
+               (make-p-term :predicate 'leq :args (list (make-vit-handel (car leq) labels) 
+                                                (make-vit-handel (cdr leq) labels)))))))
 
 (defun construct-vit-groups (group-alist)
   (for grstr in group-alist
        append
-       (let ((group (intern (format nil "L~A" (car grstr))))
+       (let ((group (intern (format nil "LH~A" (car grstr))))
              (gmembers (cdr grstr)))
+       (pushnew group *bound-vit-vars*)
        (for el in gmembers
             collect
             (make-p-term :predicate 'in_g :args (list el group))))))
@@ -929,9 +949,23 @@
 (defun get-group-of-label (label group-alist)
   (dolist (group group-alist label)
     (if (member label (rest group))
-        (return (intern (format nil "L~A" (first group)))))))
+        (return (intern (format nil "LH~A" (first group)))))))
 
+;;; extra hacks dispatcher: 
+;;; the called function is specified in the fourth slot of *psoa-extras-paths*
+;;; entries
+(defun convert-psoa-extras-to-vit (extras vit groups labels)
+  (if (consp extras)
+      (loop for ele in extras
+          do
+            (funcall (fourth 
+                      (assoc (fvpair-feature ele) *psoa-extras-paths*))
+                     ele vit groups labels)))
+  vit)
 
+(defun convert-fvpair-to-pterm (fv groups labels)
+  (make-p-term :predicate (fvpair-feature fv)
+               :args (list (convert-mrs-val-to-vit (fvpair-value fv) labels))))
 
 ;;; ******* Code for finding leqs and equalities from scoped structures ********
 
@@ -975,7 +1009,7 @@
   ;;; so far.  Then for each of these rels, find all their handel arguments
   ;;; add these to holes-so-far and recurse
   (if (member top-handel labels-so-far)
-      (struggle-on-error "Reentrant structure?")
+      (progn (struggle-on-error "Reentrant structure?") nil)
     (let ((top-rels 
            (for rel in rel-list
                 filter
@@ -1022,10 +1056,10 @@
           (for rel in (psoa-liszt psoa)
                collect
                (mrs-unstring-rel rel)))
-    (setf (psoa-wgliszt new-psoa)
-          (for rel in (psoa-wgliszt psoa)
-               collect
-               (mrs-unstring-rel rel)))
+;    (setf (psoa-wgliszt new-psoa)
+;          (for rel in (psoa-wgliszt psoa)
+;               collect
+;               (mrs-unstring-rel rel)))
     new-psoa))
 
 (defun mrs-unstring-rel (rel)
@@ -1074,4 +1108,3 @@
     
     
                
-    

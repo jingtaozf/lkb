@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.6  1998/10/07 20:54:19  danf
+;; Added support for VM word latices
+;;
 ;; Revision 1.5  1998/09/04 00:43:31  aac
 ;; merging WK's changes
 ;;
@@ -290,5 +293,15 @@ for extra features for using the extra-features of a relation")
 (defparameter *external-semantics-path* nil)
 
 (defparameter *message-semantics-path* nil)
+
+;;; for passing non-mrs-information (SYN, CTXT) to Vits:
+
+(defvar *psoa-extras-paths* nil)
+(defvar *syntax-paths* nil)
+
+;;; for using the prolog vitADT site specific stuff:
+;;; values must contain program/library-path if necessary
+(defvar *prolog-parameters* '((prolog-cmd . "prolog")
+                              (vitADT . "vitADT")))
 
 

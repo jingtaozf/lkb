@@ -54,6 +54,8 @@
 
 (defparameter *tdl-expanded-syntax-function* nil)
 
+(defparameter *tdl-status-info* nil)
+
 (defun make-tdl-break-table nil 
   (define-break-characters '(#\< #\> #\! #\= #\: #\. #\# #\&
                              #\, #\[ #\] #\; #\@ #\$ #\( #\) #\^ #\/)))
@@ -65,6 +67,7 @@
 (defun read-tdl-type-files-aux (file-names &optional settings-file)
    (setf *type-file-list* file-names)
    (clear-types)
+   (setf *tdl-status-info* nil)
    (setf *toptype* '*top*)
    (add-type-from-file '*top* nil nil nil nil)
    (let ((*readtable* (make-tdl-break-table)))
@@ -168,13 +171,17 @@
   (let* ((position (1+ (file-position istream)))
 	 (name (lkb-read istream nil))
 	 (next-char (peek-char t istream nil 'eof)))
-     (unless (eql next-char #\:)
-       (error "~%Incorrect syntax following type name ~A" name))
-     #+allegro (record-source name istream position)
-     (read-char istream)
-     (let ((next-char2 (peek-char t istream nil 'eof)))
-       (cond 
-        ((eql next-char2 #\=) 
+    (when (and (symbolp name) (eql (schar (symbol-name name) 0) #\%))
+      (error "Illegal type name ~A - names starting with '%' are reserved ~
+                 for instance types" name))
+    (push name *ordered-type-list*)    
+    (unless (eql next-char #\:)
+      (error "~%Incorrect syntax following type name ~A" name))
+    #+allegro (record-source name istream position)
+    (read-char istream)
+    (let ((next-char2 (peek-char t istream nil 'eof)))
+      (cond 
+       ((eql next-char2 #\=) 
          (read-char istream)
          (read-tdl-avm-def istream name augment)
          (check-for #\. istream name))
@@ -243,13 +250,14 @@
           (read-tdl-status-info istream name)))))
 
 (defun read-tdl-status-info (istream name)
-  (declare (ignore name))
   (read-char istream)
   (let* ((status-indicator (read istream))
          (break-char (read istream))
          (status-type (read istream)))
-    (declare (ignore status-indicator break-char status-type))))
-;    (format t "~%~A ~A ~A" status-indicator break-char status-type)))
+    (push (cons name
+                (format nil "~%~A ~A ~A" 
+                        status-indicator break-char status-type))
+          *tdl-status-info*)))
 
 (defun make-tdl-coreference-conditions (coref-table in-default-p)
   ;;; the coref table is a list of paths, indexed by

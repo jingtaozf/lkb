@@ -77,6 +77,12 @@
 (reset-system-paths)
 
 (pushnew :lkb *features*)
-;;; (pushnew :tty *features*)
-;;; uncomment line above for non-graphical generic CL version of LKB
+#+(not (or :mcl :clim))(pushnew :tty *features*)
+
+;;; graphics currently assumes mcl or clim
+;;; do (pushnew :tty *features*) manually
+;;; if you want to use the tty version from mcl or acl/clim
+;;; for some reason
+
+
 
