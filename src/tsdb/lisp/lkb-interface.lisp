@@ -10,10 +10,7 @@
 ;;; has been made public ... sigh.                         (22-aug-99  -  oe)
 ;;;
 
-#+:lkb-v5.3
 (in-package :lkb)
-#-:lkb-v5.3
-(in-package :cl-user)
 
 (defparameter *lkb-package* 
   (or (find-package :lkb) (find-package :common-lisp-user)))

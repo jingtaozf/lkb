@@ -149,15 +149,36 @@
                 for string = (if (stringp argument) 
                                argument
                                (format nil "~(~s~)" argument))
-                for native = #+:(and :ics :null) (excl:string-to-native string)
-                             #-:(and :ics :null) string
+                for native = #+:ics (excl:string-to-native string)
+                             #-:ics string
                 collect native)))
-         (arguments (make-array (+ (length arguments) 1)
+         (argv
+          #+:ics
+          (let* ((size (+ (length arguments) 1))
+                 (vector (allocate-fobject (list :array '(* :char) size))))
+            (loop
+                for argument in arguments
+                for i from 0
+                do
+                  (setf (fslot-value-typed '(:array (* :char)) nil vector i)
+                    argument)
+                finally 
+                  (incf i)
+                  (setf (fslot-value-typed '(:array (* :char)) nil vector i)
+                    0))
+            vector)
+          #-:ics
+          (make-array (+ (length arguments) 1)
                                 :initial-contents (append arguments '(0))))
          (host (if host (string host) ""))
          (architecture 
-          (if (or host (null architecture)) "" (string architecture))))
-    (_pvm_create task arguments host architecture)))
+          (if (or host (null architecture)) "" (string architecture)))
+         (result (_pvm_create task argv host architecture)))
+    #+:ics
+    (loop
+        for argument in arguments
+        when (integerp argument) do (excl:aclfree argument))
+    result))
 
 #+(version>= 5 0)
 (def-foreign-call pvm_flush (:void) :returning :int)
