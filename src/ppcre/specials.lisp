@@ -3,7 +3,7 @@
 
 ;;; globally declared special variables
 
-;;; Copyright (c) 2002, Dr. Edmund Weitz. All rights reserved.
+;;; Copyright (c) 2002-2004, Dr. Edmund Weitz. All rights reserved.
 
 ;;; Redistribution and use in source and binary forms, with or without
 ;;; modification, are permitted provided that the following conditions
@@ -33,11 +33,9 @@
 
 ;;; special variables used by the lexer/parser combo
 
-(defvar *error-msg-offset* 0
-  "Offset to substract from positions in error messages.
-This is necessary because CREATE-MATCHER-FROM-REGEX-STRING might prefix
-the regex string with modifiers like (?i).")
-(declaim (type fixnum *error-msg-offset*))
+(defvar *extended-mode-p* nil
+  "Whether the parser will start in extended mode.")
+(declaim (type boolean *extended-mode-p*))
 
 ;;; special variables used by the SCAN function and the matchers
 
@@ -51,7 +49,7 @@ Will always be coerced to a SIMPLE-STRING.")
 (declaim (type fixnum *start-pos*))
 
 (defvar *real-start-pos* nil
-  "The real start of *STRING*. This is for repeated strings and is only used internally.")
+  "The real start of *STRING*. This is for repeated scans and is only used internally.")
 (declaim (type (or null fixnum) *real-start-pos*))
 
 (defvar *end-pos* 0
@@ -98,3 +96,31 @@ repetitive patterns have been tested already.")
 where we saw repetitive patterns.
 Only used for patterns which might have zero length.")
 (declaim (type simple-vector *last-pos-stores*))
+
+(defvar *use-bmh-matchers* t
+  "Whether the scanners created by CREATE-SCANNER should use the \(fast
+but large) Boyer-Moore-Horspool matchers.")
+
+(defvar *allow-quoting* nil
+  "Whether the parser should support Perl's \\Q and \\E.")
+
+(pushnew :cl-ppcre *features*)
+
+;; stuff for Nikodemus Siivola's HYPERDOC
+;; see <http://common-lisp.net/project/hyperdoc/>
+;; and <http://www.cliki.net/hyperdoc>
+
+(defvar *hyperdoc-base-uri* "http://weitz.de/cl-ppcre/")
+
+(let ((exported-symbols-alist
+       (loop for symbol being the external-symbols of :cl-ppcre
+             collect (cons symbol
+                           (concatenate 'string
+                                        "#"
+                                        (string-downcase symbol))))))
+  (defun hyperdoc-lookup (symbol type)
+    (declare (ignore type))
+    (cdr (assoc symbol
+                exported-symbols-alist
+                :test #'eq))))
+               

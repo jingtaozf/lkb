@@ -7,7 +7,7 @@
 ;;; Hash-tables are treated like sets, i.e. a character C is a member of the
 ;;; hash-table H iff (GETHASH C H) is true.
 
-;;; Copyright (c) 2002, Dr. Edmund Weitz. All rights reserved.
+;;; Copyright (c) 2002-2004, Dr. Edmund Weitz. All rights reserved.
 
 ;;; Redistribution and use in source and binary forms, with or without
 ;;; modification, are permitted provided that the following conditions
@@ -35,19 +35,76 @@
 
 (in-package #:cl-ppcre)
 
+(defmacro with-unique-names ((&rest bindings) &body body)
+  "Syntax: WITH-UNIQUE-NAMES ( { var | (var x) }* ) declaration* form*
+
+Executes a series of forms with each VAR bound to a fresh,
+uninterned symbol. The uninterned symbol is as if returned by a call
+to GENSYM with the string denoted by X - or, if X is not supplied, the
+string denoted by VAR - as argument.
+
+The variable bindings created are lexical unless special declarations
+are specified. The scopes of the name bindings and declarations do not
+include the Xs.
+
+The forms are evaluated in order, and the values of all but the last
+are discarded \(that is, the body is an implicit PROGN)."
+  ;; reference implementation posted to comp.lang.lisp as
+  ;; <cy3bshuf30f.fsf@ljosa.com> by Vebjorn Ljosa - see also
+  ;; <http://www.cliki.net/Common%20Lisp%20Utilities>
+  `(let ,(mapcar #'(lambda (binding)
+                     (check-type binding (or cons symbol))
+                     (if (consp binding)
+                       (destructuring-bind (var x) binding
+                         (check-type var symbol)
+                         `(,var (gensym ,(etypecase x
+                                          (symbol (symbol-name x))
+                                          (character (string x))
+                                          (string x)))))
+                       `(,binding (gensym ,(symbol-name binding)))))
+                 bindings)
+         ,@body))
+
+(defmacro with-rebinding (bindings &body body)
+  "WITH-REBINDING ( { var | (var prefix) }* ) form*
+
+Evaluates a series of forms in the lexical environment that is
+formed by adding the binding of each VAR to a fresh, uninterned
+symbol, and the binding of that fresh, uninterned symbol to VAR's
+original value, i.e., its value in the current lexical environment.
+
+The uninterned symbol is created as if by a call to GENSYM with the
+string denoted by PREFIX - or, if PREFIX is not supplied, the string
+denoted by VAR - as argument.
+
+The forms are evaluated in order, and the values of all but the last
+are discarded \(that is, the body is an implicit PROGN)."
+  ;; reference implementation posted to comp.lang.lisp as
+  ;; <cy3wv0fya0p.fsf@ljosa.com> by Vebjorn Ljosa - see also
+  ;; <http://www.cliki.net/Common%20Lisp%20Utilities>
+  (loop for binding in bindings
+        for var = (if (consp binding) (car binding) binding)
+        for name = (gensym)
+        collect `(,name ,var) into renames
+        collect ``(,,var ,,name) into temps
+        finally (return `(let ,renames
+                          (with-unique-names ,bindings
+                            `(let (,,@temps)
+                              ,,@body))))))
+
 (eval-when (:compile-toplevel :execute :load-toplevel)
-  (unless (boundp '+regex-char-code-limit+)
-    (defconstant +regex-char-code-limit+ char-code-limit
-      "The upper exclusive bound on the char-codes of characters
+  (defvar *regex-char-code-limit* char-code-limit
+    "The upper exclusive bound on the char-codes of characters
 which can occur in character classes.
-Change this value BEFORE compiling CL-PPCRE if you don't need
-the full Unicode support of LW, ACL, or CLISP."))
+Change this value BEFORE creating scanners if you don't need
+the full Unicode support of LW, ACL, or CLISP.")
+  (declaim (type fixnum *regex-char-code-limit*))
   
   (defun make-char-hash (test)
     (declare (optimize speed space))
     "Returns a hash-table of all characters satisfying test."
     (loop with hash = (make-hash-table)
-          for c of-type fixnum from 0 below +regex-char-code-limit+
+          for c of-type fixnum from 0 below char-code-limit
           for chr = (code-char c)
           if (and chr (funcall test chr))
             do (setf (gethash chr hash) t)
@@ -101,39 +158,66 @@ i.e. whether it would match [\\s] in Perl."
     "Hash-table containing all whitespace characters."))
 
 (defun merge-hash (hash1 hash2)
-  (declare (optimize speed space))
-  "Returns the \"sum\" of two hashes."
-  (loop for chr being the hash-keys of hash2
-        do (setf (gethash chr hash1) t))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
+  "Returns the \"sum\" of two hashes. This is a destructive operation
+on HASH1."
+  (cond ((> (hash-table-count hash2)
+            *regex-char-code-limit*)
+          ;; don't walk through, e.g., the whole +WORD-CHAR-HASH+ if
+          ;; the user has set *REGEX-CHAR-CODE-LIMIT* to a lower value
+          (loop for c of-type fixnum from 0 below *regex-char-code-limit*
+                for chr = (code-char c)
+                if (and chr (gethash chr hash2))
+                do (setf (gethash chr hash1) t)))
+        (t
+          (loop for chr being the hash-keys of hash2
+                do (setf (gethash chr hash1) t))))
   hash1)
 
 (defun merge-inverted-hash (hash1 hash2)
-  (declare (optimize speed space))
-  "Returns the \"sum\" of hash1 and the \"inverse\" of hash2."
-  (loop for c of-type fixnum from 0 below +regex-char-code-limit+
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
+  "Returns the \"sum\" of HASH1 and the \"inverse\" of HASH2. This is
+a destructive operation on HASH1."
+  (loop for c of-type fixnum from 0 below *regex-char-code-limit*
         for chr = (code-char c)
         if (and chr (not (gethash chr hash2)))
-            do (setf (gethash chr hash1) t))
+          do (setf (gethash chr hash1) t))
   hash1)
 
 (defun create-ranges-from-hash (hash &key downcasep)
-  (declare (optimize speed space))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Tries to identify up to three intervals (with respect to CHAR<)
 which together comprise HASH. Returns NIL if this is not possible.
 If DOWNCASEP is true it will treat the hash-table as if it represents
 both the lower-case and the upper-case variants of its members and
 will only return the respective lower-case intervals."
   ;; discard empty hash-tables
-  (unless (plusp (hash-table-count hash))
+  (unless (and hash (plusp (hash-table-count hash)))
     (return-from create-ranges-from-hash nil))
   (loop with min1 and min2 and min3
         and max1 and max2 and max3
         ;; loop through all characters in HASH, sorted by CHAR<
-        for chr in (sort (loop for chr being the hash-keys of hash
-                               collect (if downcasep
-                                         (char-downcase chr)
-                                         chr))
-                         #'char<)
+        for chr in (sort (the list
+                           (loop for chr being the hash-keys of hash
+                                 collect (if downcasep
+                                           (char-downcase chr)
+                                           chr)))
+		         #'char<)
         for code = (char-code chr)
         ;; MIN1, MAX1, etc. are _exclusive_
         ;; bounds of the intervals identified so far
@@ -142,28 +226,28 @@ will only return the respective lower-case intervals."
                ;; this will only happen once, for the first character
                (setq min1 (1- code)
                      max1 (1+ code)))
-             ((<= min1 code max1)
+             ((<= (the fixnum min1) code (the fixnum max1))
                ;; we're here as long as CHR fits into the first interval
-               (setq min1 (min min1 (1- code))
-                     max1 (max max1 (1+ code))))
+               (setq min1 (min (the fixnum min1) (1- code))
+                     max1 (max (the fixnum max1) (1+ code))))
              ((not min2)
                ;; we need to open a second interval
                ;; this'll also happen only once
                (setq min2 (1- code)
                      max2 (1+ code)))
-             ((<= min2 code max2)
+             ((<= (the fixnum min2) code (the fixnum max2))
                ;; CHR fits into the second interval
-               (setq min2 (min min2 (1- code))
-                     max2 (max max2 (1+ code))))
+               (setq min2 (min (the fixnum min2) (1- code))
+                     max2 (max (the fixnum max2) (1+ code))))
              ((not min3)
                ;; we need to open the third interval
                ;; happens only once
                (setq min3 (1- code)
                      max3 (1+ code)))
-             ((<= min3 code max3)
+             ((<= (the fixnum min3) code (the fixnum max3))
                ;; CHR fits into the third interval
-               (setq min3 (min min3 (1- code))
-                     max3 (max max3 (1+ code))))
+               (setq min3 (min (the fixnum min3) (1- code))
+                     max3 (max (the fixnum max3) (1+ code))))
              (t
                ;; we're out of luck, CHR doesn't fit
                ;; into one of the three intervals
@@ -176,3 +260,54 @@ will only return the respective lower-case intervals."
                                 (and max2 (code-char (1- max2)))
                                 (and min3 (code-char (1+ min3)))
                                 (and max3 (code-char (1- max3)))))))
+
+(defmacro maybe-coerce-to-simple-string (string)
+  (with-unique-names (=string=)
+    `(let ((,=string= ,string))
+      (cond ((simple-string-p ,=string=)
+              ,=string=)
+            (t
+              (coerce ,=string= 'simple-string))))))
+
+(declaim (inline nsubseq))
+(defun nsubseq (sequence start &optional (end (length sequence)))
+  "Return a subsequence by pointing to location in original sequence."
+  (make-array (- end start)
+              :element-type (array-element-type sequence)
+              :displaced-to sequence
+              :displaced-index-offset start))
+
+(defun normalize-var-list (var-list)
+  "Utility function for REGISTER-GROUPS-BIND and
+DO-REGISTER-GROUPS. Creates the long form \(a list of \(FUNCTION VAR)
+entries) out of the short form of VAR-LIST."
+  (loop for element in var-list
+        if (consp element)
+          nconc (loop for var in (rest element)
+                      collect (list (first element) var))
+        else
+          collect (list '(function identity) element)))
+
+(defun string-list-to-simple-string (string-list)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
+  "Concatenates a list of strings to one simple-string."
+  ;; this function provided by JP Massar; note that we can't use APPLY
+  ;; with CONCATENATE here because of CALL-ARGUMENTS-LIMIT
+  (let ((total-size 0))
+    (declare (type fixnum total-size))
+    (dolist (string string-list)
+      #-genera (declare (type string string))
+      (incf total-size (length string)))
+    (let ((result-string (make-sequence 'simple-string total-size))
+          (curr-pos 0))
+      (declare (type fixnum curr-pos))
+      (dolist (string string-list)
+        #-genera (declare (type string string))
+        (replace result-string string :start1 curr-pos)
+        (incf curr-pos (length string)))
+      result-string)))

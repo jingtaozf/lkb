@@ -7,7 +7,7 @@
 ;;; rather crazy micro-optimizations which were introduced to be as
 ;;; competitive with Perl as possible in tight loops.
 
-;;; Copyright (c) 2002, Dr. Edmund Weitz. All rights reserved.
+;;; Copyright (c) 2002-2004, Dr. Edmund Weitz. All rights reserved.
 
 ;;; Redistribution and use in source and binary forms, with or without
 ;;; modification, are permitted provided that the following conditions
@@ -38,14 +38,14 @@
 (defmacro incf-after (place &optional (delta 1) &environment env)
   "Utility macro inspired by C's \"place++\", i.e. first return the
 value of PLACE and afterwards increment it by DELTA."
-  (let ((=temp= (gensym)))
+  (with-unique-names (%temp)
     (multiple-value-bind (vars vals store-vars writer-form reader-form)
         (get-setf-expansion place env)
       `(let* (,@(mapcar #'list vars vals)
-              (,=temp= ,reader-form)
-              (,(car store-vars) (+ ,=temp= ,delta)))
+              (,%temp ,reader-form)
+              (,(car store-vars) (+ ,%temp ,delta)))
         ,writer-form
-        ,=temp=))))
+        ,%temp))))
 
 ;; code for greedy repetitions with minimum zero
 
@@ -204,7 +204,7 @@ of fixed length and doesn't contain registers."
                   (create-greedy-everything-matcher maximum min-rest next-fn)
                   (greedy-constant-length-closure
                    (char/= #\Newline (schar *string* curr-pos)))))
-              (otherwise
+              (t
                 ;; the general case - we build an inner matcher which
                 ;; just checks for immediate success, i.e. NEXT-FN is
                 ;; #'IDENTITY
@@ -466,7 +466,7 @@ of fixed length and doesn't contain registers."
                   ;; a dot which has to watch out for #\Newline
                   (non-greedy-constant-length-closure
                    (char/= #\Newline (schar *string* curr-pos)))))
-              (otherwise
+              (t
                 ;; the general case - we build an inner matcher which
                 ;; just checks for immediate success, i.e. NEXT-FN is
                 ;; #'IDENTITY
@@ -721,14 +721,14 @@ length and doesn't contain registers."
               (declare (type fixnum start-pos))
               (let ((next-pos (+ start-pos repetitions)))
                 (declare (type fixnum next-pos))
-                (or (<= next-pos *end-pos*)
-                    (funcall next-fn next-pos))))
+                (and (<= next-pos *end-pos*)
+                     (funcall next-fn next-pos))))
             ;; a dot which is not in single-line-mode - make sure we
             ;; don't match #\Newline
             (constant-repetition-constant-length-closure
              (and (char/= #\Newline (schar *string* curr-pos))
                   (1+ curr-pos)))))
-        (otherwise
+        (t
           ;; the general case - we build an inner matcher which just
           ;; checks for immediate success, i.e. NEXT-FN is #'IDENTITY
           (let ((inner-matcher (create-matcher-aux regex #'identity)))
@@ -835,12 +835,12 @@ that REPETITION has a constant number of repetitions."
                 (zerop maximum))
             ;; this should have been optimized away by CONVERT but just
             ;; in case...
-            (error "Got REPETITION with MAXIMUM 0~%"))
+            (error "Got REPETITION with MAXIMUM 0 \(should not happen)"))
           ((and maximum
                 (= minimum maximum 1))
             ;; this should have been optimized away by CONVERT but just
             ;; in case...
-            (error "Got REPETITION with MAXIMUM 1 and MINIMUM 1~%"))
+            (error "Got REPETITION with MAXIMUM 1 and MINIMUM 1 \(should not happen)"))
           ((and (eql minimum maximum)
                 len
                 (not contains-register-p))

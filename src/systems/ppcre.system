@@ -32,18 +32,30 @@
 (pushnew :ppcre *features*)
 
 (defsystem "ppcre"
-    :source-pathname (dir-append (get-sources-dir "pvm") '(:relative "ppcre"))
-    :binary-pathname (dir-append (get-binaries-dir "pvm") '(:relative "ppcre"))
+    :source-pathname (dir-append
+                      (get-sources-dir "pppcre") '(:relative "ppcre"))
+    :binary-pathname (dir-append
+                      (get-binaries-dir "pppcre") '(:relative "ppcre"))
+    :source-extension "lisp"
     :source-extension "lisp"
     :components ((:file "packages")
                  (:file "specials" :depends-on ("packages"))
                  (:file "util" :depends-on ("packages"))
-                 (:file "lexer" :depends-on ("util" "specials"))
+                 (:file "errors" :depends-on ("util"))
+                 #-:use-acl-regexp2-engine
+                 (:file "lexer" :depends-on ("errors" "specials"))
+                 #-:use-acl-regexp2-engine
                  (:file "parser" :depends-on ("lexer"))
+                 #-:use-acl-regexp2-engine
                  (:file "regex-class" :depends-on ("parser"))
+                 #-:use-acl-regexp2-engine
                  (:file "convert" :depends-on ("regex-class"))
+                 #-:use-acl-regexp2-engine
                  (:file "optimize" :depends-on ("convert"))
+                 #-:use-acl-regexp2-engine
                  (:file "closures" :depends-on ("optimize" "specials"))
+                 #-:use-acl-regexp2-engine
                  (:file "repetition-closures" :depends-on ("closures"))
+                 #-:use-acl-regexp2-engine
                  (:file "scanner" :depends-on ("repetition-closures"))
                  (:file "api" :depends-on ("scanner"))))

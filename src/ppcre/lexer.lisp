@@ -9,7 +9,7 @@
 ;;; has opened so far. (The latter is necessary for interpreting
 ;;; strings like "\\10" correctly.)
 
-;;; Copyright (c) 2002, Dr. Edmund Weitz. All rights reserved.
+;;; Copyright (c) 2002-2004, Dr. Edmund Weitz. All rights reserved.
 
 ;;; Redistribution and use in source and binary forms, with or without
 ;;; modification, are permitted provided that the following conditions
@@ -37,15 +37,14 @@
 
 (in-package #:cl-ppcre)
 
-(defun fix-pos (pos)
-  (declare (optimize speed space))
-  (declare (type fixnum pos))
-  "Will fix positions reported by error messages so that they match the
-original regex string and not the one prefixed by modifiers like (?i)."
-  (- pos *error-msg-offset*))
-
+(declaim (inline map-char-to-special-class))
 (defun map-char-to-special-char-class (chr)
-  (declare (optimize speed space))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Maps escaped characters like \"\\d\" to the tokens which represent
 their associated character classes."
   (case chr
@@ -62,219 +61,272 @@ their associated character classes."
     ((#\S)
       :non-whitespace-char-class)))
 
-(defclass lexer ()
-  ((str :initarg :str
-        :reader str
-        :type string
-        :documentation  "The regex string which is lexed by this lexer.")
-   (len :reader len
-        :type fixnum
-        :documentation "The length of the regex string.")
-   (reg :initform 0
-        :accessor reg
-        :type fixnum
-        :documentation "The number of register groups opened so far.")
-   (pos :initform 0
-        :accessor pos
-        :type fixnum
-        :documentation "The current position within the regex string,
-i.e. the next character that will be read.")
-   ;; looks like we actually don't need a stack here,
-   ;; remembering one position would suffice - but hey...
-   (last-pos :initform nil
-             :accessor last-pos
-             :documentation "A stack which holds older positions
-the lexer might wish to get back to."))
-  (:documentation "LEXER objects are used to hold the regex string which is
-currently lexed and to keep track of the lexer's state."))
+(locally
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
+  (defstruct (lexer (:constructor make-lexer-internal))
+    "LEXER structures are used to hold the regex string which is
+currently lexed and to keep track of the lexer's state."
+    (str ""
+         :type string
+         :read-only t)
+    (len 0
+         :type fixnum
+         :read-only t)
+    (reg 0
+         :type fixnum)
+    (pos 0
+         :type fixnum)
+    (last-pos nil
+              :type list)))
 
-(defmethod initialize-instance :after ((lexer lexer) &rest init-args)
-  (declare (optimize speed space))
-  (declare (ignore init-args))
-  "Computes the length of the regex string after initializing the lexer object."
-  (setf (slot-value lexer 'len) (length (str lexer))))
+(defun make-lexer (string)
+  (declare (inline make-lexer-internal)
+           #-genera (type string string))
+  (make-lexer-internal :str (maybe-coerce-to-simple-string string)
+                       :len (length string)))
 
-(defmethod end-of-string-p ((lexer lexer))
-  (declare (optimize speed space))
+(declaim (inline end-of-string-p))
+(defun end-of-string-p (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Tests whether we're at the end of the regex string."
-  (<= (len lexer) (pos lexer)))
+  (<= (lexer-len lexer)
+      (lexer-pos lexer)))
 
-(defmethod next-char-non-extended ((lexer lexer))
-  (declare (optimize speed space))
-  "Returns the next character which is to be examined and updates the
-POS slot. Does not respect extended mode."
-  (with-accessors ((pos pos) (str str))
-      lexer
-    (if (end-of-string-p lexer)
-      nil
-      (prog1
-        (char str pos)
-        (incf pos)))))
-
-(defmethod next-char ((lexer lexer))
-  (declare (optimize speed space))
-  (declare (special extended-mode-p))
-  "Returns the next character which is to be examined and updates the
-POS slot. Respects extended mode, i.e.  whitespace, comments, and also
-nested comments are skipped if applicable."
-  (with-slots ((pos pos))
-      lexer
-    (let ((next-char (next-char-non-extended lexer))
-          last-loop-pos)
-      (loop
-        ;; remember where we started
-        (setq last-loop-pos pos)
-        ;; first we look for nested comments like (?#foo)
-        (when (and next-char
-                   (char= next-char #\()
-                   (looking-at-p lexer #\?))
-          (incf pos)
-          (cond ((looking-at-p lexer #\#)
-                  ;; must be a nested comment - so we have to search
-                  ;; for the closing parenthesis
-                  (let ((error-pos (- pos 2)))
-                    (unless
-                        ;; loop 'til ')' or end of regex string and
-                        ;; return NIL if ')' wasn't encountered
-                        (loop for skip-char = next-char
-                                  then (next-char-non-extended lexer)
-                              while (and skip-char
-                                         (char/= skip-char #\)))
-                              finally (return skip-char))
-                      (error "Comment group started at position ~A not closed"
-                             (fix-pos error-pos))))
-                  (setq next-char (next-char-non-extended lexer)))
-                (t
-                  ;; undo effect of previous INCF if we didn't see a #
-                  (decf pos))))
-        (when extended-mode-p
-          ;; now - if we're in extended mode - we skip whitespace and
-          ;; comments; repeat the following loop while we look at
-          ;; whitespace or #\#
-          (loop while (and next-char
-                           (or (char= next-char #\#)
-                               (whitespacep next-char)))
-                do (setq next-char
-                           (if (char= next-char #\#)
-                             ;; if we saw a comment marker skip until
-                             ;; we're behind #\Newline...
-                             (loop for skip-char = next-char
-                                     then (next-char-non-extended lexer)
-                                   while (and skip-char
-                                              (char/= skip-char #\Newline))
-                                   finally (return (next-char-non-extended lexer)))
-                             ;; ...otherwise (whitespace) skip until
-                             ;; we see the next non-whitespace
-                             ;; character
-                             (loop for skip-char = next-char
-                                     then (next-char-non-extended lexer)
-                                   while (and skip-char
-                                              (whitespacep skip-char))
-                                   finally (return skip-char))))))
-        ;; if the position has moved we have to repeat our tests
-        ;; because of cases like /^a (?#xxx) (?#yyy) {3}c/x which
-        ;; would be equivalent to /^a{3}c/ in Perl
-        (unless (> pos last-loop-pos)
-          (return next-char))))))
-
-(defmethod looking-at-p ((lexer lexer) chr)
-  (declare (optimize speed space))
+(declaim (inline looking-at-p))
+(defun looking-at-p (lexer chr)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Tests whether the next character the lexer would see is CHR.
 Does not respect extended mode."
   (and (not (end-of-string-p lexer))
-       (char= (char (str lexer) (pos lexer))
+       (char= (schar (lexer-str lexer) (lexer-pos lexer))
               chr)))
 
-(defmethod fail ((lexer lexer))
-  (declare (optimize speed space))
-  "Moves (POS LEXER) back to the last position stored in (LAST-POS LEXER)
-and pops the LAST-POS stack."
-  (with-accessors ((pos pos) (last-pos last-pos))
-      lexer
-    (unless last-pos
-      (error "LAST-POS stack of LEXER ~A is empty" lexer))
-    (setq pos (pop last-pos))
-    nil))
+(declaim (inline next-char-non-extended))
+(defun next-char-non-extended (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
+  "Returns the next character which is to be examined and updates the
+POS slot. Does not respect extended mode."
+  (cond ((end-of-string-p lexer)
+          nil)
+        (t
+          (prog1
+            (schar (lexer-str lexer) (lexer-pos lexer))
+            (incf (lexer-pos lexer))))))
 
-(defmethod get-number ((lexer lexer) &key (radix 10) max-length no-whitespace-p)
-  (declare (optimize speed space))
+(defun next-char (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
+  "Returns the next character which is to be examined and updates the
+POS slot. Respects extended mode, i.e.  whitespace, comments, and also
+nested comments are skipped if applicable."
+  (let ((next-char (next-char-non-extended lexer))
+        last-loop-pos)
+    (loop
+      ;; remember where we started
+      (setq last-loop-pos (lexer-pos lexer))
+      ;; first we look for nested comments like (?#foo)
+      (when (and next-char
+                 (char= next-char #\()
+                 (looking-at-p lexer #\?))
+        (incf (lexer-pos lexer))
+        (cond ((looking-at-p lexer #\#)
+                ;; must be a nested comment - so we have to search for
+                ;; the closing parenthesis
+                (let ((error-pos (- (lexer-pos lexer) 2)))
+                  (unless
+                      ;; loop 'til ')' or end of regex string and
+                      ;; return NIL if ')' wasn't encountered
+                      (loop for skip-char = next-char
+                            then (next-char-non-extended lexer)
+                            while (and skip-char
+                                       (char/= skip-char #\)))
+                            finally (return skip-char))
+                    (signal-ppcre-syntax-error*
+                     error-pos
+                     "Comment group not closed")))
+                (setq next-char (next-char-non-extended lexer)))
+              (t
+                ;; undo effect of previous INCF if we didn't see a #
+                (decf (lexer-pos lexer)))))
+      (when *extended-mode-p*
+        ;; now - if we're in extended mode - we skip whitespace and
+        ;; comments; repeat the following loop while we look at
+        ;; whitespace or #\#
+        (loop while (and next-char
+                         (or (char= next-char #\#)
+                             (whitespacep next-char)))
+              do (setq next-char
+                         (if (char= next-char #\#)
+                           ;; if we saw a comment marker skip until
+                           ;; we're behind #\Newline...
+                           (loop for skip-char = next-char
+                                 then (next-char-non-extended lexer)
+                                 while (and skip-char
+                                            (char/= skip-char #\Newline))
+                                 finally (return (next-char-non-extended lexer)))
+                           ;; ...otherwise (whitespace) skip until we
+                           ;; see the next non-whitespace character
+                           (loop for skip-char = next-char
+                                 then (next-char-non-extended lexer)
+                                 while (and skip-char
+                                            (whitespacep skip-char))
+                                 finally (return skip-char))))))
+      ;; if the position has moved we have to repeat our tests
+      ;; because of cases like /^a (?#xxx) (?#yyy) {3}c/x which
+      ;; would be equivalent to /^a{3}c/ in Perl
+      (unless (> (lexer-pos lexer) last-loop-pos)
+        (return next-char)))))
+
+(declaim (inline fail))
+(defun fail (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
+  "Moves (LEXER-POS LEXER) back to the last position stored in
+\(LEXER-LAST-POS LEXER) and pops the LAST-POS stack."
+  (unless (lexer-last-pos lexer)
+    (signal-ppcre-syntax-error "LAST-POS stack of LEXER ~A is empty" lexer))
+  (setf (lexer-pos lexer) (pop (lexer-last-pos lexer)))
+  nil)
+
+(defun get-number (lexer &key (radix 10) max-length no-whitespace-p)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Read and consume the number the lexer is currently looking at and
 return it. Returns NIL if no number could be identified.
 RADIX is used as in PARSE-INTEGER. If MAX-LENGTH is not NIL we'll read
 at most the next MAX-LENGTH characters. If NO-WHITESPACE-P is not NIL
 we don't tolerate whitespace in front of the number."
-  (when (and no-whitespace-p
-             (not (end-of-string-p lexer))
-             (whitespacep (char (str lexer) (pos lexer))))
+  (when (or (end-of-string-p lexer)
+            (and no-whitespace-p
+                 (whitespacep (schar (lexer-str lexer) (lexer-pos lexer)))))
     (return-from get-number nil))
   (multiple-value-bind (integer new-pos)
-      (parse-integer (str lexer)
-                     :start (pos lexer)
+      (parse-integer (lexer-str lexer)
+                     :start (lexer-pos lexer)
                      :end (if max-length
-                            (let ((end-pos (+ (pos lexer) max-length)))
-                              (if (< end-pos (len lexer))
+                            (let ((end-pos (+ (lexer-pos lexer)
+                                              (the fixnum max-length)))
+                                  (lexer-len (lexer-len lexer)))
+                              (if (< end-pos lexer-len)
                                 end-pos
-                                nil))
-                            nil)
+                                lexer-len))
+                            (lexer-len lexer))
                      :radix radix
                      :junk-allowed t)
-    (cond ((and integer (>= integer 0))
-            (setf (pos lexer) new-pos)
+    (cond ((and integer (>= (the fixnum integer) 0))
+            (setf (lexer-pos lexer) new-pos)
             integer)
           (t nil))))
 
-(defmethod try-number ((lexer lexer) &key (radix 10) max-length no-whitespace-p)
-  (declare (optimize speed space))
+(declaim (inline try-number))
+(defun try-number (lexer &key (radix 10) max-length no-whitespace-p)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Like GET-NUMBER but won't consume anything if no number is seen."
   ;; remember current position
-  (push (pos lexer) (last-pos lexer))
+  (push (lexer-pos lexer) (lexer-last-pos lexer))
   (let ((number (get-number lexer
                             :radix radix
                             :max-length max-length
                             :no-whitespace-p no-whitespace-p)))
     (or number (fail lexer))))
-  
+
+(declaim (inline make-char-from-code))
 (defun make-char-from-code (number error-pos)
-  (declare (optimize speed space))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Create character from char-code NUMBER. NUMBER can be NIL
 which is interpreted as 0. ERROR-POS is the position where
 the corresponding number started within the regex string."
   ;; Only look at rightmost eight bits in compliance with Perl
-  (let ((code (logand #o377 (or number 0))))
+  (let ((code (logand #o377 (the fixnum (or number 0)))))
     (or (and (< code char-code-limit)
              (code-char code))
-        (error "No character for hex-code ~X at position ~A~%"
-               number (fix-pos error-pos)))))
+        (signal-ppcre-syntax-error*
+         error-pos
+         "No character for hex-code ~X"
+         number))))
 
-(defmethod unescape-char ((lexer lexer))
-  (declare (optimize speed space))
-  (declare (special extended-mode-p))
+(defun unescape-char (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Convert the characters(s) following a backslash into a token
 which is returned. This function is to be called when the backslash
 has already been consumed. Special character classes like \\W are
 handled elsewhere."
   (when (end-of-string-p lexer)
-    (error "String ends with backslash"))
+    (signal-ppcre-syntax-error "String ends with backslash"))
   (let ((chr (next-char-non-extended lexer)))
     (case chr
+      ((#\E)
+        ;; if \Q quoting is on this is ignored, otherwise it's just an
+        ;; #\E
+        (if *allow-quoting*
+          :void
+          #\E))
       ((#\c)
         ;; \cx means control-x in Perl
         (let ((next-char (next-char-non-extended lexer)))
           (unless next-char
-            (error "Character missing after '\\c' at position ~A"
-                   (fix-pos (pos lexer))))
+            (signal-ppcre-syntax-error*
+             (lexer-pos lexer)
+             "Character missing after '\\c' at position ~A"))
           (code-char (logxor #x40 (char-code (char-upcase next-char))))))
       ((#\x)
         ;; \x should be followed by a hexadecimal char code,
         ;; two digits or less
-        (let* ((error-pos (pos lexer))
+        (let* ((error-pos (lexer-pos lexer))
                (number (get-number lexer :radix 16 :max-length 2 :no-whitespace-p t)))
           ;; note that it is OK if \x is followed by zero digits
           (make-char-from-code number error-pos)))
       ((#\0 #\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
         ;; \x should be followed by an octal char code,
         ;; three digits or less
-        (let* ((error-pos (decf (pos lexer)))
+        (let* ((error-pos (decf (lexer-pos lexer)))
                (number (get-number lexer :radix 8 :max-length 3)))
           (make-char-from-code number error-pos)))
       ;; the following five character names are 'semi-standard'
@@ -298,13 +350,18 @@ handled elsewhere."
         ;; all other characters aren't affected by a backslash
         chr))))
 
-(defmethod collect-char-class ((lexer lexer))
-  (declare (optimize speed space))
+(defun collect-char-class (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Reads and consumes characters from regex string until a right
-bracket is seen. Assembles them into a list (which is returned) of
-characters, character ranges, like (:RANGE #\A #\E) for a-e, and
+bracket is seen. Assembles them into a list \(which is returned) of
+characters, character ranges, like \(:RANGE #\\A #\\E) for a-e, and
 tokens representing special character classes."
-  (let ((start-pos (pos lexer))         ; remember start for error message
+  (let ((start-pos (lexer-pos lexer))         ; remember start for error message
         hyphen-seen
         last-char
         list)
@@ -312,9 +369,8 @@ tokens representing special character classes."
              "Do the right thing with character C depending on whether
 we're inside a range or not."
              (cond ((and hyphen-seen last-char)
-                     (pop list)
-                     (push (list :range last-char c) list)
-                     (setq last-char nil))
+                     (setf (car list) (list :range last-char c)
+                           last-char nil))
                    (t
                      (push c list)
                      (setq last-char c)))
@@ -338,11 +394,16 @@ we're inside a range or not."
                          ;; if the next character is a hyphen do the same
                          (when (looking-at-p lexer #\-)
                            (push #\- list)
-                           (incf (pos lexer)))
+                           (incf (lexer-pos lexer)))
                          (setq hyphen-seen nil))
+                       ((#\E)
+                         ;; if \Q quoting is on we ignore \E,
+                         ;; otherwise it's just a plain #\E
+                         (unless *allow-quoting*
+                           (handle-char #\E)))
                        (otherwise
                          ;; otherwise unescape the following character(s)
-                         (decf (pos lexer))
+                         (decf (lexer-pos lexer))
                          (handle-char (unescape-char lexer))))))
                  (first
                    ;; the first character must not be a right bracket
@@ -371,31 +432,34 @@ we're inside a range or not."
                    (handle-char c))))
       ;; we can only exit the loop normally if we've reached the end
       ;; of the regex string without seeing a right bracket
-      (error "Missing right bracket to close character class started at pos ~A"
-             (fix-pos start-pos)))))
+      (signal-ppcre-syntax-error*
+       start-pos
+       "Missing right bracket to close character class"))))
 
-(defmethod maybe-parse-flags ((lexer lexer) test-only)
-  (declare (optimize speed space))
-  (declare (special extended-mode-p))
-  "Reads a sequence of modifiers (including #\- to reverse their
+(defun maybe-parse-flags (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
+  "Reads a sequence of modifiers \(including #\\- to reverse their
 meaning) and returns a corresponding list of \"flag\" tokens.  The
 \"x\" modifier is treated specially in that it dynamically modifies
 the behaviour of the lexer itself via the special variable
-EXTENDED-MODE-P (unless TEST-ONLY is true)."
+*EXTENDED-MODE-P*."
   (prog1
     (loop with set = t
           for chr = (next-char-non-extended lexer)
           unless chr
-            do (error "Unexpected end of string")
+            do (signal-ppcre-syntax-error "Unexpected end of string")
           while (find chr "-imsx" :test #'char=)
           ;; the first #\- will invert the meaning of all modifiers
           ;; following it
           if (char= chr #\-)
             do (setq set nil)
-          else if (and (char= chr #\x)
-                       (not test-only))
-            ;; only modify current setting if we're not testing
-            do (setq extended-mode-p set)
+          else if (char= chr #\x)
+            do (setq *extended-mode-p* set)
           else collect (if set
                          (case chr
                            ((#\i)
@@ -411,15 +475,20 @@ EXTENDED-MODE-P (unless TEST-ONLY is true)."
                              :not-multi-line-mode-p)
                            ((#\s)
                              :not-single-line-mode-p))))
-    (decf (pos lexer))))
+    (decf (lexer-pos lexer))))
 
-(defmethod get-quantifier ((lexer lexer))
-  (declare (optimize speed space))
+(defun get-quantifier (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Returns a list of two values (min max) if what the lexer is looking
 at can be interpreted as a quantifier. Otherwise returns NIL and
 resets the lexer to its old position."
   ;; remember starting position for FAIL and UNGET-TOKEN functions
-  (push (pos lexer) (last-pos lexer))
+  (push (lexer-pos lexer) (lexer-last-pos lexer))
   (let ((next-char (next-char lexer)))
     (case next-char
       ((#\*)
@@ -463,242 +532,238 @@ resets the lexer to its old position."
       (otherwise
         (fail lexer)))))
 
-(defmethod get-token ((lexer lexer) &key test-only)
-  (declare (optimize speed space))
+(defun get-token (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Returns and consumes the next token from the regex string (or NIL)."
   ;; remember starting position for UNGET-TOKEN function
-  (with-accessors ((pos pos) (str str) (reg reg) (last-pos last-pos))
-      lexer
-    (push pos last-pos)
-    (let ((next-char (next-char lexer)))
-      (cond (next-char
-              (case next-char
-                ;; the easy cases first - the following six characters
-                ;; always have a special meaning and get translated
-                ;; into tokens immediately
-                ((#\))
-                  :close-paren)
-                ((#\|)
-                  :vertical-bar)
-                ((#\?)
-                  :question-mark)
-                ((#\.)
-                  :everything)
-                ((#\^)
-                  :start-anchor)
-                ((#\$)
-                  :end-anchor)
-                ((#\+ #\*)
-                  ;; quantifiers will always be consumend by
-                  ;; GET-QUANTIFIER, they must not appear here
-                  (error "Quantifier '~A' not allowed at position ~A"
-                         next-char (fix-pos (1- pos))))
-                ((#\{)
-                  ;; left brace isn't a special character in it's own
-                  ;; right but we must check if what follows might
-                  ;; look like a quantifier
-                  (let ((this-pos pos)
-                        (this-last-pos last-pos))
-                    (unget-token lexer)
-                    (when (get-quantifier lexer)
-                      (error "Quantifier '~A' not allowed at position ~A"
-                             (subseq str (car this-last-pos) pos)
-                             (fix-pos (car this-last-pos))))
-                    (setq pos this-pos
-                          last-pos this-last-pos)
-                    next-char))
-                ((#\[)
-                  ;; left bracket always starts a character class
-                  (if test-only
-                    ;; if we're only testing the contents of the
-                    ;; character class don't really matter
-                    '(:char-class)
-                    (cons  (cond ((looking-at-p lexer #\^)
-                                   (incf pos)
-                                   :inverted-char-class)
-                                 (t
-                                   :char-class))
-                           (collect-char-class lexer))))
-                ((#\\)
-                  ;; backslash might mean different things so we have
-                  ;; to peek one char ahead:
-                  (let ((next-char (next-char-non-extended lexer)))
-                    (case next-char
-                      ((#\A)
-                        :modeless-start-anchor)
-                      ((#\Z)
-                        :modeless-end-anchor)
-                      ((#\z)
-                        :modeless-end-anchor-no-newline)
-                      ((#\b)
-                        :word-boundary)
-                      ((#\B)
-                        :non-word-boundary)
-                      ((#\d #\D #\w #\W #\s #\S)
-                        ;; these will be treated like character classes
-                        (map-char-to-special-char-class next-char))
-                      ((#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
-                        ;; uh, a digit...
-                        (let* ((old-pos (decf pos))
-                               ;; ...so let's get the whole number first
-                               (backref-number (get-number lexer)))
-                          (cond ((and (> backref-number reg)
-                                      (<= 10 backref-number))
-                                  ;; \10 and higher are treated as
-                                  ;; octal character codes if we
-                                  ;; haven't opened that much register
-                                  ;; groups yet
-                                  (setq pos old-pos)
-                                  ;; re-read the number from the old
-                                  ;; position and convert it to its
-                                  ;; corresponding character
-                                  (make-char-from-code (get-number lexer :radix 8 :max-length 3)
-                                                       old-pos))
-                                (t
-                                  ;; otherwise this must refer to a
-                                  ;; backreference
-                                  (list :back-reference backref-number)))))
-                      ((#\0)
-                        ;; this always means an octal character code
-                        ;; (at most three digits)
-                        (let ((old-pos (decf pos)))
-                          (make-char-from-code (get-number lexer :radix 8 :max-length 3)
-                                               old-pos)))
-                      (otherwise
-                        ;; in all other cases just unescape the
-                        ;; character
-                        (decf pos)
-                        (unescape-char lexer)))))
-                ((#\()
-                  ;; an open parenthesis might mean different things
-                  ;; depending on what follows...
-                  (cond ((looking-at-p lexer #\?)
-                          ;; this is the case '(?' (and probably more behind)
-                          (incf pos)
-                          ;; we have to check for modifiers first
-                          ;; because a colon might follow
-                          (let* ((flags (maybe-parse-flags lexer test-only))
-                                 (next-char (next-char-non-extended lexer)))
-                            ;; modifiers are only allowed if a colon
-                            ;; or a closing parenthesis are following
-                            (when (and flags
-                                       (not (find next-char ":)" :test #'char=)))
-                              (error "Sequence '~A' not recognized at position ~A"
-                                     (subseq str (car last-pos) pos)
-                                     (fix-pos (car last-pos))))
-                            (case next-char
-                              ((nil)
-                                ;; syntax error
-                                (error "End of string following '(?'"))
-                              ((#\))
-                                ;; an empty group except for the flags
-                                ;; (if there are any)
-                                (or (and flags
-                                         (cons :flags flags))
-                                    :void))
-                              ((#\()
-                                ;; branch
-                                :open-paren-paren)
-                              ((#\>)
-                                ;; standalone
-                                :open-paren-greater)
-                              ((#\=)
-                                ;; positive look-ahead
-                                :open-paren-equal)
-                              ((#\!)
-                                ;; negative look-ahead
-                                :open-paren-exclamation)
-                              ((#\:)
-                                ;; non-capturing group - return flags
-                                ;; as second value
-                                (values :open-paren-colon flags))
-                              ((#\<)
-                                ;; might be a look-behind assertion,
-                                ;; so check next character
-                                (let ((next-char (next-char-non-extended lexer)))
-                                  (case next-char
-                                    ((#\=)
-                                      ;; positive look-behind
-                                      :open-paren-less-equal)
-                                    ((#\!)
-                                      ;; negative look-behind
-                                      :open-paren-less-exclamation)
-                                    ((#\))
-                                      ;; Perl allows "(?<)" and treats
-                                      ;; it like a null string
-                                      :void)
-                                    ((nil)
-                                      ;; syntax error
-                                      (error "End of string following '(?<'"))
-                                    (t
-                                      ;; also syntax error
-                                      (error "Character '~A' may not follow '(?<' at position ~A"
-                                             next-char (fix-pos (1- pos)))))))
-                              (otherwise
-                                (error "Character '~A' may not follow '(?' at position ~A"
-                                       next-char (fix-pos (1- pos)))))))
-                        (t
-                          ;; if next-char was not #\? (this is within
-                          ;; the first COND), we've just seen an
-                          ;; opening parenthesis and leave it like
-                          ;; that
-                          :open-paren)))
-                (otherwise
-                  ;; all other characters are their own tokens
-                  next-char)))
-            ;; we didn't get a character (this if the "else" branch from
-            ;; the first IF), so we don't return a token but NIL
-            (t
-              (pop last-pos)
-              nil)))))
-  
-(defmethod unget-token ((lexer lexer))
-  (declare (optimize speed space))
-  "Moves the lexer back to the last position stored in the LAST-POS stack."
-  (with-accessors ((pos pos) (last-pos last-pos))
-      lexer
-    (if last-pos
-      (setq pos (pop last-pos))
-      (error "No token to unget"))))
+  (push (lexer-pos lexer)
+        (lexer-last-pos lexer))
+  (let ((next-char (next-char lexer)))
+    (cond (next-char
+            (case next-char
+              ;; the easy cases first - the following six characters
+              ;; always have a special meaning and get translated
+              ;; into tokens immediately
+              ((#\))
+                :close-paren)
+              ((#\|)
+                :vertical-bar)
+              ((#\?)
+                :question-mark)
+              ((#\.)
+                :everything)
+              ((#\^)
+                :start-anchor)
+              ((#\$)
+                :end-anchor)
+              ((#\+ #\*)
+                ;; quantifiers will always be consumend by
+                ;; GET-QUANTIFIER, they must not appear here
+                (signal-ppcre-syntax-error*
+                 (1- (lexer-pos lexer))
+                 "Quantifier '~A' not allowed"
+                 next-char))
+              ((#\{)
+                ;; left brace isn't a special character in it's own
+                ;; right but we must check if what follows might
+                ;; look like a quantifier
+                (let ((this-pos (lexer-pos lexer))
+                      (this-last-pos (lexer-last-pos lexer)))
+                  (unget-token lexer)
+                  (when (get-quantifier lexer)
+                    (signal-ppcre-syntax-error*
+                     (car this-last-pos)
+                     "Quantifier '~A' not allowed"
+                     (subseq (lexer-str lexer)
+                             (car this-last-pos)
+                             (lexer-pos lexer))))
+                  (setf (lexer-pos lexer) this-pos
+                        (lexer-last-pos lexer) this-last-pos)
+                  next-char))
+              ((#\[)
+                ;; left bracket always starts a character class
+                (cons  (cond ((looking-at-p lexer #\^)
+                               (incf (lexer-pos lexer))
+                               :inverted-char-class)
+                             (t
+                               :char-class))
+                       (collect-char-class lexer)))
+              ((#\\)
+                ;; backslash might mean different things so we have
+                ;; to peek one char ahead:
+                (let ((next-char (next-char-non-extended lexer)))
+                  (case next-char
+                    ((#\A)
+                      :modeless-start-anchor)
+                    ((#\Z)
+                      :modeless-end-anchor)
+                    ((#\z)
+                      :modeless-end-anchor-no-newline)
+                    ((#\b)
+                      :word-boundary)
+                    ((#\B)
+                      :non-word-boundary)
+                    ((#\d #\D #\w #\W #\s #\S)
+                      ;; these will be treated like character classes
+                      (map-char-to-special-char-class next-char))
+                    ((#\1 #\2 #\3 #\4 #\5 #\6 #\7 #\8 #\9)
+                      ;; uh, a digit...
+                      (let* ((old-pos (decf (lexer-pos lexer)))
+                             ;; ...so let's get the whole number first
+                             (backref-number (get-number lexer)))
+                        (declare (type fixnum backref-number))
+                        (cond ((and (> backref-number (lexer-reg lexer))
+                                    (<= 10 backref-number))
+                                ;; \10 and higher are treated as octal
+                                ;; character codes if we haven't
+                                ;; opened that much register groups
+                                ;; yet
+                                (setf (lexer-pos lexer) old-pos)
+                                ;; re-read the number from the old
+                                ;; position and convert it to its
+                                ;; corresponding character
+                                (make-char-from-code (get-number lexer :radix 8 :max-length 3)
+                                                     old-pos))
+                              (t
+                                ;; otherwise this must refer to a
+                                ;; backreference
+                                (list :back-reference backref-number)))))
+                    ((#\0)
+                      ;; this always means an octal character code
+                      ;; (at most three digits)
+                      (let ((old-pos (decf (lexer-pos lexer))))
+                        (make-char-from-code (get-number lexer :radix 8 :max-length 3)
+                                             old-pos)))
+                    (otherwise
+                      ;; in all other cases just unescape the
+                      ;; character
+                      (decf (lexer-pos lexer))
+                      (unescape-char lexer)))))
+              ((#\()
+                ;; an open parenthesis might mean different things
+                ;; depending on what follows...
+                (cond ((looking-at-p lexer #\?)
+                        ;; this is the case '(?' (and probably more behind)
+                        (incf (lexer-pos lexer))
+                        ;; we have to check for modifiers first
+                        ;; because a colon might follow
+                        (let* ((flags (maybe-parse-flags lexer))
+                               (next-char (next-char-non-extended lexer)))
+                          ;; modifiers are only allowed if a colon
+                          ;; or a closing parenthesis are following
+                          (when (and flags
+                                     (not (find next-char ":)" :test #'char=)))
+                            (signal-ppcre-syntax-error*
+                             (car (lexer-last-pos lexer))
+                             "Sequence '~A' not recognized"
+                             (subseq (lexer-str lexer)
+                                     (car (lexer-last-pos lexer))
+                                     (lexer-pos lexer))))
+                          (case next-char
+                            ((nil)
+                              ;; syntax error
+                              (signal-ppcre-syntax-error
+                               "End of string following '(?'"))
+                            ((#\))
+                              ;; an empty group except for the flags
+                              ;; (if there are any)
+                              (or (and flags
+                                       (cons :flags flags))
+                                  :void))
+                            ((#\()
+                              ;; branch
+                              :open-paren-paren)
+                            ((#\>)
+                              ;; standalone
+                              :open-paren-greater)
+                            ((#\=)
+                              ;; positive look-ahead
+                              :open-paren-equal)
+                            ((#\!)
+                              ;; negative look-ahead
+                              :open-paren-exclamation)
+                            ((#\:)
+                              ;; non-capturing group - return flags as
+                              ;; second value
+                              (values :open-paren-colon flags))
+                            ((#\<)
+                              ;; might be a look-behind assertion, so
+                              ;; check next character
+                              (let ((next-char (next-char-non-extended lexer)))
+                                (case next-char
+                                  ((#\=)
+                                    ;; positive look-behind
+                                    :open-paren-less-equal)
+                                  ((#\!)
+                                    ;; negative look-behind
+                                    :open-paren-less-exclamation)
+                                  ((#\))
+                                    ;; Perl allows "(?<)" and treats
+                                    ;; it like a null string
+                                    :void)
+                                  ((nil)
+                                    ;; syntax error
+                                    (signal-ppcre-syntax-error
+                                     "End of string following '(?<'"))
+                                  (t
+                                    ;; also syntax error
+                                    (signal-ppcre-syntax-error*
+                                     (1- (lexer-pos lexer))
+                                     "Character '~A' may not follow '(?<'"
+                                     next-char )))))
+                            (otherwise
+                              (signal-ppcre-syntax-error*
+                               (1- (lexer-pos lexer))
+                               "Character '~A' may not follow '(?'"
+                               next-char)))))
+                      (t
+                        ;; if next-char was not #\? (this is within
+                        ;; the first COND), we've just seen an opening
+                        ;; parenthesis and leave it like that
+                        :open-paren)))
+              (otherwise
+                ;; all other characters are their own tokens
+                next-char)))
+          ;; we didn't get a character (this if the "else" branch from
+          ;; the first IF), so we don't return a token but NIL
+          (t
+            (pop (lexer-last-pos lexer))
+            nil))))
 
-(defmethod start-of-subexpr-p ((lexer lexer))
-  (declare (optimize speed space))
+(declaim (inline unget-token))
+(defun unget-token (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
+  "Moves the lexer back to the last position stored in the LAST-POS stack."
+  (if (lexer-last-pos lexer)
+    (setf (lexer-pos lexer)
+            (pop (lexer-last-pos lexer)))
+    (error "No token to unget \(this should not happen)")))
+
+(declaim (inline start-of-subexpr-p))
+(defun start-of-subexpr-p (lexer)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Tests whether the next token can start a valid sub-expression, i.e.
-a stand-alone regex. So, e.g., tokens like :QUESTION-MARK are not
-allowed. Note that no token (i.e. we're at the end of the regex
-string) is fine."
-  (let ((token (get-token lexer :test-only t)))
-    (cond (token
-            (unget-token lexer)
-            (or (member token '(:open-paren
-                                :open-paren-colon
-                                :open-paren-greater
-                                :open-paren-paren
-                                :open-paren-equal
-                                :open-paren-exclamation
-                                :open-paren-less-equal
-                                :open-paren-less-exclamation
-                                :digit-class
-                                :non-digit-class
-                                :whitespace-char-class
-                                :non-whitespace-char-class
-                                :word-char-class
-                                :non-word-char-class
-                                :start-anchor
-                                :end-anchor
-                                :modeless-start-anchor
-                                :modeless-end-anchor
-                                :modeless-end-anchor-no-newline
-                                :word-boundary
-                                :non-word-boundary
-                                :everything
-                                :void)
-                        :test #'eq)
-                (and (consp token)
-                     (member (car token) '(:char-class
-                                           :inverted-char-class
-                                           :back-reference
-                                           :flags)
-                             :test #'eq))
-                (characterp token)))
-          (t nil))))
+a stand-alone regex."
+  (let* ((pos (lexer-pos lexer))
+         (next-char (next-char lexer)))
+    (not (or (null next-char)
+             (prog1
+               (member (the character next-char)
+                       '(#\) #\|)
+                       :test #'char=)
+               (setf (lexer-pos lexer) pos))))))

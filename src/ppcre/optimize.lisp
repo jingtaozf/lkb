@@ -4,7 +4,7 @@
 ;;; This file contains optimizations which can be applied to converted
 ;;; parse trees.
 
-;;; Copyright (c) 2002, Dr. Edmund Weitz. All rights reserved.
+;;; Copyright (c) 2002-2004, Dr. Edmund Weitz. All rights reserved.
 
 ;;; Redistribution and use in source and binary forms, with or without
 ;;; modification, are permitted provided that the following conditions
@@ -32,55 +32,75 @@
 
 (in-package #:cl-ppcre)
 
-(defun string-list-to-simple-string (string-list)
-  (declare (optimize speed space))
-  "Concatenates a list of strings to one simple-string."
-  ;; note that we can't use APPLY with CONCATENATE here because of
-  ;; CALL-ARGUMENTS-LIMIT
-  (reduce #'(lambda (str1 str2)
-              (concatenate 'simple-string str1 str2))
-          string-list
-          :initial-value (make-string 0)))
-
 (defgeneric flatten (regex)
-  (declare (optimize speed space))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   (:documentation "Merges adjacent sequences and alternations, i.e. it
 transforms #<SEQ #<STR \"a\"> #<SEQ #<STR \"b\"> #<STR \"c\">>> to
 #<SEQ #<STR \"a\"> #<STR \"b\"> #<STR \"c\">>. This is a destructive
 operation on REGEX."))
 
 (defmethod flatten ((seq seq))
-  (with-slots ((elements elements))
-      seq
-    (setq elements
-            ;; loop through all elements of the sequence
-            (loop for element in elements
-                  ;; flatten inner elements first
-                  for flattened-element = (flatten element)
-                  if (typep flattened-element 'seq)
-                    ;; "splice" sequences into collected list
-                    nconc (elements flattened-element)
-                  else if flattened-element
-                    ;; and collect other regexes as is
-                    nconc (list flattened-element)))
-    (if elements
-      seq
-      (make-instance 'void))))
+  ;; this looks more complicated than it is because we modify SEQ in
+  ;; place to avoid unnecessary consing
+  (let ((elements-rest (elements seq)))
+    (loop
+      (unless elements-rest
+        (return))
+      (let ((flattened-element (flatten (car elements-rest)))
+            (next-elements-rest (cdr elements-rest)))
+        (cond ((typep flattened-element 'seq)
+                ;; FLATTENED-ELEMENT is a SEQ object, so we "splice"
+                ;; it into out list of elements
+                (let ((flattened-element-elements
+                        (elements flattened-element)))
+                  (setf (car elements-rest)
+                          (car flattened-element-elements)
+                        (cdr elements-rest)
+                          (nconc (cdr flattened-element-elements)
+                                 (cdr elements-rest)))))
+              (t
+                ;; otherwise we just replace the current element with
+                ;; its flattened counterpart
+                (setf (car elements-rest) flattened-element)))
+        (setq elements-rest next-elements-rest))))
+  (let ((elements (elements seq)))
+    (cond ((cadr elements)
+            seq)
+          ((cdr elements)
+            (first elements))
+          (t (make-instance 'void)))))
 
 (defmethod flatten ((alternation alternation))
-  (with-slots ((choices choices))
-      alternation
-    (setq choices
-            ;; loop through all choices of the alternation
-            (loop for choice in choices
-                  for flattened-choice = (flatten choice)
-                  if (typep flattened-choice 'alternation)
-                    ;; "splice" alternations into collected list
-                    nconc (choices flattened-choice)
-                  else
-                    ;; and collect other regexes as is
-                    nconc (list flattened-choice)))
-    alternation))
+  ;; same algorithm as above
+  (let ((choices-rest (choices alternation)))
+    (loop
+      (unless choices-rest
+        (return))
+      (let ((flattened-choice (flatten (car choices-rest)))
+            (next-choices-rest (cdr choices-rest)))
+        (cond ((typep flattened-choice 'alternation)
+                (let ((flattened-choice-choices
+                        (choices flattened-choice)))
+                  (setf (car choices-rest)
+                          (car flattened-choice-choices)
+                        (cdr choices-rest)
+                          (nconc (cdr flattened-choice-choices)
+                                 (cdr choices-rest)))))
+              (t
+                (setf (car choices-rest) flattened-choice)))
+        (setq choices-rest next-choices-rest))))
+  (let ((choices (choices alternation)))
+    (cond ((cadr choices)
+            alternation)
+          ((cdr choices)
+            (first choices))
+          (t (signal-ppcre-syntax-error
+              "Encountered alternation without choices.")))))
 
 (defmethod flatten ((branch branch))
   (with-slots ((test test)
@@ -102,14 +122,19 @@ operation on REGEX."))
       (setf (regex regex)
               (flatten (regex regex)))
       regex)
-    (otherwise
+    (t
       ;; otherwise (ANCHOR, BACK-REFERENCE, CHAR-CLASS, EVERYTHING,
-      ;; LOOKAHEAD, LOOKBEHIND, STR, VOID, and WORD-BOUNDARY) do
-      ;; nothing
+      ;; LOOKAHEAD, LOOKBEHIND, STR, VOID, FILTER, and WORD-BOUNDARY)
+      ;; do nothing
       regex)))
 
 (defgeneric gather-strings (regex)
-  (declare (optimize speed space))
+    (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   (:documentation "Collects adjacent strings or characters into one
 string provided they have the same case mode. This is a destructive
 operation on REGEX."))
@@ -118,81 +143,117 @@ operation on REGEX."))
   ;; note that GATHER-STRINGS is to be applied after FLATTEN, i.e. it
   ;; expects SEQ to be flattened already; in particular, SEQ cannot be
   ;; empty and cannot contain embedded SEQ objects
-  (with-slots ((elements elements))
-      seq
-    (let ((gathered-seq
-            (loop with collector and skip
-                  ;; loop through all elements of SEQ
-                  for element in elements
-                  for old-case-mode = nil then case-mode
-                  for case-mode = (case-mode element old-case-mode)
-                  if (and case-mode
-                          (eq case-mode old-case-mode))
-                    ;; if ELEMENT is a STR and we have collected a STR
-                    ;; of the same case mode in the last iteration we
-                    ;; push ELEMENT onto COLLECTOR and remember the
-                    ;; value of its SKIP slot
-                    do (push (str element) collector)
-                    ;; it suffices to remember the last SKIP slot
-                    ;; because due to the way MAYBE-ACCUMULATE works
-                    ;; adjacent STR objects have the same SKIP value
-                    and do (setq skip (skip element))
-                  else
-                    if collector
-                      ;; otherwise if we have collected something
-                      ;; already we convert it into a STR
-                      collect (make-instance 'str
-                                             :skip skip
-                                             :str (string-list-to-simple-string
-                                                   (nreverse collector))
-                                             :case-insensitive-p
-                                               (eq old-case-mode
-                                                   :case-insensitive))
-                        into result
-                    end
-                    and if case-mode
-                      ;; if ELEMENT is a string with a different case
-                      ;; mode than the last one we have either just
-                      ;; converted COLLECTOR into a STR or COLLECTOR
-                      ;; is still empty; in both cases we can now
-                      ;; begin to fill it anew
-                      do (setq collector (list (str element)))
-                      ;; and we remember the SKIP value as above
-                      and do (setq skip (skip element))
-                    else
-                      ;; otherwise this is not a STR so we apply
-                      ;; GATHER-STRINGS to it and collect it directly
-                      ;; into RESULT
-                      collect (gather-strings element) into result
-                      ;; we also have to empty COLLECTOR here in case
-                      ;; it was still filled from the last iteration
-                      and do (setq collector nil)
-                  finally (return (if collector
-                                    ;; if COLLECTOR isn't empty we
-                                    ;; have to convert it to a STR as
-                                    ;; above and append it to RESULT
-                                    ;; before we return it
-                                    (nconc result
-                                           (list
-                                            (make-instance
-                                             'str
-                                             :skip skip
-                                             :str (string-list-to-simple-string
-                                                   (nreverse collector))
-                                             :case-insensitive-p
-                                             (eq case-mode
-                                                 :case-insensitive))))
-                                    ;; otherwise just return RESULT
-                                    result)))))
-      (cond ((rest gathered-seq)
-              ;; if GATHERED-SEQ has at least two elements we set the
-              ;; ELEMENTS slot of SEQ accordingly and return SEQ
-              (setq elements gathered-seq)
-              seq)
-            (t
-              ;; otherwise it suffices to return the one element of
-              ;; GATHERED-SEQ, i.e. we drop the enclosing SEQ
-              (car gathered-seq))))))
+  (let* ((start-point (cons nil (elements seq)))
+         (curr-point start-point)
+         old-case-mode
+         collector
+         collector-start
+         (collector-length 0)
+         skip)
+    (declare (type fixnum collector-length))
+    (loop
+      (let ((elements-rest (cdr curr-point)))
+        (unless elements-rest
+          (return))
+        (let* ((element (car elements-rest))
+               (case-mode (case-mode element old-case-mode)))
+          (cond ((and case-mode
+                      (eq case-mode old-case-mode))
+                  ;; if ELEMENT is a STR and we have collected a STR of
+                  ;; the same case mode in the last iteration we
+                  ;; concatenate ELEMENT onto COLLECTOR and remember the
+                  ;; value of its SKIP slot
+                  (let ((old-collector-length collector-length))
+                    (unless (and (adjustable-array-p collector)
+                                 (array-has-fill-pointer-p collector))
+                      (setq collector
+                              (make-array collector-length
+                                          :initial-contents collector
+                                          :element-type 'character
+                                          :fill-pointer t
+                                          :adjustable t)
+                            collector-start nil))
+                    (adjust-array collector
+                                  (incf collector-length (len element))
+                                  :fill-pointer t)
+                    (setf (subseq collector
+                                  old-collector-length)
+                            (str element)
+                          ;; it suffices to remember the last SKIP slot
+                          ;; because due to the way MAYBE-ACCUMULATE
+                          ;; works adjacent STR objects have the same
+                          ;; SKIP value
+                          skip (skip element)))
+                  (setf (cdr curr-point) (cdr elements-rest)))
+                (t
+                  (let ((collected-string
+                          (cond (collector-start
+                                  collector-start)
+                                (collector
+                                  ;; if we have collected something already
+                                  ;; we convert it into a STR
+                                  (make-instance 'str
+                                                 :skip skip
+                                                 :str collector
+                                                 :case-insensitive-p
+                                                 (eq old-case-mode
+                                                     :case-insensitive)))
+                                (t nil))))
+                    (cond (case-mode
+                            ;; if ELEMENT is a string with a different case
+                            ;; mode than the last one we have either just
+                            ;; converted COLLECTOR into a STR or COLLECTOR
+                            ;; is still empty; in both cases we can now
+                            ;; begin to fill it anew
+                            (setq collector (str element)
+                                  collector-start element
+                                  ;; and we remember the SKIP value as above
+                                  skip (skip element)
+                                  collector-length (len element))
+                            (cond (collected-string
+                                    (setf (car elements-rest)
+                                            collected-string
+                                          curr-point
+                                            (cdr curr-point)))
+                                  (t
+                                    (setf (cdr curr-point)
+                                            (cdr elements-rest)))))
+                          (t
+                            ;; otherwise this is not a STR so we apply
+                            ;; GATHER-STRINGS to it and collect it directly
+                            ;; into RESULT
+                            (cond (collected-string
+                                    (setf (car elements-rest)
+                                            collected-string
+                                          curr-point
+                                            (cdr curr-point)
+                                          (cdr curr-point)
+                                            (cons (gather-strings element)
+                                                  (cdr curr-point))
+                                          curr-point
+                                            (cdr curr-point)))
+                                  (t
+                                    (setf (car elements-rest)
+                                            (gather-strings element)
+                                          curr-point
+                                            (cdr curr-point))))
+                            ;; we also have to empty COLLECTOR here in case
+                            ;; it was still filled from the last iteration
+                            (setq collector nil
+                                  collector-start nil))))))
+          (setq old-case-mode case-mode))))
+    (when collector
+      (setf (cdr curr-point)
+              (cons
+               (make-instance 'str
+                              :skip skip
+                              :str collector
+                              :case-insensitive-p
+                              (eq old-case-mode
+                                  :case-insensitive))
+               nil)))
+    (setf (elements seq) (cdr start-point))
+    seq))
 
 (defmethod gather-strings ((alternation alternation))
   ;; loop ON the choices of ALTERNATION so we can modify them directly
@@ -223,16 +284,21 @@ operation on REGEX."))
       (setf (regex regex)
               (gather-strings (regex regex)))
       regex)
-    (otherwise
+    (t
       ;; otherwise (ANCHOR, BACK-REFERENCE, CHAR-CLASS, EVERYTHING,
-      ;; LOOKAHEAD, LOOKBEHIND, STR, VOID, and WORD-BOUNDARY) do
-      ;; nothing
+      ;; LOOKAHEAD, LOOKBEHIND, STR, VOID, FILTER, and WORD-BOUNDARY)
+      ;; do nothing
       regex)))
 
 ;; Note that START-ANCHORED-P will be called after FLATTEN and GATHER-STRINGS.
 
 (defgeneric start-anchored-p (regex &optional in-seq-p)
-  (declare (optimize speed space))
+    (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   (:documentation "Returns T if REGEX starts with a \"real\" start
 anchor, i.e. one that's not in multi-line mode, NIL otherwise. If
 IN-SEQ-P is true the function will return :ZERO-LENGTH if REGEX is a
@@ -288,14 +354,25 @@ zero-length assertion."))
       (if in-seq-p
         :zero-length
         nil))
-    (otherwise
+    (filter
+      (if (and in-seq-p
+               (len regex)
+               (zerop (len regex)))
+        :zero-length
+        nil))
+    (t
       ;; BACK-REFERENCE, CHAR-CLASS, EVERYTHING, and STR
       nil)))
 
 ;; Note that END-STRING-AUX will be called after FLATTEN and GATHER-STRINGS.
 
 (defgeneric end-string-aux (regex &optional old-case-insensitive-p)
-  (declare (optimize speed space))
+    (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   (:documentation "Returns the constant string (if it exists) REGEX
 ends with wrapped into a STR object, otherwise NIL.
 OLD-CASE-INSENSITIVE-P is the CASE-INSENSITIVE-P slot of the last STR
@@ -320,46 +397,70 @@ function called by END-STRIN.)"))
 (defmethod end-string-aux ((seq seq)
                            &optional (old-case-insensitive-p :void))
   (declare (special continuep))
-  (let* ((collected-strings
-           (nreverse
-            ;; loop through all elements in reverse order
-            (loop for element in (reverse (elements seq))
-                  ;; remember the case-(in)sensitivity of the last
-                  ;; relevant STR object
-                  for loop-old-case-insensitive-p = old-case-insensitive-p
-                    then (if skip
-                           loop-old-case-insensitive-p
-                           (case-insensitive-p element-end))
-                  ;; the end-string of the current element
-                  for element-end = (end-string-aux element
-                                                    loop-old-case-insensitive-p)
-                  ;; whether we encountered a zero-length element
-                  for skip = (if element-end
-                               (zerop (len element-end))
-                               nil)
-                  ;; set CONTINUEP to NIL if we have to stop
-                  ;; collecting to alert END-STRING-AUX methods on
-                  ;; enclosing SEQ objects
-                  unless element-end
-                    do (setq continuep nil)
-                  ;; end loop if we neither got a STR nor a
-                  ;; zero-length element
-                  while element-end
-                  ;; only collect if not zero-length
-                  unless skip
-                    collect element-end
-                  ;; stop collecting if END-STRING-AUX on inner SEQ
-                  ;; has said so
-                  while continuep)))
-         (concatenated-string
-           (string-list-to-simple-string (mapcar #'str collected-strings))))
-    (if (zerop (length concatenated-string))
-      ;; don't bother to return zero-length strings
-      nil
-      (make-instance 'str
-                     :str concatenated-string
-                     :case-insensitive-p (case-insensitive-p
-                                          (first collected-strings))))))
+  (let (case-insensitive-p
+        concatenated-string
+        concatenated-start
+        (concatenated-length 0))
+    (declare (type fixnum concatenated-length))
+    (loop for element in (reverse (elements seq))
+          ;; remember the case-(in)sensitivity of the last relevant
+          ;; STR object
+          for loop-old-case-insensitive-p = old-case-insensitive-p
+            then (if skip
+                   loop-old-case-insensitive-p
+                   (case-insensitive-p element-end))
+          ;; the end-string of the current element
+          for element-end = (end-string-aux element
+                                            loop-old-case-insensitive-p)
+          ;; whether we encountered a zero-length element
+          for skip = (if element-end
+                       (zerop (len element-end))
+                       nil)
+          ;; set CONTINUEP to NIL if we have to stop collecting to
+          ;; alert END-STRING-AUX methods on enclosing SEQ objects
+          unless element-end
+            do (setq continuep nil)
+          ;; end loop if we neither got a STR nor a zero-length
+          ;; element
+          while element-end
+          ;; only collect if not zero-length
+          unless skip
+            do (cond (concatenated-string
+                       (when concatenated-start
+                         (setf concatenated-string
+                                 (make-array concatenated-length
+                                             :initial-contents (reverse (str concatenated-start))
+                                             :element-type 'character
+                                             :fill-pointer t
+                                             :adjustable t)
+                               concatenated-start nil))
+                       (let ((len (len element-end))
+                             (str (str element-end)))
+                         (declare (type fixnum len))
+                         (incf concatenated-length len)
+                         (loop for i of-type fixnum downfrom (1- len) to 0
+                               do (vector-push-extend (char str i)
+                                                      concatenated-string))))
+                     (t
+                       (setf concatenated-string
+                               t
+                             concatenated-start
+                               element-end
+                             concatenated-length
+                               (len element-end)
+                             case-insensitive-p
+                               (case-insensitive-p element-end))))
+          ;; stop collecting if END-STRING-AUX on inner SEQ has said so
+          while continuep)
+    (cond ((zerop concatenated-length)
+            ;; don't bother to return zero-length strings
+            nil)
+          (concatenated-start
+            concatenated-start)
+          (t
+            (make-instance 'str
+                           :str (nreverse concatenated-string)
+                           :case-insensitive-p case-insensitive-p)))))
 
 (defmethod end-string-aux ((register register)
                            &optional (old-case-insensitive-p :void))
@@ -388,14 +489,19 @@ function called by END-STRIN.)"))
       (make-instance 'str
                      :str ""
                      :case-insensitive-p :void))
-    (otherwise
+    (t
       ;; (ALTERNATION, BACK-REFERENCE, BRANCH, CHAR-CLASS, EVERYTHING,
-      ;; REPETITION)
+      ;; REPETITION, FILTER)
       nil)))
 
 (defmethod end-string ((regex regex))
   (declare (special end-string-offset))
-  (declare (optimize speed space))
+    (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Returns the constant string (if it exists) REGEX ends with wrapped
 into a STR object, otherwise NIL."
   ;; LAST-STR points to the last STR object (seen from the end) that's
@@ -415,7 +521,12 @@ into a STR object, otherwise NIL."
               end-string-offset (offset last-str))))))
 
 (defgeneric compute-min-rest (regex current-min-rest)
-  (declare (optimize speed space))
+    (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   (:documentation "Returns the minimal length of REGEX plus
 CURRENT-MIN-REST. This is similar to REGEX-MIN-LENGTH except that it
 recurses down into REGEX and sets the MIN-REST slots of REPETITION
@@ -438,6 +549,9 @@ objects."))
 (defmethod compute-min-rest ((str str) current-min-rest)
   (+ current-min-rest (len str)))
     
+(defmethod compute-min-rest ((filter filter) current-min-rest)
+  (+ current-min-rest (or (len filter) 0)))
+    
 (defmethod compute-min-rest ((repetition repetition) current-min-rest)
   (setf (min-rest repetition) current-min-rest)
   (compute-min-rest (regex repetition) current-min-rest)
@@ -451,7 +565,7 @@ objects."))
   (compute-min-rest (regex standalone) 0))
     
 (defmethod compute-min-rest ((lookahead lookahead) current-min-rest)
-  (compute-min-rest (regex lookahead) current-min-rest)
+  (compute-min-rest (regex lookahead) 0)
   current-min-rest)
     
 (defmethod compute-min-rest ((lookbehind lookbehind) current-min-rest)
@@ -462,7 +576,7 @@ objects."))
   (typecase regex
     ((or char-class everything)
       (1+ current-min-rest))
-    (otherwise
+    (t
       ;; zero min-len and no embedded regexes (ANCHOR,
       ;; BACK-REFERENCE, VOID, and WORD-BOUNDARY)
-      current-min-rest))) 
+      current-min-rest)))

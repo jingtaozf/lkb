@@ -4,7 +4,7 @@
 ;;; Here we create the closures which together build the final
 ;;; scanner.
 
-;;; Copyright (c) 2002, Dr. Edmund Weitz. All rights reserved.
+;;; Copyright (c) 2002-2004, Dr. Edmund Weitz. All rights reserved.
 
 ;;; Redistribution and use in source and binary forms, with or without
 ;;; modification, are permitted provided that the following conditions
@@ -32,7 +32,7 @@
 
 (in-package #:cl-ppcre)
 
-(declaim (inline special-string= special-string-equal))
+(declaim (inline *string*= *string*-equal))
 
 (defun *string*= (string2 start1 end1 start2 end2)
   "Like STRING=, i.e. compares the special string *STRING* from START1
@@ -180,15 +180,17 @@ such that the call to NEXT-FN after the match would succeed."))
   "Utility macro to replace each occurence of '(CHAR-CLASS-TEST)
 within BODY with the correct test (corresponding to CHAR-CLASS)
 against CHR-EXPR."
-  (let ((=char-class= (gensym)))
+  (with-unique-names (%char-class)
     ;; the actual substitution is done here: replace
     ;; '(CHAR-CLASS-TEST) with NEW
     (flet ((substitute-char-class-tester (new)
                (subst new '(char-class-test) body
                       :test #'equalp)))
-      `(let* ((,=char-class= ,char-class)
-              (hash (hash ,=char-class=))
-              (count (hash-table-count hash))
+      `(let* ((,%char-class ,char-class)
+              (hash (hash ,%char-class))
+              (count (if hash
+                       (hash-table-count hash)
+                       most-positive-fixnum))
               ;; collect a list of "all" characters in the hash if
               ;; there aren't more than two
               (key-list (if (<= count 2)
@@ -196,6 +198,7 @@ against CHR-EXPR."
                                 collect chr)
                           nil))
               downcasedp)
+        (declare (type fixnum count))
         ;; check if we can partition the hash into three ranges (or
         ;; less)
         (multiple-value-bind (min1 max1 min2 max2 min3 max3)
@@ -203,7 +206,7 @@ against CHR-EXPR."
           ;; if that didn't work and CHAR-CLASS is case-insensitive we
           ;; try it again with every character downcased
           (when (and (not min1)
-                     (case-insensitive-p ,=char-class=))
+                     (case-insensitive-p ,%char-class))
             (multiple-value-setq (min1 max1 min2 max2 min3 max3)
               (create-ranges-from-hash hash :downcasep t))
             (setq downcasedp t))
@@ -223,19 +226,19 @@ against CHR-EXPR."
                        `(let ((chr ,chr-expr))
                          (or (char= chr chr1)
                              (char= chr chr2))))))
-                ((word-char-class-p ,=char-class=)
+                ((word-char-class-p ,%char-class)
                   ;; special-case: hash is \w, \W, [\w], [\W] or
                   ;; something equivalent
                   ,@(substitute-char-class-tester
                      `(word-char-p ,chr-expr)))
-                ((= count +regex-char-code-limit+)
+                ((= count *regex-char-code-limit*)
                   ;; according to the ANSI standard we might have all
                   ;; possible characters in the hash even if it
-                  ;; doesn't contain +CHAR-CODE-LIMIT+ characters but
+                  ;; doesn't contain CHAR-CODE-LIMIT characters but
                   ;; this doesn't seem to be the case for current
                   ;; implementations (also note that this optimization
                   ;; implies that you must not have characters with
-                  ;; character codes beyond +REGEX-CHAR-CODE-LIMIT+ in
+                  ;; character codes beyond *REGEX-CHAR-CODE-LIMIT* in
                   ;; your regexes if you've changed this limit); we
                   ;; expect the compiler to optimize this T "test"
                   ;; away
@@ -243,20 +246,20 @@ against CHR-EXPR."
                 ((and downcasedp min1 min2 min3)
                   ;; three different ranges, downcased
                   ,@(substitute-char-class-tester
-                     `(let ((down-chr (char-downcase ,chr-expr)))
-                       (or (char<= min1 down-chr max1)
-                           (char<= min2 down-chr max2)
-                           (char<= min3 down-chr max3)))))
+                     `(let ((chr ,chr-expr))
+                       (or (char-not-greaterp min1 chr max1)
+                           (char-not-greaterp min2 chr max2)
+                           (char-not-greaterp min3 chr max3)))))
                 ((and downcasedp min1 min2)
                   ;; two ranges, downcased
                   ,@(substitute-char-class-tester
-                     `(let ((down-chr (char-downcase ,chr-expr)))
-                       (or (char<= min1 down-chr max1)
-                           (char<= min2 down-chr max2)))))
+                     `(let ((chr ,chr-expr))
+                       (or (char-not-greaterp min1 chr max1)
+                           (char-not-greaterp min2 chr max2)))))
                 ((and downcasedp min1)
                   ;; one downcased range
                   ,@(substitute-char-class-tester
-                     `(char<= min1 (char-downcase ,chr-expr) max1)))
+                     `(char-not-greaterp min1 ,chr-expr max1)))
                 ((and min1 min2 min3)
                   ;; three ranges
                   ,@(substitute-char-class-tester
@@ -541,25 +544,24 @@ against CHR-EXPR."
                    (funcall next-fn next-pos)))))))))
 
 (defmethod create-matcher-aux ((branch branch) next-fn)
-  (with-slots ((test test))
-      branch
-    (let ((then-matcher (create-matcher-aux (then-regex branch) next-fn))
-          (else-matcher (create-matcher-aux (else-regex branch) next-fn)))
-      (declare (type function then-matcher else-matcher))
-      (cond ((numberp test)
+  (let* ((test (test branch))
+         (then-matcher (create-matcher-aux (then-regex branch) next-fn))
+         (else-matcher (create-matcher-aux (else-regex branch) next-fn)))
+    (declare (type function then-matcher else-matcher))
+    (cond ((numberp test)
+            (lambda (start-pos)
+              (declare (type fixnum test))
+              (if (and (< test (length *reg-starts*))
+                       (svref *reg-starts* test))
+                (funcall then-matcher start-pos)
+                (funcall else-matcher start-pos))))
+          (t
+            (let ((test-matcher (create-matcher-aux test #'identity)))
+              (declare (type function test-matcher))
               (lambda (start-pos)
-                (declare (type fixnum test))
-                (if (and (< test (length *reg-starts*))
-                         (svref *reg-starts* test))
+                (if (funcall test-matcher start-pos)
                   (funcall then-matcher start-pos)
-                  (funcall else-matcher start-pos))))
-            (t
-              (let ((test-matcher (create-matcher-aux test #'identity)))
-                (declare (type function test-matcher))
-                (lambda (start-pos)
-                  (if (funcall test-matcher start-pos)
-                    (funcall then-matcher start-pos)
-                    (funcall else-matcher start-pos)))))))))
+                  (funcall else-matcher start-pos))))))))
 
 (defmethod create-matcher-aux ((standalone standalone) next-fn)
   (let ((inner-matcher (create-matcher-aux (regex standalone) #'identity)))
@@ -569,11 +571,13 @@ against CHR-EXPR."
         (and next-pos
              (funcall next-fn next-pos))))))
 
+(defmethod create-matcher-aux ((filter filter) next-fn)
+  (let ((fn (fn filter)))
+    (lambda (start-pos)
+      (let ((next-pos (funcall fn start-pos)))
+        (and next-pos
+             (funcall next-fn next-pos))))))
+
 (defmethod create-matcher-aux ((void void) next-fn)
   ;; optimize away VOIDs: don't create a closure, just return NEXT-FN
   next-fn)
-
-
-;; Local variables:
-;; eval: (put 'insert-char-class-tester 'common-lisp-indent-function '((&whole 4 1) &body))
-;; End:

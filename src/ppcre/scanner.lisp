@@ -4,7 +4,7 @@
 ;;; Here the scanner for the actual regex as well as utility scanners
 ;;; for the constant start and end strings are created.
 
-;;; Copyright (c) 2002, Dr. Edmund Weitz. All rights reserved.
+;;; Copyright (c) 2002-2004, Dr. Edmund Weitz. All rights reserved.
 
 ;;; Redistribution and use in source and binary forms, with or without
 ;;; modification, are permitted provided that the following conditions
@@ -37,7 +37,8 @@
   (let ((char-compare (if case-insensitive-p 'char-equal 'char=)))
     `(lambda (start-pos)
       (declare (type fixnum start-pos))
-      (if (> (the fixnum (+ start-pos m)) *end-pos*)
+      (if (or (minusp start-pos)
+              (> (the fixnum (+ start-pos m)) *end-pos*))
         nil
         (loop named bmh-matcher
               for k of-type fixnum = (+ start-pos m -1)
@@ -62,11 +63,24 @@
 simple-string *STRING* for the first occurence of the substring
 PATTERN. The search starts at the position START-POS within *STRING*
 and stops before *END-POS* is reached. Depending on the second
-argument the search is case-insensitive or not."
+argument the search is case-insensitive or not. If the special
+variable *USE-BMH-MATCHERS* is NIL, use the standard SEARCH function
+instead. (BMH matchers are faster but need much more space.)"
   ;; see <http://www-igm.univ-mlv.fr/~lecroq/string/node18.html> for
   ;; details
+  (unless *use-bmh-matchers*
+    (let ((test (if case-insensitive-p #'char-equal #'char=)))
+      (return-from create-bmh-matcher
+        (lambda (start-pos)
+          (declare (type fixnum start-pos))
+          (and (not (minusp start-pos))
+               (search pattern
+                       *string*
+                       :start2 start-pos
+                       :end2 *end-pos*
+                       :test test))))))
   (let* ((m (length pattern))
-	 (skip (make-array +regex-char-code-limit+
+	 (skip (make-array *regex-char-code-limit*
 			  :element-type 'fixnum
 			  :initial-element m)))
     (declare (type fixnum m))
@@ -116,8 +130,12 @@ case-insensitive or not."
   (declare (type fixnum start-pos))
   "Find the next occurence of a character in *STRING* which is behind
 a #\Newline."
-  (loop for i of-type fixnum from start-pos below *end-pos*
-        thereis (and (char= (schar *string* i) #\Newline)
+  ;; we can start with (1- START-POS) without testing for (PLUSP
+  ;; START-POS) because we know we'll never call NEWLINE-SKIPPER on
+  ;; the first iteration
+  (loop for i of-type fixnum from (1- start-pos) below *end-pos*
+        thereis (and (char= (schar *string* i)
+                            #\Newline)
                      (1+ i))))
 
 (defmacro insert-advance-fn (advance-fn)
@@ -186,15 +204,16 @@ ADVANCE-FN. This is a utility macro used by CREATE-SCANNER-AUX."
                (unless (setq *end-string-pos* (funcall end-string-test
                                                        end-test-pos))
                  (when (and (= 1 (the fixnum end-anchored-p))
-                            (char= #\Newline (schar *string* (1- *end-pos*)))
-                            (> end-test-pos *start-pos*))
+                            (> *end-pos* scan-start-pos)
+                            (char= #\Newline (schar *string* (1- *end-pos*))))
                    ;; if we didn't find an end string candidate from
                    ;; END-TEST-POS and if a #\Newline at the end is
                    ;; allowed we try it again from one position to the
                    ;; left
                    (setq *end-string-pos* (funcall end-string-test
                                                    (1- end-test-pos))))))
-             (unless *end-string-pos*
+             (unless (and *end-string-pos*
+                          (<= *start-pos* *end-string-pos*))
                ;; no end string candidate found, so give up
                (return-from scan nil))
              (when end-string-offset
@@ -202,8 +221,9 @@ ADVANCE-FN. This is a utility macro used by CREATE-SCANNER-AUX."
                ;; left of the regular expression is known we can start
                ;; scanning further to the right; this is similar to
                ;; what we might do in ADVANCE-FN
-               (setq scan-start-pos (- (the fixnum *end-string-pos*)
-                                       (the fixnum end-string-offset)))))
+               (setq scan-start-pos (max scan-start-pos
+                                         (- (the fixnum *end-string-pos*)
+                                            (the fixnum end-string-offset))))))
              (cond
                (start-anchored-p
                  ;; we're anchored at the start of the target string,
@@ -243,19 +263,36 @@ ADVANCE-FN. This is a utility macro used by CREATE-SCANNER-AUX."
                    ;; the regular expression has a constant end string
                    ;; which isn't anchored so we didn't check for it
                    ;; already
-                   (unless (setq *end-string-pos*
-                                   (funcall (the function end-string-test)
-                                            *start-pos*))
-                     ;; no end string candidate found, so give up
-                     (return-from scan nil))
-                   (when (and end-string-offset
-                              (/= (- (the fixnum *end-string-pos*)
-                                     (the fixnum end-string-offset))
-                                  *start-pos*))
-                     ;; end string candidate found but its offset into
-                     ;; the regular expression contradicts the start
-                     ;; anchor, so give up
-                     (return-from scan nil)))
+                   (block end-string-loop
+                     ;; we temporarily use *END-STRING-POS* as our
+                     ;; starting position to look for end string
+                     ;; candidates
+                     (setq *end-string-pos* *start-pos*)
+                     (loop
+                       (unless (setq *end-string-pos*
+                                       (funcall (the function end-string-test)
+                                                *end-string-pos*))
+                         ;; no end string candidate found, so give up
+                         (return-from scan nil))
+                       (unless end-string-offset
+                         ;; end string doesn't have an offset so we
+                         ;; can start scanning now
+                         (return-from end-string-loop))
+                       (let ((maybe-start-pos (- (the fixnum *end-string-pos*)
+                                                 (the fixnum end-string-offset))))
+                         (cond ((= maybe-start-pos *start-pos*)
+                                 ;; offset of end string into regular
+                                 ;; expression matches start anchor -
+                                 ;; fine...
+                                 (return-from end-string-loop))
+                               ((and (< maybe-start-pos *start-pos*)
+                                     (< (+ *end-string-pos* end-string-len) *end-pos*))
+                                 ;; no match but maybe we find another
+                                 ;; one to the right - try again
+                                 (incf *end-string-pos*))
+                               (t
+                                 ;; otherwise give up
+                                 (return-from scan nil)))))))
                  ;; if we got here we scan exactly once
                  (let ((next-pos (funcall match-fn *start-pos*)))
                    (when next-pos
@@ -305,7 +342,7 @@ ADVANCE-FN. This is a utility macro used by CREATE-SCANNER-AUX."
                      (compilation-speed 0)
                      #+:lispworks (hcl:fixnum-safety 0)))
   (declare (type fixnum min-len zero-length-num rep-num reg-num))
-  "Auxiliary function to create and return a scanner (which is
+  "Auxiliary function to create and return a scanner \(which is
 actually a closure). Used by CREATE-SCANNER."
   (let ((starts-with-len (if (typep starts-with 'str)
                            (len starts-with)))

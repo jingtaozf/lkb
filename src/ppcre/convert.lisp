@@ -5,7 +5,7 @@
 ;;; using REGEX objects.  At the same time some optimizations are
 ;;; already applied.
 
-;;; Copyright (c) 2002, Dr. Edmund Weitz. All rights reserved.
+;;; Copyright (c) 2002-2004, Dr. Edmund Weitz. All rights reserved.
 
 ;;; Redistribution and use in source and binary forms, with or without
 ;;; modification, are permitted provided that the following conditions
@@ -33,21 +33,6 @@
 
 (in-package #:cl-ppcre)
 
-(defun pre-flatten (list token)
-  (declare (optimize speed space))
-  "Recursively merges nested sublists of LIST which start with TOKEN
-directly into LIST. This is a destructive operation on LIST."
-  (cond ((null list) nil)
-        ((and (consp (first list))
-              (eq token (first (first list))))
-          (nconc (pre-flatten (rest (first list)) token)
-                 (pre-flatten (rest list) token)))
-        (t
-          (setf (rest list)
-                  (pre-flatten (rest list) token))
-          list)))
-          
-
 ;;; The flags that represent the "ism" modifiers are always kept
 ;;; together in a three-element list. We use the following macros to
 ;;; access individual elements.
@@ -65,7 +50,12 @@ directly into LIST. This is a destructive operation on LIST."
   `(third ,flags))
 
 (defun set-flag (token)
-  (declare (optimize speed space))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   (declare (special flags))
   "Reads a flag token and sets or unsets the corresponding entry in
 the special FLAGS list."
@@ -83,10 +73,15 @@ the special FLAGS list."
     ((:not-single-line-mode-p)
       (setf (single-line-mode-p flags) nil))
     (otherwise
-      (error "Unknown flag token ~A" token))))
+      (signal-ppcre-syntax-error "Unknown flag token ~A" token))))
 
 (defun add-range-to-hash (hash from to)
-  (declare (optimize speed space))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   (declare (special flags))
   "Adds all characters from character FROM to character TO (inclusive)
 to the char class hash HASH. Does the right thing with respect to
@@ -94,52 +89,65 @@ case-(in)sensitivity as specified by the special variable FLAGS."
   (let ((from-code (char-code from))
         (to-code (char-code to)))
     (when (> from-code to-code)
-      (error "Invalid range from ~A to ~A in char-class" from to))
-    (if (case-insensitive-mode-p flags)
-      (loop for code from from-code to to-code
-            for chr = (code-char code)
-            do (setf (gethash (char-upcase chr) hash) 1
-                     (gethash (char-downcase chr) hash) 1))
-      (loop for code from from-code to to-code
-            do (setf (gethash (code-char code) hash) 1)))
+      (signal-ppcre-syntax-error "Invalid range from ~A to ~A in char-class"
+                                 from to))
+    (cond ((case-insensitive-mode-p flags)
+            (loop for code from from-code to to-code
+                  for chr = (code-char code)
+                  do (setf (gethash (char-upcase chr) hash) t
+                           (gethash (char-downcase chr) hash) t)))
+          (t
+            (loop for code from from-code to to-code
+                  do (setf (gethash (code-char code) hash) t))))
     hash))
 
 (defun convert-char-class-to-hash (list)
-  (declare (optimize speed space))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Combines all items in LIST into one char class hash and returns it.
-Items can be single characters, character ranges like (:RANGE #\A #\E),
-or special character classes like :DIGIT-CLASS. Does the right thing
-with respect to case-(in)sensitivity as specified by the special
-variable FLAGS."
-  (loop with hash = (make-hash-table)
+Items can be single characters, character ranges like \(:RANGE #\\A
+#\\E), or special character classes like :DIGIT-CLASS. Does the right
+thing with respect to case-\(in)sensitivity as specified by the
+special variable FLAGS."
+  (loop with hash = (make-hash-table :size (ceiling (expt *regex-char-code-limit* (/ 1 4)))
+                                     :rehash-size (float (expt *regex-char-code-limit* (/ 1 4)))
+                                     :rehash-threshold #-genera 1.0 #+genera 0.99)
         for item in list
         if (characterp item)
           ;; treat a single character C like a range (:RANGE C C)
           do (add-range-to-hash hash item item)
         else if (symbolp item)
           ;; special character classes
-          do (case item
-               ((:digit-class)
-                 (merge-hash hash +digit-hash+))
-               ((:non-digit-class)
-                 (merge-inverted-hash hash +digit-hash+))
-               ((:whitespace-char-class)
-                 (merge-hash hash +whitespace-char-hash+))
-               ((:non-whitespace-char-class)
-                 (merge-inverted-hash hash +whitespace-char-hash+))
-               ((:word-char-class)
-                 (merge-hash hash +word-char-hash+))
-               ((:non-word-char-class)
-                 (merge-inverted-hash hash +word-char-hash+))
-               (otherwise
-                 (error "Unknown symbol ~A in character class" item)))
+          do (setq hash
+                     (case item
+                       ((:digit-class)
+                         (merge-hash hash +digit-hash+))
+                       ((:non-digit-class)
+                         (merge-inverted-hash hash +digit-hash+))
+                       ((:whitespace-char-class)
+                         (merge-hash hash +whitespace-char-hash+))
+                       ((:non-whitespace-char-class)
+                         (merge-inverted-hash hash +whitespace-char-hash+))
+                       ((:word-char-class)
+                         (merge-hash hash +word-char-hash+))
+                       ((:non-word-char-class)
+                         (merge-inverted-hash hash +word-char-hash+))
+                       (otherwise
+                         (signal-ppcre-syntax-error
+                          "Unknown symbol ~A in character class"
+                          item))))
         else if (and (consp item)
                      (eq (car item) :range))
           ;; proper ranges
           do (add-range-to-hash hash
                                 (second item)
                                 (third item))
-        else do (error "Unknown item ~A in char-class list" item)
+        else do (signal-ppcre-syntax-error "Unknown item ~A in char-class list"
+                                           item)
         finally (return hash)))
 
 (defun maybe-split-repetition (regex
@@ -149,7 +157,14 @@ variable FLAGS."
                                min-len
                                length
                                reg-seen)
-  (declare (optimize speed space))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
+  (declare (type fixnum minimum)
+           (type (or fixnum null) maximum))
   "Splits a REPETITION object into a constant and a varying part if
 applicable, i.e. something like
   a{3,} -> a{3}a*
@@ -178,6 +193,7 @@ the same name."
                                               :min-len min-len
                                               :len length
                                               :contains-register-p reg-seen)
+                               ;; don't create garbage if minimum is 0
                                nil)))
     (when (and maximum
                (= maximum minimum))
@@ -185,16 +201,15 @@ the same name."
         ;; no varying part needed because min = max
         constant-repetition))
     ;; now construct the varying part
-    (let* ((new-maximum (if maximum (- maximum minimum) nil))
-           (varying-repetition
-             (make-instance 'repetition
-                            :regex regex
-                            :greedyp greedyp
-                            :minimum 0
-                            :maximum new-maximum
-                            :min-len min-len
-                            :len length
-                            :contains-register-p reg-seen)))
+    (let ((varying-repetition
+            (make-instance 'repetition
+                           :regex regex
+                           :greedyp greedyp
+                           :minimum 0
+                           :maximum (if maximum (- maximum minimum) nil)
+                           :min-len min-len
+                           :len length
+                           :contains-register-p reg-seen)))
       (cond ((zerop minimum)
               ;; min = 0, no constant part needed
               varying-repetition)
@@ -215,9 +230,15 @@ the same name."
 ;; case if the regex starts with ".*" which implicitely anchors the
 ;; regex at the start (perhaps modulo #\Newline).
 
-(defmethod maybe-accumulate ((str str))
-  (declare (optimize speed space))
+(defun maybe-accumulate (str)
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   (declare (special accumulate-start-p starts-with))
+  (declare (ftype (function (t) fixnum) len))
   "Accumulate STR into the special variable STARTS-WITH if
 ACCUMULATE-START-P (also special) is true and STARTS-WITH is either
 NIL or a STR object of the same case mode. Always returns NIL."
@@ -226,25 +247,41 @@ NIL or a STR object of the same case mode. Always returns NIL."
       (str
         ;; STARTS-WITH already holds a STR, so we check if we can
         ;; concatenate
-        (if (eq (case-insensitive-p starts-with)
-                (case-insensitive-p str))
-          ;; we modify STARTS-WITH in place
-          (setf (len starts-with)
-                  (+ (len starts-with) (len str))
-                (str starts-with)
-                  (concatenate 'string (str starts-with) (str str))
-                ;; STR objects that are parts of STARTS-WITH always
-                ;; have their SKIP slot set to true because the SCAN
-                ;; function will take care of them, i.e. the matcher
-                ;; can ignore them
-                (skip str) t)
-          (setq accumulate-start-p nil)))
+        (cond ((eq (case-insensitive-p starts-with)
+                   (case-insensitive-p str))
+                ;; we modify STARTS-WITH in place
+                (setf (len starts-with)
+                        (+ (len starts-with) (len str)))
+                ;; note that we use SLOT-VALUE because the accessor
+                ;; STR has a declared FTYPE which doesn't fit here
+                (adjust-array (slot-value starts-with 'str)
+                              (len starts-with)
+                              :fill-pointer t)
+                (setf (subseq (slot-value starts-with 'str)
+                              (- (len starts-with) (len str)))
+                        (str str)
+                      ;; STR objects that are parts of STARTS-WITH
+                      ;; always have their SKIP slot set to true
+                      ;; because the SCAN function will take care of
+                      ;; them, i.e. the matcher can ignore them
+                      (skip str) t))
+              (t (setq accumulate-start-p nil))))
       (null
         ;; STARTS-WITH is still empty, so we create a new STR object
         (setf starts-with
                 (make-instance 'str
-                               :str (str str)
+                               :str ""
                                :case-insensitive-p (case-insensitive-p str))
+              ;; INITIALIZE-INSTANCE will coerce the STR to a simple
+              ;; string, so we have to fill it afterwards
+              (slot-value starts-with 'str)
+                (make-array (len str)
+                            :initial-contents (str str)
+                            :element-type 'character
+                            :fill-pointer t
+                            :adjustable t)
+              (len starts-with)
+                (len str)
               ;; see remark about SKIP above
               (skip str) t))
       (everything
@@ -254,7 +291,12 @@ NIL or a STR object of the same case mode. Always returns NIL."
   nil)
 
 (defun convert-aux (parse-tree)
-  (declare (optimize speed space))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   (declare (special flags reg-num accumulate-start-p starts-with max-back-ref))
   "Converts the parse tree PARSE-TREE into a REGEX object and returns it.
 
@@ -272,10 +314,17 @@ Will also
           (case (first parse-tree)
             ;; (:SEQUENCE {<regex>}*)
             ((:sequence)
-              (make-instance 'seq
-                             :elements (mapcar #'convert-aux
-                                               (pre-flatten (rest parse-tree)
-                                                            :sequence))))
+              (cond ((cddr parse-tree)
+                      ;; this is essentially like
+                      ;; (MAPCAR 'CONVERT-AUX (REST PARSE-TREE))
+                      ;; but we don't cons a new list
+                      (loop for parse-tree-rest on (rest parse-tree)
+                            while parse-tree-rest
+                            do (setf (car parse-tree-rest)
+                                       (convert-aux (car parse-tree-rest))))
+                      (make-instance 'seq
+                                     :elements (rest parse-tree)))
+                    (t (convert-aux (second parse-tree)))))
             ;; (:GROUP {<regex>}*)
             ;; this is a syntactical construct equivalent to :SEQUENCE
             ;; intended to keep the effect of modifiers local
@@ -284,19 +333,25 @@ Will also
               ;; value while we descend into the enclosed regexes
               (let ((flags (copy-list flags)))
                 (declare (special flags))
-                (make-instance 'seq
-                               :elements (mapcar #'convert-aux
-                                                 (pre-flatten (rest parse-tree)
-                                                              :sequence)))))
+                (cond ((cddr parse-tree)
+                        (loop for parse-tree-rest on (rest parse-tree)
+                              while parse-tree-rest
+                              do (setf (car parse-tree-rest)
+                                         (convert-aux (car parse-tree-rest))))
+                        (make-instance 'seq
+                                       :elements (rest parse-tree)))
+                      (t (convert-aux (second parse-tree))))))
             ;; (:ALTERNATION {<regex>}*)
             ((:alternation)
               ;; we must stop accumulating objects into STARTS-WITH
               ;; once we reach an alternation
               (setq accumulate-start-p nil)
+              (loop for parse-tree-rest on (rest parse-tree)
+                    while parse-tree-rest
+                    do (setf (car parse-tree-rest)
+                               (convert-aux (car parse-tree-rest))))
               (make-instance 'alternation
-                             :choices (mapcar #'convert-aux
-                                              (pre-flatten (rest parse-tree)
-                                                           :alternation))))
+                             :choices (rest parse-tree)))
             ;; (:BRANCH <test> <regex>)
             ;; <test> must be look-ahead, look-behind or number;
             ;; if <regex> is an alternation it must have one or two
@@ -305,22 +360,25 @@ Will also
               (setq accumulate-start-p nil)
               (let* ((test-candidate (second parse-tree))
                      (test (cond ((numberp test-candidate)
-                                   (when (zerop test-candidate)
-                                     (error "Register 0 doesn't exist: ~S"
-                                            parse-tree))
-                                   (1- test-candidate))
+                                   (when (zerop (the fixnum test-candidate))
+                                     (signal-ppcre-syntax-error
+                                      "Register 0 doesn't exist: ~S"
+                                      parse-tree))
+                                   (1- (the fixnum test-candidate)))
                                  (t (convert-aux test-candidate))))
                      (alternations (convert-aux (third parse-tree))))
                 (when (and (not (numberp test))
                            (not (typep test 'lookahead))
                            (not (typep test 'lookbehind)))
-                  (error "Branch test must be look-ahead, look-behind or number: ~S"
-                         parse-tree))
+                  (signal-ppcre-syntax-error
+                   "Branch test must be look-ahead, look-behind or number: ~S"
+                   parse-tree))
                 (typecase alternations
                   (alternation
                     (case (length (choices alternations))
                       ((0)
-                        (error "No choices in branch: ~S" parse-tree))
+                        (signal-ppcre-syntax-error "No choices in branch: ~S"
+                                                   parse-tree))
                       ((1)
                         (make-instance 'branch
                                        :test test
@@ -334,20 +392,20 @@ Will also
                                        :else-regex (second
                                                     (choices alternations))))
                       (otherwise
-                        (error "Too much choices in branch: ~S"
-                               parse-tree))))
-                  (otherwise
+                        (signal-ppcre-syntax-error
+                         "Too much choices in branch: ~S"
+                         parse-tree))))
+                  (t
                     (make-instance 'branch
                                    :test test
                                    :then-regex alternations)))))
             ;; (:POSITIVE-LOOKAHEAD|:NEGATIVE-LOOKAHEAD <regex>)
             ((:positive-lookahead :negative-lookahead)
               ;; keep the effect of modifiers local to the enclosed
-              ;; regex and temporarily stop accumulating into
-              ;; STARTS-WITH
-              (let ((flags (copy-list flags))
-                    (accumulate-start-p nil))
-                (declare (special flags accumulate-start-p))
+              ;; regex and stop accumulating into STARTS-WITH
+              (setq accumulate-start-p nil)
+              (let ((flags (copy-list flags)))
+                (declare (special flags))
                 (make-instance 'lookahead
                                :regex (convert-aux (second parse-tree))
                                :positivep (eq (first parse-tree)
@@ -355,17 +413,17 @@ Will also
             ;; (:POSITIVE-LOOKBEHIND|:NEGATIVE-LOOKBEHIND <regex>)
             ((:positive-lookbehind :negative-lookbehind)
               ;; keep the effect of modifiers local to the enclosed
-              ;; regex and temporarily stop accumulating into
-              ;; STARTS-WITH
+              ;; regex and stop accumulating into STARTS-WITH
+              (setq accumulate-start-p nil)
               (let* ((flags (copy-list flags))
-                     (accumulate-start-p nil)
                      (regex (convert-aux (second parse-tree)))
                      (len (regex-length regex)))
-                (declare (special flags accumulate-start-p))
+                (declare (special flags))
                 ;; lookbehind assertions must be of fixed length
                 (unless len
-                  (error "Variable length look-behind not implemented (yet): ~S"
-                         parse-tree))
+                  (signal-ppcre-syntax-error
+                   "Variable length look-behind not implemented (yet): ~S"
+                   parse-tree))
                 (make-instance 'lookbehind
                                :regex regex
                                :positivep (eq (first parse-tree)
@@ -377,6 +435,8 @@ Will also
               (let ((local-accumulate-start-p accumulate-start-p))
                 (let ((minimum (second parse-tree))
                       (maximum (third parse-tree)))
+                  (declare (type fixnum minimum))
+                  (declare (type (or null fixnum) maximum))
                   (unless (and maximum
                                (= 1 minimum maximum))
                     ;; set ACCUMULATE-START-P to NIL for the rest of
@@ -474,12 +534,21 @@ Will also
                     (stored-reg-num reg-num))
                 (declare (special flags reg-seen))
                 (setq reg-seen t)
-                (incf reg-num)
+                (incf (the fixnum reg-num))
                 (make-instance 'register
                                :regex (convert-aux (second parse-tree))
                                :num stored-reg-num)))
+            ;; (:FILTER <function> &optional <length>)
+            ((:filter)
+              ;; stop accumulating into STARTS-WITH
+              (setq accumulate-start-p nil)
+              (make-instance 'filter
+                             :fn (second parse-tree)
+                             :len (third parse-tree)))
             ;; (:STANDALONE <regex>)
             ((:standalone)
+              ;; stop accumulating into STARTS-WITH
+              (setq accumulate-start-p nil)
               ;; keep the effect of modifiers local to the enclosed
               ;; regex
               (let ((flags (copy-list flags)))
@@ -489,13 +558,16 @@ Will also
             ;; (:BACK-REFERENCE <number>)
             ((:back-reference)
               (let ((backref-number (second parse-tree)))
+                (declare (type fixnum backref-number))
                 (when (or (not (typep backref-number 'fixnum))
                           (<= backref-number 0))
-                  (error "Illegal back-reference: ~S" parse-tree))
+                  (signal-ppcre-syntax-error
+                   "Illegal back-reference: ~S"
+                   parse-tree))
                 ;; stop accumulating into STARTS-WITH and increase
                 ;; MAX-BACK-REF if necessary
                 (setq accumulate-start-p nil
-                      max-back-ref (max max-back-ref
+                      max-back-ref (max (the fixnum max-back-ref)
                                         backref-number))
                 (make-instance 'back-reference
                                ;; we start counting from 0 internally
@@ -509,26 +581,30 @@ Will also
             ;;   - a special char class symbol like :DIGIT-CHAR-CLASS
             ((:char-class :inverted-char-class)
               ;; first create the hash-table and some auxiliary values
-              (let* ((item-list (rest parse-tree))
-                     (hash (convert-char-class-to-hash item-list))
+              (let* (hash
+                     hash-keys
+                     (count most-positive-fixnum)
+                     (item-list (rest parse-tree))
                      (invertedp (eq (first parse-tree) :inverted-char-class))
-                     (count (hash-table-count hash))
-                     ;; collect the hash-table keys into a list if
-                     ;; COUNT is smaller than 3
-                     (hash-keys (if (<= count 2)
+                     word-char-class-p)
+                (cond ((every (lambda (item) (eq item :word-char-class))
+                              item-list)
+                        ;; treat "[\\w]" like "\\w"
+                        (setq word-char-class-p t))
+                      ((every (lambda (item) (eq item :non-word-char-class))
+                              item-list)
+                        ;; treat "[\\W]" like "\\W"
+                        (setq word-char-class-p t)
+                        (setq invertedp (not invertedp)))
+                      (t
+                        (setq hash (convert-char-class-to-hash item-list)
+                              count (hash-table-count hash))
+                        (when (<= count 2)
+                          ;; collect the hash-table keys into a list if
+                          ;; COUNT is smaller than 3
+                          (setq hash-keys
                                   (loop for chr being the hash-keys of hash
-                                        collect chr)
-                                  nil))
-                     (word-char-class-p nil))
-                (when (every (lambda (item) (eq item :word-char-class))
-                             item-list)
-                  ;; treat "[\\w]" like "\\w"
-                  (setq word-char-class-p t))
-                (when (every (lambda (item) (eq item :non-word-char-class))
-                             item-list)
-                  ;; treat "[\\W]" like "\\W"
-                  (setq word-char-class-p t)
-                  (setq invertedp (not invertedp)))
+                                        collect chr)))))
                 (cond ((and (not invertedp)
                             (= count 1))
                         ;; convert one-element hash table into a STR
@@ -567,14 +643,16 @@ Will also
             ((:flags)
               ;; set/unset the flags corresponding to the symbols
               ;; following :FLAGS
-              (mapcar #'set-flag (rest parse-tree))
+              (mapc #'set-flag (rest parse-tree))
               ;; we're only interested in the side effect of
               ;; setting/unsetting the flags and turn this syntactical
               ;; construct into a VOID object which'll be optimized
               ;; away when creating the matcher
               (make-instance 'void))
             (otherwise
-              (error "Unknown token ~A in parse-tree" (first parse-tree)))))
+              (signal-ppcre-syntax-error
+               "Unknown token ~A in parse-tree"
+               (first parse-tree)))))
         ((or (characterp parse-tree) (stringp parse-tree))
           ;; turn characters or strings into STR objects and try to
           ;; accumulate into STARTS-WITH
@@ -610,7 +688,7 @@ Will also
                                        +digit-hash+)
                                      ((:word-char-class
                                        :non-word-char-class)
-                                       +word-char-hash+)
+                                       nil)
                                      ((:whitespace-char-class
                                        :non-whitespace-char-class)
                                        +whitespace-char-hash+))
@@ -670,10 +748,20 @@ Will also
               (set-flag parse-tree)
               (make-instance 'void))
             (otherwise
-              (error "Unknown token ~A in parse-tree" parse-tree))))))
+             (let ((translation (and (symbolp parse-tree)
+                                     (parse-tree-synonym parse-tree))))
+               (if translation
+                 (convert-aux (copy-tree translation))
+                 (signal-ppcre-syntax-error "Unknown token ~A in parse-tree"
+                                            parse-tree))))))))
 
 (defun convert (parse-tree)
-  (declare (optimize speed space))
+  (declare (optimize speed
+                     (safety 0)
+                     (space 0)
+                     (debug 0)
+                     (compilation-speed 0)
+                     #+:lispworks (hcl:fixnum-safety 0)))
   "Converts the parse tree PARSE-TREE into an equivalent REGEX object
 and returns three values: the REGEX object, the number of registers
 seen and an object the regex starts with which is either a STR object
@@ -689,6 +777,12 @@ or an EVERYTHING object (if the regex starts with something like
          (converted-parse-tree (convert-aux parse-tree)))
     (declare (special flags reg-num accumulate-start-p starts-with max-back-ref))
     ;; make sure we don't reference registers which aren't there
-    (if (> max-back-ref reg-num)
-      (error "Backreference to register ~A which has not been defined" max-back-ref))
+    (when (> (the fixnum max-back-ref)
+             (the fixnum reg-num))
+      (signal-ppcre-syntax-error
+       "Backreference to register ~A which has not been defined"
+       max-back-ref))
+    (when (typep starts-with 'str)
+      (setf (slot-value starts-with 'str)
+              (coerce (slot-value starts-with 'str) 'simple-string)))
     (values converted-parse-tree reg-num starts-with)))
