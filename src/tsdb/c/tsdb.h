@@ -31,7 +31,7 @@
 #  include <malloc.h>
 #endif
 
-#define TSDB_VERSION "0.6"
+#define TSDB_VERSION "0.7"
 #define TSDB_REVISION "$Revision$"
 #define TSDB_REVISION_DATE "$Date$"
 
