@@ -1026,7 +1026,19 @@
 ;;; restrictors as well as a mechanism to extinct all occurences of a feature.
 ;;;                                                          (12-nov-99  -  oe)
 ;;;
+;;; We also need to know about minimal types for feature values
+;;; for packing.  The following code caches the values as accessed
+;;; (replaced property lists with hash table)
 
+(defun minimal-type-for (feature)
+  (or (gethash feature *feature-minimal-type*)
+      (let* ((introduction (maximal-type-of feature))
+             (constraint (and introduction (constraint-of introduction)))
+             (type (or (and constraint 
+                            (type-of-fs (get-dag-value constraint feature)))
+                       *toptype*)))
+        (setf (gethash feature *feature-minimal-type*) type)
+        type)))
 
 (defun copy-dag-partially (dag)
   (invalidate-visit-marks)
