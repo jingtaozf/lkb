@@ -119,7 +119,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 	(error "Please load the the LKB"))
     (if (not (cle-eval "(common-lisp-user::featurep :psql)"))
 	(error "The running version of LKB is not :psql enabled"))
-    (princ "Please wait... (initializing LexDb)")
+    (princ "Please wait... (initializing LexDb) ")
     (cle-initialize-psql))
   (lexdb-load-record id))
 
@@ -260,12 +260,12 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
       (cons fv-pairs lexdb-fsize-map))))
 
 (defun lexdb-retrieve-completion-lists nil
-  (terpri)
+  ;;(terpri)
   (princ "generating completion lists for ")
   (setf *lexdb-completion-lists*
 	(mapcar #'(lambda (x)
-		    (princ (format "\t%s" x))
-		    (terpri)
+		    (princ (format "%s " x))
+		    ;;(terpri)
 		    (cons x
 			  (cle-get-completion-list x)))
 		*lexdb-completion-features*))
@@ -275,7 +275,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (let ((fields (cle-retrieve-record-fields id))
 	(sizes (cle-retrieve-record-sizes)))
     (unless (assoc :name fields)
-      (princ (format "%s not found" id))
+      (princ (format "%s not found! " id))
       (setf fields (push 
 		    (cons :name (l:val-str id))
 		    fields)))
@@ -289,12 +289,12 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (push 
    (cons :orthkey (first (split-string (cdr (assoc :orthography record-in)))))
    record-in)
-  (princ "please wait...")
-  (terpri)
+  (princ "please wait... ")
+  ;;(terpri)
   (cle-store-record record-in)
   (lexdb-update-completion-lists record-in)
   (cle-empty-psql-cache)
-  (princ (format "record saved to lexdb %s" (cle-dbname))))
+  (princ (format "record saved to lexdb %s. " (cle-dbname))))
 
 (defun lexdb-lookup-aux2 (field-kw val-str)
   (let ((ids (cle-lookup field-kw val-str)))
