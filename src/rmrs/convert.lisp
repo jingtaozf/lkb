@@ -302,12 +302,12 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 ;;; `compiled' table
 
 (defstruct var-conversion-table 
-  simple complex)
+  simple compleks)
 
 
-;;; tables is defined as a structure with simple and complex
+;;; tables is defined as a structure with simple and compleks
 ;;; entries, where simple is defined as simplex on the input
-;;; side (one fvp) and complex is a conjunction on the input side
+;;; side (one fvp) and compleks is a conjunction on the input side
 ;;; (list of fvps)
 ;;; Output will be a list of fvps (possibly singleton) 
 ;;; in either case.
@@ -317,7 +317,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 
 (defun compile-var-extra-table (table rmrs-in-p)
   (let ((simple nil)
-	(complex nil))
+	(compleks nil))
     (dolist (entry table)
       (let* ((input (if rmrs-in-p 
 			(cdr entry)
@@ -333,7 +333,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 		  collect 
 		  (make-fvp-input-side (car fvp) (cadr fvp) rmrs-in-p))
 	      new-output)
-	     complex)
+	     compleks)
 	  (push
 	   (cons (make-fvp-input-side (car input) 
 				      (cadr input)
@@ -341,7 +341,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 	    new-output)
 	   simple))))
     (make-var-conversion-table :simple (nreverse simple)
-			       :complex (nreverse complex))))
+			       :compleks (nreverse compleks))))
 
 (defun make-fvp-input-side (feature value rmrs-in-p)
   (let ((fstr (format nil "~A"  feature))
@@ -384,7 +384,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 	  (push extra to-do-list))))
     (multiple-value-bind (complex-match-results left-overs)
 	(complex-var-extra-check to-do-list 
-				 (var-conversion-table-complex
+				 (var-conversion-table-compleks
 				  table))
       (when complex-match-results
 	(setf converted (append converted complex-match-results)))
