@@ -77,7 +77,12 @@
                           (dag-restricted (when dag
                                             (restrict-fs (tdfs-indef dag))))
                           leaves lex-ids parents children morph-history 
-                          spelling-change from to label head
+                          spelling-change 
+                          (from (when (edge-p (first children))
+                                  (edge-from (first children))))
+                          (to (when (edge-p (first (last children)))
+                                (edge-from (first (last children)))))
+                          label head
                           foo bar baz
                           #+:packing packed #+:packing equivalent 
                           #+:packing frozen)))
