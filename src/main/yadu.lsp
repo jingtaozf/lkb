@@ -163,13 +163,12 @@
 ;;; Specificity ordering of elements
 
 (defun more-specific-p (el1 el2)
-   (let ((spec1 (tail-element-spec el1))
-         (spec2 (tail-element-spec el2)))
-      (if (eq spec1 'lex) 
-         (not (eq spec2 'lex))
-         (if (eq spec2 'lex)
-            nil
-            (subtype-p spec1 spec2)))))
+  (let ((spec1 (tail-element-spec el1))
+	(spec2 (tail-element-spec el2)))
+    (cond ((eq spec1 'lex) (not (eq spec2 'lex)))
+	  ((eq spec2 'lex) nil)
+	  ((eq spec1 spec2) nil)
+	  (t (subtype-p spec1 spec2)))))
 
 
 ;;; Partitioning
@@ -194,22 +193,18 @@
 ;;; mu2
 ;;; repeat until no more tail
 
-
 (defun partition-tail (unpartitioned partitioned)
-   (if unpartitioned
+  (if unpartitioned
       (let ((mu-next nil)
-         (next-unpartitioned nil))
-      (for tail-element in unpartitioned
-         do
-         (if 
-            (every #'(lambda (rem-element) 
-                        (not (more-specific-p rem-element tail-element)))
-                     unpartitioned)
-             (push (tail-element-path-rep tail-element) mu-next)
-             (push tail-element next-unpartitioned)))
-       (partition-tail next-unpartitioned (cons mu-next partitioned)))
+	    (next-unpartitioned nil))
+	(loop for tail-element in unpartitioned
+	    do
+	      (if (loop for rem-element in unpartitioned
+		      never (more-specific-p rem-element tail-element))
+		  (push (tail-element-path-rep tail-element) mu-next)
+		(push tail-element next-unpartitioned)))
+	(partition-tail next-unpartitioned (cons mu-next partitioned)))
     (nreverse partitioned)))
-
 
 
 ;;; Merging
@@ -234,7 +229,7 @@
           (let ((tail-atfs (tail-element-path-rep tail-element)))
              (or (atomic-dag-subsumes-p tail-atfs indef-fs)
                  (not
-                    (atomic-unifiable-dags-p tail-atfs indef-fs)))))
+		  (atomic-unifiable-dags-p tail-atfs indef-fs)))))
       (union-tails tail1 tail2)))
 
 (defun filter-tail (tail indef-fs)
@@ -377,20 +372,16 @@
 
 ;;; YADU 
   
-
-
 (defun yadu-unify (fixed-fss partition &optional second-call-p)
   (when *yadu-debug* 
     (format t "~%No of fixed fs ~A next tail length ~A second-call-p ~A"
-    (length fixed-fss) (length (car partition)) second-call-p))
-   (if partition
+	    (length fixed-fss) (length (car partition)) second-call-p))
+  (if partition
       (yadu-unify
-         (for fixed-fs in fixed-fss
-            append
-            (carp-unify fixed-fs (car partition) second-call-p))
-         (cdr partition) t)
-      fixed-fss))
-
+       (loop for fixed-fs in fixed-fss
+	   append (carp-unify fixed-fs (car partition) second-call-p))
+       (cdr partition) t)
+    fixed-fss))
 
 ;;; We need to find the maximal results
 ;;; I'm attempting to make this efficient for the case where most of the
@@ -436,7 +427,7 @@
 	;; assign each constraint a bit position
 	(loop for def in defaults
 	    and pos upfrom 0
-	    collect (cons def pos))))
+	    collect (cons (dagify def) pos))))
 
 (defun carp-unify (fixed-fs def-fs-set check-ind-defs-p)
   ;; def-fs-set is using path representation 
@@ -470,13 +461,13 @@
 ;; calls the runtime system directly, avoiding a little bit of type-checking
 ;; overhead.
 
-#-allegro
 (defmacro fast-subsetp (l1 l2)
   `(progn
      (bit-and ,l1 ,l2 *temp-bit-vector*)  
      (equal ,l1 *temp-bit-vector*)))
 
-#+allegro
+
+#+ignore
 (defmacro fast-subsetp (l1 l2)
   `(progn
      (excl::.primcall 'sys::rs-bitop
@@ -489,6 +480,7 @@
 		      *temp-bit-vector*)))
 
 (defun search-combinations (fixed-fs start combo state)
+  ;; (print "search-combinations")
   (unify-combinations fixed-fs start combo state)
   (when (null *success*)
     (error "This shouldn't happen!"))
@@ -530,35 +522,30 @@
   (unless (dolist (old-comb (failures state))
 	    (when (fast-subsetp old-comb combo)
 	      (return t)))
-    (let ((added (make-array (length (defaults state))
-			     :element-type 'bit 
-			     :initial-element 0)))
+    (with-unification-context (indef-fs)
+      (let ((added (make-array (length (defaults state))
+			       :element-type 'bit 
+			       :initial-element 0)))
 	(dolist (def (defaults state))
 	  (unless (or
 		   (zerop (sbit combo (cdr def))) ; Skip if not in set
-		   (let ((res
-			  (with-unification-context (indef-fs)
-			    (let ((it			    
-				   (atomic-unifiable-dags-p (car def) 
-							    indef-fs)))
-			      (if it
-				  (setq indef-fs (copy-dag indef-fs))
-				(progn
-				  nil))))))
+		   (progn
 		     (setf (sbit added (cdr def)) 1)
-		     (when res
-		       (setq indef-fs (create-wffs indef-fs)))))
-	    ;; Failed: add set so far to *failure-list*, and move constraint
-	    ;; that caused the failure to the front of the list of
-	    ;; constraints.  That way, we should wind up with the mutually
-	    ;; inconsistent constraints at the front of the list, and we
-	    ;; should be able to catch failures early.
+		     (not (unify-wffs indef-fs (car def))))
+		   (prog1 
+		       (not (cyclic-dag-p indef-fs))
+		     (setf indef-fs (fix-dag indef-fs))))
+	    ;; Failed: add set so far to *failure-list*, and move
+	    ;; constraint that caused the failure to the front of the list
+	    ;; of constraints.  That way, we should wind up with the
+	    ;; mutually inconsistent constraints at the front of the list,
+	    ;; and we should be able to catch failures early.
 	    (push added (failures state))
 	    (setf (defaults state) 
 	      (cons def (delete def (defaults state) :test #'eq)))
 	    (return-from unify-in nil)))
 	;; Unifications all successful, so return the final result
-	indef-fs)))
+	(copy-dag indef-fs)))))
 
 ;;; incorporating all the defaults of a given persistence
 ;;; non-destructively
@@ -585,16 +572,11 @@
                (partition (partition-tail non-persistent nil))
                (non-persistent-def 
                 (generalise-set (yadu-unify (list indef) partition)))
-	       (result (unify-dags indef non-persistent-def)))
+	       (result (unify-wffs indef non-persistent-def)))
 	  (unless result
 	    (error "Default is inconsistent with indef"))
-	  (let ((new-indef (create-wffs result)))
-	    (unless new-indef
-	      (cerror "The result of incorporating the persistent defaults
-                     cannot be made well-formed" "Ignore defaults")
-	      (setf new-indef indef))
-	    (make-tdfs :indef new-indef
-		       :tail persistent))))
+	  (make-tdfs :indef result
+		     :tail persistent)))
     tdfs))
 
 
@@ -721,13 +703,42 @@
                   (if indef-dag (get-dag-value indef-dag label))
                   persistence))))))
 
-       
+#|
+(defun dagify (atomic-fs)
+  (let ((dag (create-dag)))
+    (create-wffs
+     (with-unification-context (dag)
+       (if (yadu-pv-p atomic-fs)
+	   (unify-paths (yadu-pv-path atomic-fs)
+			dag
+			(make-u-value :types (yadu-pv-value atomic-fs))
+			dag)
+	 (let* ((paths (yadu-pp-paths atomic-fs))
+		(initial-path (car paths)))
+	   (dolist (path2 (cdr paths))
+	     (unify-paths initial-path       
+			  dag
+			  path2
+			  dag))))
+       (copy-dag dag)))))
+|#
 
-
-
-   
-
-
+(defun dagify (atomic-fs)
+  (let ((dag (create-dag)))
+    (with-unification-context (dag)
+      (if (yadu-pv-p atomic-fs)
+	  (unify-paths (yadu-pv-path atomic-fs)
+		       dag
+		       (make-u-value :types (yadu-pv-value atomic-fs))
+		       dag)
+	(let* ((paths (yadu-pp-paths atomic-fs))
+	       (initial-path (car paths)))
+	  (dolist (path2 (cdr paths))
+	    (unify-paths initial-path       
+			 dag
+			 path2
+			 dag))))
+      (copy-dag dag))))
 
 
 
