@@ -268,7 +268,8 @@
           '(:readings :error)
           (list -1 "null parser input")))
         (t
-         (let* ((items (main::output-stream main::*parser*))
+         (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
+                (items (main::output-stream main::*parser*))
                 (readings (length items))
                 (statistics 
                  (pg::parser-stats-readings (pg::get-parser :syntax)))
