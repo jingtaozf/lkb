@@ -46,12 +46,19 @@
       (setf *psorts-stream*
          (open *psorts-temp-file* 
             :direction :io
-            :if-exists :supersede
+            :if-exists :append
             :if-does-not-exist :create))
       (unless (and (input-stream-p *psorts-stream*)
             (output-stream-p *psorts-stream*))
-         (error "~%Failed to open temporary file correctly" 
+         (error "Failed to open temporary file ~A correctly" 
             *psorts-temp-file*))))
+
+(defun flush-psorts-stream-output nil
+   (unless (output-stream-p *psorts-stream*)
+     (error "Temporary file ~A unexpectedly closed" 
+            *psorts-temp-file*))
+   (finish-output *psorts-stream*))
+
 
 (defun close-temporary-lexicon-file nil
    (when (and (streamp *psorts-stream*)
@@ -118,6 +125,7 @@
 	 (*print-pretty* nil))
       (file-position *psorts-stream* current-file-end)
       (write specified-entry :stream *psorts-stream*)
+      (terpri *psorts-stream*)
       (setf (gethash id *psorts*)
          (list orth current-file-end))))
 
@@ -185,7 +193,7 @@
     (setf *psorts-stream*
           (open *psorts-temp-file* 
                 :direction :io
-                :if-exists :supersede
+                :if-exists :append
                 :if-does-not-exist :create))
     (unless (and (input-stream-p *psorts-stream*)
                  (output-stream-p *psorts-stream*))
