@@ -348,8 +348,8 @@
            (intern 
             (typecase (edge-rule edge)
               (string (string-upcase (edge-rule edge)))
-              (symbol (edge-rule edge))
-              (rule (rule-id (edge-rule edge)))
+              (symbol (symbol-name (edge-rule edge)))
+              (rule (string (rule-id (edge-rule edge))))
               (t :unknown))
             :common-lisp-user)))
     (let* ((configuration (and (null (edge-children edge))
