@@ -29,6 +29,12 @@ int tsdb_parse(char *command) {
 
   int foo;
 
+#ifdef DEBUG
+  fprintf(tsdb_debug_stream,
+          "yyparse(): `%s'.\n", command);
+  fflush(tsdb_debug_stream);
+#endif
+
   if(tsdb.query != NULL) {
     free(tsdb.query);
   } /* if */
@@ -126,9 +132,14 @@ FILE *tsdb_open_debug() {
 
   if((output = fopen(tsdb.debug_file, "w")) != NULL) {
     fprintf(output,
-            "TSDB debug opened by %s on %s.\n\n",
+            "TSDB debug file opened by %s on %s.\n\n",
             (user != NULL ? user : ""),
             (date != NULL ? date : ""));
+    fprintf(output,
+            "tsdb(1) %s (%s) [%s] --- (c) oe@tsnlp.dfki.uni-sb.de.\n\n",
+            tsdb_version,
+            tsdb_rcs_strip(&tsdb_revision[0], "Revision"),
+            tsdb_rcs_strip(&tsdb_revision_date[0], "Date"));
     fflush(output);
     return(output);
   } /* if */
@@ -231,10 +242,10 @@ char* tsdb_sprint_value(Tsdb_value *value ) {
         case TSDB_NOT_MATCH:
           result = strdup("!~");
           break;
-        case TSDB_IMATCH:
+        case TSDB_INSENSITIVE_MATCH:
           result = strdup("~~");
           break;
-        case TSDB_NOT_IMATCH:
+        case TSDB_NOT_INSENSITIVE_MATCH:
           result = strdup("!~~");
           break; 
       } /* switch */
@@ -359,10 +370,10 @@ BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
         case TSDB_NOT_MATCH:
           r=fprintf(stream, "!~");
           break;
-        case TSDB_IMATCH:
+        case TSDB_INSENSITIVE_MATCH:
           r=fprintf(stream, "~~");
           break;
-        case TSDB_NOT_IMATCH:
+        case TSDB_NOT_INSENSITIVE_MATCH:
           r=fprintf(stream, "!~~");
           break;  
       } /* switch */

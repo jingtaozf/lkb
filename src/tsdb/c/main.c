@@ -22,10 +22,6 @@
 
 #define TSDB_HISTORY_FILE ".tsdb_history"
 
-char _tsdb_version[] = TSDB_VERSION;
-char _tsdb_revision[] = "$Revision$";
-char _tsdb_date[] = "$Date$";
-
 char *tsdb_commands[] = {
   "create table",
   "drop table",
@@ -135,7 +131,7 @@ int main(int argc, char **argv) {
     if(!strcmp(bar, "tsdbd")) {
       tsdb.status |= TSDB_SERVER_MODE;
     } /* if */
-    free(foo);
+    tsdb_free(foo);
   } /* if */
 
   tsdb_parse_options(argc, argv);
@@ -197,11 +193,11 @@ int main(int argc, char **argv) {
           input = strcat(input, " ");
           input = strcat(input, foo);
         } /* else */
-        free(foo);
+        tsdb_free(foo);
         if(input != NULL && *input && input[strlen(input) - 1] == '.') {
           tsdb_parse(input);
           add_history(input);
-          /* free(input); */
+          /* tsdb_free(input); */
           input = (char *)NULL;
           sprintf(prompt, "tsdb@%s (%d) # ", host, ++tsdb.command);
         } /* if */
@@ -375,7 +371,10 @@ void tsdb_parse_options(int argc, char **argv) {
       case TSDB_QUERY_OPTION:
         if(optarg != NULL) {
           tsdb.query = strdup(optarg);
-          if(strchr(tsdb.query, '.') == NULL) {
+          if((bar = strrchr(tsdb.query, '.')) != NULL) {
+            for(++bar; *bar && isspace(*bar); bar++);
+          } /* if */
+          if(bar == NULL || *bar) {
             tsdb.query = (char *)realloc(tsdb.query, strlen(tsdb.query) + 2);
             tsdb.query = strcat(tsdb.query, ".");
           } /* if */
@@ -388,9 +387,9 @@ void tsdb_parse_options(int argc, char **argv) {
       case TSDB_VERSION_OPTION:
         fprintf(tsdb_error_stream,
                 "tsdb(1) %s (%s) [%s] --- (c) oe@tsnlp.dfki.uni-sb.de.\n",
-                _tsdb_version,
-                tsdb_rcs_strip(_tsdb_revision, "Revision"),
-                tsdb_rcs_strip(_tsdb_date, "Date"));
+                tsdb_version,
+                tsdb_rcs_strip(tsdb_revision, "Revision"),
+                tsdb_rcs_strip(tsdb_revision_date, "Date"));
         exit(0);
         break;
       case TSDB_HISTORY_OPTION:
@@ -717,7 +716,7 @@ char *tsdb_command_generate(char *text, int state) {
   while(name = tsdb_commands[list_index]) {
     list_index++;
     if(strncmp(name, text, len) == 0)
-      return(name);
+      return(strdup(name));
   }
   return((char *)NULL);
 

@@ -1392,19 +1392,21 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
           } 
           match = match || !(vm_result); 
           break;
-        case TSDB_IMATCH:
+        case TSDB_INSENSITIVE_MATCH:
           vm_result = 
             tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
-                             conditions[i]->right->node,TSDB_IMATCH,NULL);
+                             conditions[i]->right->node,
+                             TSDB_INSENSITIVE_MATCH,NULL);
           if (vm_result==3) {
             return(NULL);
           }
           match = match || vm_result;
           break;
-        case TSDB_NOT_IMATCH:
+        case TSDB_NOT_INSENSITIVE_MATCH:
           vm_result = 
             tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
-                               conditions[i]->right->node,TSDB_IMATCH,NULL);
+                               conditions[i]->right->node,
+                             TSDB_INSENSITIVE_MATCH,NULL);
           if (vm_result==3) {
             return NULL;
           } 
@@ -1450,18 +1452,20 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
             return NULL;
           match = match && !(vm_result);
           break;
-        case TSDB_IMATCH:
+        case TSDB_INSENSITIVE_MATCH:
           vm_result = 
             tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
-                             conditions[i]->right->node,TSDB_IMATCH,NULL);
+                             conditions[i]->right->node,
+                             TSDB_INSENSITIVE_MATCH,NULL);
           if (vm_result==3)
             return NULL;
           match = match && vm_result;
           break;
-        case TSDB_NOT_IMATCH:
+        case TSDB_NOT_INSENSITIVE_MATCH:
            vm_result = 
              tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
-                              conditions[i]->right->node,TSDB_IMATCH,NULL);
+                              conditions[i]->right->node,
+                              TSDB_INSENSITIVE_MATCH,NULL);
           if (vm_result==3)
             return NULL;
           match = match && !(vm_result);

@@ -15,6 +15,8 @@ extern void free(void *);
 #  endif
 #endif
 
+#define tsdb_free(foo) { ; }
+
 #if defined(unix)
 #  if defined(sun) && defined(__svr4__)
 #    define SOLARIS
@@ -25,7 +27,7 @@ extern void free(void *);
 #  endif
 #endif
 
-#define TSDB_VERSION "0.1"
+#define TSDB_VERSION "0.2"
 
 #define TSDB_DEFAULT_STREAM stdout
 #define TSDB_ERROR_STREAM stderr
@@ -54,8 +56,8 @@ extern void free(void *);
 #define TSDB_GREATER_OR_EQUAL_THAN 6
 #define TSDB_MATCH 7
 #define TSDB_NOT_MATCH 8
-#define TSDB_IMATCH 9
-#define TSDB_NOT_IMATCH 10
+#define TSDB_INSENSITIVE_MATCH 9
+#define TSDB_NOT_INSENSITIVE_MATCH 10
 
 #define TSDB_NOT 0
 #define TSDB_AND 1
@@ -275,7 +277,7 @@ typedef struct tsdb {
   Tsdb_history **history;
   int history_size;
 
-  char *translate_table;
+/*  char *translate_table; */
 } Tsdb;
 
 #if !defined(TSDB_C)
@@ -286,6 +288,10 @@ typedef struct tsdb {
 #ifdef DEBUG
   extern FILE *tsdb_debug_stream;
 #endif
+
+  extern char tsdb_version[];
+  extern char tsdb_revision[];
+  extern char tsdb_revision_date[];
 #endif
 
 void tsdb_parse_options(int, char **);

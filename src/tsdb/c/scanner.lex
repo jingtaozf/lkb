@@ -66,7 +66,7 @@ QUOTE \"
 LETTER [a-zA-Z]
 SPECIAL [-_]
 IDENTIFIER {LETTER}({LETTER}|{DIGIT}|{SPECIAL})*
-STRING ({QUOTE}[^"]*{QUOTE})|`[^']*'
+STRING ({QUOTE}([^"]|\\\")*{QUOTE})|`([^']|\\')*'
 TWENTYNINE (0?[1-9])|([12][0-9])
 THIRTY (0?[1-9])|([12][0-9])|(30)
 THIRTYONE (0?[1-9])|([12][0-9])|(3[01])
@@ -305,16 +305,16 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
 
 "~~" {
  if(verbose_mode) {
-    fprintf(stderr, "D_TILDA\n");
+    fprintf(stderr, "INSENSITIVE_TILDA\n");
   } /* if */
-  return(Y_TILDA);
+  return(Y_INSENSITIVE_TILDA);
 }
 
 "!~~" {
  if(verbose_mode) {
-    fprintf(stderr, "NOT_D_TILDA\n");
+    fprintf(stderr, "NOT_INSENSITIVE_TILDA\n");
   } /* if */
-  return(Y_NOT_D_TILDA);
+  return(Y_NOT_INSENSITIVE_TILDA);
 }
         
 ({a}{n}{d})|"&"|"&&" {
@@ -353,6 +353,7 @@ TIME (\(|\[)?{HOUR}:{MINUTE}(:{SECOND})?(\)|\])?
     fprintf(stderr, "STRING\n");
   } /* if */
   yytext[strlen(&yytext[0]) - 1] = 0;
+  /* fixme: remove escape characters for quotes */
   yylval.string = (char *)strdup(&yytext[1]);
   return(Y_STRING);
 }

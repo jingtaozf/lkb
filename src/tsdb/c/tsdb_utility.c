@@ -164,7 +164,7 @@ BYTE tsdb_value_match(Tsdb_value *foo, Tsdb_value *bar,char mode,
        pattern = (regex_t*) bar_pat;
      else { /* compile new pattern */
        pattern = &baz;
-       if (mode==TSDB_IMATCH)
+       if (mode==TSDB_INSENSITIVE_MATCH)
          result = regcomp(pattern,bar->value.string,REG_EXTENDED|REG_ICASE);
        else 
          result = regcomp(pattern,bar->value.string,REG_EXTENDED);
@@ -511,12 +511,12 @@ BOOL tsdb_value_satisfies(Tsdb_value* value1,Tsdb_value* operator,
     if (operator->value.operator==TSDB_NOT_MATCH) {
       return !tsdb_value_match(value1,value2,0,NULL);
     }
-  if (operator->value.operator==TSDB_IMATCH) {
-     return tsdb_value_match(value1,value2,TSDB_IMATCH,NULL);
+  if (operator->value.operator==TSDB_INSENSITIVE_MATCH) {
+     return tsdb_value_match(value1,value2,TSDB_INSENSITIVE_MATCH,NULL);
   }
    else
-    if (operator->value.operator==TSDB_NOT_IMATCH) {
-      return !tsdb_value_match(value1,value2,TSDB_IMATCH,NULL);
+    if (operator->value.operator==TSDB_NOT_INSENSITIVE_MATCH) {
+      return !tsdb_value_match(value1,value2,TSDB_INSENSITIVE_MATCH,NULL);
     }
   
   answer = tsdb_value_compare(value1,value2);
@@ -669,7 +669,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
       answer = (strstr(string, tuple->fields[i]->value.string) == NULL);
     } /* else */
     break; 
-  case TSDB_IMATCH :
+  case TSDB_INSENSITIVE_MATCH :
     if(number) {
       fprintf(tsdb_error_stream,
               "satisfies_condition(): undefined operator '~~ on integers.\n");
@@ -679,7 +679,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
       answer = (strstr(string, tuple->fields[i]->value.string) != NULL);
     } /* else */
     break; 
-  case TSDB_NOT_IMATCH :
+  case TSDB_NOT_INSENSITIVE_MATCH :
     if(number) {
       fprintf(tsdb_error_stream,
               "satisfies_condition(): undefined operator '!~~' on integers.\n");
@@ -1811,9 +1811,11 @@ BOOL tsdb_initialize() {
           (tsdb.pager != NULL ? tsdb.pager : "null"), tsdb.debug_file);
 #ifdef COMPRESSED_DATA
   fprintf(tsdb_debug_stream,
-          "initialize(): compress: `%s'; uncompress: `%s'; suffix: `%s'.\n",
+          "initialize(): compress: `%s'; uncompress: `%s';\n",
           (tsdb.compress != NULL ? tsdb.compress : "null"),
-          (tsdb.uncompress != NULL ? tsdb.uncompress : "null"),
+          (tsdb.uncompress != NULL ? tsdb.uncompress : "null"));
+  fprintf(tsdb_debug_stream,
+          "initialize(): compressed file suffix: `%s'.\n", 
           (tsdb.suffix != NULL ? tsdb.suffix : "null"));
 #endif
   fflush(tsdb_debug_stream);
@@ -2158,8 +2160,8 @@ BOOL tsdb_sort_tuples(Tsdb_key_list*** lists,int last,int n_lists) {
   for (i=0;i<n_lists;i++ ) {
     if (!is_sorted((char*)lists[i],last,sizeof(Tsdb_key_list*),
                    tsdb_keylist_compare))
-      qsort((char*)lists[i],last,sizeof(Tsdb_key_list*),
-            tsdb_keylist_compare);
+      qsort((char*)lists[i], last, sizeof(Tsdb_key_list*),
+            (int (*)())tsdb_keylist_compare);
     else {
     }
   } /* for () */
@@ -2396,11 +2398,11 @@ void tsdb_negate_node(Tsdb_node* node)
   case TSDB_NOT_MATCH: 
     node->node->value.operator = TSDB_MATCH ; 
     break;
- case TSDB_IMATCH:    
-    node->node->value.operator = TSDB_NOT_IMATCH; 
+ case TSDB_INSENSITIVE_MATCH:    
+    node->node->value.operator = TSDB_NOT_INSENSITIVE_MATCH; 
     break;
-  case TSDB_NOT_IMATCH: 
-    node->node->value.operator = TSDB_IMATCH ; 
+  case TSDB_NOT_INSENSITIVE_MATCH: 
+    node->node->value.operator = TSDB_INSENSITIVE_MATCH ; 
     break;
   default:
     fprintf(tsdb_error_stream," eh what??\n");
@@ -2522,7 +2524,7 @@ char *tsdb_rcs_strip(char *s1, char *s2) {
   char *foo, *bar;
 
   if(s1 != NULL && s2 != NULL) {
-    if((foo = strchr(s1, '$')) != NULL) {
+    if(*s1 && (foo = strchr(s1, '$')) != NULL) {
       for(foo++; *foo && *foo == *s2; foo++, s2++);
       if(!*foo || *foo++ != ':') {
         return(s1);

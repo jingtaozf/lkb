@@ -35,8 +35,8 @@
 %token Y_MATCH
        Y_NOT_TILDA
        Y_TILDA
-       Y_D_TILDA
-       Y_NOT_D_TILDA
+       Y_INSENSITIVE_TILDA
+       Y_NOT_INSENSITIVE_TILDA
        Y_LESS
        Y_GREATER
        Y_NOT_EQUAL
@@ -493,12 +493,12 @@ y_operator :
     $$ = tsdb_operator(TSDB_NOT_MATCH);
   }
  |
-  Y_D_TILDA {
-    $$ = tsdb_operator(TSDB_IMATCH);
+  Y_INSENSITIVE_TILDA {
+    $$ = tsdb_operator(TSDB_INSENSITIVE_MATCH);
   }
 |
-  Y_NOT_D_TILDA {
-    $$ = tsdb_operator(TSDB_NOT_IMATCH);
+  Y_NOT_INSENSITIVE_TILDA {
+    $$ = tsdb_operator(TSDB_NOT_INSENSITIVE_MATCH);
   }
  
 ;
