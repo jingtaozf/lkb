@@ -33,6 +33,12 @@ extern int errno;
 #else
 #  include <sys/times.h>
 #endif
+
+
+
+/* it's only hacked code but i like it */
+int copy_key_list_flag = 0;
+
 
 BYTE tsdb_value_compare(Tsdb_value *foo, Tsdb_value *bar) {
 /* what about matching?*/ 
@@ -912,6 +918,8 @@ Tsdb_key_list *tsdb_copy_key_list(Tsdb_key_list *key_list) {
   Tsdb_key_list *new;
   int i;
 
+  printf("*** --- copy_key_list considered harmful --- ***\n");
+  copy_key_list_flag = 1;
   new = (Tsdb_key_list *)malloc(sizeof(Tsdb_key_list));
   new->key = key_list->key;
   new->n_tuples = key_list->n_tuples;
@@ -1429,6 +1437,9 @@ Tsdb_selection* tsdb_copy_selection(Tsdb_selection* source) {
   for(i = 0; i < source->n_relations; i++) {
     target->relations[i] = tsdb_copy_relation(source->relations[i]);
   } /* for*/
+  
+  if (source->length==0)
+    return target;
   
   foo = source->key_lists[0];
   n_tuples = foo->n_tuples;
@@ -2093,7 +2104,7 @@ int comp(char **a,char**b) {
 
 int tsdb_uniq_projection(char** projection,int n) {
   int i,j,d=0;
-#if defined(TOM) && defined(DEBUG)
+#if defined(TOM) && defined(DEBUG) && defined(CRAZY)
   fprintf(tsdb_debug_stream,"qsort\n");
   for (i=0;i<n;i++) {
     fprintf(tsdb_debug_stream,"%s\n",projection[i]);
@@ -2101,7 +2112,7 @@ int tsdb_uniq_projection(char** projection,int n) {
   fflush(tsdb_debug_stream);
 #endif
   qsort(projection,n,sizeof(char*),(int(*)())comp);
-#if defined(TOM) && defined(DEBUG)
+#if defined(TOM) && defined(DEBUG) && defined(CRAZY)
   fprintf(tsdb_debug_stream,"qsort\n");
   for (i=0;i<n;i++) {
     fprintf(tsdb_debug_stream,"%s\n",projection[i]);
