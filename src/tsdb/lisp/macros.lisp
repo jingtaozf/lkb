@@ -63,7 +63,7 @@
            (:efficiency 4))))
   
 (defmacro convert-time (time granularity)
-  `(if (eql ,time -1)
+  `(if (= ,time -1)
      -1
      (/ ,time (cond
                ((zerop ,granularity) 10)

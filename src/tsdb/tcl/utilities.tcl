@@ -575,7 +575,7 @@ proc tsdb_set {variable {value ""}} {
         # time will be discounted; should be configurable  (17-oct-99  -  oe)
         #
         if {$globals(exclude_tgc_p)} {
-          set value "(:first :total :tcpu)";
+          set value "(:tcpu)";
         } else {
           set value "nil";
         }; # else

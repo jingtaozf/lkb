@@ -70,7 +70,10 @@
 
 (defparameter *statistics-select-condition* nil)
 
-(defparameter *statistics-exclude-tgc-p* '(:first :total :tcpu))
+(defparameter *statistics-time-fields* 
+  '(:first :total :tcpu :tgc :treal :utcpu))
+
+(defparameter *statistics-exclude-tgc-p* '(:tcpu))
 
 (defparameter *statistics-aggregate-dimension* :phenomena)
 
@@ -1507,96 +1510,92 @@
           (extras *statistics-extra*)
           restrictor (format 9902))
   
-  (labels ((discount (key value tgc)
-             (if (member key *statistics-exclude-tgc-p* :test #'eq)
-               (- value tgc)
-               value)))
-      
-    (loop
-        with fields = (append fields extras)
-        with nfields = (length fields)
-        with rank = (- nfields 1)
-        with values = (make-array nfields :element-type 'integer)
-        with totals = (make-array nfields :element-type 'integer 
-                                  :initial-element 0)
-        with tfields = '(:first :total :tcpu :tgc :treal :utcpu)
-        with aitems = 0
-        with aanalyzed = 0
-        with result = nil
-        for class in items
-        for items = 0
-        for analyzed = 0
-        for data = (rest (rest class)) 
-        finally (let ((total
-                       (cons 
-                        :total
-                        (nconc (pairlis '(:items :readings) 
-                                        (list aitems aanalyzed))
-                               (pairlis 
-                                fields 
-                                (loop
-                                    for field in fields
-                                    for value across totals
-                                    when (eq field :first)
-                                    collect (divide value aanalyzed)
-                                    else collect (divide value aitems)))))))
-                  (return (cons total (remove :all result :key #'first))))
-        do
-          (loop for i from 0 to rank do (setf (aref values i) 0))
-          (loop
-              for tuple in data
-              for readings = (get-field :readings tuple)
-              unless (or (minus-one-p readings) 
-                         (and restrictor (funcall restrictor tuple))) do
-                (incf items)
-                (when (> readings 0) (incf analyzed))
-                (loop
-                    with tgc = (convert-time 
-                                (get-field+ :tgc tuple -1) format)
-                    for i from 0
-                    for field in fields
-                    for value = (get-field+ field tuple -1)
-                    when (and (not (minus-one-p value))
-                              (member field tfields :test #'eq)) do
-                      (setf value 
-                        (discount field (convert-time value format) tgc))
-                    when (eq field :space) do
-                      (let* ((conses (get-field+ :conses tuple -1))
-                             (symbols (get-field+ :symbols tuple -1))
-                             (others (get-field+ :others tuple -1)))
-                        (if (and (minus-one-p conses) 
-                                 (minus-one-p symbols)
-                                 (minus-one-p others))
-                          (setf value -1)
-                          (setf value
-                            (if (>= format 9903)
-                              (+ (if (minus-one-p conses) 0 conses)
-                                 (if (minus-one-p symbols) 0 symbols) 
-                                 (if (minus-one-p others) 0 others))
-                              (+ (* (if (minus-one-p conses) 0 conses) 8)
-                                 (* (if (minus-one-p symbols) 0 symbols) 24)
-                                 (if (minus-one-p others) 0 others))))))
-                    when (eq field :first) do
-                      (when (> readings 0) (incf (aref values i) value))
-                    else do
-                      (incf (aref values i) value)))
-          (incf aitems items) (incf aanalyzed analyzed)
-          (push (cons (first class)
-                      (nconc (pairlis '(:items :readings) (list items analyzed))
-                             (pairlis fields 
-                                      (loop
-                                          for i from 0
-                                          for field in fields
-                                          for value across values
-                                          when (eq field :first)
-                                          collect (divide value analyzed)
-                                          and do (unless (zerop  analyzed)
-                                                   (incf (aref totals i) value))
+  (loop
+      with fields = (append fields extras)
+      with nfields = (length fields)
+      with rank = (- nfields 1)
+      with values = (make-array nfields :element-type 'integer)
+      with totals = (make-array nfields :element-type 'integer 
+                                :initial-element 0)
+      with aitems = 0
+      with aanalyzed = 0
+      with result = nil
+      for class in items
+      for items = 0
+      for analyzed = 0
+      for data = (rest (rest class)) 
+      finally (let ((total
+                     (cons 
+                      :total
+                      (nconc (pairlis '(:items :readings) 
+                                      (list aitems aanalyzed))
+                             (pairlis 
+                              fields 
+                              (loop
+                                  for field in fields
+                                  for value across totals
+                                  when (eq field :first)
+                                  collect (divide value aanalyzed)
+                                  else collect (divide value aitems)))))))
+                (return (cons total (remove :all result :key #'first))))
+      do
+        (loop for i from 0 to rank do (setf (aref values i) 0))
+        (loop
+            for tuple in data
+            for readings = (get-field :readings tuple)
+            unless (or (minus-one-p readings) 
+                       (and restrictor (funcall restrictor tuple))) do
+              (incf items)
+              (when (> readings 0) (incf analyzed))
+              (loop
+                  with tgc = (let ((tgc (get-field+ :tgc tuple -1)))
+                               (if (minus-one-p tgc) 0 tgc))
+                  for i from 0
+                  for field in fields
+                  for value = (get-field+ field tuple -1)
+                  when (and (not (minus-one-p value))
+                            (member field *statistics-time-fields*)) do
+                    (setf value 
+                      (if (member field *statistics-exclude-tgc-p*)
+                        (convert-time (- value tgc) format)
+                        (convert-time value format)))
+                  when (eq field :space) do
+                    (let* ((conses (get-field+ :conses tuple -1))
+                           (symbols (get-field+ :symbols tuple -1))
+                           (others (get-field+ :others tuple -1)))
+                      (if (and (minus-one-p conses) 
+                               (minus-one-p symbols)
+                               (minus-one-p others))
+                        (setf value -1)
+                        (setf value
+                          (if (>= format 9903)
+                            (+ (if (minus-one-p conses) 0 conses)
+                               (if (minus-one-p symbols) 0 symbols) 
+                               (if (minus-one-p others) 0 others))
+                            (+ (* (if (minus-one-p conses) 0 conses) 8)
+                               (* (if (minus-one-p symbols) 0 symbols) 24)
+                               (if (minus-one-p others) 0 others))))))
+                  when (eq field :first) do
+                    (when (> readings 0) (incf (aref values i) value))
+                  else do
+                    (incf (aref values i) value)))
+        (incf aitems items) (incf aanalyzed analyzed)
+        (push (cons (first class)
+                    (nconc (pairlis '(:items :readings) (list items analyzed))
+                           (pairlis fields 
+                                    (loop
+                                        for i from 0
+                                        for field in fields
+                                        for value across values
+                                        when (eq field :first)
+                                        collect (divide value analyzed)
+                                        and do (unless (zerop  analyzed)
+                                                 (incf (aref totals i) value))
 
-                                          else 
-                                          do (incf (aref totals i) value)
-                                          and collect (divide value items)))))
-                result))))
+                                        else 
+                                        do (incf (aref totals i) value)
+                                        and collect (divide value items)))))
+              result)))
 
 (defun analyze-performance (&optional (language *tsdb-data*)
                             &key (condition *statistics-select-condition*)
@@ -2219,17 +2218,18 @@
                             (loop
                                 for tuple in (rest (rest data))
                                 for i-id = (get-field :i-id tuple)
-                                for tgc = (if (member 
-                                               key *statistics-exclude-tgc-p*)
-                                            (get-field+ :tgc tuple 0)
-                                            0)
-                                for y = (if (member key '(:first :total
-                                                          :tcpu :tgc))
-                                          (convert-time 
-                                           (- (get-field+ key tuple -1) tgc)
-                                           granularity)
-                                          (get-field+ key tuple -1))
+                                for tgc = (let ((tgc (get-field+ :tgc tuple 0)))
+                                            (if (minus-one-p tgc) 0 tgc))
+                                for y = (get-field+ key tuple -1)
                                 unless (minus-one-p y) do
+                                  (when (member key *statistics-time-fields*)
+                                    (setf y
+                                      (convert-time 
+                                       (if (member
+                                            key *statistics-exclude-tgc-p*)
+                                         (- y tgc)
+                                         y)
+                                       granularity)))
                                   (setf ymin (if ymin (min ymin y) y))
                                   (setf ymax (if ymax (max ymax y) y))
                                 and collect (list x y i-id)))
