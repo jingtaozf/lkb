@@ -428,7 +428,7 @@
                (max 0 (- (point-h node-pos) (point-h view-pos)))
                (max 0 (- (point-v node-pos) (point-v view-pos))))
             (unless
-               (let ((eps (make-point 30 15)))
+               (let ((eps (make-point 15 15)))
                   (inside-box-p node-pos
                      ;; make slightly smaller box than full area of visible pane
                      (cons (add-points (view-scroll-position pane) eps)

@@ -64,11 +64,12 @@
 ;;; loop to terminate and the appropriate value to be returned
 
 (defun y-or-n-p-movable (query-string &optional reverse-default)
-  (let* ((spacing 10) (button-height 18) (button-width 74)
+  (let* ((font (lkb-dialog-font))
+         (ascent (font-info font))
+         (spacing (+ ascent 4)) (button-height (+ ascent 6)) (button-width 74)
          (return-value nil) 
          (title "")
          (dialog-box nil)
-         (font (lkb-dialog-font))
          (done-flag nil)
          (query-width (max (string-width query-string font) 100))
          (width
@@ -90,7 +91,8 @@
                                (make-point spacing spacing)
                                (make-point query-width button-height)
                                query-string
-                               nil)
+                               nil
+                               :view-font font)
              (make-dialog-item 'default-button-dialog-item
                                (make-point (+ spacing query-width spacing) spacing)
                                (make-point button-width button-height)
@@ -100,6 +102,7 @@
                                    (setf return-value reverse-default)
                                    (setf done-flag t)
                                    (window-close (view-container item)))
+                               :view-font font
                                :default-button nil)
              (make-dialog-item 'default-button-dialog-item
                                (make-point (+ spacing query-width spacing)
@@ -110,7 +113,8 @@
                                #'(lambda (item)
                                    (setf return-value (not reverse-default))
                                    (setf done-flag t)
-                                   (window-close (view-container item)))))))
+                                   (window-close (view-container item)))
+                               :view-font font))))
     (loop (event-dispatch)          
           (when (null (wptr dialog-box)) 
            (if done-flag 
@@ -128,8 +132,9 @@
 ;;; The dialog box built is sized appropriately
 
 (defun ask-for-strings-movable (title prompt-init-pairs &optional (expected-width 100))
-   (let* ((spacing 16) (button-height 18) (button-width 74) 
-          (font (lkb-dialog-font))
+   (let* ((font (lkb-dialog-font))
+          (ascent (font-info font))
+          (spacing (+ ascent 4)) (button-height (+ ascent 6)) (button-width 74) 
           (prompt-width
              (+ 20
                 (find-maximum-string-width font 
@@ -145,12 +150,13 @@
              (for prompt-init-pair in prompt-init-pairs
                 append
                 (make-prompt-init-dialog-items 
-                   button-height prompt-width 
+                   0 button-height prompt-width 
                    spacing
                    value-width
                    (incf count)
                    (car prompt-init-pair)
-                   (cdr prompt-init-pair)))))
+                   (cdr prompt-init-pair)
+                   font))))
       (ask-for-strings-dialog title prompt-init-items prompt-width 
          value-width button-width button-height spacing font)))
 
@@ -159,17 +165,18 @@
       (mapcar #'(lambda (val) (if (stringp val) (string-width val font) 0))
          items)))
 
-(defun make-prompt-init-dialog-items (button-height prompt-width spacing
-                                      value-width count prompt init)
+(defun make-prompt-init-dialog-items (offset button-height prompt-width spacing
+                                      value-width count prompt init font)
    (list
        (make-dialog-item 'static-text-dialog-item
           (make-point spacing
              (+ spacing (* (1- count) (+ spacing button-height))))
           (make-point prompt-width button-height)
           prompt
-          nil)
+          nil
+          :view-font font)
        (let ((top-left
-                (make-point (+ spacing prompt-width spacing) 
+                (make-point (+ offset spacing prompt-width spacing) 
                    (+ spacing (* (1- count) (+ spacing button-height))))))
           (cond
              ((eq init :check-box)
@@ -183,6 +190,7 @@
                    (make-point value-width (+ button-height 3))
                    (cadr init)
                    nil
+                   :view-font font
                    :menu-position :right
                    :menu-items
                    (mapcar
@@ -195,27 +203,32 @@
                    top-left
                    (make-point value-width button-height)
                    init
-                   nil))))))
+                   nil
+                   :view-font font))))))
 
 
 (defun ask-for-strings-dialog (title prompt-init-items prompt-width
-                                     value-width button-width button-height spacing font)
+                               value-width button-width button-height spacing font)
   (let* ((request-dialog nil) (return-values nil)
          (title-width
             (+ 40 (string-width title font)))
-         (window-width
+         (ideal-width
             (max title-width
                (+ spacing spacing spacing
                   (max (+ prompt-width value-width) (+ button-width button-width)))))
-         (window-height 
+         (ideal-height 
             (+ spacing
                (* (1+ (truncate (length prompt-init-items) 2))
-                  (+ spacing button-height)))))                  
+                  (+ spacing button-height))))                 
+         (window-width
+            (min ideal-width (- *screen-width* 100)))
+         (window-height 
+            (min ideal-height (- *screen-height* 100))))                  
     (setf request-dialog   
           (make-instance 'dialog
             :window-type :document
             :window-title ""
-            :view-position '(:top 60)
+            :view-position (make-point (truncate (- *screen-width* window-width) 2) 60)
             :view-size (make-point window-width window-height)
             :view-font font
             :close-box-p nil
