@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.16  1999/01/16 05:12:16  aac
+;; minor fixes because of PC version, generator changes
+;;
 ;; Revision 1.15  1998/11/14 23:19:27  danf
 ;; Added extraglobals.lisp to repository, and added :LEX to packages used in defpackage of :MRS in mrs-package.lisp
 ;;
@@ -375,19 +378,37 @@
 
 ;;; global variables are defined in mrsglobals
 
+#+page
+(defun determine-variable-type (fs)
+  (let ((type (fs-type fs)))
+    (case type
+          (disco::event "e")
+          (disco::event_or_index "e")
+          (disco::eventtime "t")
+          (disco::handle "h")
+          (disco::hole "h")
+          (disco::label "h")
+          (disco::ref-ind "x")
+          (disco::full_ref-ind "x")
+          (disco::deg-ind "d")
+          (disco::individual "d")
+          (tdl::*diff-list* "c")  ;; Assume coordination structure
+          (t "v"))))
 
+#+lkb
 (defun determine-variable-type (fs)
   (let ((type (create-type (fs-type fs))))
     (cond ((equal-or-subtype type *event-type*) "e")
           ((equal-or-subtype type *ref-ind-type*) "x")
-          ((equal-or-subtype type *full_ref-ind-type*) "x")
+          ((equal-or-subtype type *non_expl-ind-type*) "v")
           ((equal-or-subtype type *event_or_index-type*) "e")
           ((equal-or-subtype type *eventtime-type*) "t")
           ((equal-or-subtype type *handle-type*) "h")  
-;          ((equal-or-subtype type *group_lab-type*) "g")  
           ((equal-or-subtype type *hole-type*) "h")
           ((equal-or-subtype type *label-type*) "h")
+          ((equal-or-subtype type *full_ref-ind-type*) "x")
           ((equal-or-subtype type *deg-ind-type*) "d")
+          ((equal-or-subtype type *individual-type*) "d")
           ((equal-or-subtype type *difference-list-type*) "c") 
           ;; Assume coordination structure
           (t "v"))))
@@ -498,7 +519,7 @@
         (if (or (numberp val)
                 (stringp val)
                 (and (symbolp val)
-                     (member (elt (string val) 0) '(#\R))))
+                     (member (elt (string-downcase val) 0) '(#\R))))
             val
           (funcall gen)))
     (funcall gen)))

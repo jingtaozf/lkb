@@ -1,5 +1,20 @@
-;;; Lisp structures for VITs and basic functions for reading 
-;;; and writing VITS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;   $RCSfile$
+;;  $Revision$
+;;      $Date$
+;;     Author: Ann Copestake (CSLI)/Walter Kasper (DFKI)
+;;    Purpose: Lisp structures for VITs and basic functions for reading and writing VITS
+;;   Language: Allegro Common Lisp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; $Log$
+;; Revision 1.2  1998/10/28 13:50:23  kasper
+;; structures for vit-variables
+;;
+;; Revision 1.1  1998/10/28 10:37:56  kasper
+;; Initial revision
+;; 
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (in-package "MRS")
 
@@ -81,6 +96,26 @@
 
 (defstruct (vit_prontype (:include vit-special-form (predicate 'prontype))))
 
+(defstruct (vit_case (:include vit-special-form (predicate 'cas))))
+
+(defstruct (vit_pcase (:include vit-special-form (predicate 'pcase))))
+
+(defstruct (vit_accent (:include vit-special-form (predicate 'pros_accent))))
+
+(defstruct (vit_pmood (:include vit-special-form (predicate 'pros_mood))))
+
+(defstruct vit-var
+  (id :type integer))
+
+(defstruct (vit-hole-var (:include vit-var)
+            (:print-function print-vit-hole-var)))
+
+(defstruct (vit-label-var (:include vit-var)
+            (:print-function print-vit-label-var)))
+
+(defstruct (vit-instance-var (:include vit-var)
+            (:print-function print-vit-instance-var)))
+
 ;;;; printers
 
 
@@ -104,7 +139,24 @@
           (vit-special-form-args form)))
 
 
-           
+(defun print-vit-hole-var (var stream level)
+  (declare (ignore level))
+  (format stream "~(~a~a~)" *vit-hole-prefix* (vit-var-id var)))
+
+(defun print-vit-label-var (var stream level)
+  (declare (ignore level))
+  (format stream "~(~a~a~)" *vit-label-prefix* (vit-var-id var)))
+
+(defun print-vit-instance-var (var stream level)
+  (declare (ignore level))
+  (format stream "~(~a~a~)" *vit-instance-prefix* (vit-var-id var)))
+
+(defun vit-vars-eq (v1 v2)
+  (and (eq (type-of v1)
+           (type-of v2))
+       (eq (vit-var-id v1)
+           (vit-var-id v2))))
+
 ;;; Not sure whether VIT is allowing all Prolog operators
 ;;; or what
 
@@ -373,6 +425,8 @@
          (output-p-struct vit-out form))
         ((p-term-p form)
          (output-p-term vit-out form))
+        ((whg-id-p form)
+         (format vit-out "~A" form))
         ((stringp form)
          (format vit-out "'~A'" form))
         ((symbolp form)
@@ -421,7 +475,58 @@
       (output-p-form vit-out current-arg))
    (format vit-out ")")))
 
+;;;; equality predicates for VITs
 
+(defun vit-terms-equiv-p (rel1 rel2)
+  (cond ((and (p-term-p rel1)
+              (p-term-p rel2))
+              (and (equalp (p-term-predicate rel1)
+                           (p-term-predicate rel2))
+                                        ; ignore the first arg (fixed type by specification)
+                   (loop for arg1 in (rest (p-term-args rel1))
+                       for arg2 in (rest (p-term-args rel2))
+                                        ; for vit-vars only type is relevant
+                       always (if (and (vit-var-p arg1)
+                                       (vit-var-p arg2))
+                                  (eq (type-of arg1)
+                                      (type-of arg2))
+                                (equalp arg1 arg2)))))
+        (t nil)))
+
+(defun vit-rellists-equiv-p (rels1 rels2)
+  (when (= (length rels1) (length rels2))
+    (loop for rel1 in rels1
+        for rel2 in rels2
+        always (vit-terms-equiv-p rel1 rel2))))
+
+(defun vit-id-equiv-p (id1 id2)
+  (if (and (p-term-p id1)
+	   (p-term-p id2))
+      (let ((sid1 (first (p-term-args id1)))
+	    (sid2 (first (p-term-args id2))))
+	(and (sid-p sid1) (sid-p sid2)
+	     (= (sid-begintime sid1) (sid-begintime sid2))
+	     (= (sid-endtime sid1) (sid-endtime sid2))))
+    (eq id1 id2)))
+
+;;; a simple form of equivalence check
+;;; 1. relations must occur in same order
+;;; 2 coreference is ignored
+;;; 3. not every slot is considered
+;;; according to agreement with C.J. (2.2.99) only semantics and
+;;; sid-starttime/endtime are compared
+(defun vits-equiv-p (vit1 vit2)
+  (and (vit-p vit1) (vit-p vit2)
+       (vit-id-equiv-p (vit-utterance-id vit1) (vit-utterance-id vit2))
+       (vit-rellists-equiv-p (vit-semantics vit1) (vit-semantics vit2))
+;       (vit-rellists-equiv-p (vit-sorts vit1) (vit-sorts vit2))
+;       (vit-rellists-equiv-p (vit-discourse vit1) (vit-discourse vit2))
+;       (vit-rellists-equiv-p (vit-syntax vit1) (vit-syntax vit2))
+;       (vit-rellists-equiv-p (vit-tenseandaspect vit1) (vit-tenseandaspect vit2))
+;       (vit-rellists-equiv-p (vit-scope vit1) (vit-scope vit2))
+;       (vit-rellists-equiv-p (vit-prosody vit1) (vit-prosody vit2))
+;       (vit-terms-equiv-p (vit-utterance-id vit1) (vit-utterance-id vit2))
+       ))
 
 ;;;;;;;;;;;;;;;;;; other general access and create functions
 

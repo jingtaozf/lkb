@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.11  1999/03/06 03:45:59  aac
+;; got rid of special message stuff in generator, added code so compatible lexical entries can be retrieved, added menu item in CLIM for lexical ids on trees
+;;
 ;; Revision 1.10  1999/03/04 06:03:52  aac
 ;; construction semantics correct for lexical rules, redid equality checking
 ;;
@@ -151,6 +154,15 @@ order in an MRS")
 (defparameter *sem-relation-prefix* nil
   "a prefix string in relation names (removed in VITs)")
 
+(defvar *vit-hole-prefix* "HH"
+  "a prefix string designating a hole in VITs")
+
+(defvar *vit-instance-prefix* "IH"
+  "a prefix string designating an instance in VITs")
+
+(defvar *vit-label-prefix* "LH"
+  "a prefix string designating an instance in VITs")
+
 ;;; at present only simple feature-value-pairs are treated (no complex values)
 
 (defparameter *index-feature-transform-table* nil
@@ -255,6 +267,13 @@ for extra features for using the extra-features of a relation")
 
 (defparameter *throle-feature* (vsym "THROLE"))
 
+(defvar *prosodic-accent-feature* (vsym "ACCENT"))
+
+(defvar *prosodic-mood-feature* (vsym "PMOOD"))
+
+;; an assoc list listing for each prosodic mood compatible syntactic moods
+(defvar *prosodic-syntactic-mood-table* nil)
+
 ;;; used in mrsresolve
 
 (defparameter *bv-feature* (vsym "BV"))
@@ -263,6 +282,7 @@ for extra features for using the extra-features of a relation")
 
 (defparameter *event-type* (vsym "event"))
 (defparameter *event_or_index-type* (vsym "event_or_index"))
+(defparameter *non_expl-ind-type* (vsym "non_expl-ind"))
 (defparameter *eventtime-type* (vsym "eventtime"))
 (defparameter *handle-type* (vsym "handle"))
 (defparameter *group_lab-type* (vsym "group_lab"))
@@ -288,6 +308,12 @@ for extra features for using the extra-features of a relation")
 
 (defparameter *mrs-extra-display* nil)
 
+;;; take VM arg role control out of package MAIN
+
+(defvar *VM-arg-roles-only-p* nil)
+(defvar *VM-arg-roles* nil)
+(defvar *suppressed-VM-arg-roles* nil)
+
 ;;; for generation - real values in mrsglobals-eng
 
 (defparameter *dummy-relations* nil)
@@ -295,6 +321,10 @@ for extra features for using the extra-features of a relation")
 (defparameter *main-semantics-path* nil)
 
 (defparameter *construction-semantics-path* nil)
+
+(defparameter *external-semantics-path* nil)
+
+(defparameter *message-semantics-path* nil)
 
 (defparameter *top-semantics-type* nil)
 

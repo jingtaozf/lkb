@@ -52,12 +52,14 @@
 ;;; called from mrsfns.lisp
 
 (defun get-parse-fs (parse)
-  (if (string-equal "1" (subseq cl-user::*page-version* 0 1))
-      (lexicon::cfs-fs (pg::u-item-cfs parse))
-    (if (or (eq (type-of parse) 'typed-item)
-	    (eq (type-of parse) 'main::typed-item))
-	(lexicon::cfs-fs (car (main::typed-item-args parse)))
-      (cfs-fs (pg::combo-item-cfs parse)))))
+  (if (eq (type-of parse) 'csli-unify::fs) 
+      parse
+    (if (string-equal "1" (subseq user::*page-version* 0 1))
+	(lexicon::cfs-fs (pg::u-item-cfs parse))
+      (if (or (eq (type-of parse) 'typed-item)
+	      (eq (type-of parse) 'main::typed-item))
+	  (lexicon::cfs-fs (car (main::typed-item-args parse)))
+	(cfs-fs (pg::combo-item-cfs parse))))))
 
 (defun get-parse-fs-alt (parse)
   (if (string-equal "1" (subseq cl-user::*page-version* 0 1))
@@ -145,11 +147,12 @@ Other useful functions from UDINE/TDL:
 (defun is-valid-type (type)
   (tdl::get-infon (intern type lex::*lex-package*) lex::*lex-package* :avms))
 
-(defun fetch-and-expand-type (name &optional (domain *lex-package*))
+(defun fetch-and-expand-type (name &optional (domain lex::*lex-package*))
   (let* ((domain (string domain))
          (name (intern name domain))
          (infon (tdl::get-infon name domain :avms)))
     (when infon
+      (tdl::expand-type name :domain domain)
       (lex::convert 
        (tdl::feature-structure-term (tdl::get-prototype name domain :avms))
        user::*unifier*))))

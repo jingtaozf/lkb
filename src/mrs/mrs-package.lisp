@@ -16,7 +16,7 @@
 (in-package "MRS")
 
 (export '(psoa-handel psoa-top-h psoa-index psoa-liszt psoa-h-cons
-          psoa-message psoa-wgliszt
+          psoa-message psoa-wgliszt psoa-key-h
           rel-extra rel-type rel-sort rel-handel rel-label rel-flist
           fvpair-feature fvpair-value
           var-name var-extra var-id
