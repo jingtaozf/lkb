@@ -6,6 +6,7 @@ cvs update: Updating lkb
 ? lkb/mrs-globals.lisp.fasl
 ? lkb/user-fns.lsp.fasl
 cvs update: Updating .
+M Makefile
 ? doc
 ? etc
 ? linux
@@ -47,6 +48,7 @@ cvs update: Updating lib/tcl8.3
 cvs update: Updating lib/tcl8.3/encoding
 cvs update: Updating lib/tcl8.3/http1.0
 cvs update: Updating lib/tcl8.3/http2.3
+cvs update: Updating lib/tcl8.3/http2.4
 cvs update: Updating lib/tcl8.3/msgcat1.1
 cvs update: Updating lib/tcl8.3/opt0.4
 cvs update: Updating lib/tcl8.3/tcltest1.0
@@ -69,7 +71,6 @@ cvs update: Updating lib/tk8.3/images
 cvs update: Updating log
 M log/build
 cvs update: Updating src
-U src/version.lsp
 ? src/.l6cl
 ? src/.sacl
 cvs update: Updating src/.aasl
@@ -264,6 +265,7 @@ cvs update: Updating src/rmrs
 cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
+U src/systems/tsdb.system
 cvs update: Updating src/tproving
 cvs update: Updating src/tsdb
 cvs update: Updating src/tsdb/TeX
@@ -339,7 +341,7 @@ cvs update: Updating src/www
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.169; previous revision: 1.168
+new revision: 1.172; previous revision: 1.171
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1175,7 +1177,7 @@ rsh lineara "cd /eo/e7/apache/htdocs/src/lkb && make lkb_linux_om@lineara";
 ( \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp\")"; \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp\")"; \
-  echo "(pushnew :lkb *features*)"; \
+  echo "(pushnew :mrs *features*)"; \
   echo "(setf make::*building-image-p* t)"; \
   echo "(setf (system:getenv \"DISPLAY\") nil)"; \
   echo "(compile-system \"tsdb\" :force t)"; \
@@ -1244,14 +1246,14 @@ area area  address(bytes)        cons         other bytes
      Top #x41f06000
      New #x41c86000(2621440)    -----            -----
      New #x41a06000(2621440)  1019:1019     2551696:872
-   0 Old #x41003970(10495632)    1:45854    8914504:1207192
+   0 Old #x41003970(10495632)    1:45854    8914520:1207176
 Root pages: 2
  Lisp heap: #x41000000  pos: #x41f06000 resrve: 586153984
  C heap:    #x64000000  pos: #x64006000 resrve: 1024000
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Sep 25, 2002 10:26)
+6.0 [Linux (x86)] (Oct 1, 2002 22:16)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -2043,7 +2045,7 @@ CL-USER(47):
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 [Current process: Initial Lisp Listener]
-CL-USER(48): #<EQUAL hash-table with 0 entries @ #x4143e9da>
+CL-USER(48): #<EQUAL hash-table with 0 entries @ #x4143e9ca>
 [Current process: Initial Lisp Listener]
 CL-USER(49): ; Libfasl from bundle code/who.fasl.
 
@@ -2060,7 +2062,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/nacl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-24882520 bytes have been tenured, next gc will be global.
+25816616 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -2202,7 +2204,7 @@ CL-USER(81):
 [Current process: Initial Lisp Listener]
 CL-USER(82): ; Exiting Lisp
 T
-CL-USER(3): (:LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM
+CL-USER(3): (:MRS :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM
  :CLTL2 :CLIM-MOTIF :ANSI-90 :SILICA :CLIM-2.1 ...)
 CL-USER(4): T
 CL-USER(5): NIL
@@ -2220,6 +2222,7 @@ CL-USER(6): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/pvm/pvm.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/pvm/pvm.fasl
+; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/mrs.system
 ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/lkb.system
 ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/psql.system
 ; Foreign loading /eo/e7/apache/htdocs/src/lkb/src/psql/linux/libpq.so.
@@ -2360,7 +2363,7 @@ CL-USER(6): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/rules.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/parse.lsp
-8939568 bytes have been tenured, next gc will be global.
+8954784 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/parse.fasl
@@ -2567,6 +2570,133 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/debug.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/debug.fasl
+;;; Compiling file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/mrs/lkb-interface.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lkb-interface.fasl
+;;; Fasl write complete
+; Fast loading
+;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lkb-interface.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrsglobals.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsglobals.fasl
+;;; Fasl write complete
+; Fast loading
+;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsglobals.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/basemrs.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/basemrs.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/basemrs.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrsoutput.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsoutput.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsoutput.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrscorpus.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrscorpus.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrscorpus.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/interface.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/interface.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/interface.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrsresolve.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsresolve.fasl
+;;; Fasl write complete
+; Fast loading
+;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsresolve.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrscons.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrscons.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrscons.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/cheapscope.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/cheapscope.fasl
+;;; Fasl write complete
+; Fast loading
+;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/cheapscope.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrsmunge.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsmunge.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsmunge.fasl
+;;; Compiling file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/mrs/mrsruleinput.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsruleinput.fasl
+;;; Fasl write complete
+; Fast loading
+;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrsruleinput.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lkb-acl-mrs.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lkb-acl-mrs.fasl
+;;; Fasl write complete
+; Fast loading
+;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lkb-acl-mrs.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lkbmrs.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lkbmrs.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lkbmrs.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/generate.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/generate.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/generate.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/spell.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/spell.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/spell.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/genbatch.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/genbatch.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/genbatch.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrstoplevel.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrstoplevel.fasl
+;;; Fasl write complete
+; Fast loading
+;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/mrstoplevel.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lexutils.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lexutils.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lexutils.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lexindex.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lexindex.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lexindex.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lexlookup.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lexlookup.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/lexlookup.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/genpredict.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/genpredict.fasl
+;;; Fasl write complete
+; Fast loading
+;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/genpredict.fasl
+;;; Compiling file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/mrs/dependencies.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/dependencies.fasl
+;;; Fasl write complete
+; Fast loading
+;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/dependencies.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/translate.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/translate.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/mrs/translate.fasl
 ; Foreign loading /eo/e7/apache/htdocs/src/lkb/src/tsdb/linux/capi.so.
 ; Foreign loading /eo/e7/apache/htdocs/src/lkb/src/tsdb/linux/gc.so.
 ;;; Compiling file
@@ -2582,13 +2712,6 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/macros.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/macros.fasl
-;;; Compiling file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/lkb-interface.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/lkb-interface.fasl
-;;; Fasl write complete
-; Fast loading
-;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/lkb-interface.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/globals.lisp
 ;;; Writing fasl file
@@ -2624,6 +2747,8 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tsdb.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/process.lisp
+; While compiling RESULT-HOOK:
+Warning: Variable *RECONSTRUCT-CACHE* is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/process.fasl
 ;;; Fasl write complete
@@ -2647,69 +2772,26 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/statistics.fasl
-;;; Compiling file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/podium.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/podium.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/podium.fasl
-;;; Compiling file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/allegro.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/allegro.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/allegro.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/gc.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/gc.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/gc.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/yy.lisp
-gc-after-hook(): local; new: 3484480; old: 0; pending: 0; efficiency: 96.
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/yy.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/yy.fasl
-;;; Compiling file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/derivations.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/derivations.fasl
-;;; Fasl write complete
-; Fast loading
-;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/derivations.fasl
-;;; Compiling file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/tnt-interface.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tnt-interface.fasl
-;;; Fasl write complete
-; Fast loading
-;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tnt-interface.fasl
-;;; Compiling file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/ptb.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/ptb.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/ptb.fasl
-Warning: While compiling these undefined functions were referenced:
-         MRS::MRS-OUTPUT-PSOA from position 27449 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-         MRS::EXTRACT-MRS from position 27449 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp,
-           32021 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-         MRS::GET-MRS-STRING from position 25375 in
-           /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-         PRINT-GEN-CHART from position 11986 in
-           /eo/e7/apache/htdocs/src/lkb/src/io-general/utils.lsp
-         LKB::EXPAND-IDIOMS-PHRASES from position 4248 in
-           /eo/e7/apache/htdocs/src/lkb/src/io-tdl/tdllexinput.lsp
-(#<MODULE: tsdb>)
-CL-USER(7): ; killing "scheduler work-out [spr19158]"
+
+;      - Source file not found. Not compiling file
+;        "/eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/evolution.lisp"
+;      - Source file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/evolution.lisp
+;        and binary file
+;        /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/evolution.fasl not found,
+;        not loading.
+Error: 
+Source file "/eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/evolution.lisp"
+       and binary file
+       "/eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/evolution.fasl" do
+       not exist.
+
+Restart actions (select using :continue):
+ 0: Continue, ignoring missing files.
+ 1: Return to Top Level (an "abort" restart)
+ 2: Abort #<PROCESS Initial Lisp Listener>
+[1c] CL-USER(7): :pop
+CL-USER(7): EOF
+Really exit lisp [n]? 
 ; killing "Initial Lisp Listener"
 ; Exiting Lisp
 ( \
@@ -2796,14 +2878,14 @@ area area  address(bytes)        cons         other bytes
      Top #x41f06000
      New #x41c86000(2621440)    -----            -----
      New #x41a06000(2621440)  1019:1019     2551696:872
-   0 Old #x41003970(10495632)    1:45854    8914504:1207192
+   0 Old #x41003970(10495632)    1:45854    8914520:1207176
 Root pages: 2
  Lisp heap: #x41000000  pos: #x41f06000 resrve: 586153984
  C heap:    #x64000000  pos: #x64006000 resrve: 1024000
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Sep 25, 2002 10:31)
+6.0 [Linux (x86)] (Oct 1, 2002 22:22)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -3595,7 +3677,7 @@ CL-USER(47):
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 [Current process: Initial Lisp Listener]
-CL-USER(48): #<EQUAL hash-table with 0 entries @ #x4143e9da>
+CL-USER(48): #<EQUAL hash-table with 0 entries @ #x4143e9ca>
 [Current process: Initial Lisp Listener]
 CL-USER(49): ; Libfasl from bundle code/who.fasl.
 
@@ -3612,7 +3694,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/macl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-24683448 bytes have been tenured, next gc will be global.
+25823832 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -3777,7 +3859,7 @@ rm -f /eo/e7/apache/htdocs/src/.yes;
 ( \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/general/loadup.lisp\")"; \
   echo "(load \"/eo/e7/apache/htdocs/src/lkb/src/ACL_specific/deliver.lsp\")"; \
-  echo "(pushnew :lkb *features*)"; \
+  echo "(pushnew :mrs *features*)"; \
   echo "(setf make::*building-image-p* t)"; \
   echo "(setf (system:getenv \"DISPLAY\") nil)"; \
   echo "(compile-system \"tsdb\" :force t)"; \
@@ -3849,7 +3931,7 @@ Root pages: 12
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (9/25/2 10:32)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (10/1/2 22:21)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -4004,8 +4086,8 @@ USER(21): ; Libfasl from bundle code/eli.fasl.
 ;      /eo/e7/apache/htdocs/src/lkb/src/.sacl/ACL_specific/dialog.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/types.lsp
 ; While compiling TYPES-TO-XML:
-Warning: Variable #:G13593 is never used.
-Warning: Variable #:G13594 is never used.
+Warning: Variable #:G13601 is never used.
+Warning: Variable #:G13602 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/types.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/types.fasl
@@ -4060,10 +4142,10 @@ Warning: Variable #:G13594 is never used.
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/clex.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/rules.lsp
 ; While compiling RULES-TO-XML:
-Warning: Variable #:G18109 is never used.
-Warning: Variable #:G18110 is never used.
-Warning: Variable #:G18095 is never used.
-Warning: Variable #:G18096 is never used.
+Warning: Variable #:G18117 is never used.
+Warning: Variable #:G18118 is never used.
+Warning: Variable #:G18103 is never used.
+Warning: Variable #:G18104 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
@@ -4114,9 +4196,9 @@ Warning: Variable #:G18096 is never used.
 ;      /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputtdfs.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/io-general/outputsrc.lsp
 ; While compiling (LABELS OUTPUT-RULES-FOR-EBL OUTPUT-RULES):
-Warning: Variable #:G22376 is never used.
-Warning: Variable #:G22372 is never used.
-Warning: Variable #:G22373 is never used.
+Warning: Variable #:G22384 is never used.
+Warning: Variable #:G22380 is never used.
+Warning: Variable #:G22381 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputsrc.fasl
 ;;; Fasl write complete
@@ -4370,7 +4452,7 @@ USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-22491688 bytes have been tenured, next gc will be global.
+22050384 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4414,7 +4496,7 @@ NIL
 USER(40): [Current process: Initial Lisp Listener]
 USER(40): ; Exiting Lisp
 T
-USER(3): (:LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM :CLTL2
+USER(3): (:MRS :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM :CLTL2
  :CLIM-MOTIF :ANSI-90 :SILICA :CLIM-2.1 ...)
 USER(4): T
 USER(5): NIL
@@ -4430,6 +4512,7 @@ USER(6): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/pvm/pvm.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/pvm/pvm.fasl
+; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/mrs.system
 ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/lkb.system
 ; Loading /eo/e7/apache/htdocs/src/lkb/src/lkb-package.lsp
 ; Loading /eo/e7/apache/htdocs/src/lkb/src/mrs-package.lsp
@@ -4467,8 +4550,8 @@ USER(6): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/ACL_specific/dialog.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/types.lsp
 ; While compiling TYPES-TO-XML:
-Warning: Variable #:G14184 is never used.
-Warning: Variable #:G14185 is never used.
+Warning: Variable #:G17530 is never used.
+Warning: Variable #:G17531 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/types.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/types.fasl
@@ -4476,7 +4559,7 @@ Warning: Variable #:G14185 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
-7152328 bytes have been tenured, next gc will be global.
+7162080 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/yadu.fasl
@@ -4525,10 +4608,10 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/clex.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/rules.lsp
 ; While compiling RULES-TO-XML:
-Warning: Variable #:G18713 is never used.
-Warning: Variable #:G18714 is never used.
-Warning: Variable #:G18699 is never used.
-Warning: Variable #:G18700 is never used.
+Warning: Variable #:G22059 is never used.
+Warning: Variable #:G22060 is never used.
+Warning: Variable #:G22045 is never used.
+Warning: Variable #:G22046 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/rules.fasl
@@ -4576,9 +4659,9 @@ Warning: Variable #:G18700 is never used.
 ;    /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputtdfs.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/io-general/outputsrc.lsp
 ; While compiling (LABELS OUTPUT-RULES-FOR-EBL OUTPUT-RULES):
-Warning: Variable #:G22990 is never used.
-Warning: Variable #:G22986 is never used.
-Warning: Variable #:G22987 is never used.
+Warning: Variable #:G26336 is never used.
+Warning: Variable #:G26332 is never used.
+Warning: Variable #:G26333 is never used.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/io-general/outputsrc.fasl
 ;;; Fasl write complete
@@ -4696,6 +4779,107 @@ Warning: Variable #:G22987 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/debug.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/debug.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lkb-interface.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lkb-interface.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lkb-interface.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrsglobals.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrsglobals.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrsglobals.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/basemrs.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/basemrs.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/basemrs.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrsoutput.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrsoutput.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrsoutput.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrscorpus.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrscorpus.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrscorpus.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/interface.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/interface.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/interface.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrsresolve.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrsresolve.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrsresolve.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrscons.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrscons.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrscons.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/cheapscope.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/cheapscope.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/cheapscope.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrsmunge.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrsmunge.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrsmunge.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrsruleinput.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrsruleinput.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrsruleinput.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lkb-acl-mrs.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lkb-acl-mrs.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lkb-acl-mrs.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lkbmrs.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lkbmrs.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lkbmrs.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/generate.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/generate.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/generate.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/spell.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/spell.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/spell.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/genbatch.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/genbatch.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/genbatch.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/mrstoplevel.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrstoplevel.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/mrstoplevel.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lexutils.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lexutils.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lexutils.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lexindex.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lexindex.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lexindex.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/lexlookup.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lexlookup.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/lexlookup.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/genpredict.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/genpredict.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/genpredict.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/dependencies.lisp
+;;; Writing fasl file
+;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/dependencies.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/dependencies.fasl
+;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/mrs/translate.lisp
+;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/translate.fasl
+;;; Fasl write complete
+; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/mrs/translate.fasl
 ; Foreign loading /eo/e7/apache/htdocs/src/lkb/src/tsdb/solaris/capi.so.
 ; Foreign loading /eo/e7/apache/htdocs/src/lkb/src/tsdb/solaris/gc.so.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/tsdb-package.lisp
@@ -4707,12 +4891,6 @@ Warning: Variable #:G22987 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/macros.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/macros.fasl
-;;; Compiling file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/lkb-interface.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/lkb-interface.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/lkb-interface.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/globals.lisp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/globals.fasl
 ;;; Fasl write complete
@@ -4739,6 +4917,8 @@ Warning: Variable #:G22987 is never used.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tsdb.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/process.lisp
+; While compiling RESULT-HOOK:
+Warning: Variable *RECONSTRUCT-CACHE* is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/process.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/process.fasl
@@ -4755,46 +4935,26 @@ Warning: Variable #:G22987 is never used.
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/statistics.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/statistics.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/podium.lisp
-;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/podium.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/podium.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/allegro.lisp
-;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/allegro.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/allegro.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/gc.lisp
-;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/gc.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/gc.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/yy.lisp
-;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/yy.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/yy.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/derivations.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/derivations.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/derivations.fasl
-;;; Compiling file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/tnt-interface.lisp
-;;; Writing fasl file
-;;;   /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tnt-interface.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tnt-interface.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
-;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/ptb.lisp
-;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/ptb.fasl
-;;; Fasl write complete
-; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/ptb.fasl
-Warning: While compiling these undefined functions were referenced:
-         MRS::MRS-OUTPUT-PSOA, MRS::EXTRACT-MRS, MRS::GET-MRS-STRING,
-         PRINT-GEN-CHART, LKB::EXPAND-IDIOMS-PHRASES.
-(#<MODULE: tsdb>)
-USER(7): ; killing "scheduler work-out [spr19158]"
+
+;      - Source file not found. Not compiling file
+;        "/eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/evolution.lisp"
+;      - Source file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/evolution.lisp
+;        and binary file
+;        /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/evolution.fasl not found,
+;        not loading.
+Error: 
+Source file "/eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/evolution.lisp" and
+       binary file
+       "/eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/evolution.fasl" do not
+       exist.
+
+Restart actions (select using :continue):
+ 0: Continue, ignoring missing files.
+ 1: Return to Top Level (an "abort" restart)
+ 2: Abort #<PROCESS Initial Lisp Listener>
+[1c] USER(7): :pop
+USER(7): EOF
+Really exit lisp [n]? 
 ; killing "Initial Lisp Listener"
 ; Exiting Lisp
 ( \
@@ -4816,8 +4976,7 @@ solaris/libacl5016.so
   tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/erg.tgz \
       --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-      --exclude="pet*" --exclude="tsdb*" \
-      --exclude="*.fasl" \
+      --exclude="tsdb*" --exclude="*.fasl" \
       erg; \
 )
 erg/
@@ -4857,11 +5016,11 @@ erg/lkb/mrsmunge.tdl
 erg/lkb/script
 erg/lkb/user-fns.lsp
 erg/pet/
-erg/pet/cheap.settings
-erg/pet/flop.settings
-erg/pet/full.voc
+erg/pet/english.set
+erg/pet/l2global.set
 erg/pet/qc-set.tdl
 erg/pet/qc-traditional.tdl
+erg/pet/flop.set
 ( \
   cd /eo/e7/apache/htdocs/src; \
   tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/matrix.tgz \
@@ -5042,6 +5201,15 @@ lib/blt2.4/dd_protocols/dd-file.tcl
 lib/blt2.4/dd_protocols/dd-number.tcl
 lib/blt2.4/dd_protocols/dd-text.tcl
 lib/blt2.4/dd_protocols/tclIndex
+lib/blt2.4/dnd.tcl
+lib/blt2.4/dragdrop.tcl
+lib/blt2.4/graph.tcl
+lib/blt2.4/hierbox.tcl
+lib/blt2.4/tabnotebook.tcl
+lib/blt2.4/tabset.tcl
+lib/blt2.4/treeview.tcl
+lib/blt2.4/treeview.xbm
+lib/blt2.4/treeview_m.xbm
 lib/linux/
 lib/linux/libgd.so
 lib/linux/libitsdb.a
@@ -5133,6 +5301,14 @@ lib/tcl8.3/encoding/macTurkish.enc
 lib/tcl8.3/encoding/macUkraine.enc
 lib/tcl8.3/encoding/shiftjis.enc
 lib/tcl8.3/encoding/symbol.enc
+lib/tcl8.3/encoding/ebcdic.enc
+lib/tcl8.3/encoding/iso8859-10.enc
+lib/tcl8.3/encoding/iso8859-13.enc
+lib/tcl8.3/encoding/iso8859-14.enc
+lib/tcl8.3/encoding/iso8859-15.enc
+lib/tcl8.3/encoding/iso8859-16.enc
+lib/tcl8.3/encoding/koi8-u.enc
+lib/tcl8.3/encoding/tis-620.enc
 lib/tcl8.3/http1.0/
 lib/tcl8.3/http1.0/http.tcl
 lib/tcl8.3/http1.0/pkgIndex.tcl
@@ -5148,6 +5324,9 @@ lib/tcl8.3/opt0.4/pkgIndex.tcl
 lib/tcl8.3/tcltest1.0/
 lib/tcl8.3/tcltest1.0/pkgIndex.tcl
 lib/tcl8.3/tcltest1.0/tcltest.tcl
+lib/tcl8.3/http2.4/
+lib/tcl8.3/http2.4/http.tcl
+lib/tcl8.3/http2.4/pkgIndex.tcl
 lib/tix4.1/
 lib/tix4.1/Balloon.tcl
 lib/tix4.1/BtnBox.tcl
@@ -5515,6 +5694,170 @@ lib/tk8.3/images/pwrdLogo175.gif
 lib/tk8.3/images/pwrdLogo200.gif
 lib/tk8.3/images/pwrdLogo75.gif
 lib/tk8.3/images/tai-ku.gif
+lib/Tktable2.7/
+lib/Tktable2.7/pkgIndex.tcl
+lib/Tktable2.7/tkTable.tcl
+lib/tix8.2/
+lib/tix8.2/Balloon.tcl
+lib/tix8.2/BtnBox.tcl
+lib/tix8.2/CObjView.tcl
+lib/tix8.2/ChkList.tcl
+lib/tix8.2/ComboBox.tcl
+lib/tix8.2/Compat.tcl
+lib/tix8.2/Console.tcl
+lib/tix8.2/Control.tcl
+lib/tix8.2/DefSchm.tcl
+lib/tix8.2/DialogS.tcl
+lib/tix8.2/DirBox.tcl
+lib/tix8.2/DirDlg.tcl
+lib/tix8.2/DirList.tcl
+lib/tix8.2/DirTree.tcl
+lib/tix8.2/DragDrop.tcl
+lib/tix8.2/DtlList.tcl
+lib/tix8.2/EFileBox.tcl
+lib/tix8.2/EFileDlg.tcl
+lib/tix8.2/Event.tcl
+lib/tix8.2/FileBox.tcl
+lib/tix8.2/FileCbx.tcl
+lib/tix8.2/FileCmpt.tcl
+lib/tix8.2/FileDlg.tcl
+lib/tix8.2/FileEnt.tcl
+lib/tix8.2/FileUtil.tcl
+lib/tix8.2/FloatEnt.tcl
+lib/tix8.2/Grid.tcl
+lib/tix8.2/HList.tcl
+lib/tix8.2/HListDD.tcl
+lib/tix8.2/IconView.tcl
+lib/tix8.2/Init.tcl
+lib/tix8.2/LabEntry.tcl
+lib/tix8.2/LabFrame.tcl
+lib/tix8.2/LabWidg.tcl
+lib/tix8.2/ListNBk.tcl
+lib/tix8.2/Meter.tcl
+lib/tix8.2/MultView.tcl
+lib/tix8.2/NoteBook.tcl
+lib/tix8.2/OldUtil.tcl
+lib/tix8.2/OptMenu.tcl
+lib/tix8.2/PanedWin.tcl
+lib/tix8.2/PopMenu.tcl
+lib/tix8.2/Primitiv.tcl
+lib/tix8.2/ResizeH.tcl
+lib/tix8.2/SGrid.tcl
+lib/tix8.2/Tix.tcl
+lib/tix8.2/SHList.tcl
+lib/tix8.2/SListBox.tcl
+lib/tix8.2/STList.tcl
+lib/tix8.2/SText.tcl
+lib/tix8.2/SWidget.tcl
+lib/tix8.2/SWindow.tcl
+lib/tix8.2/Select.tcl
+lib/tix8.2/Shell.tcl
+lib/tix8.2/SimpDlg.tcl
+lib/tix8.2/StackWin.tcl
+lib/tix8.2/StatBar.tcl
+lib/tix8.2/StdBBox.tcl
+lib/tix8.2/StdShell.tcl
+lib/tix8.2/TList.tcl
+lib/tix8.2/Tree.tcl
+lib/tix8.2/UnixFile.tcl
+lib/tix8.2/Utils.tcl
+lib/tix8.2/VResize.tcl
+lib/tix8.2/VStack.tcl
+lib/tix8.2/VTree.tcl
+lib/tix8.2/Variable.tcl
+lib/tix8.2/Verify.tcl
+lib/tix8.2/Version.tcl
+lib/tix8.2/WInfo.tcl
+lib/tix8.2/WinFile.tcl
+lib/tix8.2/fs.tcl
+lib/tix8.2/pkgIndex.tcl
+lib/tix8.2/tclIndex
+lib/tix8.2/bitmaps/
+lib/tix8.2/bitmaps/act_fold.gif
+lib/tix8.2/bitmaps/act_fold.xbm
+lib/tix8.2/bitmaps/act_fold.xpm
+lib/tix8.2/bitmaps/balarrow.xbm
+lib/tix8.2/bitmaps/cbxarrow.xbm
+lib/tix8.2/bitmaps/ck_def.xbm
+lib/tix8.2/bitmaps/ck_off.xbm
+lib/tix8.2/bitmaps/ck_on.xbm
+lib/tix8.2/bitmaps/cross.xbm
+lib/tix8.2/bitmaps/decr.xbm
+lib/tix8.2/bitmaps/drop.xbm
+lib/tix8.2/bitmaps/file.gif
+lib/tix8.2/bitmaps/file.xbm
+lib/tix8.2/bitmaps/file.xpm
+lib/tix8.2/bitmaps/folder.gif
+lib/tix8.2/bitmaps/folder.xbm
+lib/tix8.2/bitmaps/folder.xpm
+lib/tix8.2/bitmaps/harddisk.xbm
+lib/tix8.2/bitmaps/hourglas.mask
+lib/tix8.2/bitmaps/hourglas.xbm
+lib/tix8.2/bitmaps/incr.xbm
+lib/tix8.2/bitmaps/info.gif
+lib/tix8.2/bitmaps/info.xpm
+lib/tix8.2/bitmaps/maximize.xbm
+lib/tix8.2/bitmaps/minimize.xbm
+lib/tix8.2/bitmaps/minus.gif
+lib/tix8.2/bitmaps/minus.xbm
+lib/tix8.2/bitmaps/minus.xpm
+lib/tix8.2/bitmaps/minusarm.gif
+lib/tix8.2/bitmaps/minusarm.xbm
+lib/tix8.2/bitmaps/minusarm.xpm
+lib/tix8.2/bitmaps/mktransgif.tcl
+lib/tix8.2/bitmaps/network.xbm
+lib/tix8.2/bitmaps/no_entry.gif
+lib/tix8.2/bitmaps/no_entry.xpm
+lib/tix8.2/bitmaps/openfile.xbm
+lib/tix8.2/bitmaps/openfold.gif
+lib/tix8.2/bitmaps/openfold.xbm
+lib/tix8.2/bitmaps/openfold.xpm
+lib/tix8.2/bitmaps/plus.gif
+lib/tix8.2/bitmaps/plus.xbm
+lib/tix8.2/bitmaps/plus.xpm
+lib/tix8.2/bitmaps/plusarm.gif
+lib/tix8.2/bitmaps/plusarm.xbm
+lib/tix8.2/bitmaps/plusarm.xpm
+lib/tix8.2/bitmaps/resize1.xbm
+lib/tix8.2/bitmaps/resize2.xbm
+lib/tix8.2/bitmaps/restore.xbm
+lib/tix8.2/bitmaps/srcfile.gif
+lib/tix8.2/bitmaps/srcfile.xbm
+lib/tix8.2/bitmaps/srcfile.xpm
+lib/tix8.2/bitmaps/system.xbm
+lib/tix8.2/bitmaps/textfile.gif
+lib/tix8.2/bitmaps/textfile.xbm
+lib/tix8.2/bitmaps/textfile.xpm
+lib/tix8.2/bitmaps/tick.xbm
+lib/tix8.2/bitmaps/warning.gif
+lib/tix8.2/bitmaps/warning.xpm
+lib/tix8.2/pref/
+lib/tix8.2/pref/12Point.fs
+lib/tix8.2/pref/12Point.fsc
+lib/tix8.2/pref/14Point.fs
+lib/tix8.2/pref/14Point.fsc
+lib/tix8.2/pref/Bisque.cs
+lib/tix8.2/pref/Bisque.csc
+lib/tix8.2/pref/Blue.cs
+lib/tix8.2/pref/Blue.csc
+lib/tix8.2/pref/Gray.cs
+lib/tix8.2/pref/Gray.csc
+lib/tix8.2/pref/Makefile
+lib/tix8.2/pref/Old12Pt.fs
+lib/tix8.2/pref/Old14Pt.fs
+lib/tix8.2/pref/SGIGray.cs
+lib/tix8.2/pref/SGIGray.csc
+lib/tix8.2/pref/TK.cs
+lib/tix8.2/pref/TK.csc
+lib/tix8.2/pref/TK.fs
+lib/tix8.2/pref/TK.fsc
+lib/tix8.2/pref/TixGray.cs
+lib/tix8.2/pref/TixGray.csc
+lib/tix8.2/pref/TkWin.cs
+lib/tix8.2/pref/TkWin.csc
+lib/tix8.2/pref/TkWin.fs
+lib/tix8.2/pref/TkWin.fsc
+lib/tix8.2/pref/tixmkpref
 man/
 man/man1/
 man/man1/aimk.1
