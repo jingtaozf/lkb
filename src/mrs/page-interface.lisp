@@ -2,7 +2,7 @@
   (:use "COMMON-LISP" "COMMON-LISP-USER" "USER")
   )
 
-(in-package "USER")
+(in-package "CL-USER")
 
 (export '(edge-dag follow-pointers existing-dag-at-end-of dag-p is-atomic
           type-of-fs tdfs-indef lex-or-psort-id lex-or-psort-full-fs 

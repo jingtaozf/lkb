@@ -1,99 +1,3 @@
-(in-package "USER")
-
-(defun index-for-generator nil
-  (index-lexicon)
-  (index-lexical-rules)
-  (index-grammar-rules)
-  (mrs::instantiate-null-semantic-items)
-  (format t "~%Indexing complete")
-  nil)
- 
-
-(defun index-lexicon nil
-  (mrs::clear-semantic-indices)
-   (setf *batch-mode* t)
-   (let ((ids nil))
-      ;; because of multiple lexical entries, an id may be indexed by
-      ;; multiple orthographies
-     (dolist (word (lex-words *lexicon*))
-       (dolist (inst (lookup-word *lexicon* word))
-	 (pushnew inst ids :test #'eq)))
-     (dolist (id ids)
-       (let* ((entry (read-psort *lexicon* id))
-	      (lex-id (lex-or-psort-id entry)))
-	 (expand-psort-entry entry)
-	 (let ((new-fs (lex-or-psort-full-fs entry)))
-	   (if new-fs
-	       (mrs::extract-lexical-relations entry)
-	     (format t "~%No feature structure for ~A" lex-id))))
-       (unexpand-psort *lexicon* id))
-     (setf *batch-mode* nil)))
-  
-(defun index-lexical-rules nil
-  (mrs::clear-lrule-globals)
-  (maphash #'(lambda (id entry)
-               (let* ((tdfs (rule-full-fs entry))
-                      (fs (if tdfs (tdfs-indef tdfs))))
-                 (if fs
-                     (mrs::extract-lex-rule-rels id fs))))
-           *lexical-rules*))           
-                           
-
-(defun index-grammar-rules nil
-  (mrs::clear-grule-globals)
-  (maphash #'(lambda (id entry)
-               (let* ((tdfs (rule-full-fs entry))
-                      (fs (if tdfs (tdfs-indef tdfs))))
-                 (if fs
-                     (mrs::extract-grammar-rule-rels id fs))))
-           *rules*))
-                 
-;;; actually used by lexlookup, but convenient to define in USER
-
-(defun make-mrs-unifs (fvplist initial-features)
-  (let ((initial-path (create-typed-path-from-feature-list initial-features)))
-    (for fvp in fvplist
-         filter
-         (let ((value (mrs:fvpair-value fvp)))
-           (if (listp value)
-               nil
-             (make-unification :lhs (make-typed-path 
-                                     :typed-feature-list
-                                     (append (path-typed-feature-list
-                                              initial-path)
-                                             (path-typed-feature-list
-                                              (mrs:fvpair-feature fvp))))
-                               :rhs (make-u-value :types
-                                                  (list (deasterisk value)))))))))
-
-(defun deasterisk (value)
-  (or
-   (and (not (stringp value))
-        (let* ((ancestors (mapcar #'type-name (retrieve-ancestors value)))
-               (strict-type
-                (if ancestors
-                    (find-strict-type (cons value ancestors)))))
-          (if strict-type
-              (find-gcsubtype strict-type value))))
-   value))
-
-(defparameter *strict-pairs*
-    '((pernum . strict_sort)
-      (gender . strict_sort)
-      (mood . strict_sort)
-      (tense . strict_sort)))
-      
-(defun find-strict-type (types)
-  (dolist (type types)
-    (let ((strict-type
-           (dolist (strp *strict-pairs*)
-             (when (eq type (car strp))
-               (return (cdr strp))))))
-      (when strict-type
-        (return strict-type)))))
-       
-
-
 (in-package "MRS")
 
 ;;; semantics record is intended for all possible semantics 
@@ -102,15 +6,15 @@
 (defstruct (semantics-record)
   id
   main-relations           ; main (lexicon, lrules, grules)
-  alternate-relations      ; alternate (lexicon only)
   message-relations        ; message (lexicon, lrules, grules)
   c-cont-relations)        ; grammar rules
 
 
 ;;; lexical rules
 
-(defvar *contentful-lrs* nil)
 (defvar *contentless-lrs* nil)
+(defvar *contentful-lrs* nil)
+
 
 (defvar *lrule-rel-index* nil)
 
@@ -119,13 +23,11 @@
   (setf *contentless-lrs* nil)
   (setf *lrule-rel-index* nil))
 
-(defun extract-lex-rule-rels (id fs)
+(defun extract-lex-rule-rels (id fs entry)
   (let* ((main-semantics-fs (path-value fs *main-semantics-path*))
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 
                          main-semantics-fs id)))
-; alternate semantics should never be relevant for
-; lexical or grammar rules
          (message-semantics-fs (path-value fs *message-semantics-path*))
          (message-rels
           (if message-semantics-fs
@@ -145,36 +47,34 @@
                do
                (push (cons (relation-record-relation rel) new-record) 
                      *lrule-rel-index*))
-          (if main-rels
-            (push id *contentful-lrs*)
-            (push id *contentless-lrs*)))
-        (push id *contentless-lrs*))))
+          (push new-record *contentful-lrs*))
+        (push entry *contentless-lrs*))))
 
 
 ;;; grammar rules
 
 (defvar *grule-rel-index* nil)
 
-(defvar *contentful-grs* nil)
 (defvar *contentless-grs* nil)
+(defvar *contentful-grs* nil)
 
 (defun clear-grule-globals nil
-  (setf *contentful-grs* nil)
   (setf *contentless-grs* nil)
+  (setf *contentful-grs* nil)
   (setf *grule-rel-index* nil))
 
-(defun extract-grammar-rule-rels (id fs)
+(defun extract-grammar-rule-rels (id fs entry)
   (let* ((construction-semantics-fs 
           (path-value fs *construction-semantics-path*))
          (construction-rels (if construction-semantics-fs
                         (extract-relations-from-liszt 
                          construction-semantics-fs id)))
+         ;;; shouldn't be anything on main-semantics path
+         ;;; but leave this here for checking
          (main-semantics-fs (path-value fs *main-semantics-path*))
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 
                          main-semantics-fs id)))
-; alternate semantics should never be relevant for
-; lexical or grammar rules
          (message-semantics-fs (path-value fs *message-semantics-path*))
          (message-rels
           (if message-semantics-fs
@@ -199,21 +99,17 @@
                do
                (push (cons (relation-record-relation rel) new-record) 
                      *grule-rel-index*))
-          (if (or main-rels construction-rels)
-            (push id *contentful-grs*)))
-        (push id *contentless-grs*))))
+          (push new-record *contentful-grs*))
+        (push entry *contentless-grs*))))
 
 ;;; indexing and retrieving a lexical entry based on some input semantics
 
 ;;; Quite grammar specific (though actual feature paths etc are
-;;; in mrsglobasl-eng), this assumes there are three
+;;; in mrsglobasl-eng), this assumes there are two
 ;;; possible locations for semantic information in a lexical
 ;;; entry, which have to be kept distinct
 ;;; 1. main relation LISZT
-;;; 2. an alternative LISZT which is used so that
-;;;    two semantic structures can be `packed' into a single
-;;;    representation
-;;; 3. a `message' - essentially this is contributed
+;;; 2. a `message' - essentially this is contributed
 ;;;    by a construction, but in some cases has to be supplied
 ;;;    to the construction by a particular lexical entry
 ;;;
@@ -226,6 +122,7 @@
 ;;; *empty-semantics-lexical-entries*
 
 (defvar *empty-semantics-lexical-entries* nil)
+(defvar *message-only-rels* nil)
 
 
 (defstruct (relation-record)
@@ -255,7 +152,8 @@
 (defun clear-semantic-indices nil
   (clrhash *semantic-table*)
   (clrhash *relation-index*)
-  (setf *empty-semantics-lexical-entries* nil))
+  (setf *empty-semantics-lexical-entries* nil)
+  (setf *message-only-rels* nil))
 
 ; indexing extracted semantics
 
@@ -294,34 +192,30 @@
          (main-rels (if main-semantics-fs
                         (extract-relations-from-liszt 
                          main-semantics-fs id)))
-         (alternate-semantics-fs (path-value fs *external-semantics-path*))
-         (alternate-rels (if alternate-semantics-fs
-                        (extract-relations-from-liszt 
-                         alternate-semantics-fs id)))
          (message-semantics-fs (path-value fs *message-semantics-path*))
          (message-rels
           (if message-semantics-fs
               (extract-relations-from-liszt 
                message-semantics-fs id))))
-    (if (or main-rels alternate-rels message-rels)
+    (when (or main-rels message-rels)
         (let* ((new-record
                 (make-semantics-record
                  :id id
                  :main-relations main-rels
-                 :alternate-relations alternate-rels
                  :message-relations message-rels)))
           (add-semantics-record id new-record)
           (for rel in  main-rels
                do
                (index-semantics-record rel id))
-          (for rel in alternate-rels
-               do
-               (index-semantics-record rel id))
           (for rel in message-rels
                do
-               (index-semantics-record rel id)))
+               (index-semantics-record rel id))
+          (unless main-rels
+            (push (cons id message-rels) *message-only-rels*))))
+    (unless main-rels
       (progn (format t "~%Warning ~A has no semantics" id)
              (pushnew id *empty-semantics-lexical-entries*)))))
+
 
 
 (defun extract-relations-from-liszt (fs id &optional last-fs path)

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.8  1999/01/16 05:12:15  aac
+;; minor fixes because of PC version, generator changes
+;;
 ;; Revision 1.7  1998/10/09 00:48:46  aac
 ;; merging in Walter's code again ...
 ;;
@@ -286,8 +289,6 @@ for extra features for using the extra-features of a relation")
 (defparameter *main-semantics-path* nil)
 
 (defparameter *construction-semantics-path* nil)
-
-(defparameter *external-semantics-path* nil)
 
 (defparameter *message-semantics-path* nil)
 

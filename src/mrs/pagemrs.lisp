@@ -41,7 +41,7 @@
 
 (defun is-top-type (val)
   (or (eq 'tdl::*top* val)
-      (eq 'user::*top* val)))
+      (eq 'cl-user::*top* val)))
 
 (defun last-path-feature (path)
   path)
@@ -52,7 +52,7 @@
 ;;; called from mrsfns.lisp
 
 (defun get-parse-fs (parse)
-  (if (string-equal "1" (subseq user::*page-version* 0 1))
+  (if (string-equal "1" (subseq cl-user::*page-version* 0 1))
       (lexicon::cfs-fs (pg::u-item-cfs parse))
     (if (or (eq (type-of parse) 'typed-item)
 	    (eq (type-of parse) 'main::typed-item))
@@ -60,7 +60,7 @@
       (cfs-fs (pg::combo-item-cfs parse)))))
 
 (defun get-parse-fs-alt (parse)
-  (if (string-equal "1" (subseq user::*page-version* 0 1))
+  (if (string-equal "1" (subseq cl-user::*page-version* 0 1))
       (lexicon::cfs-fs (pg::u-item-cfs parse))
     (lexicon::cfs-fs (pg::combo-item-cfs parse))))
 

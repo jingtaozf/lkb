@@ -21,7 +21,7 @@
 ;;; page version calls kh-parse-tree
 
 (defun get-last-sentence nil
-  (car USER::*last-parses*))  
+  (car CL-USER::*last-parses*))  
 
 (defun deref (fs)
   ;;; just a guess, but can't do any harm ...
@@ -75,7 +75,7 @@
 
 (defun is-top-type (val)
 ;;; also defined for PAGE
-  (eql USER::*toptype* val))
+  (eql CL-USER::*toptype* val))
 
 (defun tdl-precedes (type1 type2)
   (or (equal type1 type2)
@@ -92,10 +92,10 @@
 (defun compatible-types (type1 type2)
   (if (and (null type1) (null type2))
       t ; *** fudge, since sometimes erroneously gets called with nil args
-      (user::find-gcsubtype type1 type2)))
+      (cl-user::find-gcsubtype type1 type2)))
 
 
 (defun is-valid-type (val)
-  (USER::is-valid-type val))
+  (CL-USER::is-valid-type val))
 
 

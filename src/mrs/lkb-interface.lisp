@@ -1,6 +1,4 @@
-#+mcl (defpackage :common-lisp-user (:nicknames :user :cl-user))
-
-(in-package "USER")
+(in-package :cl-user)
 
 (export '(edge-dag follow-pointers existing-dag-at-end-of dag-p is-atomic
           type-of-fs tdfs-indef lex-or-psort-id lex-or-psort-full-fs 
@@ -31,7 +29,7 @@
 
 (defun vsym (str) 
   ;;; allow mrsglobals-eng file to be system independent
-  (intern (string-upcase str) "USER"))
+  (intern (string-upcase str) "CL-USER"))
 
 
 

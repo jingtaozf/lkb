@@ -1,4 +1,4 @@
-(in-package "USER")
+(in-package :cl-user)
 ;;;; *****************************************************
 
 (defparameter *ordered-mrs-rule-list* nil)
