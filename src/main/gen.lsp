@@ -337,8 +337,7 @@
                collect (cdr pred)) :test #'equal)
          (push (make-unification 
                :lhs (create-path-from-feature-list (reverse path))
-               :rhs (make-u-value :types 
-                  (if (listp type) type (list type))))
+               :rhs (make-u-value :type type)) 
             *canonical-paths*))
       (unless
          (is-atomic real-dag)

@@ -65,7 +65,7 @@
 
 (defstruct (type-feature-pair) type feature) 
 
-(defstruct (u-value) types)
+(defstruct (u-value) type)
 
 
 (defun create-path-from-feature-list (f-list)
@@ -83,8 +83,7 @@
 
 (defun make-pv-unif (path1 type)
   (make-unification :lhs (create-typed-path-from-feature-list path1)
-                    :rhs (make-u-value :types (if (listp type) type
-                                                  (list type)))))
+                    :rhs (make-u-value :type type)))
 
 
 (defun path-append (path1 path2)
@@ -126,9 +125,8 @@
 (defun eval-unif-half-types (path-or-value)
   (cond ((path-p path-or-value) nil)
         ((u-value-p path-or-value) 
-         (loop for type in (u-value-types path-or-value)
-              do
-              (eval-possible-leaf-type *leaf-types* type)))
+         (eval-possible-leaf-type *leaf-types* 
+                                  (u-value-type path-or-value)))
         ((typed-path-p path-or-value)
          (loop for fvp in (typed-path-typed-feature-list path-or-value)
               do
@@ -200,23 +198,16 @@
          (unify-typed-paths-dag-at-end-of1 dag-instance 
             (typed-path-typed-feature-list path-or-value)))
       ((u-value-p path-or-value)
-         (let* ((types (u-value-types path-or-value))
-                (invalid-types (remove-if #'is-valid-type types)))
+         (let* ((type (u-value-type path-or-value)))
             (cond 
-               (invalid-types
-                  (format t "~%Invalid types ~A" 
-                     invalid-types)
+               ((not (is-valid-type type))
+                  (format t "~%Invalid type ~A" type)
                   nil)
-               ((eql (length types) 1)
-                  (let ((type (car types)))
-                     (cond 
-                        ((atomic-type-p type)
-                           (create-atomic-dag types))
-                        (t (create-typed-dag type)))))
-               ((every #'atomic-type-p types)
-                  (create-atomic-dag types))
-               (t (format t "~%Disjunction of non-atomic fs ~A" types)
-                  nil))))
+               (t
+                (cond 
+                 ((atomic-type-p type)
+                  (create-atomic-dag type))
+                 (t (create-typed-dag type)))))))
       (t (error "~%Invalid path specification ~A"
             path-or-value)))
      #+(and mcl powerpc)(incf ff (CCL::%HEAP-BYTES-ALLOCATED))))

@@ -215,7 +215,7 @@
          (type-unifs (if type (list 
                         (make-unification :lhs 
                            (make-path :typed-feature-list nil)
-                           :rhs (make-u-value :types (list type)))))))
+                           :rhs (make-u-value :type type))))))
       (cond 
          ((eql next-char 'eof) (error "~%Unexpected end of file"))
          ((char= next-char #\.)

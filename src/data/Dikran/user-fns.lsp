@@ -58,7 +58,7 @@
            (push (make-unification :lhs opath                    
                                    :rhs
                                    (make-u-value 
-                                    :types (list orth-value)))
+                                    :type orth-value))
                  unifs)
            (setq tmp-orth-path (append tmp-orth-path *list-tail*))))
     (let ((indef (process-unifications unifs)))

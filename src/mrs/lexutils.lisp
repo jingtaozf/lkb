@@ -121,8 +121,8 @@
              (append initial-features
                      (extract-mrs-path
                       (mrs::extrapair-feature fvp))))
-            :rhs (make-u-value :types
-                               (list (deasterisk value)))))))
+            :rhs (make-u-value :type
+                               (deasterisk value))))))
 
 (defun extract-mrs-path (dotted-feature)
   (let ((feature-string (nreverse (coerce (string dotted-feature) 'list)))

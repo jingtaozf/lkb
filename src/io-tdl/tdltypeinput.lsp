@@ -263,7 +263,7 @@
            do
            (cond ((unification-p unif)
                   (if (null (path-typed-feature-list (unification-lhs unif)))
-                      (push (car (u-value-types (unification-rhs unif))) parents)
+                      (push (u-value-type (unification-rhs unif)) parents)
                     (push unif constraint)))
                  ((consp unif)
                   (let ((entry (assoc (car unif) def-alist)))
@@ -832,8 +832,7 @@
 
 (defun make-tdl-path-value-unif (path1 type def-p)
   (let ((ps1 (create-path-from-feature-list path1))
-        (val (make-u-value :types (if (listp type) type
-                                    (list type)))))
+        (val (make-u-value :type type)))
     (if def-p
         (list def-p
               (make-unification :lhs ps1 :rhs val))

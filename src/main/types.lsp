@@ -597,10 +597,10 @@
 	   *types*))
 
 (defun used-types (type)
-  (let ((used (mapcar #'(lambda (x) (u-value-types (unification-rhs x)))
+  (let ((used (mapcar #'(lambda (x) (u-value-type (unification-rhs x)))
 		      (type-constraint-spec type))))
     (when used
-      (reduce #'union used))))
+      (remove-duplicates used))))
 
 (defun purge-constraints nil
   (gc-types)

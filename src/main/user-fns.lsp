@@ -57,13 +57,13 @@
 ;;;    (list 
 ;;;       (make-unification :lhs
 ;;;          (create-path-from-feature-list '(orth hd))
-;;;          :rhs (make-u-value :types (list sense-string)))
+;;;          :rhs (make-u-value :type sense-string))
 ;;;       (make-unification :lhs
 ;;;          (create-path-from-feature-list '(lang))
-;;;          :rhs (make-u-value :types (list language)))
+;;;          :rhs (make-u-value :type language))
 ;;;        (make-unification :lhs
 ;;;           (create-path-from-feature-list '(fs-id))
-;;;           :rhs (make-u-value :types (list id)))
+;;;           :rhs (make-u-value :type id))
 ;;;       )))
 
 
@@ -77,7 +77,7 @@
            (push (make-unification :lhs opath                    
                                    :rhs
                                    (make-u-value 
-                                    :types (list orth-value)))
+                                    :type orth-value))
                  unifs)
            (setq tmp-orth-path (append tmp-orth-path *list-tail*))))
     #|
@@ -85,7 +85,7 @@
     (push (make-unification :lhs
                      (create-path-from-feature-list tmp-orth-path)
                             :rhs 
-                     (make-u-value :types (list *empty-list-type*)))
+                     (make-u-value :type *empty-list-type*))
            unifs)
            |#
     (let ((indef (process-unifications unifs)))
@@ -104,7 +104,7 @@
                                     *orth-path*)                    
                                    :rhs
                                    (make-u-value 
-                                    :types (list orth)))))))
+                                    :type orth))))))
     (when indef
       (setf indef (create-wffs indef))
       (when indef

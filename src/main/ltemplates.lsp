@@ -102,7 +102,7 @@
            (path (when feature (append prefix (list feature))))
            (unification (make-unification 
                          :lhs (create-path-from-feature-list path)
-                         :rhs (make-u-value :types (list type)))))
+                         :rhs (make-u-value :type type))))
       (if (get-type-entry type)
         (cons unification
               (loop 
@@ -118,7 +118,7 @@
    (t
     (list (make-unification 
            :lhs (create-path-from-feature-list (append prefix (list feature)))
-           :rhs (make-u-value :types (list template)))))))
+           :rhs (make-u-value :type template))))))
 
 (defparameter *tokenizer* "/bin/cat")
 

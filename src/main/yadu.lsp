@@ -706,8 +706,8 @@
            (let ((type (yadu-pv-value atomic-fs)))
              (unify-paths (yadu-pv-path atomic-fs)
                           dag
-                          (make-u-value :types 
-                                        (if (listp type) type (list type)))
+                          (make-u-value :type 
+                                        type)
                           dag))
          (let* ((paths (yadu-pp-paths atomic-fs))
                 (initial-path (car paths)))

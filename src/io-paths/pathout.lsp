@@ -76,9 +76,7 @@
             (format ostream ">")))
          (t
           (format ostream (if active-p "~/FB/~(~A~)~/FP/   " "~S") 
-                  (if (> (length (u-value-types path)) 1)
-                      (u-value-types path)
-                    (car (u-value-types path)))))))
+                    (u-value-type path)))))
 
       
 (defun output-type-feature-pair (ostream tfp &optional active-p)

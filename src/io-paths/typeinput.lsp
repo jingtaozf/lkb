@@ -317,15 +317,8 @@
       (cond ((eq next-char #\<)
              (read-char istream)
              (read-typed-path istream name))
-            ((eq next-char #\() ; disjunction
-             (let ((value (read istream)))
-               (make-u-value :types
-                  (loop for type in value
-                       collect
-                       (if (symbolp type) type
-                           (convert-to-lkb-symbol type))))))
-             (t (let ((value (lkb-read istream t)))
-                  (make-u-value :types (list value)))))))
+            (t (let ((value (lkb-read istream t)))
+                 (make-u-value :type value))))))
 
 (defun read-typed-path (istream name)
    (let ((typed-feature-list nil))

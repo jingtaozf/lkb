@@ -175,7 +175,7 @@
                     (general-path-match 
                      (unification-lhs (car matching-unifs))
                      *orth-path* t))
-               (u-value-types (unification-rhs (car matching-unifs))))
+               (u-value-type (unification-rhs (car matching-unifs))))
               (t 
                (loop
                  (let ((exact-match
@@ -198,7 +198,7 @@
                                    (u-value-p (unification-rhs unif))))
                              (return unif)))))
                    (unless exact-match (return))
-                   (push (car (u-value-types (unification-rhs exact-match)))
+                   (push (u-value-type (unification-rhs exact-match))
                          orth-strings)
                    (incf n)))
                (nreverse orth-strings)))))))
