@@ -9,7 +9,8 @@
 (defparameter %mrs-representatives-table% nil)
 
 (defparameter %mrs-relevant-features% 
-  '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA" "NAMED" "CONST_VALUE"
+  '("ARG" "ARG0" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA" "NAMED" 
+    "CVAL" "CONST_VALUE"
     "L-INDEX" "R-INDEX" "L-HANDEL" "R-HANDEL" "MAIN" "SUBORD" "ROLE"
     "HINST" "NHINST"))
 
@@ -71,7 +72,9 @@
           for feature = (fvpair-feature fvpair)
           when (eq feature (vsym "EVENT"))
           do (setf event (fvpair-value fvpair))
-          when (or (eq feature (vsym "INST")) (eq feature (vsym "C-ARG")))
+          when (or (eq feature (vsym "INST")) 
+                   (eq feature (vsym "ARG0"))
+                   (eq feature (vsym "C-ARG")))
           do (setf instance (fvpair-value fvpair)))
       (let ((name (or
                    (and instance (var-p instance) (var-name instance))
