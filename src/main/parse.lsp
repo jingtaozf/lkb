@@ -1038,7 +1038,8 @@
        ;; number of other functions rely on evaluate-unifications(), allow both
        ;; a string of TDFS as the value for .nu-orth. here :-{.  (7-aug-03; oe)
        ;; 
-       (new-orth-fs (if (tdfs-p nu-orth) nu-orth (make-orth-tdfs nu-orth))))
+       (new-orth-fs (when nu-orth
+                      (if (tdfs-p nu-orth) nu-orth (make-orth-tdfs nu-orth)))))
     ;; shouldn't strictly do this here because we may not need it but
     ;; otherwise we get a nested unification context error - cache the values
     ;; for a word, so it's not reconstructed only wasted if the morphology is
