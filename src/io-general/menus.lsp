@@ -308,51 +308,43 @@
 ;                        :value 'output-type-file 
 ;                        :available-p :grammar)
                      )
-		  :available-p :always)
+                   :available-p :always)
+         #+:psql
          (make-lkb-submenu-item :menu-title "LexDB"
                  :menu-items                       
                  (list 
-                  #+:psql
                   (make-menu-item :name "Merge new entries"
                                   :value 'command-merge-into-psql-lexicon
                                   ;:available-p :always
 				  )
-                  #+:psql
                   (make-menu-item :name "Dump"
                                   :value 'command-dump-psql-lexicon
                                   ;:available-p :always
 				  )
-                  #+:psql
                   (make-menu-item :name "Dump (TDL format)"
                                   :value 'command-export-lexicon-to-tdl
                                   ;:available-p :always
 				  )
-                  #+:psql
                   (make-menu-item :name "Filter"
                                   :value 'command-set-filter-psql-lexicon
                                   ;:available-p :always
 				  )
-                  #+:psql
                   (make-menu-item :name "Load TDL entries"
                                   :value 'command-load-tdl-to-scratch
                                   ;:available-p :always
 				  )
-                  #+:psql
                   (make-menu-item :name "Show scratch"
                                   :value 'command-show-scratch
                                   ;:available-p :always
 				  )
-                  #+:psql
                   (make-menu-item :name "Commit scratch"
                                   :value 'command-commit-scratch
                                   ;:available-p :always
 				  )
-                  #+:psql
                   (make-menu-item :name "Clear scratch"
                                   :value 'command-clear-scratch
                                   ;:available-p :always
 				  )
-                  #+:psql
                   (make-menu-item :name "Generate SEM-I"
                                   :value 'command-generate-semi
                                   ;:available-p :always
