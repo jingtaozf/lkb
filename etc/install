@@ -183,7 +183,7 @@ if [ "${os}" == "linux.x86.32" ]; then
     fi
   fi
   [ -d ${DELPHINHOME}/lib ] || ${MKDIR} ${DELPHINHOME}/lib;
-  [ -d ${DELPHINHOME}/lib/linux ] || ${MKDIR} ${DELPHINHOME}/lib/linux;
+  [ -d ${DELPHINHOME}/lib/${os} ] || ${MKDIR} ${DELPHINHOME}/lib/${os};
   ( \
     cd lib/${os}; \
     ${WGET} http://lingo.stanford.edu/ftp/lib/linux/libXm.so.2; \
