@@ -287,7 +287,7 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
       case TSDB_HOME_OPTION:
         if(optarg != NULL) {
-          tsdb.home = tsdb_expand_directory(optarg);
+          tsdb.home = tsdb_expand_directory((char *)NULL, optarg);
         } /* if */
         break;
       case TSDB_RELATIONS_FILE_OPTION:
@@ -297,12 +297,12 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
       case TSDB_DATA_PATH_OPTION:
         if(optarg != NULL) {
-          tsdb.data_path = tsdb_expand_directory(optarg);
+          tsdb.data_path = tsdb_expand_directory(tsdb.home, optarg);
         } /* if */
         break;
       case TSDB_RESULT_PATH_OPTION:
         if(optarg != NULL) {
-          tsdb.result_path = tsdb_expand_directory(optarg);
+          tsdb.result_path = tsdb_expand_directory((char *)NULL, optarg);
         } /* if */
         break;
       case TSDB_RESULT_PREFIX_OPTION:
