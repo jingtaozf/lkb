@@ -144,7 +144,8 @@
 ;;;
 
 (defvar *lexdb-read-only* '(:version :userid :modstamp))
-(defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp))
+;;;(defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp))
+(defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :source :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp))
 (defvar *lexdb-minibuffer-max* 80)
 (defvar *lexdb-active-id-ring* nil)
 (defvar *new-entries-buffer* "*new-entries*")
