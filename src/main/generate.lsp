@@ -64,9 +64,10 @@
 (defun intersective-modifier-dag-p (dag)
    "is this dag a possible intersective modifier?"
    (let ((val
-          (existing-dag-at-end-of dag '(synsem local cat head mod))))
+          (existing-dag-at-end-of dag 
+                                  '(synsem local cat head mod first local))))
       (and val
-         (eq (type-of-fs val) 'intersective_mod))))
+           (subtype-or-equal (type-of-fs val) 'intersective_mod))))
 
 (eval-when
  (compile load eval)    

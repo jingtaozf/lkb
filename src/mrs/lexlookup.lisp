@@ -330,6 +330,7 @@ at this point).
 ;;; because it will allow them to have empty message/alternates as well
 ;;; we hack this for the moment by not allowing anything with no semantics
 ;;; to get through
+  (declare (ignore lex-e))
   (let* ((main-rel-fl-strs
          (if main-rels
              (apply-rels-to-base lex-id base-fs main-rels 

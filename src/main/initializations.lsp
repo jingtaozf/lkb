@@ -1,5 +1,18 @@
 (in-package "COMMON-LISP-USER")
 
+;;; the following is just for the Windows version because we're trying
+;;; to use the built-in project mechanism for that
+
+#+:mswindows
+(unless (find-package "MAKE") 
+  (make-package "MAKE" :nicknames '("MK") :use '("COMMON-LISP")))
+
+#+:mswindows
+(pushnew :lkb *features*)
+
+;;; if for some reason, the tty mode is desirable, use the following
+;;; (pushnew :tty *features*)
+
 ;;;
 ;;; because ann used the term `type' the way she does well before it became a
 ;;; *censored* part of the *censored* common-lisp language |:-}.
@@ -8,10 +21,6 @@
 ;;;
 #+:allegro 
 (setf excl:*enable-package-locked-errors* nil)
-
-(defparameter *lkb-source-dir* (pathname-directory (get-sources-dir "lkb")))
-
-(defparameter *lkb-fasl-dir* (pathname-directory (get-binaries-dir "lkb")))
 
 (defparameter *grammar-directory* nil)
 

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.7  1998/10/09 00:48:46  aac
+;; merging in Walter's code again ...
+;;
 ;; Revision 1.6  1998/10/07 20:54:19  danf
 ;; Added support for VM word latices
 ;;
@@ -276,12 +279,6 @@ for extra features for using the extra-features of a relation")
 
 (defparameter *mrs-extra-display* nil)
 
-;;; take VM arg role control out of package MAIN
-
-(defvar *VM-arg-roles-only-p* nil)
-(defvar *VM-arg-roles* nil)
-(defvar *suppressed-VM-arg-roles* nil)
-
 ;;; for generation - real values in mrsglobals-eng
 
 (defparameter *dummy-relations* nil)
@@ -305,3 +302,4 @@ for extra features for using the extra-features of a relation")
                               (vitADT . "vitADT")))
 
 
+(defparameter *key-handel-path* nil)

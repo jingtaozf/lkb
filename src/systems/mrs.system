@@ -2,6 +2,7 @@
 
 
 (defsystem "mrs"
+     :device (make-pathname :device cl-user::%sys-device%)
     :source-pathname (get-sources-dir #+:lkb "lkb" #+:page "page")
     :binary-pathname (get-binaries-dir #+:lkb "lkb" #+:page "page")
     :source-extension "lisp"

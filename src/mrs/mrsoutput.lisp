@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.15  1998/11/14 23:19:27  danf
+;; Added extraglobals.lisp to repository, and added :LEX to packages used in defpackage of :MRS in mrs-package.lisp
+;;
 ;; Revision 1.14  1998/10/07 20:54:19  danf
 ;; Added support for VM word latices
 ;;
@@ -191,50 +194,49 @@
 ;;; cycles should not occur but they seem to arise occasionally in lattice
 ;;; parsing
 (defun construct-mrs (fs &optional existing-variable-generator generator-p)
-  (let ((*VM-arg-roles-only-p* (if generator-p nil *VM-arg-roles-only-p*)))
-      (when #-pagelite (not (cyclic-p fs))
-            #+pagelite t
-            (if existing-variable-generator
-                (setf *variable-generator* existing-variable-generator)
-              (if *restart-variable-generator*
-                  (init-variable-generator)))
-            (unless existing-variable-generator (setf *named-nodes* nil))
-            #-pagelite
-            (SETQ fs (deref fs))
-            (let ((handel-fs (path-value fs *psoa-handel-path*))
-                  (top-h-fs (path-value fs *psoa-top-h-path*))
-                  (event-fs (path-value fs *psoa-event-path*))
-                  (liszt-fs (path-value fs *psoa-liszt-path*))
-                  (h-cons-fs (path-value fs *psoa-rh-cons-path*))
-                  (message-fs (path-value fs *psoa-message-path*))
-                  (wgliszt-fs (path-value fs *psoa-wgliszt-path*))
-		  (key-h-fs (path-value fs *key-handel-path*))
-		  )
-              (make-psoa
-               :handel (create-variable (if (mrs-language '(english))
-                                            top-h-fs
-                                          handel-fs)
-                                        *variable-generator*)
-               :top-h (create-variable top-h-fs
-                                       *variable-generator*)
-               :index (if (is-valid-fs event-fs)
-                          (create-variable event-fs
-                                           *variable-generator*))
-               :liszt (nreverse (construct-liszt liszt-fs
-                                                 nil
-                                                 *variable-generator*))
-               :h-cons (nreverse (construct-h-cons h-cons-fs
-                                                   nil
-                                                   *variable-generator*))
-               :message (if (is-valid-fs message-fs)
-                            (create-rel-struct message-fs 
+  (when #-pagelite (not (cyclic-p fs))
+        #+pagelite t
+        (if existing-variable-generator
+            (setf *variable-generator* existing-variable-generator)
+          (if *restart-variable-generator*
+              (init-variable-generator)))
+        (unless existing-variable-generator (setf *named-nodes* nil))
+        #-pagelite
+        (SETQ fs (deref fs))
+        (let ((handel-fs (path-value fs *psoa-handel-path*))
+              (top-h-fs (path-value fs *psoa-top-h-path*))
+              (event-fs (path-value fs *psoa-event-path*))
+              (liszt-fs (path-value fs *psoa-liszt-path*))
+              (h-cons-fs (path-value fs *psoa-rh-cons-path*))
+              (message-fs (path-value fs *psoa-message-path*))
+              (wgliszt-fs (path-value fs *psoa-wgliszt-path*))
+              (key-h-fs (path-value fs *key-handel-path*))
+              )
+          (make-psoa
+           :handel (create-variable (if (mrs-language '(english))
+                                        top-h-fs
+                                      handel-fs)
+                                    *variable-generator*)
+           :top-h (create-variable top-h-fs
+                                   *variable-generator*)
+           :index (if (is-valid-fs event-fs)
+                      (create-variable event-fs
+                                       *variable-generator*))
+           :liszt (nreverse (construct-liszt liszt-fs
+                                             nil
+                                             *variable-generator*))
+           :h-cons (nreverse (construct-h-cons h-cons-fs
+                                               nil
                                                *variable-generator*))
-               :wgliszt (nreverse (construct-wgliszt 
-                                   wgliszt-fs
-                                   *variable-generator*
-                                   *mrs-wg-liszt*))
-	       :key-h (create-variable key-h-fs
-                                        *variable-generator*))))))
+           :message (if (is-valid-fs message-fs)
+                        (create-rel-struct message-fs 
+                                           *variable-generator*))
+           :wgliszt (nreverse (construct-wgliszt 
+                               wgliszt-fs
+                               *variable-generator*
+                               *mrs-wg-liszt*))
+           :key-h (create-variable key-h-fs
+                                   *variable-generator*)))))
 
 
 
@@ -445,13 +447,6 @@
                                     (remove label-pair label-list)))
                     #'feat-sort-func)
             do
-              (when (or (not (boundp '*VM-arg-roles-only-p*))
-                        (and *VM-arg-roles-only-p*
-                             (not (member (car feat-val) 
-                                          *suppressed-VM-arg-roles*)))
-                        (and (not *VM-arg-roles-only-p*)
-                             (not (member (car feat-val)
-                                          *VM-arg-roles*))))
                 (let ((feature (car feat-val)))
                   (cond ((member feature *ignored-sem-features*) t)
                         ((member feature *relation-extra-feats*)
@@ -471,7 +466,7 @@
                                                   (create-variable
                                                    (cdr feat-val)
                                                    variable-generator)))
-                                   (rel-flist rel))))))))
+                                   (rel-flist rel)))))))
         (setf (rel-flist rel) (reverse (rel-flist rel)))
         rel)))
 

@@ -422,7 +422,7 @@
 
 
 (defun check-vit (vit &optional (as-string nil) (stream *standard-output*))
-  #+allegro
+  #+(and :allegro :clim)
   (progn
    (with-open-file (vit-out "~/tmp/vitcheck" :direction :output
 	                                    :if-exists :supersede)
@@ -434,7 +434,7 @@
    (excl::run-shell-command "cd /eo/e1/vm2/vitADT/lib/Vit_Adt;/opt/quintus/bin3.2/sun4-5/prolog < ~/tmp/vitcheck" :output "~/tmp/vitout" :if-output-exists :supersede :error-output "~/tmp/viterror" :if-error-output-exists :supersede)
    (excl::run-shell-command "tail +65 ~/tmp/viterror | tail -r | tail +2 | tail -r" :output stream :error-output "~/tmp/realerrorout" :if-output-exists :supersede :if-error-output-exists :supersede)
    (format stream "~%"))
-  #-allegro
+  #-(and :allegro :clim)
   (warn "function check-vit needs customising for this Lisp"))
 
 (defun horrible-hack-2 (vit)

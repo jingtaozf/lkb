@@ -91,11 +91,10 @@
    value))
 
 (defparameter *strict-pairs*
-    '((pernum . strict_pn)
-      (gender . strict_gen)
-      (mood . strict_mood)
-      (conj . strict-conj) ; sic - dash not underscore
-      (tense . strict_tense)))
+    '((pernum . strict_sort)
+      (gender . strict_sort)
+      (mood . strict_sort)
+      (tense . strict_sort)))
       
 (defun find-strict-type (types)
   (dolist (type types)

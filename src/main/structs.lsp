@@ -26,7 +26,7 @@
       (write-string " :" stream)
       (write-string (symbol-name slot) stream)
       (write-char #\space stream)
-      (write (slot-value instance slot) :stream stream))
+      (write (slot-value instance slot) :stream stream :length nil :level nil))
     (write-char #\) stream)))
 
 

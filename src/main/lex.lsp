@@ -144,7 +144,8 @@
          (specified-entry (cons id entry))
 	 (*print-pretty* nil))
       (file-position *psorts-stream* current-file-end)
-      (write specified-entry :stream *psorts-stream*)
+      (write specified-entry :stream *psorts-stream* 
+        :level nil :length nil)
       (terpri *psorts-stream*)
       (when (gethash id *psorts*)
         (format t "~%Redefining ~A" id))

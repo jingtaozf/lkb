@@ -270,7 +270,7 @@
                    #+:allegro-v5.0 (system:user-name)
                    #-:allegro-v5.0 (system:getenv "USER")
                    sentence result)
-	     :stream stream)
+	     :stream stream :level nil :length nil)
       (write-char #\lf stream))))
 
 
