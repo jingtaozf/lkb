@@ -213,10 +213,10 @@ at this point).
   ;;; constants (below)
   (if rel-name
       (let ((matching (gethash rel-name *relation-index*)))
-        (if matching
+         (when matching
             (if (hash-table-p matching)
-                (if parameter-str
-                    (or
+               (if parameter-str
+                  (or
                      (gethash parameter-str matching)
                      (gethash (string-upcase (string parameter-str)) matching))
                   (progn 
@@ -229,12 +229,19 @@ at this point).
                                    (setf ids (nconc ids v)))
                                matching)
                       ids)))
-              (progn
-                (when parameter-str
-                  (cerror "~%ignore parameter"
-                          "~%unparameterised relation ~A has parameter ~A"
-                          rel parameter-str))
-                matching))))))
+               (progn
+                  (when parameter-str
+                     (cerror "~%ignore parameter"
+                             "~%unparameterised relation ~A has parameter ~A"
+                             rel parameter-str))
+                  (when (hash-table-p (car matching))
+                     (let ((contents nil))
+                        (maphash
+                           #'(lambda (key val) (declare (ignore val))
+                               (push key contents))
+                           (car matching))
+                         (setf (car matching) contents)))
+                  (car matching)))))))
 
 
 ;;; candidates contain at least one relation but the
