@@ -119,8 +119,6 @@
 (defun stream-string-width (stream string)
   (clim:stream-string-width stream string))
 
-
-
 ;;; The functions called from format statements won't work, because
 ;;; it appears that Allegro CL hasn't implemented user-defined
 ;;; format-directives.  
@@ -174,7 +172,10 @@
 		 :accessor class-frames
 		 :allocation :class)
    (selected :initform nil
-	     :accessor frame-selected)))
+	     :accessor frame-selected)
+   (doc-pane :initform nil
+	     :accessor lkb-window-doc-pane)))
+
 
 (defparameter *lkb-frame-lock* (mp:make-process-lock))
 
@@ -196,6 +197,10 @@
 	    (clim:raise-frame latest)
 	    latest))))))
 
+;; Disable right button
+
+(clim:delete-gesture-name :menu)
+
 ;; Add a [Close] button
 
 (define-lkb-frame-command (com-close-frame :menu "Close") 
@@ -204,7 +209,8 @@
     (unhighlight-objects frame)
     (mp:with-process-lock (*lkb-frame-lock*)
       (setf (getf (class-frames frame) (class-of frame))
-	(delete frame (getf (class-frames frame) (class-of frame)))))
+	(delete frame (getf (class-frames frame) (class-of frame)) 
+		:test #'eq)))
     (clim:frame-exit frame)))
 
 ;; Add a [Close All] button
@@ -221,7 +227,6 @@
   
 ;; Add a [Print] button
 
-#+(and :ignore (and :allegro (not (version>= 5 0))))
 (define-lkb-frame-command (com-print-frame :menu "Print") 
     ()
   (clim:with-application-frame (frame)
@@ -240,29 +245,65 @@
 			frame 'clim:application-pane))
 		      frame stream))))))))
 
-
-(defmacro define-lkb-frame (frame-class slots &rest pane-options)
+(defmacro define-lkb-frame (frame-class slots 
+			    &rest pane-options 
+			    &key (info-bar nil)
+			    &allow-other-keys)
   `(clim:define-application-frame ,frame-class (lkb-frame)
      ,slots
      (:command-table (,frame-class :inherit-from (lkb-frame)
 				   :inherit-menu t))
      (:panes
-      (display  
-       (clim:outlining (:thickness 1)
-	 (clim:spacing (:thickness 1)  
-	   (clim:scrolling (:scroll-bars :both)
-	     (clim:make-pane 'clim:application-pane
-			     :name :lkb-pane
-			     :text-cursor nil
-			     :end-of-line-action :allow
-			     :end-of-page-action :allow
-			     :borders nil
-			     :background clim:+white+
-			     :foreground clim:+black+
-			     :display-time nil
-			     ,@pane-options))))))
+      (display 
+       (clim:vertically ()
+	 (clim:outlining (:thickness 1)
+	   (clim:spacing (:thickness 1)  
+	     (clim:scrolling (:scroll-bars :both)
+	       (clim:make-pane 'clim:application-pane
+			       :name :lkb-pane
+			       :text-cursor nil
+			       :end-of-line-action :allow
+			       :end-of-page-action :allow
+			       :borders nil
+			       :background clim:+white+
+			       :foreground clim:+black+
+			       :display-time nil
+			       ,@pane-options))))
+	 ,@(when info-bar
+	     '((clim:spacing (:thickness 1)
+		 (clim:make-pane 'clim:application-pane
+				 :name :path
+				 :text-cursor nil
+				 :end-of-line-action :allow
+				 :end-of-page-action :allow
+				 :borders nil
+				 :height 1
+				 :record nil
+				 :scroll-bars nil)))))))
      (:layouts
       (default display))))
+
+
+;; Provide a way to describe an object when the pointer is over it
+
+(defmacro define-info-bar (type vars &body body)
+  `(clim:define-presentation-method clim:highlight-presentation 
+       ((dummy ,type) record stream state)
+     state
+     (multiple-value-bind (xoff yoff)
+	 (clim:convert-from-relative-to-absolute-coordinates 
+	  stream (clim:output-record-parent record))
+       (let* ((,(first vars) (clim:presentation-object record))
+	      (,(second vars) (lkb-window-doc-pane (clim:pane-frame stream))))
+	 (if (eq state :highlight)
+	     ,@body
+	   (clim:window-clear ,(second vars))))
+       (clim:with-bounding-rectangle* (left top right bottom) record
+	 (clim:draw-rectangle* stream
+			       (+ left xoff) (+ top yoff)
+			       (+ right xoff) (+ bottom yoff)
+			       :filled nil
+			       :ink clim:+flipping-ink+)))))
 
 ;; Highlight a list of objects
 

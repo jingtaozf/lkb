@@ -115,12 +115,12 @@
   "controls whether the type hierarchy appears automatically"
   :user)
 
-(def-lkb-parameter *dont-show-morphology* nil
-  "if set, the morphological structures are not shown in parse trees"
+(def-lkb-parameter *show-morphology* t
+  "if set, the morphological structures are shown in parse trees"
   :user)
 
-(def-lkb-parameter *dont-show-lex-rules* nil
-  "if set, applications of lexical rules are not shown in parse trees"
+(def-lkb-parameter *show-lex-rules* t
+  "if set, applications of lexical rules are shown in parse trees"
   :user)
 
 (def-lkb-parameter *parse-tree-font-size* 12

@@ -16,6 +16,8 @@
 (defparameter *parse-window-height* 400
   "Initial height of tree window")
 
+(defparameter *parse-tree-font* nil)
+
 (defun lkb-parse-tree-font nil
   (list :sans-serif :roman (or *parse-tree-font-size* 9)))
 
@@ -80,32 +82,35 @@
   (let* ((edge-record (get edge-symbol 'edge-record))
 	 (edge-fs (get edge-symbol 'edge-fs))
 	 (item (edge-rule edge-record))
-         (rule-name (if (rule-p item) (rule-id item) item)))
+         (rule-name (if (rule-p item) (rule-id item) item))
+	 (chart-frame (reuse-frame 'chart-window)))
     (pop-up-menu
      `((,(format nil "Feature structure - Edge ~A" (edge-id edge-record))
-	:value edge)
+	:value fs)
+       ("Show edge in chart" :value edge :active ,chart-frame)
        (,(format nil "Rule ~A" (or rule-name ""))
 	:value rule)
+       ("Generate from edge" :value generate)
        (,(format nil "Lex ids ~A" (edge-lex-ids edge-record))
-	:value nil)
-       )
-     (edge (display-fs edge-fs
+	:value nil))
+     (fs (display-fs edge-fs
 		       (format nil "Edge ~A ~A - Tree FS" 
 			       (edge-id edge-record)
 			       (if (g-edge-p edge-record) 
 				   "G" 
-				 "P")))
-	   (display-edge-in-chart edge-record))
+				 "P"))))
+     (edge (highlight-edge edge-record chart-frame :scroll-to t))
      (rule 
       (let* ((item (edge-rule edge-record))
              (rule (and (rule-p item) item)))
-            (if rule
-               (display-fs (rule-full-fs rule)
-                  (format nil "~A" (rule-id rule)))
-               (let ((alternative (get-tdfs-given-id item)))
-                  (when alternative
-                     (display-fs alternative
-                        (format nil "~A" item))))))))))
+	(if rule
+	    (display-fs (rule-full-fs rule)
+			(format nil "~A" (rule-id rule)))
+	  (let ((alternative (get-tdfs-given-id item)))
+	    (when alternative
+	      (display-fs alternative (format nil "~A" item)))))))
+     (generate 
+      (really-generate-from-edge edge-record)))))
 
 
 
@@ -132,18 +137,13 @@
   edge)
 
 (define-lkb-frame parse-tree-frame
-  ((trees :initform nil
-	  :accessor parse-tree-frame-trees))
+    ((trees :initform nil
+	    :accessor parse-tree-frame-trees))
   :display-function 'draw-res-trees-window
   :text-style (clim:parse-text-style 
                (list :sans-serif :roman 7))
-   :width :compute
-   :height :compute)
-
-#|
-(show-parse-tree-frame *parse-record*)
-|#
-
+  :width :compute
+  :height :compute)
 
 (defun invalidate-chart-commands nil
   (clim:map-over-frames 

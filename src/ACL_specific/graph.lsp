@@ -66,5 +66,64 @@
 	(+ x (- (floor (graph-node-generation node) 2)
 		(floor (bounding-rectangle-width node) 2)))))))
 
-  
-  
+#|  
+(defclass parse-chart-graph-output-record (directed-graph-output-record) ())
+
+(define-graph-type :parse-chart parse-chart-graph-output-record)
+
+(defmethod layout-graph-nodes :around ((graph parse-chart-graph-output-record) 
+				       stream arc-drawer options)
+  (call-next-method))
+
+(defmethod layout-graph-nodes ((graph parse-chart-graph-output-record) 
+			       stream arc-drawer options)
+  (declare (ignore stream arc-drawer options))
+  (setq user::x graph)
+  (with-slots (root-nodes properties) graph
+    (let* ((dx (getf properties :generation-separation))
+	   (dy (getf properties :within-generation-separation))
+	   (top-layer (loop for node in (graph-node-children (car root-nodes))
+			  for i upfrom 1
+			  do (setf (slot-value node 'generation-tick) i)
+			  collecting node))
+	   (widest-layer (sort-layers top-layer)))
+      (let ((x dx))
+	(loop for layer = top-layer then (next-layer layer)
+	    while layer
+	    do (let ((y 0)
+		     (widest 0)
+		     (new-layer (stable-sort 
+				 (copy-list layer) #'< 
+				 :key #'(lambda (node)
+					  (slot-value node 
+						      'generation-tick)))))
+		 (loop for node in new-layer
+		     do (setf (graph-node-x node) x)
+			(setf (graph-node-y node) 
+			  (incf y (+ 30 dy))) ;;(bounding-rectangle-height node) dy)))
+			(setf widest (max widest 
+					  (bounding-rectangle-width node))))
+		 (incf x (+ widest dx)))))))
+  (tree-recompute-extent graph))
+	    
+(defun sort-layers (layer)
+  (when layer
+    (let* ((new-layer 
+	    (sort-layers
+	     (loop for node in (next-layer layer)
+		 do (setf (slot-value node 'generation-tick)
+		      (* (/ (length (graph-node-parents node)))
+			 (loop for parent in (graph-node-parents node)
+			     sum (slot-value parent 'generation-tick))))
+		 collecting node))))
+      (if (> (length layer) (length new-layer))
+	  layer
+	new-layer))))
+
+(defun next-layer (layer)
+  (loop for node in layer
+      appending (loop for child in (graph-node-children node)
+		    when (= (graph-node-generation child) 
+			    (1+ (graph-node-generation node)))
+		    collect child)))
+|#

@@ -69,84 +69,24 @@
 ;; Define a frame class for our FS windows
 ;;
 
-#|
 (define-lkb-frame active-fs-window 
     ((fs  :initform nil
 	  :accessor active-fs-window-fs))
+  :info-bar t
   :display-function 'draw-active-fs
-  :width 500 ;:compute 
-  :height 500; :compute
+  :width 500				;:compute 
+  :height 500				;:compute
   :output-record (make-instance 'clim:standard-tree-output-history))
-|#
-
-
-(clim:define-application-frame active-fs-window (lkb-frame)
-  ((fs  :initform nil
-	:accessor active-fs-window-fs)
-   (doc-pane :initform nil
-	     :accessor active-fs-window-doc-pane))
-  (:command-table (active-fs-window :inherit-from (lkb-frame)
-				    :inherit-menu t))
-  (:panes
-   (display  
-	(clim:vertically ()
-    (clim:outlining (:thickness 1)
-      (clim:spacing (:thickness 1)  
-
-	  (clim:scrolling (:scroll-bars :both)
-	    (clim:make-pane 'clim:application-pane
-			    :name :lkb-pane
-			    :text-cursor nil
-			    :end-of-line-action :allow
-			    :end-of-page-action :allow
-			    :borders nil
-			    :background clim:+white+
-			    :foreground clim:+black+
-			    :display-time nil
-			    :display-function 'draw-active-fs
-			    :width 500	
-			    :height 500	
-			    :output-record 
-			    (make-instance 
-				'clim:standard-tree-output-history)))))
-	  (clim:spacing (:thickness 1)
-	    (clim:make-pane 'clim:application-pane
-			    :name :path
-			    :text-cursor nil
-			    ;; :background clim:+white+
-			    ;; :foreground clim:+black+
-			    :end-of-line-action :allow
-			    :end-of-page-action :allow
-			    :borders nil
-			    :record nil
-			    :scroll-bars nil)))))
-  (:layouts
-   (default  display)))
-
 
 ;; Update the path window when we are over a type name
 
-(clim:define-presentation-method clim:highlight-presentation 
-    ((type type-thing) record stream state)
-  state
-  (multiple-value-bind (xoff yoff)
-      (clim:convert-from-relative-to-absolute-coordinates 
-        stream (clim:output-record-parent record))
-    (let* ((path (reverse (type-thing-type-label-list 
-			   (clim:presentation-object record))))
-	   (pane (active-fs-window-doc-pane (clim:pane-frame stream))))
-      (declare (dynamic-extent path))
-      (if (eq state :highlight)
-	  (dolist (feat path)
-	    (write-string (string-downcase (symbol-name feat)) pane)
-	    (write-char #\space pane))
-	(clim:window-clear pane)))
-    (clim:with-bounding-rectangle* (left top right bottom) record
-      (clim:draw-rectangle* stream
-                       (+ left xoff) (+ top yoff)
-                       (+ right xoff) (+ bottom yoff)
-		       :filled nil
-                       :ink clim:+flipping-ink+))))
+(define-info-bar type-thing (object stream)
+  (let ((path (reverse (type-thing-type-label-list object))))
+    (declare (dynamic-extent path))
+    (clim:with-text-style (stream *normal*)
+      (dolist (feat path)
+	(write-string (string-downcase (symbol-name feat)) stream)
+	(write-char #\space stream)))))
 
 ;;; **** display function entry points ****
 
@@ -166,7 +106,7 @@
     (let ((path-pane 
 	   (find :path (clim:frame-current-panes fs-window)
 		 :test #'eq :key #'clim:pane-name)))
-      (setf (active-fs-window-doc-pane fs-window) path-pane)
+      (setf (lkb-window-doc-pane fs-window) path-pane)
       (clim:change-space-requirements 
        path-pane
        :resize-frame t
@@ -318,17 +258,27 @@
 ;;; Search for coreferences in a feature structure
 
 (defstruct pointer
-  label valuep)
+  label valuep type-label-list)
 
-(defun add-active-pointer (stream position pointer valuep)
+(defun add-active-pointer (stream position pointer type-label-list valuep)
   (declare (ignore position))
   (let ((string (concatenate 'string 
 		 "<" (write-to-string pointer) ">"
 		 (when valuep " = "))))
-    (clim:with-output-as-presentation (stream (make-pointer :label pointer
-							    :valuep valuep)
-					      'pointer)
+    (clim:with-output-as-presentation 
+	(stream (make-pointer :label pointer
+			      :valuep valuep
+			      :type-label-list type-label-list)
+		'pointer)
       (write-string string stream))))
+
+(define-info-bar pointer (object stream)
+  (let ((path (reverse (pointer-type-label-list object))))
+    (declare (dynamic-extent path))
+    (clim:with-text-style (stream *normal*)
+      (dolist (feat path)
+	(write-string (string-downcase (symbol-name feat)) stream)
+	(write-char #\space stream)))))
 
 (define-active-fs-window-command (com-pointer-menu)
     ((pointer 'pointer :gesture :select))

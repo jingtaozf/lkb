@@ -213,7 +213,6 @@
 (defvar *print-scale* nil)
 (defvar *print-filename* "~")
 
-#+(and :allegro (not (version>= 5 0) :ignore))
 (defun get-print-options ()
   (let ((destination *print-destination*)
 	(orientation *print-orientation*)

@@ -338,11 +338,12 @@
       (format stream "~V%" 1)))
 
 (defmethod fs-output-reentrant-value-fn ((fsout edit) reentrant-pointer)
-  (with-slots (stream indentation max-width) fsout
+  (with-slots (stream indentation max-width type-label-list) fsout
     (move-to-x-y stream indentation (current-position-y stream))
     (with-bold-output stream 
       (let ((start-pos (current-position stream)))
-         (add-active-pointer stream start-pos reentrant-pointer t))) 
+	(add-active-pointer stream start-pos reentrant-pointer 
+			    type-label-list t))) 
     (setf indentation (current-position-x stream))
     (setf max-width (max indentation max-width))))
 
@@ -351,7 +352,8 @@
     (move-to-x-y stream indentation (current-position-y stream))
     (with-bold-output stream
       (let ((start-pos (current-position stream)))
-         (add-active-pointer stream start-pos reentrant-pointer nil))) 
+	(add-active-pointer stream start-pos reentrant-pointer 
+			    type-label-list nil))) 
     (setf max-width (max (current-position-x stream) max-width))
     (pop type-label-list)))
 
@@ -364,7 +366,8 @@
        (move-to-x-y stream indentation y-pos) 
        ; make start-pos the actual place where the type label starts!!
        (let ((start-pos (current-position stream)))
-          (add-type-and-active-fs-region stream start-pos type-label-list val nil t)
+	 (add-type-and-active-fs-region stream start-pos type-label-list 
+					val nil t)
           (setf max-width (max (current-position-x stream) max-width))
           (pop type-label-list)))))
 

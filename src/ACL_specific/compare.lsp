@@ -208,7 +208,7 @@
   (:layouts
    (:default (clim:horizontally () trees display))))
 
-(define-compare-frame-command (com-exit-compare-frame :menu "Quit")
+(define-compare-frame-command (com-exit-compare-frame :menu "Close")
     ()
  (clim:with-application-frame (frame)
    (when (compare-frame-stream frame)
@@ -225,6 +225,7 @@
     (recompute-in-and-out frame)
     (update-trees frame))) 
 
+#|
 (define-compare-frame-command (com-done-compare-frame :menu "Done")
     ()
   (clim:with-application-frame (frame)
@@ -236,7 +237,9 @@
 	     (next-sentence frame))
 	(clim:redisplay-frame-panes frame :force-p t)
       (clim:frame-exit frame))))
+|#
 
+#|
 (define-compare-frame-command (com-error-compare-frame :menu "Error")
     ()
   (clim:with-application-frame (frame)
@@ -248,6 +251,7 @@
 	     (next-sentence frame))
 	(clim:redisplay-frame-panes frame :force-p t)
       (clim:frame-exit frame))))
+|#
 
 (defun type-tree (tree)
   (let ((edge-record (get tree 'edge-record)))
@@ -356,8 +360,8 @@
 	(unless (eq ink (ptree-ink tree))
 	  (setf (ptree-ink tree) ink)
 	  (recolor-tree (ptree-output-record tree) ink)
-	  (clim:replay (ptree-output-record tree) stream))))
-    (setf (clim:command-enabled 'com-done-compare-frame window) done-p)))
+	  (clim:replay (ptree-output-record tree) stream))))))
+;;    (setf (clim:command-enabled 'com-done-compare-frame window) done-p)))
 
 (defun recolor-tree (record ink)
   (labels ((recolor-node (node) 

@@ -390,7 +390,7 @@
              :dag sense
              :leaves (list word)
              :lex-ids lex-ids
-             :morph-history (construct-morph-history lex-ids history)
+             :morph-history (construct-morph-history word lex-ids history)
              :spelling-change (when history 
 				(mhistory-new-spelling (car history)))))
 
@@ -561,17 +561,16 @@
 					       expanded-entry))))))))))))
 
 
-(defun construct-morph-history (lex-ids history)
-  ;;; the rule on an edge refers `back' i.e. to the way it was
-  ;;; constructed, so when this is called, the rule and 
-  ;;; the new spelling (if any) of the current-record have
-  ;;; already been put into an edge
-  (if history
-      (let* ((current-record (car history))
-             (fs (mhistory-fs current-record))
-             (new-edge (construct-lex-edge fs (cdr history) nil lex-ids)))
-        (push new-edge *morph-records*)
-        new-edge)))
+(defun construct-morph-history (word lex-ids history)
+  ;; the rule on an edge refers `back' i.e. to the way it was constructed, so
+  ;; when this is called, the rule and the new spelling (if any) of the
+  ;; current-record have already been put into an edge
+  (when history
+    (let* ((current-record (car history))
+	   (fs (mhistory-fs current-record))
+	   (new-edge (construct-lex-edge fs (cdr history) word lex-ids)))
+      (push new-edge *morph-records*)
+      new-edge)))
     
 
 

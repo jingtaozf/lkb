@@ -103,7 +103,9 @@
 
 
 (defun lexical-rule-p (x)
-   (and (rule-p x) (get-lex-rule-entry (rule-id x))))
+  (when (and (rule-p x) 
+	     (get-lex-rule-entry (rule-id x)))
+    t))
 
 
 (defun apply-lexical-rule (rule-name fs)

@@ -2,34 +2,31 @@
 
 (defconst lkb-menu
     '("LKB"
+      ("Load"
+       ["Complete grammar..." read-script-file t]
+       ["Reload grammar" reload-script-file t])
       ("View"
        ["Type hierarchy..." show-type-tree t]
        ["Type definition..." show-type-spec t]
        ["Expanded type..." show-type t]
-       ["Lex definition..." show-lex-def t]
        ["Lex entry..." show-lex t]
-       ["Word definition..." show-word-defs t]
        ["Word entries..." show-words t]
        ["Grammar rule..." show-grammar-rule t]
        ["Lexical rule..." show-lex-rule t])
       ("Parse"
-       ["Parse input..." do-parse t]
-       ["Show parse" show-parse t]
-       ["Show edge..." show-parse-edge t]
+       ["Parse input..." clim-user::do-parse-batch t]
+       ["Redisplay pars" show-parse t]
        ["Show chart" show-chart t]
        ["Print chart" print-chart t]
-       ["Batch parse" parse-sentences t]
-       ["Compare..." compare-parses t])
+       ["Batch parse..." parse-sentences-batch t])
       ("Generate"
        ["Generate..." generate-from-edge t]
-       ["Show result" show-gen-result t]
-       ["Show edge..." show-gen-edge t]
+       ["Redisplay realization" show-gen-result t]
        ["Show chart" show-gen-chart t]
-       ["Print chart" print-gen-chart t])
+       ["Index" index-for-generator t])
       "---"
       ["Redefine type" redefine-type t]))
       
-       
 (add-hook 'fi:lisp-mode-hook 
 	  (function (lambda ()
 		      (fi::install-menubar lkb-menu))))
@@ -44,13 +41,13 @@
 	     (interactive ())
 	     (eval-in-lisp ,(format "(%s)" com))))))
 
-(define-lisp-commands '(show-type-tree show-type-spec show-type show-lex-def 
-			show-lex show-word-defs show-words show-grammar-rule 
-			show-lex-rule do-parse show-parse show-parse-edge 
-			show-chart print-chart compare-parses 
-			generate-from-edge show-gen-result show-gen-edge 
-			show-gen-chart print-gen-chart))  
- 
+(define-lisp-commands 
+    '(read-script-file reload-script-file show-type-tree show-type-spec 
+      show-type show-lex show-words show-grammar-rule show-lex-rule 
+      clim-user::do-parse-batch show-parse show-chart print-chart 
+      parse-sentences-batch generate-from-edge show-gen-result show-gen-chart 
+      index-for-generator))
+			 
 (defun redefine-type (arg)
   (interactive "P")
   (let ((beg 0)
