@@ -67,3 +67,9 @@
   scarg
   outscpd)
 
+;;; macros
+
+(defmacro is-handel-var (var)
+    ;;; test is whether the type is "h"
+  `(and (var-p ,var)
+       (equal (var-type ,var) "h")))
