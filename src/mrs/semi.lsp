@@ -1072,12 +1072,23 @@
       collect (subseq string i j)
       while j))
 
+;(defun get-pred-name (pred)
+;  (let* ((pred-fields (if (stringp pred)
+;			  (get-lex-pred-fields pred))))
+;    (make-instance 'pred-name
+;      :key pred
+;      :name (if (stringp pred) pred (string-downcase (string pred)))
+;      :string-p (stringp pred)
+;      :lex (nth 0 pred-fields)
+;      :pos (nth 1 pred-fields)
+;      :id (nth 2 pred-fields))))
+
 (defun get-pred-name (pred)
-  (let* ((pred-fields (if (stringp pred)
-			  (get-lex-pred-fields pred))))
+  (let* ((pred-str (if (stringp pred) pred (string-downcase (string pred))))
+	 (pred-fields (get-lex-pred-fields pred-str)))
     (make-instance 'pred-name
       :key pred
-      :name (if (stringp pred) pred (string-downcase (string pred)))
+      :name pred-str
       :string-p (stringp pred)
       :lex (nth 0 pred-fields)
       :pos (nth 1 pred-fields)
