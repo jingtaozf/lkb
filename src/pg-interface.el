@@ -5,6 +5,7 @@
 
 (load "pg.elc")
 
+(defvar *psql-port-default* 5432)
 (defconst pg-menu
     '("PG"
       ("Lexical Entry"
@@ -84,7 +85,8 @@
 
 (defun retrieve-record (id)
   (with-pg-connection 
-      con ("lingo" "guest" "guest")
+      ;con ("lingo" "guest" "guest")
+      con ("lingo" "guest" "guest" "localhost" *psql-port-default*)
       (let* (
 	    (res (pg:exec con (print (format "SELECT * FROM erg_max_version WHERE name='%s';" id))))
 	    (tuple (pg:result res :tuple 0))
@@ -97,7 +99,7 @@
 
 
 (defun attribs-to-edit nil
-  '("name" "type" "orthography" "orthkey" "pronunciation" "keyrel" "altkey" "alt2key" "keytag" "compkey" "ocompkey" "complete" "semclasses" "preferences" "classifier" "selectrest" "comments" "exemplars" "usages" "lang" "country" "dialect" "domains" "genres" "register" "confidence" "flags"))
+  '("name" "type" "orthography" "orthkey" "pronunciation" "keyrel" "altkey" "alt2key" "keytag" "compkey" "ocompkey" "comments" "exemplars" "usages" "complete" "semclasses" "preferences" "classifier" "selectrest" "jlink" "lang" "country" "dialect" "domains" "genres" "register" "confidence" "flags"))
 
 (defun x-to-str (x)
   (cond
@@ -111,7 +113,8 @@
 
 (defun store-record (record-in)
   (with-pg-connection 
-      con ("lingo" "guest" "guest")
+;      con ("lingo" "guest" "guest")
+      con ("lingo" "guest" "guest" "localhost" *psql-port-default*)
       (let* (
 	     (record (mapcan '(lambda (x) (if (cdr x) (list x))) record-in))
 	     (record (set-val "version" (next-version (val "name" record)) record))
@@ -143,7 +146,8 @@
 (defun retrieve-val (sql-str &optional default)
   (unless default (setf default 0))
   (with-pg-connection 
-      con ("lingo" "guest" "guest")
+;      con ("lingo" "guest" "guest")
+      con ("lingo" "guest" "guest" "localhost" *psql-port-default*)
       (let* (
 	    (res (pg:exec con sql-str))
 	    (val (car (pg:result res :tuple 0)))
