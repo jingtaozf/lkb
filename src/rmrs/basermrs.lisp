@@ -103,3 +103,12 @@
   hcons1
   hcons2)
 
+;;; output as string - used in output but also in convert
+
+(defun convert-realpred-to-string (lemma pos sense)
+  (if sense
+	(format nil "_~(~a_~a_~@[~a~]~)" 
+		lemma (or pos "U") sense)
+      (format nil "_~(~a_~a~)" 
+	      lemma (or pos "U"))))
+
