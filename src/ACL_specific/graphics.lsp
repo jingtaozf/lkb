@@ -224,20 +224,34 @@
 (define-lkb-frame-command (com-print-frame :menu "Print") 
     ()
   (clim:with-application-frame (frame)
-    (multiple-value-bind (dest orient scale filename)
-	(get-print-options)
-      (case dest
-	(:printer (error "!"))
-	(:file	
-	 (with-open-file (file filename :direction :output 
-			  :if-exists :supersede)
-	   (clim:with-output-to-postscript-stream 
-	       (stream file :scale-to-fit (not scale) :multi-page scale
-		       :orientation orient)
-	     (funcall (clim-internals::pane-display-function 
-		       (clim-internals::find-frame-pane-of-type 
-			frame 'clim:application-pane))
-		      frame stream))))))))
+    (with-output-to-top ()
+      (multiple-value-bind (dest orient scale filename)
+	  (get-print-options)
+	(case dest
+	  (:printer (format t "~%Printing to printer not implemented yet."))
+	  (:file	
+	   (when (or (not (probe-file filename))
+		     (clim:notify-user clim-user::*lkb-top-frame*
+				       (format nil 
+					       "File ~a exists.~%Overwrite?" 
+					       filename)
+				       :style :question))
+	     (handler-case
+		 (with-open-file (ps-stream filename 
+				  :direction :output 
+				  :if-exists :supersede)
+		   (clim:with-output-to-postscript-stream 
+		       (stream ps-stream 
+			       :scale-to-fit (not scale) 
+			       :multi-page scale
+			       :orientation orient)
+		     (funcall (clim-internals::pane-display-function 
+			       (clim-internals::find-frame-pane-of-type 
+				frame 'clim:application-pane))
+			      frame stream)))
+	       (error (condition)
+		 (format t "~%Error: ~a" condition))))))))))
+
 
 (defmacro define-lkb-frame (frame-class slots 
 			    &rest pane-options 

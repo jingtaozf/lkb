@@ -337,9 +337,14 @@
   ;;; for MCL this can just be parse-sentences
   (mp:process-run-function "Batch parse" #'cl-user::parse-sentences))
 
+#|
 (defun do-parse-batch nil
   ;;; for MCL this can just be do-parse
   (mp:process-run-function "Parse" #'cl-user::do-parse))
+|#
+
+(defun do-parse-batch nil
+  (cl-user::do-parse))
 
 ;; Direct output to LKB window, if present
 
@@ -356,7 +361,6 @@
 	(when (not (eq mp:*current-process* *lkb-top-process*))
 	  (mp:process-add-arrest-reason *lkb-top-process* :output))
 	(setf (stream-recording-p *standard-output*) t)
-	(funcall body)
-	(terpri))
+	(funcall body))
     (mp:process-revoke-arrest-reason *lkb-top-process* :output)))
 
