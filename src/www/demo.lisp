@@ -396,7 +396,7 @@
               when (and value (not (equal value "?"))) do
                 (let ((value (when (equal value "+") t)))
                   (push (cons i value) decisions))
-              finally (pprint decisions)
+              finally
                 (loop
                     for (i . value) in decisions
                     for discriminant = (nth i discriminants)
