@@ -486,8 +486,9 @@
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   ;;obsolete
   (set-version psql-le lexicon) 
-  (if *lexdb-dump-timestamp* 
-      (set-val psql-le :modstamp *lexdb-dump-timestamp*))
+;  (if *lexdb-dump-timestamp* 
+;      (set-val psql-le :modstamp *lexdb-dump-timestamp*))
+  (set-val psql-le :modstamp "NOW")
   (let* ((symb-list (copy-list (fields lexicon)))
 	 (symb-list (remove :name symb-list))
 	 (symb-list (remove-duplicates symb-list))
@@ -993,11 +994,41 @@
 		nil
 		)))
 	(format t "Merge new entries aborted..."))
-      (if (and 
-	   (equal count-new 0))
+      (if (equal count-new 0)
 	  (empty-cache lexicon)
 	(initialize-psql-lexicon))
       (disconnect conn-db-owner))))
+
+(defmethod merge-into-lexicon-defn ((lexicon psql-lex-database) filename)
+  "reconnect as db owner and merge new defn into lexdb"
+  (with-slots (dbname host port) lexicon
+    (unless dbname
+      (error "please set :dbname"))
+    (let ((conn-db-owner 
+	   (make-instance 'psql-lex-database
+	     :dbname dbname
+	     :host host
+	     :port port
+	     :user (sql-fn-get-val lexicon :db_owner))))
+      (connect conn-db-owner)
+      (when
+	  (catch :sql-error
+	    (progn
+	      (let ((dfn-filename 
+		     (absolute-namestring "~a" filename)))
+		(cond
+		 ((probe-file dfn-filename)
+		  (merge-defn conn-db-owner 
+			      dfn-filename)
+		  (make-field-map-slot lexicon))
+		 (t
+		  (format t "~%WARNING: no file ~a" dfn-filename)))
+		nil
+		)))
+	(format t "Merge new .dfn entries aborted..."))
+      (empty-cache lexicon)
+      (disconnect conn-db-owner))))
+
 
 (defmethod to-db-dump ((x lex-entry) (lexicon psql-lex-database))
   "provide line entry for lexicon db import file"
@@ -1014,8 +1045,9 @@
 			(list
 			 (cons :orthkey (orthkey x))
 			 (cons :userid *lexdb-dump-user*)
-			 (cons :version (2-str *lexdb-dump-version*))
-			 (cons :modstamp *lexdb-dump-timestamp*)
+;			 (cons :version (2-str *lexdb-dump-version*))
+;			 (cons :modstamp *lexdb-dump-timestamp*)
+			 (cons :modstamp "NOW")
 			 (cons :lang *lexdb-dump-lang*)
 			 (cons :country *lexdb-dump-country*)
 			 (cons :confidence 1)

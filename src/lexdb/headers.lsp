@@ -12,8 +12,8 @@
 
 (defvar *lexdb-major-version* "3.5")
 (defvar *lexdb-dump-skip-stream* t)
-(defvar *lexdb-dump-version* 0)
-(defvar *lexdb-dump-timestamp* nil)
+;(defvar *lexdb-dump-version* 0)
+;(defvar *lexdb-dump-timestamp* nil)
 (defvar *lexdb-dump-source* "?")
 (defvar *lexdb-dump-user* nil)
 (defvar *lexdb-dump-lang* nil)

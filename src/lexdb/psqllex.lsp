@@ -76,7 +76,8 @@
   
 (defun initialize-psql-lexicon 
     (&key
-     (dbname (extract-param :dbname *psql-lexicon-parameters*))
+     (dbname (or (extract-param :dbname *psql-lexicon-parameters*)
+		 (and *psql-lexicon* (dbname *psql-lexicon*))))
      (host (extract-param :host *psql-lexicon-parameters*))
      (table (extract-param :table *psql-lexicon-parameters*))
      (port (extract-param :port *psql-lexicon-parameters*))
