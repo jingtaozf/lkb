@@ -411,7 +411,7 @@ char* skip_non_whitespace(char *text) {
 }
 
 char** string_to_words(char* text) {
-  int n,i=0,k=0,nw=10;
+  int n,k=0,nw=10;
   char **words,*start,*end,c;
   
   words = (char**)malloc(sizeof(char*)*nw);
@@ -440,7 +440,6 @@ char** string_to_words(char* text) {
 } /* string_to_words */
 
 int key_word_num(char* word) {
-  int i=0;
   
   return 0;
 }
@@ -483,7 +482,6 @@ char** matches_rest(char* text, int start, int end) {
   static char** matches=NULL;
   static int num=50; 
   char **names_r, **names_a;
-  Tsdb_value v;
   int n,last,rel_num,attr_num;
 
   if (!matches) {
@@ -581,9 +579,7 @@ char** matches_rest(char* text, int start, int end) {
 
 char **tsdb_completion(char *text, int start, int end) {
 
-  char **matches = (char **)NULL,**words,*line;
-  int i,n;
-  BOOL kaerb= FALSE;
+  char **matches = (char **)NULL;
 
   if(start == 0) {
     matches = completion_matches(text, tsdb_command_generate);
