@@ -42,7 +42,7 @@ verb := pos & [MOD.CAT <>, AUX /l -].
 det := nominal & [MOD.CAT <>].
 prep := pos & [MOD.CAT < [ SPR *ne-list* ] >].
 adv := pos & [MOD.CAT < [ SPR *list*, HEAD verb ] >].
-adj := pos & [MOD [CAT < [ SPR *ne-list*, HEAD noun ] >, DIR pre]].
+adj := pos & [MOD [CAT < [ HEAD noun ] >, DIR pre]].
 deg := pos & [MOD [CAT < [ SPR *list* ] >, DIR pre]].
 conj := pos & [MOD.CAT <>].
 comp := pos & [MOD.CAT <>].
@@ -229,7 +229,7 @@ word := lex-item &
            SEM #cont ] > ].
 
 det-lxm := const-lxm &
-[ HEAD nominal & [AGR #agr],
+[ HEAD det & [AGR #agr],
   SPR < >,
   COMPS < >,
   SPEC < [ HEAD noun & [ AGR #agr ],
@@ -301,25 +301,34 @@ no-arg-verb := verb-lxm &
   KEY relation].
 
 intrans-verb := verb-lxm &
-[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1] >,
+[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1, SEM.HOOK.LTOP #h] >,
   COMPS <>,
+  SEM.HOOK.LTOP #h,
   KEY arg1-relation & [ARG1 #arg1]].
 
 trans-verb := verb-lxm &
-[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1] >,
-  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg2] >,
+[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1, SEM.HOOK.LTOP #h] >,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, 
+                    SEM.HOOK.INDEX #arg2, SEM.HOOK.LTOP #h] >,
+  SEM.HOOK.LTOP #h,
   KEY arg1-2-relation & [ARG1 #arg1, ARG2 #arg2]].
 
 ditranspp-verb := verb-lxm &
-[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1] >,
-  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg2],
-          phrase & [HEAD prep, SPR <>, SEM.HOOK.INDEX #arg3] >,
+[ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1, SEM.HOOK.LTOP #h] >,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, 
+                    SEM.HOOK.INDEX #arg2, SEM.HOOK.LTOP #h],
+          phrase & [HEAD prep, SPR <>, SEM.HOOK.INDEX #arg3, 
+                    SEM.HOOK.LTOP #h] >,
+  SEM.HOOK.LTOP #h,
   KEY arg1-2-3-relation & [ARG1 #arg1, ARG2 #arg2, ARG3 #arg3]].
 
 ditransnp-verb := verb-lxm &
 [ SPR < [HEAD.FORM norm, SEM.HOOK.INDEX #arg1] >,
-  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg2],
-          phrase & [HEAD det, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg3] >,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, 
+                    SEM.HOOK.INDEX #arg2, SEM.HOOK.LTOP #h],
+          phrase & [HEAD det, HEAD.FORM norm, SPR <>, 
+                    SEM.HOOK.INDEX #arg3, SEM.HOOK.LTOP #h] >,
+  SEM.HOOK.LTOP #h,
   KEY arg1-2-3-relation & [ARG1 #arg1, ARG2 #arg2, ARG3 #arg3]].
 
 srv-lxm := verb-lxm &
@@ -352,22 +361,32 @@ auxv-lxm := verb-lxm &
 prep-lxm := const-lxm &
 [ HEAD prep & [MOD.CAT < [SEM.HOOK.INDEX #index] > ],
   SPR <>,
-  COMPS < phrase & [HEAD noun, HEAD.FORM norm, SPR <>, SEM.HOOK.INDEX #arg1] >,
+  COMPS < phrase & [HEAD det, HEAD.FORM norm, SPR <>, SPEC <>, SEM.HOOK.INDEX #arg1] >,
   SEM [HOOK.INDEX #index],
   KEY arg1-relation & [ARG1 #arg1]].
 
+;;; this is for intersective modification
+
 adv-lxm := const-lxm &
-[ HEAD adv & [MOD.CAT < [SEM.HOOK.INDEX #index] > ],
+[ HEAD adv & 
+       [ MOD.CAT < [SEM.HOOK [ INDEX #index,
+                               LTOP #ltop ]] > ],
   SPR <>,
   COMPS <>,
-  SEM [HOOK.INDEX #index ],
+  SEM.HOOK [ INDEX #index,
+             LTOP #ltop ],
   KEY relation ].
 
+;;; this is for intersective modification
+
 adj-lxm := const-lxm &
-[ HEAD adj & [MOD.CAT < [SEM.HOOK.INDEX #index] > ],
+[ HEAD adj & 
+       [MOD.CAT < [SEM.HOOK [ INDEX #index,
+                              LTOP #ltop ]] > ],
   SPR <>,
   COMPS <>,
-  SEM [HOOK.INDEX #index],
+  SEM.HOOK [ INDEX #index,
+             LTOP #ltop ],
   KEY relation ].
 
 
