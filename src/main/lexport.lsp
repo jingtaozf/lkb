@@ -243,7 +243,9 @@
     (error "unexpected type"))
   (let* ((fields-map (or fields-map (fields-map *psql-lexicon*)))
 	 (mapping (find field-kw fields-map :key #'second :test 'equal)))
-    (extract-field2 x (first mapping) (third mapping) (fourth mapping))))
+    (if mapping
+        (extract-field2 x (first mapping) (third mapping) (fourth mapping))
+      "")))
 	 
 (defun extract-field2 (x key2 path2 type2)
   (unless (typep x 'lex-entry)

@@ -509,10 +509,7 @@ INSERT INTO defn VALUES ( 'mwe', 'id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'orth', 'orthography', '', 'string-list' ); 
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'type', 'nil', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'orthography', '(orth)', 'string-diff-fs' ); -- DIFF LIST
-INSERT INTO defn VALUES ( 'mwe', 'unifs', 'keyrel', '(sem keys key1)', 'string' );
-INSERT INTO defn VALUES ( 'mwe', 'unifs', 'keytag', '(sem keys key carg)', 'string' );
-INSERT INTO defn VALUES ( 'mwe', 'unifs', 'altkey', '(sem keys altkey)', 'symbol' );
-INSERT INTO defn VALUES ( 'mwe', 'unifs', 'alt2key', '(sem keys alt2key)', 'symbol' );
+INSERT INTO defn VALUES ( 'mwe', 'unifs', 'keyrel', '(sem hook keypred)', 'mixed' );
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'compkey', '(sem keys --compkey)', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'ocompkey', '(sem keys --ocompkey)', 'symbol' );
 
