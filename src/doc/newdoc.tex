@@ -355,7 +355,8 @@ advantageous in any case, since we make minor bug fixes available
 as source, rather than providing new images.
 % UPDATE POINT
 We have tested the curent version of the LKB
-system on Allegro Common Lisp 5.0 on SunOS 5.6
+system on Allegro Common Lisp 5.0 on SunOS 5.6 
+(with all patches installed)
 and on Red Hat Linux 6.0 with Metrolink Motif 1.2
 and (less extensively) on 
 Macintosh Common Lisp 4.0.
@@ -480,7 +481,8 @@ to the prompt for {\bf Executable image name:}.
 
 In order to get a local copy of the LKB source at CSLI, you need to
 checkout the latest version from the cvs system.  To do this,
-you must have access to eoan or eo.  You will also need filespace
+you must have access to eo or one of the linear machines.  
+You will also need filespace
 on these machines.
 
 In the directory which you wish to act as the root for the LKB source
@@ -510,7 +512,8 @@ To compile the LKB system files in ACL/CLIM, do the following:
 \item cd to \filename{newlkb/src}.  
 \item Start ACL/CLIM.  The command needed will vary with your local
 installation.  For instance,
-at CSLI, the command to start ACL with CLIM is \filename{/eo/e4/malouf/acl50/base} on eo and eoan and
+at CSLI, the command to start ACL with CLIM is 
+\filename{/eo/e4/malouf/acl50/base} on eo and eoan and
 \filename{/usr/acl/base} on the linear machines.
 % UPDATE
 \footnote{Note that since the objective is just to compile the system,
@@ -606,15 +609,15 @@ as described in \S\ref{mcl-comp}.
 \subsection{ACL/CLIM with emacs}
 \label{acl-emacs}
 
-To use the LKB commands for interacting with source
-files in ACL/CLIM, you must use the emacs text editor and
-run a command that allows the linkage.  We suggest
-the use of \functionname{fi:common-lisp} which is available
-from \href{ftp: //ftp.franz.com/pub/emacs/eli/eli-2.0.21.16.2/}{ftp: //ftp.franz.com/pub/emacs/eli/eli-2.0.21.16.2/}.  The following
-instructions assume that this is installed on your system.
-You can run the LKB from emacs in a shell using the standard
-emacs commands, but the commands to show the grammar files
-will not work.
+To use the LKB commands for interacting with source files in ACL/CLIM, you must
+use the emacs text editor and run a command that allows the linkage.  We
+suggest the use of \functionname{fi:common-lisp} which is available from
+\href{ftp: //ftp.franz.com/pub/emacs/eli/eli-2.0.21.16.2/}{ftp:
+//ftp.franz.com/pub/emacs/eli/eli-2.0.21.16.2/}.  The following instructions
+assume that this is installed on your system.  You can run the LKB from emacs
+in a shell using the standard emacs commands, or you can start lisp with the
+emacs function \functionname{run-lisp}, but the commands to show the grammar
+files will not work.
 
 \begin{enumerate}
 \item The first time you use the system,
@@ -648,7 +651,7 @@ system should be specified), as follows:
 {\bf Buffer:} \verb+<RET>+\\
 {\bf Host:} \verb+<RET>+\\
 {\bf Process directory:} \verb+<RET>+\\
-{\bf Executable image name:} \verb+/usr/acl/bin/acl+\\
+{\bf Executable image name:} \verb+/usr/acl/base+\\
 {\bf Lisp image:}  \verb+<RET>+\\
 {\bf Image arguments:}  \verb+<RET>+
 \end{quote}
@@ -866,6 +869,23 @@ already):
      :version (pathname-version pathname))))
 \end{verbatim}
 
+\section{Building an image}
+
+If you wish to make a development image, for instance because
+you want to make the LKB available for several users at your site,
+this section gives brief instructions.
+
+\subsection{Allegro Common Lisp}
+
+To build an image, see the file \filename{ACL\_specific/image.lsp}.  This should
+be loaded into a fresh Lisp image, after loading \filename{general/loadup}.
+Notice that the distributed version has CSLI-specific filenames, which you will
+have to alter as appropriate for your site.
+
+\subsection{Macintosh Common Lisp}
+
+The function \functionname{dump-lkb} should create an MCL image.  
+The source is in \filename{MCL\_specific/topmenu.lsp}.
 
 
 \section{Problems}
@@ -880,6 +900,19 @@ documentation, please look at the instructions on the
 \href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}.  We will make
 fixes for known problems available there.  The Web site also contains details
 of how to report bugs that you find.
+
+
+
+\subsection{Lisp specific problems}
+
+\paragraph{Allegro CL}
+If you are using source files, note that there are various patches available
+for ACL 5.0 which are required to make the LKB run.  Please contact Franz
+to obtain the patches.
+
+If you are using an image which doesn't have CLIM built in, you need to load
+CLIM before loading \filename{general/loadup}.  If you don't, you will get the
+tty version of the LKB system.
 
 \subsection{Missing libraries}
 
@@ -7767,8 +7800,8 @@ are output.  If there are a large number of scoped forms, only a limited number
 are shown, by default.  Because scoping can be computationally
 expensive, there is a limit on the search space for scopes: this
 is controlled by \lkbparam{mrs::*scoping-call-limit*}.
-\item[VIT] VIT stands for Verbmobil interchange term.  This is not relevant
-to most users.  (Note for CSLI users: the VIT output 
+\item[VIT] VIT stands for Verbmobil interchange term.  This is 
+not available for most users. (Note for CSLI users: the VIT output 
 attempts to invoke a Prolog process to check the VIT --- 
 this can cause noticeable
 delays.)
@@ -7969,8 +8002,8 @@ are active - currently the following operations are supported:
 window) will display a menu of options which apply to the whole
 window.
 \begin{description}
-\item [Output TeX] Outputs the FS as TeX macros to a file selected by
-the user.  
+\item [Output TeX] Outputs the FS as LaTeX macros to a file selected by
+the user.  The LaTeX macros are defined in %FIX
 \item[Apply lex rule]
 Only available if the identifier points to something that might
 be a lexical entry.
@@ -9918,9 +9951,10 @@ stored in a separate file from the other globals (called
 \item[mrs::*scoping-call-limit*, 10000]  
 Controls the search space for scoping.  
 May be set interactively.
-\item[mrs::*null-semantics-hack-p*, t]
-Allows the generator to cheat by using only the null semantic lexical
-entries that were found from the last parse.
+\item[mrs::*null-semantics-hack-p*, nil]
+If set, allows the generator to cheat by using only the null semantic lexical
+entries that were found from the last parse.  Requires that the generator is
+run only on the output of the last sentence parsed.
 \end{description}
 
 
@@ -10223,13 +10257,28 @@ This file is used to store cached leaf types.
 {Cambridge University Press}
 {1993}
 
-\book{Carpenter, R.}
+\book{Carpenter, B.}
 {The logic of typed feature structures}
 {(Tracts in Theoretical Computer Science), Cambridge University Press,
   Cambridge, England} 
 {1992}
 
-%FIX carpenter 1993 in book
+\bookart{Carpenter, B.}
+           {Skeptical And Credulous Default Unification With
+Application To Templates And Inheritance}
+    {13--37}
+    {Inheritance, Defaults and the Lexicon}
+    {E.J.~Briscoe, A.~Copestake and V.~de~Paiva}
+    {Cambridge University Press, Cambridge, England}
+    {1993}
+
+\procart{Carroll, J. A.~Copestake, D.~Flickinger and V.~Poznanski}
+{An Efficient Chart Generator for (Semi-)Lexicalist Grammars}
+{7th European Workshop on Natural Language
+Generation (EWNLG'99)}
+{Toulouse} 
+{86--95}
+{1999}
 
 \procart{Copestake, A.}
 {The ACQUILEX LKB: representation issues in semi-automatic
@@ -10245,7 +10294,10 @@ acquisition of large lexicons}
 University of Cambridge Computer Laboratory}
 {1993}
 
-%FIX MRS semantics (Copestake et al, 1999)
+\unpub{Copestake, A., D.~Flickinger, I.A.~Sag and C.~Pollard}
+{Minimal Recursion Semantics: An introduction}
+{ms. CSLI, Stanford}
+{1999}
 
 \procart{Kasper, R.~T. and  W.~C. Rounds}
 {A logical semantics for feature structures}
