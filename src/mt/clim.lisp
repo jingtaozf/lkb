@@ -345,7 +345,9 @@
               (format stream "~%~%")))
           (clim:formatting-row (stream)
             (clim:formatting-cell (stream :align-x :left)
-              (format stream "~a~%" edge))))))))
+              (let ((mrs::*mrs-raw-output-p* nil)
+                    (%transfer-raw-output-p% nil))
+                (format stream "~a~%" edge)))))))))
 
 (defun transfer-title (frame)
   (let* ((edge (nth (mrs-transfer-i frame) (mrs-transfer-stack frame)))

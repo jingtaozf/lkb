@@ -739,7 +739,7 @@
     (and (= (edge-depth edge1) (edge-depth edge2))
          (= (logior vector2 vector1) vector2)
          (ignore-errors
-           (mrs::mrs-equalp mrs1 mrs2 t nil)))))
+           (mrs::mrs-equalp mrs1 mrs2 t nil (list *mtr-skolem-property*))))))
 
 (defun packed-edge-p (edge)
   (loop
@@ -1411,6 +1411,10 @@
 (defun mtr-operator-p (value)
   (or (eq value *mtr-upcase-operator*) (eq value *mtr-downcase-operator*)))
 
+(defun role-delete-p (role value)
+  (declare (ignore value))
+  (member role mrs::*ignored-sem-features* :test #'eq))
+
 (defun variable-delete-p (variable)
   (when (mrs::var-p variable)
     (let ((properties (mrs:var-extra variable)))
@@ -1485,9 +1489,24 @@
   variable)
 
 (defun new-variable (type extras)
-  (let ((id %transfer-variable-id%))
+  (let* ((extras (remove
+                  *mtr-skolem-property* extras
+                  :key #'mrs::extrapair-feature))
+         (variable (mrs::make-var 
+                    :id %transfer-variable-id% :type type :extra extras)))
     (incf %transfer-variable-id%)
-    (mrs::make-var :id id :type type :extra extras)))
+    ;;
+    ;; _fix_me_
+    ;; work out why *transfer-skolemize-p* is not on (by default) during core
+    ;; transfer; preferably move to re-skolemization after each MTR expansion.
+    ;;                                                          (30-jun-04; oe)
+    (when #+:null (null *transfer-skolemize-p*) #-:null t
+      (push 
+       (mrs::make-extrapair 
+        :feature *mtr-skolem-property*
+        :value (mrs::var-string variable))
+       (mrs:var-extra variable)))
+    variable))
 
 (defun constant-role-p (role)
   (member role mrs::*value-feats* :test #'eq))
@@ -1608,8 +1627,9 @@
                 (loop
                     for role in (mrs:rel-flist ep)
                     for value = (mrs:fvpair-value role)
-                    unless (and (mrs::var-p value)
-                                (variable-delete-p value))
+                    unless (or (role-delete-p (mrs:fvpair-feature role) value)
+                               (and (mrs::var-p value)
+                                    (variable-delete-p value)))
                     collect 
                       (mrs::make-fvpair 
                        :feature (mrs:fvpair-feature role)

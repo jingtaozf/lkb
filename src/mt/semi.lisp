@@ -212,7 +212,7 @@
                         (symbol :symbol)
                         (number :number)
                         (t :constant))))
-      do
+      unless (eq feature (mrs::vsym "LNK")) do
         (record-role feature value semi)
         (push (cons feature value) roles)
       finally
