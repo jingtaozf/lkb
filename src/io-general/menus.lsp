@@ -20,7 +20,9 @@
 		      cl-user::show-words 
 		      cl-user::show-grammar-rule 
 		      cl-user::show-lex-rule 
-		      ;; parse
+                      ;; parse
+                      #+:oe
+                      cl-user::parse-with-preprocessor
 		      cl-user::show-parse 
 		      cl-user::show-chart 
 		      cl-user::compare-parses
@@ -185,6 +187,9 @@
                   (list 
                      (make-menu-item :name "Parse input..."
                         :value 'do-parse-batch)
+                     #+:oe
+                     (make-menu-item :name "Parse file..."
+                        :value 'parse-with-preprocessor)
                      (make-menu-item :name "Redisplay parse"
                         :value 'show-parse)
                      (make-menu-item :name "Show chart"

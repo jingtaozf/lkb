@@ -173,8 +173,14 @@
 			      (dag-arcs dag2) (dag-comp-arcs dag2))
 			  (progn
 			    (when *unify-debug*
-			      (format t "~%Unification failed due to atomic/~
-                           non-atomic clash at path < ~{~A ~^: ~}>" (reverse path)))
+                              (if (eq *unify-debug* :return)
+                                (setf %failure% 
+                                  (list :atomic (reverse path)))
+                                (format 
+                                 t 
+                                 "~%Unification failed due to atomic/~
+                                  non-atomic clash at path < ~{~A ~^: ~}>" 
+                                 (reverse path))))
 			    (throw '*fail* nil))
 			(setf (dag-forward dag2) dag1))
 		    (progn
@@ -187,9 +193,16 @@
 			      (let ((res
 				     (catch '*fail* (unify1 dag1 constraint path))))
 				(unless res
-				  (format t 
-					  "~%Unification with constraint of type ~A failed ~
-                                    at path < ~{~A ~^: ~}>" new-type (reverse path))
+				  (if (eq *unify-debug* :return)
+                                    (setf %failure% 
+                                      (list :constraints 
+                                            (reverse path) new-type))
+                                    (format 
+                                     t 
+                                     "~%Unification with constraint ~
+                                      of type ~A failed ~
+                                      at path < ~{~A ~^: ~}>" 
+                                     new-type (reverse path)))
 				  (throw '*fail* nil)))
 			    (unify1 dag1 constraint path)))
 			;; dag1 might just have been forwarded so dereference
@@ -217,8 +230,16 @@
 	      (progn
 		;; Unification failed, and we aren't collecting failure stats
 		(when *unify-debug*
-		  (format t "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>" 
-			  (unify-get-type dag1) (unify-get-type dag2) (reverse path)))
+		  (if (eq *unify-debug* :return)
+                    (setf %failure% (list :clash 
+                                          (reverse path) 
+                                          (unify-get-type dag1)
+                                          (unify-get-type dag2)))
+                    (format 
+                     t 
+                     "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
+                     (unify-get-type dag1) (unify-get-type dag2) 
+                     (reverse path))))
 		(throw '*fail* nil)))))
       )
 					;

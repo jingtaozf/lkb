@@ -295,8 +295,9 @@
                              ;; filter is in rules.lsp
                              (find-irregular-morphs word) :test #'equalp)
                           #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
-           (unless morph-poss (format t "~%Word ~A is not in lexicon" word)
-                   (return))
+          (unless #+:oe (template-p word) #-:oe nil
+            (unless morph-poss (format t "~%Word ~A is not in lexicon" word)
+                    (return)))
            (setf (aref *morphs* current)
                  (make-morph-edge :id current 
                                   :word base-word 
@@ -340,18 +341,30 @@
   ;; word senses - the type of the dag is used to do the indexing
   (let* ((multi-results (add-multi-words morph-poss right-vertex f))
          (word-senses 
-	  (loop for morph-res in morph-poss
-	      append
-		(loop for sense in (get-senses (car morph-res))
-		    append
-		      (if (cdr morph-res)
-			  (apply-all-lexical-and-morph-rules 
-			   (list (make-mrecord :lex-ids (list (car sense))
-					       :fs (cdr sense) 
-					       :rules (cdr morph-res)))
-			   f)
-			(list (make-mrecord :lex-ids (list (car sense))
-					    :fs (cdr sense) :rules nil)))))))
+          (if #+:oe (template-p local-word) #-:oe nil
+            #+:oe
+            (let* ((template (retrieve-template local-word))
+                   (surface (or (get-template-surface template) local-word))
+                   (tdfs (when template (instantiate-template template))))
+              (when tdfs
+                (setf local-word surface)
+                (list (make-mrecord :lex-ids (list (intern local-word))
+                                    :fs tdfs
+                                    :rules nil))))
+            #-:oe nil
+            (loop for morph-res in morph-poss
+                append
+                  (loop for sense in (get-senses (car morph-res))
+                      append
+                        (if (cdr morph-res)
+                            (apply-all-lexical-and-morph-rules 
+                             (list (make-mrecord :lex-ids (list (car sense))
+                                                 :fs (cdr sense) 
+                                                 :rules (cdr morph-res)))
+                             f)
+                          (list (make-mrecord :lex-ids (list (car sense))
+                                              :fs (cdr sense) 
+                                              :rules nil))))))))
     (dolist (mrec word-senses)
       (let ((lex-ids (mrecord-lex-ids mrec))
 	    (sense (mrecord-fs mrec))

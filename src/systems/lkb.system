@@ -74,7 +74,9 @@
                (:file "leaf")       ; leaf types - for efficiency not
                                     ; expanded at load time
 	       (:file "lex")        ; lexical structures, also templates etc
-	       #+plob (:file "plex"); lexical database 
+	       #+plob (:file "plex")    ; lexical database 
+               #+:oe
+               (:file "ltemplates") ; lexical templates (e.g. for cardinals)
 	       (:file "clex")       ; constant lexical database 
                (:file "rules")      ; grammar and lexical rules
 	       (:file "parse")      ; chart parser

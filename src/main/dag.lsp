@@ -53,6 +53,12 @@
 (defvar *unify-debug* nil)
 (defvar *unify-debug-cycles* nil) ; report when cycle found during copy?
 
+;;;
+;;; establish way to return information about failure (rather than printing
+;;; the nature of the failure right away).          (2-mar-99  -  oe@csli)
+;;;
+(defparameter %failure% nil)
+
 (defvar *unify-wffs* nil)
 
 (defvar *within-unification-context-p* nil)
@@ -337,8 +343,18 @@
                      (unify1 dag1 dag2 nil)
                      (when (or *unify-debug* *unify-debug-cycles*)
                        (if (cyclic-dag-p dag1)
-                           (format t "~%Unification failed - cyclic result")
-                         (when *unify-debug*
+                         ;;
+                         ;; for the (eq *unify-debug* :return) variant the 
+                         ;; %failure% value is determined in cyclic-dag-p()
+                         ;; already; hence suppress printed output here.  the
+                         ;; baroque conditionals preserve the original LKB
+                         ;; behaviour.                   (19-mary-99  -  oe)
+                         ;;
+                         (unless (and (null *unify-debug-cycles*)
+                                      (eq *unify-debug* :return))
+                           (format t "~%Unification failed - cyclic result"))
+                         (when (and *unify-debug* 
+                                    (not (eq *unify-debug* :return)))
                            (format t "~%Unification succeeded"))))
                      dag1))
                 #+(and mcl powerpc)(incf bb (CCL::%HEAP-BYTES-ALLOCATED))
@@ -352,12 +368,17 @@
          (progn
             (unify1 dag1 dag2 nil)
             (if (cyclic-dag-p dag1)
-                (progn 
-                  (when (or *unify-debug* *unify-debug-cycles*)
-                    (format t "~%Unification failed - cyclic result"))
-                  nil)
+              (progn 
+                ;;
+                ;; see above for baroque conditional       (19-may-99  -  oe)
+                ;;
+                (when (and (or *unify-debug* *unify-debug-cycles*)
+                           (not (eq *unify-debug* :return)))
+                  (format t "~%Unification failed - cyclic result"))
+                nil)
               (progn
-               (when *unify-debug* (format t "~%Unification succeeded"))
+                (when (and *unify-debug* (not (eq *unify-debug* :return)))
+                  (format t "~%Unification succeeded"))
                t))))
       (with-unification-context (dag1) (unifiable-dags-p dag1 dag2))))
 
@@ -381,8 +402,12 @@
   (cond
    ((eq (dag-copy dag1) :inside)
     (when (or *unify-debug* *unify-debug-cycles*)
-      (format t "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
-	      (reverse path)))
+      (if (eq *unify-debug* :return)
+        (setf %failure% (list :cycle (reverse path)))
+        (format 
+         t 
+         "~%Unification failed: unifier found cycle at < ~{~A ~^: ~}>" 
+         (reverse path))))
     (throw '*fail* nil))
    ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
   dag1)
@@ -403,8 +428,13 @@
 		      (dag-arcs dag2) (dag-comp-arcs dag2))
                   (progn
 		    (when *unify-debug*
-		      (format t "~%Unification failed due to atomic/~
-                           non-atomic clash at path < ~{~A ~^: ~}>" (reverse path)))
+		      (if (eq *unify-debug* :return)
+                        (setf %failure% (list :atomic (reverse path)))
+                        (format 
+                         t 
+                         "~%Unification failed due to atomic/~
+                          non-atomic clash at path < ~{~A ~^: ~}>" 
+                         (reverse path))))
 		    (throw '*fail* nil))
 		(setf (dag-forward dag2) dag1))
 	    (progn
@@ -419,9 +449,16 @@
 		      (let ((res 
 			     (catch '*fail* (unify1 dag1 constraint path))))
 			(unless res
-			  (format t 
-				  "~%Unification with constraint of type ~A failed ~
-                                    at path < ~{~A ~^: ~}>" new-type (reverse path))
+			  (if (eq *unify-debug* :return)
+                            (setf %failure% 
+                              (list :constraints 
+                                    (reverse path) new-type nil nil))
+                            (format 
+                             t 
+                             "~%Unification with constraint 
+                              of type ~A failed ~
+                              at path < ~{~A ~^: ~}>" 
+                             new-type (reverse path)))
 			  (throw '*fail* nil)))
 		    (unify1 dag1 constraint path)))
 		;; dag1 might just have been forwarded so dereference it again
@@ -446,8 +483,15 @@
 		(setf (dag-copy dag1) nil))))))
       (progn
 	(when *unify-debug*
-	  (format t "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>" 
-                  (unify-get-type dag1) (unify-get-type dag2) (reverse path)))
+          (if (eq *unify-debug* :return)
+            (setf %failure% 
+              (list :clash (reverse path) 
+                    (unify-get-type dag1) (unify-get-type dag2)))
+            (format 
+             t 
+             "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
+             (unify-get-type dag1) (unify-get-type dag2) 
+             (reverse path))))
 	(throw '*fail* nil)))))
 
 (defmacro unify-arcs-find-arc (attribute arcs comp-arcs)
@@ -592,8 +636,10 @@
   (cond
    ((eq (dag-copy dag) :inside)
     (when (or *unify-debug* *unify-debug-cycles*)
-      (format t "~%Unification failed: copy found cycle at < ~{~A ~^: ~}>" 
-	      (reverse path)))
+      (if (eq *unify-debug* :return)
+        (setf %failure% (list :cycle (reverse path)))
+        (format t "~%Unification failed: copy found cycle at < ~{~A ~^: ~}>" 
+                (reverse path))))
     (throw '*fail* nil))
    ((not (symbolp (dag-copy dag)))
     (dag-copy dag))
@@ -790,22 +836,25 @@
 
 (defun cyclic-dag-p (dag)   
    ;; return t if cyclic
-   (if *within-unification-context-p*
+  (if *within-unification-context-p*
       (catch '*cyclic*
-         (progn
-            (cyclic-dag-p1 dag nil)
-            (when *unify-debug* (format t "~%Dag not cyclic"))
-            nil))
-      (with-unification-context (dag) (cyclic-dag-p dag))))
+        (progn
+          (cyclic-dag-p1 dag nil)
+          (when (and *unify-debug* (not (eq *unify-debug* :return)))
+            (format t "~%Dag not cyclic"))
+          nil))
+    (with-unification-context (dag) (cyclic-dag-p dag))))
 
 (defun cyclic-dag-p1 (dag path)   
    (setq dag (deref-dag dag))
    (cond
       ((eq (dag-copy dag) :outside))
       ((eq (dag-copy dag) :inside)
-         (when (or *unify-debug* *unify-debug-cycles*)
-            (format t "~%Cyclic check found cycle at < ~{~A ~^: ~}>" 
-               (reverse path)))
+       (when (or *unify-debug* *unify-debug-cycles*)
+         (if (eq *unify-debug* :return)
+           (setf %failure% (list :cycle (reverse path)))
+           (format t "~%Cyclic check found cycle at < ~{~A ~^: ~}>" 
+                   (reverse path))))
          (throw '*cyclic* t))
       ((or (dag-arcs dag) (dag-comp-arcs dag))
          (setf (dag-copy dag) :inside)

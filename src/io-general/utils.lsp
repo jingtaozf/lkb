@@ -223,7 +223,14 @@
    (make-pathname :name name)
    directory))
 
-(defun lkb-load-lisp (directory name &optional optional)
+;;;
+;;; add optional .compile. argument to supress compilation when needed; this
+;;; is essential when running multiple LKB instances simultaneously on the
+;;; same file system (e.g. as back-end processors for [incr tsdb()]); the 
+;;; problem is that multiple processes end up recompiling files in parallel.
+;;;                                                       (1-apr-99  -  oe)
+;;;
+(defun lkb-load-lisp (directory name &optional optional (compile t))
   (let ((file (merge-pathnames (make-pathname :name name) 
                                directory)))
     (if (probe-file file)
@@ -234,7 +241,7 @@
 				     #'(lambda (c)
 					 (declare (ignore c))
 					 (muffle-warning))))
-		       (if (member :compiler *features*)
+		       (if (and compile (member :compiler *features*))
 			   (compile-file file :verbose nil :print nil)
 			 file))))
       (unless optional
