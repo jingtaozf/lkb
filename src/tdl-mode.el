@@ -158,9 +158,11 @@ with no args, if that value is non-nil."
 	 ("'[a-zA-Z0-9---_]+" . font-lock-string-face) ; single quoted predicates
 	 ("\\(:[=<]\\|&\\)"    . font-lock-constant-face) ; background syntax
 	 ("#|\\(|[^#]\\|[^|]\\)*|#" . (0 font-lock-comment-face t)))) ; comments
-      ;; If this is on font-lock-global-modes, then tdl-mode has been loaded ...
-      (eval-after-load "font-lock"
-	'(add-to-list 'font-lock-global-modes 'tdl-mode))))
+;; If this is on font-lock-global-modes, then tdl-mode has been loaded ...
+     (eval-after-load "font-lock"
+       	'(if (boundp 'font-lock-global-modes)
+	     (if (listp  font-lock-global-modes)
+		 (add-to-list 'font-lock-global-modes 'tdl-mode))))))
 
 (defun tdl-compute-ubound ()
   (beginning-of-line)
