@@ -3564,7 +3564,7 @@ the system definition, if provided."
 			       (compile-during-load *compile-during-load*)
 			       dribble
 			       (minimal-load *minimal-load*)
-			       (override-compilation-unit t)
+			       (override-compilation-unit nil)
 			       )
   (declare #-(or :cltl2 :ansi-cl) (ignore override-compilation-unit))
   (unwind-protect

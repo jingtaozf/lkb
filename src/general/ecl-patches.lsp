@@ -97,7 +97,7 @@
 ;;; accordingly (6-feb-96 -- oe@csli)
 ;;;
 (defvar %system-binaries%
-  #+(and (or :i386 :i686 :pentium4) :unix) "linux"
+  #+(and (or :i386 :i686 :pentium4) :unix) "linux.x86.32"
   #+(and (not (or :i386 :i686 :pentium4)) :unix) "ppc"
   #+(and (or :i386 :i686 :pentium4) (not :unix)) "windows"
   #-(or (or :i386 :i686 :pentium4) 
