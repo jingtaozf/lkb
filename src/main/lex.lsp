@@ -556,12 +556,6 @@
 
 (defmethod clear-lex :around ((lexicon lex-database) &rest rest)
   (let ((in-isolation (get-keyword-val :in-isolation rest)))
-;  (when (fboundp 'clear-generator-lexicon)
-;    (funcall 'clear-generator-lexicon))
-;  (clrhash (slot-value lexicon 'lexical-entries))
-;  (clrhash (slot-value lexicon 'psorts))
-;  (when (fboundp 'clear-lexicon-indices)
-;    (funcall 'clear-lexicon-indices))
     (empty-cache lexicon)
     (call-next-method)
     (unless in-isolation
@@ -592,26 +586,26 @@
 
 ;;; dunno what this is - looks like oe code
 
-(defun lexicon-to-xml (&key (stream t) file)
-  (loop
-      with stream = (if file
-                      (open file
-                            :direction :output :if-exists :supersede
-                            :if-does-not-exist :create)
-                      stream)
-      with *batch-mode* = t
-      for id in (collect-psort-ids *lexicon*)
-      for entry = (read-psort *lexicon* id)
-      for tdfs = (and entry (lex-entry-local-fs entry))
-      for type = (and tdfs (indef-type-of-tdfs tdfs))
-      for stem = (and entry (lex-entry-orth entry))
-      when (and id type stem) do
-        (format
-         stream
-         "<instance name=\"~(~a~)\" type=\"~(~a~)\" ~
-           stem=\"~(~{~a~^ ~}~)\" status=\"lexicon\"/>~%"
-         id type stem)
-      finally (when file (close stream))))
+;;(defun lexicon-to-xml (&key (stream t) file)
+;;  (loop
+;;      with stream = (if file
+;;                      (open file
+;;                            :direction :output :if-exists :supersede
+;;                            :if-does-not-exist :create)
+;;                      stream)
+;;      with *batch-mode* = t
+;;      for id in (collect-psort-ids *lexicon*)
+;;      for entry = (read-psort *lexicon* id)
+;;      for tdfs = (and entry (lex-entry-local-fs entry))
+;;      for type = (and tdfs (indef-type-of-tdfs tdfs))
+;;      for stem = (and entry (lex-entry-orth entry))
+;;      when (and id type stem) do
+;;        (format
+;;         stream
+;;         "<instance name=\"~(~a~)\" type=\"~(~a~)\" ~
+;;           stem=\"~(~{~a~^ ~}~)\" status=\"lexicon\"/>~%"
+;;         id type stem)
+;;      finally (when file (close stream))))
 
 ;; moved from clex.lsp (it belongs here)
 

@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1998-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Benjamin Waldron
 ;;; see licence.txt for conditions
 
 (in-package :lkb)
@@ -34,6 +34,10 @@
   nil)
 
 (defun index-lexicon nil
+  #+:psql
+  (when (typep *lexicon* 'psql-lex-database)
+    (format t "~%(caching all lexical entries)")
+    (cache-all-lex-entries-orth *lexicon*))
   (mrs::clear-semantic-indices)
   (setf *batch-mode* t)
   (if mrs::*top-semantics-type*
@@ -70,7 +74,8 @@
 		      (lex-entry-id entry))))
 	  (unexpand-psort *lexicon* (lex-entry-id entry))))
      (mrs::check-for-redundant-filter-rules)
-     (setf *batch-mode* nil)))
+     (setf *batch-mode* nil))
+   )
 
 
 

@@ -1,4 +1,4 @@
-;;; Copyright (c) 2001 -- 2002 
+;;; Copyright (c) 2001 -- 2003 
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
 ;;   see `licence.txt' for conditions.
 
@@ -526,13 +526,18 @@
     "")))
 
 (defmethod export-to-tdl ((lexicon lex-database) stream)
-  (format t "~%(caching all lexical entries)")
-  (cache-all-lex-entries *lexicon*)
+  #+:psql
+  (when (typep *lexicon* 'psql-lex-database)
+    (format t "~%(caching all lexical entries)")
+    (cache-all-lex-entries *lexicon*))
   (mapc
    #'(lambda (x) (format stream "~a" (to-tdl (read-psort lexicon x))))
    (collect-psort-ids lexicon))
-  (format t "~%(clearing cache)")
-  (empty-cache *lexicon*))
+  #+:psql
+  (when (typep *lexicon* 'psql-lex-database)
+    (format t "~%(clearing cache)")
+    (empty-cache *lexicon*))
+  )
 
 (defmethod export-to-tdl-to-file ((lexicon lex-database) filename)
   (setf filename (namestring (pathname filename)))

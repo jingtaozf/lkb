@@ -1,4 +1,4 @@
-;;; Copyright (c) 2002 
+;;; Copyright (c) 2002-2003 
 ;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
@@ -8,6 +8,7 @@
 ;;;
 
 ;;; bmw (nov-03)
+;;; - support for generator indexing;
 ;;; - SEMI
 ;;; - RH9 default-locale bug workaround
 
@@ -55,12 +56,7 @@
 ;;;  - rework DB access layer to cache connection in `psql-database' object.
 ;;;
 ;;; ToDo
-;;;  - add insertion of additional lexical entries support from LKB; maybe use
-;;;    emacs(1) forms for input (and the emacs(1) -- lisp interface, such that
-;;;    no extra installation overhead is incurred, e.g. for a web server to
-;;;    talk to PostGres);
 ;;;  - rework connection handling to re-open on demand (rather than error());
-;;;  - support for generator indexing;
 ;;;  - integrate irregular spellings into lexical DB;
 ;;;
 
@@ -456,6 +452,7 @@
 ;;;
 
 (defmethod lookup-word ((lexicon psql-lex-database) orth &key (cache t))
+  (setf orth (string-downcase orth))
   (let ((hashed (gethash orth 
 			 (slot-value lexicon 'lexical-entries))))
     (cond 
@@ -476,7 +473,8 @@
 (defun lookup-word-psql-lex-database (lexicon orth)
   (declare (ignore cache))
   (if (connection lexicon)
-      (let* ((orthstr (string-downcase orth))
+      ;;(let* ((orthstr (string-downcase orth))
+      (let* ((orthstr orth)
 	     (sql-str (sql-retrieve-entries-by-orthkey lexicon 
 						       (make-requested-fields lexicon) 
 						       orthstr))
@@ -503,7 +501,6 @@
 	      (make-psort-struct lexicon record)))
 	 collect id))))
 
-;;; really necessary?
 ;;; (used to index for generator)
 ;;; fix_me: inefficient implementation
 (defmethod lex-words ((lexicon psql-lex-database))
@@ -558,22 +555,51 @@
 (defmethod read-psort ((lexicon psql-lex-database) id &key (cache t) (recurse t))
   (declare (ignore recurse))
   (with-slots (psorts) lexicon
-    (cond ((gethash id psorts))
-	  (t
-	   (let* ((record (retrieve-record lexicon id (make-requested-fields lexicon)))
-		  (entry (if record (make-psort-struct lexicon record))))
-	     (when (and entry cache)
-	       (setf (gethash id psorts) entry))
-	     entry)))))
+    (let ((hashed (gethash id psorts)))
+      ;;    (cond ((gethash id psorts))
+      (cond (hashed
+	     (unless (eq hashed 'EMPTY)
+	       hashed))
+	    (t
+	     (let* ((record (retrieve-record lexicon id (make-requested-fields lexicon)))
+		    (entry (if record (make-psort-struct lexicon record))))
+	       ;;(when (and entry cache)
+	       ;;  (setf (gethash id psorts) entry))
+	       (when cache
+		 (setf (gethash id psorts)
+		   (or entry 'EMPTY)))
+	       entry))))))
 
 (defun record-id (record)
   (str-2-symb (cdr (assoc :name record))))
+
+(defun record-orth (record)
+  (cdr (assoc :orthography record)))
 
 (defmethod cache-all-lex-entries ((lexicon psql-lex-database))
   (with-slots (psorts) lexicon
     (mapc 
      #'(lambda (x) 
 	 (let ((id (record-id x)))
+	   (unless (gethash id psorts) 
+	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
+     (retrieve-all-records lexicon (make-requested-fields lexicon)))))
+
+(defmethod cache-all-lex-entries-orth ((lexicon psql-lex-database))
+  (with-slots (psorts lexical-entries) lexicon
+    (clrhash lexical-entries)
+    (mapc 
+     #'(lambda (x) 
+	 (let* ((id (record-id x))
+	       (orth (record-orth x))
+	       ;;(orth-entries (gethash orth lexical-entries))
+		)
+	   (mapc 
+	    #'(lambda (y)
+		(setf (gethash y lexical-entries) 
+		  (cons id (gethash y lexical-entries))))
+	    (split-into-words orth))
+	   
 	   (unless (gethash id psorts) 
 	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
      (retrieve-all-records lexicon (make-requested-fields lexicon)))))

@@ -51,7 +51,8 @@
   #+:psql
   (when (typep *lexicon* 'psql-lex-database)
     (format t "~%(clearing cache)")
-    (empty-cache *lexicon*)))
+    (empty-cache *lexicon*))
+  )
 
 
 (defun sanitize (dag-instance id path &optional (ostream t))
