@@ -48,7 +48,7 @@
                       lkb::command-commit-scratch		      
                       lkb::command-show-scratch		      
                       lkb::command-set-filter-psql-lexicon		      
-                      lkb::command-generate-semi		      
+                      ;lkb::command-generate-semi		      
                       ;; generate
                       lkb::show-gen-result
                       lkb::show-generator-input
@@ -341,10 +341,10 @@
                                   :value 'command-clear-scratch
                                   ;:available-p :always
 				  )
-                  (make-menu-item :name "Generate SEM-I"
-                                  :value 'command-generate-semi
-                                  ;:available-p :always
-				  )
+;                  (make-menu-item :name "Generate SEM-I"
+;                                  :value 'command-generate-semi
+;                                  ;:available-p :always
+;				  )
                   )
 		 :available-p :always)
 	    (make-lkb-submenu-item 

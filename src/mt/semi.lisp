@@ -1,3 +1,6 @@
+
+;;; (bmw20): see lkb/src/mrs/semi.lsp
+
 (in-package :mt)
 
 (defparameter *semis* nil)

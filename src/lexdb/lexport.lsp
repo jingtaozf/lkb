@@ -25,6 +25,8 @@
 
 (in-package :lkb)
 
+(defvar *current-lex-id*) 
+
 (defvar *postgres-temp-filename* nil)
 
 (defvar *postgres-export-skip-stream* t)
@@ -985,3 +987,23 @@
 ;		 :host (pathname-host (lkb-tmp-dir))
 ;		 :device (pathname-device (lkb-tmp-dir))
 ;		 :directory (pathname-directory (lkb-tmp-dir))))
+
+(defun dag-diff-list-2-list (dag)
+  (let* ((last-dag (dag-path-val (list *diff-list-last*) dag))
+	 (list-dag (dag-path-val (list *diff-list-list*) dag)))
+    (loop
+	with rest-dag
+	while (not (eq list-dag
+		       last-dag))
+	do
+	  (setf rest-dag (dag-path-val '(rest) list-dag))
+	  (when (null rest-dag)
+	    (format t "~%WARNING: invalid difference list ~a in ~a" out-list *current-lex-id*)
+	    (loop-finish))
+	collect (dag-path-val '(first) list-dag)
+	into out-list
+	do
+	  (setf list-dag rest-dag)
+	finally
+	  (return out-list)
+	  )))

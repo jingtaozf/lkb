@@ -181,6 +181,13 @@
        :components
        ((:file "translate")))           ; collection of crude MT functions
 
+     (:module "semi"
+       :source-pathname "mrs"
+       :binary-pathname "mrs"
+       :source-extension "lsp"
+       :components
+       ((:file "semi")))           ; semi
+
      #+:nil
       (:module "extensions"
        :source-pathname "mrs"

@@ -811,20 +811,20 @@
 	  (mapcar #'(lambda (x) (cdr (first x))) (show-scratch *psql-lexicon*)))
   (lkb-beep))
 
-(defun command-generate-semi nil
-  (unless (typep *lexicon* 'psql-lex-database)
-    (error "You need to load the LexDB before generating the SEMI..."))
-  (format *postgres-debug-stream* "~%(caching all lexical records)")
-  (cache-all-lex-records *lexicon*)
-
-  (format *postgres-debug-stream* "~%(dumping semi files)")
-  (dump-obj-semi *lexicon*)
-  (format *postgres-debug-stream* "~%(loading semi into db)")
-  (load-semi-from-files *lexicon*)
-  
-  (format *postgres-debug-stream* "~%(clearing cache)")
-  (empty-cache *lexicon*)
-  (lkb-beep))
+;;;(defun command-generate-semi nil
+;;;  (unless (typep *lexicon* 'psql-lex-database)
+;;;    (error "You need to load the LexDB before generating the SEMI..."))
+;;;  (format *postgres-debug-stream* "~%(caching all lexical records)")
+;;;  (cache-all-lex-records *lexicon*)
+;;;
+;;;  (format *postgres-debug-stream* "~%(dumping semi files)")
+;;;  (dump-obj-semi *lexicon*)
+;;;  (format *postgres-debug-stream* "~%(loading semi into db)")
+;;;  (load-semi-from-files *lexicon*)
+;;;  
+;;;  (format *postgres-debug-stream* "~%(clearing cache)")
+;;;  (empty-cache *lexicon*)
+;;;  (lkb-beep))
 
 ;;;
 ;;; cache
@@ -836,33 +836,23 @@
     (mapc
      #'(lambda (record)  
 	 (setf (gethash (record-id record) record-cache) 
-	     record))
+	   record))
      (retrieve-all-records lexicon (make-requested-fields lexicon)))))
 
-(defmethod cache-all-lex-entries ((lexicon psql-lex-database))
-  (with-slots (psorts) lexicon
-    (mapc 
-     #'(lambda (x) 
-	 (let ((id (record-id x)))
-	   (unless (gethash id psorts) 
-	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
-     (retrieve-all-records lexicon (make-requested-fields lexicon)))))
-
-(defmethod cache-all-lex-entries-orth ((lexicon psql-lex-database))
-  (with-slots (psorts lexical-entries) lexicon
+(defmethod cache-all-lex-records-orth ((lexicon psql-lex-database))
+  (with-slots (record-cache lexical-entries) lexicon
     (clrhash lexical-entries)
     (mapc 
-     #'(lambda (x) 
-	 (let* ((id (record-id x))
-	       (orth (record-orth x)))
+     #'(lambda (record) 
+	 (let* ((id (record-id record))
+	       (orth (record-orth record)))
 	   (mapc 
 	    #'(lambda (y)
 		(setf (gethash y lexical-entries) 
 		  (cons id (gethash y lexical-entries))))
 	    (split-into-words orth))
-	   
-	   (unless (gethash id psorts) 
-	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
+	   (setf (gethash (record-id record) record-cache) 
+	     record) ))
      (retrieve-all-records lexicon (make-requested-fields lexicon)))))
 
 (defun i (&optional (slot 'record-cache)) (inspect (slot-value *lexicon* slot)))

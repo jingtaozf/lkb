@@ -36,46 +36,45 @@
 (defun index-lexicon nil
   #+:psql
   (when (typep *lexicon* 'psql-lex-database)
-    (format t "~%(caching all lexical entries)")
-    (cache-all-lex-entries-orth *lexicon*))
+    (format t "~%(caching all lexical records)")
+    (cache-all-lex-records-orth *lexicon*))
   (mrs::clear-semantic-indices)
-  (setf *batch-mode* t)
-  (if mrs::*top-semantics-type*
-      (setf mrs::*top-semantics-entry* 
-        (get-type-entry mrs::*top-semantics-type*))
-    (progn (cerror "~A will be used (indexing may be inefficient)" 
-                   "~%No *top-semantics-type* defined" *toptype*)
-           (setf mrs::*top-semantics-entry*
-             (get-type-entry *toptype*))))
-  (unless mrs::*top-semantics-entry*
-    (error "~%No entry found for top semantics type ~A" 
-           mrs::*top-semantics-type*))
-   (let ((ids-table (make-hash-table :test #'eq)) (ids nil))
-     ;; because of multiple lexical entries, an id may be indexed by
-     ;; multiple orthographies
-     (dolist (word (lex-words *lexicon*))
-       (dolist (inst (lookup-word *lexicon* word :cache nil))
-	 (setf (gethash inst ids-table) t)))
-     (maphash
+  (let ((*batch-mode* t))
+    (if mrs::*top-semantics-type*
+	(setf mrs::*top-semantics-entry* 
+	  (get-type-entry mrs::*top-semantics-type*))
+      (progn (cerror "~A will be used (indexing may be inefficient)" 
+		     "~%No *top-semantics-type* defined" *toptype*)
+	     (setf mrs::*top-semantics-entry*
+	       (get-type-entry *toptype*))))
+    (unless mrs::*top-semantics-entry*
+      (error "~%No entry found for top semantics type ~A" 
+	     mrs::*top-semantics-type*))
+    (let ((ids-table (make-hash-table :test #'eq)) (ids nil))
+      ;; because of multiple lexical entries, an id may be indexed by
+      ;; multiple orthographies
+      (dolist (word (lex-words *lexicon*))
+	(dolist (inst (lookup-word *lexicon* word :cache nil))
+	  (setf (gethash inst ids-table) t)))
+      (maphash
        #'(lambda (id val) (declare (ignore val)) (push id ids))
        ids-table)
-     (process-queue
-      #'(lambda ()
-	  (let ((id (pop ids)))
-	    (if id
-		(read-psort *lexicon* id :cache nil)
-	      :eof)))
-      #'(lambda (entry)
-	  (expand-psort-entry entry)
-	  (let ((new-fs (lex-entry-full-fs entry)))
-	    (if (and new-fs (not (eq new-fs :fail)))
-		(mrs::extract-lexical-relations entry)
-	      (format t "~%No feature structure for ~A~%" 
-		      (lex-entry-id entry))))
-	  (unexpand-psort *lexicon* (lex-entry-id entry))))
-     (mrs::check-for-redundant-filter-rules)
-     (setf *batch-mode* nil))
-   )
+      (process-queue
+       #'(lambda ()
+	   (let ((id (pop ids)))
+	     (if id
+		 (read-psort *lexicon* id :cache nil)
+	       :eof)))
+       #'(lambda (entry)
+	   (expand-psort-entry entry)
+	   (let ((new-fs (lex-entry-full-fs entry)))
+	     (if (and new-fs (not (eq new-fs :fail)))
+		 (mrs::extract-lexical-relations entry)
+	       (format t "~%No feature structure for ~A~%" 
+		       (lex-entry-id entry))))
+	   (unexpand-psort *lexicon* (lex-entry-id entry))))
+      (mrs::check-for-redundant-filter-rules)))
+  (setf *batch-mode* nil))
 
 
 
