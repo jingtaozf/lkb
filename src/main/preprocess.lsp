@@ -32,8 +32,11 @@
 ;;; : token separator (also marks transition from string- to token-level rules)
 ;;;
 ;;; - replace
+;;;
 ;;; + augment (only in token-level mode)
+;;;
 ;;; ^ ersatz (currently only in token-level mode)
+;;;
 ;;; #42
 ;;;
 ;;; # grouping: name set of rules # 42; group is not executed unless called
@@ -44,11 +47,11 @@
 ;;;
 ;;; | continuation line for token-level rule, in pattern or substitution, e.g.
 ;;;
-;;; +it
-;;; |'s				its
+;;;   +it
+;;;   |'s			its
 ;;;
-;;; +its			it
-;;; |				's
+;;;   +its			it
+;;;   |				's
 ;;;
 
 (in-package :lkb)

@@ -380,7 +380,9 @@
 
 
 (defun add-morphs-to-morphs (user-input)
-   (let ((current 0))
+  (if (consp (first user-input))
+    (sppp-setup-morphs user-input)
+    (let ((current 0))
       (dolist (base-word user-input)
         (let* ((word (string-upcase base-word))
                (new (+ current 1))
@@ -419,7 +421,7 @@
               (make-morph-edge :id current :word base-word 
                                :morph-results 
                                (or morph-poss (list (list word)))))
-            (setf current new))))))
+            (setf current new)))))))
 
 (defun add-words-to-chart (f)
   (let ((current 0)

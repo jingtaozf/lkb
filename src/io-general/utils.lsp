@@ -115,20 +115,22 @@
                        (if type (tdfs-of fs-id)))))))))))
 
 (defun split-into-words (sentence-string)
-  ; split-into-words is used in various places 
-  ; so shouldn't be redefined for more complete scanner
-   (let ((current-word nil)
-         (current-sentence nil))
+  (if (listp sentence-string)
+    sentence-string
+    ; split-into-words is used in various places 
+    ; so shouldn't be redefined for more complete scanner
+    (let ((current-word nil)
+          (current-sentence nil))
       (loop for character in (coerce sentence-string 'list)
-         do
-         (cond ((char= character #\Space) 
-                (when current-word 
-                  (push (coerce (nreverse current-word) 'string)
-                        current-sentence)
-                  (setf current-word nil)))
-               (t (push character current-word))))
+          do
+            (cond ((char= character #\Space) 
+                   (when current-word 
+                     (push (coerce (nreverse current-word) 'string)
+                           current-sentence)
+                     (setf current-word nil)))
+                  (t (push character current-word))))
       (push (coerce (nreverse current-word) 'string) current-sentence)
-      (nreverse current-sentence)))
+      (nreverse current-sentence))))
 
 (defun do-parse-tty (sentence)
   (when sentence
