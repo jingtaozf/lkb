@@ -288,21 +288,6 @@
 ;;; Functions below here are to replace functions in graphics files
 ;;; called from functions in core files
 
-(defun split-into-words (sentence-string)
-;;; as in toplevel.lsp
-   (let ((current-word nil)
-         (current-sentence nil))
-      (for character in (coerce sentence-string 'list)
-         do
-         (cond ((char= character #\Space) 
-               (push (coerce (nreverse current-word) 'string)
-                  current-sentence)
-               (setf current-word nil))
-            (t (push character current-word))))
-      (push (coerce (nreverse current-word) 'string) current-sentence)
-      (nreverse current-sentence)))
-
-
 
 (defun draw-new-type-tree (type title something)
   (declare (ignore type title something))
@@ -331,3 +316,35 @@
 (defun lkb-beep nil
 ;;; so that misc.lsp doesn't need to be loaded in the tty version
   nil)
+
+;;; might be useful
+
+(defun less-interactive-unification-check (check-details)
+  ;;; temporary, since dialog doesn't work in ACL
+  (let* ((fs1-id (car check-details))
+         (path1 (cadr check-details))
+         (fs2-id (caddr check-details))
+         (path2 (cadddr check-details))
+         (resname (cadddr (cdr check-details))))
+    (when check-details
+    (if (and fs1-id fs2-id) 
+      (let ((fs1 (get-fs-given-id fs1-id))
+            (fs2 (get-fs-given-id fs2-id)))
+        (if (and fs1 fs2 (listp path1) (listp path2))
+          (let ((resdag fs1))
+            (when 
+             (setq resdag
+                   (unify-paths-with-fail-messages 
+                    (create-path-from-feature-list path1) 
+                    resdag
+                    (create-path-from-feature-list path2) 
+                    (copy-dag-completely fs2) fs1-id path1 fs2-id path2))
+             (format t "~%Unification successful")
+             (if resname (store-temporary-psort resname resdag))))
+          (cond ((null fs1) 
+                 (error  "~%~A is not a valid FS identifier" fs1-id))
+                ((null fs2) 
+                 (error  "~%~A is not a valid FS identifier" fs2-id))
+                (t (error  "~%Paths are not lists")))))
+      (error  "~%Need to specify both feature structures")))))
+

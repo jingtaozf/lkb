@@ -17,6 +17,14 @@
 ;;;
 ;;; "Load"
 ;;; all in various input files
+;;; apart from
+
+(defun read-script-file nil
+  (let ((file-name 
+         (ask-user-for-existing-pathname "Script file?")))
+    (when file-name
+      (load file-name))))
+
 
 ;;; "View"
 ;;;
@@ -60,24 +68,26 @@
 ;;; "Word entries" show-words
 
 (defun show-words nil
-    (let* ((word-string (ask-user-for-word))
-        (lex-entry (if word-string (get-lex-entry word-string))))
-     (unless lex-entry
-         (setf lex-entry (get-lex-entry (string-upcase word-string))))
-      (for word-entry in lex-entry 
-         do
-         (display-fs (lex-or-psort-full-fs word-entry) 
-               (format nil "~(~A~) - expanded" word-string))
-            ))) 
+  (show-word-aux t))
 
 (defun show-word-defs nil
-   (let* ((word-string (ask-user-for-word))
-         (lex-entry (if word-string (get-lex-entry word-string))))
-      (unless lex-entry
-         (setf lex-entry (get-lex-entry (string-upcase word-string))))
-      (for word-entry in lex-entry 
+  (show-word-aux nil))
+
+(defun show-word-aux (exp-p)
+  (let* ((word-string (ask-user-for-word))
+         (orth-list (if word-string 
+                      (split-into-words (string-upcase word-string))))
+         (lex-entries (if orth-list (get-lex-entry (car orth-list)))))
+      ; entries indexed by all elements
+    (for word-entry in lex-entries
          do
-         (display-unexpanded-lex-entry word-string word-entry))))
+         (when (equal (mapcar #'string-upcase (lex-or-psort-orth word-entry))
+                    orth-list)
+           (if exp-p
+             (display-fs (lex-or-psort-full-fs word-entry) 
+                         (format nil "~(~A~) - expanded" word-string))
+             (display-unexpanded-lex-entry word-string word-entry))))))
+
   
 ;;; "Lex or psort entry" show-lex
 (defun show-lex nil
@@ -149,19 +159,6 @@
 
 
 ;;; display-fs is in outputfs.lsp
-
-;;; included from lexbatch.lsp
-
-(defun collect-psort-ids nil
-   ;; work around Procyon maphash bug - as in checktypes.lsp
-   (let ((ids nil))
-      (maphash 
-         #'(lambda (name val)
-             (declare (ignore val))
-            (push name ids))
-         *psorts*)
-      ids))
-
 
 (defun ask-user-for-lex nil
    (let ((possible-name
@@ -335,23 +332,6 @@
                (split-into-words 
                   (preprocess-sentence-string str)))))))   
 
-(defun split-into-words (sentence-string)
-  ; split-into-words is used in various places 
-  ; so shouldn't be redefined for more complete scanner
-   (let ((current-word nil)
-         (current-sentence nil))
-      (for character in (coerce sentence-string 'list)
-         do
-         (cond ((char= character #\Space) 
-                (when current-word 
-                  (push (coerce (nreverse current-word) 'string)
-                        current-sentence)
-                  (setf current-word nil)))
-               (t (push character current-word))))
-      (push (coerce (nreverse current-word) 'string) current-sentence)
-      (nreverse current-sentence)))
-
-
 ;;; "Generate"
 ;;;
 ;;; "Generate" generate-from-edge
@@ -455,56 +435,6 @@
       (progn (cerror  "~%Try again" "~%Need to specify both feature structures")
              (interactive-unification-check))))))
 
-
-(defun less-interactive-unification-check (check-details)
-  ;;; temporary, since dialog doesn't work in ACL
-  (let* ((fs1-id (car check-details))
-         (path1 (cadr check-details))
-         (fs2-id (caddr check-details))
-         (path2 (cadddr check-details))
-         (resname (cadddr (cdr check-details))))
-    (when check-details
-    (if (and fs1-id fs2-id) 
-      (let ((fs1 (get-fs-given-id fs1-id))
-            (fs2 (get-fs-given-id fs2-id)))
-        (if (and fs1 fs2 (listp path1) (listp path2))
-          (let ((resdag fs1))
-            (when 
-             (setq resdag
-                   (unify-paths-with-fail-messages 
-                    (create-path-from-feature-list path1) 
-                    resdag
-                    (create-path-from-feature-list path2) 
-                    (copy-dag-completely fs2) fs1-id path1 fs2-id path2))
-             (format t "~%Unification successful")
-             (if resname (store-temporary-psort resname resdag))))
-          (cond ((null fs1) 
-                 (error  "~%~A is not a valid FS identifier" fs1-id))
-                ((null fs2) 
-                 (error  "~%~A is not a valid FS identifier" fs2-id))
-                (t (error  "~%Paths are not lists")))))
-      (error  "~%Need to specify both feature structures")))))
-
-
-(defun get-fs-given-id (fs-id)
-  ;;; this accepts type names and rule names as well as lexical ids
-  (let ((result (get-tdfs-given-id fs-id)))
-    (if result
-      (if (tdfs-p result)
-        (tdfs-indef result)
-        result))))
-
-
-(defun get-tdfs-given-id (fs-id)
-  ;;; this accepts type names and rule names as well as lexical ids
-  (let ((lex-entry (get-psort-entry fs-id)))
-    (if lex-entry (lex-or-psort-full-fs lex-entry)
-      (let ((rule-entry (get-grammar-rule-entry fs-id)))
-        (if rule-entry (rule-full-fs rule-entry)
-          (let ((lex-rule-entry (get-lex-rule-entry fs-id)))
-            (if lex-rule-entry (rule-full-fs lex-rule-entry)
-              (let ((type (get-type-entry fs-id)))
-                (if type (tdfs-of fs-id))))))))))
 
 #-allegro
 (defun compare-parses ()
