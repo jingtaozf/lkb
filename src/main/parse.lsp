@@ -37,10 +37,10 @@
 ;;; Vertices are integers, not atoms.
 
 (defvar *parse-unifs* 0)
-(defvar *parse-fails* 0)
-(defparameter *chart-limit* 100)
 
-(defvar *chart* (make-array (list *chart-limit*) :initial-element nil)) 
+;;; *chart-limit* is defined in globals.lsp
+
+(defvar *chart* (make-array (list *chart-limit*))) 
 
 (defvar *parse-record* nil)
 
@@ -61,21 +61,25 @@
 ;;; rule-number - either the word (storms etc) or the number of the grammar
 ;;; rule which has been applied to create that edge  
 ;;; dag - the dag associated with the constituent
-;;; leaves - whatever this edge has been formed from
-;;; children -
+;;; leaves - orthography of whatever this edge has been formed from
+;;; lex-ids - like leaves, but identifiers of whole structures
+;;; children - daughter edges
  
 (defstruct
    (edge
       (:constructor make-edge
-                    (&key id category rule-number dag (dag-restricted (restrict-fs dag))
-                          leaves children morph-history)))
-   id category rule-number dag dag-restricted leaves children morph-history)
+                    (&key id category rule-number dag 
+                          (dag-restricted (restrict-fs dag))
+                          leaves lex-ids children morph-history)))
+   id category rule-number dag dag-restricted leaves lex-ids
+   children morph-history)
 
 (defstruct
    (mrecord
       (:constructor make-mrecord
-                    (&key fs (fs-restricted (restrict-fs fs)) rules history)))
-   fs fs-restricted rules history)
+                    (&key fs (fs-restricted (restrict-fs fs)) 
+                          lex-ids rules history)))
+   fs fs-restricted lex-ids rules history)
 
 (defvar *edge-id* 0)
 
@@ -83,7 +87,7 @@
    (incf *edge-id*)
    *edge-id*)
 
-(defvar *morphs* (make-array (list *chart-limit*) :initial-element nil))
+(defvar *morphs* (make-array (list *chart-limit*)))
 
 ;;; *morphs* is added, paralleling *chart* to allow for
 ;;; multi-word entries (and eventually idioms perhaps).
@@ -116,29 +120,27 @@
 ;;; sentence as a list of strings and is called from the top level
 
 (defun parse (user-input)
-  (cond ((> (length user-input) *chart-limit*)
-           (format t "Can't parse this length of sentence~%") nil)
-        (t
-           (let ((*safe-not-to-copy-p* t)
-                 (*parse-unifs* 0) (*parse-fails* 0))
-              (clear-chart)
-              (add-morphs-to-morphs user-input)
-              (add-words-to-chart)
-              (setf *parse-record*
-                 (find-spanning-edges 0 (length user-input)))
-              (show-parse)
-;              (cache-structures)
-              (values *parse-unifs* *parse-fails*)))))
+   (cond ((> (length user-input) *chart-limit*)
+         (format t "Can't parse this length of sentence~%") nil)
+      (t
+         (let ((*safe-not-to-copy-p* t))
+            (clear-chart)
+            (add-morphs-to-morphs user-input)
+            (add-words-to-chart)
+            (setf *parse-record*
+               (find-spanning-edges 0 (length user-input)))
+            (show-parse)
+            ))))
 
 (defun add-morphs-to-morphs (user-input)
    (let ((current 0))
       (dolist (word user-input)
          (let* ((new (+ current 1))
-                (morph-poss (progn #+(and mcl powerpc)(decf gg (CCL::%HEAP-BYTES-ALLOCATED))
+                (morph-poss (progn #+:powerpc(decf gg (CCL::%HEAP-BYTES-ALLOCATED))
                                    (prog1
                                      (append (morph-analyse word)
                                        (find-irregular-morphs word))
-                                     #+(and mcl powerpc)(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
+                                     #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
            (unless morph-poss (format t "Word ~A is not in lexicon~%" word)
                    (return))
            (setf (aref *morphs* current)
@@ -157,12 +159,10 @@
 
 
 (defun add-word (local-word morph-poss right-vertex)
-   ;;; get-senses returns a list of dags corresponding
-   ;;; to the word senses 
+   ;;; get-senses returns a list of conses of ids and dags 
+   ;;; corresponding to the word senses 
    ;;; - the type of the dag is used 
    ;;; to do the indexing
-;;; removed structure caching for now - doesn't help much and
-;;; complicates multi-word stuff
       (let* ((word-senses 
               (for morph-res in morph-poss
                    append
@@ -171,18 +171,25 @@
  ;;; fix? for case where not everything is pumped  AAC July 1996
                         (if (cdr morph-res)
                           (apply-all-lexical-and-morph-rules 
-                           (list (make-mrecord :fs sense :rules (cdr morph-res))))
-                          (list (make-mrecord :fs sense :rules nil)))))))
+                           (list (make-mrecord :lex-ids (list (car sense))
+                                  :fs (cdr sense) :rules (cdr morph-res))))
+                          (list (make-mrecord :lex-ids (list (car sense))
+                                 :fs (cdr sense) :rules nil)))))))
         (dolist (mrec word-senses)
-          (let ((sense (mrecord-fs mrec))
+          (let ((lex-ids (mrecord-lex-ids mrec))
+                (sense (mrecord-fs mrec))
                 (history (mrecord-history mrec)))
             (activate-context (- right-vertex 1) 
-                              (make-edge :id (next-edge) :category (indef-type-of-tdfs sense) 
-                                            :rule-number (if history (caar history) local-word)
-                                            :dag sense
-                                            :leaves (list local-word)
-                                            :morph-history 
-                                            (construct-morph-history history))
+                              (make-edge :id (next-edge) 
+                                         :category (indef-type-of-tdfs sense) 
+                                         :rule-number 
+                                         (if history (caar history) local-word)
+                                         :dag sense
+                                         :leaves (list local-word)
+                                         :lex-ids lex-ids
+                                         :morph-history 
+                                         (construct-morph-history 
+                                          lex-ids history))
                                  right-vertex))))
       (add-multi-words morph-poss right-vertex))
 
@@ -194,16 +201,19 @@
          filter
          (if (not (cdr (lex-or-psort-orth entry)))
            ; exclude multi-words
-             (let ((expanded-entry
-              (get-psort-entry (lex-or-psort-id entry))))
+             (let* ((id (lex-or-psort-id entry))
+                    (expanded-entry
+                     (get-psort-entry id)))
                (when expanded-entry
-                 (lex-or-psort-full-fs expanded-entry)))))))
+                 (cons id
+                       (lex-or-psort-full-fs expanded-entry))))))))
 
 ;;; get-multi-senses has to return a structure
 
 (defstruct (sense-record)
   word-string
   left-vertex
+  lex-ids
   fs
   morph-res
   mrecs)
@@ -223,14 +233,19 @@
                (for sense-record in (get-multi-senses stem right-vertex)
                     filter
                     (let* ((sense (sense-record-fs sense-record))
-                           (new-morph-res (sense-record-morph-res sense-record))
+                           (lex-ids (sense-record-lex-ids sense-record))
+                           (new-morph-res 
+                            (sense-record-morph-res sense-record))
                            (mrecs 
                             (if (cdr new-morph-res)
                               (apply-all-lexical-and-morph-rules 
                                (list (make-mrecord :fs sense 
+                                                   :lex-ids lex-ids
                                                    :rules 
                                                    (cdr new-morph-res))))
-                              (list (make-mrecord :fs sense :rules nil)))))
+                              (list (make-mrecord :fs sense 
+                                                  :lex-ids lex-ids      
+                                                  :rules nil)))))
                       (if mrecs
                         (progn
                           (setf (sense-record-mrecs sense-record) mrecs)
@@ -240,16 +255,21 @@
                  (left-vertex (sense-record-left-vertex sense-record)))
              (dolist (mrec (sense-record-mrecs sense-record))
                (let ((sense (mrecord-fs mrec))
+                     (lex-ids (mrecord-lex-ids mrec))
                      (history (mrecord-history mrec)))
                  (activate-context left-vertex 
                                    (make-edge :id (next-edge) 
-                                              :category (indef-type-of-tdfs sense) 
+                                              :category 
+                                              (indef-type-of-tdfs sense) 
                                               :rule-number 
                                               (if history (caar history) word)
                                               :dag sense
                                               :leaves (list word)
+                                              :lex-ids lex-ids
                                               :morph-history 
-                                              (construct-morph-history history))
+                                              (construct-morph-history 
+                                               lex-ids
+                                               history))
                                    right-vertex)))))))
 
 
@@ -315,6 +335,8 @@
                                       :left-vertex (- right-vertex 
                                                       (length entry-orth))
                                       :morph-res (list full-stem-string)
+                                      :lex-ids (list (lex-or-psort-id
+                                                expanded-entry))
                                       :fs (lex-or-psort-full-fs 
                                            expanded-entry))
                    (for rule in (for res in new-morph-res
@@ -328,11 +350,13 @@
                                            (list full-stem-string 
                                                  (list rule 
                                                        full-word-string))
+                                           :lex-ids (list (lex-or-psort-id
+                                                expanded-entry))
                                     :fs (lex-or-psort-full-fs 
                                          expanded-entry))))))))))))
 
 
-(defun construct-morph-history (history)
+(defun construct-morph-history (lex-ids history)
   ;;; the rule on an edge refers `back' i.e. to the way it was
   ;;; constructed
   (if history
@@ -340,11 +364,14 @@
              (rule-id (if (cdr history) (caadr history)))
              (fs (cdr current-record))
              (new-edge
-;;; YADU
-            (make-edge :id (next-edge) :category (indef-type-of-tdfs fs)
-                       :rule-number rule-id
-                       :dag fs
-                       :morph-history (construct-morph-history (cdr history)))))
+              (make-edge 
+               :id (next-edge) 
+               :lex-ids lex-ids
+               :category (indef-type-of-tdfs fs)
+               :rule-number rule-id 
+               :dag fs
+               :morph-history 
+               (construct-morph-history lex-ids (cdr history)))))
         (push new-edge *morph-records*)
         new-edge)))
     
@@ -363,10 +390,11 @@
    (let ((transformed-entries 
             (for entry in entries
                append
-               (let* ((fs (mrecord-fs entry))
-                      (fs-restricted (mrecord-fs-restricted entry))
-                      (morph-rules (mrecord-rules entry))
-                      (history (mrecord-history entry)))
+               (let ((fs (mrecord-fs entry))
+                     (fs-restricted (mrecord-fs-restricted entry))
+                     (lex-ids (mrecord-lex-ids entry))
+                     (morph-rules (mrecord-rules entry))
+                     (history (mrecord-history entry)))
                  (if (>=  (length history) *maximal-lex-rule-applications*)
                    (progn (format t "~%Warning - probable circular lexical rule") nil)
                    (append
@@ -374,7 +402,8 @@
                              filter
                              (let ((result (apply-morph-rule rule fs fs-restricted nil)))
                                (if result 
-                                   (make-mrecord :fs result 
+                                   (make-mrecord :fs result
+                                                 :lex-ids lex-ids
                                            :rules morph-rules 
                                            :history (cons (cons (rule-id rule) fs) history)))))
                       (if morph-rules
@@ -382,10 +411,11 @@
                                 (new-orth (cadr morph-rule-info))
                                  (rule-id (car morph-rule-info))
                                 (result
-                                 (apply-morph-rule
+                                 (apply-morph-rule 
                                    (get-lex-rule-entry rule-id) fs fs-restricted new-orth)))
                            (if result 
                              (list (make-mrecord :fs result 
+                                                 :lex-ids lex-ids
                                    :rules (cdr morph-rules)
                                    :history (cons (cons rule-id fs) history))))))))))))
      (if transformed-entries
@@ -407,7 +437,7 @@
 	       	; grammar rules are indexed by rightmost daughter (in theory!)
 		; ie application is attempted when we've got all the bits
                (apply-grammar-rule rule
-                                   (reverse (rule-daughters-restricted rule))
+                                   (cdr (rule-order rule))
                                    left-vertex
                                    right-vertex
                                    (list edge))))
@@ -425,97 +455,124 @@
                (list
                   (make-chart-configuration :begin left :edge edge)))))))
  
-(defun apply-grammar-rule (rule rule-restricted-list left-vertex right-vertex
-                           child-fs-list)
-   ;; Application of a grammar rule 
-   ;; Every time an edge is added to the chart, a check is made to see whether
-   ;; its addition triggers a rule application. 
-   ;; (That is whether it has a category corresponding to the rightmost 
-   ;; daughter of a grammar rule - checked before calling apply-grammar-rule
-   ;; and whether edges corresponding to the other daughter categories are
-   ;; already on the chart.) 
-   ;; If yes 
-   ;; collect the dags associated with the children, perform
-   ;; the unifications specified by the rule, and if the unification(s) succeed, 
-   ;; create a new edge (for the mother), record its dag and associated
-   ;; information, add this to the chart, and invoke the same process
-   ;; recursively.
-   (cond
-      ((not
-          (restrictors-compatible-p (car rule-restricted-list)
-             (edge-dag-restricted (car child-fs-list)))))
-      ((null (cdr rule-restricted-list))
-         ;; we've got all the bits
-         (apply-immediate-grammar-rule rule left-vertex right-vertex child-fs-list))
-      (t
-        (let ((entry (aref *chart* left-vertex)))
-           (when entry
-              (dolist (configuration (chart-entry-configurations entry))
-                 (apply-grammar-rule
-                    rule
-                    (cdr rule-restricted-list)
-                    (chart-configuration-begin configuration)
-                    right-vertex
-                    (cons (chart-configuration-edge configuration) child-fs-list))))))))
+(defun apply-grammar-rule (rule rule-remainder 
+      left-vertex right-vertex rule-so-far)
+;;; Application of a grammar rule 
+;;; Every time an edge is added to the chart, a check is made to see whether
+;;; its addition triggers a rule application. 
+;;; (That is whether it has a category corresponding to the rightmost 
+;;; daughter of a grammar rule - checked before calling apply-grammar-rule
+;;; and whether edges corresponding to the other daughter categories are
+;;; already on the chart.) 
+;;; If yes 
+;;; collect the dags associated with the children, perform
+;;; the unifications specified by the rule, and if the unification(s) succeed, 
+;;; create a new edge (for the mother), record its dag and associated
+;;; information, add this to the chart, and invoke the same process
+;;; recursively.
+       (cond ((= (length rule-remainder) 1) 
+	      			; we've got all the bits
+              (apply-immediate-grammar-rule rule
+                                            left-vertex
+                                            right-vertex
+                                            rule-so-far))
+             (t
+              (dolist
+                (configuration
+                  (step-backward *toptype* ; (car rule-remainder)
+                                 left-vertex))
+                (apply-grammar-rule rule
+                                   (cdr rule-remainder)
+                                    (chart-configuration-begin configuration)
+                                    right-vertex
+                                    (cons
+                                      (chart-configuration-edge configuration)
+                                      rule-so-far))))))
 
+(defun step-backward (category right-vertex)
+   ;;;  finds all chart configurations which define vertices connected to the
+   ;;; right vertex by a node which may be of a particular type
+   (let ((candidate
+            (aref *chart* right-vertex)))
+      (when candidate
+        (let ((res nil))
+            (dolist (configuration (chart-entry-configurations candidate) res)
+               (when
+                  (greatest-common-subtype 
+                     category
+                     (edge-category (chart-configuration-edge configuration)))
+                  (push configuration res)))))))
 
 (defparameter *debugging* nil)
 
-(defun apply-immediate-grammar-rule (rule left-vertex right-vertex child-fs-list)
+(defun apply-immediate-grammar-rule (rule
+      left-vertex right-vertex rule-so-far)
    ;;; attempt to apply a grammar rule when we have all the parts which
    ;;; match its daughter categories 
-   (let ((unification-result
-           (evaluate-unifications rule (mapcar #'edge-dag child-fs-list)
-               nil child-fs-list)))
+   (let* ((child-fs-list rule-so-far)
+          (unification-result
+            (and
+               (dolist (daughter-r (rule-daughters-restricted rule) t)
+                  (unless
+                     (restrictors-compatible-p daughter-r
+                        (edge-dag-restricted (pop child-fs-list)))
+                     (return nil)))
+               (evaluate-unifications
+                  rule (mapcar #'edge-dag rule-so-far) nil rule-so-far))))
       (if unification-result
          (let ((new-edge (make-edge :id (next-edge)
                                    :category (indef-type-of-tdfs unification-result)
                                    :rule-number (rule-id rule)
-                                   :children child-fs-list
+                                   :children rule-so-far
                                    :dag unification-result
+                                   :lex-ids 
+                                   (mapcan
+                                    #'(lambda (child)
+                                        (copy-list (edge-lex-ids child)))
+                                    rule-so-far)
                                    :leaves
                                    (mapcan
                                     #'(lambda (child)
                                         (copy-list (edge-leaves child)))
-                                    child-fs-list))))
+                                    rule-so-far))))
               (activate-context left-vertex new-edge right-vertex))
          (when *debugging*
             (format t "~%Unification failure on rule ~A and edges ~:A" 
-               (rule-id rule) (mapcar #'edge-id child-fs-list))))))
+               (rule-id rule) (mapcar #'edge-id rule-so-far))))))
 
 
-(defun evaluate-unifications (rule child-fs-list &optional nu-orth child-edges)
+(defun evaluate-unifications (rule child-fs-list
+      &optional nu-orth child-edges)
    ;; modified for YADU
    ;; 
    ;; An additional optional argument is given. This is the
    ;; new orthography if the unification relates to a morphological
    ;; process. If it is present, it is inserted in the resulting fs.
    ;;  The actual process of unification 
-   (let*
+   (incf *parse-unifs*)
+   (let
       ((rule-tdfs (rule-full-fs rule))
-       (rule-daughter-order (cdr (rule-order rule)))
-       (rule-apply-order (rule-daughters-apply-order rule))
-       (n 0))
+       (rule-feats (rule-order rule))
+       (child-fses child-fs-list))
       (with-unification-context (ignore)
-         (dolist (rule-feat rule-apply-order)
-            (unless
-               (or (eql (incf n) 1)
-                  (x-restrict-and-compatible-p
-                     (if (listp rule-feat)
-                        (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) rule-feat)
-                        (x-get-dag-value (tdfs-indef rule-tdfs) rule-feat))
-                     (edge-dag-restricted
-                        (nth (position rule-feat rule-daughter-order) child-edges))))
-               (return-from evaluate-unifications nil))
-            (incf *parse-unifs*)
-            (unless
-               (yadu-features rule-feat rule-tdfs nil
-                  (nth (position rule-feat rule-daughter-order) child-fs-list))
-               (incf *parse-fails*)
-               (return-from evaluate-unifications nil)))
-         ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of
+         (let (;(n 0)
+               ;(child-edges-tail (cdr child-edges))
+               )
+            (dolist (rule-feat (cdr rule-feats))
+               (unless
+                  (and
+                     (or t ;(eql (incf n) 1)
+                        ;(and child-edges-tail
+                        ;   (restrictors-compatible-p
+                        ;      (x-restrict-fs
+                        ;         (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) rule-feat))
+                        ;      (edge-dag-restricted (pop child-edges-tail))))
+                        )
+                     (yadu-features rule-feat rule-tdfs nil (pop child-fses)))
+                  (return-from evaluate-unifications nil))))
+         ;; if (car rule-feats) is NIL - tdfs-at-end-of
          ;; will return the entire structure
-         (let ((result (tdfs-at-end-of (car (rule-order rule)) rule-tdfs)))
+         (let ((result (tdfs-at-end-of (car rule-feats) rule-tdfs)))
             (when nu-orth
                (let ((tmp-orth-path *orth-path*))
                   (for orth-value in (split-into-words nu-orth)
@@ -531,6 +588,8 @@
                ;; otherwise their copies would be thrown away immediately
                ;; we have to check whether any of the deleted dags contain a cycle -
                ;; if so then the whole rule application should fail
+               ;; what we can't check with this technique is a cycle from inside one
+               ;; of these deleted dags back to the very top of the result dag
                (let* ((real-dag (deref-dag (tdfs-indef result)))
                       (new (clone-dag real-dag))
                       (arcs-to-check nil))
@@ -591,9 +650,11 @@
                                      :id (next-edge)
                                      :category
                                      (indef-type-of-tdfs unif)
-                                     :rule-number 'root
+                                     :rule-number start-symbol
                                      :children 
                                      (list (chart-configuration-edge item))
+                                     :lex-ids (edge-lex-ids
+                                               (chart-configuration-edge item))
                                      :leaves
                                      (edge-leaves 
                                       (chart-configuration-edge item)))))
@@ -634,11 +695,11 @@
 
 (defun print-chart-configuration (span right-vertex)
    (let ((e (chart-configuration-edge span)))
-      (format t "~A-~A [~A] ~A ~25,5T=> ~A~A  [~{~A~^ ~}]~%"
+      (format t "~A-~A [~A] ~A => ~A~A  [~{~A~^ ~}]~%"
          (chart-configuration-begin span)
          right-vertex
          (edge-id e)
-         (edge-rule-number e)
+         (edge-category e)
          (edge-leaves e)
          (if (chart-configuration-roots span) "*" "")
          (mapcar #'edge-id (edge-children e)))))
@@ -672,7 +733,6 @@
                           (add-words-to-chart)
                           (setf *parse-record*
                                 (find-spanning-edges 0 (length user-input)))
-;                          (cache-structures)
                           (let ((n (length *parse-record*)))
                             (format ostream "~%~R parse~:[s~;~] found" n (= n 1))))))))))
          (format ostream "~%Total time taken: ~A" (- (get-universal-time) start-time))
@@ -717,10 +777,13 @@
             (collect-morph-history-rule-names 
              (edge-morph-history edge-rec)))))
 
+        
 
 (defun preprocess-sentence-string (str)
-  ;;; may be redefined by the user
-    str)
+  ;;; to be defined by the user
+    str))
+
       
       
+
 
