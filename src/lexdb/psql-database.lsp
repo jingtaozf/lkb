@@ -18,7 +18,7 @@
 	    "PostgreSQL login" 
 	    (cons 
 	     (format nil "~a~%Username?"
-		     (pg:error-message (connection lexicon))) 
+		     (error-msg (connection lexicon))) 
 	     (or (user lexicon) 
 		 "guest")))))
       (if user
@@ -47,7 +47,7 @@
   (with-slots (port host dbname password user connection) lexicon
     (let ((connect-timeout *psql-database-connect-timeout*)) 
       (setf connection 
-	(pg:connect-db-with-handler 
+	(connect-db 
 	 (concatenate 'string 
 	   (and connect-timeout 
 		(format nil "connect_timeout=~a " (sql-embedded-text (2-str connect-timeout))))
@@ -59,18 +59,14 @@
 	   (format nil "user=~a " (sql-embedded-text user))
 	   (and password 
 		(format nil "password=~a" (sql-embedded-text password))))))
-      (when (eq :connection-ok (connection-status lexicon))
+      (when (connection-ok lexicon)
 	t))))
-
-(defmethod connection-status ((lexicon psql-database))
-  (pg:decode-connection-status 
-	    (pg:status (connection lexicon))))
 
 (defmethod disconnect ((lexicon psql-database))
   (with-slots (connection) lexicon
   ;:close connection cleanly
     (when connection 
-      (pg:finish connection)
+      (finish-db connection)
       (setf connection nil))))
 
 (defmethod reconnect ((lexicon psql-database))
@@ -81,34 +77,32 @@
 ;;; execute db queries/commands
 ;;;
 
-(defmethod get-records ((lexicon psql-database) sql-string)
-  (make-column-map-record (run-command lexicon sql-string)))
-
-(defmethod get-raw-records ((lexicon psql-database) sql-string)
-  (records (run-command lexicon sql-string)))
-
-;;;
-
-(defmethod run-query ((database psql-database) (query sql-query))
-  (let ((connection (connection database)))
+(defmethod get-records ((database psql-database) sql-string)
+  (with-slots (connection) database
     (unless connection
       (error "psql-database ~s has no active connection." database))
-    (multiple-value-bind (recs cols)
-        (pg:sql (sql-string query) :db connection)
-      (setf (records query) recs
-            (columns query) (mapcar #'str-2-keyword cols)))
-    query))
+      (multiple-value-bind (recs cols)
+	  (execute connection sql-string :tup :col)
+	(make-instance 'psql-database-table :recs recs :cols cols))))
+
+(defmethod get-raw-records ((database psql-database) sql-string)
+  (with-slots (connection) database
+    (unless connection
+      (error "psql-database ~s has no active connection." database))
+    (execute connection sql-string :tup t)))
 
 ;; run command with stdin = filename
 (defmethod run-command-stdin ((database psql-database) command filename)
   (with-slots (connection) database
     (unless connection
       (error "psql-database ~s has no active connection." database))
-    (pg::stdin-command-file connection command filename)))
+    (execute connection command :in (list filename))))
 
 (defmethod run-command ((database psql-database) command)
-  (run-query database 
-	     (make-instance 'sql-query :sql-string command)))
+  (with-slots (connection) database
+    (unless connection
+      (error "psql-database ~s has no active connection." database))
+    (execute connection command :com t)))
 
 ;;;
 ;;;
@@ -218,3 +212,140 @@
     (format nil "\\%~a" (sql-like-text-aux (subseq str 1))))
    (t
     (format nil "~a~a" (char str 0) (sql-like-text-aux (subseq str 1))))))
+
+;;
+;;
+;;
+
+(defun retrieve-tuples (result &key col)
+  (let* ((nfields (pq:nfields result))
+	 (cols (and col 
+		    (loop
+			for c below nfields
+			collect (2-kw (pq:fname result c)))))
+	 (ntuples (pq:ntuples result))
+	 (recs (loop
+		   for r below ntuples
+		   collect
+		     (loop
+			 for c below nfields
+			 collect
+			   (pq:getvalue result r c)))))
+    (list recs cols)))
+
+(defun 2-kw (str)
+  (intern (string-upcase str) :keyword))
+
+(defun execute (conn sql-str &key com tup out in)
+  (let* ((result (pq:exec conn sql-str))
+	 (status-kw (result-status-kw result)))
+    (unwind-protect
+	(case status-kw
+	  (:PGRES_EMPTY_QUERY 
+	   (format t  "~%WARNING: empty query sent to PSQL DB ~a" (pq:db conn)))
+	  (:PGRES_COMMAND_OK
+	   (if com t
+	     (error "unexpected `command returning no data' sent to PSQL DB ~a" (pq:db conn))))
+	  (:PGRES_TUPLES_OK
+	   (if tup
+	       (values-list (retrieve-tuples result :col (eq tup :col)))
+	     (error "unexpected `query returning tuples' sent to PSQL DB ~a" (pq:db conn))))
+	  (:PGRES_COPY_OUT 
+	   (unless out
+	     (error "unexpected `COPY OUT' data transfer operation from PSQL DB ~a" (pq:db conn)))
+	   (copy-out-filename conn (car out))
+	   (setf copy-out (cdr out))
+	   )
+	  (:PGRES_COPY_IN 
+	   (unless in
+	     (error "unexpected `COPY IN' data transfer operation sent from PSQL DB ~a" (pq:db conn)))
+	   (copy-in-filename conn (car in))
+	   (setf copy-in (cdr in))	     
+	   )
+	  (:PGRES_NON_FATAL_ERROR
+	   (let ((error-message (pq:result-error-message result)))
+	     (format t "~%WARNING: (pgres error) ~a" error-message))
+	   nil)
+	  (:PGRES_FATAL_ERROR
+	   (let ((error-message (pq:result-error-message result)))
+	     (throw :sql-error (cons status-kw error-message))))
+	  (t
+	   (error "unhandled result status")))
+      (pq:clear result)
+      nil)))
+
+(defun copy-in-filename (conn filename)
+  (with-open-file (istr filename
+		   :direction :input)
+    (copy-in-stream conn istr)))
+		  
+(defun copy-in-stream (conn istream)
+  (do* ((line (read-line istream nil) (read-line istream nil)))
+      ((null line))
+    (putline conn line))
+  (putline conn "\\.")
+  (endcopy conn))
+
+(defun putline (conn line)
+  (unless (= 0 (pq:putline conn (format nil "~a~%" line)))
+    (throw :sql-error (cons :putline "unable to send string")))) 
+
+(defun endcopy (conn)
+  (unless (= 0 (pq:endcopy conn))
+    (throw :sql-error (cons :putline "endcopy failed")))) 
+
+(defun copy-out-filename (conn filename)
+  (with-open-file (ostr filename
+		   :direction :output
+		   :if-exists :rename)
+    (copy-out-stream conn ostr)))
+		  
+(defun copy-out-stream (conn ostream)
+  (let* ((c-str-len 10)
+	 (c-str (ff::string-to-native 
+		 (make-string c-str-len))))
+    (unwind-protect
+	(do* ((line 
+	       (getline conn c-str c-str-len) 
+	       (getline conn c-str c-str-len)))
+	    ((string= line "\\."))
+	  (write-line line ostream)))
+    (excl::aclfree c-str)
+    (endcopy conn)
+    ))
+
+(defun getline (conn c-str len)
+  (loop
+      with line = ""
+      for i = (pq:getline conn c-str len)
+      for line = (concatenate 'string line (ff::native-to-string c-str))
+      while (= i 1)
+      finally (return line)))
+
+(defun result-status-kw (result)
+  (cdr 
+   (assoc 
+    (pq:result-status result)
+    pq:exec-status-kw-map
+    :test #'=)))
+
+(defun conn-status-kw (conn)
+  (cdr 
+   (assoc 
+    (pq:status conn)
+    pq:conn-status-kw-map
+    :test #'=)))
+
+(defmethod connection-ok ((lexicon psql-database))
+  (equal (conn-status-kw (connection lexicon)) :CONNECTION_OK))
+
+(defun error-msg (conn)
+  (pq:error-message conn))
+
+(defun connect-db (conninfo)
+  (handler-case
+      (pq:connectdb conninfo)
+    (simple-error () (error "PostgreSQL functionality not available~% (perhaps load libpq.so?)"))))
+
+(defun finish-db (conn)
+  (pq:finish conn))

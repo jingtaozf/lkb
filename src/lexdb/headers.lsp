@@ -68,10 +68,9 @@
    (ext-fns :initform nil :accessor ext-fns)
    (semi :initform nil :accessor semi)))
 
-(defclass sql-query ()
-  ((sql-string :accessor sql-string :initarg :sql-string :initform nil)
-   (records :initform :unknown :accessor records)
-   (columns :initform :unknown :accessor columns)))
+(defclass psql-database-table ()
+  ((recs :initarg :recs :accessor recs)
+   (cols :initarg :cols :accessor cols)))
 
 ;; this should be replaced with a-list records
 (defclass psql-lex-entry ()
@@ -97,7 +96,7 @@
   ;; make sure we `mark' the current universe as PSQL-enabled.
   ;;
   (pushnew :psql *features*)
-  (handler-case (load "libpq.so") 
+  (handler-case (load-libpq-3) 
     (file-error () 
       ;; some feedback to user
       (format t ";   Warning: cannot load libpq.so")
@@ -106,3 +105,7 @@
       ;; need this for backward compatibility with ERG script
       ;; (also a good idea anyway)
       (setf *features* (remove :psql *features*)))))
+
+(defun load-libpq-3 nil
+  (let ((excl::*load-foreign-types* (cons "3" excl::*load-foreign-types*)))
+    (load "libpq.so.3")))

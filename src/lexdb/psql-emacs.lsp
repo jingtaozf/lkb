@@ -39,10 +39,10 @@
   (if *psql-lexicon*
       (apply fn-name (cons *psql-lexicon* rest))))
 
-(defun field-size-elt (x)
-  (let ((attname (get-val :ATTNAME x))
-	(typname (get-val :TYPNAME x))
-	(atttypmod (str-2-num (get-val :ATTTYPMOD x)
+(defun field-size-elt (raw-rec cols)
+  (let ((attname (get-val :ATTNAME raw-rec cols))
+	(typname (get-val :TYPNAME raw-rec cols))
+	(atttypmod (str-2-num (get-val :ATTTYPMOD raw-rec cols)
 			      0)))
     (list (str-2-keyword attname) typname (field-len typname atttypmod))))
 

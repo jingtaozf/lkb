@@ -8,16 +8,18 @@
 ;;; Miscellaneous functions
 ;;;
 
-(defun alist-val (feat alist &key test)
-  (if test
-      (cdr (assoc feat alist :test test))
-  (cdr (assoc feat alist))))
+;(defun alist-val (feat alist &key test)
+;  (if test
+;      (cdr (assoc feat alist :test test))
+;  (cdr (assoc feat alist))))
 
-(defun get-val (field record)
-  (cdr (assoc field record :test #'equal)))
+(defun get-val (field raw-record cols)
+  (nth (position field cols) raw-record))
+;(cdr (assoc field record :test #'equal)))
 
-(defun record-id (record)
-  (str-2-symb (cdr (assoc :name record))))
+(defun record-id (raw-record cols)
+  (str-2-symb (get-val :name raw-record cols)))  
+;(str-2-symb (cdr (assoc :name record))))
 
 (defun record-orth (record)
   (cdr (assoc :orthography record)))

@@ -11,7 +11,7 @@
 
 (defun dump-psql-lexicon (filename &key tdl)
   (when
-      (catch 'pg:sql-error
+      (catch :sql-error
 	(progn
 	  (format t "~%(dumping LexDB)")
 	  (force-output)
@@ -50,7 +50,7 @@
   (unless (string>= (lexdb-version lexicon) "3.32")
     (error "operation requires LexDB version 3.32 or above"))
   (when
-      (catch 'pg:sql-error
+      (catch :sql-error
 	(progn
 	  (format t "~%(dumping LexDB .dfn .fld)")
 	  (force-output)

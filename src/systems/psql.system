@@ -13,12 +13,12 @@
    (#+(and :allegro-version>= (version>= 6 0))
     (:module "interface"
      :source-pathname ""
-     :source-extension "cl"
+     :source-extension "lsp"
      :components
-     ((:file "pg-package")
-      (:file "bind-libpq")
-      (:file "sql")
-      (:file "sql2")))))
+     ((:file "pq-package")
+      (:file "pq-libpq")
+      ;(:file "pq")
+      ))))
 
 
 
