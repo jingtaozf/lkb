@@ -4,10 +4,11 @@
 
 
 ;;; modifications by bmw (jul-03)
+;;; - db dump and merge
 ;;; - default port mechanism
 ;;; - db queries now execute on fixed table 'current grammar'
 ;;; - postgres login no longer restricted to 'guest'
-;;; - timestamp, user and id fields set in db
+;;; - timestamp user and id fields set in db
 
 ;;; modifications by bmw (jun-03)
 ;;; - SQL code moved into db and optimized
@@ -49,7 +50,7 @@
 (in-package :lkb)
 
 (defvar *psql-db-version* "1.2")
-(defvar *psql-port-default* 5432)
+(defvar *psql-port-default* nil)
 
 (defvar *psql-lexicon* nil)
 (defvar *psql-verbose-query* nil) ;;; flag
@@ -91,9 +92,10 @@
       (retrieve-fn-defns lexicon)
       (when *psql-lexicon* (clear-lex *psql-lexicon*))
       (setf *psql-lexicon* lexicon)
-      (if (equal (fn-get-val lexicon ''current-grammar-up-to-date-p)
-                 "t")
-          (fn-get-records lexicon ''initialize-current-grammar))
+      (when 
+          (equal (fn-get-val lexicon ''current-grammar-up-to-date-p) "t")
+        (fn-get-records lexicon ''set-current-view (get-filter *psql-lexicon*))
+        (fn-get-records lexicon ''initialize-current-grammar))
       (cond
        ((null *lexicon*)
 	(setf *lexicon* *psql-lexicon*))
@@ -166,7 +168,7 @@
 
 (defclass psql-lex-entry ()
   (
-   (id :initform nil :accessor id)
+   ;(id :initform nil :accessor id)
    (name :initform nil :accessor name :initarg :name)
    (type :initform nil :accessor type :initarg :type)
    (orthography :initform nil :accessor orthography :initarg :orthography)
@@ -251,7 +253,7 @@
     (setf connection 
       (pg:connect-db 
        (concatenate 'string 
-	 (format nil "port='~a' " (sql-escape-string port))
+	 (if port (format nil "port='~a' " (sql-escape-string port)))
 	 (format nil "host='~a' " (sql-escape-string host))
 	 (format nil "dbname='~a' " (sql-escape-string dbname))
 	 (format nil "user='~a' " (sql-escape-string user))
@@ -262,7 +264,7 @@
       (setf connection 
 	(pg:connect-db
 	 (concatenate 'string 
-           (format nil "port='~a' " (sql-escape-string port))
+           (if port (format nil "port='~a' " (sql-escape-string port)))
 	   (format nil "dbname='~a' " (sql-escape-string dbname))
 	   (format nil "user='~a' " (sql-escape-string user))
 	   (if password (format nil "password='~a'" (sql-escape-string password))
@@ -388,9 +390,12 @@
     (error (format nil "unhandled data type")))))
 
 (defun str-list-2-str (str-list &optional separator)
-  (unless separator (setf separator " "))
+  (setf separator 
+    (if separator
+      (format nil separator)
+      " "))
   (let ((stream (make-string-output-stream)))
-    (format stream "~a" (pop str-list))
+    (if str-list (format stream "~a" (pop str-list)))
     (loop 
 	while str-list
 	do 
@@ -414,14 +419,17 @@
 (defun symb-2-str (symb)
   (cond
    ((null symb) "")
-   ((not (numberp symb)) (string-downcase (string symb)))
-   (t (num-2-str symb))))
+   ((numberp symb) (num-2-str symb))
+   ((stringp symb) symb)
+   (t (string-downcase (string symb)))
+   ))
     
 
 (defun num-2-str (num)
-  (let ((stream (make-string-output-stream)))
-    (format stream "~a" num)
-    (get-output-stream-string stream)))
+  (if num
+      (let ((stream (make-string-output-stream)))
+        (format stream "~a" num)
+        (get-output-stream-string stream))))
 
 (defun char-2-symb (c)
   (str-2-symb (string c)))
@@ -513,7 +521,8 @@
       (mapcan #'(lambda (x) (split-into-words (string-upcase (car x))))
 	      (records query-res))))
 
-(defmethod collect-psort-ids ((lexicon psql-lex-database))
+(defmethod collect-psort-ids ((lexicon psql-lex-database)  &key (recurse t))
+  (declare (ignore recurse))
   (let* (
 	 (sql-str (sql-psort-id-set lexicon))
           (query-res (run-query 
@@ -533,7 +542,8 @@
 	(error (format nil "database error (too many records returned)"))
       (car records)))) 
 
-(defmethod read-psort ((lexicon psql-lex-database) id &key (cache t))
+(defmethod read-psort ((lexicon psql-lex-database) id &key (cache t) (recurse t))
+  (declare (ignore recurse))
   (with-slots (psorts) lexicon
     (cond ((gethash id psorts))
 	  (t
@@ -645,40 +655,40 @@
   (set-lexical-entry-psql-lex-database-check orth-string lex-id new-entry)
   (let* ((name lex-id)
 	 (constraint new-entry)
-       (temp (extract-stem-from-unifications constraint))
-       (stem (cdr temp))
-       (count (car temp))
-           (keyrel (extract-key-from-unifications constraint))      
-           (keytag (extract-tag-from-unifications constraint))
-           (altkey (extract-altkey-from-unifications constraint))
-           (alt2key (extract-alt2key-from-unifications constraint))
-           (compkey (extract-comp-from-unifications constraint))
-           (ocompkey (extract-ocomp-from-unifications constraint))
-       (total (+ count 1 
-		 (if keyrel 1 0) (if keytag 1 0) (if altkey 1 0)
-		 (if alt2key 1 0) (if compkey 1 0) (if ocompkey 1 0)))
-       (psql-le
-	(make-instance 'psql-lex-entry
-	 :name (non-null-symb-2-str name)
-	 :type (non-null-symb-2-str (extract-type-from-unifications constraint))
-	 :orthography stem		;list
-	 :orthkey (first stem)
-	 :keyrel (non-null-symb-2-str keyrel)
-	 :altkey (non-null-symb-2-str altkey)
-	 :alt2key (non-null-symb-2-str alt2key)
-	 :keytag (non-null-symb-2-str keytag)
-	 :compkey (non-null-symb-2-str compkey)
-	 :ocompkey (non-null-symb-2-str ocompkey)
-	 :country *current-country*
-	 :lang *current-lang*
-	 :source *current-source*
-	:flags 1)))
-  (cond
-   ((= total (length constraint))
-    (set-lex-entry lexicon psql-le))
-   (t
-    (format *trace-output* "~%skipping super-rich entry: `~a'~%"  name)
-  nil))))
+	 (temp (extract-stem-from-unifications constraint))
+	 (stem (cdr temp))
+	 (count (car temp))
+	 (keyrel (extract-key-from-unifications constraint))      
+	 (keytag (extract-tag-from-unifications constraint))
+	 (altkey (extract-altkey-from-unifications constraint))
+	 (alt2key (extract-alt2key-from-unifications constraint))
+	 (compkey (extract-comp-from-unifications constraint))
+	 (ocompkey (extract-ocomp-from-unifications constraint))
+	 (total (+ count 1 
+		   (if keyrel 1 0) (if keytag 1 0) (if altkey 1 0)
+		   (if alt2key 1 0) (if compkey 1 0) (if ocompkey 1 0)))
+	 (psql-le
+	  (make-instance 'psql-lex-entry
+	    :name (non-null-symb-2-str name)
+	    :type (non-null-symb-2-str (extract-type-from-unifications constraint))
+	    :orthography stem		;list
+	    :orthkey (first stem)
+	    :keyrel (non-null-symb-2-str keyrel)
+	    :altkey (non-null-symb-2-str altkey)
+	    :alt2key (non-null-symb-2-str alt2key)
+	    :keytag (non-null-symb-2-str keytag)
+	    :compkey (non-null-symb-2-str compkey)
+	    :ocompkey (non-null-symb-2-str ocompkey)
+	    :country *current-country*
+	    :lang *current-lang*
+	    :source *current-source*
+	    :flags 1)))
+    (cond
+     ((= total (length constraint))
+      (set-lex-entry lexicon psql-le))
+     (t
+      (format *trace-output* "~%skipping super-rich entry: `~a'~%"  name)
+      nil))))
 
 (defmethod clear-lex ((lexicon psql-database) &optional no-delete)
   (declare (ignore no-delete))
@@ -760,7 +770,12 @@
     
 (defmethod get-db-version ((lexicon psql-lex-database))
   (let* 
-      ((sql-str "SELECT * FROM erg_version LIMIT 1;"))
+      ((sql-str "SELECT val FROM ergm WHERE var='db-version' LIMIT 1;"))
+    (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
+    
+(defmethod get-filter ((lexicon psql-lex-database))
+  (let* 
+      ((sql-str "SELECT val FROM ergm WHERE var='filter' LIMIT 1;"))
     (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
     
 (defmethod next-version (id (lexicon psql-lex-database))
@@ -816,6 +831,19 @@
 
 (defmethod sql-retrieve-entry ((lexicon psql-lex-database) select-list word)
   (fn lexicon 'retrieve-entry select-list word))
+
+(defmethod dump-db ((lexicon psql-lex-database) filename)  
+  (fn-get-records lexicon ''dump-db filename))
+
+(defmethod merge-into-db ((lexicon psql-lex-database) filename)  
+  (fn-get-records lexicon ''merge-into-db filename))
+
+(defun dump-psql-lexicon (filename)
+  (dump-db *psql-lexicon* filename))
+
+(defun merge-into-psql-lexicon (filename)
+  (merge-into-db *psql-lexicon* filename)
+  (initialize-psql-lexicon))
 
 (defmethod retrieve-fn-defns ((lexicon psql-lex-database))
   (let* ((sql-str (format nil "SELECT * FROM ergq;"))
@@ -908,6 +936,8 @@
 	    (format stream "~~a"))
 	   ((equal type 'value-list)
 	    (format stream "~~a"))
+	   ((equal type 'where-subcls)
+	    (format stream "~~a"))
 	   (t
 	    (error "unknown type: ~a" type)))
 	  (push (nth arg arg-vars) args)
@@ -917,16 +947,6 @@
   (cons (cons (get-output-stream-string stream) (reverse args)) 
 	(subseq arg-vars 0 arity))))
 
-;(defmethod db-begin ((lexicon psql-lex-database))
-;  (let* 
-;      ((sql-str "BEGIN"))
-;    (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
-    
-;(defmethod db-commit ((lexicon psql-lex-database))
-;  (let* 
-;      ((sql-str "COMMIT"))
-;    (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))
-    
 ;;;
 ;;; --- psql-lex-entry methods and funtions
 ;;;
@@ -952,3 +972,22 @@
    (parse
     (split-into-words 
      (preprocess-sentence-string str)))))
+
+;;;
+;;; db filter
+;;;
+
+(defmethod set-filter ((lexicon psql-lex-database))  
+  (let ((filter
+         (ask-user-for-x "Alter filter" 
+                         (cons "New filter?" (get-filter lexicon)))))
+    (when filter
+      (if (catch 'pg:sql-error 
+            (fn-get-records lexicon ''set-current-view filter)
+            (fn-get-records lexicon ''initialize-current-grammar)
+            )
+        (set-filter lexicon)))))
+
+(defun set-filter-psql-lexicon nil
+  (set-filter *psql-lexicon*))
+
