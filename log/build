@@ -1,4 +1,9 @@
 cvs update: Updating .
+U Version.lisp
+U fundamentals.tdl
+U lexicon.csv
+U lexicon.tdl
+U lextypes.tdl
 cvs update: Updating arboretum
 cvs update: Updating data
 cvs update: Updating gold
@@ -10,6 +15,7 @@ cvs update: Updating gold/mrs
 cvs update: Updating gold/trec
 cvs update: Updating lkb
 cvs update: Updating pet
+U pet/english.set
 cvs update: Updating .
 cvs update: Updating doc
 cvs update: Updating lkb
@@ -255,6 +261,7 @@ cvs update: Updating src/fasl/main
 cvs update: Updating src/fasl/mrs
 cvs update: Updating src/general
 cvs update: Updating src/glue
+U src/glue/lsp.lsp
 cvs update: Updating src/graft
 cvs update: Updating src/io-general
 cvs update: Updating src/io-lilfes
@@ -281,7 +288,6 @@ cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
 M src/systems/lkb.system
-M src/systems/mt.system
 cvs update: Updating src/tproving
 cvs update: Updating src/tsdb
 cvs update: Updating src/tsdb/TeX
@@ -388,7 +394,7 @@ cvs update: Updating src/xml
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.318; previous revision: 1.317
+new revision: 1.319; previous revision: 1.318
 done
 make[1]: Entering directory `/lingo/www/build/lkb'
 ( \
@@ -1339,6 +1345,8 @@ make[2]: Entering directory `/lingo/www/build/lkb'
   echo "(load \"/lingo/www/build//lkb/src/general/loadup.lisp\")"; \
   echo "(load \"/lingo/www/build//lkb/src/ACL_specific/deliver.lsp\")"; \
   echo "(pushnew :lkb *features*)"; \
+  echo "(pushnew :psql *features*)"; \
+  echo "(pushnew :lui *features*)"; \
   echo "(pushnew :mrs *features*)"; \
   echo "(pushnew :mt *features*)"; \
   echo "(setf make::*building-image-p* t)"; \
@@ -1407,7 +1415,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (May 21, 2004 19:39)
+6.2 [Linux (x86)] (May 28, 2004 12:49)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -1803,6 +1811,7 @@ T
 ;;       since prebuilt filled templates for them were found and loaded:
 ;;       ':UNICODE-BASE' 
 ;   Loading /lingo/www/build/lkb/src/systems/mt.system
+;   Loading /lingo/www/build/lkb/src/systems/mrs.system
 ;   Loading /lingo/www/build/lkb/src/systems/lkb.system
 ;   Loading /lingo/www/build/lkb/src/systems/psql.system
 ;;; Compiling file /lingo/www/build/lkb/src/psql/pg-package.cl
@@ -2230,112 +2239,214 @@ T
 ;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/main/debug.fasl
 ;;; Fasl write complete
 ;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/main/debug.fasl
+;   Loading /lingo/www/build/lkb/src/lkb-package.lsp
+;   Loading /lingo/www/build/lkb/src/mrs-package.lsp
+;;; Compiling file /lingo/www/build/lkb/src/mrs/lkb-interface.lisp
+;;; Writing fasl file
+;;;   /lingo/www/build/lkb/src/.l6cl/mrs/lkb-interface.fasl
+;;; Fasl write complete
+;   Libfasl loading
+;      /lingo/www/build/lkb/src/.l6cl/mrs/lkb-interface.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/mrsglobals.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/mrsglobals.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/mrsglobals.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/basemrs.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/basemrs.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/basemrs.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/mrsoutput.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/mrsoutput.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/mrsoutput.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/mrscorpus.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/mrscorpus.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/mrscorpus.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/interface.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/interface.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/interface.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/mrsresolve.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/mrsresolve.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/mrsresolve.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/mrscons.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/mrscons.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/mrscons.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/cheapscope.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/cheapscope.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/cheapscope.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/mrsmunge.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/mrsmunge.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/mrsmunge.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/mrsruleinput.lisp
+;;; Writing fasl file
+;;;   /lingo/www/build/lkb/src/.l6cl/mrs/mrsruleinput.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/mrsruleinput.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/lkb-acl-mrs.lisp
+;;; Writing fasl file
+;;;   /lingo/www/build/lkb/src/.l6cl/mrs/lkb-acl-mrs.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/lkb-acl-mrs.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/lexutils.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/lexutils.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/lexutils.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/lexindex.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/lexindex.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/lexindex.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/lexlookup.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/lexlookup.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/lexlookup.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/genpredict.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/genpredict.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/genpredict.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/generate.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/generate.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/generate.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/spell.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/spell.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/spell.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/genbatch.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/genbatch.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/genbatch.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/mrstoplevel.lisp
+;;; Writing fasl file
+;;;   /lingo/www/build/lkb/src/.l6cl/mrs/mrstoplevel.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/mrstoplevel.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/idioms.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/idioms.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/idioms.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/basermrs.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/basermrs.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/basermrs.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/comp.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/comp.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/comp.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/convert.lisp
+; While compiling RMRS-CONVERT-VARIABLE:
+Warning: Free reference to undeclared variable
+         *VAR-EXTRA-MRS-COMPILED-TABLE* assumed special.
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/convert.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/convert.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/annlt.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/annlt.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/annlt.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/output.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/output.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/output.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/xml-utils.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/xml-utils.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/xml-utils.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/readgram.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/readgram.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/readgram.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/readtag.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/readtag.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/readtag.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/input.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/input.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/input.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/compare.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/compare.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/compare.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/lkb-acl-rmrs.lisp
+;;; Writing fasl file
+;;;   /lingo/www/build/lkb/src/.l6cl/rmrs/lkb-acl-rmrs.fasl
+;;; Fasl write complete
+;   Libfasl loading
+;      /lingo/www/build/lkb/src/.l6cl/rmrs/lkb-acl-rmrs.fasl
+;;; Compiling file /lingo/www/build/lkb/src/rmrs/testing.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/rmrs/testing.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/rmrs/testing.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/dependencies.lisp
+;;; Writing fasl file
+;;;   /lingo/www/build/lkb/src/.l6cl/mrs/dependencies.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/dependencies.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/lsp.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/lsp.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/lsp.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/translate.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/translate.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/translate.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/semi.lsp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/semi.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/semi.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mrs/semi-psql.lsp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mrs/semi-psql.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mrs/semi-psql.fasl
 ;   Loading /lingo/www/build/lkb/src/mt/mt-package.lisp
 ;   Loading /lingo/www/build/lkb/src/mt/version.lisp
 ;   Loading /lingo/www/build/lkb/src/mt/mrsglobals.lisp
-Error (from DEBUG): attempt to call `VSYM' which is an undefined
-                    function.
+;;; Compiling file /lingo/www/build/lkb/src/mt/globals.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mt/globals.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mt/globals.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mt/patches.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mt/patches.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mt/patches.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mt/mrs.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mt/mrs.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mt/mrs.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mt/transfer.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mt/transfer.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mt/transfer.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mt/translate.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mt/translate.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mt/translate.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mt/clim.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mt/clim.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mt/clim.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mt/semi.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mt/semi.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mt/semi.fasl
+;;; Compiling file /lingo/www/build/lkb/src/mt/lm.lisp
+;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/mt/lm.fasl
+;;; Fasl write complete
+;   Libfasl loading /lingo/www/build/lkb/src/.l6cl/mt/lm.fasl
+Error (from DEBUG): START-LKB is unbound -- bad arg for function.
 Evaluation stack:
 
    (EXCL::INTERNAL-INVOKE-DEBUGGER)
    (ERROR)
-   (EXCL::UNDEFFUNC-HANDLER)
-   (EXCL::%EVAL)
-   (EXCL::%INVOKES)
- ->(LET*)
-   (EVAL)
-   (EXCL::SLOLOAD)
-   (EXCL::LOAD-FROM-STREAM-OR-BUNDLE)
-   (EXCL::LOAD-2)
-   (EXCL::LOAD-1)
-   (LOAD)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (FUNCALL)
-   (PROGN)
-   (PROGN)
-   (EXCL::EVAL-AS-PROGN)
-   (LET*)
-   (BLOCK)
-   #<Printer Error, obj=#x4a7baaea: `:UNKNOWN' is not of the expected type `REAL'>
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (AND)
-   (LET)
-   (BLOCK)
-   #<Printer Error, obj=#x4a7bde2a: `:UNKNOWN' is not of the expected type `REAL'>
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (FUNCALL)
-   (EXCL::%INVOKES)
-   (LET)
+   (EXCL::.PROGRAM-ERROR)
+ ->(FUNCTION)
    (SETQ)
-   (PROGN)
-   (UNWIND-PROTECT)
-   (EXCL::EVAL-AS-PROGN)
-   (LET)
-   (EXCL::EVAL-AS-PROGN)
-   (BLOCK)
-   #<Printer Error, obj=#x4a7c7d4a: `:UNKNOWN' is not of the expected type `REAL'>
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (EXCL::%INVOKES)
-   (IF)
-   (EXCL::EVALUATE-A-TAGBODY)
-   (DOLIST)
-   (PROGN)
-   (EXCL::EVAL-AS-PROGN)
-   (BLOCK)
-   #<Printer Error, obj=#x4a7cfbba: `:UNKNOWN' is not of the expected type `REAL'>
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (LET)
-   (SETQ)
-   (PROGN)
-   (UNWIND-PROTECT)
-   (EXCL::EVAL-AS-PROGN)
-   (LET)
-   (EXCL::EVAL-AS-PROGN)
-   (BLOCK)
-   #<Printer Error, obj=#x4a7d9d0a: `:UNKNOWN' is not of the expected type `REAL'>
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (EXCL::%INVOKES)
-   (IF)
-   (EXCL::EVALUATE-A-TAGBODY)
-   (DOLIST)
-   (PROGN)
-   (EXCL::EVAL-AS-PROGN)
-   (BLOCK)
-   #<Printer Error, obj=#x4a7e331a: `:UNKNOWN' is not of the expected type `REAL'>
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (LET)
-   (SETQ)
-   (PROGN)
-   (UNWIND-PROTECT)
-   (EXCL::EVAL-AS-PROGN)
-   (LET)
-   (EXCL::EVAL-AS-PROGN)
-   (BLOCK)
-   #<Printer Error, obj=#x4a7eef6a: `:UNKNOWN' is not of the expected type `REAL'>
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (EXCL::%INVOKES)
-   (LET)
-   (MULTIPLE-VALUE-BIND)
-   (BLOCK)
-   #<Printer Error, obj=#x4a7f758a: `:UNKNOWN' is not of the expected type `REAL'>
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (MULTIPLE-VALUE-PROG1)
-   (LET)
-   (PROGV)
-   (LET)
-   (FLET)
-   (UNWIND-PROTECT)
-   (BLOCK)
-   #<Printer Error, obj=#x4a8051fa: `:UNKNOWN' is not of the expected type `REAL'>
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (BLOCK)
-   #<Printer Error, obj=#x4a80748a: `:UNKNOWN' is not of the expected type `REAL'>
-   (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
-   (EXCL::%INVOKES)
    (EVAL)
    (EXCL::SLOLOAD)
    (EXCL::LOAD-FROM-STREAM-OR-BUNDLE)
@@ -2350,7 +2461,7 @@ Evaluation stack:
    (EVAL)
    (EXCL::PROCESS-SCRIPT "/tmp/genappa1453202")
    (TPL:START-INTERACTIVE-TOP-LEVEL
-      #<EXCL:TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @
+      #<TERMINAL-SIMPLE-STREAM [initial terminal io] fd 0/1 @
         #x441a1a1a>
       #<Function TOP-LEVEL-READ-EVAL-PRINT-LOOP> NIL)
    (EXCL::START-LISP-EXECUTION NIL)
