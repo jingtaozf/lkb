@@ -743,7 +743,7 @@ goes to
     (setf (rmrs-rule-dtrs new-rule)
       (loop for dtr in rule-dtrs
           nconc
-            (if (not (member dtr '(opt opt*))) 
+            (if (not (member dtr '("OPT" "OPT*") :test #'string-equal)) 
                 (list dtr)
                 (let ((next-opt (car opt-dtrs)))
                    (setf opt-dtrs (cdr opt-dtrs))
