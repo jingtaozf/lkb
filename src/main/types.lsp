@@ -67,6 +67,7 @@
            atomic-p glbp
            descendants
            shrunk-p visible-p          ; for display in type hierarchy
+           bit-code               ; for glb computation
            )
            
 (defmethod common-lisp:print-object ((instance type) stream)

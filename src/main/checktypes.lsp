@@ -1,4 +1,4 @@
-;;; Copyright Ann Copestake 1991-1997 All Rights Reserved.
+;;; Copyright Ann Copestake, John Carroll 1991-2000 All Rights Reserved.
 ;;; No use or redistribution without permission.
 ;;; 
 
@@ -98,63 +98,10 @@
     (and (null (set-difference new-parents old-parents))
          (null (set-difference old-parents new-parents))))
 
+
+;;;
+
 (defvar *type-names* nil)
-
-(defun amend-type-information (new-type new-type-entry parents daughters)
-  ;;
-  ;; called from fix-mglb
-  ;;
-  ;; takes a new type-name and its entry (this should have parents and
-  ;; daughters specified, plus any idiosyncratic information) a list of its
-  ;; parent types and of its daughter types (it is assumed that these will not
-  ;; add a cycle, and that they are valid types, so if this function is called
-  ;; from code which gets new specs from a user, the calling function must
-  ;; perform the checks). the fn does the following:
-  ;; 1) sets the new type entry
-  ;; 2) amends all the daughter types so that their parents 
-  ;;    are correct (remove any redundant links to the old parents)
-  ;; 3) amends all the parents in a similar way
-  ;; 3') adds the ancestors and descendants to the type entry
-  ;; 4) adds the new type to the descendants list of all its ancestors
-  ;; 5) adds the new type to the ancestors list of all its descendants
-  ;; 5') pushes the new type onto the list of ordered glbtypes
-  ;;     (used for output)
-  ;; 6) pushes the new type onto the list of *type-names*
-  (let ((ancestors nil)
-        (descendants nil))
-    (create-mark-field new-type-entry)
-    (set-type-entry new-type new-type-entry)   
-    (dolist (dtr daughters)
-      (let ((dtr-entry (get-type-entry dtr)))
-	(setf (type-parents dtr-entry)
-	  (cons new-type (set-difference (type-parents dtr-entry) 
-					 parents :test #'eq)))
-	(setf descendants (union descendants 
-				 (type-descendants dtr-entry) :test #'eq))
-	(push (get-type-entry dtr) descendants)))
-    (dolist (parent parents)
-      (let ((par-entry (get-type-entry parent)))
-	(setf (type-daughters par-entry)
-	  (cons new-type (set-difference (type-daughters par-entry) 
-					 daughters :test #'eq)))
-	(setf ancestors (union ancestors 
-			       (type-ancestors par-entry) :test #'eq))
-	(push (get-type-entry parent) ancestors)))
-    (setf (type-descendants new-type-entry) descendants)
-    (setf (type-ancestors new-type-entry) ancestors)
-    (dolist (ancestor ancestors)
-      (push new-type-entry (type-descendants ancestor)))
-    (dolist (descendant descendants)
-      (push new-type-entry (type-ancestors descendant)))
-    (push new-type *ordered-glbtype-list*)
-    (push new-type *type-names*)
-    new-type-entry))
-        
-;;; Checking
-
-(defparameter *partition* nil)
-
-(defparameter *glbsets* nil)
 
 (defparameter *hierarchy-only-p* nil)
 
@@ -172,41 +119,26 @@
        (when (check-for-cycles-etc *toptype*)
          (unmark-type-table)
          (format t "~%Checking for unique greatest lower bounds") 
-	 (setq *partition* nil)
-         (find-good-partitions *toptype*)
-         (unmark-type-table)
-         (let ((already-warned nil))
-           (for partition in *partition*
-                do
-                (check-for-unique-glbs partition)
-                 ;;; partition is now a list of lists of types
-                (when *glbsets* 
-                  (unless already-warned
-                    (format t "~%Fixing glb problem")
-                    (setf already-warned t))
-                  (unmark-type-table)
-                  (format t 
-                          "~%Partition size ~A" 
-                          (length partition))
-                  (fix-mglbs))))
+         (compute-and-add-glbtypes)
 	 (setf *type-names* (sort *type-names* #'string-lessp))
-         (unmark-type-table)
+         (set-up-descendants *toptype*)
+         (add-ancestors-to-type-table *toptype*)
          (if *hierarchy-only-p*
-               (expand-local-only-constraints)
+           (expand-local-only-constraints)
            (progn
              (format t "~%Expanding constraints")
-           (when (expand-and-inherit-constraints)
-             (format t "~%Making constraints well formed")
-             (when (strongly-type-constraints)
-               (optimise-check-unif-paths)
-                ;;; YADU --- extra expansion stage
-                ;;; earlier stages are unchanged
-               (format t "~%Expanding defaults")
-               (when (expand-type-hierarchy-defaults)
-                 (format t "~%Type file checked successfully")
-		 (gc-types)
-                 (clear-type-cache)	; not for consistency, but for efficiency
-                 t)))))))))
+             (when (expand-and-inherit-constraints)
+               (format t "~%Making constraints well formed")
+               (when (strongly-type-constraints)
+                 (optimise-check-unif-paths)
+                 ;; YADU --- extra expansion stage
+                 ;; earlier stages are unchanged
+                 (format t "~%Expanding defaults")
+                 (when (expand-type-hierarchy-defaults)
+                   (format t "~%Type file checked successfully")
+		   (gc-types)
+                   (clear-type-cache)	; not for consistency, but for efficiency
+                   t)))))))))
 
 
 (defun patch-type-table nil
@@ -239,6 +171,14 @@
 	(expand-rules) ; in rules.lsp
 	(format t "~%Type file checked successfully")
 	t))))
+
+
+(defun unmark-type-table nil
+   (maphash 
+    #'(lambda (node type-entry)
+           (declare (ignore node))
+           (clear-marks type-entry))
+        *types*))
 
 
 ;;; First we need to check that the type hierarchy itself is OK
@@ -374,10 +314,10 @@
 ;;; removed unary branch stuff - can't imagine anyone wanting to
 ;;; even be warned 
       *types*)
-   (when ok
-     (set-up-descendants *toptype*)
-     (add-ancestors-to-type-table *toptype*))
    ok))
+
+
+;;; Set up descendants and ancestors after glb computation
 
 (defun set-up-descendants (type)
   (let ((type-entry (get-type-entry type)))
@@ -410,13 +350,12 @@
         (setf (type-ancestors type-entry) ancestors)
         ancestors)))
 
-(defun unmark-type-table nil
-   (maphash 
-    #'(lambda (node type-entry)
-           (declare (ignore node))
-           (clear-marks type-entry))
-        *types*))
 
+#|
+;;; Not currently used
+;;; but might be useful to partition the hierarchy to shorten the type bit
+;;; representations and reduce the number of comparisons performed from
+;;; ntypes^2 to (a^2 + b^2 + ...) where a,b,... are sizes of partitions
 
 (defun find-good-partitions (type)
   ;; doing the glb stuff over the entire hierarchy is very slow when we have
@@ -449,203 +388,310 @@
 			  descendant))))
 	      (when partition-nodes
 		(push partition-nodes *partition*)))))))))
-
-;;; GLB stuff
-
-(defparameter *interesting-types* nil)
- 
-(defstruct (glbset)
-  top bottom ignore)
-
-(defun check-for-unique-glbs (partition-nodes)
-  (setf *glbsets* nil)
-  (setf *interesting-types* nil)
-  (let ((ancestors nil))
-    (dolist (type partition-nodes)
-      (when (cdr (type-parents type))                   
-	(dolist (ancestor (type-ancestors type))
-	  (when (member ancestor partition-nodes :test #'eq)
-	    (pushnew ancestor ancestors :test #'eq)))))
-    (setf *interesting-types* ancestors)
-    (check-for-unique-glbs-from-top ancestors)))
-
-(defun check-for-unique-glbs-from-top (possible-nodes)
-  (mapl #'(lambda (remaining-nodes)
-            (let ((x (car remaining-nodes)))
-	      (mapc #'(lambda (y)
-			(let ((problem-list (check-lbs-from-top x y)))
-			  (when problem-list
-			    (push (make-glbset :top (list x y) 
-					       :bottom problem-list) 
-				  *glbsets*))))
-		    (cdr remaining-nodes))))
-        possible-nodes))
-
-;;; this is the bottleneck in glb computation, taking more than 90% of the
-;;; cpu time. The functions looks a bit odd but that's because they're
-;;; optimised
-
-(defun check-lbs-from-top (x y)
-  (let ((xdescendants (type-descendants x))
-        (ydescendants (type-descendants y)))
-    (unless (or (member y xdescendants :test #'eq) 
-                (member x ydescendants :test #'eq))
-      (let ((wanted (find-highest-intersections xdescendants ydescendants)))
-	(when (cdr wanted) wanted)))))
-
-(defun find-highest-intersections (xs ys)
-  ;; find set of highest intersections between 2 sets of types - intersectp
-  ;; records whether any intersection has been detected. If there hasn't, test
-  ;; first if the next type in xs is a member of ys. If there has, then
-  ;; quickest strategy is to see whether type has been marked (i.e. is a
-  ;; descendent of an intersect point) so need not even be tested for
-  ;; membership of ys. (In former case the member test must come first
-  ;; otherwise type lookup slows things down) At the end, collect highest
-  ;; intersections and unmark the types in xs. A type can only have been
-  ;; marked if intersectp is true, since intersectp is true for every type in
-  ;; xs that is in ys (either it's true on entry, or it's set to true after
-  ;; the member test in the second branch of the if test)
-  (let ((intersectp nil)
-	(result nil))
-    (mapc #'(lambda (type)
-	      (when (if intersectp
-			;; specialise order of tests depending on intersectp
-			(and (not (seen-node-p type))
-			     (member type ys :test #'eq))
-		      (and (member type ys :test #'eq)
-			   (setq intersectp t)
-			   (not (seen-node-p type))))
-		(mark-node-seen type)
-		(dolist (desc (type-descendants type))
-		  (mark-node-active-and-seen desc))))
-	  xs)
-    (unless (null intersectp)
-      (mapc #'(lambda (type)
-		(cond ((not (seen-node-p type)))
-		      ((not (active-node-p type))
-		       ;; seen but not active, so is a highest intersection
-		       (push type result)
-		       (clear-marks type))
-		      (t (clear-marks type))))
-	    xs))
-    result))
-
-;;;; July 1996 new stuff to fix mglbs
-
-;;; the glb checking code puts records of problems on the global *glbsets*
-;;; We find start from the bottom, fixing a set which has no lower sets in
-;;; the problem list The fix consists of adding a type with parents of the
-;;; types which have mglbs and daughters equal to the mglbs and removing any
-;;; redundant links.  We then make fixes to *glbsets*
+|#
 
 
-(defun fix-mglbs nil
-  ;; partition specific because of *interesting-types*
-  (format t "~%Elements in *interesting-types* ~A" 
-	  (length *interesting-types*))
-  (loop 
-    (let* ((minset (find-minimal-glbset *glbsets*))
-	   ;; find candidate problem to fix 
-	   (new-type-entry (fix-mglb minset)))
-      ;; fix-mglb now also redoes the type hierarchy info
-      (when *display-glb-messages*
-	(format t "~%Fixing ~A with glbs ~A" 
-		(mapcar #'type-name (glbset-top minset))
-		(mapcar #'type-name (glbset-bottom minset))))
-      (modify-glbsets new-type-entry *interesting-types*)
-      ;; (push new-type *interesting-types*)
-      ;; apparently glbtypes cannot be interesting - there are never
-      ;; cases where we get multiple glbs between glbtypes (presumably
-      ;; because glbtypes are always minimal)
-      (unless *glbsets*			; have we fixed it yet?
-	(format t "~%Checked")
-	(return t)))))
+;;; Glb type computation. Assigns a (temporary) bit representation for
+;;; each type in heirarchy, and uses it to efficiently check if each pair
+;;; of types has a glb and add it if not
 
-(defun modify-glbsets (new-type-entry nodes)
-  (let* ((ancestors (type-ancestors new-type-entry)))
-    (dolist (glbrec *glbsets*)
-      (let* ((pair (glbset-top glbrec)))
-	(when (and (member (car pair) ancestors :test #'eq)
-		   (member (cadr pair) ancestors :test #'eq))
-	  (let ((new-probs (check-lbs-from-top (car pair) (cadr pair))))
-	    (if new-probs
-		(setf (glbset-bottom glbrec) new-probs)
-	      (setf (glbset-ignore glbrec) t))))))
-    (dolist (node nodes)
-      (let ((problem-list (check-lbs-from-top new-type-entry node)))
-	(when problem-list
-	  (push (make-glbset :top (list new-type-entry node) 
-			     :bottom problem-list) 
-		*glbsets*))))
-    (setf *glbsets* 
-      (delete-if #'(lambda (x) (glbset-ignore x))
-		 *glbsets*))))
+#|
+;;; Type bit code operations assuming simple bit vector representation.
+;;; Useful example code - DO NOT DELETE!
+
+(progn
+(defparameter +bit-code-temp+ nil)
+(defparameter +bit-code-zero+ nil)
+
+(defun make-bit-code (length)
+   (make-array length :element-type 'bit :initial-element 0))
+
+(defun bit-code-equal (c1 c2)
+   (equal c1 c2))
+
+(defun bit-code-and-zero-p (c1 c2 c3)
+   ;; c3 <- c1 AND c2 (destructive)
+   ;; also return boolean indicating whether c3 is all zero
+   (unless (= (length c1) (length +bit-code-zero+))
+      (setq +bit-code-zero+
+         (make-array (length c1) :element-type 'bit :initial-element 0)))
+   (bit-and c1 c2 c3)
+   (equal c3 +bit-code-zero+))
+
+(defun bit-code-ior (c1 c2 c3)
+   (bit-ior c1 c2 c3))
+
+(defun bit-code-subsume-p (c1 c2)
+   ;; does code c1 subsume c2? i.e. for every bit not set in c1, is the
+   ;; corresponding bit in c2 also unset?
+   (unless (= (length c1) (length +bit-code-temp+) (length +bit-code-zero+))
+      (setq +bit-code-temp+
+         (make-array (length c1) :element-type 'bit))
+      (setq +bit-code-zero+
+         (make-array (length c1) :element-type 'bit :initial-element 0)))
+   (equal (bit-andc1 c1 c2 +bit-code-temp+) +bit-code-zero+))
+
+(defun set-bit-code (c n)
+   (setf (sbit c n) 1))
+
+(defun bit-code-position-1 (c)
+   ;; index of first bit that is set in c
+   (position 1 c))
+)
+|#
+
+;;; The actual type bit code representation is different since not all lisp
+;;; systems have all of these operations running at a decent speed (especially
+;;; the equal and position functions). Instead, each code is represented by a
+;;; simple array of unsigned 16 bit integers, with all operations on codes
+;;; being performed 16 bits at a time. (A related approach is described by Henry
+;;; Baker "Efficient implementation of bit-vector operations in Common Lisp",
+;;; ACM Lisp Pointers, 3(2-4).) The scheme as implemented here is completely
+;;; portable and should run well in all reasonable Lisp systems
+
+(progn
+(defun make-bit-code (length)
+   (make-array (ceiling length 16)
+      :element-type '(unsigned-byte 16) :initial-element 0))
+
+(defun bit-code-equal (c1 c2)
+   ;; need the array decl up here since if it's in the locally then acl
+   ;; seems to overlook it. The arrayp tests should still be OK and not
+   ;; optimised away since we're not at the highest speed setting just yet
+   (declare (type (simple-array (unsigned-byte 16) 1) c1 c2))
+   (when (or (not (arrayp c1)) (not (arrayp c2))) (error "not an array"))
+   (locally
+      (declare (optimize (speed 3) (safety 0)))
+      (dotimes (n (length c1) t)
+         (declare (fixnum n))
+         (unless (= (aref c1 n) (aref c2 n)) (return nil)))))
+
+(defun bit-code-and-zero-p (c1 c2 c3)
+   (declare (type (simple-array (unsigned-byte 16) 1) c1 c2 c3))
+   (when (or (not (arrayp c1)) (not (arrayp c2)) (not (arrayp c3)))
+      (error "not an array"))
+   (locally
+      (declare (optimize (speed 3) (safety 0)))
+      (let ((acc 0))
+         (declare (fixnum acc))
+         (dotimes (n (length c1) (zerop acc))
+            (declare (fixnum n))
+            (let ((x (logand (aref c1 n) (aref c2 n))))
+               (declare (fixnum x))
+               (setf (aref c3 n) x)
+               (setq acc (logior x acc)))))))
+
+(defun bit-code-ior (c1 c2 c3)
+   (declare (type (simple-array (unsigned-byte 16) 1) c1 c2 c3))
+   (when (or (not (arrayp c1)) (not (arrayp c2)) (not (arrayp c3)))
+      (error "not an array"))
+   (locally
+      (declare (optimize (speed 3) (safety 0)))
+      (dotimes (n (length c1) c3)
+         (declare (fixnum n))
+         (setf (aref c3 n) (logior (aref c1 n) (aref c2 n))))))
+
+(defun bit-code-subsume-p (c1 c2)
+   (declare (type (simple-array (unsigned-byte 16) 1) c1 c2))
+   (when (or (not (arrayp c1)) (not (arrayp c2))) (error "not an array"))
+   (locally
+      (declare (optimize (speed 3) (safety 0)))
+      (dotimes (n (length c1) t)
+         (declare (fixnum n))
+         (unless (zerop (logand (lognot (aref c1 n)) (aref c2 n))) (return nil)))))
+
+(defun set-bit-code (c n)
+   (multiple-value-bind (e1 e2)
+      (truncate n 16)
+      (setf (aref c e1) (logior (aref c e1) (ash 1 (- 15 e2))))))
+
+(defun bit-code-position-1 (c)
+   (declare (type (simple-array (unsigned-byte 16) 1) c))
+   (unless (arrayp c) (error "not an array"))
+   (locally
+      (declare (optimize (speed 3) (safety 0)))
+      (dotimes (n (length c) nil)
+         (declare (fixnum n))
+         (unless (zerop (aref c n))
+            (return (+ (* n 16) (- 16 (integer-length (aref c n)))))))))
+)
 
 
-;;; code to find best candidate to fix
+;;; Entry point for glb computation compute-and-add-glbtypes. Don't need to
+;;; consider any types that are at the fringe of the hierarchy and have only
+;;; a single parent
+;;;
+;;; Type codes can be looked up efficiently by hashing them on the index of
+;;; their first non-zero bit. Thanks to Ulrich Callmeier for the code
+;;; on which this is based
 
-(defun find-minimal-glbset (glbs)
-  ;; find a set x which has no other top set y which is more specific - that
-  ;; is there is no y which contains both an element e such that e is strictly
-  ;; subsumed by a member of x, and an element f which is subsumed by or equal
-  ;; to another member of x
-  (let* ((candidate (car glbs))
-         (newset
-          (do ((rest (cdr glbs) (cdr rest)))
-              ((null rest) nil)
-            (when (glb-subsum-test candidate (car rest))
-              (return rest)))))
-    (if newset
-	(find-minimal-glbset newset)
-      candidate)))
+(defvar *bit-coded-type-table*)
 
-(defun glb-subsum-test (glbset1 glbset2)
-  ;; messy test
-  (let ((tset1 (glbset-top glbset1))
-        (tset2 (glbset-top glbset2))
-        (ok1 nil)
-        (ok2 nil))
-    ;; first check to see whether any element in tset2 is strictly more
-    ;; specific than any element in tset1 - if so, return these elements as a
-    ;; cons
-    (dolist (x tset2)
-      (when
-	  (dolist (y tset1)
-	    (when (member y (type-ancestors x) :test #'eq)
-	      (setf ok1 (cons x y))
-	      (return ok1)))
-        (return ok1)))
-    ;; now check to see whether there is some other element pair which either
-    ;; match, or where tset2 is strictly more specific
-    (and ok1
-	 (dolist (x1 (remove (car ok1) tset2 :test #'eq))
-	   (when
-	       (dolist (y1 (remove (cdr ok1) tset1 :test #'eq))
-		 (when (or (eq x1 y1) 
-			   (member y1 (type-ancestors x1) :test #'eq))
-		   (setf ok2 t)
-		   (return ok2)))
-	     (return ok2))))))
+(defmacro get-bit-coded-type (bit-coded-type-table code)
+   `(svref ,bit-coded-type-table (bit-code-position-1 ,code)))
 
-; code to fix the local glb problem
+(defun lookup-type-from-bits (code)
+   ;; hash code and check for equal one in bucket
+   (dolist (type (get-bit-coded-type *bit-coded-type-table* code) nil)
+      (when (bit-code-equal (type-bit-code type) code)
+         (return type))))
 
-(defun fix-mglb (glbset)
-  ;; takes a mglbset which is at least as specific as any of the other problem
-  ;; sets, and fixes this locally by creating a new type which has as
-  ;; (multiple) parents all the elements in the top set and has as daughters
-  ;; all the types in the bottom set
-  ;;
-  ;; if there are now some redundant links - i.e. there were originally direct
-  ;; links between members of the top set and bottom set - these are removed
-  (let* ((daughters (mapcar #'type-name (glbset-bottom glbset)))
-         (parents (mapcar #'type-name (glbset-top glbset)))
-         (new-type (make-glb-name daughters))
-         (new-type-entry (make-type :name new-type 
-				    :parents parents
-                                    :daughters daughters
-				    :glbp t)))
-    (amend-type-information new-type new-type-entry parents daughters)))
-   
+
+(defmacro external-single-parent-type-p (type-entry)
+   `(and (null (type-daughters ,type-entry))
+         (null (cdr (type-parents ,type-entry)))))
+
+(defun compute-and-add-glbtypes nil
+   (let*
+      ((internal-types
+          (mapcan
+             #'(lambda (x)
+                 (unless (external-single-parent-type-p (get-type-entry x))
+                    (list (get-type-entry x))))
+             *type-names*))
+        (ntypes (length internal-types))
+        (*bit-coded-type-table* (make-array ntypes :initial-element nil)))
+      (assign-type-bit-codes *toptype* ntypes)
+      (format t "~%Constructing glb types") (force-output t)
+      (let ((glbtypes
+              (compute-glbtypes-from-bit-codes internal-types ntypes)))
+         (if glbtypes
+            (progn
+               (format t "~%Inserting glb types") 
+               (insert-glbtypes-into-hierarchy internal-types glbtypes))
+            (format t "~%No glb types needed"))
+         (dolist (type (append glbtypes internal-types))
+            (setf (type-bit-code type) nil)))))
+
+
+(defun assign-type-bit-codes (type ntypes)
+   ;; assign a bit code to every type of length the number of types in the
+   ;; hierarchy, being the OR of all its descendants with one additional bit
+   ;; set
+   (let ((n ntypes))
+      (labels
+         ((assign-type-bit-codes1 (type)
+            (let* ((type-entry (get-type-entry type))
+                   (code (type-bit-code type-entry)))
+               (unless code
+                  (setq code (make-bit-code ntypes))
+                  (setf (type-bit-code type-entry) code)
+                  (dolist (d (type-daughters type-entry))
+                     (unless (external-single-parent-type-p (get-type-entry d))
+                        (setq code
+                           (bit-code-ior code (assign-type-bit-codes1 d) code))))
+                  (decf n)
+                  (set-bit-code code n)
+                  (push type-entry
+                     (get-bit-coded-type *bit-coded-type-table* code)))
+               code)))
+         (assign-type-bit-codes1 type))))
+
+
+(defun compute-glbtypes-from-bit-codes (types ntypes)
+   ;; for every pair of types check if they have any common subtypes (is the
+   ;; AND of the two types' codes non-zero?), and if so, if they already have
+   ;; a glb type (is there a type with a code equal to the AND of the codes?).
+   ;; If not, a glb type is created with this code. Process iterates with new
+   ;; types until no more are constructed 
+   (let* ((temp (make-bit-code ntypes))
+          (new nil) (glbtypes nil))
+      (loop
+         (unless (cdr types) (return glbtypes))
+         (do* ((t1 types (cdr t1)))
+              ((null t1))
+            (do* ((t2 (cdr t1) (cdr t2))
+                  (code-zero-p nil))
+                 ((null t2))
+               (setq code-zero-p
+                  (bit-code-and-zero-p
+                     (type-bit-code (car t1)) (type-bit-code (car t2)) temp))
+               (when (and (not code-zero-p)
+                          (not (lookup-type-from-bits temp)))
+                  (let* ((name (make-glb-name nil))
+                         (new-type-entry (make-type :name name :glbp t)))
+                     (when *display-glb-messages*
+	                (format t "~%Fixing ~A and ~A with ~A" 
+		           (car t1) (car t2) name))
+                     (setf (type-bit-code new-type-entry) temp)
+                     (push new-type-entry
+                        (get-bit-coded-type *bit-coded-type-table* temp))
+                     (push new-type-entry glbtypes)
+                     (push new-type-entry new)
+                     (setq temp (make-bit-code ntypes))))))
+         (when new
+            (format t "~A~A" (if (= (length types) ntypes) " " "+") (length new))
+            (force-output t))
+         (setq types new new nil))))
+
+
+(defun insert-glbtypes-into-hierarchy (types glbtypes
+                                       &aux (all-types (append glbtypes types)))
+   ;; work out the parents and daughters of each glb type and insert it into
+   ;; the standard linked type node representation of the hierarchy
+   (dolist (glbtype-entry glbtypes)
+      (let ((parents nil) (daughters nil))
+         (dolist (entry all-types)
+            (unless (eq entry glbtype-entry)
+               (cond
+                  ((bit-code-subsume-p (type-bit-code glbtype-entry) (type-bit-code entry))
+                     ;; entry is a descendent of glbtype - try and add it to the current
+                     ;; highest disjoint set of descendants. If it subsumes any elements
+                     ;; of the set, replace one of them and delete rest. If it's subsumed
+                     ;; by any, then don't consider this entry further
+                     (do ((tail daughters (cdr tail))
+                          (replacedp nil))
+                         ((null tail)
+                          (setq daughters (delete nil daughters))
+                          (unless replacedp (push entry daughters)))
+                        (when (bit-code-subsume-p
+                                 (type-bit-code entry) (type-bit-code (car tail)))
+                           (setf (car tail) (if replacedp nil entry))
+                           (setq replacedp t))
+                        (when
+                           (and (not replacedp)
+                              (bit-code-subsume-p
+                                 (type-bit-code (car tail)) (type-bit-code entry)))
+                           (return))))
+                  ((bit-code-subsume-p (type-bit-code entry) (type-bit-code glbtype-entry))
+                     ;; entry is an ancestor of glbtype - try and add it to lowest
+                     ;; disjoint set of ancestors
+                     (do ((tail parents (cdr tail))
+                          (replacedp nil))
+                         ((null tail)
+                          (setq parents (delete nil parents))
+                          (unless replacedp (push entry parents)))
+                        (when (bit-code-subsume-p
+                                 (type-bit-code (car tail)) (type-bit-code entry))
+                           (setf (car tail) (if replacedp nil entry))
+                           (setq replacedp t))
+                        (when
+                           (and (not replacedp)
+                              (bit-code-subsume-p
+                                 (type-bit-code entry) (type-bit-code (car tail))))
+                           (return)))))))
+         (insert-new-type-into-hieriarchy
+            (type-name glbtype-entry) glbtype-entry parents daughters))))
+
+         
+(defun insert-new-type-into-hieriarchy (new-type new-type-entry parents daughters)
+   ;; ancestors and descendants are computed later
+   (create-mark-field new-type-entry)
+   (set-type-entry new-type new-type-entry)   
+   (setf (type-daughters new-type-entry) (mapcar #'type-name daughters))
+   (setf (type-parents new-type-entry) (mapcar #'type-name parents))
+   (dolist (daughter daughters)
+      (setf (type-parents daughter)
+	    (cons new-type (set-difference (type-parents daughter) 
+				           parents :test #'eq))))
+   (dolist (parent parents)
+      (setf (type-daughters parent)
+	    (cons new-type (set-difference (type-daughters parent) 
+                                           daughters :test #'eq))))
+   (push new-type *ordered-glbtype-list*)
+   (push new-type *type-names*)
+   new-type-entry)
+
 
 (defun make-glb-name (dtrs)
   (declare (ignore dtrs))
@@ -664,13 +710,14 @@
                   (mapcar #'abbrev-type-name true-dtrs)))
          (existing (find-symbol new-name-str)))
     (if existing (next existing) (intern new-name-str))))
-|#
 
 (defun abbrev-type-name (dtr)
   (let ((strname (string dtr)))
     (if (> (length strname) 3)
       (subseq strname 0 3)
       strname)))
+|#
+
 
 ;;; Constraint stuff
 
