@@ -57,7 +57,8 @@
                                 :protocol cache)))
          (gc-strategy 
           (unless interactive
-            (install-gc-strategy nil :tenure nil :burst t :verbose t)))
+            (install-gc-strategy 
+             nil :tenure *tsdb-tenure-p* :burst t :verbose t)))
          %client%)
     (declare (special %client%))
 
