@@ -44,6 +44,7 @@
 #+(version>= 6 0) (require :mcombin)
 #+(version>= 6 0) (require :uri)
 #+(version>= 6 2) (require :euc)
+#+(version>= 6 2) (require :ffcompat)
 
 (setq make::*building-image-p* t)
 (setq make:*compile-during-load* t)
