@@ -22,7 +22,16 @@
   (not (null (psort-db lexicon))))
 
 (defmethod lex-words ((lexicon cdb-lex-database))
-  (cdb:all-keys (orth-db *lexicon*)))
+  (unless (orth-db lexicon)
+    (setf (orth-db lexicon) 
+      (cdb:open-read *psorts-temp-index-file*)))
+  (cdb:all-keys (orth-db lexicon)))
+
+(defmethod collect-psort-ids ((lexicon cdb-lex-database))
+  (unless (psort-db lexicon)
+    (setf (psort-db lexicon) 
+      (cdb:open-read *psorts-temp-file*)))
+   (cdb:all-keys (psort-db lexicon)))
 
 (defmethod read-cached-lex ((lexicon cdb-lex-database) filenames)
   (unless (or *psorts-temp-file* *psorts-temp-index-file*)
@@ -107,3 +116,4 @@
 
 (defmethod unexpand-psort ((lexicon cdb-lex-database) id)
   (setf (gethash id (slot-value lexicon 'psorts)) nil))
+
