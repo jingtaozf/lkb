@@ -19,7 +19,7 @@
 #include <netdb.h>
 #include <sys/param.h>
 #include <errno.h>
-#ifdef SIGTSTP
+#if defined(SUNOS)
 #include <sys/file.h>
 #include <sys/ioctl.h>
 #endif
@@ -30,13 +30,21 @@
 
 extern int errno;
 extern BOOL quit;
-#ifdef SIGTSTP
+#if defined(SUNOS)
 
-void sigcld(void);
+void sigcld(int);
 #endif
 
-void sigterm(void);
-static _tsdb_server;
+void sigterm_server(int);
+void sigterm_client(int);
+void sigsegv_server(int);
+void sigsegv_client(int);
+
+static int _server;
+static int _client;
+#if defined(DEBUG) && defined(SERVER)
+static char *_query = (char *)NULL;
+#endif
 
 void tsdb_server() {
 
@@ -53,57 +61,78 @@ void tsdb_server() {
 
   int new, child, n;
   struct sockaddr_in server_address, client_address;
+  struct linger linger;
 #if defined(DEBUG) && defined(SERVER)
   struct hostent *host;
 #endif
 
-  if((_tsdb_server = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
+  if((_server = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
     exit(-1);
   } /* if */
+
+  n = TRUE;
+  setsockopt(_server, SOL_SOCKET, SO_KEEPALIVE, (char *)&n, sizeof(n));
+  linger.l_onoff = TRUE;
+  linger.l_linger = 5;
+  setsockopt(_server,
+             SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
 
   bzero((char *)&server_address, sizeof(server_address));
   server_address.sin_family = AF_INET;
   server_address.sin_addr.s_addr = htonl(INADDR_ANY);
   server_address.sin_port = htons(tsdb.port);
-  if(bind(_tsdb_server,
+  if(bind(_server,
           (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
     exit(-1);
   } /* if */
 
-  listen(_tsdb_server, TSDB_SERVER_QUEUE_LENGTH);
+  listen(_server, TSDB_SERVER_QUEUE_LENGTH);
 
   while(TRUE) {
     n = sizeof(client_address);
-    if((new = accept(_tsdb_server,
-                     (struct sockaddr *)&client_address, &n)) < 0) {
+    if((_client = accept(_server,
+                         (struct sockaddr *)&client_address, &n)) < 0) {
 #if defined(DEBUG) && defined(SERVER)
       fprintf(tsdb_debug_stream,
-              "server(): failed (invalid) accept(2); errno: %d.\n", errno);
+              "server(): [%d] failed (invalid) accept(2); errno: %d.\n",
+              getpid(), errno);
       fflush(tsdb_debug_stream);
 #endif
       continue;
     } /* if */
+
 #if defined(DEBUG) && defined(SERVER)
-    if((host
-        = gethostbyaddr(&client_address.sin_addr.s_addr, 4, AF_INET)) != NULL
+    if((host = gethostbyaddr((char *)&client_address.sin_addr.s_addr,
+                             4, AF_INET)) != NULL
        && host->h_name != NULL) {
       fprintf(tsdb_debug_stream,
-              "server(): connection from `%s'.\n", host->h_name);
+              "server(): [%d] connection from `%s'.\n",
+              getpid(), host->h_name);
     } /* if */
     else {
       fprintf(tsdb_debug_stream,
-              "server(): connection from unknown remote host.\n");
+              "server(): [%d] connection from unknown remote host.\n",
+              getpid());
     } /* else */
     fflush(tsdb_debug_stream);
 #endif    
+    n = TRUE;
+    setsockopt(_client, SOL_SOCKET, SO_KEEPALIVE, (char *)&n, sizeof(n));
+    linger.l_onoff = TRUE;
+    linger.l_linger = 5;
+    setsockopt(_client, SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
+
     if((child = fork()) < 0) {
       exit(-1);
     } /* if */
     else if(child > 0) {
-      close(new);
+      close(_client);
     } /* else */
     else {
-      tsdb_server_child(new);
+      signal(SIGTERM, sigterm_client);
+      signal(SIGSEGV, sigsegv_client);
+      signal(SIGBUS, sigsegv_client);
+      tsdb_server_child(_client);
     } /* else */
   } /* while */
 } /* tsdb_server() */
@@ -133,20 +162,22 @@ int tsdb_server_initialize() {
   signal(SIGTSTP, SIG_IGN);
 #endif
 
-#ifndef NOFORK
+#if !defined(NOFORK)
   if((i = fork()) < 0) {
     fprintf(tsdb_error_stream,
-            "server_initialize(): unable to fork(2) server.\n");
+            "server_initialize(): unable to fork(2) server; errno: %d.\n",
+            errno);
     return(1);
   } /* if */
   else if(i > 0) {
     exit(0);
   } /* if */
 
-#ifdef SIGTSTP
+#if defined(SUNOS)
   if(setpgrp(0, getpid()) == -1) {
     fprintf(tsdb_error_stream,
-            "server_initialize(): unable to change process group.\n");
+            "server_initialize(): unable to change process group; errno:%d.\n",
+            errno);
     return(2);
   } /* if */
   if((i = open("/dev/tty", O_RDWR)) >= 0) {
@@ -154,51 +185,61 @@ int tsdb_server_initialize() {
     close(i);
   } /* if */
 #else
-  if(setpgrp() == -1) {
+  if(setsid() == -1) {
     fprintf(tsdb_error_stream,
-            "server_initialize(): unable to change process group.\n");
+            "server_initialize(): "
+            "unable to change process group; errno: %d.\n", errno);
     return(2);
   } /* if */
   signal(SIGHUP, SIG_IGN);
   if((i = fork()) < 0) {
     fprintf(tsdb_error_stream,
-            "server_initialize(): unable to fork(2) server.\n");
+            "server_initialize(): unable to fork(2) server; errno: %d.\n",
+            errno);
     return(1);
   } /* if */
   else if(i > 0) {
     exit(0);
   } /* if */
-#endif
+#endif /* #if defined(SUNOS) */
 
-#ifndef DEBUG
   fclose(stdin);
   fclose(stdout);
   fclose(stderr);
   fclose(tsdb_default_stream);
   fclose(tsdb_error_stream);
+
   for(i = 0; i < NOFILE; i++) {
+#if defined(DEBUG)
+    if(i == fileno(tsdb_debug_stream)) {
+      continue;
+    } /* if */
+#endif
     close(i);
   } /* for */
   errno = 0;
-#endif
+#endif /* #if !defined(NOFORK) */
 
   chdir("/tmp");
-  
-  umask(0);
-#endif
 
-#ifdef SIGTSTP
+  umask(0);
+
+#if defined(SUNOS)
   signal(SIGCLD, sigcld);
 #else
   signal(SIGCLD, SIG_IGN);
 #endif
-  signal(SIGTERM, sigterm);
+
+  signal(SIGTERM, sigterm_server);
+  signal(SIGSEGV, sigsegv_server);
+  signal(SIGBUS, sigsegv_server);
 
   return(0);
+
 } /* tsdb_server_initialize() */
-#ifdef SIGTSTP
+#if defined(SUNOS)
 
-void sigcld(void) {
+void sigcld(int signal) {
 
 /*****************************************************************************\
 |*        file: 
@@ -224,11 +265,11 @@ void sigcld(void) {
 } /* sigcld() */
 #endif
 
-void sigterm(void) {
+void sigterm_server(int signal) {
 
 /*****************************************************************************\
 |*        file: 
-|*      module: sigterm()
+|*      module: sigterm_server()
 |*     version: 
 |*  written by: oe, dfki saarbruecken
 |* last update: 
@@ -238,17 +279,99 @@ void sigterm(void) {
 |* server.
 \*****************************************************************************/
 
-  close(_tsdb_server);
+  close(_server);
 #if defined(DEBUG) && defined(SERVER)
     fprintf(tsdb_debug_stream,
-            "sigterm(): [%d] going down on SIGTERM.\n", getpid());
+            "sigterm(): [%d] server going down on SIGTERM.\n",
+            getpid());
     fflush(tsdb_debug_stream);
 #endif
-#ifdef DEBUG
+#if defined(DEBUG)
   tsdb_close_debug(tsdb_debug_stream);
 #endif
   exit(0);
-} /* sigterm() */
+} /* sigterm_server() */
+
+void sigterm_client(int signal) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: sigterm_client()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* sigterm() is installed as the handler for SIGTERM signals to the childs of
+|* the TSDB server (clients, in a sense).
+\*****************************************************************************/
+
+  close(_client);
+#if defined(DEBUG) && defined(SERVER)
+  fprintf(tsdb_debug_stream,
+          "sigterm(): [%d] client going down on SIGTERM.\n", getpid());
+  fflush(tsdb_debug_stream);
+#endif
+  exit(0);
+} /* sigterm_client() */
+
+void sigsegv_server(int signal) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: sigsegv_server()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* sigsegv() is installed as the handler for SIGSEGV and SIGBUS signals to the
+|* TSDB server.
+\*****************************************************************************/
+
+  close(_server);
+#if defined(DEBUG) && defined(SERVER)
+  fprintf(tsdb_debug_stream,
+          "sigsegv(): [%d] server going down on %s.\n",
+          getpid(), (signal == SIGSEGV ? "SIGSEGV" : "SIGBUS"));
+  fflush(tsdb_debug_stream);
+#endif
+#if defined(DEBUG)
+  tsdb_close_debug(tsdb_debug_stream);
+#endif
+  exit(1);
+} /* sigsegv_server() */
+
+void sigsegv_client(int signal) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: sigsegv_client()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* sigterm() is installed as the handler for SIGSEGV and SIGBUS signals to
+|* childs of the TSDB server (clients, in a sense).
+\*****************************************************************************/
+
+  close(_client);
+#if defined(DEBUG) && defined(SERVER)
+  fprintf(tsdb_debug_stream,
+          "sigsegv(): [%d] client going down on %s",
+          getpid(), (signal == SIGSEGV ? "SIGSEGV" : "SIGBUS"));
+  if(_query != NULL) {
+    fprintf(tsdb_debug_stream,
+            ";\nsigsegv(): [%d] query: `%s'.\n", getpid(), _query);
+  } /* if */
+  else {
+    fprintf(tsdb_debug_stream, ".\n");
+  } /* else */
+  fflush(tsdb_debug_stream);
+#endif
+  exit(0);
+} /* sigsegv_client() */
 
 void tsdb_server_child(int socket) {
 
@@ -280,8 +403,9 @@ void tsdb_server_child(int socket) {
     } /* if */
   } /* else */
 
-
   while((!quit)) {
+    fflush(tsdb_default_stream);
+    fflush(tsdb_error_stream);
     sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
     if(tsdb_socket_write(socket, &prompt[0], strlen(prompt)) == -1) {
       close(socket);
@@ -289,28 +413,40 @@ void tsdb_server_child(int socket) {
     } /* if */
     
     if(tsdb_socket_readline(socket, &input[0], 1024) > 0) {
-      if(command == NULL) {
-        command = strdup(&input[0]);
-      } /* if */
-      else {
-        command
-          = (char *)realloc(command, strlen(command) + strlen(input) + 2);
-        command = strcat(command, " ");
-        command = strcat(command, input);
-      } /* else */
-      if(command != NULL && strchr(command, '.')) {
+      if(input[0]) {
+        if(command == NULL) {
+          command = strdup(&input[0]);
+        } /* if */
+        else {
+          command
+            = (char *)realloc(command, strlen(command) + strlen(input) + 2);
+          command = strcat(command, " ");
+          command = strcat(command, input);
+        } /* else */
+        if(command != NULL && strchr(command, '.')) {
 #if defined(DEBUG) && defined(SERVER)
-        fprintf(tsdb_debug_stream,
-                "server_child(): `%s'.\n", command);
-        fflush(tsdb_debug_stream);
+          fprintf(tsdb_debug_stream,
+                  "server_child(): [%d] `%s'.\n", getpid(), command);
+          fflush(tsdb_debug_stream);
+          if(_query == NULL) {
+            _query = strdup(command);
+          } /* if */
+          else {
+            free(_query);
+            _query = strdup(command);
+          } /* else */
 #endif
-        tsdb_parse(command);
-        free(command);
-        command = (char *)NULL;
-        sprintf(prompt, "tsdb@%s (%d) # ", host, ++n_commands);
+          tsdb_parse(command);
+          free(command);
+          command = (char *)NULL;
+          sprintf(prompt, "tsdb@%s (%d) # ", host, ++n_commands);
+        } /* if */
+        else {
+          sprintf(prompt, "> ", host, n_commands);
+        } /* else */
       } /* if */
       else {
-        sprintf(prompt, "> ", host, n_commands);
+        quit = TRUE;
       } /* else */
     } /* if */
   } /* while */
@@ -340,7 +476,8 @@ int tsdb_socket_write(int socket, char *string, int n) {
     if((written = write(socket, string, left)) == -1) {
 #if defined(DEBUG) && defined(SERVER)
       fprintf(tsdb_debug_stream,
-              "socket_write(): write() error; errno: %d.\n", errno);
+              "socket_write(): [%d] write() error; errno: %d.\n",
+              getpid(), errno);
       fflush(tsdb_debug_stream);
 #endif
       return(-1);
@@ -369,12 +506,14 @@ int tsdb_socket_readline(int socket, char *string, int length) {
   char c;
 
   for(n = 0; n < (length - 1) && (i = read(socket, &c, 1)) == 1; n++) {
-    if(c == '\n' || c == '\r') {
+    if(c == '\r') {
       (void)read(socket, &c, 1);
+    } /* if */
+    if(c == '\n') {
       string[n] = 0;
 #if defined(DEBUG) && defined(SOCKET_READLINE)
     fprintf(tsdb_debug_stream,
-            "socket_readline(): `%s' (%d).\n", string, n + 1);
+            "socket_readline(): [%d] `%s' (%d).\n", getpid(), string, n + 1);
     fflush(tsdb_debug_stream);
 #endif
       return(n + 1);
@@ -382,14 +521,15 @@ int tsdb_socket_readline(int socket, char *string, int length) {
     string[n] = c;
 #if defined(DEBUG) && defined(SOCKET_READLINE)
     fprintf(tsdb_debug_stream,
-            "socket_readline(): `%c' (%d).\n", c, n + 1);
+            "socket_readline(): [%d] `%c' (%d).\n", getpid(), c, n + 1);
     fflush(tsdb_debug_stream);
 #endif
   } /* for */
   if(i == -1) {
 #if defined(DEBUG) && defined(SERVER)
     fprintf(tsdb_debug_stream,
-            "socket_readline(): read() error; errno: %d.\n", errno);
+            "socket_readline(): [%d] read() error; errno: %d.\n",
+            getpid(), errno);
     fflush(tsdb_debug_stream);
 #endif
     return(-1);
@@ -398,7 +538,7 @@ int tsdb_socket_readline(int socket, char *string, int length) {
     string[n] = 0;
 #if defined(DEBUG) && defined(SOCKET_READLINE)
     fprintf(tsdb_debug_stream,
-            "socket_readline(): `%s' (%d).\n", string, n + 1);
+            "socket_readline(): [%d] `%s' (%d).\n", getpid(), string, n + 1);
     fflush(tsdb_debug_stream);
 #endif
     return(n + 1);

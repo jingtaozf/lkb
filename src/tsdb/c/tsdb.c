@@ -9,33 +9,39 @@
 |*
 \*****************************************************************************/
 
-#define TSDB_DOT_C
+#define TSDB_C
 
 #include <stdio.h>
 #include "globals.h"
 #include "tsdb.h"
 
-Tsdb tdsb = { 0, 0 };
+#if defined(NOFREE)
+void free(void *foo) {
+  ;
+} /* free() */
+#endif
+
+Tsdb tdsb = { 
+  0,                       /* status */
+  (Tsdb_relation **)NULL,  /* relations */
+  (Tsdb_selection **)NULL, /* data */
+  (char *)NULL,            /* input */
+  (char *)NULL,            /* home */
+  (char *)NULL,            /* relations_file */
+  (char *)NULL,            /* data_path */
+  (char *)NULL,            /* result_path */
+  (char *)NULL,            /* result_prefix */
+  -1,                      /* max_results */
+  0,                       /* port */
+  (char *)NULL,            /* pager */
+  (char *)NULL,            /* query */
+#ifdef DEBUG
+  (char *)NULL             /* debug_file */
+#endif
+}; /* tsdb */
 
 FILE *tsdb_default_stream = (FILE *)NULL;
 FILE *tsdb_error_stream = (FILE *)NULL;
-
 #ifdef DEBUG
   FILE *tsdb_debug_stream = (FILE *)NULL;
-  char *tsdb_debug_file = (char *)NULL;
 #endif
-
-int really_verbose_mode = FALSE;
-
-char *tsdb_home = (char *)NULL;
-char *tsdb_relations_file = (char *)NULL;
-char *tsdb_data_path = (char *)NULL;
-char *tsdb_result_path = (char *)NULL;
-char *tsdb_result_prefix = (char *)NULL;
-int tsdb_max_results = -1;
-
-char *tsdb_input = (char *)NULL;
-char *tsdb_pager = (char *)NULL;
-
-Tsdb_relation **tsdb_relations = (Tsdb_relation **)NULL;
-Tsdb_selection **tsdb_data = (Tsdb_selection **)NULL;

@@ -120,14 +120,11 @@ int* tsdb_double_relations(Tsdb_selection *selection_1,
            tsdb_find_relation gives the real thing */
 
         if (relation_1 == selection_1->relations[i]) {
-/*          printf("Basic relation pointer found!!\n");*/
           basic_1=TRUE;
         }
         relation_2 = tsdb_find_relation(selection_2->relations[j]->name);
         
         if (relation_2 == selection_2->relations[j]) {
-/*          printf("Basic relation pointer found!!\n");*/
-
           basic_2=TRUE;
         }    
         /* relation_1 and relation_2 have same name */
@@ -616,8 +613,16 @@ Tsdb_selection *tsdb_join(Tsdb_selection *selection_1,
       result = selection_1;
     } /* if */
     else {
-/*      fprintf(tsdb_error_stream, "asshole: unconnected Relations.\n");*/
-      fprintf(tsdb_error_stream," Error: unconnected Relations.\n");
+      fprintf(tsdb_error_stream,
+              "join(): no path from %s", selection_1->relations[0]->name);
+      for(i = 1; i < selection_1->n_relations; i++) {
+        fprintf(tsdb_error_stream, ":%s", selection_1->relations[i]->name);
+      } /* for */
+      fprintf(tsdb_error_stream, " to %s", selection_2->relations[0]->name);
+      for(i = 1; i < selection_2->n_relations; i++) {
+        fprintf(tsdb_error_stream, ":%s", selection_2->relations[i]->name);
+      } /* for */
+      fprintf(tsdb_error_stream, ".\n");
       return((Tsdb_selection *)NULL);
     } /* else */
   } /* else */

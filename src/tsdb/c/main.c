@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "getopt.h"
+#include <getopt.h>
 #include "globals.h"
 #include "tsdb.h"
 #include <readline/readline.h>
@@ -53,6 +53,8 @@ char *rev_complete[] = {
   "values",
   "into",
   "insert",
+  "info",
+  "set",
   (char*)NULL
 };
 
@@ -63,14 +65,14 @@ char *tsdb_keywords[] = {
   "add",
   "table",
   "values",
-  "set",
+  "relations",
   ":integer",
   ":string",
   ":key",
   (char *)NULL
 };
 
-char *tsdb_rest_generate(char* , int ) ;
+char *tsdb_rest_generate(char *, int) ;
 char **tsdb_completion(char *, int, int);
 char *tsdb_command_generate(char *, int);
 char *tsdb_others_generate(char *, int);
@@ -101,18 +103,8 @@ int main(int argc, char **argv) {
   mallopt(MALLOC_ERRFILE,m);
 #endif
 
-#ifdef SYSV
-  struct sigaction tsdb_sig = { SIG_IGN, (sigset_t)0, 0 };
-  sigaction(SIGPIPE, &tsdb_sig);
-#else
-  signal(SIGPIPE, SIG_IGN);
-#endif
-
   tsdb_default_stream = TSDB_DEFAULT_STREAM;
   tsdb_error_stream = TSDB_ERROR_STREAM;
-
-  tsdb_parse_options(argc, argv);
-  tsdb_initialize();
 
   if((foo = strdup(argv[0])) != NULL) {
     if((bar = strrchr(foo, TSDB_DIRECTORY_DELIMITER[0])) != NULL) {
@@ -128,6 +120,9 @@ int main(int argc, char **argv) {
     free(foo);
   } /* if */
 
+  tsdb_parse_options(argc, argv);
+  tsdb_initialize();
+
   if(tsdb.status & TSDB_SERVER_MODE) {
     if(tsdb_server_initialize()) {
       exit(-1);
@@ -135,55 +130,68 @@ int main(int argc, char **argv) {
     tsdb_server();
   } /* if */
 
-  using_history();
-  if(read_history(TSDB_HISTORY_FILE) != NULL) {
-    fprintf(tsdb_error_stream,
-            "main(): no history file `%s'.\n",
-            TSDB_HISTORY_FILE);
-  } /* if */
+#ifdef SYSV
+  struct sigaction tsdb_sig = { SIG_IGN, (sigset_t)0, 0 };
+  sigaction(SIGPIPE, &tsdb_sig);
+#else
+  signal(SIGPIPE, SIG_IGN);
+#endif
 
-  initialize_readline();
-  if(gethostname(&host[0], 512)) {
-    perror("main(): gethostname(): ");
-    host[0] = 0;
+  if(tsdb.query != NULL) {
+    tsdb_parse(tsdb.query);
   } /* if */
   else {
-    if((foo = strchr(host, '.')) != NULL) {
-      *foo = 0;
+    using_history();
+    if(read_history(TSDB_HISTORY_FILE) != NULL) {
+      fprintf(tsdb_error_stream,
+              "main(): no history file `%s'.\n",
+              TSDB_HISTORY_FILE);
+    } /* if */
+    
+    initialize_readline();
+    if(gethostname(&host[0], 512)) {
+      perror("main(): gethostname(): ");
+      host[0] = 0;
+    } /* if */
+    else {
+      if((foo = strchr(host, '.')) != NULL) {
+        *foo = 0;
+      } /* if */
+    } /* else */
+    
+    sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
+    
+    while((!quit) && ((foo = readline(prompt)) != NULL)) {
+      if(*foo) {
+        if(input == NULL) {
+          input = strdup(foo);
+        } /* if */
+        else {
+          input = (char *)realloc(input, strlen(input) + strlen(foo) + 2);
+          input = strcat(input, " ");
+          input = strcat(input, foo);
+        } /* else */
+        free(foo);
+        if(input != NULL && strchr(input, '.')) {
+          tsdb_parse(input);
+          add_history(input);
+          free(input);
+          input = (char *)NULL;
+          sprintf(prompt, "tsdb@%s (%d) # ", host, ++n_commands);
+        } /* if */
+        else {
+          sprintf(prompt, "> ", host, n_commands);
+        } /* else */
+      } /* if */
+    } /* while */
+    
+    if(write_history(TSDB_HISTORY_FILE) != NULL) {
+      fprintf(tsdb_error_stream,
+              "main(): unable to write to history file `%s'.\n",
+              TSDB_HISTORY_FILE);
     } /* if */
   } /* else */
 
-  sprintf(prompt, "tsdb@%s (%d) # ", host, n_commands);
-
-  while((!quit) && ((foo = readline(prompt)) != NULL)) {
-    if(*foo) {
-      if(input == NULL) {
-        input = strdup(foo);
-      } /* if */
-      else {
-        input = (char *)realloc(input, strlen(input) + strlen(foo) + 2);
-        input = strcat(input, " ");
-        input = strcat(input, foo);
-      } /* else */
-      free(foo);
-      if(input != NULL && strchr(input, '.')) {
-        tsdb_parse(input);
-        add_history(input);
-        free(input);
-        input = (char *)NULL;
-        sprintf(prompt, "tsdb@%s (%d) # ", host, ++n_commands);
-      } /* if */
-      else {
-        sprintf(prompt, "> ", host, n_commands);
-      } /* else */
-    } /* if */
-  } /* while */
-
-  if(write_history(TSDB_HISTORY_FILE) != NULL) {
-    fprintf(tsdb_error_stream,
-            "main(): unable to write to history file `%s'.\n",
-            TSDB_HISTORY_FILE);
-  } /* if */
   tsdb_save_changes();
 
 #ifdef DEBUG
@@ -218,6 +226,7 @@ void tsdb_parse_options(int argc, char **argv) {
     {"max-results", optional_argument, 0, TSDB_MAX_RESULTS_OPTION},
     {"debug-file", required_argument, 0, TSDB_DEBUG_FILE_OPTION},
     {"pager", optional_argument, 0, TSDB_PAGER_OPTION},
+    {"query", required_argument, 0, TSDB_QUERY_OPTION},
     {"usage", no_argument, 0, TSDB_USAGE_OPTION},
     {"help", no_argument, 0, TSDB_USAGE_OPTION},
     {"version", no_argument, 0, TSDB_VERSION_OPTION},
@@ -250,60 +259,69 @@ void tsdb_parse_options(int argc, char **argv) {
         break;
       case TSDB_HOME_OPTION:
         if(optarg != NULL) {
-          tsdb_home = strdup(optarg);
+          tsdb.home = tsdb_expand_directory(optarg);
         } /* if */
         break;
       case TSDB_RELATIONS_FILE_OPTION:
         if(optarg != NULL) {
-          tsdb_relations_file = strdup(optarg);
+          tsdb.relations_file = strdup(optarg);
         } /* if */
         break;
       case TSDB_DATA_PATH_OPTION:
         if(optarg != NULL) {
-          tsdb_data_path = strdup(optarg);
+          tsdb.data_path = tsdb_expand_directory(optarg);
         } /* if */
         break;
       case TSDB_RESULT_PATH_OPTION:
         if(optarg != NULL) {
-          tsdb_result_path = strdup(optarg);
+          tsdb.result_path = tsdb_expand_directory(optarg);
         } /* if */
         break;
       case TSDB_RESULT_PREFIX_OPTION:
         if(optarg != NULL) {
-          tsdb_result_prefix = strdup(optarg);
+          tsdb.result_prefix = strdup(optarg);
         } /* if */
         break;
       case TSDB_MAX_RESULTS_OPTION:
         if(optarg != NULL) {
-          if((tsdb_max_results = strtol(optarg, &bar, 10)) == 0
+          if((tsdb.max_results = strtol(optarg, &bar, 10)) == 0
              && optarg == bar) {
             fprintf(tsdb_error_stream,
                     "parse_options(): "
                     "non-integer (`%s') argument to `-max-results'.\n",
                     optarg);
-            tsdb_max_results = -1;
+            tsdb.max_results = -1;
           } /* if */
         } /* if */
         else {
-          tsdb_max_results = 0;
+          tsdb.max_results = 0;
         } /* else */
         break;
 #ifdef DEBUG
       case TSDB_DEBUG_FILE_OPTION:
         if(optarg != NULL) {
-          tsdb_debug_file = strdup(optarg);
+          tsdb.debug_file = strdup(optarg);
         } /* if */
         break;
 #endif
       case TSDB_PAGER_OPTION:
         if(optarg != NULL) {
-          tsdb_pager = strdup(optarg);
+          tsdb.pager = strdup(optarg);
         } /* if */
         else {
-          tsdb_pager = (char *)NULL;
+          tsdb.pager = (char *)NULL;
         } /* else */
         break;
-      case TSDB_USAGE_OPTION:
+      case TSDB_QUERY_OPTION:
+        if(optarg != NULL) {
+          tsdb.query = strdup(optarg);
+          if(strchr(tsdb.query, '.') == NULL) {
+            tsdb.query = (char *)realloc(tsdb.query, strlen(tsdb.query) + 2);
+            tsdb.query = strcat(tsdb.query, ".");
+          } /* if */
+        } /* if */
+        break;
+       case TSDB_USAGE_OPTION:
         tsdb_usage();
         exit(0);
         break;
@@ -358,6 +376,8 @@ void tsdb_usage() {
 #endif
   fprintf(tsdb_error_stream,
           "  `-pager[={command | _off_}' --- pager command to use;\n");
+  fprintf(tsdb_error_stream,
+          "  `-query=' --- query to be processed in batch mode;\n");
   fprintf(tsdb_error_stream,
           "  `-usage' or `-help' --- this message (give it a try |:-);\n");
   fprintf(tsdb_error_stream,

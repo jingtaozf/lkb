@@ -11,7 +11,7 @@
 
 %{
 
-#include <strings.h>
+#include <string.h>
 #include "globals.h"
 #include "tsdb.h"
 #include "parser.h"
@@ -124,6 +124,20 @@ STRING          {QUOTE}[^"]*{QUOTE}
   return(Y_ALTER);
 }
 
+{i}{n}{f}{o} {
+  if(verbose_mode) {
+    fprintf(stderr, "Info\n");
+  } /* if */
+  return(Y_INFO);
+}
+
+{s}{e}{t} {
+  if(verbose_mode) {
+    fprintf(stderr, "Set\n");
+  } /* if */
+  return(Y_SET);
+}
+
 {t}{a}{b}{l}{e} {
   if(verbose_mode) {
     fprintf(stderr, "Table\n");
@@ -166,18 +180,18 @@ STRING          {QUOTE}[^"]*{QUOTE}
   return(Y_VALUES);
 }
 
+{r}{e}{l}{a}{t}{i}{o}{n}{s} {
+  if(verbose_mode) {
+    fprintf(stderr, "Relations\n");
+  } /* if */
+  return(Y_RELATIONS);
+}
+
 {t}{e}{s}{t} {
   if(verbose_mode) {
     fprintf(stderr, "Test\n");
   } /* if */
   return(Y_TEST);
-}
-
-{t}{o} {
-  if(verbose_mode) {
-    fprintf(stderr, "To\n");
-  } /* if */
-  return(Y_TO);
 }
 
 :{i}{n}{t}{e}{g}{e}{r} {

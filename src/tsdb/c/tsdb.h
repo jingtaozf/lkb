@@ -9,8 +9,10 @@
 |*
 \*****************************************************************************/
 
-#ifdef DEMO
-#  define free(x) x
+#if defined(NOFREE)
+#  if !defined(TSDB_DOT_C)
+extern void free(void *);
+#  endif
 #endif
 
 #define TSDB_VERSION "0.0"
@@ -61,8 +63,9 @@
 #define TSDB_MAX_RESULTS_OPTION 7
 #define TSDB_DEBUG_FILE_OPTION 8
 #define TSDB_PAGER_OPTION 9
-#define TSDB_USAGE_OPTION 10
-#define TSDB_VERSION_OPTION 11
+#define TSDB_QUERY_OPTION 10
+#define TSDB_USAGE_OPTION 11
+#define TSDB_VERSION_OPTION 12
 
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
@@ -73,7 +76,7 @@
 #endif
 
 #ifndef TSDB_HOME
-#  define TSDB_HOME "/home/cl-home/fettig/work/tsdb/"
+#  define TSDB_HOME "."
 #endif
 
 #ifndef TSDB_RELATIONS_FILE
@@ -130,11 +133,6 @@
 #  define TSDB_SERVER_QUEUE_LENGTH 5
 #endif
 
-typedef struct tsdb {
-  BYTE status;
-  int port;
-} Tsdb;
-
 typedef struct tsdb_field {
   char *name;
   BYTE type;
@@ -189,30 +187,37 @@ typedef struct tsdb_selection {
   int length;
 } Tsdb_selection;
 
-#if !defined(TSDB_DOT_C)
+typedef struct tsdb {
+  BYTE status;
+
+  Tsdb_relation **relations;
+  Tsdb_selection **data;
+
+  char *input;
+
+  char *home;
+  char *relations_file;
+  char *data_path;
+  char *result_path;
+  char *result_prefix;
+  int max_results;
+
+  int port;
+  char *pager;
+  char *query;
+#ifdef DEBUG
+  char *debug_file;
+#endif
+} Tsdb;
+
+#if !defined(TSDB_C)
   Tsdb tsdb;
 
   extern FILE *tsdb_default_stream;
   extern FILE *tsdb_error_stream;
-
 #ifdef DEBUG
   extern FILE *tsdb_debug_stream;
-  extern char *tsdb_debug_file;
 #endif
-
-  extern char *tsdb_home;
-  extern char *tsdb_relations_file;
-  extern char *tsdb_data_path;
-  extern char *tsdb_result_path;
-  extern char *tsdb_result_prefix;
-  extern int tsdb_max_results;
-  extern char *tsdb_pager;
-
-  extern char *tsdb_input;
-  extern Tsdb_relation **tsdb_relations;
-  extern Tsdb_selection **tsdb_data;
-
-  extern int really_verbose_mode;
 #endif
 
 void tsdb_parse_options(int, char **);
@@ -274,6 +279,7 @@ char **tsdb_common_keys(Tsdb_relation *, Tsdb_relation *);
 char** tsdb_key_names(Tsdb_selection* );
 char** tsdb_all_attribute_names();
 char** tsdb_all_relation_names();
+void tsdb_info_relations(void);
 int tsdb_drop_table(Tsdb_value *);
 int tsdb_create_table(Tsdb_value *, Tsdb_field **);
 int tsdb_alter_table(Tsdb_value *, Tsdb_field **);
@@ -287,6 +293,7 @@ void tsdb_project(Tsdb_selection*,Tsdb_value **,FILE* );
 FILE *tsdb_find_relations_file(char *);
 FILE *tsdb_find_data_file(char *, char *);
 FILE* tsdb_open_result();
+char *tsdb_expand_directory(char *);
 char *tsdb_rcs_strip(char *, char *);
 
 Tsdb_node **tsdb_linearize_conditions(Tsdb_node *);

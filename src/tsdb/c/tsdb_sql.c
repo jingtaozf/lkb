@@ -20,6 +20,28 @@
 #include "tsdb.h"
 #include "errors.h"
 
+void tsdb_info_relations(void) {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_info_relations()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  int i;
+
+  if(tsdb.relations != NULL) {
+    for(i = 0; tsdb.relations[i] != NULL; i++) {
+      tsdb_print_relation(tsdb.relations[i], tsdb_default_stream);
+    } /* for */
+  } /* if */
+} /* tsdb_info_relations() */
+
 int tsdb_drop_table(Tsdb_value *table) {
   
   FILE *infp, *outfp;
@@ -42,13 +64,13 @@ int tsdb_drop_table(Tsdb_value *table) {
     fclose(infp);
     fclose(outfp);
 
-    if(rename(TSDB_TEMPORARY_FILE, tsdb_relations_file)) {
+    if(rename(TSDB_TEMPORARY_FILE, tsdb.relations_file)) {
       perror("tsdb: rename(): ");
     } /* if */
 
-    path = strdup(tsdb_data_path);
+    path = strdup(tsdb.data_path);
     path = (char *)realloc(path,
-                           strlen(tsdb_data_path) +
+                           strlen(tsdb.data_path) +
                            strlen(table->value.identifier) + 1);
     path = strcat(path, table->value.identifier);
     /*unlink(path);*/
@@ -80,8 +102,8 @@ int tsdb_create_table(Tsdb_value *table, Tsdb_field **fields) {
     fprintf(fp, "\n");
     fclose(fp);
   
-    path = strdup(tsdb_data_path);
-    path = (char *)realloc(path,strlen(tsdb_data_path) + 
+    path = strdup(tsdb.data_path);
+    path = (char *)realloc(path,strlen(tsdb.data_path) + 
                            strlen(table->value.identifier) + 1);
     path = strcat(path, table->value.identifier);
     creat(path, 0644);
@@ -141,15 +163,15 @@ int tsdb_alter_table(Tsdb_value *table, Tsdb_field **fields) {
       while((i = fgetc(input)) != EOF) {
         fputc(i, output);
       } /* while */
-      for(i = 0; strcmp(tsdb_relations[i]->name, relation->name); i++);
-      free(tsdb_relations[i]);
-      tsdb_relations[i] = relation;
+      for(i = 0; strcmp(tsdb.relations[i]->name, relation->name); i++);
+      free(tsdb.relations[i]);
+      tsdb.relations[i] = relation;
     } /* if */
     
     fclose(input);
     fclose(output);
 
-    if(rename(TSDB_TEMPORARY_FILE, tsdb_relations_file)) {
+    if(rename(TSDB_TEMPORARY_FILE, tsdb.relations_file)) {
       perror("tsdb: rename(): ");
     } /* if */
   } /* if */
@@ -439,8 +461,8 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
 |*      module: tsdb_complex_retrieve()
 |*     version: 
 |*  written by: tom fettig, dfki saarbruecken
-|* last update: 
-|*  updated by: 
+|* last update: 17-jul-95
+|*  updated by: oe, dfki saarbruecken
 |*****************************************************************************|
 |* tom said: ``final retrieve() function'' --- i suppose he is mistaken |:-}.
 \*****************************************************************************/
@@ -480,8 +502,9 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
     kaerb = 0;
     for(r=0;relation_list[r];r++) {
       if (!tsdb_is_relation(relation_list[r])) {
-        fprintf(tsdb_error_stream,"Unkown Relation %s\n",
-                 relation_list[r]->value.string);
+        fprintf(tsdb_error_stream,
+                "complex_retrieve(): unkown relation `%s'.\n",
+                relation_list[r]->value.string);
         kaerb = 1;
       } /* if */
     } /* for */
@@ -498,7 +521,8 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
    kaerb = 0;
    for(i = 0; attribute_list[i]; i++) {
      if (!tsdb_is_attribute(attribute_list[i])) {
-       fprintf(tsdb_error_stream,"Unknown Attribute %s\n",
+       fprintf(tsdb_error_stream,
+               "complex_retrieve(): unknown attribute `%s'.\n",
                attribute_list[i]->value.string);
        kaerb = 1;
      } /* if */
@@ -608,8 +632,13 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
     } /* for */
     if (!kaerb) {
       /* error! attribute not found */
-      fprintf(stream,"can't find attribute %s in specified relations\n",
-              attributes[k]->value.string);
+      fprintf(tsdb_error_stream,
+              "project(): no attribute `%s' in relation %s",
+              attributes[k]->value.string, selection->relations[0]->name);
+      for(i = 1; i < selection->n_relations; i++) {
+        fprintf(tsdb_error_stream, ":%s", selection->relations[i]->name);
+      } /* for */
+      fprintf(tsdb_error_stream, ".\n");
       return;
       }      
   } /* for */ 

@@ -48,11 +48,13 @@
        Y_DROP
        Y_CREATE
        Y_ALTER 
+       Y_INFO
+       Y_SET
+       Y_RELATIONS
        Y_TABLE
        Y_WHERE
        Y_ADD
        Y_FROM
-       Y_TO
        Y_INTO
        Y_VALUES
        Y_KEY
@@ -69,6 +71,8 @@
                 Y_STRING
 
 %token <integer> Y_INTEGER
+
+%type <string> y_special
 
 %type <tsdb_value_array> y_attribute_list
                          y_value_list
@@ -108,6 +112,8 @@ y_query :
 | 
   y_altering '.'
 |
+  y_info '.'
+|
   y_exit '.'
 | 
   y_test '.'
@@ -119,17 +125,18 @@ y_creation :
       tsdb_create_table($3, $4); 
     } /* if */
     else {
-      fprintf(TSDB_ERROR_STREAM, "\ttsdb: Table already exists.\n");
+      fprintf(tsdb_error_stream, "\ttsdb: Table already exists.\n");
     } /* else */
   }
 ;
 
 y_dropping : 
   Y_DROP Y_TABLE y_table_name { 
+    *(char *)0 = 1;
     if(tsdb_is_relation($3)) 
       tsdb_drop_table($3); 
     else
-      fprintf(TSDB_ERROR_STREAM, "\ttsdb: Table does not exist.\n");
+      fprintf(tsdb_error_stream, "\ttsdb: Table does not exist.\n");
   }
 ;
 
@@ -138,7 +145,7 @@ y_altering :
     if(tsdb_is_relation($3)) 
       tsdb_alter_table($3, $5);
     else 
-      fprintf(TSDB_ERROR_STREAM, "\ttsdb: Table does not exist.\n");
+      fprintf(tsdb_error_stream, "\ttsdb: Table does not exist.\n");
   }
 ;
 
@@ -179,6 +186,12 @@ y_retrieval :
   }
 ;
 
+y_info :
+  Y_INFO Y_RELATIONS {
+    tsdb_info_relations();
+  }
+;
+
 y_table_list :
   '(' y_tables ')' {
     $$ = $2;
@@ -201,6 +214,10 @@ y_table_name :
   Y_IDENTIFIER {
     $$ = tsdb_identifier($1); 
   }
+|
+  y_special {
+    $$ = tsdb_identifier($1);
+  } 
 ;
 
 y_attribute_list :
@@ -225,6 +242,10 @@ y_attribute :
   Y_IDENTIFIER {
     $$ = tsdb_identifier($1);
   }
+|
+  y_special {
+    $$ = tsdb_identifier($1);
+  } 
 ;
 
 y_create_attribute_list :
@@ -306,11 +327,6 @@ y_condition :
 |
   '(' y_condition ')' {
     $$ = $2;
-/*
-    $$ = (Tsdb_node *)malloc(sizeof(Tsdb_node*));
-    $$->left = $2;
-    $$->node = tsdb_connective(TSDB_BRACE);
-    $$->right = NULL;*/
   }
 |
   y_condition Y_AND y_condition {
@@ -320,7 +336,6 @@ y_condition :
     $$->right = $3;
   }
 |
-
   y_condition Y_OR y_condition {
     $$ = (Tsdb_node *)malloc(sizeof(Tsdb_node));
     $$->left = $1;
@@ -328,7 +343,6 @@ y_condition :
     $$->right = $3;
   }
 |
-
   Y_NOT y_condition {
     $$ = (Tsdb_node *)malloc(sizeof(Tsdb_node));
     $$->left = (Tsdb_node *)NULL;
@@ -390,6 +404,10 @@ y_tsdb_value :
     $$ = tsdb_string($1);
   }
 |
+  y_special {
+    $$ = tsdb_string($1);
+  } 
+|
   Y_INTEGER {
     $$ = tsdb_integer($1);
   }
@@ -421,9 +439,19 @@ y_attribute_value_pair :
   }
 ;
 
+y_special :
+  Y_SET {
+    $$ = "set";
+  }
+|
+  Y_RELATIONS {
+    $$ = "relations";
+  }
+;
+
 y_test :
-  Y_TEST Y_FROM y_attribute_list Y_TO y_attribute_list {
-    tsdb_debug_join_path($3, $5);
+  Y_TEST y_attribute_list '>' y_attribute_list {
+    tsdb_debug_join_path($2, $4);
   }
 |
   Y_TEST y_attribute_list '#' y_attribute_list {
@@ -447,7 +475,8 @@ int yywrap() {
 
 yyerror(char *s) {
  
-  fprintf(TSDB_ERROR_STREAM,
+  fprintf(tsdb_error_stream,
           "parser(): parse error; check the tsdb(1) syntax.\n");
+  fflush(tsdb_error_stream);
 
 } /* yyerror() */
