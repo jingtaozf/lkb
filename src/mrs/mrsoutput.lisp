@@ -1,4 +1,4 @@
-;;; Copyright (c) 1998--2003
+;;; Copyright (c) 1998--2004
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
@@ -447,7 +447,17 @@ duplicate variables")
           ((equal-or-subtype type *handle-type*) "h")  
           (t "u"))))
 
-
-
-        
-
+(defun ep-shorthand (ep)
+  ;;
+  ;; return compact short-hand representation; primarily for error messages.
+  ;;
+  (when (rel-p ep)
+    (let ((pred (rel-pred ep))
+          (parameters (get-rel-parameter-strings ep)))
+      (format 
+       nil 
+       "~:[~(~a~)~;~s~]~@[(~{~s~^, ~})~]"
+       (stringp pred) pred 
+       (loop
+           for parameter in parameters
+           collect (fvpair-value parameter))))))
