@@ -148,7 +148,8 @@ set globals(evolution,all) {
 }; # globals(evolution,all)
 set globals(evolution,coverage) 1;
 
-set globals(tree,n) 1;
+set globals(tree,beam) 1;
+set globals(tree,nfold) 10;
 set globals(tree,scorep) true;
 set globals(tree,comparison) :id;
 
@@ -709,8 +710,6 @@ proc main {} {
   .menu.trees.menu add command \
     -label "Rank" -command {tsdb_trees rank};
   .menu.trees.menu add command \
-    -label "Score" -command {tsdb_trees score};
-  .menu.trees.menu add command \
     -label "Reset" -command {tsdb_file purge score};
   .menu.trees.menu add cascade \
     -label "Switches" -menu .menu.trees.menu.switches;
@@ -727,6 +726,8 @@ proc main {} {
   menu .menu.trees.menu.summarize -tearoff 0;
   .menu.trees.menu.summarize add command \
     -label "Annotations" -command {analyze_trees};
+  .menu.trees.menu.summarize add command \
+    -label "Scores" -command {tsdb_trees score};
   .menu.trees.menu.summarize add command \
     -label "Update" -state disabled -command {};
 
@@ -747,9 +748,11 @@ proc main {} {
   .menu.trees.menu.switches add separator;
   .menu.trees.menu.switches add checkbutton \
     -label "Ambiguous Trees" \
-    -variable globals(tree,ambiguityp);
+    -variable globals(tree,loosep);
 
   menu .menu.trees.menu.variables -tearoff 0;
+  .menu.trees.menu.variables add command \
+    -label "Cross Validation" -command {tsdb_option nfold};
   .menu.trees.menu.variables add command \
     -label "Scoring Beam" -command {tsdb_option beam};
 

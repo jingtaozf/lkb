@@ -252,7 +252,7 @@
 
 (defun analyze (data 
                 &key condition meter message thorough trees extras
-                     edgep score gold)
+                     score gold)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
@@ -264,13 +264,12 @@
          (key (format 
                nil 
                "~a~@[ @ ~a~]~@[ # ~a~]~@[~* : trees~]~
-                ~@[~* : extras~]~@[ on ~a~]~@[ : edge~]" 
+                ~@[~* : extras~]~@[ on ~a~]" 
                data condition foo trees extras
                (cond
                 ((stringp score) score)
                 (score "itself")
-                (gold (format nil "~a (gold)" gold)))
-               edgep))
+                (gold (format nil "~a (gold)" gold)))))
          (relations (read-database-schema data))
          (parse (rest (find "parse" relations :key #'first :test #'string=)))
          pfields ptypes result)
@@ -363,32 +362,16 @@
           (when results
             (when (consp thorough)
               (loop
-                  with *reconstruct-cache* = (make-hash-table :test #'eql)
                   for field in thorough
                   for reader = (find-attribute-reader field)
-                  when (or reader edgep)
+                  when reader
                   do
                     (loop
                         for result in results
                         for value = (get-field field result)
                         when (and reader value) do 
                           (setf (get-field field result) 
-                            (funcall reader value))
-                        when (and edgep (eq field :derivation)) do
-                          ;;
-                          ;; _fix_me_
-                          ;; move this into rank-items() below, such that only
-                          ;; results that end up ranked have their derivation
-                          ;; reconstructed (and, thus, converted from string to
-                          ;; derivation); this must only be done when ranking
-                          ;; from `gold', presumabyly.        (29-oct-02; oe)
-                          ;;
-                          ;; alternatively, look at reconstruting edges on the
-                          ;; fly, i.e. in the Redwoods PCFG part.
-                          ;;                                  (30-oct-02; oe)
-                          (let* ((value (get-field :derivation result))
-                                 (edge (reconstruct value (eq edgep :full))))
-                            (nconc result (acons :edge edge nil))))))
+                            (funcall reader value)))))
             ;;
             ;; _fix_me_
             ;; this is sort of hacky: since we fail to guarantee unique parse
@@ -440,7 +423,8 @@
               (setf sorted 
                 (sort (copy-list all) 
                       #'< :key #'(lambda (foo) (get-field :parse-id foo)))))
-            (rank-items sorted :gold gold :score score :edgep edgep)))
+            (rank-items sorted :gold gold :score score 
+                        :condition condition)))
         
         (setf (gethash key *tsdb-profile-cache*) result)))
     (when meter 
@@ -449,26 +433,27 @@
         (status :text (format nil "~a done" message) :duration 2)))
     result))
 
-(defun rank-items (items &key gold score edgep)
+(defun rank-items (items &key gold score condition)
 
-  (declare (ignore edgep))
-  
   (loop
       with scores = (when (and (null gold) (stringp score))
                       (select '("parse-id" "result-id" "rank")
                               '(:integer :integer :integer)
-                              "score"
-                              nil
-                              score :sort :parse-id))
+                              "score" condition score :sort :parse-id))
       with golds = (when gold
                      (select '("parse-id" "t-version" "result-id")
                              '(:integer :integer :integer)
                              "preference" 
-                             nil gold :sort :parse-id))
+                             condition gold :sort :parse-id))
       for item in items
       for parse-id = (get-field :parse-id item)
       for results = (get-field :results item)
-      for matches = (if golds
+      for matches = ;;
+                    ;; _fix_me_
+                    ;; for increased robustness, we should read over leading
+                    ;; items as long as their parse id is less than .id.
+                    ;;                                           (3-nov-02; oe)
+                    (if golds
                       (let* ((matches (loop
                                           for foo = (first golds)
                                           for id = (get-field :parse-id foo)

@@ -10,19 +10,6 @@
 ## Purpose: Defines procedures for 'showtable'.
 ##
 
-## Include TkTable-Widget; rename 'table' widget from BLT first to avoid
-## name clash
-#rename table blt_table
-#set table(library) Tktable[info sharedlibextension]
-#if {
-#    [string match {} [info commands table]]
-#    && [catch {package require Tktable} err]
-#    && [catch {load [file join [pwd] $table(library)]} err]
-#    && [catch {load [file join [pwd] src $table(library)]} err]
-#} {
-#    error $err
-#}
-
 ## disable flawed default bindings of 'Table' widget
 bind TkTable <Control-Left>  {}
 bind TkTable <Control-Right> {}

@@ -291,6 +291,7 @@
 ;;;
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
 	   #-:ansi-eval-when (load eval compile)
+  #+:null         
   (setf (gethash :derivation *statistics-readers*)
     #'(lambda (string)
         (let ((*package* (find-package :tsdb)))

@@ -34,9 +34,10 @@
 
 (defparameter *tsdb-wish-application*
   (format
-    nil "exec ~a"
-    (namestring (make-pathname :directory (pathname-directory make::bin-dir)
-                               :name "swish++"))))
+   nil 
+   "exec ~a"
+   (namestring (make-pathname :directory (pathname-directory make::bin-dir)
+                              :name "swish++"))))
 
 (defvar *tsdb-podium-windows* nil)
 
@@ -913,7 +914,7 @@
                  (title 
                   (format 
                    nil 
-                   "tsdb(1) `~a' Parse Selecton Score~@[ @ `~a'~]"
+                   "tsdb(1) `~a' Parse Selecton Scores~@[ @ `~a'~]"
                    data condition))
                  (message "computing table layout and geometry ..."))
             (apply #'analyze-scores
@@ -942,7 +943,17 @@
                  (t
                   (status :text (format nil "~a abort" message) 
                           :duration 2)))))))
-           
+
+         (rank-profile
+            (let* ((interrupt (install-interrupt-handler))
+                   (meter (make-meter 0 1)))
+              (apply #'rank-profile
+                     (append arguments 
+                             (list :interrupt interrupt :meter meter))))
+            (send-to-podium 
+             (format nil "update_ts_list update ~a" (second arguments)) 
+             :wait t))
+
            (latex
             (status :text "generating LaTeX output ...")
             (let* ((window (find-podium-window (second command)))

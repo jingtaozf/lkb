@@ -89,12 +89,13 @@
 (defmethod print-object ((instance edge) stream)
   (format 
    stream 
-   "#[`~(~a~)' edge # ~a <~{~a~^ ~}>]"
+   "#[Edge # ~d: `~(~a~)' <~{~a~^ ~}>]"
+   (edge-id instance)
    (let ((rule (edge-rule instance)))
      (if (stringp rule) rule (rule-id rule)))
-   (edge-id instance) (loop 
-                          for child in (edge-children instance)
-                          collect (edge-id child))))
+   (loop 
+       for child in (edge-children instance)
+       collect (edge-id child))))
 
 (defstruct
    (mrecord

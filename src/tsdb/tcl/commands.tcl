@@ -82,11 +82,13 @@ proc tsdb_file {action {index -1}} {
       }; # if
     }; # if
   } elseif {$action == "purge"} {
+    switch -- $index {
+      trees { set prefix "clear-cut"; }
+      score { set prefix "reset"; }
+      default { set prefix "purge"; }
+    }; # switch
     if {[verify_ts_selection]} {return 1};
-    set prompt [format "%s `%s'%s" \
-                [expr {$index == "trees" ? "clear-cut" : "purge"}] \
-                $globals(data) \
-                [expr {$index == "trees" ? " trees" : ""}]];
+    set prompt [format "%s `%s'" $prefix $globals(data)];
     if {[file isdirectory $globals(home)$globals(data)] 
         && [yes-or-no-p $prompt] == 1} {
       if {$index == "trees"} {
@@ -300,11 +302,23 @@ proc tsdb_option {name} {
       }; # if
     }
     beam {
-      if {![integer_input "maximal size of scoring beam" $globals(tree,n)]} {
+      if {![integer_input \
+              "maximal size of scoring beam" \
+              $globals(tree,beam)]} {
         if {$globals(integer,lvalue) == ""} {
           set globals(integer,lvalue) 1;
         }; # if
-        set globals(tree,n) $globals(integer,lvalue);
+        set globals(tree,beam) $globals(integer,lvalue);
+      }; # if
+    }
+    nfold {
+      if {![integer_input \
+              "number of cross-validation runs" \
+              $globals(tree,nfold)]} {
+        if {$globals(integer,lvalue) == ""} {
+          set globals(integer,lvalue) 1;
+        }; # if
+        set globals(tree,nfold) $globals(integer,lvalue);
       }; # if
     }
   }; # switch
@@ -965,13 +979,20 @@ proc tsdb_trees {action} {
     set command \
       [format \
        "(analyze-scores \"%s\" \"%s\" :scorep %s :spartanp %s \
-         :n %d :test %s :ambiguityp %s)" \
+         :n %d :test %s :loosep %s)" \
        $target $source \
        [lispify_truth_value $globals(tree,scorep)] \
        [lispify_truth_value $spartanp] \
-       $globals(tree,n) $globals(tree,comparison) \
-       [lispify_truth_value $globals(tree,ambiguityp)]];
-  }; # if
+       $globals(tree,beam) $globals(tree,comparison) \
+       [lispify_truth_value $globals(tree,loosep)]];
+  } else {
+    if {$action == "rank"} {
+      set command \
+        [format \
+         "(rank-profile \"%s\" \"%s\" :nfold %d)" \
+         $source $target $globals(tree,nfold)];
+    }; # if
+  }; # else
 
   if {$command != ""} {
     send_to_lisp :event $command;

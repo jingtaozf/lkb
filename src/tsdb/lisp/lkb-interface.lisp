@@ -351,7 +351,7 @@
               (t :unknown))
             *lkb-package*)))
     (let* ((id (edge-id edge))
-           (score 0)
+           (score (float (or (edge-score edge) 0)))
            (configuration (and (null (edge-children edge))
                                (find-chart-configuration :edge edge)))
            (start (or (edge-from edge)

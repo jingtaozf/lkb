@@ -2,11 +2,20 @@
 
 (in-package :tsdb)
 
-(defstruct (symbol-table)
-  (forward (make-hash-table :test #'eq))
-  (backward (make-array 512))
-  (size 512)
-  (count 0))
+(defparameter *pcfg-collapse-irules-p* nil)
+
+(defparameter *pcfg-use-preterminal-tupes-p* t)
+
+(defparameter *pcfg-laplace-smoothing-p* t)
+
+(defstruct (symbol-table 
+            (:constructor make-symbol-table 
+                          (&key (test #'eq)
+                                (forward (make-hash-table :test test))
+                                (backward (make-array 512))
+                                (size 512)
+                                (count 0))))
+  forward backward size count)
 
 (defmethod print-object ((object symbol-table) stream)
   (let ((n (hash-table-count (symbol-table-forward object))))
@@ -49,7 +58,7 @@
        (eq (cfr-type foo) (cfr-type bar))
        (equal (cfr-rhs foo) (cfr-rhs bar))))
 
-(defun print-cfr (rule grammar &key (stream t) (prefix ""))
+(defun print-cfr (rule grammar &key (stream t) (prefix "") (suffix ""))
   (let* ((table (cfg-table grammar))
          (count (cfr-count rule))
          (probability (cfr-probability rule))
@@ -66,7 +75,7 @@
       (loop
           for code in rhs do
             (format stream " ~a[~a]" (code-to-symbol code table) code)))
-    (format stream "~%")))
+    (when suffix (format stream suffix))))
 
 (defstruct (cfg)
   (table (make-symbol-table))
@@ -85,8 +94,6 @@
    (cfg-count object) (cfg-count object) (cfg-epsilon object)))
 
 (defun record-cfr (rule grammar)
-  #+:debug
-  (print-cfr rule grammar)
   (let ((i (cfr-lhs rule)))
     (if (>= i (cfg-size grammar))
       (let ((n (setf (cfg-size grammar) (* 2 (cfg-size grammar)))))
@@ -94,20 +101,23 @@
         (setf (cfg-counts grammar) 
           (adjust-array (cfg-counts grammar) n :initial-element 0))
         (push rule (aref (cfg-rules grammar) i)))
-      (loop
+      (if (cfr-grammar rule)
+        (incf (cfr-count rule))
+        (loop
           for foo in (aref (cfg-rules grammar) i)
           when (cfr-equal foo rule) 
           do (incf (cfr-count foo)) (return)
-          finally (push rule (aref (cfg-rules grammar) i))))
+          finally (push rule (aref (cfg-rules grammar) i)))))
     (incf (aref (cfg-counts grammar) i)))
+  (setf (cfr-grammar rule) grammar)
   (incf (cfg-count grammar)))
 
-(defun find-cfr (rule grammar)
-  (let ((i (cfr-lhs rule)))
-    (when (and (integerp i) (< i (cfg-size grammar)))
-      (loop
-          for foo in (aref (cfg-rules grammar) i)
-          thereis (when (cfr-equal foo rule) foo)))))
+(defun match-cfr (rule grammar)
+  (loop
+      with i = (cfr-lhs rule)
+      with bucket = (and (< i (cfg-size grammar)) (aref (cfg-rules grammar) i))
+      for foo in bucket
+      thereis (when (cfr-equal foo rule) foo)))
 
 (defun estimate-probabilities (grammar)
   (loop
@@ -115,13 +125,17 @@
       for bucket = (aref (cfg-rules grammar) i)
       for count = (aref (cfg-counts grammar) i)
       when bucket do
+        (when *pcfg-laplace-smoothing-p*
+          (incf (aref (cfg-counts grammar) i) (+ (length bucket) 1))
+          (setf count (aref (cfg-counts grammar) i)))
         (loop
             for rule in bucket
-            for probability = (/ (cfr-count rule) count)
+            when *pcfg-laplace-smoothing-p* do (incf (cfr-count rule))
             do 
-              (setf (cfr-probability rule) probability)
-              (setf (cfg-epsilon grammar) 
-                (min (cfg-epsilon grammar) probability)))))
+              (let ((probability (/ (cfr-count rule) count)))
+                (setf (cfr-probability rule) probability)
+                (setf (cfg-epsilon grammar) 
+                  (min (cfg-epsilon grammar) probability))))))
 
 (defun print-cfg (grammar &key (stream t))
   (loop
@@ -133,21 +147,40 @@
         (let ((code (cfr-lhs (first bucket))))
           (format 
            stream 
-           "~%~a[~a] {~a}~%" 
+           "~a[~a] {~a}~%" 
            (code-to-symbol code table) code count))
         (loop
             for rule in bucket 
-            do (print-cfr rule grammar :stream stream :prefix "  "))))
+            do 
+              (print-cfr rule grammar :stream stream 
+                         :prefix "  " :suffix "~%"))))
 
-(defun estimate-cfg (edges)
+(defun estimate-cfg (items &key (stream *tsdb-io*))
+
   (loop
       with grammar = (make-cfg)
-      for edge in edges
-      do
-        (edge-to-cfrs edge grammar)
+      for item in items
+      for id = (get-field :i-id item)
+      for ranks = (get-field :ranks item)
+      for edges = (loop
+                      with *reconstruct-cache* = (make-hash-table :test #'eql)
+                      for rank in ranks
+                      for i = (get-field :rank rank)
+                      for derivation = (get-field :derivation rank)
+                      when (and i (= i 1))
+                      collect (reconstruct derivation nil))
+      when edges do
+        (loop
+            for edge in edges do
+              (edge-to-cfrs edge grammar)
+              (incf (cfg-samples grammar)))
+      else do
+        (format 
+         stream
+         "~&[~a] estimate-cfg(): ignoring item # ~d (no edge);~%"
+         (current-time :long :short) id)
       finally 
         (estimate-probabilities grammar)
-        (setf (cfg-samples grammar) (length edges))
         (return grammar)))
 
 (defun edge-to-cfrs (edge grammar)
@@ -158,24 +191,14 @@
           for daughter in (lkb::edge-children edge)
           do (edge-to-cfrs daughter grammar)))))
 
-(defun score-edge (edge grammar)
-  (let* ((rule (edge-to-cfr edge grammar))
-         (rule (find-cfr rule grammar))
-         (probability (if rule (cfr-probability rule) (cfg-epsilon grammar))))
-    (if (null (lkb::edge-children edge))
-      probability 
-      (* probability
-         (loop
-             with result = 1
-             for daughter in (lkb::edge-children edge)
-             do (setf result (* result (score-edge daughter grammar)))
-             finally (return result))))))
-
 (defun edge-to-cfr (edge grammar)
   (labels ((edge-root (edge)
              (typecase (lkb::edge-rule edge)
                (lkb::rule (lkb::rule-id (lkb::edge-rule edge)))
-               (string (first (lkb::edge-lex-ids edge)))
+               (string (let ((instance (first (lkb::edge-lex-ids edge))))
+                         (if *pcfg-use-preterminal-tupes-p*
+                           (type-of-lexical-entry instance)
+                           instance)))
                (t (error 
                    "edge-to-cfr(): unknown rule type in edge ~a~%" 
                    edge)))))
@@ -191,7 +214,7 @@
                (rhs (first (lkb::edge-leaves edge))))
           (setf (lkb::edge-foo edge)
             (make-cfr :type :word :lhs lhs :rhs rhs))))
-       (irulep
+       ((and *pcfg-collapse-irules-p* irulep)
         (let* ((rhs (first (lkb::edge-leaves edge)))
                (extra (loop
                           for daughter = (first daughters)
@@ -211,47 +234,33 @@
                         collect (symbol-to-code (edge-root edge) table))))
           (setf (lkb::edge-foo edge)
             (make-cfr :type type :lhs lhs :rhs rhs))))))))
-
-(defun train-and-rank (train test &key (stream *tsdb-io*))
 
-  #+:debug
-  (setf %train% train %test% test)
-  (loop
-      with edges = (loop
-                       for item in train
-                       for ranks = (get-field :ranks item)
-                       for best = (loop
-                                      for rank in ranks
-                                      for i = (get-field :rank rank)
-                                      when (and i (= i 1)) 
-                                      collect (get-field :edge rank))
-                       nconc best)
-      with grammar = (estimate-cfg edges)
-      for item in test
-      for readings = (get-field :readings item)
-      for results = (get-field :results item)
-      for ranks = nil
-      initially 
-        (format
-         stream
-         "~&[~a] train-and-rank(): using ~a;~%"
-         (current-time :long :short) grammar)
-      when (and (integerp readings) (> readings 1)) do
-        (loop
-            for result in results
-            for id = (get-field :result-id result)
-            for edge = (get-field :edge result)
-            for score = (score-edge edge grammar)
-            do 
-              (push (nconc (pairlis '(:result-id :score)
-                                    (list id score))
-                           result)
-                    ranks))
-      and collect 
-        (let* ((ranks (sort ranks #'> 
-                            :key #'(lambda (foo) (get-field :score foo))))
-               (ranks (loop
-                          for i from 1
-                          for rank in ranks
-                          collect (acons :rank i rank))))
-          (nconc (acons :ranks ranks nil) item))))
+(defun pcfg-score-edge (edge grammar)
+  
+  (if (and (numberp (lkb::edge-score edge)) (eq (lkb::edge-foo edge) grammar))
+    (lkb::edge-score edge)
+    (let* ((rule (edge-to-cfr edge grammar))
+           (i (cfr-lhs rule))
+           (match (if (eq (cfr-grammar rule) grammar)
+                    rule
+                    (match-cfr rule grammar)))
+           (probability (if match
+                          (cfr-probability match)
+                          (if *pcfg-laplace-smoothing-p*
+                            (let ((count  (when (< i (cfg-size grammar)) 
+                                            (aref (cfg-counts grammar) i))))
+                              (if (zerop count)
+                                (cfg-epsilon grammar)
+                                (/ 1 count)))
+                            (cfg-epsilon grammar)))))
+      
+      (setf (lkb::edge-foo edge) grammar)
+      (setf (lkb::edge-score edge)
+        (if (smember (cfr-type rule) '(:irule :word))
+          probability
+          (* probability
+             (loop
+                 with result = 1
+                 for daughter in (lkb::edge-children edge)
+                 do (setf result (* result (pcfg-score-edge daughter grammar)))
+                 finally  (return result))))))))

@@ -120,7 +120,9 @@
        #+:lkb
        (:file "ptb")
        #+:lkb
-       (:file "pcfg")))
+       (:file "pcfg")
+       #+:lkb
+       (:file "maxent")))
      
      #+:dfki
      (:module "podium"
