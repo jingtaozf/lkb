@@ -952,6 +952,7 @@
   (fn-get-records lexicon ''merge-multi-into-db filename))
 
 (defun dump-psql-lexicon (filename)
+  (get-postgres-temp-filename)
   (setf filename (namestring (pathname filename)))
   (dump-db *psql-lexicon* *postgres-temp-filename*)
   (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
@@ -960,6 +961,7 @@
 					       *postgres-temp-filename*)))
 
 (defun dump-multi-psql-lexicon (filename)
+  (get-postgres-temp-filename)
   (setf filename (namestring (pathname filename)))
   (dump-multi-db *psql-lexicon* *postgres-temp-filename*)
   (common-lisp-user::run-shell-command (format nil "cp ~a ~a"

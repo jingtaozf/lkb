@@ -28,7 +28,7 @@
 (defvar *export-lexicon-p* nil)
 (defvar *export-to* nil)
 
-(defvar *postgres-temp-filename* "/tmp/postgres-temp")
+(defvar *postgres-temp-filename* nil)
 (defvar *export-file* (make-pathname :name "lexicon"
 				     :directory (pathname-directory (lkb-tmp-dir))))
 (defvar *export-skip-stream* t)
@@ -55,6 +55,10 @@
 
 (defvar *export-multi-separately* nil)
 (defvar *export-multi-stream* t)
+
+(defun get-postgres-temp-filename nil
+  (setf *postgres-temp-filename*
+    (format nil "~a.~a" "/tmp/postgres-temp" (sys:user-name))))
 
 (defun export-lexicon (&rest rest)
   (apply 'export-lexicon-to-file rest))
