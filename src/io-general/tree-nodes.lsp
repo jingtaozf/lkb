@@ -542,7 +542,13 @@
     ;; through nodes in the corresponding tree (un-restricted) or a derived
     ;; form, e.g. some MRS display variant.                    (30-oct-02; oe)
     ;;
-    (unless (edge-dag edge) 
+    ;;
+    ;; _fix_me_
+    ;; apparently, with some grammars, there are nodes that have no edge
+    ;; somewhere towards the leaves; work around that for now, but expect to
+    ;; understand this better some day.                        (20-nov-02; oe)
+    ;;
+    (when (and edge (null (edge-dag edge)))
       (setf (edge-dag edge) (get edge-symbol 'edge-fs))))
   (mapc #'copy-parse-tree (get edge-symbol 'daughters))
   edge-symbol)
