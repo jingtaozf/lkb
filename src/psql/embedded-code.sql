@@ -196,7 +196,7 @@ INSERT INTO qry VALUES
        '
 DELETE FROM temp;
 INSERT INTO temp
- (SELECT * FROM revision_all ORDER BY name, userid, version);
+ (SELECT * FROM public.revision ORDER BY name, userid, version);
 COPY temp TO $0 DELIMITERS '','' WITH NULL AS '''';
 ' );
 
