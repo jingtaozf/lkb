@@ -1,0 +1,707 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; 
+;;; GRAMMAR FOR ENGLISH INTERROGATIVE CONSTRUCTIONS
+;;; by Chris Callison-Burch 
+;;;
+;;; based on Ginzburg and Sag (April 2000 Draft)
+;;;
+;;; types.tdl
+;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+feat-struc := *top*.
+
+; I've expanded the feature NHD-DTRS to DTRS which contains all the sign's daughters and coindexes the head daughter with the HD-DTR feature where applicable.  Generalizing the feature from being a constraint on phrase to being a constraint on all signs allows the elimination of the feature STEM from word.
+
+sign := feat-struc &
+[ ORTH *list-of-strings*,
+  SS synsem,
+  DTRS *list* ]. 
+
+synsem := feat-struc &
+[ LOC local,
+  SLASH *list-of-locals*,
+  WH *list-of-scope-objs*,
+  REL *diff-list* ].
+
+local := feat-struc &
+[ CAT  category,
+  CONT sem-obj,
+  STORE *list-of-params* ].
+
+category := feat-struc &
+[ HEAD  pos,
+  SUBJ  list-of-synsems,
+  SPR   list-of-synsems,
+  COMPS list-of-synsems ].
+
+lex-cat := category &
+[ ARG-ST list-of-synsems ].
+
+phrase-cat := category.
+
+canon-ss := synsem.
+noncanon-ss := synsem.
+
+
+gap-ss := noncanon-ss & 
+[ LOC #1,
+  SLASH <! #1 !> ].
+
+pro-ss := noncanon-ss &
+[ SLASH <! !>,
+  LOC [ STORE <! !>,
+        CAT.HEAD.CASE acc ] ].
+
+;;; CCB - added the type elip-ss, to mark elliptical constituents.  This has the effect of blocking extraction on those elements since the type ellip-ss says SLASH <! !> explicitly.
+
+ellip-ss := noncanon-ss &
+[ SLASH <! !>,
+  LOC [ CAT phrase-cat,
+        STORE <! !> ] ].
+
+neg-ss := noncanon-ss. 
+
+
+;;; <<< >>> SUBTYPES OF SIGN
+
+phrase := sign &
+[ SS.LOC.CAT phrase-cat & [ HEAD  pos,
+                            COMPS < > ] ].
+
+lex-sign := sign &
+[ NEEDS-AFFIX boolean,
+  SS.LOC.CAT lex-cat ].
+
+
+lexeme := lex-sign.
+
+
+; The Argument Realization Principle has been incorporated into type inflected lexeme rather than word, because SLASHed constituents are not furmulated into the principle.  Instead ARG-ST is the append of SUBJ, SPR and COMPS.  This neglects extraction (SLASH) which will be formulated as non-branching grammar rules, which happen between type inflected-lexeme and type word.
+
+#|
+removing the idfference list stitching approach for the Argument Realization Principle.  I'm instead going to do it using a non-branching rule.
+  SS /l #ss & [ LOC.CAT [ ARG-ST [ LIST #first,
+                                   LAST #last ], 
+                          SUBJ [ LIST #first,
+                                 LAST #second ],
+                          SPR [ LIST #second,
+                                LAST #third ],
+                          COMPS [ LIST #third,
+                                  LAST #last ] ] ],
+|#
+
+inflected-lexeme := lex-sign &
+[ NEEDS-AFFIX /l false,
+  SS /l #ss,
+  DTRS < [ SS /l #ss ] > ].
+; lexeme
+
+
+
+inflected-lexeme+ARP := lex-sign &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  SS /l #ss & [ LOC.CAT [ SUBJ list-of-synsems-wh-none ] ],
+  DTRS < [ ORTH #orth,
+            SS /l #ss ] > ].
+; inflected-lexeme &
+
+
+inflected-lexeme+amalg := lex-sign &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  SS #ss,
+  DTRS < [ ORTH #orth,
+           SS #ss ] > ].
+
+
+
+word := lex-sign &
+[ NEEDS-AFFIX false,
+  ORTH #orth,
+  SS /l #ss,
+  DTRS <  [ ORTH #orth,
+            SS /l #ss ] > ].
+
+;inflected-lexeme+slash_amalg &
+
+;;; <<< >>> PARTS OF SPEECH 
+
+pos := feat-struc &
+[ FORM form-cat,
+  PRED boolean,
+  ANA boolean ].
+
+mod-type := feat-struc &
+[ MOD *list* ].
+
+deg-type := feat-struc &
+[ DEG boolean ].
+
+
+
+; Features for verbal are described in section 4.4 (Features for Verbals) in Ginzburg and Sag.  Rather than adding the additional feature VFORM I've simply constrained the FORM feature from pos to be type vform.  The feature INF serces to distinguish infiniticals, i.e. the verb 'to' and the copmlementizer 'for', which are [INF +] from all other verbs and compementizers which are [INF -].  (Ginzburg and Sag).
+
+
+verbal := pos &
+[ FORM vform,
+  IC boolean,
+  INF boolean ].
+ 
+
+verb := verbal & mod-type &
+[ AUX boolean,
+  INV boolean,
+  NEG boolean,
+  MOD < > ].
+
+nonverbal := pos.
+
+comp := verbal.
+
+
+; I've added "topic" to the heirarchy to restrict what can be topicalized though the head-filler rule. 
+
+topic := nonverbal.
+
+nominal-cat := topic & 
+ [ AGR index ]. 
+
+noun := nominal-cat & mod-type &
+ [ CASE case ].
+
+det := nominal-cat & deg-type &
+ [ COUNT boolean ].
+
+conj := nonverbal.
+
+adv := topic & mod-type.
+
+adj := nonverbal & mod-type & deg-type.
+
+;;; In English, agreement is marked on nouns and determiners, but I've added it on prepositions because my bining theory implementation relys on PPs having AGR.
+prep := nominal-cat.
+
+
+
+
+
+;;; <<< >>> AGREEMENT TYPES
+
+index := feat-struc &
+[ PERNUM agr-cat ].
+
+; referential-index (ref-index)
+ref-index := index.
+
+; explitive-index (expl-index)
+expl-index := index.
+expl-there := expl-index.
+expl-it := expl-index.
+
+agr-cat := *value*.
+
+1or3sg := agr-cat.
+non-3sg := agr-cat.
+non-1sg := non-3sg.
+2per := non-1sg.
+1sg := 1or3sg & non-3sg.
+1pl := non-1sg.
+2sg := 2per.
+2pl := 2per.
+3pl := non-1sg.
+3sg := 1or3sg &
+[ GEND gend ].
+
+gend := *value*.
+fem := gend.
+masc := gend.
+neut := gend.
+
+
+
+
+;;; <<< >>> CLAUSALITY
+
+;;; CCB - Ivan's notes say that the SUBJ list on clause should be composed of noncan-ss.  Why?  
+
+;clause := phrase &
+;[ SS [ LOC [ CAT [ SUBJ *list-of-noncanon-ss* ], 
+;             CONT message ],
+;       WH wh-none ] ].
+
+;;; CCB - Causing problems with the negation lexical rule.
+clause := phrase &
+[ SS [ LOC [ CAT.SUBJ list-of-noncanon-ss,
+             CONT message ],
+       WH <! !> ] ].
+
+
+
+non-clause := phrase.
+
+
+
+; core-clause (core-cl)
+core-cl := clause &
+[ SS.LOC.CAT [ HEAD verb & [ FORM clausal,
+                             MOD < > ] ] ].
+
+#|
+; relative-clause (rel-cl)
+rel-cl := clause &
+[ SS.LOC [ CAT [ HEAD [ IC false,
+                        INV false,
+                        MOD < [ HEAD noun ] > ] ],
+           CONT fact ] ].
+|#
+
+;;; CCB - should decl-cl inherit from hd-ph, or should I add a HD-DTR type?
+; declarative-clause (decl-cl)
+decl-cl := core-cl & hd-ph &
+[ SS.LOC.CONT propositional & [ SOA #1 ],
+  HD-DTR [ SS.LOC [ CONT #1 ] ] ]. 
+
+
+
+; interrogative-clause (inter-cl)
+inter-cl := core-cl &
+[ SS.LOC.CONT question ].
+
+;;; The headed-interrogative-clause is constrained by the Wh-Question Retrieval principle, which requires that the STORE value of a hd-int-cl be the head daughter's STORE value, minus some set of indicies that are included in the clause's PARAM's set.  (Note that the set of retrieved indicies can be the empty set).
+
+;;; I'm treating the STORE and the PARAMS as *diff-lists* rather than sets, so might be making different predictions.  CCB - like what?
+
+
+; headed-interrogative-clause (hd-int-cl)
+hd-int-cl := inter-cl & hd-ph.
+
+#| &
+[ SS.LOC [ STORE [ LIST #first,
+                   LAST #last ],
+           CONT [ PARAMS [ LIST #middle,
+                           LAST #last ] ] ],
+  HD-DTR.SS.LOC.STORE [ LIST #first,
+                        LAST #middle ] ].
+   
+|#
+
+
+canon-int-cl := hd-int-cl &
+[ SS.LOC.CAT.HEAD [ IC #1,
+                    INV #1 ] ].
+
+;;; CCB - in-situ constructions are headed by a finite indicative verb that cannot occur as the complement of an emedding predicate.  Subtype of hd-only-ph (a non-branching headed phrasal type).
+
+is-int-cl := hd-int-cl & hd-only-ph &
+[ SS.LOC.CAT.HEAD verb & [ FORM fin,
+                           IC true ] ].
+
+
+imp-cl := core-cl &
+[ SS.LOC.CONT outcome ].
+
+
+
+; exclamative-clause (excl-cl)
+excl-cl := core-cl &
+[ SS.LOC.CONT fact ].
+
+
+;;; <<< >>> HEADEDNESS
+
+; I've collapsed the Head Feature Principle, the Valence Principle, and the Semantic Inheritance Principle into a single default unification constraint on hd-ph.  
+
+
+;;; CCB - I need to be composing the ORTH on all of these phrasal construtions, so that it inherits from the words to the phrases.  Maybe I should put it in consturctions.tdl?
+
+hd-ph := phrase &
+[ SS /l #1,
+  HD-DTR sign & [ SS /l #1 ] ].
+
+; head-complement-phrase (hd-comp-ph)
+;;; CCB - I'm not allowing for non-phrasal complements.  Will that mess anything up?
+
+hd-comp-ph := hd-ph & 
+[ HD-DTR #1,
+  DTRS < word & #1, ... > ].
+
+nv-hd-comp-ph := hd-comp-ph &
+[ HD-DTR [ SS.LOC.CAT.HEAD nonverbal ] ].
+
+
+hd-comp-ph-0 := nv-hd-comp-ph & 
+[ HD-DTR.SS.LOC.CAT.COMPS < >,
+  DTRS < sign > ].
+
+hd-comp-ph-1 := nv-hd-comp-ph &
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
+  DTRS < sign, phrase & [ SS #1 ] > ].
+
+hd-comp-ph-2 := nv-hd-comp-ph &
+[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
+  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+
+
+; verb-phrase (vb-ph)
+vb-ph := hd-comp-ph &
+[ HD-DTR sign & [ SS.LOC.CAT.HEAD verb & [ AUX #1,
+                                           NEG #1 ] ] ].
+
+
+vb-ph-0 := vb-ph & 
+[ HD-DTR.SS.LOC.CAT.COMPS < >,
+  DTRS < sign > ].
+
+vb-ph-1 := vb-ph &
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
+  DTRS < sign, phrase & [ SS #1 ] > ].
+
+vb-ph-2 := vb-ph &
+[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
+  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+
+vb-ph-3 := vb-ph &
+[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2, #3 >,
+  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ], phrase & [ SS #3 ] > ].
+
+
+; elliptical-verb-phrase (ellip-vp)
+ellip-vp := hd-comp-ph &
+[ HD-DTR.SS.LOC.CAT [ HEAD verb & [ AUX true ] ] ].
+
+ellip-vp-0 := ellip-vp &
+[ HD-DTR.SS.LOC.CAT.COMPS < ellip-ss >,
+  DTRS < sign > ].
+
+ellip-vp-1 := ellip-vp &
+[ HD-DTR.SS.LOC.CAT.COMPS < #1, ellip-ss >,
+  DTRS < sign, phrase & [ SS #1 ] > ].
+
+
+; complementizer-phrase (cp-ph)
+cp-ph := hd-comp-ph &
+[ HD-DTR sign & [ SS.LOC.CAT.HEAD comp ] ].
+
+cp-ph-1 := cp-ph &
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
+  DTRS < sign, phrase & [ SS #1 ] > ].
+
+cp-ph-2 := cp-ph &
+[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
+  DTRS < sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+
+
+
+
+;;; CCB - Note the cleverness here with this unifying with the constraint on clause that the SUBJ be a list of non-canonical synsems.  An e-list is...
+; head-subject-phrase (hd-subj-ph)
+hd-subj-ph := hd-ph &
+[ SS.LOC [ CAT [ SUBJ < > ] ],
+  HD-DTR #1 & [ SS.LOC.CAT [ SUBJ < #2 >,
+                             SPR < > ] ],
+  DTRS < phrase & [ SS #2 ], phrase & #1 > ].
+
+
+; head-specifier-phrase (hd-spr-ph)
+hd-spr-ph := hd-ph & binary-construction &
+[ SS.LOC [ CAT [ SPR < > ] ],
+  HD-DTR #1 & [ SS.LOC.CAT [ SPR < #2 > ] ],
+  DTRS < phrase & [ SS #2 ], phrase & #1 > ].
+
+
+
+; subject-auxilary-inversion-phrase (sai-ph)
+sai-ph := hd-ph & 
+[ SS.LOC.CAT.SUBJ < >,
+  HD-DTR #1 & [ SS.LOC.CAT [ HEAD verb & [ INV true,
+                                           AUX true ],
+                             SUBJ < #2 > ] ],
+  DTRS < word & #1, phrase & [ SS #2 ], ... > ].
+
+; elliptical sai-ph.
+sai-ph-0 := sai-ph & 
+[ HD-DTR.SS.LOC.CAT.COMPS < ellip-ss >,
+  DTRS < sign, sign > ].
+
+
+sai-ph-1 := sai-ph & 
+[ HD-DTR.SS.LOC.CAT.COMPS < #1 >,
+  DTRS < sign, sign, phrase & [ SS #1 ] > ].
+
+; CCB - Is a two placed COMPS construction ever needed with sai-ph?  Do auxv-lxms ever have more than one complement? -- Yes, in the case of the dummy-subject "be".
+
+sai-ph-2 := sai-ph & 
+[ HD-DTR.SS.LOC.CAT.COMPS < #1, #2 >,
+  DTRS < sign, sign, phrase & [ SS #1 ], phrase & [ SS #2 ] > ].
+
+
+; head-adjunct-phrase (hd-adj-ph)
+hd-adj-ph := hd-ph & non-clause &
+[ HD-DTR #1 & [ SS #2 ],
+  DTRS < #1, [ SS.LOC.CAT.HEAD [ MOD < #2 > ] ] > ].
+
+
+
+; head-filler-phrase (hd-fill-ph)
+hd-fill-ph := hd-ph &
+[ SS [ LOC.CAT.HEAD verb,
+       SLASH [ LIST #rest,
+	       LAST #last] ],
+  HD-DTR #1 & [ SS.SLASH [ LIST *cons* & < #2 . #rest>,
+			   LAST *null* & #last ] ],
+  DTRS < phrase & [ SS [ LOC #2,
+                    SLASH <! !> ] ], phrase & #1 > ].
+
+
+;;; CCB - 5/22/00 - added the hd-modifier-ph
+; post-head-modifier-phrase (post-hd-mod-ph)
+post-hd-mod-ph := hd-ph & binary-construction &
+[ HD-DTR #1 & [ SS #mod ],
+  DTRS < phrase & #1, phrase & [ SS.LOC.CAT [ HEAD.MOD < #mod >,
+                                 SPR < >,
+                                 SUBJ < > ] ] > ].
+
+
+
+;;; CCB - 5/22/00 - added the hd-modifier-ph
+; pre-head-modifier-phrase (pre-hd-mod-ph)
+pre-hd-mod-ph := hd-ph & binary-construction &
+[ HD-DTR #1 & [ SS #mod ],
+  DTRS < phrase & [ SS.LOC.CAT [ HEAD.MOD < #mod >,
+                                 SPR < >,
+                                 SUBJ < > ] ], phrase & #1 > ].
+
+
+
+
+
+; head-only-phrase (hd-only-ph)
+hd-only-ph := hd-ph & 
+[ HD-DTR #1,
+  DTRS < #1 > ].
+
+; non-headed-phrase (non-hd-ph)
+non-hd-ph := phrase.
+
+
+
+;;; The following is the "Filler Inclusion Constrant" which  guarntees that the non head daughter must be WH-specified, and hence that the filler constituent must properly contain a wh-word.
+;;; [ SS.LOC.CONT.PARAMS.LIST.FIRST #1,
+;;;  DTRS < [ SS.WH #1 & param ], sign > ].
+
+;;; CCB - I'm not sure if my specification for the wh-quantifier appearing at the begining of the PARAMS list is going to work.  If the text above is correct, and that it's only to guarantee a wh-specified thing, then the [ WH g-quant ] should work by itself.
+
+; wh-interrogative-clause (wh-int-cl)
+wh-int-cl := hd-int-cl & hd-fill-ph & 
+[ SS.LOC.CONT [ PARAMS.LIST.FIRST #1,
+                PROP #2 ],
+  HD-DTR.SS.LOC.CONT proposition & #2,
+  DTRS < [ SS.WH <! #1 & param !> ], sign > ].
+
+
+;;; <<< >>> VALUES FOR VARIOUS FEATURES.
+
+*value* := *top*.
+
+
+case := *value*.
+nom := case.
+acc := case.
+
+
+
+;;; <<< >>> Verb Form Types
+
+; Abbreviations for VFORM are: fin(ite), nonfin(ite), inf(initive) participle (part), present patriciple (prp), perfect-participle (pfp), and passive-participle (pas).
+
+vform := form-cat.
+
+clausal := vform.
+fin := clausal.
+
+inf := clausal & nonfin.
+
+nonfin := vform.
+
+base := nonfin.
+part := nonfin.
+prp := part.
+pfp := part.
+pas := part.
+
+form-cat := *value*.
+
+f_not := form-cat.
+
+; The noun form types distinguish between normal and idiomatic usages.
+nform := form-cat.
+normal := nform.
+
+
+
+
+
+;-------------------------------------------------------------------------
+
+boolean := *value*.
+   true  := boolean.               
+   false := boolean.
+
+
+*list* := *top*.
+
+ne-list := *cons* &
+ [ FIRST *top*,
+   REST *list* ].
+
+e-list := *null*.
+
+*null* := *list*.
+
+*cons* := *list* &
+  [ FIRST *top*,
+    REST *list* ].
+
+
+*diff-list* := *top* &
+[ LIST *list*,
+  LAST *list* ].
+
+;;; CCB - added *e-diff-list* because the inv-decl-cl construction was leaking - it was creating the sentence "Can Sandy love the cat", so I constrainted the SLAS value of root to be an *e-diff-list* rather than just <! !> ... which I would have thought should have that definition anyway.  But maybe not for the ARG-ST list stitching.
+
+*e-diff-list* := *diff-list* &
+[ LIST #1 & e-list,
+  LAST #1 ].
+
+string := *value*.
+
+;;; <<< >>> List types.
+
+list-of-strings := *list*.
+
+ne-list-of-strings := list-of-strings & ne-list &
+[ FIRST string,
+  REST list-of-strings ].
+
+e-list-of-strings := list-of-strings & e-list.
+
+
+
+list-of-locals := *list*.
+
+ne-list-of-locals := list-of-locals & ne-list &
+[ FIRST local,
+  REST list-of-locals ].
+
+e-list-of-locals := list-of-locals & e-list.
+
+
+
+list-of-signs := *list*.
+
+ne-list-of-signs := list-of-signs & ne-list &
+[ FIRST sign,
+  REST list-of-signs ].
+
+e-list-of-signs := list-of-signs & e-list.
+
+
+
+list-of-synsems := *list*.
+
+ne-list-of-synsems := list-of-synsems & ne-list &
+[ FIRST synsem,
+  REST list-of-synsems ].
+
+e-list-of-synsems := list-of-synsems & e-list.
+
+
+
+list-of-canon-ss := list-of-synsems.
+
+ne-list-of-canon-ss := list-of-canon-ss & ne-list-of-synsems &
+[ FIRST canon-ss,
+  REST list-of-canon-ss ].
+
+e-list-of-canon-ss := list-of-canon-ss & e-list-of-synsems.
+
+
+
+
+list-of-noncanon-ss := list-of-synsems.
+
+ne-list-of-noncanon-ss := list-of-noncanon-ss & ne-list-of-synsems &
+[ FIRST noncanon-ss,
+  REST list-of-noncanon-ss ].
+
+e-list-of-noncanon-ss := list-of-noncanon-ss & e-list-of-synsems.
+
+
+list-of-pro-ss := list-of-noncanon-ss.
+
+ne-list-of-pro-ss := list-of-pro-ss & ne-list-of-noncanon-ss &
+[ FIRST pro-ss,
+  REST list-of-pro-ss ].
+
+e-list-of-pro-ss := list-of-pro-ss & e-list-of-noncanon-ss.
+
+
+
+
+list-of-synsems-wh-none := list-of-synsems.
+
+ne-list-of-synsems-wh-none := list-of-synsems-wh-none & ne-list-of-synsems &
+[ FIRST synsem & [ WH <! !> ],
+  REST list-of-synsems-wh-none ].
+
+e-list-of-synsems-wh-none := list-of-synsems-wh-none &
+ e-list-of-synsems.
+
+
+
+list-of-nc-ss-wh-none := list-of-synsems-wh-none & list-of-noncanon-ss.
+
+ne-list-of-nc-ss-wh-none := list-of-nc-ss-wh-none & ne-list-of-noncanon-ss & ne-list-of-synsems-wh-none &
+[ FIRST noncanon-ss & [ WH <! !> ],
+  REST list-of-nc-ss-wh-none ].
+
+e-list-of-nc-ss-wh-none := list-of-nc-ss-wh-none & e-list-of-synsems-wh-none & 
+e-list-of-noncanon-ss.
+
+;;; <<< >>> *diff-list* types.
+
+
+*list-of-strings* := *diff-list* &
+[ LIST list-of-strings,
+  LAST list-of-strings ].
+
+
+*list-of-locals* := *diff-list* &
+[ LIST list-of-locals,
+  LAST list-of-locals ].
+
+
+*list-of-synsems* := *diff-list* &
+[ LIST list-of-synsems,
+  LAST list-of-synsems ]. 
+
+
+
+*list-of-noncanon-ss* := *diff-list* &
+[ LIST list-of-noncanon-ss,
+  LAST list-of-noncanon-ss ].
+
+*list-of-canon-ss* := *diff-list* &
+[ LIST list-of-canon-ss,
+  LAST list-of-canon-ss ].
+
+
+
+
+*list-of-synsems-wh-none* := *list-of-synsems* &
+[ LIST list-of-synsems-wh-none,
+  LAST list-of-synsems-wh-none ]. 
+

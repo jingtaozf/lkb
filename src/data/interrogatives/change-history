@@ -1,0 +1,232 @@
+5/22/2000
+Added the hd-modifier-ph construction.  Also, constrained where the feature MOD appears to aviod overgeneration, as observed in  "Who the hell loves Kim?".  The modifier value of "hell" shown in the Wh-Interroagatives section of the Basic Interrogative Constructions chapter says that it's modifying a word.  I've got my hd-mod rule working on phrases.... is there any reason to favor one analysis over the other?
+
+
+
+5/18/2000 ---
+On the NLP grammar I added a coindex between auxilaries content and the content of their complement.  Seems to be working pretty well.  Fold into my grammar....
+
+
+auxv-lxm := v-lxm & 
+[ SS.LOC [ CONT #cont,
+           CAT [ SUBJ < #2 >,
+                 ARG-ST < #2, [ LOC [ CONT #cont,
+				      CAT [ SUBJ < #2 >, 
+                                         COMPS < > ] ] ] > ] ] ].
+
+Might want to make the conidex a default, so that auxvs like "won't" can add negation into the semantics somehow.
+
+5/16/2000
+I think that I could explicitly fold each of the non-branching rules that I've got in this grammar into the types, if I created subtypes of argument structure which did the amalgim........ no that won't quite work, will it?
+
+5/14/2000 
+I had a question about 
+whether it would be possible to define a grammar rule like this:
+
+head-complement-rule := phrase & 
+[ HEAD #0,
+  SPR #a,
+  COMPS < >,   
+
+  ARGS < word & 
+         [ HEAD #0,
+           SPR #a, 
+           COMPS #comps ] .  #comps > ].
+
+
+with a linear-precedence definition like this:
+(defun establish-linear-precedence (rule-fs)
+   ;;;    A function which will order the features of a rule
+   ;;;    to give (mother daughter1 ... daughtern)
+   ;;;
+   ;;;  Modification - this must always give a feature
+   ;;;  position for the mother - it can be NIL if
+   ;;; necessary
+  (let* ((mother NIL)
+         (daughter1 (get-value-at-end-of rule-fs '(ARGS FIRST)))
+         (daughter2 (get-value-at-end-of rule-fs '(ARGS REST FIRST)))
+         (daughter3 (get-value-at-end-of rule-fs '(ARGS REST REST
+FIRST))))
+    (declare (ignore mother))
+    (unless (and daughter1 (not (eql daughter1 'no-way-through)))
+      (cerror "Ignore it" "Rule without daughter"))
+    (append (list nil '(ARGS FIRST))
+            (if (and daughter2 (not (eql daughter2 'no-way-through)))
+                (list '(ARGS REST FIRST)))
+            (if (and daughter3 (not (eql daughter3 'no-way-through)))
+                (if (and daughter2 (not (eql daughter2 'no-way-through)))
+                    (list '(ARGS REST REST FIRST)))))))
+
+
+to allow indeterminacy in the number of complements that a construction
+takes, provided that I don't need to do anything that would require
+looking at list lengths (like append the ORTH values)?
+
+TO WHICH ANN REPLIED:
+> 'Fraid not - it makes sense in terms of the logic, but the chart parser
+> requires a known number of daughters in the rules.
+
+BUT, since I am determining the number of rules with the orthography composition it might allow me to reduce the appearence of so many hd-comp constructions in the types.tdl file, and instead let the length be determined by the ORTH specification.  However, then the fact that COMPS is a list-of-synsems rather than a list-of-signs like DTRS is would be a problem.  Might be a nice asethetic change for a smaller grammar though...
+
+5/7/2000
+I made the ARP a non-branching rule.  I had to removed the [ ARG-ST.REST list-of-synsems-wh-none ] constraint from inflected-lexeme+WHAP, so I instead added it to the ARP type.  Probably still not formulated correctly for the ARP-0 case.
+
+
+5/6/2000
+Pied piping is no longer working, because the SUBJ list-of-wh-none and the difference list stitching for the Argument Realization Principle are interfearing.  "Whose cat loves Sandy?" fails to parse because cat's SUBJ LIST and LAST are conidexed to its SPR's LIST, so the constraint gets pushed onto SPR, which is exactly what we don't want to happen.  Possible solution - remove the difference lists for SUBJ, SPR, COMPS, ARG-ST, and do the Argument Realization Principle manually, or through a non-branching rule.
+
+Tighen up the top-cl so that the topicalized element has to be STORE < >,  *Who Sandy saw.
+
+4/23/2000
+Cleaned up the semantic types a bit.  Specifically, I removed the RESTR feature, which plays a role in the Wasow and Sag textbook, but doesn't really seem to have any role in the Ginzburg and Sag monograph (though it may be attached to the type param, becuase I had wh words' params marked as RESTR <! !>).  This requred a reworking of the lexicon.out file.  I should probably rewrite the Perl script that I used to generate that file too.  
+
+4/22/2000 
+Finally figured out the bug that was allowing "Who did Sandy think loved Kim?" to get two parse where both the ns-wh-int-cl 1 and 2 were applying.  The decl-ns-cl's specification that its SUBJ be a non-canonical-ss was not forcing identity with the "Who" extracted subject, because it wasn't being forced to be a gap-ss.  The fact that "who" was coming into play at all when it wasn't SLASHED, was rather strange -- because the SUBJ was never realized it could contribute a SLASH value, but not have it identified with anything.  The wh-int-cl constraints were still guarnteeing that it appear as a wh-constituent though.
+
+I've changed the decl-ns-cl to have two subtypes, one for gap-ss and one for pro-ss.  I've also constrained pro-ss such that it has empty SLASH and STORE values.
+
+Also, got rid of the redundant relns that were causing error flags to appear on loading the grammar.
+
+Futzed around with the negation lexical rule - it was breaking because of the non-canonical subject constraint on type clause.  The solution now is pretty hacky, but prevents "not" from being an elliptical element.
+
+
+4/20/2000 (Acidentially did a 'rm *' and lost all my work for the past few days.  I recreated the following quickly:
+
+- Added the STORE amagimation as a non-branching constraint between infelcted-lexeme and  infelcted-lexeme+WHAP.  
+- Added the "ctv" lxm standing for complemntizer lexeme.  For lex entries like "think".
+- Constrained the top-cl to only allow topics which are [ HEAD topic ].
+
+Added the quantifier retrieval from STORE to QUANTS for subject and non-subject questions with STORE lists of up to length 2 correctly, and added a quick test for subject-interogs with STORE lists of 3.  Also added the first of the reprise constructions.
+
+To do:  Pritty up the semantic types.  Expand inventory of wh-words.
+
+
+4/16/2000
+Added the nonsubject-interrogative-clause construction.  Now "Who did Sandy love?" parses.   *"Kim did Sandy love?" was also parsing, so I constrained the appropriate lxm-types (those that are SPR < > -- v-lxm, pron-lxm, pn-lxm, ) to be [ WH wh-none ].
+
+Added subject-interrogative-clause construction.
+
+To do: (1)  Do the finite/non-finite hd-complement constructions rather than the verb, complementizer, nonverbal, etc hd-comps rules.  (2)  Change the feature CINV to INV.  (3) Add the Store Amalgamation Constraint.
+
+
+4/15/2000
+Talked to Ivan about a treatment of the superiority effect in questions.  The data is:
+        * You wonder what who saw?
+        You wonder what WHO saw?     where WHO is focused.
+The generalization is that normally the wh-filler is the first memeber of the head's store, and the only exception is if there's something preceding it hat will stay in store and be focused.
+
+The listp error from yesterday was due to the so-called `rule-filter' which Ann suspects has got something LinGO grammar specific in it. For now the fix is to assert (push :vanilla *features*)
+
+I added the wh-excl-ph, but the list typing on the feature QUANTS on the type soa is fucked up, so I moved it back to just being a vanilla *diff-list*.  Haven't tested this type yet, since I need to add "how" or something like that.
+
+The [ SUBJ *list-of-noncanon-ss* ] constraint on clause is fucking up the stitching together of lists to make the ARG-ST, esp, when it comes to the "not" cases, because I've got not marked as canon-ss so that it won't extract.  This is a problem.
+
+I added *e-diff-list* because the inv-decl-cl construction was leaking - it was creating the sentence "Can Sandy sing", so I constrainted the SLAS value of root to be an *e-diff-list* rather than just <! !> ... which I would have thought should have that definition anyway.  But maybe not for the ARG-ST list stitching.
+
+Added  `unary-construction', `binary-construction', `ternary-constuction', and `quaternary-construction' phrase types so that each phrase didn't have to have its ORTH composition explicitly specified (as I was doing in the grules file).
+
+Added the Wh-Question Retrieval constraint to the hd-int-cl type.
+
+
+4/14/2000
+I've added list types for synsem, canon-ss, and noncanon-ss.  I'm trying to constrain subject extraction so the decl-ns-cl doesn't over apply.  Only subjects which are bound for extraction should be marked non-canon (more specifically all others should be marked canon-ss), and also be marked [ WH something ] to get the correspondence with subject extraction and wh subject questions.  Also, I think that I'm going to need a lexical rule or something to mark subject as type non-canon-ss for extraction.
+
+Tried changing the < [ ] > list element shorthand to < synsem > to take care of an LKB "Error: Attempt to take the car of 96246736 which is not listp." error.  Didn't seem to fix the problem.
+
+
+
+2/29/2000
+I hardcoded SLASH AMAGIMATION for "easy".  "Kim is easy to please" now works.  The topicalization on top of the easy stuff seems to be over generating "A violin the sonata is easy to play with" gets two parses.  This should be looked into.
+
+Added the bare-plural-np construction.  Noticed that the plural-noun-lexical-rule wasn't working because I had changed the agreement pernum hierarchy so that only 3sg things had GEND, and cn-lxms were marked as [ GEND /l neut ].  I removed that constraint.
+
+
+2/22/2000
+Tried eliminating the constraint that I added to ellipsis about the elided complements being a non-canonical type ellip-ss.  This helped block "not" from being elided, because I marked it as a canonical-ss on the negation lexical rules.  I'm now going to mark "not" as a lexical complement and require that elided complements be phrasal, as Ivan suggested.  This will require that the hd-comps constructions be altered so that apply to lexical complements, instead of being restricted to phrasal as they are currently.  Might also require that the v-lxms be shored up.
+
+THIS DIDN'T SEEM TO WORK -- I was getting overgeneration for "Kim did not die" because "not" was being treated as an adv-lxm, an inflected-lexeme, a lexeme+slash_amalg, and a word, and all were parsing because of the constraint that the argument "not" in a negative construction be [ LOC.CAT lex-cat ].  I revoked the change.
+
+
+
+2/21/2000
+Removed MOOD, added ORTH composition to the grules file.
+
+
+2/17/2000
+Made ellipsis a construction rather than a lexical rule.  There are redundant rules, because the inversion construction requires additional formuations for ellipsis.
+
+
+2/15/2000
+Added a lot of forms of "be" as inflected-lexemes to the file
+auxiliaries.tdl.  Noticed that "not" is always undergoing the hd-comps-0
+rule, and I think that it should not.  I don't think that I'm allowing for
+non-phrasal complements in those rules. 
+
+
+2/4/2000
+Added SLASH Amalgamtion constraints, which allowed me to add
+topicalization constructions.  I force the SLASH Amalg onto words by
+addiding an intermediate type between lexeme and word.  Inflectional rules
+change lexemes into this intermediate type.  To change from the
+intermeiate type type to type word, one of several rules which constrain
+the argument structure (to be more precise the rules indicate that a
+sign's SLASH value is the concatenation of the SLASH values of the items
+on its argument structure).  Since words are the input to the grammar
+rules, all signs are forced to move through the intermediate types and
+thus all words are governed by the SLASH Amalgamtion constraint.  
+[CCB - what happens to words that are specifed as words in the lexicon? Do
+they have to be specified with this constraint, or can they be listed as
+the intermediate type instead of as the word type?]
+
+
+
+2/3/2000
+Fleshed out the Auxiliaries stuff to be consistent with the "Rules and
+Exceptions" Sag 2000 paper.  I've made the Negation Lexial Rule a word to
+word rule rather than a lexeme to lexeme rule, and I think that I'm going
+to specify the auxilaries in the lexicon as words rather than lexemes,
+that or have them be affected by a special lexical rules that applies like
+the const-lxm-infl rule.  This should be OK, since they don't inflect
+regularly.  I'm a bit worried about what will happen with extra info that
+the lexical rules are marking, like CASE nom, PRED +/-, and SEM 
+i-soa/r-soa, but maybe that'll be worked out.
+
+
+
+1/29/2000
+Updated the semantics.tdl file to match the typed feature structure
+descriptions of the semantics given in the latest version (JAN) of Chpater
+3 of Ginzburg and Sag.  Need to look at how the Semantics Inheritnace
+Principle is working with this version of HPSG, and implement it.  It's
+slightly different than the Ling120 textbook, because restrictions are
+represented as sets instead of lists, and I'm not sure if that will change
+things.
+
+Also, I need to look at how realtions are defined, and see if I can either
+automatically generate the features on them (i.e.
+[ love-relation		[ train-relation
+  LOVER  i		  TRAINER i
+  LOVED  j  ],		  TRAINEE j  ]      etc.
+Seem very productive, and it seems like one could generalize the number of
+semantic arguments to be the number of syntactic arguments in most cases.
+Is there a paper on "linking theory" that I could take a look at?
+
+
+9/10/1999
+Changed the noun infl rules to affect all nouns.  Will encode pronouns as words in the lexicon.  Deleted this comment: CCB - make these more geneal so that they apply to all nouns.  Mark all nouns as singular by default and then have the AGR information inherit in the singular rule, and in the plural have all other features inherit and mark the resulting structure as 3pl.  Could make it apply to all nouns.  That'd make prediction that you could do things like "Dans are like that", or "Shes run faster than hes".  Which might be OK.
+
+
+
+9/8/1999
+Deleted the ARGS feature in favor of DTRS.  Changed the linear-presidence function in user-fns to reflect the change.  Changed the SPR and COMPS and ARG-ST to be diff-lists so that I can do list sewing for the argument realization principle.
+
+
+8/14/1999 
+I think that I have to add the head-comps-ph-0 back in now that I've included arg-st.  There needs to be something to pump a WORD (which has an arg-st) into a PHRASE (which doesn't) so that the node-types NP, PP, etc. will work.
+
+
+
+8/4/1999 
+I'm having trouble with the fact that SPR and COMPS only select for type synsem (i.e. only select for items based on what's inside their SS field), because it doesn't allow me to indicate that a verb is selecting for a noun *phrase* for instance, because phrase clashes with type synsem.
+
+So I thought I'd be clever and define NP in terms of things under SS, which is fine since it solves a problem I was having with abreviations before, but it really fucks up the word/phrase distinction.  For instance "Kim sneezed" gets two parses, one where "Kim" is still of type word and one where it has been pumped through the hd-comps-ph-0 rule.  Is it possible to ditch the pumping rule?  I.e. have anything of COMPS < > simply be treated as a phrase (or an underspecified word/phrase thing) or will that cause problems?

@@ -1,0 +1,201 @@
+r_see := reln &
+[ OBSERVER index,
+  OBSERVED index ].
+
+r_person := reln &
+[ PERSON index ].
+
+r_thing := reln &
+[ THING index ].
+
+r_wonder := reln &
+[ WONDERER index,
+  WONDERED question ].
+
+;;; CCB -- added the wh-value (with g-quant and param and wh-none as subtypes), and rel-values.
+
+wh-value := *value*.
+wh-none := wh-value.
+
+rel-value := *value*.
+rel-none := rel-value.
+
+;;; The basic semantic types are from Ginzburg and Sag chapter 3 (January 2000 draft).
+
+;;; <<< >>>> SOME BASIC SEMANTIC TYPES
+
+sem-obj := feat-struc.
+
+;;; CCB - 4/23/00 - removed RESTR from sem-obj, because it doesn't seem to come into play with any significance in the analysis.
+;;;[ RESTR *list-of-facts* ].
+
+message := sem-obj.
+
+propositional := message &
+[ SOA soa,
+  SIT sit ].
+
+proposition := propositional & 
+[ SOA r-soa ].
+
+fact := propositional & 
+[ SOA r-soa ].
+
+outcome := propositional & 
+[ SOA i-soa ].
+
+question := message &
+[ PARAMS *list-of-params*, 
+  PROP proposition ].
+
+; PARAMS *list-of-params*, 
+
+illoc-rel := reln &
+[ MSG-ARG message ].
+
+assert-reln := illoc-rel &
+[ MSG-ARG proposition ].
+
+ask-reln := illoc-rel &
+[ MSG-ARG question ].
+
+order-reln := illoc-rel &
+[ MSG-ARG outcome ].
+
+exclaim-reln := illoc-rel &
+[ MSG-ARG fact ].
+
+
+;;; CCB - 5/17/00 -  removed quants from the semantics to try to simplify things for the KB application.  Had to comment out the  wh-exclamative-clause from constructions.tdl as a result, but I hadn't been playing with that much anyway.
+;; QUANTS *list-of-quants*,
+ 
+soa := sem-obj &
+[ NUCL reln ]. 
+
+
+r-soa := soa.
+
+i-soa := soa.
+
+
+
+;;; <<< >>> MISC. SEMANTIC TYPES
+
+mode-cat :< *value*.
+   prop :< mode-cat.
+   ques :< mode-cat.
+   dir  :< mode-cat.
+   ref  :< mode-cat.
+   null-mode :< mode-cat.
+
+
+null-sem := sem-obj.
+
+scope-obj := sem-obj.
+
+g-quant := scope-obj & wh-value.
+
+param := scope-obj & wh-value &
+[ INDEX index,
+  FOC boolean,
+  RESTR list-of-relns ].
+
+
+sit := feat-struc.
+
+reln := feat-struc.
+
+
+
+
+
+
+
+;;; <<< >>> LIST TYPES
+
+
+list-of-scope-objs := *list*.
+
+ne-list-of-scope-objs := list-of-scope-objs & ne-list &
+[ FIRST scope-obj,
+  REST list-of-scope-objs ].
+
+e-list-of-scope-objs := list-of-scope-objs & e-list.
+
+
+
+
+list-of-params := list-of-scope-objs.
+
+ne-list-of-params := list-of-params & ne-list-of-scope-objs &
+[ FIRST param,
+  REST list-of-params ].
+
+e-list-of-params := list-of-params & e-list-of-scope-objs.
+
+
+
+
+
+list-of-quants := *list*.
+
+ne-list-of-quants := list-of-quants & ne-list &
+[ FIRST g-quant,
+  REST list-of-quants ].
+
+e-list-of-quants := list-of-quants & e-list.
+
+
+
+
+list-of-propositions := *list*.
+
+ne-list-of-propositions := list-of-propositions & ne-list &
+[ FIRST proposition,
+  REST list-of-propositions ].
+
+e-list-of-propositions := list-of-propositions & e-list.
+
+
+
+
+list-of-relns := *list*.
+
+ne-list-of-relns := list-of-relns & ne-list &
+[ FIRST reln,
+  REST list-of-relns ].
+
+e-list-of-relns := list-of-relns & e-list.
+
+
+;;; *diff-list* types.
+
+
+*list-of-params* := *diff-list* &
+[ LIST list-of-params,
+  LAST list-of-params ].
+
+*e-list-of-params* := *list-of-params* & *e-diff-list* &
+[ LIST #1 & e-list-of-params,
+  LAST #1 ].
+
+*list-of-scope-objs* := *diff-list* &
+[ LIST list-of-scope-objs,
+  LAST list-of-scope-objs ].
+
+
+
+*list-of-quants* := *diff-list* &
+[ LIST list-of-quants,
+  LAST list-of-quants ].
+
+
+
+*list-of-propositions* := *diff-list* &
+[ LIST list-of-propositions,
+  LAST list-of-propositions ].
+
+
+*list-of-relns* := *diff-list* &
+[ LIST list-of-relns,
+  LAST list-of-relns ].

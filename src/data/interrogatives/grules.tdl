@@ -1,0 +1,130 @@
+;;; This file lets the LKB know which constructions it should treat as grammar rules.
+
+pol-int-rule-0 := pol-int-cl-0.
+pol-int-rule-1 := pol-int-cl-1.
+pol-int-rule-2 := pol-int-cl-2.
+
+ncl-hd-comps-rule-0 := ncl-hd-comps-ph-0.
+ncl-hd-comps-rule-1 := ncl-hd-comps-ph-1.
+ncl-hd-comps-rule-2 := ncl-hd-comps-ph-2.
+
+ncl-vb-rule-0 := ncl-vb-ph-0.
+ncl-vb-rule-1 := ncl-vb-ph-1.
+ncl-vb-rule-2 := ncl-vb-ph-2.
+ncl-vb-rule-3 := ncl-vb-ph-3.
+
+ellip-vp-rule-0 := ncl-ellip-vp-0.
+ellip-vp-rule-1 := ncl-ellip-vp-1.
+
+cp-cl-rule-1 := cp-cl-1.
+cp-cl-rule-2 := cp-cl-2.
+
+
+hd-spr-rule := hd-spr-ph.
+decl-hs-rule := decl-hs-cl.
+
+inv-decl-rule := inv-decl-cl.
+
+decl-ns-gap-rule := decl-ns-cl &
+[ SS.LOC.CAT.SUBJ < gap-ss > ].
+
+decl-ns-pro-rule := decl-ns-cl &
+[ SS.LOC.CAT.SUBJ < pro-ss > ].
+
+
+top-cl-rule := top-cl. 
+
+inv-excl-rule := inv-excl-cl.
+;;;wh-excl-rule := wh-excl-cl.
+
+
+post-hd-mod-rule := post-hd-mod-ph.
+;pre-hd-mod-rule := pre-hd-mod-ph.
+
+
+;coordination-rule := coordination-word.
+;coordination-rule-2 := coordination-phrase.
+
+rep-int-cl-1 := rep-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ] !>,
+           STORE <! !> ],
+  HD-DTR.SS.LOC.STORE <! #1 !> ].
+
+rep-int-cl-2 := rep-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ], #2 & [ FOC true ] !>,
+           STORE <! !> ],
+  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+
+
+
+dir-is-int-cl-1 := dir-is-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ] !>,
+           STORE <! !> ],
+  HD-DTR.SS.LOC.STORE <! #1 !> ].
+
+dir-is-int-cl-2 := dir-is-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ], #2 & [ FOC true ] !>,
+           STORE <! !> ],
+  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+
+
+
+
+su-wh-int-cl-1 := su-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1 !>,
+           STORE <! !> ],
+  HD-DTR.SS.LOC.STORE <! #1 !> ].
+
+
+su-wh-int-cl-2 := su-wh-int-cl & 
+[ SS.LOC [ CONT.PARAMS <! #1, #2 !>,
+           STORE <! !> ],
+  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+
+su-wh-int-cl-3 := su-wh-int-cl & 
+[ SS.LOC [ CONT.PARAMS <! #1 !>,
+           STORE <! #2 !> ],
+  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+
+;;; CCB - the second item from the store needs to be FOC in this case,
+;;; Delete this case.
+;su-wh-int-cl-4 := su-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #2 !>,
+;           STORE <! #1 !> ],
+;  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+
+
+su-wh-int-cl-5 := su-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1 !>,
+           STORE <! #2, #3 !> ],
+  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+
+su-wh-int-cl-6 := su-wh-int-cl & 
+[ SS.LOC [ CONT.PARAMS <! #1, #2 !>,
+           STORE <! #3 !> ],
+  HD-DTR.SS.LOC.STORE <! #1, #2, #3 !> ].
+
+
+
+ns-wh-int-cl-1 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1 !>,
+           STORE <! !> ],
+  HD-DTR.SS.LOC.STORE <! #1 !> ].
+
+ns-wh-int-cl-2 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1, #2 !>,
+           STORE <! !> ],
+  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+
+
+ns-wh-int-cl-3 := ns-wh-int-cl & 
+[ SS.LOC [ CONT.PARAMS <! #1 !>,
+           STORE <! #2 !> ],
+  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+
+;;; CCB - the second item from the store needs to be FOC in this case,
+;ns-wh-int-cl-4 := ns-wh-int-cl &
+;[ SS.LOC [ CONT.PARAMS <! #2 !>,
+;           STORE <! #1 !> ],
+;  HD-DTR.SS.LOC.STORE <! #1, #2 !> ].
+

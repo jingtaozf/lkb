@@ -1,0 +1,197 @@
+;;; <<< >>> Maximal Subtypes of Phrase
+
+ncl-hd-comps-ph-0 := non-clause & hd-comp-ph-0 & unary-construction.
+ncl-hd-comps-ph-1 := non-clause & hd-comp-ph-1 & binary-construction.
+ncl-hd-comps-ph-2 := non-clause & hd-comp-ph-2 & ternary-construction.
+
+ncl-vb-ph-0 := non-clause & vb-ph-0 & unary-construction.
+ncl-vb-ph-1 := non-clause & vb-ph-1 & binary-construction.
+ncl-vb-ph-2 := non-clause & vb-ph-2 & ternary-construction.
+ncl-vb-ph-3 := non-clause & vb-ph-3 & quaternary-construction.
+
+ncl-ellip-vp-0 := non-clause & ellip-vp-0 & unary-construction.
+ncl-ellip-vp-1 := non-clause & ellip-vp-1 & binary-construction.
+;ncl-ellip-vp-2 := non-clause & ellip-vp-2 & ternary-construction.
+
+cp-cl-1 := clause & cp-ph-1 & binary-construction.
+cp-cl-2 := clause & cp-ph-2 & ternary-construction.
+
+#|
+coordination-word := word &
+[ SS #1,
+
+DTRS < word & [ SS #1 & [ LOC.CAT [ HEAD.FORM #form,
+                 SPR #spr,
+                 SUBJ #subj,
+                 COMPS #comps & < [ ] ... > ],
+       WH #wh,
+       SLASH #slash ] ],  word & [ ORTH <! "and" !> ], word &  [ SS [ LOC.CAT [ HEAD.FORM #form,
+                 SPR #spr,
+                 SUBJ #subj,
+                 COMPS #comps ],
+       WH #wh,
+       SLASH #slash ] ] > ]. 
+
+
+coordination-phrase := ternary-construction & hd-ph &
+[ SS #1,
+
+DTRS < phrase & [ SS #1 & [ LOC.CAT [ HEAD.FORM #form,
+                 SPR #spr,
+                 SUBJ #subj,
+                 COMPS #comps ],
+       WH #wh,
+       SLASH #slash ] ],  word & [ ORTH <! "and" !> ], phrase & [ SS [ LOC.CAT [ HEAD.FORM #form,
+                 SPR #spr,
+                 SUBJ #subj,
+                 COMPS #comps ],
+       WH #wh,
+       SLASH #slash ] ] > ]. 
+
+|#
+
+decl-hs-cl := decl-cl & hd-subj-ph & binary-construction &
+[ SS.LOC.CAT.HEAD [ FORM fin,
+                    INV false ] ].
+
+
+decl-ns-cl := decl-cl & hd-only-ph & unary-construction &
+[ SS.LOC.CAT.SUBJ < noncanon-ss > ].
+
+
+
+;;; CCB - An earlier draft of the Basic Interrogative Constructions chapter called what I am calling "PARAMS" "INDICIES", I think that my change fits within the new semantics chapter, but better check on it.
+
+pol-int-cl := canon-int-cl & sai-ph &
+[ SS.LOC.CONT [ PARAMS <! !>,
+                PROP [ SOA #1 ] ],
+  HD-DTR.SS.LOC.CONT #1 ].
+
+pol-int-cl-0 := pol-int-cl & sai-ph-0 & binary-construction.
+pol-int-cl-1 := pol-int-cl & sai-ph-1 & ternary-construction.
+pol-int-cl-2 := pol-int-cl & sai-ph-2 & quaternary-construction.
+
+
+; topicalized-clause (top-cl)
+top-cl := hd-fill-ph & core-cl & binary-construction &
+[ SS.LOC.CAT [ SUBJ < >,
+               HEAD verb & [ INV false,
+                             IC true ] ],
+  DTRS < [ SS.WH <! !>,
+           SS.LOC.CAT.HEAD topic ], sign > ].
+
+
+
+;;; CCB - do I need to enumerate more types for each of the sai-ph values?
+
+; inverted-exclamative-clause (inv-excl-cl)
+inv-excl-cl := excl-cl & sai-ph-1 & ternary-construction &
+[ SS.LOC.CONT.SOA #1,
+  HD-DTR.SS.LOC [ CAT.HEAD.IC true, 
+                  CONT #1 ] ].
+
+
+;;; The SLASH value on inverted declarative clauses like "are you reading" from the sentence "Whose book are you reading?" is non-empty.
+
+; inverted-declarative-clause (inv-decl-cl)
+inv-decl-cl := decl-cl & sai-ph-1 & ternary-construction &
+[ SS [ LOC [ CAT.HEAD.IC true,
+             CONT proposition & [ SOA #1 ] ],
+       SLASH [ LIST < [ ], ... > ] ],
+  HD-DTR.SS.LOC.CONT #1 ].
+
+
+;;; CCB - the semantics for wh-excl-cl is of type fact, and the Basic Interrogatives chapter says that its "PROP" value is coindexed with its head daughter's CONT.  I only have PROP on type question in my semantic ontology.  Check this out.
+
+#|
+; wh-exclamative-clause (wh-excl-cl)
+wh-excl-cl := hd-fill-ph & excl-cl & binary-construction &
+[ SS.LOC [ CAT.HEAD.INV false,
+           CONT.SOA.QUANTS [ LIST < #1 >,
+                             LAST #A ] ],
+  HD-DTR.SS.LOC.CONT.QUANTS [ LIST #A ],
+  DTRS < [ SS.WH <! #1 & g-quant !> ], sign > ].
+|#
+
+
+;;; CCB - 5/22/00 should the subject-wh-int-cl really be getting the filler daughter's LOC value from the gap-ss SUBJ?  Or should it be drawing from the SLASH list?  Is this what's causing problems for the "Who DID see Sandy?" examples?
+
+; subject-wh-interrogative-clause (su-wh-int-cl)
+su-wh-int-cl := wh-int-cl & binary-construction &
+[ SS.LOC.CAT.SUBJ < >,
+  HD-DTR.SS.LOC.CAT.SUBJ < gap-ss & [ LOC #1 ] >,
+  DTRS < [ SS.LOC #1 ], sign > ].
+
+
+
+;;; CCB - Needs to have the subject be labeled list of pro-synsems.  Why?...
+
+; nonsubject-wh-interrogative-clause (ns-wh-int-cl)
+ns-wh-int-cl := wh-int-cl & binary-construction &
+[ HD-DTR.SS.LOC.CAT [
+                      HEAD [ INV #1,
+                             IC #1 ] ] ].
+
+; reprise-in-situ-interrogative-clause (rep-int-cl)
+rep-int-cl := is-int-cl & unary-construction &
+[ SS.LOC.CONT.PROP.SOA.NUCL.MSG-ARG #1,
+  HD-DTR.SS.LOC.CONT #1 ].
+
+
+
+; direct-interrogative-clause (dir-int-cl)
+dir-is-int-cl := is-int-cl & unary-construction &
+[ SS.LOC.CONT.PROP #1,
+  HD-DTR.SS.LOC.CONT #1 ].
+
+
+
+
+
+
+; bare-plural-np (bare-pl-np)
+bare-pl-np := hd-only-ph & unary-construction &
+[ SS.LOC.CAT.SPR < >,
+  HD-DTR.SS.LOC.CAT phrase-cat & [ HEAD noun & [ AGR.PERNUM 3pl ],
+                                   SPR < [ LOC.CAT.HEAD det,
+                                            SLASH <! !>,
+                                            WH <! !> ] > ] ].
+
+
+
+;;; 
+
+unary-construction := phrase &
+[ ORTH #first,
+  DTRS < [ ORTH #first ] > ].
+
+
+binary-construction := phrase &
+[ ORTH [ LIST #first,
+         LAST #last ],
+  DTRS < [ ORTH [ LIST #first,
+                  LAST #second ] ], [ ORTH [ LIST #second,
+                                             LAST #last ] ] > ].
+
+ternary-construction := phrase &
+[ ORTH [ LIST #first,
+         LAST #last ],
+  DTRS < [ ORTH [ LIST #first,
+                  LAST #second ] ], [ ORTH [ LIST #second,
+                                             LAST #third ] ], 
+         [ ORTH [ LIST #third,
+                  LAST #last ] ] > ].
+
+
+quaternary-construction := phrase &
+[ ORTH [ LIST #first,
+         LAST #last ],
+  DTRS < [ ORTH [ LIST #first,
+                  LAST #second ] ], [ ORTH [ LIST #second,
+                                             LAST #third ] ], 
+         [ ORTH [ LIST #third,
+                  LAST #forth ] ], [ ORTH [ LIST #forth,
+                                            LAST #last ] ] > ].
+
+
+

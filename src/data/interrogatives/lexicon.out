@@ -1,0 +1,1583 @@
+Kim_1 := pn-lxm &
+[ ORTH <! "Kim" !>,
+  SS.LOC.CONT.INDEX r_Kim ].
+
+Sandy_1 := pn-lxm &
+[ ORTH <! "Sandy" !>,
+  SS.LOC.CONT.INDEX r_Sandy ].
+
+
+Pat_1 := pn-lxm &
+[ ORTH <! "Pat" !>,
+  SS.LOC.CONT.INDEX r_Pat ].
+
+Chris_1 := pn-lxm &
+[ ORTH <! "Chris" !>,
+  SS.LOC.CONT.INDEX r_Chris ].
+
+Carrie_1 := pn-lxm &
+[ ORTH <! "Carrie" !>,
+  SS.LOC.CONT.INDEX r_Carrie ].
+
+Fido_1 := pn-lxm &
+[ ORTH <! "Fido" !>,
+  SS.LOC.CONT.INDEX r_Fido ].
+
+Leslie_1 := pn-lxm &
+[ ORTH <! "Leslie" !>,
+  SS.LOC.CONT.INDEX r_Leslie ].
+
+Lou_1 := pn-lxm &
+[ ORTH <! "Lou" !>,
+  SS.LOC.CONT.INDEX r_Lou ].
+
+Dana_1 := pn-lxm &
+[ ORTH <! "Dana" !>,
+  SS.LOC.CONT.INDEX r_Dana ].
+
+Lynn_1 := pn-lxm &
+[ ORTH <! "Lynn" !>,
+  SS.LOC.CONT.INDEX r_Lynn ].
+
+Lee_1 := pn-lxm &
+[ ORTH <! "Lee" !>,
+  SS.LOC.CONT.INDEX r_Lee ].
+
+the_1 := det-lxm &
+[ ORTH <! "the" !>,
+  SS.WH <! !> ].
+
+my_1 := det-lxm &
+[ ORTH <! "my" !>,
+  SS.WH <! !> ].
+
+your_1 := det-lxm &
+[ ORTH <! "your" !>,
+  SS.WH <! !> ].
+
+his_1 := det-lxm &
+[ ORTH <! "his" !>,
+  SS.WH <! !> ].
+
+her_1 := det-lxm &
+[ ORTH <! "her" !>,
+  SS.WH <! !> ].
+
+its_1 := det-lxm &
+[ ORTH <! "its" !>,
+  SS.WH <! !> ].
+
+our_1 := det-lxm &
+[ ORTH <! "our" !>,
+  SS.WH <! !> ].
+
+their_1 := det-lxm &
+[ ORTH <! "their" !>,
+  SS.WH <! !> ].
+
+to_1 := mkp-lxm &
+[ ORTH <! "to" !> ].
+
+
+;to_2 := pdp-lxm &
+;[ ORTH <! "to" !> ].
+
+
+about_1 := mkp-lxm &
+[ ORTH <! "about" !> ].
+
+on_1 := mkp-lxm &
+[ ORTH <! "on" !> ].
+
+on_2 := pdp-lxm &
+[ ORTH <! "on" !> ].
+
+in_1 := mkp-lxm &
+[ ORTH <! "in" !> ].
+
+in_2 := pdp-lxm &
+[ ORTH <! "in" !> ].
+
+with_1 := mkp-lxm &
+[ ORTH <! "with" !> ].
+
+with_2 := pdp-lxm &
+[ ORTH <! "with" !> ].
+
+of_1 := pdp-lxm &
+[ ORTH <! "of" !> ].
+
+for_1 := mkp-lxm &
+[ ORTH <! "for" !> ].
+
+by_1 := mkp-lxm &
+[ ORTH <! "by" !> ].
+
+around_1 := mkp-lxm &
+[ ORTH <! "around" !> ].
+
+angry_1 := adj-lxm &
+[ ORTH <! "angry" !> ].
+
+available_1 := adj-lxm &
+[ ORTH <! "available" !> ].
+
+black_1 := adj-lxm &
+[ ORTH <! "black" !> ].
+
+broken_1 := adj-lxm &
+[ ORTH <! "broken" !> ].
+
+brown_1 := adj-lxm &
+[ ORTH <! "brown" !> ].
+
+eager_1 := adj-lxm &
+[ ORTH <! "eager" !> ].
+
+expensive_1 := adj-lxm &
+[ ORTH <! "expensive" !> ].
+
+funny_1 := adj-lxm &
+[ ORTH <! "funny" !> ].
+
+german_1 := adj-lxm &
+[ ORTH <! "german" !> ].
+
+hard_1 := adj-lxm &
+[ ORTH <! "hard" !> ].
+
+happy_1 := adj-lxm &
+[ ORTH <! "happy" !> ].
+
+kind_1 := adj-lxm &
+[ ORTH <! "kind" !> ].
+
+likely_1 := adj-lxm &
+[ ORTH <! "likely" !> ].
+
+large_1 := adj-lxm &
+[ ORTH <! "large" !> ].
+
+magnificent_1 := adj-lxm &
+[ ORTH <! "magnificent" !> ].
+
+obvious_1 := adj-lxm &
+[ ORTH <! "obvious" !> ].
+
+offended_1 := adj-lxm &
+[ ORTH <! "offended" !> ].
+
+optional_1 := adj-lxm &
+[ ORTH <! "optional" !> ].
+
+new_1 := adj-lxm &
+[ ORTH <! "new" !> ].
+
+noisy_1 := adj-lxm &
+[ ORTH <! "noisy" !> ].
+
+unfair_1 := adj-lxm &
+[ ORTH <! "unfair" !> ].
+
+undocumented_1 := adj-lxm &
+[ ORTH <! "undocumented" !> ].
+
+will_1 := auxv-lxm &
+[ ORTH <! "will" !>,
+  SS.LOC.CONT [ NUCL r_will ] ].
+
+age_1 := siv &
+[ ORTH <! "age" !>,
+  SS.LOC.CONT [ NUCL r_age ] ].
+
+bark_1 := siv &
+[ ORTH <! "bark" !>,
+  SS.LOC.CONT [ NUCL r_bark ] ].
+
+believe_1 := siv &
+[ ORTH <! "believe" !>,
+  SS.LOC.CONT [ NUCL r_believe ] ].
+
+die_1 := siv &
+[ ORTH <! "die" !>,
+  SS.LOC.CONT [ NUCL r_die ] ].
+
+
+dine_1 := siv &
+[ ORTH <! "dine" !>,
+  SS.LOC.CONT [ NUCL r_dine ] ].
+
+disappear_1 := siv &
+[ ORTH <! "disappear" !>,
+  SS.LOC.CONT [ NUCL r_disappear ] ].
+
+drive_1 := siv &
+[ ORTH <! "drive" !>,
+  SS.LOC.CONT [ NUCL r_drive ] ].
+
+eat_1 := siv &
+[ ORTH <! "eat" !>,
+  SS.LOC.CONT [ NUCL r_eat ] ].
+
+explode_1 := siv &
+[ ORTH <! "explode" !>,
+  SS.LOC.CONT [ NUCL r_explode ] ].
+
+fall_1 := siv &
+[ ORTH <! "fall" !>,
+  SS.LOC.CONT [ NUCL r_fall ] ].
+
+fly_1 := siv &
+[ ORTH <! "fly" !>,
+  SS.LOC.CONT [ NUCL r_fly ] ].
+
+float_1 := siv &
+[ ORTH <! "float" !>,
+  SS.LOC.CONT [ NUCL r_float ] ].
+
+gather_1 := siv &
+[ ORTH <! "gather" !>,
+  SS.LOC.CONT [ NUCL r_gather ] ].
+
+laugh_1 := siv &
+[ ORTH <! "laugh" !>,
+  SS.LOC.CONT [ NUCL r_laugh ] ].
+
+leave_1 := siv &
+[ ORTH <! "leave" !>,
+  SS.LOC.CONT [ NUCL r_leave ] ].
+
+lie_1 := siv &
+[ ORTH <! "lie" !>,
+  SS.LOC.CONT [ NUCL r_lie ] ].
+
+live_1 := siv &
+[ ORTH <! "live" !>,
+  SS.LOC.CONT [ NUCL r_live ] ].
+
+run_1 := siv &
+[ ORTH <! "run" !>,
+  SS.LOC.CONT [ NUCL r_run ] ].
+
+sank_1 := siv &
+[ ORTH <! "sank" !>,
+  SS.LOC.CONT [ NUCL r_sank ] ].
+
+sit_1 := siv &
+[ ORTH <! "sit" !>,
+  SS.LOC.CONT [ NUCL r_sit ] ].
+
+scream_1 := siv &
+[ ORTH <! "scream" !>,
+  SS.LOC.CONT [ NUCL r_scream ] ].
+
+sing_1 := siv &
+[ ORTH <! "sing" !>,
+  SS.LOC.CONT [ NUCL r_sing ] ].
+
+skate_1 := siv &
+[ ORTH <! "skate" !>,
+  SS.LOC.CONT [ NUCL r_skate ] ].
+
+sleep_1 :=  siv &
+[ ORTH <! "sleep" !> ].
+
+sneeze_1 := siv &
+[ ORTH <! "sneeze" !>,
+  SS.LOC.CONT [ NUCL r_sneeze ] ].
+
+speak_1 := siv &
+[ ORTH <! "speak" !>,
+  SS.LOC.CONT [ NUCL r_speak ] ].
+
+suck_1 := siv &
+[ ORTH <! "suck" !>,
+  SS.LOC.CONT [ NUCL r_suck ] ].
+
+talk_1 := siv &
+[ ORTH <! "talk" !>,
+  SS.LOC.CONT [ NUCL r_talk ] ].
+
+tapdance_1 := siv &
+[ ORTH <! "tapdance" !>,
+  SS.LOC.CONT [ NUCL r_tapdance ] ].
+
+visit_1 := siv &
+[ ORTH <! "visit" !>,
+  SS.LOC.CONT [ NUCL r_visit ] ].
+
+vote_1 := siv &
+[ ORTH <! "vote" !>,
+  SS.LOC.CONT [ NUCL r_vote ] ].
+
+win_1 := siv &
+[ ORTH <! "win" !>,
+  SS.LOC.CONT [ NUCL r_win ] ].
+
+yell_1 := siv &
+[ ORTH <! "yell" !>,
+  SS.LOC.CONT [ NUCL r_yell ] ].
+
+ask_1 := piv &
+[ ORTH <! "ask" !>,
+  SS.LOC.CONT [ NUCL r_ask ] ].
+
+campaign_1 := piv &
+[ ORTH <! "campaign" !>,
+  SS.LOC.CONT [ NUCL r_campaign ] ].
+
+come_1 := piv &
+[ ORTH <! "come" !>,
+  SS.LOC.CONT [ NUCL r_come ] ].
+
+fit_1 := piv &
+[ ORTH <! "fit" !>,
+  SS.LOC.CONT [ NUCL r_fit ] ].
+
+go_1 := piv &
+[ ORTH <! "go" !>,
+  SS.LOC.CONT [ NUCL r_go ] ].
+
+lie_2 := piv &
+[ ORTH <! "lie" !>,
+  SS.LOC.CONT [ NUCL r_lie ] ].
+
+look_1 := piv &
+[ ORTH <! "look" !>,
+  SS.LOC.CONT [ NUCL r_look ] ].
+
+rely_1 := piv &
+[ ORTH <! "rely" !>,
+  SS.LOC.CONT [ NUCL r_rely ] ].
+
+talk_2 := piv &
+[ ORTH <! "talk" !>,
+  SS.LOC.CONT [ NUCL r_talk ] ].
+
+tug_1 := piv &
+[ ORTH <! "tug" !>,
+  SS.LOC.CONT [ NUCL r_tug ] ].
+
+visit_2 := piv &
+[ ORTH <! "visit" !>,
+  SS.LOC.CONT [ NUCL r_visit ] ].
+
+vote_2 := piv &
+[ ORTH <! "vote" !>,
+  SS.LOC.CONT [ NUCL r_vote ] ].
+
+hope_1 := ctv &
+[ ORTH <! "hope" !> ].
+
+say_1 := ctv &
+[ ORTH <! "say" !> ].
+
+suspect_1 := ctv &
+[ ORTH <! "suspect" !> ].
+
+discover_1 := ctv &
+[ ORTH <! "discover" !> ].
+
+believe_2 := ctv &
+[ ORTH <! "believe" !> ].
+
+learn_1 := ctv &
+[ ORTH <! "learn" !> ].
+
+;see_1 := ctv &
+;[ ORTH <! "see" !> ].
+
+admire_1 := stv &
+[ ORTH <! "admire" !>,
+  SS.LOC.CONT [ NUCL r_admire ] ].
+
+affect_1 := stv &
+[ ORTH <! "affect" !>,
+  SS.LOC.CONT [ NUCL r_affect ] ].
+
+annoy_1 := stv &
+[ ORTH <! "annoy" !>,
+  SS.LOC.CONT [ NUCL r_annoy ] ].
+
+arrest_1 := stv &
+[ ORTH <! "arrest" !>,
+  SS.LOC.CONT [ NUCL r_arrest ] ].
+
+ask_2 := stv &
+[ ORTH <! "ask" !>,
+  SS.LOC.CONT [ NUCL r_ask ] ].
+
+avoid_1 := stv &
+[ ORTH <! "avoid" !>,
+  SS.LOC.CONT [ NUCL r_avoid ] ].
+
+bite_1 := stv &
+[ ORTH <! "bite" !>,
+  SS.LOC.CONT [ NUCL r_bite ] ].
+
+bare_1 := stv &
+[ ORTH <! "bare" !>,
+  SS.LOC.CONT [ NUCL r_bare ] ].
+
+brake_1 := stv &
+[ ORTH <! "brake" !>,
+  SS.LOC.CONT [ NUCL r_broke ] ].
+
+cause_1 := stv &
+[ ORTH <! "cause" !>,
+  SS.LOC.CONT [ NUCL r_cause ] ].
+
+cark_1 := stv &
+[ ORTH <! "cark" !>,
+  SS.LOC.CONT [ NUCL r_cark ] ].
+
+chase_1 := stv &
+[ ORTH <! "chase" !>,
+  SS.LOC.CONT [ NUCL r_chase ] ].
+
+close_1 := stv &
+[ ORTH <! "close" !>,
+  SS.LOC.CONT [ NUCL r_close ] ].
+
+consider_1 := stv &
+[ ORTH <! "consider" !>,
+  SS.LOC.CONT [ NUCL r_consider ] ].
+
+consume_1 := stv &
+[ ORTH <! "consume" !>,
+  SS.LOC.CONT [ NUCL r_consume ] ].
+
+cross_1 := stv &
+[ ORTH <! "cross" !>,
+  SS.LOC.CONT [ NUCL r_cross ] ].
+
+cut_1 := stv &
+[ ORTH <! "cut" !>,
+  SS.LOC.CONT [ NUCL r_cut ] ].
+
+determine_1 := stv &
+[ ORTH <! "determine" !>,
+  SS.LOC.CONT [ NUCL r_determine ] ].
+
+devour_1 := stv &
+[ ORTH <! "devour" !>,
+  SS.LOC.CONT [ NUCL r_devour ] ].
+
+deny_1 := stv &
+[ ORTH <! "deny" !>,
+  SS.LOC.CONT [ NUCL r_deny ] ].
+
+discover_2 := stv &
+[ ORTH <! "discover" !>,
+  SS.LOC.CONT [ NUCL r_discover ] ].
+
+display_1 := stv &
+[ ORTH <! "display" !>,
+  SS.LOC.CONT [ NUCL r_display ] ].
+
+draw_1 := stv &
+[ ORTH <! "draw" !>,
+  SS.LOC.CONT [ NUCL r_draw ] ].
+
+dread_1 := stv &
+[ ORTH <! "dread" !>,
+  SS.LOC.CONT [ NUCL r_dread ] ].
+
+drive_2 := stv &
+[ ORTH <! "drive" !>,
+  SS.LOC.CONT [ NUCL r_drive ] ].
+
+eat_2 := stv &
+[ ORTH <! "eat" !>,
+  SS.LOC.CONT [ NUCL r_eat ] ].
+
+elect_1 := stv &
+[ ORTH <! "elect" !>,
+  SS.LOC.CONT [ NUCL r_elect ] ].
+
+enjoy_1 := stv &
+[ ORTH <! "enjoy" !>,
+  SS.LOC.CONT [ NUCL r_enjoy ] ].
+
+examine_1 := stv &
+[ ORTH <! "examine" !>,
+  SS.LOC.CONT [ NUCL r_examine ] ].
+
+exploit_1 := stv &
+[ ORTH <! "exploit" !>,
+  SS.LOC.CONT [ NUCL r_exploit ] ].
+
+find_1 := stv &
+[ ORTH <! "find" !>,
+  SS.LOC.CONT [ NUCL r_find ] ].
+
+finish_1 := stv &
+[ ORTH <! "finish" !>,
+  SS.LOC.CONT [ NUCL r_finish ] ].
+
+fix_1 := stv &
+[ ORTH <! "fix" !>,
+  SS.LOC.CONT [ NUCL r_fix ] ].
+
+fill_1 := stv &
+[ ORTH <! "fill" !>,
+  SS.LOC.CONT [ NUCL r_fill ] ].
+
+fly_2 := stv &
+[ ORTH <! "fly" !>,
+  SS.LOC.CONT [ NUCL r_fly ] ].
+
+follow_1 := stv &
+[ ORTH <! "follow" !>,
+  SS.LOC.CONT [ NUCL r_follow ] ].
+
+gather_2 := stv &
+[ ORTH <! "gather" !>,
+  SS.LOC.CONT [ NUCL r_gather ] ].
+
+get_1 := stv &
+[ ORTH <! "get" !>,
+  SS.LOC.CONT [ NUCL r_get ] ].
+
+halve_1 := stv &
+[ ORTH <! "halve" !>,
+  SS.LOC.CONT [ NUCL r_halve ] ].
+
+hate_1 := stv &
+[ ORTH <! "hate" !>,
+  SS.LOC.CONT [ NUCL r_hate ] ].
+
+have_1 := stv &
+[ ORTH <! "have" !>,
+  SS.LOC.CONT [ NUCL r_have ] ].
+
+help_1 := stv &
+[ ORTH <! "help" !>,
+  SS.LOC.CONT [ NUCL r_help ] ].
+
+hit_1 := stv &
+[ ORTH <! "hit" !>,
+  SS.LOC.CONT [ NUCL r_hit ] ].
+
+improve_1 := stv &
+[ ORTH <! "improve" !>,
+  SS.LOC.CONT [ NUCL r_improve ] ].
+
+involve_1 := stv &
+[ ORTH <! "involve" !>,
+  SS.LOC.CONT [ NUCL r_involve ] ].
+
+know_1 := stv &
+[ ORTH <! "know" !>,
+  SS.LOC.CONT [ NUCL r_know ] ].
+
+kick_1 := stv &
+[ ORTH <! "kick" !>,
+  SS.LOC.CONT [ NUCL r_kick ] ].
+
+#|
+leave_2 := stv &
+[ ORTH <! "leave" !>,
+  SS.LOC.CONT [ NUCL r_leave ] ].
+|#
+
+
+
+like_1 := stv &
+[ ORTH <! "like" !>,
+  SS.LOC.CONT [ NUCL r_like ] ].
+
+list_1 := stv &
+[ ORTH <! "list" !>,
+  SS.LOC.CONT [ NUCL r_list ] ].
+
+lock_1 := stv &
+[ ORTH <! "lock" !>,
+  SS.LOC.CONT [ NUCL r_lock ] ].
+
+love_1 := stv &
+[ ORTH <! "love" !>,
+  SS.LOC.CONT [ NUCL r_love ] ].
+
+read_1 := stv &
+[ ORTH <! "read" !>,
+  SS.LOC.CONT [ NUCL r_read ] ].
+
+
+meet_1 := stv &
+[ ORTH <! "meet" !>,
+  SS.LOC.CONT [ NUCL r_meet ] ].
+
+observe_1 := stv &
+[ ORTH <! "observe" !>,
+  SS.LOC.CONT [ NUCL r_observe ] ].
+
+pat_1 := stv &
+[ ORTH <! "pat" !>,
+  SS.LOC.CONT [ NUCL r_pat ] ].
+
+paint_1 := stv &
+[ ORTH <! "paint" !>,
+  SS.LOC.CONT [ NUCL r_paint ] ].
+
+pet_1 := stv &
+[ ORTH <! "pet" !>,
+  SS.LOC.CONT [ NUCL r_pet ] ].
+
+phone_1 := stv &
+[ ORTH <! "phone" !>,
+  SS.LOC.CONT [ NUCL r_phone ] ].
+
+present_1 := stv &
+[ ORTH <! "present" !>,
+  SS.LOC.CONT [ NUCL r_present ] ].
+
+protect_1 := stv &
+[ ORTH <! "protect" !>,
+  SS.LOC.CONT [ NUCL r_protect ] ].
+
+question_1 := stv &
+[ ORTH <! "question" !>,
+  SS.LOC.CONT [ NUCL r_question ] ].
+
+race_1 := stv &
+[ ORTH <! "race" !>,
+  SS.LOC.CONT [ NUCL r_race ] ].
+
+rake_1 := stv &
+[ ORTH <! "rake" !>,
+  SS.LOC.CONT [ NUCL r_rake ] ].
+
+represent_1 := stv &
+[ ORTH <! "represent" !>,
+  SS.LOC.CONT [ NUCL r_represent ] ].
+
+respect_1 := stv &
+[ ORTH <! "respect" !>,
+  SS.LOC.CONT [ NUCL r_respect ] ].
+
+sing_2 := stv &
+[ ORTH <! "sing" !>,
+  SS.LOC.CONT [ NUCL r_sing ] ].
+
+solve_1 := stv &
+[ ORTH <! "solve" !>,
+  SS.LOC.CONT [ NUCL r_solve ] ].
+
+spot_1 := stv &
+[ ORTH <! "spot" !>,
+  SS.LOC.CONT [ NUCL r_spot ] ].
+
+spray_1 := stv &
+[ ORTH <! "spray" !>,
+  SS.LOC.CONT [ NUCL r_spray ] ].
+
+suck_2 := stv &
+[ ORTH <! "suck" !>,
+  SS.LOC.CONT [ NUCL r_suck ] ].
+
+supervise_1 := stv &
+[ ORTH <! "supervise" !>,
+  SS.LOC.CONT [ NUCL r_supervise ] ].
+
+take_1 := stv &
+[ ORTH <! "take" !>,
+  SS.LOC.CONT [ NUCL r_take ] ].
+
+taste_1 := stv &
+[ ORTH <! "taste" !>,
+  SS.LOC.CONT [ NUCL r_taste ] ].
+
+target_1 := stv &
+[ ORTH <! "target" !>,
+  SS.LOC.CONT [ NUCL r_target ] ].
+
+tell_1 := stv &
+[ ORTH <! "tell" !>,
+  SS.LOC.CONT [ NUCL r_tell ] ].
+
+trick_1 := stv &
+[ ORTH <! "trick" !>,
+  SS.LOC.CONT [ NUCL r_trick ] ].
+
+turn_1 := stv &
+[ ORTH <! "turn" !>,
+  SS.LOC.CONT [ NUCL r_turn ] ].
+
+upset_1 := stv &
+[ ORTH <! "upset" !>,
+  SS.LOC.CONT [ NUCL r_upset ] ].
+
+visit_3 := stv &
+[ ORTH <! "visit" !>,
+  SS.LOC.CONT [ NUCL r_visit ] ].
+
+watch_1 := stv &
+[ ORTH <! "watch" !>,
+  SS.LOC.CONT [ NUCL r_watch ] ].
+
+win_2 := stv &
+[ ORTH <! "win" !>,
+  SS.LOC.CONT [ NUCL r_win ] ].
+
+bring_1 := dtv &
+[ ORTH <! "bring" !>,
+  SS.LOC.CONT [ NUCL r_bring ] ].
+
+donate_1 := dtv &
+[ ORTH <! "donate" !>,
+  SS.LOC.CONT [ NUCL r_donate ] ].
+
+hand_1 := dtv &
+[ ORTH <! "hand" !>,
+  SS.LOC.CONT [ NUCL r_hand ] ].
+
+give_1 := dtv &
+[ ORTH <! "give" !>,
+  SS.LOC.CONT [ NUCL r_give ] ].
+
+tell_2 := dtv &
+[ ORTH <! "tell" !>,
+  SS.LOC.CONT [ NUCL r_tell ] ].
+
+ask_3 := ptv &
+[ ORTH <! "ask" !>,
+  SS.LOC.CONT [ NUCL r_ask ] ].
+
+bring_2 := ptv &
+[ ORTH <! "bring" !>,
+  SS.LOC.CONT [ NUCL r_bring ] ].
+
+hand_2 := ptv &
+[ ORTH <! "hand" !>,
+  SS.LOC.CONT [ NUCL r_hand ] ].
+
+determine_2 := dtv &
+[ ORTH <! "determine" !>,
+  SS.LOC.CONT [ NUCL r_determine ] ].
+
+donate_2 := ptv &
+[ ORTH <! "donate" !>,
+  SS.LOC.CONT [ NUCL r_donate ] ].
+
+move_1 := ptv &
+[ ORTH <! "move" !>,
+  SS.LOC.CONT [ NUCL r_move ] ].
+
+put_1 := ptv &
+[ ORTH <! "put" !>,
+  SS.LOC.CONT [ NUCL r_put ] ].
+
+spray_2 := ptv &
+[ ORTH <! "spray" !>,
+  SS.LOC.CONT [ NUCL r_spray ] ].
+
+tell_3 := ptv &
+[ ORTH <! "tell" !>,
+  SS.LOC.CONT [ NUCL r_tell ] ].
+
+take_2 := ptv &
+[ ORTH <! "take" !>,
+  SS.LOC.CONT [ NUCL r_take ] ].
+
+wrap_1 := ptv &
+[ ORTH <! "wrap" !>,
+  SS.LOC.CONT [ NUCL r_wrap ] ].
+
+give_2 := ptv &
+[ ORTH <! "give" !>,
+  SS.LOC.CONT [ NUCL r_give ] ].
+
+continue_1 := srv &
+[ ORTH <! "continue" !>,
+  SS.LOC.CONT [ NUCL r_continue ] ].
+
+appear_1 := srv &
+[ ORTH <! "appear" !>,
+  SS.LOC.CONT [ NUCL r_appear ] ].
+
+appeal_1 := scv &
+[ ORTH <! "appeal" !>,
+  SS.LOC.CONT [ NUCL r_appeal ] ].
+
+try_1 := scv &
+[ ORTH <! "try" !>,
+  SS.LOC.CONT [ NUCL r_try ] ].
+
+expect_1 := orv &
+[ ORTH <! "expect" !> ].
+
+persuade_1 := ocv &
+[ ORTH <! "persuade" !> ].
+
+abbie_1 := cn-lxm &
+[ ORTH <! "abbie" !>,
+  SS.LOC.CONT.SOA.NUCL r_abbie ].
+
+accusation_1 := cn-lxm &
+[ ORTH <! "accusation" !>,
+  SS.LOC.CONT.SOA.NUCL r_accusation ].
+
+advantage_1 := cn-lxm &
+[ ORTH <! "advantage" !>,
+  SS.LOC.CONT.SOA.NUCL r_advantage ].
+
+age_2 := cn-lxm &
+[ ORTH <! "age" !>,
+  SS.LOC.CONT.SOA.NUCL r_age ].
+
+album_1 := cn-lxm &
+[ ORTH <! "album" !>,
+  SS.LOC.CONT.SOA.NUCL r_album ].
+
+alps_1 := cn-lxm &
+[ ORTH <! "alps" !>,
+  SS.LOC.CONT.SOA.NUCL r_alps ].
+
+andes_1 := cn-lxm &
+[ ORTH <! "andes" !>,
+  SS.LOC.CONT.SOA.NUCL r_andes ].
+
+animal_1 := cn-lxm &
+[ ORTH <! "animal" !>,
+  SS.LOC.CONT.SOA.NUCL r_animal ].
+
+answer_1 := cn-lxm &
+[ ORTH <! "answer" !>,
+  SS.LOC.CONT.SOA.NUCL r_answer ].
+
+arrow_1 := cn-lxm &
+[ ORTH <! "arrow" !>,
+  SS.LOC.CONT.SOA.NUCL r_arrow ].
+
+artist_1 := cn-lxm &
+[ ORTH <! "artist" !>,
+  SS.LOC.CONT.SOA.NUCL r_artist ].
+
+assignment_1 := cn-lxm &
+[ ORTH <! "assignment" !>,
+  SS.LOC.CONT.SOA.NUCL r_assignment ].
+
+associate_1 := cn-lxm &
+[ ORTH <! "associate" !>,
+  SS.LOC.CONT.SOA.NUCL r_associate ].
+
+astronomer_1 := cn-lxm &
+[ ORTH <! "astronomer" !>,
+  SS.LOC.CONT.SOA.NUCL r_astronomer ].
+
+atom_1 := cn-lxm &
+[ ORTH <! "atom" !>,
+  SS.LOC.CONT.SOA.NUCL r_atom ].
+
+audience_1 := cn-lxm &
+[ ORTH <! "audience" !>,
+  SS.LOC.CONT.SOA.NUCL r_audience ].
+
+auxiliary_1 := cn-lxm &
+[ ORTH <! "auxiliary" !>,
+  SS.LOC.CONT.SOA.NUCL r_auxiliary ].
+
+baby_1 := cn-lxm &
+[ ORTH <! "baby" !>,
+  SS.LOC.CONT.SOA.NUCL r_baby ].
+
+back_1 := cn-lxm &
+[ ORTH <! "back" !>,
+  SS.LOC.CONT.SOA.NUCL r_back ].
+
+bagel_1 := cn-lxm &
+[ ORTH <! "bagel" !>,
+  SS.LOC.CONT.SOA.NUCL r_bagel ].
+
+bark_2 := cn-lxm &
+[ ORTH <! "bark" !>,
+  SS.LOC.CONT.SOA.NUCL r_bark ].
+
+barn_1 := cn-lxm &
+[ ORTH <! "barn" !>,
+  SS.LOC.CONT.SOA.NUCL r_barn ].
+
+beer_1 := cn-lxm &
+[ ORTH <! "beer" !>,
+  SS.LOC.CONT.SOA.NUCL r_beer ].
+
+belief_1 := cn-lxm &
+[ ORTH <! "belief" !>,
+  SS.LOC.CONT.SOA.NUCL r_belief ].
+
+bicycle_1 := cn-lxm &
+[ ORTH <! "bicycle" !>,
+  SS.LOC.CONT.SOA.NUCL r_bicycle ].
+
+bird_1 := cn-lxm &
+[ ORTH <! "bird" !>,
+  SS.LOC.CONT.SOA.NUCL r_bird ].
+
+bit_1 := cn-lxm &
+[ ORTH <! "bit" !>,
+  SS.LOC.CONT.SOA.NUCL r_bit ].
+
+blanket_1 := cn-lxm &
+[ ORTH <! "blanket" !>,
+  SS.LOC.CONT.SOA.NUCL r_blanket ].
+
+blues_1 := cn-lxm &
+[ ORTH <! "blues" !>,
+  SS.LOC.CONT.SOA.NUCL r_blues ].
+
+boat_1 := cn-lxm &
+[ ORTH <! "boat" !>,
+  SS.LOC.CONT.SOA.NUCL r_boat ].
+
+book_1 := cn-lxm &
+[ ORTH <! "book" !>,
+  SS.LOC.CONT.SOA.NUCL r_book ].
+
+building_1 := cn-lxm &
+[ ORTH <! "building" !>,
+  SS.LOC.CONT.SOA.NUCL r_building ].
+
+campaign_2 := cn-lxm &
+[ ORTH <! "campaign" !>,
+  SS.LOC.CONT.SOA.NUCL r_campaign ].
+
+cancer_1 := cn-lxm &
+[ ORTH <! "cancer" !>,
+  SS.LOC.CONT.SOA.NUCL r_cancer ].
+
+candidate_1 := cn-lxm &
+[ ORTH <! "candidate" !>,
+  SS.LOC.CONT.SOA.NUCL r_candidate ].
+
+captain_1 := cn-lxm &
+[ ORTH <! "captain" !>,
+  SS.LOC.CONT.SOA.NUCL r_captain ].
+
+car_1 := cn-lxm &
+[ ORTH <! "car" !>,
+  SS.LOC.CONT.SOA.NUCL r_car ].
+
+cardinal_1 := cn-lxm &
+[ ORTH <! "cardinal" !>,
+  SS.LOC.CONT.SOA.NUCL r_cardinal ].
+
+cat_1 := cn-lxm &
+[ ORTH <! "cat" !>,
+  SS.LOC.CONT.SOA.NUCL r_cat ].
+
+cause_2 := cn-lxm &
+[ ORTH <! "cause" !>,
+  SS.LOC.CONT.SOA.NUCL r_cause ].
+
+chair_1 := cn-lxm &
+[ ORTH <! "chair" !>,
+  SS.LOC.CONT.SOA.NUCL r_chair ].
+
+cheetah_1 := cn-lxm &
+[ ORTH <! "cheetah" !>,
+  SS.LOC.CONT.SOA.NUCL r_cheetah ].
+
+child_1 := cn-lxm &
+[ ORTH <! "child" !>,
+  SS.LOC.CONT.SOA.NUCL r_child ].
+
+city_1 := cn-lxm &
+[ ORTH <! "city" !>,
+  SS.LOC.CONT.SOA.NUCL r_city ].
+
+class_1 := cn-lxm &
+[ ORTH <! "class" !>,
+  SS.LOC.CONT.SOA.NUCL r_class ].
+
+cloud_1 := cn-lxm &
+[ ORTH <! "cloud" !>,
+  SS.LOC.CONT.SOA.NUCL r_cloud ].
+
+clue_1 := cn-lxm &
+[ ORTH <! "clue" !>,
+  SS.LOC.CONT.SOA.NUCL r_clue ].
+
+coast_1 := cn-lxm &
+[ ORTH <! "coast" !>,
+  SS.LOC.CONT.SOA.NUCL r_coast ].
+
+conflict_1 := cn-lxm &
+[ ORTH <! "conflict" !>,
+  SS.LOC.CONT.SOA.NUCL r_conflict ].
+
+council_1 := cn-lxm &
+[ ORTH <! "council" !>,
+  SS.LOC.CONT.SOA.NUCL r_council ].
+
+customer_1 := cn-lxm &
+[ ORTH <! "customer" !>,
+  SS.LOC.CONT.SOA.NUCL r_customer ].
+
+day_1 := cn-lxm &
+[ ORTH <! "day" !>,
+  SS.LOC.CONT.SOA.NUCL r_day ].
+
+dealer_1 := cn-lxm &
+[ ORTH <! "dealer" !>,
+  SS.LOC.CONT.SOA.NUCL r_dealer ].
+
+dealership_1 := cn-lxm &
+[ ORTH <! "dealership" !>,
+  SS.LOC.CONT.SOA.NUCL r_dealership ].
+
+defendant_1 := cn-lxm &
+[ ORTH <! "defendant" !>,
+  SS.LOC.CONT.SOA.NUCL r_defendant ].
+
+difference_1 := cn-lxm &
+[ ORTH <! "difference" !>,
+  SS.LOC.CONT.SOA.NUCL r_difference ].
+
+dinner_1 := cn-lxm &
+[ ORTH <! "dinner" !>,
+  SS.LOC.CONT.SOA.NUCL r_dinner ].
+
+disease_1 := cn-lxm &
+[ ORTH <! "disease" !>,
+  SS.LOC.CONT.SOA.NUCL r_disease ].
+
+doctor_1 := cn-lxm &
+[ ORTH <! "doctor" !>,
+  SS.LOC.CONT.SOA.NUCL r_doctor ].
+
+dog_1 := cn-lxm &
+[ ORTH <! "dog" !>,
+  SS.LOC.CONT.SOA.NUCL r_dog ].
+
+drug_1 := cn-lxm &
+[ ORTH <! "drug" !>,
+  SS.LOC.CONT.SOA.NUCL r_drug ].
+
+duck_1 := cn-lxm &
+[ ORTH <! "duck" !>,
+  SS.LOC.CONT.SOA.NUCL r_duck ].
+
+earthquake_1 := cn-lxm &
+[ ORTH <! "earthquake" !>,
+  SS.LOC.CONT.SOA.NUCL r_earthquake ].
+
+east_1 := cn-lxm &
+[ ORTH <! "east" !>,
+  SS.LOC.CONT.SOA.NUCL r_east ].
+
+exam_1 := cn-lxm &
+[ ORTH <! "exam" !>,
+  SS.LOC.CONT.SOA.NUCL r_exam ].
+
+evidence_1 := cn-lxm &
+[ ORTH <! "evidence" !>,
+  SS.LOC.CONT.SOA.NUCL r_evidence ].
+
+fbi_1 := cn-lxm &
+[ ORTH <! "fbi" !>,
+  SS.LOC.CONT.SOA.NUCL r_fbi ].
+
+felon_1 := cn-lxm &
+[ ORTH <! "felon" !>,
+  SS.LOC.CONT.SOA.NUCL r_felon ].
+
+fever_1 := cn-lxm &
+[ ORTH <! "fever" !>,
+  SS.LOC.CONT.SOA.NUCL r_fever ].
+
+flower_1 := cn-lxm &
+[ ORTH <! "flower" !>,
+  SS.LOC.CONT.SOA.NUCL r_flower ].
+
+flour_1 := cn-lxm &
+[ ORTH <! "flour" !>,
+  SS.LOC.CONT.SOA.NUCL r_flour ].
+
+food_1 := cn-lxm &
+[ ORTH <! "food" !>,
+  SS.LOC.CONT.SOA.NUCL r_food ].
+
+fool_1 := cn-lxm &
+[ ORTH <! "fool" !>,
+  SS.LOC.CONT.SOA.NUCL r_fool ].
+
+form_1 := cn-lxm &
+[ ORTH <! "form" !>,
+  SS.LOC.CONT.SOA.NUCL r_form ].
+
+friend_1 := cn-lxm &
+[ ORTH <! "friend" !>,
+  SS.LOC.CONT.SOA.NUCL r_friend ].
+
+game_1 := cn-lxm &
+[ ORTH <! "game" !>,
+  SS.LOC.CONT.SOA.NUCL r_game ].
+
+garden_1 := cn-lxm &
+[ ORTH <! "garden" !>,
+  SS.LOC.CONT.SOA.NUCL r_garden ].
+
+garlic_1 := cn-lxm &
+[ ORTH <! "garlic" !>,
+  SS.LOC.CONT.SOA.NUCL r_garlic ].
+
+gas_1 := cn-lxm &
+[ ORTH <! "gas" !>,
+  SS.LOC.CONT.SOA.NUCL r_gas ].
+
+gathering_1 := cn-lxm &
+[ ORTH <! "gathering" !>,
+  SS.LOC.CONT.SOA.NUCL r_gathering ].
+
+german_2 := cn-lxm &
+[ ORTH <! "german" !>,
+  SS.LOC.CONT.SOA.NUCL r_german ].
+
+guest_1 := cn-lxm &
+[ ORTH <! "guest" !>,
+  SS.LOC.CONT.SOA.NUCL r_guest ].
+
+hand_3 := cn-lxm &
+[ ORTH <! "hand" !>,
+  SS.LOC.CONT.SOA.NUCL r_hand ].
+
+head_1 := cn-lxm &
+[ ORTH <! "head" !>,
+  SS.LOC.CONT.SOA.NUCL r_head ].
+
+horse_1 := cn-lxm &
+[ ORTH <! "horse" !>,
+  SS.LOC.CONT.SOA.NUCL r_horse ].
+
+hospital_1 := cn-lxm &
+[ ORTH <! "hospital" !>,
+  SS.LOC.CONT.SOA.NUCL r_hospital ].
+
+ice-cream_1 := cn-lxm &
+[ ORTH <! "ice", "cream" !> ].
+
+idea_1 := cn-lxm &
+[ ORTH <! "idea" !>,
+  SS.LOC.CONT.SOA.NUCL r_idea ].
+
+improvement_1 := cn-lxm &
+[ ORTH <! "improvement" !>,
+  SS.LOC.CONT.SOA.NUCL r_improvement ].
+
+innocent_1 := cn-lxm &
+[ ORTH <! "innocent" !>,
+  SS.LOC.CONT.SOA.NUCL r_innocent ].
+
+judge_1 := cn-lxm &
+[ ORTH <! "judge" !>,
+  SS.LOC.CONT.SOA.NUCL r_judge ].
+
+jury_1 := cn-lxm &
+[ ORTH <! "jury" !>,
+  SS.LOC.CONT.SOA.NUCL r_jury ].
+
+kind_2 := cn-lxm &
+[ ORTH <! "kind" !>,
+  SS.LOC.CONT.SOA.NUCL r_kind ].
+
+language_1 := cn-lxm &
+[ ORTH <! "language" !>,
+  SS.LOC.CONT.SOA.NUCL r_language ].
+
+leaf_1 := cn-lxm &
+[ ORTH <! "leaf" !>,
+  SS.LOC.CONT.SOA.NUCL r_leaf ].
+
+leg_1 := cn-lxm &
+[ ORTH <! "leg" !>,
+  SS.LOC.CONT.SOA.NUCL r_leg ].
+
+letter_1 := cn-lxm &
+[ ORTH <! "letter" !>,
+  SS.LOC.CONT.SOA.NUCL r_letter ].
+
+library_1 := cn-lxm &
+[ ORTH <! "library" !>,
+  SS.LOC.CONT.SOA.NUCL r_library ].
+
+life_1 := cn-lxm &
+[ ORTH <! "life" !>,
+  SS.LOC.CONT.SOA.NUCL r_life ].
+
+light_1 := cn-lxm &
+[ ORTH <! "light" !>,
+  SS.LOC.CONT.SOA.NUCL r_light ].
+
+linguist_1 := cn-lxm &
+[ ORTH <! "linguist" !>,
+  SS.LOC.CONT.SOA.NUCL r_linguist ].
+
+list_2 := cn-lxm &
+[ ORTH <! "list" !>,
+  SS.LOC.CONT.SOA.NUCL r_list ].
+
+logic_1 := cn-lxm &
+[ ORTH <! "logic" !>,
+  SS.LOC.CONT.SOA.NUCL r_logic ].
+
+lunch_1 := cn-lxm &
+[ ORTH <! "lunch" !>,
+  SS.LOC.CONT.SOA.NUCL r_lunch ].
+
+mailbox_1 := cn-lxm &
+[ ORTH <! "mailbox" !>,
+  SS.LOC.CONT.SOA.NUCL r_mailbox ].
+
+martini_1 := cn-lxm &
+[ ORTH <! "martini" !>,
+  SS.LOC.CONT.SOA.NUCL r_martini ].
+
+master_1 := cn-lxm &
+[ ORTH <! "master" !>,
+  SS.LOC.CONT.SOA.NUCL r_master ].
+
+meal_1 := cn-lxm &
+[ ORTH <! "meal" !>,
+  SS.LOC.CONT.SOA.NUCL r_meal ].
+
+meeting_1 := cn-lxm &
+[ ORTH <! "meeting" !>,
+  SS.LOC.CONT.SOA.NUCL r_meeting ].
+
+man_1 := cn-lxm &
+[ ORTH <! "man" !>,
+  SS.LOC.CONT.SOA.NUCL r_man ].
+
+monster_1 := cn-lxm &
+[ ORTH <! "monster" !>,
+  SS.LOC.CONT.SOA.NUCL r_monster ].
+
+mother_1 := cn-lxm &
+[ ORTH <! "mother" !>,
+  SS.LOC.CONT.SOA.NUCL r_mother ].
+
+movie_1 := cn-lxm &
+[ ORTH <! "movie" !>,
+  SS.LOC.CONT.SOA.NUCL r_movie ].
+
+museum_1 := cn-lxm &
+[ ORTH <! "museum" !>,
+  SS.LOC.CONT.SOA.NUCL r_museum ].
+
+napkin_1 := cn-lxm &
+[ ORTH <! "napkin" !>,
+  SS.LOC.CONT.SOA.NUCL r_napkin ].
+
+neighborhood_1 := cn-lxm &
+[ ORTH <! "neighborhood" !>,
+  SS.LOC.CONT.SOA.NUCL r_neighborhood ].
+
+nephew_1 := cn-lxm &
+[ ORTH <! "nephew" !>,
+  SS.LOC.CONT.SOA.NUCL r_nephew ].
+
+night_1 := cn-lxm &
+[ ORTH <! "night" !>,
+  SS.LOC.CONT.SOA.NUCL r_night ].
+
+note_1 := cn-lxm &
+[ ORTH <! "note" !>,
+  SS.LOC.CONT.SOA.NUCL r_note ].
+
+opportunity_1 := cn-lxm &
+[ ORTH <! "opportunity" !>,
+  SS.LOC.CONT.SOA.NUCL r_opportunity ].
+
+painting_1 := cn-lxm &
+[ ORTH <! "painting" !>,
+  SS.LOC.CONT.SOA.NUCL r_painting ].
+
+park_1 := cn-lxm &
+[ ORTH <! "park" !>,
+  SS.LOC.CONT.SOA.NUCL r_park ].
+
+participant_1 := cn-lxm &
+[ ORTH <! "participant" !>,
+  SS.LOC.CONT.SOA.NUCL r_participant ].
+
+past_1 := cn-lxm &
+[ ORTH <! "past" !>,
+  SS.LOC.CONT.SOA.NUCL r_past ].
+
+patient_1 := cn-lxm &
+[ ORTH <! "patient" !>,
+  SS.LOC.CONT.SOA.NUCL r_patient ].
+
+pencil_1 := cn-lxm &
+[ ORTH <! "pencil" !>,
+  SS.LOC.CONT.SOA.NUCL r_pencil ].
+
+person_1 := cn-lxm &
+[ ORTH <! "person" !>,
+  SS.LOC.CONT.SOA.NUCL r_person ].
+
+phone_2 := cn-lxm &
+[ ORTH <! "phone" !>,
+  SS.LOC.CONT.SOA.NUCL r_phone ].
+
+picture_1 := cn-lxm &
+[ ORTH <! "picture" !>,
+  SS.LOC.CONT.SOA.NUCL r_picture ].
+
+police_1 := cn-lxm &
+[ ORTH <! "police" !>,
+  SS.LOC.CONT.SOA.NUCL r_police ].
+
+present_2 := cn-lxm &
+[ ORTH <! "present" !>,
+  SS.LOC.CONT.SOA.NUCL r_present ].
+
+price_1 := cn-lxm &
+[ ORTH <! "price" !>,
+  SS.LOC.CONT.SOA.NUCL r_price ].
+
+problem_1 := cn-lxm &
+[ ORTH <! "problem" !>,
+  SS.LOC.CONT.SOA.NUCL r_problem ].
+
+protester_1 := cn-lxm &
+[ ORTH <! "protester" !>,
+  SS.LOC.CONT.SOA.NUCL r_protester ].
+
+question_2 := cn-lxm &
+[ ORTH <! "question" !>,
+  SS.LOC.CONT.SOA.NUCL r_question ].
+
+race_2 := cn-lxm &
+[ ORTH <! "race" !>,
+  SS.LOC.CONT.SOA.NUCL r_race ].
+
+rain_1 := cn-lxm &
+[ ORTH <! "rain" !>,
+  SS.LOC.CONT.SOA.NUCL r_rain ].
+
+rake_2 := cn-lxm &
+[ ORTH <! "rake" !>,
+  SS.LOC.CONT.SOA.NUCL r_rake ].
+
+ravioli_1 := cn-lxm &
+[ ORTH <! "ravioli" !>,
+  SS.LOC.CONT.SOA.NUCL r_ravioli ].
+
+relative_1 := cn-lxm &
+[ ORTH <! "relative" !>,
+  SS.LOC.CONT.SOA.NUCL r_relative ].
+
+riot_1 := cn-lxm &
+[ ORTH <! "riot" !>,
+  SS.LOC.CONT.SOA.NUCL r_riot ].
+
+river_1 := cn-lxm &
+[ ORTH <! "river" !>,
+  SS.LOC.CONT.SOA.NUCL r_river ].
+
+roof_1 := cn-lxm &
+[ ORTH <! "roof" !>,
+  SS.LOC.CONT.SOA.NUCL r_roof ].
+
+room_1 := cn-lxm &
+[ ORTH <! "room" !>,
+  SS.LOC.CONT.SOA.NUCL r_room ].
+
+run_2 := cn-lxm &
+[ ORTH <! "run" !>,
+  SS.LOC.CONT.SOA.NUCL r_run ].
+
+scream_2 := cn-lxm &
+[ ORTH <! "scream" !>,
+  SS.LOC.CONT.SOA.NUCL r_scream ].
+
+seat_1 := cn-lxm &
+[ ORTH <! "seat" !>,
+  SS.LOC.CONT.SOA.NUCL r_seat ].
+
+senora_1 := cn-lxm &
+[ ORTH <! "senora" !>,
+  SS.LOC.CONT.SOA.NUCL r_senora ].
+
+sentence_1 := cn-lxm &
+[ ORTH <! "sentence" !>,
+  SS.LOC.CONT.SOA.NUCL r_sentence ].
+
+series_1 := cn-lxm &
+[ ORTH <! "series" !>,
+  SS.LOC.CONT.SOA.NUCL r_series ].
+
+shepherd_1 := cn-lxm &
+[ ORTH <! "shepherd" !>,
+  SS.LOC.CONT.SOA.NUCL r_shepherd ].
+
+song_1 := cn-lxm &
+[ ORTH <! "song" !>,
+  SS.LOC.CONT.SOA.NUCL r_song ].
+
+skate_2 := cn-lxm &
+[ ORTH <! "skate" !>,
+  SS.LOC.CONT.SOA.NUCL r_skate ].
+
+sneeze_2 := cn-lxm &
+[ ORTH <! "sneeze" !>,
+  SS.LOC.CONT.SOA.NUCL r_sneeze ].
+
+spot_2 := cn-lxm &
+[ ORTH <! "spot" !>,
+  SS.LOC.CONT.SOA.NUCL r_spot ].
+
+storm_1 := cn-lxm &
+[ ORTH <! "storm" !>,
+  SS.LOC.CONT.SOA.NUCL r_storm ].
+
+storm_cloud_1 := cn-lxm &
+[ ORTH <! "storm", "cloud" !>,
+  SS.LOC.CONT.SOA.NUCL r_storm_cloud ].
+
+student_1 := cn-lxm &
+[ ORTH <! "student" !>,
+  SS.LOC.CONT.SOA.NUCL r_student ].
+
+table_1 := cn-lxm &
+[ ORTH <! "table" !>,
+  SS.LOC.CONT.SOA.NUCL r_table ].
+
+tabs_1 := cn-lxm &
+[ ORTH <! "tabs" !>,
+  SS.LOC.CONT.SOA.NUCL r_tabs ].
+
+tail_1 := cn-lxm &
+[ ORTH <! "tail" !>,
+  SS.LOC.CONT.SOA.NUCL r_tail ].
+
+tale_1 := cn-lxm &
+[ ORTH <! "tale" !>,
+  SS.LOC.CONT.SOA.NUCL r_tale ].
+
+talk_3 := cn-lxm &
+[ ORTH <! "talk" !>,
+  SS.LOC.CONT.SOA.NUCL r_talk ].
+
+teacher_1 := cn-lxm &
+[ ORTH <! "teacher" !>,
+  SS.LOC.CONT.SOA.NUCL r_teacher ].
+
+team_1 := cn-lxm &
+[ ORTH <! "team" !>,
+  SS.LOC.CONT.SOA.NUCL r_team ].
+
+telescope_1 := cn-lxm &
+[ ORTH <! "telescope" !>,
+  SS.LOC.CONT.SOA.NUCL r_telescope ].
+
+television_1 := cn-lxm &
+[ ORTH <! "television" !>,
+  SS.LOC.CONT.SOA.NUCL r_television ].
+
+theorem_1 := cn-lxm &
+[ ORTH <! "theorem" !>,
+  SS.LOC.CONT.SOA.NUCL r_theorem ].
+
+thief_1 := cn-lxm &
+[ ORTH <! "thief" !>,
+  SS.LOC.CONT.SOA.NUCL r_thief ].
+
+thing_1 := cn-lxm &
+[ ORTH <! "thing" !>,
+  SS.LOC.CONT.SOA.NUCL r_thing ].
+
+thrill_1 := cn-lxm &
+[ ORTH <! "thrill" !>,
+  SS.LOC.CONT.SOA.NUCL r_thrill ].
+
+time_1 := cn-lxm &
+[ ORTH <! "time" !>,
+  SS.LOC.CONT.SOA.NUCL r_time ].
+
+town_1 := cn-lxm &
+[ ORTH <! "town" !>,
+  SS.LOC.CONT.SOA.NUCL r_town ].
+
+toy_1 := cn-lxm &
+[ ORTH <! "toy" !>,
+  SS.LOC.CONT.SOA.NUCL r_toy ].
+
+trash_1 := cn-lxm &
+[ ORTH <! "trash" !>,
+  SS.LOC.CONT.SOA.NUCL r_trash ].
+
+trick_2 := cn-lxm &
+[ ORTH <! "trick" !>,
+  SS.LOC.CONT.SOA.NUCL r_trick ].
+
+trouble_1 := cn-lxm &
+[ ORTH <! "trouble" !>,
+  SS.LOC.CONT.SOA.NUCL r_trouble ].
+
+tug_2 := cn-lxm &
+[ ORTH <! "tug" !>,
+  SS.LOC.CONT.SOA.NUCL r_tug ].
+
+tv_1 := cn-lxm &
+[ ORTH <! "tv" !>,
+  SS.LOC.CONT.SOA.NUCL r_tv ].
+
+twin_1 := cn-lxm &
+[ ORTH <! "twin" !>,
+  SS.LOC.CONT.SOA.NUCL r_twin ].
+
+type_1 := cn-lxm &
+[ ORTH <! "type" !>,
+  SS.LOC.CONT.SOA.NUCL r_type ].
+
+umbrella_1 := cn-lxm &
+[ ORTH <! "umbrella" !>,
+  SS.LOC.CONT.SOA.NUCL r_umbrella ].
+
+unicorn_1 := cn-lxm &
+[ ORTH <! "unicorn" !>,
+  SS.LOC.CONT.SOA.NUCL r_unicorn ].
+
+verb_1 := cn-lxm &
+[ ORTH <! "verb" !>,
+  SS.LOC.CONT.SOA.NUCL r_verb ].
+
+vote_3 := cn-lxm &
+[ ORTH <! "vote" !>,
+  SS.LOC.CONT.SOA.NUCL r_vote ].
+
+voter_1 := cn-lxm &
+[ ORTH <! "voter" !>,
+  SS.LOC.CONT.SOA.NUCL r_voter ].
+
+water_1 := cn-lxm &
+[ ORTH <! "water" !>,
+  SS.LOC.CONT.SOA.NUCL r_water ].
+
+window_1 := cn-lxm &
+[ ORTH <! "window" !>,
+  SS.LOC.CONT.SOA.NUCL r_window ].
+
+wine_1 := cn-lxm &
+[ ORTH <! "wine" !>,
+  SS.LOC.CONT.SOA.NUCL r_wine ].
+
+witness_1 := cn-lxm &
+[ ORTH <! "witness" !>,
+  SS.LOC.CONT.SOA.NUCL r_witness ].
+
+woman_1 := cn-lxm &
+[ ORTH <! "woman" !>,
+  SS.LOC.CONT.SOA.NUCL r_woman ].
+
+work_1 := cn-lxm &
+[ ORTH <! "work" !>,
+  SS.LOC.CONT.SOA.NUCL r_work ].
+
+worm_1 := cn-lxm &
+[ ORTH <! "worm" !>,
+  SS.LOC.CONT.SOA.NUCL r_worm ].
+

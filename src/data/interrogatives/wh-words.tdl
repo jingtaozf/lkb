@@ -1,0 +1,325 @@
+
+hell_0 := cn-lxm &
+[ ORTH <! "hell" !>,
+  SS.LOC.CAT.HEAD.MOD < [ WH <! param !> ] > ].
+
+
+
+
+
+;;; CCB - I'm guessing at the details of this from the tree in section 5.2 for "Whose cousin's friend"...
+
+inter_whose :=  inflected-lexeme+amalg &
+[ ORTH <! "whose" !>,
+  SS [ LOC [ CAT [ HEAD det,
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE <! #1 !> ],
+       WH <! #1 & param & [ INDEX #i ] !>,
+       SLASH <! !>,
+       REL <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+
+
+inter_how :=  inflected-lexeme+amalg &
+[ ORTH <! "how" !>,
+  SS [ LOC [ CAT [ HEAD det & [ DEG true ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE <! #1 !> ],
+       WH <! #1 & param & [ INDEX #i ] !>,
+       SLASH <! !>,
+       REL <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+big_0 := adj-lxm &
+[ ORTH <! "big" !>,
+  SS.LOC.CAT [ HEAD.DEG true,
+               SPR < [ LOC.CAT.HEAD.DEG true ] > ] ].
+
+a_0 := det-lxm &
+[ ORTH <! "a" !>,
+  SS.LOC.CAT.SPR < [ LOC.CAT [ HEAD adj ] ] > ].
+
+
+
+
+;;; <<< >>> WHO
+
+;;; 4 entries for each - one with a WH value and one without, times FOC vs not FOC....  CCB-  These are messy large structures, containing a lot of redundant info.  Reduce them when you get the chance
+
+
+;;; CCB - taken from Ch 5 of G&S; should have a preson_rel in the STORE's RESTR once you figure out how to do that.
+
+
+interrogative_who := inflected-lexeme+amalg &
+[ ORTH <! "who" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i,
+                            FOC false ],
+             STORE  <! #1 !> ],
+       REL <! !>,
+       WH <! #1 & param & [ INDEX #i,
+                            RESTR < [ PERSON #i ] > ] !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+interrogative_who-2 := inflected-lexeme+amalg &
+[ ORTH <! "who" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE <! param & [ INDEX #i,
+                                RESTR < [ PERSON #i ] >,
+                                FOC false ] !> ],
+       REL <! !>,
+       WH <! !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+interrogative_who-foc := inflected-lexeme+amalg &
+[ ORTH <! "WHÓ" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE  <! #1 & [ FOC true,
+                              RESTR < [ PERSON #i ] > ] !> ],
+       REL <! !>,
+       WH <! #1 & param & [ INDEX #i ] !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+interrogative_who-foc-2 := inflected-lexeme+amalg &
+[ ORTH <! "WHÓ" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE <! param & [ INDEX #i,
+                                RESTR < [ PERSON #i ] >,
+                                FOC true ] !> ],
+       REL <! !>,
+       WH <! !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+
+
+;;; <<< >>> WHOM
+
+
+interrogative_whom := inflected-lexeme+amalg &
+[ ORTH <! "whom" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i,
+                            RESTR < [ PERSON #i ] >,
+                            FOC false ],
+             STORE  <! #1 !> ],
+       REL <! !>,
+       WH <! #1 & param & [ INDEX #i ] !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+interrogative_whom-2 := inflected-lexeme+amalg &
+[ ORTH <! "whom" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE <! param & [ INDEX #i,
+                                RESTR < [ PERSON #i ] >,
+                                FOC false ] !> ],
+       REL <! !>,
+       WH <! !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+interrogative_whom-foc := inflected-lexeme+amalg &
+[ ORTH <! "WHÓM" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE  <! #1 & [ FOC true ] !> ],
+       REL <! !>,
+       WH <! #1 & param & [ INDEX #i ] !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+interrogative_whom-foc-2 := inflected-lexeme+amalg &
+[ ORTH <! "WHÓM" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE <! param & [ INDEX #i,
+                                RESTR < [ PERSON #i ] >,
+                                FOC true ] !> ],
+       REL <! !>,
+       WH <! !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+
+;;; <<< >>> WHAT
+
+
+
+interrogative_what := inflected-lexeme+amalg &
+[ ORTH <! "what" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i,
+                            RESTR < [ THING #i ] >,
+                            FOC false ],
+             STORE  <! #1 !> ],
+       REL <! !>,
+       WH <! #1 & param & [ INDEX #i ] !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+interrogative_what-2 := inflected-lexeme+amalg &
+[ ORTH <! "what" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE <! param & [ INDEX #i,
+                                RESTR < [ THING #i ] >,
+                                FOC false ] !> ],
+       REL <! !>,
+       WH <! !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+interrogative_what-foc := inflected-lexeme+amalg &
+[ ORTH <! "WHÁT" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE  <! #1 & [ FOC true,
+                              RESTR < [ THING #i ] > ] !> ],
+       REL <! !>,
+       WH <! #1 & param & [ INDEX #i ] !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+interrogative_what-foc-2 := inflected-lexeme+amalg &
+[ ORTH <! "WHÁT" !>,
+  SS [ LOC [ CAT [ HEAD noun & [ FORM normal, 
+	        	         ANA false,
+                                 AGR ref-index ],
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < >,
+                   ARG-ST < > ],
+             CONT param & [ INDEX #i ],
+             STORE <! param & [ INDEX #i,
+                                RESTR < [ THING #i ] >,
+                                FOC true ] !> ],
+       REL <! !>,
+       WH <! !>,
+       SLASH <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+
+
+
+
+
+;;; CCB - add exist_rel to the WH valuse, as per ch 5.
+
+exclamative_what :=  inflected-lexeme+amalg &
+[ ORTH <! "what" !>,
+  SS [ LOC [ CAT [ HEAD det,
+                   SUBJ < >,
+                   SPR < >,
+                   COMPS < > ],
+             CONT param & [ INDEX #i ],
+             STORE <! !> ],
+       WH <! param & [ INDEX #i ] !>,
+       SLASH <! !>,
+       REL <! !> ],
+  DTRS < inflected-lexeme > ].
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,25 @@
+(defparameter *grammar-version* "INTERROGATIVE CONSTRUCTIONS - 2000")
+
+(lkb-load-lisp (this-directory) "mrs-globals-ygg.lisp")
+(lkb-load-lisp (this-directory) "globals.lsp")
+(lkb-load-lisp (this-directory) "user-fns.lsp")
+(lkb-load-lisp (this-directory) "options.lisp")
+(read-tdl-type-files-aux
+     (list (lkb-pathname (parent-directory) "types.tdl")  
+           (lkb-pathname (parent-directory) "constructions.tdl")
+           (lkb-pathname (parent-directory) "lxm-types.tdl")
+           (lkb-pathname (parent-directory) "semantics.tdl")
+           (lkb-pathname (parent-directory) "reln.out")))
+(load-irregular-spellings (lkb-pathname (parent-directory) "irregs.lisp"))
+(read-morph-file-aux 
+     (lkb-pathname (parent-directory) "inflr.tdl"))
+(read-tdl-grammar-file-aux 
+     (lkb-pathname (parent-directory) "grules.tdl"))
+(read-tdl-lex-file-aux 
+     (list (lkb-pathname (parent-directory) "lexicon.tdl")
+           (lkb-pathname (parent-directory) "wh-words.tdl")
+           (lkb-pathname (parent-directory) "auxiliaries.tdl")
+           (lkb-pathname (parent-directory) "lexicon.out")))
+(read-tdl-psort-file-aux 
+     (lkb-pathname (parent-directory) "roots.tdl"))
+

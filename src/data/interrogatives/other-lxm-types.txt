@@ -1,0 +1,65 @@
+
+dummy-idiom-lxm := lexeme & 
+ [ SS.LOC [ CAT [ HEAD noun & [ ANA false ], 
+                  SUBJ <! !>,
+                  ARG-ST <! !> ] ] ].
+
+
+
+;;; CCB - pdp needs to be marked MOD < [ SS.LOC.CAT [ HEAD noun|verb ] ] >.  Should I put in two entries, or make a supertype in the pos hierarchy?
+
+pdp-lxm := p-lxm &
+ [ SS.LOC [ CAT [ HEAD [ ANA false ],
+	          SPR <! [ ] !>,
+                  ARG-ST <! [ LOC.CAT phrase-cat & [ HEAD noun,
+                                                     SPR <! !>,
+                                                     COMPS <! !> ] ], 
+
+                             [ LOC.CAT phrase-cat & [ HEAD noun,
+                                                      SPR <! !>,
+                                                      COMPS <! !> ] ] !> ] ] ].
+
+;; If the ARG-ST isn't limited to things of type NP then that info
+;; must be placed on the the ARG-ST of verbs using P-OBJ.
+;; The semantics are left empty in the book, do we need any?
+mkp-lxm := p-lxm &  
+ [ SS.LOC [ CAT [ HEAD [ MOD < >,
+		         P-OBJ < #1 > ],
+	          SPR <! !>,
+                  COMPS <! [ ] !>,
+                  ARG-ST <! #1 & [ LOC.CAT phrase-cat & [ HEAD noun,
+                                                         SPR <! !>,
+                                                         COMPS <! !> ] ] !> ] ] ].
+
+
+
+
+
+
+
+;;; CCB - adv-lxm isn't right.  Just a temp entry.  Look at the Malouf et al stuff for the approriate subcategorization.
+
+adv-lxm := const-lxm &
+[ SS.LOC.CAT [ HEAD adv,
+               SPR <! !>,
+               SUBJ <! !>,
+               COMPS <! !>,
+               ARG-ST <! !> ] ].
+
+easily_1 := adv-lxm &
+[ ORTH <! "easily" !> ].
+
+quickly_1 := adv-lxm &
+[ ORTH <! "quickly" !> ].
+
+today_1 := adv-lxm &
+[ ORTH <! "today" !> ].
+
+
+
+not_0 := adv-lxm & 
+[ ORTH <! "not" !>,
+  SS.LOC.CAT [ HEAD adv & [ FORM f_not ],
+               ARG-ST  <! !> ] ].
+
+

@@ -1,0 +1,7 @@
+; To start the LKB use these lines:
+(load "~/newlkb/src/general/loadup")
+(load-system "mrs" :force t)
+(push :vanilla *features*)
+
+; To load the benchmark softward type the following:
+(load-system "tsdb")

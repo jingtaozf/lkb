@@ -1,0 +1,226 @@
+#| I'm not longer treating the variation in auxilaries' forms as exections to the lexical rules; they're now all specified in the lexicon as inflected-lexemes.
+can 3RD-SING-VERB can
+would 3RD-SING-VERB would
+could 3RD-SING-VERB could
+should 3RD-SING-VERB should
+must 3RD-SING-VERB must
+will 3RD-SING-VERB will
+|#
+
+;;; <<< >>> LEXICAL ENTRIES FOR THE COPULA
+
+be_0 := inflected-lexeme &
+[ ORTH <! "be" !>,
+  SS.LOC.CAT [ HEAD [ FORM base ],
+               ARG-ST < synsem, [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+being_0 := inflected-lexeme &
+[ ORTH <! "being" !>,
+  SS.LOC.CAT [ HEAD [ FORM prp,
+                      PRED true ],
+               ARG-ST < synsem, [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+been_0 := inflected-lexeme &
+[ ORTH <! "been" !>,
+  SS.LOC.CAT [ HEAD [ FORM pfp ],
+               ARG-ST < synsem, [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+;;; CCB - the following finite forms need tense information.
+
+am_0 := inflected-lexeme &
+[ ORTH <! "am" !>,
+  SS.LOC.CAT [ HEAD [ FORM fin ],
+               ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM 1sg,
+                                          CASE nom ] ], 
+                         [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+are_0 := inflected-lexeme &
+[ ORTH <! "are" !>,
+  SS.LOC.CAT [ HEAD [ FORM fin ],
+               ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM non-1sg,
+                                          CASE nom ] ], 
+                         [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+is_0 := inflected-lexeme &
+[ ORTH <! "is" !>,
+  SS.LOC.CAT [ HEAD [ FORM fin ],
+               ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM 3sg,
+                                          CASE nom ] ], 
+                         [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+
+was_0 := inflected-lexeme &
+[ ORTH <! "was" !>,
+  SS.LOC.CAT [ HEAD [ FORM fin ],
+               ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM 1or3sg,
+                                          CASE nom ] ], 
+                         [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+were_0 := inflected-lexeme &
+[ ORTH <! "were" !>,
+  SS.LOC.CAT [ HEAD [ FORM fin ],
+               ARG-ST < [ LOC.CAT.HEAD [ AGR.PERNUM non-1sg,
+                                          CASE nom ] ], 
+                         [ LOC.CAT [ HEAD [ PRED true ] ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+;;; <<< >>> Dummy subject "be".  This case is for sentences like "There was a unicorn in the garden." where there is non-referential.
+
+there_0 := n-lxm &
+[ ORTH <! "there" !>,
+  SS.LOC.CAT.HEAD.AGR expl-there ].
+
+
+it_01 := n-lxm &
+[ ORTH <! "it" !>,
+  SS.LOC.CAT.HEAD.AGR expl-it & [ PERNUM 3sg ] ].
+
+
+dummy-are_0 := inflected-lexeme &
+[ ORTH <! "are" !>,
+  DTRS < dummy-auxv-lxm > ].
+
+
+dummy-is_0 := inflected-lexeme &
+[ ORTH <! "is" !>,
+  DTRS < dummy-auxv-lxm > ].
+
+
+dummy-was_0 := inflected-lexeme &
+[ ORTH <! "was" !>,
+  DTRS < dummy-auxv-lxm > ].
+
+
+dummy-were_0 := inflected-lexeme &
+[ ORTH <! "were" !>,
+  DTRS < dummy-auxv-lxm > ].
+
+
+;;; The Auxilary "do", including unfocused "do" and focused "dó".
+
+
+
+did_0 := inflected-lexeme &
+[ ORTH <! "DÍD" !>,
+  SS.LOC.CAT [ HEAD [ PRED false ],
+               SUBJ < [ LOC.CAT.HEAD.CASE nom ] >,
+               COMPS < [ LOC.CAT [ HEAD [ FORM base ],
+                                    COMPS < > ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+unfocused-did_0 := inflected-lexeme &
+[ ORTH <! "did" !>,
+  SS.LOC.CAT [ HEAD [ PRED false,
+                      AUX true ],
+               SUBJ < [ LOC.CAT.HEAD.CASE nom ] >,
+               COMPS < [ LOC.CAT [ HEAD [ FORM base ],
+                                    COMPS < > ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+do_0 := inflected-lexeme &
+[ ORTH <! "DÓ" !>,
+  SS.LOC.CAT [ HEAD [ PRED false ],
+               SUBJ < [ LOC.CAT.HEAD.CASE nom ] >,
+               COMPS < [ LOC.CAT [ HEAD [ FORM base ],
+                                    COMPS < > ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+unfocused-do_0 := inflected-lexeme &
+[ ORTH <! "do" !>,
+  SS.LOC.CAT [ HEAD [ PRED false,
+                      AUX true ],
+               SUBJ < [ LOC.CAT.HEAD.CASE nom ] >,
+               COMPS < [ LOC.CAT [ HEAD [ FORM base ],
+                                    COMPS < > ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+
+;;; CCB - Needs the idosyncratic infromation that not outscopes the content of won't's compliment.  See pg.24 of the English Aux paper.
+
+;;; I removed [ FORM fin ] because it excludes won't from the pol-int-cl consturction, since inter-cl specifies that the verb be [ FORM inf ].
+
+;;; I added [ CASE nom ] to SUBJ, and [ PRED false ] to HEAD.
+
+wont_0 := inflected-lexeme &
+[ ORTH <! "wont" !>,
+  SS.LOC.CAT [ HEAD [ NEG true ],
+               SUBJ < [ LOC.CAT.HEAD.CASE nom ] >,
+               COMPS < [ LOC.CAT [ HEAD [ FORM base ],
+                                    COMPS < > ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+
+have_0 :=  inflected-lexeme &
+[ ORTH <! "have" !>,
+  SS.LOC.CAT [ HEAD [ FORM fin ],
+               ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+;;; Definition for can_0, and wont_0 taken from "Rules and Exceptions in the English Auxiliary System," Sag 2000.
+
+
+can_0 :=  inflected-lexeme &
+[ ORTH <! "can" !>,
+  SS.LOC.CAT [ HEAD [ FORM fin ],
+               ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM base ] ] ] > ],
+  DTRS < auxv-lxm > ].
+
+
+
+
+
+
+
+;;; CCB - not_0 shouldn't be specified by FORM as it is in the Ling120 textbook, but instead by a relation in the semantics.  Fix that once you figure out the semantic types.
+
+not_0 := adv-lxm &
+[ ORTH <! "not" !>,
+  SS.LOC.CAT.HEAD [ FORM f_not,
+                    MOD < [ LOC.CAT.HEAD verb & [ FORM nonfin ] ] > ] ].
+
+
+
+could_0 := auxv-lxm &
+[ ORTH <! "could" !>,
+  SS.LOC.CAT [ ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM inf] ] ] > ] ].
+
+
+
+
+
+have_0 :=  auxv-lxm &
+[ ORTH <! "have" !>,
+  SS.LOC.CAT [ HEAD [ FORM fin ],
+               ARG-ST < [ ], [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] > ],
+  DTRS < auxv-lxm > ].

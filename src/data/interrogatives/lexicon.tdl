@@ -1,0 +1,327 @@
+the-possessive := inflected-lexeme &
+[ ORTH <! "s" !>,
+  SS [ LOC.CAT [ SPR < #1 >,
+                 ARG-ST < #1 & [ LOC.CAT phrase-cat & [ HEAD noun,
+                                                         SPR < > ],
+                                  WH #2 ] > ],
+       WH #2 ],
+  DTRS < det-lxm > ].
+
+
+
+and_1 := word &
+[ ORTH <! "and" !>,
+  SS.LOC.CAT [ HEAD conj,
+               SPR < >,
+               SUBJ < >,
+               COMPS < > ] ].
+
+
+
+;;; The definition for whether_0 and if_0 are taken from the Wh-Complemntizers section of the Basic Interrogatives Constructions chapter of the Ginzburg and Sag monograph.
+
+;;; CCB - The Ginzburg and Sag definition of "whether" also indicates that its SUBJ list be a list-of-pro-ss.  I'm not sure why this is.
+
+whether_0 := comp-lxm &
+[ ORTH <! "whether" !>,
+  SS.LOC [ CAT [ HEAD comp & [ IC false,
+                               FORM #2 ],
+                 ARG-ST < [ LOC [ CAT [ HEAD [ INV false,
+                                                FORM #2 ] ],
+                                   CONT #1 ] ] > ],
+           CONT question & [ PARAMS <! !>,
+                             PROP #1 ] ] ].
+
+
+
+if_0 := comp-lxm &
+[ ORTH <! "if" !>,
+  SS.LOC [ CAT [ HEAD comp & [ IC false,
+                               FORM #2 & fin ],
+                 ARG-ST < [ LOC [ CAT [ HEAD verb & [ INV false,
+                                                       FORM #2 ],
+                                         SUBJ < > ],
+                                   CONT #1 ] ] > ],
+           CONT question & [ PARAMS <! !>,
+                             PROP #1 ] ] ].
+
+
+;;; CCB - 5/17/00 - Changed the content of that_0 to be propositional rather than proposition, so that it would work with outcomes - "I insist that Sandy leave".
+that_0 := comp-lxm &
+[ ORTH <! "that" !>,
+  SS.LOC [ CAT [ HEAD comp & [ IC false,
+                               INF false,
+                               FORM #2 ],
+                 SUBJ < >,
+                 ARG-ST <  [ LOC [ CAT [ HEAD verb & [ INF false,
+                                                           INV false,
+                                                           FORM #2 ],
+                                            SUBJ < >,
+                                            COMPS < > ],
+                                      CONT #1 ] ] > ],
+           CONT #1 & propositional ] ].
+
+ 
+for_0 := comp-lxm &
+[ ORTH <! "for" !>,
+  SS.LOC [ CAT [ HEAD comp & [ IC false,
+                               INF true,
+                               FORM #4 & base ],
+                 SUBJ < >,
+                 ARG-ST < [ LOC #2 ], VP & 
+                                       [ LOC [ CAT [ HEAD [ INF true,
+                                                            FORM #4 ],
+                                                     SUBJ < [ LOC #2 ] > ],
+                                              CONT #1 ] ] > ],
+            CONT proposition & [ SOA #1 ] ] ].
+
+
+to_0 := inflected-lexeme &
+[ ORTH <! "to" !>,
+  SS.LOC [ CAT [ HEAD verb & [ FORM inf ],
+                 SUBJ < [ LOC #2,
+                           SLASH <! !> ] >,
+                 ARG-ST < synsem,  [ LOC [ CAT [ HEAD verb & [ FORM base ],
+                                               SUBJ < [ LOC #2 ] >,
+                                               COMPS < > ],
+                                         CONT #1 ] ] > ],
+           CONT #1 ],
+  DTRS < non-auxv-lxm & tran > ].
+                                        
+
+believe_0 := v-lxm &
+[ ORTH <! "believe" !>,
+  SS.LOC.CAT [ ARG-ST < synsem, [ LOC.CAT phrase-cat & [ HEAD comp,
+                                                       SUBJ < >,
+                                                       COMPS < > ] ] > ] ].
+
+wonder_0 := v-lxm &
+[ ORTH <! "wonder" !>,
+  SS.LOC.CONT.NUCL [ WONDERER #1,
+                     WONDERED #2 ],
+  SS.LOC.CAT [ ARG-ST < [ LOC.CONT.INDEX #1 ], [ LOC [ CAT phrase-cat & [
+                                                       HEAD.IC false,
+                                                       SUBJ < >,
+                                                       COMPS < > ],
+                                         CONT #2 & question ] ] > ] ].
+
+
+
+think_1 := ctv &
+[ ORTH <! "think" !>,
+  SS.LOC.CAT.COMPS < [ LOC.CAT.HEAD.IC false ] > ].
+
+
+
+
+
+insist_0 := v-lxm &
+[ ORTH <! "insist" !>,
+  SS.LOC.CAT [ ARG-ST < synsem, [ LOC [ CAT phrase-cat & [
+                                                       SUBJ < >,
+                                                       COMPS < > ],
+                                         CONT outcome ] ] > ] ].
+
+
+
+;;; "Easy" - an example of a lexical entry which has a compulsory extracting element.  Because my slash amalgimation constraint doesn't have any info about BIND, and is inflexible about words not composing all of their arguments SLASH values, I have to hand encode the SLASH AMALG constraint on the lexical entries for such cases.
+
+easy_0 := inflected-lexeme+slash_amalg &
+[ ORTH <! "easy" !>,
+  SS [ LOC.CAT [ HEAD adj & [ FORM normal,
+                              PRED true ],
+                 SUBJ < #1 & [ LOC.CAT phrase-cat & [ HEAD noun,
+                                                       SPR < > ] ] >,
+                 COMPS < #2 & [ LOC.CAT phrase-cat & [ HEAD verb & [ FORM inf ] ] ] >,
+                 ARG-ST < #1 & [ SLASH [ LIST #first,
+                                          LAST #rest ] ], 
+                          #2 & [ SLASH [ LIST *cons* & < #1 . #rest >,
+                                         LAST *null* & #last ] ] > ],
+       SLASH [ LIST #first,
+               LAST #last ] ],
+ DTRS < inflected-lexeme > ].
+
+
+
+please_1 := stv &
+[ ORTH <! "please" !> ].
+
+
+play_1 := ptv &
+[ ORTH <! "play" !> ].
+
+violin_1 := cn-lxm &
+[ ORTH <! "violin" !> ].
+
+sonata_1 := cn-lxm &
+[ ORTH <! "sonata" !> ].
+
+picture_0 := cn-lxm &
+[ ORTH <! "picture" !>,
+  SS.LOC.CAT.COMPS < [ LOC.CAT [ HEAD prep,
+                                 COMPS < > ] ] >  ].
+
+
+
+
+see_0 := stv &
+[ ORTH <! "see" !>,
+  SS.LOC.CONT [ NUCL r_see & [ OBSERVER #1,
+                               OBSERVED #2 ] ],
+  SS.LOC.CAT.ARG-ST < [ LOC.CONT.INDEX #1 ], [ LOC.CONT.INDEX #2 ] > ].
+
+
+
+
+a_1 := det-lxm &
+[ ORTH <! "a" !>,
+  SS.LOC.CAT.HEAD.AGR.PERNUM 3sg ].
+
+these_1 := det-lxm &
+[ ORTH <! "these" !>,
+  SS.LOC.CAT.HEAD.AGR.PERNUM 3pl,
+  SS.WH wh-none ].
+
+
+
+;;; Pronouns are hand encoded into the lexicon as infelcted-lexemes since they don't fit into the inflectional paradigm of other n-lxms.  By specifiying them as such the inflectional rules are circumvented.
+
+
+i_0 := inflected-lexeme &
+[ ORTH <! "i" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 1sg,
+                    CASE nom ],
+  DTRS < pron-lxm > ].
+
+
+me_0 := inflected-lexeme &
+[ ORTH <! "me" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 1sg,
+                    CASE acc ],
+  DTRS < pron-lxm > ].
+
+
+myself_0 := inflected-lexeme &
+[ ORTH <! "myself" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 1sg,
+                    CASE acc,
+                    ANA true ],
+  DTRS < pron-lxm > ].
+
+
+you_0 := inflected-lexeme &
+[ ORTH <! "you" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 2per ],
+  DTRS < pron-lxm > ].
+
+
+yourself_0 := inflected-lexeme &
+[ ORTH <! "yourself" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 2per,
+                    CASE acc,
+                    ANA true ],
+  DTRS < pron-lxm > ].
+
+
+she_0 := inflected-lexeme &
+[ ORTH <! "she" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND fem ],
+                    CASE nom ],
+  DTRS < pron-lxm > ].
+
+
+her_0 := inflected-lexeme &
+[ ORTH <! "her" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND fem ],
+                    CASE acc ],
+  DTRS < pron-lxm > ].
+
+
+herself_0 := inflected-lexeme &
+[ ORTH <! "herself" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND fem ],
+                    CASE acc,
+                    ANA true ],
+  DTRS < pron-lxm > ].
+
+
+he_0 := inflected-lexeme &
+[ ORTH <! "he" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND masc ],
+                    CASE nom ],
+  DTRS < pron-lxm > ].
+
+
+him_0 := inflected-lexeme &
+[ ORTH <! "him" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND masc ],
+                    CASE acc ],
+  DTRS < pron-lxm > ].
+
+
+himself_0 := inflected-lexeme &
+[ ORTH <! "himself" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND masc ],
+                    CASE acc,
+                    ANA true ],
+  DTRS < pron-lxm > ].
+
+
+it_0 := inflected-lexeme &
+[ ORTH <! "it" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND neut ] ],
+  DTRS < pron-lxm > ].
+
+
+itself_0 := inflected-lexeme &
+[ ORTH <! "itself" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3sg & [ GEND neut ],
+                    CASE acc,
+                    ANA true ],
+  DTRS < pron-lxm > ].
+
+
+we_0 := inflected-lexeme &
+[ ORTH <! "we" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 1pl,
+                    CASE nom ],
+  DTRS < pron-lxm > ].
+
+
+us_0 := inflected-lexeme &
+[ ORTH <! "us" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 1pl,
+                    CASE acc ],
+  DTRS < pron-lxm > ].
+
+
+ourselves_0 := inflected-lexeme &
+[ ORTH <! "ourselves" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 1pl,
+                    CASE acc,
+                    ANA true ],
+  DTRS < pron-lxm > ].
+
+
+
+they_0 := inflected-lexeme &
+[ ORTH <! "they" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3pl,
+                    CASE nom ],
+  DTRS < pron-lxm > ].
+
+
+them_0 := inflected-lexeme &
+[ ORTH <! "them" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3pl,
+                    CASE acc ],
+  DTRS < pron-lxm > ].
+
+
+themselves_0 := inflected-lexeme &
+[ ORTH <! "themselves" !>,
+  SS.LOC.CAT.HEAD [ AGR.PERNUM 3pl,
+                    CASE acc,
+                    ANA true ],
+  DTRS < pron-lxm > ].
+
