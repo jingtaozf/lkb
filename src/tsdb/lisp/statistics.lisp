@@ -94,7 +94,7 @@
 (defparameter *statistics-aggregate-maximum* 
   (min 20000 array-total-size-limit))
 
-(defparameter *statistics-result-filter* #'mrs-result-filter)
+(defparameter *statistics-result-filter* #'result-filter)
 
 (defparameter *statistics-critical-line-threshold* 500)
 

@@ -125,6 +125,7 @@ set globals(special_menues) {
   .menu.options.menu.condition
   .menu.options.menu.phenomena
   .menu.options.menu.switches
+  .menu.options.menu.filters
 }; # globals(special_menues)
 set globals(division) "";
 set globals(division,null) 1;
