@@ -34,7 +34,8 @@
 (defclass active-type-hier-window-pane (ccl::picture-window-pane)
    ((type-nodes :initarg type-nodes :initform nil :accessor type-nodes)
     (current-type-node :initarg type-tree :initform nil :accessor current-type-node)
-    (top-type-node :initarg top-type-node :initform nil :accessor top-type-node))
+    (top-type-node :initarg top-type-node :initform nil :accessor top-type-node)
+    (show-all-p :initarg show-all-p :initform nil :accessor show-all-p))
    (:default-initargs 
     :scroll-bar-class 'active-type-scroll-bar))
 
@@ -59,9 +60,12 @@
       (setf (get name 'daughters) nil))
    (clear-type-visibility)
    (propagate-visibility-in-type-tree type)
-   (let ((node (car (make-new-type-tree type show-all-p))))
+   (when old-window
+      (setq show-all-p (show-all-p (ccl::my-scroller old-window))))
+   (let ((node
+           (car (make-new-type-tree type show-all-p))))
       (draw-new-type-tree node
-         (format nil "Type hierarchy below ~(~A~)" type) t old-window)))
+         (format nil "Type hierarchy below ~(~A~)" type) t old-window show-all-p)))
 
 (defun close-existing-type-hierarchy-trees nil
    (dolist (w (windows :class 'active-type-hier-window))
@@ -110,7 +114,7 @@
 
 ;;;
 
-(defun draw-new-type-tree (node title horizontalp existing)
+(defun draw-new-type-tree (node title horizontalp existing show-all-p)
    (when existing
       (let ((pane (ccl::my-scroller existing)))
          (setf (type-nodes pane) nil)                   ; disable node menus while
@@ -169,6 +173,7 @@
          (setf (top-type-node (ccl::my-scroller real-window)) node)
          (setf (current-type-node (ccl::my-scroller real-window)) nil)
          (setf (type-nodes (ccl::my-scroller real-window)) *type-records*)
+         (setf (show-all-p (ccl::my-scroller real-window)) show-all-p)
          (if existing
             (invalidate-view real-window)
             (reposition-type-in-window node (ccl::my-scroller real-window) nil))
