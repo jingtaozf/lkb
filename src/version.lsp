@@ -1,1 +1,1 @@
-(defconstant *cvs-version* "x")
+(defconstant *cvs-version* "")
