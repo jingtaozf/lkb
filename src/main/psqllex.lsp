@@ -2,6 +2,9 @@
 ;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
+;;; modifications by bmw (sep-03)
+;;; - LexDB menu
+
 ;;; modifications by bmw (aug-03)
 ;;; - lexicon loading code
 ;;; - db scratch space
@@ -61,6 +64,8 @@
 (defvar *current-user* nil)
 (defvar *current-lang* nil)
 (defvar *current-country* nil)
+
+(defvar *scratch-tdl-file* nil)
 
 ;; obsolete...
 (defun open-psql-lex (&rest rest)
@@ -256,18 +261,12 @@
   (let ((connection (connection database)))
     (unless connection
       (error "database ~s has no active connection." database))
-
-    ;(time
-    
     (multiple-value-bind (recs cols recs-count)
         (pg:sql (sql-string query) :db connection)
       (setf (records query) recs 
             (columns query) cols
             (count-recs query) recs-count))
-    
-    ;)
-    
-    (if *psql-verbose-query* ;;; verbosity flag
+    (if *psql-verbose-query*
 	(format *trace-output* "~%~a~%=>~%~a" (sql-string query) (records query)))
     query))
 
@@ -441,7 +440,8 @@
   (declare (ignore cache))
   (if (connection lexicon)
       (let* (
-	     (orthstr (string-downcase (sql-escape-string orth)))
+	     ;;(orthstr (string-downcase (sql-escape-string orth)))
+	     (orthstr (string-downcase orth))
 	     (sql-str (sql-retrieve-entries-by-orthkey lexicon (make-requested-fields lexicon) orthstr))
 	     (query-res (run-query 
 			 lexicon 
@@ -619,8 +619,7 @@
 	       (make-instance 'sql-query
 		 :sql-string (format 
 			      nil
-                              (fn lexicon 'update-entry (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le))
-                 )))))
+                              (fn lexicon 'update-entry (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le)))))))
 
 (defmethod set-lex-entry-scratch ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   ;(set-version psql-le lexicon) 
@@ -633,8 +632,7 @@
      lexicon 
      (make-instance 'sql-query
        :sql-string (format nil
-			   (fn lexicon 'update-entry-scratch (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le))
-			   )))))
+			   (fn lexicon 'update-entry-scratch (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le)))))))
 
 (defmethod clear-scratch ((lexicon psql-database))
   (fn-get-records lexicon ''clear-scratch))
@@ -650,7 +648,7 @@
     (let* ((connection (connect lexicon)))
       (if *tmp-lexicon* (clear-lex *tmp-lexicon*))
       (setf *tmp-lexicon* lexicon)
-      (format t "~%Initializing lexical database ~a" (dbname lexicon))
+      (format t "~%(Re)initializing ~a" (dbname lexicon))
       (cond
        (connection
 	(unless (string>= (server-version lexicon) "7.3")
@@ -659,12 +657,12 @@
 	(unless (string>= (get-db-version lexicon) *psql-db-version*)
 	  (error "Your database structures (v. ~a) are out of date. See the latest script import.sql." (get-db-version lexicon)))
 	(make-field-map-slot lexicon)
-	(format t ".")
+	;(format t ".")
 	(retrieve-fn-defns lexicon)
 	(clear-scratch lexicon)
-	(format t ".")
+	;(format t ".")
 	(fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
-	(format t ".")
+	;(format t ".")
 	)
        (t
 	(error 
@@ -685,7 +683,7 @@
 
 ;;; hack (psql-lex-database does not use temporary lexicon files)
 (defmethod delete-temporary-lexicon-files ((lexicon psql-lex-database))
-  ;: does nothing
+  ;;; does nothing
   )
 
 (defun orth-string-to-str-list (string)
@@ -832,24 +830,31 @@
   (fn lexicon 'retrieve-entry select-list word))
 
 (defmethod dump-db ((lexicon psql-lex-database) filename)  
+  (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''dump-db filename))
 
 (defmethod dump-multi-db ((lexicon psql-lex-database) filename)  
+  (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''dump-multi-db filename))
 
 (defmethod merge-into-db ((lexicon psql-lex-database) filename)  
+  (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''merge-into-db filename))
 
 (defmethod merge-multi-into-db ((lexicon psql-lex-database) filename)  
+  (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''merge-multi-into-db filename))
 
 (defun dump-psql-lexicon (filename)
+  (setf filename (namestring (pathname filename)))
   (dump-db *psql-lexicon* filename))
 
 (defun dump-multi-psql-lexicon (filename)
+  (setf filename (namestring (pathname filename)))
   (dump-multi-db *psql-lexicon* filename))
 
 (defun merge-into-psql-lexicon (filename)
+  (setf filename (namestring (pathname filename)))
   (unless
       (and *psql-lexicon* (connection *psql-lexicon*))
     (initialize-psql-lexicon))
@@ -857,6 +862,7 @@
   (initialize-psql-lexicon))
 
 (defun merge-multi-into-psql-lexicon (filename)
+  (setf filename (namestring (pathname filename)))
   (unless
       (and *psql-lexicon* (connection *psql-lexicon*))
     (initialize-psql-lexicon))
@@ -1012,20 +1018,21 @@
 ;;;
 
 (defmethod set-filter ((lexicon psql-lex-database))  
-  (let ((filter
+  (let* ((old-filter (get-filter lexicon))
+	(filter
          (ask-user-for-x "Alter filter" 
-                         (cons "New filter?" (get-filter lexicon)))))
-    (when filter
+                         (cons "New filter?" old-filter))))
+    (when (and filter (string/= filter old-filter))
       (if (catch 'pg:sql-error 
-            (fn-get-records lexicon ''initialize-current-grammar filter)
+            (format t "~%Updating filter")
+	    (fn-get-records lexicon ''initialize-current-grammar filter)
+	    (format t "~%New filter active")
             )
 	  (set-filter lexicon))
       )))
 
 (defun set-filter-psql-lexicon nil
-  (set-filter *psql-lexicon*)
-  ;(initialize-psql-lexicon)
-  )
+  (set-filter *psql-lexicon*))
 
 (defun sql-embedded-text (str)
   (cond
@@ -1039,5 +1046,81 @@
 ;;;
 ;;; set (uninitialized) lexicon
 ;;;
-(setf *psql-lexicon* (make-instance 'psql-lex-database))
+(unless *psql-lexicon* (setf *psql-lexicon* (make-instance 'psql-lex-database)))
+
+
+;;;
+;;; LexDB menu commands
+;;;
+
+(defun command-merge-into-psql-lexicon (&rest rest)
+  (let ((filename
+	 (cond
+	  ((= (length rest) 0)
+	   (ask-user-for-existing-pathname "CSV file?"))
+	  ((= (length rest) 1)
+	   (first rest))
+	  (t
+	   (error "to many arguments")))))
+    (when filename
+      (merge-into-psql-lexicon filename)
+      (lkb-beep))))
+  
+(defun command-dump-psql-lexicon (&rest rest)
+  (let ((filename
+	 (cond
+	  ((= (length rest) 0)
+	   (ask-user-for-new-pathname "CSV file?"))
+	  ((= (length rest) 1)
+	   (first rest))
+	  (t
+	   (error "to many arguments")))))
+    (when filename
+      (dump-psql-lexicon filename)
+      (lkb-beep))))
+  
+(defun command-export-lexicon-to-tdl (&rest rest)
+  (let ((filename
+	 (cond
+	  ((= (length rest) 0)
+	   (ask-user-for-new-pathname "TDL file?"))
+	  ((= (length rest) 1)
+	   (first rest))
+	  (t
+	   (error "to many arguments")))))
+    (when filename
+      (export-lexicon-to-tdl :file filename)
+      (lkb-beep))))
+  
+(defun command-set-filter-psql-lexicon (&rest rest)
+  (apply 'set-filter-psql-lexicon rest)
+  (lkb-beep))
+
+(defun command-load-scratch-lex nil
+  (let ((filename (ask-user-for-existing-pathname "TDL file?")))
+    (when filename
+      (load-scratch-lex :filename filename)
+      (lkb-beep))))
+
+(defun command-clear-scratch-lex nil
+  (format t "~%Clearing scratch entries")
+  (clear-lex *lexicon* :in-isolation t)
+  (setf *scratch-tdl-file* nil)
+  (lkb-beep))
+
+(defun command-merge-tdl-into-psql-lexicon (&rest rest)
+  (let ((filename
+	 (cond
+	  ((= (length rest) 0)
+	   (or *scratch-tdl-file* (ask-user-for-existing-pathname "TDL file?")))
+	  ((= (length rest) 1)
+	   (first rest))
+	  (t
+	   (error "to many arguments")))))
+    (when filename
+      (merge-tdl-into-psql-lexicon filename)
+      (lkb-beep))))
+
+
+
 

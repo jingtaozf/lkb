@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2001 -- 2002 
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron;
-;;;   see `licence.txt' for conditions.
+;;   see `licence.txt' for conditions.
 
 ;;;
 ;;; export lexicon in various formats
@@ -59,43 +59,60 @@
 
 (defun export-lexicon-to-file2 (&key (file *export-file*) 
 				    (separator *export-separator*)
-				    (lexicon *lexicon*))
+				     (lexicon *lexicon*))
+  (setf file (namestring (pathname file)))
+  
   (setf *export-file* file)
   (setf *export-separator* separator)
 
   ;;; extra data in db entries
   (setf *current-source* (get-current-source))
   (setf *export-timestamp* (extract-date-from-source *current-source*))
-  (unless *current-lang* 
-    (setf *current-lang* 
-      (ask-user-for-x 
-       "Export Lexicon" 
-       (cons "Language code?" "EN"))))
+  
+  (setf *current-source* 
+    (ask-user-for-x 
+     "Export Lexicon" 
+     (cons "Source?" (or (extract-pure-source-from-source *current-source*) ""))))
+  (unless *current-source* (throw 'abort 'source))
+  
+  (setf *export-timestamp* 
+    (ask-user-for-x 
+     "Export Lexicon" 
+     (cons "Modstamp?" (or *export-timestamp* "1990-01-01"))))
+  (unless *export-timestamp* (throw 'abort 'modstamp))
+  
+  (setf *current-lang* 
+    (ask-user-for-x 
+     "Export Lexicon" 
+     (cons "Language code?" (or *current-lang* "EN"))))
   (unless *current-lang* (throw 'abort 'lang))
-  (unless *current-country* 
-    (setf *current-country* 
-      (ask-user-for-x 
-       "Export Lexicon" 
-       (cons "Country code?" "US"))))
+  
+  (setf *current-country* 
+    (ask-user-for-x 
+     "Export Lexicon" 
+     (cons "Country code?" (or *current-country* "UK"))))
   (unless *current-country* (throw 'abort 'country))
+  
   (setf *current-user* 
     (ask-user-for-x 
      "Export Lexicon" 
-     (cons "Username?" "guest")))
+     (cons "Username?" (or *current-user* "danf"))))
   (unless *current-user* (throw 'abort 'user))
+  
   (setf *export-version* 
     (ask-user-for-x 
      "Export Lexicon" 
      (cons "Version?" "0")))
   (unless *export-version* (throw 'abort 'version))
+  
   (setf *export-version* 
     (symb-2-str (str-2-num *export-version*)))
   
   (let ((csv-file (format nil "~a.csv" file))
 	(skip-file (format nil "~a.skip" file))
 	(multi-file (format nil "~a.multi.csv" file)))
-    (format *trace-output* "~%Exporting lexicon to CSV file ~a" csv-file)
-    (format *trace-output* "~%   (skip file: ~a)" skip-file)
+    (format t "~%Exporting lexicon to CSV file ~a" csv-file)
+    (format t "~%   (skip file: ~a)" skip-file)
     
     (if *export-multi-separately*
 	;; set multi stream
@@ -107,14 +124,15 @@
 			   skip-file
 			   :direction :output 
 			   :if-exists :supersede :if-does-not-exist :create)
-	    (format *trace-output* "~%   (multi file: ~a)" multi-file)
+	    (format t "~%   (multi file: ~a)" multi-file)
 	    (export-to-csv-to-file lexicon csv-file)))	  
       ;; no multi stream
       (with-open-file (*export-skip-stream* 
 		       skip-file
 		       :direction :output 
 		       :if-exists :supersede :if-does-not-exist :create)
-	(export-to-csv-to-file lexicon csv-file)))))
+	(export-to-csv-to-file lexicon csv-file))))
+  (format t "~%Export complete"))
   
 (defun ask-user-for-x (head promptDcons)
   (car (ask-for-strings-movable head 
@@ -130,56 +148,64 @@
   (unless
       (and output-lexicon (connection output-lexicon))
     (setf output-lexicon (initialize-psql-lexicon)))
-  
+
   (setf *export-output-lexicon* output-lexicon)
-  ;(setf *current-source* (get-current-source))
+  
   (setf *current-source* 
     (ask-user-for-x 
      "Export Lexicon" 
      (cons "Source?" *current-source*)))
   (unless *current-source* (throw 'abort 'source))
-  ;(setf *export-timestamp* (extract-date-from-source *current-source*))
-  (setf *export-timestamp* "NOW") ;;hack!! fixme!!
-  (unless *current-lang* 
+  
+  (setf *export-timestamp* "NOW") ;; fixme?
+  
     (setf *current-lang* 
       (ask-user-for-x 
        "Export Lexicon" 
-       (cons "Language code?" "EN"))))
-  (unless *current-lang* (throw 'abort 'lang))
-  (unless *current-country* 
+       (cons "Language code?" (or *current-lang* "EN"))))
+    (unless *current-lang* (throw 'abort 'lang))
+    
     (setf *current-country* 
       (ask-user-for-x 
        "Export Lexicon" 
-       (cons "Country code?" "US"))))
-  (unless *current-country* (throw 'abort 'country))
-;  (setf *current-user* 
-;    (ask-user-for-x 
-;     "Export Lexicon" 
-;     (cons "Username?" "guest")))
-;  (unless *current-user* (throw 'abort 'user))
-  
-  (format *trace-output* 
-	  "~%Exporting lexical entries to DB ~a" 
+       (cons "Country code?" (or *current-country* "UK"))))
+    (unless *current-country* (throw 'abort 'country))
+    
+  (format t 
+	  "~%Exporting lexical entries to ~a" 
 	  (dbname output-lexicon))  
-  (export-to-db lexicon output-lexicon))
+  (export-to-db lexicon output-lexicon)
+  (format t "~%Export complete"))
   
 (defun export-lexicon-to-tdl (&key (file *export-file*)
 				   (lexicon *lexicon*))
+  (setf file (namestring (pathname file)))
   (let ((tdl-file (format nil "~a.tdl" file)))
-    (format *trace-output* "~%Exporting lexicon to TDL file ~a" tdl-file)
-    (export-to-tdl-to-file lexicon tdl-file)))
+    (if (equal (subseq file (- (length file) 4)) ".tdl")
+	(setf tdl-file file))
+    (format t "~%Exporting lexicon to TDL file ~a" tdl-file)
+    (export-to-tdl-to-file lexicon tdl-file))
+  (format t "~%Export complete~%"))
 
 (defun extract-date-from-source (source)
   (if (not (stringp source))
-      (format *trace-output* "WARNING: unable to determine modstamp for grammar")
+      (format t "WARNING: unable to determine modstamp for grammar")
     (let* ((start (position #\( source :test #'equal))
 	   (end (position #\) source :test #'equal))
 	   (date (and start end (< (1+ start) end)
 		      (subseq source (1+ start) end))))
       (if date
 	  date
-	(format *trace-output* "WARNING: unable to determine modstamp for grammar")))))
+	(format t "WARNING: unable to determine modstamp for grammar")))))
       
+(defun extract-pure-source-from-source (source)
+  (let* ((end (position #\( source :test #'equal))
+	 (pure-source (and end (< 1 end)
+			   (subseq source 0 end))))
+    (if pure-source
+	(string-trim '(#\Space) pure-source)
+      source)))
+
 (defun extract-key-from-unification (unification)
   (when (unification-p unification)
     (let ((lhs (unification-lhs unification)))
@@ -308,6 +334,7 @@
    (collect-psort-ids lexicon)))
 
 (defmethod export-to-unpacked-tdl-to-file ((lexicon lex-database) filename)
+  (setf filename (namestring (pathname filename)))
   (with-open-file 
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-unpacked-tdl lexicon ostream)))
@@ -385,13 +412,7 @@
 (defun pack-order (x y)
   (let ((a (pack-order-str x))
 	(b (pack-order-str y)))
-    ;(cond
-     ;((and (eq (car x) 'LIST) (eq (car y) 'LAST))
-     ; t)
-     ;(t
-      (string< a b)
-      ;))
-    ))
+      (string< a b)))
 
 (defun pack-order-str (x)
   (cond
@@ -406,6 +427,7 @@
    (collect-psort-ids lexicon)))
 
 (defmethod export-to-tdl-to-file ((lexicon lex-database) filename)
+  (setf filename (namestring (pathname filename)))
   (with-open-file 
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-tdl lexicon ostream)))
@@ -450,8 +472,7 @@
 	 (branches (cdr p))
 	 (a-branch-flag (not (cdr (first branches))))
 	 (a-branch)
-	 (len)
-	 )
+	 (len))
   (setf i (+ i 3 (length (string root))))
     (when a-branch-flag
       (setf a-branch (pop branches)))
@@ -558,16 +579,17 @@
   (let ((fields-map
 	 (and *psql-lexicon* (fields-map *psql-lexicon*))))
     (unless fields-map
-      (format *trace-output* 
+      (format t 
 	      "~%WARNING: using default fields map *export-default-fields-map*")
       (setf fields-map *export-default-fields-map*))
-    (format *trace-output* "~%Export fields map:~%~a~%" fields-map)
+    (format t "~%Export fields map:~%~a~%" fields-map)
     (mapc 
      #'(lambda (x) 
 	 (format stream "~a" (to-csv (read-psort lexicon x :recurse nil) fields-map)))
      (collect-psort-ids lexicon :recurse nil))))
 
 (defmethod export-to-csv-to-file ((lexicon lex-database) filename)
+  (setf filename (namestring (pathname filename)))
   (with-open-file 
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-csv lexicon ostream)))
@@ -654,8 +676,7 @@
 	      separator base-name
 	      separator particle
 	      separator type
-	      separator keyrel
-	      ))
+	      separator keyrel))
     ""))
 
 (defun subseq-from-end (seq rev-end &optional (rev-start 0))
@@ -687,7 +708,7 @@
      ((equal (subseq name 0 2) "i_")
       (subseq name 2))
      (t
-      (format *trace-output* "WARNING: cannot generate base name for idiom ~a~%" name-full)
+      (format t "WARNING: cannot generate base name for idiom ~a~%" name-full)
       (format nil "UNKNOWN_BASE_~a" name)))))
 
 (defun multi-vpc-base-name (name-full)
@@ -698,7 +719,7 @@
        (position #\_ name))
     (subseq name 0 (position #\_ name)))
      (t
-      (format *trace-output* "WARNING: cannot generate base name for vpc ~a~%" name-full)
+      (format t "WARNING: cannot generate base name for vpc ~a~%" name-full)
       (format nil "UNKNOWN_BASE_~a" name)))))
 
 (defmethod export-to-db ((lexicon lex-database) output-lexicon)
@@ -744,13 +765,14 @@
 	    :ocompkey ocompkey
 	    :country *current-country*
 	    :lang *current-lang*
-	    :source *current-source*
+	    :source (extract-pure-source-from-source *current-source*)
+	    :confidence 1
 	    :flags 1)))
     (cond
      ((= total (length (lex-entry-unifs x)))
       (set-lex-entry lexicon psql-le))
      (t
-      (format *trace-output* "~%skipping super-rich entry: `~a'~%"  name)
+      (format t "~%skipping super-rich entry: `~a'~%"  name)
       nil))))
 
 (defmethod to-db-scratch ((x lex-entry) (lexicon psql-lex-database))  
@@ -796,9 +818,8 @@
      ((= total (length (lex-entry-unifs x)))
       (set-lex-entry-scratch lexicon psql-le))
      (t
-      (format *trace-output* "~%skipping super-rich entry: `~a'~%"  name)
-      nil)))
-  )
+      (format t "~%skipping super-rich entry: `~a'~%"  name)
+      nil))))
 
 (defun get-current-source nil
   (cond
@@ -807,10 +828,10 @@
    ((boundp 'common-lisp-user::*grammar-version*)
     common-lisp-user::*grammar-version*)
    (t
-    (format *trace-output* "WARNING: no *GRAMMAR-VERSION* defined!")
-   )))
+    (format t "WARNING: no *GRAMMAR-VERSION* defined!"))))
 
 (defun merge-tdl-into-psql-lexicon2 (file-in)
+  (setf file-in (namestring (pathname file-in)))
   (let ((tmp-lex (create-empty-cdb-lex))
 	(file-out (get-new-filename "~/tmp/lexicon")))
     (unless (probe-file file-in)
@@ -820,9 +841,15 @@
     (merge-into-psql-lexicon (namestring (probe-file (format nil "~a.csv" file-out))))))
 
 (defun merge-tdl-into-psql-lexicon (file-in)
+  (setf file-in (namestring (pathname file-in)))
   (let ((tmp-lex (create-empty-cdb-lex)))
   (unless (probe-file file-in)
     (error "~%file not found (~a)" file-in))
   (load-lex tmp-lex :filename file-in)
   (export-lexicon-to-db :lexicon tmp-lex :output-lexicon *psql-lexicon*)
   (clear-lex tmp-lex)))
+
+(defun load-scratch-lex (&key filename)
+  (load-lex *lexicon* :filename filename)
+  (setf *scratch-tdl-file* filename))
+

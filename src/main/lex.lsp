@@ -29,7 +29,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-(defvar *lexicon-in*) ;; ugly
+(defvar *lexicon-in*)
 (defvar *verbose-lex-lookup-word* nil)
 (defvar *psql-lexicon*)
 
@@ -534,7 +534,6 @@
   (let* ((words (if (next-method-p) (call-next-method)))
 	 (extra 
 	    (loop
-					;:try sublexicon
 		for lexicon in (extra-lexicons lexicon)
 		for extra-words = (and lexicon (lex-words lexicon))
 		collect extra-words))
@@ -585,8 +584,7 @@
      (extra-lexicons lexicon))  
 					;:unlink from super-lexicons
     (mapcar #'(lambda (lex) (unlink lexicon lex)) (part-of lexicon)))
-    lexicon
-  ))
+    lexicon))
   
 
 ;;; End of general methods
@@ -616,7 +614,6 @@
          id type stem)
       finally (when file (close stream))))
 
-;; -bmw-
 ;; moved from clex.lsp (it belongs here)
 
 (defmethod collect-expanded-lex-ids ((lexicon lex-database))
@@ -639,13 +636,17 @@
   (load-cdb-lexicon-from-script)))
 
 (defun load-cdb-lexicon-from-script nil
+  (format t "~%Loading lexicon")
   (clear-lex *lexicon* :psorts-temp-file *psorts-temp-file* :no-delete t)
-  (load-cached-lexicon-if-available *lexicon*))
+  (load-cached-lexicon-if-available *lexicon*)
+  (format t "~%Loading complete"))
 
 (defun load-psql-lexicon-from-script nil
+  (format t "~%Loading lexicon")
   (clear-lex *lexicon* :psorts-temp-file "~/tmp/templex")
   (setf *psql-lexicon* (make-instance 'psql-lex-database))
-  (link (load-lex *psql-lexicon*) *lexicon*))
+  (link (load-lex *psql-lexicon*) *lexicon*)
+  (format t "~%Loading complete"))
 
 (defun get-keyword-val (keyword list)
   (second (member keyword list)))

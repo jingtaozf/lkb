@@ -12,10 +12,10 @@ INSERT INTO meta VALUES ('filter', 'TRUE');
 --- main table
 ---
 CREATE TABLE revision (
-  name VARCHAR(95),
-  type VARCHAR(95),
-  orthography VARCHAR(200),
-  orthkey VARCHAR(200),
+  name VARCHAR(95) NOT NULL,
+  type VARCHAR(95) NOT NULL,
+  orthography VARCHAR(200) NOT NULL,
+  orthkey VARCHAR(200) NOT NULL,
   pronunciation VARCHAR(200),
   keyrel VARCHAR(50),
   altkey VARCHAR(50),
@@ -54,6 +54,42 @@ CREATE UNIQUE INDEX name_modstamp
 ON revision (name,modstamp); 
 
 CREATE INDEX revision_name_modstamp ON revision (name, modstamp);
+
+CREATE VIEW revision_view AS
+ SELECT
+  lower(name) AS name,
+  lower(type) AS type,
+  lower(orthography) AS orthography,
+  lower(orthkey) AS orthkey,
+  pronunciation,
+  lower(keyrel) AS keyrel,
+  lower(altkey) AS altkey,
+  lower(alt2key) AS alt2key,
+  lower(keytag) AS keytag,
+  lower(compkey) AS compkey,
+  lower(ocompkey) AS ocompkey,
+  complete,
+  semclasses,
+  preferences,
+  classifier,
+  selectrest,
+  jlink,
+  comments,
+  exemplars,
+  usages,
+  lang,
+  country,
+  dialect,
+  domains,
+  genres,
+  register,
+  confidence,
+  version,
+  source,
+  flags,
+  userid,
+  modstamp
+ FROM revision;
 
 ---
 --- multi word entries
@@ -105,14 +141,14 @@ CREATE VIEW multi_revision AS
   rev.userid,
   rev.modstamp
 
-	FROM multi LEFT JOIN revision AS rev 
+	FROM multi LEFT JOIN revision_view AS rev 
 		ON rev.name = multi.verb_id;
 
 ---
 --- table on which queries executed
 ---
 
-CREATE TABLE current_grammar AS SELECT * FROM revision WHERE NULL;
+CREATE TABLE current_grammar AS SELECT * FROM revision_view WHERE NULL;
 
 CREATE UNIQUE INDEX current_grammar_name
 ON current_grammar (name); 
@@ -123,7 +159,7 @@ ON current_grammar (orthkey);
 ---
 --- scratch tables
 ---
-CREATE TABLE temp AS SELECT * FROM revision WHERE NULL;
+CREATE TABLE temp AS SELECT * FROM revision_view WHERE NULL;
 CREATE TABLE multi_temp AS SELECT * FROM multi WHERE NULL;
 
 CREATE TABLE scratch (
@@ -208,7 +244,7 @@ INSERT INTO qry VALUES
 INSERT INTO qrya VALUES ( 'next-version', 0, 'text');
 INSERT INTO qry VALUES 
        ( 'next-version', 1, 
-         'SELECT COALESCE(1 + max(version),0) FROM revision WHERE (name,user) = ($0,user)');
+         'SELECT COALESCE(1 + max(version),0) FROM revision_view WHERE (name,user) = ($0,user)');
 
 INSERT INTO qry VALUES 
        ( 'orthography-set', 0, 
@@ -248,7 +284,7 @@ DROP VIEW multi_revision_filtered;
 
 CREATE VIEW revision_filtered
 AS SELECT * 
-     FROM revision
+     FROM revision_view
      WHERE flags = 1
       AND $0;
 
@@ -392,16 +428,16 @@ COPY multi_temp TO $0 DELIMITERS '','';
 --- views
 ---
 
-CREATE VIEW active AS SELECT * FROM revision WHERE NULL;
-CREATE VIEW revision_active AS SELECT * FROM revision WHERE NULL;
-CREATE VIEW revision_filtered AS SELECT * FROM revision WHERE NULL;
-CREATE VIEW revision_filtered_union_scratch_revision AS SELECT * FROM revision WHERE NULL;
-CREATE VIEW multi_revision_active AS SELECT * FROM revision WHERE NULL;
-CREATE VIEW multi_revision_filtered AS SELECT * FROM revision WHERE NULL;
+CREATE VIEW active AS SELECT * FROM revision_view WHERE NULL;
+CREATE VIEW revision_active AS SELECT * FROM revision_view WHERE NULL;
+CREATE VIEW revision_filtered AS SELECT * FROM revision_view WHERE NULL;
+CREATE VIEW revision_filtered_union_scratch_revision AS SELECT * FROM revision_view WHERE NULL;
+CREATE VIEW multi_revision_active AS SELECT * FROM revision_view WHERE NULL;
+CREATE VIEW multi_revision_filtered AS SELECT * FROM revision_view WHERE NULL;
 
 CREATE VIEW new_pkeys 
        AS SELECT t2.* from 
-          ((SELECT name,userid,version FROM revision) t1 
+          ((SELECT name,userid,version FROM revision_view) t1 
            RIGHT OUTER JOIN 
            (SELECT name,userid,version FROM temp) t2 
            USING (name,userid,version))

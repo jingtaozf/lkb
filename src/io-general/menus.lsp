@@ -38,8 +38,16 @@
                       lkb::clear-mrs-rules
                       lkb::choose-mrs-output-level
                       ;; lexical db
-                      ;lkb::initialize-psql-lexicon
-                      ;lkb::set-filter-psql-lexicon
+                      ;lkb::load-cdb-lexicon-from-script
+                      ;lkb::load-psql-lexicon-from-script
+                      ;lkb::export-lexicon
+                      lkb::command-merge-into-psql-lexicon
+                      lkb::command-dump-psql-lexicon
+                      lkb::command-export-lexicon-to-tdl
+                      lkb::command-load-scratch-lex
+                      lkb::command-clear-scratch-lex
+                      lkb::command-merge-tdl-into-psql-lexicon		      
+                      lkb::command-set-filter-psql-lexicon		      
                       ;; generate
                       lkb::show-gen-result
                       lkb::show-generator-input
@@ -262,19 +270,6 @@
                                      :value 'stop-generator-server
                                      :available-p :mrs))
                :available-p :mrs)
-;         (make-lkb-submenu-item :menu-title "LexDB"
-;                 :menu-items                       
-;                 (list 
-;                  #+:psql
-;                  (make-menu-item :name "Reinitialize"
-;                                  :value 'initialize-psql-lexicon
-;                                  :available-p :always)
-;                  #+:psql
-;                  (make-menu-item :name "Set filter"
-;                                  :value 'set-filter-psql-lexicon
-;                                  :available-p :always)
-;                  )
-;                 :available-p :always)
          (make-lkb-submenu-item :menu-title "Debug"
                                 :available-p :grammar
                                 :menu-items
@@ -303,6 +298,46 @@
 ;                        :available-p :grammar)
                      )
 		  :available-p :always)
+         (make-lkb-submenu-item :menu-title "LexDB"
+                 :menu-items                       
+                 (list 
+                  #+:psql
+                  (make-menu-item :name "Merge new entries"
+                                  :value 'command-merge-into-psql-lexicon
+                                  ;:available-p :always
+				  )
+                  #+:psql
+                  (make-menu-item :name "Dump"
+                                  :value 'command-dump-psql-lexicon
+                                  ;:available-p :always
+				  )
+                  #+:psql
+                  (make-menu-item :name "Dump (TDL format)"
+                                  :value 'command-export-lexicon-to-tdl
+                                  ;:available-p :always
+				  )
+                  #+:psql
+                  (make-menu-item :name "Filter"
+                                  :value 'command-set-filter-psql-lexicon
+                                  ;:available-p :always
+				  )
+                  #+:psql
+                  (make-menu-item :name "Load scratch"
+                                  :value 'command-load-scratch-lex
+                                  ;:available-p :always
+				  )
+                  #+:psql
+                  (make-menu-item :name "Commit scratch"
+                                  :value 'command-merge-tdl-into-psql-lexicon
+                                  ;:available-p :always
+				  )
+                  #+:psql
+                  (make-menu-item :name "Clear scratch"
+                                  :value 'command-clear-scratch-lex
+                                  ;:available-p :always
+				  )
+                  )
+		 :available-p :always)
 	    (make-lkb-submenu-item 
 	     :menu-title "Options"
 	     :menu-items                       

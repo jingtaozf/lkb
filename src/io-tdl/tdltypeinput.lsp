@@ -679,7 +679,7 @@
 
 
 
-(defun read-tdl-symbol (istream name path-so-far in-default-p)
+(defun read-tdl-symbol2 (istream name path-so-far in-default-p)
   (declare (ignore name))
   (read-char istream) ; get rid of the '
   (let* ((symbol (lkb-read istream t)))
@@ -687,6 +687,41 @@
                                       (format nil "~A" symbol) in-default-p))))
 
 
+(defun read-tdl-symbol (istream name path-so-far in-default-p)
+  (declare (ignore name))
+  (read-char istream) ; get rid of the '
+  (let* ((symbol (lkb-read-preserving-case istream t)))
+      (list (make-tdl-path-value-unif (reverse path-so-far) 
+                                      (format nil "~A" symbol) in-default-p))))
+
+
+(defun lkb-read-preserving-case (&rest rest)
+  (let ((case (readtable-case *readtable*))
+	(res))
+    (setf (readtable-case *readtable*) :preserve)
+    (setf res (apply 'lkb-read rest))
+    (setf (readtable-case *readtable*) case)
+    res))
+    
+
+;(defun read-tdl-symbol (istream name path-so-far in-default-p)
+;  (declare (ignore name))
+;  (read-char istream) ; get rid of the '
+;  (let* ((symbol (lkb-read-string-symbol istream)))
+;      (list (make-tdl-path-value-unif (reverse path-so-far) 
+;                                      (format nil "~A" symbol) in-default-p))))
+
+
+;(defun lkb-read-string-symbol (istream)
+;  (loop
+;      with char-list
+;      and ch
+;      while (not (equal (setf ch (read-char istream)) #\Space))
+;      do
+;	(push ch char-list)
+;      finally
+;	(return (apply 'concatenate (cons 'string (mapcar 'string (reverse char-list)))))))
+	
 (defun read-tdl-type (istream name path-so-far in-default-p)
   (declare (ignore name))
   (let ((type (lkb-read istream t)))
