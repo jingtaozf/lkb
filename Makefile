@@ -165,7 +165,8 @@ lkb_windows:
 	      windows; \
 	  ${RM} -f /c/tmp/lkb_windows.zip; \
           zip -r /c/tmp/lkb_windows.zip windows; )
-	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip oe@lingo:/tmp;
+	scp /c/tmp/lkb_windows.tgz /c/tmp/lkb_windows.zip \
+          oe@lingo.stanford.edu:/tmp;
 
 lkb_documentation:
 	( \
