@@ -4,34 +4,37 @@
 ;;; CSLI, Stanford University, USA
 
 
-;;; Not done yet:
-;;; *** multi-word lexical entries? (might need a lattice of lex possibilties
-;;; if one entry can cover more than a single relation)
-;;; *** morph generation?
+;;;
 
-(defstruct (gen-chart-edge (:include edge))
-   ;; category: not used
-   ;; id, rule-number, children, leaves: filled in, but not used by generation
-   ;; algorithm itself
+(defstruct (dotted-chart-edge (:include edge))
    res ; feature name of mother in rule dag in active edges
    needed ; ordered list of names of daughter features still to be found
+   )
+
+(defstruct (gen-chart-edge (:include dotted-chart-edge))
+   ;; category: not used
+   ;; id, rule-number, leaves: filled in, not used by generation
+   ;; algorithm itself, but needed for chart display etc
    lex-used ; indices to sets of generator lexical alternatives used so far
    )
+
 
 (defvar *gen-chart* nil)
 (defvar *gen-record* nil)
 (defvar *gen-chart-unifs* 0)
 (defvar *gen-chart-fails* 0)
+(defvar *gen-filter-debug* nil)
+
 
 (defparameter *semantics-index-path* '(synsem local cont index)
    "path used by generator to index chart")
 
 
 (proclaim
-   '(special *edge-id* *orth-path* *toptype* *start-symbol*
-       mrs::*initial-semantics-path*
-       mrs::*psoa-liszt-path*
-       ))
+   '(special *edge-id* *safe-not-to-copy-p* *orth-path* *toptype*
+       *start-symbol* *debugging*
+       mrs::*initial-semantics-path* mrs::*psoa-liszt-path*))
+
 
 ;;; utility functions
 
@@ -45,23 +48,27 @@
    (substitute item nil lst :count 1))
 
 (defun gen-chart-intersection-p (lst1 lst2)
-   (member-if #'(lambda (x) (member x lst1)) lst2))
+   (member-if #'(lambda (x) (member x lst1 :test #'eq)) lst2))
 
 
 ;;;
 
 (defun generate-from-mrs (input-sem)
    (let*
-      ((found-lex-alts
-         (reverse ; ***
-            (mapcar
-               #'(lambda (s)
-                   (remove 'THAT_C s :key #'mrs::found-lex-lex-id))
-               (mrs::collect-lex-entries-from-mrs input-sem)))))
-      (if found-lex-alts
-         (chart-generate input-sem
-            (mapcar #'(lambda (s) (mapcar #'mrs::found-lex-inst-fs s))
-                found-lex-alts))
+      ((found-lex-list
+          (apply #'append (mrs::collect-lex-entries-from-mrs input-sem)))
+       (filtered
+          (remove 'THAT_C found-lex-list :key #'mrs::found-lex-lex-id))
+       (empty
+          (mapcar
+            #'(lambda (x)
+                (mrs::make-found-lex
+                   :lex-id x
+                   :inst-fs (lex-or-psort-full-fs (get-psort-entry x))))
+            (remove "CONJ" mrs::*empty-semantics-lexical-entries* :key #'string
+               :test #'search))))
+      (if filtered
+         (chart-generate input-sem (append filtered empty))
          (format t "~%No lexical entries could be found from MRS relations - have ~
                     functions index-lexicon and index-lexical-rules been run yet?"))))
 
@@ -86,29 +93,30 @@
 ;;; attempts, number of unification failures, number of active edges, number
 ;;; of inactive, total number of chart edges
 
-(defun chart-generate (input-sem lex-entry-alts)
-   (setf main::*suppressed-VM-arg-roles* nil) ; ***
+(defun chart-generate (input-sem found-lex-items)
    (setq *edge-id* 0)
    (setq *gen-chart* nil)
    (setq *gen-record* nil)
    (let ((*safe-not-to-copy-p* t)
-         (*gen-chart-unifs* 0) (*gen-chart-fails* 0) (n 0)
+         (*gen-chart-unifs* 0) (*gen-chart-fails* 0)
          (start-time (get-internal-run-time)))
       #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
-      (dolist (lex-entry-alt lex-entry-alts)
-         (incf n) ; restrict to use only 1 FS from each alt - indexed by n
-         (dolist (lex-entry-fs lex-entry-alt)
-            (let ((word (extract-orth-from-fs lex-entry-fs)))
-               (gen-chart-add-inactive
-                  (make-gen-chart-edge
-                     :id (next-edge) :rule-number word
-                     :dag lex-entry-fs
-                     :needed nil
-                     :lex-used (list n)
-                     :children nil :leaves (list word))
-                 input-sem))))
+      (dolist (found found-lex-items)
+         (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
+                (word (extract-orth-from-fs lex-entry-fs)))
+            (gen-chart-add-inactive
+               (make-gen-chart-edge
+                  :id (next-edge) :rule-number word
+                  :dag lex-entry-fs
+                  :needed nil
+                  :lex-used
+                  (append (mrs::found-lex-main-rels found)
+                          (mrs::found-lex-alternative-rels found)
+                          (mrs::found-lex-message-rels found))
+                  :children nil :leaves (list word))
+              input-sem)))
       (setq *gen-record*
-         (gen-chart-find-complete-edges input-sem lex-entry-alts))
+         (gen-chart-find-complete-edges input-sem))
       (let* ((total-time
                 (truncate (* 1000 (- (get-internal-run-time) start-time))
                    internal-time-units-per-second))
@@ -125,7 +133,7 @@
 ;;; Finish off syntactically complete analyses, and return those that
 ;;; cover all of input semantics 
 
-(defun gen-chart-find-complete-edges (input-sem lex-entry-alts)
+(defun gen-chart-find-complete-edges (input-sem)
    ;; from edges that use an entry from each of input lex-entry-alts, try to
    ;; derive all possible inactive edges with 'root' rule - from these retain
    ;; ones which have correct top category, and don't have any semantics missing.
@@ -134,11 +142,10 @@
    ;; orthographies of the lex entries passed in
    (let ((res nil))
       (dolist (e (gen-chart-retrieve-with-index *toptype* nil))
-         ;; process has so far checked that we have used no more than a single
-         ;; entry from each alt - now check that have used all alts that contain
-         ;; any entries
+         ;; process has so far checked that we have not generated any relation more
+         ;; than once - now check that we have generated them all
          (when (eql (length (gen-chart-edge-lex-used e))
-                  (count-if #'identity lex-entry-alts))
+                    (1- (length (mrs::psoa-liszt input-sem)))) ; *** prpstn_rel
             (dolist
                (new
                   (gen-chart-root-edges e
@@ -250,12 +257,10 @@
          (gen-chart-test-active edge e input-sem))
       ;; see if we can create new active edges by instantiating the head
       ;; daughter of a rule
-      ;; *** do we want rules which have orthographic effects? i.e. use
-      ;; spelling-change-rule-p - depends on what lexical items we get passed
       (dolist (rule (get-indexed-rules (gen-chart-edge-dag edge) #'spelling-change-rule-p))
          (when *debugging*
             (format t "~&Trying to create new active edge from rule ~A and inactive edge ~A"
-               (gen-chart-edge-id edge) (rule-id rule)))
+               (rule-id rule) (gen-chart-edge-id edge)))
          (multiple-value-bind (gen-daughter-order head-index) ; zero-based on daughters
                (gen-chart-rule-ordered-daughters rule)
             (let
@@ -288,7 +293,7 @@
 
 (defun gen-chart-test-active (inact act input-sem)
    ;; can extend active edge with inactive? First check to make sure new edge
-   ;; would use no more than 1 entry from each lexical alt
+   ;; would not generate any relation more than once
    (when (not (gen-chart-intersection-p (gen-chart-edge-lex-used act)
                  (gen-chart-edge-lex-used inact)))
       (when *debugging*
@@ -316,7 +321,7 @@
                         (append (gen-chart-edge-lex-used act)
                            (gen-chart-edge-lex-used inact))
                         :children
-                        (let ((combined
+                        (let ((combined ; *** not very clean, really need an index
                                (if (car (gen-chart-edge-children act))
                                   (list act inact) (list inact act))))
                            (if (rest (gen-chart-edge-needed act))
@@ -354,7 +359,8 @@
       (let
          ((dag (gen-chart-edge-dag act)))
          (unless (gen-chart-inaccessible-needed-p
-                    dag input-sem (gen-chart-edge-lex-used act))
+                    dag input-sem (gen-chart-edge-lex-used act)
+                    (gen-chart-edge-leaves act))
             (setf (gen-chart-edge-dag act) dag)
             (setf (gen-chart-edge-res act) nil)
             (setf (gen-chart-edge-leaves act)
@@ -368,11 +374,8 @@
 ;;; Present but inaccessible means: instance type is in dag semantics but not
 ;;; in *semantics-index-path* or rest of dag. (The only access we allow to
 ;;; semantics in rules is to *semantics-index-path*)
-;;; !!! relies on original lex-entry-alts being in same order as input mrs
-;;; since identifies relations not yet generated by relating lex-used to
-;;; input-sem
 
-(defun gen-chart-inaccessible-needed-p (dag input-sem lex-used)
+(defun gen-chart-inaccessible-needed-p (dag input-sem lex-used leaves)
    (let
       ((sem-fs
         (or (existing-dag-at-end-of (tdfs-indef dag)
@@ -384,33 +387,31 @@
       (let
          ((present-inaccessible-lvs
               (gen-chart-present-inaccessible-variables-in (tdfs-indef dag) sem-fs))
-          (not-yet-generated-lvs nil)
-          (n 0))
+          (not-yet-generated-lvs nil))
          (dolist (rel (mrs::psoa-liszt input-sem))
-            (incf n)
-            (unless (member n lex-used)
+            (unless (member rel lex-used :test #'eq)
                (dolist (fvpair (mrs::rel-flist rel))
                   (when (mrs::var-p (mrs::fvpair-value fvpair))
                      (pushnew
                         ;; lv in portion of input-sem that hasn't been generated yet
-                        (intern (format nil "%~A~A"
-                                   ;; *** messy
-                                   (if (consp (mrs::var-type (mrs::fvpair-value fvpair)))
-                                      (car (mrs::var-type (mrs::fvpair-value fvpair)))
-                                      (mrs::var-type (mrs::fvpair-value fvpair)))
-                                   (mrs::var-id (mrs::fvpair-value fvpair))))
+                        (mrs::make-instance-type (mrs::fvpair-value fvpair))
                         not-yet-generated-lvs)))))
          ;(print sem-fs)
          ;(print (list lex-used present-inaccessible-lvs not-yet-generated-lvs))
-         ;(when (gen-chart-intersection-p present-inaccessible-lvs not-yet-generated-lvs)
-         ;   (print (list lex-used present-inaccessible-lvs not-yet-generated-lvs)))
-         (gen-chart-intersection-p
-            present-inaccessible-lvs not-yet-generated-lvs))))
+         (let ((to-be-generated-but-inaccessible-p
+                  (gen-chart-intersection-p
+                     present-inaccessible-lvs not-yet-generated-lvs)))
+            (when (and to-be-generated-but-inaccessible-p *gen-filter-debug*)
+               (format t "~&Filtered out candidate inactive edge covering ~A ~
+                          with IVs ~(~A~) in semantics that are no longer reachable, ~
+                          but which has still to generate relations containing ~(~A~)"
+                  leaves present-inaccessible-lvs not-yet-generated-lvs))
+            to-be-generated-but-inaccessible-p))))
 
 
 (defun gen-chart-present-inaccessible-variables-in (dag sub-dag)
    ;; return set of instance types that are in sub-dag (semantic part in call)
-   ;; but not in remainder of dag U *semantics-index-path*
+   ;; but do not occur anywhere in remainder of dag U *semantics-index-path*
    (set-difference
       (gen-chart-instance-variables-in sub-dag nil nil)
       (gen-chart-instance-variables-in dag sub-dag
@@ -438,7 +439,7 @@
          (dolist (type (type-of-fs dag))
             (when (instance-type-parent type) (pushnew type res))))
       (t
-         (when (instance-type-parent (type-of-fs dag)) ; instance type could be complex
+         (when (instance-type-parent (type-of-fs dag)) ; instance type could be non-atomic
             (pushnew (type-of-fs dag) res))
          (setf (dag-visit dag) :visited)
          (dolist (arc (dag-arcs dag))
@@ -467,37 +468,20 @@
 
 
 (defun gen-chart-evaluate-unification (rule-tdfs daughter-index fs completedp
-      mother-path ; &optional nu-orth
-      )
+      mother-path)
    ;; c.f. evaluate-unifications in parse.lsp
-   ;; modified for YADU
    ;; 
-   ;; An additional optional argument is given. This is the
-   ;; new orthography if the unification relates to a morphological
-   ;; process. If it is present, it is inserted in the resulting fs.
-   ;; The actual process of unification 
+   ;; No orthography done here - it was done during the production of the initial
+   ;; set of candidate lexical entries 
    ;;
-   ;; unify path <daughter-index> of rule-tdfs with fs, then return copy
-   ;; of rule-tdfs
-   ;;
+   ;; unify path <daughter-index> of rule-tdfs with fs, then if completedp is true
+   ;; return mother portion of rule-tdfs
    (with-unification-context (ignore)
       (incf *gen-chart-unifs*)
       (unless
          (yadu-features daughter-index rule-tdfs nil fs)
          (incf *gen-chart-fails*)
          (return-from gen-chart-evaluate-unification nil))
-;
-;             (when (and unification-result nu-orth)
-;               (let ((tmp-orth-path *orth-path*))
-;                 (for orth-value in (split-into-words nu-orth)
-;                      do
-;                      (let ((opath (create-path-from-feature-list 
-;                                    (append tmp-orth-path *list-head*))))
-;                        (unify-paths opath                    
-;                                     (tdfs-indef unification-result) 
-;                                     (make-u-value :types (list orth-value)) nil))
-;                      (setf tmp-orth-path (append tmp-orth-path *list-tail*)))))
-;
       (if completedp
          ;; delete arcs just holding constituents' feature structures - before copying
          ;; otherwise their copies would be thrown away immediately
@@ -528,7 +512,7 @@
 
 
 
-;;; Print out contents of generator chart (tty output) (print-gen-chart)
+;;; Print out contents of generator chart (tty output) - (print-gen-chart)
 
 (defun print-gen-chart ()
    (format t "~&------~%")
@@ -549,7 +533,7 @@
 
 
 #|
-;;; collect orth / mrs of entries in lex sets
+;;; for debugging collect orth / mrs of entries in lex sets
 
 (mapcar
    #'(lambda (lex-entry-alt)
