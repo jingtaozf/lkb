@@ -18,7 +18,11 @@ update:
 	  ${CVS} commit -f -m "auto-update for build" \
             ${ROOT}/lkb/src/version.lsp; \
 	  $(MAKE) all; \
-	) 2>&1 | ${TEE} /tmp/build.${USER}
+	) 2>&1 | ${TEE} ${ROOT}/lkb/build
+	( \
+	  cd ${ROOT}/lkb/log; \
+	  cvs commit -m "" build; \
+	)
 
 all: lkb erg spanish itsdb
 
@@ -242,6 +246,7 @@ itsdb_data:
 	      --exclude=src/tsdb/skeletons/english/vm13 \
 	      --exclude=src/tsdb/skeletons/english/vm31 \
 	      --exclude=src/tsdb/skeletons/english/vm32 \
+	      --exclude=src/tsdb/skeletons/english/wsj00 \
 	      --exclude=src/tsdb/skeletons/yy \
 	      --exclude=src/tsdb/home/trees \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
