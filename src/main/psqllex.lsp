@@ -822,7 +822,6 @@
 	 (args (cdr tmp))
 	 (fn-defn (list 'defun fn-name args format-cmd))
 	 )
-    (print fn-defn)
     (eval fn-defn)))
 
 (defun new-fn-name (str)
@@ -906,6 +905,7 @@
       while j))
 
 (defun time-parse (str)
+  (setf *psql-verbose-query* t)
   (time
    (parse
     (split-into-words 
