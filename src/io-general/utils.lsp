@@ -300,4 +300,101 @@
         (setf ok nil)))
       ok))
 
-  
+
+
+(defun display-lex-words nil
+  (let ((stream lkb::*lkb-background-stream*))
+    (format stream "~%")
+    (loop for word in (list-lex-words)
+        do (format stream "~A, " (string-downcase word)))
+    (format stream "~%")))
+
+(defun list-lex-words nil
+  (sort (lex-words *lexicon*) #'string-lessp))
+
+(defun list-lex-ids nil
+  (sort (collect-psort-ids *lexicon*) #'string-lessp))
+
+(defun list-grammar-rules nil
+  (let ((rule-names nil))
+    (maphash #'(lambda (name value)
+                 (declare (ignore value))
+                 (push name rule-names))
+             *rules*)
+    (sort rule-names #'string-lessp)))
+
+(defun list-lex-rules nil
+  (let ((rule-names nil))
+    (maphash #'(lambda (name value)
+                 (declare (ignore value))
+                 (push name rule-names))
+             *lexical-rules*)
+    (sort rule-names #'string-lessp)))
+    
+
+(defun print-chart-toplevel nil
+  (let ((stream lkb::*lkb-background-stream*))
+    (print-chart :stream stream)))
+
+(defun print-gen-chart-toplevel nil
+  (let ((stream lkb::*lkb-background-stream*))
+    (print-gen-chart :stream stream)))
+
+;;; Output of derivation trees
+
+(defun construct-derivation-trees nil
+  (loop for parse in *parse-record*
+      collect
+        (deriv-tree-compute-derivation-tree parse)))
+
+#|
+;;; for batch parsing
+;;; (setf *do-something-with-parse* 'print-derivation-trees)
+
+(defun print-derivation-trees nil
+  (format *ostream* "~%~S" (construct-derivation-trees)))
+
+;;; *ostream* is set to the output stream for the batch parse
+;;; in parse.lsp
+
+|#
+
+;;; the following are borrowed from the tsdb code 
+;;; with some modifications
+
+(defun deriv-tree-edge-label (edge)
+  (intern 
+   (typecase (edge-rule edge)
+     (string (string-upcase (edge-rule edge)))
+     (symbol (string (edge-rule edge)))
+     (rule (string (rule-id (edge-rule edge))))
+     (t :unknown))
+   :lkb))
+
+(defun deriv-tree-compute-derivation-tree (edge)
+  (let ((edge-children 
+         (or (edge-children edge) 
+             (if (edge-morph-history edge)
+                 (list (edge-morph-history edge))))))
+    (if edge-children
+      (let* ((start *chart-limit*)
+             (end 0)
+             (children
+              (loop
+                  for child in edge-children
+                    collect
+                    (let ((derivation 
+                           (deriv-tree-compute-derivation-tree 
+                            child)))
+                      (setf start (min start (second derivation)))
+                      (setf end (max end (third derivation)))
+                      derivation))))
+        (nconc (list (deriv-tree-edge-label edge) start end)
+               children))
+      (list (first (edge-lex-ids edge))
+            (edge-from edge) (edge-to edge)
+            (list (car (edge-leaves edge)) 
+                  (edge-from edge) (edge-to edge))))))
+
+
+
