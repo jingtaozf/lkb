@@ -56,10 +56,6 @@
 
 (defvar *sppp-debug-p* nil)
 
-#+:allegro
-(eval-when (:load-toplevel :compile-toplevel :execute)
-  (require :process))
-
 (defun initialize-sppp ()
 
   (when *sppp-application*
@@ -87,6 +83,7 @@
                   :wait t :output "/dev/null" :error-output "/dev/null")
      (run-process "kill -QUIT ~d" *sppp-pid* 
                   :wait t :output "/dev/null" :error-output "/dev/null"))
+    #+:allegro
     (sys:os-wait nil *sppp-pid*)
     (setf *sppp-pid* nil)))
 
@@ -121,6 +118,10 @@
        "<?xml version='1.0' encoding='utf-8'?><text>~a</text>~%~a~%"
        (xml-escape-string text) #\page)
       (force-output stream))
+    (let ((n (array-dimension *sppp-input-chart* 0)))
+      (when (>= (length text) n)
+        (setf *sppp-input-chart* 
+          (adjust-array *sppp-input-chart* (list n 2)))))
     (setf (stream-external-format stream) (excl:find-external-format :utf-8))
     (let ((*package* (find-package :lkb))
           (n (loop
@@ -138,8 +139,6 @@
                    (incf size size)
                    (setf *sppp-input-buffer* 
                      (adjust-array *sppp-input-buffer* size))
-                   (setf *sppp-input-chart* 
-                     (adjust-array *sppp-input-chart* (list size 2)))
                  when (char= c #\page) do
                    (return n)
                  while c do (vector-push c *sppp-input-buffer*))))
@@ -157,7 +156,7 @@
 
 (defun sppp-process-segment (segment)
   (loop
-      for i from 0 to (- (array-dimension *sppp-input-buffer* 0) 1)
+      for i from 0 to (- (array-dimension *sppp-input-chart* 0) 1)
       do
         (setf (aref *sppp-input-chart* i 0) nil)
         (setf (aref *sppp-input-chart* i 1) nil))
@@ -172,7 +171,7 @@
           (push token (aref *sppp-input-chart* to 1)))
     (loop
         with n = 0
-        for i from 0 to (- (array-dimension *sppp-input-buffer* 0) 1)
+        for i from 0 to (- (array-dimension *sppp-input-chart* 0) 1)
         for foo = (aref *sppp-input-chart* i 0)
         when foo do
           (loop
@@ -251,7 +250,7 @@
              (decf padding 5)))
           (vector-push #\; result)
           (when (<= padding 0)
-            (setf padding 42)
+            (setf padding 128)
             (incf length padding)
             (setf result (adjust-array result length)))
         else do

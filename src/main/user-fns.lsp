@@ -13,15 +13,15 @@
   #+(or :preprocessor :xml)
   (declare (special *preprocessor* *sppp-stream*))
 
+  #+:xml
+  (when *sppp-stream*
+    (return-from preprocess-sentence-string (sppp str)))
+
   #+:preprocessor
   (when *preprocessor*
     (return-from preprocess-sentence-string 
       (preprocess str :format :lkb :verbose nil)))
 
-  #+:xml
-  (when *sppp-stream*
-    (return-from preprocess-sentence-string (sppp str)))
-  
   (let ((in-word nil)
         (chars (coerce str 'list))
         (result-chars nil))
