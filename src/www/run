@@ -1,0 +1,33 @@
+#!/bin/bash
+
+ROOT=/lingo/www/aserve
+GRAMMAR=erg
+PORT=8000
+
+if [ ! -z "${1}" ]; then 
+  GRAMMAR=${1} ]; 
+fi
+
+if [ ! -z "${2}" ]; then 
+  PORT=${2} ]; 
+fi
+
+LOG=${ROOT}/${GRAMMAR}.log
+
+unset DISPLAY
+
+{
+  echo $GRAMMAR @ $PORT
+  ( \
+    echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
+    echo "(pushnew :lkb *features*)"; \
+    echo "(pushnew :mrs *features*)"; \
+    echo "(setf (system:getenv \"DISPLAY\") nil)"; \
+    echo "(compile-system \"www\" :force t)"; \
+    echo "(read-script-file-aux \"${ROOT}/${GRAMMAR}/lkb/script\")"; \
+    echo "(tsdb::tsdb :cpu :www :file t)"; \
+    echo "(www::initialize :port ${PORT})"; \
+    cat - \
+  )  | ( cd /lingo/local/acl; ./alisp -I bclim.dxl -qq; )
+
+} 2>&1 | tee -a ${LOG}
