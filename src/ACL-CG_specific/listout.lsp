@@ -18,7 +18,7 @@
 
 
 (defun lkb-list-font nil
-   (let ((pix (cg:stream-units-per-inch (cg:screen cg:*system*))))
+   (let ((pix (cg:stream-units-per-inch (lkb-screen-stream))))
       (cg:make-font :roman :|COURIER NEW| 
         (ceiling (* (or *parse-tree-font-size* 9) pix) 72) 
         '(:bold))))
@@ -40,9 +40,9 @@
                   (cg:make-box
                    100 100
                    (min (+ 100 max-x) 
-                     (- (cg:width (cg:screen cg:*system*)) 100))
+                     (- (cg:width (lkb-screen-stream)) 100))
                    (min (+ 100 max-y) 
-                     (- (cg:height (cg:screen cg:*system*)) 100)))
+                     (- (cg:height (lkb-screen-stream)) 100)))
                :page-width max-x
                :page-height max-y
                :font font
@@ -77,11 +77,11 @@
             (cg:open-menu
               menu-command-and-action-list 
              ; conses are coerced into menu items
-             'cg:pop-up-menu aclwin:*lisp-main-window*
+             'cg:pop-up-menu (lkb-parent-stream)
              :selection-function 
              #'(lambda (menu mitem window)
                  (declare (ignore menu window))
-                 (funcall (aclwin:menu-item-value mitem) 
+                 (funcall (cg:value mitem) 
                    (cdr string-and-item))))))    
       (let ((result (cg:pop-up-menu menu)))
          (close menu)

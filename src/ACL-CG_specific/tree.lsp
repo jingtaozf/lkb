@@ -11,7 +11,7 @@
 ;;; This is a function so users can change font sizes after code has loaded
 
 (defun lkb-type-tree-font nil
-   (let ((pix (cg:stream-units-per-inch (cg:screen cg:*system*))))
+   (let ((pix (cg:stream-units-per-inch (lkb-screen-stream))))
       (cg:make-font :roman :|COURIER NEW| 
         (ceiling (* (or *type-tree-font-size* 9) pix) 72) nil)))
 
@@ -130,9 +130,9 @@
                :page-width max-x
                :page-height max-y
                :scrollbars t
+               :font font
                :title (format nil "Type hierarchy below ~(~A~)" type))))) 
     ;; FIX - make window smaller is hierarchy is very little ...
-    (aclwin:set-font stream font)
     (when existing
        (setf (cg-user::active-type-hier-window-active-menus existing)
              nil)
@@ -201,12 +201,12 @@
    (let ((menu 
            (cg:open-menu
             (list
-             (aclwin:make-menu-item :name "Help"                 
+             (make-instance 'cg:menu-item :name "Help"                 
                :available-p (type-comment type-entry)
                :value               
                #'(lambda ()
                    (display-type-comment node (type-comment type-entry))))
-             (aclwin:make-menu-item :name "Shrink/expand"
+             (make-instance 'cg:menu-item :name "Shrink/expand"
                :value 
                #'(lambda ()
                    (let ((stream-name (cg:name stream)))
@@ -220,13 +220,13 @@
                       (reposition-type-in-window
                        node window nil)))
                :available-p (type-daughters type-entry))               
-             (aclwin:make-menu-item :name "Type definition"                 
+             (make-instance 'cg:menu-item :name "Type definition"                 
                :value               
                #'(lambda () (show-type-spec-aux node type-entry)))
-             (aclwin:make-menu-item :name "Expanded type"                 
+             (make-instance 'cg:menu-item :name "Expanded type"                 
                :value               
                #'(lambda () (show-type-aux node type-entry)))
-             (aclwin:make-menu-item :name "New hierarchy..."                 
+             (make-instance 'cg:menu-item :name "New hierarchy..."                 
                :value               
                #'(lambda ()
                    (let ((*last-type-name* (type-name type-entry)))
@@ -239,8 +239,8 @@
                                   (create-type-hierarchy-tree 
                                    type nil show-all-p)))))))
                :available-p (type-daughters type-entry)))            
-             'cg:pop-up-menu aclwin:*lisp-main-window*
-             :selection-function #'lkb-funcall-menu-item)))
+             'cg:pop-up-menu (lkb-parent-stream)
+            :selection-function #'lkb-funcall-menu-item)))
       (let ((result (cg:pop-up-menu menu)))
          (close menu)
          result)))

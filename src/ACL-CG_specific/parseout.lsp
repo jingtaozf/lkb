@@ -22,7 +22,7 @@
 
 
 (defun lkb-parse-tree-font nil
-   (let ((pix (cg:stream-units-per-inch (cg:screen cg:*system*))))
+   (let ((pix (cg:stream-units-per-inch (lkb-screen-stream))))
       (cg:make-font :roman :|COURIER NEW| 
         (ceiling (* (or *parse-tree-font-size* 9) pix) 72) nil)))
 
@@ -40,14 +40,14 @@
        (max-y (graph-description-max-y description))
        (stream
                (cg:open-stream 'cg-user::active-parse-tree-window
-                  aclwin:*lisp-main-window* :io :title title
+                  (lkb-parent-stream) :io :title title
                  :scrollbars t
+                 :font font
                   :window-interior
                   (cg:make-box 100 100 (min (+ 100 max-x) 600)
                      (min (+ 100 max-y) 300))
                   :page-width max-x
                   :page-height max-y)))
-    (aclwin:set-font stream font)
     (graph-display-output stream description
          #'(lambda (str edge-symbol)
             (multiple-value-bind (s bold-p) 
@@ -107,7 +107,7 @@
    (let ((menu 
             (cg:open-menu
                (list
-                  (aclwin:make-menu-item :name (format nil 
+                  (make-instance 'cg:menu-item :name (format nil 
                                           "Feature structure - Edge ~A" 
                                           (edge-id edge-record))
                      :value 
@@ -119,7 +119,7 @@
                                 "G" 
                                 "P")))
                          (display-edge-in-chart edge-record)))
-                (aclwin:make-menu-item 
+                (make-instance 'cg:menu-item 
                   :name (format nil "Rule ~A" 
                           (or (edge-rule-number edge-record) ""))                     
                   :available-p 
@@ -138,7 +138,7 @@
                                   (when alternative
                                      (display-fs alternative
                                        (format nil "~A" rule-name)))))))))  
-             'cg:pop-up-menu aclwin:*lisp-main-window*
+             'cg:pop-up-menu (lkb-parent-stream)
              :selection-function #'lkb-funcall-menu-item)))
       (let ((result (cg:pop-up-menu menu)))
          (close menu)

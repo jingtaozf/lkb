@@ -20,12 +20,12 @@
 ;;; conversion using cg:stream-units-per-inch
 
 (defun make-active-fs-type-font-spec nil
-   (let ((pix (cg:stream-units-per-inch (cg:screen cg:*system*))))
+   (let ((pix (cg:stream-units-per-inch (lkb-screen-stream))))
       (cg:make-font :roman :|COURIER NEW| 
         (ceiling (* *fs-type-font-size* pix) 72) nil)))
 
 (defun make-active-fs-title-font-spec nil
-   (let ((pix (cg:stream-units-per-inch (cg:screen cg:*system*))))
+   (let ((pix (cg:stream-units-per-inch (lkb-screen-stream))))
    (cg:make-font :roman :|COURIER NEW|
      (ceiling (* *fs-type-font-size* pix) 72)
      nil)))
@@ -84,12 +84,14 @@
 
 (defun display-basic-fs (fs title &optional parents paths)
    (let ((fs-window (cg:open-stream 'cg-user::active-fs-window
-                      aclwin:*lisp-main-window* :io
-                       :title title 
+                      (lkb-parent-stream) :io
+                       :title title
+                       :page-height (truncate (cg:height (lkb-screen-stream)) 4)
+                       :page-width (truncate (cg:width (lkb-screen-stream)) 4)
                        :window-state :shrunk
                        :scrollbars t
+                       :font (make-active-fs-type-font-spec)
                       )))
-      (aclwin:set-font fs-window (make-active-fs-type-font-spec))
       (set-associated-fs fs-window fs title paths parents)
       (cg:expand-window fs-window)
       (cg:select-window fs-window)))
@@ -123,22 +125,22 @@
                 (+ 200 (cg:font-string-width  
                          (make-active-fs-title-font-spec) title)))
               (max 
-                (cg:position-y (current-position fs-window))
-                (aclwin:window-interior-height fs-window)))
+                (cg:position-y (cg:current-position fs-window))
+                (cg:interior-height fs-window)))
             (cg:resize-window fs-window
               (cg:make-position
                (min
                 (cg:page-width fs-window t)
-                (- (cg:page-width aclwin:*lisp-main-window* t)
+                (- (cg:page-width (lkb-screen-stream) t)
                    (cg:position-x
-                    (aclwin:window-interior-top-left fs-window))
-                   20))
+                    (cg:interior-top-left fs-window))
+                   200))
                (min
                 (cg:position-y (current-position fs-window))
-                (- (cg:page-length aclwin:*lisp-main-window* t)
+                (- (cg:page-length (lkb-screen-stream) t)
                    (cg:position-y
-                    (aclwin:window-interior-top-left fs-window))
-                   20))))
+                    (cg:interior-top-left fs-window))
+                   200))))
             (setf (fs-display-record-changed-p fs-record)
                   nil)))))))
 
@@ -271,13 +273,13 @@
    (let ((menu 
             (cg:open-menu
                (list
-                  (aclwin:make-menu-item :name "Hierarchy"
+                  (make-instance 'cg:menu-item :name "Hierarchy"
                      :available-p (type-p type-entry)
                      :value 
                      #'(lambda ()
                           (display-type-in-tree type)))
 #|
-                  (aclwin:make-menu-item :name "Help"
+                  (make-instance 'cg:menu-item :name "Help"
                      :value 
                      #'(lambda ()
                           (display-type-comment type
@@ -286,11 +288,11 @@
                              stream))
                      :available-p (type-comment type-entry))
 |# 
-                  (aclwin:make-menu-item :name "Shrink/expand"
+                  (make-instance 'cg:menu-item :name "Shrink/expand"
                      :value #'(lambda ()
                                  (if shrunk-p :expand :shrink))
                      :available-p (eql type-p :fs))
-                  (aclwin:make-menu-item :name "Type definition"
+                  (make-instance 'cg:menu-item :name "Type definition"
                      :available-p (type-p type-entry)
                      :value 
                      #'(lambda ()
@@ -301,7 +303,7 @@
                                    type)
                                 (type-parents type-entry))
                              (format t "~%No constraint for type ~A" type))))
-                  (aclwin:make-menu-item :name "Expanded type"
+                  (make-instance 'cg:menu-item :name "Expanded type"
                      :available-p (type-p type-entry)
                      :value #'(lambda ()
                                  (if (type-constraint type-entry)
@@ -311,7 +313,7 @@
                                           type)
                                        (type-parents type-entry))
                                     (format t "~%No constraint for type ~A" type)))))     
-               'cg:pop-up-menu aclwin:*lisp-main-window*
+               'cg:pop-up-menu (lkb-parent-stream)
                :selection-function #'lkb-funcall-menu-item)))
       (let ((result (cg:pop-up-menu menu)))
          (close menu)
@@ -327,7 +329,7 @@
          (cg:select-window existing)
          (setf existing
                (cg:open-stream 'text-edit-window
-                  aclwin:*lisp-main-window* :output :title "Explanation of types")))
+                  (lkb-parent-stream) :output :title "Explanation of types")))
       (file-position existing :end)
       (do* ((str (concatenate 'string (string type) " " comment-string))
             (len (length str))
@@ -336,7 +338,7 @@
              (or (position #\space str :start (1+ prev)) len))
             (buf nil)
             (n 0)
-            (width (- (truncate (aclwin:window-interior-width existing)
+            (width (- (truncate (cg:interior-width existing)
                          (stream-string-width existing "M"))
                       3)))
            ((> prev next)
@@ -368,15 +370,15 @@
    (let ((menu 
             (cg:open-menu
                (list
-                  (aclwin:make-menu-item :name "Psort definition"
+                  (make-instance 'cg:menu-item :name "Psort definition"
                      :value 
                      #'(lambda ()
                         (display-unexpanded-lex-entry psort lex-entry)))
-                  (aclwin:make-menu-item :name "Expanded psort"
+                  (make-instance 'cg:menu-item :name "Expanded psort"
                      :value #'(lambda ()
                         (display-fs (lex-or-psort-full-fs lex-entry) 
                            (format nil "~(~A~) - expanded" psort)))))     
-               'cg:pop-up-menu aclwin:*lisp-main-window*
+               'cg:pop-up-menu (lkb-parent-stream)
                :selection-function #'lkb-funcall-menu-item)))
       (let ((result (cg:pop-up-menu menu)))
          (close menu)
@@ -387,12 +389,12 @@
    (let ((menu 
             (cg:open-menu
                (list
-                  (aclwin:make-menu-item :name "Show rule"
+                  (make-instance 'cg:menu-item :name "Show rule"
                      :value 
                      #'(lambda ()
                         (display-fs (rule-full-fs rule-entry) 
                            (format nil "~(~A~)" (rule-id rule-entry))))))     
-               'cg:pop-up-menu aclwin:*lisp-main-window*
+               'cg:pop-up-menu (lkb-parent-stream)
                :selection-function #'lkb-funcall-menu-item)))
       (let ((result (cg:pop-up-menu menu)))
          (close menu)
@@ -407,23 +409,23 @@
    (let ((menu 
             (cg:open-menu
                (list
-                  (aclwin:make-menu-item :name "Output TeX"
+                  (make-instance 'cg:menu-item :name "Output TeX"
                      :available-p t
                      :value 
                      #'(lambda ()
                           (output-fs-in-tex fs-record)))
-                  (aclwin:make-menu-item :name "Show source" 
+                  (make-instance 'cg:menu-item :name "Show source" 
                     :value 
                     #'(lambda ()
                           (edit-source name)) 
 		        :available-p (source-available-p name))
-                  (aclwin:make-menu-item :name "Store fs"
+                  (make-instance 'cg:menu-item :name "Store fs"
                      :available-p t
                      :value 
                      #'(lambda ()
                           (store-as-psort fs-record)))
                   )                  
-               'cg:pop-up-menu aclwin:*lisp-main-window*
+               'cg:pop-up-menu (lkb-parent-stream)
                :selection-function #'lkb-funcall-menu-item)))
       (let ((result (cg:pop-up-menu menu)))
          (close menu)
@@ -443,8 +445,8 @@
                (cg:vary-font prtfont :size
                   (floor (* (cg:font-size prtfont)
                             (cg:stream-units-per-inch print-stream))
-                     (cg:stream-units-per-inch (cg:screen cg:*system*)))))
-            (aclwin:set-font print-stream prtfont))
+                     (cg:stream-units-per-inch (lkb-screen-stream)))))
+            (setf (cg:font print-stream) prtfont))
          (let ((fs (fs-display-record-fs fs-record))
                (title (fs-display-record-title fs-record))
                (paths (fs-display-record-paths fs-record))

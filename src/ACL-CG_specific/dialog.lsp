@@ -150,7 +150,7 @@
                            filter 
                           (incf i)
                           (if (evenp i) 
-                              (aclwin:dialog-item-value d-item))))) 
+                              (cg:value d-item))))) 
                      (values t t)))
                (cons
                (aclwin:make-dialog-item :widget 'cg:button
@@ -165,7 +165,7 @@
                      (values t t)))
                prompt-init-items))
             'cg:dialog
-            aclwin:*lisp-main-window*
+            (lkb-parent-stream)
             :pop-up-p nil
             :title title
             :font font

@@ -7,6 +7,21 @@
 ;;; ACL-WIN port 
 
 ;;; Top level menus etc
+;;; two versions 
+
+;;; 1) for developers' use - it adds a menu to the 
+;;; toolbar, and directs output to the debug window.  Feature
+;;; structure windows etc are attached to the main window as
+;;; parent.  This avoids cluttering up the interface with another
+;;; window
+;;;
+;;; 2) for the executable - it constructs an LKB window
+;;; 
+;;; these are distinguished by *lkb-exe-p* which should be set
+;;; before making an executable
+
+(defparameter *lkb-exe-p* nil
+  "controls the appearance of the LKB interface")
 
 (defvar *lkb-menu* nil)
 
@@ -15,6 +30,15 @@
 (defvar *lkb-real-menu-item* nil)
 
 (defvar *lkb-menu-disabled-list* nil)
+
+(defvar *lkb-top-frame* nil
+  "only relevant for the exe version")
+
+(defun lkb-parent-stream nil
+   aclwin:*lisp-main-window*)
+
+(defun lkb-screen-stream nil
+   (cg:screen cg:*system*))
 
 
 ;;; The class menu is a
@@ -48,7 +72,7 @@
 
 (defun make-menu-item (&key name value available-p)
   (unless available-p (pushnew name *lkb-menu-disabled-list* :test #'equal))
-  (aclwin:make-menu-item :name name
+  (make-instance 'cg:menu-item :name name
                :value value :available-p available-p))
 
 ;;; items which are themselves menus are created as follows
@@ -65,7 +89,7 @@
    (cg:open-menu
       list-of-menu-items
       'cg:pop-up-menu
-       aclwin:*lisp-main-window*
+       (lkb-parent-stream)
        :selection-function #'lkb-funcall-menu-item))
 
 (defun expand-lkb-menu nil
@@ -84,26 +108,63 @@
   (ecase system-type
     (:core (create-mini-lkb-system-menu))
     (:big  (create-big-lkb-system-menu)))
-;    (:full (create-lkb-system-menu))
-;    (:yadu (create-yadu-system-menu)))
-   ; this sets the value of *lkb-real-menu* to be an instance of the
-   ; real menu class
-      (multiple-value-bind
-       (menu menu-item)
-       (cg:open-menu
-        (slot-value *lkb-menu* 'menu-items) 
-        'cg:pop-up-menu aclwin:*lisp-menu-bar*
-        :title (slot-value *lkb-menu* 'menu-title)               
-        :selection-function #'lkb-funcall-menu-item
-        :add-to-menu :end)
-       (setf *lkb-real-menu* menu)
-       (setf *lkb-real-menu-item* menu-item))
+   (if *lkb-exe-p* (make-lkb-top-frame)
+      (make-lkb-top-menu))
    (when user::*ordered-type-list*
     (enable-type-interactions)))
 
+
+(defun make-lkb-top-frame nil
+   ;;; for the exe version
+   ;;; still incomplete
+   (unless (and *lkb-top-frame* (cg:windowp *lkb-top-frame*))
+      (setf *lkb-top-frame*
+            (cg:make-window 'lkbtop)))
+   (setf (cg:menu *lkb-top-frame*)
+         (cg:open-stream 'cg:menu-bar 
+           *lkb-top-frame*
+           :io
+           :menu-items
+           (slot-value *lkb-menu* 'menu-items)
+           :title (slot-value *lkb-menu* 'menu-title)               
+           :selection-function #'lkb-funcall-menu-item)))
+
+(defun make-lkb-top-menu nil
+   ;;; for the development version
+   ;; this sets the value of *lkb-real-menu* to be an instance of the
+   ;; real menu class
+   (multiple-value-bind
+    (menu menu-item)
+    (cg:open-menu
+     (slot-value *lkb-menu* 'menu-items) 
+     'cg:pop-up-menu (development-environment::development-menu-bar cg:*system*)
+     :title (slot-value *lkb-menu* 'menu-title)               
+     :selection-function #'lkb-funcall-menu-item
+     :add-to-menu :end)
+    (when *lkb-real-menu-item*
+       (setf
+        (cg::menu-items
+         (development-environment::development-menu-bar cg:*system*))
+        (remove *lkb-real-menu-item*
+          (cg::menu-items
+           (development-environment::development-menu-bar cg:*system*)))))
+    (setf *lkb-real-menu* menu)
+    ;;; Franz bug
+    ;;; - the value of menu-item ought to be set to
+    ;;; a menu item, but actually the second value returned is t
+    ;;; So, annoyingly, we have to set the value of *lkb-real-menu-item*
+    ;;; to the last thing on the menu-bar, which should be safe enough,
+    ;;; but is a bit nasty
+    (setf *lkb-real-menu-item* 
+          (car (last 
+                 (cg::menu-items
+                  (development-environment::development-menu-bar cg:*system*)))))))
+
+
+
 (defun lkb-funcall-menu-item (menu item window)
    (declare (ignore menu window))
-   (funcall (aclwin:menu-item-value item)))
+   (funcall (cg:value item)))
 
 ; FIX
 ; ignore disabling for now and cleaning up the temp file
@@ -127,9 +188,9 @@
    (for menu-item in 
       (cg:menu-items menu)      
       do
-      (let ((value (aclwin:menu-item-value menu-item)))
+      (let ((value (cg:value menu-item)))
          (when value
-               (setf (aclwin:menu-item-available-p menu-item) t)
+               (setf (cg:available menu-item) t)
                 (if (cg:menup value)
                    (enable-defined-interactions value))
                 ))))
@@ -138,12 +199,12 @@
    (for menu-item in 
       (cg:menu-items menu)      
       do
-      (let ((name (aclwin:menu-item-name menu-item))
-            (value (aclwin:menu-item-value menu-item)))
+      (let ((name (cg:name menu-item))
+            (value (cg:value menu-item)))
          (when (and value
                    (member name *lkb-menu-disabled-list* 
                      :test #'equal))
-               (setf (aclwin:menu-item-available-p menu-item) nil))
+               (setf (cg:available menu-item) nil))
           (when (and value (cg:menup value))
              (disable-defined-interactions value)))))
     

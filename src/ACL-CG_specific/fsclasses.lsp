@@ -135,6 +135,10 @@
 
 (defclass active-type-hier-pane (bitmap-pane) ())
 
+#|
+;;; Commented out because 
+;;; redisplay of bitmap is not happening on NT if this is defined
+ 
 ;;; Highlight current node, if there is one at the moment
 
 (defmethod redisplay-window ((pane active-type-hier-pane) &optional box)
@@ -142,7 +146,7 @@
   (let ((record (current-type-node (parent pane))))
      (when record 
         (highlight-current-type-node record pane))))
-
+|#
 
 (defun highlight-current-type-node (record pane)
    (cg:invert-box pane
