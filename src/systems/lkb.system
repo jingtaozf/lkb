@@ -29,6 +29,7 @@
 ;;; what each feature does); with features added in individual files, we still
 ;;; need to worry about load() order.
 ;;;
+;;;   - :psql -- support for (external) PostGreSQL-based lexical database;
 ;;;   - :ltemplates -- lexical templates: see `src/main/ltemplates.lsp';
 ;;;   - :pooling -- enable recycling of high-frequency objects (dags, for now);
 ;;;   - :packing -- enable code for chart packing under (partial) subsumption;
