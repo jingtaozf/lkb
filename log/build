@@ -18,6 +18,7 @@ cvs update: Updating .
 cvs update: Updating lkb
 cvs update: Updating .
 M Makefile
+? linux
 cvs update: Updating bin
 cvs update: Updating bin/linux
 cvs update: Updating bin/solaris
@@ -387,7 +388,7 @@ cvs update: Updating src/xml
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.317; previous revision: 1.316
+new revision: 1.318; previous revision: 1.317
 done
 make[1]: Entering directory `/lingo/www/build/lkb'
 ( \
@@ -1362,9 +1363,9 @@ CL-USER(1): ; Loading /lingo/www/build/lkb/src/general/loadup.lisp
 ;   Loading /lingo/www/build/lkb/src/general/loadup-library.lisp
 T
 CL-USER(2): ; Loading /lingo/www/build/lkb/src/ACL_specific/deliver.lsp
-;   Fast loading /lingo/local/acl/code/genapp.fasl
-;     Fast loading /lingo/local/acl/code/fileutil.006
+;   Fast loading /lingo/local/acl/code/fileutil.006
 ;;; Installing fileutil patch, version 6
+;   Fast loading /lingo/local/acl/code/genapp.fasl
 ;     Fast loading /lingo/local/acl/code/build.fasl
 ;;; Installing build patch, version 1
 Bundle is up to date.
@@ -1406,7 +1407,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (May 21, 2004 16:55)
+6.2 [Linux (x86)] (May 21, 2004 19:39)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2255,12 +2256,12 @@ Evaluation stack:
    (EXCL::EVAL-AS-PROGN)
    (LET*)
    (BLOCK)
-   #<Printer Error, obj=#x4a7fe04a: `:UNKNOWN' is not of the expected type `REAL'>
+   #<Printer Error, obj=#x4a7baaea: `:UNKNOWN' is not of the expected type `REAL'>
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (AND)
    (LET)
    (BLOCK)
-   #<Printer Error, obj=#x4a80138a: `:UNKNOWN' is not of the expected type `REAL'>
+   #<Printer Error, obj=#x4a7bde2a: `:UNKNOWN' is not of the expected type `REAL'>
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (FUNCALL)
@@ -2273,7 +2274,7 @@ Evaluation stack:
    (LET)
    (EXCL::EVAL-AS-PROGN)
    (BLOCK)
-   #<Printer Error, obj=#x4a80b2aa: `:UNKNOWN' is not of the expected type `REAL'>
+   #<Printer Error, obj=#x4a7c7d4a: `:UNKNOWN' is not of the expected type `REAL'>
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (EXCL::%INVOKES)
    (IF)
@@ -2282,7 +2283,7 @@ Evaluation stack:
    (PROGN)
    (EXCL::EVAL-AS-PROGN)
    (BLOCK)
-   #<Printer Error, obj=#x4a81311a: `:UNKNOWN' is not of the expected type `REAL'>
+   #<Printer Error, obj=#x4a7cfbba: `:UNKNOWN' is not of the expected type `REAL'>
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (LET)
@@ -2293,7 +2294,7 @@ Evaluation stack:
    (LET)
    (EXCL::EVAL-AS-PROGN)
    (BLOCK)
-   #<Printer Error, obj=#x4a81d26a: `:UNKNOWN' is not of the expected type `REAL'>
+   #<Printer Error, obj=#x4a7d9d0a: `:UNKNOWN' is not of the expected type `REAL'>
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (EXCL::%INVOKES)
    (IF)
@@ -2302,7 +2303,7 @@ Evaluation stack:
    (PROGN)
    (EXCL::EVAL-AS-PROGN)
    (BLOCK)
-   #<Printer Error, obj=#x4a82687a: `:UNKNOWN' is not of the expected type `REAL'>
+   #<Printer Error, obj=#x4a7e331a: `:UNKNOWN' is not of the expected type `REAL'>
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (LET)
@@ -2313,13 +2314,13 @@ Evaluation stack:
    (LET)
    (EXCL::EVAL-AS-PROGN)
    (BLOCK)
-   #<Printer Error, obj=#x4a8324ca: `:UNKNOWN' is not of the expected type `REAL'>
+   #<Printer Error, obj=#x4a7eef6a: `:UNKNOWN' is not of the expected type `REAL'>
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (EXCL::%INVOKES)
    (LET)
    (MULTIPLE-VALUE-BIND)
    (BLOCK)
-   #<Printer Error, obj=#x4a83aaea: `:UNKNOWN' is not of the expected type `REAL'>
+   #<Printer Error, obj=#x4a7f758a: `:UNKNOWN' is not of the expected type `REAL'>
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (MULTIPLE-VALUE-PROG1)
    (LET)
@@ -2328,11 +2329,11 @@ Evaluation stack:
    (FLET)
    (UNWIND-PROTECT)
    (BLOCK)
-   #<Printer Error, obj=#x4a84875a: `:UNKNOWN' is not of the expected type `REAL'>
+   #<Printer Error, obj=#x4a8051fa: `:UNKNOWN' is not of the expected type `REAL'>
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (BLOCK)
-   #<Printer Error, obj=#x4a84a9ea: `:UNKNOWN' is not of the expected type `REAL'>
+   #<Printer Error, obj=#x4a80748a: `:UNKNOWN' is not of the expected type `REAL'>
    (SYS::..RUNTIME-OPERATION . :UNKNOWN-ARGS)
    (EXCL::%INVOKES)
    (EVAL)
