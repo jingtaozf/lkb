@@ -94,9 +94,12 @@
   (declare (special *temp-result* *abort-query*))
   (setf *abort-query* nil)
   (setf *temp-result* (loop for p-i-p in prompt-init-pairs
-			  collect (if (equal (cdr p-i-p) ":CHECK-BOX")
-				      nil ; Default for checkbox is nil
-				    (cdr p-i-p))))
+			  collect (cond ((equal (cdr p-i-p) ":CHECK-BOX")
+					 nil) ; Default for checkbox is nil
+					((and (consp (rest p-i-p))
+					      (eq (second p-i-p) :TYPEIN-MENU))
+					 (third p-i-p))
+					(t (cdr p-i-p)))))
   ;; this has to be a special, because eval doesn't take any notice of lexical
   ;; environment
   (let* ((count 0)
