@@ -39,11 +39,11 @@
 
 (defvar %www-attic% (make-array 512))
 
-(defun initialize ()
+(defun initialize (&key (port *www-port*))
   (setf %www-clients% 0)
   (setf %www-object-counter% 0)
   (setf %www-attic% (make-array 512))
-  (start :port *www-port* :external-format (excl:crlf-base-ef :utf-8))
+  (start :port port :external-format (excl:crlf-base-ef :utf-8))
   (publish-file :path "/lkb.css" :file *www-lkb-css*)
   (publish-file :path "/lkb.js" :file *www-lkb-js*)
   (publish :path "/erg"
@@ -117,7 +117,7 @@
                   "&nbsp;"
                   ((:input
                     :type "text" :name "input"
-                    :value (or input "") :size "120"))
+                    :value (or input "") :size "100"))
                   "&nbsp;"
                   ((:input :type "submit" :value "Analyze"))
                   :br :newline
@@ -342,8 +342,8 @@
             finally (setf edges (www-store-object nil active))))
       (www-compare request entity :edges edges)))))
 
-(defun www-compare (request entity &key edges)
-  #+:debug
+(defun www-compare (request entity &key profile edges)
+  #-:debug
   (setf %request% request %entity% entity)
   (let* ((method (request-method request))
          (body (when (eq method :post) (get-request-body request)))
@@ -360,6 +360,10 @@
          (edges (typecase edges
                   (string (ignore-errors (parse-integer edges)))
                   (number edges)))
+         (profile (or profile
+                      (if query 
+                        (lookup-form-value "profile" query)
+                        (request-query-value "profile" request :post nil))))
          (mode (lookup-form-value "mode" query))
          (classicp (equal mode "classic"))
          (display (lookup-form-value "display" query))
@@ -368,6 +372,29 @@
          (fullp (equal display "full"))
          (action (lookup-form-value "action" query))
          resetp)
+
+    (when (and profile (null frame))
+      (setf frame (tsdb::browse-trees profile :runp nil))
+      (setf index (www-store-object nil frame))
+      (setf classicp (eq (lkb::compare-frame-mode frame) :classic))
+      (setf concisep (eq (lkb::compare-frame-display frame) :concise))
+      (setf orderedp (eq (lkb::compare-frame-display frame) :ordered))
+      (setf fullp (eq (lkb::compare-frame-display frame) :full))
+      (tsdb::browse-tree 
+       profile (first (lkb::compare-frame-ids frame)) frame :runp nil))
+    
+    (when (member action '("back" "next") :test #'string-equal)
+      (let ((backp (string-equal action "back"))
+            (id (lkb::compare-frame-item frame)))
+        (setf %id% id %ids% (lkb::compare-frame-ids frame))
+        (loop
+            for ids on (lkb::compare-frame-ids frame)
+            when (or (and (null backp) (eql id (first ids)) (second ids))
+                     (and backp (eql id (second ids))))
+            do 
+              (tsdb::browse-tree 
+               profile (if backp (first ids) (second ids)) frame :runp nil)
+              (return))))
     
     (cond
      (frame
@@ -417,7 +444,6 @@
           (setf orderedp (eq (lkb::compare-frame-display frame) :ordered))
           (setf fullp (eq (lkb::compare-frame-display frame) :full))))))
 
-          
     (with-http-response (request entity)
       (with-http-body (request entity
                        :external-format (excl:crlf-base-ef :utf-8))
@@ -451,6 +477,16 @@
                      ((:input 
                        :type "button" :name "close" :value "close"
                        :onClick "window.close()")))
+                    (when profile
+                      (html
+                       (:td "&nbsp;")
+                       (:td
+                        ((:input 
+                          :type "submit" :name "action" :value "back")))
+                       (:td "&nbsp;")
+                       (:td
+                        ((:input 
+                          :type "submit" :name "action" :value "next")))))
                     (:td "&nbsp;")
                     (:td
                      ((:input :type "submit" :name "action" :value "clear")))
@@ -485,6 +521,7 @@
                         :if* fullp :selected :if* fullp '||)
                        "full")))))
                   :newline
+                  ((:input :type "hidden" :name "profile" :value profile))
                   ((:input :type "hidden" :name "frame" :value index))
                   :newline
                   (when frame

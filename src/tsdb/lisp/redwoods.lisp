@@ -33,7 +33,7 @@
                           (cache *tsdb-cache-database-writes-p*)
                           (verbose t) interactive
                           (stream *tsdb-io*)
-                          interrupt meter)
+                          (runp t) interrupt meter)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
@@ -70,14 +70,23 @@
                                 :schema schema :verbose verbose 
                                 :protocol cache)))
          (gc-strategy 
-          (unless interactive
+          (unless (or interactive (null runp))
             (install-gc-strategy 
              nil :tenure *tsdb-tenure-p* :burst t :verbose t)))
          (frame (unless #-:expand strip #+:expand nil
-                  (clim:make-application-frame 'lkb::compare-frame)))
+                  (if runp
+                    (clim:make-application-frame 'lkb::compare-frame)
+                    (clim:make-application-frame 
+                     'lkb::compare-frame :frame-manager nil))))
+                    
          %client%)
     (declare (special %client%))
 
+    #-:debug
+    (setf lkb::%frame% frame)
+    (setf (lkb::compare-frame-ids frame) 
+      (loop for item in items collect (get-field :i-id item)))
+    
     (when (functionp *statistics-result-filter*)
       (setf items
         (loop
@@ -88,102 +97,104 @@
     (when meter
       (status :text message)
       (meter :value 0))
+    (when runp
+      (loop
+          with last = nil
+          with increment = (and meter (/ 1 (if items (length items) 1)))
+          with title = (format 
+                        nil 
+                        "[incr tsdb()] Tree ~a (`~a'~
+                         ~:[~*~; from `~a'~])~@[ @ `~a'~]" 
+                        (if gold "Update" "Annotation")
+                        data gold gold condition)
+          with nitems = (length items)
+          with annotated = (make-array nitems :initial-element 0)
+          with position = 0
+          initially
+            (unless #-:expand strip #+:expand nil
+              (setf (lkb::compare-frame-chart frame) nil)
+              (setf (clim:frame-pretty-name frame) title)
+              (setf (lkb::compare-frame-controller frame) *current-process*))
+          for item = (when position (nth position items))
+          for i-id = (get-field :i-id item)
+          for status = (when (integerp i-id) 
+                         (or 
+                          #+:allegro
+                          (when *tsdb-tenure-p*
+                            (excl:tenuring
+                             (browse-tree 
+                              data i-id frame 
+                              :gold gold :strip strip :bestp bestp 
+                              :inspect inspect
+                              :cache cache :title title
+                              :verbose verbose :stream stream)))
+                          (browse-tree 
+                           data i-id frame 
+                           :gold gold :strip strip :bestp bestp 
+                           :inspect inspect
+                           :cache cache :title title
+                           :verbose verbose :stream stream)))
+          for action = (get-field :status status)
+          for offset = (or (get-field :offset status) 1)
+          while (and status (not (eq action :close)) (numberp position))
+          do 
+            (when (and (eq action :save) increment 
+                       (zerop (aref annotated position)))
+              (meter-advance increment))
+            (case action
+              (:first (setf position 0))
+              (:previous 
+               (decf position offset)
+               (close-connections :data data))
+              ((:skip :null :flag)
+               (if (eq last :previous) (decf position) (incf position))
+               (setf action last))
+              ((:next :save) 
+               (when (eq action :save) (incf (aref annotated position)))
+               (incf position offset))
+              (:last (setf position (- nitems 1))))
+            (setf last action)
+            (when (or (>= position nitems) (< position 0))
+              (setf position nil))
+            (purge-profile-cache data :expiryp nil)
+            (when gold (purge-profile-cache gold  :expiryp nil))
+          when (interrupt-p interrupt) do
+            (format 
+             stream
+             "browse-trees(): external interrupt signal~%")
+            (force-output stream)
+            (return))
 
-    (loop
-        with last = nil
-        with increment = (and meter (/ 1 (if items (length items) 1)))
-        with title = (format 
-                      nil 
-                      "[incr tsdb()] Tree ~a (`~a'~
-                       ~:[~*~; from `~a'~])~@[ @ `~a'~]" 
-                      (if gold "Update" "Annotation")
-                      data gold gold condition)
-        with nitems = (length items)
-        with annotated = (make-array nitems :initial-element 0)
-        with position = 0
-        initially
-          #+:debug
-          (setf lkb::%frame% frame)
-          (unless #-:expand strip #+:expand nil
-            (setf (lkb::compare-frame-chart frame) nil)
-            (setf (clim:frame-pretty-name frame) title)
-            (setf (lkb::compare-frame-controller frame) *current-process*))
-        for item = (when position (nth position items))
-        for i-id = (get-field :i-id item)
-        for status = (when (integerp i-id) 
-                       (or 
-                        #+:allegro
-                        (when *tsdb-tenure-p*
-                          (excl:tenuring
-                           (browse-tree 
-                            data i-id frame 
-                            :gold gold :strip strip :bestp bestp 
-                            :inspect inspect
-                            :cache cache :title title
-                            :verbose verbose :stream stream)))
-                        (browse-tree 
-                         data i-id frame 
-                         :gold gold :strip strip :bestp bestp 
-                         :inspect inspect
-                         :cache cache :title title
-                         :verbose verbose :stream stream)))
-        for action = (get-field :status status)
-        for offset = (or (get-field :offset status) 1)
-        while (and status (not (eq action :close)) (numberp position))
-        do 
-          (when (and (eq action :save) increment 
-                     (zerop (aref annotated position)))
-            (meter-advance increment))
-          (case action
-            (:first (setf position 0))
-            (:previous 
-             (decf position offset)
-             (close-connections :data data))
-            ((:skip :null :flag)
-             (if (eq last :previous) (decf position) (incf position))
-             (setf action last))
-            ((:next :save) 
-             (when (eq action :save) (incf (aref annotated position)))
-             (incf position offset))
-            (:last (setf position (- nitems 1))))
-          (setf last action)
-          (when (or (>= position nitems) (< position 0))
-            (setf position nil))
-          (purge-profile-cache data :expiryp nil)
-          (when gold (purge-profile-cache gold  :expiryp nil))
-        when (interrupt-p interrupt) do
-          (format 
-           stream
-           "browse-trees(): external interrupt signal~%")
-          (force-output stream)
-          (return))
+      (when frame 
+        ;;
+        ;; according to section 9.6 of the CLIM User Guide, frame-exit() cannot
+        ;; have an effect unless called from the process running the top-level
+        ;; of that frame.
+        ;;
+        (clim:frame-exit frame)
+        #+:null
+        (clim:destroy-frame frame))
+      (when (mp:process-p %client%)
+        (mp:process-kill %client%))
 
-    (when frame 
-      ;;
-      ;; according to section 9.6 of the CLIM User Guide, frame-exit() cannot
-      ;; have an effect unless called from the process running the top-level of
-      ;; that frame.
-      ;;
-      (clim:frame-exit frame)
-      #+:null
-      (clim:destroy-frame frame))
-    (when (mp:process-p %client%)
-      (mp:process-kill %client%))
+      (when meter
+        (status :text (format nil "~a done" message) :duration 10)
+        (meter :value 1)))
   
     (when cache (flush-cache cache :verbose verbose))
     (when gc-strategy (restore-gc-strategy gc-strategy))
     (purge-profile-cache data :expiryp nil)
     
-    (when meter
-      (status :text (format nil "~a done" message) :duration 10)
-      (meter :value 1))))
+    frame))
 
 (defun browse-tree (data i-id frame &key gold strip bestp inspect 
-                                         title cache verbose stream)
+                                         title cache verbose 
+                                         (runp t) stream)
   
   (declare (special %client%))
 
-  (when (or (null %client%)
+  (when (or (null runp)
+            (null %client%)
             (and (mp:process-p %client%) (mp:process-active-p %client%)))
     #+:allegro
     (format
@@ -474,141 +485,144 @@
           (pairlis '(:parse-id :u-gin :u-gout)
                    (list parse-id gactive (- greadings gactive)))))
       
-      (when (null %client%)
+      (when (and (null %client%) runp)
         (setf %client%
           (mp:run-function 
            (or title "[incr tsdb()] Tree Selection")
            #'lkb::run-compare-frame frame)))
 
-      (let ((status (lkb::set-up-compare-frame frame lkb::*parse-record*)))
+      (let ((status (lkb::set-up-compare-frame 
+                     frame lkb::*parse-record* :runp runp)))
         #+:expand
         (lkb::record-decision (lkb::make-decision :type :save) frame)
         #-:expand
-        (unless (eq status :skip)
+        (unless (or (eq status :skip) (null runp))
           (process-add-arrest-reason *current-process* :wait)))
       
-      (let* ((decisions (lkb::compare-frame-decisions frame))
-             (status (lkb::decision-type (first decisions)))
-             (recent (second decisions)))
-        
-        (when (and (eq status :flag) (null trees))
-          (let* ((user (current-user))
-                 (time (current-time :long :tsdb))
-                 (tree (pairlis '(:parse-id 
-                                  :t-version :t-active :t-confidence
-                                  :t-author :t-start :t-end :t-comment)
-                                (list parse-id 
-                                      0 -1 -1
-                                      user time time ""))))
-            (write-tree strip tree :cache cache)))
+      (when runp
+        (let* ((decisions (lkb::compare-frame-decisions frame))
+               (status (lkb::decision-type (first decisions)))
+               (recent (second decisions)))
 
-        (when (eq status :save)
-          (let* ((version (if version 
-                            #-:expand (incf version) #+:expand version
-                            1))
-                 (edges (lkb::compare-frame-in frame))
-                 (active (length edges))
-                 (foo (lkb::compare-frame-confidence frame))
-                 (confidence (if (and (integerp foo)
-                                      (>= foo 0) (<= foo 3))
-                               foo
-                               -1))
-                 (t-author (current-user))
-                 (t-start (let* ((start (first (last decisions)))
-                                 (start (when (lkb::decision-p start)
-                                          (lkb::decision-time start))))
-                            (if start 
-                              (decode-time start :long :tsdb)
-                              (current-time :long :tsdb))))
-                 (t-end (let* ((end (first decisions))
-                               (end (when (lkb::decision-p end)
-                                      (lkb::decision-time end))))
-                          (if end 
-                            (decode-time end :long :tsdb)
-                            (current-time :long :tsdb)))))
+          (when (and (eq status :flag) (null trees))
+            (let* ((user (current-user))
+                   (time (current-time :long :tsdb))
+                   (tree (pairlis '(:parse-id 
+                                    :t-version :t-active :t-confidence
+                                    :t-author :t-start :t-end :t-comment)
+                                  (list parse-id 
+                                        0 -1 -1
+                                        user time time ""))))
+              (write-tree strip tree :cache cache)))
+
+          (when (eq status :save)
+            (let* ((version (if version 
+                              #-:expand (incf version) #+:expand version
+                              1))
+                   (edges (lkb::compare-frame-in frame))
+                   (active (length edges))
+                   (foo (lkb::compare-frame-confidence frame))
+                   (confidence (if (and (integerp foo)
+                                        (>= foo 0) (<= foo 3))
+                                 foo
+                                 -1))
+                   (t-author (current-user))
+                   (t-start (let* ((start (first (last decisions)))
+                                   (start (when (lkb::decision-p start)
+                                            (lkb::decision-time start))))
+                              (if start 
+                                (decode-time start :long :tsdb)
+                                (current-time :long :tsdb))))
+                   (t-end (let* ((end (first decisions))
+                                 (end (when (lkb::decision-p end)
+                                        (lkb::decision-time end))))
+                            (if end 
+                              (decode-time end :long :tsdb)
+                              (current-time :long :tsdb)))))
+              #-:expand
+              (write-tree data (pairlis '(:parse-id 
+                                          :t-version :t-active :t-confidence
+                                          :t-author :t-start :t-end :t-comment)
+                                        (list parse-id 
+                                              version active confidence
+                                              t-author t-start t-end ""))
+                          :cache cache)
+
+              (loop
+                  for edge in edges
+                  for id = (when (lkb::edge-p edge) (lkb::edge-foo edge))
+                  do
+                    (write-preference data
+                                      (pairlis '(:parse-id 
+                                                 :t-version :result-id)
+                                               (list parse-id
+                                                     version id))
+                                      :cache cache)))
+
             #-:expand
-            (write-tree data (pairlis '(:parse-id 
-                                        :t-version :t-active :t-confidence
-                                        :t-author :t-start :t-end :t-comment)
-                                      (list parse-id 
-                                            version active confidence
-                                            t-author t-start t-end ""))
-                        :cache cache)
-
-            (loop
-                for edge in edges
-                for id = (when (lkb::edge-p edge) (lkb::edge-foo edge))
-                do
-                  (write-preference data
-                                    (pairlis '(:parse-id 
-                                               :t-version :result-id)
-                                             (list parse-id
-                                                   version id))
-                                    :cache cache)))
-
-          #-:expand
-          (when (and (lkb::decision-p recent)
-                     (member (lkb::decision-type recent) '(:reject :select)))
-            (let* ((version (or version 1))
-                   (state (encode-discriminant-state recent))
-                   (type (encode-discriminant-type recent))
-                   (start (lkb::compare-frame-start frame))
-                   (end (lkb::compare-frame-end frame))
-                   (time (let ((time (lkb::decision-time recent)))
-                           (if time
-                             (decode-time time :long :tsdb)
-                             (current-time :long :tsdb)))))
-              (write-decision data 
-                              (pairlis '(:parse-id :t-version 
-                                         :d-state :d-type :d-key :d-value 
-                                         :d-start :d-end :d-date)
-                                       (list parse-id version 
-                                             state type nil nil 
-                                             start end time))
-                              :cache cache)))
-          #-:expand
-          (loop
-              with version = (or version 1)
-              for discriminant in (lkb::compare-frame-discriminants frame)
-              for state = (encode-discriminant-state discriminant)
-              for type = (encode-discriminant-type discriminant)
-              for key = (lkb::discriminant-key discriminant)
-              for value = (lkb::discriminant-value discriminant)
-              for start = (lkb::discriminant-start discriminant)
-              for end = (lkb::discriminant-end discriminant)
-              for time = (let ((time (lkb::discriminant-time discriminant)))
-                           (if time
-                             (decode-time time :long :tsdb)
-                             (current-time :long :tsdb)))
-              unless (= state 5)
-              do
+            (when (and (lkb::decision-p recent)
+                       (member (lkb::decision-type recent) '(:reject :select)))
+              (let* ((version (or version 1))
+                     (state (encode-discriminant-state recent))
+                     (type (encode-discriminant-type recent))
+                     (start (lkb::compare-frame-start frame))
+                     (end (lkb::compare-frame-end frame))
+                     (time (let ((time (lkb::decision-time recent)))
+                             (if time
+                               (decode-time time :long :tsdb)
+                               (current-time :long :tsdb)))))
                 (write-decision data 
                                 (pairlis '(:parse-id :t-version 
                                            :d-state :d-type :d-key :d-value 
                                            :d-start :d-end :d-date)
                                          (list parse-id version 
-                                               state type key value 
+                                               state type nil nil 
                                                start end time))
-                                :cache cache))
-          #-:expand
-          (let* ((update (lkb::compare-frame-update frame))
-                 (discriminants (lkb::compare-frame-discriminants frame))
-                 (decisions (loop
-                                for foo in discriminants
-                                for bar = (lkb::discriminant-toggle foo)
-                                count (and (null (lkb::discriminant-gold foo))
-                                           (not (eq bar :unknown)))))
-                 (in (length (lkb::compare-frame-in frame)))
-                 (out (length (lkb::compare-frame-out frame))))
-            (when (and update (>= (profile-granularity data) 0210))
-              (write-update 
-               data (append
-                     (pairlis '(:t-version :u-new :u-in :u-out)
-                              (list (or version 1) decisions in out))
-                     update)
-               :cache cache))))
-                 
-        (pairlis '(:status) (list status))))))
+                                :cache cache)))
+            #-:expand
+            (loop
+                with version = (or version 1)
+                for discriminant in (lkb::compare-frame-discriminants frame)
+                for state = (encode-discriminant-state discriminant)
+                for type = (encode-discriminant-type discriminant)
+                for key = (lkb::discriminant-key discriminant)
+                for value = (lkb::discriminant-value discriminant)
+                for start = (lkb::discriminant-start discriminant)
+                for end = (lkb::discriminant-end discriminant)
+                for time = (let ((time (lkb::discriminant-time discriminant)))
+                             (if time
+                               (decode-time time :long :tsdb)
+                               (current-time :long :tsdb)))
+                unless (= state 5)
+                do
+                  (write-decision data 
+                                  (pairlis '(:parse-id :t-version 
+                                             :d-state :d-type :d-key :d-value 
+                                             :d-start :d-end :d-date)
+                                           (list parse-id version 
+                                                 state type key value 
+                                                 start end time))
+                                  :cache cache))
+            #-:expand
+            (let* ((update (lkb::compare-frame-update frame))
+                   (discriminants (lkb::compare-frame-discriminants frame))
+                   (decisions 
+                    (loop
+                        for foo in discriminants
+                        for bar = (lkb::discriminant-toggle foo)
+                        count (and (null (lkb::discriminant-gold foo))
+                                   (not (eq bar :unknown)))))
+                   (in (length (lkb::compare-frame-in frame)))
+                   (out (length (lkb::compare-frame-out frame))))
+              (when (and update (>= (profile-granularity data) 0210))
+                (write-update 
+                 data (append
+                       (pairlis '(:t-version :u-new :u-in :u-out)
+                                (list (or version 1) decisions in out))
+                       update)
+                 :cache cache))))
+
+          (pairlis '(:status) (list status)))))))
 
 (defun encode-discriminant-state (discriminant)
   (cond

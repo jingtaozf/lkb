@@ -99,6 +99,7 @@
 
   (setf *cached-category-abbs* nil)
 
+  (setf (compare-frame-runp frame) runp)
   ;;
   ;; when called in error analysis mode, i.e. against the scoring results of
   ;; some stochastic parse selection model, throw out all edges that are not 
@@ -352,6 +353,7 @@
    (gderivation :initform nil :accessor compare-frame-gderivation)
    (inspect :initform nil :accessor compare-frame-inspect)
    (update :initform nil :accessor compare-frame-update)
+   (ids :initform nil :accessor compare-frame-ids)
    (controller :initform nil :accessor compare-frame-controller))
   (:panes
    (top
@@ -1193,9 +1195,11 @@
   (let ((treep (or (not (integerp *tree-display-threshold*))
                    (<= (length (compare-frame-trees frame)) 
                        *tree-display-threshold*)))
-        (mrsp (and *tree-display-semantics-p*
-                     (compare-frame-trees frame)
-                     (null (rest (compare-frame-trees frame))))))
+        (mrsp (when (and *tree-display-semantics-p*
+                         (compare-frame-trees frame)
+                         (null (rest (compare-frame-trees frame))))
+                (let ((edge (ctree-edge (first (compare-frame-trees frame)))))
+                  (when (edge-dag edge) (mrs::extract-mrs edge))))))
     (format
      stream
      "~v,0t<table class=compare>~%~
@@ -1231,9 +1235,7 @@
        frame :stream stream :onlyp (not treep) 
        :indentation (+ indentation 6))
       #+:mrs
-      (let* ((edge (ctree-edge (first (compare-frame-trees frame))))
-             (mrs (mrs::extract-mrs edge)))
-        (mrs::output-mrs1 mrs 'mrs::html stream))))
+      (mrs::output-mrs1 mrsp 'mrs::html stream)))
   (format
    stream
    "~v,0t    </td>~%~v,0t  </tr>~%~v,0t</table>"
