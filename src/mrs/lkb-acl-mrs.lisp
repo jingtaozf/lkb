@@ -246,8 +246,8 @@
 	    (mrs::output-algebra-sement1 sement 'mrs::simple-indexed stream))
 	(format stream "~%::: Sement structure could not be extracted~%"))
       (if messages
-	  (dolist (message messages)
-	    (format stream "~A~%" message stream))
+	    (dolist (message messages)
+	      (format stream "~%~A" message stream))
 	(format stream "~%::: Sement structure checked without problems~%")))))
 
 
