@@ -185,54 +185,66 @@
               filter
               (if (unification-p unif)
 		  (let ((unif-lhs (unification-lhs unif)))
-		    (if (or
-			 (and (typed-path-p unif-lhs)
-			      (typed-path-matches 
-			       (path-typed-feature-list unif-lhs) *orth-path*))
-			 (and (path-p unif-lhs)
-			      (path-matches 
-			       (path-typed-feature-list unif-lhs) *orth-path*)))
+		    (if (general-path-match unif-lhs *orth-path*)
 			unif))))))
     (when matching-unifs
       (let ((n (length *orth-path*))
             (orth-strings nil))
-        (loop
-          (let ((exact-match
-                 (for unif in matching-unifs
-                      keep-first
-                      (let* ((path (unification-lhs unif))
-                             (feats (path-typed-feature-list path)))
-                        (if
-                            (or (and (path-p path)
-                                     (eq
-                                      (nth n feats)
-                                      (car *list-head*)))
-                                (and (typed-path-p path)
-                                     (let 
-                                         ((nth-el (nth n feats)))
-                                       (and nth-el
-                                            (eq (type-feature-pair-feature 
-                                                 nth-el)
-                                                (car *list-head*))))))
-                            (u-value-p (unification-rhs unif)))))))
-            (unless exact-match (return))
-            (push (car (u-value-types (unification-rhs exact-match)))
-                  orth-strings)
-            (incf n)))
-        (nreverse orth-strings)))))
+        (cond ((null matching-unifs) nil)
+              ((and (not (cdr matching-unifs))
+                    (general-path-match 
+                     (unification-lhs (car matching-unifs))
+                     *orth-path* t))
+               (u-value-types (unification-rhs (car matching-unifs))))
+              (t 
+               (loop
+                 (let ((exact-match
+                        (for unif in matching-unifs
+                             keep-first
+                             (let* ((path (unification-lhs unif))
+                                    (feats (path-typed-feature-list path)))
+                               (if
+                                   (or (and (path-p path)
+                                            (eq
+                                             (nth n feats)
+                                             (car *list-head*)))
+                                       (and (typed-path-p path)
+                                            (let 
+                                                ((nth-el (nth n feats)))
+                                              (and nth-el
+                                                   (eq (type-feature-pair-feature 
+                                                        nth-el)
+                                                       (car *list-head*))))))
+                                   (u-value-p (unification-rhs unif)))))))
+                   (unless exact-match (return))
+                   (push (car (u-value-types (unification-rhs exact-match)))
+                         orth-strings)
+                   (incf n)))
+               (nreverse orth-strings)))))))
+      
+(defun general-path-match (unif-path path &optional exactp)      
+  (or
+   (and (typed-path-p unif-path)
+        (typed-path-matches 
+         (path-typed-feature-list unif-path) path exactp))
+   (and (path-p unif-path)
+        (path-matches 
+         (path-typed-feature-list unif-path) path exactp))))
 
-(defun path-matches (tfplist flist)
-  (cond ((null flist) t)
+(defun path-matches (tfplist flist exactp)
+  (cond ((and (null flist) (null tfplist)) t)
+        ((null flist) (not exactp))
         ((null tfplist) nil)
         ((eq (car tfplist) (car flist))
-         (path-matches (cdr tfplist) (cdr flist)))
+         (path-matches (cdr tfplist) (cdr flist) exactp))
         (t nil)))
 
-(defun typed-path-matches (tfplist flist)
-  (cond ((null flist) t)
+(defun typed-path-matches (tfplist flist exactp)
+  (cond ((and (null flist) (null tfplist)) t)
+        ((null flist) (not exactp))
         ((null tfplist) nil)
         ((eq (type-feature-pair-feature (car tfplist)) (car flist))
-         (typed-path-matches (cdr tfplist) (cdr flist)))
+         (typed-path-matches (cdr tfplist) (cdr flist) exactp))
         (t nil)))
   
 
