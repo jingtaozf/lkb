@@ -53,7 +53,10 @@
         ((eql (elt tag 1) #\J) "j")
         ((eql (elt tag 1) #\R) "r")
         ((eql (elt tag 1) #\P) "p")
-	((eql (elt tag 1) #\A) "q")
+	((and (eql (elt tag 1) #\A)
+	      (eql (elt tag 2) #\T)) "q")
+	((and (eql (elt tag 1) #\D)
+	      (eql (elt tag 2) #\D)) "q")
         (t "x")))
 
 
@@ -408,46 +411,64 @@
 				 ostream)
   ;;; can't tell for sure which the head is,
   ;;; except for unary rules
-  (let* ((real-dtr-names (construct-tsg-dtr-names dtr-strs))
+  (let* ((real-dtr-names (construct-tsg-dtr-names dtr-strs dtrs))
 	 (names real-dtr-names)
 	 (next-name nil))
     (format ostream "~%<rule>")
     (format ostream "~%<name>~A</name>" name)
+    (format ostream "~%<comment>AUTO</comment>")
     (format ostream "~%<dtrs>")
     (dolist (dtr dtrs)
-      (unless dtr
+      (unless (listp dtr)
 	(setf next-name (car names))
 	(setf names (cdr names)))
-      (format ostream "<dtr>~A</dtr>" (if dtr "OPT" next-name))) 
+      (format ostream "<dtr>~A</dtr>" (if (listp dtr) "OPT" next-name))) 
     (format ostream "</dtrs>")
-    (format ostream "~%<head>~A<head>" 
-	    (or (guess-tsg-head mother real-dtr-names)
+    (format ostream "~%<head>~A</head>" 
+	    (or (guess-tsg-head mother real-dtr-names dtrs)
 		"FIX_ME"))
-    (format ostream "~%</rule>")
+    (format ostream "~%</rule>~%")
     (finish-output ostream)))
 
-(defun construct-tsg-dtr-names (dtr-strs)
-  (let ((types nil))
-    (loop for dtr-str in dtr-strs
-      collect
-      (let* ((type (elt dtr-str 0))
-	     (type-count (assoc type types)))
-	(if type-count
-	    (let ((count (cdr type-count)))
-	      (setf (cdr type-count)
-		(+ 1 count))
-	      (format nil "~A~A" type count))
-	  (let ((count 1))
-	    (push (cons type count)
-		  types)
-	    (format nil "~A" type)))))))
+(defun construct-tsg-dtr-names (dtr-strs dtrs)
+  (let ((dtr-count 0))
+    (dolist (dtr dtrs)
+      (unless (listp dtr)
+	(setf dtr-count (+ 1 dtr-count))))
+    (unless (eql (length dtr-strs) dtr-count)
+      (format t "~%Warning ~A doesn't match ~A" dtr-strs dtrs))
+    (let ((types nil))
+      (loop for dtr-str in dtr-strs
+	  collect
+	    (let* ((type (string-upcase  dtr-str))
+		   (type-count (assoc type types :test #'equal)))
+	      (if type-count
+		  (let ((count (cdr type-count)))
+		    (setf (cdr type-count)
+		      (+ 1 count))
+		    (format nil "~A~A" type count))
+		(let ((count 1))
+		  (push (cons type count)
+			types)
+		  (format nil "~A" type))))))))
 
-(defun guess-tsg-head (mother real-dtr-names)
+(defun guess-tsg-head (mother real-dtr-names dtrs)
   (declare (ignore mother)) ;;; FIX later
   (if (cdr real-dtr-names)
-      nil
+      (let ((syn-head (find-tsg-syn-head dtrs)))
+	(if syn-head (elt real-dtr-names syn-head)
+	  nil))
     (car real-dtr-names)))
-    
+
+(defun find-tsg-syn-head (dtrs)
+  (let ((head-count 0))
+    (dolist (dtr dtrs)
+      (cond ((listp dtr) nil)
+	    ((eql (elt dtr 0) #\H)
+	     (return head-count))
+	    (t (setf head-count (+ 1 head-count))
+	       nil)))))
+
 
 (defun parse-tsg-rule (istream)
   (let ((dtrs nil))
@@ -504,15 +525,15 @@
 (defun parse-tsg-non-opt (istream)
   (let* ((name (read istream nil nil))
 	 (new-char (peek-char t istream nil nil)))
-    (declare (ignore name))
     (when (eql new-char #\[)
       (let ((next (peek-char #\] istream nil nil)))
 	(unless next
 	  (error "File ends inside []"))
-	(read-char istream)))))
+	(read-char istream)))
+    (string name)))
      
 (defun parse-tsg-dtrs (istream)
-  ;;; count the dtrs, return the opts
+  ;;; parse the dtrs, return the symbols
   ;;; warn if there's a +
   (let ((dtrs nil))
     (loop 
@@ -521,16 +542,16 @@
 	      ((eql next-char #\.) (return))
 	      ((char= next-char #\()
 	       (read-char istream)
-	       (parse-tsg-non-opt istream)
-	       (lkb::check-for-string ")" istream)
-	       (let ((next-char (peek-char t istream nil nil)))
-		 (when (eql next-char #\+)
-		   (read-char istream)
-		   (format t "Warning + in rule at ~A" 
-			   (file-position istream))))
-	       (push t dtrs))
-	      (t (parse-tsg-non-opt istream)
-		 (push nil dtrs)))))
-    dtrs))
+	       (let ((name (parse-tsg-non-opt istream)))
+		 (lkb::check-for-string ")" istream)
+		 (let ((next-char (peek-char t istream nil nil)))
+		   (when (eql next-char #\+)
+		     (read-char istream)
+		     (format t "~%Warning + in rule at ~A" 
+			     (file-position istream))))
+		 (push (list name) dtrs)))
+	      (t 
+		 (push (parse-tsg-non-opt istream) dtrs)))))
+    (nreverse dtrs)))
 
 
