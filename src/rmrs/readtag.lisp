@@ -8,9 +8,6 @@
 
 (defparameter *unknown-tags* nil)
 
-(defun show-unknown-tags nil
-  (show-unknown *unknown-tags*))
-
 ;;; Reading
 
 (defun read-rmrs-tag-templates (file-name)

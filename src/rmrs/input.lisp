@@ -18,7 +18,7 @@
   ;;; <!ELEMENT rmrs-list (rmrs)*>
   (with-open-file (istream file-name :direction :input)
     (let ((rmrss (parse-xml-removing-junk istream)))
-      (setf *rmrs-debug* rmrss)
+;      (setf *rmrs-debug* rmrss)
       (unless (equal (car rmrss) '|rmrs-list|)
         (error "~A is not a valid rmrs file" file-name))
       (loop for rmrs in (cdr rmrss)

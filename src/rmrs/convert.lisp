@@ -46,7 +46,20 @@
     (format ostream "</S>~%")
     (finish-output ostream)))
   
-
+(defun batch-output-rmrs-only nil  
+  (let ((ostream (if (and lkb::*ostream* 
+                          (streamp lkb::*ostream*) 
+                          (output-stream-p lkb::*ostream*)) 
+                     lkb::*ostream*  t)))
+    (if *parse-record*
+          (let* ((parse (car *parse-record*))
+                 (mrs-struct (extract-mrs parse))
+                 (rmrs-struct 
+                    (mrs-to-rmrs mrs-struct)))
+            (output-rmrs1 rmrs-struct 'xml ostream))
+      (format ostream
+              "~%<rmrs></rmrs>"))
+    (finish-output ostream)))
 
 
 ;;; Full MRS to RMRS conversion
@@ -65,7 +78,8 @@
             (if in-group
                 (setf new-in-groups (cons in-group new-in-groups)))
             (setf labels label-list)))
-    (make-rmrs   :h-cons (psoa-h-cons mrs)
+    (make-rmrs   :top-h (psoa-top-h mrs)
+                 :h-cons (psoa-h-cons mrs)
                  :liszt new-lzt
                  :in-groups new-in-groups
                  :rmrs-args new-args)))
@@ -131,7 +145,12 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
            (uscore-pos2 
             (if uscore-pos
                 (position #\_ str :start (+ 1 uscore-pos))))
-           (remainder (cond (uscore-pos2
+           (uscore-pos3 
+            (if uscore-pos2
+                (position #\_ str :start (+ 1 uscore-pos2))))
+           (remainder (cond (uscore-pos3
+                             (subseq str uscore-pos3))
+                            (uscore-pos2
                              (subseq str uscore-pos2))
                             (uscore-pos
                              (subseq str uscore-pos))
@@ -140,19 +159,20 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
               ;;; we're missing the _rel
               ;;; nasty so just output what we've got
             str
-          (concatenate 'string
-            (subseq str 0 uscore-pos)
-            pos-type
-            (strip-pos-type (subseq str uscore-pos) pos-type)))))))
+          (make-realpred :lemma (subseq str 1 uscore-pos)
+                         :pos pos-type
+                         :sense (if uscore-pos3
+                                   (subseq str uscore-pos2 uscore-pos3))))))))
+
 
 (defun find-pred-pos-type (pred)
   (cond ((not (lkb::is-valid-type pred)) "")
-        ((lkb::subtype-p pred 'LKB::basic_NOM_REL) "_N")
-        ((lkb::subtype-p pred 'LKB::adj_rel) "_J")
-        ((lkb::subtype-p pred 'LKB::adv_rel) "_R")
-        ((lkb::subtype-p pred 'LKB::prep_rel) "")
-        ((lkb::subtype-p pred 'LKB::event_rel) "_V")
-        (t "")))
+        ((lkb::subtype-p pred 'LKB::basic_NOM_REL) "N")
+        ((lkb::subtype-p pred 'LKB::adj_rel) "J")
+        ((lkb::subtype-p pred 'LKB::adv_rel) "R")
+        ((lkb::subtype-p pred 'LKB::prep_rel) "P")
+        ((lkb::subtype-p pred 'LKB::event_rel) "V")
+        (t nil)))
 
 (defun strip-pos-type (str pos-type)
   (if (eql (elt str 2) #\_)

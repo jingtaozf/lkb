@@ -112,6 +112,10 @@
   (with-slots (stream) rmrsout
     (format stream "<label vid='~A'/>" label-id)))
 
+(defmethod rmrs-output-top-label ((rmrsout xml) label-id)
+  (with-slots (stream) rmrsout
+    (format stream "<label vid='~A'/>" label-id)))
+
 ;;; Parsonian arguments
 
 ;;; <!ELEMENT rarg (rargname, label, var)>
@@ -138,7 +142,7 @@
 (defmethod rmrs-output-hcons-start ((rmrsout xml) reln)
   (with-slots (stream) rmrsout
     (format stream "~%<hcons hreln='~A'><hi>"
-            reln)))
+            (string-downcase reln))))
 
 (defmethod rmrs-output-hcons-next ((rmrsout xml))
   (with-slots (stream) rmrsout
@@ -258,11 +262,11 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-var-fn ((rmrsout compact) var-id var-type)
   (with-slots (stream) rmrsout
-    (format stream ",~A~A" var-type var-id)))
+    (format stream "~A~A" var-type var-id)))
 
 (defmethod rmrs-output-constant-fn ((rmrsout compact) constant)
   (with-slots (stream) rmrsout
-    (format stream ",~A" constant)))
+    (format stream "~A" constant)))
 
 (defmethod rmrs-output-end-ep ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -270,7 +274,11 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-label ((rmrsout compact) label-id)
   (with-slots (stream) rmrsout
-    (format stream "l~A" label-id)))
+    (format stream "l~A," label-id)))
+
+(defmethod rmrs-output-top-label ((rmrsout compact) label-id)
+  (with-slots (stream) rmrsout
+    (format stream "l~A~%" label-id)))
 
 ;;; Parsonian arguments
 
@@ -372,7 +380,7 @@ for gram.dtd and tag.dtd
     (when (and hook (not (indices-default hook)))
       (print-semstruct-hook hook 
                             bindings *rmrs-display-structure*))
-    (rmrs-output-label *rmrs-display-structure*
+    (rmrs-output-top-label *rmrs-display-structure*
                        (if top-h
                            (find-rmrs-var-id top-h bindings)
                          (funcall
