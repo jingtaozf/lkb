@@ -648,8 +648,12 @@
   (clear-lex *lexicon* 
 	     :psorts-temp-files (cons
 				 (make-pathname :name "templex"
+						:host (pathname-host (lkb-tmp-dir))
+						:device (pathname-device (lkb-tmp-dir))
 					      :directory (pathname-directory (lkb-tmp-dir))) 
 				 (make-pathname :name "templex-index"
+						:host (pathname-host (lkb-tmp-dir))
+						:device (pathname-device (lkb-tmp-dir))
 					      :directory (pathname-directory (lkb-tmp-dir)))) 
 	     :no-delete t)
   (setf *psql-lexicon* (make-instance 'psql-lex-database))

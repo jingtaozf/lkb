@@ -26,10 +26,15 @@
 (defclass cdb-lex-database (lex-database)
   ((psort-db :initform nil :accessor psort-db)
    (orth-db :initform nil :accessor orth-db)
-   (psorts-temp-file :initform (make-pathname :name "templex" 
-					      :directory (pathname-directory (lkb-tmp-dir)))
+   (psorts-temp-file :initform (make-pathname :name "templex"
+					      :host (pathname-host (lkb-tmp-dir))
+					      :device (pathname-device (lkb-tmp-dir))
+					      :directory 
+					      (pathname-directory (lkb-tmp-dir)))
 		     :accessor psorts-temp-file)
    (psorts-temp-index-file :initform (make-pathname :name "templex-index" 
+						    :host (pathname-host (lkb-tmp-dir))
+						    :device (pathname-device (lkb-tmp-dir))
 						    :directory (pathname-directory (lkb-tmp-dir)))
 		     :accessor psorts-temp-index-file)
    (all-cdb-lex-dbs :allocation :class :initform nil :accessor all-cdb-lex-dbs)))
