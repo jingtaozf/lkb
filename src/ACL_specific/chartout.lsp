@@ -34,7 +34,8 @@
 (defun draw-chart-lattice (node title horizontalp &optional subframe-p)
   (declare (ignore horizontalp))
   (when (and *main-chart-frame* (not subframe-p))
-    (clim:execute-frame-command *main-chart-frame* '(clim-user::com-close-to-replace)))
+    (clim:execute-frame-command *main-chart-frame* 
+				'(clim-user::com-close-to-replace)))
   (let ((chart-window (clim:make-application-frame 'chart-window)))
     (if subframe-p
         (push chart-window
@@ -72,7 +73,7 @@
        ;; root node to the lexical edges
        :arc-drawer #'(lambda (stream from to x1 y1 x2 y2 &rest args)
                        (when (or (not (symbolp to))
-                                 (get to 'chart-edge-contents))
+                                 (not (get from 'root)))
                          (apply #'clim-internals::draw-linear-arc
                                 (append (list stream from to x1 y1 x2 y2)
                                         args))))   

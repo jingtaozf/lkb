@@ -335,7 +335,8 @@
 
 (defun show-gen-chart (&optional all-p) 
    (let ((root (make-symbol "")))
-      (create-gen-chart-pointers root all-p)
+     (setf (get root 'root) t)
+     (create-gen-chart-pointers root all-p)
       (draw-chart-lattice root
          (format nil "Generator Chart (~A edges)" (if all-p "all" "inactive"))
          t)
@@ -392,7 +393,8 @@
 
 (defun show-chart nil 
    (let ((root (make-symbol "")))
-         (setf (get root 'chart-edge-descendents)
+     (setf (get root 'root) t)
+     (setf (get root 'chart-edge-descendents)
             (make-array *chart-limit* :initial-element nil))
          (let*
             ((end (create-chart-pointers root))
