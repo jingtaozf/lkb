@@ -99,7 +99,7 @@
 
 (defgeneric store-temporary-psort (lexicon id entry))
 
-(defgeneric read-psort (lexicon id &key (cache)))
+(defgeneric read-psort (lexicon id &key (cache) (recurse t)))
 
 (defgeneric unexpand-psort (lexicon id))
 
@@ -108,7 +108,7 @@
 ;;; identifiers of lexical items plus start symbols and node labels (for the
 ;;; time being, these are stored in the same namespace).
 ;;;
-(defgeneric collect-psort-ids (lexicon))
+(defgeneric collect-psort-ids (lexicon &key (recurse t)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -485,7 +485,6 @@
       (if *verbose-lex-lookup-word* (format *trace-output* "~%lookup-word(~a): ~a~%~a" orth (length value) value))
       value)))))
 
-;;; look in lexicons and sublexicons too
 (defmethod lex-words :around ((lexicon lex-database))
   (let* ((words (if (next-method-p) (call-next-method)))
 	 (extra 
@@ -496,6 +495,17 @@
 		collect extra-words))
 	 (words (cons words extra)))
     (remove-duplicates (mapcan #'(lambda (x) x) words) :test #'equal)))
+
+(defmethod collect-psort-ids :around ((lexicon lex-database) &key (recurse t))
+  (let* ((ids (if (next-method-p) (call-next-method)))
+	 (extra 
+	  (if recurse
+	      (loop
+		  for lexicon in (extra-lexicons lexicon)
+		  for extra-ids = (and lexicon (collect-psort-ids lexicon :recurse recurse))
+		  collect extra-ids)))
+	 (ids (cons ids extra)))
+    (remove-duplicates (mapcan #'(lambda (x) x) ids) :test #'equal)))
 
 (defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry)
   (store-psort lexicon id new-entry orth)
@@ -520,11 +530,11 @@
 			  :full-fs entry)))
 
 ;;; todo: cache
-(defmethod read-psort :around ((lexicon lex-database) id &key (cache t))
+(defmethod read-psort :around ((lexicon lex-database) id &key (cache t) (recurse t))
   (cond ((gethash id (slot-value lexicon 'temp-psorts)))
 	((and (next-method-p) (call-next-method)))
-	(t (some #'(lambda (lex) (read-psort lex id :cache cache))
-		 (extra-lexicons lexicon)))))
+	(recurse (some #'(lambda (lex) (read-psort lex id :cache cache))
+		       (extra-lexicons lexicon)))))
 
 (defmethod collect-expanded-lex-ids :around ((lexicon lex-database))
   (let ((ids nil))
@@ -696,8 +706,8 @@
   id)
 
 ;;; todo: cache
-(defmethod read-psort ((lexicon simple-lex-database) id &key (cache t))
-  (declare (ignore cache))
+(defmethod read-psort ((lexicon simple-lex-database) id &key (cache t)  (recurse t))
+  (declare (ignore cache recurse))
   (with-slots (psorts) lexicon
     (let ((hash-table-entry (gethash id psorts)))
       (when hash-table-entry
@@ -712,7 +722,8 @@
 (defmethod unexpand-psort ((lexicon simple-lex-database) id)
   (setf (cddr (gethash id (slot-value lexicon 'psorts))) nil))
 
-(defmethod collect-psort-ids ((lexicon simple-lex-database))
+(defmethod collect-psort-ids ((lexicon simple-lex-database) &key (recurse t))
+  (declare (ignore recurse))
   (let ((ids nil))
     (maphash 
      #'(lambda (name val)
