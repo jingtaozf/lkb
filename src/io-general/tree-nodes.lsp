@@ -12,8 +12,8 @@
   (let ((edges (or edges *parse-record*)))
     (if edges
       (with-parser-lock ()
-        (if #+:glue (glue-status-p :tree) #-:glue nil
-          #+:glue (glue-show-parses edges *sentence*) #-:glue nil
+        (if #+:lui (lui-status-p :tree) #-:lui nil
+          #+:lui (lui-show-parses edges *sentence*) #-:lui nil
           #+(and :allegro :clim)
           (show-parse-tree-frame edges title)
           #-(and :allegro :clim) 

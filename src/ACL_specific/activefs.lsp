@@ -128,8 +128,8 @@
     (clim:run-frame-top-level fs-window)))
 
 (defun display-fs (fs title &optional id)
-  (if #+:glue (glue-status-p :avm) #-:glue nil
-    #+:glue (glue-display-fs fs title id) #-:glue nil
+  (if #+:lui (lui-status-p :avm) #-:lui nil
+    #+:lui (lui-display-fs fs title id) #-:lui nil
     (display-basic-fs fs title nil nil id)))
 
 (defun display-fs-and-parents (fs title parents &optional id)

@@ -65,7 +65,7 @@
   (let* ((real-type (type-of-fs fs)))
     (when (and #+allegro 
                (let ((user (system:getenv "USER")))
-                 (member user '("aac" "dan" "danf" "oe") :test #'string-equal))
+                 (member user '("aac" "dan" "danf") :test #'string-equal))
                #-allegro 
                nil
                (search "GLBTYPE" (if (stringp real-type)
@@ -120,7 +120,7 @@
 
 ;;;
 ;;; convert PSOA to LKB dag representation; enables use of DAG browsing tools
-;;; for MRS viewing (specifically the emerging GLUE AVM browser, while GLUE
+;;; for MRS viewing (specifically the emerging LUI AVM browser, while LUI
 ;;; does not include a specialized MRS browser).             (10-jul-03; oe)
 ;;;
 (defun psoa-to-dag (mrs)

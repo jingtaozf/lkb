@@ -321,7 +321,7 @@
             (cons
              key
              (nconc
-              (loop for i from 0 to (- key 1) collect i)
+              (loop for i from (- key 1) downto 0 collect i)
               (loop for i from (+ key 1) to (- arity 1) collect i)))))
         #+:head-first
         (let ((head (rule-head rule))

@@ -188,8 +188,8 @@
       while c do (vector-push c buffer)))
 
 (defun lsp-process-event (id event stream)
-  #+:glue
-  (declare (special %glue-stream% %glue-eoc%))
+  #+:lui
+  (declare (special %lui-stream% %lui-eoc%))
   (let* ((client  (loop
                       for client in %lsp-clients%
                       when (= (client-id client) id) return client))
@@ -258,12 +258,12 @@
          (grammar
           (let ((script (pop command)))
             (when (probe-file script)
-              #+:glue
+              #+:lui
               (unless id 
-                (format %glue-stream% "status loading~a~%" %glue-eoc%))
+                (format %lui-stream% "status loading~a~%" %lui-eoc%))
               (read-script-file-aux script)))
-          #+:glue
-          (unless id (format %glue-stream% "status ready~a~%" %glue-eoc%)))
+          #+:lui
+          (unless id (format %lui-stream% "status ready~a~%" %lui-eoc%)))
          (parse
           (let* ((input (pop command))
                  (set (let ((foo (pop command))) 
@@ -275,8 +275,8 @@
             (when (stringp input)
               (setf *sentence* input)
               (unless id 
-                #+:glue
-                (glue-status (format nil "parsing `~a' ..." input)))
+                #+:lui
+                (lui-status (format nil "parsing `~a' ..." input)))
               (parse (split-into-words 
                       (preprocess-sentence-string 
                        (string-trim '(#\space #\tab #\newline) input)))
@@ -287,8 +287,8 @@
                                (list (first *parse-record*))
                                *parse-record*)))
                   (unless id 
-                    #+:glue
-                    (glue-status (format 
+                    #+:lui
+                    (lui-status (format 
                                  nil 
                                  " done (~d tree~p; ~,2f seconds)~%"
                                  (length *parse-record*) 
@@ -308,8 +308,8 @@
             (when (and (second object) (member format '(:avm :tree)))
               (lsp-browse id (first object) (rest object) format))))
          (quit
-          #+:glue
-          (glue-shutdown))
+          #+:lui
+          (lui-shutdown))
          (t
           (setf return %lsp-invalid-command%))))
       (declare (ignore foo))
