@@ -8,7 +8,7 @@ MKDIR=mkdir
 #
 if [ "$OSTYPE" = "linux" -o "$OSTYPE" = "linux-gnu" ]; then
   os="linux";
-elif [ "$OSTYPE" = "solaris" ]; then
+elif [ "$OSTYPE" = "solaris" -o "$os" == "solaris" ]; then
   os="solaris";
 elif [ "$OSTYPE" = "cygwin" ]; then
   os="windows";

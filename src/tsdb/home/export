@@ -49,18 +49,15 @@ unset DISPLAY
       echo "(setf (sys:gsgc-switch :stats) t)"; \
       echo "(setf (sys:gsgc-switch :verbose) t)"; \
       echo "(setf (sys:gsgc-parameter :auto-step) nil)"; \
+ 
       echo "(setf (system:getenv \"DISPLAY\") nil)"; \
-      echo "(load \"${DELPHINHOME}/lkb/src/general/loadup.lisp\")"; \
-      echo "(pushnew :lkb *features*)"; \
-      echo "(compile-system \"tsdb\")"; \
-
       echo "(load \"${DELPHINHOME}/lkb/src/general/itsdb.lisp\")"; \
 
       echo "(setf mrs::*eds-include-quantifiers-p* nil)"; \
       echo "(setf mrs::*eds-include-vacuous-relations-p* nil)"; \
       echo "(setf tsdb::*redwoods-export-values* :all)"; \
       echo "(setf tsdb::*redwoods-thinning-export-p* nil)"; \
-      echo "(read-script-file-aux \"${GRAMMAR}/lkb/script\")"; \
+      echo "(lkb:read-script-file-aux \"${GRAMMAR}/lkb/script\")"; \
 
       echo "(excl:gc :tenure) (excl:gc t) (excl:gc)"; \
 
