@@ -16,12 +16,21 @@
 
    :lisp-files (list :srecord
 		     :eli
-		     (merge-pathnames #p"src/ACL_specific/build.lsp" 
+		     (merge-pathnames #p"src/ACL_specific/build-psql.lsp" 
 				      sys-home))
    
    :opt-speed 3
-   :newspace 83886080			; 80 meg newspace
-   :oldspace 78643200			; 75 meg oldspace
+   :newspace (* 1024 1024 4)
+   :oldspace (* 1024 1024 12)
+   :lisp-heap-size (* 1024 1024 #-:mswindows 768 #+:mswindows 512)
+   ;;
+   ;; change heap placement to allow immense newspace growth (21-may-00  -  oe)
+   ;;
+   #+:linux86 :lisp-heap-start 
+   #+(and :linux86 (not (version>= 6 2))) "1040M" 
+   #+(and :linux86 (version>= 6 2)) "1088M"
+   #+(and :sparc :solaris2) :c-heap-start #+(and :sparc :solaris2) #xe0000000
+ 
    
    :runtime nil
    
@@ -32,7 +41,8 @@
    :include-debugger t
    :include-devel-env t
    :include-ide nil
-;   :include-common-graphics nil
+   #-(or :mswindows (version>= 6 2)) :include-common-graphics
+   #-(or :mswindows (version>= 6 2)) nil
    :include-composer t
    :include-xcw t
 
