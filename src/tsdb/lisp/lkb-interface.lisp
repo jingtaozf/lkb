@@ -943,7 +943,9 @@
             (ids (list (lex-entry-id instance))))
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
-                   :dag tdfs :from start :to end)))))
+                   :dag tdfs :from start :to end
+                   :cfrom (find-cfrom-hack start)
+                   :cto (find-cto-hack start))))))
 
 (defun tsdb::find-affix (type)
   (let* ((*package* *lkb-package*)
@@ -1047,34 +1049,34 @@
 
 
 (defun get-test-suite-sentences nil
+  ;;; returns assoc list of id and string
   (loop
       for item in (tsdb::analyze *tsdb-directory1*)
       for id = (tsdb::get-field :i-id item)
       for input = (tsdb::get-field :i-input item)
       collect
-        (cons 
-         (format nil "~a: ~a" id input)
-         id)))
+        (cons id input)))
 
 ;;; FIX - add some error checking!
 
 (defun get-tsdb-selected-rasp-rmrs (item)
   (let* ((data *tsdb-directory2*)
-         (frame (tsdb::browse-trees data :runp nil)))
+         (frame (tsdb::browse-trees data :runp nil :verbose nil)))
     (tsdb::browse-tree 
-     data item frame :runp nil)
-    (let ((tsdb-rasp-tree (edge-bar (first (compare-frame-edges frame)))))
-      (let ((mrs::*initial-rasp-num* nil)
-            (mrs::*rasp-xml-word-p* t)) ; FIX - RASP `script'
-        (mrs::construct-sem-for-tree tsdb-rasp-tree :rasp :quiet)))))
+     data item frame :runp nil :verbose nil)
+    (let* ((tsdb-rasp-tree (edge-bar (first (compare-frame-edges frame))))
+           (mrs::*rasp-xml-word-p* t)   ; FIX - RASP `script'
+          (mrs::*initial-rasp-num* (mrs::scan-rasp-for-first-num 
+                                    tsdb-rasp-tree most-positive-fixnum)))
+      (mrs::construct-sem-for-tree tsdb-rasp-tree :rasp :quiet))))
 
 (defun get-tsdb-selected-erg-rmrs (item)
   (let* ((data *tsdb-directory1*)
-         (frame (tsdb::browse-trees data :runp nil)))
+         (frame (tsdb::browse-trees data :runp nil :verbose nil)))
     (setf (lkb::compare-frame-mode frame) :modern)
     ;;; force reconstruction of dags by browse-tree
     (tsdb::browse-tree 
-     data item frame :runp nil)
+     data item frame :runp nil :verbose nil)
     (mrs::mrs-to-rmrs (mrs::extract-mrs
                        (first (compare-frame-edges frame))))))
     
