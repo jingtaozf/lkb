@@ -167,7 +167,7 @@
           (existing-dag-at-end-of (tdfs-indef (gen-chart-edge-dag edge))
              mrs::*initial-semantics-path*)))
       (if (mrs::is-valid-fs sem-fs)
-         (let ((mrs (mrs::construct-mrs sem-fs)))
+         (let ((mrs (mrs::construct-mrs sem-fs nil t)))
             ;; (mrs::output-mrs mrs 'mrs::simple)
             (and ; *** how do you check mrs for equality properly? (handel values
                  ; may be variously fully instantiated or not, or have different

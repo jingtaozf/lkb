@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.3  1998/07/06 01:09:08  aac
+;; mostly fixes to lexical lookup for generation
+;;
 ;; Revision 1.2  1998/06/26 02:35:27  aac
 ;; at least partially working VIT construction
 ;;
@@ -107,9 +110,10 @@
 
 ;;; WK: I copy the *VM-arg-roles ... parameters from main-package into MRS
 ;; they appear to work without PAGE then
-(setf main::*VM-arg-roles-only-p* t)
-(setf main::*VM-arg-roles* `(,(vsym "arg1") ,(vsym "arg2") ,(vsym "arg3")))
-(setf main::*suppressed-VM-arg-roles* 
+;; AAC - take these out of main and set in mrsglobals
+(setf *VM-arg-roles-only-p* t)
+(setf *VM-arg-roles* `(,(vsym "arg1") ,(vsym "arg2") ,(vsym "arg3")))
+(setf *suppressed-VM-arg-roles* 
     `(,(vsym "act") ,(vsym "und") ,(vsym "fig") ,(vsym "gnd") 
       ,(vsym "i-ord") ,(vsym "preparg") 
       ,(vsym "thm") ,(vsym "id1") 

@@ -29,11 +29,6 @@
 						(first binding-sets)))
 		    (output-scoped-mrs mrs-struct :stream stream))))))))
 
-(defun get-parse-fs (parse)
-  (if (string-equal "1" (subseq user::*page-version* 0 1))
-      (lexicon::cfs-fs (pg::u-item-cfs parse))
-  (lexicon::cfs-fs (car (lex::typed-item-args parse)))))
-
 (defun get-vit-strings (parse-list)
   (loop for parse in parse-list
         collecting
@@ -51,8 +46,7 @@
 				   result-file
 				   "~/grammar/tsdb/tsnlpsed"
 				   (concatenate 'string result-file ".out")))
-  (let ((old-raw-mrs main::*raw-mrs-output-p*))
-    (setf main::*raw-mrs-output-p* nil)
+  (let ((*raw-mrs-output-p* nil))
     (with-open-file 
 	(istream (concatenate 'string result-file ".out") :direction :input)
      (with-open-file 
@@ -65,7 +59,7 @@
 	  ((eql sent-num 'eof) nil)
 	(format t "~%~A" sent)
 	(format ostream "~%~A~%" sent)
-	(trees::kh-parse-tree tree :stream ostream)
+        (output-parse-tree tree ostream)
 	(if vitp
 	    #|
 	    (progn
@@ -86,8 +80,7 @@
 	      sent (read istream nil 'eof)
 	      mrs (read istream nil 'eof)
 	      sep (read-char istream nil 'eof)
-	      tree (read istream nil 'eof)))))
-    (setf main::*raw-mrs-output-p* old-raw-mrs)))
+	      tree (read istream nil 'eof)))))))
 
 (defun extract-and-output (parse-list)
  (let ((*print-circle* nil))
@@ -108,7 +101,7 @@
                     (let ((sorted-mrs-struct (sort-mrs-struct mrs-struct))
 			  (previous-result
                            (gethash (remove-trailing-periods
-                                     main::*last-sentence*)
+                                     (get-last-sentence))
                                     *mrs-results-table*)))
                       (if previous-result
                          (unless (mrs-equalp sorted-mrs-struct previous-result)
@@ -118,7 +111,7 @@
                                    (setf 
                                     (gethash
                                      (remove-trailing-periods
-                                     main::*last-sentence*)
+                                     (get-last-sentence))
                                      *mrs-results-table*)
                                     sorted-mrs-struct)))
                         (when (y-or-n-p "No previous result.
@@ -126,5 +119,5 @@
                               (setf 
                                (gethash
                                 (remove-trailing-periods
-                                main::*last-sentence*) *mrs-results-table*)
+                                (get-last-sentence)) *mrs-results-table*)
                                sorted-mrs-struct)))))))))))

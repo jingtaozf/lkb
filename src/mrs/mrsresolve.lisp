@@ -185,17 +185,18 @@
          (mrsstruct (read istream nil 'eof) (read istream nil 'eof)))
         ((or (eql sentence 'eof) (eql mrsstruct 'eof)) nil)
         (when (and mrsstruct (psoa-p mrsstruct))
-              (check-mrs-struct sentence mrsstruct)))))
+              (check-mrs-struct mrsstruct sentence)))))
 
 (defvar *canonical-bindings* nil
 "global variable which is set to the current set of bindings for the
 printing routines -  convenient to make this global to keep printing generic")
 
-(defun check-mrs-struct (sentence mrsstruct)
+(defun check-mrs-struct (mrsstruct &optional sentence)
   ;;; first output the existing structure in the indexed notation
   (setf *canonical-bindings* nil)
-  (format t "~%~A" sentence)
-    (format t "~%FSs")
+  (when sentence
+    (format t "~%~A" sentence)
+    (format t "~%FSs"))
   (output-mrs mrsstruct 'simple)
   (format t "~%Unscoped form")
   (output-mrs mrsstruct 'indexed)

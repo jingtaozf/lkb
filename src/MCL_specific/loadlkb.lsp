@@ -20,7 +20,6 @@
 (import '(enable-type-interactions disable-type-interactions))
 
 (defpackage "MRS")
-(defpackage "MAIN")
 
 (progn 
       (dolist  (dir-and-file 

@@ -43,7 +43,6 @@
    "a file to index the lexicon")
 
 (defpackage "MRS")
-(defpackage "MAIN")
 
 (eval-when (eval)
    (load

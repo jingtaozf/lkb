@@ -235,7 +235,7 @@ because of the likelyhood of changes in the grammar.
 ;;; at present the DBs do not appear appropriate to the purpose
 (defun insert-predicate-translation (pred1 pred2 
                                      &optional 
-                                     (domain (tdl::show-current-domain)))
+                                     (domain (tdl-show-current-domain)))
   (let ((dompred (find-symbol (string pred1) domain)))
     (setf (gethash (if dompred
                        dompred

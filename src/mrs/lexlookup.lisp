@@ -547,12 +547,11 @@ at this point).
 |#
 
 (defun check-lex-retrieval nil
-  (let ((main::*VM-arg-roles-only-p* nil))
     (time
      (for parse-res in *parse-record*
           do
           (let* ((lrules-and-entries-used (collect-parse-base parse-res))
-                 (mrs (car (mrs::extract-mrs (list parse-res)))))
+                 (mrs (car (mrs::extract-mrs (list parse-res) t))))
             (let
                 ((identified-entry-sets
                   (mrs::collect-lex-entries-from-mrs mrs)))
@@ -576,12 +575,11 @@ at this point).
                 (when undergen
                   (format t "~%Entries not retrieved ~{~A ~}" undergen)) 
                 (when overgen
-                  (format t "~%Extra entries retrieved  ~{~A ~}" overgen)))))))))
+                  (format t "~%Extra entries retrieved  ~{~A ~}" overgen))))))))
 
 ;;; needs to be made more sophisticated to deal with lex rules etc
 
 (defun quick-check-lex-retrieval nil
-   (let ((main::*VM-arg-roles-only-p* nil))
      (for parse-res in *parse-record*
         do
         (let ((mrs (car (mrs::extract-mrs (list parse-res)))))
@@ -598,7 +596,7 @@ at this point).
                     (display-dag 
                      (existing-dag-at-end-of 
                       (tdfs-indef (mrs::found-lex-inst-fs item)) 
-                      mrs::*main-semantics-path*) 'simple))))))))
+                      mrs::*main-semantics-path*) 'simple)))))))
 
 
 

@@ -23,7 +23,6 @@
 (import '(enable-type-interactions disable-type-interactions))
 
 (defpackage "MRS")
-(defpackage "MAIN")
 
 (eval-when (load eval)
 (#+allegro excl:without-package-locks

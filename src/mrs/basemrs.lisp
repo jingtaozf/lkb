@@ -13,11 +13,6 @@
 
 (in-package "MRS")
 
-;;; Uncomment by WK
-(defparameter *raw-mrs-output-p* nil)
-;;; in tdl, this is in package "MAIN", so this def would need to be removed
-;;; and fn below would be altered
-
 ;;; MRS structs
 ;;; because I want to be able to do other things with MRSs besides
 ;;; just printing them, this stuff defines a set of structures

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.1  1998/06/24 17:15:11  aac
+;; adding mrs code to source control
+;;
 ;; Revision 1.1.1.1  1997/12/12 20:18:29  malouf
 ;; DFKI preliminary version of 11-Dec-1997.
 ;; 
@@ -243,3 +246,19 @@ for extra features for using the extra-features of a relation")
 
 
 (defparameter *no-inst-arg-roles* nil)
+
+
+;;;
+;;; MRS output control
+
+(defparameter *mrs-output-p* nil)
+(defparameter *raw-mrs-output-p* nil)
+
+(defparameter *mrs-extra-display* nil)
+
+;;; take VM arg role control out of package MAIN
+
+(defvar *VM-arg-roles-only-p* nil)
+(defvar *VM-arg-roles* nil)
+(defvar *suppressed-VM-arg-roles* nil)
+

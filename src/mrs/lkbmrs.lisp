@@ -14,6 +14,15 @@
 (defun get-parse-fs (edge)
   (tdfs-indef (edge-dag edge)))
 
+(defun output-parse-tree (tree stream)
+  (format stream "~A" tree))
+;;; called from mrsfns.lsp
+;;; this is a temporary expedient
+;;; page version calls kh-parse-tree
+
+(defun get-last-sentence nil
+  (car USER::*last-parses*))  
+
 (defun deref (fs)
   ;;; just a guess, but can't do any harm ...
   (follow-pointers fs))
@@ -60,7 +69,10 @@
       (subtype-p type1 type2)))
 
 ;;; called from mrs-to-vit
- 
+
+(defun tdl-show-current-domain nil
+  nil)
+
 (defun is-top-type (val)
 ;;; also defined for PAGE
   (eql USER::*toptype* val))

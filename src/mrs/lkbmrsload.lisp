@@ -5,35 +5,7 @@
    (make-pathname :name "lkb-mrs-package"
                   :directory (append *lkb-source-dir* (list "mrs"))))
 
-;;; define MRS package, and also DISCO, TREES, UNIFY, TDL and MAIN, to allow
-;;; files to be read in without errors
-;;; and define a few symbols etc here
-
-(in-package "UNIFY")
-
-(export '(*fail*))
-
-(in-package "TREES")
-
-(defun kh-parse-tree (tree &key stream)
-  (declare (ignore tree stream))
-  nil)
-
-(in-package "MAIN")
-
-(defparameter *raw-mrs-output-p* nil)
-
-(defparameter *VM-arg-roles-only-p* nil)
-
-(defparameter *suppressed-VM-arg-roles* nil)
-
-(defparameter *VM-arg-roles* nil)
-
-(in-package "TDL")
-
-(defun show-current-domain nil
-  nil)
-
+;;; define MRS package
 
 (in-package "MRS")
 
@@ -65,9 +37,8 @@
                                        ; done by mrsglobals-eng 
            (("mrs") "basemrs")        ; MRS structures and printing
            (("mrs") "mrsoutput")      ; constructing MRS from parse result  
-           (("mrs") "mrscorpus")      ; checking equality etc
-                                      ; for seeing whether results have
-                                      ; changed - needs fixing?
+          (("mrs") "mrscorpus")         ; checking equality etc
+          (("mrs") "interface")
 ; following two files needed for scoping - can be excluded for generation 
            (("mrs") "mrsresolve")     ; resolving scope
            (("mrs")  "mrscons")       ; constraints on scope
@@ -76,6 +47,7 @@
            (("mrs") "mrs-to-vit")     ; convert MRS to VIT
            (("mrs") "time-convert")   ; temporary code for converting
                                       ; times to VIT format
+                                      ; needs fixing
            (("mrs") "mrsmunge")       ; manipulate MRS via rules
                                       ; currently for vitrifying - potential
                                       ; other uses
@@ -85,7 +57,6 @@
 ;           (("mrs") "acl-mrs")        ; display etc in CLIM
                                        ; needs fixing
            (("mrs") "mrsfns")         ; from old mrsglobals
-                                      ; needs sorting out
            (("mrs") "mrsglobals-eng") ; globals for LinGO grammar
            (("mrs") "lkbmrs")         ; LKB specific - redefines
                                       ; some functions

@@ -44,8 +44,13 @@
    (if *parse-record*
       (for edge in *parse-record*
          do
-         (display-parse-tree edge nil))
-      (let ((possible-edge-name
+         (display-parse-tree edge nil)
+         (when (fboundp 'mrs::output-mrs-after-parse)
+           (mrs::output-mrs-after-parse *parse-record*)))
+     (format t "~%No parses found")))
+
+#|     
+     (let ((possible-edge-name
                (ask-for-lisp-movable "Current Interaction" 
                   `(("No parses - specify an edge number" . ,*edge-id*)) 60)))
          (when possible-edge-name
@@ -53,7 +58,8 @@
                   (edge-record (find-edge-given-id edge-id)))
                (when edge-record 
                   (display-parse-tree edge-record nil)))))))
-            
+|#
+                  
 (defun show-parse-edge nil
    (let ((possible-edge-name
             (ask-for-lisp-movable "Current Interaction" 

@@ -176,4 +176,3 @@
 (defparameter *label-fs-path* '(SYNSEM))
 
 (defparameter *label-template-type* 'label)
-

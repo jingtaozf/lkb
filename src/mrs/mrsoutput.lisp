@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.5  1998/07/22 01:55:51  aac
+;; mrs equality and type file patching
+;;
 ;; Revision 1.4  1998/07/19 03:08:41  aac
 ;; reduced size of cached lexicon
 ;;
@@ -54,20 +57,12 @@
 
 (defparameter *mrs-scoping-p* nil)
 
-;;; AAC - not used?
-;;; (defparameter *label-path* '(DISCO::LABEL-NAME)) ; from trees/trees.lisp
-
 ;;; First necessary to retrive the structure from the result of
 ;;; a parse.  The FS returned will have an initial path to get to
 ;;; the MRS *initial-semantics-path*
 ;;; Following this gets you to a psoa structure
-
-;;; get feature structure from parse (added by WK for customization)
-;;; moved to call-mrs.lisp to reduce the dependency on PAGE in the core system
-;(defun get-parse-fs (parse)
-;  (if (string-equal "1" (subseq user::*page-version* 0 1))
-;      (lexicon::cfs-fs (pg::u-item-cfs parse))
-;  (lexicon::cfs-fs (car (lex::typed-item-args parse)))))
+;;; 
+;;; function moved to lkb/page specific files
 
 ;; To avoid mis-printing circular structures, locally set *print-circle* to nil
 
@@ -97,13 +92,13 @@
 (defun remove-trailing-periods (sentence-string)
   (string-right-trim '(#\Space #\.) sentence-string))
 
-(defun extract-mrs (parse-list)
+(defun extract-mrs (parse-list &optional generator-p)
   (loop for parse in parse-list
         collect
         (let* ((fs (get-parse-fs parse))
                (sem-fs (path-value fs *initial-semantics-path*)))
          (if (is-valid-fs sem-fs)
-          (construct-mrs sem-fs)))))
+          (construct-mrs sem-fs nil generator-p)))))
 
 (defun mrs-language (languages)
   (member *mrs-for-language* languages))
@@ -162,23 +157,23 @@
 ;;; added test for cycles
 ;;; cycles should not occur but they seem to arise occasionally in lattice
 ;;; parsing
-(defun construct-mrs (fs &optional existing-variable-generator)
-  (when #-pagelite (not (cyclic-p fs))
-        #+pagelite t
-        (let ((variable-generator (setf *variable-generator*
-                                   (or existing-variable-generator
-                                    (create-variable-generator)))))
-          (unless existing-variable-generator (setf *named-nodes* nil))
-          #-pagelite
-          (SETQ fs (deref fs))
-          (let ((handel-fs (path-value fs *psoa-handel-path*))
-                (top-h-fs (path-value fs *psoa-top-h-path*))
-                (event-fs (path-value fs *psoa-event-path*))
-                (liszt-fs (path-value fs *psoa-liszt-path*))
-                (h-cons-fs (path-value fs *psoa-rh-cons-path*))
-                (message-fs (path-value fs *psoa-message-path*))
-                (wgliszt-fs (path-value fs *psoa-wgliszt-path*)))
-;            (if  (and (is-valid-fs handel-fs) (is-valid-fs liszt-fs))
+(defun construct-mrs (fs &optional existing-variable-generator generator-p)
+  (let ((*VM-arg-roles-only-p* (if generator-p nil *VM-arg-roles-only-p*)))
+      (when #-pagelite (not (cyclic-p fs))
+            #+pagelite t
+            (let ((variable-generator (setf *variable-generator*
+                                        (or existing-variable-generator
+                                            (create-variable-generator)))))
+              (unless existing-variable-generator (setf *named-nodes* nil))
+              #-pagelite
+              (SETQ fs (deref fs))
+              (let ((handel-fs (path-value fs *psoa-handel-path*))
+                    (top-h-fs (path-value fs *psoa-top-h-path*))
+                    (event-fs (path-value fs *psoa-event-path*))
+                    (liszt-fs (path-value fs *psoa-liszt-path*))
+                    (h-cons-fs (path-value fs *psoa-rh-cons-path*))
+                    (message-fs (path-value fs *psoa-message-path*))
+                    (wgliszt-fs (path-value fs *psoa-wgliszt-path*)))
                 (make-psoa
                  :handel (create-variable (if (mrs-language '(english))
                                               top-h-fs
@@ -196,9 +191,13 @@
                                                      nil
                                                      variable-generator))
                  :message (if (is-valid-fs message-fs)
-                              (create-rel-struct message-fs variable-generator))
-                 :wgliszt (nreverse (construct-wgliszt wgliszt-fs
-                                                       variable-generator))))))) ;)
+                              (create-rel-struct message-fs 
+                                                 variable-generator))
+                 :wgliszt (nreverse (construct-wgliszt 
+                                     wgliszt-fs
+                                     variable-generator))))))))
+
+
 
 (defun create-variable-generator ()
   (let ((number 0))
@@ -414,13 +413,13 @@
 			      (remove label-pair label-list)))
 		    #'feat-sort-func)
             do
-              (when (or (not (boundp 'main::*VM-arg-roles-only-p*))
-                        (and main::*VM-arg-roles-only-p*
+              (when (or (not (boundp '*VM-arg-roles-only-p*))
+                        (and *VM-arg-roles-only-p*
                              (not (member (car feat-val) 
-                                          main::*suppressed-VM-arg-roles*)))
-                        (and (not main::*VM-arg-roles-only-p*)
+                                          *suppressed-VM-arg-roles*)))
+                        (and (not *VM-arg-roles-only-p*)
                              (not (member (car feat-val)
-                                          main::*VM-arg-roles*))))
+                                          *VM-arg-roles*))))
                 (let ((feature (car feat-val)))
                   (cond ((member feature *ignored-sem-features*) t)
                         ((member feature *relation-extra-feats*)

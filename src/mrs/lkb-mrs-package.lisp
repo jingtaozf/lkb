@@ -7,6 +7,7 @@
           dag-arcs subtype-p extend-typed-path path-p typed-path-p
           path-typed-feature-list typed-path-typed-feature-list
           type-feature-pair-p type-feature-pair-feature type-feature-pair-type
+          *parse-record*
 ; for vitrification
           *ordered-mrs-rule-list*
 ; for lexlookup
@@ -19,16 +20,10 @@
 
 ; just to avoid errors because package is undefined
 (defpackage "DISCO")
+; still used in time-convert
 (defpackage "TREES")
-(defpackage "MAIN")
-(defpackage "UNIFY")
-(defpackage "TDL")
-(defpackage "LEXICON")
-(defpackage "PG")
-(defpackage "LEX")
-(defpackage "TDL-CONTROL")
-(in-package "TDL-CONTROL")
-(export '(MESSAGE))
+; used in acl-mrs.lisp
+
 (in-package "USER")
 
 
