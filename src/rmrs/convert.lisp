@@ -230,16 +230,6 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 
 
 
-(defun rmrs-convert-variable (var)
-  (make-var :type (if (member (var-type var) '("x" "e" "h" "u" "l")
-                              :test #'equal)
-                      (var-type var)
-                    "u")
-            :id (var-id var)
-	    :extra (rmrs-convert-var-extra 
-		    (var-extra var) 
-		    *var-extra-mrs-compiled-table*)))
-
 ;;; conversion of extra values is going to be grammar specific
 ;;; and there's no guarantee that it can be done one-to-one
 ;;;
@@ -370,6 +360,18 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 
 ;;; conversion functions - mostly generic for MRS <-> RMRS
 ;;; calling function supplies the right table
+
+
+(defun rmrs-convert-variable (var)
+  (make-var :type (if (member (var-type var) '("x" "e" "h" "u" "l")
+                              :test #'equal)
+                      (var-type var)
+                    "u")
+            :id (var-id var)
+	    :extra (rmrs-convert-var-extra 
+		    (var-extra var) 
+		    *var-extra-mrs-compiled-table*)))
+
 
 (defun rmrs-convert-var-extra (extras table)
   (let ((converted nil)
