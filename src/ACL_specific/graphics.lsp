@@ -302,7 +302,8 @@
   (with-slots (selected) frame
     (when selected
       (dolist (record selected)
-	(clim:erase-output-record record (clim:frame-standard-output frame))))
+	(clim:erase-output-record record 
+				  (clim:frame-standard-output frame) nil)))
     (setf selected nil)))
 
 ;; Clear highlighting all frames of a particular class
