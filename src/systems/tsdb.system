@@ -135,7 +135,9 @@
        #+:lkb
        (:file "pcfg")
        #+:lkb
-       (:file "maxent")))
+       (:file "maxent")
+       #+:lkb
+       (:file "tagger")))
      
      #+:dfki
      (:module "podium"
