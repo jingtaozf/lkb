@@ -151,7 +151,6 @@ cvs update: Updating src/.nasl/tty
 cvs update: Updating src/.nasl/www
 cvs update: Updating src/ACL-CG_specific
 cvs update: Updating src/ACL_specific
-U src/ACL_specific/build.lsp
 cvs update: Updating src/MCL_specific
 cvs update: Updating src/data
 cvs update: Updating src/data/Dikran
@@ -257,7 +256,6 @@ cvs update: Updating src/io-paths
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-U src/main/ssp.lsp
 cvs update: Updating src/mrs
 cvs update: Updating src/mrs/data
 cvs update: Updating src/non-core
@@ -272,7 +270,6 @@ cvs update: Updating src/rmrs
 cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
-U src/systems/lkb.system
 cvs update: Updating src/tproving
 cvs update: Updating src/tsdb
 cvs update: Updating src/tsdb/TeX
@@ -357,7 +354,7 @@ cvs update: Updating src/xml
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.218; previous revision: 1.217
+new revision: 1.219; previous revision: 1.218
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1309,7 +1306,7 @@ Root pages: 2
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Apr 17, 2003 22:38)
+6.0 [Linux (x86)] (Apr 20, 2003 15:35)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -3253,7 +3250,7 @@ Root pages: 2
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Apr 17, 2003 22:44)
+6.0 [Linux (x86)] (Apr 20, 2003 15:41)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -4195,7 +4192,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/macl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-82540752 bytes have been tenured, next gc will be global.
+82540664 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4432,7 +4429,7 @@ Root pages: 12
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (4/17/3 22:39)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (4/20/3 15:36)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -5069,14 +5066,14 @@ NIL
 [Current process: Initial Lisp Listener]
 USER(22): NIL
 [Current process: Initial Lisp Listener]
-USER(23): #<EQUAL hash-table with 0 entries @ #x4310d32>
+USER(23): #<EQUAL hash-table with 0 entries @ #x4310dd2>
 [Current process: Initial Lisp Listener]
 USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 ; Libfasl from bundle code/who.fasl.
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-34856808 bytes have been tenured, next gc will be global.
+33099216 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -5272,7 +5269,7 @@ Warning: Variable #:G23900 is never used.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/dag.fasl
-7692504 bytes have been tenured, next gc will be global.
+7692528 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/main/yadu.fasl
