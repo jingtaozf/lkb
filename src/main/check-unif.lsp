@@ -116,6 +116,7 @@
          *fail-path-list*))
    (multiple-value-bind (new-type constraintp)
          (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
+;; --- new bit start
       (if (or new-type *collecting-check-paths-p*)
          (progn
             (unless new-type
@@ -127,6 +128,7 @@
                      (push item *fail-path-list*))
                   ;; an adjustable bit-vector might be more suitable than a hash table
                   (setf (gethash *unify-dags-fail-count* (cdr item)) t)))
+;; --- new bit end
             (setf (dag-new-type dag1) new-type)
             (if (type-spec-atomic-p new-type)
                (if (or (dag-arcs dag1) (dag-comp-arcs dag1)
@@ -134,7 +136,7 @@
                   (progn
                      (when *unify-debug*
                         (format t "~%Unification failed due to atomic/~
-                           non-atomic clash at path ~:A" (reverse path)))
+                           non-atomic clash at path < ~{~A ~^: ~}>" (reverse path)))
                      (throw '*fail* nil))
                   (setf (dag-forward dag2) dag1))
                (progn
@@ -149,7 +151,7 @@
                               (unless res
                                  (format t 
                                     "~%Unification with constraint of type ~A failed ~
-                                    at path ~:A" new-type (reverse path))
+                                    at path < ~{~A ~^: ~}>" new-type (reverse path))
                                  (throw '*fail* nil)))
                            (unify1 dag1 constraint path)))
                      ;; dag1 might just have been forwarded so dereference it again
@@ -174,7 +176,7 @@
                   (setf (dag-copy dag1) nil))))
          (progn
             (when *unify-debug*
-               (format t "~%Unification of ~A and ~A failed at path ~:A" 
+               (format t "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>" 
                   (unify-get-type dag1) (unify-get-type dag2) (reverse path)))
             (throw '*fail* nil)))))
 )
@@ -271,8 +273,11 @@
                 (let ((type (type-of-fs v)))
                    (when type
                       (if (consp (cdr path-spec))
-                         (or (cdr (assoc (if (consp type) (car type) type) (cdr path-spec)))
-                            (break "inconsistency"))
+                         (or (cdr
+                               (assoc (if (consp type) (car type) type) (cdr path-spec)
+                                  :test #'eq))
+                            (error "Inconsistency - could not find restrictor bit vector ~
+                                    for type ~A" type))
                          type)))
                 nil)))
       *check-paths-optimised*))
@@ -282,7 +287,7 @@
    (dolist (dt daughter-restricted t)
       (let ((ct (pop child-restricted)))
          (cond
-            ((or (eql dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
+            ((or (eq dt ct) (null dt) (null ct))) ; eq possibly avoids a function call
             ((not (integerp dt))
                (unless (find-gcsubtype dt ct)
                   (return-from restrictors-compatible-p nil)))
@@ -303,8 +308,10 @@
                           (if (consp (cdr path-spec))
                              (or
                                 (cdr
-                                   (assoc (if (consp type) (car type) type) (cdr path-spec)))
-                                (break "inconsistency"))
+                                   (assoc (if (consp type) (car type) type) (cdr path-spec)
+                                      :test #'eq))
+                                (error "Inconsistency - could not find restrictor bit vector ~
+                                        for type ~A" type))
                              type)))
                     nil)))
             (ct (pop child-restricted)))
@@ -332,9 +339,9 @@
                   nil))))))
 
 (defun x-get-dag-value (dag attribute)
-   (dolist (arc (dag-arcs dag) nil)
-      (when (eql attribute (dag-arc-attribute arc))
+   (dolist (arc (dag-arcs dag))
+      (when (eq attribute (dag-arc-attribute arc))
          (return-from x-get-dag-value (dag-arc-value arc))))
    (dolist (arc (dag-comp-arcs dag) nil)
-      (when (eql attribute (dag-arc-attribute arc))
+      (when (eq attribute (dag-arc-attribute arc))
          (return-from x-get-dag-value (dag-arc-value arc)))))
