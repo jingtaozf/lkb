@@ -293,7 +293,9 @@
    ;; c.f. filter-root-edges in parse.lsp
    (dolist (start-symbol start-symbols)
       (let ((root-spec (get-tdfs-given-id start-symbol)))
-         (when root-spec
+         (when (and root-spec
+                    (not (stringp (g-edge-rule edge)))
+                    (eq (rule-id (g-edge-rule edge)) 'ROOT_CL)) ; *** until grammar fixed
             (when (yadu root-spec (g-edge-dag edge))
                (return (list edge)))))))
 
@@ -306,7 +308,6 @@
 ;;; representation of chart
 
 (defun gen-chart-dag-index (dag edge-id)
-  (declare (ignore edge-id))
    (let ((index-dag (existing-dag-at-end-of dag *semantics-index-path*)))
       (if index-dag
          (let ((index (type-of-fs index-dag)))
@@ -316,8 +317,8 @@
                (setq index (car index)))
             index)
          (progn
-            ;(cerror (format nil "use type ~A" *toptype*) ; ***
-            ;   "unexpectedly missing index for edge ~A: ~S" edge-id dag)
+            ;;(cerror (format nil "use type ~A" *toptype*)
+            ;;   "unexpectedly missing index for edge ~A: ~S" edge-id dag)
             (warn "unexpectedly missing index for edge ~A - using ~A" edge-id *toptype*)
             *toptype*))))
 
@@ -359,7 +360,7 @@
    (unless (gen-chart-subset-p (g-edge-rels-covered edge) (mrs::psoa-liszt input-sem))
       (when *gen-filter-debug*
          (format t "~&Filtered out candidate inactive edge covering ~A ~
-                    with lexical relations ~A that are not a subset of ~
+                    with lexical relations ~(~A~) that are not a subset of ~
                     input semantics"
              (g-edge-leaves edge) (mapcar #'mrs::rel-sort (g-edge-rels-covered edge))))
       (return-from gen-chart-add-inactive nil))
@@ -493,10 +494,8 @@
    ;; in parse.lsp
    (when
       (and
-         (if (and (rule-p (g-edge-rule edge)) (rule-apply-index (g-edge-rule edge))) ; ***
-            (check-rule-filter
-               rule (g-edge-rule edge) daughter-index)
-            t)
+         (check-rule-filter
+            rule (g-edge-rule edge) daughter-index)
          (restrictors-compatible-p
             daughter-restricted (g-edge-dag-restricted edge)))
       (gen-chart-evaluate-unification
@@ -515,10 +514,10 @@
    (with-unification-context (ignore)
       (incf *gen-chart-unifs*)
       (unless
-          (setf rule-tdfs
+         (setq rule-tdfs
             (yadu rule-tdfs
                   (create-temp-parsing-tdfs
-                   fs daughter-index)))
+                     fs daughter-index)))
          (incf *gen-chart-fails*)
          (return-from gen-chart-evaluate-unification nil))
       (if completedp
@@ -557,9 +556,16 @@
 ;;; potentially save a lot of work of inserting modifiers into all the other
 ;;; analyses
 ;;;
+;;; Could share some computation in reconstruction of parses after modifiers
+;;; inserted - put into chart and re-use for other alternatives where same
+;;; modifier is inserted in same place
+;;;
 ;;; find missing rels and look for sets of potential modifier edges that cover them,
 ;;; then try inserting modifier edges into partial edge and recompute nodes higher
 ;;; up in tree
+;;;
+;;; all edges created from now on have index *toptype* since we're not trying to
+;;; retrieve them from the chart
 
 (defun gen-chart-adjoin-modifiers (partial-edges input-sem)
    (let ((*active-modifier-edges* nil)
@@ -576,7 +582,7 @@
          (let* ((*optional-rel-names* nil)
                 (missing-rels
                   ;; *** don't go looking for rels that might be coming from a message
-                  ;; - they might be part of the semantics proper so can't just ignore
+                  ;; - but they might be part of the semantics proper so can't just ignore
                   ;; them in the input-sem
                   (remove-if
                      #'(lambda (s)
@@ -589,15 +595,15 @@
                   ))
             (declare (special *optional-rel-names*))
             (when *gen-adjunction-debug*
-               (format t "~&Missing relations ~:A" (mapcar #'mrs::rel-sort missing-rels))
+               (format t "~&Missing relations ~(~:A~)" (mapcar #'mrs::rel-sort missing-rels))
                (when *optional-rel-names*
-                  (format t "~&'Optional' possibly message relations ~:A" *optional-rel-names*)))
+                  (format t "~&'Optional' possibly message relations ~(~:A~)" *optional-rel-names*)))
             (dolist (mod-alt
                       (gen-chart-mod-edge-partitions
                          (list (car missing-rels)) (cdr missing-rels) (cdr missing-rels)
                          mod-candidate-edges cached-rels-edges))
                (when *gen-adjunction-debug*
-                  (format t "~&Relation partitions ~:A"
+                  (format t "~&Relation partitions ~(~:A~)"
                      (mapcar
                         #'(lambda (rels-and-edges)
                              (cons (mapcar #'mrs::rel-sort (car rels-and-edges))
@@ -636,20 +642,20 @@
    ;; compute sets of partitions of input relations with each partition containing
    ;; the set of modifier edges that cover those relations: e.g.
    ;; ( (((r1 r2) e1 e2) ((r3 r4) e3))  (((r1) e4 e5 e6) ((r2 r3 r4) e5)) )
+   ;; this gets expensive if there are many relations
    (let ((rels-edges (gethash rels cached-rels-edges t)))
       (when (eq rels-edges t)
          (setq rels-edges nil)
          (dolist (e mod-candidate-edges)
            (let ((rels-covered (g-edge-rels-covered e)))
                (declare (special *optional-rel-names*))
-               ;; *** optionality only needed because no one tells us when rules
-               ;; introduce rels - see comment above
+               ;; *** pick up optionality of message rels - see above
                (when *optional-rel-names*
                   (setq rels-covered
                      (remove-if
-                        #'(lambda (r)
-                             (member (mrs::rel-sort r) *optional-rel-names* :test #'eq))
-                        rels-covered)))
+                        #'(lambda (s)
+                            (member s *optional-rel-names* :test #'eq))
+                        rels-covered :key #'mrs::rel-sort)))
                (when (gen-chart-set-equal-p rels-covered rels)
                   (push e rels-edges))))
          (setf (gethash rels cached-rels-edges) rels-edges))
