@@ -4,6 +4,8 @@
 (in-package :lkb)
 
 
+(defparameter *generator-server* nil)
+
 ;;;
 ;;; transfer-based MT prototype from the Gothenburg -- Oslo train.  many things
 ;;; remain to be improved, including:
@@ -33,8 +35,6 @@
 
 (defun translate (&key serverp 
                        (file (format nil "/tmp/.transfer.~a" (current-user))))
-  (declare (special %mrs%))
-  
   (when serverp
     (loop
         until (probe-file file) do (sleep 1)))
@@ -42,13 +42,25 @@
     (with-open-file (stream file :direction :input)
       (let* ((mrs (mrs::read-mrs-from-file file))
              (*bypass-equality-check* t))
-        ;(delete-file file)
-        (setf %mrs% mrs)
         (generate-from-mrs mrs)
         (show-gen-result))))
   (when serverp 
     (delete-file file)
     (translate :serverp serverp :file file)))
+
+(defun start-generator-server (&optional (forkp t))
+  (if forkp
+    (with-output-to-top ()
+      (setf *generator-server*
+        (mp:run-function "generator server" #'start-generator-server nil)))
+    (translate :serverp t)))
+
+(defun stop-generator-server ()
+  (when *generator-server*
+    (let ((process *generator-server*))
+      (setf *generator-server* nil)
+      (ignore-errors
+       (mp:process-kill process)))))
 
 (defun current-user ()
   (or #+(and :allegro-version>= (version>= 5 0)) 

@@ -43,6 +43,12 @@
                   (display-parse-tree edge-record nil)))))))
 |#
 
+#-:tty
+(defun show-generator-input ()
+  (when *generator-input*
+    #+:mrs
+    (mrs::browse-mrs *generator-input*)))
+
 #-tty
 (defun show-gen-edge nil
   (let ((possible-edge-name

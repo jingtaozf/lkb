@@ -38,11 +38,14 @@
                       lkb::choose-mrs-output-level
                       ;; generate
                       lkb::show-gen-result
+                      lkb::show-generator-input
 		      lkb::show-gen-chart
                       lkb::index-for-generator
                       lkb::read-gen-rule-file
                       lkb::clear-gen-rules
                       lkb::index-for-generator
+                      lkb::start-generator-server
+                      lkb::stop-generator-server
 		      ;; link
 		      lkb::apply-lex 
 		      lkb::apply-lex-rules 
@@ -227,6 +230,9 @@
                      (make-menu-item :name "Redisplay realisation"
                                      :value 'show-gen-result
                                      :available-p :mrs)
+                     (make-menu-item :name "Redisplay MRS"
+                                     :value 'show-generator-input
+                                     :available-p :mrs)
                      (make-menu-item :name "Show gen chart"
                                      :value 'show-gen-chart
                                      :available-p :mrs)
@@ -238,6 +244,12 @@
                                      :available-p :mrs)
                      (make-menu-item :name "Index"
                                      :value 'index-for-generator
+                                     :available-p :mrs)
+                     (make-menu-item :name "Start server"
+                                     :value 'start-generator-server
+                                     :available-p :mrs)
+                     (make-menu-item :name "Stop server"
+                                     :value 'stop-generator-server
                                      :available-p :mrs))
                :available-p :mrs)
          (make-lkb-submenu-item :menu-title "Debug"

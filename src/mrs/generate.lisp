@@ -12,6 +12,7 @@
 (defvar *non-intersective-rules* nil)
 (defvar *lexemes-allowed-orderings* nil)
 
+(defparameter *generator-input* nil)
 (defparameter *gen-adjunction-debug* nil)
 (defparameter *gen-equality-debug* nil)
 
@@ -70,6 +71,7 @@
 ;;; an entry point
 
 (defun generate-from-mrs (input-sem)
+  (setf *generator-input* input-sem)
   (with-package (:lkb)
     (clear-gen-chart)
     (setf *cached-category-abbs* nil)

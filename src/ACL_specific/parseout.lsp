@@ -257,6 +257,7 @@
                     ("Indexed MRS" :value indexed :active ,*mrs-loaded*)
                     ("Scoped MRS" :value scoped :active ,*mrs-loaded*)
                     ("Dependencies" :value dependencies :active ,*mrs-loaded*)
+                    ("Transfer" :value transfer :active ,*mrs-loaded*)
                     ))))
     (when command
       (handler-case
@@ -294,7 +295,8 @@
             (scoped (funcall 'show-mrs-scoped-window (prtree-edge tree)))
             (dependencies 
              (funcall 'show-mrs-dependencies-window (prtree-edge tree)))
-            )
+            (transfer
+             (funcall 'transfer (prtree-edge tree))))
         (storage-condition (condition)
           (with-output-to-top ()
             (format t "~%Memory allocation problem: ~A~%" condition)))
