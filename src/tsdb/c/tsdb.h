@@ -215,6 +215,7 @@ typedef struct tsdb_selection {
 
 typedef struct tsdb_history {
   int command;
+  char *query;
   struct tsdb_selection *result;
 } Tsdb_history;
 
