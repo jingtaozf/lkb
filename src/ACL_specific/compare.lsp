@@ -42,6 +42,8 @@
 
 (def-lkb-parameter *tree-update-match-hook* nil)
 
+(def-lkb-parameter *tree-save-on-reject-p* nil)
+
 (def-lkb-parameter *tree-display-semantics-p* t)
 
 (defparameter *tree-completion-hook* nil)
@@ -526,7 +528,12 @@
     (record-decision (make-decision :type :reject) frame)
     (setf (compare-frame-in frame) nil)
     (setf (compare-frame-out frame) (compare-frame-edges frame))
-    (update-trees frame t :discriminant)))
+    (update-trees frame t :discriminant)
+    (when *tree-save-on-reject-p*
+      (record-decision (make-decision :type :save))
+      (when (compare-frame-controller frame) 
+        (mp:process-revoke-arrest-reason 
+         (compare-frame-controller frame) :wait)))))
 
 (define-compare-frame-command (com-clear-compare-frame :menu "Clear")
     ()
