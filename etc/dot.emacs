@@ -5,8 +5,7 @@
 ;;; following towards the end of `~/.emacs' (without the leading semikolons, of
 ;;; course):
 ;;;
-;;;   (let ((root (or (getenv "DELPHINHOME")
-;;;                   "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo")))
+;;;   (let ((root (getenv "DELPHINHOME")))
 ;;;     (if (file-exists-p (format "%s/dot.emacs" root))
 ;;;       (load (format "%s/dot.emacs" root) nil t t)))
 ;;;

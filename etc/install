@@ -229,7 +229,7 @@ fi
 # is any evidence of conflicting settings in `.emacs'.
 #
 echo
-echo "add the following to your personal \`~/.bashrc':"
+echo "add the following to the file \`~/.bashrc' in your home directory:"
 echo
 echo "  export DELPHINHOME=${DELPHINHOME}"
 echo 
@@ -242,7 +242,7 @@ echo "to run the LKB and [incr tsdb()] from within emacs(1), add the following"
 echo "to the file \`.emacs' in your home directory:"
 echo
 echo "  (let ((root (or (getenv \"DELPHINHOME\")"
-echo "                  \"${DELPHINHOME}\"))" 
+echo "                  \"${DELPHINHOME}\")))" 
 echo "    (if (file-exists-p (format \"%s/dot.emacs\" root))"
 echo "      (load (format \"%s/dot.emacs\" root) nil t t)))"
 echo
