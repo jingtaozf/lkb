@@ -625,7 +625,7 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
     if (!attributes) {
       return((Tsdb_selection *)NULL);
     }
-    attributes[0] = NULL;
+    memset(attributes,'\0',s_attributes*sizeof(char*));
     attributes
       = tsdb_condition_attributes(conditions, attributes, &s_attributes);
   } /* if conditions */
