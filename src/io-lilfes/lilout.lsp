@@ -43,7 +43,7 @@ Parse nodes need to be added so we can understand the display.
 
 (defun output-all-for-lilfes (&optional dir)
   (setf dir (cond (dir (get-directory-name dir))
-		  ((sys:getenv "LKB_OUTPUT_DIR")
+#+:allegro		  ((sys:getenv "LKB_OUTPUT_DIR")
 		   (get-directory-name (sys:getenv "LKB_OUTPUT_DIR")))
 		  (t "./")))
   (output-types :lilfes (concatenate 'string dir "types.lil") t)

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.3  1999/04/09 23:20:56  danf
+;; Merged WK's changes
+;;
 ;; Revision 1.2  1998/10/28 13:50:23  kasper
 ;; structures for vit-variables
 ;;
@@ -104,8 +107,8 @@
 
 (defstruct (vit_pmood (:include vit-special-form (predicate 'pros_mood))))
 
-(defstruct vit-var
-  (id :type integer))
+(defstruct (vit-var)
+  (id 0 :type integer))
 
 (defstruct (vit-hole-var (:include vit-var)
             (:print-function print-vit-hole-var)))

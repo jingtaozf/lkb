@@ -537,7 +537,7 @@
 (defun purge-constraints nil
   (gc-types)
   (let* ((leaves (mapcar #'(lambda (x) (gethash x *types*)) 
-			 (slot-value *leaf-types* leaf-types)))
+			 (slot-value *leaf-types* 'leaf-types)))
 	 (parents 
 	  (union (reduce #'union (mapcar #'type-real-parents leaves))
 		 (reduce #'union (mapcar #'type-template-parents leaves))))

@@ -4,8 +4,8 @@
 
 
 (defun time-scope nil 
-  (format t "~%~A" user::*sentence*) 
-  (for res in user::*parse-record* 
+  (format t "~%~A" cl-user::*sentence*) 
+  (for res in cl-user::*parse-record* 
        do 
        (let ((current-time (get-internal-run-time)))
          (format t " scopes ~A time ~A" 
@@ -14,20 +14,20 @@
                  (- (get-internal-run-time) current-time)))))
 
 (defun show-all nil 
-  (format t "~%~A" user::*sentence*) 
-  (for res in user::*parse-record* 
+  (format t "~%~A" cl-user::*sentence*) 
+  (for res in cl-user::*parse-record* 
        do 
        (let ((mrsstruct (car (extract-mrs (list res) t))))
         (show-all-scoped-structures mrsstruct (make-scoped-mrs mrsstruct)))))
 
 (defun time-first nil 
-  (format t "~%~A" user::*sentence*) 
-  (format t " ~A" (length (make-scoped-mrs (car (extract-mrs (list (car user::*parse-record*)) t))))))
+  (format t "~%~A" cl-user::*sentence*) 
+  (format t " ~A" (length (make-scoped-mrs (car (extract-mrs (list (car cl-user::*parse-record*)) t))))))
 
 (defun test-cache nil 
   (let ((current-cache *cache-on*))
-    (format t "~%~A" user::*sentence*) 
-    (for res in user::*parse-record* 
+    (format t "~%~A" cl-user::*sentence*) 
+    (for res in cl-user::*parse-record* 
          do 
          (let* ((mrs (car (extract-mrs (list res) t)))
                 (uncached-result (progn (setf *cache-on* nil)

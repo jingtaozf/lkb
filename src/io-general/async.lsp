@@ -1,4 +1,4 @@
-(in-package :user)
+(in-package :cl-user)
 
 ;; A thread-safe first-in first-out queue
 

@@ -26,7 +26,7 @@
    (temp-psorts :initform (make-hash-table :test #'eq))
    (extra-lexicons :initform nil :accessor extra-lexicons)))
 
-(defgeneric lookup-word (lexicon orth &key (cache t)))
+(defgeneric lookup-word (lexicon orth &key (cache)))
 
 (defgeneric lex-words (lexicon))
 
@@ -46,7 +46,7 @@
 
 (defgeneric store-temporary-psort (lexicon id entry))
 
-(defgeneric read-psort (lexicon id &key (cache t)))
+(defgeneric read-psort (lexicon id &key (cache)))
 
 (defgeneric unexpand-psort (lexicon id))
 

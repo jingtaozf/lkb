@@ -121,7 +121,7 @@ output results
 
 (defun check-generate nil
   (let ((sentence (or *sentence* (split-into-words (car *last-parses*))))
-        (ostream (or *ostream* t)))
+        (ostream (if (and *ostream* (output-stream-p *ostream*)) *ostream*  t)))
     (unless *parse-record*
       (format ostream "~%#| Parse failure: ~A |#" sentence))
     (for parse-res in *parse-record*

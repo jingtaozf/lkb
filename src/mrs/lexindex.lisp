@@ -225,9 +225,9 @@
                       nil))))))))
 
 (defun empty-diff-list-p (fs full-path oldfs)
-  (if (eql (car (last full-path)) user::*diff-list-list*)
+  (if (eql (car (last full-path)) cl-user::*diff-list-list*)
       (eq (path-value oldfs (append (butlast full-path) 
-                                    (list user::*diff-list-last*)))
+                                    (list cl-user::*diff-list-last*)))
           fs)))
                   
 (defun extract-relation-from-fs (fs id)

@@ -168,7 +168,8 @@
 	;; We take the last entry that's returned
 	(let ((entry (car (last (cdb:read-record (leaf-db leaf-db) 
 						 (string type)))))
-	      (*readtable* excl::std-lisp-readtable))
+	      (*readtable* #+allegro excl::std-lisp-readtable
+                           #-allegro (copy-readtable nil)))
 	  (when entry
 	    (pushnew type *type-names* :test #'eq)
 	    (pushnew type leaf-types :test #'eq)    
