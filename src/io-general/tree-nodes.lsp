@@ -290,6 +290,8 @@
 
 
 (defun create-gen-chart-pointers (root all-p)
+   ;; create a global mapping from edge-ids to symbols, not interned - so we don't
+   ;; end up hanging on to old edges
    (let ((edge-symbols nil))
       (dolist (entry *gen-chart*)
          (dolist (e (cdr entry))
@@ -395,12 +397,51 @@
                   (pushnew (cdr pair)
                      (aref (get root 'chart-edge-descendents) (1- right-vertex)))))))))
 
-;;; Stuff moved from xxx_specific/parseout.lsp
+
+;;; make a copy of an existing root and descendent chart lattice, filtered such that
+;;; only edges which are ancestors or descendents of given edge are present
+
+(defun filtered-chart-lattice (node edge found)
+   ;; the plist found keeps track of nodes that have already been processed,
+   ;; recording their new names
+   (labels
+      ((super-chart-edge-path-p (e)
+          ;; path from e recursively through children to edge?
+          (and e ; don't blow up on active edges
+             (or (eq e edge)
+                (some #'super-chart-edge-path-p (edge-children e)))))
+       (sub-chart-edge-path-p (e edge)
+          ;; path from edge recursively through children to e?
+          (and edge
+             (or (eq e edge)
+                (some #'(lambda (c) (sub-chart-edge-path-p e c)) (edge-children edge))))))
+      (cond
+         ((not (or (null (get node 'chart-edge-contents))
+                   (super-chart-edge-path-p (get node 'chart-edge-contents))
+                   (sub-chart-edge-path-p (get node 'chart-edge-contents) edge)))
+            (values nil found))
+         ((getf found node)
+            (values (getf found node) found))
+         (t
+            (let ((new (make-symbol (symbol-name node))))
+               (setq found (list* node new found))
+               (let ((new-ds nil))
+                  (dolist (d (get node 'chart-edge-descendents))
+                     (multiple-value-bind (new-d new-found)
+                                          (filtered-chart-lattice d edge found)
+                        (setq found new-found)
+                        (when new-d
+                           (setf (get new-d 'chart-edge-span) (get d 'chart-edge-span))
+                           (setf (get new-d 'chart-edge-contents) (get d 'chart-edge-contents))
+                           (push new-d new-ds))))
+                  (setf (get new 'chart-edge-descendents) (nreverse new-ds)))
+               (values new found))))))
+
+
+;;; takes an edge and builds the tree below it for input
+;;; to the graph package - then displays it with active nodes
 
 (defun display-parse-tree (edge display-in-chart-p)
-   ;;; takes an edge and builds the tree below it for input
-   ;;; to John's graph package - then displays it
-   ;;; with active nodes
    (when display-in-chart-p (display-edge-in-chart edge))
    (let ((edge-symbol (make-new-parse-tree edge 1)))
       (draw-new-parse-tree edge-symbol 
