@@ -125,7 +125,7 @@
 ;;; The dialog box built is sized appropriately
 
 (defun ask-for-strings-movable (title prompt-init-pairs &optional (expected-width 100))
-   (let* ((spacing 14) (button-height 18) (button-width 74) 
+   (let* ((spacing 16) (button-height 18) (button-width 74) 
           (font *dialog-font*)
           (prompt-width
              (+ 20
