@@ -204,6 +204,25 @@
               (error "~%Similar relations not grouped"))
       (< l1 l2))))
 
+;;; make current code more compact and allow for 
+;;; reporting of comparisons to windows etc
+
+(defparameter *mrs-comparison-output-control*
+    nil)
+;;; values are nil, :noisy-p, :save
+
+(defparameter *mrs-comparison-output-messages*
+    nil)
+;; used by algebra code
+
+(defun mrs-comparison-output (&rest args)
+  (cond ((eql *mrs-comparison-output-control* :noisy-p)
+	 (apply #'format t args))
+	((eql *mrs-comparison-output-control* :save)
+	 (push (apply #'format nil args) *mrs-comparison-output-messages*))
+	(t nil))
+  nil)
+	
 ;;; need sort-mrs-hcons
 
 ;;; bindings is a list of assoc lists of variable numbers
@@ -224,69 +243,54 @@
 (defun mrs-equalp (mrs1 mrs2 &optional syntactic-p noisy-p (propertyp t))
   #+:debug
   (setf %mrs1 mrs1 %mrs2 mrs2)
-  (let* ((*mrs-equalp-properties-p* propertyp)
+  (let* ((*mrs-comparison-output-control* (if noisy-p :noisy-p nil))
+	 (*mrs-equalp-properties-p* propertyp)
          (bindings (variables-equal (psoa-top-h mrs1)
                                     (psoa-top-h mrs2) syntactic-p nil)))
     (if bindings
-        ; hack for case where no handels
-        (progn
-          (unless (listp bindings)
-            (setf bindings nil))
        (if (setf bindings (variables-equal (psoa-index mrs1)
                             (psoa-index mrs2) syntactic-p bindings))
            (if (setf bindings (mrs-liszts-equal-p (psoa-liszt mrs1)
                                    (psoa-liszt mrs2) 
                                    syntactic-p 
-                                   noisy-p bindings))
+                                   bindings))
                (if 
                    (or (not syntactic-p)
                        (setf bindings (hcons-equal-p (psoa-h-cons mrs1)
                                       (psoa-h-cons mrs2) bindings)))
                    bindings
-                 (progn 
-                   (when noisy-p
-                     (format t "~%hcons difference ~A ~A"
-                             (psoa-h-cons mrs1)
-                             (psoa-h-cons mrs2)))
-                   nil))
+		 (mrs-comparison-output "~%hcons difference ~A ~A"
+					(psoa-h-cons mrs1)
+					(psoa-h-cons mrs2)))
                  ;; difference in rels reported by
                  ;; mrs-liszts-equal-p
              nil)
-         (progn 
-           (when noisy-p
-             (format t "~%index difference ~A ~A"
-                     (psoa-index mrs1)
-                     (psoa-index mrs2))
-             nil))))
-    (progn 
-      (when noisy-p
-        (format t "~%handel difference ~A ~A"
+	 (mrs-comparison-output "~%index difference ~A ~A"
+				(psoa-index mrs1)
+				(psoa-index mrs2)))
+        (mrs-comparison-output "~%handel difference ~A ~A"
                 (psoa-top-h mrs1)
-                (psoa-top-h mrs2)))
-      nil))))
+                (psoa-top-h mrs2)))))
 
 
 (defun mrs-liszts-equal-p (orig-liszt1 orig-liszt2 syntactic-p 
-                                       noisy-p bindings)
+                                       bindings)
   (let ((liszt1 (sort-mrs-struct-liszt orig-liszt1))
         (liszt2 (sort-mrs-struct-liszt orig-liszt2)))
     (unless (eql (length liszt1) (length liszt2))
-      (when noisy-p (format t "~%Difference in RELS (bags of EPs)"))
+      (mrs-comparison-output "~%Difference in RELS (bags of EPs)")
       (return-from mrs-liszts-equal-p))
     (if (loop for rel1 in liszt1
             as rel2 in liszt2
             always
               (if (setf bindings 
                     (mrs-relation-set-equal-p 
-                     rel1 rel2 syntactic-p noisy-p bindings))
+                     rel1 rel2 syntactic-p bindings))
                 bindings 
-                (progn
-                  (when noisy-p
-                    (format t "~%Relations differ ~A ~A" rel1 rel2))
-                  nil)))
+		(mrs-comparison-output "~%Relations differ ~A ~A" rel1 rel2)))
         bindings)))
 
-(defun mrs-relation-set-equal-p (relset1 relset2 syntactic-p noisy-p bindings)
+(defun mrs-relation-set-equal-p (relset1 relset2 syntactic-p bindings)
   (and (eql (length relset1) (length relset2))
        (loop for rel-alt1 in relset1
             append
@@ -294,16 +298,18 @@
                  append
                  (let ((new-bindings (copy-tree bindings)))
                    (mrs-relations-equal-p rel-alt1 rel-alt2
-                                          syntactic-p noisy-p new-bindings))))))
-(defun mrs-relations-equal-p (rel1 rel2 syntactic-p noisy-p bindings)
+                                          syntactic-p new-bindings))))))
+
+(defun mrs-relations-equal-p (rel1 rel2 syntactic-p bindings)
   (if (equal (rel-pred rel1) (rel-pred rel2))
+      ;; then predicates ok
       (if (setf bindings 
-            (if 
-                (and (rel-handel rel1) (rel-handel rel2))
+            (if (and (rel-handel rel1) (rel-handel rel2))
                 (variables-equal 
                  (rel-handel rel1) 
                  (rel-handel rel2) syntactic-p bindings)
               bindings))
+	  ;; then handels ok
           (let ((fv1 (loop
                          for role in (rel-flist rel1)
                          unless (lkb::smember
@@ -324,28 +330,24 @@
                         always 
                           (setf bindings
                             (mrs-fvpair-equal-p fvpair1 fvpair2 
-                                                syntactic-p noisy-p bindings)))
+                                                syntactic-p bindings)))
                     bindings)
-              (progn (when noisy-p
-                       (format t "~%Feature numbers differ ~A ~A" 
-                               fv1 fv2))
-                     nil)))        
-            (progn (when noisy-p
-                     (format t "~%Handels differ ~A ~A" 
-                             (rel-handel rel1) 
-                             (rel-handel rel2))
-                     nil))) 
-        (progn (when noisy-p
-                 (format t "~%Predicates differ ~A ~A" 
-                         (rel-pred rel1) 
-                         (rel-pred rel2))
-                 nil))))
+	      (mrs-comparison-output "~%Feature numbers differ ~A ~A" 
+				     fv1 fv2)))
+	    ;;; else handels not ok
+	    (mrs-comparison-output "~%Handels differ ~A ~A" 
+				   (rel-handel rel1) 
+				   (rel-handel rel2)))
+    ;; else predicates not ok
+	(mrs-comparison-output "~%Predicates differ ~A ~A" 
+			       (rel-pred rel1) 
+			       (rel-pred rel2))))
 
 
 
 
 
-(defun mrs-fvpair-equal-p (fvpair1 fvpair2 syntactic-p noisy-p bindings)
+(defun mrs-fvpair-equal-p (fvpair1 fvpair2 syntactic-p bindings)
   (if (eql (fvpair-feature fvpair1)
            (fvpair-feature fvpair2))
       (if (member (fvpair-feature fvpair1)
@@ -353,40 +355,30 @@
           (if (equal (fvpair-value fvpair1)
                      (fvpair-value fvpair2))
               bindings
-            (progn
-              (when noisy-p
-                (format 
-                 t "~%Values differ ~A ~A" 
-                 (fvpair-value fvpair1)
-                 (fvpair-value fvpair2)))
-              nil))
+	    (mrs-comparison-output "~%Values differ ~A ~A" 
+				   (fvpair-value fvpair1)
+				   (fvpair-value fvpair2)))
         (if (setf bindings 
               (variables-equal
                (fvpair-value fvpair1)
                (fvpair-value fvpair2)
                syntactic-p bindings))
             bindings
-          (progn 
-            (when noisy-p
-              (format 
-               t "~%Variables differ ~A ~A" 
-               (fvpair-value fvpair1)
-               (fvpair-value fvpair2)))
-            nil)))
-    (progn (when noisy-p
-             (format 
-              t "~%Features differ ~A ~A" 
+              (mrs-comparison-output "~%Variables differ ~A ~A" 
+				     (fvpair-value fvpair1)
+				     (fvpair-value fvpair2))))
+             (mrs-comparison-output "~%Features differ ~A ~A" 
               (fvpair-feature fvpair1)
-              (fvpair-feature fvpair2))))))
+              (fvpair-feature fvpair2))))
 
 
 (defun variables-equal (var1 var2 syntactic-p bindings)
-  (or (when (eq var1 var2) bindings)
+  (or (if (eq var1 var2) bindings)
       (and (var-p var1) (var-p var2)
            (if syntactic-p
              (equal (var-type var1) (var-type var2))
              (if (and (var-type var1) (var-type var2))
-               (compatible-var-types (var-type var1) (var-type var2))
+		 (compatible-var-types (var-type var1) (var-type var2))
                t))
            (or (null *mrs-equalp-properties-p*)
                (if syntactic-p
@@ -398,7 +390,11 @@
 
 (defun compatible-var-types (var-type1 var-type2)
   ;;; FIX - should allow for underspecified values
-  (equal var-type1 var-type2))
+  (or 
+   (equal var-type1 var-type2)
+   (equal var-type1 "u")
+   (equal var-type2 "u")))
+   
 
 (defun compatible-extra-vals (extra1 extra2)
   ;;; this version is for generation, where we assume we need
@@ -462,6 +458,7 @@
   ;;; this should only be called with null bindings 
   ;;; at the start of a process of checking equality
   ;;; After this - null bindings is a failure
+  ;;; but this is checked for in code before this is called
   (if (null bindings)
       (list (list (cons val1 val2)))
     (loop for binding-possibility in bindings
@@ -524,7 +521,7 @@
                  (rel2 (car superset-liszt2)))
              (if
                  (mrs-relation-set-equal-p rel1 rel2 
-                                           syntactic-p nil binding-copy)
+                                           syntactic-p binding-copy)
                  (mrs-liszts-subset-aux-p (cdr subset-liszt1)
                                           (cdr superset-liszt2) 
                                           syntactic-p binding-copy)

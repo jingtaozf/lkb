@@ -47,6 +47,10 @@
   (vsym "LNK")
   "LNK feature for recording surface positions on relations")
 
+(defparameter *hook-type* 
+  (vsym "HOOK")
+  "type of the hook in an mrs fs")
+
 (defparameter *hook-path* 
   `(,(vsym "HOOK"))
   "path to get the hook from an mrs fs")

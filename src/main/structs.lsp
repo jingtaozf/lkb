@@ -324,16 +324,19 @@
 ;;; introduced by the feature parameter.  Returns an a-list
 ;;; with the subdag associated with all the paths that lead to it
 
-(defun collect-subdags-for-feature (fs feature ignore-list top-ignore-list)
-  (collect-subdags-for-feature-aux fs feature ignore-list top-ignore-list
-				   nil nil t))
+(defun collect-subdags-for-feature (fs feature ignore-feats ignore-paths)
+  (collect-subdags-for-feature-aux fs feature ignore-feats 
+				   (loop for path in ignore-paths
+				       collect
+				       (reverse path))
+				   nil nil))
 
-(defun collect-subdags-for-feature-aux (fs feature ignore-list top-ignore-list 
-					results path-so-far top-p)
+(defun collect-subdags-for-feature-aux (fs feature ignore-feats ignore-paths 
+					results path-so-far)
   (dolist (arc (dag-arcs fs))
     (let ((dag-feature (dag-arc-attribute arc)))
-      (unless (or (member dag-feature ignore-list)
-		  (and top-p (member dag-feature top-ignore-list)))
+      (unless (or (member dag-feature ignore-feats)
+		  (member path-so-far ignore-paths :test #'equal)) 
 	(let ((next-dag (dag-arc-value arc))
 	      (new-path (cons dag-feature path-so-far)))
 	  (if (eql dag-feature feature)
@@ -345,5 +348,36 @@
 			results)))
 	    (setf results
 	      (collect-subdags-for-feature-aux 
-	       next-dag feature ignore-list nil results new-path nil)))))))
+	       next-dag feature ignore-feats ignore-paths 
+	       results new-path)))))))
+  results)
+
+;;; as above, but looks for dags of a particular type
+
+(defun collect-subdags-for-type (fs type ignore-feats ignore-paths)
+  (collect-subdags-for-type-aux fs type ignore-feats 
+				   (loop for path in ignore-paths
+				       collect
+				       (reverse path))
+				   nil nil))
+
+(defun collect-subdags-for-type-aux (fs type ignore-feats ignore-paths 
+					results path-so-far)
+  (dolist (arc (dag-arcs fs))
+    (let ((dag-feature (dag-arc-attribute arc)))
+      (unless (or (member dag-feature ignore-feats)
+		  (member path-so-far ignore-paths :test #'equal)) 
+	(let ((next-dag (dag-arc-value arc))
+	      (new-path (cons dag-feature path-so-far)))
+	  (if (and next-dag (eql (type-of-fs next-dag) type))
+	      (let ((already-found (assoc next-dag results))
+		    (rev-path (reverse new-path)))
+		(if already-found 
+		    (push rev-path (cdr already-found))
+		  (push (cons next-dag (list rev-path))
+			results)))
+	    (setf results
+	      (collect-subdags-for-type-aux 
+	       next-dag type ignore-feats ignore-paths 
+	       results new-path)))))))
   results)

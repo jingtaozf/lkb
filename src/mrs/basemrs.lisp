@@ -33,7 +33,8 @@
 
 (defstruct (sement (:include basemrs))
   hook
-  slots)
+  slots
+  equalities)
 
 (defstruct (hook)
   index
