@@ -261,6 +261,12 @@
 ;; lexical entries no matter what, but this runs the risk of copying lexical
 ;; entries which never wind up being part of an edge in the chart.  
 
+;(defmacro protect (fs)
+;  `(copy-tdfs-completely ,fs))
+
+(defmacro protect (fs)
+  fs)
+
 (defun get-senses (stem-string)
   (let* (;;(*safe-not-to-copy-p* nil)
          (entries (get-unexpanded-lex-entry 
@@ -273,9 +279,8 @@
                     (expanded-entry
                      (get-psort-entry id)))
                (when expanded-entry
-                 (cons id
-                       (copy-tdfs-completely
-                        (lex-or-psort-full-fs expanded-entry)))))))))
+                 (cons id 
+		       (protect (lex-or-psort-full-fs expanded-entry)))))))))
 
 ;;; get-multi-senses has to return a structure
 
@@ -288,14 +293,14 @@
   mrecs)
   
 (defun add-multi-words (morph-poss right-vertex)
-   (let* ((multi-strings nil)
-          (word-senses 
+  (let* ((multi-strings nil)
+	 (word-senses 
           (for stem in (remove-duplicates 
                         (for analysis in morph-poss
                              collect (car analysis)) :test #'string-equal)
-               ; make sure we have all the possible stems
-               ; in case inflection is going to be allowed on rightmost element
-               ; but otherwise the variable morph-poss is not used
+	       ;; make sure we have all the possible stems in case inflection
+	       ;; is going to be allowed on rightmost element but otherwise
+	       ;; the variable morph-poss is not used
                append
                (for sense-record in (get-multi-senses stem right-vertex)
                     filter
@@ -305,43 +310,44 @@
                             (sense-record-morph-res sense-record))
                            (mrecs 
                             (if (cdr new-morph-res)
-                              (apply-all-lexical-and-morph-rules 
-                               (list (make-mrecord :fs sense 
-                                                   :lex-ids lex-ids
-                                                   :rules 
-                                                   (cdr new-morph-res))))
+				(apply-all-lexical-and-morph-rules 
+				 (list (make-mrecord :fs sense 
+						     :lex-ids lex-ids
+						     :rules 
+						     (cdr new-morph-res))))
                               (list (make-mrecord :fs sense 
                                                   :lex-ids lex-ids      
                                                   :rules nil)))))
                       (if mrecs
-                        (progn
-                          (setf (sense-record-mrecs sense-record) mrecs)
-                          sense-record)))))))                      
-         (dolist (sense-record word-senses)
-           (let ((word (sense-record-word-string sense-record))
-                 (left-vertex (sense-record-left-vertex sense-record)))
-             (push word multi-strings)
-             (dolist (mrec (sense-record-mrecs sense-record))
-               (let ((sense (mrecord-fs mrec))
-                     (lex-ids (mrecord-lex-ids mrec))
-                     (history (mrecord-history mrec)))
-                 (activate-context left-vertex 
-                                   (construct-lex-edge sense history word
-                                                       lex-ids)      
-                                   right-vertex)))))
-         ; return multi-strings, so we know what's been found
-         multi-strings))
+			  (progn
+			    (setf (sense-record-mrecs sense-record) mrecs)
+			    sense-record)))))))                      
+    (dolist (sense-record word-senses)
+      (let ((word (sense-record-word-string sense-record))
+	    (left-vertex (sense-record-left-vertex sense-record)))
+	(push word multi-strings)
+	(dolist (mrec (sense-record-mrecs sense-record))
+	  (let ((sense (mrecord-fs mrec))
+		(lex-ids (mrecord-lex-ids mrec))
+		(history (mrecord-history mrec)))
+	    (activate-context left-vertex 
+			      (construct-lex-edge sense history word
+						  lex-ids)      
+			      right-vertex)))))
+    ;; return multi-strings, so we know what's been found
+    multi-strings))
 
 
 (defun get-multi-senses (stem-string right-vertex)
-  (let ((entries (get-unexpanded-lex-entry (string-upcase stem-string))))
+  (let* (;; (*safe-not-to-copy-p* nil)
+	 (entries (get-unexpanded-lex-entry (string-upcase stem-string))))
     (for entry in (sort entries #'(lambda (x y) 
                                     (> (length (lex-or-psort-orth x))
                                        (length (lex-or-psort-orth y)))))
          append
          (if (cdr (lex-or-psort-orth entry))
-           (check-multi-word stem-string entry right-vertex
-                             (lex-or-psort-id entry))))))
+	     (check-multi-word stem-string entry right-vertex
+			       (lex-or-psort-id entry))))))
 
 
 (defun check-multi-word (stem unexpanded-entry right-vertex id)
@@ -353,73 +359,69 @@
         (inflection-position (lex-or-psort-infl-pos unexpanded-entry))) 
     (when (< right-vertex (length entry-orth))
       (return-from check-multi-word nil)) ; too near start of sentence
-    (if (string-equal (car (last entry-orth)) stem)
-      ; only check multi-words when we have the rightmost
+    (when (string-equal (car (last entry-orth)) stem)
+      ;; only check multi-words when we have the rightmost
       (let ((current-vertex (- right-vertex (length entry-orth)))
-            (current-position 1))
-        (dolist (word-stem entry-orth)
-          (let* ((morph-entry (aref *morphs* current-vertex))
-                (existing-word (morph-edge-word morph-entry)))
-            (if (eql current-position inflection-position)
-              ; inflection allowed here
-              (let ((current-morph-res (morph-edge-morph-results morph-entry)))
-                (setf new-morph-res
-                      (for res in current-morph-res
-                           filter
-                           (if (string-equal word-stem (car res))
-                             res)))
-                (unless new-morph-res
-                  (setf ok nil)
-                  (return)))
-             ; else cannot be inflected        
-              (unless 
-                (string-equal word-stem existing-word)
-                (setf ok nil)
-                (return)))
-            (push word-stem amalgamated-stems)
-            (push " " amalgamated-stems)
-            (push existing-word amalgamated-words)
-            (push " " amalgamated-words)
-            (incf current-vertex)
-            (incf current-position)))
-        (if ok
-          (let ((expanded-entry (get-psort-entry id)))
-            (if expanded-entry
-                (let*
-                    ((full-stem-string 
-                      (apply #'concatenate 'string 
-                             (nreverse (cdr amalgamated-stems))))
-                     (full-word-string 
-                      (apply #'concatenate 'string 
-                             (nreverse (cdr amalgamated-words)))))
-                  (cons 
-                   (make-sense-record :word-string full-word-string
-                                      :left-vertex (- right-vertex 
-                                                      (length entry-orth))
-                                      :morph-res (list full-stem-string)
-                                      :lex-ids (list (lex-or-psort-id
-                                                expanded-entry))
-                                      :fs 
-                                      (copy-tdfs-completely
-                                       (lex-or-psort-full-fs 
-                                        expanded-entry)))
-                   (for rule in (for res in new-morph-res
-                                     filter
-                                     (caadr res))
-                        collect
-                        (make-sense-record :word-string full-word-string
-                                           :left-vertex (- right-vertex 
-                                                           (length entry-orth))
-                                           :morph-res 
-                                           (list full-stem-string 
-                                                 (list rule 
-                                                       full-word-string))
-                                           :lex-ids (list (lex-or-psort-id
-                                                expanded-entry))
-                                           :fs
-                                           (copy-tdfs-completely
-                                           (lex-or-psort-full-fs 
-                                         expanded-entry)))))))))))))
+	    (current-position 1))
+	(dolist (word-stem entry-orth)
+	  (let* ((morph-entry (aref *morphs* current-vertex))
+		 (existing-word (morph-edge-word morph-entry)))
+	    (if (eql current-position inflection-position)
+		;; inflection allowed here
+		(let ((current-morph-res 
+		       (morph-edge-morph-results morph-entry)))
+		  (setf new-morph-res
+		    (for res in current-morph-res
+			 filter
+			 (if (string-equal word-stem (car res))
+			     res)))
+		  (unless new-morph-res
+		    (setf ok nil)
+		    (return)))
+	      ;; else cannot be inflected        
+	      (unless (string-equal word-stem existing-word)
+		(setf ok nil)
+		(return)))
+	    (push word-stem amalgamated-stems)
+	    (push " " amalgamated-stems)
+	    (push existing-word amalgamated-words)
+	    (push " " amalgamated-words)
+	    (incf current-vertex)
+	    (incf current-position)))
+	(when ok
+	  (let ((expanded-entry (get-psort-entry id)))
+	    (when expanded-entry
+	      (let* ((full-stem-string 
+		      (apply #'concatenate 'string 
+			     (nreverse (cdr amalgamated-stems))))
+		     (full-word-string 
+		      (apply #'concatenate 'string 
+			     (nreverse (cdr amalgamated-words)))))
+		(cons 
+		 (make-sense-record :word-string full-word-string
+				    :left-vertex (- right-vertex 
+						    (length entry-orth))
+				    :morph-res (list full-stem-string)
+				    :lex-ids (list (lex-or-psort-id
+						    expanded-entry))
+				    :fs (protect (lex-or-psort-full-fs 
+						  expanded-entry)))
+		 (for rule in (for res in new-morph-res
+				   filter
+				   (caadr res))
+		      collect
+		      (make-sense-record :word-string full-word-string
+					 :left-vertex (- right-vertex 
+							 (length entry-orth))
+					 :morph-res 
+					 (list full-stem-string 
+					       (list rule 
+						     full-word-string))
+					 :lex-ids (list (lex-or-psort-id
+							 expanded-entry))
+					 :fs (protect 
+					      (lex-or-psort-full-fs 
+					       expanded-entry)))))))))))))
 
 
 (defun construct-morph-history (lex-ids history)
@@ -481,7 +483,7 @@
                                 (rule-entry (get-lex-rule-entry rule-id))
                                 (result
                                  (if rule-entry
-                                     (apply-morph-rule 
+                                     (apply-morph-rule
                                       rule-entry fs fs-restricted new-orth))))
                            (unless rule-entry
                              (format t 

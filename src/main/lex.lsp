@@ -397,16 +397,17 @@
       (cerror string1 string2)))
 
 (defun expand-psort-entry (entry &optional local-p interim-p)
-   (let* ((orth (lex-or-psort-orth entry))
+  (let* ((*safe-not-to-copy-p* nil)
+	 (orth (lex-or-psort-orth entry))
          (lex-id (lex-or-psort-id entry))
          (language (lex-or-psort-language entry))
          (fs (append (lex-or-psort-unifs entry)
-               (if (and orth *sense-unif-fn*)
-                  (apply *sense-unif-fn* 
-                         (list orth 
-                              (format nil "~A" lex-id) language))))))
-      (process-unif-list lex-id fs (lex-or-psort-def-unifs entry) entry
-         *lexical-persistence* *bc96lrules* local-p interim-p)))
+		     (if (and orth *sense-unif-fn*)
+			 (apply *sense-unif-fn* 
+				(list orth 
+				      (format nil "~A" lex-id) language))))))
+    (process-unif-list lex-id fs (lex-or-psort-def-unifs entry) entry
+		       *lexical-persistence* *bc96lrules* local-p interim-p)))
 
 ;;; *bclrules* is t if the style of lexical rules
 ;;; and linking adopted in Briscoe and Copestake 1996 
