@@ -653,16 +653,16 @@
            (parse-id (if (>= parse-id i-id) parse-id i-id))
            (client (get-field :client run))
            (cpu (and client (client-cpu client)))
-           (o-input (when (and (cpu-p cpu) (cpu-reader cpu))
-                      (call-hook (cpu-reader cpu) i-input)))
+           (o-input (or (get-field :o-input item)
+                        (when (and (cpu-p cpu) (cpu-reader cpu))
+                          (call-hook (cpu-reader cpu) i-input))))
            (o-input (when (and (stringp o-input) (not (string= o-input "")))
                       o-input))
            (p-input (cond
                      ((and (cpu-p cpu) (cpu-preprocessor cpu))
-                      (call-hook (cpu-preprocessor cpu) (or o-input i-input)))
+                      (call-hook (cpu-preprocessor cpu) i-input))
                      (*tsdb-preprocessing-hook*
-                      (call-hook *tsdb-preprocessing-hook* 
-                                 (or o-input i-input))))))
+                      (call-hook *tsdb-preprocessing-hook* i-input)))))
 
       (cond 
        ((and o-ignore (tsdb-ignore-p o-ignore))
@@ -693,9 +693,9 @@
   (declare (ignore interactive))
   
   (let* ((i-id (get-field :i-id item)) 
-         (i-input (or (get-field :o-input item)
-                      (when *process-pretty-print-trace-p*
-                        (get-field :p-input item))
+         (i-input (or (when *process-pretty-print-trace-p*
+                        (get-field :o-input item))
+                      (get-field :p-input item)
                       (get-field :i-input item)))
          (i-wf (get-field :i-wf item))
          (gc (get-field :gc item))

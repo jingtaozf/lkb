@@ -96,14 +96,17 @@
 (defun rewrite-ptb-token (token pos)
   (cond
    ((string-equal pos "nnp") "NameErsatz")
+   ((member pos '("``" "''" "," "\"") :test #'string=) "")
    #+:null
    ((string-equal pos "cd") "TwoDigitErsatz")
    ((string-equal token "-lrb-") "(")
    ((string-equal token "-rrb-") ")")
-   (t token)))
+   (t (if lkb::*preprocessor*
+        (lkb::preprocess token :globalp nil :format :lkb :verbose nil)
+        token))))
 
-(defun preprocess-ptb-string (string 
-                              &key rawp plainp (posp *ptb-use-pos-tags-p*))
+(defun ptb-preprocess (string 
+                       &key rawp (plainp t) (posp *ptb-use-pos-tags-p*))
   (let ((length 0)
         (result nil))
     (loop
@@ -115,7 +118,9 @@
         for pos = (first leaf)
         for raw = (second leaf)
         for form = (rewrite-ptb-token raw pos)
-        unless (string-equal pos "-none-") do
+        unless (or (string-equal pos "-none-")
+                   (and rawp (string= raw ""))
+                   (and (not rawp) (string= form ""))) do
           (cond
            (rawp (push raw result))
            (plainp (push form result))
@@ -126,8 +131,11 @@
                     ~:[~*~;, \"~a\" 1.00~])" 
                    (incf id) i (incf i) form raw posp pos)
                   result)))
-          (unless (lkb::punctuationp form) (incf length)))
+          (incf length))
     (values (and result (format nil "~{~a~^ ~}" (nreverse result))) length)))
+
+(defun ptb-preprocess-for-pet (string)
+  (ptb-preprocess string :rawp nil :plainp nil :posp t))
 
 #+:null         
 (eval-when #+:ansi-eval-when (:load-toplevel :execute)

@@ -148,6 +148,7 @@
             (return (setf *preprocessor* fspp))))))
 
 (defun preprocess (string &key (preprocessor *preprocessor*) 
+                               (globalp t) (tokenp t)
                                (verbose *preprocessor-debug-p*)
                                (format :pet))
 
@@ -159,18 +160,19 @@
         (local (and preprocessor (fspp-local preprocessor)))
         (length 0)
         result)
-    (loop
-        for rule in global
-        for scanner = (fsr-scanner rule)
-        for target = (fsr-target rule)
-        for match = (ppcre:regex-replace-all scanner string target)
-        when (and (eq verbose :trace) (not (string= string match))) do
-          (format
-           t
-           "~&|~a|~%  |~a|~%  |~a|~%~%"
-           (fsr-source rule) string match)
-        do
-          (setf string match))
+    (when globalp
+      (loop
+          for rule in global
+          for scanner = (fsr-scanner rule)
+          for target = (fsr-target rule)
+          for match = (ppcre:regex-replace-all scanner string target)
+          when (and (eq verbose :trace) (not (string= string match))) do
+            (format
+             t
+             "~&|~a|~%  |~a|~%  |~a|~%~%"
+             (fsr-source rule) string match)
+          do
+            (setf string match)))
     (loop
         with tokens = (ppcre:split tokenizer string)
         for token in tokens
@@ -178,7 +180,7 @@
           (incf length)
           (loop
               with extra = nil
-              for rule in local
+              for rule in (when tokenp local)
               for type = (fsr-type rule)
               for scanner = (fsr-scanner rule)
               for target = (fsr-target rule)
