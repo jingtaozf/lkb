@@ -989,24 +989,25 @@
                          (setf lex-ids (append lex-ids (edge-lex-ids child)))
                          (setf result (yadu! result tdfs path))
                        finally
+                         (when result
+                           (setf result (restrict-and-copy-tdfs result)))
                          (return
                            (cond
                             (result
-                             (let ((copy (restrict-and-copy-tdfs result)))
-                               (setf (aref cache i)
-                                 (if (g-edge-p edge)
-                                   (make-g-edge
-                                    :id (next-edge) :rule rule :dag copy
-                                    :category (indef-type-of-tdfs copy)
-                                    :children children 
-                                    :leaves leaves :lex-ids lex-ids
-                                    :rels-covered rels :lexemes lexemes)
-                                   (make-edge
-                                    :id (next-edge) :rule rule :dag copy
-                                    :category (indef-type-of-tdfs copy)
-                                    :from (edge-from edge) :to (edge-to edge)
-                                    :children children 
-                                    :leaves leaves :lex-ids lex-ids)))))
+                             (setf (aref cache i)
+                               (if (g-edge-p edge)
+                                 (make-g-edge
+                                  :id (next-edge) :rule rule :dag result
+                                  :category (indef-type-of-tdfs result)
+                                  :children children 
+                                  :leaves leaves :lex-ids lex-ids
+                                  :rels-covered rels :lexemes lexemes)
+                                 (make-edge
+                                  :id (next-edge) :rule rule :dag result
+                                  :category (indef-type-of-tdfs result)
+                                  :from (edge-from edge) :to (edge-to edge)
+                                  :children children 
+                                  :leaves leaves :lex-ids lex-ids))))
                             (t
                              #+:fdebug
                              (when id
