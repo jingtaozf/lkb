@@ -1268,6 +1268,7 @@ Setting *first-only-p* to nil")
             (collect-morph-history-rule-names 
              (edge-morph-history edge-rec)))))
 
+
 ;;; generator structures 
 
 (defstruct (dotted-edge (:include edge))
@@ -1275,23 +1276,12 @@ Setting *first-only-p* to nil")
    needed ; ordered list of names of daughter features still to be found
    )
 
-(defstruct (g-edge (:include dotted-edge)
-                   (:constructor make-g-edge
-                    (&key id category rule dag needed
-                          (dag-restricted
-                             ;; restricted field in inactive edges is dag, for
-                             ;; active edges it's the next needed daughter
-                             (restrict-fs
-                                (if needed
-                                   (existing-dag-at-end-of (tdfs-indef dag)
-                                      (if (listp (first needed))
-                                         (first needed)
-                                         (list (first needed))))
-                                   (tdfs-indef dag))))
-                          leaves lex-ids children morph-history 
-                          spelling-change res rels-covered)))
-   ;; category: not used
-   ;; id, rule, leaves: filled in, not used in generation algorithm itself, but
-   ;; needed for chart display etc
+
+(defstruct (g-edge (:include dotted-edge))
+   ;; category, id, rule, leaves: filled in, not used in generation algorithm
+   ;; itself, but needed for debug output, chart display etc
    rels-covered ; set of relations generated so far
-   index)
+   index
+   lexemes ; non-ordered set of found-lex structures
+   mod-index ; 0-based index to modifier under an intersective rule instantiation
+   )
