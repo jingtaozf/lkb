@@ -22,7 +22,6 @@
       '( ("main" "for")         ; duplicate useful Procyon CL for loops
                            ; generic CL
          ("main" "globals")
-         ("io-general" "utils")
          ("MCL_specific" "picwin")      ; MacCL specific PICT windows
          ("MCL_specific" "picfield")    ; MacCL specific pop-up-fields
          ("MCL_specific" "topmenu") ; dialect specific - toplevel menu
@@ -62,6 +61,7 @@
          ("io-tdl" "tdlruleinput")
          ("io-tdl" "tdllexinput")
          ("main" "batch-check")
+         ("io-general" "utils")
          ))
       (let* ((dir (car dir-and-file))
              (file (cadr dir-and-file))
