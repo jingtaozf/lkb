@@ -22,7 +22,6 @@
   (let ((*package* (find-package :mrs)))
     (with-open-file (istream file-name :direction :input)
       (let ((rmrss (parse-xml-removing-junk istream)))
-	;;; (setf *rmrs-debug* rmrss)
 	(unless (equal (car rmrss) '|rmrs-list|)
 	  (error "~A is not a valid rmrs file" file-name))
 	(loop for rmrs in (cdr rmrss)
@@ -37,7 +36,6 @@
   (let ((*package* (find-package :mrs)))
     (with-input-from-string (istream str)
       (let ((rmrs (parse-xml-removing-junk istream)))
-	;;      (setf *rmrs-debug* rmrs)
 	(unless (xml-whitespace-string-p rmrs)
 	  (read-rmrs rmrs :rasp))))))
   
