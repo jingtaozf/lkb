@@ -40,10 +40,10 @@
   ;;
   (declare (ignore load))
   (ignore-errors
-    (let ((*package* (find-package "COMMON-LISP-USER"))
+   (let* ((*package* (find-package "COMMON-LISP-USER"))
           (str (make-string-output-stream)) ; capture any warning messages
           (*standard-output* (if trace
-                               (make-broadcast-stream *standard-output* str)
+                                 (make-broadcast-stream *standard-output* str)
                                str))
           (input (split-into-words (preprocess-sentence-string word))))
       (parse input nil)
@@ -97,7 +97,7 @@
         (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks)
             #+allegro
             (excl::time-a-funcall
-             #'(lambda () (parse-tsdb-sentence sent))
+             #'(lambda () (parse-tsdb-sentence sent trace))
              #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                  (declare (ignore ignore))
                  (setq tgc (/ (+ tgcu tgcs) 10)
@@ -113,7 +113,7 @@
                         tcpu (get-internal-run-time)
                         tgc #+mcl (ccl:gctime) #-mcl 0
                         others #+mcl (ccl::total-bytes-allocated) #-mcl 0)
-                  (parse-tsdb-sentence sent))
+                  (parse-tsdb-sentence sent trace))
               (let ((rawgc (- #+mcl (ccl:gctime) tgc)))
                 (setq symbols 0 conses 0
                       others
@@ -177,9 +177,9 @@
 
 (defvar *do-something-with-parse* nil)
 
-(defun parse-tsdb-sentence (user-input)
+(defun parse-tsdb-sentence (user-input &optional trace)
    (multiple-value-prog1
-      (parse user-input nil)
+      (parse user-input trace)
       (when (fboundp *do-something-with-parse*)
          (funcall *do-something-with-parse*))))
 
