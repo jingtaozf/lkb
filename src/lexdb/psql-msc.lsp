@@ -83,50 +83,69 @@
 (defun record-orth (record)
   (cdr (assoc :orthography record)))
 
-(defun orth-string-to-str-list (string)
-  ;;
-  ;; break orthography string returned from DB at (one or more) spaces
-  ;;
-  (unless (stringp string)
-    (error "string exected"))
-
+(defun string-2-str-list-on-spc (string)
   (loop
-      with result = nil
-      with word = (make-array 42
-                              :element-type 'character
-                              :adjustable t :fill-pointer 0)
-      with stream = (make-string-input-stream string)
-      for c = (read-char stream nil nil)
-      while c
-      when (and (eql c #\space) (not (zerop (length word)))) do
-        (push (copy-seq word) result)
-        (setf (fill-pointer word) 0)
-      when (not (eql c #\space)) do
-        (vector-push-extend c word)
-      finally
-        (when (not (zerop (length word))) (push word result))
-        (return (nreverse result))))
+      with res
+      with flag
+      with word-chars
+      for c in (explode-to-chars string)
+      if flag do
+	(push c word-chars)
+	(setf flag nil)
+      else do
+	   (cond
+	     ((eq #\Space c)
+	      (push (implode-from-chars (reverse word-chars)) res)
+	      (setf word-chars nil))
+	     ((eq #\\ c)
+		 (setf flag t))
+	     (T
+	      (push c word-chars)))
+      finally (return (reverse (push (implode-from-chars (reverse word-chars)) res)))
+	      ))
 
+;; see also extract-value-by-path
 ;;; returns _list_ of values of appropriate type
 (defun work-out-value (type value &key path)
-  (cond ((equal type "symbol") 
-	 (unless (equal value "")
-	   (list (str-2-symb value))))
-	((equal type "string")
-	 (unless (equal value "")
-	   (list (str-to-string value))))
-	((equal type "mixed")
-	 (unless (equal value "")
-	   (list (str-to-mixed value))))
-	((equal type "string-list")
-	 (list (orth-string-to-str-list value)))
-	((equal type "string-fs")
-	 (expand-string-list-to-fs-list (orth-string-to-str-list value)))
-	((equal type "string-diff-fs")
-	 (expand-string-list-to-fs-diff-list (orth-string-to-str-list value) :path path))
-	((equal type "list") (unless (equal value "")
-			       (str-2-list value) ))
-	(t (error "unhandled type during database access"))))
+  (case type
+    ('mixed
+     (unless (equal value "")
+       (list (str-to-mixed value))))
+    ('string
+     (unless (equal value "")
+       (list (str-to-string value))))
+    ('symbol 
+     (unless (equal value "")
+       (list (str-2-symb value))))
+    ('string-list
+     (list (string-2-str-list-on-spc value)))
+    ('list 
+     (unless (equal value "")
+       (str-2-list value) ))
+    ('string-fs
+     (expand-string-list-to-fs-list 
+      (string-2-str-list-on-spc value)))
+    ('string-diff-fs
+     (expand-string-list-to-fs-diff-list 
+      (string-2-str-list-on-spc value) :path path))
+    (T
+     (typecase type
+       (list
+	(case (first type)
+	  ('mixed-fs
+	   (expand-string-list-to-fs-list-complex 
+	    (string-2-str-list-on-spc value)
+	    :elt-path (cdr type)))
+	  ('mixed-diff-fs
+	   (expand-string-list-to-fs-diff-list-complex 
+	    (string-2-str-list-on-spc value)
+	    :path path
+	    :elt-path (cdr type)))
+	  (t
+	   (error "unhandled (list) type: ~a" (first type)))))
+       (T3 
+	(error "unhandled type"))))))
+
 
 (defun str-to-mixed (val-str)
   (let ((len (length val-str)))
@@ -155,15 +174,28 @@
 (defun expand-string-list-to-fs-list (string-list)
   (cond
    ((equal string-list nil) 
-    (list (list '*NULL*)))
+    (list (list *empty-list-type*)))
    (t
-    (cons (list 'FIRST (first string-list)) 
-	  (mapcar #'(lambda (x) (cons 'REST x))
-	  (expand-string-list-to-fs-list (cdr string-list)))))))   
+    (cons (append *list-head* (list (first string-list))) 
+	  (mapcar #'(lambda (x) (append *list-tail* x))
+		  (expand-string-list-to-fs-list (cdr string-list)))))))   
+
+;;; eg. ("w1" "w2") (A B)-> ((FIRST A B "w1") (REST FIRST A B "w2") (REST REST *NULL*)) 
+(defun expand-string-list-to-fs-list-complex (string-list &key elt-path)
+  (cond
+   ((equal string-list nil) 
+    (list (list *empty-list-type*)))
+   (t
+    (cons (append *list-head* 
+		  elt-path
+		  (list (first string-list))) 
+	  (mapcar #'(lambda (x) (append *list-tail* x))
+		  (expand-string-list-to-fs-list-complex (cdr string-list)
+							 :elt-path elt-path))))))   
 
 ;;; eg. ("w1" "w2") path -> ((LIST FIRST "w1") (LIST REST FIRST "w2") (LIST REST REST path)) 
 (defun expand-string-list-to-fs-diff-list (string-list &key path)
-   (mapcar #'(lambda (x) (cons 'LIST x))
+   (mapcar #'(lambda (x) (cons *diff-list-list* x))
 	   (expand-string-list-to-fs-diff-list-aux string-list :path path)))
 
 ;;; eg. ("w1" "w2") path -> ((FIRST "w1") (REST FIRST "w2") (REST REST path)) 
@@ -172,12 +204,38 @@
    ((equal string-list nil) 
     (list 
      (list 
-      (append (work-out-value "list" path) 
-	      (list 'LAST)))))
+      (append path 
+	      (list *diff-list-last*)))))
    (t
-    (cons (list 'FIRST (first string-list)) 
-	  (mapcar #'(lambda (x) (cons 'REST x))
+    (cons (append *list-head* (list (first string-list))) 
+	  (mapcar #'(lambda (x) (append *list-tail* x))
 		  (expand-string-list-to-fs-diff-list-aux (cdr string-list) :path path))))))   
+
+;;; eg. ("w1" "w2") path (A B)-> ((LIST FIRST A B "w1") (LIST REST FIRST A B "w2") (LIST REST REST path)) 
+(defun expand-string-list-to-fs-diff-list-complex (string-list &key path elt-path)
+   (mapcar #'(lambda (x) (cons *diff-list-list* x))
+	   (expand-string-list-to-fs-diff-list-complex-aux string-list 
+							   :path path
+							   :elt-path elt-path)))
+
+;;; eg. ("w1" "w2") path (A B) -> ((FIRST A B "w1") (REST FIRST A B "w2") (REST REST path)) 
+(defun expand-string-list-to-fs-diff-list-complex-aux (string-list &key path elt-path)
+  (cond
+   ((equal string-list nil) 
+    (list 
+     (list 
+      (append path 
+	      (list *diff-list-last*)))))
+   (t
+    (cons 
+     (append *list-head*
+	     elt-path
+	     (list (first string-list))) 
+     (mapcar #'(lambda (x) (append *list-tail* x))
+	     (expand-string-list-to-fs-diff-list-complex-aux (cdr string-list) 
+							     :path path
+							     :elt-path elt-path))))))   
+
 
 (defun sql-embedded-text (str)
   (format nil "'~a'" (sql-embedded-text-aux str)))
@@ -318,3 +376,9 @@
               do
                 (join-tdl x :stream t)
                 ))))
+
+(defvar *rc-file* nil)
+(defun rc (&optional file)
+  (if file
+      (setf *rc-file* file))
+  (lkb::recomp *rc-file*))

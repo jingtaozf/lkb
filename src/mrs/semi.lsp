@@ -1120,3 +1120,75 @@
 
 (defun get-info-from-semi (lex &key pos id (semi *semi*))
   (mapcar #'info-from-semi-by-pred (lookup-preds lex :pos pos :id id :semi semi)))
+
+;;;
+;;;
+;;;
+
+(defun get-dag-by-id (lex-id)
+  (let* ((entry (lkb::get-lex-entry-from-id lex-id :cache nil))
+	 (dag (and
+	       entry
+	       (tdfs-indef (lex-entry-full-fs entry)))))
+    dag))
+
+(defun get-comps-list-by-id (lex-id)
+  (get-comps-list (get-dag-by-id lex-id)))
+
+(defun get-comps-list (dag)
+  (let* ((comps-path 
+	  '(lkb::synsem lkb::local lkb::cat lkb::val lkb::comps))
+	 (comps-dag (path-value dag 
+				comps-path)))
+    (lkb::dag-list-2-list comps-dag)))
+
+(defun get-rels-list-by-id (lex-id)
+  (get-rels-list (get-dag-by-id lex-id)))
+
+(defun get-rels-list (dag)
+  (let* ((rels-path 
+	  (append mrs::*initial-semantics-path* '(lkb::rels)))
+	 (rels-dag (path-value dag 
+			       rels-path)))
+    (lkb::dag-diff-list-2-list rels-dag)))
+
+(defun extract-comps-info-by-id (lex-id)
+  (let* ((comps-list (get-comps-list-by-id lex-id))
+	 (rels-list (get-rels-list-by-id lex-id)))
+    (mapcar
+     #'(lambda (x) (extract-comps-elt-info x rels-list))
+     comps-list)))
+
+(defun extract-comps-elt-info (comps-elt rels-list)
+  (let* ((comp-rel (lkb::dag-type 
+	       (path-value comps-elt
+			   '(lkb::local lkb::cat lkb::head lkb::keys lkb::key))))
+	 (index (path-value comps-elt
+			    '(lkb::local lkb::cont lkb::hook lkb::index)))
+	 (opt (lkb::dag-type (path-value comps-elt
+					 '(lkb::opt))))
+	 (coslot
+	  (loop
+	      for rel in rels-list
+	      for rel-pred = (path-value rel *rel-name-path*)
+	      do
+		(format t "~%PRED=~a" rel-pred)
+		(loop
+		    for arc in (dag-arcs rel)
+		    for feat = (car arc)
+		    for val = (cdr arc)
+		    unless (ignored-sem-arc feat)
+		    if (eq (and (describe feat) (describe val) (print val)) 
+			   (and (describe index) (print index)))
+		    collect
+		      (cons rel-pred feat)
+		      ))))
+    (list
+     (cons :rel comp-rel)
+     (cons :coslot coslot)
+     (cons :opt opt))))
+    
+(defun ignored-sem-arc (feature)
+    (or (member feature *ignored-sem-features*)
+     (eql feature (car *rel-handel-path*))
+     (eql feature (car *rel-name-path*))))

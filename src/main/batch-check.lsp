@@ -46,10 +46,7 @@
 	    (sanitize (existing-dag-at-end-of (tdfs-indef new-fs) start-path)
 		      lex-id
 		      (reverse start-path)))
-	  )
-	)
-      ))
-  ;;  (describe *lexicon*)
+	  ))))
   #+:psql
   (when check-duplicates
     (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")
@@ -57,9 +54,7 @@
     (format t "~%END OF DUPLICATE ENTRIES~%"))
   (format t "~%(emptying cache)")
   (empty-cache *lexicon*)
-  (format t "~%Lexicon checked")
-  )
-
+  (format t "~%Lexicon checked"))
 
 (defun sanitize (dag-instance id path &optional (ostream t))
   ;;; walks over a fs, looking for things of type
@@ -68,7 +63,6 @@
   (when (dag-p dag-instance)
     (invalidate-visit-marks)  
     (sanitize-aux dag-instance id path ostream)))
-
 
 (defun sanitize-aux (dag-instance id path-so-far ostream)
    (let* ((real-dag (follow-pointers dag-instance))
@@ -86,12 +80,10 @@
 			     (cons label path-so-far) 
 			     ostream))))))
 
-
 (defun eq-or-subtype (dag type)
   (or (eq (type-of-fs dag) type)
       (subtype-p (type-of-fs dag) type)))
   
-
 (defun check-dag-diff-list (dag id path &optional (ostream t))
   (let* ((list-dag (dag-path-val (list *diff-list-list*) dag))
 	 (last-dag (dag-path-val (list *diff-list-last*) dag)))
@@ -118,7 +110,6 @@
 
 ;;;; Morphology
 
-
 (defun batch-check-morphology (&optional plus-ids)
   ;;; generates all morphological forms
   ;;; plus-ids is a boolean value: if set to t, it 
@@ -135,7 +126,6 @@
                          (if plus-ids id))
     (unexpand-psort *lexicon* id)))
     
-
 (defun try-all-morph-rules (entries &optional id)
    (incf *number-of-applications*)
    (when (> *number-of-applications* *maximal-lex-rule-applications*)
@@ -174,23 +164,21 @@
 ;;;
 
 (defun dag-path-val (path dag)
-  (cond
-   ((null dag)
-    nil)
-   ((null path)
-    dag)
-   (t
-    (dag-path-val
-     (cdr path)
-     (cdr (assoc (car path) (dag-arcs dag)))))))
+  (existing-dag-at-end-of dag path))
+
+;(defun dag-path-val (path dag)
+;  (cond
+;   ((null dag)
+;    nil)
+;   ((null path)
+;    dag)
+;   (t
+;    (dag-path-val
+;     (cdr path)
+;     (cdr (assoc (car path) (dag-arcs dag)))))))
 
 (defun dag-path-type (path dag)
   (let ((val (dag-path-val path dag)))
     (if (typep val 'dag)
         (dag-type val)
       nil)))
-
-
-
-
-    

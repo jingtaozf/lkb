@@ -294,10 +294,11 @@
       (cdb:write-record orth-db (string-upcase orth-el) (string id)))
     orth))
 
-(defmethod read-psort ((lexicon cdb-lex-database) id &key (cache t) (recurse t))
+(defmethod read-psort ((lexicon cdb-lex-database) id &key (cache t) (recurse t) (new-instance nil))
   (declare (ignore recurse))
   (with-slots (psorts psort-db) lexicon
-    (let ((hashed (gethash id psorts)))
+    (let ((hashed (and (not new-instance)
+		       (gethash id psorts))))
       (cond (hashed
 	     (unless (eq hashed :empty)
 	       hashed))

@@ -12,23 +12,26 @@
 (defmethod make-field-map-slot ((lexicon psql-lex-database))
   ;; stores the mapping of fields to lex-entry structure slots
   (setf (fields-map lexicon)
-    (mapcar #'(lambda (x) 
-		(append (list (str-2-keyword (first x))
-			      (str-2-keyword (second x)))
-			(cddr x)))
-            (records (run-query lexicon 
-                                (make-instance 'sql-query
-                                  :sql-string (format 
-                                               nil 
-                                               "SELECT slot,field,path,type FROM defn WHERE mode='~a';"
-                                               (fields-tb lexicon)))))))
-  (if (null (fields-map lexicon))
-;      (format t "~%WARNING: empty fields map in ~a mode ~a !!!" 
-;              (dbname lexicon) (fields-tb lexicon))
-      (error "~%No definitions for :table mode='~a' found in table public.defn of database ~a. (Hint: check the value of :table in *psql-lexicon-parameters*, ensure DB table public.defn matches the definitions in lexicon.dfn. If necessary 'Merge new entries' from LexDB menu)" 
-              (fields-tb lexicon) (dbname lexicon))
-    )
-  (fields-map lexicon))
+    (sort
+     (mapcar #'(lambda (x) 
+		 (list (str-2-keyword (first x))
+		       (str-2-keyword (second x))
+		       (third x)
+		       (2-symb-or-list (fourth x))))
+	     (records (run-query lexicon 
+				 (make-instance 'sql-query
+				   :sql-string (format 
+						nil 
+						"SELECT slot,field,path,type FROM defn WHERE mode='~a';"
+						(fields-tb lexicon))))))
+     #'(lambda (x y) (declare (ignore y)) (eq (car x) :unifs))))
+    (if (null (fields-map lexicon))
+					;      (format t "~%WARNING: empty fields map in ~a mode ~a !!!" 
+					;              (dbname lexicon) (fields-tb lexicon))
+	(error "~%No definitions for :table mode='~a' found in table public.defn of database ~a. (Hint: check the value of :table in *psql-lexicon-parameters*, ensure DB table public.defn matches the definitions in lexicon.dfn. If necessary 'Merge new entries' from LexDB menu)" 
+	       (fields-tb lexicon) (dbname lexicon))
+      )
+    (fields-map lexicon))
 
 ;;; returns version, eg. "7.3.2"
 (defmethod get-server-version ((lexicon psql-lex-database))
@@ -233,37 +236,6 @@
 (defun absolute-namestring (format str)
   (namestring (pathname (format nil format str))))
 
-;(defun merge-into-psql-lexicon2 (lexicon filename)
-;  (get-postgres-temp-filename)
-;;  (let ((revision-filename 
-;;	 (namestring (pathname (format nil "~a.csv" filename))))
-;;	(new-entries-filename 
-;;	 (namestring (pathname (format nil "~a/lexdb.new_entries" *postgres-user-temp-dir*))))
-;;	(defn-filename (namestring (pathname (format nil "~a.dfn" filename)))))
-;  (let ((revision-filename 
-;	 (absolute-namestring "~a.csv" 
-;			      filename))
-;	(new-entries-filename 
-;	 (absolute-namestring "~a/lexdb.new_entries" 
-;			      *postgres-user-temp-dir*))
-;	(defn-filename 
-;	    (absolute-namestring "~a.dfn" 
-;				 filename)))
-;    (format t "~%(~a new revision entries)"
-;	    (merge-into-db lexicon 
-;			   revision-filename
-;			    *postgres-temp-filename*))
-;    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
-;						 *postgres-temp-filename*
-;						 new-entries-filename))
-;    
-;    (if (probe-file defn-filename)
-;	(format t "~%(~a new defn entries)"
-;		(merge-defn lexicon 
-;			    defn-filename)))
-;    (build-current-grammar *psql-lexicon*)
-;    ))
-
 (defun merge-into-psql-lexicon2 (lexicon filename)
   (when
       (catch 'pg:sql-error
@@ -381,7 +353,7 @@
 	      (error "whilst compiling embedded SQL function ~a(~a). Argument $~a is not valid in 
 ~%~a~a~a" 
 		     str-fn-name 
-		     (str-list-2-str (get-$-args arity) ",") 
+		     (str-list-2-str-by-str (get-$-args arity) ",") 
 		     arg 
 		     (if (> (- i 20) 0) "..." "")
 		     (subseq str 

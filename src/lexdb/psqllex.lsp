@@ -90,8 +90,7 @@
                                 (host (extract-param :host *psql-lexicon-parameters*))
                                 (table (extract-param :table *psql-lexicon-parameters*))
                                 (port (extract-param :port *psql-lexicon-parameters*))
-                                (user (extract-param :user *psql-lexicon-parameters*))
-				)
+                                (user (extract-param :user *psql-lexicon-parameters*)))
   (unless (and db host)
     (error "please instantiate db+host in *psql-lexicon-parameters*"))
   (let ((part-of))   
@@ -189,8 +188,6 @@
      (t
       (setf user (ask-user-for-x "Connect to PostgreSQL lexicon" 
 				 (cons "Username?" (or user "guest"))))
-;      (unless user 
-;	(setf (connection lexicon) nil))
       (when user
 	(setf (user lexicon) user)
 	(connect lexicon))))))
@@ -477,10 +474,11 @@
 	(error (format nil "database error (too many records returned)"))
 	      (car records))))
 
-(defmethod read-psort ((lexicon psql-lex-database) id &key (cache t) (recurse t))
+(defmethod read-psort ((lexicon psql-lex-database) id &key (cache t) (recurse t) (new-instance nil))
   (declare (ignore recurse))
   (with-slots (psorts) lexicon
-    (let ((hashed (gethash id psorts)))
+    (let ((hashed (and (not new-instance)
+		       (gethash id psorts))))
       (cond (hashed
 	     (unless (eq hashed 'EMPTY)
 	       hashed))
@@ -501,15 +499,17 @@
               in (fields-map lexicon)
               for slot-value-list = 
 		(work-out-value 
-                                slot-type 
-                                (get-val slot-field query-res)
-				:path slot-path
-				)		
-                               ;; if empty third argument (ie. path), 
-                               ;; then add (:key "field")
+		 slot-type 
+		 (get-val slot-field query-res)
+		 :path (work-out-value 'list slot-path)
+		 )		
+		;; if empty third argument (ie. path), 
+		;; then add (:key "field")
 	      when slot-value-list
               append (mapcar 
-		      #'(lambda (x) (make-psort-struct-aux slot-key x slot-path)) 
+		      #'(lambda (x) (make-psort-struct-aux slot-key x 
+							   slot-path
+							   )) 
 		      slot-value-list)))
          ;; groups slots with same key together in a list
          (strucargs 
@@ -552,7 +552,7 @@
     (list slot-key
 	  (make-unification
 	   :lhs (make-path :typed-feature-list 
-			   (work-out-value "list" slot-path))
+			   (work-out-value 'list slot-path))
 	   :rhs (make-u-value :type slot-value))))
    ;: list. eg. (rest first "word") => (... rest first) has val "word"  
    ((listp slot-value)
@@ -560,7 +560,7 @@
 	  (make-unification
 	   :lhs (make-path 
 		 :typed-feature-list (append
-				      (work-out-value "list" slot-path)
+				      (work-out-value 'list slot-path)
 				      (reverse (cdr (reverse slot-value)))))
 	   :rhs (make-rhs-val (car (last slot-value))))))
   (T (error "unhandled input"))))
@@ -576,14 +576,11 @@
 (defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-val psql-le :modstamp "NOW")
   (set-val psql-le :userid (user lexicon))
-  ;;(set-val psql-le :flags 1)
-  
   (set-lex-entry-aux lexicon psql-le))
   
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-version psql-le lexicon) 
   (if *postgres-export-timestamp* (set-val psql-le :modstamp *postgres-export-timestamp*))
-  ;;(set-val psql-le :flags 1)
   (let* ((symb-list '(:type :orthography :orthkey :keyrel :altkey :alt2key :keytag :altkeytag :compkey :ocompkey :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
 	 (symb-list (remove-if #'(lambda (x) (or (null x) 
 						 (and (stringp x)
@@ -825,21 +822,6 @@
   (format t "~%Contents of scratch: ~a"
 	  (mapcar #'(lambda (x) (cdr (first x))) (show-scratch *psql-lexicon*)))
   (lkb-beep))
-
-;;;(defun command-generate-semi nil
-;;;  (unless (typep *lexicon* 'psql-lex-database)
-;;;    (error "You need to load the LexDB before generating the SEMI..."))
-;;;  (format *postgres-debug-stream* "~%(caching all lexical records)")
-;;;  (cache-all-lex-records *lexicon*)
-;;;
-;;;  (format *postgres-debug-stream* "~%(dumping semi files)")
-;;;  (dump-obj-semi *lexicon*)
-;;;  (format *postgres-debug-stream* "~%(loading semi into db)")
-;;;  (load-semi-from-files *lexicon*)
-;;;  
-;;;  (format *postgres-debug-stream* "~%(clearing cache)")
-;;;  (empty-cache *lexicon*)
-;;;  (lkb-beep))
 
 ;;;
 ;;; cache

@@ -43,18 +43,19 @@
 ;(defvar common-lisp-user::*grammar-version*)
 ;(defvar *grammar-version*)
 (defvar *postgres-export-default-fields-map*
-    '((:ID "name" "" "symbol") 
-      (:ORTH "orthography" "" "string-list") 
-      ;;(:SENSE-ID "name" "" "symbol")
-      (:UNIFS "alt2key" "(synsem local keys alt2key)" "symbol")
+    '((:UNIFS "alt2key" "(synsem local keys alt2key)" "symbol")
       (:UNIFS "altkey" "(synsem local keys altkey)" "symbol")
       (:UNIFS "altkeytag" "(synsem local keys altkey carg)" "string")
       (:UNIFS "compkey" "(synsem lkeys --compkey)" "symbol")
       (:UNIFS "keyrel" "(synsem local keys key)" "symbol")
       (:UNIFS "keytag" "(synsem local keys key carg)" "string")
       (:UNIFS "ocompkey" "(synsem lkeys --ocompkey)" "symbol")
-      ;;(:UNIFS "orthography" "(stem)" "string-fs") 
-      (:UNIFS "type" "nil" "symbol")))
+      (:UNIFS "orthography" "(stem)" "string-fs") 
+      (:UNIFS "type" "nil" "symbol")
+      (:ID "name" "" "symbol") 
+      (:ORTH "orthography" "" "string-list") 
+      ;;(:SENSE-ID "name" "" "symbol")
+      ))
 
 (defvar *postgres-export-multi-separately* nil)
 (defvar *postgres-export-multi-stream* t)
@@ -164,8 +165,7 @@
 					  :separator separator
 					  :recurse t
 					  :use-defaults t))
-	    (extra-lexicons lexicon)))
-  )
+	    (extra-lexicons lexicon))))
 
 
 (defmethod export-to-csv ((lexicon lex-database) stream)
@@ -178,7 +178,11 @@
     (format t "~%Export fields map:~%~a~%" fields-map)
     (mapc 
      #'(lambda (x) 
-	 (format stream "~a" (to-csv (read-psort lexicon x :recurse nil) fields-map)))
+	 (format stream "~a" (to-csv (read-psort lexicon x 
+						 :recurse nil
+						 :cache nil
+						 :new-instance t
+						 ) fields-map)))
      (collect-psort-ids lexicon :recurse nil))))
 
 (defmethod export-to-csv-to-file ((lexicon lex-database) filename)
@@ -189,8 +193,7 @@
 
 (defmethod to-csv ((x lex-entry) fields-map)
   (let* (
-	 ;;(separator (string *postgres-export-separator*))
-
+	 (unifs-in (copy-tree (slot-value x 'unifs)))
 	 (keyrel (extract-field x :keyrel fields-map))      
 	 (keytag (extract-field x :keytag fields-map))
 	 (altkey (extract-field x :altkey fields-map))
@@ -200,20 +203,12 @@
 	 (ocompkey (extract-field x :ocompkey fields-map))
 	 
 	 (type (extract-field x :type fields-map))
-	 (orth-list (extract-field2 x :orth nil "list"))
+	 (orth-list (extract-field2 x :orth nil 'list))
 	 (orthography (extract-field x :orthography fields-map))
 	 (name (extract-field x :name fields-map))
-	 (count (+ 2 (length orth-list)))
-	 (total (+ count
-		   (if (string> keyrel "") 1 0) 
-		   (if (string> keytag "") 1 0) 
-		   (if (string> altkey "") 1 0)
-		   (if (string> altkeytag "") 1 0)
-		   (if (string> alt2key "") 1 0) 
-		   (if (string> compkey "") 1 0) 
-		   (if (string> ocompkey "") 1 0)))
-	 
-	 (multi-base-name (and *postgres-export-multi-separately* (multi-p :name name :type type)))
+	 (multi-base-name (and 
+			   *postgres-export-multi-separately* 
+			   (multi-p :name name :type type)))
 	 (line 
 	  (format nil "~a~%"
 		  (csv-line
@@ -252,7 +247,7 @@
 		   "1" ;;flags: 1 = not deleted
 		   ))))
     (cond 
-     ((= total (length (lex-entry-unifs x)))
+     ((null (lex-entry-unifs x))
       (if multi-base-name
 	  (to-multi-csv-line :name name
 			     :base-name multi-base-name
@@ -261,24 +256,15 @@
 			     :keyrel keyrel)
       line))
      (t
+      (setf (slot-value x 'unifs) unifs-in)
       (format *postgres-export-skip-stream* "~a" (to-tdl x))
       ;;     (format *postgres-export-skip-stream* "~%skipping super-rich entry: ~a"  line)
       ""))))
 
 (defun csv-line (&rest str-list)
-  (str-list-2-str
-   (mapcar #'csv-escape str-list)
-   ","))
+  (str-list-2-str str-list
+		  *postgres-export-separator*))
 
-(defun csv-escape (str &optional (sep-char *postgres-export-separator*))
-  (let ((l))
-    (do ((i (1- (length str)) (1- i)))
-	((< i 0))
-      (push (aref str i) l)
-      (if (eq (aref str i) sep-char)
-	  (push #\\ l)))
-    (concatenate 'string l)))
-	  
 (defun encode-mixed-as-str (val)
   (cond
    ((null val)
@@ -396,7 +382,9 @@
 
 (defmethod export-to-db ((lexicon lex-database) output-lexicon)
   (mapc
-   #'(lambda (x) (to-db (read-psort lexicon x :recurse nil) output-lexicon))
+   #'(lambda (x) (to-db (read-psort lexicon x 
+				    :recurse nil
+				    :new-instance t) output-lexicon))
    (collect-psort-ids lexicon :recurse nil))
   (build-current-grammar *psql-lexicon*))
 
@@ -591,7 +579,8 @@
     )
   (mapc
    #'(lambda (id)
-       (format stream "~a" (to-tdl (read-psort lexicon id)))
+       (format stream "~a" (to-tdl (read-psort lexicon id
+					       :new-instance t)))
        (unexpand-psort lexicon id))
    (collect-psort-ids lexicon))
   #+:psql
@@ -606,12 +595,6 @@
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-tdl lexicon ostream)))
 
-;(defmethod to-tdl ((x lex-entry))
-;  (format 
-;   nil "~%~a := ~a.~%"
-;   (tdl-val-str (lex-entry-id x))
-;   (p-2-tdl (pack-unifs (lex-entry-unifs x)))))
-	  
 (defmethod to-tdl ((x lex-entry))
   (format 
    nil "~%~a := ~a.~%"
@@ -637,12 +620,12 @@
     
      (cond
       ((and a-branch-flag (= len 0))
-       (str-list-2-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
+       (str-list-2-str-by-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
 			       a-branches)
 		       " & "))
       (a-branch-flag
        (format nil "~a &~%~a ~a"  
-	       (str-list-2-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
+	       (str-list-2-str-by-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
 				       a-branches)
 			       " & ")
 	       (make-string i :initial-element #\ )
@@ -672,13 +655,13 @@
      (cond
       ((and a-branch-flag (= len 0))
        (format nil "~a ~a" (string root)
-	       (str-list-2-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
+	       (str-list-2-str-by-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
 				       a-branches)
 			       " & ")))
       (a-branch-flag
        (format nil "~a ~a & ~a" 
 	       (string root) 
-	       (str-list-2-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
+	       (str-list-2-str-by-str (mapcar #'(lambda (x) (tdl-val-str (car x)))
 				       a-branches)
 			       " & ")	       
 	       (p-2-tdl-aux i branches)))
@@ -695,18 +678,18 @@
      ((and (setf res (get-tdl-list branches))
 	   (every #'(lambda (x) (= (length x) 1)) res))
       (format nil "< ~a >"
-	      (str-list-2-str
+	      (str-list-2-str-by-str
 	       (mapcar (lambda (x) (p-2-tdl-2-in-list i (car x))) res)
 	       ", ")))
      ((and (setf res (get-tdl-diff-list branches))
 	   (every #'(lambda (x) (= (length x) 1)) res))
       (format nil "<! ~a !>"
-	      (str-list-2-str
+	      (str-list-2-str-by-str
 	       (mapcar (lambda (x) (p-2-tdl-2-in-list i (car x))) res)
 	       ", ")))
      (t
       (format nil "[ ~a ]"
-	      (str-list-2-str
+	      (str-list-2-str-by-str
 	       (mapcar (lambda (x) (p-2-tdl-2 i x)) branches)
 	       (format nil ",~%~a" (make-string i :initial-element #\ ))))))))
 
@@ -852,47 +835,173 @@
         (extract-field2 x (first mapping) (third mapping) (fourth mapping))
       "")))
 	 
-(defun extract-field2 (x key2 path2 type2)
+(defun extract-field2 (x key2 path2 type)
   (unless (typep x 'lex-entry)
     (error "unexpected type: ~a" x))
   (let* ((key (un-keyword key2))
-	 (path (get-path path2))
-	 (type (2-symb type2))
-	 (x-key (slot-value x key)))
-    (extract-value-by-path x-key path type)))
+	 (path (get-path path2)))
+    (extract-value-by-path x key path type)))
 
-(defun extract-value-by-path (x path type)
-  (extracted-val-2-str
-   (cond
-    ((and (listp x) (every #'(lambda (y) (typep y 'unification)) x))
-     (extract-value-by-path-from-unifications x path))
-    ((null path)
-     x)
+(defun extract-atom-by-path (x key path)
+  (case key
+    ('unifs
+     (extract-atom-by-path-from-unifs x path))
     (t
-     (error "unhandled input: ~a" x)))
-   :type type))
+     (if path
+	 (error "non-unifs key must have null path")
+       (slot-value x key)))))
+     
+(defun extract-raw-list (x key path)
+  (if (eq key 'unifs) (error "unifs use different type. eg. fs-list"))
+  (if path (error "type requires null path"))
+  (let ((val (slot-value x key)))
+    (unless (listp val)
+      (error "raw list expected"))
+    val))
+    
 
-(defun extracted-val-2-str (val &key (type 'STRING))
-  (cond
-   ((eq type 'MIXED)
-    (encode-mixed-as-str val))
-   ((eq type 'STRING)
-    (encode-string-as-str val))
-   ((eq type 'SYMBOL)
-    (symb-2-str val))
-   ((eq type 'STRING-LIST)
-    (str-list-2-str val))
-   ((eq type 'STRING-FS)
-    (error "unhandled type: ~a" type))
-   ((eq type 'STRING-DIFF-FS)
-     (str-list-2-str (mapcar #'2-str (dag-diff-list-2-list val)))) ;;!!!
-   ((eq type 'LIST)
-    (if (listp val)
-	val
-      (list val)))
-   (t
-    (error "unhandled type: ~a" type))))
+(defun extract-atom-by-path-from-unifs (x path)
+  (let* ((constraint (slot-value x 'unifs))
+	 (unification (find path constraint
+                            :key #'extract-key-from-unification 
+                            :test #'equal)))
+    (when (unification-p unification)
+       (setf (slot-value x 'unifs)
+	(remove unification constraint))
+     (extract-value-from-unification unification)
+      )))
 
+;; see also work-out-value
+(defun extract-value-by-path (x key path type)
+  (case type
+    ('mixed
+     (encode-mixed-as-str 
+      (extract-atom-by-path x key path)))
+    ('string
+     (encode-string-as-str
+      (extract-atom-by-path x key path)))
+    ('symbol
+     (symb-2-str
+      (extract-atom-by-path x key path)))
+    ('string-list
+     (str-list-2-str
+      (extract-raw-list x key path)))
+    ('list
+     (extract-raw-list x key path))
+    ('string-fs
+     (str-list-2-str (extract-fs-list x key path)))
+    ('string-diff-fs
+     (str-list-2-str (extract-fs-diff-list x key path)))
+    (T
+     (typecase type
+       (list
+	(case (first type)
+	  ('mixed-fs
+	   (mixed-list-2-str 
+	    (extract-fs-list-complex x key path 
+				     :e-path (cdr type))))
+	  ('mixed-diff-fs
+	   (mixed-list-2-str 
+	    (extract-fs-diff-list-complex x key path 
+					  :e-path (cdr type))))
+	  (t
+	   (error "unhandled (list) type: ~a" (first type)))))
+       (T 
+	(error "unhandled type"))))))
+    
+(defun extract-fs-list (x key path)
+  (extract-fs-list-complex x key path))
+
+(defun extract-fs-list-complex (x key path &key e-path)
+  (let ((res (extract-fs-list-complex-aux 
+	       (copy-list (slot-value x key)) 
+	       path
+	       nil
+	       :e-path e-path)))
+    (cond
+     ((listp res)
+      (setf (slot-value x key) (cdr res))
+      (car res))
+     (t
+      nil))))
+
+(defun extract-fs-list-complex-aux (unifs path o-list &key e-path)
+  (let* (
+	 (end-match (find path
+			  unifs
+			  :key #'extract-key-from-unification
+			  :test #'equal))
+	 (first-match (find (append path (list 'first) e-path)
+			    unifs
+			    :key #'extract-key-from-unification
+			    :test #'equal))
+	 (val (extract-value-from-unification first-match)))
+    (cond
+     ((and end-match 
+	   (eq (extract-value-from-unification end-match)
+	       '*NULL*))
+      (setf unifs (remove end-match unifs))
+      (cons (reverse o-list) unifs))
+     ((null val)
+      :fail)
+     (t
+      (setf unifs (remove first-match unifs))
+      (extract-fs-list-complex-aux unifs 
+			   (append path (list 'REST))
+			   (cons val o-list)
+			   :e-path e-path)))))
+
+(defun extract-fs-diff-list (x key path)
+  (extract-fs-diff-list-complex x key path))
+  
+(defun extract-fs-diff-list-complex (x key path &key e-path)
+  (let* ((unifs (copy-list (slot-value x key)))
+	 (last-match 
+	  (find (append path (list 'LAST))
+		 unifs
+		 :key #'extract-key-from-unification
+		 :test #'equal))
+	 (last-path
+	  (and last-match
+	       (path-typed-feature-list
+		(unification-rhs last-match))))
+	 (res 
+	  (and last-path
+	       (extract-fs-diff-list-complex-aux 
+		(remove last-match unifs)
+		(append path (list 'LIST))
+		nil
+		:last last-path
+		:e-path e-path))))
+    (cond
+     ((null last-path)
+      nil)
+     ((not (listp res))
+      nil)
+     ((listp res)
+      (setf (slot-value x key) (cdr res))
+      (car res)))))
+
+(defun extract-fs-diff-list-complex-aux (unifs path o-list &key last e-path)
+  (let* ((first-match (find (append path (list 'first) e-path)
+			    unifs
+			    :key #'extract-key-from-unification
+			    :test #'equal))
+	 (val (extract-value-from-unification first-match)))
+   (cond
+    ((equal path
+	    last)
+     (cons (reverse o-list) unifs))
+     ((null val)
+      :fail)
+     (t
+      (setf unifs (remove first-match unifs))
+      (extract-fs-diff-list-complex-aux 
+       unifs 
+       (append path (list 'REST))
+       (cons val o-list)
+       :last last
+       :e-path e-path)))))
 
 (defun get-path (path-str)
   (cond
@@ -903,19 +1012,14 @@
    ((equal "" path-str)
     nil)
    ((stringp path-str)
-    (work-out-value "list" path-str))
+    (work-out-value 'list path-str))
    (t
     (error "unhandled value: ~a" path-str))))
 
-(defun extract-value-by-path-from-unifications (constraint path)
-  (let* ((unification (find path constraint
-                            :key #'extract-key-from-unification 
-                            :test #'equal)))
-    (when (unification-p unification)
-      (extract-value-from-unification unification))))
-
 (defun get-orthkey (orth-list)
-  (string-downcase (car (last orth-list))))
+  (string-downcase 
+   (or (car (last orth-list))
+       "")))
 
 ;;;
 ;;; DB standard io
@@ -928,17 +1032,6 @@
 	(setf filename (format nil "~aX" filename))
       finally
 	(return filename)))
-
-;;(defun merge-tdl-into-psql-lexicon2 (file-in)
-;;  (setf file-in (namestring (pathname file-in)))
-;;  (let ((tmp-lex (create-empty-cdb-lex))
-;;	(file-out (get-new-filename (make-pathname :name "lexicon"
-;;                     :directory (pathname-directory (lkb-tmp-dir))))))
-;;    (unless (probe-file file-in)
-;;      (error "~%file not found (~a)" file-in))
-;;    (load-lex tmp-lex :filename file-in)
-;;    (export-lexicon-to-file :lexicon tmp-lex :file file-out)
-;;    (merge-into-psql-lexicon (namestring (probe-file (format nil "~a.csv" file-out))))))
 
 (defun merge-tdl-into-psql-lexicon (file-in)
   (setf file-in (namestring (pathname file-in)))
@@ -971,22 +1064,9 @@
   (fn-get-val *psql-lexicon* ''clear-scratch)
   (build-current-grammar *psql-lexicon*))
 
-;;(defun clear-scratch2-lex nil
-;;  (format *postgres-debug-stream* "~%(clearing scratch)")
-;;  (time (fn-get-records *psql-lexicon* ''clear-scratch2))
-;;  (format  *postgres-debug-stream* "~%(clustering current_grammar)")
-;;  (time (fn-get-records *psql-lexicon* ''cluster-current-grammar))
-;;  (empty-cache *psql-lexicon*))
-
 (defun commit-scratch-lex nil
   (fn-get-val *psql-lexicon* ''commit-scratch)
   (empty-cache *psql-lexicon*))
-
-;(defun make-nice-temp-file-pathname (filename)
-;  (make-pathname :name filename
-;		 :host (pathname-host (lkb-tmp-dir))
-;		 :device (pathname-device (lkb-tmp-dir))
-;		 :directory (pathname-directory (lkb-tmp-dir))))
 
 (defun dag-diff-list-2-list (dag)
   (let* ((last-dag (dag-path-val (list *diff-list-last*) dag))
@@ -1001,6 +1081,25 @@
 	    (format t "~%WARNING: invalid difference list ~a in ~a" out-list *current-lex-id*)
 	    (loop-finish))
 	collect (dag-path-val '(first) list-dag)
+	into out-list
+	do
+	  (setf list-dag rest-dag)
+	finally
+	  (return out-list)
+	  )))
+
+(defun dag-list-2-list (dag)
+  (let* ((list-dag dag))
+    (loop
+	with rest-dag
+	while (not (equal (dag-type list-dag)
+			  *empty-list-type*))
+	do
+	  (setf rest-dag (dag-path-val *list-tail* list-dag))
+	  (when (null rest-dag)
+	    (format t "~%WARNING: invalid list ~a in ~a" out-list dag)
+	    (loop-finish))
+	collect (dag-path-val *list-head* list-dag)
 	into out-list
 	do
 	  (setf list-dag rest-dag)
