@@ -36,7 +36,9 @@
 (defparameter *import-category* "S")
 
 (defparameter *import-marks*
-  '((#\* . :illformed) (#\+ . :incomplete) (#\^ . :mispeled)))
+  '((#\* . :illformed) 
+    (#\+ . :incomplete) 
+    (#\^ . :mispeled)))
 
 (defparameter *import-email-headers*
   '("From " "From:" "To:" "Subject:" 
@@ -214,7 +216,9 @@
           for line = (read-line stream nil nil)
           while line
           for string = (string-trim '(#\Space #\Tab #\Return) line)
-          for length = (length string)
+          for commentp = (let ((n (position #\; string)))
+                           (and (numberp n) (zerop n)))
+          for length = (if commentp 0 (length string))
           for pseparation = (search pseparator string)
           when (and pseparation (zerop pseparation)) do
             (let* ((string (subseq string (length pseparator)))

@@ -1695,8 +1695,8 @@
           "region 1 5 1 7 -contents {scores} ~
              -format title -hor_justify center~%~
            cell 2 5 -contents {<} -format title~%~
-           cell 2 6 -contents {H(X)} -format title~%~
-           region 2 6 2 6 -contents {H(X)} ~
+           cell 2 6 -contents {H(p)} -format title~%~
+           region 2 6 2 6 -contents {H(p)} ~
              -format title -hor_justify center~%~
            cell 2 7 -contents {=} -format title~%")))
       (loop
@@ -1707,8 +1707,8 @@
           for greadings = (get-field :readings gitem)
           for readings = (get-field :readings item)
           for tag = (intern (gensym "") :keyword)
-          for i from 3
-          when (zerop (mod i 10))
+          with i = 3
+          when (zerop (mod (- i 2) 10))
           do 
             (case format
               (:tcl
@@ -1748,15 +1748,17 @@
              i (length errors)
              i entropy tag
              i (length others))
+            (incf i)
           finally
-            (case format
-              (:tcl
-               (format
-                stream
-                "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
-                 cell ~d 1 -contents {~a} -format total~%~
-                 layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-                i (+ i 1) (- i 2) (+ i 1))))))
+            (when (> i 3)
+              (case format
+                (:tcl
+                 (format
+                  stream
+                  "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+                   cell ~d 1 -contents {~a} -format total~%~
+                   layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+                  (- i 1) i (- i 3) i))))))
     
     (when (or (stringp file) (stringp append)) (close stream))
     (if (listp errors) 0 -1)))
