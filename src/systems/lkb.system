@@ -8,15 +8,6 @@
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lsp"
-    :depends-on ()
-    :initially-do
-    (progn
-      #+:allegro (setf excl:*enable-package-locked-errors* nil)
-      (format 
-       t 
-       "~&;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;~%~
-        ;;; ann, remember to eliminate redefinitions of built-in types.~%~
-        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;~%"))
     :finally-do
     (progn
       (pushnew :lingo *features*)
@@ -31,8 +22,8 @@
               :source-pathname "main"
 	      :binary-pathname "main"
 	      :components
-	      ((:file "for")
-               (:file "initializations" :load-only t)
+	      ((:file "initializations" :load-only t)
+               (:file "for")
                (:file "globals")))
      (:module "two"
               :source-pathname *lisp-specific-directory*
@@ -41,11 +32,17 @@
 	      ((:file "topmenu")
                (:file "graphics")
                (:file "misc")))
-     (:module "three"
+     (:module "twopointone"
               :source-pathname "io-general"
 	      :binary-pathname "io-general"
 	      :components
 	      ((:file "menus")))
+     (:module "twopointtwo"
+              :source-pathname *lisp-specific-directory*
+	      :binary-pathname *lisp-specific-directory*
+	      :components
+	      ((:file "graphics")
+               (:file "misc")))
      (:module "four"
               :source-pathname "main"
 	      :binary-pathname "main"
@@ -63,28 +60,48 @@
               :source-pathname "io-paths"
 	      :binary-pathname "io-paths"
 	      :components
-	      ((:file "typeinput")
-               (:file "lexinput")
-               (:file "ruleinput")))
+	      ((:file "typeinput")))
      (:module "six"
               :source-pathname "io-general"
 	      :binary-pathname "io-general"
 	      :components
 	      ((:file "outputfs")
-               (:file "outputtdfs")
-               (:file "toplevel")))
+               (:file "outputtdfs")))
      (:module "seven"
               :source-pathname *lisp-specific-directory*
 	      :binary-pathname *lisp-specific-directory*
 	      :components
 	      ((:file "activefs")))
+     (:module "sevenpointone"
+              :source-pathname "io-paths"
+	      :binary-pathname "io-paths"
+	      :components
+	      ((:file "lexinput")))
      (:module "nine"
               :source-pathname "main"
 	      :binary-pathname "main"
 	      :components
-	      ((:file "lex")
-               (:file "rules")
-               (:file "parse")
+	      ((:file "lex")))
+     (:module "ninepointone"
+              :source-pathname "io-general"
+	      :binary-pathname "io-general"
+	      :components
+	      ((:file "toplevel")))
+     (:module "ninepointsix"
+              :source-pathname "main"
+	      :binary-pathname "main"
+	      :components
+	      ((:file "rules")))
+     (:module "ninepointseven"
+              :source-pathname "io-paths"
+	      :binary-pathname "io-paths"
+	      :components
+	      ((:file "ruleinput")))
+     (:module "ninepointeight"
+              :source-pathname "main"
+	      :binary-pathname "main"
+	      :components
+	      ((:file "parse")
                (:file "generate")))
      (:module "ten"
               :source-pathname *lisp-specific-directory*
@@ -100,6 +117,18 @@
                (:file "dialog")
                (:file "tree")
                #+:allegro (:file "compare")))
+     (:module "tenpointthree"
+              :source-pathname "main"
+	      :binary-pathname "main"
+	      :components
+	      ((:file "morph")))
+     (:module "ten"
+              :source-pathname *lisp-specific-directory*
+	      :binary-pathname *lisp-specific-directory*
+	      :components
+	      ((:file "dialog")
+               (:file "tree")
+               #+:allegro (:file "compare")))
      #+:mcl
      (:module "eleven"
               :source-pathname "io-general"
@@ -110,8 +139,7 @@
               :source-pathname "main"
 	      :binary-pathname "main"
 	      :components
-	      ((:file "morph")
-               (:file "check-unif")
+	      ((:file "check-unif")
                (:file "lkb-tsdb")))
      (:module "thirteen"
               :source-pathname "io-general"
