@@ -117,6 +117,9 @@
 (def-lkb-parameter *dont-show-morphology* nil
   "if set, the morphological structures are not shown in parse trees")
 
+(def-lkb-parameter *dont-show-lex-rules* nil
+  "if set, applications of lexical rules are not shown in parse trees")
+
 (def-lkb-parameter *parse-tree-font-size* 9)
 
 (def-lkb-parameter *fs-type-font-size* 9)

@@ -454,6 +454,7 @@
   (when display-in-chart-p 
     (display-edge-in-chart edge))
   (let ((edge-symbol (make-new-parse-tree edge 1)))
+    (setq x edge-symbol)
     (draw-new-parse-tree edge-symbol 
 			 (format nil "Edge ~A ~A" (edge-id edge) 
 				 (if (gen-chart-edge-p edge) "G" "P"))
@@ -464,42 +465,40 @@
     (copy-parse-tree (rebuild-edge (car (make-new-parse-tree1 edge level))))))
 
 (defun make-new-parse-tree1 (edge level)
-   ;; show active edge nodes at first level but not thereafter
-   (if (and (> level 1) (gen-chart-edge-p edge) (gen-chart-edge-needed edge))
-      (mapcan
-         #'(lambda (c) (when c (make-new-parse-tree1 c (1+ level))))
-         (edge-children edge))
-      (let
-         ((edge-symbol (make-edge-symbol (edge-id edge)))
-          (daughters (edge-children edge))
-          (daughter-list nil))
-         (setf (get edge-symbol 'edge-record) edge)
-         (if daughters
-            (progn
-               (dolist (daughter daughters)
-                  (if daughter
-                     (setq daughter-list
-                        (append daughter-list (make-new-parse-tree1 daughter (1+ level))))
-                     (setq daughter-list ; active chart edge daughter
-                        (append daughter-list (list (make-symbol ""))))))
-               (setf (get edge-symbol 'daughters) daughter-list)
-               (list edge-symbol))
-            (list
-               (make-lex-and-morph-tree edge-symbol edge 1))))))
-
-(defun make-lex-and-morph-tree (edge-symbol edge level)
-   (let
-      ((leaf-symbol (make-edge-symbol (car (edge-leaves edge)))))
-      (setf (get edge-symbol 'daughters) (list leaf-symbol))
-      (when (> level 1) (setf (get leaf-symbol 'edge-record) edge))
-      (unless *dont-show-morphology*
-         (let ((mdaughter (edge-morph-history edge)))
-            (if mdaughter
-               (make-lex-and-morph-tree leaf-symbol mdaughter (1+ level)))))
-      edge-symbol))
+  ;; show active edge nodes at first level but not thereafter
+  (if (and (> level 1) 
+	   (gen-chart-edge-p edge) 
+	   (gen-chart-edge-needed edge))
+      (mapcan #'(lambda (c) 
+		  (when c 
+		    (make-new-parse-tree1 c (1+ level))))
+	      (edge-children edge))
+    (let ((edge-symbol (make-edge-symbol (edge-id edge)))
+	  (daughters (edge-children edge)))
+      (setf (get edge-symbol 'edge-record) edge)
+      (setf (get edge-symbol 'daughters) 
+	(if daughters
+	    (mapcan #'(lambda (dtr)
+			(if dtr
+			    (make-new-parse-tree1 dtr (1+ level))
+			  ;; active chart edge daughter
+			  (list (make-symbol ""))))
+		    daughters)
+	  (make-lex-and-morph-tree edge 1)))
+      (list edge-symbol))))
+  
+(defun make-lex-and-morph-tree (edge level)
+  (let ((leaf-symbol (make-edge-symbol (car (edge-leaves edge))))
+	(mdaughter (edge-morph-history edge)))
+    (when (> level 1) 
+      (setf (get leaf-symbol 'edge-record) edge))
+    (when mdaughter
+      (setf (get leaf-symbol 'daughters)
+	(make-lex-and-morph-tree mdaughter (1+ level))))
+    (list leaf-symbol)))
 
 ;;
-;; Reconstruct a parse from the chart
+;; Reconstruct a parse from the chart 
 ;;
 
 (defmacro listify (thing)
@@ -523,6 +522,8 @@
 	  ((eql (length dtrs) 1)
 	   (setf (get edge-symbol 'edge-fs) (get (car dtrs) 'edge-fs)))))
   edge-symbol)
+
+;; NB: This doesn't respect defaults!!
 
 (defun reapply-rule (rule daughters)
   (let ((rule-dag (copy-dag-completely (tdfs-indef (rule-full-fs rule))))
