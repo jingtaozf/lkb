@@ -84,6 +84,7 @@ type.
 
 
 (defun parsonifiable-type-p (reltype)
+  (declare (ignore reltype))
   ;;; needs to return t for rels with more than
   ;;; one arg which are to be split up
   t)
