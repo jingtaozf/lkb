@@ -36,6 +36,8 @@
 
 (def-lkb-parameter *tree-update-match-hook* nil)
 
+(def-lkb-parameter *tree-display-semantics-p* t)
+
 (defstruct ctree 
   edge
   id
@@ -627,7 +629,8 @@
                                :within-generation-separation 7
                                :center-nodes nil)))))
                       (terpri stream)))))))
-      (when (null (rest (compare-frame-trees frame)))
+      (when (and *tree-display-semantics-p*
+                 (null (rest (compare-frame-trees frame))))
         (let* ((extract (when (find-package :mrs)
                           (find-symbol "EXTRACT-MRS" :mrs)))
                (extract (when (and extract (fboundp extract))
