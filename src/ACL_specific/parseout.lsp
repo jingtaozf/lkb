@@ -122,11 +122,10 @@
                             *chart-generation-counter*))))
        (,(format nil "Rule ~A" (or rule-name ""))
 	:value rule)
-       #|
        (,(format nil "Sement" (edge-id edge-record))
 	:value sement)
        (,(format nil "Check algebra" (edge-id edge-record))
-       :value check-algebra) |#
+       :value check-algebra)
        ("Generate from edge" :value generate
                              :active ,(and *mrs-loaded*
                                        (not (g-edge-p edge-record))))
