@@ -122,6 +122,42 @@ output results
        append
        (list " " str))))
 
+(defun compare-gen-test-files (file-name1 file-name2)
+  ;;; compares two files of output results from generation
+    (with-open-file (istream1 file-name1 :direction :input)
+      (with-open-file (istream2 file-name2 :direction :input)  
+        (loop (let ((res1 (read istream1 nil nil))
+                    (res2 (read istream2 nil nil)))
+                (unless (and res1 res2) (return))
+                (let* ((input-sentence1 (elt res1 0))
+                       (input-sentence2 (elt res2 0)))
+                  (unless (equalp input-sentence1 input-sentence2)
+                    (error "~%Unequal sentences"))
+                  (let
+                   ((input-sentence-text 
+                    (apply #'concatenate 'string 
+                           (add-spaces input-sentence1)))
+                    (strings1 (elt res1 1))
+                    (strings2 (elt res2 1))
+                    (errorp1 (elt res1 2))
+                    (errorp2 (elt res2 2))
+                    (edges1 (elt res1 3))
+                    (edges2 (elt res2 3)))
+                   (unless (equal errorp1 errorp2)
+                     (format t "~%Differences in error in ~A" input-sentence-text))
+                   (unless (string-set-equal strings1 strings2)
+                     (format t "~%Differences in strings in ~A" input-sentence-text))
+                   (unless (eql edges1 edges2)
+                     (format t "~%Differences in edges in ~A" input-sentence-text)))))))))
+                     
+(defun string-set-equal (set1 set2)
+  (and (eql (length set1) (length set2))
+       (for x in set1
+            all-satisfy
+            (member x set2 :test #'equal))))
+
+
+;;; **************************************************************
 
 (defun check-generate nil
   (let ((sentence (or *sentence* (split-into-words (car *last-parses*))))
