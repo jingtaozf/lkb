@@ -104,8 +104,10 @@
 	 (item (edge-rule edge-record))
          (rule-name (if (rule-p item) (rule-id item) item)))
     (pop-up-menu
-     `((,(format nil "Feature structure - Edge ~A" (edge-id edge-record))
+     `((,(format nil "Feature structure" (edge-id edge-record))
 	:value fs)
+       (,(format nil "Feature structure - Edge ~A" (edge-id edge-record))
+	:value edge-fs)
        ("Show edge in chart" 
         :value edge
         :active ,(and (not (g-edge-p edge-record))
@@ -127,6 +129,16 @@
 			       (if (g-edge-p edge-record) 
 				   "G" 
 				 "P"))))
+     (edge-fs
+      (setf %foo% edge-record)
+      (let ((tdfs (and (edge-p edge-record) (edge-dag edge-record))))
+        (when (tdfs-p tdfs)
+          (display-fs (tdfs-indef tdfs)
+                      (format nil "Edge ~A ~A - Edge FS" 
+                              (edge-id edge-record)
+                              (if (g-edge-p edge-record) 
+                                  "G" 
+                                "P"))))))
      (edge
           (progn
             (cond ((and *main-chart-frame* 
