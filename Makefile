@@ -3,7 +3,7 @@ SROOT = ${HOME}/class/src
 LROOT = ${HOME}/src/lingo
 WROOT = c:/src
 DATE = `date "+%Y-%m-%d"`
-TARGET = /lingo/www/lingo/ftp
+TARGET = /lingo/www/lingo/ftp/
  
 LINKS = lkb_data.tgz lkb_linux.x86.32.tgz lkb_solaris.tgz \
         lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
@@ -71,13 +71,15 @@ links:
 
 lkb: lkb_source lkb_data lkb_binaries
 	${RM} ${TARGET}/latest;
-	${LN} ${TARGET}/${DATE} ${TARGET}/latest;
+	${LN} ${TARGET}/builds/${DATE} ${TARGET}/latest;
 
 lkb_source:
 	( \
 	  cd ${ROOT}/lkb; \
-	  if [ ! -d ${TARGET}/${DATE} ]; then ${MKDIR} ${TARGET}/${DATE}; fi; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_source.tgz \
+	  if [ ! -d ${TARGET}/builds/${DATE} ]; then \
+            ${MKDIR} ${TARGET}/builds/${DATE}; \
+          fi; \
+	  ${TAR} Svczf ${TARGET}/builds/${DATE}/lkb_source.tgz \
 	      --exclude=Makefile \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
 	      --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
@@ -97,7 +99,7 @@ lkb_source:
 lkb_data:
 	( \
 	  cd ${ROOT}/lkb; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_data.tgz \
+	  ${TAR} Svczf ${TARGET}/builds/${DATE}/lkb_data.tgz \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="src/data/spanish*" \
@@ -116,7 +118,7 @@ lkb_linux_x86_32:
 	( \
 	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
 	  cd ${ROOT}/lkb; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_linux.x86.32.tgz \
+	  ${TAR} Svczf ${TARGET}/builds/${DATE}/lkb_linux.x86.32.tgz \
               --exclude=".nfs*" \
 	      linux.x86.32 bin/linux.x86.32/yzlui; \
 	)
@@ -160,7 +162,7 @@ lkb_linux@ar:
               --exclude=".nfs*" \
 	      linux.x86.64 bin/linux.x86.64/yzlui; \
 	  scp /tmp/lkb_linux.x86.64.tgz \
-            oe@lingo.stanford.edu:${TARGET}/${DATE}; \
+            oe@lingo.stanford.edu:${TARGET}/builds/${DATE}; \
 	)
 
 lkb_solaris:
@@ -183,7 +185,8 @@ lkb_solaris:
 	  ${TAR} Svczf /tmp/lkb_solaris.tgz \
               --exclude=".nfs*" \
 	      solaris; \
-	  /usr/pubsw/bin/scp /tmp/lkb_solaris.tgz oe@lingo:${TARGET}/${DATE}; \
+	  /usr/pubsw/bin/scp /tmp/lkb_solaris.tgz \
+            oe@lingo:${TARGET}/builds/${DATE}; \
 	)
 
 lkb_windows:
@@ -212,7 +215,7 @@ lkb_windows:
 lkb_documentation:
 	( \
 	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/${DATE}/lkb_documentation.tgz \
+	  tar Svczf ${TARGET}/builds/${DATE}/lkb_documentation.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      doc/lkb.pdf; \
@@ -225,7 +228,7 @@ lkb_documentation:
 erg:
 	( \
 	  cd ${ROOT}; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/erg.tgz \
+	  ${TAR} Svczf ${TARGET}/builds/${DATE}/erg.tgz \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="tsdb*" --exclude="*.fasl" \
@@ -240,7 +243,7 @@ erg:
 matrix:
 	( \
 	  cd ${ROOT}; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/matrix.tgz \
+	  ${TAR} Svczf ${TARGET}/builds/${DATE}/matrix.tgz \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="matrix/doc*" --exclude="*.fasl" \
@@ -254,7 +257,7 @@ matrix:
 spanish:
 	( \
 	  cd ${ROOT}; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/spanish.tgz \
+	  ${TAR} Svczf ${TARGET}/builds/${DATE}/spanish.tgz \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
 	      --exclude="pet*" --exclude="tsdb*" \
@@ -277,7 +280,7 @@ itsdb_linux_x86_32:
 	( \
 	  cd ${ROOT}/lkb; \
 	  find src/.l7cl -type f -exec touch {} \; ; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_linux.x86.32.tgz \
+	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_linux.x86.32.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \
@@ -298,7 +301,7 @@ itsdb_linux_x86_64:
 	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
 	      src/.l7c4/pvm src/.l7c4/tsdb; \
 	  scp /tmp/itsdb_linux.x86.64.tgz \
-	    oe@lingo.stanford.edu:${TARGET}/${DATE}; \
+	    oe@lingo.stanford.edu:${TARGET}/builds/${DATE}; \
 	)
 
 itsdb_solaris:
@@ -313,13 +316,13 @@ itsdb_solaris:
 	      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
 	      src/.s6cl/pvm src/.s6cl/tsdb; \
 	  /usr/pubsw/bin/scp /tmp/itsdb_solaris.tgz \
-	    oe@lingo.stanford.edu:${TARGET}/${DATE}; \
+	    oe@lingo.stanford.edu:${TARGET}/builds/${DATE}; \
 	)
 
 itsdb_libraries:
 	( \
 	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_libraries.tgz \
+	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_libraries.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" \
 	      etc include lib man src/general/itsdb.lisp; \
@@ -328,7 +331,7 @@ itsdb_libraries:
 itsdb_source:
 	( \
 	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_source.tgz \
+	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_source.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" \
 	      src/systems/tsdb.system src/systems/pvm.system \
@@ -341,7 +344,7 @@ itsdb_source:
 itsdb_capi:
 	( \
 	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_capi.tgz \
+	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_capi.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" \
 	      src/tsdb/capi; \
@@ -350,7 +353,7 @@ itsdb_capi:
 itsdb_tsdb:
 	( \
 	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_tsdb.tgz \
+	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_tsdb.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" \
 	      src/tsdb/c; \
@@ -359,7 +362,7 @@ itsdb_tsdb:
 itsdb_data:
 	( \
 	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_data.tgz \
+	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_data.tgz \
 	      --exclude=src/tsdb/skeletons/english/vm97 \
 	      --exclude=src/tsdb/skeletons/english/vm97p \
 	      --exclude=src/tsdb/skeletons/english/vm98 \
@@ -375,7 +378,7 @@ itsdb_data:
 itsdb_documentation:
 	( \
 	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_documentation.tgz \
+	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_documentation.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      doc/itsdb.ps doc/tsnlp.ps doc/profiling.ps doc/parsing.ps; \
@@ -387,7 +390,7 @@ itsdb_trees: itsdb_vm32
 itsdb_vm32:
 	( \
 	  cd ${ROOT}/lkb; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_vm32.tgz \
+	  tar Svczf ${TARGET}/builds/${DATE}/itsdb_vm32.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
 	      src/tsdb/home/trees/vm32; \
