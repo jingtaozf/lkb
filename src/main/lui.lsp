@@ -30,6 +30,11 @@
    (namestring (make-pathname :directory (pathname-directory make::bin-dir)
                               :name "yzlui"))))
 
+(defparameter *lui-hidden-features*
+  '(ARG ARG0 ARG1 ARG2 ARG3 ARG4
+    MARG L-INDEX R-INDEX L-HNDL R-HNDL L-HANDEL R-HANDEL 
+    MAIN SUBORD ROLE HINST NHINST))
+
 (defparameter *lui-debug-p* t)
 
 (defparameter %lui-stream% nil)
@@ -204,7 +209,34 @@
     (format %lui-stream% " ~s~a~%" title %lui-eoc%))
   (force-output %lui-stream%))
 
+(defun lui-display-mrs (mrs)
+  (let* ((id (lsp-store-object nil nil mrs))
+         (dag (mrs::psoa-to-dag mrs))
+         (title "Simple MRS Display"))
+    (let ((string (with-output-to-string (stream)
+                    (when *lui-hidden-features*
+                      (format 
+                       stream 
+                       "parameter+ hidden-features ~a~a~%"
+                       (first *lui-hidden-features*) %lui-eoc%)
+                      (loop
+                          for foo in (rest *lui-hidden-features*)
+                          do
+                            (format 
+                             stream 
+                             "parameter+ hidden-features ~a~a~%"
+                             foo %lui-eoc%)))
+                    (format stream "avm ~d " id)
+                    (display-dag1 dag 'linear stream))))
+      (format %lui-stream% string))
+    (format %lui-stream% " ~s~a~%" title %lui-eoc%))
+  (force-output %lui-stream%))
+
 (defun lui-status-p (key)
   (case key
+    #+:null
     (:tree (streamp %lui-stream%))
-    (:avm (streamp %lui-stream%))))
+    #+:null
+    (:avm (streamp %lui-stream%))
+    #-:null
+    (:mrs (streamp %lui-stream%))))

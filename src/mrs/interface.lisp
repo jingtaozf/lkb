@@ -168,6 +168,93 @@
        (apply browser (list nil mrs title))
        (output-mrs mrs 'simple)))))
 
+(defun psoa-to-dag (mrs)
+  (let ((dag (lkb::make-dag :type 'lkb::mrs))
+        (cache (make-hash-table :test #'equal)))
+    (setf (lkb::dag-arcs dag)
+      (list
+       (lkb::make-dag-arc
+        :attribute (vsym "LTOP")
+        :value (lkb::make-dag :type (var-name (psoa-top-h mrs))))
+       (lkb::make-dag-arc 
+        :attribute (vsym "INDEX") 
+        :value (lkb::make-dag :type (var-name (psoa-index mrs))))
+       (lkb::make-dag-arc
+        :attribute (vsym "RELS")
+        :value (loop
+                   with dags = nil
+                   for ep in (psoa-liszt mrs)
+                   for predicate = (or (rel-reltype ep) (rel-sort ep))
+                   for handel = (let* ((foo (rel-handel ep))
+                                       (bar (when (handle-var-p foo)
+                                              (var-name foo))))
+                                  (when bar (lkb::make-dag :type bar)))
+                   for flist = (rel-flist ep)
+                   when handel do
+                     (let ((dag (lkb::make-dag 
+                                 :type (intern (string predicate) :lkb))))
+                       (loop
+                           with arcs = (list (lkb::make-dag-arc 
+                                              :attribute (vsym "LBL")
+                                              :value handel))
+                           for pair in flist
+                           for feature = (mrs:fvpair-feature pair)
+                           for foo = (mrs:fvpair-value pair)
+                           for value = (let* ((bar (cond
+                                                    ((stringp foo) foo)
+                                                    ((var-p foo) 
+                                                     (var-name foo)))))
+                                         (lkb::make-dag :type bar))
+                           for arc = (lkb::make-dag-arc 
+                                      :attribute feature :value value)
+                           for extras = (when (var-p foo)
+                                          (var-extra foo))
+                           do
+                             (when (and extras 
+                                        (not (gethash (var-name foo) cache)))
+                               (setf (gethash (var-name foo) cache) foo)
+                               (loop
+                                   with arcs = nil
+                                   for extra in extras
+                                   for efeature = (extrapair-feature extra)
+                                   for evalue = (lkb::make-dag
+                                                 :type (extrapair-value extra))
+                                   for earc = (lkb::make-dag-arc
+                                               :attribute efeature
+                                               :value evalue)
+                                   do
+                                     (push earc arcs)
+                                   finally
+                                     (setf (lkb::dag-arcs value)
+                                       (nreverse arcs))))
+                             (push arc arcs)
+                           finally
+                             (setf (lkb::dag-arcs dag) (nreverse arcs)))
+                       (push dag dags))
+                   finally (return (lkb::list-to-dag (nreverse dags)))))
+       (lkb::make-dag-arc
+        :attribute (vsym "HCONS")
+        :value (loop
+                   with dags = nil
+                   for hcons in (psoa-h-cons mrs)
+                   for relation = (hcons-relation hcons)
+                   for hi = (let ((foo (hcons-scarg hcons)))
+                              (when (var-p foo) 
+                                (lkb::make-dag :type (var-name foo))))
+                   for lo = (let ((foo (hcons-outscpd hcons)))
+                              (when (var-p foo) 
+                                (lkb::make-dag :type (var-name foo))))
+                   for dag = (lkb::make-dag 
+                                 :type (intern (string relation) :lkb))
+                   when (and hi lo) do
+                     (setf (lkb::dag-arcs dag)
+                       (list
+                        (lkb::make-dag-arc :attribute (vsym "HI") :value hi)
+                        (lkb::make-dag-arc :attribute (vsym "LO") :value lo)))
+                     (push dag dags)
+                   finally (return (lkb::list-to-dag (nreverse dags)))))))
+    dag))
+
 #|
 
 (defun time-scope nil

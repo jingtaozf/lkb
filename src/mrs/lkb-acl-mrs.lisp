@@ -89,7 +89,9 @@
 
 
 (defun show-mrs-window (edge &optional mrs title)
-  (mp:run-function "Simple MRS" #'show-mrs-window-really edge mrs title))
+  (if #+:lui (lui-status-p :mrs) #-:lui nil
+    (lui-display-mrs (or mrs (mrs::extract-mrs edge)))
+    (mp:run-function "Simple MRS" #'show-mrs-window-really edge mrs title)))
 
 (defun show-mrs-window-really (edge &optional mrs title)
   (let ((mframe (clim:make-application-frame 'mrs-simple)))
@@ -168,9 +170,11 @@
   (declare (ignore max-width max-height))
   (let ((mrsstruct (mrs-simple-mrsstruct mframe)))
     (if mrsstruct
+      (if #+:lui (lui-status-p :mrs) #-:lui nil
+        (lui-display-mrs mrsstruct)
         (clim:with-text-style (stream *normal*)
 	  (clim:with-output-recording-options (stream :draw nil :record t)
-            (mrs::output-mrs1 mrsstruct 'mrs::active-t stream)))
+            (mrs::output-mrs1 mrsstruct 'mrs::active-t stream))))
       (format stream "~%::: MRS structure could not be extracted~%"))))
 
 (defun show-mrs-indexed (mframe stream &key max-width max-height)

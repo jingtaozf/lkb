@@ -258,6 +258,7 @@
          (grammar
           (let ((script (pop command)))
             (when (probe-file script)
+              (unless id (format %lui-stream% "status loading~a~%" %lui-eoc%))
               (read-script-file-aux script)))
           (unless id (format %lui-stream% "status ready~a~%" %lui-eoc%)))
          (parse
