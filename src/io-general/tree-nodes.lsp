@@ -409,25 +409,31 @@
    
 
 (defun make-new-parse-tree (edge level)
+   (car (make-new-parse-tree1 edge level)))
+
+(defun make-new-parse-tree1 (edge level)
    ;; show active edge nodes at first level but not thereafter
-   (when edge
-      (if (and (> level 1) (gen-chart-edge-p edge) (gen-chart-edge-needed edge))
-         (some #'(lambda (c) (make-new-parse-tree c (1+ level)))
-            (edge-children edge))
-         (let
-            ((edge-symbol (make-edge-symbol (edge-id edge)))
-             (daughters (edge-children edge))
-             (daughter-list nil))
-            (setf (get edge-symbol 'edge-record) edge)
-            (if daughters
-               (dolist (daughter daughters
-                          (progn
-                             (setf (get edge-symbol 'daughters) (nreverse daughter-list))
-                             edge-symbol))
+   (if (and (> level 1) (gen-chart-edge-p edge) (gen-chart-edge-needed edge))
+      (mapcan
+         #'(lambda (c) (when c (make-new-parse-tree1 c (1+ level))))
+         (edge-children edge))
+      (let
+         ((edge-symbol (make-edge-symbol (edge-id edge)))
+          (daughters (edge-children edge))
+          (daughter-list nil))
+         (setf (get edge-symbol 'edge-record) edge)
+         (if daughters
+            (progn
+               (dolist (daughter daughters)
                   (if daughter
-                     (push (make-new-parse-tree daughter (1+ level)) daughter-list)
-                     (push (make-symbol "") daughter-list))) ; active chart edge daughter
-                  (make-lex-and-morph-tree edge-symbol edge 1))))))
+                     (setq daughter-list
+                        (append daughter-list (make-new-parse-tree1 daughter (1+ level))))
+                     (setq daughter-list ; active chart edge daughter
+                        (append daughter-list (list (make-symbol ""))))))
+               (setf (get edge-symbol 'daughters) daughter-list)
+               (list edge-symbol))
+            (list
+               (make-lex-and-morph-tree edge-symbol edge 1))))))
 
 
 (defun make-lex-and-morph-tree (edge-symbol edge level)
