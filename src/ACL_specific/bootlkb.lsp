@@ -68,9 +68,9 @@
          ("main" "gen")         ; generic CL
          ("main" "structs")     ; generic CL
          ("main" "user-fns")     ; generic CL
+         ("main" "marks")       ; generic CL
          ("main" "checktypes")           ; generic CL
          ("main" "leaf")
-         ("main" "marks")       ; generic CL
          ("io-paths" "typeinput")   ; generic CL
          ("io-general" "outputfs")    ; generic CL - calls some graphics
          ("io-general" "outputtdfs")    ; generic CL - calls some graphics
