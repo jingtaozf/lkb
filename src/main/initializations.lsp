@@ -1,5 +1,12 @@
 (in-package "COMMON-LISP-USER")
 
+;;;
+;;; because ann used the term `type' the way she does well before it became a
+;;; bloody part of the bloody common-lisp language |:-}.
+;;;
+#+:allegro 
+(setf excl:*enable-package-locked-errors* nil)
+
 (defparameter *lkb-source-dir* (pathname-directory mk::tmp-dir))
 
 (defparameter *psorts-temp-file* 
