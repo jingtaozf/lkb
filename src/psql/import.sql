@@ -19,7 +19,7 @@ CREATE TABLE meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO meta VALUES ('db-version', '1.6');
+INSERT INTO meta VALUES ('db-version', '1.7');
 INSERT INTO meta VALUES ('filter', 'TRUE');
 
 ---
@@ -79,301 +79,6 @@ CREATE TABLE multi (
 PRIMARY KEY (name)
 );
 
----
---- table on which queries executed
----
-CREATE TABLE current_grammar (
-  name VARCHAR(95),
-  type VARCHAR(95),
-  orthography VARCHAR(200),
-  orthkey VARCHAR(200),
-  pronunciation VARCHAR(200),
-  keyrel VARCHAR(50),
-  altkey VARCHAR(50),
-  alt2key VARCHAR(50),
-  keytag VARCHAR(50),
-  compkey VARCHAR(50),
-  ocompkey VARCHAR(50),
-  complete VARCHAR(200),
-  semclasses VARCHAR(100),
-  preferences VARCHAR(200),
-  classifier VARCHAR(25),
-  selectrest VARCHAR(50),
-  jlink VARCHAR(50),
-  comments VARCHAR(255),
-  exemplars VARCHAR(50),
-  usages VARCHAR(50),
-  lang VARCHAR(8),
-  country VARCHAR(2),
-  dialect VARCHAR(25),
-  domains VARCHAR(15),
-  genres VARCHAR(25),
-  register VARCHAR(50),
-  confidence real,
-  version INTEGER DEFAULT 0,
-  source VARCHAR(50),
-  flags INTEGER,
-  userid VARCHAR(25),
-  modstamp TIMESTAMP WITH TIME ZONE,
- PRIMARY KEY (name)
-);
-
-CREATE INDEX current_grammar_orthkey
-ON current_grammar (orthkey); 
-
----
---- temporary table
----
-CREATE TABLE temp (
-
-  name VARCHAR(95),
-  type VARCHAR(95),
-  orthography VARCHAR(200),
-  orthkey VARCHAR(200),
-  pronunciation VARCHAR(200),
-  keyrel VARCHAR(50),
-  altkey VARCHAR(50),
-  alt2key VARCHAR(50),
-  keytag VARCHAR(50),
-  compkey VARCHAR(50),
-  ocompkey VARCHAR(50),
-  complete VARCHAR(200),
-  semclasses VARCHAR(100),
-  preferences VARCHAR(200),
-
-  classifier VARCHAR(25),
-  selectrest VARCHAR(50),
-  jlink VARCHAR(50),
-  comments VARCHAR(255),
-  exemplars VARCHAR(50),
-  usages VARCHAR(50),
-  lang VARCHAR(8),
-  country VARCHAR(2),
-  dialect VARCHAR(25),
-  domains VARCHAR(15),
-  genres VARCHAR(25),
-  register VARCHAR(50),
-  confidence real,
-  version INTEGER DEFAULT 0,
-
-  source VARCHAR(50),
-  flags INTEGER,
-  userid VARCHAR(25),
-  modstamp TIMESTAMP WITH TIME ZONE
-);
-
-CREATE TABLE multi_temp (
-  name VARCHAR(95),
-  verb_id VARCHAR(95),
-  particle VARCHAR(95),
-  type VARCHAR(200),
-  keyrel VARCHAR(200),
-PRIMARY KEY (name)
-);
-
----
---- sql queries embedded in db
----
-CREATE TABLE qry (
-  fn VARCHAR(50),
-  arity int,
-  sql_code VARCHAR(4096),
-PRIMARY KEY (fn)
-);
-
-INSERT INTO qry VALUES 
-       ( 'test', 1, 
-         '$0' );
-
-INSERT INTO qry VALUES 
-       ( 'next-version', 1, 
-         'SELECT COALESCE(1 + max(version),0) FROM revision WHERE (name,user) = ($0,user)');
-
-INSERT INTO qry VALUES 
-       ( 'orthography-set', 0, 
-         'SELECT DISTINCT orthography FROM current_grammar' );
-INSERT INTO qry VALUES 
-       ( 'psort-id-set', 0, 
-         'SELECT DISTINCT name FROM current_grammar');
-INSERT INTO qry VALUES 
-       ( 'lookup-word', 1, 
-         'SELECT name FROM current_grammar WHERE orthkey=$0' );
-INSERT INTO qry VALUES 
-       ( 'retrieve-entries-by-orthkey', 2, 
-         'SELECT $0 FROM current_grammar WHERE orthkey=$1' );
-INSERT INTO qry VALUES 
-       ( 'retrieve-entry', 2, 
-         'SELECT $0 FROM current_grammar WHERE name=$1' );
-
-INSERT INTO qry VALUES 
-       ( 'initialize-current-grammar', 0, 
-         'VACUUM ANALYZE revision; 
-          BEGIN; 
-          DELETE FROM current_grammar; 
-          INSERT INTO current_grammar SELECT * FROM active; 
-          COMMIT; 
-          CLUSTER current_grammar_pkey ON current_grammar; 
-          VACUUM ANALYZE current_grammar' );
-INSERT INTO qry VALUES 
-       ( 'update-current-grammar', 0, 
-       'BEGIN;
-        DELETE FROM temp;
-        INSERT INTO temp 
-               SELECT * FROM active 
-                      WHERE modstamp >= 
-                      (SELECT max(modstamp) FROM current_grammar); 
-        DELETE FROM current_grammar 
-               WHERE name IN 
-               (SELECT name FROM temp); 
-        INSERT INTO current_grammar 
-               SELECT * FROM temp; 
-        COMMIT' );
-
--- INSERT INTO qry VALUES 
---       ( 'current-grammar-up-to-date-p', 0, 
---       '(SELECT 
---                (SELECT COALESCE(max(modstamp),''-infinity'') FROM current_grammar) 
---                < 
---                (SELECT COALESCE(max(modstamp),''infinity'') FROM revision))');
-
-INSERT INTO qry VALUES 
-       ( 'update-entry', 3, 
-       'INSERT INTO revision (name, $1) VALUES ($0, $2); 
-       DELETE FROM current_grammar 
-              WHERE name=$0; 
-       INSERT INTO current_grammar 
-              SELECT * FROM active
-              	WHERE name = $0
-		LIMIT 1' );
-INSERT INTO qry VALUES 
-       ( 'set-current-view', 2, 
-       'DROP VIEW active;
-	DROP VIEW revision_active;
-	DROP VIEW multi_revision_active;
-
-        CREATE VIEW revision_active
-	AS SELECT revision.* 
-	FROM 
-		(revision 
-		NATURAL JOIN 
-		(SELECT name, max(modstamp) AS modstamp 
-                        FROM revision
-                        WHERE flags = 1
-                              AND $0
-                        GROUP BY name) AS t1
-		 ); 
-
-	CREATE VIEW multi_revision_active
-		AS SELECT rev.* 
-		FROM 
-			(multi_revision AS rev 
-			NATURAL JOIN 
-			(SELECT name, max(modstamp) AS modstamp 
-       	                 FROM multi_revision
-       	                 WHERE flags = 1
-				AND $0
-       	                 GROUP BY name) AS t1
-			 ); 
-
-	CREATE VIEW active
-		AS SELECT * FROM revision_active UNION SELECT * FROM multi_revision_active;
-        UPDATE meta SET val=''$1'' WHERE var=''filter'';
-
-	-- code below is update-current-grammar and should be a function...
-	BEGIN;
-        DELETE FROM temp;
-        INSERT INTO temp 
-               SELECT * FROM active 
-                      WHERE modstamp >= 
-                      (SELECT max(modstamp) FROM current_grammar); 
-        DELETE FROM current_grammar 
-               WHERE name IN 
-               (SELECT name FROM temp); 
-        INSERT INTO current_grammar 
-               SELECT * FROM temp; 
-        COMMIT' );
-INSERT INTO qry VALUES 
-       ( 'merge-into-db', 1, 
-       '
-       DELETE FROM temp;
-       COPY temp FROM $0 DELIMITERS '','' NULL '''';
-       INSERT INTO revision 
-              (SELECT temp.* FROM (new_pkeys NATURAL JOIN temp));
-       DELETE FROM temp;
-       ' );
-INSERT INTO qry VALUES 
-       ( 'merge-multi-into-db', 1, 
-       '
-       DELETE FROM multi_temp;
-       COPY multi_temp FROM $0 DELIMITERS '','';
-       DELETE FROM multi WHERE name IN (SELECT name FROM multi_temp);
-       INSERT INTO multi
-              (SELECT * FROM multi_temp);
-       DELETE FROM multi_temp;
-       ' );
-INSERT INTO qry VALUES 
-       ( 'dump-db', 1, 
-       '
-       DELETE FROM temp;       
-       INSERT INTO temp (SELECT * FROM revision ORDER BY modstamp, name, userid, version);
-       COPY temp TO $0 DELIMITERS '','' NULL '''';
-       DELETE FROM temp;
-' );
-INSERT INTO qry VALUES 
-       ( 'dump-multi-db', 1, 
-       '
-       DELETE FROM multi_temp;       
-       INSERT INTO multi_temp (SELECT * FROM multi ORDER BY name);
-       COPY multi_temp TO $0 DELIMITERS '','';
-       DELETE FROM multi_temp;
-' );
-
-
-
----
---- arities of sql queries
----
-CREATE TABLE qrya (
-  fn VARCHAR(50),
-  arg int,
-  type VARCHAR(50),
-PRIMARY KEY (fn,arg)
-);
-
-INSERT INTO qrya VALUES ( 'test', 0, 'select-list' );
-
-INSERT INTO qrya VALUES ( 'next-version', 0, 'text');
-
-INSERT INTO qrya VALUES ( 'lookup-word', 0, 'text' );
-INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 0, 'select-list' );
-INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 1, 'text' );
-INSERT INTO qrya VALUES ( 'retrieve-entry', 0, 'select-list' );
-INSERT INTO qrya VALUES ( 'retrieve-entry', 1, 'text' );
-INSERT INTO qrya VALUES ( 'update-entry', 0, 'text' );
-INSERT INTO qrya VALUES ( 'update-entry', 1, 'select-list' );
-INSERT INTO qrya VALUES ( 'update-entry', 2, 'value-list' );
-INSERT INTO qrya VALUES ( 'set-current-view', 0, 'where-subcls' );
-INSERT INTO qrya VALUES ( 'set-current-view', 1, 'embedded-str' );
-INSERT INTO qrya VALUES ( 'merge-into-db', 0, 'text' );
-INSERT INTO qrya VALUES ( 'merge-multi-into-db', 0, 'text' );
-INSERT INTO qrya VALUES ( 'dump-db', 0, 'text' );
-INSERT INTO qrya VALUES ( 'dump-multi-db', 0, 'text' );
-
----
---- views
----
-
-CREATE VIEW revision_active
-	AS SELECT revision.* 
-	FROM 
-		(revision 
-		NATURAL JOIN 
-		(SELECT name, max(modstamp) AS modstamp 
-                        FROM revision
-                        WHERE flags = 1
-                        GROUP BY name) AS t1
-		 ); 
-
 CREATE VIEW multi_revision AS 
 	SELECT 
   multi.name,
@@ -414,6 +119,211 @@ CREATE VIEW multi_revision AS
 	FROM multi LEFT JOIN revision AS rev 
 		ON rev.name = multi.verb_id;
 
+---
+--- table on which queries executed
+---
+
+CREATE TABLE current_grammar AS SELECT * FROM revision WHERE NULL;
+
+CREATE UNIQUE INDEX current_grammar_name
+ON current_grammar (name); 
+
+CREATE INDEX current_grammar_orthkey
+ON current_grammar (orthkey); 
+
+---
+--- scratch tables
+---
+CREATE TABLE temp AS SELECT * FROM revision WHERE NULL;
+CREATE TABLE multi_temp AS SELECT * FROM multi WHERE NULL;
+
+---
+--- sql queries embedded in db
+---
+CREATE TABLE qry (
+  fn VARCHAR(50),
+  arity int,
+  sql_code VARCHAR(4096),
+PRIMARY KEY (fn)
+);
+
+-- arities
+CREATE TABLE qrya (
+  fn VARCHAR(50),
+  arg int,
+  type VARCHAR(50),
+PRIMARY KEY (fn,arg)
+);
+
+INSERT INTO qrya VALUES ( 'test', 0, 'select-list' );
+INSERT INTO qry VALUES 
+       ( 'test', 1, 
+         '$0' );
+
+INSERT INTO qrya VALUES ( 'next-version', 0, 'text');
+INSERT INTO qry VALUES 
+       ( 'next-version', 1, 
+         'SELECT COALESCE(1 + max(version),0) FROM revision WHERE (name,user) = ($0,user)');
+
+INSERT INTO qry VALUES 
+       ( 'orthography-set', 0, 
+         'SELECT DISTINCT orthography FROM current_grammar' );
+
+INSERT INTO qry VALUES 
+       ( 'psort-id-set', 0, 
+         'SELECT DISTINCT name FROM current_grammar');
+
+INSERT INTO qrya VALUES ( 'lookup-word', 0, 'text' );
+INSERT INTO qry VALUES 
+       ( 'lookup-word', 1, 
+         'SELECT name FROM current_grammar WHERE orthkey=$0' );
+
+INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 0, 'select-list' );
+INSERT INTO qrya VALUES ( 'retrieve-entries-by-orthkey', 1, 'text' );
+INSERT INTO qry VALUES 
+       ( 'retrieve-entries-by-orthkey', 2, 
+         'SELECT $0 FROM current_grammar WHERE orthkey=$1' );
+
+INSERT INTO qrya VALUES ( 'retrieve-entry', 0, 'select-list' );
+INSERT INTO qrya VALUES ( 'retrieve-entry', 1, 'text' );
+INSERT INTO qry VALUES 
+       ( 'retrieve-entry', 2, 
+         'SELECT $0 FROM current_grammar WHERE name=$1' );
+
+INSERT INTO qry VALUES 
+       ( 'initialize-current-grammar', 0, 
+'VACUUM ANALYZE revision; 
+BEGIN; 
+DELETE FROM current_grammar; 
+INSERT INTO current_grammar SELECT * FROM active; 
+COMMIT; 
+CLUSTER current_grammar_name ON current_grammar; 
+VACUUM ANALYZE current_grammar;
+' );
+
+-- see fn defn
+INSERT INTO qry VALUES 
+       ( 'update-current-grammar', 0, 
+	'BEGIN;
+DELETE FROM temp;
+INSERT INTO temp 
+ (SELECT * FROM active 
+   WHERE modstamp >= 
+    (SELECT max(modstamp) FROM current_grammar)); 
+DELETE FROM current_grammar 
+ WHERE name IN 
+  (SELECT name FROM temp); 
+INSERT INTO current_grammar
+ (SELECT * FROM temp); 
+COMMIT;');
+
+INSERT INTO qrya VALUES ( 'update-entry', 0, 'text' );
+INSERT INTO qrya VALUES ( 'update-entry', 1, 'select-list' );
+INSERT INTO qrya VALUES ( 'update-entry', 2, 'value-list' );
+INSERT INTO qry VALUES 
+       ( 'update-entry', 3, 
+       '
+INSERT INTO revision (name, $1) VALUES ($0, $2); 
+DELETE FROM current_grammar 
+ WHERE name=$0; 
+INSERT INTO current_grammar 
+ SELECT * FROM active
+  WHERE name = $0
+   LIMIT 1;' );
+
+INSERT INTO qrya VALUES ( 'set-current-view', 0, 'where-subcls' );
+INSERT INTO qrya VALUES ( 'set-current-view', 1, 'embedded-str' );
+INSERT INTO qry VALUES 
+       ( 'set-current-view', 2, 
+       '
+DROP VIEW active;
+DROP VIEW revision_active;
+DROP VIEW multi_revision_active;
+
+CREATE VIEW revision_active
+ AS SELECT revision.* 
+ FROM 
+  (revision 
+  NATURAL JOIN 
+   (SELECT name, max(modstamp) AS modstamp 
+     FROM revision
+     WHERE flags = 1
+      AND $0
+     GROUP BY name) AS t1
+); 
+
+CREATE VIEW multi_revision_active
+ AS SELECT rev.* 
+ FROM 
+  (multi_revision AS rev 
+  NATURAL JOIN 
+   (SELECT name, max(modstamp) AS modstamp 
+     FROM multi_revision
+      WHERE flags = 1
+       AND $0
+      GROUP BY name) AS t1
+); 
+
+CREATE VIEW active
+ AS SELECT * FROM revision_active UNION SELECT * FROM multi_revision_active;
+UPDATE meta SET val=''$1'' WHERE var=''filter'';
+' );
+
+INSERT INTO qrya VALUES ( 'merge-into-db', 0, 'text' );
+INSERT INTO qry VALUES 
+       ( 'merge-into-db', 1, 
+       '
+DELETE FROM temp;
+COPY temp FROM $0 DELIMITERS '','' NULL '''';
+INSERT INTO revision 
+ (SELECT temp.* FROM (new_pkeys NATURAL JOIN temp));
+       ' );
+
+INSERT INTO qrya VALUES ( 'merge-multi-into-db', 0, 'text' );
+INSERT INTO qry VALUES 
+       ( 'merge-multi-into-db', 1, 
+       '
+DELETE FROM multi_temp;
+COPY multi_temp FROM $0 DELIMITERS '','';
+DELETE FROM multi WHERE name IN (SELECT name FROM multi_temp);
+INSERT INTO multi
+ (SELECT * FROM multi_temp);
+       ' );
+
+INSERT INTO qrya VALUES ( 'dump-db', 0, 'text' );
+INSERT INTO qry VALUES 
+       ( 'dump-db', 1, 
+       '
+DELETE FROM temp;
+INSERT INTO temp
+ (SELECT * FROM revision ORDER BY modstamp, name, userid, version);
+COPY temp TO $0 DELIMITERS '','' NULL '''';
+' );
+
+INSERT INTO qrya VALUES ( 'dump-multi-db', 0, 'text' );
+INSERT INTO qry VALUES 
+       ( 'dump-multi-db', 1, 
+       '
+DELETE FROM multi_temp;
+INSERT INTO multi_temp
+ (SELECT * FROM multi ORDER BY name);
+COPY multi_temp TO $0 DELIMITERS '','';
+' );
+
+---
+--- views
+---
+
+CREATE VIEW revision_active
+	AS SELECT revision.* 
+	FROM 
+		(revision 
+		NATURAL JOIN 
+		(SELECT name, max(modstamp) AS modstamp 
+                        FROM revision
+                        WHERE flags = 1
+                        GROUP BY name) AS t1
+		 ); 
 
 CREATE VIEW multi_revision_active
 	AS SELECT rev.* 
@@ -428,6 +338,7 @@ CREATE VIEW multi_revision_active
 
 CREATE VIEW active
 	AS SELECT * FROM revision_active UNION SELECT * FROM multi_revision_active;
+
 
 CREATE VIEW new_pkeys 
        AS SELECT t2.* from 
@@ -471,7 +382,7 @@ INSERT INTO defn VALUES ( 'mwe', 'id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'sense-id', 'name', '', 'symbol' );
 INSERT INTO defn VALUES ( 'mwe', 'orth', 'orthography', '', 'string-list' ); 
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'type', 'nil', 'symbol' );
-INSERT INTO defn VALUES ( 'mwe', 'unifs', 'orthography', '(orth list)', 'string-diff-fs' ); -- DIFF LIST
+INSERT INTO defn VALUES ( 'mwe', 'unifs', 'orthography', '(orth)', 'string-diff-fs' ); -- DIFF LIST
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'keyrel', '(sem keys key1)', 'string' );
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'keytag', '(sem keys key carg)', 'string' );
 INSERT INTO defn VALUES ( 'mwe', 'unifs', 'altkey', '(sem keys altkey)', 'symbol' );

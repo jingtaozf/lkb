@@ -29,27 +29,18 @@
 ;;;  - rework DB access layer to cache connection in `psql-database' object.
 ;;;
 ;;; ToDo
-;;;  - look into Postgres optimization (factor of four or more);
-;;;  - find out why we spend an extra 45 seconds or more over the CDB version
-;;;    when looking up some 9000 stems;
-;;;  - decide on whether to keep using the `definition' table or move that
-;;;    information into the globals;
-;;;  - add export to TDL file support; probably use `definition' table;
-;;;  - generalize import code, maybe use `definition' table;
 ;;;  - add insertion of additional lexical entries support from LKB; maybe use
 ;;;    emacs(1) forms for input (and the emacs(1) -- lisp interface, such that
 ;;;    no extra installation overhead is incurred, e.g. for a web server to
 ;;;    talk to PostGres);
-;;;  - work out interface for PET (not really LKB-related);
 ;;;  - rework connection handling to re-open on demand (rather than error());
 ;;;  - support for generator indexing;
 ;;;  - integrate irregular spellings into lexical DB;
-;;;  - versioning of databases, delivery, et al.
 ;;;
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "1.6")
+(defvar *psql-db-version* "1.7")
 (defvar *psql-port-default* nil)
 
 (defvar *tmp-lexicon* nil)
@@ -107,6 +98,7 @@
 		      (get-filter *psql-lexicon*)
 		      (sql-embedded-str (get-filter *psql-lexicon*))
 		      )
+      ;(fn-get-records lexicon ''update-current-grammar)
       (fn-get-records lexicon ''initialize-current-grammar)
 ;	)
       (cond
@@ -588,8 +580,10 @@
               in (fields-map lexicon)
               for slot-value-list = 
 		(work-out-value 
-                                slot-key slot-type 
-                                (get-val slot-field query-res))		
+                                slot-type 
+                                (get-val slot-field query-res)
+				:path slot-path
+				)		
                                ;; if empty third argument (ie. path), 
                                ;; then add (:key "field")
 	      when slot-value-list
@@ -628,8 +622,7 @@
     (list slot-key
 	  (make-unification
 	   :lhs (make-path :typed-feature-list 
-			   (work-out-value 
-			    slot-key "list" slot-path))
+			   (work-out-value "list" slot-path))
 	   :rhs (make-u-value :type slot-value))))
    ;: list. eg. (rest first "word") => (... rest first) has val "word"  
    ((listp slot-value)
@@ -637,7 +630,7 @@
 	  (make-unification
 	   :lhs (make-path 
 		 :typed-feature-list (append
-				      (work-out-value slot-key "list" slot-path)
+				      (work-out-value "list" slot-path)
 				      (reverse (cdr (reverse slot-value)))))
 	   :rhs (make-rhs-val (car (last slot-value))))))
   (T (error "unhandled input"))))
@@ -665,11 +658,6 @@
 			      nil
                               (fn lexicon 'update-entry (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le))
                  )))))
-
-;(defun set-lexical-entry-psql-lex-database-check (orth-string lex-id new-entry) 
-;  (declare (ignore lex-id))
-;  (declare (ignore new-entry))
-;  (if orth-string (format *trace-output* "WARNING: ignoring explicit orth-string")))
 
 (defmethod clear-lex ((lexicon psql-database) &optional no-delete)
   (declare (ignore no-delete))
@@ -715,8 +703,7 @@
         (return (nreverse result))))
 
 ;;; returns _list_ of values of appropriate type
-(defun work-out-value (key type value)
-  (declare (ignore key))
+(defun work-out-value (type value &key path)
   (cond ((equal type "symbol") 
 	 (unless (equal value "")
 	   (list (str-to-symbol-format value))))
@@ -728,8 +715,9 @@
 	((equal type "string-fs")
 	 (expand-string-list-to-fs-list (orth-string-to-str-list value)))
 	((equal type "string-diff-fs")
-	 (expand-string-list-to-fs-diff-list (orth-string-to-str-list value)))
-	((equal type "list") (read-from-string value))
+	 (expand-string-list-to-fs-diff-list (orth-string-to-str-list value) :path path))
+	((equal type "list") (unless (equal value "")
+			       (read-from-string value)))
 	(t (error "unhandled type during database access"))))
 
 ;;; eg. ("w1" "w2") -> ((FIRST "w1") (REST FIRST "w2") (REST REST *NULL*)) 
@@ -742,15 +730,23 @@
 	  (mapcar #'(lambda (x) (cons 'REST x))
 	  (expand-string-list-to-fs-list (cdr string-list)))))))   
 
-;;; eg. ("w1" "w2") -> ((FIRST "w1") (REST FIRST "w2") (REST REST (ORTH LAST))) 
-(defun expand-string-list-to-fs-diff-list (string-list)
+;;; eg. ("w1" "w2") path -> ((LIST FIRST "w1") (LIST REST FIRST "w2") (LIST REST REST path)) 
+(defun expand-string-list-to-fs-diff-list (string-list &key path)
+   (mapcar #'(lambda (x) (cons 'LIST x))
+	   (expand-string-list-to-fs-diff-list-aux string-list :path path)))
+
+;;; eg. ("w1" "w2") path -> ((FIRST "w1") (REST FIRST "w2") (REST REST path)) 
+(defun expand-string-list-to-fs-diff-list-aux (string-list &key path)
   (cond
    ((equal string-list nil) 
-    (list (list '(ORTH LAST)))) ;;fix me
+    (list 
+     (list 
+      (append (work-out-value "list" path) 
+	      (list 'LAST)))))
    (t
     (cons (list 'FIRST (first string-list)) 
 	  (mapcar #'(lambda (x) (cons 'REST x))
-	  (expand-string-list-to-fs-diff-list (cdr string-list)))))))   
+		  (expand-string-list-to-fs-diff-list-aux (cdr string-list) :path path))))))   
 
 ;;; returns version, eg. "7.3.2"
 (defmethod get-server-version ((lexicon psql-lex-database))

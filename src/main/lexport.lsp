@@ -29,14 +29,26 @@
 
 (defvar *export-output-lexicon* nil)
 (defvar common-lisp-user::*grammar-version*)
-
+(defvar *export-default-fields-map*
+    '((:ID "name" "" "symbol") 
+      (:ORTH "orthography" "" "string-list") 
+					;(:SENSE-ID "name" "" "symbol")
+      (:UNIFS "alt2key" "(synsem local keys alt2key)" "symbol")
+      (:UNIFS "altkey" "(synsem local keys altkey)" "symbol")
+      (:UNIFS "compkey" "(synsem lkeys --compkey)" "symbol")
+      (:UNIFS "keyrel" "(synsem local keys key)" "symbol")
+      (:UNIFS "keytag" "(synsem local keys key carg)" "string")
+      (:UNIFS "ocompkey" "(synsem lkeys --ocompkey)" "symbol")
+					;(:UNIFS "orthography" "(stem)" "string-fs") 
+      (:UNIFS "type" "nil" "symbol")))
 
 ;;; export prev loaded grammar to (psql) db or to file
 (defun export-lexicon nil
   (export-lexicon-to-file))
   
 (defun export-lexicon-to-file (&key (file *export-file*) 
-                            (separator *export-separator*))
+				    (separator *export-separator*)
+				    (lexicon *lexicon*))
   (setf *export-file* file)
   (setf *export-separator* separator)
 
@@ -71,14 +83,15 @@
 		     skip-file
 		     :direction :output 
 		     :if-exists :supersede :if-does-not-exist :create)
-      (export-to-csv-to-file *lexicon* csv-file))))
+      (export-to-csv-to-file lexicon csv-file))))
     
 (defun ask-user-for-x (head promptDcons)
   (car (ask-for-strings-movable head 
 			   (list promptDcons))))
 
  ;;; implemented for postgres
-(defun export-lexicon-to-db (&key (output-lexicon *export-output-lexicon*))
+(defun export-lexicon-to-db (&key (output-lexicon *export-output-lexicon*)
+				  (lexicon *lexicon*))
   (unless
       (and output-lexicon (connection output-lexicon))
     (setf output-lexicon (initialize-psql-lexicon)))
@@ -104,12 +117,13 @@
   (format *trace-output* 
 	  "~%Exporting lexicon to DB ~a" 
 	  (dbname output-lexicon))  
-  (export-to-db *lexicon* output-lexicon))
+  (export-to-db lexicon output-lexicon))
   
-(defun export-lexicon-to-tdl (&key (file *export-file*) )
+(defun export-lexicon-to-tdl (&key (file *export-file*)
+				   (lexicon *lexicon*))
   (let ((tdl-file (format nil "~a.tdl" file)))
     (format *trace-output* "~%Exporting lexicon to TDL file ~a" tdl-file)
-    (export-to-tdl-to-file *lexicon* tdl-file)))
+    (export-to-tdl-to-file lexicon tdl-file)))
 
 (defun extract-date-from-source (source)
   (subseq source (1+ (position #\( source :test #'equal)) (position #\) source :test #'equal)))
@@ -126,20 +140,28 @@
       (when (u-value-p rhs)
         (u-value-type rhs)))))
 
-(defun extract-field (x field-str &optional field-map)
+(defun extract-field (x field-str &optional fields-map)
   (unless (typep x 'lex-or-psort)
     (error "unexpected type"))
-  (let* ((field-map (or field-map (fields-map *psql-lexicon*)))
-	 (mapping (find field-str field-map :key #'second :test 'equal)))
+  (let* ((fields-map (or fields-map (fields-map *psql-lexicon*)))
+	 (mapping (find field-str fields-map :key #'second :test 'equal)))
     (extract-field2 x (first mapping) (third mapping) (fourth mapping))))
 	 
-
+(defun 2-symb (x)
+  (cond
+   ((symbolp x)
+    x)
+   ((stringp x)
+    (str-2-symb x))
+   (t
+    (error "unhandled value"))))
+    
 (defun extract-field2 (x key2 path2 type2)
   (unless (typep x 'lex-or-psort)
     (error "unexpected type"))
   (let* ((key (un-keyword key2))
 	 (path (get-path path2))
-	 (type (str-2-symb type2))
+	 (type (2-symb type2))
 	 (x-key (slot-value x key)))
     (extract-value-by-path x-key path type)))
 
@@ -183,7 +205,7 @@
    ((equal "" path-str)
     nil)
    ((stringp path-str)
-    (work-out-value nil "list" path-str))
+    (work-out-value "list" path-str))
    (t
     (error "unhandled value"))))
 
@@ -481,40 +503,34 @@
    (eq (char (symb-2-str x) 0) #\#)))
 
 (defmethod export-to-csv ((lexicon lex-database) stream)
-  (mapc
-   #'(lambda (x) (format stream "~a" (to-csv (read-psort lexicon x :recurse nil))))
-   (collect-psort-ids lexicon :recurse nil)))
+  (let ((fields-map
+	 (and *psql-lexicon* (fields-map *psql-lexicon*))))
+    (unless fields-map
+      (format *trace-output* 
+	      "~%WARNING: using default fields map *export-default-fields-map* = ~%~s~%" *export-default-fields-map*)
+      (setf fields-map *export-default-fields-map*))
+
+	(mapc
+	 #'(lambda (x) (format stream "~a" (to-csv (read-psort lexicon x :recurse nil) fields-map)))
+	 (collect-psort-ids lexicon :recurse nil))))
 
 (defmethod export-to-csv-to-file ((lexicon lex-database) filename)
   (with-open-file 
       (ostream filename :direction :output :if-exists :supersede)
     (export-to-csv lexicon ostream)))
 
-(defmethod to-csv ((x lex-or-psort) 
-		   &key 
-		   (field-map
-		    '((:ID "name" "" "symbol") 
-		      (:ORTH "orthography" "" "string-list") 
-					;(:SENSE-ID "name" "" "symbol")
-		      (:UNIFS "alt2key" "(synsem local keys alt2key)" "symbol")
-		      (:UNIFS "altkey" "(synsem local keys altkey)" "symbol")
-		      (:UNIFS "compkey" "(synsem lkeys --compkey)" "symbol")
-		      (:UNIFS "keyrel" "(synsem local keys key)" "symbol")
-		      (:UNIFS "keytag" "(synsem local keys key carg)" "string")
-		      (:UNIFS "ocompkey" "(synsem lkeys --ocompkey)" "symbol")
-					;(:UNIFS "orthography" "(stem)" "string-fs") 
-		      (:UNIFS "type" "nil" "symbol"))))
+(defmethod to-csv ((x lex-or-psort) fields-map)
   (let* ((separator (string *export-separator*))
 
-	 (keyrel (extract-field x "keyrel" field-map))      
-	 (keytag (extract-field x "keytag" field-map))
-	 (altkey (extract-field x "altkey" field-map))
-	 (alt2key (extract-field x "alt2key" field-map))
-	 (compkey (extract-field x "compkey" field-map))
-	 (ocompkey (extract-field x "ocompkey" field-map))
+	 (keyrel (extract-field x "keyrel" fields-map))      
+	 (keytag (extract-field x "keytag" fields-map))
+	 (altkey (extract-field x "altkey" fields-map))
+	 (alt2key (extract-field x "alt2key" fields-map))
+	 (compkey (extract-field x "compkey" fields-map))
+	 (ocompkey (extract-field x "ocompkey" fields-map))
 	 
 	 (orth-list (extract-field2 x :orth nil "list"))
-	 (name (extract-field x "name" field-map))
+	 (name (extract-field x "name" fields-map))
 	 (count (+ 2 (length orth-list)))
 	 (total (+ count
 		   (if (string> keyrel "") 1 0) 
@@ -522,14 +538,14 @@
 		   (if (string> altkey "") 1 0)
 		   (if (string> alt2key "") 1 0) 
 		   (if (string> compkey "") 1 0) 
-		   (if (string> ocompkey "") 1 0))))
-    (cond 
-     ((= total (length (lex-or-psort-unifs x)))
-      (format nil "~a~%"
+		   (if (string> ocompkey "") 1 0)))
+	 
+	 (line 
+	        (format nil "~a~%"
 	      (concatenate 'string
 		name
-		separator (extract-field x "type" field-map)
-		separator (extract-field x "orthography" field-map) ;:todo: comma in word?
+		separator (extract-field x "type" fields-map)
+		separator (extract-field x "orthography" fields-map) ;:todo: comma in word?
 		separator (first orth-list)
 		separator  ;;pronunciation
 		separator keyrel
@@ -559,9 +575,12 @@
 		separator "1" ;;flags: 1 = not deleted
 		separator *current-user* ;;userid
 		separator *export-timestamp* ;;modstamp
-		)))
+		))))
+    (cond 
+     ((= total (length (lex-or-psort-unifs x)))
+      line)
      (t
-      (format *export-skip-stream* "~%skipping super-rich entry: `~a'"  name)
+      (format *export-skip-stream* "~%skipping super-rich entry: ~a"  line)
       ""))))
 
 (defmethod export-to-db ((lexicon lex-database) output-lexicon)
@@ -571,17 +590,17 @@
   (fn-get-records output-lexicon ''initialize-current-grammar))
 
 (defmethod to-db ((x lex-or-psort) (lexicon psql-lex-database))  
-  (let* ((field-map (fields-map lexicon))
+  (let* ((fields-map (fields-map lexicon))
 
-	 (keyrel (extract-field x "keyrel" field-map))      
-	 (keytag (extract-field x "keytag" field-map))
-	 (altkey (extract-field x "altkey" field-map))
-	 (alt2key (extract-field x "alt2key" field-map))
-	 (compkey (extract-field x "compkey" field-map))
-	 (ocompkey (extract-field x "ocompkey" field-map))
+	 (keyrel (extract-field x "keyrel" fields-map))      
+	 (keytag (extract-field x "keytag" fields-map))
+	 (altkey (extract-field x "altkey" fields-map))
+	 (alt2key (extract-field x "alt2key" fields-map))
+	 (compkey (extract-field x "compkey" fields-map))
+	 (ocompkey (extract-field x "ocompkey" fields-map))
 	 
 	 (orth-list (extract-field2 x :orth nil "list"))
-	 (name (extract-field x "name" field-map))
+	 (name (extract-field x "name" fields-map))
 	 (count (+ 2 (length orth-list)))
 	 (total (+ count
 		   (if (string> keyrel "") 1 0) 
@@ -591,7 +610,7 @@
 		   (if (string> compkey "") 1 0) 
 		   (if (string> ocompkey "") 1 0)))
 	 
-	 (type (extract-field x "type" field-map))
+	 (type (extract-field x "type" fields-map))
 	 
 	 (psql-le
 	  (make-instance 'psql-lex-entry
