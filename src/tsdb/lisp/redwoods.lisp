@@ -786,7 +786,7 @@
            for i from 2 to 14 by 3
            do
              (loop
-                 for label in '("parses\\n#" "words\\n\\330" "trees\\n\\330")
+                 for label in '("items\\n#" "words\\n\\330" "trees\\n\\330")
                  for j from 0
                  for k = (+ i j)
                  do
@@ -2027,18 +2027,27 @@
         with n = (max (ceiling (- last first) delta) 1)
         with increment = (when meter (/ (mduration meter) n))
         for i from 1 to n
+        for low = (+ first (* (- i 1) delta))
+        for high = (+ first (* i delta))
+        for message = (format
+                       nil
+                       "training `~a' [~a - ~a| ..."
+                       sources low high)
         for foo = (format 
                    nil 
                    "i-id >= ~d && i-id < ~d~@[ && (~a)~]"
-                   (+ first (* (- i 1) delta)) 
-                   (+ first (* i delta)) condition)
+                   low high condition)
         initially (when meter (meter :value (get-field :start meter)))
         do
-          (when meter (meter-advance increment))
+          (when meter 
+            (meter-advance increment)
+            (status :text message))
           (train sources nil :condition foo :type type
                  :model model :estimatep (and estimatep (= i n))
                  :recursep nil :verbose verbose :stream stream)
-        finally (when meter (meter :value (get-field :end meter)))))
+        finally (when meter 
+                  (status :text (format nil "~a done" message) :duration 3)
+                  (meter :value (get-field :end meter)))))
    (t
     (let ((items (analyze sources :gold sources :condition condition
                           :thorough '(:derivation) :readerp nil)))
