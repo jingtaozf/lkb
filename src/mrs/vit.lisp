@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.10  1999/10/14 19:01:09  aac
+;; eq's are now disliked, so convert them all to leq at the printing stage
+;;
 ;; Revision 1.9  1999/10/14 02:14:54  aac
 ;; fixes for sorts
 ;;
@@ -47,6 +50,12 @@
 ;;;
 ;;; This may need fleshing out later - currently parts of the
 ;;; VIT are being left relatively unanalysed
+
+(defstruct (vitturn)
+  id
+  whatever
+  input
+  vit)
 
 ;;; new specification: vit/9 (without ambiguities)
 (defstruct (vit)
@@ -140,6 +149,7 @@
 
 (defstruct (vit-instance-var (:include vit-var)
             (:print-function print-vit-instance-var)))
+
 
 ;;;; printers
 
@@ -249,7 +259,20 @@
          (error "~%~A Expected and not found" character))
       (read-char istream)))
 
-;;; (read-vit-file "Macintosh HD:lkb96:vit:july-ex")
+;;; (mrs::read-vit-turn-file "vittest")
+
+(defun read-vit-turn-file (filename)
+  ;;; returns a list of turn structures
+   (let ((*readtable*
+            (define-break-characters 
+               '(#\[ #\] #\,))))
+     (with-open-file (istream filename :direction :input)
+       (do* ((turnstruct (read-vit-turn istream) (read-vit-turn istream))
+             (results (if turnstruct (list turnstruct)) 
+                      (if turnstruct (cons turnstruct results)))
+             (next-char (peek-char t istream nil 'eof)
+                        (peek-char t istream nil 'eof)))
+           ((or (null turnstruct) (eql next-char 'eof)) (return results))))))
 
 (defun read-vit-file (filename)
   ;;; returns a list of VIT structures
@@ -260,7 +283,8 @@
        (do* ((vitstruct (read-vit istream) (read-vit istream))
              (results (if vitstruct (list vitstruct)) 
                       (if vitstruct (cons vitstruct results)))
-             (next-char (peek-char t istream nil 'eof)))
+             (next-char (peek-char t istream nil 'eof)
+                        (peek-char t istream nil 'eof)))
             ((or (null vitstruct) (eql next-char 'eof)) (return results))))))
 
 ;;; DPF 21-Jul-99 - Added from WK
@@ -269,6 +293,33 @@
             (define-break-characters 
                 '(#\[ #\] #\,))))
     (read-vit (make-string-input-stream vitstring))))
+
+(defun read-vit-turn (istream)
+  (let ((id nil)
+        (whatever nil)
+        (input nil)
+        (vit nil)
+        )
+    (check-for #\t istream)
+    (check-for #\( istream)
+    (setf id (read istream))
+    (check-for #\, istream)
+    (read-p-comment istream)
+    (setf whatever (read istream))
+    (check-for #\, istream)
+    (read-p-comment istream)
+    (setf input (read-quoted-stuff istream))
+    (check-for #\, istream)
+    (read-p-comment istream)
+    (setf vit (read-vit istream))
+    (read-p-comment istream)
+    (check-for #\. istream)
+    (read-p-comment istream)
+    (make-vitturn   :id id
+                    :whatever whatever
+                    :input input
+                    :vit vit)))
+
 
 (defun read-vit (istream)
   (let ((utterance-id nil)
@@ -469,11 +520,18 @@
                       (read-from-string (subseq varname prefixlength))))
          (type nil))
     (if prefix
-        (cond ((equal prefix *vit-instance-prefix*)
+        (cond ((or (equal prefix *vit-instance-prefix*)
+                   (char= (elt varname 0)
+                          (elt *vit-instance-prefix* 0)))
+               ;;; hack because transfer uses - e.g. lt
                (setq type 'i))
-              ((equal prefix *vit-label-prefix*)
+              ((or (equal prefix *vit-label-prefix*)
+                   (char= (elt varname 0)
+                          (elt *vit-label-prefix* 0)))
                (setq type 'l))
-              ((equal prefix *vit-hole-prefix*)
+              ((or (equal prefix *vit-hole-prefix*)
+                   (char= (elt varname 0)
+                          (elt *vit-hole-prefix* 0)))
                (setq type 'h))
               (t nil)))
     (if (integerp numval)
