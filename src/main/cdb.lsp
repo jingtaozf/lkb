@@ -1,3 +1,5 @@
+;;; -*- Mode: Common-Lisp; Package: CDB; -*-
+
 ;;; Copyright (c) 1999--2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
@@ -191,7 +193,7 @@
 		      (setf (aref hash where) p))
 		;; Write hash table
 		(loop for (h . p) across hash
-		    do
+		    do 
 		      (write-fixnum h stream)
 		      (write-fixnum p stream)))))
       ;; Write out pointers to tables
@@ -287,6 +289,7 @@
 
 ;; Search hash table for a matching entry
 
+#+:null
 (defun scan-forward (stream key hash origin start end not-first)
   (let (h)
     (loop 
@@ -304,6 +307,23 @@
   (let ((result (grab-record (read-fixnum stream) stream)))
     (when (equal (car result) key)
       (cdr result))))
+
+(defun scan-forward (stream key hash origin start end not-first)
+  (loop 
+      with h = nil
+      when (eql end (file-position stream)) do
+        (file-position stream origin)
+      when (and not-first (eql start (file-position stream))) do
+        (return-from scan-forward nil)
+      do 
+        (setf not-first t)
+        (setf h (read-fixnum stream))
+        (cond ((zerop h) (return-from scan-forward nil))
+              ((eql hash h)
+               (let ((result (grab-record (read-fixnum stream) stream)))
+                 (when (equal (car result) key)
+                   (return-from scan-forward (cdr result)))))
+              (t (read-fixnum stream)))))
 
 ;; Look up a key in a CDB
 

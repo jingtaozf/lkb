@@ -16,21 +16,17 @@
 
 (setf *lexicon* (make-instance 'cdb-lex-database))
 
-
 (defmethod lookup-word ((lexicon cdb-lex-database) orth &key (cache t))
   (declare (ignore cache))
   (with-slots (orth-db) lexicon
-  (if (not(stringp orth)) 
-      (error (format  nil "~a is not a string."orth))
-    )
-  (unless orth-db
-    (if *psorts-temp-index-file*
-    (setf orth-db 
-      (cdb:open-read *psorts-temp-index-file*))))
-  (if orth-db
-      (loop
-	  for record in (cdb:read-record orth-db orth)
-	  collect (intern record :lkb)))))
+  (unless (stringp orth)
+    (error "~a is not a string." orth))
+  (when (and (null orth-db) *psorts-temp-index-file*)
+    (setf orth-db (cdb:open-read *psorts-temp-index-file*)))
+  (when orth-db
+    (loop
+     for record in (cdb:read-record orth-db orth)
+     collect (intern record :lkb)))))
 
 (defmethod lexicon-loaded-p ((lexicon cdb-lex-database))
   (not (null (psort-db lexicon))))
