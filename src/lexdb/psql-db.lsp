@@ -207,7 +207,8 @@
 							 revision-filename))
 	    (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
 							 postgres-tmp2
-							 defn-filename)))))
+							 defn-filename))
+	    nil)))
     (format t "~%Dump aborted... (do you have the appropriate db permissions?")))
 
 (defun dump-scratch (filename)
