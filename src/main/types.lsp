@@ -274,6 +274,66 @@
 
 ;;; glb computation - entry point is greatest-common-subtype
 
+;;; Type unification performed by lookup in a global vector. Index is
+;;; numeric combination of sxhash values of the two type names
+;;; (symbols): (sxhash(t1)&&1023)<<10 + sxhash(t2)&&1023 where the two
+;;; types are ordered on their sxhash values - so that either order results
+;;; in the same table entry being retrieved. Must also test the types
+;;; themselves in case another pair of types has the same key. So a vector
+;;; entry is (type1 type2 . (subype . constraintp))
+
+(defparameter *type-cache* (make-array (* 1024 1024) :initial-element nil))
+
+(defun clear-type-cache nil
+   ;; it's probably best to clear this out occasionally - definitely after
+   ;; loading a grammar and before parsing since different pairs of types will
+   ;; be exercised
+   (let ((arr *type-cache*))
+      (declare (simple-vector arr))
+      (dotimes (x (* 1024 1024)) (setf (svref arr x) nil))))
+
+
+(defmacro sxhash-one-symbol (x)
+   `(#+mcl ccl::%%eqhash #-mcl sxhash (the symbol ,x)))
+
+(defmacro type-cache-index (x)
+   ;; least significant 10 bits of sxhash(x)
+   `(logand (the fixnum (sxhash-one-symbol ,x)) 1023))
+
+(defmacro type-cache-entry (x y)
+   `(svref *type-cache*
+       (the fixnum (+ (the fixnum (ash (the fixnum ,x) 10)) (the fixnum ,y)))))
+
+(defmacro cached-greatest-common-subtype (type1 type2 type1-atomic-p)
+  `(let ((t1 ,(if type1-atomic-p `(car ,type1) type1))
+         (t2 ,type2))
+      (if (eq t1 *toptype*)
+         ;; avoid caching on top type - result will always be other type
+         t2
+         (if (eq t2 *toptype*)
+            t1
+            (let* ((i1 (type-cache-index t1))
+                   (i2 (type-cache-index t2)))
+               (when (> (the fixnum i2) (the fixnum i1))
+                  (rotatef i1 i2) (rotatef t1 t2))
+               (let* ((entry (type-cache-entry i1 i2))
+                      (found
+                         (dolist (e entry)
+                            (when (and (eq (car e) t1) (eq (cadr e) t2))
+                               (return (cddr e))))))
+                   (if found
+                      (values (car found) (cdr found))
+                      (multiple-value-bind (subtype constraintp)
+                           (full-greatest-common-subtype t1 t2)
+                         ,@(when type1-atomic-p
+                            `((when subtype (setq subtype (list subtype)))))
+                         (setf (type-cache-entry i1 i2)
+                            (nconc entry
+                              (list (list* t1 t2 (cons subtype constraintp)))))
+                         (values subtype constraintp)))))))))
+
+
+#|
 (defparameter *type-cache* nil)
 
 (defun clear-type-cache nil
@@ -310,6 +370,7 @@
                 (nconc entry
                        (list (cons t2 (cons subtype constraintp)))))
               (values subtype constraintp))))))))
+|#
 
 #|
 ;;; investigate effectiveness of subtype cache
