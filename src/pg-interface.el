@@ -119,7 +119,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 ;;;
 
 (defun lexdb (id)
-  (interactive (list (read-from-minibuffer "Lex Id: " lexdb-id)))
+  (interactive (list (read-from-minibuffer "Lex Id: " "")))
   (unless (cle-eval-lexdb 'connection)
     (if (not (cle-eval "(common-lisp-user::featurep :lkb)"))
 	(error "Please load the the LKB"))
@@ -130,7 +130,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
   (lexdb-load-record id))
 
 (defun lexdb-load-record (id)
-  (interactive (list (read-from-minibuffer "Lex Id: " lexdb-id)))
+  (interactive (list (read-from-minibuffer "Lex Id: " "")))
   (unless (cle-eval-lexdb 'connection)
     (error "no connection to LexDb"))
   (lexdb-load-record-aux id)
