@@ -99,36 +99,8 @@
         fail-path-list)
      #'> :key #'cdr))
 
-;;; # paths   naive(no bv)  lkb(no bv)
-;;;            (secs)        (secs)
-;;;   20        68            70
-;;;   30        62            58
-;;;   45        58            58
-;;;   55        57(60)        59(61)
-;;;   60        58            60
-
-|#
-
-#|
-(load "Macintosh HD:grammar:lkb:checkpaths.lsp")
-
-(optimise-check-unif-paths)
-(length *check-paths-optimised*)
-(dolist (table (list *lexical-rules* *rules*))
-  (maphash
-    #'(lambda (id rule)
-       (declare (ignore id))
-       (let ((fs (rule-full-fs rule))
-             (f-list (rule-order rule)))  
-        (setf (rule-daughters-restricted rule)
-          (mapcar
-           #'(lambda (path)
-               (restrict-fs
-                (existing-dag-at-end-of 
-                 (tdfs-indef fs)
-                 (if (listp path) path (list path)))))
-           (cdr f-list)))))
-    table))
+(with-check-path-list-collection "Macintosh HD:mylkb:checkpaths-naive.lsp"
+   (parse-sentences "Macintosh HD:mylkb:checkpaths-sample.txt" nil))
 |#
 
 
@@ -260,11 +232,9 @@
   (unless *check-paths*
     (setq *check-paths-optimised* nil)
     (return-from optimise-check-unif-paths nil))
-  (let ((freq-threshold (truncate (cdr (first *check-paths*)) 1000))
-	(nseen 0))
-    ;; Keep all paths whose freq is within a factor of 1000 of most frequent,
-    ;; but always keep at least 40.  There's certainly scope here for
-    ;; experimenting with how many paths are kept.
+  (let ((nseen 0))
+    ;; there's scope here for experimenting with the criteria under which lower
+    ;; frequency paths should be kept
     (setq *check-paths-optimised*
       (mapcan
        #'(lambda (path-and-freq)
@@ -272,8 +242,13 @@
 	   (cond
 	    ((not (and (listp (car path-and-freq)) (integerp (cdr path-and-freq))))
 	     (error "Incorrect format for check path list"))
-            ((and (< (cdr path-and-freq) freq-threshold) (> nseen 40)) nil)
-	    (t
+            ;; ((and (< (cdr path-and-freq) 1000) (> nseen 40))
+            ;;  ;; keep all paths whose freq is within a factor of 1000 of most frequent
+            ;;  nil)
+	    ((> nseen 45)
+             ;; keep 45 paths - if there are that many
+             nil)
+            (t
 	     (list
 	      (optimise-check-unif-path
 	       (car path-and-freq) (cdr path-and-freq))))))
