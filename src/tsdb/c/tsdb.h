@@ -54,6 +54,8 @@ extern void free(void *);
 #define TSDB_GREATER_OR_EQUAL_THAN 6
 #define TSDB_MATCH 7
 #define TSDB_NOT_MATCH 8
+#define TSDB_IMATCH 9
+#define TSDB_NOT_IMATCH 10
 
 #define TSDB_NOT 0
 #define TSDB_AND 1
@@ -156,6 +158,12 @@ extern void free(void *);
 #  define TSDB_SERVER_QUEUE_LENGTH 5
 #endif
 
+#ifndef CHAR_SET_SIZE
+#  define CHAR_SET_SIZE 256
+#endif
+
+#define ISUPPER(c) (isascii (c) && isupper (c))
+
 typedef struct tsdb_field {
   char *name;
   BYTE type;
@@ -245,6 +253,7 @@ typedef struct tsdb {
   int command;
   Tsdb_history **history;
   int history_size;
+  char* translate_table;
 } Tsdb;
 
 #if !defined(TSDB_C)
@@ -287,7 +296,7 @@ BYTE tsdb_tuple_compare(Tsdb_tuple *, Tsdb_tuple *);
 BOOL tsdb_verify_tuple(Tsdb_node* , Tsdb_tuple** );
 
 BOOL tsdb_tuple_equal(Tsdb_tuple* , Tsdb_tuple* );
-BYTE tsdb_value_match(Tsdb_value *, Tsdb_value *,void *);
+BYTE tsdb_value_match(Tsdb_value *, Tsdb_value *,char,void *);
 
 FILE* tsdb_open_pager();
 FILE* tsdb_open_debug();
@@ -374,6 +383,7 @@ Tsdb_relation *tsdb_copy_relation(Tsdb_relation *);
 
 Tsdb_key_list *tsdb_copy_key_list(Tsdb_key_list *);
 Tsdb_key_list* tsdb_first_other_key(Tsdb_key_list*);
+char* tsdb_translate_table() ;
 
 BOOL tsdb_insert_into_selection(Tsdb_selection *, Tsdb_tuple **);
 char** tsdb_condition_attributes(Tsdb_node* , char** , int* );
