@@ -64,6 +64,9 @@
 (defparameter *syntax-error* nil
   "boolean that is set to t if a syntax error is detected")
 
+(defparameter *amend-error* nil
+  "boolean that is set to t if an error in amending a type is detected")
+
 (defun read-type-file nil  
    (let* ((file-name 
             (ask-user-for-existing-pathname "Type file?"))

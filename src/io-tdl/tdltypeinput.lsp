@@ -116,14 +116,15 @@
             (read-tdl-type-stream istream t)))) 
     ;; check-type-table is in checktypes.lsp 
     (if *syntax-error*
-      ;;; also set if cannot patch because of changes to hierarchy
       (progn (setf *syntax-error* nil)
              (cerror "Cancel load" "Syntax error(s) in type file")
              nil)
-      (when (patch-type-table) 
-        (canonicalise-feature-order)           
-        (set-up-type-interactions)
-        t)) )   
+      (if *amend-error*
+          (setf *amend-error* nil)
+        (when (patch-type-table) 
+          (canonicalise-feature-order)           
+          (set-up-type-interactions)
+          t)) ))   
 
 
 ;;; main functions
@@ -230,9 +231,9 @@
 ;;; Subtype-def ->  :< type 
      (let* ((parent (lkb-read istream nil)))
        (if augment
-;         (unless
+         (unless
            (amend-type-from-file name (list parent) nil nil nil)
-;           (setf *syntax-error* t))
+           (setf *amend-error* t))
          (add-type-from-file name (list parent) nil nil nil))
        (let ((next-char (peek-char t istream nil 'eof)))
          (unless (eql next-char #\.)
@@ -279,9 +280,9 @@
               (push (cadr coref) (cdr entry))
             (push coref def-alist))))
       (if augment
-;        (unless
+        (unless
           (amend-type-from-file name parents constraint def-alist nil)
-;          (setf *syntax-error* t))
+          (setf *amend-error* t))
         (add-type-from-file name parents constraint def-alist nil))
       (let ((next-char (peek-char t istream nil 'eof)))
         (unless (eql next-char #\.)
