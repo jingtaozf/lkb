@@ -321,7 +321,7 @@ FILE *tsdb_find_relations_file(char *);
 FILE *tsdb_find_data_file(char *, char *);
 FILE* tsdb_open_result();
 char *tsdb_rcs_strip(char *, char *);
-char *tsdb_expand_directory(char *);
+char *tsdb_expand_directory(char *, char *);
 char *tsdb_user(void);
 
 Tsdb_node **tsdb_linearize_conditions(Tsdb_node *);
