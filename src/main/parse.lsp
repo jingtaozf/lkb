@@ -643,7 +643,8 @@
                              left-vertex
 			     right-vertex
 			     (list edge)
-			     f (1- (length (rule-daughters-apply-order rule))))
+			     f
+                             (1- (length (the list (rule-daughters-apply-order rule)))))
       ;; when we don't build up the chart in strict left-to-right
       ;; order (as when we're doing a best-first search), we need to
       ;; check for rule applying to the right as well as to the left.
