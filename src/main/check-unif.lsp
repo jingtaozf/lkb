@@ -41,6 +41,7 @@
                                    :if-does-not-exist :create)
                (let ((*print-pretty* nil))
                   (format .str. "#|~%Check paths from~%~{  ~S~%~}|#~%" ',forms))
+               (format t "~%Extracting paths...")
                (write
                   `(defparameter *check-paths* ',(extract-check-paths *fail-path-list*))
                   :stream .str. :escape t :pretty t :length nil :level nil)
@@ -83,9 +84,10 @@
 ;;; updated accordingly!!!
 
 (defun install-unify-check-paths-functions nil
-   (declare (special *unify-dags-fail-count* *fail-path-list*))
+   (declare (special *collecting-check-paths-p* *unify-dags-fail-count* *fail-path-list*))
    (prog1
       (mapcar #'(lambda (name) (cons name (symbol-function name))) '(unify-dags unify2))
+      (setq *collecting-check-paths-p* nil)
       (setq *unify-dags-fail-count* 0)
       (setq *fail-path-list* nil)
 ;
@@ -120,6 +122,7 @@
                   (unless item
                      (setq item (cons p (make-hash-table)))
                      (push item *fail-path-list*))
+                  ;; an adjustable bit-vector might be more suitable than a hash table
                   (setf (gethash *unify-dags-fail-count* (cdr item)) t)))
             (setf (dag-new-type dag1) new-type)
             (if (type-spec-atomic-p new-type)
@@ -304,18 +307,19 @@
                (return-from x-restrict-and-compatible-p nil))))))
 
 
-(defun x-existing-dag-at-end-of (real-dag labels-chain)
-   (cond 
-      ((null labels-chain) real-dag)
-      ((is-atomic real-dag) nil)
-      (t
-         (let ((one-step-down
-                  (x-get-dag-value real-dag
-                     (car labels-chain))))
-            (if one-step-down
-               (x-existing-dag-at-end-of one-step-down
-                  (cdr labels-chain))
-               nil)))))
+(defun x-existing-dag-at-end-of (dag labels-chain)
+   (let ((real-dag (deref-dag dag)))
+      (cond 
+         ((null labels-chain) real-dag)
+         ((is-atomic real-dag) nil)
+         (t
+            (let ((one-step-down
+                     (x-get-dag-value real-dag
+                        (car labels-chain))))
+               (if one-step-down
+                  (x-existing-dag-at-end-of one-step-down
+                     (cdr labels-chain))
+                  nil))))))
 
 (defun x-get-dag-value (dag attribute)
    (dolist (arc (dag-arcs dag) nil)
