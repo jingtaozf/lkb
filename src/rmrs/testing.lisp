@@ -153,28 +153,28 @@
 
 (defun rasp-semtest-out nil
   (let ((*rasp-rmrs-gram-file*
-	 (make-pathname 
-	  :device "d"
-	  :directory "/lingo/lkb/src/rmrs/annlt-test/"
-	  :name "gram14.1.rmrs")
-	;; (make-pathname 
-	;; :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-	;; :name "gram14.1.rmrs")
+	 ;; (make-pathname 
+	 ;; :device "d"
+	 ;; :directory "/lingo/lkb/src/rmrs/annlt-test/"
+	 ;; :name "gram14.1.rmrs")
+	(make-pathname 
+	:directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+	:name "gram14.1.rmrs")
 	)
 	(*rasp-rmrs-tag-file*
-	 (make-pathname :device "d" :directory "/lingo/lkb/src/rmrs/annlt-test/"
-			:name "lex14.1.rmrs")
-	;; (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-	;; :name "lex14.1.rmrs")
+	 ;;(make-pathname :device "d" :directory "/lingo/lkb/src/rmrs/annlt-test/"
+	;;		:name "lex14.1.rmrs")
+	(make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+	:name "lex14.1.rmrs")
 	)
 	(*rasp-xml-word-p* t)
 	(*rasp-xml-type* :none)
 	(*rasp-input-file*
-	 (make-pathname :device "d" 
-			:directory "/lingo/lkb/src/rmrs/annlt-test/"
-			:name "semtest.rasp")
-	 ;; (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
-	 ;;      :name "semtest.rasp")
+	 ;; (make-pathname :device "d" 
+	;;		:directory "/lingo/lkb/src/rmrs/annlt-test/"
+	;;		:name "semtest.rasp")
+	 (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+	       :name "semtest.rasp")
 	 )
 	(*rasp-rmrs-output-file*
 	 "semtest-rasp.rmrs"))
