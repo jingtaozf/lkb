@@ -504,7 +504,7 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
     } /* if */
     else {
       bar = (char**)malloc(sizeof(char*)*(size+1));
-      if (where >0) {
+      if (where >=0) {
         praefix = strdup(format);
         strncpy(praefix,format,where);
         praefix[where]='\0';
@@ -519,6 +519,14 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
             where = -1;
           } /* if */
       } /* where > 0 */
+      else {
+        char c = format[2];
+        format[2] = '\0';
+        bar[i++]=strdup(format);
+        format[2] = c;
+        typ = find_next_format(tmp,&where);
+        foo = format +2;
+      } /* where = 0 */
       for (; (where > -1) ;typ = find_next_format(tmp,&where)) {
         bar[i]=strdup(tmp);
         bar[i][where]='\0';
@@ -533,17 +541,14 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
     } /* else */
   } /* if format */
   
-  for(j=0;j<n;j++)
-    if (projection[j]) {
-      l=0;
-      tmp = projection[j];
-      while  ( strchr(tmp,TSDB_FS)) {
-        tmp++;l++;
-      }
-      break;
-    }
+  l=0;
+  tmp = projection[0];
+  while  ( strchr(tmp,TSDB_FS)) {
+    tmp++;l++;
+  } /* while */
   
-  if (l>i) {
+    
+  if ((l+1)<i) {
     fprintf(tsdb_error_stream," Wrong report string: %s \n",format);
     fprintf(tsdb_error_stream," too many format specifications\n");
     return;
@@ -553,14 +558,14 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
   if (!praefix)
     praefix=strdup("");
   
-  if (i>l) {
+  if (i>(l+1)) {
     fprintf(tsdb_error_stream," Wrong report string: %s \n",format);
     fprintf(tsdb_error_stream," too many format specifications\n");
   }
   else
-    for (j=0;j<n;j++) {
-      if (projection[j]) {
-        foo = projection[j];
+    for (j=0,l=0;j<n;l++) {
+      if (projection[l]) {
+        foo = projection[l];
         fputs(praefix,stream);
         for (k=0;k<i;k++) {
           tmp = strchr(foo,TSDB_FS);
@@ -578,6 +583,7 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
         fputs(foo,stream);
         fputs(suffix,stream);
         fputc('\n',stream);
+        j++;
       } /* if */
     } /* for */
   
