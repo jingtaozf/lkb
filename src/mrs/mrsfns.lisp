@@ -108,7 +108,7 @@
 		     (format nil "~S" (write-vit stream 
 						 (horrible-hack-2 vit)))))))))
 
-(defun extract-and-output (parse-list)
+#+page(defun extract-and-output (parse-list)
   (let ((*print-circle* nil))
     (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
                              collect
