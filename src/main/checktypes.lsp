@@ -288,28 +288,27 @@
 ;;; marks.lsp contains the marking structures and functions
 
 (defun mark-for-cycles (type-record)
-   (let ((ok t))
-     (unless (seen-node-p type-record) 
-       (let ((daughters (mapcar #'(lambda (d) (get-type-entry d))
+   (let ((ok t)
+         (daughters (mapcar #'(lambda (d) (get-type-entry d))
                                 (type-daughters type-record))))
-         (mark-node-seen type-record)
+     (mark-node-seen type-record)
+     (for daughter in daughters
+          do
+          (if (active-node-p daughter)
+              (progn 
+                (setf ok nil)
+                (format t "~%Cycle or redundancy involving ~A" 
+                        (type-name daughter)))
+            (mark-node-active daughter)))
+     (when ok
+       (setf ok 
          (for daughter in daughters
+              all-satisfy
+              (mark-for-cycles daughter)))
+       (for daughter in daughters
             do
-            (if (active-node-p daughter)
-               (progn 
-                  (setf ok nil)
-                  (format t "~%Cycle or redundancy involving ~A" 
-                     (type-name daughter)))
-               (mark-node-active daughter)))
-         (when ok
-            (setf ok 
-               (for daughter in daughters
-                  all-satisfy
-                  (mark-for-cycles daughter)))
-            (for daughter in daughters
-               do
-               (unmark-node-active daughter)))))
-      ok))
+            (unmark-node-active daughter)))
+     ok))
 
 (defun scan-table nil
    (let ((ok t))
