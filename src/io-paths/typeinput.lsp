@@ -112,9 +112,7 @@
   (let* ((file-name 
           (ask-user-for-existing-pathname "Leaf type file?")))
     (when file-name
-      (if (eql *lkb-system-version* :page)
-          (read-tdl-leaf-type-file-aux file-name)
-        (read-leaf-type-file-aux file-name)))))
+      (read-GENERAL-leaf-type-files-aux file-name))))
 
 (defun read-GENERAL-leaf-type-files-aux (filenames)
   (unless (listp filenames)
@@ -167,17 +165,13 @@
     (unless (read-cached-leaf-types *leaf-types* filenames)
       (read-GENERAL-leaf-type-files-aux filenames)))))
 
-  (defun reload-leaf-files nil
-  (setf *syntax-error* nil)
-  (when (check-load-names *leaf-type-file-list* 'leaf-type)
-    (clear-leaf-types *leaf-types*)
-    (loop for file-name in (reverse *leaf-type-file-list*)
-         do
-         (if (eql *lkb-system-version* :page)
-	     (read-tdl-leaf-type-file-aux file-name)
-           (read-leaf-type-file-aux file-name)))
-    (store-cached-leaf-types *leaf-types*)
-    (format t "~%Reload complete")))
+(defun reload-leaf-files nil
+  (let ((filenames *leaf-type-file-list*))
+    (setf *syntax-error* nil)
+    (when (check-load-names filenames 'leaf-type)
+      (clear-leaf-types *leaf-types*)
+      (read-GENERAL-leaf-type-files-aux filenames))
+     (format t "~%Reload complete")))
 
 ;(defun read-type-patch-files nil
 ;  (setf *syntax-error* nil)
