@@ -100,9 +100,6 @@
        (unless ok (cerror "Continue loading script anyway" 
         "Problems in type file")))))
 
-(defun read-GENERAL-leaf-type-file-aux (filename)
-  (read-GENERAL-leaf-type-file-aux filename))
-
 (defun read-tdl-leaf-type-file-aux (filenames)
   (read-GENERAL-leaf-type-files-aux filenames))
   
