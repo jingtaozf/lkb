@@ -215,8 +215,7 @@
     (define-key map [menu-bar LexDB commit]
       '(menu-item "Commit" lexdb-commit-record 
 		  :keys "C-c"
-		  :enable (and lexdb-id
-			       (cle-eval "(lexdb-fn 'connection)"))))
+		  :enable (cle-eval-lexdb 'connection)))
     (define-key map [menu-bar LexDB edit]
       '(menu-item "Edit" lexdb-load-record 
 		  :keys "C-l"

@@ -182,13 +182,13 @@ BEGIN
 	RAISE INFO \'build time: %\', b_time;
 	RAISE INFO \'mod time: %\', m_time;
 
+	-- set (new) filter
+ 	EXECUTE \'
+  		CREATE OR REPLACE VIEW filtered
+ 		AS SELECT * 
+  		FROM revision_all
+    		WHERE \' || $1 ;
 	IF new_filter != current_filter THEN
-		-- set (new) filter
-	 	EXECUTE \'
-	  		CREATE OR REPLACE VIEW filtered
-   			AS SELECT * 
-    			FROM revision_all
-    			WHERE \' || $1 ;
  		EXECUTE \'UPDATE meta SET val= \' || quote_literal($1) || \' WHERE var=\'\'filter\'\'\';
 		RAISE INFO \'new filter: %\', new_filter;
 		RAISE INFO \'rebuilding db cache\';
@@ -354,4 +354,45 @@ CREATE OR REPLACE VIEW semi_obj AS
  RETURN true;
 END;
 ' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.build_current_grammar () RETURNS boolean AS
+'
+DECLARE
+	b_time text;
+BEGIN
+	-- we need "indices on the view" for reasons of efficicency...
+	raise info \'creating filtered_temp\';
+	CREATE TABLE filtered_temp AS SELECT * FROM filtered;
+	raise info \'creating index filtered_temp_i1\';
+	CREATE INDEX filtered_temp_i1 ON filtered_temp (name);
+	raise info \'creating index filtered_temp_i2\';
+	CREATE INDEX filtered_temp_i2 ON filtered_temp (modstamp);
+
+	-- recreate db cache
+	raise info \'emptying db cache\';
+	DELETE FROM current_grammar; 
+
+	raise info \'populating db cache\';
+	INSERT INTO current_grammar 
+  		SELECT fil.*
+  		FROM 
+   		(filtered_temp AS fil
+   		NATURAL JOIN 
+    		(SELECT name, max(modstamp) AS modstamp 
+      			FROM filtered_temp
+      		GROUP BY name) AS t1)
+  	WHERE flags=1;
+	--	SELECT * FROM active;
+
+	DROP TABLE filtered_temp;
+
+	-- set build time 
+	DELETE FROM meta WHERE var=''build_time'';
+	INSERT INTO meta VALUES (''build_time'',current_timestamp);
+	b_time := (SELECT build_time());
+	raise info \'build time: %\', b_time;
+
+	RETURN true;
+END;'
+LANGUAGE plpgsql;
 

@@ -53,23 +53,12 @@ CREATE OR REPLACE FUNCTION public.test_user(text) RETURNS SETOF text AS '
 SELECT val FROM public.meta WHERE var=''user'' AND val = $1;
 ' LANGUAGE SQL;
 
-CREATE OR REPLACE FUNCTION public.build_current_grammar () RETURNS boolean AS
-'
-DELETE FROM current_grammar; 
-INSERT INTO current_grammar 
-	SELECT * FROM active; 
-DELETE FROM meta WHERE var=''build_time'';
-INSERT INTO meta VALUES (''build_time'',current_timestamp);
-
-SELECT true;' 
-LANGUAGE SQL;
-
 CREATE OR REPLACE FUNCTION public.mod_time_private() RETURNS text AS '
-SELECT COALESCE((SELECT val FROM meta WHERE var=''mod_time'' LIMIT 1),''infin'')
+SELECT COALESCE((SELECT val FROM meta WHERE var=\'mod_time\' LIMIT 1),\'-infin\')
 ' LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION public.mod_time_public() RETURNS text AS '
-SELECT COALESCE((SELECT val FROM public.meta WHERE var=''mod_time'' LIMIT 1),''infin'')
+SELECT COALESCE((SELECT val FROM public.meta WHERE var=\'mod_time\' LIMIT 1),\'-infin\')
 ' LANGUAGE SQL;
 
 CREATE OR REPLACE FUNCTION public.mod_time() RETURNS text AS '

@@ -70,7 +70,7 @@
 (defun postgres-user-temp-dir nil  
     (make-pathname :directory (pathname-directory (lkb-tmp-dir))))
 
-(defvar *psql-db-version* "3.08")
+(defvar *psql-db-version* "3.09")
 (defvar *psql-fns-version* "1.00")
 (defvar *psql-port-default* 5432)
 
@@ -787,6 +787,7 @@
     (when (catch 'pg:sql-error
 	    (format *postgres-debug-stream* 
 		    "~%(applying new filter to db and rebuilding current grammar)")
+	    (initialize-psql-lexicon) ;; must reconnect to avoid server bug...
 	    (fn-get-records lexicon ''initialize-current-grammar filter)
 	    (empty-cache lexicon)
 	    nil)
@@ -800,6 +801,7 @@
 	    (fn-get-val lexicon ''size-current-grammar))))
 
 (defmethod set-filter-text-only ((lexicon psql-database) filter)
+  (initialize-psql-lexicon) ;; must reconnect to avoid server bug...
   (fn-get-records lexicon 
 		  ''initialize-current-grammar 
 		  filter)
@@ -834,7 +836,7 @@
 			       (- (length filename) 4))))
     (when filename
       (format t 
-	      "~%Merging files ~a.* into lexical database ~a" 
+	      "~%Please wait: merging files ~a.* into lexical database ~a~%" 
 	      filename 
 	      (dbname *psql-lexicon*))
       (merge-into-psql-lexicon2 *psql-lexicon* filename)

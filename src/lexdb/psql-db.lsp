@@ -148,19 +148,22 @@
 (defmethod build-lex ((lexicon psql-database) &key (semi t))
   (cond 
    ((not (user-read-only-p lexicon))
-    (format *postgres-debug-stream* "~%(building current_grammar)")
     (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
-    (format *postgres-debug-stream* "~%(vacuuming current_grammar)")
-    (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar")))
+    ;;(format *postgres-debug-stream* "~%(vacuuming current_grammar)")
+    ;;(run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar"))
+    )
    (t
     (format t "~%(user ~a has read-only privileges)" (user lexicon))))    
-  (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
-  (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
+  (format t "~%(LexDB filter: ~a )" (get-filter lexicon))
+  (let ((size (fn-get-val lexicon ''size-current-grammar)))
+    (if (string= "0" size)
+	(format t "~%WARNING: no entries passed the LexDB filter! " size)
+      (format t "~%(active lexical entries: ~a )" size)))
 
   (if semi
       (cond
        ((semi-up-to-date-p lexicon)
-	(format *postgres-debug-stream* "~%(loading SEM-I into memory)")
+	(format t "~%(loading SEM-I into memory)")
 	(unless (mrs::semi-p 
 		 (catch 'pg::sql-error
 		   (mrs::populate-*semi*-from-psql)))
@@ -175,13 +178,13 @@
 (defun build-current-grammar (lexicon)
   (cond 
    ((not (user-read-only-p lexicon))
-    (format *postgres-debug-stream* "~%(building current_grammar)")
     (fn-get-records  lexicon ''build-current-grammar)
-    (format *postgres-debug-stream* "~%(vacuuming current_grammar)")
-    (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar")))
+    ;;(format *postgres-debug-stream* "~%(vacuuming current_grammar)")
+    ;;(run-query lexicon (make-instance 'sql-query :sql-string "VACUUM current_grammar"))
+    )
    (t
     (format t "~%(user ~a had read-only privileges)" (user lexicon))))
-  (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
+  (format *postgres-debug-stream* "~%(LexDB filter: ~a )" (get-filter lexicon))
   (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
   (empty-cache lexicon))
 
@@ -230,7 +233,7 @@
   (let ((num-new-entries 
 	 (fn-get-val lexicon '
 		     'merge-into-db2))) 
-    (format *postgres-debug-stream* "~%(vacuuming public.revision)")
+    (format *postgres-debug-stream* "~%please wait while I vacuum the database...")
     (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM public.revision"))
     num-new-entries))
 
