@@ -208,9 +208,14 @@
 
 ;;; bindings is a list of assoc lists of variable numbers
 
-(defun mrs-equalp (mrs1 mrs2 &optional syntactic-p noisy-p)
-  (let ((bindings (variables-equal (psoa-top-h mrs1)
-                                   (psoa-top-h mrs2) syntactic-p nil)))
+(defparameter *mrs-equalp-properties-p* t)
+
+(defun mrs-equalp (mrs1 mrs2 &optional syntactic-p noisy-p (propertyp t))
+  #+:debug
+  (setf %mrs1 mrs1 %mrs2 mrs2)
+  (let* ((*mrs-equalp-properties-p* propertyp)
+         (bindings (variables-equal (psoa-top-h mrs1)
+                                    (psoa-top-h mrs2) syntactic-p nil)))
     (if bindings
         ; hack for case where no handels
         (progn
@@ -254,18 +259,21 @@
                                        noisy-p bindings)
   (let ((liszt1 (sort-mrs-struct-liszt orig-liszt1))
         (liszt2 (sort-mrs-struct-liszt orig-liszt2)))
-  (and (eql (length liszt1) (length liszt2))
-       (if (loop for rel1 in liszt1
-           as rel2 in liszt2
-           always
-             (if
-                 (setf bindings (mrs-relation-set-equal-p rel1 rel2 syntactic-p noisy-p bindings))
+    (unless (eql (length liszt1) (length liszt2))
+      (when noisy-p (format t "~%Difference in RELS (bags of EPs)"))
+      (return-from mrs-liszts-equal-p))
+    (if (loop for rel1 in liszt1
+            as rel2 in liszt2
+            always
+              (if (setf bindings 
+                    (mrs-relation-set-equal-p 
+                     rel1 rel2 syntactic-p noisy-p bindings))
                 bindings 
-               (progn
-                 (when noisy-p
-                   (format t "~%Relations differ ~A ~A" rel1 rel2))
-                 nil)))
-           bindings))))
+                (progn
+                  (when noisy-p
+                    (format t "~%Relations differ ~A ~A" rel1 rel2))
+                  nil)))
+        bindings)))
 
 (defun mrs-relation-set-equal-p (relset1 relset2 syntactic-p noisy-p bindings)
   (and (eql (length relset1) (length relset2))
@@ -353,16 +361,17 @@
 
 
 (defun variables-equal (var1 var2 syntactic-p bindings)
-  (or (eq var1 var2)
+  (or (when (eq var1 var2) bindings)
       (and (var-p var1) (var-p var2)
            (if syntactic-p
              (equal (var-type var1) (var-type var2))
              (if (and (var-type var1) (var-type var2))
                (compatible-types (var-type var1) (var-type var2))
                t))
-           (if syntactic-p
-             (equal-extra-vals (var-extra var1) (var-extra var2))
-             (compatible-extra-vals (var-extra var1) (var-extra var2)))
+           (or (null *mrs-equalp-properties-p*)
+               (if syntactic-p
+                 (equal-extra-vals (var-extra var1) (var-extra var2))
+                 (compatible-extra-vals (var-extra var1) (var-extra var2))))
            (bindings-equal (get-var-num var1)
                            (get-var-num var2) bindings))))
 
