@@ -16,7 +16,7 @@
         (let ((new-fs (lex-or-psort-full-fs entry)))
           (unless new-fs
             (format cl-user::*lkb-background-stream*
-                    "~%No feature structure for ~A" lex-id))
+                    "~%No feature structure for ~A~%" lex-id))
           (when (and new-fs
                      *grammar-specific-batch-check-fn*)
             (funcall *grammar-specific-batch-check-fn*

@@ -465,7 +465,7 @@
       (handler-case 
 	  (read-psort-index-file)
 	(error (condition)
-	  (format t "~%Error: ~A~%" condition)
+	  (format t "~%Error: ~A" condition)
 	  (delete-temporary-lexicon-files)
 	  (setf ok nil)))
       (cond (ok (format t "~%Cached lexicon read")
@@ -608,7 +608,7 @@
     (let ((successful-positioning
             (file-position psorts-stream file-pointer)))
       (unless successful-positioning 
-         (error "Can't retrieve entry for ~A~%" id))
+         (error "~%Can't retrieve entry for ~A" id))
       (read psorts-stream t))
     #+(and mcl powerpc)(incf ee (CCL::TOTAL-BYTES-ALLOCATED))))
 

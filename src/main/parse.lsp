@@ -330,7 +330,10 @@ Setting *first-only-p* to nil")
                  (progn #+:powerpc(decf gg (CCL::%HEAP-BYTES-ALLOCATED))
                         (prog1
                             (union
-                             (filter-for-irregs (morph-analyse word))
+                             (filter-for-irregs
+                              (remove-duplicates
+                               (morph-analyse word)
+                               :test #'equalp))
                              ;; filter is in rules.lsp
                              (find-irregular-morphs word) :test #'equalp)
                           #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
