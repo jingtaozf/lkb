@@ -324,11 +324,15 @@ proc tsdb_browse_vocabulary {{load 0}} {
 }; # tsdb_browse_vocabulary()
 
 
-proc tsdb_browse {code {condition ""} {globalp 1}} {
+proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
 
   global globals;
 
-  if {[verify_ts_selection]} {return 1};
+  if {$profile == ""} {
+    set profile $globals(data);
+  } else {
+    if {[verify_ts_selection]} {return 1};
+  }; # else
 
   switch $code {
     items {
@@ -375,7 +379,7 @@ proc tsdb_browse {code {condition ""} {globalp 1}} {
 
   if {[info exists attributes]} {
     set command [format "(select \"%s\" %s nil %s \"%s\")" \
-                   $globals(data) $attributes $relations $condition];
+                   $profile $attributes $relations $condition];
     send_to_lisp :event $command;
   }; # if
   
