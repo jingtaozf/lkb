@@ -16,6 +16,8 @@
   (setf %pet-types% nil)
   (setf %pet-features% nil))
 
+(defconstant *mrs-package* :mrs)
+
 (defun vsym (string) 
   #+:debug
   (format t "vsym(): `~a'.~%" string)
@@ -30,7 +32,7 @@
      ((and (char= (char string 0) #\") (char= (char string (- n 1)) #\"))
       (subseq string 1 (- (length string) 1)))
      (t
-      (intern (string-upcase string) :mrs)))))
+      (intern (string-upcase string) *mrs-package*)))))
       
 (defun deref (fs)
   ;;
@@ -181,8 +183,9 @@
        (if (psoa-p psoa)
          (let* ((mode 
                  (typecase mode
-                   (symbol (intern (string-upcase (symbol-name mode)) :mrs))
-                   (string (intern (string-upcase mode) :mrs))))
+                   (symbol (intern (string-upcase (symbol-name mode)) 
+                                   *mrs-package*))
+                   (string (intern (string-upcase mode) *mrs-package*))))
                 (result  
                  (with-output-to-string (stream)
                    (case mode

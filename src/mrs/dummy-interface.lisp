@@ -11,8 +11,10 @@
 
 (in-package :mrs)
 
+(defconstant *mrs-package* :mrs)
+
 (defun vsym (string) 
-  (intern (string-upcase (string string)) :mrs))
+  (intern (string-upcase (string string)) *mrs-package*))
 
 (defun get-parse-fs (result)
   ;;

@@ -1107,7 +1107,8 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
           
           
 (defun read-mrs-atom (istream)
-  (let ((atomsym (read istream nil 'eof)))
+  (let* ((*package* (find-package *mrs-package*))
+         (atomsym (read istream nil 'eof)))
     (when (eq atomsym 'eof)
       (error "Unexpected eof"))
     atomsym))

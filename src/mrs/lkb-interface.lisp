@@ -1,3 +1,5 @@
+;;; Hey, emacs(1), this is -*- Mode: Common-Lisp; Package: MRS; -*- got it?
+
 ;;; Copyright (c) 1998--2003
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
@@ -38,9 +40,11 @@
 
 (in-package :mrs)
 
+(defconstant *mrs-package* :lkb)
+
 (defun vsym (str) 
   ;;; allow mrsglobals files to be system independent
-  (intern (string-upcase str) :lkb))
+  (intern (string-upcase str) *mrs-package*))
 
 ;;;
 ;;; the following functions are basically accessors for those parts of feature
