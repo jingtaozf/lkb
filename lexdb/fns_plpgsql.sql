@@ -362,8 +362,14 @@ END;
 ' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.next_version(text) RETURNS integer AS '
+DECLARE
+	i integer;
+	x RECORD;
 BEGIN
-	RETURN (SELECT COALESCE(1 + max(version),0) FROM revision_all WHERE name LIKE $1 AND user=user);
+	FOR x IN EXECUTE \'SELECT COALESCE(1 + max(version),0) as v FROM revision_all WHERE name LIKE \' || quote_literal($1) || \' AND user=user\' LOOP 
+    		i := x.v;
+	END LOOP;
+	RETURN i;
 END;
 ' LANGUAGE plpgsql;
 
@@ -489,6 +495,7 @@ END;
 
 
 
+-- Total runtime: 4.259 ms
 CREATE OR REPLACE FUNCTION public.update_entry(text,text,text) RETURNS boolean AS '
 DECLARE
 	sql_str text;
@@ -537,6 +544,7 @@ END;
 
 ' LANGUAGE plpgsql;
 
+-- fix me?
 CREATE OR REPLACE FUNCTION public.semi_mod_time_private(text,text,int) RETURNS text AS '
 BEGIN
 	RETURN (SELECT modstamp FROM semi_mod WHERE (name,userid,version)=($1,$2,$3));
