@@ -77,9 +77,7 @@
 #+(and (version>= 6 0) (or :linux86 :solaris))
 (pushnew :lui *features*)
 
-(pushnew :mrs *features*)
-(pushnew :mt *features*)
-(compile-system "mt" :force t)
+(compile-system "lkb" :force t)
 (setq make::*building-image-p* nil)
 
 ;;;
