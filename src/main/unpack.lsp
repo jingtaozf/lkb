@@ -392,7 +392,7 @@
       (if test
         (loop
             for edge in edges
-            when (ignore-errors (funcall test edge)) collect edge)
+            when (funcall test edge) collect edge)
         edges))
     ;;
     ;; ignore genuinely frozen edges; now that we are into the unpacking
@@ -415,8 +415,7 @@
           for new = (when hypothesis 
                       (let ((edge (instantiate-hypothesis hypothesis)))
                         (when (and edge 
-                                   (or (null test)
-                                       (ignore-errors (funcall test edge))))
+                                   (or (null test) (funcall test edge)))
                           edge)))
           while (and hypothesis (>= n 1))
           when new do (decf n) and collect new))))
