@@ -70,11 +70,11 @@
              (compiled-file (make-pathname :name file :type "fasl"
                :directory (append *lkb-fasl-dir* (list dir)))))
           (load compiled-file))))))
-#|
+
 (in-package :clim-user)
 (set-up-lkb-interaction :core) 
 (in-package :cl-user)
-|#
+
 
 
 
