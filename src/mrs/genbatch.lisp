@@ -271,8 +271,21 @@ output results
                (tgc nil)
                (tcpu nil)
                (treal nil)
-               (errorp nil)
-               (*dag-recycling-p* t))
+               (errorp nil))
+           ;;
+           ;; when generating from a parse, dag recycling caused a serious
+           ;; problem.  apparently, something in the generator makes reference
+           ;; to a dag node allocated from the pool in the parser.  when the
+           ;; pool is reset prior to generation, this backward reference causes
+           ;; desaster (though curiously not for all sentences; ``Abrams will
+           ;; interview Browne as soon as Browne sleeps.'' seems a good test).
+           ;; supposedly, the MRS structure extracted from the parser is fully
+           ;; self-contained; so, if nothing else referenced parser results,
+           ;; resetting the pool on entry to the generator would be the right
+           ;; thing.  room for debugging here ...           (8-sep-99  -  oe)
+           ;;
+           #+:gdebug
+           (reset-pools #+:gdebug t)
            (if (not (mrs::make-scoped-mrs mrs))
                (format ostream "~%#| Scope failure: ~A |#" sentence)  
              ;;; check for scoping, because incorrect MRS often
@@ -281,11 +294,16 @@ output results
                    (strings unifs-tried unifs-failed active inactive)
                    (excl::time-a-funcall
                     #'(lambda () 
-                        (handler-case 
+                        (#-:gdebug 
+                         handler-case 
+                         #+:gdebug 
+                         progn
                             (generate-from-mrs mrs)
+                          #-:gdebug  
                           (storage-condition (condition)
                             (format t "~%Memory allocation problem in generation: ~A caused by ~A~%" condition sentence)
                             (setf errorp t))
+                          #-:gdebug
                           (error (condition)
                             (format t  
                                     "~%Error in generation: ~A caused by ~A~%" condition sentence)

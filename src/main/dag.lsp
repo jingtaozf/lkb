@@ -118,6 +118,66 @@
 ;;; significantly (at the minor cost of slightly increased initial image size);
 ;;; garbage collection time should drop accordingly.        (17-jul-99  -  oe)
 ;;;
+
+;;;
+;;; some general thoughts on dag recycling:
+;;;
+;;; processing typically is organized in discrete intervals, e.g. parsing one
+;;; sentence or generating from one input.  within one interval large amounts
+;;; of temporary data are created that mostly become garbage as the interval
+;;; is completed.  a big chunk of garbage results from dag nodes allocated in
+;;; the unifier.  after one parse is completed, say, and the chart is emptied,
+;;; all references (pointers) to edges created during that parse are dropped;
+;;; accordingly, references to feature structures associated with those edges
+;;; disappear; accordingly, references to dag nodes within those structures.
+;;;
+;;; although the processor after completion of a parse knows explicitly that
+;;; all the temporary data will no longer be used, there is no direct way to
+;;; take advantage of this knowledge.  instead, the application has to wait for
+;;; the garbage collector to eventually infer that knowledge (viz. from lack
+;;; of references to those objects) from the overall state of the Lisp system,
+;;; and only then dispose of the garbage; call this indirect memory management.
+;;;
+;;; the dag pool is an attempt to do direct memory management and allow the
+;;; processor to use knowledge about temporary data that is no longer used.
+;;; the pool is a generic data structure that has the following slots:
+;;;
+;;;   - size: overall size (in number of objects) of this pool;
+;;;   - position: current fill pointer;
+;;;   - data: vector of objects held in this pool;
+;;;   - constructur: function to allocate new objects when pool has exhausted;
+;;;   - garbage: counter for pool accesses after exhaustion.
+;;;
+;;; currently, there is one pool for dag nodes that is initialized (to a size
+;;; of *dag-pool-size*) in `dag.lisp'; i.e. *dag-pool-size* many dag nodes are
+;;; allocated at load() time and stored in the .data. vector.  the dag node
+;;; constructor make-dag() on each call tries to retrieve a dag object from the
+;;; pool; if the pool is not exhausted it returns a pointer to the dag node at
+;;; the current pool position and increments the fill pointer; if allocation
+;;; from the pool fails, it falls back into calling the actual constructor; it
+;;; will allocate a new object which will ultimately become garbage (in this 
+;;; case the .garbage. counter is incremented to record that we overshot the
+;;; pool size).
+;;;
+;;; the tricky thing is to decide on the interval boundaries and seal the pool
+;;; from leakage.  leakage here means that after the pool position was reset,
+;;; someone outside of the interval can (will) still make reference to a dag
+;;; from the pool.  suppose that dag recycling was on in interactive mode: the
+;;; pool pointer is reset (to 0) on entry into the parser.  since people may 
+;;; have feature structure windows open browsing results from a previous parse,
+;;; dag recycling could mean that parts of those features structures suddenly
+;;; are changed, because dag nodes have been reused (nb: it is not clear, the
+;;; problem cannot be solved; it seems most of the display of previous results
+;;; is closed or frozen anyway, when new input is parsed; in Allegro at least).
+;;;
+;;; in batch parsing, on the contrary, it can be guaranteed that once the next
+;;; parse is started there will be no reference to edges created earlier.  the
+;;; global *dag-recycling-p* is used to signal whether dag recycling shall be
+;;; used (i.e. whether dag node allocation requests try the pool first).
+;;;
+;;;                                                       (7-sep-99  -  oe)
+;;;
+
 (defstruct pool
   (size 0 :type fixnum)
   (position 0 :type fixnum)
@@ -137,6 +197,29 @@
         (setf (pool-data pool) data)
         pool)))
 
+(defparameter *dag-pool* (create-pool 
+                          *dag-pool-size*
+                          #'(lambda () (make-safe-dag-x nil nil))))
+
+(defun reset-pool (pool &optional forcep)
+  (when forcep
+    (loop
+        with data = (pool-data pool)
+        for i from 0 to (pool-position pool)
+        for dag = (svref data i) 
+        when (dag-p dag) do
+          (setf (dag-type dag) :invalid)
+          (setf (dag-arcs dag) :invalid)))
+  (setf (pool-position pool) 0)
+  (setf (pool-garbage pool) 0))
+  
+
+(defun reset-pools (&optional forcep)
+  (loop
+      for pool in (list *dag-pool*)
+      do (reset-pool pool forcep)))
+
+
 (defmacro pool-next (pool)
   (declare (type pool pool))
   `(let ((next (svref (the simple-vector (pool-data ,pool))
@@ -148,10 +231,6 @@
       (t
        (incf (pool-position ,pool))
        next))))
-
-(defparameter *dag-pool* (create-pool 
-                          *dag-pool-size*
-                          #'(lambda () (make-safe-dag-x nil nil))))
 
 (defparameter *dag-recycling-p* nil)
 
@@ -492,83 +571,84 @@
   ;;
   (if (and *chart-packing-p* (eq (first path) 'cont))
     (setf (dag-forward dag1) dag2)
-  (multiple-value-bind (new-type constraintp)
-      (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
-    (if new-type
-	(progn
-	  (setf (dag-new-type dag1) new-type)
-	  (if (type-spec-atomic-p new-type)
-	      (if (or (dag-arcs dag1) (dag-comp-arcs dag1)
-		      (dag-arcs dag2) (dag-comp-arcs dag2))
-                  (progn
-		    (when *unify-debug*
-		      (if (eq *unify-debug* :return)
-                        (setf %failure% (list :atomic (reverse path)))
-                        (format 
-                         t 
-                         "~%Unification failed due to atomic/~
-                          non-atomic clash at path < ~{~A ~^: ~}>" 
-                         (reverse path))))
-		    (throw '*fail* nil))
-		(setf (dag-forward dag2) dag1))
-	    (progn
-	      ;; unify in constraints if necessary - may have to copy them to
-	      ;; prevent separate uses of same constraint in same unification
-	      ;; becoming reentrant
-	      (when (and constraintp *unify-wffs*)
-		(let ((constraint (if *expanding-types*
-                                      (copy-dag-completely (wf-constraint-of new-type))
-                                      (may-copy-constraint-of new-type))))
+    (multiple-value-bind (new-type constraintp)
+        (find-gcsubtype (unify-get-type dag1) (unify-get-type dag2))
+      (if new-type
+        (progn
+          (setf (dag-new-type dag1) new-type)
+          (if (type-spec-atomic-p new-type)
+            (if (or (dag-arcs dag1) (dag-comp-arcs dag1)
+                    (dag-arcs dag2) (dag-comp-arcs dag2))
+                (progn
+                  (when *unify-debug*
+                    (if (eq *unify-debug* :return)
+                      (setf %failure% (list :atomic (reverse path)))
+                      (format 
+                       t 
+                       "~%Unification failed due to atomic/~
+                        non-atomic clash at path < ~{~A ~^: ~}>" 
+                       (reverse path))))
+                  (throw '*fail* nil))
+              (setf (dag-forward dag2) dag1))
+            (progn
+              ;; unify in constraints if necessary - may have to copy them to
+              ;; prevent separate uses of same constraint in same unification
+              ;; becoming reentrant
+              (when (and constraintp *unify-wffs*)
+                (let ((constraint (if *expanding-types*
+                                    (copy-dag-completely
+                                     (wf-constraint-of new-type))
+                                    (may-copy-constraint-of new-type))))
                   (when *recording-constraints-p*
-                      (pushnew new-type *type-constraint-list* :test #'eq))
-		  (if  *unify-debug*
-		      (let ((res 
-			     (catch '*fail* (unify1 dag1 constraint path))))
-			(unless res
-			  (if (eq *unify-debug* :return)
-                            (setf %failure% 
-                              (list :constraints 
-                                    (reverse path) new-type nil nil))
-                            (format 
-                             t 
-                             "~%Unification with constraint 
-                              of type ~A failed ~
-                              at path < ~{~A ~^: ~}>" 
-                             new-type (reverse path)))
-			  (throw '*fail* nil)))
-		    (unify1 dag1 constraint path)))
-		;; dag1 might just have been forwarded so dereference it again
-		(setq dag1 (deref-dag dag1)))
-	      ;; cases for each of dag1 and dag2 where they have no arcs just
-	      ;; considering straightforward use of unify1: if we've
-	      ;; previously visited a node with no arcs then it must have got
-	      ;; forwarded then so we won't ever visit it again - so no need
-	      ;; to test for presence of any comp-arcs BUT:
-	      ;; unify-paths-dag-at-end-of1 adds to comp-arcs independently so
-	      ;; we do need the additional tests
-	      (cond
-	       ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
-		(setf (dag-new-type dag2) new-type)
-		(setf (dag-forward dag1) dag2))
-	       ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
-		(setf (dag-forward dag2) dag1))
-	       (t
-		(setf (dag-forward dag2) dag1)
-		(setf (dag-copy dag1) :inside)
-		(unify-arcs dag1 dag2 path)
-		(setf (dag-copy dag1) nil))))))
-      (progn
-	(when *unify-debug*
-          (if (eq *unify-debug* :return)
-            (setf %failure% 
-              (list :clash (reverse path) 
-                    (unify-get-type dag1) (unify-get-type dag2)))
-            (format 
-             t 
-             "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
-             (unify-get-type dag1) (unify-get-type dag2) 
-             (reverse path))))
-	(throw '*fail* nil))))))
+                    (pushnew new-type *type-constraint-list* :test #'eq))
+                  (if  *unify-debug*
+                    (let ((res 
+                           (catch '*fail* (unify1 dag1 constraint path))))
+                      (unless res
+                        (if (eq *unify-debug* :return)
+                          (setf %failure% 
+                            (list :constraints 
+                                  (reverse path) new-type nil nil))
+                          (format 
+                           t 
+                           "~%Unification with constraint 
+                            of type ~A failed ~
+                            at path < ~{~A ~^: ~}>" 
+                           new-type (reverse path)))
+                        (throw '*fail* nil)))
+                    (unify1 dag1 constraint path)))
+                ;; dag1 might just have been forwarded so dereference it again
+                (setq dag1 (deref-dag dag1)))
+              ;; cases for each of dag1 and dag2 where they have no arcs just
+              ;; considering straightforward use of unify1: if we've
+              ;; previously visited a node with no arcs then it must have got
+              ;; forwarded then so we won't ever visit it again - so no need
+              ;; to test for presence of any comp-arcs BUT:
+              ;; unify-paths-dag-at-end-of1 adds to comp-arcs independently so
+              ;; we do need the additional tests
+              (cond
+               ((and (null (dag-arcs dag1)) (null (dag-comp-arcs dag1)))
+                (setf (dag-new-type dag2) new-type)
+                (setf (dag-forward dag1) dag2))
+               ((and (null (dag-arcs dag2)) (null (dag-comp-arcs dag2)))
+                (setf (dag-forward dag2) dag1))
+               (t
+                (setf (dag-forward dag2) dag1)
+                (setf (dag-copy dag1) :inside)
+                (unify-arcs dag1 dag2 path)
+                (setf (dag-copy dag1) nil))))))
+        (progn
+          (when *unify-debug*
+            (if (eq *unify-debug* :return)
+              (setf %failure% 
+                (list :clash (reverse path) 
+                      (unify-get-type dag1) (unify-get-type dag2)))
+              (format 
+               t 
+               "~%Unification of ~A and ~A failed at path < ~{~A ~^: ~}>"
+               (unify-get-type dag1) (unify-get-type dag2) 
+               (reverse path))))
+          (throw '*fail* nil))))))
 
 (defmacro unify-arcs-find-arc (attribute arcs comp-arcs)
   ;; find arc in arcs or comp-arcs with given attribute - also used in

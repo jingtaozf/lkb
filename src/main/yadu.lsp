@@ -136,6 +136,9 @@
           (make-tdfs :indef indef12
                      :tail (yadu-general-merge-tails tail1 tail2 indef12)))))
 
+(defun yaduablep (tdfs1 tdfs2)
+  (unifiable-wffs-p (tdfs-indef tdfs1) (tdfs-indef tdfs2)))
+
 (defun yadu-winner (tdfs)
   (let ((indef (tdfs-indef tdfs))
          (tail (tdfs-tail tdfs)))

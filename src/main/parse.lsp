@@ -222,16 +222,11 @@
 (defvar *parser-lock* (mp:make-process-lock))
 
 (defmacro with-parser-lock (() &body body)
-  (let ((form
-         `(progn
-            (when *dag-recycling-p*
-              (setf (pool-position *dag-pool*) 0)
-              (setf (pool-garbage *dag-pool*) 0))
-            ,@body)))
-    #+allegro
-    `(mp:with-process-lock (*parser-lock*) ,form)
-    #-allegro
-    form))
+  #+allegro
+  `(mp:with-process-lock (*parser-lock*)
+     ,@body)
+  #-allegro
+  `(progn ,@body))
 
 ;;;
 ;;; satisfy measurement fetish: list used to store (cpu) time used to find
@@ -273,6 +268,7 @@
 
 (defun parse (user-input &optional (show-parse-p *show-parse-p*) 
                                    (first-only-p *first-only-p*))
+  
   (when (and first-only-p (greater-than-binary-p))
     (format t "~%First only mode only works if rules are unary or binary.
 Setting *first-only-p* to nil")
@@ -1000,7 +996,7 @@ Setting *first-only-p* to nil")
 	   (when (eql (chart-configuration-begin item) start-vertex)
 	     ;; root may be a list of (td)fs with the interpretation that
 	     ;; if any of them match the parse is OK
-	     (if (null *start-symbol*)
+	     (if (null start-symbols)
 		 (list (chart-configuration-edge item))
 	       (if *substantive-roots-p*
 		   (create-new-root-edges item start-symbols
@@ -1021,14 +1017,14 @@ Setting *first-only-p* to nil")
 	  (create-new-root-edges item start-symbols start-vertex end-vertex)
           (filter-root-edges item start-symbols))))))
 
-(defun filter-root-edges (item start-symbols)
-  (dolist (start-symbol start-symbols)
-    (let ((root-spec (get-tdfs-given-id start-symbol)))
-         (when root-spec
-             (when (yadu root-spec
-                         (edge-dag 
-                          (chart-configuration-edge item)))
-               (return (list (chart-configuration-edge item))))))))
+(defun filter-root-edges (item &optional (roots *start-symbol*))
+  (loop
+      with edge = (if (edge-p item) item (chart-configuration-edge item))
+      with tdfs = (edge-dag edge)
+      for root in (if (listp roots) roots (list roots))
+      for rtdfs = (get-tdfs-given-id root)
+      thereis (when (and rtdfs (yaduablep rtdfs tdfs))
+                (list edge))))
 
 (defun create-new-root-edges (item start-symbols start-vertex end-vertex)
   (for start-symbol in start-symbols        
@@ -1168,7 +1164,6 @@ Setting *first-only-p* to nil")
          ;; ask for recycling of safe dags
          ;; NB lexical entries must not contain safe dags - so expand-psort-entry
          ;; and friends must rebind *safe-not-to-copy-p* to nil
-         (*dag-recycling-p* t)
          (*print-right-margin* 300)
          (start-time (get-internal-run-time)))
      (unwind-protect
@@ -1203,17 +1198,25 @@ Setting *first-only-p* to nil")
                          (if (fboundp 'preprocess-sentence-string)
                              (preprocess-sentence-string sentence)
                            sentence))
-                        (user-input (split-into-words munged-string)))
-                   (handler-case
-                       (progn (parse user-input nil)
-                              (setf *sentence* sentence)
-                              (setf *ostream* ostream)
-                              (when (fboundp *do-something-with-parse*)
-                                (funcall *do-something-with-parse*)))
-                     (storage-condition (condition)
-                       (format t "~%Memory allocation problem: ~A caused by ~A~%" condition user-input))
-                     (error (condition)
-                       (format t  "~%Error: ~A caused by ~A~%" condition user-input))) 
+                        (user-input (split-into-words munged-string))
+                        (*dag-recycling-p* t))
+                   (#-:gdebug 
+                    handler-case
+                    #+:gdebug
+                    progn
+                       (progn
+                         (reset-pools #+:gdebug t)
+                         (parse user-input nil)
+                         (setf *sentence* sentence)
+                         (setf *ostream* ostream)
+                         (when (fboundp *do-something-with-parse*)
+                           (funcall *do-something-with-parse*)))
+                       #-:gdebug
+                       (storage-condition (condition)
+                       (format t "~%Memory allocation problem: ~A caused by ~A~%" condition user-input)) 
+                       #-:gdebug
+                       (error (condition)
+                              (format t  "~%Error: ~A caused by ~A~%" condition user-input)))
                    (unless (fboundp *do-something-with-parse*)
                      ;; if we're doing something else, 
                      ;; let that function control the output
