@@ -1,6 +1,11 @@
 cvs update: Updating .
+? Version.lisp.fasl
 cvs update: Updating data
 cvs update: Updating lkb
+? lkb/checkpaths.lsp.fasl
+? lkb/comlex.lsp.fasl
+? lkb/globals.lsp.fasl
+? lkb/user-fns.lsp.fasl
 cvs update: Updating patches
 cvs update: Updating pet
 cvs update: Updating tsdb
@@ -280,6 +285,7 @@ cvs update: Updating src/tsdb
 cvs update: Updating src/tsdb/TeX
 cvs update: Updating src/tsdb/doc
 cvs update: Updating src/tsdb/home
+? src/tsdb/home/export
 ? src/tsdb/home/redwoods
 cvs update: Updating src/tsdb/home/lingo
 cvs update: Updating src/tsdb/home/lingo/jul-98
@@ -353,7 +359,7 @@ cvs update: Updating src/www
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.186; previous revision: 1.185
+new revision: 1.188; previous revision: 1.187
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1260,14 +1266,14 @@ area area  address(bytes)        cons         other bytes
      Top #x41f06000
      New #x41c86000(2621440)    -----            -----
      New #x41a06000(2621440)  1019:1019     2551696:872
-   0 Old #x41003970(10495632)    1:45854    8914520:1207176
+   0 Old #x41003970(10495632)    1:45854    8914504:1207192
 Root pages: 2
  Lisp heap: #x41000000  pos: #x41f06000 resrve: 586153984
  C heap:    #x64000000  pos: #x64006000 resrve: 1024000
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Oct 30, 2002 9:58)
+6.0 [Linux (x86)] (Oct 30, 2002 11:56)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -2066,7 +2072,7 @@ CL-USER(47):
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 [Current process: Initial Lisp Listener]
-CL-USER(48): #<EQUAL hash-table with 0 entries @ #x4143e9ca>
+CL-USER(48): #<EQUAL hash-table with 0 entries @ #x4143e9da>
 [Current process: Initial Lisp Listener]
 CL-USER(49): ; Libfasl from bundle code/who.fasl.
 
@@ -2083,7 +2089,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/nacl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-27235976 bytes have been tenured, next gc will be global.
+26425216 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -2969,7 +2975,7 @@ Root pages: 2
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Oct 30, 2002 10:04)
+6.0 [Linux (x86)] (Oct 30, 2002 12:02)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -3785,7 +3791,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/macl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-26410800 bytes have been tenured, next gc will be global.
+26411128 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4023,7 +4029,7 @@ Root pages: 12
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (10/30/2 9:59)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (10/30/2 11:57)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -4550,7 +4556,7 @@ USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-21691256 bytes have been tenured, next gc will be global.
+21885016 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -5077,7 +5083,7 @@ Warning: Variable #:G27260 is never used.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tnt-interface.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 3736632; old: 562312; pending: 0; efficiency: 95.
+gc-after-hook(): local; new: 3736880; old: 562312; pending: 0; efficiency: 95.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
@@ -7312,8 +7318,9 @@ src/tsdb/TeX/piclatex.sty
       --exclude=src/tsdb/skeletons/english/vm31 \
       --exclude=src/tsdb/skeletons/english/vm32 \
       --exclude=src/tsdb/skeletons/english/wsj00 \
+      --exclude=src/tsdb/skeletons/english/parc \
       --exclude=src/tsdb/skeletons/yy \
-      --exclude=src/tsdb/home/trees \
+      --exclude=src/tsdb/home/redwoods \
       --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
       src/tsdb/skeletons src/tsdb/home; \
@@ -7379,9 +7386,6 @@ src/tsdb/skeletons/english/ec/relations
 src/tsdb/skeletons/english/demo/
 src/tsdb/skeletons/english/demo/item
 src/tsdb/skeletons/english/demo/relations
-src/tsdb/skeletons/english/parc/
-src/tsdb/skeletons/english/parc/item
-src/tsdb/skeletons/english/parc/relations
 src/tsdb/skeletons/francaise/
 src/tsdb/skeletons/francaise/Relations
 src/tsdb/skeletons/francaise/french/
@@ -7460,27 +7464,7 @@ src/tsdb/home/lingo/oct-97/csli/97-11-26/page/rule
 src/tsdb/home/lingo/oct-97/csli/97-11-26/page/run
 src/tsdb/home/lingo/oct-97/csli/97-11-26/page/set
 src/tsdb/home/lingo/oct-97/csli/97-11-26/page/tree
-src/tsdb/home/redwoods/
-src/tsdb/home/redwoods/vm6/
-src/tsdb/home/redwoods/vm6/02-10-24/
-src/tsdb/home/redwoods/vm6/02-10-24/preference
-src/tsdb/home/redwoods/vm6/02-10-24/decision
-src/tsdb/home/redwoods/vm6/02-10-24/tree
-src/tsdb/home/redwoods/vm6/02-10-24/daughter
-src/tsdb/home/redwoods/vm6/02-10-24/edge
-src/tsdb/home/redwoods/vm6/02-10-24/output
-src/tsdb/home/redwoods/vm6/02-10-24/rule
-src/tsdb/home/redwoods/vm6/02-10-24/result
-src/tsdb/home/redwoods/vm6/02-10-24/parse
-src/tsdb/home/redwoods/vm6/02-10-24/run
-src/tsdb/home/redwoods/vm6/02-10-24/item-set
-src/tsdb/home/redwoods/vm6/02-10-24/item-phenomenon
-src/tsdb/home/redwoods/vm6/02-10-24/set
-src/tsdb/home/redwoods/vm6/02-10-24/parameter
-src/tsdb/home/redwoods/vm6/02-10-24/phenomenon
-src/tsdb/home/redwoods/vm6/02-10-24/analysis
-src/tsdb/home/redwoods/vm6/02-10-24/item
-src/tsdb/home/redwoods/vm6/02-10-24/relations
+src/tsdb/home/export
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
   tar Svczf /usr/local/apache/htdocs/lingo/ftp/`date "+%Y-%m-%d"`/itsdb_documentation.tgz \
