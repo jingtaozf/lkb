@@ -12,13 +12,14 @@
 		   (probe-file "/usr/lib/libpq.so.2"))))
 (cond 
  (libpq-file
-  (format t "; Copying ~a to  ~~/tmp/libpq.so" libpq-file)
+  (format t ";   Copying ~a to  ~~/tmp/libpq.so" libpq-file)
   (if (probe-file "~/tmp/libpq.so")
       (common-lisp-user::run-shell-command "rm ~/tmp/libpq.so"))
   (common-lisp-user::run-shell-command (format nil "ln -s ~a ~~/tmp/libpq.so" libpq-file)))
  (t
   (format t "WARNING: Unable to determine current version of library libpq
          Please copy current version libpq.so.* to ~~/tmp/libpq.so"))))
+
 
 (defsystem "psql"
    :source-pathname (dir-append (get-sources-dir "psql")
