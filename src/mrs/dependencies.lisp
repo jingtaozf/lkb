@@ -38,7 +38,7 @@
 
 (defparameter %eds-relevant-features% 
   '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA"
-    "CONST_VALUE" "CARG"
+    "CONST_VALUE" "CARG" "TERM1" "TERM2" "FACTOR1" "FACTOR2"
     "MARG" "L-INDEX" "R-INDEX" 
     "L-HNDL" "R-HNDL"  "L-HANDEL" "R-HANDEL" "MAIN" "SUBORD" "ROLE"
     "HINST" "NHINST"))
