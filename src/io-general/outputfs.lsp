@@ -829,6 +829,8 @@
              #'(lambda (x y)
                 (member y (member x ordered-attributes))))))
 
+;;; not sure whether the following is being used any more
+
 (defun convert-dag-to-paths (dag-instance)   
    (cond 
       ((dag-p dag-instance)
@@ -886,7 +888,7 @@
                (type (pop path)))
             (push (make-type-feature-pair :type type :feature feature)
                typed-feature-list)))
-      (make-path :typed-feature-list typed-feature-list)))
+      (make-typed-path :typed-feature-list typed-feature-list)))
 
 
 

@@ -70,9 +70,12 @@
       (subtype-p type2 type1)))
 
 (defun last-path-feature (path)
-  (if (path-p path)
-      (let ((last-tfp (car (last (path-typed-feature-list path)))))
-        (if (type-feature-pair-p last-tfp)
-            (type-feature-pair-feature last-tfp)))
-    path))
+  (cond ((typed-path-p path)
+         (let ((last-tfp (car (last (typed-path-typed-feature-list path)))))
+           (if (type-feature-pair-p last-tfp)
+               (type-feature-pair-feature last-tfp))))
+        ((path-p path) (car (last (path-typed-feature-list path))))
+        (t path)))
+
+
 

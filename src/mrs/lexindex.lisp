@@ -62,13 +62,13 @@
 ;;; actually used by lexlookup, but convenient to define in USER
 
 (defun make-mrs-unifs (fvplist initial-features)
-  (let ((initial-path (create-path-from-feature-list initial-features)))
+  (let ((initial-path (create-typed-path-from-feature-list initial-features)))
     (for fvp in fvplist
          filter
          (let ((value (mrs:fvpair-value fvp)))
            (if (listp value)
                nil
-             (make-unification :lhs (make-path 
+             (make-unification :lhs (make-typed-path 
                                      :typed-feature-list
                                      (append (path-typed-feature-list
                                               initial-path)

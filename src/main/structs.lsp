@@ -50,45 +50,58 @@
    
 
 (defstruct (path) typed-feature-list)
+; try saving space/time by making typed-feature-list a list of
+; features rather than type-feature-pairs
+
+(defstruct (typed-path) typed-feature-list)
 
 (defstruct (type-feature-pair) type feature) 
 
 (defstruct (u-value) types)
 
 
-#|
 (defun create-path-from-feature-list (f-list)
    (make-path 
-      :typed-feature-list
-      (for f in f-list
-         collect
-         (make-type-feature-pair :type (maximal-type-of f)
-            :feature f))))
-|#
+      :typed-feature-list f-list))
 
-(defun create-path-from-feature-list (f-list)
-   (make-path 
+
+(defun create-typed-path-from-feature-list (f-list)
+   (make-typed-path 
       :typed-feature-list
       (for f in f-list
          collect
          (make-type-feature-pair :type *toptype*
             :feature f))))
-      
+
+
+(defun make-pv-unif (path1 type)
+  (make-unification :lhs (create-typed-path-from-feature-list path1)
+                    :rhs (make-u-value :types (if (listp type) type
+                                                  (list type)))))
+
+
 (defun push-feature (feature path)
-   (push (make-type-feature-pair :type (maximal-type-of feature)
-            :feature feature)
+   (push feature 
          (path-typed-feature-list path)))
       
 (defun pop-feature (path)
    (pop (path-typed-feature-list path)))
 
 
-(defun extend-path (path type feature)
+(defun push-typed-feature (feature path)
+   (push (make-type-feature-pair :type (maximal-type-of feature)
+            :feature feature)
+         (typed-path-typed-feature-list path)))
+      
+(defun pop-typed-feature (path)
+   (pop (typed-path-typed-feature-list path)))
+
+(defun extend-typed-path (path type feature)
   (let ((new-tvp (make-type-feature-pair :type type :feature feature))
-        (old-tvp-list (if (path-p path)
-                          (path-typed-feature-list path)
+        (old-tvp-list (if (typed-path-p path)
+                          (typed-path-typed-feature-list path)
                         nil)))
-    (make-path 
+    (make-typed-path 
      :typed-feature-list 
      (append old-tvp-list (list new-tvp)))))
    
@@ -155,6 +168,9 @@
       ((path-p path-or-value)
          (unify-paths-dag-at-end-of1 dag-instance 
             (path-typed-feature-list path-or-value)))
+      ((typed-path-p path-or-value)
+         (unify-typed-paths-dag-at-end-of1 dag-instance 
+            (typed-path-typed-feature-list path-or-value)))
       ((u-value-p path-or-value)
          (let* ((types (u-value-types path-or-value))
                 (invalid-types (remove-if #'is-valid-type types)))
@@ -178,8 +194,33 @@
      #+(and mcl powerpc)(incf ff (CCL::%HEAP-BYTES-ALLOCATED))))
 
 
-
 (defun unify-paths-dag-at-end-of1 (dag-instance labels-chain)
+   (let ((real-dag
+           ;; can get called with null path and dag-instance=nil
+           (if dag-instance (deref-dag dag-instance) nil)))
+      (cond
+         ((null labels-chain) real-dag)
+         ((is-atomic real-dag) nil)
+         (t
+          (let* ((next-feature (car labels-chain))
+                 (found
+                   (unify-arcs-find-arc next-feature
+                                        (dag-arcs real-dag)
+                                        (dag-comp-arcs real-dag))))
+              (if found
+                  (unify-paths-dag-at-end-of1
+                   (dag-arc-value found) (cdr labels-chain))
+                (let ((one-step-down 
+                       (create-typed-dag *toptype*)))
+                  (push
+                   (make-dag-arc :attribute next-feature
+                                 :value one-step-down)
+                   (dag-comp-arcs real-dag))
+                  (unify-paths-dag-at-end-of1 one-step-down
+                                              (cdr labels-chain)))))))))
+
+; original function
+(defun unify-typed-paths-dag-at-end-of1 (dag-instance labels-chain)
    (let ((real-dag
            ;; can get called with null path and dag-instance=nil
            (if dag-instance (deref-dag dag-instance) nil)))
@@ -200,7 +241,7 @@
                                     (dag-arcs real-dag)
                                     (dag-comp-arcs real-dag))))
                            (if found
-                              (unify-paths-dag-at-end-of1
+                              (unify-typed-paths-dag-at-end-of1
                                  (dag-arc-value found) (cdr labels-chain))
                               (let ((one-step-down 
                                       (create-typed-dag *toptype*)))
@@ -208,10 +249,10 @@
                                     (make-dag-arc :attribute next-feature
                                        :value one-step-down)
                                     (dag-comp-arcs real-dag))
-                                 (unify-paths-dag-at-end-of1 one-step-down
+                                 (unify-typed-paths-dag-at-end-of1 one-step-down
                                     (cdr labels-chain)))))))
                   (format t "~%Invalid type ~A" next-type)))))))
-         
+
 
 ;;; To be called (only) outside context of a (set of) unifications. We can't
 ;;; by default create subdags at end of path if not there since that would

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.3  1998/07/06 01:09:09  aac
+;; mostly fixes to lexical lookup for generation
+;;
 ;; Revision 1.2  1998/06/26 02:35:28  aac
 ;; at least partially working VIT construction
 ;;
@@ -301,7 +304,7 @@
         (if (and label-list (consp label-list))
             (loop for feat-val in label-list
                 do
-                (let ((new-path (extend-path path-so-far fs-type
+                (let ((new-path (extend-typed-path path-so-far fs-type
                                                  (car feat-val)))
                       (next-fs (cdr feat-val)))
                   (cond ((eq (car feat-val) *list-feature*)

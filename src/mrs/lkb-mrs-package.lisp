@@ -4,12 +4,13 @@
 
 (export '(edge-dag follow-pointers existing-dag-at-end-of dag-p is-atomic
           type-of-fs tdfs-indef lex-or-psort-id lex-or-psort-full-fs 
-          dag-arcs subtype-p extend-path path-p path-typed-feature-list
+          dag-arcs subtype-p extend-typed-path path-p typed-path-p
+          path-typed-feature-list typed-path-typed-feature-list
           type-feature-pair-p type-feature-pair-feature
 ; for vitrification
           *ordered-mrs-rule-list*
 ; for lexlookup
-          make-tdl-path-value-unif construct-tdfs create-wffs 
+          make-pv-unif construct-tdfs create-wffs 
           process-unifications yadu copy-tdfs-completely))
 
 (defpackage "MRS"

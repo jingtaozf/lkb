@@ -99,9 +99,13 @@
             (source-file (make-pathname :name file
                :directory (append *lkb-source-dir* dir)))
             (compiled-file (make-pathname :name file
-               :directory (append *lkb-fasl-dir* dir))))
-          (compile-file source-file :output-file compiled-file)
-          (load compiled-file))))
+                                          :directory (append *lkb-fasl-dir* dir))))
+        (when (and compiled-file (file-write-date source-file)
+                   (file-write-date compiled-file)
+                   (> (file-write-date source-file) 
+                      (file-write-date compiled-file)))             
+          (compile-file source-file :output-file compiled-file))
+        (load compiled-file))))
 ))
 
 (in-package :cl-user)

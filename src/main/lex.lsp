@@ -16,7 +16,7 @@
 
 (defvar *psorts-stream* nil)
 
-(defvar *psorts* (make-hash-table))
+(defvar *psorts* (make-hash-table :test #'eq))
 
 (defvar *language-lists* nil)
 
@@ -31,12 +31,14 @@
    (language *current-language*)
    unifs
    def-unifs
-   local-fs
    mother-p ; set if the psort is specified as a parent
             ; cacheing may be sensitive to this value
-   interim-fs ; all defaults still specified as defaults
-              ; no linking 
    full-fs)
+
+; interim-fs is removed from the structure since it's redundant - there
+; are calls to it in non-core, but these are just for display
+; so if it's wanted it can be recalculated
+; also local-fs
 
 (defun check-for-open-psorts-stream nil
    (unless (and (streamp *psorts-stream*)
@@ -148,6 +150,7 @@
       ; LKB quit routines
       (when (and (streamp *psorts-stream*)
                  (open-stream-p *psorts-stream*))
+        (finish-output *psorts-stream*)
         (close *psorts-stream*))
       (unless ok
         (when (probe-file *psorts-temp-file*)
@@ -239,15 +242,6 @@
                         (format nil
                            "~A is not a valid psort" psort)))))))))
 
-
-(defun get-interim-lex-value (psort) 
-   (let ((psort-entry (get-psort-entry psort)))
-      (if psort-entry 
-         (lex-or-psort-interim-fs psort-entry)
-         (lex-expansion-error "Return nil" 
-            (format nil
-               "~A is not a valid psort" psort)))))
-
 (defun collect-defined-word-strings nil
    (let ((words nil))
       (maphash #'(lambda (k v)
@@ -296,44 +290,60 @@
 
 (defun extract-orth-from-unifs (unifs)
   ;;; returns a list of strings
-  (let ((orth-strings nil)
-        (current-orth-path *orth-path*)
-        (matching-unifs 
+  ;;; doesn't do much error checking
+  (let ((matching-unifs 
          (for unif in unifs
               filter
               (if (unification-p unif)
                 (let ((unif-lhs (unification-lhs unif)))
-                  (if (and (path-p unif-lhs)
-                           (path-matches 
-                            (path-typed-feature-list unif-lhs) *orth-path*))
-                    unif))))))
-    (loop
-      (let ((exact-match
-             (for unif in matching-unifs
-                  keep-first
-                  (and
-                   (path-matches-exactly 
-                    (path-typed-feature-list (unification-lhs unif))
-                    (append current-orth-path *list-head*))
-                   (u-value-p (unification-rhs unif))))))
-        (unless exact-match (return))
-        (push (car (u-value-types (unification-rhs exact-match)))
-                orth-strings)
-        (setf current-orth-path (append current-orth-path *list-tail*))))
-    (nreverse orth-strings)))
+                  (if (or
+                       (and (typed-path-p unif-lhs)
+                            (typed-path-matches 
+                             (path-typed-feature-list unif-lhs) *orth-path*))
+                       (and (path-p unif-lhs)
+                            (path-matches 
+                             (path-typed-feature-list unif-lhs) *orth-path*)))
+                      unif))))))
+    (when matching-unifs
+      (let ((n (length *orth-path*))
+            (orth-strings nil))
+        (loop
+          (let ((exact-match
+                 (for unif in matching-unifs
+                      keep-first
+                      (let* ((path (unification-lhs unif))
+                             (feats (path-typed-feature-list path)))
+                        (if
+                            (or (and (path-p path)
+                                     (eq
+                                      (nth n feats)
+                                      (car *list-head*)))
+                                (and (typed-path-p path)
+                                     (let 
+                                         ((nth-el (nth n feats)))
+                                       (and nth-el
+                                            (eq (type-feature-pair-feature 
+                                                 nth-el)
+                                                (car *list-head*))))))
+                            (u-value-p (unification-rhs unif)))))))
+            (unless exact-match (return))
+            (push (car (u-value-types (unification-rhs exact-match)))
+                  orth-strings)
+            (incf n)))
+        (nreverse orth-strings)))))
 
 (defun path-matches (tfplist flist)
   (cond ((null flist) t)
         ((null tfplist) nil)
-        ((eql (type-feature-pair-feature (car tfplist)) (car flist))
+        ((eq (car tfplist) (car flist))
          (path-matches (cdr tfplist) (cdr flist)))
         (t nil)))
 
-(defun path-matches-exactly (tfplist flist)
-  (cond ((and (null flist) (null tfplist)) t)
-        ((or (null flist) (null tfplist)) nil)
-        ((eql (type-feature-pair-feature (car tfplist)) (car flist))
-         (path-matches-exactly (cdr tfplist) (cdr flist)))
+(defun typed-path-matches (tfplist flist)
+  (cond ((null flist) t)
+        ((null tfplist) nil)
+        ((eq (type-feature-pair-feature (car tfplist)) (car flist))
+         (typed-path-matches (cdr tfplist) (cdr flist)))
         (t nil)))
   
 
@@ -377,7 +387,7 @@
       (format t "~%~A" string2)
       (cerror string1 string2)))
 
-(defun expand-psort-entry (entry)
+(defun expand-psort-entry (entry &optional local-p interim-p)
    (let* ((orth (lex-or-psort-orth entry))
          (lex-id (lex-or-psort-id entry))
          (language (lex-or-psort-language entry))
@@ -387,7 +397,7 @@
                          (list orth 
                               (format nil "~A" lex-id) language))))))
       (process-unif-list lex-id fs (lex-or-psort-def-unifs entry) entry
-         *lexical-persistence* *bc96lrules*)))
+         *lexical-persistence* *bc96lrules* local-p interim-p)))
 
 ;;; *bclrules* is t if the style of lexical rules
 ;;; and linking adopted in Briscoe and Copestake 1996 
@@ -395,9 +405,11 @@
          
 
 (defun process-unif-list (lex-id indef-list default-specs entry persistence
-      &optional linking-p)
-  ; linking-p is only true with the bc96 version of lexical rules
-   (let* ((fs (process-unifications indef-list))
+      &optional linking-p local-p interim-p)
+   ; linking-p is only true with the bc96 version of lexical rules
+  ; local-p and interim-p are called for display, to avoid storing unneeded
+  ; structure
+  (let* ((fs (process-unifications indef-list))
           (indef (if fs (create-wffs fs))))
       (if indef
         (let* ((default-fss
@@ -405,25 +417,34 @@
                       collect
                       (make-equivalent-persistence-defaults 
                        indef (car default-spec) (cdr default-spec) lex-id)))
-               (local-tdfs (construct-tdfs indef default-fss t))
-               (interim-fs
-                (if default-fss
-                  (yadu
-                   local-tdfs
-                   (type-tdfs (get-type-entry (type-of-fs indef))))
-                  local-tdfs))
-               (incorp-fs 
-                (if (and default-fss persistence) 
-                  (make-indefeasible interim-fs (list persistence))
-                  interim-fs)))
-          (setf (lex-or-psort-local-fs entry) fs)
-          (setf (lex-or-psort-interim-fs entry) interim-fs)
-          (setf (lex-or-psort-full-fs entry)
-                (if linking-p
-                  (link-lex-entry incorp-fs)
-                  incorp-fs)))
-         (progn
-            (if fs
-               (format t "~%Structure for ~A could not be made well formed" lex-id)
-               (format t "~%Structure for ~A could not be created" lex-id))
-            nil))))
+               (local-tdfs (construct-tdfs indef default-fss t)))
+          (if local-p local-tdfs
+            (let ((interim-fs
+                   (if default-fss
+                       (yadu
+                        local-tdfs
+                        (type-tdfs (get-type-entry (type-of-fs indef))))
+                     local-tdfs)))
+              (if interim-p interim-fs
+                (let ((incorp-fs 
+                       (if (and default-fss persistence) 
+                           (make-indefeasible interim-fs (list persistence))
+                         interim-fs)))
+                  (setf (lex-or-psort-full-fs entry)
+                    (if linking-p
+                        (link-lex-entry incorp-fs)
+                      incorp-fs)))))))
+                (progn
+                  (if fs
+                      (format t "~%Structure for ~A could not be made well formed" lex-id)
+                    (format t "~%Structure for ~A could not be created" lex-id))
+                  nil))))
+
+(defun lex-or-psort-interim-fs (entry)
+  (expand-psort-entry entry nil t))
+
+(defun lex-or-psort-local-fs (entry)
+  (expand-psort-entry entry t nil))
+
+
+

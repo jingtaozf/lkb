@@ -373,6 +373,8 @@ at this point).
        (let ((new-fs (create-liszt-fs-from-rels 
                        rel-sequence
                        path)))
+         (unless new-fs (cerror "Ignore this entry" 
+                                "~%Problem in create-liszt-from-rels"))
          (user::with-unification-context (base-fs)
               (if (yadu base-fs new-fs)
                   (let ((new-str
@@ -424,10 +426,11 @@ at this point).
            (tdfs (if wffs (construct-tdfs wffs nil nil))))
       tdfs)))
 
+
 (defun create-unifs-for-rel (rel-str path)
   (cons
-   (make-tdl-path-value-unif (append path *rel-handel-path*)
-                            (make-instance-type (rel-handel rel-str)))
+   (make-pv-unif (append path *rel-handel-path*)
+                 (make-instance-type (rel-handel rel-str)))
    (for fvp in (rel-flist rel-str)
         append
         (let* ((feature (fvpair-feature fvp)) ; should be a symbol
@@ -436,10 +439,10 @@ at this point).
           (if (listp value) ; exclude conj values for the time being
               nil
             (cons
-             (make-tdl-path-value-unif new-path
-                                       (if (var-p value)
-                                           (make-instance-type value)
-                                         value))
+             (make-pv-unif new-path
+                           (if (var-p value)
+                               (make-instance-type value)
+                             value))
              (if (var-p value)
                  (USER::make-mrs-unifs (var-extra value) new-path))))))))
 
@@ -533,14 +536,15 @@ at this point).
 ;;; lexical rules which do not affect the semantics have to be
 ;;; applied generally 
 
-#|
+
 (in-package "USER")
 
 ;;; Testing lookup code.  
 ;;; If the following is evaluated, then the parse-tsdb-sentences
 ;;; code will call the fn on each parse
-
+#|
 (defparameter *do-something-with-parse* 'check-lex-retrieval)
+|#
 
 (defun check-lex-retrieval nil
   (setf main::*VM-arg-roles-only-p* nil)
@@ -549,7 +553,6 @@ at this point).
         do
         (let* ((lrules-and-entries-used (collect-parse-base parse-res))
                (mrs (car (mrs::extract-mrs (list parse-res)))))
-          (setf *mrs* mrs)
           (let
                ((identified-entry-sets
                 (mrs::collect-lex-entries-from-mrs mrs)))
@@ -595,5 +598,5 @@ at this point).
 ;                    (display-basic-fs (mrs::found-lex-inst-fs item)
 ;                                      (string (mrs::found-lex-lex-id item)))
 
-|#
+
 

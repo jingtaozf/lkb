@@ -277,7 +277,7 @@
             (return))
          (push (read-type-feature-pair istream name) 
             typed-feature-list)))
-  (make-path :typed-feature-list (nreverse typed-feature-list))))
+  (make-typed-path :typed-feature-list (nreverse typed-feature-list))))
 
 (defun read-type-feature-pair (istream name)
    ; the seperating : has to be delimited by spaces at the moment

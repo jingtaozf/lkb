@@ -79,7 +79,8 @@
         (unless ok
           (if (eql *lkb-system-version* :page)
               (read-tdl-lex-file-aux file-name overwrite-p)
-            (read-lex-file-aux file-name overwrite-p))))
+            (read-lex-file-aux file-name overwrite-p))
+          (write-psort-index-file)))
     (cerror "Continue with script" "Lexicon file not found")))
 
             
@@ -225,8 +226,8 @@
       ((unification-p unif)
          (output-unif-lhs ostream unif active-p)
          (output-path ostream (basic-unification-rhs unif) active-p))
-      ((path-p unif)
-        (output-path ostream unif active-p)) 
+      ((or (path-p unif) (typed-path-p unif))
+       (output-path ostream unif active-p))
       (t (format ostream "~A" unif))))
 
 (defun output-unif-lhs (ostream unif &optional active-p)
@@ -251,20 +252,31 @@
 
             
 (defun output-path (ostream path &optional active-p)
-   (if (path-p path)
-      (let ((ordered-list (path-typed-feature-list path)))
-         (format ostream "<")
-         (when ordered-list
-            (output-type-feature-pair ostream (car ordered-list) active-p)
-            (for tfp in (cdr ordered-list)
-               do
-               (format ostream ":" )
-               (output-type-feature-pair ostream tfp active-p)))
-         (format ostream ">"))
-      (format ostream (if active-p "~/FB/~(~A~)~/FP/   " "~S") 
-         (if (> (length (u-value-types path)) 1)
-            (u-value-types path)
-            (car (u-value-types path))))))
+   (cond ((typed-path-p path)
+          (let ((ordered-list (typed-path-typed-feature-list path)))
+            (format ostream "<")
+            (when ordered-list
+              (output-type-feature-pair ostream (car ordered-list) active-p)
+              (for tfp in (cdr ordered-list)
+                   do
+                   (format ostream ":" )
+                   (output-type-feature-pair ostream tfp active-p)))
+            (format ostream ">")))
+         ((path-p path)
+          (let ((ordered-list (path-typed-feature-list path)))
+            (format ostream "<")
+            (when ordered-list
+              (format ostream " ~A " (car ordered-list))
+              (for feat in (cdr ordered-list)
+                   do
+                   (format ostream ":" )
+                   (format ostream " ~A " feat)))
+            (format ostream ">")))
+         (t
+          (format ostream (if active-p "~/FB/~(~A~)~/FP/   " "~S") 
+                  (if (> (length (u-value-types path)) 1)
+                      (u-value-types path)
+                    (car (u-value-types path)))))))
 
       
 (defun output-type-feature-pair (ostream tfp &optional active-p)

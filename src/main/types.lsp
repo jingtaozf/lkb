@@ -53,7 +53,7 @@
            template-parents
            shrunk-p visible-p) ; for display in type hierarchy
         
-(defvar *types* (make-hash-table))
+(defvar *types* (make-hash-table :test #'eq))
 
 (defparameter *default-abbreviations* nil)
 
@@ -446,7 +446,7 @@
 ;;; feature is introduced.  The following are called from functions
 ;;; in checktypes.lsp
 
-(defvar *feature-list* (make-hash-table))
+(defvar *feature-list* (make-hash-table :test #'eq))
 
 (defun clear-feature-table nil
    (clrhash *feature-list*))

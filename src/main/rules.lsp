@@ -27,9 +27,9 @@
 ;;; but this is set up in the types.
 
 
-(defvar *rules* (make-hash-table))
+(defvar *rules* (make-hash-table :test #'eq))
 
-(defvar *lexical-rules* (make-hash-table))
+(defvar *lexical-rules* (make-hash-table :test #'eq))
 
 (defun clear-grammar nil
    (clrhash *rules*))
