@@ -34,8 +34,7 @@
    (cdb:all-keys (psort-db lexicon)))
 
 (defmethod read-cached-lex ((lexicon cdb-lex-database) filenames)
-  (unless (or *psorts-temp-file* *psorts-temp-index-file*)
-    (set-temporary-lexicon-filenames))
+  (set-temporary-lexicon-filenames)
   (when (up-to-date-p filenames
 		      (list *psorts-temp-file* 
 			    *psorts-temp-index-file*))
@@ -54,7 +53,7 @@
 	      nil))
       (format t "~%Cached lexicon read")
       (return-from read-cached-lex t)))
-  (format t "~%Cached lexicon corrupt: reading lexicon source files")
+  (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
   nil)
 
 (defmethod store-cached-lex ((lexicon cdb-lex-database))

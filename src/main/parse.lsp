@@ -260,8 +260,14 @@
 
 (defun parse (user-input &optional (show-parse-p t) 
 				   (first-only-p *first-only-p*))
+  (when (and first-only-p (greater-than-binary-p))
+    (format t "~%First only mode only works if rules are unary or binary.
+Setting *first-only-p* to nil")
+    (setf *first-only-p* nil)
+    (setf first-only-p nil))
   (if (> (length user-input) *chart-limit*)
-      (error "Sentence ~A too long" user-input)
+      (error "Sentence ~A too long - ~A words maximum (*chart-limit*)" 
+             user-input *chart-limit*)
     (let ((*executed-tasks* 0) (*successful-tasks* 0)
 	  (*contemplated-tasks* 0) (*filtered-tasks* 0)
           (*parser-rules* (get-matching-rules nil nil))

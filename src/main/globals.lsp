@@ -148,21 +148,6 @@
   "maximum number of items in a list pane"
   :user)
 
-
-
-;;; Languages
-;;; (not very useful in core LKB, maybe remove from here?)
-
-(def-lkb-parameter *current-language* 'English
-   "Specifies the default language for the
-   various interactions where a language has to
-   be selected")
-
-(def-lkb-parameter *possible-languages* nil
-   "Specifies the possible languages for interactions
-   where a language has to be selected or specified")
-   
-
 ;;; YADU
 
 (def-lkb-parameter *description-persistence* 'l
@@ -227,6 +212,8 @@
 (defvar *lexicon* nil)
 (defvar *leaf-types* nil)
 
+(defvar *current-language* nil)
+
 ;;; MRS interaction control
 
 (defvar *mrs-loaded* nil)
@@ -239,13 +226,6 @@
 (defparameter *intersective-rule-names* '(adjh_i nadj_i hadj_i_uns)
   "names of rules that introduce intersective modifiers")
 
-;;; functions which currently contain grammar specific stuff
-#|
+(defparameter *duplicate-lex-ids* '(AN)
+  "temporary expedient to avoid generating dual forms")
 
-generate-from-mrs
-
-gen-chart-finish-active
-
-
-gen-chart-adjoin-modifiers
-|#

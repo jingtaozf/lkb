@@ -42,6 +42,7 @@
 		      cl-user::apply-lex-rules 
 		      ;; tidy
 		      cl-user::clear-non-parents
+                      cl-user::interactive-create-check-paths
 		      ;; output
 		      cl-user::output-type-file 
                       cl-user::output-display-settings
@@ -251,6 +252,9 @@
                                       :value 'dump-lkb :available-p :always)
                       (make-menu-item :name "Tidy up"
                                       :value 'clear-non-parents
+                                      :available-p :grammar)
+                      (make-menu-item :name "Create quick check file"
+                                      :value 'interactive-create-check-paths
                                       :available-p :grammar)
 ;                     (make-menu-item :name "Types with glbs..."
 ;                        :value 'output-type-file 

@@ -76,7 +76,7 @@
 
 (defmethod read-cached-leaf-types ((leaf-db trivial-leaf-database) filenames)
   (declare (ignore filenames))
-  (format t "~%Cached leaf types corrupt: reading leaf type source files.")
+  (format t "~%Cached leaf types missing or out-of-date: reading leaf type source files.")
   nil)
 
 (defmethod store-cached-leaf-types ((leaf-db trivial-leaf-database))
@@ -108,8 +108,7 @@
 (setf *leaf-types* (make-instance 'cdb-leaf-database))
 
 (defmethod read-cached-leaf-types ((leaf-db cdb-leaf-database) filenames)
-  (unless *leaf-temp-file*
-    (set-temporary-lexicon-filenames))
+  (set-temporary-lexicon-filenames)
   (when (up-to-date-p filenames (list *leaf-temp-file*))
     (format t "~%Reading in cached leaf types")
     (when (handler-case 
@@ -121,7 +120,7 @@
       (setf (leaf-db-ready-p leaf-db) t)
       (format t "~%Cached leaf types read")
       (return-from read-cached-leaf-types t)))
-  (format t "~%Cached leaf types corrupt: reading leaf type source files")
+  (format t "~%Cached leaf types missing or out-of-date: reading leaf type source files")
   nil)
 
 (defmethod clear-leaf-types :after ((leaf-db cdb-leaf-database))

@@ -35,24 +35,8 @@
           (set-current-language existing-language)))))
 
 
-(defstruct (language-info)
-  language
-  abbreviation
-  lexicon)
-
-(defun set-current-language (language &optional abbreviation)
-  (declare (ignore abbreviation))
-  ;;; this is here because we may need to generate particular names
-  (let ((existing-language (find language *language-record*
-                                 :key #'language-info-language)))
-    (unless existing-language
-      (setf existing-language
-        (let ((new-lexicon (make-new-lexicon)))
-          (make-language-info :language language
-                              :lexicon new-lexicon)))
-      (push existing-language *language-record*))
-    (setf *lexicon* (language-info-lexicon existing-language))
-    (setf *current-language* language)))
+(defun set-current-language (language)
+    (setf *current-language* language))
 
 
 

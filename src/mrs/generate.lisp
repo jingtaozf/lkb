@@ -64,7 +64,7 @@
        ((found-lex-list
 	(apply #'append lex-results))
        (filtered
-        (remove-if #'(lambda (x) (member x '(AN) :test #'eq))
+        (remove-if #'(lambda (x) (member x *duplicate-lex-ids* :test #'eq))
 					; *** e.g. a -> an
 		   found-lex-list
 		   :key #'mrs::found-lex-lex-id)))

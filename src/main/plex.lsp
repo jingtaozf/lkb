@@ -25,7 +25,7 @@
 	     (format t "~%Reading in cached lexicon")
 	     t)
 	    (t
-	     (format t "~%Cached lexicon corrupt: reading lexicon source files")
+	     (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
 	     nil))
     (open-plob-lexicon lexicon)))
 

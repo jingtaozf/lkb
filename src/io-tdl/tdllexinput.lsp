@@ -14,14 +14,9 @@
 ;;; rather than reading them in
 
 
-; *category-display-templates* is in io-paths/lexinput
+;;; *category-display-templates* is in io-paths/lexinput
 
-(defun read-tdl-lex-file-aux (file-name &optional overwrite-p)
-  (if overwrite-p 
-      (setf *lex-file-list* (list file-name))
-    (pushnew file-name *lex-file-list* :test #'equal))
-  ;; (reset-cached-lex-entries) ; in constraints.lsp  
-  (when overwrite-p (clear-lex *lexicon*))
+(defun read-tdl-lex-file-aux-internal (file-name)
   (let ((*readtable* (make-tdl-break-table)))
     (with-open-file 
 	(istream file-name :direction :input)

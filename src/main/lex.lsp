@@ -14,10 +14,6 @@
 ;;; by a combination of orthography
 ;;; plus sense identifier
 
-;;; THINGS TO FIX: 
-;;;   CLIM-USER::RUN-LKB-TOP-MENU and CLIM-USER::DUMP-LKB try to dump
-;;;   the lexicon using write-psort-index-file
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defclass lex-database () 
@@ -54,20 +50,17 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-;; This isn't used at all.  What's it for?
-;;(defvar *language-lists* nil)
-
 ;; This isn't getting used correctly, since it's not preserved in the
-;; lexical cache.  Do we really need it?
+;; lexical cache.  But it is only used for outputting source
+;; files in other syntaxes and batch checking, where 
+;; it is acceptable to have to read in a fresh lexicon
+
 (defvar *ordered-lex-list* nil)
 
 (defparameter *batch-mode* nil
    "set when indexing to prevent errors in expanding a lexical entry being
    signalled as continuable errors, rather than written
    to a file.")
-
-(defparameter *bc96lrules* nil)
 
 (defstruct (lex-or-psort) 
    orth
@@ -77,7 +70,7 @@
    sense-id
    id ; for a lexical entry this is an
       ; atom formed by combining the strings
-   (language *current-language*)
+   language
    unifs
    def-unifs
    mother-p ; set if the psort is specified as a parent
@@ -296,11 +289,8 @@
 			      (list orth 
 				    (format nil "~A" lex-id) language))))))
     (process-unif-list lex-id fs (lex-or-psort-def-unifs entry) entry
-		       *description-persistence* *bc96lrules* 
+		       *description-persistence* nil 
 		       local-p interim-p)))
-
-;;; *bclrules* is t if the style of lexical rules and linking adopted
-;;; in Briscoe and Copestake 1996 is being used
          
 (defun process-unif-list (lex-id indef-list default-specs entry persistence
 			  &optional linking-p local-p interim-p)
@@ -431,7 +421,6 @@
   (clrhash (slot-value lexicon 'temp-psorts))
   (when (fboundp 'clear-lexicon-indices)
     (funcall 'clear-lexicon-indices))
-  ;; (setf *language-lists* nil)
   (call-next-method)
   (mapcar #'(lambda (lex) (clear-lex lex no-delete)) (extra-lexicons lexicon))
   (unless no-delete
@@ -461,8 +450,7 @@
     words))
 
 (defmethod read-cached-lex ((lexicon simple-lex-database) filenames)
-  (unless (or *psorts-temp-file* *psorts-temp-index-file*)
-    (set-temporary-lexicon-filenames))
+  (set-temporary-lexicon-filenames)
   (let* ((ok nil)
 	 (cache-date
 	  (if (and *psorts-temp-file* 
@@ -492,7 +480,7 @@
 	  (setf ok nil)))
       (cond (ok (format t "~%Cached lexicon read")
 		t)
-	    (t (format t "~%Cached lexicon corrupt: reading lexicon source files")
+	    (t (format t "~%Cached lexicon missing or out-of-date: reading lexicon source files")
 	       nil)))))
 
 (defmethod store-cached-lex ((lexicon simple-lex-database))

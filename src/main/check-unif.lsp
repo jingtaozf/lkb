@@ -37,6 +37,8 @@
   (parse-sentences "data/textbook/well-formed.txt" "data/textbook/test.out"))
 |#
 
+;;; see variant at end of file for interactive version
+
 (defmacro with-check-path-list-collection (output-file &body forms)
   `(let ((.saved-names-and-fns. (install-unify-check-paths-functions))
 	 (.completedp. nil))
@@ -65,6 +67,7 @@
 	    :stream .str. :escape t :pretty t :length nil :level nil)
 	   (terpri .str.)
 	   (format t "~%Wrote file ~A" (truename ,output-file)))))))
+
 
 
 (defun extract-check-paths (fail-path-list)
@@ -484,12 +487,38 @@
       tree)))
 |#
 
+(defun interactive-check-path-list-collection (output-file test-file)
+  (let ((saved-names-and-fns (install-unify-check-paths-functions))
+	 (completedp nil))
+     (declare (special *fail-path-list*))
+     (unwind-protect
+         (prog1
+	     ;; disable any path checking in force
+	     (let ((*check-paths-optimised* nil))
+                (parse-sentences test-file nil))
+	   (setq completedp t))
+       ;; Restore original function definitions
+       (dolist (name-and-fn saved-names-and-fns)
+	 (setf (symbol-function (car name-and-fn)) (cdr name-and-fn)))
+       (when completedp
+	 (with-open-file (str output-file :direction :output 
+			  :if-exists :supersede
+			  :if-does-not-exist :create)
+           (format str "#|~%Check paths created interactively from ~A~%|#~%"
+                   test-file)
+	   (format t "~%Extracting paths...")
+	   (write
+	    `(defparameter *check-paths* 
+		 ',(check-path-convert 
+		    (extract-check-paths *fail-path-list*)))
+	    :stream str :escape t :pretty t :length nil :level nil)
+	   (terpri str)
+	   (format t "~%Wrote file ~A" (truename output-file)))))))
 
 (defun interactive-create-check-paths nil
   (let* ((test-file (ask-user-for-existing-pathname "Checkpaths sample file?"))
          (output-file (ask-user-for-new-pathname "Checkpaths output file?")))
     (when (and test-file output-file)
-      (with-check-path-list-collection output-file
-        (parse-sentences test-file nil)))))
+      (interactive-check-path-list-collection output-file test-file))))
 
-        
+

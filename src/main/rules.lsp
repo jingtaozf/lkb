@@ -102,6 +102,13 @@
     result))
 
 
+(defun greater-than-binary-p nil
+  (maphash #'(lambda (k v) 
+               (declare (ignore k))
+               (if (> (length (rule-order v)) 3) 
+                   (return-from greater-than-binary-p t)))
+           *rules*))
+
 (defun lexical-rule-p (x)
   (when (and (rule-p x) 
 	     (get-lex-rule-entry (rule-id x)))

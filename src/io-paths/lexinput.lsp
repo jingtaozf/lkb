@@ -4,6 +4,10 @@
 ;;; Drastically simplified for YADU
 ;;; old laurel input stuff is now in laurel/lrlinput
 
+;;; June 1999 - to fit in with Rob's code, all lexicon files must 
+;;; be read in by a single command.  Language must be specified within
+;;; the FS.  Overwrite is no longer relevant.
+
 (in-package :cl-user)
 
 ;;; Input from lexical entry and psort files
@@ -40,42 +44,24 @@
  
 
 (defun read-lex-file nil
-  ; we assume this will only be called by a user
-  ; who really does want a source file to be read in
-  (setf *ordered-lex-list* nil)
-   (let* ((file-name 
-            (ask-user-for-existing-pathname "Entry file?"))
-         (*current-language*
-          (if (cdr *possible-languages*)
-            (apply #'ask-user-for-multiple-choice "Language" 
-               (cons *current-language*
-                  (remove *current-language*
-                     *possible-languages*)))
-            *current-language*))
-         (overwrite-p (if (lexicon-loaded-p *lexicon*) 
-                          (lkb-y-or-n-p "Overwrite existing lexicon?"))))
-      (when file-name
-        (if (eql *lkb-system-version* :page)
-         (read-tdl-lex-file-aux file-name overwrite-p)
-         (read-lex-file-aux file-name overwrite-p)))))
+  (let* ((file-name 
+          (ask-user-for-existing-pathname "Entry file?")))
+    (when file-name
+      (read-lex-file-sub file-name :path))))
 
 (defun reload-lex-files nil
   (setf *syntax-error* nil)
   (if (check-load-names *lex-file-list* 'lexical)
-    (let ((overwrite-p t))
-      (setf *ordered-lex-list* nil)
-      (for file-name in (reverse *lex-file-list*)
-           do
-           (if (eql *lkb-system-version* :page)
-	       (read-tdl-lex-file-aux file-name overwrite-p)
-             (read-lex-file-aux file-name overwrite-p))
-           (setf overwrite-p nil))
-      (when *template-file-list*
-        (reload-template-files))
-      (when *psort-file-list*
-        (reload-psort-files))
-      (store-cached-lex *lexicon*)
-      (format t "~%Reload complete"))
+      (progn
+        (read-lex-file-sub 
+         (reverse *lex-file-list*)
+         (if (eql *lkb-system-version* :page) :tdl :path))
+        (when *template-file-list*
+          (reload-template-files))
+        (when *psort-file-list*
+          (reload-psort-files))
+        (store-cached-lex *lexicon*)
+        (format t "~%Reload complete"))
     (progn
       #-:tty(format t "~%Use Load Complete Grammar instead")
       #+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
@@ -107,23 +93,56 @@
   (setf *lex-file-list* file-names)
   (if (check-load-names file-names 'lexical)
       (unless (read-cached-lex *lexicon* file-names)
-	(let ((overwrite-p t)
-	      (*syntax-error* nil))
+	(let ((*syntax-error* nil))
 	  (setf *ordered-lex-list* nil)
+          (clear-lex *lexicon*)        
 	  (dolist (file-name file-names)
 	    (if (eql *lkb-system-version* :page)
-		(read-tdl-lex-file-aux file-name overwrite-p)
-	      (read-lex-file-aux file-name overwrite-p)))
+		(read-tdl-lex-file-aux-internal file-name)
+	      (read-lex-file-aux-internal file-name)))
 	  (store-cached-lex *lexicon*)))
     (cerror "Continue with script" "Lexicon file not found")))
 
+(defun read-tdl-lex-file-aux (file-names &optional overwrite-p)
+  ;;; this is the version that is called from scripts
+  ;;; this version uses the cached-lex code but never reads
+  ;;; an existing file
+  ;;; file-names may be a list
+  (declare (ignore overwrite-p))
+  ;;; now always overwrites but retain optional arg for consistency
+  ;;; with old scripts
+  (read-lex-file-sub file-names :tdl))
 
-(defun read-lex-file-aux (file-name &optional overwrite-p)
-  (if overwrite-p 
-      (setf *lex-file-list* (list file-name))
-    (pushnew file-name *lex-file-list* :test #'equal))
-  ;;  (reset-cached-lex-entries) ; in constraints.lsp  
-  (when overwrite-p (clear-lex *lexicon*))
+(defun read-lex-file-aux (file-names &optional overwrite-p)
+  ;;; this is the version that is called from scripts
+  ;;; this version uses the cached-lex code but never reads
+  ;;; an existing file
+  ;;; file-names may be a list
+  (declare (ignore overwrite-p))
+  ;;; now always overwrites
+  ;;; but retain optional arg for consistency
+  ;;; with old scripts
+  (read-lex-file-sub file-names :path))
+
+(defun read-lex-file-sub (file-names syntax)
+  (unless (listp file-names) 
+    (setf file-names (list file-names)))
+  (setf *lex-file-list* file-names)
+  (clear-lex *lexicon*)
+  (setf *ordered-lex-list* nil)
+  (if (check-load-names file-names 'lexical)
+      (progn
+        (dolist (file-name file-names)
+          (ecase syntax
+            (:tdl
+             (read-tdl-lex-file-aux-internal file-name))
+            (:path 
+             (read-lex-file-aux-internal file-name))))
+        (store-cached-lex *lexicon*))
+    (cerror "Continue with script" "Lexicon file not found")))
+
+
+(defun read-lex-file-aux-internal (file-name)
   (let ((*readtable* (make-path-notation-break-table)))
     (with-open-file 
         (istream file-name :direction :input)
