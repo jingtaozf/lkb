@@ -61,6 +61,7 @@
                       (path-value fs *psoa-top-h-path*)))
         (index-fs (path-value fs *psoa-index-path*))
         (liszt-fs (path-value fs *psoa-liszt-path*))
+	(mode-fs (if *psoa-mode-path* (path-value fs *psoa-mode-path*)))
         (h-cons-fs (if *psoa-rh-cons-path*
                        (path-value fs *psoa-rh-cons-path*))))
     (make-psoa
@@ -69,6 +70,9 @@
      :index (if (is-valid-fs index-fs)
                 (create-variable index-fs
                                  *variable-generator*))
+     :mode (if (is-valid-fs mode-fs) 
+	       (create-type
+                    (fs-type mode-fs)))
      :liszt (nreverse (construct-liszt liszt-fs
                                        nil
                                        *variable-generator*))

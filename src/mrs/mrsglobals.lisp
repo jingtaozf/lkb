@@ -40,6 +40,10 @@
   `(,(vsym "TOP-H"))
   "path to get the top handle from a psoa")
 
+(defparameter *psoa-mode-path* 
+  NIL
+  "path in grammars which make a distinction between prop etc")
+
 (defparameter *psoa-index-path* 
   `(,(vsym "INDEX"))
   "path to get an index from a psoa")

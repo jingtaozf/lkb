@@ -44,6 +44,9 @@
 
 (def-lkb-parameter *orth-path* '(orth lst))
 
+(def-lkb-parameter *alt-orth-path* nil
+  "an alternative location for the orthography --- needed for Aline's grammar")
+
 (def-lkb-parameter *list-tail* '(tl))
 
 (def-lkb-parameter *list-head* '(hd))
@@ -242,6 +245,10 @@
 
 (defparameter *semantics-index-path* '(synsem local cont index)
   "path used by generator to index chart")
+
+(defparameter *alt-semantics-index-path* nil
+  "alternative path used by generator to index chart --- needed
+   for Aline's grammar")
 
 (defparameter *intersective-rule-names* '(adjh_i nadj_i hadj_i_uns)
   "names of rules that introduce intersective modifiers")

@@ -12,6 +12,7 @@
 
 (defstruct (psoa)
   top-h
+  mode
   index
   liszt
   h-cons)
@@ -126,6 +127,11 @@
     (when index-val
       (format stream "~%  INDEX: ~A" index-val))))
 
+(defmethod mrs-output-mode ((mrsout simple) mode-val)
+  (with-slots (stream) mrsout
+    (when mode-val
+      (format stream "~%  MODE: ~A" mode-val))))
+
 (defmethod mrs-output-start-liszt ((mrsout simple))
   (with-slots (stream indentation) mrsout
     (format stream "~%  LISZT: <")
@@ -236,6 +242,10 @@
 (defmethod mrs-output-index ((mrsout indexed) index-val)
   (with-slots (stream) mrsout
     (format stream "~A" index-val)))
+
+(defmethod mrs-output-mode ((mrsout indexed) mode-val)
+  (with-slots (stream) mrsout
+    (format stream "~A," mode-val)))
 
 (defmethod mrs-output-start-liszt ((mrsout indexed))
   (with-slots (stream) mrsout
@@ -374,6 +384,10 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream "~A" handel-val)))
 
+(defmethod mrs-output-mode ((mrsout prolog) mode-val)
+  (with-slots (stream) mrsout
+    (format stream ",~A" mode-val)))
+
 (defmethod mrs-output-index ((mrsout prolog) index-val)
   (with-slots (stream) mrsout
     (format stream ",~A" index-val)))
@@ -504,6 +518,9 @@ higher and lower are handle-variables
   (mrs-output-top-h *mrs-display-structure* 
                     (find-var-name (psoa-top-h psoa) connected-p))
   (print-mrs-extra (psoa-top-h psoa))
+  (when (psoa-mode psoa)
+    (mrs-output-mode *mrs-display-structure* 
+		     (psoa-mode psoa)))
   (mrs-output-index *mrs-display-structure* 
                     (find-var-name (psoa-index psoa) connected-p))
   (print-mrs-extra (psoa-index psoa))

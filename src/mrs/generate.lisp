@@ -340,8 +340,13 @@
    (let ((index
            (or chart-index
               (gen-chart-dag-index
-                 (existing-dag-at-end-of
-                    (tdfs-indef (g-edge-dag edge)) *semantics-index-path*)
+               (or 
+                (existing-dag-at-end-of
+                 (tdfs-indef (g-edge-dag edge)) *semantics-index-path*)
+                (if *alt-semantics-index-path*
+                    (existing-dag-at-end-of
+                     (tdfs-indef (g-edge-dag edge)) 
+                     *alt-semantics-index-path*)))
                  (g-edge-id edge)))))
       (setf (g-edge-index edge) index)
       (let ((entry (assoc index *gen-chart* :test #'equal))) ; may be a cons
