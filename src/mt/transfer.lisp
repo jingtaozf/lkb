@@ -418,13 +418,16 @@
   ;; e.g. confirm that .outputp. below would also work if an MTR had OUTPUT as
   ;; its first component.                                      (27-jan-04; oe)
   ;;
-  (loop
+  (flet ((prefixp (p lst n)
+           ;; is first n elements of p a prefix of lst? -- jac 5-jul-04
+           (and (>= (length lst) n) (null (mismatch p lst :end2 n)))))
+    (loop
       with lhss with constants with copies with equals with subsumes with rhss
       with n = (length *mtr-output-path*)
       for unification in unifications
       for lhs = (lkb::unification-lhs unification)
       for path = (and (lkb::path-p lhs) (lkb::path-typed-feature-list lhs))
-      for outputp = (null (mismatch *mtr-output-path* path :end2 n))
+      for outputp = (prefixp *mtr-output-path* path n)
       for rhs = (lkb::unification-rhs unification)
       when (and path (lkb::u-value-p rhs)
                 (or (eq (lkb::u-value-type rhs) *mtr-copy-operator*)
@@ -465,11 +468,9 @@
                          (member feature %transfer-variable-features%))))
           (push unification constants))
         (let ((rhsp (and (lkb::path-p rhs)
-                         (null
-                          (mismatch
-                           *mtr-output-path*
+                         (prefixp *mtr-output-path*
                            (lkb::path-typed-feature-list rhs)
-                           :end2 n)))))
+                           n))))
           (cond
            ((and outputp rhsp)
             (push unification rhss))
@@ -480,7 +481,7 @@
       finally 
         #+:debug
         (setf %lhss lhss %rhss rhss)
-        (return (values lhss constants copies equals subsumes rhss))))
+        (return (values lhss constants copies equals subsumes rhss)))))
 
 (defun convert-dag-to-mtr (lhs constants copies equals subsumes
                            rhs id &key optional)
