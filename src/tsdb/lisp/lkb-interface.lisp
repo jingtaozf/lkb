@@ -532,9 +532,10 @@
                       (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
                             conses (* scons 8) symbols (* ssym 24) 
                             others sother))))
-                (partial (loop
-                             for edge in edges
-                             when (mt::edge-source edge) collect edge))
+                (partial (when mt::*transfer-filter-p*
+                           (loop
+                               for edge in edges
+                               when (mt::edge-source edge) collect edge)))
                 (unknown (loop
                              with result
                              for edge in partial
@@ -557,7 +558,8 @@
            (setf edges 
              (loop 
                  for edge in edges 
-                 unless (mt::edge-source edge) collect edge))
+                 unless (and mt::*transfer-filter-p* (mt::edge-source edge))
+                 collect edge))
            
            `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
              (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
