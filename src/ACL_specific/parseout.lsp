@@ -36,7 +36,9 @@
 
 (define-lkb-frame parse-tree
     ((nodes :initform nil
-	    :accessor parse-tree-nodes))
+	    :accessor parse-tree-nodes)
+     (current-chart :initform nil
+	    :accessor parse-tree-current-chart))
   :display-function 'draw-parse-tree
   :width *parse-window-width* 
   :height *parse-window-height*)
@@ -45,6 +47,7 @@
   (declare (ignore horizontalp))
   (let ((pframe (clim:make-application-frame 'parse-tree)))
     (setf (parse-tree-nodes pframe) topnode)
+    (setf (parse-tree-current-chart pframe) *chart-generation-counter*)
     (mp:process-run-function title 
                              #'clim:run-frame-top-level pframe)))
 
@@ -98,9 +101,14 @@
 			       (if (g-edge-p edge-record) 
 				   "G" 
 				 "P"))))
-     (edge (let ((chart-frame (reuse-frame 'chart-window)))
-	     (when chart-frame
-	       (highlight-edge edge-record chart-frame :scroll-to t))))
+     (edge
+      (if 
+          (eql (parse-tree-current-chart clim:*application-frame*)
+               *chart-generation-counter*)
+          (let ((chart-frame (reuse-frame 'chart-window)))
+            (when chart-frame
+              (highlight-edge edge-record chart-frame :scroll-to t)))
+        (lkb-beep)))
      (rule 
       (let* ((item (edge-rule edge-record))
              (rule (and (rule-p item) item)))
@@ -142,20 +150,28 @@
 
 (define-lkb-frame parse-tree-frame
     ((trees :initform nil
-	    :accessor parse-tree-frame-trees))
+	    :accessor parse-tree-frame-trees)
+  (current-chart :initform nil
+	    :accessor parse-tree-frame-current-chart))
   :display-function 'draw-res-trees-window
   :text-style (clim:parse-text-style 
                (list :sans-serif :roman 7))
   :width :compute
   :height :compute)
 
+
+
 (defun invalidate-chart-commands nil
+  ;;; this function should be redundant now because of *chart-generation-counter*
+  nil)
+#|
   (clim:map-over-frames 
    #'(lambda (frame) 
        (when (and (eql (clim:frame-name frame) 'parse-tree-frame)
                   (member (clim:frame-state frame) '(:enabled :shrunk)))
          (setf (clim:command-enabled 'com-multiple-tree-menu frame) nil) 
          (setf (clim:command-enabled 'com-show-chart-from-tree frame) nil)))))
+|#
 
 (defun show-parse-tree-frame (parses)
   (let ((frame (clim:make-application-frame 'parse-tree-frame)))
@@ -166,6 +182,7 @@
                              #'clim:run-frame-top-level frame)))
 
 (defun set-up-parse-tree-frame (parses frame)
+  (setf (parse-tree-frame-current-chart frame) *chart-generation-counter*)
   (setf (parse-tree-frame-trees frame)
     (mapcar #'(lambda (p) 
 		(make-prtree :top (make-new-parse-tree p 1)
@@ -215,17 +232,23 @@
 	    (show (draw-new-parse-tree (prtree-top tree)
 				       "Parse tree" nil))
             (chart
-             (cond ((and *main-chart-frame* 
-                         (eql (clim:frame-state *main-chart-frame*) :enabled))
-                    nil)
-                   ((and *main-chart-frame* 
-                         (eql (clim:frame-state *main-chart-frame*) :shrunk))
-                    (clim:raise-frame *main-chart-frame*))
-                   (t (show-chart) 
-                      (mp:process-wait-with-timeout "Waiting" 
-                                                    5 #'chart-ready)))
-             (display-edge-in-chart
-              (prtree-edge tree)))
+             (if (eql (parse-tree-frame-current-chart clim:*application-frame*)
+                     *chart-generation-counter*)
+                 (progn
+                   (cond ((and *main-chart-frame* 
+                               (eql (clim:frame-state *main-chart-frame*) 
+                                    :enabled))
+                          nil)
+                         ((and *main-chart-frame* 
+                               (eql (clim:frame-state *main-chart-frame*) 
+                                    :shrunk))
+                          (clim:raise-frame *main-chart-frame*))
+                         (t (show-chart) 
+                            (mp:process-wait-with-timeout "Waiting" 
+                                                          5 #'chart-ready)))
+                   (display-edge-in-chart
+                    (prtree-edge tree)))
+               (lkb-beep)))
             ;; funcall avoids undefined function warnings
             (generate (funcall 'really-generate-from-edge (prtree-edge tree)))
             (mrs (funcall 'show-mrs-window (prtree-edge tree)))
@@ -233,8 +256,8 @@
             (scoped (funcall 'show-mrs-scoped-window (prtree-edge tree)))
             )
 	(error (condition) 
-	  (declare (ignore condition) )
-	  nil)))))
+          (with-output-to-top ()
+	    (format t "~%Error: ~A~%" condition)))))))
 
 (defun chart-ready nil
   (and *main-chart-frame* 
@@ -242,6 +265,9 @@
 
 (define-parse-tree-frame-command (com-show-chart-from-tree :menu "Show chart")
     ()   
-    (show-chart))
+  (if (eql (parse-tree-frame-current-chart clim:*application-frame*)
+           *chart-generation-counter*)
+      (show-chart)
+    (lkb-beep)))
 
 
