@@ -1027,14 +1027,6 @@
 ;;;                                                          (12-nov-99  -  oe)
 ;;;
 
-(defun minimal-type-for (feature)
-  (or (get feature :constraint)
-      (let* ((introduction (maximal-type-of feature))
-             (constraint (and introduction (constraint-of introduction)))
-             (type (or (and constraint 
-                            (type-of-fs (get-dag-value constraint feature)))
-                       *toptype*)))
-        (setf (get feature :constraint) type))))
 
 (defun copy-dag-partially (dag)
   (invalidate-visit-marks)
