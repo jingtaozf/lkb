@@ -1,5 +1,5 @@
+;;;
 ;;; Copyright John Carroll 1999 All Rights Reserved.
-;;; No use or redistribution without permission.
 ;;; 
 
 ;;; 5 interface functions supplied by Alvey Tools GDE for [incr tsdb()]:
@@ -247,6 +247,3 @@
                  (dolist (d (cdr tree))
                     (incf n (parse-tsdb-count-nodes d)))
                  n))))))
-
-
-;;; End of file

@@ -1,6 +1,22 @@
 #!/bin/sh
 # the next line restarts using wish(1) \
-exec /coli/apps/tcl+tk/bin/wish++ "$0" "$@"
+exec $HOME/delphin/lkb/bin/linux.x86.32/swish++ "$0" "$@"
+
+#
+# [incr tsdb()] --- Competence and Performance Profiling Environment
+# Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+#
+# This program is free software; you can redistribute it and/or modify it
+# under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or (at
+# your option) any later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+# License for more details.
+# 
+
 
 #
 # facilitate stand-alone debugging for `oe'
@@ -645,6 +661,10 @@ proc main {} {
     -command {update_graph_cascade rpedges};
   if {$globals(user) == "oe"} {
     .menu.analyze.menu.values add checkbutton \
+      -label "Morphological Time (`mtcpu')" \
+      -variable globals(graph,mtcpu) \
+      -command {update_graph_cascade mtcpu};
+    .menu.analyze.menu.values add checkbutton \
       -label "Packed Parse Trees (`trees')" \
       -variable globals(graph,trees) \
       -command {update_graph_cascade trees};
@@ -655,7 +675,7 @@ proc main {} {
     .menu.analyze.menu.values add checkbutton \
       -label "Unpacking Space (`uspace')" \
       -variable globals(graph,uspace) \
-      -command {update_graph_cascade utcpu};
+      -command {update_graph_cascade uspace};
     .menu.analyze.menu.values add checkbutton \
       -label "Subsumption Tests (`subsumptions')" \
       -variable globals(graph,subsumptions) \

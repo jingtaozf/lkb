@@ -1,5 +1,20 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: TSDB -*-
 
+;;;
+;;; [incr tsdb()] --- Competence and Performance Profiling Environment
+;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;;
+;;; This program is free software; you can redistribute it and/or modify it
+;;; under the terms of the GNU Lesser General Public License as published by
+;;; the Free Software Foundation; either version 2.1 of the License, or (at
+;;; your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+;;; License for more details.
+;;; 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;        file:
 ;;;      module:
@@ -15,12 +30,11 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 (in-package "TSDB")
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "2.0 (28-jan-05; beta)")
+(defparameter *tsdb-version* "2.0 (17-feb-05; beta)")
 
 (defparameter
   *tsdb-application*

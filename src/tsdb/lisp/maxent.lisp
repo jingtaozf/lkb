@@ -1,5 +1,20 @@
 ;;; -*- Mode: COMMON-LISP; Syntax: Common-Lisp; Package: TSDB -*-
 
+;;;
+;;; [incr tsdb()] --- Competence and Performance Profiling Environment
+;;; Copyright (c) 1996 -- 2005 Stephan Oepen (oe@csli.stanford.edu)
+;;;
+;;; This program is free software; you can redistribute it and/or modify it
+;;; under the terms of the GNU Lesser General Public License as published by
+;;; the Free Software Foundation; either version 2.1 of the License, or (at
+;;; your option) any later version.
+;;;
+;;; This program is distributed in the hope that it will be useful, but WITHOUT
+;;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+;;; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
+;;; License for more details.
+;;; 
+
 (in-package :tsdb)
 
 (defparameter *maxent-collapse-irules-p* nil)
@@ -439,7 +454,7 @@
      ((and (eq (lkb::edge-foo edge) model) (consp (lkb::edge-bar edge)))
       (lkb::edge-bar edge))
      ((null daughters)
-      (let* ((feature (list 1 root (first (lkb::edge-leaves edge))))
+      (let* ((feature (cons 1 (cons root (lkb::edge-leaves edge))))
              (code (symbol-to-code feature table)))
         (setf (lkb::edge-head edge) root)
         (setf (lkb::edge-foo edge) model)
@@ -454,7 +469,6 @@
                              extra 
                              (list (first (lkb::edge-leaves edge)))))
              (code (symbol-to-code feature table)))
-        (pprint feature)
         (setf (lkb::edge-head edge) (first (last extra)))
         (setf (lkb::edge-foo edge) model)
         (setf (lkb::edge-bar edge) (list code))))
@@ -536,9 +550,9 @@
             for i from (if *maxent-ngram-back-off-p* 1 *maxent-ngram-size*)
             to *maxent-ngram-size*
             for form = (nth (- i 1) forms)
-            for tags = (ith-n tags 1 i)
+            for itags = (ith-n tags 1 i)
             when form do
-              (push (symbol-to-code (cons form tags) table) result))
+              (push (symbol-to-code (cons form itags) table) result))
       finally 
         (setf (lkb::edge-foo edge) model)
         (setf (lkb::edge-baz edge) result)
