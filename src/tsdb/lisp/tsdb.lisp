@@ -329,7 +329,7 @@
        data database))))
 
 (defun flush-cache (cache
-                    &key (verbose t))
+                    &key sort (verbose t))
   (let ((database (get-field :database cache))
         (protocol (get-field :protocol cache)))
     (when verbose
@@ -355,6 +355,26 @@
           (call-tsdb query database))
         (unless *tsdb-debug-mode-p*
           (delete-file file))))
+    (when sort
+      ;;
+      ;; for improved tsdb(1) efficiency, make an attempt at sorting the files.
+      ;;
+      (loop
+          with path = (find-tsdb-directory database)
+          for file in '("parse" "result")
+          for source = (namestring (make-pathname :directory path :name file))
+          for target = (format nil "~a-" source)
+          when (probe-file source) do
+            (when (probe-file target) (delete-file target))
+            (run-process (format nil "exec mv -f '~a' '~a'" source target)
+                         :output "/dev/null" :if-output-exists :append
+                         :input "/dev/null" :error-output "/dev/null"
+                         :if-error-output-exists :append) 
+            (run-process (format nil "exec sort -n '~a'" target)
+                         :output source :if-output-exists :supersede
+                         :input "/dev/null" :error-output "/dev/null"
+                         :if-error-output-exists :append)
+            (when (probe-file target) (delete-file target))))
     (when verbose
       (format *tsdb-io* " done.~%")
       (force-output *tsdb-io*))))

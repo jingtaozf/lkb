@@ -36,7 +36,7 @@
  ((:path . "parc") (:content . "Wall Street Journal (PTB; PARC DB)"))
  ((:path . "wsj00") (:content . "Wall Street Journal (PTB; Section 0)"))
  ((:path . "cell") (:content . "DT Cell Phone Groups (Development Section)"))
- ((:path . "ecpa") (:content . "Ecommerce Email (Produce Availability)"))
+ ((:path . "ecpa") (:content . "Ecommerce Email (Product Availability)"))
  ((:path . "ecos") (:content . "Ecommerce Email (Order Status)"))
  ((:path . "ecoc") (:content . "Ecommerce Email (Order Cancellation)"))
  ((:path . "ecpr") (:content . "Ecommerce Email (Product Return)"))

@@ -22,6 +22,8 @@
 
 (defparameter *process-raw-print-trace-p* nil)
 
+(defparameter *process-sort-profile-p* t)
+
 (defparameter %graft-aligned-generation-hack% nil)
 
 (defun tsdb-do-process (data
@@ -46,7 +48,9 @@
      "~%tsdb-do-process(): out-of-date profile `~a'.~%"
      data))
   
-  (unless (or (null vocabulary) (eq type :generate) interactive
+  (unless (or (null vocabulary) 
+              (smember type '(:transfer :generate))
+              interactive
               (and (find :pvm *features*)
                    (find-symbol "*PVM-CLIENTS*")
                    (symbol-value (find-symbol "*PVM-CLIENTS*"))))
@@ -78,9 +82,10 @@
       (meter :value (get-field :start imeter))
       (status :text imessage))
 
-    (when (setf items (retrieve condition data 
-                                :mrs (when (eq type :generate) gold)
-                                :verbose verbose))
+    (when (setf items (retrieve 
+                       condition data 
+                       :mrs (when (smember type '(:transfer :generate)) gold)
+                       :verbose verbose))
       (let* ((schema (read-database-schema data))
              (cache (when (and cache (not interactive))
                       (create-cache data 
@@ -273,7 +278,9 @@
            data runs 
            :cache cache :interactive interactive 
            :stream stream :interrupt interrupt)
-          (when cache (flush-cache cache :verbose verbose))
+          (when cache 
+            (flush-cache cache :verbose verbose 
+                         :sort *process-sort-profile-p*))
           (unless interactive (format stream "~&"))
           (when meter
             (if abort
@@ -785,7 +792,7 @@
            (i-input (or (and interactive (get-field :o-input item))
                         (get-field :p-input item)
                         (get-field :i-input item)))
-           (mrs (when (eq type :generate)
+           (mrs (when (smember type '(:transfer :generate))
                   (let* ((reader (find-attribute-reader :mrs))
                          (ranks (get-field :ranks item))
                          (top (loop
@@ -810,26 +817,39 @@
       (gc-statistics-reset)
       (setf i-load (unless interactive #+:pvm (load_average) #-:pvm nil))
       (setf result 
-        (if (eq type :parse)
-          (parse-item i-input 
-                      :edges edges
-                      :trace interactive
-                      :exhaustive exhaustive
-                      :nanalyses nanalyses
-                      :trees-hook trees-hook
-                      :semantix-hook semantix-hook
-                      :nresults nresults
-                      :burst burst)
-          (generate-item mrs 
-                         :string i-input
-                         :edges edges
-                         :trace interactive
-                         :exhaustive exhaustive
-                         :nanalyses nanalyses
-                         :trees-hook trees-hook
-                         :semantix-hook semantix-hook
-                         :nresults nresults
-                         :burst burst)))
+        (case type
+          (:parse
+           (parse-item i-input 
+                       :edges edges
+                       :trace interactive
+                       :exhaustive exhaustive
+                       :nanalyses nanalyses
+                       :trees-hook trees-hook
+                       :semantix-hook semantix-hook
+                       :nresults nresults
+                       :burst burst))
+          (:transfer
+           (transfer-item mrs 
+                          :string i-input
+                          :edges edges
+                          :trace interactive
+                          :exhaustive exhaustive
+                          :nanalyses nanalyses
+                          :trees-hook trees-hook
+                          :semantix-hook semantix-hook
+                          :nresults nresults
+                          :burst burst))
+          (:generate
+           (generate-item mrs 
+                          :string i-input
+                          :edges edges
+                          :trace interactive
+                          :exhaustive exhaustive
+                          :nanalyses nanalyses
+                          :trees-hook trees-hook
+                          :semantix-hook semantix-hook
+                          :nresults nresults
+                          :burst burst))))
       (when (and (not *tsdb-minimize-gcs-p*) (not (eq gc :global))
                  (not interactive)
                  (>= (gc-statistics :global) 1) (<= (gc-statistics :global) 3))
@@ -845,25 +865,38 @@
         (gc-statistics-reset)
         (setf i-load #+:pvm (load_average) #-:pvm nil)
         (setf result 
-          (if (eq type :parse)
-            (parse-item i-input :edges edges
-                        :trace interactive
-                        :exhaustive exhaustive
-                        :nanalyses nanalyses
-                        :trees-hook trees-hook
-                        :semantix-hook semantix-hook
-                        :nresults nresults
-                        :burst burst)
-            (generate-item mrs
-                           :string i-input 
-                           :edges edges
-                           :trace interactive
-                           :exhaustive exhaustive
-                           :nanalyses nanalyses
-                           :trees-hook trees-hook
-                           :semantix-hook semantix-hook
-                           :nresults nresults
-                           :burst burst))))
+          (case type
+            (:parse
+             (parse-item i-input :edges edges
+                         :trace interactive
+                         :exhaustive exhaustive
+                         :nanalyses nanalyses
+                         :trees-hook trees-hook
+                         :semantix-hook semantix-hook
+                         :nresults nresults
+                         :burst burst))
+            (:transfer
+             (transfer-item mrs
+                            :string i-input 
+                            :edges edges
+                            :trace interactive
+                            :exhaustive exhaustive
+                            :nanalyses nanalyses
+                            :trees-hook trees-hook
+                            :semantix-hook semantix-hook
+                            :nresults nresults
+                            :burst burst))
+            (:generate
+             (generate-item mrs
+                            :string i-input 
+                            :edges edges
+                            :trace interactive
+                            :exhaustive exhaustive
+                            :nanalyses nanalyses
+                            :trees-hook trees-hook
+                            :semantix-hook semantix-hook
+                            :nresults nresults
+                            :burst burst)))))
 
       #+:allegro
       (when (and (= (get-field+ :readings result -1) -1)

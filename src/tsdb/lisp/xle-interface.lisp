@@ -1,13 +1,13 @@
 (in-package :xle)
 
-(defun current-grammar ()
+(defun tsdb::current-grammar ()
   ;;
   ;; return a string identifying the grammar that is currently in use, ideally
   ;; including relevant grammar-internal parameters of variation and a version.
   ;;
-  "norgram (oct-03)")
+  (or (tsdb::clients-grammar) "norgram (nov-03)"))
 
-(defun initialize-run (&key interactive 
+(defun tsdb::initialize-run (&key interactive 
                             exhaustive nanalyses
                             protocol custom)
   (declare (ignore interactive exhaustive nanalyses protocol custom))
@@ -36,7 +36,7 @@
   (parse "sov!" nil)
   nil)
   
-(defun finalize-run (context &key custom)
+(defun tsdb::finalize-run (context &key custom)
   (declare (ignore context custom))
   ;;
   ;; restore processor to original state after completion of a (test) run.  the
@@ -52,7 +52,7 @@
   ;;
   )
 
-(defun parse-item (string 
+(defun tsdb::parse-item (string 
                    &key id exhaustive nanalyses trace
                         edges derivations semantix-hook trees-hook
                         burst (nresults 0))
@@ -133,8 +133,3 @@
        (let* ((error (tsdb::normalize-string (format nil "~a" condition))))
          (pairlis '(:readings :error) (list -1 error))))
      return)))
-
-(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
-	   #-:ansi-eval-when (load eval compile)
-  (import '(current-grammar initialize-run finalize-run parse-item)
-           :tsdb))

@@ -8,6 +8,7 @@
 
 (in-package :lkb)
 
+
 (defparameter *lkb-package* 
   (or (find-package :lkb) (find-package :common-lisp-user)))
   
@@ -18,18 +19,27 @@
 (defmacro uday (tdfs1 tdfs2 path)
   `(yadu ,tdfs1 (create-temp-parsing-tdfs ,tdfs2 ,path)))
 
+;;;
+;;; _fix_me_
+;;; even more: in the (current) MT set-up, the `mt' system tends to be loaded
+;;; _after_ the [incr tsdb()] code.                          (1-nov-03; oe)
+;;;
+(eval-when #+:ansi-eval-when (:compile-toplevel :load-toplevel :execute)
+	   #-:ansi-eval-when (compile load eval)
+  (unless (find-package :mt) (make-package :mt)))
 
-(defun current-grammar ()
-  (cond 
-   ((and (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)
-         (boundp (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
-    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
-   ((and (member :lkb *features*) 
-         (find-package :lkb)
-         (find-symbol "*GRAMMAR-VERSION*" :lkb)
-         (boundp (find-symbol "*GRAMMAR-VERSION*" :lkb)))
-    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :lkb)))
-   (t "anonymous")))
+(defun tsdb::current-grammar ()
+  (or (tsdb::clients-grammar)
+      (cond 
+       ((and (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)
+             (boundp (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
+        (symbol-value (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
+       ((and (member :lkb *features*) 
+             (find-package :lkb)
+             (find-symbol "*GRAMMAR-VERSION*" :lkb)
+             (boundp (find-symbol "*GRAMMAR-VERSION*" :lkb)))
+        (symbol-value (find-symbol "*GRAMMAR-VERSION*" :lkb)))
+       (t "anonymous"))))
 
 
 (defun get-test-run-information ()
@@ -58,7 +68,7 @@
       (:rules . ,(hash-table-count *rules*))
       (:lrules . ,(hash-table-count *lexical-rules*))
       (:lexicon . ,(size-of-lexicon))
-      (:grammar . ,(current-grammar))
+      (:grammar . ,(tsdb::current-grammar))
       (:application . ,(format 
                         nil 
                         "LKB (~A mode~@[; version `~a'~]; ~
@@ -79,7 +89,7 @@
                         agendap)))))
 
 
-(defun parse-word (word &key load trace)
+(defun tsdb::parse-word (word &key load trace)
   ;; .load. can be one of
   ;;
   ;;   (:warn :quiet :collect nil)
@@ -105,7 +115,7 @@
      (parse input nil)
      (summarize-chart))))
 
-(defun initialize-run (&key interactive exhaustive nanalyses
+(defun tsdb::initialize-run (&key interactive exhaustive nanalyses
                             protocol custom)
   (declare (ignore interactive protocol custom))
   ;; returns whatever it likes; the return value will be given to
@@ -123,7 +133,7 @@
                             (list first-only-p))))
       (acons :context context (get-test-run-information)))))
 
-(defun finalize-run (context &key custom)
+(defun tsdb::finalize-run (context &key custom)
   (declare (ignore custom))
   ;; called after completion of test run
   (let ((lexicon 0)
@@ -148,7 +158,7 @@
 ;;; funcall()s .semantix-hook. and .trees-hook. to obtain MRS and tree
 ;;; representations (strings); all times in thousands of secs
 
-(defun parse-item (string 
+(defun tsdb::parse-item (string 
                    &key id exhaustive nanalyses trace
                         edges derivations semantix-hook trees-hook
                         burst (nresults 0))
@@ -354,7 +364,7 @@
 ;;; - more error reporting from inside of generate-from-mrs()
 ;;; 
 
-(defun generate-item (mrs
+(defun tsdb::generate-item (mrs
                       &key id string exhaustive nanalyses trace
                            edges derivations semantix-hook trees-hook
                            burst (nresults 0))
@@ -481,6 +491,68 @@
       (subseq string 0 (max (- (search index string) 1) 0)))
      (t string))))
 
+
+#+:mt
+(defun tsdb::transfer-item (mrs
+                      &key id string exhaustive nanalyses trace
+                           edges derivations semantix-hook trees-hook
+                           burst (nresults 0))
+  (declare (ignore edges derivations string id exhaustive nanalyses
+                   semantix-hook trees-hook))
+
+  (let* ((*package* *lkb-package*)
+         (stream (make-string-output-stream))
+         (*standard-output* 
+          (if trace (make-broadcast-stream *standard-output* stream) stream))
+         tgc tcpu treal conses symbols others)
+
+    (multiple-value-bind (return condition)
+        (ignore-errors
+         (when (or (null mrs) (not (mrs::psoa-p mrs)))
+           (error "null or malformed input MRS"))
+         (let* ((edges
+                 (tsdb::time-a-funcall
+                  #'(lambda () (mt::transfer-mrs mrs :filterp t))
+                  #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
+                      (declare (ignore ignore))
+                      (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
+                            conses (* scons 8) symbols (* ssym 24) 
+                            others sother))))
+
+                (*print-pretty* nil) (*print-level* nil) (*print-length* nil)
+                (output (get-output-stream-string stream))
+                (readings (length edges))
+                (readings (if (or (equal output "") (> readings 0))
+                            readings -1)))
+           `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
+             (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
+             (:readings . ,readings)
+             (:error . ,(pprint-error output))
+             (:results .
+              ,(loop
+                   with *package* = *lkb-package*
+                   with nresults = (if (<= nresults 0)
+                                     (length edges)
+                                     nresults)
+                   for i from 1
+                   for edge in edges
+                   for tree = (with-standard-io-syntax
+                                (let ((*package* *lkb-package*))
+                                  (write-to-string edge :case :downcase)))
+                   for mrs = (let ((mrs (mt::edge-mrs edge)))
+                               (with-output-to-string (stream)
+                                 (mrs::output-mrs1 mrs 'mrs::simple stream)))
+                   while (>= (decf nresults) 0) collect
+                     (pairlis '(:result-id :mrs :tree)
+                              (list i mrs tree)))))))
+      (append
+       (when condition
+         (let* ((error (tsdb::normalize-string 
+                        (format nil "~a" condition)))
+                (error (pprint-error error)))
+           (pairlis '(:readings :condition :error)
+                    (list -1 (unless burst condition) error))))
+       return))))
 
 (defun compute-derivation-tree (edge)
   (labels ((edge-label (edge)
@@ -802,7 +874,7 @@
 ;;; derivation format |:-).
 ;;;
 
-(defparameter *reconstruct-hook*
+(defparameter tsdb::*reconstruct-hook*
   #-:tty
   #'(lambda (edge &optional (i-input "reconstructed item"))
       (declare (ignore i-input))
@@ -811,7 +883,7 @@
   #+:tty
   nil)
 
-(defun find-lexical-entry (form instance &optional id start end (dagp t))
+(defun tsdb::find-lexical-entry (form instance &optional id start end (dagp t))
 
   (let* ((*package* *lkb-package*)
          (name (intern (if (stringp instance)
@@ -828,14 +900,14 @@
                    :rule form :leaves (list form) :lex-ids ids
                    :dag tdfs :from start :to end)))))
 
-(defun find-affix (type)
+(defun tsdb::find-affix (type)
   (let* ((*package* *lkb-package*)
          (name (string-upcase (string type)))
          (name (intern name *lkb-package*))
-         (rule (find-rule name)))
+         (rule (tsdb::find-rule name)))
     (when (rule-p rule) rule)))
 
-(defun find-rule (instance)
+(defun tsdb::find-rule (instance)
   (let* ((name (intern (if (stringp instance)
                            (string-upcase instance)
                          instance)
@@ -844,7 +916,7 @@
                    (get-grammar-rule-entry name))))
     rule))
 
-(defun instantiate-rule (rule edges id &optional (dagp t))
+(defun tsdb::instantiate-rule (rule edges id &optional (dagp t))
   (let* ((dagp (smember dagp '(:rule t)))
          (*unify-debug* :return)
          (%failure% nil)
@@ -883,7 +955,7 @@
                  :to (edge-to (first (last edges))))
       (values status %failure%))))
 
-(defun instantiate-preterminal (preterminal mrule 
+(defun tsdb::instantiate-preterminal (preterminal mrule 
                                 &optional id start end (dagp t))
   ;;
   ;; _fix_me_
@@ -915,14 +987,9 @@
                    :children (list preterminal))
         (values nil %failure%)))))
 
-(defun reconstruct-mrs (id mrs length)
+;;;
+;;; _fix_me_
+;;; obsolete this function (fix in `redwoods.lisp').          (3-nov-03; oe)
+;;;
+(defun tsdb::reconstruct-mrs (id mrs length)
   (make-edge :id id :mrs mrs :from 0 :to length))
-
-(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
-	   #-:ansi-eval-when (load eval compile)
-  (import '(current-grammar initialize-run finalize-run
-            parse-word parse-item generate-item
-            *reconstruct-hook*
-            find-lexical-entry find-affix find-rule
-            instantiate-rule instantiate-preterminal reconstruct-mrs)
-           :tsdb))

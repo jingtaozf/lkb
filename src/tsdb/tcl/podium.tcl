@@ -413,6 +413,9 @@ proc main {} {
     -label "Parsing" \
     -variable globals(process,type) -value :parse;
   .menu.process.menu.switches add radiobutton \
+    -label "Transfer" \
+    -variable globals(process,type) -value :transfer;
+  .menu.process.menu.switches add radiobutton \
     -label "Generation" \
     -variable globals(process,type) -value :generate;
   .menu.process.menu.switches add separator;

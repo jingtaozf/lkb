@@ -229,6 +229,16 @@
                      (not (apply test items)))
            :key key))
 
+(defun clients-grammar ()
+  (let* ((grammars (loop
+                       for client in *pvm-clients*
+                       for cpu = (client-cpu client)
+                       for grammar = (cpu-grammar cpu)
+                       when grammar collect grammar))
+         (grammars 
+          (remove-duplicates grammars :test #'string-equal)))
+    (when (= (length grammars) 1) (first grammars))))
+
 (defun current-application ()
   (cond ((and *pvm-clients*
               (let* ((names (loop

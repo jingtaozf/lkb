@@ -662,7 +662,8 @@ proc tsdb_process {code {data ""} {key ""}} {
 
   if {$data == "" && [verify_ts_selection "" "write"]} {return 1};
 
-  if {$globals(process,type) == ":generate" 
+  if {($globals(process,type) == ":transfer" ||
+       $globals(process,type) == ":generate")
       && [verify_ts_selection both]} {
     return 1;
   }; # if
@@ -703,7 +704,8 @@ proc tsdb_process {code {data ""} {key ""}} {
     set overwrite nil;
   }; # else
   set source "";
-  if {$globals(process,type) == ":generate"} {
+  if {$globals(process,type) == ":transfer"
+      || $globals(process,type) == ":generate"} {
     set source " :gold \"$compare_in_detail(source)\"";
   }; # if
   set command \
