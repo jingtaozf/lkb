@@ -2,7 +2,6 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
-
 (in-package :common-lisp-user)
 
 ;;;
@@ -71,6 +70,10 @@
 #+:clisp
 (load
  (make-pathname :directory general-dir :name "clisp-patches"))
+
+#+:ecl
+(load
+ (make-pathname :directory general-dir :name "ecl-patches"))
 
 #+:lispworks
 (load
