@@ -179,7 +179,7 @@
     (when gc-strategy (restore-gc-strategy gc-strategy))
     (purge-profile-cache data :expiryp nil)
     
-    frame))
+    (or frame t)))
 
 (defun browse-tree (data i-id frame &key gold strip bestp inspect 
                                          title cache verbose 
@@ -433,7 +433,9 @@
                        (types (loop
                                   for field in relation 
                                   collect (second field)))
-                       (results (select fields types "result" condition data)))
+                       (results 
+                        (when ids
+                          (select fields types "result" condition data))))
                   (when (or *redwoods-semantix-hook* *redwoods-trees-hook*)
                     (loop
                         for result in results
