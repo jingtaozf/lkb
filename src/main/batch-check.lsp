@@ -11,14 +11,13 @@
 (defvar mrs::*initial-semantics-path*)
 
 (defun get-semantics-path nil
-  (or
-   (and
-    (boundp '*batch-check-semantics-path*)
+  (cond
+   ((boundp '*batch-check-semantics-path*)
     *batch-check-semantics-path*)
-   (and 
-    (boundp 'mrs::*initial-semantics-path*)
+   ((boundp 'mrs::*initial-semantics-path*)
     mrs::*initial-semantics-path*)
-   (error "please set *batch-check-semantics-path*")))
+   (t
+    (error "please set *batch-check-semantics-path*"))))
    
 (defun batch-check-lexicon (&optional (unexpandp t))
   (let ((*batch-mode* t)
