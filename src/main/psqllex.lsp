@@ -9,11 +9,10 @@
 ;;;  - rework DB access layer to cache connection in `psql-database' object.
 ;;;
 ;;; ToDo
+;;;   - use SQL maximize to honour versioning mechanism in DB;
 ;;;   - look into Postgres optimization (factor of four or more);
 ;;;   - find out why we spend an extra 45 seconds or more over the CDB version
 ;;;     when looking up some 9000 stems;
-;;;   - fix creation of psorts: fill in all fields, debug proper names;
-;;;   - fix root node treatment, so they have a life outside of the database;
 ;;;   - decide on whether to keep using the `definition' table or move that
 ;;;     information into the globals;
 ;;;   - add export to TDL file support;
