@@ -151,7 +151,7 @@
 
 (defmethod mrs-output-start-liszt ((mrsout simple))
   (with-slots (stream indentation) mrsout
-    (format stream "~%  LISZT: <")
+    (format stream "~%  RELS: <")
     (setf indentation (+ indentation 10))))
 
 (defmethod mrs-output-var-fn ((mrsout simple) var-string)
@@ -176,7 +176,7 @@
 (defmethod mrs-output-rel-handel ((mrsout simple) handel)
   (if handel
       (with-slots (stream indentation) mrsout
-        (format stream "~%~VT~A: ~A" (+ indentation 2) 'handel handel))))
+        (format stream "~%~VT~A: ~A" (+ indentation 2) 'hndl handel))))
 
 (defmethod mrs-output-label-fn  ((mrsout simple) label)
   (with-slots (stream indentation) mrsout
@@ -786,13 +786,12 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
   (read-mrs-var istream))
 
 (defun read-mrs-liszt (istream)
-  ;;; LISZT -> liszt: < REL* >
+  ;;; LISZT -> rels: < REL* >
   (let ((rels nil))
+    (mrs-check-for #\r istream)
+    (mrs-check-for #\e istream)
     (mrs-check-for #\l istream)
-    (mrs-check-for #\i istream)
     (mrs-check-for #\s istream)
-    (mrs-check-for #\z istream)
-    (mrs-check-for #\t istream)
     (mrs-check-for #\: istream)
     (mrs-check-for #\< istream)
     (loop 
@@ -832,15 +831,9 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
          (next (peek-char t istream nil nil))
          (sort (if (eql next #\") (read-mrs-atom istream) reltype)))
     (when *rel-handel-path*
-      ;;
-      ;; _fix_me_
-      ;; this should probably use *rel-handel-path* instead (30-sep-02; oe)
-      ;;
       (mrs-check-for #\h istream)
-      (mrs-check-for #\a istream)
       (mrs-check-for #\n istream)
       (mrs-check-for #\d istream)
-      (mrs-check-for #\e istream)
       (mrs-check-for #\l istream)
       (mrs-check-for #\: istream))
     (let ((hvar (if *rel-handel-path* (read-mrs-var istream)))

@@ -56,7 +56,7 @@
   ;;; assumes that there is only one such feature and 
   ;;; that its value is a var 
   (dolist (fvpair (rel-flist rel))
-    (when (eql (fvpair-feature fvpair) (vsym 'restr))
+    (when (eql (fvpair-feature fvpair) (vsym 'rstr))
       (return (get-var-num (fvpair-value fvpair))))))
 
 (defun get-scope-value (rel)

@@ -107,7 +107,7 @@
        (member (rel-sort rel) *quant-rel-types* 
                :test #'string-equal)
        (dolist (fvpair (rel-flist rel))
-         (when (and (eq (fvpair-feature fvpair) *bv-feature*))
+         (when (and (eq (fvpair-feature fvpair) *scope-feat*))
            (return t))))
    (not (member (rel-sort rel) *top-level-rel-types* 
                 :test #'eq))))
