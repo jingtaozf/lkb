@@ -1,0 +1,37 @@
+#!/bin/bash
+
+unset DISPLAY
+
+ROOT="${HOME}/src"
+
+date=$(date "+%Y-%m-%d")
+
+skeleton=hike
+if [ ! -z "${1}" ]; then 
+  skeleton=${1}; 
+fi
+
+log=${HOME}/${skeleton}.${date}.log
+
+{
+  echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"
+  echo "(pushnew :lkb *features*)"; \
+  echo "(pushnew :logon *features*)"; \
+  echo "(compile-system \"tsdb\" :force t)"; \
+  echo "(lkb::read-script-file-aux \"${ROOT}/erg/lkb/script\")"
+  echo "(lkb::index-for-generator)"; \
+  echo "(tsdb:tsdb 
+         :skeletons \"${ROOT}/lkb/src/tsdb/skeletons/english\")"
+  echo "(tsdb:tsdb :skeletons)"
+  echo "(setf target 
+         (tsdb::suggest-test-run-directory \"${skeleton}\" :absolute nil))"
+  echo "(tsdb:tsdb :create target :skeleton \"${skeleton}\")"
+  echo "(setf lkb::*unpack-edge-allowance* 50000)"
+  echo "(setf tsdb::*tsdb-maximal-number-of-edges* 50000)"
+  echo "(setf tsdb::*process-default-task* :generate)"
+  echo "(tsdb::tsdb-do-process target :gold \"gold/erg/${skeleton}\"
+         :type :generate :overwrite t)"
+  echo "(excl:exit)"
+} | ( cd ${HOME}/src/acl; \
+      ./alisp -I bclim.dxl -locale iso.8859.1 -qq; ) \
+    2>&1 | tee ${log}
