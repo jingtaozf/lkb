@@ -89,7 +89,7 @@ lkb_data:
 	      --exclude="src/data/spanish*" \
 	      --exclude="src/data/interrogatives*" \
 	      --exclude="src/data/aline2*" \
-	      src/data; \
+	      src/data src/*.el; \
 	)
 
 lkb_binaries: lkb_linux lkb_solaris
@@ -207,8 +207,7 @@ matrix:
 	  ${TAR} Svczf ${TARGET}/${DATE}/matrix.tgz \
 	      --exclude="*~" --exclude="CVS*" --exclude="*/CVS*" \
               --exclude=".nfs*" --exclude=".#*" --exclude="#*#"\
-	      --exclude="pet*" --exclude="tsdb*" \
-	      --exclude="*.fasl" \
+	      --exclude="matrix/doc*" --exclude="*.fasl" \
 	      matrix; \
 	)
 

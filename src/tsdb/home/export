@@ -1,9 +1,7 @@
 #!/bin/bash
 
 ROOT=/eo/e8nb/oe/www/src
-#TSDBHOME=/eo/e8nb/oe/www/src/lkb/src/tsdb/home
 TSDBHOME=/lingo/oe/tsdb/home
-#TARGET=/export/c2/oe/kristina
 TARGET=/lingo/attic/oe
 TSDB=/user/oe/lbin/tsdb
 
@@ -23,7 +21,7 @@ fi
   all=$(${TSDB} -home ${DB} -query 'select i-id from item' \
         | sort -n | tail -1);
   while [ ${low} -le ${all} ]; do
-    high=$[${low} + 100];
+    high=$[${low} + 100000];
     echo
     echo "exporting \`${1}' [$low -- $high]";
     echo
@@ -45,14 +43,17 @@ fi
       echo "(compile-system \"tsdb\")"; \
       echo "(setf mrs::*eds-include-quantifiers-p* nil)"; \
       echo "(setf mrs::*eds-include-vacuous-relations-p* nil)"; \
-      echo "(push 'lkb::discourse_rel mrs::*eds-bleached-relations*)"; \
-      echo "(setf tsdb::*redwoods-export-values* '(:dependencies))"; \
-      echo "(setf tsdb::*redwoods-export-bad-trees-p* t)"; \
-      echo "(read-script-file-aux \"${ROOT}/erg.oct-02/lkb/script\")"; \
+#      echo "(push 'lkb::discourse_rel mrs::*eds-bleached-relations*)"; \
+      echo "(setf tsdb::*redwoods-export-values* :all)"; \
+#      echo "(setf tsdb::*redwoods-export-values* '(:dependencies))"; \
+      echo "(setf tsdb::*redwoods-thinning-export-p* nil)"; \
+#      echo "(read-script-file-aux \"${ROOT}/erg.oct-02/lkb/script\")"; \
+      echo "(read-script-file-aux \"/lingo/oe/src/grammars/feb-03/lkb/script\")"; \
+#      echo "(read-script-file-aux \"/lingo/oe/src/grammars/erg/lkb/script\")"; \
       echo "(tsdb:tsdb :home \"$TSDBHOME\")"; \
       echo "(tsdb::export-trees \"${1}\" :path \"${TARGET}\""; \
       echo "  :condition \"${condition}\")"; \
       echo "(excl:exit)"; \
-    ) | ( cd /lingo/local/acl; ./clim -qq && touch ${ROOT}/.yes; )
+    ) | ( cd /lingo/local/acl; ./alisp -I bclim.dxl -qq && touch ${ROOT}/.yes; )
   done
 } 2>&1 | tee ${TSDBHOME}/${log}.$$.log
