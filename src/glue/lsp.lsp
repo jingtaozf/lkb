@@ -192,6 +192,8 @@
 (defun lsp-process-event (id event stream)
   #+:lui
   (declare (special %lui-stream% %lui-eoc%))
+  #+:debug
+  (setf %id id %event event %stream stream)
   (let* ((client (loop
                      for client in %lsp-clients%
                      when (= (client-id client) id) return client))
@@ -463,6 +465,7 @@
          (let ((*morphs* (lspb-morphs object))
                (*chart* (lspb-chart object)))
            (show-chart)
+	   #+:null
            (when (edge-p (lspb-edge object)) 
              (display-edge-in-chart (lspb-edge object))))))
       (:entity
@@ -498,7 +501,7 @@
               (mrs (and dag (mrs::extract-mrs-from-fs dag))))
          (case view
            (:simple
-            (show-mrs-window nil mrs title))
+            (mrs::display-mrs nil mrs title))
            (:indexed 
             (show-mrs-indexed-window nil mrs title))
            (:prolog 

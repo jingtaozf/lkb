@@ -46,7 +46,8 @@
 ;;; Lex-def -> Lexid Avm-def . 
 ;;; Lexid  -> identifier
 ;;; Avm-def -> := Conjunction (as in tdltypeinput.lsp)
-  (let* ((position  (1+ (file-position istream)))
+  (let* (#+:allegro
+         (position  (1+ (file-position istream)))
 	 (name (lkb-read istream nil))
 	 (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)

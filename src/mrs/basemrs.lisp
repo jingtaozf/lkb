@@ -1097,6 +1097,8 @@ extras have to be sorted out later
     (output-mrs1 mrs-instance device t)))
 
 (let ((lock #+:allegro (mp:make-process-lock) #-:allegro nil))
+  #-:allegro
+  (declare (ignore lock))
   (defun output-mrs1 (mrs-instance device stream &optional (id 0))
     (#+:allegro mp:with-process-lock #+:allegro (lock) #-:allegro progn
       (def-print-operations device 0 stream)
@@ -1866,6 +1868,8 @@ VAR -> VARNAME[:CONSTNAME]*
     (output-algebra-sement1 sement device t)))
 
 (let ((lock #+:allegro (mp:make-process-lock) #-:allegro nil))
+  #-:allegro
+  (declare (ignore lock))
   (defun output-algebra-sement1 (sement device stream)
     (#+:allegro mp:with-process-lock #+:allegro (lock) #-:allegro progn
       (def-print-operations device 0 stream)

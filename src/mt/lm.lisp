@@ -86,6 +86,7 @@
             finally
               (close *lm-input*)
               (setf *lm-input* nil)
+	      #+:allegro
               (sys:os-wait nil *lm-pid*))
         (let ((results
                (with-open-file (stream *lm-output* :direction :input)

@@ -4667,7 +4667,7 @@ or does not contain valid compiled code."
            (and (consp form)
                 (eq (car form) 'SYSTEM::VERSION)
                 (null (nth-value 1 (ignore-errors (eval form))))))))
-  #-clisp t))
+  file-name))
 
 (defun needs-compilation (component force)
   ;; If there is no binary, or it is older than the source

@@ -118,6 +118,7 @@
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (export '*current-process*))
 
+(pushnew :multiprocessing *features*)
 
 (defpackage :socket (:use :common-lisp)
   (:use :cl)

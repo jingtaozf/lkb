@@ -127,15 +127,18 @@
   #-:clisp
   (when %lui-pid%
     (ignore-errors
-     (run-process "kill -HUP ~d" %lui-pid% 
+     (run-process (format nil "kill -HUP ~d" %lui-pid%)
                   :wait t :output "/dev/null" 
-                  #-:clisp :error-output #-:clisp "/dev/null")
-     (run-process "kill -TERM ~d" %lui-pid% 
+                  #-(or :sbcl :openmcl) :error-output
+		  #-(or :sbcl :openmcl) "/dev/null")
+     (run-process (format nil "kill -TERM ~d" %lui-pid%)
                   :wait t :output "/dev/null" 
-                  #-:clisp :error-output #-:clisp "/dev/null")
-     (run-process "kill -QUIT ~d" %lui-pid% 
+                  #-(or :sbcl :openmcl) :error-output
+		  #-(or :sbcl :openmcl) "/dev/null")
+     (run-process (format nil "kill -QUIT ~d" %lui-pid%)
                   :wait t :output "/dev/null" 
-                  #-:clisp :error-output #-:clisp "/dev/null"))
+                  #-(or :sbcl :openmcl) :error-output
+		  #-(or :sbcl :openmcl) "/dev/null"))
     #+:allegro
     (sys:os-wait nil %lui-pid%)
     (setf %lui-pid% nil))

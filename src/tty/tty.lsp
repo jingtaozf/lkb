@@ -219,7 +219,7 @@
       (format t "~&No parses"))))
 
 
-(defun display-type-in-tree (type scroll-onlyp)
+(defun display-type-in-tree (type &optional scroll-onlyp)
   (declare (ignore type scroll-onlyp))
   nil)
 

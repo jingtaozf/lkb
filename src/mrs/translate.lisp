@@ -44,6 +44,8 @@
 			       nil
 			       ".transfer.~a.~:[2~;1~]"
 			       (current-user) *translate-other-p*))))
+  #-:allegro
+  (declare (ignore gcp))
   (when serverp 
     (when (probe-file file) (delete-file file))
     (loop until (probe-file file) do (sleep 1)))
@@ -209,7 +211,7 @@
     :arguments nil
     :return-type :integer)
 #-:allegro-version
-(defun getpid () (random (expt 2 15)))
+(defun current-pid () (random (expt 2 15)))
 
 ;;; functions that allow for translation (using interlingua)
 ;;; and `translation'
