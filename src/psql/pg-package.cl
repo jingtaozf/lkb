@@ -7,13 +7,15 @@
 ;; (http://opensource.franz.com/preamble.html),
 ;; known as the LLGPL.
 
+;; 22/01/04 Ben Waldron: added CONNECT-DB-WITH-HANDLER
+
 (in-package :user)
 
 (defpackage :pgsql
   (:nicknames :pg)
   (:use :common-lisp :excl :foreign-functions)
   (:export
-   "CONNECT-DB" "DECODE-CONNECTION-STATUS" "STATUS" "DB"
+   "CONNECT-DB-WITH-HANDLER" "CONNECT-DB" "DECODE-CONNECTION-STATUS" "STATUS" "DB"
    "ERROR-MESSAGE" "SQL" "FINISH" "SQL-ERROR"))
 
    

@@ -10,15 +10,7 @@
                                 '(:relative "psql"))
 
    :components
-   (#+(and allegro-version>= (version>= 6 0) (or :linux (and :sparc :svr4)))
-    (:module "so"
-     :source-pathname %system-binaries%
-     :source-extension "so"
-     :load-only t
-     :components
-     ((:file "libpq3")))
-
-    #+(and :allegro-version>= (version>= 6 0))
+   (#+(and :allegro-version>= (version>= 6 0))
     (:module "interface"
      :source-pathname ""
      :source-extension "cl"

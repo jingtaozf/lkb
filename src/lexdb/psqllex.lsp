@@ -216,7 +216,7 @@
   (let ((connection)
 	(decoded-status))
     (setf connection 
-      (pg:connect-db 
+      (pg:connect-db-with-handler 
        (concatenate 'string 
 	 (if port (format nil "port='~a' " (sql-escape-string port)))
 	 (format nil "host='~a' " (sql-escape-string host))
@@ -227,7 +227,7 @@
     (setf decoded-status (pg:decode-connection-status (pg:status connection)))
     (unless (eq decoded-status :connection-ok) ;: in case postgres is running locally w/o TCPIP...
       (setf connection 
-	(pg:connect-db
+	(pg:connect-db-with-handler
 	 (concatenate 'string 
            (if port (format nil "port='~a' " (sql-escape-string port)))
 	   (format nil "dbname='~a' " (sql-escape-string dbname))

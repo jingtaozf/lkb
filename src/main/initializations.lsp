@@ -116,6 +116,17 @@
   (let* ((lkbrc (dir-and-name (user-homedir-pathname) ".lkbrc")))
     (with-package (:lkb) (when (probe-file lkbrc) (load lkbrc))))
 
+  #+:psql
+  (handler-case (load "libpq.so") 
+    (file-error () 
+      ;; some feedback to user
+      (format t ";   Warning: cannot load libpq.so")
+      (format t "~%;            (PSQL lexicon functionality will be unavailable)")
+      (format t "~%;            (hint: are the PostgreSQL libraries installed on your machine?)")
+      ;; need this for backward compatibility with ERG script
+      ;; (also a good idea anyway)
+      (setf *features* (remove :psql *features*))))
+  
   ;;; this is a no-op in tty mode
   #+(not :tty)
   (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :make)))
