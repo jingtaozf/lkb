@@ -36,7 +36,7 @@
 
 (defun ask-user-for-new-pathname (prompt)
   (loop for filename = (clim:select-file clim-user:*lkb-top-frame*
-					 #+:mswindows :dialog-type :save
+					 #+:mswindows :dialog-type #+:mswindows :save
      ;;; fix for bug in Windows that disallows new file names
      ;;; undocumented feature - see release notes for 5.0.1
      ;;; (which doesn't explain what it does, but this seems to work ...)
