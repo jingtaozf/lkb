@@ -78,7 +78,7 @@
   (with-slots (stream) rmrsout
     (if (dummy-pred-p pred)
         (format stream "<pred/>")
-      (format stream "<gpred>~A</gpred>" pred))))
+      (format stream "<gpred>~(~a~)</gpred>" pred))))
 
 #|
 <!ELEMENT var EMPTY>
@@ -267,13 +267,11 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-realpred ((rmrsout compact) lemma pos sense)
   (with-slots (stream) rmrsout
-    (format stream "_~A~A~A(" lemma 
-            (if pos (format nil "_~A" pos) "") 
-            (if sense (format nil "_~A" sense) ""))))
+    (format stream "_~(~a_~a~@[~a~]~)(" lemma (or pos "U") sense)))
 
 (defmethod rmrs-output-gpred ((rmrsout compact) predname)
   (with-slots (stream) rmrsout
-    (format stream "~A(" predname)))
+    (format stream "~(~a~)(" predname)))
 
 (defmethod rmrs-output-var-fn ((rmrsout compact) var-id var-type)
   (with-slots (stream) rmrsout
