@@ -39,18 +39,6 @@
       parse-sentences-batch generate-from-edge show-gen-result show-gen-chart 
       index-for-generator))
 			 
-(defun redefine-type (arg)
-  (interactive "P")
-  (let ((beg 0)
-        (end 0)
-        (pos (point)))
-    (setq beg (calc-begin-of-tdl-expression))
-    (goto-char pos)
-    (setq end (calc-end-of-tdl-expression))
-    (eval-in-lisp (format "(lkb::redefine-type \"%s\")" 
-			  (buffer-substring beg (min (1+ end) (point-max)))))
-    (goto-char pos)))
-
 ;;;
 ;;; menu construction
 ;;;
@@ -144,17 +132,37 @@
 	  (function (lambda ()
 		      (install-lkb-menu fi:common-lisp-mode-map))))
 
+(add-hook 'fi:lisp-mode-hook 
+	  (function (lambda ()
+		      (install-lkb-menu fi:lisp-listener-mode-map))))
+
 (add-hook 'tdl-mode-hook 
 	  (function (lambda ()
 		      (install-lkb-menu tdl-mode-map))))
 
 )
+;;; end >= 21 mode
 
 ;;; 
 ;;; old code for use with Emacs version < 21
 ;;;
 
 (defun lkb-pre-21 nil
+  
+(defun eval-in-lisp (expr)
+  (fi::make-request
+      (lep::evaluation-request
+       :transaction-directory fi:emacs-to-lisp-transaction-directory
+       :text expr
+       :echo nil
+       :pathname nil
+       :compilep nil)
+    ;; Normal continuation
+    (() (result) nil)
+    ;; Error continuation
+    (() (error)
+     (fi::show-error-text "Error: %s" error))))
+
 
 (defconst lkb-menu
     '("LKB"
@@ -203,7 +211,15 @@
       clim-user::do-parse-batch show-parse show-chart print-chart 
       parse-sentences-batch generate-from-edge show-gen-result show-gen-chart 
       index-for-generator))
-			 
+)
+;;; end pre-21 mode
+
+(if
+    (and (boundp 'emacs-major-version)
+	 (>= emacs-major-version 21))
+    (lkb-21)
+  (lkb-pre-21))
+
 (defun redefine-type (arg)
   (interactive "P")
   (let ((beg 0)
@@ -216,19 +232,6 @@
 			  (buffer-substring beg (min (1+ end) (point-max)))))
     (goto-char pos)))
 
-(defun eval-in-lisp (expr)
-  (fi::make-request
-      (lep::evaluation-request
-       :transaction-directory fi:emacs-to-lisp-transaction-directory
-       :text expr
-       :echo nil
-       :pathname nil
-       :compilep nil)
-    ;; Normal continuation
-    (() (result) nil)
-    ;; Error continuation
-    (() (error)
-     (fi::show-error-text "Error: %s" error))))
 
 (defun find-tdl-definition (thing file)
   (fi::ensure-buffer-visible (find-file file))
@@ -236,13 +239,6 @@
   (re-search-forward (format "%s\\W+:" (regexp-quote thing)))
   (goto-char (match-beginning 0)))
  
-)
-
-(if
-    (and (boundp 'emacs-major-version)
-	 (>= emacs-major-version 21))
-    (lkb-21)
-  (lkb-pre-21))
 
 ;;;
 ;;; Some key bindings for those having trouble with encodings
