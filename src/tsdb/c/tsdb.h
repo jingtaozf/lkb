@@ -92,6 +92,8 @@ extern void free(void *);
 #define TSDB_COMPRESS_OPTION 16
 #define TSDB_UNCOMPRESS_OPTION 17
 #define TSDB_SUFFIX_OPTION 18
+#define TSDB_FS_OPTION 19
+#define TSDB_OFS_OPTION 20
 
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
@@ -259,6 +261,9 @@ typedef struct tsdb {
   char *result_prefix;
   int max_results;
 
+  char fs;
+  char *ofs;
+
   char *server;
   int port;
   char *pager;
@@ -277,7 +282,6 @@ typedef struct tsdb {
   Tsdb_history **history;
   int history_size;
 
-/*  char *translate_table; */
 } Tsdb;
 
 #if !defined(TSDB_C)

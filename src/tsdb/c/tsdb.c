@@ -32,6 +32,8 @@ Tsdb tsdb = {
   (char *)NULL,            /* result_path */
   (char *)NULL,            /* result_prefix */
   -1,                      /* max_results */
+  TSDB_FS,                 /* fs */
+  (char *)NULL,            /* ofs */
   (char *)NULL,            /* server */
   0,                       /* port */
   (char *)NULL,            /* pager */
@@ -47,7 +49,6 @@ Tsdb tsdb = {
   -1,                      /* command */
   (Tsdb_history **)NULL,   /* history */
   TSDB_HISTORY_SIZE,       /* history_size */
-  (char*) NULL             /* translate_table */
 }; /* tsdb */
 
 FILE *tsdb_default_stream = TSDB_DEFAULT_STREAM;

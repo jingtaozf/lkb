@@ -1774,12 +1774,6 @@ BOOL tsdb_initialize() {
 #endif
 
   tsdb_init_history(&tsdb);
-  
-  if (!(tsdb.translate_table = tsdb_translate_table())) {
-    fprintf(tsdb_error_stream,
-            "initialize(): unable to create translate table.\n");
-    fflush(tsdb_error_stream);
-  } /* if */
 
 #ifdef DEBUG
   if(tsdb.relations != NULL) {
@@ -1815,8 +1809,14 @@ BOOL tsdb_initialize() {
           (tsdb.compress != NULL ? tsdb.compress : "null"),
           (tsdb.uncompress != NULL ? tsdb.uncompress : "null"));
   fprintf(tsdb_debug_stream,
-          "initialize(): compressed file suffix: `%s'.\n", 
+          "initialize(): compressed file suffix: `%s'; ", 
           (tsdb.suffix != NULL ? tsdb.suffix : "null"));
+  fprintf(tsdb_debug_stream, "fs: `%c'; ofs: `%c'.\n", tsdb.fs, tsdb.ofs);
+#else
+  fprintf(tsdb_debug_stream, 
+          "initialize(): fs: `%c'; ofs: `%s'.\n",
+          tsdb.fs,
+          (tsdb.ofs != NULL ? tsdb.ofs : "null"));
 #endif
   fflush(tsdb_debug_stream);
 #endif
@@ -1975,9 +1975,9 @@ char *tsdb_pseudo_user() {
   struct passwd *clare;
   char *fs, *name = strdup(TSDB_PSEUDO_USER);
 
-  for(fs = strchr(name, TSDB_FS); 
+  for(fs = strchr(name, tsdb.fs); 
       fs != NULL; 
-      name = ++fs, fs = strchr(name, TSDB_FS)) {
+      name = ++fs, fs = strchr(name, tsdb.fs)) {
     *fs = 0;
     if((clare = getpwnam(name)) != NULL) {
       return(clare->pw_dir);
@@ -2487,9 +2487,9 @@ char** tsdb_condition_attributes(Tsdb_node *node,
         attributes[i] = NULL;
         if (!tsdb_is_attribute(node->node)) {
           fprintf(tsdb_error_stream,
-                  "condition_attributes: %s is not an attribute\n",
+                  "condition_attributes(): %s is not a valid attribute.\n",
                   node->node->value.string);
-          tsdb_free_char_array(attributes,*s_attributes);
+          tsdb_free_char_array(attributes, *s_attributes);
           return NULL;
         }
         else {

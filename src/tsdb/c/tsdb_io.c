@@ -291,7 +291,7 @@ char* tsdb_sprint_key_list(Tsdb_key_list* list,int* r,int* f,
       free(cat);
     } /* if */
     if (k+1 < n_attributes) {
-      buf[len++]=TSDB_FS;
+      buf[len++]=tsdb.fs;
       buf[len]='\0';
     } /* if */
   } /* for  n_attributes */
@@ -574,7 +574,7 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
   
   l=0;
   tmp = projection[0];
-  while  ( tmp= strchr(tmp,TSDB_FS)) {
+  while  ( tmp= strchr(tmp,tsdb.fs)) {
     tmp++;l++;
   } /* while */
   
@@ -602,7 +602,7 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
       if (result==EOF) 
         break;
       for (k=0;k<i;k++) {
-        tmp = strchr(foo,TSDB_FS);
+        tmp = strchr(foo,tsdb.fs);
         if (!tmp) {
           k=i;
         }
@@ -611,7 +611,7 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
           result = fputs(foo,stream);
           if (result==EOF)
             break;
-          *tmp=TSDB_FS;
+          *tmp=tsdb.fs;
           foo = tmp+1;
           fputs(bar[k],stream);
         }
@@ -697,7 +697,7 @@ void tsdb_print_tuple(Tsdb_tuple *tuple, FILE *stream) {
   if(tuple != NULL) {
     for(i = 0; i < tuple->n_fields - 1; i++) {
       tsdb_print_value(tuple->fields[i], stream);
-      fprintf(stream, "%c", TSDB_FS);
+      fprintf(stream, "%c", tsdb.fs);
     } /* for */
     tsdb_print_value(tuple->fields[i], stream);
   } /* if */
@@ -858,7 +858,7 @@ BOOL tsdb_write_tuple(Tsdb_key_list* bar,FILE *output)
   for (i=0;i<bar->tuples[0]->n_fields-1;i++) {
     r=tsdb_print_value(bar->tuples[0]->fields[i],output);
     if (!r) return FALSE;
-    r=fputc(TSDB_FS,output);
+    r=fputc(tsdb.fs,output);
     if (!r) return FALSE;
   }
   r=tsdb_print_value(bar->tuples[0]->fields[i],output);
@@ -920,14 +920,14 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
     n += strlen(&buf[n]);
   } /* while() */
 
-  for(bar = strchr(buf ,TSDB_FS), n = 0;
+  for(bar = strchr(buf ,tsdb.fs), n = 0;
       bar != NULL;
-      bar = strchr(bar + 1, TSDB_FS), n++);
+      bar = strchr(bar + 1, tsdb.fs), n++);
   if(n + 1 != relation->n_fields) {
     fprintf(tsdb_error_stream,
             "read_tuple(): arity mismatch (%d vs. %d) for `%s'",
             n + 1, relation->n_fields, relation->name);
-    if((bar = strchr(buf, TSDB_FS)) != NULL) {
+    if((bar = strchr(buf, tsdb.fs)) != NULL) {
       *bar = 0;
     } /* if */
     fprintf(tsdb_error_stream, " (%s).\n", buf);
@@ -949,10 +949,10 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
   } /* if */
   
   if(buf[0] != '\n') {
-    *(char *)strchr(&buf[0], '\n') = TSDB_FS;
-    for(field = &buf[0], n = 0, fs = strchr(field, TSDB_FS);
+    *(char *)strchr(&buf[0], '\n') = tsdb.fs;
+    for(field = &buf[0], n = 0, fs = strchr(field, tsdb.fs);
         n < relation->n_fields && fs != NULL;
-        field = ++fs, n++, fs = strchr(field, TSDB_FS)) {
+        field = ++fs, n++, fs = strchr(field, tsdb.fs)) {
       value = (Tsdb_value *)malloc(sizeof(Tsdb_value));
       *fs = 0;
       if(!*field) {
@@ -1101,7 +1101,7 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
 \*****************************************************************************/
 
   Tsdb_relation *relation;
-  char buf[256 + 1], *foo, *bar;
+  char buf[2048 + 1], *foo, *bar;
   int c;
 
   relation = tsdb_create_relation();
@@ -1113,7 +1113,7 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
   while(isspace(c = fgetc(input)));
   buf[0] = (char)c;
 
-  if(fgets(&buf[1], 256, input) != NULL) {
+  if(fgets(&buf[1], 2047, input) != NULL) {
     if((foo = strrchr(&buf[0], ':')) == NULL) {
       if((foo = strchr(&buf[0], '\n')) != NULL) {
         *foo = 0;
@@ -1121,9 +1121,9 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
       fprintf(tsdb_error_stream,
               "read_relation(): invalid relation `%s'.\n",
               &buf[0]);
-      for(foo = fgets(&buf[0], 256, input);
+      for(foo = fgets(&buf[0], 2048, input);
           foo != NULL && buf[0] != '\n';
-          foo = fgets(&buf[0], 256, input));
+          foo = fgets(&buf[0], 2048, input));
       tsdb_free_relation(relation);
       if(!feof(input) && (relation = tsdb_read_relation(input)) != NULL) {
         return(relation);
@@ -1135,7 +1135,7 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
     *foo = 0;
     relation->name = strdup(&buf[0]);
     
-    while(fgets(&buf[0], 256, input) != NULL && buf[0] != '\n') {
+    while(fgets(&buf[0], 2048, input) != NULL && buf[0] != '\n') {
       for(foo = &buf[0]; isspace(*foo); foo++);
       
       if(relation->fields == NULL) {
@@ -1172,9 +1172,9 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
           fprintf(tsdb_error_stream,
                   "read_relation(): `%s' has no type in relation `%s'.\n",
                   foo, relation->name);
-          for(foo = fgets(&buf[0], 256, input);
+          for(foo = fgets(&buf[0], 2048, input);
               foo != NULL && buf[0] != '\n';
-              foo = fgets(&buf[0], 256, input));
+              foo = fgets(&buf[0], 2048, input));
           tsdb_free_relation(relation);
           if(!feof(input) && (relation = tsdb_read_relation(input)) != NULL) {
             return(relation);

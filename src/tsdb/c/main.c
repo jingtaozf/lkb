@@ -257,6 +257,10 @@ void tsdb_parse_options(int argc, char **argv) {
     {"uncompress", required_argument, 0, TSDB_UNCOMPRESS_OPTION},
     {"suffix", required_argument, 0, TSDB_SUFFIX_OPTION},
 #endif
+    {"fs", required_argument, 0, TSDB_FS_OPTION},
+    {"field-separator", required_argument, 0, TSDB_FS_OPTION},
+    {"ofs", required_argument, 0, TSDB_OFS_OPTION},
+    {"output-field-separator", required_argument, 0, TSDB_OFS_OPTION},
     {"query", required_argument, 0, TSDB_QUERY_OPTION},
     {"usage", no_argument, 0, TSDB_USAGE_OPTION},
     {"help", no_argument, 0, TSDB_USAGE_OPTION},
@@ -412,6 +416,16 @@ void tsdb_parse_options(int argc, char **argv) {
           exit(0);
         }
         break;
+      case TSDB_FS_OPTION:
+        if(optarg != NULL) {
+          tsdb.fs = optarg[0];
+        } /* if */
+        break;
+      case TSDB_OFS_OPTION:
+        if(optarg != NULL) {
+          tsdb.ofs = strdup(optarg);
+        } /* if */
+        break;
       } /* switch */
   } /* while */
 } /* tsdb_parse_options() */
@@ -466,6 +480,10 @@ void tsdb_usage() {
 #endif
   fprintf(tsdb_error_stream,
           "  `-pager[={command | _off_}' --- pager command to use;\n");
+  fprintf(tsdb_error_stream,
+          "  `-fs=character' --- field separator character;\n");
+  fprintf(tsdb_error_stream,
+          "  `-ofs=string' --- output field separator character;\n");
   fprintf(tsdb_error_stream,
           "  `-query=string' --- query to be processed in batch mode;\n");
   fprintf(tsdb_error_stream,
