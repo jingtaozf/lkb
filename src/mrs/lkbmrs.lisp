@@ -90,7 +90,9 @@
         (t path)))
 
 (defun compatible-types (type1 type2)
-  (user::find-gcsubtype type1 type2))
+  (if (and (null type1) (null type2))
+      t ; *** fudge, since sometimes erroneously gets called with nil args
+      (user::find-gcsubtype type1 type2)))
 
 
 

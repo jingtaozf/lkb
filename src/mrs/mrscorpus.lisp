@@ -114,14 +114,12 @@
 ;;; two identical rel types, we use handel number
 
 (defun sort-mrs-struct-liszt (liszt)
-   (let ((new-liszt (copy-list liszt)))
-        (sort new-liszt
-              #'(lambda (rel1 rel2)
-                  (or (string-lessp (rel-sort rel1) (rel-sort rel2))
-                      (and (string-equal (rel-sort rel1) (rel-sort rel2))
-                           (< (get-var-num (rel-handel rel1))
-                              (get-var-num (rel-handel rel2)))))))
-        new-liszt))
+   (sort (copy-list liszt)
+      #'(lambda (rel1 rel2)
+          (or (string-lessp (rel-sort rel1) (rel-sort rel2))
+              (and (string-equal (rel-sort rel1) (rel-sort rel2))
+                   (< (get-var-num (rel-handel rel1))
+                      (get-var-num (rel-handel rel2))))))))
 
 ;;; need sort-mrs-hcons
 
@@ -177,16 +175,18 @@
 (defun variables-equal (var1 var2 syntactic-p)
   (or (eq var1 var2)
       (and (var-p var1) (var-p var2)
+        (if syntactic-p
            (equal (var-type var1) (var-type var2))
-           (if syntactic-p
-               (equal-extra-vals
-                (var-extra var1) 
-                (var-extra var2))
-               (compatible-extra-vals 
-                (var-extra var1) 
-                (var-extra var2)))
-           (bindings-equal (get-var-num var1)
-                           (get-var-num var2)))))
+           (compatible-types (var-type var1) (var-type var2)))
+        (if syntactic-p
+            (equal-extra-vals
+              (var-extra var1) 
+              (var-extra var2))
+            (compatible-extra-vals 
+              (var-extra var1) 
+              (var-extra var2)))
+         (bindings-equal (get-var-num var1)
+                         (get-var-num var2)))))
 
 (defun compatible-extra-vals (extra1 extra2)
   ;;; extra values are currently in a typed-path notation
