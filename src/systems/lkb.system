@@ -2,15 +2,14 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
-
 (in-package :make)
 
 ;;;
 ;;; the :tty feature, when set, disables all graphics.  the graphical user
-;;; interface currently requires CLIM (tested using Allegro CL on Unix
-;;; and on Windows) or Macintosh CL.  Common Graphics (Allegro CL on 
-;;; Windoze) support was partly done but isn't in sync so the code
-;;; to load this has been commented out
+;;; interface currently requires CLIM (tested using Allegro CL on Unix and on 
+;;; Windows) or Macintosh CL.  Common Graphics (Allegro CL on Windoze) support
+;;; was partly done but isn't in sync so the code to load this has been 
+;;; commented out
 ;;;
 ;;; push()ing :tty manually (before any load-system() call) can also be used
 ;;; to force non-graphics mode, if this seems desirable for some reason.
@@ -33,6 +32,7 @@
 ;;;   - :ltemplates -- lexical templates: see `src/main/ltemplates.lsp';
 ;;;   - :preprocessor -- include RE library and enable preprocessor support;
 ;;;   - :xml -- include XML parser and enable simple preprocessing protocol;
+;;;   - :lsp -- Linguistic Server Protocol (also used for GLUE communication);
 ;;;   - :pooling -- enable recycling of high-frequency objects (dags, for now);
 ;;;   - :packing -- enable code for chart packing under (partial) subsumption;
 ;;;   - :vanilla -- run passive parser in pure CKY mode: disable `left-corner'
@@ -42,9 +42,6 @@
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   (pushnew :preprocessor *features*)
-  #+(and :allegro (version>= 6 0) 
-         (or :linux (and :sparc :svr4)))
-  (pushnew :psql *features*)
   #+(and :allegro (version>= 6 0))
   (pushnew :xml *features*)
   #+(or :glue (and :allegro (version>= 6 0)))
@@ -70,8 +67,7 @@
     :source-pathname (get-sources-dir "lkb")
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lsp"
-    :depends-on (
-		 #+:psql "psql"
+    :depends-on (#+:psql "psql"
                  #+:preprocessor "ppcre"
                  #+:xml "xml")
 
@@ -162,7 +158,7 @@
 	       #-:tty
                (:file "toplevel")))   ; top level menu commands
 
-     (:module "GLUE, LSP, and SPPP"
+     (:module "communication to external processes (GLUE, LSP, et al.)"
       :source-pathname "glue"
       :binary-pathname "glue"
       :components
