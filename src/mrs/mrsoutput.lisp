@@ -12,9 +12,6 @@
 (defun remove-trailing-periods (sentence-string)
   (string-right-trim '(#\Space #\.) sentence-string))
 
-(defvar *synlabel* nil
-  "Syntactic label - used for fragments, may be worth retaining")
-
 ;;; First necessary to retrive the structure from the result of
 ;;; a parse.  The FS returned will have an initial path to get to
 ;;; the MRS *initial-semantics-path*
@@ -23,20 +20,17 @@
 
 (defun extract-mrs (parse &optional generator-p)
   (setf *fragment-p* nil)
-  (setf *synlabel* nil)
   (let* ((fs (get-parse-fs parse))
          ;; get-parse-fs also sets *fragment-p*
          ;; which controls whether the scoping code is run
          ;;
          ;; the synlabel mechanism, apparently, is no longer required; ann
          ;; says she wants to look into this sometime  (28-mar-00  -  oe)
-         ;;
-         (synlabel #+:vm (get-category-label parse) nil)
+         ;; 
+         ;; have removed synlabel - aac
          (sem-fs (path-value fs *initial-semantics-path*)))
     (if (is-valid-fs sem-fs)
-        (progn
-          (setf *synlabel* synlabel)
-          (construct-mrs sem-fs nil generator-p)))))
+        (construct-mrs sem-fs nil generator-p))))
 
 (defun is-fragment-fs (fs)
   (and *root-path* *false-type*
