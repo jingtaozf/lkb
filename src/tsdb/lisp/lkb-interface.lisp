@@ -544,7 +544,7 @@
     (loop
         for i from 0 to (- *chart-limit* 1)
         for entry = (aref *chart* i 0)
-        when (chart-entry-p entry)
+        while (chart-entry-p entry)
         do
           (loop
               for configuration in (chart-entry-configurations entry)

@@ -32,7 +32,7 @@
 ;;; items (i.e. where the recorded decisions completely disambiguate the new
 ;;; parses).
 ;;;
-(def-lkb-parameter *tree-automatic-update-p* 2)
+(def-lkb-parameter *tree-automatic-update-p* 0)
 
 (def-lkb-parameter *tree-update-match-hook* nil)
 

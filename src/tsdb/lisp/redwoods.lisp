@@ -48,7 +48,11 @@
          (message (format 
                    nil 
                    "~a `~a' trees ..." 
-                   (if strip "normalizing" "browsing") data))
+                   (cond
+                    (strip "normalizing")
+                    (gold "updating")
+                    (t "browsing"))
+                   data))
          (items (sort (copy-seq items) 
                       #'< :key #'(lambda (foo) (get-field :i-id foo))))
          (schema (read-database-schema data))
@@ -328,8 +332,9 @@
                               (gdate (get-field :t-end (first gtrees))))
                          (format 
                           nil 
-                          "(~a) ~a on ~a: ~a (of ~a) active"
-                          gversion guser gdate gactive greadings))))
+                          "(~a) ~a on ~a; [~a : ~a] active"
+                          gversion guser gdate 
+                          gactive (- greadings gactive)))))
            (gdecisions (when (and gold gversion)
                          #+:allegro
                          (format
@@ -943,7 +948,9 @@
              for edge being each hash-value in *reconstruct-cache*
              collect edge))
         (clrhash *reconstruct-cache*)
+        #+:null
         (excl:gc)
+        
         (with-open-file (stream file
                          :direction :output
                          :if-exists :supersede :if-does-not-exist :create)
@@ -953,8 +960,11 @@
            parse-id 
            (if version (length active) "all")
            (length results) input #\page)
+          
+          (setf (get-field :results item) (nreverse results))
           (export-tree item active :stream stream)
           (export-tree item active :complementp t :stream stream))
+        
         (when compressor
           (let ((command (format nil "~a '~a'" compressor file)))
             (run-process command :wait t)))
@@ -996,7 +1006,7 @@
       when dag do
         (format 
          stream 
-         "[~d:~d] ~:[(active)~;(inactive)~]~%~%~%" 
+         "[~d:~d] ~:[(active)~;(inactive)~]~%~%" 
          parse-id result-id complementp)
         (setf lkb::*cached-category-abbs* nil)
         (when (or (eq *redwoods-export-values* :all)
