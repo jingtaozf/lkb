@@ -216,13 +216,38 @@
                    for token = (format 
                                 nil 
                                 "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\")" 
-                                id start end form surface)
+                                id start end 
+                                (escape-string form) (escape-string surface))
                    collect token into tokens
                    finally 
                      (return
                        (values (format nil "~{~a~^ ~}" tokens) length))))
               (:list
                (values (nreverse result) length)))))))
+
+(defun escape-string (string &key (syntax :c))
+  (declare (ignore syntax))
+           
+  (if string
+    (loop
+        with padding = 128
+        with length = (+ (length string) padding)
+        with result = (make-array length
+                                  :element-type 'character
+                                  :adjustable nil :fill-pointer 0)
+        for c across string
+        when (or (char= c #\") (char= c #\\)) do
+          (vector-push #\\ result)
+          (vector-push c result)
+          (when (zerop (decf padding))
+            (setf padding 42)
+            (incf length padding)
+            (setf result (adjust-array result length)))
+        else do
+          (vector-push c result)
+        finally
+          (return result))
+    ""))
 
 (defun preprocess-for-pet (string)
   (preprocess string :format :pet :verbose nil))
