@@ -666,70 +666,100 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
 
   Tsdb_tuple *tuple;
   Tsdb_value *value;
-  char buf[1024+1];
+  static char *buf=NULL;
+  static int s_buf = 1024;
   int n, foo;
   char *field, *fs, *bar,*baz;
 
 
-  baz = fgets(&buf[0],1024, input);
-  if(baz != NULL) {
-    tuple = (Tsdb_tuple *)malloc(sizeof(Tsdb_tuple));
-    tuple->n_fields = 0;
-    tuple->fields = (Tsdb_value **)NULL;
-
-    if(buf[0] != '\n') {
-      *(char *)strchr(&buf[0], '\n') = TSDB_FS;
-      for(field = &buf[0], n = 0, fs = strchr(field, TSDB_FS);
-          n < relation->n_fields && fs != NULL;
-          field = ++fs, n++, fs = strchr(field, TSDB_FS)) {
-        value = (Tsdb_value *)malloc(sizeof(Tsdb_value));
-        *fs = 0;
-        if(relation->types[n] == TSDB_INTEGER) {
-          if((foo = (int)strtol(field, &bar, 10)) != 0 || field != bar) {
-            value->type = TSDB_INTEGER;
-            value->value.integer = foo;
-          } /* if */
-          else {
-            fprintf(tsdb_error_stream,
-                    "read_tuple(): non-integer `%s' as `%s' in `%s'",
-                    field, relation->fields[n], relation->name);
-            if(n) {
-              if(tuple->fields[0]->type == TSDB_INTEGER) {
-                fprintf(tsdb_error_stream,
-                        " (%d)", tuple->fields[0]->value.integer);
-              } /* if */
-              else {
-                fprintf(tsdb_error_stream,
-                        " (%s)", tuple->fields[0]->value.string);
-              } /* else */
-            } /* if */
-            fprintf(tsdb_error_stream, ".\n");
-            fflush(tsdb_error_stream);
-            return(Tsdb_tuple *)NULL;
-          } /* else */
-        } /* if */
-        else {
-          value->type = TSDB_STRING;
-          value->value.string = strdup(field);
-        } /* else */
-        if(tuple->fields == NULL) {
-          tuple->fields = (Tsdb_value **)malloc(sizeof(Tsdb_value *));
-        } /* if */
-        else {
-          tuple->fields =
-            (Tsdb_value **)realloc(tuple->fields,
-                                 (n + 1) * sizeof(Tsdb_value *));
-        } /* else */
-        tuple->fields[n] = value;
-      } /* for */
-      tuple->n_fields = n;
+  if (!buf) {
+    buf = malloc(s_buf);
+    if (!buf) {
+      fprintf(tsdb_error_stream,"read_tuple(): out of memory\n");
+      return NULL;
     } /* if */
-    return(tuple);
   } /* if */
-  else {
-    return((Tsdb_tuple *)NULL);
-  } /* else */
+  
+  baz = fgets(buf,s_buf, input);
+  if (!baz)
+    return NULL;
+  n = strlen(baz);
+  while (baz[n-1]!='\n') {
+    s_buf+=s_buf;
+    buf = realloc(buf,s_buf);
+    if (!buf) {
+      fprintf(tsdb_error_stream,"read_tuple(): out of memory\n");
+      return NULL;
+    } /* if */
+    fgets(buf+n,s_buf/2,input);
+    n = n+strlen(buf+n);
+  } /* while() */
 
+  
+  for (baz=strchr(baz,TSDB_FS),n=0 ; baz ; baz=strchr(baz+1,TSDB_FS), n++) 
+ ;
+  if (n+1!=relation->n_fields) {
+    fprintf(tsdb_error_stream,
+            "read_tuple(): relation %s has %d fields, tuple has %d fields\n",
+            relation->name,relation->n_fields,n+1);
+    fprintf(tsdb_error_stream,"in set: %s",buf);
+    return NULL;
+  } /* if */
+  
+  
+  tuple = (Tsdb_tuple *)malloc(sizeof(Tsdb_tuple));
+  if (!tuple) {
+    fprintf(tsdb_error_stream,"read_tuple(): out of memory\n");
+    return NULL;
+  } /* if */
+  tuple->n_fields = n+1;
+  tuple->fields = (Tsdb_value **)malloc(sizeof(Tsdb_value*)*(n+2));
+  if (!tuple->fields) {
+    fprintf(tsdb_error_stream,"read_tuple(): out of memory\n");
+    return NULL;
+  } /* if */
+  
+  if(buf[0] != '\n') {
+    *(char *)strchr(&buf[0], '\n') = TSDB_FS;
+    for(field = &buf[0], n = 0, fs = strchr(field, TSDB_FS);
+        n < relation->n_fields && fs != NULL;
+        field = ++fs, n++, fs = strchr(field, TSDB_FS)) {
+      value = (Tsdb_value *)malloc(sizeof(Tsdb_value));
+      *fs = 0;
+      if(relation->types[n] == TSDB_INTEGER) {
+        if((foo = (int)strtol(field, &bar, 10)) != 0 || field != bar) {
+          value->type = TSDB_INTEGER;
+          value->value.integer = foo;
+        } /* if */
+        else {
+          fprintf(tsdb_error_stream,
+                  "read_tuple(): non-integer `%s' as `%s' in `%s'",
+                  field, relation->fields[n], relation->name);
+          if(n) {
+            if(tuple->fields[0]->type == TSDB_INTEGER) {
+              fprintf(tsdb_error_stream,
+                      " (%d)", tuple->fields[0]->value.integer);
+            } /* if */
+            else {
+              fprintf(tsdb_error_stream,
+                      " (%s)", tuple->fields[0]->value.string);
+            } /* else */
+          } /* if */
+          fprintf(tsdb_error_stream, ".\n");
+          fflush(tsdb_error_stream);
+          return(Tsdb_tuple *)NULL;
+        } /* else */
+      } /* if */
+      else {
+        value->type = TSDB_STRING;
+        value->value.string = strdup(field);
+      } /* else */
+      tuple->fields[n] = value;
+    } /* for */
+  } /* if */
+  
+  return(tuple);
+  
 } /* tsdb_read_tuple() */
 
 int tsdb_write_relations() {
