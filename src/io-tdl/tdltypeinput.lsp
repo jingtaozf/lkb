@@ -3,7 +3,7 @@
 
 (in-package :lkb)
 
-;;; modifications by bmw (nov-03)
+;;; modifications by bmw (dec-03)
 ;;; - internal reworking of cdb-lex-database + cdb-leaf-database classes 
 ;;;   and associated script functions
 

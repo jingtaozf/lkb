@@ -2,6 +2,10 @@
 ;;; see licence.txt for conditions
 
 
+;;; modifications by bmw (dec-03)
+;;; - internal reworking of cdb-lex-database + cdb-leaf-database classes 
+;;;   and associated script functions
+
 ;;; modified for defaults 1995
 ;;; 
 
