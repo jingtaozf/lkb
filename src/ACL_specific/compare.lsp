@@ -65,7 +65,7 @@
                 (setf (edge-from edge) begin)
                 (setf (edge-to edge) end)))
                             
-    (compare *parse-record*)))
+    (mp:run-function "Tree Comparison" #'compare *parse-record*)))
 
 (defun compare (edges)
   (let ((frame (clim:make-application-frame 'compare-frame)))
@@ -73,7 +73,7 @@
     (set-up-compare-frame frame edges)
     (setf (clim:frame-pretty-name frame) 
       (format nil "~a" (edge-leaves (first edges))))
-    (mp:run-function "Tree Comparison" #'run-compare-frame frame)))
+    (funcall #'clim:run-frame-top-level frame)))
 
 (defun run-compare-frame (frame)
   (clim:run-frame-top-level frame))
@@ -208,7 +208,8 @@
          (discriminant-state-as-string foo)
          (discriminant-toggle-as-string foo)
          (discriminant-key foo) (discriminant-value foo))
-      finally (format excl:*initial-terminal-io* "~%"))
+      finally (when (compare-frame-lead frame)
+		(format excl:*initial-terminal-io* "~%")))
 
   (setf (compare-frame-edges frame) edges)
   (recompute-in-and-out frame t)
@@ -414,6 +415,7 @@
       (mp:process-revoke-arrest-reason 
        (compare-frame-controller frame) :wait))))
 
+#+:null
 (define-compare-frame-command (com-first-compare-frame :menu "First")
     ()
   (clim:with-application-frame (frame)
@@ -441,6 +443,7 @@
       (mp:process-revoke-arrest-reason 
        (compare-frame-controller frame) :wait))))
 
+#+:null
 (define-compare-frame-command (com-last-compare-frame :menu "Last")
     ()
   (clim:with-application-frame (frame)

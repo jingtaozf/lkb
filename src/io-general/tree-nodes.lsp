@@ -566,8 +566,7 @@
          (edge-fs (get edge-symbol 'edge-fs))
          (label (if edge-record
                   (tree-node-text-string
-                   (or (edge-label edge-record)
-                       (when edge-fs (find-category-abb edge-fs))
+                   (or (when edge-fs (find-category-abb edge-fs))
                        (edge-category edge-record)))
                   (tree-node-text-string edge-symbol))))
     ;;
