@@ -35,7 +35,8 @@
   (store-object (p-find-symbol 'lexicon) :deep)
   t)
 
-(defmethod clear-lex ((lexicon plob-lex-database) &optional no-delete)
+(defmethod clear-lex ((lexicon plob-lex-database) &rest rest)
+  (declare (ignore rest))
   (when (slot-value lexicon 'initialized-p)
     (clrhash (slot-value lexicon 'lexical-entries))
     (clrhash (slot-value lexicon 'psorts))
