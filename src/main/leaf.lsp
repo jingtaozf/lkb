@@ -228,7 +228,8 @@ introduces new features ~A" name new-features)
           (if full-constraint
               (progn
                 (setf (type-constraint type-entry) full-constraint)
-                (if (nth-value 1 (wf-constraint-of node))
+                (if (progn (setf *well-formed-trace* nil)
+                           (nth-value 1 (wf-constraint-of node)))
                     (progn (clear-marks type-entry)
                            (expand-default-constraint node type-entry))
           ; wf-constraint-of and expand-default-constraint 

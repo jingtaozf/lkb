@@ -825,6 +825,8 @@
 
 ;;; Do strong typing and well-formedness check
 
+(defparameter *well-formed-trace* nil)
+
 (defun strongly-type-constraints nil
   ;; c. check for well-formedness ...
   (let ((ok t))
@@ -833,40 +835,46 @@
 	 do
 	 (unless (leaf-type-p (get-type-entry type-name))
 	   (unless 
-	       (nth-value 1 (wf-constraint-of type-name))
+               (progn (setf *well-formed-trace* nil)
+                      (nth-value 1 (wf-constraint-of type-name)))
 	     ;; i.e. just looks at boolean ok/not-ok
 	     (setf ok nil))))
     (unmark-type-table)
     ;; !!! can't create cyclic dags so don't check for them
     ok))
 
-(defun wf-constraint-of (type-name) 
+(defun wf-constraint-of (type-name)
   ;; may need to be copied completely before use
   ;; (print (list '> 'wf-constraint-of type-name))
   (let ((type-entry (get-type-entry type-name))
 	(ok t))
     (unless (seen-node-p type-entry)
-      (when (type-appfeats type-entry)
-	(let ((new-dag (type-constraint type-entry)))
-	  ;; !!! outside here must stay within current generation
-	  (let ((*unify-generation* *unify-generation*)
-		(*within-unification-context-p* t))
-	    ;; establish new unification generation now, and also at
-	    ;; end (the usual place)
-	    (invalidate-marks)
-	    (prog1
-		(if (really-make-features-well-formed new-dag nil type-name)
-		    (let ((res (copy-dag new-dag)))
-		      (if res
-			  (setf (type-constraint type-entry) res)
-			(progn
-			  (format t "~%Warning: cycle in ~A" type-name)
-			  (setq ok nil))))
-		  (setq ok nil))
-	      (invalidate-marks)))))
-      (mark-node-seen type-entry))
+        (when (member type-name *well-formed-trace*)
+          (error "~%~A is used in expanding its own constraint 
+                    expansion sequence: ~A"  type-name
+                 *well-formed-trace*))
+        (push type-name *well-formed-trace*)
+        (when (type-appfeats type-entry)
+          (let ((new-dag (type-constraint type-entry)))
+            ;; !!! outside here must stay within current generation
+            (let ((*unify-generation* *unify-generation*)
+                  (*within-unification-context-p* t))
+              ;; establish new unification generation now, and also at
+              ;; end (the usual place)
+              (invalidate-marks)
+              (prog1
+                  (if (really-make-features-well-formed new-dag nil type-name)
+                      (let ((res (copy-dag new-dag)))
+                        (if res
+                            (setf (type-constraint type-entry) res)
+                          (progn
+                            (format t "~%Warning: cycle in ~A" type-name)
+                            (setq ok nil))))
+                    (setq ok nil))
+                (invalidate-marks)))))
+        (mark-node-seen type-entry))
     ;; (print (list '< 'wf-constraint-of type-name))
-    (values (type-constraint type-entry) ok)))                    
+    (values (type-constraint type-entry) ok)))                   
                   
 
 ;;; Make appfeats order equivalent so that display is consistent. Mostly
