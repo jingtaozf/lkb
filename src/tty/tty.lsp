@@ -294,5 +294,6 @@
 ;; This macro takes care of synchonization problems in the CLIM version
 
 (defmacro with-output-to-top (() &body body)
-  ,@body
-  (terpri))
+  `(progn
+     ,@body
+     (terpri)))
