@@ -157,7 +157,7 @@ duplicate variables")
 
 (defun create-new-handle-var (gen)
   (let* ((idnumber (funcall gen)))
-    (make-handle-var 
+    (make-var 
      :type "h"
      :id idnumber)))
 
@@ -168,34 +168,20 @@ duplicate variables")
         (let* ((idnumber (funcall gen))
                (var-type (determine-variable-type fs))
                (extra (create-index-property-list fs))
-               (variable-identifier (cond ((eql var-type :handle)
-                                           (make-handle-var 
-                                            :type var-type 
-                                            :extra extra 
-                                            :id idnumber))
-                                          (t (make-var 
-                                              :type var-type
+               (variable-identifier (make-var :type var-type
                                               :extra extra 
-                                              :id idnumber)))))
+                                              :id idnumber)))
           (push (cons fs variable-identifier) *named-nodes*)
           variable-identifier)))))
 
 (defun create-indexing-variable (fs)
   ;;; this is called when we are building an mrs structure for indexing
   (when (is-valid-fs fs)
-    (let* ((idletter (determine-variable-type fs))
-           (var-type (fs-type fs))
-           (extra (create-index-property-list fs))
-           (variable-identifier (cond ((equal idletter "h")
-                                       (make-handle-var 
-                                        :type var-type 
-                                        :extra extra 
-                                        :id :dummy))
-                                      (t (make-var 
-                                          :type var-type
-                                          :extra extra 
-                                          :id :dummy)))))
-      variable-identifier)))
+    (let* ((var-type (determine-variable-type fs))
+           (extra (create-index-property-list fs)))
+          (make-var :type var-type
+		    :extra extra 
+		    :id :dummy))))
 
 ;;; The `extra' information on variables is represented
 ;;; as a structure consisting of a combination of feature
@@ -379,7 +365,7 @@ duplicate variables")
 (defun create-constr-struct (fs variable-generator)
   (if (is-valid-fs fs)
       (let* ((label-list (fs-arcs fs))
-             (rel (create-type (fs-type fs)))
+             (rel (create-hcons-relation (fs-type fs)))
              (scarg (assoc  *sc-arg-feature* label-list))
              (outscpd (assoc *outscpd-feature* label-list)))
         (make-hcons 
@@ -389,7 +375,20 @@ duplicate variables")
            :outscpd (when outscpd
                       (create-variable (cdr outscpd) variable-generator))))))
 
+(defun create-hcons-relation (type)
+  (cond ((eql type *qeq-type*) "qeq")
+        (t (error "Unknown relation type ~A"))))
 
+
+(defun determine-variable-type (fs)
+  (let ((type (create-type (fs-type fs))))
+    (cond ((equal-or-subtype type *event-type*) "e")
+          ((equal-or-subtype type *ref-ind-type*) "x")
+          ((equal-or-subtype type *deg-ind-type*) "d")
+          ((equal-or-subtype type *non_expl-ind-type*) "u")
+          ((equal-or-subtype type *event_or_index-type*) "e")
+          ((equal-or-subtype type *handle-type*) "h")  
+          (t "u"))))
 
 
 
