@@ -24,5 +24,6 @@
  ((:path . "vm97") (:content . "VerbMobil 97"))
  ((:path . "vm97p") (:content . "VerbMobil 97 (Partials)"))
  ((:path . "vm98") (:content . "VerbMobil 98"))
+ ((:path . "vm6") (:content . "VerbMobil CD # 6"))
  ((:path . "vm") (:content . "Aged VerbMobil Data"))
  ((:path . "toy") (:content . "Development Test Suite")))

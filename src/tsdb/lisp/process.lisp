@@ -82,23 +82,26 @@
                     :stream stream :interrupt interrupt))
              (burst (and (not interactive)
                          (find :pvm *features*)
-                         (every #'(lambda (run) (get-field :client run)) runs)))
+                         (every #'(lambda (run)
+                                    (get-field :client run)) runs)))
              (trees-hook 
               (unless interactive
-                (typecase *tsdb-trees-hook*
-                  (null nil)
-                  (string (symbol-function 
-                           (read-from-string *tsdb-trees-hook*)))
-                  (symbol (symbol-function *tsdb-trees-hook*))
-                  (function *tsdb-trees-hook*))))
+                (ignore-errors
+                 (typecase *tsdb-trees-hook*
+                   (null nil)
+                   (string (symbol-function 
+                            (read-from-string *tsdb-trees-hook*)))
+                   (symbol (symbol-function *tsdb-trees-hook*))
+                   (function *tsdb-trees-hook*)))))
              (semantix-hook 
               (unless interactive
-                (typecase *tsdb-semantix-hook*
-                  (null nil)
-                  (string (symbol-function 
-                           (read-from-string *tsdb-semantix-hook*)))
-                  (symbol (symbol-function *tsdb-semantix-hook*))
-                  (function *tsdb-semantix-hook*))))
+                (ignore-errors
+                 (typecase *tsdb-semantix-hook*
+                   (null nil)
+                   (string (symbol-function 
+                            (read-from-string *tsdb-semantix-hook*)))
+                   (symbol (symbol-function *tsdb-semantix-hook*))
+                   (function *tsdb-semantix-hook*)))))
              (increment (when meter (/ (mduration pmeter) (length items)))))
         
         (when meter 
@@ -484,8 +487,7 @@
         (:local #+:allegro (excl:gc))
         (:global #+:allegro (excl:gc) #+:allegro (excl:gc t)))
       (setf *tsdb-global-gcs* 0)
-      (setf i-load (unless interactive 
-                     (first (load-average))))
+      (setf i-load (unless interactive #+:pvm (load_average) #-:pvm nil))
       (setf result (parse-item i-input 
                                :edges edges
                                :trace interactive
@@ -509,7 +511,7 @@
         (when verbose
           (print-item item :stream stream))
         (setf *tsdb-global-gcs* 0)
-        (setf i-load (first (load-average)))
+        (setf i-load #+:pvm (load_average) #-:pvm nil)
         (setf result (parse-item i-input :edges edges
                                  :trace interactive
                                  :exhaustive exhaustive
@@ -533,14 +535,8 @@
         (throw :break nil))
 
       (let* ((readings (get-field :readings result))
-             (treal (/ (get-field+ :treal result 0) 1000))
              (timeup (get-field :timeup result))
-             (loads (load-average))
-             (a-load
-              (cond ((null treal) (first loads))
-                    ((<= treal 60) (first loads))
-                    ((<= treal (* 5 60)) (second loads))
-                    (t (third loads)))))
+             (a-load #+:pvm (load_average) #-:pvm nil))
         (push (cons :i-load i-load) result)
         (push (cons :a-load a-load) result)
         (push (cons :parse-id parse-id) result)

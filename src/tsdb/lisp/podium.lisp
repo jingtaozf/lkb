@@ -59,6 +59,10 @@
       (run-process *tsdb-wish-application*
                    :wait nil
                    :output :stream :input :stream :error-output nil))
+    ;;
+    ;; this may seem silly: suppress compiler warning about unused .foo.
+    ;;
+    (when foo (setf foo foo))
     (when *tsdb-wish-pid* (enable-gc-cursor *tsdb-wish-pid*))
     (format 
      *tsdb-wish-stream* 
@@ -169,14 +173,14 @@
      (unwind-protect
       (multiple-value-bind (foo condition)
        (ignore-errors
-       (let* ((command (second form))
-              (action (first command))
-              (arguments (rest command))
-              (user (current-user))
-              (file (format
-                     nil "/tmp/.tsdb.podium.~a.~a.~a"
-                     user (current-pid) 
-                     (string-downcase (string (gensym ""))))))
+        (let* ((command (second form))
+               (action (first command))
+               (arguments (rest command))
+               (user (current-user))
+               (file (format
+                      nil "/tmp/.tsdb.podium.~a.~a.~a"
+                      user (current-pid) 
+                      (string-downcase (string (gensym ""))))))
          (case action
 
            (set

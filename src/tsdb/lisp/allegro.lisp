@@ -18,6 +18,8 @@
 
 (in-package "TSDB")
 
+(defparameter *scavenge-limit* 402653184)
+
 (eval-when (:load-toplevel :execute)
   ;;
   ;; establish gc() hook that toggles podium(1) cursor for global gc()s;
@@ -28,7 +30,17 @@
         global-gc-p)
     (setf excl:*gc-after-hook*
       #'(lambda (global scavenged tenured foo bar)
+          #+:lkb
           (when (null global-gc-p)
+            (when (or (>= scavenged *scavenge-limit*) (< scavenged 0))
+              (top-level::zoom-command
+               :from-read-eval-print-loop nil :all t :brief t)
+              (error
+               #+:lkb
+               "gc-after-hook(): scavenge limit exceeded [~d] (~d edges)."
+               #-:lkb
+               "gc-after-hook(): scavenge limit exceeded [~d]." 
+               scavenged #+:lkb common-lisp-user::*edge-id*))
             (unless global
               (incf *tenured-bytes* tenured)
               (when (> *tenured-bytes* excl:*tenured-bytes-limit*)

@@ -45,7 +45,7 @@
 (defun call-tsdb (query language
                   &key redirection cache absolute unique quiet ro)
   (if *tsdb-server-mode-p*
-    (call-tsdbd query language)
+    #+:server (call-tsdbd query language) #-:server nil
     (if cache
       (cache-query query language cache)
       (let* ((user (current-user))

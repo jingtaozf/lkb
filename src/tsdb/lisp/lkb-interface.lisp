@@ -13,29 +13,48 @@
 (in-package :cl-user)
 
 (defun get-test-run-information ()
-  (let ((*package* (find-package :common-lisp-user)))
-    `((:AVMS . ,(- (hash-table-count *types*) (length *templates*)))
-      (:SORTS . 0)
-      (:TEMPLATES . ,(length *templates*))
-      (:RULES . ,(hash-table-count *rules*))
-      (:LRULES . ,(hash-table-count *lexical-rules*))
-      (:LEXICON . ,(size-of-lexicon))
-      (:GRAMMAR . ,(if (boundp '*grammar-version*) 
+  (let* ((*package* (find-package :common-lisp-user))
+         (exhaustivep (null *first-only-p*))
+         (active-parsing-p (and (find-symbol "*ACTIVE-PARSING-P*")
+                                (boundp (find-symbol "*ACTIVE-PARSING-P*"))
+                                (symbol-value 
+                                 (find-symbol "*ACTIVE-PARSING-P*"))))
+         (hyper-activity-p (and (find-symbol "*HYPER-ACTIVITY-P*")
+                                (boundp (find-symbol "*HYPER-ACTIVITY-P*"))
+                                (symbol-value 
+                                 (find-symbol "*HYPER-ACTIVITY-P*"))))
+         (chart-packing-p (and (find-symbol "*CHART-PACKING-P*")
+                              (boundp (find-symbol "*CHART-PACKING-P*"))
+                              (symbol-value 
+                               (find-symbol "*CHART-PACKING-P*"))))
+         (aagenda (and active-parsing-p
+                       (find :agenda *features*)
+                       (find-symbol "*AAGENDA*")
+                       (boundp (find-symbol "*AAGENDA*")))))
+    `((:avms . ,(- (hash-table-count *types*) (length *templates*)))
+      (:sorts . 0)
+      (:templates . ,(length *templates*))
+      (:rules . ,(hash-table-count *rules*))
+      (:lrules . ,(hash-table-count *lexical-rules*))
+      (:lexicon . ,(size-of-lexicon))
+      (:grammar . ,(if (boundp '*grammar-version*) 
                      (symbol-value '*grammar-version*)
                      "unknown"))
-      (:APPLICATION . ,(format 
+      (:application . ,(format 
                         nil 
-                        "LKB (~A mode~@[; version `~a'~]~
-                        ~:[; passive~;; active~])" 
+                        "LKB (~A mode~@[; version `~a'~]; ~
+                         ~@[packing ~]~
+                         ~:[passive~*~;~:[~;hyper~]active~] ~
+                         [~:[~d~;all~*~]~:[~;; agenda~]])" 
                         *lkb-system-version* 
                         (and (find-symbol "*CVS-VERSION*")
                              (boundp (find-symbol "*CVS-VERSION*"))
                              (symbol-value 
                               (find-symbol "*CVS-VERSION*")))
-                        (and (find-symbol "*ACTIVE-PARSING*")
-                             (boundp (find-symbol "*ACTIVE-PARSING*"))
-                             (symbol-value 
-                              (find-symbol "*ACTIVE-PARSING*"))))))))
+                        (and active-parsing-p chart-packing-p)
+                        active-parsing-p hyper-activity-p
+                        exhaustivep *maximal-number-of-readings*
+                        aagenda)))))
                        
 
 
@@ -60,20 +79,24 @@
                                  (make-broadcast-stream *standard-output* str)
                                str))
           (input (split-into-words (preprocess-sentence-string word))))
-      (parse input nil)
+     (let ((*dag-recycling-p* t))
+      (parse input nil))
       (summarize-chart))))
 
-(defun initialize-test-run (&key interactive)
+(defun initialize-test-run (&key interactive exhaustive)
   (declare (ignore interactive))
    ;; returns whatever it likes; the return value will be given to
    ;; finalize-test-run() to restore the interactive environment if
    ;; necessary
-  (let ((*package* (find-package "COMMON-LISP-USER")))
-    (clear-type-cache)))
+  (let ((*package* (find-package "COMMON-LISP-USER"))
+        (first-only-p *first-only-p*))
+    (clear-type-cache)
+    (setf *first-only-p* (not exhaustive))
+    (pairlis '(:first-only-p)
+             (list first-only-p))))
 
 (defun finalize-test-run (environment)
   ;; called after completion of test run
-  (declare (ignore environment))
   (let ((lexicon 0)
         (*package* (find-package "COMMON-LISP-USER")))
     (loop 
@@ -83,15 +106,17 @@
           (incf lexicon)) 
     (clear-type-cache)
     (uncache-lexicon)
+    (loop
+        for (variable . value) in environment do
+          (case variable
+            (:first-only-p 
+             (setf *first-only-p* value))))
     (pairlis '(:lexicon) (list lexicon))))
 
 ;;; sets the processor into exhaustive mode if requested; parses
 ;;; .string. without producing any printout (unless .trace. is set);
 ;;; funcall()s .semantix-hook. and .trees-hook. to obtain MRS and tree
 ;;; representations (strings); all times in thousands of secs
-
-;; DPF (16-Apr-99) - Modified PARSE-ITEM to also allow parse trees and MRS
-;; structures to be captured.
 
 (defun parse-item (string 
                    &key exhaustive trace
@@ -106,20 +131,21 @@
                                          *maximum-number-of-edges*
                                          edges))
             (*first-only-p* (not exhaustive))
-            (*maximal-number-of-readings* (cond
-                                           (exhaustive nil)
-                                           ((integerp readings) readings)
-                                           (t *maximal-number-of-readings*)))
+            (*maximal-number-of-readings* (if (integerp readings)
+                                            readings
+                                            *maximal-number-of-readings*))
             (*do-something-with-parse* nil)
              (sent
               (split-into-words (preprocess-sentence-string string)))
-             (str (make-string-output-stream)) ; capture any warning messages
-             (*standard-output* (if trace
-                                  (make-broadcast-stream *standard-output* str)
-                                  str))
+            (str (make-string-output-stream)) ; capture any warning messages
+            (*standard-output* (if trace
+                                 (make-broadcast-stream *standard-output* str)
+                                 str))
+            (*unifications* 0)
+            (*copies* 0)
+            (*subsumptions* 0)
              tgc tcpu treal conses symbols others)
-        (setf cl-user::*sentence* string)
-        (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks)
+        (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks packings)
             #+allegro
             (excl::time-a-funcall
              #'(lambda () (parse-tsdb-sentence sent trace))
@@ -155,7 +181,11 @@
                       #-mcl -1)))
           (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                  (output (get-output-stream-string str))
-                 (readings (length *parse-record*))
+                 (readings (if *chart-packing-p*
+                             (loop
+                                 for edge in *parse-record*
+                                 sum (length (unpack-edge edge)))
+                             (length *parse-record*)))
                  (readings (if (or (equal output "") (> readings 0))
                               readings
                              -1))
@@ -169,65 +199,73 @@
                           (round (* (- (first times) start) 1000) 
                                  internal-time-units-per-second)
                           (if (> readings 0) total -1)))
+                 (comment 
+                  (format 
+                   nil 
+                   "(s ~d) (p ~d) (g ~d)" 
+                   *subsumptions* packings (pool-garbage *dag-pool*)))
                  (summary (summarize-chart :derivationp derivationp)))
             (multiple-value-bind (l-s-tasks redges words)
                 (parse-tsdb-count-lrules-edges-morphs)
               (declare (ignore l-s-tasks words))
-              `((:COPIES . -1) (:UNIFICATIONS . -1)
-                (:OTHERS . ,others) (:SYMBOLS . ,symbols) 
-                (:CONSES . ,conses)
-                (:TREAL . ,treal) (:TCPU . ,(+ tcpu tgc)) 
-                (:TGC . ,tgc)
-                (:RPEDGES . ,redges) 
-                (:PEDGES . ,(rest (assoc :pedges summary)))
-                (:AEDGES . -1)
-                (:P-STASKS . ,s-tasks) (:P-ETASKS . ,e-tasks) 
-                (:P-FTASKS . ,f-tasks) (:P-CTASKS . ,c-tasks) 
-                (:L-STASKS . ,(rest (assoc :l-stasks summary)))
-                (:WORDS . ,(rest (assoc :words summary)))
-                (:TOTAL . ,total) (:FIRST . ,first) 
-                (:READINGS . ,readings)
-                (:ERROR . ,(tsdb::normalize-string output))
-                (:RESULTS .
+              `((:others . ,others) (:symbols . ,symbols) 
+                (:conses . ,conses)
+                (:treal . ,treal) (:tcpu . ,(+ tcpu tgc)) 
+                (:tgc . ,tgc)
+                (:rpedges . ,redges) 
+                (:pedges . ,(rest (assoc :pedges summary)))
+                (:p-stasks . ,s-tasks) (:p-etasks . ,e-tasks) 
+                (:p-ftasks . ,f-tasks) (:p-ctasks . ,c-tasks) 
+                (:l-stasks . ,(rest (assoc :l-stasks summary)))
+                (:words . ,(rest (assoc :words summary)))
+                (:total . ,total) (:first . ,first) 
+                (:unifications . ,*unifications*) (:copies . ,*copies*)
+                (:readings . ,readings)
+                (:error . ,(tsdb::normalize-string output))
+                (:comment . ,comment)
+                (:results .
                  ,(append
-                   (loop
-                       for i from 0
-                       for parse in (nreverse *parse-record*)
-                       for time = (if (integerp (first times))
-                                    (round (* (- (pop times) start) 1000)
-                                           internal-time-units-per-second )
-                                    total)
-                       for derivation = (tsdb::normalize-string
-                                         (format
-                                          nil
-                                          "~s"
-                                          (compute-derivation-tree parse)))
-                       for r-redges = (length 
-                                       (parse-tsdb-distinct-edges parse nil))
-                       for size = (parse-tsdb-count-nodes parse)
-                       for trees = (or (and trees-hook
-					    (ignore-errors 
-					     (tsdb::normalize-string
-					      (format
-					       nil
-					       "~s"
-					       (funcall trees-hook parse)))))
-				       "")
-                       for mrs = (or (and semantix-hook
-					  (ignore-errors 
-					   (funcall semantix-hook parse)))
-				     "")
-                       collect
-                         (pairlis '(:result-id :mrs :tree
-                                    :derivation :r-redges :size
-                                    :r-stasks :r-etasks 
-                                    :r-ftasks :r-ctasks
-                                    :time)
-                                  (list i mrs trees
-                                        derivation r-redges size
-                                        -1 -1 
-                                        -1 -1 
-                                        time)))
+                   (unless *chart-packing-p*
+                     (loop
+                         for i from 0
+                         for parse in (nreverse *parse-record*)
+                         for time = (if (integerp (first times))
+                                      (round (* (- (pop times) start) 1000)
+                                             internal-time-units-per-second )
+                                      total)
+                         for derivation = (tsdb::normalize-string
+                                           (format
+                                            nil
+                                            "~s"
+                                            (compute-derivation-tree parse)))
+                         for r-redges = (length 
+                                         (parse-tsdb-distinct-edges parse nil))
+                         for size = (parse-tsdb-count-nodes parse)
+                         for tree = (when trees-hook
+                                      (let ((tree
+                                             (ignore-errors 
+                                              (funcall trees-hook parse))))
+                                        (if (stringp tree)
+                                          tree
+                                          (format nil "~a" tree))))
+                         for mrs = (when semantix-hook
+                                     (let ((mrs
+                                            (ignore-errors
+                                             (funcall semantix-hook parse))))
+                                       (if (stringp mrs)
+                                          mrs
+                                          (format nil "~a" mrs))))
+                         collect
+                           (pairlis '(:result-id :mrs :tree
+                                      :derivation :r-redges :size
+                                      :r-stasks :r-etasks 
+                                      :r-ftasks :r-ctasks
+                                      :time)
+                                    (list i mrs tree
+                                          derivation r-redges size
+                                          -1 -1 
+                                          -1 -1 
+                                          time))))
                    (when derivationp
                      (loop
                          for i from (length *parse-record*)
@@ -316,8 +354,9 @@
                  return configuration))))
 
 (defun parse-tsdb-sentence (user-input &optional trace)
-   (multiple-value-prog1
-      (parse user-input trace)
+  (multiple-value-prog1
+      (let ((*dag-recycling-p* (null trace)))
+        (parse user-input trace))
       (when (fboundp *do-something-with-parse*)
          (funcall *do-something-with-parse*))))
 
@@ -363,7 +402,7 @@
             for configuration in (chart-entry-configurations entry)
             for edge = (chart-configuration-edge configuration)
             for rule = (edge-rule edge)
-            do
+            do 
               ;;
               ;; the situation here is somewhat more complicated than we like
               ;; it :-{: the LKB chart contains two edges for words that have
@@ -372,7 +411,7 @@
               ;; change the surface form (e.g. `third_sg_fin_verb_infl_rule');
               ;; hence, in counting the number of passives edges and words we
               ;; have to keep track of lexical entry + inflectional rule pairs
-              ;; and adjust the counting accordingly.        (26-may-99  -  oe)
+              ;; and adjust the counting accordingly.       (26-may-99  -  oe)
               ;;
               (cond
                ((and (rule-p rule) (tsdb::inflectional-rule-p (rule-id rule)))

@@ -120,11 +120,66 @@
              (sort data (if (eq stype :integer) #'< #'string<) 
                    :key #'(lambda (foo) (get-field sattribute foo)))
              data))
+          (:ntcl
+           (let* ((data 
+                   (if sort
+                     (sort data (if (eq stype :integer) #'< #'string<) 
+                           :key #'(lambda (foo) (get-field sattribute foo)))
+                     data))
+                  (stream (if file
+                            (create-output-stream file nil)
+                            *tsdb-io*))
+                  (width (length attributes))
+                  (length (length data))
+                  (*print-circle* nil)
+                  (totals (make-array (length attributes) :initial-element 0)))
+             (format
+              stream
+              "viewer fast~%~
+               noofrows ~d~%noofcols ~d~%~
+               titlerows 1~%tilecols 1~%"
+              (+ length 2) width)
+             (loop
+                 for attribute in attributes
+                 do
+                   (format stream "{~a}~%" attribute))
+             (loop
+                 for item in data
+                 do
+                   (loop
+                       for attribute in attributes
+                       for key = (intern (string-upcase attribute) :keyword)
+                       for field = (get-field key item)
+                       for i from 0 by 1
+                       when (and (integerp field) (not (= field -1)))
+                       do 
+                         (incf (aref totals i) field)
+                       do
+                         (format stream "{~a}~%" field)))
+             (loop
+                 for attribute in attributes
+                 for key = (intern (string-upcase attribute) :keyword)
+                 for type in types
+                 for i from 0 by 1
+                 for total = (aref totals i)
+                 when (member key *tsdb-id-attributes* :test #'eq)
+                 do
+                   (format stream "{~a}~%" length)                  
+                 else when (and (eq type :integer)
+                                (not (member key 
+                                             *tsdb-coded-attributes* 
+                                             :test #'eq)))
+                 do
+                   (format stream "{~a}~%" total)
+                 else do
+                   (format stream "{-}~%"))
+             (force-output stream)
+             (when file (close stream))
+             length))
           (:tcl
            (let* ((data 
                    (if sort
-                     (sort (copy-list data)
-                           (if (eq stype :integer) #'< #'string<) 
+                     (sort data (if (eq stype :integer) #'< #'string<) 
                            :key #'(lambda (foo) (get-field sattribute foo)))
                      data))
                   (stream (if file
@@ -224,8 +279,8 @@
                     "cell ~d ~d -contents \"-\" -format total~%"
                     (+ (length data) 2) (+ i 1)))
              (force-output stream)
-             (when file (close stream)))
-           (length data)))))))
+             (when file (close stream))
+             length)))))))
 
 (defun tcount (data relation &key absolute quiet)
   

@@ -138,7 +138,7 @@ foreach attribute $compare_in_detail(compare,all) {
 set compare_in_detail(compare,readings) 1;
 
 #
-# load table display modules by oliver (the genius) `plaehn@coli.uni-sb.de' 
+# load table display modules by oliver `plaehn@coli.uni-sb.de' 
 #
 source "$globals(podium_home)goodies.tcl";
 source "$globals(podium_home)table.tcl";
@@ -157,19 +157,28 @@ source "$globals(podium_home)copyleft.tcl";
 if {$globals(user) == ""} {
   set globals(user) "unknown";
 }; # if
-set trace [open "/tmp/podium.debug.$globals(user)" "w"];
+catch {set trace [open "/tmp/podium.debug.$globals(user)" "w"]};
 
 
 proc logger {string} {
 
     global trace;
 
-    if {[info exists trace]} {
+    if {[info exists trace] && $string != ""} {
         puts $trace $string;
         flush $trace;
     }; # if
 
 }; # logger()
+
+#
+# establish vanilla handler for background errors; the gc cursor handling
+# seems to cause trouble sometimes that, we hope, can be ignored ...
+#                                                     (25-jun-99  -  oe)
+#
+proc bgerror {message} {
+  catch {logger [format "(error: %s)" $message]};
+}; # bgerror()
 
 
 proc main {} {
@@ -332,7 +341,7 @@ proc main {} {
   .menu.analyze.menu add command \
           -label "Performance" -command {analyze_performance}
   .menu.analyze.menu add command \
-          -label "Parsing Strategy" -command {analyze_performance parser}
+          -label "Processor" -command {analyze_performance parser}
   .menu.analyze.menu add separator
   .menu.analyze.menu add command \
           -label "Show Graph" \
@@ -1009,15 +1018,6 @@ proc idle {} {
 
   global globals;
 
-  #
-  # _fix_me_
-  # because, somehow, we could not (yet) make the asynchronous callback into
-  # tsdb_busy() (from the gc_handler() signal handler) work reliably, call
-  # this procedure frequently; this way, gc cursors will be updated at least
-  # once per second. 
-  #                                                        (16-jun-99  -  oe)
-  #
-  # tsdb_busy;
   if {[llength $globals(idle_colours)]} {
     set time [clock seconds];
     set foo [expr {int($time / 10)}];

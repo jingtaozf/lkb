@@ -328,18 +328,18 @@ proc make_graph {graph} {
   set copyright [label $graph.copyright -bg white -fg black];
   $copyright config -relief flat -bd 2 \
     -text $caption -font $globals(copyright_font);
-  if {[$graph cget -invertxy]} {
-   $graph marker create window -coords {-Inf Inf} -anchor e -window $copyright
-  } else {
-    $graph marker create window -coords {Inf -Inf} -anchor e -window $copyright
-  }; # else
+#  if {[$graph cget -invertxy]} {
+#   $graph marker create window -coords {-Inf Inf} -anchor e -window $copyright
+#  } else {
+#    $graph marker create window -coords {Inf -Inf} -anchor e -window $copyright
+#  }; # else
   #
   # now that text markers are supposedly fixed, they come out in dark grey
   # when generating postscript |:-(.
   #
-#  $graph marker create text -coords {Inf -Inf} -anchor e \
-#    -text $caption -font $globals(copyright_font) \
-#    -bg white -fg black
+  $graph marker create text -coords {Inf -Inf} -anchor e \
+    -text $caption -font $globals(copyright_font) \
+    -fill white -fg black
 }    
 
 proc process_options {optionlist optionarrayname} {

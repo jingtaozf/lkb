@@ -78,7 +78,7 @@
       (busy :gc :start)
       #+:ignore
       (excl:gc t)
-      (excl:gc :tenure)
+      (excl:gc :mark-for-tenure)
       #-(version>= 5 0)
       (busy :gc :end)
       (format *tsdb-io* " done.~%"))
@@ -111,6 +111,7 @@
          (string (string-right-trim (list #\space #\tab) string)))
     (concatenate 'string string ".")))
 
+#+:cray
 (defun normalize-string (string)
   (if string
     (let* ((string (nsubstitute #\Space #\Newline string))
@@ -125,6 +126,27 @@
                       string :from-end t)
               string)))
       (string-trim '(#\Space #\Tab) string))
+    ""))
+
+(defun normalize-string (string)
+  (if string
+    (let* ((result (make-array 42
+                               :element-type 'character
+                               :adjustable t :fill-pointer 0)))
+      (loop
+          with space = t
+          for c across string
+          when (member c '(#\Space #\Newline #\Tab)) do
+            (unless space
+              (vector-push-extend #\Space result 42)
+              (setf space t))
+          else do
+            (vector-push-extend c result 42)
+            (setf space nil)
+          finally
+            (when (and space (not (zerop (fill-pointer result))))
+              (decf (fill-pointer result))))
+      result)
     ""))
 
 (defun string-strip (prefix string)
@@ -175,7 +197,7 @@
         ((member :babel *features* :test #'eq)
          "BABEL")
         (t
-         "UNKNOWN")))
+         "standalone")))
 
 (defun current-grammar ()
   (cond 
@@ -248,25 +270,6 @@
         (format
          nil "~a-~a-~a (~2,'0d:~2,'0d:~2,'0d)"
          day month year hour minute second))))))
-
-(defun load-average ()
-  (multiple-value-bind (output foo pid)
-    (run-process "/usr/bin/uptime" :wait nil
-                 :output :stream :input "/dev/null" :error-output nil)
-    (declare (ignore foo))
-    #+:allegro (sys:os-wait nil pid)
-    (let* ((line (read-line output nil :eof))
-           (colon (position #\: line :from-end t))
-           (line (subseq line (+ colon 1)))
-           (current (read-from-string line nil 0))
-           (comma (position #\, line))
-           (line (subseq line (+ comma 1)))
-           (recent (read-from-string line nil 0))
-           (comma (position #\, line))
-           (line (subseq line (+ comma 1)))
-           (past (read-from-string line nil 0)))
-      (close output)
-      (list current recent past))))
 
 (defun pprint-memory-usage (result &optional (separator #\Space))
   (let* ((conses (get-field+ :conses result 0))

@@ -426,7 +426,7 @@ proc update_graph_cascade {code} {
     foreach field {first total tcpu tgc p-ftasks p-etasks p-stasks} {
       set globals(graph,$field) 0;
     }; # foreach
-    set globals(graph,values) "";
+    set globals(graph,values) "edges";
   }; # if
 
   set globals(graph_values) "(";
@@ -685,17 +685,15 @@ proc tsdb_busy {{action "update"}} {
     }
     "update" {
       if {[oe gc] == "yes"} {
-        if {!$globals(kanji_p)} {
-          busy hold .;
-          busy config . -cursor $globals(gc_cursor); 
-        }; # if
+        busy hold .;
+        busy config . -cursor $globals(gc_cursor); 
       } elseif {[oe busy] == "yes"} {
         if {!$globals(kanji_p)} {
           busy hold .;
           busy config . -cursor $globals(busy_cursor);
         }; # if
       } else {
-        if {!$globals(kanji_p) && [busy isbusy .] == "."} {
+        if {[busy isbusy .] == "."} {
           busy release .;
         }; # if
       }; # else

@@ -595,10 +595,13 @@ proc tsdb_graph {{code "graph"}} {
         set command "$command :title \"Parser Tasks\"";
       }
       ptimes {
-        set command "$command :title \"Parsing Time\"";
+        set command "$command :title \"Parsing Time(s)\"";
       }
       ttimes {
-        set command "$command :title \"Overall Processing Time\"";
+        set command "$command :title \"Overall Processing Time(s)\"";
+      }
+      edges {
+        set command "$command :title \"Chart Edges\"";
       }
     }; # switch
   }; # else

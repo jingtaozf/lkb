@@ -35,6 +35,12 @@
     file))
 
 #+(version>= 5 0)
+(def-foreign-call load_average (:void) :returning :double)
+
+#-(version>= 5 0)
+(defforeign 'load_average :arguments nil :return-type :double-float)
+
+#+(version>= 5 0)
 (def-foreign-call 
     (_pvm_register "pvm_register")
     ((file (* :char) string))
@@ -98,7 +104,7 @@
 (def-foreign-call pvm_parent (:void) :returning :int)
 
 #-(version>= 5 0)
-(defforeign 'pvm_parents :arguments nil :return-type :integer)
+(defforeign 'pvm_parent :arguments nil :return-type :integer)
 
 
 #+(version>= 5 0)

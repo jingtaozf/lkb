@@ -154,17 +154,19 @@ proc showtable {filename {container ".table"} {database "unknown"} {title ""}} {
 ##              After a separating blank line, one ore more regions may be
 ##              specified for the nice viewer.  A region spans more than one row 
 ##              and/or column.  The line format is "region <rowNW> <colNW>
-##              <rowSE> <colSE> <hor_just> <ver_just>".  (<rowNW>,<colNW>) is
-##              the upper left corner of the region, (<rowSE>,<colSE>) the lower 
-##              right corner.  The contents of the region (and its format) is
-##              copied from the upper left cell (as specfied in the second part
-##              of the input file and with the "cell" command, resp.)  All other 
-##              cells within the region are overwritten.
+##              <rowSE> <colSE> <hor_just> <ver_just> <contents>".
+##              (<rowNW>,<colNW>) is the upper left corner of the region,
+##              (<rowSE>,<colSE>) the lower right corner.  The format of the
+##              region is copied from the upper left cell (as specfied in the
+##              second part of the input file and with the "cell" command,
+##              resp.); the contents to be displayed in the region is specified
+##              in <contents>; if this field contains the empty string, then the 
+##              contents of the upper left cell is used as contents of the
+##              region.  All other cells within the region are overwritten.
 ##              <hor_just> is the horizontal justification of the cell within
 ##              the region.  Possible values are "left", "right", or "center".
-##              The latter is the default.  <ver_just> is the vertical
-##              justification of the cell within the region; possible values:
-##              "top", "bottom, "center", the last being the default.
+##              <ver_just> is the vertical justification of the cell within the
+##              region; possible values: "top", "bottom, "center".
 ##
 ## Caveats: The format of the input file is supposed to be correct and is only
 ##          partially checked.  An incorrect file format might therefore result
@@ -172,7 +174,8 @@ proc showtable {filename {container ".table"} {database "unknown"} {title ""}} {
 ##
 
   global globals viewer cell layout noOfCols noOfRows colWidth \
-      colAnchor colDefaultAnchor  titlerows titlecols regions
+      colAnchor colDefaultAnchor  titlerows titlecols regions \
+      implode
     
   ## Constants
 
@@ -394,23 +397,20 @@ proc showtable {filename {container ".table"} {database "unknown"} {title ""}} {
   }; # catch
 
   if { $viewer == "nice" } {
-      bind $c <Button> [list canvas_select $c %x %y %b]
+      bind $c <Button-1> [list canvas_select $c %x %y %b]
   } else {
-      bind $c <Double-Button> {
-	  set t %W
-	  set index [$t index @%x,%y]
-	  if {[info exists key${t}($index)] 
-              && [info exists source${t}($index)]} {
-	    [list tsdb_process selection [set source${t}($index)] [set key${t}($index)]]
-	  }
-      }
+      bind $c <Double-Button-1> \
+	  "execute_double_button \"\" %W %x %y $tbl $noOfTitleRows $noOfTitleCols $noOfRows $noOfCols"
+      bind $c <Control-Double-Button-1> \
+	  "execute_double_button Control %W %x %y $tbl $noOfTitleRows $noOfTitleCols $noOfRows $noOfCols"
   }
+
   bind $c <Enter> {
       balloon post "<Button-1> selects cell element; \
                     <Double-Button-1> processes test item interactively";
   }
   bind $c <Leave> {balloon unpost}
-  
+
   if { $viewer == "nice" } {
       return [format "(:table (:toplevel . \"%s\") (:table . \"%s\")\
                           (:canvas . \"%s\"))" \
@@ -428,6 +428,85 @@ proc colTagProc {col} {
 
 proc rowTagProc {row} {
     return row$row
+}
+
+proc execute_double_button {Mod Window X Y Table NoOfTitleRows NoOfTitleCols NoOfRows NoOfCols} {
+    global key$Table source$Table
+    
+    set index [$Window index @$X,$Y]
+    set idx_list [split $index ,]
+    set row [lindex $idx_list 0]
+    set col [lindex $idx_list 1]
+    ## Double click on title row or column calls implode/explode mechanism;
+    ## double click on BOTH title row and column (that is, on intersection of
+    ## title rows with title columns) explodes all cells, if any; double click on
+    ## normal cell calls 'tsdb_process'
+    if { $row <= $NoOfTitleRows && $col <= $NoOfTitleCols } {
+	if { $Mod == "" } {
+	    forI col 1 $NoOfCols {
+		if { [is_imploded $Table col $col] } {
+		    explode $Table col $col
+		}
+	    }
+	    forI row 1 $NoOfRows {
+		if { [is_imploded $Table row $row] } {
+		    explode $Table row $row
+		}
+	    }
+	}
+    } elseif { $row <= $NoOfTitleRows && $col > $NoOfTitleCols } {
+	if { [is_imploded $Table col $col] } {
+	    if { $Mod == "Control" } {
+		set startcol [implode_find_colrow $Table col $col $NoOfTitleRows $NoOfTitleCols exploded]
+		incr startcol
+		forI i $startcol $col {
+		    explode $Table col $i
+		}
+	    } else {
+		explode $Table col $col
+	    }
+	} else {
+	    if { $Mod == "Control" } {
+		set startcol [implode_find_colrow $Table col $col $NoOfTitleRows $NoOfTitleCols imploded]
+		incr startcol
+		forI i $startcol $col {
+		    implode $Table col $i
+		}
+	    } else {
+		implode $Table col $col
+	    }
+	}
+    } elseif { $col <= $NoOfTitleCols && $row > $NoOfTitleRows } {
+	if { [is_imploded $Table row $row] } {
+	    if { $Mod == "Control" } {
+		set startrow [implode_find_colrow $Table row $row $NoOfTitleRows $NoOfTitleCols exploded]
+		incr startrow
+		forI i $startrow $row {
+		    explode $Table row $i
+		}
+	    } else {
+		explode $Table row $row
+	    }
+	} else {
+	    if { $Mod == "Control" } {
+		set startrow [implode_find_colrow $Table row $row $NoOfTitleRows $NoOfTitleCols imploded]
+		incr startrow
+		forI i $startrow $row {
+		    implode $Table row $i
+		}
+	    } else {
+		implode $Table row $row
+	    }
+	}
+    } else {
+	## TODO: make variables 'key$t' and 'source$t' visible in local
+	## context; supply values for key and source from input file OR change 
+	## mechanism so that these values are stored in 'tsdb'
+	if {[info exists key${Table}($index)] 
+	    && [info exists source${Table}($index)]} {
+	    [list tsdb_process selection [set source${Table}($index)] [set key${Table}($index)]]
+	}
+    }
 }
 
 proc canvas_select {canvas x y button} {
@@ -609,7 +688,7 @@ proc read_file_cell_layout {file viewer tbl} {
     ## 
     ## Reads layout of cells (default, per col/row, per cell) from 'file'.
     ##
-    global noOfCols
+    global noOfCols noOfRows
 
     if { $viewer == "nice" } {
 	set c [table_canvas $tbl]
@@ -621,6 +700,9 @@ proc read_file_cell_layout {file viewer tbl} {
     if { $viewer == "fast" } {
 	forI i 1 $noOfCols {
 	    eval $tbl tag configure col$i $opts
+	}
+	forI i 1 $noOfRows {
+	    eval $tbl tag configure row$i $opts
 	}
     } else {
 	eval $c itemconfigure allcells $opts
@@ -721,13 +803,10 @@ proc preprocess_regions {table} {
 	
 	forI row $rowNW $rowSE {
 	    forI col $colNW $colSE {
-		if { $row != $rowNW || $col != $colNW } {
-		    ## If cell doesn't exist, create it
-		    if { [$cv gettags cell$row,$col] == "" } {
-			set newitem [$cv create text -100 -100 -text "W" \
-					 -tag "cell$row,$col" -anchor w]
-			table_add $table $newitem $row $col
-		    }
+		## If cell doesn't exist, create it
+		if { [$cv itemcget cell$row,$col -text] == "" } {
+		    puts "$row,$col: W"
+		    $cv itemconfigure "cell$row,$col" -text "W"
 		}
 	    }
 	}
@@ -748,30 +827,119 @@ proc postprocess_regions {table} {
 
     set regions ""
     foreach index [array names region] {
+	set contents ""
+	set hor_just ""
+	set ver_just ""
+
 	set idx_list [split $index ,]
 	set rowNW [lindex $idx_list 0]
 	set colNW [lindex $idx_list 1]
 	set rowSE [lindex $idx_list 2]
 	set colSE [lindex $idx_list 3]
 
+	set hor_just [lindex $region($index) 0]
+	set ver_just [lindex $region($index) 1]
+	eval set contents [lrange $region($index) 2 end]
+
 	## Delete all items in the region EXCEPT for the one in the upper left
 	## cell; this one is reconfigured with the full text of the region
 
 	forI row $rowNW $rowSE {
 	    forI col $colNW $colSE {
-		if { $row != $rowNW || $col != $colNW } {
+		if { $row == $rowNW && $col == $colNW } {
+		    if { $contents != "" } {
+			eval $cv itemconfigure \"cell$row,$col\" -text \"$contents\"
+		    }
+		} else {
 		    $cv delete "cell$row,$col"
 		}
 	    }
 	}
-
+	
 	## Append new list element to 'regions'
 
-	set elem "$idx_list $region($index)"
+	set elem "$idx_list $hor_just $ver_just"
 	lappend regions $elem
     }
     
     ## Call 'table_make_regions' with list
     
     table_make_regions $table $regions
+}
+
+
+##[ Implode/Explode mechanism ]#################################################
+
+set implode(MIN_WIDTH) -2
+set implode(MIN_HEIGHT) -2
+
+proc implode_find_colrow {Table What RowCol NoOfTitleRows NoOfTitleCols Status} {
+
+    set find_imploded_rowcol [expr [string compare $Status imploded] == 0]
+
+    if { $What == "row" } {
+	set firstRowCol $NoOfTitleRows
+    } else {
+	set firstRowCol $NoOfTitleCols
+    }
+
+    for {set i [expr $RowCol - 1]} {$i>$firstRowCol} {decr i} {
+	if { $find_imploded_rowcol == [is_imploded $Table $What $i] } {
+	    break
+	}
+    }
+    
+    return $i
+}
+
+proc is_imploded {Table What RowCol} {
+    global implode
+
+    ## If status of column has not yet been set, column is in its original
+    ## state, that is, it is exploded
+    if { [ catch { set status $implode($Table,status,$What$RowCol) } ] } {
+	return 0
+    }
+
+    return [expr [string compare $status imploded] == 0]
+}
+
+
+proc implode {Table What RowCol} {
+    global implode
+
+    ## Remember old width/height and foreground of column/row in 'implode' array
+    if { $What == "col" } {
+	set implode($Table,width,col$RowCol) [$Table width $RowCol]
+    } else {
+	set implode($Table,height,row$RowCol) [$Table height $RowCol]
+    }
+    set implode($Table,fg,$What$RowCol) [$Table tag cget $What$RowCol -fg]
+
+    ## Set width/height to minimum width/height and foreground to background
+    if { $What == "col" } {
+	$Table width $RowCol $implode(MIN_WIDTH)
+    } else {
+	$Table height $RowCol $implode(MIN_HEIGHT)
+    }
+    $Table tag configure $What$RowCol -fg [$Table tag cget $What$RowCol -bg]
+    
+    ## Set status to "imploded"
+    set implode($Table,status,$What$RowCol) "imploded"
+}
+
+
+proc explode {Table What RowCol} {
+    global implode
+
+    ## Reset old width/height and foreground
+    if { $What == "col" } {
+	$Table width $RowCol $implode($Table,width,col$RowCol)
+    } else {
+	$Table height $RowCol $implode($Table,height,row$RowCol)
+    }
+    $Table tag configure $What$RowCol -fg $implode($Table,fg,$What$RowCol)
+
+    ## Set status to "exploded"
+    set implode($Table,status,$What$RowCol) "exploded"
 }
