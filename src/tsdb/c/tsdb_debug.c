@@ -294,6 +294,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
     (void)tsdb_verify_selection(result);
     if((output = tsdb_open_result()) != NULL) {
       tsdb_print_selection(result, output);
+      fclose(output);
     } /* if */
     else {
       tsdb_print_selection(result, TSDB_DEFAULT_STREAM);
