@@ -28,8 +28,8 @@ END;
 ' LANGUAGE plpgsql;
 
 CREATE TABLE public.meta (
-  var varchar,
-  val varchar
+  var text,
+  val text
 );
 DELETE FROM public.meta WHERE var='db-version';
 DELETE FROM public.meta WHERE var='filter';
@@ -40,38 +40,38 @@ INSERT INTO public.meta VALUES ('filter', 'TRUE');
 --- main table
 ---
 CREATE TABLE public.revision (
-  name VARCHAR NOT NULL,
-  userid VARCHAR DEFAULT user,
+  name TEXT NOT NULL,
+  userid TEXT DEFAULT user,
   version INTEGER DEFAULT 0,
   modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  type VARCHAR NOT NULL,
-  orthography VARCHAR NOT NULL,
-  orthkey VARCHAR NOT NULL,
-  pronunciation VARCHAR,
-  keyrel VARCHAR,
-  altkey VARCHAR,
-  alt2key VARCHAR,
-  keytag VARCHAR,
-  altkeytag VARCHAR,
-  compkey VARCHAR,
-  ocompkey VARCHAR,
-  complete VARCHAR,
-  semclasses VARCHAR,
-  preferences VARCHAR,
-  classifier VARCHAR,
-  selectrest VARCHAR,
-  jlink VARCHAR,
-  comments VARCHAR,
-  exemplars VARCHAR,
-  usages VARCHAR,
-  lang VARCHAR DEFAULT 'EN',
-  country VARCHAR,
-  dialect VARCHAR,
-  domains VARCHAR,
-  genres VARCHAR,
-  register VARCHAR,
+  type TEXT NOT NULL,
+  orthography TEXT NOT NULL,
+  orthkey TEXT NOT NULL,
+  pronunciation TEXT,
+  keyrel TEXT,
+  altkey TEXT,
+  alt2key TEXT,
+  keytag TEXT,
+  altkeytag TEXT,
+  compkey TEXT,
+  ocompkey TEXT,
+  complete TEXT,
+  semclasses TEXT,
+  preferences TEXT,
+  classifier TEXT,
+  selectrest TEXT,
+  jlink TEXT,
+  comments TEXT,
+  exemplars TEXT,
+  usages TEXT,
+  lang TEXT DEFAULT 'EN',
+  country TEXT,
+  dialect TEXT,
+  domains TEXT,
+  genres TEXT,
+  register TEXT,
   confidence real NOT NULL,
-  source VARCHAR,
+  source TEXT,
   flags INTEGER DEFAULT 0 NOT NULL,
  PRIMARY KEY (name,version,userid)
 );
@@ -96,11 +96,11 @@ CREATE TABLE revision_new AS SELECT * FROM public.revision WHERE NULL;
 \i embedded-code.sql
 
 CREATE TABLE defn (
-  mode VARCHAR(50),
-  slot VARCHAR(50),
-  field VARCHAR(50),
-  path VARCHAR(255),
-  type VARCHAR(20),
+  mode TEXT,
+  slot TEXT,
+  field TEXT,
+  path TEXT,
+  type TEXT,
 PRIMARY KEY (mode,slot, field)
 );
 

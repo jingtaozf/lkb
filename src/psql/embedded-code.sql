@@ -9,15 +9,15 @@ SELECT public.hide_schemas();
 ---
 
 CREATE TABLE qry (
-  fn VARCHAR(50),
+  fn text,
   arity int,
-  sql_code VARCHAR(4096),
+  sql_code text,
 PRIMARY KEY (fn)
 );
 CREATE TABLE qrya (
-  fn VARCHAR(50),
+  fn text,
   arg int,
-  type VARCHAR(50),
+  type text,
 PRIMARY KEY (fn,arg)
 );
 
