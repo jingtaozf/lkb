@@ -427,7 +427,27 @@
              sum (mem-score-edge edge model))
          (mem-score-edge passive model))))
    (t -10)))
+
+(defconstant e (exp 1d0))
 
+(defun scores-to-probabilities (scores)
+  (loop
+      with sum = 0d0
+      for score in scores
+      for foo = (if (stringp score) (read-from-string score) score)
+      for p = (expt e (coerce foo 'long-float))
+      collect p into probabilities
+      do (incf sum p)
+      finally
+        (return (loop 
+                    for p in probabilities
+                    collect (/ p sum)))))
 
+(defun entropy (probabilities)
+  (loop
+      with h = 0d0
+      for p in probabilities
+      do (incf h (* p (log p 2d0)))
+      finally (return (- h))))
 
-
+                 

@@ -1695,10 +1695,12 @@
           "region 1 5 1 7 -contents {scores} ~
              -format title -hor_justify center~%~
            cell 2 5 -contents {<} -format title~%~
-           cell 2 6 -contents {=} -format title~%~
-           cell 2 7 -contents {>} -format title~%")))
+           cell 2 6 -contents {H(X)} -format title~%~
+           region 2 6 2 6 -contents {H(X)} ~
+             -format title -hor_justify center~%~
+           cell 2 7 -contents {=} -format title~%")))
       (loop
-          for (item gitem rank errors match others) in errors
+          for (item gitem rank errors match others entropy) in errors
           for i-id = (get-field :i-id item)
           for i-input = (or (get-field :o-input item)
                             (get-field :i-input item))
@@ -1736,22 +1738,25 @@
               cell ~d 3 -contents {~a} -format data~%~
               cell ~d 4 -contents {~a} -format data~%~
               cell ~d 5 -contents {~a} -format data~%~
-              cell ~d 6 -contents {~a} -format data -action inspect -tag ~a~%~
+              cell ~d 6 -contents {~,4f} -format data ~
+                -action inspect -tag ~a~%~
               cell ~d 7 -contents {~a} -format data~%"
              i i-id 
              i i-input i-id data
              i greadings
              i readings
              i (length errors)
-             i (get-field :result-id match) tag
+             i entropy tag
              i (length others))
           finally
             (case format
               (:tcl
                (format
                 stream
-                "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
-                i)))))
+                "layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+                 cell ~d 1 -contents {~a} -format total~%~
+                 layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%"
+                i (+ i 1) (- i 2) (+ i 1))))))
     
     (when (or (stringp file) (stringp append)) (close stream))
     (if (listp errors) 0 -1)))
@@ -1797,7 +1802,15 @@
               (score-item item gitem :test test :n n :loosep loosep :errorp t)
             (declare (ignore foo bar))
             (when (and rank (or (zerop rank) (> rank n) others))
-              (push (list item gitem rank errors match others) result))))
+              (let* ((ranks (when (or errors others)
+                              (get-field :ranks item)))
+                     (scores (loop 
+                                 for rank in ranks
+                                 collect (get-field :score rank)))
+                     (probabilities (scores-to-probabilities scores))
+                     (entropy (entropy probabilities)))
+                (push (list item gitem rank errors match others entropy)
+                      result)))))
     (if (listp result) (nreverse result) result)))
 
 (defun train (sources file &key (condition *statistics-select-condition*)
