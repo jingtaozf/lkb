@@ -114,7 +114,7 @@
                           (format nil "~A" item)
                           item))))))
      (generate 
-      (really-generate-from-edge edge-record)))))
+      (funcall 'really-generate-from-edge edge-record)))))
 
 
 
@@ -226,10 +226,11 @@
                                                     5 #'chart-ready)))
              (display-edge-in-chart
               (prtree-edge tree)))
-            (generate (really-generate-from-edge (prtree-edge tree)))
-            (mrs (show-mrs-window (prtree-edge tree)))
-            (indexed (show-mrs-indexed-window (prtree-edge tree)))
-            (scoped (show-mrs-scoped-window (prtree-edge tree)))
+            ;; funcall avoids undefined function warnings
+            (generate (funcall 'really-generate-from-edge (prtree-edge tree)))
+            (mrs (funcall 'show-mrs-window (prtree-edge tree)))
+            (indexed (funcall 'show-mrs-indexed-window (prtree-edge tree)))
+            (scoped (funcall 'show-mrs-scoped-window (prtree-edge tree)))
             )
 	(error (condition) 
 	  (declare (ignore condition) )

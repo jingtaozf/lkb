@@ -7,15 +7,6 @@
 
 ;;; Port to MCL - moved dialect specific display stuff to parseout.lsp
 
-;;; Modified 03/93 to incorporate LKB morphology system - BEMJ
-;;;
-;;; mods to: add-word
-;;;          evaluate-unifications
-;;; new fns: process-morph-possibilities
-;;;          apply-morph-rule
-;;; AAC 1995 - junked most of Bernie's mods - call morph-analyse and
-;;; proceed from there ...
-
 ;;; This file implements the chart parser.
 ;;; A rule is applied in a standard fashion (see below). In case a mother node
 ;;; can be constructed, the dags of the daughter nodes (which are already) 
@@ -720,24 +711,19 @@
   (if (and (check-rule-filter rule (edge-rule (car child-edge-list)) n)
 	   (restrictors-compatible-p (car rule-restricted-list) 
 				     (edge-dag-restricted 
-				      (car child-edge-list))))
+				      (car child-edge-list)))) 
       (if (cdr rule-restricted-list)
 	  (let ((entry (aref (the (simple-array t (* *)) *chart*) 
 			     left-vertex 0)))
 	    (when entry
 	      (dolist (config (chart-entry-configurations entry))
-		(unless
-		    ;; inner recusive call returns nil in cases when first
-		    ;; unif attempt fails - if this happens there's no point
-		    ;; continuing with other alternatives here
-		    (try-grammar-rule-left rule
-					   (cdr rule-restricted-list)
-					   (chart-configuration-begin config)
-					   right-vertex
-					   (cons (chart-configuration-edge config) 
-						 child-edge-list)
-					   f (1- n))
-                  (return-from try-grammar-rule-left nil)))))
+                (try-grammar-rule-left rule
+                                       (cdr rule-restricted-list)
+                                       (chart-configuration-begin config)
+                                       right-vertex
+                                       (cons (chart-configuration-edge config) 
+                                             child-edge-list)
+                                       f (1- n)))))
 	;; we've got all the bits
 	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex
@@ -756,15 +742,13 @@
 	  (let ((entry (aref *chart* right-vertex 1)))
 	    (when entry
 	      (dolist (config (chart-entry-configurations entry))
-		(unless
                   (try-grammar-rule-right rule
 					  (cdr rule-restricted-list)
 					  left-vertex
 					  (chart-configuration-end config)
 					  (cons (chart-configuration-edge config)
 					        child-edge-list)
-					  f (1+ n))
-                  (return-from try-grammar-rule-right nil)))))
+					  f (1+ n)))))
 	;; we've got all the bits
 	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex 
@@ -778,8 +762,7 @@
 				     child-edge-list f backwardp)
   ;; attempt to apply a grammar rule when we have all the parts which match
   ;; its daughter categories
-  #+ignore
-  (format t "~%Try Rule id ~A left ~A right ~A dtrs ~A" (rule-id rule)  
+#+ignore (format t "~%Try Rule id ~A left ~A right ~A dtrs ~A" (rule-id rule)  
 	  left-vertex right-vertex (mapcar #'edge-id child-edge-list))
   (let ((child-edge-list-reversed (reverse child-edge-list)))
     (multiple-value-bind (unification-result first-failed-p)
@@ -1096,7 +1079,7 @@
                         (user-input (split-into-words munged-string)))
                    (handler-case
                        (progn (parse user-input nil)
-                              (setf *sentence* user-input)
+                              (setf *sentence* sentence)
                               (setf *ostream* ostream)
                               (when (fboundp *do-something-with-parse*)
                                 (funcall *do-something-with-parse*)))
@@ -1176,3 +1159,32 @@
       (cons (rule-id (edge-rule edge-rec))
             (collect-morph-history-rule-names 
              (edge-morph-history edge-rec)))))
+
+;;; generator structures 
+
+(defstruct (dotted-edge (:include edge))
+   res ; feature name of mother in rule dag in active edges
+   needed ; ordered list of names of daughter features still to be found
+   )
+
+(defstruct (g-edge (:include dotted-edge)
+                   (:constructor make-g-edge
+                    (&key id category rule dag needed
+                          (dag-restricted
+                             ;; restricted field in inactive edges is dag, for
+                             ;; active edges it's the next needed daughter
+                             (restrict-fs
+                                (if needed
+                                   (existing-dag-at-end-of (tdfs-indef dag)
+                                      (if (listp (first needed))
+                                         (first needed)
+                                         (list (first needed))))
+                                   (tdfs-indef dag))))
+                          leaves lex-ids children morph-history 
+                          spelling-change res rels-covered)))
+   ;; category: not used
+   ;; id, rule, leaves: filled in, not used in generation algorithm itself, but
+   ;; needed for chart display etc
+   rels-covered ; set of relations generated so far
+   index)
+

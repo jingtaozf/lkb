@@ -50,6 +50,11 @@
 ;;; 
 ;;; Syntactic sugar for lists is still to be defined
 
+(eval-when
+    (compile load eval)
+  (proclaim '(special *DISPLAY-SETTINGS-FILE*)))
+;;; to avoid warnings with tty version
+
 (defun make-path-notation-break-table nil
   (define-break-characters 
                          '(#\; #\< #\> #\= #\: #\. #\/)))

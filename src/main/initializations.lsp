@@ -24,6 +24,8 @@
 
 (defparameter *grammar-directory* nil)
 
+(defparameter *lkb-background-stream* *terminal-io*)
+
 (import '(enable-type-interactions disable-type-interactions))
 
 #+(and :allegro :clim) (setq tk-silica::*use-clim-gc-cursor* t)

@@ -347,7 +347,7 @@
             (ask-for-strings-movable "Current Interaction" 
                `(("Sentence" . ,(cons :typein-menu *last-parses*))) 400)))
     (when sentence
-      (setf *sentence* sentence)
+      (setf *sentence* (car sentence))
       (close-existing-chart-windows)
       (let ((str (string-trim '(#\space #\tab #\newline) (car sentence))))
         (setq *last-parses* 
@@ -361,39 +361,8 @@
 	   (split-into-words 
 	    (preprocess-sentence-string str))))))))
 
-
-;;; "Generate"
-;;;
 ;;; "Generate" generate-from-edge
-
-
-(defparameter *last-generate-from-edge* nil)
-
-(defun generate-from-edge nil
-  (let ((possible-edge-name 
-	 (ask-for-lisp-movable 
-	  "Current Interaction" 
-	  `(("Parser edge number for input MRS?" 
-	     . ,(or *last-generate-from-edge* *edge-id*))) 60)))
-    (when possible-edge-name
-      (setf *last-generate-from-edge* (car possible-edge-name))
-      (let ((parser-edge (find-edge-given-id (car possible-edge-name))))
-	(if parser-edge
-	    (really-generate-from-edge parser-edge)
-	  (format t "~%No parser edge ~A" (car possible-edge-name)))))))
-
-(defun really-generate-from-edge (parser-edge)    
-  (let* ((input-sem (car (mrs::extract-mrs (list parser-edge) t))))
-    ;; t indicates that this is being run from the generator and that
-    ;; the appropriate globals should be set
-    (with-output-to-top ()
-      (if (mrs::psoa-liszt input-sem)
-	  (progn
-	    (close-existing-chart-windows)
-	    (generate-from-mrs input-sem)
-	    (show-gen-result))
-	(format t "~%Could not extract any MRS relations from edge ~A"
-		(edge-id parser-edge))))))
+;;; this is in mrstoplevel.lsp
 
 
 ;;; Unification checking
@@ -455,7 +424,7 @@
 			     ;; Skip things we won't be able to read back in
 			     (handler-case
 				 (list 
-				  (cons (string p) 
+				  (cons (format nil "~S" p) 
 					(write-to-string (symbol-value p))))
 			       (print-not-readable () nil)))
 			 *lkb-user-params*))
@@ -476,7 +445,7 @@
         (loop for p in params
             for r in result
             do
-              (format ostream "~%(defparameter ~A ~A)"
+              (format ostream "~%(defparameter ~S ~S)"
                       (read-from-string (car p))
                       (read-from-string r)))))))
 

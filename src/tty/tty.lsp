@@ -14,9 +14,10 @@
 (defun show-type-spec-tty (type)
   (eval-possible-leaf-type *leaf-types* type)
   (let* ((type-entry (if type (get-type-entry type))))
-    (when type-entry
+    (if type-entry
       (display-fs-and-parents-tty (type-local-constraint type-entry)
-                                  (type-parents type-entry)))))
+                                  (type-parents type-entry))
+      (format t "~%Type ~A not found" type))))
 
 
 ;;;                     (make-menu-item :name "Expanded type"
@@ -25,17 +26,19 @@
 (defun show-type-tty (type)
   (eval-possible-leaf-type *leaf-types* type)
   (let* ((type-entry (if type (get-type-entry type))))
-    (when type-entry
+    (if type-entry
       (display-fs-and-parents-tty (type-tdfs type-entry)
-                                  (type-parents type-entry)))))
+                                  (type-parents type-entry))
+      (format t "~%Type ~A not found" type))))
 
 ;;;                     (make-menu-item :name "Lex or psort definition"
 ;;;                        :value #'show-lex-def)
 
 (defun show-lex-def-tty (lex)
    (let ((lex-entry (if lex (get-psort-entry lex))))
-      (when lex-entry 
-         (display-unexpanded-lex-entry-tty lex lex-entry))))
+      (if lex-entry 
+          (display-unexpanded-lex-entry-tty lex lex-entry)
+        (format t "~%Entry ~A not found" lex))))
 
 
 (defun display-unexpanded-lex-entry-tty (lex lex-entry)
@@ -57,8 +60,9 @@
 
 (defun show-lex-tty (lex)
   (let ((lex-entry (if lex (get-psort-entry lex))))
-      (when lex-entry 
-            (display-fs-tty (lex-or-psort-full-fs lex-entry)))))
+      (if lex-entry 
+        (display-fs-tty (lex-or-psort-full-fs lex-entry))
+        (format t "~%Entry ~A not found" lex))))
 
 ;;;                     (make-menu-item :name "Word definitions"
 ;;;                        :value #'show-word-defs)
@@ -76,7 +80,9 @@
   (let* ((orth-list (if word-string 
                       (split-into-words (string-upcase word-string))))
          (lex-entries (if orth-list (get-lex-entry (car orth-list)))))
-      ; entries indexed by all elements
+                                        ; entries indexed by all elements
+    (unless lex-entries
+      (format t "~%No entry found for ~A" word-string))
     (for word-entry in lex-entries
          do
          (when (equal (mapcar #'string-upcase (lex-or-psort-orth word-entry))
@@ -90,16 +96,18 @@
 
 (defun show-grammar-rule-tty (name)
   (let* ((rule-entry  (get-grammar-rule-entry name)))
-      (when rule-entry 
-            (display-fs-tty (rule-full-fs rule-entry)))))
+      (if rule-entry 
+          (display-fs-tty (rule-full-fs rule-entry))
+          (format t "~%No rule ~A" name))))
 
 ;;;                     (make-menu-item :name "Lexical rule"
 ;;;                       :value #'show-lex-rule)
 
 (defun show-lex-rule-tty (name)
   (let* ((rule-entry (get-lex-rule-entry name)))
-      (when rule-entry 
-            (display-fs-tty (rule-full-fs rule-entry)))))
+      (if rule-entry 
+          (display-fs-tty (rule-full-fs rule-entry))
+        (format t "~%No rule ~A" name))))
 
 
 ;;; (make-menu-item :name "Parse input"
@@ -113,32 +121,6 @@
 
 ;;;                     (make-menu-item :name "Apply lexical rule"
 ;;;                        :value #'apply-lex)
-
-
-;;; (make-menu-item :name "Generate..."
-;;;                        :value 'generate-from-edge)
-
-(defparameter *last-generate-from-edge* nil)
-
-(defun do-generate-tty (&optional edge-name)
-   (let ((possible-edge-name 
-            (or edge-name *last-generate-from-edge* *edge-id*)))
-      (when possible-edge-name
-         (setq *last-generate-from-edge* edge-name)
-         (let ((parser-edge (find-edge-given-id possible-edge-name)))
-            (if parser-edge
-               (let* ((input-sem
-                       (car (mrs::extract-mrs (list parser-edge) t))))
-   ;; t indicates that this is being run from the generator and that
-   ;; the appropriate globals should be set
-                  (if (mrs::psoa-liszt input-sem)
-                     (progn
-                        (format t "~&Generating from parser edge ~A" possible-edge-name)
-                        (generate-from-mrs input-sem)
-                        (show-gen-result))
-                     (format t "~&Could not extract any MRS relations from edge ~A"
-                        possible-edge-name)))
-               (format t "~&No parser edge ~A" possible-edge-name))))))
 
 
 (defun apply-lex-tty (lex lex-rule-name)
@@ -202,8 +184,9 @@
            
 
 (defun display-fs-and-parents-tty (fs parents)
-   (display-fs-tty fs)
-   (format t "~S" parents))
+  (when fs
+   (display-fs-tty fs))
+  (format t "~S" parents))
 
 
 ;;; Functions below here are to replace functions in graphics files
@@ -235,14 +218,6 @@
         (when (fboundp 'mrs::output-mrs-after-parse)
           (funcall 'mrs::output-mrs-after-parse *parse-record*)))
       (format t "~&No parses")))
-
-(defun show-gen-result nil
-   (if *gen-record*
-      (for edge in *gen-record*
-         do
-         (format t "~&Edge ~A G:" (edge-id edge))
-         (pprint (parse-tree-structure edge)))
-      (format t "~&No strings generated")))
 
 
 (defun display-type-in-tree (type scroll-onlyp)

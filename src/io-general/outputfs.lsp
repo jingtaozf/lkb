@@ -447,7 +447,32 @@
         (store-fs-record-data-end stream rpath)))
 
 ;;; ********* outputting Antonio's TeX macros  ***********
+
+#|
+
+macro definitions
+
+\newcommand{\avmplus}[1]{{\setlength{\arraycolsep}{0.8mm}	
+                       \renewcommand{\arraystretch}{1.2}
+                       \left[ 			
+                       \begin{array}{l}
+                       \\[-2mm] #1 \\[-2mm] \\
+                       \end{array} 		
+                       \right]
+                    }}
+%
+\newcommand{\att}[1]{{\mbox{\small {\bf #1}}}}
+\newcommand{\attval}[2]{{\mbox{\small {\sc #1}}\ =\ {{#2}}}}
+\newcommand{\attvaltyp}[2]{{\mbox{\small{\sc #1}}\ =\ {\myvaluebold{#2}}}}
+\newcommand{\attvalshrunktyp}[2]{{\mbox{\small{\sc #1}}\ =\ {\boxvaluebold{#2}}}}
+\newcommand{\myvaluebold}[1]{{\mbox{\small {\bf #1}}}}
+\newcommand{\boxvaluebold}[1]{{\fbox{\small {\bf #1}}}}
+\newcommand{\ind}[1]{{\setlength{\fboxsep}{0.5mm} \: \fbox{{\small #1}} \:}}
+|#
+
 ;;; \ has to be inserted into the format as a character ~C
+
+
 
 (defclass tex (fs-output-type) 
     ((indentation-vector :accessor edit-indentation-vector
@@ -481,7 +506,8 @@
 (defmethod fs-output-reentrant-fn ((fsout tex) reentrant-pointer)
   (with-slots (stream indentation unoutput-label) fsout
     (format stream "\\\\~%~VT\\attval{~A}{\\ind{~A}}" 
-      indentation unoutput-label reentrant-pointer)
+            indentation (convert-values-for-tex unoutput-label) 
+            reentrant-pointer)
     (setf unoutput-label nil)))
 
 (defmethod fs-output-atomic-fn ((fsout tex) atomic-value)
@@ -489,7 +515,7 @@
   (with-slots (stream indentation unoutput-label) fsout
     (if unoutput-label             
          (format stream "\\\\~%~VT\\attvaltyp{~A}{~(~A~)}" 
-            indentation unoutput-label 
+            indentation (convert-values-for-tex unoutput-label)
             (convert-values-for-tex atomic-value))
          (format stream "\\ \\ \\myvaluebold{~(~A~)}" 
             (convert-values-for-tex atomic-value)))
@@ -499,9 +525,10 @@
    (with-slots (stream indentation unoutput-label) fsout
      (if unoutput-label             
         (format stream "\\\\~%~VT\\attvalshrunktyp{~A}{~(~A~)}" 
-          indentation unoutput-label type)
+                indentation (convert-values-for-tex unoutput-label) 
+                (convert-values-for-tex type))
         (format stream "\\ \\ \\boxvaluebold{~(~A~)}" 
-          type))
+          (convert-values-for-tex type)))
      (setf unoutput-label nil)))
 
 (defmethod fs-output-shrinks ((fsout tex))
@@ -514,23 +541,25 @@
           ((and unoutput-label labels)
            (format stream 
              "\\\\~%~VT\\attval{~A}{\\avmplus{\\att{~(~A~)}" 
-             indentation unoutput-label type)
+             indentation (convert-values-for-tex unoutput-label) 
+             (convert-values-for-tex type))
            ;; \attval{label}{\avmplus{\att{type}\\
            (push 2 bracket-stack)
            (setf unoutput-label nil))
           (labels
            (format stream "~VT\\avmplus{\\att{~(~A~)}" 
-             indentation type)
+             indentation (convert-values-for-tex type))
            ;; \avmplus{\att{label}\\
            (push 1 bracket-stack))
           (unoutput-label 
            (format stream 
              "\\\\~%~VT\\attvaltyp{~A}{~(~A~)}" 
-             indentation unoutput-label type)
+             indentation (convert-values-for-tex unoutput-label) 
+             (convert-values-for-tex type))
            (setf unoutput-label nil)
            (push 0 bracket-stack))
           (t (format stream "~VT\\ \\ \\myvaluebold{~(~A~)}" 
-               indentation type)
+               indentation (convert-values-for-tex type))
             (push 0 bracket-stack))) 
     (setf (aref indentation-vector depth) (+ indentation 2))))
 

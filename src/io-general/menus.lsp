@@ -29,6 +29,7 @@
                       ;; mrs
                       cl-user::read-mrs-rule-file
                       cl-user::clear-mrs-rules
+                      cl-user::choose-mrs-output-level
                       ;; generate
                       cl-user::show-gen-result
 		      cl-user::show-gen-chart
@@ -207,6 +208,9 @@
                                      :available-p :mrs)
                      (make-menu-item :name "Clear munger"
                                      :value 'clear-mrs-rules
+                                     :available-p :mrs)
+                     (make-menu-item :name "Output level"
+                                     :value 'choose-mrs-output-level
                                      :available-p :mrs))
                :available-p :mrs)
          (make-lkb-submenu-item :menu-title "Generate"
