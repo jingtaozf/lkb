@@ -21,10 +21,12 @@
 ;;;
 
 (defun transfer (&optional (edge (first *parse-record*))
-                 &key (file (format
-                              nil
-                              "/tmp/.transfer.~a.~:[1~;2~]"
-                              (current-user) *translate-other-p*)))
+                 &key (file (merge-pathnames
+			     (lkb-tmp-dir)
+			     (format
+			      nil
+			      ".transfer.~a.~:[1~;2~]"
+			      (current-user) *translate-other-p*))))
   (let* ((*package* (find-package :lkb))
          (rules (reverse *ordered-mrs-rule-list*))
          (input (or (edge-mrs edge) (mrs::extract-mrs edge)))
@@ -36,16 +38,23 @@
       (mrs::browse-mrs output "Transfer Result"))))
 
 (defun translate (&key serverp (gcp t)
-                       (file (format
-                              nil
-                              "/tmp/.transfer.~a.~:[2~;1~]"
-                              (current-user) *translate-other-p*)))
+                       (file (merge-pathnames
+			      (lkb-tmp-dir)
+			      (format
+			       nil
+			       ".transfer.~a.~:[2~;1~]"
+			       (current-user) *translate-other-p*))))
   (when serverp 
     (when (probe-file file) (delete-file file))
     (loop until (probe-file file) do (sleep 1)))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
-      (with-open-file (log (format nil "/tmp/generate.debug.~a" (current-user))
+      (with-open-file (log (merge-pathnames
+			    (lkb-tmp-dir)
+			    (format 
+			     nil 
+			     "generate.debug.~a.~:[1~;2~]" 
+			     (current-user) *translate-other-p*))
                        :direction :output 
                        :if-exists :append :if-does-not-exist :create)
         (let* ((log (make-broadcast-stream 
@@ -144,7 +153,12 @@
 (defun start-generator-server (&optional (forkp t) (gcp t))
   (when (and *generator-server* forkp) 
     (stop-generator-server)
-    (with-open-file (log (format nil "/tmp/generate.debug.~a" (current-user))
+    (with-open-file (log (merge-pathnames
+			  (lkb-tmp-dir)
+			  (format 
+			   nil 
+			   "generate.debug.~a.~:[1~;2~]" 
+			   (current-user) *translate-other-p*))
                      :direction :output :if-exists :supersede)))
   ;;
   ;; tune Allegro CL gc() performance to initially tenure everything (assuming

@@ -112,10 +112,12 @@
                       (or (mrs-transfer-stack frame)
                           (mrs-transfer-edges frame))))
            (mrs (edge-mrs edge))
-           (file (format 
-                  nil
-                  "/tmp/.transfer.~a.~:[1~;2~]"
-                  (lkb::current-user) lkb::*translate-other-p* ))
+           (file (merge-pathnames
+		  (lkb::lkb-tmp-dir)
+		  (format
+		   nil
+		   ".transfer.~a.~:[1~;2~]"
+		   (lkb::current-user) lkb::*translate-other-p*)))
            (*package* (find-package :lkb)))
       (with-open-file (stream file :direction :output :if-exists :supersede)
         (mrs::output-mrs1 mrs 'mrs::simple stream)))))

@@ -2,27 +2,26 @@
 
 ;;;
 ;;; make sure this file is included from your personal `~/.emacs', e.g. put the
-;;; following towards the end of `~/.emacs' (and uncomment these, of course):
+;;; following towards the end of `~/.emacs' (without the leading semikolons, of
+;;; course):
 ;;;
-;;;   (let ((root (or (if (getenv "DELPHINHOME")
-;;;                     (substitute-in-file-name "$DELPHINHOME"))
+;;;   (let ((root (or (getenv "DELPHINHOME")
 ;;;                   "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo")))
 ;;;     (if (file-exists-p (format "%s/dot.emacs" root))
 ;;;       (load (format "%s/dot.emacs" root) nil t t)))
 ;;;
-;;; in other words, either set the shell environment variable `DELPHINROOT' to
-;;; the root directory of your installation tree (e.g. `~/delphin' for most
+;;; in other words, set the shell environment variable `DELPHINHOME' to the 
+;;; root directory of your installation tree (which is `~/delphin' for most 
 ;;; people), then make sure to also export that variable (see the bash(1) or
-;;; tcsh(1) on-line documentation), log out and back in (so that changes to the
-;;; shell configuration take effect), and then launch emacs(1).  alternatively,
-;;; skip the shell configuration part and make sure that the absolute path in
-;;; the second part of the or() statement above is correct.
-;;; 
+;;; csh(1) on-line documentation), log out and back in (so that changes to the
+;;; shell configuration take effect), and then launch emacs(1).
+;;;
 ;;; please try not to make changes to _this_ file, so that on future upgrades
 ;;; you can safely move to a later version.
 ;;;
 
-(defconst lingo-home "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo")
+(defconst lingo-home (or (getenv "DELPHINHOME")
+			 "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo"))
 
 (defmacro when (condition &rest body)
   (list 'and condition (cons 'progn body)))
