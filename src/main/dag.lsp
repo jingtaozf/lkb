@@ -260,8 +260,14 @@
    #-lkb-nochecks (declare (ignore dag))
    `(locally (declare (type fixnum *unify-generation*))
        #+lkb-nochecks (declare ,@(if (symbolp dag) `((type dag ,dag)))
-                               (optimize (speed 3) (safety 0)))
+                               (optimize (speed 3) (safety 0) (space 0)))
       ,@body))
+
+(defmacro with-verified-dag ((dag) &body body)
+   `(locally (declare ,@(if (symbolp dag) `((type dag ,dag)))
+                      (optimize (speed 3) (safety 0) (space 0)))
+       ,@body))
+
 
 (defmacro dag-safe-p (dag)
    `(with-dag-optimize (,dag) (safe-dag-p ,dag)))
@@ -270,67 +276,73 @@
 (defmacro dag-new-type (dag)
   `(with-dag-optimize (,dag)
      (when (= (the fixnum (dag-x-new-type-mark ,dag)) *unify-generation*)
-        (dag-x-new-type ,dag))))
+        (with-verified-dag (,dag) (dag-x-new-type ,dag)))))
 
 (defsetf dag-new-type (dag) (new)
   `(with-dag-optimize (,dag)
-     (setf (dag-x-new-type-mark ,dag) *unify-generation*
-           (dag-x-new-type ,dag) ,new)))
+     (setf (dag-x-new-type-mark ,dag) *unify-generation*)
+     (with-verified-dag (,dag) (setf (dag-x-new-type ,dag) ,new))))
 
 
 (defmacro dag-comp-arcs (dag)
   `(with-dag-optimize (,dag)
      (when (and (consp (dag-x-comp-arcs-slot ,dag))
-                (= (the fixnum (car (the cons (dag-x-comp-arcs-slot ,dag))))
+                (= (the fixnum
+                     (with-verified-dag (,dag) (car (the cons (dag-x-comp-arcs-slot ,dag)))))
                    *unify-generation*))
-        (cdr (dag-x-comp-arcs-slot ,dag)))))
+        (with-verified-dag (,dag) (cdr (the cons (dag-x-comp-arcs-slot ,dag)))))))
 
 (defsetf dag-comp-arcs (dag) (new)
   `(with-dag-optimize (,dag)
      (if (consp (dag-x-comp-arcs-slot ,dag))
-        (setf (car (the cons (dag-x-comp-arcs-slot ,dag))) *unify-generation*
-              (cdr (the cons (dag-x-comp-arcs-slot ,dag))) ,new)
+        (with-verified-dag (,dag)
+           (setf (car (the cons (dag-x-comp-arcs-slot ,dag))) *unify-generation*
+                 (cdr (the cons (dag-x-comp-arcs-slot ,dag))) ,new))
         (progn
-           (setf (dag-x-comp-arcs-slot ,dag) (cons *unify-generation* ,new))
+           (with-verified-dag (,dag)
+              (setf (dag-x-comp-arcs-slot ,dag) (cons *unify-generation* ,new)))
            ,new))))
 
 
 (defmacro dag-copy (dag)
   `(with-dag-optimize (,dag)
      (when (= (the fixnum (dag-x-copy-mark ,dag)) *unify-generation*)
-        (dag-x-copy ,dag))))
+        (with-verified-dag (,dag) (dag-x-copy ,dag)))))
 
 (defsetf dag-copy (dag) (new)
   `(with-dag-optimize (,dag)
-     (setf (dag-x-copy-mark ,dag) *unify-generation*
-           (dag-x-copy ,dag) ,new)))
+     (setf (dag-x-copy-mark ,dag) *unify-generation*)
+     (with-verified-dag (,dag) (setf (dag-x-copy ,dag) ,new))))
 
 
 (defmacro dag-forward (dag)
   `(with-dag-optimize (,dag)
      (when (= (the fixnum (dag-x-forward-mark ,dag)) *unify-generation*)
-        (dag-x-forward ,dag))))
+        (with-verified-dag (,dag) (dag-x-forward ,dag)))))
 
 (defsetf dag-forward (dag) (new)
   `(with-dag-optimize (,dag)
-     (setf (dag-x-forward-mark ,dag) *unify-generation*
-           (dag-x-forward ,dag) ,new)))
+     (setf (dag-x-forward-mark ,dag) *unify-generation*)
+     (with-verified-dag (,dag) (setf (dag-x-forward ,dag) ,new))))
 
 
 (defmacro dag-visit (dag)
   `(with-dag-optimize (,dag)
      (when (and (consp (dag-x-visit-slot ,dag))
-                (= (the fixnum (car (the cons (dag-x-visit-slot ,dag))))
+                (= (the fixnum
+                     (with-verified-dag (,dag) (car (the cons (dag-x-visit-slot ,dag)))))
                    *visit-generation*))
-        (cdr (dag-x-visit-slot ,dag)))))
+        (with-verified-dag (,dag) (cdr (the cons (dag-x-visit-slot ,dag)))))))
 
 (defsetf dag-visit (dag) (new)
   `(with-dag-optimize (,dag)
      (if (consp (dag-x-visit-slot ,dag))
-        (setf (car (the cons (dag-x-visit-slot ,dag))) *visit-generation*
-              (cdr (the cons (dag-x-visit-slot ,dag))) ,new)
+        (with-verified-dag (,dag) 
+           (setf (car (the cons (dag-x-visit-slot ,dag))) *visit-generation*
+                 (cdr (the cons (dag-x-visit-slot ,dag))) ,new))
         (progn
-           (setf (dag-x-visit-slot ,dag) (cons *visit-generation* ,new))
+           (with-verified-dag (,dag)
+              (setf (dag-x-visit-slot ,dag) (cons *visit-generation* ,new)))
            ,new))))
 
 
@@ -352,7 +364,7 @@
 (defmacro with-arc-optimize ((arc) &body body)
    #-lkb-nochecks (declare (ignore arc))
    `(locally #+lkb-nochecks (declare ,@(if (symbolp arc) `((type cons ,arc)))
-                                     (optimize (speed 3) (safety 0)))
+                                     (optimize (speed 3) (safety 0) (space 0)))
       ,@body))
 
 (defmacro dag-arc-attribute (arc)
@@ -378,11 +390,18 @@
 ;;; out dags during debugging). It can afford to do some useful consistency
 ;;; checks
 
-(defun deref-dag (dag) 
-  (with-dag-optimize (dag)
-     (if (= (the fixnum (dag-x-forward-mark dag)) *unify-generation*)
-        (deref-dag (dag-x-forward dag))
-        dag)))
+(defmacro deref-dag (dag) 
+   ;; could instead be defined as a compiler macro but since we're not funcalling it
+   ;; it doesn't really matter
+   (let ((dag-var (if (consp dag) (gensym) dag)))
+      `(let ,(if (consp dag) `((,dag-var ,dag)) nil)
+         (with-dag-optimize (,dag-var)
+            (loop
+               (if (= (the fixnum (dag-x-forward-mark ,dag-var)) *unify-generation*)
+                  (setq ,dag-var
+                     (with-verified-dag (,dag-var) (dag-x-forward ,dag-var)))
+                  (return)))
+            ,dag-var))))
 
 
 (defun follow-pointers (dag)
