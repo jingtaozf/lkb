@@ -646,7 +646,7 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
         if (r[k]!=-1) {
         tsdb_print_value(list->tuples[r[k]]->fields[f[k]],stream);
         }
-        if (k+1 < n_attributes) fprintf(stream,"%s", TSDB_FIELD_DELIMITER);
+        if (k+1 < n_attributes) fprintf(stream,"%s", TSDB_FS);
       } /* for */
       fprintf(stream,"\n");
     } /* for */
