@@ -706,6 +706,20 @@
        collect #\\
        collect c)))
   
+(defun replace-char (string &key from to)
+  (unless (and
+	   (characterp from)
+	   (characterp to))
+    (error ":from and :to must be characters"))
+  (implode-from-chars
+   (loop
+       for i from 0 to (1- (length string))
+       for c = (aref string i)
+       if (eq c from)
+       collect to
+       else
+       collect c)))
+  
 (defun implode-from-chars (char-list)
   (loop
       with res = (make-string (length char-list))
@@ -717,7 +731,8 @@
 	(return res)))
 
 (defun str-list-2-str (str-list &key (sep-c #\Space)
-				     (null-str ":null:"))
+				     (null-str ":null:")
+				     (esc t))
   (unless (listp str-list)
     (error "list expected"))
   (let ((sep (string sep-c)))
@@ -727,10 +742,14 @@
 	       (cons
 		'string
 		(cons
-		 (escape-char sep-c (pop str-list))
+		 (if esc
+		     (escape-char sep-c (pop str-list))
+		   (pop str-list))
 		 (mapcan #'(lambda (x) (list sep
 					     (if x 
-						 (escape-char sep-c x)
+						 (if esc
+						     (escape-char sep-c x)
+						   x)
 					       null-str)
 					     ))
 			 str-list))))))))

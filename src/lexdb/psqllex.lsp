@@ -106,12 +106,11 @@
   "obsolete (keep for script file compatibility)"
   (apply 'open-psql-lexicon rest))
 
-(defun lookup-word-aux (query-res lexicon)
+(defun lookup-word-aux (records lexicon)
   (with-slots 
       (psorts record-cache) 
       lexicon
-    (let* ((records (make-column-map-record query-res))
-	   (name-field 
+    (let ((name-field 
 	    (second 
 	     (assoc 
 	      :id 
@@ -131,6 +130,32 @@
 	    (setf (gethash id psorts) 
 	      (make-psort-struct lexicon record)))
 	 collect id))))
+
+;(defun lookup-word-aux (query-res lexicon)
+;  (with-slots 
+;      (psorts record-cache) 
+;      lexicon
+;    (let* ((records (make-column-map-record query-res))
+;	   (name-field 
+;	    (second 
+;	     (assoc 
+;	      :id 
+;	      (fields-map lexicon)))))
+;    (loop
+;	for record in records
+;	for id = (str-2-symb 
+;		  (cdr 
+;		   (assoc name-field 
+;			  record 
+;			  :test #'equal)))
+;	do
+;	  (unless (gethash id record-cache)
+;	    (setf (gethash id record-cache) 
+;	      record))
+;	  (unless (gethash id psorts)
+;	    (setf (gethash id psorts) 
+;	      (make-psort-struct lexicon record)))
+;	 collect id))))
 
 ;;; create slot entry
 (defun make-psort-struct-aux (slot-key slot-value slot-path)

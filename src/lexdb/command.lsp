@@ -91,7 +91,7 @@
     (error "please initialize PSQL lexicon"))
   (let ((scratch
 	 (mapcar 
-	  #'(lambda (x) (cdr (first x))) 
+	  #'(lambda (x) (car x)) 
 	  (show-scratch *psql-lexicon*))))
     (format t "~%~%Contents of scratch (~a entries): ~a"
 	    (length scratch)

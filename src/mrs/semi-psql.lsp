@@ -5,19 +5,36 @@
 
 (in-package :mrs)
 
+;(defun load-sdbt (sdbt dbname)
+;  (clear sdbt)
+;  ;;(format t "~%(loading table ~a from ~a...)" (sdbt-name sdbt) dbname)
+;  (let ((sql-query (lkb::fn-get-raw-records 
+;		    dbname 
+;		    ''lkb::test 
+;		    (format nil "SELECT * FROM semi_~a"
+;			    (sdbt-name sdbt)))))
+;    (mapc #'(lambda (row) (sdbt-rows-hash 
+;			   (mapcar #'str-to-mixed2 row)
+;			   (sdbt-rows sdbt)))
+;	  (lkb::records sql-query))
+;    (setf (sdbt-last sdbt) nil)))
+
 (defun load-sdbt (sdbt dbname)
   (clear sdbt)
-  ;;(format t "~%(loading table ~a from ~a...)" (sdbt-name sdbt) dbname)
-  (let ((sql-query (lkb::fn-get-raw-records 
-		    dbname 
-		    ''lkb::test 
-		    (format nil "SELECT * FROM semi_~a"
-			    (sdbt-name sdbt)))))
+  (let* ((sql-fn (case (sdbt-name sdbt)
+		   ('pred :retrieve_semi_pred)
+		   ('frame :retrieve_semi_frame)
+		   ('var :retrieve_semi_var)
+		   ('extra :retrieve_semi_extra)))
+	 (records
+	  (lkb::sql-fn-get-raw-records dbname
+				      sql-fn)))
     (mapc #'(lambda (row) (sdbt-rows-hash 
 			   (mapcar #'str-to-mixed2 row)
 			   (sdbt-rows sdbt)))
-	  (lkb::records sql-query))
+	  records)
     (setf (sdbt-last sdbt) nil)))
+
 
 (defun load-sdb (sdb dbname)
   (mapcar #'(lambda (x)
@@ -309,17 +326,16 @@
 		    :value value)))
 
 (defun get-raw-rows (db table key val)
-  (let ((rows (lkb::records
-		  (lkb::fn-get-raw-records db 
-					   ''lkb::get-semi-general 
-					   table key
-					   (2-db-str val)))))
+  (let ((rows (lkb::sql-fn-get-raw-records 
+	       db
+	       :get_semi_general
+	       :args (list table 
+			   key
+			   (2-db-str val)))))
     (loop 
 	for row in rows
 	collect
-	  (mapcar #'str-to-mixed2 row))
-    ;rows
-    ))
+	  (mapcar #'str-to-mixed2 row))))
   
 (defun getrows (val table db)
   (let (

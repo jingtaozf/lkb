@@ -49,6 +49,14 @@
 				(retr-val psql-le (pop symb-list)))))
     (get-output-stream-string stream)))
 
+;;; prepare val list for SQL INSERT INTO query
+(defun ordered-val-list (symb-list psql-le)
+  (if (null symb-list) (error (format nil "non-null list expected")))
+  (loop 
+      while symb-list
+      collect (retr-val psql-le (pop symb-list))))
+
+
 (defmethod get-raw-orth ((lexicon psql-lex-database) (le psql-lex-entry))
   (let* ((orth-raw-mapping (assoc :orth (fields-map lexicon)))
 	 (orth-raw-value-mapping (fourth orth-raw-mapping))

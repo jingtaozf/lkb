@@ -20,7 +20,8 @@
 		    (namestring (pathname (format nil "~a.dfn" filename))))
 		 (pg-files 
 		  (string-2-str-list-on-spc
-		   (dump-db *psql-lexicon*)
+;		   (dump-db *psql-lexicon*)
+		   (caar (sql-fn-get-raw-records *psql-lexicon* :dump_db))
 		   :esc nil))
 		 (pg-rev (first pg-files))
 		 (pg-dfn (second pg-files)))
@@ -36,7 +37,11 @@
 (defun dump-scratch (filename)
   (get-postgres-temp-filename)
   (setf filename (namestring (pathname filename)))
-  (dump-scratch-db *psql-lexicon* *postgres-temp-filename*)
+  (sql-fn-get-raw-records *psql-lexicon*
+			  :dump_scratch_db
+			  :args (list 
+				 (namestring 
+				  (pathname *postgres-temp-filename*))))
   (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
 					       *postgres-temp-filename*
 					       filename)))
@@ -50,11 +55,12 @@
 			   :dbname dbname
 			   :host host
 			   :port port
-			   :user (raw-get-val lexicon "SELECT db_owner()")))
-	  ;(count-new-dfn 0)
+			   :user (sql-fn-get-val lexicon
+						 :db_owner)))
+;			   :user (raw-get-val lexicon "SELECT db_owner()")))
 	  (count-new 0))
       (connect conn-db-owner)
-      (retrieve-fn-defns conn-db-owner)
+      ;(retrieve-fn-defns conn-db-owner)
       (when
 	  (catch 'pg:sql-error
 	    (progn

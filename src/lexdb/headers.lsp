@@ -9,7 +9,7 @@
 (defvar *postgres-temp-filename* nil)
 
 (defvar *psql-lkb-version* "2.00")
-(defvar *psql-lexdb-compat-version* "3.1")
+(defvar *psql-lexdb-compat-version* "3.2")
 (defvar *psql-port-default* 5432)
 
 (defvar *postgres-tmp-lexicon* nil)
@@ -36,7 +36,53 @@
 (defvar *postgres-debug-stream*)
 
 ;; temporary
-(defvar *record-features* '(:name :f1 :f2 :f3 :f4 :f5 :f6 :f7 :f8 :f9 :source :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp :orthkey))
+(defvar *postgres-record-features* '(:name :f1 :f2 :f3 :f4 :f5 :f6 :f7 :f8 :f9 :source :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp :orthkey))
+
+(defvar *postgres-sql-fns*)
+(setf *postgres-sql-fns*
+  '(
+    :clear_scratch
+    :commit_scratch
+    :complete
+    :create_schema
+    :db_owner
+    :dump_db
+    :dump_scratch_db
+    :filter
+    :get_filter 
+    :initialize_current_grammar
+    :lex_id_set 
+    :lexdb_version
+    :lookup_general
+    :lookup_general_null
+    :lookup_word
+    :merge_into_db2
+    :merge_defn
+    :mneum_f_map
+    :next_version 
+    :orthography_set
+    :retrieve_all_entries
+    :retrieve_current_timestamp
+    :retrieve_entries_by_orthkey
+    :retrieve_entry
+    :retrieve_head_entry
+    :revision_new
+    :retrieve_semi_extra
+    :retrieve_semi_frame
+    :retrieve_semi_pred
+    :retrieve_semi_var
+    :semi_out_of_date
+    :semi_setup_1
+    :semi_setup_2
+    :semi_up_to_date_p
+    :show_scratch
+    :size_current_grammar
+    :test_user
+    :update_entry
+    :user_read_only_p
+    :value_set
+    :version
+    ))
 
 ;;;
 ;;; class declarations

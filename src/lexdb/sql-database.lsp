@@ -25,10 +25,12 @@
  
 (defmethod get-records ((lexicon sql-database) sql-string)
   (make-column-map-record
-   (get-raw-records lexicon sql-string)))
+   (get-raw-results lexicon sql-string)))
 
 (defmethod get-raw-records ((lexicon sql-database) sql-string)
+  (records (get-raw-results lexicon sql-string)))
+
+(defmethod get-raw-results ((lexicon sql-database) sql-string)
    (run-query 
     lexicon 
     (make-instance 'sql-query :sql-string sql-string)))
-

@@ -109,6 +109,7 @@
 	    (reload-template-file))
 	  (when (and allp *root-file*)
 	    (reload-root-file))
+	  #+:mwe
 	  (when (and allp
                      (typep *lexicon* 'psql-lex-database)
 		     (mwe-lexicon-enabled-p))

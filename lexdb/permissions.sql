@@ -3,8 +3,6 @@ BEGIN
 
 GRANT SELECT ON public.defn TO PUBLIC;
 GRANT SELECT ON public.meta TO PUBLIC;
-GRANT SELECT ON public.qry TO PUBLIC;
-GRANT SELECT ON public.qrya TO PUBLIC;
 GRANT SELECT ON public.revision TO PUBLIC;
 GRANT INSERT ON public.revision TO PUBLIC;
 GRANT SELECT ON public.revision_new TO PUBLIC;

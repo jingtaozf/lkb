@@ -525,20 +525,16 @@
    (t
     (format nil "~a~a" (char str 0) (sql-embedded-text-aux (subseq str 1))))))
 
-(defun sql-like-text (str)
-  (format nil "'~a'" (sql-like-text-aux str)))
+(defun sql-like-text (id)
+  (format nil "~a" (sql-like-text-aux (2-str id))))
 
 (defun sql-like-text-aux (str)
   (cond
    ((equal str "")
     "")
-   ((eq (char str 0) #\')
-    (format nil "''~a" (sql-like-text-aux (subseq str 1))))
    ((eq (char str 0) #\_)
-    (format nil "\\\\_~a" (sql-like-text-aux (subseq str 1))))
+    (format nil "\\_~a" (sql-like-text-aux (subseq str 1))))
    ((eq (char str 0) #\%)
-    (format nil "\\\\%~a" (sql-like-text-aux (subseq str 1))))
-   ((eq (char str 0) #\\)
-    (format nil "\\\\\\\\~a" (sql-like-text-aux (subseq str 1))))
+    (format nil "\\%~a" (sql-like-text-aux (subseq str 1))))
    (t
     (format nil "~a~a" (char str 0) (sql-like-text-aux (subseq str 1))))))

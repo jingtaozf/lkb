@@ -21,6 +21,7 @@ BEGIN
 END;
  ' LANGUAGE plpgsql;
 
+-- obsolete
 CREATE OR REPLACE FUNCTION public.lookup_word(text) RETURNS SETOF text AS '
 DECLARE
 	x RECORD;
@@ -88,7 +89,7 @@ BEGIN
  uid := (select usesysid from pg_catalog.pg_user where usename=user);
  db_uid= (select datdba from pg_catalog.pg_database where datname=current_database());
  IF uid != db_uid THEN
-   RAISE EXCEPTION ''You are not the DB owner.'';
+   RAISE EXCEPTION \'You are not the DB owner.\';
  END IF;
  RETURN true;
 END;
@@ -103,7 +104,7 @@ BEGIN
 ---- n o t e : must copy file to temp_defn before invoking this code
 ----           eg. COPY TO stdin from frontend
  PERFORM merge_into_db2();
- PERFORM merge_dfn();
+ PERFORM merge_defn();
 END;
 ' LANGUAGE plpgsql;
 
@@ -168,7 +169,7 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION public.merge_dfn() RETURNS integer AS 
+CREATE OR REPLACE FUNCTION public.merge_defn() RETURNS integer AS 
 '
 DECLARE
 	num_new int;
@@ -203,7 +204,7 @@ DECLARE
 	x RECORD;
 	sql_str text;
 BEGIN
-	sql_str := ''SELECT DISTINCT '' || $1 || '' AS field FROM current_grammar WHERE '' || $1 || '' ILIKE '' || $2 || '' || ''''%'''' '';
+	sql_str := \'SELECT DISTINCT \' || quote_ident($1) || \' AS field FROM current_grammar WHERE \' || quote_ident($1) || \' ILIKE \' || quote_literal($2) || \' || \'\'%\'\' \';
 	FOR x IN EXECUTE sql_str LOOP 
      	  RETURN NEXT x.field;
  	END LOOP;
@@ -216,7 +217,7 @@ DECLARE
 	x RECORD;
 	sql_str text;
 BEGIN
-	sql_str := ''SELECT name FROM current_grammar WHERE '' || $1 || '' ILIKE '' || $2;
+	sql_str := \'SELECT name FROM current_grammar WHERE \' || quote_ident($1) || \' ILIKE \' || quote_literal($2);
 	FOR x IN EXECUTE sql_str LOOP 
      	  RETURN NEXT x.name;
  	END LOOP;	
@@ -229,7 +230,7 @@ DECLARE
 	x RECORD;
 	sql_str text;
 BEGIN
-	sql_str := ''SELECT name FROM current_grammar WHERE '' || $1 || '' IS NULL '';
+	sql_str := \'SELECT name FROM current_grammar WHERE \' || quote_ident($1) || \' IS NULL \';
 	FOR x IN EXECUTE sql_str LOOP 
      	  RETURN NEXT x.name;
  	END LOOP;	
@@ -266,10 +267,10 @@ BEGIN
  		EXECUTE \'UPDATE meta SET val= \' || quote_literal($1) || \' WHERE var=\'\'filter\'\'\';
 		RAISE INFO \'new filter: %\', new_filter;
 		RAISE INFO \'rebuilding db cache\';
-   		EXECUTE ''SELECT build_current_grammar()'';
+   		EXECUTE \'SELECT build_current_grammar()\';
 	ELSIF mod_time() > build_time() THEN
 		RAISE INFO \'rebuilding db cache\';
-   		EXECUTE ''SELECT build_current_grammar()'';
+   		EXECUTE \'SELECT build_current_grammar()\';
  	END IF;
  	RETURN true;
 END;
@@ -308,13 +309,13 @@ END;
 
 CREATE OR REPLACE FUNCTION public.create_schema(text) RETURNS boolean AS '
 BEGIN
-	EXECUTE ''CREATE SCHEMA '' || $1;
-	EXECUTE ''INSERT INTO public.meta VALUES (''''user'''', '' || quote_literal($1) || '')'';
-	CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=''filter'';
+	EXECUTE \'CREATE SCHEMA \' || $1;
+	EXECUTE \'INSERT INTO public.meta VALUES (\'\'user\'\', \' || quote_literal($1) || \')\';
+	CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=\'filter\';
 	
 	-- scratch
  	CREATE TABLE revision AS SELECT * FROM public.revision WHERE NULL;
- 	EXECUTE ''CREATE UNIQUE INDEX user_'' || user || ''_name_revision_userid ON revision (name,version,userid)''; 
+ 	EXECUTE \'CREATE UNIQUE INDEX user_\' || user || \'_name_revision_userid ON revision (name,version,userid)\'; 
 
 	-- current_grammar
  	CREATE TABLE current_grammar AS SELECT * FROM public.revision WHERE NULL;
@@ -367,8 +368,32 @@ BEGIN
 		feat text NOT NULL,
 		val text NOT NULL);
 
+CREATE OR REPLACE FUNCTION public.retrieve_semi_pred() RETURNS SETOF semi_pred AS \'
+BEGIN
+	RETURN ( SELECT * FROM semi_pred );
+END;
+\' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.retrieve_semi_frame() RETURNS SETOF semi_frame AS \'
+BEGIN
+	RETURN ( SELECT * FROM semi_frame );
+END;
+\' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.retrieve_semi_var() RETURNS SETOF semi_var AS \'
+BEGIN
+	RETURN ( SELECT * FROM semi_var );
+END;
+\' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.retrieve_semi_extra() RETURNS SETOF semi_extra AS \'
+BEGIN
+	RETURN ( SELECT * FROM semi_extra );
+END;
+\' LANGUAGE plpgsql;
+
 	-- semi mod time
-	DELETE FROM meta WHERE var=''semi_build_time'';
+	DELETE FROM meta WHERE var=\'semi_build_time\';
 
 	RETURN true;
 END;
@@ -422,8 +447,8 @@ END;
 CREATE OR REPLACE FUNCTION semi_setup_2() RETURNS text AS '
 BEGIN
 -- build time
-DELETE FROM meta WHERE var=''semi_build_time'';
-INSERT INTO meta VALUES (''semi_build_time'',current_timestamp);
+DELETE FROM meta WHERE var=\'semi_build_time\';
+INSERT INTO meta VALUES (\'semi_build_time\',current_timestamp);
 
 CREATE INDEX semi_pred_lex_id ON semi_pred (lex_id);
 CREATE INDEX semi_pred_pred_id ON semi_pred (pred_id);
@@ -443,8 +468,10 @@ CREATE OR REPLACE VIEW semi_obj AS
   semi_frame NATURAL LEFT JOIN
   semi_var NATURAL LEFT JOIN
   semi_extra;
- RETURN true;
+
+RETURN true;
 END;
+
 ' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.build_current_grammar () RETURNS boolean AS
@@ -480,8 +507,8 @@ BEGIN
 	DROP TABLE filtered_temp;
 
 	-- set build time 
-	DELETE FROM meta WHERE var=''build_time'';
-	INSERT INTO meta VALUES (''build_time'',current_timestamp);
+	DELETE FROM meta WHERE var=\'build_time\';
+	INSERT INTO meta VALUES (\'build_time\',current_timestamp);
 	b_time := (SELECT build_time());
 	raise info \'build time: %\', b_time;
 
@@ -522,8 +549,8 @@ END;
 ' LANGUAGE plpgsql;
 
 --CREATE OR REPLACE FUNCTION public.update_meta_mod_time_public() RETURNS boolean AS '
---DELETE FROM public.meta WHERE var=''mod_time'';
---INSERT INTO public.meta VALUES (''mod_time'',current_timestamp);
+--DELETE FROM public.meta WHERE var=\'mod_time\';
+--INSERT INTO public.meta VALUES (\'mod_time\',current_timestamp);
 --SELECT true;
 --' LANGUAGE SQL SECURITY DEFINER;
 
@@ -589,3 +616,203 @@ BEGIN
 	RETURN;
 END;
 ' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.semi_out_of_date() RETURNS SETOF text AS '
+DECLARE
+	x RECORD;
+BEGIN
+	FOR x IN
+		SELECT name FROM current_grammar WHERE modstamp > semi_build_time_private()
+		LOOP
+		RETURN NEXT x.name;
+	END LOOP;
+	RETURN;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.semi_up_to_date_p() RETURNS boolean AS '
+BEGIN
+	RETURN ( SELECT mod_time() < (SELECT min(modstamp) FROM semi_pred ));
+END;
+' LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION public.value_set(text) RETURNS SETOF text AS '
+DECLARE
+	x RECORD;
+	sql_str text;
+BEGIN
+	sql_str := \'SELECT DISTINCT \' || quote_ident($1) || \'::text AS foo FROM revision_all WHERE \' || quote_ident($1) || \' IS NOT NULL\';
+	FOR x IN
+		EXECUTE sql_str
+		LOOP
+		RETURN NEXT x.foo;
+	END LOOP;
+	RETURN;
+END;
+' LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION public.size_current_grammar() RETURNS int AS '
+BEGIN
+	RETURN ( SELECT count(*) FROM current_grammar );
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.update_entry(text,text,text) RETURNS boolean AS '
+DECLARE
+	sql_str text;
+BEGIN
+	sql_str := \'INSERT INTO revision ( name, \' || $2 || \' ) VALUES ( \' || quote_literal($1) || \', \' || $3 || \')\';
+	RAISE INFO \'%\', sql_str;
+	EXECUTE sql_str;
+	DELETE FROM current_grammar
+		WHERE name = $1 ;
+	INSERT INTO current_grammar
+		SELECT * FROM active WHERE name = $1 LIMIT 1;
+
+	PERFORM update_modstamp_priv();
+	RETURN TRUE;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.lexdb_version() RETURNS text AS '
+BEGIN
+	RETURN ( SELECT val FROM public.meta WHERE var=\'db-version\' LIMIT 1 );
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.filter() RETURNS text AS '
+BEGIN
+	RETURN ( SELECT val FROM meta WHERE var=\'filter\' LIMIT 1 );
+END;
+' LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION public.retrieve_current_timestamp() RETURNS text AS '
+BEGIN
+	RETURN current_timestamp;
+END;
+' LANGUAGE plpgsql;
+
+---
+--- define public.revision (needed for fn defns below)
+---
+
+CREATE OR REPLACE FUNCTION public.recreate_public_revision() RETURNS boolean AS '
+DECLARE
+	backup_file_base text;
+BEGIN
+	IF (table_exists_p(\'public\',\'revision\')) THEN
+		backup_file_base := \'BACKUP-BEFORE-LEXDB-UPDATE\';
+		PERFORM dump_db_su(backup_file_base);
+		DELETE FROM public.backup;
+		INSERT INTO public.backup VALUES (backup_file_base);
+		DROP TABLE public.revision CASCADE;
+	END IF;
+	CREATE TABLE public.revision (
+		name TEXT NOT NULL,
+		userid TEXT DEFAULT user,
+		version INTEGER DEFAULT 0,
+		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+		f1 TEXT,
+		f2 TEXT,
+		orthkey TEXT NOT NULL,
+		pronunciation TEXT,
+		f3 TEXT,
+		f4 TEXT,
+		f5 TEXT,
+		f6 TEXT,
+		f7 TEXT,
+		f8 TEXT,
+		f9 TEXT,
+		complete TEXT,
+		semclasses TEXT,
+		preferences TEXT,
+		classifier TEXT,
+		selectrest TEXT,
+		jlink TEXT,
+		comments TEXT,
+		exemplars TEXT,
+		usages TEXT,
+		lang TEXT DEFAULT \'EN\',
+		country TEXT,
+		dialect TEXT,
+		domains TEXT,
+		genres TEXT,
+		register TEXT,
+		confidence real NOT NULL,
+		source TEXT,
+		flags INTEGER DEFAULT 0 NOT NULL
+	);
+
+	IF (table_exists_p(\'public\',\'backup\')) THEN
+		backup_file_base := (SELECT b FROM public.backup LIMIT 1);
+		IF backup_file_base IS NOT NULL THEN
+			PERFORM restore_public_revision_su(backup_file_base);
+		END IF;
+	END IF;
+
+	PERFORM public.index_public_revision();
+
+	RETURN TRUE;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.create_bc_temp_tables() RETURNS boolean AS '
+BEGIN
+	IF (table_exists_p(\'public\',\'temp\')) THEN
+		DROP TABLE public.temp CASCADE;
+	END IF;
+	IF (table_exists_p(\'public\',\'revision_new\')) THEN
+		DROP TABLE public.revision_new CASCADE;
+	END IF;
+	CREATE TABLE public.temp AS SELECT * FROM public.revision WHERE NULL;
+	CREATE TABLE public.revision_new AS SELECT * FROM public.revision WHERE NULL;
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+SELECT recreate_public_revision();
+SELECT public.create_bc_temp_tables();
+
+---
+---
+---
+
+create table revision_all as select * from revision where null;
+CREATE OR REPLACE FUNCTION public.revision_new() RETURNS SETOF revision AS '
+	SELECT * FROM revision_new
+' LANGUAGE sql;
+drop table revision_all;
+
+create table filtered as select * from revision where null;
+CREATE OR REPLACE FUNCTION public.retrieve_head_entry(text) RETURNS revision AS '
+	SELECT * FROM filtered WHERE name LIKE $1 AND modstamp=(SELECT max(modstamp) FROM filtered WHERE name LIKE $1) LIMIT 1
+' LANGUAGE sql;
+drop table filtered;
+
+create table current_grammar as select * from revision where null;
+CREATE OR REPLACE FUNCTION public.retrieve_all_entries() RETURNS SETOF revision AS '
+	SELECT * FROM current_grammar
+' LANGUAGE sql;
+drop table current_grammar;
+
+create table current_grammar as select * from revision where null;
+CREATE OR REPLACE FUNCTION public.retrieve_entries_by_orthkey(text) RETURNS SETOF revision AS '
+	SELECT * FROM current_grammar WHERE orthkey LIKE $1
+' LANGUAGE sql;
+drop table current_grammar;
+
+create table current_grammar as select * from revision where null;
+CREATE OR REPLACE FUNCTION public.retrieve_entry(text) RETURNS SETOF revision AS '
+	SELECT * FROM current_grammar WHERE name LIKE $1
+' LANGUAGE sql;
+drop table current_grammar;
+
+CREATE OR REPLACE FUNCTION public.user_read_only_p(text) RETURNS boolean AS '
+BEGIN
+	RETURN (SELECT $1 IN (SELECT val FROM public.meta WHERE var=\'user-read-only\'));
+END;
+' LANGUAGE plpgsql;
+

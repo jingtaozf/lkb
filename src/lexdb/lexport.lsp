@@ -146,14 +146,16 @@
 
 (defun close-scratch-lex nil
   (let ((lexicon *psql-lexicon*))
-    (fn-get-val lexicon ''clear-scratch)
+    (sql-fn-get-records lexicon 
+			:clear_scratch)
     (reconnect lexicon) ;; work around server bug
-    (fn-get-records lexicon 
-                    ''initialize-current-grammar 
-                    (get-filter *psql-lexicon*))))
+    (sql-fn-get-records lexicon 
+			:initialize_current_grammar 
+			:args (list (get-filter *psql-lexicon*)))))
 
 (defun commit-scratch-lex nil
-  (fn-get-val *psql-lexicon* ''commit-scratch)
+  (sql-fn-get-val *psql-lexicon* 
+		  :commit_scratch)
   (empty-cache *psql-lexicon*))
 
 (defun load-tdl-from-scratch (filename)
