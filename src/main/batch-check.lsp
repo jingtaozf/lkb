@@ -1,4 +1,4 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1991-2003 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Ben Waldron
 ;;; see licence.txt for conditions
 
 ;;; Functions for checking instances are well formed
@@ -6,10 +6,25 @@
 (in-package :lkb)
 
 (defvar *grammar-specific-batch-check-fn* nil)
+(defvar *batch-check-diff-list-acceptable-ostream* nil)
+(defvar *batch-check-semantics-path*)
+(defvar mrs::*initial-semantics-path*)
 
+(defun get-semantics-path nil
+  (or
+   (and
+    (boundp '*batch-check-semantics-path*)
+    *batch-check-semantics-path*)
+   (and 
+    (boundp 'mrs::*initial-semantics-path*)
+    mrs::*initial-semantics-path*)
+   (error "please set *batch-check-semantics-path*")))
+   
 (defun batch-check-lexicon (&optional (unexpandp t))
-  (format t "~%Checking lexicon")
-  (let ((*batch-mode* t))
+  (let ((*batch-mode* t)
+	(start-path (get-semantics-path)))
+    (format t "~%Checking lexicon")
+    (format t "~%  - difference-list check starts at path ~a" start-path)
     (dolist (id (collect-psort-ids *lexicon*))
       ;; alternatively - for lexicon only
       ;; (reverse *ordered-lex-list*) 
@@ -23,25 +38,22 @@
           (when (and new-fs
                      *grammar-specific-batch-check-fn*)
             (funcall *grammar-specific-batch-check-fn*
-                     new-fs id))                
-  ;;;                     (when new-fs
-  ;;;                       (sanitize (existing-dag-at-end-of 
-  ;;;                                  (tdfs-indef new-fs) 
-  ;;;                                  mrs::*initial-semantics-path*)
-  ;;;                                 lex-id ostream))))
-          ))
+                     new-fs id))   
+	  (when new-fs
+	    (sanitize (existing-dag-at-end-of (tdfs-indef new-fs) start-path)
+		      lex-id
+		      (reverse start-path)))))
       (when unexpandp (unexpand-psort *lexicon* id))))
   (format t "~%Lexicon checked"))
 
 
-(defun sanitize (dag-instance id &optional (ostream t))
+(defun sanitize (dag-instance id path &optional (ostream t))
   ;;; walks over a fs, looking for things of type
-  ;;; *diff-list-type* and checks that the
-  ;;; LAST is indeed equal to the end of the LIST
+  ;;; *diff-list-type* and checks that it is well-formed
   ;;; Outputs a warning message if this fails
   (when (dag-p dag-instance)
     (invalidate-visit-marks)  
-    (sanitize-aux dag-instance id nil ostream)))
+    (sanitize-aux dag-instance id path ostream)))
 
 
 (defun sanitize-aux (dag-instance id path-so-far ostream)
@@ -51,52 +63,44 @@
        (setf (dag-visit real-dag) :sanitized)
        (unless (not (has-features real-dag))
          ; don't care about things without features
-         (when (or (eq (type-of-fs real-dag) *diff-list-type*)
-                   (subtype-p (type-of-fs real-dag) *diff-list-type*))
-           (check-diff-list dag-instance id path-so-far ostream))
+         (when (eq-or-subtype real-dag *diff-list-type*)
+           (check-dag-diff-list dag-instance id path-so-far ostream))
          (loop for label in (top-level-features-of real-dag)
               do
-              (sanitize-aux (get-dag-value real-dag label)
-                            id (cons label path-so-far) ostream))))))
+	       (sanitize-aux (get-dag-value real-dag label) 
+			     id 
+			     (cons label path-so-far) 
+			     ostream))))))
 
 
-(defun check-diff-list (fs id path &optional (ostream t))
-  ;;; all-diff-lists should have 
-  ;;; *diff-list-list* and *diff-list-last*
-  (let ((labels (top-level-features-of fs)))
-    (if (and (member *diff-list-list* labels)
-             (member *diff-list-last* labels))
-        (let* ((last-fs (get-dag-value fs *diff-list-last*))
-               (list-fs (get-dag-value fs *diff-list-list*))
-               (last-of-list (find-end-of-list list-fs id path ostream)))
-          (unless (eq last-of-list last-fs)
-            (format ostream "~%~A has unterminated diff-list at ~A" id (reverse path))))
-      (format ostream "~%~A has missing list/last on diff-list at ~A" id (reverse path)))))
+(defun eq-or-subtype (dag type)
+  (or (eq (type-of-fs dag) type)
+      (subtype-p (type-of-fs dag) type)))
+  
 
-
-(defun find-end-of-list (input-fs id path &optional (ostream t))
-  (let* ((fs (follow-pointers input-fs)))
-    (if (not (has-features fs))
-        (if (eq (type-of-fs fs) *empty-list-type*)
-            fs
-          (progn
-            (format ostream "~%~A :list not terminated with ~A at ~A" 
-                    id *empty-list-type* (reverse path))
-            nil))
-      (let ((head-part (get-dag-value fs (car *list-head*)))
-            (rest-part (get-dag-value fs (car *list-tail*))))             
-        (if head-part
-            (if rest-part
-                (find-end-of-list rest-part id path ostream)
-              (progn
-                (format ostream "~%~A has an incorrect structure in its ~A list" 
-                        id (reverse path))
-                nil))
-          (if rest-part
-              (progn
-                (format ostream "~%~A has a gap in its ~A list" id (reverse path))
-                nil)
-            fs))))))
+(defun check-dag-diff-list (dag id path &optional (ostream t))
+  (let* ((list-dag (dag-path-val (list *diff-list-list*) dag))
+	 (last-dag (dag-path-val (list *diff-list-last*) dag)))
+    (when
+	(and
+	 (null (top-level-features-of list-dag))
+	 (null (top-level-features-of last-dag))
+	 (eq-or-subtype list-dag *list-type*)
+	 (eq-or-subtype last-dag *list-type*))
+      (format *batch-check-diff-list-acceptable-ostream* "~%WARNING: malformed but 'acceptable' difference list at ~a in ~a" (reverse path) id)
+      (return-from check-dag-diff-list))
+    (loop
+	with rest-dag
+	while (not (eq list-dag
+		       last-dag))
+	do
+	  (setf rest-dag (dag-path-val '(rest) list-dag))
+	  (when (null rest-dag)
+	    (format ostream "~%WARNING: malformed difference list at ~a in ~a" (reverse path) id)
+	    (return-from check-dag-diff-list))
+	do
+	  (setf list-dag rest-dag))
+    t))
 
 ;;;; Morphology
 

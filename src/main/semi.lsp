@@ -1,8 +1,10 @@
-;;; Copyright (c) 2002 
+;;; Copyright (c) 2003
 ;;;   Ben Waldron;
 ;;;   see `licence.txt' for conditions.
 
 (in-package :lkb)
+
+(defvar *current-lex-id*)
 
 (defun dag-path-val (path dag)
   (cond
@@ -21,30 +23,56 @@
         (dag-type val)
       nil)))
 
-(defun get-arg-info (lex-id)
-  (let* ((dag (and
-	       (get-lex-entry-from-id lex-id)
-	       (dag-path-val '(synsem lkeys keyrel) (tdfs-indef (lex-entry-full-fs (read-psort *lexicon* lex-id))))))
+(defun get-arg-info (stream lex-id)
+  (let* ((entry (get-lex-entry-from-id lex-id))
+	 (dag (and
+	       entry
+	       (dag-path-val '(synsem lkeys keyrel) (tdfs-indef (lex-entry-full-fs entry)))))
 	 (n 0)
 	 (argN 'arg0)
 	 (dagN))
     
     (loop
 	while (setf dagN (dag-path-val (list argN) dag))
-	collect (list
-		 (cons :lex-id lex-id)
-		 (cons :arg n)
-		 (cons :type (dag-path-type (list) dagN))
-		 (cons :tense (dag-path-type (list 'e 'tense) dagN))
-		 (cons :aspect-perf (dag-path-type (list 'e 'aspect 'perf) dagN))
-		 (cons :aspect-progr (dag-path-type (list 'e 'aspect 'progr) dagN))
-		 (cons :mood (dag-path-type (list 'e 'mood) dagN))
-		 (cons :pn (dag-path-type (list 'png 'pn) dagN))
-		 (cons :gen (dag-path-type (list 'png 'gen) dagN))
-		 )
 	do
+	  (format stream "~a~%"
+		  (tsv-line 
+		   (list
+		    lex-id ;;lex-id
+		    n ;;arg
+		    (dag-path-type (list) dagN) ;;type
+		    (dag-path-type (list 'e 'tense) dagN) ;;tense
+		    (dag-path-type (list 'e 'aspect 'perf) dagN) ;;aspect-perf
+		    (dag-path-type (list 'e 'aspect 'progr) dagN) ;;aspect-progr
+		    (dag-path-type (list 'e 'mood) dagN) ;;mood
+		    (dag-path-type (list 'png 'pn) dagN) ;;pn
+		    (dag-path-type (list 'png 'gen) dagN) ;;gen
+		    )))
+	  
 	  (setf n (1+ n))
-	  (setf argN (str-2-symb (format nil "arg~a" n))))))
+	  (setf argN (str-2-symb (format nil "arg~a" n))))
+    (unexpand-psort *lexicon* entry)
+    ))
+    
+
+(defun get-secondaries-info (stream lex-id)
+  (let* ((entry (get-lex-entry-from-id lex-id))
+	 (dag (and
+	       entry
+	       (tdfs-indef (lex-entry-full-fs entry))))
+	 (dag-keyrel (dag-path-val '(synsem lkeys keyrel) dag))
+	 (*current-lex-id* lex-id)
+	 (cont-rels (dag-diff-list-2-list 
+		     (dag-path-val '(synsem local cont rels) dag)))
+	 )
+    (loop
+	for x in (remove dag-keyrel cont-rels)
+	do
+	  (format stream "~a~a~a~%" 
+		  (string-downcase lex-id)
+		  #\tab
+		  (string-downcase (dag-path-type '(pred) x))))
+  (unexpand-psort *lexicon* entry)))
     
 
 (defun tsv-line (str-list)
@@ -68,27 +96,6 @@
    (t
     (tsv-escape (string-downcase (format nil "~a"  symb))))))
 
-(defun print-arg-info (stream lex-id)
-  (let ((arg-info (get-arg-info lex-id)))
-    (loop
-	for x in arg-info
-	do
-	  (format stream "~a~%"
-		  (tsv-line 
-			  (mapcar #'cdr x))))))
-		    
-(defmethod export-semi-args-to-file ((lexicon lex-database) filename)
-  (setf filename (namestring (pathname filename)))
-  ;;(format t "~%Exporting semi args to file ~a" filename)
-  (with-open-file 
-      (ostream filename :direction :output :if-exists :supersede)
-    (export-semi-args lexicon ostream)))
-
-(defmethod export-semi-args ((lexicon lex-database) stream)
-    (mapc 
-     #'(lambda (x) (print-arg-info stream x))
-     (collect-psort-ids lexicon)))
-
 (defmethod dump-obj-semi-main-aux ((lexicon psql-lex-database) filename)  
   (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''dump-obj-semi-main filename))
@@ -100,5 +107,48 @@
   (common-lisp-user::run-shell-command (format nil "cp ~a ~a"
 					       *postgres-temp-filename*
 					       filename)))
+
+(defmethod dump-obj-semi-args-aux ((lexicon lex-database) filename)
+  (setf filename (namestring (pathname filename)))
+  (with-open-file 
+      (ostream filename :direction :output :if-exists :supersede)
+    (mapc 
+     #'(lambda (x) (get-arg-info ostream x))
+     (collect-psort-ids lexicon))))
+
 (defun dump-obj-semi-args (filename)
-  (export-semi-args-to-file *psql-lexicon* filename))
+  (dump-obj-semi-args-aux *psql-lexicon* filename))
+
+(defmethod dump-obj-semi-secondaries-aux-file ((lexicon lex-database) filename)
+  (setf filename (namestring (pathname filename)))
+  (with-open-file 
+      (ostream filename :direction :output :if-exists :supersede)
+    (dump-obj-semi-secondaries-aux-stream lexicon ostream)))
+
+(defmethod dump-obj-semi-secondaries-aux-stream ((lexicon lex-database) ostream)
+    (mapc 
+     #'(lambda (x) (get-secondaries-info ostream x))
+     (collect-psort-ids lexicon)))
+
+(defun dump-obj-semi-secondaries (filename)
+  (dump-obj-semi-secondaries-aux-file *psql-lexicon* filename))
+
+(defun dag-diff-list-2-list (dag)
+  (let* ((last-dag (dag-path-val (list *diff-list-last*) dag))
+	 (list-dag (dag-path-val (list *diff-list-list*) dag)))
+    (loop
+	with rest-dag
+	while (not (eq list-dag
+		       last-dag))
+	do
+	  (setf rest-dag (dag-path-val '(rest) list-dag))
+	  (when (null rest-dag)
+	    (format t "~%WARNING: invalid difference list ~a in ~a" out-list *current-lex-id*)
+	    (loop-finish))
+	collect (dag-path-val '(first) list-dag)
+	into out-list
+	do
+	  (setf list-dag rest-dag)
+	  )))
+	  
+  
