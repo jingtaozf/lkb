@@ -340,7 +340,7 @@ proc tsdb_browse {code condition} {
       set relations "(\"phenomenon\")";
     }
     runs {
-      set attributes "(\"run-id\" \"comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\")";
+      set attributes "(\"run-id\" \"comment\" \"platform\" \"application\" \"grammar\" \"avms\" \"sorts\" \"templates\" \"lexicon\" \"lrules\" \"rules\" \"user\" \"host\" \"start\" \"end\" \"items\")";
       set relations "(\"run\")";
     }
     parses {

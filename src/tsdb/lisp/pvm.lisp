@@ -90,8 +90,9 @@
                              (classes '(:csli))
                              (file (format 
                                     nil 
-                                    "/tmp/.pvm.log.~a"
+                                    "/tmp/pvm.debug.~a"
                                     (current-user))))
+  (pvm_start :user (current-user))
   ;;
   ;; first, create as many tasks as we have cpus ...
   ;;
@@ -99,15 +100,22 @@
   (setf *pvm-tasks* nil)
   (loop
       with classes = (if (consp classes) classes (list classes))
+      with allp = (member :all classes :test #'eq)
       for cpu in cpus
       for class = (let ((class (cpu-class cpu)))
                     (if (listp class) class (list class)))
-      for tid = (when (intersection class classes)
+      for tid = (when (or allp (intersection class classes))
                   (pvm_create (cpu-spawn cpu) (cpu-options cpu)
                               :host (cpu-host cpu) 
                               :architecture (cpu-architecture cpu)))
       for task = (when (and (integerp tid) (> tid 0)) (tid-status tid))
-      when task
+      unless task
+      do
+        (format
+         *tsdb-io*
+         "initialize-cpus(): error initializing `~a' [~d].~%"
+         (cpu-host cpu) tid)
+      else 
       do
         (push (make-task :tid tid :task task :cpu cpu :status :start)
               *pvm-tasks*))
@@ -133,28 +141,34 @@
            ((null task)
             (when *pvm-debug-p*
               (format
-               t
+               *tsdb-io*
                "~&initialize-cpus(): ~
                 ignoring message from alien <~d>:~%~s~%~%"
                remote message)
               (force-output)))
            
            ((eql tag %pvm_lisp_message%)
-            (if (and (eq (first content) :register)
-                     (eq (second content) (task-tid task)))
+            (cond
+             ((and (eq (first content) :register)
+                   (eq (second content) (task-tid task)))
               (setf (task-status task) :ready)
+              (format
+               *tsdb-io*
+               "initialize-cpus(): `~a' registered (tid ~d).~%"
+               (cpu-host (task-cpu task)) (task-tid task)))
+             (t
               (when *pvm-debug-p*
                 (format
-                 t
+                 *tsdb-io*
                  "~&initialize-cpus(): ~
                   ignoring unexpected message from <~d>:~%~s~%~%"
                  remote message)
-                (force-output))))
+                (force-output)))))
 
            (t
             (when *pvm-debug-p*
               (format
-               t
+               *tsdb-io*
                "~&initialize-cpus(): ~
                 ignoring dubious message from <~d>:~%~s~%~%"
                remote message)

@@ -132,7 +132,7 @@
                          (when (and item result)
                            (when verbose
                              (print-item item :stream stream :result result)
-                             (print-result result))
+                             (print-result result :stream stream))
                            (unless interactive
                              (store-result data result :cache cache)))
                          (when corpses
@@ -167,7 +167,7 @@
                          (setf runs (delete run runs)))
                         ((listp result)
                          (when verbose
-                           (print-result result))
+                           (print-result result :stream stream))
                          (unless interactive
                            (store-result data result :cache cache)))))
 
@@ -178,7 +178,8 @@
           (loop 
               for run in runs
               do
-                (complete-test-run data run :cache cache))
+                (complete-test-run data run 
+                                   :cache cache :interactive interactive))
           (when cache (flush-cache cache :verbose verbose))
 
           (unless interactive (format stream "~&~%"))
@@ -630,13 +631,13 @@
          data
          :cache cache)))))
 
-(defun complete-test-run (data run &key cache)
+(defun complete-test-run (data run &key cache interactive)
   (when (> (length run) 1)
     (let* ((end (current-time :long t))
            (environment (get-field :environment run))
            (gc-strategy (get-field :gc-strategy run)))
       (push (cons :end end) run)
-      (write-run run data :cache cache)
+      (unless interactive (write-run run data :cache cache))
       (finalize-test-run environment)
       (when gc-strategy (restore-gc-strategy gc-strategy)))))
 

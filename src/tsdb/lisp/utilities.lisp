@@ -302,7 +302,7 @@
                     :ro
                     :rw))
                  (chart 
-                  (let ((n (tcount data "rule" :absolute t)))
+                  (let ((n (tcount data "rule" :absolute t :quiet t)))
                     (and n (not (zerop n)))))
                  (items (tcount data "item" :absolute t))
                  (parses (tcount data "parse" :absolute t)))

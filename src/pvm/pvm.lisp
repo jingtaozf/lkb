@@ -7,6 +7,19 @@
 (defconstant %pvm_task_fail% 42)
 (defconstant %pvm_lisp_message% 50)
 
+(defparameter 
+  *pvm*
+  (format
+   nil "exec ~a"
+   (namestring (make-pathname :directory (pathname-directory make::bin-dir)
+                              :name "pvm"))))
+(defparameter 
+  *pvmd*
+  (format
+   nil "exec ~a"
+   (namestring (make-pathname :directory (pathname-directory make::bin-dir)
+                              :name "pvmd3"))))
+
 (defparameter *pvm-debug-p* nil)
 (defparameter *pvm-pending-events* nil)
 
@@ -43,6 +56,19 @@
     pvm_quit
     (:void)
   :returning :int)
+
+(def-foreign-call 
+    (_pvm_halt "pvm_halt")
+    (:void)
+  :returning :int)
+(def-foreign-call 
+    pvmendtask
+    (:void)
+  :returning :int)
+
+(defun pvm_halt ()
+  (_pvm_halt)
+  (pvm_quit))
 
 (def-foreign-call 
     pvm_kill
@@ -189,8 +215,26 @@
                  "~&pvm_task_info(): error `~a'.~%" condition))
               (or result :error)))))))))
 
+(defun pvm_start (&key reset (user (system:getenv "USER")))
+  (when reset
+    (pvm_quit)
+    (let ((file (format nil "/tmp/.pvm.halt.~a.~a" user (gensym ""))))
+      (with-open-file (stream file :direction :output :if-exists :supersede)
+        (format stream "halt~%"))
+      (run-process 
+       *pvm* :wait t 
+       :output "/dev/null" :if-output-exists :append
+       :error-output "/dev/null" :if-error-output-exists :append
+       :input file)
+      (when (probe-file file) (delete-file file))))
+  (let ((status (run-process 
+                 *pvmd* :wait t 
+                 :output "/dev/null" :if-output-exists :append
+                 :error-output "/dev/null" :if-error-output-exists :append)))
+    (if (zerop status) :ok :error)))
+
 (defmacro message-p (message)
-  `(and (listp ,message)
+  `(and (consp ,message)
         (find :tag ,message :key #'first)
         (find :remote ,message :key #'first)))
 

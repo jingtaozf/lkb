@@ -196,10 +196,10 @@
              (when file (close stream)))
            (length data)))))))
 
-(defun tcount (data relation &key absolute)
+(defun tcount (data relation &key absolute quiet)
   
   (let* ((query (format nil "count ~a" relation))
-         (result (call-tsdb query data :absolute absolute :ro t))
+         (result (call-tsdb query data :absolute absolute :ro t :quiet quiet))
          (colon (and result (position #\: result)))
          (result (and colon (subseq result (+ colon 2))))
          (count (and result (read-from-string result))))
