@@ -298,17 +298,25 @@
         do
         (pushnew id (gethash (string-upcase orth-el) *lexical-entries*))))
 
+
+
 (defun add-lex-from-file (orth sense-id fs-or-type defs)
-   (let ((lex-id (if orth (make-lex-id orth sense-id) sense-id))
+   (let* ((lex-id (if orth (make-lex-id orth sense-id) sense-id))
          (orth-string (if (and orth *sense-unif-fn*)
                           (format nil "~A" orth) 
-                          (extract-orth-from-unifs fs-or-type))))
+                          (extract-orth-from-unifs fs-or-type)))
+         (infl-pos (if (and (listp orth-string) (cdr orth-string))
+                       ; infl-pos is only relevant for multi-word entries
+                       (find-infl-pos fs-or-type 
+                                      orth-string sense-id))))
      ; adapted for the case where the orthography is only specified in the FS
      ; extract-orth-from-unifs must be defined on a per-grammar basis
       (set-lexical-entry orth-string lex-id 
-         (make-lex-or-psort :orth orth-string
-            :sense-id sense-id :id lex-id
-            :unifs fs-or-type :def-unifs defs))))
+         (make-lex-or-psort 
+          :orth orth-string
+          :infl-pos infl-pos                  
+          :sense-id sense-id :id lex-id
+          :unifs fs-or-type :def-unifs defs))))
 
 (defun extract-orth-from-unifs (unifs)
   ;;; returns a list of strings

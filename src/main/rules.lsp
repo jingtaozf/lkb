@@ -305,16 +305,27 @@
     (with-input-from-string (stream string)
       (loop for irreg = (read-line stream nil nil)
           while irreg
-          unless (zerop (length irreg))
+          unless (or (zerop (length irreg)) (eq (elt irreg 0) #\;))
           do
             (let* ((irreg-right (position '#\  irreg))                         
-                   (spelling (string-upcase (subseq irreg 0 irreg-right)))
-                   (aff-right (position '#\  irreg :start (+ 1 irreg-right)))
-                   (affixname (subseq irreg (+ 1 irreg-right) aff-right))
-                   (stem-right (position '#\  irreg :start (+ 1 aff-right)))
-                   (stem (subseq irreg (+ 1 aff-right) stem-right)))
-              (add-to-irregulars spelling (create-lex-rule-name affixname) 
-                                 stem))))))
+                   (spelling 
+                    (if irreg-right
+                        (string-upcase (subseq irreg 0 irreg-right))))
+                   (aff-right 
+                    (if irreg-right
+                        (position '#\  irreg :start (+ 1 irreg-right))))
+                   (affixname 
+                    (if (and irreg-right aff-right)
+                        (subseq irreg (+ 1 irreg-right) aff-right)))
+                   (stem-right 
+                    (if aff-right
+                        (position '#\  irreg :start (+ 1 aff-right))))
+                   (stem 
+                    (if aff-right
+                        (subseq irreg (+ 1 aff-right) stem-right))))
+              (if (and spelling affixname stem)
+                  (add-to-irregulars spelling (create-lex-rule-name affixname) 
+                                     stem)))))))
 
 (defun add-to-irregulars (irreg-form rule stem)
   (push (list stem (list rule irreg-form))

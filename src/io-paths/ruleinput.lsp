@@ -49,7 +49,7 @@
                (read-tdl-grammar-file-aux grule-file ovwr)
              (read-grammar-file-aux grule-file ovwr))
            (setf ovwr nil)))
-    (format t "Reload complete")))
+    (format t "~%Reload complete")))
          
 (defun read-lex-rule-file nil  
    (let ((ovwr
@@ -83,7 +83,7 @@
              do
              (read-morph-file-aux mrule-file ovwr movwr)
              (setf movwr nil)))
-      (format t "Reload complete"))
+      (format t "~%Reload complete"))
     (format t "~%No lexical or morphological files loaded")))
          
 

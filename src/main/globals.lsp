@@ -102,6 +102,9 @@
   "if this is set, root edges are regarded as real edges
    for the purposes of chart display")
 
+(def-lkb-parameter *irregular-forms-only-p* nil
+  "if this is set, the parser will not look for regular spellings
+   once it has found an irregular spelling")
 
 ;;; Display 
 

@@ -137,7 +137,7 @@
          (if (eql *lkb-system-version* :page)
            (read-tdl-leaf-type-file-aux file-name)
            (read-leaf-type-file-aux file-name)))
-    (format t "Reload complete")))
+    (format t "~%Reload complete")))
 
 (defun read-type-patch-files nil
   (setf *syntax-error* nil)
@@ -147,7 +147,7 @@
     (clear-types-for-patching-constraints)
     (read-tdl-patch-files-aux *type-file-list*)
     (check-for-open-psorts-stream)
-    (format t "Reload complete")))
+    (format t "~%Reload complete")))
 
 
 

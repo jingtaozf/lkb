@@ -114,14 +114,18 @@
          
 
 (defun expand-local-only-constraint (node type-entry)
-  (declare (ignore node))
   (let* ((*unify-debug-cycles* t)       ; turn on cyclic dag warning messages
          (constraint-spec (type-constraint-spec type-entry))
          (local-constraint 
           (if constraint-spec (process-unifications constraint-spec))))
     (if (and constraint-spec (null local-constraint))
-     nil
-     (setf (type-local-constraint type-entry) local-constraint))))
+        (progn
+          (format t "~%Type ~A has an invalid constraint specification" node)
+          nil)
+     (progn
+       (setf (type-local-constraint type-entry) local-constraint)
+       t))))
+
 
 
                   

@@ -76,7 +76,7 @@
         (reload-template-files))
       (when *psort-file-list*
         (reload-psort-files))
-      (format t "Reload complete"))
+      (format t "~%Reload complete"))
     (progn
       #-:tty(format t "~%Use Load Complete Grammar instead")
      #+:tty(format t "~%Use (read-script-file-aux file-name) instead"))))
@@ -89,7 +89,7 @@
          (if (eql *lkb-system-version* :page)
            (read-tdl-psort-file-aux template-file t)
            (read-psort-file-aux template-file t)))
-    (format t "Reload complete")))
+    (format t "~%Reload complete")))
 
 (defun reload-psort-files nil
   (setf *syntax-error* nil)
@@ -99,28 +99,30 @@
          (if (eql *lkb-system-version* :page)
            (read-tdl-psort-file-aux psort-file nil)
            (read-psort-file-aux psort-file nil)))
-    (format t "Reload complete")))
+    (format t "~%Reload complete")))
 
 
-(defun read-cached-lex-if-available (file-name &optional overwrite-p)
-  (if (and file-name (probe-file file-name))
-      (progn (if overwrite-p 
-                 (setf *lex-file-list* (list file-name))
-               (pushnew file-name *lex-file-list* :test #'equal))
-      (let* ((ok nil)
-             (cache-date
-              (if (probe-file *psorts-temp-file*)
-                  (file-write-date *psorts-temp-file*)))
-             (cache-index-date 
-              (if 
-                  (probe-file *psorts-temp-index-file*)
-                  (file-write-date *psorts-temp-index-file*)))
-             (file-date 
-              (file-write-date file-name)))
-        (when (and overwrite-p
-                   cache-date file-date cache-index-date
-                 (> cache-date file-date) 
-                 (> cache-index-date file-date))
+(defun read-cached-lex-if-available (file-names)
+  (setf *syntax-error* nil)
+  (unless (listp file-names) (setf file-names (list file-names)))
+  (if (check-load-names file-names 'lexical)
+      (progn
+        (setf *lex-file-list* file-names)
+        (let* ((ok nil)
+               (cache-date
+                (if (probe-file *psorts-temp-file*)
+                    (file-write-date *psorts-temp-file*)))
+               (cache-index-date 
+                (if 
+                    (probe-file *psorts-temp-index-file*)
+                    (file-write-date *psorts-temp-index-file*)))
+               (last-file-date
+                (apply #'max (for file in file-names
+                                  filter
+                                  (file-write-date file)))))
+          (when (and cache-date last-file-date cache-index-date
+                     (> cache-date last-file-date) 
+                     (> cache-index-date last-file-date))
             (progn (setf ok t)
                    (format t "~%Reading in cached lexicon")
                    (clear-lex t)
@@ -132,12 +134,17 @@
                        (setf ok nil)))
                    (if ok
                        (format t "~%Cached lexicon read")
-                     (format t "~%Cached lexicon corrupt: reading lexicon source file"))))
-        (unless ok
-          (if (eql *lkb-system-version* :page)
-              (read-tdl-lex-file-aux file-name overwrite-p)
-            (read-lex-file-aux file-name overwrite-p))
-          (write-psort-index-file))))
+                     (format t "~%Cached lexicon corrupt: reading lexicon source files"))))
+          (unless ok
+            (let ((overwrite-p t))
+              (setf *ordered-lex-list* nil)
+              (for file-name in file-names
+                   do
+                   (if (eql *lkb-system-version* :page)
+                       (read-tdl-lex-file-aux file-name overwrite-p)
+                     (read-lex-file-aux file-name overwrite-p))
+                   (setf overwrite-p nil)))
+            (write-psort-index-file))))
     (cerror "Continue with script" "Lexicon file not found")))
 
             

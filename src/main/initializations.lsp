@@ -2,7 +2,9 @@
 
 ;;;
 ;;; because ann used the term `type' the way she does well before it became a
-;;; bloody part of the bloody common-lisp language |:-}.
+;;; *censored* part of the *censored* common-lisp language |:-}.
+;;;
+;;; censorship by ann ...
 ;;;
 #+:allegro 
 (setf excl:*enable-package-locked-errors* nil)

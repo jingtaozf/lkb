@@ -39,7 +39,7 @@
 (proclaim '(optimize (compilation-speed 3)))
 
 ;;;
-;;; Lucid 4.1 with CLIM 2.0 (beta) is totally fucked: `COMMON-LISP' and `LISP'
+;;; Lucid 4.1 with CLIM 2.0 (beta) is totally belgiumed: `COMMON-LISP' and `LISP'
 ;;; are separate packages; likewise for `COMMON-LISP-USER' and `USER'.  ---
 ;;; unfortunately deleting the (bogus) `LISP' package makes it really unhappy.
 ;;; 

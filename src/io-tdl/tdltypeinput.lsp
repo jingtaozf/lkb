@@ -738,8 +738,7 @@
                                 :key #'tdl-templ-name)))
       (unless template-entry 
         (lkb-read-cerror istream 
-         "Unknown template ~A used in ~A" templ-name
-         name)
+         "Unknown template ~A" templ-name)
         (ignore-rest-of-entry istream name))        
       (check-for #\( istream name)
       (let ((next-char (peek-char t istream nil 'eof))
@@ -784,8 +783,7 @@
                 :key #'tdl-templ-parameter-name)))
     (unless par-value 
       (lkb-read-cerror istream 
-       "Unknown parameter ~A used in ~A" par-name
-       name)
+       "Unknown parameter ~A" par-name)
       (ignore-rest-of-entry istream name))
     (check-for #\= istream name)
     (read-tdl-conjunction 

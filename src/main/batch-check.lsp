@@ -27,6 +27,14 @@
                    (let ((new-fs (lex-or-psort-full-fs entry)))
                      (unless new-fs
                        (format ostream "~%No feature structure for ~A" lex-id))
+                     #|
+                     ;;; uncomment these lines with the LinGO ERG
+                     ;;; version of user-fns in order to check 
+                     ;;; coindexation for inflection position   
+                     (when new-fs
+                       (unless (extract-infl-pos-from-fs (tdfs-indef new-fs))
+                       (format t "~%No position identified for ~A" id)))
+                       |#
 ;;                     (when new-fs
 ;;                       (sanitize (existing-dag-at-end-of 
 ;;                                  (tdfs-indef new-fs) 

@@ -37,6 +37,10 @@
 (in-package "MAKE")
 
 (defvar %BINARY-DIR-NAME% 
+  ".fasl")
+;;; If you want different directories for different versions
+;;; then uncomment the following and define as needed.
+#|
   #+(and :allegro-v4.2 :sparc) (if sys:*patches* ".fasl" ".fosl")
   #+(and (or :allegro-v4.3 :allegro-v4.3.1) :sparc) ".nasl"
   #+(and :allegro-v5.0 :sparc) ".basl"
@@ -46,6 +50,7 @@
   #+(not (or (or :allegro-v4.2 :allegro-v4.3) (or :sparc :hpprism :alpha)))
   (error "~&loadup: unable to determine system type; see file ~
           `allegro-patches.lisp'.~%"))
+|#
 
 ;;;
 ;;; determine the system type (in terms of hardware and os) in order to set

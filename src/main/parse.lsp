@@ -162,8 +162,11 @@
                 (morph-poss 
                  (progn #+:powerpc(decf gg (CCL::%HEAP-BYTES-ALLOCATED))
                         (prog1
-                            (append (morph-analyse word)
-                                    (find-irregular-morphs word))
+                            (let ((irregs (find-irregular-morphs word)))
+                              (if (and irregs *irregular-forms-only-p*)
+                                  irregs
+                                (append (morph-analyse word)
+                                        irregs)))
                           #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
            (unless morph-poss (format t "~%Word ~A is not in lexicon" word)
                    (return))
@@ -871,9 +874,11 @@
              (finish-output ostream)
              (let ((sentence (string-trim '(#\Space #\Tab) interim-sentence)))
                (unless (equal sentence "")
-                 (let ((user-input 
-                        (split-into-words 
-                         (preprocess-sentence-string sentence))))
+                 (let* ((munged-string 
+                         (if (fboundp 'preprocess-sentence-string)
+                             (preprocess-sentence-string sentence)
+                           sentence))
+                        (user-input (split-into-words munged-string)))
                    (parse user-input nil)
                    (when (fboundp *do-something-with-parse*)
                      (funcall *do-something-with-parse*))
@@ -927,9 +932,6 @@
 
         
 
-(defun preprocess-sentence-string (str)
-  ;;; to be defined by the user
-    str)
 
 
       

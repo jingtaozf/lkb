@@ -16,9 +16,7 @@
 		      cl-user::show-type-tree
 		      cl-user::show-type-spec 
 		      cl-user::show-type 
-		      cl-user::show-lex-def 
 		      cl-user::show-lex
-		      cl-user::show-word-defs 
 		      cl-user::show-words 
 		      cl-user::show-grammar-rule 
 		      cl-user::show-lex-rule 
@@ -47,7 +45,6 @@
                       cl-user::load-display-settings
 		      cl-user::*lkb-system-version*
                       ;; debug
-                      cl-user::find-all-redundancies
                       cl-user::print-chart
                       cl-user::batch-check-lexicon
 		      ;; options
@@ -66,7 +63,7 @@
                    (make-lkb-submenu-item :menu-title "Load"
                                           :menu-items
                                           (list
-                                           (make-menu-item :name "Load grammar..."
+                                           (make-menu-item :name "Complete grammar..."
                                                            :value 'read-script-file 
                                                            :available-p t)
                                            (make-menu-item :name "Reload grammar"
@@ -81,12 +78,8 @@
                                                            :value 'show-type-spec)
                                            (make-menu-item :name "Expanded type..."
                                                            :value 'show-type)
-;                                  (make-menu-item :name "Lex definition..."
-;                                                   :value 'show-lex-def)
                                            (make-menu-item :name "Lex entry..."
                                                            :value 'show-lex)
-;                                  (make-menu-item :name "Word definitions..."
-;                                                  :value 'show-word-defs)
                                            (make-menu-item :name "Word entries..."
                                                            :value 'show-words)
                                            (make-menu-item :name "Grammar rule..."
@@ -100,10 +93,8 @@
                                           (list 
                                            (make-menu-item :name "Parse input..."
                                                            :value 'do-parse)
-                                           (make-menu-item :name "Show parse"
+                                           (make-menu-item :name "Redisplay parse"
                                                            :value 'show-parse)
-                                           (make-menu-item :name "Show edge..."
-                                                           :value 'show-parse-edge)
                                            (make-menu-item :name "Show chart"
                                                            :value 'show-chart)
                                            (make-menu-item :name "Batch parse..."
@@ -122,8 +113,6 @@
                                           :available-p t
                                           :menu-items
                                           (list
-                                           (make-menu-item :name "Find redundancies"
-                                                           :value 'find-all-redundancies :available-p t)
                                            (make-menu-item :name "Check lexicon"
                                                            :value 'batch-check-lexicon :available-p nil)
                                            (make-menu-item :name "Print chart"
@@ -179,12 +168,8 @@
                         :value 'show-type-spec)
                      (make-menu-item :name "Expanded type..."
                         :value 'show-type)
-                     (make-menu-item :name "Lex definition..."
-                        :value 'show-lex-def)
                      (make-menu-item :name "Lex entry..."
                         :value 'show-lex)
-                     (make-menu-item :name "Word definitions..."
-                        :value 'show-word-defs)
                      (make-menu-item :name "Word entries..."
                         :value 'show-words)
                      (make-menu-item :name "Grammar rule..."
@@ -198,10 +183,8 @@
                   (list 
                      (make-menu-item :name "Parse input..."
                         :value 'do-parse)
-                     (make-menu-item :name "Show parse"
+                     (make-menu-item :name "Redisplay parse"
                         :value 'show-parse)
-                     (make-menu-item :name "Show edge..."
-                        :value 'show-parse-edge)
                      (make-menu-item :name "Show chart"
                         :value 'show-chart)
                      (make-menu-item :name "Print chart"

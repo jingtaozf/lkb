@@ -42,7 +42,8 @@
 ;;;
 
 ;;;
-;;; the patches for ``fucking lucid incompatibilities'' (bernd kiefer |:-) have
+;;; the patches for ``belgianing lucid incompatibilities'' (bernd kiefer |:-) 
+;;; (censored by aac@csli ...) have
 ;;; now moved into a file of their own ... rip (5-jun-1994 -- oe@csli)
 ;;;
 ;;; and the ones for allegro and mcl too... (4-jul-1994 -- bk@dfki)

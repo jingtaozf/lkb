@@ -201,15 +201,13 @@
                    (fix-mglbs)))
          (unmark-type-table)
          (if *hierarchy-only-p*
-             (expand-local-only-constraints)
+               (expand-local-only-constraints)
            (progn
              (format t "~%Expanding constraints")
            (when (expand-and-inherit-constraints)
              (format t "~%Making constraints well formed")
              (when (strongly-type-constraints)
-               (when *check-paths*
-                 (format t "~%Optimising unification check paths") 
-                 (optimise-check-unif-paths))
+               (optimise-check-unif-paths)
                 ;;; YADU --- extra expansion stage
                 ;;; earlier stages are unchanged
                (when (expand-type-hierarchy-defaults)

@@ -143,6 +143,20 @@
 (defun whitespacep (char) 
   (member char '(#\space #\tab #\newline #\page #\return #\linefeed)))
 
+;;; Function below is to replace the use of alphanumericp
+;;; in the preprocess-sentence-string fn
+;;; alphanumericp is defined to return nil on extended characters
+;;; in ACL (at least).  This is a pain, because it means there's
+;;; no reliable way of stripping punctuation.  For now, specify
+;;; explicitly what is to be stripped.
+
+(defun alphanumeric-or-extended-p (char)
+  (and (graphic-char-p char)
+       (not (member char '(#\space #\! #\" #\# #\$ #\% #\& #\' #\(
+                           #\) #\* #\+ #\, #\- #\. #\/ #\: #\;
+                           #\< #\= #\> #\? #\@ #\[ #\\ #\] #\^
+                           #\_ #\` #\{ #\| #\} #\~)))))
+
 ;;;  Loading and reloading - called by the tty version as well
 ;;; as the menu driven version
 
@@ -170,7 +184,7 @@
     (clear-type-load-files)
     (clear-lex-load-files)
     (clear-rule-load-files)
-    (clear-lex)
+    (clear-lex t)                ;; doesn't delete temporary files
     (reset-morph-var)
     (clear-grammar)              ;; should clear everything that might not be
     (clear-lex-rules)            ;; overridden, this should do for now    
@@ -203,6 +217,9 @@
   (make-pathname :name name 
                  :directory (pathname-directory mk::tmp-dir)))
 
+(defun temporary-directory nil
+  mk::tmp-dir)
+
 (defun lkb-pathname (directory name)
   (merge-pathnames
    (make-pathname :name name)
@@ -233,11 +250,10 @@
     (setf *user-params-file* file)))
 
 
-(defun load-irregular-spellings (directory name)
+(defun load-irregular-spellings (pathname)
   (read-irreg-form-string 
-   (with-open-file (istream (merge-pathnames 
-                             (make-pathname :name name)
-                             directory) :direction :input)
+   (with-open-file (istream pathname
+                    :direction :input)
      (read istream))))
 
 ;;; utility for reloading

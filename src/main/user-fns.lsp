@@ -2,6 +2,39 @@
 
 (in-package :cl-user)
 
+(defun preprocess-sentence-string (str)
+  ;; replace all punctuation by spaces
+  ;; except
+  ;; for PAGE compatability, replace #\' by #\space
+  ;; except at end of word, when replace by #\space #\s
+  (let ((in-word nil)
+        (chars (coerce str 'list))
+        (result-chars nil))
+    (do* ((next-char (car chars) (car remainder))
+          (remainder (cdr chars) (cdr remainder)))
+         ((null next-char) nil)
+         (cond ((eql next-char #\')
+                (cond 
+                 ((not in-word) 
+                  (if (or (null remainder) (eql (car remainder) #\space))
+                      nil
+                    (progn
+                      (push next-char result-chars)
+                      (setf in-word t))))
+                 ((or (null remainder) (eql (car remainder) #\space))
+                  (setf in-word nil)
+                  (push #\space result-chars)
+                  (push #\s result-chars))
+                 (t
+                  (setf in-word nil)
+                  (push #\space result-chars))))
+               ((not (alphanumeric-or-extended-p next-char)) 
+                (setf in-word nil)
+                (push #\space result-chars))
+               (t (setf in-word t) 
+                (push next-char result-chars))))
+    (string-trim '(#\space) (coerce (nreverse result-chars) 'string))))
+
 (defun make-sense-unifications (sense-string id language)
    ;; < orth : hd > = sense
    ;; < lang > = language
@@ -100,3 +133,7 @@
   (declare (ignore type-name))
   nil)
 
+(defun find-infl-pos (unifs orths sense-id)
+  ; default inflection position for multi-word entries is rightmost
+  (declare (ignore unifs sense-id))
+  (length orths))
