@@ -361,38 +361,6 @@
 ;;;  General lexicon methods
 ;;;
 
-(defgeneric lookup-word (lexicon orth &key (cache t)))
-
-(defgeneric lex-words (lexicon))
-
-(defgeneric lexicon-loaded-p (lexicon))
-
-(defgeneric read-cached-lex (lexicon filenames))
-
-(defgeneric store-cached-lex (lexicon))
-
-(defgeneric set-lexical-entry (lexicon orth id new-entry))
-
-(defgeneric clear-lex (lexicon &optional no-delete))
-
-(defgeneric collect-expanded-lex-ids (lexicon))
-
-(defgeneric store-psort (lexicon id entry &optional orth))
-
-(defgeneric store-temporary-psort (lexicon id entry))
-
-(defgeneric read-psort (lexicon id))
-
-(defgeneric unexpand-psort (lexicon id))
-
-(defgeneric collect-psort-ids (lexicon))
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;
-;;;  General lexicon methods
-;;;
-
 (defmethod lookup-word :around ((lexicon lex-database) orth &key (cache t))
   (cond ((gethash orth (slot-value lexicon 'lexical-entries)))
 	(t 
