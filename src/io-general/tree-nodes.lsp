@@ -604,7 +604,25 @@
 
 ;;; convert tree into a nested list - for simple printing of structure
 ;;; (dolist (parse *parse-record*) (pprint (parse-tree-structure parse)))
+;;; DPF (16-Apr-99) Modified to use the rebuilding machinery employed for
+;;; fancy parse trees - needed since in the chart we throw away ARGS when
+;;; parsing.  If optional complete-p flag is set to nil, then the labeled
+;;; bracketing will be constructed using the current settings of the flags 
+;;; *dont-show-lex-rules* and *dont-show-morphology*.
 
+(defun parse-tree-structure (edge &optional (complete-p t))
+   (parse-tree-structure1 (make-new-parse-tree edge 1) complete-p))
+
+(defun parse-tree-structure1 (node complete-p)
+  (let ((edge (get node 'edge-record))
+ 	(daughters (if complete-p
+		       (get node 'daughters)
+		     (find-children node))))
+    (cons (get-string-for-edge node)
+	  (loop for dtr in daughters
+               collect (parse-tree-structure1 dtr complete-p)))))
+
+#|
 (defun parse-tree-structure (edge)
    (car (parse-tree-structure1 edge 1)))
 
@@ -639,6 +657,7 @@
                    (cons (car (edge-leaves edge))
                      (morph-tree-structure
                         (edge-rule edge) (edge-morph-history edge))))))))))
+|#
 
 (defun morph-tree-structure (rule edge)
    (if rule
