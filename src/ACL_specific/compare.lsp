@@ -14,6 +14,7 @@
 
 (def-lkb-parameter *preference-file* "~/grammar/parses.txt")
 
+(def-lkb-parameter *tree-comparison-threshold* 2)
 
 ;;; **********************************************************************
 ;;; Collect differences among a set of parses
@@ -205,7 +206,22 @@
     (mp:run-function "Compare" #'clim:run-frame-top-level frame)))
 
 (defun set-up-compare-frame (parses frame)
+
   (setf (compare-frame-decisions frame) (list (make-decision :type :start)))
+  (when (and (numberp *tree-comparison-threshold*)
+             (> (length parses) *tree-comparison-threshold*)
+             (null (clim:notify-user 
+                    frame
+                    (format 
+                     nil 
+                     "Excessive Set of Trees (~a).  Continue?"
+                     (length parses))
+                    :style :question :title "Tree Comparison Safeguard")))
+    (let ((sheet (clim:frame-top-level-sheet frame)))
+      (setf (clim:sheet-pointer-cursor sheet) :horizontal-scroll))
+    (record-decision (make-decision :type :skip) frame)
+    (return-from set-up-compare-frame :skip))
+  
   (when (null (compare-frame-input frame))
     (setf (compare-frame-input frame) (edge-leaves (car parses))))
   (let ((id 0))
@@ -236,7 +252,9 @@
     (recompute-in-and-out frame)
     (setf (compare-frame-in-parses frame) nil
           (compare-frame-out-parses frame) 
-          (mapcar #'ptree-top (compare-frame-otrees frame)))))
+          (mapcar #'ptree-top (compare-frame-otrees frame))))
+  (let ((sheet (clim:frame-top-level-sheet frame)))
+    (setf (clim:sheet-pointer-cursor sheet) nil)))
 
              
 (defstruct decision
@@ -335,6 +353,8 @@
 (define-compare-frame-command (com-save-compare-frame :menu "Save")
     ()
   (clim:with-application-frame (frame)
+    (let ((sheet (clim:frame-top-level-sheet frame)))
+      (setf (clim:sheet-pointer-cursor sheet) :horizontal-scroll))
     (record-decision (make-decision :type :save))
     (if (compare-frame-controller frame)
       (mp:process-revoke-arrest-reason 
@@ -351,6 +371,8 @@
 (define-compare-frame-command (com-reject-compare-frame :menu "Reject")
     ()
   (clim:with-application-frame (frame)
+    (let ((sheet (clim:frame-top-level-sheet frame)))
+      (setf (clim:sheet-pointer-cursor sheet) :horizontal-scroll))
     (record-decision (make-decision :type :reject) frame)
     (recompute-in-and-out frame t)
     (record-decision (make-decision :type :save) frame)

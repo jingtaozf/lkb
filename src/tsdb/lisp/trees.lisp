@@ -69,11 +69,9 @@
           (setf (lkb::compare-frame-controller frame) *current-process*)
         for item = (when position (nth position items))
         for i-id = (get-field :i-id item)
-        for status = (if nil
-                       (acons :status :skip nil)
-                       (when (integerp i-id) 
-                         (browse-tree 
-                          data i-id frame :cache cache :title title)))
+        for status = (when (integerp i-id) 
+                       (browse-tree 
+                        data i-id frame :cache cache :title title))
         for action = (get-field :status status)
         while (and status (not (eq action :close)) (numberp position))
         do 
@@ -85,7 +83,7 @@
               (:first (setf position 0))
               (:previous (setf position (max (- position 1) 0)))
               ((:skip :null)
-               (setf position (when (< position (- nitems 1) (+ position 1)))))
+               (setf position (when (< position (- nitems 1)) (+ position 1))))
               ((:next :save) 
                (when (eq action :save) (incf (aref annotated position)))
                (setf position (min (+ position 1) (- nitems 1))))
@@ -173,7 +171,6 @@
       (setf (lkb::compare-frame-version frame) history)
       (setf (lkb::compare-frame-confidence frame) confidence)
       (setf (lkb::compare-frame-preset frame) discriminants)
-      (lkb::set-up-compare-frame lkb::*parse-record* frame)
       (when (null %client%)
         (setf %client%
           (mp:run-function 
@@ -185,9 +182,10 @@
             `(when (and ,%client% (eq (first excl:arglist) ,%client%))
                (ignore-errors 
                 (process-revoke-arrest-reason *current-process* :wait))))))
+      (unless (eq (lkb::set-up-compare-frame lkb::*parse-record* frame) :skip)
+        (clim:redisplay-frame-panes frame :force-p t)
+        (process-add-arrest-reason *current-process* :wait))
 
-      (clim:redisplay-frame-panes frame :force-p t)
-      (process-add-arrest-reason *current-process* :wait)
       (let* ((decisions (lkb::compare-frame-decisions frame))
              (status (lkb::decision-type (first decisions)))
              (recent (second decisions)))
