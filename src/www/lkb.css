@@ -236,6 +236,32 @@
     padding-right: 2px;
     border-width: thin;
   }
+
+  div.profiles table {
+    padding: 2px;
+    background: #d8d6d6;
+    border: solid;
+    border-width: thin;
+  }
+  div.profiles th {
+    font-weight: bold; font-size: 12pt; 
+    font-family: helvetica, arial, sans-serif; 
+    padding-bottom: 2px;
+  }
+  div.profiles td {
+    font-weight: normal; font-size: 12pt; 
+    font-family: helvetica, arial, sans-serif; 
+  }
+
+  td.ItsdbHeader, td.ItsdbAggregate, td.ItsdbData, td.ItsdbTotal {
+    font-size: 12pt; 
+    font-family: helvetica, arial, sans-serif; 
+  }
+
+  td.ItsdbCaption {
+    font-size: 8pt; 
+    font-family: helvetica, arial, sans-serif; 
+  }
 </style>
 
 
