@@ -120,6 +120,11 @@
 ;;; we allow for the possibility of different binding
 ;;; sets.
 
+;;; Unfortunately it is possible for two relations not to be
+;;; orderable (e.g. two instances of a def_rel)
+;;; so we have to return sets in this case, and check
+;;; compatability pairwise
+
 (defun sort-mrs-struct-liszt (liszt)
   (let ((new-liszt (combine-similar-relations liszt nil)))
    (sort new-liszt
@@ -185,26 +190,23 @@
 
 ;;; need sort-mrs-hcons
 
-
-(defparameter *bindings* nil)
-
-;;; *bindings* is an assoc list of variable numbers
+;;; bindings is a list of assoc lists of variable numbers
 
 (defun mrs-equalp (mrs1 mrs2 &optional syntactic-p noisy-p)
-  (setf *bindings* nil)
-  (if (variables-equal (psoa-handel mrs1)
-                       (psoa-handel mrs2) syntactic-p)
-       (if (variables-equal (psoa-index mrs1)
-                            (psoa-index mrs2) syntactic-p)
-           (if (mrs-liszts-equal-p (psoa-liszt mrs1)
+  (let ((bindings (variables-equal (psoa-handel mrs1)
+                                   (psoa-handel mrs2) syntactic-p nil)))
+    (if bindings
+       (if (setf bindings (variables-equal (psoa-index mrs1)
+                            (psoa-index mrs2) syntactic-p bindings))
+           (if (setf bindings (mrs-liszts-equal-p (psoa-liszt mrs1)
                                    (psoa-liszt mrs2) 
                                    syntactic-p 
-                                   noisy-p)
+                                   noisy-p bindings))
                (if 
                    (or (not syntactic-p)
-                       (hcons-equal-p (psoa-h-cons mrs1)
-                                      (psoa-h-cons mrs2)))
-                   t
+                       (setf bindings (hcons-equal-p (psoa-h-cons mrs1)
+                                      (psoa-h-cons mrs2) bindings)))
+                   bindings
                  (progn 
                    (when noisy-p
                      (format t "~%hcons difference ~A ~A"
@@ -225,71 +227,81 @@
         (format t "~%handel difference ~A ~A"
                 (psoa-handel mrs1)
                 (psoa-handel mrs2)))
-      nil)))
+      nil))))
 
 
 (defun mrs-liszts-equal-p (orig-liszt1 orig-liszt2 syntactic-p 
-                                       &optional noisy-p)
+                                       noisy-p bindings)
   (let ((liszt1 (sort-mrs-struct-liszt orig-liszt1))
         (liszt2 (sort-mrs-struct-liszt orig-liszt2)))
   (and (eql (length liszt1) (length liszt2))
-       (loop for rel1 in liszt1
-             as rel2 in liszt2
+       (if (loop for rel1 in liszt1
+           as rel2 in liszt2
            always
              (if
-                 (mrs-relation-set-equal-p rel1 rel2 syntactic-p noisy-p)
-                 t
+                 (setf bindings (mrs-relation-set-equal-p rel1 rel2 syntactic-p noisy-p bindings))
+                bindings 
                (progn
                  (when noisy-p
                    (format t "~%Relations differ ~A ~A" rel1 rel2))
-                 nil))))))
+                 nil)))
+           bindings))))
 
-(defun mrs-relation-set-equal-p (relset1 relset2 syntactic-p noisy-p)
+(defun mrs-relation-set-equal-p (relset1 relset2 syntactic-p noisy-p bindings)
   (and (eql (length relset1) (length relset2))
-       ;;; temporary hack
-       (mrs-relations-equal-p (car relset1) (car relset2) 
-                              syntactic-p noisy-p)))
+       (for rel-alt1 in relset1
+            append
+            (for rel-alt2 in relset2
+                 append
+                 (let ((new-bindings (copy-tree bindings)))
+                   (mrs-relations-equal-p rel-alt1 rel-alt2
+                                          syntactic-p noisy-p new-bindings))))))
 
-(defun mrs-relations-equal-p (rel1 rel2 syntactic-p noisy-p)
+(defun mrs-relations-equal-p (rel1 rel2 syntactic-p noisy-p bindings)
   (if (eql (rel-sort rel1) (rel-sort rel2))
-      (if (variables-equal (rel-handel rel1) 
-                           (rel-handel rel2) syntactic-p)
+      (if (setf bindings 
+            (variables-equal 
+             (rel-handel rel1) 
+             (rel-handel rel2) syntactic-p bindings))
           (let ((fv1 (rel-flist rel1))
                 (fv2 (rel-flist rel2)))
             (if (eql (length fv1) (length fv2))
-                         ;;; assumes canonical feature ordering
-                (loop for fvpair1 in fv1
-                    as fvpair2 in fv2
-                    always 
-                      (mrs-fvpair-equal-p fvpair1 fvpair2 
-                                          syntactic-p noisy-p))
+                         ;;; assumes canonical feature ordering 
+                (if 
+                    (loop for fvpair1 in fv1
+                        as fvpair2 in fv2
+                        always 
+                          (setf bindings
+                            (mrs-fvpair-equal-p fvpair1 fvpair2 
+                                                syntactic-p noisy-p bindings)))
+                    bindings)
               (progn (when noisy-p
                        (format t "~%Feature numbers differ ~A ~A" 
                                fv1 fv2))
                      nil)))        
+            (progn (when noisy-p
+                     (format t "~%Handels differ ~A ~A" 
+                             (rel-handel rel1) 
+                             (rel-handel rel2))
+                     nil))) 
         (progn (when noisy-p
-                 (format t "~%Handels differ ~A ~A" 
-                         (rel-handel rel1) 
-                         (rel-handel rel2))
-                 nil))) 
-    (progn (when noisy-p
-             (format t "~%Sorts differ ~A ~A" 
-                     (rel-sort rel1) 
-                     (rel-sort rel2))
-             nil))))
+                 (format t "~%Sorts differ ~A ~A" 
+                         (rel-sort rel1) 
+                         (rel-sort rel2))
+                 nil))))
 
 
 
 
 
-(defun mrs-fvpair-equal-p (fvpair1 fvpair2 syntactic-p noisy-p)
+(defun mrs-fvpair-equal-p (fvpair1 fvpair2 syntactic-p noisy-p bindings)
   (if (eql (fvpair-feature fvpair1)
            (fvpair-feature fvpair2))
       (if (member (fvpair-feature fvpair1)
                   *value-feats*)
           (if (equal (fvpair-value fvpair1)
                      (fvpair-value fvpair2))
-              t
+              bindings
             (progn
               (when noisy-p
                 (format 
@@ -297,11 +309,12 @@
                  (fvpair-value fvpair1)
                  (fvpair-value fvpair2)))
               nil))
-        (if (variables-equal
-             (fvpair-value fvpair1)
-             (fvpair-value fvpair2)
-             syntactic-p)
-            t
+        (if (setf bindings 
+              (variables-equal
+               (fvpair-value fvpair1)
+               (fvpair-value fvpair2)
+               syntactic-p bindings))
+            bindings
           (progn 
             (when noisy-p
               (format 
@@ -316,23 +329,27 @@
               (fvpair-feature fvpair2))))))
 
 
-(defun variables-equal (var1 var2 syntactic-p)
-  (or (eq var1 var2)
-      (and (var-p var1) (var-p var2)
-        (if syntactic-p
-           (equal (var-type var1) (var-type var2))
-           (compatible-types (var-type var1) (var-type var2)))
-        (if syntactic-p
-            (equal-extra-vals
-              (var-extra var1) 
-              (var-extra var2))
-            (compatible-extra-vals 
-              (var-extra var1) 
-              (var-extra var2)))
-         (bindings-equal (get-var-num var1)
-                         (get-var-num var2)))))
+(defun variables-equal (var1 var2 syntactic-p bindings)
+  (let ((new-bindings nil))
+    (or (eq var1 var2)
+        (and (var-p var1) (var-p var2)
+             (if syntactic-p
+                 (equal (var-type var1) (var-type var2))
+               (compatible-types (var-type var1) (var-type var2)))
+             (if syntactic-p
+                 (equal-extra-vals
+                  (var-extra var1) 
+                  (var-extra var2))
+               (progn
+                 (setf new-bindings
+                   (compatible-extra-vals 
+                    (var-extra var1) 
+                    (var-extra var2) bindings))
+                 (or new-bindings (null bindings))))
+             (bindings-equal (get-var-num var1)
+                             (get-var-num var2) new-bindings)))))
 
-(defun compatible-extra-vals (extra1 extra2)
+(defun compatible-extra-vals (extra1 extra2 bindings)
   ;;; extra values are currently in a typed-path notation
   ;;; this version is for generation, where we assume we need
   ;;; compatibility, rather than identity
@@ -355,24 +372,24 @@
                         (setf ok nil)
                         (return))
                       (when comparable-p
-                        (unless (compatible-extra-values (fvpair-value tp1)
-                                                  (fvpair-value tp2))
+                        (unless (setf bindings (compatible-extra-values (fvpair-value tp1)
+                                                  (fvpair-value tp2) bindings))
                           (setf ok nil)
                           (return)))))))))
       (when (not ok)
         (return)))
-    ok))
+    (if ok
+        bindings)))
 
 
-(defun compatible-extra-values (val1 val2)
+(defun compatible-extra-values (val1 val2 bindings)
   ;;; needs to deal with lists of variables correctly
   ;;; currently just checks for first ones being compatible
   (if (and (listp val1) (var-p (car val1)))
       (if (and (listp val2) (var-p (car val2)))
-          (variables-equal (car val1) (car val2) nil)
+          (variables-equal (car val1) (car val2) nil bindings)
         nil)
-    (compatible-types val1 val2)))
-
+    (if (compatible-types val1 val2) bindings)))
 
   
 
@@ -431,32 +448,40 @@
             nil)
         nil))))
         
-(defun bindings-equal (val1 val2)
-  (let ((bound (assoc val1 *bindings*)))
-    (if bound                           ; val1 exists
-        (eql (cdr bound) val2)          ; if it's bound to val2 OK else fail
-      (unless (rassoc val2 *bindings*)  ; check val2 hasn't got bound
-              (push (cons val1 val2) *bindings*) ; create new binding
-              t))))
+(defun bindings-equal (val1 val2 bindings)
+  ;;; this should only be called with null bindings 
+  ;;; at the start of a process of checking equality
+  ;;; After this - null bindings is a failure
+  (if (null bindings)
+      (list (list (cons val1 val2)))
+    (for binding-possibility in bindings
+         filter
+         (let ((bound (assoc val1 binding-possibility)))
+           (if bound                    ; val1 exists
+               (if (eql (cdr bound) val2) ; if it's bound to val2 OK else fail
+                   binding-possibility)
+             (unless (rassoc val2 binding-possibility) ; check val2 hasn't got bound
+               (push (cons val1 val2) binding-possibility) ; create new binding
+               binding-possibility))))))
 
 
-(defun hcons-equal-p (hc-list1 hc-list2)
+(defun hcons-equal-p (hc-list1 hc-list2 bindings)
   (and (eql (length hc-list1) (length hc-list2))
        (for hc1 in hc-list1
             all-satisfy
             (for hc2 in hc-list2
                  some-satisfy
-                 (hcons-el-equal hc1 hc2)))))
+                 (hcons-el-equal hc1 hc2 bindings)))))
 
-(defun hcons-el-equal (hc1 hc2)
+(defun hcons-el-equal (hc1 hc2 bindings)
   (and (variables-equal (hcons-scarg hc1)
-                        (hcons-scarg hc2) t)
+                        (hcons-scarg hc2) t bindings)
        (variables-equal (hcons-outscpd hc1)
-                        (hcons-outscpd hc2) t)
+                        (hcons-outscpd hc2) t bindings)
        (variable-set-equal (hcons-cands hc1)
-                           (hcons-cands hc2))))
+                           (hcons-cands hc2) bindings)))
 
-(defun variable-set-equal (l1 l2)
+(defun variable-set-equal (l1 l2 bindings)
   (or (and (null l1) (null l2))
       (and (eql (length l1) 
                 (length l2))
@@ -464,5 +489,5 @@
                 all-satisfy
                 (for v2 in l2
                      some-satisfy
-                     (variables-equal v1 v2 t))))))
+                     (variables-equal v1 v2 t bindings))))))
 

@@ -573,7 +573,7 @@ at this point).
         (let ((rule (cl-user::get-lex-rule-entry 
                      (semantics-record-id rule-record)))
               (main-rels
-               (semantics-record-main-relations rule-record))
+               (semantics-record-c-cont-relations rule-record))
               (message-rels 
                (semantics-record-message-relations rule-record)))
           (let ((rel-list
@@ -598,7 +598,7 @@ at this point).
             (if rel-list
                 (for rel-comb-and-fs in 
                      (apply-rels-to-rule (cl-user::rule-full-fs rule)
-                                         rel-list *main-semantics-path*)
+                                         rel-list *construction-semantics-path*)
                      collect
                      (make-new-found-rule rule (car rel-comb-and-fs)
                                           (cdr rel-comb-and-fs)

@@ -24,22 +24,23 @@
   (setf *lrule-rel-index* nil))
 
 (defun extract-lex-rule-rels (id fs entry)
-  (let* ((main-semantics-fs (path-value fs *main-semantics-path*))
-         (main-rels (if main-semantics-fs
+  (let* ((construction-semantics-fs (path-value fs *construction-semantics-path*))
+         (construction-rels (if construction-semantics-fs
                         (extract-relations-from-liszt 
-                         main-semantics-fs id *main-semantics-path*)))
+                         construction-semantics-fs id 
+                         *construction-semantics-path*)))
          (message-semantics-fs (path-value fs *message-semantics-path*))
          (message-rels
           (if message-semantics-fs
               (extract-relations-from-liszt 
                message-semantics-fs id *message-semantics-path*))))
-    (if (or main-rels message-rels)
+    (if (or construction-rels message-rels)
         (let* ((new-record
                 (make-semantics-record
                  :id id
-                 :main-relations main-rels
+                 :c-cont-relations construction-rels
                  :message-relations message-rels)))
-          (for rel in  main-rels
+          (for rel in  construction-rels
                do
                (push (cons (relation-record-relation rel) new-record) 
                      *lrule-rel-index*))
@@ -70,29 +71,18 @@
                         (extract-relations-from-liszt 
                          construction-semantics-fs id 
                          *construction-semantics-path*)))
-         ;;; shouldn't be anything on main-semantics path
-         ;;; but leave this here for checking
-         (main-semantics-fs (path-value fs *main-semantics-path*))
-         (main-rels (if main-semantics-fs
-                        (extract-relations-from-liszt 
-                         main-semantics-fs id *main-semantics-path*)))
          (message-semantics-fs (path-value fs *message-semantics-path*))
          (message-rels
           (if message-semantics-fs
               (extract-relations-from-liszt 
                message-semantics-fs id *message-semantics-path*))))
-    (if (or main-rels message-rels construction-rels)
+    (if (or message-rels construction-rels)
         (let* ((new-record
                 (make-semantics-record
                  :id id
                  :c-cont-relations construction-rels
-                 :main-relations main-rels
                  :message-relations message-rels)))
           (for rel in construction-rels
-               do
-               (push (cons (relation-record-relation rel) new-record) 
-                     *grule-rel-index*))
-          (for rel in  main-rels
                do
                (push (cons (relation-record-relation rel) new-record) 
                      *grule-rel-index*))

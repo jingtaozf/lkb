@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.9  1999/02/25 06:27:48  aac
+;; not very well tested changes to generation lexical lookup, also fixing references to user rather than cl-user package
+;;
 ;; Revision 1.8  1999/01/16 05:12:15  aac
 ;; minor fixes because of PC version, generator changes
 ;;
@@ -39,13 +42,13 @@
 
 (in-package "MRS")
 
-(defparameter *MRS-RESULTS-CHECK* nil)
+(defparameter *mrs-results-check* nil)
 
-(defparameter *MRS-FOR-LANGUAGE* 'german)
+(defparameter *mrs-for-language* 'german)
 
-(defparameter *MRS-TO-VIT* t)
+(defparameter *mrs-to-vit* t)
 
-(defparameter *MRS-SCOPING* nil)
+(defparameter *mrs-scoping* nil)
 
 ;;; to be done: use (tdl::show-current-domain) rather than hardwire
 ;;; domain-package 
