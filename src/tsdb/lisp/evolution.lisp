@@ -20,7 +20,7 @@
                 
       for i from 0
       for profile in profiles
-      for message = (when meter 
+      for message = (when meter
                       (format nil "summarizing profile `~a' ..." profile))
       for ameter = (when meter 
                      (status :text message)

@@ -539,10 +539,8 @@
         (loop
             for configuration in (chart-entry-configurations entry)
             for edge = (chart-configuration-edge configuration)
-            for tdfs = #+:packing 
-                       (or (edge-odag edge) (edge-dag edge))
-                       #-:packing
-                       (edge-dag edge)
+            for odag = #+:packing (edge-odag edge) #-:packing nil
+            for tdfs = (if (dag-p odag) odag (edge-dag edge))
             for dag = (tdfs-indef tdfs)
             unless (safe-dag-p dag) do
               (compress-dag dag)))
