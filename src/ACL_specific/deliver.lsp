@@ -2,20 +2,26 @@
 
 (in-package "COMMON-LISP-USER")
 
-(delete-directory-and-files (merge-pathnames #p"bin/lkb/" sys-home))
+(delete-directory-and-files 
+ (dir-append sys-home (list :relative mk::%system-binaries%)))
 
 (excl:generate-application 
  "lkb" 
- (merge-pathnames #p"bin/lkb/" sys-home)
+ (dir-append sys-home (list :relative mk::%system-binaries%))
  (list :srecord
        :eli
        :sock
        (merge-pathnames #p"src/ACL_specific/build.lsp" sys-home))
  
  :opt-speed 3
- :newspace 3145728			; 3 meg newspace
- :oldspace 10485760			; 10 meg oldspace 
- :lisp-heap-size (* 1024 1024 1024) ; 1 gbyte maximal size
+ :newspace (* 1024 1024 3)
+ :oldspace (* 1024 1024 10)
+ :lisp-heap-size (* 1024 1024 1024)
+ ;;
+ ;; change heap placement on Linux to allow newspace growth (21-may-00   -  oe)
+ ;;
+ #+:linux86 :lisp-heap-start #+:linux86 "1040M"
+ #+:linux86 :c-heap-start #+:linux86 "2816M"
  :runtime :standard 
  
  :include-clim t
