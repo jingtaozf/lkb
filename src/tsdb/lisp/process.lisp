@@ -702,7 +702,7 @@
 (defun enrich-result (result &key verbose)
   (declare (ignore verbose))
   (let* ((readings (get-field :readings result)))
-    (if (and *tsdb-result-hook* (> readings 0))
+    (if (and *tsdb-result-hook* (integerp readings) (> readings 0))
       (multiple-value-bind (wealth condition)
           (ignore-errors (funcall *tsdb-result-hook* result))
         (or wealth (acons :error (format nil "~a" condition) result)))

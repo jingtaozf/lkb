@@ -1,12 +1,12 @@
 ;;; -*- Mode: LISP; Syntax: Common-Lisp; Package: TSDB -*-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;        file:
-;;;      module:
-;;;     version:
-;;;  written by:
-;;; last update:
-;;;  updated by:
+;;;        file: allegro.lisp
+;;;      module: gc() after hook for Allegro CL
+;;;     version: 0.0 (30-jul-98)
+;;;  written by: oe, csli stanford
+;;; last update: 22-jan-99
+;;;  updated by: oe, coli saarbruecken
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; author            | date        | modification
 ;;; ------------------|-------------|------------------------------------------
@@ -20,7 +20,7 @@
 
 (eval-when (:load-toplevel :execute)
   ;;
-  ;; establish gc() hook that toggles podium(1) cursor for global gc()s;
+  ;; use gc() hook to toggle [incr tsdb()] podium cursor for global gc()s;
   ;; unfortunately, there is no (pre-5.0 and all-lisp) way to get gc() cursors
   ;; for scavenges too.
   ;;
@@ -34,28 +34,29 @@
                       (when (probe-file file)
                         (delete-file file))
                       (open file :direction :output
-                            :if-exists :supersede
+                            :if-exists :supersede 
                             :if-does-not-exist :create)))))
         global-gc-p)
     (setf excl:*gc-after-hook*
       #'(lambda (global new old efficiency pending)
-          #+:oe
-          (let ((*print-readably* nil)
-                (*print-miser-width* 40)
-                (*print-pretty* t)
-                (tpl:*zoom-print-circle* t)
-                (tpl:*zoom-print-level* nil)
-                (tpl:*zoom-print-length* nil)
-                (*terminal-io* stream)
-                (*standard-output* stream))
+          (when (and #-:oe *tsdb-gc-message-p* (output-stream-p stream))
             (format
-             t
+             stream
              "~&gc-after-hook(): ~:[local~;global~]~@[ (recursive)~*~]; ~
               new: ~a; old: ~a; pending: ~a~@[~*; efficiency: ~d~].~%" 
              global global-gc-p new old pending 
-             (integerp efficiency) (round efficiency))
-            (top-level::zoom-command
-             :from-read-eval-print-loop nil :all t :brief t))
+             (integerp efficiency) efficiency)
+            #+:gcdebug
+            (let ((*print-readably* nil)
+                  (*print-miser-width* 40)
+                  (*print-pretty* t)
+                  (tpl:*zoom-print-circle* t)
+                  (tpl:*zoom-print-level* nil)
+                  (tpl:*zoom-print-length* nil)
+                  (*terminal-io* stream)
+                  (*standard-output* stream))
+              (tpl::zoom-command
+               :from-read-eval-print-loop nil :all t :brief t)))
           (when *tsdb-gc-statistics*
             (incf (gc-statistics (if global :global :scavenge)))
             (incf (gc-statistics :new) new)
@@ -63,25 +64,27 @@
             (when (and (not global) (integerp efficiency))
               (push efficiency (gc-statistics :efficiency))))
           (when (null global-gc-p)
-            #+(version>= 5 0)
+            ;;
+            ;; unfortunately, this breaks because of yet another bug in the
+            ;; Allegro memory management: when newspace is expanded during a
+            ;; scavenge, the `copy new' value reported by the gc() statistics
+            ;; is much bigger than would be appropriate.  this causes our .new.
+            ;; parameter to overflow the fixnum range.  email to `bugs@franz'
+            ;; sent today.                                   (22-jan-00  -  oe)
+            ;;
+            #+:edelweiss
             (when (or (>= new *tsdb-scavenge-limit*) (< new 0))
-              (ignore-errors
-               (let ((*print-readably* nil)
-                     (*print-miser-width* 40)
-                     (*print-pretty* t)
-                     (tpl:*zoom-print-circle* t)
-                     (tpl:*zoom-print-level* nil)
-                     (tpl:*zoom-print-length* nil)
-                     (*terminal-io* stream)
-                     (*standard-output* stream))
-                 (top-level::zoom-command
-                  :from-read-eval-print-loop nil :all t :brief t)))
-              (error
-               #+:lkb
-               "gc-after-hook(): scavenge limit exceeded [~d] (~d edges)."
-               #-:lkb
-               "gc-after-hook(): scavenge limit exceeded [~d]." 
-               new #+:lkb common-lisp-user::*edge-id*))
+              (let ((*print-readably* nil)
+                    (*print-miser-width* 40)
+                    (*print-pretty* t)
+                    (tpl:*zoom-print-circle* t)
+                    (tpl:*zoom-print-level* nil)
+                    (tpl:*zoom-print-length* nil)
+                    (*terminal-io* stream)
+                    (*standard-output* stream))
+                (tpl::zoom-command
+                 :from-read-eval-print-loop nil :all t :brief t))
+              (error "gc-after-hook(): scavenge limit exceeded [~d]" new))
             (unless global
               (incf *tsdb-tenured-bytes* old)
               (when (and *tsdb-tenured-bytes-limit*
@@ -96,13 +99,7 @@
                      "~&gc-after-hook(): ~d bytes were tenured; ~
                       triggering global gc().~%"
                      *tsdb-tenured-bytes*))
-                  (let ((*terminal-io* stream)
-                        (*standard-output* stream))
-                    #+(and :oe :gcdebug)
-                    (room)
-                    (excl:gc t)
-                    #+(and :oe :gcdebug)
-                    (room))
+                  (excl:gc t)
                   (setf global-gc-p nil)
                   (setf *tsdb-tenured-bytes* 0)
                   #-(version>= 5 0)

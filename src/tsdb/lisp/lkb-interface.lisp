@@ -32,10 +32,10 @@
                                 (symbol-value 
                                  (find-symbol "*HYPER-ACTIVITY-P*"))))
          (chart-packing-p #+:packing *chart-packing-p* #-:packing nil)
-         (aagenda (and active-parsing-p
-                       (find :agenda *features*)
-                       (find-symbol "*AAGENDA*")
-                       (boundp (find-symbol "*AAGENDA*")))))
+         (agendap (or (and (not active-parsing-p) (not exhaustivep))
+                      (and active-parsing-p (not exhaustivep) 
+                           (find :agenda *features*))))
+         (npaths (length *check-paths-optimised*)))
     `((:avms . ,(- (hash-table-count *types*) (length *templates*)))
       (:sorts . 0)
       (:templates . ,(length *templates*))
@@ -48,6 +48,7 @@
       (:application . ,(format 
                         nil 
                         "LKB (~A mode~@[; version `~a'~]; ~
+                         ~d qc paths; ~
                          ~@[packing ~]~
                          ~:[passive~*~;~:[~;hyper~]active~] ~
                          [~:[~d~;all~*~]~:[~;; agenda~]])" 
@@ -56,10 +57,12 @@
                              (boundp (find-symbol "*CVS-VERSION*"))
                              (symbol-value 
                               (find-symbol "*CVS-VERSION*")))
+                        npaths
                         (and active-parsing-p chart-packing-p)
                         active-parsing-p hyper-activity-p
-                        exhaustivep *maximal-number-of-readings*
-                        aagenda)))))
+                        exhaustivep 
+                        (if (numberp *first-only-p*) *first-only-p* 1)
+                        agendap)))))
                        
 
 
@@ -95,7 +98,8 @@
   (let ((*package* (find-package "COMMON-LISP-USER"))
         (first-only-p *first-only-p*))
     (clear-type-cache)
-    (setf *first-only-p* (not exhaustive))
+    (setf *first-only-p* (unless exhaustive 
+                           (if (integerp *first-only-p*) *first-only-p* 1)))
     (pairlis '(:first-only-p)
              (list first-only-p))))
 
@@ -117,6 +121,11 @@
              (setf *first-only-p* value))))
     (pairlis '(:lexicon) (list lexicon))))
 
+
+(defmacro with-package ((package) &body body)
+  `(let ((*package* (find-package ,package)))
+     ,@body))
+
 ;;; sets the processor into exhaustive mode if requested; parses
 ;;; .string. without producing any printout (unless .trace. is set);
 ;;; funcall()s .semantix-hook. and .trees-hook. to obtain MRS and tree
@@ -135,10 +144,8 @@
                                            *maximum-number-of-edges*
                                            edges))
               (*maximum-number-of-active-edges* *maximum-number-of-edges*)
-              (*first-only-p* (not exhaustive))
-              (*maximal-number-of-readings* (if (integerp readings)
-                                              readings
-                                              *maximal-number-of-readings*))
+              (*first-only-p* (unless exhaustive
+                                (if (integerp readings) readings 1)))
               (*do-something-with-parse* nil)
               (sent
                (split-into-words (preprocess-sentence-string string)))
@@ -177,7 +184,8 @@
                (let ((rawgc (- #+mcl (ccl:gctime) tgc)))
                  (setq symbols 0 conses 0
                        others
-                       (- #+mcl (- (ccl::total-bytes-allocated) 24) #-mcl -1 others)
+                       (- #+mcl (- (ccl::total-bytes-allocated) 24) #-mcl -1 
+                          others)
                        tcpu
                        (round (* (- (get-internal-run-time) tcpu) 1000)
                               internal-time-units-per-second)
@@ -290,9 +298,10 @@
                                       (round (* (- (pop times) start) 1000)
                                              internal-time-units-per-second )
                                       total)
-                         for derivation = (write-to-string
-                                           (compute-derivation-tree parse)
-                                           :escape t)
+                         for derivation = (with-package (:common-lisp-user)
+                                            (write-to-string
+                                             (compute-derivation-tree parse)
+                                             :escape t :case :downcase))
                          for r-redges = (length 
                                          (parse-tsdb-distinct-edges parse nil))
                          for size = (parse-tsdb-count-nodes parse)
@@ -313,7 +322,9 @@
                      (loop
                          for i from (length *parse-record*)
                          for derivation in (rest (assoc :derivations summary))
-                         for string = (write-to-string derivation :escape t)
+                         for string = (with-package (:common-lisp-user)
+                                        (write-to-string derivation
+                                         :escape t :case :downcase))
                          collect (pairlis '(:result-id :derivation)
                                           (list i string))))))))))))
     (release-temporary-storage)
@@ -325,7 +336,7 @@
                   :timeup)
                 (list -1 
                       (unless burst condition)
-                      (write-to-string condition :escape nil)
+                      (format nil "~a" condition)
                       (when (> *edge-id* *maximum-number-of-edges*)
                         (format nil "edge limit (~a)" *edge-id*)))))
      return)))
@@ -334,9 +345,13 @@
 
 (defun compute-derivation-tree (edge)
   (flet ((edge-label (edge)
-           (format nil "~(~a~)" (if (rule-p (edge-rule edge))
-                                  (rule-id (edge-rule edge)) 
-                                  (edge-rule edge)))))
+           (intern 
+            (typecase (edge-rule edge)
+              (string (string-upcase (edge-rule edge)))
+              (symbol (edge-rule edge))
+              (rule (rule-id (edge-rule edge)))
+              (t :unknown))
+            :common-lisp-user)))
     (let* ((configuration (and (null (edge-children edge))
                                (find-chart-configuration :edge edge)))
            (start (and configuration 
@@ -388,11 +403,6 @@
 (defun parse-tsdb-sentence (user-input &optional trace)
   (multiple-value-prog1
       (let ((*dag-recycling-p* (null trace)))
-        (when *dag-recycling-p*
-          (let ((reset (and (find-symbol "RESET-POOLS")
-                            (fboundp (find-symbol "RESET-POOLS"))
-                            (symbol-function (find-symbol "RESET-POOLS")))))
-            (when reset (funcall reset))))
         (parse user-input trace))))
 
 
@@ -533,6 +543,10 @@
 ;;;
 
 (defun release-temporary-storage ()
+  (invalidate-marks)
+  (invalidate-visit-marks)
+  #+:recycling
+  (reset-pools :compressp t)
   (loop
       for i from 0 to (- *chart-limit* 1)
       for entry = (aref *chart* i 0)
@@ -541,22 +555,41 @@
         (loop
             for configuration in (chart-entry-configurations entry)
             for edge = (chart-configuration-edge configuration)
-            when (stringp (edge-rule edge)) do
-              (compress-dag (tdfs-indef (edge-dag edge)))))
+            for tdfs = #+:packing 
+                       (if *chart-packing-p* (edge-odag edge) (edge-dag edge))
+                       #-:packing
+                       (edge-dag edge)
+            for dag = (tdfs-indef tdfs)
+            unless (safe-dag-p dag) do
+              (compress-dag dag)))
   (loop 
       for edge in *morph-records* do
         (compress-dag (tdfs-indef (edge-dag edge))))
   (clear-chart)
+  (when *active-parsing-p* (clear-achart))
   (setf *cached-category-abbs* nil)
   (setf *parse-times* nil)
   (loop
       for rule in (get-matching-lex-rules nil)
-      for dag = (tdfs-indef (rule-full-fs rule)) do
+      for tdfs = #+:restrict
+                 (if *chart-packing-p* (rule-rtdfs rule) (rule-full-fs rule))
+                 #-:restrict
+                 (rule-full-fs rule)
+      for dag = (tdfs-indef tdfs) do
         (compress-dag dag))
   (loop
       for rule in (get-matching-rules nil nil)
       for dag = (tdfs-indef (rule-full-fs rule)) do
-        (compress-dag dag)))
+        (compress-dag dag))
+  (if (listp *start-symbol*)
+    (loop
+        for root in *start-symbol* 
+        for tdfs = (get-tdfs-given-id root)
+        for dag = (and tdfs (tdfs-indef tdfs))
+        when (dag-p dag) do (compress-dag dag))
+    (let* ((tdfs (get-tdfs-given-id *start-symbol*))
+           (dag (and tdfs (tdfs-indef tdfs))))
+      (when (dag-p dag) (compress-dag dag)))))
                   
 ;;;
 ;;; interface functions for reconstruction of derivations (in UDF --- unified

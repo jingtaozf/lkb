@@ -155,13 +155,23 @@ proc showgraph {FileName {Toplevel ""} {output "unknown"} {Title ""} {scatterp 0
     # activate legend entries: pop-up menu for interactive colour selection
     #
     set colours {white yellow orange red blue green black};
+    set symbols {square circle diamond plus cross splus scross triangle void};
     foreach item [$g element names] {
-      set menu [menu $g.$item -font {Helvetica 9} -tearoff no];
+      set cmenu [menu ${g}.${item}_colour -font {Helvetica 9} -tearoff no];
       foreach colour $colours {
-        $menu add command -label $colour -foreground $colour \
+        $cmenu add command -label $colour -foreground $colour \
           -command [list $g element config $item -color $colour]
       }; # foreach
-      $g legend bind $item <Button> [list tk_popup $menu %X %Y];
+      set smenu [menu ${g}.${item}_symbol -font {Helvetica 9} -tearoff no];
+      foreach symbol $symbols {
+        $smenu add command -label $symbol -foreground black \
+          -command [list $g element config $item -symbol $symbol]
+      }; # foreach
+      $g legend bind $item <Button-1> [list tk_popup $cmenu %X %Y];
+      $g legend bind $item <Button-2> [list tk_popup $smenu %X %Y];
+      if {$item == "overlay"} {
+        $g legend bind $item <Button-3> overlay_input;
+      }; # if
     }; # foreach
 
 
@@ -294,6 +304,14 @@ proc make_graph {graph} {
       $vname set $data($index)
     }
 
+    regsub -all "\\." $graph "_" name
+    set xname "v${name}_x";
+    set overlay "v${name}_o";
+    uplevel #0 vector create ${overlay};
+    $graph element create overlay -xdata $xname -ydata $overlay \
+      -label overlay -symbol diamond -pixel 3 -linewidth 1 \
+      -color grey -fill defcolor -outline defcolor;
+
     ## Create new elements in 'graph'
 
     foreach index [array names element] {
@@ -384,6 +402,31 @@ proc process_options {optionlist optionarrayname} {
 }
 
 
+proc plot_overlay {graph {function {pow($x,2)}}} {
+
+  regsub -all "\\." $graph "_" name;
+  set xname "v${name}_x";
+  upvar #0 $xname xarray;
+  if {[info exists xarray]} {
+    set length [$xname length];
+    set yname "v${name}_o";
+    set i 0;
+    if {$function != ""} {
+      foreach x [$xname range 0 end] {
+        lappend yvalues [expr $function];
+      }; # for
+      $yname set $yvalues;
+    } else {
+      $yname set "";
+    }; # else
+    $graph element config overlay -xdata $xname -ydata $yname \
+      -label [expr {$function == "" ? "overlay" : "$function"}] \
+      -color [expr {$function == "" ? "gray" : "red"}];
+    adjust_graph_view $graph 2;
+  }; # if
+}; # plot_overlay()
+
+
 proc local_balloon {balloon action {text ""}} {
 
   global globals;
@@ -394,6 +437,7 @@ proc local_balloon {balloon action {text ""}} {
     $balloon config -text $text;
   }; # else
 }; # local_balloon()
+
 
 
 proc find_graph_point {action graph button x y balloon} {
@@ -421,40 +465,15 @@ proc find_graph_point {action graph button x y balloon} {
 
 }; # find_graph_point()
 
-proc adjust_graph_view {graph button x y} {
+proc adjust_graph_view {graph button {x ""} {y ""}} {
 
-  if {[$graph legend get @$x,$y] != ""} {
-    return;
-  }; # if
-
-  set x [$graph axis invtransform x $x];
-  set y [$graph axis invtransform y $y];
-  set foo [$graph axis limits x];
-  set xmin [lindex $foo 0];
-  set xmax [lindex $foo 1];
-  set foo [$graph axis limits y];
-  set ymin [lindex $foo 0];
-  set ymax [lindex $foo 1];
-
-  if {$button == 1} {
-    if {$x > $xmin} {
-      $graph axis config x -min $x;
-    } else {
-      $graph axis config x -min {};
-    }; # else
-    if {$y > $ymin} {
-      $graph axis config y -min $y;
-    } else {
-      $graph axis config y -min {};
-    }; # else
-  } elseif {$button == 2} {
+  if {$button == 2} {
     $graph axis config x -min {} -max {};
     $graph axis config y -min {} -max {};
     #
     # kludge (2-nov-98): adjust y axis to leave extra space at the bottom and
     # position copyright notice; needs improvement ...
     #
-    $graph axis config y -min {} -max {};
     set foo [$graph axis limits y];
     set xmin [lindex $foo 0];
     set xmax [lindex $foo 1];
@@ -464,17 +483,42 @@ proc adjust_graph_view {graph button x y} {
       set pad [expr ($xmax - $xmin) * 0.05];
     }; # else
     $graph axis config y -min [expr $xmin - $pad] -max $xmax;
-  } elseif {$button == 3} {
-    if {$x < $xmax} {
-      $graph axis config x -max $x;
-    } else {
-      $graph axis config x -max {};
-    }; # else
-    if {$y < $ymax} {
-      $graph axis config y -max $y;
-    } else {
-      $graph axis config y -max {};
-    }; # else
-  }; # if
+  } else {
+    if {[$graph legend get @$x,$y] != ""} {
+      return;
+    }; # if
 
+    set x [$graph axis invtransform x $x];
+    set y [$graph axis invtransform y $y];
+    set foo [$graph axis limits x];
+    set xmin [lindex $foo 0];
+    set xmax [lindex $foo 1];
+    set foo [$graph axis limits y];
+    set ymin [lindex $foo 0];
+    set ymax [lindex $foo 1];
+
+    if {$button == 1} {
+      if {$x > $xmin} {
+        $graph axis config x -min $x;
+      } else {
+        $graph axis config x -min {};
+      }; # else
+      if {$y > $ymin} {
+        $graph axis config y -min $y;
+      } else {
+        $graph axis config y -min {};
+      }; # else
+    } elseif {$button == 3} {
+      if {$x < $xmax} {
+        $graph axis config x -max $x;
+      } else {
+        $graph axis config x -max {};
+      }; # else
+      if {$y < $ymax} {
+        $graph axis config y -max $y;
+      } else {
+        $graph axis config y -max {};
+      }; # else
+    }; # if
+  }; # else
 }; # adjust_graph_view()

@@ -54,21 +54,30 @@
   (let* ((root (cond
                 ((stringp derivation) derivation)
                 ((symbolp derivation) (symbol-name derivation))
-                ((consp derivation) (derivation-root derivation))
+                ((consp derivation) 
+                 (let ((root (derivation-root derivation)))
+                   (if (symbolp root) 
+                     (symbol-name root)
+                     root)))
                 (t 
                  (error 
                   "inflectional-rule-p(): invalid call `~s'." 
                   derivation))))
          (break (max 0 (- (length root) (length *inflectional-rule-suffix*)))))
-    (when (string-equal
-             root *inflectional-rule-suffix* :start1 break)
+    (when (string-equal root *inflectional-rule-suffix* :start1 break)
       (subseq root 0 break))))
 
 (defun derivation-equal (gold blue)
   (cond
    ((and (null gold) (null blue)) t)
-   ((and (stringp gold) (stringp blue))
-    (string-equal gold blue))
+   ((stringp gold)
+    (cond 
+     ((stringp blue) (string-equal gold blue))
+     ((symbolp blue) (string-equal gold (symbol-name blue)))))
+   ((symbolp gold)
+    (cond 
+     ((symbolp blue) (eq gold blue))
+     ((stringp blue) (string-equal (symbol-name gold) blue))))
    ((or (null (derivation-daughters gold)) (null (derivation-daughters blue)))
     (if *derivations-ignore-leafs-p*
       t
