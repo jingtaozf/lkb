@@ -20,5 +20,6 @@
 ;;;
 
 (((:path . "enkel") (:content . "Basic Development Test Suite"))
+ ((:path . "mrs") (:content . "Norwegian MRS Test Suite"))
  ((:path . "bokmaal") (:content . "NorGram Development Test Suite"))
  ((:path . "tur") (:content . "First LOGON Development Corpus")))
