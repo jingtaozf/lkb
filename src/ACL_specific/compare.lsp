@@ -1185,7 +1185,7 @@
         (setf (clim:pointer-cursor pointer) cursor))))
    ((clim:sheetp frame)
     (setf (clim:sheet-pointer-cursor frame) cursor)
-    #+:allegro
+    #+(and :allegro (not :mswindows))
     (loop
         for child in (clim:sheet-children frame)
         ;;
