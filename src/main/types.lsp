@@ -508,6 +508,12 @@
                (mapcar #'maximal-type-of features))))
       
 
+;; Utility function
+
+(defun type-signature (type-entry)
+  (let ((tc (tdfs-indef (type-tdfs type-entry))))
+    (get-top-features-and-values tc)))
+               
 
 ;; Remove obsolete pointers from type constraints so that the garbage
 ;; collector can purge the structures they point to.
