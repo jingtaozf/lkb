@@ -151,10 +151,10 @@ inflected-lexeme &
 ;;;inflected-lexeme and most AUX's have been moved beyond that lexically
 ;;;to account for their subject-raising effects by sais hack.
 
+#|
 negation-lexical-rule :=
-inflected-lexeme &
-[ ORTH #orth,
-  SS.LOC.CAT [ HEAD [ AUX true,
+inflected-lexeme+amalg &
+[ SS.LOC.CAT [ HEAD [ AUX true,
                       NEG true,
                       INV false ],
                SPR < >,
@@ -162,8 +162,7 @@ inflected-lexeme &
                COMPS < neg-ss & #neg & [ LOC.CAT.HEAD adv & [FORM f_not ] ], 
                        #2 > ],
   ARG-ST < #1, #neg, #2 >, 
-  DTRS < inflected-lexeme & [ NEEDS-AFFIX false,
-                              ORTH #orth,
+  DTRS < non-infl-vb-comp & [ NEEDS-AFFIX false,
                               SS.LOC.CAT [ HEAD [ AUX true,
                                                   NEG false ],
                                            SPR < >,
@@ -172,9 +171,8 @@ inflected-lexeme &
                               ARG-ST < #1, #2 > ] > ].
 
 negation-lexical-rule-2 :=
-inflected-lexeme &
-[ ORTH #orth,
-  SS.LOC.CAT [ HEAD [ AUX true,
+inflected-lexeme+amalg &
+[ SS.LOC.CAT [ HEAD [ AUX true,
                       NEG true,
                       INV false ],
                SPR < >,
@@ -182,15 +180,14 @@ inflected-lexeme &
                COMPS < #neg & neg-ss & [ LOC.CAT.HEAD adv & [FORM f_not ] ], 
                        #2, #3 > ],
   ARG-ST < #1, #neg, #2, #3 >,
-  DTRS < inflected-lexeme & [ NEEDS-AFFIX false,
-                      ORTH #orth,
-                      SS.LOC.CAT [ HEAD [ AUX true,
-                                          NEG false ],
-                                   SPR < >,
-                                   SUBJ < #1 >,
-                                   COMPS < #2, #3 > ],
-                      ARG-ST < #1, #2, #3 > ] > ].
-
+  DTRS < non-infl-vb-comp & [ NEEDS-AFFIX false,
+                              SS.LOC.CAT [ HEAD [ AUX true,
+                                                  NEG false ],
+                                           SPR < >,
+                                           SUBJ < #1 >,
+                                           COMPS < #2, #3 > ],
+                              ARG-ST < #1, #2, #3 > ] > ].
+|#
 
 ;;; <<< >>> Argument Realization Principle
 

@@ -52,7 +52,8 @@ question := prop-constr &
   REPRISABLE /l true ].
 
 illoc-rel := rel &
-[ MSG-ARG message ].
+[ MSG-ARG message,
+  ILLOCUTIONER index ].
 
 assert-rel := illoc-rel &
 [ MSG-ARG proposition ].

@@ -12,7 +12,7 @@
            (lkb-pathname (parent-directory) "lxm-types.tdl")
            (lkb-pathname (parent-directory) "semantics.tdl")
 	   (lkb-pathname (parent-directory) "rel.tdl")))
-(load-irregular-spellings (lkb-pathname (parent-directory) "irregs.lisp"))
+(load-irregular-spellings (lkb-pathname (this-directory) "irregs.lisp"))
 (read-morph-file-aux 
      (lkb-pathname (parent-directory) "inflr.tdl"))
 (read-tdl-lex-rule-file-aux (lkb-pathname (parent-directory) "lrules.tdl"))

@@ -103,6 +103,13 @@ rep-int-cl-2 := rep-int-cl &
            P-STORE <! !> ],
   HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
 
+rep-int-cl-3 := rep-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ], 
+                          #2 & [ FOC true ], 
+                          #3 & [ FOC true] !>,
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+
 ;;;JTB 07/14/01 - Added this for the base case as above.  Again, hope
 ;;;we don't overgenerate.
 
@@ -118,6 +125,13 @@ dir-is-int-cl-2 := dir-is-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ], #2 & [ FOC true ] !>,
            P-STORE <! !> ],
   HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
+
+dir-is-int-cl-3 := dir-is-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1 & [ FOC true ], 
+                          #2 & [ FOC true ],
+                          #3 & [ FOC true ] !>,
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
 su-wh-int-cl-1 := su-wh-int-cl &
 [ SS.LOC [ CONT.PARAMS <! #1 !>,
@@ -204,67 +218,65 @@ ns-wh-int-cl-5 := ns-wh-int-cl &
 ;;;lists) gets a crack at being first on PARAMS, but the order of the
 ;;;remaining two shouldn't make a difference.
 
+ns-wh-int-cl-6 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1, #2, #3 !>,
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
+ns-wh-int-cl-7 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #2, #1, #3 !>,
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;ns-wh-int-cl-6 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #1, #2, #3 !>,
-;           P-STORE <! !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+ns-wh-int-cl-8 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #3, #1, #2 !>,
+           P-STORE <! !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;ns-wh-int-cl-7 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #2, #1, #3 !>,
-;           P-STORE <! !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+ns-wh-int-cl-9 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1, #2 !>,
+           P-STORE <! #3 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;ns-wh-int-cl-8 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #3, #1, #2 !>,
-;           P-STORE <! !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+ns-wh-int-cl-10 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #2, #1 !>,
+           P-STORE <! #3  !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;ns-wh-int-cl-9 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #1, #2 !>,
-;           P-STORE <! #3 !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+ns-wh-int-cl-11 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #3, #1  !>,
+           P-STORE <! #2 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;ns-wh-int-cl-10 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #2, #1 !>,
-;           P-STORE <! #3  !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+ns-wh-int-cl-12 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1, #3 !>,
+           P-STORE <! #2 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;ns-wh-int-cl-11 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #3, #1  !>,
-;           P-STORE <! #2 !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+ns-wh-int-cl-13 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #2, #3 !>,
+           P-STORE <! #1 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;ns-wh-int-cl-12 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #1, #3 !>,
-;           P-STORE <! #2 !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+ns-wh-int-cl-14 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #3, #2 !>,
+           P-STORE <! #1 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;ns-wh-int-cl-13 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #2, #3 !>,
-;           P-STORE <! #1 !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+ns-wh-int-cl-15 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #1 !>,
+           P-STORE <! #2, #3 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;ns-wh-int-cl-14 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #3, #2 !>,
-;           P-STORE <! #1 !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+ns-wh-int-cl-16 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #2 !>,
+           P-STORE <! #1, #3 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
-;ns-wh-int-cl-15 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #1 !>,
-;           P-STORE <! #2, #3 !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
-
-;ns-wh-int-cl-16 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #2 !>,
-;           P-STORE <! #1, #3 !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
-
-;ns-wh-int-cl-17 := ns-wh-int-cl &
-;[ SS.LOC [ CONT.PARAMS <! #3 !>,
-;           P-STORE <! #1, #2 !> ],
-;  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
+ns-wh-int-cl-17 := ns-wh-int-cl &
+[ SS.LOC [ CONT.PARAMS <! #3 !>,
+           P-STORE <! #1, #2 !> ],
+  HD-DTR.SS.LOC.P-STORE <! #1, #2, #3 !> ].
 
 
 ;;; CCB - the second item from the P-STORE needs to be FOC in this case,
@@ -272,3 +284,9 @@ ns-wh-int-cl-5 := ns-wh-int-cl &
 ;[ SS.LOC [ CONT.PARAMS <! #2 !>,
 ;           P-STORE <! #1 !> ],
 ;  HD-DTR.SS.LOC.P-STORE <! #1, #2 !> ].
+
+
+
+
+
+

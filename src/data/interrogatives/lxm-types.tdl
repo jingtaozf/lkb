@@ -73,16 +73,18 @@ fin_copula := copula &
   ARG-ST < [ LOC.CAT.HEAD.CASE nom ], synsem > ].
 
 do-lexeme := non-infl-vb-comp &
-[ SS.LOC.CAT [ HEAD [ PRED false ],
+[ SS.LOC.CAT [ HEAD verb & [ PRED false ],
                SUBJ < [ LOC.CAT.HEAD.CASE nom ] >,
                COMPS < [ LOC.CAT [ HEAD.FORM base,
                                    COMPS < > ] ] > ],
   DTRS < auxv-lxm > ].
 
 do-lxm-unfoc := do-lexeme &
-[ SS.LOC.CAT.HEAD.AUX true ].
+[ SS.LOC.CAT.HEAD [ AUX true,
+                    FORM fin ] ].
 
-do-lxm-foc := do-lexeme.
+do-lxm-foc := do-lexeme &
+[ SS.LOC.CAT.HEAD.FORM fin ].
 
 v-lxm := lexeme & 
  [ SS [ LOC [ CAT [ HEAD verb & [ NEG false,
@@ -457,7 +459,8 @@ wh-n-lxm:=wh-lxm &
                            AGR ref-index,
                            MOD < > ],
   SS.LOC.CONT [ INDEX #index,
-                RESTR < [ PROP.SOA.NUCL.ARG #index ] > ] ].
+                RESTR < [ PROP.SOA.NUCL.ARG #index ] > ],
+  SS.LOC.Q-STORE <! !> ].
 
 wh-det-lxm := det-lxm &
 [ SS.LOC [ CAT.HEAD.SPEC /l [ INDEX #index,
@@ -473,7 +476,7 @@ wh-poss-det-lxm := det-lxm &
                                  RESTR #restr1 ] ] ],
              CONT param & [ INDEX #ind2, 
                             RESTR < [ PROP.SOA.NUCL person-rel &
-                                       [ ARG #index ] ] > ],
+                                       [ ARG #ind2 ] ] > ],
              Q-STORE <! the-rel & [ INDEX #index,
                                     RESTR [ FIRST.PROP.SOA.NUCL poss-rel &
                                              [ POSS-ER #ind2,

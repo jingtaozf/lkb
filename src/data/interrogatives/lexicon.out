@@ -1339,6 +1339,10 @@ council_1 := cn-lxm &
 [ ORTH <! "council" !>,
   SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_council ] > ].
 
+cousin_1 := cn-lxm &
+[ ORTH <! "cousin" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_cousin ] > ].
+
 customer_1 := cn-lxm &
 [ ORTH <! "customer" !>,
   SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_customer ] > ].
@@ -1911,3 +1915,22 @@ worm_1 := cn-lxm &
 [ ORTH <! "worm" !>,
   SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_worm ] > ].
 
+brother_1 := cn-lxm &
+[ ORTH <! "brother" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_brother ] > ].
+
+father_1 := cn-lxm &
+[ ORTH <! "father" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_father ] > ].
+
+sister_1 := cn-lxm &
+[ ORTH <! "sister" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_sister ] > ].
+
+aunt_1 := cn-lxm &
+[ ORTH <! "aunt" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_aunt ] > ].
+
+uncle_1 := cn-lxm &
+[ ORTH <! "uncle" !>,
+  SS.LOC.CONT.RESTR < [ PROP.SOA.NUCL r_uncle ] > ].

@@ -174,7 +174,7 @@ inflected-lexeme+amalg := lex-sign &
   SS /l #ss,
   ARG-ST #arg,
   DTRS < [ ORTH #orth,
-           SS /l #ss, 
+           SS /l #ss,
            ARG-ST #arg ] > ].
 
 word := lex-sign & expression &
@@ -247,7 +247,7 @@ nominal-cat := topic &
 ;;;determiners.  Can they?  I'm going to quietly remove this and put it
 ;;;in later if need be.
 
-noun := nominal-cat & mod-type &
+noun := nominal-cat & mod-type & spec-type & 
  [ CASE case,
    MOD /l < > ].
 
@@ -309,9 +309,16 @@ neut := gend.
 ;             CONT message ],
 ;       WH wh-none ] ].
 
+;;;JTB 7/30/01 Added the SPR constraint, mainly because I think the
+;;;default inheritence was getting so busted up in some maximal types
+;;;that some things that should have been inherited weren't.  Bug in
+;;;defaulting?  Talk to Ann.  This hard constraint ensures that
+;;;clauses never take specifiers.
+
 ;;; CCB - Causing problems with the negation lexical rule.
 clause := phrase &
-[ SS [ LOC [ CAT.SUBJ list-of-noncanon-ss,
+[ SS [ LOC [ 
+             CAT.SUBJ list-of-noncanon-ss,
              CONT message ],
        WH <! !> ] ].
 

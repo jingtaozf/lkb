@@ -99,7 +99,6 @@ inv-excl-cl := excl-cl & sai-ph-1 & ternary-construction &
                   CAT.HEAD.IC true, 
                   CONT #1 ] ].
 
-
 ;;; The SLASH value on inverted declarative clauses like "are you
 ;;;reading" from the sentence "Whose book are you reading?" is non-empty.
 
@@ -130,13 +129,13 @@ inv-decl-cl-2 := decl-cl & sai-ph-3 & binary-construction &
 
 ; wh-exclamative-clause (wh-excl-cl)
 wh-excl-cl := hd-fill-ph & excl-cl & binary-construction &
-[ SS.LOC [ CAT.HEAD.INV false,
+[ SS.LOC [ CAT #cat & [ HEAD.INV false ],
            CONT.PROP.SOA [ QUANTS [ LIST < #1 >,
                                     LAST #A ],
                            NUCL #2 ] ],
   HD-DTR.SS.LOC.CONT.SOA [ QUANTS [ LIST #A ],
                            NUCL #2 ],
-  DTRS < [ SS.WH <! #1 & quant-rel !> ], sign > ].
+  DTRS < [ SS.WH <! #1 & quant-rel !> ], sign & [ SS.LOC.CAT #cat ] > ].
 
 ;;; CCB - 5/22/00 should the subject-wh-int-cl really be getting the
 ;;;filler daughter's LOC value from the gap-ss SUBJ?  Or should it be
@@ -161,8 +160,9 @@ ns-wh-int-cl := wh-int-cl & binary-construction &
 ;;;must be true.  reprise-in-situ-interrogative-clause (rep-int-cl)
 
 rep-int-cl := is-int-cl & unary-construction &
-[ SS.LOC.CONT [PROP.SOA.NUCL.MSG-ARG #1,
-               REPRISABLE false],
+[ SS.LOC.CONT [ PROP.SOA.NUCL.MSG-ARG #1,
+                PROP.SOA.NUCL.ILLOCUTIONER prev-speaker,
+                REPRISABLE false ],
   HD-DTR.SS [LOC.CONT #1 & [REPRISABLE true],
              SLASH *e-list-of-locals* ]].
 

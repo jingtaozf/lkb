@@ -1,4 +1,5 @@
 #| I'm not longer treating the variation in auxilaries' forms as exections to the lexical rules; they're now all specified in the lexicon as inflected-lexemes.
+
 can 3RD-SING-VERB can
 would 3RD-SING-VERB would
 could 3RD-SING-VERB could
@@ -56,35 +57,31 @@ were_0 := fin_copula &
 ;;; <<< >>> Dummy subject "be".  This case is for sentences like
 ;;;"There was a unicorn in the garden." where there is non-referential.
 
+#|
 there_0 := n-lxm &
 [ ORTH <! "there" !>,
   SS.LOC.CAT.HEAD.AGR expl-there ].
-
 
 it_01 := n-lxm &
 [ ORTH <! "it" !>,
   SS.LOC.CAT.HEAD.AGR expl-it & [ PERNUM 3sg ] ].
 
-
 dummy-are_0 := inflected-lexeme &
 [ ORTH <! "are" !>,
   DTRS < dummy-auxv-lxm > ].
-
 
 dummy-is_0 := inflected-lexeme &
 [ ORTH <! "is" !>,
   DTRS < dummy-auxv-lxm > ].
 
-
 dummy-was_0 := inflected-lexeme &
 [ ORTH <! "was" !>,
   DTRS < dummy-auxv-lxm > ].
 
-
 dummy-were_0 := inflected-lexeme &
 [ ORTH <! "were" !>,
   DTRS < dummy-auxv-lxm > ].
-
+|#
 
 ;;; The Auxilary "do", including unfocused "do" and focused "dó".
 
@@ -123,6 +120,22 @@ unfocused-does_0 := do-lxm-unfoc &
 [ ORTH <! "does" !>,
   SS.LOC.CAT.HEAD.AUX true,
   SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR.PERNUM 3sg ] > ].
+
+doing_0 := do-lexeme &
+[ ORTH <! "doing" !>,
+  SS.LOC.CAT.HEAD.FORM prp ].
+
+done_0 := do-lexeme &
+[ ORTH <! "done" !>,
+  SS.LOC.CAT.HEAD.FORM pfp ].
+
+do_1 := do-lexeme &
+[ ORTH <! "do" !>,
+  SS.LOC.CAT.HEAD.FORM inf ].
+
+do_3 := do-lexeme &
+[ ORTH <! "do" !>,
+  SS.LOC.CAT.HEAD.FORM base ].
 
 ;;; CCB - Needs the idosyncratic infromation that not outscopes the
 ;;;content of won't's compliment.  See pg.24 of the English Aux paper.
