@@ -1,6 +1,8 @@
 (in-package :tsdb)
 
 (defvar *rasp-use-pos-tags-p* t)
+
+(defvar *rasp-loose-preprocessing-p* nil)
 
 (defun rasp-read-sentences (file)
   (loop
@@ -43,13 +45,14 @@
         for tag = (and break (subseq token (+ break 1)))
         while (and (stringp token) (not (string= token "")))
         unless (and form tag) do
-          (format
-           t
-           "extract-rasp-tokens(): ignoring invalid token `~a'.~%" token)
+	  (unless *rasp-loose-preprocessing-p*
+	    (format
+	     t
+	     "extract-rasp-tokens(): ignoring invalid token `~a'.~%" token))
         else collect (list form tag))))
 
 (defun rasp-preprocess (string 
-                        &key (format :plainp) (posp *ptb-use-pos-tags-p*))
+                        &key (format :plain) (posp *ptb-use-pos-tags-p*))
   (let ((length 0)
         (result nil))
     (loop
@@ -75,14 +78,19 @@
                    (incf id) i (incf i) form raw posp pos)
                   result)))
           (incf length))
-    (values (when result
-              (if (eq format :pos)
-                result
-                (format nil "~{~a~^ ~}" (nreverse result))))
+    (values (or 
+	     (when result
+	       (if (eq format :pos)
+		 (nreverse result)
+		 (format nil "~{~a~^ ~}" (nreverse result))))
+	     (and *rasp-loose-preprocessing-p* (not (eq format :pos)) string))
             length)))
 
 (defun rasp-preprocess-for-pet (string)
   (rasp-preprocess string :format :pet :posp t))
+
+(defun rasp-tag (string)
+  (rasp-preprocess string :format :pos))
 
 ;;;
 ;;; from here on, import support to read in a file of RASP parse trees and make

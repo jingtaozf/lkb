@@ -25,6 +25,12 @@
 
 (def-lkb-parameter *tree-display-threshold* 10)
 
+(def-lkb-parameter *tree-display-trees-width* 530)
+
+(def-lkb-parameter *tree-display-discriminants-width* 430)
+
+(def-lkb-parameter *tree-display-height* 630)
+
 ;;;
 ;;; switch to control auto-advance in update mode: set to non-nil to enable
 ;;; auto-save in updates; set to a (positive) number to cause that many seconds
@@ -197,7 +203,10 @@
   ;; extract (minimal) set of elementary properties to discriminate analyses
   ;;
   (setf (compare-frame-discriminants frame) 
-    (find-discriminants edges :mode (compare-frame-mode frame)))
+    (find-discriminants
+     edges
+     :mode (compare-frame-mode frame)
+     :tags (compare-frame-tags frame)))
   #+:allegro
   (when runp
     (format
@@ -346,6 +355,7 @@
   ((runp :initform 0 :accessor compare-frame-runp)
    (item :initform nil :accessor compare-frame-item)
    (input :initform nil :accessor compare-frame-input)
+   (tags :initform nil :accessor compare-frame-tags)
    (start :initform nil :accessor compare-frame-start)
    (end :initform nil :accessor compare-frame-end)
    (edges :initform nil :accessor compare-frame-edges)
@@ -401,7 +411,7 @@
 	  (clim:make-pane 'clim:application-pane
 			  :display-function 'draw-trees-window
 			  :text-cursor nil
-			  :width 530
+			  :width *tree-display-trees-width*
 			  :text-style (comparison-tree-font)
 			  :end-of-line-action :allow
 			  :end-of-page-action :allow
@@ -447,8 +457,8 @@
 	  (clim:make-pane 'clim:application-pane
 			  :display-function 'draw-discriminants-window
 			  :text-cursor nil
-			  :width 430
-			  :height 630
+			  :width *tree-display-discriminants-width*
+			  :height *tree-display-height*
 			  :text-style (comparison-discriminant-font)
 			  :end-of-line-action :allow
 			  :end-of-page-action :allow
@@ -600,14 +610,14 @@
                (clim:formatting-cell (stream :align-x :center :min-width 950)
                  (format
                   stream
-                  "~:[~*~;(~a)  ~]~a [~a : ~a~@[ @ ~a~]]"
+                  "~:[~*~;(~a) ~][~a : ~a~@[ @ ~a~]]  ~a"
                   (compare-frame-item frame) (compare-frame-item frame)
-                  (compare-frame-input frame)
                   (length (compare-frame-in frame)) 
                   (length (compare-frame-out frame))
                   (let ((foo (compare-frame-confidence frame)))
                     (when (and (integerp foo) (>= foo 0) (<= foo 3))
-                      (aref #("zero" "low" "fair" "high") foo)))))))
+                      (aref #("zero" "low" "fair" "high") foo)))
+                  (compare-frame-input frame)))))
           (when (= (length (compare-frame-in frame)) 1)
             (recolor-record record clim:+blue+)
             (clim:replay record stream))

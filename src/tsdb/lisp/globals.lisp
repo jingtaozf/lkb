@@ -80,6 +80,8 @@
 
 (defparameter *tsdb-preprocessing-hook* nil)
 
+(defparameter *tsdb-tagging-hook* nil)
+
 (defparameter *tsdb-result-hook* "tsdb::result-hook")
 
 (defparameter *tsdb-trees-hook* nil)

@@ -23,10 +23,7 @@
 (defun find-discriminants (edges 
                            &key (mode *tree-discriminants-mode*)
                                 (blaze *tree-discriminants-blaze*)
-                                input)
-  #-:ntt
-  (declare (ignore blaze input))
-  
+                                tags)
   (let* ((n (if (edge-p (first edges)) 
               (+ (loop
                      for edge in edges
@@ -45,20 +42,21 @@
         do (extract-discriminants-from-edge edge edge :mode mode))
     ;;
     ;; in case we have a `blaze' (mapping to prime strong trees, according to
-    ;; what we have observed in earlier corpus exposure.
+    ;; what we have observed in earlier corpus exposure) attempt to prime the
+    ;; (lexical) discriminants that match the blaze, which can be a positive
+    ;; or negative match.
     ;;
-    #+:ntt
     (when blaze
       (loop
-          with tags = (tsdb::rasp-preprocess input :format :pos)
           with n = (length tags)
           for discriminant in %discriminants%
           for start = (discriminant-start discriminant)
           for end = (discriminant-end discriminant)
           for tag = (when (and (numberp start) (numberp end)
-                               (= (+ start 1) end) (< end n))
-                      (aref tags start))
-          do (blaze-discriminant discriminant tag blaze)))
+                               (= (+ start 1) end) (< end n)
+			       (eq (discriminant-type discriminant) :type))
+                      (nth start tags))
+          when tag do (blaze-discriminant discriminant tag blaze)))
     ;;
     ;; then, filter out discriminants that either (i) all parses have or (ii) 
     ;; are implied by other discriminants, based on `size' (i.e. span), for
@@ -71,7 +69,8 @@
           for type = (discriminant-type foo)
           for in = (discriminant-in foo)
           for match = (or (= (length in) nparses)
-                          (when (eq type :constituent)
+                          (when (and (eq type :constituent)
+				     (null (discriminant-toggle foo)))
                             (loop
                                 with span = (- (discriminant-end foo)
                                                (discriminant-start foo))
@@ -308,25 +307,35 @@
   (let ((toggle (discriminant-toggle discriminant)))
     (cond ((eq toggle t) "+") ((null toggle) "-") (t "?"))))
 
-(defun read-blaze (file)
+(defun read-blaze (&optional file)
   (setf *tree-discriminants-blaze* nil)
-  (when (probe-file file)
-    (with-open-file (stream file :direction :input)
-      (loop
-          with blaze = (make-hash-table :test #'equal)
-          with *package* = (find-package :lkb)
-          for form = (ignore-errors (read stream nil nil))
-          while form do
-            (let ((word (first form))
-                  (tag (second form))
-                  (types (rest (rest form))))
-              ;;
-              ;; _fix_me_
-              ;; use .word. information for lexicalisation, at some point.
-              ;;                                                (5-feb-04; oe)
-              (declare (ignore word))
-              (setf (gethash tag blaze) types))
-          finally (setf *tree-discriminants-blaze* blaze)))))
+  (when file
+   (if (probe-file file)
+     (with-open-file (stream file :direction :input)
+       (loop
+	   with blaze = (make-hash-table :test #'equal)
+	   with *package* = (find-package :lkb)
+	   for form = (ignore-errors (read stream nil nil))
+	   while form do
+	     (let ((word (first form))
+		   (tag (second form))
+		   (types (rest (rest form))))
+	       ;;
+	       ;; _fix_me_
+	       ;; use .word. information for lexicalisation, at some point.
+	       ;;                                                (5-feb-04; oe)
+	       (declare (ignore word))
+	       (setf (gethash tag blaze) types))
+	   finally
+	     (format
+	      (or #+:allegro excl:*initial-terminal-io* t)
+	      "read-blaze(): read ~d blaze~p from `~a'.~%" 
+	      (hash-table-count blaze) (hash-table-count blaze) file)
+	     (setf *tree-discriminants-blaze* blaze)))
+     (format
+      (or #+:allegro excl:*initial-terminal-io* t)
+      "read-blaze(): unable to open `~a'.~%" 
+      file))))
 
 (defun blaze-discriminant (discriminant tag blaze)
   (let* ((key (intern (string-upcase (discriminant-key discriminant)) :lkb))
@@ -334,20 +343,26 @@
          (bucket (gethash tag blaze)))
     (if (null key)
       (format
-       excl:*initial-terminal-io*
+       (or #+:allegro excl:*initial-terminal-io* t)
        "blaze-discriminant(): ignoring discriminant with invalid key `~a'.~%"
        (discriminant-key discriminant))
       (loop
-          for (type . confidence) in bucket
+          for type = (pop bucket)
+	  for confidence = (pop bucket)
+	  while (and type confidence)
           when (and (is-valid-type type) (numberp confidence)
-                    (subtype-p key type)) do
-            (format
-             excl:*initial-terminal-io*
-             "blaze-discriminant(): [~2,'0d ~2,'0d] ~a ~a | ~a~@[ `~a'~]~%"
-             (discriminant-start discriminant) (discriminant-end discriminant)
+                    (or (eq key type) (subtype-p key type))) do
+            (unless (zerop confidence)
+               (setf (discriminant-toggle discriminant) 
+                 (> confidence 0.0)))
+	    (format
+	     (or #+:allegro excl:*initial-terminal-io* t)
+             "[~a] blaze-discriminant(): ~
+              [~2,'0d ~2,'0d] ~a ~a | ~a~@[ `~a'~]~%"
+             (current-time :long :short)
+	     (discriminant-start discriminant) (discriminant-end discriminant)
              (discriminant-state-as-string discriminant)
              (discriminant-toggle-as-string discriminant)
-             (discriminant-key discriminant) (discriminant-value discriminant)
-             (unless (zerop confidence)
-               (setf (discriminant-state discriminant) 
-                 (> confidence 0.0))))))))
+             (discriminant-key discriminant) 
+	     (discriminant-value discriminant))
+	    (return)))))

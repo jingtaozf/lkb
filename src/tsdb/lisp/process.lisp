@@ -690,7 +690,12 @@
                      ((and (cpu-p cpu) (cpu-preprocessor cpu))
                       (call-hook (cpu-preprocessor cpu) i-input))
                      (*tsdb-preprocessing-hook*
-                      (call-hook *tsdb-preprocessing-hook* i-input)))))
+                      (call-hook *tsdb-preprocessing-hook* i-input))))
+	   (tags (cond
+		  ((and (cpu-p cpu) (cpu-tagger cpu))
+		   (call-hook (cpu-tagger cpu) i-input))
+		  (*tsdb-tagging-hook*
+		   (call-hook *tsdb-tagging-hook* i-input)))))
 
       (cond 
        ((and o-ignore (tsdb-ignore-p o-ignore))
@@ -713,8 +718,8 @@
                             (floor (* *tsdb-edge-factor* o-edges))
                             *tsdb-maximal-number-of-edges*))))
           (append 
-           (pairlis '(:run-id :parse-id :gc :edges :o-input :p-input) 
-                    (list run-id parse-id gc edges o-input p-input)) 
+           (pairlis '(:run-id :parse-id :gc :edges :o-input :p-input :tags) 
+                    (list run-id parse-id gc edges o-input p-input tags)) 
            item)))))))
 
 (defun print-item (item &key (stream *tsdb-io*) result interactive)
@@ -1313,6 +1318,11 @@
 
 (defun call-hook (hook &rest arguments)
   (when hook
+    ;;
+    ;; _fix_me_
+    ;; work out whether to use funcall() or apply and then call through to 
+    ;; call-raw-hook().                                    (francis; 6-feb-04)
+    ;;
     (let* ((hook (typecase hook
                    (null nil)
                    (function hook)
@@ -1324,6 +1334,16 @@
         (null nil)
         (string result)
         (t (write-to-string result :escape t))))))
+
+(defun call-raw-hook (hook &rest arguments)
+  (when hook
+    (let* ((hook (typecase hook
+                   (null nil)
+                   (function hook)
+                   (symbol (and (fboundp hook) (symbol-function hook)))
+                   (string (ignore-errors 
+                            (symbol-function (read-from-string hook)))))))
+      (when hook (ignore-errors (apply hook arguments))))))
 
 (defun call-safe-hook (hook &rest arguments)
   (when hook

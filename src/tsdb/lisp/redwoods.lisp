@@ -208,9 +208,10 @@
            (condition (format nil "i-id = ~a" i-id))
            (items (analyze 
                    data :thorough '(:derivation :mrs) 
-                   :commentp t :condition condition))
+                   :commentp t :taggingp t :condition condition))
            (item (and (null (rest items)) (first items)))
            (input (or (get-field :o-input item) (get-field :i-input item)))
+	   (tags (get-field :tags item))
            (i-id (get-field :i-id item))
            (i-length (get-field :i-length item))
            (i-comment (get-field :i-comment item))
@@ -480,6 +481,7 @@
       
       (setf (lkb::compare-frame-edges frame) nil)
       (setf (lkb::compare-frame-input frame) input)
+      (setf (lkb::compare-frame-tags frame) tags)
       (setf (lkb::compare-frame-item frame) i-id)
       (setf (lkb::compare-frame-start frame) start)
       (setf (lkb::compare-frame-end frame) end)

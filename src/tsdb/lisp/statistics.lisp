@@ -264,7 +264,8 @@
 (defun analyze (data 
                 &key condition meter message thorough trees extras 
                      (readerp t) filter
-                     score gold commentp sloppyp scorep)
+                     score gold taggingp
+		     commentp sloppyp scorep)
 
   (declare (optimize (speed 3) (safety 0) (space 0)))
 
@@ -354,6 +355,15 @@
                               (when commentp '(:string)))
                              "item" condition data 
                              :meter imeter :sort :i-id))
+	       (item (if taggingp
+                       (loop
+                           for foo in item
+                           for i-input = (get-field :i-input foo)
+                           for tags = (call-raw-hook 
+                                       *tsdb-tagging-hook* i-input)
+                           when tags do (nconc foo (acons :tags tags nil))
+                           finally (return item))
+		       item))
                (results (when thorough
                           (select (append '("parse-id" "result-id")
                                           (when (consp thorough)

@@ -38,7 +38,7 @@
 (defstruct cpu 
   host spawn options 
   architecture class task threshold name grammar template
-  preprocessor reader
+  preprocessor tagger reader
   create complete)
 
 (defstruct client tid cpu task protocol form status load)
