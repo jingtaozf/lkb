@@ -3,7 +3,7 @@
 (in-package :common-lisp-user)
 
 (defpackage :lkb
-  (:use :common-lisp :make)
+  (:use :common-lisp :make #+mcl :ccl)
   (:export 
    "DO-PARSE-TTY"))          
   
