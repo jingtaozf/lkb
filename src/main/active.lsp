@@ -849,7 +849,7 @@
         (format
          t
          "~&unpack-edge!(): ignoring <~d> (frozen for <~d>)~%"
-         (edge-id  edge) (edge-frozen edge))
+         (edge-id edge) (edge-frozen edge))
         nil)
        ((and (null insidep) (or (edge-packed edge) (edge-equivalent edge)))
         (nconc (unpack-edge! id edge t)

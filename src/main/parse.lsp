@@ -322,6 +322,7 @@ Setting *first-only-p* to nil")
 	(values *executed-tasks* *successful-tasks* 
                 *contemplated-tasks* *filtered-tasks*))))
 
+
 (defun add-morphs-to-morphs (user-input)
    (let ((current 0))
       (dolist (base-word user-input)
@@ -348,8 +349,8 @@ Setting *first-only-p* to nil")
            (setf current new)))))
 
 (defun add-words-to-chart (f)
-   (let ((current 0)
-         (to-be-accounted-for (make-array (list *chart-limit*) 
+  (let ((current 0)
+        (to-be-accounted-for (make-array (list *chart-limit*) 
                                           :initial-element nil)))
      ;; to-be-accounted for is needed because we cannot tell that a word is
      ;; impossible until after the whole sentence has been processed because
@@ -440,7 +441,7 @@ Setting *first-only-p* to nil")
 				(mhistory-new-spelling (car history)))))
 
 (defun get-senses (stem-string)
-  (let* (;;(*safe-not-to-copy-p* nil)
+  (let* (#+:ignore (*safe-not-to-copy-p* nil)
          (entries (get-unexpanded-lex-entry stem-string)))
     (for entry in entries
          filter
@@ -901,7 +902,7 @@ Setting *first-only-p* to nil")
 	  (cdr (rule-order rule))))
        (n -1)
        (new-orth-fs (when nu-orth
-		      (get-orth-tdfs nu-orth))))
+		      (get-orth-tdfs nu-orth nil))))
     ;; shouldn't strictly do this here because we may not need it but
     ;; otherwise we get a nested unification context error - cache the values
     ;; for a word, so it's not reconstructed only wasted if the morphology is
@@ -987,8 +988,8 @@ Setting *first-only-p* to nil")
       (make-tdfs :indef indef-dag :tail tail)))
     #+:powerpc (incf hh (CCL::%HEAP-BYTES-ALLOCATED))))
 
-(defun get-orth-tdfs (str)
-  (or (cdr (assoc str *cached-orth-str-list* :test #'equal))
+(defun get-orth-tdfs (str &optional (cachedp t))
+  (or (and cachedp (cdr (assoc str *cached-orth-str-list* :test #'equal)))
       (let ((new-orth-tdfs (make-orth-tdfs str)))
         (push (cons str new-orth-tdfs) *cached-orth-str-list*)
         new-orth-tdfs)))
