@@ -45,7 +45,8 @@
         (format t "~%Reading in ~Arules file ~A" 
                 (if lexical "lexical " "")
                 (pathname-name file-name))
-        (read-tdl-rule-stream istream lexical))))
+        (read-tdl-rule-stream istream lexical)))
+   (build-rule-filter))
 
 
 (defun read-tdl-rule-stream (istream lexical) 
