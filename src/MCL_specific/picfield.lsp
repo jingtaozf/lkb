@@ -26,7 +26,7 @@
   (setf (shrunk-p self) shrunk-p)
   (set-view-size self
                  (string-width (or item-display "") (view-font self))
-                 (+ (font-ascent self) (font-descent self))))
+                 (+ (lkb::font-ascent self) (lkb::font-descent self))))
 
 
 ;;; Annie wants not a triangle

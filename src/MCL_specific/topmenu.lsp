@@ -16,6 +16,9 @@
 ;;; mods to: set-up-lkb-interaction  (extra menu items added)
 ;;;          apply-lex
 
+(in-package :lkb)
+
+
 (defvar *lkb-menu-type* :core)
 
 (defvar *lkb-menu-disabled-list* nil
@@ -99,11 +102,11 @@
     )
   (menu-install *lkb-menu*)
   (unless *current-grammar-load-file*
-    (for submenu in *lkb-menu-disabled-list*
-         do (menu-item-disable submenu)) ; get round bug by disabling after
-                                        ; installation, but only if
-                                        ; we don't have a grammar
-    )
+     (dolist (submenu *lkb-menu-disabled-list*)
+        (menu-item-disable submenu)) ; get round bug by disabling after
+                                     ; installation, but only if
+                                     ; we don't have a grammar
+        )
   (when *current-grammar-load-file* 
     (enable-type-interactions))
   (pushnew 'lkb-exit-function *lisp-cleanup-functions*))
@@ -147,24 +150,22 @@
 (defun enable-type-interactions nil
    ;; called when a type file has been read in successfully
    ;; use the kludge
-   (for submenu in *lkb-menu-disabled-list*
-        do 
-        (if 
-            (or lkb::*mrs-loaded* (not (member submenu *lkb-menu-mrs-list*)))
-            (menu-item-enable submenu))))
+   (dolist (submenu *lkb-menu-disabled-list*)
+      (if 
+         (or lkb::*mrs-loaded* (not (member submenu *lkb-menu-mrs-list*)))
+         (menu-item-enable submenu))))
 
 (defun disable-type-interactions nil
    ;; called when a type file has been cleared
    ;; disables everthing that was originally disabled
    ;; use the kludge
-   (for submenu in *lkb-menu-disabled-list*
-        do (menu-item-disable submenu)))
+   (dolist (submenu *lkb-menu-disabled-list*)
+      (menu-item-disable submenu)))
 
 (defun enable-grammar-reload-interactions nil
    ;; called when a script file load has been attempted
-   (for submenu in *lkb-menu-grammar-file-list*
-        do 
-        (menu-item-enable submenu)))
+   (dolist (submenu *lkb-menu-grammar-file-list*)
+      (menu-item-enable submenu)))
 
 (defun enable-mrs-interactions nil
   (when lkb::*mrs-loaded*

@@ -2,7 +2,8 @@
 ;;; No use or redistribution without permission.
 ;;; 
 
-;;; dialect specific from this point
+(in-package :lkb)
+
 
 ;;; use *parse-tree-font-size* from globals.lsp. These are functions so users
 ;;; can change font sizes after code has loaded

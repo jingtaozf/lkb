@@ -7,7 +7,8 @@
 ;;; parse output functions - split from parse.lsp
 ;;; and extensively rewritten for MCL
 
-;;; dialect specific from this point
+(in-package :lkb)
+
 
 ;;; *parse-tree-font-size* is in globals.lsp. This is a function so users
 ;;; can change font sizes after code has loaded

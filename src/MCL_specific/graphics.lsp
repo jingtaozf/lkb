@@ -1,6 +1,8 @@
 ;;; Graphical fs drawing 
 ;;; CL dialect specific
 
+(in-package :lkb)
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
    (require 'quickdraw))
 

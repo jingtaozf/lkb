@@ -5,6 +5,9 @@
 ;;; Most of the functions in here are implementation specific
 ;;; This has been extensively modified for MCL
 
+(in-package :lkb)
+
+
 ;;; Dialogs
 ;;; Some general purpose functions
 

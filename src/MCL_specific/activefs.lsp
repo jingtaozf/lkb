@@ -34,6 +34,9 @@
 ;;;   attached to the picture-field window are added to the window-pane
 ;;;   as subviews.
 
+(in-package :lkb)
+
+
 ;;; This is the font for the pop up menu and the display windows. They
 ;;; are functions so users can change font sizes after code has loaded
 
@@ -276,8 +279,7 @@
 
 (defun display-active-dpaths (dpath-list ostream)
    (let ((max-width 0))
-      (for unif in dpath-list
-         do
+      (dolist (unif dpath-list)
          (output-unif unif ostream t)
          (setf max-width (max max-width (current-position-x ostream))))
       max-width))
@@ -314,14 +316,14 @@
                   (add-active-fs-region ostream start-pos (current-position ostream)
                      nil parent nil t)
                   (unless endp (format ostream "  " parent))))))
-      (for parent in parents
-         do
+      (dolist (parent parents)
          (if (consp parent) ; it's actually a list of non-glbtype parents
             (progn
                (format ostream "(")
-               (for ptail on parent
-                  do
-                  (display-individual-parent (car ptail) ostream (null (cdr ptail))))
+               (mapl
+                  #'(lambda (ptail)
+                     (display-individual-parent (car ptail) ostream (null (cdr ptail))))
+                  parent)
                (format ostream ")  "))
             (display-individual-parent parent ostream nil)))
       (let ((max-width (current-position-x ostream)))

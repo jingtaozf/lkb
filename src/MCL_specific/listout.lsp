@@ -9,7 +9,8 @@
 ;;; Each function should take 1 argument, the data item associated with
 ;;; the string that is chosen
 
-;;; dialect specific from this point
+(in-package :lkb)
+
 
 ;;; *parse-tree-font-size* is in globals.lsp. This is a function so users
 ;;; can change font sizes after code has loaded
