@@ -79,14 +79,14 @@
        (:file "genpredict")))           ; LKB specific - null semantics
 
      #+:nil
-      (:module "information-structure"
+     (:module "information-structure"
       :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
       ((:file "infostr")))
 
      #+:nil
-      (:module "theorem-proving"
+     (:module "theorem-proving"
       :source-pathname "tproving"
       :binary-pathname "tproving"
       :components
@@ -97,7 +97,7 @@
        (:file "nf-to-fol")
        (:file "fol-to-mrs")))
 
-(:module "rmrs"
+     (:module "rmrs"
       :source-pathname "rmrs"
       :binary-pathname "rmrs"
       :components
@@ -109,6 +109,12 @@
        (:file "readgram")
        (:file "readtag")))
 
+     (:module "redwoods"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :components
+      ((:file "dependencies")))
+     
      #+:nil
       (:module "extensions"
        :source-pathname "mrs"
