@@ -629,21 +629,26 @@
       for input = (or (get-field :o-input item) (get-field :i-input item))
       for i-id = (get-field :i-id item)
       for parse-id = (get-field :parse-id item)
+      for results = (get-field :results item)
       for trees = (select '("t-version") '(:integer) "tree" 
                           (format nil "parse-id == ~a" parse-id) 
                           data
                           :sort :parse-id)
-      for version = (loop
-                        for tree in trees
-                        maximize (get-field :t-version tree))
-      for active = (let ((foo (select '("result-id") '(:integer) "preference" 
-                                      (format 
-                                       nil 
-                                       "parse-id == ~a && t-version == ~d" 
-                                       parse-id version) 
-                                      data)))
-                     (loop for bar in foo collect (get-field :result-id bar)))
-      for results = (get-field :results item)
+      for version = (when trees
+                      (loop
+                          for tree in trees
+                          maximize (get-field :t-version tree)))
+      for active = (when version
+                     (let ((foo (select '("result-id") '(:integer) 
+                                        "preference" 
+                                        (format 
+                                         nil 
+                                         "parse-id == ~a && t-version == ~d" 
+                                         parse-id version) 
+                                        data)))
+                       (loop 
+                           for bar in foo 
+                           collect (get-field :result-id bar))))
       initially 
         #+:allegro (excl::delete-directory-and-files target)
         #+:allegro (mkdir target)
@@ -651,7 +656,8 @@
         (format 
          t 
          "kristina(): ~d active tree~p (of ~d) for item # ~d.~%" 
-         (length active) (length active) (length results) i-id)
+         (if version (length active) (length results))
+         (length active) (length results) i-id)
 
         (with-open-file (stream (format nil "~a/~d" target i-id)
                          :direction :output
@@ -659,7 +665,9 @@
           (format 
            stream
            "[~d: ~d of ~d] `~a'~%~a~%"
-           i-id (length active) (length results) input #\page)
+           i-id 
+           (if version (length active) (length results))
+           (length results) input #\page)
           (loop
               with *package* = (find-package lkb::*lkb-package*)
 	      with lkb::*deleted-daughter-features* = nil
@@ -677,6 +685,7 @@
                 (format stream "~c~%" #\page))
           (loop
               with *package* = (find-package lkb::*lkb-package*)
+	      with lkb::*deleted-daughter-features* = nil
               for result in results
               for id = (get-field :result-id result)
               for derivation = (unless (member id active :test #'eql)
