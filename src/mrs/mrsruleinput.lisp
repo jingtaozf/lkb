@@ -46,6 +46,7 @@
   "list of rules expressed as fs for debugging")
 
 
+; DPF 13-Oct-99 - CONSTRUCT-MRS uses the global *key-fs*, which must be reset
 (defun read-mrs-rule-file-aux (file-name &optional generator-p)
    (clear-mrs-rules)
   (let ((*tdl-expanded-syntax-function* 
@@ -55,6 +56,7 @@
          (istream file-name :direction :input)
          (format t "~%Reading in rule file")
          (setf *mrs-rule-fs-list* nil)
+         (setf mrs::*key-fs* nil)
          (read-mrs-rule-stream istream generator-p))))
 
 (defun read-mrs-rule-stream (istream generator-p) 

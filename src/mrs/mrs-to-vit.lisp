@@ -452,8 +452,8 @@
           (when (and vit standalone)
             (write-vit-pretty stream (horrible-hack-2 vit))
             (format stream "~%"))
-	  (check-vit vit nil stream)
-          vit))
+	  (check-vit (horrible-hack-2 vit) nil stream)
+          (horrible-hack-2 vit)))
     (let ((vit (german-mrs-to-vit mrs-psoa)))
       (when standalone
         (format stream "~%Unscoped form")
@@ -654,12 +654,13 @@
         (unless sort-info (return))
         (setf sorts (cdr sorts))
         (unless (or (not (vit_sort-p sort-info))
-                    (member (vit_sort-instance sort-info) done))
-          (push (vit_sort-instance sort-info) done)
+		    (not (vit-var-p (vit_sort-instance sort-info)))
+                    (member (vit-var-id (vit_sort-instance sort-info)) done))
+          (push (vit-var-id (vit_sort-instance sort-info)) done)
           (let ((equiv (list (vit_sort-args sort-info))))
             (for rem in sorts
                  do
-                 (when (eql (vit_sort-instance sort-info)
+                 (when (equal (vit_sort-instance sort-info)
                             (vit_sort-instance rem))
                    (push (vit_sort-args rem) equiv)))
             (let ((new-sorts 
@@ -895,7 +896,9 @@
                                     (sort (argval-sort varstruct))
                                     (vitval 
                                      (convert-mrs-val-to-vit val labels)))
-                                 (when (and (var-p val) sort)
+                                 (when (and (var-p val) sort
+					    (or (vit-instance-var-p vitval)
+					     (vit-label-var-p vitval)))
                                    (push (construct-vit-sort vitval sort) 
                                              *vit-sorts*))
                                  vitval))
@@ -911,7 +914,9 @@
                                (sort (argval-sort arg))
                                (vitval 
                                 (convert-mrs-val-to-vit var labels)))
-                          (when sort
+                          (when (and sort 
+				     (or (vit-label-var-p vitval)
+					 (vit-instance-var-p vitval)))
                             (push (construct-vit-sort vitval sort) 
                                   *vit-sorts*))
                           (make-p-term 
@@ -1322,7 +1327,6 @@
              (cons (get-var-num var) holes-so-far)
              (cons top-handel labels-so-far)))))))
                     
-
 (defun is-locally-equivalent (h1 h2 bindings)
   (member h2 (get-bindings-for-handel h1 bindings)))
   
@@ -1366,7 +1370,7 @@
          (vitrified-feature (last-path-feature current-fvp-feature)))
     ;;; last-path-feature is a no-op for atomic features
     ;;; but returns the last feature for paths
-    (if (member current-fvp-feature (list (vsym "NAMED")))
+    (if (member current-fvp-feature *string-valued-features*)
         fvp
       (make-fvpair :feature (mrs-unstring-value vitrified-feature)
                    :value (mrs-unstring-value (fvpair-value fvp))))))
@@ -1393,24 +1397,59 @@
 ;;; Preliminary fragment stuff
 
 
+;; DPF 13-Oct-99 - Replace with WK's revision
+#|
 (defun calculate-fragment-main-label (mrs oldmain oldmainnum 
                                       topholenum synlabel)
-  (let ((scope-hole (find-scope-hole mrs)))
-    (cond ((and scope-hole
+  (let ((scope-or-arg-hole (or (find-scope-hole mrs)
+                               (find-arg-hole mrs))))
+    (cond ((and scope-or-arg-hole
                 ;;; pronouns won't have a scopehole
                 (or (equal synlabel "DET") 
-                    (equal synlabel "NP")))
+                    (equal synlabel "NP")
+                    (equal synlabel "ADV")))
            (let* ((new-var-num (funcall *variable-generator*))
                   (new-var (make-vit-label-var :id new-var-num)))
-             (pushnew (cons new-var-num scope-hole) *extra-leqs*)
+             (pushnew (cons new-var-num scope-or-arg-hole) *extra-leqs*)
              (setf *newmainlabel* (list new-var-num))
              new-var))
         (t (pushnew (cons oldmainnum topholenum) *extra-leqs*)
            oldmain))))
+|#
 
+(defun calculate-fragment-main-label (mrs oldmain oldmainnum 
+                                      topholenum synlabel)
+  (let ((scope-or-arg-hole (or (find-scope-hole mrs)
+                               (find-arg-hole mrs))))
+    (cond ((and scope-or-arg-hole
+                ;;; pronouns won't have a scopehole
+                (or (equal synlabel "DET") 
+                    (equal synlabel "NP")
+                    (equal synlabel "ADV")))
+           (let* ((new-var-num (funcall *variable-generator*))
+                  (new-var (make-vit-label-var :id new-var-num)))
+             (pushnew (cons new-var-num scope-or-arg-hole) *extra-leqs*)
+             (setf *newmainlabel* (list new-var-num))
+             new-var))
+        (t (pushnew (cons oldmainnum topholenum) *extra-leqs*)
+           oldmain))))
 
 (defun find-scope-hole (mrs)
   (dolist (rel (psoa-liszt mrs))
     (when (is-quant-rel rel)
       (return (get-scope-value rel)))))
 ;; get-scope-value is in cheapscope.lisp
+
+(defun find-arg-hole (mrs)
+  (dolist (rel (psoa-liszt mrs))
+    (when (is-handel-arg-rel rel)
+      (return (get-h-arg-value rel)))))
+
+(defun get-h-arg-value (rel)
+  ;;; returns the integer value of the handel corresponding to the
+  ;;; feature ARG
+  ;;; assumes that there is only one such feature and 
+  ;;; that its value is a var 
+  (dolist (fvpair (rel-flist rel))
+    (when (eql (fvpair-feature fvpair) *arg-feat*)
+      (return (get-var-num (fvpair-value fvpair))))))

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.18  1999/08/20 00:45:16  aac
+;; allow hack for null semantics to be turned off
+;;
 ;; Revision 1.17  1999/08/06 01:00:13  aac
 ;; added an alex-mode to allow for the output of munging rules
 ;;
@@ -384,6 +387,10 @@ printing routines -  convenient to make this global to keep printing generic")
 (defvar *false-type* nil)
 (defvar *true-type* nil)
 
+;;; don't unstring these:
+(setf *string-valued-features* nil)
+
 (defparameter *alex-mode* nil
   "if t, allows scope to have specified relations")
 
+(defparameter *prolog-quote-chars* '(#\'))

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.7  1999/09/29 18:21:49  aac
+;; adding sorts
+;;
 ;; Revision 1.6  1999/08/02 20:51:44  danf
 ;; Updates from Walter K.
 ;;
@@ -538,6 +541,18 @@
   (let ((%vit-indent% ",~%    "))
     (write-vit vit-out vit T)))
 
+;;; good for Rock'n'Roll
+(defun make-quoted-p-string (str) 
+  (let* ((str2 (if (symbolp str) (symbol-name str) str))
+         (newstr (make-array (length str2) :fill-pointer 0 :adjustable t :element-type 'character)))
+    (loop
+      for c across (the simple-string str2)
+        do
+          (if (member c *prolog-quote-chars* :test #'char=)
+              (vector-push-extend '#\\ newstr 1))
+          (vector-push-extend c newstr 1))
+    newstr)
+  )
       
 (defun output-p-form (vit-out form)
   ;;; the generic output function for something that could be 
@@ -553,7 +568,7 @@
         ((whg-id-p form)
          (format vit-out "~A" form))
         ((stringp form)
-         (format vit-out "'~A'" form))
+         (format vit-out "'~A'" (make-quoted-p-string form)))
         ((symbolp form)
          (format vit-out "~(~A~)" form))
         (t (format vit-out "~(~S~)" form))))

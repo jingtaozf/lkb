@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.25  1999/08/02 20:51:43  danf
+;; Updates from Walter K.
+;;
 ;; Revision 1.24  1999/07/09 04:51:48  aac
 ;; fragments
 ;;
@@ -549,9 +552,22 @@
         (setf (rel-flist rel) (reverse (rel-flist rel)))
         rel)))
 
+
+;; DPF 13-Oct-99 - Replaced with WK's def
+#|
 (defun create-type (sort)
   ;;; base-create-type is the LKB/PAGE specific function
   (horrible-hack-3 (base-create-type sort)))
+|#
+
+(defun create-type (sort)
+  ;;; base-create-type is the LKB/PAGE specific function
+  (horrible-hack-3 (vm-create-type sort)))
+
+(defun vm-create-type (type)
+  (if (and (consp type) (eq (first type) :atom))
+      (second type)
+    type))
 
 (defun horrible-hack-3 (sort)
   ;;; this hack would not be necessary if the grammar used
@@ -584,7 +600,8 @@
       (unless (member feat2 *feat-priority-list*)
               (string-lessp feat1 feat2)))))
 
-
+;; DPF 13-Oct-99 - Replaced with WK's def
+#|
 (defun create-word-identifier (id gen)
   (if id
       (let ((val (if (stringp id)
@@ -597,6 +614,18 @@
             val
           (funcall gen)))
     (funcall gen)))
+|#
+
+(defun create-word-identifier (id gen)
+  (if (keywordp id)
+      id
+    (let ((val (if (fs-atomic-p (rest id))
+                       (get-atom-name (rest id)))))
+        (if (or (numberp val) 
+                (and (symbolp val)
+                     (member (elt (string-downcase val) 0) '(#\r))))
+            val
+          (funcall gen)))))
 
 (defun construct-h-cons (fs constr-list variable-generator)
   #-pagelite

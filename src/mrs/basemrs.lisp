@@ -92,7 +92,7 @@
   (declare (ignore level))
   (let ((handels (whg-id-handel whg)))
     (format stream "word('~A',~A," 
-            (whg-id-word whg)
+            (make-quoted-p-string (whg-id-word whg))
             (whg-id-id whg))
     (if handels 
         (format stream "~([~A~@[~{,~A~}~]])~)" (first handels) 
