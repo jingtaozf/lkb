@@ -262,11 +262,14 @@
                      (current-time :long :short) (length trees) (length trees))
                     (loop
                         with edges
+                        with mode = 
+                          (if (eq (lkb::compare-frame-mode frame) :modern)
+                            t :word)
                         for result in results
                         for id = (get-field :result-id result)
                         for derivation = (get-field :derivation result)
                         for edge = (when derivation
-                                     (reconstruct derivation :word))
+                                     (reconstruct derivation mode))
                         when edge do 
                           (setf (lkb::edge-foo edge) id)
                           (setf (lkb::edge-bar edge) derivation)
@@ -880,7 +883,7 @@
          (format
           stream
           "<tr>~%  ~
-           <td class=\"itsdb@caption\" colspan=~a align=right>~%    ~
+           <td class=\"ItsdbCaption\" colspan=~a align=right>~%    ~
            ~a~%  </td>~%</tr>~%</table>~%"
           ncolumns caption)))
 

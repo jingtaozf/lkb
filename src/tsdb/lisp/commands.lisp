@@ -417,48 +417,81 @@
 (defun tsdb-do-list (home &key (stream *tsdb-io*) 
                                (prefix "  ")
                                (format :ascii)
+                               (indentation 0)
                                name meter index)
   
   (when stream (format stream "~%"))
-  (let ((dbs (sort (find-tsdb-directories home :name name 
-                                          :meter (madjust * meter 0.95))
-                   #'string< :key #'(lambda (foo) (get-field :database foo))))
-        result)
-    (do* ((dbs dbs (rest dbs))
-          (db (first dbs) (first dbs))
-          (i 0 (+ i 1)))
-        ((null dbs))
-      (case format
-        (:ascii
-         (format 
-          stream 
-          "~a`~a'~@[ (~(~a~))~]: ~a items; ~a parses;~%"
-          prefix
-          (get-field :database db) (get-field :status db) 
-          (get-field :items db) (get-field :parses db)))
-        (:tcl
-         (format 
-          stream 
-          "set test_suites(~d) {~s \"~(~a~)\" ~d ~d ~
+  (loop
+      with dbs = (sort (find-tsdb-directories home :name name 
+                                              :meter (madjust * meter 0.95))
+                       #'string< :key #'(lambda (foo) 
+                                          (get-field :database foo)))
+      with result = nil
+      initially
+        (case format
+          (:html
+           (format 
+            stream 
+            "~v,0t<table>~%~
+             ~v,0t  <tr><th>&nbsp;</th>~
+             <th align=center>Test Suite Instance</th>~
+             <th align=center>Items</th><th align=center>Parses</th>~
+             <th align=center>Options</th></tr>~%"
+            indentation indentation)))
+      for i from 0
+      for db in dbs
+      do
+        (case format
+          (:ascii
+           (format 
+            stream 
+            "~a`~a'~@[ (~(~a~))~]: ~a items; ~a parses;~%"
+            prefix
+            (get-field :database db) (get-field :status db) 
+            (get-field :items db) (get-field :parses db)))
+          (:tcl
+           (format 
+            stream 
+            "set test_suites(~d) {~s \"~(~a~)\" ~d ~d ~
              ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]};~%"
-          (if index (+ index i) i)
-          (get-field :database db) (get-field :status db) 
-          (get-field :items db) (get-field :parses db)
-          (get-field :resultp db) (get-field :rulep db) 
-          (get-field :treep db) (get-field :scorep db)))
-        (:list
-         (push (format 
-                nil 
-                "{~s \"~(~a~)\" ~d ~d ~
-                 ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]}"
-                (get-field :database db) (get-field :status db) 
-                (get-field :items db) (get-field :parses db)
-                (get-field :resultp db) (get-field :rulep db)
-                (get-field :treep db) (get-field :scorep db))
-               result))))
-    (when (and stream dbs) (format stream "~%"))
-    (when meter (meter :value (get-field :end meter)))
-    result))
+            (if index (+ index i) i)
+            (get-field :database db) (get-field :status db) 
+            (get-field :items db) (get-field :parses db)
+            (get-field :resultp db) (get-field :rulep db) 
+            (get-field :treep db) (get-field :scorep db)))
+          (:list
+           (push (format 
+                  nil 
+                  "{~s \"~(~a~)\" ~d ~d ~
+                   ~:[0~;1~] ~:[0~;1~] ~:[0~;1~] ~:[0~;1~]}"
+                  (get-field :database db) (get-field :status db) 
+                  (get-field :items db) (get-field :parses db)
+                  (get-field :resultp db) (get-field :rulep db)
+                  (get-field :treep db) (get-field :scorep db))
+                 result))
+          (:html
+           (format
+            stream
+            "~v,0t  <tr>~%~
+             ~v,0t    <td><input type=radio name=data value=\"~a\"></td>~%~
+             ~v,0t    <td align=left>~a</td><td align=center>~a</td>~
+             <td align=center>~a</td><td align=center>~a~a~a~a</td>~%~
+             ~v,0t  </tr>~%"
+            indentation 
+            indentation (get-field :database db)
+            indentation (get-field :database db) (get-field :items db)
+            (get-field :parses db)
+            (if (get-field :resultp db) "r" "-")
+            (if (get-field :rulep db) "r" "-")
+            (if (get-field :treep db) "t" "-")
+            (if (get-field :scorep db) "s" "-") indentation)))
+      finally
+        (case format
+          (:html
+           (format stream "~v,0t</table>~%" indentation)))
+        (when (and stream dbs) (format stream "~%"))
+        (when meter (meter :value (get-field :end meter)))
+        (return result)))
 
 (defun tsdb-do-skeletons (source &key (stream *tsdb-io*) 
                                       (prefix "  ")

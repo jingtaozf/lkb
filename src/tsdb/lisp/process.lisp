@@ -716,7 +716,7 @@
                         (get-field :o-input item))
                       (get-field :p-input item)
                       (get-field :i-input item)))
-         (i-wf (get-field :i-wf item))
+         (i-wf (get-field+ :i-wf item 1))
          (gc (get-field :gc item))
          (edges (get-field :edges item))
          (host (get-field :host result))
@@ -901,12 +901,16 @@
           (push (cons :error (if (stringp timeup) timeup "timeup")) result)))
       result))))
 
-(defun process-queue (runs &key (verbose t) (stream *tsdb-io*) interrupt)
+(defun process-queue (runs 
+                      &key client (verbose t) (stream *tsdb-io*) interrupt)
 
   (loop
-      while (find-if #'consp runs :key #'run-status)
+      with tid = (if client (client-tid client) -1)
+      while (or (find-if #'consp runs :key #'run-status) 
+                (and client (consp (client-status client))))
       with pending = nil
-      for message = (pvm_poll -1 -1 1)
+      for message = (or (pvm_poll tid -1 1) 
+                        (unless (= tid -1) (pvm_poll -1 %pvm_task_fail% 1)))
       finally
         (return (pairlis '(:pending :ready) 
                          (list pending (find :ready runs :key #'run-status))))
@@ -925,7 +929,7 @@
                (load (message-load message))
                (content (message-content message))
                (run (find remote runs :key #'run-tid))
-               (client (get-field :client run))
+               (client (or client (get-field :client run)))
                (item (and client (client-status client)))
                (host (and (client-p client) (cpu-p (client-cpu client))
                           (cpu-host (client-cpu client)))))
@@ -939,11 +943,11 @@
                 (print-item item :stream stream :result fail)
                 (print-result fail :stream stream))))
           (when run
-            (nconc run `((:end . ,(current-time :long :tsdb))))
-            (when (client-p client)
-              (setf (client-status client) :exit))))
+            (nconc run `((:end . ,(current-time :long :tsdb)))))
+          (when (client-p client)
+            (setf (client-status client) :exit)))
                  
-         ((null run)
+         ((null client)
           (when verbose
             (format
              stream
@@ -957,7 +961,7 @@
           (if (eq (first content) :return)
             (case (second content)
               (:process-item
-               (let* ((run-id (get-field+ :run-id run))
+               (let* ((run-id (get-field+ :run-id run -1))
                       (result (nconc (pairlis '(:host :run-id)
                                               (list host run-id))
                                      (third content))))

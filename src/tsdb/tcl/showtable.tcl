@@ -507,7 +507,7 @@ proc read_table_file {file} {
     set titlecols 0;			# default value
     set titlerows 1;			# default value
 
-    catch {fconfigure $file -encoding euc-jp};
+#    catch {fconfigure $file -encoding iso8859-1};
     while { ![eof $file] } {
 	
 	## Read next line

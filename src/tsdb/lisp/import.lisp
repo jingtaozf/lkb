@@ -156,7 +156,13 @@
                (make-pathname :directory (namestring *tsdb-skeleton-directory*)
                               :name *tsdb-relations-skeleton*))
               (target (make-pathname :directory path :name "relations")))
-          (cp relations target))
+          (unless (cp relations target)
+            (format
+             *tsdb-io*
+             "import-items(): invalid skeleton root; check `~a'.~%"
+             (namestring *tsdb-skeleton-directory*))
+            (return-from do-import-items 4)))
+          
         (select "i-id" :integer "item" nil path :absolute t))
       (when overwrite 
         (with-open-file (foo ifile :direction :output

@@ -381,20 +381,26 @@
         ((>= n (expt 2 10)) (format nil "~,1fK" (/ n (expt 2 10))))
         (t (format nil "~d" n))))
 
-(defun create-output-stream (file &optional append)
-  (cond
-   ((or (stringp file) (pathnamep file))
-    (open file
-          :direction :output 
-          :if-exists :supersede
-          :if-does-not-exist :create))
-   ((or (stringp append) (pathnamep append))
-    (open append
-          :direction :output 
-          :if-exists :append
-          :if-does-not-exist :create))
-   ((or file append) (or file append))
-   (t *tsdb-io*)))
+(defun create-output-stream (file &optional append &key (encoding :utf-8))
+  (let ((stream
+         (cond
+          ((or (stringp file) (pathnamep file))
+           (open file
+                 :direction :output 
+                 :if-exists :supersede
+                 :if-does-not-exist :create))
+          ((or (stringp append) (pathnamep append))
+           (open append
+                 :direction :output 
+                 :if-exists :append
+                 :if-does-not-exist :create))
+          ((or file append) (or file append))
+          (t *tsdb-io*))))
+    #+(and :allegro-version>= (version>= 6 0))
+    (unless (or (eq stream file) (eq stream append) (eq stream *tsdb-io*))
+      (setf (stream-external-format stream) 
+        (excl:find-external-format encoding)))
+    stream))
 
 (defun verify-tsdb-directory (language &key absolute skeletonp)
   (let ((data 

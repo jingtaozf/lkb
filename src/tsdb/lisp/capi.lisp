@@ -100,3 +100,16 @@
             do
               (return-from complete_run :interrupt))
         :ok))))
+
+(let ((lock (mp:make-process-lock)))
+  (defun allocate-client (item &key (protocol :raw) (wait 42))
+    (loop
+        for i from 1 to wait do
+          (loop
+              for client in *pvm-clients*
+              when (eq (client-protocol client) protocol) do
+                (mp:with-process-lock (lock) 
+                  (when (eq (client-status client) :ready)
+                    (setf (client-status client) item)
+                    (return-from allocate-client client))))
+          (sleep 1))))
