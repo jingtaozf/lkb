@@ -262,7 +262,7 @@ BEGIN
 	CREATE TABLE semi_mod (
 		name text,
 		userid text,
-		modstamp0 int,
+		modstamp0 TIMESTAMP WITH TIME ZONE,
 		modstamp TIMESTAMP WITH TIME ZONE
 	);
 
