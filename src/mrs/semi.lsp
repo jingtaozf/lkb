@@ -9,34 +9,33 @@
 (defvar *semi* nil)
 
 (defconstant *semi-u-type* "u")
-
 (defconstant *semi-h-type* "h")
-
 (defconstant *semi-i-type* "i")
-
 (defconstant *semi-e-type* "e")
-
 (defconstant *semi-x-type* "x")
 
 (defstruct semi
   signature
   (roles (make-hash-table))
   (properties (make-hash-table))
-  (predicates (make-hash-table :test #'equal)))
+  (predicates (make-hash-table :test #'equal))
+  (lexicon (make-hash-table)))
 
 (unless *semi* (setf *semi* (make-semi)))
 
 (defmethod print-object ((object semi) stream)
-;;  (if %transfer-raw-output-p%
-;;      (call-next-method)
-    (let ((roles (hash-table-count (semi-roles object)))
-          (predicates (hash-table-count (semi-predicates object)))
-          (properties (hash-table-count (semi-properties object))))
+  (let ((properties (hash-table-count (semi-properties object)))
+	(roles (hash-table-count (semi-roles object)))
+	(predicates (hash-table-count (semi-predicates object)))
+	(lexicon (print (hash-table-count (semi-lexicon object)))))
       (format
        stream
-       "#[SEM-I: ~a role~p; ~a predicate~p; ~a propert~a]"
-       roles roles predicates predicates properties (if (= properties 1) "y" "ies"))))
-;;)
+       "#[SEM-I: ~a role~p; ~a predicate~p; ~a propert~a; ~a lexical item~p]"
+       roles roles 
+       predicates predicates 
+       properties (if (= properties 1) "y" "ies")
+       lexicon lexicon
+       )))
 
 (defmethod close-semi ((semi semi))
   (with-slots (signature roles predicates properties) semi
@@ -48,15 +47,17 @@
 ;;; build semi
 
 (defmethod populate-semi ((semi semi))
-  (close-semi semi)
-  (let ((semantic-table *semantic-table*))
+  (with-slots (lexicon) semi
+    (setf lexicon *semantic-table*)
+    (close-semi semi)
+    (setf lexicon *semantic-table*)
     (maphash 
      #'(lambda (key val)
 	 (declare (ignore key))
 	 (extend-semi semi val :mode :batch))
-     semantic-table))
-  (populate-semi-roles *semi*)
-  semi)
+     lexicon)
+    (populate-semi-roles *semi*)
+    semi))
 
 (defmethod extend-semi ((semi semi) (record semantics-record) &key (mode :dynamic))
   (mapcar
@@ -99,7 +100,7 @@
 	(when (eq mode :dynamic)
 	  (record-role feature value semi))
       finally
-        (record-predicate pred roles semi)))
+        (record-predicate pred ep semi)))
 
 (defmethod populate-semi-roles ((semi semi))
   (with-slots (roles predicates) semi
@@ -108,13 +109,13 @@
       (null (setf roles (make-hash-table)))
       (t (error "hash-table or null expected")))
     (loop
-	for frames being each hash-value in predicates
+	for rels being each hash-value in predicates
 	do
 	  (loop
-	      for frame in frames
+	      for rel in rels
 	      do
 		(loop
-		    for role in frame
+		    for role in (rel-base-flist rel)
 		    for feature = (fvpair-feature role)
 		    for value = (fvpair-value role)
 		    do
@@ -124,8 +125,8 @@
 (defun record-role (feature value semi)
   (pushnew value (gethash feature (semi-roles semi)) :test #'eq))
 
-(defun record-predicate (pred roles semi)
-  (pushnew roles (gethash pred (semi-predicates semi)) :test #'equal))
+(defun record-predicate (pred rel semi)
+  (pushnew rel (gethash pred (semi-predicates semi)) :test #'eq))
 
 (defun record-property (type fvpair semi)
   (with-slots (feature value) fvpair
@@ -226,27 +227,27 @@
   (loop
       with predicates
       for predicate being each hash-key in (semi-predicates semi)
-      for frames being each hash-value in (semi-predicates semi)
+      for rels being each hash-value in (semi-predicates semi)
       for roles = (loop
                       with roles
-                      for frame in frames
+                      for rel in rels
+		      for frame = (rel-base-flist rel)
                       do
                         (loop 
                             for foo in frame 
                             do
                               (pushnew 
-                               ;(cons (first foo) nil) ;;eg. (ARG0) 
-                               (cons (fvpair-feature foo) nil) ;;eg. (ARG0) 
+                                (cons (fvpair-feature foo) nil) ;;eg. (ARG0) 
                                roles :key #'first)) ;;eg. ((ARG0) (ARG1))
                       finally (return roles))
       do
         (loop
-            for frame in frames
+            for rel in rels
+	    for frame = (rel-base-flist rel)
             do 
               (loop
                   for role in roles
                   for value = (loop
-                                  ;for (feature . value) in frame
                                   for fvpair in frame
 				  for feature = (fvpair-feature fvpair)
 				  for value = (fvpair-value fvpair)
@@ -326,8 +327,8 @@
 	 (predicates (sort
 		      (loop
 			  for pred being each hash-key in (semi-predicates semi)
-			  for frames being each hash-value in (semi-predicates semi)
-			  collect (cons pred frames))
+			  for rels being each hash-value in (semi-predicates semi)
+			  collect (cons pred rels))
 		      #'pred-order
 		      :key #'car)))
   (loop
@@ -351,17 +352,17 @@
       finally (format stream "~%"))
   (loop
       initially (format stream "predicates:~%~%")
-      for predicate in predicates
-      do (print-predicate-full
-	  predicate  :generalizep generalizep :stream stream))))
+      for (pred . rels) in predicates
+      do 
+	(setf pred pred) ;; to avoid compiler warning
+	(print-predicate-full
+	  rels  :generalizep generalizep :stream stream))))
 
-(defun print-predicate-full (predicate &key generalizep (stream t))
+(defun print-predicate-full (rels &key generalizep (stream t))
   (declare (ignore generalizep))
   (loop
       with disp = (make-instance 'simple :stream stream)
-      with (pred . frames) = predicate
-      for frame in frames
-      for rel = (make-rel-base :pred pred :flist frame)
+      for rel in rels
       do  
 	(setf *already-seen-vars* nil)
 	(print-rel rel :display-to disp)))
@@ -369,135 +370,265 @@
 ;;; format = :db
 
 (defstruct sdbt
+  name
   (rows (make-hash-table))
   last)
 
+(defmethod clear ((sdbt sdbt))
+  (with-slots (rows last) sdbt
+    (clrhash rows)
+    (setf last nil))
+  sdbt)
+
+(defmethod print-object ((object sdbt) stream)
+  (let (
+	(keys-c (hash-table-count (sdbt-rows object)))
+	)
+      (format
+       stream
+       "#[SDBT ~a: ~a key~p]"
+       (sdbt-name object)
+       keys-c keys-c
+       )))
+
 (defstruct sdb
-  (pred (make-sdbt))
-  (frame (make-sdbt :last 0))
-  (role (make-sdbt :last 0))
-  (slot-val (make-sdbt :last 0))
-  (var (make-sdbt :last 0))
-  (extra (make-sdbt :last 0)))
+  (tables (list
+	   (make-sdbt :name 'pred)
+	   (make-sdbt :name 'frame :last 0)
+	   (make-sdbt :name 'var :last 0)
+	   (make-sdbt :name 'extra :last 0)
+	   )))
+
+(defmethod clear ((sdb sdb))
+  (with-slots (tables) sdb
+    (mapc #'clear tables)
+    sdb))
+
+(defun sdb-table (sdb table-name)
+  (or
+   (car (member table-name (sdb-tables sdb) :test #'eq :key #'sdbt-name))
+   (error "unknown table name: ~a" table-name)))
+
+(defun update-table (sdb sdbt)
+  (with-slots (name) sdbt
+  (let ((foo
+	 (member name
+		 (sdb-tables sdb) 
+		 :test #'eq
+		 :key #'sdbt-name)))
+    (if foo
+	(setf (car foo) sdbt)
+      (error "no table ~a in ~a" name sdb)))))
 
 (defun next-counter (sdbt)
   (with-slots (last) sdbt
     (setf last (1+ last))))
-  
-(defun sdbt-hash (row sdbt)
-  (setf (gethash row sdbt) row))
+
+(defun sdbt-rows-hash (row sdbt)
+  (push row (gethash (car row) sdbt))
+  sdbt)
 
 (defun print-sdb (sdb)
   (let ((temp-dir (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir)))))
-    (with-open-file 
-	(stream
-	 (format nil "~a/semi.obj.pred" temp-dir)
-	 :direction :output :if-exists :supersede)
-      (format t "~%writing table pred...")
-      (print-sdbt (sdb-pred sdb) :stream stream))
-    (with-open-file 
-	(stream
-	 (format nil "~a/semi.obj.frame" temp-dir)
-	 :direction :output :if-exists :supersede)
-      (format t "~%writing table frame...")
-      (print-sdbt (sdb-frame sdb) :stream stream))
-    (with-open-file 
-	(stream
-	 (format nil "~a/semi.obj.role" temp-dir)
-	 :direction :output :if-exists :supersede)
-      (format t "~%writing table role...")
-      (print-sdbt (sdb-role sdb) :stream stream))
-    (with-open-file 
-	(stream
-	 (format nil "~a/semi.obj.slot-val" temp-dir)
-	 :direction :output :if-exists :supersede)
-      (format t "~%writing table slot-val...")
-      (print-sdbt (sdb-slot-val sdb) :stream stream))
-    (with-open-file 
-	(stream
-	 (format nil "~a/semi.obj.var" temp-dir)
-	 :direction :output :if-exists :supersede)
-      (format t "~%writing table var...")
-      (print-sdbt (sdb-var sdb) :stream stream))
-    (with-open-file 
-	(stream
-	 (format nil "~a/semi.obj.extra" temp-dir)
-	 :direction :output :if-exists :supersede)
-      (format t "~%writing table extra...")
-      (print-sdbt (sdb-extra sdb) :stream stream))))
+    (mapc
+     #'(lambda (x)
+	 (with-open-file 
+	     (stream
+	      (format nil "~a/semi.obj.~(~a~)" temp-dir (sdbt-name x))
+	      :direction :output 
+	      :if-exists :supersede)
+	   (format t "~%writing table ~a..." (sdbt-name x))
+	   (print-sdbt x :stream stream)))
+     (sdb-tables sdb))))
+    
+(defun load-sdb (sdb dbname)
+  (mapcar #'(lambda (x)
+	      (load-sdbt x dbname))
+	  (sdb-tables sdb)))
+
+(defun load-sdbt (sdbt dbname)
+  (clear sdbt)
+  (format t "~%loading table ~a from ~a..." (sdbt-name sdbt) dbname)
+  (let ((sql-query (lkb::fn-get-raw-records 
+		    dbname 
+		    ''lkb::test 
+		    (format nil "SELECT * FROM semi_~a"
+			    (sdbt-name sdbt)))))
+    (mapc #'(lambda (row) (sdbt-rows-hash 
+			   (mapcar #'str-to-mixed2 row)
+			   (sdbt-rows sdbt)))
+	  (lkb::records sql-query))
+    (setf (sdbt-last sdbt) nil)))
 
 (defun print-sdbt (sdbt &key (stream t))
   (format t " ~a" (sdbt-rows sdbt))
-  (maphash #'(lambda (key row)
+  (maphash #'(lambda (key rows)
 	       (declare (ignore key))
-	       (format stream "~a~%" (tsv-line row)))
+	       (mapc #'(lambda (row)
+			 (format stream "~a~%" (tsv-line row)))
+		     rows))
 	   (sdbt-rows sdbt)))
 
 ;; for now...
 (defvar *sdb* (make-sdb))
 
 (defun print-semi-db (semi)
-  (let* ((predicates (sort
-		      (loop
-			  for pred being each hash-key in (semi-predicates semi)
-			  for frames being each hash-value in (semi-predicates semi)
-			  collect (cons pred frames))
-		      #'pred-order
-		      :key #'car)))
-    (loop
-	with sdb = (make-sdb)
-	initially (format t "~%preparing semi-db tables...~%")
-	for predicate in predicates
-	do (process-predicate-db predicate sdb)
-	finally
-	  (setf *sdb* sdb)
-	  (print-sdb sdb))))
-
-(defun process-predicate-db (predicate sdb)
   (loop
-      with (pred . frames) = predicate
-      with pred-str = pred
-      for frame in frames
-      for frame-id = (next-counter (sdb-frame sdb))
-      for pred-row = (list pred-str frame-id)
-      do
-	(sdbt-hash pred-row (sdbt-rows (sdb-pred sdb)))
-	(loop
-	    for role in frame
-	    for role-id = (next-counter (sdb-role sdb))
-	    for frame-row = (list frame-id role-id)
-	    for slot = (fvpair-feature role)
-	    for slot-val = (fvpair-value role)
-	    for value-id = (next-counter (sdb-slot-val sdb))
-	    for role-row = (list role-id slot value-id)
-	    with value-row
-	    do
-	      (sdbt-hash frame-row (sdbt-rows (sdb-frame sdb)))
-	      (sdbt-hash role-row (sdbt-rows (sdb-role sdb)))
-	      (typecase slot-val
-		(string
-		 (setf value-row (list value-id slot-val nil nil))
-		 (sdbt-hash value-row (sdbt-rows (sdb-slot-val sdb))))
-		(symbol
-		 (setf value-row (list value-id nil slot-val nil))
-		 (sdbt-hash value-row (sdbt-rows (sdb-slot-val sdb))))
-		(var-base
-		 (let* ((var slot-val)
-		       (var-id (next-counter (sdb-var sdb)))
-		       (type (var-base-type var)))
-		   (setf value-row (list value-id nil nil var-id))
-		   (sdbt-hash  value-row (sdbt-rows (sdb-slot-val sdb)))
-		   (loop
-		       with extra-list = (var-base-extra var)
-		       for extra in extra-list
-		       for extra-id = (next-counter (sdb-var sdb))
-		       for var-row = (list var-id type extra-id)
-		       for extra-feature = (extrapair-feature extra)
-		       for extra-value = (extrapair-value extra)
-		       for extra-row = (list extra-id extra-feature extra-value)
-		       do
-		   (sdbt-hash  var-row (sdbt-rows (sdb-var sdb)))
-		   (sdbt-hash  extra-row (sdbt-rows (sdb-extra sdb))))))))))
+      with sdb = (make-sdb)
+      initially (format t "~%preparing semi-db tables...~%")
+      for record being each hash-value in (semi-lexicon semi)
+      do (process-record-db record sdb)
+      finally
+	(setf *sdb* sdb)
+	(print-sdb sdb)))
+
+(defmethod populate-semi-from-sdb ((semi semi) (sdb sdb))
+  (with-slots (lexicon) semi
+    (close-semi semi)
+    (let* ((pred-t (sdb-table sdb 'pred))
+	   (pred-r (sdbt-rows pred-t)))
+      (loop
+	  for lex-id being each hash-key in pred-r
+	  do
+	    (setf (gethash lex-id lexicon)
+	      (load-lex-id-db lex-id sdb))
+	    ))))
+
+;;; -> lex-id
+;;; semantics_record.id = lex-id
+;;;                 .relations = frame-list
+(defun load-lex-id-db (lex-id sdb)
+  (let* ((pred-t (sdb-table sdb 'pred))
+	 (pred-r (sdbt-rows pred-t))
+	 (rows (gethash lex-id pred-r)))
+    (make-semantics-record :id lex-id
+			   :relations (load-relations-db rows sdb)))) 
+
+;;; -> (lex-id pred frame-id)*
+;;; rel-base*.pred = pred
+;;;          .flist = role-list
+(defun load-relations-db (rows sdb)
+  (loop
+      for row in rows
+      for pred = (second row)
+      for frame-id = (third row)
+      collect
+	(make-rel :pred pred
+		  :flist (load-fvpairs-db frame-id sdb))))
+
+;;; -> frame-id
+;;; (frame-id slot str symb var-id)
+;;; fvpair*.feature = slot
+;;;        .value   = slot-val
+(defun load-fvpairs-db (frame-id sdb)
+  (loop
+      with frame-t = (sdb-table sdb 'frame)
+      with frame-r = (sdbt-rows frame-t)
+      with rows = (gethash frame-id frame-r)
+      for row in rows
+      for slot = (second row)
+      for str = (third row)
+      for symb = (fourth row)
+      for var-id = (fifth row)
+      for type = (sixth row)
+      for slot-val = (cond
+		      ((and str (null symb) (null var-id))
+		       str)
+		      ((and (null str) symb (null var-id))
+		       symb)
+		      ((and (null str) (null symb) var-id)
+		       (make-var :type type
+				      :extra (load-extra-list-db var-id sdb)))
+		      (t
+		       (error "(str,symb,var-id)=(~a,~a,~a)"
+			      str symb var-id)))
+      collect
+	(make-fvpair :feature slot
+		     :value slot-val)))
+
+;;; -> var-id
+;;; (var-id extra-id)
+;;; extrapair*.feature = feature
+;;;           .value = value  
+(defun load-extra-list-db (var-id sdb)
+  (loop 
+      with var-t = (sdb-table sdb 'var)
+      with var-r = (sdbt-rows var-t)
+      with rows = (gethash var-id var-r)
+      for row in rows
+      for extra-id = (second row)
+      collect
+	(load-extra-db extra-id sdb)))
+
+;;; -> extra-id
+;;; (extra-id feature value)
+;;; extrapair.feature
+;;;          .value
+(defun load-extra-db (extra-id sdb)
+  (let* ((extra-t (sdb-table sdb 'extra))
+	 (extra-r (sdbt-rows extra-t))
+	 (rows (gethash extra-id extra-r))
+	 (row (car rows))
+	 (feature (second row))
+	 (value (third row)))
+    (unless (= 1 (length rows))
+      (error "~a rows for extra-id=~a" 
+	     (length rows) extra-id))
+    (make-extrapair :feature feature
+		    :value value)))
+
+
+(defun process-record-db (record sdb)
+  (let* ((pred-t (sdb-table sdb 'pred))
+	(frame-t (sdb-table sdb 'frame))
+	(var-t (sdb-table sdb 'var))
+	(extra-t (sdb-table sdb 'extra))
+	
+	(pred-r (sdbt-rows pred-t))
+	(frame-r (sdbt-rows frame-t))
+	(var-r (sdbt-rows var-t))
+	(extra-r (sdbt-rows extra-t)))
+    (loop
+	with lex-id = (semantics-record-id record)
+	with rels = (semantics-record-relations record)
+	for rel in rels
+	for pred = (rel-base-pred rel)
+	for frame = (rel-base-flist rel)
+	for frame-id = (next-counter frame-t)
+	for pred-row = (list lex-id pred frame-id)
+	do
+	  (sdbt-rows-hash pred-row pred-r)
+	  (loop
+	      for role in frame
+	      for slot = (fvpair-feature role)
+	      for slot-val = (fvpair-value role)
+	      with frame-row
+	      do
+		(typecase slot-val
+		  (string
+		   (setf frame-row (list frame-id slot slot-val nil nil nil))
+		   (sdbt-rows-hash frame-row frame-r))
+		  (symbol
+		   (setf frame-row (list frame-id slot nil slot-val nil nil))
+		   (sdbt-rows-hash frame-row frame-r))
+		  (var-base
+		   (let* ((var slot-val)
+			  (var-id (next-counter var-t))
+			  (type (var-base-type var)))
+		     (setf frame-row (list frame-id slot nil nil var-id type))
+		     (sdbt-rows-hash  frame-row frame-r)
+		     (loop
+			 with extra-list = (var-base-extra var)
+			 for extra in extra-list
+			 for extra-id = (next-counter extra-t)
+			 for var-row = (list var-id extra-id)
+			 for extra-feature = (extrapair-feature extra)
+			 for extra-value = (extrapair-value extra)
+			 for extra-row = (list extra-id extra-feature extra-value)
+			 do
+			   (sdbt-rows-hash  var-row var-r)
+			   (sdbt-rows-hash  extra-row extra-r)
+			   ))))))))
 		   
 ;;; aux fns
 
@@ -613,3 +744,17 @@
 	       (pop str-list)
 	       (mapcan #'(lambda (x) (list separator x)) str-list)))))))
   
+(defun str-to-mixed2 (val-str)
+  (let ((len (length val-str)))
+    (cond 
+     ((= (length val-str) 0)
+      nil)
+     ((eq (aref val-str 0) #\")
+      (unless (eq (aref val-str (1- len)) #\")
+	(error "STRING val must be of form \\\"STR\\\""))
+      (subseq val-str 1 (1- len)))
+     ((and (eq (aref val-str 0) #\\)
+	  (eq (aref val-str 1) #\"))
+      (lkb::str-2-symb (format nil "\"~a" (subseq val-str 2 len))))
+     (t
+      (lkb::str-2-symb val-str)))))
