@@ -156,16 +156,22 @@
     (user::write-psort-index-file)))
 
 (defun restart-lkb-function nil
-  #+:foo (user::read-psort-index-file)
+  (user::read-psort-index-file)
   (set-up-lkb-interaction :core)
   (enable-type-interactions))
 
-(defun dump-lkb nil
+(defun restart-lkb-window nil
+  (set-up-lkb-interaction :core)
+  (enable-type-interactions))
+
+(defun dump-lkb (&optional fresh-p)
   (let ((image-location 
          (user::ask-user-for-new-pathname 
           "File for image (local file strongly advised)")))
     (when image-location
-      (setf excl:*restart-init-function* #'restart-lkb-function) 
+      (setf excl:*restart-init-function* 
+        (if fresh-p #'restart-lkb-window
+          #'restart-lkb-function))
       (user::write-psort-index-file)
       (user::clear-expanded-lex)
       (user::clear-type-cache)

@@ -7,6 +7,7 @@
   (let ((error-file (or path-name 
                         (ask-user-for-new-pathname "File for errors?"))))
     (when error-file
+      (format t "~%Checking lexicon")
       (with-open-file (ostream error-file :direction :output
                                :if-exists :new-version)
         (setf *batch-mode* t)
@@ -26,12 +27,14 @@
                    (let ((new-fs (lex-or-psort-full-fs entry)))
                      (unless new-fs
                        (format ostream "~%No feature structure for ~A" lex-id))
-                     (when new-fs
-                       (sanitize (existing-dag-at-end-of 
-                                  (tdfs-indef new-fs) 
-                                  mrs::*initial-semantics-path*)
-                                 lex-id ostream))))
+;;                     (when new-fs
+;;                       (sanitize (existing-dag-at-end-of 
+;;                                  (tdfs-indef new-fs) 
+;;                                  mrs::*initial-semantics-path*)
+;;                                 lex-id ostream))))
+                     ))
                  (setf (cddr (gethash id *psorts*)) nil)))) ; clear structure
+        (format t "~%Lexicon checked")
         (setf *batch-mode* nil)))))
 
 #|

@@ -21,9 +21,11 @@
 
 ;;; This is the font for the pop up menu and the display windows
 
-(def-lkb-parameter *type-font-spec* '(:sans-serif :roman 12))
+(defun make-active-fs-type-font-spec nil
+  (list :sans-serif :roman *fs-type-font-size*))
 
-(def-lkb-parameter *title-font-spec* '(:fix :roman 14))
+(defun make-active-fs-title-font-spec nil
+  (list :fix :roman *fs-title-font-size*))
 
 ;;; ***** active types *****
 
@@ -122,7 +124,7 @@
            (fudge 20)
 	   (max-width 0))
       (silica:inhibit-updating-scroll-bars (stream)
-        (clim:with-text-style (stream *type-font-spec*)
+        (clim:with-text-style (stream (make-active-fs-type-font-spec))
 	  (clim:with-output-recording-options (stream :draw nil :record t)
 	    (draw-active-title stream fs title parents paths)
 	    (when parents 
@@ -170,7 +172,7 @@
 
 (defun draw-active-title (stream fs title parents paths)
   (declare (ignore fs parents paths))
-  (clim:with-text-style (stream *title-font-spec*)
+  (clim:with-text-style (stream (make-active-fs-title-font-spec))
     (clim:with-output-as-presentation 
 	(stream t 'symbol)
       (format stream "~%~A~%" title))))

@@ -162,7 +162,8 @@
               :source-pathname "main"
 	      :binary-pathname "main"
 	      :components
-	      ((:file "batch-check")))
+	      ((:file "batch-check")
+               (:file "debug")))
      (:module "fourtytwo"
               :source-pathname "io-general"
 	      :binary-pathname "io-general"

@@ -11,14 +11,7 @@
   :display-function 'draw-chart-window
   :width :compute 
   :height :compute
-  :text-style *ptree-text-style*)
-
-;;; use *parse-tree-font-size* from globals.lsp
-
-(defparameter *chart-font* (list "Helvetica" (or *parse-tree-font-size* 9)))
-(defparameter *chart-bold-font* (list "Helvetica" 
-				      (or *parse-tree-font-size* 9) :bold))
-
+  :text-style (lkb-parse-tree-font))
 
 (defun draw-chart-lattice (node title horizontalp)
   (declare (ignore horizontalp))
@@ -171,7 +164,7 @@
 			  :text-cursor nil
 			  :width :compute
 			  :height :compute
-			  :text-style *ptree-text-style*
+			  :text-style (lkb-parse-tree-font)
 			  :end-of-line-action :allow
 			  :end-of-page-action :allow
 			  :borders nil

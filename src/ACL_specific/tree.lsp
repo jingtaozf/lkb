@@ -20,10 +20,10 @@
 (defconstant *window-height* 400
   "Initial height of tree window")
 
-(defvar *tree-text-style* (clim:parse-text-style 
-                           (list 
-                            :sans-serif :roman *type-tree-font-size*))
-  "Text style for node labels.")
+(defun make-tree-text-style nil
+  (clim:parse-text-style 
+   (list 
+    :sans-serif :roman *type-tree-font-size*)))
 
 (defconstant *tree-node-sep* 6
   "Spacing between nodes in a single generation.")
@@ -122,7 +122,7 @@
   :display-function 'draw-type-hierarchy
   :width *window-width* 
   :height *window-height*
-  :text-style *tree-text-style*)
+  :text-style (make-tree-text-style))
 
 (defun display-type-hierarchy (node title horizontalp existing show-all-p)
   (declare (ignore horizontalp))

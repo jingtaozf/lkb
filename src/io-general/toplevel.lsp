@@ -394,9 +394,9 @@
   ;;; stuff won't fail anyway
   (let* ((check-details
           (ask-for-lisp-movable 
-           "Check unification" '(("fs1" . plur-noun) 
-                                 ("path1 in ()s (optional)" . (1))
-                                 ("fs2" . book_1)
+           "Check unification" '(("fs1" . head-specifier-rule) 
+                                 ("path1 in ()s (optional)" . (args first))
+                                 ("fs2" . sleeps_1)
                                  ("path2 in ()s (optional)" . nil)
                                  ("name for result (optional)" . nil))))
          (fs1-id (car check-details))

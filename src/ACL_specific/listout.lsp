@@ -13,9 +13,6 @@
 
 (in-package :user)
 
-(def-lkb-parameter *lkb-list-font*
-    (list :bold "Helvetica" (or *parse-tree-font-size* 9)))
-
 (defstruct thing object)
 
 (define-lkb-frame list-window

@@ -28,7 +28,6 @@
 		      cl-user::show-parse 
 		      cl-user::show-parse-edge 
 		      cl-user::show-chart 
-		      cl-user::print-chart
 		      cl-user::parse-sentences 
 		      cl-user::compare-parses
 		      ;; generate
@@ -48,6 +47,10 @@
                       cl-user::output-display-settings
                       cl-user::load-display-settings
 		      cl-user::*lkb-system-version*
+                      ;; debug
+                      cl-user::find-all-redundancies
+                      cl-user::print-chart
+                      cl-user::batch-check-lexicon
 		      ;; options
 		      cl-user::get-parameters)))
 
@@ -97,8 +100,6 @@
                                                            :value 'show-parse-edge)
                                            (make-menu-item :name "Show chart"
                                                            :value 'show-chart)
-                                           (make-menu-item :name "Print chart"
-                                                           :value 'print-chart)
                                            (make-menu-item :name "Batch parse..."
                                                            :value 'parse-sentences))
                                           :available-p nil)
@@ -113,6 +114,16 @@
                                                            :value 'interactive-unification-check)
                                            )
                                           :available-p nil) 
+                   (make-lkb-submenu-item :menu-title "Debug"
+                                          :available-p t
+                                          :menu-items
+                                          (list
+                                           (make-menu-item :name "Find redundancies"
+                                                           :value 'find-all-redundancies :available-p t)
+                                           (make-menu-item :name "Check lexicon"
+                                                           :value 'batch-check-lexicon :available-p nil)
+                                           (make-menu-item :name "Print chart"
+                                                           :value 'print-chart :available-p nil)))
                    (make-lkb-submenu-item :menu-title "Options"
                                           :menu-items
                                           (list

@@ -104,11 +104,7 @@
 ;;; (make-menu-item :name "Parse input"
 ;;;                        :value #'do-parse)
 
-(defun do-parse-tty (sentence)
-  (when sentence
-    (parse (split-into-words 
-            (preprocess-sentence-string 
-             (string-trim '(#\space #\tab #\newline) sentence))))))
+;;; do-parse-tty is in utils.lsp
 
 ;;; (make-menu-item :name "Print chart"
 ;;;                        :value #'print-chart)))

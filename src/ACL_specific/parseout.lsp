@@ -16,9 +16,10 @@
 (defparameter *parse-window-height* 400
   "Initial height of tree window")
 
-(def-lkb-parameter *ptree-text-style* 
-    (list :sans-serif :roman (or *parse-tree-font-size* 9))
-  "Text style for node labels.")
+(defun lkb-parse-tree-font nil
+  (list :sans-serif :roman (or *parse-tree-font-size* 9)))
+
+; replaces  *ptree-text-style* 
 
 (def-lkb-parameter *ptree-node-sep* 6
   "Spacing between nodes in a single generation.")
@@ -48,7 +49,7 @@
 (defun draw-parse-tree (ptree-frame stream &key max-width max-height)
   (declare (ignore max-width max-height))
   (let ((node-tree (parse-tree-nodes ptree-frame)))
-    (clim:with-text-style (stream *ptree-text-style*)
+    (clim:with-text-style (stream (lkb-parse-tree-font))
       (clim:format-graph-from-root
        node-tree
        #'(lambda (node stream)

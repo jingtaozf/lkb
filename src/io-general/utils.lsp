@@ -91,4 +91,9 @@
       (push (coerce (nreverse current-word) 'string) current-sentence)
       (nreverse current-sentence)))
 
+(defun do-parse-tty (sentence)
+  (when sentence
+    (parse (split-into-words 
+            (preprocess-sentence-string 
+             (string-trim '(#\space #\tab #\newline) sentence))))))
 

@@ -835,7 +835,7 @@
              (setq raw-sentence (read-line istream nil 'eof))))
         (format ostream "Total elapsed time: ~A msecs~%" 
                 (- (get-internal-run-time) start-time))
-        (format t "~%Batch parse complete")
+        (format t "~%Finished test file")
         (lkb-beep))))
 
 

@@ -31,7 +31,7 @@
 	    :display-function 'display-mrs
 	    :text-cursor nil
 	    :width 400 :height 400
-	    :text-style *tree-text-style*
+	    :text-style (make-tree-text-style)
 	    :borders t
 	    :display-after-commands :no-clear
 	    :incremental-redisplay t))
