@@ -62,9 +62,6 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-echo $DELPHINHOME -- $TSDBHOME
-exit
-
 #
 # create the target directory, unless it exists already.  if the target exists
 # as a non-directory (e.g. plain file), then stop here.
