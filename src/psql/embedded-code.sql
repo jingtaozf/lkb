@@ -1,3 +1,5 @@
+DELETE FROM public.meta WHERE var='user';
+
 ---
 --- sql queries embedded in db
 ---
@@ -21,6 +23,11 @@ INSERT INTO qrya VALUES ( 'test', 0, 'select-list' );
 INSERT INTO qry VALUES 
        ( 'test', 1, 
          '$0' );
+
+INSERT INTO qrya VALUES ( 'test-like-text', 0, 'like-text' );
+INSERT INTO qry VALUES 
+       ( 'test-like-text', 1, 
+         'SELECT $0;' );
 
 INSERT INTO qrya VALUES ( 'next-version', 0, 'like-text');
 INSERT INTO qry VALUES 
@@ -74,16 +81,7 @@ INSERT INTO qry VALUES
 '
 DROP VIEW active;
 DROP VIEW filtered;
-DROP VIEW revision_all;
-
-CREATE VIEW revision_all
-AS SELECT * FROM public.revision 
-   UNION 
-   SELECT * FROM revision
-   	UNION 
-	SELECT * FROM public.revision_multi
-	UNION
-	SELECT * FROM public.revision_multi;
+-- DROP VIEW revision_all;
 
 CREATE VIEW filtered
 AS SELECT * 
@@ -102,6 +100,10 @@ CREATE VIEW active
 ); 
 
 UPDATE meta SET val=$0:text WHERE var=''filter'';
+
+--
+-- build current_grammar
+--
 
 DELETE FROM current_grammar; 
 INSERT INTO current_grammar 
@@ -249,6 +251,7 @@ CREATE TABLE meta AS SELECT * FROM public.meta WHERE var=''filter'';
 ---
 
 CREATE TABLE revision AS (SELECT * FROM public.revision);
+
 CREATE TABLE multi AS (SELECT * FROM public.multi);
 
 ---
@@ -271,14 +274,74 @@ CREATE INDEX current_grammar_orthkey
 ON current_grammar (orthkey); 
 
 ---
+--- MWE views
+---
+
+CREATE VIEW revision_all_non_multi
+AS SELECT * FROM public.revision 
+   UNION 
+   SELECT * FROM revision;
+
+CREATE VIEW multi_all AS 
+	SELECT * FROM public.multi
+	UNION
+	SELECT * FROM multi;
+
+CREATE VIEW revision_multi AS
+	SELECT 
+  multi.name,
+  rev.userid,
+  rev.version,
+  rev.modstamp,
+  COALESCE(multi.type,rev.type) AS type,
+  rev.orthography,
+  rev.orthkey,
+  rev.pronunciation,
+  COALESCE(multi.keyrel,rev.keyrel) AS keyrel,
+  rev.altkey,
+  rev.alt2key,
+  rev.keytag,
+  rev.altkeytag,
+  COALESCE(multi.particle,rev.compkey) AS compkey,
+  rev.ocompkey,
+  rev.complete,
+  rev.semclasses,
+  rev.preferences,
+
+  rev.classifier,
+  rev.selectrest,
+  rev.jlink,
+  rev.comments,
+  rev.exemplars,
+  rev.usages,
+  rev.lang,
+  rev.country,
+  rev.dialect,
+  rev.domains,
+  rev.genres,
+  rev.register,
+  rev.confidence,
+
+  rev.source,
+  rev.flags
+
+	FROM multi_all AS multi LEFT JOIN revision_all_non_multi AS rev 
+		ON rev.name = multi.verb_id;
+
+---
 --- views
 ---
 
 CREATE VIEW active AS SELECT * FROM public.revision WHERE NULL;
 CREATE VIEW filtered AS SELECT * FROM public.revision WHERE NULL;
-CREATE VIEW revision_all AS SELECT * FROM public.revision WHERE NULL;
+-- CREATE VIEW revision_all AS SELECT * FROM public.revision WHERE NULL;
 
-CREATE VIEW revision_multi AS SELECT * FROM public.revision WHERE NULL;
+CREATE VIEW revision_all
+AS SELECT * FROM public.revision 
+   UNION 
+   SELECT * FROM revision
+   	UNION 
+	SELECT * FROM revision_multi;
 
 ---
 --- FUNCTIONS

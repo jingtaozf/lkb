@@ -1,6 +1,3 @@
-\i embedded-code.sql
-\i defn.sql
-
 --- postgres optimization is poor...
 ALTER DATABASE lingo SET enable_seqscan TO off;
 
@@ -8,7 +5,7 @@ CREATE TABLE public.meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO public.meta VALUES ('db-version', '2.8');
+INSERT INTO public.meta VALUES ('db-version', '2.9');
 INSERT INTO public.meta VALUES ('filter', 'TRUE');
 
 ---
@@ -72,45 +69,6 @@ CREATE TABLE public.multi (
 PRIMARY KEY (name)
 );
 
-CREATE VIEW public.revision_multi AS 
-	SELECT 
-  multi.name,
-  rev.userid,
-  rev.version,
-  rev.modstamp,
-  COALESCE(multi.type,rev.type) AS type,
-  rev.orthography,
-  rev.orthkey,
-  rev.pronunciation,
-  COALESCE(multi.keyrel,rev.keyrel) AS keyrel,
-  rev.altkey,
-  rev.alt2key,
-  rev.keytag,
-  rev.altkeytag,
-  COALESCE(multi.particle,rev.compkey) AS compkey,
-  rev.ocompkey,
-  rev.complete,
-  rev.semclasses,
-  rev.preferences,
-
-  rev.classifier,
-  rev.selectrest,
-  rev.jlink,
-  rev.comments,
-  rev.exemplars,
-  rev.usages,
-  rev.lang,
-  rev.country,
-  rev.dialect,
-  rev.domains,
-  rev.genres,
-  rev.register,
-  rev.confidence,
-
-  rev.source,
-  rev.flags
-
-	FROM public.multi LEFT JOIN public.revision AS rev 
-		ON rev.name = multi.verb_id;
-
+\i embedded-code.sql
+\i defn.sql
 

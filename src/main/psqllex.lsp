@@ -61,7 +61,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "2.8")
+(defvar *psql-db-version* "2.9")
 (defvar *psql-port-default* nil)
 (defvar *psql-lexicon-parameters*)
 
