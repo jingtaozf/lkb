@@ -38,6 +38,17 @@
 ;; temporary
 (defvar *postgres-record-features* '(:name :f1 :f2 :f3 :f4 :f5 :f6 :f7 :f8 :f9 :source :lang :country :dialect :domains :genres :register :confidence :comments :exemplars :flags :version :userid :modstamp :orthkey))
 
+(defvar *psql-mneum-f-back-compat-map* 
+    '(("type" . "f1")
+      ("orthography" . "f2")
+      ("keyrel" . "f3") 
+      ("altkey" . "f4") 
+      ("alt2key" . "f5") 
+      ("keytag" . "f6")
+      ("altkeytag" . "f7")
+      ("compkey" . "f8") 
+      ("ocompkey" . "f9")))
+
 (defvar *postgres-sql-fns*)
 (setf *postgres-sql-fns*
   '(

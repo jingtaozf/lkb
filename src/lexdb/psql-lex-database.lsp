@@ -325,13 +325,18 @@
 			   (make-requested-fields-as-list lexicon)))))
 
 (defmethod make-mneum-f-slot ((lexicon psql-lex-database))
-  (setf (mneum-f lexicon)
-    (mapcar 
-     #'(lambda (x)
-	 (cons (first x) (second x)))
-     (sql-fn-get-raw-records lexicon 
-			     :mneum_f_map 
-			     :args (list (fields-tb lexicon))))))
+  (let ((map
+	    (mapcar 
+	     #'(lambda (x)
+		 (cons (first x) (second x)))
+	     (sql-fn-get-raw-records lexicon 
+				     :mneum_f_map 
+				     :args (list (fields-tb lexicon))))))
+    (unless map
+      (format t "~%WARNING: no field-name mappings defined in LexDB ~a (mode = `~a'~% Using following backwards-compatibility mapping:~%~a"
+	      (dbname lexicon) (fields-tb lexicon) *psql-mneum-f-back-compat-map*)
+      (setf map *psql-mneum-f-back-compat-map*)
+    map)))
 
 (defmethod mneum-2-f ((lexicon psql-lex-database) mneum)
   (or 
