@@ -21,7 +21,7 @@ LEX = flex -8
 MV = /bin/mv
 CP = /bin/cp
 #LINUX_LIBS = -lreadline -ltermcap -lregex -ldbmalloc
-LINUX_LIBS = -lreadline -ltermcap -lregex
+LINUX_LIBS = -Lllib -lreadline -ltermcap -lregex
 SUNOS_LIBS = -L4lib $(LINUX_LIBS) -liberty
 HPUX_LIBS = -L7lib -lreadline -ltermcap -lregex -liberty
 #SOLARIS_LIBS = -L5lib $(LINUX_LIBS) -liberty -lsocket -lnsl 
@@ -36,7 +36,7 @@ SOLARIS_LIBS = -L/opt/gnu/lib -L5lib $(LINUX_LIBS) -liberty -lsocket -lnsl
 XCFLAGS = -DDEBUG -DALEP \
 	  -DREAD_TABLE -DJOIN -DCOMMIT -DPRINT_SELECTION \
           -DINITIALIZE -DSERVER -DCOMPRESSED_DATA \
-          -g -I/usr/gnu/include -Iinclude -pipe
+          -g -Iinclude -pipe
 
 #
 # dependendies
