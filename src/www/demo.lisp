@@ -59,7 +59,15 @@
          (mrsp (or (null body) 
                    (if (stringp output)
                      (equal output "mrs")
-                     (member "mrs" output :test #'equal)))))
+                     (member "mrs" output :test #'equal))))
+         (nresults (lookup-form-value "nresults" query))
+         (*www-maximal-number-of-results*
+          (cond
+           ((equal nresults "10") 10)
+           ((equal nresults "50") 50)
+           ((equal nresults "100") 100)
+           ((equal nresults "all") nil)
+           (t *www-maximal-number-of-results*))))
     (with-http-response (request entity)
       (with-http-body (request entity
                        :external-format (excl:crlf-base-ef :utf-8))
@@ -123,7 +131,16 @@
                      ((:input
                        :type "checkbox" :name "output" :value "mrs"
                        :if* mrsp :checked '||)))
-                    ((:td :class "buttons") "mrs")))))
+                    ((:td :class "buttons") "mrs")
+                    ((:td :class "buttons")
+                     "&nbsp;&nbsp;|&nbsp;&nbsp;show&nbsp;")
+                    ((:td :class "buttons")
+                     ((:select :size 1 :name "nresults")
+                      ((:option :value "10" :selected '||) "10")
+                      ((:option :value "50") "50")
+                      ((:option :value "100") "100")
+                      ((:option :value "all") "all")))
+                    ((:td :class "buttons") "&nbsp;results")))))
                 (:center
                  (when (and (eq method :post) input)
                    (www-parse-input
@@ -181,13 +198,15 @@
       (format
        stream 
        "<div id=summary>~
-        [~d of ~d solution~p~
+        [~d of ~d ~:[analyses~;analysis~]~
         ~@[; processing time: ~,2f seconds~]~
         ~@[; ~a edges~]]</div>~%~
         <br>~%"
-       (min readings *www-maximal-number-of-results*)
-       readings 
-       readings time edges edges)
+       (if (numberp *www-maximal-number-of-results*)
+         (min readings *www-maximal-number-of-results*)
+         readings)
+       readings (= readings 1)
+       time edges edges)
       (mp:with-process-lock (%www-visualize-lock%)
         (loop
             initially

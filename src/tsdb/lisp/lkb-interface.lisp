@@ -1,7 +1,3 @@
-;;; Copyright John Carroll, Stephan Oepen 1998--2001 All Rights Reserved.
-;;; No use or redistribution without permission.
-;;; 
-
 ;;;
 ;;; while preparing for the sep-99 release of the LKB we need to do some magic 
 ;;; to support the pre-release and current development versions in the same
