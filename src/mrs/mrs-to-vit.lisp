@@ -53,6 +53,8 @@
 
 (defvar *vit-instances* nil)
 
+(defvar *vit-sorts* nil)
+
 (defvar *hole-label-eqs* nil
   "store additional eqs for labels which must be holes according to vitADT")
 
@@ -107,6 +109,7 @@
 (defun clear-temporary-dbs ()
   (setf *group-members* nil
         *vit-instances* nil
+        *vit-sorts* nil
         *hole-label-eqs* nil
         *used-handel-labels* nil
         *top-level-variables* nil
@@ -241,6 +244,11 @@
   (and (var-p var)
        (eql (elt (var-name var) 0) '#\v)))       
 
+(defstruct (argval)
+  arg
+  var
+  sort)
+
 (defun collect-args-and-values-from-rel (rel dbitem)
   ;;; returns the values from a relation (other than the handel)
   ;;; split up in those for arg-relations and normal
@@ -255,21 +263,65 @@
           (let* ((value (fvpair-value fvp))
                  (feat (fvpair-feature fvp))
                  ;;; this treats *mrs-arg-features* as default for mismatches
-  ;;; between semdb and grammar:
+                 ;;; between semdb and grammar:
                  (def (or (assoc feat dbargs)
                           (assoc feat *mrs-arg-features*)))
                  (arg (if def
                           (or (and (consp (rest def))
                                    (first (rest def)))
-                           (get-arg-role value) (rest def) feat))))
+                              (get-arg-role value) (rest def) feat)))
+                 (sort
+                  (when dbitem
+                    (extract-sort def (semdbitem-extra dbitem)))))
             ;; or better use fvp???
             (unless (and (optional-var-p value)
                          (mrs-language '(english)))
               (if arg
                    ;; args assoc-Liste (arg . var)
-                  (setf args (acons arg value args))
-                (setf others (append others (list (fvpair-value fvp))))))))
+                  (setf args (push (make-argval :arg arg :var value
+                                                :sort sort) args))
+                (push (make-argval :var (fvpair-value fvp)
+                                   :sort sort)
+                      others)))))
     (list args others)))
+
+(defun extract-sort (def extra)
+  (if def
+      (if (third extra)
+          (let ((argpos (dolist (char (coerce (string (car def)) 'list))
+                             (when (digit-char-p char)
+                               (return (digit-char-p char))))))
+            (when argpos
+              (when (first extra)
+                (let* ((poslist 
+                       (for char in (coerce (string (first extra)) 'list)
+                            filter
+                            (digit-char-p char)))
+                       (index (position argpos poslist)))
+              (elt (expand-sort (third extra)) index))))))
+    (if (second extra)
+        (car (expand-sort (second extra))))))
+
+(defun expand-sort (str)
+  ;;; format is a string with commas separating args
+  ;;; which are possibly disjunctive (;s)
+  ;;; return a list of lists
+  ;;; e.g. human;food,food
+  ;;; ((human food) (food))
+  (let ((char-list nil))
+    (push #\( char-list)
+    (push #\( char-list)
+    (for char in (coerce str 'list)
+         do
+         (cond ((eql char #\,) (push #\) char-list)
+                               (push #\( char-list))
+               ((eql char #\;) (push #\space char-list))
+               (t (push char char-list))))
+    (push #\) char-list)
+    (push #\) char-list)
+    (read-from-string
+     (coerce (nreverse char-list) 'string))))
+
 
 (defun collect-all-handel-vars (rels)
   ;;; Given a set of relations, this returns the list of labels and of
@@ -574,8 +626,66 @@
             (append groups scope (vit-scope *current-vit*)))
           (add-unbounds-to-vit *current-vit*)
           (convert-psoa-extras-to-vit (psoa-extras mrs-psoa) *current-vit* group-list labels)
+          (for sort-info in (make-sorts-consistent *vit-sorts*)
+               do
+               (push (make-vit_sort 
+                      :instance (car sort-info)
+                      :args 
+                       (if (cdr (cdr sort-info))
+                           (list (make-disj-sort 
+                                        :args (cdr sort-info)))
+                         (cdr sort-info)))
+                     (vit-sorts *current-vit*)))
           (values *current-vit*
                   binding-sets)))))))
+
+(defun make-sorts-consistent (sorts)
+  (let ((done nil)
+        (res nil))
+    (loop 
+      (let ((sort-info (car sorts)))
+        (unless sort-info (return))
+        (setf sorts (cdr sorts))
+        (unless (member (car sort-info) done)
+          (push (car sort-info) done)
+          (let ((equiv (list (cdr sort-info))))
+            (for rem in sorts
+                 do
+                 (when (eql (car sort-info)
+                            (car rem))
+                   (push (cdr rem) equiv)))
+            (let ((new-sorts (reduce #'merge-sorts equiv)))
+              (setf new-sorts (delete-if 
+                               #'(lambda (x) (member x *vm-ignored-sort-list*))
+                               new-sorts))
+              (when new-sorts 
+              ;;; ignored sorts are dropped
+                (push (cons (car sort-info)
+                            (reduce #'merge-sorts equiv))
+                      res)))))))
+      res))
+
+(defun merge-sorts (sorts1 sorts2)
+  (for sort1 in sorts1
+       append
+       (for sort2 in sorts2
+            filter
+            (let* ((munged1 (intern 
+                            (concatenate 'string "VMSORT_" (string sort1))
+                            :cl-user))
+                   (munged2 (intern 
+                             (concatenate 'string "VMSORT_" (string sort2))
+                            :cl-user))
+                   (res
+                    (if 
+                        (and (is-valid-type munged1)
+                             (is-valid-type munged2))
+                        (compatible-types munged1 munged2))))
+              ;;; needs fixing for PAGE
+              (when (and res (string-equal (subseq (string res) 0 7) "VMSORT_"))
+                  (setf res (intern (subseq (string res) 7) :cl-user)))
+              res))))
+  
 
 (defun german-mrs-to-vit (mrs)
   (clear-temporary-dbs)
@@ -756,34 +866,44 @@
                                         (rel-label rel)))
            (dbitem (get-db-item (rel-sort rel)))
            (args (collect-args-and-values-from-rel rel dbitem))
-           (pred (make-p-term :predicate 
-                              (get-vit-predicate-name (rel-sort rel) dbitem)
-                              :args 
-                              (cons label
-                                    (check-for-repair 
-                                     (loop for val in (second args)
-                                         collect
-                                           (convert-mrs-val-to-vit val labels))
-                                     dbitem))))
+           (pred (make-p-term 
+                  :predicate 
+                  (get-vit-predicate-name (rel-sort rel) dbitem)
+                  :args 
+                  (cons label
+                        (check-for-repair 
+                         (loop for varstruct in (second args)
+                             collect
+                               (let* 
+                                   ((val (argval-var varstruct))
+                                    (sort (argval-sort varstruct))
+                                    (vitval 
+                                     (convert-mrs-val-to-vit val labels)))
+                                 (when (and (var-p val) sort)
+                                   (push (cons vitval sort) 
+                                             *vit-sorts*))
+                                 vitval))
+                         dbitem))))
            (inst (get-vit-instance-from-rel pred))
            (semantics 
             (cons pred
                   (loop for arg in (first args)
-                                   ;; arg is (argN . value)
+                                   ;; arg is an argval structure
                       collect
-                        (make-p-term :predicate
-                                     (first arg)
-                                     :args (if (member (first arg) 
-                                                       *no-inst-arg-roles*)
-                                               (list label
-                                                     (convert-mrs-val-to-vit 
-                                                      (rest arg)
-                                                      labels))
-                                             (list label
-                                                   inst
-                                                   (convert-mrs-val-to-vit 
-                                                    (rest arg)
-                                                    labels))))))))
+                        (let* ((truearg (argval-arg arg))
+                               (var (argval-var arg))
+                               (sort (argval-sort arg))
+                               (vitval 
+                                (convert-mrs-val-to-vit var labels)))
+                          (when sort
+                            (push (cons vitval sort) *vit-sorts*))
+                          (make-p-term 
+                           :predicate
+                           truearg
+                           :args (if (member truearg 
+                                             *no-inst-arg-roles*)
+                                     (list label vitval)
+                                   (list label inst vitval))))))))
       (convert-mrs-var-extra (second args) vit inst groups labels)
       (when (vit-bind-inst-rel-p rel)
         (pushnew inst *bound-vit-vars* :test #'equalp))
@@ -911,9 +1031,12 @@
 ;; find out whether there is something to do
 (defun convert-mrs-var-extra (vars vit inst groups labels)
   (declare (ignore groups labels))
-  (loop for var in vars
+  (loop for varstruct in vars
       do
-        (when (and (var-p var) (not (member inst *vit-instances* :test #'equalp))
+        (when (argval-p varstruct)
+          (let ((var (argval-var varstruct)))
+            (when (and (var-p var) 
+                       (not (member inst *vit-instances* :test #'equalp))
 		   (var-extra var))
           (loop for fvp in (var-extra var)
               do
@@ -930,7 +1053,7 @@
                                                                   inst))))
                       (if newrels
                           (add-rels-to-vit access newrels vit))))))
-          (push inst *vit-instances*))))
+          (push inst *vit-instances*))))))
 
 ;;;; Label/Inst-selection unsolved; at present used only for 'dir' taking a
 ;;;; label; extension of table format will be required

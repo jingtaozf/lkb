@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.6  1999/08/02 20:51:44  danf
+;; Updates from Walter K.
+;;
 ;; Revision 1.5  1999/05/14 02:25:29  aac
 ;; allowing generator index to be cleared, tidying up to avoid compiler warnings
 ;;
@@ -54,6 +57,9 @@
 
 (defstruct (p-struct)
   operator
+  args)
+
+(defstruct (disj-sort)
   args)
 
 ;;; segment descriptions with defaults for standalone
@@ -542,6 +548,8 @@
          (output-p-struct vit-out form))
         ((p-term-p form)
          (output-p-term vit-out form))
+        ((disj-sort-p form)
+         (output-disj-sort vit-out form))
         ((whg-id-p form)
          (format vit-out "~A" form))
         ((stringp form)
@@ -549,6 +557,16 @@
         ((symbolp form)
          (format vit-out "~(~A~)" form))
         (t (format vit-out "~(~S~)" form))))
+
+(defun output-disj-sort (vit-out form)
+  (format vit-out ";(")
+  (let ((need-comma nil)) 
+    (dolist (current-form (disj-sort-args form))
+      (when need-comma
+        (format vit-out ","))
+      (setf need-comma t)
+      (output-p-form vit-out current-form))
+  (format vit-out ")")))
 
 (defun output-p-list (vit-out form)
   (format vit-out "[")
@@ -570,8 +588,9 @@
       (format vit-out "~(~A(~)" (p-term-predicate p-term)))
     (let ((args (p-term-args p-term))
           (need-comma nil))             ; messiness because of comma delimiters
-      (if (vit-special-form-p p-term)
-          (setf args (cons (vit-special-form-instance p-term) args)))
+      (when (vit-special-form-p p-term)
+        (output-p-form vit-out (vit-special-form-instance p-term))
+        (setf need-comma t))
     (dolist (current-arg args)
       (when need-comma
         (format vit-out ","))
@@ -645,13 +664,4 @@
 ;       (vit-terms-equiv-p (vit-utterance-id vit1) (vit-utterance-id vit2))
        ))
 
-;;;;;;;;;;;;;;;;;; other general access and create functions
-
-
-(defun vitAddSort (sort inst vit)
-  (if (member sort *vm-ignored-sort-list*)
-      vit
-    (setf (vit-sorts vit) 
-      (cons (make-vit_sort :args (list inst sort))
-            (vit-sorts vit)))))
 
