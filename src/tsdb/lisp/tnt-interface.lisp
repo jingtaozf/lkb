@@ -184,5 +184,6 @@
              for derivation = (when (member id active :test #'eql)
                                 (get-field :derivation result))
              when derivation do
+               (format stream "%% tree # %d~%" id)
                (tnt-process-deriv derivation stream)
                (format stream "~%")))))

@@ -655,8 +655,8 @@
       do
         (format 
          t 
-         "kristina(): ~d active tree~p (of ~d) for item # ~d.~%" 
-         (if version (length active) (length results))
+         "kristina(): ~a active tree~p (of ~d) for item # ~d.~%" 
+         (if version "all" (length results))
          (length active) (length results) i-id)
 
         (with-open-file (stream (format nil "~a/~d" target i-id)
@@ -664,10 +664,11 @@
                          :if-exists :supersede :if-does-not-exist :create)
           (format 
            stream
-           "[~d: ~d of ~d] `~a'~%~a~%"
+           "[~d: ~a of ~d] `~a'~%~a~%"
            i-id 
-           (if version (length active) (length results))
+           (if version "all" (length results))
            (length results) input #\page)
+          #-:null
           (loop
               with *package* = (find-package lkb::*lkb-package*)
 	      with lkb::*deleted-daughter-features* = nil
@@ -683,6 +684,7 @@
                 (lkb::display-dag1 dag 'lkb::tdl stream)
                 (format stream "~%")
                 (format stream "~c~%" #\page))
+          #-:null
           (loop
               with *package* = (find-package lkb::*lkb-package*)
 	      with lkb::*deleted-daughter-features* = nil
