@@ -119,6 +119,8 @@
        #+:allegro
        (:file "gc")
        (:file "yy")
+       #+:mt
+       (:file "mt")
        #+:page 
        (:file "page-interface")
        (:file "derivations")
@@ -170,6 +172,8 @@
        (:file "utilities")
        (:file "commands")
        (:file "input")
+       (:file "yy")
+       (:file "mt")
        (:file "copyleft")
        (:file "balloon")
        (:file "balloons" :source-extension ""))))

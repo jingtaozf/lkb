@@ -201,6 +201,10 @@ if {[file exists "$globals(podium_home)yy.tcl"]} {
   source "$globals(podium_home)yy.tcl";
 }; # if
 
+if {[info exists globals(mtp)] && $globals(mtp) 
+    &&[file exists "$globals(podium_home)mt.tcl"]} {
+  source "$globals(podium_home)mt.tcl";
+}; # if
 #
 # log activity to trace file (for debugging)
 #
@@ -407,6 +411,8 @@ proc main {} {
     -menu .menu.process.menu.switches;
   .menu.process.menu add cascade \
     -label "Variables" -menu .menu.process.menu.variables;
+  .menu.process.menu add cascade -label "Source Database" \
+    -menu .menu.compare.menu.compare
 
   menu .menu.process.menu.switches -tearoff 0;
   .menu.process.menu.switches add radiobutton \
@@ -538,6 +544,11 @@ proc main {} {
   .menu.analyze.menu add cascade \
           -label "Rule Values" \
           -menu .menu.analyze.menu.rvalues;
+  .menu.analyze.menu add separator
+  .menu.analyze.menu add command \
+          -label "Results" \
+          -state [expr {$globals(mtp) ? "active" : "disabled"}] \
+          -command {analyze_results};
 
   menu .menu.analyze.menu.by -tearoff 0
   .menu.analyze.menu.by add radiobutton \

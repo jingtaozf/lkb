@@ -1702,7 +1702,7 @@
          (format stream *statistics-tcl-formats*))
        (format
         stream
-        "flags 1~%~
+        "flags 0~%~
          layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
          layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
          layout col 0 -m1 5 -r 2 -m2 5 -c black -j right~%~

@@ -288,48 +288,59 @@
   ;; make sure to not create a write cache (and thus no new files) on read-only
   ;; profiles: add call to verify-tsdb-directory() here and inspect status.
   ;;                                                           (27-oct-03; oe)
-  (if (eq protocol :raw)
-    (loop 
-        with cache = (pairlis '(:database :count :protocol)
-                              (list data 0 protocol))
-        with path = (find-tsdb-directory data)
-        with schema = (or schema (read-database-schema data))
-        initially (when verbose
-                    (format 
-                     *tsdb-io*
-                     "~&create-cache(): write-through mode for `~a'.~%"
-                     data)
-                    (force-output *tsdb-io*))
-        for file in (if allp
-                      (loop 
-                          for relation in schema
-                          collect (first relation))
-                      *tsdb-profile-files*)
-        for key = (intern (string-upcase file) :keyword)
-        when (assoc file schema :test #'string=) do
-          (let ((stream (open (make-pathname :directory path :name file) 
-                              :direction :output 
-                              :if-exists :append 
-                              :if-does-not-exist :create)))
-            (push (cons key stream) cache))
-        finally (return cache))
-    (let* ((user (current-user))
-           (file (format
-                  nil "/tmp/.tsdb.cache.~a.~a.~a"
-                  user (current-pid) (string-downcase (string (gensym "")))))
-           (stream (open file 
-                         :direction :output 
-                         :if-exists :supersede :if-does-not-exist :create)))
-      (when stream
-        (format stream "set implicit-commit \"exit\".~%")
-        (when verbose
-          (format 
-           *tsdb-io*
-           "~&create-cache(): tsdb(1) write cache in `~a'.~%"
-           file)
-          (force-output *tsdb-io*)))
-      (pairlis '(:database :file :stream :count :protocol)
-               (list data file stream 0 protocol)))))
+  (let ((status (verify-tsdb-directory data)))
+    (when (eq (get-field :status status) :ro)
+      (when verbose
+        (format 
+         *tsdb-io*
+         "~&create-cache(): `~a' is read-only.~%"
+         data))
+      (return-from create-cache
+        (pairlis '(:database :count :protocol) (list data 0 :ro)))))
+  (case protocol
+    (:raw
+     (loop 
+         with cache = (pairlis '(:database :count :protocol)
+                               (list data 0 protocol))
+         with path = (find-tsdb-directory data)
+         with schema = (or schema (read-database-schema data))
+         initially (when verbose
+                     (format 
+                      *tsdb-io*
+                      "~&create-cache(): write-through mode for `~a'.~%"
+                      data)
+                     (force-output *tsdb-io*))
+         for file in (if allp
+                       (loop 
+                           for relation in schema
+                           collect (first relation))
+                       *tsdb-profile-files*)
+         for key = (intern (string-upcase file) :keyword)
+         when (assoc file schema :test #'string=) do
+           (let ((stream (open (make-pathname :directory path :name file) 
+                               :direction :output 
+                               :if-exists :append 
+                               :if-does-not-exist :create)))
+             (push (cons key stream) cache))
+         finally (return cache)))
+    (:cooked
+     (let* ((user (current-user))
+            (file (format
+                   nil "/tmp/.tsdb.cache.~a.~a.~a"
+                   user (current-pid) (string-downcase (string (gensym "")))))
+            (stream (open file 
+                          :direction :output 
+                          :if-exists :supersede :if-does-not-exist :create)))
+       (when stream
+         (format stream "set implicit-commit \"exit\".~%")
+         (when verbose
+           (format 
+            *tsdb-io*
+            "~&create-cache(): tsdb(1) write cache in `~a'.~%"
+            file)
+           (force-output *tsdb-io*)))
+       (pairlis '(:database :file :stream :count :protocol)
+                (list data file stream 0 protocol))))))
 
 (defun cache-query (query data cache)
   (let* ((database (get-field :database cache))
@@ -367,24 +378,26 @@
        "~&flush-cache(): flushing `~a' cache ..."
        database)
       (force-output *tsdb-io*))
-    (if (eq protocol :raw)
-      (loop
-          for file in *tsdb-profile-files*
-          for key = (intern (string-upcase file) :keyword)
-          for stream = (get-field key cache)
-          when stream do
-            (force-output stream)
-            (close stream))
-      (let ((file (get-field :file cache))
-            (stream (get-field :stream cache)))
-        (format stream "~&commit.~%")
-        (force-output stream)
-        (close stream)
-        (let* ((query (format nil "do \"~a\"" file)))
-          (call-tsdb query database))
-        (unless *tsdb-debug-mode-p*
-          (delete-file file))))
-    (when sort
+    (case protocol
+      (:raw
+       (loop
+           for file in *tsdb-profile-files*
+           for key = (intern (string-upcase file) :keyword)
+           for stream = (get-field key cache)
+           when stream do
+             (force-output stream)
+             (close stream)))
+      (:cooked
+       (let ((file (get-field :file cache))
+             (stream (get-field :stream cache)))
+         (format stream "~&commit.~%")
+         (force-output stream)
+         (close stream)
+         (let* ((query (format nil "do \"~a\"" file)))
+           (call-tsdb query database))
+         (unless *tsdb-debug-mode-p*
+           (delete-file file)))))
+    (when (and sort (not (eq protocol :ro)))
       ;;
       ;; for improved tsdb(1) efficiency, make an attempt at sorting the files.
       ;;
@@ -662,6 +675,9 @@
 
 (defun write-run (result language &key cache)
 
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error "write-run(): write attempt on read-only cache; see `tsdb.lisp'"))
+  
   (when *tsdb-write-run-p*
     (let* ((*print-circle* nil)
            (*print-level* nil)
@@ -735,6 +751,9 @@
           (call-tsdb query language :cache cache))))))
 
 (defun write-parse (result language &key cache)
+
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error "write-parse(): write attempt on read-only cache; see `tsdb.lisp'"))
   
   (when *tsdb-write-parse-p*
     (let* ((*print-circle* nil)
@@ -840,6 +859,11 @@
 (defun write-results (parse-id results
                       &optional (language *tsdb-data*)
                       &key cache)
+
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error 
+     "write-results(): write attempt on read-only cache; see `tsdb.lisp'"))
+
   (when *tsdb-write-result-p*
     (loop
         with *print-circle* = nil
@@ -895,6 +919,9 @@
 (defun write-edges (parse-id edges
                     &optional (language *tsdb-data*)
                     &key cache)
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error "write-edges(): write attempt on read-only cache; see `tsdb.lisp'"))
+
   (when *tsdb-write-edge-p*
     (loop
         with *print-circle* = nil
@@ -943,6 +970,10 @@
 (defun write-rules (parse-id statistics
                     &optional (language *tsdb-data*)
                     &key cache)
+
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error "write-rules(): write attempt on read-only cache; see `tsdb.lisp'"))
+
   (when *tsdb-rule-statistics-p*
     (loop 
         with *print-circle* = nil
@@ -982,6 +1013,10 @@
                      user date
                      language
                      &key cache)
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error 
+     "write-output(): write attempt on read-only cache; see `tsdb.lisp'"))
+
   (when *tsdb-write-output-p*
     (when (and cache (eq (get-field :protocol cache) :raw))
       (error "write-output(): unable to write to raw cache; see `tsdb.lisp'"))
@@ -1001,6 +1036,10 @@
       (call-tsdb query language :cache cache)))) 
 
 (defun write-tree (data record &key cache)
+
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error "write-tree(): write attempt on read-only cache; see `tsdb.lisp'"))
+
   (let* ((*print-circle* nil)
          (*print-level* nil)
          (*print-length* nil)
@@ -1036,6 +1075,10 @@
 
 (defun write-decision (data record &key cache)
   
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error 
+     "write-decision(): write attempt on read-only cache; see `tsdb.lisp'"))
+
   (let* ((*print-circle* nil)
          (*print-level* nil)
          (*print-length* nil)
@@ -1072,6 +1115,11 @@
         (call-tsdb query data :cache cache)))))
 
 (defun write-preference (data record &key cache)
+
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error 
+     "write-preference(): write attempt on read-only cache; see `tsdb.lisp'"))
+
   (let* ((*print-circle* nil)
          (*print-level* nil)
          (*print-length* nil)
@@ -1095,6 +1143,11 @@
         (call-tsdb query data :cache cache)))))
 
 (defun write-update (data record &key cache)
+
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error 
+     "write-update(): write attempt on read-only cache; see `tsdb.lisp'"))
+
   (let* ((*print-circle* nil)
          (*print-level* nil)
          (*print-length* nil)
@@ -1136,6 +1189,10 @@
         (call-tsdb query data :cache cache)))))
 
 (defun write-score (data record &key cache)
+
+  (when (and cache (eq (get-field :protocol cache) :ro))
+    (error "write-score(): write attempt on read-only cache; see `tsdb.lisp'"))
+
   (let* ((*print-circle* nil)
          (*print-level* nil)
          (*print-length* nil)

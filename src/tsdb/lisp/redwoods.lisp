@@ -514,7 +514,7 @@
             when (derivation-equal derivation gderivation) do
               (setf (lkb::compare-frame-exact frame) edge)))
 
-      (when (and (null %client%) runp)
+      (when (and runp (null %client%))
         (setf %client%
           (mp:run-function 
            (or title "[incr tsdb()] Tree Selection")
@@ -522,7 +522,12 @@
 
       (let ((status (lkb::set-up-compare-frame 
                      frame lkb::*parse-record* :runp runp)))
-         
+
+        ;;
+        ;; _fix_me_
+        ;; grey out `Save' button in compare frame, when we have a read-only
+        ;; cache, i.e. (:protocol . :ro).                     (26-jan-04; oe)
+        ;;
         #+:expand
         (lkb::record-decision (lkb::make-decision :type :save) frame)
         #-:expand

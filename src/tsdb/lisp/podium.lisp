@@ -106,7 +106,8 @@
       set globals(filter,connectivity) ~:[0~;1~]~%~
       set globals(cache_connections_p) ~:[0~;1~]~%~
       set globals(gc_p) ~(~a~)~%~
-      set globals(tenure_p) ~:[0~;1~]~%~%"
+      set globals(tenure_p) ~:[0~;1~]~%~
+      set globals(mtp) ~:[0~;1~]~%~%"
      *tsdb-version*
      (current-application)
      *tsdb-podium-home* 
@@ -140,7 +141,8 @@
      (smember :connectivity *filter-test*)
      *tsdb-cache-connections-p*
      *tsdb-gc-p*
-     *tsdb-tenure-p*)
+     *tsdb-tenure-p*
+     (find :mt *features*))
     (tsdb-do-phenomena :stream *tsdb-wish-stream*)
     (format *tsdb-wish-stream* "source \"~a\"~%" *tsdb-podium*)
     (format *tsdb-wish-stream* 
@@ -851,8 +853,8 @@
                      (push (append (second return)
                                    (pairlis 
                                     '(:file 
-                                     :data
-                                     :command)
+                                      :data
+                                      :command)
                                     (list file
                                           (format nil "~a@~a" source target)
                                           (cons action arguments))))
@@ -898,6 +900,37 @@
                  (t
                   (status :text (format nil "~a abort" message) 
                           :duration 2))))))
+           
+           #+:mt
+           (summarize
+            (let* ((profile (first arguments))
+                   (title (format 
+                           nil 
+                           "`~a' MRS Summary~@[ [~a]~]"
+                           profile *statistics-select-condition*))
+                   (message "summarizing results ...")
+                   (meter (make-meter 0 1)))
+              
+              (status :text message)
+              (summarize profile :meter meter :file file)
+              (when (probe-file file)
+                (let ((return 
+                        (send-to-podium 
+                         (format 
+                          nil 
+                          "show_text ~s \".~(~a~)\" ~s ~d ~d" 
+                          file (gensym "") title 80 25)
+                         :wait t)))
+                  (when (and (equal (first return) :ok) 
+                           (equal (first (second return)) :text))
+                    (push (append (second return)
+                                  (pairlis 
+                                   '(:file :data 
+                                     :command)
+                                   (list file profile 
+                                         (cons 'summarize arguments))))
+                          *tsdb-podium-windows*))))
+              (status :text (format nil "~a done" message) :duration 2)))
            
            (evolution
             (let* ((profiles (first arguments))
