@@ -342,11 +342,11 @@
 
 
 (defun filter-generator-lexical-items (lex-items grules lex-orderings)
-   (values
-      (remove-if
-          #'(lambda (x) (gethash x *duplicate-lex-ids*))
-          lex-items :key #'mrs::found-lex-lex-id)
-      grules lex-orderings))
+  (values
+   (remove-if
+    #'(lambda (x) (member x *duplicate-lex-ids* :test #'eq))
+    lex-items :key #'mrs::found-lex-lex-id)
+   grules lex-orderings))
 
 
 ;;; generate from an input MRS and a set of lexical entry FSs. Each entry
