@@ -207,7 +207,7 @@
 		 (format t "~%Error: type ~A cannot be a leaf type - it has ~
 multiple parents ~A" name real-parents)
 	       (if (not (get-type-entry (car real-parents)))
-		   (format t "~%Error: type ~A has non-existant parent ~A" 
+		   (format t "~%Error: type ~A has non-existent parent ~A" 
 			   name (car real-parents))
 		 (let ((new-features (append (new-features-in constraint)
 					     (new-features-in default))))
