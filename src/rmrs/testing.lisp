@@ -124,7 +124,7 @@
 (defun output-sem-test-suite nil
   (with-open-file (ostream "semtest-erg.rmrs" :direction :output
                    :if-exists :supersede)
-    (output-header-blah ostream)
+    (output-rmrs-xml-file-header ostream :standard)
     (let ((num 1))
       (dolist (eg *rmrs-test-suite*)
         (let ((sentence (car eg))
@@ -145,14 +145,45 @@
               (format ostream
                       "~%<rmrs></rmrs>")))
           (format ostream "</S>~%")))
-      (output-end-blah ostream)
+      (output-rmrs-xml-file-end ostream :standard)
       (finish-output ostream))))
 |#
 
 #|
 
+(defun rasp-semtest-out nil
+  (let ((*rasp-rmrs-gram-file*
+	 (make-pathname 
+	  :device "d"
+	  :directory "/lingo/lkb/src/rmrs/annlt-test/"
+	  :name "gram14.1.rmrs")
+	;; (make-pathname 
+	;; :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+	;; :name "gram14.1.rmrs")
+	)
+	(*rasp-rmrs-tag-file*
+	 (make-pathname :device "d" :directory "/lingo/lkb/src/rmrs/annlt-test/"
+			:name "lex14.1.rmrs")
+	;; (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+	;; :name "lex14.1.rmrs")
+	)
+	(*rasp-xml-word-p* t)
+	(*rasp-xml-type* :none)
+	(*rasp-input-file*
+	 (make-pathname :device "d" 
+			:directory "/lingo/lkb/src/rmrs/annlt-test/"
+			:name "semtest.rasp")
+	 ;; (make-pathname :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
+	 ;;      :name "semtest.rasp")
+	 )
+	(*rasp-rmrs-output-file*
+	 "semtest-rasp.rmrs"))
+    (simple-process-rasp-file)))
+
+
+
 ;;; Temporary
-;;; FIX this to read from ERG file
+;;; FIX this to read from ERG file?
 
 (defun compare-eg (egnum strpos-p)
   (let* ((eg (nth (- egnum 1)
