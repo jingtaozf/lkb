@@ -6,6 +6,8 @@
 
 (defparameter *generator-server* nil)
 
+(defparameter *translate-other-p* nil)
+
 ;;;
 ;;; transfer-based MT prototype from the Gothenburg -- Oslo train.  many things
 ;;; remain to be improved, including:
@@ -19,7 +21,10 @@
 ;;;
 
 (defun transfer (&optional (edge (first *parse-record*))
-                 &key (file (format nil "/tmp/.transfer.~a" (current-user))))
+                 &key (file (format
+                              nil
+                              "/tmp/.transfer.~a.~:[1~;2~]"
+                              (current-user) *translate-other-p*)))
   (let* ((*package* (find-package :lkb))
          (rules (reverse *ordered-mrs-rule-list*))
          (input (or (edge-mrs edge) (mrs::extract-mrs edge)))
@@ -30,8 +35,11 @@
         (mrs::output-mrs1 output 'mrs::simple stream))
       (mrs::browse-mrs output "Transfer Result"))))
 
-(defun translate (&key serverp 
-                       (file (format nil "/tmp/.transfer.~a" (current-user))))
+(defun translate (&key serverp (gcp t)
+                       (file (format
+                              nil
+                              "/tmp/.transfer.~a.~:[2~;1~]"
+                              (current-user) *translate-other-p*)))
   (when serverp 
     (when (probe-file file) (delete-file file))
     (loop until (probe-file file) do (sleep 1)))
@@ -122,7 +130,7 @@
                          (when (dag-p dag) (compress-dag dag :recursivep t)))))
                     (sleep 1)
                     #+:allegro
-                    (excl:gc)))
+                    (when gcp (excl:gc))))
                  (t
                   (format
                    log
@@ -133,7 +141,7 @@
     (delete-file file)
     (translate :serverp serverp :file file)))
 
-(defun start-generator-server (&optional (forkp t))
+(defun start-generator-server (&optional (forkp t) (gcp t))
   (when (and *generator-server* forkp) 
     (stop-generator-server)
     (with-open-file (log (format nil "/tmp/generate.debug.~a" (current-user))
@@ -143,19 +151,17 @@
   ;; that is the grammar, mostly) and then keep everything in newspace.
   ;;
   #+:allegro
-  (excl:gc :tenure)
-  #+:allegro
-  (excl:gc)
-  #+:allegro
-  (excl:gc t)
-  #+:allegro
-  (setf (sys:gsgc-parameter :auto-step) nil)
+  (when gcp
+    (excl:gc :tenure)
+    (excl:gc)
+    (excl:gc t)
+    (setf (sys:gsgc-parameter :auto-step) nil))
 
   (if forkp
     (with-output-to-top ()
       #-:clisp
       (setf *generator-server*
-        (mp:run-function "generator server" #'start-generator-server nil)))
+        (mp:run-function "generator server" #'start-generator-server nil gcp)))
     (translate :serverp t)))
 
 (defun stop-generator-server ()

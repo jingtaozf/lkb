@@ -171,6 +171,9 @@
 
 (defmacro mtr-optional-p (mtr)
   `(getf (mtr-flags ,mtr) :optional))
+
+(defmacro mtr-fail-p (mtr)
+  `(getf (mtr-flags ,mtr) :fail))
 
 (defstruct (edge (:constructor make-edge-x))
   (id (let ((n %transfer-edge-id%)) (incf %transfer-edge-id%) n))
@@ -616,11 +619,14 @@
 
 (defun convert-dag-to-flags (dag)
   (let* ((optional (mrs::path-value dag *mtr-optional-path*))
+         (fail (mrs::path-value dag *mtr-fail-path*))
          flags)
     (when (lkb::bool-value-true optional)
       (pushnew :optional flags))
     (when (lkb::bool-value-false optional)
       (pushnew :obligatory flags))
+    (when (lkb::bool-value-true fail)
+      (pushnew :fail flags))
     flags))
 
 (defun convert-dag-to-special (dag)
@@ -995,7 +1001,8 @@
            (top1 (mrs:psoa-top-h mrs1))
            (top2 (mrs:psoa-top-h mrs2)))
       (transfer-trace :part :top)
-      (unless (unify-values top1 top2 solution)
+      (unless (or (null mrs::*rel-handel-path*)
+                  (unify-values top1 top2 solution))
         ;;
         ;; trace
         ;;
@@ -1077,7 +1084,7 @@
            (label (when pred
                     (unify-values 
                      (mrs:rel-handel ep1) (mrs:rel-handel ep2) solution))))
-      (when label
+      (when (and pred (or (null mrs::*rel-handel-path*) label))
         (loop
             with flist1 = (mrs:rel-flist ep1)
             with flist2 = (mrs:rel-flist ep2)
@@ -1744,23 +1751,24 @@
     copy))
 
 (defun clone-variable (variable)
-  (or (rest (assoc variable %transfer-clones%))
-      (let ((copy (mrs::make-var 
-                   :type (mrs:var-type variable) :id (mrs:var-id variable))))
-        (setf (mrs:var-extra copy)
-          (loop
-              for extra in (mrs:var-extra variable)
-              collect (mrs::make-extrapair 
-                       :feature (mrs::extrapair-feature extra)
-                       :value (mrs::extrapair-value extra))))
-        (when *transfer-skolemize-p*
-          (push
-           (mrs::make-extrapair 
-            :feature *mtr-skolem-property*
-            :value (mrs::var-string variable))
-           (mrs:var-extra copy)))
-        (push (cons variable copy) %transfer-clones%)
-        copy)))
+  (when variable
+    (or (rest (assoc variable %transfer-clones%))
+        (let ((copy (mrs::make-var 
+                     :type (mrs:var-type variable) :id (mrs:var-id variable))))
+          (setf (mrs:var-extra copy)
+            (loop
+                for extra in (mrs:var-extra variable)
+                collect (mrs::make-extrapair 
+                         :feature (mrs::extrapair-feature extra)
+                         :value (mrs::extrapair-value extra))))
+          (when *transfer-skolemize-p*
+            (push
+             (mrs::make-extrapair 
+              :feature *mtr-skolem-property*
+              :value (mrs::var-string variable))
+             (mrs:var-extra copy)))
+          (push (cons variable copy) %transfer-clones%)
+          copy))))
 
 (defun clone-ep (ep)
   (let ((copy (mrs::make-rel 

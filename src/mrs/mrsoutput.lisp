@@ -138,6 +138,13 @@ duplicate variables")
            (make-psoa
             :top-h (if top-h-fs
                      (create-variable top-h-fs *variable-generator*)
+                     ;;
+                     ;; _fix_me_
+                     ;; in handle-free mode, why should we hallucinate a dummy
+                     ;; handle?  it will fail in mrs-equal-p(), at least, when
+                     ;; compared to a structure serialized and read back in.
+                     ;;                                        (23-feb-05; oe)
+                     #+:null
                      (create-new-handle-var *variable-generator*))
             :index (when (is-valid-fs index-fs)
                      (create-variable index-fs *variable-generator*))

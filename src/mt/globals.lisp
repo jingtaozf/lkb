@@ -18,6 +18,8 @@
 
 (defparameter *mtr-optional-path* (list (mrs::vsym "OPTIONAL")))
 
+(defparameter *mtr-fail-path* (list (mrs::vsym "FAIL")))
+
 (defparameter *mtr-equal-path* (list (mrs::vsym "EQUAL")))
 
 (defparameter *mtr-subsume-path* (list (mrs::vsym "SUBSUME")))
