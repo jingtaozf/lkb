@@ -94,7 +94,7 @@
      (fs (display-fs (edge-dag edge-rec)
 		     (format nil "Edge ~A ~A - FS" 
 			     (edge-id edge-rec)
-			     (if (gen-chart-edge-p edge-rec) 
+			     (if (g-edge-p edge-rec) 
 				 "G" 
 			       "P"))))
      (edge (display-parse-tree edge-rec nil))
