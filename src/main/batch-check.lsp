@@ -48,11 +48,8 @@
 		      (reverse start-path)))
 	  )
 	)
-;      (when unexpandp (unexpand-psort *lexicon* id))
-;      (when unexpandp (forget-psort *lexicon* id))
       ))
-  (print 'part-a)
-  (describe *lexicon*)
+  ;;  (describe *lexicon*)
   #+:psql
   (when check-duplicates
     (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")
