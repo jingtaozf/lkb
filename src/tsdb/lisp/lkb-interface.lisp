@@ -18,7 +18,7 @@
      (:TEMPLATES . ,(length *templates*))
      (:RULES . ,(hash-table-count *rules*))
      (:LRULES . ,(hash-table-count *lexical-rules*))
-     (:LEXICON . ,(hash-table-count *psorts*))
+     (:LEXICON . ,(length (collect-expanded-lex-ids *lexicon*)))
      (:GRAMMAR . ,(if (boundp '*grammar-version*) 
                       (symbol-value '*grammar-version*)
                       "unknown"))
@@ -62,15 +62,14 @@
    ;; finalize-test-run() to restore the interactive environment if
    ;; necessary
   (let ((*package* (find-package "COMMON-LISP-USER")))
-    (clear-type-cache)
-    (uncache-psorts)))
+    (clear-type-cache)))
 
 (defun finalize-test-run (environment)
    ;; called after completion of test run
    (declare (ignore environment))
   (let ((*package* (find-package "COMMON-LISP-USER")))
     (clear-type-cache)
-    (uncache-psorts)))
+    (clear-expanded-lex)))
 
 ;;; sets the processor into exhaustive mode if requested; parses
 ;;; .string. without producing any printout (unless .trace. is set);
