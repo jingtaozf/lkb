@@ -62,6 +62,9 @@
 (defparameter *outscpd-feature* (vsym "OUTSCPD")
   "the feature in a qeq that leads to the second argument")
 
+(defparameter *qeq-type* (vsym "qeq")
+  "the type associated with a qeq relation")
+
 ;;; generic paths
 
 (defparameter *first-path*  `(,(vsym "FIRST"))
@@ -94,17 +97,9 @@ order in an MRS")
 (defparameter *event-type* (vsym "event"))
 (defparameter *event_or_index-type* (vsym "event_or_index"))
 (defparameter *non_expl-ind-type* (vsym "non_expl-ind"))
-(defparameter *eventtime-type* (vsym "eventtime"))
 (defparameter *handle-type* (vsym "handle"))
-(defparameter *group_lab-type* (vsym "group_lab"))
-(defparameter *hole-type* (vsym "hole"))
-(defparameter *label-type* (vsym "label"))
 (defparameter *ref-ind-type* (vsym "ref-ind"))
-(defparameter *full_ref-ind-type* (vsym "full_ref-ind"))
 (defparameter *deg-ind-type* (vsym "deg-ind"))
-(defparameter *individual-type* (vsym "individual"))
-(defparameter *difference-list-type* (vsym "*diff-list*"))
-(defparameter *conj-ind-type* (vsym "conj-ind"))
 
 
 ;;; used in mrsresolve
@@ -204,27 +199,11 @@ set in the code")
 (defparameter *alex-mode* nil
   "if t, allows scope to have specified relations")
 
-
-
-;;;
-;;; move here from `lkbmrs.lisp', because it is entirely using MRS calls, hence
-;;; not part of the interface to the back-end system.
-;;;
-(defun determine-variable-type (fs)
-  (let ((type (create-type (fs-type fs))))
-    (cond ((equal-or-subtype type *event-type*) "e")
-          ((equal-or-subtype type *conj-ind-type*) "e")
-          ((equal-or-subtype type *ref-ind-type*) "x")
-          ((equal-or-subtype type *full_ref-ind-type*) "x")
-          ((equal-or-subtype type *deg-ind-type*) "d")
-          ((equal-or-subtype type *non_expl-ind-type*) "v")
-          ((equal-or-subtype type *event_or_index-type*) "e")
-          ((equal-or-subtype type *eventtime-type*) "t")
-          ((equal-or-subtype type *handle-type*) "h")  
-          ((equal-or-subtype type *hole-type*) "h")
-          ((equal-or-subtype type *label-type*) "h")
-          ;;((equal-or-subtype type *individual-type*) "d")
-          ((equal-or-subtype type *difference-list-type*) "c") 
-          ;; Assume coordination structure
-          (t "v"))))
+;;; for some reason, the function determine-variable-type 
+;;; was moved here, where it surely doesn't belong (given that it's
+;;; a function ...)
+;;; Moved (back?) to mrsoutput.lisp, since it only relates to
+;;; grammar-to-MRS construction.  Note that the types available
+;;; for variables are now something that's part of the definition of
+;;; MRS/RMRS, so not user-controllable any more.
 
