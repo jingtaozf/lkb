@@ -431,6 +431,7 @@
   (when display-in-chart-p 
     (display-edge-in-chart edge))
   (let ((edge-symbol (make-new-parse-tree edge 1)))
+    (break)
     (draw-new-parse-tree edge-symbol 
 			 (format nil "Edge ~A ~A" (edge-id edge) 
 				 (if (g-edge-p edge) "G" "P"))
@@ -524,12 +525,12 @@
   edge-symbol)
 
 (defun get-string-for-edge (edge-symbol)
-  (let ((edge-record (get edge-symbol 'edge-record)))
+  (let* ((edge-record (get edge-symbol 'edge-record))
+         (edge-fs (get edge-symbol 'edge-fs)))
      (if edge-record
 	 (progn
 	   (values (tree-node-text-string 
-		    (or (when (get edge-symbol 'edge-fs)
-			  (find-category-abb (get edge-symbol 'edge-fs)))
+		    (or (when edge-fs (find-category-abb edge-fs))
 			(edge-category edge-record))) nil))
        (values (tree-node-text-string edge-symbol) t))))
 
@@ -587,4 +588,7 @@
   (if (null (get node 'edge-record))
       node
     (find-leaf (car (get node 'daughters)))))
+
+
+
 
