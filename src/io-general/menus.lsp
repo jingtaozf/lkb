@@ -187,8 +187,6 @@
                         :value 'show-parse)
                      (make-menu-item :name "Show chart"
                         :value 'show-chart)
-                     (make-menu-item :name "Print chart"
-                        :value 'print-chart)
                      (make-menu-item :name "Batch parse..."
   		        :value 'parse-sentences)
 		     (make-menu-item :name "Compare..."
@@ -199,14 +197,10 @@
                   (list 
                      (make-menu-item :name "Generate..."
                         :value 'generate-from-edge)
-                     (make-menu-item :name "Show result"
+                     (make-menu-item :name "Redisplay result"
                         :value 'show-gen-result)
-                     (make-menu-item :name "Show edge..."
-                        :value 'show-gen-edge)
                      (make-menu-item :name "Show chart"
-                        :value 'show-gen-chart)
-                     (make-menu-item :name "Print chart"
-                        :value 'print-gen-chart))
+                        :value 'show-gen-chart))
                :available-p nil)
          (make-lkb-submenu-item :menu-title "Links"
                  :menu-items                       

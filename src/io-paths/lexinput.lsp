@@ -36,6 +36,8 @@
 (defvar *psort-file-list* nil)
 
 (defun clear-lex-load-files nil
+  (setf *ordered-lex-list* nil)         ; adding this makes
+                                        ; the fn name a bit of a misnomer
   (setf *lex-file-list* nil)
   (setf *template-file-list* nil)
   (setf *psort-file-list* nil))

@@ -307,13 +307,6 @@
 ;;; 4. If at any point you find that you are about to mark an already 
 ;;; active node then you have a cycle
 
-;;; extension to check for redundant links
-;;;
-;;; mark all daughters of the node as active
-;;; marking an already active node either indicates a cycle or
-;;; a redundant link
-;;; only unmark as active when all daughters have been checked
-
 ;;; marks.lsp contains the marking structures and functions
 
 (defun mark-for-cycles (type-record)
@@ -338,31 +331,41 @@
                        inner-ok)))))))
       ok))
 
+
+;;; checking for redundant links
+;;;
+;;; mark all daughters of the node as active
+;;; marking an already active node indicates a redundant link
+;;; recurse on each daughter
+;;; only unmark as active when all daughters have been checked
+;;; the algorithm requires that some parts of the hierarchy 
+;;; will be scanned more than once
+
 (defun mark-for-redundancy (type-record)
-  ; assumes no cycles
-  (let ((ok t))
-      (unless (seen-node-p type-record) 
-        (mark-node-seen type-record)
-        (let 
-            ((daughters (for d in (type-daughters type-record)
+  ;; assumes no cycles
+  (mark-node-seen type-record)
+  ;; this is here because it's used in the next phase
+  ;; of checking
+  (let ((ok t)
+        (daughters (for d in (type-daughters type-record)
                          collect (get-type-entry d))))
-          (for daughter in daughters
-               do
-               (if (active-node-p daughter)
-                   (progn 
-                     (setf ok nil)
-                     (format t "~%Redundancy involving ~A" 
-                             (type-name daughter)))
-                 (mark-node-active daughter)))
-          (when ok
-            (setf ok 
-              (for daughter in daughters
-                   all-satisfy
-                   (mark-for-redundancy daughter)))
-            (for daughter in daughters
-                 do
-                 (unmark-node-active daughter)))))
-      ok))
+    (for daughter in daughters
+         do
+         (if (active-node-p daughter)
+             (progn 
+               (setf ok nil)
+               (format t "~%Redundancy involving ~A" 
+                       (type-name daughter)))
+           (mark-node-active daughter)))
+    (when ok
+      (setf ok 
+        (for daughter in daughters
+             all-satisfy
+             (mark-for-redundancy daughter)))
+      (for daughter in daughters
+           do
+           (unmark-node-active daughter)))
+    ok))
 
 
 (defun scan-table nil

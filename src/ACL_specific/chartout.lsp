@@ -31,12 +31,15 @@
   :height :compute
   :text-style (lkb-parse-tree-font))
 
-(defun draw-chart-lattice (node title horizontalp)
+(defun draw-chart-lattice (node title horizontalp &optional subframe-p)
   (declare (ignore horizontalp))
-  (when *main-chart-frame* 
+  (when (and *main-chart-frame* (not subframe-p))
     (clim:execute-frame-command *main-chart-frame* '(clim-user::com-quit)))
   (let ((chart-window (clim:make-application-frame 'chart-window)))
-    (setf *main-chart-frame* chart-window)
+    (if subframe-p
+        (push chart-window
+              *sub-chart-window-frames*)
+      (setf *main-chart-frame* chart-window))
     (setf (chart-window-root chart-window) node)
     (setf (clim:frame-pretty-name chart-window) title)
     (mp:process-run-function "CHART" 
@@ -99,7 +102,7 @@
   (when (edge-p edge-rec)
     (pop-up-menu
      (append '(("Feature structure" :value fs))
-	     `((,(format nil "Edge ~A" (edge-id edge-rec))
+	     `((,(format nil "Tree" (edge-id edge-rec))
 		:value edge))
 	     (unless (stringp (edge-rule-number edge-rec))
 	       `((,(format nil "Rule ~A" 
@@ -123,7 +126,9 @@
 	       (display-fs (rule-full-fs rule)
 			   (format nil "~A" rule-name)))))
      (highlight (display-edge-in-chart edge-rec))
-     (new (display-edge-in-new-window clim:*application-frame* edge-rec))
+     (new (display-edge-in-new-window 
+           clim:*application-frame* 
+           edge-rec))
      (unify (try-unify-fs-in-chart (edge-dag edge-rec))))))
 
 (defun try-unify-fs-in-chart (fs)
@@ -185,13 +190,16 @@
 ;;; create a new chart window and display just the descendents and ancestors
 ;;; of the edge in it
 
-(defun display-edge-in-new-window (frame edge)
+(defun display-edge-in-new-window (parent-frame edge)
   (if edge
-      (progn (push frame *sub-chart-window-frames*)
+      (progn 
              (draw-chart-lattice
-              (filtered-chart-lattice (chart-window-root frame) edge nil)
-              (string (gentemp (format nil "~A-" (clim:frame-pretty-name frame))))
-              t))
+              (filtered-chart-lattice 
+               (chart-window-root parent-frame) edge nil)
+              (string 
+               (gentemp (format nil "~A-" 
+                                (clim:frame-pretty-name parent-frame))))
+              t t))
     (lkb-beep)))
 
 ;;; -----------------------------------------------------------------

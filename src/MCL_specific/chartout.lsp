@@ -173,7 +173,7 @@
             (format nil "Edge ~A ~A - FS" (edge-id edge-record)
                (if (g-edge-p edge-record) "G" "P")))))
    (make-instance 'menu-item
-     :menu-item-title (format nil "Edge ~A" (edge-id edge-record))
+     :menu-item-title (format nil "Tree" (edge-id edge-record))
      :menu-item-action
      #'(lambda ()
          (display-parse-tree edge-record nil)))

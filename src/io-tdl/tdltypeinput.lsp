@@ -314,16 +314,24 @@
   (let ((unifs nil))
     (maphash #'(lambda (index value)
                  (declare (ignore index))
-                 (let ((path1 (car value))
+                 (let ((path1 (if in-default-p 
+                                  (cdar value)
+                                (car value)))
+                       (persist (if in-default-p 
+                                  (caar value)))
                        (rest (cdr value)))
+                   ;;; this assumes that we can keep
+                   ;;; the persistance the same on all the bits
                    (if rest
                      (for path2 in rest
                           do
-                          (push (make-tdl-path-path-unif path1 path2 
-                                                         in-default-p) 
+                          (push (make-tdl-path-path-unif 
+                                 path1 
+                                 (if in-default-p (cdr path2) path2) 
+                                 persist) 
                                 unifs))
                      (push (make-tdl-path-value-unif path1 *toptype* 
-                                                     in-default-p)
+                                                     persist)
                            unifs))))
              coref-table)
     unifs))
@@ -642,7 +650,7 @@
       (setf corefindex (convert-to-lkb-symbol corefindex)))
     (let ((true-path (reverse path-so-far)))
       (if in-default-p
-          (push true-path
+          (push (cons in-default-p true-path)
                 (gethash corefindex *tdl-default-coreference-table*))
         (push true-path
               (gethash corefindex *tdl-coreference-table*))))

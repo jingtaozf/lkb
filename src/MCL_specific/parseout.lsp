@@ -125,7 +125,7 @@
 (defun pop-up-parse-tree-menu-items (edge-symbol edge-record)
   (list
    (make-instance 'menu-item
-     :menu-item-title (format nil "Edge ~A" (edge-id edge-record))
+     :menu-item-title (format nil "Feature structure - Edge ~A" (edge-id edge-record))
      :menu-item-action
      #'(lambda ()
          (display-fs (get edge-symbol 'edge-fs)

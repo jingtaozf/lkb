@@ -24,7 +24,7 @@
 
 (defstruct (fs-output)
    name error-fn start-fn end-fn indentation 
-   reentrant-value-fn reentrant-fn
+   reentrant-value-fn reentrant-value-endfn reentrant-fn
    atomic-fn start-fs label-fn end-fs 
    shrunk-fn
    (max-width-fn #'(lambda nil nil)))
@@ -32,6 +32,7 @@
 (defun def-print-operations (device indentation stream)
    (case device 
       (linear (def-linear-print-operations indentation stream))
+      (lilfes (def-lilfes-print-operations indentation stream))
       (tdl (def-tdl-print-operations indentation stream))
       (simple (def-simple-print-operations indentation stream))
       (edit (def-edit-print-operations indentation stream))
@@ -151,7 +152,87 @@
          (format stream " ]")
          (incf indentation))))))
 
+(defun def-lilfes-print-operations (indentation stream)
+   (let ((indentation-vector (make-array '(3000)))
+         (new-fs-p t))
+  (setf *display-structure*
+   (make-fs-output 
+      :name 'lilfes
+      :error-fn #'(lambda (dag-instance)
+         (format stream
+            "~%::: ~A is not a dag...~%"
+            dag-instance))
+      :start-fn #'(lambda nil (format stream "~V%" 1))      
+      :end-fn #'(lambda nil nil)
+      ;; was (format stream "~V%" 1))
+      :reentrant-value-fn                 
+      #'(lambda (reentrant-pointer)
+         (format stream
+            "($~A & "
+            reentrant-pointer)
+         (setf indentation
+         (cond ((> indentation 53) (terpri stream) 3)
+               (t (+ 12 indentation)))))
+      :reentrant-value-endfn #'(lambda nil (format stream ")"))
+      :reentrant-fn
+      #'(lambda (reentrant-pointer)
+         (format stream "$~A" reentrant-pointer))
+      :atomic-fn
+      #'(lambda (atomic-value)
+         (if (or (stringp atomic-value) 
+                 (and (listp atomic-value) (stringp (car atomic-value))))
+           (format stream "~S" 
+                   (if (listp atomic-value) (car atomic-value)
+                                        atomic-value))
+           (format stream "'~A'"
+                   (string-downcase
+                    (convert-lilfes-type
+                    (if (listp atomic-value) (car atomic-value)
+                                        atomic-value))))))
+      :start-fs
+      #'(lambda (type depth labels)
+          (declare (ignore labels))
+          (if (eql type *toptype*)
+            (format stream "(")
+            (if (stringp type)
+              (format stream "(~S & " type)
+              (format stream "('~A' & " 
+                      (string-downcase (convert-lilfes-type type)))))
+          (setf new-fs-p t)
+         (setf (aref indentation-vector depth) (+ indentation 2)))
+      :label-fn
+      #'(lambda (label depth)
+         (setf indentation (aref indentation-vector depth))
+         (unless new-fs-p 
+           (format stream " &~%~VT" indentation))
+         (setf new-fs-p nil)
+         (format stream "'~A'\\" (convert-lilfes-feature label))
+         (setf indentation (+ indentation 7))
+         (when (> indentation 65) (terpri stream) (setf indentation 1)))
+      :end-fs 
+      #'(lambda (terminal)
+          (declare (ignore terminal))
+         (format stream ")")
+         (incf indentation))))))
 
+(defun convert-lilfes-type (type)
+  (string-downcase
+   (cond ((eq type *list-type*) 'list)
+         ((eq type *empty-list-type*) nil) ; the type is called nil
+         ((eq type 'ne-list) 'cons)     ; needs a global
+         ((eq type *toptype*) 'bot)
+         ((eq type *string-type*) 'string)
+         ((eq type 'true) 'tru)
+         (t type))))
+
+(defun convert-lilfes-feature (feat)
+  (cond ((eq feat (car *list-head*)) 'hd)
+        ((eq feat (car *list-tail*)) 'tl)
+        (t feat)))
+        
+             
+             
+             
          
 (defun def-simple-print-operations (indentation stream)
    (let ((indentation-vector (make-array '(3000))))
@@ -701,7 +782,9 @@
             (incf *reentrancy-pointer*)
             (funcall (fs-output-reentrant-value-fn *display-structure*) 
                (dag-visit real-dag))                  
-            (print-dag-aux real-dag depth new-rpath))
+            (print-dag-aux real-dag depth new-rpath)
+            (if (fs-output-reentrant-value-endfn *display-structure*)
+                (funcall (fs-output-reentrant-value-endfn *display-structure*))))
          ((equal flag-value 'single)
             (print-dag-aux real-dag depth new-rpath))
          (t (funcall (fs-output-reentrant-fn *display-structure*) 

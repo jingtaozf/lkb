@@ -106,7 +106,7 @@
 	 (edge-fs (get edge-symbol 'edge-fs))
 	 (rule-name (edge-rule-number edge-record)))
     (pop-up-menu
-     `((,(format nil "Edge ~A" (edge-id edge-record))
+     `((,(format nil "Feature structure - Edge ~A" (edge-id edge-record))
 	:value edge)
        (,(format nil "Rule ~A" (or rule-name ""))
 	:value rule))
