@@ -288,14 +288,14 @@
 
 (defun ed-handle-p (variable)
   (when (var-p variable)
-    (or (handle-var-p variable) (string-equal (var-type variable) "h"))))
+    (is-handel-var variable)))
 
 (defun ed-hcons-qeq (eds handle)
   (loop
       with name = (if (stringp handle) handle (when (ed-handle-p handle)
                                                 (var-string handle)))
       for hcons in (eds-hcons eds)
-      for scarg = (when (eq (hcons-relation hcons) (vsym "QEQ"))
+      for scarg = (when (equal (hcons-relation hcons) "qeq")
                     (var-string (hcons-scarg hcons)))
       thereis 
         (when (equal name scarg) (hcons-outscpd hcons))))
