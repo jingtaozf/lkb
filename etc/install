@@ -27,11 +27,6 @@ if [ -z "${DELPHINHOME}" ]; then
 fi
 
 #
-# comment out the following to skip the Redwoods treebank data (1.5 gbytes)
-#
-TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home
-
-#
 # for the script to be independent of where specific OS versions keep their
 # files (e.g. on some Solaris boxes one might have to use `gtar' for a decent
 # GNU tar(1)).
@@ -49,6 +44,26 @@ WGET="wget --quiet --timestamping"
 GUNZIP="gunzip -c"
 TAR="tar xf -"
 SED=sed
+
+#
+# process command-line options; for now, either set root directory and toggle
+# inclusion of Redwoods data (off by default).
+#
+while [ $# -gt 0 ]; do
+  case $1 in
+    -h|--home)
+      DELPHINHOME=$2;
+      shift 2;
+    ;;
+    -r|--redwoods)
+      TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home;
+      shift;
+    ;;
+  esac
+done
+
+echo $DELPHINHOME -- $TSDBHOME
+exit
 
 #
 # create the target directory, unless it exists already.  if the target exists
