@@ -142,7 +142,7 @@
      ;;
      ;; _fix_me_
      ;; to insert equivalence testing of lexemes rasonably efficiently, we need
-     ;; to look ahead and determine whether we current nodes are preterminals,
+     ;; to look ahead and determine whether the current nodes are preterminals,
      ;; i.e. have exactly one generation of descendants.  i am inclined to redo
      ;; the derivation format, or at least move to a UDF 1.1 variant that made
      ;; more of this explicit (and maybe had room for additional bits, e.g. an

@@ -380,6 +380,7 @@
          (*unifications* 0)
          (*copies* 0)
          (*subsumptions* 0)
+         (start (get-internal-run-time)) stop
          tgc tcpu treal conses symbols others)
 
     (multiple-value-bind (return condition)
@@ -397,12 +398,14 @@
                     (generate-from-mrs mrs :signal t)))
               #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                   (declare (ignore ignore))
+                  (setf stop (get-internal-run-time))
                   (setf tgc (+ tgcu tgcs) tcpu (+ tu ts) treal tr
                         conses (* scons 8) symbols (* ssym 24) 
                         others sother)))
 
            (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                   (output (get-output-stream-string stream))
+                  (words (length %generator-lexical-items%))
                   (readings (length strings))
                   (readings (if (or (equal output "") (> readings 0))
                               readings
@@ -440,42 +443,45 @@
                     "~a (:pool . ~d) (:garbage . ~d)" 
                     comment position garbage)))
              `((:others . ,others) (:symbols . ,symbols) (:conses . ,conses)
-                (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
-                (:pedges . ,pedges) (:aedges . ,aedges)
-                (:p-stasks . ,s-tasks) (:p-etasks . ,e-tasks)
-                (:p-ftasks . ,f-tasks)
-                (:unifications . ,unifications) (:copies . ,copies)
-                (:readings . ,readings)
-                (:error . ,(pprint-error output))
-                (:comment . ,comment)
-                (:results .
-                 ,(loop
-                      with parses = *gen-record*
-                      with *package* = *lkb-package*
-                      with nresults = (if (<= nresults 0)
-                                        (length strings)
-                                        nresults)
-                      for i from 0
-                      for string in strings
-                      for parse = (pop parses)
-                      for derivation = (if parse
-                                         (with-standard-io-syntax
-                                           (let ((*package* *lkb-package*))
-                                             (write-to-string
-                                              (compute-derivation-tree parse) 
-                                              :case :downcase)))
-                                         "")
-                      for size = (if parse (parse-tsdb-count-nodes parse) -1)
-                      for tree = #-:null (format nil "~{~a~^ ~}" string)
-                                 #+:null (tsdb::call-hook trees-hook parse)
-                      for mrs = (if parse
-                                  (tsdb::call-hook semantix-hook parse)
-                                  "")
-                      while (>= (decf nresults) 0) collect
-                        (pairlis '(:result-id :mrs :tree :string
-                                   :derivation :size)
-                                 (list i mrs tree string
-                                       derivation size))))))))
+               (:treal . ,treal) (:tcpu . ,tcpu) (:tgc . ,tgc)
+               (:pedges . ,pedges) (:aedges . ,aedges)
+               (:p-stasks . ,s-tasks) (:p-etasks . ,e-tasks)
+               (:p-ftasks . ,f-tasks)
+               (:unifications . ,unifications) (:copies . ,copies)
+               (:words . ,words) (:readings . ,readings)
+               (:error . ,(pprint-error output))
+               (:comment . ,comment)
+               (:results .
+                ,(loop
+                     with edges = *gen-record*
+                     with *package* = *lkb-package*
+                     with nresults = (if (<= nresults 0)
+                                       (length strings)
+                                       nresults)
+                     for i from 0
+                     for string in strings
+                     for edge = (pop edges)
+                     for derivation = (if edge
+                                        (with-standard-io-syntax
+                                          (let ((*package* *lkb-package*))
+                                            (write-to-string
+                                             (compute-derivation-tree edge) 
+                                             :case :downcase)))
+                                        "")
+                     for size = (if edge (parse-tsdb-count-nodes edge) -1)
+                     for tree = #-:null (format nil "~{~a~^ ~}" string)
+                                #+:null (tsdb::call-hook trees-hook edge)
+                     for mrs = (if edge
+                                 (tsdb::call-hook semantix-hook edge)
+                                 "")
+                     while (>= (decf nresults) 0) collect
+                       (pairlis '(:result-id :mrs :tree
+                                  :derivation :size)
+                                (list i mrs tree
+                                      derivation size))))))))
+
+      (unless stop (setf stop (get-internal-run-time)))
+
       (unless trace 
         (release-temporary-storage :task :generate))
     
@@ -486,6 +492,9 @@
                 (error (pprint-error error)))
            (pairlis '(:readings :condition :error)
                     (list -1 (unless burst condition) error))))
+       (let ((total
+              (round (* (- stop start) 1000) internal-time-units-per-second)))
+         (acons :total total nil))
        return))))
 
 
