@@ -1166,7 +1166,6 @@
 
 (defun result-hook (result)
 
-  (declare (special *reconstruct-cache*))
   (loop
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       for parse in (get-field :results result)

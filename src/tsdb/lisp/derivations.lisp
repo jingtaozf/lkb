@@ -134,8 +134,6 @@
 ;;; where application of additional (glb) constraints fails.
 ;;;
 
-(defvar *reconstruct-cache* nil)
-
 (defun reconstruct-item (i-id i-input derivation)
   (let* ((*package* (or (find-package :disco)
                         (find-package :common-lisp-user))))
