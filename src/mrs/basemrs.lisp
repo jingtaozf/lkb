@@ -18,7 +18,7 @@
   liszt
   h-cons)
 
-;;; rmrs is a substructure of this (see comp.lisp)
+;;; rmrs is a substructure of this (see basermrs.lisp)
 
 (defstruct (psoa (:include basemrs))
   index)
@@ -38,9 +38,8 @@
   handel                               
   pred					; relation name
   flist
-  parameter-strings                     ; copy of the relations with constant
-					; values, used in the generator
-                                        ; candidate for removal!
+  parameter-strings			; the constant values
+                                        ; FIX - remove when generator is redone
   extra)                                ; extra is a junk slot
                                         ; needed for the munging rules 
 
@@ -71,13 +70,6 @@
   feature
   value)
 
-;;;
-;;; _fix_me_
-;;; is `handle-var' still used, actually?  at least the MRS extracted from an
-;;; LKB parse result no longer have any, it seems.              (9-sep-03; oe)
-;;;
-(defstruct (handle-var (:include var)))
-
 (defstruct (grammar-var (:include var)))
 ;;; a sort of placeholder variable used in RMRS code
 
@@ -85,6 +77,10 @@
   relation
   scarg
   outscpd)
+
+;;; relation is one of "qeq", "lheq" or "outscopes" as in the rmrs.dtd
+;;; the code for grammar read in must convert the type to one
+;;; of these
 
 ;;; In an attempt to clean up a messy situation,
 ;;; var-types are now all lower-case strings.  
@@ -96,17 +92,27 @@
 ;;; part of the SEM-I.  For now we have the
 ;;; following (from the RMRS DTD)
 ;;; (x|e|h|u|l)
-;;; the mapping from the ERG (currently in lkbmrs.lisp)
-;;; adds d, t, v and c
+;;; the mapping from the ERG (in mrsoutput.lisp)
+;;; adds d and v (should be u??)
 
 (defun var-string (var)
   ;;; always constructed from the type and the id
-  ;;; FIX - should be renamed to avoid confusion
-  ;;; when dependencies code is changed
   (unless (var-p var)
     (error "var expected ~A found" var))
   (format nil "~(~A~)~A" (var-type var)
 	  (var-id var)))
+
+;;; macros moved from mrsresolve
+
+(defmacro is-handel-var (var)
+    ;;; test is whether the type is "h"
+  `(and (var-p ,var)
+       (equal (var-type ,var) "h")))
+
+(defmacro nonquantified-var-p (var)
+  ;;; true if the type is anything other than x
+  `(and (var-p ,var)
+	(not (equal (var-type ,var) "x"))))
 
 ;;; variable generator - moved from mrsoutput because it could
 ;;; potentially be called without that code having been read in
@@ -124,7 +130,10 @@
 
 (init-variable-generator)
 
+;;; test for variable equality
 
+(defun eql-var-id (var1 var2)
+  (eql (var-id var1) (var-id var2)))
 
 ;;; The MRS structure could be output either as simple ascii
 ;;; or as LaTeX and possibly in other ways
