@@ -599,3 +599,10 @@
   (and
    (psql-lexicon-enabled-p)
    *postgres-mwe-enable*))
+
+(defun make-nice-temp-file-pathname (filename)
+  (make-pathname :name filename
+                 :host (pathname-host (lkb-tmp-dir))
+                 :device (pathname-device (lkb-tmp-dir))
+                 :directory (pathname-directory (lkb-tmp-dir))))
+

@@ -908,8 +908,8 @@
   (fn-get-val *psql-lexicon* ''commit-scratch)
   (empty-cache *psql-lexicon*))
 
-(defun make-nice-temp-file-pathname (filename)
-  (make-pathname :name filename
-		 :host (pathname-host (lkb-tmp-dir))
-		 :device (pathname-device (lkb-tmp-dir))
-		 :directory (pathname-directory (lkb-tmp-dir))))
+;(defun make-nice-temp-file-pathname (filename)
+;  (make-pathname :name filename
+;		 :host (pathname-host (lkb-tmp-dir))
+;		 :device (pathname-device (lkb-tmp-dir))
+;		 :directory (pathname-directory (lkb-tmp-dir))))
