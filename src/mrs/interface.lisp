@@ -19,6 +19,8 @@
       (for edge in edges 
            do
            (let ((mrs (extract-mrs edge)))
+             (format stream "~%Edge number ~A" 
+                     (cl-user::edge-id edge))
              (format stream "~%~A~%" 
                      (cl-user::parse-tree-structure edge))
              (treat-mrs mrs t stream))))))
