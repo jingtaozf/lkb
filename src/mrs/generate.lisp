@@ -15,7 +15,7 @@
 (defvar *non-intersective-rules* nil)
 (defvar *lexemes-allowed-orderings* nil)
 
-(defvar *chart-generation-counter* 0) ; also defined in parse.lsp
+(defvar *gen-chart-generation-counter* 0)
 
 (defparameter *gen-adjunction-debug* nil)
 (defparameter *gen-equality-debug* nil)
@@ -224,7 +224,7 @@
         (g-edge-leaves edge))))
 
 (defun clear-gen-chart nil
-   (incf *chart-generation-counter*)
+   (incf *gen-chart-generation-counter*)
    (setq *edge-id* 0)
    (setq *gen-chart* nil)
    (setq *gen-record* nil))
@@ -609,8 +609,9 @@
            (x-restrict-fs
               (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) (first needed)))
            (gen-chart-dag-index
-              (x-existing-dag-at-end-of
-                 (tdfs-indef rule-tdfs) (append (first needed) *semantics-index-path*))
+              (deref-dag
+                 (x-existing-dag-at-end-of (tdfs-indef rule-tdfs)
+                    (append (first needed) *semantics-index-path*)))
               nil))
         (let ((dag (gen-chart-restrict-and-copy
                       (tdfs-at-end-of mother-path rule-tdfs))))
@@ -958,7 +959,7 @@
 (defun print-gen-chart ()
    (format t "~&------~%")
    (dolist (entry (reverse *gen-chart*)) ; order in which originally created
-      (format t "Vertex ~(~A~):~%" (car entry))
+      (format t "~%Vertex ~(~A~):~%" (car entry))
       (dolist (e (sort (append (cadr entry) (copy-list (cddr entry))) #'<
                        :key #'edge-id))
          (format t "[~A] ~A~A ~30,5T=> (~{~:A~^ ~})  [~{~A~^ ~}]~%"
