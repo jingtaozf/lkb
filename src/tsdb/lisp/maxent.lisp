@@ -153,8 +153,8 @@
     (t
      (format 
       stream 
-      ";;;~%;;; ~a~%;;; (exported by ~a on ~a)~%;;;~%"
-      model (current-user) (current-time :long :pretty))
+      ";;;~%;;; ~a~%;;; (~a@~a; ~a)~%;;;~%"
+      model (current-user) (current-host) (current-time :long :pretty))
      (format stream "~%:begin :mem ~d.~%~%" (length (mem-contexts model)))
      (loop
          with *print-case* = :downcase

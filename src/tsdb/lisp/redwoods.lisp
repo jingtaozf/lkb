@@ -1157,6 +1157,7 @@
 
 (defun export-tree (item active &key complementp (stream *tsdb-io*))
 
+  #+:debug
   (setf %item% item %active% active)
   (loop
       with *package* = (find-package lkb::*lkb-package*)
@@ -1717,7 +1718,7 @@
          stream
          "~&[~a] train-and-rank(): using ~a;~%"
          (current-time :long :short)  model)
-        #-:debug (setf %model% model)
+        #+:debug (setf %model% model)
       when (and (integerp readings) (> readings 1)) do
         (format 
          stream
