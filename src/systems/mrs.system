@@ -55,6 +55,7 @@
       :components
        ((:file "vit")                    ; VIT structures
         (:file "mrs-to-vit")             ; convert MRS to VIT
+        (:file "cheapscope")             ; scope for fragments
         (:file "time-convert")           ; temporary code for converting
                                          ; times to VIT format
                                          ; needs fixing
@@ -76,10 +77,4 @@
       :components
        ((:file "lexindex")        ; LKB specific - indexing
 					; entries etc on semantics
-       (:file "lexlookup")))   ; LKB specific - retrieving
- #+:lkb
-     (:module "generator"
-       :source-pathname "main"
-       :binary-pathname "main"
-      :components
-      ((:file "generate")))))
+       (:file "lexlookup")))))   ; LKB specific - retrieving

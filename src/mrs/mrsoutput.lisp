@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.11  1998/09/10 02:24:19  aac
+;; bug fixes
+;;
 ;; Revision 1.10  1998/09/09 01:58:09  aac
 ;; mostly changes to mrs
 ;;
@@ -217,8 +220,8 @@
 
 
 
-(defun create-variable-generator ()
-  (let ((number 0))
+(defun create-variable-generator (&optional start)
+  (let ((number (or start 0)))
     #'(lambda nil
         (incf number)
         number)))

@@ -428,7 +428,8 @@ printing routines -  convenient to make this global to keep printing generic")
         ; are possible, we fail
         (for rel-comb-and-bindings in 
              (make-combinations-with-is-one-ofs top-handel top-rels
-                           (set-difference possible-top-rels top-rels) 
+                    ;; (if top-rels nil possible-top-rels)
+                    (set-difference possible-top-rels top-rels) 
                            ;; if this third argument is set to nil
                            ;; when there are top-rels, then 
                            ;; no rels can be added to
@@ -463,7 +464,11 @@ printing routines -  convenient to make this global to keep printing generic")
                  (make-combinations-of-top-rels 
                   top-handel 
                   (append known-top-rels matching-rels)
-                  (set-difference other-possibles matching-rels)
+                  nil
+                  ; if third argument is nil as opposed
+                  ; to the set-difference, this enforces the
+                  ; is exactly one of constraint ...
+                  ; (set-difference other-possibles matching-rels)
                   (adjust-bindings bindings top-handel is-one-of)))))
       (make-combinations-of-top-rels 
        top-handel 

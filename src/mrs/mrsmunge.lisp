@@ -713,7 +713,7 @@
         (output-fs (path-value fs *mrs-rule-output-path*))
         (condition-fs (path-value fs *mrs-rule-condition-path*)))
       (if (and input-fs output-fs)
-          (let* ((variable-generator (create-variable-generator))
+          (let* ((variable-generator (create-variable-generator 1000))
                  (*psoa-rh-cons-path* `( ,(vsym "H-CONS")  ,(vsym "LIST")))
                  (*psoa-liszt-path* `( ,(vsym "LISZT")  ,(vsym "LIST")))
                  (input-spec (construct-mrs input-fs variable-generator))

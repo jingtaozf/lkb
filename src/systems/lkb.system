@@ -122,7 +122,8 @@
               :source-pathname "main"
 	      :binary-pathname "main"
 	      :components
-	      ((:file "lkb-tsdb")           ; connection to tsdb
+	      (
+;              (:file "lkb-tsdb")           ; simulation of tsdb
 	       (:file "batch-check")        ; batch check lexicon
                (:file "debug")))            ; rudimentary debugging
                                             ; for errors in type file
