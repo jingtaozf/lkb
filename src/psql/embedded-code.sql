@@ -129,19 +129,13 @@ INSERT INTO qry VALUES
 INSERT INTO revision (name, $1) VALUES ($0 , $2); 
 DELETE FROM current_grammar 
  WHERE name LIKE $0:like-text ; 
-----DELETE FROM current_grammar_index 
----- WHERE name LIKE $0:like-text ;
-----DELETE FROM temp; 
-----INSERT INTO temp 
 INSERT INTO current_grammar
  SELECT * FROM active
   WHERE name = $0 
    LIMIT 1;
 
-----INSERT INTO current_grammar 
----- SELECT * FROM temp;
-----INSERT INTO current_grammar_index 
----- SELECT name,orthkey FROM temp;
+DELETE FROM meta WHERE var=''mod_time'';
+INSERT INTO meta VALUES (''mod_time'',current_timestamp);
 ' );
 
 INSERT INTO qry VALUES 
@@ -196,6 +190,9 @@ CREATE INDEX public_revision_name
  ON public.revision (name varchar_ops); 
 SELECT if_version(''7.4'',''CREATE INDEX public_revision_name_pattern ON public.revision (name varchar_pattern_ops)'',''CREATE INDEX public_revision_name_pattern ON public.revision (name)'');
 
+DELETE FROM public.meta WHERE var=''mod_time'';
+INSERT INTO public.meta VALUES (''mod_time'',current_timestamp);
+
  SELECT count(*) FROM revision_new;
 ' );
 
@@ -214,6 +211,10 @@ INSERT INTO qry VALUES
  INSERT INTO meta VALUES (''tmp-merge-defn'',(SELECT count(*) FROM temp_defn_new));
  DROP TABLE temp_defn_new;
  DROP TABLE temp_defn;
+
+ DELETE FROM public.meta WHERE var=''mod_time'';
+ INSERT INTO public.meta VALUES (''mod_time'',current_timestamp);
+
  SELECT val FROM meta WHERE var=''tmp-merge-defn'';' );
 
 INSERT INTO qrya VALUES ( 'merge-multi-into-db', 0, 'e-text' );
@@ -335,7 +336,15 @@ SELECT true;
 
 CREATE OR REPLACE FUNCTION commit_scratch() RETURNS boolean AS '
 INSERT INTO public.revision (SELECT * FROM revision);
+
+DELETE FROM public.meta WHERE var=''mod_time'';
+INSERT INTO public.meta VALUES (''mod_time'',current_timestamp);
+
 DELETE FROM revision;
+
+DELETE FROM meta WHERE var=''mod_time'';
+INSERT INTO meta VALUES (''mod_time'',current_timestamp);
+
 SELECT true;
 ' LANGUAGE SQL;
 
@@ -365,6 +374,22 @@ LANGUAGE SQL;
 DROP VIEW revision_all;
 DROP VIEW active;
 DROP TABLE current_grammar;
+
+CREATE OR REPLACE FUNCTION mod_time_private() RETURNS text AS '
+SELECT COALESCE(val,''infin'') FROM meta WHERE var=''mod_time'' LIMIT 1;
+' LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION mod_time_public() RETURNS text AS '
+SELECT COALESCE(val,''infin'') FROM public.meta WHERE var=''mod_time'' LIMIT 1;
+' LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION mod_time() RETURNS text AS '
+SELECT max(t) FROM (SELECT mod_time_private() AS t UNION SELECT mod_time_public() AS t) AS foo;
+' LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION build_time() RETURNS text AS '
+SELECT COALESCE(val,'''') FROM meta WHERE var=''build_time'' LIMIT 1;
+' LANGUAGE SQL;
 
 ---
 --- PL/pgSQL
@@ -403,6 +428,10 @@ BEGIN
  DELETE FROM public.multi WHERE name IN (SELECT name FROM temp_multi);
  INSERT INTO public.multi
   (SELECT * FROM temp_multi);
+
+ DELETE FROM public.meta WHERE var=''mod_time'';
+ INSERT INTO public.meta VALUES (''mod_time'',current_timestamp);
+
  RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -438,10 +467,10 @@ BEGIN
    AS SELECT * 
     FROM revision_all
     WHERE '' || $1 ;
---    WHERE flags = 1
---          AND '' || $1 ;
  EXECUTE ''UPDATE meta SET val= '' || quote_literal($1) || '' WHERE var=''''filter'''''';
- EXECUTE ''SELECT build_current_grammar()'';
+ IF mod_time() > build_time() THEN
+   EXECUTE ''SELECT build_current_grammar()'';
+ ENd IF;
  RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -522,6 +551,11 @@ BEGIN
    (SELECT val FROM ddd WHERE argkey=t1.argkey AND feat=''mood'') AS mood, 
    (SELECT val FROM ddd WHERE argkey=t1.argkey AND feat=''tense'') AS tense
    FROM (arg NATURAL JOIN prd) AS t1;
+
+-- mod time
+DELETE FROM meta WHERE var=''mod_time'';
+INSERT INTO meta VALUES (''mod_time'',current_timestamp);
+
 RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -534,4 +568,3 @@ BEGIN
 RETURN true;
 END;' 
 LANGUAGE plpgsql;
-
