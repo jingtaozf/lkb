@@ -26,38 +26,40 @@
   (declare (ignore max-width max-height))
   (let ((*chart-edges* nil))
     (declare (special *chart-edges*))
-    (clim:format-graph-from-root
-     (chart-window-root window) 
-     #'(lambda (node stream)
-	 (multiple-value-bind (s bold-p)
-	     (chart-node-text-string node)
-	   (clim:with-text-face (stream (if bold-p :bold :roman))
-	     (let ((cont (get node 'chart-edge-contents)))
-	       (if cont
-		   (progn
-		     (push cont *chart-edges*)
-		     (clim:with-output-as-presentation 
-			 (stream cont 'edge)
-		       (write-string s stream)))
-		 (write-string s stream))))))
-     #'(lambda (node) 
-	 (get node 'chart-edge-descendents))
-     ;; This trickery is to avoid drawing the connections from the dummy
-     ;; root node to the lexical edges
-     :arc-drawer #'(lambda (stream from to x1 y1 x2 y2 &rest args)
-		     (when (or (not (symbolp to))
-			       (get to 'chart-edge-contents))
-		       (apply #'clim-internals::draw-linear-arc
-			      (append (list stream from to x1 y1 x2 y2)
-				      args))))   
-     :stream stream 
-     :graph-type :dag
-     :merge-duplicates t
-     :orientation :horizontal
-     :generation-separation *tree-level-sep*
-     :within-generation-separation *tree-node-sep*
-     :center-nodes nil)
-    (setf (chart-window-edges window) *chart-edges*)))
+    ;; Don't bother if there's no chart
+    (unless (null (get (chart-window-root window) 'chart-edge-descendants))
+      (clim:format-graph-from-root
+       (chart-window-root window) 
+       #'(lambda (node stream)
+           (multiple-value-bind (s bold-p)
+               (chart-node-text-string node)
+             (clim:with-text-face (stream (if bold-p :bold :roman))
+               (let ((cont (get node 'chart-edge-contents)))
+                 (if cont
+                     (progn
+                       (push cont *chart-edges*)
+                       (clim:with-output-as-presentation 
+                           (stream cont 'edge)
+                         (write-string s stream)))
+                   (write-string s stream))))))
+       #'(lambda (node) 
+           (get node 'chart-edge-descendents))
+       ;; This trickery is to avoid drawing the connections from the dummy
+       ;; root node to the lexical edges
+       :arc-drawer #'(lambda (stream from to x1 y1 x2 y2 &rest args)
+                       (when (or (not (symbolp to))
+                                 (get to 'chart-edge-contents))
+                         (apply #'clim-internals::draw-linear-arc
+                                (append (list stream from to x1 y1 x2 y2)
+                                        args))))   
+       :stream stream 
+       :graph-type :dag
+       :merge-duplicates t
+       :orientation :horizontal
+       :generation-separation *tree-level-sep*
+       :within-generation-separation *tree-node-sep*
+       :center-nodes nil)
+      (setf (chart-window-edges window) *chart-edges*))))
 
 (defun chart-node-text-string (x)
   (let ((edge-record (get x 'chart-edge-contents)))
