@@ -132,6 +132,10 @@
 
 (defvar *tsdb-phenomena* (make-hash-table :test #'equal))
 
+(defparameter *tsdb-data-hook* nil)
+
+(defparameter *tsdb-gold-hook* nil)
+
 (defparameter *tsdb-gc-statistics* nil)
 
 (defparameter *tsdb-ofs* #\@)

@@ -549,7 +549,10 @@
                :trees trees :extras extras
                :format format :meter meter)
     (let* ((phenomena (or phenomena
-                          (gethash language *tsdb-phenomena*)
+                          (loop
+                              for key being each hash-key in *tsdb-phenomena*
+                              when (and (stringp key) (search key language))
+                              return (gethash key *tsdb-phenomena*))
                           *phenomena*))
            (key (format nil "~a # phenomena" language))
            (imeter (madjust * meter (if phenomena 0.3 0.5)))

@@ -229,6 +229,9 @@
                                           *tsdb-cache-connections-p*))
                          *tsdb-cache-connections-p*)
                 (close-connections :data (symbol-value symbol)))
+              (case symbol
+                (*tsdb-data* (data-hook *tsdb-data* value))
+                (*tsdb-gold* (gold-hook *tsdb-gold* value)))
               (if (atom symbol)
                 (when (or (null package) (find-package package))
                   (set (intern symbol (or package :tsdb)) value))

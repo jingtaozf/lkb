@@ -89,6 +89,12 @@
      "close-connection(): `~a' expiry.~%"
      (connection-data connection))))
 
+(defun data-hook (old new)
+  (when *tsdb-data-hook* (call-hook *tsdb-data-hook* old new)))
+
+(defun gold-hook (old new)
+  (when *tsdb-gold-hook* (call-hook *tsdb-gold-hook* old new)))
+
 (defun initialize-tsdb (&optional cache &key action background name pattern)
   
   (declare (special *statistics-readers* *statistics-browsers* 
@@ -469,8 +475,7 @@
               (analyze-phenomena phenomena common)
             (push (cons common analysis) result)
             (setf phenomena residuum)))
-         ((and common prefix (< (mismatch common prefix) (length prefix)))
-          )
+         ((and common prefix (< (mismatch common prefix) (length prefix))))
          (t
           (push tuple result)))
       finally (return (nreverse result))))
