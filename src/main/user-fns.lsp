@@ -1,8 +1,7 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991--2003
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
-;;; bmw (aug-03)
-;;; - *psorts-temp-file* etc. moved into lexion slots
 
 ;;; User defined functions - from old globals file
 
@@ -217,17 +216,14 @@
 ;;; functions which returns a directory etc for LKB temporary files.
 
 
-;(defparameter *psorts-temp-file* nil  
-(defparameter *psorts-temp-file* "~/tmp/DefaultLexicon"  
+(defparameter *psorts-temp-file* nil  
    "a temporary file for the lexicon")
 
-(defparameter *psorts-temp-index-file* "~/tmp/DefaultLexicon-index"
-;(defparameter *psorts-temp-index-file* nil
-   "a file to index the lexicon")
+(defparameter *psorts-temp-index-file* nil
+  "a file to index the lexicon")
 
-(defparameter *leaf-temp-file* "~/tmp/DefaultLexicon-rels"
-;(defparameter *leaf-temp-file* nil
-   "a temporary file for leaf types")
+(defparameter *leaf-temp-file* nil
+  "a temporary file for leaf types")
 
 (defun lkb-tmp-dir nil 
   ;;; This should be a function, rather than a global, because we 
@@ -239,13 +235,16 @@
    #+(and :allegro :mswindows)
    (let ((tmp
           (if (system:getenv "TMP")
-	    (or (ignore-errors (parse-namestring (system:getenv "TMP")))
-		(let ((path (concatenate 'string (system:getenv "TMP") "\\")))
-		  (ignore-errors (parse-namestring path))))
+	    (or (let ((path (concatenate 'string (system:getenv "TMP") "\\")))
+		  (ignore-errors (parse-namestring path)))
+		(ignore-errors (parse-namestring (system:getenv "TMP"))))
             (when (system:getenv "TEMP")
-	      (or (ignore-errors (parse-namestring (system:getenv "TEMP")))
-		(let ((path (concatenate 'string (system:getenv "TEMP") "\\")))
-		  (ignore-errors (parse-namestring path))))))))
+	      (or (let ((path 
+			 (concatenate 'string (system:getenv "TEMP") "\\")))
+		    (ignore-errors (parse-namestring path)))
+		  (ignore-errors 
+		   (parse-namestring (system:getenv "TEMP"))))))))
+		  
      (when (and (pathnamep tmp) (ignore-errors (directory tmp))) tmp))
   (let ((pathname  #-mcl (user-homedir-pathname)
                    #+mcl (make-pathname :directory "Macintosh HD"))
@@ -264,12 +263,12 @@
                    :device (pathname-device (lkb-tmp-dir))
                    :directory (pathname-directory (lkb-tmp-dir))))
   (setf *psorts-temp-index-file* 
-    (make-pathname :name "templex-index"
+    (make-pathname :name "templex.idx"
                    :host (pathname-host (lkb-tmp-dir))
                    :device (pathname-device (lkb-tmp-dir))
                    :directory (pathname-directory (lkb-tmp-dir))))
   (setf *leaf-temp-file* 
-    (make-pathname :name "biglex-rels" 
+    (make-pathname :name "templeaf" 
                    :host (pathname-host (lkb-tmp-dir))
                    :device (pathname-device (lkb-tmp-dir))
                    :directory (pathname-directory (lkb-tmp-dir)))))

@@ -28,13 +28,11 @@
 (defclass cdb-lex-database (lex-database)
   ((psort-db :initform nil :accessor psort-db)
    (orth-db :initform nil :accessor orth-db)
-   (psorts-temp-file :initform "~/tmp/templex" :accessor psorts-temp-file)
-   (psorts-temp-index-file :initform nil :reader psorts-temp-index-file)
+   (psorts-temp-file 
+    :initform *psorts-temp-file* :accessor psorts-temp-file)
+   (psorts-temp-index-file 
+    :initform *psorts-temp-index-file* :accessor psorts-temp-index-file)
    (all-cdb-lex-dbs :allocation :class :initform nil :accessor all-cdb-lex-dbs)))
-
-(defmethod psorts-temp-index-file ((lexicon cdb-lex-database))
-  (format nil "~a-index" (psorts-temp-file lexicon))) 
-
 (defmethod load-cached-lexicon-if-available ((lexicon cdb-lex-database))
   (unless (typep (catch 'abort (read-cached-lex-if-available *lexicon-tdl-files*)) 'cdb-lex-database)
     (error "~%unable to load lexicon")
@@ -203,5 +201,9 @@
     (store-cached-lex lexicon)
     lexicon))
 
-(setf *lexicon* (initialize-lex (or *lexicon* (make-instance 'cdb-lex-database))))
+(eval-when #+:ansi-eval-when (:load-toplevel :execute)
+           #-:ansi-eval-when (load eval)
+  (set-temporary-lexicon-filenames)
+  (setf *lexicon*
+    (initialize-lex (or *lexicon* (make-instance 'cdb-lex-database)))))
 
