@@ -17,6 +17,7 @@ update:
 	  ${CVS} update -P -d -R; \
 	  ${CVS} commit -f -m "auto-update for build" \
             ${ROOT}/lkb/src/version.lsp; \
+	  $(MAKE) all; \
 	) 2>&1 | ${TEE} /tmp/build.${USER}
 
 all: lkb erg spanish itsdb
@@ -60,7 +61,7 @@ lkb_data:
 	      src/data; \
 	)
 
-lkb_binaries: lkb_linux lkb_solaris lkb_windows
+lkb_binaries: lkb_linux lkb_solaris
 
 lkb_linux: lkb_linux_om lkb_linux_ml
 
