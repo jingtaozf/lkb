@@ -398,14 +398,32 @@
         ok)))
 
 (defun equal-extra-vals (extra1 extra2)
-  ;;; this version is for tsdb etc, so we're really looking for identity
-  (and (eql (length extra1) (length extra2))
-       (every #'(lambda (tp1)
-                  (some 
-                   #'(lambda (tp2) 
-                       (extrapairs-equal tp1 tp2))
-                   extra2))
-              extra1)))
+  ;;
+  ;; for better parameterization, allow *mrs-equalp-properties-p* to be a list
+  ;; of property names that should be ignored: for simplicity, filter those out
+  ;; first.                                                     (30-jun-04; oe)
+  ;;
+  (let ((extra1 (if (consp *mrs-equalp-properties-p*)
+                  (loop
+                      with filter = *mrs-equalp-properties-p*
+                      for extra in extra1
+                      unless (member (extrapair-feature extra) filter)
+                      collect extra)
+                  extra1))
+        (extra2 (if (consp *mrs-equalp-properties-p*)
+                  (loop
+                      with filter = *mrs-equalp-properties-p*
+                      for extra in extra2
+                      unless (member (extrapair-feature extra) filter)
+                      collect extra)
+                  extra1)))
+    (and (eql (length extra1) (length extra2))
+         (every #'(lambda (tp1)
+                    (some 
+                     #'(lambda (tp2) 
+                         (extrapairs-equal tp1 tp2))
+                     extra2))
+                extra1))))
        
 (defun extrapairs-equal (tp1 tp2)
   (if (and (extrapair-p tp1) (extrapair-p tp2))
