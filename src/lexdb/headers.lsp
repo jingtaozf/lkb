@@ -60,7 +60,6 @@
     :dump_db
     :dump_scratch_db
     :filter
-    :get_filter 
     :initialize_current_grammar
     :lex_id_set 
     :lexdb_version
