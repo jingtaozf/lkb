@@ -95,6 +95,7 @@
 ;;; retrieved using its orthography.  it seems unlikely that the CDB code is
 ;;; intended to require unique hash keys?                   (30-jul-01  -  oe)
 ;;;
+#+:null
 (defun hash (key)
   (let ((h 5381))
     (loop for c across #-(and :allegro-version>= (version>= 6 0)) 
@@ -107,6 +108,15 @@
                             (char-code c) 
                             #+(and :allegro-version>= (version>= 6 0)) 
                             c)))
+    h))
+
+
+(defun hash (key)
+  (let ((h 5381))
+    (loop for c across key
+	do
+	  (setq h (ldb (byte 32 0) (+ h (ash h 5))))
+	  (setq h (logxor h (char-code c))))
     h))
 
 ;; Open a database file for writing
