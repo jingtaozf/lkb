@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.20  1999/10/14 02:14:47  aac
+;; fixes for introduced bugs
+;;
 ;; Revision 1.19  1999/10/14 00:46:31  danf
 ;; Patches for better sorts
 ;;
@@ -399,3 +402,11 @@ printing routines -  convenient to make this global to keep printing generic")
   "if t, allows scope to have specified relations")
 
 (defparameter *prolog-quote-chars* '(#\'))
+
+;;; for generation
+
+(defparameter *instloc-type* (vsym "INSTLOC"))
+
+(defparameter *instloc-path*   `(,(vsym "INSTLOC")))
+
+
