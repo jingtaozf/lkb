@@ -1,5 +1,6 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991--2002
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 ;;; Drastically simplified for YADU
 ;;; old laurel input stuff is now in laurel/lrlinput
@@ -52,7 +53,7 @@
     (when file-name
       (read-lex-file-sub file-name :path))))
 
-(defun reload-lex-files nil
+(defun reload-lex-files (&key (allp t))
   (setf *syntax-error* nil)
   (if (check-load-names *lex-file-list* 'lexical)
       (progn
@@ -60,9 +61,9 @@
          (reverse *lex-file-list*)
          (if (eql *lkb-system-version* :page) :tdl :path))
         (format t "~%Lexicon reload complete")
-        (when *template-file-list*
+        (when (and allp *template-file-list*)
           (reload-template-files))
-        (when *psort-file-list*
+        (when (and allp *psort-file-list*)
           (reload-psort-files)))
     (progn
       #-:tty(format t "~%Use Load Complete Grammar instead")

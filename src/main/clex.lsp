@@ -1,5 +1,6 @@
-;;; Copyright (c) 1999-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1999--2002
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 
 (in-package :lkb)
@@ -96,7 +97,8 @@
 	   ;; In case multiple entries are returned, we take the last one
 	   (let* ((rec (car (last (cdb:read-record (psort-db lexicon) 
 						   (string id)))))
-		  (entry (when rec (with-package (:lkb) (read-from-string rec)))))
+		  (entry (when rec 
+                           (with-package (:lkb) (read-from-string rec)))))
 	     (when (and entry cache)
 	       (setf (gethash id psorts) entry))
 	     entry)))))

@@ -1,5 +1,6 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991--2001 
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 
 ;;; April 1997 - modified for YADU
@@ -21,10 +22,20 @@
   ((lexical-entries :initform (make-hash-table :test #'equal))
    (psorts :initform (make-hash-table :test #'eq))
    (temp-psorts :initform (make-hash-table :test #'eq))
-   (extra-lexicons :initform nil :accessor extra-lexicons)))
+   (extra-lexicons :initform nil :accessor extra-lexicons)
+   (extra-mode :initform :union :accessor extra-mode)))
 
+;;;
+;;; given the orthography (string in all upper case), look up all lexical
+;;; entries that _contain_ that orthography; return list of identifiers.
+;;;
 (defgeneric lookup-word (lexicon orth &key (cache)))
 
+;;;
+;;; for a given lexicon, return all words, i.e. strings of orthography that
+;;; occur as part of the spelling of a lexical item; returns "ad" and "hoc" as
+;;; two separate `words' but not "ad hoc".
+;;; 
 (defgeneric lex-words (lexicon))
 
 (defgeneric lexicon-loaded-p (lexicon))
@@ -47,6 +58,11 @@
 
 (defgeneric unexpand-psort (lexicon id))
 
+;;;
+;;; for a given lexicon, return list of psort identifiers (as strings), i.e.
+;;; identifiers of lexical items plus start symbols and node labels (for the
+;;; time being, these are stored in the same namespace).
+;;;
 (defgeneric collect-psort-ids (lexicon))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -122,7 +138,9 @@
 		(rule-full-fs lr-entry)
 	      (lex-expansion-error 
 	       "Return nil" 
-	       (format nil "~A is not a valid structure identifier" psort)))))))))
+	       (format 
+                nil 
+                "~A is not a valid structure identifier" psort)))))))))
 
 (defun get-type-from-lex-id (id)
   ;;; Utility function for MPhillies
@@ -136,16 +154,16 @@
               (indef-type-of-tdfs tdfs))))))
 
 (defun get-lex-entry (orth)
-  (loop for psort in (remove-duplicates (lookup-word *lexicon* orth))
-      nconc
-        (let ((entry (get-psort-entry psort)))
-          (if entry (list entry)))))                       
+  (loop 
+      for psort in (remove-duplicates (lookup-word *lexicon* orth))
+      for entry = (get-psort-entry psort)
+      when entry collect entry))
 
 (defun get-unexpanded-lex-entry (orth)
-  (loop for psort in (remove-duplicates (lookup-word *lexicon* orth))
-      nconc
-        (let ((entry (get-unexpanded-psort-entry psort)))
-          (if entry (list entry)))))
+  (loop 
+      for psort in (remove-duplicates (lookup-word *lexicon* orth))
+      for entry = (get-unexpanded-psort-entry psort)
+      when entry collect entry))
 
 (defun generate-unknown-word-entries (orth)
   (loop for type in *unknown-word-types*
@@ -392,15 +410,21 @@
 (defmethod lookup-word :around ((lexicon lex-database) orth &key (cache t))
   (cond ((gethash orth (slot-value lexicon 'lexical-entries)))
 	(t 
-	 (let ((value (if (next-method-p) (call-next-method))))
-	   ;; If main lexicon doesn't have an entry, try the other lexicons
-	   (when (null value)
-	     (setf value
-	       (some #'(lambda (lex) (lookup-word lex orth :cache nil))
-		     (extra-lexicons lexicon))))
+	 (let* ((value (if (next-method-p) (call-next-method)))
+                (mode (extra-mode lexicon))
+                (extra (when (or (null value) (eq mode :union))
+                         (loop
+                             with result = nil
+                             for lexicon in (extra-lexicons lexicon)
+                             for value = (lookup-word lexicon orth :cache nil)
+                             when (and value (eq mode :shadow)) do
+                             (return value)
+                             else when value do
+                               (setf result (nconc result value))
+                             finally (return result))))
+                (value (nconc value extra)))
 	   (when (and cache value)
-	     (setf (gethash orth (slot-value lexicon 'lexical-entries)) 
-	       value))
+	     (setf (gethash orth (slot-value lexicon 'lexical-entries)) value))
 	   value))))
 
 (defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry)
@@ -470,7 +494,7 @@
 (defclass simple-lex-database (lex-database)
   ((psorts-stream :initform nil)))
 
-#+:ignore
+#+:null
 (setf *lexicon* (make-instance 'simple-lex-database))
 
 (defmethod lexicon-loaded-p ((lexicon simple-lex-database))

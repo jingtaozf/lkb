@@ -23,10 +23,10 @@
   (setf *export-skip-file* skip)
   (with-open-file (stream *export-output-file* :direction :output 
                    :if-exists :supersede :if-does-not-exist :create))
-  (with-open-file (stream *export-output-file* :direction :output 
+  (with-open-file (stream *export-skip-file* :direction :output 
                    :if-exists :supersede :if-does-not-exist :create))
   (let ((*export-lexicon-p* t))
-    (reload-lex-files)))
+    (reload-lex-files :allp nil)))
 
 (defun export-lexical-entry (name constraint)
   (with-open-file (stream *export-output-file*
