@@ -126,8 +126,10 @@
      (apply #'mrs-equalp mrs1 mrs2 '(t nil))
      (equal mrs1 mrs2))))
 
-(defun browse-mrs (mrs)
-  (let ((browser (fboundp (find-symbol "SHOW-MRS-WINDOW" :cl-user))))
-    (if (functionp browser)
-      (apply browser (list nil mrs))
-      (output-mrs mrs 'simple))))
+(defun browse-mrs (mrs &optional title)
+  (ignore-errors
+   (let ((browser (fboundp (find-symbol "SHOW-MRS-WINDOW" :cl-user))))
+     (if (functionp browser)
+         (apply browser (list nil mrs title))
+       (output-mrs mrs 'simple)))))
+  
