@@ -70,7 +70,7 @@
 (defun postgres-user-temp-dir nil  
     (make-pathname :directory (pathname-directory (lkb-tmp-dir))))
 
-(defvar *psql-db-version* "3.09")
+(defvar *psql-db-version* "3.10")
 (defvar *psql-fns-version* "1.00")
 (defvar *psql-port-default* 5432)
 
@@ -90,8 +90,6 @@
      (user (extract-param :user *psql-lexicon-parameters*))
      (semi (extract-param :semi *psql-lexicon-parameters*))
      )
-;  (unless (and db host)
-;    (error "please instantiate db+host in *psql-lexicon-parameters*"))
   (let ((part-of))   
     (if *psql-lexicon*
         (setf part-of (part-of *psql-lexicon*))
@@ -696,10 +694,18 @@
       (unless (string>= (get-db-version lexicon) 
                         *psql-db-version*)
         (if (string>= dbversion "3.00")
-            (error "Your database structures (v. ~a) are out of date. Change to directory lkb/lexdb/ and use PSQL tool to import file import.sql as DB owner and import su-setup.sql as DB superuser. Ignore WARNING/ERROR messages. (NOTE: existing private schemas will be renamed tmpSCHEMANAME.)" 
+            (error "Your database structures (v. ~a) are out of date.
+ You must load updated setup files.
+ See http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html" 
 		   dbversion 
 		   dbversion)
-          (error "Your database structures (v. ~a) are too out of date. You must recreate the database: dump the LexDB using LKB, go to shell prompt and 'dropdb ~a' then 'createdb ~a', then change to directory lkb/lexdb and import file import.sql as DB owner using PSQL tool, and finally merge dumped LexDB into new database." 
+          (error "Your database structures (v. ~a) are too out of date.
+ You must recreate the database:
+   dump the LexDB entries
+   dropdb ~a
+   follow instructions at http://www.cl.cam.ac.uk/~~bmw20/DT/initialize-db.html
+   merge dumped entries into new database
+" 
 		 dbversion 
 		 (dbname lexicon))))
       (make-field-map-slot lexicon)
@@ -969,3 +975,28 @@
       (format t "~%No feature structure for ~A~%" 
 	      (lex-entry-id entry))))
     (forget-psort lexicon lexid))
+
+(defun command-vacuum-current-grammar nil
+  (vacuum-current-grammar *lexicon*))
+
+(defun command-vacuum-public-revision nil
+  (vacuum-public-revision *lexicon*)
+  (lkb-beep))
+
+(defmethod vacuum-current-grammar ((lexicon psql-database) &key verbose)
+  (if verbose
+      (run-command lexicon "vacuum full analyze verbose current_grammar")
+    (run-command lexicon "vacuum full analyze current_grammar"))
+  (lkb-beep))
+
+(defmethod vacuum-public-revision ((lexicon psql-database) &key verbose)
+  (with-slots (dbname host port) lexicon
+    (let ((l2 (make-instance 'psql-database
+		:dbname dbname
+		:host host
+		:port port
+		:user (raw-get-val lexicon "SELECT db_owner()"))))
+      (connect l2)
+      (if verbose
+	  (run-command l2 "vacuum full analyze verbose public.revision")      
+	(run-command l2 "vacuum full analyze public.revision")))))

@@ -202,6 +202,36 @@ END;
 ' LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION public.index_current_grammar() RETURNS boolean AS '
+BEGIN
+	RAISE INFO \'indexing db cache\';
+	CREATE UNIQUE INDEX current_grammar_name ON current_grammar (name varchar_ops);
+ 	CREATE INDEX current_grammar_orthkey ON current_grammar (orthkey varchar_ops); 
+
+ 	IF check_version(\'7.4\') THEN
+		CREATE UNIQUE INDEX current_grammar_name_pattern ON current_grammar (name varchar_pattern_ops);
+		CREATE INDEX current_grammar_orthkey_pattern ON current_grammar (orthkey varchar_pattern_ops);
+ 	ELSE
+		CREATE UNIQUE INDEX current_grammar_name_pattern ON current_grammar (name);
+		CREATE INDEX current_grammar_orthkey_pattern ON current_grammar (orthkey);
+ 	END IF; 
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION public.deindex_current_grammar() RETURNS boolean AS '
+BEGIN
+	RAISE INFO \'deindexing db cache\';
+	DROP INDEX current_grammar_name;
+ 	DROP INDEX current_grammar_orthkey; 
+
+	DROP INDEX current_grammar_name_pattern;
+	DROP INDEX current_grammar_orthkey_pattern;
+
+	RETURN true;
+END;
+' LANGUAGE plpgsql;
+
 CREATE OR REPLACE FUNCTION public.create_schema(text) RETURNS boolean AS '
 BEGIN
   EXECUTE ''CREATE SCHEMA '' || $1;
@@ -213,16 +243,8 @@ BEGIN
   ON revision (name,version,userid)''; 
 -- current_grammar
  CREATE TABLE current_grammar AS SELECT * FROM public.revision WHERE NULL;
- CREATE UNIQUE INDEX current_grammar_name ON current_grammar (name varchar_ops);
- CREATE INDEX current_grammar_orthkey ON current_grammar (orthkey varchar_ops); 
 
- IF check_version(''7.4'') THEN
-	CREATE UNIQUE INDEX current_grammar_name_pattern ON current_grammar (name varchar_pattern_ops);
-	CREATE INDEX current_grammar_orthkey_pattern ON current_grammar (orthkey varchar_pattern_ops);
- ELSE
-	CREATE UNIQUE INDEX current_grammar_name_pattern ON current_grammar (name);
-	CREATE INDEX current_grammar_orthkey_pattern ON current_grammar (orthkey);
- END IF; 
+ PERFORM public.index_current_grammar();
 
 -- views
  CREATE VIEW filtered AS SELECT * FROM public.revision WHERE NULL;
@@ -371,6 +393,7 @@ BEGIN
 	-- recreate db cache
 	raise info \'emptying db cache\';
 	DELETE FROM current_grammar; 
+	PERFORM public.deindex_current_grammar();
 
 	raise info \'populating db cache\';
 	INSERT INTO current_grammar 
@@ -382,7 +405,7 @@ BEGIN
       			FROM filtered_temp
       		GROUP BY name) AS t1)
   	WHERE flags=1;
-	--	SELECT * FROM active;
+	PERFORM public.index_current_grammar();
 
 	DROP TABLE filtered_temp;
 

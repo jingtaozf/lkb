@@ -52,23 +52,23 @@
     (fields-map lexicon))
 
 ;;; returns version, eg. "7.3.2"
-(defmethod get-server-version ((lexicon psql-lex-database))
+(defmethod get-server-version ((lexicon psql-database))
   (let* 
       ((sql-str "SELECT version();")
        (version-str (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
     (second (split-on-char version-str))))
     
-(defmethod get-db-version ((lexicon psql-lex-database))
+(defmethod get-db-version ((lexicon psql-database))
   (let* 
       ((sql-str "SELECT val FROM public.meta WHERE var='db-version' LIMIT 1;"))
     (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
     
-(defmethod get-filter ((lexicon psql-lex-database))
+(defmethod get-filter ((lexicon psql-database))
   (let* 
       ((sql-str "SELECT val FROM meta WHERE var='filter' LIMIT 1;"))
     (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
     
-(defmethod next-version (id (lexicon psql-lex-database))
+(defmethod next-version (id (lexicon psql-database))
   (let* (
 	 (sql-str (sql-next-version lexicon (string-downcase id)))
 	 (res (caar (records (run-query 
@@ -76,28 +76,28 @@
 			      (make-instance 'sql-query :sql-string sql-str))))))
     (str-2-num res 0)))
 
-(defmethod get-records ((lexicon psql-lex-database) sql-string)
+(defmethod get-records ((lexicon psql-database) sql-string)
   (make-column-map-record
    (get-raw-records lexicon sql-string)))
 
-(defmethod get-raw-records ((lexicon psql-lex-database) sql-string)
+(defmethod get-raw-records ((lexicon psql-database) sql-string)
    (run-query 
     lexicon 
     (make-instance 'sql-query :sql-string sql-string)))
 
-(defmethod fn-get-records ((lexicon psql-lex-database) fn-name &rest rest)
+(defmethod fn-get-records ((lexicon psql-database) fn-name &rest rest)
   (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
 
-(defmethod fn-get-raw-records ((lexicon psql-lex-database) fn-name &rest rest)
+(defmethod fn-get-raw-records ((lexicon psql-database) fn-name &rest rest)
   (get-raw-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
 
-(defmethod fn-get-record ((lexicon psql-lex-database) fn-name &rest rest)
+(defmethod fn-get-record ((lexicon psql-database) fn-name &rest rest)
   (let ((res (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest)))))
     (if (> (length res) 1)
         (error "too many records returned")
       (first res))))
   
-(defmethod fn-get-val ((lexicon psql-lex-database) fn-name &rest rest)
+(defmethod fn-get-val ((lexicon psql-database) fn-name &rest rest)
   (let* ((res (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
          (rec (first res)))
     (if (> (length res) 1)
@@ -106,7 +106,7 @@
           (error "multiple columns returned")
         (cdar rec)))))
   
-(defmethod raw-get-val ((lexicon psql-lex-database) sql-str)
+(defmethod raw-get-val ((lexicon psql-database) sql-str)
   (let* ((res (get-records lexicon sql-str))
          (rec (first res)))
     (if (> (length res) 1)
@@ -116,7 +116,7 @@
         (cdar rec)))))
   
   
-(defmethod fn ((lexicon psql-lex-database) fn-name &rest rest)
+(defmethod fn ((lexicon psql-database) fn-name &rest rest)
   (unless (connection lexicon)
     (error "no connection to psql lexicon"))
   (let ((lex-fn (assoc fn-name (fns lexicon))))
@@ -124,25 +124,25 @@
 	(eval (append (list (cdr lex-fn)) rest))
       (error "Embedded-SQL fn ~a not defined. Is the latest embedded-code.sql loaded into the LexDB?" fn-name))))
   
-(defmethod sql-next-version ((lexicon psql-lex-database) id)
+(defmethod sql-next-version ((lexicon psql-database) id)
   (fn lexicon 'next-version id))
 
-(defmethod sql-orthography-set ((lexicon psql-lex-database))
+(defmethod sql-orthography-set ((lexicon psql-database))
   (fn lexicon 'orthography-set))
 
-(defmethod sql-lex-id-set ((lexicon psql-lex-database))
+(defmethod sql-lex-id-set ((lexicon psql-database))
   (fn lexicon 'lex-id-set))
 
-(defmethod sql-lookup-word ((lexicon psql-lex-database) word)
+(defmethod sql-lookup-word ((lexicon psql-database) word)
   (fn lexicon 'lookup-word (string-downcase word)))
 
-(defmethod sql-retrieve-entries-by-orthkey ((lexicon psql-lex-database) select-list word)
+(defmethod sql-retrieve-entries-by-orthkey ((lexicon psql-database) select-list word)
   (fn lexicon 'retrieve-entries-by-orthkey select-list (string-downcase word)))
 
-(defmethod sql-retrieve-entry ((lexicon psql-lex-database) select-list word)
+(defmethod sql-retrieve-entry ((lexicon psql-database) select-list word)
   (fn lexicon 'retrieve-entry select-list word))
 
-(defmethod sql-retrieve-all-entries ((lexicon psql-lex-database) select-list)
+(defmethod sql-retrieve-all-entries ((lexicon psql-database) select-list)
   (fn lexicon 'retrieve-all-entries select-list))
 
 (defmethod build-lex ((lexicon psql-database) &key (semi t))
@@ -189,40 +189,21 @@
   (empty-cache lexicon))
 
 
-(defmethod user-read-only-p ((lexicon psql-lex-database))
+(defmethod user-read-only-p ((lexicon psql-database))
   (or (string= "t" (fn-get-val lexicon ''user-read-only-p (user lexicon)))
       (string= "T" (fn-get-val lexicon ''user-read-only-p (user lexicon)))))
 
-(defmethod dump-db ((lexicon psql-lex-database))  
+(defmethod dump-db ((lexicon psql-database))  
     (fn-get-val lexicon ''dump-db))
 
-(defmethod dump-scratch-db ((lexicon psql-lex-database) filename)  
+(defmethod dump-scratch-db ((lexicon psql-database) filename)  
   (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''dump-scratch-db filename))
 
-(defmethod show-scratch ((lexicon psql-lex-database))
+(defmethod show-scratch ((lexicon psql-database))
   (fn-get-records lexicon ''show-scratch))
 
-#+:null
-(defmethod load-semi-from-files ((lexicon psql-lex-database))  
-  (format t "~%")
-  (run-command-stdin lexicon 
-		     (format nil "~a;~%~a;" 
-			     "DELETE FROM prd" 
-			     "COPY prd FROM stdin") 
-		     "~/tmp/semi.obj.prd")
-  (run-command-stdin lexicon 
-		     (format nil "~a;~%~a;" 
-			     "DELETE FROM arg" 
-			     "COPY arg FROM stdin") 
-		     "~/tmp/semi.obj.arg")
-  (run-command-stdin lexicon 
-		     (format nil "~a;~%~a;" 
-			     "DELETE FROM ddd" 
-			     "COPY ddd FROM stdin") 
-		     "~/tmp/semi.obj.ddd"))
-
-(defmethod merge-into-db ((lexicon psql-lex-database) 
+(defmethod merge-into-db ((lexicon psql-database) 
 			  rev-filename)  
   (format t "~%")
   (run-command-stdin lexicon 
@@ -231,13 +212,12 @@
 			     "COPY temp FROM stdin DELIMITERS ',' WITH NULL AS ''") 
 		     rev-filename)
   (let ((num-new-entries 
-	 (fn-get-val lexicon '
-		     'merge-into-db2))) 
-    (format *postgres-debug-stream* "~%please wait while I vacuum the database...")
-    (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM public.revision"))
+	 (fn-get-val lexicon ''merge-into-db2))) 
+    (format t "~%please wait while I vacuum the database...")
+    (vacuum-public-revision lexicon)
     num-new-entries))
 
-(defmethod merge-defn ((lexicon psql-lex-database) 
+(defmethod merge-defn ((lexicon psql-database) 
 		       dfn-filename)  
   (when (catch 'pg:sql-error 
 	  (run-command lexicon "CREATE TABLE temp_defn AS SELECT * FROM defn WHERE NULL;"))
@@ -291,11 +271,14 @@
   (unless (equal (host lexicon)
 		 "localhost")
     (error "Operation requires db host = \"localhost\""))
-  (let ((db-user (user lexicon))
-	(db-owner (raw-get-val lexicon "SELECT db_owner()")))
-    (when
-	(initialize-psql-lexicon :user db-owner
-				 :semi nil)
+  (with-slots (dbname host port) lexicon
+    (let ((conn-db-owner (make-instance 'psql-database
+			   :dbname dbname
+			   :host host
+			   :port port
+			   :user (raw-get-val lexicon "SELECT db_owner()"))))
+      (connect conn-db-owner)
+      (retrieve-fn-defns conn-db-owner)
       (when
 	  (catch 'pg:sql-error
 	    (progn
@@ -306,26 +289,25 @@
 		     (dfn-filename 
 		      (absolute-namestring "~a.dfn" 
 					   filename)))
-		(merge-into-db lexicon 
+		(merge-into-db conn-db-owner 
 			       rev-filename)
 		(if (probe-file dfn-filename)
-		    (merge-defn lexicon 
+		    (merge-defn conn-db-owner 
 				dfn-filename))
 		nil
 		)))
-	(format t "Merge new entries aborted..."))
-	(initialize-psql-lexicon :user db-user)
-      )))
-  
+	(format t "Merge new entries aborted..."))))
+  (initialize-psql-lexicon))
+
 (defmethod initialize-userschema ((lexicon psql-database))
   (unless
       (fn-get-val lexicon ''test-user (user lexicon))
-    (format *postgres-debug-stream* "~%(initializing schema ~a)" (user lexicon))
+    (format t "~%(creating private space for user ~a)" (user lexicon))
     (fn-get-val lexicon ''create-schema (user lexicon))
     (if *postgres-mwe-enable*
 	(mwe-initialize-userschema lexicon))))
 
-(defmethod retrieve-fn-defns ((lexicon psql-lex-database))
+(defmethod retrieve-fn-defns ((lexicon psql-database))
   (let* ((sql-str (format nil "SELECT * FROM qry;"))
 	 (records (make-column-map-record (run-query 
                      lexicon 
@@ -335,7 +317,7 @@
 	do
 	  (retrieve-fn-defn lexicon record))))
 
-(defmethod retrieve-fn-defn ((lexicon psql-lex-database) record)
+(defmethod retrieve-fn-defn ((lexicon psql-database) record)
   (let* ((fn (get-val :fn record))
 	 (arity (str-2-num (get-val :arity record)))
 	 (sql-code (get-val :sql_code record))
@@ -523,19 +505,19 @@
 	    do
 	      (format fstream "~a~%" line))))))
 
-(defmethod semi-setup-1 ((lexicon psql-lex-database))  
+(defmethod semi-setup-1 ((lexicon psql-database))  
   (fn-get-records lexicon ''semi-setup-1))
 
-(defmethod semi-setup-2 ((lexicon psql-lex-database))  
+(defmethod semi-setup-2 ((lexicon psql-database))  
   (fn-get-records lexicon ''semi-setup-2))
 
-(defmethod semi-up-to-date-p ((lexicon psql-lex-database))  
+(defmethod semi-up-to-date-p ((lexicon psql-database))  
   (string= "t" (fn-get-val lexicon ''semi-up-to-date-p)))
 
-(defmethod current-timestamp ((lexicon psql-lex-database))  
+(defmethod current-timestamp ((lexicon psql-database))  
   (cdaar (get-records *lexicon* "select current_timestamp")))
 
-(defmethod semi-out-of-date ((lexicon psql-lex-database))  
+(defmethod semi-out-of-date ((lexicon psql-database))  
   (mapcar #'(lambda (x) (2-symb (car x))) 
 	  (records 
 	   (fn-get-raw-records lexicon ''semi-out-of-date))))

@@ -456,7 +456,9 @@
 
 (defun close-scratch-lex nil
   (fn-get-val *psql-lexicon* ''clear-scratch)
-  (build-current-grammar *psql-lexicon*))
+;;  (build-current-grammar *psql-lexicon*)
+  (initialize-psql-lexicon)
+  )
 
 (defun commit-scratch-lex nil
   (fn-get-val *psql-lexicon* ''commit-scratch)

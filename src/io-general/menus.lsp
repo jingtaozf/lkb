@@ -51,6 +51,8 @@
                       lkb::command-show-scratch		      
                       lkb::command-set-filter-psql-lexicon		      
 		      lkb::command-index-new-lex-entries
+		      lkb::command-vacuum-current-grammar
+		      lkb::command-vacuum-public-revision
                        ;; generate
                       lkb::show-gen-result
                       lkb::show-generator-input
@@ -355,6 +357,14 @@
                   (make-menu-item :name "Index new lex entries"
                                   :value 'command-index-new-lex-entries
                                   :available-p :mrs
+				  )
+                  (make-menu-item :name "Vacuum (private)"
+                                  :value 'command-vacuum-current-grammar
+                                  ;:available-p :always
+				  )
+                  (make-menu-item :name "Vacuum (public)"
+                                  :value 'command-vacuum-public-revision
+                                  ;:available-p :always
 				  )
                   )
 		 :available-p :always)))
