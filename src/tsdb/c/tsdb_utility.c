@@ -225,7 +225,7 @@ BOOL tsdb_are_attributes(Tsdb_value **attribute_list, Tsdb_relation *relation){
 
 BOOL tsdb_are_joinable(Tsdb_relation *source, Tsdb_relation *target) {
   
-  int i, j, k, l;
+  int i, j;
   
   for(i = 0; i < source->n_keys; i++) {
     for(j = 0; j < target->n_keys; j++) {
@@ -278,6 +278,7 @@ int tsdb_n_attributes() {
   int m=20,h,l,k,i,n = tsdb_n_relations();
   char** names;
   BOOL kaerb;
+
 
   names = (char**)malloc(sizeof(char**)*(m+1));
   for (k=0,i=0;i<n;i++) {
@@ -682,7 +683,6 @@ Tsdb_relation **tsdb_all_relations() {
 
 } /* tsdb_all_relations() */
 
-static char** names = NULL;
 
 char** tsdb_all_relation_names() {
   Tsdb_relation** all;
@@ -720,8 +720,7 @@ int tsdb_n_relations() {
 Tsdb_relation *tsdb_copy_relation(Tsdb_relation *relation) {
 
   Tsdb_relation *new;
-  char **foo;
-  int i, j;
+  int i;
 
   new = (Tsdb_relation *)malloc(sizeof(Tsdb_relation));
   new->fields = (char **)malloc((relation->n_fields + 1) * sizeof(char *));
@@ -784,7 +783,6 @@ Tsdb_selection *tsdb_find_table(Tsdb_relation *relation) {
 \*****************************************************************************/
 
   int i;
-  BOOL kaerb = FALSE;
 
   if(relation == NULL || relation->name == NULL || tsdb.relations == NULL) {
     fprintf(tsdb_error_stream,
@@ -1122,7 +1120,6 @@ Tsdb_relation *tsdb_create_relation() {
 void tsdb_free_relation(Tsdb_relation *relation) {
 
   int i;
-  char **foo;
 
   if(relation->name != NULL) {
     free(relation->name);
@@ -1407,6 +1404,7 @@ BOOL tsdb_initialize() {
           (tsdb.pager != NULL ? tsdb.pager : "null"), tsdb.debug_file);
   fflush(tsdb_debug_stream);
 #endif
+  return(TSDB_OK);
 } /* tsdb_initialize */
 
 void tsdb_parse_environment() {
@@ -1764,6 +1762,38 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
 
 } /* tsdb_insert_into_selection() */
 
+
+
+int tsdb_uniq_projection(char** projection,int n) {
+  int i,j,d=0;
+
+  qsort((char*)projection,n,sizeof(char*),(int(*)())strcmp);
+  for (i=0,j=1;j<n;j++) {
+    if (!strcmp(projection[i],projection[j])) {
+      free(projection[j]);
+      projection[j]=NULL;
+      d++;
+    }
+    else
+      i=j;
+  } /* for */
+
+  return n-d ;
+} /* tsdb_uniq_projection() */
+
+
+void tsdb_free_char_array(char** array,int n) {
+  int i;
+
+  for (i=0;i<n;i++)
+    if (array[i]) {
+      free(array[i]);
+      array[i]=NULL;
+    } /* if */
+  free(array);
+
+} /* tsdb_free_char_array() */
+
 void tsdb_negate_node(Tsdb_node* node)
 {
   if (node->node->type != TSDB_OPERATOR) {
@@ -1973,4 +2003,5 @@ char *tsdb_expand_directory(char *name) {
     } /* if */
     return(tsdb_expand_directory(&foo[0]));
   } /* if */
+  return(NULL);
 } /* tsdb_expand_directory() */
