@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.27  1999/10/14 01:17:38  danf
+;; Neglected LKB/PAGE differences
+;;
 ;; Revision 1.26  1999/10/14 00:46:31  danf
 ;; Patches for better sorts
 ;;
@@ -422,6 +425,8 @@
                                             :value (create-type 
                                                     (fs-type next-fs)))
                                feat-list))
+                        ((eq (car feat-val) (car *instloc-path*))
+                         nil)
                         (t 
                          (setf feat-list 
                            (append feat-list
