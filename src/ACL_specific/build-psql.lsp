@@ -79,7 +79,7 @@
       (if (system:getenv "SSP")
         (tpl:setq-default *package* (find-package :ssp))
         (tpl:setq-default *package* (find-package :lkb)))
-      #+:psql
+      (pushnew :psql *features*) ;; in case the parent lost this feature
       (handler-case (load "libpq.so") 
 	(file-error () 
 	  ;; some feedback to user
