@@ -1137,6 +1137,46 @@
   dag)
 
 
+(defun destructively-replace-types (dag-instance replace-alist)
+;;; walks over a dag, looking for types which are equal to the car
+;;; values in the replace-alist and resets them to the cdr values
+;;;
+;;; tried doing this properly, within a unification context
+;;; but not working, so copy-completely first  
+  (let* ((real-dag (follow-pointers dag-instance))
+         (dag-type (dag-type real-dag))
+	 (replaceable (assoc dag-type replace-alist :test #'equal)))
+    (when replaceable
+      (setf (dag-type real-dag) (cdr replaceable)))
+    (dolist (arc (dag-arcs real-dag))
+      (destructively-replace-types
+       (dag-arc-value arc)
+       replace-alist))
+    real-dag))
+
+
+#|
+
+(defun destructively-replace-types-top (dag-instance replace-alist)
+  (with-unification-context (dag-instance)
+    (destructively-replace-types dag-instance replace-alist)
+    (copy-dag dag-instance)))
+
+(defun destructively-replace-types (dag-instance replace-alist)
+;;; walks over a dag, looking for types which are equal to the car
+;;; values in the replace-alist and resets them to the cdr values
+  (let* ((real-dag (deref-dag dag-instance))
+         (dag-type (dag-type real-dag))
+	 (replaceable (assoc dag-type replace-alist :test #'equal)))
+    (when replaceable
+      (setf (dag-new-type real-dag) (cdr replaceable)))
+    (dolist (arc (dag-arcs real-dag))
+      (destructively-replace-types
+       (dag-arc-value arc)
+       replace-alist))
+    real-dag))
+|#
+
 ;;; **********************************************************************
 
 ;;; WFFs
