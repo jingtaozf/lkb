@@ -144,9 +144,9 @@
 (defun string-type-p (type-name)
    ;;; AAC 30/12/94
    ;;; allow for no string type
-   (if *string-type*
+   (and *string-type*
       (or (eq type-name *string-type*)
-         (subtype-p *string-type* type-name))))
+         (member type-name (retrieve-ancestors *string-type*) :test #'eq))))
 
 (defun get-known-type-entry (name)
    (or (gethash name *types*)
@@ -265,24 +265,20 @@
    (values max longest))
 |#
 
-(defun greatest-common-subtype (type1 type2 &aux ptype)
+(defun greatest-common-subtype (type1 type2)
    ;; implemented as a memo function. In practice we won't see anything like all
    ;; possible combinations of arguments so best not to attempt to pre-compute the
    ;; cache contents
+   ;;
+   ;; we expect both args to be lisp atoms, but either or both could be strings/
+   ;; string type, or instance types. The latter are cached, but not the former
    (cond 
       ((eq type1 type2) type1)
-      ((stringp type1) 
+      ((arrayp type1) ; a string?
          (when (or (equal type1 type2) (string-type-p type2))
             type1))
-      ((stringp type2) 
+      ((arrayp type2) 
          (when (string-type-p type1) type2))
-      ((and (setq ptype (instance-type-parent type1))
-            (or (eq ptype type2) (member type2 (retrieve-ancestors ptype))))
-         ;; no need to look for constraint of ptype since it's already the glb
-         type1)
-      ((and (setq ptype (instance-type-parent type2))
-            (or (eq ptype type1) (member type1 (retrieve-ancestors ptype))))
-         type2) ; ditto
       (t
          (cached-greatest-common-subtype type1 type2 nil))))
 
@@ -337,22 +333,24 @@
             (values subtype constraintp)))))
 
 
-(defun full-greatest-common-subtype (type1 type2)
+(defun full-greatest-common-subtype (type1 type2 &aux ptype1 ptype2)
    ;; atomic types should have been stripped down to their constituent type
    ;; component(s) before this point
    (cond 
       ((eq type1 type2) type1)
-      ((stringp type1) 
-         (when (or (equal type1 type2) (string-type-p type2))
-            type1))
-      ((stringp type2) 
-         (when (string-type-p type1) type2))
-      ((subtype-p type1 type2)
+      ((and (setq ptype1 (instance-type-parent type1))
+            (or (eq ptype1 type2) (member type2 (retrieve-ancestors ptype1) :test #'eq)))
+         ;; no need to look for constraint of ptype since it's already the glb
          type1)
-      ((subtype-p type2 type1)
+      ((and (setq ptype2 (instance-type-parent type2))
+            (or (eq ptype2 type1) (member type1 (retrieve-ancestors ptype2) :test #'eq)))
+         type2) ; ditto
+      ((or ptype1 ptype2)
+         nil)
+      ((member type2 (retrieve-ancestors type1) :test #'eq)
+         type1)
+      ((member type1 (retrieve-ancestors type2) :test #'eq)
          type2)
-      ((or (instance-type-parent type1)
-            (instance-type-parent type2)) nil)
       (t (let ((common-subtypes 
                   (retrieve-common-descendants type1 type2)))
             (if common-subtypes
@@ -374,7 +372,6 @@
                            greatest-common-subtype-list))
                      (t (error 
                            "~%Error found in type hierarchy")))))))))
-
 
 
 ;;; when called from generalisation this should only take non-atomic types 
