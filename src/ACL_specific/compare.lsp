@@ -853,7 +853,7 @@
         (clim::redisplay-frame-pane frame 'trees :force-p t))
       ;;
       ;; _fix_me_
-      ;; alwyas force complete redraw: omitting this causes rather disturbing
+      ;; always force complete redraw: omitting this causes rather disturbing
       ;; glitches in the state and toggle displays in non-concise mode and the
       ;; overlay of old ink with new ink in concise mode; maybe our drawing
       ;; function needs improvement (or maybe CLIm :-{).      (15-oct-02; oe)
@@ -909,6 +909,7 @@
         (setf (clim:pointer-cursor pointer) cursor))))
    ((clim:sheetp frame)
     (setf (clim:sheet-pointer-cursor frame) cursor)
+    #+:silica
     (loop
         for child in (clim:sheet-children frame)
         ;;
@@ -926,7 +927,11 @@
 (defun recompute-in-and-out (frame &optional resetp)
   ;;
   ;; apply inference rules from [Carter, 1997] until a fixpoint is reached
-  ;;
+  ;; _fix_me_
+  ;; now that some of the other parts are reasonably efficient, we can look at
+  ;; sets of a thousand or more discriminants; propagation of discriminants 
+  ;; becomes noticeably sluggish with more than a few hundred.
+  ;;                                                          (5-nov-02; oe)
   (let ((threshold *tree-display-threshold*)
         (initial (length (compare-frame-in frame)))
         (decision (first (compare-frame-decisions frame))))

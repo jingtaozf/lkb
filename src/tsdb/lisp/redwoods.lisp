@@ -1372,7 +1372,7 @@
                           (stream *tsdb-io*) (cache :raw) (verbose t)
                           interrupt meter)
   
-  (declare (ignore interrupt meter))
+  (declare (ignore meter))
   
   (format
    stream

@@ -4,7 +4,7 @@
 
 (defparameter *pcfg-collapse-irules-p* nil)
 
-(defparameter *pcfg-use-preterminal-tupes-p* t)
+(defparameter *pcfg-use-preterminal-types-p* t)
 
 (defparameter *pcfg-laplace-smoothing-p* t)
 
@@ -196,7 +196,7 @@
              (typecase (lkb::edge-rule edge)
                (lkb::rule (lkb::rule-id (lkb::edge-rule edge)))
                (string (let ((instance (first (lkb::edge-lex-ids edge))))
-                         (if *pcfg-use-preterminal-tupes-p*
+                         (if *pcfg-use-preterminal-types-p*
                            (type-of-lexical-entry instance)
                            instance)))
                (t (error 

@@ -4,7 +4,15 @@
 
 (defparameter *maxent-collapse-irules-p* nil)
 
-(defparameter *maxent-use-preterminal-tupes-p* t)
+(defparameter *maxent-use-preterminal-types-p* t)
+
+(defparameter *maxent-ngram-size* 3)
+
+(defparameter *maxent-ngram-values* '(:type))
+
+(defparameter *maxent-ngram-back-off-p* nil)
+
+(defparameter *maxent-debug-p* t)
 
 (defstruct (feature) 
   code 
@@ -144,7 +152,7 @@
               (format
                stream
                "[~a] estimate-mem(): ignoring item # ~d (no edge for ~d)~%"
-               iid rid)
+               (current-time :long :short) iid rid)
               (return)
             when event do 
               (setf (event-id event) rid)
@@ -158,18 +166,25 @@
                (command (format 
                          nil 
                          "estimate -events_in ~a -params_out ~a"
-                         in out)))
+                         in out))
+               (output (if *maxent-debug-p* nil "/dev/null")))
           (print-mem model :file in)
           (when (probe-file out) (ignore-errors (delete-file out)))
-          (when (and (zerop (run-process command :wait t))
+          (when (and (zerop (run-process 
+                             command :wait t 
+                             :output output :if-output-exists :append))
                      (probe-file out))
             (read-weights model out)))
         (return model)))
 
-(defun edge-to-event (edge model &key (event (make-event)))
+(defun edge-to-event (edge model &key (event (make-event) eventp))
 
-  (let* ((code (edge-to-code edge model)))
-    (record-feature (make-feature :code code) event))
+  (let* ((code (edge-to-code edge model))
+         (ngrams (unless eventp (edge-to-ngrams edge model))))
+    (record-feature (make-feature :code code) event)
+    (loop
+        for code in ngrams 
+        do (record-feature (make-feature :code code) event)))
   (loop
       for edge in (lkb::edge-children edge)
       do
@@ -181,7 +196,7 @@
              (typecase (lkb::edge-rule edge)
                (lkb::rule (lkb::rule-id (lkb::edge-rule edge)))
                (string (let ((instance (first (lkb::edge-lex-ids edge))))
-                         (if *maxent-use-preterminal-tupes-p*
+                         (if *maxent-use-preterminal-types-p*
                            (type-of-lexical-entry instance)
                            instance)))
                (t (error 
@@ -193,6 +208,8 @@
            (daughters (lkb::edge-children edge))
            (irulep (lkb::inflectional-rule-p root)))
       (cond
+       ((and (eq (lkb::edge-foo edge) model) (integerp (lkb::edge-bar edge)))
+        (lkb::edge-bar edge))
        ((null daughters)
         (symbol-to-code  table)
         (let* ((feature (list root (first (lkb::edge-leaves edge))))
@@ -218,11 +235,49 @@
           (setf (lkb::edge-foo edge) model)
           (setf (lkb::edge-bar edge) code)))))))
 
-(defun mem-score-edge (edge model)
-  (let* ((code (or (when (eq (lkb::edge-foo edge) model) (lkb::edge-bar edge))
-                   (edge-to-code edge model)))
-         (weight (score-feature code model)))
+(defun edge-to-ngrams (edge model)
+  
+  (loop
+      with result = nil
+      with table = (mem-table model)
+      with forms = (lkb::edge-leaves edge)
+      with ids = (lkb::edge-lex-ids edge)
+      with types = (when (smember :type *maxent-ngram-values*)
+                     (loop
+                         for id in ids
+                         collect (type-of-lexical-entry id)))
+      initially
+        (if (and (eq (lkb::edge-foo edge) model)
+                 (consp (lkb::edge-baz edge)))
+          (return (lkb::edge-baz edge))
+          (when (or (null *maxent-ngram-values*)
+                  (not (= (length forms) (length ids)))
+                  (and types (not (= (length forms) (length types)))))
+            (return)))
+      for (form1 form2 form3) on (append (cons '^ forms) '($))
+      for (id1 id2 id3) on (append (cons '^ ids) '($))
+      for (type1 type2 type3) on (append (cons '^ types) '($))
+      while form3 do
+        (let* ((feature (nconc (when (smember :form *maxent-ngram-values*)
+                                 (list form1 form2 form3))
+                               (when (smember :id *maxent-ngram-values*)
+                                 (list id1 id2 id3))
+                               (when (smember :type *maxent-ngram-values*)
+                                 (list type1 type2 type3)))))
+          (push (symbol-to-code feature table) result))
+      finally 
+        (setf (lkb::edge-foo edge) model)
+        (setf (lkb::edge-baz edge) result)
+        (return result)))
+                
+(defun mem-score-edge (edge model &key recursivep)
+  (let* ((code (edge-to-code edge model))
+         (weight (score-feature code model))
+         (ngrams (unless recursivep (edge-to-ngrams edge model))))
     (+ weight
        (loop
+           for code in ngrams
+           sum (score-feature code model))
+       (loop
            for edge in (lkb::edge-children edge)
-           sum (mem-score-edge edge model)))))
+           sum (mem-score-edge edge model :recursivep t)))))
