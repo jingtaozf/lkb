@@ -12,17 +12,10 @@
     (when source
       (edit-file thing source))))
 
-#-:runtime-standard
 (defun source-available-p (thing)
   (and (lep:lep-is-running)
        (ignore-errors (excl:source-file thing :lkb))))
 
-#+:runtime-standard
-(defun source-available-p (thing)
-  (declare (ignore thing))
-  nil)
-
-#-:runtime-standard
 (defun edit-file (thing file)
   (when (lep:lep-is-running)
     (lep::eval-in-emacs (format nil "(find-tdl-definition \"~a\" \"~a\")"
