@@ -39,7 +39,7 @@
     
 
 (defun get-obj-semi-info (lex-id base)
-  (let* ((entry (get-lex-entry-from-id lex-id))
+  (let* ((entry (get-lex-entry-from-id lex-id :cache nil))
 	 (dag (and
 	       entry
 	       (tdfs-indef (lex-entry-full-fs entry))))
@@ -51,7 +51,8 @@
 	do
 	  (get-obj-semi-pred-info lex-id x base
 				  )) 
-    (unexpand-psort *lexicon* entry)))
+  (unexpand-psort *lexicon* lex-id)
+  ))
     
 ;;(defun get-obj-semi-pred-info (lex-id dag &key (arg-stream t) (carg-stream t))
 (defun get-obj-semi-pred-info (lex-id dag base)

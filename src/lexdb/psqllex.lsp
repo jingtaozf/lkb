@@ -64,6 +64,7 @@
 (in-package :lkb)
 
 (defvar *psql-db-version* "3.06")
+(defvar *psql-fns-version* "1.00")
 (defvar *psql-port-default* nil)
 (defvar *psql-lexicon-parameters*) ;; define in GRAMMAR/globals.lsp
 
@@ -137,6 +138,7 @@
 
 (defclass external-lex-database (lex-database)
   (
+   (record-cache :initform (make-hash-table :test #'eq))
    ;; flat-table containing the lexical database
    (lexicon-table :initform nil :accessor lex-tb :initarg :lex-tb) ;; unused
    ;; table for mapping the lexicon-table fields to the psort-or-lex structure
@@ -169,11 +171,13 @@
 
 (defmethod close-lex ((lexicon sql-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
-  (setf (dbname lexicon) nil)
-  (setf (host lexicon) nil)
-  (setf (user lexicon) nil)
-  (setf (password lexicon) nil)
-  (setf (fns lexicon) nil)) ;:todo: unbind functions
+  (with-slots (dbname host user password fns) lexicon
+    (setf dbname nil)
+    (setf host nil)
+    (setf lexicon nil)
+    (setf password nil)
+    (setf fns nil))			;:todo: unbind functions
+  )
 
 ;;;
 ;;; --- psql-database methods
@@ -300,9 +304,16 @@
 
 (defmethod close-lex ((lexicon external-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
-  (setf (lex-tb lexicon) nil) ;; unused
-  (setf (fields-map lexicon) nil)
-  (setf (fields-tb lexicon) nil))
+  (with-slots (lex-tb fields-map fields-tb record-cache) lexicon
+    (setf lex-tb nil) ;; unused
+    (setf fields-map nil)
+    (setf fields-tb nil)
+    ))
+
+(defmethod empty-cache ((lexicon external-lex-database))
+  (with-slots (record-cache) lexicon
+    (clrhash record-cache)
+    ))
 
 ;;;
 ;; --- psql-lex-database methods
@@ -343,7 +354,7 @@
 	ids)))
 
 (defun lookup-word-aux (query-res lexicon)
-  (with-slots (psorts) lexicon
+  (with-slots (psorts record-cache) lexicon
     (let* ((records (make-column-map-record query-res))
 	 (name-field (second (assoc :id (fields-map lexicon)))))
     (loop
@@ -352,6 +363,9 @@
 		  (cdr 
 		   (assoc name-field record :test #'equal)))
 	do
+	  (unless (gethash id record-cache)
+	    (setf (gethash id record-cache) 
+	      record))
 	  (unless (gethash id psorts)
 	    (setf (gethash id psorts) 
 	      (make-psort-struct lexicon record)))
@@ -400,8 +414,23 @@
 		     (make-instance 'sql-query :sql-string sql-str))))
     (when (records query-res) (make-column-map-record query-res))))
 
-(defmethod retrieve-record ((lexicon psql-lex-database) id &optional reqd-fields)
-  (retrieve-record-str lexicon (symb-2-str id) reqd-fields))
+;;(defmethod read-psort ((lexicon psql-lex-database) id &key (cache t) (recurse t))
+
+(defmethod retrieve-record ((lexicon psql-lex-database) id &key (cache t) reqd-fields)
+  (with-slots (record-cache) lexicon
+    (let ((hashed (gethash id record-cache)))
+      (cond (hashed
+	     (unless (eq hashed 'EMPTY)
+	       hashed))
+	    (t
+	     (let* ((record (retrieve-record-str lexicon (symb-2-str id) reqd-fields)))
+	       (when cache
+		 (setf (gethash id record-cache)
+		   (or record 'EMPTY)))
+	       record))))))
+
+;(defmethod retrieve-record ((lexicon psql-lex-database) id &optional reqd-fields)
+;  (retrieve-record-str lexicon (symb-2-str id) reqd-fields))
 
 (defmethod retrieve-record-str ((lexicon psql-lex-database) id-str &optional reqd-fields)
   (unless (connection lexicon)
@@ -441,7 +470,9 @@
 	     (unless (eq hashed 'EMPTY)
 	       hashed))
 	    (t
-	     (let* ((record (retrieve-record lexicon id (make-requested-fields lexicon)))
+	     (let* ((record (retrieve-record lexicon id 
+					     :reqd-fields (make-requested-fields lexicon)
+					     :cache cache))
 		    (entry (if record (make-psort-struct lexicon record))))
 	       (when cache
 		 (setf (gethash id psorts)
@@ -783,8 +814,8 @@
 (defun command-generate-semi nil
   (unless (typep *lexicon* 'psql-lex-database)
     (error "You need to load the LexDB before generating the SEMI..."))
-  (format *postgres-debug-stream* "~%(caching all lexical entries)")
-  (cache-all-lex-entries *lexicon*)
+  (format *postgres-debug-stream* "~%(caching all lexical records)")
+  (cache-all-lex-records *lexicon*)
 
   (format *postgres-debug-stream* "~%(dumping semi files)")
   (dump-obj-semi *lexicon*)
@@ -798,6 +829,15 @@
 ;;;
 ;;; cache
 ;;;
+
+(defmethod cache-all-lex-records ((lexicon psql-lex-database))
+  (with-slots (record-cache) lexicon
+    (clrhash record-cache)
+    (mapc
+     #'(lambda (record)  
+	 (setf (gethash (record-id record) record-cache) 
+	     record))
+     (retrieve-all-records lexicon (make-requested-fields lexicon)))))
 
 (defmethod cache-all-lex-entries ((lexicon psql-lex-database))
   (with-slots (psorts) lexicon
@@ -825,3 +865,4 @@
 	     (setf (gethash id psorts) (make-psort-struct lexicon x)))))
      (retrieve-all-records lexicon (make-requested-fields lexicon)))))
 
+(defun i (&optional (slot 'record-cache)) (inspect (slot-value *lexicon* slot)))

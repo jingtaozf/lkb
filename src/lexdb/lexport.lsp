@@ -583,14 +583,18 @@
 (defmethod export-to-tdl ((lexicon lex-database) stream)
   #+:psql
   (when (typep *lexicon* 'psql-lex-database)
-    (format t "~%(caching all lexical entries)")
-    (cache-all-lex-entries *lexicon*))
+    (format t "~%(caching all lexical records)")
+    (cache-all-lex-records *lexicon*)
+    (format t "~%(caching complete)")
+    )
   (mapc
-   #'(lambda (x) (format stream "~a" (to-tdl (read-psort lexicon x))))
+   #'(lambda (id)
+       (format stream "~a" (to-tdl (read-psort lexicon id)))
+       (unexpand-psort lexicon id))
    (collect-psort-ids lexicon))
   #+:psql
   (when (typep *lexicon* 'psql-lex-database)
-    (format t "~%(clearing cache)")
+    (format t "~%(emptying cache)")
     (empty-cache *lexicon*))
   )
 

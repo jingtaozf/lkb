@@ -2,15 +2,6 @@
 --- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
---- postgres optimization is poor...
----- change to 'SET enable_seqscan TO off' to be run at the start of each session
----ALTER DATABASE lingo SET enable_seqscan TO off;
-
-
----- the superuser has to run this!
-----CREATE FUNCTION "plpgsql_call_handler" () RETURNS LANGUAGE_HANDLER AS '$libdir/plpgsql' LANGUAGE C;
-----CREATE TRUSTED LANGUAGE "plpgsql" HANDLER "plpgsql_call_handler";
-
 CREATE OR REPLACE FUNCTION check_version(text) RETURNS boolean AS '
 DECLARE
 	x text;
@@ -98,8 +89,22 @@ ON public.revision (name,modstamp);
 
 CREATE INDEX public_revision_name_modstamp ON public.revision (name, modstamp);
 
+-- temp tables defined here for backwards compatibility
+CREATE TABLE temp AS SELECT * FROM public.revision WHERE NULL;
+CREATE TABLE revision_new AS SELECT * FROM public.revision WHERE NULL;
+
 \i embedded-code.sql
-\i mwe.sql
-\i semi.sql
-\i defn.sql
+
+CREATE TABLE defn (
+  mode VARCHAR(50),
+  slot VARCHAR(50),
+  field VARCHAR(50),
+  path VARCHAR(255),
+  type VARCHAR(20),
+PRIMARY KEY (mode,slot, field)
+);
+
+\copy defn FROM 'defn.tsv'
 \i permissions.sql
+
+\i mwe.sql

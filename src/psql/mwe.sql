@@ -191,3 +191,6 @@ AS SELECT * FROM public.revision
 
 ' );
 
+GRANT SELECT ON public.multi TO PUBLIC;
+GRANT SELECT ON public.mwe_components TO PUBLIC;
+GRANT SELECT ON public.mwe_type TO PUBLIC;

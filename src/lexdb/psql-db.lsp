@@ -281,7 +281,7 @@
 	    (build-current-grammar *psql-lexicon*))
 	  nil
 	  ))
-    (format t "Merge new entries aborted... (do you have the appropriate db permissions?)")))
+    (format t "Merge new entries aborted... (do you have the appropriate db permissions? Hint: log in as the db owner)")))
 	
 (defmethod initialize-userschema ((lexicon psql-database))
   (unless

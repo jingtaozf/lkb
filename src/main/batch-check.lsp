@@ -25,8 +25,8 @@
 	(start-path (get-diff-list-start-path)))
     #+:psql
     (when (typep *lexicon* 'psql-lex-database)
-      (format t "~%(caching all lexical entries)")
-      (cache-all-lex-entries *lexicon*))
+      (format t "~%(caching all lexical records)")
+      (cache-all-lex-records *lexicon*))
     (format t "~%Checking lexicon")
     (format t "~%  - difference-list check starts at path ~a" start-path)
     (dolist (id (collect-psort-ids *lexicon*))
@@ -53,11 +53,11 @@
     (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")
     (display-tdl-duplicates *lexicon*)
     (format t "~%END OF DUPLICATE ENTRIES~%"))
-  (format t "~%Lexicon checked")
   #+:psql
   (when (typep *lexicon* 'psql-lex-database)
-    (format t "~%(clearing cache)")
+    (format t "~%(emptying cache)")
     (empty-cache *lexicon*))
+  (format t "~%Lexicon checked")
   )
 
 

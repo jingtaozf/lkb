@@ -198,6 +198,9 @@
     (setf temp-file nil)
     (setf temp-index-file nil)))
 
+(defmethod empty-cache ((lexicon cdb-lex-database))
+  )
+
 ;; lexicon is open...
 (defmethod close-read-write ((lexicon cdb-lex-database))
   (handler-case 

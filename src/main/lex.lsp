@@ -132,9 +132,9 @@
 ;;;  Database-independent lexical access functions
 ;;;
 
-(defun get-lex-entry-from-id (id)
+(defun get-lex-entry-from-id (id &key (cache t))
   ;;; now lexical entries only
-  (let ((entry (get-unexpanded-psort-entry id)))
+  (let ((entry (get-unexpanded-psort-entry id :cache cache)))
     ;; if we haven't previously expanded then
     ;; destructively modify entry
     (when entry
@@ -144,10 +144,10 @@
 	    (t (setf (lex-entry-full-fs entry) :fail)
 	       nil)))))
                    
-(defun get-unexpanded-psort-entry (id)
+(defun get-unexpanded-psort-entry (id &key (cache t))
   ;; for multi words, where we don't want the full-fs to be created
   ;; until we're sure we've got all the bits
-  (let ((entry (read-psort *lexicon* id)))
+  (let ((entry (read-psort *lexicon* id :cache cache)))
     entry))
 
 (defun clear-expanded-lex nil
@@ -559,10 +559,12 @@
       (mapcar #'(lambda (lex) (unlink lexicon lex)) part-of))
     lexicon))
 
-(defmethod empty-cache ((lexicon lex-database))
+(defmethod empty-cache :around ((lexicon lex-database))
   (with-slots (lexical-entries psorts cache-lex-list) lexicon
     (when (fboundp 'clear-generator-lexicon)
       (funcall 'clear-generator-lexicon))
+    (if (typep lexicon 'external-lex-database)
+	(call-next-method))
     (clrhash lexical-entries)
     (clrhash psorts)
     (setf cache-lex-list nil)
@@ -582,7 +584,8 @@
     ids))
 
 (defmethod unexpand-psort ((lexicon lex-database) id)
-  (setf (gethash id (slot-value lexicon 'psorts)) nil))
+  ;;  (setf (gethash id (slot-value lexicon 'psorts)) nil))
+  (remhash id (slot-value lexicon 'psorts)))
 
 ;;--
 
