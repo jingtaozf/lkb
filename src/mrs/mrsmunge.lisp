@@ -348,6 +348,29 @@
                         new-bindings))))))
   (append new-bindings constant-bindings)))
 
+(defun match-mrs-rule-rels (remaining-rels rels matching-rels bindings 
+                            constant-bindings)
+  ;;; remaining-rels is the list of things in the rule,
+  ;;; rels is the list of rels in the relevant part of the input MRS.
+  ;;; Each function call attempts to match the top remaining-rel
+  ;;; with the input MRSs.
+  ;;; The function always takes one set of matching-rels and of bindings
+  ;;; but the result may be a set, because we may have multiple
+  ;;; matches for a particular relation
+  (if (null remaining-rels)
+      ; normally this will be the end condition
+      ; but it allows rules to be written which always fire,
+      ; effectively allowing material to be appended to a LISZT
+      ; without anything being deleted
+      (list (make-munge-result :matching-rels matching-rels
+                               :constant-bindings constant-bindings
+                               :bindings bindings))
+    (let ((input-rel (car remaining-rels))
+          (results nil))
+      (dolist (rel rels)
+        (when (and (compatible-types-or-values (rel-sort input-rel)
+                        (rel-sort rel))
+                   (not (member rel matching-rels)))
           ; conditions such as predicates should be checked here
           (let ((local-bindings (copy-alist bindings)))
             (setf local-bindings
@@ -383,7 +406,8 @@
                                       constant-bindings)))
                   (when local-results
                               ; all conditions satisfied
-                    (setf results (append local-results results)))))))
+                    (setf results (append local-results results)))))))))
+        results)))
 
 (defun match-mrs-rule-hcons (remaining-hcons hcons-list 
                              matching-hcons bindings 
