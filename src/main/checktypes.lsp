@@ -160,7 +160,7 @@
    (format t "~%Checking type hierarchy")
    (setf *type-names* (collect-type-names))
    (prog1
-      (when *toptype*
+     (when *toptype*
         (when 
           (add-daughters-to-type-table)
           (when (check-for-cycles-etc *toptype*)
@@ -184,6 +184,8 @@
             (when (expand-and-inherit-constraints)
               (format t "~%Making constraints well formed")
               (when (strongly-type-constraints)
+                (format t "~%Optimising unification check paths") 
+                (optimise-check-unif-paths)
                 ;;; YADU --- extra expansion stage
                 ;;; earlier stages are unchanged
                 (format t "~%Expanding defaults") 
@@ -191,6 +193,7 @@
                   (format t "~%Type file checked successfully")
                   t))))))
      (clear-type-cache))) ; not for consistency, but for efficiency
+
 
 (defun patch-type-table nil
   ;;; added for the case where definitions are changed, but the hierarchy
@@ -916,20 +919,46 @@
       (t
          (mark-node-seen type-entry)
          (let* ((indef (type-constraint type-entry))
-                (full-tdfs nil)
-                (default-specs (type-default-spec type-entry))
-                (default-fss
+                (full-tdfs nil))
+           (if *non-default-system*
+               ; shortcut for efficiency
+               (setf full-tdfs
+                      (make-nondefault-tdfs indef))
+             ; else
+             (let*
+                 ((default-specs (type-default-spec type-entry))
+                  (default-fss
                     (for default-spec in default-specs
                          collect
                          (make-equivalent-persistence-defaults indef 
-                               (car default-spec) (cdr default-spec) node))))               
+                               (car default-spec) (cdr default-spec) node)))
+                  (default-fs 
+                    (copy-and-unify-set 
+                     (cons indef (mapcar #'cdr default-fss)))))
+               (when (and default-fss (not default-fs))
+                 (cerror "Ignore them"
+                         "Defaults for type ~A mutually inconsistent" node))
                (setf full-tdfs 
                      (inherit-default-constraints node type-entry 
                        (construct-tdfs 
                         indef
-                        default-fss)))
-               (setf (type-tdfs type-entry) full-tdfs)
-               full-tdfs))))
+                        default-fs
+                        default-fss)))))
+           (setf (type-tdfs type-entry) full-tdfs)
+           full-tdfs))))
+
+(defun copy-and-unify-set (fss)
+   (if (null (cdr fss))
+      fss
+      (with-unification-context (ignore)
+         (copy-dag
+            (reduce
+               #'(lambda (x y)
+                   (unless
+                      (or (null x) (null y))
+                      (unify-dags x y)))
+               fss)))))
+
 
 (defun make-equivalent-persistence-defaults (indef persistence default-spec node)
    (let*
@@ -961,32 +990,21 @@
                (setf new-default indef))
             (cons persistence new-default)))))
             
+
+            
+
 (defun inherit-default-constraints (node type-entry local-tdfs)
   (declare (ignore node))
-  (let ((current-tail (tdfs-tail local-tdfs)))
-    (for parent in (type-parents type-entry)
-         do
-         (let ((parent-tdfs (expand-default-constraint parent
-                                 (get-type-entry parent))))
-           (unless parent-tdfs
-             (cerror "Ignore it" "Cannot make tdfs for ~A" parent))
-           (when parent-tdfs
-             (setf current-tail
-                   (combine-yadu-tails (tdfs-tail parent-tdfs)
-                             current-tail (tdfs-indef local-tdfs))))))
-      (setf (tdfs-tail local-tdfs) current-tail)
+   (reduce #'(lambda (x y)
+         (unless
+            (or (null x) (null y))
+            (yadu x y)))
+      (mapcar #'(lambda (parent)
+            (let ((constraint
+                     (expand-default-constraint parent
+                        (get-type-entry parent))))
+               (if constraint
+                  (copy-tdfs-completely constraint))))
+         (type-parents type-entry))
+      :initial-value 
       local-tdfs))
-
-(defun combine-yadu-tails (tail1 tail2 indef)
-  (let ((ct1 (for element in tail1
-                 collect
-                 (copy-tail-element-completely
-                    element)))
-        (ct2 (for element in tail2
-                 collect
-                 (copy-tail-element-completely
-                    element))))
-    (cond ((and ct1 ct2)
-           (merge-tails ct1 ct2 indef))
-          (ct1)
-          (t ct2))))
