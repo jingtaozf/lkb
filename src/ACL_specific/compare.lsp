@@ -14,7 +14,7 @@
 
 (def-lkb-parameter *preference-file* "~/grammar/parses.txt")
 
-(def-lkb-parameter *tree-comparison-threshold* 2)
+(def-lkb-parameter *tree-comparison-threshold* 50)
 
 ;;; **********************************************************************
 ;;; Collect differences among a set of parses
