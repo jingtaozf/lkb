@@ -511,10 +511,12 @@
                                     :parents parents)))
      (with-underlined-output stream
         (format stream "~A~%" short-title))
-        (push
-           (make-title-click-field :view-pos start-pos :title short-title
-                                   :fs fs-record)
-           (fields stream))))
+     (push
+        (make-title-click-field :view-pos start-pos
+                                :end-pos (current-position stream)
+                                :title short-title
+                                :fs fs-record)
+        (fields stream))))
 
 
 (defun create-active-fs-pop-up-title (field menu-pos)
@@ -594,8 +596,11 @@
 (defun display-active-psort (psort ostream)
    (let ((start-pos (current-position ostream)))
      (with-bold-output ostream
-     (format ostream "~A  " psort))
-         (push (make-psort-click-field :view-pos start-pos :psort psort)
+        (format ostream "~A  " psort))
+     (push
+        (make-psort-click-field :view-pos start-pos
+                                :end-pos (current-position ostream)
+                                :psort psort)
         (fields ostream))))
 
 (defun create-active-fs-pop-up-psort (field menu-pos)
