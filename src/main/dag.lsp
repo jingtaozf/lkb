@@ -332,10 +332,11 @@
 		 (catch '*fail*
                    (progn
                      (unify1 dag1 dag2 nil)
-                     (when *unify-debug*
+                     (when (or *unify-debug* *unify-debug-cycles*)
                        (if (cyclic-dag-p dag1)
-                         (format t "~%Unification failed - cyclic result")
-                         (format t "~%Unification succeeded")))
+                           (format t "~%Unification failed - cyclic result")
+                         (when *unify-debug*
+                           (format t "~%Unification succeeded"))))
                      dag1))
                 #+(and mcl powerpc)(incf bb (CCL::%HEAP-BYTES-ALLOCATED))
                 ))
@@ -349,7 +350,7 @@
             (unify1 dag1 dag2 nil)
             (if (cyclic-dag-p dag1)
                 (progn 
-                  (when *unify-debug* 
+                  (when (or *unify-debug* *unify-debug-cycles*)
                     (format t "~%Unification failed - cyclic result"))
                   nil)
               (progn
@@ -383,7 +384,8 @@
    ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
   dag1)
 
-(defparameter *recording-constraints-p* nil)
+(defparameter *recording-constraints-p* nil
+  "needed for LilFes conversion")
 
 (defvar *type-constraint-list* nil)
 
@@ -409,7 +411,7 @@
 	      (when (and constraintp *unify-wffs*)
 		(let ((constraint (may-copy-constraint-of new-type)))
                   (when *recording-constraints-p*
-                    (pushnew new-type *type-constraint-list* :test #'eq))
+                      (pushnew new-type *type-constraint-list* :test #'eq))
 		  (if  *unify-debug*
 		      (let ((res 
 			     (catch '*fail* (unify1 dag1 constraint path))))
@@ -713,7 +715,7 @@
 (defun copy-dag1 (dag path)
   (setq dag (deref-dag dag))
   (cond ((eq (dag-copy dag) 'visited)
-         (when *unify-debug*
+         (when (or *unify-debug* *unify-debug-cycles*)
            (format t "~%Unification failed: copy found cycle at ~A" 
                    (reverse path)))
          (throw '*fail* nil))        ; Oh no, a cycle!
