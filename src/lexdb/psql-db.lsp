@@ -150,17 +150,18 @@
   (fn lexicon 'retrieve-all-entries select-list))
 
 (defmethod build-lex ((lexicon psql-database) &key (semi t))
-  (cond 
-   ((not (user-read-only-p lexicon))
-    (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon))
-    )
-   (t
-    (format t "~%(user ~a has read-only privileges)" (user lexicon))))    
-  (format t "~%(LexDB filter: ~a )" (get-filter lexicon))
-  (let ((size (fn-get-val lexicon ''size-current-grammar)))
-    (if (string= "0" size)
-	(format t "~%WARNING: 0 entries passed the LexDB filter" size)
-      (format t "~%(active lexical entries: ~a )" size)))
+
+  (build-lex-aux lexicon)
+;  (cond 
+;   ((not (user-read-only-p lexicon))
+;    (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon)))
+;   (t
+;    (format t "~%(user ~a has read-only privileges)" (user lexicon))))    
+;  (format t "~%(LexDB filter: ~a )" (get-filter lexicon))
+;  (let ((size (fn-get-val lexicon ''size-current-grammar)))
+;    (if (string= "0" size)
+;	(format t "~%WARNING: 0 entries passed the LexDB filter" size)
+;      (format t "~%(active lexical entries: ~a )" size)))
 
   (if semi
       (cond
@@ -174,18 +175,31 @@
 	(index-grammar-rules))
        (t
 	(format t "~%WARNING: no lexical entries indexed for generator"))))
-  
   lexicon)
 
-(defun build-current-grammar (lexicon)
+(defun build-lex-aux (lexicon)
+  (reconnect lexicon) ;; work around server bug
   (cond 
    ((not (user-read-only-p lexicon))
-    (fn-get-records  lexicon ''build-current-grammar))
+    (fn-get-records lexicon ''initialize-current-grammar (get-filter lexicon)))
    (t
-    (format t "~%(user ~a had read-only privileges)" (user lexicon))))
-  (format *postgres-debug-stream* "~%(LexDB filter: ~a )" (get-filter lexicon))
-  (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
+    (format t "~%(user ~a has read-only privileges)" (user lexicon))))    
+  (format t "~%(LexDB filter: ~a )" (get-filter lexicon))
+  (let ((size (fn-get-val lexicon ''size-current-grammar)))
+    (if (string= "0" size)
+	(format t "~%WARNING: 0 entries passed the LexDB filter" size)
+      (format t "~%(active lexical entries: ~a )" size)))
   (empty-cache lexicon))
+  
+;(defun build-current-grammar (lexicon)
+;  (cond 
+;   ((not (user-read-only-p lexicon))
+;    (fn-get-records  lexicon ''build-current-grammar))
+;   (t
+;    (format t "~%(user ~a had read-only privileges)" (user lexicon))))
+;  (format *postgres-debug-stream* "~%(LexDB filter: ~a )" (get-filter lexicon))
+;  (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
+;  (empty-cache lexicon))
 
 
 (defmethod user-read-only-p ((lexicon psql-database))

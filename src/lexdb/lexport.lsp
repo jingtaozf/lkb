@@ -74,36 +74,18 @@
     ;; extra data in db entries
     (setf *postgres-current-source* (get-current-source))
     (setf *postgres-export-timestamp* (extract-date-from-source *postgres-current-source*))
-    (setf *postgres-current-source* 
-      (ask-user-for-x 
-       "Export Lexicon" 
-       (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
-    (unless *postgres-current-source* (throw 'abort 'source))
-    
     (setf *postgres-export-timestamp* 
       (ask-user-for-x 
        "Export Lexicon" 
        (cons "Modstamp?" (or *postgres-export-timestamp* "1990-01-01"))))
     (unless *postgres-export-timestamp* (throw 'abort 'modstamp))
     
-    (setf *postgres-current-lang* 
-      (ask-user-for-x 
-       "Export Lexicon" 
-       (cons "Language code?" (or *postgres-current-lang* "EN"))))
-    (unless *postgres-current-lang* (throw 'abort 'lang))
-    
-    (setf *postgres-current-country* 
-      (ask-user-for-x 
-       "Export Lexicon" 
-       (cons "Country code?" (or *postgres-current-country* "UK"))))
-    (unless *postgres-current-country* (throw 'abort 'country))
-    
     (setf *postgres-current-user* 
       (ask-user-for-x 
        "Export Lexicon" 
        (cons "Username?" (or *postgres-current-user* "danf"))))
     (unless *postgres-current-user* (throw 'abort 'user))
-  
+    (query-for-meta-fields)
     (get-export-version))
 
   (let ((csv-file (format nil "~a.csv" file))
@@ -250,52 +232,13 @@
 ;;; export to DB
 ;;;
 
-(defun export-lexicon-to-db (&rest rest)
-  (catch 'abort 
-    (apply 'export-lexicon-to-db2 rest)))
-
-(defun export-lexicon-to-db2 (&key (output-lexicon *postgres-export-output-lexicon*)
-				  (lexicon *lexicon*))
-  "export to postgres db lexicon"
-  (unless
-      (and output-lexicon (connection output-lexicon))
-    (setf output-lexicon (initialize-psql-lexicon)))
-
-  (setf *postgres-export-output-lexicon* output-lexicon)
-  
-  (setf *postgres-current-source* 
-    (ask-user-for-x 
-     "Export Lexicon" 
-     (cons "Source?" *postgres-current-source*)))
-  (unless *postgres-current-source* (throw 'abort 'source))
-  
-  (setf *postgres-export-timestamp* "NOW")
-  
-    (setf *postgres-current-lang* 
-      (ask-user-for-x 
-       "Export Lexicon" 
-       (cons "Language code?" (or *postgres-current-lang* "EN"))))
-    (unless *postgres-current-lang* (throw 'abort 'lang))
-    
-    (setf *postgres-current-country* 
-      (ask-user-for-x 
-       "Export Lexicon" 
-       (cons "Country code?" (or *postgres-current-country* "UK"))))
-    (unless *postgres-current-country* (throw 'abort 'country))
-    
-  (format t 
-	  "~%Exporting lexical entries to ~a" 
-	  (dbname output-lexicon))  
-  (export-to-db lexicon output-lexicon)
-  (format t "~%Export complete"))
-
 (defmethod export-to-db ((lexicon lex-database) output-lexicon)
   (mapc
    #'(lambda (x) (to-db (read-psort lexicon x 
 				    :recurse nil
 				    :new-instance t) output-lexicon))
    (collect-psort-ids lexicon :recurse nil))
-  (build-current-grammar *psql-lexicon*))
+  (build-lex-aux *psql-lexicon*))
 
 (defmethod to-db ((x lex-entry) (lexicon psql-lex-database))
   "insert lex-entry into lexicon db (user scratch space)"
@@ -428,23 +371,6 @@
       finally
 	(return filename)))
 
-(defun merge-tdl-into-psql-lexicon (file-in)
-  (setf file-in (namestring (pathname file-in)))
-  (let ((tmp-lex (make-instance 'cdb-lex-database)))
-    (unless
-        (open-lex tmp-lex
-                  :parameters (list (make-nice-temp-file-pathname ".tx")
-                                    (make-nice-temp-file-pathname ".tx-index")))
-      (format t "~%Operation aborted")
-      (return-from merge-tdl-into-psql-lexicon))
-    (unless (probe-file file-in)
-      (error "~%file not found (~a)" file-in))
-    (load-lex-from-files tmp-lex (list file-in) :tdl)
-    (export-lexicon-to-db :lexicon tmp-lex :output-lexicon *psql-lexicon*)
-    (close-lex tmp-lex))
-  t)
-
-;; assumes *lexicon* eq *psql-lexicon*
 (defun load-scratch-lex (&key filename)
   (let ((lexicon (make-instance 'cdb-lex-database)))
     (unless
@@ -456,10 +382,11 @@
     lexicon))
 
 (defun close-scratch-lex nil
-  (fn-get-val *psql-lexicon* ''clear-scratch)
-;;  (build-current-grammar *psql-lexicon*)
-  (initialize-psql-lexicon)
-  )
+  (let ((lexicon *psql-lexicon*))
+    (fn-get-val lexicon ''clear-scratch)
+    (reconnect lexicon) ;; work around server bug
+    (fn-get-records lexicon ''initialize-current-grammar (get-filter *psql-lexicon*))
+    ))
 
 (defun commit-scratch-lex nil
   (fn-get-val *psql-lexicon* ''commit-scratch)
@@ -504,23 +431,27 @@
       (unless psql-lexicon
 	(error "~%psql-lexicon is NULL"))
       (let ((lexicon (load-scratch-lex :filename filename)))
-	(setf *postgres-current-source* 
-	  (ask-user-for-x 
-	   "Export Lexicon" 
-	   (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
-	(unless *postgres-current-source* (throw 'abort 'source))
-	(setf *postgres-current-lang* 
-	  (ask-user-for-x 
-	   "Export Lexicon" 
-	   (cons "Language code?" (or *postgres-current-lang* "EN"))))
-	(unless *postgres-current-lang* (throw 'abort 'lang))
-	(setf *postgres-current-country* 
-	  (ask-user-for-x 
-	   "Export Lexicon" 
-	   (cons "Country code?" (or *postgres-current-country* "UK"))))
-	(unless *postgres-current-country* (throw 'abort 'country)) 
+	(query-for-meta-fields)
 	(reconnect psql-lexicon);; work around server bug...
-	(export-to-db lexicon psql-lexicon)
+	(time (export-to-db lexicon psql-lexicon))
 	(close-lex lexicon)
 	(format t "~%(private space: ~a entries)" 
 		(length (show-scratch psql-lexicon)))))))
+
+(defun query-for-meta-fields nil
+  (setf *postgres-current-source* 
+    (ask-user-for-x 
+     "Export Lexicon" 
+     (cons "Source?" (or (extract-pure-source-from-source *postgres-current-source*) ""))))
+  (unless *postgres-current-source* (throw 'abort 'source))
+  (setf *postgres-current-lang* 
+    (ask-user-for-x 
+     "Export Lexicon" 
+     (cons "Language code?" (or *postgres-current-lang* "EN"))))
+  (unless *postgres-current-lang* (throw 'abort 'lang))
+  (setf *postgres-current-country* 
+    (ask-user-for-x 
+     "Export Lexicon" 
+     (cons "Country code?" (or *postgres-current-country* "UK"))))
+  (unless *postgres-current-country* (throw 'abort 'country))) 
+
