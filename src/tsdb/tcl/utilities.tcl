@@ -855,6 +855,10 @@ proc tsdb_set {variable {value ""}} {
         set variable "*tsdb-write-lexicon-chart-p*"; 
         set value [lispify_truth_value $globals(write_lexicon_chart_p)]
       }
+      pvm_protocol {
+        set variable "*pvm-protocol*"; 
+        set value $globals(process,protocol);
+      }
       gc_p {
         set variable "*tsdb-gc-p*";
         set value $globals(gc_p);

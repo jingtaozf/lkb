@@ -20,6 +20,8 @@
 
 (defparameter *pvm-master* nil)
 
+(defparameter *pvm-protocol* 1)
+
 (defun client-idle-p (client)
   (eq (client-status client) :ready))
 

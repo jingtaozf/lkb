@@ -72,6 +72,9 @@ if {![info exists globals(graph_upper)]} {
 set globals(menu_font) {Helvetica 14 bold};
 
 set globals(process,type) :parse;
+if {![info exists globals(process,protocol)]} {
+  set globals(process,protocol) 1;
+}; # if
 
 set globals(graph,by) :i-length;
 set globals(graph,scatterp) 1;
@@ -450,6 +453,13 @@ proc main {} {
   .menu.process.menu.switches add checkbutton \
     -label "Enable Tenuring" \
     -variable globals(tenure_p) -command {tsdb_set tenure_p};
+  .menu.process.menu.switches add separator;
+  .menu.process.menu.switches add radiobutton \
+    -label "Complete Derivations" -command {tsdb_set pvm_protocol} \
+    -variable globals(process,protocol) -value 1;
+  .menu.process.menu.switches add radiobutton \
+    -label "Packed Derivations" -command {tsdb_set pvm_protocol} \
+    -variable globals(process,protocol) -value 2;
 
   menu .menu.process.menu.variables -tearoff 0
   .menu.process.menu.variables add command \

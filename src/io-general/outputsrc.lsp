@@ -175,7 +175,7 @@
   (unless file-name 
     (setf file-name
       (ask-user-for-new-pathname "Output file?")))
-  (if (or (eq syntax :pet) (eq syntax :tnt))
+  (if (or (eq syntax :pet) (eq syntax :tnt) (eq syntax :stefan))
     (if ids-used
       (output-lexicon-for-pet file-name syntax ids-used)
       (output-lexicon-for-pet file-name syntax))
@@ -312,6 +312,12 @@
 (defun output-entry-for-tim (stream forms)
   (format stream "~{~(~a~)~^ ~}~%" forms))
 
+(defun output-entry-for-stefan (stream forms id irule)
+  (format
+   stream
+   "\"~{~(~a~)~^ ~}\"~c~(~a~)~c~@[~(~a~)~]~%"
+   forms #\tab id #\tab irule))
+
 (defun output-lexicon-for-pet (file 
                                &optional (format :pet)
                                          (ids (or *ordered-lex-list*
@@ -351,7 +357,11 @@
                 (:tnt
                  (output-entry-for-tnt
                   stream
-                  orth type nil))))
+                  orth type nil))
+                (:stefan
+                 (output-entry-for-stefan
+                  stream
+                  orth id nil))))
 
           unless (or inflectedp (not entry)) do
             (loop

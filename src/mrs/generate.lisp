@@ -118,8 +118,8 @@
    (values
       (remove-if
           #'(lambda (x) 
-              (or #+ignore (search "_CX" (string x))) ; contracted forms
-                 (member x *duplicate-lex-ids* :test #'eq)) ; e.g. a -> an
+              (or #-ignore (search "_CX" (string x)) ; contracted forms
+                  (member x *duplicate-lex-ids* :test #'eq))) ; e.g. a -> an
           lex-items :key #'mrs::found-lex-lex-id)
       grules lex-orderings))
 

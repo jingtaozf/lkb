@@ -90,6 +90,7 @@
       set globals(write_rule_p) ~:[0~;1~]~%~
       set globals(write_syntax_chart_p) ~:[0~;1~]~%~
       set globals(write_lexicon_chart_p) ~:[0~;1~]~%~
+      set globals(process,protocol) ~d~%~
       set globals(maximal_number_of_edges) ~d~%~
       set globals(maximal_number_of_derivations) ~d~%~
       set globals(tree,updatep) ~:[0~;1~]~%~
@@ -115,6 +116,7 @@
      *tsdb-write-result-p* *tsdb-write-output-p*
      *tsdb-rule-statistics-p*
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
+     *pvm-protocol*
      *tsdb-maximal-number-of-edges* *tsdb-maximal-number-of-derivations*
      delay (if (numberp delay) delay 0)
      *tsdb-cache-connections-p*

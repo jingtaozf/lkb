@@ -11,7 +11,7 @@
 
 #define capi_putc(char) (capi_printf("%c", char) == 1 ? char : EOF)
 extern int capi_printf(char *format, ...);
-extern int capi_register(int (*)(char *, int, char *, int, char *),
+extern int capi_register(int (*)(char *, int, char *, int, int, char *),
                          int (*)(int, char *, int, int, 
                                  int, int, int),
                          int (*)(char *),

@@ -493,6 +493,7 @@
 (defun create-runs (data run-id &key comment 
                                      gc (tenure *tsdb-tenure-p*)
                                      clients interactive verbose
+                                     (protocol *pvm-protocol*)
                                      stream interrupt)
   (if (and clients (null interactive))
     (let ((clients (remove-if-not #'client-idle-p clients))
@@ -510,10 +511,12 @@
                             `(create-run 
                               ,data ,i 
                               :comment ,comment :gc ,gc :tenure ,tenure
-                              :interactive nil :verbose ,verbose)
+                              :interactive nil :verbose ,verbose 
+                              :protocol ,protocol)
                             nil
                             :key :create-run)
-                           (create_run tid data i comment interactive custom))
+                           (create_run 
+                            tid data i comment interactive protocol custom))
             when (eq status :ok)
             do
               (setf (client-status client) :create)
@@ -614,7 +617,8 @@
 (defun create-run (data run-id &key comment 
                                     gc (tenure *tsdb-tenure-p*)
                                     (exhaustive *tsdb-exhaustive-p*)
-                                    interactive verbose)
+                                    interactive (protocol *pvm-protocol*)
+                                    verbose)
   
   (let* ((environment (initialize-test-run :interactive interactive 
                                            :exhaustive exhaustive))
@@ -631,11 +635,11 @@
          (os (current-os))
          (run (pairlis (list :data :run-id :comment
                              :platform :grammar
-                             :user :host :os :start
+                             :user :host :os :protocol :start
                              :environment :gc-strategy :gc)
                        (list data run-id comment
                              platform grammar
-                             user host os start
+                             user host os protocol start
                              environment gc-strategy gc))))
     (gc-statistics-reset :all)
     (append run (get-test-run-information))))

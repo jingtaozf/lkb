@@ -8,6 +8,7 @@
      (run-id :int integer)
      (comment (* :char) string)
      (interactive :int integer)
+     (protocol :int integer)
      (custom (* :char) string))
   :returning :int
   #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
@@ -15,14 +16,15 @@
 #-(version>= 5 0)
 (defforeign
     '_create_run :entry-point "create_run"
-    :arguments '(integer string integer string integer string)
+    :arguments '(integer string integer string integer integer string)
     :return-type :integer)
 
-(defun create_run (tid data run-id comment interactive custom)
+(defun create_run (tid data run-id comment interactive protocol custom)
   (let* ((comment (if (stringp comment) comment ""))
          (interactive (if interactive 1 0))
          (custom (if (stringp custom) custom ""))
-         (status (_create_run tid data run-id comment interactive custom)))
+         (status (_create_run 
+                  tid data run-id comment interactive protocol custom)))
     (cond
      ((zerop status) :ok)
      (t :error))))
