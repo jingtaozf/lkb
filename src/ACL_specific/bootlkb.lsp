@@ -89,7 +89,7 @@
          ))
       (let ((dir (car dir-and-file))
             (file (cadr dir-and-file)))
-      (excl:compile-file-if-needed
+      (compile-file
             (make-pathname :name file :type "lsp"
                :directory (append *lkb-source-dir* (list dir)))
             :output-file 
