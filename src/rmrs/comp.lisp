@@ -335,8 +335,8 @@
 				   (if semstruct
 				       (semstruct-hook semstruct)
 				     (make-default-running-hook))
-                               (semstruct-hook 
-                                (elt dtrs semhead)))
+				 (semstruct-hook 
+				  (elt dtrs semhead)))
                              (if (not (cdr dtrs))
                                  (semstruct-hook (car dtrs))
                                 ;;; assume semhead is single dtr 

@@ -102,7 +102,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
          (label (rel-handel rel))
          (new-label (if (member (var-id label) labels) ;; conjunction
                         (create-new-rmrs-var 
-			 :handle *rmrs-variable-generator* nil)
+			 "h" *rmrs-variable-generator* nil)
                         label))
          (rmrs-args
           (if (cdr flist)
@@ -132,9 +132,12 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 	   :cfrom (if (char-rel-p rel)
 		      (char-rel-cfrom rel))
 	   :cto (if (char-rel-p rel)
-		      (char-rel-cto rel))))
+		    (char-rel-cto rel))))
+	 ;;; FIX - it would be convenient to have a canonical approach
+	 ;;; to IN-G generation, which unfortunately means complicating this
          (in-group (if (member (var-id label) labels)
-                       (make-in-group :labels (list label new-label)))))
+                       (make-in-group :labels (list label 
+						    new-label)))))
     (values ep rmrs-args in-group
             (cons (var-id new-label) labels))))
 

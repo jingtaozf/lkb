@@ -17,14 +17,27 @@
 (defun get-dtr-nodes (node)
   (rest node))
 
+(defparameter *xml-word-p* nil)
+
+#|
+some of the files just have
+|Beijing:18_NP1|
+others have `XML'
+|#
+
+
 (defun get-lexical-tag (node)
-  (let* ((str (de-xml-str (string node)))
+  (let* ((str (if *xml-word-p*
+		  (de-xml-str (string node))
+		(string node)))	      
          (uscore-pos (position #\_ str)))
     (subseq str (+ 1 uscore-pos))))    
 
 (defun get-lexeme (node)
   (let* ((xml-str (string node))
-	 (str (de-xml-str xml-str))
+	 (str (if *xml-word-p* 
+		  (de-xml-str xml-str)
+		xml-str))
          (uscore-pos (position #\_ str))
          (notag (subseq str 0 uscore-pos))
          (tag (subseq str uscore-pos))
@@ -52,7 +65,7 @@
         ((eql (elt tag 1) #\V) "v")
         ((eql (elt tag 1) #\J) "j")
         ((eql (elt tag 1) #\R) "r")
-        ((eql (elt tag 1) #\P) "p")
+        ((eql (elt tag 1) #\I) "p")
 	((and (eql (elt tag 1) #\A)
 	      (eql (elt tag 2) #\T)) "q")
 	((and (eql (elt tag 1) #\D)
@@ -75,34 +88,36 @@
 (defun get-cfrom (str)
   ;;; <w s="19" e="24">bark+ed_VVD</w>
   ;;; extract 19
-  (let ((first-s (position #\s str)))
-    (if (and (char= (elt str (+ 1 first-s)) #\=)
-	     (char= (elt str (+ 2 first-s)) #\"))
-	(let ((spec-num
-	       (parse-integer (subseq str (+ 3 first-s)) :junk-allowed t)))
-	  (if (and spec-num 
-		   (integerp spec-num))
-	      (if *initial-rasp-num*
-		  (- spec-num *initial-rasp-num*)
-		spec-num)
-	    nil))
-      nil)))
+  (if *xml-word-p*
+      (let ((first-s (position #\s str)))
+	(if (and (char= (elt str (+ 1 first-s)) #\=)
+		 (char= (elt str (+ 2 first-s)) #\"))
+	    (let ((spec-num
+		   (parse-integer (subseq str (+ 3 first-s)) :junk-allowed t)))
+	      (if (and spec-num 
+		       (integerp spec-num))
+		  (if *initial-rasp-num*
+		      (- spec-num *initial-rasp-num*)
+		    spec-num)
+		nil))
+	  nil))))
 
 (defun get-cto (str)
   ;;; <w s="19" e="24">bark+ed_VVD</w>
   ;;; extract 24
-  (let ((first-e (position #\e str)))
-    (if (and (char= (elt str (+ 1 first-e)) #\=)
-	     (char= (elt str (+ 2 first-e)) #\"))
-	(let ((spec-num
-	       (parse-integer (subseq str (+ 3 first-e)) :junk-allowed t)))
-	  (if (and spec-num 
-		   (integerp spec-num))
-	      (if *initial-rasp-num*
-		  (- spec-num *initial-rasp-num*)
-		spec-num)
-	    nil))
-      nil)))
+  (if *xml-word-p*
+      (let ((first-e (position #\e str)))
+	(if (and (char= (elt str (+ 1 first-e)) #\=)
+		 (char= (elt str (+ 2 first-e)) #\"))
+	    (let ((spec-num
+		   (parse-integer (subseq str (+ 3 first-e)) :junk-allowed t)))
+	      (if (and spec-num 
+		       (integerp spec-num))
+		  (if *initial-rasp-num*
+		      (- spec-num *initial-rasp-num*)
+		    spec-num)
+		nil))
+	  nil))))
 
 ;;; temporary function to make numbering start at 0
 ;;; for each sentence
@@ -130,13 +145,37 @@
 
 
 #|
+(progn
+(setf *xml-word-p* t)
 (simple-process-rasp-file 
  (make-pathname 
    :device "d"
    :directory "/lingo/lkb/src/rmrs/annlt-test/"
    :name "semtest.rasp")
- "semtest.rmrs" nil)
+ "semtest.rmrs" nil))
 
+(progn
+(setf *xml-word-p* t)
+(simple-process-rasp-file 
+ (make-pathname 
+   :device "d"
+   :directory "/lingo/lkb/src/rmrs/annlt-test/"
+   :name "t1.rasp")
+ "t1.rmrs" nil))
+
+(progn
+ (setf *xml-word-p* nil) 
+(simple-process-rasp-file 
+ (make-pathname 
+   :device "d"
+   :directory "/lingo/lkb/src/rmrs/qa/"
+   :name "test.parses")
+ (make-pathname 
+   :device "d"
+   :directory "/lingo/lkb/src/rmrs/qa/"
+   :name "test.rmrs")
+ t)
+)
 |#
 
 (defun simple-process-rasp-file (ifile ofile xml-p)
@@ -322,7 +361,6 @@
                   (excl::shell (concatenate 'string "gzip " 
                                             new-file)))
                 (excl::shell "rm /tmp/rfile")))))))
-
 
 #+:excl
 (defun revalidate-rmrs-files nil

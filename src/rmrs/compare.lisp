@@ -9,7 +9,7 @@ how close they are e.g. question answering
 
 For now, attempt to use the same code for both situations.
 
-The idea is to record the RMRS results on the elements,
+The idea is to record the RMRS results with comparison records,
 using a comp-status slot.  This should enable
 display and scoring of differences.
 
@@ -17,13 +17,55 @@ The backbone of the comparison is the eps, especially the
 ones from real words, especially the ones from open class words.
 
 Should be possible to reuse this as MRS code
+
+Jan 1 2004: The best way of doing this now looks like a two pass strategy
+(actually three pass if you include the quick threshold check which I haven't
+done yet).  
+
+The general idea is to leave the more complicated binding until the basic
+relation match has been done and for the indeterminacy in comparison
+to be localised to matches for individual relations.  The proper bindings
+will then potentially filter the matches.
+
+For instance, consider matching:
+
+A: the big dog sleeps and the big cat snores
+
+and
+
+B: the big dog snores and the big cat sleeps
+
+We have on a first pass
+
+the1 . the1, the1 . the6, the6 . the1, the6 . the6
+big2 . big2, big2 . big7, big7 . big2, big7 . big7
+dog3 . dog3
+sleep4 . sleep9
+and5 . and5
+cat8 . cat8
+snore9 . snore4
+
+the labels are paired and the characteristic variables
+
+obviously these relation pairings are not all mutually compatible in that
+one thing can only be paired once, but because repeated relations are less
+common that unrepeated ones, it's more economical to store things
+this way and work out the global compatibilities later
+
+In the second pass, the variable bindings are used to rule out members
+of sets, and to give lower scores to matches of relations where the 
+arguments differ.  In the case above, we want to rule out the `wrong' pairings
+for `the' and `big' and reduce the overall score (somehow) because snore and 
+sleep don't have matching ARGs.  We locate the mismatch on the relation with 
+the ARGs.
+
 |#
 
 (defstruct (comp-rmrs (:include rmrs))
   labels holes distinguished undistinguished)
 
-;;; the extra slots here are for caching the variables
-;;; distinguished vs undistinguished is explained below
+;;; the extra slots here are for caching the variables distinguished
+;;; vs undistinguished is explained below
 
 ;;; a comp-rmrs rels list is a list of the following
 ;;; structures.  For the same source case, this list
@@ -45,7 +87,14 @@ Should be possible to reuse this as MRS code
 (defstruct match-rel-record
   rel1
   rel2
-  comp-status)
+  pred-comp-status
+  var-comp-status
+  arg-comp-status
+  label-pair ;; rel labels
+  cvar-pair ;; characteristic vars of ns and vs - taken
+            ;; as fixed
+  other-vars ;; all other var pairs
+  )
 
 ;;; comp-status records the class of compatibility
 ;;; between the relation
@@ -55,6 +104,9 @@ Should be possible to reuse this as MRS code
 ;;; :comp - rel1 and rel2 are compatible but not equal
 ;;;         and not in a subsumes relationship
 
+  
+;;; *************************************************************  
+  
 ;;; Main entry point - same-source-p is t if we want
 ;;; to use the character position information 
 ;;; FIX - need to put in a quick and dirty check for the
@@ -64,17 +116,19 @@ Should be possible to reuse this as MRS code
 
 (defun compare-rmrs (rmrs1 rmrs2 same-source-p input-string)
   (declare (ignore input-string))
-  ;;; returns a list of comparison records 
+  ;;; returns a list of comparison records
   (unless (and (rmrs-p rmrs1) (rmrs-p rmrs2))
     (error "Arguments to compare-rmrs are not valid RMRSs"))
   (let* ((new-rmrs1 (sort-rmrs (convert-to-comparison-rmrs rmrs1)
 			  same-source-p))
 	 (new-rmrs2 (sort-rmrs (convert-to-comparison-rmrs rmrs2)
-			  same-source-p)))
-    (compare-rmrs-aux new-rmrs1 new-rmrs2 
-		      (initial-comparison-record)
-		      same-source-p)))
-
+			       same-source-p))
+	 (first-pass
+	  (compare-rmrs-aux new-rmrs1 new-rmrs2 
+			      (initial-comparison-record)
+			      same-source-p))
+	 (second-pass (prune-comparison-record first-pass)))
+    (expand-comparison-records second-pass)))
 
 (defun initial-comparison-record nil
   (make-rmrs-comparison-record 
@@ -188,14 +242,20 @@ the canonical order is fully defined.
 	      ((rel-parameter-strings rel)
 	       (push rel constant-pred-rels))
 	      (t (push rel gram-pred-rels)))))
-    (make-comparison-set
-     :cfrom cfrom
-     :cto cto
-     :real-preds (sort real-pred-rels 
-		       #'rmrs-real-pred-lesser-p)
-     :constant-preds (sort constant-pred-rels 
-			   #'rmrs-constant-pred-lesser-p)
-     :gram-preds gram-pred-rels)))
+    (let ((combined-real-preds
+	   (combine-similar-relations real-pred-rels nil 
+				      #'rmrs-real-pred-rel-eql))
+	  (combined-constant-preds
+	   (combine-similar-relations constant-pred-rels nil 
+				      #'rmrs-constant-pred-rel-eql)))
+      (make-comparison-set
+       :cfrom cfrom
+       :cto cto
+       :real-preds (sort combined-real-preds
+			 #'rmrs-real-pred-lesser-p :key #'car)
+       :constant-preds (sort combined-constant-preds
+			     #'rmrs-constant-pred-lesser-p :key #'car)
+       :gram-preds gram-pred-rels))))
 
 
 (defun rmrs-constant-pred-lesser-p (rel1 rel2)
@@ -341,13 +401,12 @@ the canonical order is fully defined.
 	  (if (and same-source-p
 		   (rmrs-cset-same-source-lesser-p first1 first2))
 	      (compare-rmrs-liszts (cdr l1) l2 comp-record same-source-p)
-	      (let ((comp-records (compare-rmrs-rel-set 
-				      (car l1) (car l2) comp-record)))
-		   (loop for alternative in comp-records
-		       nconc
-			 (compare-rmrs-liszts (cdr l1) (cdr l2) 
-					      alternative same-source-p))))))
-    (list comp-record)))
+	    (let ((new-comp-record 
+		   (compare-rmrs-rel-set 
+		    (car l1) (car l2) comp-record)))
+	      (compare-rmrs-liszts (cdr l1) (cdr l2) 
+				  new-comp-record same-source-p)))))
+    comp-record))
 
 (defun compare-rmrs-rel-set (s1 s2 comp-record)
   ;;; 1 compare the real preds on an ordered basis
@@ -374,23 +433,24 @@ the canonical order is fully defined.
 	     (compare-rmrs-ordered-rel-set 
 	      const-preds1 const-preds2 r-comp-record 
 	      #'rmrs-constant-pred-lesser-p)))
-	(let ((g-comp-records 
+	(let ((g-comp-record
 		(compare-rmrs-unordered-rel-set 
 		 gram-preds1 gram-preds2 c-comp-record)))
-	  g-comp-records)))))
+	  g-comp-record)))))
 
 (defun compare-rmrs-ordered-rel-set (l1 l2 comp-record lesser-p-fn)
   (if (and l1 l2)
       (let ((first1 (car l1))
 	    (first2 (car l2)))
-	(if (apply lesser-p-fn (list first2 first1))
+	(if (apply lesser-p-fn (list (car first2) (car first1)))
 	    (compare-rmrs-ordered-rel-set l1 (cdr l2) 
 					  comp-record lesser-p-fn)
-	  (if (apply lesser-p-fn (list first1 first2))
+	  (if (apply lesser-p-fn (list (car first1) (car first2)))
 	      (compare-rmrs-ordered-rel-set (cdr l1) l2 
 					    comp-record lesser-p-fn)
 	    (let ((new-comp-record
-		   (compare-rmrs-rels first1 first2 comp-record)))
+		   (compare-rmrs-unordered-rel-set 
+		    first1 first2 comp-record)))
 	      (compare-rmrs-ordered-rel-set (cdr l1) (cdr l2) 
 					    new-comp-record lesser-p-fn)))))
     comp-record))
@@ -399,38 +459,36 @@ the canonical order is fully defined.
   ;;; the full set of possibilities here is horrible
   ;;; since in principle if we have {a,b} and {c,d}
   ;;; we should allow for the possibility that if a matches c
-  ;;; b might match d if we ignored the a/c match
-  ;;;
-  ;;; For now, see if we can get away without this since it
-  ;;; seems very unlikely that the bindings will interact
-  ;;;
-  ;;; even for the same-source-p case, we do sometimes get
-  ;;; two grammar preds from the same string, so this needs to work
-  ;;; but the hypothesis is that we can determine the best
-  ;;; match possibility simply by doing a relation
-  ;;; comparison, which doesn't get stored in comp-record
-  ;;;
-  ;;; In effect what we're doing is a relation sort based
-  ;;; on knowing the set of things we're going to be comparing with.
-  ;;; Probably this can actually be done as an initial
-  ;;; sort by developing categories of relations
-  (let ((pairlist nil)
-	(unmatched2 s2))
+  ;;; b might match d if we ignored the a/c match    
+  (let ((matches nil))
     (dolist (rel1 s1)
-	  (dolist (rel2 unmatched2)
-	    (when (compare-rmrs-preds rel1 rel2)
-	      (setf unmatched2 (remove rel2 unmatched2))
-	      (push (cons rel1 rel2) pairlist)
-	      (return))))
-    (dolist (paired pairlist)
-      (setf comp-record
-	(compare-rmrs-rels (car paired) (cdr paired)
-			   comp-record)))
-    (list comp-record)))
+      (dolist (rel2 s2)
+	(let ((match (compare-rmrs-rels rel1 rel2)))
+	  (when match
+	    (push match matches)))))
+    (when matches
+      (push matches
+	    (rmrs-comparison-record-matched-rels comp-record)))
+    comp-record))
 
-(defun compare-rmrs-rels (rel1 rel2 comparison-record)
+
+(defun compare-rmrs-rels (rel1 rel2)
   (let ((pred-comparison (compare-rmrs-preds rel1 rel2)))
     (if pred-comparison
+	(let ((match-record
+	       (make-match-rel-record :rel1 rel1
+				      :rel2 rel2
+				      :pred-comp-status pred-comparison
+				      :label-pair 
+				      (cons (rel-handel rel1)
+					    (rel-handel rel2))
+				      :cvar-pair nil
+				      :other-vars nil)))    
+	  match-record)
+      nil)))
+
+
+#|
 	(let ((var-match-record 
 	       (let ((label-match (compare-rmrs-labels 
 				   (rel-handel rel1)
@@ -445,20 +503,8 @@ the canonical order is fully defined.
 			     ;; this probably shouldn't happen		      
 			     (t label-match)))
 		   nil))))
-	  (if var-match-record
-	      (let ((match-record
-		     (make-match-rel-record :rel1 rel1
-					:rel2 rel2
-					:comp-status pred-comparison)))
-		(push match-record
-		      (rmrs-comparison-record-matched-rels 
-		       var-match-record))
-		var-match-record)
-	    ;;; else - variable match is impossible
-	    comparison-record))
-      ;;; else - predicates don't match
-      comparison-record)))
-      
+|#
+
 
 (defun compare-rmrs-preds (rel1 rel2)
   ;;; FIX - need to think about the parameter
@@ -491,7 +537,20 @@ the canonical order is fully defined.
 			 (rel-parameter-strings rel2)))) :comp)
 	  (t nil))))
 
+(defun rmrs-constant-pred-rel-eql (rel1 rel2)
+  ;;; used for grouping similar relations
+    ;;; needs to be kept reasonably consistent with above
+  (let ((pred1 (rel-pred rel1))
+	(pred2 (rel-pred rel2)))
+    (and (equal pred1 pred2) 
+	 (string-equal (rel-parameter-strings rel1)
+		       (rel-parameter-strings rel2)))))
 
+(defun rmrs-real-pred-rel-eql (rel1 rel2)
+  ;;; used for grouping similar relations
+  (let ((pred1 (rel-pred rel1))
+	(pred2 (rel-pred rel2)))
+    (compare-rmrs-real-preds pred1 pred2)))
 
 (defun gpred-subsumes-real-p (gpred real-pred)
   ;;; returns t if the gpred subsumes the real-pred
@@ -569,3 +628,88 @@ the canonical order is fully defined.
 	    ))))
 
 |#
+
+
+;;;; ******************************************************
+;;; The second pass
+;;; *******************************************************
+
+(defun prune-comparison-record (comparison-record)
+  comparison-record)
+
+(defun expand-comparison-records (comp-record)
+  (let* ((match-alternatives (rmrs-comparison-record-matched-rels
+			      comp-record))
+	 (flat-matches
+	  (expand-comparison-records-aux match-alternatives)))
+    (loop for option in flat-matches
+	collect
+	  (make-rmrs-comparison-record 
+	   :matched-rels option
+	   :label-list (rmrs-comparison-record-label-list
+			comp-record)
+	   :var-list
+	   (rmrs-comparison-record-var-list
+			      comp-record)))))
+
+
+(defun expand-comparison-records-aux (option-list)
+  (if option-list
+      (let ((mutually-compatible
+	     (find-maximal-length-comp
+	      (expand-multiple-comp-records (car option-list)))))     
+	(if (cdr option-list)
+	    (let ((res (expand-comparison-records-aux (cdr option-list))))
+	      (loop for option-set in mutually-compatible
+		  nconc
+		    (loop for partial in res
+			collect
+			  (append option-set partial))))
+	mutually-compatible))
+    nil))
+
+(defun expand-multiple-comp-records (opt-set)
+  ;;; this comes into play when we have things like
+  ;;; ((theA1 theB1) (theA1 theB2) (theA2 theB1) (theA2 theB2))
+  ;;; where we want to return
+  ;;; (((theA1 theB1) (theA2 theB2)) ((theA1 theB2) (theA2 theB1)))
+  (if opt-set
+      (let ((new (car opt-set))
+	    (res 
+	     (expand-multiple-comp-records (cdr opt-set))))
+	(if res
+	    (let ((new-res
+		   (loop for poss in res
+		       unless
+			 (rel-already-used new poss)
+		       collect
+			 (cons new poss))))
+	      (cons (list new) (append new-res res)))
+	  (list (list new))))
+    nil))
+
+(defun find-maximal-length-comp (sets)
+  (let ((max-length 0)
+	(current-res nil))
+    (dolist (set sets)
+      (let ((l (length set)))
+      (cond  ((> l max-length)
+	      (setf max-length l)
+	      (setf current-res (list set)))
+	     ((= l max-length)
+	      (push set current-res))
+	     (t nil))))
+    current-res))
+
+(defun rel-already-used (mrec mrec-list)
+  (let ((arel (match-rel-record-rel1 mrec))
+	(brel (match-rel-record-rel2 mrec)))
+    (dolist (used mrec-list)
+      (when (or (eql (match-rel-record-rel1 used)
+		     arel)
+		(eql (match-rel-record-rel2 used)
+		     brel))
+	(return t)))))
+    
+    
+    

@@ -115,17 +115,22 @@
 		 (- (position-x ep2-pos) 10)
 		 (+ (position-y ep2-pos) 10)
 		 :ink (determine-comparison-line-colour
-		       (mrs::match-rel-record-comp-status match)))))))))
+		       (mrs::match-rel-record-pred-comp-status match)
+		       (mrs::match-rel-record-var-comp-status match)
+		       (mrs::match-rel-record-arg-comp-status match)))))))))
+		       
 
-(defun determine-comparison-line-colour (comp-type)
+(defun determine-comparison-line-colour (pred-comp-type var-comp-type 
+					 arg-comp-type)
   ;;; if we assume that the deep-grammar derived RMRS is
   ;;; in position 1, then the :sub2 and :comp cases are
   ;;; generally unexpected - hence use red/magenta for these
-  (ecase comp-type
-    (:equal +green-flipping-ink+)
-    (:sub1 +blue-flipping-ink+)
-    (:sub2 +red-flipping-ink+)
-    (:comp +magenta-flipping-ink+)))
+  (declare (ignore var-comp-type arg-comp-type)
+	   (ecase pred-comp-type
+	     (:equal +green-flipping-ink+)
+	     (:sub1 +blue-flipping-ink+)
+	     (:sub2 +red-flipping-ink+)
+	     (:comp +magenta-flipping-ink+))))
     
 ;;; ************* Temporary !!!! ************************
 
@@ -162,7 +167,7 @@
 ("Abrams wondered which dog barked." . 1)
 ("Abrams wondered whether Browne barked." . 1)
 ("The dog that Browne chased barked." . 2) ; 31
-("The dog to chase is barking." . 1)
+("The dog to chase is barking." . 2)
 ("The dog was chased by Browne." . 1)
 ("The dog chased by Browne barked." . 2)
 ("The dog is barking." . 1)
@@ -248,17 +253,8 @@
 	(rasp-mrs 
 	 (nth (- egnum 1)
 	      (mrs::read-rmrs-file "semtest.rmrs" :rasp)))
-       (erg-mrs
-	(let ((*show-parse-p* nil))
-	  (do-parse-tty input)
-	  (unless *parse-record*
-	    (error "Parse failed"))
-	  (let ((selected-parse (nth (- parse-number 1) *parse-record*)))
-	    (unless selected-parse
-	        (error "Incorrect parse number"))
-	    (let ((mrs (mrs::extract-mrs selected-parse)))
-	      (unless mrs (error "~%Can't extract MRS"))
-	      (mrs::mrs-to-rmrs mrs))))))
+	 (erg-mrs
+	  (rmrs-for-sentence input parse-number)))
     (dolist (comparison-record (mrs::compare-rmrs erg-mrs rasp-mrs t input))
       (show-mrs-rmrs-compare-window erg-mrs rasp-mrs 
 				    comparison-record input))))
@@ -280,3 +276,45 @@
 				    comparison-record (format nil "~A" egnum)))))
 
 |#
+
+;;; test cases for making sure the comparison code is doing what it's
+;;; expected to
+
+(defparameter *comp-test-suite*
+    '(
+      ("It rained." 1 "It rained." 1)
+      ("Abrams barked." 1 "Browne barked." 1)
+      ("The cat chased the cat." 1 "The cat chased the cat." 1)
+      ("The cat chased the cat." 1 "The cat chased the dog." 1)
+      ("The dog chased the cat." 1 "The cat chased the dog." 1)))
+
+
+(defun test-eg (egnum same-source-p)
+  (let* ((eg (nth (- egnum 1)
+		  *comp-test-suite*))
+	 (input1 (first eg))
+	 (parse-number1 (second eg))
+	 (input2 (third eg))
+	 (parse-number2 (fourth eg)) 
+	 (rmrs1 (rmrs-for-sentence input1 parse-number1))
+	 (rmrs2 (rmrs-for-sentence input2 parse-number2)))
+    (dolist (comparison-record 
+		(time
+		(mrs::compare-rmrs rmrs1 rmrs2 same-source-p 
+				   (concatenate 'string input1 " / " input2))))
+      (show-mrs-rmrs-compare-window rmrs1 rmrs2
+				    comparison-record 
+				    (concatenate 'string input1 " / " input2)))))
+    
+
+(defun rmrs-for-sentence (input parse-number)
+  (let ((*show-parse-p* nil))
+    (do-parse-tty input)
+    (unless *parse-record*
+      (error "Parse failed"))
+    (let ((selected-parse (nth (- parse-number 1) *parse-record*)))
+      (unless selected-parse
+	(error "Incorrect parse number"))
+      (let ((mrs (mrs::extract-mrs selected-parse)))
+	(unless mrs (error "~%Can't extract MRS"))
+	(mrs::mrs-to-rmrs mrs)))))
