@@ -29,7 +29,10 @@
                       (format nil "Edge ~A G - Tree FS" (g-edge-id edge)))))
             (cons "Edge"
                #'(lambda (edge)
-                   (display-parse-tree edge nil)))))
+                   (display-parse-tree edge nil)))
+            (cons "MRS"
+                #'(lambda (edge)
+                    (show-mrs-window edge)))))
       (format t "~%No strings generated")))
 
 #|     

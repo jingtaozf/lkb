@@ -1,5 +1,6 @@
-;;; Copyright (c) 1991-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1991-2002
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 
 (in-package :lkb)
@@ -332,7 +333,7 @@
               (add-words-to-chart (and first-only-p (null *active-parsing-p*)
                                        (cons 0 (length user-input))))
               (if *active-parsing-p*
-                  (complete-chart)
+                (complete-chart)
                 (loop 
                     until (empty-heap *agenda*)
                     do (funcall (heap-extract-max *agenda*)))))

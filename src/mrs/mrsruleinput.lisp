@@ -53,23 +53,27 @@
 (defun read-mrs-rule-file-aux (file-names &optional generator-p)
   (unless (listp file-names)
     (setf file-names (list file-names)))
-  (when (every #'(lambda (file-name)
-                   (and file-name 
-                        (probe-file file-name)))
-               file-names)
-    (if generator-p
-        (clear-gen-rules) 
-      (clear-mrs-rules))
-    (let ((*tdl-expanded-syntax-function* 
-           #'read-mrs-rule-expanded-syntax)
-          (*readtable* (make-tdl-break-table)))
-      (setf *mrs-rule-fs-list* nil)
-      (loop for file in file-names
-           do
-           (with-open-file 
-               (istream file :direction :input)
-             (format t "~%Reading in rule file ~A" file)
-             (read-mrs-rule-stream istream generator-p))))))
+  
+  (let ((mrs::*variable-generator* (if generator-p 
+                                mrs::*variable-generator*
+                                (mrs::create-variable-generator 10000))))
+    (when (every #'(lambda (file-name)
+                     (and file-name 
+                          (probe-file file-name)))
+                 file-names)
+      (if generator-p
+          (clear-gen-rules) 
+        (clear-mrs-rules))
+      (let ((*tdl-expanded-syntax-function* 
+             #'read-mrs-rule-expanded-syntax)
+            (*readtable* (make-tdl-break-table)))
+        (setf *mrs-rule-fs-list* nil)
+        (loop for file in file-names
+             do
+             (with-open-file 
+                 (istream file :direction :input)
+               (format t "~%Reading in rule file ~A" file)
+               (read-mrs-rule-stream istream generator-p)))))))
 
 (defun read-mrs-rule-stream (istream generator-p) 
    (loop
@@ -105,10 +109,11 @@
        (let* ((temp-fs (process-unifications normal-unifs))
               (entry (if temp-fs
                          (if generator-p
-                             (mrs::construct-gen-rule-from-fs id temp-fs
+                           (mrs::construct-gen-rule-from-fs id temp-fs
                                                             funny-unifs)
-                         (mrs::construct-munge-rule-from-fs id temp-fs
-                                                            funny-unifs)))))
+                           (mrs::construct-munge-rule-from-fs 
+                            id temp-fs funny-unifs 
+                            mrs::*variable-generator*)))))
          (push temp-fs *mrs-rule-fs-list*) ; just for debugging
          (if entry
              (if generator-p

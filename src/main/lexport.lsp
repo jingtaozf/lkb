@@ -1,6 +1,6 @@
 ;;; Copyright (c) 2001 -- 2002 
-;;; John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 ;;;
 ;;; first shot at exporting TDL lexicon for Access or Postgres import.

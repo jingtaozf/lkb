@@ -832,6 +832,10 @@ EXTRAPAIR -> PATHNAME: CONSTNAME
          (next (peek-char t istream nil nil))
          (sort (if (eql next #\") (read-mrs-atom istream) reltype)))
     (when *rel-handel-path*
+      ;;
+      ;; _fix_me_
+      ;; this should probably use *rel-handel-path* instead (30-sep-02; oe)
+      ;;
       (mrs-check-for #\h istream)
       (mrs-check-for #\a istream)
       (mrs-check-for #\n istream)

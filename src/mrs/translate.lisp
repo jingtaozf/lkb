@@ -1,8 +1,8 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998--2002 
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 (in-package :lkb)
-
 
 (defparameter *generator-server* nil)
 
@@ -24,7 +24,7 @@
 (defun transfer (&optional (edge (first *parse-record*))
                  &key (file (format nil "/tmp/.transfer.~a" (current-user))))
   (let* ((*package* (find-package :lkb))
-         (rules (reverse lkb:*ordered-mrs-rule-list*))
+         (rules (reverse *ordered-mrs-rule-list*))
          (input (mrs::extract-mrs edge))
          (output (and input (mrs::munge-mrs-struct input rules))))
     (when output
@@ -35,9 +35,7 @@
 
 (defun translate (&key serverp 
                        (file (format nil "/tmp/.transfer.~a" (current-user))))
-  (when serverp
-    (loop
-        until (probe-file file) do (sleep 1)))
+  (when serverp (loop until (probe-file file) do (sleep 1)))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (let* ((mrs (mrs::read-mrs-from-file file))
@@ -49,6 +47,7 @@
     (translate :serverp serverp :file file)))
 
 (defun start-generator-server (&optional (forkp t))
+  (when (and *generator-server* forkp) (stop-generator-server))
   (if forkp
     (with-output-to-top ()
       (setf *generator-server*

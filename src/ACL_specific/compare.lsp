@@ -1,5 +1,6 @@
-;;; Copyright (c) 1998-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
-;;; see licence.txt for conditions
+;;; Copyright (c) 1998-2002
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;;   see `licence.txt' for conditions.
 
 
 ;;;
@@ -289,6 +290,12 @@
 ;;; **********************************************************************
 ;;; Application frame for comparison window
 
+(defun comparison-tree-font ()
+  (list :sans-serif :roman (or *comparison-tree-font-size* 7)))
+
+(defun comparison-discriminator-font ()
+  (list :sans-serif :roman (or *comparison-discriminator-font-size* 10)))
+
 (clim:define-application-frame compare-frame ()
   ((discrs :initform nil
 	   :accessor compare-frame-discrs)
@@ -323,10 +330,9 @@
 	  (clim:make-pane 'clim:application-pane
 			  :display-function 'draw-trees-window
 			  :text-cursor nil
-			  :width 520
+			  :width 530
 			  ;; :height 100
-			  :text-style (clim:parse-text-style 
-				       (list :sans-serif :roman 7))
+			  :text-style (comparison-tree-font)
 			  :end-of-line-action :allow
 			  :end-of-page-action :allow
 			  :borders nil
@@ -342,9 +348,8 @@
 			  :display-function 'draw-compare-window
 			  :text-cursor nil
 			  :width 420
-			  :height 650
-			  :text-style (clim:parse-text-style 
-				       (list :sans-serif :roman 10))
+			  :height 660
+			  :text-style (comparison-discriminator-font)
 			  :end-of-line-action :allow
 			  :end-of-page-action :allow
 			  :borders nil
@@ -566,33 +571,35 @@
         (setf (ptree-ink tree) clim:+foreground-ink+)
         (setf (ptree-output-record tree)
           (clim:with-new-output-record (stream)
-            (clim:with-output-recording-options (stream :record t)
-              (clim:formatting-row (stream)
-                (clim:formatting-cell (stream :align-x :center :align-y :top)
-                  (clim:with-text-style (stream (clim:parse-text-style 
-                                                 '(:sans-serif :bold 14)))
-                    (format stream "~%[~a]" (ptree-id tree))))
-                (clim:formatting-cell (stream :align-x :left :align-y :center)
-                  (clim:with-output-as-presentation 
-                      (stream tree 'ptree :single-box t)
-                    (clim:format-graph-from-root
-                     (ptree-top tree)
-                     #'(lambda (node stream)
-                         (multiple-value-bind (s bold-p) 
-                             (get-string-for-edge node)
-                           (clim:with-text-face (stream 
-                                                 (if bold-p :bold :roman))
-                             (write-string s stream))))
-                     #'(lambda (node) (get node 'daughters))
-                     :graph-type :parse-tree
-                     :stream stream 
-                     :merge-duplicates nil
-                     :orientation :vertical
-                     :generation-separation 7
-                     :move-cursor t
-                     :within-generation-separation 7
-                     :center-nodes nil)))
-                (terpri stream)))))))
+            (clim:with-text-style (stream (comparison-tree-font))
+              (clim:with-output-recording-options (stream :record t)
+                (clim:formatting-row (stream)
+                  (clim:formatting-cell (stream :align-x :center :align-y :top)
+                    (clim:with-text-style (stream (clim:parse-text-style 
+                                                   '(:sans-serif :bold 14)))
+                      (format stream "~%[~a]" (ptree-id tree))))
+                  (clim:formatting-cell (stream 
+                                         :align-x :left :align-y :center)
+                    (clim:with-output-as-presentation 
+                        (stream tree 'ptree :single-box t)
+                      (clim:format-graph-from-root
+                       (ptree-top tree)
+                       #'(lambda (node stream)
+                           (multiple-value-bind (s bold-p) 
+                               (get-string-for-edge node)
+                             (clim:with-text-face (stream 
+                                                   (if bold-p :bold :roman))
+                               (write-string s stream))))
+                       #'(lambda (node) (get node 'daughters))
+                       :graph-type :parse-tree
+                       :stream stream 
+                       :merge-duplicates nil
+                       :orientation :vertical
+                       :generation-separation 7
+                       :move-cursor t
+                       :within-generation-separation 7
+                       :center-nodes nil)))
+                (terpri stream))))))))
     (update-trees window)))
 
 (defun propagate-discriminants (frame top toggle)
@@ -784,37 +791,39 @@
            (aref #("zero" "low" "fair" "high") foo)))))
     
     (clim:formatting-table (stream :x-spacing "X")
-      (dolist (d discrs)
-        (unless (discr-hidep d)
-          (clim:formatting-row (stream)
-            (setf (discr-record d)
-              (clim:with-new-output-record (stream)
-                (clim:with-output-recording-options (stream :record t)
-                  (clim:with-output-as-presentation
-                      (stream d 'discr)
-                    #+:null
-                    (clim:formatting-cell (stream :align-x :center)
-                      (format stream "~a" (discr-start d)))
-                    #+:null
-                    (clim:formatting-cell (stream :align-x :center)
-                      (format stream "~a" (discr-end d)))
-                    (clim:updating-output (stream :cache-value (discr-state d))
+      (clim:with-text-style (stream (comparison-discriminator-font))
+        (dolist (d discrs)
+          (unless (discr-hidep d)
+            (clim:formatting-row (stream)
+              (setf (discr-record d)
+                (clim:with-new-output-record (stream)
+                  (clim:with-output-recording-options (stream :record t)
+                    (clim:with-output-as-presentation
+                        (stream d 'discr)
+                      #+:null
                       (clim:formatting-cell (stream :align-x :center)
-                        (write-string (cond ((eq (discr-state d) t) "+")
-                                            ((null (discr-state d)) "-")
-                                            (t "?"))
-                                      stream)))
-                    (clim:updating-output (stream 
-                                           :cache-value (discr-toggle d))
+                        (format stream "~a" (discr-start d)))
+                      #+:null
                       (clim:formatting-cell (stream :align-x :center)
-                        (write-string (cond ((eq (discr-toggle d) t) "+")
-                                        ((null (discr-toggle d)) "-")
-                                        (t "?"))
-                                      stream)))
-                    (clim:formatting-cell (stream :align-x :left)
-                      (format stream "~A" (discr-key d)))
-                    (clim:formatting-cell (stream :align-x :left)
-                      (format stream "~A" (discr-value d)))))))))))))
+                        (format stream "~a" (discr-end d)))
+                      (clim:updating-output (stream 
+                                             :cache-value (discr-state d))
+                        (clim:formatting-cell (stream :align-x :center)
+                          (write-string (cond ((eq (discr-state d) t) "+")
+                                              ((null (discr-state d)) "-")
+                                              (t "?"))
+                                        stream)))
+                      (clim:updating-output (stream 
+                                             :cache-value (discr-toggle d))
+                        (clim:formatting-cell (stream :align-x :center)
+                          (write-string (cond ((eq (discr-toggle d) t) "+")
+                                          ((null (discr-toggle d)) "-")
+                                          (t "?"))
+                                        stream)))
+                      (clim:formatting-cell (stream :align-x :left)
+                        (format stream "~A" (discr-key d)))
+                      (clim:formatting-cell (stream :align-x :left)
+                        (format stream "~A" (discr-value d))))))))))))))
 
 
 (define-compare-frame-command (com-discr-menu)

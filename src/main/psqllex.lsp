@@ -25,8 +25,8 @@
 (in-package :lkb)
 
 (defun initialize-psql-lexicon (&key (db "lingo")
-                                     (host "lineard.stanford.edu")
-                                     (user "guest")
+                                     (host "localhost")
+                                     (user "lingo")
                                      (password "")
                                      (table "erg")
                                      (definition "ergd"))

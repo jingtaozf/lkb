@@ -589,7 +589,7 @@
 
 (defparameter *mrs-rule-condition-path* '(lkb::lcondition))
 
-(defun construct-munge-rule-from-fs (id fs funny-unifs)
+(defun construct-munge-rule-from-fs (id fs funny-unifs &optional generator)
   ;;; input and output are constructed using construct-mrs
   ;;; with a given variable-generator
   (declare (ignore id))
@@ -601,7 +601,8 @@
         (output-fs (path-value fs *mrs-rule-output-path*))
         (condition-fs (path-value fs *mrs-rule-condition-path*)))
       (if (and input-fs output-fs)
-          (let* ((variable-generator (create-variable-generator 10000))
+          (let* ((variable-generator (or generator
+                                         (create-variable-generator 10000)))
                  (input-spec (construct-mrs input-fs variable-generator))
                  (output-spec (construct-mrs output-fs variable-generator))
                  (condition-spec 

@@ -172,7 +172,15 @@
   "size of font in dialogs"
   :user)
 
-(def-lkb-parameter *maximum-list-pane-items* 50
+(def-lkb-parameter *comparison-tree-font-size* 7
+  "size of font in tree comparison (tree pane)"
+  :user)
+
+(def-lkb-parameter *comparison-discriminator-font-size* 10
+  "size of font in tree comparison (discriminator pane)"
+  :user)
+
+(def-lkb-parameter *maximum-list-pane-items* 150
   "maximum number of items in a list pane")
 
 ;;; YADU
