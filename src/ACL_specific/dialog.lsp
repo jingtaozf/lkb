@@ -34,7 +34,7 @@
                      (pathname-name filename)))
       finally (return filename)))
 
-(defun ask-user-for-new-pathname (prompt)
+(defun ask-user-for-new-pathname (prompt &optional protected)
   (loop for filename = (clim:select-file clim-user:*lkb-top-frame*
 					 #+:mswindows :dialog-type #+:mswindows :save
      ;;; fix for bug in Windows that disallows new file names
@@ -44,7 +44,13 @@
 					 :directory clim-user:*last-directory*)
       do (when filename
 	   (setq clim-user:*last-directory* 
-             (directory-namestring (pathname filename))))
+             (directory-namestring (pathname filename)))
+           (if (equal filename protected)
+               (progn
+                 (show-message-window
+                  (format nil 
+                          "Attempt to overwrite input file"))
+                 (setf filename nil))))
       until (or (null filename)
 		(not (probe-file filename))
                 (when (clim:notify-user clim-user:*lkb-top-frame*
