@@ -3,11 +3,18 @@
 
 (defparameter *lkb-system-version* :main)
 
-(defparameter *lkb-source-dir* '(:absolute "Macintosh HD" "lkb99"))
+;;(defparameter *lkb-source-dir* '(:absolute "Macintosh HD" "lkb99"))
+
+;;(defparameter *lkb-fasl-dir* 
+;;'(:absolute "Macintosh HD" "lkb99" "fasl"))
+
+(defparameter *lkb-source-dir* 
+  (butlast (pathname-directory *load-truename*)))
 
 (defparameter *lkb-fasl-dir* 
-'(:absolute "Macintosh HD" "lkb99" "fasl"))
+  (append *lkb-source-dir* '("fasl")))
 
+ 
 (defparameter *psorts-temp-file* 
   (make-pathname :name "templex" 
                  :directory *lkb-source-dir*)
