@@ -14,7 +14,7 @@
 
 ;;; Strings
 
-(defparameter *toptype* 'top)
+(defparameter *toptype* '*top*)
 
 (defparameter *string-type* 'string
    "a special type name - any lisp strings are subtypes of it")
