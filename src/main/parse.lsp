@@ -136,23 +136,24 @@
 ;;; Entry point to this group of functions is parse which is passed the
 ;;; sentence as a list of strings and is called from the top level
 
-(defun parse (user-input &optional (show-parse-p t))
-   (cond
-      ((> (length user-input) *chart-limit*)
-         (error "Sentence ~A too long" user-input))
-      (t
-         (let ((*safe-not-to-copy-p* t)
-               (*executed-tasks* 0) (*successful-tasks* 0)
-               (*contemplated-tasks* 0) (*filtered-tasks* 0))
-            (clear-chart)
-            #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
-            (add-morphs-to-morphs user-input)
-            (add-words-to-chart)
-            (setf *parse-record*
-               (find-spanning-edges 0 (length user-input)))
-            (when show-parse-p (show-parse))
-            (values *executed-tasks* *successful-tasks* *contemplated-tasks*
-               *filtered-tasks*)))))
+(defun parse (user-input &optional (show-parse-p t) 
+				   (first-only-p *first-only-p*))
+  (if (> (length user-input) *chart-limit*)
+      (error "Sentence ~A too long" user-input)
+    (let ((*safe-not-to-copy-p* t)
+	  (*executed-tasks* 0) (*successful-tasks* 0)
+	  (*contemplated-tasks* 0) (*filtered-tasks* 0))
+      (clear-chart)
+      #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
+      (add-morphs-to-morphs user-input)
+      (catch 'first
+	(add-words-to-chart first-only-p 0 (length user-input)))
+      (unless first-only-p
+	(setf *parse-record*
+	  (find-spanning-edges 0 (length user-input))))
+      (when show-parse-p (show-parse))
+      (values *executed-tasks* *successful-tasks* *contemplated-tasks*
+	      *filtered-tasks*))))
 
 (defun add-morphs-to-morphs (user-input)
    (let ((current 0))
@@ -172,7 +173,7 @@
                                   :morph-results morph-poss))
            (setf current new)))))
 
-(defun add-words-to-chart nil
+(defun add-words-to-chart (first-only-p start-vertex end-vertex)
    (let ((current 0)
          (to-be-accounted-for (make-array (list *chart-limit*) 
                                           :initial-element nil)))
@@ -187,7 +188,8 @@
          (incf current)
          (multiple-value-bind (ind-results multi-strings)
            (add-word (morph-edge-word morph-poss)
-                     (morph-edge-morph-results morph-poss) current)
+                     (morph-edge-morph-results morph-poss) current
+		     first-only-p start-vertex end-vertex)
            (unless (or ind-results multi-strings)
              (setf (aref to-be-accounted-for current)
                    (morph-edge-word morph-poss)))
@@ -205,13 +207,13 @@
                  (aref to-be-accounted-for y))))))
 
 
-(defun add-word (local-word morph-poss right-vertex)
+(defun add-word (local-word morph-poss right-vertex first-only-p start end)
    ;;; get-senses returns a list of conses of ids and dags 
    ;;; corresponding to the word senses 
    ;;; - the type of the dag is used 
    ;;; to do the indexing
   (let* ((multi-results
-               (add-multi-words morph-poss right-vertex))
+               (add-multi-words morph-poss right-vertex first-only-p start end))
          (word-senses 
               (for morph-res in morph-poss
                    append
@@ -230,8 +232,9 @@
                 (history (mrecord-history mrec)))
             (activate-context (- right-vertex 1) 
                               (construct-lex-edge sense history local-word
-                                                    lex-ids)
-                                 right-vertex)))
+						  lex-ids)
+			      right-vertex
+			      first-only-p start end)))
           ; add-multi-words is mostly for side effects, but want to
           ; check if we've found something, and produce correct error
           ; messages, so we return the strings found
@@ -292,7 +295,7 @@
   morph-res
   mrecs)
   
-(defun add-multi-words (morph-poss right-vertex)
+(defun add-multi-words (morph-poss right-vertex first-only-p start end)
   (let* ((multi-strings nil)
 	 (word-senses 
           (for stem in (remove-duplicates 
@@ -333,7 +336,7 @@
 	    (activate-context left-vertex 
 			      (construct-lex-edge sense history word
 						  lex-ids)      
-			      right-vertex)))))
+			      right-vertex first-only-p start end)))))
     ;; return multi-strings, so we know what's been found
     multi-strings))
 
@@ -512,76 +515,82 @@
       (evaluate-unifications rule (list fs) new-orth)))
 
 
-(defun activate-context (left-vertex edge right-vertex &optional no-unary)
-       (add-to-chart left-vertex edge right-vertex)
-       (dolist (rule (get-matching-rules (edge-dag edge) no-unary))
-	       	; grammar rule application is attempted when 
-                ; we've got all the bits
-               (apply-grammar-rule rule
-                                   (reverse (rule-daughters-restricted rule))
-                                   left-vertex
-                                   right-vertex
-                                   (list edge))))
+(defun activate-context (left-vertex edge right-vertex first-only-p start end)
+  (let ((no-unary nil))
+    (add-to-chart left-vertex edge right-vertex first-only-p start end)
+    (dolist (rule (get-matching-rules (edge-dag edge) no-unary))
+      ;; grammar rule application is attempted when we've got all the bits
+      (apply-grammar-rule rule
+			  (reverse (rule-daughters-restricted rule))
+			  left-vertex
+			  right-vertex
+			  (list edge)
+			  first-only-p start end))))
 
 
-(defun add-to-chart (left edge right)
-   ;;; Find an existing chart-entry structure if there is one and add a
-   ;;; new chart-configuration to it, otherwise build up a new chart-entry
-   (let ((item (aref *chart* right)))
-      (if item (push (make-chart-configuration :begin left :edge edge)
-            (chart-entry-configurations item))
-         (setf (aref *chart* right)
-            (make-chart-entry 
-               :configurations
-               (list
-                  (make-chart-configuration :begin left :edge edge)))))))
- 
+(defun add-to-chart (left edge right first-only-p start end)
+  ;; Find an existing chart-entry structure if there is one and add a
+  ;; new chart-configuration to it, otherwise build up a new
+  ;; chart-entry
+  (let ((item (aref *chart* right))
+	(config (make-chart-configuration :begin left :edge edge)))
+    (if item (push config (chart-entry-configurations item))
+      (setf (aref *chart* right)
+	(make-chart-entry :configurations (list config))))
+    ;; Did we just find a parse?
+    (when (and first-only-p
+	       (eql left start)
+	       (eql right end)
+	       (setf *parse-record* (find-spanning-edge config start end)))
+      (throw 'first nil))))
+
+
 (defun apply-grammar-rule (rule rule-restricted-list left-vertex right-vertex
-                           child-fs-list)
-   ;; Application of a grammar rule 
-   ;; Every time an edge is added to the chart, a check is made to see whether
-   ;; its addition triggers a rule application. 
-   ;; (That is whether it has a category corresponding to the rightmost 
-   ;; daughter of a grammar rule - checked before calling apply-grammar-rule
-   ;; and whether edges corresponding to the other daughter categories are
-   ;; already on the chart.) 
-   ;; If yes collect the dags associated with the children, perform
-   ;; the unifications specified by the rule, and if the unification(s) 
-   ;; succeed, create a new edge (for the mother), record its dag and associated
-   ;; information, add this to the chart, and invoke the same process
-   ;; recursively.
-   (incf *contemplated-tasks*)
-   (if (restrictors-compatible-p
-          (car rule-restricted-list) (edge-dag-restricted (car child-fs-list)))
+                           child-fs-list first-only-p start end)
+  ;; Application of a grammar rule: Every time an edge is added to the chart,
+  ;; a check is made to see whether its addition triggers a rule application.
+  ;; (That is whether it has a category corresponding to the rightmost
+  ;; daughter of a grammar rule - checked before calling apply-grammar-rule
+  ;; and whether edges corresponding to the other daughter categories are
+  ;; already on the chart.)  If yes collect the dags associated with the
+  ;; children, perform the unifications specified by the rule, and if the
+  ;; unification(s) succeed, create a new edge (for the mother), record its
+  ;; dag and associated information, add this to the chart, and invoke the
+  ;; same process recursively.
+  (incf *contemplated-tasks*)
+  (if (restrictors-compatible-p
+       (car rule-restricted-list) (edge-dag-restricted (car child-fs-list)))
       (if (cdr rule-restricted-list)
-         (let ((entry (aref *chart* left-vertex)))
+	  (let ((entry (aref *chart* left-vertex)))
             (when entry
-               (dolist (configuration (chart-entry-configurations entry))
-                  (apply-grammar-rule rule
-                     (cdr rule-restricted-list)
-                     (chart-configuration-begin configuration)
-                     right-vertex
-                     (cons (chart-configuration-edge configuration) 
-                        child-fs-list)))))
-         ;; we've got all the bits
-         (apply-immediate-grammar-rule rule left-vertex right-vertex
-            child-fs-list))
-      (incf *filtered-tasks*)))
+	      (dolist (configuration (chart-entry-configurations entry))
+		(apply-grammar-rule rule
+				    (cdr rule-restricted-list)
+				    (chart-configuration-begin configuration)
+				    right-vertex
+				    (cons (chart-configuration-edge configuration) 
+					  child-fs-list)
+				    first-only-p start end))))
+	;; we've got all the bits
+	(apply-immediate-grammar-rule rule left-vertex right-vertex
+				      child-fs-list first-only-p start end))
+    (incf *filtered-tasks*)))
 
 
 (defparameter *debugging* nil)
 
 (defun apply-immediate-grammar-rule (rule left-vertex right-vertex 
-                                          child-fs-list)
-   ;;; attempt to apply a grammar rule when we have all the parts which
-   ;;; match its daughter categories 
-   ;; (format t "~%Rule id ~A left ~A right ~A filter ~A" (rule-id rule) 
-   ;; left-vertex right-vertex *filtered-tasks*)
-   (let ((unification-result
-           (evaluate-unifications rule (mapcar #'edge-dag child-fs-list)
-               nil child-fs-list)))
-      (if unification-result
-         (let ((new-edge (make-edge :id (next-edge)
+				     child-fs-list first-only-p start end)
+  ;; attempt to apply a grammar rule when we have all the parts which match
+  ;; its daughter categories
+  #+ignore 
+  (format t "~%Try Rule id ~A left ~A right ~A filter ~A" (rule-id rule)  
+	  left-vertex right-vertex *filtered-tasks*)
+  (let ((unification-result
+	 (evaluate-unifications rule (mapcar #'edge-dag child-fs-list)
+				nil child-fs-list)))
+    (if unification-result
+	(let ((new-edge (make-edge :id (next-edge)
                                    :category (indef-type-of-tdfs 
                                               unification-result)
                                    :rule-number (rule-id rule)
@@ -597,84 +606,89 @@
                                     #'(lambda (child)
                                         (copy-list (edge-leaves child)))
                                     child-fs-list))))
-              (activate-context left-vertex new-edge right-vertex))
-        (when *debugging*
-;            (format t "~%~A" *filtered-tasks*)
-            (format t "~%Unification failure on rule ~A and edges ~:A" 
-               (rule-id rule) (mapcar #'edge-id child-fs-list))))))
+	  #+ignore (format t " Succeed.")
+	  (activate-context left-vertex new-edge right-vertex 
+			    first-only-p start end))
+      (progn
+	 #+ignore (format t " Fail.")
+	(when *debugging*
+	  #+ignore (format t "~%~A" *filtered-tasks*)
+	  (format t "~%Unification failure on rule ~A and edges ~:A" 
+		  (rule-id rule) (mapcar #'edge-id child-fs-list)))))))
 
 
 (defun evaluate-unifications (rule child-fs-list &optional nu-orth child-edges)
-   ;; An additional optional argument is given. This is the new orthography if the
-   ;; unification relates to a morphological process. If it is present, it is
-   ;; inserted in the resulting fs
-   (let*
+  ;; An additional optional argument is given. This is the new orthography if
+  ;; the unification relates to a morphological process. If it is present, it
+  ;; is inserted in the resulting fs
+  (let*
       ((current-tdfs (rule-full-fs rule))
        (rule-daughter-order (cdr (rule-order rule)))
        (rule-apply-order (rule-daughters-apply-order rule))
        (n 0)
        (new-orth-fs (if nu-orth (get-orth-tdfs nu-orth))))
-       ;; shouldn't strictly do this here because we may not need it
-       ;; but otherwise we get a nested unification context error
-       ;; - cache the values for a word, so it's not reconstructed 
-       ;; only wasted if the morphology is wrong
-       (with-unification-context (ignore)
-         (dolist (rule-feat rule-apply-order)
-            (cond
-               ((eql (incf n) 1))
-               ((x-restrict-and-compatible-p
-                   (if (listp rule-feat)
-                      (x-existing-dag-at-end-of 
-                         (tdfs-indef current-tdfs) rule-feat)
-                      (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
-                   (edge-dag-restricted
-                      (nth (position rule-feat rule-daughter-order :test #'eq) 
-                           child-edges))))
-               (t (incf *filtered-tasks*)
-                  (return-from evaluate-unifications nil)))
-            (incf *executed-tasks*)
-            (if (setq current-tdfs
-                   (yadu current-tdfs
-                      (create-temp-parsing-tdfs
-                         (nth (position rule-feat rule-daughter-order :test #'eq) 
-                              child-fs-list)
-                         rule-feat)))
-               (incf *successful-tasks*)
-               (return-from evaluate-unifications nil)))
-         ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of
-         ;; will return the entire structure
-         (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
-           (when new-orth-fs
-             (setq result (yadu result new-orth-fs))) 
-           (when result
-             ;; delete arcs just holding constituents' feature structures - before
-             ;; copying otherwise their copies would be thrown away immediately
-             ;; we have to check whether any of the deleted dags contain a cycle
-             ;; - if so then the whole rule application should fail
-             (let* ((real-dag (deref-dag (tdfs-indef result)))
-                    (new (clone-dag real-dag))
-                    (arcs-to-check nil))
-               (flet ((member-with-cyclic-check (arc)
-                        (when (member (dag-arc-attribute arc) 
-                                      *deleted-daughter-features* :test #'eq)
-                          (push arc arcs-to-check)
-                          t)))
-                 (setf (dag-arcs new)
-                    (remove-if #'member-with-cyclic-check (dag-arcs new)))
-                 (setf (dag-comp-arcs new)
-                    (remove-if #'member-with-cyclic-check (dag-comp-arcs new)))
-                 ;; take advantage of the fact that removed arcs might
-                 ;; share structure by checking them all at once
-                 (let ((res
-                         (and
-                            (not (cyclic-dag-p
-                                    (make-dag :type *toptype* 
-                                              :arcs arcs-to-check)))
-                            (setf (dag-forward real-dag) new)
-                            (copy-tdfs-elements result))))
-                     (or res
-                        ;; charge copy failure to last successful unification
-                        (progn (decf *successful-tasks*) nil))))))))))
+    ;; shouldn't strictly do this here because we may not need it but
+    ;; otherwise we get a nested unification context error - cache the values
+    ;; for a word, so it's not reconstructed only wasted if the morphology is
+    ;; wrong
+    (with-unification-context (ignore)
+      (dolist (rule-feat rule-apply-order)
+	(cond
+	 ((eql (incf n) 1))
+	 ((x-restrict-and-compatible-p
+	   (if (listp rule-feat)
+	       (x-existing-dag-at-end-of 
+		(tdfs-indef current-tdfs) rule-feat)
+	     (x-get-dag-value (tdfs-indef current-tdfs) rule-feat))
+	   (edge-dag-restricted
+	    (nth (position rule-feat rule-daughter-order :test #'eq) 
+		 child-edges))))
+	 (t (incf *filtered-tasks*)
+	    (return-from evaluate-unifications nil)))
+	(incf *executed-tasks*)
+	(if (setq current-tdfs
+	      (yadu current-tdfs
+		    (create-temp-parsing-tdfs
+		     (nth (position rule-feat rule-daughter-order :test #'eq) 
+			  child-fs-list)
+		     rule-feat)))
+	    (incf *successful-tasks*)
+	  (return-from evaluate-unifications nil)))
+      ;; if (car (rule-order rule)) is NIL - tdfs-at-end-of will return the
+      ;; entire structure
+      (let ((result (tdfs-at-end-of (car (rule-order rule)) current-tdfs)))
+	(when new-orth-fs
+	  (setq result (yadu result new-orth-fs))) 
+	(when result
+	  ;; delete arcs just holding constituents' feature structures -
+	  ;; before copying otherwise their copies would be thrown away
+	  ;; immediately we have to check whether any of the deleted dags
+	  ;; contain a cycle - if so then the whole rule application should
+	  ;; fail
+	  (let* ((real-dag (deref-dag (tdfs-indef result)))
+		 (new (clone-dag real-dag))
+		 (arcs-to-check nil))
+	    (flet ((member-with-cyclic-check (arc)
+		     (when (member (dag-arc-attribute arc) 
+				   *deleted-daughter-features* :test #'eq)
+		       (push arc arcs-to-check)
+		       t)))
+	      (setf (dag-arcs new)
+		(remove-if #'member-with-cyclic-check (dag-arcs new)))
+	      (setf (dag-comp-arcs new)
+		(remove-if #'member-with-cyclic-check (dag-comp-arcs new)))
+	      ;; take advantage of the fact that removed arcs might share
+	      ;; structure by checking them all at once
+	      (let ((res
+		     (and
+		      (not (cyclic-dag-p
+			    (make-dag :type *toptype* 
+				      :arcs arcs-to-check)))
+		      (setf (dag-forward real-dag) new)
+		      (copy-tdfs-elements result))))
+		(or res
+		    ;; charge copy failure to last successful unification
+		    (progn (decf *successful-tasks*) nil))))))))))
 
 
 (defun create-temp-parsing-tdfs (tdfs flist)
@@ -699,26 +713,35 @@
 ;;; evaluate-unifications-with-fail-messages - temporarily removed
 
 (defun find-spanning-edges (start-vertex end-vertex)
-   ;;; Returns all edges between two vertices and checks for
-   ;;; root conditions - used to see if a parse has been found. 
-   (let ((start-symbols (if (listp *start-symbol*)
-                                      *start-symbol*
-                                    (list *start-symbol*)))
-         (chart-index
-            (aref *chart* end-vertex)))
-      (if chart-index
-        (for item in (chart-entry-configurations chart-index)
-             append
-             (if (eql (chart-configuration-begin item) start-vertex)
-;;; root may be a list of (td)fs 
-;;; with the interpretation that if any of them match
-;;; the parse is OK
-                 (if (null *start-symbol*)
-                     (list (chart-configuration-edge item))
-                   (if *substantive-roots-p*
-                       (create-new-root-edges item start-symbols
-                                              start-vertex end-vertex)
-                     (filter-root-edges item start-symbols))))))))
+  ;; Returns all edges between two vertices and checks for root conditions -
+  ;; used to see if a parse has been found.
+  (let ((start-symbols (if (listp *start-symbol*)
+			   *start-symbol*
+			 (list *start-symbol*)))
+	(chart-index (aref *chart* end-vertex)))
+    (when chart-index
+      (for item in (chart-entry-configurations chart-index)
+	   append
+	   (when (eql (chart-configuration-begin item) start-vertex)
+	     ;; root may be a list of (td)fs with the interpretation that
+	     ;; if any of them match the parse is OK
+	     (if (null *start-symbol*)
+		 (list (chart-configuration-edge item))
+	       (if *substantive-roots-p*
+		   (create-new-root-edges item start-symbols
+					  start-vertex end-vertex)
+		 (filter-root-edges item start-symbols))))))))
+
+;; Decide if a single edge is a successful parse (when looking for the
+;; first parse only).
+
+(defun find-spanning-edge (item start-vertex end-vertex)
+  (when (eql (chart-configuration-begin item) start-vertex)
+    (if (null *start-symbol*)
+	(list (chart-configuration-edge item))
+      (if *substantive-roots-p*
+	  (create-new-root-edges item *start-symbol* start-vertex end-vertex)
+	(filter-root-edges item *start-symbol*)))))
 
 (defun filter-root-edges (item start-symbols)
   (dolist (start-symbol start-symbols)
@@ -755,7 +778,9 @@
                                       (chart-configuration-edge item)))))
                      (add-to-chart start-vertex
                                    new-edge
-                                   end-vertex)
+                                   end-vertex
+				   ;; Don't (recursively) check for success
+				   nil 0 0)
                      new-edge)))))))
 
 

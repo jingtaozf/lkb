@@ -202,3 +202,5 @@
    "a file to index the lexicon")
 
 (def-lkb-parameter *lkb-system-version* :page)
+
+(def-lkb-parameter *first-only-p* nil)

@@ -99,7 +99,6 @@
 ;;; when the cancel box is clicked, nil is returned
 ;;; The dialog box built is sized appropriately
 
-;;#+(and :allegro (not (version>= 5 0)))
 (defun ask-for-strings-movable (title prompt-init-pairs &optional width)
   (let* ((history nil)
 	 (stream t)
@@ -153,78 +152,6 @@
 	(return-from ask-for-strings-movable nil)))
     ;; User selected "OK", so return the result
     result))
-
-#+(and :allegro (version>= 5 0) :ignore)
-(clim:define-application-frame lkb-dialog ()
-  ((prompt-init-pairs :initform nil
-		      :accessor dialog-pairs)
-   (width :initform nil
-	  :accessor dialog-width))
-  (:menu-bar nil)
-  (:panes 
-   (dialog :application
-	   :width 1000 ;; :compute
-	   :height 100 ;; :compute
-	   :scroll-bars nil
-	   :display-function #'display-dialog))
-  (:layouts
-   (default dialog)))
-
-#+(and :allegro (version>= 5 0) :ignore)
-(defun ask-for-strings-movable (title prompt-init-pairs &optional width)
-  (let ((frame (clim:make-application-frame 'lkb-dialog)))
-    (setf (clim:frame-pretty-name frame) title)
-    (setf (dialog-pairs frame) prompt-init-pairs)
-    (setf (dialog-width frame) width)
-    (catch 'dialog
-	(clim:run-frame-top-level frame))))
-
-#+(and :allegro (version>= 5 0) :ignore)
-(defun display-dialog (frame stream &key max-width max-height)
-  (declare (ignore max-width max-height))
-  (let* ((history nil)
-	 (result (loop for p-i-p in (dialog-pairs frame)
-		     for count from 0
-		     collect (cond ((equal (cdr p-i-p) ":CHECK-BOX")
-				    nil) ; Default for checkbox is nil
-				   ((and (consp (rest p-i-p))
-					 (eq (second p-i-p) 
-					     :TYPEIN-MENU))
-				    (setf (getf history count) (cddr p-i-p))
-				    (third p-i-p))
-				   (t (cdr p-i-p))))))
-    (restart-case
-        (clim:accepting-values (stream :resize-frame t)
-	  (clim:formatting-table (stream)
-	    (loop for p-i-p in (dialog-pairs frame)
-		for count from 0
-		do 
-		  (clim:formatting-row (stream)
-		    (clim:formatting-cell (stream :align-y :center)
-		      (write-string (car p-i-p) stream))
-		    (clim:formatting-cell (stream :align-y :center)
-		      (setf (elt result count)
-			(if (typep (elt result count) 'boolean)
-			    (clim:accept 'boolean :stream stream
-					 :default (elt result count)
-					 :query-identifier count
-					 :prompt nil
-					 :view 'clim:toggle-button-view)
-			  (clim:accept 'string :stream stream
-				       :default (elt result count)
-				       :view `(clim:text-field-view 
-					       :width ,(dialog-width frame))
-				       :query-identifier count
-				       :prompt nil))))
-		    (clim:formatting-cell (stream :align-y :center)
-		      (when (getf history count)
-			(clim:accept-values-command-button (stream) "Prev"
-			  (let ((choice (clim:menu-choose
-					 (getf history count))))
-			    (when choice
-			      (setf (elt result count) choice))))))))))
-      (abort () (throw 'dialog nil)))
-    (throw 'dialog result)))
 
 (defun ask-for-lisp-movable (title prompt-init-pairs &optional expected-width)
   ;; Procyon version called a special dialog item - no known equivalnet in MCL
