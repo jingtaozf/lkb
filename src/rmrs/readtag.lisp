@@ -14,7 +14,8 @@
   ;;; <!ELEMENT lex (le)*>
   (setf *tag-templates* nil)
   (with-open-file (istream file-name :direction :input)
-    (let ((templates (parse-xml-removing-junk istream)))
+    (let* ((*package* (find-package :mrs))
+           (templates (parse-xml-removing-junk istream)))
       (unless (equal (car templates) '|lex|)
         (error "~A is not a valid lexical tags file" file-name))
       (loop for template in (cdr templates)
