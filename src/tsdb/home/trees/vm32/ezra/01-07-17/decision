@@ -1,741 +1,793 @@
-2@1@4@3@FILLHEAD_NON_WH@what can I do for you @0@6@16-7-2001
-2@1@4@3@HADJ_I_UNS@can I do for you @1@6@16-7-2001
 2@1@1@3@HCOMP@can I do for you @1@6@16-7-2001 (14:00:57)
 2@1@4@2@n_freerel_pro_le@what@0@1@16-7-2001
-8@1@4@3@HADJ_I_UNS@do you have a special day in mind @0@8@16-7-2001
+2@1@4@3@FILLHEAD_NON_WH@what can I do for you @0@6@16-7-2001
+2@1@4@3@HADJ_I_UNS@can I do for you @1@6@16-7-2001
+8@1@1@2@v_poss_le@have@2@3@16-7-2001 (14:02:19)
+8@1@1@3@ADJ@special @4@5@16-7-2001 (14:01:50)
 8@1@1@3@HADJ_I_UNS@have a special day in mind @2@8@16-7-2001 (14:02:28)
+8@1@2@3@ADJN_I@special day in mind @4@8@16-7-2001 (14:02:10)
+8@1@4@1@_have_prd_rel@have@2@3@16-7-2001
+8@1@4@1@_special_n_rel@special@4@5@16-7-2001
+8@1@4@2@n_intr_le@special@4@5@16-7-2001
+8@1@4@2@v_obj_equi_non_trans_prd_lowprio_le@have@2@3@16-7-2001
+8@1@4@3@HADJ_I_UNS@do you have a special day in mind @0@8@16-7-2001
 8@1@4@3@HCOMP@have a special day in mind @2@8@16-7-2001
 8@1@4@3@HSPEC@a special day in mind @3@8@16-7-2001
+8@1@4@3@NADJ_RR@special day in mind @4@8@16-7-2001
+8@1@4@3@NOUN_N_CMPND@special day @4@6@16-7-2001
 8@1@4@3@NP-T@a special day in mind @3@8@16-7-2001
 8@1@4@3@V@have a special day @2@6@16-7-2001
-8@1@4@3@NADJ_RR@special day in mind @4@8@16-7-2001
-8@1@2@3@ADJN_I@special day in mind @4@8@16-7-2001 (14:02:10)
-8@1@4@3@NOUN_N_CMPND@special day @4@6@16-7-2001
-8@1@1@2@v_poss_le@have@2@3@16-7-2001 (14:02:19)
-8@1@4@2@v_obj_equi_non_trans_prd_lowprio_le@have@2@3@16-7-2001
-8@1@4@1@_have_prd_rel@have@2@3@16-7-2001
-8@1@1@3@ADJ@special @4@5@16-7-2001 (14:01:50)
-8@1@4@2@n_intr_le@special@4@5@16-7-2001
-8@1@4@1@_special_n_rel@special@4@5@16-7-2001
-9@1@4@3@HADJ_I_UNS@don t have any really special day in mind @2@11@16-7-2001
+8@2@1@3@ADJ@special @4@5@23-7-2001 (14:05:42)
+8@2@1@3@HADJ_I_UNS@have a special day in mind @2@8@23-7-2001 (14:05:49)
+8@2@4@1@_have_prd_rel@have@2@3@23-7-2001 (14:05:22)
+8@2@4@1@_special_n_rel@special@4@5@23-7-2001 (14:05:22)
+8@2@4@2@n_intr_le@special@4@5@23-7-2001 (14:05:22)
+8@2@4@2@v_obj_equi_non_trans_prd_lowprio_le@have@2@3@23-7-2001 (14:05:22)
+8@2@4@3@ADJN_I@special day in mind @4@8@23-7-2001 (14:05:22)
+8@2@4@3@HADJ_I_UNS@do you have a special day in mind @0@8@23-7-2001 (14:05:22)
+8@2@4@3@HCOMP@have a special day in mind @2@8@23-7-2001 (14:05:22)
+8@2@4@3@HSPEC@a special day in mind @3@8@23-7-2001 (14:05:22)
+8@2@4@3@NADJ_RR@special day in mind @4@8@23-7-2001 (14:05:22)
+8@2@4@3@NOUN_N_CMPND@special day @4@6@23-7-2001 (14:05:22)
+8@2@4@3@NP-T@a special day in mind @3@8@23-7-2001 (14:05:22)
+8@2@4@3@V@have a special day @2@6@23-7-2001 (14:05:22)
+9@1@1@2@v_poss_le@have@4@5@16-7-2001 (14:02:36)
 9@1@1@3@HADJ_I_UNS@have any really special day in mind @4@11@16-7-2001 (14:03:02)
+9@1@1@3@HCOMP@have any really special day @4@9@16-7-2001 (14:02:50)
+9@1@4@1@_have_prd_rel@have@4@5@16-7-2001
+9@1@4@2@v_obj_equi_non_trans_prd_lowprio_le@have@4@5@16-7-2001
+9@1@4@3@HADJ_I_UNS@don t have any really special day in mind @2@11@16-7-2001
 9@1@4@3@HCOMP@have any really special day in mind @4@11@16-7-2001
 9@1@4@3@HSPEC@any really special day in mind @5@11@16-7-2001
 9@1@4@3@NP-T@any really special day in mind @5@11@16-7-2001
-9@1@1@3@HCOMP@have any really special day @4@9@16-7-2001 (14:02:50)
 9@1@4@3@V@have any really special day @4@9@16-7-2001
-9@1@1@2@v_poss_le@have@4@5@16-7-2001 (14:02:36)
-9@1@4@2@v_obj_equi_non_trans_prd_lowprio_le@have@4@5@16-7-2001
-9@1@4@1@_have_prd_rel@have@4@5@16-7-2001
-10@1@4@3@HADJ_I_UNS@have to go down to Hanover for a business meeting @1@11@16-7-2001
-10@1@4@3@HADJ_I_UNS@go down to Hanover for a business @3@10@16-7-2001
-10@1@4@3@S@go down to Hanover for a business @3@10@16-7-2001
-10@1@2@3@HCOMP@have to go down to Hanover @1@7@16-7-2001 (14:06:25)
-10@1@4@3@HADJ_I_UNS@have to go down to Hanover @1@7@16-7-2001
-10@1@4@3@HCOMP@have to go down @1@5@16-7-2001
-10@1@4@3@HADJ_I_UNS@have to go down @1@5@16-7-2001
-10@1@1@3@S@go down to Hanover @3@7@16-7-2001 (14:06:09)
-10@1@1@3@PP@for a business meeting @7@11@16-7-2001 (14:05:53)
-10@1@4@3@SUBJH@a business meeting @8@11@16-7-2001
-10@1@4@3@N@a business meeting @8@11@16-7-2001
-10@1@4@3@BARE_VGER@a business meeting @8@11@16-7-2001
-10@1@4@3@HCOMP@go down @3@5@16-7-2001
-10@1@4@3@HSPEC@a business @8@10@16-7-2001
-10@1@2@3@NP@a business @8@10@16-7-2001 (14:05:22)
-10@1@4@2@v_subj_equi_prd_le@go@3@4@16-7-2001
-10@1@4@1@_go_state_rel@go@3@4@16-7-2001
-10@1@4@2@adj_intrans_le@down@4@5@16-7-2001
 10@1@1@2@pp_le@down@4@5@16-7-2001 (14:06:52)
+10@1@1@3@PP@for a business meeting @7@11@16-7-2001 (14:05:53)
+10@1@1@3@S@go down to Hanover @3@7@16-7-2001 (14:06:09)
+10@1@2@3@HCOMP@have to go down to Hanover @1@7@16-7-2001 (14:06:25)
+10@1@2@3@NP@a business @8@10@16-7-2001 (14:05:22)
 10@1@4@1@_down_adj_rel@down@4@5@16-7-2001
-10@1@4@2@v_unerg_le@meeting@10@11@16-7-2001
+10@1@4@1@_go_state_rel@go@3@4@16-7-2001
 10@1@4@1@_meet_v_rel@meeting@10@11@16-7-2001
+10@1@4@2@adj_intrans_le@down@4@5@16-7-2001
+10@1@4@2@v_subj_equi_prd_le@go@3@4@16-7-2001
+10@1@4@2@v_unerg_le@meeting@10@11@16-7-2001
+10@1@4@3@BARE_VGER@a business meeting @8@11@16-7-2001
+10@1@4@3@HADJ_I_UNS@go down to Hanover for a business @3@10@16-7-2001
+10@1@4@3@HADJ_I_UNS@have to go down @1@5@16-7-2001
+10@1@4@3@HADJ_I_UNS@have to go down to Hanover @1@7@16-7-2001
+10@1@4@3@HADJ_I_UNS@have to go down to Hanover for a business meeting @1@11@16-7-2001
+10@1@4@3@HCOMP@go down @3@5@16-7-2001
+10@1@4@3@HCOMP@have to go down @1@5@16-7-2001
+10@1@4@3@HSPEC@a business @8@10@16-7-2001
+10@1@4@3@N@a business meeting @8@11@16-7-2001
+10@1@4@3@S@go down to Hanover for a business @3@10@16-7-2001
+10@1@4@3@SUBJH@a business meeting @8@11@16-7-2001
+17@1@1@1@_fast_rel@fast@11@12@16-7-2001 (14:07:49)
 17@1@1@3@TOP_COORD_E@yeah it is little bit more expensive but it is very fast @0@12@16-7-2001 (14:08:35)
+17@1@4@1@_fast_adv_rel@fast@11@12@16-7-2001
+17@1@4@2@adv_int_vp_post_le@fast@11@12@16-7-2001
 17@1@4@3@ADJH_S@yeah it is little bit more expensive but it is very fast @0@12@16-7-2001 (14:08:33)
 17@1@4@3@HADJ_I_UNS@is very fast @9@12@16-7-2001
-17@1@4@2@adv_int_vp_post_le@fast@11@12@16-7-2001
-17@1@1@1@_fast_rel@fast@11@12@16-7-2001 (14:07:49)
-17@1@4@1@_fast_adv_rel@fast@11@12@16-7-2001
-18@1@4@3@SUBJH@it only takes one hour and ten minutes to get to Hanover @0@12@16-7-2001
-18@1@4@3@HADJ_I_UNS@takes one hour and ten minutes to get to Hanover @2@12@16-7-2001
-18@1@4@3@HCOMP@takes one hour and ten minutes to get to Hanover @2@12@16-7-2001
-18@1@4@3@HSPEC@one hour and ten minutes to get to Hanover @3@12@16-7-2001
-18@1@4@3@NP@one hour and ten minutes to get to Hanover @3@12@16-7-2001
-18@1@4@3@HCOMP@takes one hour and ten minutes to get @2@10@16-7-2001
-18@1@4@3@V@takes one hour and ten minutes to get @2@10@16-7-2001
-18@1@4@3@HSPEC@one hour and ten minutes @3@8@16-7-2001
 18@1@1@3@TOP_COORD_NOM@one hour and ten minutes @3@8@16-7-2001 (14:10:26)
-18@1@4@3@TOP_COORD_NOM@hour and ten minutes @4@8@16-7-2001
-18@1@4@3@N@hour and ten minutes @4@8@16-7-2001
-18@1@4@3@VP/NP@to get to Hanover @8@12@16-7-2001
-18@1@4@3@VP/N@to get to Hanover @8@12@16-7-2001
-18@1@4@3@EXTRASUBJ_I@to get to Hanover @8@12@16-7-2001
-18@1@4@3@S-COMP/N@to get to Hanover @8@12@16-7-2001
-18@1@4@3@HADJ_I_UNS@get to Hanover @9@12@16-7-2001
-18@1@4@2@v_np_prep_trans_nomsg_le@takes@2@3@16-7-2001
-18@1@4@1@_minutes_rel@and@5@6@16-7-2001
-18@1@4@3@NOPTCOMP@minutes @7@8@16-7-2001
 18@1@2@2@n_plur_ppcomp_le@minutes@7@8@16-7-2001 (14:14:32)
-18@1@4@1@_minutes_rel@minutes@7@8@16-7-2001
-18@1@4@2@comp_to_prop_le@to@8@9@16-7-2001
-18@1@4@1@v_event_rel@to@8@9@16-7-2001
-18@1@4@3@STEM/NP@get @9@10@16-7-2001
-18@1@4@3@V/NP@get @9@10@16-7-2001
-18@1@4@3@EXTRACOMP@get @9@10@16-7-2001
-18@1@4@3@S/NP@get @9@10@16-7-2001
-18@1@4@2@v_obj_equi_non_trans_prd_lowprio_le@get@9@10@16-7-2001
-18@1@4@2@v_np_non_trans_le@get@9@10@16-7-2001
 18@1@4@1@_get_rel@get@9@10@16-7-2001
-21@1@4@3@HADJ_S@well the train would be about one hundred fifty marks whereas the plane will be one hundred and eighty marks @0@20@16-7-2001
-21@1@4@3@EXTRADJ_I@would be about one hundred fifty marks @3@10@16-7-2001
-21@1@4@3@HADJ_I_UNS@would be about one hundred fifty marks @3@10@16-7-2001
+18@1@4@1@_minutes_rel@and@5@6@16-7-2001
+18@1@4@1@_minutes_rel@minutes@7@8@16-7-2001
+18@1@4@1@v_event_rel@to@8@9@16-7-2001
+18@1@4@2@comp_to_prop_le@to@8@9@16-7-2001
+18@1@4@2@v_np_non_trans_le@get@9@10@16-7-2001
+18@1@4@2@v_np_prep_trans_nomsg_le@takes@2@3@16-7-2001
+18@1@4@2@v_obj_equi_non_trans_prd_lowprio_le@get@9@10@16-7-2001
+18@1@4@3@EXTRACOMP@get @9@10@16-7-2001
+18@1@4@3@EXTRASUBJ_I@to get to Hanover @8@12@16-7-2001
+18@1@4@3@HADJ_I_UNS@get to Hanover @9@12@16-7-2001
+18@1@4@3@HADJ_I_UNS@takes one hour and ten minutes to get to Hanover @2@12@16-7-2001
+18@1@4@3@HCOMP@takes one hour and ten minutes to get @2@10@16-7-2001
+18@1@4@3@HCOMP@takes one hour and ten minutes to get to Hanover @2@12@16-7-2001
+18@1@4@3@HSPEC@one hour and ten minutes @3@8@16-7-2001
+18@1@4@3@HSPEC@one hour and ten minutes to get to Hanover @3@12@16-7-2001
+18@1@4@3@N@hour and ten minutes @4@8@16-7-2001
+18@1@4@3@NOPTCOMP@minutes @7@8@16-7-2001
+18@1@4@3@NP@one hour and ten minutes to get to Hanover @3@12@16-7-2001
+18@1@4@3@S-COMP/N@to get to Hanover @8@12@16-7-2001
+18@1@4@3@S/NP@get @9@10@16-7-2001
+18@1@4@3@STEM/NP@get @9@10@16-7-2001
+18@1@4@3@SUBJH@it only takes one hour and ten minutes to get to Hanover @0@12@16-7-2001
+18@1@4@3@TOP_COORD_NOM@hour and ten minutes @4@8@16-7-2001
+18@1@4@3@V/NP@get @9@10@16-7-2001
+18@1@4@3@V@takes one hour and ten minutes to get @2@10@16-7-2001
+18@1@4@3@VP/N@to get to Hanover @8@12@16-7-2001
+18@1@4@3@VP/NP@to get to Hanover @8@12@16-7-2001
+18@2@1@3@TOP_COORD_NOM@one hour and ten minutes @3@8@20-7-2001
+18@2@2@2@n_plur_ppcomp_le@minutes@7@8@20-7-2001
+18@2@4@1@_get_rel@get@9@10@20-7-2001
+18@2@4@1@_minutes_rel@and@5@6@20-7-2001
+18@2@4@1@_minutes_rel@minutes@7@8@20-7-2001
+18@2@4@1@v_event_rel@to@8@9@20-7-2001
+18@2@4@2@comp_to_prop_le@to@8@9@20-7-2001
+18@2@4@2@v_np_non_trans_le@get@9@10@20-7-2001
+18@2@4@2@v_np_prep_trans_nomsg_le@takes@2@3@20-7-2001
+18@2@4@2@v_obj_equi_non_trans_prd_lowprio_le@get@9@10@20-7-2001
+18@2@4@3@EXTRACOMP@get @9@10@20-7-2001
+18@2@4@3@EXTRASUBJ_I@to get to Hanover @8@12@20-7-2001
+18@2@4@3@HADJ_I_UNS@get to Hanover @9@12@20-7-2001
+18@2@4@3@HADJ_I_UNS@takes one hour and ten minutes to get to Hanover @2@12@20-7-2001
+18@2@4@3@HCOMP@takes one hour and ten minutes to get @2@10@20-7-2001
+18@2@4@3@HCOMP@takes one hour and ten minutes to get to Hanover @2@12@20-7-2001
+18@2@4@3@HSPEC@one hour and ten minutes @3@8@20-7-2001
+18@2@4@3@HSPEC@one hour and ten minutes to get to Hanover @3@12@20-7-2001
+18@2@4@3@N@hour and ten minutes @4@8@20-7-2001
+18@2@4@3@NOPTCOMP@minutes @7@8@20-7-2001
+18@2@4@3@NP@one hour and ten minutes to get to Hanover @3@12@20-7-2001
+18@2@4@3@S-COMP/N@to get to Hanover @8@12@20-7-2001
+18@2@4@3@S/NP@get @9@10@20-7-2001
+18@2@4@3@STEM/NP@get @9@10@20-7-2001
+18@2@4@3@SUBJH@it only takes one hour and ten minutes to get to Hanover @0@12@20-7-2001
+18@2@4@3@TOP_COORD_NOM@hour and ten minutes @4@8@20-7-2001
+18@2@4@3@V/NP@get @9@10@20-7-2001
+18@2@4@3@V@takes one hour and ten minutes to get @2@10@20-7-2001
+18@2@4@3@VP/N@to get to Hanover @8@12@20-7-2001
+18@2@4@3@VP/NP@to get to Hanover @8@12@20-7-2001
+21@1@1@1@_airplane_rel@plane@12@13@16-7-2001 (14:18:31)
+21@1@1@1@_deutschmark_rel@marks@19@20@16-7-2001 (14:17:49)
+21@1@1@1@_deutschmark_rel@marks@9@10@16-7-2001 (14:19:25)
+21@1@1@1@excl_rel@well@0@1@16-7-2001 (14:18:10)
+21@1@1@2@adj_one_plur_le@one@15@16@16-7-2001 (14:21:42)
+21@1@1@2@adj_one_plur_le@one@6@7@16-7-2001 (14:21:46)
+21@1@2@1@_cop_id_rel@be@4@5@16-7-2001 (14:17:58)
+21@1@2@3@VPELLIPSIS_REF_LR@be @4@5@16-7-2001 (14:19:56)
+21@1@4@1@_about_approx_rel@about@5@6@16-7-2001
+21@1@4@1@_mark_v_rel@marks@19@20@16-7-2001
+21@1@4@1@_mark_v_rel@marks@9@10@16-7-2001
+21@1@4@1@_plane_rel@plane@12@13@16-7-2001
+21@1@4@1@_well_rel@well@0@1@16-7-2001
+21@1@4@1@udef_rel@one@15@16@16-7-2001
+21@1@4@1@udef_rel@one@6@7@16-7-2001
+21@1@4@2@adj_one_sing_le@one@15@16@16-7-2001
+21@1@4@2@adv_degree_spec_le@about@5@6@16-7-2001
+21@1@4@2@adv_int_vp_post_le@well@0@1@16-7-2001
+21@1@4@2@det_part_one_le@one@15@16@16-7-2001
+21@1@4@2@det_part_one_le@one@6@7@16-7-2001
+21@1@4@2@v_np_trans_le@marks@19@20@16-7-2001
+21@1@4@2@v_np_trans_le@marks@9@10@16-7-2001
+21@1@4@2@vc_id_be_le@be@4@5@16-7-2001
+21@1@4@3@EXTRADJ_I@be @4@5@16-7-2001
 21@1@4@3@EXTRADJ_I@be about one hundred fifty marks @4@10@16-7-2001
+21@1@4@3@EXTRADJ_I@would be @3@5@16-7-2001
+21@1@4@3@EXTRADJ_I@would be about one hundred fifty marks @3@10@16-7-2001
 21@1@4@3@HADJ_I_UNS@be about one hundred fifty marks @4@10@16-7-2001
-21@1@4@3@S/ADV@be about one hundred fifty marks @4@10@16-7-2001
+21@1@4@3@HADJ_I_UNS@would be about one hundred fifty marks @3@10@16-7-2001
+21@1@4@3@HADJ_S@well the train would be about one hundred fifty marks whereas the plane will be one hundred and eighty marks @0@20@16-7-2001
 21@1@4@3@HSPEC@about one hundred fifty marks @5@10@16-7-2001
-21@1@4@3@NP@about one hundred fifty marks @5@10@16-7-2001
 21@1@4@3@NADJ_RC@one hundred and eighty marks @15@20@16-7-2001
 21@1@4@3@NADJ_RC@one hundred fifty marks @6@10@16-7-2001
-21@1@4@3@VP@would be @3@5@16-7-2001
-21@1@4@3@EXTRADJ_I@would be @3@5@16-7-2001
-21@1@4@3@VP/ADV@would be @3@5@16-7-2001
-21@1@4@2@adv_int_vp_post_le@well@0@1@16-7-2001
-21@1@1@1@excl_rel@well@0@1@16-7-2001 (14:18:10)
-21@1@4@1@_well_rel@well@0@1@16-7-2001
-21@1@4@3@V/ADV@would @3@4@16-7-2001
-21@1@4@3@EXTRADJ_I@be @4@5@16-7-2001
+21@1@4@3@NP@about one hundred fifty marks @5@10@16-7-2001
 21@1@4@3@S/ADV@be @4@5@16-7-2001
-21@1@2@3@VPELLIPSIS_REF_LR@be @4@5@16-7-2001 (14:19:56)
+21@1@4@3@S/ADV@be about one hundred fifty marks @4@10@16-7-2001
+21@1@4@3@V/ADV@would @3@4@16-7-2001
 21@1@4@3@VP-L@be @4@5@16-7-2001
-21@1@4@2@vc_id_be_le@be@4@5@16-7-2001
-21@1@2@1@_cop_id_rel@be@4@5@16-7-2001 (14:17:58)
-21@1@4@2@adv_degree_spec_le@about@5@6@16-7-2001
-21@1@4@1@_about_approx_rel@about@5@6@16-7-2001
-21@1@4@2@det_part_one_le@one@6@7@16-7-2001
-21@1@1@2@adj_one_plur_le@one@6@7@16-7-2001 (14:21:46)
-21@1@4@1@udef_rel@one@6@7@16-7-2001
-21@1@4@2@v_np_trans_le@marks@9@10@16-7-2001
-21@1@4@1@_mark_v_rel@marks@9@10@16-7-2001
-21@1@1@1@_deutschmark_rel@marks@9@10@16-7-2001 (14:19:25)
-21@1@1@1@_airplane_rel@plane@12@13@16-7-2001 (14:18:31)
-21@1@4@1@_plane_rel@plane@12@13@16-7-2001
-21@1@4@2@adj_one_sing_le@one@15@16@16-7-2001
-21@1@1@2@adj_one_plur_le@one@15@16@16-7-2001 (14:21:42)
-21@1@4@2@det_part_one_le@one@15@16@16-7-2001
-21@1@4@1@udef_rel@one@15@16@16-7-2001
-21@1@4@2@v_np_trans_le@marks@19@20@16-7-2001
-21@1@1@1@_deutschmark_rel@marks@19@20@16-7-2001 (14:17:49)
-21@1@4@1@_mark_v_rel@marks@19@20@16-7-2001
-23@1@4@3@HADJ_I_UNS@would be about eighty dollars for the train @1@9@16-7-2001
-23@1@4@3@HADJ_I_UNS@be about eighty dollars for the train @2@9@16-7-2001
-23@1@1@3@NP@about eighty dollars for the train @3@9@16-7-2001 (14:22:48)
-23@1@4@3@HCOMP@about eighty dollars for the train @3@9@16-7-2001
-23@1@4@3@PP@about eighty dollars for the train @3@9@16-7-2001
-23@1@4@3@HADJ_I_UNS@would be about eighty dollars @1@6@16-7-2001
-23@1@4@3@HCOMP@would be about eighty dollars @1@6@16-7-2001
-23@1@4@3@VP@would be about eighty dollars @1@6@16-7-2001
-23@1@4@3@HADJ_I_UNS@be about eighty dollars @2@6@16-7-2001
-23@1@4@3@HCOMP@be about eighty dollars @2@6@16-7-2001
-23@1@4@3@S@be about eighty dollars @2@6@16-7-2001
-23@1@4@3@HCOMP@about eighty dollars @3@6@16-7-2001
-23@1@4@3@PP@about eighty dollars @3@6@16-7-2001
-23@1@4@3@ADJN_I@about eighty dollars @3@6@16-7-2001
-23@1@4@3@N@about eighty dollars @3@6@16-7-2001
-23@1@4@3@BARE_NP@about eighty dollars @3@6@16-7-2001
-23@1@4@3@NP@about eighty dollars @3@6@16-7-2001
-23@1@4@3@HCOMP@would be @1@3@16-7-2001
-23@1@4@3@VP@would be @1@3@16-7-2001
+21@1@4@3@VP/ADV@would be @3@5@16-7-2001
+21@1@4@3@VP@would be @3@5@16-7-2001
 23@1@1@3@ADJ@about eighty @3@5@16-7-2001 (14:22:06)
-23@1@4@3@VPELLIPSIS_REF_LR@be @2@3@16-7-2001
-23@1@4@3@VP-L@be @2@3@16-7-2001
-23@1@4@2@vc_prd_be_le@be@2@3@16-7-2001
-23@1@4@1@_be_prd_rel@be@2@3@16-7-2001
-23@1@4@3@P@about @3@4@16-7-2001
-23@1@4@2@p_le@about@3@4@16-7-2001
+23@1@1@3@NP@about eighty dollars for the train @3@9@16-7-2001 (14:22:48)
 23@1@4@1@_about_rel@about@3@4@16-7-2001
-30@1@4@3@HADJ_I_UNS@would like to come back to Hamburg on the fourth day @2@13@16-7-2001
-30@1@4@3@HADJ_I_UNS@like to come back to Hamburg on the fourth day @3@13@16-7-2001
-30@1@2@3@HCOMP@would like to come back to Hamburg @2@9@16-7-2001 (14:23:57)
-30@1@2@3@HADJ_I_UNS@would like to come back to Hamburg @2@9@16-7-2001 (14:23:55)
-30@1@4@3@HCOMP@like to come back to Hamburg @3@9@16-7-2001
-30@1@2@3@HADJ_I_UNS@like to come back to Hamburg @3@9@16-7-2001 (14:24:03)
-30@1@2@3@S@like to come back to Hamburg @3@9@16-7-2001 (14:24:05)
-30@1@4@3@HADJ_I_UNS@would like to come back @2@7@16-7-2001
-30@1@4@3@HCOMP@would like to come back @2@7@16-7-2001
-30@1@4@3@HADJ_I_UNS@like to come back @3@7@16-7-2001
-30@1@4@3@HCOMP@like to come back @3@7@16-7-2001
-30@1@4@3@S@like to come back @3@7@16-7-2001
-30@1@1@3@HCOMP@come back to Hamburg @5@9@16-7-2001 (14:26:59)
-30@1@4@3@HADJ_I_UNS@come back to Hamburg @5@9@16-7-2001
-30@1@4@3@HCOMP@like to come @3@6@16-7-2001
-30@1@4@3@S@like to come @3@6@16-7-2001
-30@1@4@3@HADJ_I_UNS@come back @5@7@16-7-2001
-30@1@4@3@S@come back @5@7@16-7-2001
-30@1@4@3@S@come @5@6@16-7-2001
-30@1@4@2@v_unerg_le@come@5@6@16-7-2001
-30@1@4@1@_come_rel@come@5@6@16-7-2001
+23@1@4@1@_be_prd_rel@be@2@3@16-7-2001
+23@1@4@2@p_le@about@3@4@16-7-2001
+23@1@4@2@vc_prd_be_le@be@2@3@16-7-2001
+23@1@4@3@ADJN_I@about eighty dollars @3@6@16-7-2001
+23@1@4@3@BARE_NP@about eighty dollars @3@6@16-7-2001
+23@1@4@3@HADJ_I_UNS@be about eighty dollars @2@6@16-7-2001
+23@1@4@3@HADJ_I_UNS@be about eighty dollars for the train @2@9@16-7-2001
+23@1@4@3@HADJ_I_UNS@would be about eighty dollars @1@6@16-7-2001
+23@1@4@3@HADJ_I_UNS@would be about eighty dollars for the train @1@9@16-7-2001
+23@1@4@3@HCOMP@about eighty dollars @3@6@16-7-2001
+23@1@4@3@HCOMP@about eighty dollars for the train @3@9@16-7-2001
+23@1@4@3@HCOMP@be about eighty dollars @2@6@16-7-2001
+23@1@4@3@HCOMP@would be @1@3@16-7-2001
+23@1@4@3@HCOMP@would be about eighty dollars @1@6@16-7-2001
+23@1@4@3@N@about eighty dollars @3@6@16-7-2001
+23@1@4@3@NP@about eighty dollars @3@6@16-7-2001
+23@1@4@3@P@about @3@4@16-7-2001
+23@1@4@3@PP@about eighty dollars @3@6@16-7-2001
+23@1@4@3@PP@about eighty dollars for the train @3@9@16-7-2001
+23@1@4@3@S@be about eighty dollars @2@6@16-7-2001
+23@1@4@3@VP-L@be @2@3@16-7-2001
+23@1@4@3@VP@would be @1@3@16-7-2001
+23@1@4@3@VP@would be about eighty dollars @1@6@16-7-2001
+23@1@4@3@VPELLIPSIS_REF_LR@be @2@3@16-7-2001
 30@1@1@1@_come_back_to_rel@come@5@6@16-7-2001 (14:23:28)
-30@1@4@3@PP@back @6@7@16-7-2001
-30@1@4@2@pp_le@back@6@7@16-7-2001
+30@1@1@3@HCOMP@come back to Hamburg @5@9@16-7-2001 (14:26:59)
+30@1@2@3@HADJ_I_UNS@like to come back to Hamburg @3@9@16-7-2001 (14:24:03)
+30@1@2@3@HADJ_I_UNS@would like to come back to Hamburg @2@9@16-7-2001 (14:23:55)
+30@1@2@3@HCOMP@would like to come back to Hamburg @2@9@16-7-2001 (14:23:57)
+30@1@2@3@S@like to come back to Hamburg @3@9@16-7-2001 (14:24:05)
 30@1@4@1@_back_adv_rel@back@6@7@16-7-2001
-33@1@4@3@FILLHEAD_NON_WH@then I can recommend a small hotel @1@8@16-7-2001
+30@1@4@1@_come_rel@come@5@6@16-7-2001
+30@1@4@2@pp_le@back@6@7@16-7-2001
+30@1@4@2@v_unerg_le@come@5@6@16-7-2001
+30@1@4@3@HADJ_I_UNS@come back @5@7@16-7-2001
+30@1@4@3@HADJ_I_UNS@come back to Hamburg @5@9@16-7-2001
+30@1@4@3@HADJ_I_UNS@like to come back @3@7@16-7-2001
+30@1@4@3@HADJ_I_UNS@like to come back to Hamburg on the fourth day @3@13@16-7-2001
+30@1@4@3@HADJ_I_UNS@would like to come back @2@7@16-7-2001
+30@1@4@3@HADJ_I_UNS@would like to come back to Hamburg on the fourth day @2@13@16-7-2001
+30@1@4@3@HCOMP@like to come @3@6@16-7-2001
+30@1@4@3@HCOMP@like to come back @3@7@16-7-2001
+30@1@4@3@HCOMP@like to come back to Hamburg @3@9@16-7-2001
+30@1@4@3@HCOMP@would like to come back @2@7@16-7-2001
+30@1@4@3@PP@back @6@7@16-7-2001
+30@1@4@3@S@come @5@6@16-7-2001
+30@1@4@3@S@come back @5@7@16-7-2001
+30@1@4@3@S@like to come @3@6@16-7-2001
+30@1@4@3@S@like to come back @3@7@16-7-2001
+33@1@1@1@excl_rel@then@1@2@16-7-2001 (14:27:19)
+33@1@4@1@time_rel@then@1@2@16-7-2001
+33@1@4@2@n_adv_le@then@1@2@16-7-2001
 33@1@4@3@EXTRADJ_I@can recommend a small hotel @3@8@16-7-2001
 33@1@4@3@EXTRADJ_I@recommend a small hotel @4@8@16-7-2001
+33@1@4@3@FILLHEAD_NON_WH@then I can recommend a small hotel @1@8@16-7-2001
 33@1@4@3@S/PP-T@recommend a small hotel @4@8@16-7-2001
-33@1@4@2@n_adv_le@then@1@2@16-7-2001
-33@1@4@1@time_rel@then@1@2@16-7-2001
-33@1@1@1@excl_rel@then@1@2@16-7-2001 (14:27:19)
-35@1@4@3@FILLHEAD_NON_WH@the single room costs one fifty one marks per night @0@10@16-7-2001
-35@1@4@3@SUBJH@the single room costs one fifty one marks per night @0@10@16-7-2001
-35@1@4@3@V/NP@costs one fifty one marks per night @3@10@16-7-2001
-35@1@4@3@EXTRACOMP@costs one fifty one marks per night @3@10@16-7-2001
-35@1@4@3@NADJ_RR@one fifty one marks per night @4@10@16-7-2001
-35@1@4@3@NOUN_N_CMPND@one fifty one marks per night @4@10@16-7-2001
-35@1@4@3@N@one fifty one marks per night @4@10@16-7-2001
-35@1@4@3@BARE_NP@one fifty one marks per night @4@10@16-7-2001
-35@1@1@3@NP@one fifty one marks per night @4@10@16-7-2001 (16:24:15)
-35@1@2@3@ADJN_I@fifty one marks per night @5@10@16-7-2001 (16:24:27)
-35@1@4@3@N@fifty one marks per night @5@10@16-7-2001
-35@1@4@3@BARE_NP@fifty one marks per night @5@10@16-7-2001
-35@1@2@3@NP@fifty one marks per night @5@10@16-7-2001 (16:24:07)
-35@1@4@3@HCOMP@costs one fifty one @3@7@16-7-2001
-35@1@4@3@V@costs one fifty one @3@7@16-7-2001
-35@1@4@3@NP_N_CMPND_2@one fifty one marks @4@8@16-7-2001
-35@1@4@3@NOUN_N_CMPND@one fifty one marks @4@8@16-7-2001
-35@1@4@3@BARE_NP@one marks per night @6@10@16-7-2001
-35@1@4@3@NP@one marks per night @6@10@16-7-2001
-35@1@4@3@NADJ_RR@one marks per night @6@10@16-7-2001
-35@1@4@3@N@one marks per night @6@10@16-7-2001
-35@1@2@3@NP_N_CMPND_2@one fifty one @4@7@16-7-2001 (16:23:25)
-35@1@2@3@N@one fifty one @4@7@16-7-2001 (16:23:27)
-35@1@2@3@HCOMP@one fifty one @4@7@16-7-2001 (16:23:29)
-35@1@2@3@NP@one fifty one @4@7@16-7-2001 (16:23:30)
-35@1@4@3@NOPTCOMP@one fifty one @4@7@16-7-2001
-35@1@4@3@ADJN_I@fifty one marks @5@8@16-7-2001
-35@1@2@3@N@fifty one marks @5@8@16-7-2001 (16:23:34)
-35@1@4@3@NADJ_RR@marks per night @7@10@16-7-2001
-35@1@4@3@N@marks per night @7@10@16-7-2001
-35@1@4@3@ADJN_I@single room @1@3@16-7-2001
-35@1@1@3@NOUN_N_CMPND@single room @1@3@16-7-2001 (16:21:46)
-35@1@4@3@HSPEC@one fifty @4@6@16-7-2001
-35@1@4@3@NP-T@one fifty @4@6@16-7-2001
-35@1@4@3@HCOMP@one fifty @4@6@16-7-2001
-35@1@4@3@NOPTCOMP@one fifty @4@6@16-7-2001
-35@1@4@3@NP@one fifty @4@6@16-7-2001
-35@1@4@3@HCOMP@fifty one @5@7@16-7-2001
-35@1@4@3@MEASURE_NP@fifty one @5@7@16-7-2001
-35@1@4@3@ADV-DG@fifty one @5@7@16-7-2001
-35@1@2@3@MEAS_NP_ADJ@fifty one @5@7@16-7-2001 (16:23:47)
-35@1@4@3@ADJ@fifty one @5@7@16-7-2001
-35@1@4@3@NOUN_N_CMPND@one marks @6@8@16-7-2001
-35@1@2@3@N@one marks @6@8@16-7-2001 (16:22:14)
-35@1@4@3@SING_NOUN_INFL_RULE@single @1@2@16-7-2001
-35@1@4@3@N@single @1@2@16-7-2001
-35@1@4@2@adj_intrans_le@single@1@2@16-7-2001
-35@1@4@2@n_intr_le@single@1@2@16-7-2001
-35@1@4@1@_single_isect_rel@single@1@2@16-7-2001
-35@1@4@1@_single_n_rel@single@1@2@16-7-2001
-35@1@2@3@MASS_NOUN_INFL_RULE@room @2@3@16-7-2001 (16:22:21)
-35@1@4@3@SING_NOUN_INFL_RULE@room @2@3@16-7-2001
-35@1@4@3@NOPTCOMP@room @2@3@16-7-2001
-35@1@4@2@n_mass_le@room@2@3@16-7-2001
-35@1@4@2@n_ppof_le@room@2@3@16-7-2001
-35@1@4@1@_room_space_rel@room@2@3@16-7-2001
-35@1@4@1@_room_rel@room@2@3@16-7-2001
-35@1@4@3@EXTRACOMP@costs @3@4@16-7-2001
-35@1@4@2@v_np_trans_le@costs@3@4@16-7-2001
-35@1@4@2@v_ditrans_only_lowprio_le@costs@3@4@16-7-2001
-35@1@4@3@STEM@one @4@5@16-7-2001
-35@1@4@3@SING_NOUN_INFL_RULE@one @4@5@16-7-2001
-35@1@4@3@N@one @4@5@16-7-2001
-35@1@4@3@DET@one @4@5@16-7-2001
-35@1@4@3@PARTITIVE@one @4@5@16-7-2001
-35@1@4@3@NOPTCOMP@one @4@5@16-7-2001
-35@1@4@3@NP-T@one @4@5@16-7-2001
-35@1@4@3@NP@one @4@5@16-7-2001
-35@1@4@2@n_intr_le@one@4@5@16-7-2001
-35@1@4@2@det_part_one_le@one@4@5@16-7-2001
-35@1@4@2@n_hour_le@one@4@5@16-7-2001
-35@1@4@2@n_pers_pro_le@one@4@5@16-7-2001
-35@1@4@1@_one_n_rel@one@4@5@16-7-2001
-35@1@4@1@udef_rel@one@4@5@16-7-2001
-35@1@4@1@numbered_hour_rel@one@4@5@16-7-2001
-35@1@4@1@pron_rel@one@4@5@16-7-2001
-35@1@4@3@ADJ@fifty @5@6@16-7-2001
-35@1@4@2@n_intr_le@fifty@5@6@16-7-2001
-35@1@4@2@adj_complemented_unspecified_card_le@fifty@5@6@16-7-2001
-35@1@4@2@adj_bare_unspecified_card_le@fifty@5@6@16-7-2001
-35@1@4@1@_fifty_money_rel@fifty@5@6@16-7-2001
-35@1@4@1@minute_rel@fifty@5@6@16-7-2001
-35@1@4@1@card_rel@fifty@5@6@16-7-2001
-35@1@4@3@SING_NOUN_INFL_RULE@one @6@7@16-7-2001
-35@1@4@3@N@one @6@7@16-7-2001
-35@1@4@3@STEM@one @6@7@16-7-2001
-35@1@4@2@adj_one_plur_le@one@6@7@16-7-2001
-35@1@4@2@adj_one_sing_le@one@6@7@16-7-2001
-35@1@4@2@n_intr_le@one@6@7@16-7-2001
-35@1@4@1@card_rel@one@6@7@16-7-2001
-35@1@4@1@_one_n_rel@one@6@7@16-7-2001
-35@1@4@3@NOPTCOMP@night @9@10@16-7-2001
-35@1@4@3@N@night @9@10@16-7-2001
-35@1@4@3@NP-T@night @9@10@16-7-2001
 35@1@1@2@n_day_part_le@night@9@10@16-7-2001 (16:22:52)
+35@1@1@3@NOUN_N_CMPND@single room @1@3@16-7-2001 (16:21:46)
+35@1@1@3@NP@one fifty one marks per night @4@10@16-7-2001 (16:24:15)
 35@1@2@2@n_mealtime_le@night@9@10@16-7-2001 (16:22:35)
+35@1@2@3@ADJN_I@fifty one marks per night @5@10@16-7-2001 (16:24:27)
+35@1@2@3@HCOMP@one fifty one @4@7@16-7-2001 (16:23:29)
+35@1@2@3@MASS_NOUN_INFL_RULE@room @2@3@16-7-2001 (16:22:21)
+35@1@2@3@MEAS_NP_ADJ@fifty one @5@7@16-7-2001 (16:23:47)
+35@1@2@3@N@fifty one marks @5@8@16-7-2001 (16:23:34)
+35@1@2@3@N@one fifty one @4@7@16-7-2001 (16:23:27)
+35@1@2@3@N@one marks @6@8@16-7-2001 (16:22:14)
+35@1@2@3@NP@fifty one marks per night @5@10@16-7-2001 (16:24:07)
+35@1@2@3@NP@one fifty one @4@7@16-7-2001 (16:23:30)
+35@1@2@3@NP_N_CMPND_2@one fifty one @4@7@16-7-2001 (16:23:25)
+35@1@4@1@_fifty_money_rel@fifty@5@6@16-7-2001
 35@1@4@1@_night_rel@night@9@10@16-7-2001
 35@1@4@1@_night_time_rel@night@9@10@16-7-2001
-36@1@4@3@HADJ_I_UNS@is very close to the main train station @1@9@16-7-2001
-36@1@1@3@HCOMP@is very close to the main train station @1@9@16-7-2001 (16:24:53)
-36@1@4@3@ADJ@very close to the main train station @2@9@16-7-2001
-36@1@4@3@HCOMP@to the main train station @4@9@16-7-2001
-36@1@4@3@PP@to the main train station @4@9@16-7-2001
-36@1@4@3@HCOMP@is very close @1@4@16-7-2001
-36@1@4@3@VP@is very close @1@4@16-7-2001
-36@1@4@3@NOUN_N_CMPND@main train station @6@9@16-7-2001 (16:26:07)
-36@1@1@3@ADJN_I@main train station @6@9@16-7-2001 (16:26:09)
+35@1@4@1@_one_n_rel@one@4@5@16-7-2001
+35@1@4@1@_one_n_rel@one@6@7@16-7-2001
+35@1@4@1@_room_rel@room@2@3@16-7-2001
+35@1@4@1@_room_space_rel@room@2@3@16-7-2001
+35@1@4@1@_single_isect_rel@single@1@2@16-7-2001
+35@1@4@1@_single_n_rel@single@1@2@16-7-2001
+35@1@4@1@card_rel@fifty@5@6@16-7-2001
+35@1@4@1@card_rel@one@6@7@16-7-2001
+35@1@4@1@minute_rel@fifty@5@6@16-7-2001
+35@1@4@1@numbered_hour_rel@one@4@5@16-7-2001
+35@1@4@1@pron_rel@one@4@5@16-7-2001
+35@1@4@1@udef_rel@one@4@5@16-7-2001
+35@1@4@2@adj_bare_unspecified_card_le@fifty@5@6@16-7-2001
+35@1@4@2@adj_complemented_unspecified_card_le@fifty@5@6@16-7-2001
+35@1@4@2@adj_intrans_le@single@1@2@16-7-2001
+35@1@4@2@adj_one_plur_le@one@6@7@16-7-2001
+35@1@4@2@adj_one_sing_le@one@6@7@16-7-2001
+35@1@4@2@det_part_one_le@one@4@5@16-7-2001
+35@1@4@2@n_hour_le@one@4@5@16-7-2001
+35@1@4@2@n_intr_le@fifty@5@6@16-7-2001
+35@1@4@2@n_intr_le@one@4@5@16-7-2001
+35@1@4@2@n_intr_le@one@6@7@16-7-2001
+35@1@4@2@n_intr_le@single@1@2@16-7-2001
+35@1@4@2@n_mass_le@room@2@3@16-7-2001
+35@1@4@2@n_pers_pro_le@one@4@5@16-7-2001
+35@1@4@2@n_ppof_le@room@2@3@16-7-2001
+35@1@4@2@v_ditrans_only_lowprio_le@costs@3@4@16-7-2001
+35@1@4@2@v_np_trans_le@costs@3@4@16-7-2001
+35@1@4@3@ADJ@fifty @5@6@16-7-2001
+35@1@4@3@ADJ@fifty one @5@7@16-7-2001
+35@1@4@3@ADJN_I@fifty one marks @5@8@16-7-2001
+35@1@4@3@ADJN_I@single room @1@3@16-7-2001
+35@1@4@3@ADV-DG@fifty one @5@7@16-7-2001
+35@1@4@3@BARE_NP@fifty one marks per night @5@10@16-7-2001
+35@1@4@3@BARE_NP@one fifty one marks per night @4@10@16-7-2001
+35@1@4@3@BARE_NP@one marks per night @6@10@16-7-2001
+35@1@4@3@DET@one @4@5@16-7-2001
+35@1@4@3@EXTRACOMP@costs @3@4@16-7-2001
+35@1@4@3@EXTRACOMP@costs one fifty one marks per night @3@10@16-7-2001
+35@1@4@3@FILLHEAD_NON_WH@the single room costs one fifty one marks per night @0@10@16-7-2001
+35@1@4@3@HCOMP@costs one fifty one @3@7@16-7-2001
+35@1@4@3@HCOMP@fifty one @5@7@16-7-2001
+35@1@4@3@HCOMP@one fifty @4@6@16-7-2001
+35@1@4@3@HSPEC@one fifty @4@6@16-7-2001
+35@1@4@3@MEASURE_NP@fifty one @5@7@16-7-2001
+35@1@4@3@N@fifty one marks per night @5@10@16-7-2001
+35@1@4@3@N@marks per night @7@10@16-7-2001
+35@1@4@3@N@night @9@10@16-7-2001
+35@1@4@3@N@one @4@5@16-7-2001
+35@1@4@3@N@one @6@7@16-7-2001
+35@1@4@3@N@one fifty one marks per night @4@10@16-7-2001
+35@1@4@3@N@one marks per night @6@10@16-7-2001
+35@1@4@3@N@single @1@2@16-7-2001
+35@1@4@3@NADJ_RR@marks per night @7@10@16-7-2001
+35@1@4@3@NADJ_RR@one fifty one marks per night @4@10@16-7-2001
+35@1@4@3@NADJ_RR@one marks per night @6@10@16-7-2001
+35@1@4@3@NOPTCOMP@night @9@10@16-7-2001
+35@1@4@3@NOPTCOMP@one @4@5@16-7-2001
+35@1@4@3@NOPTCOMP@one fifty @4@6@16-7-2001
+35@1@4@3@NOPTCOMP@one fifty one @4@7@16-7-2001
+35@1@4@3@NOPTCOMP@room @2@3@16-7-2001
+35@1@4@3@NOUN_N_CMPND@one fifty one marks @4@8@16-7-2001
+35@1@4@3@NOUN_N_CMPND@one fifty one marks per night @4@10@16-7-2001
+35@1@4@3@NOUN_N_CMPND@one marks @6@8@16-7-2001
+35@1@4@3@NP-T@night @9@10@16-7-2001
+35@1@4@3@NP-T@one @4@5@16-7-2001
+35@1@4@3@NP-T@one fifty @4@6@16-7-2001
+35@1@4@3@NP@one @4@5@16-7-2001
+35@1@4@3@NP@one fifty @4@6@16-7-2001
+35@1@4@3@NP@one marks per night @6@10@16-7-2001
+35@1@4@3@NP_N_CMPND_2@one fifty one marks @4@8@16-7-2001
+35@1@4@3@PARTITIVE@one @4@5@16-7-2001
+35@1@4@3@SING_NOUN_INFL_RULE@one @4@5@16-7-2001
+35@1@4@3@SING_NOUN_INFL_RULE@one @6@7@16-7-2001
+35@1@4@3@SING_NOUN_INFL_RULE@room @2@3@16-7-2001
+35@1@4@3@SING_NOUN_INFL_RULE@single @1@2@16-7-2001
+35@1@4@3@STEM@one @4@5@16-7-2001
+35@1@4@3@STEM@one @6@7@16-7-2001
+35@1@4@3@SUBJH@the single room costs one fifty one marks per night @0@10@16-7-2001
+35@1@4@3@V/NP@costs one fifty one marks per night @3@10@16-7-2001
+35@1@4@3@V@costs one fifty one @3@7@16-7-2001
 36@1@1@1@_close_to_rel@close to@3@5@16-7-2001 (16:25:02)
-36@1@4@3@VPELLIPSIS_REF_LR@is @1@2@16-7-2001
-36@1@4@3@VP-L@is @1@2@16-7-2001
-36@1@4@2@adj_trans_le@close@3@4@16-7-2001
+36@1@1@3@ADJN_I@main train station @6@9@16-7-2001 (16:26:09)
+36@1@1@3@HCOMP@is very close to the main train station @1@9@16-7-2001 (16:24:53)
 36@1@4@1@_close_adj_rel@close@3@4@16-7-2001
-36@1@4@2@p_reg_le@to@4@5@16-7-2001
 36@1@4@1@_to_rel@to@4@5@16-7-2001
 36@1@4@1@_to_rel_s@to@4@5@16-7-2001
+36@1@4@2@adj_trans_le@close@3@4@16-7-2001
+36@1@4@2@p_reg_le@to@4@5@16-7-2001
+36@1@4@3@ADJ@very close to the main train station @2@9@16-7-2001
+36@1@4@3@HADJ_I_UNS@is very close to the main train station @1@9@16-7-2001
+36@1@4@3@HCOMP@is very close @1@4@16-7-2001
+36@1@4@3@HCOMP@to the main train station @4@9@16-7-2001
+36@1@4@3@NOUN_N_CMPND@main train station @6@9@16-7-2001 (16:26:07)
+36@1@4@3@PP@to the main train station @4@9@16-7-2001
+36@1@4@3@VP-L@is @1@2@16-7-2001
+36@1@4@3@VP@is very close @1@4@16-7-2001
+36@1@4@3@VPELLIPSIS_REF_LR@is @1@2@16-7-2001
+37@1@1@1@_about_approx_rel@about@3@4@16-7-2001 (16:27:33)
+37@1@1@2@n_day_part_le@night@7@8@16-7-2001 (16:27:55)
+37@1@4@1@_about_rel@about@3@4@16-7-2001
+37@1@4@1@_be_prd_rel@is@2@3@16-7-2001
+37@1@4@1@_night_time_rel@night@7@8@16-7-2001
+37@1@4@2@n_mealtime_le@night@7@8@16-7-2001
+37@1@4@2@p_le@about@3@4@16-7-2001
+37@1@4@2@vc_prd_is_le@is@2@3@16-7-2001
 37@1@4@3@HADJ_I_UNS@is about seventy dollars per night @2@8@16-7-2001
 37@1@4@3@HCOMP@about seventy dollars per night @3@8@16-7-2001
-37@1@4@3@PP@about seventy dollars per night @3@8@16-7-2001
-37@1@4@2@vc_prd_is_le@is@2@3@16-7-2001
-37@1@4@1@_be_prd_rel@is@2@3@16-7-2001
-37@1@4@2@p_le@about@3@4@16-7-2001
-37@1@1@1@_about_approx_rel@about@3@4@16-7-2001 (16:27:33)
-37@1@4@1@_about_rel@about@3@4@16-7-2001
 37@1@4@3@NP-T@night @7@8@16-7-2001
-37@1@1@2@n_day_part_le@night@7@8@16-7-2001 (16:27:55)
-37@1@4@2@n_mealtime_le@night@7@8@16-7-2001
-37@1@4@1@_night_time_rel@night@7@8@16-7-2001
-41@1@4@3@FILLHEAD_NON_WH@well it doesn t sound that bad @0@7@16-7-2001
+37@1@4@3@PP@about seventy dollars per night @3@8@16-7-2001
+41@1@1@1@excl_rel@well@0@1@16-7-2001 (16:28:54)
+41@1@4@1@_well_rel@well@0@1@16-7-2001
+41@1@4@2@adv_int_vp_post_le@well@0@1@16-7-2001
 41@1@4@3@EXTRADJ_I@doesn t sound that bad @2@7@16-7-2001
 41@1@4@3@EXTRADJ_I@sound that bad @4@7@16-7-2001
+41@1@4@3@FILLHEAD_NON_WH@well it doesn t sound that bad @0@7@16-7-2001
 41@1@4@3@S/ADV@sound that bad @4@7@16-7-2001
-41@1@4@2@adv_int_vp_post_le@well@0@1@16-7-2001
-41@1@4@1@_well_rel@well@0@1@16-7-2001
-41@1@1@1@excl_rel@well@0@1@16-7-2001 (16:28:54)
-44@1@4@3@HCOMP@would you like to go in October and then at the beginning of the week @0@15@16-7-2001
-44@1@4@3@HADJ_I_UNS@would you like to go in October and then at the beginning of the week @0@15@16-7-2001
-44@1@4@3@HCOMP@like to go in October and then at the beginning of the week @2@15@16-7-2001
-44@1@4@3@HADJ_I_UNS@like to go in October and then at the beginning of the week @2@15@16-7-2001
-44@1@2@3@HCOMP@would you like to go in October and then @0@9@16-7-2001 (16:30:37)
+44@1@1@2@n_ppof_le@beginning@11@12@16-7-2001 (16:30:05)
 44@1@2@3@HADJ_I_UNS@would you like to go in October and then @0@9@16-7-2001 (16:31:10)
-44@1@4@3@HCOMP@like to go in October and then @2@9@16-7-2001
-44@1@4@3@HADJ_I_UNS@like to go in October and then @2@9@16-7-2001
-44@1@2@3@S@like to go in October and then @2@9@16-7-2001 (16:31:06)
-44@1@4@3@HCOMP@go in October and then @4@9@16-7-2001
-44@1@4@3@HADJ_I_UNS@go in October and then @4@9@16-7-2001
+44@1@2@3@HCOMP@would you like to go in October and then @0@9@16-7-2001 (16:30:37)
 44@1@2@3@S@go in October and then @4@9@16-7-2001 (16:30:28)
-44@1@4@3@HCOMP@like to go @2@5@16-7-2001
-44@1@4@3@S@like to go @2@5@16-7-2001
-44@1@4@3@S@go @4@5@16-7-2001
-44@1@4@2@v_empty_prep_intrans_le@go@4@5@16-7-2001
-44@1@4@2@v_unerg_le@go@4@5@16-7-2001
+44@1@2@3@S@like to go in October and then @2@9@16-7-2001 (16:31:06)
+44@1@4@1@_begin_rel@beginning@11@12@16-7-2001
+44@1@4@1@_beginning_rel@beginning@11@12@16-7-2001
 44@1@4@1@_go_in_rel@go@4@5@16-7-2001
 44@1@4@1@_go_rel@go@4@5@16-7-2001
-44@1@4@1@_in_rel_s@in@5@6@16-7-2001
 44@1@4@1@_in_rel@in@5@6@16-7-2001
-44@1@4@3@SING_NOUN_INFL_RULE@beginning @11@12@16-7-2001
-44@1@4@3@PRP_VERB_INFL_RULE@beginning @11@12@16-7-2001
-44@1@4@3@VP-PR@beginning @11@12@16-7-2001
-44@1@4@3@TRANSNG@beginning @11@12@16-7-2001
-44@1@1@2@n_ppof_le@beginning@11@12@16-7-2001 (16:30:05)
+44@1@4@1@_in_rel_s@in@5@6@16-7-2001
+44@1@4@2@v_empty_prep_intrans_le@go@4@5@16-7-2001
 44@1@4@2@v_np*_trans_le@beginning@11@12@16-7-2001
-44@1@4@1@_beginning_rel@beginning@11@12@16-7-2001
-44@1@4@1@_begin_rel@beginning@11@12@16-7-2001
-46@1@4@3@NOUN_N_CMPND@special deals @4@6@16-7-2001
-46@1@4@2@n_intr_le@special@4@5@16-7-2001
+44@1@4@2@v_unerg_le@go@4@5@16-7-2001
+44@1@4@3@HADJ_I_UNS@go in October and then @4@9@16-7-2001
+44@1@4@3@HADJ_I_UNS@like to go in October and then @2@9@16-7-2001
+44@1@4@3@HADJ_I_UNS@like to go in October and then at the beginning of the week @2@15@16-7-2001
+44@1@4@3@HADJ_I_UNS@would you like to go in October and then at the beginning of the week @0@15@16-7-2001
+44@1@4@3@HCOMP@go in October and then @4@9@16-7-2001
+44@1@4@3@HCOMP@like to go @2@5@16-7-2001
+44@1@4@3@HCOMP@like to go in October and then @2@9@16-7-2001
+44@1@4@3@HCOMP@like to go in October and then at the beginning of the week @2@15@16-7-2001
+44@1@4@3@HCOMP@would you like to go in October and then at the beginning of the week @0@15@16-7-2001
+44@1@4@3@PRP_VERB_INFL_RULE@beginning @11@12@16-7-2001
+44@1@4@3@S@go @4@5@16-7-2001
+44@1@4@3@S@like to go @2@5@16-7-2001
+44@1@4@3@SING_NOUN_INFL_RULE@beginning @11@12@16-7-2001
+44@1@4@3@TRANSNG@beginning @11@12@16-7-2001
+44@1@4@3@VP-PR@beginning @11@12@16-7-2001
 46@1@1@2@adj_intrans_le@special@4@5@16-7-2001 (16:31:29)
 46@1@4@1@_special_n_rel@special@4@5@16-7-2001
+46@1@4@2@n_intr_le@special@4@5@16-7-2001
+46@1@4@3@NOUN_N_CMPND@special deals @4@6@16-7-2001
+48@1@1@2@adj_intrans_le@special@14@15@16-7-2001 (16:34:39)
+48@1@1@2@n_pers_pro_noagr_le@they@9@10@16-7-2001 (16:37:04)
+48@1@1@3@ADJ@German @5@6@16-7-2001 (16:36:22)
+48@1@1@3@HADJ_I_UNS@talking about the German Bundesbahn here @2@8@16-7-2001 (16:35:01)
 48@1@1@3@HCOMP@are talking about the German Bundesbahn here @1@8@16-7-2001 (16:35:12)
+48@1@1@3@HCOMP@talking about the German Bundesbahn @2@7@16-7-2001 (16:35:26)
+48@1@1@3@N@German Bundesbahn @5@7@16-7-2001 (16:34:02)
+48@1@4@1@_german_n_rel@German@5@6@16-7-2001
+48@1@4@1@_special_n_rel@special@14@15@16-7-2001
+48@1@4@1@named_rel@German@5@6@16-7-2001
+48@1@4@2@n_intr_le@German@5@6@16-7-2001
+48@1@4@2@n_intr_le@special@14@15@16-7-2001
+48@1@4@2@n_pers_pro_le@they@9@10@16-7-2001
+48@1@4@2@n_proper_le@German@5@6@16-7-2001
+48@1@4@3@ADJN_I@German Bundesbahn here @5@8@16-7-2001
 48@1@4@3@HADJ_I_UNS@are talking about the German Bundesbahn here @1@8@16-7-2001
 48@1@4@3@HCOMP@talking about the German Bundesbahn here @2@8@16-7-2001
-48@1@1@3@HADJ_I_UNS@talking about the German Bundesbahn here @2@8@16-7-2001 (16:35:01)
-48@1@1@3@HCOMP@talking about the German Bundesbahn @2@7@16-7-2001 (16:35:26)
-48@1@4@3@ADJN_I@German Bundesbahn here @5@8@16-7-2001
+48@1@4@3@N@German @5@6@16-7-2001
 48@1@4@3@NADJ_RR@German Bundesbahn here @5@8@16-7-2001
 48@1@4@3@NOUN_N_CMPND@German Bundesbahn @5@7@16-7-2001
-48@1@4@3@NP_N_CMPND@German Bundesbahn @5@7@16-7-2001
-48@1@1@3@N@German Bundesbahn @5@7@16-7-2001 (16:34:02)
 48@1@4@3@NOUN_N_CMPND@special deals @14@16@16-7-2001
-48@1@4@3@N@German @5@6@16-7-2001
-48@1@1@3@ADJ@German @5@6@16-7-2001 (16:36:22)
-48@1@4@2@n_intr_le@German@5@6@16-7-2001
-48@1@4@2@n_proper_le@German@5@6@16-7-2001
-48@1@4@1@_german_n_rel@German@5@6@16-7-2001
-48@1@4@1@named_rel@German@5@6@16-7-2001
-48@1@1@2@n_pers_pro_noagr_le@they@9@10@16-7-2001 (16:37:04)
-48@1@4@2@n_pers_pro_le@they@9@10@16-7-2001
-48@1@4@2@n_intr_le@special@14@15@16-7-2001
-48@1@1@2@adj_intrans_le@special@14@15@16-7-2001 (16:34:39)
-48@1@4@1@_special_n_rel@special@14@15@16-7-2001
-50@1@4@3@SUBJH@the fifth of October sounds good then @1@8@16-7-2001
-50@1@4@2@n_adv_le@then@7@8@16-7-2001
-50@1@4@1@time_rel@then@7@8@16-7-2001
+48@1@4@3@NP_N_CMPND@German Bundesbahn @5@7@16-7-2001
 50@1@1@1@excl_rel@then@7@8@16-7-2001 (16:37:25)
-61@1@4@3@V/NP@is the cashier @1@4@16-7-2001
-61@1@4@3@S/NP@is the cashier @1@4@16-7-2001
-61@1@4@2@vc_id_is_le@is@1@2@16-7-2001
+50@1@4@1@time_rel@then@7@8@16-7-2001
+50@1@4@2@n_adv_le@then@7@8@16-7-2001
+50@1@4@3@SUBJH@the fifth of October sounds good then @1@8@16-7-2001
 61@1@2@1@_cop_id_rel@is@1@2@16-7-2001 (16:38:17)
-67@1@4@3@SUBJH@I would like to reserve a ticket for the train to go to Hanover in December @0@16@16-7-2001
-67@1@4@3@HADJ_I_UNS@would like to reserve a ticket for the train to go to Hanover in December @1@16@16-7-2001
-67@1@4@3@HCOMP@would like to reserve a ticket for the train to go to Hanover in December @1@16@16-7-2001
-67@1@4@3@HADJ_I_UNS@like to reserve a ticket for the train to go to Hanover in December @2@16@16-7-2001
-67@1@4@3@HCOMP@like to reserve a ticket for the train to go to Hanover in December @2@16@16-7-2001
-67@1@4@3@HCOMP@would like to reserve a ticket for the train to go to Hanover @1@14@16-7-2001
-67@1@4@3@HADJ_I_UNS@would like to reserve a ticket for the train to go to Hanover @1@14@16-7-2001
-67@1@4@3@VP@would like to reserve a ticket for the train to go to Hanover @1@14@16-7-2001
-67@1@4@3@HCOMP@like to reserve a ticket for the train to go to Hanover @2@14@16-7-2001
-67@1@4@3@HADJ_I_UNS@like to reserve a ticket for the train to go to Hanover @2@14@16-7-2001
-67@1@4@3@S@like to reserve a ticket for the train to go to Hanover @2@14@16-7-2001
-67@1@4@3@HADJ_I_UNS@reserve a ticket for the train to go to Hanover in December @4@16@16-7-2001
-67@1@4@3@HCOMP@reserve a ticket for the train to go to Hanover in December @4@16@16-7-2001
-67@1@4@3@HADJ_I_UNS@would like to reserve a ticket for the train to go @1@12@16-7-2001
-67@1@4@3@HCOMP@would like to reserve a ticket for the train to go @1@12@16-7-2001
-67@1@4@3@VP@would like to reserve a ticket for the train to go @1@12@16-7-2001
-67@1@4@3@HADJ_I_UNS@like to reserve a ticket for the train to go @2@12@16-7-2001
-67@1@4@3@HCOMP@like to reserve a ticket for the train to go @2@12@16-7-2001
-67@1@4@3@S@like to reserve a ticket for the train to go @2@12@16-7-2001
-67@1@4@3@HCOMP@reserve a ticket for the train to go to Hanover @4@14@16-7-2001
-67@1@4@3@HADJ_I_UNS@reserve a ticket for the train to go to Hanover @4@14@16-7-2001
-67@1@4@3@S@reserve a ticket for the train to go to Hanover @4@14@16-7-2001
-67@1@4@3@NADJ_RC@ticket for the train to go to Hanover in December @6@16@16-7-2001
-67@1@4@3@NADJ_RR@ticket for the train to go to Hanover in December @6@16@16-7-2001
-67@1@4@3@HADJ_I_UNS@would like to reserve a ticket for the train @1@10@16-7-2001
-67@1@4@3@HCOMP@for the train to go to Hanover in December @7@16@16-7-2001
-67@1@4@3@PP@for the train to go to Hanover in December @7@16@16-7-2001
-67@1@4@3@HADJ_I_UNS@like to reserve a ticket for the train @2@10@16-7-2001
-67@1@4@3@HADJ_I_UNS@reserve a ticket for the train to go @4@12@16-7-2001
-67@1@4@3@HCOMP@reserve a ticket for the train to go @4@12@16-7-2001
-67@1@4@3@S@reserve a ticket for the train to go @4@12@16-7-2001
-67@1@4@3@NADJ_RC@ticket for the train to go to Hanover @6@14@16-7-2001
-67@1@4@3@NADJ_RR@ticket for the train to go to Hanover @6@14@16-7-2001
-67@1@4@3@N@ticket for the train to go to Hanover @6@14@16-7-2001
-67@1@4@3@HCOMP@for the train to go to Hanover @7@14@16-7-2001
-67@1@4@3@PP@for the train to go to Hanover @7@14@16-7-2001
-67@1@4@3@HCOMP@would like to reserve a ticket @1@7@16-7-2001
-67@1@4@3@VP@would like to reserve a ticket @1@7@16-7-2001
-67@1@4@3@HADJ_I_UNS@reserve a ticket for the train @4@10@16-7-2001
-67@1@4@3@NADJ_RC@ticket for the train to go @6@12@16-7-2001
-67@1@4@3@NADJ_RR@ticket for the train to go @6@12@16-7-2001
-67@1@4@3@N@ticket for the train to go @6@12@16-7-2001
-67@1@4@3@VP/N@to go to Hanover in December @10@16@16-7-2001
-67@1@4@3@EXTRASUBJ_I@to go to Hanover in December @10@16@16-7-2001
-67@1@4@3@S-COMP/N@to go to Hanover in December @10@16@16-7-2001
-67@1@4@3@INF_NON_WH_REL@to go to Hanover in December @10@16@16-7-2001
-67@1@4@3@S@to go to Hanover in December @10@16@16-7-2001
-67@1@4@3@HCOMP@like to reserve a ticket @2@7@16-7-2001
-67@1@4@3@S@like to reserve a ticket @2@7@16-7-2001
-67@1@4@3@HCOMP@for the train to go @7@12@16-7-2001
-67@1@4@3@PP@for the train to go @7@12@16-7-2001
-67@1@1@3@N@ticket for the train @6@10@16-7-2001 (16:48:24)
-67@1@4@3@HCOMP@to go to Hanover @10@14@16-7-2001
-67@1@4@3@VP/N@to go to Hanover @10@14@16-7-2001
-67@1@4@3@EXTRASUBJ_I@to go to Hanover @10@14@16-7-2001
-67@1@4@3@S-COMP/N@to go to Hanover @10@14@16-7-2001
-67@1@4@3@INF_NON_WH_REL@to go to Hanover @10@14@16-7-2001
-67@1@4@3@S@to go to Hanover @10@14@16-7-2001
-67@1@4@3@HCOMP@reserve a ticket @4@7@16-7-2001
-67@1@4@3@S@reserve a ticket @4@7@16-7-2001
-67@1@4@3@HCOMP@to go @10@12@16-7-2001
-67@1@4@3@VP/N@to go @10@12@16-7-2001
-67@1@4@3@EXTRASUBJ_I@to go @10@12@16-7-2001
-67@1@4@3@S-COMP/N@to go @10@12@16-7-2001
-67@1@4@3@INF_NON_WH_REL@to go @10@12@16-7-2001
-67@1@4@3@S@to go @10@12@16-7-2001
-67@1@4@2@comp_to_prop_le@to@10@11@16-7-2001
+61@1@4@2@vc_id_is_le@is@1@2@16-7-2001
+61@1@4@3@S/NP@is the cashier @1@4@16-7-2001
+61@1@4@3@V/NP@is the cashier @1@4@16-7-2001
 67@1@1@1@_in_order_to_rel@to@10@11@16-7-2001 (16:46:38)
+67@1@1@3@N@ticket for the train @6@10@16-7-2001 (16:48:24)
 67@1@4@1@v_event_rel@to@10@11@16-7-2001
-69@1@4@3@HADJ_I_UNS@can go any day @3@7@16-7-2001
+67@1@4@2@comp_to_prop_le@to@10@11@16-7-2001
+67@1@4@3@EXTRASUBJ_I@to go @10@12@16-7-2001
+67@1@4@3@EXTRASUBJ_I@to go to Hanover @10@14@16-7-2001
+67@1@4@3@EXTRASUBJ_I@to go to Hanover in December @10@16@16-7-2001
+67@1@4@3@HADJ_I_UNS@like to reserve a ticket for the train @2@10@16-7-2001
+67@1@4@3@HADJ_I_UNS@like to reserve a ticket for the train to go @2@12@16-7-2001
+67@1@4@3@HADJ_I_UNS@like to reserve a ticket for the train to go to Hanover @2@14@16-7-2001
+67@1@4@3@HADJ_I_UNS@like to reserve a ticket for the train to go to Hanover in December @2@16@16-7-2001
+67@1@4@3@HADJ_I_UNS@reserve a ticket for the train @4@10@16-7-2001
+67@1@4@3@HADJ_I_UNS@reserve a ticket for the train to go @4@12@16-7-2001
+67@1@4@3@HADJ_I_UNS@reserve a ticket for the train to go to Hanover @4@14@16-7-2001
+67@1@4@3@HADJ_I_UNS@reserve a ticket for the train to go to Hanover in December @4@16@16-7-2001
+67@1@4@3@HADJ_I_UNS@would like to reserve a ticket for the train @1@10@16-7-2001
+67@1@4@3@HADJ_I_UNS@would like to reserve a ticket for the train to go @1@12@16-7-2001
+67@1@4@3@HADJ_I_UNS@would like to reserve a ticket for the train to go to Hanover @1@14@16-7-2001
+67@1@4@3@HADJ_I_UNS@would like to reserve a ticket for the train to go to Hanover in December @1@16@16-7-2001
+67@1@4@3@HCOMP@for the train to go @7@12@16-7-2001
+67@1@4@3@HCOMP@for the train to go to Hanover @7@14@16-7-2001
+67@1@4@3@HCOMP@for the train to go to Hanover in December @7@16@16-7-2001
+67@1@4@3@HCOMP@like to reserve a ticket @2@7@16-7-2001
+67@1@4@3@HCOMP@like to reserve a ticket for the train to go @2@12@16-7-2001
+67@1@4@3@HCOMP@like to reserve a ticket for the train to go to Hanover @2@14@16-7-2001
+67@1@4@3@HCOMP@like to reserve a ticket for the train to go to Hanover in December @2@16@16-7-2001
+67@1@4@3@HCOMP@reserve a ticket @4@7@16-7-2001
+67@1@4@3@HCOMP@reserve a ticket for the train to go @4@12@16-7-2001
+67@1@4@3@HCOMP@reserve a ticket for the train to go to Hanover @4@14@16-7-2001
+67@1@4@3@HCOMP@reserve a ticket for the train to go to Hanover in December @4@16@16-7-2001
+67@1@4@3@HCOMP@to go @10@12@16-7-2001
+67@1@4@3@HCOMP@to go to Hanover @10@14@16-7-2001
+67@1@4@3@HCOMP@would like to reserve a ticket @1@7@16-7-2001
+67@1@4@3@HCOMP@would like to reserve a ticket for the train to go @1@12@16-7-2001
+67@1@4@3@HCOMP@would like to reserve a ticket for the train to go to Hanover @1@14@16-7-2001
+67@1@4@3@HCOMP@would like to reserve a ticket for the train to go to Hanover in December @1@16@16-7-2001
+67@1@4@3@INF_NON_WH_REL@to go @10@12@16-7-2001
+67@1@4@3@INF_NON_WH_REL@to go to Hanover @10@14@16-7-2001
+67@1@4@3@INF_NON_WH_REL@to go to Hanover in December @10@16@16-7-2001
+67@1@4@3@N@ticket for the train to go @6@12@16-7-2001
+67@1@4@3@N@ticket for the train to go to Hanover @6@14@16-7-2001
+67@1@4@3@NADJ_RC@ticket for the train to go @6@12@16-7-2001
+67@1@4@3@NADJ_RC@ticket for the train to go to Hanover @6@14@16-7-2001
+67@1@4@3@NADJ_RC@ticket for the train to go to Hanover in December @6@16@16-7-2001
+67@1@4@3@NADJ_RR@ticket for the train to go @6@12@16-7-2001
+67@1@4@3@NADJ_RR@ticket for the train to go to Hanover @6@14@16-7-2001
+67@1@4@3@NADJ_RR@ticket for the train to go to Hanover in December @6@16@16-7-2001
+67@1@4@3@PP@for the train to go @7@12@16-7-2001
+67@1@4@3@PP@for the train to go to Hanover @7@14@16-7-2001
+67@1@4@3@PP@for the train to go to Hanover in December @7@16@16-7-2001
+67@1@4@3@S-COMP/N@to go @10@12@16-7-2001
+67@1@4@3@S-COMP/N@to go to Hanover @10@14@16-7-2001
+67@1@4@3@S-COMP/N@to go to Hanover in December @10@16@16-7-2001
+67@1@4@3@S@like to reserve a ticket @2@7@16-7-2001
+67@1@4@3@S@like to reserve a ticket for the train to go @2@12@16-7-2001
+67@1@4@3@S@like to reserve a ticket for the train to go to Hanover @2@14@16-7-2001
+67@1@4@3@S@reserve a ticket @4@7@16-7-2001
+67@1@4@3@S@reserve a ticket for the train to go @4@12@16-7-2001
+67@1@4@3@S@reserve a ticket for the train to go to Hanover @4@14@16-7-2001
+67@1@4@3@S@to go @10@12@16-7-2001
+67@1@4@3@S@to go to Hanover @10@14@16-7-2001
+67@1@4@3@S@to go to Hanover in December @10@16@16-7-2001
+67@1@4@3@SUBJH@I would like to reserve a ticket for the train to go to Hanover in December @0@16@16-7-2001
+67@1@4@3@VP/N@to go @10@12@16-7-2001
+67@1@4@3@VP/N@to go to Hanover @10@14@16-7-2001
+67@1@4@3@VP/N@to go to Hanover in December @10@16@16-7-2001
+67@1@4@3@VP@would like to reserve a ticket @1@7@16-7-2001
+67@1@4@3@VP@would like to reserve a ticket for the train to go @1@12@16-7-2001
+67@1@4@3@VP@would like to reserve a ticket for the train to go to Hanover @1@14@16-7-2001
 69@1@1@3@HCOMP@can go any day @3@7@16-7-2001 (16:49:42)
-72@1@4@3@HADJ_I_UNS@would like to travel down to Hanover before Christmas @1@10@16-7-2001
-72@1@4@3@ADJH_S@like to travel down to Hanover before Christmas @2@10@16-7-2001
-72@1@4@3@HSPEC@like to travel down to Hanover before Christmas @2@10@16-7-2001
-72@1@4@3@PP@like to travel down to Hanover before Christmas @2@10@16-7-2001
-72@1@4@3@HADJ_I_UNS@like to travel down to Hanover before Christmas @2@10@16-7-2001
-72@1@4@3@HCOMP@would like to travel down to Hanover @1@8@16-7-2001
-72@1@4@3@HADJ_I_UNS@would like to travel down to Hanover @1@8@16-7-2001
-72@1@4@3@VP@would like to travel down to Hanover @1@8@16-7-2001
-72@1@1@3@HCOMP@to travel down to Hanover before Christmas @3@10@16-7-2001 (16:51:21)
-72@1@4@3@HCOMP@like to travel down to Hanover @2@8@16-7-2001
-72@1@4@3@HADJ_I_UNS@like to travel down to Hanover @2@8@16-7-2001
-72@1@4@3@S@like to travel down to Hanover @2@8@16-7-2001
-72@1@4@3@HSPEC@like to travel down to Hanover @2@8@16-7-2001
-72@1@4@3@ADJH_S@like to travel down to Hanover @2@8@16-7-2001
-72@1@4@3@PP@like to travel down to Hanover @2@8@16-7-2001
-72@1@4@3@HCOMP@would like to travel down @1@6@16-7-2001
-72@1@4@3@HADJ_I_UNS@would like to travel down @1@6@16-7-2001
-72@1@4@3@VP@would like to travel down @1@6@16-7-2001
-72@1@4@3@HCOMP@to travel down to Hanover @3@8@16-7-2001
-72@1@4@3@HADJ_I_UNS@would like to travel @1@5@16-7-2001
-72@1@4@3@HCOMP@would like to travel @1@5@16-7-2001
-72@1@4@3@VP@would like to travel @1@5@16-7-2001
-72@1@4@3@ADJH_S@like to travel down @2@6@16-7-2001
-72@1@4@3@HSPEC@like to travel down @2@6@16-7-2001
-72@1@4@3@PP@like to travel down @2@6@16-7-2001
-72@1@4@3@HCOMP@like to travel down @2@6@16-7-2001
-72@1@4@3@HADJ_I_UNS@like to travel down @2@6@16-7-2001
-72@1@4@3@S@like to travel down @2@6@16-7-2001
+69@1@4@3@HADJ_I_UNS@can go any day @3@7@16-7-2001
+72@1@1@1@_travel_v_rel@travel@4@5@16-7-2001 (16:50:28)
 72@1@1@3@HADJ_I_UNS@travel down to Hanover @4@8@16-7-2001 (16:50:53)
-72@1@4@3@NADJ_RR@travel down to Hanover @4@8@16-7-2001
-72@1@4@3@N@travel down to Hanover @4@8@16-7-2001
-72@1@4@3@HSPEC@like to travel @2@5@16-7-2001
-72@1@4@3@ADJH_S@like to travel @2@5@16-7-2001
-72@1@4@3@HCOMP@like to travel @2@5@16-7-2001
-72@1@4@3@S@like to travel @2@5@16-7-2001
-72@1@4@3@HCOMP@to travel down @3@6@16-7-2001
-72@1@4@3@HCOMP@to travel @3@5@16-7-2001
+72@1@1@3@HCOMP@to travel down to Hanover before Christmas @3@10@16-7-2001 (16:51:21)
 72@1@1@3@HCOMP@travel down @4@6@16-7-2001 (16:50:40)
-72@1@4@3@HADJ_I_UNS@travel down @4@6@16-7-2001
-72@1@4@3@NADJ_RR@travel down @4@6@16-7-2001
-72@1@4@3@N@travel down @4@6@16-7-2001
-72@1@4@3@ADV-DG@like @2@3@16-7-2001
-72@1@4@3@ADV-R@like @2@3@16-7-2001
+72@1@4@1@_like_deg_rel@like@2@3@16-7-2001
+72@1@4@1@_to_rel@to@3@4@16-7-2001
+72@1@4@1@_travel_n_rel@travel@4@5@16-7-2001
+72@1@4@1@excl_rel@like@2@3@16-7-2001
 72@1@4@2@adv_degree_spec_le@like@2@3@16-7-2001
 72@1@4@2@adv_disc_like_le@like@2@3@16-7-2001
-72@1@4@1@_like_deg_rel@like@2@3@16-7-2001
-72@1@4@1@excl_rel@like@2@3@16-7-2001
+72@1@4@2@n_mass_count_le@travel@4@5@16-7-2001
 72@1@4@2@p_reg_le@to@3@4@16-7-2001
-72@1@4@1@_to_rel@to@3@4@16-7-2001
+72@1@4@3@ADJH_S@like to travel @2@5@16-7-2001
+72@1@4@3@ADJH_S@like to travel down @2@6@16-7-2001
+72@1@4@3@ADJH_S@like to travel down to Hanover @2@8@16-7-2001
+72@1@4@3@ADJH_S@like to travel down to Hanover before Christmas @2@10@16-7-2001
+72@1@4@3@ADV-DG@like @2@3@16-7-2001
+72@1@4@3@ADV-R@like @2@3@16-7-2001
+72@1@4@3@HADJ_I_UNS@like to travel down @2@6@16-7-2001
+72@1@4@3@HADJ_I_UNS@like to travel down to Hanover @2@8@16-7-2001
+72@1@4@3@HADJ_I_UNS@like to travel down to Hanover before Christmas @2@10@16-7-2001
+72@1@4@3@HADJ_I_UNS@travel down @4@6@16-7-2001
+72@1@4@3@HADJ_I_UNS@would like to travel @1@5@16-7-2001
+72@1@4@3@HADJ_I_UNS@would like to travel down @1@6@16-7-2001
+72@1@4@3@HADJ_I_UNS@would like to travel down to Hanover @1@8@16-7-2001
+72@1@4@3@HADJ_I_UNS@would like to travel down to Hanover before Christmas @1@10@16-7-2001
+72@1@4@3@HCOMP@like to travel @2@5@16-7-2001
+72@1@4@3@HCOMP@like to travel down @2@6@16-7-2001
+72@1@4@3@HCOMP@like to travel down to Hanover @2@8@16-7-2001
+72@1@4@3@HCOMP@to travel @3@5@16-7-2001
+72@1@4@3@HCOMP@to travel down @3@6@16-7-2001
+72@1@4@3@HCOMP@to travel down to Hanover @3@8@16-7-2001
+72@1@4@3@HCOMP@would like to travel @1@5@16-7-2001
+72@1@4@3@HCOMP@would like to travel down @1@6@16-7-2001
+72@1@4@3@HCOMP@would like to travel down to Hanover @1@8@16-7-2001
+72@1@4@3@HSPEC@like to travel @2@5@16-7-2001
+72@1@4@3@HSPEC@like to travel down @2@6@16-7-2001
+72@1@4@3@HSPEC@like to travel down to Hanover @2@8@16-7-2001
+72@1@4@3@HSPEC@like to travel down to Hanover before Christmas @2@10@16-7-2001
 72@1@4@3@MASS_COUNT_INFL_RULE@travel @4@5@16-7-2001
 72@1@4@3@N@travel @4@5@16-7-2001
-72@1@4@2@n_mass_count_le@travel@4@5@16-7-2001
-72@1@1@1@_travel_v_rel@travel@4@5@16-7-2001 (16:50:28)
-72@1@4@1@_travel_n_rel@travel@4@5@16-7-2001
-75@1@4@3@FILLHEAD_NON_WH@oh I see @0@3@16-7-2001
-75@1@4@2@n_proper_abb_le@oh@0@1@16-7-2001
+72@1@4@3@N@travel down @4@6@16-7-2001
+72@1@4@3@N@travel down to Hanover @4@8@16-7-2001
+72@1@4@3@NADJ_RR@travel down @4@6@16-7-2001
+72@1@4@3@NADJ_RR@travel down to Hanover @4@8@16-7-2001
+72@1@4@3@PP@like to travel down @2@6@16-7-2001
+72@1@4@3@PP@like to travel down to Hanover @2@8@16-7-2001
+72@1@4@3@PP@like to travel down to Hanover before Christmas @2@10@16-7-2001
+72@1@4@3@S@like to travel @2@5@16-7-2001
+72@1@4@3@S@like to travel down @2@6@16-7-2001
+72@1@4@3@S@like to travel down to Hanover @2@8@16-7-2001
+72@1@4@3@VP@would like to travel @1@5@16-7-2001
+72@1@4@3@VP@would like to travel down @1@6@16-7-2001
+72@1@4@3@VP@would like to travel down to Hanover @1@8@16-7-2001
 75@1@1@2@adv_disc_le@oh@0@1@16-7-2001 (16:52:25)
-75@1@4@1@named_abb_rel@oh@0@1@16-7-2001
-75@1@4@2@v_np_trans_le@see@2@3@16-7-2001
 75@1@4@1@_see_rel@see@2@3@16-7-2001
-76@1@4@3@HADJ_I_UNS@are celebrating Christmas on the twenty fifth @1@8@16-7-2001
-76@1@4@3@N@celebrating Christmas on the twenty fifth @2@8@16-7-2001
-76@1@4@3@BARE_VGER@celebrating Christmas on the twenty fifth @2@8@16-7-2001
-76@1@4@3@NP@celebrating Christmas on the twenty fifth @2@8@16-7-2001
+75@1@4@1@named_abb_rel@oh@0@1@16-7-2001
+75@1@4@2@n_proper_abb_le@oh@0@1@16-7-2001
+75@1@4@2@v_np_trans_le@see@2@3@16-7-2001
+75@1@4@3@FILLHEAD_NON_WH@oh I see @0@3@16-7-2001
 76@1@1@3@VP-PR@celebrating Christmas on the twenty fifth @2@8@16-7-2001 (16:53:01)
-76@1@4@3@BARE_VGER@celebrating Christmas @2@4@16-7-2001
-76@1@4@3@NP@celebrating Christmas @2@4@16-7-2001
-76@1@4@3@N@celebrating Christmas @2@4@16-7-2001
-76@1@4@2@vc_id_are_le@are@1@2@16-7-2001
 76@1@2@1@_cop_id_rel@are@1@2@16-7-2001 (16:52:45)
-77@1@4@3@HADJ_S@I think it will be possible for you to get down to Hanover on the twenty fourth @0@17@16-7-2001
-77@1@4@3@HADJ_I_UNS@think it will be possible for you to get down to Hanover on the twenty fourth @1@17@16-7-2001
-77@1@4@3@HADJ_I_UNS@will be possible for you to get down to Hanover on the twenty fourth @3@17@16-7-2001
-77@1@4@3@HADJ_I_UNS@be possible for you to get down to Hanover on the twenty fourth @4@17@16-7-2001
-77@1@4@3@HCOMP@think it will be possible for you to get down to Hanover @1@13@16-7-2001
-77@1@4@3@HADJ_I_UNS@think it will be possible for you to get down to Hanover @1@13@16-7-2001
-77@1@1@3@S-COMP@for you to get down to Hanover on the twenty fourth @6@17@16-7-2001 (16:55:51)
-77@1@4@3@HCOMP@will be possible for you to get down to Hanover @3@13@16-7-2001
-77@1@4@3@HADJ_I_UNS@will be possible for you to get down to Hanover @3@13@16-7-2001
-77@1@4@3@VP@will be possible for you to get down to Hanover @3@13@16-7-2001
-77@1@4@3@HCOMP@be possible for you to get down to Hanover @4@13@16-7-2001
-77@1@4@3@HADJ_I_UNS@be possible for you to get down to Hanover @4@13@16-7-2001
-77@1@4@3@S@be possible for you to get down to Hanover @4@13@16-7-2001
-77@1@1@3@HCOMP@to get down to Hanover on the twenty fourth @8@17@16-7-2001 (16:55:20)
-77@1@4@3@HCOMP@will be possible for you to get down @3@11@16-7-2001
-77@1@4@3@VP@will be possible for you to get down @3@11@16-7-2001
-77@1@4@3@HCOMP@think it will be possible for you @1@8@16-7-2001
-77@1@4@3@HADJ_I_UNS@think it will be possible for you @1@8@16-7-2001
-77@1@4@3@HCOMP@be possible for you to get down @4@11@16-7-2001
-77@1@4@3@S@be possible for you to get down @4@11@16-7-2001
-77@1@4@3@HCOMP@for you to get down to Hanover @6@13@16-7-2001
-77@1@4@3@S-COMP@for you to get down to Hanover @6@13@16-7-2001
-77@1@2@3@HCOMP@will be possible for you @3@8@16-7-2001 (16:54:45)
-77@1@2@3@HADJ_I_UNS@will be possible for you @3@8@16-7-2001 (16:54:42)
-77@1@4@3@HCOMP@for you to get down @6@11@16-7-2001
-77@1@4@3@S-COMP@for you to get down @6@11@16-7-2001
-77@1@4@3@HCOMP@get down to Hanover @9@13@16-7-2001
+76@1@4@2@vc_id_are_le@are@1@2@16-7-2001
+76@1@4@3@BARE_VGER@celebrating Christmas @2@4@16-7-2001
+76@1@4@3@BARE_VGER@celebrating Christmas on the twenty fifth @2@8@16-7-2001
+76@1@4@3@HADJ_I_UNS@are celebrating Christmas on the twenty fifth @1@8@16-7-2001
+76@1@4@3@N@celebrating Christmas @2@4@16-7-2001
+76@1@4@3@N@celebrating Christmas on the twenty fifth @2@8@16-7-2001
+76@1@4@3@NP@celebrating Christmas @2@4@16-7-2001
+76@1@4@3@NP@celebrating Christmas on the twenty fifth @2@8@16-7-2001
 77@1@1@3@HADJ_I_UNS@get down to Hanover @9@13@16-7-2001 (16:54:23)
-77@1@4@3@HCOMP@will be possible @3@6@16-7-2001
-77@1@4@3@VP@will be possible @3@6@16-7-2001
-77@1@4@3@HCOMP@possible for you @5@8@16-7-2001
-77@1@4@3@ADJ-P@possible for you @5@8@16-7-2001
-77@1@4@3@PP@for you @6@8@16-7-2001
-77@1@4@2@n_pers_pro_le@it@2@3@16-7-2001
-77@1@4@1@pron_rel@it@2@3@16-7-2001
-77@1@4@2@adj_intrans_lowprio_le@possible@5@6@16-7-2001
-77@1@4@2@adj_reg_atrans_medprio_le@possible@5@6@16-7-2001
-77@1@4@2@p_le@for@6@7@16-7-2001
+77@1@1@3@HCOMP@to get down to Hanover on the twenty fourth @8@17@16-7-2001 (16:55:20)
+77@1@1@3@PP@down @10@11@16-7-2001 (16:53:48)
+77@1@1@3@S-COMP@for you to get down to Hanover on the twenty fourth @6@17@16-7-2001 (16:55:51)
+77@1@2@3@HADJ_I_UNS@will be possible for you @3@8@16-7-2001 (16:54:42)
+77@1@2@3@HCOMP@will be possible for you @3@8@16-7-2001 (16:54:45)
+77@1@4@1@_down_adj_rel@down@10@11@16-7-2001
+77@1@4@1@_down_rel_s@down@10@11@16-7-2001
 77@1@4@1@_for_rel@for@6@7@16-7-2001
 77@1@4@1@_for_rel_s@for@6@7@16-7-2001
-77@1@4@2@p_subconj_inf_le@to@8@9@16-7-2001
-77@1@4@2@comp_to_prop_le@to@8@9@16-7-2001
-77@1@4@1@_in_order_to_rel@to@8@9@16-7-2001
-77@1@4@2@v_particle_pp_le@get@9@10@16-7-2001
 77@1@4@1@_get_down_to_rel@get@9@10@16-7-2001
-77@1@1@3@PP@down @10@11@16-7-2001 (16:53:48)
-77@1@4@3@STEM@down @10@11@16-7-2001
-77@1@4@3@POS_ADJ_INFL_RULE@down @10@11@16-7-2001
-77@1@4@3@ADJ@down @10@11@16-7-2001
-77@1@4@2@p_le@down@10@11@16-7-2001
+77@1@4@1@_in_order_to_rel@to@8@9@16-7-2001
+77@1@4@1@pron_rel@it@2@3@16-7-2001
 77@1@4@2@adj_intrans_le@down@10@11@16-7-2001
-77@1@4@1@_down_rel_s@down@10@11@16-7-2001
-77@1@4@1@_down_adj_rel@down@10@11@16-7-2001
+77@1@4@2@adj_intrans_lowprio_le@possible@5@6@16-7-2001
+77@1@4@2@adj_reg_atrans_medprio_le@possible@5@6@16-7-2001
+77@1@4@2@comp_to_prop_le@to@8@9@16-7-2001
+77@1@4@2@n_pers_pro_le@it@2@3@16-7-2001
+77@1@4@2@p_le@down@10@11@16-7-2001
+77@1@4@2@p_le@for@6@7@16-7-2001
+77@1@4@2@p_subconj_inf_le@to@8@9@16-7-2001
+77@1@4@2@v_particle_pp_le@get@9@10@16-7-2001
+77@1@4@3@ADJ-P@possible for you @5@8@16-7-2001
+77@1@4@3@ADJ@down @10@11@16-7-2001
+77@1@4@3@HADJ_I_UNS@be possible for you to get down to Hanover @4@13@16-7-2001
+77@1@4@3@HADJ_I_UNS@be possible for you to get down to Hanover on the twenty fourth @4@17@16-7-2001
+77@1@4@3@HADJ_I_UNS@think it will be possible for you @1@8@16-7-2001
+77@1@4@3@HADJ_I_UNS@think it will be possible for you to get down to Hanover @1@13@16-7-2001
+77@1@4@3@HADJ_I_UNS@think it will be possible for you to get down to Hanover on the twenty fourth @1@17@16-7-2001
+77@1@4@3@HADJ_I_UNS@will be possible for you to get down to Hanover @3@13@16-7-2001
+77@1@4@3@HADJ_I_UNS@will be possible for you to get down to Hanover on the twenty fourth @3@17@16-7-2001
+77@1@4@3@HADJ_S@I think it will be possible for you to get down to Hanover on the twenty fourth @0@17@16-7-2001
+77@1@4@3@HCOMP@be possible for you to get down @4@11@16-7-2001
+77@1@4@3@HCOMP@be possible for you to get down to Hanover @4@13@16-7-2001
+77@1@4@3@HCOMP@for you to get down @6@11@16-7-2001
+77@1@4@3@HCOMP@for you to get down to Hanover @6@13@16-7-2001
+77@1@4@3@HCOMP@get down to Hanover @9@13@16-7-2001
+77@1@4@3@HCOMP@possible for you @5@8@16-7-2001
+77@1@4@3@HCOMP@think it will be possible for you @1@8@16-7-2001
+77@1@4@3@HCOMP@think it will be possible for you to get down to Hanover @1@13@16-7-2001
+77@1@4@3@HCOMP@will be possible @3@6@16-7-2001
+77@1@4@3@HCOMP@will be possible for you to get down @3@11@16-7-2001
+77@1@4@3@HCOMP@will be possible for you to get down to Hanover @3@13@16-7-2001
+77@1@4@3@POS_ADJ_INFL_RULE@down @10@11@16-7-2001
+77@1@4@3@PP@for you @6@8@16-7-2001
+77@1@4@3@S-COMP@for you to get down @6@11@16-7-2001
+77@1@4@3@S-COMP@for you to get down to Hanover @6@13@16-7-2001
+77@1@4@3@S@be possible for you to get down @4@11@16-7-2001
+77@1@4@3@S@be possible for you to get down to Hanover @4@13@16-7-2001
+77@1@4@3@STEM@down @10@11@16-7-2001
+77@1@4@3@VP@will be possible @3@6@16-7-2001
+77@1@4@3@VP@will be possible for you to get down @3@11@16-7-2001
+77@1@4@3@VP@will be possible for you to get down to Hanover @3@13@16-7-2001
+78@1@1@3@HCOMP@will be very full that day @5@11@16-7-2001 (16:56:31)
 78@1@2@3@HADJ_I_UNS@doubt that the trains will be very full that day @1@11@16-7-2001 (16:56:16)
 78@1@4@3@HADJ_I_UNS@will be very full that day @5@11@16-7-2001
-78@1@1@3@HCOMP@will be very full that day @5@11@16-7-2001 (16:56:31)
 78@1@4@3@HCOMP@will be very full @5@9@16-7-2001
 78@1@4@3@VP@will be very full @5@9@16-7-2001
-80@1@4@3@HADJ_I_UNS@would like to go on the Monday twenty first @1@10@16-7-2001
-80@1@4@3@HADJ_I_UNS@like to go on the Monday twenty first @2@10@16-7-2001
-80@1@4@3@HCOMP@would like to go on @1@6@16-7-2001
-80@1@4@3@VP@would like to go on @1@6@16-7-2001
 80@1@1@3@PP@on the Monday twenty first @5@10@16-7-2001 (16:58:04)
-80@1@4@3@HCOMP@would like to go @1@5@16-7-2001
-80@1@4@3@VP@would like to go @1@5@16-7-2001
 80@1@2@3@HCOMP@like to go on @2@6@16-7-2001 (16:58:00)
-80@1@4@3@S@like to go on @2@6@16-7-2001
-80@1@4@3@TEMPNP_NWH@the Monday twenty first @6@10@16-7-2001 (16:57:55)
-80@1@4@3@PP-T@the Monday twenty first @6@10@16-7-2001
-80@1@4@3@HCOMP@like to go @2@5@16-7-2001
 80@1@2@3@S@like to go @2@5@16-7-2001 (16:57:15)
-80@1@4@2@v_subj_equi_prd_le@go@4@5@16-7-2001
-80@1@4@2@v_particle_le@go@4@5@16-7-2001
-80@1@4@1@_go_state_rel@go@4@5@16-7-2001
 80@1@4@1@_go_on_rel@go@4@5@16-7-2001
-80@1@4@3@STEM@on @5@6@16-7-2001
-80@1@4@3@POS_ADJ_INFL_RULE@on @5@6@16-7-2001
-80@1@4@3@ADJ@on @5@6@16-7-2001
-80@1@4@2@adj_pred_intrans_lowprio_le@on@5@6@16-7-2001
-80@1@4@2@p_reg_le@on@5@6@16-7-2001
+80@1@4@1@_go_state_rel@go@4@5@16-7-2001
 80@1@4@1@_on_isect_rel@on@5@6@16-7-2001
 80@1@4@1@_on_rel_s@on@5@6@16-7-2001
-83@1@4@3@FILLHEAD_NON_WH@oh I see @0@3@16-7-2001
-83@1@4@2@n_proper_abb_le@oh@0@1@16-7-2001
-83@1@4@1@named_abb_rel@oh@0@1@16-7-2001
+80@1@4@2@adj_pred_intrans_lowprio_le@on@5@6@16-7-2001
+80@1@4@2@p_reg_le@on@5@6@16-7-2001
+80@1@4@2@v_particle_le@go@4@5@16-7-2001
+80@1@4@2@v_subj_equi_prd_le@go@4@5@16-7-2001
+80@1@4@3@ADJ@on @5@6@16-7-2001
+80@1@4@3@HADJ_I_UNS@like to go on the Monday twenty first @2@10@16-7-2001
+80@1@4@3@HADJ_I_UNS@would like to go on the Monday twenty first @1@10@16-7-2001
+80@1@4@3@HCOMP@like to go @2@5@16-7-2001
+80@1@4@3@HCOMP@would like to go @1@5@16-7-2001
+80@1@4@3@HCOMP@would like to go on @1@6@16-7-2001
+80@1@4@3@POS_ADJ_INFL_RULE@on @5@6@16-7-2001
+80@1@4@3@PP-T@the Monday twenty first @6@10@16-7-2001
+80@1@4@3@S@like to go on @2@6@16-7-2001
+80@1@4@3@STEM@on @5@6@16-7-2001
+80@1@4@3@TEMPNP_NWH@the Monday twenty first @6@10@16-7-2001 (16:57:55)
+80@1@4@3@VP@would like to go @1@5@16-7-2001
+80@1@4@3@VP@would like to go on @1@6@16-7-2001
 83@1@1@1@excl_rel@oh@0@1@16-7-2001 (16:58:22)
-83@1@4@2@v_np_trans_le@see@2@3@16-7-2001
 83@1@4@1@_see_rel@see@2@3@16-7-2001
-85@1@4@3@HADJ_I_UNS@would like to travel around eight o clock in the morning @2@13@16-7-2001
-85@1@4@3@HADJ_I_UNS@like to travel around eight o clock in the morning @3@13@16-7-2001
-85@1@4@3@HSPEC@like to travel around eight o clock in the morning @3@13@16-7-2001
-85@1@4@3@ADJH_S@like to travel around eight o clock in the morning @3@13@16-7-2001
-85@1@4@3@PP@like to travel around eight o clock in the morning @3@13@16-7-2001
-85@1@4@3@HCOMP@would like to travel around eight o clock @2@10@16-7-2001
-85@1@4@3@HADJ_I_UNS@would like to travel around eight o clock @2@10@16-7-2001
-85@1@4@3@VP@would like to travel around eight o clock @2@10@16-7-2001
+83@1@4@1@named_abb_rel@oh@0@1@16-7-2001
+83@1@4@2@n_proper_abb_le@oh@0@1@16-7-2001
+83@1@4@2@v_np_trans_le@see@2@3@16-7-2001
+83@1@4@3@FILLHEAD_NON_WH@oh I see @0@3@16-7-2001
+85@1@1@1@_travel_v_rel@travel@5@6@16-7-2001 (16:58:47)
 85@1@1@3@HADJ_I_UNS@travel around eight o clock in the morning @5@13@16-7-2001 (16:59:37)
-85@1@4@3@HCOMP@travel around eight o clock in the morning @5@13@16-7-2001
-85@1@4@3@ADJH_S@like to travel around eight o clock @3@10@16-7-2001
-85@1@4@3@HSPEC@like to travel around eight o clock @3@10@16-7-2001
-85@1@4@3@PP@like to travel around eight o clock @3@10@16-7-2001
-85@1@4@3@HCOMP@like to travel around eight o clock @3@10@16-7-2001
-85@1@4@3@HADJ_I_UNS@like to travel around eight o clock @3@10@16-7-2001
-85@1@4@3@S@like to travel around eight o clock @3@10@16-7-2001
 85@1@1@3@PP@around eight o clock in the morning @6@13@16-7-2001 (16:59:22)
-85@1@4@3@HCOMP@to travel around eight o clock @4@10@16-7-2001
-85@1@4@3@HCOMP@travel around eight o clock @5@10@16-7-2001
-85@1@4@3@HADJ_I_UNS@travel around eight o clock @5@10@16-7-2001
-85@1@4@3@S@travel around eight o clock @5@10@16-7-2001
-85@1@4@3@NADJ_RR@travel around eight o clock @5@10@16-7-2001
-85@1@4@3@N@travel around eight o clock @5@10@16-7-2001
-85@1@4@3@HCOMP@would like to travel @2@6@16-7-2001
-85@1@4@3@HADJ_I_UNS@would like to travel @2@6@16-7-2001
-85@1@4@3@VP@would like to travel @2@6@16-7-2001
-85@1@4@3@HCOMP@around eight o clock @6@10@16-7-2001
-85@1@4@3@PP@around eight o clock @6@10@16-7-2001
-85@1@4@3@HCOMP@like to travel @3@6@16-7-2001
-85@1@4@3@S@like to travel @3@6@16-7-2001
-85@1@4@3@ADJH_S@like to travel @3@6@16-7-2001
-85@1@4@3@HSPEC@like to travel @3@6@16-7-2001
-85@1@4@3@HCOMP@to travel @4@6@16-7-2001
-85@1@4@3@ADV-DG@like @3@4@16-7-2001
-85@1@4@3@ADV-R@like @3@4@16-7-2001
+85@1@4@1@_like_deg_rel@like@3@4@16-7-2001
+85@1@4@1@_to_rel@to@4@5@16-7-2001
+85@1@4@1@_travel_n_rel@travel@5@6@16-7-2001
+85@1@4@1@excl_rel@like@3@4@16-7-2001
 85@1@4@2@adv_degree_spec_le@like@3@4@16-7-2001
 85@1@4@2@adv_disc_like_le@like@3@4@16-7-2001
-85@1@4@1@_like_deg_rel@like@3@4@16-7-2001
-85@1@4@1@excl_rel@like@3@4@16-7-2001
+85@1@4@2@n_mass_count_le@travel@5@6@16-7-2001
 85@1@4@2@p_reg_le@to@4@5@16-7-2001
-85@1@4@1@_to_rel@to@4@5@16-7-2001
+85@1@4@3@ADJH_S@like to travel @3@6@16-7-2001
+85@1@4@3@ADJH_S@like to travel around eight o clock @3@10@16-7-2001
+85@1@4@3@ADJH_S@like to travel around eight o clock in the morning @3@13@16-7-2001
+85@1@4@3@ADV-DG@like @3@4@16-7-2001
+85@1@4@3@ADV-R@like @3@4@16-7-2001
+85@1@4@3@HADJ_I_UNS@like to travel around eight o clock @3@10@16-7-2001
+85@1@4@3@HADJ_I_UNS@like to travel around eight o clock in the morning @3@13@16-7-2001
+85@1@4@3@HADJ_I_UNS@travel around eight o clock @5@10@16-7-2001
+85@1@4@3@HADJ_I_UNS@would like to travel @2@6@16-7-2001
+85@1@4@3@HADJ_I_UNS@would like to travel around eight o clock @2@10@16-7-2001
+85@1@4@3@HADJ_I_UNS@would like to travel around eight o clock in the morning @2@13@16-7-2001
+85@1@4@3@HCOMP@around eight o clock @6@10@16-7-2001
+85@1@4@3@HCOMP@like to travel @3@6@16-7-2001
+85@1@4@3@HCOMP@like to travel around eight o clock @3@10@16-7-2001
+85@1@4@3@HCOMP@to travel @4@6@16-7-2001
+85@1@4@3@HCOMP@to travel around eight o clock @4@10@16-7-2001
+85@1@4@3@HCOMP@travel around eight o clock @5@10@16-7-2001
+85@1@4@3@HCOMP@travel around eight o clock in the morning @5@13@16-7-2001
+85@1@4@3@HCOMP@would like to travel @2@6@16-7-2001
+85@1@4@3@HCOMP@would like to travel around eight o clock @2@10@16-7-2001
+85@1@4@3@HSPEC@like to travel @3@6@16-7-2001
+85@1@4@3@HSPEC@like to travel around eight o clock @3@10@16-7-2001
+85@1@4@3@HSPEC@like to travel around eight o clock in the morning @3@13@16-7-2001
 85@1@4@3@MASS_COUNT_INFL_RULE@travel @5@6@16-7-2001
 85@1@4@3@N@travel @5@6@16-7-2001
-85@1@4@2@n_mass_count_le@travel@5@6@16-7-2001
-85@1@4@1@_travel_n_rel@travel@5@6@16-7-2001
-85@1@1@1@_travel_v_rel@travel@5@6@16-7-2001 (16:58:47)
-86@1@4@3@HCOMP@have a business meeting in Hanover at nine o clock @1@11@16-7-2001
-86@1@4@3@SUBJH@a business meeting in Hanover at nine o clock @2@11@16-7-2001
-86@1@4@3@N@a business meeting in Hanover at nine o clock @2@11@16-7-2001
-86@1@4@3@BARE_VGER@a business meeting in Hanover at nine o clock @2@11@16-7-2001
-86@1@4@3@HSPEC@a business meeting in Hanover at nine o clock @2@11@16-7-2001
-86@1@4@3@NP@a business meeting in Hanover at nine o clock @2@11@16-7-2001
-86@1@4@3@VP-PR@meeting in Hanover at nine o clock @4@11@16-7-2001
-86@1@4@3@HADJ_I_UNS@meeting in Hanover at nine o clock @4@11@16-7-2001
-86@1@4@3@HADJ_I_UNS@have a business meeting in Hanover @1@7@16-7-2001
-86@1@4@3@V@have a business meeting in Hanover @1@7@16-7-2001
-86@1@1@3@HSPEC@a business meeting in Hanover @2@7@16-7-2001 (17:04:50)
-86@1@4@3@SUBJH@a business meeting in Hanover @2@7@16-7-2001
-86@1@4@3@N@a business meeting in Hanover @2@7@16-7-2001
-86@1@4@3@BARE_VGER@a business meeting in Hanover @2@7@16-7-2001
-86@1@4@3@V@have a business meeting @1@5@16-7-2001
-86@1@4@3@HADJ_I_UNS@have a business meeting @1@5@16-7-2001
-86@1@4@3@HCOMP@have a business meeting @1@5@16-7-2001
-86@1@4@3@VP@have a business meeting @1@5@16-7-2001
-86@1@1@3@N@business meeting in Hanover @3@7@16-7-2001 (17:04:39)
-86@1@4@3@VP@have a business @1@4@16-7-2001
-86@1@4@3@HCOMP@have a business @1@4@16-7-2001
-86@1@4@3@V@have a business @1@4@16-7-2001
-86@1@4@3@SUBJH@a business meeting @2@5@16-7-2001
-86@1@4@3@N@a business meeting @2@5@16-7-2001
-86@1@4@3@BARE_VGER@a business meeting @2@5@16-7-2001
-86@1@4@3@HSPEC@a business meeting @2@5@16-7-2001
-86@1@4@3@NP@a business meeting @2@5@16-7-2001
-86@1@4@3@VP-PR@meeting in Hanover @4@7@16-7-2001
-86@1@4@3@HADJ_I_UNS@meeting in Hanover @4@7@16-7-2001
-86@1@4@3@N@meeting in Hanover @4@7@16-7-2001
-86@1@4@3@HSPEC@a business @2@4@16-7-2001
-86@1@4@3@NP@a business @2@4@16-7-2001
+85@1@4@3@N@travel around eight o clock @5@10@16-7-2001
+85@1@4@3@NADJ_RR@travel around eight o clock @5@10@16-7-2001
+85@1@4@3@PP@around eight o clock @6@10@16-7-2001
+85@1@4@3@PP@like to travel around eight o clock @3@10@16-7-2001
+85@1@4@3@PP@like to travel around eight o clock in the morning @3@13@16-7-2001
+85@1@4@3@S@like to travel @3@6@16-7-2001
+85@1@4@3@S@like to travel around eight o clock @3@10@16-7-2001
+85@1@4@3@S@travel around eight o clock @5@10@16-7-2001
+85@1@4@3@VP@would like to travel @2@6@16-7-2001
+85@1@4@3@VP@would like to travel around eight o clock @2@10@16-7-2001
 86@1@1@2@v_poss_le@have@1@2@16-7-2001 (17:05:03)
-86@1@4@2@v_obj_equi_non_trans_prd_lowprio_le@have@1@2@16-7-2001
-86@1@4@1@_have_prd_rel@have@1@2@16-7-2001
-86@1@4@3@PRP_VERB_INFL_RULE@meeting @4@5@16-7-2001
-86@1@4@3@VP-PR@meeting @4@5@16-7-2001
-86@1@4@3@VGERING@meeting @4@5@16-7-2001
+86@1@1@3@HSPEC@a business meeting in Hanover @2@7@16-7-2001 (17:04:50)
+86@1@1@3@N@business meeting in Hanover @3@7@16-7-2001 (17:04:39)
 86@1@1@3@N@meeting @4@5@16-7-2001 (17:05:21)
-86@1@4@2@v_unerg_le@meeting@4@5@16-7-2001
+86@1@4@1@_have_prd_rel@have@1@2@16-7-2001
 86@1@4@1@_meet_v_rel@meeting@4@5@16-7-2001
+86@1@4@2@v_obj_equi_non_trans_prd_lowprio_le@have@1@2@16-7-2001
+86@1@4@2@v_unerg_le@meeting@4@5@16-7-2001
+86@1@4@3@BARE_VGER@a business meeting @2@5@16-7-2001
+86@1@4@3@BARE_VGER@a business meeting in Hanover @2@7@16-7-2001
+86@1@4@3@BARE_VGER@a business meeting in Hanover at nine o clock @2@11@16-7-2001
+86@1@4@3@HADJ_I_UNS@have a business meeting @1@5@16-7-2001
+86@1@4@3@HADJ_I_UNS@have a business meeting in Hanover @1@7@16-7-2001
+86@1@4@3@HADJ_I_UNS@meeting in Hanover @4@7@16-7-2001
+86@1@4@3@HADJ_I_UNS@meeting in Hanover at nine o clock @4@11@16-7-2001
+86@1@4@3@HCOMP@have a business @1@4@16-7-2001
+86@1@4@3@HCOMP@have a business meeting @1@5@16-7-2001
+86@1@4@3@HCOMP@have a business meeting in Hanover at nine o clock @1@11@16-7-2001
+86@1@4@3@HSPEC@a business @2@4@16-7-2001
+86@1@4@3@HSPEC@a business meeting @2@5@16-7-2001
+86@1@4@3@HSPEC@a business meeting in Hanover at nine o clock @2@11@16-7-2001
+86@1@4@3@N@a business meeting @2@5@16-7-2001
+86@1@4@3@N@a business meeting in Hanover @2@7@16-7-2001
+86@1@4@3@N@a business meeting in Hanover at nine o clock @2@11@16-7-2001
+86@1@4@3@N@meeting in Hanover @4@7@16-7-2001
+86@1@4@3@NP@a business @2@4@16-7-2001
+86@1@4@3@NP@a business meeting @2@5@16-7-2001
+86@1@4@3@NP@a business meeting in Hanover at nine o clock @2@11@16-7-2001
+86@1@4@3@PRP_VERB_INFL_RULE@meeting @4@5@16-7-2001
+86@1@4@3@SUBJH@a business meeting @2@5@16-7-2001
+86@1@4@3@SUBJH@a business meeting in Hanover @2@7@16-7-2001
+86@1@4@3@SUBJH@a business meeting in Hanover at nine o clock @2@11@16-7-2001
+86@1@4@3@V@have a business @1@4@16-7-2001
+86@1@4@3@V@have a business meeting @1@5@16-7-2001
+86@1@4@3@V@have a business meeting in Hanover @1@7@16-7-2001
+86@1@4@3@VGERING@meeting @4@5@16-7-2001
+86@1@4@3@VP-PR@meeting @4@5@16-7-2001
+86@1@4@3@VP-PR@meeting in Hanover @4@7@16-7-2001
+86@1@4@3@VP-PR@meeting in Hanover at nine o clock @4@11@16-7-2001
+86@1@4@3@VP@have a business @1@4@16-7-2001
+86@1@4@3@VP@have a business meeting @1@5@16-7-2001
+86@2@1@2@v_poss_le@have@1@2@23-7-2001
+86@2@1@3@HSPEC@a business meeting in Hanover @2@7@23-7-2001
+86@2@1@3@N@business meeting in Hanover @3@7@23-7-2001
+86@2@1@3@N@meeting @4@5@23-7-2001
+86@2@4@1@_have_prd_rel@have@1@2@23-7-2001
+86@2@4@1@_meet_v_rel@meeting@4@5@23-7-2001
+86@2@4@2@v_obj_equi_non_trans_prd_lowprio_le@have@1@2@23-7-2001
+86@2@4@2@v_unerg_le@meeting@4@5@23-7-2001
+86@2@4@3@BARE_VGER@a business meeting @2@5@23-7-2001
+86@2@4@3@BARE_VGER@a business meeting in Hanover @2@7@23-7-2001
+86@2@4@3@BARE_VGER@a business meeting in Hanover at nine o clock @2@11@23-7-2001
+86@2@4@3@HADJ_I_UNS@have a business meeting @1@5@23-7-2001
+86@2@4@3@HADJ_I_UNS@have a business meeting in Hanover @1@7@23-7-2001
+86@2@4@3@HADJ_I_UNS@meeting in Hanover @4@7@23-7-2001
+86@2@4@3@HADJ_I_UNS@meeting in Hanover at nine o clock @4@11@23-7-2001
+86@2@4@3@HCOMP@have a business @1@4@23-7-2001
+86@2@4@3@HCOMP@have a business meeting @1@5@23-7-2001
+86@2@4@3@HCOMP@have a business meeting in Hanover at nine o clock @1@11@23-7-2001
+86@2@4@3@HSPEC@a business @2@4@23-7-2001
+86@2@4@3@HSPEC@a business meeting @2@5@23-7-2001
+86@2@4@3@HSPEC@a business meeting in Hanover at nine o clock @2@11@23-7-2001
+86@2@4@3@N@a business meeting @2@5@23-7-2001
+86@2@4@3@N@a business meeting in Hanover @2@7@23-7-2001
+86@2@4@3@N@a business meeting in Hanover at nine o clock @2@11@23-7-2001
+86@2@4@3@N@meeting in Hanover @4@7@23-7-2001
+86@2@4@3@NP@a business @2@4@23-7-2001
+86@2@4@3@NP@a business meeting @2@5@23-7-2001
+86@2@4@3@NP@a business meeting in Hanover at nine o clock @2@11@23-7-2001
+86@2@4@3@PRP_VERB_INFL_RULE@meeting @4@5@23-7-2001
+86@2@4@3@SUBJH@a business meeting @2@5@23-7-2001
+86@2@4@3@SUBJH@a business meeting in Hanover @2@7@23-7-2001
+86@2@4@3@SUBJH@a business meeting in Hanover at nine o clock @2@11@23-7-2001
+86@2@4@3@V@have a business @1@4@23-7-2001
+86@2@4@3@V@have a business meeting @1@5@23-7-2001
+86@2@4@3@V@have a business meeting in Hanover @1@7@23-7-2001
+86@2@4@3@VGERING@meeting @4@5@23-7-2001
+86@2@4@3@VP-PR@meeting @4@5@23-7-2001
+86@2@4@3@VP-PR@meeting in Hanover @4@7@23-7-2001
+86@2@4@3@VP-PR@meeting in Hanover at nine o clock @4@11@23-7-2001
+86@2@4@3@VP@have a business @1@4@23-7-2001
+86@2@4@3@VP@have a business meeting @1@5@23-7-2001
 91@1@1@3@FILLHEAD_WH_SUBJ_R@what is the next earliest train I could take @1@10@16-7-2001 (17:07:15)
 91@1@4@3@FILLHEAD_WH_R@what is the next earliest train I could take @1@10@16-7-2001
-99@1@4@3@HADJ_S@it is supposed to be very good @0@7@16-7-2001
-99@1@4@2@p_subconj_inf_le@to@3@4@16-7-2001
 99@1@2@1@_in_order_to_rel@to@3@4@16-7-2001 (17:08:21)
+99@1@4@2@p_subconj_inf_le@to@3@4@16-7-2001
+99@1@4@3@HADJ_S@it is supposed to be very good @0@7@16-7-2001
 100@1@1@3@HCOMP@is right @2@4@16-7-2001 (17:08:40)
-100@1@4@3@HADJ_S@is right @2@4@16-7-2001
-100@1@4@2@adv_vp_post_le@right@3@4@16-7-2001
 100@1@4@1@_right_focus_rel@right@3@4@16-7-2001
-9@2@4@3@HADJ_I_UNS@don t have any really special day in mind @2@11@17-7-2001
-9@2@3@3@HCOMP@don t have any really special day in mind @2@11@17-7-2001
-9@2@4@3@HADJ_I_UNS@have any really special day in mind @4@11@17-7-2001 (00:48:06)
-9@2@3@3@HCOMP@have any really special day in mind @4@11@17-7-2001
-9@2@4@3@HSPEC@any really special day in mind @5@11@17-7-2001
-9@2@4@3@NP-T@any really special day in mind @5@11@17-7-2001
-9@2@4@3@S@have any really special day @4@9@17-7-2001
-9@2@1@3@HCOMP@have any really special day @4@9@17-7-2001
-9@2@3@3@V@have any really special day @4@9@17-7-2001
-9@2@4@2@v_poss_le@have@4@5@17-7-2001 (00:48:06)
-9@2@3@2@v_obj_equi_non_trans_prd_lowprio_le@have@4@5@17-7-2001
-9@2@4@1@_have_rel@have@4@5@17-7-2001
-9@2@3@1@_have_prd_rel@have@4@5@17-7-2001
-2@2@4@3@FILLHEAD_NON_WH@what can I do for you @0@6@19-7-2001
-2@2@4@3@HADJ_I_UNS@can I do for you @1@6@19-7-2001
-2@2@1@3@HCOMP@can I do for you @1@6@19-7-2001
-2@2@4@2@n_freerel_pro_le@what@0@1@19-7-2001
-2@3@1@3@FILLHEAD_WH_R@what can I do for you @0@6@19-7-2001 (16:42:17)
-2@3@4@3@FILLHEAD_NON_WH@what can I do for you @0@6@19-7-2001 (16:42:15)
-2@3@2@3@HCOMP@can I do for you @1@6@19-7-2001 (16:42:35)
-2@3@4@3@HADJ_I_UNS@do for you @3@6@19-7-2001 (16:42:15)
-2@3@4@2@n_freerel_pro_le@what@0@1@19-7-2001 (16:42:15)
-2@4@4@3@FILLHEAD_NON_WH@what can I do for you @0@6@23-7-2001 (01:24:02)
-2@4@4@3@HADJ_I_UNS@can I do for you @1@6@23-7-2001 (01:24:02)
-2@4@1@3@HADJ_I_UNS@do for you @3@6@23-7-2001 (01:24:09)
-2@4@1@2@n_wh_pro_le@what@0@1@23-7-2001 (01:24:12)
-2@4@4@2@n_freerel_pro_le@what@0@1@23-7-2001 (01:24:02)
-2@5@4@3@FILLHEAD_NON_WH@what can I do for you @0@6@23-7-2001
-2@5@4@3@HADJ_I_UNS@can I do for you @1@6@23-7-2001
-2@5@1@3@HADJ_I_UNS@do for you @3@6@23-7-2001
-2@5@1@2@n_wh_pro_le@what@0@1@23-7-2001
-2@5@4@2@n_freerel_pro_le@what@0@1@23-7-2001
-4@2@-1@5@@@0@14@23-7-2001 (01:25:02)
+100@1@4@2@adv_vp_post_le@right@3@4@16-7-2001
+100@1@4@3@HADJ_S@is right @2@4@16-7-2001

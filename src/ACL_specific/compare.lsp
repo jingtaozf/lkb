@@ -307,7 +307,7 @@
 	  (clim:make-pane 'clim:application-pane
 			  :display-function 'draw-trees-window
 			  :text-cursor nil
-			  :width 450
+			  :width 530
 			  ;; :height 100
 			  :text-style (clim:parse-text-style 
 				       (list :sans-serif :roman 7))
@@ -325,8 +325,8 @@
 	  (clim:make-pane 'clim:application-pane
 			  :display-function 'draw-compare-window
 			  :text-cursor nil
-			  :width 450
-			  :height 650
+			  :width 410
+			  :height 660
 			  :text-style (clim:parse-text-style 
 				       (list :sans-serif :roman 10))
 			  :end-of-line-action :allow
@@ -386,6 +386,8 @@
 (define-compare-frame-command (com-first-compare-frame :menu "First")
     ()
   (clim:with-application-frame (frame)
+    (let ((sheet (clim:frame-top-level-sheet frame)))
+      (setf (clim:sheet-pointer-cursor sheet) :horizontal-scroll))
     (record-decision (make-decision :type :first) frame)
     (when (compare-frame-controller frame)
       (mp:process-revoke-arrest-reason 
@@ -395,6 +397,8 @@
 (define-compare-frame-command (com-pervious-compare-frame :menu "Previous")
     ()
   (clim:with-application-frame (frame)
+    (let ((sheet (clim:frame-top-level-sheet frame)))
+      (setf (clim:sheet-pointer-cursor sheet) :horizontal-scroll))
     (record-decision (make-decision :type :previous) frame)
     (when (compare-frame-controller frame)
       (mp:process-revoke-arrest-reason 
@@ -403,6 +407,8 @@
 (define-compare-frame-command (com-next-compare-frame :menu "Next")
     ()
   (clim:with-application-frame (frame)
+    (let ((sheet (clim:frame-top-level-sheet frame)))
+      (setf (clim:sheet-pointer-cursor sheet) :horizontal-scroll))
     (record-decision (make-decision :type :next) frame)
     (when (compare-frame-controller frame)
       (mp:process-revoke-arrest-reason 
@@ -411,6 +417,8 @@
 (define-compare-frame-command (com-last-compare-frame :menu "Last")
     ()
   (clim:with-application-frame (frame)
+    (let ((sheet (clim:frame-top-level-sheet frame)))
+      (setf (clim:sheet-pointer-cursor sheet) :horizontal-scroll))
     (record-decision (make-decision :type :last) frame)
     (when (compare-frame-controller frame)
       (mp:process-revoke-arrest-reason 
