@@ -156,7 +156,7 @@
     (user::write-psort-index-file)))
 
 (defun restart-lkb-function nil
-  (user::read-psort-index-file)
+  #+:foo (user::read-psort-index-file)
   (set-up-lkb-interaction :core)
   (enable-type-interactions))
 
