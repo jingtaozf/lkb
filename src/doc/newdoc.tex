@@ -8,10 +8,23 @@
 \usepackage{times}
 % use the time fonts for better results with
 % pdf (CM fonts don't index correctly)
-\usepackage[dvips]{hyperref}
+
+\ifx\pdfoutput\undefined
+  \usepackage[dvips]{hyperref}
+\else
+  \usepackage[pdftex,colorlinks]{hyperref}
+  \pdfinfo{ 
+    /Title (The (new) LKB system) 
+    /Author (Ann Copestake)
+    /Subject ()
+    /Keywords ()
+  }
+\fi
+
+\usepackage{graphicx}
 
 %- comment out epsf box for TeXtures
-\input epsf
+%\input epsf
 %\newcommand{\epsfbox}[1]{}
 %\def\epsfxsize{}
 \input thedefs1
@@ -633,7 +646,7 @@ installation.
     (setq load-path (cons "/usr/acl/fi" load-path)))
 (if (not (member "~/newlkb/src" load-path))
     (setq load-path (cons "~/newlkb/src" load-path)))
-	
+        
 (load "fi-site-init")
 (load "tdl-mode")
 (load "lkb")
@@ -682,7 +695,8 @@ should now see the LKB interaction window, as shown in
 Figure~\ref{lkbtop-unix}.
 To continue, see Chapter~\ref{firstsession}.
 \begin{figure}
-\epsfbox[0 0 400 100]{figs/lkbtop-unix.ps}
+%\epsfbox[0 0 400 100]{figs/lkbtop-unix.ps}
+\includegraphics[width=400bp]{figs/lkbtop-unix}
 \caption{The LKB interaction window in ACL/CLIM}
 \label{lkbtop-unix}
 \end{figure}
@@ -769,7 +783,7 @@ installation.
     (setq load-path (cons "/usr/acl/fi" load-path)))
 (if (not (member "~/newlkb/src" load-path))
     (setq load-path (cons "~/newlkb/src" load-path)))
-	
+        
 (load "fi-site-init")
 (load "tdl-mode")
 (load "lkb")
@@ -995,7 +1009,8 @@ The main way of interacting with the LKB is through the LKB top menu.
 The ACL/CLIM version is shown in Figure~\ref{lunix2}, the MCL version
 is on the top menu-bar.
 \begin{figure}
-\epsfbox[0 0 400 100]{figs/lkbtop-unix.ps}
+%\epsfbox[0 0 400 100]{figs/lkbtop-unix.ps}
+\includegraphics[width=400bp]{figs/lkbtop-unix}
 \caption{The LKB interaction window in ACL/CLIM}
 \label{lunix2}
 \end{figure}
@@ -1057,13 +1072,15 @@ you get another error message when trying to load
 \filename{toy/script}, it is
 possible you have selected another file instead of script --- try again.
 \begin{figure}
-\epsfxsize=3in
-\epsfbox[0 0 400 500]{figs/loadscript.ps}
+%\epsfxsize=3in
+%\epsfbox[0 0 400 500]{figs/loadscript.ps}
+\includegraphics[width=3in]{figs/loadscript}
 \caption{Selecting the script file in ACL/CLIM}
 \label{loadscript}
 \end{figure}
 \begin{figure}
-\epsfbox[0 0 400 250]{figs/loadmess.ps}
+%\epsfbox[0 0 400 250]{figs/loadmess.ps}
+\includegraphics[width=3in]{figs/loadmess}
 \caption{Loading a file}
 \label{loadmess}
 \end{figure}
@@ -1071,8 +1088,9 @@ possible you have selected another file instead of script --- try again.
 Once a file is successfully loaded, the menu commands are all available
 and a type hierarchy window is displayed (as shown in Figure~\ref{typehier}).
 \begin{figure}
-\epsfxsize=3in
-\epsfbox[0 0 400 500]{figs/typehier.ps}
+%\epsfxsize=3in
+%\epsfbox[0 0 400 500]{figs/typehier.ps}
+\includegraphics[width=3in]{figs/typehier}
 \caption{The type hierarchy window}
 \label{typehier}
 \end{figure}
@@ -1102,8 +1120,9 @@ which is a daughter of {\type *list*}, which is a daughter of {\type *top*},
 and choose {\lkbmenucommand Expanded Type} from the menu.  A window will appear
 as shown in Figure~\ref{ne-list}.
 \begin{figure}
-\epsfxsize=1in
-\epsfbox[0 0 200 200]{figs/ne-list.ps}
+%\epsfxsize=1in
+%\epsfbox[0 0 200 200]{figs/ne-list.ps}
+\includegraphics[width=1in]{figs/ne-list}
 \caption{An expanded type constraint window}
 \label{ne-list}
 \end{figure}
@@ -1151,8 +1170,9 @@ Figure~\ref{grule}.  {\type grule} illustrates that types can have
 complex constraints: that is the value of a feature in a constraint
 can be a feature structure.  
 \begin{figure}
-\epsfxsize=1in
-\epsfbox[0 0 200 400]{figs/grule.ps}
+%\epsfxsize=1in
+%\epsfbox[0 0 200 400]{figs/grule.ps}
+\includegraphics[width=1in]{figs/grule}
 \caption{A complex type constraint}
 \label{grule}
 \end{figure}
@@ -1222,8 +1242,9 @@ it will not fit on one page, but the boxes indicate which parts of the
 structure have been `shrunk' (this is done by clicking on a node,
 and choosing the menu option {\lkbmenucommand Shrink/expand}).
 \begin{figure}
-\epsfxsize=4in
-\epsfbox[0 0 400 800]{figs/rulefs.ps}
+%\epsfxsize=4in
+%\epsfbox[0 0 400 800]{figs/rulefs.ps}
+\includegraphics[width=4in]{figs/rulefs}
 \caption{The head specifier rule}
 \label{rulefs}
 \end{figure}
@@ -1247,14 +1268,16 @@ If you choose this, you will see a window with a more readable version
 of the tree, as shown in Figure~\ref{ptree}. In MCL you will just get the 
 large tree immediately.
 \begin{figure}
-\epsfxsize=2in
-\epsfbox[0 0 400 100]{figs/kimsleeps.ps}
+%\epsfxsize=2in
+%\epsfbox[0 0 400 100]{figs/kimsleeps.ps}
+\includegraphics[width=2in]{figs/kimsleeps}
 \caption{The parse result window in ACL/CLIM}
 \label{kimsleeps}
 \end{figure}
 \begin{figure}
-\epsfxsize=2in
-\epsfbox[0 0 400 400]{figs/ptree.ps}
+%\epsfxsize=2in
+%\epsfbox[0 0 400 400]{figs/ptree.ps}
+\includegraphics[width=2in]{figs/ptree}
 \caption{A parse tree window}
 \label{ptree}
 \end{figure}
@@ -1272,8 +1295,9 @@ This structure represents the entire
 sentence.  It is an instantiation of the \lkbentryname{head-specifier-rule}
 shown in Figure~\ref{rulefs}.
 \begin{figure}
-\epsfxsize=4in
-\epsfbox[0 0 400 800]{figs/bigfs.ps}
+%\epsfxsize=4in
+%\epsfbox[0 0 400 800]{figs/bigfs.ps}
+\includegraphics[width=4in]{figs/bigfs}
 \caption{A feature structure representing the sentence {\it Kim sleeps}}
 \label{bigfs}
 \end{figure}
@@ -4893,7 +4917,7 @@ synsem-struc := *top* &
 
 phrase :=  synsem-struc &
  [ ORTH [ LIST #first,
-	         LAST #last ],
+                 LAST #last ],
    ARGS [ FIRST [ ORTH [ LIST #first,
                          LAST #middle ] ], 
           REST [ FIRST [ ORTH [ LIST #middle,
@@ -5944,7 +5968,7 @@ me_1 := pron-lxm &
   SYN  [ HEAD noun & 
               [ AGR non-3sing 
                     & [ PER 1st ],
-		CASE acc ] ] ].
+                CASE acc ] ] ].
 \end{verbatim}
 However the interpretation is different.  Rather than
 stipulating that me\_1 is a type in the hierarchy under the
@@ -8587,7 +8611,7 @@ the CSLI LinGO ERG:
            (lkb-pathname (parent-directory) "syntax.tdl")
            (lkb-pathname (parent-directory) "lexrules.tdl")
            (lkb-pathname (parent-directory) "auxverbs.tdl")
-	   (lkb-pathname (parent-directory) "multiletypes.tdl")	
+           (lkb-pathname (parent-directory) "multiletypes.tdl") 
            (lkb-pathname (this-directory) "lkbpatches.tdl")
            (lkb-pathname (this-directory) "mrsmunge.tdl"))
      (lkb-pathname (this-directory) "settings.lsp"))
