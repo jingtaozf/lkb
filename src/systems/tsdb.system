@@ -77,6 +77,7 @@
      (:module "tsdb"
       :source-pathname "lisp"
       :binary-pathname ""
+      :source-extension "lisp"
       :components
       ((:file "tsdb-package")
        (:file "macros")

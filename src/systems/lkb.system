@@ -36,7 +36,7 @@
 ;;; need to worry about load() order.
 ;;;
 ;;;   - :ltemplates -- lexical templates: see `src/main/ltemplates.lsp';
-;;;   - :pooling -- enable recycling of high-frequency objects (currently dags);
+;;;   - :pooling -- enable recycling of high-frequency objects (dags, for now);
 ;;;   - :packing -- enable code for chart packing under (partial) subsumption;
 ;;; 
 
@@ -51,7 +51,7 @@
     #+(and :allegro :clim) "ACL_specific"
     #+(and :allegro (not :clim) :tty) "ACL_specific"
     #+(and :allegro :common-graphics (not :clim) (not :tty)) 
-                                             "ACL-CG_specific"
+    "ACL-CG_specific"
     #+:mcl "MCL_specific"
     #+(and (not :allegro) (not :mcl)) "")
 
@@ -62,22 +62,24 @@
     :binary-pathname (get-binaries-dir "lkb")
     :source-extension "lsp"
     :depends-on ()
+
     :initially-do
-      #+:allegro (setf excl:*enable-package-locked-errors* nil)
-      #-:allegro nil
+    #+:allegro (setf excl:*enable-package-locked-errors* nil)
+    #-:allegro nil
     :finally-do
     #+(and :allegro :clim (not :tty))
     (unless (and (boundp 'cl-user::*building-image-p*)
 		 cl-user::*building-image-p*)
       (let ((*package* (find-package "CLIM-USER")))
 	(clim-user::set-up-lkb-interaction :core)))
-  #+(and :allegro :common-graphics (not :clim) (not :tty))
+    #+(and :allegro :common-graphics (not :clim) (not :tty))
     (unless (and (boundp 'cl-user::*building-image-p*)
 		 cl-user::*building-image-p*)
 	(cl-user::set-up-lkb-interaction :core))
     #+(and :mcl (not :tty))
     (cl-user::set-up-lkb-interaction :core)
     #+tty nil
+
     :components
     ((:module "version"
               :source-pathname ""
