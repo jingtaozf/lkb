@@ -934,12 +934,12 @@ Unattached arguments are ignored
 (defun compatible-arg-types (arg-type1 arg-type2)
   ;;; FIX3 - will need expansion
   (cond 
-   ((and (equal arg-type1 "argn")
-	 (equal arg-type2 "argn"))
+   ((and (string-equal arg-type1 "argn")
+	 (string-equal arg-type2 "argn"))
     :comp)
-   ((equal arg-type1 arg-type2) :equal)
-   ((equal arg-type1 "argn") :sub2)
-   ((equal arg-type2 "argn") :sub1)
+   ((string-equal arg-type1 arg-type2) :equal)
+   ((string-equal arg-type1 "argn") :sub2)
+   ((string-equal arg-type2 "argn") :sub1)
    (t nil)))
 
 
