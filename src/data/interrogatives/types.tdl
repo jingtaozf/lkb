@@ -386,9 +386,9 @@ imp-root-cl := root-cl &
 
 ; factive-clause (factive-cl)
 factive-cl := core-cl &
-[ SS.LOC.CAT.HEAD.IC false,
-  SS.LOC.CONT.REPRISABLE false,
-  SS.LOC.CONT fact ].
+[ SS.LOC [ CAT.HEAD [ IC false,
+                      FORM fin ], 
+           CONT fact & [ REPRISABLE false ] ] ].
 
 #|
 ; relative-clause (rel-cl)

@@ -180,7 +180,7 @@ Proposition selecting:
 Sandy claims Kim sees the dog.
 Sandy claims that Kim sees the dog.
 Sandy claims to see the dog.
-*Sandy claims for to see the dog.
+*Sandy claims for Kim to see the dog.
 *Sandy claims Kim see the dog.
 *Sandy claims that Kim see the dog.
 
@@ -188,7 +188,7 @@ Finite Proposition Selecting:
 I believe Kim ate the bagel.
 I believe that Kim ate the bagel.
 *I believe to eat the bagel.
-*I believe for to eat the bagel.
+*I believe for Kim to eat the bagel.
 *I believe Kim eat the bagel.
 *I believe that Kim eat the bagel.
 
@@ -216,7 +216,7 @@ Sandy tried to drink a martini.
 *Sandy tried Kim drinks a martini.
 *Sandy tried that Kim drinks a martini.
 
-Finite Fact Selecting:
+Fact Selecting:
 Sandy discovered Kim left.
 Sandy discovered that Kim left.
 Sandy discovered what an artist Kim is.
@@ -227,9 +227,9 @@ Sandy discovered Kim eats bagels.
 
 Question selecting:
 Sandy wonders whether Kim ate the bagels.
-Sandy wonders if Kim ate those the bagels.
+Sandy wonders if Kim ate the bagels.
 Sandy wonders whether to eat the bagels.
-Those bagels Sandy wonder whether to eat.
+Those bagels Sandy wonders whether to eat.
 *Sandy wonders Kim ate the bagels.
 *Sandy wonders Kim eat the bagels.
 *Sandy wonders if to eat the bagels.
