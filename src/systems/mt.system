@@ -23,7 +23,7 @@
 (pushnew :mt *features*)
 
 (defsystem "mt"
-  :depends-on (#+:tsdb "tsdb" #-:tsdb "mrs")
+  :depends-on ("mrs")
   :source-pathname (dir-append (get-sources-dir "mt") '(:relative "mt"))
   :binary-pathname (dir-append (get-binaries-dir "mt") '(:relative "mt"))
   :proclamations (optimize (safety 3) (speed 0) (debug 3) (space 0))

@@ -475,9 +475,5 @@
             (browse-mrss mtr)
             (setf previous id)))))))
 
-#+:tsdb
-(eval-when (:load-toplevel :execute)
-  (setf (gethash :mrs tsdb::*statistics-browsers*) "mt::browse-mrss"))
-
 (defun mrs-transfer-font ()
   '(:sans-serif :roman 10))
