@@ -91,7 +91,8 @@
   (unless (and db host table)
     (error "please instantiate db+host+table in *psql-lexicon-parameters*"))
   (if (extract-param :user *psql-lexicon-parameters*)
-      (setf *current-user* (extract-param :user *psql-lexicon-parameters*)))
+      (setf *current-user* (extract-param :user *psql-lexicon-parameters*))
+    (setf *current-user* (sys:user-name)))
   (let ((part-of))   
     (if *psql-lexicon*
         (setf part-of (part-of *psql-lexicon*))
@@ -698,7 +699,7 @@
   (clear-lex lexicon)
   (if *tmp-lexicon* 
       (clear-lex *tmp-lexicon*))
-  (format t "~%Connecting to lexical database ~a" (dbname lexicon))
+  (format t "~%Connecting to lexical database ~a as user ~a" (dbname lexicon) (user lexicon))
     (let* ((connection (connect lexicon)))
       (setf *tmp-lexicon* lexicon)
       (format t "~%(Re)initializing ~a" (dbname lexicon))

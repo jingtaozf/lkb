@@ -515,11 +515,9 @@
 		  do
 		    (setf result 
 		      (append result value))
-		      ;(nconc result value))
 		  finally 
 		    (return result))))
 	   (value (append value extra)))
-	   ;(value (nconc value extra)))
      value))
 
 (defmethod lex-words :around ((lexicon lex-database))
@@ -633,3 +631,10 @@
 
 (defun get-keyword-val (keyword list)
   (second (member keyword list)))
+
+;; this can't go in psqllex
+(defun psql-lexicon-enabled-p nil
+  (and
+   (common-lisp-user::featurep :psql)
+   *psql-lexicon-parameters*))
+
