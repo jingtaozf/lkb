@@ -2,8 +2,9 @@
 --- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
-CREATE FUNCTION "plpgsql_call_handler" () RETURNS LANGUAGE_HANDLER AS '$libdir/plpgsql' LANGUAGE C;
-CREATE TRUSTED LANGUAGE "plpgsql" HANDLER "plpgsql_call_handler";
+-- use instead: create_lang -U postgres plpgsql template1
+--CREATE FUNCTION "plpgsql_call_handler" () RETURNS LANGUAGE_HANDLER AS '$libdir/plpgsql' LANGUAGE C;
+--CREATE TRUSTED LANGUAGE "plpgsql" HANDLER "plpgsql_call_handler";
 
 --
 --
