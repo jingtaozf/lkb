@@ -238,3 +238,15 @@ echo
 echo "to run the LKB and [incr tsdb()] from within emacs(1), add the following"
 echo "to the file \`.emacs' in your home directory:"
 echo
+echo "  (let ((root (or (if (getenv \"DELPHINHOME\")"
+echo "                    (substitute-in-file-name \"\$DELPHINHOME\"))"
+echo "                  \"${DELPHINHOME}\")))" 
+echo "    (if (file-exists-p (format \"%s/dot.emacs\" root))"
+echo "      (load (format \"%s/dot.emacs\" root) nil t t)))"
+echo
+echo "and consider adding the following to your \`.bashrc':"
+echo
+echo "  export DELPHINHOME=${DELPHINHOME}"
+echo 
+echo "to permanently record the root directory of your DELPH-IN installation"
+echo "(and if you are a (t)csh(1) user, use \`setenv' rather than \`export')."

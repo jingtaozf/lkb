@@ -4,11 +4,11 @@
 ;;; make sure this file is included from your personal `~/.emacs', e.g. put the
 ;;; following towards the end of `~/.emacs' (and uncomment these, of course):
 ;;;
-;;;   (if (getenv "DELPHINROOT")
-;;;     (let ((root (or (substitute-in-file-name "$DELPHINROOT")
-;;;                     "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo")))
-;;;       (if (file-exists-p (format "%s/dot.emacs" root))
-;;;         (load (format "%s/dot.emacs" root) nil t t))))
+;;;   (let ((root (or (if (getenv "DELPHINHOME")
+;;;                     (substitute-in-file-name "$DELPHINHOME"))
+;;;                   "/afs/ir.stanford.edu/users/o/e/oepen/src/lingo")))
+;;;     (if (file-exists-p (format "%s/dot.emacs" root))
+;;;       (load (format "%s/dot.emacs" root) nil t t)))
 ;;;
 ;;; in other words, either set the shell environment variable `DELPHINROOT' to
 ;;; the root directory of your installation tree (e.g. `~/delphin' for most
