@@ -42,50 +42,89 @@
                        :if-exists :append :if-does-not-exist :create)
         (let* ((log (make-broadcast-stream 
                      log (or #+:allegro excl:*initial-terminal-io* t)))
-               (mrs (mrs::read-mrs-from-file file))
-               (*bypass-equality-check* t))
-          (cond
-           ((mrs::psoa-p mrs)
-            (format
-             log
-             "~&[~a] translate(): read one MRS (~a EP~p) as generator input.~%"
-             (current-time :long :short)
-             (length (mrs:psoa-liszt mrs)) (length (mrs:psoa-liszt mrs)))
-            (force-output log)
-            (multiple-value-bind (result condition)
-                (ignore-errors 
-                 ;;
-                 ;; work around values() return from generate-from-mrs() ...
-                 ;;
-                 (let* ((stream (make-string-output-stream))
-                        (*standard-output* stream)
-                        (strings (generate-from-mrs mrs))
-                        (output (get-output-stream-string stream)))
-                   (when (and (stringp output) (not (string= output "")))
-                     (format
-                      log
-                      "~&[~a] translate(): message `~a'.~%"
-                      (current-time :long :short)
-                      (normalize-string output)))
-                   strings))
-              (if condition
-                (format
-                 log
-                 "~&[~a] translate(): error `~a'.~%"
-                 (current-time :long :short)
-                 (normalize-string (format nil "~a" condition)))
-                (format
-                 log
-                 "~&[~a] translate(): ~a generation result~p.~%"
-                 (current-time :long :short)
-                 (length result) (length result)))
-              (when result (show-gen-result))))
-           (t
-            (format
-             log
-             "~&[~a] translate(): ignoring null or illformed MRS.~%"
-             (current-time :long :short))))
-          (force-output log)))))
+               (mrss (mrs::read-mrss-from-file file)))
+          (format
+           log
+           "~&[~a] translate(): read ~a MRS~p as generator input.~%"
+           (current-time :long :short) (length mrss) (length mrss))
+          (loop
+              for i from 0
+              for mrs in mrss do
+                (cond
+                 ((mrs::psoa-p mrs)
+                  (format
+                   log
+                   "~&[~a] translate(): ~
+                     processing MRS # ~a (~a EP~p).~%"
+                   (current-time :long :short) i
+                   (length (mrs:psoa-liszt mrs)) (length (mrs:psoa-liszt mrs)))
+                  (force-output log)
+                  (multiple-value-bind (result condition)
+                      (ignore-errors 
+                       ;;
+                       ;; work around values() return from generate-from-mrs()
+                       ;;
+                       (let* ((stream (make-string-output-stream))
+                              (*standard-output* stream)
+                              (strings (generate-from-mrs mrs))
+                              (output (get-output-stream-string stream)))
+                         (when (and (stringp output) (not (string= output "")))
+                           (format
+                            log
+                            "~&[~a] translate(): message `~a'.~%"
+                            (current-time :long :short)
+                            (normalize-string output)))
+                         strings))
+                    (if condition
+                      (format
+                       log
+                       "~&[~a] translate(): error `~a'.~%"
+                       (current-time :long :short)
+                       (normalize-string (format nil "~a" condition)))
+                      (format
+                       log
+                       "~&[~a] translate(): ~a generation result~p.~%"
+                       (current-time :long :short)
+                       (length result) (length result)))
+                    (force-output log)
+                    (when result (show-gen-result))
+                    (invalidate-marks)
+                    (invalidate-visit-marks)
+                    (loop
+                        for item in %generator-lexical-items%
+                        for tdfs = (mrs::found-lex-inst-fs item)
+                        when (tdfs-p tdfs) 
+                        do (compress-dag (tdfs-indef tdfs) :recursivep t))
+                    (loop
+                        for rule in (get-matching-lex-rules nil)
+                        for tdfs = (rule-full-fs rule)
+                        for dag = (tdfs-indef tdfs) do
+                          (compress-dag dag :recursivep t))
+                    (loop
+                        for rule in (get-matching-rules nil nil)
+                        for tdfs = (rule-full-fs rule)
+                        for dag = (tdfs-indef tdfs) do
+                          (compress-dag dag :recursivep t))
+                    (ignore-errors
+                     (if (listp *start-symbol*)
+                       (loop
+                           for root in *start-symbol* 
+                           for tdfs = (get-tdfs-given-id root)
+                           for dag = (and tdfs (tdfs-indef tdfs))
+                           when (dag-p dag) 
+                           do (compress-dag dag :recursivep t))
+                       (let* ((tdfs (get-tdfs-given-id *start-symbol*))
+                              (dag (and tdfs (tdfs-indef tdfs))))
+                         (when (dag-p dag) (compress-dag dag :recursivep t)))))
+                    (sleep 1)
+                    #+:allegro
+                    (excl:gc)))
+                 (t
+                  (format
+                   log
+                   "~&[~a] translate(): ignoring null or illformed MRS.~%"
+                   (current-time :long :short))))
+                (force-output log))))))
   (when serverp 
     (delete-file file)
     (translate :serverp serverp :file file)))
@@ -95,6 +134,15 @@
     (stop-generator-server)
     (with-open-file (log (format nil "/tmp/generate.debug.~a" (current-user))
                      :direction :output :if-exists :supersede)))
+  ;;
+  ;; tune Allegro CL gc() performance to initially tenure everything (assuming
+  ;; that is the grammar, mostly) and then keep everything in newspace.
+  ;;
+  #+:allegro
+  (excl:gc :mark-for-tenure)
+  #+:allegro
+  (setf (sys:gsgc-parameter :auto-step) nil)
+
   (if forkp
     (with-output-to-top ()
       #-:clisp
