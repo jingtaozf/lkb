@@ -118,8 +118,10 @@
            (output-scoped-mrs mrsstruct)))))
 
 
-
+#|
 
 (in-package :cl-user)
 
 (read-mrs-rule-file-aux "~aac/grammar/data/alex.rules")
+
+|#
