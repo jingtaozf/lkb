@@ -174,7 +174,7 @@
 
 (defmethod rmrs-output-end-ep ((rmrsout compact))
   (with-slots (stream) rmrsout
-    (format stream ")  ")))
+    (format stream ")~%")))
 
 (defmethod rmrs-output-end-eps ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -196,7 +196,7 @@
 
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout compact))
   (with-slots (stream) rmrsout
-    (format stream ")  ")))
+    (format stream ")~%")))
 
 (defmethod rmrs-output-end-rmrs-args ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -210,7 +210,7 @@
 
 (defmethod rmrs-output-outscopes ((rmrsout compact) reln higher lower)
   (with-slots (stream) rmrsout
-    (format stream "~A(~A,~A) " 
+    (format stream "~A(~A,~A)~%" 
             reln higher lower)))
 
 (defmethod rmrs-output-end-h-cons ((rmrsout compact))
