@@ -76,7 +76,6 @@ char *tsdb_rest_generate(char *, int) ;
 char **tsdb_completion(char *, int, int);
 char *tsdb_command_generate(char *, int);
 char *tsdb_others_generate(char *, int);
-char *cannon_whitespace(char *);
 int initialize_readline(void);
 BOOL tsdb_command(char *);
 
@@ -105,6 +104,24 @@ int main(int argc, char **argv) {
 
   tsdb_default_stream = TSDB_DEFAULT_STREAM;
   tsdb_error_stream = TSDB_ERROR_STREAM;
+
+  tsdb.status = 0;
+  tsdb.relations = (Tsdb_relation **)NULL;
+  tsdb.data = (Tsdb_selection **)NULL;
+  tsdb.input = (char *)NULL;
+  tsdb.home = (char *)NULL;
+  tsdb.relations_file = (char *)NULL;
+  tsdb.data_path = (char *)NULL;
+  tsdb.result_path = (char *)NULL;
+  tsdb.result_prefix = (char *)NULL;
+  tsdb.max_results = -1;
+  tsdb.server = (char *)NULL;
+  tsdb.port = 0;
+  tsdb.pager = (char *)NULL;
+  tsdb.query = (char *)NULL;
+#ifdef DEBUG
+  tsdb.debug_file = (char *)NULL;
+#endif
 
   if((foo = strdup(argv[0])) != NULL) {
     if((bar = strrchr(foo, TSDB_DIRECTORY_DELIMITER[0])) != NULL) {
@@ -142,7 +159,7 @@ int main(int argc, char **argv) {
   } /* if */
   else {
     using_history();
-    if(read_history(TSDB_HISTORY_FILE) != NULL) {
+    if(read_history(TSDB_HISTORY_FILE)) {
       fprintf(tsdb_error_stream,
               "main(): no history file `%s'.\n",
               TSDB_HISTORY_FILE);
@@ -185,7 +202,7 @@ int main(int argc, char **argv) {
       } /* if */
     } /* while */
     
-    if(write_history(TSDB_HISTORY_FILE) != NULL) {
+    if(write_history(TSDB_HISTORY_FILE)) {
       fprintf(tsdb_error_stream,
               "main(): unable to write to history file `%s'.\n",
               TSDB_HISTORY_FILE);
@@ -217,7 +234,7 @@ void tsdb_parse_options(int argc, char **argv) {
   int c, foo;
   char *bar;
   struct option options[] = {
-    {"server", no_argument, 0, TSDB_SERVER_OPTION},
+    {"server", optional_argument, 0, TSDB_SERVER_OPTION},
     {"port", required_argument, 0, TSDB_PORT_OPTION},
     {"home", required_argument, 0, TSDB_HOME_OPTION},
     {"relations-file", required_argument, 0, TSDB_RELATIONS_FILE_OPTION},
@@ -244,7 +261,12 @@ void tsdb_parse_options(int argc, char **argv) {
         exit(-1);
         break;
       case TSDB_SERVER_OPTION:
-        tsdb.status |= TSDB_SERVER_MODE;
+        if(optarg != NULL) {
+          tsdb.server = strdup(optarg);
+        } /* if */
+        else {
+          tsdb.status |= TSDB_SERVER_MODE;
+        } /* else */
         break;
       case TSDB_PORT_OPTION:
         if(optarg != NULL) {
@@ -357,28 +379,34 @@ void tsdb_usage() {
   fprintf(tsdb_error_stream,
           "  `-server' --- go into server (daemon) mode;\n");
   fprintf(tsdb_error_stream,
-          "  `-port=' --- server TCP port address;\n");
+          "  `-server=host' --- "
+          "go into client mode connecting to server `host';\n");
   fprintf(tsdb_error_stream,
-          "  `-home=' --- root directory for database;\n");
+          "  `-client' --- go into client mode;\n");
   fprintf(tsdb_error_stream,
-          "  `-relations-file=' --- relations file for database;\n");
+          "  `-port=n' --- server TCP port address;\n");
   fprintf(tsdb_error_stream,
-          "  `-data-path=' --- data directory for database;\n");
+          "  `-home=directory' --- root directory for database;\n");
   fprintf(tsdb_error_stream,
-          "  `-result-path' --- directory to store query results;\n");
+          "  `-relations-file=file' --- relations file for database;\n");
   fprintf(tsdb_error_stream,
-          "  `-result-prefix=' --- file prefix for query results;\n");
+          "  `-data-path=directory' --- data directory for database;\n");
+  fprintf(tsdb_error_stream,
+          "  `-result-path=directory' "
+          "--- directory to store query results;\n");
+  fprintf(tsdb_error_stream,
+          "  `-result-prefix=string' --- file prefix for query results;\n");
   fprintf(tsdb_error_stream,
           "  `-max-results[={_0_ | 1 | ...}]' "
           "--- maximum of stored query results;\n");
 #ifdef DEBUG
   fprintf(tsdb_error_stream,
-          "  `-debug-file=' --- output file for debug information;\n");
+          "  `-debug-file=file' --- output file for debug information;\n");
 #endif
   fprintf(tsdb_error_stream,
           "  `-pager[={command | _off_}' --- pager command to use;\n");
   fprintf(tsdb_error_stream,
-          "  `-query=' --- query to be processed in batch mode;\n");
+          "  `-query=string' --- query to be processed in batch mode;\n");
   fprintf(tsdb_error_stream,
           "  `-usage' or `-help' --- this message (give it a try |:-);\n");
   fprintf(tsdb_error_stream,
@@ -394,7 +422,7 @@ void tsdb_quit(void) {
 
 int initialize_readline(void) {
 
-  rl_attempted_completion_function = (Function *)tsdb_completion;
+  rl_attempted_completion_function = (CPPFunction *)tsdb_completion;
 
 } /* initialize_readline */
 
@@ -656,33 +684,6 @@ char *tsdb_others_generate(char *text, int state) {
   return((char *)NULL);
 
 } /* tsdb_others_generate() */
-
-char *cannon_whitespace(char *command) {
-
-  char *result = (char *)malloc(sizeof(char));
-  BOOL instring = FALSE;
-
-  printf("command = %s\n", command);
-  while(*command != NULL) {
-    if(*command == '"') {
-      if(!instring)
-        instring = TRUE;
-      else 
-        instring = FALSE;
-    } /* if */
-    printf("%c.", *command);
-    *result = *command;
-    (*result)++;
-    if(!instring) 
-      while((*command)++ == ' ');
-    else
-      *command++;
-  } /* while */
-        
-  printf("result = %s\n", result);
-  return(result);
-
-} /* cannon_whitespace() */
 
 BOOL tsdb_command(char *command) {
 

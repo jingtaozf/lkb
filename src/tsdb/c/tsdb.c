@@ -21,6 +21,7 @@ void free(void *foo) {
 } /* free() */
 #endif
 
+Tsdb tsdb;
 Tsdb tdsb = { 
   0,                       /* status */
   (Tsdb_relation **)NULL,  /* relations */
@@ -32,6 +33,7 @@ Tsdb tdsb = {
   (char *)NULL,            /* result_path */
   (char *)NULL,            /* result_prefix */
   -1,                      /* max_results */
+  (char *)NULL,            /* server */
   0,                       /* port */
   (char *)NULL,            /* pager */
   (char *)NULL,            /* query */

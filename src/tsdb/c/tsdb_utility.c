@@ -19,8 +19,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <regex.h>
-
-#include <sys/times.h>
+#include <sys/types.h>
 #include <sys/param.h>
 #include <errno.h>
 extern int errno;
@@ -29,8 +28,11 @@ extern int errno;
 #include "tsdb.h"
 #include "errors.h"
 
-
-/* ------------------------- Tsdb_value Operations ---------------------*/
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+#  include <sys/time.h>
+#else
+#  include <sys/times.h>
+#endif
 
 BYTE tsdb_value_compare(Tsdb_value *foo, Tsdb_value *bar) {
 
@@ -83,8 +85,7 @@ BOOL tsdb_value_substring(Tsdb_value *foo, Tsdb_value *bar) {
   } /* else */
 
 } /* tsdb_value_substring() */
-
-
+
 /*  True if the pattern bar matches foo: If given the compiled pattern
     bar_pat, it matches with it instead. */
 
@@ -418,7 +419,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
                               Tsdb_relation *relation) {
   
   int i, integer;
-  char *string=NULL, *attribute=NULL;
+  char *string=NULL, *attribute = NULL;
   BOOL number, answer;
 
   attribute = strdup(condition->left->node->value.identifier);
@@ -431,87 +432,101 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
     number = TRUE;
   }
   else {
-    fprintf(tsdb_error_stream, "tsdb: bad tsdb_type.\n");
+    fprintf(tsdb_error_stream,
+            "satisfies_condition(): "
+            "invalid righthand side comparison value.\n");
     fflush(tsdb_error_stream);
-    if (attribute)
+    if (attribute != NULL)
       free(attribute);
     return(FALSE);
   }
 
   for(i = 0; strcmp(attribute, relation->fields[i]) != 0; i++);
-  if(number) 
-    printf("comparing %d with %d with operator: %d.\n",
-           integer, tuple->fields[i]->value.integer,
-           condition->node->value.operator);
-  else
-    printf("comparing %s with %s with operator: %d.\n",
-           string, tuple->fields[i]->value.string, 
-           condition->node->value.operator);
+
   switch(condition->node->value.operator) {
   case TSDB_EQUAL :
-    if(number) answer = (tuple->fields[i]->value.integer == integer);
-    else answer = (!strcmp(string, tuple->fields[i]->value.string));
+    answer = (number
+              ? (tuple->fields[i]->value.integer == integer)
+              : !strcmp(string, tuple->fields[i]->value.string));
     break;
   case TSDB_NOT_EQUAL :
-    if(number) answer = (tuple->fields[i]->value.integer != integer);
-    else answer = (strcmp(string, tuple->fields[i]->value.string));
+    answer = (number 
+              ? (tuple->fields[i]->value.integer != integer)
+              : strcmp(string, tuple->fields[i]->value.string));
     break;
   case TSDB_LESS_THAN :
-    if(number) answer = (tuple->fields[i]->value.integer < integer);
+    if(number) {
+      answer = (tuple->fields[i]->value.integer < integer);
+    } /* if */
     else {
-      fprintf(tsdb_error_stream, "Cannot compare strings with '<' operator.\n");
+      fprintf(tsdb_error_stream,
+              "satisfies_condition(): undefined operator '<' on strings.\n");
       answer = FALSE;
-    }
+    } /* if */
     break;
   case TSDB_LESS_OR_EQUAL_THAN :
-    if(number) answer = (tuple->fields[i]->value.integer <= integer);
+    if(number) {
+      answer = (tuple->fields[i]->value.integer <= integer);
+    } /* if */
     else {
-      fprintf(tsdb_error_stream, "Cannot compare strings with '<=' operator.\n");
+      fprintf(tsdb_error_stream,
+              "satisfies_condition(): undefined operator '<' on strings.\n");
       answer = FALSE;
-    }
+    } /* else */
     break;
   case TSDB_GREATER_THAN :
-    if(number) answer = (tuple->fields[i]->value.integer > integer);
+    if(number) {
+      answer = (tuple->fields[i]->value.integer > integer);
+    } /* if */
     else {
-      fprintf(tsdb_error_stream, "Cannot compare strings with '>' operator.\n");
+      fprintf(tsdb_error_stream,
+              "satisfies_condition(): undefined operator '>' on strings.\n");
       answer = FALSE;
-    }
+    } /* else */
     break;
   case TSDB_GREATER_OR_EQUAL_THAN :
-    if(number) answer = (tuple->fields[i]->value.integer >= integer);
+    if(number) {
+      answer = (tuple->fields[i]->value.integer >= integer);
+    } /* if */
     else {
-      fprintf(tsdb_error_stream, "Cannot compare strings with '>=' operator.\n");
+      fprintf(tsdb_error_stream,
+              "satisfies_condition(): undefined operator '>=' on strings.\n");
       answer = FALSE;
-    }
+    } /* else */
     break;
   case TSDB_SUBSTRING :
     if(number) {
-      fprintf(tsdb_error_stream, "Cannot compare integers with '~' operator.\n");
+      fprintf(tsdb_error_stream,
+              "satisfies_condition(): undefined operator '~' on integers.\n");
       answer = FALSE;
-    }
+    } /* if */
     else {
       answer = (strstr(string, tuple->fields[i]->value.string) != NULL);
-    }
+    } /* else */
     break; 
   case TSDB_NOT_SUBSTRING :
     if(number) {
-      fprintf(tsdb_error_stream, "Cannot compare integers with '~' operator.\n");
+      fprintf(tsdb_error_stream,
+              "satisfies_condition(): undefined operator '!~' on integers.\n");
       answer = TRUE;
-    }
+    } /* if */
     else {
       answer = (strstr(string, tuple->fields[i]->value.string) == NULL);
-    }
+    } /* else */
     break; 
   default :
-      fprintf(tsdb_error_stream, "no such operator.\n");
+      fprintf(tsdb_error_stream,
+              "satisfies_condition(): unknown operator %d.\n",
+              condition->node->value.operator);
   } /* switch */
   
-  printf("returning %d.\n", answer);
   fflush(tsdb_error_stream);
-  if (attribute)
+  if(attribute != NULL) {
     free(attribute);
-  if (string)
+  } /* if */
+  if(string != NULL) {
     free(string);
+  } /* if */
   return(answer);
     
 } /* tsdb_satisfies_condition() */
@@ -1267,8 +1282,6 @@ BOOL tsdb_initialize() {
 |*
 |*****************************************************************************|
 |* <open questions>
-|* Why install the ignore handler for SIGPIPE; this seems to suggest misuse of
-|* popen(3) to me (30-jun-95 -- oe).
 \*****************************************************************************/
 
   char *foo;
@@ -1322,7 +1335,7 @@ BOOL tsdb_initialize() {
     free(tsdb.result_prefix);
     tsdb.result_path = strdup(TSDB_RESULT_PATH);
     tsdb.result_prefix = strdup(TSDB_RESULT_PREFIX);
-    if((foo = getenv("USER")) != NULL) {
+    if((foo = tsdb_user()) != NULL) {
       tsdb.result_prefix
         = (char *)realloc(tsdb.result_prefix,
                           strlen(tsdb.result_prefix + strlen(foo) + 2));
@@ -1499,13 +1512,13 @@ void tsdb_parse_environment() {
     } /* else */
   } /* if */
 
-  if(tsdb.result_prefix == 0) {
+  if(tsdb.result_prefix == NULL) {
     if((name = getenv("TSDB_RESULT_PREFIX")) != NULL) {
       tsdb.result_prefix = strdup(name);
     } /* if */
     else {
       tsdb.result_prefix = strdup(TSDB_RESULT_PREFIX);
-      if((foo = getenv("USER")) != NULL) {
+      if((foo = tsdb_user()) != NULL) {
         tsdb.result_prefix
           = (char *)realloc(tsdb.result_prefix,
                             strlen(tsdb.result_prefix) + strlen(foo) + 2);
@@ -1587,11 +1600,20 @@ float tsdb_timer(BYTE action) {
 |*
 \*****************************************************************************/
 
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+  static struct timeval start[TSDB_MAX_TIMERS], stop[TSDB_MAX_TIMERS];
+  struct timezone foo;
+#else
   static struct tms start[TSDB_MAX_TIMERS], stop[TSDB_MAX_TIMERS];
+#endif
   static BYTE n_timers = 0;
 
   if(action == TSDB_START_TIMER) {
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+    if(gettimeofday(&start[n_timers], &foo)) {
+#else
     if(times(&start[n_timers]) == -1) {
+#endif
       perror("timer()");
       return((float)-1);
     } /* if */
@@ -1604,13 +1626,21 @@ float tsdb_timer(BYTE action) {
               "timer(): timer # %d not running.\n", action);
       return((float)-1);
     } /* if */
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+    if(gettimeofday(&stop[--n_timers], &foo)) {
+#else
     if(times(&stop[--n_timers]) == -1) {
+#endif
       perror("tsdb_timer()");
       return((float)-1);
     } /* if */
-    return(((stop[n_timers].tms_utime - start[n_timers].tms_utime)+
-           (stop[n_timers].tms_stime - start[n_timers].tms_stime))/60);
-
+#if defined(SUNOS) || defined(SOLARIS) || defined(LINUX)
+    return((stop[n_timers].tv_sec - start[n_timers].tv_sec) +
+           ((stop[n_timers].tv_usec - start[n_timers].tv_usec) / 1000000));
+#else
+    return(((stop[n_timers].tms_utime - start[n_timers].tms_utime) +
+            (stop[n_timers].tms_stime - start[n_timers].tms_stime)) / 60);
+#endif
   } /* else */
 
 } /* tsdb_timer() */
@@ -1761,8 +1791,6 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
   return(TRUE);
 
 } /* tsdb_insert_into_selection() */
-
-
 
 int tsdb_uniq_projection(char** projection,int n) {
   int i,j,d=0;
@@ -1996,12 +2024,64 @@ char *tsdb_expand_directory(char *name) {
     } /* else */
   } /* if */
   else if(name[0] == '.' && !name[1]) {
-    if(getwd(&foo) == NULL) {
+#if defined(SUNOS)
+    if(getwd(&foo[0]) == NULL) {
       fprintf(tsdb_error_stream,
               "expand_directory(): getpw(3) error; errno: %d.\n", errno);
+#else
+    if(getcwd(&foo[0], MAXPATHLEN + 1) == NULL) {
+      fprintf(tsdb_error_stream,
+              "expand_directory(): getcwd(3) error; errno: %d.\n", errno);
+#endif
       return((char *)NULL);
     } /* if */
     return(tsdb_expand_directory(&foo[0]));
   } /* if */
+  else {
+#if defined(SUNOS)
+    if(getwd(&foo[0]) == NULL) {
+      fprintf(tsdb_error_stream,
+              "expand_directory(): getpw(3) error; errno: %d.\n", errno);
+#else
+    if(getcwd(&foo[0], MAXPATHLEN + 1) == NULL) {
+      fprintf(tsdb_error_stream,
+              "expand_directory(): getcwd(3) error; errno: %d.\n", errno);
+#endif
+      return((char *)NULL);
+    } /* if */
+    if(foo[strlen(foo) - 1] != TSDB_DIRECTORY_DELIMITER[0]) {
+      (void)strcat(&foo[0], TSDB_DIRECTORY_DELIMITER);
+    } /* if */
+    if(name[0] == '.' && name[1] == TSDB_DIRECTORY_DELIMITER[0]) {
+      (void)strcat(&foo[0], &name[2]);
+    } /* if */
+    else {
+      (void)strcat(&foo[0], &name[0]);
+    } /* else */
+    return(tsdb_expand_directory(&foo[0]));
+  } /* else */
   return(NULL);
 } /* tsdb_expand_directory() */
+
+char *tsdb_user() {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_user()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|*
+\*****************************************************************************/
+
+  struct passwd *user;
+
+  if((user = getpwuid(getuid())) != NULL) {
+    return(user->pw_name);
+  } /* if */
+  else {
+    return((char *)NULL);
+  } /* else */
+} /* tsdb_user() */

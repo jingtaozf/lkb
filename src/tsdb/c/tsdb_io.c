@@ -84,7 +84,7 @@ FILE *tsdb_open_debug() {
   char *name, *date, *user;
   time_t clock;
 
-  user = getenv("USER");
+  user = tsdb_user();
 
   if(tsdb.debug_file == NULL) {
     if((name = getenv("TSDB_DEBUG_FILE")) != NULL
@@ -224,7 +224,7 @@ char* tsdb_sprint_value(Tsdb_value *value ) {
       break;
     default:
       fprintf(tsdb_error_stream,
-              "tsdb: unknown tsdb_value type: %d\n", value->type);
+              "print_value(): unknown type: %d.\n", value->type);
       fflush(tsdb_error_stream);
     } /* switch */
   
@@ -336,7 +336,7 @@ BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
       break;
     default:
       fprintf(tsdb_error_stream,
-              "tsdb: unknown tsdb_value type: %d\n", value->type);
+              "print_value(): unknown type: %d.\n", value->type);
       fflush(tsdb_error_stream);
     } /* switch */
   fflush(stream);
@@ -585,7 +585,8 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
   path = strcat(path, name);
 
   if((file = fopen(path, mode)) == NULL) {
-    fprintf(tsdb_error_stream, "tsdb: unable to open data file %s.\n", path);
+    fprintf(tsdb_error_stream,
+            "find_data_file(): unable to open file `%s'.\n", path);
     return((FILE *)NULL);
   } /* if */
   else {

@@ -12,7 +12,17 @@
 #if defined(NOFREE)
 #  if !defined(TSDB_DOT_C)
 extern void free(void *);
+#  endif
 #endif
+
+#if defined(unix)
+#  if defined(sun) && defined(__svr4__)
+#    define SOLARIS
+#  elif defined(sun) && !defined(__svr4__)
+#    define SUNOS
+#  elif defined(linux)
+#    define LINUX
+#  endif
 #endif
 
 #define TSDB_VERSION "0.0"
@@ -21,6 +31,7 @@ extern void free(void *);
 #define TSDB_ERROR_STREAM stderr
 
 #define TSDB_SERVER_MODE 1
+#define TSDB_CLIENT_MODE 2
 
 #define TSDB_UNKNOWN_TYPE 0
 #define TSDB_INTEGER 1
@@ -76,7 +87,7 @@ extern void free(void *);
 #endif
 
 #ifndef TSDB_HOME
-#  define TSDB_HOME "."
+#  define TSDB_HOME "/home/cl-home/oe/src/tsdb/"
 #endif
 
 #ifndef TSDB_RELATIONS_FILE
@@ -84,7 +95,7 @@ extern void free(void *);
 #endif
 
 #ifndef TSDB_DATA_PATH
-#  define TSDB_DATA_PATH "lib/"
+#  define TSDB_DATA_PATH "german/"
 #endif
 
 #ifndef TSDB_RESULT_PATH
@@ -202,6 +213,7 @@ typedef struct tsdb {
   char *result_prefix;
   int max_results;
 
+  char *server;
   int port;
   char *pager;
   char *query;
@@ -211,7 +223,7 @@ typedef struct tsdb {
 } Tsdb;
 
 #if !defined(TSDB_C)
-  Tsdb tsdb;
+  extern Tsdb tsdb;
 
   extern FILE *tsdb_default_stream;
   extern FILE *tsdb_error_stream;
@@ -307,8 +319,9 @@ void tsdb_project(Tsdb_selection*,Tsdb_value **,FILE* );
 FILE *tsdb_find_relations_file(char *);
 FILE *tsdb_find_data_file(char *, char *);
 FILE* tsdb_open_result();
-char *tsdb_expand_directory(char *);
 char *tsdb_rcs_strip(char *, char *);
+char *tsdb_expand_directory(char *);
+char *tsdb_user(void);
 
 Tsdb_node **tsdb_linearize_conditions(Tsdb_node *);
 
@@ -363,8 +376,8 @@ Tsdb_selection* tsdb_conditional_retrieve(Tsdb_value **, Tsdb_value **,
                                           Tsdb_node *);
 
 int tsdb_server_initialize(void);
-void tsdb_server();
+void tsdb_server(void);
 void tsdb_server_child(int);
 int tsdb_socket_write(int, char *, int);
 int tsdb_socket_readline(int, char *, int);
-
+int tsdb_client(void);

@@ -117,7 +117,7 @@ void tsdb_debug_join_path(Tsdb_value **source_attribute_list,
     } /* if */
     else {
       fprintf(tsdb_error_stream,
-              "debug_join_path(): unknown relation `%s'\n",
+              "debug_join_path(): unknown relation `%s'.\n",
               source_attribute_list[i]->value.identifier);
       tsdb_free_tsdb_values(source_attribute_list);
       tsdb_free_tsdb_values(target_attribute_list);
@@ -135,7 +135,7 @@ void tsdb_debug_join_path(Tsdb_value **source_attribute_list,
         = tsdb_find_relation(target_attribute_list[i]->value.identifier);
     } /* if */
     else {
-      fprintf(stderr, "debug_join_path(): unknown relation `%s'\n",
+      fprintf(stderr, "debug_join_path(): unknown relation `%s'.\n",
               target_attribute_list[i]->value.identifier);
       tsdb_free_tsdb_values(source_attribute_list);
       tsdb_free_tsdb_values(target_attribute_list);
@@ -193,7 +193,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
     } /* if */
     else {
       fprintf(tsdb_error_stream,
-              "debug_simple_join(): unknown relation `%s'\n",
+              "debug_simple_join(): unknown relation `%s'.\n",
               attribute_list_1[i]->value.identifier);
       tsdb_free_tsdb_values(attribute_list_1);
       tsdb_free_tsdb_values(attribute_list_2);
@@ -206,7 +206,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
   for(i = 0; relations_1[i] != NULL; i++) {
     if((selections_1[i] = tsdb_find_table(relations_1[i])) == NULL) {
       fprintf(tsdb_error_stream,
-              "debug_simple_join(): no table for relation `%s'\n",
+              "debug_simple_join(): no table for relation `%s'.\n",
               relations_1[i]->name);
       tsdb_free_tsdb_values(attribute_list_1);
       tsdb_free_tsdb_values(attribute_list_2);
@@ -243,7 +243,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
     } /* if */
     else {
       fprintf(tsdb_error_stream,
-              "debug_simple_join(): unknown relation `%s'\n",
+              "debug_simple_join(): unknown relation `%s'.\n",
               attribute_list_2[i]->value.identifier);
       tsdb_free_tsdb_values(attribute_list_1);
       tsdb_free_tsdb_values(attribute_list_2);
@@ -257,7 +257,7 @@ void tsdb_debug_simple_join(Tsdb_value **attribute_list_1,
   for(i = 0; relations_2[i] != NULL; i++) {
     if((selections_2[i] = tsdb_find_table(relations_2[i])) == NULL) {
       fprintf(tsdb_error_stream,
-              "debug_simple_join(): no table for relation `%s'\n",
+              "debug_simple_join(): no table for relation `%s'.\n",
               relations_2[i]->name);
       tsdb_free_tsdb_values(attribute_list_1);
       tsdb_free_tsdb_values(attribute_list_2);

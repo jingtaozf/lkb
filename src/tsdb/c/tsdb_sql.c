@@ -673,21 +673,17 @@ int tsdb_complex_retrieve(Tsdb_value **relation_list,
   if (attributes)
     free(attributes);
 
+  /* TOM: CLEAN ME UP */
+
   /* now check the attributes for projections */
   if (attribute_list) {
-    if((output = tsdb_open_pager()) != NULL) {
-      tsdb_project(selection, attribute_list, output);
-      pclose(output);
-    } /* if */
-    else {
-      tsdb_project(selection,attribute_list,tsdb_default_stream);
-    } /* else */
+    tsdb_project(selection, attribute_list, (FILE *)NULL);
     if (!from_find)
       tsdb_free_selection(selection);
     return(selection->length);
   } /* if */
   else { /* selection with '*': show all attributes in the selection */
-    tsdb_project(selection,NULL,tsdb_default_stream);
+    tsdb_project(selection,NULL, (FILE *)NULL);
   }
   if (!from_find)
     tsdb_free_selection(selection);
@@ -808,6 +804,13 @@ void tsdb_project(Tsdb_selection *selection,Tsdb_value **attributes,FILE* stream
       } /* for key_list */
     } /* for i */
     n  = tsdb_uniq_projection(projection,n);
+    if((output = tsdb_open_pager()) != NULL) {
+      tsdb_print_projection(projection,n,output);
+      pclose(output);
+    } /* if */
+    else {
+      tsdb_print_projection(projection, n, tsdb_default_stream);
+    } /* else */
     if (output=tsdb_open_result()) {
       tsdb_print_projection(projection,n,output);
       fclose(output);

@@ -19,14 +19,15 @@
 #include <netdb.h>
 #include <sys/param.h>
 #include <errno.h>
-#if defined(SUNOS)
-#include <sys/file.h>
-#include <sys/ioctl.h>
-#endif
 #include <readline/readline.h>
 
 #include "globals.h"
 #include "tsdb.h"
+#if defined(SUNOS)
+#  include <fcntl.h>
+#  include <sys/file.h>
+#  include <sys/ioctl.h>
+#endif
 
 extern int errno;
 extern BOOL quit;
@@ -176,7 +177,8 @@ int tsdb_server_initialize() {
 #if defined(SUNOS)
   if(setpgrp(0, getpid()) == -1) {
     fprintf(tsdb_error_stream,
-            "server_initialize(): unable to change process group; errno:%d.\n",
+            "server_initialize(): "
+            "unable to change process group; errno: %d.\n",
             errno);
     return(2);
   } /* if */
@@ -411,7 +413,7 @@ void tsdb_server_child(int socket) {
       exit(0);
     } /* if */
     
-    if(tsdb_socket_readline(socket, &input[0], 1024) > 0) {
+    if(tsdb_socket_readline(socket, &input[0], 1024) >= 0) {
       if(input[0]) {
         if(command == NULL) {
           command = strdup(&input[0]);
@@ -442,7 +444,6 @@ void tsdb_server_child(int socket) {
         } /* if */
         else {
           sprintf(prompt, "> ");
-          /*, host, n_commands);*/
         } /* else */
       } /* if */
       else {
@@ -450,6 +451,12 @@ void tsdb_server_child(int socket) {
       } /* else */
     } /* if */
   } /* while */
+
+#if defined(DEBUG) && defined(SERVER)
+  fprintf(tsdb_debug_stream,
+          "server_child(): [%d] exit.\n", getpid());
+  fflush(tsdb_debug_stream);
+#endif
 
   close(socket);
   exit(0);
@@ -506,6 +513,9 @@ int tsdb_socket_readline(int socket, char *string, int length) {
   char c;
 
   for(n = 0; n < (length - 1) && (i = read(socket, &c, 1)) == 1; n++) {
+    if(c == EOF) {
+      return(-1);
+    } /* if */
     if(c == '\r') {
       (void)read(socket, &c, 1);
     } /* if */
@@ -547,3 +557,51 @@ int tsdb_socket_readline(int socket, char *string, int length) {
     return(0);
   } /* else */
 } /* tsdb_socket_readline() */
+
+int tsdb_client() {
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_client()
+|*     version: 
+|*  written by: oe, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* 
+\*****************************************************************************/
+
+  int client;
+  struct hostent *server;
+  struct sockaddr_in server_address;
+
+  if((server = gethostbyname(tsdb.server)) == NULL) {
+    fprintf(tsdb_error_stream,
+            "client(): unknown server host `%s'.\n", tsdb.server);
+    fflush(tsdb_error_stream);
+    return(-1);
+  } /* if */
+
+  bzero((char *)&server_address, sizeof(server_address));
+  server_address.sin_family = AF_INET;
+  server_address.sin_addr.s_addr = (unsigned long)server->h_addr;
+  server_address.sin_port = htons(tsdb.port);
+
+  if((client = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    perror("socket()");
+    return(-1);
+  } /* if */
+  if(connect(client,
+             (struct sockaddr *)&server_address,
+             sizeof(server_address)) < 0) {
+    fprintf(tsdb_error_stream,
+            "client(): connection refused by `%s'.\n", tsdb.server);
+    fflush(tsdb_error_stream);
+    return(-1);
+  } /* if */
+  
+  write(client, "info relations", 15);
+  sleep(20);
+  return(0);
+
+} /* tsdb_client() */
