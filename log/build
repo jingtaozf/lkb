@@ -1,117 +1,16 @@
 cvs server: Updating .
-P Version.lisp
-P auxverbs.tdl
-P characterize.tdl
-U constructions.tdl
-U ecommerce.fsr
-P english.tdl
-P fundamentals.tdl
-P gen-lex.tdl
-P idioms.tdl
-P irregs.tab
-P letypes.tdl
-P lexicon.csv
-P lexicon.dfn
-P lexicon.tdl
-U lexrinst.tdl
-P lexrules.tdl
-P lextypes.tdl
-P paraphraser.mtr
-P parse-nodes.tdl
-P preprocessor.fsr
-U roots.tdl
-U syntax.tdl
-P vm6p.mem
 cvs server: Updating arboretum
-U arboretum/README
-U arboretum/errordesc.lsp
-U arboretum/mal-constructions.tdl
-U arboretum/mal-english.tdl
-U arboretum/mal-inflr.tdl
-U arboretum/mal-irregs.tab
-U arboretum/mal-letypes.tdl
-U arboretum/mal-lex.tdl
-U arboretum/mal-lexrinst.tdl
-U arboretum/mal-types.tdl
 cvs server: Updating data
-P data/genrules.mrs
 cvs server: Updating gold
 cvs server: Updating gold/csli
-U gold/csli/decision.gz
-U gold/csli/item-phenomenon.gz
-U gold/csli/item.gz
-U gold/csli/parse.gz
-U gold/csli/phenomenon.gz
-U gold/csli/preference.gz
-U gold/csli/result.gz
-U gold/csli/run.gz
-U gold/csli/tree.gz
-U gold/csli/update.gz
 cvs server: Updating gold/dt-faqs
-U gold/dt-faqs/analysis
-U gold/dt-faqs/decision.gz
-U gold/dt-faqs/edge
-U gold/dt-faqs/item-phenomenon
-U gold/dt-faqs/item-set
-U gold/dt-faqs/item.gz
-U gold/dt-faqs/output
-U gold/dt-faqs/parameter
-U gold/dt-faqs/parse.gz
-U gold/dt-faqs/phenomenon
-U gold/dt-faqs/preference.gz
-U gold/dt-faqs/relations
-U gold/dt-faqs/result.gz
-U gold/dt-faqs/rule
-U gold/dt-faqs/run.gz
-U gold/dt-faqs/score
-U gold/dt-faqs/set
-U gold/dt-faqs/tree.gz
-U gold/dt-faqs/update.gz
 cvs server: Updating gold/ecoc
-U gold/ecoc/decision.gz
-U gold/ecoc/item.gz
-U gold/ecoc/parse.gz
-U gold/ecoc/preference.gz
-U gold/ecoc/result.gz
-U gold/ecoc/run.gz
-U gold/ecoc/tree.gz
-U gold/ecoc/update.gz
 cvs server: Updating gold/hike
-U gold/hike/decision.gz
-U gold/hike/item.gz
-U gold/hike/parse.gz
-U gold/hike/preference.gz
-U gold/hike/result.gz
-U gold/hike/run.gz
-U gold/hike/tree.gz
-U gold/hike/update.gz
 cvs server: Updating gold/mrs
-U gold/mrs/decision.gz
-U gold/mrs/item.gz
-U gold/mrs/parse.gz
-U gold/mrs/preference.gz
-U gold/mrs/result.gz
-U gold/mrs/run.gz
-U gold/mrs/tree.gz
-U gold/mrs/update.gz
 cvs server: Updating gold/trec
-U gold/trec/decision.gz
-U gold/trec/item.gz
-U gold/trec/parse.gz
-U gold/trec/preference.gz
-U gold/trec/result.gz
-U gold/trec/run.gz
-U gold/trec/tree.gz
-U gold/trec/update.gz
 cvs server: Updating lkb
-P lkb/globals.lsp
-P lkb/mrsglobals.lsp
-U lkb/patches.lsp
-P lkb/script
 cvs server: Updating pet
-P pet/english.set
 cvs server: Updating .
-P matrix.tdl
 cvs server: Updating doc
 cvs server: Updating lkb
 cvs server: Updating pet
@@ -129,24 +28,10 @@ cvs server: Updating .
 M Makefile
 cvs server: Updating bin
 cvs server: Updating bin/linux
-U bin/linux/yzlui
 cvs server: Updating bin/solaris
 cvs server: Updating etc
 cvs server: Updating include
 cvs server: Updating lexdb
-U lexdb/defn.sql
-U lexdb/defn.tsv
-U lexdb/embedded-code.sql
-U lexdb/fns-version.sql
-U lexdb/fns_plpgsql.sql
-U lexdb/fns_sql.sql
-U lexdb/import-7.1.sql
-U lexdb/import.sql
-U lexdb/mwe.sql
-U lexdb/permissions.sql
-U lexdb/qry.tsv
-U lexdb/qrya.tsv
-U lexdb/su-setup.sql
 cvs server: Updating lib
 cvs server: Updating lib/Tktable2.7
 cvs server: Updating lib/blt2.4
@@ -202,7 +87,6 @@ cvs server: Updating lib/tk8.3/images
 cvs server: Updating log
 M log/build
 cvs server: Updating src
-U src/pg-interface.el
 cvs server: Updating src/.aasl
 cvs server: Updating src/.aasl/ACL_specific
 cvs server: Updating src/.aasl/io-general
@@ -278,14 +162,6 @@ cvs server: Updating src/.nasl/www
 cvs server: Updating src/ACL-CG_specific
 cvs server: Updating src/ACL_specific
 cvs server: Updating src/MCL_specific
-U src/MCL_specific/activefs.lsp
-U src/MCL_specific/chartout.lsp
-U src/MCL_specific/dialog.lsp
-U src/MCL_specific/graphics.lsp
-U src/MCL_specific/listout.lsp
-U src/MCL_specific/parseout.lsp
-U src/MCL_specific/picfield.lsp
-P src/MCL_specific/tree.lsp
 cvs server: Updating src/data
 cvs server: Updating src/data/Dikran
 cvs server: Updating src/data/aline
@@ -383,79 +259,39 @@ cvs server: Updating src/fasl/io-tdl
 cvs server: Updating src/fasl/main
 cvs server: Updating src/fasl/mrs
 cvs server: Updating src/general
-P src/general/mcl-patches.lisp
 cvs server: Updating src/glue
+U src/glue/dag.lsp
 U src/glue/lsp.lsp
-P src/glue/lui.lsp
 cvs server: Updating src/graft
 cvs server: Updating src/io-general
 U src/io-general/graph.lsp
-P src/io-general/menus.lsp
 U src/io-general/toplevel.lsp
 U src/io-general/tree-nodes.lsp
 cvs server: Updating src/io-lilfes
 cvs server: Updating src/io-paths
 cvs server: Updating src/io-tdl
 cvs server: Updating src/lexdb
-U src/lexdb/extract.lsp
-U src/lexdb/gentdl.lsp
-P src/lexdb/lexport.lsp
-P src/lexdb/psql-db.lsp
-P src/lexdb/psql-emacs.lsp
-P src/lexdb/psql-msc.lsp
-P src/lexdb/psqllex.lsp
 cvs server: Updating src/lexicon
 cvs server: Updating src/main
 U src/main/active.lsp
-U src/main/batch-check.lsp
 P src/main/clex.lsp
-P src/main/dag.lsp
-P src/main/lex.lsp
 cvs server: Updating src/mrs
-P src/mrs/basemrs.lisp
-P src/mrs/dependencies.lisp
-P src/mrs/generate.lisp
-P src/mrs/lexindex.lisp
-P src/mrs/lexlookup.lisp
-P src/mrs/mrsglobals.lisp
 U src/mrs/mrstoplevel.lisp
-U src/mrs/semi-psql.lsp
-U src/mrs/semi.lsp
-P src/mrs/translate.lisp
 cvs server: Updating src/mrs/data
 cvs server: Updating src/mt
-P src/mt/clim.lisp
-U src/mt/lm.lisp
-P src/mt/transfer.lisp
-P src/mt/version.lisp
 cvs server: Updating src/non-core
 cvs server: Updating src/ppcre
 cvs server: Updating src/psql
-cvs server: src/psql/defn.tsv is no longer in the repository
-cvs server: src/psql/embedded-code.sql is no longer in the repository
-cvs server: src/psql/fns-version.sql is no longer in the repository
-cvs server: src/psql/fns_plpgsql.sql is no longer in the repository
-cvs server: src/psql/fns_sql.sql is no longer in the repository
-cvs server: src/psql/import-7.1.sql is no longer in the repository
-cvs server: src/psql/mwe.sql is no longer in the repository
-cvs server: src/psql/permissions.sql is no longer in the repository
-cvs server: src/psql/qry.tsv is no longer in the repository
-cvs server: src/psql/qrya.tsv is no longer in the repository
-cvs server: src/psql/su-setup.sql is no longer in the repository
 cvs server: Updating src/psql/linux
 cvs server: Updating src/psql/solaris
 cvs server: Updating src/pvm
 cvs server: Updating src/pvm/linux
 cvs server: Updating src/pvm/solaris
 cvs server: Updating src/rmrs
-P src/rmrs/convert.lisp
-P src/rmrs/input.lisp
 cvs server: Updating src/rmrs/annlt-test
 cvs server: Updating src/rmrs/test1
 cvs server: Updating src/systems
 P src/systems/lkb.system
-P src/systems/mrs.system
-P src/systems/mt.system
 cvs server: Updating src/tproving
 cvs server: Updating src/tsdb
 cvs server: Updating src/tsdb/TeX
@@ -552,13 +388,11 @@ cvs server: Updating src/tsdb/solaris
 cvs server: Updating src/tsdb/tcl
 cvs server: Updating src/tty
 cvs server: Updating src/www
-P src/www/alttxt.js
-U src/www/lkb.js
 cvs server: Updating src/www/linux
 cvs server: Updating src/xml
 Checking in ./src/version.lsp;
 /lingo/CVS/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.312; previous revision: 1.311
+new revision: 1.313; previous revision: 1.312
 done
 make[1]: Entering directory `/lingo/www/aserve/eo/lkb'
 ( \
@@ -653,6 +487,7 @@ make[1]: Entering directory `/lingo/www/aserve/eo/lkb'
 ./src/glue/lsp.lsp
 ./src/glue/lui.lsp
 ./src/glue/sppp.lsp
+./src/glue/dag.lsp
 ./src/io-general/
 ./src/io-general/outputfs.lsp
 ./src/io-general/async.lsp
@@ -1569,7 +1404,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (May 18, 2004 11:00)
+6.2 [Linux (x86)] (May 20, 2004 16:07)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2151,10 +1986,6 @@ T
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/main/active.lsp
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/main/active.fasl
-Warning: No IN-PACKAGE form seen in
-         /lingo/www/aserve/eo/lkb/src/main/active.lsp.  (Allegro Presto
-         will be ineffective when loading a file having no IN-PACKAGE
-         form.)
 ;;; Fasl write complete
 ;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/main/active.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/main/brackets.lsp
@@ -2219,10 +2050,6 @@ Warning: No IN-PACKAGE form seen in
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/io-general/toplevel.lsp
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/io-general/toplevel.fasl
-Warning: No IN-PACKAGE form seen in
-         /lingo/www/aserve/eo/lkb/src/io-general/toplevel.lsp.
-         (Allegro Presto will be ineffective when loading a file having
-         no IN-PACKAGE form.)
 ;;; Fasl write complete
 ;   Libfasl loading
 ;      /lingo/www/aserve/eo/lkb/src/.l6cl/io-general/toplevel.fasl
@@ -2296,9 +2123,6 @@ Warning: No IN-PACKAGE form seen in
 ;      /lingo/www/aserve/eo/lkb/src/.l6cl/ACL_specific/graph.fasl
 ;;; Compiling file
 ;;;   /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp
-; While compiling DISPLAY-BASIC-FS-REALLY:
-Warning: Free reference to undeclared variable *TYPE-FS-DISPLAY*
-         assumed special.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/ACL_specific/activefs.fasl
 ;;; Fasl write complete
@@ -2346,10 +2170,6 @@ Warning: Free reference to undeclared variable *TYPE-FS-DISPLAY*
 ;;;   /lingo/www/aserve/eo/lkb/src/io-general/tree-nodes.lsp
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/io-general/tree-nodes.fasl
-Warning: No IN-PACKAGE form seen in
-         /lingo/www/aserve/eo/lkb/src/io-general/tree-nodes.lsp.
-         (Allegro Presto will be ineffective when loading a file having
-         no IN-PACKAGE form.)
 ;;; Fasl write complete
 ;   Libfasl loading
 ;      /lingo/www/aserve/eo/lkb/src/.l6cl/io-general/tree-nodes.fasl
@@ -2463,11 +2283,6 @@ Warning: No IN-PACKAGE form seen in
 ;   Libfasl loading
 ;      /lingo/www/aserve/eo/lkb/src/.l6cl/mrs/genpredict.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp
-; While compiling GEN-CHART-ADD-WITH-INDEX:
-Warning: Free reference to undeclared variable *PACKINGS* assumed
-         special.
-Warning: Free reference to undeclared variable *PACKINGS* assumed
-         special.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/mrs/generate.fasl
 ;;; Fasl write complete
@@ -2484,10 +2299,6 @@ Warning: Free reference to undeclared variable *PACKINGS* assumed
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/mrs/mrstoplevel.lisp
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/mrs/mrstoplevel.fasl
-Warning: No IN-PACKAGE form seen in
-         /lingo/www/aserve/eo/lkb/src/mrs/mrstoplevel.lisp.  (Allegro
-         Presto will be ineffective when loading a file having no
-         IN-PACKAGE form.)
 ;;; Fasl write complete
 ;   Libfasl loading
 ;      /lingo/www/aserve/eo/lkb/src/.l6cl/mrs/mrstoplevel.fasl
@@ -2617,99 +2428,10 @@ Warning: Free reference to undeclared variable
 ;;; Fasl write complete
 ;   Libfasl loading /lingo/www/aserve/eo/lkb/src/.l6cl/mt/lm.fasl
 Warning: While compiling these undefined functions were referenced:
-         SHOW-GEN-RESULT from position 11110 in
-           /lingo/www/aserve/eo/lkb/src/rmrs/lkb-acl-rmrs.lisp, 1279 in
-           /lingo/www/aserve/eo/lkb/src/mrs/translate.lisp
-         LKB::PACKINGS-PROACTIVE from position 22479 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp
-         LKB::PACKINGS-EQUIVALENT from position 22479 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp
-         (SETF LKB::PACKINGS-PROACTIVE) from position 22479 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp
-         (SETF LKB::PACKINGS-EQUIVALENT) from position 22479 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp
-         LKB::UNPACK-EDGE! from position 10051 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp, 25756 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp
-         LKB::RESET-PACKINGS from position 10051 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp
-         LKB::HTML-TREE from position 57529 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/compare.lsp
-         LKB::FILTERED-CHART-LATTICE from position 10991 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/chartout.lsp,
-           11343 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/chartout.lsp
-         LKB::DISPLAY-PARSE-TREE from position 6662 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/chartout.lsp
-         LKB::TREE-NODE-TEXT-STRING from position 4442 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/chartout.lsp
-         LKB::CONSTRUCT-CHART-NO-DISPLAY from position 8742 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp
-         LKB::MAKE-NEW-PARSE-TREE from position 7490 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp, 3435
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/compare.lsp,
-           24026 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/compare.lsp, 27304
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/compare.lsp
-         LKB::SHOW-CHART from position 2863 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp, 8742
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp,
-           13266 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp
-         LKB::GET-STRING-FOR-EDGE from position 1959 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp, 7778
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp,
-           24026 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/compare.lsp
-         LKB::ASK-USER-FOR-TYPE from position 7292 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/tree.lsp
-         LKB::DISPLAY-UNEXPANDED-LEX-ENTRY from position 15971 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp, 5565
-           in /lingo/www/aserve/eo/lkb/src/io-general/utils.lsp
-         LKB::APPLY-LEX-RULES from position 13807 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp
-         LKB::APPLY-LEX from position 13807 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp
-         LKB::ADD-CATEGORY-DISPLAY-TEMPLATE from position 8924 in
-           /lingo/www/aserve/eo/lkb/src/io-paths/lexinput.lsp
-         LKB::SPLIT-UP-TEMPLATES from position 8761 in
-           /lingo/www/aserve/eo/lkb/src/io-paths/lexinput.lsp
-         LKB::CLEAR-CATEGORY-DISPLAY-TEMPLATES from position 8452 in
-           /lingo/www/aserve/eo/lkb/src/io-paths/lexinput.lsp
-         LKB::PARSE-TREE-STRUCTURE from position 15801 in
-           /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp, 685 in
-           /lingo/www/aserve/eo/lkb/src/mrs/interface.lisp
          LKB::LUI-DISPLAY-FS from position 5958 in
            /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp
-         LKB::SHOW-TYPE-AUX from position 5958 in
-           /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp, 11635 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp, 7292
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/tree.lsp, 1843
-           in /lingo/www/aserve/eo/lkb/src/mrs/lkb-acl-mrs.lisp
-         LKB::SHOW-TYPE-SPEC-AUX from position 5958 in
-           /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp, 11635 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp, 7292
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/tree.lsp, 1843
-           in /lingo/www/aserve/eo/lkb/src/mrs/lkb-acl-mrs.lisp
-         LKB::FIND-CATEGORY-ABB from position 19968 in
-           /lingo/www/aserve/eo/lkb/src/io-general/outputsrc.lsp
-         LKB::YADU! from position 13823 in
-           /lingo/www/aserve/eo/lkb/src/io-general/outputsrc.lsp, 5958
-           in /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp
-         LKB::LEXICAL-TASK from position 18918 in
-           /lingo/www/aserve/eo/lkb/src/main/parse.lsp, 23586 in
-           /lingo/www/aserve/eo/lkb/src/main/parse.lsp
-         SHOW-PARSE from position 11492 in
-           /lingo/www/aserve/eo/lkb/src/main/parse.lsp, 14612 in
+         LKB::DEBUG-YADU! from position 5958 in
            /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp
-         LKB::COMPLETE-CHART from position 11492 in
-           /lingo/www/aserve/eo/lkb/src/main/parse.lsp
-         LKB::CLEAR-ACHART from position 10189 in
-           /lingo/www/aserve/eo/lkb/src/main/parse.lsp
-         LKB::GET-DISPLAY-TEMPLATE-ENTRY from position 16051 in
-           /lingo/www/aserve/eo/lkb/src/main/lex.lsp
-         LKB::DO-PARSE from position 12491 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/topmenu.lsp
 
 NIL 
  #|
@@ -2733,7 +2455,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-100465824 bytes have been tenured, next gc will be global.
+104490056 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2913,7 +2635,7 @@ CL-USER(7): ; Loading /lingo/www/aserve/eo/lkb/src/systems/tsdb.system
 ; Fast loading
 ;    /lingo/www/aserve/eo/lkb/src/.l6cl/ppcre/repetition-closures.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/ppcre/scanner.lisp
-8802080 bytes have been tenured, next gc will be global.
+8802048 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/ppcre/scanner.fasl
@@ -2939,7 +2661,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/xml/pxml3.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/xml/pxml2.cl
-11715728 bytes have been tenured, next gc will be global.
+11715720 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/xml/pxml2.fasl
 ;;; Fasl write complete
@@ -3049,10 +2771,6 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/main/active.lsp
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/main/active.fasl
-Warning: No IN-PACKAGE form seen in
-         /lingo/www/aserve/eo/lkb/src/main/active.lsp.  (Allegro Presto
-         will be ineffective when loading a file having no IN-PACKAGE
-         form.)
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/main/active.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/main/brackets.lsp
@@ -3112,10 +2830,6 @@ Warning: No IN-PACKAGE form seen in
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/io-general/toplevel.lsp
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/io-general/toplevel.fasl
-Warning: No IN-PACKAGE form seen in
-         /lingo/www/aserve/eo/lkb/src/io-general/toplevel.lsp.
-         (Allegro Presto will be ineffective when loading a file having
-         no IN-PACKAGE form.)
 ;;; Fasl write complete
 ; Fast loading
 ;    /lingo/www/aserve/eo/lkb/src/.l6cl/io-general/toplevel.fasl
@@ -3185,9 +2899,6 @@ Warning: No IN-PACKAGE form seen in
 ;    /lingo/www/aserve/eo/lkb/src/.l6cl/ACL_specific/graph.fasl
 ;;; Compiling file
 ;;;   /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp
-; While compiling DISPLAY-BASIC-FS-REALLY:
-Warning: Free reference to undeclared variable *TYPE-FS-DISPLAY*
-         assumed special.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/ACL_specific/activefs.fasl
 ;;; Fasl write complete
@@ -3234,10 +2945,6 @@ Warning: Free reference to undeclared variable *TYPE-FS-DISPLAY*
 ;;;   /lingo/www/aserve/eo/lkb/src/io-general/tree-nodes.lsp
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/io-general/tree-nodes.fasl
-Warning: No IN-PACKAGE form seen in
-         /lingo/www/aserve/eo/lkb/src/io-general/tree-nodes.lsp.
-         (Allegro Presto will be ineffective when loading a file having
-         no IN-PACKAGE form.)
 ;;; Fasl write complete
 ; Fast loading
 ;    /lingo/www/aserve/eo/lkb/src/.l6cl/io-general/tree-nodes.fasl
@@ -3338,11 +3045,6 @@ Warning: No IN-PACKAGE form seen in
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/mrs/genpredict.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp
-; While compiling GEN-CHART-ADD-WITH-INDEX:
-Warning: Free reference to undeclared variable *PACKINGS* assumed
-         special.
-Warning: Free reference to undeclared variable *PACKINGS* assumed
-         special.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/mrs/generate.fasl
 ;;; Fasl write complete
@@ -3359,10 +3061,6 @@ Warning: Free reference to undeclared variable *PACKINGS* assumed
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/mrs/mrstoplevel.lisp
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/mrs/mrstoplevel.fasl
-Warning: No IN-PACKAGE form seen in
-         /lingo/www/aserve/eo/lkb/src/mrs/mrstoplevel.lisp.  (Allegro
-         Presto will be ineffective when loading a file having no
-         IN-PACKAGE form.)
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/mrs/mrstoplevel.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/mrs/idioms.lisp
@@ -3462,21 +3160,6 @@ Warning: Free reference to undeclared variable
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/macros.fasl
 ;;; Compiling file
 ;;;   /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-; While compiling GET-TEST-RUN-INFORMATION:
-Warning: Free reference to undeclared variable *CHART-PACKING-P*
-         assumed special.
-; While compiling TSDB::PARSE-ITEM:
-Warning: Free reference to undeclared variable *CHART-PACKING-P*
-         assumed special.
-Warning: Free reference to undeclared variable *PACKINGS* assumed
-         special.
-; While compiling TSDB::GENERATE-ITEM:
-Warning: Free reference to undeclared variable *PACKINGS* assumed
-         special.
-; While compiling SUMMARIZE-CHART:
-Warning: Free reference to undeclared variable *ACHART* assumed special.
-; While compiling SUMMARIZE-GENERATOR-CHART:
-Warning: Free reference to undeclared variable *ACHART* assumed special.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/lkb-interface.fasl
 ;;; Fasl write complete
@@ -3563,7 +3246,7 @@ Warning: Free reference to undeclared variable *ACHART* assumed special.
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Compiling file
 ;;;   /lingo/www/aserve/eo/lkb/src/tsdb/lisp/derivations.lisp
-gc-after-hook(): local; new: 1119840; old: 50664; pending: 0; efficiency: 83.
+gc-after-hook(): local; new: 1099728; old: 49360; pending: 40; efficiency: 90.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/derivations.fasl
 ;;; Fasl write complete
@@ -3576,8 +3259,8 @@ gc-after-hook(): local; new: 1119840; old: 50664; pending: 0; efficiency: 83.
 ; Fast loading
 ;    /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1374112; old: 299712; pending: 72; efficiency: 84.
-gc-after-hook(): local; new: 967776; old: 72896; pending: 72; efficiency: 84.
+gc-after-hook(): local; new: 1333200; old: 299712; pending: 0; efficiency: 89.
+gc-after-hook(): local; new: 968632; old: 72984; pending: 72; efficiency: 91.
 ;;; Writing fasl file
 ;;;   /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
@@ -3595,7 +3278,7 @@ gc-after-hook(): local; new: 967776; old: 72896; pending: 72; efficiency: 84.
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/rasp.fasl
 ;;; Compiling file /lingo/www/aserve/eo/lkb/src/tsdb/lisp/pcfg.lisp
-gc-after-hook(): local; new: 655920; old: 369352; pending: 40; efficiency: 83.
+gc-after-hook(): local; new: 656152; old: 358656; pending: 72; efficiency: 83.
 ;;; Writing fasl file /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/pcfg.fasl
@@ -3610,123 +3293,10 @@ gc-after-hook(): local; new: 655920; old: 369352; pending: 40; efficiency: 83.
 ;;; Fasl write complete
 ; Fast loading /lingo/www/aserve/eo/lkb/src/.l6cl/tsdb/tagger.fasl
 Warning: While compiling these undefined functions were referenced:
-         LKB::RESTRICT-AND-COPY-TDFS from position 41665 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp,
-           43125 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-         LKB::PACKINGS-FAILURES from position 6712 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-         LKB::PACKINGS-FROZEN from position 6712 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-         LKB::PACKINGS-RETROACTIVE from position 6712 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp,
-           16376 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-         SHOW-GEN-RESULT from position 11110 in
-           /lingo/www/aserve/eo/lkb/src/rmrs/lkb-acl-rmrs.lisp, 1279 in
-           /lingo/www/aserve/eo/lkb/src/mrs/translate.lisp
-         LKB::PACKINGS-PROACTIVE from position 22479 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp, 6712 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp,
-           16376 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-         LKB::PACKINGS-EQUIVALENT from position 22479 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp, 6712 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp,
-           16376 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-         (SETF LKB::PACKINGS-PROACTIVE) from position 22479 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp
-         (SETF LKB::PACKINGS-EQUIVALENT) from position 22479 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp
-         LKB::UNPACK-EDGE! from position 10051 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp, 25756 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp, 6712 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-         LKB::RESET-PACKINGS from position 10051 in
-           /lingo/www/aserve/eo/lkb/src/mrs/generate.lisp, 6712 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-         LKB::HTML-TREE from position 57529 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/compare.lsp
-         LKB::FILTERED-CHART-LATTICE from position 10991 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/chartout.lsp,
-           11343 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/chartout.lsp
-         LKB::DISPLAY-PARSE-TREE from position 6662 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/chartout.lsp,
-           40110 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-         LKB::TREE-NODE-TEXT-STRING from position 4442 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/chartout.lsp
-         LKB::CONSTRUCT-CHART-NO-DISPLAY from position 8742 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp
-         LKB::MAKE-NEW-PARSE-TREE from position 7490 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp, 3435
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/compare.lsp,
-           24026 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/compare.lsp, 27304
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/compare.lsp
-         LKB::SHOW-CHART from position 2863 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp, 8742
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp,
-           13266 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp
-         LKB::GET-STRING-FOR-EDGE from position 1959 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp, 7778
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/parseout.lsp,
-           24026 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/compare.lsp
-         LKB::ASK-USER-FOR-TYPE from position 7292 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/tree.lsp
-         LKB::DISPLAY-UNEXPANDED-LEX-ENTRY from position 15971 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp, 5565
-           in /lingo/www/aserve/eo/lkb/src/io-general/utils.lsp
-         LKB::APPLY-LEX-RULES from position 13807 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp
-         LKB::APPLY-LEX from position 13807 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp
-         LKB::ADD-CATEGORY-DISPLAY-TEMPLATE from position 8924 in
-           /lingo/www/aserve/eo/lkb/src/io-paths/lexinput.lsp
-         LKB::SPLIT-UP-TEMPLATES from position 8761 in
-           /lingo/www/aserve/eo/lkb/src/io-paths/lexinput.lsp
-         LKB::CLEAR-CATEGORY-DISPLAY-TEMPLATES from position 8452 in
-           /lingo/www/aserve/eo/lkb/src/io-paths/lexinput.lsp
-         LKB::PARSE-TREE-STRUCTURE from position 15801 in
-           /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp, 685 in
-           /lingo/www/aserve/eo/lkb/src/mrs/interface.lisp, 58968 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/redwoods.lisp
          LKB::LUI-DISPLAY-FS from position 5958 in
            /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp
-         LKB::SHOW-TYPE-AUX from position 5958 in
-           /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp, 11635 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp, 7292
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/tree.lsp, 1843
-           in /lingo/www/aserve/eo/lkb/src/mrs/lkb-acl-mrs.lisp
-         LKB::SHOW-TYPE-SPEC-AUX from position 5958 in
-           /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp, 11635 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/activefs.lsp, 7292
-           in /lingo/www/aserve/eo/lkb/src/ACL_specific/tree.lsp, 1843
-           in /lingo/www/aserve/eo/lkb/src/mrs/lkb-acl-mrs.lisp
-         LKB::FIND-CATEGORY-ABB from position 19968 in
-           /lingo/www/aserve/eo/lkb/src/io-general/outputsrc.lsp
-         LKB::YADU! from position 13823 in
-           /lingo/www/aserve/eo/lkb/src/io-general/outputsrc.lsp, 5958
-           in /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp
-         LKB::LEXICAL-TASK from position 18918 in
-           /lingo/www/aserve/eo/lkb/src/main/parse.lsp, 23586 in
-           /lingo/www/aserve/eo/lkb/src/main/parse.lsp
-         SHOW-PARSE from position 11492 in
-           /lingo/www/aserve/eo/lkb/src/main/parse.lsp, 14612 in
+         LKB::DEBUG-YADU! from position 5958 in
            /lingo/www/aserve/eo/lkb/src/glue/lsp.lsp
-         LKB::COMPLETE-CHART from position 11492 in
-           /lingo/www/aserve/eo/lkb/src/main/parse.lsp
-         LKB::CLEAR-ACHART from position 10189 in
-           /lingo/www/aserve/eo/lkb/src/main/parse.lsp, 38012 in
-           /lingo/www/aserve/eo/lkb/src/tsdb/lisp/lkb-interface.lisp
-         LKB::GET-DISPLAY-TEMPLATE-ENTRY from position 16051 in
-           /lingo/www/aserve/eo/lkb/src/main/lex.lsp
-         LKB::DO-PARSE from position 12491 in
-           /lingo/www/aserve/eo/lkb/src/ACL_specific/topmenu.lsp
 (#<MODULE: tsdb>)
 CL-USER(8): ; killing "scheduler work-out [spr19158]"
 ; killing "Initial Lisp Listener"
