@@ -87,8 +87,8 @@ INSERT INTO ergd VALUES ( 'unifs', 'keyrel', '(synsem local keys key)', 'symbol'
 INSERT INTO ergd VALUES ( 'unifs', 'keytag', '(synsem local keys key carg)', 'string' );
 INSERT INTO ergd VALUES ( 'unifs', 'altkey', '(synsem local keys altkey)', 'symbol' );
 INSERT INTO ergd VALUES ( 'unifs', 'alt2key', '(synsem local keys alt2key)', 'symbol' );
-INSERT INTO ergd VALUES ( 'unifs', 'compkey', '(synsem local keys --compkey)', 'symbol' );
-INSERT INTO ergd VALUES ( 'unifs', 'ocompkey', '(synsem local keys --ocompkey)', 'symbol' );
+INSERT INTO ergd VALUES ( 'unifs', 'compkey', '(synsem lkeys --compkey)', 'symbol' );
+INSERT INTO ergd VALUES ( 'unifs', 'ocompkey', '(synsem lkeys --ocompkey)', 'symbol' );
 
 DROP VIEW max_version;
 CREATE VIEW max_version 
