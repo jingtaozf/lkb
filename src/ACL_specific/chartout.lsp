@@ -1,4 +1,4 @@
-;;; Copyright (c) 1997-2001 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen
+;;; Copyright (c) 1997-2004 John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Frederik Fouvry
 ;;; see licence.txt for conditions
 
 (in-package :lkb)
@@ -187,6 +187,7 @@
       (pop-up-menu
        (append '(("Highlight nodes" :value highlight))
 	       '(("Feature structure" :value fs))
+	       '(("Unfilled feature structure" :value ufs))
 	       (when (rule-p (edge-rule edge-rec))
 		 `((,(format nil "Rule ~A" 
 			     (rule-id (edge-rule edge-rec)))
@@ -204,6 +205,12 @@
 			       (if (g-edge-p edge-rec) 
 				   "G" 
 				 "P"))))
+       (ufs (display-fs (unfilled-tdfs (copy-tdfs-completely (edge-dag edge-rec)))
+			(format nil "Edge ~A ~A - Unfilled FS" 
+				(edge-id edge-rec)
+				(if (g-edge-p edge-rec) 
+				    "G" 
+				  "P"))))
        (edge (display-parse-tree edge-rec nil))
        (rule (let* ((item (edge-rule edge-rec))
 		    (rule (and (rule-p item) item)))

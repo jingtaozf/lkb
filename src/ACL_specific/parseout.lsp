@@ -1,5 +1,5 @@
-;;; Copyright (c) 1991--2002
-;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
+;;; Copyright (c) 1991--2004
+;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen, Frederik Fouvry;
 ;;;   see `licence.txt' for conditions.
 
 ;;; ACL version
@@ -106,8 +106,12 @@
     (pop-up-menu
      `((,(format nil "Feature structure" (edge-id edge-record))
 	:value fs)
+       (,(format nil "Unfilled feature structure" (edge-id edge-record))
+	:value ufs)
        (,(format nil "Feature structure - Edge ~A" (edge-id edge-record))
 	:value edge-fs)
+       (,(format nil "Unfilled feature structure - Edge ~A" (edge-id edge-record))
+	:value edge-ufs)
        ("Show edge in chart" 
         :value edge
         :active ,(and (not (g-edge-p edge-record))
@@ -127,11 +131,22 @@
 		       (format nil "Edge ~A ~A - Tree FS" 
 			       (edge-id edge-record)
 			       (if (g-edge-p edge-record) "G" "P"))))
+     (ufs (display-fs (unfilled-tdfs (copy-tdfs-completely edge-fs))
+		       (format nil "Edge ~A ~A - Tree Unfilled FS" 
+			       (edge-id edge-record)
+			       (if (g-edge-p edge-record) "G" "P"))))
      (edge-fs
       (let ((tdfs (and (edge-p edge-record) (edge-dag edge-record))))
         (when (tdfs-p tdfs)
           (display-fs tdfs
                       (format nil "Edge ~A ~A - Edge FS" 
+                              (edge-id edge-record)
+                              (if (g-edge-p edge-record) "G" "P"))))))
+     (edge-ufs
+      (let ((tdfs (and (edge-p edge-record) (edge-dag edge-record))))
+        (when (tdfs-p tdfs)
+          (display-fs (unfilled-tdfs (copy-tdfs-completely tdfs))
+                      (format nil "Edge ~A ~A - Edge Unfilled FS" 
                               (edge-id edge-record)
                               (if (g-edge-p edge-record) "G" "P"))))))
      (edge
@@ -161,9 +176,6 @@
                           (format nil "~A" item)
                           item))))))
      (generate (funcall 'really-generate-from-edge edge-record)))))
-
-
-
 
 ;;; ***** Single parse display window ********
 ;;; because it's very annoying to get zillions of windows when there's
