@@ -447,7 +447,13 @@
                     target :protocol :raw :verbose t :schema schema :allp t)
       with special = '(:i-id :run-id :parse-id)
       for profile in profiles
-      for offset from 0 by 10000
+      for i from 1000000 by 10000
+      for offset = (cond
+                    ((search "vm6" profile) 60000)
+                    ((search "vm13" profile) 130000)
+                    ((search "vm31" profile) 310000)
+                    ((search "vm32" profile) 320000)
+                    (t i))
       for schema = (read-database-schema profile)
       do
         (loop
