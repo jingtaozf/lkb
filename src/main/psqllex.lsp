@@ -943,9 +943,9 @@
 	 (filename-sorted (format nil "~a.s" filename-normalized))
 	 (dump-filename-sorted (format nil "~a.s" dump-filename))
 	 (add-filename (format nil "~a.add" dump-filename))
-	 (command-str-sort-file (format nil "sort ~a > ~a" filename-normalized filename-sorted))
-	 (command-str-sort-dumpfile (format nil "sort ~a > ~a" dump-filename dump-filename-sorted))
-	 (command-str-add (format nil "diff ~a ~a | grep -e '^> ' | sed 's/^> //' > ~a" dump-filename-sorted filename-sorted add-filename))
+	 (command-str-sort-file (format nil "LANG=c sort ~a > ~a" filename-normalized filename-sorted))
+	 (command-str-sort-dumpfile (format nil "LANG=c sort ~a > ~a" dump-filename dump-filename-sorted))
+	 (command-str-add (format nil "LANG=c diff ~a ~a | LANG=c grep -e '^> ' | LANG=c sed 's/^> //' > ~a" dump-filename-sorted filename-sorted add-filename))
 	 (command-str-rm-files (format nil "rm ~a*" dump-filename))
 	 )
     (unless
