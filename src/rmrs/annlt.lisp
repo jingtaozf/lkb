@@ -16,6 +16,7 @@
          (uscore-pos (position #\_ str)))
     (subseq str (+ 1 uscore-pos))))    
 
+#|
 (defun get-lexeme (node)
   (let* ((str (string node))
          (uscore-pos (position #\_ str))
@@ -26,7 +27,21 @@
           (subseq notag 0 suffix-pos)
         notag)
       "_rel")))
+|#
 
+(defun get-lexeme (node)
+  (let* ((str (string node))
+         (uscore-pos (position #\_ str))
+         (notag (subseq str 0 uscore-pos))
+         (colon-pos (position #\: notag :from-end t))
+         (suffix-pos (position #\+ notag)))
+    (concatenate 'string
+      (if suffix-pos
+          (subseq notag 0 suffix-pos)
+        (if (and colon-pos (> uscore-pos (+ 1 colon-pos)))
+            (subseq notag 0 colon-pos)
+          notag))
+      "_rel")))
 
 ;;; File wrapper - note use of handler-case
 
@@ -41,13 +56,16 @@
               (declare (ignore id))
               (unless tree (return))
               (format ostream "~%<sentence>")
-              (format ostream
-                      "~%<s>~%~A~{ ~A~}~A~%</s>"
-                      (car original) (cdr original)
-                      (if (member (car (last original)) 
-                                  '("." "?" "!") :test #'equal)
-                          ""
-                        " ."))
+              (if original
+                  (format ostream
+                          "~%<s>~%~A~{ ~A~}~A~%</s>"
+                          (car original) (cdr original)
+                          (if (member (car (last original)) 
+                                      '("." "?" "!") :test #'equal)
+                              ""
+                            " ."))
+                (format ostream
+                          "~%<s></s>"))
               ;;; put spaces in between words but not at end.
               ;;;
               ;;; put a full stop at the end unless there's already
@@ -57,7 +75,8 @@
                       tree)
               (handler-case
                   (progn
-                    (construct-sem-for-tree tree ostream)
+                    (unless (equal tree '(X))
+                      (construct-sem-for-tree tree ostream))
                     (format ostream "</sentence>"))
                 (storage-condition (condition)
                   (format ostream "~%Memory allocation problem: ~A~%" condition))
