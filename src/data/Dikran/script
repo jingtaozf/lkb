@@ -1,0 +1,34 @@
+(let ((data-dir1 (make-pathname :directory 
+                                (append *lkb-source-dir* '("data" "Dikran")))))
+   (setf *lkb-system-version* nil)
+   (load (merge-pathnames
+         (make-pathname :name "globals.lsp")
+         data-dir1))
+   (read-irreg-form-file (merge-pathnames (make-pathname :name "irregs.tab")
+                                          data-dir1))
+   (read-type-files-aux
+      (list
+         (merge-pathnames
+            (make-pathname :name "sag.types")
+            data-dir1)))
+   (setf *current-language* 'english)
+   (read-lex-file-aux (merge-pathnames
+         (make-pathname :name "sag.lex")
+         data-dir1) t)
+   (read-grammar-file-aux (merge-pathnames 
+         (make-pathname :name "sag.rules")
+         data-dir1) t)
+;;; morph rule files have to be read in twice -
+;;; once as a morph file and again as a lexical rules file
+;;; sigh ...
+   (morph-file-read-aux (merge-pathnames 
+         (make-pathname :name "sag.lrules")
+         data-dir1) t)
+   (read-lex-rule-file-aux (merge-pathnames 
+         (make-pathname :name "sag.lrules")
+         data-dir1) t)
+   (read-psort-file-aux (merge-pathnames 
+         (make-pathname :name "sag.tmpl")
+         data-dir1) t)
+   nil
+   )

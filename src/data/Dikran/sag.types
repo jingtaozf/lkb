@@ -1,0 +1,404 @@
+;;; English Grammar: Version 4.0 for Linguistics 120
+;;; or some approximation thereof
+;;; AAC - December 2 1995
+;;; MHK - July 15 1996
+;;;       July 16 1996 : moved < SYN : ARG-ST > to just < ARG-ST >
+;;;       July 18 1996 : changed to ivan/tom's new typing of pos/head
+;;;                      and semantics.
+;;;       July 19 1996 : all nominals have case (noun, comp, det)
+;;;       July 22 1996 : new version of types - 
+;;;                       GAP moved into SYN
+;;;                       different head sub-typing                       
+;;;       July 26 1996 : new root-cat typing
+;;;       Aug  3  1996 : morph rules do not necessarily preserve arg-str.
+
+;;; Aug 8 1996 : Removed binding theory constraints and conjunction
+;;;              to improve performance for Dikran's demo.
+
+;;; note that all types which are specific to particular lexical
+;;; entries are at the end of this file.
+
+top ().
+
+boolean (top) (OR true false).
+
+string (top).
+
+;;; ********************
+;;; * basic list types *
+;;; ********************
+
+list (top).
+
+ne-list (list)
+< HD > = top
+< TL > = list.
+
+diff-list (top)
+< LST > = list
+< LAST > = list.
+
+;;; *****************
+;;; * grammar types *
+;;; *****************
+
+;;;    *******************
+;;;    * grammar objects *
+;;;    *******************
+
+cat (top)
+< ORTH > = orth-cat
+< SYN > = syn-cat
+< SEM > = sem-cat.
+
+gram-cat (cat).
+
+;;; this type prevents the output of grammar rules from entering
+;;; lexical rules.  also, phrases do not have an argument structure
+;;; (see lex-cat type below.)
+
+phrase (gram-cat).
+
+lex-cat (cat)
+< ORTH : LAST > = < ORTH : LST : TL>
+< ARG-STR > = list-of-cats.
+
+;;; base lexical items (pre-morphological) are lexemes.  once
+;;; a morphological rule has applied, they become words.
+
+lexeme (lex-cat)
+< SYN : GAP : LST > = < SYN : GAP : LAST >.
+
+word (lex-cat gram-cat).
+
+;;; final parses for sentences must be unifiable with this root-cat
+;;; type.  this prevents strings like "kim die" from being accepted.
+
+root-cat (gram-cat)
+< SYN : HEAD > = verb
+< SYN : HEAD : FORM > = (fin imp)
+< SYN : VAL : SPR > = e-list
+< SYN : VAL : COMPS > = e-list
+< SYN : GAP : LST > = < SYN : GAP : LAST >
+< SYN : GAP : LAST > = e-list.
+
+root-phrase (phrase root-cat).
+root-word (word root-cat).
+
+;;;    **************
+;;;    * rule types *
+;;;    **************
+
+rule (top)
+< 0 > = cat 
+< 1 > = cat.
+
+;;; the needs-affix feature is a convenience for the morph processor.
+
+lrule (rule)
+< 0 > = word
+< 1 > = lex-cat
+< NEEDS-AFFIX > = boolean.
+
+morph-rule (lrule)
+< 1 > = lexeme
+< 0 : SYN : GAP > = < 1 : SYN : GAP >
+< 0 : SEM > = < 1 : SEM >.
+
+lex-rule (lrule)
+< 1 > = word
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+grule (rule)
+< 0 > = phrase
+< 1 > = gram-cat.
+
+unary-rule (grule)
+< 0 : ORTH > = < 1 : ORTH >.
+
+biplus-rule (grule)
+< 2 > = gram-cat
+< 0 : ORTH : LST > = < 1 : ORTH : LST >
+< 1 : ORTH : LAST > = < 2 : ORTH : LST >.
+
+birule (biplus-rule) 
+< 0 : ORTH : LAST > = < 2 : ORTH : LAST >.
+
+triplus-rule (biplus-rule)
+< 3 > = gram-cat
+< 2 : ORTH : LAST > = < 3 : ORTH : LST >.
+
+trirule (triplus-rule)
+< 3 > = gram-cat
+< 0 : ORTH : LAST > = < 3 : ORTH : LAST >.
+
+quadrule (triplus-rule)
+< 4 > = gram-cat
+< 3 : ORTH : LAST > = < 4 : ORTH : LST >
+< 0 : ORTH : LAST > = < 4 : ORTH : LAST >.
+
+;;; ***********************
+;;; * expanded list types *
+;;; ***********************
+
+list-of-cats (list).
+
+e-list (list-of-cats orth-list).
+
+ne-list-of-cats (list-of-cats ne-list)
+< HD > = cat
+< TL > = list-of-cats.
+
+;;;    **********************
+;;;    * orthographic lists *
+;;;    **********************
+
+orth-cat (diff-list)
+< LST > = orth-list.
+   
+orth-list (list).
+
+ne-orth-list (orth-list ne-list)
+< HD > = string
+< TL > = orth-list.
+
+;;;    *************
+;;;    * gap lists *
+;;;    *************
+
+gap-cat (diff-list)
+< LST > = list-of-cats.
+
+;;; **************************************
+;;; * grammar object internal structures *
+;;; **************************************
+
+syn-cat (top) 
+< HEAD > = pos
+< VAL > = val-cat
+< GAP > = gap-cat.
+
+val-cat (top)
+< SPR > = list-of-cats
+< COMPS > = list-of-cats.
+
+;;;    ************************
+;;;    * part-of-speech types *
+;;;    ************************
+
+pos (top) 
+< FORM > = form-cat
+< PRED > = boolean.
+
+verb (pos)
+< AUX > = boolean
+< INV > = boolean
+< NEG > = boolean.
+
+non-verbal (pos)
+< REF > = ref-cat.
+
+prep (non-verbal).
+
+nominal (non-verbal)
+< AGR > = agr-obj
+< CASE > = case-cat.
+
+noun (nominal).
+
+comp (nominal).
+
+det (nominal).
+
+adv (pos)
+< MOD > = cat.
+
+conj (pos).
+
+;;;    **************************
+;;;    * specific head features *
+;;;    **************************
+
+case-cat (top)
+(OR nom acc).
+
+ref-cat (top)
+< ANA > = boolean
+< PRO > = boolean.
+
+agr-obj (top)
+< PER > = per
+< NUM > = num.
+
+3sing (agr-obj)
+< PER > = 3rd
+< NUM > = sing
+< GEND > = gend.
+
+non-3sing (agr-obj).
+
+per (top)
+(OR 1st 2nd 3rd).
+
+num (top)
+(OR sing plur).
+
+gend (top)
+(OR fem masc neut).
+
+;;; *********************
+;;; * semantics objects *
+;;; *********************
+
+sem-cat (top).
+
+predication (sem-cat)
+< RELN > = reln-cat.
+
+ind-obj (sem-cat)
+< INDEX > = agr-obj.
+
+null-sem (sem-cat).
+
+;;; ***********************
+;;; * argument structures *
+;;; ***********************
+
+arg-stem (ne-list-of-cats)
+< HD : SYN : HEAD : REF : ANA > = false.
+
+
+nom-plus-pred-arg-stem (arg-stem)
+< TL : HD : SYN : HEAD > = non-verbal.
+
+
+nom-pred-arg-stem (nom-plus-pred-arg-stem)
+< TL : TL > = e-list.
+
+nom-pred-arg-list (nom-pred-arg-stem)
+< TL : HD : SYN : HEAD : REF : ANA > = false.
+
+ana-pred-arg-list (nom-pred-arg-stem)
+< TL : HD : SYN : HEAD : REF : ANA > = true
+< TL : HD : SEM : INDEX > = < HD : SEM : INDEX >.
+
+
+nom-nom-pred-arg-stem (nom-plus-pred-arg-stem)
+< TL : TL : HD : SYN : HEAD > = non-verbal
+< TL : TL : TL > = e-list.
+
+nom-nom-pred-arg-list (nom-nom-pred-arg-stem)
+< TL : HD : SYN : HEAD : REF : ANA > = false
+< TL : TL : HD : SYN : HEAD : REF : ANA > = false.
+
+ana-nom-pred-arg-list (nom-nom-pred-arg-stem)
+< TL : HD : SYN : HEAD : REF : ANA > = true
+< TL : TL : HD : SYN : HEAD : REF : ANA > = false
+< TL : HD : SEM : INDEX > = < HD : SEM : INDEX >.
+
+nom-ana-1-pred-arg-list (nom-nom-pred-arg-stem)
+< TL : HD : SYN : HEAD : REF : ANA > = false
+< TL : TL : HD : SYN : HEAD : REF : ANA > = true
+< TL : TL : HD : SEM : INDEX > = < HD : SEM : INDEX >.
+
+nom-ana-2-pred-arg-list (nom-nom-pred-arg-stem)
+< TL : HD : SYN : HEAD : REF : ANA > = false
+< TL : TL : HD : SYN : HEAD : REF : ANA > = true
+< TL : TL : HD : SEM : INDEX > = < TL : HD : SEM : INDEX >.
+
+
+nom-v-pred-arg-stem (nom-plus-pred-arg-stem)
+< TL : TL : HD : SYN : HEAD > = verb
+< TL : TL : TL > = e-list.
+
+nom-v-pred-arg-list (nom-v-pred-arg-stem)
+< TL : HD : SYN : HEAD : REF : ANA > = false.
+
+ana-v-pred-arg-list (nom-v-pred-arg-stem)
+< TL : HD : SYN : HEAD : REF : ANA > = true
+< TL : HD : SEM : INDEX > = < HD : SEM : INDEX >.
+
+
+v-pred-arg-list (arg-stem)
+< TL : HD : SYN : HEAD > = verb
+< TL : TL > = e-list.
+
+;;; *******************
+;;; * 'lexical' types *
+;;; *******************
+
+;;; types which will need to be augmented for new lexical items.
+
+form-cat (top)
+(OR normal inf fin pres-p past-p imp pass
+    f_tabs f_on f_advantage f_of f_it f_there f_to f_by f_not).
+
+reln-cat (top)
+(OR r_die r_love r_give r_observe r_exploit r_annoy r_continue
+    r_try r_expect r_persuade r_have r_can r_not r_question).
+
+die_reln (predication)
+< RELN > = r_die
+< CORPSE > = agr-obj.
+
+love_reln (predication)
+< RELN > = r_love
+< LOVER > = agr-obj
+< LOVED > = agr-obj.
+
+annoy_reln (predication)
+< RELN > = r_annoy
+< ANNOYANCE > = sem-cat
+< ANNOYED > = agr-obj.
+
+give_reln (predication)
+< RELN > = r_give
+< GIVER > = agr-obj
+< GIVEN > = agr-obj
+< GIFT > = agr-obj.
+
+observe_reln (predication)
+< RELN > = r_observe
+< OBSERVER > = agr-obj
+< OBSERVED > = agr-obj.
+
+exploit_reln (predication)
+< RELN > = r_exploit
+< EXPLOITER > = agr-obj
+< EXPLOITED > = agr-obj.
+
+continue_reln (predication)
+< RELN > = r_continue
+< CONTINUANT > = sem-cat.
+
+try_reln (predication)
+< RELN > = r_try
+< TRYER > = agr-obj
+< TRIED > = sem-cat.
+
+expect_reln (predication)
+< RELN > = r_expect
+< EXPECTOR > = agr-obj
+< EXPECTED > = sem-cat.
+
+persuade_reln (predication)
+< RELN > = r_persuade
+< PERSUADER > = agr-obj
+< PERSUADED > = agr-obj
+< PERSUADED-OF > = sem-cat.
+
+have_reln (predication)
+< RELN > = r_have
+< HAVE-ARG > = sem-cat.
+
+can_reln (predication)
+< RELN > = r_can
+< CAN-ARG > = sem-cat.
+
+not_reln (predication)
+< RELN > = r_not
+< NOT-ARG > = sem-cat.
+
+question_reln (predication)
+< RELN > = r_question
+< QUERY-ARG > = sem-cat.

@@ -1,0 +1,126 @@
+;;; English Grammar: Version 4.0 for Linguistics 120
+;;; or some approximation thereof
+;;; AAC - December 2 1995
+;;; MHK - July 15 1996
+;;;       July 16 1996 : split head-comp rules for binding theory
+;;;       July 18 1996 : new head typing for part-of-speech.
+;;;       July 23 1996 : new type structure
+;;;       July 25 1996 : head specifier : spr-daughter gap empty
+;;;       July 26 1996 : head filler : form fin, inv false
+;;;       July 30 1996 : head specifier : spr-dtr gap non-empty ok
+;;;                                       hd-dtr spr gap empty
+
+;;; Aug 8 1996 : Removed binding theory constraints and conjunction
+;;;              to improve performance for Dikran's demo.
+
+;;; Grammar rules.
+;;; In this version the principles are all compiled out
+;;; into the specific rules, but the principles should really
+;;; be encoded using types.
+
+;;; ***********************
+;;; * head specifier rule *
+;;; ***********************
+
+;;; should the specifier necessarily have an empty valence?
+
+r1 
+<> = birule
+< 0 : SYN : HEAD > = < 2 : SYN : HEAD >
+< 0 : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : COMPS > = e-list
+< 0 : SEM > = < 2 : SEM > 
+< 2 : SYN : VAL : SPR : HD : SYN : HEAD > = < 1 : SYN : HEAD >
+< 2 : SYN : VAL : SPR : HD : SYN : VAL > = < 1 : SYN : VAL >
+< 2 : SYN : VAL : SPR : HD : SYN : GAP : LST > =
+   < 2 : SYN : VAL : SPR : HD : SYN : GAP : LAST >
+< 2 : SYN : VAL : SPR : HD : SEM > = < 1 : SEM >
+< 2 : SYN : VAL : SPR : TL > = e-list
+< 2 : SYN : VAL : COMPS > = e-list
+< 0 : SYN : GAP : LST > = < 1 : SYN : GAP : LST >
+< 1 : SYN : GAP : LAST > = < 2 : SYN : GAP : LST >
+< 0 : SYN : GAP : LAST > = < 2 : SYN : GAP : LAST >.
+
+;;; *************************
+;;; * head complement rules *
+;;; *************************
+
+;;; we have to split up the head complement rules into separate sub-rules
+;;; to allow for either one or two complements, because the chart parser
+;;; has to know how many elements to expect.
+;;;
+;;; in the full grammar, the maximum number of complements is perhaps
+;;; three e.g. "bet", "sell".
+;;;
+;;; an alternative strategy (see Shieber, 1986) is to adopt a binary
+;;; branching structure.
+
+;;; *************************
+;;; * head complement rules *
+;;; *************************
+
+;;; r2 : head complement rule
+;;;    bin : binary hcr (two daughters)
+;;;    ter : ternary hcr (three daughters)
+;;; quad : quatenary hcr (four daughters)
+
+r2-bin
+<> = birule
+< 0 : SYN : VAL : COMPS > = e-list
+< 1 : SYN : VAL : COMPS : HD > = < 2 >
+< 1 : SYN : VAL : COMPS : TL > = e-list
+< 0 : SYN : VAL : SPR > = < 1 : SYN : VAL : SPR >
+< 0 : SYN : HEAD > = < 1 : SYN : HEAD >
+< 0 : SEM > = < 1 : SEM >
+< 0 : SYN : GAP : LST > = < 1 : SYN : GAP : LST >
+< 1 : SYN : GAP : LAST > = < 2 : SYN : GAP : LST >
+< 0 : SYN : GAP : LAST > = < 2 : SYN : GAP : LAST >.
+
+r2-ter
+<> = trirule
+< 0 : SYN : VAL : COMPS > = e-list
+< 1 : SYN : VAL : COMPS : HD > = < 2 >
+< 1 : SYN : VAL : COMPS : TL : HD > = < 3 >
+< 1 : SYN : VAL : COMPS : TL : TL > = e-list
+< 0 : SYN : VAL : SPR > = < 1 : SYN : VAL : SPR >
+< 0 : SYN : HEAD > = < 1 : SYN : HEAD >
+< 0 : SEM > = < 1 : SEM >
+< 0 : SYN : GAP : LST > = < 1 : SYN : GAP : LST >
+< 1 : SYN : GAP : LAST > = < 2 : SYN : GAP : LST >
+< 2 : SYN : GAP : LAST > = < 3 : SYN : GAP : LST >
+< 0 : SYN : GAP : LAST > = < 3 : SYN : GAP : LAST >.
+
+r2-quad
+<> = quadrule
+< 0 : SYN : VAL : COMPS > = e-list
+< 1 : SYN : VAL : COMPS : HD > = < 2 >
+< 1 : SYN : VAL : COMPS : TL : HD > = < 3 >
+< 1 : SYN : VAL : COMPS : TL : TL : HD > = < 4 >
+< 1 : SYN : VAL : COMPS : TL : TL : TL > = e-list
+< 0 : SYN : VAL : SPR > = < 1 : SYN : VAL : SPR >
+< 0 : SYN : HEAD > = < 1 : SYN : HEAD >
+< 0 : SEM > = < 1 : SEM >
+< 0 : SYN : GAP : LST > = < 1 : SYN : GAP : LST >
+< 1 : SYN : GAP : LAST > = < 2 : SYN : GAP : LST >
+< 2 : SYN : GAP : LAST > = < 3 : SYN : GAP : LST >
+< 3 : SYN : GAP : LAST > = < 4 : SYN : GAP : LST >
+< 0 : SYN : GAP : LAST > = < 4 : SYN : GAP : LAST >.
+
+;;; ********************
+;;; * head filler rule *
+;;; ********************
+
+r4 
+<> = birule
+< 0 : SYN : HEAD > = < 2 : SYN : HEAD >
+< 0 : SYN : VAL > = < 2 : SYN : VAL >
+< 0 : SYN : GAP : LST > = < 0 : SYN : GAP : LAST >
+< 0 : SEM > = < 2 : SEM > 
+< 1 : SYN : GAP : LST > = < 1 : SYN : GAP : LAST >
+< 2 : SYN : HEAD : FORM > = fin
+< 2 : SYN : HEAD : INV > = false
+< 2 : SYN : VAL : SPR > = e-list
+< 2 : SYN : VAL : COMPS > = e-list
+< 2 : SYN : GAP : LST : HD > = < 1 >
+< 2 : SYN : GAP : LST : TL > = < 2 : SYN : GAP : LAST >
+< 2 : SYN : GAP : LAST > = e-list.

@@ -1,0 +1,497 @@
+;;; English Grammar: Version 4.0 for Linguistics 120
+;;; or some approximation thereof
+;;; AAC - December 2 1995
+;;; MHK - July 15 1996
+;;;       July 16 1996 : moved < SYN : ARG-ST > to just < ARG-ST >
+;;;       July 18 1996 : new head/pos subtypes and semantics.
+;;;       July 22 1996 : neg values must be maintained by rules
+;;;       July 24 1996 : new type structure.  negation rule removed
+;;;       July 26 1996 : comp extract cast comp to phrase, copies syn/sem only
+;;;                      negation rule back - casts not to word.
+;;;       July 29 1996 : preposition complement extraction rule.
+;;;       Aug  2  1996 : fixed bug in verb 2nd complement extraction rule
+;;;                      fixed passive rules - do not preserve arg-str.
+;;;                      other morph rules now must explicitly preserve arg-str.
+;;; AAC - removed hacks for kick the bucket
+
+;;; lexical (and  morphological) rules
+
+;;; in general, lexical rules have to be stated very verbosely, because
+;;; it is not possible in this implementation to make implicit the
+;;; convention (assumed in the text) that feature values are
+;;; carried over unless otherwise stipulated.
+;;; an inheritence system using defaults could implement this assumption.
+
+;;; ***********************
+;;; * morphological rules *
+;;; ***********************
+
+;;; recall that the type morph-rule implies these constraints:
+;;;  input: lexeme
+;;;  output: word
+;;;  unchanged by rule: gap, sem.
+
+;;; the morphographemics described here attempt only to cover the limited vocabulary
+;;; of this lexicon.  for instance, the plural noun morphographemics would incorrectly
+;;; generate 'mouses' instead of 'mice'.  this was in the interests of clarity over
+;;; general correctness.
+
+%(letter-set (!a abcdefghijklmnopqrstuvwxyz))   ;;; any letter
+
+;;; *******************
+;;; * noun morphology *
+;;; *******************
+
+sing-noun morph-rule
+< NEEDS-AFFIX > = false
+< 0 : ORTH > = < 1 : ORTH >
+< 1 : SYN : HEAD > = noun
+< 1 : SYN : HEAD : AGR : NUM > = sing
+< 1 : SYN : VAL : SPR > = ne-list
+< 0 : SYN > = < 1 : SYN >
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+plur-noun morph-rule
+%suffix (!a !as) 
+< NEEDS-AFFIX > = true
+< 1 : SYN : HEAD > = noun
+< 1 : SYN : HEAD : AGR : NUM > = plur
+< 1 : SYN : VAL : SPR > = ne-list
+< 0 : SYN > = < 1 : SYN >
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+bare-plur-noun morph-rule
+%suffix (!a !as)
+< NEEDS-AFFIX > = true
+< 1 : SYN : HEAD > = noun
+< 1 : SYN : HEAD : AGR > = non-3sing
+< 1 : SYN : HEAD : AGR : NUM > = plur
+< 0 : SYN : HEAD > = < 1 : SYN : HEAD >
+< 1 : SYN : VAL : SPR > = ne-list
+< 0 : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : COMPS > = < 1 : SYN : VAL : COMPS >
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+;;; *******************
+;;; * verb inflection *
+;;; *******************
+
+3rd-sing-verb morph-rule
+%suffix (!a !as) 
+< NEEDS-AFFIX > = true
+< 0 : SYN : HEAD > = verb
+< 0 : SYN : HEAD : FORM > = fin
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD : CASE > = nom
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD : AGR > = 3sing
+< 0 : SYN > = < 1 : SYN >
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+non-3rd-sing-verb morph-rule
+< NEEDS-AFFIX > = false
+< 0 : ORTH > = < 1 : ORTH >
+< 0 : SYN : HEAD > = verb
+< 0 : SYN : HEAD : FORM > = fin
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD : CASE > = nom
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD : AGR > = non-3sing
+< 0 : SYN > = < 1 : SYN >
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+past-verb morph-rule
+%suffix (!a !aed) (e ed) 
+< NEEDS-AFFIX > = true
+< 0 : SYN : HEAD > = verb
+< 0 : SYN : HEAD : FORM > = fin
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD : CASE > = nom
+< 0 : SYN > = < 1 : SYN >
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+pres-part-verb morph-rule
+%suffix (!a !aing) (e ing) (ie ying) 
+< NEEDS-AFFIX > = true
+< 0 : SYN : HEAD : FORM > = pres-p
+< 0 : SYN : HEAD : AUX > = < 1 : SYN : HEAD : AUX >
+< 0 : SYN : HEAD : INV > = < 1 : SYN : HEAD : INV >
+< 0 : SYN : HEAD : NEG > = < 1 : SYN : HEAD : NEG >
+< 0 : SYN : HEAD : PRED > = true
+< 0 : SYN : VAL > = < 1 : SYN : VAL >
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+past-part-verb morph-rule
+%suffix (!a !aed) (e ed) 
+< NEEDS-AFFIX > = true
+< 0 : SYN : HEAD > = verb
+< 0 : SYN : HEAD : FORM > = past-p
+< 0 : SYN > = < 1 : SYN >
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+inf-verb morph-rule
+< NEEDS-AFFIX > = false
+< 0 : ORTH > = < 1 : ORTH >
+< 0 : SYN : HEAD > = verb
+< 0 : SYN : HEAD : FORM > = inf
+< 0 : SYN > = < 1 : SYN >
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+;;; note: 'die' produces a valence-saturated word - still has arg-str, won't unify with
+;;; root-phrase.  do we need an imperative grammar rule?
+
+imp-verb morph-rule
+< NEEDS-AFFIX > = false
+< 0 : ORTH > = < 1 : ORTH >
+< 0 : SYN : HEAD > = verb
+< 0 : SYN : HEAD : FORM > = imp
+< 0 : SYN : HEAD > = < 1 : SYN : HEAD >
+< 1 : SYN : VAL : SPR : HD : SYN : HEAD > = noun
+< 1 : SYN : VAL : SPR : HD : SYN : VAL : SPR > = e-list
+< 1 : SYN : VAL : SPR : HD : SYN : VAL : COMPS > = e-list
+< 1 : SYN : VAL : SPR : TL > = e-list
+< 0 : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : COMPS > = < 1 : SYN : VAL : COMPS >
+< 1 : ARG-STR : HD > = < 1 : SYN : VAL : SPR : HD > 
+< 1 : ARG-STR : HD : SYN : HEAD : AGR > = non-3sing
+< 1 : ARG-STR : HD : SYN : HEAD : AGR : PER > = 2nd
+< 0 : ARG-STR > = < 1 : ARG-STR >.
+
+;;; since the by-phrase is optional, we need two morph rules variants: one
+;;; which adds the by-phrase, and one which does not.  also, since the by-phrase
+;;; must be added at the end of the comps list, we need specific variants for
+;;; each possible length of complements list - unary or binary.  the same issue
+;;; applies for rewriting the argument structure on output - however, since the
+;;; verbs with the argument structure [NOM NOM VERB] do not undergo passive
+;;; transformation (there is, there were, etc.) we can assume that the argument 
+;;; structure on input is either [NOM NOM] or [NOM NOM NOM].
+;;; so:
+;;;   pass-verb-null-un   no by phrase, unary comps
+;;;   pass-verb-null-bin  no by phrase, binary comps
+;;;   pass-verb-by-un     by phrase, unary comps
+;;;   pass-verb-by-bin    by phrase, binary comps
+
+pass-verb-null-un morph-rule
+%suffix (!a !aed) (e ed) 
+< NEEDS-AFFIX > = true
+< 0 : SYN : HEAD : FORM > = pass
+< 0 : SYN : HEAD : AUX > = < 1 : SYN : HEAD : AUX >
+< 0 : SYN : HEAD : INV > = < 1 : SYN : HEAD : INV >
+< 0 : SYN : HEAD : NEG > = < 1 : SYN : HEAD : NEG >
+< 0 : SYN : HEAD : PRED > = true
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD > = noun
+< 0 : SYN : VAL : SPR : HD : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : SPR : HD : SYN : VAL : COMPS > = e-list
+< 0 : SYN : VAL : SPR : TL > = e-list
+< 0 : SYN : VAL : COMPS > = e-list
+< 0 : ARG-STR > = arg-stem
+< 0 : ARG-STR : HD > = < 0 : SYN : VAL : SPR : HD >
+< 0 : ARG-STR : TL > = e-list
+< 1 : SYN : VAL : SPR : HD : SYN : HEAD > = noun
+< 1 : SYN : VAL : SPR : HD : SYN : VAL : SPR > = e-list
+< 1 : SYN : VAL : SPR : HD : SYN : VAL : COMPS > = e-list
+< 1 : SYN : VAL : SPR : TL > = e-list
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD > = noun
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : FORM > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : FORM >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : PRED > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : PRED >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : REF > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : REF >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : AGR > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : AGR >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : CASE > = acc
+< 1 : SYN : VAL : COMPS : HD : SYN : VAL > =
+   < 0 : SYN : VAL : SPR : HD : SYN : VAL >
+< 1 : SYN : VAL : COMPS : HD : SYN : GAP > =
+   < 0 : SYN : VAL : SPR : HD : SYN : GAP >
+< 1 : SYN : VAL : COMPS : HD : SEM > =
+   < 0 : SYN : VAL : SPR : HD : SEM >
+< 1 : SYN : VAL : COMPS : TL > = e-list.
+
+pass-verb-null-bin morph-rule
+%suffix (!a !aed) (e ed) 
+< NEEDS-AFFIX > = true
+< 0 : SYN : HEAD : FORM > = pass
+< 0 : SYN : HEAD : AUX > = < 1 : SYN : HEAD : AUX >
+< 0 : SYN : HEAD : INV > = < 1 : SYN : HEAD : INV >
+< 0 : SYN : HEAD : NEG > = < 1 : SYN : HEAD : NEG >
+< 0 : SYN : HEAD : PRED > = true
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD > = noun
+< 0 : SYN : VAL : SPR : HD : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : SPR : HD : SYN : VAL : COMPS > = e-list
+< 0 : SYN : VAL : SPR : TL > = e-list
+< 0 : SYN : VAL : COMPS : HD > = < 1 : SYN : VAL : COMPS : TL : HD >
+< 0 : SYN : VAL : COMPS : TL > = e-list
+< 0 : ARG-STR > = nom-pred-arg-stem
+< 0 : ARG-STR : HD > = < 0 : SYN : VAL : SPR : HD >
+< 0 : ARG-STR : TL : HD > = < 0 : SYN : VAL : COMPS : HD >
+< 1 : SYN : VAL : SPR : HD : SYN : HEAD > = noun
+< 1 : SYN : VAL : SPR : HD : SYN : VAL : SPR > = e-list
+< 1 : SYN : VAL : SPR : HD : SYN : VAL : COMPS > = e-list
+< 1 : SYN : VAL : SPR : TL > = e-list
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD > = noun
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : FORM > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : FORM >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : PRED > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : PRED >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : REF > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : REF >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : AGR > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : AGR >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : CASE > = acc
+< 1 : SYN : VAL : COMPS : HD : SYN : VAL > =
+   < 0 : SYN : VAL : SPR : HD : SYN : VAL >
+< 1 : SYN : VAL : COMPS : HD : SYN : GAP > =
+   < 0 : SYN : VAL : SPR : HD : SYN : GAP >
+< 1 : SYN : VAL : COMPS : HD : SEM > =
+   < 0 : SYN : VAL : SPR : HD : SEM >
+< 1 : SYN : VAL : COMPS : TL : TL > = e-list.
+
+pass-verb-by-un morph-rule
+%suffix (!a !aed) (e ed) 
+< NEEDS-AFFIX > = true
+< 0 : SYN : HEAD : FORM > = pass
+< 0 : SYN : HEAD : AUX > = < 1 : SYN : HEAD : AUX >
+< 0 : SYN : HEAD : INV > = < 1 : SYN : HEAD : INV >
+< 0 : SYN : HEAD : NEG > = < 1 : SYN : HEAD : NEG >
+< 0 : SYN : HEAD : PRED > = true
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD > = noun
+< 0 : SYN : VAL : SPR : HD : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : SPR : HD : SYN : VAL : COMPS > = e-list
+< 0 : SYN : VAL : SPR : TL > = e-list
+< 0 : SYN : VAL : COMPS : HD : SYN : HEAD > = prep
+< 0 : SYN : VAL : COMPS : HD : SYN : HEAD : FORM > = f_by
+< 0 : SYN : VAL : COMPS : HD : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : COMPS : HD : SYN : VAL : COMPS > = e-list
+< 0 : SYN : VAL : COMPS : TL > = e-list
+< 0 : ARG-STR > = nom-pred-arg-stem
+< 0 : ARG-STR : HD > = < 0 : SYN : VAL : SPR : HD >
+< 0 : ARG-STR : TL : HD > = < 0 : SYN : VAL : COMPS : HD >
+< 1 : SYN : VAL : SPR : HD : SYN : HEAD > = noun
+< 1 : SYN : VAL : SPR : HD : SYN : VAL : SPR > = e-list
+< 1 : SYN : VAL : SPR : HD : SYN : VAL : COMPS > = e-list
+< 1 : SYN : VAL : SPR : TL > = e-list
+< 1 : SYN : VAL : SPR : HD : SEM : INDEX > =
+   < 0 : SYN : VAL : COMPS : HD : SEM : INDEX >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD > = noun
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : FORM > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : FORM >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : PRED > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : PRED >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : REF > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : REF >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : AGR > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : AGR >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : CASE > = acc
+< 1 : SYN : VAL : COMPS : HD : SYN : VAL > =
+   < 0 : SYN : VAL : SPR : HD : SYN : VAL >
+< 1 : SYN : VAL : COMPS : HD : SYN : GAP > =
+   < 0 : SYN : VAL : SPR : HD : SYN : GAP >
+< 1 : SYN : VAL : COMPS : HD : SEM > =
+   < 0 : SYN : VAL : SPR : HD : SEM >
+< 1 : SYN : VAL : COMPS : TL > = e-list.
+
+pass-verb-by-bin morph-rule
+%suffix (!a !aed) (e ed) 
+< NEEDS-AFFIX > = true
+< 0 : SYN : HEAD : FORM > = pass
+< 0 : SYN : HEAD : AUX > = < 1 : SYN : HEAD : AUX >
+< 0 : SYN : HEAD : INV > = < 1 : SYN : HEAD : INV >
+< 0 : SYN : HEAD : NEG > = < 1 : SYN : HEAD : NEG >
+< 0 : SYN : HEAD : PRED > = true
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD > = noun
+< 0 : SYN : VAL : SPR : HD : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : SPR : HD : SYN : VAL : COMPS > = e-list
+< 0 : SYN : VAL : SPR : TL > = e-list
+< 0 : SYN : VAL : COMPS : HD > = < 1 : SYN : VAL : COMPS : TL : HD >
+< 0 : SYN : VAL : COMPS : TL : HD : SYN : HEAD > = prep
+< 0 : SYN : VAL : COMPS : TL : HD : SYN : HEAD : FORM > = f_by
+< 0 : SYN : VAL : COMPS : TL : HD : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : COMPS : TL : HD : SYN : VAL : COMPS > = e-list
+< 0 : SYN : VAL : COMPS : TL : TL > = e-list
+< 0 : ARG-STR > = nom-nom-pred-arg-stem
+< 0 : ARG-STR : HD > = < 0 : SYN : VAL : SPR : HD >
+< 0 : ARG-STR : TL : HD > = < 0 : SYN : VAL : COMPS : HD >
+< 0 : ARG-STR : TL : TL : HD > = < 0 : SYN : VAL : COMPS : TL : HD >
+< 1 : SYN : VAL : SPR : HD : SYN : HEAD > = noun
+< 1 : SYN : VAL : SPR : HD : SYN : VAL : SPR > = e-list
+< 1 : SYN : VAL : SPR : HD : SYN : VAL : COMPS > = e-list
+< 1 : SYN : VAL : SPR : TL > = e-list
+< 1 : SYN : VAL : SPR : HD : SEM : INDEX > =
+   < 0 : SYN : VAL : COMPS : TL : HD : SEM : INDEX >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD > = noun
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : FORM > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : FORM >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : PRED > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : PRED >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : REF > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : REF >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : AGR > =
+   < 0 : SYN : VAL : SPR : HD : SYN : HEAD : AGR >
+< 1 : SYN : VAL : COMPS : HD : SYN : HEAD : CASE > = acc
+< 1 : SYN : VAL : COMPS : HD : SYN : VAL > =
+   < 0 : SYN : VAL : SPR : HD : SYN : VAL >
+< 1 : SYN : VAL : COMPS : HD : SYN : GAP > =
+   < 0 : SYN : VAL : SPR : HD : SYN : GAP >
+< 1 : SYN : VAL : COMPS : HD : SEM > =
+   < 0 : SYN : VAL : SPR : HD : SEM >
+< 1 : SYN : VAL : COMPS : TL : TL > = e-list.
+
+;;; *****************
+;;; * lexical rules *
+;;; *****************
+
+;;; recall that lexical rules (because of their type constraints) do not alter
+;;; arguemnt-structure, and apply only to words producing words.
+;;; these constraints are not made explicit in each rule.
+
+;;; Until we get into difference lists, we can't do the extraposition
+;;; rule in full generality, because it requires that the COMP phrase
+;;; be added to the end of the COMPS.  So the rule below only works
+;;; for the case where there is a single value on the COMPS list
+
+extraposition lex-rule
+< NEEDS-AFFIX > = false
+< 0 : ORTH > = < 1 : ORTH >
+< 0 : SYN : HEAD : AUX > = false
+< 0 : SYN : HEAD > = < 1 : SYN : HEAD >
+< 1 : SYN : VAL : SPR : HD : SYN : HEAD > = comp
+< 1 : SYN : VAL : SPR : TL > = e-list
+< 1 : SYN : VAL : COMPS : TL > = e-list
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD > = noun
+< 0 : SYN : VAL : SPR : HD : SYN : HEAD : FORM > = f_it
+< 0 : SYN : VAL : SPR : HD : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : SPR : HD : SYN : VAL : COMPS > = e-list
+< 0 : SYN : VAL : SPR : TL > = e-list
+< 0 : SYN : VAL : COMPS : HD > = < 1 : SYN : VAL : COMPS : HD >
+< 0 : SYN : VAL : COMPS : TL : HD > = < 1 : SYN : VAL : SPR : HD >
+< 0 : SYN : VAL : COMPS : TL : TL > = e-list
+< 0 : SEM > = < 1 : SEM >
+< 1 : SYN : GAP : LAST > = e-list
+< 1 : SYN : GAP : LST > = < 1 : SYN : GAP : LAST >
+< 0 : SYN : GAP : LST > = < 0 : SYN : GAP : LAST >.
+
+negation lex-rule
+< NEEDS-AFFIX > = false
+< 0 : ORTH > = < 1 : ORTH >
+< 1 : SYN : HEAD : FORM > = fin
+< 1 : SYN : HEAD : AUX > = true
+< 1 : SYN : HEAD : INV > = false
+< 1 : SYN : HEAD : NEG > = false
+< 0 : SYN : HEAD : FORM > = < 1 : SYN : HEAD : FORM >
+< 0 : SYN : HEAD : PRED > = < 1 : SYN : HEAD : PRED >
+< 0 : SYN : HEAD : AUX > = < 1 : SYN : HEAD : AUX >
+< 0 : SYN : HEAD : INV > = < 1 : SYN : HEAD : INV >
+< 0 : SYN : HEAD :  NEG > = true
+< 0 : SYN : VAL : SPR > = < 1 : SYN : VAL : SPR >
+< 0 : SYN : VAL : COMPS : HD > = word
+< 0 : SYN : VAL : COMPS : HD : SYN : HEAD > = adv
+< 0 : SYN : VAL : COMPS : HD : SYN : HEAD : FORM > = f_not
+< 0 : SYN : VAL : COMPS : TL > = < 1 : SYN : VAL : COMPS >
+< 0 : SEM : NOT-ARG > = < 1 : SEM >
+< 1 : SYN : GAP : LAST > = e-list
+< 1 : SYN : GAP : LST > = < 1 : SYN : GAP : LAST >
+< 0 : SYN : GAP : LST > = < 0 : SYN : GAP : LAST >.
+
+inversion lex-rule
+< NEEDS-AFFIX > = false
+< 0 : ORTH > = < 1 : ORTH >
+< 1 : SYN : HEAD : FORM > = fin
+< 1 : SYN : HEAD : AUX > = true
+< 0 : SYN : HEAD : FORM > = < 1 : SYN : HEAD : FORM >
+< 0 : SYN : HEAD : PRED > = < 1 : SYN : HEAD : PRED >
+< 0 : SYN : HEAD : AUX > = < 1 : SYN : HEAD : AUX >
+< 0 : SYN : HEAD : INV > = true
+< 0 : SYN : HEAD :  NEG > = < 1 : SYN : HEAD : NEG >
+< 1 : SYN : VAL : SPR : TL > = e-list
+< 0 : SYN : VAL : SPR > = e-list
+< 0 : SYN : VAL : COMPS : HD > = < 1 : SYN : VAL : SPR : HD >
+< 0 : SYN : VAL : COMPS : TL > = < 1 : SYN : VAL : COMPS >
+< 0 : SEM : QUERY-ARG > = < 1 : SEM >
+< 1 : SYN : GAP : LAST > = e-list
+< 1 : SYN : GAP : LST > = < 1 : SYN : GAP : LAST >
+< 0 : SYN : GAP : LST > = < 0 : SYN : GAP : LAST >.
+
+contraction lex-rule
+%suffix (!a !ant) (n nt)
+< NEEDS-AFFIX > = true
+< 1 : SYN : HEAD : FORM > = fin
+< 1 : SYN : HEAD : AUX > = true
+< 1 : SYN : HEAD : INV > = false
+< 1 : SYN : HEAD : NEG > = false
+< 0 : SYN : HEAD : FORM > = < 1 : SYN : HEAD : FORM >
+< 0 : SYN : HEAD : PRED > = < 1 : SYN : HEAD : PRED >
+< 0 : SYN : HEAD : AUX > = < 1 : SYN : HEAD : AUX >
+< 0 : SYN : HEAD : INV > = < 1 : SYN : HEAD : INV >
+< 0 : SYN : HEAD :  NEG > = true
+< 0 : SYN : VAL > = < 1 : SYN : VAL >
+< 0 : SEM : NOT-ARG > = < 1 : SEM >
+< 1 : SYN : GAP : LAST > = e-list
+< 1 : SYN : GAP : LST > = < 1 : SYN : GAP : LAST >
+< 0 : SYN : GAP : LST > = < 0 : SYN : GAP : LAST >.
+
+;;; complement extraction rules
+;;; ---------------------------
+;;; same as it-extraposition, we can't do a single general c.e. rule since the
+;;; length of the complement list is crucial.  therefore, there is a specific
+;;; rule for each list length.
+
+;;; also, the constrain INV false means only verb heads, so we need a separate
+;;; extraction rule for prepositions only.
+
+comp-extract-verb-one lex-rule
+< NEEDS-AFFIX > = false
+< 0 : ORTH > = < 1 : ORTH >
+< 0 : SYN : HEAD : INV > = false
+< 0 : SYN : HEAD > = < 1 : SYN : HEAD >
+< 0 : SYN : VAL : SPR > = < 1 : SYN : VAL : SPR >
+< 0 : SYN : VAL : COMPS > = < 1 : SYN : VAL : COMPS : TL >
+< 0 : SYN : GAP : LST : HD : SYN : HEAD > = < 1 : SYN : VAL : COMPS : HD : SYN : HEAD >
+< 0 : SYN : GAP : LST : HD : SYN : VAL > = < 1 : SYN : VAL : COMPS : HD : SYN : VAL >
+< 0 : SYN : GAP : LST : HD : SYN : GAP : LST > =
+   < 0 : SYN : GAP : LST : HD : SYN : GAP : LAST >
+< 0 : SYN : GAP : LST : HD : SEM > = < 1 : SYN : VAL : COMPS : HD : SEM >
+< 0 : SYN : GAP : LST : TL > = < 0 : SYN : GAP : LAST >
+< 0 : SEM > = < 1 : SEM >
+< 1 : SYN : VAL : COMPS : HD > = phrase
+< 1 : SYN : VAL : COMPS : HD : SYN : GAP : LST > =
+   < 1 : SYN : VAL : COMPS : HD : SYN : GAP : LAST >
+< 1 : SYN : GAP : LST > = < 1 : SYN : GAP : LAST >
+< 1 : SYN : GAP : LAST > = e-list.
+
+comp-extract-verb-two lex-rule
+< NEEDS-AFFIX > = false
+< 0 : ORTH > = < 1 : ORTH >
+< 0 : SYN : HEAD : INV > = false
+< 0 : SYN : HEAD > = < 1 : SYN : HEAD >
+< 0 : SYN : VAL : SPR > = < 1 : SYN : VAL : SPR >
+< 0 : SYN : VAL : COMPS : HD > = < 1 : SYN : VAL : COMPS : HD >
+< 0 : SYN : VAL : COMPS : TL > = < 1 : SYN : VAL : COMPS : TL : TL >
+< 0 : SYN : GAP : LST : HD : SYN : HEAD > = < 1 : SYN : VAL : COMPS : TL : HD : SYN : HEAD >
+< 0 : SYN : GAP : LST : HD : SYN : VAL > = < 1 : SYN : VAL : COMPS : TL : HD : SYN : VAL >
+< 0 : SYN : GAP : LST : HD : SYN : GAP : LST > =
+   < 0 : SYN : GAP : LST : HD : SYN : GAP : LAST >
+< 0 : SYN : GAP : LST : HD : SEM > = < 1 : SYN : VAL : COMPS : TL : HD : SEM >
+< 0 : SYN : GAP : LST : TL > = < 0 : SYN : GAP : LAST >
+< 0 : SEM > = < 1 : SEM >
+< 1 : SYN : VAL : COMPS : TL : HD > = phrase
+< 1 : SYN : VAL : COMPS : TL : HD : SYN : GAP : LST > =
+   < 1 : SYN : VAL : COMPS : TL : HD : SYN : GAP : LAST >
+< 1 : SYN : GAP : LST > = < 1 : SYN : GAP : LAST >
+< 1 : SYN : GAP : LAST > = e-list.
+
+comp-extract-prep lex-rule
+< NEEDS-AFFIX > = false
+< 0 : ORTH > = < 1 : ORTH >
+< 0 : SYN : HEAD > = prep
+< 0 : SYN : HEAD > = < 1 : SYN : HEAD >
+< 0 : SYN : VAL : SPR > = < 1 : SYN : VAL : SPR >
+< 0 : SYN : VAL : COMPS > = < 1 : SYN : VAL : COMPS : TL >
+< 0 : SYN : GAP : LST : HD : SYN : HEAD > = < 1 : SYN : VAL : COMPS : HD : SYN : HEAD >
+< 0 : SYN : GAP : LST : HD : SYN : VAL > = < 1 : SYN : VAL : COMPS : HD : SYN : VAL >
+< 0 : SYN : GAP : LST : HD : SYN : GAP : LST > =
+   < 0 : SYN : GAP : LST : HD : SYN : GAP : LAST >
+< 0 : SYN : GAP : LST : HD : SEM > = < 1 : SYN : VAL : COMPS : HD : SEM >
+< 0 : SYN : GAP : LST : TL > = < 0 : SYN : GAP : LAST >
+< 0 : SEM > = < 1 : SEM >
+< 1 : SYN : VAL : COMPS : HD > = phrase
+< 1 : SYN : VAL : COMPS : HD : SYN : GAP : LST > =
+   < 1 : SYN : VAL : COMPS : HD : SYN : GAP : LAST >
+< 1 : SYN : GAP : LST > = < 1 : SYN : GAP : LAST >
+< 1 : SYN : GAP : LAST > = e-list.

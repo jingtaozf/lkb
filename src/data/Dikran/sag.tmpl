@@ -1,0 +1,52 @@
+;;; templates which provide labels for the parse trees
+;;; MHK - 15 July 1996
+
+
+np
+< SYN : HEAD > = noun
+< SYN : VAL : SPR > = e-list
+< SYN : VAL : COMPS > = e-list.
+
+n
+< SYN : HEAD > = noun
+< SYN : VAL : SPR > = ne-list
+< SYN : VAL : COMPS > = e-list.
+
+s
+< SYN : HEAD > = verb
+< SYN : VAL : SPR > = e-list
+< SYN : VAL : COMPS > = e-list.
+
+vp
+< SYN : HEAD > = verb
+< SYN : VAL : SPR > = ne-list
+< SYN : VAL : COMPS > = e-list.
+
+v
+< SYN : HEAD > = verb
+< SYN : VAL : COMPS > = ne-list.
+
+pp
+< SYN : HEAD > = prep
+< SYN : VAL : COMPS > = e-list.
+
+prep
+< SYN : HEAD > = prep
+< SYN : VAL : COMPS > = ne-list.
+
+det
+< SYN : HEAD > = det.
+
+comp
+< SYN : HEAD > = comp
+< SYN : VAL : COMPS > = ne-list.
+
+cp
+< SYN : HEAD > = comp
+< SYN : VAL : COMPS > = e-list.
+
+adv
+< SYN : HEAD > = adv.
+
+conj
+< SYN : HEAD > = conj.
