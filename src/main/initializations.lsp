@@ -155,8 +155,6 @@
       ;; (also a good idea anyway)
       (setf *features* (remove :psql *features*))))
   
-  ;;; this is a no-op in tty mode
-  #+(not :tty)
   (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :make)))
     (unless (or (and building-image-p 
                      (boundp building-image-p)
@@ -165,6 +163,12 @@
       #+:allegro
       (tpl:setq-default *package* 
         (find-package (if (system:getenv "SSP") :ssp :lkb)))
+      
+      #+:lui
+      (when (system:getenv "LUI") (lui-initialize))
+      
+      ;; this is a no-op in tty mode
+      #+(not :tty)
       (let ((display #+:allegro (system:getenv "DISPLAY") #-:allegro nil)
             (*package* (find-package #+:clim :clim-user #-:clim :lkb)))
         (when (and (stringp display) (not (zerop (length display))))
