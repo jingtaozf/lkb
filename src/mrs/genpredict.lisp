@@ -75,7 +75,6 @@
 
 (defun construct-output-id (fs)
   (let ((res (fs-type fs)))
-    (when (listp res) (setf res (car res)))
     (if (stringp res)
         (intern (string-upcase res) :cl-user))))
 

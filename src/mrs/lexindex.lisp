@@ -233,26 +233,23 @@
 (defun extract-relation-from-fs (fs id)
   ;;; two cases - normal relation and string-valued relation
   (if (is-valid-fs fs)
-      (let* ((reln_type (extract-relation-type fs))
-             (real-type (base-create-type reln_type)))
+      (let ((real-type (extract-relation-type fs)))
         (when real-type
-            (when (listp real-type)
-              (error "~%Disjunction not expected in ~A" id))
-            (unless (member real-type *dummy-relations*)
-              (let* ((label-list (fs-arcs fs))
-                     (string-values
-                      (for pair in label-list
-                           filter
-                           (if (member (car pair) 
-                                       *value-feats*)
+          (unless (member real-type *dummy-relations*)
+            (let* ((label-list (fs-arcs fs))
+                   (string-values
+                    (for pair in label-list
+                         filter
+                         (if (member (car pair) 
+                                     *value-feats*)
                              (create-type
                               (fs-type (cdr pair)))))))
-                (when (cdr string-values)
-                  (error "~%Multiple string values not expected in ~A
+              (when (cdr string-values)
+                (error "~%Multiple string values not expected in ~A
                       values ~A labels ~A" id string-values label-list)) 
-                (make-relation-record 
-                 :relation real-type
-                 :feature-string (car string-values))))))))
+              (make-relation-record 
+               :relation real-type
+               :feature-string (car string-values))))))))
 
 
 (defun extract-relation-type (fs)

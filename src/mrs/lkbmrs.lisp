@@ -79,16 +79,26 @@
 
 (defun fs-type (fs)
   ;;; also defined for PAGE
-  (let ((type (type-of-fs fs)))
-    (if (listp type)
-        (car type)
-      type)))
-
-(defun base-create-type (type)
-  ;;; also defined for PAGE
-  (if (listp type)
-      (car type)
-    type))
+  (let* ((type (type-of-fs fs))
+         (real-type 
+          (if (listp type)
+              (car type)
+            type)))
+    (when 
+        (and #+allegro (or (string-equal (system:getenv "USER") "aac")
+                        (string-equal (system:getenv "USER") "dan")
+                           (string-equal (system:getenv "USER") "danf"))
+             #-allegro nil
+             (search "GLBTYPE" (if (stringp real-type) real-type
+                                   (symbol-name real-type))))
+      ;;; if there's a glbtype, and the user is Dan, be annoying
+      (dotimes (n 5)
+        (cl-user::lkb-beep)
+        (format t "~%!!!!!!!!!!!!!!!!!!!!!!" real-type))
+      (format t "~%GLBTYPE ~A in MRS" real-type)
+      (dotimes (n 5)
+        (format t "~%!!!!!!!!!!!!!!!!!!!!!!" real-type)))
+    real-type))
 
 (defun equal-or-subtype (type1 type2)
   (or (equal type1 type2)

@@ -221,20 +221,20 @@
     (format stream "~V%" 1)))
 
 (defmethod mrs-output-start-psoa ((mrsout indexed)) 
-  nil)
+  (with-slots (stream) mrsout
+    (format stream "<")))
   
 (defmethod mrs-output-top-h ((mrsout indexed) handel-val)
   (with-slots (stream) mrsout
-    (format stream "TOP: ~A~%"
-            handel-val)))
+    (format stream "~A" handel-val)))
 
 (defmethod mrs-output-index ((mrsout indexed) index-val)
-  (declare (ignore index-val))
-  nil)
+  (with-slots (stream) mrsout
+    (format stream ",~A" index-val)))
 
 (defmethod mrs-output-start-liszt ((mrsout indexed))
   (with-slots (stream) mrsout
-    (format stream "AND[ ")))
+    (format stream ",~%{")))
 
 (defmethod mrs-output-var-fn ((mrsout indexed) var-string)
   (with-slots (stream) mrsout
@@ -242,12 +242,12 @@
 
 (defmethod mrs-output-atomic-fn ((mrsout indexed) atomic-value)
   (with-slots (stream) mrsout
-    (format stream "~A" atomic-value)))
+    (format stream "~S" atomic-value)))
 
 (defmethod mrs-output-start-rel ((mrsout indexed) sort first-p)
-  (declare (ignore first-p))
-  (with-slots (temp-sort) mrsout
-    (setf temp-sort sort)))
+  (with-slots (stream temp-sort) mrsout
+    (setf temp-sort sort)
+    (unless first-p (format stream ",~%"))))
 
 (defmethod mrs-output-rel-handel ((mrsout indexed) handel)
   (with-slots (stream temp-sort) mrsout  
@@ -263,47 +263,50 @@
     (setf need-comma t)))
 
 (defmethod mrs-output-start-extra ((mrsout indexed) var-type)
-  (declare (ignore var-type))
-  nil)
+   (declare (ignore var-type))
+   nil)
+;  (with-slots (stream) mrsout
+;    (format stream ":~A" var-type)))
 
 (defmethod mrs-output-extra-feat  ((mrsout indexed) feat)
   (declare (ignore feat))
   nil)
 
 (defmethod mrs-output-extra-val  ((mrsout indexed) val)
-  (declare (ignore val))
-  nil)
+  (with-slots (stream) mrsout
+    (format stream ":~A" val)))
 
 (defmethod mrs-output-end-extra ((mrsout indexed))
   nil)
 
 (defmethod mrs-output-end-rel ((mrsout indexed))
   (with-slots (stream need-comma) mrsout
-    (format stream ")~%") 
+    (format stream ")") 
     (setf need-comma nil)))
 
 (defmethod mrs-output-end-liszt ((mrsout indexed))
   (with-slots (stream) mrsout
-    (format stream "]")))
+    (format stream "},")))
 
 (defmethod mrs-output-start-h-cons ((mrsout indexed))
   (with-slots (stream) mrsout
-    (format stream "~%")))
+    (format stream "~%{")))
 
 ;;; ???
 (defmethod mrs-output-outscopes ((mrsout indexed) reln higher lower first-p)
-  (declare (ignore first-p))
   (with-slots (stream) mrsout
-    (format stream "~A ~A ~A~%" 
+    (unless first-p
+      (format stream ",~%"))
+    (format stream "~A ~A ~A" 
             higher reln lower)))
 
 (defmethod mrs-output-end-h-cons ((mrsout indexed))
   (with-slots (stream) mrsout
-    (format stream " ")))
+    (format stream "}")))
 
 (defmethod mrs-output-end-psoa ((mrsout indexed))
   (with-slots (stream) mrsout
-    (format stream "~%" )))
+    (format stream ">~%" )))
 
 
 
@@ -341,20 +344,8 @@ higher and lower are handle-variables
 
 |#
 
-
-#|
-
 (defclass prolog (output-type)
-  ((need-rel-comma :initform nil)
-   (need-comma :initform nil)))
-
-;;; replace generic fn
-
-(defmethod mrs-output-print-name ((mrsout prolog) value)
-  (with-slots () mrsout
-    (if (var-p value)
-        (intern (var-name value))
-      'u)))
+  ((need-comma :initform nil)))
 
 (defmethod mrs-output-start-fn ((mrsout prolog))
   (with-slots (stream) mrsout
@@ -364,18 +355,25 @@ higher and lower are handle-variables
   (with-slots (stream) mrsout
     (format stream "~V%" 1)))
 
-(defmethod mrs-output-start-psoa ((mrsout prolog) 
-				  handel-val event-val)
+(defmethod mrs-output-start-psoa ((mrsout prolog)) 
   (with-slots (stream) mrsout
-    (format stream "psoa(~A,~A," handel-val event-val)))
+    (format stream "psoa(")))
+
+(defmethod mrs-output-top-h ((mrsout prolog) handel-val)
+  (with-slots (stream) mrsout
+    (format stream "~A" handel-val)))
+
+(defmethod mrs-output-index ((mrsout prolog) index-val)
+  (with-slots (stream) mrsout
+    (format stream ",~A" index-val)))
 
 (defmethod mrs-output-start-liszt ((mrsout prolog))
   (with-slots (stream) mrsout
-    (format stream "[")))
+    (format stream ",[")))
 
 (defmethod mrs-output-var-fn ((mrsout prolog) var-string)
   (with-slots (stream) mrsout
-    (format stream "'~A')" var-string)))
+    (format stream "~A)" (remove-variable-junk var-string))))
 
 (defmethod mrs-output-atomic-fn ((mrsout prolog) atomic-value)
   (with-slots (stream) mrsout
@@ -383,11 +381,17 @@ higher and lower are handle-variables
         (format stream "'~A')" atomic-value)
       (format stream "~A)" atomic-value))))
 
-(defmethod mrs-output-start-rel ((mrsout prolog) sort handel)
-  (with-slots (stream need-rel-comma) mrsout
-    (when need-rel-comma (format stream ","))
-    (setf need-rel-comma t)
-    (format stream "rel('~A',~A,[" (string-downcase sort) handel)))
+(defmethod mrs-output-start-rel ((mrsout prolog) sort first-p)
+  (with-slots (stream) mrsout
+    (unless first-p (format stream ","))
+    (format stream "rel('~A'," 
+            (remove-right-sequence 
+                    *sem-relation-suffix*(string-downcase sort)))))
+
+(defmethod mrs-output-rel-handel ((mrsout prolog) handel)
+  (with-slots (stream temp-sort) mrsout  
+    (format stream "~A,[" handel)))
+
 
 (defmethod mrs-output-label-fn  ((mrsout prolog) label)
   (with-slots (stream need-comma) mrsout
@@ -395,25 +399,38 @@ higher and lower are handle-variables
     (setf need-comma t)
     (format stream "attrval('~A'," label)))
 
+(defmethod mrs-output-start-extra ((mrsout prolog) var-type)
+   (declare (ignore var-type))
+   nil)
+
+(defmethod mrs-output-extra-feat  ((mrsout prolog) feat)
+  (declare (ignore feat))
+  nil)
+
+(defmethod mrs-output-extra-val  ((mrsout prolog) val)
+  (declare (ignore val))
+  nil)
+
+(defmethod mrs-output-end-extra ((mrsout prolog))
+  nil)
+
 (defmethod mrs-output-end-rel ((mrsout prolog))
   (with-slots (stream need-comma) mrsout
     (setf need-comma nil)
     (format stream "])")))
 
 (defmethod mrs-output-end-liszt ((mrsout prolog))
-  (with-slots (stream need-rel-comma) mrsout
-    (setf need-rel-comma nil)
+  (with-slots (stream) mrsout
     (format stream "]")))
 
 (defmethod mrs-output-start-h-cons ((mrsout prolog))
   (with-slots (stream) mrsout
     (format stream ",hcons([")))
 
-(defmethod mrs-output-outscopes ((mrsout prolog) reln higher lower)
-  (with-slots (stream need-comma) mrsout  
-    (when need-comma (format stream ","))
-    (setf need-comma t)
-    (format stream "~A(~A,~A)" reln higher lower)))
+(defmethod mrs-output-outscopes ((mrsout prolog) reln higher lower first-p)
+  (with-slots (stream) mrsout  
+    (unless first-p (format stream ","))
+    (format stream "~A(~A,~A)" (string-downcase reln) higher lower)))
 
 (defmethod mrs-output-end-h-cons ((mrsout prolog))
   (with-slots (stream need-comma) mrsout
@@ -425,7 +442,6 @@ higher and lower are handle-variables
     (format stream ")~%")))
 
 
-|#
 
 ;;; Utility fns
 
@@ -525,7 +541,7 @@ higher and lower are handle-variables
     (mrs-output-end-psoa *mrs-display-structure*))
 
 (defun print-mrs-extra (var)
-  (when (var-p var)
+  (when (and (var-p var) (var-type var) (var-extra var))
     (when (not (member var *already-seen-vars*
                                             :test #'eq))
       (mrs-output-start-extra *mrs-display-structure*
@@ -577,7 +593,7 @@ QEQ -> VARNAME RELNNAME VARNAME
 
 (defun make-mrs-break-table nil 
   (cl-user::define-break-characters '(#\< #\> #\:
-                                      #\[ #\])))
+                                      #\[ #\] #\, #\{ #\})))
 
 (defun mrs-check-for (character istream)
    (let ((next-char (peek-char t istream nil 'eof)))
@@ -787,4 +803,174 @@ QEQ -> VARNAME RELNNAME VARNAME
     (when (eq atomsym 'eof)
       (error "Unexpected eof"))
     atomsym))
+
+;;; Reading in an MRS that was written out in the `indexed' format
+
+#|
+
+MRS -> < LTOP, INDEX, LISZT, HCONS >
+
+LTOP -> VAR
+
+INDEX -> VAR
+
+LISZT -> { } | { [REL,]* REL }
+
+HCONS -> {} | { [QEQ,]* QEQ }
+
+REL -> VARNAME:PREDNAME([ARG,]* ARG)
+
+ARG -> VAR | STRING | CONSTNAME
+
+VAR -> VARNAME[:CONSTNAME]*
+
+QEQ -> VARNAME RELNNAME VARNAME
+
+
+|#
+
+(defun read-indexed-mrs (istream)
+  (let ((*readtable* (make-mrs-break-table)))
+;;; MRS -> < LTOP, INDEX, LISZT, HCONS >
+    (setf *already-read-vars* nil)
+    (mrs-check-for #\< istream)
+    (let* ((ltop (read-mrs-indexed-ltop istream))
+           (index (read-mrs-indexed-index istream))
+           (liszt (read-mrs-indexed-liszt istream))
+           (hcons (read-mrs-indexed-hcons istream))
+           (psoa
+            (make-psoa :top-h ltop
+                       :index index
+                       :liszt liszt
+                       :h-cons hcons)))
+      (mrs-check-for #\> istream)
+      psoa)))
+
+(defun read-mrs-indexed-ltop (istream)
+;;; LTOP -> VAR
+  (let ((var
+         (read-mrs-indexed-var istream)))
+    (mrs-check-for #\, istream)
+    var))
+  
+(defun read-mrs-indexed-index (istream)
+;;; INDEX -> VAR
+  (let ((var
+         (read-mrs-indexed-var istream)))
+    (mrs-check-for #\, istream)
+    var))
+
+(defun read-mrs-indexed-liszt (istream)
+  ;;; LISZT -> { } | { [REL,]* REL }
+  (let ((rels nil)
+        (first-p t))
+    (mrs-check-for #\{ istream)
+    (loop 
+      (let ((next-char (peek-char t istream nil 'eof)))
+        (when (eql next-char 'eof) (error "Unexpected eof"))
+        (when (eql next-char #\}) (return))
+        (unless first-p
+          (mrs-check-for #\, istream))
+        (setf first-p nil)
+        (push (read-mrs-indexed-rel istream)
+              rels)))
+    (mrs-check-for #\} istream)
+    (mrs-check-for #\, istream)
+    rels))
+
+(defun read-mrs-indexed-hcons (istream)
+;;; HCONS -> {} | { [QEQ,]* QEQ }
+  (let ((cons nil)
+        (first-p t))
+    (mrs-check-for #\{ istream)
+    (loop 
+      (let ((next-char (peek-char t istream nil 'eof)))
+        (when (eql next-char 'eof) (error "Unexpected eof"))
+        (when (eql next-char #\}) (return))
+        (unless first-p
+          (mrs-check-for #\, istream))
+        (setf first-p nil)       
+        (push (read-mrs-qeq istream)
+              cons)))
+    (mrs-check-for #\} istream)
+    cons))
+
+(defun read-mrs-indexed-rel (istream)
+;;; REL -> VARNAME:PREDNAME([ARG,]* ARG)  
+  (let ((hvar (read-mrs-simple-var istream)))
+    (mrs-check-for #\: istream)
+    (let ((predname (read-mrs-atom istream)))
+      (mrs-check-for #\( istream)
+      (let ((featpairs nil)
+            (first-p t)
+            (pos 1))
+        (loop 
+          (let ((next-char (peek-char t istream nil 'eof)))
+            (when (eql next-char 'eof) (error "Unexpected eof"))
+            (when (eql next-char #\)) 
+              (read-char istream)
+              (return))
+            (unless first-p
+              (mrs-check-for #\, istream))
+            (setf first-p nil)
+            (push (read-mrs-indexed-featpair istream predname pos)
+                  featpairs)
+            (incf pos)))
+        (make-rel :sort predname
+                  :handel hvar
+                  :flist (sort featpairs #'feat-sort-func))))))
+          
+(defun read-mrs-indexed-featpair (istream relname pos)        
+;;; ARG -> VAR | STRING | CONSTNAME
+  ;;; Note that in this notation, the feature has to be determined from
+  ;;; a semdb
+  ;;; FIX - faked for now
+  (let* ((feature (determine-mrs-feature relname pos))
+         (val
+           (if (member feature *value-feats*
+                       :test #'eq)
+               (read-mrs-atom istream)
+             (read-mrs-indexed-var istream))))
+      (make-fvpair :feature feature
+                   :value val)))
+
+(defun read-mrs-indexed-var (istream)
+  ;; VAR -> VARNAME[:CONSTNAME]*
+  ;; note that the extra info is filled in from the semdb
+  (let* ((varname (read-mrs-atom istream))
+         (existing (assoc varname *already-read-vars*))
+         (var (or (cdr existing)
+                  (make-var :name (string varname)
+                            :id (funcall *variable-generator*)))))
+    (unless existing 
+      (push (cons varname var) *already-read-vars*))
+    (let ((extra nil))
+      (loop
+        (let ((next-char (peek-char t istream nil 'eof)))
+          (when (eql next-char 'eof) (error "Unexpected eof"))
+          (when (not (eql next-char #\:)) (return))
+          (mrs-check-for #\: istream)
+          (let* ((val (read-mrs-atom istream))
+                (pathname (determine-mrs-pathname val)))
+            (if pathname
+                (push
+                 (make-extrapair :feature pathname
+                                 :value val)
+                 extra)
+              (progn 
+                (when (var-type var)
+                  (error "Multiple type specs"))
+                (setf (var-type var) val))))))
+      (when extra
+        (setf (var-extra var) extra)))
+    var))
+
+(defun determine-mrs-pathname (val)
+  (declare (ignore val))
+  'DUMMY)
+
+(defun determine-mrs-feature (reln pos)
+  (declare (ignore reln pos))
+  'DUMMYF)
+
 

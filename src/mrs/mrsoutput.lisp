@@ -43,9 +43,7 @@
   (let ((root-value (path-value fs *root-path*)))
     (if root-value 
         (not
-         (or (eql (fs-type root-value) *true-type*)
-             (and (listp (fs-type root-value))
-                  (eql (car (fs-type root-value)) *true-type*))))))))
+         (eql (fs-type root-value) *true-type*))))))
   
 
 (defparameter *named-nodes* nil)
@@ -106,9 +104,6 @@
                                               :id idnumber)))))
           (push (cons fs variable-identifier) *named-nodes*)
           variable-identifier)))))
-
-(defun get-tdl-val (fs pathlist)
-  (fs-type (path-value fs pathlist)))
 
 ;;; The `extra' information on variables is now represented
 ;;; as a structure consisting of a combination of feature
@@ -226,13 +221,7 @@
 
 #+lkb
 (defun create-type (sort)
-  ;;; base-create-type is the LKB/PAGE specific function
-  (horrible-hack-3 (base-create-type sort)))
-
-(defun vm-create-type (type)
-  (if (and (consp type) (eq (first type) :atom))
-      (second type)
-    type))
+  (horrible-hack-3 sort))
 
 (defun horrible-hack-3 (sort)
   ;;; this hack would not be necessary if the grammar used

@@ -9,6 +9,31 @@
   :width *parse-window-width* 
   :height *parse-window-height*)
 
+(define-lkb-frame mrs-indexed
+    ((mrsstruct :initform nil
+	    :accessor mrs-indexed-mrsstruct))
+  :display-function 'show-mrs-indexed
+  :width *parse-window-width* 
+  :height *parse-window-height*)
+
+(define-lkb-frame mrs-prolog
+    ((mrsstruct :initform nil
+                :accessor mrs-prolog-mrsstruct))
+  :display-function 'show-mrs-prolog  
+  :width *parse-window-width* 
+  :height *parse-window-height*)
+
+(define-lkb-frame mrs-scoped
+    ((mrsstruct :initform nil
+                :accessor mrs-scoped-mrsstruct)
+     (scoped :initform nil
+                :accessor mrs-scoped-scoped))
+  :display-function 'show-mrs-scoped  
+  :width *parse-window-width* 
+  :height *parse-window-height*)
+
+
+
 (defstruct mrs-type-thing value)
 
 (define-mrs-simple-command (com-type-mrs-menu)
@@ -43,21 +68,6 @@
        (def (show-type-spec-aux type type-entry))
        (exp (show-type-aux type type-entry))))))
     
-(define-lkb-frame mrs-indexed
-    ((mrsstruct :initform nil
-	    :accessor mrs-indexed-mrsstruct))
-  :display-function 'show-mrs-indexed
-  :width *parse-window-width* 
-  :height *parse-window-height*)
-
-(define-lkb-frame mrs-scoped
-    ((mrsstruct :initform nil
-                :accessor mrs-scoped-mrsstruct)
-     (scoped :initform nil
-                :accessor mrs-scoped-scoped))
-  :display-function 'show-mrs-scoped  
-  :width *parse-window-width* 
-  :height *parse-window-height*)
 
 
 (defun show-mrs-window (edge  &optional mrs title)
@@ -69,7 +79,7 @@
     (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
     (setf *bold* (clim:merge-text-styles '(nil :bold nil) *normal*))
     (setf (mrs-simple-mrsstruct mframe) 
-      (or mrs (mrs::extract-mrs edge)))
+      (or mrs (and edge (mrs::extract-mrs edge))))
     (setf (clim:frame-pretty-name mframe) (or title "Simple MRS"))
     (clim:run-frame-top-level mframe)))
 
@@ -84,6 +94,17 @@
     (setf (mrs-indexed-mrsstruct mframe) 
       (mrs::extract-mrs edge))
     (setf (clim:frame-pretty-name mframe) "Indexed MRS")
+    (clim:run-frame-top-level mframe)))
+
+(defun show-mrs-prolog-window (edge)
+  (mp:process-run-function "Prolog MRS"
+                           #'show-mrs-prolog-window-really edge))
+
+(defun show-mrs-prolog-window-really (edge)
+  (let ((mframe (clim:make-application-frame 'mrs-prolog)))
+    (setf (mrs-prolog-mrsstruct mframe) 
+      (mrs::extract-mrs edge))
+    (setf (clim:frame-pretty-name mframe) "Prolog MRS")
     (clim:run-frame-top-level mframe)))
 
 (defun show-mrs-scoped-window (edge)
@@ -115,6 +136,14 @@
     (if mrsstruct
         (clim:with-text-style (stream (lkb-parse-tree-font))
           (mrs::output-mrs1 mrsstruct 'mrs::indexed stream))
+      (format stream "~%::: MRS structure could not be extracted~%"))))
+
+(defun show-mrs-prolog (mframe stream &key max-width max-height)
+  (declare (ignore max-width max-height))
+  (let ((mrsstruct (mrs-prolog-mrsstruct mframe)))
+    (if mrsstruct
+        (clim:with-text-style (stream (lkb-parse-tree-font))
+          (mrs::output-mrs1 mrsstruct 'mrs::prolog stream))
       (format stream "~%::: MRS structure could not be extracted~%"))))
 
 (defun show-mrs-scoped (mframe stream &key max-width max-height)

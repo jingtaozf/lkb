@@ -28,11 +28,20 @@
 
 (defvar *mrs-debug* nil)
 
+(defvar *mrs-discourse* nil)
+
 (defun treat-mrs (mrs-struct simplep stream)
   (format stream "~%~A " cl-user::*sentence*)
   (setf *mrs-debug* mrs-struct)
   (cond (*mrs-scoping*
          (process-mrs-struct mrs-struct nil 10 simplep stream))
+        (*mrs-discourse*
+	 (output-mrs1 mrs-struct 'simple stream)
+	 (output-mrs1 mrs-struct 'prolog stream)
+	 (with-open-file (pro-out "~/tmp/prologformat"
+			  :direction :output :if-does-not-exist :create
+			  :if-exists :append)
+	   (output-mrs1 mrs-struct 'prolog pro-out)))      
         (t (output-mrs1 mrs-struct 'simple stream))))
 
 (defun process-mrs-struct (mrs-psoa sentence maximum simplep stream)
@@ -119,6 +128,11 @@
     (ignore-errors 
      (with-input-from-string (stream string)
        (read-mrs stream)))))
+
+(defun read-indexed-mrs-from-string (string)
+  (let ((*package* (find-package :mrs)))
+     (with-input-from-string (stream string)
+       (read-indexed-mrs stream))))
 
 (defun safe-mrs-unequalp (mrs1 mrs2 &rest options)
   (not 
