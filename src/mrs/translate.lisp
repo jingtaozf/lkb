@@ -67,6 +67,7 @@
                        (let* ((stream (make-string-output-stream))
                               (*standard-output* stream)
                               (mrs::*mrs-raw-output-p* nil)
+                              (*debugging* nil)
                               (strings (generate-from-mrs mrs :signal t))
                               (output (get-output-stream-string stream)))
                          (when (and (stringp output) (not (string= output "")))
@@ -175,6 +176,20 @@
       #+:lucid 
       (lcl:environment-variable "USER")
       "nobody"))
+
+#+(and :allegro-version>= (version>= 5 0))
+(ff:def-foreign-call 
+    (current-pid "getpid")
+    (:void)
+  :returning :int)
+#+(and :allegro-version>= (not (version>= 5 0)))
+(ff:defforeign 
+    'current-pid
+    :entry-point "getpid"
+    :arguments nil
+    :return-type :integer)
+#-:allegro-version
+(defun getpid () (random (expt 2 15)))
 
 ;;; functions that allow for translation (using interlingua)
 ;;; and `translation'
