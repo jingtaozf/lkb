@@ -65,13 +65,24 @@
          (second-first (position #\< after-tag)))
     (subseq after-tag 0 second-first)))
 
+(defparameter *rasp-full-numbers-p* t)
+
+(defparameter *initial-rasp-num* nil)
+
 (defun get-cfrom (str)
   ;;; <w s="19" e="24">bark+ed_VVD</w>
   ;;; extract 19
   (let ((first-s (position #\s str)))
     (if (and (char= (elt str (+ 1 first-s)) #\=)
 	     (char= (elt str (+ 2 first-s)) #\"))
-	(parse-integer (subseq str (+ 3 first-s)) :junk-allowed t)
+	(let ((spec-num
+	       (parse-integer (subseq str (+ 3 first-s)) :junk-allowed t)))
+	  (if (and spec-num 
+		   (integerp spec-num))
+	      (if *initial-rasp-num*
+		  (- spec-num *initial-rasp-num*)
+		spec-num)
+	    nil))
       nil)))
 
 (defun get-cto (str)
@@ -80,9 +91,35 @@
   (let ((first-e (position #\e str)))
     (if (and (char= (elt str (+ 1 first-e)) #\=)
 	     (char= (elt str (+ 2 first-e)) #\"))
-	(parse-integer (subseq str (+ 3 first-e)) :junk-allowed t)
+	(let ((spec-num
+	       (parse-integer (subseq str (+ 3 first-e)) :junk-allowed t)))
+	  (if (and spec-num 
+		   (integerp spec-num))
+	      (if *initial-rasp-num*
+		  (- spec-num *initial-rasp-num*)
+		spec-num)
+	    nil))
       nil)))
 
+;;; temporary function to make numbering start at 0
+;;; for each sentence
+
+;;; call with most-positive-fixnum to be safe
+;;; setf *initial-rasp-num* whatever
+;;; deduct this from all cfrom cto
+
+
+(defun scan-rasp-for-first-num (tree-node min)
+  (if (daughter-nodes-p tree-node)
+      (let ((dtr-nodes (get-dtr-nodes tree-node)))
+	(loop for dtr in dtr-nodes
+	    do
+	      (let ((min-dtr (scan-rasp-for-first-num dtr min)))
+		(when (< min-dtr min)
+		  (setf min min-dtr))))
+	min)
+    (let ((cfrom (get-cfrom (string tree-node))))
+      (or cfrom most-positive-fixnum))))
 
   
 ;;; top level call
@@ -165,6 +202,11 @@
 		(handler-case
 		    (progn
 		      (unless (equal tree '(X))
+			(when *rasp-full-numbers-p* 
+			  (setf *initial-rasp-num* nil)
+			  (setf *initial-rasp-num*
+			    (scan-rasp-for-first-num 
+			     tree most-positive-fixnum)))
 			(construct-sem-for-tree tree :rasp ostream))
 		      (finish-output ostream))
 		  (storage-condition (condition)

@@ -293,7 +293,7 @@
 <rarg><rargname>RESTR</rargname><label>H</label><var>H2</var></rarg>
 <rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
 <ep><gpred>NAMED_REL</gpred><label>H1</label><var>X</var></ep>
-<rarg><rargname>CARG</rargname><label>H</label><lemma/></rarg>
+<rarg><rargname>CARG</rargname><label>H1</label><lemma/></rarg>
 <hcons hreln='qeq'><hi><var>H2</var></hi><lo><var>H1</var></lo></hcons>
 </semstruct>
 </le>

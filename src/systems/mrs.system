@@ -146,7 +146,11 @@
        (:file "xml-utils")
        (:file "readgram")
        (:file "readtag")
-       (:file "input")))
+       (:file "input")
+       (:file "compare")
+       #+(and :lkb :allegro :clim (not :tty)) 	
+       (:file "lkb-acl-rmrs")            ; display etc in CLIM
+))
 
      (:module "redwoods"
       :source-pathname "mrs"

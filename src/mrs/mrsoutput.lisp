@@ -293,8 +293,17 @@ duplicate variables")
 	(let ((cfrom-fs
 	       (cdr (assoc *rel-cfrom-feature*
 			   label-list))))
-	  (if cfrom-fs
-	      (parse-integer (fs-type cfrom-fs)))))))
+	  (or (extract-integer-from-fs-type cfrom-fs)
+	       -1)))))
+
+(defun extract-integer-from-fs-type (fs)
+  (if fs
+      (let ((fs-type (fs-type fs)))
+	(if (stringp fs-type)
+	    (let ((res
+		   (parse-integer fs-type :junk-allowed t)))
+	      (if (integerp res)
+		  res))))))
 
 (defun extract-cto-from-rel-fs (fs)
   (let ((label-list (fs-arcs fs)))
@@ -302,8 +311,8 @@ duplicate variables")
 	(let ((cto-fs
 	       (cdr (assoc *rel-cto-feature*
 			   label-list))))
-	  (if cto-fs
-	      (parse-integer (fs-type cto-fs)))))))
+	  (or (extract-integer-from-fs-type cto-fs)
+	       -1)))))
 
 (defun extract-pred-from-rel-fs (rel-fs)
     (let* ((label-list (fs-arcs rel-fs))

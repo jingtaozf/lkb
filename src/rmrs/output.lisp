@@ -318,7 +318,7 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-start-rmrs-arg ((rmrsout compact) predname)
   (with-slots (stream indentation) rmrsout
-    (format stream "~VT~A(" indentation predname)))
+    (format stream "~VT          ~A(" indentation predname)))
 
 (defmethod rmrs-output-end-rmrs-arg ((rmrsout compact))
   (with-slots (stream) rmrsout
@@ -416,6 +416,19 @@ for gram.dtd and tag.dtd
     (format stream "_~(~a_~a~@[~a~]~)(" 
 	    lemma (or pos "U") sense)))
 
+(defmethod rmrs-output-gpred ((rmrsout compact-chars) predname)
+  (with-slots (stream) rmrsout
+    (format stream "~(~a~)(" predname)))
+
+
+(defmethod rmrs-output-start-extra ((rmrsout compact-chars))
+  nil)
+
+(defmethod rmrs-output-extra-feat-val  ((rmrsout compact-chars) feat val)
+  (declare (ignore feat val))
+  nil)
+
+
 
 (defclass compact-two (compact-chars)
   ((xpos :initform 0 :initarg :xpos)))
@@ -423,7 +436,7 @@ for gram.dtd and tag.dtd
 (defmethod rmrs-output-start-fn ((rmrsout compact-two) cfrom cto)
   (declare (ignore cfrom cto))
   (with-slots (stream indentation xpos) rmrsout
-    (setf indentation (+ indentation 100))
+    (setf indentation (+ indentation 70))
     (format stream "~%~VT" indentation)
     (setf xpos (lkb::current-position-x stream))))
 

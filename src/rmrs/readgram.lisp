@@ -97,12 +97,12 @@
                 (|ing| (push (read-rmrs-semstruct-in-g tag-content)
 			     ings)))))))
     (make-semstruct :hook (or hook (make-default-hook))
-                    :liszt eps
+                    :liszt (nreverse eps)
 		    ;; binding-list is constructed when the
                     ;; real semstruct is created
-                    :h-cons h-cons
+                    :h-cons (nreverse h-cons)
                     :rmrs-args (nreverse rargs)
-                    :in-groups ings
+                    :in-groups (nreverse ings)
 		    :bindings nil)))
 
 (defun read-rmrs-semstruct-hook (content)

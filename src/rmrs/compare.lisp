@@ -25,12 +25,6 @@ Should be possible to reuse this as MRS code
 ;;; the extra slots here are for caching the variables
 ;;; distinguished vs undistinguished is explained below
 
-(defstruct (comp-rel (:include char-rel)) 
-  comp-status)
-
-(defstruct (comp-arg (:include rmrs-arg))
-  comp-status)
-
 (defstruct rmrs-comparison-record
   matched-rels
   label-list
@@ -40,52 +34,22 @@ Should be possible to reuse this as MRS code
   rel1
   rel2
   comp-status)
-  
-#|
-(progn
-(setf *rasp-eg5-a*
-  (nth 4
-       (read-rmrs-file "xxx" :rasp)))
-nil)
-
-(progn
-(setf *rasp-eg5-b*
-  (nth 4
-       (read-rmrs-file "xxx" :rasp)))
-nil)
-
-(setf *erg-eg5*
-  (progn (let ((*mrs-output-p* t))
-	   (do-parse-tty "Abrams handed Browne the cigarette")
-	   (mrs-to-rmrs *mrs-debug*))))
-
-(compare-rmrs *rasp-eg5-a* *rasp-eg5-b* t)
-|#
 
 ;;; Main entry point - same-source-p is t if we want
 ;;; to use the character position information 
 
-(defun compare-rmrs (rmrs1 rmrs2 same-source-p)
+(defun compare-rmrs (rmrs1 rmrs2 same-source-p input-string)
+  ;;; returns a list of comparison records 
   (unless (and (rmrs-p rmrs1) (rmrs-p rmrs2))
     (error "Arguments to compare-rmrs are not valid RMRSs"))
   (let* ((new-rmrs1 (sort-rmrs (convert-to-comparison-rmrs rmrs1)
-	      ;; turns the rmrs into comp-rel and comp-args
 			  same-source-p))
 	 (new-rmrs2 (sort-rmrs (convert-to-comparison-rmrs rmrs2)
-			  same-source-p))
-	 (comparison-records
-	  (compare-rmrs-aux new-rmrs1 new-rmrs2 
-			    (initial-comparison-record)
-			    same-source-p)))
-    (dolist (comparison-record comparison-records)
-      (display-comparison-results rmrs1 rmrs2
-       comparison-record))))
+			  same-source-p)))
+    (compare-rmrs-aux new-rmrs1 new-rmrs2 
+		      (initial-comparison-record)
+		      same-source-p)))
 
-
-
-(defun display-comparison-results (rmrs1 rmrs2 record)
-  (lkb::show-mrs-rmrs-compare-window rmrs1 rmrs2 record "Comparison"))
-  
 
 (defun initial-comparison-record nil
   (make-rmrs-comparison-record 
@@ -228,29 +192,23 @@ realpreds.
   (let* ((holes (list (rmrs-top-h rmrs)))
 	 (labels nil)
 	 (distinguished nil)
-	 (undistinguished nil)
-	 (elpreds
-	  (loop for ep in (rmrs-liszt rmrs)
-	      collect
-		(progn
-		  (pushnew (rel-handel ep) labels 
+	 (undistinguished nil))
+    (loop for ep in (rmrs-liszt rmrs)
+	do
+	  (progn
+	    (pushnew (rel-handel ep) labels 
+		     :test #'eql-var-id)
+	    (let ((ep-var (retrieve-rmrs-ep-var ep)))
+	      (if (or (eql (rmrs-origin rmrs) :erg)
+		      (distinguished-rel-type-p ep))
+		  (pushnew ep-var distinguished
 			   :test #'eql-var-id)
-		  (let ((ep-var (retrieve-rmrs-ep-var ep)))
-		    (if (or (eql (rmrs-origin rmrs) :erg)
-			    (distinguished-rel-type-p ep))
-			(pushnew ep-var distinguished
-				 :test #'eql-var-id)
-		      (pushnew ep-var undistinguished
-			       :test #'eql-var-id))
-		    (make-comp-rel :handel (rel-handel ep)
-				   :pred (rel-pred ep)
-				   :flist (rel-flist ep)
-				   :cfrom (char-rel-cfrom ep)
-				   :cto (char-rel-cto ep)
-				   :parameter-strings
-				   (get-carg-value
-				    ep
-				    (rmrs-rmrs-args rmrs))))))))
+		(pushnew ep-var undistinguished
+			 :test #'eql-var-id))
+	      (setf (rel-parameter-strings ep)
+		(get-carg-value
+		 ep
+		 (rmrs-rmrs-args rmrs))))))
       (dolist (qeq (rmrs-h-cons rmrs))
 	(cond
 	  ((equal (hcons-relation qeq) "qeq")
@@ -259,32 +217,27 @@ realpreds.
 	   (pushnew (hcons-outscpd qeq) labels 
 		    :test #'eql-var-id))
 	  (t (error "Unsupported hcons relation ~A"  (hcons-relation qeq)))))
-      (let ((new-rmrs-args
-	     (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
-		 collect
-		   (progn
-		   (pushnew (rmrs-arg-label rmrs-arg) 
-			    labels :test #'eql-var-id)
-		   (let ((value (rmrs-arg-val rmrs-arg)))
-		     (if (is-handel-var value)
-			 (pushnew value holes :test #'eql-var-id)
-		       (if (var-p value) 
-			   (ecase (rmrs-origin rmrs) 
-			     (:erg
-			      (pushnew value distinguished 
-				       :test #'eql-var-id))
-			     (:rasp 
-			      (pushnew value undistinguished 
-				       :test #'eql-var-id)))))
-		     (make-comp-arg
-		      :arg-type (rmrs-arg-arg-type rmrs-arg)
-		      :label (rmrs-arg-label rmrs-arg)
-		      :val value))))))
+      (loop for rmrs-arg in (rmrs-rmrs-args rmrs)
+	    do
+	    (progn
+	      (pushnew (rmrs-arg-label rmrs-arg) 
+		       labels :test #'eql-var-id)
+	      (let ((value (rmrs-arg-val rmrs-arg)))
+		(if (is-handel-var value)
+		    (pushnew value holes :test #'eql-var-id)
+		  (if (var-p value) 
+		      (ecase (rmrs-origin rmrs) 
+			(:erg
+			 (pushnew value distinguished 
+				  :test #'eql-var-id))
+			(:rasp 
+			 (pushnew value undistinguished 
+				  :test #'eql-var-id))))))))
 	(make-comp-rmrs
 	 :top-h (rmrs-top-h rmrs)
-	 :liszt elpreds
+	 :liszt (rmrs-liszt rmrs)
 	 :h-cons (rmrs-h-cons rmrs)
-	 :rmrs-args new-rmrs-args
+	 :rmrs-args (rmrs-rmrs-args rmrs)
 	 :in-groups (rmrs-in-groups rmrs)
 	 :bindings nil ;;; should already be canonicalized??
 	 :cfrom (rmrs-cfrom rmrs)
@@ -293,7 +246,7 @@ realpreds.
 	 :labels labels
 	 :holes holes
 	 :distinguished distinguished
-	 :undistinguished undistinguished))))
+	 :undistinguished undistinguished)))
 
 (defun get-carg-value (rel rmrs-args)
   (let ((lbl (rel-handel rel)))
