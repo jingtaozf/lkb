@@ -462,7 +462,8 @@ printing routines -  convenient to make this global to keep printing generic")
         (progn
           (unless *giving-demo-p*
             (format t "~%Free variables in MRS: ~A" 
-                    (mapcar #'var-name free-variables)))
+                    (remove-duplicates (mapcar #'var-name free-variables)
+                                       :test #'equal)))
           nil)
 ;;; variables must be bound by quantifiers unless they are in relations
 ;;; which license implicit existential binding
