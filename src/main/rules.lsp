@@ -43,6 +43,7 @@
 
 (defstruct (rule (:include lex-or-psort))
    daughters-restricted
+   head-first-p
    order)
 
 ;;; order is an ordered list of the paths that get at mother and daughters
@@ -88,7 +89,7 @@
       (evaluate-unifications lex-rule
          (list fs))))
 
-;;; *number-of-applications* is defined in globals.lsp
+(defparameter *number-of-applications* 0)
 
 (defun try-all-lexical-rules (entries &optional ignore-list)
    ;;; entries are pairs with list of rules applied plus result
@@ -172,7 +173,7 @@
 (defun add-lex-or-grammar-rule (id rule lexp)
   ;;; YADU - need to get at the indef structure
    (let* ((fs (rule-full-fs rule))
-         (f-list (establish-linear-precedence (tdfs-indef fs))))
+          (f-list (establish-linear-precedence (tdfs-indef fs))))
       (setf (rule-order rule) f-list)
       (setf (rule-daughters-restricted rule)
          (mapcar
@@ -181,6 +182,13 @@
                    (existing-dag-at-end-of (tdfs-indef fs)
                       (if (listp path) path (list path)))))
             (cdr f-list)))
+      (flet ((listify (x) (if (listp x) x (list x))))
+         (setf (rule-head-first-p rule)
+            (eq
+               (existing-dag-at-end-of (tdfs-indef fs)
+                  (append (listify (car f-list)) *head-marking-path*))
+               (existing-dag-at-end-of (tdfs-indef fs)
+                  (append (listify (cadr f-list)) *head-marking-path*)))))
       (setf (gethash id (if lexp *lexical-rules* *rules*)) rule)))
 
 
