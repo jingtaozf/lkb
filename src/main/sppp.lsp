@@ -101,7 +101,8 @@
        (xml-escape-string text) #\page)
       (force-output stream))
     (setf (stream-external-format stream) (excl:find-external-format :ascii))
-    (let ((n (loop
+    (let ((*package* (find-package :lkb))
+          (n (loop
                  with size = (array-dimension *sppp-input-buffer* 0)
                  initially (setf (fill-pointer *sppp-input-buffer*) 0)
                  for n from 1
