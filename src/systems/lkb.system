@@ -20,7 +20,6 @@
   (pushnew :lkb *features*)
   (pushnew :lkb-v5.4 *features*)         
   #+(or :cl-http (not (or :mcl :clim))) 
-       ;; (not (or :mcl :clim :common-graphics))
   (pushnew :tty *features*))
 
 ;;;
@@ -42,6 +41,7 @@
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   (pushnew :preprocessor *features*)
+  #+:allegro
   (pushnew :xml *features*)
   (pushnew :pooling *features*)
   (pushnew :packing *features*))

@@ -21,6 +21,25 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;
+;;; ToDo
+;;;
+;;; - respect `encoding' header in incoming message: read in 8-bit mode and use
+;;;   XML header to explicitly convert strings; arguably the XML parser might
+;;;   be expected to do this for us, but it seems to not respect the encoding
+;;;   declaration and just return what was read.
+;;; - experiment with generic lexical entries that are activaed on the basis of
+;;;   POS assignments.
+;;; - write DTD and experiment with validating parser; the way we dissect the
+;;;   parsed XML feels overly clumsy for the time being.
+;;; - add more tracing and debugging support; currently grammarians need to
+;;;   know to inspect *morphs* and run the preprocessor stand-alone to debug
+;;;   the integration.
+;;; - investigate ways of allowing tokenization ambiguity; presumably, this 
+;;;   would have to be part of a full refactoring of the LKB preprocessing and
+;;;   lexical look-up machinery, and ann would want to take part in that.
+;;;
+
 (in-package :lkb)
 
 (defvar *sppp-pid* nil)
@@ -30,10 +49,10 @@
 (defparameter *sppp-application* nil)
 
 (defparameter *sppp-input-buffer* 
-  (make-array 4096 :element-type 'character :adjustable nil :fill-pointer 0))
+  (make-array 2048 :element-type 'character :adjustable nil :fill-pointer 0))
 
 (defparameter *sppp-input-chart*
-  (make-array '(4096 2)))
+  (make-array '(2048 2)))
 
 (defvar *sppp-debug-p* nil)
 
@@ -93,6 +112,7 @@
         (setf (aref *morphs* i) edge)))
 
 (defun sppp (text &key (stream *sppp-stream*))
+
   (when (streamp stream)
     (when (output-stream-p stream)
       (setf (stream-external-format stream) (excl:find-external-format :utf-8))
