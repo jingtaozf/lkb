@@ -973,7 +973,11 @@
 
 (defvar *debug-stream* t)
 
-(defun unpack-edge! (id edge &optional insidep)
+(defun unpack-edge! (id edge)
+  (or (edge-foo edge)
+      (setf (edge-foo edge) (unpack-edge!! id edge))))
+
+(defun unpack-edge!! (id edge &optional insidep)
   #+:fdebug
   (clrhash *unpacking-failure-paths*)
   (labels (#+:idebug
@@ -1001,7 +1005,7 @@
                    (format *debug-stream* " [~a of ~a]" i n))
              ;;
              ;; re-use `foo' slot to keep local cache of how this edge can be
-             ;; unfolded record failure, where appropriate, too. 
+             ;; unfolded; record failures, where appropriate, too. 
              ;;
              ;; _fix_me_
              ;; the caching mechanism is unnecessarily complex: it would seem
@@ -1182,7 +1186,7 @@
        ;; sure we recurse on all packed nodes and accumulate results.
        ;;
        ((and (null insidep) (or (edge-packed edge) (edge-equivalent edge)))
-        (nconc (unpack-edge! id edge t)
+        (nconc (unpack-edge!! id edge t)
                (loop
                    for edge in (edge-packed edge)
                    nconc (unpack-edge! id edge))
