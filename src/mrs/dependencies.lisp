@@ -42,7 +42,7 @@
 (defstruct ed
   handle id type
   predicate arguments carg
-  raw foo)
+  raw)
 
 (defmethod print-object ((object ed) stream)
   (if *dependencies-pretty-print-p*
@@ -265,14 +265,18 @@
   (loop
       for ed in (eds-relations eds)
       unless (or (ed-bleached-p ed) (null (ed-arguments ed))) do
-        (unless (ed-mark ed) (return ed))))
+        (unless (ed-walk ed) (return ed))))
 
-(defun ed-mark (ed &optional (mark (gensym)))
-  (unless (eq (ed-foo ed) mark)
-    (setf (ed-foo ed) mark)
+(defun ed-walk (ed &optional (start ed startp))
+  (unless (and startp (eq ed start))
     (loop
         for (role . value) in (ed-arguments ed)
         when (and (ed-p value) (not (ed-bleached-p value))) do
           (setf role role)
-          (unless (ed-mark value mark) (return nil))
+          (unless (ed-walk value start) (return nil))
         finally (return t))))
+
+
+
+
+
