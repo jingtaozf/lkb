@@ -385,8 +385,10 @@
 
 (defun selectively-unpack-edges (edges &optional n &key test)
 
-  (unless edges (return-from selectively-unpack-edges))
+  #+:debug
   (setf %edges edges)
+
+  (unless edges (return-from selectively-unpack-edges))
   (if (or (null n) (not (numberp n)) (<= n 0) (null *unpacking-scoring-hook*))
     (let ((edges (unpack-edges edges)))
       (if test
