@@ -1,0 +1,46 @@
+#!/bin/bash
+
+ROOT=/eo/e8nb/oe/www/src
+TSDBHOME=/eo/e8nb/oe/www/src/lkb/src/tsdb/home
+TARGET=/lingo/oe/kristina
+TSDB=/user/oe/lbin/tsdb
+
+if [ ! -d ${TARGET} ]; then
+  mkdir $TARGET
+fi
+
+if [ -z "${2}" ]; then
+  low=0;
+else
+  low=${2};
+fi
+
+{
+  DB=${TSDBHOME}/${1}
+  all=$(${TSDB} -home ${DB} -query 'select i-id from item' \
+        | sort -n | tail -1);
+  while [ ${low} -le ${all} ]; do
+    high=$[${low} + 200];
+    echo
+    echo "exporting \`${1}' [$low -- $high]";
+    echo
+    condition="i-id >= ${low} && i-id < ${high} && t-active == 1";
+    ( \
+      echo "(setf (sys:gsgc-switch :print) t)"; \
+      echo "(setf (sys:gsgc-switch :stats) t)"; \
+      echo "(setf (sys:gsgc-switch :verbose) t)"; \
+      echo "(setf (sys:gsgc-parameter :auto-step) nil)"; \
+      echo "(load \"${ROOT}/lkb/src/general/loadup.lisp\")"; \
+      echo "(pushnew :lkb *features*)"; \
+      echo "(pushnew :mrs *features*)"; \
+      echo "(setf (system:getenv \"DISPLAY\") nil)"; \
+      echo "(compile-system \"tsdb\")"; \
+      echo "(read-script-file-aux \"${ROOT}/erg.20-jun-01/lkb/script\")"; \
+      echo "(tsdb:tsdb :home \"$TSDBHOME\")"; \
+      echo "(tsdb::export-trees \"${1}\" :path \"${TARGET}\""; \
+      echo "  :condition \"${condition}\")"; \
+      echo "(excl:exit)"; \
+    ) | ( cd /lingo/local/acl; ./clim -qq && touch ${ROOT}/.yes; )
+    low=${high};
+  done
+} 2>&1 | tee /tmp/export.$$.log
