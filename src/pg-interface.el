@@ -480,7 +480,7 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
 (defun l:minibuffer-complete-dyn (&rest rest)
   (interactive)
   (unless (and
-	   (cle-eval "(packagep :lkb)")
+	   (cle-eval "(find-package :lkb)")
 	   (cle-eval-lexdb 'connection))
     (if (not (cle-eval "(common-lisp-user::featurep :lkb)"))
 	(error "Please load the the LKB"))
