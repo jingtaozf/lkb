@@ -22,7 +22,7 @@
 ;;; fields in active chart edges
 
 (defun gen-make-list-and-insert (len item index)
-   ;; make list of length len and insert item at index (1-based)
+  ;; make list of length len and insert item at index (1-based)
   (let ((lst (make-list len)))
      (setf (nth (1- index) lst) item)
      lst))
