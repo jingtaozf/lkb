@@ -135,3 +135,13 @@ modal := sign &
 
 
 
+;;; more examples
+;;;
+;;; default reentrancy deeply nested
+
+nested := ne-list &
+[ HD /l #1 & a,
+  TL [ HD /l #1,
+       TL [ HD [ HD /l #1,
+                 TL e-list ],
+            TL e-list ]]].

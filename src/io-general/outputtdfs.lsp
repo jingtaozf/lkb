@@ -75,10 +75,8 @@
               (output-tail-features stream path) 
               (let ((new-start-pos (current-position stream)))
                 (add-type-and-active-fs-region stream 
-                                               new-start-pos nil 
-                                               (if (cdr value) 
-                                                   value 
-                                                 (car value)) nil t)))
+                                               new-start-pos nil
+                                               value nil t)))
           (loop for path in (yadu-pp-paths path-rep)
                do
                (output-tail-features stream                        

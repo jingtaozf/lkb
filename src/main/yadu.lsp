@@ -637,28 +637,30 @@
 (defvar *atfs* nil)
 
 (defun extract-yadu-tails (persistence def-dag indef &optional lexp)
-   (invalidate-visit-marks)
+  (invalidate-visit-marks)
    (let ((specificity (if lexp 'lex (type-of-fs def-dag))))
-      (setf *atfs* nil)
-      (yadu-convert-dag-to-atfs def-dag nil specificity indef persistence)
-      *atfs*))
+     (setf *atfs* nil)
+     (yadu-convert-dag-to-atfs def-dag nil specificity indef persistence)
+     (pruned-atfs)))
 
 (defun yadu-convert-dag-to-atfs (dag-instance path-so-far spec indef-dag
       persistence)
    (let* ((real-dag (follow-pointers dag-instance))
          (real-indef (if indef-dag (follow-pointers indef-dag)))
          (current-path 
-            (create-path-from-feature-list (reverse path-so-far))))      
-      (loop for stored-path in (dag-visit real-dag)
+          (create-path-from-feature-list (reverse path-so-far)))
+          (prev-def-paths (dag-visit real-dag))
+          (prev-indef-paths (if real-indef
+                                  (dag-visit real-indef))))
+      (loop for stored-path in prev-def-paths
          do
-         (unless (and real-indef 
-                      (member stored-path (dag-visit real-indef)))
+         (unless (member stored-path prev-indef-paths)
            (save-if-new-tail (make-yadu-pp :paths 
                                            (list current-path stored-path))
                              spec persistence)))
       (push current-path (dag-visit real-dag))
       (when real-indef
-         (push current-path (dag-visit real-indef)))
+        (push current-path (dag-visit real-indef)))
       (let ((type (dag-type real-dag)))
         (unless 
             (and real-indef 
@@ -675,20 +677,11 @@
              persistence))))
       
 (defun save-if-new-tail (path-rep spec persistence)
-  (let ((fs-rep (dagify path-rep)))
-    (unless (member fs-rep 
-                    *atfs* 
-                    :test 
-                    #'(lambda (atfs listmember) 
-                        (dag-equal-p atfs
-                                     (tail-element-cached-tfs 
-                                      listmember))))
-      (push 
-       (make-tail-element :spec spec 
-                          :path-rep path-rep
-                          :cached-tfs fs-rep
-                          :persistence (list persistence))
-                *atfs*))))
+  (push 
+   (make-tail-element :spec spec 
+                      :path-rep path-rep
+                      :persistence (list persistence))
+   *atfs*))
 
 (defun dagify (atomic-fs)
   (let ((dag (create-dag)))
@@ -711,4 +704,22 @@
        (copy-dag dag)))))
 
 
+(defun pruned-atfs nil
+  (loop for atfs-el in *atfs*
+        nconc
+        (let* ((path-rep (tail-element-path-rep atfs-el))
+               (fs-rep (dagify path-rep)))
+          (unless (member fs-rep 
+                          *atfs* 
+                          :test 
+                          #'(lambda (atfs listmember) 
+                              (and (tail-element-cached-tfs 
+                                            listmember)
+                              (dag-equal-p atfs
+                                           (tail-element-cached-tfs 
+                                            listmember)))))
+            (setf (tail-element-cached-tfs atfs-el)
+              fs-rep)
+            (list atfs-el)))))
+            
 
