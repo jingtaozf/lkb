@@ -1,1 +1,1 @@
-(defconstant *cvs-version* "$Date")
+(defconstant *cvs-version* "$Date$")
