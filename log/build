@@ -45,7 +45,7 @@ cvs update: Updating lib/solaris/tk8.0/demos
 cvs update: Updating lib/solaris/tk8.0/demos/images
 cvs update: Updating lib/solaris/tk8.0/images
 cvs update: Updating lib/tcl8.0
-cvs update: Updating lib/tcl8.0/http1.0
+cvs update: ignoring lib/tcl8.0/http1.0 (CVS/Entries missing)
 cvs update: Updating lib/tcl8.0/http2.0
 cvs update: Updating lib/tcl8.0/opt0.1
 cvs update: Updating lib/tcl8.3
@@ -252,18 +252,12 @@ cvs update: Updating src/fasl/mrs
 cvs update: Updating src/general
 cvs update: Updating src/glue
 cvs update: Updating src/io-general
-U src/io-general/outputfs.lsp
 cvs update: Updating src/io-lilfes
 cvs update: Updating src/io-paths
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-cvs update: src/main/lkb-tsdb.lsp is no longer in the repository
-U src/main/ltemplates.lsp
-U src/main/parse.lsp
 cvs update: Updating src/mrs
-U src/mrs/lexlookup.lisp
-U src/mrs/lkb-interface.lisp
 cvs update: Updating src/mrs/data
 cvs update: Updating src/non-core
 cvs update: Updating src/ppcre
@@ -277,10 +271,6 @@ cvs update: Updating src/rmrs
 cvs update: Updating src/rmrs/annlt-test
 cvs update: Updating src/rmrs/test1
 cvs update: Updating src/systems
-U src/systems/lkb.system
-U src/systems/mrs.system
-U src/systems/pxml.system
-cvs update: src/systems/xml.system is no longer in the repository
 cvs update: Updating src/tproving
 cvs update: Updating src/tsdb
 ? src/tsdb/c
@@ -380,7 +370,7 @@ cvs update: Updating src/xml
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.241; previous revision: 1.240
+new revision: 1.242; previous revision: 1.241
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1324,7 +1314,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (Jul 15, 2003 1:51)
+6.2 [Linux (x86)] (Jul 15, 2003 14:03)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2372,7 +2362,7 @@ NIL
  (DISCARD-ALL-SOURCE-FILE-INFO)
  |#
 
-#<EQUAL hash-table with 0 entries @ #x4445a4a2> 
+#<EQUAL hash-table with 0 entries @ #x44444e9a> 
  #|
 ; Libfasl from bundle code/who.fasl.
  (DISCARD-LOCAL-NAME-INFO)
@@ -2383,7 +2373,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-88758808 bytes have been tenured, next gc will be global.
+89723248 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2489,16 +2479,6 @@ NIL
  (EXIT 0)
  |#
 ; Exiting Lisp
-;   Fast loading /lingo/local/acl/code/locale.002
-;;; Installing locale patch, version 2
-Warning: The maintenance and support agreement for this Allegro CL
-         license has expired on Sunday, June 15, 2003 12:00:00 AM .
-         Any continued right under this license to distribute or deploy
-         Allegro CL based applications is contingent upon such an
-         agreement.  Please review the Franz Software License Agreement
-         provided with the Allegro CL distribution for further
-         details.  If you believe this warning was received in error or
-         would like additional information please email sales@franz.com.
 T
 CL-USER(3): (:LKB :DISCO-LOADUP :ANSI-FUNCTIONP :ANSI-EVAL-WHEN :MK-DEFSYSTEM
  :CLTL2 :ALLEGRO-CL-ENTERPRISE :CLIM-MOTIF :ANSI-90 :SILICA ...)
@@ -2582,7 +2562,7 @@ CL-USER(7): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ; Fast loading
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/ppcre/repetition-closures.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/ppcre/scanner.lisp
-8735456 bytes have been tenured, next gc will be global.
+8733920 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/ppcre/scanner.fasl
@@ -2605,16 +2585,16 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/xml/pxml1.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/xml/pxml3.cl
-9285240 bytes have been tenured, next gc will be global.
+8428072 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
-9009096 bytes have been tenured, next gc will be global.
+8621504 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/xml/pxml3.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/xml/pxml3.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/xml/pxml2.cl
-11778688 bytes have been tenured, next gc will be global.
+11107768 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/xml/pxml2.fasl
@@ -2851,6 +2831,8 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/io-paths/pathout.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/io-tdl/tdltypeinput.lsp
+8527568 bytes have been tenured, next gc will be global.
+See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/io-tdl/tdltypeinput.fasl
 ;;; Fasl write complete
@@ -2891,8 +2873,6 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/ACL_specific/graph.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/ACL_specific/activefs.lsp
-8724504 bytes have been tenured, next gc will be global.
-See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/ACL_specific/activefs.fasl
 ;;; Fasl write complete
@@ -3239,13 +3219,13 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/gc.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/yy.lisp
+gc-after-hook(): local; new: 1786152; old: 56528; pending: 0; efficiency: 89.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/derivations.lisp
-gc-after-hook(): local; new: 1063648; old: 252424; pending: 0; efficiency: 91.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/derivations.fasl
 ;;; Fasl write complete
@@ -3260,13 +3240,14 @@ gc-after-hook(): local; new: 1063648; old: 252424; pending: 0; efficiency: 91.
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1176224; old: 304480; pending: 0; efficiency: 91.
-gc-after-hook(): local; new: 1199992; old: 69064; pending: 0; efficiency: 92.
+gc-after-hook(): local; new: 1140368; old: 298872; pending: 0; efficiency: 89.
+gc-after-hook(): local; new: 994128; old: 48448; pending: 0; efficiency: 93.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/lsp.lisp
+gc-after-hook(): local; new: 496328; old: 378648; pending: 0; efficiency: 91.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/lsp.fasl
 ;;; Fasl write complete
@@ -3288,7 +3269,7 @@ gc-after-hook(): local; new: 1199992; old: 69064; pending: 0; efficiency: 92.
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/maxent.lisp
-gc-after-hook(): local; new: 1002640; old: 407320; pending: 48; efficiency: 92.
+gc-after-hook(): local; new: 861768; old: 94640; pending: 0; efficiency: 92.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Fasl write complete
@@ -3387,13 +3368,13 @@ area  address(bytes)        cons        symbols        other bytes
 Top #x4f06000
 New #x4c86000(2621440)    982:1056      254:0        2531528:12848
 New #x4a06000(2621440)     -----         -----            -----
-Old #x4003858(10495912)   374:30196     259:9572     9322648:684640
+Old #x4003858(10495912)   374:30196     259:9572     9322632:684656
 Root pages: 12
  Lisp heap base: #x4000000  position: #x4f06000 reserved: 805306368
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (7/15/3 1:59)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (7/15/3 14:12)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -4047,14 +4028,14 @@ NIL
 [Current process: Initial Lisp Listener]
 USER(22): NIL
 [Current process: Initial Lisp Listener]
-USER(23): #<EQUAL hash-table with 0 entries @ #x4310dda>
+USER(23): #<EQUAL hash-table with 0 entries @ #x4310dea>
 [Current process: Initial Lisp Listener]
 USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 ; Libfasl from bundle code/who.fasl.
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-33587544 bytes have been tenured, next gc will be global.
+34929632 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -4717,7 +4698,7 @@ Warning: Variable #:G50629 is never used.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tnt-interface.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 3094048; old: 408256; pending: 528; efficiency: 97.
+gc-after-hook(): local; new: 3094080; old: 408256; pending: 528; efficiency: 97.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
@@ -4990,6 +4971,7 @@ etc/
 etc/dot.bashrc
 etc/dot.cshrc
 etc/dot.emacs
+etc/launch
 include/
 include/itsdb.h
 include/pvm3.h
@@ -5676,6 +5658,8 @@ lib/tix8.2/pref/TkWin.csc
 lib/tix8.2/pref/TkWin.fs
 lib/tix8.2/pref/TkWin.fsc
 lib/tix8.2/pref/tixmkpref
+lib/tcl8.0/
+lib/tcl8.0/http1.0/
 man/
 man/man1/
 man/man1/aimk.1
