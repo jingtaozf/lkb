@@ -165,11 +165,11 @@
       (setf new-psorts-temp-index-file (psorts-temp-index-file lexicon))))
       
     ;; close (old) temporary lexicon files
-    (setf (psort-db lexicon) 
-      (and
-       (psorts-temp-file lexicon)
-       (probe-file (psorts-temp-file lexicon))
-       (cdb:open-read (psorts-temp-file lexicon))))
+ ;   (setf (psort-db lexicon) 
+ ;     (and
+ ;      (psorts-temp-file lexicon)
+ ;      (probe-file (psorts-temp-file lexicon))
+ ;      (cdb:open-read (psorts-temp-file lexicon))))
     
     (when (orth-db lexicon)
       (cdb:close-read (orth-db lexicon))
