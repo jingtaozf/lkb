@@ -379,7 +379,8 @@
 
 
 ;;; Compute partitions of the hierarchy, returning a list of lists of nodes
-;;; which are mutually independent. Shortens the type bit
+;;; which are mutually independent. Additionally filter out from partitions
+;;; sets of types which are in tree-shaped configurations. Shortens the type bit
 ;;; representations and reduces the number of comparisons performed from
 ;;; ntypes^2 to (a^2 + b^2 + ...) where a,b,... are sizes of partitions
 
@@ -409,7 +410,19 @@
 			  (mark-node-seen descendant)
 			  descendant))))
 	      (when partition-nodes
-		(push (cons type-entry partition-nodes) *partitions*)))))))))
+		 (push (partition-non-tree-config-types type-entry partition-nodes)
+                    *partitions*)))))))))
+
+(defun partition-non-tree-config-types (top others)
+   (let ((partition-types (cons top others))
+         (filtered nil))
+       (dolist (type partition-types)
+          (when (cdr (type-parents type)) ; multiple parents
+ 	     (dolist (ancestor (type-ancestors type))
+	        (when (member ancestor partition-types :test #'eq)
+	           (pushnew type filtered :test #'eq)
+                   (pushnew ancestor filtered :test #'eq)))))
+       (cons top (delete top filtered :test #'eq))))
 
 
 ;;; Glb type computation. Assigns a (temporary) bit representation for
