@@ -59,7 +59,7 @@
 	  collect (intern record :lkb)))))
 
 (defmethod lexicon-loaded-p ((lexicon cdb-lex-database))
-  (not (null (psort-db lexicon))))
+  (psort-db lexicon))
 
 (defmethod lex-words ((lexicon cdb-lex-database))
   (unless (orth-db lexicon)
@@ -163,27 +163,18 @@
      (t
       (setf new-psorts-temp-file (psorts-temp-file lexicon))
       (setf new-psorts-temp-index-file (psorts-temp-index-file lexicon))))
-      
     ;; close (old) temporary lexicon files
- ;   (setf (psort-db lexicon) 
- ;     (and
- ;      (psorts-temp-file lexicon)
- ;      (probe-file (psorts-temp-file lexicon))
- ;      (cdb:open-read (psorts-temp-file lexicon))))
-    
     (when (orth-db lexicon)
       (cdb:close-read (orth-db lexicon))
+            ;; close-read leaves it open if it's open for output
+      (cdb::emergency-close (orth-db lexicon))
       (setf (orth-db lexicon) nil))
     (when (psort-db lexicon)
-;;      (setf lexicon-size 
-;;	(cdb:num-entries (psort-db lexicon)))
       (cdb:close-read (psort-db lexicon))
+      (cdb::emergency-close (psort-db lexicon))
       (setf (psort-db lexicon) nil))
     (unless 
 	no-delete
-;;	(and 
-;;	     no-delete 
-;;	     (> lexicon-size 1))
       (delete-temporary-lexicon-files lexicon))
     
     ;; set new temporary lexicon filenames    
@@ -211,12 +202,12 @@
 (defun create-empty-cdb-lex nil
   (create-empty-cdb-lex-aux 
    (make-instance 'cdb-lex-database
-     :psorts-temp-file (make-pathname :name "templex"
+     :psorts-temp-file (make-pathname :name "tx"
                                       :host (pathname-host (lkb-tmp-dir))
                                       :device (pathname-device (lkb-tmp-dir))
                                       :directory 
                                       (pathname-directory (lkb-tmp-dir)))
-     :psorts-temp-index-file (make-pathname :name "templex-index"
+     :psorts-temp-index-file (make-pathname :name "tx-index"
                                             :host (pathname-host (lkb-tmp-dir))
                                             :device (pathname-device (lkb-tmp-dir))
                                             :directory 

@@ -198,6 +198,17 @@
 	(setf (cdb-mode cdb) nil)
 	(setf stream (close stream))))))
 
+;;; close a stream without writing out
+
+(defun emergency-close (cdb)
+  (when (cdb-p cdb)
+    (setf (cdb-mode cdb) nil)
+    (with-slots (stream) cdb
+      (when (and
+	     (streamp stream)
+	     (open-stream-p stream))
+	  (setf stream (close stream))))))
+
 ;; Open a CDB file for reading
 
 (defun open-read (filename)
