@@ -150,9 +150,8 @@
                           (when (member (fvpair-feature fvpair) soa :test #'eq)
                             (fvpair-value fvpair)))))
           (when (handle-var-p soa)
-            (setf (gethash handle %eds-equivalences%)
-              (handle-var-name soa))
-            (setf (ed-type ed) :message)))
+            (setf (gethash handle %eds-equivalences%) soa))
+          (setf (ed-type ed) :message))
       when (ed-quantifier-p ed) do (setf (ed-type ed) :quantifier)))
 
 (defun ed-augment-eds (eds)
@@ -192,9 +191,7 @@
       (let* ((name (or
                     (and instance (var-p instance) (var-name instance))
                     (and event (var-p event) (var-name event))
-                    (format nil "_~d" (incf %eds-variable-counter%))))
-             #+:null
-             (name (or (gethash name %eds-equivalences%) name)))
+                    (format nil "_~d" (incf %eds-variable-counter%)))))
         (setf (gethash relation %eds-symbol-table%) name)))))
 
 (defun ed-find-representative (variable &optional (selectp t))
@@ -211,7 +208,8 @@
           ;;
           (loop
               with foo = (handle-var-name variable)
-              with name = (or (ed-variable-equivalence foo) foo)
+              with name = (let ((bar (ed-variable-equivalence foo)))
+                            (if bar (handle-var-name bar) foo))
               with qeq = (ed-hcons-qeq name)
               for ed in (eds-relations %eds-eds%)
               for handle = (ed-handle ed)
@@ -235,7 +233,8 @@
          ((var-p variable)
           (loop
               with foo = (var-name variable)
-              with name = (or (ed-variable-equivalence foo) foo)
+              with name = (let ((bar (ed-variable-equivalence foo)))
+                            (if  bar (handle-var-name bar) foo))
               for ed in (eds-relations %eds-eds%)
               for id = (unless (or (ed-bleached-p ed)
                                    (ed-quantifier-p ed))
