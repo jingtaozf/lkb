@@ -1,4 +1,5 @@
 ;;; Automatically generated file - do not edit!
+(defparameter *BRACKETING-P* 'NIL)
 (defparameter *DIALOG-FONT-SIZE* '15)
 (defparameter *DISPLAY-TYPE-HIERARCHY-ON-LOAD* 'NIL)
 (defparameter *FIRST-ONLY-P* 'NIL)
@@ -7,8 +8,7 @@
 (defparameter *GEN-FIRST-ONLY-P* 'NIL)
 (defparameter *MAXIMUM-NUMBER-OF-EDGES* '10000)
 (defparameter *PARSE-TREE-FONT-SIZE* '15)
-(defparameter MRS::*SCOPING-CALL-LIMIT* '10000)
-(defparameter *SHOW-LEX-RULES* 'NIL)
-(defparameter *SHOW-MORPHOLOGY* 'NIL)
+(defparameter *SHOW-LEX-RULES* 'T)
+(defparameter *SHOW-MORPHOLOGY* 'T)
 (defparameter *START-SYMBOL* '(ROOT))
 (defparameter *TYPE-TREE-FONT-SIZE* '12)

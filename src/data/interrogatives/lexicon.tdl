@@ -61,18 +61,19 @@ that_0 := comp-lxm &
                                       CONT #1 ] ] > ],
            CONT #1 & propositional ] ].
 
- 
-for_0 := comp-lxm &
-[ ORTH <! "for" !>,
+;;;JTB - 6/27/01 - Originally the second value on comps was of type
+;;;"VP" which doesn't exist in this grammar, so I got rid of it and
+;;;said the HEAD must be verbal.
+
+for_0 := comp-lxm & [ ORTH <! "for" !>,
   SS.LOC [ CAT [ HEAD comp & [ IC false,
                                INF true,
                                FORM #4 & base ],
                  SUBJ < >,
-                 ARG-ST < [ LOC #2 ], VP & 
-                                       [ LOC [ CAT [ HEAD [ INF true,
-                                                            FORM #4 ],
-                                                     SUBJ < [ LOC #2 ] > ],
-                                              CONT #1 ] ] > ],
+                 ARG-ST < [ LOC #2 ],  [ LOC [ CAT [ HEAD verbal & [ INF true,
+                                                                     FORM #4 ],
+                                                        SUBJ < [ LOC #2 ] > ],
+                                                  CONT #1 ] ] > ],
             CONT proposition & [ SOA #1 ] ] ].
 
 
@@ -124,24 +125,48 @@ insist_0 := v-lxm &
 
 
 
-;;; "Easy" - an example of a lexical entry which has a compulsory extracting element.  Because my slash amalgimation constraint doesn't have any info about BIND, and is inflexible about words not composing all of their arguments SLASH values, I have to hand encode the SLASH AMALG constraint on the lexical entries for such cases.
+;;; "Easy" - an example of a lexical entry which has a compulsory
+;;; extracting element.  Because my slash amalgimation constraint doesn't
+;;; have any info about BIND, and is inflexible about words not composing
+;;; all of their arguments SLASH values, I have to hand encode the SLASH
+;;; AMALG constraint on the lexical entries for such cases.
 
-easy_0 := inflected-lexeme+slash_amalg &
+;;;JTB - 6/27/01 - two problems: this originally inherited from
+;;;inflected-lexeme+amalg, which doesn't exist anymore, so I've updated
+;;;it (correctly I hope).  Second, in the original copy (given below) the
+;;;first slash value of the COMP was unified with the singleton value of
+;;;the SUBJ, but the former is a LOC and the latter an SS, so I've
+;;;type-raised the one to the other.
+
+easy_0 := inflected-lexeme+amalg &
 [ ORTH <! "easy" !>,
   SS [ LOC.CAT [ HEAD adj & [ FORM normal,
                               PRED true ],
-                 SUBJ < #1 & [ LOC.CAT phrase-cat & [ HEAD noun,
-                                                       SPR < > ] ] >,
+                 SUBJ < #subj & [LOC #1 & [ CAT phrase-cat & [ HEAD noun,
+                                                               SPR < > ]]] >,
                  COMPS < #2 & [ LOC.CAT phrase-cat & [ HEAD verb & [ FORM inf ] ] ] >,
-                 ARG-ST < #1 & [ SLASH [ LIST #first,
-                                          LAST #rest ] ], 
+                 ARG-ST < #subj & [ SLASH [ LIST #first,
+                                            LAST #rest ] ], 
                           #2 & [ SLASH [ LIST *cons* & < #1 . #rest >,
                                          LAST *null* & #last ] ] > ],
        SLASH [ LIST #first,
                LAST #last ] ],
  DTRS < inflected-lexeme > ].
 
-
+;;easy_0 := inflected-lexeme+amalg &
+;;[ ORTH <! "easy" !>,
+;;  SS [ LOC.CAT [ HEAD adj & [ FORM normal,
+;;                              PRED true ],
+;;                 SUBJ < #1 & [ LOC.CAT phrase-cat & [ HEAD noun,
+;;                                                      SPR < > ] ] >,
+;;                 COMPS < #2 & [ LOC.CAT phrase-cat & [ HEAD verb & [ FORM inf ] ] ] >,
+;;                 ARG-ST < #1 & [ SLASH [ LIST #first,
+;;                                         LAST #rest ] ], 
+;;                          #2 & [ SLASH [ LIST *cons* & < #1 . #rest >,
+;;                                         LAST *null* & #last ] ] > ],
+;;       SLASH [ LIST #first,
+;;               LAST #last ] ],
+;; DTRS < inflected-lexeme > ].
 
 please_1 := stv &
 [ ORTH <! "please" !> ].
@@ -177,12 +202,11 @@ a_1 := det-lxm &
 [ ORTH <! "a" !>,
   SS.LOC.CAT.HEAD.AGR.PERNUM 3sg ].
 
+;;;JTB - changed wh-none to <! !> which should be the same thing, yes?
 these_1 := det-lxm &
 [ ORTH <! "these" !>,
   SS.LOC.CAT.HEAD.AGR.PERNUM 3pl,
-  SS.WH wh-none ].
-
-
+  SS.WH <! !> ].
 
 ;;; Pronouns are hand encoded into the lexicon as infelcted-lexemes since they don't fit into the inflectional paradigm of other n-lxms.  By specifiying them as such the inflectional rules are circumvented.
 

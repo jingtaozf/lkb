@@ -249,6 +249,7 @@ r_park := reln.
 r_participant := reln.
 r_past := reln.
 r_patient := reln.
+r_pat_v := reln.  ;;;JTB - 06/27/01 - added this
 r_pencil := reln.
 r_picture := reln.
 r_police := reln.

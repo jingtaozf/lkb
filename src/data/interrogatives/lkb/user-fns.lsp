@@ -1,7 +1,7 @@
 ;;;A little fn to display the parses feature structure
 
 (defun show-parse-fs nil
-          (for parse in *parse-record*
+          (loop for parse in *parse-record*
                do
                (let* ((fs (mrs::get-parse-fs parse))
                      (sem-struct
@@ -97,19 +97,22 @@
 
 
 
-(defun make-orth-tdfs (orth)
-  ;;; this version is for grammars where the orthography is
-  ;;; encoded as a list (difference list or otherwise)
+;;;JTB - 06/28/01 changed :types (list orth-value) to :type orth-value 
+;;;since that's what it's supposed to be?
+
+(defun make-orth-tdfs (orth) 
+  ;;; this version is for grammars where the
+  ;;; orthography is encoded as a list (difference list or otherwise)
   (let ((unifs nil)
         (tmp-orth-path *orth-path*))
-    (for orth-value in (split-into-words orth)
+    (loop for orth-value in (split-into-words orth)
          do
          (let ((opath (create-path-from-feature-list 
                        (append tmp-orth-path *list-head*))))
            (push (make-unification :lhs opath                    
                                    :rhs
                                    (make-u-value 
-                                    :types (list orth-value)))
+                                    :type orth-value))
                  unifs)
            (setq tmp-orth-path 
              (append tmp-orth-path *list-tail*))))

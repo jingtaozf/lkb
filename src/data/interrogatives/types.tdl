@@ -78,10 +78,19 @@ lex-sign := sign &
 lexeme := lex-sign.
 
 
-; The Argument Realization Principle has been incorporated into type inflected lexeme rather than word, because SLASHed constituents are not furmulated into the principle.  Instead ARG-ST is the append of SUBJ, SPR and COMPS.  This neglects extraction (SLASH) which will be formulated as non-branching grammar rules, which happen between type inflected-lexeme and type word.
+; The Argument Realization Principle has been incorporated into type
+; inflected lexeme rather than word, because SLASHed constituents are
+; not furmulated into the principle.  Instead ARG-ST is the append of
+; SUBJ, SPR and COMPS.  This neglects extraction (SLASH) which will be
+; formulated as non-branching grammar rules, which happen between type
+; inflected-lexeme and type word.
 
-#|
-removing the idfference list stitching approach for the Argument Realization Principle.  I'm instead going to do it using a non-branching rule.
+#| 
+
+removing the idfference list stitching approach for the Argument
+Realization Principle.  I'm instead going to do it using a
+non-branching rule.
+
   SS /l #ss & [ LOC.CAT [ ARG-ST [ LIST #first,
                                    LAST #last ], 
                           SUBJ [ LIST #first,
@@ -97,8 +106,6 @@ inflected-lexeme := lex-sign &
   SS /l #ss,
   DTRS < [ SS /l #ss ] > ].
 ; lexeme
-
-
 
 inflected-lexeme+ARP := lex-sign &
 [ NEEDS-AFFIX false,
@@ -116,15 +123,12 @@ inflected-lexeme+amalg := lex-sign &
   DTRS < [ ORTH #orth,
            SS #ss ] > ].
 
-
-
 word := lex-sign &
 [ NEEDS-AFFIX false,
   ORTH #orth,
   SS /l #ss,
   DTRS <  [ ORTH #orth,
             SS /l #ss ] > ].
-
 ;inflected-lexeme+slash_amalg &
 
 ;;; <<< >>> PARTS OF SPEECH 
@@ -133,6 +137,7 @@ pos := feat-struc &
 [ FORM form-cat,
   PRED boolean,
   ANA boolean ].
+;;;JTB 06/27/01 is ANA appropriate for type pos?  Shouldn't it just be in nominals?
 
 mod-type := feat-struc &
 [ MOD *list* ].

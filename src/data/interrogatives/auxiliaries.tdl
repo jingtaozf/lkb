@@ -219,8 +219,15 @@ could_0 := auxv-lxm &
 
 
 
-have_0 :=  auxv-lxm &
+have_0a :=  auxv-lxm &
 [ ORTH <! "have" !>,
   SS.LOC.CAT [ HEAD [ FORM fin ],
                ARG-ST < [ ], [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] > ],
   DTRS < auxv-lxm > ].
+
+;;;JTB - multiply defined, 
+;;;have_0 :=  inflected-lexeme &
+;;;[ ORTH <! "have" !>,
+;;;  SS.LOC.CAT [ HEAD [ FORM fin ],
+;;;               ARG-ST < synsem, [ LOC.CAT [ HEAD verb & [FORM pfp] ] ] > ],
+;;;  DTRS < auxv-lxm > ].

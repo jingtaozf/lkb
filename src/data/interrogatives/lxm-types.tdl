@@ -40,7 +40,7 @@ non-auxv-lxm:= v-lxm &
 
 #|
 auxv-lxm := v-lxm & 
-[ SS.LOC.CAT [ SUBJ < [ LOC /l #1 ] >,
+<[ SS.LOC.CAT [ SUBJ < [ LOC /l #1 ] >,
                ARG-ST < [ LOC /l #1 ], [ LOC.CAT [ SUBJ < [ LOC /l #1  & [ STORE <! !> ] ] >, 
                                          COMPS < > ] ] > ] ].
 |#

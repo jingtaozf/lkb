@@ -7,7 +7,7 @@ Sandy_1 := pn-lxm &
   SS.LOC.CONT.INDEX r_Sandy ].
 
 
-Pat_1 := pn-lxm &
+Pat_1a := pn-lxm &
 [ ORTH <! "Pat" !>,
   SS.LOC.CONT.INDEX r_Pat ].
 
@@ -614,7 +614,7 @@ observe_1 := stv &
 
 pat_1 := stv &
 [ ORTH <! "pat" !>,
-  SS.LOC.CONT [ NUCL r_pat ] ].
+  SS.LOC.CONT [ NUCL r_pat_v ] ].
 
 paint_1 := stv &
 [ ORTH <! "paint" !>,
@@ -804,11 +804,11 @@ try_1 := scv &
 [ ORTH <! "try" !>,
   SS.LOC.CONT [ NUCL r_try ] ].
 
-expect_1 := orv &
-[ ORTH <! "expect" !> ].
+;;;expect_1 := orv &
+;;;[ ORTH <! "expect" !> ].
 
-persuade_1 := ocv &
-[ ORTH <! "persuade" !> ].
+;;;persuade_1 := ocv &
+;;;[ ORTH <! "persuade" !> ].
 
 abbie_1 := cn-lxm &
 [ ORTH <! "abbie" !>,

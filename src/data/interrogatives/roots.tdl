@@ -1,9 +1,11 @@
-;;; CCB -- Should this also be SUBJ <>, COMPS <>, or will the [ IC true ] constraint cover it.  It appears that the SUNJ <> COMPS <> are needed`, yes.  Try parsing "Kim could sleep" without that constraint.  Massive overgeneration.
+;;; CCB -- Should this also be SUBJ <>, COMPS <>, or will the [ IC
+;;; true ] constraint cover it.  It appears that the SUNJ <> COMPS <> are
+;;; needed`, yes.  Try parsing "Kim could sleep" without that constraint.
+;;; Massive overgeneration.
 
-;;; CCB -- removed FORM fin from HEAD, because the pol-int constructions seem to be inf, and they weren't parsing.
+;;; CCB -- removed FORM fin from HEAD, because the pol-int
+;;; constructions seem to be inf, and they weren't parsing.
 ;                                 FORM fin ] ],
-
-
 
 root := phrase &
 [ SS [ LOC [ CAT [ HEAD verb & [ IC true ],
@@ -14,6 +16,8 @@ root := phrase &
              STORE <! !> ],
        SLASH <! !>,
        WH <! !> ] ].
+
+
 
 
 
