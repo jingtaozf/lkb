@@ -26,6 +26,7 @@ SUNOS_LIBS = -L4lib $(GENERIC_LIBS) -liberty
 HPUX_LIBS = -L7lib -lreadline -ltermcap -lregex -liberty
 SOLARIS_LIBS = -L5lib $(GENERIC_LIBS) -liberty -lsocket -lnsl 
 OSF_LIBS = -Lolib -lreadline -ltermcap -lregex -liberty
+CYGWIN_LIBS = -Lwlib -lreadline -ltermcap -lregex -liberty
 
 #
 # compiler flags
@@ -68,6 +69,10 @@ hpux : main.$(OBJ)$(DOT) libtsdb.a
 #
 osf : main.$(OBJ)$(DOT) libtsdb.a
 	$(CC) -o tsdb main.$(OBJ)$(DOT) libtsdb.a $(LIBS) $(OSF_LIBS)
+#
+#
+cygwin : main.$(OBJ)$(DOT) libtsdb.a
+	$(CC) -o tsdb main.$(OBJ)$(DOT) libtsdb.a $(LIBS) $(CYGWIN_LIBS)
 #
 #
 libtsdb.a : tsdb.$(OBJ)$(DOT) \
