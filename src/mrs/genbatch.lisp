@@ -169,7 +169,7 @@ output results
       (format ostream "~%#| Parse failure: ~A |#" sentence))
     (for parse-res in *parse-record*
          do
-         (let ((mrs (car (mrs::extract-mrs (list parse-res) t)))
+         (let ((mrs (mrs::extract-mrs parse-res t))
                (tgc nil)
                (tcpu nil)
                (treal nil)

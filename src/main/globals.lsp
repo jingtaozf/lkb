@@ -84,7 +84,8 @@
     having the same value for this path as the mother")
 
 (def-lkb-parameter *start-symbol* 'sign
-  "a type which specifies the type of any valid parse")
+  "a type which specifies the type of any valid parse" 
+  :user)
 
 (def-lkb-parameter *feature-ordering* nil
   "partial order of features for fixing or resolving default ordering")

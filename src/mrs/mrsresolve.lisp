@@ -301,10 +301,12 @@ printing routines -  convenient to make this global to keep printing generic")
                                     &optional (stream t) (max 10))
   (if binding-sets
       (progn 
-        (format stream "~%~A scoped form(s) ~A~%" (length binding-sets))
+        (format stream "~%~A scoped form(s)" (length binding-sets))
         (when (and max (> (length binding-sets) max))
           (format stream "only printing first ~A" max)))
-    (format stream "~%WARNING: No valid scopes~%"))
+    (if *fragment-p*
+        (format stream "~%Treated as fragment~%")
+      (format stream "~%WARNING: No valid scopes~%")))
   (for binding in (if max
                       (subseq binding-sets 0 
                               (min (length binding-sets) max))

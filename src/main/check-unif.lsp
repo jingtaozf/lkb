@@ -483,3 +483,13 @@
       (setf (cdr next) (add-path (cdr path) value (cdr next)))
       tree)))
 |#
+
+
+(defun interactive-create-check-paths nil
+  (let* ((test-file (ask-user-for-existing-pathname "Checkpaths sample file?"))
+         (output-file (ask-user-for-new-pathname "Checkpaths output file?")))
+    (when (and test-file output-file)
+      (with-check-path-list-collection output-file
+        (parse-sentences test-file nil)))))
+
+        

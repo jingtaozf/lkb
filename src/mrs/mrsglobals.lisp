@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.13  1999/05/14 02:25:24  aac
+;; allowing generator index to be cleared, tidying up to avoid compiler warnings
+;;
 ;; Revision 1.12  1999/04/09 23:20:56  danf
 ;; Merged WK's changes
 ;;
@@ -356,3 +359,12 @@ for extra features for using the extra-features of a relation")
 (defvar *canonical-bindings* nil
 "global variable which is set to the current set of bindings for the
 printing routines -  convenient to make this global to keep printing generic")
+
+;;; to control scoping or cheap scope
+
+(defvar *fragment-p* nil
+  "if t for a parse, cheapscope is not called")
+
+(defvar *root-path* nil)
+
+(defvar *false-type* nil)

@@ -12,7 +12,9 @@
 ;;; to be used with the LKB as well as PAGE
 
 (defun get-parse-fs (edge)
-  (tdfs-indef (edge-dag edge)))
+  (let ((fs (tdfs-indef (edge-dag edge))))
+    (setf *fragment-p* (is-fragment-fs fs))
+    fs))
 
 (defun output-parse-tree (tree stream)
   (format stream "~A" tree))

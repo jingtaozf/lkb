@@ -9,12 +9,14 @@
 (defun predict-for-gen nil
   ;;; for debugging
   (format t "~%~A " cl-user::*sentence*)
-  (dolist (mrs-struct (extract-mrs cl-user::*parse-record*))
-    (when mrs-struct
-      (unless cl-user::*gen-rule-list*
-        (error "~%No heuristic rules defined"))
-      (format t "~%~S" 
-        (genpredict-mrs-struct mrs-struct cl-user::*gen-rule-list*)))))
+  (dolist (edge cl-user::*parse-record*)
+    (let ((mrs-struct (extract-mrs edge)))
+      (when mrs-struct
+        (unless cl-user::*gen-rule-list*
+          (error "~%No heuristic rules defined"))
+        (format t "~%~S" 
+                (genpredict-mrs-struct mrs-struct 
+                                       cl-user::*gen-rule-list*))))))
 
 
 (defun genpredict-mrs-struct (mrsstruct rules)

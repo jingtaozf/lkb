@@ -23,7 +23,7 @@
                    do
                    (set-current-language *source-language*)
                    ;;; mrs extraction might be language specific
-                   (let ((mrs (car (mrs::extract-mrs (list parse-res) t))))
+                   (let ((mrs (mrs::extract-mrs parse-res t)))
                      (set-current-language *target-language*)
                      (multiple-value-bind
                          (strings unifs-tried unifs-failed active inactive)

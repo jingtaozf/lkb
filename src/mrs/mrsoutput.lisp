@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.21  1999/06/12 04:41:43  aac
+;; adding hack to allow for preposition fragments
+;;
 ;; Revision 1.20  1999/06/04 21:27:48  danf
 ;; WK updates and tsdb fixes
 ;;
@@ -140,14 +143,23 @@
 (defun remove-trailing-periods (sentence-string)
   (string-right-trim '(#\Space #\.) sentence-string))
 
-(defun extract-mrs (parse-list &optional generator-p)
-  (loop for parse in parse-list
-        collect
-        (let* ((fs (get-parse-fs parse))
-               (sem-fs (path-value fs *initial-semantics-path*)))
-         (if (is-valid-fs sem-fs)
-          (construct-mrs sem-fs nil generator-p)))))
+(defun extract-mrs (parse &optional generator-p)
+  (setf *fragment-p* nil)
+  (let* ((fs (get-parse-fs parse))
+         ;; get-parse-fs also sets *fragment-p*
+         ;; which controls whether the scoping code is run
+         (sem-fs (path-value fs *initial-semantics-path*)))
+    (if (is-valid-fs sem-fs)
+        (construct-mrs sem-fs nil generator-p))))
 
+(defun is-fragment-fs (fs)
+  (and *root-path* *false-type*
+  (let ((root-value (path-value fs *root-path*)))
+    (if root-value 
+        (or (eql (fs-type root-value) *false-type*)
+            (and (listp (fs-type root-value))
+                 (eql (car (fs-type root-value)) *false-type*)))))))
+  
 (defun mrs-language (languages)
   (member *mrs-for-language* languages))
 
@@ -169,6 +181,9 @@
 
 ;;; called from VM-Parser
 ;;; AAC - not called for CSLI version of PAGE or the LKB
+;;; looks like it's not used, since the current code has
+;;; an unbound variable, but put the fragment check call in
+;;; just in case
 
 #-(or :lkb :lingo)
 (defun fs2vit (fs sid)
@@ -176,6 +191,7 @@
   (let* #-pagelite
     ((cp (copy fs))
      (sem-fs  (path-value cp *initial-semantics-path*))
+     (fragment-p (is-fragment-fs cp))
      (dnf (if (is-valid-fs sem-fs) 
               (ndnf sem-fs)))
      (fs1 (cond ((or (consp dnf)
@@ -186,8 +202,10 @@
               (construct-mrs fs1))))
     #+pagelite
     ((fs1 (path-value cfs *initial-semantics-path*))
+     (fragment-p (is-fragment-fs cfs))
      (mrs (if (is-valid-fs fs1)
               (construct-mrs fs1))))
+    (setf *fragment-p* fragment-p)
     (if mrs
         (or (mrs-to-vit-convert mrs nil)
             (make-vit :utterance-id

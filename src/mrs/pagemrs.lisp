@@ -52,6 +52,7 @@
 ;;; called from mrsfns.lisp
 
 (defun get-parse-fs (parse)
+  (let ((fs
   (if (eq (type-of parse) 'csli-unify::fs) 
       parse
     (if (string-equal "1" (subseq user::*page-version* 0 1))
@@ -59,8 +60,10 @@
       (if (or (eq (type-of parse) 'typed-item)
 	      (eq (type-of parse) 'main::typed-item))
 	  (lexicon::cfs-fs (car (main::typed-item-args parse)))
-	(cfs-fs (pg::combo-item-cfs parse))))))
-
+	(cfs-fs (pg::combo-item-cfs parse)))))))
+    (setf *fragment-p* (is-fragment-fs fs))
+    fs))
+    
 (defun get-parse-fs-alt (parse)
   (if (string-equal "1" (subseq cl-user::*page-version* 0 1))
       (lexicon::cfs-fs (pg::u-item-cfs parse))

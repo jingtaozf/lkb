@@ -485,7 +485,8 @@
            (mrs-psoa (if (mrs-language '(english))
                          (time-convert-mrs-struct unstrung-psoa)
                        unstrung-psoa))
-           (binding-sets (make-scoped-mrs mrs-psoa))
+           (binding-sets (unless *fragment-p* 
+                           (make-scoped-mrs mrs-psoa)))
            (equalities)
            (leqs))
       (multiple-value-bind 

@@ -2,8 +2,6 @@
 
 ;;; LKB specific
 
-(defvar *mrs-record* nil)
-
 #| 
 (mrs::output-mrs-after-parse *parse-record*)
 |#
@@ -17,14 +15,13 @@
             *mrs-output-p*)
     (unless stream (setf stream cl-user::*lkb-background-stream*))
     (unless edges (setf edges *parse-record*))
-    (setf *mrs-record*
-      (extract-mrs edges))
     (let ((*print-circle* nil))
-      (for mrs in *mrs-record* 
+      (for edge in edges 
            do
-           (format stream "~%~A~%" (cl-user::parse-tree-structure (car edges)))
-           (setf edges (cdr edges))
-           (treat-mrs mrs t stream)))))
+           (let ((mrs (extract-mrs edge)))
+             (format stream "~%~A~%" 
+                     (cl-user::parse-tree-structure edge))
+             (treat-mrs mrs t stream))))))
 
 (defun treat-mrs (mrs-struct simplep stream)
   (format stream "~%~A " cl-user::*sentence*)

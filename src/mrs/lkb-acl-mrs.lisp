@@ -65,7 +65,7 @@
     (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
     (setf *bold* (clim:merge-text-styles '(nil :bold nil) *normal*))
     (setf (mrs-simple-mrsstruct mframe) 
-      (car (mrs::extract-mrs (list edge))))
+      (mrs::extract-mrs edge))
     (setf (clim:frame-pretty-name mframe) "Simple MRS")
     (mp:process-run-function "Simple MRS"
                              #'clim:run-frame-top-level mframe)))
@@ -73,14 +73,14 @@
 (defun show-mrs-indexed-window (edge)
   (let ((mframe (clim:make-application-frame 'mrs-indexed)))
     (setf (mrs-indexed-mrsstruct mframe) 
-      (car (mrs::extract-mrs (list edge))))
+      (mrs::extract-mrs edge))
     (setf (clim:frame-pretty-name mframe) "Indexed MRS")
     (mp:process-run-function "Indexed MRS"
                              #'clim:run-frame-top-level mframe)))
 
 (defun show-mrs-scoped-window (edge)
   (let ((mframe (clim:make-application-frame 'mrs-scoped))
-        (mrsstruct (car (mrs::extract-mrs (list edge)))))
+        (mrsstruct (mrs::extract-mrs edge)))
     (setf (mrs-scoped-mrsstruct mframe) 
       mrsstruct)
     (setf (mrs-scoped-scoped mframe) 
