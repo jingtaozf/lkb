@@ -70,10 +70,12 @@
                (:file "marks")      ; utility macros for type checking
                (:file "checktypes") ; type hierarchy and constraint
                                     ; construction and checking
+	       (:file "cdb")        ; constant database, for storing lexicon
                (:file "leaf")       ; leaf types - for efficiency not
                                     ; expanded at load time
 	       (:file "lex")        ; lexical structures, also templates etc
 	       #+plob (:file "plex"); lexical database 
+	       (:file "clex")       ; constant lexical database 
                (:file "rules")      ; grammar and lexical rules
 	       (:file "parse")      ; chart parser
                (:file "generate")   ; chart generator (requires mrs)

@@ -20,7 +20,10 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defclass lex-database () ())
+(defclass lex-database () 
+  ((lexical-entries :initform (make-hash-table :test #'equal))
+   (psorts :initform (make-hash-table :test #'eq))
+   (temp-psorts :initform (make-hash-table :test #'eq))))
 
 (defgeneric lookup-word (lexicon orth))
 
@@ -38,8 +41,9 @@
 
 (defgeneric collect-expanded-lex-ids (lexicon))
 
-
 (defgeneric store-psort (lexicon id entry &optional orth))
+
+(defgeneric store-temporary-psort (lexicon id entry))
 
 (defgeneric read-psort (lexicon id))
 
@@ -87,17 +91,6 @@
 ;;;
 ;;;  Database-independent lexical access functions
 ;;;
-
-; FIX
-(defun store-temporary-psort (id fs)
-   (unless (gethash id *psorts*)
-      (setf (gethash id *psorts*)
-         (cons 'no-pointer
-           (cons nil
-            (make-lex-or-psort 
-               :id id
-               :full-fs fs))))))
-   
 
 (defun get-psort-entry (id &optional parent-p)
   (let ((entry (get-unexpanded-psort-entry id parent-p)))
@@ -170,8 +163,8 @@
          (infl-pos (if (and (listp orth-string) (cdr orth-string))
 		       ;; infl-pos is only relevant for multi-word entries
                        (find-infl-pos fs-or-type orth-string sense-id))))
-     ;; adapted for the case where the orthography is only specified
-     ;; in the FS; extract-orth-from-unifs must be defined on a
+    ;; adapted for the case where the orthography is only specified
+    ;; in the FS; extract-orth-from-unifs must be defined on a
     ;; per-grammar basis
     (set-lexical-entry *lexicon* orth-string lex-id 
 		       (make-lex-or-psort
@@ -274,11 +267,11 @@
    (intern (format nil "~A_~A" orth sense-id)))
  
 (defun add-psort-from-file (id fs-or-type defs)
-  (store-psort *lexicon*
-	       id 
-	       (make-lex-or-psort :id id
-				  :unifs fs-or-type
-				  :def-unifs defs)))
+  (store-temporary-psort *lexicon*
+			 id 
+			 (make-lex-or-psort :id id
+					    :unifs fs-or-type
+					    :def-unifs defs)))
 
 ;;; When expanding a lexical entry we want to eventually produce a
 ;;; tdfs which then has the non-persistent defaults incorporated.  As
@@ -355,21 +348,25 @@
 (defun lex-or-psort-local-fs (entry)
   (expand-psort-entry entry t nil))
 
+;; Check to see if compiled files match originals
+
+(defun up-to-date-p (in-files out-files)
+  (when (every #'probe-file out-files)
+    (let ((in-date (apply #'max (mapcar #'file-write-date in-files)))
+	  (out-date (apply #'min (mapcar #'file-write-date out-files))))
+      (> out-date in-date))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;
-;;;  Interface to a simple flat-file lexical cache
+;;;  General lexicon methods
 ;;;
 
-(defclass simple-lex-database (lex-database)
-  ((lexical-entries :initform (make-hash-table :test #'equal))
-   (psorts-stream :initform nil)
-   (psorts :initform (make-hash-table :test #'eq))))
-
-#-plob 
-(setf *lexicon* (make-instance 'simple-lex-database))
-
-(defmethod lookup-word ((lexicon lex-database) orth)
-  (gethash orth (slot-value lexicon 'lexical-entries)))
+(defmethod lookup-word :around ((lexicon lex-database) orth)
+  (cond ((gethash orth (slot-value lexicon 'lexical-entries)))
+	(t 
+	 (let ((value (call-next-method)))
+	   (setf (gethash orth (slot-value lexicon 'lexical-entries)) 
+	     value)))))
 
 (defmethod lex-words ((lexicon lex-database))
   (let ((words nil))
@@ -378,6 +375,56 @@
 		 (push k words))
 	     (slot-value lexicon 'lexical-entries))
     words))
+
+(defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry)
+  (store-psort lexicon id new-entry orth)
+  (with-slots (lexical-entries) lexicon
+    (dolist (orth-el orth)
+      (pushnew id (gethash (string-upcase orth-el) lexical-entries)))))
+
+(defmethod store-temporary-psort ((lexicon lex-database) id 
+				  (entry lex-or-psort))
+  ;; add to hash but don't store in database
+  (with-slots (temp-psorts psorts) lexicon
+    (when (or (gethash id psorts)
+	      (gethash id temp-psorts))
+      (format t "~%Redefining ~A" id))
+    (setf (gethash id temp-psorts) entry)))
+
+(defmethod store-temporary-psort ((lexicon lex-database) id 
+				  (entry t))
+  (store-temporary-psort lexicon id 
+			 (make-lex-or-psort 
+			  :id id
+			  :full-fs entry)))
+
+(defmethod read-psort :around ((lexicon lex-database) id)
+  (cond ((gethash id (slot-value lexicon 'temp-psorts)))
+	(t (call-next-method))))
+
+(defmethod clear-lex :around ((lexicon lex-database) &optional no-delete)
+  (when (fboundp 'reset-cached-lex-entries)
+    (funcall 'reset-cached-lex-entries))
+  (clrhash (slot-value lexicon 'lexical-entries))
+  (clrhash (slot-value lexicon 'psorts))
+  (clrhash (slot-value lexicon 'temp-psorts))
+  (when (fboundp 'clear-lexicon-indices)
+    (funcall 'clear-lexicon-indices))
+  ;; (setf *language-lists* nil)
+  (call-next-method)
+  (unless no-delete
+    (delete-temporary-lexicon-files)))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;  Interface to a simple flat-file lexical cache
+;;;
+
+(defclass simple-lex-database (lex-database)
+  ((psorts-stream :initform nil)))
+
+#+ignore
+(setf *lexicon* (make-instance 'simple-lex-database))
 
 (defmethod lexicon-loaded-p ((lexicon simple-lex-database))
   (and (streamp (slot-value lexicon 'psorts-stream))
@@ -406,7 +453,7 @@
 	       (> cache-index-date last-file-date))
       (setf ok t)
       (format t "~%Reading in cached lexicon")
-      (clear-lex *lexicon* t)
+      (clear-lex lexicon t)
       (handler-case 
 	  (read-psort-index-file)
 	(error (condition)
@@ -450,31 +497,13 @@
 	    (when (probe-file *psorts-temp-index-file*)
 	      (delete-file *psorts-temp-index-file*))))))))
 
-(defmethod set-lexical-entry ((lexicon lex-database) orth id new-entry)
-  (store-psort lexicon id new-entry orth)
-  (with-slots (lexical-entries) lexicon
-    (dolist (orth-el orth)
-      (pushnew id (gethash (string-upcase orth-el) lexical-entries)))))
-
-
 (defmethod clear-lex ((lexicon simple-lex-database) &optional no-delete)
-  (when (fboundp 'reset-cached-lex-entries)
-    (funcall 'reset-cached-lex-entries))
-  ;; reset-cached-lexical entries is in constraints.lsp, which isn't
-  ;; part of the core lkb distribution.  The use of funcall here is
-  ;; just to prevent compiler warnings
-  (clrhash (slot-value lexicon 'lexical-entries))
-  (clrhash (slot-value lexicon 'psorts))
-  (when (fboundp 'clear-lexicon-indices)
-    (funcall 'clear-lexicon-indices))
-  ;; (setf *language-lists* nil)
+  (declare (ignore no-delete))
   ;; Close temporary lexicon file
   (with-slots (psorts-stream) lexicon
       (when (and (streamp psorts-stream)
 		 (open-stream-p psorts-stream))
-	(close psorts-stream)))
-  (unless no-delete
-    (delete-temporary-lexicon-files)))
+	(close psorts-stream))))
 
 (defmethod collect-expanded-lex-ids ((lexicon simple-lex-database))
   ;; useful for creating a subset of a lexicon which corresponds to a
@@ -503,7 +532,8 @@
       (when (gethash id psorts)
 	(format t "~%Redefining ~A" id))
       (setf (gethash id psorts)
-	(list orth current-file-end)))))
+	(list orth current-file-end))))
+  id)
 
 (defmethod read-psort ((lexicon simple-lex-database) id)
   (with-slots (psorts) lexicon
@@ -616,4 +646,5 @@
   (when (and *psorts-temp-index-file*
 	     (probe-file *psorts-temp-index-file*))
     (delete-file *psorts-temp-index-file*)))
+
 

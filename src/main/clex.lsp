@@ -1,0 +1,102 @@
+(in-package :cl-user)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;
+;;;  Interface to an off-line hash table lexical cache
+;;;
+
+(defclass cdb-lex-database (lex-database)
+  ((psort-db :initform nil :accessor psort-db)
+   (orth-db :initform nil :accessor orth-db)))
+
+(setf *lexicon* (make-instance 'cdb-lex-database))
+
+(defmethod lookup-word ((lexicon cdb-lex-database) orth)
+  (unless (orth-db lexicon)
+    (setf (orth-db lexicon) 
+      (cdb:open-read *psorts-temp-index-file*)))
+  (mapcar #'intern (cdb:read-record (orth-db lexicon) orth)))
+
+(defmethod lexicon-loaded-p ((lexicon cdb-lex-database))
+  (not (null (psort-db lexicon))))
+
+(defmethod read-cached-lex ((lexicon cdb-lex-database) filenames)
+  (unless (or *psorts-temp-file* *psorts-temp-index-file*)
+    (set-temporary-lexicon-filenames))
+  (when (up-to-date-p filenames
+		      (list *psorts-temp-file* 
+			    *psorts-temp-index-file*))
+    (format t "~%Reading in cached lexicon")
+    (clear-lex lexicon t)
+    (when (handler-case 
+	      (progn
+		(setf (psort-db lexicon) 
+		  (cdb:open-read *psorts-temp-file*))
+		(setf (orth-db lexicon) 
+		  (cdb:open-read *psorts-temp-index-file*))
+		t)
+	    (error (condition)
+	      (format t "~%Error: ~A~%" condition)
+	      (delete-temporary-lexicon-files)
+	      nil))
+      (format t "~%Cached lexicon read")
+      (return-from read-cached-lex t)))
+  (format t "~%Cached lexicon corrupt: reading lexicon source files")
+  nil)
+
+(defmethod store-cached-lex ((lexicon cdb-lex-database))
+  (cdb:close-write (psort-db lexicon))
+  (cdb:close-write (orth-db lexicon))
+  (setf (psort-db lexicon) nil)
+  (setf (orth-db lexicon) nil))
+
+(defmethod set-lexical-entry ((lexicon cdb-lex-database) orth id new-entry)
+  (store-psort lexicon id new-entry orth)
+  (dolist (orth-el orth)
+    (cdb:write-record (orth-db lexicon) (string-upcase orth-el) (string id)))
+  orth)
+
+(defmethod store-psort ((lexicon cdb-lex-database) id entry &optional orth)
+  (declare (ignore orth))
+  (unless (psort-db lexicon)
+    (setf (psort-db lexicon) (cdb:open-write *psorts-temp-file*))
+    (setf (orth-db lexicon) (cdb:open-write *psorts-temp-index-file*)))
+  (let ((*print-pretty* nil))
+    (cdb:write-record (psort-db lexicon) (string id) 
+		      (write-to-string entry)))
+  id)
+
+(defmethod read-psort ((lexicon cdb-lex-database) id)
+  (unless (psort-db lexicon)
+    (setf (psort-db lexicon) 
+      (cdb:open-read *psorts-temp-file*)))
+  (with-slots (psorts) lexicon
+    (cond ((gethash id psorts))
+	  (t
+	   ;; In case multiple entries are returned, we take the last one
+	   (let ((entry (car (last (cdb:read-record (psort-db lexicon) 
+						    (string id))))))
+	     (when entry
+	       (setf (gethash id psorts) (read-from-string entry))))))))
+
+(defmethod clear-lex ((lexicon cdb-lex-database) &optional no-delete)
+  (declare (ignore no-delete))
+  ;; Close temporary lexicon files
+  (when (orth-db lexicon)
+    (cdb:close-read (orth-db lexicon))
+    (setf (orth-db lexicon) nil))
+  (when (psort-db lexicon)
+    (cdb:close-read (psort-db lexicon))
+    (setf (psort-db lexicon) nil))
+  nil)
+
+(defmethod collect-expanded-lex-ids ((lexicon cdb-lex-database))
+  (let ((ids nil))
+    (maphash #'(lambda (id value)
+                 (when (lex-or-psort-full-fs value)
+		   (push id ids)))
+	     (slot-value lexicon 'psorts))
+    ids))
+
+(defmethod unexpand-psort ((lexicon cdb-lex-database) id)
+  (setf (gethash id (slot-value lexicon 'psorts)) nil))
