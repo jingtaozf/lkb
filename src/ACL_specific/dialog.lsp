@@ -80,7 +80,28 @@
 ;;; when the cancel box is clicked, nil is returned
 ;;; The dialog box built is sized appropriately
 
-(defun ask-for-strings-movable (title prompt-init-pairs &optional width)
+#|
+(clim:define-presentation-type cmpl (choices))
+
+(clim:define-presentation-method clim:accept
+    ((type cmpl) stream view &key)
+  (declare (ignore view))
+  (multiple-value-bind (obj success string)
+      (clim::complete-input
+       stream
+       #'(lambda (string action)
+	   (clim:complete-from-possibilities
+	    string choices '(#\_) :name-key #'string 
+	    :value-key #'string
+	    :action action)))
+    (print string)
+    string))
+
+(clim:define-gesture-name :complete :keyboard #\$ :unique t)
+|#
+
+(defun ask-for-strings-movable (title prompt-init-pairs 
+				&optional width choices)
   (let* ((history nil)
 	 (stream t)
 	 (result (loop for p-i-p in prompt-init-pairs
@@ -116,12 +137,32 @@
 					 :query-identifier count
 					 :prompt nil
 					 :view 'clim:toggle-button-view)
-			  (clim:accept 'string :stream stream
-				       :default (elt result count)
-				       :view `(clim:text-field-view 
-					       :width ,width)
-				       :query-identifier count
-				       :prompt nil))))
+			  (if choices
+			      (clim:accept 
+			       `((clim:member-sequence 
+				  ,choices
+				  :test equal)
+				 :allow-any-input t
+				 :partial-completers 
+				 '(#\space #\- #\_ )
+				 :name-key string
+				 :value-key string)
+			       :stream stream
+			       :default (intern (elt result count))
+			       :view (if (and choices
+					      (< (length choices) 
+						 *maximum-list-pane-items*))
+					 'clim:list-pane-view
+				       `(clim:text-field-view 
+					 :width ,width))
+			       :query-identifier count
+			       :prompt nil)
+			    (clim:accept 'string :stream stream
+					 :default (elt result count)
+					 :view `(clim:text-field-view 
+						 :width ,width)
+					 :query-identifier count
+					 :prompt nil)))))
 		    (clim:formatting-cell (stream :align-y :center)
 		      (when (getf history count)
 			(clim:accept-values-command-button (stream) "Prev"
@@ -134,7 +175,8 @@
     ;; User selected "OK", so return the result
     result))
 
-(defun ask-for-lisp-movable (title prompt-init-pairs &optional expected-width)
+(defun ask-for-lisp-movable (title prompt-init-pairs 
+			     &optional expected-width choices)
   ;; Procyon version called a special dialog item - no known equivalnet in MCL
   ;; so coerce the cdrs of the prompt-init pairs to strings and coerce the
   ;; results back to s-expressions
@@ -144,11 +186,11 @@
 		 prompt-init-pairs))) 
     (mapcar #'(lambda (x) 
 		(unless (equal x "") 
-		  (if (typep x 'boolean)
-		      x
-		    (read-from-string x))))
+		  (if (stringp x)
+		      (read-from-string x)
+		    x)))
             (ask-for-strings-movable title new-prompt-init-pairs 
-				     expected-width))))
+				     expected-width choices))))
 
 ;;; temporary for ACL
 
