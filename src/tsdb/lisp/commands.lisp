@@ -199,9 +199,9 @@
          (format *tsdb-io* "~&~%")
          (cond
           ((null argument)
-           (tsdb-do-cpus :stream *tsdb-io*))
-          ((eq argument :active)
            (tsdb-do-cpus :action :active :stream *tsdb-io*))
+          ((member argument '(:active :list :kill))
+           (tsdb-do-cpus :action argument :stream *tsdb-io*))
          (t
            (cond
             ((and filep resetp)
@@ -501,31 +501,41 @@
   
   (case action
     (:list
-     (loop 
-         for cpu in (sort 
-                     (copy-list *pvm-cpus*) #'string< 
-                     :key #'(lambda (cpu) 
-                              (let ((class (cpu-class cpu)))
-                                (symbol-name
-                                 (typecase class
-                                   (cons (first class))
-                                   (t class))))))
-                                         
-         for host = (cpu-host cpu)
-         for spawn = (cpu-spawn cpu)
-         for options = (cpu-options cpu)
-         for class = (cpu-class cpu)
-         do
-           (case format
-             (:ascii
-              (format
-               stream
-               "~&~%~a- `~(~:[~a~;~{~a~^ | ~}~]~)' (`~a');~%~
-                ~a  command: `~a';~%~
-                ~a  options: `~{~a~^ ~}';~%~%"
-               prefix (consp class) class host
-               prefix spawn
-               prefix options)))))
+     (if (null *pvm-cpus*)
+       (format
+        stream
+        "~atsdb(): no active PVM clients.~%~%"
+        prefix)
+       (loop 
+           for cpu in (sort 
+                       (copy-list *pvm-cpus*) #'string< 
+                       :key #'(lambda (cpu) 
+                                (let ((class (cpu-class cpu)))
+                                  (symbol-name
+                                   (typecase class
+                                     (cons (first class))
+                                     (t class))))))
+
+           for host = (cpu-host cpu)
+           for spawn = (cpu-spawn cpu)
+           for options = (cpu-options cpu)
+           for class = (cpu-class cpu)
+           do
+             (case format
+               (:ascii
+                (format
+                 stream
+                 "~&~%~a- `~(~:[~a~;~{~a~^ | ~}~]~)' (`~a');~%~
+                  ~a  command: `~a';~%~
+                  ~a  options: `~{~a~^ ~}';~%~%"
+                 prefix (consp class) class host
+                 prefix spawn
+                 prefix options))))))
+    (:kill
+     (format stream "~atsdb(): performing full PVM reset ..." prefix)
+     (pvm_quit)
+     (sleep 2)
+     (format stream " done; no active PVM clients.~%~%"))
     (:active
      (loop 
          for client in (sort 
@@ -540,12 +550,13 @@
          for pid = (get-field :pid task)
          for status = (client-status client)
          for protocol = (client-protocol client)
+         finally (format t "~%")
          do
            (format
                stream
                "~&~%~a- `~(~a~)' (pid: ~a --- tid: <~a>);~%~
                 ~a  command: `~a';~%~
-                ~a  status: ~(~a~) --- protocol: ~(~a~);~%~%"
+                ~a  status: ~(~a~) --- protocol: ~(~a~);~%"
                prefix host pid tid
                prefix spawn
                prefix status protocol)))))
@@ -754,10 +765,14 @@
      "    - :cpus [ _keyword_ ] [ :file _string_ ] [ :reset _bool_ ]
 
         list or activate [incr tsdb()] cpus; _keyword_ is a class name (used
-        in the cpu definition); write cpu output to file _string_ (defaults to
-        `/tmp/pvm.debug.user' --- where `user' is the active account name);
-        :reset defaults to `t' and shuts down all existing cpus before cpu
-        initialization;~%~%"))
+        in the cpu definition) that identifies which cliet(s) to start; write
+        client output to file _string_ (defaults to `/tmp/pvm.debug.user' --- 
+        where `user' is the active account name; `t' as the :file argument
+        means client output goes to standard out); :reset defaults to `t' and
+        shuts down all existing cpus before initialization; 
+        no _keyword_ argument (or `:active') lists currently active clients;
+        `:list' provides a summary of all available client definitions; and
+        `:kill' shuts down all existing clients.~%~%")) 
   
   (when (member command (list :all :help :hel :he))
     (format
