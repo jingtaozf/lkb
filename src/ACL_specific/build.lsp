@@ -9,7 +9,7 @@
 (setq make:*compile-during-load* t)
 ;;(sys:record-strings "/tmp/lkb.str" 
 ;;  (load-system "mrs"))
-(load-system "mrs")
+(compile-system "mrs" :force t)
 (setq *building-image-p* nil)
 
 (setq excl:*restart-init-function* 

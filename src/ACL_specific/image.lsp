@@ -2,26 +2,28 @@
 
 (in-package "COMMON-LISP-USER")
 
-(delete-directory-and-files (merge-pathnames #p"bin/lkb/" sys-home))
+;;(delete-directory-and-files (merge-pathnames #p"bin/lkb/" sys-home))
 
 (let ((*record-source-file-info* t)
       (*load-source-file-info* t))
   
-  (excl:generate-application 
-   "lkb" 
-   (merge-pathnames #p"bin/lkb/" sys-home)
-   (list :srecord
-	 (merge-pathnames #p"src/ACL_specific/build.lsp" sys-home))
+  (excl:build-lisp-image
+   "/eo/e4/malouf/acl/lkb.dxl" 
 
+   :lisp-files (list :srecord
+		     :eli
+		     (merge-pathnames #p"src/ACL_specific/build.lsp" 
+				      sys-home))
+   
    :opt-speed 3
    :newspace 83886080			; 80 meg newspace
    :oldspace 78643200			; 75 meg oldspace
    
    :runtime nil
-
+   
    :include-clim t
    :include-compiler t
-
+   
    :include-tpl t
    :include-debugger t
    :include-devel-env t
@@ -37,5 +39,7 @@
    :discard-xref-info nil
    :print-startup-message t
    
+   :presto t
+   :presto-lib "/eo/e4/malouf/acl/lkb.lib"
    ))
 
