@@ -38,6 +38,8 @@
 
 (defvar *parse-unifs* 0)
 (defvar *parse-fails* 0)
+(defvar *check-paths-successes* 0)
+(defvar *check-paths-fails* 0)
 
 ;;; *chart-limit* is defined in globals.lsp
 
@@ -125,7 +127,8 @@
          (format t "Can't parse this length of sentence~%") nil)
       (t
          (let ((*safe-not-to-copy-p* t)
-               (*parse-unifs* 0) (*parse-fails* 0))
+               (*parse-unifs* 0) (*parse-fails* 0) (*check-paths-successes* 0)
+               (*check-paths-fails* 0))
             (clear-chart)
             #+powerpc(setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
             (add-morphs-to-morphs user-input)
@@ -133,7 +136,8 @@
             (setf *parse-record*
                (find-spanning-edges 0 (length user-input)))
             (show-parse)
-            (values *parse-unifs* *parse-fails*)))))
+            (values *parse-unifs* *parse-fails* *check-paths-successes*
+               *check-paths-fails*)))))
 
 (defun add-morphs-to-morphs (user-input)
    (let ((current 0))
@@ -507,23 +511,23 @@
    ;; create a new edge (for the mother), record its dag and associated
    ;; information, add this to the chart, and invoke the same process
    ;; recursively.
-   (cond
-      ((not
-          (restrictors-compatible-p (car rule-restricted-list)
-             (edge-dag-restricted (car child-fs-list)))))
-      ((null (cdr rule-restricted-list))
-         ;; we've got all the bits
-         (apply-immediate-grammar-rule rule left-vertex right-vertex child-fs-list))
-      (t
-        (let ((entry (aref *chart* left-vertex)))
-           (when entry
-              (dolist (configuration (chart-entry-configurations entry))
-                 (apply-grammar-rule
-                    rule
-                    (cdr rule-restricted-list)
-                    (chart-configuration-begin configuration)
-                    right-vertex
-                    (cons (chart-configuration-edge configuration) child-fs-list))))))))
+   (if (restrictors-compatible-p
+          (car rule-restricted-list) (edge-dag-restricted (car child-fs-list)))
+      (progn
+         (incf *check-paths-successes*)
+         (if (cdr rule-restricted-list)
+            (let ((entry (aref *chart* left-vertex)))
+               (when entry
+                  (dolist (configuration (chart-entry-configurations entry))
+                     (apply-grammar-rule
+                        rule
+                        (cdr rule-restricted-list)
+                        (chart-configuration-begin configuration)
+                        right-vertex
+                        (cons (chart-configuration-edge configuration) child-fs-list)))))
+            ;; we've got all the bits
+            (apply-immediate-grammar-rule rule left-vertex right-vertex child-fs-list)))
+      (incf *check-paths-fails*)))
 
 
 (defparameter *debugging* nil)
@@ -570,15 +574,18 @@
        (n 0))
       (with-unification-context (ignore)
          (dolist (rule-feat rule-apply-order)
-            (unless
-               (or (eql (incf n) 1)
-                  (x-restrict-and-compatible-p
-                     (if (listp rule-feat)
-                        (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) rule-feat)
-                        (x-get-dag-value (tdfs-indef rule-tdfs) rule-feat))
-                     (edge-dag-restricted
-                        (nth (position rule-feat rule-daughter-order) child-edges))))
-               (return-from evaluate-unifications nil))
+            (cond
+               ((eql (incf n) 1))
+               ((x-restrict-and-compatible-p
+                   (if (listp rule-feat)
+                      (x-existing-dag-at-end-of (tdfs-indef rule-tdfs) rule-feat)
+                      (x-get-dag-value (tdfs-indef rule-tdfs) rule-feat))
+                   (edge-dag-restricted
+                      (nth (position rule-feat rule-daughter-order) child-edges)))
+                  (incf *check-paths-successes*))
+               (t
+                  (incf *check-paths-fails*)
+                  (return-from evaluate-unifications nil)))
             (incf *parse-unifs*)
             (unless
                (yadu-features rule-feat rule-tdfs nil
@@ -617,7 +624,7 @@
                      ;; take advantage of the fact that removed arcs might share structure
                      ;; by checking them all at once
                      (if (cyclic-dag-p (make-dag :type *toptype* :arcs arcs-to-check))
-                        nil
+                        (progn (incf *parse-fails*) nil)
                         (progn
                            ;; (setf (dag-copy new) 'copy)
                            (setf (dag-forward real-dag) new)
