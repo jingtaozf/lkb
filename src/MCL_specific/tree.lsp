@@ -68,7 +68,7 @@
    (when old-window
       (setq show-all-p (show-all-p (ccl::my-scroller old-window))))
    (let ((node
-           (car (make-new-type-tree type show-all-p))))
+           (car (make-new-type-tree type show-all-p t))))
       (draw-new-type-tree node
          (format nil "Type hierarchy below ~(~A~)" type) t old-window show-all-p)))
 
@@ -79,7 +79,8 @@
 
 ;;; initially all nodes are marked not visible. If we're not a shrunk node,
 ;;; go on to attempt to mark each daughter as visible
-;;; If we're marked as visible then daughters must have been done already 
+;;; If we're marked as visible then daughters must have been done already
+;;; If we start below a shrunk node then nodes are visible despite this
 
 (defun propagate-visibility-in-type-tree (type)
    (let ((type-record (get-type-entry type)))
@@ -91,16 +92,19 @@
       (setf (type-visible-p type-record) t)))
 
 
-(defun make-new-type-tree (type show-all-p)
+(defun make-new-type-tree (type show-all-p toplevel-p)
+   ;; make sure that top type is not hidden, no matter what hide-in-type-hierarchy-p
+   ;; function says - otherwise we may end up displaying no hierarchy at all (if all
+   ;; descendents are hidden), or just one branch rather than all
    (let ((type-record (get-type-entry type)))
       (cond
          ((not (type-visible-p type-record))
             nil)
-         ((and (not show-all-p)
+         ((and (not toplevel-p) (not show-all-p)
              (fboundp 'hide-in-type-hierarchy-p)
              (funcall (symbol-function 'hide-in-type-hierarchy-p) type))
             (mapcan
-               #'(lambda (d) (make-new-type-tree d show-all-p))
+               #'(lambda (d) (make-new-type-tree d show-all-p nil))
                (type-daughters type-record)))
          (t
             (let ((node
@@ -112,7 +116,7 @@
                   (setf (get node 'daughters)
                      (delete-duplicates
                         (mapcan
-                           #'(lambda (d) (make-new-type-tree d show-all-p))
+                           #'(lambda (d) (make-new-type-tree d show-all-p nil))
                            (type-daughters type-record)) :test #'eq)))
                (list node))))))
 
