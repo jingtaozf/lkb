@@ -231,10 +231,12 @@
   (force-output %lui-stream%))
 
 (defun lui-status-p (key)
-  (case key
-    #+:null
-    (:tree (streamp %lui-stream%))
-    #-:null
-    (:avm (streamp %lui-stream%))
-    #-:null
-    (:mrs (streamp %lui-stream%))))
+  (when (and (streamp %lui-stream%) (open-stream-p %lui-stream%))
+    (case key
+      #+:null
+      (:tree (streamp %lui-stream%))
+      #-:null
+      (:avm (streamp %lui-stream%))
+      #-:null
+      (:mrs (streamp %lui-stream%)))))
+

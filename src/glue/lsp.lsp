@@ -307,6 +307,26 @@
                  (object (lsp-retrieve-object id location)))
             (when (and (second object) (member format '(:avm :tree)))
               (lsp-browse id (first object) (rest object) format))))
+         (type
+          (let* ((name (pop command))
+                 (type (and name (get-type-entry name)))
+                 (action (pop command)))
+            (if type
+              (case action
+                (hierarchy (display-type-in-tree name))
+                (skeleton (show-type-spec-aux name type))
+                (expansion (show-type-aux name type))
+                (source (edit-source name))
+                (t
+                 (format
+                  t
+                  "[~d] lsp-process-event(): invalid type action `~a'~%" 
+                  id action)
+                 (setf return %lsp-invalid-subcommand%)))
+              (format
+               t
+               "[~d] lsp-process-event(): invalid type identifier `~a'~%" 
+               id name))))
          (quit
           #+:lui
           (lui-shutdown))
