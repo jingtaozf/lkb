@@ -87,3 +87,29 @@
          (+ (setf start (+ start ,value))
             (setf end (+ end ,value))))
        (make-meter start end))))
+
+(defun time-a-funcall (timed-function report-function)
+   #+:allegro
+   (excl::time-a-funcall timed-function report-function)
+   #-:allegro
+   (let* ((treal (get-internal-real-time))
+          (tcpu (get-internal-run-time))
+          #+:mcl (tgc (ccl:gctime))
+          #+:mcl (others (ccl::total-bytes-allocated)))
+      (multiple-value-prog1
+         (funcall timed-function)
+         (let (#+:mcl (others (- (ccl::total-bytes-allocated) others))
+               )
+            (funcall report-function
+               ;; tgcu tgcs tu ts tr scons ssym sother
+               #+:mcl (round (* (- (ccl:gctime) tgc) 1000)
+                             internal-time-units-per-second)
+               #-:mcl 0
+               0
+               (round (* (- (get-internal-run-time) tcpu) 1000)
+                      internal-time-units-per-second)
+               0
+               (round (* (- (get-internal-real-time) treal) 1000)
+                      internal-time-units-per-second)
+               0 0
+               #+:mcl others #-:mcl -1)))))

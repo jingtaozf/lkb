@@ -104,8 +104,7 @@
                                   str))
             tgc tcpu treal conses symbols others)
         (multiple-value-bind (e-tasks s-tasks c-tasks f-tasks)
-            #+allegro
-            (excl::time-a-funcall
+            (tsdb::time-a-funcall
              #'(lambda () (parse-tsdb-sentence sent trace))
              #'(lambda (tgcu tgcs tu ts tr scons ssym sother &rest ignore)
                  (declare (ignore ignore))
@@ -115,28 +114,6 @@
                        conses (* scons 8)
                        symbols (* ssym 24)
                        others sother)))
-            #-allegro
-            (multiple-value-prog1
-                (progn
-                  (setq treal (get-internal-real-time)
-                        tcpu (get-internal-run-time)
-                        tgc #+mcl (ccl:gctime) #-mcl 0
-                        others #+mcl (ccl::total-bytes-allocated) #-mcl 0)
-                  (parse-tsdb-sentence sent trace))
-              (let ((rawgc (- #+mcl (ccl:gctime) tgc)))
-                (setq symbols 0 conses 0
-                      others
-                      (- #+mcl (ccl::total-bytes-allocated) #-mcl -1 others)
-                      tcpu
-                      (round 
-                       (* (- (get-internal-run-time) tcpu #+mcl rawgc) 1000)
-                       internal-time-units-per-second)
-                      treal
-                      (round (* (- (get-internal-real-time) treal) 1000)
-                             internal-time-units-per-second)
-                      tgc #+mcl (round (* rawgc 1000)
-                                       internal-time-units-per-second)
-                      #-mcl -1)))
           (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
                  (output (get-output-stream-string str))
                  (readings (length *current-parse-trees))
