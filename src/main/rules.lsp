@@ -196,9 +196,11 @@
                              mother-value)
                          path))
                   (cdr f-list))))
+            ;; if there is a head, remaining daughters must stay in same left-to-
+            ;; right order - parser assumes this
             (setf (rule-daughters-apply-order rule)
                (if head-path
-                  (cons head-path (remove head-path (cdr f-list) :test #'eq))
+                  (cons head-path (remove head-path (cdr f-list) :count 1 :test #'eq))
                   (cdr f-list)))))
       (setf (gethash id (if lexp *lexical-rules* *rules*)) rule)))
 
