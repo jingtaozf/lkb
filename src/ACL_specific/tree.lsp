@@ -150,12 +150,14 @@
     (setf (type-hierarchy-show-all-p thframe) show-all-p)
     (setf (clim:frame-pretty-name thframe) title)
     (clim:run-frame-top-level thframe)))
-	
+
+
 (defun draw-type-hierarchy (type-hierarchy stream &key max-width max-height)
   (declare (ignore max-width max-height))
-  (let ((node-tree (type-hierarchy-nodes type-hierarchy))
-	(x (clim:bounding-rectangle-min-x (clim:pane-viewport stream)))
-	(y (clim:bounding-rectangle-min-x (clim:pane-viewport stream))))
+  (let* ((node-tree (type-hierarchy-nodes type-hierarchy))
+         (viewport (clim:pane-viewport stream))
+         (x (if viewport (clim:bounding-rectangle-min-x viewport)))
+         (y (if viewport (clim:bounding-rectangle-min-y viewport))))
     (silica:inhibit-updating-scroll-bars #+:allegro (stream)
       (clim:format-graph-from-root
        node-tree
@@ -177,7 +179,8 @@
        :generation-separation *tree-level-sep*
        :within-generation-separation *tree-node-sep*
        :center-nodes nil))
-    (clim:scroll-extent stream x y)))
+    (when (and x y)
+      (clim:scroll-extent stream x y))))
 
 (defparameter *node-text-scratch-string*
     (make-array 32 :element-type 'character :fill-pointer 0))
