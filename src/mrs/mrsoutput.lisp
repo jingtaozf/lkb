@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.6  1998/07/23 01:24:06  aac
+;; mrs equality and removing remnants of page packages
+;;
 ;; Revision 1.5  1998/07/22 01:55:51  aac
 ;; mrs equality and type file patching
 ;;
@@ -121,7 +124,7 @@
 ;;; called from VM-Parser
 ;;; AAC - not called for CSLI version of PAGE or the LKB
 
-#-lingo
+#-(or :lkb :lingo)
 (defun fs2vit (fs sid)
   (setf *segment-id* sid)
   (let* #-pagelite
