@@ -25,6 +25,12 @@
                (dir-append (get-sources-dir "www") '(:relative "www")))
    :name "lkb.js"))
 
+(defparameter *www-alttxt-js*
+  (make-pathname
+   :directory (pathname-directory 
+               (dir-append (get-sources-dir "www") '(:relative "www")))
+   :name "alttxt.js"))
+
 (defparameter *www-introduction*
   (make-pathname
    :directory (pathname-directory 
@@ -79,6 +85,7 @@
     
   (publish-file :path "/lkb.css" :file *www-lkb-css*)
   (publish-file :path "/lkb.js" :file *www-lkb-js*)
+  (publish-file :path "/alttxt.js" :file *www-alttxt-js*)
   (publish-file :path "/rmrs.dtd" :file *www-rmrs-dtd*)
 
   (publish :path "/compare"
@@ -151,6 +158,9 @@
                 :newline
                 ((:script
                   :src "/lkb.js" :language "javascript" 
+                  :type "text/javascript"))
+                ((:script
+                  :src "/alttxt.js" :language "javascript" 
                   :type "text/javascript")))
                :newline
                (:body
