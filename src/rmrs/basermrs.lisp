@@ -59,3 +59,47 @@
    :position position
    :object object))
 
+;;; Comparison structures (mainly for compare.lisp, but also annlt.lisp
+;;; and lkb-acl-rmrs.lisp)
+
+(defstruct rmrs-comparison-record
+  matched-top matched-rels matched-args matched-ings matched-hcons bindings
+  qeq-pairs)
+
+(defstruct match-rel-record
+  rel1
+  rel2
+  pred-comp-status
+  var-comp-status
+  arg-comp-status
+  label-pair ;; rel labels
+  cvar-pair ;; characteristic vars (non-handle)
+  hvar-pair ;; non arg vars (handle)
+  )
+
+;;; comp-status records the class of compatibility
+;;; between the relation
+;;; :equal
+;;; :sub1 - rel1 is more specific tham rel2
+;;; :sub2 - rel2 is more specific tham rel1
+;;; :comp - rel1 and rel2 are compatible but not equal
+;;;         and not in a subsumes relationship
+
+(defstruct match-top-record
+  label1
+  label2)
+
+(defstruct match-arg-record
+  arg1
+  arg2
+  comp-status
+  arg-type) ; want to record if this is a carg
+
+(defstruct match-ing-record
+  ing1
+  ing2)
+
+(defstruct match-hcons-record
+  hcons1
+  hcons2)
+

@@ -70,6 +70,7 @@ because snore and sleep don't have matching ARGs.
 
 |#
 
+
 (defstruct (comp-rmrs (:include rmrs)))
 
 ;;; Originally I intended this to have extra slots compared to
@@ -98,6 +99,10 @@ because snore and sleep don't have matching ARGs.
 ;;; *********************************************
 ;;; Storing results 
 ;;;
+;;; Structure definitions in basermrs.lisp since used outside this file
+;;;
+;;;
+#|
 
 (defstruct rmrs-comparison-record
   matched-top matched-rels matched-args matched-ings matched-hcons bindings
@@ -140,7 +145,8 @@ because snore and sleep don't have matching ARGs.
   hcons1
   hcons2)
 
-  
+|#
+
 ;;; *************************************************************  
 ;;;
 ;;; Code
@@ -157,24 +163,25 @@ because snore and sleep don't have matching ARGs.
   ;;; returns a list of comparison records
   (unless (and (rmrs-p rmrs1) (rmrs-p rmrs2))
     (error "Arguments to compare-rmrs are not valid RMRSs"))
-  (let* ((new-rmrs1 (sort-rmrs (convert-to-comparison-rmrs rmrs1)
-			  same-source-p))
-	 (new-rmrs2 (sort-rmrs (convert-to-comparison-rmrs rmrs2)
-			       same-source-p))
-	 (first-pass
-	  (compare-rmrs-liszts (rmrs-liszt new-rmrs1) 
-			       (rmrs-liszt new-rmrs2)
-			       (initial-comparison-record)
-			       same-source-p))
-	 (second-pass (prune-comparison-record first-pass))
-	 (expanded
-	  (expand-comparison-records second-pass new-rmrs1 new-rmrs2)))
-    (dolist (comp expanded)
-      (add-top-label-compare comp new-rmrs1 new-rmrs2) 
-      (add-argument-compare comp new-rmrs1 new-rmrs2)
-      (add-ing-compare comp new-rmrs1 new-rmrs2)
-      (add-hcons-compare comp new-rmrs1 new-rmrs2))
-    expanded))
+  (if (and (rmrs-liszt rmrs1) (rmrs-liszt rmrs2))
+      (let* ((new-rmrs1 (sort-rmrs (convert-to-comparison-rmrs rmrs1)
+				   same-source-p))
+	     (new-rmrs2 (sort-rmrs (convert-to-comparison-rmrs rmrs2)
+				   same-source-p))
+	     (first-pass
+	      (compare-rmrs-liszts (rmrs-liszt new-rmrs1) 
+				   (rmrs-liszt new-rmrs2)
+				   (initial-comparison-record)
+				   same-source-p))
+	     (second-pass (prune-comparison-record first-pass))
+	     (expanded
+	      (expand-comparison-records second-pass new-rmrs1 new-rmrs2)))
+	(dolist (comp expanded)
+	  (add-top-label-compare comp new-rmrs1 new-rmrs2) 
+	  (add-argument-compare comp new-rmrs1 new-rmrs2)
+	  (add-ing-compare comp new-rmrs1 new-rmrs2)
+	  (add-hcons-compare comp new-rmrs1 new-rmrs2))
+	expanded)))
 
 (defun initial-comparison-record nil
   (make-rmrs-comparison-record 

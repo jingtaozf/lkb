@@ -855,7 +855,7 @@ empty (and hope this works ...)</comment>
 <comment>not</comment>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<ep><gpred>NEG</gpred><label>H</label><var>E</var></ep>
+<ep><gpred>NEG_REL</gpred><label>H</label><var>E</var></ep>
 </semstruct>
 </le>
 

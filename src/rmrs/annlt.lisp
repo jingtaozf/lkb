@@ -33,6 +33,9 @@ others have `XML'
          (uscore-pos (position #\_ str)))
     (subseq str (+ 1 uscore-pos))))    
 
+;;; Note that ' is removed from the lexeme to avoid XML errors
+;;; - also will match better with ERG output
+
 (defun get-lexeme (node)
   (let* ((xml-str (string node))
 	 (str (if *xml-word-p* 
@@ -44,12 +47,13 @@ others have `XML'
          (colon-pos (position #\: notag :from-end t))
          (suffix-pos (position #\+ notag)))
     (make-word-info
-      :lemma 
+     :lemma 
+     (remove #\'
       (if suffix-pos
           (subseq notag 0 suffix-pos)
         (if (and colon-pos (> uscore-pos (+ 1 colon-pos)))
             (subseq notag 0 colon-pos)
-          notag))
+          notag)))
       :pos
       (tag-letters tag)
       :from (get-cfrom xml-str)
@@ -169,11 +173,11 @@ others have `XML'
  (make-pathname 
    :device "d"
    :directory "/lingo/lkb/src/rmrs/qa/"
-   :name "test.parses")
+   :name "top_docs.24.parses")
  (make-pathname 
    :device "d"
    :directory "/lingo/lkb/src/rmrs/qa/"
-   :name "test.rmrs")
+   :name "top_docs.24.rmrs")
  t)
 )
 |#
@@ -592,4 +596,118 @@ others have `XML'
 		 (push (parse-tsg-non-opt istream) dtrs)))))
     (nreverse dtrs)))
 
+#| 
+
+Simple qa code.
+
+|#
+
+(defparameter *qa-test-suite*
+    '((24 "When did Nixon visit China?" 1)))
+
+(defun make-a-file-name (num)
+  (let ((filename (format nil "top_docs.~A.rmrs" num)))
+	 ;;; (format nil "test.~A.rmrs" num)))
+    (make-pathname :device "d"
+		   :directory "/lingo/lkb/src/rmrs/qa/"
+		   :name filename)))
+
+(defun extract-qa-structs (a-file)
+  (let ((qa-structs nil))
+    (with-open-file (istream a-file :direction :input)
+      (let ((xml (parse-xml-removing-junk istream)))
+	(unless (equal (car xml) 'corpus)
+	  (error "~A is not a valid qa file" a-file))
+	(loop for doc in (cdr xml)
+	    unless (stringp doc)
+	    do
+	      (unless (equal (caar doc) 'doc)
+		(error "~A is not a valid qa file" a-file))
+	      (loop for thing in (cdr doc)
+		  unless (stringp thing)
+		  do
+		    (let ((tag (car thing)))
+		      (when (eql tag 'text)
+			(loop for text-el in (cdr thing)
+			    unless (stringp text-el)
+			    do
+			      (let ((subtag (car text-el)))
+				(when (eql subtag 'p)
+				  (loop for p-el in (cdr text-el)
+				      unless (stringp p-el)
+				      do
+					(let ((subsubtag (car p-el)))
+					  (when (eql subsubtag 's)
+					    (push
+					     (extract-qa-struct p-el)
+					     qa-structs)))))))))))
+	(nreverse qa-structs)))))
+
+(defstruct qa-struct 
+  str
+  tree 
+  rmrs)
+
+(defun extract-qa-struct (s)
+  (let* ((real-stuff 
+	  (loop for thing in (cdr s)
+	      unless (stringp thing)
+	      collect thing))
+	 (str (second (first real-stuff)))
+	(tree (second real-stuff))
+	(rmrs (read-rmrs (third real-stuff) :rasp)))
+    (declare (ignore tree))
+    (make-qa-struct :str str
+		    :rmrs rmrs)))
+	
+
+(defun test-qa-eg (egnum)
+  (let* ((eg (assoc egnum *qa-test-suite*))
+	 (input (second eg))
+	 (parse-number (third eg))
+	 (q-rmrs (lkb::rmrs-for-sentence input parse-number))
+	 (a-file (make-a-file-name egnum)))
+    (when (and q-rmrs a-file)
+	 (let ((qa-recs nil)
+	       (qa-structs (extract-qa-structs a-file)))
+	   (dolist (qa-struct qa-structs)
+	     (let* ((a-rmrs (qa-struct-rmrs qa-struct))
+		    (original (qa-struct-str qa-struct))
+		    (comparison-records 
+		     (compare-rmrs q-rmrs a-rmrs nil "Foo")))
+	       (when comparison-records
+		 (let
+		     ((score (qa-score (car comparison-records)))
+		      (to-beat (fifth qa-recs)))
+		   (if to-beat
+		       (when (> score (car (fifth qa-recs)))
+			 (format t "~%New top rank ~A" original)
+			 (setf qa-recs 
+			   (subseq 
+			    (sort (cons (cons score original)
+					qa-recs) #'> :key #'car)
+			    0 4)))
+		     (setf qa-recs
+		       (sort (cons (cons score original)
+				   qa-recs) #'> :key #'car)))))))
+	   (pprint qa-recs)))))
+      
+      
+(defun qa-score (comp-record)
+  ;;; not serious at this point, just to see whether anything works
+  (let ((score 0))
+    (dolist (rel-match (rmrs-comparison-record-matched-rels comp-record))
+      (let* ((rel (match-rel-record-rel2 rel-match))
+	     (pred (rel-pred rel)))
+	(setf score (+ score
+		       (cond ((equal pred "named_rel") 10)
+			     ((realpred-p pred)
+			      (let ((pos (realpred-pos pred)))
+				(cond ((equal pos "n") 5)
+				      ((equal pos "v") 4)
+				      ((equal pos "j") 2)
+				      ((equal pos "r") 1)
+				      (t 0))))
+			     (t 0))))))
+    score))
 
