@@ -160,7 +160,7 @@ we assume that there will generally only be one feature
                       (let* ((rel-string (fvpair-value fvp))
                              (table (cdr (assoc (fvpair-feature fvp) index-value))))
                         (if (hash-table-p table)
-                            (pushnew id (gethash rel-string table))
+                            (pushnew id (gethash (string-upcase rel-string) table))
                             (warn "~%Ignoring ~A - ~A inconsistent in ~A"
                                  id rel-strings rel-name)))))
           (t 
