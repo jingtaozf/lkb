@@ -282,7 +282,7 @@
                 (push (make-argval :var (fvpair-value fvp)
                                    :sort sort)
                       others)))))
-    (list args others)))
+    (list args (nreverse others))))
 
 (defun extract-sort (def extra)
   (if def
