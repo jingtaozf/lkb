@@ -237,25 +237,10 @@
 ;      (format t "~%Expanding defaults") 
       (when (expand-type-hierarchy-defaults)
 	(format t "~%Re-expanding rules")
-	(expand-rules)
+	(expand-rules) ; in rules.lsp
 	(format t "~%Type file checked successfully")
 	t))))
 
-(defun expand-rules nil
-  (maphash #'(lambda (id rule)
-	       (process-unif-list (rule-id rule)
-				  (car (rule-unifications rule))
-				  (cdr (rule-unifications rule))
-				  rule
-				  *rule-persistence*))
-	   *rules*)
-  (maphash #'(lambda (id rule)
-	       (process-unif-list (rule-id rule)
-				  (car (rule-unifications rule))
-				  (cdr (rule-unifications rule))
-				  rule
-				  *rule-persistence*))
-	   *lexical-rules*))
 
 ;;; First we need to check that the type hierarchy itself is OK
 ;;; viewed as a graph without considering the constraints
@@ -341,27 +326,29 @@
 
 (defun mark-for-redundancy (type-record)
   ; assumes no cycles
-   (let ((ok t)
-         (daughters (mapcar #'(lambda (d) (get-type-entry d))
-                                (type-daughters type-record))))
-     (mark-node-seen type-record)
-     (for daughter in daughters
-          do
-          (if (active-node-p daughter)
-              (progn 
-                (setf ok nil)
-                (format t "~%Redundancy involving ~A" 
-                        (type-name daughter)))
-            (mark-node-active daughter)))
-     (when ok
-       (setf ok 
-         (for daughter in daughters
-              all-satisfy
-              (mark-for-redundancy daughter)))
-       (for daughter in daughters
-            do
-            (unmark-node-active daughter)))
-     ok))
+  (let ((ok t))
+      (unless (seen-node-p type-record) 
+        (mark-node-seen type-record)
+        (let 
+            ((daughters (for d in (type-daughters type-record)
+                         collect (get-type-entry d))))
+          (for daughter in daughters
+               do
+               (if (active-node-p daughter)
+                   (progn 
+                     (setf ok nil)
+                     (format t "~%Redundancy involving ~A" 
+                             (type-name daughter)))
+                 (mark-node-active daughter)))
+          (when ok
+            (setf ok 
+              (for daughter in daughters
+                   all-satisfy
+                   (mark-for-redundancy daughter)))
+            (for daughter in daughters
+                 do
+                 (unmark-node-active daughter)))))
+      ok))
 
 
 (defun scan-table nil
@@ -396,26 +383,37 @@
 (defun set-up-descendants (type)
   (let ((type-entry (get-type-entry type)))
     (or (type-descendants type-entry)
-        (let ((daughters (type-daughters type-entry)))
-          (if daughters
-              (setf (type-descendants type-entry)
-                (union daughters
-                       (reduce #'union
-                               (mapcar #'set-up-descendants
-                                       daughters)))))))))
+        (let ((daughters (type-daughters type-entry))
+              (descendants nil))
+          (for daughter in daughters
+               do
+             (pushnew daughter descendants :test #'eq)
+             (for descendant in (set-up-descendants daughter)
+                  do
+                  (pushnew descendant descendants :test #'eq)))
+          (setf (type-descendants type-entry) descendants)
+          descendants))))
+
 
 (defun add-ancestors-to-type-table (top-node)
-  (let* ((type-entry (get-type-entry top-node))
-         (daughters (type-daughters type-entry)))
-    (for daughter in daughters
-         do
-         (let ((daughter-entry (get-type-entry daughter)))
-           (unless (type-ancestors daughter-entry)
-             (setf (type-ancestors daughter-entry)
-               (get-ancestors daughter-entry)))))
-    (for daughter in daughters
-         do
-         (add-ancestors-to-type-table daughter)))) 
+  (declare (ignore top-node))
+  (for type in *type-names*
+       do
+       (let ((type-entry (get-type-entry type)))
+         (calculate-ancestors type-entry))))
+
+(defun calculate-ancestors (type-entry)
+  (or (type-ancestors type-entry)
+      (let* ((parents (type-parents type-entry))
+             (ancestors nil))
+        (for parent in parents
+             do
+             (for ancestor in (calculate-ancestors (get-type-entry parent))
+                  do
+                  (pushnew ancestor ancestors :test #'eq))
+             (pushnew parent ancestors :test #'eq))
+        (setf (type-ancestors type-entry) ancestors)
+        ancestors)))
 
 (defun unmark-type-table nil
    (maphash 
@@ -424,39 +422,42 @@
            (clear-marks type-entry))
         *types*))
 
+
 (defun find-good-partitions (type)
   ;;; doing the glb stuff over the entire hierarchy is very slow
   ;;; when we have lots of multiple inheritance.  This function attempts
   ;;; to find manageable subchunks, returning a list of lists of nodes which
   ;;; should be mutually independent
+  ;;; AAC - Oct 12 1998 - faster version
   (let* ((type-entry (get-type-entry type))
          (daughters (type-daughters type-entry)))
-    (unless (seen-node-p type-entry)
+    (unless (or (active-node-p type-entry)
+                (seen-node-p type-entry))
+      (mark-node-active type-entry)
       (when daughters
-        (let*
-          ((ancestors (type-ancestors type-entry))
-           (descendants (type-descendants type-entry))
-           (lineage (cons type (append ancestors descendants))))
+        (let
+            ((descendants (type-descendants type-entry)))
           (for daughter in daughters
                do 
                (find-good-partitions daughter))
-          (when 
-            (for descendant in descendants
-                 all-satisfy
-                 (let ((desc-entry (get-type-entry descendant)))
-                         (or (seen-node-p desc-entry)
-                             (subsetp (type-ancestors desc-entry)
-                                      lineage :test #'eq))))
+          (when
+              (for descendant in descendants
+                   all-satisfy
+                   (let ((desc-entry (get-type-entry descendant)))
+                     (or (seen-node-p desc-entry)
+                         (and (or (null (cdr (type-parents desc-entry)))
+                                  (subsetp (type-parents desc-entry) descendants
+                                           :test #'eq))))))
             (let ((partition-nodes
-                         (for descendant in descendants
-                              filter
-                              (let ((desc-entry (get-type-entry descendant)))
-                                (if (not (seen-node-p desc-entry))
-                                  (progn
-                                    (mark-node-seen desc-entry)
-                                    descendant))))))
-              (push partition-nodes *partition*))))))))
-
+                   (for descendant in descendants
+                        filter
+                        (let ((desc-entry (get-type-entry descendant)))
+                          (if (not (seen-node-p desc-entry))
+                            (progn
+                              (mark-node-seen desc-entry)
+                              descendant))))))
+              (when partition-nodes
+                (push partition-nodes *partition*)))))))))
 
 ;;; GLB stuff
 
@@ -486,13 +487,13 @@
             (let ((x (car remaining-nodes)))
                (mapc #'(lambda (y)
                          (let ((problem-list
-                                (check-lbs-from-top x y)))                           
+                                (check-lbs-from-top x y)))
                            (when problem-list
                              (push (make-glbset :top (list x y) 
                                                 :bottom problem-list) 
                                    *glbsets*))))
                      (cdr remaining-nodes))))
-         possible-nodes))
+        possible-nodes))
 
 
 

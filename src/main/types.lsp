@@ -438,15 +438,16 @@
       (retrieve-descendants type2)))
 
 (defun get-ancestors (type-entry)
+  ;;; general function - should be fairly safe, but slow
    (let ((parents (type-parents type-entry)))
       (if parents
          (union parents
             (reduce #'union
                     (mapcar #'(lambda (parent)
                                 (let ((parent-entry (get-type-entry parent)))
-                                  (or (type-ancestors parent-entry)
-                                    (get-ancestors parent-entry))))
-                  parents))))))
+                                    (get-ancestors parent-entry)))
+                            parents))))))
+
 
 (defun get-descendants (type-entry)
       (let ((daughters (type-daughters type-entry)))

@@ -122,8 +122,9 @@
       (gen-chart-relation-names1 sem-fs nil)))
 
 (defun gen-chart-relation-names1 (fs rels-list) ; c.f. mrs::construct-liszt
-  (if (mrs::is-valid-fs fs)
-     (let ((label-list (mrs::fs-arcs fs)))
+  (if (and fs (dag-p fs))
+     (let ((label-list (unless (is-atomic fs)
+                         (dag-arcs fs))))
         (if label-list
            (let ((first-part (assoc (car mrs::*liszt-first-path*)
                                        label-list))
@@ -131,12 +132,15 @@
                                       label-list)))
                (if (and first-part rest-part)
                   (let* ((fs (cdr first-part))
-                         (label-list (mrs::fs-arcs fs))
-                         (pred (assoc (car mrs::*rel-name-path*) label-list)))
+                         (label-list (unless (is-atomic fs)
+                                       (dag-arcs fs)))
+                         (pred (assoc (car mrs::*rel-name-path*) label-list))
+                         (type (if pred 
+                                   (type-of-fs (rest pred)) 
+                                 (type-of-fs fs))))
                       (push
-                         (mrs::create-type
-                            (if pred (mrs::fs-type (rest pred)) (mrs::fs-type fs)))
-                         rels-list)
+                       (if (listp type) (car type) type)
+                       rels-list)
                       (gen-chart-relation-names1 (cdr rest-part) rels-list))
                   rels-list))
             rels-list))))
@@ -327,7 +331,7 @@
    (let ((sem-fs
             (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
                 mrs::*initial-semantics-path*)))
-      (if (mrs::is-valid-fs sem-fs)
+      (if (and sem-fs (is-valid-fs sem-fs))
          (let ((mrs (mrs::construct-mrs sem-fs nil t)))
             ;; (mrs::output-mrs input-sem 'mrs::simple)
             ;; (mrs::output-mrs mrs 'mrs::simple)
@@ -581,7 +585,7 @@
       (let ((sem-fs
                (existing-dag-at-end-of (tdfs-indef (g-edge-dag act))
                    mrs::*initial-semantics-path*)))
-         (if (mrs::is-valid-fs sem-fs)
+         (if (and sem-fs (dag-p sem-fs))
             (let ((mrs (mrs::construct-mrs sem-fs nil t)))
                (declare (special *input-sem-liszt*))
                (dolist (rel (mrs::psoa-liszt mrs))

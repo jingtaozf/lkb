@@ -28,7 +28,12 @@
    (parse '("Devito" "manages" "a" "programmer" "Abrams" "interviewed" "and" "Browne" "hired") nil))
 
 (with-check-path-list-collection "Macintosh HD:lkb99-expt:big:grammar:lkb:checkpaths1.lsp"
-   (chart-generate input-sem lex-entry-alts))
+  (chart-generate input-sem lex-entry-alts))
+
+(with-check-path-list-collection "~aac/checkpaths.lsp"
+  (parse-tsdb-sentences "~aac/grammar/tsdb/csli/item" "~aac/parses" "~aac/results"
+                        "~aac/runs"))
+
 |#
 
 (defmacro with-check-path-list-collection (output-file &body forms)

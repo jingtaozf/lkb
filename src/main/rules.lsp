@@ -242,6 +242,25 @@
       (setf (gethash id (if lexp *lexical-rules* *rules*)) rule)))
 
 
+;;; The following is called from the code which redefines types
+
+(defun expand-rules nil
+  (maphash #'(lambda (id rule)
+	       (process-unif-list (rule-id rule)
+				  (car (rule-unifications rule))
+				  (cdr (rule-unifications rule))
+				  rule
+				  *rule-persistence*))
+	   *rules*)
+  (maphash #'(lambda (id rule)
+	       (process-unif-list (rule-id rule)
+				  (car (rule-unifications rule))
+				  (cdr (rule-unifications rule))
+				  rule
+				  *rule-persistence*))
+	   *lexical-rules*))
+
+
 ;;; Irregular morphology
 
 (defparameter *irregular-forms* (make-hash-table :test #'equal))
