@@ -28,7 +28,7 @@ dvips -Ptype1 -file newdoc.dvi > newdoc.ps
 distill newdoc.ps (on turing, or eoan, accidentally ...)
 web files are on ~aac/WWW
 so 
-mv newdoc.pdf ~aac/WWW
+cp newdoc.pdf ~aac/WWW/doc5-2.pdf
 
 
 To print two-up:
