@@ -201,6 +201,19 @@
 	  (decoded-status nil))
       (setf (connection lexicon) (pg:connect-db properties))
       (setf decoded-status (pg:decode-connection-status (pg:status connection)))
+      
+      ;;; temporary hack
+      (unless (eq decoded-status :connection-ok)
+	(setf properties (format 
+		       nil 
+		       "dbname='~a' user='~a' password='~a'"
+		       (sql-escape-string dbname)
+		       (sql-escape-string user)
+		       (sql-escape-string password)))
+      (setf (connection lexicon) (pg:connect-db properties))
+      (setf decoded-status (pg:decode-connection-status (pg:status connection)))	
+       )
+      
       (if (eq decoded-status :connection-ok)
 	  (setf (server-version lexicon) (get-server-version lexicon)))
       decoded-status)))
@@ -221,7 +234,7 @@
     (unless connection
       (error "database ~s has no active connection." database))
 
-    (time
+    ;(time
     
     (multiple-value-bind (recs cols recs-count)
         (pg:sql (sql-string query) :db connection)
@@ -229,7 +242,7 @@
             (columns query) cols
             (count-recs query) recs-count))
     
-    )
+    ;)
     
     (if *psql-verbose-query* ;;; verbosity flag
 	(format *trace-output* "~%~a~%=>~%~a" (sql-string query) (records query)))
