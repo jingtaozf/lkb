@@ -15,31 +15,31 @@
 (read-rmrs-file "rmrs/annlt-test/test-select.rmrs" :rasp)
 |#
 
-;;; FIX - there could usefully be a with-package wrapped round this ...
-
 (defun read-rmrs-file (file-name &optional origin)
   ;;; <!ELEMENT rmrs-list (rmrs)*>
   ;;; <!ATTLIST rmrs-list
   ;;;        origin (RASP|ERG) #REQUIRED >
-  (with-open-file (istream file-name :direction :input)
-    (let ((rmrss (parse-xml-removing-junk istream)))
-;      (setf *rmrs-debug* rmrss)
-      (unless (equal (car rmrss) '|rmrs-list|)
-        (error "~A is not a valid rmrs file" file-name))
-      (loop for rmrs in (cdr rmrss)
-          unless (xml-whitespace-string-p rmrs)
-          collect
-            (read-rmrs rmrs origin)))))
+  (let ((*package* (find-package :mrs)))
+    (with-open-file (istream file-name :direction :input)
+      (let ((rmrss (parse-xml-removing-junk istream)))
+	;;; (setf *rmrs-debug* rmrss)
+	(unless (equal (car rmrss) '|rmrs-list|)
+	  (error "~A is not a valid rmrs file" file-name))
+	(loop for rmrs in (cdr rmrss)
+	    unless (xml-whitespace-string-p rmrs)
+	    collect
+	      (read-rmrs rmrs origin))))))
 
 (defun read-single-rmrs-from-string (str)
   ;;; currently called from emacs interface - takes
   ;;; a string containing an rmrs (we hope) and
   ;;; reads it in
-  (with-input-from-string (istream str)
-    (let ((rmrs (parse-xml-removing-junk istream)))
-;;      (setf *rmrs-debug* rmrs)
-      (unless (xml-whitespace-string-p rmrs)
-	(read-rmrs rmrs :rasp)))))
+  (let ((*package* (find-package :mrs)))
+    (with-input-from-string (istream str)
+      (let ((rmrs (parse-xml-removing-junk istream)))
+	;;      (setf *rmrs-debug* rmrs)
+	(unless (xml-whitespace-string-p rmrs)
+	  (read-rmrs rmrs :rasp))))))
   
 
 (defun read-rmrs (content origin)
