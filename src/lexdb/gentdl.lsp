@@ -320,6 +320,9 @@
      (unless (equal value "")
        (list (str-2-symb value))))
 
+    (mixed-rawlst
+     (list (string-2-mxd-list-on-spc value)))
+
     (str-rawlst
      (list (string-2-str-list-on-spc value)))
     (string-list

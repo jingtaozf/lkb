@@ -88,7 +88,8 @@
       (setf (fields-tb *psql-lexicon*) table))
      (t
       (setf (fields-tb *psql-lexicon*) (dbname *psql-lexicon*))))
-    (when (initialize-lex *psql-lexicon* :semi semi)
+    (setf (semi *psql-lexicon*) semi)
+    (when (initialize-lex *psql-lexicon*)
       (mapcar #'(lambda (x) (link *psql-lexicon* x)) part-of)
       *psql-lexicon*)))
 

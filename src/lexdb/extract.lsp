@@ -112,6 +112,10 @@
      (symb-2-str
       (extract-atom-by-path x key path)))
     
+    (mixed-rawlst
+     (mixed-list-2-str
+      (extract-raw-list x key path)))
+    
     (str-rawlst
      (str-list-2-str
       (extract-raw-list x key path)))

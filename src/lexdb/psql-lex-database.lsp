@@ -592,8 +592,9 @@
 
 (defmethod close-lex ((lexicon psql-lex-database) &key in-isolation delete)
   (declare (ignore in-isolation delete))
-  (with-slots (lexdb-version) lexicon
+  (with-slots (lexdb-version semi) lexicon
     (setf lexdb-version nil)
+    ;(setf semi nil)
     (if (next-method-p) (call-next-method))))
 
 (defmethod open-lex ((lexicon psql-lex-database) &key name parameters)
@@ -637,9 +638,9 @@
 	      (pg:error-message connection))
       nil))))
 
-(defmethod initialize-lex ((lexicon psql-lex-database) &key semi)
+(defmethod initialize-lex ((lexicon psql-lex-database))
   (when (open-lex lexicon)
-    (build-lex lexicon :semi semi)))
+    (build-lex lexicon)))
   
 (defmethod vacuum-current-grammar ((lexicon psql-database) &key verbose)
   (let ((command
@@ -697,20 +698,23 @@
 			      (make-instance 'sql-query :sql-string sql-str))))))
     (str-2-num res 0)))
 
-(defmethod build-lex ((lexicon psql-lex-database) &key (semi t))
+(defmethod build-lex ((lexicon psql-lex-database))
   (build-lex-aux lexicon)
-  (if semi
-      (cond
-       ((semi-up-to-date-p lexicon)
-	(format t "~%(loading SEM-I into memory)")
-	(unless (mrs::semi-p 
-		 (catch 'pg::sql-error
-		   (mrs::populate-*semi*-from-psql)))
-	  (format t "~% (unable to retrieve database SEM-I)"))
-	(index-lexical-rules)
-	(index-grammar-rules))
-       (t
-	(format t "~%WARNING: no lexical entries indexed for generator"))))
+  ;(if (semi lexicon)   
+  (cond
+   ((null (semi lexicon))
+    nil)
+   ((semi-up-to-date-p lexicon)
+    (format t "~%(loading SEM-I into memory)")
+    (unless (mrs::semi-p 
+	     (catch 'pg::sql-error
+	       (mrs::populate-*semi*-from-psql)))
+      (format t "~% (unable to retrieve database SEM-I)"))
+    (index-lexical-rules)
+    (index-grammar-rules))
+   (t
+    (format t "~%WARNING: no lexical entries indexed for generator")))
+    ;)
   lexicon)
 
 (defmethod build-lex-aux ((lexicon psql-lex-database))

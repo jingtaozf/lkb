@@ -63,20 +63,22 @@
 		     (dfn-filename 
 		      (absolute-namestring "~a.dfn" 
 					   filename)))
-		(setf count-new 
-		  (merge-into-db conn-db-owner 
-				 rev-filename))
+		(if (probe-file rev-filename)
+		    (setf count-new 
+		      (merge-into-db conn-db-owner 
+				     rev-filename))
+		  (format t "~%WARNING: no file ~a" rev-filename))
 		(if (probe-file dfn-filename)
 		    (setf count-new-dfn
 		      (merge-defn conn-db-owner 
-				  dfn-filename)))
+				  dfn-filename))
+		  (format t "~%WARNING: no file ~a" dfn-filename))
 		nil
 		)))
 	(format t "Merge new entries aborted..."))
       (if (and 
-	   (equal count-new 0)
-	   (equal count-new-dfn 0))
-	  nil
+	   (equal count-new 0))
+	  (empty-cache lexicon)
 	(initialize-psql-lexicon))
       (disconnect conn-db-owner))))
 

@@ -61,7 +61,9 @@
    (fns :initform nil :accessor fns)))
 
 (defclass psql-lex-database (psql-database external-lex-database)
-  ((lexdb-version :initform nil :accessor lexdb-version)))
+  ((lexdb-version :initform nil :accessor lexdb-version)
+   (semi :initform nil :accessor semi)
+   ))
 
 (defclass sql-query ()
   ((sql-string :accessor sql-string :initarg :sql-string :initform nil)
