@@ -179,7 +179,6 @@
                             for fvpair in flist
                             thereis 
                               (when (eq (fvpair-feature fvpair) key)
-                                (pprint fvpair)
                                 (fvpair-value fvpair)))
             for representative = (when value 
                                    (ed-find-representative eds value))
