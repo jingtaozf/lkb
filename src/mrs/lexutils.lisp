@@ -163,7 +163,7 @@
      (for parse-res in *parse-record*
           do
           (let* ((lrules-and-entries-used (collect-parse-base parse-res))
-                 (mrs (car (mrs::extract-mrs (list parse-res) t))))
+                 (mrs (mrs::extract-mrs parse-res t)))
             (let
                 ((identified-entry-sets
                   (mrs::collect-lex-entries-from-mrs mrs)))
@@ -194,7 +194,7 @@
   (for parse-res in *parse-record*
        do
        (let* ((lrules-and-entries-used (collect-parse-base parse-res))
-              (mrs (car (mrs::extract-mrs (list parse-res) t))))
+              (mrs (mrs::extract-mrs parse-res t)))
          (let
              ((identified-entry-sets
                (mrs::collect-lex-entries-from-mrs mrs)))
@@ -224,7 +224,7 @@
 (defun quick-check-lex-retrieval nil
      (for parse-res in *parse-record*
         do
-        (let ((mrs (car (mrs::extract-mrs (list parse-res)))))
+        (let ((mrs (mrs::extract-mrs parse-res)))
           (mrs::output-mrs mrs 'mrs::simple)
           (let
                ((identified-entry-sets
