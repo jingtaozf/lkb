@@ -153,6 +153,9 @@
   "size of font in parse trees"
   :user)
 
+(def-lkb-parameter *summary-tree-font-size* 7
+  "size of font in parse tree summary")
+
 (def-lkb-parameter *fs-type-font-size* 12
   "size of font in AVMs"
   :user)
@@ -206,6 +209,8 @@
 (def-lkb-parameter *label-fs-path* '(SYNSEM))
 
 (def-lkb-parameter *label-template-type* 'label)
+
+(def-lkb-parameter *rich-tree-labels-p* nil)
 
 ;;;
 ;;; size of static pool used to cache safe dag instances (see `dag.lsp').
