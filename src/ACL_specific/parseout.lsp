@@ -258,6 +258,7 @@
   (let ((command (clim:menu-choose
 		  `(("Show enlarged tree" :value show)
                     ("Highlight chart nodes" :value chart) 
+		    ("Partial chart" :value partial-chart)
                     ("Generate" :value generate :active ,*mrs-loaded*)
                     ("MRS" :value mrs :active ,*mrs-loaded*)
                     ("Prolog MRS" :value prolog :active ,*mrs-loaded*)
@@ -296,6 +297,30 @@
                    (display-edge-in-chart
                     (prtree-edge tree)))
                (lkb-beep)))
+	    (partial-chart
+	     (if (or (not (parse-tree-frame-current-chart 
+                           clim:*application-frame*))
+                     (eql (parse-tree-frame-current-chart 
+                           clim:*application-frame*)
+                     *chart-generation-counter*))
+                 (multiple-value-bind (root subframe-p)
+                   (cond ((and *main-chart-frame* 
+                               (eql (clim:frame-state *main-chart-frame*) 
+                                    :enabled))
+			  (values
+			   (chart-window-root *main-chart-frame*)
+			   t))
+                         ((and *main-chart-frame* 
+                               (eql (clim:frame-state *main-chart-frame*) 
+                                    :shrunk))
+			  (values
+			   (chart-window-root *main-chart-frame*)
+			   t))
+                         (t (values (construct-chart-no-display)
+				    nil)))
+		   (display-partial-chart root (prtree-edge tree)
+					  subframe-p))
+               (lkb-beep)))
             ;; funcall avoids undefined function warnings
             (generate (funcall 'really-generate-from-edge (prtree-edge tree)))
             (mrs (funcall 'show-mrs-window (prtree-edge tree)))
@@ -329,5 +354,3 @@
                *chart-generation-counter*))
       (show-chart)
     (lkb-beep)))
-
-

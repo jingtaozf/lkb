@@ -813,3 +813,22 @@
                    indentation (< column width))
                 else do (decf span))
           do (format stream "~v,0t  </tr>~%" indentation)))))
+
+;;;
+
+(defun construct-chart-no-display nil 
+  (if (aref *morphs* 0) ; anything in chart?
+    (let ((root (make-symbol "")))
+      (setf (get root 'root) t)
+      (setf (get root 'chart-edge-descendents)
+        (make-array *chart-limit* :initial-element nil))
+      (let*
+	  ((end (create-chart-pointers root))
+	   (word-alt-sets
+	    ;; each element is a set to allow for multi-word lexical entries at
+	    ;; each position in input
+	    (coerce (subseq (get root 'chart-edge-descendents) 0 end) 'list)))
+        (setf (get root 'chart-edge-descendents) (apply #'append word-alt-sets))
+        (adjust-chart-pointers root)
+        root))
+    (lkb-beep)))

@@ -240,7 +240,7 @@
 ;; scrolled so given edge is visible in center, and the edge highlighted
 
 (defun display-edge-in-chart (edge)
-  (let ((frame (reuse-frame 'chart-window)))
+  (let ((frame *main-chart-frame*))
     (when frame
       (highlight-edge edge frame :scroll-to t))))
 
@@ -302,4 +302,15 @@
 	 (string (gentemp (format nil "~A-" 
 				  (clim:frame-pretty-name parent-frame))))
 	 :subframe-p t))
+    (lkb-beep)))
+
+;;; same as above, but called without drawing the full chart
+
+(defun display-partial-chart (root edge subframe-p)
+  (if edge
+      (progn 
+	(draw-chart-lattice
+	 (filtered-chart-lattice root edge nil)
+	 "partial chart"
+	 :subframe-p subframe-p))
     (lkb-beep)))
