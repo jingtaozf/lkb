@@ -27,7 +27,7 @@ extern void free(void *);
 #  endif
 #endif
 
-#define TSDB_VERSION "0.3"
+#define TSDB_VERSION "0.4"
 
 #define TSDB_DEFAULT_STREAM stdout
 #define TSDB_ERROR_STREAM stderr
@@ -35,7 +35,9 @@ extern void free(void *);
 #define TSDB_SERVER_MODE 1
 #define TSDB_CLIENT_MODE 2
 #define TSDB_QUIT 4
-#define TSDB_UNIQUELY_PROJECT 8
+#define TSDB_HANGUP 8
+#define TSDB_UNIQUELY_PROJECT 16
+#define TSDB_TSDB_CLIENT 32
 #ifdef ALEP
 #  define TSDB_TX_OUTPUT 128
 #endif
@@ -44,6 +46,7 @@ extern void free(void *);
 #  define TSDB_TX_FORMAT "tx(%s, '%s', '')."
 #endif
 
+#
 #define TSDB_UNKNOWN_TYPE 0
 #define TSDB_INTEGER 1
 #define TSDB_IDENTIFIER 2
@@ -70,8 +73,7 @@ extern void free(void *);
 #define TSDB_AND 1
 #define TSDB_OR 2
 #define TSDB_NOT_NOT 3
-#define TSDB_BRACE 4
-#define TSDB_NONE 5
+#define TSDB_NONE 4
 
 #define TSDB_NEW 0
 #define TSDB_CHANGED 1
@@ -102,12 +104,18 @@ extern void free(void *);
 #define TSDB_FS_OPTION 19
 #define TSDB_OFS_OPTION 20
 #define TSDB_OUTPUT_OPTION 21
+#define TSDB_SHUTDOWN_OPTION 22
+#define TSDB_HANGUP_OPTION 23
 #ifdef ALEP
 #  define TSDB_TX_OPTION 255
 #endif
 
 #define TSDB_REDIRECTION_OVERWRITE 1
 #define TSDB_REDIRECTION_APPEND 2
+#define TSDB_REDIRECTION_PIPE 3
+
+#define TSDB_CLIENT_CONNECT_OK 'Ö'
+#define TSDB_CLIENT_CONNECT_ERROR 'Ä'
 
 #ifndef TSDB_PSEUDO_USER
 #  define TSDB_PSEUDO_USER "TSDB@tsdb"
@@ -298,6 +306,9 @@ typedef struct tsdb {
   char *debug_file;
 #endif
   char *output;
+  char *error_output;
+
+  int errno;
 
 #ifdef COMPRESSED_DATA
   char *compress;
@@ -405,8 +416,8 @@ char** tsdb_all_relation_names();
 BOOL tsdb_attribute_in_relation(Tsdb_relation *, char *);
 BOOL tsdb_attribute_in_selection(Tsdb_selection *, char *);
 int tsdb_relation_in_selection(Tsdb_selection *, char* );
-void tsdb_info(Tsdb_value **, char *);
-void tsdb_set(Tsdb_value *, Tsdb_value *);
+int tsdb_info(Tsdb_value **, char *);
+int tsdb_set(Tsdb_value *, Tsdb_value *);
 int tsdb_drop_table(Tsdb_value *);
 int tsdb_create_table(Tsdb_value *, Tsdb_field **);
 int tsdb_alter_table(Tsdb_value *, Tsdb_field **);
@@ -481,9 +492,11 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **, int,
                                      Tsdb_relation *, int);
 Tsdb_selection *tsdb_simple_merge(Tsdb_selection *, Tsdb_selection *);
 Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **, Tsdb_value **,
-                                      Tsdb_node *, char *, char*);
-Tsdb_selection *tsdb_retrieve(Tsdb_value **, Tsdb_value **, Tsdb_node *, 
-                              char *, char *);
+                                      Tsdb_node *,
+                                      char *, char*);
+int tsdb_retrieve(Tsdb_value **, Tsdb_value **, Tsdb_node *, char *, char *);
+
+void tsdb_shutdown(int);
 int tsdb_do(char *, char *);
 
 Tsdb_history *tsdb_get_history(int);
@@ -494,6 +507,10 @@ int tsdb_init_history(Tsdb*);
 int tsdb_server_initialize(void);
 void tsdb_server(void);
 void tsdb_server_child(int);
-int tsdb_socket_write(int, char *, int);
+void tsdb_server_shutdown(int);
+int tsdb_socket_write(int, char *);
 int tsdb_socket_readline(int, char *, int);
-int tsdb_client(void);
+int tsdb_client_clear_stream(int, BOOL);
+#ifdef ALEP
+int tsdb_alep_client(char *);
+#endif
