@@ -1051,7 +1051,7 @@
     #+:lucid                (working-directory)
     #+(or :allegro ACLPC)   (current-directory)
     #+:cmu                  (default-directory)
-    #+:lispworks 
+    #+:lispworks
     ,(multiple-value-bind (major minor) (system::lispworks-version)
        (if (or (> major 3) 
 	       (and (= major 3) (> minor 2))

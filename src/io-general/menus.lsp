@@ -1,6 +1,7 @@
-#+(and :allegro :clim)(in-package :clim-user)
-#-(and :allegro :clim)(in-package :lkb)
-#+:allegro
+#+:clim (in-package :clim-user)
+#-:clim (in-package :lkb)
+
+#+:clim
 (eval-when 
     (compile load eval)
   (shadowing-import '(lkb::read-script-file

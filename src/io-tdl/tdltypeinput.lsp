@@ -197,7 +197,8 @@
 ;;; Type  -> identifier
 ;;; Subtype-def ->  :< type 
 ;;; Avm-def -> := Conjunction
-  (let* ((position (1+ (file-position istream)))
+  (let* (#+:allegro
+         (position (1+ (file-position istream)))
 	 (name (lkb-read istream nil))
 	 (next-char (peek-char t istream nil 'eof)))
     (when (and (symbolp name) (eql (schar (symbol-name name) 0) #\%))

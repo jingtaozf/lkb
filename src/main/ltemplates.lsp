@@ -140,7 +140,7 @@
              :input file
              :output :stream
              :wait nil)
-          (declare (ignore foo))
+          (declare (ignore foo #-:allegro pid))
           (setf *result* nil)
           (let* ((result
                   (loop 

@@ -18,7 +18,9 @@
   (unless (orth-db lexicon)
     (setf (orth-db lexicon) 
       (cdb:open-read *psorts-temp-index-file*)))
-  (mapcar #'intern (cdb:read-record (orth-db lexicon) orth)))
+  (loop
+      for record in (cdb:read-record (orth-db lexicon) orth)
+      collect (intern record :lkb)))
 
 (defmethod lexicon-loaded-p ((lexicon cdb-lex-database))
   (not (null (psort-db lexicon))))

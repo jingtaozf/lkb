@@ -254,14 +254,14 @@
 (defvar *cached-category-abbs* nil
   "variable used in output to avoid recomputation of tree nodes")
 
-#+allegro
+#+(or :allegro :lispworks)
 (defvar *parser-lock* (mp:make-process-lock))
 
 (defmacro with-parser-lock (() &body body)
-  #+allegro
+  #+(or :allegro :lispworks)
   `(mp:with-process-lock (*parser-lock*)
      ,@body)
-  #-allegro
+  #-(or :allegro :lispworks)
   `(progn ,@body))
 
 ;;;

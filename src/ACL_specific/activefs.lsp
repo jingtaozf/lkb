@@ -34,7 +34,10 @@
 ;;; for ACL it appears that we need things of a particular type for
 ;;; presentations, and the easiest way of doing this is with a struct
 
-(defstruct type-thing value type-label-list shrunk-p full-tdfs)
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (defstruct type-thing value type-label-list shrunk-p full-tdfs))
+
 
 ;;; YADU - here and below, the slot full-tdfs is needed so that B+C96
 ;;; style lexical rules can be displayed in the type -> type format
@@ -61,9 +64,11 @@
 
 ;;; ***** Records and classes *******
 
-(defstruct fs-display-record 
-;;; the record of the FS associated with a window
-   fs title paths parents type-fs-display id)
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (defstruct fs-display-record 
+  ;; the record of the FS associated with a window
+     fs title paths parents type-fs-display id))
 
 ;;
 ;; Define a frame class for our FS windows
@@ -91,8 +96,8 @@
 ;;; **** display function entry points ****
 
 (defun display-basic-fs (fs title &optional parents paths id) 
-  (mp:process-run-function "FS" #'display-basic-fs-really
-			   fs title parents paths id))
+  (mp:run-function "FS" #'display-basic-fs-really
+                   fs title parents paths id))
 
 
 (defun display-basic-fs-really (fs title parents paths id)
@@ -112,6 +117,7 @@
 	   (find :path (clim:frame-current-panes fs-window)
 		 :test #'eq :key #'clim:pane-name)))
       (setf (lkb-window-doc-pane fs-window) path-pane)
+      #+:allegro
       (clim:change-space-requirements 
        path-pane
        :resize-frame t
@@ -146,7 +152,7 @@
            (paths (fs-display-record-paths fs-record))
            (fudge 20)
 	   (max-width 0))
-      (silica:inhibit-updating-scroll-bars (stream)
+      (silica:inhibit-updating-scroll-bars #+:allegro (stream)
         (clim:with-text-style (stream *normal*)
 	  (clim:with-output-recording-options (stream :draw nil :record t)
 	    (draw-active-title stream fs title parents paths)
@@ -252,8 +258,10 @@
 
 ;;; Search for coreferences in a feature structure
 
-(defstruct pointer
-  label valuep type-label-list)
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (defstruct pointer
+    label valuep type-label-list))
 
 (defun add-active-pointer (stream position pointer type-label-list valuep)
   (declare (ignore position))
@@ -337,6 +345,7 @@
 ;	 ("Help" :value help
 ;		 :active ,(type-comment type-entry))
 	 ("Shrink/expand" :value shrink)
+         #+:allegro
 	 ("Show source" :value source
 			:active ,(source-available-p type))
 	 ("Type definition" :value def
@@ -351,6 +360,7 @@
 		  :active ,(and *fs1* (highlighted-class frame))))
        (hier (display-type-in-tree type))
        (help (display-type-comment type (type-comment type-entry)))
+       #+:allegro
        (source (edit-source type))
        (shrink (shrink-fs-action frame
 				 (if (type-thing-shrunk-p type-thing)
@@ -399,9 +409,11 @@
                               :active ,(and id
                                             (get-psort-entry id)
                                             *ordered-lrule-list*))
+       #+:allegro
        ("Show source" :value source 
 		      :active ,(and id (source-available-p id))))
      (tex (output-fs-in-tex fs))
+     #+:allegro
      (source (edit-source id))
      (lexrule (apply-lex id))
      (allrules (apply-lex-rules id)))))
@@ -410,7 +422,9 @@
 
 ;;; display-fs-spec etc are in lexinput.lsp
 
-(defstruct psort-thing value)
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (defstruct psort-thing value))
 
 (defun display-active-psort (psort ostream)
   (let ( ; (start-pos (current-position ostream))

@@ -13,7 +13,9 @@
 
 (in-package :lkb)
 
-(defstruct thing object)
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (defstruct thing object))
 
 (define-lkb-frame list-window
     ((pairs :initform nil
@@ -25,7 +27,7 @@
   :height *parse-window-height*)
 
 (defun draw-active-list (pairs title menu)
-  (mp:process-run-function title #'draw-active-list-really 
+  (mp:run-function title #'draw-active-list-really 
                            pairs title menu))
                            
 (defun draw-active-list-really (pairs title menu)                           

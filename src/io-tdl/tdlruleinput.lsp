@@ -68,7 +68,8 @@
 
 
 (defun read-tdl-rule-entry (istream lexical)
-  (let* ((position (1+ (file-position istream)))
+  (let* (#+:allegro
+         (position (1+ (file-position istream)))
 	 (id (lkb-read istream nil))
 	 (next-char (peek-char t istream nil 'eof)))
     (unless (eql next-char #\:)

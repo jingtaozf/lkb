@@ -40,12 +40,14 @@
 (defparameter *lisp-specific-directory*
   (or
    #+(and :allegro :clim) "ACL_specific"
+   #+(and :lispworks :clim) "ACL_specific"
    #+(and :allegro (not :clim) :tty) "ACL_specific"
    #+(and :allegro :common-graphics (not :clim) (not :tty)) "ACL-CG_specific"
    #+:mcl "MCL_specific"
    ""))
 
 (defsystem "lkb"
+
     :host (make-pathname :host cl-user::%sys-host%)   
     :device (make-pathname :device cl-user::%sys-device%)
     :source-pathname (get-sources-dir "lkb")
@@ -53,163 +55,167 @@
     :source-extension "lsp"
     :depends-on ()
 
-    :initially-do
-    #+:allegro (setf excl:*enable-package-locked-errors* nil)
-    #-:allegro nil
-    :finally-do
-    #+(and :allegro (not :tty) (or :clim :common-graphics :mcl))
-    (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :lkb)))
-      (unless (and building-image-p (boundp building-image-p)
-                   (symbol-value building-image-p))
-        (let ((*package* (find-package #+:clim :clim-user #-:clim :lkb)))
-          #+:clim
-          (clim-user::set-up-lkb-interaction :core)
-          #-:clim
-          (lkb::set-up-lkb-interaction :core))))
-    #-(and :allegro (not :tty) (or :clim :common-graphics :mcl))
-    nil
+    :finally-do (funcall (symbol-function (find-symbol "START-LKB" :lkb)))
 
     :components
     ((:module "package"
-              :source-pathname ""
-	      :binary-pathname ""
-	      :components
+      :source-pathname ""
+      :binary-pathname ""
+      :components
 	      ((:file "lkb-package")))
+
      (:module "version"
-              :source-pathname ""
-	      :binary-pathname ""
-	      :components
+      :source-pathname ""
+      :binary-pathname ""
+      :components
 	      ((:file "version")))
+
      (:module "for"
-              :source-pathname "mrs"
-	      :binary-pathname "mrs"
-	      :components
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :components
 	      ((:file "for")))         ; for loop macros
+
      (:module "initialization"
-              :source-pathname "main"
-	      :binary-pathname "main"
-	      :components
+      :source-pathname "main"
+      :binary-pathname "main"
+      :components
 	      ((:file "initializations" :load-only t)
                (:file "globals")))   
   ;; variables for grammar parameterization
   ;; mostly user-settable, usually reset by a globals file associated
   ;; with a particular grammar and loaded by the script file
-     #-:tty(:module "general graphics utilities"
-              :source-pathname *lisp-specific-directory*
-	      :binary-pathname *lisp-specific-directory*
-	      :components
-	      ((:file "graphics") ; basic font handling etc
-               (:file "misc")     ; non-graphics Lisp specific
-               (:file "topmenu")  ; main interaction window/menu
-               (:file "dialog"))) ; querying user
+
+     #-:tty
+     (:module "general graphics utilities"
+      :source-pathname *lisp-specific-directory*
+      :binary-pathname *lisp-specific-directory*
+      :components
+              ((:file "graphics")    ; basic font handling etc
+               (:file "misc")        ; non-graphics Lisp specific
+               (:file "topmenu")     ; main interaction window/menu
+               (:file "dialog")))    ; querying user
+
      (:module "main functionality"
-              :source-pathname "main"
-	      :binary-pathname "main"
-	      :components
-	      ((:file "types")      ; type hierarchy and associated runtime
-                                    ; functions
-               (:file "dag")        ; feature structures and unification
-               (:file "yadu")       ; default unification
-               (:file "gen")        ; generalisation
-               (:file "structs")    ; structures for path values etc
-               (:file "user-fns")   ; as globals - but functions
-               (:file "marks")      ; utility macros for type checking
-               (:file "checktypes") ; type hierarchy and constraint
-                                    ; construction and checking
-	       (:file "cdb")        ; constant database, for storing lexicon
-               (:file "leaf")       ; leaf types - for efficiency not
-                                    ; expanded at load time
-	       (:file "lex")        ; lexical structures, also templates etc
-	       #+plob (:file "plex")    ; lexical database 
+      :source-pathname "main"
+      :binary-pathname "main"
+      :components
+	      ((:file "types")        ; type hierarchy and associated functions
+               (:file "dag")          ; feature structures and unification
+               (:file "yadu")         ; default unification
+               (:file "gen")          ; generalisation
+               (:file "structs")      ; structures for path values etc
+               (:file "user-fns")     ; as globals - but functions
+               (:file "marks")        ; utility macros for type checking
+               (:file "checktypes")   ; type hierarchy and constraint
+                                      ; construction and checking
+	       (:file "cdb")          ; constant database, for storing lexicon
+               (:file "leaf")         ; leaf types - for efficiency not
+                                      ; expanded at load time
+	       (:file "lex")          ; lexical structures, also templates etc
+	       #+plob 
+               (:file "plex")         ; lexical database 
                #+:ltemplates
-               (:file "ltemplates") ; lexical templates (e.g. for cardinals)
-	       (:file "clex")       ; constant lexical database 
-               (:file "rules")      ; grammar and lexical rules
-	       (:file "parse")      ; chart parser
-	       (:file "active")     ; experimental key-driven (active) parser
-               (:file "morph")    ; morphographemics
+               (:file "ltemplates")   ; lexical templates (e.g. for cardinals)
+	       (:file "clex")         ; constant lexical database 
+               (:file "rules")        ; grammar and lexical rules
+	       (:file "parse")        ; chart parser
+	       (:file "active")       ; experimental key-driven (active) parser
+               (:file "morph")        ; morphographemics
                (:file "check-unif"))) ; for efficiency 
+
      (:module "various io"
-              :source-pathname "io-general"
-	      :binary-pathname "io-general"
-	      :components
-	      (#-tty(:file "menus")      ; top level menus for varying 
-                                         ; configurations
-               (:file "async")	; utilities for doing asynchronous I/O
-               (:file "outputfs")   ; feature structure display
-               (:file "outputtdfs") ; default fs display
-               (:file "outputsrc") ; outputting machine readable
-                                   ; versions (useful for translating between formalisms)
-	       #-:tty(:file "toplevel"))) ; top level menu commands
-     (:module "path notation input"        ; original LKB notation
-              :source-pathname "io-paths"  ; toplevel fns also used
-	      :binary-pathname "io-paths"  ; by TDL files (below)
-	      :components
-	      ((:file "typeinput")     ; types and main input fns used by
-                                       ; other input files
-               (:file "lexinput")      ; lexical entries, templates etc
-               (:file "ruleinput")     ; lexical and grammar rules
-               (:file "pathout")))     ; output in path notation
+      :source-pathname "io-general"
+      :binary-pathname "io-general"
+      :components
+	      (#-tty
+               (:file "menus")        ; top level menus for varying set-ups
+               (:file "async")	      ; utilities for doing asynchronous I/O
+               (:file "outputfs")     ; feature structure display
+               (:file "outputtdfs")   ; default fs display
+               (:file "outputsrc")    ; outputting machine readable versions 
+                                      ; (translating between formalisms)
+	       #-:tty
+               (:file "toplevel")))   ; top level menu commands
+
+     (:module "path notation input"   ; original LKB notation
+      :source-pathname "io-paths"     ; toplevel fns also used
+      :binary-pathname "io-paths"     ; by TDL files (below)
+      :components
+	      ((:file "typeinput")    ; types and main input fns used by
+                                      ; other input files
+               (:file "lexinput")     ; lexical entries, templates etc
+               (:file "ruleinput")    ; lexical and grammar rules
+               (:file "pathout")))    ; output in path notation
+
      (:module "TDL syntax input"
-              :source-pathname "io-tdl" ; as used in ERG
-	      :binary-pathname "io-tdl"
-	      :components
+      :source-pathname "io-tdl"       ; as used in ERG
+      :binary-pathname "io-tdl"
+      :components
 	      ((:file "tdltypeinput")  
-               (:file "tdloutput")     ; output in TDL notation
+               (:file "tdloutput")    ; output in TDL notation
                (:file "tdlruleinput")
                (:file "tdllexinput")))
+
      (:module "LiLFeS syntax output"
-              :source-pathname "io-lilfes" 
-	      :binary-pathname "io-lilfes"
-	      :components
-	      ((:file "lilout")     ; output in LiLFeS notation
+      :source-pathname "io-lilfes" 
+      :binary-pathname "io-lilfes"
+      :components
+	      ((:file "lilout")       ; output in LiLFeS notation
                ))
-     #-:tty(:module "Lisp specific graphics"
-              :source-pathname *lisp-specific-directory*
-	      :binary-pathname *lisp-specific-directory*
-	      :components
-	      ( 
-        #+(and :allegro :clim)(:file "graph")   ; uses Allegro graph drawing
+
+     #-:tty
+     (:module "Lisp specific graphics"
+      :source-pathname *lisp-specific-directory*
+      :binary-pathname *lisp-specific-directory*
+      :components
+	      (#+:clim
+               (:file "graph")              ; uses CLIM graph drawing
                #+:mcl (:file "picwin")      ; low level 
                #+:mcl (:file "picfield")    ; low level
-        #+(and :allegro (not :clim)
-               :common-graphics)(:file "fsclasses") ; classes for display	       
-        (:file "activefs")           ; display FS in window
-             (:file "tree")               ; type hierarchy
-             (:file "parseout")           ; parse tree output
-             (:file "chartout")           ; parse chart
-             (:file "listout")            ; `active' lists
-             #+(and :allegro :clim) (:file "compare"))) ; comparing parses
-     #+:allegro(:module "emacs-interface"              
-                :source-pathname *lisp-specific-directory*
-	        :binary-pathname *lisp-specific-directory*
-	        :components
-               ((:file "emacs")))   ; recording source positions
+               #+(and :allegro (not :clim) :common-graphics)
+               (:file "fsclasses")          ; classes for display	       
+               (:file "activefs")           ; display FS in window
+               (:file "tree")               ; type hierarchy
+               (:file "parseout")           ; parse tree output
+               (:file "chartout")           ; parse chart
+               (:file "listout")            ; `active' lists
+               #+(and :allegro :clim) 
+               (:file "compare")))          ; comparing parses
+
+     #+:allegro
+     (:module "emacs-interface"              
+      :source-pathname *lisp-specific-directory*
+      :binary-pathname *lisp-specific-directory*
+      :components
+               ((:file "emacs")))           ; recording source positions
+     
      (:module "non-Lisp specific graphics"
-              :source-pathname "io-general"
-	      :binary-pathname "io-general"
-	      :components
+      :source-pathname "io-general"
+      :binary-pathname "io-general"
+      :components
 	      ((:file "tree-nodes")         ; non-Lisp specific
                                             ; display functions used
                                             ; in parse/generate chart
                                             ; and tree drawing code         
 	       (:file "utils")              ; miscellany
-        #+(and (not :clim) (not :tty))
+               #+(and (not :clim) (not :tty))
                (:file "graph")))            ; JAC's graph package
+
      (:module "user utility functions"
-              :source-pathname "main"
-	      :binary-pathname "main"
-	      :components
-	      (
-;              (:file "lkb-tsdb")           ; simulation of tsdb
+      :source-pathname "main"
+      :binary-pathname "main"
+      :components
+	      (#+:null
+               (:file "lkb-tsdb")           ; simulation of tsdb (out of date)
 	       (:file "batch-check")        ; batch check lexicon
                (:file "debug")))            ; rudimentary debugging
                                             ; for errors in type file
      #+tty
      (:module "tty commands"                ; redefine for tty version
-              :source-pathname "tty"
-	      :binary-pathname "tty"
-	      :components
+      :source-pathname "tty"
+      :binary-pathname "tty"
+      :components
 	      ((:file "tty")))))     
 
 

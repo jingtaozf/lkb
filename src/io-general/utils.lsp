@@ -60,17 +60,18 @@
       temporary-readtable))
 
 (defun lkb-read (istream &optional strings-allowed)
-  (let ((item (read istream)))
-    (if (stringp item)
-      (if strings-allowed 
-        item 
-        (error "~%~S should not be a string" item))
-      (if (symbolp item)
-        item
-        (convert-to-lkb-symbol item)))))
+  (with-package (:lkb)
+    (let ((item (read istream)))
+      (if (stringp item)
+        (if strings-allowed 
+          item 
+          (error "~%~S should not be a string" item))
+        (if (symbolp item)
+          item
+          (convert-to-lkb-symbol item))))))
 
 (defun convert-to-lkb-symbol (item)
-  (intern (format nil "~S" item)))
+  (intern (format nil "~S" item) :lkb))
 
 (defun set-up-type-interactions nil
    (enable-type-interactions)
@@ -238,16 +239,20 @@
   (let ((file (merge-pathnames (make-pathname :name name) 
                                directory)))
     (if (probe-file file)
-        (progn 
-          #-allegro (load file)
-          #+allegro (load
-		     (handler-bind ((excl:compiler-no-in-package-warning
-				     #'(lambda (c)
-					 (declare (ignore c))
-					 (muffle-warning))))
-		       (if (and compile (member :compiler *features*))
-			   (compile-file file :verbose nil :print nil)
-			 file))))
+      #+:allegro 
+      (load
+       (handler-bind ((excl:compiler-no-in-package-warning
+                       #'(lambda (c)
+                           (declare (ignore c))
+                           (muffle-warning))))
+                     (if (and compile (member :compiler *features*))
+                       (compile-file file :verbose nil :print nil)
+                       file)))
+      #+:lispworks
+      (load 
+       (if compile (compile-file file :load t :print nil :verbose nil) file))
+      #-(or :allegro :lispworks)
+      (load file)
       (unless optional
         (cerror "Continue loading script" "~%File ~A not found" file)))))
 
@@ -260,11 +265,12 @@
 
 
 (defun load-irregular-spellings (pathname)
-  (read-irreg-form-string 
-   (with-open-file (istream pathname
-                    :direction :input)
-     (read istream))))
-
+  (with-package (:lkb)
+    (read-irreg-form-string 
+     (with-open-file (istream pathname
+                      :direction :input)
+       (read istream)))))
+  
 ;;; utility for reloading
 
 (defun check-load-names (file-list &optional filetype)

@@ -2,14 +2,14 @@
 
 ;; A thread-safe first-in first-out queue
 
-#+allegro
+#+(or :allegro :lispworks)
 (defmacro with-queue-lock ((queue) &body body)
   (let ((lock (gensym)))
     `(let ((,lock (queue-lock ,queue)))
        (mp:with-process-lock (,lock)
 	 ,@body))))
 
-#-allegro
+#-(or :allegro :lispworks)
 (defmacro with-queue-lock ((queue) &body body)
   (declare (ignore queue))
   `(progn
@@ -22,7 +22,7 @@
 
 (defun make-queue ()
   (let ((queue (x-make-queue)))
-    #+allegro (setf (queue-lock queue) (mp:make-process-lock))
+    #+(or :allegro :lispworks) (setf (queue-lock queue) (mp:make-process-lock))
     (setf (queue-head queue) (cons nil nil))
     (setf (queue-tail queue) (queue-head queue))
     queue))
@@ -50,11 +50,11 @@
 ;; operations with CPU intensive processing, e.g., when expanding lots of
 ;; lexical entries.
 
-#+allegro
+#+(or :allegro :lispworks)
 (defun process-queue (source sink)
   (let ((queue (make-queue)))
     (let ((child
-	   (mp:process-run-function 
+	   (mp:run-function 
 	    "source"
 	    #'(lambda ()
 		(loop for item = (funcall source)
@@ -70,7 +70,7 @@
 	      do (funcall sink item))
 	(mp:process-kill child)))))
 
-#-allegro
+#-(or :allegro :lispworks)
 (defun process-queue (source sink)
   (loop for item = (funcall source)
       until (eq item :eof)

@@ -411,7 +411,7 @@
                     (create-path-from-feature-list path2) 
                     fs2 fs1-id path1 fs2-id path2))
              (format t "~%Unification successful")
-             (if resname (store-temporary-psort resname resdag))))
+             (if resname (store-temporary-psort *lexicon* resname resdag))))
           (cond ((null fs1) 
                  (progn (cerror  "~%Try again" "~%~A is not a valid FS identifier" fs1-id)
                          (interactive-unification-check)))

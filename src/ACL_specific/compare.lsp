@@ -11,7 +11,7 @@
 ;;; Main entry points
 
 (defun batch-compare (filename)
-  (mp:process-run-function "Batch" #'batch-compare-really filename))
+  (mp:run-function "Batch" #'batch-compare-really filename))
 
 (defun batch-compare-really (filename)
   (let ((frame (clim:make-application-frame 'compare-frame)))
@@ -53,7 +53,7 @@
     (set-up-compare-frame parses frame)
     (setf (clim:frame-pretty-name frame) 
       (format nil "~a" (edge-leaves (car parses))))
-    (mp:process-run-function "Compare" #'clim:run-frame-top-level frame)))
+    (mp:run-function "Compare" #'clim:run-frame-top-level frame)))
 
 (defun set-up-compare-frame (parses frame)
   (setf (compare-frame-trees frame)

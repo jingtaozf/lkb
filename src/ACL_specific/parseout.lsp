@@ -53,7 +53,7 @@
 
 (defun draw-new-parse-tree (topnode title horizontalp &optional counter)
   (declare (ignore horizontalp))
-  (mp:process-run-function title 
+  (mp:run-function title 
                            #'draw-new-parse-tree-really 
                            topnode counter))
 
@@ -163,13 +163,15 @@
 ;;; based on Rob's compare code (see compare.lsp)
 
 
-(defstruct prtree 
-  ;; Top node of parse tree
-  top					
-  ;; Output record of tree
-  output-record
-  ;; edge
-  edge)
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (defstruct prtree 
+    ;; Top node of parse tree
+    top					
+    ;; Output record of tree
+    output-record
+    ;; edge
+    edge))
 
 (define-lkb-frame parse-tree-frame
     ((trees :initform nil
@@ -197,7 +199,7 @@
 |#
 
 (defun show-parse-tree-frame (parses)
-  (mp:process-run-function "Parse results" 
+  (mp:run-function "Parse results" 
                              #'show-parse-tree-frame-really parses)) 
 
 (defun show-parse-tree-frame-really (parses)

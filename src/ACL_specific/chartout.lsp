@@ -45,8 +45,8 @@
 				'(clim-user::com-close-to-replace)))
   ;; Initialize fonts
   (setq *parse-tree-font* (clim:parse-text-style (lkb-parse-tree-font)))
-  (mp:process-run-function "CHART" #'draw-chart-lattice-really
-                           node title subframe-p))
+  (mp:run-function "CHART" #'draw-chart-lattice-really
+                   node title subframe-p))
                            
 (defun draw-chart-lattice-really (node title subframe-p)                    
   (let* ((chart-window (clim:make-application-frame 'chart-window))
@@ -55,6 +55,7 @@
 		:test #'eq :key #'clim:pane-name)))
     ;; Set up yield display
     (setf (lkb-window-doc-pane chart-window) yield-pane)
+    #+:allegro
     (clim:change-space-requirements 
      yield-pane
      :resize-frame t

@@ -32,11 +32,13 @@
   "Spacing between levels in the tree.")
 
 
-(defstruct hier-node
-  "Data structure for type-hierarchy nodes."
-  (name "")				; Node label
-  (type-entry nil)			; type record for node
-  (children nil))
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+           #-:ansi-eval-when (load eval compile)
+  (defstruct hier-node
+    "Data structure for type-hierarchy nodes."
+    (name "")				; Node label
+    (type-entry nil)			; type record for node
+    (children nil)))
 
 ;; Close function
 
@@ -137,7 +139,7 @@
         (setf (type-hierarchy-nodes existing) node)
 	(setf (clim:frame-pretty-name existing) title)
         (clim:redisplay-frame-panes existing :force-p t))
-      (mp:process-run-function "Type Hierarchy" 
+      (mp:run-function "Type Hierarchy" 
                                #'display-type-hierarchy-really
                                node title show-all-p)))
 
@@ -154,7 +156,7 @@
   (let ((node-tree (type-hierarchy-nodes type-hierarchy))
 	(x (clim:bounding-rectangle-min-x (clim:pane-viewport stream)))
 	(y (clim:bounding-rectangle-min-x (clim:pane-viewport stream))))
-    (silica:inhibit-updating-scroll-bars (stream)
+    (silica:inhibit-updating-scroll-bars #+:allegro (stream)
       (clim:format-graph-from-root
        node-tree
        #'(lambda (node s)
@@ -181,7 +183,10 @@
     (make-array 32 :element-type 'character :fill-pointer 0))
 
 (defun type-node-text-string (node)
-   (excl:without-interrupts ; the code in here isn't re-entrant
+   (#+:allegro excl:without-interrupts   ; the code in here isn't re-entrant
+    #+:lispworks mp:without-interrupts
+    #-(or :allegro :lispworks) 
+    (error "no known without-interrupts(); see `tree.lsp'")
       (let* ((str *node-text-scratch-string*)
              (full-string (symbol-name node))
              (full-length (length full-string))

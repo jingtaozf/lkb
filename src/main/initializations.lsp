@@ -22,6 +22,14 @@
 #+:allegro 
 (setf excl:*enable-package-locked-errors* nil)
 
+#+:lispworks
+(setf hcl:*packages-for-warn-on-redefinition*
+  (loop
+     with key = (find-package :common-lisp)
+     for name in hcl:*packages-for-warn-on-redefinition*
+     for package = (find-package name)
+     unless (eq key package) collect name))
+
 (defparameter *grammar-directory* nil)
 
 #-:allegro
@@ -38,5 +46,22 @@
 (defmacro with-package ((package) &body body)
   `(let ((*package* (find-package ,package)))
      ,@body))
+
+
+(defun start-lkb ()
+  #+(or :clim :common-graphics :mcl)
+  (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :lkb)))
+    (unless (and building-image-p (boundp building-image-p)
+                 (symbol-value building-image-p))
+      (let ((*package* (find-package #+:clim :clim-user #-:clim :lkb)))
+        #+:clim
+        (clim-user::set-up-lkb-interaction :core)
+        #-:clim
+        (lkb::set-up-lkb-interaction :core)))))
+
+
+
+
+
 
 

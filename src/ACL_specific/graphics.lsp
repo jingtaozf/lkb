@@ -309,6 +309,7 @@
 ;; Provide a way to describe an object when the pointer is over it
 
 (defmacro define-info-bar (type vars &body body)
+  #+:allegro
   `(clim:define-presentation-method clim:highlight-presentation 
        ((dummy ,type) record stream state)
      state
@@ -342,7 +343,7 @@
 		   (clim:bounding-rectangle* 
 		    (clim:output-record-parent thing))
 		 (clim:draw-rectangle* stream x1 y1 x2 y2 :
-				       ink clim:+flipping-ink+ 
+				       :ink clim:+flipping-ink+ 
 				       :filled t))))))))))
 
 ;; Highlight a list of objects, making the first one red

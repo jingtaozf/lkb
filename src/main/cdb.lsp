@@ -1,3 +1,5 @@
+(in-package :common-lisp-user)
+
 ;;; cdb.lsp
 ;;;  R. Malouf (23-Apr-1999)
 ;;;

@@ -196,9 +196,9 @@
 
 #+:pooling
 (defmacro with-verified-pool ((pool) &body body)
-   `(locally (declare ,@(if (symbolp pool) `((type pool ,pool)))
-                      (optimize (speed 3) (safety 0) (space 0)))
-       ,@body))
+  `(locally (declare ,@(if (symbolp pool) `((type pool ,pool)))
+                     (optimize (speed 3) (safety 0) (space 0)))
+     ,@body))
 
 #+:pooling
 (defun create-pool (size constructor)
@@ -214,9 +214,8 @@
         pool)))
 
 #+:pooling
-(defparameter *dag-pool* (create-pool 
-                          *dag-pool-size*
-                          #'(lambda () (make-safe-dag-x nil nil))))
+(defparameter *dag-pool* 
+  (create-pool *dag-pool-size* #'(lambda () (make-safe-dag-x nil nil))))
 
 #+:pooling
 (defun reset-pool (pool &key forcep compressp)

@@ -78,3 +78,9 @@
 (defun run-process (&rest arguments)
   (apply #'excl:run-shell-command arguments))
 
+(in-package :mp)
+
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (export 'run-function)
+  (setf (symbol-function 'run-function) 
+        (symbol-function 'process-run-function)))

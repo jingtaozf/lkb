@@ -126,6 +126,7 @@
 			    :command-table ,table) ()
 	     (handler-case
 		 (funcall (quote ,(menu-value menu)))
+               #+:allegro
                (excl:interrupt-signal (condition)
 		 (format t "~%Interrupted"))
                ;; placeholder - we need a way
@@ -186,11 +187,12 @@
   (:full (create-lkb-system-menu)) 
   (:yadu (create-yadu-system-menu)))
   |#
-  (if (and nil (lep:lep-is-running))
-      (set-up-emacs-interaction)
+  (if (and nil #+:allegro (lep:lep-is-running))
+    (set-up-emacs-interaction)
     (set-up-clim-interaction)))
 
 (defun set-up-emacs-interaction ()
+  #+:allegro
   (lkb::add-lkb-menu (construct-menu *lkb-menu*)))
 
 (defun set-up-clim-interaction ()
@@ -264,9 +266,11 @@
 (defun start-lkb-frame ()
   (let ((old-frame *lkb-top-frame*))
     (setf *lkb-top-process*
-      (mp:process-run-function "start-lkb-frame" 
+      (mp:run-function "start-lkb-frame"
                                #'run-lkb-top-menu 
-                               excl::*initial-terminal-io*))
+                               #+:allegro
+                               excl::*initial-terminal-io*
+                               #-:allegro *terminal-io*))
     ;; note - if this is being called from a command in the old frame it's
     ;; important this is the last action ...
     (when old-frame
@@ -287,7 +291,12 @@
     (unwind-protect
         (run-frame-top-level frame)
       (when *complete-lisp-close*
-        (excl:exit 0 :no-unwind t)))))
+        #+:allegro
+        (excl:exit 0 :no-unwind t)
+        #+:lispworks
+        (lw:quit :ignore-errors-p t)
+        #-(or :allegro :lispworks)
+        (error "no known mechanism to shutdown Lisp (see `topmenu.lsp'")))))
 
 #|
 (defun user-exit-lkb-frame (frame)
@@ -316,6 +325,7 @@
   (setf *last-directory* nil)
   (set-up-lkb-interaction))
 
+#+:allegro
 (defun dump-lkb nil
   (if lkb::*current-grammar-load-file*
       (progn (lkb::lkb-beep)
@@ -372,12 +382,12 @@
     
 (defun parse-sentences-batch nil
   ;;; for MCL this can just be parse-sentences
-  (mp:process-run-function "Batch parse" #'lkb::parse-sentences))
+  (mp:run-function "Batch parse" #'lkb::parse-sentences))
 
 #|
 (defun do-parse-batch nil
   ;;; for MCL this can just be do-parse
-  (mp:process-run-function "Parse" #'lkb::do-parse))
+  (mp:run-function "Parse" #'lkb::do-parse))
 |#
 
 (defun do-parse-batch nil
@@ -390,7 +400,6 @@
       (let ((*standard-output* *lkb-top-stream*)
 	    (*debug-io* *lkb-top-stream*)
 	    ;; (*terminal-io* *lkb-top-stream*)
-	    (*standard-output* *lkb-top-stream*)
 	    (*standard-input* *lkb-top-stream*)
 	    (*error-output* *lkb-top-stream*)
 	    (*query-io* *lkb-top-stream*)
