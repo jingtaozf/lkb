@@ -49,7 +49,7 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "1.5")
+(defvar *psql-db-version* "1.6")
 (defvar *psql-port-default* nil)
 
 (defvar *tmp-lexicon* nil)
@@ -76,7 +76,7 @@
 (defun initialize-psql-lexicon (&key
                                 (db "lingo")
                                 (host "localhost")
-                                (table "erg"))
+                                (table (or (fields-tb *psql-lexicon*) "erg")))
   
   (let* ((lexicon (make-instance 'psql-lex-database 
                     :dbname db :host host
@@ -96,10 +96,15 @@
       (retrieve-fn-defns lexicon)
       (when *psql-lexicon* (clear-lex *psql-lexicon*))
       (setf *psql-lexicon* lexicon)
-      (when 
-          (equal (fn-get-val lexicon ''current-grammar-up-to-date-p) "t")
-        (fn-get-records lexicon ''set-current-view (get-filter *psql-lexicon*))
-        (fn-get-records lexicon ''initialize-current-grammar))
+;      (when 
+;          (equal (fn-get-val lexicon ''current-grammar-up-to-date-p) "t")
+      (fn-get-records lexicon 
+		      ''set-current-view 
+		      (get-filter *psql-lexicon*)
+		      (sql-embedded-str (get-filter *psql-lexicon*))
+		      )
+      (fn-get-records lexicon ''initialize-current-grammar)
+;	)
       (cond
        ((null *lexicon*)
 	(setf *lexicon* *psql-lexicon*))
@@ -768,14 +773,14 @@
 			      (make-instance 'sql-query :sql-string sql-str))))))
     (str-2-num res)))
 
-(defmethod fn-get-records ((lexicon psql-lex-database) fn-name &rest rest)
-  (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
-
 (defmethod get-records ((lexicon psql-lex-database) sql-string)
   (make-column-map-record 
    (run-query 
     *psql-lexicon* 
     (make-instance 'sql-query :sql-string sql-string))))
+
+(defmethod fn-get-records ((lexicon psql-lex-database) fn-name &rest rest)
+  (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest))))
 
 (defmethod fn-get-record ((lexicon psql-lex-database) fn-name &rest rest)
   (let ((res (get-records lexicon (eval (append (list 'fn lexicon fn-name) rest)))))
@@ -817,17 +822,33 @@
 (defmethod dump-db ((lexicon psql-lex-database) filename)  
   (fn-get-records lexicon ''dump-db filename))
 
+(defmethod dump-multi-db ((lexicon psql-lex-database) filename)  
+  (fn-get-records lexicon ''dump-multi-db filename))
+
 (defmethod merge-into-db ((lexicon psql-lex-database) filename)  
   (fn-get-records lexicon ''merge-into-db filename))
 
+(defmethod merge-multi-into-db ((lexicon psql-lex-database) filename)  
+  (fn-get-records lexicon ''merge-multi-into-db filename))
+
 (defun dump-psql-lexicon (filename)
   (dump-db *psql-lexicon* filename))
+
+(defun dump-multi-psql-lexicon (filename)
+  (dump-multi-db *psql-lexicon* filename))
 
 (defun merge-into-psql-lexicon (filename)
   (unless
       (and *psql-lexicon* (connection *psql-lexicon*))
     (initialize-psql-lexicon))
   (merge-into-db *psql-lexicon* filename)
+  (initialize-psql-lexicon))
+
+(defun merge-multi-into-psql-lexicon (filename)
+  (unless
+      (and *psql-lexicon* (connection *psql-lexicon*))
+    (initialize-psql-lexicon))
+  (merge-multi-into-db *psql-lexicon* filename)
   (initialize-psql-lexicon))
 
 (defmethod retrieve-fn-defns ((lexicon psql-lex-database))
@@ -868,6 +889,7 @@
 	 (format-cmd (append '(format nil) (car tmp)))
 	 (args (cdr tmp))
 	 (fn-defn (list 'defun fn-name args format-cmd)))
+    ;(print format-cmd)
     (eval fn-defn)))
 
 (defun new-fn-name (str)
@@ -923,6 +945,8 @@
 	    (format stream "~~a"))
 	   ((equal type 'where-subcls)
 	    (format stream "~~a"))
+	   ((equal type 'embedded-str)
+	    (format stream "~~a"))
 	   (t
 	    (error "unknown type: ~a" type)))
 	  (push (nth arg arg-vars) args)
@@ -930,6 +954,9 @@
 	 (t
 	  (format stream "~a" (aref str i)))))
   (cons (cons (get-output-stream-string stream) (reverse args)) 
+;  (cons (cons (get-output-stream-string stream) 
+;	      (mapcar #'(lambda (x) (list 'sql-embedded-str x)) (reverse args))
+;	      ) 
 	(subseq arg-vars 0 arity))))
 
 ;;;
@@ -968,7 +995,7 @@
                          (cons "New filter?" (get-filter lexicon)))))
     (when filter
       (if (catch 'pg:sql-error 
-            (fn-get-records lexicon ''set-current-view filter)
+            (fn-get-records lexicon ''set-current-view filter (sql-embedded-str filter))
             )
 	  (set-filter lexicon))
       ;(fn-get-records lexicon ''initialize-current-grammar)
@@ -978,3 +1005,12 @@
   (set-filter *psql-lexicon*)
   (initialize-psql-lexicon))
 
+(defun sql-embedded-str (str)
+  (cond
+   ((equal str "")
+    "")
+   ((eq (char str 0) #\')
+    (format nil "''~a" (sql-embedded-str (subseq str 1))))
+   (t
+    (format nil "~a~a" (char str 0) (sql-embedded-str (subseq str 1))))))
+    

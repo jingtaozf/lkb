@@ -3,12 +3,13 @@
 -- DROP TABLE multi CASCADE;
 -- DROP TABLE current_grammar CASCADE;
 -- DROP TABLE temp CASCADE;
+-- DROP TABLE multi_temp CASCADE;
 -- DROP TABLE qry CASCADE;
 -- DROP TABLE qrya CASCADE;
 
--- DROP VIEW grammar_view1 CASCADE;
--- DROP VIEW grammar_view2 CASCADE;
--- DROP VIEW grammar_view CASCADE;
+-- DROP VIEW revision_active CASCADE;
+-- DROP VIEW multi_revision_active CASCADE;
+-- DROP VIEW active CASCADE;
 
 --- postgres optimization is poor...
 ALTER DATABASE lingo SET enable_seqscan TO off;
@@ -18,7 +19,7 @@ CREATE TABLE meta (
   var varchar(50),
   val varchar(250)
 );
-INSERT INTO meta VALUES ('db-version', '1.5');
+INSERT INTO meta VALUES ('db-version', '1.6');
 INSERT INTO meta VALUES ('filter', 'TRUE');
 
 ---
@@ -161,6 +162,15 @@ CREATE TABLE temp (
   modstamp TIMESTAMP WITH TIME ZONE
 );
 
+CREATE TABLE multi_temp (
+  name VARCHAR(95),
+  verb_id VARCHAR(95),
+  particle VARCHAR(95),
+  type VARCHAR(200),
+  keyrel VARCHAR(200),
+PRIMARY KEY (name)
+);
+
 ---
 --- sql queries embedded in db
 ---
@@ -200,7 +210,7 @@ INSERT INTO qry VALUES
          'VACUUM ANALYZE revision; 
           BEGIN; 
           DELETE FROM current_grammar; 
-          INSERT INTO current_grammar SELECT * FROM grammar_view; 
+          INSERT INTO current_grammar SELECT * FROM active; 
           COMMIT; 
           CLUSTER current_grammar_pkey ON current_grammar; 
           VACUUM ANALYZE current_grammar' );
@@ -209,7 +219,7 @@ INSERT INTO qry VALUES
        'BEGIN;
         DELETE FROM temp;
         INSERT INTO temp 
-               SELECT * FROM grammar_view 
+               SELECT * FROM active 
                       WHERE modstamp >= 
                       (SELECT max(modstamp) FROM current_grammar); 
         DELETE FROM current_grammar 
@@ -218,28 +228,30 @@ INSERT INTO qry VALUES
         INSERT INTO current_grammar 
                SELECT * FROM temp; 
         COMMIT' );
-INSERT INTO qry VALUES 
-       ( 'current-grammar-up-to-date-p', 0, 
-       '(SELECT 
-                (SELECT COALESCE(max(modstamp),''-infinity'') FROM current_grammar) 
-                < 
-                (SELECT COALESCE(max(modstamp),''infinity'') FROM revision))');
+
+-- INSERT INTO qry VALUES 
+--       ( 'current-grammar-up-to-date-p', 0, 
+--       '(SELECT 
+--                (SELECT COALESCE(max(modstamp),''-infinity'') FROM current_grammar) 
+--                < 
+--                (SELECT COALESCE(max(modstamp),''infinity'') FROM revision))');
+
 INSERT INTO qry VALUES 
        ( 'update-entry', 3, 
        'INSERT INTO revision (name, $1) VALUES ($0, $2); 
        DELETE FROM current_grammar 
               WHERE name=$0; 
        INSERT INTO current_grammar 
-              SELECT * FROM grammar_view
+              SELECT * FROM active
               	WHERE name = $0
 		LIMIT 1' );
 INSERT INTO qry VALUES 
-       ( 'set-current-view', 1, 
-       '-- DROP VIEW grammar_view;
-	DROP VIEW grammar_view1 CASCADE;
-	-- DROP VIEW grammar_view2;
+       ( 'set-current-view', 2, 
+       'DROP VIEW active;
+	DROP VIEW revision_active;
+	DROP VIEW multi_revision_active;
 
-        CREATE VIEW grammar_view1
+        CREATE VIEW revision_active
 	AS SELECT revision.* 
 	FROM 
 		(revision 
@@ -251,51 +263,35 @@ INSERT INTO qry VALUES
                         GROUP BY name) AS t1
 		 ); 
 
-CREATE VIEW grammar_view2 AS 
-	SELECT 
-  multi.name,
-  COALESCE(multi.type,rev.type) AS type,
-  rev.orthography,
-  rev.orthkey,
-  rev.pronunciation,
-  COALESCE(multi.keyrel,rev.keyrel) AS keyrel,
-  rev.altkey,
-  rev.alt2key,
-  rev.keytag,
-  COALESCE(multi.particle,rev.compkey) AS compkey,
-  rev.ocompkey,
-  rev.complete,
-  rev.semclasses,
-  rev.preferences,
+	CREATE VIEW multi_revision_active
+		AS SELECT rev.* 
+		FROM 
+			(multi_revision AS rev 
+			NATURAL JOIN 
+			(SELECT name, max(modstamp) AS modstamp 
+       	                 FROM multi_revision
+       	                 WHERE flags = 1
+				AND $0
+       	                 GROUP BY name) AS t1
+			 ); 
 
-  rev.classifier,
-  rev.selectrest,
-  rev.jlink,
-  rev.comments,
-  rev.exemplars,
-  rev.usages,
-  rev.lang,
-  rev.country,
-  rev.dialect,
-  rev.domains,
-  rev.genres,
-  rev.register,
-  rev.confidence,
-  rev.version,
+	CREATE VIEW active
+		AS SELECT * FROM revision_active UNION SELECT * FROM multi_revision_active;
+        UPDATE meta SET val=''$1'' WHERE var=''filter'';
 
-  rev.source,
-  rev.flags,
-  rev.userid,
-  rev.modstamp
-
-	FROM multi LEFT JOIN grammar_view1 AS rev 
-		ON rev.name = multi.verb_id;
-
-
-	CREATE VIEW grammar_view
-		AS SELECT * FROM grammar_view1 UNION SELECT * FROM grammar_view2;
-        UPDATE meta SET val=''$0'' WHERE var=''filter'';
-' );
+	-- code below is update-current-grammar and should be a function...
+	BEGIN;
+        DELETE FROM temp;
+        INSERT INTO temp 
+               SELECT * FROM active 
+                      WHERE modstamp >= 
+                      (SELECT max(modstamp) FROM current_grammar); 
+        DELETE FROM current_grammar 
+               WHERE name IN 
+               (SELECT name FROM temp); 
+        INSERT INTO current_grammar 
+               SELECT * FROM temp; 
+        COMMIT' );
 INSERT INTO qry VALUES 
        ( 'merge-into-db', 1, 
        '
@@ -306,12 +302,30 @@ INSERT INTO qry VALUES
        DELETE FROM temp;
        ' );
 INSERT INTO qry VALUES 
+       ( 'merge-multi-into-db', 1, 
+       '
+       DELETE FROM multi_temp;
+       COPY multi_temp FROM $0 DELIMITERS '','';
+       DELETE FROM multi WHERE name IN (SELECT name FROM multi_temp);
+       INSERT INTO multi
+              (SELECT * FROM multi_temp);
+       DELETE FROM multi_temp;
+       ' );
+INSERT INTO qry VALUES 
        ( 'dump-db', 1, 
        '
        DELETE FROM temp;       
        INSERT INTO temp (SELECT * FROM revision ORDER BY modstamp, name, userid, version);
-       COPY revision TO $0 DELIMITERS '','' NULL '''';
+       COPY temp TO $0 DELIMITERS '','' NULL '''';
        DELETE FROM temp;
+' );
+INSERT INTO qry VALUES 
+       ( 'dump-multi-db', 1, 
+       '
+       DELETE FROM multi_temp;       
+       INSERT INTO multi_temp (SELECT * FROM multi ORDER BY name);
+       COPY multi_temp TO $0 DELIMITERS '','';
+       DELETE FROM multi_temp;
 ' );
 
 
@@ -339,14 +353,17 @@ INSERT INTO qrya VALUES ( 'update-entry', 0, 'text' );
 INSERT INTO qrya VALUES ( 'update-entry', 1, 'select-list' );
 INSERT INTO qrya VALUES ( 'update-entry', 2, 'value-list' );
 INSERT INTO qrya VALUES ( 'set-current-view', 0, 'where-subcls' );
+INSERT INTO qrya VALUES ( 'set-current-view', 1, 'embedded-str' );
 INSERT INTO qrya VALUES ( 'merge-into-db', 0, 'text' );
+INSERT INTO qrya VALUES ( 'merge-multi-into-db', 0, 'text' );
 INSERT INTO qrya VALUES ( 'dump-db', 0, 'text' );
+INSERT INTO qrya VALUES ( 'dump-multi-db', 0, 'text' );
 
 ---
 --- views
 ---
 
-CREATE VIEW grammar_view1
+CREATE VIEW revision_active
 	AS SELECT revision.* 
 	FROM 
 		(revision 
@@ -357,7 +374,7 @@ CREATE VIEW grammar_view1
                         GROUP BY name) AS t1
 		 ); 
 
-CREATE VIEW grammar_view2 AS 
+CREATE VIEW multi_revision AS 
 	SELECT 
   multi.name,
   COALESCE(multi.type,rev.type) AS type,
@@ -394,11 +411,23 @@ CREATE VIEW grammar_view2 AS
   rev.userid,
   rev.modstamp
 
-	FROM multi LEFT JOIN grammar_view1 AS rev 
+	FROM multi LEFT JOIN revision AS rev 
 		ON rev.name = multi.verb_id;
 
-CREATE VIEW grammar_view
-	AS SELECT * FROM grammar_view1 UNION SELECT * FROM grammar_view2;
+
+CREATE VIEW multi_revision_active
+	AS SELECT rev.* 
+	FROM 
+		(multi_revision AS rev 
+		NATURAL JOIN 
+		(SELECT name, max(modstamp) AS modstamp 
+                        FROM multi_revision
+                        WHERE flags = 1
+                        GROUP BY name) AS t1
+		 ); 
+
+CREATE VIEW active
+	AS SELECT * FROM revision_active UNION SELECT * FROM multi_revision_active;
 
 CREATE VIEW new_pkeys 
        AS SELECT t2.* from 
