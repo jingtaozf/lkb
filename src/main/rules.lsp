@@ -38,14 +38,14 @@
 
 (defun clear-grammar nil
   (declare (special *arules*))
+  (setf *ordered-rule-list* nil)
   (when (fboundp 'clear-generator-grules)
     (funcall 'clear-generator-grules))
   (clrhash *rules*)
   (setf *arules* nil))
 
 (defun clear-lex-rules nil
-  (when (fboundp 'reset-cached-lex-entries)
-    (funcall 'reset-cached-lex-entries))
+  (setf *ordered-lrule-list* nil)
   (when (fboundp 'clear-generator-lrules)
     (funcall 'clear-generator-lrules))
   (clrhash *lexical-rules*))
