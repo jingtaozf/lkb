@@ -1230,6 +1230,10 @@
                      ((search "vm13" data) 130000)
                      ((search "vm31" data) 310000)
                      ((search "vm32" data) 320000)
+                     ((search "ecoc" data) 1000000)
+                     ((search "ecos" data) 2000000)
+                     ((search "ecpa" data) 3000000)
+                     ((search "ecpr" data) 4000000)
                      (t 0))
       with target = (format 
                      nil 
