@@ -69,7 +69,7 @@
 (defvar *postgres-user-temp-dir* 
     (make-pathname :directory (pathname-directory (lkb-tmp-dir))))
 
-(defvar *psql-db-version* "3.07")
+(defvar *psql-db-version* "3.08")
 (defvar *psql-fns-version* "1.00")
 (defvar *psql-port-default* 5432)
 
@@ -86,7 +86,9 @@
      (host (extract-param :host *psql-lexicon-parameters*))
      (table (extract-param :table *psql-lexicon-parameters*))
      (port (extract-param :port *psql-lexicon-parameters*))
-     (user (extract-param :user *psql-lexicon-parameters*)))
+     (user (extract-param :user *psql-lexicon-parameters*))
+     (semi (extract-param :semi *psql-lexicon-parameters*))
+     )
 ;  (unless (and db host)
 ;    (error "please instantiate db+host in *psql-lexicon-parameters*"))
   (let ((part-of))   
@@ -95,7 +97,7 @@
       (setf *psql-lexicon* 
 	(make-instance 'psql-lex-database)))    
     (setf (dbname *psql-lexicon*) db)
-    (setf (host *psql-lexicon*) host)
+    (if host (setf (host *psql-lexicon*) host))
     (if user (setf (user *psql-lexicon*) user))
     (if port (setf (port *psql-lexicon*) port))
     ;;(setf (lex-tb *psql-lexicon*) table) ;;unused
@@ -104,7 +106,7 @@
       (setf (fields-tb *psql-lexicon*) table))
      (t
       (setf (fields-tb *psql-lexicon*) (dbname *psql-lexicon*))))
-    (when (initialize-lex *psql-lexicon*)
+    (when (initialize-lex *psql-lexicon* :semi semi)
       (mapcar #'(lambda (x) (link *psql-lexicon* x)) part-of)
       *psql-lexicon*)))
 
@@ -258,13 +260,9 @@
        ))))
 
 (defmethod run-command-stdin ((database psql-database) command filename)
-  (let ((connection (connection database))
-	(host (host database)))
+  (with-slots (connection) database
     (unless connection
       (error "Database ~s has no active connection." database))
-    (unless (equal host
-		   "localhost")
-      (error "Operation requires db host = \"localhost\""))
     (pg::stdin-command-file connection command filename)))
 
 (defmethod run-command ((database psql-database) command)
@@ -715,9 +713,9 @@
 	     (pg:error-message (connection lexicon)))
      nil)))
 
-(defmethod initialize-lex ((lexicon psql-database))
+(defmethod initialize-lex ((lexicon psql-database) &key semi)
   (when (open-lex lexicon)
-    (build-lex lexicon)))
+    (build-lex lexicon :semi semi)))
   
 ;; lexicon is open
 (defmethod load-lex-from-files ((lexicon psql-lex-database) file-names syntax)
@@ -938,3 +936,33 @@
 			   (make-requested-fields lexicon)))))
 
 (defun i (&optional (slot 'record-cache)) (inspect (slot-value *lexicon* slot)))
+(defun command-index-new-lex-entries nil
+  (format t "~%Indexing new lexical entries for generator")
+  (index-new-lex-entries *lexicon*)
+  (format t "~%done~%")
+  (lkb-beep))
+
+(defun index-new-lex-entries (lexicon)
+  (let ((semi-out-of-date (semi-out-of-date lexicon)))
+    (format t "~%(indexing ~a entries)" (length semi-out-of-date))
+    (when semi-out-of-date
+      (mrs::populate-*semi*-from-psql)
+      (index-lexical-rules)
+      (index-grammar-rules)
+      (mapc 
+       #'(lambda (x)
+	   (update-semi-entry lexicon x))
+       semi-out-of-date)
+      (mrs::dump-*semi*-to-psql))))
+  
+(defun update-semi-entry (lexicon lexid)
+  (let* ((entry (read-psort lexicon lexid :cache nil))
+	 (new-fs (and
+		  (expand-psort-entry entry)
+		  (lex-entry-full-fs entry))))
+    (if (and new-fs 
+	     (not (eq new-fs :fail)))
+	(mrs::extract-lexical-relations entry)
+      (format t "~%No feature structure for ~A~%" 
+	      (lex-entry-id entry))))
+    (forget-psort lexicon lexid))

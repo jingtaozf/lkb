@@ -5,79 +5,9 @@
 
 (in-package :mrs)
 
-(defconstant *psql-semi-setup* "
----
--- under development
----
-
-DROP TABLE semi_pred CASCADE;
-DROP TABLE semi_frame CASCADE;
-DROP TABLE semi_var CASCADE;
-DROP TABLE semi_extra CASCADE;
-
-CREATE TABLE semi_pred (
- lex_id text NOT NULL,
- pred_id text NOT NULL,
- frame_id int NOT NULL,
- pred_txt text NOT NULL,
- string_p boolean NOT NULL
-);
-
-CREATE TABLE semi_frame (
- frame_id int NOT NULL,
- slot text NOT NULL,
- str text,
- symb text,
- var_id int,
- type text
-);
-
-CREATE TABLE semi_var (
- var_id int NOT NULL,
- extra_id int NOT NULL
-);
-
-CREATE TABLE semi_extra (
- extra_id int NOT NULL,
- feat text NOT NULL,
- val text NOT NULL
-);
-
-
-DELETE FROM semi_frame;
-DELETE FROM semi_pred;
-DELETE FROM semi_var;
-DELETE FROM semi_extra;
-
-
-\\copy semi_pred from '~a.pred'
-\\copy semi_frame from '~a.frame'
-\\copy semi_var from '~a.var'
-\\copy semi_extra from '~a.extra'
-
-CREATE INDEX semi_pred_lex_id ON semi_pred (lex_id);
-CREATE INDEX semi_pred_pred_id ON semi_pred (pred_id);
-CREATE INDEX semi_frame_frame_id ON semi_frame (frame_id);
-CREATE INDEX semi_frame_var_id ON semi_frame (var_id);
-CREATE INDEX semi_var_var_id ON semi_var (var_id);
-CREATE INDEX semi_extra_extra_id ON semi_extra (extra_id);
-
----
--- merge join is fastest
----
-SET ENABLE_HASHJOIN TO false;
-
-CREATE OR REPLACE VIEW semi_obj AS
- SELECT * FROM
-  semi_pred NATURAL JOIN
-  semi_frame NATURAL LEFT JOIN
-  semi_var NATURAL LEFT JOIN
-  semi_extra;"
-  "semi setup script (psql command)")
-
 (defun load-sdbt (sdbt dbname)
   (clear sdbt)
-  (format t "~%(loading table ~a from ~a...)" (sdbt-name sdbt) dbname)
+  ;;(format t "~%(loading table ~a from ~a...)" (sdbt-name sdbt) dbname)
   (let ((sql-query (lkb::fn-get-raw-records 
 		    dbname 
 		    ''lkb::test 
@@ -98,26 +28,34 @@ CREATE OR REPLACE VIEW semi_obj AS
     (format nil "~a/semi.obj." 
 	    (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir)))))
 
+(defun dump-*semi*-to-psql nil
+  (dump-semi-to-psql *semi*))
+
 (defmethod dump-semi-to-psql ((semi semi) &key (lexicon lkb::*psql-lexicon*))
   (populate-semi semi)
   (print-semi-db semi)
+  (with-slots (lkb::host lkb::port lkb::user lkb::dbname) lexicon
   (let* ((base (format nil "~a/semi.obj" 
-	    (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir)))))
-	 (script 
-	  (format nil *psql-semi-setup*
-		  base
-		  base
-		  base
-		  base)))
-    (excl:run-shell-command 
-     (format nil "echo '~a' | psql -h ~a -p ~a -U ~a ~a" 
-	     script
-	     (lkb::host lexicon)
-	     (lkb::port lexicon)
-	     (lkb::user lexicon)
-	     (lkb::dbname lexicon)))
+	    (make-pathname :directory (pathname-directory (lkb::lkb-tmp-dir))))))
+    (lkb::semi-setup-1 lexicon)
+    (load-db-table-from-file "semi_pred"
+			     (format nil "~a.~a" base "pred")
+			     lexicon)
+    (load-db-table-from-file "semi_frame"
+			     (format nil "~a.~a" base "frame")
+			     lexicon)
+    (load-db-table-from-file "semi_var"
+			     (format nil "~a.~a" base "var")
+			     lexicon)
+    (load-db-table-from-file "semi_extra"
+			     (format nil "~a.~a" base "extra")
+			     lexicon)
+    (lkb::semi-setup-2 lexicon)
     semi
-    ))
+    )))
+
+(defun populate-*semi*-from-psql nil
+  (populate-semi-from-psql *semi*))
 
 (defmethod populate-semi-from-psql ((semi semi) &key (psql-lexicon lkb::*psql-lexicon*))
   (close-semi semi)
@@ -398,4 +336,12 @@ CREATE OR REPLACE VIEW semi_obj AS
 	   (t
 	    (error "unhandled table name")))))
     raw-rows))
-         
+
+(defun load-db-table-from-file (table-name file-name lexicon)
+  (lkb::run-command-stdin lexicon 
+		     (format nil "DELETE FROM ~a; ~% COPY ~a FROM stdin;"
+			     table-name
+			     table-name) 
+		     file-name))
+
+  

@@ -470,7 +470,8 @@
 (defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-val psql-le :modstamp "NOW")
   (set-val psql-le :userid (user lexicon))
-  (set-lex-entry-aux lexicon psql-le))
+  (set-lex-entry-aux lexicon psql-le)
+  )
   
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
   (set-version psql-le lexicon) 

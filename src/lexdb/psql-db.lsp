@@ -145,7 +145,7 @@
 (defmethod sql-retrieve-all-entries ((lexicon psql-lex-database) select-list)
   (fn lexicon 'retrieve-all-entries select-list))
 
-(defmethod build-lex ((lexicon psql-database))
+(defmethod build-lex ((lexicon psql-database) &key (semi t))
   (cond 
    ((not (user-read-only-p lexicon))
     (format *postgres-debug-stream* "~%(building current_grammar)")
@@ -156,6 +156,20 @@
     (format t "~%(user ~a has read-only privileges)" (user lexicon))))    
   (format *postgres-debug-stream* "~%(lexicon filter: ~a )" (get-filter lexicon))
   (format *postgres-debug-stream* "~%(active lexical entries: ~a )" (fn-get-val lexicon ''size-current-grammar))
+
+  (if semi
+      (cond
+       ((semi-up-to-date-p lexicon)
+	(format *postgres-debug-stream* "~%(loading SEM-I into memory)")
+	(unless (mrs::semi-p 
+		 (catch 'pg::sql-error
+		   (mrs::populate-*semi*-from-psql)))
+	  (format t "~% (unable to retrieve database SEM-I)"))
+	(index-lexical-rules)
+	(index-grammar-rules))
+       (t
+	(format t "~%(WARNING: no index for generator)"))))
+  
   lexicon)
 
 (defun build-current-grammar (lexicon)
@@ -186,6 +200,7 @@
 (defmethod show-scratch ((lexicon psql-lex-database))
   (fn-get-records lexicon ''show-scratch))
 
+#+:null
 (defmethod load-semi-from-files ((lexicon psql-lex-database))  
   (format t "~%")
   (run-command-stdin lexicon 
@@ -276,7 +291,8 @@
   (let ((db-user (user lexicon))
 	(db-owner (raw-get-val lexicon "SELECT db_owner()")))
     (when
-	(initialize-psql-lexicon :user db-owner)
+	(initialize-psql-lexicon :user db-owner
+				 :semi nil)
       (when
 	  (catch 'pg:sql-error
 	    (progn
@@ -503,3 +519,20 @@
 	    for line in pgpass-entries
 	    do
 	      (format fstream "~a~%" line))))))
+
+(defmethod semi-setup-1 ((lexicon psql-lex-database))  
+  (fn-get-records lexicon ''semi-setup-1))
+
+(defmethod semi-setup-2 ((lexicon psql-lex-database))  
+  (fn-get-records lexicon ''semi-setup-2))
+
+(defmethod semi-up-to-date-p ((lexicon psql-lex-database))  
+  (string= "t" (fn-get-val lexicon ''semi-up-to-date-p)))
+
+(defmethod current-timestamp ((lexicon psql-lex-database))  
+  (cdaar (get-records *lexicon* "select current_timestamp")))
+
+(defmethod semi-out-of-date ((lexicon psql-lex-database))  
+  (mapcar #'(lambda (x) (2-symb (car x))) 
+	  (records 
+	   (fn-get-raw-records lexicon ''semi-out-of-date))))

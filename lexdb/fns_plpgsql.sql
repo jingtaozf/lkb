@@ -219,46 +219,44 @@ BEGIN
   AS SELECT * FROM public.revision 
    UNION 
    SELECT * FROM revision;
--- semi
- CREATE TABLE prd 
-  (lexid text,
-   predkey integer,
-   pred text,
-   lex text,
-   pos text,
-   sense text,
-   carg text,
-   PRIMARY KEY (predkey));
- DELETE FROM prd;
- CREATE INDEX prd_lexid on prd (lexid);
- CREATE TABLE arg
- (predkey int,
-  argkey int,
-  arg int,
-  type text,
-  PRIMARY KEY (argkey));
- DELETE FROM arg;
- CREATE INDEX arg_predkey on arg (predkey);
- CREATE TABLE ddd
-  (argkey int,
-   feat text,
-   val text);
- DELETE FROM ddd;
- CREATE INDEX ddd_argkey on ddd (argkey);
- CREATE OR REPLACE VIEW obj_semi AS
-  SELECT 
-   lexid, pred, lex, pos, sense, carg, arg, type, 
-   (SELECT val FROM ddd WHERE argkey=t1.argkey AND feat=''gen'') AS gen,
-   (SELECT val FROM ddd WHERE argkey=t1.argkey AND feat=''pn'') AS pn, 
-   (SELECT val FROM ddd WHERE argkey=t1.argkey AND feat=''aspect.perf'') AS aspect_perf, 
-   (SELECT val FROM ddd WHERE argkey=t1.argkey AND feat=''aspect.progr'') AS aspect_progr, 
-   (SELECT val FROM ddd WHERE argkey=t1.argkey AND feat=''mood'') AS mood, 
-   (SELECT val FROM ddd WHERE argkey=t1.argkey AND feat=''tense'') AS tense
-   FROM (arg NATURAL JOIN prd) AS t1;
 
 -- mod time
 DELETE FROM meta WHERE var=''mod_time'';
 INSERT INTO meta VALUES (''mod_time'',current_timestamp);
+
+-- semi
+
+CREATE TABLE semi_pred (
+ lex_id text NOT NULL,
+ pred_id text NOT NULL,
+ frame_id int NOT NULL,
+ pred_txt text NOT NULL,
+ string_p boolean NOT NULL,
+ modstamp TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE semi_frame (
+ frame_id int NOT NULL,
+ slot text NOT NULL,
+ str text,
+ symb text,
+ var_id int,
+ type text
+);
+
+CREATE TABLE semi_var (
+ var_id int NOT NULL,
+ extra_id int NOT NULL
+);
+
+CREATE TABLE semi_extra (
+ extra_id int NOT NULL,
+ feat text NOT NULL,
+ val text NOT NULL
+);
+
+-- semi mod time
+DELETE FROM meta WHERE var=''semi_build_time'';
 
 RETURN true;
 END;
@@ -269,3 +267,71 @@ BEGIN
  RETURN dump_db_su(user);
 END;
 ' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION semi_setup_1() RETURNS boolean AS '
+BEGIN
+DROP TABLE semi_pred CASCADE;
+DROP TABLE semi_frame CASCADE;
+DROP TABLE semi_var CASCADE;
+DROP TABLE semi_extra CASCADE;
+
+CREATE TABLE semi_pred (
+ lex_id text NOT NULL,
+ pred_id text NOT NULL,
+ frame_id int NOT NULL,
+ pred_txt text NOT NULL,
+ string_p boolean NOT NULL,
+ modstamp TIMESTAMP WITH TIME ZONE
+);
+
+CREATE TABLE semi_frame (
+ frame_id int NOT NULL,
+ slot text NOT NULL,
+ str text,
+ symb text,
+ var_id int,
+ type text
+);
+
+CREATE TABLE semi_var (
+ var_id int NOT NULL,
+ extra_id int NOT NULL
+);
+
+CREATE TABLE semi_extra (
+ extra_id int NOT NULL,
+ feat text NOT NULL,
+ val text NOT NULL
+);
+ RETURN true;
+END;
+' LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION semi_setup_2() RETURNS text AS '
+BEGIN
+-- build time
+DELETE FROM meta WHERE var=''semi_build_time'';
+INSERT INTO meta VALUES (''semi_build_time'',current_timestamp);
+
+CREATE INDEX semi_pred_lex_id ON semi_pred (lex_id);
+CREATE INDEX semi_pred_pred_id ON semi_pred (pred_id);
+CREATE INDEX semi_frame_frame_id ON semi_frame (frame_id);
+CREATE INDEX semi_frame_var_id ON semi_frame (var_id);
+CREATE INDEX semi_var_var_id ON semi_var (var_id);
+CREATE INDEX semi_extra_extra_id ON semi_extra (extra_id);
+
+---
+-- merge join is fastest
+---
+SET ENABLE_HASHJOIN TO false;
+
+CREATE OR REPLACE VIEW semi_obj AS
+ SELECT * FROM
+  semi_pred NATURAL JOIN
+  semi_frame NATURAL LEFT JOIN
+  semi_var NATURAL LEFT JOIN
+  semi_extra;
+ RETURN true;
+END;
+' LANGUAGE plpgsql;
+

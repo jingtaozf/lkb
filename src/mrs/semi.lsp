@@ -483,7 +483,7 @@
 	      (format nil "~a/semi.obj.~(~a~)" temp-dir (sdbt-name x))
 	      :direction :output 
 	      :if-exists :supersede)
-	   (format t "~%writing table ~a..." (sdbt-name x))
+	   ;;(format t "~%writing table ~a..." (sdbt-name x))
 	   (print-sdbt x :stream stream)))
      (sdb-tables sdb))))
     
@@ -528,7 +528,8 @@
 			     pred 
 			     frame-id 
 			     (2-symb pred) 
-			     (if (stringp pred) 'T 'F))
+			     (if (stringp pred) 'T 'F)
+			     "NOW")
 	do
 	  (sdbt-rows-hash pred-row pred-r)
 	unless frame-hashed

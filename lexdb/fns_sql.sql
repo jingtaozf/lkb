@@ -80,3 +80,6 @@ CREATE OR REPLACE FUNCTION public.build_time() RETURNS text AS '
 SELECT COALESCE((SELECT val FROM meta WHERE var=''build_time'' LIMIT 1),'''')
 ' LANGUAGE SQL;
 
+CREATE OR REPLACE FUNCTION public.semi_build_time_private() RETURNS text AS '
+SELECT COALESCE((SELECT val FROM meta WHERE var=''semi_build_time'' LIMIT 1),'''')
+' LANGUAGE SQL;

@@ -27,8 +27,8 @@
 ;;; for the time being, the whole lexicon has to be reindexed whenever
 ;;; something is altered ...
 
-(defun index-for-generator (&key mode)
-  (index-lexicon :mode mode)
+(defun index-for-generator nil
+  (index-lexicon)
   (index-lexical-rules)
   (index-grammar-rules)
   (format t "~%Indexing complete")
@@ -36,18 +36,9 @@
 
 ;;; retrieve SEM-I from psql-lexicon if possible
 ;;; if not, recompile semantic indices as per normal
-(defun index-lexicon (&key mode)
-  #-:psql
-  (declare (ignore mode))
+(defun index-lexicon nil
   #+:psql
   (when (typep *lexicon* 'psql-lex-database)
-    (unless (eq mode :recompile)
-      (format t "~% (attempting to retrieve SEM-I from LexDB)")
-      (if (mrs::semi-p 
-	   (catch 'pg::sql-error
-	     (mrs::populate-semi-from-psql mrs::*semi*)))
-	  (return-from index-lexicon)
-	(format t "~% (unable to retrieve database SEM-I)")))
     (format t "~%(caching all lexical records)")
     (cache-all-lex-records-orth *lexicon*))
   (format t "~% (recompiling semantic indices)")
@@ -92,7 +83,11 @@
 	   (forget-psort *lexicon* (lex-entry-id entry))
 	   ))
       (mrs::check-for-redundant-filter-rules)))
-  (setf *batch-mode* nil))
+  (setf *batch-mode* nil)
+  #+:psql
+  (when (typep *lexicon* 'psql-lex-database)
+    (mrs::dump-semi-to-psql mrs::*semi*))
+  )
 
 (defun get-compatible-rels (reltype)
   (or (gethash reltype *get-compatible-rels-memo*)

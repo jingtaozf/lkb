@@ -45,10 +45,7 @@
   (setf filename (namestring (pathname filename)))
   (fn-get-records lexicon ''merge-multi-into-db filename))
 
-;;;
-;;; not in use
-;;;
-
+#+:null
 (defun dump-multi-psql-lexicon (filename)
   (get-postgres-temp-filename)
   (setf filename (namestring (pathname filename)))
@@ -57,6 +54,7 @@
 					       *postgres-temp-filename*
 					       filename)))
 
+#+:null
 (defun merge-multi-into-psql-lexicon (filename)
   (setf filename (namestring (pathname filename)))
   (unless

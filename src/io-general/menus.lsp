@@ -50,13 +50,13 @@
                       lkb::command-commit-scratch		      
                       lkb::command-show-scratch		      
                       lkb::command-set-filter-psql-lexicon		      
-                      ;lkb::command-generate-semi		      
-                      ;; generate
+		      lkb::command-index-new-lex-entries
+                       ;; generate
                       lkb::show-gen-result
                       lkb::show-generator-input
 		      lkb::show-gen-chart
                       lkb::index-for-generator
-                      lkb::read-gen-rule-file
+                     lkb::read-gen-rule-file
                       lkb::clear-gen-rules
                       lkb::index-for-generator
                       lkb::start-generator-server
@@ -352,10 +352,10 @@
                                   :value 'command-clear-scratch
                                   ;:available-p :always
 				  )
-;                  (make-menu-item :name "Generate SEM-I"
-;                                  :value 'command-generate-semi
-;                                  ;:available-p :always
-;				  )
+                  (make-menu-item :name "Index new lex entries"
+                                  :value 'command-index-new-lex-entries
+                                  :available-p :mrs
+				  )
                   )
 		 :available-p :always)))
          (list

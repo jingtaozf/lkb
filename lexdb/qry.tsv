@@ -31,3 +31,7 @@ dump-scratch-db	1	\nDELETE FROM temp;\nINSERT INTO temp\n (SELECT * FROM revisio
 test	1	$0
 user-read-only-p	1	SELECT $0 IN (SELECT val FROM public.meta WHERE var='user-read-only');
 merge-into-db2	0	SELECT merge_into_db2();
+semi-setup-1	0	SELECT semi_setup_1();
+semi-setup-2	0	SELECT semi_setup_2();
+semi-up-to-date-p	0	select mod_time() < (select min(modstamp) from semi_pred);
+semi-out-of-date	0	select * from current_grammar where modstamp > semi_build_time_private(); --select name from current_grammar as a left join semi_pred as b on name=lex_id where (a.modstamp > b.modstamp) or b.modstamp is null;
