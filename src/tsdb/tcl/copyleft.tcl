@@ -39,7 +39,7 @@ proc copyleft {action} {
       } else {
         frame $copyleft.fourth -bg $bg -height 6
         label $copyleft.fifth -bg $bg -fg grey -font [concat $normalsize] \
-          -text "Until registered, after 10 minutes of continuous use\
+          -text "Until registered, after several minutes of continuous use\
                  a log entry will be generated and\n\
                  automatically sent to a central protocol server\
                  (at Saarbruecken University)."
@@ -65,15 +65,9 @@ proc copyleft {action} {
       }; # if
     }
     register {
-      #
-      # trap valid keys and suppress all messages.  note however, that all the
-      # actual decision making and communication is done by swish(1) itself
-      # --- thus changing the Tcl code here will not prevent registration.
-      #
-      if {[oe copyleft $globals(copyleft,key)]} {
-        oe reap;
-        return; 
-      }; # if
+      winop map .;
+      winop raise .;
+      tkwait visibility .;
       set status $globals(status);
       set visible [lindex [winfo children .status] end];
       .list.copyleft.body.fifth config -fg yellow \
@@ -121,7 +115,7 @@ proc copyleft {action} {
       if {!$busy} {
         busy release .;
       }; # if
-      oe reape;
+      oe reap;
       update idletasks;
     }
   }; # switch

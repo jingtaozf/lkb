@@ -353,6 +353,9 @@ proc main {} {
   .menu.analyze.menu.by add radiobutton \
     -label "Passive Edges (`pedges')" \
     -variable globals(graph,by) -value :pedges;
+  .menu.analyze.menu.by add radiobutton \
+    -label "Item Identifier (`i-id')" \
+    -variable globals(graph,by) -value :i-id;
 
   menu .menu.analyze.menu.values -tearoff 0
   .menu.analyze.menu.values add radiobutton \
