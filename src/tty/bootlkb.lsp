@@ -49,7 +49,6 @@
     (dolist  (dir-and-file 
       '( ("main" "for")         ; duplicate useful Procyon CL for loops
                            ; generic CL
-         ("io-general" "utils")
          ("main" "types")       ; generic CL
          ("main" "dag")         ; generic CL
          ("main" "yadu")        ; generic CL
@@ -70,11 +69,13 @@
          ("main" "rules")       ; generic CL
          ("io-paths" "ruleinput")       ; generic CL
          ("main" "parse")       ; generic CL
+         ("main" "generate")       ; generic CL
          ("main" "morph")       ; generic CL
          ("main" "check-unif")  ; generic CL
          ("main" "batch-check")
          ("main" "lkb-tsdb")    ; generic CL
          ("io-general" "tree-nodes")
+         ("io-general" "utils")
          ("tty" "tty")
          ))
       (let ((dir (car dir-and-file))

@@ -51,6 +51,7 @@
          ("main" "rules")       ; generic CL
          ("io-paths" "ruleinput")       ; generic CL
          ("main" "parse")       ; generic CL
+         ("main" "generate")       ; generic CL
          ("main" "morph")       ; generic CL
          ("main" "check-unif")  ; generic CL
          ("main" "batch-check")
