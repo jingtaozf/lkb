@@ -63,6 +63,7 @@
          ("io-tdl" "tdloutput")
          ("io-tdl" "tdlruleinput")
          ("io-tdl" "tdllexinput")
+         ("main" "batch-check")
          ))
       (let* ((dir (car dir-and-file))
              (file (cadr dir-and-file))

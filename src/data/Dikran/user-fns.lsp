@@ -1,29 +1,3 @@
-;;; User defined functions - from old globals file
-
-
-(defun make-sense-unifications (sense-string id language)
-   ;; < orth : hd > = sense
-   ;; < lang > = language
-  (declare (ignore sense-string id language))
-   nil)
-
-(defparameter *sense-unif-fn* #'make-sense-unifications)
-
-
-;;;   (when sense-string
-;;;    (list 
-;;;       (make-unification :lhs
-;;;          (create-path-from-feature-list '(orth hd))
-;;;          :rhs (make-u-value :types (list sense-string)))
-;;;       (make-unification :lhs
-;;;          (create-path-from-feature-list '(lang))
-;;;          :rhs (make-u-value :types (list language)))
-;;;        (make-unification :lhs
-;;;           (create-path-from-feature-list '(fs-id))
-;;;           :rhs (make-u-value :types (list id)))
-;;;       )))
-  
-
 (defun establish-linear-precedence (rule-fs)
    ;;;    A function which will order the features of a rule
    ;;;    to give (mother daughter1 ... daughtern)
@@ -40,7 +14,7 @@
                (if (and (numberp x-num) (numberp y-num))
                  (< x-num y-num)
                  (not (numberp x-num)))))))
-
+  
 
 (defun spelling-change-rule-p (rule)
 ;;; a function which is used to prevent the parser 
@@ -51,7 +25,11 @@
 ;;; *morph-rule-type* - this tests for 
 ;;; < NEEDS-AFFIX > = true
 ;;; in the rule
-  (let ((affix (get-dag-value (rule-full-fs rule) 'needs-affix)))
+  (let* ((fs (rule-full-fs rule))
+         (affix (get-dag-value (if (tdfs-p fs)
+                                   (tdfs-indef fs)
+                                                fs)
+                               'needs-affix)))
     (and affix (equal (type-of-fs affix) '(true)))))
 
 (defun redundancy-rule-p (rule)
@@ -61,14 +39,9 @@
 ;;; this version tests for 
 ;;; < PRODUCTIVE > = false
 ;;; in the rule
-  (let ((affix (get-dag-value (rule-full-fs rule) 'productive)))
+  (let* ((fs (rule-full-fs rule))
+         (affix (get-dag-value (if (tdfs-p fs)
+                                   (tdfs-indef fs)
+                                   fs) 
+                               'productive)))
     (and affix (equal (type-of-fs affix) '(false)))))
-
-;;; return true for types that shouldn't be displayed in type hierarchy
-;;; window. Descendents (if any) will be displayed, i.e. non-displayed
-;;; types are effectively spliced out
-
-(defun hide-in-type-hierarchy-p (type-name)
-  (declare (ignore type-name))
-  nil)
-

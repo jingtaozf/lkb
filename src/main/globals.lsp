@@ -4,13 +4,11 @@
 ;;; This is the base globals file because parameters have to be
 ;;; defined somewhere, but in most cases a particular set of
 ;;; grammar files will have their own associated parameters
+;;;
+;;; All functions have now been moved to user-fns.lsp
 
-(defparameter *display-glb-messages* nil)
-
-;;; Avoiding too many glbs - treat some types as
-;;; templates
-
-(defparameter *templates* nil)
+(defparameter *templates* nil 
+   "types which are treated as templates to avoid excessive glbs")
 
 ;;; Strings
 
@@ -28,13 +26,13 @@
 
 (defparameter *list-head* '(hd))
 
-(defparameter *lex-rule-suffix* nil)
+(defparameter *lex-rule-suffix* nil
+  "creates the inflectional rule name from the information
+   in irregs.tab - for PAGE compatability")
 
 (defparameter *sense-unif-fn* nil)
   
 ;;; Parsing
-
-(defparameter *preprocess-sentence-fn* nil)
 
 (defparameter *chart-limit* 100)
 
@@ -51,7 +49,6 @@
 
 ;;; value is 'node for YADU
 
-  
 (defparameter *start-symbol* 'sign
    "a type which specifies the type of any valid parse")
 
@@ -70,12 +67,17 @@
 
 (defparameter *bc96lrules* nil)
 
+
 (defparameter *check-paths* nil
    "an alist in which the keys are feature paths that often fail -
     these are checked first before attempting unification")
 
 
 ;;; Display 
+
+
+(defparameter *display-glb-messages* nil
+   "if set, informs user of glbtypes as they are created")
 
 (defparameter *settings-options* nil
   "controls whether user is asked for type display options file")
@@ -119,7 +121,7 @@
    various interactions where a language has to
    be selected")
 
-(defparameter *possible-languages* '(Spanish Italian Dutch English French)
+(defparameter *possible-languages* nil
    "Specifies the possible languages for interactions
    where a language has to be selected or specified")
    
@@ -139,6 +141,8 @@
 
 
 ;;; Parse tree node labels
+
+;;; these are actually only used when in PAGE compatability mode
 
 ;;; the path where the name string is stored
 (defparameter *label-path* '(LABEL-NAME))

@@ -4,6 +4,12 @@
    (load (merge-pathnames
          (make-pathname :name "globals.lsp")
          data-dir1))
+   (load (merge-pathnames
+         (make-pathname :name "user-fns.lsp")
+         data-dir1))
+   (load (merge-pathnames
+         (make-pathname :name "new.qc")
+         data-dir1))
    (read-irreg-form-file (merge-pathnames (make-pathname :name "irregs.tab")
                                           data-dir1))
    (read-type-files-aux

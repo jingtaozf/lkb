@@ -183,8 +183,8 @@
 
 
 (defun morph-item-process (istream)
-   (let ((id (read istream))
-         (type (read istream))
+   (let ((id (lkb-read istream nil))
+         (type (lkb-read istream nil))
          (current-set *letter-set-list*)
          method-list)
       (when (or (eql type *morph-rule-type*)

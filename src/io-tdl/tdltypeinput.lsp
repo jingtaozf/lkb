@@ -190,7 +190,7 @@
 ;;; Type  -> identifier
 ;;; Subtype-def ->  :< type 
 ;;; Avm-def -> := Conjunction
-   (let* ((name (read istream))
+   (let* ((name (lkb-read istream nil))
          (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)
        (error "~%Incorrect syntax following type name ~A" name))
@@ -210,7 +210,7 @@
 
 (defun read-tdl-subtype-def (istream name &optional augment)
 ;;; Subtype-def ->  :< type 
-     (let* ((parent (read istream)))
+     (let* ((parent (lkb-read istream nil)))
        (if augment
          (amend-type-from-file name (list parent) nil nil nil)
          (add-type-from-file name (list parent) nil nil nil))
@@ -372,7 +372,7 @@
 (defun read-tdl-attr-val (istream name path-so-far)
   ;;; Attr-val -> attribute{.attribute}* Conjunction
   (loop
-      (let* ((attribute (read istream))
+      (let* ((attribute (lkb-read istream nil))
              (next-char (peek-char t istream nil 'eof)))
         (push attribute path-so-far)
         (unless (eql next-char #\.) (return))
@@ -510,12 +510,12 @@
 ;;; structure
   (read-char istream) ; get rid of the hash
   (let ((corefindex (read istream nil 'end-of-file)))
-    (cond ((eql corefindex 'end-of-file) 
-           (error "Unexpected end of file when processing ~A" name))
-          ((not (atom corefindex)) 
-           (error "Coref index must be an atom in ~A" name))
-          (t (push (reverse path-so-far)
-              (gethash corefindex *tdl-coreference-table*))))
+    (when (eql corefindex 'end-of-file) 
+      (error "Unexpected end of file when processing ~A" name))
+    (unless (symbolp corefindex)
+      (setf corefindex (convert-to-lkb-symbol corefindex)))
+    (push (reverse path-so-far)
+          (gethash corefindex *tdl-coreference-table*))
     nil))
 
 
@@ -523,14 +523,14 @@
 (defun read-tdl-symbol (istream name path-so-far)
   (declare (ignore name))
   (read-char istream) ; get rid of the '
-  (let* ((symbol (read istream)))
+  (let* ((symbol (lkb-read istream t)))
       (list (make-tdl-path-value-unif (reverse path-so-far) 
                                       (format nil "~A" symbol)))))
 
 
 (defun read-tdl-type (istream name path-so-far)
   (declare (ignore name))
-  (let ((type (read istream)))
+  (let ((type (lkb-read istream t)))
     (list (make-tdl-path-value-unif (reverse path-so-far) type))))
 
 
@@ -543,7 +543,7 @@
         (when (char= next-char #\))
           (read-char istream)
           (return))
-        (push (read istream) types)))
+        (push (lkb-read istream t) types)))
     (list (make-tdl-path-value-unif (reverse path-so-far) types))))
 
 
@@ -598,33 +598,32 @@
 ;;; Templ-par -> $templ-var | $templ-var = conjunction
   (read-char istream) ; get rid of the @
   (let ((templ-name (read istream nil 'end-of-file)))
-    (cond ((eql templ-name 'end-of-file) 
-           (error "Unexpected end of file when processing ~A" name))
-          ((not (atom templ-name)) 
-           (error "Template name must be an atom in ~A" name))
-          (t 
-           (let ((template-entry (find templ-name *tdl-templates*
-                                       :key #'tdl-templ-name)))
-             (unless template-entry 
-               (error "Unknown template ~A used in ~A" templ-name
-                      name))
-             (check-for #\( istream name)
-             (let ((next-char (peek-char t istream nil 'eof))
-                   (constraints (get-tdl-template-constraints 
-                                 (tdl-templ-constraint template-entry)
-                                 path-so-far)))
-               (unless (eql next-char #\)) 
-                 (loop  
-                   (setf constraints 
-                         (nconc 
-                          (read-tdl-templ-par istream name path-so-far
-                                              template-entry)
-                          constraints))
-                   (setf next-char (peek-char t istream nil 'eof))
-                   (unless (eql next-char #\,) (return))
-                   (read-char istream)))
-              (check-for #\) istream name) 
-               constraints))))))
+    (when (eql templ-name 'end-of-file) 
+      (error "Unexpected end of file when processing ~A" name))
+    (unless (symbolp templ-name) 
+      (setf templ-name (convert-to-lkb-symbol templ-name))) 
+    (let ((template-entry (find templ-name *tdl-templates*
+                                :key #'tdl-templ-name)))
+      (unless template-entry 
+        (error "Unknown template ~A used in ~A" templ-name
+               name))
+      (check-for #\( istream name)
+      (let ((next-char (peek-char t istream nil 'eof))
+            (constraints (get-tdl-template-constraints 
+                          (tdl-templ-constraint template-entry)
+                          path-so-far)))
+        (unless (eql next-char #\)) 
+          (loop  
+            (setf constraints 
+                  (nconc 
+                   (read-tdl-templ-par istream name path-so-far
+                                       template-entry)
+                   constraints))
+            (setf next-char (peek-char t istream nil 'eof))
+            (unless (eql next-char #\,) (return))
+            (read-char istream)))
+        (check-for #\) istream name) 
+        constraints))))
 
 (defun get-tdl-template-constraints (template-constraint path-so-far)
   (let ((rev-p (reverse path-so-far)))
@@ -642,8 +641,10 @@
   ;;; without a value would be)
   (check-for #\$ istream name)
   (let* ((par-name (read istream nil 'end-of-file))
-         (par-value (find par-name (tdl-templ-parameters template-entry)
-                                       :key #'tdl-templ-parameter-name)))
+         (par-value 
+          (find (if (symbolp par-name) par-name (convert-to-lkb-symbol par-name)) 
+                (tdl-templ-parameters template-entry)
+                :key #'tdl-templ-parameter-name)))
     (unless par-value 
                (error "Unknown parameter ~A used in ~A" par-name
                       name))

@@ -276,7 +276,9 @@
    (erase-rect (view-container menu) (view-position menu)
       (add-points (view-position menu)
          (make-point
-            (string-width (pop-up-menu-item-display menu) (view-font (view-container menu)))
+            (string-width #+powerpc(pop-up-menu-item-display menu) 
+                          #-powerpc(ccl::pop-up-menu-item-display menu)
+                          (view-font (view-container menu)))
             (+ 2 (font-ascent (view-container menu)))))))
 
 (defmethod set-pop-up-menu-default-item ((menu active-type-pop-up-field) num)

@@ -168,6 +168,7 @@
      #+(and mcl powerpc)(incf ff (CCL::%HEAP-BYTES-ALLOCATED))))
 
 
+
 (defun unify-paths-dag-at-end-of1 (dag-instance labels-chain)
    (let ((real-dag
            ;; can get called with null path and dag-instance=nil

@@ -160,7 +160,7 @@
    (format t "~%Checking type hierarchy")
    (setf *type-names* (collect-type-names))
    (prog1
-     (when *toptype*
+      (when *toptype*
         (when 
           (add-daughters-to-type-table)
           (when (check-for-cycles-etc *toptype*)
@@ -184,8 +184,6 @@
             (when (expand-and-inherit-constraints)
               (format t "~%Making constraints well formed")
               (when (strongly-type-constraints)
-                (format t "~%Optimising unification check paths") 
-                (optimise-check-unif-paths)
                 ;;; YADU --- extra expansion stage
                 ;;; earlier stages are unchanged
                 (format t "~%Expanding defaults") 
@@ -193,7 +191,6 @@
                   (format t "~%Type file checked successfully")
                   t))))))
      (clear-type-cache))) ; not for consistency, but for efficiency
-
 
 (defun patch-type-table nil
   ;;; added for the case where definitions are changed, but the hierarchy
@@ -373,7 +370,7 @@
                  (let ((desc-entry (get-type-entry descendant)))
                          (or (seen-node-p desc-entry)
                              (subsetp (type-ancestors desc-entry)
-                                      lineage))))
+                                      lineage :test #'eq))))
             (let ((partition-nodes
                          (for descendant in descendants
                               filter
@@ -403,8 +400,8 @@
            (when (cdr (type-parents type-entry))                   
              (for ancestor in (retrieve-ancestors type)
                   do
-                  (when (member ancestor partition-nodes)
-                    (pushnew ancestor ancestors))))))
+                  (when (member ancestor partition-nodes :test #'eq)
+                    (pushnew ancestor ancestors :test #'eq))))))
     (setf *interesting-types* ancestors)
     (check-for-unique-glbs-from-top ancestors)))
 
@@ -428,7 +425,8 @@
 (defun check-lbs-from-top (x y)
   (let ((xdescendants (retrieve-descendants x))
         (ydescendants (retrieve-descendants y)))
-    (unless (or (member y xdescendants) (member x ydescendants))
+    (unless (or (member y xdescendants :test #'eq) 
+                (member x ydescendants :test #'eq))
       (let ((*wanted* nil))
          (find-highest-intersections xdescendants ydescendants)
          (collect-highest-intersects xdescendants)
@@ -437,7 +435,7 @@
 (defun find-highest-intersections (xs ys)
    (for type in xs
       do
-      (when (member type ys)
+      (when (member type ys :test #'eq)
          (let ((type-entry (get-type-entry type)))
             (unless (seen-node-p type-entry)
                (mark-node-seen type-entry)
@@ -534,8 +532,8 @@
           do
          (let* ((pair (glbset-top glbrec)))
            (if
-             (and (member (car pair) ancestors)
-                  (member (cadr pair) ancestors))
+             (and (member (car pair) ancestors :test #'eq)
+                  (member (cadr pair) ancestors :test #'eq))
              (let ((new-probs
                     (check-lbs-from-top (car pair) (cadr pair))))
                (if new-probs
@@ -584,17 +582,18 @@
     (dolist (x tset2)
       (when
          (dolist (y tset1)
-           (when (member y (retrieve-ancestors x))
+           (when (member y (retrieve-ancestors x) :test #'eq)
              (setf ok1 (cons x y))
              (return ok1)))
         (return ok1)))
     ;;; now check to see whether there is some other element pair which
     ;;; either match, or where tset2 is strictly more specific
     (and ok1
-      (dolist (x1 (remove (car ok1) tset2))
+      (dolist (x1 (remove (car ok1) tset2 :test #'eq))
         (when
-          (dolist (y1 (remove (cdr ok1) tset1))
-            (when (or (eql x1 y1) (member y1 (retrieve-ancestors x1)))
+          (dolist (y1 (remove (cdr ok1) tset1 :test #'eq))
+            (when (or (eql x1 y1) 
+                      (member y1 (retrieve-ancestors x1) :test #'eq))
               (setf ok2 t)
               (return ok2)))
           (return ok2))))))
@@ -919,46 +918,20 @@
       (t
          (mark-node-seen type-entry)
          (let* ((indef (type-constraint type-entry))
-                (full-tdfs nil))
-           (if *non-default-system*
-               ; shortcut for efficiency
-               (setf full-tdfs
-                      (make-nondefault-tdfs indef))
-             ; else
-             (let*
-                 ((default-specs (type-default-spec type-entry))
-                  (default-fss
+                (full-tdfs nil)
+                (default-specs (type-default-spec type-entry))
+                (default-fss
                     (for default-spec in default-specs
                          collect
                          (make-equivalent-persistence-defaults indef 
-                               (car default-spec) (cdr default-spec) node)))
-                  (default-fs 
-                    (copy-and-unify-set 
-                     (cons indef (mapcar #'cdr default-fss)))))
-               (when (and default-fss (not default-fs))
-                 (cerror "Ignore them"
-                         "Defaults for type ~A mutually inconsistent" node))
+                               (car default-spec) (cdr default-spec) node))))               
                (setf full-tdfs 
                      (inherit-default-constraints node type-entry 
                        (construct-tdfs 
                         indef
-                        default-fs
-                        default-fss)))))
-           (setf (type-tdfs type-entry) full-tdfs)
-           full-tdfs))))
-
-(defun copy-and-unify-set (fss)
-   (if (null (cdr fss))
-      fss
-      (with-unification-context (ignore)
-         (copy-dag
-            (reduce
-               #'(lambda (x y)
-                   (unless
-                      (or (null x) (null y))
-                      (unify-dags x y)))
-               fss)))))
-
+                        default-fss)))
+               (setf (type-tdfs type-entry) full-tdfs)
+               full-tdfs))))
 
 (defun make-equivalent-persistence-defaults (indef persistence default-spec node)
    (let*
@@ -990,21 +963,32 @@
                (setf new-default indef))
             (cons persistence new-default)))))
             
-
-            
-
 (defun inherit-default-constraints (node type-entry local-tdfs)
   (declare (ignore node))
-   (reduce #'(lambda (x y)
-         (unless
-            (or (null x) (null y))
-            (yadu x y)))
-      (mapcar #'(lambda (parent)
-            (let ((constraint
-                     (expand-default-constraint parent
-                        (get-type-entry parent))))
-               (if constraint
-                  (copy-tdfs-completely constraint))))
-         (type-parents type-entry))
-      :initial-value 
+  (let ((current-tail (tdfs-tail local-tdfs)))
+    (for parent in (type-parents type-entry)
+         do
+         (let ((parent-tdfs (expand-default-constraint parent
+                                 (get-type-entry parent))))
+           (unless parent-tdfs
+             (cerror "Ignore it" "Cannot make tdfs for ~A" parent))
+           (when parent-tdfs
+             (setf current-tail
+                   (combine-yadu-tails (tdfs-tail parent-tdfs)
+                             current-tail (tdfs-indef local-tdfs))))))
+      (setf (tdfs-tail local-tdfs) current-tail)
       local-tdfs))
+
+(defun combine-yadu-tails (tail1 tail2 indef)
+  (let ((ct1 (for element in tail1
+                 collect
+                 (copy-tail-element-completely
+                    element)))
+        (ct2 (for element in tail2
+                 collect
+                 (copy-tail-element-completely
+                    element))))
+    (cond ((and ct1 ct2)
+           (merge-tails ct1 ct2 indef))
+          (ct1)
+          (t ct2))))

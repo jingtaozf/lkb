@@ -116,8 +116,8 @@
             (read-type-entry istream)))))
 
 (defun read-type-entry (istream)
-   (let* ((name (read istream))
-         (parents (read istream))
+   (let* ((name (lkb-read istream nil))
+         (parents (read-parent-list istream name))
          (comment nil)
          (next-char (peek-char t istream nil 'eof)))
       (when (and (symbolp name) (eql (schar (symbol-name name) 0) #\%))
@@ -162,6 +162,19 @@
                   end of a unification specialisation")
             (error "~%Badly formed type specification for ~A" name))))))
 
+(defun read-parent-list (istream name)
+  (let ((parents (read istream)))
+    (unless (listp parents)
+      (error "~%Parents of ~A are ~A: should be a list"
+             name parents))
+    (if (every #'symbolp parents)
+      parents
+      (for parent in parents
+           collect
+           (if (symbolp parent) parent
+               (convert-to-lkb-symbol parent))))))
+
+
 
 (defun read-defaults (istream name defaults-so-far)
    ;;; keeps reading while next stuff begins with a slash
@@ -171,7 +184,7 @@
    (let ((next-char (peek-char t istream nil 'eof)))
       (when (char= next-char #\<)
          (error "Missing persistence label in ~A" name))
-      (let ((persistence (read istream)))
+      (let ((persistence (lkb-read istream nil)))
          (push (cons persistence 
                (read-path-spec-list istream name))
             defaults-so-far)
@@ -191,7 +204,10 @@
       (unless (and (listp daughter-list)
             (eql (car daughter-list) 'or))
          (error "Badly formed disjuction in ~A" name))
-      (cdr daughter-list)))
+      (for dtr in (cdr daughter-list)
+           collect
+           (if (symbolp dtr) dtr
+               (convert-to-lkb-symbol dtr)))))
 
 
 (defun read-path-spec-list (istream name)
@@ -232,12 +248,17 @@
 (defun read-path (istream name)
    (let ((next-char (peek-char t istream nil 'eof)))
       (cond ((eq next-char #\<)
-            (read-char istream)
-            (read-typed-path istream name))
-         (t (let ((value (read istream)))
+             (read-char istream)
+             (read-typed-path istream name))
+            ((eq next-char #\() ; disjunction
+             (let ((value (read istream)))
                (make-u-value :types
-                  (if (atom value)
-                     (list value) value)))))))
+                  (for type in value
+                       collect
+                       (if (symbolp type) type
+                           (convert-to-lkb-symbol type))))))
+             (t (let ((value (lkb-read istream t)))
+                  (make-u-value :types (list value)))))))
 
 (defun read-typed-path (istream name)
    (let ((typed-feature-list nil))
@@ -255,7 +276,7 @@
 (defun read-type-feature-pair (istream name)
    ; the seperating : has to be delimited by spaces at the moment
    (unless *toptype* (error "No top type has been defined"))
-   (let* ((token (read istream))
+   (let* ((token (lkb-read istream nil))
          (next-char (peek-char t istream nil 'eof)))    
       (cond 
          ((eql next-char 'eof)
@@ -266,7 +287,7 @@
             (read-char istream)
             (make-type-feature-pair :type *toptype* :feature token))
          (t 
-            (let* ((feature (read istream))
+            (let* ((feature (lkb-read istream nil))
                   (end-char (peek-char t istream nil 'eof)))
                (cond 
                   ((eql end-char 'eof)

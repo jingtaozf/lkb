@@ -71,7 +71,7 @@
 
 
 (defun read-tdl-rule-entry (istream lexical)
-   (let* ((id (read istream))
+   (let* ((id (lkb-read istream nil))
           (entry (make-rule :id id))
           (non-def nil)
           (next-char (peek-char t istream nil 'eof)))

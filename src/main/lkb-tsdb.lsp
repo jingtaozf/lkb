@@ -90,13 +90,13 @@ e.g.
                      internal-time-units-per-second))
                )))))
 
+(defparameter *do-something-with-parse* nil)
 
 (defun parse-tsdb-sentences-get-filename (prompt file)
    (unless file
       (setq file (ask-user-for-new-pathname prompt)))
    (when file
       (if (probe-file file) (and (delete-file file) file) file)))
-
 
 (defun parse-tsdb-sentences1 (istream parse-file result-file &aux (nsent 0))
    ;; open and close output files for each sentence, so if run fails we have all
@@ -153,7 +153,8 @@ e.g.
         (add-words-to-chart)
         (setf *parse-record*
         (find-spanning-edges 0 (length user-input)))
-;        (cache-structures)
+        (when (fboundp *do-something-with-parse*)
+                 (funcall *do-something-with-parse*))
         (values *parse-unifs* *parse-fails*)))
 
 

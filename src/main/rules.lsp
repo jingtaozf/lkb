@@ -230,7 +230,7 @@
 
 (defun read-irreg-entry (istream)
   (let* ((irreg-form (string (read istream)))
-         (rule (create-lex-rule-name (read istream)))
+         (rule (create-lex-rule-name (lkb-read istream nil)))
          (stem (string (read istream))))
     (add-to-irregulars irreg-form rule stem)))
 

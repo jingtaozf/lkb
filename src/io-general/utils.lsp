@@ -21,6 +21,19 @@
             temporary-readtable))
       temporary-readtable))
 
+(defun lkb-read (istream &optional strings-allowed)
+  (let ((item (read istream)))
+    (if (stringp item)
+      (if strings-allowed 
+        item 
+        (error "~%~S should not be a string" item))
+      (if (symbolp item)
+        item
+        (convert-to-lkb-symbol item)))))
+
+(defun convert-to-lkb-symbol (item)
+  (intern (format nil "~S" item)))
+
 (defun set-up-type-interactions nil
    (enable-type-interactions)
 ;   (initialise-type-menus)

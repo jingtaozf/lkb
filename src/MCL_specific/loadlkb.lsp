@@ -2,10 +2,7 @@
 
 (defparameter *lkb-system-version* :main)
 
-(defparameter *lkb-source-dir* '(:absolute "Macintosh HD" "lkb99-expt"))
-
-(defparameter *lkb-fasl-dir* 
-'(:absolute "Macintosh HD" "lkb99-expt" "fasl"))
+(defparameter *lkb-source-dir* '(:absolute "Macintosh HD" "lkb"))
 
 (defparameter *psorts-temp-file* 
   (make-pathname :name "templex" 
@@ -18,6 +15,7 @@
       (dolist  (dir-and-file 
       '( ("main" "for")         ; duplicate useful Procyon CL for loops
                            ; generic CL
+         ("main" "globals")
          ("io-general" "utils")
          ("MCL_specific" "picwin")      ; MacCL specific PICT windows
          ("MCL_specific" "picfield")    ; MacCL specific pop-up-fields
@@ -30,7 +28,7 @@
          ("main" "yadu")        ; generic CL
          ("main" "gen")         ; generic CL
          ("main" "structs")     ; generic CL
-         ("main" "globals")     ; generic CL
+         ("main" "user-fns")     ; generic CL
          ("main" "checktypes")  ; generic CL
          ("main" "marks")       ; generic CL
          ("io-paths" "typeinput")   ; generic CL
@@ -48,7 +46,7 @@
          ("main" "morph")       ; generic CL
          ("MCL_specific" "dialog")
          ("MCL_specific" "tree") ; some dialect specific - type hierarchy fns
-         ("main" "graph")       ; graph drawing by JAC - generic CL         
+         ("io-general" "graph")       ; graph drawing by JAC - generic CL         
          ("main" "check-unif")  ; generic CL
          ("main" "lkb-tsdb")    ; generic CL
          ("io-general" "tree-nodes")
@@ -56,6 +54,7 @@
          ("io-tdl" "tdloutput")
          ("io-tdl" "tdlruleinput")
          ("io-tdl" "tdllexinput")
+         ("main" "batch-check")
          ))
       (let* ((dir (car dir-and-file))
              (file (cadr dir-and-file))

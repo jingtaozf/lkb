@@ -57,7 +57,7 @@
 ;;; Lex-def -> Lexid Avm-def . 
 ;;; Lexid  -> identifier
 ;;; Avm-def -> := Conjunction (as in tdltypeinput.lsp)
-   (let* ((name (read istream))
+   (let* ((name (lkb-read istream nil))
           (constraint nil)
           (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)
@@ -138,7 +138,7 @@
                (t (read-tdl-psort-entry istream templates-p qc-p))))))
 
 (defun read-tdl-psort-entry (istream &optional templates-p qc-p)
-   (let* ((name (read istream))
+   (let* ((name (lkb-read istream nil))
           (constraint nil)
           (next-char (peek-char t istream nil 'eof)))
      (unless (eql next-char #\:)

@@ -63,8 +63,8 @@
       (format t "~%Lexical entry file read")))
 
 (defun read-lex-entry (istream)
-   (let* ((orth (read istream))
-         (id (read istream)))
+   (let* ((orth (lkb-read istream nil))
+         (id (lkb-read istream nil)))
       (push (make-lex-id orth id) *ordered-lex-list*)
       (multiple-value-bind 
          (non-def defs)
@@ -110,7 +110,8 @@
                                              (t "Psort")))))
 
 (defun read-psort-entry (istream &optional templates-p qc-p)
-   (let ((id (read istream)))
+  (declare (ignore qc-p))
+   (let ((id (lkb-read istream nil)))
       (multiple-value-bind 
          (non-def defs)
          (read-psort-unifications id istream)
@@ -161,7 +162,7 @@
                 (check-for #\. istream orth)
                 (values (append type-unifs fs) nil)))))
          ((not type) ; may have a type by itself 
-          (let ((itype (read istream)))
+          (let ((itype (lkb-read istream nil)))
             (if (and itype (is-valid-type itype))
                 (read-psort-unifications orth istream itype))))
          (t
