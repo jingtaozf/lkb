@@ -9,6 +9,21 @@
 
 (in-package :cl-user)
 
+;;;
+;;; generic assoc() and member() are mightier than is typically needed; supply
+;;; simplified versions instead.                           (27-sep-99  -  oe)
+;;;
+(defmacro sassoc (element list)
+  (declare (type list list))
+  `(loop
+       for foo in ,list
+       when (eq (first (the cons foo)) ,element) return foo))
+
+(defmacro smember (element list)
+  (declare (type list list))
+  `(loop for foo in ,list thereis (eq ,element foo)))
+
+
 ;;(defmethod print-object ((obj type) stream) (write-char #\~ stream) (prin1 (type-name obj) stream))
 ;;;
 ;;; For each type we need:
@@ -280,7 +295,8 @@
         (if (eq t2 *toptype*)
             t1
         (let* ((entry (get t1 :type-cache))
-               (found (cdr (assoc t2 entry :test #'eq))))
+               (found (cdr (dolist (foo entry)
+                             (when (eq (first foo) t2) (return foo))))))
           (if found
               (values (car found) (cdr found))
             (multiple-value-bind (subtype constraintp)
@@ -332,8 +348,7 @@
   ;; component(s) before this point
   (let ((t1 (get-type-entry type1))
 	(t2 (get-type-entry type2))
-	(ptype1)
-	(ptype2))
+	ptype1 ptype2)
     (cond 
      ((eq type1 type2) type1)
      ((and (setq ptype1 (instance-type-parent type1))
