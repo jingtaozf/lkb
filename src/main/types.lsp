@@ -254,6 +254,11 @@
 	(member (get-type-entry type2) (retrieve-ancestors type1)
 		:test #'eq)))))
 
+(defun safe-subtype-p (type1 type2)
+  ;;
+  ;; be robust on invalid type names and fail gracefully (i.e. no error())
+  ;;
+  (ignore-errors (subtype-p type1 type2)))
 
 (defun atomic-type-p (type-name)
   (or (stringp type-name)
