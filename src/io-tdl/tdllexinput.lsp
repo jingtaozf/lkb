@@ -67,7 +67,7 @@
          (if (member name *ordered-lex-list* :test #'eq)
            (format
             t
-            "~&WARNING: redefining lexicon entry `~a'.~%" name)
+            "~%WARNING: lexicon entry `~a' redefined." name)
            (push name *ordered-lex-list*))
          (add-lex-from-file nil name constraint default)))))
 
