@@ -170,39 +170,23 @@
 		(edge-id parser-edge))))))
 
 #-tty
-(defun choose-mrs-output-level nil
-  (let ((output-level 
-         (ask-user-for-multiple-choice 
-          "MRS output?" 
-          :none
-          :base
-          :rmrs
-          :rmrs-compact
-          :scoped)))
-    (case output-level
-      (:none (setf mrs::*mrs-output-p* nil)
-             (setf mrs::*mrs-scoping* nil)
-             (setf mrs::*rmrs-xml* nil)
-             (setf mrs::*rmrs-compact* nil))
-      (:base (setf mrs::*mrs-output-p* t)
-             (setf mrs::*mrs-scoping* nil)
-             (setf mrs::*rmrs-xml* nil)
-             (setf mrs::*rmrs-compact* nil))
-      (:rmrs (setf mrs::*mrs-output-p* t)
-             (setf mrs::*rmrs-xml* t)
-             (setf mrs::*rmrs-compact* nil)
-             (setf mrs::*mrs-scoping* nil))
-      (:rmrs-compact (setf mrs::*mrs-output-p* t)
-                     (setf mrs::*rmrs-xml* nil)
-                     (setf mrs::*rmrs-compact* t)
-                     (setf mrs::*mrs-scoping* nil))
-      (:scoped (setf mrs::*rmrs-xml* nil)
-               (setf mrs::*rmrs-compact* nil)
-               (setf mrs::*mrs-output-p* nil)
-               (setf mrs::*mrs-scoping* t)))))
+(defun toggle-mrs-base nil
+  (setf mrs::*mrs-base-output-p* (not mrs::*mrs-base-output-p*)))
 
+(defun toggle-mrs-scoping nil
+  (setf mrs::*mrs-scoping-output-p* (not mrs::*mrs-scoping-output-p*)))
+
+(defun toggle-rmrs-xml nil
+  (setf mrs::*rmrs-xml-output-p* (not mrs::*rmrs-xml-output-p*)))
+
+(defun toggle-rmrs nil
+  (setf mrs::*rmrs-compact-output-p* (not mrs::*rmrs-compact-output-p*)))
                                                     
-
+;;; logic of choose-mrs-output-level was getting horrible
+;;; and it didn't work on Windows (XP) anyway
+;;;
+;;; new functionality means you can have as many (or as few)
+;;; types of output as you like
 
 ;;; tty version
 

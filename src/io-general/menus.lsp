@@ -36,7 +36,10 @@
                       ;; mrs
                       lkb::read-mrs-rule-file
                       lkb::clear-mrs-rules
-                      lkb::choose-mrs-output-level
+                      lkb::toggle-mrs-base
+                      lkb::toggle-mrs-scoping	
+		      lkb::toggle-rmrs
+                      lkb::toggle-rmrs-xml
                       ;; lexical db
                       ;lkb::load-cdb-lexicon-from-script
                       ;lkb::load-psql-lexicon-from-script
@@ -236,8 +239,17 @@
                      (make-menu-item :name "Clear munger"
                                      :value 'clear-mrs-rules
                                      :available-p :mrs)
-                     (make-menu-item :name "Output level"
-                                     :value 'choose-mrs-output-level
+                     (make-menu-item :name "Toggle base output"
+                                     :value 'toggle-mrs-base
+                                     :available-p :mrs)
+		     (make-menu-item :name "Toggle scoping"
+                                     :value 'toggle-mrs-scoping
+                                     :available-p :mrs)
+		     (make-menu-item :name "Toggle RMRS"
+                                     :value 'toggle-rmrs
+                                     :available-p :mrs)
+		     (make-menu-item :name "Toggle RMRS (XML)"
+                                     :value 'toggle-rmrs-xml
                                      :available-p :mrs))
                :available-p :mrs)
          (make-lkb-submenu-item :menu-title "Generate"

@@ -10,9 +10,23 @@
 (mrs::output-mrs-after-parse *parse-record*)
 |#
 
-(defvar *rmrs-xml* nil)
+(defvar *mrs-scoping-output-p* nil)
+;; interface control - causes scoping code to be run when set
 
-(defvar *rmrs-compact* nil)
+(defvar *mrs-base-output-p* nil)
+;; interface control - set via mrstoplevel
+
+(defvar *rmrs-xml-output-p* nil)
+;; interface control - set via mrstoplevel
+
+(defvar *rmrs-compact-output-p* nil)
+;; interface control - set via mrstoplevel
+
+(defvar *mrs-discourse* nil)
+;; interface control
+
+(defvar *mrs-debug* nil)
+;;; for debugging - set to latest mrs structure
 
 #+:lkb
 (defun output-mrs-after-parse (&optional edges stream)
@@ -20,10 +34,11 @@
   ;;; the need to use *lkb-background-stream* is because 
   ;;; of the complexity with background streams in ACL
   ;;; it's set in topmenu.lsp
-  (when (or *mrs-scoping*
-            *mrs-output-p*
-            *rmrs-xml*
-            *rmrs-compact*)
+  (when (or *mrs-scoping-output-p*
+            *mrs-base-output-p*
+            *rmrs-xml-output-p*
+            *rmrs-compact-output-p*
+	    *mrs-discourse*)
     (unless stream
       (setf stream lkb::*lkb-background-stream*))
     (unless edges (setf edges *parse-record*))
@@ -37,32 +52,26 @@
                      (lkb::parse-tree-structure edge))
              (treat-mrs mrs t stream))))))
 
-(defvar *mrs-debug* nil)
-
-(defvar *mrs-discourse* nil)
-
-(defparameter *regurgitate* nil)
-
 #+:lkb
 (defun treat-mrs (mrs-struct simplep stream)
   (format stream "~%~A " lkb::*sentence*)
   (setf *mrs-debug* mrs-struct)
-  (cond (*mrs-scoping*
+  (when *mrs-base-output-p*
+    (output-mrs1 mrs-struct 'simple stream))
+  (when *mrs-scoping-output-p*
          (process-mrs-struct mrs-struct nil 10 simplep stream))
-        (*mrs-discourse*
+  (when *rmrs-xml-output-p*
+         (output-rmrs1 (mrs-to-rmrs mrs-struct) 'xml stream))
+  (when *rmrs-compact-output-p*
+    (output-rmrs1 (mrs-to-rmrs mrs-struct) 'compact stream t))
+  (when *mrs-discourse*
 	 (output-mrs1 mrs-struct 'simple stream)
 	 (output-mrs1 mrs-struct 'prolog stream)
 	 (with-open-file (pro-out "~/tmp/prologformat"
 			  :direction :output :if-does-not-exist :create
 			  :if-exists :append)
-	   (output-mrs1 mrs-struct 'prolog pro-out)))
-        (*rmrs-xml* 
-         (output-rmrs1 (mrs-to-rmrs mrs-struct) 'xml stream))
-        (*rmrs-compact* 
-         (output-rmrs1 (mrs-to-rmrs mrs-struct) 'compact stream))
-        (*regurgitate*
-         (output-mrs1 mrs-struct 'simple-indexed stream))
-        (t (output-mrs1 mrs-struct 'simple stream))))
+	   (output-mrs1 mrs-struct 'prolog pro-out))))
+
 
 (defun process-mrs-struct (mrs-psoa sentence maximum simplep stream)
   (when mrs-psoa
@@ -191,6 +200,8 @@
 ;;; this collection in `rmrs/interface.lisp', but the ECL -- PET linking would
 ;;; be unhappy about duplicate file names, for a silly reason.
 ;;;
+;;; FIX - so change the file name?  
+;;; this should be in rmrs directory (AAC 12 Oct 2003)
 
 (defun rasp-semantix-hook (derivation)
   (let* ((*package* (find-package :mrs))
@@ -204,6 +215,7 @@
   (let ((*package* (find-package :mrs)))
     (ignore-errors 
      (read-rmrs (first (xml:parse-xml string))))))
+;;; FIX - now need a second argument to read-rmrs, indicating origin
 
 (defun browse-rmrs (rmrs &optional title)
   (ignore-errors

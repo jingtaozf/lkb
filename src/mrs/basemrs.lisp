@@ -133,6 +133,7 @@
 ;;; test for variable equality
 
 (defun eql-var-id (var1 var2)
+  ;;; can't be macroized cos used where fn is required
   (eql (var-id var1) (var-id var2)))
 
 ;;; The MRS structure could be output either as simple ascii
