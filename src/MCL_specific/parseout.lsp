@@ -23,7 +23,8 @@
 
 (defun draw-new-parse-tree (node title horizontalp)
    (let*
-      ((font (lkb-parse-tree-font))
+      ((ccl:*idle-sleep-ticks* 0) ; don't let get-next-event give much time to others
+       (font (lkb-parse-tree-font))
        (ascent (font-info font))
        (description
           (graph-display-layout node

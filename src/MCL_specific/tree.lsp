@@ -1,4 +1,4 @@
-;;; Copyright Ann Copestake 1992-7 All Rights Reserved.
+;;; Copyright Ann Copestake, John Carroll 1992-8 All Rights Reserved.
 ;;; No use or redistribution without permission.
 ;;; 
 
@@ -6,6 +6,8 @@
 
 ;;; 1996 modified to allow trees to be displayed without automatically
 ;;; added glb types
+
+;;; 1998 substantially rewritten
 
 
 ;;; This is a function so users can change font sizes after code has loaded
@@ -48,7 +50,7 @@
 
 ;;; Entry points - (time (create-type-hierarchy-tree))
 ;;; (create-type-hierarchy-tree 'sign)
-;;; (create-type-hierarchy-tree 'nom_rel nil nil)
+;;; (create-type-hierarchy-tree 'nom_rel nil t)
 
 (defun create-type-hierarchy-tree (&optional (type *toptype*) old-window show-all-p)
    ;; if show-all-p is true then we never hide any nodes. If it's false then we
@@ -125,7 +127,8 @@
          (event-dispatch) ; get remove-subviews redrawing over and done with
          (erase-region existing (clip-region existing))))
    (let*
-      ((*type-display* t)
+      ((ccl:*idle-sleep-ticks* 0) ; don't let get-next-event give much time to others
+       (*type-display* t)
        (*type-records* nil)
        (font (lkb-type-tree-font))
        (ascent (font-info font))
@@ -217,7 +220,6 @@
       (string-width (type-node-text-string node) font)))
 
 
-
 ;;; Highlight current node, if there is one at the moment
 
 (defmethod view-draw-contents ((pane active-type-hier-window-pane))
@@ -234,7 +236,7 @@
             (type-hier-record-node record) (view-font pane)))))
 
 
-;;; pop up menus are created as separate views in the right position
+;;; Pop up menus are created as separate views in the right position
 ;;; but only on the first click near where the type is
 
 (defmethod view-click-event-handler ((pane active-type-hier-window-pane) where)
@@ -307,8 +309,7 @@
        :menu-item-action 
        #'(lambda () 
            (setf (type-shrunk-p type-entry) (not (type-shrunk-p type-entry)))
-           (let* ((*idle-sleep-ticks* 0)        ; don't let get-next-event give
-                  (pane (view-container menu))  ; much time to other apps
+           (let* ((pane (view-container menu))
                   (record (display-type-node-record node pane))
                   (node-pos (type-hier-record-position record))
                   (view-pos (view-scroll-position pane)))
@@ -343,15 +344,14 @@
        :menu-item-title "New hierarchy"
        :menu-item-action
        #'(lambda ()
-           (let ((*idle-sleep-ticks* 0))
-             (let ((*last-type-name* (type-name type-entry)))
+           (let ((*last-type-name* (type-name type-entry)))
                (declare (special *last-type-name*))
                (multiple-value-bind (type show-all-p)
                    (ask-user-for-type nil '("Show all types?" . :check-box))
                  (when type
                    (let ((type-entry (get-type-entry type)))
                      (when type-entry 
-                       (create-type-hierarchy-tree type nil show-all-p))))))))
+                       (create-type-hierarchy-tree type nil show-all-p)))))))
        :disabled (null (type-daughters type-entry)))))
 
 
