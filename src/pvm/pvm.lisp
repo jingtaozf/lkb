@@ -25,7 +25,7 @@
 
 (defstruct cpu 
   host spawn options 
-  architecture class threshold name grammar template
+  architecture class task threshold name grammar template
   preprocessor reader
   create complete)
 

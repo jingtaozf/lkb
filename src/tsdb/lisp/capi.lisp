@@ -102,12 +102,19 @@
         :ok))))
 
 (let ((lock (mp:make-process-lock)))
-  (defun allocate-client (item &key (protocol :raw) (wait 42))
+  (defun allocate-client (item &key protocol (task :parse) (wait 42))
     (loop
         for i from 1 to wait do
           (loop
               for client in *pvm-clients*
-              when (eq (client-protocol client) protocol) do
+              for cpu = (client-cpu client)
+              when (and (or (null protocol)
+                            (eq (client-protocol client) protocol))
+                        (or (null task)
+                            (and (eq task :parse) (null (cpu-task cpu)))
+                            (eq task (cpu-task cpu))
+                            (smember task (cpu-task cpu))))
+              do
                 (mp:with-process-lock (lock) 
                   (when (eq (client-status client) :ready)
                     (setf (client-status client) item)

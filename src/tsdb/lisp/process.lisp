@@ -790,9 +790,10 @@
                                   for rank in ranks
                                   for foo = (get-field :rank rank)
                                   thereis (when (eql foo 1) rank)))
-                         (string (get-field :mrs top)))
-                    (when (and reader (stringp string))
-                      (funcall reader string)))))
+                         (mrs (get-field :mrs top)))
+                    (if (and reader (stringp mrs))
+                      (funcall reader mrs)
+                      mrs))))
            (gc (get-field :gc item))
            (edges (get-field :edges item))
            result i-load)

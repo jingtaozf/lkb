@@ -338,7 +338,7 @@
 (defun www-analyze (input exhaustivep nedges nresults)
   (let* ((item (pairlis '(:i-id :parse-id :i-input :edges)
                         (list 0 0 input nedges)))
-         (client (tsdb::allocate-client item :wait 5))
+         (client (tsdb::allocate-client item :task :parse :wait 5))
          (cpu (and client (pvm::client-cpu client)))
          (tid (and client (pvm::client-tid client)))
          (protocol (and client (pvm::client-protocol client)))
