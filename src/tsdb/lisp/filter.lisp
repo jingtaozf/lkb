@@ -41,6 +41,11 @@
 (defparameter *filter-mrs-relations-ratio* 1.0)
 
 (defun result-filter (item &key (verbose *filter-verbose-p*))
+  #+:debug
+  (format 
+   t 
+   "~%~%[~a] `~a'.~%"
+   (get-field :i-id item) (get-field :i-input item))
   (let ((flags (make-hash-table :test #'eql)))
     #+:mrs
     (when (and (smember :sparseness *filter-test*)
@@ -111,23 +116,83 @@
                         (let ((mrs (mrs::read-mrs-from-string mrs)))
                           (setf (get-field :mrs result) mrs))
                         (and (mrs::psoa-p mrs) mrs)))
-          for stream = (make-string-output-stream)
+          for cheap = (when mrs 
+                        (let* ((stream (make-string-output-stream))
+                               (*standard-output* stream)
+                               result error)
+                          (multiple-value-setq (result error)
+                            (ignore-errors (mrs::produce-one-scope mrs)))
+                          (when error 
+                            (push 
+                             (list :scope (format nil "~a" error))
+                             (gethash id flags)))
+                          (when verbose
+                            (let* ((output 
+                                    (get-output-stream-string stream))
+                                   (output (normalize-string output)))
+                              (unless (string= output "")
+                                (push
+                                 (list :scope output)
+                                 (gethash id flags)))))
+                          (unless (mrs::psoa-p result)
+                            (push
+                             (list :scope "no cheap scope") 
+                             (gethash id flags)))
+                          result))
+          for bindings = (when cheap 
+                           (let* ((stream (make-string-output-stream))
+                                  (*standard-output* stream)
+                                  result error)
+                             (multiple-value-setq (result error)
+                               (ignore-errors (mrs::make-scoped-mrs cheap)))
+                             (when error 
+                               (push 
+                                (list :scope (format nil "~a" error))
+                                (gethash id flags))
+                               (push
+                                (list :scope "no valid cheap scope") 
+                                (gethash id flags)))
+                             (when verbose
+                               (let* ((output 
+                                       (get-output-stream-string stream))
+                                      (output (normalize-string output)))
+                                 (unless (string= output "")
+                                   (push
+                                    (list :scope output)
+                                    (gethash id flags)))))
+                             result))
           for scopes = (when mrs 
-                         (let ((*standard-output* stream))
-                           (multiple-value-bind (result error)
-                               (ignore-errors
-                                (mrs::make-scoped-mrs mrs))
-                             (when error
-                               (format stream "~a" error))
-                             result)))
-          when (and mrs (null scopes))
-          do 
-            (let* ((output (and verbose (get-output-stream-string stream)))
-                   (output (normalize-string output))
-                   (output (if (string= output "")
-                             "no valid scopes"
-                             output)))
-              (push (list :scope output) (gethash id flags)))))
+                         (let* ((stream (make-string-output-stream))
+                                (*standard-output* stream)
+                                result error)
+                           (multiple-value-setq (result error)
+                             (ignore-errors (mrs::make-scoped-mrs mrs)))
+                           (when error 
+                             (push 
+                              (list :scope (format nil "~a" error))
+                              (gethash id flags)))
+                           (when verbose
+                             (let* ((output 
+                                     (get-output-stream-string stream))
+                                    (output (normalize-string output)))
+                               (unless (string= output "")
+                                 (push
+                                  (list :scope output)
+                                  (gethash id flags)))))
+                           result))
+          when bindings
+          do
+            (if (rest bindings)
+              (push
+               (list :scope (format nil "~a cheap scopes" (length bindings)))
+               (gethash id flags))
+              (when (mrs::extra-bindings-p (first bindings))
+                (push
+                 (list :scope "incomplete cheap scope")
+                 (gethash id flags))))
+      
+          unless (and mrs scopes)
+          do (push (list :scope "no valid scope(s)") (gethash id flags))))
     #+:mrs
     (when (smember :fragmentation *filter-test*)
       (loop
@@ -174,7 +239,7 @@
                        (format 
                         t 
                         "    scoping: `~a'.~%"
-                        (second foo)))
+                        (normalize-string (second foo))))
                       (:fragmentation
                        (format 
                         t 
