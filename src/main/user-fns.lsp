@@ -37,11 +37,14 @@
                                     :types (list orth-value)))
                  unifs)
            (setq tmp-orth-path (append tmp-orth-path *list-tail*))))
-    (push (make-unification :lhs
+#|
+         ;; not a good idea for difference lists                             
+(push (make-unification :lhs
                             (create-path-from-feature-list tmp-orth-path)
                             :rhs 
                             (make-u-value :types (list *empty-list-type*)))
-          unifs)
+                            unifs)
+|#
     (let ((indef (process-unifications unifs)))
       (when indef
         (setf indef (create-wffs indef))
