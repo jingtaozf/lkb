@@ -41,7 +41,7 @@
 		      (eq :pgres-tuples-ok exec-status))
 	    ;(error "BAD COMMAND TO ~s: ~a" (db db) (result-error-message result))
 	    (warn "BAD COMMAND TO ~s: ~a" (db db) (result-error-message result))            
-	    (throw 'sql-error (result-error-message result))            
+	    (throw 'sql-error (cons exec-status (result-error-message result)))            
             )
 	  (let ((field-names (loop for field below (nfields result)
 				 collect (field-name result field)))

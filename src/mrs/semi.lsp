@@ -404,6 +404,7 @@
   (push row (gethash (car row) sdbt))
   sdbt)
 
+#+:psql
 (defun load-sdbt (sdbt dbname)
   (clear sdbt)
   (format t "~%loading table ~a from ~a..." (sdbt-name sdbt) dbname)
@@ -471,6 +472,7 @@
 	   (print-sdbt x :stream stream)))
      (sdb-tables sdb))))
     
+#+:psql
 (defun load-sdb (sdb dbname)
   (mapcar #'(lambda (x)
 	      (load-sdbt x dbname))
@@ -489,17 +491,26 @@
 	(setf *sdb* sdb)
 	(print-sdb sdb)))
 
-(defmethod populate-semi-from-sdb ((semi semi) (sdb sdb))
-  (with-slots (lexicon) semi
-    (close-semi semi)
-    (let* ((pred-t (sdb-table sdb 'pred))
-	   (pred-r (sdbt-rows pred-t)))
-      (loop
-	  for lex-id being each hash-key in pred-r
-	  do
-	    (setf (gethash lex-id lexicon)
-	      (load-lex-id-db lex-id sdb))
-	    ))))
+#+:psql
+(defmethod populate-semi-from-psql ((semi semi) &key (psql-lexicon lkb::*psql-lexicon*))
+  (close-semi semi)
+  (let ((sdb (make-sdb)))
+    (load-sdb sdb psql-lexicon)
+    (populate-semantic-table sdb)
+    (setf (semi-lexicon semi) *semantic-table*)
+    (populate-semi semi))
+  semi)
+
+(defmethod populate-semantic-table ((sdb sdb))
+  (let* ((pred-t (sdb-table sdb 'pred))
+	 (pred-r (sdbt-rows pred-t)))
+    (loop
+	for lex-id being each hash-key in pred-r
+	for record = (load-lex-id-db lex-id sdb)
+	do
+	  (add-semantics-record2 lex-id record)
+	  ))
+  *semantic-table*)
 
 ;;; -> lex-id
 ;;; semantics_record.id = lex-id
@@ -627,7 +638,6 @@
 	for pred-row = (list lex-id pred frame-id)
 	do
 	  (sdbt-rows-hash pred-row pred-r)
-	if frame-hashed
 	unless frame-hashed
 	do
 	  (setf (gethash frame frame-h) frame-id)
@@ -664,7 +674,6 @@
 			   for extra-row = (list extra-id extra-feature extra-value)
 			   do
 			     (sdbt-rows-hash  var-row var-r)
-			   if extra-hashed
 			   unless extra-hashed
 			   do
 			     (setf (gethash extra extra-h) extra-id)
@@ -800,3 +809,8 @@
       (lkb::str-2-symb (format nil "\"~a" (subseq val-str 2 len))))
      (t
       (lkb::str-2-symb val-str)))))
+
+
+#+:psql
+(defun rc (&optional (file "mrs/semi"))
+	   (lkb::recomp file))

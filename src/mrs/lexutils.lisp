@@ -22,6 +22,7 @@
 (defun clear-generator-grules nil
   (clear-generator-index))
   
+(defvar mrs::*semi*)
 
 ;;; for the time being, the whole lexicon has to be reindexed whenever
 ;;; something is altered ...
@@ -33,7 +34,20 @@
   (format t "~%Indexing complete")
   nil)
 
-(defun index-lexicon nil
+;;; retrieve SEM-I from psql-lexicon if possible
+;;; if not, recompile semantic indices as per normal
+(defun index-lexicon (&key mode)
+  #-:psql
+  (declare (ignore mode))
+  #+:psql
+  (unless (eq mode :recompile)
+    (format t "~% (attempting to retrieve SEM-I from LexDB)")
+    (if (mrs::semi-p 
+	 (catch 'pg::sql-error
+	   (mrs::populate-semi-from-psql mrs::*semi*)))
+	(return-from index-lexicon)
+      (format t "~% (unable to retrieve database SEM-I)")))
+  (format t "~% (recompiling semantic indices)")
   #+:psql
   (when (typep *lexicon* 'psql-lex-database)
     (format t "~%(caching all lexical records)")
@@ -50,14 +64,17 @@
     (unless mrs::*top-semantics-entry*
       (error "~%No entry found for top semantics type ~A" 
 	     mrs::*top-semantics-type*))
-    (let ((ids-table (make-hash-table :test #'eq)) (ids nil))
+    (let ((ids-table (make-hash-table :test #'eq)) 
+	  (ids nil))
       ;; because of multiple lexical entries, an id may be indexed by
       ;; multiple orthographies
       (dolist (word (lex-words *lexicon*))
 	(dolist (inst (lookup-word *lexicon* word :cache nil))
 	  (setf (gethash inst ids-table) t)))
       (maphash
-       #'(lambda (id val) (declare (ignore val)) (push id ids))
+       #'(lambda (id val) 
+	   (declare (ignore val)) 
+	   (push id ids))
        ids-table)
       (process-queue
        #'(lambda ()
@@ -68,15 +85,14 @@
        #'(lambda (entry)
 	   (expand-psort-entry entry)
 	   (let ((new-fs (lex-entry-full-fs entry)))
-	     (if (and new-fs (not (eq new-fs :fail)))
-		 (mrs::extract-lexical-relations entry)
+	     (if (and new-fs 
+		      (not (eq new-fs :fail)))
+		 (mrs::extract-lexical-relations2 entry)
 	       (format t "~%No feature structure for ~A~%" 
 		       (lex-entry-id entry))))
 	   (unexpand-psort *lexicon* (lex-entry-id entry))))
       (mrs::check-for-redundant-filter-rules)))
   (setf *batch-mode* nil))
-
-
 
 (defun get-compatible-rels (reltype)
   (or (gethash reltype *get-compatible-rels-memo*)

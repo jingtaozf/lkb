@@ -233,6 +233,33 @@ we assume that there will generally only be one feature
       do
         (add-rel-semdb-entry relation)))
 
+;;; !!!
+(defun add-semantics-record2 (id record)
+  (let ((main-rels (semantics-record-relations record)))
+    (setf (gethash id *semantic-table*)
+      record)
+    (loop for relation in (semantics-record-relations record)
+	do
+	  (add-rel-semdb-entry relation))
+    
+  ;;; case simple semantic records
+    (loop
+	for rel in 
+	  (find-index-rels
+	   (loop for rel-record in main-rels
+	       unless (rel-parameter-strings rel-record)
+	       collect (rel-pred rel-record))
+	   id)
+	do
+	  (index-simple-semantics-record rel id))
+  ;;; case complex semantics record
+    (loop for rel in main-rels
+	when (rel-parameter-strings rel)
+	do
+	  (index-complex-semantics-record rel id)) 
+    ))
+  
+
 (defun add-rel-semdb-entry (relation)
   ;;; very crude right now
   (let ((entry (gethash (rel-pred relation) *rel-semdb*)))
@@ -403,7 +430,42 @@ we assume that there will generally only be one feature
                        "~%Warning: ~A has no semantics and no filter rule" id))
              (pushnew id *empty-semantics-lexical-entries*)))))
 
-
+;;; !!!
+(defun extract-lexical-relations2 (lex-entry)
+  (let* ((fs (tdfs-indef (lex-entry-full-fs lex-entry)))
+         (id  (lex-entry-id lex-entry))
+         (main-semantics-fs (path-value fs *main-semantics-path*))
+         (main-rels (if main-semantics-fs
+                        (extract-relations-from-liszt 
+                         main-semantics-fs id 
+                         *main-semantics-path* fs))))
+    (if main-rels
+        (let* ((new-record
+                (make-semantics-record
+                 :id id
+                 :relations main-rels)))
+          (loop
+              with top = (let ((top (if *rel-name-path*
+                                      *top-pred-type*
+                                      *top-semantics-type*)))
+                           (and (is-valid-type top) top))
+              for rel in main-rels
+              for pred = (rel-pred rel)
+              when (or (null pred)
+                       (is-top-type pred)
+                       (and top (equal-or-subtype top pred)))
+              do
+                (format
+                 t 
+                 "~%Warning: ~A contains an underdetermined PRED (`~(~a~)')"
+                 id pred))
+          (add-semantics-record2 id new-record)
+  	  )
+      (progn (unless
+               (member id *gen-rule-ids*)
+               (format t 
+                       "~%Warning: ~A has no semantics and no filter rule" id))
+             (pushnew id *empty-semantics-lexical-entries*)))))
 
 (defun extract-relations-from-liszt (fs id path old-fs)
   ;;; similar to the mrsoutput fn, construct-liszt
