@@ -4,10 +4,10 @@ WROOT = c:/src
 DATE = `date "+%Y-%m-%d"`
 TARGET = /lingo/www/lingo/ftp
  
-LINKS = lkb_data.tgz lkb_linux_ml.tgz lkb_linux.tgz lkb_solaris.tgz \
+LINKS = lkb_data.tgz lkb_linux_x86_32.tgz lkb_solaris.tgz \
         lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
         itsdb_data.tgz itsdb_documentation.tgz itsdb_libraries.tgz \
-        itsdb_linux.tgz itsdb_solaris.tgz itsdb_source.tgz \
+        itsdb_linux_x86_32.tgz itsdb_solaris.tgz itsdb_source.tgz \
         erg.tgz matrix.tgz spanish.tgz
 
 CP=cp
@@ -103,15 +103,17 @@ lkb_data:
 
 lkb_binaries: lkb_linux # lkb_solaris
 
-lkb_linux:
+lkb_linux: lkb_linux_x86_32
+
+lkb_linux_x86_32:
 	${RM} -f ${ROOT}/.yes;
 	( cd ${ROOT}/lkb && make lkb_linux@cypriot; )
 	( \
 	  if [ ! -f ${ROOT}/.yes ]; then exit 1; fi; \
 	  cd ${ROOT}/lkb; \
-	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_linux.tgz \
+	  ${TAR} Svczf ${TARGET}/${DATE}/lkb_linux_x86_32.tgz \
               --exclude=".nfs*" \
-	      linux bin/linux/yzlui; \
+	      linux.x86.32 bin/linux.x86.32/yzlui; \
 	)
 	  
 lkb_linux@cypriot:
@@ -238,16 +240,18 @@ itsdb: itsdb_binaries itsdb_libraries itsdb_source itsdb_capi itsdb_tsdb \
 
 itsdb_binaries: itsdb_linux # itsdb_solaris
 
-itsdb_linux:
+itsdb_linux: itsdb_linux_x86_32
+
+itsdb_linux_x86_32:
 	( \
 	  cd ${ROOT}/lkb; \
 	  find src/.l6cl -type f -exec touch {} \; ; \
-	  tar Svczf ${TARGET}/${DATE}/itsdb_linux.tgz \
+	  tar Svczf ${TARGET}/${DATE}/itsdb_linux_x86_32.tgz \
 	      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
-	      bin/linux/tsdb bin/linux/swish++ \
-	      bin/linux/pvmd3 bin/linux/pvm \
-	      src/pvm/linux/*.so src/tsdb/linux/*.so \
+	      bin/linux.x86.32/tsdb bin/linux.x86.32/swish++ \
+	      bin/linux.x86.32/pvmd3 bin/linux.x86.32/pvm \
+	      src/pvm/linux.x86.32/*.so src/tsdb/linux.x86.32/*.so \
 	      src/.l6cl/pvm src/.l6cl/tsdb; \
 	)
 
