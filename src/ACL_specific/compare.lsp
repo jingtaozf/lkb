@@ -16,71 +16,10 @@
 
 
 ;;; **********************************************************************
-;;; Main entry points
-
-(defun batch-compare (filename)
-  (mp:run-function "Batch" #'batch-compare-really filename))
-
-(defun batch-compare-really (filename)
-  (let ((frame (clim:make-application-frame 'compare-frame)))
-    (setf (compare-frame-stream frame) (open filename :direction :input))
-    (setf (clim:frame-pretty-name frame) "Batch compare")
-    (when (next-sentence frame)
-      (clim:run-frame-top-level frame))))
-
-(defun next-sentence (frame)
-  (let ((*parse-record*)
-	(success))
-    (loop 
-	do (setq success (parse-next-sentence frame))
-	until (and success
-		   (car *parse-record*)))
-    (when success
-      (set-up-compare-frame *parse-record* frame)
-      t)))
-
-(defun parse-next-sentence (frame)
-  (let ((line (when (compare-frame-stream frame)
-		(read-line (compare-frame-stream frame) nil nil))))
-    (when line
-      (incf (compare-frame-item frame))
-      (parse
-       (split-into-words 
-	(preprocess-sentence-string 
-	 (string-trim '(#\space #\tab #\newline) line)))
-       nil))))
-
-(defun compare-parses nil
-  (when *parse-record*
-    (compare *parse-record*)))
-
-(defun compare (parses)
-  (let ((frame (clim:make-application-frame 'compare-frame)))
-    (setf (compare-frame-current-chart frame) 
-          *chart-generation-counter*)
-    (set-up-compare-frame parses frame)
-    (setf (clim:frame-pretty-name frame) 
-      (format nil "~a" (edge-leaves (car parses))))
-    (mp:run-function "Compare" #'clim:run-frame-top-level frame)))
-
-(defun set-up-compare-frame (parses frame)
-  (setf (compare-frame-decisions frame) (list (make-decision :type :start)))
-  (when (null (compare-frame-input frame))
-    (setf (compare-frame-input frame) (edge-leaves (car parses))))
-  (let ((id 0))
-    (setf (compare-frame-trees frame)
-      (mapcar #'(lambda (p) 
-                  (make-ptree :top (make-new-parse-tree p 1) :id (incf id)))
-              parses)))
-  (setf (compare-frame-otrees frame) (copy-list (compare-frame-trees frame)))
-  (setf (compare-frame-discrs frame) (find-discriminants frame))
-  (recompute-in-and-out frame t))
-
-;;; **********************************************************************
 ;;; Collect differences among a set of parses
 
 (defstruct discr 
-  key value start end in out toggle state type time record)
+  key value start end in out toggle state type time record preset)
 
 (defvar *discrs*)
 
@@ -212,9 +151,94 @@
                           :type type
                           :start start :end end
                           :toggle (if preset (discr-toggle preset) :unknown)
-                          :state (if preset (discr-state preset) :unknown))
+                          :state (if preset (discr-state preset) :unknown)
+                          :preset preset)
               *discrs*)))))
 
+
+;;; **********************************************************************
+;;; Main entry points
+
+(defun batch-compare (filename)
+  (mp:run-function "Batch" #'batch-compare-really filename))
+
+(defun batch-compare-really (filename)
+  (let ((frame (clim:make-application-frame 'compare-frame)))
+    (setf (compare-frame-stream frame) (open filename :direction :input))
+    (setf (clim:frame-pretty-name frame) "Batch compare")
+    (when (next-sentence frame)
+      (clim:run-frame-top-level frame))))
+
+(defun next-sentence (frame)
+  (let ((*parse-record*)
+	(success))
+    (loop 
+	do (setq success (parse-next-sentence frame))
+	until (and success
+		   (car *parse-record*)))
+    (when success
+      (set-up-compare-frame *parse-record* frame)
+      t)))
+
+(defun parse-next-sentence (frame)
+  (let ((line (when (compare-frame-stream frame)
+		(read-line (compare-frame-stream frame) nil nil))))
+    (when line
+      (incf (compare-frame-item frame))
+      (parse
+       (split-into-words 
+	(preprocess-sentence-string 
+	 (string-trim '(#\space #\tab #\newline) line)))
+       nil))))
+
+(defun compare-parses nil
+  (when *parse-record*
+    (compare *parse-record*)))
+
+(defun compare (parses)
+  (let ((frame (clim:make-application-frame 'compare-frame)))
+    (setf (compare-frame-current-chart frame) 
+          *chart-generation-counter*)
+    (set-up-compare-frame parses frame)
+    (setf (clim:frame-pretty-name frame) 
+      (format nil "~a" (edge-leaves (car parses))))
+    (mp:run-function "Compare" #'clim:run-frame-top-level frame)))
+
+(defun set-up-compare-frame (parses frame)
+  (setf (compare-frame-decisions frame) (list (make-decision :type :start)))
+  (when (null (compare-frame-input frame))
+    (setf (compare-frame-input frame) (edge-leaves (car parses))))
+  (let ((id 0))
+    (setf (compare-frame-trees frame)
+      (mapcar #'(lambda (p) 
+                  (make-ptree :top (make-new-parse-tree p 1) :id (incf id)))
+              parses)))
+  (setf (compare-frame-otrees frame) (copy-list (compare-frame-trees frame)))
+  (setf (compare-frame-discrs frame) (find-discriminants frame))
+  (recompute-in-and-out frame t)
+  (when (find :select (compare-frame-preset frame)
+              :key #'(lambda (foo) (discr-type foo)))
+    (loop
+        for discriminant in (compare-frame-discrs frame)
+        for preset = (discr-preset discriminant)
+        when preset do
+          (setf (discr-toggle discriminant) (discr-toggle preset))
+          (setf (discr-state discriminant) (discr-state preset)))
+    (recompute-in-and-out frame))
+  (when (find :reject (compare-frame-preset frame)
+              :key #'(lambda (foo) (discr-type foo)))
+    (loop
+        for discriminant in (compare-frame-discrs frame)
+        for preset = (discr-preset discriminant)
+        when preset do
+          (setf (discr-toggle discriminant) (discr-toggle preset))
+          (setf (discr-state discriminant) (discr-state preset)))
+    (recompute-in-and-out frame)
+    (setf (compare-frame-in-parses frame) nil
+          (compare-frame-out-parses frame) 
+          (mapcar #'ptree-top (compare-frame-otrees frame)))))
+
+             
 (defstruct decision
   type
   value
@@ -539,7 +563,7 @@
           (setf (discr-toggle discriminant) :unknown)
           (setf (discr-time discriminant) (get-universal-time)))
         (setf (discr-state discriminant) nil))
-  (recompute-in-and-out frame t))
+  (recompute-in-and-out frame))
 
 (define-compare-frame-command (com-tree-menu)
     ((tree 'ptree :gesture :select))
@@ -630,7 +654,7 @@
       (dolist (tree (compare-frame-trees window))
         (let ((ink (cond ((member (ptree-top tree) 
                                   (compare-frame-out-parses window)
-                                  :test #'eq)X
+                                  :test #'eq)
                           clim:+red+)
                          ((and (not (cdr (compare-frame-in-parses window)))
                                (eq (car (compare-frame-in-parses window))

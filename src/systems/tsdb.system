@@ -100,10 +100,11 @@
        (:file "process")
        (:file "commands")
        (:file "import")
-       #+:edelweiss 
+       #+:null
        (:file "server")
        (:file "statistics")
        (:file "podium")
+       #+(and :lkb :allegro)
        (:file "trees")
        #+:allegro
        (:file "allegro")

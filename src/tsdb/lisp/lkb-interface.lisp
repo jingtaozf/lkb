@@ -288,9 +288,10 @@
                                              internal-time-units-per-second )
                                       total)
                          for derivation = (with-standard-io-syntax
-                                            (write-to-string
-                                              (compute-derivation-tree parse)
-                                                :case :downcase))
+                                            (let ((*package* *lkb-package*))
+                                              (write-to-string
+                                               (compute-derivation-tree parse) 
+                                               :case :downcase)))
                          for r-redges = (length 
                                          (parse-tsdb-distinct-edges parse nil))
                          for size = (parse-tsdb-count-nodes parse)
@@ -312,8 +313,9 @@
                          for i from (length *parse-record*)
                          for derivation in (rest (assoc :derivations summary))
                          for string = (with-standard-io-syntax
-                                        (write-to-string derivation
-                                           :case :downcase))
+                                        (let ((*package* *lkb-package*))
+                                          (write-to-string 
+                                           derivation :case :downcase)))
                          collect (pairlis '(:result-id :derivation)
                                           (list i string))))))))))))
     (unless trace (release-temporary-storage))

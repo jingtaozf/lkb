@@ -3,18 +3,19 @@
 ;;;
 ;;; ToDo
 ;;;
-;;; - confidence menu
-;;; - `Reset' buttom: re-instantiate original, preset state
-;;; - reorder trees: active at top
-;;; - pairwise comparison of trees
-;;; - highlighting of discriminats on tree select
-;;; - highlighting of trees on discriminant select
+;;; - confidence menu;
+;;; - `Reset' buttom: re-instantiate original, preset state;
+;;; - reorder trees: active at top;
+;;; - pairwise comparison of trees;
+;;; - highlighting of discriminats on tree select;
+;;; - highlighting of trees on discriminant select;
+;;; - utilize status vector to, e.g. fast-forward to first unannotated;
+;;; - record all :select decisions, valid at `Save' time;
 ;;;
 
 
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
-                          (threshold 100)
                           (cache *tsdb-cache-database-writes-p*)
                           (verbose t)
                           meter)
@@ -61,22 +62,20 @@
         with annotated = (make-array nitems :initial-element 0)
         with position = 0
         initially
+          #+:debug
           (setf *frame* frame)
           (setf (lkb::compare-frame-current-chart frame) nil)
           (setf (clim:frame-pretty-name frame) title)
           (setf (lkb::compare-frame-controller frame) *current-process*)
-        for item = (nth position items)
+        for item = (when position (nth position items))
         for i-id = (get-field :i-id item)
-        for readings = (get-field :readings item)
-        for status = (if (and (numberp threshold) (numberp readings)
-                              (> readings threshold))
+        for status = (if nil
                        (acons :status :skip nil)
-                       (and (integerp i-id) 
-                            (browse-tree 
-                             data i-id frame 
-                             :cache cache :title title)))
+                       (when (integerp i-id) 
+                         (browse-tree 
+                          data i-id frame :cache cache :title title)))
         for action = (get-field :status status)
-        while (and status (not (eq action :close)))
+        while (and status (not (eq action :close)) (numberp position))
         do 
           (when (and (eq action :save) increment 
                      (zerop (aref annotated position)))
@@ -85,7 +84,9 @@
             (case action
               (:first (setf position 0))
               (:previous (setf position (max (- position 1) 0)))
-              ((:next :save :skip) 
+              ((:skip :null)
+               (setf position (when (< position (- nitems 1) (+ position 1)))))
+              ((:next :save) 
                (when (eq action :save) (incf (aref annotated position)))
                (setf position (min (+ position 1) (- nitems 1))))
               (:last (setf position (- nitems 1)))))
@@ -147,16 +148,24 @@
            (edges (loop
                       with edges
                       for result in results
+                      for id = (get-field :result-id result)
                       for derivation = (get-field :derivation result)
                       for edge = (and derivation (reconstruct derivation))
-                      when edge do (push edge edges)
+                      when edge do 
+                        (setf (lkb::edge-score edge) id)
+                        (setf (lkb::edge-parents edge) derivation)
+                        (push edge edges)
                       finally (return (nreverse edges))))
            (foo (first edges))
            (start (and foo (lkb::edge-from foo)))
            (end (and foo (lkb::edge-to foo)))
-           (discriminants (reconstruct-discrimininants data parse-id version))
+           (discriminants (reconstruct-discriminants data parse-id version))
            (lkb::*parse-record* edges))
       (declare (ignore active))
+
+      (unless edges 
+        (return-from browse-tree (acons :status :null nil)))
+      
       (setf (lkb::compare-frame-input frame) input)
       (setf (lkb::compare-frame-item frame) i-id)
       (setf (lkb::compare-frame-start frame) start)
@@ -206,14 +215,35 @@
             (write-tree data parse-id version active confidence
                         t-author t-start t-end "" 
                         :cache cache))
-          #+:debug
+
           (when (and (lkb::decision-p recent)
                      (member (lkb::decision-type recent) '(:reject :select)))
             (let* ((version (or version 1))
                    (state (encode-discriminant-state recent))
                    (type (encode-discriminant-type recent))
                    (start (lkb::compare-frame-start frame))
-                   (end (lkb::compare-frame-end frame)))))
+                   (end (lkb::compare-frame-end frame))
+                   #|                   
+                   (edge (get (lkb::decision-value recent) 'lkb::edge-record))
+                   (id (when (lkb::edge-p edge) (lkb::edge-score edge)))
+                   (key (when (and (eq (lkb::decision-type recent) :select)
+                                   (numberp id))
+                          (format nil "~a" id)))
+                   (derivation (and (lkb::edge-p edge) 
+                                    (lkb::edge-parents edge)))
+                   (value (when derivation
+                            (with-standard-io-syntax
+                              (let ((*package* lkb::*lkb-package*))
+                                (write-to-string
+                                derivation :case :downcase)))))
+                   |#                                
+                   (time (let ((time (lkb::decision-time recent)))
+                           (if time
+                             (decode-time time :long t)
+                             (current-time)))))
+              (write-decision data parse-id version 
+                              state type nil nil start end time
+                              :cache cache)))
                    
           (loop
               with version = (or version 1)
@@ -248,7 +278,8 @@
        ((null state) 4)
        (t 5))))
    ((lkb::decision-p discriminant)
-    -1)))
+    -1)
+   (t -1)))
 
 (defun encode-discriminant-type (discriminant)
   (cond
@@ -261,11 +292,11 @@
    ((lkb::decision-p discriminant)
     (case (lkb::decision-type discriminant)
       (:select 4)
-      (:revert 5)
+      (:reject 5)
       (t -1)))
    (t -1)))
 
-(defun reconstruct-discrimininants (data parse-id version)
+(defun reconstruct-discriminants (data parse-id version)
   (loop
       with decisions = (when (and parse-id version)
                          (select '("d-state" "d-type" "d-key" "d-value" 
@@ -287,25 +318,25 @@
       for end = (get-field :d-end decision)
       for discriminant = (and state type key value start end
                               (not (minus-one-p type))
-                              (or (= state 1) (= state 2))
                               (reconstruct-discriminant 
                                state type key value start end))
       when discriminant collect discriminant))
 
 (defun reconstruct-discriminant (istate type key value start end)
-  (let ((type (cond 
-               ((eq type 1) :rel)
-               ((eq type 2) :type)
-               ((eq type 3) :constituent)
-               (t nil)))
-        toggle state)
+  (let* ((type (cond 
+                ((eq type 1) :rel)
+                ((eq type 2) :type)
+                ((eq type 3) :constituent)
+                ((eq type 4) :select)
+                ((eq type 5) :reject)
+                (t nil)))
+         (toggle :unknown)
+         (state :unknown))
     (cond
-     ((eq istate 1) (setf toggle t) (setf state :unknown))
-     ((eq istate 2) (setf toggle nil) (setf state :unknown))
-     ((eq istate 3) (setf toggle :unknown) (setf state t))
-     ((eq istate 4) (setf toggle :unknown)(setf state nil))
-     ((eq istate 5) (setf toggle :unknown) (setf state :unknown))
-     (t (return-from reconstruct-discriminant nil)))
+     ((eq istate 1) (setf toggle t) (setf state t))
+     ((eq istate 2) (setf toggle nil) (setf state nil))
+     ((eq istate 3) (setf state t))
+     ((eq istate 4) (setf state nil)))
     (lkb::make-discr :type (intern type :keyword) 
                      :key key :value value 
                      :start start :end end

@@ -747,17 +747,18 @@
         (write version :stream stream) (write-char ofs stream)
         (write d-state :stream stream) (write-char ofs stream)
         (write d-type :stream stream) (write-char ofs stream)
-        (write-string d-key stream) (write-char ofs stream)
-        (write-string d-value stream) (write-char ofs stream)
+        (write-string (or d-key "") stream) (write-char ofs stream)
+        (write-string (or d-value "") stream) (write-char ofs stream)
         (write d-start :stream stream) (write-char ofs stream)
         (write d-end :stream stream) (write-char ofs stream)
-        (write-string d-date stream)
+        (write-string (or d-date "") stream)
         (terpri stream)
         (force-output stream)
         (incf (get-field :count cache)))
       (let ((query (format
                     nil
                     "insert into decision values ~d ~d ~s ~s ~d ~d ~a"
-                    parse-id d-type d-key d-value d-start d-end d-date)))
+                    parse-id d-type (or d-key "") (or d-value "") 
+                    d-start d-end (or d-date ""))))
         (call-tsdb query data :cache cache)))))
 
