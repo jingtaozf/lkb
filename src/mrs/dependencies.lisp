@@ -352,7 +352,6 @@
         for ed = (pop agenda)
         for id = (ed-id ed)
         while ed do
-          (format t "pop(): ~a~%" ed)
           (unless (or (eq (ed-mark ed) mark) (ed-bleached-p ed))
             (setf (ed-mark ed) mark)
             (loop
