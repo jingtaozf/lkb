@@ -23,6 +23,9 @@
 
 (with-check-path-list-collection "Macintosh HD:lkb99-expt:big:grammar:lkb:checkpaths1.lsp"
    (parse '("Devito" "manages" "a" "programmer" "Abrams" "interviewed" "and" "Browne" "hired")))
+
+(with-check-path-list-collection "Macintosh HD:lkb99-expt:data:mrs_grammar:checkpaths1.lsp"
+   (chart-generate input-sem lex-entry-alts))
 |#
 
 (defmacro with-check-path-list-collection (output-file &body forms)
@@ -188,6 +191,9 @@
 ;;; (optimise-check-unif-paths)
 
 (defun optimise-check-unif-paths nil
+   (unless *check-paths*
+      (setq *check-paths-optimised* nil)
+      (return-from optimise-check-unif-paths nil))
    (let ((freq-threshold (truncate (cdr (first *check-paths*)) 1000)))
       ;; keep all paths whose freq is within a factor of 1000 of most frequent - but
       ;; there's certainly scope here for experimenting with how many paths are kept
@@ -206,7 +212,11 @@
                          (t
                             (let*
                                ((feat (car (last (car path-and-freq))))
-                                (fs (constraint-of (maximal-type-of feat)))
+                                (fs
+                                   (constraint-of
+                                      (or (maximal-type-of feat)
+                                         (error "Inconsistency - *check-paths* uses feature ~A ~
+                                                 which is not in grammar" feat))))
                                 (type (type-of-fs (get-dag-value fs feat))))
                                (when (consp type) (setq type (car type))) ; atomic type
                                (let*
