@@ -159,7 +159,8 @@ e.g.
 
 
 (defun parse-tsdb-sentence-read (line)
-   (if (or (eq line 'eof) (every #'whitespacep line))
+   (if (or (eq line 'eof)
+          (every #'(lambda (c) (member c '(#\space #\tab))) line))
       'eof
       (let
          ((id (subseq line 0 (position #\@ line)))
@@ -176,33 +177,6 @@ e.g.
          ((not (eql (char str ind) char)))
          ((eql n 1) (return ind))
          (t (decf n)))))
-
-
-;;; (dolist (parse *parse-record*) (pprint (parse-tree-structure parse)))
-
-(defun parse-tree-structure (edge-record)
-   (let ((daughters (edge-children edge-record)))
-      (if daughters
-         (cons (tree-node-text-string
-                  (or (find-category-abb (edge-dag edge-record))
-                      (edge-category edge-record)))
-            (mapcar
-               #'(lambda (daughter)
-                   (if daughter
-                      (parse-tree-structure daughter)
-                      '||)) ; active chart edge daughter
-               daughters))
-         (if *dont-show-morphology*
-            (car (edge-leaves edge-record))
-            (cons (car (edge-leaves edge-record))
-               (morph-tree-structure
-                  (edge-rule-number edge-record) (edge-morph-history edge-record)))))))
-
-(defun morph-tree-structure (rule edge-record)
-   (if rule
-      (cons rule
-         (if edge-record
-            (morph-tree-structure nil (edge-morph-history edge-record))))))
 
 
 ;;;
