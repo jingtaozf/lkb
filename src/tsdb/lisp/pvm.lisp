@@ -20,41 +20,42 @@
 
 (defparameter *pvm-cpus* nil)
 
-(defparameter *pvm-tasks* nil)
+(defparameter *pvm-clients* nil)
 
 (defparameter *pvm-master* nil)
 
-(defun run-status (run)
-  (let ((task (get-field :task run)))
-    (and task (task-status task))))
-
-(defun run-tid (run)
-  (let ((task (get-field :task run)))
-    (and task (task-tid task))))
-
-(defun task-idle-p (task)
-  (eq (task-status task) :ready))
+(defun client-idle-p (client)
+  (eq (client-status client) :ready))
 
 (defun initialize-cpus (&key cpus
-                             (classes '(:csli))
+                             (classes '(:all))
+                             (reset t)
+                             block
                              (file (format 
                                     nil 
                                     "/tmp/pvm.debug.~a"
-                                    (current-user))))
-  (initialize-tsdb)
-  (when (null cpus) (setf cpus *pvm-cpus*))
+                                    (current-user)))
+                             (prefix "")
+                             (stream *tsdb-io*))
 
-  (pvm_quit)
-  (pvm_start :user (current-user))
+  (initialize-tsdb)
+  (when reset                           
+    (pvm_quit)
+    (pvm_start :user (current-user))
+    (setf *pvm-master* (pvm_register file))
+    (setf *pvm-clients* nil))
+  (when (and file (null reset))
+    (format
+     stream
+     "~&~ainitialize-cpus(): ignoring (protocol) `file' argument (no reset).~%"
+     prefix ))
   ;;
-  ;; first, create as many tasks as we have cpus ...
+  ;; first, create as many clients as we have cpus ...
   ;;
-  (setf *pvm-master* (pvm_register file))
-  (setf *pvm-tasks* nil)
   (loop
       with classes = (if (consp classes) classes (list classes))
       with allp = (member :all classes :test #'eq)
-      for cpu in cpus
+      for cpu in (or cpus *pvm-cpus*)
       for class = (let ((class (cpu-class cpu)))
                     (if (listp class) class (list class)))
       for tid = (when (or allp (intersection class classes))
@@ -65,72 +66,79 @@
       when (and tid (null task))
       do
         (format
-         *tsdb-io*
-         "initialize-cpus(): `~a' communication error [~d].~%"
-         (cpu-host cpu) tid)
+         stream
+         "~ainitialize-cpus(): `~a' communication error [~d].~%"
+         prefix (cpu-host cpu) tid)
       when task
       do
-        (push (make-task :tid tid :task task :cpu cpu :status :start)
-              *pvm-tasks*))
+        (push (make-client :tid tid :task task :cpu cpu :status :start)
+              *pvm-clients*)
+        (when block
+          (wait-for-clients :block tid :prefix prefix :stream stream)))
   ;;
   ;; ... then, wait for them to register (start talking) with us.
   ;;
+  (wait-for-clients :prefix prefix :stream stream))
+
+(defun wait-for-clients (&key block (prefix "  ") (stream *tsdb-io*))
   (loop
-      while (and *pvm-tasks* 
-                 (find :start *pvm-tasks* :key #'task-status))
+      while (and *pvm-clients* 
+                 (find :start *pvm-clients* :key #'client-status))
       for message = (pvm_poll -1 -1 1)
       when (message-p message)
       do
         (let* ((tag (message-tag message))
                (remote (message-remote message))
                (content (message-content message))
-               (task (find remote *pvm-tasks* :key #'task-tid)))
+               (client (find remote *pvm-clients* :key #'client-tid)))
           (cond
            ((eql tag %pvm_task_fail%)
             (let* ((remote (message-corpse message))
-                   (task (find remote *pvm-tasks* :key #'task-tid)))
-              (when (and (task-p task) (cpu-p (task-cpu task)))
+                   (client (find remote *pvm-clients* :key #'client-tid)))
+              (when (and (client-p client) (cpu-p (client-cpu client)))
                 (format
-                 *tsdb-io*
-                 "~&initialize-cpus(): client exit for `~a' <~a>~%"
-                 (cpu-host (task-cpu task)) remote))
-              (setf *pvm-tasks* (delete task *pvm-tasks*))))
-
-           ((null task)
+                 stream
+                 "~&~await-for-clients(): client exit for `~a' <~a>~%"
+                 prefix (cpu-host (client-cpu client)) remote))
+              (setf *pvm-clients* (delete client *pvm-clients*))))
+           
+           ((null client)
             (when *pvm-debug-p*
               (format
-               *tsdb-io*
-               "~&initialize-cpus(): ~
+               stream
+               "~&~await-for-clients(): ~
                 ignoring message from alien <~d>:~%~s~%~%"
-               remote message)
+               prefix remote message)
               (force-output)))
            
            ((eql tag %pvm_lisp_message%)
             (cond
              ((and (eq (first content) :register)
-                   (eq (second content) (task-tid task)))
-              (setf (task-status task) :ready)
-              (setf (task-protocol task) (third content))
+                   (eq (second content) (client-tid client)))
+              (setf (client-status client) :ready)
+              (setf (client-protocol client) (third content))
               (format
-               *tsdb-io*
-               "initialize-cpus(): `~a' registered as tid <~d>.~%"
-               (cpu-host (task-cpu task)) (task-tid task)))
+               stream
+               "~await-for-clients(): `~a' registered as tid <~d>.~%"
+               prefix (cpu-host (client-cpu client)) (client-tid client))
+              (when (and block (eql (client-tid client) block))
+                (return-from wait-for-clients client)))
              (t
               (when *pvm-debug-p*
                 (format
-                 *tsdb-io*
-                 "~&initialize-cpus(): ~
+                 stream
+                 "~&~await-for-clients(): ~
                   ignoring unexpected message from <~d>:~%~s~%~%"
-                 remote message)
+                 prefix remote message)
                 (force-output)))))
 
            (t
             (when *pvm-debug-p*
               (format
-               *tsdb-io*
-               "~&initialize-cpus(): ~
+               stream
+               "~&~await-for-clients(): ~
                 ignoring dubious message from <~d>:~%~s~%~%"
-               remote message)
+               stream remote message)
               (force-output)))))))
 
 (defun evaluate (form)

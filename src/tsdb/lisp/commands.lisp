@@ -164,7 +164,9 @@
       (status :text (format nil "~a done" message) :duration 5))
     (length items)))
 
-(defun tsdb (&optional action argument &key condition run skeleton load)
+(defun tsdb (&optional action argument 
+             &key condition run skeleton load 
+                  (file nil filep) (reset nil resetp))
   
   (initialize-tsdb)
   (if (stringp action)
@@ -185,6 +187,27 @@
          (when argument
            (load-cache :pattern load :background t)))
         
+        ((:cpus :cpu :cpu :cp)
+         (format *tsdb-io* "~&~%")
+         (cond
+          ((null argument)
+           (tsdb-do-cpus :stream *tsdb-io*))
+          ((eq argument :active)
+           (tsdb-do-cpus :action :active :stream *tsdb-io*))
+         (t
+           (cond
+            ((and filep resetp)
+             (initialize-cpus :classes argument 
+                              :file file :reset reset 
+                              :stream *tsdb-io* :prefix "  "))
+            (filep 
+             (initialize-cpus :classes argument 
+                              :file file :stream *tsdb-io* :prefix "  "))
+            (resetp
+             (initialize-cpus :classes argument 
+                              :reset reset :stream *tsdb-io* :prefix "  ")))))
+         (format *tsdb-io* "~&~%"))
+         
         ((:info :inf)
          (tsdb-do-status :all :stream *tsdb-io*))
         
@@ -420,7 +443,7 @@
                                (list :relative (get-field :path skeleton)))))
                  (content (get-field :content skeleton))
                  (items (length (select "i-id" :integer "item" nil path 
-                                        :absolute t :unique t 
+                                        :absolute t :unique nil
                                         :quiet t :ro t))))
             (case format
               (:ascii
@@ -453,6 +476,54 @@
         stream 
         "set phenomena(~d) ~s;~%"
         i (first phenomena))))))
+
+(defun tsdb-do-cpus (&key (action :list) (format :ascii)
+                         (stream *tsdb-io*) (prefix "  "))
+  
+  (case action
+    (:list
+     (loop 
+         for cpu in (sort 
+                     (copy-list *pvm-cpus*) #'string< 
+                     :key #'(lambda (cpu) (symbol-name (cpu-class cpu))))
+         for host = (cpu-host cpu)
+         for spawn = (cpu-spawn cpu)
+         for options = (cpu-options cpu)
+         for class = (cpu-class cpu)
+         do
+           (case format
+             (:ascii
+              (format
+               stream
+               "~&~%~a- `~(~a~)' (`~a');~%~
+                ~a  command: `~a';~%~
+                ~a  options: `~{~a~^ ~}';~%~%"
+               prefix class host
+               prefix spawn
+               prefix options)))))
+    (:active
+     (loop 
+         for client in (sort 
+                        (copy-list *pvm-clients*) #'string<
+                        :key #'(lambda (client) 
+                                 (cpu-host (client-cpu client))))
+         for cpu = (client-cpu client)
+         for host = (cpu-host cpu)
+         for spawn = (cpu-spawn cpu)
+         for task = (client-task client)
+         for tid = (get-field :tid task)
+         for pid = (get-field :pid task)
+         for status = (client-status client)
+         for protocol = (client-protocol client)
+         do
+           (format
+               stream
+               "~&~%~a- `~(~a~)' (pid: ~a --- tid: <~a>);~%~
+                ~a  command: `~a';~%~
+                ~a  status: `~(~a~)' --- protocol: `~(~a~)';~%~%"
+               prefix host pid tid
+               prefix spawn
+               prefix status protocol)))))
 
 (defun tsdb-do-schema (data &key (stream *tsdb-io*) (format :tcl))
   
@@ -555,7 +626,7 @@
   (when (equal command :all)
     (format
      *tsdb-io*
-     "  The `tsdb' command encapsulates all interaction with the PAGE test suite
+     "  The `tsdb' command encapsulates all interaction with the test suite
   database tsdb(1) and profiling machinery; it has the general synopsis:
 
     tsdb _action_ [ _argument_ ] [ :key _option_ ]+
@@ -611,16 +682,16 @@
         list available skeleton databases (name, description, and size) or
         make _string_ the new default skeleton;~%~%"))
 
-  (when (member command (list :all :create :cre :cr :c))
+  (when (member command (list :all :create :cre :cr))
     (format
      *tsdb-io*
      "    - :create [ _string_ ] [ :skeleton _string_ ]
 
-        create new database called _string_ (as a subdirectory in in the 
-        tsdb(1) home directory) from the skeleton database (or the default
-        skeleton if the :skeleton option ist omitted; if the name for the new
-        database has a trailing `/' and is an existing directory, a new name
-        will be generated from the current date;)~%~%"))
+        create new database called _string_ (as a subdirectory in the tsdb(1)
+        home directory) from the skeleton database (or the default skeleton if
+        the :skeleton option ist omitted; if the name for the new database has
+        a trailing `/' and is an existing directory, a new name will be
+        generated from the current date;)~%~%"))
 
   (when (member command (list :all :vocabulary :voc :vo :v))
     (format
@@ -651,6 +722,17 @@
 
         start up tsdb(1) podium (the graphical user interface); see :initialize
         above for the optional :cache argument;~%~%"))
+
+  (when (member command (list :all :cpus :cpu :cp))
+    (format
+     *tsdb-io*
+     "    - :cpus [ _keyword_ ] [ :file _string_ ] [ :reset _bool_ ]
+
+        list or activate [incr tsdb()] cpus; _keyword_ is a class name (used
+        in the cpu definition); write cpu output to file _string_ (defaults to
+        `/tmp/pvm.debug.user' --- where `user' is the active account name);
+        :reset defaults to `t' and shuts down all existing cpus before cpu
+        initialization;~%~%"))
   
   (when (member command (list :all :help :hel :he))
     (format

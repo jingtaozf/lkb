@@ -246,14 +246,9 @@
          (attributes 
           (rest (find relation schema :test #'string= :key #'first)))
          (ntuples (length tuples))
-         (interval (cond 
-                    ((< ntuples 200) 10)
-                    ((< ntuples 1000) 50)
-                    ((< ntuples 2000) 100)
-                    ((< ntuples 10000) 500)
-                    (t 1000)))
-         (increment (when meter 
-                      (/ (mduration meter) (floor ntuples interval)))))
+         (increment (when (and meter (> ntuples 0))
+                      (/ (mduration meter) ntuples))))
+                      
     (cond
      ((null status)
       (format
@@ -291,7 +286,7 @@
                                     value)))
                       (format stream "~:[@~;~]~a" start value))
                   finally (format stream "~%"))
-              (when (and increment (zerop (mod i interval)))
+              (when increment
                 (meter-advance increment))))
       (when meter (meter :value (get-field :end meter)))
       tuples))))

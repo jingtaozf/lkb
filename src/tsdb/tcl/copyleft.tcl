@@ -53,8 +53,8 @@ proc copyleft {action} {
       # seconds; the handler in update_skeleton_list() will block until the
       # system time has reached this value.
       #
-      set globals(copyleft,status) pending;
       set globals(copyleft) [expr {[clock seconds] + 5}];
+      set globals(copyleft,status) pending;
     } 
     hide { 
       if {[winfo exists .list.copyleft] && [info exists globals(copyleft)]} {
@@ -65,9 +65,11 @@ proc copyleft {action} {
       }; # if
     }
     register {
+      if {![set busy [expr {[busy isbusy .] != ""}]]} {
+        tsdb_busy freeze;
+      }; # if
       winop map .;
       winop raise .;
-      tkwait visibility .;
       set status $globals(status);
       set visible [lindex [winfo children .status] end];
       #
@@ -86,14 +88,11 @@ proc copyleft {action} {
         -relwidth 1 -relheight 1 -bordermode outside;
       raise .list.copyleft;
       status $message;
-      if {![set busy [expr {[busy isbusy .] != ""}]]} {
-        busy hold .;
-      }; # if
       update; update idletasks;
       #
       # wait for confirmation from the background registrar process; once the
-      # registration is completed, an asynchronous event will change the value
-      # of .globals(copyleft,status).
+      # registration is completed, an asynchronous event will change the oe()
+      # registration status.
       #
       for {set timeout 20; set i 0} \
           {$i <= 4
@@ -122,7 +121,7 @@ proc copyleft {action} {
       set globals(status) $status;
       raise $visible;
       if {!$busy} {
-        busy release .;
+        tsdb_busy release;
       }; # if
       oe reap;
       update idletasks;

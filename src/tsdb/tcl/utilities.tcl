@@ -231,7 +231,7 @@ proc update_condition_cascade {{active ""}} {
 
   if {$active == "null"} {
     set globals(condition,null) 1;
-    foreach i {wellformed illformed analyzed unanalyzed} {
+    foreach i {wellformed illformed analyzed unanalyzed unproblematic} {
       set globals(condition,$i) 0;
     }; # foreach
     for {set i 0} {$i < $globals(condition,size)} {incr i} {
@@ -251,6 +251,8 @@ proc update_condition_cascade {{active ""}} {
   } elseif {$active == "unanalyzed"} {
     set globals(condition,null) 0;
     set globals(condition,analyzed) 0;
+  } elseif {$active == "unproblematic"} {
+    set globals(condition,null) 0;
   }; # else
 
   #
@@ -282,6 +284,10 @@ proc update_condition_cascade {{active ""}} {
     -label "Unanalyzed (`readings = 0')" \
     -variable globals(condition,unanalyzed) \
     -command {update_condition_cascade unanalyzed};
+  .menu.options.menu.condition add checkbutton \
+    -label "Unproblematic (`readings != -1')" \
+    -variable globals(condition,unproblematic) \
+    -command {update_condition_cascade unproblematic};
 
   history_move condition end 1;
   for {set i 0} {$i < 10} {incr i} {
@@ -338,6 +344,15 @@ proc update_condition_cascade {{active ""}} {
       } else {
         set globals(condition) \
           "$globals(condition) and [lispify_string "(readings = 0)"]";
+      }; # else
+    }; # if
+
+    if {$globals(condition,unproblematic)} {
+      if {$globals(condition) == ""} {
+        set globals(condition) [lispify_string "(readings != -1)"];
+      } else {
+        set globals(condition) \
+          "$globals(condition) and [lispify_string "(readings != -1)"]";
       }; # else
     }; # if
 
@@ -655,9 +670,39 @@ proc tsdb_beep {} {
 }; # tsdb_beep()
 
 
-proc isbusy {window} {
-  return "\"[busy isbusy $window]\"";
-}; # isbusy()
+proc tsdb_busy {{action "update"}} {
+
+  global globals;
+
+  switch $action {
+    "freeze" {
+      oe busy yes;
+      tsdb_busy;
+    }
+    "release" {
+      oe busy no;
+      tsdb_busy;
+    }
+    "update" {
+      if {[oe gc] == "yes"} {
+        if {!$globals(kanji_p)} {
+          busy hold .;
+          busy config . -cursor $globals(gc_cursor); 
+        }; # if
+      } elseif {[oe busy] == "yes"} {
+        if {!$globals(kanji_p)} {
+          busy hold .;
+          busy config . -cursor $globals(busy_cursor);
+        }; # if
+      } else {
+        if {!$globals(kanji_p) && [busy isbusy .] == "."} {
+          busy release .;
+        }; # if
+      }; # else
+    }
+  }; # switch
+
+}; # tsdb_busy()
 
 proc show_text {file {container ""} {title ""} {width 80} {height 25}} {
 
@@ -748,7 +793,7 @@ proc show_chart {file {container ""} {title ""}} {
 
 proc send_to_lisp {code string {lispify 0} {force 1}} {
 
-  if {!$force && [busy isbusy .] != ""} {
+  if {!$force && [oe busy] == "yes"} {
     tsdb_beep;
     return;
   }; # if
@@ -756,7 +801,7 @@ proc send_to_lisp {code string {lispify 0} {force 1}} {
   if {$lispify} {
     set string [lispify_string $string];
   }; # if
-  set command [format "(%s %s)" $code $string];
+  set command [format "(%s %s)\n\n" $code $string];
   puts $command;
   flush stdout;
   logger $command;

@@ -23,8 +23,8 @@
 (defparameter *pvm-debug-p* nil)
 (defparameter *pvm-pending-events* nil)
 
-(defstruct cpu host spawn options initialize architecture class threshold)
-(defstruct task tid task cpu protocol form status load)
+(defstruct cpu host spawn options architecture class threshold create complete)
+(defstruct client tid cpu task protocol form status load)
 
 (defun make-tmp-file (prefix)
   (let ((file (format 
@@ -34,10 +34,17 @@
     (when (probe-file file) (delete-file file))
     file))
 
+#+(version>= 5 0)
 (def-foreign-call 
     (_pvm_register "pvm_register")
     ((file (* :char) string))
   :returning :int)
+
+#-(version>= 5 0)
+(defforeign
+    '_pvm_register :entry-point "pvm_register"
+    :arguments '(string)
+    :return-type :integer)
 
 (defun pvm_register (&optional (file t))
   (let ((file (cond
@@ -47,39 +54,54 @@
                (t ""))))
     (_pvm_register file)))
 
-(def-foreign-call 
-    pvm_mytid
-    (:void)
-  :returning :int)
+#+(version>= 5 0)
+(def-foreign-call pvm_mytid (:void) :returning :int)
+
+#-(version>= 5 0)
+(defforeign 'pvm_mytid :arguments nil :return-type :integer)
 
-(def-foreign-call 
-    pvm_quit
-    (:void)
-  :returning :int)
+#+(version>= 5 0)
+(def-foreign-call pvm_quit (:void) :returning :int)
+
+#-(version>= 5 0)
+(defforeign 'pvm_quit :arguments nil :return-type :integer)
 
+#+(version>= 5 0)
 (def-foreign-call 
     (_pvm_halt "pvm_halt")
-    (:void)
-  :returning :int)
-(def-foreign-call 
-    pvmendtask
-    (:void)
+    (:void) 
   :returning :int)
 
-(defun pvm_halt ()
+#-(version>= 5 0)
+(defforeign 
+    '_pvm_halt :entry-point "pvm_halt" 
+    :arguments nil 
+    :return-type :integer)
+
+#+(version>= 5 0)
+(def-foreign-call pvmendtask (:void) :returning :int)
+
+#-(version>= 5 0)
+(defforeign 'pvmendtask :arguments nil :return-type :integer)
+
+(defun pvm_halt () 
   (_pvm_halt)
   (pvm_quit))
 
-(def-foreign-call 
-    pvm_kill
-    ((tid :int integer))
-  :returning :int)
+#+(version>= 5 0)
+(def-foreign-call pvm_kill ((tid :int integer)) :returning :int)
+
+#-(version>= 5 0)
+(defforeign 'pvm_kill :arguments '(integer) :return-type :integer)
 
-(def-foreign-call 
-    pvm_parent 
-    (:void)
-  :returning :int)
+#+(version>= 5 0)
+(def-foreign-call pvm_parent (:void) :returning :int)
+
+#-(version>= 5 0)
+(defforeign 'pvm_parents :arguments nil :return-type :integer)
+
 
+#+(version>= 5 0)
 (def-foreign-call 
     (_pvm_create "pvm_create")
     ((task (* :char) string)
@@ -87,6 +109,12 @@
      (host (* :char) string)
      (architecture (* :char) string))
   :returning :int)
+
+#-(version>= 5 0)
+(defforeign 
+    '_pvm_create :entry-point "pvm_create"
+    :arguments '(string (simple-array simple-string (*)) string string)
+    :return-type :integer)
 
 (defun pvm_create (task arguments &key host architecture)
   (let ((arguments (if (and arguments 
@@ -102,11 +130,13 @@
          (if (or host (null architecture)) "" (string architecture))))
   (_pvm_create task arguments host architecture)))
 
-(def-foreign-call  
-    pvm_flush 
-    (:void) 
-  :returning :int)
+#+(version>= 5 0)
+(def-foreign-call pvm_flush (:void) :returning :int)
+
+#-(version>= 5 0)
+(defforeign 'pvm_flush :arguments nil :return-type :integer)
 
+#+(version>= 5 0)
 (def-foreign-call 
     (_pvm_poll "pvm_poll")
     ((tid :int integer)
@@ -114,6 +144,12 @@
      (block :int integer)
      (file (* :char) string))
   :returning :int)
+
+#-(version>= 5 0)
+(defforeign
+    '_pvm_poll :entry-point "pvm_poll"
+    :arguments '(integer integer integer string)
+    :return-type :integer)
 
 (defun pvm_poll (tid tag block)
   (let* ((file (make-tmp-file ".pvm.io"))
@@ -140,12 +176,19 @@
             (or result :error))))))))
               
 
+#+(version>= 5 0)
 (def-foreign-call 
     (_pvm_transmit "pvm_transmit")
     ((tid :int integer)
      (tag :int integer)
      (file (* :char) string))
   :returning :int)
+
+#-(version>= 5 0)
+(defforeign
+    '_pvm_transmit :entry-point "pvm_transmit"
+    :arguments '(integer integer string)
+    :return-type :integer)
 
 (defun pvm_transmit (tid tag form)
   (let ((file (make-tmp-file ".pvm.io"))
@@ -159,15 +202,23 @@
         (unless *pvm-debug-p* (delete-file file))
         status))))
 
-(def-foreign-call 
-    (pvm_tidtohost "pvm_tidtohost")
-    ((tid :int integer))
-  :returning :int)
+#+(version>= 5 0)
+(def-foreign-call pvm_tidtohost ((tid :int integer)) :returning :int)
+
+#-(version>= 5 0)
+(defforeign 'pvm_tidtohost :arguments '(integer) :return-type :integer)
 
+#+(version>= 5 0)
 (def-foreign-call 
     (_pvm_vm_info "pvm_vm_info")
     ((file (* :char) string))
   :returning :int)
+
+#-(version>= 5 0)
+(defforeign 
+    '_pvm_vm_info :entry-point "pvm_vm_info"
+    :arguments '(string)
+    :return-type :integer)
 
 (defun pvm_vm_info ()
   (let ((file (make-tmp-file ".pvm.io")))
@@ -189,11 +240,18 @@
                  "~&pvm_vm_info(): error `~a'.~%" condition))
               (or result :error)))))))))
 
+#+(version>= 5 0)
 (def-foreign-call 
     (_pvm_task_info "pvm_task_info")
     ((tid :int integer)
      (file (* :char) string))
   :returning :int)
+
+#-(version>= 5 0)
+(defforeign
+    '_pvm_task_info :entry-point "pvm_task_info"
+    :arguments '(integer string)
+    :return-type :integer)
 
 (defun pvm_task_info (&optional (tid 0))
   (let ((file (make-tmp-file ".pvm.io" )))
@@ -256,7 +314,9 @@
   (find tid (rest (assoc :tasks (pvm_task_info tid))) 
         :key #'(lambda (task) (rest (assoc :tid task)))))
          
-(defun revaluate (tid form &optional (block t) &key (verbose t) (key 0))
+(defun revaluate (tid form 
+                  &optional (block t) 
+                  &key (verbose t) (key 0) interrupt)
   (when (and block (null (tid-status tid)))
     (when verbose
       (format
@@ -275,6 +335,15 @@
                     (eq (first (message-content message)) :return)
                     (eql (second (message-content message)) key))
           return (third (message-content message))
-          else
-          do (when message (push message *pvm-pending-events*)))
+          else when (interrupt-p interrupt)
+          do
+            (return-from revaluate :interrupt))
       :ok)))
+
+(defun interrupt-p (interrupt)
+  (when (and interrupt (probe-file interrupt))
+    (delete-file interrupt)
+    t))
+
+
+

@@ -74,12 +74,13 @@
        *tsdb-io*
        "install-gc-strategy(): ~
         disabling tenure; global garbage collection ...")
-      #+:debug
-      (busy :cursor *tsdb-gc-cursor*)
+      #-(version>= 5 0)
+      (busy :gc :start)
+      #+:ignore
       (excl:gc t)
-      #+:debug
-      (busy :action :restore)
       (excl:gc :tenure)
+      #-(version>= 5 0)
+      (busy :gc :end)
       (format *tsdb-io* " done.~%"))
     (when (and (null tenure) (eq gc :global))
       (format
@@ -169,8 +170,8 @@
         ((and (member :lkb *features* :test #'eq) 
               (member :page *features* :test #'eq))
          "JANUS")
-        ((member :dam *features* :test #'eq)
-         "DAM")
+        ((member :chic *features* :test #'eq)
+         "CHIC")
         ((member :babel *features* :test #'eq)
          "BABEL")
         (t
@@ -214,6 +215,20 @@
 (defun current-host ()
   (short-site-name))
 
+#+(and :allegro-version>= (version>= 5 0))
+(def-foreign-call 
+    (current-pid "getpid")
+    (:void)
+  :returning :int)
+#+(and :allegro-version>= (not (version>= 5 0)))
+(defforeign 
+    'current-pid
+    :entry-point "getpid"
+    :arguments nil
+    :return-type :integer)
+#-:allegro-version>=
+(defun getpid () (random (expt 2 15)))
+
 (defun current-time (&key long)
   (multiple-value-bind (second minute hour day month year foo bar baz)
       (get-decoded-time)
@@ -236,7 +251,7 @@
 
 (defun load-average ()
   (multiple-value-bind (output foo pid)
-    (run-process "/bin/uptime" :wait nil
+    (run-process "/usr/bin/uptime" :wait nil
                  :output :stream :input "/dev/null" :error-output nil)
     (declare (ignore foo))
     #+:allegro (sys:os-wait nil pid)
@@ -417,15 +432,47 @@
          (version (when (and open close) (subseq grammar (+ open 1) close)))
          (grammar (if version (subseq grammar 0 open) grammar))
          (grammar (string-downcase (string-trim '(#\Space) grammar)))
-         (date (current-time :long :usa)))
-    (format 
-     nil 
-     "~a~a/~@[~a/~]~a/~a/~a" 
-     *tsdb-home* grammar version skeleton date 
-     (cond
-      ((member :page *features*) "page")
-      ((member :lkb *features*) "lkb")
-      (t "unknown")))))
+         (date (current-time :long :usa))
+         (system (current-application))
+         (result (make-array 42 
+                             :element-type 'character 
+                             :adjustable t
+                             :fill-pointer 0)))
+    (if (stringp *tsdb-instance-template*)
+      (loop
+          initially (loop
+                        for c across *tsdb-home*
+                        do (vector-push-extend c result 42))
+          with skip = 0
+          for c across *tsdb-instance-template*
+          for special = (if control
+                          (case c
+                            (#\g grammar)
+                            (#\v version)
+                            (#\t skeleton)
+                            (#\d date)
+                            (#\s system)
+                            (#\% "%")
+                            (t ""))
+                          :null)
+          for control = (unless control (char= c #\%))
+          do
+            (cond
+             ((null special)
+              (incf skip))
+             ((stringp special)
+              (loop
+                  for c across (string-downcase special)
+                  do (vector-push-extend c result 42)))
+             ((> skip 0)
+              (decf skip))
+             ((null control)
+              (vector-push-extend c result 42)))
+          finally (return result))
+      (format 
+       nil 
+       "~a~a/~@[~a/~]~a/~a/~a" 
+       *tsdb-home* grammar version skeleton date system))))
 
 (defun list2tcl (list &key format)
   (let ((format (format nil "{~~{~a ~~}}" (or format "~s"))))

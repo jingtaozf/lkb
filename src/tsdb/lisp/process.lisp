@@ -35,8 +35,8 @@
   
   (unless (or (null vocabulary) interactive
               (and (find :pvm *features*)
-                   (find-symbol "*PVM-TASKS*")
-                   (symbol-value (find-symbol "*PVM-TASKS*"))))
+                   (find-symbol "*PVM-CLIENTS*")
+                   (symbol-value (find-symbol "*PVM-CLIENTS*"))))
     (unless (tsdb-do-vocabulary data 
                                 :condition condition :load :quiet 
                                 :meter (make-meter 0 1)
@@ -76,12 +76,13 @@
              (runs (create-runs 
                     data run-id 
                     :comment comment :gc gc 
-                    :tasks (when (find-symbol "*PVM-TASKS*")
-                             (symbol-value (find-symbol "*PVM-TASKS*")))
-                    :interactive interactive))
+                    :clients (when (find-symbol "*PVM-CLIENTS*")
+                               (symbol-value (find-symbol "*PVM-CLIENTS*")))
+                    :interactive interactive 
+                    :stream stream :interrupt interrupt))
              (burst (and (not interactive)
                          (find :pvm *features*)
-                         (every #'(lambda (run) (get-field :task run)) runs)))
+                         (every #'(lambda (run) (get-field :client run)) runs)))
              (trees-hook 
               (unless interactive
                 (typecase *tsdb-trees-hook*
@@ -106,7 +107,9 @@
         (when meter
           (status :text pmessage)
           (meter :value (get-field :start pmeter)))
-
+        (when (and burst runs)
+          (install-gc-strategy nil :tenure nil))
+        
         (unwind-protect
             (ignore-errors
              (catch :break
@@ -133,22 +136,25 @@
                         stream
                         "do-process(): ~
                          received external interrupt signal~
-                         ~:[~*~; (~d active task~:p)~].~%"
+                         ~:[~*~; (~d active client~:p)~].~%"
                         busy (length busy))
-                       (when items
-                         (loop
-                             for run in runs
-                             do (nconc run (acons :status :interrupt nil))))
                        (force-output stream)
-                       (setf abort t)
-                       (setf items nil))
-                     
+                       (loop
+                           for run in runs
+                           do (nconc run (acons :status :interrupt nil)))
+                       (setf items nil)
+                       (setf abort t))
+                    
                      (when (and burst busy (or (null run) (null items)))
-                       (let* ((status (process-queue runs :stream stream))
+                       (let* ((status (process-queue 
+                                       runs 
+                                       :stream stream
+                                       :interrupt interrupt))
                               (pending (get-field :pending status))
                               (ready (get-field :ready status))
                               (item (get-field :item status))
-                              (result (get-field :result status)))
+                              (result (get-field :result status))
+                              (interrupt (get-field :interrupt status)))
                          (when (and item result)
                            (when verbose
                              (print-item item :stream stream :result result)
@@ -157,11 +163,30 @@
                              (store-result data result :cache cache))
                            (when ready (incf (get-field :items ready)))
                            (when increment (meter-advance increment)))
-                         (when pending
-                           (unless abort (setf items (append pending items))))
-                         (if ready 
-                           (setf run ready)
-                           (throw :break nil))))
+                         (when (and pending (null abort) (null interrupt))
+                           (setf items (append pending items)))
+                         (cond
+                          ((and interrupt abort)
+                           (loop
+                               with end = (current-time :long t)
+                               for run in runs
+                               when (get-field :status run) do
+                                 (setf (get-field :status run) :abort)
+                               else do
+                                 (nconc run (acons :status :abort nil))
+                               do
+                                 (nconc run (acons :end end nil)))
+                           (throw :break nil))
+                          (interrupt
+                           (loop
+                               for run in runs
+                               do (nconc run (acons :status :interrupt nil)))
+                           (setf items nil)
+                           (setf abort t))
+                          ((null ready)
+                           (throw :break nil))
+                          (ready
+                           (setf run ready)))))
 
                      (setf item 
                        (when run
@@ -176,14 +201,14 @@
                                        :trees-hook trees-hook 
                                        :semantix-hook semantix-hook
                                        :stream stream
-                                       :task (get-field :task run)
+                                       :client (get-field :client run)
                                        :interactive interactive))
                        (cond
                         ((eq result :ok))
                         ((eq result :error)
-                         (let ((task (get-field :task run))
+                         (let ((client (get-field :client run))
                                (end (current-time :long t)))
-                           (when task (setf (task-status task) :error))
+                           (when client (setf (client-status client) :error))
                            (nconc run `((:end . ,end)))))
                         ((consp result)
                          (when verbose
@@ -195,27 +220,33 @@
                      
           (when interactive
             (format *tsdb-io* "~&~a" (get-output-stream-string stream)))
-          (complete-test-runs data runs :cache cache :interactive interactive)
+          (complete-runs 
+           data runs 
+           :cache cache :interactive interactive 
+           :stream stream :interrupt interrupt)
           (when cache (flush-cache cache :verbose verbose))
           (unless interactive (format stream "~&~%"))
-          (if abort
-            (status :text (format nil "~a interrupt" pmessage) :duration 5)  
-            (when meter
-              (status :text (format nil "~a done" pmessage) :duration 5)
-              (meter :value (get-field :end meter)))))))))
+          (when meter
+            (if abort
+              (status :text (format nil "~a interrupt" pmessage) :duration 5)
+              (status :text (format nil "~a done" pmessage) :duration 5))
+            (meter :value (get-field :end meter))))))))
 
 (defun create-runs (data run-id &key comment 
                                      gc (tenure *tsdb-tenure-p*)
-                                     tasks interactive)
-  (if (and tasks (null interactive))
-    (let ((tasks (remove-if-not #'task-idle-p tasks))
+                                     clients interactive 
+                                     stream interrupt)
+  (if (and clients (null interactive))
+    (let ((clients (remove-if-not #'client-idle-p clients))
           runs)
-      (when tasks
+      (when clients
         (loop
-            for task in tasks
-            for tid = (task-tid task)
+            for client in clients
+            for tid = (client-tid client)
+            for cpu = (client-cpu client)
+            for custom = (and (cpu-p cpu) (cpu-create cpu))
             for i = run-id then (+ i 1)
-            for status = (if (eq (task-protocol task) :lisp)
+            for status = (if (eq (client-protocol client) :lisp)
                            (revaluate 
                             tid 
                             `(create-run 
@@ -224,15 +255,15 @@
                               :interactive nil)
                             nil
                             :key :create-run)
-                           (create_run tid data i comment interactive))
+                           (create_run tid data i comment interactive custom))
             when (eq status :ok)
             do
-              (setf (task-status task) :create)
-              (push (enrich-run (list (cons :task task))) runs)
+              (setf (client-status client) :create)
+              (push (enrich-run (list (cons :client client))) runs)
             else 
             do
-              (setf (task-status task) :error)
-              (setf tasks (delete task tasks))
+              (setf (client-status client) :error)
+              (setf clients (delete client clients))
               (when *pvm-debug-p*
                 (format
                  t
@@ -241,8 +272,8 @@
                  tid)
                 (force-output)))
         (loop
-            while (and tasks
-                       (not (find :ready tasks :key #'task-status)))
+            while (and clients
+                       (not (find :ready clients :key #'client-status)))
             finally (return runs)
             for message = (pvm_poll -1 -1 1)
             when (message-p message)
@@ -259,20 +290,20 @@
                                (message-corpse message)
                                (message-remote message)))
                      (content (message-content message))
-                     (task (find remote tasks :key #'task-tid)))
+                     (client (find remote clients :key #'client-tid)))
                 (cond
                  ((eql tag %pvm_task_fail%)
-                  (when task
-                    (setf (task-status task) :exit)
-                    (setf tasks (delete task tasks))
-                    (when (and (task-p task) (cpu-p (task-cpu task)))
+                  (when client
+                    (setf (client-status client) :exit)
+                    (setf clients (delete client clients))
+                    (when (and (client-p client) (cpu-p (client-cpu client)))
                       (format
                        *tsdb-io*
                        "~&create-runs(): client exit on `~a' <~a>.~%"
-                       (cpu-host (task-cpu task)) remote)
+                       (cpu-host (client-cpu client)) remote)
                       (force-output *tsdb-io*))))
                  
-                 ((null task)
+                 ((null client)
                   (when *pvm-debug-p*
                     (format
                      t
@@ -284,14 +315,14 @@
                  ((eql tag %pvm_lisp_message%)
                   (if (and (eq (first content) :return)
                            (eq (second content) :create-run))
-                    (let* ((stub (find task runs 
+                    (let* ((stub (find client runs 
                                        :key #'(lambda (run)
-                                                (get-field :task run))))
+                                                (get-field :client run))))
                            (run (third content)))
                       (when (and stub (consp run))
                         (nconc stub run)
-                        (setf (task-status task) :ready)
-                        (setf (task-load task) load)))
+                        (setf (client-status client) :ready)
+                        (setf (client-load client) load)))
                     (when *pvm-debug-p*
                       (format
                        t
@@ -307,7 +338,15 @@
                      "~&create-runs(): ~
                       ignoring dubious message from <~d>.~%"
                      remote)
-                    (force-output))))))))
+                    (force-output)))))
+            else when (interrupt-p interrupt)
+            do
+              (format
+               stream
+               "create-runs(): ~
+                received external interrupt signal.~%")
+              (force-output stream)
+              (return-from create-runs runs))))
     
     (list (enrich-run (create-run data run-id 
                                   :comment comment :gc gc 
@@ -406,29 +445,33 @@
 (defun process-item (item &key trees-hook semantix-hook 
                                (stream *tsdb-io*)
                                (verbose t)
-                               task
+                               client
                                (exhaustive *tsdb-exhaustive-p*)
+                               (derivationp *tsdb-write-passive-edges-p*)
                                interactive burst)
 
   (cond
-   ((task-p task)
-    (let* ((tid (task-tid task))
-           (status (if (eq (task-protocol task) :lisp)
+   ((and client (client-p client))
+    (let* ((tid (client-tid client))
+           (status (if (eq (client-protocol client) :lisp)
                      (revaluate 
                       tid 
                       `(process-item
                         (quote ,item)
-                        :trees-hook ,trees-hook :semantix-hook ,semantix-hook
+                        :trees-hook ,trees-hook 
+                        :semantix-hook ,semantix-hook
+                        :derivationp ,derivationp
                         :verbose nil :interactive nil :burst t)
                       nil
                       :key :process-item
                       :verbose nil)
-                     (process_item tid item exhaustive interactive))))
+                     (process_item 
+                      tid item exhaustive derivationp interactive))))
       (case status
-        (:ok (setf (task-status task) item) :ok)
-        (:error (setf (task-status task) :error) :error))))
+        (:ok (setf (client-status client) item) :ok)
+        (:error (setf (client-status client) :error) :error))))
   
-   ((null task)
+   ((null client)
     (let* ((run-id (get-field :run-id item))
            (parse-id (get-field :parse-id item))
            (i-id (get-field :i-id item)) 
@@ -443,11 +486,13 @@
       (setf *tsdb-global-gcs* 0)
       (setf i-load (unless interactive 
                      (first (load-average))))
-      (setf result (parse-item i-input :edges edges
+      (setf result (parse-item i-input 
+                               :edges edges
                                :trace interactive
                                :exhaustive exhaustive
                                :trees-hook trees-hook
                                :semantix-hook semantix-hook
+                               :derivationp derivationp
                                :burst burst))
       (when (and (not *tsdb-minimize-gcs-p*) 
                  (not interactive)
@@ -459,7 +504,6 @@
            stream
            " (~d gc~:p);~%" *tsdb-global-gcs*)
           (force-output stream))
-        (setf gc :global)
         (setf (get-field :gc item) :global)
         #+:allegro (excl:gc t)
         (when verbose
@@ -471,6 +515,7 @@
                                  :exhaustive exhaustive
                                  :trees-hook trees-hook
                                  :semantix-hook semantix-hook
+                                 :derivationp derivationp
                                  :burst burst)))
       (setf gcs *tsdb-global-gcs*)
       (setf *tsdb-global-gcs* 0)
@@ -512,7 +557,7 @@
               (push (cons :statistics statistics) result)))))
       result))))
 
-(defun process-queue (runs &key (verbose t) (stream *tsdb-io*))
+(defun process-queue (runs &key (verbose t) (stream *tsdb-io*) interrupt)
 
   (loop
       while (find-if #'consp runs :key #'run-status)
@@ -536,10 +581,10 @@
                (load (message-load message))
                (content (message-content message))
                (run (find remote runs :key #'run-tid))
-               (task (get-field :task run))
-               (item (and task (task-status task)))
-               (host (and (task-p task) (cpu-p (task-cpu task))
-                          (cpu-host (task-cpu task)))))
+               (client (get-field :client run))
+               (item (and client (client-status client)))
+               (host (and (client-p client) (cpu-p (client-cpu client))
+                          (cpu-host (client-cpu client)))))
 
         (cond
          ((eql tag %pvm_task_fail%)
@@ -551,8 +596,8 @@
                 (print-result fail :stream stream))))
           (when run
             (nconc run `((:end . ,(current-time :long t))))
-            (when (task-p task)
-              (setf (task-status task) :exit))))
+            (when (client-p client)
+              (setf (client-status client) :exit))))
                  
          ((null run)
           (when verbose
@@ -564,12 +609,12 @@
           (push message *pvm-pending-events*))
          
          ((eql tag %pvm_lisp_message%)
-          (when task (setf (task-load task) load))
+          (when client (setf (client-load client) load))
           (if (eq (first content) :return)
             (case (second content)
               (:process-item
                (let* ((result (third content)))
-                 (setf (task-status task) :ready)
+                 (setf (client-status client) :ready)
                  (return-from process-queue
                    (pairlis '(:pending :ready 
                               :item :result)
@@ -578,7 +623,7 @@
               (:create-run
                (let ((ready (third content)))
                  (when (consp ready)
-                   (setf (task-status task) :ready)
+                   (setf (client-status client) :ready)
                    (return-from process-queue
                      (pairlis '(:pending :ready)
                               (list pending (nconc run ready)))))))
@@ -604,7 +649,23 @@
              stream
              "~&process-queue(): ~
              ignoring dubious message from <~d>.~%"
-             remote message)))))))
+             remote message)))))
+      else when (interrupt-p interrupt)
+      do
+        (let ((busy (loop 
+                        for run in runs 
+                        when (consp (run-status run)) collect run)))
+          (format
+           stream
+           "process-queue(): ~
+            received external interrupt signal~
+            ~:[~*~; (~d active client~:p)~].~%"
+           busy (length busy))
+          (force-output stream))
+        (return-from process-queue
+          (pairlis '(:pending :interrupt)
+                   (list pending t)))))
+
 
 (defun print-result (result &key (stream *tsdb-io*))
   (let* ((readings (get-field :readings result))
@@ -615,9 +676,11 @@
          (total (/ (get-field+ :total result 0) 1000))
          (aedges (get-field :aedges result))
          (pedges (get-field :pedges result))
-         (edges (if (and aedges pedges)
-                  (+ aedges pedges)
-                  -1))
+         (edges (if (and (integerp pedges) (not (= pedges -1)))
+                  (if (and (integerp aedges) (not (= aedges -1)))
+                    (+ aedges pedges)
+                    pedges)
+                  (and (integerp aedges) (not (= aedges -1)) aedges)))
          (timeup (get-field :timeup result))
          (unifications (get-field+ :unifications result 0))
          (copies (get-field+ :copies result 0))
@@ -668,23 +731,25 @@
      (corpse
       (format
        stream
-       " --- task exit <~d>.~%"
+       " --- client exit <~d>.~%"
        corpse))
+     ((null readings)
+      (format stream ".~%"))
      (t
       (format stream ".~%")))
     (force-output stream)))
 
 (defun store-result (data result &key cache)
   (let* ((parse-id (get-field :parse-id result))
-         #+:page (statistics (get-field :statistics result)))
+         (readings (get-field :readings result))
+         (statistics (get-field :statistics result)))
     
     (write-parse result data :cache cache)
-    (unless (= (get-field :readings result) -1)
+    (unless (or (null readings) (= readings -1))
       (write-results
        parse-id 
        (get-field :results result) data
        :cache cache)
-      #+:page
       (when statistics
         (write-rules
          parse-id
@@ -692,48 +757,72 @@
          data
          :cache cache)))))
 
-(defun complete-test-runs (data runs &key cache interactive)
+(defun complete-runs (data runs &key cache interactive stream interrupt)
   (loop
       for run in runs
-      for end = (or (get-field :end run) (complete-test-run run))
+      for completion = (unless (get-field :end run)
+                         (complete-run run stream interrupt))
       for status = (or (get-field :status run) (run-status run) :complete)
-      when (> (length run) 1)
+      when (get-field :run-id run)
       do
-        (push (cons :end end) run)
-        (push (cons :status (format nil "~(~a~)" status)) run)
-        (unless interactive (write-run run data :cache cache))))
+        (push (cons :status (format 
+                             nil "~(~a~)" 
+                             (if (eq status :ready) :complete status)))
+              completion)
+        (unless interactive 
+          (write-run (append completion run) data :cache cache))))
 
-(defun complete-test-run (run)
-  (when (> (length run) 1)
+(defun complete-run (run &optional stream interrupt)
+  (when (get-field :run-id run)
     (let ((environment (get-field :environment run))
           (gc-strategy (get-field :gc-strategy run))
-          (task (get-field :task run)))
+          (client (get-field :client run)))
       (cond
-       ((task-p task)
-        (let* ((tid (task-tid task))
-               (status (if (eq (task-protocol task) :lisp)
+       ((and client (client-p client))
+        (let* ((tid (client-tid client))
+               (cpu (client-cpu client))
+               (custom (and (cpu-p cpu) (cpu-complete cpu)))
+               (status (if (eq (client-protocol client) :lisp)
                          (revaluate 
                           tid 
-                          `(complete-test-run
+                          `(complete-run
                             (quote ,(pairlis '(:environment :gc-strategy)
                                              (list environment gc-strategy))))
                           1
-                          :key :complete-test-run
-                          :verbose nil)
-                         (complete_test_run tid (get-field :run-id run) 1))))
+                          :key :complete-run
+                          :verbose nil
+                          :interrupt interrupt)
+                         (complete_run 
+                          tid (get-field :run-id run) custom 1 interrupt))))
           (cond
-           ((stringp status)
-            (setf (task-status task) :ready)
+           ((and (consp status) (get-field :end status))
+            (setf (client-status client) :ready)
             status)
+           ((eq status :interrupt)
+            (format
+             stream
+             "complete-run(): ~
+              received external interrupt signal.~%")
+            (force-output stream)
+            (setf (client-status client) :interrupt)
+            (acons :end (current-time :long t) nil))
            (t
-            (setf (task-status task) :error)
-            (current-time :long t)))))
+            (setf (client-status client) :error)
+            (acons :end (current-time :long t) nil)))))
        (t
-        (finalize-test-run environment)
-        (when gc-strategy (restore-gc-strategy gc-strategy))
-        (current-time :long t))))))
+        (let ((finalization (finalize-test-run environment)))
+          (when gc-strategy (restore-gc-strategy gc-strategy))
+          (cons (cons :end (current-time :long t)) finalization)))))))
 
 (defun interrupt-p (interrupt)
   (when (and interrupt (probe-file interrupt))
     (delete-file interrupt)
     t))
+
+(defun run-status (run)
+  (let ((client (get-field :client run)))
+    (and client (client-status client))))
+
+(defun run-tid (run)
+  (let ((client (get-field :client run)))
+    (and client (client-tid client))))

@@ -9,12 +9,12 @@ if {![info exists page_root]} {
   set page_root [expr {[info exists env(HOSTNAME)] 
                        && ![string first "mv" $env(HOSTNAME)]
                        ? "/home/oe/src/page" 
-                       : "/user/oe/src/page"}];
+                       : "/proj/perform/page"}];
 }; # if
 #
 # import BLT library (for `table' and `graph' widgets)
 #
-namespace import blt::*
+namespace import -force blt::*
 namespace import -force blt::tile::*
 
 #
@@ -83,7 +83,8 @@ if {[info commands oe] == "oe"} {
   set globals(user) [oe user];
 }; # if
 if {$globals(user) == ""} {
-  set globals(user) [expr {[info exists env(USER)] ? $env(USER) : "anonymous"}];
+  set globals(user) \
+    [expr {[info exists env(USER)] ? $env(USER) : "anonymous"}];
 }; # if
 set globals(balloon_p) [expr {$globals(user) != "oe"}];
 set globals(balloon) "";
@@ -111,6 +112,9 @@ set globals(errno) 0;
 set globals(gensym) 0;
 set globals(slash) "/";
 set globals(saarbruecken) "mail.coli.uni-sb.de";
+set globals(busy_cursor) "watch";
+set globals(gc_cursor) "pirate";
+set globals(kanji_p) [expr {[info commands kanji] == "kanji"}];
 
 #
 # relation and attributes for current database; reset when selection changes
@@ -126,7 +130,7 @@ set compare_in_detail(source) "";
 set compare_in_detail(phenomena,all) 1;
 set compare_in_detail(show,i-input) 1;
 set compare_in_detail(compare,all) {
-  words readings first total pedges rpedges gcs error derivation mrs
+  words readings first total aedges pedges rpedges gcs error derivation mrs
 }; # compare_in_detail(compare,all)
 foreach attribute $compare_in_detail(compare,all) {
   set compare_in_detail(compare,$attribute) 0;
@@ -139,6 +143,7 @@ set compare_in_detail(compare,readings) 1;
 source "$globals(podium_home)goodies.tcl";
 source "$globals(podium_home)table.tcl";
 source "$globals(podium_home)showtable.tcl";
+namespace eval test {source "$globals(podium_home)nshowtable.tcl"};
 source "$globals(podium_home)showgraph.tcl";
 source "$globals(podium_home)utilities.tcl";
 source "$globals(podium_home)commands.tcl";
@@ -326,6 +331,8 @@ proc main {} {
           -command {analyze_competence 0}
   .menu.analyze.menu add command \
           -label "Performance" -command {analyze_performance}
+  .menu.analyze.menu add command \
+          -label "Parsing Strategy" -command {analyze_performance parser}
   .menu.analyze.menu add separator
   .menu.analyze.menu add command \
           -label "Show Graph" \
@@ -1002,6 +1009,15 @@ proc idle {} {
 
   global globals;
 
+  #
+  # _fix_me_
+  # because, somehow, we could not (yet) make the asynchronous callback into
+  # tsdb_busy() (from the gc_handler() signal handler) work reliably, call
+  # this procedure frequently; this way, gc cursors will be updated at least
+  # once per second. 
+  #                                                        (16-jun-99  -  oe)
+  #
+  # tsdb_busy;
   if {[llength $globals(idle_colours)]} {
     set time [clock seconds];
     set foo [expr {int($time / 10)}];

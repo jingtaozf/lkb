@@ -20,7 +20,7 @@
 
 (defparameter *tsdb-name* "[incr tsdb()]")
 
-(defparameter *tsdb-version* "1.6 (12-mar-99)")
+(defparameter *tsdb-version* "1.6 (18-jun-99)")
 
 (defparameter
   *tsdb-application*
@@ -53,13 +53,15 @@
 
 (defparameter *tsdb-write-result-p* t)
 
+(defparameter *tsdb-write-passive-edges-p* nil)
+
 (defparameter *tsdb-write-lexicon-chart-p* nil)
 
 (defparameter *tsdb-write-syntax-chart-p* nil)
 
 (defparameter *tsdb-write-output-p* nil)
 
-(defparameter *tsdb-rule-statistics-p* #+:page t #-:page nil)
+(defparameter *tsdb-rule-statistics-p* #+:page nil #-:page nil)
 
 (defparameter *tsdb-cache-database-writes-p* t)
 
@@ -81,6 +83,8 @@
 
 (defparameter *tsdb-gc-message-p* t)
 
+(defparameter *tsdb-gc-cursor-p* t)
+
 (defparameter *tsdb-edge-factor* 2.0)
 
 (defparameter *tsdb-exhaustive-p* t)
@@ -98,6 +102,8 @@
 (defparameter *tsdb-skeleton-index* "Index.lisp")
 
 (defparameter *tsdb-relations-skeleton* "Relations")
+
+(defparameter *tsdb-instance-template* "%g/%v/%t/%d/%s")
 
 (defparameter *tsdb-skeletons* nil)
 
@@ -117,11 +123,9 @@
   '(:i-difficulty :i-wf :polarity))
 
 (defparameter *tsdb-tokens-to-ignore*
-  '("." "(" ")" "!" "?" "-" "'" "[" "]" "`"))
+  '("." "(" ")" "!" "?" "," "-" "'" "[" "]" "`"))
 
 (defparameter *tsdb-slash* #\/)
-
-(defparameter *tsdb-gc-cursor* :pirate)
 
 (defparameter *tenured-bytes* 0)
 

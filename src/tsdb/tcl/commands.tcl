@@ -513,14 +513,14 @@ proc analyze_competence {code} {
 }; # analyze_competence()
 
 
-proc analyze_performance {} {
+proc analyze_performance {{code "performance"}} {
 
   global globals;
 
   if {[verify_ts_selection]} {return 1};
 
   set command \
-      [format "(analyze-performance \"%s\")" $globals(data)];
+      [format "(analyze-performance \"%s\" :view :%s)" $globals(data) $code];
   send_to_lisp :event $command;
 
 }; # analyze_performance()

@@ -34,8 +34,8 @@
               (when (> *tenured-bytes* excl:*tenured-bytes-limit*)
                 (excl:without-interrupts
                   (setf global-gc-p t)
-                  #+:debug
-                  (busy :cursor *tsdb-gc-cursor*)
+                  #-(version>= 5 0)
+                  (busy :gc :start)
                   (when *tsdb-gc-message-p*
                     (format 
                      *terminal-io*
@@ -46,8 +46,8 @@
                   (setf global-gc-p nil)
                   (setf *tenured-bytes* 0)
                   (incf *tsdb-global-gcs*)
-                  #+:debug
-                  (busy :action :restore)))))
+                  #-(version>= 5 0)
+                  (busy :gc :end)))))
           (when default-gc-after-hook
             (funcall default-gc-after-hook 
                      global scavenged tenured foo bar)))))

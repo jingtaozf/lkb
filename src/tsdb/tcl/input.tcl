@@ -2,7 +2,6 @@ proc input {prompt {default ""} {base ""} {mode ""}} {
 
   global globals;
 
-  busy release 
   set label [.status.entry subwidget label];
   set entry [.status.entry subwidget entry];
   set prompt " $prompt";
@@ -393,7 +392,6 @@ proc aggregate_input {{set 1}} {
   set focus [focus -displayof .];
   focus .status.aggregate.esize;
   grab set .status.aggregate;
-  busy release;
   raise .status.aggregate;
   tkwait variable globals(errno);
 

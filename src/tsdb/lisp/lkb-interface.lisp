@@ -13,23 +13,30 @@
 (in-package :cl-user)
 
 (defun get-test-run-information ()
-   `((:AVMS . ,(- (hash-table-count *types*) (length *templates*)))
-     (:SORTS . 0)
-     (:TEMPLATES . ,(length *templates*))
-     (:RULES . ,(hash-table-count *rules*))
-     (:LRULES . ,(hash-table-count *lexical-rules*))
-     (:LEXICON . ,(size-of-lexicon))
-     (:GRAMMAR . ,(if (boundp '*grammar-version*) 
-                      (symbol-value '*grammar-version*)
-                      "unknown"))
-     (:APPLICATION . ,(format 
-                       nil 
-                       "LKB (~A mode; version ~@[`~a'~])" 
-                       *lkb-system-version* 
-                       (and (find-symbol "*CVS-VERSION*" :cl-user)
-                            (boundp (find-symbol "*CVS-VERSION*" :cl-user))
-                            (symbol-value 
-                             (find-symbol "*CVS-VERSION*" :cl-user)))))))
+  (let ((*package* (find-package :common-lisp-user)))
+    `((:AVMS . ,(- (hash-table-count *types*) (length *templates*)))
+      (:SORTS . 0)
+      (:TEMPLATES . ,(length *templates*))
+      (:RULES . ,(hash-table-count *rules*))
+      (:LRULES . ,(hash-table-count *lexical-rules*))
+      (:LEXICON . ,(size-of-lexicon))
+      (:GRAMMAR . ,(if (boundp '*grammar-version*) 
+                     (symbol-value '*grammar-version*)
+                     "unknown"))
+      (:APPLICATION . ,(format 
+                        nil 
+                        "LKB (~A mode~@[; version `~a'~]~
+                        ~:[; passive~;; active~])" 
+                        *lkb-system-version* 
+                        (and (find-symbol "*CVS-VERSION*")
+                             (boundp (find-symbol "*CVS-VERSION*"))
+                             (symbol-value 
+                              (find-symbol "*CVS-VERSION*")))
+                        (and (find-symbol "*ACTIVE-PARSING*")
+                             (boundp (find-symbol "*ACTIVE-PARSING*"))
+                             (symbol-value 
+                              (find-symbol "*ACTIVE-PARSING*"))))))))
+                       
 
 
 (defun parse-word (word &key load trace)
@@ -54,14 +61,7 @@
                                str))
           (input (split-into-words (preprocess-sentence-string word))))
       (parse input nil)
-      (multiple-value-bind (l-s-tasks redges words)
-          (parse-tsdb-count-lrules-edges-morphs)
-        (declare (ignore redges))
-        `((:L-STASKS . ,l-s-tasks) (:WORDS . ,words))))))
-
-
-#+allegro
-(defvar *allegro-gccount* 0)
+      (summarize-chart))))
 
 (defun initialize-test-run (&key interactive)
   (declare (ignore interactive))
@@ -72,25 +72,29 @@
     (clear-type-cache)))
 
 (defun finalize-test-run (environment)
-   ;; called after completion of test run
-   (declare (ignore environment))
-  (let ((*package* (find-package "COMMON-LISP-USER")))
+  ;; called after completion of test run
+  (declare (ignore environment))
+  (let ((lexicon 0)
+        (*package* (find-package "COMMON-LISP-USER")))
+    (loop 
+        for id in (collect-expanded-lex-ids *lexicon*)
+        do 
+          (pushnew id *lex-ids-used*)
+          (incf lexicon)) 
     (clear-type-cache)
-    (uncache-lexicon)))
+    (uncache-lexicon)
+    (pairlis '(:lexicon) (list lexicon))))
 
 ;;; sets the processor into exhaustive mode if requested; parses
 ;;; .string. without producing any printout (unless .trace. is set);
 ;;; funcall()s .semantix-hook. and .trees-hook. to obtain MRS and tree
-;;; representations (strings); all times in hundredths of secs
-
-;; DPF (16-Apr-99) - Modified PARSE-ITEM to also allow parse trees and MRS
-;; structures to be captured.
+;;; representations (strings); all times in thousands of secs
 
 (defun parse-item (string 
-                   &key exhaustive
-                        edges trace derivations semantix-hook trees-hook
-                        burst)
-  (declare (ignore derivations))
+                   &key exhaustive trace
+                        readings edges derivations semantix-hook trees-hook
+                        burst derivationp)
+  (declare (ignore derivations semantix-hook trees-hook))
   
   (multiple-value-bind (return condition)
     (ignore-errors
@@ -99,6 +103,10 @@
                                          *maximum-number-of-edges*
                                          edges))
             (*first-only-p* (not exhaustive))
+            (*maximal-number-of-readings* (cond
+                                           (exhaustive nil)
+                                           ((integerp readings) readings)
+                                           (t *maximal-number-of-readings*)))
             (*do-something-with-parse* nil)
              (sent
               (split-into-words (preprocess-sentence-string string)))
@@ -156,93 +164,140 @@
                  (first (if best-first-p
                           (round (* (- (first times) start) 1000) 
                                  internal-time-units-per-second)
-                          (if (> readings 0) total -1))))
+                          (if (> readings 0) total -1)))
+                 (summary (summarize-chart :derivationp derivationp)))
             (multiple-value-bind (l-s-tasks redges words)
                 (parse-tsdb-count-lrules-edges-morphs)
-              `((:TIMEUP) ;; we should be able to tell from *edge-id*
-                (:COPIES . -1) (:UNIFICATIONS . -1)
+              (declare (ignore l-s-tasks words))
+              `((:COPIES . -1) (:UNIFICATIONS . -1)
                 (:OTHERS . ,others) (:SYMBOLS . ,symbols) 
                 (:CONSES . ,conses)
                 (:TREAL . ,treal) (:TCPU . ,(+ tcpu tgc)) 
                 (:TGC . ,tgc)
-                (:REDGES . ,redges) 
-                (:PEDGES . ,(- *edge-id* (length *morph-records*)))
+                (:RPEDGES . ,redges) 
+                (:PEDGES . ,(rest (assoc :pedges summary)))
                 (:AEDGES . -1)
                 (:P-STASKS . ,s-tasks) (:P-ETASKS . ,e-tasks) 
                 (:P-FTASKS . ,f-tasks) (:P-CTASKS . ,c-tasks) 
-                (:L-STASKS . ,l-s-tasks) (:WORDS . ,words)
+                (:L-STASKS . ,(rest (assoc :l-stasks summary)))
+                (:WORDS . ,(rest (assoc :words summary)))
                 (:TOTAL . ,total) (:FIRST . ,first) 
                 (:READINGS . ,readings)
                 (:ERROR . ,(tsdb::normalize-string output))
                 (:RESULTS .
-                 ,(loop
-                      for i from 0
-                      for parse in (nreverse *parse-record*)
-                      for time = (if (integerp (first times))
-                                   (round (* (- (pop times) start) 1000)
-                                          internal-time-units-per-second )
-                                   total)
-                      for derivation = (tsdb::normalize-string
-                                        (format
-                                         nil
-                                         "~s"
-                                         (compute-derivation-tree parse)))
-                      for r-redges = (length 
-                                      (parse-tsdb-distinct-edges parse nil))
-                      for size = (parse-tsdb-count-nodes parse)
-                      for trees = (or (and trees-hook
-					   (ignore-errors 
-					    (funcall trees-hook parse)))
-				      "")
-                      for mrs = (or (and semantix-hook
-					   (ignore-errors 
-					    (funcall semantix-hook parse)))
-				      "")
-                      collect
-                        (pairlis '(:result-id :mrs :tree
-                                   :derivation :r-redges :size
-                                   :r-stasks :r-etasks 
-                                   :r-ftasks :r-ctasks
-                                   :time)
-                                 (list i mrs trees
-                                       derivation r-redges size
-                                       -1 -1 
-                                       -1 -1 
-
-                                       time))))))))))
+                 ,(append
+                   (loop
+                       for i from 0
+                       for parse in (nreverse *parse-record*)
+                       for time = (if (integerp (first times))
+                                    (round (* (- (pop times) start) 1000)
+                                           internal-time-units-per-second )
+                                    total)
+                       for derivation = (tsdb::normalize-string
+                                         (format
+                                          nil
+                                          "~s"
+                                          (compute-derivation-tree parse)))
+                       for r-redges = (length 
+                                       (parse-tsdb-distinct-edges parse nil))
+                       for size = (parse-tsdb-count-nodes parse)
+                       collect
+                         (pairlis '(:result-id :mrs :tree
+                                    :derivation :r-redges :size
+                                    :r-stasks :r-etasks 
+                                    :r-ftasks :r-ctasks
+                                    :time)
+                                  (list i "" ""
+                                        derivation r-redges size
+                                        -1 -1 
+                                        -1 -1 
+                                        time)))
+                   (when derivationp
+                     (loop
+                         for i from (length *parse-record*)
+                         for derivation in (rest (assoc :derivations summary))
+                         for string = (format nil "~s" derivation)
+                         collect (pairlis '(:result-id :derivation)
+                                          (list i string))))))))))))
     (append
      (when condition
        (pairlis '(:readings 
                   :condition 
-                  :error)
+                  :error
+                  :timeup)
                 (list -1 
                       (unless burst condition)
-                      (tsdb::normalize-string (format nil "~a" condition)))))
+                      (tsdb::normalize-string (format nil "~a" condition))
+                      (when (> *edge-id* *maximum-number-of-edges*)
+                        (format nil "edge limit (~a)" *edge-id*)))))
      return)))
 
 
 
-(defun compute-derivation-tree (edge &optional (offset 0))
+(defun compute-derivation-tree (edge)
   (flet ((edge-label (edge)
            (format nil "~(~a~)" (if (rule-p (edge-rule edge))
                                   (rule-id (edge-rule edge)) 
-                                  (edge-rule edge)))))
-    (cond
-     ((null (edge-children edge))
-      (list (format nil "~(~a~)" (first (edge-lex-ids edge)))
-            offset (+ offset 1)
-            (list (edge-label edge) offset (+ offset 1))))
-     (t
-      (let* ((end offset)
-             (children
-              (loop
-                  for kid in (edge-children edge)
-                  for derivation = (compute-derivation-tree kid end)
-                  do
-                    (setf end (max end (third derivation)))
-                  collect derivation)))
-        (nconc (list (edge-label edge) offset end)
-               children))))))
+                                  (edge-rule edge))))
+         (edge-stem (edge)
+           (let* ((tdfs (and (edge-p edge) (edge-dag edge)))
+                  (dag (and (tdfs-p tdfs) (tdfs-indef tdfs)))
+                  (stem (and (dag-p dag) 
+                             (existing-dag-at-end-of dag '(stem first))))
+                  (type (and (dag-p stem) (dag-type stem))))
+             (cond
+              ((and type (consp type) (stringp (first type)))
+               (first type))
+              ((or (stringp type) (symbolp type))
+               (string type))
+              (t "unknown")))))
+    (let* ((configuration (and (null (edge-children edge))
+                               (find-chart-configuration :edge edge)))
+           (start (and configuration 
+                       (chart-configuration-begin configuration)))
+           (end (and configuration 
+                       (chart-configuration-end configuration))))
+      (cond
+       ((and (edge-morph-history edge) (edge-spelling-change edge))
+        (let* ((daughter (edge-morph-history edge))
+               (leave (edge-label daughter))
+               (preterminal (first (edge-lex-ids daughter))))
+          (list (edge-label edge)
+                start end
+                (list (format nil "~(~a~)" preterminal)
+                      start end
+                      (list (format nil "~(~a~)" leave) 
+                            start end)))))
+       ((null (edge-children edge))
+        (list (format nil "~(~a~)" (first (edge-lex-ids edge)))
+              start end
+              (list (edge-label edge) 0 1)))
+       (t
+        (let* ((start *chart-limit*)
+               (end 0)
+               (children
+                (loop
+                    for child in (edge-children edge)
+                    for derivation = (compute-derivation-tree child)
+                    do
+                      (setf start (min start (second derivation)))
+                      (setf end (max end (third derivation)))
+                    collect derivation)))
+          (nconc (list (edge-label edge) start end)
+                 children)))))))
+
+(defun find-chart-configuration (&key edge id)
+  (loop
+      for i from 0 to (- *chart-limit* 1)
+      for entry = (aref *chart* i 0)
+      thereis
+        (and (chart-entry-p entry)
+             (loop
+                 for configuration in (chart-entry-configurations entry)
+                 for candidate = (chart-configuration-edge configuration)
+                 when (or (and edge (eq edge candidate))
+                          (and id (eq id (edge-id candidate))))
+                 return configuration))))
 
 (defun parse-tsdb-sentence (user-input &optional trace)
    (multiple-value-prog1
@@ -250,6 +305,13 @@
       (when (fboundp *do-something-with-parse*)
          (funcall *do-something-with-parse*))))
 
+
+;;;
+;;; _fix_me_
+;;; this function is flawed in that it miscounts words and successful lexical
+;;; rule applications (see comment in summarize-chart()); hence, the caller
+;;; currently ignores everything but the `redges' count.   (26-may-99  -  oe)
+;;;
 
 (defun parse-tsdb-count-lrules-edges-morphs ()
    (let ((distinct-parse-edges nil)
@@ -270,6 +332,59 @@
                             0))
                       *morphs*)))))
 
+(defun summarize-chart (&key derivationp)
+  (loop
+      with leaves = nil
+      with pedges = 0
+      with words = 0
+      with l-stasks = 0
+      with derivations = nil
+      for i from 0 to (- *chart-limit* 1)
+      for entry = (aref *chart* i 0)
+      when (chart-entry-p entry)
+      do
+        (loop
+            for configuration in (chart-entry-configurations entry)
+            for edge = (chart-configuration-edge configuration)
+            for rule = (edge-rule edge)
+            do
+              ;;
+              ;; the situation here is somewhat more complicated than we like
+              ;; it :-{: the LKB chart contains two edges for words that have
+              ;; undergone an inflectional rule without spelling change (e.g.
+              ;; `pos_adj_infl_rule') but only one for inflectional rules that
+              ;; change the surface form (e.g. `third_sg_fin_verb_infl_rule');
+              ;; hence, in counting the number of passives edges and words we
+              ;; have to keep track of lexical entry + inflectional rule pairs
+              ;; and adjust the counting accordingly.        (26-may-99  -  oe)
+              ;;
+              (cond
+               ((and (rule-p rule) (tsdb::inflectional-rule-p (rule-id rule)))
+                (if (edge-children edge)
+                  (loop
+                      for child in (edge-children edge)
+                      for id = (edge-id child)
+                      unless (member id leaves) 
+                      do
+                        (incf words)
+                        (pushnew id leaves))
+                  (incf words)))
+               ((not (rule-p rule))
+                (let ((id (edge-id edge)))
+                  (unless (member id leaves)
+                    (incf words)
+                    (pushnew id leaves))))
+               ((rule-p rule)
+                (incf pedges)
+                (when derivationp 
+                  (push (compute-derivation-tree edge) derivations))
+                (when (lexical-rule-p rule) (incf l-stasks)))))
+      finally (return (pairlis '(:pedges :words :l-stasks 
+                                 :derivations)
+                               (list (+ pedges words) words l-stasks 
+                                     derivations)))))
+              
+                           
 (defun parse-tsdb-distinct-edges (edge found)
    ;; collect edge for top lrule on each branch and all above
    (pushnew edge found :test #'eq)
@@ -309,27 +424,102 @@
 
 
 (defun size-of-lexicon ()
-  (cond
-   ((and (find-symbol "*PSORTS*") (boundp (find-symbol "*PSORTS*")))
-    (hash-table-count (symbol-value (find-symbol "*PSORTS*"))))
-   ((and (find-symbol "*LEXICON*") (boundp (find-symbol "*LEXICON*")))
-    (length (collect-expanded-lex-ids 
-             (symbol-value (find-symbol "*LEXICON*")))))
-   (t
-    -1)))
+  (let ((*package* (find-package :common-lisp-user)))
+    (cond
+     ((and (find-symbol "*PSORTS*") (boundp (find-symbol "*PSORTS*")))
+      (hash-table-count (symbol-value (find-symbol "*PSORTS*"))))
+     ((and (find-symbol "*LEXICON*") (boundp (find-symbol "*LEXICON*")))
+      (length (collect-expanded-lex-ids 
+               (symbol-value (find-symbol "*LEXICON*")))))
+     (t
+      -1))))
     
-;; For use with TSDB machinery, which needs a string as input
-(defun get-labeled-bracketings (parse)
-  (format nil "~s" (parse-tree-structure parse)))
-
+
+;;;
+;;; interface functions for reconstruction of derivations (in UDF --- unified
+;;; derivation format |:-).
 ;;;
 
-(eval-when (:load-toplevel :compile-toplevel :execute)
-   (when (find-package :TSDB)
-      (import '(get-test-run-information
-                parse-word
-                initialize-test-run
-                finalize-test-run
-                parse-item
-                uncache-lexicon)
-              :TSDB)))
+(defparameter *reconstruct-hook*
+  #'(lambda (tdfs &optional (i-input "reconstructed item"))
+      (display-fs tdfs i-input)))
+
+(defun find-lexical-entry (form instance)
+  (declare (ignore form))
+  (let* ((*package* (find-package "COMMON-LISP-USER"))
+         (name (intern (if (stringp instance)
+                         (string-upcase instance)
+                         instance)
+                       :common-lisp-user))
+         (instance (get-psort-entry name)))
+    (when instance
+      (lex-or-psort-full-fs instance))))
+
+(defun find-affix (type)
+  (let* ((*package* (find-package "COMMON-LISP-USER"))
+         (name (string-upcase (string type)))
+         (name (intern name :common-lisp-user))
+         (rule (find-rule name)))
+    (when (rule-p rule) (rule-full-fs rule))))
+
+(defun find-rule (instance)
+  (let* ((name (intern (if (stringp instance)
+                           (string-upcase instance)
+                         instance)
+                       :common-lisp-user))
+         (rule (or (get-lex-rule-entry name)
+                   (get-grammar-rule-entry name))))
+    rule))
+
+(defun instantiate-rule (rule items)
+  (let* ((*unify-debug* :return)
+         (%failure% nil)
+         (status 0)
+         (result (copy-tdfs-completely (rule-full-fs rule)))
+         (paths (rule-order rule)))
+    (with-unification-context (foo)
+      (loop
+          while result
+          for path in (rest paths)
+          for item in items
+          for i from 0
+          do
+            (setf status i)
+            (setf result 
+              (yadu
+               result
+               (create-temp-parsing-tdfs item path)))
+          finally
+            (setf result (and result (copy-tdfs-elements result)))))
+    (or result (values status %failure%))))
+
+(defun instantiate-preterminal (preterminal affix)
+  ;;
+  ;; _fix_me_
+  ;; this hardwires some assumptions about how affixation is carried out. 
+  ;;                                                        (22-apr-99  -  oe)
+  ;;
+  (with-unification-context (foo)
+    (let* ((*unify-debug* :return)
+           (%failure% nil)
+           (result 
+            (yadu (create-temp-parsing-tdfs preterminal '(args first)) affix)))
+      (if (tdfs-p result)
+        (copy-tdfs-elements result)
+        (values nil %failure%)))))
+
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+	   #-:ansi-eval-when (load eval compile)
+   (import '(get-test-run-information
+            parse-word
+            initialize-test-run
+            finalize-test-run
+            parse-item
+            uncache-lexicon
+            *reconstruct-hook*
+            find-lexical-entry find-affix find-rule
+            instantiate-rule instantiate-preterminal)
+          :tsdb))
+      
+
+

@@ -21,7 +21,8 @@
 (defun initialize-tsdb (&optional cache &key action background name pattern)
   
   (unless (and *tsdb-initialized-p* (null action))
-    (let* ((tsdbrc (dir-and-name (user-homedir-pathname) ".tsdbrc"))
+    (let* ((*tsdb-initialized-p* t)
+           (tsdbrc (dir-and-name (user-homedir-pathname) ".tsdbrc"))
            (index (make-pathname :directory  *tsdb-skeleton-directory*
                                  :name *tsdb-skeleton-index*)))
       (when (and (or (null action) (member action '(:tsdbrc :all)))
@@ -38,8 +39,8 @@
                                                 :if-does-not-exist :create)
                                  (read stream nil nil))))
       (when (and (or (null action) (member action '(:cache :all))) cache)
-        (load-cache :background background :name name :pattern pattern))
-      (unless action (setf *tsdb-initialized-p* t)))))
+        (load-cache :background background :name name :pattern pattern))))
+  (unless action (setf *tsdb-initialized-p* t)))
 
 (defun call-tsdb (query language
                   &key redirection cache absolute unique quiet ro)
@@ -49,14 +50,14 @@
       (cache-query query language cache)
       (let* ((user (current-user))
              (file (format
-                    nil "/tmp/.tsdb.io.~a.~a"
-                    user (string-downcase (string (gensym "")))))
+                    nil "/tmp/.tsdb.io.~a.~a.~a"
+                    user (current-pid) (string-downcase (string (gensym "")))))
              (data (if absolute 
                      (namestring language) 
                      (find-tsdb-directory language)))
              (command (format
                        nil 
-                       "~a -home=~a~:[~; -uniquely-project=off~]~
+                       "~a -home=~a -uniquely-project=~:[off~;on~]~
                        ~:[~; -quiet~]~:[~; -read-only~] ~
                         -string-escape=lisp -pager=null -max-results=0"
                        *tsdb-application* data unique quiet ro))
@@ -69,8 +70,9 @@
                       query))
              (output (when (eq redirection :output)
                        (format
-                        nil "/tmp/.tsdb.data.~a.~a"
-                        user (string-downcase (string (gensym ""))))))
+                        nil "/tmp/.tsdb.data.~a.~a.~a"
+                        user (current-pid) 
+                        (string-downcase (string (gensym ""))))))
              (redirection 
               (if output (concatenate 'string " > \"" output "\"") ""))
              (query (concatenate 'string query redirection ".")))
@@ -137,13 +139,13 @@
 (defun create-cache (language &key (verbose t))
   (let* ((user (current-user))
          (file (format
-                nil "/tmp/.tsdb.cache.~a.~a"
-                user (string-downcase (string (gensym "")))))
+                nil "/tmp/.tsdb.cache.~a.~a.~a"
+                user (current-pid) (string-downcase (string (gensym "")))))
          (stream (open file 
                        :direction :output 
                        :if-exists :supersede :if-does-not-exist :create)))
     (when stream
-      (format stream "set implicit-commit off.~%")
+      (format stream "set implicit-commit \"exit\".~%")
       (when verbose
         (format 
          *tsdb-io*
@@ -172,7 +174,7 @@
                  (open (get-field :file cache)
                        :direction :output 
                        :if-exists :supersede :if-does-not-exist :create)))
-            (format stream "set implicit-commit off.~%")
+            (format stream "set implicit-commit \"exit\".~%")
             (setf (get-field :stream cache) stream))))
       (format
        *tsdb-io*
@@ -274,6 +276,36 @@
          (map 'list (lambda (string) (read-from-string string nil))
               derivations))))
 
+(defun select-phenomena (data &key (format :tcl) (stream *tsdb-io*))
+  (declare (ignore format stream))
+  (let* ((phenomena (select '("p-id" "p-name")
+                            '(:integer :string)
+                            "phenomenon"
+                            nil data)))
+    (sort phenomena #'string< 
+          :key #'(lambda (tuple)
+                   (get-field :p-name tuple)))))
+
+(defun analyze-phenomena (phenomena &optional prefix)
+  (loop
+      with result
+      for tuple = (pop phenomena)
+      for name = (get-field :p-name tuple)
+      for next = (get-field :p-name (first phenomena))
+      for common = (and next (mismatch name next))
+      do
+        (cond
+         ((and common (null prefix))
+          (multiple-value-bind (analysis residuum)
+              (analyze-phenomena phenomena common)
+            (push (cons common analysis) result)
+            (setf phenomena residuum)))
+         ((and common prefix (< (mismatch common prefix) (length prefix)))
+          )
+         (t
+          (push tuple result)))
+      finally (return (nreverse result))))
+
 (defun read-database-schema (data &key absolute)
   
   (let* ((relations (call-tsdb "info relations" data :ro t :absolute absolute))
@@ -307,14 +339,15 @@
                                     (and (search "unique" flags) '(:unique)))))
                       (push field fields)))))
               (push (cons relation (nreverse fields)) schema))))))))
-                      
 
 (defun write-run (result language
                   &key cache)
 
   (when *tsdb-write-run-p*
     (let* ((*print-circle* nil)
-           (run-id (get-field :run-id result))
+           (*print-level* nil)
+           (*print-length* nil)
+           (run-id (get-field+ :run-id result -1))
            (comment (normalize-string (get-field :comment result)))
            (platform (normalize-string (get-field :platform result)))
            (tsdb (normalize-string (get-field :tsdb result)))
@@ -352,9 +385,11 @@
                     &key cache)
   (when *tsdb-write-parse-p*
     (let* ((*print-circle* nil)
-           (parse-id (get-field :parse-id result))
-           (run-id (get-field :run-id result))
-           (i-id (get-field :i-id result))
+           (*print-level* nil)
+           (*print-length* nil)
+           (parse-id (get-field+ :parse-id result -1))
+           (run-id (get-field+ :run-id result -1))
+           (i-id (get-field+ :i-id result -1))
            (readings (get-field+ :readings result -1))
            (first (round (get-field+ :first result -1)))
            (total (round (get-field+ :total result -1)))
@@ -413,38 +448,43 @@
                       &optional (language *tsdb-data*)
                       &key cache)
   (when *tsdb-write-result-p*
-    (dolist (result results)
-      (let* ((*print-circle* nil)
-             (result-id (get-field :result-id result))
-             (time (round (get-field+ :time result -1)))
-             (r-ctasks (get-field+ :r-ctasks result -1))
-             (r-ftasks (get-field+ :r-ftasks result -1))
-             (r-etasks (get-field+ :r-etasks result -1))
-             (r-stasks (get-field+ :r-stasks result -1))
-             (size (get-field+ :size result -1))
-             (r-aedges (get-field+ :r-aedges result -1))
-             (r-pedges (get-field+ :r-pedges result -1))
-             (derivation (normalize-string (get-field+ :derivation result "")))
-             (tree (normalize-string (get-field+ :tree result "")))
-             (mrs (normalize-string (get-field+ :mrs result "")))
-             (query "insert into result values")
-             (query
-              (format
-               nil
-               "~a ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~s ~s ~s"
-               query
-               parse-id result-id
-               time
-               r-ctasks r-etasks r-stasks r-ftasks
-               size r-aedges r-pedges
-               derivation tree mrs)))
-        (call-tsdb query language :cache cache)))))
+    (loop
+        with *print-circle* = nil
+        with *print-level* = nil
+        with *print-length* = nil
+        for result in results
+        for result-id = (get-field :result-id result)
+        for time = (round (get-field+ :time result -1))
+        for r-ctasks = (get-field+ :r-ctasks result -1)
+        for r-ftasks = (get-field+ :r-ftasks result -1)
+        for r-etasks = (get-field+ :r-etasks result -1)
+        for r-stasks = (get-field+ :r-stasks result -1)
+        for size = (get-field+ :size result -1)
+        for r-aedges =  (get-field+ :r-aedges result -1)
+        for r-pedges = (get-field+ :r-pedges result -1)
+        for derivation = (normalize-string (get-field :derivation result))
+        for tree = (normalize-string (get-field :tree result))
+        for mrs = (normalize-string (get-field :mrs result))
+        for query = (format
+                     nil
+                     "insert into result values ~
+                      ~d ~d ~d ~d ~d ~d ~d ~d ~d ~d ~s ~s ~s"
+                     parse-id result-id
+                     time
+                     r-ctasks r-etasks r-stasks r-ftasks
+                     size r-aedges r-pedges
+                     derivation tree mrs)
+        when result-id do
+          (call-tsdb query language :cache cache))))
 
 (defun write-rules (parse-id statistics
                     &optional (language *tsdb-data*)
                     &key cache)
   (when *tsdb-rule-statistics-p*
     (loop 
+        with *print-circle* = nil
+        with *print-level* = nil
+        with *print-length* = nil
         for rule in statistics
         for name = (normalize-string (get-field+ :rule rule ""))
         for filtered = (get-field+ :filtered rule -1)
@@ -466,6 +506,8 @@
                      &key cache)
   (when *tsdb-write-output-p*
     (let* ((*print-circle* nil)
+           (*print-level* nil)
+           (*print-length* nil)
            (tree (shell-escape-quotes (remove #\@ (normalize-string tree))))
            (mrs (shell-escape-quotes (remove #\@ (normalize-string mrs))))
            (query

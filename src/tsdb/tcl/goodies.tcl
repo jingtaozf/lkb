@@ -8,6 +8,76 @@
 ## Author:  Oliver Plaehn (plaehn@coli.uni-sb.de)
 ##
 ## Purpose: Defines auxiliary procedures for 'showtable'.
+##
+
+#-------------------------------------------------------------------------------------
+# Usage: wfsl List CharPos [LeftBracket] [RightBracket]
+#
+# Returns the well-formed sublist of 'List' that contains the character at position
+# 'CharPos', when 'List' is considered as an ordinary string (where the numbering
+# starts at 0).  'List' might contain sublists of arbitrary depth.  'LeftBracket' and
+# 'RightBracket' are the opening and closing brackets used in 'List' and default to "("
+# and ")", resp.  If 'List' is not itself a well-formed list or any other error is
+# encountered during processing, the empty string is returned.
+#-------------------------------------------------------------------------------------
+
+proc wfsl {List CharPos {LeftBracket "("} {RightBracket ")"}} {
+    
+    ## Get character at specified position
+    set Char [string index $List $CharPos]
+    if { $Char == "" } {
+	return ""
+    }
+    
+    ## If that character is a left bracket, get position of matching right bracket; if
+    ## it is a right bracket, compute position of matching left bracket; otherwise get
+    ## position of first left bracket to the left of 'CharPos' and then the position of 
+    ## its matching right bracket
+    if { "$Char" == "$LeftBracket" } {
+	set leftpos  $CharPos
+	set rightpos [_wfsl_get_matching_bracket $List $leftpos +1 $LeftBracket $RightBracket]
+    } elseif { "$Char" == "$RightBracket" } {
+	set rightpos $CharPos
+	set leftpos  [_wfsl_get_matching_bracket $List $rightpos -1 $LeftBracket $RightBracket]
+    } else {
+	set leftpos  [_wfsl_get_matching_bracket $List $CharPos -1 $LeftBracket $RightBracket]
+	if { $leftpos > -1 } {
+	    set rightpos [_wfsl_get_matching_bracket $List $leftpos +1 $LeftBracket $RightBracket]
+	}
+    }
+
+    ## Return the empty string, if an error has been encountered, or otherwise the
+    ## computed substring
+    if { $leftpos == -1 || $rightpos == -1 } {
+	return ""
+    } else {
+	return [string range $List $leftpos $rightpos]
+    }
+}
+
+proc _wfsl_get_matching_bracket {List StartPos DirIncr {LeftBracket "("} {RightBracket ")"} } {
+
+    set pos $StartPos
+    set char [string index $List $pos]
+    if { "$char" == "$LeftBracket" || "$char" == "$RightBracket" } {
+	set bracketlevel 0
+    } else {
+	set bracketlevel $DirIncr
+    }
+    while { $char != "" } {
+	if { "$char" == "$LeftBracket" } {
+	    incr bracketlevel
+	} elseif { "$char" == "$RightBracket" } {
+	    decr bracketlevel
+	}
+	if { $bracketlevel == 0 } {
+	    return $pos
+	}
+	incr pos $DirIncr
+	set char [string index $List $pos]
+    }
+    return -1
+}
 
 
 #-------------------------------------------------------------------------------------

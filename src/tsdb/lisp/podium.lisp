@@ -59,6 +59,7 @@
       (run-process *tsdb-wish-application*
                    :wait nil
                    :output :stream :input :stream :error-output nil))
+    (when *tsdb-wish-pid* (enable-gc-cursor *tsdb-wish-pid*))
     (format 
      *tsdb-wish-stream* 
      "set globals(version) {~a}~%~
@@ -96,8 +97,8 @@
      *tsdb-write-result-p* *tsdb-write-output-p*
      *tsdb-rule-statistics-p*
      *tsdb-write-syntax-chart-p* *tsdb-write-lexicon-chart-p*
-     *tsdb-tenure-p*
-     *tsdb-gc-p*)
+     *tsdb-gc-p*
+     *tsdb-tenure-p*)
     (tsdb-do-phenomena :stream *tsdb-wish-stream*)
     (format *tsdb-wish-stream* "source \"~a\"~%" *tsdb-podium*)
     (format *tsdb-wish-stream* 
@@ -110,10 +111,12 @@
 (defun shutdown-podium ()
 
   (setf *tsdb-podium-windows* nil)
+  (enable-gc-cursor -1)
   (when *tsdb-wish-stream*
     (ignore-errors
      (format *tsdb-wish-stream* "~%~%exit~%")
      (force-output *tsdb-wish-stream*)
+     (sleep 2)
      (close *tsdb-wish-stream*)
      (setf *tsdb-wish-stream* nil)))
   (when *tsdb-wish-pid*
@@ -171,8 +174,9 @@
               (arguments (rest command))
               (user (current-user))
               (file (format
-                     nil "/tmp/.tsdb.podium.~a.~a"
-                     user (string-downcase (string (gensym ""))))))
+                     nil "/tmp/.tsdb.podium.~a.~a.~a"
+                     user (current-pid) 
+                     (string-downcase (string (gensym ""))))))
          (case action
 
            (set
@@ -223,7 +227,7 @@
                      (send-to-podium 
                       (format 
                        nil 
-                       "input \"create:\" ~s ~s directory" 
+                       "input {create:} {~a} {~a} directory" 
                        path *tsdb-home*)
                       :wait t))
                    (path (when (and (eq (first return) :ok)
@@ -579,7 +583,7 @@
                           file (gensym "") data title)
                          :wait t)))
                   (when (and (equal (first return) :ok) 
-                             (equal (first (second return)) :graph))
+                             (equal (first (second return)) :table))
                     (push (append (second return)
                                   (pairlis 
                                    '(:data :command)
@@ -767,8 +771,8 @@
   (delete-interrupt-handler)
   (let* ((user (current-user))
          (file (format
-                nil "/tmp/.tsdb.interrupt.~a.~a"
-                user (string-downcase (string (gensym ""))))))
+                nil "/tmp/.tsdb.interrupt.~a.~a.~a"
+                user (current-pid) (string-downcase (string (gensym ""))))))
     (when (probe-file file) (delete-file file))
     (if (probe-file file)
       (when (< i 42)
@@ -803,9 +807,13 @@
   (if hide
     (send-to-podium (format nil "meter hide") :wait t)  
     (send-to-podium (format nil "meter ~,3f ~s" value text) :wait t)))
-
-(defun meter-advance (increment)
-  (send-to-podium (format nil "meter_advance ~,6f" increment) :wait t))
+
+(let ((pending 0))
+  (defun meter-advance (increment)
+    (incf pending increment)
+    (when (>= pending 0.01)
+      (send-to-podium (format nil "meter_advance ~,6f" pending) :wait t)
+      (setf pending 0))))
 
 (defun run-meter (duration)
   (send-to-podium (format nil "run_meter ~d" duration) :wait t))
@@ -813,53 +821,17 @@
 (defun status (&key (text "") (duration 0))
   (send-to-podium (format nil "status {~a} ~d" text duration) :wait t))
 
-;;;
-;;; this should really change: recording the previous status on the lisp side
-;;; of the interface causes communication overhead (to put it mildly); it
-;;; should be such that a busy() call causes exactly one message to the podium.
-;;;
-(eval-when (:load-toplevel :execute)
-  (let (previous)
-    (defun busy (&key (action :hold) (cursor :watch) (toplevel "."))
-      (when (streamp *tsdb-wish-stream*)
-        (unless (eq action :restore)
-          (let ((status 
-                 (send-to-podium (format nil "isbusy ~a" toplevel) :wait t)))
-            (if (and (eq (first status) :ok) 
-                     (equal (second status) toplevel))
-              (setf previous t)
-              (setf previous nil))))
-        (let* ((action (if (stringp action)
-                         (intern action :keyword)
-                         action))
-               (cursor (if (stringp cursor)
-                         (intern cursor :keyword)
-                         cursor)))
-          (case action
-            (:hold
-             (let ((return 
-                     (send-to-podium 
-                      (format nil "busy ~(~a ~a~)" action toplevel) :wait t)))
-               (when (eq (first return) :ok)
-                 (send-to-podium 
-                  (format nil "busy config ~(~a -cursor ~a~)" toplevel cursor) 
-                  :wait t))))
-            (:release
-             (let ((status 
-                    (send-to-podium (format nil "isbusy ~a" toplevel) 
-                                    :wait t)))
-               (when (and (eq (first status) :ok) 
-                          (equal (second status) toplevel))
-                 (send-to-podium 
-                  (format nil "busy ~(~a ~a~)" action toplevel) :wait t))))
-            (:restore
-             (if previous
-               (let ((return (busy)))
-                 (setf previous previous)
-                 return)
-               (let ((return (busy :action :release)))
-                 (setf previous previous)
-                 return)))))))))
+(defun busy (&key (action :freeze) gc)
+  (when (streamp *tsdb-wish-stream*)
+    (cond
+     ((eq gc :start)
+      (gc_start 0))
+     ((eq gc :end)
+      (gc_end 0))
+     ((eq action :freeze)
+      (send-to-podium (format nil "tsdb_busy freeze") :wait t))
+     ((eq action :release)
+      (send-to-podium (format nil "tsdb_busy release") :wait t)))))
 
 (defun beep ()
   (send-to-podium "tsdb_beep" :wait t))

@@ -18,6 +18,8 @@
 
 (in-package "TSDB")
 
+(defparameter *import-tsnlp-style-p* nil)
+
 (defparameter *import-separator* ";;")
 
 (defparameter *import-punctuation* 
@@ -175,15 +177,24 @@
             (let* ((start (if (char= (char string 0) #\") 1 0))
                    (wf (if (char= (char string start) #\*) 0 1))
                    (string (subseq string (if (zerop wf) (+ start 1) start)))
-                   (break (and separator 
-                               (search separator string 
-                                       :test #'string= :from-end t)))
+                   (break (if (zerop start)
+                            (and separator 
+                                 (search separator string 
+                                         :test #'string= :from-end t))
+                            (loop
+                                for i from 0
+                                for c across string
+                                for escape = (unless escape (char= c #\\))
+                                when (and (char= c #\") (null escape))
+                                return i)))
                    (comment 
                     (or comment
                         (when break
                           (string-trim 
                            (list #\Space #\Tab) 
-                           (subseq string (+ break (length separator)))))
+                           (subseq string (+ break (if (zerop start) 
+                                                     (length separator)
+                                                     1)))))
                         ""))
                    (string (if break
                              (subseq string 0 (max break 0)) 
@@ -212,7 +223,8 @@
 
 (defun normalize-item (string)
   (flet ((punctuation-p (char)
-           (member char *import-punctuation* :test #'char=))
+           (and *import-tsnlp-style-p*
+                (member char *import-punctuation* :test #'char=)))
          (whitespace-p (char)
            (member char '(#\Space #\Tab #\Newline) :test #'char=)))
     (let ((string (string-trim '(#\Space #\Tab #\Newline) string))

@@ -28,6 +28,14 @@
     (list (find-symbol "MODSTREAM" "MAIN") module)
     `(stream ,module)))
 
+(eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
+	   #-:ansi-eval-when (load eval compile)
+  (import
+   '(pg::*reconstruct-hook*
+     pg::find-lexical-entry pg::find-affix pg::find-rule
+     pg::instantiate-rule pg::instantiate-preterminal)
+    :tsdb))
+
 (defparameter
   *tsdb-morphology-protocol*
   '((main::*scanner* main::*morphology* :stop-bw)
@@ -90,32 +98,44 @@
         (run-protocol *tsdb-morphology-protocol* word :trace trace)
       (declare (ignore result))
       (when (equal load :collect)
-        (let* ((entries (unless condition 
-                          (main::output-stream main::*lexicon*))))
-          (map nil #'(lambda (entry)
-                       (when (main::typed-item-p entry)
-                         (push (second (main::typed-item-args entry))
-                               %tsdb-lexical-preterminals%)))
-               entries)))
+        (loop
+            for entry in (unless condition (pg::find-words))
+            when (pg::combo-item-p entry)
+            do (push entry %tsdb-lexical-preterminals%)))
       (pg::summarize-lexicon))))
 
-(defun extract-inflections (&optional (items %tsdb-lexical-preterminals%))
+(defun extract-inflections (&key (items %tsdb-lexical-preterminals%)
+                                 pprint (stream t))
   (loop
       with result = nil
       for item in items
       for preterminal = (pg::combo-item-index item)
       for name = (when (symbolp preterminal)
                    (string-downcase (string preterminal)))
-      finally (return result)
-      when (eq (pg::combo-item-itype item) :lex-entry)
+      finally 
+        (if pprint
+          (loop 
+              for item in result
+              for morph = (second item)
+              do 
+                (format 
+                 stream 
+                 "  {~(~s~), ~(~s~), ~(~s~), ~(~s~), ~d, ~d},~%"
+                 (first item) (first morph) (second morph) (third morph)
+                 (third item) (fourth item)))
+            (return result))
+      when (member (pg::combo-item-itype item) '(:c-lex-entry :lex-entry))
       do
         (let* ((daughters (pg::item-daughters item))
-               (daughter (when (= (length daughters) 1)
-                           (aref daughters 0)))
+               (arity (length daughters))
+               (rhs (loop for i from 0 to (- arity 1) collect i))
+               (key (first (set-difference rhs (pg::combo-item-rhs item))))
+               (daughter (when (>= (length daughters) 1)
+                           (aref daughters key)))
                (itype (and daughter (pg::combo-item-itype daughter)))
                (index (and daughter (pg::combo-item-index daughter))))
           (when (and name daughter itype index (eq itype :morph))
-            (pushnew (list name index) result :test #'equal)))))
+            (pushnew (list name index key arity) result :test #'equal)))))
 
 (defun initialize-test-run (&key interactive)
   (declare (special pg::*maximal-number-of-edges*))
@@ -127,7 +147,6 @@
                      tdl::*verbose-definition-p*
                      main::*draw-chart-p*
                      pg::stat-rules
-                     pg::ebl-parser-name-rule-fn
                      pg::ebl-parser-external-signal-fn
                      pg::*maximal-number-of-edges*)
                    (list tdl::*verbose-reader-p*
@@ -135,8 +154,6 @@
                          main::*draw-chart-p*
                          (and parser
                            (pg::parser-stat-rules parser))
-                         (and parser 
-                           (pg::ebl-parser-name-rule-fn parser))
                          (and parser 
                            (pg::ebl-parser-external-signal-fn parser))
                          pg::*maximal-number-of-edges*))))
@@ -147,8 +164,6 @@
       (setf tdl::*verbose-definition-p* nil)
 
       (when parser
-        (setf (pg::ebl-parser-name-rule-fn (pg::get-parser :syntax))
-          #'get-informative-item-label)
         (setf (pg::parser-stat-rules parser) *tsdb-rule-statistics-p*)))
     (scanning::init-scanner)
     (setf (get :environment storage) environment)
@@ -173,10 +188,11 @@
           (set (first pair) (rest pair))))))))
 
 (defun parse-item (string &key exhaustive
-                               (edges 0) trace derivations
+                               (edges 0) readings trace derivations
                                semantix-hook trees-hook
+                               derivationp
                                burst)
-  (declare (special pg::*maximal-number-of-edges*))
+  (declare (special pg::*maximal-number-of-edges*) (ignore readings))
 
   (let* ((string (remove-and-insert-punctuation string))
          (tracep (main::trace-p main::*parser*))
@@ -237,7 +253,8 @@
         (let ((timeup (or (pg::maximal-number-of-edges-exceeded-p 
                            (pg::get-parser :syntax))
                           (pg::maximal-number-of-tasks-exceeded-p 
-                           (pg::get-parser :syntax)))))
+                           (pg::get-parser :syntax))
+                          (pg::time-exceeded-p (pg::get-parser :syntax)))))
           (when timeup
             (push (cons :timeup timeup) result))))
 
@@ -304,10 +321,7 @@
                       (stasks (pg::stats-successful statistic))
                       (ctasks (if (and ftasks etasks) (+ ftasks etasks) -1))
                       (derivation 
-                       (format 
-                        nil 
-                        "~s"
-                        (pg::item-to-node item (pg::get-parser :syntax)))))
+                       (format nil "~s" (compute-derivation-tree item))))
                  (dolist (item (get-field :redges summary))
                    (pushnew item redges))
                  (push (pairlis
@@ -356,14 +370,14 @@
          (templates (tdl::get-global :templates))
          (templates
           (when (hash-table-p templates) (hash-table-count templates)))
-         (lexicon (pg::combo-parser-lexicon (pg::get-parser :lexicon)))
+         (lparser (pg::get-parser :lexicon))
+         (parser (pg::get-parser :syntax))
+         (lexicon (and lparser (pg::combo-parser-lexicon lparser)))
          (lexicon (when (pg::lexicon-p lexicon) 
                     (pg::lexicon-lex-entries lexicon)))
          (lexicon (when (hash-table-p lexicon) (hash-table-count lexicon)))
-         (lrules 
-          (length (pg::combo-parser-lex-rules (pg::get-parser :lexicon))))
-         (rules 
-          (length (pg::combo-parser-syn-rules (pg::get-parser :syntax)))))
+         (lrules (and lparser (length (pg::combo-parser-lex-rules lparser))))
+         (rules (and parser (length (pg::combo-parser-syn-rules parser)))))
     (append (and avms (list (cons :avms avms)))
             (and sorts (list (cons :sorts sorts)))
             (and templates (list (cons :templates templates)))
@@ -392,21 +406,35 @@
                     sum (fs-size (rest arc)))))))
 (defmethod fs-size ((fs t)) -1)
 
-(defun get-informative-item-label (item)
-  (when (pg::combo-item-p item)
-    (case (pg::combo-item-itype item)
-      ((:lex-entry :c-lex-entry)
-       (if nil
-         (let* ((spare (pg::combo-item-spare item))
-                (spare (when (and spare (or (symbolp spare)
-                                            (stringp spare)))
-                         (string spare)))
-                (cfs (pg::combo-item-cfs item))
-                (fs (and cfs (pg::cfs-fs cfs))))
-           (and fs (string-downcase 
-                    (or spare (format nil "~a" (get-fs-type fs))))))
-         (format nil "~(~a~)" (pg::combo-item-index item))))
-      (t (format nil "~(~a~)" (pg::item-label item))))))
+(defun compute-derivation-tree (item &optional (offset (pg::item-start item)))
+  (flet ((informative-item-label (item)
+           (when (pg::combo-item-p item)
+             (case (pg::combo-item-itype item)
+               ((:lex-entry :c-lex-entry)
+                (format nil "~(~a~)" (pg::combo-item-index item)))
+               (t (format nil "~(~a~)" (pg::item-label item)))))))
+    (cond
+     ((eq (pg::combo-item-itype item) :morph)
+      (list
+       (format nil "~(~a~)" (third (pg::combo-item-index item)))
+       (- (pg::item-start item) offset)
+       (- (pg::item-end item) offset)
+       (list
+        (format nil "~(~a~)" (pg::combo-item-stem item))
+        (- (pg::item-start item) offset)
+        (- (pg::item-end item) offset))))
+     (t
+      (cons
+       (informative-item-label item)
+       (cons 
+        (- (pg::item-start item) offset)
+        (cons
+         (- (pg::item-end item) offset)
+         (when (pg::item-daughters item)
+           (loop
+               for kid across (pg::Item-daughters item)
+               for start = (pg::item-start item)
+               collect (compute-derivation-tree kid start))))))))))
 
 (defun remove-terminals (derivation)
   (let ((daughters (pg::pnode-daughters derivation)))
@@ -626,6 +654,22 @@
                                    (second (main::typed-item-args titem)))))))
     (pairlis '(:words :l-stasks) (list words lstasks))))
 
+(defun find-words (&optional (parser (pg::get-parser :lexicon)))
+  (let* ((chart (parser-chart parser))
+         (passives (reduce #'append (chart-passive-items-starting-at chart)))
+         (active-items-starting-at 
+          (reduce #'append 
+                  (when chart (chart-active-items-starting-at chart))))
+         (active-items-ending-at 
+          (reduce #'append 
+                  (when chart (chart-active-items-ending-at chart))))
+         (actives (union active-items-starting-at active-items-ending-at)))
+    (loop 
+        for item in (append passives actives)
+        when (member (combo-item-itype item)
+                     (rest (assoc :rule *legal-combinations*)))
+        collect item)))
+
 ;;;
 ;;; maximal-number-of-tasks-exceeded-p() is installed as external-signal-fn()
 ;;; in the syntax parser (because the :taskslice mechanism) is not readily
@@ -641,7 +685,7 @@
 
 (defun maximal-number-of-edges-exceeded-p (parser)
   (declare (ignore parser))
-  (and *maximal-number-of-edges*
+  (and (integerp *maximal-number-of-edges*) (integerp *edge-id-counter*)
        (when (>= *edge-id-counter* *maximal-number-of-edges*)
          (format nil "edge limit (~a)" *edge-id-counter*))))
 
@@ -650,115 +694,51 @@
     (let* ((limit (second (main::add-keys main::*parser*)))
            (statistics (parser-global-stats parser))
            (executed (and statistics (stats-executed statistics))))
-      (when (and (integerp limit) (>= executed limit))
+      (when (and (integerp limit) (integerp executed) (>= executed limit))
         (format nil "task limit (~a)" executed)))))
+
+(defun time-exceeded-p (parser)
+  (when (eq (first (main::add-keys main::*parser*)) :timeslice)
+    (let* ((limit (second (main::add-keys main::*parser*)))
+           (statistics (parser-global-stats parser))
+           (total (and statistics (stats-time statistics))))
+      (when (and (integerp limit) (integerp total) (>= total limit))
+        (format nil "time limit (~a)" total)))))
 
 ;;;
-;;; functionality to reconstruct derivation trees and report nature of failure
-;;; when unification clashes.
-;;;
-;;; some of this, actually, is generic and should go into `utilities.lisp' or
-;;; elsewhere.  plus an equality predicate on derivations that ignores the
-;;; PAGE -- LKB difference in handling affixation is needed.  we want to come
-;;; back to this sometime soon.                                  (11-mar-99)
-;;;
-;;; rob, should somebody suggest you provide similar functionality for the LKB,
-;;; i recomment we synchronize before you go ahead ...
+;;; interface functions for reconstruction of derivations (in UDF --- unified
+;;; derivation format |:-).
 ;;;
 
-(defun reconstruct-item (i-id i-input derivation)
-  (let* ((result (reconstruct derivation))
-         (*package* (find-package "DISCO")))
-    (cond
-     ((and (combo-item-p result) (cfs-p (combo-item-cfs)))
-      (call-fegramed (cfs-fs (combo-item-cfs result))))
-     (t
-      (format
-       t
-       "~&~%(~d) `~a'~%~%  ~s~%~%"
-       i-id i-input (first result))
-      (case (third result)
-        (:noentry
-         (format t "  no lexical entry ~a.~%" (fourth result)))
-        (:norule
-         (format t "  no rule ~a.~%" (fourth result)))
-        (t
-         (format
-          t
-          "  ~(~a~) in daughter # ~d;~%  path: "
-          (first (third result)) (second result))
-         (if (eq (first (third result)) :cycle)
-           (format
-            t
-            "`~{~a~^|~}'.~%"
-            (second (third result)))
-           (let* ((clash (rest (third result)))
-                  (path (first clash))
-                  (one (second clash))
-                  (two (third clash)))
-             (format
-              t
-              "`~{~a~^|~}'~%  values: `~(~a~)' vs. `~(~a~)'.~%"
-              path one two)))))
-      (format t "~%")))))
-            
-(defmacro derivation-root (derivation)
-  `(first ,derivation))
-
-(defmacro derivation-start (derivation)
-  `(second ,derivation))
-
-(defmacro derivation-end (derivation)
-  `(third ,derivation))
-
-(defmacro derivation-daughters (derivation)
-  `(rest (rest (rest ,derivation))))
-
-(defun reconstruct (derivation)
-  (catch :fail
-    (reconstruct-derivation derivation)))
-
-(defun reconstruct-derivation (derivation)
-  (let* ((root (derivation-root derivation))
-         (daughters (derivation-daughters derivation)))
-    (cond
-     ((and (= (length daughters) 1)
-           (null (derivation-daughters (first daughters))))
-      (let* ((surface (derivation-root (first daughters)))
-             (entry (find-lexical-entry surface root)))
-        (if entry
-          entry
-          (throw :fail
-            (list derivation
-                  0
-                  :noentry
-                  (format nil "`~a' (`~a')" root surface))))))
-     (t
-      (let* ((items
-              (loop
-                  for daughter in daughters
-                  for item = (reconstruct-derivation daughter)
-                  collect item))
-             (rule (find-rule root)))
-        (if (null rule)
-          (throw :fail
-            (list derivation 0 :norule
-                  (format nil "`~a'" root)))
-          (let* ((csli-unify::*unify-debug* :return)
-                 (csli-unify::%failure% nil)
-                 (result (instantiate-rule rule items)))
-            (if (item-p result)
-              result
-              (throw :fail
-                (list derivation result csli-unify::%failure%))))))))))
-
+(defparameter *reconstruct-hook*
+  #'(lambda (item &optional (i-input "reconstructed item"))
+      (declare (ignore i-input))
+      (when (and (combo-item-p item) 
+                 (cfs-p (combo-item-cfs item)))
+        (fed::call-fegramed (cfs-fs (combo-item-cfs item)) :wait nil))))
+
 (defun find-lexical-entry (form instance)
-  (let ((items (main::lex-lookup form))
-        (name (intern (if (stringp instance)
-                        (string-upcase instance)
-                        instance)
-                      lex::*lex-package*)))
-    (find name items :key #'pg::combo-item-index)))
+  (main::lex-lookup form)
+  (let* ((name (intern (if (stringp instance)
+                         (string-upcase instance)
+                         instance)
+                       lex::*lex-package*))
+         (instance (and (tdl::get-infon name *lex-package* :instances)
+                        (first (tdl::get-instance name))))
+         (cfs (and instance (create-cfs-from-instance name instance nil))))
+    (when cfs
+      (make-combo-item
+       :itype :lex-entry
+       :cfs cfs))))
+
+(defun find-affix (type)
+  (let ((name 
+         (intern (if (stringp type) (string-upcase type) type) *lex-package*)))
+      (when (tdl::get-infon name *lex-package* :avms)
+      (tdl::expand-type name :domain *lex-package*)
+      (let ((prototype (tdl::get-prototype name *lex-package* :avms)))
+        (make-cfs :fs (convert (feature-structure-term prototype) *unifier*)
+                  :fc (feature-structure-funs prototype))))))
 
 (defun find-rule (instance)
   (let ((name (intern (if (stringp instance)
@@ -772,7 +752,9 @@
            :key #'combo-item-index))))
 
 (defun instantiate-rule (rule items)
-  (let* ((itype (combo-item-itype rule))
+  (let* ((csli-unify::*unify-debug* :return)
+         (csli-unify::%failure% nil)
+         (itype (combo-item-itype rule))
          (parser (get-parser (if (eq itype :lex-rule) :lexicon :syntax)))
          (result (cfs-fs (combo-item-cfs rule)))
          (status 0))
@@ -800,7 +782,7 @@
        :start (item-start (first items))
        :end (item-end (first (last items)))
        :daughters (make-array 
-                    (length (combo-item-rhs rule))
+                   (length (combo-item-rhs rule))
                    :initial-contents items)
        :cfs (make-cfs :fs result)
        :key (item-key rule)
@@ -808,4 +790,30 @@
        :index (combo-item-index rule)
        :itype itype
        :ruletype (item-ruletype rule))
-      status)))
+      (values status csli-unify::%failure%))))
+
+(defun instantiate-preterminal (preterminal affix)
+  ;;
+  ;; _fix_me_
+  ;; probably we would be better off with copies of .preterminal. and the cfs
+  ;; that is destructively modified; right now, we hope nothing of this never
+  ;; ever ends up in some cache                           (21-apr-99  -  oe)
+  ;;
+  (let* ((fs (cfs-fs (combo-item-cfs preterminal)))
+         (csli-unify::*unify-debug* :return)
+         (csli-unify::%failure% nil)
+         (result (when fs
+                   (unify
+                    fs
+                    (cfs-fs affix)
+                    (append *args-prefix* 
+                            (fslist-nth-path 0) 
+                            (list lex::*affix-into*))))))
+    (cond
+     ((null fs)
+      (error "instantiate-preterminal(): a mystery has happened."))
+     ((null result)
+      (values nil csli-unify::%failure%))
+     (t
+      (setf (cfs-fs (combo-item-cfs preterminal)) result)
+      preterminal))))

@@ -110,6 +110,8 @@
 
 (defparameter *statistics-predicates* (make-hash-table))
 
+(defparameter *statistics-readers* (make-hash-table))
+
 (defun latexify-string (string)
   (if (and (stringp string) (>= (length string) 1))
     (let ((prefix (elt string 0)))
@@ -122,18 +124,26 @@
 (defmacro average (values)
   `(let ((length (length ,values)))
      (if (zerop length) 0 (/ (apply #'+ ,values) length))))
-
+
 (defmacro divide (numerator denominator)
   `(if (zerop ,denominator) 0 (/ ,numerator ,denominator)))
-
+
 (defmacro sum (values)
   `(apply #'+ ,values))
+
+(defmacro minus-one-p (integer)
+  `(and (integerp ,integer) (= ,integer -1)))
 
 (defun find-attribute-predicate (attribute)
   (let* ((name (if (stringp attribute) (string-upcase attribute) attribute))
          (attribute (intern name :keyword)))
     (or (gethash attribute *statistics-predicates*) 
         #'(lambda (old new) (not (equal old new))))))
+
+(defun find-attribute-reader (attribute)
+  (let* ((name (if (stringp attribute) (string-upcase attribute) attribute))
+         (attribute (intern name :keyword)))
+    (gethash attribute *statistics-readers*) ))
 
 (defun find-attribute-label (attribute)
   (case attribute
@@ -208,12 +218,12 @@
 
 (defun analyze (language &key condition meter message thorough)
 
-  (let* ((thorough (and thorough 
-                        (loop for symbol in thorough
-                            collect (format nil "~(~a~)" symbol))))
-         (message (when message
+  (let* ((message (when message
                     (format nil "retrieving `~a' data ..." language)))
-         (key (format nil "~a @ ~a ~a" language condition thorough))
+         (key (format 
+               nil 
+               "~a @ ~a~@[ # ~{~(~a~)~^#~}~]" 
+               language condition thorough))
          (relations (read-database-schema language))
          (parse (rest (find "parse" relations :key #'first :test #'string=)))
          pfields ptypes data)
@@ -259,12 +269,29 @@
                              "item" condition language 
                              :meter imeter :sort :i-id))
                (results (when thorough
-                          (select (append '("parse-id" "result-id") thorough)
+                          (select (append '("parse-id" "result-id") 
+                                          (loop for symbol in thorough
+                                              collect (format 
+                                                       nil 
+                                                       "~(~a~)" 
+                                                       symbol)))
                                   nil "result" condition language 
                                   :meter rmeter :sort :parse-id)))
                (all (njoin parse item :i-id :meter ameter)))
           (setf data all)
           (when results
+            (loop
+                for field in thorough
+                for reader = (find-attribute-reader field)
+                when reader
+                do
+                  (loop
+                      for result in results
+                      for value = (get-field field result)
+                      when value
+                      do 
+                        (setf (get-field field result) 
+                          (funcall reader value))))
             ;;
             ;; _fix_me_
             ;; this is sort of hacky: since we fail to guarantee unique parse
@@ -308,7 +335,7 @@
     (let* ((phenomena (or phenomena
                           (gethash language *tsdb-phenomena*)
                           *phenomena*))
-           (key (format nil "`~a' phenomena" language))
+           (key (format nil "~a # phenomena" language))
            (imeter (madjust * meter (if phenomena 0.3 0.5)))
            (pmeter (madjust + (madjust * meter 0.5) (mduration imeter)))
            (increment (when meter
@@ -1046,15 +1073,13 @@
       for oplus = (loop
                       for ovalue in ovalues
                       unless (member ovalue nvalues :test-not predicate)
-                      collect ovalue and
-                      do (setf nvalues (delete ovalue nvalues :count 1)))
+                      collect ovalue
+                      do 
+                        (setf nvalues
+                          (delete ovalue nvalues 
+                                  :count 1 :test-not predicate)))
 
-      for nplus = (loop
-                      for nvalue in nvalues
-                      unless (member nvalue ovalues :test-not predicate)
-                      collect nvalue and
-                      do (setf ovalues (delete nvalue ovalues :count 1)))
-      collect (cons oplus nplus)))
+      collect (cons oplus nvalues)))
 
 (defun compare-in-detail (olanguage nlanguage
                           &key (condition *statistics-select-condition*)
@@ -1373,7 +1398,7 @@
     (case action
       (:browse
        (let* ((clashes (get :value tag))
-              (stream (create-output-stream file append)))
+              (stream (and clashes (create-output-stream file append))))
          (when clashes
            (case format
              (:tcl
@@ -1385,6 +1410,7 @@
                 layout row def -m1 5 -r 1 -m2 5 -c black -j center~%~
                 layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%")
               (loop
+                  with *print-pretty* = nil
                   for clash in clashes
                   for i from 1
                   for ntag = (intern (gensym "") :keyword)
@@ -1395,7 +1421,7 @@
                     (setf (get :derivation ntag) clash)
                     (format
                      stream
-                     "cell ~d 1 -contents {~a} -format title ~
+                     "cell ~d 1 -contents {~s} -format title ~
                       -action reconstruct -tag ~a~%"
                      i clash ntag)
                   finally
@@ -1417,10 +1443,7 @@
          ;; about half a year), all application-specific code should really go
          ;; into the interface file.                            (12-mar-99)
          ;;
-         #+:lkb
-         (declare (ignore i-id i-input derivation))
-         #+:page
-         (pg::reconstruct-item i-id i-input derivation))))))
+         (reconstruct-item i-id i-input derivation))))))
   
 (defun summarize-performance-parameters (items
                                          &key restrictor (format 9902))
@@ -1600,7 +1623,8 @@
 
 (defun analyze-performance (&optional (language *tsdb-data*)
                             &key (condition *statistics-select-condition*)
-                                 file append (format :latex) 
+                                 file append 
+                                 (format :latex) (view :parser)
                                  restrictor meter)
 
   (let* ((items (analyze-aggregates language :condition condition
@@ -1637,31 +1661,60 @@
          alabel))
       (:tcl
        (when *statistics-tcl-formats* (format stream *statistics-tcl-formats*))
-       (format
-        stream
-        "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
-         layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
-         layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
-         layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
-         layout col 10 -m1 5 -r 2 -m2 5 -c black -j right~%~
-         layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
-         layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%~
-         layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
-         layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~%"
-        (+ naggregates 1) (+ naggregates 2))
-       (format
-        stream
-        "cell 1 1 -contents ~a -format title~%~
-         cell 1 2 -contents \"items\\n#\" -format title~%~
-         cell 1 3 -contents \"etasks\\n\\330\" -format title~%~
-         cell 1 4 -contents \"filter\\n%\" -format title~%~
-         cell 1 5 -contents \"edges\\n\\330\" -format title~%~
-         cell 1 6 -contents \"first\\n\\330 (s)\" -format title~%~
-         cell 1 7 -contents \"total\\n\\330 (s)\" -format title~%~
-         cell 1 8 -contents \"tcpu\\n\\330 (s)\" -format title~%~
-         cell 1 9 -contents \"tgc\\n\\330 (s)\" -format title~%~
-         cell 1 10 -contents \"space\\n\\330 (kb)\" -format title~%~%"
-        alabel)))
+       (case view
+         (:performance
+          (format
+           stream
+           "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+            layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
+            layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
+            layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
+            layout col 10 -m1 5 -r 2 -m2 5 -c black -j right~%~
+            layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
+            layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%~
+            layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+            layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~%"
+           (+ naggregates 1) (+ naggregates 2))
+          (format
+           stream
+           "cell 1 1 -contents ~a -format title~%~
+            cell 1 2 -contents \"items\\n#\" -format title~%~
+            cell 1 3 -contents \"etasks\\n\\330\" -format title~%~
+            cell 1 4 -contents \"filter\\n%\" -format title~%~
+            cell 1 5 -contents \"edges\\n\\330\" -format title~%~
+            cell 1 6 -contents \"first\\n\\330 (s)\" -format title~%~
+            cell 1 7 -contents \"total\\n\\330 (s)\" -format title~%~
+            cell 1 8 -contents \"tcpu\\n\\330 (s)\" -format title~%~
+            cell 1 9 -contents \"tgc\\n\\330 (s)\" -format title~%~
+            cell 1 10 -contents \"space\\n\\330 (kb)\" -format title~%~%"
+           alabel))
+         (:parser
+          (format
+           stream
+           "layout col def -m1 5 -r 1 -m2 5 -c black -j right~%~
+            layout row def -m1 5 -r 0 -m2 5 -c black -j center~%~
+            layout col 0 -m1 5 -r 2 -m2 5 -c black -j left~%~
+            layout col 1 -m1 5 -r 2 -m2 5 -c black -j left~%~
+            layout col 8 -m1 5 -r 2 -m2 5 -c black -j right~%~
+            layout row 0 -m1 5 -r 2 -m2 5 -c black -j center~%~
+            layout row 1 -m1 5 -r 2 -m2 5 -c black -j center~%~
+            layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+            layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+            layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~
+            layout row ~d -m1 5 -r 2 -m2 5 -c black -j center~%~%"
+           (+ naggregates 1) (+ naggregates 2) 
+           (+ naggregates 3) (+ naggregates 4))
+          (format
+           stream
+           "cell 1 1 -contents ~a -format title~%~
+            cell 1 2 -contents \"items\\n#\" -format title~%~
+            cell 1 3 -contents \"etasks\\n#\" -format title~%~
+            cell 1 4 -contents \"stasks\\n#\" -format title~%~
+            cell 1 5 -contents \"aedges\\n#\" -format title~%~
+            cell 1 6 -contents \"pedges\\n#\" -format title~%~
+            cell 1 7 -contents \"raedges\\n#\" -format title~%~
+            cell 1 8 -contents \"rpedges\\n#\" -format title~%"
+           alabel)))))
     (do* ((items items (rest items))
           (i 2 (1+ i))
           (phenomenon (first items) (first items)))
@@ -1672,9 +1725,11 @@
                      (latexify-string (second phenomenon))
                      (second phenomenon)))
                  (items (get-field :items data))
+                 (stasks (round (get-field :p-stasks data)))
                  (etasks (round (get-field :p-etasks data)))
                  (ftasks (round (get-field :p-ftasks data)))
-                 (filter (float (* 100 (divide ftasks (+ etasks ftasks)))))
+                 (filter (unless (or (minus-one-p etasks) (minus-one-p ftasks))
+                           (float (* 100 (divide ftasks (+ etasks ftasks))))))
                  (aedges (round (get-field :aedges data)))
                  (pedges (round (get-field :pedges data)))
                  (edges (round (get-field :edges data)))
@@ -1682,6 +1737,8 @@
                           edges
                           (+ (if (>= aedges 0) aedges 0) 
                              (if (>= pedges 0) pedges 0))))
+                 (raedges (round (get-field :raedges data)))
+                 (rpedges (round (get-field :rpedges data)))
                  (first (float (get-field :first data)))
                  (total (float (get-field :total data)))
                  (tcpu (float (get-field :tcpu data)))
@@ -1691,37 +1748,60 @@
               (:latex
                (format
                 stream
-                "  ~a~%    & ~d & ~d & ~,1f & ~d & ~,2f & ~,2f & ~d\\\\~%"
+                "  ~a~%    & ~d & ~d & ~@[~,1f~] & ~d & ~,2f & ~,2f & ~d\\\\~%"
                 name items etasks filter edges first total space))
               (:tcl
-               (format
-                stream
-                "cell ~d 1 -contents \"~a\" -format aggregate~%~
-                 cell ~d 2 -contents ~d -format data~%~
-                 cell ~d 3 -contents ~d -format data~%~
-                 cell ~d 4 -contents ~,1f -format data~%~
-                 cell ~d 5 -contents ~d -format data~%~
-                 cell ~d 6 -contents ~,2f -format data~%~
-                 cell ~d 7 -contents ~,2f -format data~%~
-                 cell ~d 8 -contents ~,2f -format data~%~
-                 cell ~d 9 -contents ~,2f -format data~%~
-                 cell ~d 10 -contents ~d -format data~%~%"
-                i name
-                i items
-                i etasks
-                i filter
-                i edges
-                i first
-                i total
-                i tcpu
-                i tgc
-                i space)))))))
+               (case view
+                 (:performance
+                  (format
+                   stream
+                   "cell ~d 1 -contents \"~a\" -format aggregate~%~
+                    cell ~d 2 -contents ~d -format data~%~
+                    cell ~d 3 -contents ~d -format data~%~
+                    cell ~d 4 -contents ~:[{-}~*~;~,1f~] -format data~%~
+                    cell ~d 5 -contents ~d -format data~%~
+                    cell ~d 6 -contents ~,2f -format data~%~
+                    cell ~d 7 -contents ~,2f -format data~%~
+                    cell ~d 8 -contents ~,2f -format data~%~
+                    cell ~d 9 -contents ~,2f -format data~%~
+                    cell ~d 10 -contents ~d -format data~%~%"
+                   i name
+                   i items
+                   i etasks
+                   i filter filter
+                   i edges
+                   i first
+                   i total
+                   i tcpu
+                   i tgc
+                   i space))
+                 (:parser
+                  (format
+                   stream
+                   "cell ~d 1 -contents \"~a\" -format aggregate~%~
+                    cell ~d 2 -contents ~d -format data~%~
+                    cell ~d 3 -contents ~,1f -format data~%~
+                    cell ~d 4 -contents ~,1f -format data~%~
+                    cell ~d 5 -contents ~,1f -format data~%~
+                    cell ~d 6 -contents ~,1f -format data~%~
+                    cell ~d 7 -contents ~,1f -format data~%~
+                    cell ~d 8 -contents ~,1f -format data~%"
+                   i name
+                   i items
+                   i etasks
+                   i stasks
+                   i aedges
+                   i pedges
+                   i raedges
+                   i rpedges)))))))))
     (let* ((data (rest (assoc :total averages)))
            (name "Total")
            (items (get-field :items data))
+           (stasks (round (get-field :p-stasks data)))
            (etasks (round (get-field :p-etasks data)))
            (ftasks (round (get-field :p-ftasks data)))
-           (filter (float (* 100 (divide ftasks (+ etasks ftasks)))))
+           (filter (unless (or (minus-one-p etasks) (minus-one-p ftasks))
+                     (float (* 100 (divide ftasks (+ etasks ftasks))))))
            (aedges (round (get-field :aedges data)))
            (pedges (round (get-field :pedges data)))
            (edges (round (get-field :edges data)))
@@ -1729,18 +1809,21 @@
                     edges
                     (+ (if (>= aedges 0) aedges 0) 
                        (if (>= pedges 0) pedges 0))))
+           (raedges (round (get-field :raedges data)))
+           (rpedges (round (get-field :rpedges data)))
            (first (float (get-field :first data)))
            (total (float (get-field :total data)))
            (tcpu (float (get-field :tcpu data)))
            (tgc (float (get-field :tgc data)))
-           (space (round (/ (get-field :space data) (expt 2 10)))))
+           (space (round (/ (get-field :space data) (expt 2 10))))
+           (bytes (/ (get-field :space data) (expt 2 20))))
       (case format
         (:latex
          (format stream "  \\hline~%  \\hline~%")
          (format
           stream
           "  {\\bf ~a} & {\\bf ~d}~%    ~
-           & {\\bf ~d} & {\\bf ~,1f} & {\\bf ~d} & {\\bf ~,2f}~%    ~
+           & {\\bf ~d} & ~@[{\\bf ~,1f}~] & {\\bf ~d} & {\\bf ~,2f}~%    ~
            & {\\bf ~,2f} & {\\bf ~d}\\\\~%  \\hline~%"
           name items etasks filter edges first total space)
          (format
@@ -1749,28 +1832,86 @@
             \\end{tabular}~%"
           ncolumns caption))
         (:tcl
-         (format
-          stream
-          "cell ~d 1 -contents \"~a\" -format total~%~
-           cell ~d 2 -contents ~d -format total~%~
-           cell ~d 3 -contents ~d -format total~%~
-           cell ~d 4 -contents ~,1f -format total~%~
-           cell ~d 5 -contents ~d -format total~%~
-           cell ~d 6 -contents ~,2f -format total~%~
-           cell ~d 7 -contents ~,2f -format total~%~
-           cell ~d 8 -contents ~,2f -format total~%~
-           cell ~d 9 -contents ~,2f -format total~%~
-           cell ~d 10 -contents ~d -format total~%~%"
-          (+ naggregates 2) name
-          (+ naggregates 2) items
-          (+ naggregates 2) etasks
-          (+ naggregates 2) filter
-          (+ naggregates 2) edges
-          (+ naggregates 2) first
-          (+ naggregates 2) total
-          (+ naggregates 2) tcpu
-          (+ naggregates 2) tgc
-          (+ naggregates 2) space))))
+         (case view
+           (:performance
+            (format
+             stream
+             "cell ~d 1 -contents \"~a\" -format total~%~
+              cell ~d 2 -contents ~d -format total~%~
+              cell ~d 3 -contents ~d -format total~%~
+              cell ~d 4 -contents ~:[{-}~*~;~,1f~] -format total~%~
+              cell ~d 5 -contents ~d -format total~%~
+              cell ~d 6 -contents ~,2f -format total~%~
+              cell ~d 7 -contents ~,2f -format total~%~
+              cell ~d 8 -contents ~,2f -format total~%~
+              cell ~d 9 -contents ~,2f -format total~%~
+              cell ~d 10 -contents ~d -format total~%~%"
+             (+ naggregates 2) name
+             (+ naggregates 2) items
+             (+ naggregates 2) etasks
+             (+ naggregates 2) filter filter
+             (+ naggregates 2) edges
+             (+ naggregates 2) first
+             (+ naggregates 2) total
+             (+ naggregates 2) tcpu
+             (+ naggregates 2) tgc
+             (+ naggregates 2) space))
+           (:parser
+            (format
+             stream
+             "cell ~d 1 -contents \"~a\" -format aggregate~%~
+              cell ~d 2 -contents ~d -format data~%~
+              cell ~d 3 -contents ~,1f -format data~%~
+              cell ~d 4 -contents ~,1f -format data~%~
+              cell ~d 5 -contents ~,1f -format data~%~
+              cell ~d 6 -contents ~,1f -format data~%~
+              cell ~d 7 -contents ~,1f -format data~%~
+              cell ~d 8 -contents ~,1f -format data~%"
+             (+ naggregates 2)  name
+             (+ naggregates 2)  items
+             (+ naggregates 2)  etasks
+             (+ naggregates 2)  stasks
+             (+ naggregates 2)  aedges
+             (+ naggregates 2)  pedges
+             (+ naggregates 2)  raedges
+             (+ naggregates 2)  rpedges)
+            (format
+             stream
+             "cell ~d 1 -contents \"~a\" -format aggregate~%~
+              cell ~d 2 -contents ~d -format data~%~
+              cell ~d 3 -contents ~,1f -format data~%~
+              cell ~d 4 -contents ~,1f -format data~%~
+              cell ~d 5 -contents ~,1f -format data~%~
+              cell ~d 6 -contents ~,1f -format data~%~
+              cell ~d 7 -contents ~,1f -format data~%~
+              cell ~d 8 -contents ~,1f -format data~%"
+             (+ naggregates 3)  "Per Second"
+             (+ naggregates 3)  items
+             (+ naggregates 3)  (divide etasks tcpu)
+             (+ naggregates 3)  (divide stasks tcpu)
+             (+ naggregates 3)  (divide aedges tcpu)
+             (+ naggregates 3)  (divide pedges tcpu)
+             (+ naggregates 3)  (divide raedges tcpu)
+             (+ naggregates 3)  (divide rpedges tcpu))
+            (format
+             stream
+             "cell ~d 1 -contents \"~a\" -format aggregate~%~
+              cell ~d 2 -contents ~d -format data~%~
+              cell ~d 3 -contents ~,1f -format data~%~
+              cell ~d 4 -contents ~,1f -format data~%~
+              cell ~d 5 -contents ~,1f -format data~%~
+              cell ~d 6 -contents ~,1f -format data~%~
+              cell ~d 7 -contents ~,1f -format data~%~
+              cell ~d 8 -contents ~,1f -format data~%"
+             (+ naggregates 4)  "Per MByte"
+             (+ naggregates 4)  items
+             (+ naggregates 4)  (divide etasks bytes)
+             (+ naggregates 4)  (divide stasks bytes)
+             (+ naggregates 4)  (divide aedges bytes)
+             (+ naggregates 4)  (divide pedges bytes)
+             (+ naggregates 4)  (divide raedges bytes)
+             (+ naggregates 4)  (divide rpedges bytes)))))))
+            
     (when (or (stringp file) (stringp append)) (close stream))))
 
 (defun compare-performance (olanguage nlanguage 

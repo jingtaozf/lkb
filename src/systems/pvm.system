@@ -20,22 +20,19 @@
 
 (defsystem "pvm"
     :finally-do (pushnew :pvm *features*)
+    :source-pathname (dir-append (get-sources-dir "pvm") '(:relative "pvm"))
+    :binary-pathname (dir-append (get-binaries-dir "pvm") '(:relative "pvm"))
     :components
     ((:module "c"
-      :source-pathname (dir-append sys-home 
-                                   (list :relative "lib" %system-binaries%))
+      :source-pathname %system-binaries%
       :source-extension "so"
       :load-only t
       :components
       ((:file "pvm")))
      (:module "lisp"
-      :source-pathname (dir-append (get-sources-dir "pvm") '(:relative "pvm"))
-      :binary-pathname (dir-append (get-binaries-dir "pvm") '(:relative "pvm"))
+      :source-pathname ""
+      :binary-pathname ""
       :components
       ((:file "pvm-package")
+       #+(and :allegro (or :linux (and :sparc :svr4) :alpha))
        (:file "pvm.lisp")))))
-
-
-
-
-

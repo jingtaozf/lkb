@@ -195,6 +195,7 @@ proc read_graph_file {file graph} {
     catch {unset graphtype}
     catch {unset graphoptions}
     catch {unset data}
+    catch {unset function}
     catch {unset axis}
     catch {unset element}
     catch {unset legend}
