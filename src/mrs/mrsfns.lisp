@@ -66,7 +66,7 @@
 	     (format ostream "~%String: ~A~%" sent)
 	     (pprint tree ostream)
 	     (format ostream "~%~%")
-	     ;(user::output-parse-tree tree ostream)
+	     ;(cl-user::output-parse-tree tree ostream)
 	     (if vitp
 	    #|
 	    (progn
@@ -154,8 +154,8 @@
 #+lkb
 (defun compute-mrs-wg-liszt ()
   (loop for elem in 
-	(user::split-into-words 
-	 (user::preprocess-sentence-string 
+	(cl-user::split-into-words 
+	 (cl-user::preprocess-sentence-string 
 	  (string-trim '(#\space #\tab #\newline) cl-user::*sentence*)))
       collect (list (string-left-trim "'" elem))))
 
