@@ -48,9 +48,10 @@
       (:rules . ,(hash-table-count *rules*))
       (:lrules . ,(hash-table-count *lexical-rules*))
       (:lexicon . ,(size-of-lexicon))
-      (:grammar . ,(if (boundp '*grammar-version*) 
-                     (symbol-value '*grammar-version*)
-                     "unknown"))
+      (:grammar . 
+       ,(or (symbol-value (find-symbol "*GRAMMAR-VERSION*" *lkb-package*))
+            (symbol-value (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user))
+            "unknown"))
       (:application . ,(format 
                         nil 
                         "LKB (~A mode~@[; version `~a'~]; ~

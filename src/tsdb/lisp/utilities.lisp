@@ -216,9 +216,14 @@
 
 (defun current-grammar ()
   (cond 
-   ((and (find-symbol "*GRAMMAR-VERSION*" "USER")
-         (boundp (find-symbol "*GRAMMAR-VERSION*" "USER")))
-    (symbol-value (find-symbol "*GRAMMAR-VERSION*" "USER")))
+   ((and (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)
+         (boundp (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
+    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :common-lisp-user)))
+   ((and (member :lkb *features*) 
+         (find-package :lkb)
+         (find-symbol "*GRAMMAR-VERSION*" :lkb)
+         (boundp (find-symbol "*GRAMMAR-VERSION*" :lkb)))
+    (symbol-value (find-symbol "*GRAMMAR-VERSION*" :lkb)))
    ((and (member :page *features*) 
          (find-package "DISCO")
          (find-symbol "*GRAMMAR-VERSION*" "DISCO")

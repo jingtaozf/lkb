@@ -42,7 +42,8 @@
                                 :meter (make-meter 0 1)
                                 :interrupt interrupt)
       (return-from tsdb-do-process)))
-                   
+
+  (purge-profile-cache data)
   (when (and overwrite (not interactive))
     (purge-test-run data :action :purge))
 

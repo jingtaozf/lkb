@@ -82,6 +82,7 @@ proc tsdb_file {action {index -1}} {
       } else {
         status "database `$old' successfully deleted" 10;
       }; # else
+      set globals(data) "";
       update_ts_list delete $old;
     }; # if
   }; # elseif
@@ -337,6 +338,7 @@ proc tsdb_browse {code {condition ""} {globalp 1} {profile ""}} {
   global globals;
 
   if {$profile == ""} {
+    if {[verify_ts_selection]} {return 1};
     set profile $globals(data);
   } else {
     if {[verify_ts_selection]} {return 1};
