@@ -59,10 +59,9 @@
                  (error 
                   "inflectional-rule-p(): invalid call `~s'." 
                   derivation))))
-         (break (- (length root) (length *inflectional-rule-suffix*))))
-    (when (string-equal 
-           (subseq root break)
-           *inflectional-rule-suffix*)
+         (break (max 0 (- (length root) (length *inflectional-rule-suffix*)))))
+    (when (string-equal
+             root *inflectional-rule-suffix* :start1 break)
       (subseq root 0 break))))
 
 (defun derivation-equal (gold blue)
