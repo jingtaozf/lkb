@@ -9,6 +9,7 @@ cvs update: Updating gold/hike
 cvs update: Updating gold/mrs
 cvs update: Updating gold/trec
 cvs update: Updating lkb
+U lkb/mt.lsp
 cvs update: Updating pet
 cvs update: Updating .
 cvs update: Updating doc
@@ -263,10 +264,11 @@ cvs update: Updating src/io-tdl
 cvs update: Updating src/lexdb
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
-U src/main/initializations.lsp
 cvs update: Updating src/mrs
 cvs update: Updating src/mrs/data
 cvs update: Updating src/mt
+U src/mt/transfer.lisp
+U src/mt/translate.lisp
 cvs update: Updating src/non-core
 cvs update: Updating src/ppcre
 cvs update: Updating src/psql
@@ -386,7 +388,7 @@ cvs update: Updating src/xml
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.328; previous revision: 1.327
+new revision: 1.329; previous revision: 1.328
 done
 make[1]: Entering directory `/lingo/www/build/lkb'
 ( \
@@ -1405,7 +1407,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (May 29, 2004 14:44)
+6.2 [Linux (x86)] (May 29, 2004 15:15)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2452,7 +2454,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-101374264 bytes have been tenured, next gc will be global.
+101380736 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2644,7 +2646,7 @@ CL-USER(10): ; Loading /lingo/www/build/lkb/src/systems/tsdb.system
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/ppcre/closures.fasl
 ;;; Compiling file
 ;;;   /lingo/www/build/lkb/src/ppcre/repetition-closures.lisp
-8546224 bytes have been tenured, next gc will be global.
+8546232 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /lingo/www/build/lkb/src/.l6cl/ppcre/repetition-closures.fasl
@@ -3276,7 +3278,7 @@ Warning: Free reference to undeclared variable
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/tsdb/gc.fasl
 ;;; Compiling file /lingo/www/build/lkb/src/tsdb/lisp/yy.lisp
-gc-after-hook(): local; new: 2255128; old: 80520; pending: 0; efficiency: 83.
+gc-after-hook(): local; new: 2256608; old: 80520; pending: 0; efficiency: 83.
 ;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/tsdb/yy.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/tsdb/yy.fasl
@@ -3295,9 +3297,9 @@ gc-after-hook(): local; new: 2255128; old: 80520; pending: 0; efficiency: 83.
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file /lingo/www/build/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1433168; old: 294480; pending: 0; efficiency: 81.
-gc-after-hook(): local; new: 2225576; old: 16; pending: 128; efficiency: 82.
-gc-after-hook(): local; new: 1556624; old: 761528; pending: 0; efficiency: 80.
+gc-after-hook(): local; new: 1434192; old: 294480; pending: 0; efficiency: 82.
+gc-after-hook(): local; new: 2227504; old: 16; pending: 40; efficiency: 84.
+gc-after-hook(): local; new: 1557416; old: 761528; pending: 0; efficiency: 78.
 ;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/tsdb/redwoods.fasl
@@ -3317,7 +3319,7 @@ gc-after-hook(): local; new: 1556624; old: 761528; pending: 0; efficiency: 80.
 ;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/tsdb/pcfg.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/tsdb/pcfg.fasl
-gc-after-hook(): local; new: 744296; old: 183552; pending: 1064; efficiency: 86.
+gc-after-hook(): local; new: 744352; old: 183584; pending: 6952; efficiency: 85.
 ;;; Compiling file /lingo/www/build/lkb/src/tsdb/lisp/maxent.lisp
 ;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Fasl write complete
