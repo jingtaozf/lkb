@@ -2155,7 +2155,8 @@ D
 
     (namestring
      (make-pathname :name (pathname-name pathname)
-		    :type (component-extension component type)
+		    :type (let ((suffix (component-extension component type)))
+                            (if (equal suffix "") nil suffix))
 		    :host (when (component-host component)
 			    ;; MCL2.0b1 and ACLPC cause an error on
 			    ;; (pathname-host nil)
