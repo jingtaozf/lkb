@@ -13,7 +13,6 @@
 
 (defun get-parse-fs (edge)
   (let ((fs (tdfs-indef (edge-dag edge))))
-    (setf *fragment-p* (is-fragment-fs fs))
     fs))
 
 ;;; disposed of get-category-label
@@ -50,6 +49,7 @@
   (and fs (dag-p fs)))
 
 (defun fs-arcs (dag-instance)
+  ;;; assumed to return an association list
   (dag-arcs dag-instance))
 
 (defun no-path-to (path-value-res)
@@ -86,14 +86,6 @@
 (defun tdl-precedes (type1 type2)
   (or (equal type1 type2)
       (subtype-p type2 type1)))
-
-(defun last-path-feature (path)
-  (cond ((typed-path-p path)
-         (let ((last-tfp (car (last (typed-path-typed-feature-list path)))))
-           (if (type-feature-pair-p last-tfp)
-               (type-feature-pair-feature last-tfp))))
-        ((path-p path) (car (last (path-typed-feature-list path))))
-        (t path)))
 
 (defun compatible-types (type1 type2)
   (if (and (null type1) (null type2))

@@ -174,7 +174,7 @@
 
 ;;; Parse tree node labels
 
-(defparameter *simple-tree-display* nil
+(def-lkb-parameter *simple-tree-display* nil
   "turn off PAGE style labels")
 
 ;;; these are actually only used when in PAGE compatability mode
@@ -215,7 +215,7 @@
 ;;; being we prefer to assume that the user choice of pool size is appropriate
 ;;; for what is required on average.
 ;;; 
-(defparameter *dag-pool-size* 50000)
+(def-lkb-parameter *dag-pool-size* 50000)
 
 ;;; recent additions 
 
