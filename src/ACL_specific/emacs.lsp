@@ -22,8 +22,9 @@
 	(*standard-output* clim-user::*lkb-top-stream*))
     (with-input-from-string (istream definition)
       (read-tdl-type-stream istream t)))
-  (when (patch-type-table) 
-    (canonicalise-feature-order)           
-    (set-up-type-interactions)
-    t))
+  (let ((*standard-output clim-user:*lkb-top-stream*))
+    (when (patch-type-table) 
+      (canonicalise-feature-order)           
+      (set-up-type-interactions)
+      t)))
 

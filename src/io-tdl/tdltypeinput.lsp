@@ -174,7 +174,7 @@
     (when (and (symbolp name) (eql (schar (symbol-name name) 0) #\%))
       (error "Illegal type name ~A - names starting with '%' are reserved ~
                  for instance types" name))
-    (push name *ordered-type-list*)    
+    (pushnew name *ordered-type-list*)    
     (unless (eql next-char #\:)
       (error "~%Incorrect syntax following type name ~A" name))
     #+allegro (record-source name istream position)
