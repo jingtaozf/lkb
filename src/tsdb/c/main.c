@@ -98,9 +98,9 @@ int main(int argc, char **argv) {
   int n_commands = 0;
 
 #ifdef DBMALLOC
-  union dbmalloptarg m;
-  m.str = "malloc_tsdb";
-  mallopt(MALLOC_ERRFILE,m);
+  /* union dbmalloptarg m;
+     m.str = "malloc_tsdb";
+     mallopt(MALLOC_ERRFILE,m);*/
 #endif
 
   tsdb_default_stream = TSDB_DEFAULT_STREAM;
