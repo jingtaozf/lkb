@@ -62,7 +62,7 @@
                '(#\% #\; #\< #\> #\= #\: #\.))))
       (with-open-file 
          (istream file-name :direction :input)
-         (format t "~%Reading in ~Arules~%" (if lexical "lexical " ""))
+         (format t "~%Reading in ~Arules" (if lexical "lexical " ""))
          (loop
             (let ((next-char (peek-char t istream nil 'eof)))
                (when (eql next-char 'eof) (return))
