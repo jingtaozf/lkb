@@ -3,7 +3,7 @@ SROOT = ${HOME}/class/src
 LROOT = ${HOME}/src/lingo
 WROOT = c:/src
 DATE = `date "+%Y-%m-%d"`
-TARGET = /lingo/www/lingo/ftp/
+TARGET = /lingo/www/lingo/ftp
  
 LINKS = lkb_data.tgz lkb_linux.x86.32.tgz lkb_solaris.tgz \
         lkb_source.tgz lkb_windows.tgz lkb_windows.zip \
