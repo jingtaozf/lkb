@@ -34,8 +34,6 @@
 (defvar *parser-rules* nil)
 (defvar *parser-lexical-rules* nil)
 
-(defvar *cached-orth-str-list* nil)
-
 ;;; *chart-limit* is defined in globals.lsp
 
 (defvar *chart-generation-counter* 0
@@ -77,17 +75,17 @@
                           (dag-restricted (when dag
                                             (restrict-fs (tdfs-indef dag))))
                           leaves lex-ids parents children morph-history 
-                          spelling-change 
+                          spelling-change orth-tdfs
                           (from (when (edge-p (first children))
                                   (edge-from (first children))))
                           (to (when (edge-p (first (last children)))
-                                (edge-from (first (last children)))))
+                                (edge-to (first (last children)))))
                           label head
                           foo bar baz
                           #+:packing packed #+:packing equivalent 
                           #+:packing frozen)))
    id score category rule dag odag dag-restricted leaves lex-ids
-   parents children morph-history spelling-change from to label head
+   parents children morph-history spelling-change orth-tdfs from to label head
    foo bar baz
    #+:packing packed #+:packing equivalent #+:packing frozen)
 
@@ -113,7 +111,7 @@
   (mhistory)
   rule
   fs
-  new-spelling)
+  new-spelling orth-tdfs)
 
 (defvar *edge-id* 0)
 (declaim (type fixnum *edge-id*))
@@ -267,7 +265,6 @@
 
 (defun clear-chart nil
    (incf *chart-generation-counter*)
-   (setf *cached-orth-str-list* nil)
    (setf *parse-record* nil) 
    (loop for i from 0 upto (1- *chart-limit*)
        do (setf (aref *chart* i 0) nil)
@@ -516,6 +513,7 @@
                                                      history from to)
              :spelling-change (when history 
 				(mhistory-new-spelling (car history)))
+             :orth-tdfs (when history (mhistory-orth-tdfs (car history)))
              :from from
              :to to))
 
@@ -756,12 +754,14 @@
 		   (when morph-rules
 		     (let* ((morph-rule-info (car morph-rules))
 			    (new-orth (cadr morph-rule-info))
+                            (orth-tdfs (when new-orth 
+                                         (make-orth-tdfs new-orth)))
 			    (rule-id (car morph-rule-info))
 			    (rule-entry (get-lex-rule-entry rule-id))
 			    (result
 			     (if rule-entry
 				 (apply-morph-rule
-				  rule-entry fs fs-restricted new-orth 
+				  rule-entry fs fs-restricted orth-tdfs
                                   daughter))))
 		       (unless rule-entry
 			 (format t 
@@ -769,14 +769,16 @@
                                        morphology was not found"
 				 rule-id))
 		       (when result 
-			 (list (make-mrecord :fs result 
-					     :lex-ids lex-ids
-					     :rules (cdr morph-rules)
-					     :history (cons (make-mhistory 
-							     :rule rule-entry
-							     :fs fs
-							     :new-spelling new-orth)
-							    history))))))))))))
+			 (list (make-mrecord 
+                                :fs result 
+                                :lex-ids lex-ids
+                                :rules (cdr morph-rules)
+                                :history (cons (make-mhistory 
+                                                :rule rule-entry
+                                                :fs fs
+                                                :new-spelling new-orth
+                                                :orth-tdfs orth-tdfs)
+                                               history))))))))))))
     (if transformed-entries
 	(append (remove-if #'mrecord-rules transformed-entries)
 		(apply-all-lexical-and-morph-rules 
@@ -1024,8 +1026,19 @@
 	    (rule-daughters-order-reversed rule) 
 	  (cdr (rule-order rule))))
        (n -1)
-       (new-orth-fs (when nu-orth
-		      (get-orth-tdfs nu-orth))))
+       ;;
+       ;; _fix_me_
+       ;; the entire `nu-orth' mechanism is, hmm, a little baroque: results of
+       ;; make-orth-tdfs() are cached (presumably so they can be retrieved from
+       ;; within a unification context, apparently in tree reconstruction) and
+       ;; cause grief when attempting to construct a (display) tree for an edge
+       ;; after the orthography TDFS cache has been cleared (e.g. by parsing).
+       ;; personally, i believe that the cache should go and everybody in their
+       ;; right minds will cache those TDFSs within the edge.  however, since a
+       ;; number of other functions rely on evaluate-unifications(), allow both
+       ;; a string of TDFS as the value for .nu-orth. here :-{.  (7-aug-03; oe)
+       ;; 
+       (new-orth-fs (if (tdfs-p nu-orth) nu-orth (make-orth-tdfs nu-orth))))
     ;; shouldn't strictly do this here because we may not need it but
     ;; otherwise we get a nested unification context error - cache the values
     ;; for a word, so it's not reconstructed only wasted if the morphology is
@@ -1108,14 +1121,6 @@
                do
                (push (add-path-to-tail path tail-element) tail))))
       (make-tdfs :indef indef-dag :tail tail))))
-
-(defun get-orth-tdfs (str)
-  (let ((new-orth-tdfs (make-orth-tdfs str)))
-    (push (cons str new-orth-tdfs) *cached-orth-str-list*)
-    new-orth-tdfs))
-
-(defun retrieve-orth-tdfs (str)
-   (cdr (assoc str *cached-orth-str-list* :test #'equal)))
 
 ;;; evaluate-unifications-with-fail-messages - temporarily removed
 
