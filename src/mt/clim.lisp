@@ -88,6 +88,7 @@
              :mode :modern :view :modern)))))
 
 
+#+:tsdb
 (define-mrs-transfer-command (com-transfer-mrs-parse :menu "Parse")
     ()
   (parse-interactively))
