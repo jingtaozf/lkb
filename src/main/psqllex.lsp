@@ -49,9 +49,10 @@
 
 (in-package :lkb)
 
-(defvar *psql-db-version* "1.3")
+(defvar *psql-db-version* "1.5")
 (defvar *psql-port-default* nil)
 
+(defvar *tmp-lexicon* nil)
 (defvar *psql-lexicon* nil)
 (defvar *psql-verbose-query* nil) ;;; flag
 (defvar *export-counter*) ;;; see lexport.lsp
@@ -62,9 +63,10 @@
 (defvar *current-lang* nil)
 (defvar *current-country* nil)
 
-(defun open-psql-lex nil
+(defun open-psql-lex (&rest rest)
+  (set-temporary-lexicon-filenames)
   (read-cached-lex-if-available nil)
-  (initialize-psql-lexicon))
+  (apply 'initialize-psql-lexicon rest))
 
 					;: set up connection
 					;: make-field-map-slot
@@ -74,13 +76,15 @@
 (defun initialize-psql-lexicon (&key
                                 (db "lingo")
                                 (host "localhost")
-                                (table "erg")
-                                (definition (format nil "~ad" table)))
+                                (table "erg"))
   
   (let* ((lexicon (make-instance 'psql-lex-database 
                     :dbname db :host host
-                    :lex-tb table :fields-tb definition))
-	(connection (connect lexicon)))
+                    :lex-tb table ;;unused 
+		    :fields-tb table))
+	 (connection (connect lexicon)))
+    (if *tmp-lexicon* (clear-lex *tmp-lexicon*))
+    (setf *tmp-lexicon* lexicon)
     (cond
      (connection
       (unless (string>= (server-version lexicon) "7.3")
@@ -106,6 +110,7 @@
       (error 
        "unable to connect to ~s: ~a"
        (pg:db (connection lexicon)) (pg:error-message (connection lexicon)))))
+    (setf *tmp-lexicon* nil)
     lexicon))
 
 ;;;
@@ -144,7 +149,7 @@
 (defclass external-lex-database (lex-database)
   (
    ;; flat-table containing the lexical database
-   (lexicon-table :initform nil :accessor lex-tb :initarg :lex-tb)
+   (lexicon-table :initform nil :accessor lex-tb :initarg :lex-tb) ;; unused
    ;; table for mapping the lexicon-table fields to the psort-or-lex structure
    (slot-to-fields-mapping-table 
     :initform nil :accessor fields-tb :initarg :fields-tb)
@@ -462,7 +467,7 @@
 
 (defmethod clear-lex ((lexicon external-lex-database) &optional no-delete)
   (declare (ignore no-delete))
-  (setf (lex-tb lexicon) nil)
+  (setf (lex-tb lexicon) nil) ;; unused
   (setf (fields-map lexicon) nil)
   (setf (fields-tb lexicon) nil))
 
@@ -564,7 +569,7 @@
                                 (make-instance 'sql-query
                                   :sql-string (format 
                                                nil 
-                                               "SELECT * FROM ~a;"
+                                               "SELECT slot,field,path,type FROM defn WHERE mode='~a';"
                                                (fields-tb lexicon))))))))
 
 (defmethod make-psort-struct ((lexicon psql-lex-database) query-res)
@@ -625,8 +630,15 @@
 		 :typed-feature-list (append
 				      (work-out-value slot-key "list" slot-path)
 				      (reverse (cdr (reverse slot-value)))))
-	   :rhs (make-u-value :type (car (last slot-value))))))
+	   :rhs (make-rhs-val (car (last slot-value))))))
   (T (error "unhandled input"))))
+
+(defun make-rhs-val (x)
+  (cond
+   ((listp x)
+    (make-path :typed-feature-list x))
+   (t
+    (make-u-value :type x))))
 
 ;;; redo later...
 ;;; insert lex entry into db
@@ -643,52 +655,12 @@
 		 :sql-string (format 
 			      nil
                               (fn lexicon 'update-entry (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le))
-                              ;(fn lexicon 'update-entry-erg (name psql-le) (sql-select-list-str symb-list) (sql-val-list-str symb-list psql-le))
                  )))))
 
-(defun set-lexical-entry-psql-lex-database-check (orth-string lex-id new-entry) 
-  (declare (ignore lex-id))
-  (declare (ignore new-entry))
-  (if orth-string (format *trace-output* "WARNING: ignoring explicit orth-string")))
-
-(defmethod set-lexical-entry ((lexicon psql-lex-database) orth-string lex-id new-entry)  
-  (set-lexical-entry-psql-lex-database-check orth-string lex-id new-entry)
-  (let* ((name lex-id)
-	 (constraint new-entry)
-	 (temp (extract-stem-from-unifications constraint))
-	 (stem (cdr temp))
-	 (count (car temp))
-	 (keyrel (extract-key-from-unifications constraint))      
-	 (keytag (extract-tag-from-unifications constraint))
-	 (altkey (extract-altkey-from-unifications constraint))
-	 (alt2key (extract-alt2key-from-unifications constraint))
-	 (compkey (extract-comp-from-unifications constraint))
-	 (ocompkey (extract-ocomp-from-unifications constraint))
-	 (total (+ count 1 
-		   (if keyrel 1 0) (if keytag 1 0) (if altkey 1 0)
-		   (if alt2key 1 0) (if compkey 1 0) (if ocompkey 1 0)))
-	 (psql-le
-	  (make-instance 'psql-lex-entry
-	    :name (non-null-symb-2-str name)
-	    :type (non-null-symb-2-str (extract-type-from-unifications constraint))
-	    :orthography stem		;list
-	    :orthkey (first stem)
-	    :keyrel (non-null-symb-2-str keyrel)
-	    :altkey (non-null-symb-2-str altkey)
-	    :alt2key (non-null-symb-2-str alt2key)
-	    :keytag (non-null-symb-2-str keytag)
-	    :compkey (non-null-symb-2-str compkey)
-	    :ocompkey (non-null-symb-2-str ocompkey)
-	    :country *current-country*
-	    :lang *current-lang*
-	    :source *current-source*
-	    :flags 1)))
-    (cond
-     ((= total (length constraint))
-      (set-lex-entry lexicon psql-le))
-     (t
-      (format *trace-output* "~%skipping super-rich entry: `~a'~%"  name)
-      nil))))
+;(defun set-lexical-entry-psql-lex-database-check (orth-string lex-id new-entry) 
+;  (declare (ignore lex-id))
+;  (declare (ignore new-entry))
+;  (if orth-string (format *trace-output* "WARNING: ignoring explicit orth-string")))
 
 (defmethod clear-lex ((lexicon psql-database) &optional no-delete)
   (declare (ignore no-delete))
@@ -743,11 +715,11 @@
 	 (unless (equal value "")
 	   (list value)))
 	((equal type "string-list")
-	 (list (orth-string-to-str-list value))
-	 )
+	 (list (orth-string-to-str-list value)))
 	((equal type "string-fs")
-	 (expand-string-list-to-fs-list (orth-string-to-str-list value))
-	 )
+	 (expand-string-list-to-fs-list (orth-string-to-str-list value)))
+	((equal type "string-diff-fs")
+	 (expand-string-list-to-fs-diff-list (orth-string-to-str-list value)))
 	((equal type "list") (read-from-string value))
 	(t (error "unhandled type during database access"))))
 
@@ -761,6 +733,16 @@
 	  (mapcar #'(lambda (x) (cons 'REST x))
 	  (expand-string-list-to-fs-list (cdr string-list)))))))   
 
+;;; eg. ("w1" "w2") -> ((FIRST "w1") (REST FIRST "w2") (REST REST (ORTH LAST))) 
+(defun expand-string-list-to-fs-diff-list (string-list)
+  (cond
+   ((equal string-list nil) 
+    (list (list '(ORTH LAST)))) ;;fix me
+   (t
+    (cons (list 'FIRST (first string-list)) 
+	  (mapcar #'(lambda (x) (cons 'REST x))
+	  (expand-string-list-to-fs-diff-list (cdr string-list)))))))   
+
 ;;; returns version, eg. "7.3.2"
 (defmethod get-server-version ((lexicon psql-lex-database))
   (let* 
@@ -770,12 +752,12 @@
     
 (defmethod get-db-version ((lexicon psql-lex-database))
   (let* 
-      ((sql-str "SELECT val FROM ergm WHERE var='db-version' LIMIT 1;"))
+      ((sql-str "SELECT val FROM meta WHERE var='db-version' LIMIT 1;"))
     (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
     
 (defmethod get-filter ((lexicon psql-lex-database))
   (let* 
-      ((sql-str "SELECT val FROM ergm WHERE var='filter' LIMIT 1;"))
+      ((sql-str "SELECT val FROM meta WHERE var='filter' LIMIT 1;"))
     (caar (records (run-query lexicon (make-instance 'sql-query :sql-string sql-str))))))
     
 (defmethod next-version (id (lexicon psql-lex-database))
@@ -849,7 +831,7 @@
   (initialize-psql-lexicon))
 
 (defmethod retrieve-fn-defns ((lexicon psql-lex-database))
-  (let* ((sql-str (format nil "SELECT * FROM ergq;"))
+  (let* ((sql-str (format nil "SELECT * FROM qry;"))
 	 (records (make-column-map-record (run-query 
                      lexicon 
                      (make-instance 'sql-query :sql-string sql-str)))))
@@ -862,7 +844,7 @@
   (let* ((fn (get-val "fn" record))
 	 (arity (str-2-num (get-val"arity" record)))
 	 (sql-code (get-val "sql_code" record))
-	 (sql-str (format nil "SELECT * FROM ergqa WHERE fn='~a';" fn))
+	 (sql-str (format nil "SELECT * FROM qrya WHERE fn='~a';" fn))
 	 (ergqa-records 
 	  (make-column-map-record 
 	   (run-query 
@@ -987,10 +969,12 @@
     (when filter
       (if (catch 'pg:sql-error 
             (fn-get-records lexicon ''set-current-view filter)
-            (fn-get-records lexicon ''initialize-current-grammar)
             )
-        (set-filter lexicon)))))
+	  (set-filter lexicon))
+      ;(fn-get-records lexicon ''initialize-current-grammar)
+      )))
 
 (defun set-filter-psql-lexicon nil
-  (set-filter *psql-lexicon*))
+  (set-filter *psql-lexicon*)
+  (initialize-psql-lexicon))
 
