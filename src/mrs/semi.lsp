@@ -49,17 +49,27 @@
        )))
 
 (defmethod close-semi ((semi semi))
-  (with-slots (signature roles predicates properties) semi
+  (with-slots (signature roles predicates properties
+	       lexicon pred-names lex-preds pos-preds)
+      semi
     (setf signature nil)
     (clrhash properties)
     (clrhash roles)
-    (clrhash predicates)))
+    (clrhash predicates)
+    (setf lexicon (make-hash-table)) ;; don't want to clear *semantic-table*
+    (clrhash pred-names)
+    (clrhash lex-preds)
+    (clrhash pos-preds)
+    ))
 
 ;;; build semi
 
+(defmethod populated-p ((semi semi))
+  (with-slots (signature) semi
+    (if signature t)))
+  
 (defmethod populate-semi ((semi semi))
-  (with-slots (lexicon) semi
-    (setf lexicon *semantic-table*)
+  (with-slots (lexicon signature) semi
     (close-semi semi)
     (setf lexicon *semantic-table*)
     (maphash 
@@ -67,7 +77,8 @@
 	 (declare (ignore key))
 	 (extend-semi semi val :mode :batch))
      lexicon)
-    (populate-semi-roles *semi*)
+    (populate-semi-roles semi)
+    (setf signature (get-universal-time))
     semi))
 
 (defmethod extend-semi ((semi semi) (record semantics-record) &key (mode :dynamic))
@@ -527,7 +538,6 @@
   (let ((sdb (make-sdb)))
     (load-sdb sdb psql-lexicon)
     (populate-semantic-table sdb)
-    (setf (semi-lexicon semi) *semantic-table*)
     (populate-semi semi))
   semi)
 
