@@ -24,7 +24,7 @@
 (defparameter *pvm-pending-events* nil)
 
 (defstruct cpu host spawn options initialize architecture class threshold)
-(defstruct task tid task cpu form status)
+(defstruct task tid task cpu form status load)
 
 (defun make-tmp-file (prefix)
   (let ((file (format 
@@ -240,6 +240,8 @@
 
 (defmacro message-tag (message)
   `(rest (assoc :tag ,message)))
+(defmacro message-load (message)
+  `(rest (assoc :load ,message)))
 (defmacro message-remote (message)
   `(rest (assoc :remote ,message)))
 (defmacro message-content (message)

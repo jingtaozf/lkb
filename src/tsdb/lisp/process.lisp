@@ -23,6 +23,7 @@
                              run-id comment
                              (verbose t)
                              output
+                             vocabulary
                              (cache *tsdb-cache-database-writes-p*)
                              (gc *tsdb-gc-p*)
                              (stream *tsdb-io*)
@@ -31,6 +32,7 @@
   (declare (ignore podium))
   
   (initialize-tsdb)
+  
   
   (when (and overwrite (not interactive))
     (purge-test-run data :action :purge))
@@ -70,9 +72,7 @@
                     :interactive interactive))
              (burst (and (not interactive)
                          (find :pvm *features*)
-                         (every #'(lambda (run)
-                                    (get-field :task run))
-                                runs)))
+                         (every #'(lambda (run) (get-field :task run)) runs)))
              (trees-hook 
               (unless interactive
                 (typecase *tsdb-trees-hook*
@@ -92,11 +92,21 @@
              (increment (when meter (/ (mduration pmeter) (length items)))))
         
         (when meter 
+          (status :text (format nil "~a done" imessage)))
+          
+        (when (and vocabulary (not burst) (not interactive))
+          (unless (tsdb-do-vocabulary data 
+                                      :condition condition :load :quiet 
+                                      :meter (make-meter 0.02 1)
+                                      :interrupt interrupt))
+          (return-from tsdb-do-process))
+                   
+        (when meter 
           (status :text pmessage)
           (meter :value (get-field :start pmeter)))
         
         (unwind-protect
-            (ignore-errors
+            (progn;ignore-errors
              (catch :break
                (loop
                    until (or (null runs)
@@ -135,7 +145,8 @@
                              (print-result result :stream stream))
                            (unless interactive
                              (store-result data result :cache cache))
-                           (when ready (incf (get-field :items ready))))
+                           (when ready (incf (get-field :items ready)))
+                           (when increment (meter-advance increment)))
                          (when corpses
                            (loop
                                for corpse in corpses
@@ -171,9 +182,8 @@
                            (print-result result :stream stream))
                          (unless interactive
                            (store-result data result :cache cache))
-                         (incf (get-field :items run)))))
-
-                     (when increment (meter-advance increment)))))
+                         (incf (get-field :items run))
+                         (when increment (meter-advance increment))))))))
                      
           (when interactive
             (format *tsdb-io* "~&~a" (get-output-stream-string stream)))
@@ -223,7 +233,7 @@
             while (and tasks
                        (not (find :ready tasks :key #'task-status)))
             finally (return runs)
-            for message = (pvm_poll -1 -1 5)
+            for message = (pvm_poll -1 -1 1)
             when (message-p message)
             do
               (when *pvm-debug-p*
@@ -233,14 +243,23 @@
                  message)
                 (force-output))
               (let* ((tag (message-tag message))
-                     (remote (message-remote message))
+                     (load (message-load message))
+                     (remote (if (eql tag %pvm_task_fail%)
+                               (message-corpse message)
+                               (message-remote message)))
                      (content (message-content message))
                      (task (find remote tasks :key #'task-tid)))
                 (cond
                  ((eql tag %pvm_task_fail%)
-                  (let* ((remote (message-corpse message))
-                         (task (find remote tasks :key #'task-tid)))
-                    (setf tasks (delete task tasks))))
+                  (when task
+                    (setf (task-status task) :exit)
+                    (setf tasks (delete task tasks))
+                    (when (and (task-p task) (cpu-p (task-cpu task)))
+                      (format
+                       *tsdb-io*
+                       "~&create-test-runs(): client exit on `~a' <~a>.~%"
+                       (cpu-host (task-cpu task)) remote)
+                      (force-output *tsdb-io*))))
                  
                  ((null task)
                   (when *pvm-debug-p*
@@ -260,7 +279,8 @@
                           (run (third content)))
                       (when (and stub (consp run))
                         (nconc stub run)
-                        (setf (task-status task) :ready)))
+                        (setf (task-status task) :ready)
+                        (setf (task-load task) load)))
                     (when *pvm-debug-p*
                       (format
                        t
@@ -284,6 +304,7 @@
 
 (defun create-test-run (data run-id &key comment gc interactive)
   (let* ((environment (initialize-test-run :interactive interactive))
+         (start (current-time :long t))
          (gc-strategy (unless interactive (install-gc-strategy gc)))
          (gc (get-field :gc gc-strategy))
          (user (current-user))
@@ -293,7 +314,6 @@
          (tsdb (current-tsdb))
          (host (current-host))
          (os (current-os))
-         (start (current-time :long t))
          (run (pairlis (list :data :run-id :comment 
                              :platform :tsdb :grammar
                              :user :host :os :start :items
@@ -470,7 +490,7 @@
       while runs
       with corpses = nil
       with pending = nil
-      for message = (pvm_poll -1 -1 5)
+      for message = (pvm_poll -1 -1 1)
       when (message-p message)
       do
         (when *pvm-debug-p*
@@ -480,27 +500,29 @@
            message)
           (force-output))
         (let* ((tag (message-tag message))
-               (remote (message-remote message))
+               (remote (if (eql tag %pvm_task_fail%)
+                         (message-corpse message)
+                         (message-remote message)))
+               (load (message-load message))
                (content (message-content message))
-               (run (find remote runs 
-                          :key #'(lambda (run) 
-                                   (task-tid (get-field :task run)))))
+               (run (find remote runs :key #'run-tid))
                (task (get-field :task run))
                (item (when task (task-status task))))
 
         (cond
          ((eql tag %pvm_task_fail%)
-          (let* ((remote (message-corpse message))
-                 (run (find remote runs 
-                            :key #'(lambda (run) 
-                                     (task-tid (get-field :task run)))))
-                 (task (get-field :task run))
-                 (item (when task (task-status task))))
-            (when (consp item) (push item pending))
-            (when (and run task)
-              (setf (task-status task) :exit)
-              (push run corpses)
-              (setf runs (delete run runs)))))
+          (when (consp item) (push item pending))
+          (when run
+            (push run corpses)
+            (setf runs (delete run runs))
+            (when (task-p task)
+              (setf (task-status task) :exit))
+            (when (and (task-p task) (cpu-p (task-cpu task)))
+              (format
+               *tsdb-io*
+               "~&process-queue(): client exit on `~a' <~a>.~%"
+               (cpu-host (task-cpu task)) remote)
+              (force-output *tsdb-io*))))
                  
          ((null run)
           (when verbose
@@ -512,6 +534,7 @@
           (push message *pvm-pending-events*))
          
          ((eql tag %pvm_lisp_message%)
+          (when task (setf (task-load task) load))
           (if (eq (first content) :return)
             (case (second content)
               (:process-item

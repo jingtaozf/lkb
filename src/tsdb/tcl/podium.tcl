@@ -938,7 +938,7 @@ proc meter {value {text ""}} {
 proc meter_advance {increment} {
 
   set current [.status.meter cget -value];
-  meter [expr $current + $increment];
+  meter [min [expr $current + $increment] 1];
 
 }; # meter_advance()
 

@@ -18,66 +18,7 @@
 
 (in-package "TSDB")
 
-(defparameter *pvm-cpus*
-  (list
-   (make-cpu 
-    :host "eo.Stanford.EDU"
-    :spawn "/eo/e4/malouf/acl50/base"
-    :options '("-I" "/user/oe/tmp/lkb.dxl" "-L" "/user/oe/lpvm.lisp")
-    :class :csli :threshold 2)
-   (make-cpu 
-    :host "eoan"
-    :spawn "/eo/e4/malouf/acl50/base"
-    :options '("-I" "/user/oe/tmp/lkb.dxl" "-L" "/user/oe/lpvm.lisp")
-    :class :csli :threshold nil)
-   (make-cpu 
-    :host "top.coli.uni-sb.de"
-    :spawn "/proj/perform/nacl/home/lisp"
-    :options '("-I" "/proj/perform/images/lkb.dxl" "-qq" 
-               "-L" "/proj/perform/lpvm.lisp")
-    :class '(:external :coli) :threshold 3.5)
-   (make-cpu 
-    :host "top.coli.uni-sb.de"
-    :spawn "/proj/perform/nacl/home/lisp"
-    :options '("-I" "/proj/perform/images/lkb.dxl" "-qq" 
-               "-L" "/proj/perform/lpvm.lisp")
-    :class '(:external :coli) :threshold 2.5)
-   (make-cpu 
-    :host "limit.dfki.uni-sb.de"
-    :spawn "/proj/perform/nacl/home/lisp"
-    :options '("-I" "/proj/perform/images/lkb.dxl" "-qq" 
-               "-L" "/proj/perform/lpvm.lisp")
-    :class '(:external :dfki) :threshold 4)
-   (make-cpu 
-    :host "limit.dfki.uni-sb.de"
-    :spawn "/proj/perform/nacl/home/lisp"
-    :options '("-I" "/proj/perform/images/lkb.dxl" "-qq" 
-               "-L" "/proj/perform/lpvm.lisp")
-    :class '(:external :dfki) :threshold 2.5)
-   (make-cpu 
-    :host "let.dfki.uni-sb.de"
-    :spawn "/proj/perform/nacl/home/lisp"
-    :options '("-I" "/proj/perform/images/lkb.dxl" "-qq" 
-               "-L" "/proj/perform/lpvm.lisp")
-    :class '(:external :dfki) :threshold 8)
-   (make-cpu 
-    :host "let.dfki.uni-sb.de"
-    :spawn "/proj/perform/nacl/home/lisp"
-    :options '("-I" "/proj/perform/images/lkb.dxl" "-qq" 
-               "-L" "/proj/perform/lpvm.lisp")
-    :class '(:external :dfki) :threshold 6)
-   (make-cpu 
-    :host "let.dfki.uni-sb.de"
-    :spawn "/proj/perform/nacl/home/lisp"
-    :options '("-I" "/proj/perform/images/lkb.dxl" "-qq" 
-               "-L" "/proj/perform/lpvm.lisp")
-    :class '(:external :dfki) :threshold 4)
-   (make-cpu 
-    :host "let.dfki.uni-sb.de"
-    :spawn "/proj/perform/nacl/home/lisp"
-    :options '("-I" "/proj/perform/images/lkb.dxl" "-qq" 
-               "-L" "/proj/perform/lpvm.lisp")
-    :class '(:external :dfki) :threshold 4)))
+(defparameter *pvm-cpus* nil)
 
 (defparameter *pvm-tasks* nil)
 
@@ -86,16 +27,24 @@
 (defun run-status (run)
   (let ((task (get-field :task run)))
     (and task (task-status task))))
-
+
+(defun run-tid (run)
+  (let ((task (get-field :task run)))
+    (and task (task-tid task))))
+
 (defun task-idle-p (task)
   (eq (task-status task) :ready))
 
-(defun initialize-cpus (&key (cpus *pvm-cpus*)
+(defun initialize-cpus (&key cpus
                              (classes '(:csli))
                              (file (format 
                                     nil 
                                     "/tmp/pvm.debug.~a"
                                     (current-user))))
+  (initialize-tsdb)
+  (when (null cpus) (setf cpus *pvm-cpus*))
+
+  (pvm_quit)
   (pvm_start :user (current-user))
   ;;
   ;; first, create as many tasks as we have cpus ...
@@ -129,7 +78,7 @@
   (loop
       while (and *pvm-tasks* 
                  (find :start *pvm-tasks* :key #'task-status))
-      for message = (pvm_poll -1 -1 5)
+      for message = (pvm_poll -1 -1 1)
       when (message-p message)
       do
         (let* ((tag (message-tag message))
@@ -140,6 +89,11 @@
            ((eql tag %pvm_task_fail%)
             (let* ((remote (message-corpse message))
                    (task (find remote *pvm-tasks* :key #'task-tid)))
+              (when (and (task-p task) (cpu-p (task-cpu task)))
+                (format
+                 *tsdb-io*
+                 "~&initialize-cpus(): client exit for `~a' <~a>~%"
+                 (cpu-host (task-cpu task)) remote))
               (setf *pvm-tasks* (delete task *pvm-tasks*))))
 
            ((null task)
@@ -158,7 +112,7 @@
               (setf (task-status task) :ready)
               (format
                *tsdb-io*
-               "initialize-cpus(): `~a' registered (tid ~d).~%"
+               "initialize-cpus(): `~a' registered as tid <~d>.~%"
                (cpu-host (task-cpu task)) (task-tid task)))
              (t
               (when *pvm-debug-p*
@@ -202,7 +156,7 @@
          self master master)
         (force-output))
       (loop 
-          for message = (pvm_poll (or master -1) -1 5)
+          for message = (pvm_poll -1 -1 1)
           while (or (null message)
                     (and (not (eq message :error))
                          (not (eql (message-tag message) 

@@ -444,30 +444,21 @@
             (let* ((interrupt (install-interrupt-handler))
                    (data (first arguments))
                    (arguments (rest arguments))
-                   (vocabulary (find-key-argument :vocabulary arguments))
-                   (condition (find-key-argument :condition arguments))
                    (interactive (find-key-argument :interactive arguments))
-                   (arguments (remove-key-argument :vocabulary arguments))
-                   (meter (make-meter 0 1))
-                   (status
-                    (if (and vocabulary (not interactive))
-                      (tsdb-do-vocabulary data :condition condition
-                                          :load :quiet :meter meter
-                                          :interrupt interrupt)
-                      t)))
-              (when status
-                (apply #'tsdb-do-process
-                       (cons data 
-                             (append arguments 
-                                     (list :meter meter :podium t 
-                                           :interrupt interrupt))))
-                (unless interactive
-                  (sleep 3)
-                  (send-to-podium (format 
-                                   nil 
-                                   "update_ts_list update ~a"
-                                   data)
-                                  :wait t)))
+                   (meter (make-meter 0 1)))
+
+              (apply #'tsdb-do-process
+                     (cons data 
+                           (append arguments 
+                                   (list :meter meter :podium t 
+                                         :interrupt interrupt))))
+              (unless interactive
+                (sleep 1)
+                (send-to-podium (format 
+                                 nil 
+                                 "update_ts_list update ~a"
+                                 data)
+                                :wait t))
               (delete-interrupt-handler interrupt)))
 
          ((analyze-competence analyze-performance)
