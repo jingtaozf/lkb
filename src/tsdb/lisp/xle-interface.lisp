@@ -92,7 +92,15 @@
 		 (tsdb::time-a-funcall
 		  #'(lambda () 
 		      (loop
-			  for solution = (solution (get-next-solution graph))
+                          ;;
+                          ;; _fix_me_
+                          ;; find a better way of not having to keep all the
+                          ;; memory around: probably allow de-allocation of the
+                          ;; solutions here and then rebuild them in the loop
+                          ;; below extracting results.         (29-oct-03; oe)
+                          ;;
+			  for solution = (solution 
+                                          (get-next-solution graph nil))
 			  while (not (zerop solution)) 
 			  do (push solution solutions)
 			  count 1))
