@@ -2,7 +2,11 @@
 ;;; CL dialect specific
 ;;; This version for Allegro CL - CLIM2
 
-(in-package :user)
+(in-package :cl-user)
+
+(eval-when
+    (compile load eval)
+  (proclaim '(special clim-user::*lkb-top-frame* clim-user::*lkb-top-stream*)))
 
 (defmacro with-output-to-top (() &body body)
   (let ((func (gensym)))

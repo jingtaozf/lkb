@@ -382,6 +382,7 @@
 
 (define-active-fs-window-command (com-title-fs-menu)
     ((name 'symbol :gesture :select))
+  (declare (ignore name))
   (let ((id (fs-display-record-id 
 	     (active-fs-window-fs clim:*application-frame*)))
         (fs (fs-display-record-fs 
