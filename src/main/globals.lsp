@@ -103,8 +103,8 @@
    for the purposes of chart display")
 
 (def-lkb-parameter *irregular-forms-only-p* nil
-  "if this is set, the parser will not look for regular spellings
-   once it has found an irregular spelling")
+  "if this is set, the parser will not parse regular spellings
+   if there is an irregular spelling (eated, dreamed)")
 
 ;;; Display 
 

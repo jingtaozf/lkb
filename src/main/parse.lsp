@@ -240,11 +240,10 @@
                 (morph-poss 
                  (progn #+:powerpc(decf gg (CCL::%HEAP-BYTES-ALLOCATED))
                         (prog1
-                            (let ((irregs (find-irregular-morphs word)))
-                              (if (and irregs *irregular-forms-only-p*)
-                                  irregs
-                                (append (morph-analyse word)
-                                        irregs)))
+                            (append 
+                             (filter-for-irregs (morph-analyse word))
+                             ;; filter is in rules.lsp
+                             (find-irregular-morphs word))
                           #+:powerpc(incf gg (CCL::%HEAP-BYTES-ALLOCATED))))))
            (unless morph-poss (format t "~%Word ~A is not in lexicon" word)
                    (return))
@@ -1044,7 +1043,5 @@
             (collect-morph-history-rule-names 
              (edge-morph-history edge-rec)))))
 
-(defun preprocess-sentence-string (str)
-  ;;; to be defined by the user
-    str)
+
 

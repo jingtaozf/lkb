@@ -282,7 +282,8 @@
   ;;; have a mechanism for alternate spellings in
   ;;; lexical entries it'll have to do
   (let ((irreg
-         (gethash (string-upcase stem) *irregular-forms-gen*)))
+         (reverse ; so order matches textual order
+          (gethash (string-upcase stem) *irregular-forms-gen*))))
     (cdr (assoc rule irreg)))) 
 
 (defun full-morph-generate (stem rule)
@@ -291,10 +292,33 @@
         (list (list (string-downcase irreg-form) (list rule stem)))
         (morph-generate stem rule))))
 
-#|
-(read-irreg-form-string 
- (load "Macintosh HD:lkb99-expt:data:Dikran:irregs.tab"))
 
+(defun filter-for-irregs (reg-list)
+  ;;; called from parse.lsp
+;;; remove anything from the regular morphology results which corresponds
+;;; to the application of a rule to a stem corresponding to one of 
+;;; the irregular forms
+  (if *irregular-forms-only-p* 
+      (for reg in reg-list
+           filter
+           (let* ((stem (car reg))
+                  (first-rule (caadr reg))
+                  (irreg-stems 
+                   (gethash (string-upcase stem)
+                            *irregular-forms-gen*))
+                  (irreg-rules (mapcar #'car irreg-stems)))
+             (if (and irreg-stems first-rule
+                      (member first-rule irreg-rules))
+                 nil
+               reg)))
+    reg-list))
+
+
+#|
+(load-irregular-spellings "Macintosh HD:newlkb:src:data:Dikran:irregs.tab")
+
+(load-irregular-spellings "~aac/grammar/irregs.tab")
+ 
 (find-irregular-morphs "has")
 |#
 
@@ -316,13 +340,15 @@
                         (position '#\  irreg :start (+ 1 irreg-right))))
                    (affixname 
                     (if (and irreg-right aff-right)
-                        (subseq irreg (+ 1 irreg-right) aff-right)))
+                        (string-upcase
+                         (subseq irreg (+ 1 irreg-right) aff-right))))
                    (stem-right 
                     (if aff-right
                         (position '#\  irreg :start (+ 1 aff-right))))
                    (stem 
                     (if aff-right
-                        (subseq irreg (+ 1 aff-right) stem-right))))
+                        (string-upcase
+                        (subseq irreg (+ 1 aff-right) stem-right)))))
               (if (and spelling affixname stem)
                   (add-to-irregulars spelling (create-lex-rule-name affixname) 
                                      stem)))))))
@@ -336,5 +362,5 @@
 (defun create-lex-rule-name (rule-name)
   (if *lex-rule-suffix*
     (intern (concatenate 'string (string rule-name) *lex-rule-suffix*))
-    rule-name))
+    (intern rule-name)))
 
