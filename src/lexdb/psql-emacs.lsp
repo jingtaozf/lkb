@@ -1,3 +1,7 @@
+;;; Copyright (c) 2002-2003 
+;;;   Ann Copestake, Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
+;;;   see `licence.txt' for conditions.
+
 ;;;
 ;;; Emacs-Postgres interface
 ;;;

@@ -1,4 +1,4 @@
-;;; Copyright (c) 2003 Ben Waldron
+;;; Copyright (c) 2003 Benjamin Waldron
 ;;; see licence.txt for conditions
 
 ;;; Add a PG menu to the emacs menu bar
