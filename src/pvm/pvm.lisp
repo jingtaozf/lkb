@@ -42,12 +42,14 @@
     (current-pid "getpid")
     (:void)
   :returning :int)
+
 #+(and :allegro-version>= (not (version>= 5 0)))
 (defforeign 
     'current-pid
     :entry-point "getpid"
     :arguments nil
     :return-type :integer)
+
 #-:allegro-version>=
 (defun getpid () (random (expt 2 15)))
 
@@ -77,9 +79,10 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (_pvm_register "pvm_register")
-    ((file (* :char) string)
+    ((file (* :char) #+(not (version>= 6 0)) string)
      (debugp :int integer))
-  :returning :int)
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign
@@ -124,11 +127,13 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (_pvm_create "pvm_create")
-    ((task (* :char) string)
-     (argv (* (* :char)) (simple-array simple-string (*)))
-     (host (* :char) string)
-     (architecture (* :char) string))
-  :returning :int)
+    ((task (* :char) #+(not (version>= 6 0)) string)
+     (argv (* (* :char)) 
+           #+(not (version>= 6 0)) (simple-array simple-string (*)))
+     (host (* :char) #+(not (version>= 6 0)) string)
+     (architecture (* :char) #+(not (version>= 6 0)) string))
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign 
@@ -162,9 +167,10 @@
     ((tid :int integer)
      (tag :int integer)
      (block :int integer)
-     (output (* :char) string)
+     (output (* :char) #+(not (version>= 6 0)) string)
      (size :int integer))
-  :returning :int)
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign
@@ -175,8 +181,10 @@
 #+(version>= 5 0)
 (def-foreign-call 
     pvm_collect 
-    ((output (* :char) string) (size :int integer))
-  :returning :int)
+    ((output (* :char) #+(not (version>= 6 0)) string) 
+     (size :int integer))
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign
@@ -231,8 +239,9 @@
     (_pvm_transmit "pvm_transmit")
     ((tid :int integer)
      (tag :int integer)
-     (file (* :char) string))
-  :returning :int)
+     (file (* :char) #+(not (version>= 6 0)) string))
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign
@@ -255,8 +264,9 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (_pvm_vm_info "pvm_vm_info")
-    ((file (* :char) string))
-  :returning :int)
+    ((file (* :char) #+(not (version>= 6 0)) string))
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign 
@@ -287,10 +297,11 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (pvm_announce "pvm_announce")
-    ((class (* :char) string)
-     (version (* :char) string)
-     (user (* :char) string))
-  :returning :int)
+    ((class (* :char) #+(not (version>= 6 0)) string)
+     (version (* :char) #+(not (version>= 6 0)) string)
+     (user (* :char) #+(not (version>= 6 0)) string))
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign
@@ -301,10 +312,11 @@
 #+(version>= 5 0)
 (def-foreign-call 
     (pvm_delinfo "pvm_delinfo")
-    ((class (* :char) string)
+    ((class (* :char) #+(not (version>= 6 0)) string)
      (index :int integer)
      (flags :int integer))
-  :returning :int)
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign
@@ -319,8 +331,9 @@
 (def-foreign-call 
     (_pvm_task_info "pvm_task_info")
     ((tid :int integer)
-     (file (* :char) string))
-  :returning :int)
+     (file (* :char) #+(not (version>= 6 0)) string))
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign

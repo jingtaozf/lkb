@@ -355,11 +355,8 @@
                       (chart-configuration-end configuration)))))
       (cond
        ((and (edge-morph-history edge) (edge-spelling-change edge))
-        (let* ((daughter (edge-morph-history edge))
-               (preterminal (first (edge-lex-ids daughter))))
-          (list id (edge-label edge) score start end
-                (list id preterminal score start end
-                      (list (edge-rule daughter) start end)))))
+        (list id (edge-label edge) score start end
+              (compute-derivation-tree (edge-morph-history edge))))
        ((null (edge-children edge))
         (list id (first (edge-lex-ids edge)) score start end
               (list (edge-rule edge) start end)))

@@ -4,12 +4,13 @@
 (def-foreign-call 
     (_create_run "create_run")
     ((tid :int integer)
-     (data (* :char) string)
+     (data (* :char) #+(not (version>= 6 0)) string)
      (run-id :int integer)
-     (comment (* :char) string)
+     (comment (* :char) #+(not (version>= 6 0)) string)
      (interactive :int integer)
-     (custom (* :char) string))
-  :returning :int)
+     (custom (* :char) #+(not (version>= 6 0)) string))
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign
@@ -31,13 +32,14 @@
     (_process_item "process_item")
     ((tid :int integer)
      (i_id :int integer)
-     (i_input (* :char) string)
+     (i_input (* :char) #+(not (version>= 6 0)) string)
      (parse_id :int integer)
      (edges :int integer)
      (exhaustive :int integer)
      (derivationp :int integer)
      (interactive :int integer))
-  :returning :int)
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign
@@ -66,8 +68,9 @@
     (_complete_run "complete_run")
     ((tid :int integer)
      (run_id :int integer)
-     (custom (* :char) string))
-  :returning :int)
+     (custom (* :char) #+(not (version>= 6 0)) string))
+  :returning :int
+  #+(version>= 6 0) :strings-convert #+(version>= 6 0) t)
 
 #-(version>= 5 0)
 (defforeign
@@ -94,4 +97,3 @@
             do
               (return-from complete_run :interrupt))
         :ok))))
-
