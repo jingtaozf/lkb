@@ -78,7 +78,7 @@
   (declare (ignore output-fs))
   (let ((fs-window 
           (clim:make-application-frame 'active-fs-window)))
-        (setf (active-fs-window-fs fs-window) 
+    (setf (active-fs-window-fs fs-window) 
               (make-fs-display-record :fs fs :title title :paths paths 
                                       :parents parents
 				      :type-fs-display *type-fs-display*))
@@ -120,7 +120,8 @@
            (parents (fs-display-record-parents fs-record))
            (paths (fs-display-record-paths fs-record))
            (fudge 20)
-           (max-width 0))
+	   (max-width 0))
+      (incf x)
       (silica:inhibit-updating-scroll-bars (stream)
         (clim:with-text-style (stream *type-font-spec*)
 	  (clim:with-output-recording-options (stream :draw nil :record t)
@@ -379,7 +380,7 @@
     (setq *fs1* nil)
     (unhighlight-class frame)))
 
-;;; **********************************************************************
+;;; Search for coreferences in a feature structure
 
 (defstruct pointer
   label valuep)
@@ -400,6 +401,7 @@
      (append (unless (pointer-valuep pointer)
 	       '(("Find value" :value value)))
 	     '(("Find next" :value next)))
+     ;; Find where the value of a pointer is
      (value (let ((sel (clim:output-record-children
 			(find-object (clim:frame-standard-output frame) 
 				     #'(lambda (p) 
@@ -410,4 +412,21 @@
 	      (scroll-to (car sel) (clim:frame-standard-output frame))
 	      (setq *fs1* nil)
 	      (highlight-objects sel frame)))
-     (next))))
+     ;; Find the next use of a pointer after this one
+     (next (let* ((found nil)
+		  (rec (find-object (clim:frame-standard-output frame) 
+				   #'(lambda (p) 
+				       (if (eq pointer p)
+					   (progn
+					     (setq found t)
+					     nil)
+					 (when found
+					   (and (pointer-p p)
+						(eql (pointer-label pointer)
+						     (pointer-label p))))))))
+		  (sel (when rec
+			 (clim:output-record-children rec))))
+	     (when sel
+	       (scroll-to (car sel) (clim:frame-standard-output frame))
+	       (setq *fs1* nil)
+	       (highlight-objects sel frame)))))))
