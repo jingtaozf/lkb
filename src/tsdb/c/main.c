@@ -686,7 +686,7 @@ void tsdb_usage() {
           "go into client mode connecting to server on `host';\n");
   fprintf(tsdb_error_stream,
           "  `-hangup[=host]' --- "
-          "(attemp to) shut down tsdb(1) server on `host';\n");
+          "(attempt to) shut down tsdb(1) server on `host';\n");
   fprintf(tsdb_error_stream,
           "  `-shutdown[=host]' --- "
           "(really) shut down tsdb(1) server on `host';\n");
