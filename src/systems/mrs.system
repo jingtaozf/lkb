@@ -5,11 +5,13 @@
 
 (in-package :make)
 
+
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
   #+(and :allegro (version>= 6 0))
   (pushnew :xml *features*)
   (pushnew :mrs *features*))
+
 
 (defsystem "mrs"
     :source-pathname (get-sources-dir "lkb")
@@ -25,9 +27,15 @@
       (when symbol (set symbol t))
       #+:ecl (ecl-finalize :module "mrs"))
     
-      
-
+    ;;
+    ;; for backwards compatibility with people pushing an :lkb feature and then
+    ;; loading the MRS system to obtain both, effectively make this system a 
+    ;; no-op, when LKB is requested; the :depends-on above will now take make
+    ;; sure the LKB (now including MRS) will get loaded.
+    ;;
     :components
+    #+:lkb ()
+    #-:lkb
     ((:module "package"
       :source-pathname ""
       :binary-pathname ""
@@ -41,13 +49,11 @@
       :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
-      (#+:lkb
-       (:file "lkb-interface")          ; interface functions to LKB
-       #+:ecl
+      (#+:ecl
        (:file "ecl" :compile-only t)
        #+:ecl
        (:file "pet-interface")
-       #+(and (not :lkb) (not :ecl))
+       #+(not :ecl)
        (:file "dummy-interface")
        (:file "mrsglobals")             ; some defaults for grammar-specific 
                                         ; variables, typically adapted in a
@@ -60,7 +66,7 @@
      ;; following two files needed for scoping - can be excluded
      ;; for generation
      (:module "scoping"
-      :source-pathname "mrs"
+              :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
       ((:file "mrsresolve")             ; resolving scope
@@ -70,67 +76,8 @@
       :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
-      ((:file "cheapscope")             ; scope for fragments
-       #+:lkb
-       (:file "mrsmunge")               ; manipulate MRS via rules
-                                        ; currently for vitrifying - potential
-                                        ; other uses
-       #+:lkb
-       (:file "mrsruleinput")           ; creating rules for above
-                                        ; requires LKB, but outputs compiled 
-                                        ; rules which can be used without LKB
-       #+(and :lkb :allegro :clim (not :tty)) 
-       (:file "lkb-acl-mrs")            ; display etc in CLIM
-       #+(and :lkb :mcl (not :tty)) 
-       (:file "lkb-mcl-mrs")))          ; display etc in MCL
+      ((:file "cheapscope")))             ; scope for fragments
      
-     #+:lkb
-     (:module "generator-morph"
-      :source-pathname "mrs"
-      :binary-pathname "mrs"
-      :components
-      ((:file "lexutils")
-       (:file "lexindex")               ; LKB specific - indexing
-                                        ; entries etc on semantics
-       (:file "lexlookup")              ; LKB specific - retrieving
-       (:file "genpredict")))           ; LKB specific - null semantics
-
-     #+:lkb
-     (:module "generator"
-      :source-pathname "mrs"
-      :binary-pathname "mrs"
-      :components
-      ((:file "generate")               ; chart generator (requires mrs)
-       (:file "spell")                  ; for a/an
-       (:file "genbatch")
-       (:file "mrstoplevel")))      
-     
-
-     (:module "idioms"
-      :source-pathname "mrs"
-      :binary-pathname "mrs"
-      :components
-      ((:file "idioms")))     ; idioms
-
-     #+:nil
-     (:module "information-structure"
-      :source-pathname "mrs"
-      :binary-pathname "mrs"
-      :components
-      ((:file "infostr")))
-
-     #+:nil
-     (:module "theorem-proving"
-      :source-pathname "tproving"
-      :binary-pathname "tproving"
-      :components
-      ((:file "gq")
-       (:file "gq-to-fol")                           
-       (:file "fol-to-nf")
-       (:file "dtp-interface")
-       (:file "nf-to-fol")
-       (:file "fol-to-mrs")))
-
      (:module "rmrs"
       :source-pathname "rmrs"
       :binary-pathname "rmrs"
@@ -154,46 +101,12 @@
                          ;; readgram
        (:file "input") ;;; loads the underlying rmrs input code
        (:file "compare") ;;; RMRS comparison
-       #+(and :lkb :allegro :clim (not :tty)) 	
-       (:file "lkb-acl-rmrs")            ; display etc in CLIM
        (:file "testing") ;;; temporary file for testing
-))
+       ))      
 
      (:module "redwoods"
       :source-pathname "mrs"
       :binary-pathname "mrs"
       :components
-      ((:file "dependencies")))
+      ((:file "dependencies")))))
 
-     #+:lkb
-     (:module "lsp"
-      :source-pathname "mrs"
-      :binary-pathname "mrs"
-      :components
-      ((:file "lsp")))
-     
-     #+:multiprocessing
-     (:module "translation"
-       :source-pathname "mrs"
-       :binary-pathname "mrs"
-       :components
-       ((:file "translate")))           ; collection of crude MT functions
-
-     #+:lkb
-     (:module "semi"                    ;;; the semantic interface
-       :source-pathname "mrs"
-       :binary-pathname "mrs"
-       :source-extension "lsp"
-       :components
-       ((:file "semi")
-	#+:psql
-	(:file "semi-psql")))
-
-     #+:nil
-      (:module "extensions"
-       :source-pathname "mrs"
-       :binary-pathname "mrs"
-       :components
-       ((:file "time-convert")))))      ; may be useful to have a version of
-                                        ; this for non-VM apps
-                                        ; currently VM specific

@@ -18,13 +18,15 @@
 
 (in-package "MAKE")
 
-;;;
-;;; the Alvey Tools package, unfortunately, comes without a unique feature to
-;;; identify it; invent one and hope for integration with future releases.
-;;;                                                      (22-nov-99  -  oe)
-;;;
 (eval-when (:load-toplevel :execute)
+  (pushnew :tsdb *features*)
   (pushnew :itsdb *features*)
+
+  ;;
+  ;; the Alvey Tools package, unfortunately, comes without a unique feature to
+  ;; identify it; invent one and hope for integration with future releases.
+  ;;                                                      (22-nov-99  -  oe)
+  ;;
   (when (and (find-symbol "*GDE-VERSION-NO" :common-lisp-user)
              (boundp (find-symbol "*GDE-VERSION-NO" :common-lisp-user)))
     (pushnew :anlt *features*)))
@@ -120,7 +122,6 @@
        #+:allegro
        (:file "gc")
        (:file "yy")
-       #+:mt
        (:file "mt")
        #+:page 
        (:file "page-interface")
@@ -180,8 +181,7 @@
        (:file "balloons" :source-extension ""))))
     
     :depends-on (#+(and :allegro (or :linux (and :sparc :svr4) :alpha)) "pvm"
-		 #+:mt "mt"
-		 #+(and :mrs (not :mt)) "mrs"
-		 #+(and :lkb (not :mt) (not :mrs)) "lkb"
+		 #+(and :mrs (not :lkb)) "mrs"
+		 #+:lkb "lkb"
 		 #+:page "page"))
 

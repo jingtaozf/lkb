@@ -17,14 +17,22 @@
 
 (eval-when #+:ansi-eval-when (:load-toplevel :compile-toplevel :execute)
            #-:ansi-eval-when (load eval compile)
+
   (pushnew :lkb *features*)
   (pushnew :lkb-v5.4 *features*)         
+
   #+(or :cl-http (not (or :mcl :clim))) 
   (pushnew :tty *features*)
+
+  #+(and :allegro (version>= 6 0))
+  (pushnew :xml *features*)
+
   ;;
-  ;; as of may-04, we assume that the LKB _always_ includes the MRS code.
+  ;; as of may-04, we assume the LKB _always_ includes the MRS and MT code.
   ;;
-  (pushnew :mrs *features*))
+  (pushnew :mrs *features*)
+  (pushnew :mt *features*))
+
 
 ;;;
 ;;; ultimately, all compile-time configurations (by means of *features*) that
@@ -71,7 +79,11 @@
                  #+:preprocessor "ppcre"
                  #+:xml "pxml")
 
-    :finally-do (funcall (symbol-function (find-symbol "START-LKB" :lkb)))
+    :finally-do 
+    (let* ((package (find-package :lkb))
+           (symbol (find-symbol "*MRS-LOADED*" package)))
+      (when symbol (set symbol t))
+      (funcall (symbol-function (find-symbol "START-LKB" :lkb))))
 
     :components
     ((:module "package"
@@ -268,4 +280,197 @@
       :source-pathname "graft"
       :binary-pathname "graft"
       :components
-      ((:file "arboretum")))))
+      ((:file "arboretum")))
+
+     ;;
+     ;; from here on, inclusion of MRS code; some of this is maintained as a
+     ;; stand-alone `mrs.system' too, hence maintaining both system definitions
+     ;; may be required; there is, unfortunately, no way of adding a post-load
+     ;; dependency do a system :-{.                             (7-jun-04; oe)
+     ;;
+
+     (:module "mrs"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "lkb-interface")          ; interface functions to LKB
+       (:file "mrsglobals")             ; some defaults for grammar-specific 
+                                        ; variables, typically adapted in a
+                                        ; grammar-specific file.
+       (:file "basemrs")                ; MRS structures and printing 
+       (:file "mrsoutput")              ; constructing MRS from parse result  
+       (:file "mrscorpus")              ; checking equality etc
+       (:file "interface")))
+
+     ;; following two files needed for scoping - can be excluded
+     ;; for generation
+     (:module "scoping"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "mrsresolve")             ; resolving scope
+       (:file "mrscons")))              ; constraints on scope
+
+     (:module "munge"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "cheapscope")             ; scope for fragments
+       (:file "mrsmunge")               ; manipulate MRS via rules
+                                        ; currently for vitrifying - potential
+                                        ; other uses
+       (:file "mrsruleinput")           ; creating rules for above
+                                        ; requires LKB, but outputs compiled 
+                                        ; rules which can be used without LKB
+       #+(and :allegro :clim (not :tty)) 
+       (:file "lkb-acl-mrs")            ; display etc in CLIM
+       #+(and :mcl (not :tty)) 
+       (:file "lkb-mcl-mrs")))          ; display etc in MCL
+     
+     (:module "generator-morph"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "lexutils")
+       (:file "lexindex")               ; LKB specific - indexing
+                                        ; entries etc on semantics
+       (:file "lexlookup")              ; LKB specific - retrieving
+       (:file "genpredict")))           ; LKB specific - null semantics
+
+     (:module "generator"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "generate")               ; chart generator (requires mrs)
+       (:file "spell")                  ; for a/an
+       (:file "genbatch")
+       (:file "mrstoplevel")))      
+
+     (:module "idioms"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "idioms")))     ; idioms
+
+     #+:nil
+     (:module "information-structure"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "infostr")))
+
+     #+:nil
+     (:module "theorem-proving"
+      :source-pathname "tproving"
+      :binary-pathname "tproving"
+      :source-extension "lisp"
+      :components
+      ((:file "gq")
+       (:file "gq-to-fol")                           
+       (:file "fol-to-nf")
+       (:file "dtp-interface")
+       (:file "nf-to-fol")
+       (:file "fol-to-mrs")))
+
+     (:module "rmrs"
+      :source-pathname "rmrs"
+      :binary-pathname "rmrs"
+      :source-extension "lisp"
+      :components
+      ((:file "basermrs") ;; the RMRS specific structures
+       (:file "comp") ;; main code for semantic composition
+       (:file "convert") ;; MRS to RMRS
+       (:file "annlt") ;; The ANNLT specific code - navigates round the input trees                           
+       (:file "output") ;; outputting RMRS structures, and also LKB
+                        ;; generated structures in a compatible format.
+                        ;; In principle, supports multiple outputs - right no
+                        ;; outputs stuff in XML or a compact representation
+                        ;; LKB-specific code for comparison windows
+                        ;; but #+:lkb used
+       #+:xml       
+       (:file "xml-utils") ;; some utilities for XML parser
+       (:file "readgram") ;; loads the data file that associates the 
+                         ;; rule names with semantic operations
+       (:file "readtag") ;; loads the data file that associates the tags with
+                         ;; base semantic structures - uses a lot of code from 
+                         ;; readgram
+       (:file "input") ;;; loads the underlying rmrs input code
+       (:file "compare") ;;; RMRS comparison
+       #+(and :allegro :clim (not :tty)) 	
+       (:file "lkb-acl-rmrs")            ; display etc in CLIM
+       (:file "testing") ;;; temporary file for testing
+))
+
+     (:module "redwoods"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "dependencies")))
+
+     (:module "lsp"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "lsp")))
+     
+     #+:multiprocessing
+     (:module "translation"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "translate")))           ; collection of crude MT functions
+
+     (:module "semi"                    ;;; the semantic interface
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lsp"
+      :source-extension "lisp"
+      :components
+      ((:file "semi")
+       #+:psql
+       (:file "semi-psql")))
+
+     #+:nil
+     (:module "extensions"
+      :source-pathname "mrs"
+      :binary-pathname "mrs"
+      :source-extension "lisp"
+      :components
+      ((:file "time-convert")))        ; may be useful to have a version of
+                                        ; this for non-VM apps
+                                        ; currently VM specific
+
+     ;;
+     ;; and now for the add-on MT facilities, assuming both the LKB and MRS
+     ;; code is available (the original `mt.system').
+     ;;
+     
+     (:module "mt"
+      :proclamations (optimize (safety 3) (speed 0) (debug 3) (space 0))
+      :source-pathname "mt"
+      :binary-pathname "mt"
+      :source-extension "lisp"
+      :components
+      ((:file "mt-package" :load-only t)
+       (:file "version" :load-only t)
+       (:file "mrsglobals" :load-only t)
+       (:file "globals")
+       (:file "patches")
+       (:file "mrs")
+       (:file "transfer")
+       (:file "translate")
+       #+:clim
+       (:file "clim")
+       (:file "semi")
+       #+:multiprocessing
+       (:file "lm")))))

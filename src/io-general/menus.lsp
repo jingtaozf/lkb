@@ -161,6 +161,7 @@
   ;;; for system with MRS etc
    (setf *lkb-menu*
    (make-instance 'menu :menu-title "Lkb" :menu-items
+       (append
          (list
               (make-lkb-submenu-item :menu-title "Load"
                  :menu-items
@@ -308,9 +309,15 @@
 ;                        :value 'output-type-file 
 ;                        :available-p :grammar)
                      )
-                   :available-p :always)
+                   :available-p :always))
          #+:psql
-         (make-lkb-submenu-item :menu-title "LexDB"
+         (when (find :psql *features*)
+           ;;
+           ;; in case loading the PSQL library failed at start-up, an image may
+           ;; have reverted itself to a sans-PSQL state.
+           ;;
+           (list
+            (make-lkb-submenu-item :menu-title "LexDB"
                  :menu-items                       
                  (list 
                   (make-menu-item :name "Merge new entries"
@@ -350,7 +357,8 @@
 ;                                  ;:available-p :always
 ;				  )
                   )
-		 :available-p :always)
+		 :available-p :always)))
+         (list
 	    (make-lkb-submenu-item 
 	     :menu-title "Options"
 	     :menu-items                       
@@ -364,6 +372,6 @@
                                                            :value 'output-display-settings)
               (make-menu-item :name "Load display options..."
                                                            :value 'load-display-settings))
-	     :available-p :always)))))
+	     :available-p :always))))))
 
 
