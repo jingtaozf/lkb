@@ -57,6 +57,37 @@
 
 (defparameter %system-binaries% "mac")
 
+;;;
+;;; the Allegro CL style run-shell-command() (since acl is home sweet home):
+;;;
+#+:null
+(defun run-process (command &rest args 
+                    &key (wait t) (error-output :output)
+                    &allow-other-keys)
+  (let* ((shell "/bin/sh")
+         (process (apply #'ccl:run-program
+                         shell (list "-c" command) 
+                         :wait wait args)))
+    (when (ccl:process-p process)
+      (if wait 
+        (multiple-value-bind (status exit)
+          (ccl:external-process-status process)
+          (when (eq status :running)
+            (error 
+             "run-process(): ~
+              non-null :wait argument, but process still running --- weird"))
+          exit)
+        (ccl:process-exit-code process)
+        (let ((stdout (make-two-way-stream 
+                       (ccl:external-process-output-stream process)
+                       (ccl:external-process-input-stream process)))
+              (stderr (ccl:external-process-error-stream process))
+              (pid (ccl:external-process-id process)))
+          (values stdout stderr pid))))))
+
+(defun getenv (name) 
+  (ccl:getenv name))
+
 (defpackage :mp (:use :common-lisp)
    (:intern "RUN-FUNCTION" "PROCESS-WAIT" "PROCESS-KILL" "WITH-PROCESS-LOCK"
             "MAKE-PROCESS-LOCK"))
