@@ -318,8 +318,9 @@
 (defmacro type-bit-representation-p (x)
   ;; mcl produces inline code for ccl:fixnump, but not integerp - and we know
   ;; that the bit representation is < most-positive-fixnum
-  #+mcl `(ccl:fixnump ,x)
-  #-mcl `(integerp ,x))
+  #+:mcl `(ccl:fixnump ,x)
+  #+:allegro `(excl:fixnump ,x)
+  #-(or :mcl :allegro) `(integerp ,x))
 
 
 #|
