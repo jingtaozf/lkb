@@ -1,0 +1,123 @@
+proc copyleft {action} {
+ 
+  global globals;
+
+  set bg black;
+  set fg yellow;
+  set large {Helvetica 18};
+  set normalsize {Helvetica 12};
+  set small {Helvetica 10};
+  set message "contacting protocol server `mail.coli.uni-sb.de' ...";
+
+  switch $action {
+    initialize {
+      if {[winfo exists .list.copyleft]} {
+        destroy .list.copyleft
+      }; # if
+      frame .list.copyleft -bg $bg
+      place .list.copyleft -in .list \
+        -relwidth 1 -relheight 1 -bordermode outside;
+      raise .list.copyleft;
+      set copyleft [frame .list.copyleft.body -bg $bg];
+      pack $copyleft -fill none -expand yes;
+
+      label $copyleft.title -bg $bg -fg grey -font [concat $large {bold}] \
+        -text "$globals(name)  -  version $globals(version)"
+      frame $copyleft.zero -bg $bg -height 6
+      label $copyleft.first -bg $bg -fg grey -font $small \
+        -text "Copyleft (c) 1995 - 1999 by Stephan Oepen (oe@coli.uni-sb.de) \
+               -  All Rights Reserved"
+      frame $copyleft.second -bg $bg -height 10
+      label $copyleft.third -bg $bg -fg green -font [concat $normalsize] \
+        -text "$globals(name) is available free of royalties\
+               for research purposes."
+      frame $copyleft.fourth -bg $bg -height 6
+      label $copyleft.fifth -bg $bg -fg grey -font [concat $normalsize] \
+        -text "Until registered, after 10 minutes of continuous use\
+               a log entry will be generated and\n\
+               automatically filed at a central protocol server\
+               (at Saarbruecken University)."
+      pack $copyleft.title \
+        $copyleft.zero $copyleft.first $copyleft.second $copyleft.third \
+        $copyleft.fourth $copyleft.fifth
+
+      #
+      # enforce that the copyleft notice will be displayed at least for several
+      # seconds; the handler in update_skeleton_list() will block until the
+      # system time has reached this value.
+      #
+      set globals(copyleft,status) pending;
+      set globals(copyleft) [expr {[clock seconds] + 5}];
+      set globals(copyleft,key) 43;
+    } 
+    hide { 
+      if {[winfo exists .list.copyleft] && [info exists globals(copyleft)]} {
+        while {[clock seconds] <= $globals(copyleft)} {
+          after 500;
+        }; # while
+        place forget .list.copyleft;
+      }; # if
+    }
+    register {
+      #
+      # trap valid keys and suppress all messages.  note however, that all the
+      # actual decision making and communication is done by swish(1) itself
+      # --- hence chaning the Tcl code will not prevent registration.
+      #
+      if {[oe copyleft $globals(copyleft,key)]} {
+        oe reape;
+        return; 
+      }; # if
+      set status $globals(status);
+      set visible [lindex [winfo children .status] end];
+      .list.copyleft.body.fifth config -fg yellow \
+        -text "Registration in Progress (See User & Reference Manual)";
+      place .list.copyleft -in .list \
+        -relwidth 1 -relheight 1 -bordermode outside;
+      raise .list.copyleft;
+      status $message;
+      if {![set busy [expr {[busy isbusy .] != ""}]]} {
+        busy hold .;
+      }; # if
+      update; update idletasks;
+      #
+      # wait for confirmation from the background registrar process; once the
+      # registration is completed, an asynchronous event will change the value
+      # of .globals(copyleft,status).
+      #
+      set timeout 30
+      for {set globals(copyleft,status) pending; set i 0} \
+          {$i <= 5 
+           || $globals(copyleft,status) == "pending" && $i <= $timeout} \
+          {incr i} {
+        after 1000;
+        if {$i % 2} {
+          .list.copyleft.body.fifth config -fg black;
+        } else {
+          .list.copyleft.body.fifth config -fg yellow;
+        }; # else
+        update idletasks;
+      }; # for
+      if {$i <= $timeout} {
+        .list.copyleft.body.fifth config -fg green \
+          -text "- Registration Completed -";
+        status "$message done";
+        after 2000;
+      } else {
+        tsdb_beep;
+        .list.copyleft.body.fifth config -fg black;
+        status "$message timeout";
+        after 2000;
+      }; # else
+      place forget .list.copyleft;
+      set globals(status) $status;
+      raise $visible;
+      if {!$busy} {
+        busy release .;
+      }; # if
+      oe reape;
+      update idletasks;
+    }
+  }; # switch
+
+}; # copyleft_register()
