@@ -50,7 +50,7 @@
 
 (defun start-lkb ()
   #+(or :clim :common-graphics :mcl)
-  (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :lkb)))
+  (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :make)))
     (unless (and building-image-p (boundp building-image-p)
                  (symbol-value building-image-p))
       (let ((*package* (find-package #+:clim :clim-user #-:clim :lkb)))
