@@ -11,7 +11,6 @@
 (defmethod layout-graph-nodes ((graph parse-tree-graph-output-record) 
 			       stream arc-drawer options)
   (declare (ignore stream arc-drawer options))
-  (setq x graph)
   (with-slots (root-nodes properties) graph
     (let ((dx (getf properties :within-generation-separation))
 	  (dy (getf properties :generation-separation)))
@@ -47,6 +46,11 @@
 	(progn
 	  (let ((x1 x)
 		(y1 (+ y (bounding-rectangle-height node) dy)))
+	    ;; Hack for single-branching nodes
+	    (unless (cdr node-children)
+	      (setf (graph-node-generation (car node-children))
+		(max (graph-node-generation (car node-children))
+		     (graph-node-generation node))))
 	    (dolist (child node-children)
 	      (layout-node child x1 y1 dx dy)
 	      (incf x1 (+ (graph-node-generation child) dx))))

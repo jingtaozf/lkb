@@ -112,18 +112,22 @@
 
 (define-parse-tree-command (com-parse-tree-menu)
     ((edge-record 'edge :gesture :select))
-  (let ((command (clim:menu-choose
-		  '(("Feature Structure" :value fs)
-		    ("Rule" :value rule)))))
+  (let* ((rule-name (edge-rule-number edge-record))
+	 (command (clim:menu-choose
+		  `((,(format nil "Edge ~A" (edge-id edge-record))
+		     :value edge)
+		    (,(format nil "Rule ~A" (or rule-name ""))
+		     :value rule)))))
     (when command
       (handler-case
 	  (ecase command
-	    (fs (display-fs (edge-dag edge-record)
+	    (edge (display-fs (edge-dag edge-record)
 			    (format nil "Edge ~A ~A - FS" 
 				    (edge-id edge-record)
 				    (if (gen-chart-edge-p edge-record) 
 					"G" 
-				      "P"))))
+				      "P")))
+		(display-edge-in-chart edge-record))
 	    (rule 
 	     (let* ((rule-name (edge-rule-number edge-record))
 		    (rule (or (get-grammar-rule-entry rule-name)
