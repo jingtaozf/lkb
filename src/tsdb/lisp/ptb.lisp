@@ -113,8 +113,9 @@
             (push form result)
             (push (format 
                    nil 
-                   "(~d, ~d, ~d, 1, \"~a\", 0, null~:[~*~;, ~a 1.00~])" 
-                   (incf id) i (incf i) form posp pos)
+                   "(~d, ~d, ~d, 1, \"~a\" \"~a\", 0, \"null\"~
+                    ~:[~*~;, \"~a\" 1.00~])" 
+                   (incf id) i (incf i) form raw posp pos)
                   result))
           (unless (lkb::punctuationp form) (incf length)))
     (values (format nil "~{~a~^ ~}" (nreverse result)) length)))

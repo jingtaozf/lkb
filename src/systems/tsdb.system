@@ -117,6 +117,7 @@
        (:file "tnt-interface")
        #+(and :lkb :allegro :clim)
        (:file "redwoods")
+       #+:lkb
        (:file "ptb")))
      
      #+:dfki
