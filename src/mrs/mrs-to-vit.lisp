@@ -673,7 +673,10 @@
               (setf new-sorts 
                 (for sort in new-sorts
                      filter
-                     (unless (member sort *vm-ignored-sort-list*)
+                     (unless (member sort *vm-ignored-sort-list*
+                                     :test #'(lambda (x y)
+                                               (string-equal (string x)
+                                                             (string y))))
                        sort)))
               (when new-sorts 
               ;;; ignored sorts are dropped
