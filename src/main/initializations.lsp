@@ -139,25 +139,18 @@
           (return result))
     ""))
 
+
 (defun start-lkb ()
 
   (let* ((lkbrc (dir-and-name (user-homedir-pathname) ".lkbrc")))
     (with-package (:lkb) (when (probe-file lkbrc) (load lkbrc))))
 
-  #+:psql
-  (handler-case (load "libpq.so") 
-    (file-error () 
-      ;; some feedback to user
-      (format t ";   Warning: cannot load libpq.so")
-      (format t "~%;            (PSQL lexicon functionality will be unavailable)")
-      (format t "~%;            (hint: are the PostgreSQL libraries installed on your machine?)")
-      ;; need this for backward compatibility with ERG script
-      ;; (also a good idea anyway)
-      (setf *features* (remove :psql *features*))))
-  
+  ;;
+  ;; unless we are creating a run-time image or operate in [incr tsdb()] slave
+  ;; mode, initialize various subsystems and the GUI.
+  ;;
   (let ((building-image-p (find-symbol "*BUILDING-IMAGE-P*" :make)))
-    (unless (or (and building-image-p 
-                     (boundp building-image-p)
+    (unless (or (and building-image-p (boundp building-image-p)
                      (symbol-value building-image-p))
                 (find :slave *features*))
       #+:allegro
@@ -166,8 +159,13 @@
       
       #+:lui
       (when (system:getenv "LUI") (lui-initialize))
-      
-      ;; this is a no-op in tty mode
+
+      #+:psql
+      (when (system:getenv "PSQL") (psql-initialize))
+
+      ;;
+      ;; no graphics when in :tty mode
+      ;;
       #+(not :tty)
       (let ((display #+:allegro (system:getenv "DISPLAY") #-:allegro nil)
             (*package* (find-package #+:clim :clim-user #-:clim :lkb)))
