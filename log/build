@@ -162,7 +162,6 @@ cvs update: Updating src/.nasl/tty
 cvs update: Updating src/.nasl/www
 cvs update: Updating src/ACL-CG_specific
 cvs update: Updating src/ACL_specific
-U src/ACL_specific/compare.lsp
 cvs update: Updating src/MCL_specific
 cvs update: Updating src/data
 cvs update: Updating src/data/Dikran
@@ -263,11 +262,14 @@ cvs update: Updating src/fasl/mrs
 cvs update: Updating src/general
 ? src/general/itsdb.lisp
 cvs update: Updating src/io-general
+U src/io-general/tree-nodes.lsp
 cvs update: Updating src/io-lilfes
 cvs update: Updating src/io-paths
 cvs update: Updating src/io-tdl
 cvs update: Updating src/lexicon
 cvs update: Updating src/main
+U src/main/discriminants.lsp
+U src/main/psqllex.lsp
 cvs update: Updating src/mrs
 cvs update: Updating src/mrs/data
 cvs update: Updating src/non-core
@@ -310,8 +312,10 @@ cvs update: Updating src/tsdb/home/trees/vm32/ezra/01-07-17
 cvs update: Updating src/tsdb/linux
 cvs update: Updating src/tsdb/lisp
 U src/tsdb/lisp/maxent.lisp
-U src/tsdb/lisp/pcfg.lisp
+U src/tsdb/lisp/podium.lisp
 U src/tsdb/lisp/redwoods.lisp
+U src/tsdb/lisp/statistics.lisp
+U src/tsdb/lisp/utilities.lisp
 cvs update: Updating src/tsdb/lisp/RCS
 cvs update: Updating src/tsdb/skeletons
 cvs update: Updating src/tsdb/skeletons/csli
@@ -352,6 +356,8 @@ cvs update: Updating src/tsdb/skeletons/s+w
 cvs update: Updating src/tsdb/skeletons/toy
 cvs update: Updating src/tsdb/solaris
 cvs update: Updating src/tsdb/tcl
+U src/tsdb/tcl/commands.tcl
+U src/tsdb/tcl/podium.tcl
 cvs update: Updating src/tty
 cvs update: Updating src/www
 **********
@@ -363,7 +369,7 @@ cvs update: Updating src/www
 **********
 Checking in /eo/e7/apache/htdocs/src/lkb/src/version.lsp;
 /eo/e1/CVSROOT/newlkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.191; previous revision: 1.190
+new revision: 1.192; previous revision: 1.191
 done
 ( \
   cd /eo/e7/apache/htdocs/src/lkb; \
@@ -1277,7 +1283,7 @@ Root pages: 2
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Nov 5, 2002 16:20)
+6.0 [Linux (x86)] (Nov 20, 2002 2:22)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -2068,7 +2074,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/nacl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-23025840 bytes have been tenured, next gc will be global.
+23258120 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -2347,7 +2353,7 @@ CL-USER(7): ; Loading /eo/e7/apache/htdocs/src/lkb/src/systems/tsdb.system
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/rules.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/main/parse.lsp
-8831288 bytes have been tenured, next gc will be global.
+8831432 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/main/parse.fasl
@@ -2813,7 +2819,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;    /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/tnt-interface.fasl
 ;;; Compiling file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 1796864; old: 436488; pending: 0; efficiency: 96.
+gc-after-hook(): local; new: 1735544; old: 436504; pending: 0; efficiency: 96.
 ;;; Writing fasl file
 ;;;   /eo/e7/apache/htdocs/src/lkb/src/.l6cl/tsdb/redwoods.fasl
 ;;; Fasl write complete
@@ -2935,7 +2941,7 @@ Root pages: 2
 
 
 International Allegro CL Enterprise Edition
-6.0 [Linux (x86)] (Nov 5, 2002 16:25)
+6.0 [Linux (x86)] (Nov 20, 2002 2:27)
 Copyright (C) 1985-2000, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This copy of Allegro CL is licensed to:
@@ -3726,7 +3732,7 @@ CL-USER(51):
 [Current process: Initial Lisp Listener]
 CL-USER(52): ; Libfasl loading /usr/local/macl/code/nocompiler.fasl
 ;;; Installing nocompiler patch, version 1
-23025840 bytes have been tenured, next gc will be global.
+23259048 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -3963,7 +3969,7 @@ Root pages: 12
  C heap    base: #xe0000000  position: #xe0004000 reserved: 1024000
 
 
-Allegro CL Enterprise Edition 5.0.1 [SPARC] (11/5/2 16:20)
+Allegro CL Enterprise Edition 5.0.1 [SPARC] (11/20/2 2:19)
 Copyright (C) 1985-1999, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 ;; Optimization settings: safety 1, space 1, speed 1, debug 2.
 ;; For a complete description of all compiler switches given the current
@@ -4483,14 +4489,14 @@ NIL
 [Current process: Initial Lisp Listener]
 USER(22): NIL
 [Current process: Initial Lisp Listener]
-USER(23): #<EQUAL hash-table with 0 entries @ #x4310ce2>
+USER(23): #<EQUAL hash-table with 0 entries @ #x4310d82>
 [Current process: Initial Lisp Listener]
 USER(24): ; Autoloading for DISCARD-LOCAL-NAME-INFO:
 ; Libfasl from bundle code/who.fasl.
 NIL
 [Current process: Initial Lisp Listener]
 USER(25): ; Libfasl from bundle code/nocompiler.fasl.
-21970336 bytes have been tenured, next gc will be global.
+23536168 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 T
 [Current process: Initial Lisp Listener]
@@ -5017,7 +5023,7 @@ Warning: Variable #:G27369 is never used.
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/tnt-interface.fasl
 ;;; Compiling file /eo/e7/apache/htdocs/src/lkb/src/tsdb/lisp/redwoods.lisp
-gc-after-hook(): local; new: 2302472; old: 562312; pending: 0; efficiency: 96.
+gc-after-hook(): local; new: 2290712; old: 563528; pending: 0; efficiency: 96.
 ;;; Writing fasl file /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
 ;;; Fasl write complete
 ; Fast loading /eo/e7/apache/htdocs/src/lkb/src/.sacl/tsdb/redwoods.fasl
