@@ -43,6 +43,10 @@
     (vsym "CFROM")
   "cfrom feature for recording character positions on relations")
 
+(defparameter *rel-link-feature*
+  (vsym "LNK")
+  "LNK feature for recording surface positions on relations")
+
 (defparameter *psoa-top-h-path* 
   `(,(vsym "HOOK") ,(vsym "LTOP"))
   "path to get the hook's ltop from an mrs fs (psoa - parameterised state of affairs -
