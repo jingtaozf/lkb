@@ -28,7 +28,7 @@
        (ascent (font-info font))
        (description
           (graph-display-layout node
-             #'(lambda (node) (get node 'daughters))
+             #'find-children
              #'(lambda (node) (string-width (get-string-for-edge node) font))
              (font-height font)
              horizontalp))
@@ -69,16 +69,33 @@
       real-window)))
 
 
-(defun get-string-for-edge (edge-symbol)
-   (let ((edge-record (get edge-symbol 'edge-record)))
-      (if edge-record
-         (values (tree-node-text-string (or 
-                                    (find-category-abb (edge-dag edge-record))
-                                    (edge-category edge-record))) nil)
-         (values (tree-node-text-string edge-symbol) t))))
+;; Find the children of a node, respecting various conditional display flags
+
+(defun find-children (node)
+  (let ((edge-record (get node 'edge-record))
+        (dtrs (get node 'daughters)))
+    (cond ((and (or *dont-show-morphology*
+                    *dont-show-lex-rules*)
+                (null edge-record))
+           ;; Leaf node
+           nil)
+          ((and *dont-show-lex-rules*
+                (get-lex-rule-entry (when edge-record
+                                      (edge-rule-number edge-record))))
+           ;; Lexical rule node
+           (mapcar #'find-leaf dtrs))
+          (t dtrs))))
+
+;; Given a node, return the first leaf node dominated by it.  Assumes
+;; that this node and all nodes under it are unary branching/
+
+(defun find-leaf (node)
+  (if (null (get node 'edge-record))
+      node
+    (find-leaf (car (get node 'daughters)))))
 
 
-;;; find-category-abb is in tree-nodes.lsp
+;;; menus
 
 (defun add-active-parse-region (edge-symbol stream start-pos)
   (let ((menu
@@ -96,7 +113,7 @@
                        :item-display (get-string-for-edge edge-symbol)
                        :view-font (cons :bold (lkb-type-font)))))
           (apply #'add-menu-items menu
-                 (pop-up-parse-tree-menu-items edge-record))
+                 (pop-up-parse-tree-menu-items edge-symbol edge-record))
           menu))))
 
 (defmethod set-pop-up-menu-default-item ((menu active-tree-pop-up-field) num)
@@ -105,33 +122,32 @@
    nil)
 
 
-(defun pop-up-parse-tree-menu-items (edge-record)
+(defun pop-up-parse-tree-menu-items (edge-symbol edge-record)
   (list
-   (make-instance 'menu-item
-     :menu-item-title "Feature structure"
-     :menu-item-action
-     #'(lambda ()
-         (display-fs (edge-dag edge-record)
-            (format nil "Edge ~A ~A - FS" (edge-id edge-record)
-               (if (gen-chart-edge-p edge-record) "G" "P")))))
    (make-instance 'menu-item
      :menu-item-title (format nil "Edge ~A" (edge-id edge-record))
      :menu-item-action
      #'(lambda ()
-         (display-parse-tree edge-record nil)))
+         (display-fs (get edge-symbol 'edge-fs)
+                      (format nil "Edge ~A ~A - Tree FS" 
+                              (edge-id edge-record)
+                              (if (g-edge-p edge-record) 
+                                  "G" 
+                                "P")))
+          (display-edge-in-chart edge-record)))
    (make-instance 'menu-item
      :menu-item-title 
      (format nil "Rule ~A" 
              (or (edge-rule-number edge-record) ""))
-     :disabled 
-     (let ((rule-name (edge-rule-number edge-record)))
-       (not (and rule-name
-                 (not (stringp rule-name)))))
      :menu-item-action
      #'(lambda ()
          (let* ((rule-name (edge-rule-number edge-record))
                 (rule (or (get-grammar-rule-entry rule-name)
                           (get-lex-rule-entry rule-name))))
-           (when rule
+           (if rule
              (display-fs (rule-full-fs rule)
-                         (format nil "~A" rule-name)))))))) 
+                         (format nil "~A" rule-name))
+             (let ((alternative (get-tdfs-given-id rule-name)))
+               (when alternative
+                 (display-fs alternative
+                             (format nil "~A" rule-name))))))))))
