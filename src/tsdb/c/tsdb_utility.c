@@ -1978,7 +1978,6 @@ char** tsdb_condition_attributes(Tsdb_node *node,
   BOOL kaerb;
 
   if (!node) return attributes;
-  
   if (node->node->type == TSDB_CONNECTIVE) {
     attributes = tsdb_condition_attributes(node->left,attributes,
                                              s_attributes);
@@ -1996,16 +1995,18 @@ char** tsdb_condition_attributes(Tsdb_node *node,
           kaerb = TRUE;
       
       if (!kaerb) {
+        attributes[i] = NULL;
         if (!tsdb_is_attribute(node->node)) {
           fprintf(tsdb_error_stream,
                   "condition_attributes: %s is not an attribute\n",
                   node->node->value.string);
-          attributes[i] = NULL;
         }
         else {
           if (!(i<*s_attributes)) {
             *s_attributes *= 2;
             attributes = (char**)realloc(attributes,*s_attributes*sizeof(char*));
+            memset(((char*)attributes)+(*s_attributes)/2,'\0',
+                   (*s_attributes)/2*sizeof(char*));
           }
           attributes[i++] = strdup(node->node->value.string);
         } /* else */
