@@ -11,16 +11,34 @@
 --
 
 CREATE OR REPLACE FUNCTION public.ext_fns() RETURNS SETOF text AS '
-	SELECT val FROM public.meta WHERE var=\'ext-fn\';
-' LANGUAGE sql;
+DECLARE
+	x RECORD;
+BEGIN
+	FOR x IN
+		SELECT val FROM public.meta WHERE var=\'ext-fn\'
+		LOOP
+		RETURN NEXT x.val;
+	END LOOP;
+	RETURN;
+END;
+' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.server_version() RETURNS text AS '
 	select split_part((select version()),\' \',2)
 ' LANGUAGE sql;
 
 CREATE OR REPLACE FUNCTION public.supported_server_versions() RETURNS SETOF text AS '
-	SELECT val FROM public.meta WHERE var=\'supported-server\';
-' LANGUAGE sql;
+DECLARE
+	x RECORD;
+BEGIN
+	FOR x IN
+		SELECT val FROM public.meta WHERE var=\'supported-server\'
+		LOOP
+		RETURN NEXT x.val;
+	END LOOP;
+	RETURN;
+END;
+' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.check_server_version() RETURNS SETOF text AS '
 DECLARE
