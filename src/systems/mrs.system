@@ -181,6 +181,7 @@
        :components
        ((:file "translate")))           ; collection of crude MT functions
 
+     #+:lkb
      (:module "semi"
        :source-pathname "mrs"
        :binary-pathname "mrs"
