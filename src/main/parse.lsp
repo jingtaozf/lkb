@@ -1160,10 +1160,18 @@ Setting *first-only-p* to nil")
    (clear-type-cache)
    (format t "~%;;; Parsing test file~%") (finish-output t)
    (let ((nsent 0)
+         (*dag-recycling-p* t)
          (*print-right-margin* 300)
          (start-time (get-internal-run-time)))
-      (loop
-         (when (eql raw-sentence 'eof) (return))
+     (unwind-protect
+       (loop
+         (when (eql raw-sentence 'eof)
+           (format t "~%;;; Finished test file")
+           (when ostream
+             (format ostream "~%;;; Total CPU time: ~A msecs~%" 
+                (- (get-internal-run-time) start-time)))
+           (lkb-beep)
+           (return))
          (when (eql (rem nsent 50) 49)
             (clear-expanded-lex))      ; try and avoid image increasing
                                        ; at some speed cost
@@ -1204,11 +1212,8 @@ Setting *first-only-p* to nil")
                do
                (pushnew lex-id *lex-ids-used*))
             (setq raw-sentence (read-line istream nil 'eof))))
-      (format t "~%;;; Finished test file")
-      (when ostream
-        (format ostream "~%;;; Total CPU time: ~A msecs~%" 
-                (- (get-internal-run-time) start-time)))
-      (lkb-beep)))
+       (clear-chart)))) ; prevent any recycled dags from hanging around
+
 
 (defun edge-count nil
   (let ((distinct-parse-edges nil))

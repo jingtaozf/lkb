@@ -173,7 +173,8 @@ output results
                (tgc nil)
                (tcpu nil)
                (treal nil)
-               (errorp nil))
+               (errorp nil)
+               (*dag-recycling-p* t))
            (if (not (mrs::make-scoped-mrs mrs))
                (format ostream "~%#| Scope failure: ~A |#" sentence)  
              ;;; check for scoping, because incorrect MRS often
@@ -195,6 +196,7 @@ output results
                         (setq treal tr)
                         ))
                  (declare (ignore unifs-tried unifs-failed))
+                 (clear-gen-chart) ; prevent any recycled dags from hanging around
                  (unless (and (integerp active)
                               (integerp inactive))
                    (setf errorp t)
