@@ -976,16 +976,16 @@
                        with result = (rule-full-fs rule)
                        with leaves = nil
                        with lex-ids = nil
-                       with rels = nil
+                       with rels = 0
                        with lexemes = nil
                        for path in paths
                        for child in children 
                        for tdfs = (or (edge-odag child) (edge-dag child))
                        when (g-edge-p child) do
-                         (setf rels (append rels (g-edge-rels-covered child)))
+                         (setf rels (logior rels (g-edge-rels-covered child)))
                          (setf lexemes (append lexemes (g-edge-lexemes child)))
                        while result do
-                         (setf leaves (append lex-ids (edge-leaves child)))
+                         (setf leaves (append leaves (edge-leaves child)))
                          (setf lex-ids (append lex-ids (edge-lex-ids child)))
                          (setf result (yadu! result tdfs path))
                        finally
@@ -998,7 +998,6 @@
                                    (make-g-edge
                                     :id (next-edge) :rule rule :dag copy
                                     :category (indef-type-of-tdfs copy)
-                                    :from (edge-from edge) :to (edge-to edge)
                                     :children children 
                                     :leaves leaves :lex-ids lex-ids
                                     :rels-covered rels :lexemes lexemes)
