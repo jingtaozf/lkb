@@ -339,6 +339,7 @@ duplicate variables")
       (when rawp (return-from extract-pred-from-rel-fs pred))
       (if (and pred-type
                (not (is-top-type pred-type))
+               #+:logon
                (not (is-top-semantics-type pred-type)))
         pred-type
         (unless *rel-name-path* (fs-type rel-fs)))))
