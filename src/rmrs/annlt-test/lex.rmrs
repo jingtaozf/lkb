@@ -1,96 +1,96 @@
+
 <le>
-<tag> NN1
+<tag>NN1</tag>
 <semstruct>
- <hook><index> x
- <ep> <pred><arg> x </ep> 
+<hook><index>X</index></hook>
+<ep><pred></pred><arg>X</arg></ep>
 </semstruct>
 </le>
 
 <le>
-<tag> NN2
+<tag>NN2</tag>
 <semstruct>
- <hook><index> x
- <ep> <pred><arg> x </ep> 
+<hook><index>X</index></hook>
+<ep><pred></pred><arg>X</arg></ep>
 </semstruct>
 </le>
 
 <le>
-<tag> NP1
+<tag>NP1</tag>
 <semstruct>
- <hook><index> x
- <ep> <pred><arg> x </ep> 
+<hook><index>X</index></hook>
+<ep><pred></pred><arg>X</arg></ep>
 </semstruct>
 </le>
 
 <le>
-<tag> VV0
+<tag>VV0</tag>
 <semstruct>
- <hook><index> e
- <ep> <pred><arg> e </ep>
-</semstruct> 
-</le>
-
-<le>
-<tag> VBZ
-<semstruct>
- <hook><index> e
- <ep> <pred><arg> e </ep>
-</semstruct> 
-</le>
-
-<le>
-<tag> VVN
-<semstruct>
- <hook><index> e
- <ep> <pred><arg> e </ep>
-</semstruct> 
-</le>
-
-<le>
-<tag> VVD
-<semstruct>
- <hook><index> e
- <ep> <pred><arg> e </ep>
-</semstruct> 
-</le>
-
-<le>
-<tag> DDQ
-<semstruct>
- <hook><index> x
- <ep> <pred><arg> x </ep> 
+<hook><index>E</index></hook>
+<ep><pred></pred><arg>E</arg></ep>
 </semstruct>
 </le>
 
 <le>
-<tag> AT
+<tag>VBZ</tag>
 <semstruct>
- <hook><index> x
- <ep> <pred><arg> x </ep> 
+<hook><index>E</index></hook>
+<ep><pred></pred><arg>E</arg></ep>
 </semstruct>
 </le>
 
 <le>
-<tag> II
+<tag>VVN</tag>
 <semstruct>
- <hook><index> e
- <ep> <pred><arg> e </ep>
-</semstruct> 
+<hook><index>E</index></hook>
+<ep><pred></pred><arg>E</arg></ep>
+</semstruct>
 </le>
 
 <le>
-<tag> IO
+<tag>VVD</tag>
 <semstruct>
- <hook><index> e
- <ep> <pred><arg> e </ep>
-</semstruct> 
+<hook><index>E</index></hook>
+<ep><pred></pred><arg>E</arg></ep>
+</semstruct>
 </le>
 
 <le>
-<tag> JJ
+<tag>DDQ</tag>
 <semstruct>
- <hook><index> x
- <ep> <pred><arg> x </ep>
-</semstruct> 
+<hook><index>X</index></hook>
+<ep><pred></pred><arg>X</arg></ep>
+</semstruct>
 </le>
 
+<le>
+<tag>AT</tag>
+<semstruct>
+<hook><index>X</index></hook>
+<ep><pred></pred><arg>X</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>II</tag>
+<semstruct>
+<hook><index>E</index></hook>
+<ep><pred></pred><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>IO</tag>
+<semstruct>
+<hook><index>E</index></hook>
+<ep><pred></pred><arg>E</arg></ep>
+</semstruct>
+</le>
+
+<le>
+<tag>JJ</tag>
+<semstruct>
+<hook><index>X</index></hook>
+<ep><pred></pred><arg>X</arg></ep>
+</semstruct>
+</le>

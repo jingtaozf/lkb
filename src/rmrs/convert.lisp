@@ -21,7 +21,7 @@ grammar-specific.
 
 |#
 
-(defparameter lkb::*do-something-with-parse* 'mrs::batch-output-rmrs)
+;;; (defparameter lkb::*do-something-with-parse* 'mrs::batch-output-rmrs)
 
 (defun batch-output-rmrs nil
   ;;; to be called from LKB batch processing
@@ -30,15 +30,15 @@ grammar-specific.
                           (streamp lkb::*ostream*) 
                           (output-stream-p lkb::*ostream*)) 
                      lkb::*ostream*  t)))
-    (if *parse-record*
-        (progn
-          (format ostream "~%;;; MRS for: ~A " sentence)
-          (loop for parse in *parse-record*
-               do
-                (let* ((mrs-struct (extract-mrs parse))
-                       (rmrs-struct (simple-mrs-to-rmrs mrs-struct)))
-                 (output-rmrs1 rmrs-struct 'xml ostream))))
-      (format ostream "~%;;; Parse failure: ~A " sentence))
+    (format ostream "~%<sentence>")
+    (format ostream
+            "~%<s>~%~A~%</s>" sentence)
+    (loop for parse in *parse-record*
+        do
+          (let* ((mrs-struct (extract-mrs parse))
+                 (rmrs-struct (simple-mrs-to-rmrs mrs-struct)))
+            (output-rmrs1 rmrs-struct 'xml ostream)))
+    (format ostream "~%</sentence>")
     (finish-output ostream)))
   
 

@@ -67,11 +67,11 @@ produced by robust parsers of various types.
 ;;; ANNLT tree output
 
  :pa :mrs
- (read-rmrs-grammar "rmrs/annlt-test/gram.rmrs")
- (read-rmrs-tag-templates "rmrs/annlt-test/lex.rmrs")
+ (read-rmrs-grammar "../annlt-data/gram.rmrs")
+ (read-rmrs-tag-templates "../annlt-data/lex.rmrs")
   ;;; functions for ANNLT version are in annlt.lisp
-  (rmrs-from-file "rmrs/annlt-test/ques.parses-ti-ph-st" "foo")
-  (rmrs-from-file1 "rmrs/annlt-test/t2.data")
+  (rmrs-from-file "/usr/groups/corpora/trec8qa/parses/14.parses-st" 
+  "../results/14.rmrsout")
  
 |#
 

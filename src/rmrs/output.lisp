@@ -33,15 +33,19 @@
 
 (defmethod rmrs-output-start-ep ((rmrsout xml) predname)
   (with-slots (stream) rmrsout
-    (format stream "~%<ep> <realpred> ~A " predname)))
+    (format stream "~%<ep><realpred>~A</realpred>" predname)))
 
 (defmethod rmrs-output-arg-fn ((rmrsout xml))
   (with-slots (stream) rmrsout
     (format stream "<arg>")))
 
+(defmethod rmrs-output-end-arg-fn ((rmrsout xml))
+  (with-slots (stream) rmrsout
+    (format stream "</arg>")))
+
 (defmethod rmrs-output-var-fn ((rmrsout xml) var-string)
   (with-slots (stream) rmrsout
-    (format stream " ~A " var-string)))
+    (format stream "~A" var-string)))
 
 (defmethod rmrs-output-end-ep ((rmrsout xml))
   (with-slots (stream) rmrsout
@@ -84,7 +88,8 @@
                 (if (var-p value)
                     (rmrs-output-var-fn 
                      *rmrs-display-structure*
-                     (find-rmrs-var-name value bindings))))
+                     (find-rmrs-var-name value bindings)))
+                (rmrs-output-end-arg-fn *rmrs-display-structure*))
           (rmrs-output-end-ep *rmrs-display-structure*))
     (rmrs-output-end-eps *rmrs-display-structure*)))
 

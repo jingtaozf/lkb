@@ -38,12 +38,27 @@
       (loop (let* ((original (read istream nil nil))
                    (id (read istream nil nil))
                    (tree (read istream nil nil)))
+              (declare (ignore id))
               (unless tree (return))
+              (format ostream "~%<sentence>")
               (format ostream
-                      "~%~S ~A"
-                      original id)
+                      "~%<s>~%~A~{ ~A~}~A~%</s>"
+                      (car original) (cdr original)
+                      (if (member (car (last original)) 
+                                  '("." "?" "!") :test #'equal)
+                          ""
+                        " ."))
+              ;;; put spaces in between words but not at end.
+              ;;;
+              ;;; put a full stop at the end unless there's already
+              ;;; some end of sentence punctuation there
+              (format ostream
+                      "~%<tree>~%~S~%</tree>"
+                      tree)
               (handler-case
-                  (construct-sem-for-tree tree ostream)
+                  (progn
+                    (construct-sem-for-tree tree ostream)
+                    (format ostream "</sentence>"))
                 (storage-condition (condition)
                   (format ostream "~%Memory allocation problem: ~A~%" condition))
                 (error (condition)

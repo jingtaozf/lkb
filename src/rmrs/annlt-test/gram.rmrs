@@ -1,140 +1,137 @@
-<rule>
-<name>NP/det_n</name> 
-<dtrs> Det N </dtrs>
-<head> N
-<eq> Det.index N.index </eq>
-</rule>
 
 <rule>
-<name>NP/name_n1</name> 
-<dtrs> Det N </dtrs>
-<head> N
-<eq> Det.index N.index </eq>
-</rule>
-
-<rule>
-<name>N1/ap_n1/-</name> 
-<dtrs> Adj N </dtrs>
-<head> N
-<eq> Adj.index N.index </eq>
-</rule>
-
-<rule>
-<name>N1/n1_nm/-</name> 
-<dtrs> N1 NM </dtrs>
-<head> N1
-<eq> N1.index NM.index </eq>
-</rule>
-
-<rule>
-<name>V/np</name>
-<dtrs> V NP </dtrs>
-<head> V
-<semstruct> 
- <hook><index> e
- <ep> <realpred> ARG2 <arg> e <arg> x </ep> 
-</semstruct>
-<eq> V.index e </eq>
-<eq> NP.index x </eq>
-</rule>
-
-<rule>
-<name>S/np_vp</name>
-<dtrs> NP VP </dtrs>
-<head> VP
+<name>VP/vp_pp</name>
+<dtrs>VP PP</dtrs>
+<head>VP</head>
 <semstruct>
- <hook><index> e 
- <ep> <realpred> ARG1 <arg> e <arg> x </ep>
+<hook><index>E</index></hook>
+<ep><realpred>ARGN</realpred><arg>E</arg><arg>E1</arg></ep>
 </semstruct>
-<eq> VP.index e </eq>
-<eq> NP.index x </eq>
-</rule>
-
-<rule>
-<name>S/whnp_s</name>
-<dtrs> WHNP VP </dtrs>
-<head> VP
-<semstruct>
- <hook><index> e 
- <ep> <realpred> ARGN <arg> e <arg> x </ep>
-</semstruct>
-<eq> VP.index e </eq>
-<eq> WHNP.index x </eq>
-</rule>
-
-<rule>
-<name>S/sai/-</name>
-<dtrs> AUX S </dtrs>
-<head> S
-<eq> S.index AUX.index </eq>
-</rule>
-
-<rule>
-<name>N1/n</name>
-<dtrs> N </dtrs>
-<head> N
-</rule>
-
-<rule>
-<name>NP/n1_name/-</name>
-<dtrs> N </dtrs>
-<head> N
-</rule>
-
-<rule>
-<name>A1/a</name>
-<dtrs> A </dtrs>
-<head> A
-</rule>
-
-<rule>
-<name>V/0</name>
-<dtrs> V </dtrs>
-<head> V
-</rule>
-
-<rule>
-<name>AP/a1</name>
-<dtrs> A1 </dtrs>
-<head> A1
-</rule>
-
-<rule>
-<name>PP/p1</name>
-<dtrs> P1 </dtrs>
-<head> P1
-</rule>
-
-<rule>
-<name>T/txt-sc1/-+-</name>
-<dtrs> S </dtrs>
-<head> S
+<eq>E1 PP.INDEX</eq>
+<eq>E VP.INDEX</eq>
 </rule>
 
 <rule>
 <name>P1/p_np</name>
-<dtrs> P NP </dtrs>
-<head> P
-<semstruct> 
- <hook><index> e
- <ep> <realpred> ARG2 <arg> e <arg> x </ep> 
+<dtrs>P NP</dtrs>
+<head>P</head>
+<semstruct>
+<hook><index>E</index></hook>
+<ep><realpred>ARG2</realpred><arg>E</arg><arg>X</arg></ep>
 </semstruct>
-<eq> P.index e </eq>
-<eq> NP.index x </eq>
+<eq>X NP.INDEX</eq>
+<eq>E P.INDEX</eq>
 </rule>
 
 <rule>
-<name>VP/vp_pp</name>
-<dtrs> VP PP </dtrs>
-<head> VP
-<semstruct> 
- <hook><index> e
- <ep> <realpred> ARGN <arg> e <arg> e1 </ep> 
-</semstruct>
-<eq> VP.index e </eq>
-<eq> PP.index e1 </eq>
+<name>T/txt-sc1/-+-</name>
+<dtrs>S</dtrs>
+<head>S</head>
 </rule>
 
+<rule>
+<name>PP/p1</name>
+<dtrs>P1</dtrs>
+<head>P1</head>
+</rule>
 
+<rule>
+<name>AP/a1</name>
+<dtrs>A1</dtrs>
+<head>A1</head>
+</rule>
 
+<rule>
+<name>V/0</name>
+<dtrs>V</dtrs>
+<head>V</head>
+</rule>
 
+<rule>
+<name>A1/a</name>
+<dtrs>A</dtrs>
+<head>A</head>
+</rule>
+
+<rule>
+<name>NP/n1_name/-</name>
+<dtrs>N</dtrs>
+<head>N</head>
+</rule>
+
+<rule>
+<name>N1/n</name>
+<dtrs>N</dtrs>
+<head>N</head>
+</rule>
+
+<rule>
+<name>S/sai/-</name>
+<dtrs>AUX S</dtrs>
+<head>S</head>
+<eq>AUX.INDEX S.INDEX</eq>
+</rule>
+
+<rule>
+<name>S/whnp_s</name>
+<dtrs>WHNP VP</dtrs>
+<head>VP</head>
+<semstruct>
+<hook><index>E</index></hook>
+<ep><realpred>ARGN</realpred><arg>E</arg><arg>X</arg></ep>
+</semstruct>
+<eq>X WHNP.INDEX</eq>
+<eq>E VP.INDEX</eq>
+</rule>
+
+<rule>
+<name>S/np_vp</name>
+<dtrs>NP VP</dtrs>
+<head>VP</head>
+<semstruct>
+<hook><index>E</index></hook>
+<ep><realpred>ARG1</realpred><arg>E</arg><arg>X</arg></ep>
+</semstruct>
+<eq>X NP.INDEX</eq>
+<eq>E VP.INDEX</eq>
+</rule>
+
+<rule>
+<name>V/np</name>
+<dtrs>V NP</dtrs>
+<head>V</head>
+<semstruct>
+<hook><index>E</index></hook>
+<ep><realpred>ARG2</realpred><arg>E</arg><arg>X</arg></ep>
+</semstruct>
+<eq>X NP.INDEX</eq>
+<eq>E V.INDEX</eq>
+</rule>
+
+<rule>
+<name>N1/n1_nm/-</name>
+<dtrs>N1 NM</dtrs>
+<head>N1</head>
+<eq>NM.INDEX N1.INDEX</eq>
+</rule>
+
+<rule>
+<name>N1/ap_n1/-</name>
+<dtrs>ADJ N</dtrs>
+<head>N</head>
+<eq>N.INDEX ADJ.INDEX</eq>
+</rule>
+
+<rule>
+<name>NP/name_n1</name>
+<dtrs>DET N</dtrs>
+<head>N</head>
+<eq>N.INDEX DET.INDEX</eq>
+</rule>
+
+<rule>
+<name>NP/det_n</name>
+<dtrs>DET N</dtrs>
+<head>N</head>
+<eq>N.INDEX DET.INDEX</eq>
+</rule>
