@@ -375,17 +375,17 @@
 				    common-subtypes))
                     :test #'eq)))
 	      (cond ((not (cdr greatest-common-subtype-list))
-		     (let* ((gcsubtype-entry (car greatest-common-subtype-list))
-                           (gcsubtype (type-name gcsubtype-entry)))
-		       (values gcsubtype
+		     (let ((gcsubtype-entry (car greatest-common-subtype-list)))
+		       (values (type-name gcsubtype-entry)
                                (if (extra-constraint-p 
                                     gcsubtype-entry
                                     t1 t2) t))))
 		    ;; return true as the second value if there is a
 		    ;; constraint that may have to be unified in
 		    (greatest-common-subtype-list
-		     (error "~%~A and ~B have multiple common subtypes "
-			    (mapcar #'(lambda (x) (type-name x)) 
+		     (error "~%~A and ~A have multiple common subtypes ~A"
+			    type1 type2
+                            (mapcar #'(lambda (x) (type-name x)) 
                                     greatest-common-subtype-list)))
 		    (t (error 
 			"~%Error found in type hierarchy"))))))))))
