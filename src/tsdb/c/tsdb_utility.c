@@ -1479,12 +1479,6 @@ BOOL tsdb_initialize() {
   int i, j;
 #endif
 
-#ifdef DEBUG
-  if((tsdb_debug_stream = tsdb_open_debug()) == NULL) {
-    tsdb_debug_stream = tsdb_error_stream;
-  } /* if */
-#endif
-
   tsdb_parse_environment();
 
   if(!(tsdb.status & TSDB_SERVER_MODE) && tsdb.port) {
@@ -1503,6 +1497,20 @@ BOOL tsdb_initialize() {
       tsdb.port = TSDB_SERVER_PORT;
     } /* if */
   } /* if */
+
+#ifdef DEBUG
+  if(tsdb.status & TSDB_SERVER_MODE) {
+    if(tsdb.debug_file != NULL) {
+      free(tsdb.debug_file);
+    } /* if */
+    /* fix me: determine appropriate length for .port. */
+    tsdb.debug_file = (char *)malloc(strlen("/tmp/tsdb.debug.") + 42);
+    (void)sprintf(tsdb.debug_file, "/tmp/tsdb.debug.%d", tsdb.port);
+  } /* if */
+  if((tsdb_debug_stream = tsdb_open_debug()) == NULL) {
+    tsdb_debug_stream = tsdb_error_stream;
+  } /* if */
+#endif
 
   if((tsdb.status & TSDB_SERVER_MODE) && tsdb.query != NULL) {
     fprintf(tsdb_debug_stream,
