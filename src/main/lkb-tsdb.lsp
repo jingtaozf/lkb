@@ -98,8 +98,8 @@ e.g.
 (proclaim '(special *do-something-with-parse*))
 
 (defun parse-tsdb-sentences2 (istream line parse-file result-file &aux (nsent 0))
-   ;; open and close output files for each sentence, so if run fails we have all
-   ;; results in them until that point
+   ;; open and close output files for each sentence, so if run fails for some reason
+   ;; we have all results in them until that point
    (clear-type-cache)
    (unwind-protect
       (loop
@@ -111,35 +111,55 @@ e.g.
             (when (eql (rem nsent 50) 1)
                ;; remove all cached lexical entries at start and after every 50 sentences
                (uncache-lexical-entries))
+            (format t " ~A" id) (finish-output)
             (if (> (length words) *chart-limit*)
                (error "Sentence ~A too long" id)
-               (let ((start (get-internal-run-time)))
+               (let* ((*print-pretty* nil) (*print-level* nil) (*print-length* nil)
+                      (str (make-string-output-stream)) ; capture any warning messages
+                      (*standard-output* (make-broadcast-stream *standard-output* str))
+                      (real (get-internal-real-time))
+                      (run (get-internal-run-time))
+                      (gcs #+mcl (ccl:gccounts) #-mcl 0)
+                      (bytes #+mcl (ccl::total-bytes-allocated) #-mcl 0))
                   (multiple-value-bind (unifs fails)
                         (parse-tsdb-sentence words)
                      (declare (ignore fails))
-                     (let ((n 0)
-                           (time ; in tenths of secs
-                              (round (* (- (get-internal-run-time) start) 10)
-                                 internal-time-units-per-second))
-                           (*print-pretty* nil))
+                     (let* ((bytes #+mcl (- (ccl::total-bytes-allocated) bytes) #-mcl -1)
+                            (gcs #+mcl (- (ccl:gccounts) gcs) #-mcl -1)
+                            (run
+                               (round (* (- (get-internal-run-time) run) 10)
+                                  internal-time-units-per-second))
+                            (real ; in tenths of secs
+                               (round (* (- (get-internal-real-time) real) 10)
+                                  internal-time-units-per-second))
+                            (msgs
+                               (substitute #\; #\newline
+                                  (string-trim '(#\newline #\space) (get-output-stream-string str))))
+                            (n 0))
                         (with-open-file (ostream parse-file :direction :output
                                            :if-exists :append :if-does-not-exist :create)
                            (format ostream "~@{~A~^@~}~%"
-                              id 1 id (length *parse-record*) time time -1 -1 -1 -1 -1 -1
-                              -1 *edge-id* unifs -1 -1 -1 -1 -1 -1 -1
+                              id 1 id (length *parse-record*)
+                              run run run 0 real -1 -1 -1
+                              (reduce #'+ *morphs* :key
+                                 #'(lambda (x)
+                                     (if (morph-edge-p x) (length (morph-edge-morph-results x)) 0)))
+                              *edge-id* unifs -1 -1 -1 bytes gcs -1 -1
                               (multiple-value-bind (sec min hour day mon year)
                                    (decode-universal-time (get-universal-time))
                                  (format nil "~A-~A-~A ~2,'0D:~2,'0D:~2,'0D" day
                                     (aref #("jan" "feb" "mar" "apr" "may" "jun" "jul"
                                             "aug" "sep" "oct" "nov" "dec") (1- mon))
                                     year hour min sec))
-                              ""))
+                              msgs))
                         (with-open-file (ostream result-file :direction :output
                                            :if-exists :append :if-does-not-exist :create)
                            (dolist (parse *parse-record*)
-                              (format ostream "~A@~A@~A@~A@-1@-1@-1@-1@@~S@~%"
-                                 id n time *edge-id* (parse-tree-structure parse))
-                              (setq time 0) ; zero time for all parses after first
+                              (format ostream "~@{~A@~}"
+                                 id n run *edge-id* -1 -1 -1 -1)
+                              (format ostream "~A@~S@~A~%"
+                                 "" (parse-tree-structure parse) "")
+                              (setq run 0) ; zero time for all parses after first
                               (incf n))))))))
          (setq line (read-line istream nil 'eof)))
      (uncache-lexical-entries)))
