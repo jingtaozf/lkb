@@ -75,7 +75,7 @@
                                     ; expanded at load time
 	       (:file "lex")        ; lexical structures, also templates etc
 	       #+plob (:file "plex")    ; lexical database 
-               #+:oe
+               #+:ltemplates
                (:file "ltemplates") ; lexical templates (e.g. for cardinals)
 	       (:file "clex")       ; constant lexical database 
                (:file "rules")      ; grammar and lexical rules
