@@ -126,14 +126,15 @@ set compare_in_detail(compare,readings) 1;
 #
 # load table display modules by oliver (the genius) `plaehn@coli.uni-sb.de' 
 #
-source "$globals(podium_home)goodies.tcl"
-source "$globals(podium_home)table.tcl"
-source "$globals(podium_home)showtable.tcl"
-source "$globals(podium_home)showgraph.tcl"
-source "$globals(podium_home)utilities.tcl"
-source "$globals(podium_home)podium_commands.tcl"
-source "$globals(podium_home)input.tcl"
-source "$globals(podium_home)balloon.tcl"
+source "$globals(podium_home)goodies.tcl";
+source "$globals(podium_home)table.tcl";
+source "$globals(podium_home)showtable.tcl";
+source "$globals(podium_home)showgraph.tcl";
+source "$globals(podium_home)utilities.tcl";
+source "$globals(podium_home)podium_commands.tcl";
+source "$globals(podium_home)input.tcl";
+source "$globals(podium_home)balloon.tcl";
+source "$globals(podium_home)copyleft.tcl";
 
 #
 # log activity to trace file (for debugging)
@@ -164,13 +165,6 @@ proc main {} {
   # withdraw podium application until it is fully decorated
   #
   wm withdraw .
-
-  #
-  # spawn background task to register at Saarbruecken support site
-  #
-  if {[info commands oe] == "oe"} {
-    oe register "$globals(name) ($globals(version))" $globals(saarbruecken);
-  }; # if
 
   #
   # decorate top-level container and create menu bar
@@ -810,6 +804,18 @@ proc main {} {
   wm deiconify .
   tkwait visibility .
 
+  #
+  # read `.podiumrc' from user home directory if available
+  #
+  if {[file exists ~/.podiumrc]} {
+    set message "reading `[file nativename ~/.podiumrc]' ...";
+    status $message;
+    catch {source ~/.podiumrc};
+    after 1000;
+    status "$message done" 2;
+  }; # if
+
+  copyleft initialize;
   tsdb_update complete;
   update_graph_cascade ptimes;
 
@@ -822,16 +828,6 @@ proc main {} {
   $clist column width 1 [expr [winfo width $list] - $width * 2];
   $clist column width 2 $width;
 
-  #
-  # read `.podiumrc' from user home directory if available
-  #
-  if {[file exists ~/.podiumrc]} {
-    set message "reading `[file nativename ~/.podiumrc]' ...";
-    status $message;
-    catch {source ~/.podiumrc};
-    after 1000;
-    status "$message done" 2;
-  }; # if
   after 2000 idle;
 
 }; # main()
@@ -882,7 +878,7 @@ proc status {string {duration 0}} {
 
   set string " $string";
   set globals(status) $string;
-  raise .status.label
+  raise .status.label;
 
   if {$duration} {
     after [expr int($duration * 1000)] \

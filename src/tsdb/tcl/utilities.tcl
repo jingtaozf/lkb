@@ -11,6 +11,8 @@ proc update_skeleton_list {} {
     $menu add command -label $label -command [list tsdb_file create $i]
   }; # foreach
 
+  copyleft hide;
+
 }; # update_skeleton_list()
 
 
@@ -154,6 +156,13 @@ proc update_ts_list {{action update} {name all} {arg_one yes} {arg_two yes}} {
       }; # if
     }; # if
   }; # elseif
+
+  #
+  # as this is one of the more frequently called functions, place the safenet
+  # for the registrar background process here; just to make sure that poor
+  # zombie can eventually free its resources ...
+  #
+  oe reape;
 
 }; # update_ts_list()
 

@@ -180,7 +180,7 @@
     (when verbose
       (format 
        *tsdb-io*
-       "~&flush-cache(): flushing `~a' tsdb(1) cache ..."
+       "~&flush-cache(): flushing `~a' cache ..."
        database)
       (force-output *tsdb-io*))
     (format stream "~&commit.~%")

@@ -104,7 +104,7 @@
             "set globals(data) \"~a\"~%" (or *tsdb-data* ""))
     (force-output *tsdb-wish-stream*))
   (setf *tsdb-wish-process*
-    (mp:process-run-function (list :name "tsdb(1) podium")
+    (mp:process-run-function '(:name "tsdb(1) podium")
                              #'podium-loop)))
 
 (defun shutdown-podium ()
@@ -375,10 +375,8 @@
                            (equal (first (second return)) :text))
                   (push (append (second return)
                                 (pairlis 
-                                 (list :file 
-                                       :command)
-                                 (list file
-                                       (cons action arguments))))
+                                 '(:file :command)
+                                 (list file (cons action arguments))))
                         *tsdb-podium-windows*)))
               (status :text (format nil "~a done" message) :duration 3)))
 
@@ -416,8 +414,8 @@
                              (equal (first (second return)) :table))
                     (push (append (second return)
                                   (pairlis 
-                                   (list :file 
-                                         :command)
+                                   '(:file 
+                                     :command)
                                    (list file
                                          (append (rest arguments)
                                                  (list data :file file)))))
@@ -503,10 +501,8 @@
                            (equal (first (second return)) :table))
                   (push (append (second return)
                                 (pairlis 
-                                 (list :data 
-                                       :command)
-                                 (list data
-                                       (cons action arguments))))
+                                 '(:data :command)
+                                 (list data (cons action arguments))))
                         *tsdb-podium-windows*))))
             (status :text (format nil "~a done" message) :duration 2)))
 
@@ -535,10 +531,8 @@
                              (equal (first (second return)) :graph))
                     (push (append (second return)
                                   (pairlis 
-                                   (list :data 
-                                         :command)
-                                   (list database
-                                         (cons 'graph arguments))))
+                                   '(:data :command)
+                                   (list database (cons 'graph arguments))))
                           *tsdb-podium-windows*))))
               (status :text (format nil "~a done" message) :duration 2)))
 
@@ -567,10 +561,8 @@
                              (equal (first (second return)) :graph))
                     (push (append (second return)
                                   (pairlis 
-                                   (list :data 
-                                         :command)
-                                   (list database
-                                         (cons action arguments))))
+                                   '(:data :command)
+                                   (list database (cons action arguments))))
                           *tsdb-podium-windows*)))
                 (status :text (format nil "~a done" gmessage) :duration 2))))
 
@@ -623,9 +615,9 @@
                               (equal (first (second return)) :table))
                      (push (append (second return)
                                    (pairlis 
-                                    (list :file 
-                                          :data
-                                          :command)
+                                    '(:file 
+                                     :data
+                                     :command)
                                     (list file
                                           (format nil "~a@~a" source target)
                                           (cons action arguments))))
@@ -657,8 +649,8 @@
                            (equal (first (second return)) :table))
                   (push (append (second return)
                                 (pairlis 
-                                 (list :file 
-                                       :command)
+                                 '(:file 
+                                   :command)
                                  (list file
                                        (append (rest arguments)
                                                (list :file file)))))
@@ -741,10 +733,10 @@
              (not (eq mp:*current-process* *tsdb-wish-process*)))
     (mp:process-add-arrest-reason *tsdb-wish-process* :pending-events))
   (loop
-      while (and *tsdb-wish-stream* (streamp *tsdb-wish-stream*)
-                 %tsdb-podium-pending-events%)
+      while (and (streamp *tsdb-wish-stream*) %tsdb-podium-pending-events%)
       do (evaluate-remote-command (pop %tsdb-podium-pending-events%)))
-  (when *tsdb-wish-process*
+  (when (and *tsdb-wish-process*
+             (not (eq mp:*current-process* *tsdb-wish-process*)))
     (mp:process-revoke-arrest-reason *tsdb-wish-process* :pending-events)))
 
 (defun install-interrupt-handler (&optional (i 0))
