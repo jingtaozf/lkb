@@ -9,6 +9,8 @@
 
 (defparameter *www-port* 8000)
 
+(defparameter *www-log* (format nil "/tmp/www.log.~a" (tsdb::current-user)))
+
 (defparameter *www-lkb-css*
   (make-pathname
    :directory (pathname-directory 
@@ -27,7 +29,7 @@
                (dir-append (get-sources-dir "www") '(:relative "www")))
    :name "introduction.html"))
 
-(defparameter *www-maximal-number-of-edges* 500)
+(defparameter *www-maximal-number-of-edges* 5000)
 
 (defparameter *www-maximal-number-of-results* 10)
 
@@ -46,7 +48,7 @@
          (body (when (eq method :post) (get-request-body request)))
          (query (and body (form-urlencoded-to-query body)))
          (input (or (lookup-form-value "input" query)
-                    "howdy, just hit return in this window!"))
+                    "just try pressing return in this window!"))
          (exhaustivep 
           (let ((foo (lookup-form-value "exhaustivep" query)))
             (string-equal foo "all")))
@@ -127,15 +129,17 @@
                    (www-parse-input
                     input
                     :exhaustivep exhaustivep :treep treep :mrsp mrsp
-                    :stream *html-stream*))))))))))
+                    :request request :stream *html-stream*))))))))))
 
-(defparameter %www-parser-lock% (mp:make-process-lock))
+(defparameter %www-parse-lock% (mp:make-process-lock))
 
-(defparameter %www-mrs-lock% (mp:make-process-lock))
+(defparameter %www-visualize-lock% (mp:make-process-lock))
 
-(defun www-parse-input (input &key exhaustivep treep mrsp stream)
+(defparameter %www-log-lock% (mp:make-process-lock))
+
+(defun www-parse-input (input &key exhaustivep treep mrsp request stream)
   (let* ((result 
-          (mp:with-process-lock (%www-parser-lock%)
+          (mp:with-process-lock (%www-parse-lock%)
             (tsdb::parse-item 
              input 
              :exhaustive exhaustivep 
@@ -169,6 +173,7 @@
                        (ignore-errors 
                         (read-from-string (aref bar 0) nil nil))))
                    error))))
+    (when request (www-log request input readings time edges error))
     (cond
      ((null error)
       (format
@@ -181,40 +186,41 @@
        (min readings *www-maximal-number-of-results*)
        (min readings *www-maximal-number-of-results*) 
        readings time edges edges)
-      (loop
-          initially
-            (format 
-             stream 
-             "<form action=\"/lkb/browse\" method=post
-                    accept-charset=\"utf-8\">~%~
-              <table class=results>~%")
-          finally (format stream "</table></form>~%")
-          with results = (tsdb::get-field :results result)
-          for i from 1 to (or *www-maximal-number-of-results* readings)
-          for result in results
-          for derivation = (tsdb::get-field :derivation result)
-          for edge = (tsdb::reconstruct derivation)
-          for mrs = (mrs::extract-mrs edge)
-          do
-            (format 
-             stream 
-             "<tr>~%<td class=navigation>~%  <table class=navigation>~%    ~
-              <tr><td class=center>~%~
-              <div class=navigation># ~a</div></td></tr>~%    ~
-              <tr><td class=center>~
-              <input type=checkbox name=selection value=\"~a\">~
-              </td></tr>~%  ~
-              </table></td>~%"
-             i i)
-          when treep do
-            (format stream "<td class=tree>~%")
-            (lkb::edge2html edge stream)
-            (format stream "</td>~%")
-          when mrsp do
-            (format stream "<td class=mrs>~%")
-            (mrs::output-mrs1 mrs 'mrs::html stream)
-            (format stream "</td>~%")
-          do (format stream "</tr>")))
+      (mp:with-process-lock (%www-visualize-lock%)
+        (loop
+            initially
+              (format 
+               stream 
+               "<form action=\"/lkb/browse\" method=post
+                      accept-charset=\"utf-8\">~%~
+                <table class=results>~%")
+            finally (format stream "</table></form>~%")
+            with results = (tsdb::get-field :results result)
+            for i from 1 to (or *www-maximal-number-of-results* readings)
+            for result in results
+            for derivation = (tsdb::get-field :derivation result)
+            for edge = (tsdb::reconstruct derivation)
+            for mrs = (mrs::extract-mrs edge)
+            do
+              (format 
+               stream 
+               "<tr>~%<td class=navigation>~%  <table class=navigation>~%    ~
+                <tr><td class=center>~%~
+                <div class=navigation># ~a</div></td></tr>~%    ~
+                <tr><td class=center>~
+                <input type=checkbox name=selection value=\"~a\">~
+                </td></tr>~%  ~
+                </table></td>~%"
+               i i)
+            when treep do
+              (format stream "<td class=tree>~%")
+              (lkb::edge2html edge stream)
+              (format stream "</td>~%")
+            when mrsp do
+              (format stream "<td class=mrs>~%")
+              (mrs::output-mrs1 mrs 'mrs::html stream)
+              (format stream "</td>~%")
+            do (format stream "</tr>"))))
      ((integerp error)
       (format
        stream 
@@ -244,6 +250,19 @@
      (tsdb::current-grammar) 
      (subseq lkb::*cvs-version* 6 (- (length lkb::*cvs-version*) 2)))))
      
+
+(defun www-log (request input readings time edges error)
+  (mp:with-process-lock (%www-log-lock%)
+    (with-open-file (stream *www-log* :direction :output
+                     :if-does-not-exist :create :if-exists :append)
+      (let* ((socket (request-socket request))
+             (address (socket:remote-host socket))
+             (host (socket:ipaddr-to-hostname address)))
+        (format
+         stream
+         "[~a] www-log(): [~a] `~a' --- ~a (~,2f) <~a>~@[ error: `~(~a~)'~].~%"
+         (tsdb::current-time :long :pretty) 
+         host input readings time edges error)))))
 
 (defun lookup-form-value (name query)
   (loop
