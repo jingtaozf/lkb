@@ -91,6 +91,7 @@
 (defmethod store-leaf-type ((leaf-db trivial-leaf-database) name type-def)
   (with-slots (leaf-types) leaf-db
     (pushnew name *type-names* :test #'eq)
+    (pushnew name *ordered-type-list* :test #'eq)
     (pushnew name leaf-types :test #'eq)    
     (set-type-entry name type-def)))
 
@@ -175,6 +176,7 @@
                            #-allegro (copy-readtable nil)))
 	  (when entry
 	    (pushnew type *type-names* :test #'eq)
+	    (pushnew type *ordered-type-list* :test #'eq)
 	    (pushnew type leaf-types :test #'eq)    
 	    (set-type-entry type 
               (with-package (:lkb) (read-from-string entry)))))))))
