@@ -69,7 +69,6 @@ lkb_source:
 	      --exclude="*.fasl" \
 	      --exclude="src/doc*" --exclude="src/data*" \
 	      --exclude="linux*" --exclude="solaris*" --exclude="windows*" \
-	      --exclude="src/www*" --exclude=src/systems/www.system \
 	      --exclude="bin*" --exclude="include*" --exclude="lib*" \
 	      --exclude="man*" --exclude="doc*" --exclude="log*" \
 	      --exclude="etc*" --exclude=src/general/itsdb.lisp \

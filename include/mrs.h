@@ -21,6 +21,7 @@ initialize_mrs() {
   extern void init_READGRAM(cl_object);
   extern void init_READTAG(cl_object);
   extern void init_INPUT(cl_object);
+  extern void init_COMPARE(cl_object);
   extern void init_DEPENDENCIES(cl_object);
   read_VV(OBJNULL, init_LKB_PACKAGE);
   read_VV(OBJNULL, init_MRS_PACKAGE);
@@ -42,6 +43,7 @@ initialize_mrs() {
   read_VV(OBJNULL, init_READGRAM);
   read_VV(OBJNULL, init_READTAG);
   read_VV(OBJNULL, init_INPUT);
+  read_VV(OBJNULL, init_COMPARE);
   read_VV(OBJNULL, init_DEPENDENCIES);
 
 } /* initialize_mrs() */
