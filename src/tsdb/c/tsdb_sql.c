@@ -1124,14 +1124,16 @@ Tsdb_relation ***tsdb_real_join_path(Tsdb_relation **guess,
   } /* for */
 
 #if defined(DEBUG) && defined(JOIN_PATH)
-  fprintf(tsdb_debug_stream,
-          "real_join_path(): neighbours: %s",
-          (n_neighbours ? neighbours[0]->name : ""));
-  for(i = 1; i < n_neighbours; i++) {
-    fprintf(tsdb_debug_stream, " | %s", neighbours[i]->name);
-  } /* for */
-  fprintf(tsdb_debug_stream, "\n");
-  fflush(tsdb_debug_stream);
+  if(n_neighbours) {
+    fprintf(tsdb_debug_stream,
+            "real_join_path(): neighbours: %s",
+            (n_neighbours ? neighbours[0]->name : ""));
+    for(i = 1; i < n_neighbours; i++) {
+      fprintf(tsdb_debug_stream, " | %s", neighbours[i]->name);
+    } /* for */
+    fprintf(tsdb_debug_stream, "\n");
+    fflush(tsdb_debug_stream);
+  } /* if */
 #endif
 
   for(i = 0; i < n_neighbours; i++) {

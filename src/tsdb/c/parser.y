@@ -181,14 +181,16 @@ y_retrieval :
   Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list Y_WHERE y_condition {
     tsdb_complex_retrieve($4, $2, $6);
   }
-| Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list {
+|
+  Y_RETRIEVE y_attribute_list Y_FROM y_attribute_list {
     tsdb_complex_retrieve($4, $2, NULL);
   }
-| Y_RETRIEVE '*' Y_WHERE y_condition {
+|
+  Y_RETRIEVE '*' Y_WHERE y_condition {
     tsdb_complex_retrieve(NULL, NULL , $4);
   }
 |
-Y_RETRIEVE '*' Y_FROM y_attribute_list Y_WHERE y_condition {
+  Y_RETRIEVE '*' Y_FROM y_attribute_list Y_WHERE y_condition {
     tsdb_complex_retrieve($4, NULL, $6);
   }
 | Y_RETRIEVE '*' Y_FROM y_attribute_list {
@@ -460,7 +462,7 @@ y_special :
 ;
 
 y_test :
-  Y_TEST y_attribute_list '>' y_attribute_list {
+  Y_TEST y_attribute_list Y_GREATER y_attribute_list {
     tsdb_debug_join_path($2, $4);
   }
 |
