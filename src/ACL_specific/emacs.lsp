@@ -23,7 +23,34 @@
 (defun edit-file (thing file)
   (when (lep:lep-is-running)
     (lep::eval-in-emacs (format nil "(find-tdl-definition \"~a\" \"~a\")"
-				thing file))))
+				thing 
+				#+:mswindows
+				(convert-backslashes-in-filename
+				 (format nil "~A" file))
+				#-:mswindows file))))
+
+(defun convert-backslashes-in-filename (str)
+  ;;; apparently needed for Windoze because the emacs interface
+  ;;; can't cope with the backslashes in the filename - doesn't
+  ;;; recognise them as escaped.  However, emacs accepts the
+  ;;; *nix forward slash syntax, so ...
+  ;;; e.g.
+  ;;; "D:\\lingo\\lkb\\src\\data\\esslli2k\\grammars\\grammar1\\types.tdl"
+  ;;; to
+  ;;; "D:/lingo/lkb/src/data/esslli2k/grammars/grammar1/types.tdl"
+  (let ((char-list (coerce str 'list))
+	(res nil))
+    (loop (unless char-list (return))
+      (let ((first (car char-list)))
+	(setf char-list (cdr char-list))
+	(if (eql first #\\)
+	    (progn
+	      (when (eql (car char-list) #\\)
+		(setf char-list (cdr char-list)))
+	      (push #\/ res))
+	  (push first res))))
+    (coerce (nreverse res) 'string)))
+    
 
 ;; Redefine a single type
 
