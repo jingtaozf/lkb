@@ -110,12 +110,9 @@ rule.
 
 21. Tobacco arrived.
 
-This one works because of the S/n1_vp rule - probably OK to
-fix by putting construction semantics on it, but need to come back to this
-after looking in the larger corpora to see where the rule applies.
-
-Jan 1 - application is a mixed bag - seem to be a lot of errors.  But overall,
-putting the quantifier on here looks like the right thing to do.
+This one works because of the S/n1_vp rule - its application is a mixed bag -
+seem to be a lot of errors.  But overall, putting the quantifier on here looks
+like the right thing to do.
 
 22. Some bark.
 
@@ -203,15 +200,14 @@ set of values for tense etc yet ...
 The second is that the auxiliary will contribute a rel in RASP because all
 have a contentful equivalent which isn't straightforward to distinguish.
 
+End of comparison notes!
+
 36. The dog has barked. 
 37. The dog has been barking.
 38. The dog had been barking.
 39. The dog will bark.
 40. The dog is going to bark.
 41. The dog could bark.
-
-
-
 42. The dog couldn't bark. 
 43. The old dog barked.
 44. The dog barked softly.

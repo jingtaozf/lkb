@@ -6,13 +6,17 @@
 
 ;;; convert an MRS structure to an RMRS  
 
+;;; settings for qa
+;;; (defparameter *unknown-word-types* '(n_proper_le))
 ;;; (defparameter lkb::*do-something-with-parse* 'mrs::batch-output-rmrs)
 
 (defparameter *mrs-to-rmrs-conversion-warnings* nil)
 
 (defun warn-rmrs-problem (str)
-#+:lkb  (push lkb::*parse-input* *mrs-to-rmrs-conversion-warnings*)
+  #+:lkb  (push lkb::*parse-input* *mrs-to-rmrs-conversion-warnings*)
   (push str *mrs-to-rmrs-conversion-warnings*))
+
+(defparameter *qa-count* 1)
 
 #+:lkb
 (defun batch-output-rmrs nil
@@ -21,7 +25,8 @@
                           (streamp lkb::*ostream*) 
                           (output-stream-p lkb::*ostream*)) 
                      lkb::*ostream*  t)))
-    (format ostream "~%<S>")
+    (format ostream "~%<S id='~A'>" *qa-count*)
+    (setf *qa-count* (+ 1 *qa-count*))
     (if sentence
         (format ostream
                 "~%<string>~%~S~%</string>" sentence)
@@ -61,6 +66,7 @@
 ;;; Full MRS to RMRS conversion
 
 (defun mrs-to-rmrs (mrs)
+  (initialize-rmrs-variables)
   (let ((lzt (psoa-liszt mrs))
         (new-lzt nil)
         (new-args nil)
@@ -215,7 +221,10 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
 
 
 (defun rmrs-convert-variable (var)
-  (make-var :type (var-type var)
+  (make-var :type (if (member (var-type var) '("x" "e" "h" "u" "l")
+                              :test #'equal)
+                      (var-type var)
+                    "u")
 	    :id (var-id var)))
 	    
 ;;;	    :extra (rmrs-convert-var-extra (var-extra var))))
