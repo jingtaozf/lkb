@@ -25,7 +25,7 @@
   (if (null (fields-map lexicon))
 ;      (format t "~%WARNING: empty fields map in ~a mode ~a !!!" 
 ;              (dbname lexicon) (fields-tb lexicon))
-      (error "~%No fields mapping defined for DB ~a in mode ~a. (Enter psql and execute \"COPY defn FROM 'PATH_TO_X.dfn';\" where X.dfn is eg. lexicon.dfn)" 
+      (error "~%No definitions for :table mode='~a' found in DB table public.defn. (Hint: check the value of :table in *psql-lexicon-parameters*, ensure DB table public.defn matches the definitions in lexicon.dfn. If necessary 'Merge new entries' from LexDB menu)" 
               (dbname lexicon) (fields-tb lexicon))
     )
   (fields-map lexicon))

@@ -91,20 +91,24 @@
                                 (port (extract-param :port *psql-lexicon-parameters*))
                                 (user (extract-param :user *psql-lexicon-parameters*))
 				)
-  (unless (and db host table)
-    (error "please instantiate db+host+table in *psql-lexicon-parameters*"))
+  (unless (and db host)
+    (error "please instantiate db+host in *psql-lexicon-parameters*"))
   (let ((part-of))   
     (if *psql-lexicon*
         (setf part-of (part-of *psql-lexicon*))
       (setf *psql-lexicon* 
 	(make-instance 'psql-lex-database)))
     
+    (setf (dbname *psql-lexicon*) db)
+    (setf (host *psql-lexicon*) host)
     (if user (setf (user *psql-lexicon*) user))
-    (if db (setf (dbname *psql-lexicon*) db))
-    (if host (setf (host *psql-lexicon*) host))
     (if port (setf (port *psql-lexicon*) port))
     ;;(setf (lex-tb *psql-lexicon*) table) ;;unused
-    (if table (setf (fields-tb *psql-lexicon*) table))
+    (cond 
+     (table
+      (setf (fields-tb *psql-lexicon*) table))
+     (t
+      (setf (fields-tb *psql-lexicon*) (dbname *psql-lexicon*))))
     (when (initialize-lex *psql-lexicon*)
       (mapcar #'(lambda (x) (link *psql-lexicon* x)) part-of)
       *psql-lexicon*)))
