@@ -916,7 +916,7 @@ rain_1 := verb-lxm &
 keep_1 := verb-lxm &
 [ ORTH <! "keep" !>,
   ARG-ST < [ ], [SYN [HEAD noun & [FORM f_tabs] ] ], [SYN [HEAD prep & [FORM f_on] ] ] >,
-  SEM  [ RESTR <! [ RELN r_observe ] !> ] ]. ].
+  SEM  [ RESTR <! [ RELN r_observe ] !> ] ]. 
 :end :instance.
 
 ; <<>>
@@ -927,7 +927,7 @@ take_1 := verb-lxm &
   ARG-ST < [ ], [SYN [HEAD noun & [FORM f_advantage] ] ], [SYN [HEAD prep & [FORM f_of,
   	ANA #agr],
   	SPR < > ] ] >,
-  SEM  [ RESTR <! [ RELN r_exploit ] !> ] ]. ].
+  SEM  [ RESTR <! [ RELN r_exploit ] !> ] ]. 
 :end :instance.
 
 ; <<>>
@@ -2554,7 +2554,7 @@ cardinal_1 := cn-lxm &
 :begin :instance.
 cat_1 := cn-lxm &
 [ ORTH <! "cat" !>,
-  SEM [ RESTR <! [ RELN r_animal] !> ] ].
+  SEM [ RESTR <! [ RELN r_cat] !> ] ].
 :end :instance.
 
 ; <<>>
@@ -2722,7 +2722,7 @@ doctor_1 := cn-lxm &
 :begin :instance.
 dog_1 := cn-lxm &
 [ ORTH <! "dog" !>,
-  SEM [ RESTR <! [ RELN r_animal] !> ] ].
+  SEM [ RESTR <! [ RELN r_dog] !> ] ].
 :end :instance.
 
 ; <<>>
