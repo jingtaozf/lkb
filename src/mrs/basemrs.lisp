@@ -99,14 +99,10 @@
                 (rest handels))
       (format stream "[])"))))
 
-
-;;; some time move structures and printers to separate files
-;(defun print-prolog-list (list stream level)
-;  (declare (ignore level))
-;  (let ((elements (prolog-list-members list)))
-;    (if elements
-;        (format stream "~([~A~@[~{,~A~}~]]~)" (first elements) (rest elements))
-;      (format stream "[]"))))
+(defun print-prolog-list (elements stream)
+  (if elements
+      (format stream "~([~A~@[~{,~A~}~]]~)" (first elements) (rest elements))
+    (format stream "[]")))
          
 ;;; WK: with an ugly way to print out 'extra' infos (for German)
 #-lkb
@@ -171,6 +167,10 @@
 
 (defmethod mrs-output-max-width-fn ((mrsout output-type))
   nil)
+
+(defmethod mrs-output-print-name ((mrsout output-type) value)
+  (with-slots () mrsout
+    (get-print-name value)))
 
 ;;; 
 ;;; simple output-type class
@@ -402,7 +402,133 @@
   (with-slots (stream) mrsout
     (format stream "~%" )))
 
+
+
+
+;;; 
+;;; prolog output-type class
+;;;
+
+#|
+
+assume the following structure
+
+psoa(handel,index,liszt,hcons)
+
+handel is a handle-variable
+index is a variable
+
+liszt is a list of rels
+
+rel(relation,handel,attrvals)
+
+relation is a string
+handel is a handle-variable
+attrvals is a list of attrvals
+
+attrval(attribute,value)
+
+attribute is a string
+value is a string or a variable or a handle-variable
+
+hcons is a list of qeqs
+
+qeq(higher,lower)
+
+higher and lower are handle-variables
+
+|#
+
+
+(defclass prolog (output-type)
+  ((need-rel-comma :initform nil)
+   (need-comma :initform nil)))
+
+;;; replace generic fn
+
+(defmethod mrs-output-print-name ((mrsout prolog) value)
+  (with-slots () mrsout
+    (if (var-p value)
+        (intern (var-name value))
+      'u)))
+
+(defmethod mrs-output-start-fn ((mrsout prolog))
+  (with-slots (stream) mrsout
+    (format stream "~V%" 1)))
+
+(defmethod mrs-output-end-fn ((mrsout prolog))
+  (with-slots (stream) mrsout
+    (format stream "~V%" 1)))
+
+(defmethod mrs-output-start-psoa ((mrsout prolog) 
+				  handel-val event-val)
+  (with-slots (stream) mrsout
+    (format stream "psoa(~A,~A," handel-val event-val)))
+
+(defmethod mrs-output-start-liszt ((mrsout prolog))
+  (with-slots (stream) mrsout
+    (format stream "[")))
+
+(defmethod mrs-output-atomic-fn ((mrsout prolog) atomic-value)
+  (with-slots (stream) mrsout
+    (if (stringp atomic-value)
+        (format stream "'~A')" atomic-value)
+      (format stream "~A)" atomic-value))))
+
+(defmethod mrs-output-list-fn ((mrsout prolog) list-value)
+  (with-slots (stream) mrsout
+    (print-prolog-list list-value stream)))
   
+(defmethod mrs-output-start-rel ((mrsout prolog) sort handel)
+  (with-slots (stream need-rel-comma) mrsout
+    (when need-rel-comma (format stream ","))
+    (setf need-rel-comma t)
+    (format stream "rel('~A',~A,[" (string-downcase sort) handel)))
+
+(defmethod mrs-output-label-fn  ((mrsout prolog) label)
+  (with-slots (stream need-comma) mrsout
+    (when need-comma (format stream ","))
+    (setf need-comma t)
+    (format stream "attrval('~A'," label)))
+
+(defmethod mrs-output-end-rel ((mrsout prolog))
+  (with-slots (stream need-comma) mrsout
+    (setf need-comma nil)
+    (format stream "])")))
+
+(defmethod mrs-output-end-liszt ((mrsout prolog))
+  (with-slots (stream need-rel-comma) mrsout
+    (setf need-rel-comma nil)
+    (format stream "]")))
+
+(defmethod mrs-output-start-h-cons ((mrsout prolog))
+  (with-slots (stream) mrsout
+    (format stream ",hcons([")))
+
+(defmethod mrs-output-outscopes ((mrsout prolog) higher lower)
+  (with-slots (stream need-comma) mrsout    
+    (when need-comma (format stream ","))
+    (setf need-comma t)
+    (format stream "qeq(~A,~A)" higher lower)))
+
+(defmethod mrs-output-leq ((mrsout prolog) higher lower)
+  (with-slots (stream need-comma) mrsout
+    (when need-comma (format stream ","))
+    (setf need-comma t)
+    (format stream "leq(~A,~A)" higher lower)))
+
+(defmethod mrs-output-end-h-cons ((mrsout prolog))
+  (with-slots (stream need-comma) mrsout
+    (setf need-comma nil)
+    (format stream "])")))
+
+(defmethod mrs-output-end-psoa ((mrsout prolog))
+  (with-slots (stream) mrsout
+    (format stream ")~%")))
+
+
+;;; Utility fns
+
 (defun remove-right-sequence (remove-seq existing-seq)
   ;;; if existing-seq terminates in the string given by remove-seq
   ;;; return the existing-sequence without it
@@ -420,7 +546,7 @@
           var))
     var))
 
-
+;;; Actual output fns
 
 (defun output-mrs (mrs-instance device &optional file-name)
      (if file-name
@@ -445,25 +571,33 @@
 (defun print-psoa (psoa indentation)
   (declare (ignore indentation))
   (mrs-output-start-psoa *mrs-display-structure*
-           (get-print-name (psoa-handel psoa))
-	   (get-print-name (psoa-index psoa)))
+           (mrs-output-print-name *mrs-display-structure* (psoa-handel psoa))
+	   (mrs-output-print-name *mrs-display-structure* (psoa-index psoa)))
   (mrs-output-start-liszt *mrs-display-structure*)
   (loop for rel in (psoa-liszt psoa)
         do
         (mrs-output-start-rel *mrs-display-structure*
-                 (rel-sort rel) (get-print-name (rel-handel rel)))
+                              (rel-sort rel) 
+                              (mrs-output-print-name 
+                               *mrs-display-structure* (rel-handel rel)))
         (loop for feat-val in (rel-flist rel)
               do
              (mrs-output-label-fn *mrs-display-structure*
                       (fvpair-feature feat-val))
              (let ((value (fvpair-value feat-val)))
                       (if (var-p value)
-                          (mrs-output-atomic-fn *mrs-display-structure*
-                             (get-print-name value))
+                          (mrs-output-atomic-fn 
+                           *mrs-display-structure*
+                           (mrs-output-print-name 
+                            *mrs-display-structure* value))
                           (if (and (listp value)
                                    (var-p (car value)))
-                            (mrs-output-list-fn *mrs-display-structure*
-                             (mapcar #'get-print-name value))
+                              (mrs-output-list-fn 
+                               *mrs-display-structure*
+                               (for el in value
+                                    collect
+                                    (mrs-output-print-name 
+                                     *mrs-display-structure* el)))
                             (mrs-output-atomic-fn *mrs-display-structure*
                                                   value)))))
         (mrs-output-end-rel *mrs-display-structure*))
@@ -472,12 +606,20 @@
   (loop for hcons in (psoa-h-cons psoa)
       do
         (cond ((leq-sc-p hcons)
-               (mrs-output-leq *mrs-display-structure*
-                               (get-print-name (leq-sc-scarg hcons)) 
-                                (get-print-name (leq-sc-outscpd hcons))))
-              (t (mrs-output-outscopes *mrs-display-structure*
-		   (get-print-name (hcons-scarg hcons)) 
-                   (get-print-name (hcons-outscpd hcons))))))
+               (mrs-output-leq 
+                *mrs-display-structure*
+                (mrs-output-print-name 
+                 *mrs-display-structure* (leq-sc-scarg hcons)) 
+                (mrs-output-print-name 
+                 *mrs-display-structure* (leq-sc-outscpd hcons))))
+              (t (mrs-output-outscopes 
+                  *mrs-display-structure*
+                  (mrs-output-print-name 
+                   *mrs-display-structure* 
+                   (hcons-scarg hcons)) 
+                  (mrs-output-print-name 
+                   *mrs-display-structure* 
+                   (hcons-outscpd hcons))))))
   (mrs-output-end-h-cons *mrs-display-structure*)
   (mrs-output-end-psoa *mrs-display-structure*))
 
