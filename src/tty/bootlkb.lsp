@@ -54,6 +54,7 @@
          ("main" "gen")         ; generic CL
          ("main" "structs")     ; generic CL
          ("main" "globals")     ; generic CL
+         ("main" "user-fns")     ; generic CL
          ("main" "marks")       ; generic CL
          ("main" "checktypes")           ; generic CL
          ("main" "leaf")
