@@ -162,10 +162,13 @@ int tsdb_info(Tsdb_value **value_list, char *redirection) {
                          "implicit-commit", 15)
              || !strcmp(value_list[i]->value.identifier, "all")) {
             fprintf(output,
-                    "implicit commit (and save) for new data is %s.\n",
+                    "implicit commit (and save) for new data is %s%s.\n",
                     (tsdb.status & TSDB_IMPLICIT_COMMIT 
                      ? "enabled" 
-                     : "disabled"));
+                     : "disabled"),
+                    (tsdb.status & TSDB_COMMIT_ON_EXIT
+                     ? " (on exit)" 
+                     : ""));
             match = TRUE;
           } /* if */
 #ifdef ALEP
@@ -404,9 +407,11 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
     if(foo != NULL) {
       if(!strcmp(foo, "on")) {
         tsdb.status |=  TSDB_IMPLICIT_COMMIT;
+        tsdb.status &= ~TSDB_COMMIT_ON_EXIT;
       } /* if */
       else if(!strcmp(foo, "off")) {
         tsdb.status &= ~TSDB_IMPLICIT_COMMIT;
+        tsdb.status &= ~TSDB_COMMIT_ON_EXIT;
       } /* if */
       else if(!strcmp(foo, "exit")) {
         tsdb.status &= ~TSDB_IMPLICIT_COMMIT;

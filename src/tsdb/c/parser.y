@@ -713,6 +713,10 @@ y_special :
     $$ = "off";
   }
 |
+  Y_QUIT {
+    $$ = "exit";
+  }
+|
   Y_SHUTDOWN {
     $$ = "shutdown";
   }
