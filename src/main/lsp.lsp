@@ -89,7 +89,7 @@
     (loop
         for match in %lsp-clients%
         when (= client (client-id match)) do (lsp-shutdown-client match)))
-   (t
+   ((client-p client)
     (setf %lsp-clients% (delete client %lsp-clients%))
     (let ((process (client-process client)))
       (unless (eq mp:*current-process* process)
@@ -256,6 +256,9 @@
                  (view (let ((foo (pop command))) 
                          (and foo (intern (string foo) :keyword)))))
             (when (stringp input)
+              (setf *sentence* input)
+              (unless id 
+                (lui-status (format nil "parsing `~a' ..." input)))
               (parse (split-into-words 
                       (preprocess-sentence-string 
                        (string-trim '(#\space #\tab #\newline) input)))
@@ -265,6 +268,13 @@
                 (let ((edges (if (eq set :best)
                                (list (first *parse-record*))
                                *parse-record*)))
+                  (unless id 
+                    (lui-status (format 
+                                 nil 
+                                 " done (~d tree~p; ~,2f seconds)~%"
+                                 (length *parse-record*) 
+                                 (length *parse-record*)
+                                 (/ (first *parse-times*) 100000))))
                   (if (eq view :browse)
                     (lsp-browse id input edges format)
                     (when waitp (lsp-return id stream edges format)))))
@@ -276,7 +286,7 @@
                  (format (let ((foo (pop command)))
                            (and foo (intern (string foo) :keyword))))
                  (object (lsp-retrieve-object id location)))
-            (when (and (edge-p (second object)) (member format '(:avm :tree)))
+            (when (and (second object) (member format '(:avm :tree)))
               (lsp-browse id (first object) (rest object) format))))
          (t
           (setf return %lsp-invalid-command%))))
@@ -288,9 +298,8 @@
            "[~d] lsp-process-event(): ~a~%" 
            id condition))
         (setf return %lsp-mysterious-error%)))
-    (when waitp
-      (format stream " ~a~c~%" return #\page)
-      (force-output stream))))
+    (when waitp (format stream " ~a~c~%" return #\page))
+    (force-output stream)))
 
 (defun lsp-parse-command (id string)
   (loop
@@ -330,7 +339,7 @@
         (rest bucket)))))
 
 (defun lsp-browse (id input edges format &key title)
-  (let ((title (or title (format nil "`~a' [LSP # ~a]" input id))))
+  (let ((title (or title (format nil "`~a'~@[ [LSP # ~a]~]" input id))))
     (when (eq format :tree)
       (show-parse edges title)
       (return-from lsp-browse))
@@ -338,7 +347,7 @@
         for edge in edges do
           (case format
             (:avm
-             (display-fs (edge-dag edge) title))
+             (display-fs edge title))
             #+:mrs
             ((:mrs :indexed :prolog :scoped :rmrs :dependencies)
              (let ((mrs (mrs::extract-mrs edge)))

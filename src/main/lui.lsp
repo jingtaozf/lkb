@@ -22,13 +22,13 @@
 (in-package :lkb)
 
 (defparameter *lui-application*
-  "exec /home/oe/lbin/nc localhost 4712"
   #+:null
+  "exec /home/oe/lbin/nc localhost 4712"
   (format
    nil 
    "exec ~a"
    (namestring (make-pathname :directory (pathname-directory make::bin-dir)
-                              :name "lui"))))
+                              :name "yzlui"))))
 
 (defparameter *lui-debug-p* t)
 
@@ -48,14 +48,28 @@
                    :wait nil
                    :output :stream :input :stream :error-output nil))
     (when foo (setf foo foo))
-    (setf %lui-process%
+    (format
+     %lui-stream%
+     "parameter list-type ~a ~a~%~
+      parameter non-empty-list-type ~a ~a~%~
+      parameter empty-list-type ~a ~a~%~
+      parameter list-head ~a ~a~%~
+      parameter list-tail ~a ~a~%~
+      status ready ~a~%"
+     *list-type* #\page
+     *empty-list-type* #\page 
+     *non-empty-list-type* #\page
+     (first *list-head*) #\page
+     (first *list-tail*) #\page
+     #\page)
+     (setf %lui-process%
       (mp:run-function '(:name "LUI") #'lsp-loop nil %lui-stream%))))
 
 (defun lui-shutdown ()
 
   (when %lui-stream%
     (ignore-errors
-     (format %lui-stream% "~%~%exit~%~a" #\page)
+     (format %lui-stream% "~%~%exit~a" #\page)
      (force-output %lui-stream%)
      (sleep 2)
      (close %lui-stream%)
@@ -84,7 +98,7 @@
       (mp:process-add-arrest-reason %lui-process% :send-to-lui))
     (when *lui-debug-p*
       (format t "~&send-to-lui(): [send] `~a'.~%" string))
-    (format %lui-stream% "~@[wait ~*~]~a~%~a" wait string #\page)
+    (format %lui-stream% "~@[wait ~*~]~a ~a" wait string #\page)
     (force-output %lui-stream%))
   (unwind-protect 
       (when (or wait recursive)
@@ -120,6 +134,9 @@
   (when (and %lui-process% (not (eq mp:*current-process* %lui-process%)))
     (mp:process-revoke-arrest-reason %lui-process% :pending-events)))
 
+(defun lui-status (string)
+  (format %lui-stream% "message ~s ~a~%" string #\page))
+  
 (defun lui-show-parses (edges &optional (input *sentence*))
   (loop
       for i from 1
@@ -130,31 +147,35 @@
       do
         (format %lui-stream% "tree ~d " id)
         (lui-show-tree top input)
-        (format %lui-stream% "~s~a~%" title #\page)))
+        (format %lui-stream% " ~s ~a~%" title #\page))
+  (force-output %lui-stream%))
 
 (defun lui-show-tree (top &optional (input *sentence*))
   (let* ((edge (get top 'edge-record))
+         (tdfs (get top 'edge-fs))
          (daughters (get top 'daughters))
          (form (when (and daughters (null (rest daughters))
                           (null (get (first daughters) 'edge-record)))
                  (get-string-for-edge (first daughters))))
-         (id (lsp-store-object nil input edge))
+         (id (lsp-store-object nil input tdfs))
          (label (get-string-for-edge top))
          (n (edge-id edge))
          (rule (if (rule-p (edge-rule edge))
-                 (string (rule-id (edge-rule edge)))
+                 (rule-id (edge-rule edge))
                  (string-downcase (string (first (edge-lex-ids edge)))))))
-    (format %lui-stream% "#T[~a ~s ~s ~a ~s " id label form n rule)
+    (format %lui-stream% "#T[~a ~s ~s ~a ~a " id label form n rule)
     (loop
         for daughter in (if form (get (first daughters) 'daughters) daughters)
         do (lui-show-tree daughter))
     (format %lui-stream% "]")))
 
-(defun lui-display-fs (tdfs input id)
+(defun lui-display-fs (tdfs title id)
   (declare (ignore id))
-  (let* ((id (lsp-store-object nil input tdfs))
-         (title (format nil "`~a' AVM" input))
+  (let* ((id (lsp-store-object nil nil tdfs))
          (dag (tdfs-indef tdfs)))
-    (format %lui-stream% "avm ~d" id)
-    (display-dag1 dag 'linear %lui-stream%)
-    (format %lui-stream% " ~s~a~%" title #\page)))
+    (format %lui-stream% "avm ~d " id)
+    (let ((string (with-output-to-string (stream)
+                    (display-dag1 dag 'linear stream))))
+      (format %lui-stream% string))
+    (format %lui-stream% " ~s ~a~%" title #\page))
+  (force-output %lui-stream%))

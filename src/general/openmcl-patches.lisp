@@ -57,8 +57,7 @@
 
 (defparameter %system-binaries% "mac")
 
-
-(defpackage :mp (:use "COMMON-LISP")
+(defpackage :mp (:use :common-lisp)
    (:intern "RUN-FUNCTION" "PROCESS-WAIT" "PROCESS-KILL" "WITH-PROCESS-LOCK"
             "MAKE-PROCESS-LOCK"))
 (in-package :mp)
@@ -66,16 +65,43 @@
 (eval-when (:execute :load-toplevel :compile-toplevel)
   (export 'run-function)
   (setf (symbol-function 'run-function) 
-        (symbol-function 'ccl:process-run-function))
+    (symbol-function 'ccl:process-run-function))
   (export 'process-wait)
   (setf (symbol-function 'process-wait) 
-        (symbol-function 'ccl:process-wait))
+    (symbol-function 'ccl:process-wait))
   (export 'process-kill)
   (setf (symbol-function 'process-kill) 
-        (symbol-function 'ccl:process-kill))
+    (symbol-function 'ccl:process-kill))
   (export 'with-process-lock)
   (defmacro with-process-lock ((lock) &body body) 
-     `(ccl:with-lock-grabbed (,lock) ,@body))
+    `(ccl:with-lock-grabbed (,lock) ,@body))
   (export 'make-process-lock)
   (setf (symbol-function 'make-process-lock) 
-        (symbol-function 'ccl:make-lock)))
+    (symbol-function 'ccl:make-lock)))
+
+
+(defpackage :socket (:use :common-lisp)
+            (:intern "MAKE-SOCKET" "SHUTDOWN" "ACCEPT-CONNECTION"
+                     "REMOTE-HOST" "REMOTE-PORT" "IPADDR-TO-HOSTNAME"))
+(in-package :socket)
+
+(eval-when (:execute :load-toplevel :compile-toplevel)
+  (export 'make-socket)
+  (setf (symbol-function 'make-socket) 
+    (symbol-function 'ccl:make-socket))
+  (export 'shutdown)
+  (setf (symbol-function 'shutdown) 
+    (symbol-function 'ccl:shutdown))
+  (export 'accept-connection)
+  (setf (symbol-function 'accept-connection) 
+    (symbol-function 'ccl:accept-connection))
+  (export remote-host)
+  (setf (symbol-function 'remote-host) 
+    (symbol-function 'ccl:remote-host))
+  (export remote-port)
+  (setf (symbol-function 'remote-port) 
+    (symbol-function 'ccl:remote-port))
+  (export 'ipaddr-to-hostname)
+  (setf (symbol-function 'ipaddr-to-hostname) 
+    (symbol-function 'ccl:ipaddr-to-hostname)))
+

@@ -43,11 +43,10 @@
 (in-package "MAKE")
 
 (defparameter %binary-dir-name% 
-    ".masl")
+  ".masl")
 
 (defparameter %system-binaries%
-    "mac")
-
+  "mac")
 
 (defpackage :mp (:use "COMMON-LISP")
    (:intern "RUN-FUNCTION" "PROCESS-WAIT" "PROCESS-KILL" "WITH-PROCESS-LOCK"

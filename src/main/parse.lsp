@@ -372,7 +372,7 @@
               (setf *parse-record* 
                 (find-spanning-edges 0 (length user-input)))))
           (push (get-internal-run-time) *parse-times*))
-        (when show-parse-p (show-parse))
+        (when show-parse-p)
         (values *executed-tasks* *successful-tasks* 
                 *contemplated-tasks* *filtered-tasks*)))))
 

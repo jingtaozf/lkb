@@ -48,9 +48,11 @@
 
 (def-lkb-parameter *list-head* '(hd))
 
+(def-lkb-parameter *list-type* '*list*)
+
 (def-lkb-parameter *empty-list-type* '*null*)
 
-(def-lkb-parameter *list-type* '*list*)
+(def-lkb-parameter *non-empty-list-type* '*cons*)
 
 (def-lkb-parameter *diff-list-type* '*diff-list*)
 
