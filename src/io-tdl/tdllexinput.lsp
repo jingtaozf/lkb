@@ -15,7 +15,7 @@
 
 
 (defun read-tdl-lex-file-aux-internal (file-name)
-  (let ((*readtable* (make-tdl-break-table)))
+  (let ((*readtable* (make-tdl-break-table))) ;; this can be dangerous
     (with-open-file 
 	(istream file-name :direction :input)
       (format t "~%Reading in lexical entry file ~A" 
@@ -24,7 +24,7 @@
 
 
 (defun read-tdl-lex-stream (istream) 
-   (loop
+  (loop
       (let ((next-char (peek-char t istream nil 'eof)))
          (when (eql next-char 'eof) (return))
          (cond ((eql next-char #\;) 
@@ -66,11 +66,8 @@
             t
             "~%WARNING: lexicon entry `~a' redefined." name)
            (push name *ordered-lex-list*))
-         ;#+:psql
-         ;(when *export-lexicon-p* 
-         ;  (unless (export-lexical-entry name constraint)
-         ;    (skip-lexical-entry istream position)))
-         (add-lex-from-file nil name constraint default)))))
+	 (let ((*readtable* (copy-readtable nil))) ;;bmw
+	   (add-lex-from-file nil name constraint default))))))
 
 
 
