@@ -88,15 +88,24 @@ fi
 # (sparc), or `windows' (x86); anything else will require manual installation.
 #
 if [ "$OSTYPE" = "linux" -o "$OSTYPE" = "linux-gnu" ]; then
-  case $(uname -i) in
-    i386)
+  #
+  # apparently, (some) Debian installations come with an older uname(1), where
+  # `-i' is not available :-{.                                 (11-mar-05; oe)
+  #
+  if uname -i > /dev/null 2>&1; then
+    cpu=$(uname -i)
+  else
+    cpu=$(uname -m)
+  fi
+  case "${cpu}" in
+    i?86)
       os="linux.x86.32"
       ;;
     x86_64)
       os="linux.x86.64"
       ;;
     *)
-      echo "lkb: unknown Linux architecture (check \`uname -i'); exit."
+      echo "lkb: unknown Linux architecture (check \`uname -m'); exit."
       exit 1;
   esac
 elif [ "$OSTYPE" = "solaris" -o "${OSTYPE%%?.?}" = "solaris" ]; then
