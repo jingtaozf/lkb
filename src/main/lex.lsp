@@ -220,8 +220,8 @@
         ((null tfplist) nil)
         ((eq (type-feature-pair-feature (car tfplist)) (car flist))
          (typed-path-matches (cdr tfplist) (cdr flist) exactp))
-        (t nil)))
-  
+        (t nil)))  
+
 
 (defun extract-orth-from-fs (tdfs)
   ;;; returns a single string, possibly concatenating the words
@@ -412,6 +412,7 @@
     (funcall 'clear-lexicon-indices))
   (call-next-method)
   (mapcar #'(lambda (lex) (clear-lex lex no-delete)) (extra-lexicons lexicon))
+  (setf (extra-lexicons lexicon) nil) ; AAC - seems to be needed
   (unless no-delete
     (delete-temporary-lexicon-files)))
 

@@ -293,6 +293,16 @@
         (setf (gethash id (if lexical-p *lexical-rules* *rules*)) rule)))))
 
 
+(defun key-daughter-p (dag)
+  ;;; AAC - moved from user-fns because it's not really likely
+  ;;; anyone will want to change this given the global variables
+  (let* ((key (existing-dag-at-end-of dag *key-daughter-path*))
+         (type (and (dag-p key) (dag-type key))))
+    (when type
+      (or (eq type *key-daughter-type*) 
+          (and (consp type) (eq (first type) *key-daughter-type*))))))
+
+
 ;;; The following is called from the code which redefines types
 
 (defun expand-rules nil

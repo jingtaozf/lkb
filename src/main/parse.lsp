@@ -1163,6 +1163,8 @@ Setting *first-only-p* to nil")
    (clear-type-cache)
    (format t "~%;;; Parsing test file~%") (finish-output t)
    (let ((nsent 0)
+         (edge-total 0)
+         (parse-total 0)
          ;; ask for recycling of safe dags
          ;; NB lexical entries must not contain safe dags - so expand-psort-entry
          ;; and friends must rebind *safe-not-to-copy-p* to nil
@@ -1173,9 +1175,14 @@ Setting *first-only-p* to nil")
        (loop
          (when (eql raw-sentence 'eof)
            (format t "~%;;; Finished test file")
-           (when ostream
-             (format ostream "~%;;; Total CPU time: ~A msecs~%" 
-                (- (get-internal-run-time) start-time)))
+           (unless (fboundp *do-something-with-parse*)
+             (when ostream
+               (format ostream "~%;;; Total CPU time: ~A msecs~%" 
+                       (- (get-internal-run-time) start-time))
+               (format ostream "~%;;; Mean edges: ~,2F~%" 
+                       (/ edge-total nsent))
+               (format ostream "~%;;; Mean parses: ~,2F~%" 
+                       (/ parse-total nsent))))
            (lkb-beep)
            (return))
          (when (eql (rem nsent 50) 49)
@@ -1190,7 +1197,7 @@ Setting *first-only-p* to nil")
                   ;; if we're doing something else, 
                   ;; let that function control the output
                   (when ostream
-                    (format ostream "~A ~S " nsent interim-sentence)
+                    (format ostream "~A ~A " nsent interim-sentence)
                     (finish-output ostream)))
                  (let* ((munged-string 
                          (if (fboundp 'preprocess-sentence-string)
@@ -1203,13 +1210,17 @@ Setting *first-only-p* to nil")
                               (setf *ostream* ostream)
                               (when (fboundp *do-something-with-parse*)
                                 (funcall *do-something-with-parse*)))
-                       (error (condition)
-                              (format t  "~%Error: ~A caused by ~A~%" condition user-input))) 
+                     (storage-condition (condition)
+                       (format t "~%Memory allocation problem: ~A caused by ~A~%" condition user-input))
+                     (error (condition)
+                       (format t  "~%Error: ~A caused by ~A~%" condition user-input))) 
                    (unless (fboundp *do-something-with-parse*)
                      ;; if we're doing something else, 
                      ;; let that function control the output
                      (when ostream
                        (let ((n (length *parse-record*)))
+                         (setf parse-total (+ parse-total n))
+                         (setf edge-total (+ edge-total *edge-id*))
                          (format ostream "~A ~A~%" n 
             ;;                     (edge-count)
                                  *edge-id*))
@@ -1219,7 +1230,6 @@ Setting *first-only-p* to nil")
                (pushnew lex-id *lex-ids-used*))
             (setq raw-sentence (read-line istream nil 'eof))))
        (clear-chart)))) ; prevent any recycled dags from hanging around
-
 
 (defun edge-count nil
   (let ((distinct-parse-edges nil))

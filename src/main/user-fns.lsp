@@ -73,19 +73,36 @@
                                     :types (list orth-value)))
                  unifs)
            (setq tmp-orth-path (append tmp-orth-path *list-tail*))))
-#|
-         ;; not a good idea for difference lists                             
-(push (make-unification :lhs
-                            (create-path-from-feature-list tmp-orth-path)
+    #|
+    ;; not a good idea for difference lists                             
+    (push (make-unification :lhs
+                     (create-path-from-feature-list tmp-orth-path)
                             :rhs 
-                            (make-u-value :types (list *empty-list-type*)))
-                            unifs)
-|#
+                     (make-u-value :types (list *empty-list-type*)))
+           unifs)
+           |#
     (let ((indef (process-unifications unifs)))
       (when indef
         (setf indef (create-wffs indef))
-        (make-tdfs :indef indef)))))
+        (when indef
+          (make-tdfs :indef indef))))))
 
+#|
+;;; following is for non-list valued ORTHs
+(defun make-orth-tdfs (orth)
+  (let ((indef (process-unifications 
+                (list 
+                 (make-unification :lhs
+                                   (create-path-from-feature-list 
+                                    *orth-path*)                    
+                                   :rhs
+                                   (make-u-value 
+                                    :types (list orth)))))))
+    (when indef
+      (setf indef (create-wffs indef))
+      (when indef
+        (make-tdfs :indef indef)))))
+|#
   
 
 (defun establish-linear-precedence (rule-fs)
@@ -139,13 +156,6 @@
   ; default inflection position for multi-word entries is rightmost
   (declare (ignore unifs sense-id))
   (length orths))
-
-(defun key-daughter-p (dag)
-  (let* ((key (existing-dag-at-end-of dag *key-daughter-path*))
-         (type (and (dag-p key) (dag-type key))))
-    (when type
-      (or (eq type *key-daughter-type*) 
-          (and (consp type) (eq (first type) *key-daughter-type*))))))
 
 ;;; Assign priorities to parser tasks
 

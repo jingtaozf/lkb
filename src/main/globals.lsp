@@ -89,10 +89,6 @@
 (def-lkb-parameter *mother-feature* 0
    "The feature giving the mother in a grammar rule")
 
-(def-lkb-parameter *head-marking-path* nil
-   "a feature path - a head daughter in a rule may be identified by
-    having the same value for this path as the mother")
-
 (def-lkb-parameter *start-symbol* 'sign
   "a type which specifies the type of any valid parse" 
   :user)
@@ -155,8 +151,7 @@
   :user)
 
 (def-lkb-parameter *maximum-list-pane-items* 50
-  "maximum number of items in a list pane"
-  :user)
+  "maximum number of items in a list pane")
 
 ;;; YADU
 
@@ -214,12 +209,7 @@
   :user)
 
 (def-lkb-parameter *gen-first-only-p* nil
-  "if set, only the first parse is produced"
-  :user)
-
-(def-lkb-parameter *lkb-menu-type* :big 
-  "type of interaction menu that is displayed 
-   - valid values are :big or :core")
+  "if set, only the first realization is produced")
 
 ;;; for the compare function 
 

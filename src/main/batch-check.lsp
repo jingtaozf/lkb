@@ -2,6 +2,8 @@
 
 (in-package :cl-user)
 
+(defvar *grammar-specific-batch-check-fn* nil)
+
 (defun batch-check-lexicon nil
   (format t "~%Checking lexicon")
   (setf *batch-mode* t)
@@ -13,13 +15,12 @@
       (expand-psort-entry entry)
       (let ((new-fs (lex-or-psort-full-fs entry)))
         (unless new-fs
-          (format t "~%No feature structure for ~A" lex-id))
-        ;; uncomment these lines with the LinGO ERG version of
-        ;; user-fns in order to check coindexation for
-        ;; inflection position
-;;;	      (when new-fs
-;;;		(unless (extract-infl-pos-from-fs (tdfs-indef new-fs))
-;;;		  (format t "~%No position identified for ~A" id)))
+          (format cl-user::*lkb-background-stream*
+                  "~%No feature structure for ~A" lex-id))
+        (when (and new-fs
+                   *grammar-specific-batch-check-fn*)
+          (funcall *grammar-specific-batch-check-fn*
+                   new-fs id))                
 ;;;                     (when new-fs
 ;;;                       (sanitize (existing-dag-at-end-of 
 ;;;                                  (tdfs-indef new-fs) 
