@@ -79,9 +79,9 @@
 
 (defun extract-mrs (parse)
   ;;; takes whatever structure the parser returns
-  (let ((fs (get-parse-fs parse)))
-             ;; get-parse-fs is system specific
-    (extract-mrs-from-fs fs)))
+  (let ((fs (get-parse-fs parse))) ;; get-parse-fs is system specific
+    (when (is-valid-fs fs)
+      (extract-mrs-from-fs fs))))
          
 (defun extract-mrs-from-fs (fs)
   (let ((sem-fs (path-value fs *initial-semantics-path*)))
