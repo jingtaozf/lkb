@@ -387,7 +387,7 @@ cvs update: Updating src/xml
 **********
 Checking in ./src/version.lsp;
 /lingo/CVS/lkb/src/version.lsp,v  <--  version.lsp
-new revision: 1.320; previous revision: 1.319
+new revision: 1.321; previous revision: 1.320
 done
 make[1]: Entering directory `/lingo/www/build/lkb'
 ( \
@@ -1408,7 +1408,7 @@ Allocated 5242880 bytes for new space
 
 
 International Allegro CL Enterprise Edition
-6.2 [Linux (x86)] (May 28, 2004 12:53)
+6.2 [Linux (x86)] (May 28, 2004 13:00)
 Copyright (C) 1985-2002, Franz Inc., Berkeley, CA, USA.  All Rights Reserved.
 
 This development copy of Allegro CL is licensed to:
@@ -2455,7 +2455,7 @@ NIL
  (REQUIRE :NOCOMPILER)
  |#
 ; Libfasl from bundle code/nocompiler.fasl.
-101370840 bytes have been tenured, next gc will be global.
+107764072 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 
 T 
@@ -2646,7 +2646,7 @@ CL-USER(10): ; Loading /lingo/www/build/lkb/src/systems/tsdb.system
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/ppcre/closures.fasl
 ;;; Compiling file
 ;;;   /lingo/www/build/lkb/src/ppcre/repetition-closures.lisp
-8629712 bytes have been tenured, next gc will be global.
+8629720 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file
 ;;;   /lingo/www/build/lkb/src/.l6cl/ppcre/repetition-closures.fasl
@@ -2673,7 +2673,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;; Compiling file /lingo/www/build/lkb/src/xml/pxml3.cl
 8632520 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
-8474560 bytes have been tenured, next gc will be global.
+8474552 bytes have been tenured, next gc will be global.
 See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/xml/pxml3.fasl
 ;;; Fasl write complete
@@ -2728,7 +2728,7 @@ See the documentation for variable *GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/main/dag.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/main/dag.fasl
-9727344 bytes have been tenured, next gc will be global.
+9727440 bytes have been tenured, next gc will be global.
 See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more information.
 ;;; Compiling file /lingo/www/build/lkb/src/main/yadu.lsp
 ;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/main/yadu.fasl
@@ -3255,7 +3255,7 @@ See the documentation for variable EXCL:*GLOBAL-GC-BEHAVIOR* for more informatio
 ;;;   /lingo/www/build/lkb/src/.l6cl/tsdb/derivations.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/tsdb/derivations.fasl
-gc-after-hook(): local; new: 709944; old: 11112; pending: 5856; efficiency: 86.
+gc-after-hook(): local; new: 709944; old: 11112; pending: 5856; efficiency: 87.
 ;;; Compiling file /lingo/www/build/lkb/src/tsdb/lisp/tnt-interface.lisp
 ;;; Writing fasl file
 ;;;   /lingo/www/build/lkb/src/.l6cl/tsdb/tnt-interface.fasl
@@ -3271,7 +3271,7 @@ gc-after-hook(): local; new: 1287416; old: 3984; pending: 0; efficiency: 88.
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/tsdb/lsp.fasl
 ;;; Compiling file /lingo/www/build/lkb/src/tsdb/lisp/ptb.lisp
-gc-after-hook(): local; new: 1056008; old: 3936; pending: 0; efficiency: 86.
+gc-after-hook(): local; new: 1056016; old: 3936; pending: 0; efficiency: 86.
 ;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/tsdb/ptb.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/tsdb/ptb.fasl
@@ -3288,7 +3288,7 @@ gc-after-hook(): local; new: 1056008; old: 3936; pending: 0; efficiency: 86.
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/tsdb/maxent.fasl
 ;;; Compiling file /lingo/www/build/lkb/src/tsdb/lisp/tagger.lisp
-gc-after-hook(): local; new: 858728; old: 318752; pending: 80; efficiency: 87.
+gc-after-hook(): local; new: 858000; old: 318752; pending: 72; efficiency: 86.
 ;;; Writing fasl file /lingo/www/build/lkb/src/.l6cl/tsdb/tagger.fasl
 ;;; Fasl write complete
 ; Fast loading /lingo/www/build/lkb/src/.l6cl/tsdb/tagger.fasl
@@ -3590,25 +3590,438 @@ spanish/lkb/user-fns.lsp
 spanish/lkb/user-prefs.lsp
 ( \
   cd /lingo/www/build//lkb; \
-  find src/.sacl -type f -exec touch {} \; ; \
-  tar Svczf /lingo/www/lingo/ftp/`date "+%Y-%m-%d"`/itsdb_solaris.tgz \
+  find src/.l6cl -type f -exec touch {} \; ; \
+  tar Svczf /lingo/www/lingo/ftp/`date "+%Y-%m-%d"`/itsdb_linux.tgz \
       --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
               --exclude=".nfs*" \
-      bin/solaris/tsdb bin/solaris/swish++ \
-      bin/solaris/pvmd3 bin/solaris/pvm \
-      src/pvm/solaris/*.so src/tsdb/solaris/*.so \
-      src/.sacl/pvm src/.sacl/tsdb; \
+      bin/linux/tsdb bin/linux/swish++ \
+      bin/linux/pvmd3 bin/linux/pvm \
+      src/pvm/linux/*.so src/tsdb/linux/*.so \
+      src/.l6cl/pvm src/.l6cl/tsdb; \
 )
-find: src/.sacl: No such file or directory
-bin/solaris/tsdb
-bin/solaris/swish++
-bin/solaris/pvmd3
-bin/solaris/pvm
-src/pvm/solaris/pvm.so
-src/tsdb/solaris/capi.so
-src/tsdb/solaris/gc.so
-tar: src/.sacl/pvm: Cannot stat: No such file or directory
-tar: src/.sacl/tsdb: Cannot stat: No such file or directory
+bin/linux/tsdb
+bin/linux/swish++
+bin/linux/pvmd3
+bin/linux/pvm
+src/pvm/linux/pvm.so
+src/tsdb/linux/capi.so
+src/tsdb/linux/gc.so
+src/.l6cl/pvm/
+src/.l6cl/pvm/pvm-package.fasl
+src/.l6cl/pvm/pvm.fasl
+src/.l6cl/tsdb/
+src/.l6cl/tsdb/tsdb-package.fasl
+src/.l6cl/tsdb/macros.fasl
+src/.l6cl/tsdb/lkb-interface.fasl
+src/.l6cl/tsdb/globals.fasl
+src/.l6cl/tsdb/utilities.fasl
+src/.l6cl/tsdb/pvm.fasl
+src/.l6cl/tsdb/capi.fasl
+src/.l6cl/tsdb/tsql.fasl
+src/.l6cl/tsdb/tsdb.fasl
+src/.l6cl/tsdb/process.fasl
+src/.l6cl/tsdb/commands.fasl
+src/.l6cl/tsdb/import.fasl
+src/.l6cl/tsdb/filter.fasl
+src/.l6cl/tsdb/statistics.fasl
+src/.l6cl/tsdb/evolution.fasl
+src/.l6cl/tsdb/html.fasl
+src/.l6cl/tsdb/podium.fasl
+src/.l6cl/tsdb/allegro.fasl
+src/.l6cl/tsdb/gc.fasl
+src/.l6cl/tsdb/yy.fasl
+src/.l6cl/tsdb/mt.fasl
+src/.l6cl/tsdb/derivations.fasl
+src/.l6cl/tsdb/tnt-interface.fasl
+src/.l6cl/tsdb/redwoods.fasl
+src/.l6cl/tsdb/lsp.fasl
+src/.l6cl/tsdb/ptb.fasl
+src/.l6cl/tsdb/rasp.fasl
+src/.l6cl/tsdb/pcfg.fasl
+src/.l6cl/tsdb/maxent.fasl
+src/.l6cl/tsdb/tagger.fasl
+( \
+  cd /lingo/www/build//lkb; \
+  tar Svczf /lingo/www/lingo/ftp/`date "+%Y-%m-%d"`/itsdb_libraries.tgz \
+      --exclude="*~" --exclude="*/RCS*" --exclude="*/CVS*" \
+              --exclude=".nfs*" --exclude=".#*" \
+      etc include lib man src/general/itsdb.lisp; \
+)
+etc/
+etc/dot.bashrc
+etc/dot.cshrc
+etc/dot.emacs
+etc/launch
+include/
+include/itsdb.h
+include/mrs.h
+include/pvm3.h
+lib/
+lib/XKeysymDB
+lib/Tktable2.7/
+lib/Tktable2.7/pkgIndex.tcl
+lib/Tktable2.7/tkTable.tcl
+lib/blt2.4/
+lib/blt2.4/bltCanvEps.pro
+lib/blt2.4/bltDnd.tcl
+lib/blt2.4/bltDragdrop.tcl
+lib/blt2.4/bltGraph.pro
+lib/blt2.4/bltGraph.tcl
+lib/blt2.4/bltHier.tcl
+lib/blt2.4/bltHierbox.tcl
+lib/blt2.4/bltHiertable.tcl
+lib/blt2.4/bltTabnotebook.tcl
+lib/blt2.4/bltTabset.tcl
+lib/blt2.4/dnd.tcl
+lib/blt2.4/dragdrop.tcl
+lib/blt2.4/graph.tcl
+lib/blt2.4/hierbox.tcl
+lib/blt2.4/htresize.xbm
+lib/blt2.4/htresize_m.xbm
+lib/blt2.4/pkgIndex.tcl
+lib/blt2.4/tabnotebook.tcl
+lib/blt2.4/tabset.tcl
+lib/blt2.4/tclIndex
+lib/blt2.4/treeview.tcl
+lib/blt2.4/treeview.xbm
+lib/blt2.4/treeview_m.xbm
+lib/blt2.4/dd_protocols/
+lib/blt2.4/dd_protocols/dd-color.tcl
+lib/blt2.4/dd_protocols/dd-file.tcl
+lib/blt2.4/dd_protocols/dd-number.tcl
+lib/blt2.4/dd_protocols/dd-text.tcl
+lib/blt2.4/dd_protocols/tclIndex
+lib/linux/
+lib/linux/libgd.so
+lib/linux/libitsdb.a
+lib/linux/libitsdb.so
+lib/linux/libmrs.a
+lib/linux/libpvm3.a
+lib/solaris/
+lib/solaris/libitsdb.a
+lib/solaris/libitsdb.so
+lib/solaris/libpvm3.a
+lib/tcl8.3/
+lib/tcl8.3/auto.tcl
+lib/tcl8.3/history.tcl
+lib/tcl8.3/init.tcl
+lib/tcl8.3/ldAix
+lib/tcl8.3/ldAout.tcl
+lib/tcl8.3/package.tcl
+lib/tcl8.3/parray.tcl
+lib/tcl8.3/safe.tcl
+lib/tcl8.3/tclAppInit.c
+lib/tcl8.3/tclIndex
+lib/tcl8.3/word.tcl
+lib/tcl8.3/encoding/
+lib/tcl8.3/encoding/ascii.enc
+lib/tcl8.3/encoding/big5.enc
+lib/tcl8.3/encoding/cp1250.enc
+lib/tcl8.3/encoding/cp1251.enc
+lib/tcl8.3/encoding/cp1252.enc
+lib/tcl8.3/encoding/cp1253.enc
+lib/tcl8.3/encoding/cp1254.enc
+lib/tcl8.3/encoding/cp1255.enc
+lib/tcl8.3/encoding/cp1256.enc
+lib/tcl8.3/encoding/cp1257.enc
+lib/tcl8.3/encoding/cp1258.enc
+lib/tcl8.3/encoding/cp437.enc
+lib/tcl8.3/encoding/cp737.enc
+lib/tcl8.3/encoding/cp775.enc
+lib/tcl8.3/encoding/cp850.enc
+lib/tcl8.3/encoding/cp852.enc
+lib/tcl8.3/encoding/cp855.enc
+lib/tcl8.3/encoding/cp857.enc
+lib/tcl8.3/encoding/cp860.enc
+lib/tcl8.3/encoding/cp861.enc
+lib/tcl8.3/encoding/cp862.enc
+lib/tcl8.3/encoding/cp863.enc
+lib/tcl8.3/encoding/cp864.enc
+lib/tcl8.3/encoding/cp865.enc
+lib/tcl8.3/encoding/cp866.enc
+lib/tcl8.3/encoding/cp869.enc
+lib/tcl8.3/encoding/cp874.enc
+lib/tcl8.3/encoding/cp932.enc
+lib/tcl8.3/encoding/cp936.enc
+lib/tcl8.3/encoding/cp949.enc
+lib/tcl8.3/encoding/cp950.enc
+lib/tcl8.3/encoding/dingbats.enc
+lib/tcl8.3/encoding/ebcdic.enc
+lib/tcl8.3/encoding/euc-cn.enc
+lib/tcl8.3/encoding/euc-jp.enc
+lib/tcl8.3/encoding/euc-kr.enc
+lib/tcl8.3/encoding/gb12345.enc
+lib/tcl8.3/encoding/gb1988.enc
+lib/tcl8.3/encoding/gb2312.enc
+lib/tcl8.3/encoding/iso2022-jp.enc
+lib/tcl8.3/encoding/iso2022-kr.enc
+lib/tcl8.3/encoding/iso2022.enc
+lib/tcl8.3/encoding/iso8859-1.enc
+lib/tcl8.3/encoding/iso8859-10.enc
+lib/tcl8.3/encoding/iso8859-13.enc
+lib/tcl8.3/encoding/iso8859-14.enc
+lib/tcl8.3/encoding/iso8859-15.enc
+lib/tcl8.3/encoding/iso8859-16.enc
+lib/tcl8.3/encoding/iso8859-2.enc
+lib/tcl8.3/encoding/iso8859-3.enc
+lib/tcl8.3/encoding/iso8859-4.enc
+lib/tcl8.3/encoding/iso8859-5.enc
+lib/tcl8.3/encoding/iso8859-6.enc
+lib/tcl8.3/encoding/iso8859-7.enc
+lib/tcl8.3/encoding/iso8859-8.enc
+lib/tcl8.3/encoding/iso8859-9.enc
+lib/tcl8.3/encoding/jis0201.enc
+lib/tcl8.3/encoding/jis0208.enc
+lib/tcl8.3/encoding/jis0212.enc
+lib/tcl8.3/encoding/koi8-r.enc
+lib/tcl8.3/encoding/koi8-u.enc
+lib/tcl8.3/encoding/ksc5601.enc
+lib/tcl8.3/encoding/macCentEuro.enc
+lib/tcl8.3/encoding/macCroatian.enc
+lib/tcl8.3/encoding/macCyrillic.enc
+lib/tcl8.3/encoding/macDingbats.enc
+lib/tcl8.3/encoding/macGreek.enc
+lib/tcl8.3/encoding/macIceland.enc
+lib/tcl8.3/encoding/macJapan.enc
+lib/tcl8.3/encoding/macRoman.enc
+lib/tcl8.3/encoding/macRomania.enc
+lib/tcl8.3/encoding/macThai.enc
+lib/tcl8.3/encoding/macTurkish.enc
+lib/tcl8.3/encoding/macUkraine.enc
+lib/tcl8.3/encoding/shiftjis.enc
+lib/tcl8.3/encoding/symbol.enc
+lib/tcl8.3/encoding/tis-620.enc
+lib/tcl8.3/http1.0/
+lib/tcl8.3/http1.0/http.tcl
+lib/tcl8.3/http1.0/pkgIndex.tcl
+lib/tcl8.3/http2.3/
+lib/tcl8.3/http2.3/http.tcl
+lib/tcl8.3/http2.3/pkgIndex.tcl
+lib/tcl8.3/http2.4/
+lib/tcl8.3/http2.4/http.tcl
+lib/tcl8.3/http2.4/pkgIndex.tcl
+lib/tcl8.3/msgcat1.1/
+lib/tcl8.3/msgcat1.1/msgcat.tcl
+lib/tcl8.3/msgcat1.1/pkgIndex.tcl
+lib/tcl8.3/opt0.4/
+lib/tcl8.3/opt0.4/optparse.tcl
+lib/tcl8.3/opt0.4/pkgIndex.tcl
+lib/tcl8.3/tcltest1.0/
+lib/tcl8.3/tcltest1.0/pkgIndex.tcl
+lib/tcl8.3/tcltest1.0/tcltest.tcl
+lib/tix8.2/
+lib/tix8.2/Balloon.tcl
+lib/tix8.2/BtnBox.tcl
+lib/tix8.2/CObjView.tcl
+lib/tix8.2/ChkList.tcl
+lib/tix8.2/ComboBox.tcl
+lib/tix8.2/Compat.tcl
+lib/tix8.2/Console.tcl
+lib/tix8.2/Control.tcl
+lib/tix8.2/DefSchm.tcl
+lib/tix8.2/DialogS.tcl
+lib/tix8.2/DirBox.tcl
+lib/tix8.2/DirDlg.tcl
+lib/tix8.2/DirList.tcl
+lib/tix8.2/DirTree.tcl
+lib/tix8.2/DragDrop.tcl
+lib/tix8.2/DtlList.tcl
+lib/tix8.2/EFileBox.tcl
+lib/tix8.2/EFileDlg.tcl
+lib/tix8.2/Event.tcl
+lib/tix8.2/FileBox.tcl
+lib/tix8.2/FileCbx.tcl
+lib/tix8.2/FileCmpt.tcl
+lib/tix8.2/FileDlg.tcl
+lib/tix8.2/FileEnt.tcl
+lib/tix8.2/FileUtil.tcl
+lib/tix8.2/FloatEnt.tcl
+lib/tix8.2/Grid.tcl
+lib/tix8.2/HList.tcl
+lib/tix8.2/HListDD.tcl
+lib/tix8.2/IconView.tcl
+lib/tix8.2/Init.tcl
+lib/tix8.2/LabEntry.tcl
+lib/tix8.2/LabFrame.tcl
+lib/tix8.2/LabWidg.tcl
+lib/tix8.2/ListNBk.tcl
+lib/tix8.2/Meter.tcl
+lib/tix8.2/MultView.tcl
+lib/tix8.2/NoteBook.tcl
+lib/tix8.2/OldUtil.tcl
+lib/tix8.2/OptMenu.tcl
+lib/tix8.2/PanedWin.tcl
+lib/tix8.2/PopMenu.tcl
+lib/tix8.2/Primitiv.tcl
+lib/tix8.2/ResizeH.tcl
+lib/tix8.2/SGrid.tcl
+lib/tix8.2/SHList.tcl
+lib/tix8.2/SListBox.tcl
+lib/tix8.2/STList.tcl
+lib/tix8.2/SText.tcl
+lib/tix8.2/SWidget.tcl
+lib/tix8.2/SWindow.tcl
+lib/tix8.2/Select.tcl
+lib/tix8.2/Shell.tcl
+lib/tix8.2/SimpDlg.tcl
+lib/tix8.2/StackWin.tcl
+lib/tix8.2/StatBar.tcl
+lib/tix8.2/StdBBox.tcl
+lib/tix8.2/StdShell.tcl
+lib/tix8.2/TList.tcl
+lib/tix8.2/Tix.tcl
+lib/tix8.2/Tree.tcl
+lib/tix8.2/UnixFile.tcl
+lib/tix8.2/Utils.tcl
+lib/tix8.2/VResize.tcl
+lib/tix8.2/VStack.tcl
+lib/tix8.2/VTree.tcl
+lib/tix8.2/Variable.tcl
+lib/tix8.2/Verify.tcl
+lib/tix8.2/Version.tcl
+lib/tix8.2/WInfo.tcl
+lib/tix8.2/WinFile.tcl
+lib/tix8.2/fs.tcl
+lib/tix8.2/pkgIndex.tcl
+lib/tix8.2/tclIndex
+lib/tix8.2/bitmaps/
+lib/tix8.2/bitmaps/act_fold.gif
+lib/tix8.2/bitmaps/act_fold.xbm
+lib/tix8.2/bitmaps/act_fold.xpm
+lib/tix8.2/bitmaps/balarrow.xbm
+lib/tix8.2/bitmaps/cbxarrow.xbm
+lib/tix8.2/bitmaps/ck_def.xbm
+lib/tix8.2/bitmaps/ck_off.xbm
+lib/tix8.2/bitmaps/ck_on.xbm
+lib/tix8.2/bitmaps/cross.xbm
+lib/tix8.2/bitmaps/decr.xbm
+lib/tix8.2/bitmaps/drop.xbm
+lib/tix8.2/bitmaps/file.gif
+lib/tix8.2/bitmaps/file.xbm
+lib/tix8.2/bitmaps/file.xpm
+lib/tix8.2/bitmaps/folder.gif
+lib/tix8.2/bitmaps/folder.xbm
+lib/tix8.2/bitmaps/folder.xpm
+lib/tix8.2/bitmaps/harddisk.xbm
+lib/tix8.2/bitmaps/hourglas.mask
+lib/tix8.2/bitmaps/hourglas.xbm
+lib/tix8.2/bitmaps/incr.xbm
+lib/tix8.2/bitmaps/info.gif
+lib/tix8.2/bitmaps/info.xpm
+lib/tix8.2/bitmaps/maximize.xbm
+lib/tix8.2/bitmaps/minimize.xbm
+lib/tix8.2/bitmaps/minus.gif
+lib/tix8.2/bitmaps/minus.xbm
+lib/tix8.2/bitmaps/minus.xpm
+lib/tix8.2/bitmaps/minusarm.gif
+lib/tix8.2/bitmaps/minusarm.xbm
+lib/tix8.2/bitmaps/minusarm.xpm
+lib/tix8.2/bitmaps/mktransgif.tcl
+lib/tix8.2/bitmaps/network.xbm
+lib/tix8.2/bitmaps/no_entry.gif
+lib/tix8.2/bitmaps/no_entry.xpm
+lib/tix8.2/bitmaps/openfile.xbm
+lib/tix8.2/bitmaps/openfold.gif
+lib/tix8.2/bitmaps/openfold.xbm
+lib/tix8.2/bitmaps/openfold.xpm
+lib/tix8.2/bitmaps/plus.gif
+lib/tix8.2/bitmaps/plus.xbm
+lib/tix8.2/bitmaps/plus.xpm
+lib/tix8.2/bitmaps/plusarm.gif
+lib/tix8.2/bitmaps/plusarm.xbm
+lib/tix8.2/bitmaps/plusarm.xpm
+lib/tix8.2/bitmaps/resize1.xbm
+lib/tix8.2/bitmaps/resize2.xbm
+lib/tix8.2/bitmaps/restore.xbm
+lib/tix8.2/bitmaps/srcfile.gif
+lib/tix8.2/bitmaps/srcfile.xbm
+lib/tix8.2/bitmaps/srcfile.xpm
+lib/tix8.2/bitmaps/system.xbm
+lib/tix8.2/bitmaps/textfile.gif
+lib/tix8.2/bitmaps/textfile.xbm
+lib/tix8.2/bitmaps/textfile.xpm
+lib/tix8.2/bitmaps/tick.xbm
+lib/tix8.2/bitmaps/warning.gif
+lib/tix8.2/bitmaps/warning.xpm
+lib/tix8.2/pref/
+lib/tix8.2/pref/12Point.fs
+lib/tix8.2/pref/12Point.fsc
+lib/tix8.2/pref/14Point.fs
+lib/tix8.2/pref/14Point.fsc
+lib/tix8.2/pref/Bisque.cs
+lib/tix8.2/pref/Bisque.csc
+lib/tix8.2/pref/Blue.cs
+lib/tix8.2/pref/Blue.csc
+lib/tix8.2/pref/Gray.cs
+lib/tix8.2/pref/Gray.csc
+lib/tix8.2/pref/Makefile
+lib/tix8.2/pref/Old12Pt.fs
+lib/tix8.2/pref/Old14Pt.fs
+lib/tix8.2/pref/SGIGray.cs
+lib/tix8.2/pref/SGIGray.csc
+lib/tix8.2/pref/TK.cs
+lib/tix8.2/pref/TK.csc
+lib/tix8.2/pref/TK.fs
+lib/tix8.2/pref/TK.fsc
+lib/tix8.2/pref/TixGray.cs
+lib/tix8.2/pref/TixGray.csc
+lib/tix8.2/pref/TkWin.cs
+lib/tix8.2/pref/TkWin.csc
+lib/tix8.2/pref/TkWin.fs
+lib/tix8.2/pref/TkWin.fsc
+lib/tix8.2/pref/tixmkpref
+lib/tk8.3/
+lib/tk8.3/bgerror.tcl
+lib/tk8.3/button.tcl
+lib/tk8.3/choosedir.tcl
+lib/tk8.3/clrpick.tcl
+lib/tk8.3/comdlg.tcl
+lib/tk8.3/console.tcl
+lib/tk8.3/dialog.tcl
+lib/tk8.3/entry.tcl
+lib/tk8.3/focus.tcl
+lib/tk8.3/listbox.tcl
+lib/tk8.3/menu.tcl
+lib/tk8.3/msgbox.tcl
+lib/tk8.3/obsolete.tcl
+lib/tk8.3/optMenu.tcl
+lib/tk8.3/palette.tcl
+lib/tk8.3/prolog.ps
+lib/tk8.3/safetk.tcl
+lib/tk8.3/scale.tcl
+lib/tk8.3/scrlbar.tcl
+lib/tk8.3/tclIndex
+lib/tk8.3/tearoff.tcl
+lib/tk8.3/text.tcl
+lib/tk8.3/tk.tcl
+lib/tk8.3/tkAppInit.c
+lib/tk8.3/tkfbox.tcl
+lib/tk8.3/xmfbox.tcl
+lib/tk8.3/demos/
+lib/tk8.3/demos/images/
+lib/tk8.3/demos/images/face.bmp
+lib/tk8.3/demos/images/flagdown.bmp
+lib/tk8.3/demos/images/flagup.bmp
+lib/tk8.3/demos/images/gray25.bmp
+lib/tk8.3/demos/images/letters.bmp
+lib/tk8.3/demos/images/noletter.bmp
+lib/tk8.3/demos/images/pattern.bmp
+lib/tk8.3/images/
+lib/tk8.3/images/README
+lib/tk8.3/images/logo.eps
+lib/tk8.3/images/logo100.gif
+lib/tk8.3/images/logo64.gif
+lib/tk8.3/images/logoLarge.gif
+lib/tk8.3/images/logoMed.gif
+lib/tk8.3/images/pwrdLogo.eps
+lib/tk8.3/images/pwrdLogo100.gif
+lib/tk8.3/images/pwrdLogo150.gif
+lib/tk8.3/images/pwrdLogo175.gif
+lib/tk8.3/images/pwrdLogo200.gif
+lib/tk8.3/images/pwrdLogo75.gif
+lib/tk8.3/images/tai-ku.gif
+tar: man: Cannot stat: No such file or directory
+src/general/itsdb.lisp
 tar: Error exit delayed from previous errors
-make[1]: *** [itsdb_binaries] Error 2
+make[1]: *** [itsdb_libraries] Error 2
 make[1]: Leaving directory `/lingo/www/build/lkb'
