@@ -139,21 +139,25 @@
 (defmacro right (i)
   `(the fixnum (1+ (* (the fixnum ,i) 2))))
 
+(defmacro fast-aref (a x)
+  `(aref (the (simple-array t (*)) ,a) ,x))
+
 (defmacro heap-size (a)
-  `(the fixnum (aref ,a 0)))
+  `(the fixnum (fast-aref ,a 0)))
 
 (defun heapify (a i)
   (let* ((l (left i))
 	 (r (right i))
 	 (largest (if (and (<= l (heap-size a))
-			   (> (car (aref a l)) (car (aref a r))))
+			   (> (car (fast-aref a l)) 
+			      (car (fast-aref a r))))
 		      l
 		    i)))
     (when (and (<= r (heap-size a))
-	       (> (car (aref a r)) (car (aref a largest))))
+	       (> (car (fast-aref a r)) (car (fast-aref a largest))))
       (setq largest r))
     (unless (eql largest i)
-      (rotatef (aref a i) (aref a largest))
+      (rotatef (fast-aref a i) (fast-aref a largest))
       (heapify a largest))))
 
 (defun heap-insert (a key value)
@@ -164,16 +168,16 @@
   (loop 
       with i = (heap-size a)
       while (and (> i 1)
-		 (< (car (aref a (parent i))) key))
-      do (setf (aref a i) (aref a (parent i)))
+		 (< (car (fast-aref a (parent i))) key))
+      do (setf (fast-aref a i) (fast-aref a (parent i)))
 	 (setf i (parent i))
-      finally (setf (aref a i) (cons key value)))
+      finally (setf (fast-aref a i) (cons key value)))
   value)
 
 (defun heap-extract-max (a)
   (when (< (heap-size a) 1)
     (error "This shouldn't happen!  Something's wrong with the parser."))
-  (let ((max (shiftf (aref a 1) (aref a (heap-size a)))))
+  (let ((max (shiftf (fast-aref a 1) (fast-aref a (heap-size a)))))
     (decf (heap-size a))
     (heapify a 1)
     (cdr max)))
@@ -191,8 +195,8 @@
 
 (defvar *agenda* (make-heap))
 
-(defmacro with-agenda ((f priority) &body body)
-  `(if ,f
+(defmacro with-agenda (priority &body body)
+  `(if ,priority
        (heap-insert *agenda* ,priority #'(lambda () ,@body))
      (progn
        ,@body)))
@@ -351,7 +355,7 @@
       (let ((lex-ids (mrecord-lex-ids mrec))
 	    (sense (mrecord-fs mrec))
 	    (history (mrecord-history mrec)))
-	(with-agenda (f (when f (lex-priority mrec)))
+	(with-agenda (when f (lex-priority mrec))
 	  (activate-context (- right-vertex 1) 
 			    (construct-lex-edge sense history local-word
 						lex-ids)
@@ -440,7 +444,7 @@
 	  (let ((sense (mrecord-fs mrec))
 		(lex-ids (mrecord-lex-ids mrec))
 		(history (mrecord-history mrec)))
-	    (with-agenda (f (when f (lex-priority mrec)))
+	    (with-agenda (when f (lex-priority mrec))
 	      (activate-context left-vertex 
 				(construct-lex-edge sense history word
 						    lex-ids)      
@@ -723,7 +727,7 @@
 					   f (1- n))
                   (return-from try-grammar-rule-left nil)))))
 	;; we've got all the bits
-	(with-agenda (f (when f (rule-priority rule)))
+	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex
 					child-edge-list f t)))
     (progn (incf *filtered-tasks*) t)))
@@ -750,7 +754,7 @@
 					  f (1+ n))
                   (return-from try-grammar-rule-right nil)))))
 	;; we've got all the bits
-	(with-agenda (f (when f (rule-priority rule)))
+	(with-agenda (when f (rule-priority rule))
 	  (apply-immediate-grammar-rule rule left-vertex right-vertex 
 					child-edge-list f nil)))
     (incf *filtered-tasks*)))

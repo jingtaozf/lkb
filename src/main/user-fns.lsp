@@ -148,6 +148,16 @@
   (declare (ignore mrec))
   1)
 
+;;; Assign priorities to generator tasks
+
+(defun gen-rule-priority (rule)
+  (declare (ignore rule))
+  1)
+
+(defun gen-lex-priority (mrec)
+  (declare (ignore mrec))
+  1)
+
 ;;; functions which returns a directory etc for LKB temporary files.
 
 
