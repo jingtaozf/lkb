@@ -157,9 +157,9 @@
                    car-filter))
             `(,$body))
         ,$arg)
-       ,@(cond ((eq type 'do) `((declare (ignore ,$ans) (ignore-if-unused ,$arg)))))
+       ,@(cond ((eq type 'do) `((declare (ignore ,$ans) #-cmu (ignore-if-unused ,$arg)))))
                                         ; avoid compiler warnings AAC
-                                        ; ignore-if-unused is MCL specific
+                                        ; ignore-if-unused is MCL and ACL specific
        ,@(and 
            (member type '(all-satisfy none-satisfy)) 
            `((setq ,$ans t)))

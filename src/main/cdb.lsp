@@ -218,9 +218,9 @@
     cdb))
 
 
-#+mcl
+#+(or :mcl :cmu)
 (eval-when (compile load eval)
-  ;; read-sequence isn't present in MCL4.0
+  ;; read-sequence isn't present in MCL4.0 or CMUCL-18a
   (unless (fboundp 'common-lisp::read-sequence)
      (defun cdb::read-sequence (s stream)
        ;; read (length s) chars into string s from stream

@@ -61,6 +61,10 @@
 ;;; and the ones for allegro and mcl too... (4-jul-1994 -- bk@dfki)
 ;;;
 
+#+:cmu
+(load 
+ (make-pathname :directory general-dir :name "cmucl-patches"))
+
 #+:lucid
 (load 
  (make-pathname :directory general-dir :name "lucid-patches"))

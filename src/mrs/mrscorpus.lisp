@@ -25,7 +25,11 @@
 
 (IN-PACKAGE "MRS")
 
-(defparameter *mrs-results-table* (make-hash-table :test #'equalp))
+;; Not all lisps (e.g., CMU CL 18a) support equalp hash tables, so in
+;; the interests of portability, make this an equal hash table and map
+;; all the keys to lower case (RPM, 27-Mar-2000)
+
+(defparameter *mrs-results-table* (make-hash-table :test #'equal))
 
 (defun write-mrs-results (filename)
   (with-open-file
@@ -49,15 +53,18 @@
         ((or (eql sentence 'eof) (eql mrsstruct 'eof)) nil)
         (when (and mrsstruct (psoa-p mrsstruct) (stringp sentence))
               (setf (gethash
-                     (remove-trailing-periods sentence) *mrs-results-table*)
+                     (string-downcase (remove-trailing-periods sentence))
+		     *mrs-results-table*)
                     mrsstruct)))))
   
 
 
 (defun compare-mrs-struct (sentence mrs-struct stream &optional (comment t))
   (if mrs-struct
-      (let ((previous-result (gethash (remove-trailing-periods sentence)
-                                      *mrs-results-table*)))
+      (let ((previous-result (gethash 
+			      (string-downcase 
+			       (remove-trailing-periods sentence))
+			      *mrs-results-table*)))
         (if previous-result
             (unless (mrs-equalp mrs-struct previous-result)
                     (format stream "~%~S" sentence)

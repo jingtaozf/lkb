@@ -110,6 +110,7 @@
 	  (error "Second directory path starts with :ABSOLUTE"))
 	 (T (append dir1 dir2))))))))
 
+#|
 ;;;
 ;;; extensions to defsystem() to allow for new load and compile operations
 ;;;
@@ -250,7 +251,7 @@
 	    (t 
 	     nil)))))
 
-
+|#
 ;; another custom load or compile function that simply checks the availability
 ;; of a file
 (defun file-present-p (c f)

@@ -13,15 +13,14 @@
 ;;; generic assoc() and member() are mightier than is typically needed; supply
 ;;; simplified versions instead.                           (27-sep-99  -  oe)
 ;;;
+
 (defmacro sassoc (element list)
-  (declare (type list list))
   `(loop
-       for foo in ,list
+       for foo in (the list ,list)
        when (eq (first (the cons foo)) ,element) return foo))
 
 (defmacro smember (element list)
-  (declare (type list list))
-  `(loop for foo in ,list thereis (eq ,element foo)))
+  `(loop for foo in (the list ,list) thereis (eq ,element foo)))
 
 
 ;;(defmethod print-object ((obj type) stream) (write-char #\~ stream) (prin1 (type-name obj) stream))
