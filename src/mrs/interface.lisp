@@ -6,6 +6,8 @@
 (mrs::output-mrs-after-parse *parse-record*)
 |#
 
+(defvar *last-vits* nil)
+
 (defun output-mrs-after-parse (&optional edges stream)
   ;;; for ACL this is most likely to be useful in an emacs window
   ;;; the need to use *lkb-background-stream* is because 
@@ -15,6 +17,7 @@
             *mrs-output-p*)
     (unless stream (setf stream cl-user::*lkb-background-stream*))
     (unless edges (setf edges *parse-record*))
+    (setf *last-vits* nil)
     (let ((*print-circle* nil))
       (for edge in edges 
            do
@@ -31,7 +34,9 @@
   (format stream "~%~A " cl-user::*sentence*)
   (setf *mrs-debug* mrs-struct)
   (cond (*mrs-to-vit*
-         (mrs-to-vit-convert mrs-struct t stream))
+         (push
+          (mrs-to-vit-convert mrs-struct t stream)
+          *last-vits*))
         (*mrs-scoping*
          (process-mrs-struct mrs-struct nil 10 simplep stream))
         (t (output-mrs1 mrs-struct 'simple stream))))
