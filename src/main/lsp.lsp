@@ -44,13 +44,17 @@
 
 (defparameter *lsp-port* 4712)
 
-(defparameter *lsp-dedbug-p* t)
+(defparameter *lsp-debug-p* t)
 
 (defparameter %lsp-socket% nil)
 
 (defparameter %lsp-server% nil)
-
+
 (defparameter %lsp-clients% nil)
+
+(defparameter %lsp-object-counter% 0)
+
+(defparameter %lsp-attic% (make-array 512))
 
 (defstruct client
   id socket stream process
@@ -59,14 +63,16 @@
 (defun lsp-initialize ()
   (lsp-shutdown)
   (setf %lsp-socket%
-    (socket:make-socket :connect :passive :local-port *lsp-port*)))
+    (socket:make-socket :connect :passive :local-port *lsp-port*))
+  (setf %lsp-object-counter% 0)
+  (setf %lsp-attic% (make-array 512)))
 
 (defun lsp-shutdown ()
   (loop
       for client in %lsp-clients%
       do (lsp-shutdown-client client))
   (when %lsp-socket%
-    (when *lsp-dedbug-p*
+    (when *lsp-debug-p*
       (format t "lsp-shutdown(): shutting down server socket.~%"))
     (unless (eq mp:*current-process* %lsp-server%)
       (let ((process %lsp-server%))
@@ -88,7 +94,7 @@
     (let ((process (client-process client)))
       (unless (eq mp:*current-process* process)
         (mp:process-kill process))
-      (when *lsp-dedbug-p*
+      (when *lsp-debug-p*
         (format 
          t 
          "lsp-shutdown(): shutting down client # ~a~%"
@@ -104,7 +110,7 @@
           while %lsp-socket%
           for i from 0
           for stream = (socket:accept-connection %lsp-socket% :wait t)
-          when *lsp-dedbug-p* do
+          when *lsp-debug-p* do
             (let* ((address (socket:remote-host stream))
                    (host (socket:ipaddr-to-hostname address))
                    (port (socket:remote-port stream)))
@@ -154,6 +160,27 @@
         (ignore-errors (close stream))
         (return)))
 
+(defun lsp-read (id stream)
+  (loop
+      with *package* = (find-package :lkb)
+      with size = 2048
+      with buffer = (make-array size :element-type 'character
+                                :adjustable nil :fill-pointer 0)
+      for n from 1
+      for c = (read-char stream nil nil)
+      when (null c) do 
+        (format
+         t
+         "[~a] lsp-read(): premature end of file (read ~a characters)~%" 
+         id n)
+        (return)
+      when (= n size) do
+        (incf size size)
+        (setf buffer (adjust-array buffer size))
+      when (char= c #\page) do
+        (return buffer)
+      while c do (vector-push c buffer)))
+
 (defun lsp-process-event (id event stream)
   (let* ((client  (loop
                       for client in %lsp-clients%
@@ -174,15 +201,16 @@
 
     (when waitp (pop command))
 
-    (when *lsp-dedbug-p*
+    (when *lsp-debug-p*
       (format 
        t 
-       "[~a] lsp-process-event(): received: `~(~a~)' command ~@[(wait)~].~%" 
+       "[~a] lsp-process-event(): received: `~(~a~)' command~@[ (wait)~].~%" 
        id (first command) waitp))
     
-    (unless waitp
+    (unless (or waitp (null id))
       (format stream "~a~c~%" return #\page)
       (force-output stream))
+    
     (multiple-value-bind (foo condition)
       (ignore-errors
        (case (pop command)
@@ -214,7 +242,7 @@
                 (list (first (client-display client)) :display (first command))
                 #+:clim
                 display))
-            (when *lsp-dedbug-p*
+            (when *lsp-debug-p*
               (format
                t
                "[~d] lsp-process-event(): new DISPLAY is `~a'.~%"
@@ -239,13 +267,22 @@
                                *parse-record*)))
                   (if (eq view :browse)
                     (lsp-browse id input edges format)
-                    (lsp-return id stream edges format))))
-              (format stream "~a " (length *parse-record*)))))
+                    (when waitp (lsp-return id stream edges format)))))
+              (when waitp
+                (format stream " ~a" (length *parse-record*))))))
+         (browse
+          (pop command)
+          (let* ((location (pop command))
+                 (format (let ((foo (pop command)))
+                           (and foo (intern (string foo) :keyword))))
+                 (object (lsp-retrieve-object id location)))
+            (when (and (edge-p (second object)) (member format '(:avm :tree)))
+              (lsp-browse id (first object) (rest object) format))))
          (t
           (setf return %lsp-invalid-command%))))
       (declare (ignore foo))
       (when condition
-        (when *lsp-dedbug-p*
+        (when *lsp-debug-p*
           (format
            t
            "[~d] lsp-process-event(): ~a~%" 
@@ -262,7 +299,7 @@
       with stream = (make-string-input-stream string)
       for form = (ignore-errors (read stream nil :eof))
       when (null form) do
-        (when *lsp-dedbug-p*
+        (when *lsp-debug-p*
           (format 
            t 
            "[~a] lsp-parse-command(): parse error in `~a'~%"
@@ -278,36 +315,46 @@
       for client in %lsp-clients%
       when (equal id (client-id client)) return client))
 
+(defun lsp-store-object (id input object &key globalp)
+  (let ((n %lsp-object-counter%))
+    (setf (aref %lsp-attic% n) (cons (if globalp -1 id) (list input object)))
+    (incf %lsp-object-counter%)
+    (when (>= %lsp-object-counter% (array-total-size %lsp-attic%))
+      (setf %lsp-attic% (adjust-array %lsp-attic% (* %lsp-object-counter% 2))))
+    n))
+
 (defun lsp-retrieve-object (id n)
-  (declare (ignore id n)))
+  (when (and (numberp n) (< n (array-total-size %lsp-attic%)))
+    (let ((bucket (aref %lsp-attic% n)))
+      (when (or (equal (first bucket) -1) (equal (first bucket) id))
+        (rest bucket)))))
 
 (defun lsp-browse (id input edges format &key title)
   (let ((title (or title (format nil "`~a' [LSP # ~a]" input id))))
-    #+(and :allegro :clim)
     (when (eq format :tree)
-      (show-parse-tree-frame edges title)
+      (show-parse edges title)
       (return-from lsp-browse))
     (loop
         for edge in edges do
           (case format
             (:avm
-             (lkb::display-fs (edge-dag edge) title))
+             (display-fs (edge-dag edge) title))
             #+:mrs
             ((:mrs :indexed :prolog :scoped :rmrs :dependencies)
              (let ((mrs (mrs::extract-mrs edge)))
                (case format
                  (:mrs
-                  (lkb::show-mrs-window nil mrs title))
+                  (show-mrs-window nil mrs title))
                  (:indexed 
-                  (lkb::show-mrs-indexed-window nil mrs title))
+                  (show-mrs-indexed-window nil mrs title))
                  (:prolog 
-                  (lkb::show-mrs-prolog-window nil mrs title))
+                  (show-mrs-prolog-window nil mrs title))
                  (:scoped 
-                  (lkb::show-mrs-scoped-window nil mrs title))
+                  (show-mrs-scoped-window nil mrs title))
                  (:rmrs 
-                  (lkb::show-mrs-rmrs-window nil mrs title))
+                  (show-mrs-rmrs-window nil mrs title))
                  (:dependencies 
-                  (lkb::show-mrs-dependencies-window nil mrs title)))))))))
+                  (show-mrs-dependencies-window nil mrs title)))))))))
 
 (defun lsp-return (id stream edges format)
   (declare (ignore id))
@@ -318,14 +365,14 @@
           (:avm
            (let* ((dag (tdfs-indef (edge-dag edge)))
                   (string (with-output-to-string (stream)
-                            (lkb::display-dag1 dag 'compact stream))))
-             (format stream "~s " string)))
+                            (display-dag1 dag 'compact stream))))
+             (format stream " ~s" string)))
           (:tree
            (let* ((*package* (find-package :lkb))
                   (string (with-standard-io-syntax
                             (write-to-string 
-                             (lkb::parse-tree-structure edge)))))
-             (format stream "~s " string) ))
+                             (parse-tree-structure edge)))))
+             (format stream " ~s" string) ))
           #+:mrs
           ((:mrs :indexed :prolog :scoped :rmrs :dependencies)
            (when (eq format :mrs) (setf format :simple))
@@ -333,4 +380,4 @@
                   (mrs (mrs::extract-mrs edge))
                   (string (with-output-to-string (stream)
                             (mrs::output-mrs1 mrs format stream))))
-             (format stream "~s " string))))))
+             (format stream " ~s" string))))))

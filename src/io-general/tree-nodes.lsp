@@ -8,33 +8,24 @@
 ;;; parse output functions which are not dialect specific
 
 #-tty
-(defun show-parse nil
-  (if *parse-record*
+(defun show-parse (&optional edges title)
+  (let ((edges (or edges *parse-record*)))
+    (if edges
       (with-parser-lock ()
-	#+(and :allegro :clim)(show-parse-tree-frame *parse-record*)
-	#-(and :allegro :clim) 
-	(dolist (edge *parse-record*)
-	  (display-parse-tree edge nil))
-	;; replace old tree display with new frame in ACL CLIM
-        ;; FIX need to replicate in MCL and CG
+        (if #+:lui (streamp %lui-stream%) #-:lui nil
+          #+:lui (lui-show-parses edges *sentence*) #-:lui nil
+          #+(and :allegro :clim)
+          (show-parse-tree-frame edges title)
+          #-(and :allegro :clim) 
+          (dolist (edge edges) (display-parse-tree edge nil)))
         (let ((hook (when (and (find-package :mrs) 
                                (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs))
                       (fboundp (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)))))
-          (when hook (funcall hook *parse-record*))))
-    (progn
-      (lkb-beep)
-      (format t "~%No parses found"))))
+          (when hook (funcall hook edges))))
+      (progn
+        (lkb-beep)
+        (format t "~%No parses found")))))
 
-#|     
-     (let ((possible-edge-name
-               (ask-for-lisp-movable "Current Interaction" 
-                  `(("No parses - specify an edge number" . ,*edge-id*)) 60)))
-         (when possible-edge-name
-            (let* ((edge-id (car possible-edge-name))
-                  (edge-record (find-edge-given-id edge-id)))
-               (when edge-record 
-                  (display-parse-tree edge-record nil)))))))
-|#
 
 #-tty
 (defun show-parse-edge nil

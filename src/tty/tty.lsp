@@ -201,19 +201,24 @@
   nil)
 
 
-(defun show-parse nil
-  (if *parse-record*
-      (progn
-        (loop for edge in *parse-record*
-             do
-             (format t "~&Edge ~A P:" (edge-id edge))
-             (pprint (parse-tree-structure edge)))        
-        (let* ((symbol (when (find-package :mrs)
-                         (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)))
-               (hook (when (and symbol (fboundp symbol))
-                       (symbol-function symbol))))
-          (when hook (funcall hook *parse-record*))))
-      (format t "~&No parses")))
+(defun show-parse (&optional edges title)
+  (declare (ignore title))
+  (let ((edges (or edges *parse-record*)))
+    (if edges
+      (if #+:lui (streamp %lui-stream%) #-:lui nil
+        #+:lui (lui-show-parses edges *sentence*) #-:lui
+        (loop 
+            for edge in edges
+            do
+              (format t "~&Edge ~A P:" (edge-id edge))
+              (pprint (parse-tree-structure edge))
+            finally
+              (let* ((symbol (when (find-package :mrs)
+                               (find-symbol "OUTPUT-MRS-AFTER-PARSE" :mrs)))
+                     (hook (when (and symbol (fboundp symbol))
+                             (symbol-function symbol))))
+                (when hook (funcall hook edges)))))
+      (format t "~&No parses"))))
 
 
 (defun display-type-in-tree (type scroll-onlyp)

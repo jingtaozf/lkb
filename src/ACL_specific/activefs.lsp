@@ -127,7 +127,9 @@
     (clim:run-frame-top-level fs-window)))
 
 (defun display-fs (fs title &optional id)
-  (display-basic-fs fs title nil nil id))
+  (if #+:lui (streamp %lui-stream%) #-:lui nil
+    #+:lui (lui-display-fs fs title id) #-:lui nil
+    (display-basic-fs fs title nil nil id)))
 
 (defun display-fs-and-parents (fs title parents &optional id)
   (display-basic-fs fs title parents nil id))

@@ -94,17 +94,17 @@
 (defmethod fs-output-start-fs ((fsout linear) type depth labels)
   (declare (ignore depth labels))
   (with-slots (stream) fsout
-    (format stream "#D(~(~A~)" type)))
+    (format stream "#D[~(~a~)" type)))
 
 (defmethod fs-output-label-fn ((fsout linear) label depth old-x old-y path)
    (declare (ignore depth old-x old-y path))  
    (with-slots (stream) fsout
-    (format stream " ~A: " label)))
+    (format stream " ~a: " label)))
 
 (defmethod fs-output-end-fs ((fsout linear) terminal)
   (declare (ignore terminal))
   (with-slots (stream) fsout
-    (format stream ")")))
+    (format stream "]")))
 
 ;;; linear print is used by the following
 

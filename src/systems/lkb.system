@@ -43,7 +43,7 @@
   (pushnew :preprocessor *features*)
   #+(and :allegro (version>= 6 0))
   (pushnew :xml *features*)
-  #+(and :allegro (version>= 6 0))
+  #+(or :lui (and :allegro (version>= 6 0)))
   (pushnew :lsp *features*)
   (pushnew :pooling *features*)
   (pushnew :packing *features*))
@@ -147,6 +147,8 @@
                (:file "preprocess")
                #+:lsp     
                (:file "lsp")
+               #+:lui
+               (:file "lui")
                #+:xml
                (:file "sppp")))
 
