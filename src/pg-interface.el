@@ -13,8 +13,8 @@
 ;;;
 
 (defvar *lexdb-completion-lists* nil)
-(defvar *lexdb-record-features* '(:name :type :orthography :keyrel :altkey :alt2key :keytag :compkey :ocompkey :pronunciation :comments :exemplars :usages :lang :country :dialect :domains :genres :register :confidence))
-(defvar *lexdb-completion-features*  '(:type :orthography :keyrel :altkey :alt2key :keytag :compkey :ocompkey :pronunciation :comments :exemplars :usages :lang :country :dialect :domains :genres :register :confidence))
+(defvar *lexdb-record-features* '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars))
+(defvar *lexdb-completion-features*  '(:name :type :orthography :keyrel :keytag :altkey :altkeytag :alt2key :compkey :ocompkey :lang :country :dialect :domains :genres :register :confidence :comments :exemplars))
 (defvar *lexdb-minibuffer-max* 100)
 (defvar *lexdb-active-id-ring* nil)
 
