@@ -115,7 +115,7 @@ srv-sem := lex-item &
 [ SEM [	INDEX #index,
         RESTR <! srv_pred & [ SIT #index,
 			      ARG #3 ] !> ],
-  ARG-ST < #4 ,  [ SEM [INDEX #3] ] > ].
+  ARG-ST < *top* ,  [ SEM [INDEX #3] ] > ].
 
 scv-sem := lex-item &
 [ SEM [ INDEX #index,

@@ -142,7 +142,7 @@ dtv-pass-rule-thm-short := general-passive-lrule &
 	    SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
 				  SEM [INDEX #und] ] >,
   
-   ARGS < [ ARG-ST < [SEM [INDEX #act ] ], [SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
+   ARGS < [ ARG-ST < *top*, [SEM [INDEX #thm ] ], [SYN [HEAD prep & [FORM #form] ],
 								  SEM [INDEX #und] ] > ] > ].
 :end :instance.  
 

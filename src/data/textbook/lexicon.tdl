@@ -930,8 +930,7 @@ take_1 := verb-lxm &
 [ ORTH <! "take" !>,
   ARG-ST < [SEM [INDEX #1] ], [SYN [HEAD noun & [FORM f_advantage] ] ], 
 
-                        [SYN [HEAD prep & [FORM f_of,
-  	                      ANA #agr],
+                        [SYN [HEAD prep & [FORM f_of],
   	                      SPR < > ],
                          SEM [ INDEX #2 ] ] >,
   SEM  [ INDEX #index,

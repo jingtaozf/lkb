@@ -151,17 +151,15 @@ noun-coordination-rule := trirule-nonheaded &
 
    NH1 [ SYN [ HEAD noun & [CASE #case ],
 	       SPR #spr,
-	       COMPS #comps ],
-	 SEM [ INDEX #1 ] ],
-   
+	       COMPS #comps ]],
+ 
    NH2 [ SYN [ HEAD conj & [ FORM f_and ] ],
 	 SEM [ INDEX #ref-index ] ],
 
    NH3 [ SYN [ HEAD noun & [CASE #case ],
 	       SPR #spr,
-	       COMPS #comps ],
-	 SEM [ INDEX #2] ] ].
-:end :instance:
+	       COMPS #comps ]]].
+:end :instance.
 
 
 :begin :instance.
@@ -177,8 +175,7 @@ verb-coordination-rule := trirule-nonheaded &
 	       SPR #spr,
 	       COMPS #comps,
 	       GAP #gap ],
-	 SEM [ MODE prop,
-	       INDEX #1 ] ],
+	 SEM [ MODE prop]],
 
    NH2 [ SYN [ HEAD conj & [FORM f_and ] ],
 	 SEM [ INDEX #sit-index,
@@ -188,8 +185,7 @@ verb-coordination-rule := trirule-nonheaded &
 	       SPR #spr,
 	       COMPS #comps,
 	       GAP #gap ],
-	 SEM [ MODE prop,
-	       INDEX #2 ] ] ].
+	 SEM [ MODE prop ] ] ].
 :end :instance.
 
 

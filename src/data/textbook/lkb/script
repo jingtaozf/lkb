@@ -14,7 +14,7 @@
            (lkb-pathname (parent-directory) "grule-types.tdl")
            (lkb-pathname (parent-directory) "types.tdl"))
      (lkb-pathname (this-directory) "settings.lsp"))
-(read-tdl-lex-file-aux 
+(read-cached-lex-if-available
      (lkb-pathname (parent-directory) "lexicon.tdl"))
 (read-tdl-lex-rule-file-aux 
 	(lkb-pathname (parent-directory) "binding.tdl"))
