@@ -658,30 +658,24 @@
                  (when (eql (vit_sort-instance sort-info)
                             (vit_sort-instance rem))
                    (push (vit_sort-args rem) equiv)))
-            (if (cdr equiv)
-                (let ((new-sorts 
-                       (reduce #'merge-sorts 
-                               (for sort-spec in equiv
-                                    collect
-                                    (if (disj-sort-p (car sort-spec))
-                                        (disj-sort-args (car sort-spec))
-                                      sort-spec)))))
-                  (setf new-sorts 
-                    (for sort in new-sorts
-                         filter
-                         (unless (member sort *vm-ignored-sort-list*)
-                           sort)))
-                  (when new-sorts 
+            (let ((new-sorts 
+                   (reduce #'merge-sorts 
+                           (for sort-spec in equiv
+                                collect
+                                (if (disj-sort-p (car sort-spec))
+                                    (disj-sort-args (car sort-spec))
+                                  sort-spec)))))
+              (setf new-sorts 
+                (for sort in new-sorts
+                     filter
+                     (unless (member sort *vm-ignored-sort-list*)
+                       sort)))
+              (when new-sorts 
               ;;; ignored sorts are dropped
-                    (push (make-vit_sort 
-                           :instance 
-                           (vit_sort-instance sort-info)
-                           :args (if (cdr new-sorts)
-                                   (list (make-disj-sort 
-                                          :args new-sorts))
-                                   new-sorts))
-                          res)))
-              (push sort-info res))))))
+                (push (construct-vit-sort 
+                       (vit_sort-instance sort-info)
+                       new-sorts)
+                      res)))))))
         res))
 
 (defun merge-sorts (sorts1 sorts2)
