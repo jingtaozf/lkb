@@ -338,9 +338,10 @@
 (defun www-analyze (input exhaustivep nedges nresults)
   (let* ((item (pairlis '(:i-id :parse-id :i-input :edges)
                         (list 0 0 input nedges)))
-         (client (tsdb::allocate-client item :protocol :raw :wait 5))
+         (client (tsdb::allocate-client item :wait 5))
          (cpu (and client (pvm::client-cpu client)))
          (tid (and client (pvm::client-tid client)))
+         (protocol (and client (pvm::client-protocol client)))
          (p-input (cond
                    ((and (pvm::cpu-p cpu) (pvm::cpu-preprocessor cpu))
                     (tsdb::call-hook (pvm::cpu-preprocessor cpu) input))
@@ -350,7 +351,21 @@
          (nanalyses (if exhaustivep 0 1))
          (nresults (or nresults 0))
          (status (if tid 
-                   (tsdb::process_item tid item nanalyses nresults nil)
+                   (case protocol
+                     (:raw
+                      (tsdb::process_item tid item nanalyses nresults nil))
+                     (:lisp
+                      (tsdb::revaluate 
+                       tid 
+                       `(tsdb::process-item
+                         (quote ,item)
+                         :exhaustive ,exhaustivep
+                         :nanalyses ,nanalyses
+                         :nresults ,nresults
+                         :verbose nil :interactive nil :burst t)
+                       nil
+                       :key :process-item
+                       :verbose nil)))
                    :null)))
     (case status
       (:ok 
