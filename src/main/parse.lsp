@@ -275,10 +275,6 @@
 (defun parse (bracketed-input &optional 
                               (show-parse-p *show-parse-p*) 
                               (first-only-p *first-only-p*))
-
-  (when (> (length user-input) *chart-limit*)
-    (error "Sentence `~a' too long - ~A words maximum (*chart-limit*)" 
-           user-input *chart-limit*))
   ;;
   ;; keep track of mutual dependencies between various configurations:
   ;;   - input bracketing is only available in passive mode;
@@ -299,6 +295,11 @@
         (if *bracketing-p*
           (initialise-bracket-list bracketed-input)
           (values bracketed-input nil))
+      
+      (when (> (length user-input) *chart-limit*)
+        (error "Sentence `~a' too long - ~A words maximum (*chart-limit*)" 
+               user-input *chart-limit*))
+
       (let ((*brackets-list* brackets-list)
             (*executed-tasks* 0) (*successful-tasks* 0)
             (*contemplated-tasks* 0) (*filtered-tasks* 0)
