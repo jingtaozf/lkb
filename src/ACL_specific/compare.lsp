@@ -53,6 +53,12 @@
     ;; fix up edges in chart: one fine day, we should really simplify the chart
     ;; set-up: there are way too many structures, for no apparent reason ...
     ;;
+    ;;
+    ;; _fix_me_
+    ;; as of 5-aug-03, presumably, this should no longer be necessary: the edge
+    ;; constructor should now always maintain .from. and .to. correctly.
+    ;;                                                          (6-aug-03; oe)
+    ;;
     (loop
         for i from 1 to (- *chart-limit* 1)
         for entry = (aref *chart* i 0)
@@ -69,18 +75,24 @@
                             
     (mp:run-function "Tree Comparison" #'compare *parse-record*)))
 
-(defun compare (edges)
+(defun compare (edges &key (runp t))
   (let ((frame (clim:make-application-frame 'compare-frame)))
+    #+:debug
+    (setf %frame% frame)
     (setf (compare-frame-chart frame) *chart-generation-counter*)
+    (setf (compare-frame-runp frame) runp)
     (set-up-compare-frame frame edges)
     (setf (clim:frame-pretty-name frame) 
       (format nil "~a" (edge-leaves (first edges))))
-    (funcall #'clim:run-frame-top-level frame)))
+    (when runp
+      (funcall #'clim:run-frame-top-level frame))
+    frame))
 
 (defun run-compare-frame (frame)
   (clim:run-frame-top-level frame))
 
-(defun set-up-compare-frame (frame edges)
+(defun set-up-compare-frame (frame edges 
+                             &key (runp (compare-frame-runp frame)))
 
   (setf *cached-category-abbs* nil)
 
@@ -90,7 +102,7 @@
   ;; part of the set of trees for closer inspection.
   ;;
   (when (compare-frame-inspect frame)
-    (setf (compare-frame-mode frame) :inspect)
+    (setf (compare-frame-display frame) :inspect)
     (loop
         with result = nil
         with inspect = (compare-frame-inspect frame)
@@ -111,7 +123,8 @@
   ;; large sets of edges can take some time (and memory :-{) to display; query
   ;; for user confirmation before moving on.
   ;;
-  (when (and (integerp *tree-comparison-threshold*)
+  (when (and runp
+             (integerp *tree-comparison-threshold*)
              (> (length edges) *tree-comparison-threshold*)
              (or *tree-automatic-update-p*
                  (null (clim:notify-user 
@@ -126,7 +139,7 @@
     (record-decision (make-decision :type :skip) frame)
     (return-from set-up-compare-frame :skip))
 
-  (frame-cursor frame :vertical-scroll)
+  (when runp (frame-cursor frame :vertical-scroll))
   (setf (compare-frame-decisions frame) (list (make-decision :type :start)))
   (when (null (compare-frame-input frame))
     (setf (compare-frame-input frame) 
@@ -152,7 +165,7 @@
         for tree = (make-ctree :edge edge :id id 
                                :score score :flags flags :symbol symbol)
         collect tree
-        when (and *tree-use-node-labels-p* (zerop (mod i 50))) do
+        when (and runp *tree-use-node-labels-p* (zerop (mod i 50))) do
           #+:allegro
           (format
            excl:*initial-terminal-io*
@@ -162,7 +175,7 @@
           nil
         finally
           #+:allegro
-          (when *tree-use-node-labels-p*
+          (when (and runp *tree-use-node-labels-p*)
             (format
              excl:*initial-terminal-io*
              "~&[~a] set-up-compare-frame(): rebuilt ~a tree~p.~%"
@@ -177,13 +190,15 @@
   ;;
   ;; extract (minimal) set of elementary properties to discriminate analyses
   ;;
-  (setf (compare-frame-discriminants frame) (find-discriminants edges))
+  (setf (compare-frame-discriminants frame) 
+    (find-discriminants edges :mode (compare-frame-mode frame)))
   #+:allegro
-  (format
-   excl:*initial-terminal-io*
-   "~&[~a] set-up-compare-frame(): found ~a discriminant~p.~%"
-   (current-time :long :short) (length (compare-frame-discriminants frame)) 
-   (length (compare-frame-discriminants frame)))
+  (when runp
+    (format
+     excl:*initial-terminal-io*
+     "~&[~a] set-up-compare-frame(): found ~a discriminant~p.~%"
+     (current-time :long :short) (length (compare-frame-discriminants frame)) 
+     (length (compare-frame-discriminants frame))))
 
   ;;
   ;; preset discriminants from recorded decisions or gold decisions (during an
@@ -195,23 +210,24 @@
      (compare-frame-preset frame) (compare-frame-gold frame)))
 
   #+:allegro
-  (loop
-      initially
-        (format
-         excl:*initial-terminal-io*
-         "~&~%[~a] `~a'~%~%"
-         (compare-frame-item frame) (compare-frame-input frame))
-      for foo in (compare-frame-lead frame)
-      do
-        (format
-         excl:*initial-terminal-io*
-         "  [~2,'0d ~2,'0d] ~a ~a | ~a `~a'~%"
-         (discriminant-start foo) (discriminant-end foo)
-         (discriminant-state-as-string foo)
-         (discriminant-toggle-as-string foo)
-         (discriminant-key foo) (discriminant-value foo))
-      finally (when (compare-frame-lead frame)
-		(format excl:*initial-terminal-io* "~%")))
+  (when runp
+    (loop
+        initially
+          (format
+           excl:*initial-terminal-io*
+           "~&~%[~@[~a~]] `~a'~%~%"
+           (compare-frame-item frame) (compare-frame-input frame))
+        for foo in (compare-frame-lead frame)
+        do
+          (format
+           excl:*initial-terminal-io*
+           "  [~2,'0d ~2,'0d] ~a ~a | ~a~@[ `~a'~]~%"
+           (discriminant-start foo) (discriminant-end foo)
+           (discriminant-state-as-string foo)
+           (discriminant-toggle-as-string foo)
+           (discriminant-key foo) (discriminant-value foo))
+        finally (when (compare-frame-lead frame)
+                  (format excl:*initial-terminal-io* "~%"))))
 
   (setf (compare-frame-edges frame) edges)
   (recompute-in-and-out frame t)
@@ -220,7 +236,7 @@
   ;; extract some quantitative summary measures on update procedure; entirely
   ;; for record keeping purposes.
   ;;
-  (when (compare-frame-update frame)
+  (when (and runp (compare-frame-update frame))
     (push (cons :u-matches
                 (loop
                     for foo in (compare-frame-discriminants frame)
@@ -254,15 +270,16 @@
   ;; always update tree and discriminant state here: this will cause the frame
   ;; to redraw both lower panes.
   ;; 
-  (clim::redisplay-frame-pane frame 'top :force-p t)
-  (clim::redisplay-frame-pane frame 'status :force-p t)
+  (when runp
+    (clim::redisplay-frame-pane frame 'top :force-p t)
+    (clim::redisplay-frame-pane frame 'status :force-p t))
   (update-trees frame)
 
   ;;
   ;; _fix_me_
   ;; need to disable input from frame for this to work reliably. 
   ;;                                                         (14-oct-02 ; oe)
-  (when *tree-automatic-update-p*
+  (when (and runp *tree-automatic-update-p*)
     (when (numberp *tree-automatic-update-p*)
       (sleep *tree-automatic-update-p*))
     (record-decision 
@@ -271,7 +288,7 @@
     (return-from set-up-compare-frame :skip))
 
   (setf (compare-frame-gactive frame) nil)
-  (frame-cursor frame :default))
+  (when runp (frame-cursor frame :default)))
 
 (defstruct decision
   type
@@ -303,7 +320,8 @@
   (list :sans-serif :roman (or *comparison-discriminant-font-size* 10)))
 
 (clim:define-application-frame compare-frame ()
-  ((item :initform 0 :accessor compare-frame-item)
+  ((runp :initform 0 :accessor compare-frame-runp)
+   (item :initform nil :accessor compare-frame-item)
    (input :initform nil :accessor compare-frame-input)
    (start :initform nil :accessor compare-frame-start)
    (end :initform nil :accessor compare-frame-end)
@@ -314,12 +332,13 @@
    (preset :initform nil :accessor compare-frame-preset)
    (gold :initform nil :accessor compare-frame-gold)
    (lead :initform nil :accessor compare-frame-lead)
+   (mode :initform *tree-discriminants-mode* :accessor compare-frame-mode)
    (discriminants :initform nil :accessor compare-frame-discriminants)
    (decisions :initform nil :accessor compare-frame-decisions)
    (confidence :initform nil :accessor compare-frame-confidence)
    (in :initform nil :accessor compare-frame-in)
    (out :initform nil :accessor compare-frame-out)
-   (mode :initform :concise :accessor compare-frame-mode)
+   (display :initform :concise :accessor compare-frame-display)
    (threshold 
     :initform *tree-display-threshold* :accessor compare-frame-threshold)
    (tstream :initform nil :accessor compare-frame-tstream)
@@ -470,41 +489,26 @@
     ()
   (clim:with-application-frame (frame)
     (record-decision (make-decision :type :clear) frame)
-    (setf (compare-frame-trees frame) (compare-frame-otrees frame))
-    (setf (compare-frame-in frame) (compare-frame-edges frame))
-    (setf (compare-frame-out frame) nil)
-    (loop
-        for foo in (compare-frame-discriminants frame)
-        do
-          (setf (discriminant-time foo) (get-universal-time))
-          (setf (discriminant-state foo) :unknown)
-          (setf (discriminant-toggle foo) :unknown)
-          ;;
-          ;; loose all memory of preset values at this point; no way back.
-          ;;
-          (setf (discriminant-preset foo) nil)
-          (setf (discriminant-gold foo) nil))
-    (recompute-in-and-out frame t)
-    (update-trees frame)))
+    (reset-discriminants frame)))
 
 (define-compare-frame-command (com-ordered-compare-frame :menu "Ordered")
     ()
   (clim:with-application-frame (frame)
-    (setf (compare-frame-mode frame) :ordered)
+    (setf (compare-frame-display frame) :ordered)
     (update-trees frame)))
 
 
 (define-compare-frame-command (com-concise-compare-frame :menu "Concise")
     ()
   (clim:with-application-frame (frame)
-    (setf (compare-frame-mode frame) :concise)
+    (setf (compare-frame-display frame) :concise)
     (update-trees frame)))
 
 
 (define-compare-frame-command (com-full-compare-frame :menu "Full")
     ()
   (clim:with-application-frame (frame)
-    (setf (compare-frame-mode frame) nil)
+    (setf (compare-frame-display frame) nil)
     (update-trees frame)))
 
 (define-compare-frame-command (com-toggle-compare-frame :menu "Toggle")
@@ -715,7 +719,7 @@
                (update-discriminants 
                 (compare-frame-discriminants frame) edge t)
                (recompute-in-and-out frame)
-               (if (smember (compare-frame-mode frame) 
+               (if (smember (compare-frame-display frame) 
                             '(:concise :ordered :inspect))
                  (update-trees frame)
                  (update-tree-colours frame))))
@@ -732,7 +736,7 @@
 	     (clim:with-application-frame (frame)
                (update-discriminants 
                 (compare-frame-discriminants frame) edge nil)
-               (if (smember (compare-frame-mode frame) 
+               (if (smember (compare-frame-display frame) 
                             '(:concise :ordered :inspect))
                  (update-trees frame)
                  (update-tree-colours frame))))
@@ -835,7 +839,7 @@
                         (clim:formatting-cell (stream :align-x :left)
                           (format 
                            stream 
-                           "~a" (discriminant-value item))))))))
+                           "~@[~a~]" (discriminant-value item))))))))
               ;;
               ;; _fix_me_
               ;; there ought to be a way of drawing things in the intended 
@@ -896,25 +900,27 @@
         (recompute-in-and-out frame)
         (update-trees frame t :discriminant)))))
 
-(defun update-trees (frame &optional (redrawp t) context)
+(defun update-trees (frame 
+                     &optional (redrawp t) (context nil)
+                     &key (runp (compare-frame-runp frame)))
 
-  (frame-cursor frame :vertical-scroll)
+  (when runp (frame-cursor frame :vertical-scroll))
   (if (null redrawp)
-    (update-tree-colours frame)
+    (when runp (update-tree-colours frame))
     (let ((in (compare-frame-in frame)))
-
-      (loop
-          for tree in (compare-frame-trees frame)
-          when (ctree-record tree) do
-            (clim:clear-output-record (ctree-record tree))
-            (setf (ctree-record tree) nil))
-      (loop
-          for discriminant in (compare-frame-discriminants frame)
-          for record = (discriminant-record discriminant)
-          when record do
-            (clim:clear-output-record record)
-            (setf (discriminant-record discriminant) nil))
-      (case (compare-frame-mode frame)
+      (when runp
+        (loop
+            for tree in (compare-frame-trees frame)
+            when (ctree-record tree) do
+              (clim:clear-output-record (ctree-record tree))
+              (setf (ctree-record tree) nil))
+        (loop
+            for discriminant in (compare-frame-discriminants frame)
+            for record = (discriminant-record discriminant)
+            when record do
+              (clim:clear-output-record record)
+              (setf (discriminant-record discriminant) nil)))
+      (case (compare-frame-display frame)
         (:ordered
          (setf (compare-frame-trees frame)
            (stable-sort 
@@ -975,20 +981,20 @@
              do
                (setf (discriminant-hidep discriminant) nil))))
 
-      (unless (eq context :tree)
+      (unless (or (null runp) (eq context :tree))
         (clim::redisplay-frame-pane frame 'trees :force-p t))
       ;;
       ;; _fix_me_
       ;; always force complete redraw: omitting this causes rather disturbing
-      ;; glitches in the state and toggle displays in non-concise mode and the
-      ;; overlay of old ink with new ink in concise mode; maybe our drawing
-      ;; function needs improvement (or maybe CLIm :-{).      (15-oct-02; oe)
+      ;; glitches in the state and toggle displays in non-concise display mode
+      ;; and the overlay of old ink with new ink in concise display; maybe our
+      ;; drawing function needs improvement (maybe CLIM :-{).  (15-oct-02; oe)
       ;;
-      (unless (and (eq context :discriminant) nil)
-        (clim::redisplay-frame-pane frame 'discriminants :force-p t))
-      (clim::redisplay-frame-pane frame 'top :force-p t)))
-
-  (frame-cursor frame :default))
+      (when runp
+        (clim::redisplay-frame-pane frame 'discriminants :force-p t)
+        (clim::redisplay-frame-pane frame 'top :force-p t))))
+  
+  (when runp (frame-cursor frame :default)))
 
 (defun update-tree-colours (frame)
 
@@ -1049,6 +1055,24 @@
                    (eq (class-of child) 
                        (find-class 'tk-silica::motif-scroll-bar)))
         do (frame-cursor child cursor)))))
+
+(defun reset-discriminants (frame)
+  (setf (compare-frame-trees frame) (compare-frame-otrees frame))
+  (setf (compare-frame-in frame) (compare-frame-edges frame))
+  (setf (compare-frame-out frame) nil)
+  (loop
+      for foo in (compare-frame-discriminants frame)
+      do
+        (setf (discriminant-time foo) (get-universal-time))
+        (setf (discriminant-state foo) :unknown)
+        (setf (discriminant-toggle foo) :unknown)
+        ;;
+        ;; loose all memory of preset values at this point; no way back.
+        ;;
+        (setf (discriminant-preset foo) nil)
+        (setf (discriminant-gold foo) nil))
+  (recompute-in-and-out frame t)
+  (update-trees frame))
 
 (defun recompute-in-and-out (frame &optional resetp)
   ;;
@@ -1156,3 +1180,135 @@
                             (read-from-string *tree-update-match-hook*)))))))
       (when hook
         (ignore-errors (funcall *tree-update-match-hook* frame))))))
+
+;;;
+;;; from here on, HTML output routines; this should probably be reorganized, so
+;;; that the comparison class is generic, and only the CLIM-specific parts are
+;;; in the segregated directory.                                (6-aug-03; oe)
+;;;
+(defun html-compare (frame &key (stream t) (indentation 0))
+  (let ((treep (or (not (integerp *tree-display-threshold*))
+                   (<= (length (compare-frame-trees frame)) 
+                       *tree-display-threshold*)))
+        (mrsp (and *tree-display-semantics-p*
+                     (compare-frame-trees frame)
+                     (null (rest (compare-frame-trees frame))))))
+    (format
+     stream
+     "~v,0t<table class=compare>~%~
+      ~v,0t  <tr>~%~v,0t    <td class=compareTop colspan=2 align=center>~%~
+      ~v,0t      ~:[~*~;(~a)  ~]~a [~a : ~a~@[ @ ~a~]]</td></tr>~%~
+      ~v,0t  <tr>~%"
+     indentation
+     indentation indentation
+     indentation
+     (compare-frame-item frame) (compare-frame-item frame)
+     (compare-frame-input frame)
+     (length (compare-frame-in frame)) 
+     (length (compare-frame-out frame))
+     (let ((foo (compare-frame-confidence frame)))
+       (when (and (integerp foo) (>= foo 0) (<= foo 3))
+         (aref #("zero" "low" "fair" "high") foo)))
+     indentation)
+    (when treep
+      (format
+       stream
+       "~v,0t    <td class=compareTrees align=left valign=top>~%"
+       indentation)
+      (html-trees frame :stream stream :indentation (+ indentation 6))
+      (format stream "~%~v,0t    </td>~%" indentation))
+    (format
+     stream
+     "~v,0t    <td class=compare~:[Discriminants~;Mrs~] ~
+                   align=right valign=top>~%"
+     indentation mrsp)
+    (if (not mrsp)
+      
+      (html-discriminants 
+       frame :stream stream :onlyp (not treep) 
+       :indentation (+ indentation 6))
+      #+:mrs
+      (let* ((edge (ctree-edge (first (compare-frame-trees frame))))
+             (mrs (mrs::extract-mrs edge)))
+        (mrs::output-mrs1 mrs 'mrs::html stream))))
+  (format
+   stream
+   "~v,0t    </td>~%~v,0t  </tr>~%~v,0t</table>"
+   indentation indentation indentation))
+
+(defun html-trees (frame &key (stream t) (indentation 0))
+
+  (unless (and (integerp *tree-display-threshold*)
+               (> (length (compare-frame-trees frame)) 
+                  *tree-display-threshold*))
+    (loop
+        initially
+          (format 
+           stream
+           "~v,0t<table class=compareTrees>~%" indentation)
+        finally
+          (format stream "~v,0t</table>" indentation)
+        with in = (compare-frame-in frame)
+        for tree in (compare-frame-trees frame)
+        for color = (unless (member (ctree-edge tree) in :test #'eq) "red")
+        do
+          (format 
+           stream 
+           "~v,0t  <tr>~%~v,0t    ~
+            <td class=compareTreeLabel valign=top>~%~v,0t      ~
+            <table class=compareTreeLabel>~%~v,0t        ~
+            <tr><td class=compareTreeId>[~a]</td></tr>~%~v,0t        ~
+            <tr><td class=compareTreeScore>~:[~*&nbsp;~;~a~]</td>~
+            </tr>~%~v,0t      </table></td>~%~v,0t    ~
+            <td class=compareTree>~%"
+           indentation indentation
+           indentation
+           indentation
+           (ctree-id tree) indentation
+           (ctree-score tree) (ctree-score tree)
+           indentation indentation)
+          (html-tree 
+           (ctree-edge tree) :tree (ctree-symbol tree)
+           :indentation (+ indentation 6) :color color :stream stream)
+          (format
+           stream
+           "~%~v,0t    </td></tr>~%" indentation))))
+
+(defun html-discriminants (frame &key (stream t) onlyp (indentation 0))
+
+  (let ((discriminants (compare-frame-discriminants frame)))
+    (format 
+     stream 
+     "~v,0t<table class=compareDiscriminants~@[Only~] cellpadding=2>~%" 
+     indentation onlyp)
+    (loop
+        for i from 0
+        for item in discriminants
+        for state = (discriminant-state-as-string item)
+        for toggle = (discriminant-toggle item)
+        unless (discriminant-hidep item) do
+          (format
+           stream
+           "~v,0t  <tr>~%~v,0t    ~
+            ~:[<td class=compareDiscriminantState>~a</td>~%~v,0t      ~;~2*~]~
+            <td class=compareDiscriminantToggle>~%~v,0t      ~
+            <select size=1 name=\"~a\"~%~v,0t              ~
+                    onChange=\"this.form.submit()\">~%~v,0t        ~
+            <option value=\"?\"~@[ selected~*~]>?</option>~%~v,0t        ~
+            <option value=\"+\"~@[ selected~*~]>+</option>~%~v,0t        ~
+            <option value=\"-\"~@[ selected~*~]>-</option>~%~v,0t        ~
+            </select></td>~%~v,0t      ~
+            <td class=compareDiscriminantKey>~a</td>~%~v,0t    ~
+            ~@[<td class=compareDiscriminantValue>~a</td>~]</tr>~%"
+           indentation indentation
+           (eq (compare-frame-display frame) :concise) state indentation
+           indentation
+           i indentation
+           indentation
+           (eq toggle :unknown) indentation
+           (eq toggle t) indentation
+           (null toggle) indentation
+           indentation
+           (discriminant-key item) indentation
+           (discriminant-value item) indentation))
+    (format stream "~v,0t</table>" indentation)))

@@ -6,15 +6,18 @@
 
 (def-lkb-parameter *tree-use-node-labels-p* nil)
 
-(defvar *tree-discriminant-chart* nil)
+(def-lkb-parameter *tree-discriminants-mode* :classic)
+
+(defvar *tree-discriminants-chart* nil)
 
 (defstruct discriminant
   type key value start end in out top toggle state hidep
   time record preset gold)
 
-(defun find-discriminants (edges)
+(defun find-discriminants (edges &key (mode *tree-discriminants-mode*))
+  
   (let* ((n (+ (edge-to (first edges)) 1))
-         (*tree-discriminant-chart* (make-array (list n n)))
+         (*tree-discriminants-chart* (make-array (list n n)))
          %discriminants%)
     (declare (special %discriminants%))
     ;;
@@ -23,7 +26,7 @@
     ;;
     (loop
         for edge in edges
-        do (extract-discriminants-from-edge edge edge))
+        do (extract-discriminants-from-edge edge edge :mode mode))
     ;;
     ;; then, filter out discriminants that either (i) all parses have or (ii) 
     ;; are implied by other discriminants, based on `size' (i.e. span), for
@@ -34,15 +37,12 @@
           with nparses = (length edges)
           for foo in %discriminants%
           for type = (discriminant-type foo)
-          for span = (- (discriminant-end foo) (discriminant-start foo))
           for in = (discriminant-in foo)
           for match = (or (= (length in) nparses)
                           (when (eq type :constituent)
-                            #+:null
-                            (find-discriminants :type :constituent
-                                                :start start :end end
-                                                :in in)
                             (loop
+                                with span = (- (discriminant-end foo)
+                                               (discriminant-start foo))
                                 for bar in %discriminants%
                                 thereis 
                                   (and (eq (discriminant-type bar) 
@@ -67,67 +67,82 @@
     (setf %discriminants%
       (sort %discriminants%
             #'(lambda (a b)
-                (let* ((astart (discriminant-start a))
-                       (aend (discriminant-end a))
-                       (aspan (when (and (numberp astart) (numberp aend))
-                                (- aend astart)))
-                       (bstart (discriminant-start b))
-                       (bend (discriminant-end b))
-                       (bspan (when (and (numberp bstart) (numberp bend))
-                                (- bend bstart))))
-                  (if (= aspan bspan)
-                    (if (= astart bstart)
-                      (or (and (eq (discriminant-type a) :constituent)
-                               (or (eq (discriminant-type b) :type)
-                                   (eq (discriminant-type b) :relation)))
-                          (and (eq (discriminant-type a) :type)
-                               (eq (discriminant-type b) :relation)))
-                      (< astart bstart))
-                    (> aspan bspan))))))))
-
-(defun extract-discriminants-from-edge (edge top)
+                (if (eq mode :classic)
+                  (let* ((astart (discriminant-start a))
+                         (aend (discriminant-end a))
+                         (aspan (- aend astart))
+                         (bstart (discriminant-start b))
+                         (bend (discriminant-end b))
+                         (bspan (- bend bstart)))
+                    (if (= aspan bspan)
+                      (if (= astart bstart)
+                        (or (and (eq (discriminant-type a) :constituent)
+                                 (or (eq (discriminant-type b) :type)
+                                     (eq (discriminant-type b) :relation)))
+                            (and (eq (discriminant-type a) :type)
+                                 (eq (discriminant-type b) :relation)))
+                        (< astart bstart))
+                      (> aspan bspan)))
+                  (let* ((keya (discriminant-key a))
+                         (keyb (discriminant-key b)))
+                    (if (not (char= (char keya 0) #\_))
+                      (or (char= (char keyb 0) #\_) (string< keya keyb))
+                      (when (char= (char keyb 0) #\_)
+                        (string< keya keyb))))))))))
+
+(defun extract-discriminants-from-edge (edge top &key mode)
   
-  (let* ((tdfs (edge-dag edge))
-         (yield (format nil "~{~a~^ ~}" (edge-leaves edge)))
-         (label (when *tree-use-node-labels-p* (edge-label edge)))
-         (rule (edge-rule edge))
-         (start (edge-from edge))
-         (end (edge-to edge)))
-    ;;
-    ;; for all constituents, always record node label (when available).
-    ;; _fix_me_
-    ;; probably, a separate :label type would be cleaner here.  (13-oct-02; oe)
-    ;;
-    (when label
-      (add-discriminant label yield :constituent top start end))
-    (cond
-     ((stringp rule)
+  (if (eq mode :classic)
+    (let* ((tdfs (edge-dag edge))
+           (yield (format nil "~{~a~^ ~}" (edge-leaves edge)))
+           (label (when *tree-use-node-labels-p* (edge-label edge)))
+           (rule (edge-rule edge))
+           (start (edge-from edge))
+           (end (edge-to edge)))
       ;;
-      ;; a leaf of the derivation, i.e. a lexical entry: record preterminal 
-      ;; type and, when available, key semantic relation.
-      ;; 
-      (add-discriminant 
-       (format nil "~(~a~)" (type-of-fs (tdfs-indef tdfs))) 
-       yield :type top start end)
-      (when (and tdfs *discriminant-path*)
-        (let* ((dag (existing-dag-at-end-of 
-                     (tdfs-indef tdfs) *discriminant-path*))
-               (type (and dag (type-of-fs dag))))
-          (when type
-            (add-discriminant 
-             (format nil "~(~a~)" type)
-             rule :relation top start end)))))
-     ((rule-p rule)
+      ;; for all constituents, always record node label (when available).
+      ;; _fix_me_
+      ;; a separate :label type would be cleaner here.         (13-oct-02; oe)
       ;;
-      ;; all other nodes of the derivation: record rule identifier.
-      ;;
-      (add-discriminant 
-       (symbol-name (rule-id rule)) yield :constituent top start end)))
-    (loop
-        for child in (edge-children edge)
-        do (extract-discriminants-from-edge child top))
-    (when (edge-morph-history edge)
-      (extract-discriminants-from-edge (edge-morph-history edge) top))))
+      (when label
+        (add-discriminant label yield :constituent top start end))
+      (cond
+       ((stringp rule)
+        ;;
+        ;; a leaf of the derivation, i.e. a lexical entry: record preterminal 
+        ;; type and, when available, key semantic relation.
+        ;; 
+        (add-discriminant 
+         (format nil "~(~a~)" (type-of-fs (tdfs-indef tdfs))) 
+         yield :type top start end)
+        (when (and tdfs *discriminant-path*)
+          (let* ((dag (existing-dag-at-end-of 
+                       (tdfs-indef tdfs) *discriminant-path*))
+                 (type (and dag (type-of-fs dag))))
+            (when type
+              (add-discriminant 
+               (format nil "~(~a~)" type)
+               rule :relation top start end)))))
+       ((rule-p rule)
+        ;;
+        ;; all other nodes of the derivation: record rule identifier.
+        ;;
+        (add-discriminant 
+         (symbol-name (rule-id rule)) yield :constituent top start end)))
+      (loop
+          for child in (edge-children edge)
+          do (extract-discriminants-from-edge child top :mode mode))
+      (when (edge-morph-history edge)
+        (extract-discriminants-from-edge 
+         (edge-morph-history edge) top :mode mode)))
+    #+:mrs
+    (let* ((eds (mrs::ed-convert-edge edge))
+           (triples (mrs::ed-explode eds)))
+      (loop
+          for triple in triples
+          for key = (format nil "~{~a~^ ~}" triple)
+          do
+            (add-discriminant key nil :ed top nil nil)))))
 
 (defun add-discriminant (key value type top start end)
 
@@ -160,7 +175,8 @@
                                              :toggle :unknown 
                                              :state :unknown)))
         (push discriminant %discriminants%)
-        (push discriminant (aref *tree-discriminant-chart* start end))))))
+        (when (and (integerp start) (integerp end))
+          (push discriminant (aref *tree-discriminants-chart* start end)))))))
 
 (defun find-discriminant  (&key key value type start end)
   
@@ -168,7 +184,7 @@
   
   (loop
       with candidates = (if (and (integerp start) (integerp end))
-                          (aref *tree-discriminant-chart* start end)
+                          (aref *tree-discriminants-chart* start end)
                           %discriminants%)
       for discriminant in candidates
       thereis (and (equal (discriminant-key discriminant) key)
