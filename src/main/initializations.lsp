@@ -110,6 +110,34 @@
          nil "~a-~a-~a (~2,'0d:~2,'0d:~2,'0d)"
          day month year hour minute second))))))
 
+(defun normalize-string (string)
+  (if string
+    (loop
+        with string = (if (stringp string)
+                        string 
+                        (with-standard-io-syntax 
+                          (let ((*package* (find-package :tsdb)))
+                            (write-to-string string))))
+        with padding = 128
+        with length = (+ (length string) padding)
+        with result = (make-array length
+                                  :element-type 'character
+                                  :adjustable nil :fill-pointer 0)
+        with space = t
+        for c across string
+        when (member c '(#\Space #\Newline #\Tab)) do
+          (when space (incf padding))
+          (unless space
+            (vector-push #\Space result)
+            (setf space :space))
+        else do
+          (vector-push c result)
+          (setf space nil)
+        finally
+          (when (and (eq space :space) (not (zerop (fill-pointer result))))
+            (decf (fill-pointer result)))
+          (return result))
+    ""))
 
 (defun start-lkb ()
 
