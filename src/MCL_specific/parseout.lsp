@@ -1,8 +1,8 @@
-;;; Copyright Ann Copestake 1992-7 
+;;; Copyright Ann Copestake 1992-8 
 ;;; All Rights Reserved.
 ;;; No use or redistribution without permission.
 ;;; 
-;;; Ann Copestake
+;;; Ann Copestake / John Carroll
 
 ;;; parse output functions - split from parse.lsp
 ;;; and extensively rewritten for MCL
@@ -11,60 +11,46 @@
    ;;; takes an edge and builds the tree below it for input
    ;;; to John's graph package - then displays it
    ;;; with active nodes
-   (let*
-      ((edge-id (edge-id edge))
-       (edge-symbol (make-edge-symbol edge-id)))
-      (when display-in-chart-p (display-edge-in-chart edge))
-      (make-new-parse-tree edge-symbol edge)
+   (when display-in-chart-p (display-edge-in-chart edge))
+   (let ((edge-symbol (make-new-parse-tree edge 1)))
       (draw-new-parse-tree edge-symbol 
-         (format nil "Edge ~A ~A" edge-id (if (gen-chart-edge-p edge) "G" "P"))
+         (format nil "Edge ~A ~A" (edge-id edge) (if (gen-chart-edge-p edge) "G" "P"))
          nil)))
    
-(defun make-new-parse-tree (edge-symbol edge-record)
-   (setf (get edge-symbol 'daughters)
-      nil)
-   (setf (get edge-symbol 'edge-record) edge-record) ; *** jac 3/27/98
-   (when edge-record
-      (let ((daughters 
-               (edge-children edge-record))
-            (daughter-list nil))
-         (for daughter in daughters
-            do
-            (if daughter
-               (let ((daughter-edge-symbol
-                      (make-edge-symbol (edge-id daughter))))
-                  (push daughter-edge-symbol daughter-list)
-                  (make-new-parse-tree daughter-edge-symbol daughter))
-               (push '|| daughter-list))) ; active chart edge daughter
-         (setf (get edge-symbol 'daughters) (nreverse daughter-list))
-         (unless daughters
-            (let ((leaf-node (make-edge-symbol (car (edge-leaves edge-record)))))
-               (push  leaf-node
-                  (get edge-symbol 'daughters))
-               (setf (get leaf-node 'daughters) nil)
-               (unless *dont-show-morphology*
-                 (let ((mdaughter (edge-morph-history edge-record)))
-                   (if mdaughter
-                     (let ((daughter-edge-symbol 
-                            (make-edge-symbol (edge-id mdaughter) t)))                         
-                       (push daughter-edge-symbol (get leaf-node 'daughters))
-                       (make-morph-tree daughter-edge-symbol
-                                        mdaughter))))))))))
 
-(defun make-morph-tree (edge-symbol edge-record)
-  (setf (get edge-symbol 'daughters)
-      nil)
-   (setf (get edge-symbol 'edge-record) edge-record) ; *** jac 3/27/98
-  (when edge-record
-      (let ((mdaughter (edge-morph-history edge-record)))
-        (if mdaughter
-          (let ((daughter-edge-symbol 
-                 (make-edge-symbol (edge-id mdaughter) t)))
-            (push daughter-edge-symbol (get edge-symbol 'daughters))
-            (make-morph-tree daughter-edge-symbol
-                             mdaughter))))))
+(defun make-new-parse-tree (edge level)
+   ;; show active edge nodes at first level but not thereafter
+   (when edge
+      (if (and (> level 1) (gen-chart-edge-p edge) (gen-chart-edge-needed edge))
+         (some #'(lambda (c) (make-new-parse-tree c (1+ level)))
+            (edge-children edge))
+         (let
+            ((edge-symbol (make-edge-symbol (edge-id edge)))
+             (daughters (edge-children edge))
+             (daughter-list nil))
+            (setf (get edge-symbol 'edge-record) edge)
+            (if daughters
+               (dolist (daughter daughters
+                          (progn
+                             (setf (get edge-symbol 'daughters) (nreverse daughter-list))
+                             edge-symbol))
+                  (if daughter
+                     (push (make-new-parse-tree daughter (1+ level)) daughter-list)
+                     (push (make-symbol "") daughter-list))) ; active chart edge daughter
+                  (make-lex-and-morph-tree edge-symbol edge 1))))))
 
-      
+
+(defun make-lex-and-morph-tree (edge-symbol edge level)
+   (let
+      ((leaf-symbol (make-edge-symbol (car (edge-leaves edge)))))
+      (setf (get edge-symbol 'daughters) (list leaf-symbol))
+      (when (> level 1) (setf (get leaf-symbol 'edge-record) edge))
+      (unless *dont-show-morphology*
+         (let ((mdaughter (edge-morph-history edge)))
+            (if mdaughter
+               (make-lex-and-morph-tree leaf-symbol mdaughter (1+ level)))))
+      edge-symbol))
+
 
 (defstruct parse-tree-record position
    box value shrunk-p)
@@ -108,16 +94,13 @@
                       (stream-write-string str s 0 (length (the string s))))
                    (stream-write-string str s 0 (length (the string s))))
                 (add-active-parse-region edge-symbol str start-pos)))))
-      (remprop node 'real-edge) ; remove pointers to old data
-      (remprop node 'edge-record)
-      (remprop node 'daughters)
       (let*
          ((fields (fields fake-window))
          (pict (window-close fake-window))
          (real-window
                (make-instance 'active-parse-tree-window
-                 :window-title title
-                 :pict pict
+                  :window-title title
+                  :pict pict
                   :field-size 
                   (make-point max-x max-y)
                   :view-size
@@ -132,9 +115,7 @@
 
 
 (defun get-string-for-edge (edge-symbol)
-   (let* ((edge-id (get edge-symbol 'real-edge))
-          (edge-record ; *** was (find-edge-given-id edge-id)
-             (get edge-symbol 'edge-record))) ; *** jac 3/27/98
+   (let ((edge-record (get edge-symbol 'edge-record)))
       (if edge-record
          (values (tree-node-text-string (or 
                                     (find-category-abb (edge-dag edge-record))
@@ -153,9 +134,7 @@
 
 
 (defun create-parse-tree-menu (edge-symbol view-pos)
-  (let* ((edge-id (get edge-symbol 'real-edge))
-         (edge-record ; *** was (find-edge-given-id edge-id)
-             (get edge-symbol 'edge-record))) ; *** jac 3/27/98
+  (let ((edge-record (get edge-symbol 'edge-record)))
       (if edge-record
         (let* ((menu (make-instance 'active-tree-pop-up-field
                        :view-position view-pos
