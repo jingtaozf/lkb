@@ -29,6 +29,33 @@
 (defparameter %generator-unknown-eps% nil)
 (defparameter %generator-statistics% nil)
 
+;;;
+;;; given all the new parameters we have just introduced, attempt to make sure
+;;; things are set up coherently.
+;;;
+(defun check-generator-environment ()
+  (when mrs::*instloc-path*
+    (let* ((feature (first (last mrs::*instloc-path*)))
+           (type (minimal-type-for feature)))
+      (unless (or (equal type *string-type*)
+                  (subtype-p *string-type* type))
+        (format
+         t
+         "~%Error: the constraint of feature `~a' must be compatible with 
+            (the string) type `~(~a~)'."
+         feature *string-type*)
+        (force-output t)
+        (return-from check-generator-environment :error))))
+  (when (and *intersective-rule-names* *gen-filtering-p*)
+    (format 
+     t
+     "~%Warning: intersective rules and variable accessibility filtering ~
+        are incompatible - the generator will ignore intersective rules.")
+    (setf *intersective-rule-names* nil))
+  (when (and (null *intersective-rule-names*) (null *gen-filtering-p*))
+    (format t "~%Warning: filtering off and no intersective rules specified"))
+  (force-output t))
+
 
 ;;; Utility functions for initialising and building daughters and leaves
 ;;; fields in active chart edges
@@ -343,24 +370,16 @@
 
 (defun chart-generate (input-sem input-rels found-lex-items possible-grules
                        *lexemes-allowed-orderings* *gen-rel-indexes*
-                       &optional (*gen-first-only-p* *gen-first-only-p*)
-                       &aux (*intersective-rule-names* *intersective-rule-names*))
-
-   (cond
-     (*intersective-rule-names*
-        (when *gen-filtering-p*
-           (format t
-"~%Warning: intersective rules and variable accessibility filtering are incompatible ~
- - temporarily ignoring intersective rules")
-           (force-output t)
-           (setq *intersective-rule-names* nil))) ; temporary since new binding above
-     ((not *gen-filtering-p*)
-        (format t "~%Warning: filtering off and no intersective rules specified")
-        (force-output t)))
+                       &optional (*gen-first-only-p* *gen-first-only-p*))
 
   (setq %generator-lexical-items% found-lex-items)
  
-  (let ((*safe-not-to-copy-p* t)
+  (let ((*intersective-rule-names* 
+         ;;
+         ;; disable two-phase set-up when index accessibility filtering is on
+         ;;
+         (unless *gen-filtering-p* *intersective-rule-names*))
+        (*safe-not-to-copy-p* t)
         (*filtered-tasks* 0) (*executed-tasks* 0) (*successful-tasks* 0) 
         (*unifications* 0) (*copies* 0) 
         (*non-intersective-rules*

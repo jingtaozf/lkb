@@ -28,11 +28,12 @@
 ;;; something is altered ...
 
 (defun index-for-generator nil
-  (index-lexicon)
-  (index-lexical-rules)
-  (index-grammar-rules)
-  (format t "~%Indexing complete")
-  nil)
+  (unless (eq (check-generator-environment) :error)
+    (index-lexicon)
+    (index-lexical-rules)
+    (index-grammar-rules)
+    (format t "~%Indexing complete")
+    nil))
 
 ;;; retrieve SEM-I from psql-lexicon if possible
 ;;; if not, recompile semantic indices as per normal
