@@ -29,6 +29,8 @@
 
 (defvar *last-directory* nil)
 
+(defvar *complete-lisp-close* nil)
+
 ;;; Top level menus etc
 
 (defvar *lkb-menu-disabled-list* nil
@@ -63,7 +65,7 @@
 		:value value
 		:available-p available-p)))
     (unless available-p 
-      (push (intern (concatenate 'string "COM-" name) 'common-lisp-user) 
+      (push (intern (concatenate 'string "COM-" name))
             *lkb-menu-disabled-list*))
     menu))
 
@@ -75,7 +77,7 @@
 		:menu-items menu-items
 		:available-p available-p)))
     (unless available-p 
-      (push (intern (concatenate 'string "COM-" menu-title) 'common-lisp-user) 
+      (push (intern (concatenate 'string "COM-" menu-title))
 	    *lkb-menu-disabled-list*))
     menu))
 
@@ -87,9 +89,8 @@
   (let ((new-table (make-command-table 
 		    (intern (concatenate 'string "MENU-" (menu-title menu)))
 		    :errorp nil)))
-    (push new-table 
-	  (command-table-inherit-from 
-	   (find-command-table 'lkb-top-command-table)))
+    (push new-table (command-table-inherit-from 
+		     (find-command-table 'lkb-top-command-table)))
     (add-menu-item-to-command-table table
 				    (menu-title menu)
 				    :menu
@@ -101,8 +102,7 @@
 
 (defmethod construct-menu ((menu menu-item) (type (eql :clim)) 
 			   &optional table)
-  (let ((name (intern (concatenate 'string "COM-" (menu-title menu))
-		      'common-lisp-user)))
+  (let ((name (intern (concatenate 'string "COM-" (menu-title menu)))))
     (eval `(define-command (,name
 			    :menu ,(menu-title menu)
 			    :command-table ,table) ()
@@ -180,10 +180,22 @@
 	     (remove-command-from-command-table name table)))
        table
        :inherited nil)))
+  (setf (command-table-inherit-from 
+	 (find-command-table 'lkb-top-command-table))
+    nil)
   ;; make sure we have a way out
-  (define-command 
-      (com-quit :menu t :command-table lkb-top-command-table) ()
-    (user-exit-lkb-frame *application-frame*))
+  (setf (command-table-inherit-from 
+	 (find-command-table 'lkb-top-command-table))
+    (list (make-command-table 'menu-quit :errorp nil)))    
+  (define-command (com-quit :menu "Are you sure?"
+			    :command-table menu-quit) ()
+    (setq *complete-lisp-close* t)
+    (frame-exit *application-frame*))
+  (add-menu-item-to-command-table 'lkb-top-command-table
+				  "Quit"
+				  :menu 
+				  'menu-quit
+				  :errorp t)
   (define-command 
       (com-close-to-replace :command-table lkb-top-command-table) ()
     (frame-exit *application-frame*))
@@ -234,8 +246,15 @@
     (when old-frame
       (execute-frame-command old-frame '(com-close-to-replace)))))
 
-(defvar *complete-lisp-close* nil)
+(defun run-lkb-top-menu (frame)
+  ;; define this function so that stuff can be called on exit from LKB
+  (unwind-protect
+      (run-frame-top-level frame)
+    (when *complete-lisp-close*
+      ;;(user::store-cached-lex user::*lexicon*)
+      (excl:exit 0 :no-unwind t))))
 
+#|
 (defun user-exit-lkb-frame (frame)
   ;; Check if user really wants to do this.  By default, exit Lisp as
   ;; well. For stand-alone application, always exit Lisp as well.
@@ -251,15 +270,6 @@
       (setf *complete-lisp-close* t)
       (frame-exit frame))))
 
-(defun run-lkb-top-menu (frame)
-  ;; define this function so that stuff can be called on exit from LKB
-  (unwind-protect
-      (setq x (run-frame-top-level frame))
-    (when *complete-lisp-close*
-      ;;(user::store-cached-lex user::*lexicon*)
-      (excl:exit 0 :no-unwind t))))
-
-#|
 (defun restart-lkb-function nil
   (user::read-psort-index-file)
   (setf *last-directory* nil)

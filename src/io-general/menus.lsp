@@ -95,7 +95,7 @@
                                                            :value 'do-parse-batch)
                                            (make-menu-item :name "Redisplay parse"
                                                            :value 'show-parse)
-                                           (make-menu-item :name "Show chart"
+                                           (make-menu-item :name "Show parse chart"
                                                            :value 'show-chart)
                                            (make-menu-item :name "Batch parse..."
                                                            :value 'parse-sentences-batch))
@@ -192,7 +192,7 @@
                         :value 'parse-with-preprocessor)
                      (make-menu-item :name "Redisplay parse"
                         :value 'show-parse)
-                     (make-menu-item :name "Show chart"
+                     (make-menu-item :name "Show parse chart"
                         :value 'show-chart)
                      (make-menu-item :name "Batch parse..."
   		        :value 'parse-sentences-batch)
@@ -206,7 +206,7 @@
                         :value 'generate-from-edge)
                      (make-menu-item :name "Redisplay realisation"
                         :value 'show-gen-result)
-                     (make-menu-item :name "Show chart"
+                     (make-menu-item :name "Show gen chart"
                                      :value 'show-gen-chart)
                      (make-menu-item :name "Index"
                         :value 'index-for-generator))
