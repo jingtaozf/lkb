@@ -59,6 +59,7 @@
 \vspace*{1in}
 \begin{center}
 {\Huge\bf The (new) LKB system}\\[0.2in]
+Version 5.1\\[0.2in]
 \today\\[1in]
 system development by\\[0.2in]
 {\Large Ann Copestake, John Carroll, Rob Malouf, Stephan Oepen\\ 
@@ -218,9 +219,9 @@ is intended for first time users: it gives
 a fairly detailed tour through some of the LKB's functionality.
 The fourth chapter is a basic
 and informal introduction to typed feature structures.
-Chapter~5 contains a formal description
+Chapter~\ref{formal} contains a formal description
 of typed feature structures as used in the LKB.
-The subsequent three chapters are the reference manual proper --- they
+The subsequent chapters are the reference manual proper --- they
 are not intended to be read straight through, but to act as 
 a source of information about error messages,
 user interface commands which have less than
@@ -262,8 +263,8 @@ what the system is called, but this is not
 the responsibility of the current author.  Please direct any comments
 about \itsdb\ to {\tt oe@coli.uni-sb.de}.}\ test suite machinery 
 (Oepen and Flickinger, 1998).
-\item Integration with MRS semantics (Copestake et al, 1997).
-\item Tactical generation from MRS input (experimental). 
+\item Integration with MRS semantics (Copestake et al, 1999).
+\item Tactical generation from MRS input (relatively experimental). 
 \item Many new user interface features.
 \end{enumerate}
 Some of the earlier functionality has not made it into the new version:
@@ -280,10 +281,12 @@ written by Bernie Jones, Dan Flickinger and
 John Bowler.  Ted Briscoe and Antonio Sanfilippo had a great 
 deal of influence on the design of the original system,
 Dan Flickinger played a similar role for the new version.
+Uli Callmeier has done extensive testing and uncovered numerous
+bugs and infelicities.
 Invaluable input has also
 been provided by users too numerous to thank individually, including
-researchers on the ACQUILEX and LinGO projects and at
-the Copenhagen Business School,
+researchers on the ACQUILEX and LinGO projects, at
+the Copenhagen Business School and Edinburgh University,
 students
 at the University of Cambridge Computer Laboratory and
 Stanford University and students on a course taught by Copestake, Flickinger
@@ -326,7 +329,8 @@ Both images are made using Allegro Common Lisp and
 can be run without a license, though since they do not contain
 a Lisp compiler, anyone who wants to make any substantial
 modifications to the
-system will need a license so that they can work with the source files.
+system will need a license from the Lisp vendor
+so that they can work with the source files.
 
 To use any version of the LKB, 
 you need a machine with adequate amounts of memory.
@@ -337,19 +341,27 @@ you will need larger amount of memory.  The size of the source
 files is about 3.5 Meg.  The documentation is about 8 MBytes
 (because of Postscript bitmaps).
 The Solaris image should run on recent versions of SunOS.
-%The Linux image requires FIX
-%The Mac image will run on (FIX what?)
+The Linux image was made for Red Hat 6.0 with Metrolink Motif 1.2
+(glibc version).  It should run on some other versions of Linux, but
+is known not to be compatible with most other versions of Motif: 
+please see the Franz Website.
+
 If you have Allegro Common Lisp with CLIM or Macintosh Common Lisp, you 
 can download the source files
 and compile them.  This will be necessary
 if you want to substantially
 modify the LKB source code, and is likely to be
-advantageous in any case, since we are likely to make minor bug fixes available
+advantageous in any case, since we make minor bug fixes available
 as source, rather than providing new images.
 % UPDATE POINT
-We have tested the system on Allegro Common Lisp 4.3 and 5.0 on SunOS 5.6
-and on 
-Macintosh Common Lisp 2.0.1, 3.9 and 4.0, under MacOS 7.1 and 7.5.
+We have tested the curent version of the LKB
+system on Allegro Common Lisp 5.0 on SunOS 5.6
+and on Red Hat Linux 6.0 with Metrolink Motif 1.2
+and (less extensively) on 
+Macintosh Common Lisp 4.0.
+It should work on other versions of these Lisps, but we are not in a position
+to offer much advice in case of problems for Lisp/OS versions
+we don't use.
 
 If you do not have access to a machine for which we provide an image,
 and do not have either Allegro Common Lisp with CLIM or Macintosh Common
@@ -362,8 +374,14 @@ and display commands result in ASCII output (or in some cases are
 not available).
 tty mode is described in detail in Appendix~\ref{tty}.
 
+Some source code is available for 
+the Windows version of Allegro Common Lisp (Common Graphics) but the port 
+is incomplete and this will only be useful for someone who is prepared
+to do substantial programming: please contact Ann Copestake for details.
+
 For up-to-date information on what is available, check the 
 \href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}
+and/or subscribe to the LKB mailing list (see the website for instructions).
 If you want to consider acquiring ACL/CLIM or MCL in order to run the source,
 please see the links to the companies on the LKB web page.\footnote{We 
 would be grateful if you let the vendor know if you intend to use the
@@ -378,29 +396,36 @@ to fix bugs etc \ldots}
 \subsection{Downloading an image}
 \label{down-images}
 
-%FIX - Linux version too
-
-The image files for Sun Solaris are available from the
+The image files for Linux and Sun Solaris are available from the
 \href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}
-as a gzipped Unix tar file.
-Download the file, making sure you are using binary mode.
+as gzipped Unix tar files.
+Download the appropriate file, making sure you are using binary mode.
 Then:
 \begin{verbatim}
-gunzip climimage5-0.tar.gz
+gunzip climimage5-1.tar.gz
 \end{verbatim}
-this should give you a file called \filename{climimage5-0.tar}.
+or
+\begin{verbatim}
+gunzip linuximage5-1.tar.gz
+\end{verbatim}
+this should give you a file called \filename{climimage5-1.tar} or
+\filename{linuximage5-1.tar}
 Put this in a directory where you want the LKB system to reside
 and extract the LKB image directory by:
 \begin{verbatim}
-tar xf climimage5-0.tar
+tar xf climimage5-1.tar
+\end{verbatim}
+or
+\begin{verbatim}
+tar xf linuximage5-1.tar
 \end{verbatim}
 This will create the new directory called \filename{lkb} containing
 several files. 
 
 Also download the data files, and unzip etc in the same way:
 \begin{verbatim}
-gunzip data5-0.tar.gz
-tar xf data5-0.tar
+gunzip data5-1.tar.gz
+tar xf data5-1.tar
 \end{verbatim}
 This will create a new directory tree called \filename{data} containing
 various sample grammars.
@@ -420,15 +445,14 @@ gzipped Unix tar file which is available from the
 A single file is used for all systems, since most of the code is shared.
 Download the file, making sure you are using binary mode.
 Then:
-%UPDATE
 \begin{verbatim}
-gunzip lkbsrc5-0.tar.gz
+gunzip lkbsrc5-1.tar.gz
 \end{verbatim}
-this should give you a file called \filename{lkbsrc5-0.tar}.  
+this should give you a file called \filename{lkbsrc5-1.tar}.  
 Make sure this in a directory where you want the LKB system to reside
 and extract the LKB by:
 \begin{verbatim}
-tar xf lkbsrc5-0.tar
+tar xf lkbsrc5-1.tar
 \end{verbatim}
 This will create the new directory and various subdirectories.
 It may take a few minutes to do this.  At this point, you have 
@@ -449,7 +473,7 @@ follow the instructions in \S\ref{emacs-clim-image}
 (\functionname{fi:common-lisp} is already installed)
 but give the file \filename{/eo/e4/malouf/acl/lkb} in response
 to the prompt for {\bf Executable image name:}.
-
+% FIX - For the linear machines, the image is \filename{?}.
 
 \subsection{Getting a local copy of the LKB source at CSLI}
 \label{down-csli}
@@ -486,7 +510,9 @@ To compile the LKB system files in ACL/CLIM, do the following:
 \item cd to \filename{newlkb/src}.  
 \item Start ACL/CLIM.  The command needed will vary with your local
 installation.  For instance,
-at CSLI, the command to start ACL with CLIM is \filename{/usr/acl/bin/acl}.
+at CSLI, the command to start ACL with CLIM is \filename{/eo/e4/malouf/acl50/base} on eo and eoan and
+\filename{/usr/acl/base} on the linear machines.
+% UPDATE
 \footnote{Note that since the objective is just to compile the system,
 we describe the procedure for
 starting the system from the command line.  For actually running the LKB,
@@ -523,6 +549,8 @@ as described in \S\ref{acl-emacs}.
 
 
 \subsection{Macintosh Common Lisp (MCL)}
+\label{mcl-src}
+
 To compile the LKB system files do the following:
 \begin{enumerate}
 \item Double-click on the MCL icon to start MCL
@@ -532,14 +560,14 @@ To compile the LKB system files do the following:
 open the \filename{src:general:loadup.lisp} file (Open is in the File menu 
 in MCL) and edit the definition of \verb+%sys-home%+ to be appropriate
 for your machine.  For instance, if your hard disk is called \filename{carrot},
-and you want to use the folder name \filename{lkb5.0}
+and you want to use the folder name \filename{lkb5.1}
 rather than \filename{newlkb},
 the definition would look like:
 \begin{verbatim}
 (defparameter %sys-home%
   #-:mcl (rest (butlast 
                 (pathname-directory *load-truename*) 2))
-  #+:mcl '("carrot" "lkb5.0"))
+  #+:mcl '("carrot" "lkb5.1"))
 \end{verbatim}
 Save the file.
 You may also need to edit the file \filename{src:main:user-fns.lsp} to
@@ -851,9 +879,7 @@ In case of installation or other problems which don't seem to be covered in the
 documentation, please look at the instructions on the
 \href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}.  We will make
 fixes for known problems available there.  The Web site also contains details
-of how to report bugs that you find: note that it's important that you give us
-enough information, so the Web site describes what information we need.
-% FIX Web site bug reporting
+of how to report bugs that you find.
 
 \subsection{Missing libraries}
 
@@ -951,6 +977,10 @@ window to be closed inadvertently.
 It may be reopened by evaluating
 (clim-user::restart-lkb-window) in Lisp (i.e., the
 {\tt *common-lisp*} buffer in emacs).
+In both versions it is possible to end up in a state 
+where most of the commands are unavailable because the system
+does not think a grammar has been loaded: to
+fix this, evaluate (enable-type-interactions).
 
 \section{Loading a grammar}
 \label{gramload}
@@ -968,7 +998,9 @@ will assume that you are working with the smallest, which is called
 
 Select {\lkbmenucommand Complete grammar} from the LKB {\lkbmenucommand Load}
 menu, and choose the file \filename{script} from the \filename{toy} directory
-as shown in Figure~\ref{loadscript}.  The script file is responsible for
+as shown in Figure~\ref{loadscript} for ACL/CLIM, MCL uses a standard
+Mac file choice menu.
+The script file is responsible for
 loading the remainder of the files into the system.  You should see various
 messages appearing in the interaction window, as shown in
 Figure~\ref{loadmess}
@@ -1108,7 +1140,8 @@ are given in \S\ref{thier}.
 The view commands let you get at entities such as lexical entries which cannot
 be accessed from the type hierarchy window.  
 
-Select {\lkbmenucommand View} from the LKB top menu and then select {\lkbmenucommand Word entries}.
+Select {\lkbmenucommand View} from the LKB top menu and then select 
+{\lkbmenucommand Word entries}.
 You will be prompted for a word which corresponds to a lexical entry.
 Enter {\tt kim} (case doesn't matter), deleting the default that
 is specified (unless of course the default is {\tt KIM}, in which
@@ -1158,17 +1191,18 @@ we will next describe how to parse a sentence.
 
 \section{Parsing}
 
-To parse a sentence, click on {\lkbmenucommand Parse} / {\lkbmenucommand Parse input}.  Unless you have been parsing other things already,
+To parse a sentence, click on {\lkbmenucommand Parse} / {\lkbmenucommand Parse input}.  
+Unless you have been parsing other things already,
 the default selection is {\tt Kim sleeps}.  Click {\tt OK} to
-accept this default. 
-% FIX - MCL ?
-You will get a window with one tiny parse
+accept this default.  In ACL/CLIM
+you will get a window with one tiny parse
 tree, as shown in Figure~\ref{kimsleeps}.\footnote{The reason for the
 small size is that with non-trivial grammars and sentences, the parse 
 trees can be very large and numerous \ldots} If you click on the parse
 tree itself you will get a menu with an option to {\lkbmenucommand Show enlarged tree}.
 If you choose this, you will see a window with a more readable version
-of the tree, as shown in Figure~\ref{ptree}.
+of the tree, as shown in Figure~\ref{ptree}. In MCL you will just get the 
+large tree immediately.
 \begin{figure}
 \epsfxsize=2in
 \epsfbox[0 0 400 400]{figs/kimsleeps.ps}
@@ -1186,7 +1220,8 @@ In a linguistic framework such as HPSG, a parse tree is just a convenient
 user interface device, which is shorthand for a much larger typed
 feature structure.  Click on the uppermost (S) node of the
 enlarged parse tree and choose the option 
-{\lkbmenucommand Feature structure --- Edge 3}.  You will
+{\lkbmenucommand Feature structure --- Edge 3}.  
+You will
 see a large feature structure, which is shown in Figure~\ref{bigfs}.
 As before, we have `shrunk' some parts of the structure so that
 it can be displayed on the page.
@@ -1214,16 +1249,26 @@ will see that the daughter structures may themselves have daughters.
 We will go into a lot more detail about how grammar rules work
 in the next chapter.
 
-Now try {\lkbmenucommand Parse} / {\lkbmenucommand Batch Parse}.  You will be prompted for the
+Now try {\lkbmenucommand Parse} / {\lkbmenucommand Batch Parse}.  
+You will be prompted for the
 name of a file which contains a test suite: i.e. a list of sentences
 which either should or should not parse in a grammar.  A suitable file,
 \filename{test.items}, already exists in the toy directory.  Select 
 \filename{test.items} and enter the name of a new file for the output,
 e.g., \filename{test.items.out}.  When you open the output file in
-the editor, it should show the number of parses (if
-any) and the number of edges (phrases
-constructed while attempting to parse) for each sentence
-and a time for the total processing.
+the editor, it should show the following for each sentence:
+\begin{enumerate}
+\item the number of the sentence
+\item the sentence itself delimited by {\tt "}
+\item the number of parses (0 if there were no parses)
+\item the number of edges (roughly speaking an edge is a
+phrase constructed while attempting to parse) 
+\end{enumerate}
+Note that we have marked ungrammatical sentences with an asterisk
+in the test suite file, and though the parser strips off the asterisk before 
+attempting to parse, the results file shows the sentence in the
+form in which it was input. 
+The results file also contains a time for the total processing.
 
 The toy grammar can parse exactly four 
 sentences.  In the next sections, we'll expand that coverage slightly.
@@ -1282,7 +1327,7 @@ showing why unification is failing.
 Once you have successfully parsed some new sentences,
 you could add them to the list of test sentences for batch parsing.
 
-\section{Adding a type and its constraint}
+\section{Adding a type and its constraint description}
 
 The way the toy grammar is set up, although you could add a lexical
 entry for a proper name by just adding a description to the lexicon file,
@@ -1311,6 +1356,7 @@ the edge of a small but steep cliff and are not going to provide much in the
 way of climbing equipment.\footnote{There is the possibility of Copestake and
 Flickinger (next millennium), which would be an introduction to linguistic
 engineering using typed feature structure systems, and the LKB in particular.
+% UPDATE pount - millennium ...
 If you think this would be a worthwhile enterprise, please send encouraging
 email, cash donations etc to us at CSLI.}  
 A basic introduction to the notion of typed feature structure
@@ -1334,7 +1380,7 @@ extending them, first by adding lexical entries as we did in this chapter, and
 then by extending the coverage by adding new lexical types.  You should refer
 to the relevant sections in chapters~\ref{formal}, \ref{srcfiles} and \ref{ui}
 when problems arise or when you need to know the details of some facility.
-Then \S\ref{own}, gives some hints as to how to go about building your own
+Then \S\ref{own} gives some hints as to how to go about building your own
 grammar.  Some of the advanced capabilities discussed in Chapter~\ref{advanced}
 will become relevant at this point.
 
@@ -1799,6 +1845,7 @@ on types which determined which typed feature structures are
 The next section describes the type hierarchy.
 
 \section{The type hierarchy}
+\label{easythier}
 
 Figure~\ref{th}
 shows the type hierarchy corresponding to our simple grammar
@@ -1948,16 +1995,26 @@ given this hierarchy, we can conclude it is of type {\type fish}
 An example of an invalid hierarchy is given in Figure~\ref{th3},
 where we have added {\type mammal} under {\type vertebrate} and
 {\type whale} as inheriting from {\type mammal}
-and {\type swimmer}.  Now {\type vertebrate} and {\type swimmer} 
-have multiple mutual descendants which don't stand 
-in an inheritance relationship: {\type fish} and {\type whale}.
+and {\type swimmer}.  
+Now both {\type fish} and {\type whale}
+inherit from the types {\type vertebrate} and 
+{\type swimmer}, but aren't related to eachother
+through an inheritance relationship.  This invalidates the
+hierarchy because it violates the unique greatest lower bounds condition.
+If {\type vertebrate} and 
+{\type swimmer} are compatible there must be a
+single type for their combination, but both {\type whale} and 
+{\type fish} independently
+inherit from them.
 Note that it is irrelevant that the node {\type mammal} intervenes
 between {\type vertebrate} and 
 {\type whale} while 
 {\type fish} is a direct daughter of {\type vertebrate}: 
 {\type whale} is
-not a descendant of {\type fish}.  In fact the number of
-nodes in a type hierarchy is never relevant formally.
+not a descendant of {\type fish}, so 
+{\type fish} isn't the greatest lower bound
+of {\type vertebrate} and 
+{\type swimmer}.
 \begin{figure}[!ht]
 \begin{center}
 \setlength{\unitlength}{1in}
@@ -2054,6 +2111,8 @@ More details of this are given in \ref{glbgen}.
 However in this chapter we will assume that
 all type hierarchies obey the glb condition.
 
+Having described the restrictions on the type hierarchy, we 
+should mention the slight complication of strings.
 As we mentioned above, strings such as {\tt "these"}
 are an exception to the requirement
 that all types have to be explicitly
@@ -2063,6 +2122,10 @@ string (i.e. sequence of characters starting and ending with
 is conventionally considered to be a subtype of the
 type {\type string}.  No strings have subtypes, which
 means that different strings are incompatible.
+So string types actually obey all the conditions on
+the type hierarchy, but we usually don't
+show them in diagrams or in the type hierarchy display,
+since they have no interesting interrelationships.
 
 You should note that, in the LKB system, despite the requirement
 that all types must be defined, it is valid to specify that
@@ -2173,13 +2236,14 @@ what the system is supposed to do \ldots
 \end{enumerate}
 
 \section{Typed feature structures}
+\label{easytfs}
 
 We now move on to talking about typed feature structures.
 We'll make a distinction between
 typed feature structures in general, which we'll discuss in this section,
 and the subset of typed feature structures
 which are \newterm{well-formed} with respect to a set of type constraints,
-which are described in \S\ref{wf}.  
+which are described in \S\ref{easycons}.  
 
 Typed feature structures can be thought of as graphs, which have exactly
 one type on each node, and which have labelled arcs connecting nodes
@@ -2219,7 +2283,7 @@ must have a unique root node:  apart from the root, all nodes have
 one or more parent nodes.  
 \item[Unique features]
 Any node may have zero or more arcs leading out of it, but the
-label on each must be unique.  
+label on each (that is, the feature) must be unique.  
 \item[No cycles]
 No node may have an arc that points
 back to the root node or
@@ -2300,7 +2364,7 @@ there's no reason generally to write a description that corresponds
 to a partially instantiated rule, and because
 it makes explicit a lot of 
 information that is inferred automatically via the
-process of making a structure well-formed, as we'll discuss in \S\ref{wf}.
+process of making a structure well-formed, as we'll discuss in \S\ref{easycons}.
 \begin{figure}
 \begin{center}
 \setlength{\unitlength}{0.3mm}
@@ -2877,7 +2941,8 @@ if and only if the following conditions hold:
 of type {\type t}, there is a corresponding path P in G
 with a value which is either {\type t} or a subtype of {\type t}.
 \item[Path equivalences] Every pair of paths P and Q which
-are reentrant in F are also reentrant in G.
+are reentrant in F (i.e., which lead to the same node in the graph)
+are also reentrant in G.
 \end{description}
 
 Unification can now be defined very concisely  in terms of subsumption.
@@ -2887,7 +2952,7 @@ typed feature structure which is subsumed by both F and G, if it
 exists.
 
 It follows from this definition
-that one if the structures specifies that a node at the end of 
+that if one of the structures specifies that a node at the end of 
 some path P
 has a type {\type a}, and in the other structure path P leads 
 to a node of
@@ -3318,10 +3383,10 @@ You could also try using the LKB system to investigate
 unification, by specifying entries,
 viewing the feature structures, and unifying the results
 according to the instructions in \S\ref{unifcheck}.
-Be warned however
-that if you do this, you will probably find that some of the
+Be warned, however,
+that if you do this you will probably find that some of the
 entries you specify get expanded with additional information
-because of the well-formedness constraints.  For instance,
+because of the well-formedness conditions.  For instance,
 if you write the following description:
 \begin{verbatim}
 ex1 := lexeme &
@@ -3733,7 +3798,7 @@ does not involve reversing unifications.
 \end{enumerate}
 
 \section{Type constraints and inheritance}
-\label{wf}
+\label{easycons}
 
 We finally arrive at a detailed description of the operation of
 the type constraints.  In the previous sections, we have been discussing
@@ -3742,13 +3807,14 @@ on those which are well-formed with respect to a set
 of type constraints.
 Usually the feature structures
 corresponding directly
-to descriptions (e.g., of lexical entries etc) won't
+to descriptions (e.g., of lexical entries) won't
 be well-formed: the process of inheriting/inferring information, which we've
-alluded to a couple of times informally so far, is in fact precisely the
+alluded to a couple of times informally so far, is precisely the
 process of making the structure well-formed. 
 The primary purpose of type constraints as far as the grammar
 writer is concerned is that they can be used to allow generalisations
-to be expressed, so that lexical entries etc can be kept
+to be expressed, so that lexical entries and other descriptions
+can be kept
 succinct.  Their secondary purpose is to avoid errors
 creeping into a grammar, such as misspelt feature names.
 
@@ -3766,6 +3832,7 @@ examples so far (e.g. in Figure~\ref{lkbgram1}) give rise to
 the actual type constraints.
 
 \subsection{Well-formedness}
+\label{easywf}
 
 First let's say that the \newterm{substructure}s
 of a feature structure are
@@ -4106,7 +4173,7 @@ must be the type {\type cat}.
 
 We want unification of well-formed feature structures to
 give a well-formed result.
-We can achieve this by given a definition of the
+We can achieve this by giving a definition of the
 unification of well-formed feature structures
 which parallels unification of typed feature structures
 in general.
@@ -4200,8 +4267,8 @@ descriptions shown in Figure~\ref{lkbgram1}
 to the constraints shown in Figure~\ref{fullcons}.
 We will refer to the feature
 structures which are directly specified in the descriptions
-as the \newterm{local} constraints.
-There are a series of conditions on type constraints
+as the \newterm{local constraints}.
+There are a series of conditions on full type constraints
 which determine how the local constraints are expanded into the 
 full constraints.
 
@@ -4227,14 +4294,14 @@ condition guarantees that the feature will be appropriate
 for all descendants of $t$.
 \item[Well-formedness of constraints]  All full constraint feature
 structures must be well-formed as described in
-\S\ref{wf}.  
+\S\ref{easywf}.  
 \end{description}
 
 You should check Figure~\ref{fullcons} and Figure~\ref{lkbgram1}
 to make sure you follow how this applies to the tiny grammar.
 
 
-Although the constraints on the grammars we've been
+Although the constraints in the grammars we've been
 looking at are all very
 simple, constraints can in general be
 arbitrarily complex feature structures.  
@@ -4416,7 +4483,7 @@ for grammar writing with typed feature structures.
 However, since the parser supplied with the LKB
 depends on this condition for its operation, we will continue to
 assume it here.  We'll see at the end of the chapter that
-we can actually implement this constraint in the grammar rules.
+we can actually implement this condition in the grammar rules.
 
 So, at the start of parsing we have a list of sets of
 lexical structures, with associated strings, and an initial structure,
@@ -4668,7 +4735,7 @@ However, although this encoding has frequently been used, it may not be the
 most perpicuous way to treat agreement in English.  The problem is that
 for most English verbs, the distinction in morphological form is between
 third person singular forms and everything else.  While we can represent
-third person singular simply enough, as above, expressing the generalization
+third person singular simply enough, as above, expressing the generalisation
 `everything else', is not so easy.\footnote{One option
 is to add negation to the formalism, and indeed this has been done with some
 variants of constraint-based formalisms, but it turns out to have lots
@@ -5827,7 +5894,7 @@ beginning with {\tt ;} or they are bracketed by {\tt \#|} {\tt |\#}.
 \subsection{Lexical entries}
 \label{lexsyntax}
 The syntactic description for lexical entries is
-very similar to that for type constraints.  For example:
+very similar to that for type constraint descriptions.  For example:
 \begin{verbatim}
 me_1 := pron-lxm & 
 [ ORTH "me",
@@ -5960,7 +6027,7 @@ Lexical rules are treated as unary grammar rules:
 they are special only in that
 they may apply before affixation.  In principle
 they may also be applied to phrases ---
-all constraints on lexical rule application must be explicitly encoded,
+all conditions on lexical rule application must be explicitly encoded,
 e.g., by stipulating that lexical rules may only apply
 to {\type word}s rather than {\type phrase}s.
 Normally this will be done by defining a type for lexical rules.
@@ -6374,12 +6441,15 @@ practical grammars.
 \chapter{LKB source files}
 \label{srcfiles}
 
-The previous chapter described the formalism used by the LKB.  This chapter
+The previous two chapters described the formalism used by the LKB.  This chapter
 goes into the details of how the system evaluates grammar source files
-expressed in that formalism.
+expressed in that formalism.  
+We expect it will be mostly useful as a reference manual, for use
+especially when there is an error message that is not self-explanatory.
 Most of this chapter should be equally relevant to people using the
 graphical or tty versions of the system.
-The source file organization is based on the assumption that
+
+The source file organization in the LKB is based on the assumption that
 a single file contains one class of object.  The user may however 
 choose to split
 the descriptions in a particular class over multiple files, for example to have
@@ -6461,10 +6531,11 @@ easier.  These are discussed in detail in \S\ref{script-adv}.
 
 The first three lines read in some Lisp files which parameterize the
 system in various ways, as briefly discussed in \S\ref{ancil}.
-The following lines read in the types with their constraints
+The following lines read in the types with their local
+constraint descriptions
 and the entries of the various
-classes listed above.  Note there is also a file for irregular
-forms, as discussed in \S\ref{irregs}.  All these files are read
+classes listed above.  Note there is also a file for morphologically
+irregular words, as discussed in \S\ref{irregs}.  All these files are read
 in by functions which take as an argument the pathname for the file.
 
 
@@ -6473,7 +6544,7 @@ in by functions which take as an argument the pathname for the file.
 The type system is defined in one or more type files.  It is necessary
 to have a valid type system before anything else will work.
 The system loads the type files and then carries out a series of
-checks and expands the type constraints.
+checks and expands the type constraint descriptions.
 With an error-free type hierarchy, you will see messages such as the
 following while the system loads the files and
 does this computation.
@@ -6493,8 +6564,11 @@ This is described in detail in \S\ref{thier}, below.
 The formal conditions on the type hierarchy and the syntax of the
 language are
 detailed in Chapter~\ref{formal}.
-Here we will go through those conditions informally, and discuss what
+Here we
+will go through those conditions informally, and discuss what
 happens when you try and load a file in which they are violated.
+If you do not understand the terminology, please refer back to
+Chapter~\ref{easy}.
 This section is lengthy compared to the sections
 on lexical rules and so on, because the type hierarchy conditions
 are relatively complex.
@@ -6545,7 +6619,7 @@ The error is caused by the missing {\tt =} following the
 {\tt :}.  The error message indicates the position of
 the error (using emacs you can use the command goto-char to
 go to this position in the file).  The number given will
-not always indicate the exact position of the problem, since the reader
+not always indicate the exact position of the problem, since the description reader
 may not be able to detect the problem immediately, but is likely to be quite close.  
 The system then says what it is doing to try and recover from the error
 (in this case, ignore the rest of the entry) and finally stops processing with
@@ -6605,13 +6679,13 @@ You may also get syntax errors such as the following:
 \begin{error}
 Unexpected eof when reading X
 \end{error}
-(eof stands for end of file --- this sort of message is usually 
-caused by a missing character).
+eof stands for end of file --- this sort of message is usually 
+caused by a missing character.
 
 \subsection{Conditions on the type hierarchy}
 After a syntactically valid type file (or series of type files)
 is read in, the hierarchy of types is constructed and checked 
-to ensure it meets the conditions specified in \S\ref{formthier}.
+to ensure it meets the conditions specified in \S\ref{easythier}/\S\ref{formthier}.
 
 \label{typehcond}
 \begin{description}
@@ -6684,12 +6758,13 @@ and reports them all.
   
 The system requires that every set of types has a unique greatest lower bound
 (\newterm{glb})
-as described in \S\ref{formthier}.  
+as described in \S\ref{easythier} and \S\ref{formthier}.  
 This is necessary so that unification of typed feature structures
 can give a single result, with one type per node in the feature structure.
 Unlike the conditions listed in the previous section, however, the system can
 fix this problem without user intervention by introducing new types.  These
-types are given names such as {\type glbtype1} etc.  They never have constraints.
+types are given names such as {\type glbtype1} etc.  They never have 
+their own local constraint descriptions.
 
 For example, the toy-glb
 grammar is almost exactly the same as the toy grammar, but the
@@ -6737,16 +6812,16 @@ Apart from their user-interface properties,
 glbtypes behave exactly like user-defined types.
 
 \subsection{Constraints}
-Once the type hierarchy is successfully computed, the constraints
+Once the type hierarchy is successfully computed, the constraint descriptions
 associated with types are checked, and inheritance
 and typing are performed to give expanded constraints on types
-(see \S\ref{formcons}).
+(see \S\ref{easycons} or \S\ref{formcons}).
 \begin{description}
 \item[Valid constraint description]
 The check for syntactic well-formedness of the constraint description
 is performed as the files are loaded, but errors such as 
 missing types which prevent a valid feature structure being constructed
-are detected when the constraint is expanded.
+are detected when the constraint description is expanded.
 For example, suppose the following was in the 
 `toy' type file, but the type 
 {\type foobar} was not defined.
@@ -6785,7 +6860,7 @@ Type 3SING's constraint specification clashes with its parents'
 \end{error}
 \item[No Cycles] 
 Feature structures are required to be acyclic
-in the LKB system (see \S\ref{extvsint} and
+in the LKB system (see \S\ref{easytfs} or \S\ref{extvsint} and
 \S\ref{formtfs}): if a cycle is constructed
 during unification, then unification fails.  In the case
 of construction of constraints, this sort of 
@@ -6808,13 +6883,13 @@ Type BIRULE-HEADFIRST has an invalid constraint specification
 Constraints are constructed by monotonic inheritance from 
 the parents'.  If the parental constraints do not unify with
 the constraint specification, or, in the case of multiple parents,
-if the parents' feature structures are not compatible,
+if the parents' feature structures are not mutually compatible,
 then the following error message is generated:
 \begin{error}
 Type X's constraint specification clashes with its parents'
 \end{error}
 \item[Maximal introduction of features]
-As described in \S\ref{formcons},
+As described in \S\ref{easycons} and \S\ref{formcons},
 there is a condition on the type system that any feature
 must be introduced at a single point in the hierarchy.
 That is, if a feature, F, is mentioned at the top level of
@@ -6872,9 +6947,9 @@ ne-list := *list* &
  [ FIRST *top*,
    REST ne-list ].
 \end{verbatim}
-The reason for this is that expansion of the constraint 
+The reason for this is that expansion of the constraint description
 would create an infinite 
-structure:
+structure (as discussed in \S\ref{tc} and \S\ref{formcons}):
 \begin{verbatim}
  [ ne-list
    FIRST *top*,
@@ -6974,7 +7049,7 @@ Error in SYNSEM-STRUC:
   Type of fs GRAM-CAT at path (SYN) is incompatible with features (MODE) which have maximal type SEM-STRUC
 \end{error}
 Note that, because the system attempts to expand other
-type constraints after detecting this error,
+type constraint descriptions after detecting this error,
 there are a lot of similar error messages from the types for which
 {\type synsem-struc} is an ancestor.
 
@@ -7057,7 +7132,7 @@ is identical to that for grammar rules.
 In principle
 lexical rules which do not affect affixation
 may also be applied to phrases ---
-all constraints on lexical rule application must be explicitly encoded,
+all conditions on lexical rule application must be explicitly encoded,
 e.g., by stipulating that lexical rules may only apply
 to {\type word}s rather than {\type phrase}s.
 Normally this is done by defining type(s) for lexical rules.
@@ -7181,17 +7256,17 @@ since as far as possible
 we try not to build in any unnecessary assumptions about processing.  
 As far as
 the parser is concerned, the primary distinction is between rules that affect
-spelling changes (i.e. morphological rules) and those that don't.  The system
+spelling changes (i.e., morphological rules) and those that don't.  The system
 makes the assumption that all morphological processing happens at the level of
 an individual word (although see \S\ref{multiword}).  Thus, when parsing, all
 affixation operations apply before grammar rules.\footnote{There are some
 examples in English morphology which arguably make this assumption problematic.
-For example, the suffix {\it -ed}, which forms adjectives such as {\it
-broken-hearted}, could be described as applying to an adjective noun phrase to
+For example, there is a suffix {\it -ed}, which forms adjectives such as {\it
+broken-hearted}, and which could be described as applying to an adjective noun phrase to
 form an adjective.  Note that the adjective is obligatory (*{\it a hearted
 lover}), the result is sometimes but not always hyphenated, and that the
 process is productive (e.g., {\it rattan chaired terrace}).  We leave this
-problem as an exercise for the reader.}
+problem as an exercise for the advanced reader.}
 This means that it is the grammar writer's responsibility to
 stop rules applying in unwanted ways.  On the whole, this is done
 via the type system, as was discussed above in \S\ref{lrules}.
@@ -7250,6 +7325,12 @@ type.  Start symbol
 types are treated like any other type with respect to loading,
 viewing etc.
  
+The value of \lkbparam{*start-symbol*} may be altered interactively,
+via the \lkbmenucommand{Options} / \lkbmenucommand{Set options} 
+menu command: if the right initial condition structures are defined
+this allows the user to switch easily between 
+allowing only full sentences and allowing fragments.
+
 In the sample \filename{esslli/toy} grammar, the start symbols are 
 entries.  For convenience, such entries
 can be stored in a separate file.
@@ -7359,11 +7440,13 @@ appendices.
 
 \subsection{Globals}
 
+Default file name \filename{globals.lsp}.
 Contains parameters that may be changed by the user.  
 Details are given in Appendix~\ref{glob}.
 
 \subsection{User preferences}
 
+Default file name \filename{user-prefs.lsp}.
 Some of the parameter settings can be controlled interactively
 via {\lkbmenucommand Set options} on the {\lkbmenucommand Options} menu 
 (see \S\ref{display}).
@@ -7376,6 +7459,7 @@ parameters are given in Appendix~\ref{glob}.
 
 \subsection{User defined functions}
 
+Default file name \filename{user-fns.lsp}.
 There are a few functions which control parameters such as rule
 ordering which may differ in different grammars.  These are
 in the user-fns file (written in Lisp).
@@ -7401,10 +7485,15 @@ which display the following classes of object:
 \item Parse chart
 \end{enumerate}
 Note that in the ACL/CLIM version, all windows for these structures
-have two buttons: {\lkbmenucommand Close} and {\lkbmenucommand Close all}.
+have three buttons: {\lkbmenucommand Close}, {\lkbmenucommand Close all}
+and {\lkbmenucommand Print}.
 {\lkbmenucommand Close} will close the individual window, {\lkbmenucommand Close all}
 will close all windows of that class --- e.g., all type hierarchy windows
 etc.
+{\lkbmenucommand Print} produces a dialog
+that allows one to write a Postscript file which can then
+be printed.  Printing directly to a printer
+is not implemented yet.
 
 \section{Top level commands}
 
@@ -7415,6 +7504,10 @@ window to be closed inadvertently.
 It may be reopened by evaluating
 (clim-user::restart-lkb-window) in Lisp (i.e., the
 {\tt *common-lisp*} buffer in emacs).
+In both versions it is possible to end up in a state 
+where most of the commands are unavailable because the system
+does not think a grammar has been loaded: to
+fix this, evaluate (enable-type-interactions).
 
 In the MCL interface, the LKB menu is added to the top menu.
 
@@ -7448,7 +7541,7 @@ file to cause a grammar to behave differently from the expected behaviour
 (some of which are mentioned below).
 The reload options are therefore only on the `advanced' menu.
 
-\paragraph{Complete grammar \ldots}
+\paragraph{Complete grammar}
 
 This prompts for a script file to load, and then loads the 
 grammar as discussed above.
@@ -7566,18 +7659,19 @@ and which will unify with the feature structure(s)
 identified by the value of the parameter \lkbparam{*start-symbol*},
 if specified
 (i.e., the initial structure(s), see \S\ref{root} and \S\ref{parse}).
+(Note that \lkbparam{*start-symbol*} may be set interactively.)
 If there is a valid parse,
 the parse tree(s) are displayed.  Currently, in the Mac version,
 all the parse trees are displayed in separate windows, while in
 the ACL/CLIM version a single window with very small parse trees 
 is displayed (see \S\ref{parseout}).
 
-Note that it is sometimes more useful in ACL/CLIM
+Note that it is sometimes more useful
 to run the parser from the Lisp
 command line interface, since this means that
 any results generated
 by post-processing will appear in an 
-emacs buffer and can be searched, edited and so on.
+editor buffer and can be searched, edited and so on.
 It may also be useful to do this
 if you have to use emacs to enter diacritics.
 The command \functionname{do-parse-tty} is therefore available in
@@ -7589,10 +7683,10 @@ For example:
 In the tty version of the system, this outputs a bracketed
 structure --- otherwise the normal graphical parse output is produced.
 
-\paragraph{Show parse}
+\paragraph{Redisplay parse}
 Shows the tree(s) from the last parse again.  
 
-\paragraph{Show chart}
+\paragraph{Show parse chart}
 Shows the parse chart (see \S\ref{chart}).
 
 \paragraph{Batch parse}
@@ -7610,6 +7704,7 @@ more functionality is available from the \itsdb\ machinery which
 can be run in conjunction with the LKB (see \ref{tsdb}).
 
 \paragraph{Compare*}
+(ACL/CLIM only)
 This displays the results of the last parse, together with a dialog that 
 allows selection / rejection of rule applications which differ between 
 the parses.
@@ -7621,14 +7716,74 @@ cause the relevant parse trees to be indicated as possible/impossible
 and the other phrases to be marked in/out, to the extent that this can
 be determined.  
 
-\subsection{MRS*}
+The parameter \lkbparam{*discriminant-path*} can be set to
+identify a useful discriminating position in a structure: the
+default value corresponds to the location of the key relation
+in the semantic structure used by the LinGO grammar.
 
-\paragraph{Load munger}
+\subsection{MRS*}
+\label{mrsmenu}
+
+MRS commands are only available if the MRS system has been loaded
+(i.e., (load-system "mrs") rather than (load-system "lkb")) --- see
+Chapter~\ref{installation}.  The MRS commands are loaded into the 
+distributed images.
+
+The MRS commands relate to semantic representation, but they assume 
+a particular style of semantic encoding, as is used in the LinGO grammar
+and also in the textbook grammars.  MRS is 
+briefly discussed in \S\ref{mrs}.  MRS output can be displayed in
+various ways by clicking on the result of a parse in the compact parse tree
+representation (ACL/CLIM only, see \S\ref{parseout}), 
+or displayed in the main editor window
+(*common-lisp* buffer or Listener), as controlled by the 
+\lkbmenucommand{Output level}
+command below.  The parameterisation for MRS is 
+controlled by various MRS-specific files,
+discussed in \S\ref{mrs}.
+
+\paragraph{Load munger} 
+
+The term \newterm{munger} refers to a set of rules which
+manipulate the MRS in application-specific ways.  
+Loading a new set of rules will overwrite the previously loaded set.
+Most users can ignore this.
+
 \paragraph{Clear munger}
+
+Deletes the munger rules.  
+
 \paragraph{Output level}
+
+Allows the user to control the output to the editor window. 
+\begin{enumerate}
+\item[None]
+\item[Base]  An underspecified MRS, generally quite similar to
+the feature structure representation.
+\item[Scoped] The scoped forms corresponding to the
+underspecified structure produced by the grammar.
+If no scoped forms can be produced, warning messages
+are output.  If there are a large number of scoped forms, only a limited number
+are shown, by default.  Because scoping can be computationally
+expensive, there is a limit on the search space for scopes: this
+is controlled by \lkbparam{mrs::*scoping-call-limit*}.
+\item[VIT] VIT stands for Verbmobil interchange term.  This is not relevant
+to most users.  (Note for CSLI users: the VIT output 
+attempts to invoke a Prolog process to check the VIT --- 
+this can cause noticeable
+delays.)
+\end{enumerate}
+ The default output level is {\bf none}, but this may be changed by
+the grammar-specific MRS globals files.
+
 
 \subsection{Generate*}
 \label{gencommands}
+
+The generator is only available if the MRS system has been loaded
+(i.e., (load-system "mrs") rather than (load-system "lkb")) --- see
+Chapter~\ref{installation}.  The MRS commands are loaded into the distributed
+images.
 
 The generator is described in more detail in \S\ref{generator},
 but is currently in a fairly early stage of development.
@@ -7644,7 +7799,7 @@ the command \lkbmenucommand{Index} must be run from this menu.
 At the moment,
 there is no interactive way of entering an MRS input other than by parsing
 a sentence which produces that MRS and then choosing
-\lkbmenucommand{Generate} from the appropriate window.
+\lkbmenucommand{Generate} from the appropriate parse window.
 
 \paragraph{Redisplay realisation}
 Redisplays the results from the last sentence generated.
@@ -7654,10 +7809,10 @@ Displays a chart from the generation process (see \S\ref{chart}).  Note that
 the ordering of items on the chart is controlled by their semantic
 indices.  
 
-\paragraph{Load heuristics \ldots}
+\paragraph{Load heuristics}
 
 Prompts for a file which should contain a set of heuristics for
-determining null semantics lexical items (see \S\ref{generation}).
+determining null semantics lexical items (see \S\ref{generator}).
 
 \paragraph{Clear heuristics}
 
@@ -7675,7 +7830,7 @@ be run before anything can be generated.
 notifying the user of any entries which fail to expand.
 This will take a few minutes for a large lexicon.
 
-\paragraph{Find features' type}  Used to find the maximal type (if any)
+\paragraph{Find features' type*}  Used to find the maximal type (if any)
 for a list of features (see \S\ref{tc} and/or \S\ref{formcons} 
 for a discussion of maximal types).
 Warns if feature is not known.
@@ -7687,7 +7842,7 @@ Displays the chart (crudely) in the LKB interaction
 window.  This can be useful as an alternative display to
 the parse chart window, especially with very large charts.
 
-\paragraph{Print generator chart}
+\paragraph{Print generator chart*}
 As above, but for generator.
 
 \subsection{Advanced*}
@@ -7707,7 +7862,7 @@ memory is becoming restricted this option can be
 used.  However often more memory will be reclaimed by closing any open
 feature structure windows, and especially the Type Hierarchy window.
 
-\paragraph{Create quick check file \ldots}
+\paragraph{Create quick check file}
 \label{qccreate}
 
 The check path mechanism constructs a filter which improves efficiency
@@ -7730,16 +7885,34 @@ enconding where the daughters of a rule are given by an
 asterisked commands are added/removed.
 
 \paragraph{Set options} Allows interactive setting of some system
-parameters.  
-%FIX
-
-See Appendix~\ref{glob} for full details of all parameters.
-
+parameters.
 Note that the values of the boolean parameters are specified 
 in the standard way for Common Lisp: that is, {\tt t} indicates
-true and {\tt nil} indicates false.
+true and {\tt nil} indicates false. 
+We will not go through the parameters here:
+Appendix~\ref{glob} gives full details of all parameters, including those
+that cannot be altered interactively. 
+
+
+If a parameter file has been read in by the script (using 
+\functionname{load-lkb-preferences}) the
+parameter settings are saved
+in the same file.  Otherwise the user is prompted for the name of a file
+to save any preference changes to.
+
+Usually the preferences file is loaded by the script so that any preferences 
+which are set in one session will be saved for a subsequent session
+with that grammar.  (In the cases of `families' of grammars, such as the
+ESSLLI grammars supplied with the LKB, the user-prefs file may be
+shared by all the grammars in the family.)
+The user should not need to look at this file and 
+should not edit it, since any changes may be overwritten.
+
+
 
 \paragraph{Save display settings} Save shrunkenness of feature structures
+(see the description
+of \lkbmenucommand{Shrink/Expand} in \S\ref{activefs}).
 
 \paragraph{Load display settings} Load pre-saved display setting file.
 
@@ -7761,6 +7934,9 @@ scrollable by the user and is automatically scrolled by various {\lkbmenucommand
 View} options.  Nodes in the window are active; clicking on a type
 node will give a menu with the following options:
 \begin{description}
+%\item[Help] This menu option is only available if a comment has been
+%specified for a type.  The type name and comment are printed in a
+%separate window.
 \item[Shrink/Expand] Shrinking a type node results in the type
 hierarchy being redisplayed without the part of the hierarchy which
 appears under that type being shown.  The shrunk type is indicated by
@@ -7795,7 +7971,7 @@ window.
 \begin{description}
 \item [Output TeX] Outputs the FS as TeX macros to a file selected by
 the user.  
-\item[Apply lexical rule]
+\item[Apply lex rule]
 Only available if the identifier points to something that might
 be a lexical entry.
 It prompts for a lexical or morphological rule
@@ -7809,13 +7985,24 @@ lexical and morphological rules to the entry, and to any results of
 the application and so on.  (To prevent infinite recursion on
 inappropriately specified rules the number of applications is limited.)
 The results are displayed in summary form,
-see Figure~\ref{lexruleapp}.  Clicking on one of
+for instance:
+\begin{verbatim}
+consultant_n1 + SING_NOUN_INFL_RULE
+
+consultant_n1 + PLUR_NOUN_INFL_RULE
+\end{verbatim}
+Clicking on one of
 these summaries will display the resulting feature structure.
-% FIX - {lexruleapp}
 \item [Show source] Shows the source code for this structure 
 if ACL/CLIM is being used with emacs --- see \S\ref{emacs}
 This is not available with all structures: it is not available for
 any entries which have been read in from a cached file.
+\end{description}
+\item Clicking on a reentrancy marker gives the following sub-menu:
+\begin{description}
+\item[Find value] Shows the value of this node, scrolling as necessary.
+\item[Find next] Shows the next place in the display where there is 
+a pointer to the node, scrolling as necessary.
 \end{description}
 \item Clicking on a type (either a parent, or a type in the feature
 structure itself) will give a sub-menu with the following options:
@@ -7832,18 +8019,16 @@ Shrinking means that the feature structure will be redisplayed without
 the feature structure which follows the type being shown.  The
 existence of further undisplayed structure is indicated by a box round
 the type.  Atomic feature structures may not be shrunk.  Shrinking
-modifies the actual feature structure being displayed, so that if the
+persists, so that if the
 window is closed, and subsequently a new window opened onto that
 feature structure, the shrunken status will be retained.  Furthermore,
-any feature structures which are formed by unification with the
-shrunken feature structure, will also be displayed with equivalent
-parts hidden.  Thus if the {\em expanded} constraint on a type has
-parts shrunk, any lexical entry which involves that type, which is
-expanded subsequent to any shrinking on the type, will also be
-displayed with parts hidden.  Since type constaints 
-are evaluated when they are
-read in, shrinking parts of the constraint on a type will not affect
-the daughters of that type.
+if the shrunken structure is a type constraint,
+any feature structures which inherit
+from this constraint will also be displayed with equivalent
+parts hidden.  For instance, if the constraint on a type has
+parts shrunk, any lexical entry which involves that type
+will also be
+displayed with parts hidden. 
 
 If this option is chosen on an already shrunken feature structure then
 the feature structure will be expanded.  Again this can affect the
@@ -7888,6 +8073,9 @@ This ordering can be changed or further specified by
 means of the parameter \lkbparam{*feature-ordering*}, which consists of
 a list of features in the desired order (see \S\ref{disglob}).
 
+ACL/CLIM only --- the bar at the bottom of the window shows the
+path to the node the cursor is currently at.
+
 \subsection{Unification checks}
 \label{unifcheck}
 
@@ -7907,7 +8095,7 @@ unifications.
 For example, consider why ``Kim sleep'' does not parse in the 
 \filename{esslli/buggy}
 grammar.  
-In fact, the parse is blocked by the initial structure check
+In fact, the parse is blocked by the initial (root) structure condition
 because we will want to license the
 phrase ``Kim sleep'' in some contexts, e.g., 
 {\it Sandy prefers that Kim sleep}.
@@ -8007,24 +8195,32 @@ unifying the other daughter into the partially instantiated result.
 \section{Parse output display}
 \label{parseout}
 
+ACL/CLIM version only.
+
 The parse output display is intended to give an easily readable
 overview of the results of a parse, even if there are several
 analyses.  The display shows a parse tree for each separate
 parse, using a very small font to get as many trees as possible on
-the screen.  Clicking on a tree gives two options:
+the screen.  Clicking on a tree gives several options:
 \begin{description}
 \item[Show enlarged tree] produces a full size parse tree window, as
-in \S\ref{parsetree}, with clickable nodes etc
+in \S\ref{parsetree}, with clickable nodes etc.
 \item[Highlight chart nodes] will highlight the nodes on the 
 parse chart corresponding to this tree.  If the parse chart is not currently
 displayed, this option will bring up a new window (see \S\ref{chart}
 for details of the chart display).
 \end{description}
-The details of the parse tree display are discussed in the next section.
+If the MRS system has been loaded, the following commands are also available:
+\begin{description}
+\item[Generate] Tries to generate from the MRS for this parse.  Note that
+in order to run the generator, the {\lkbmenucommand Generate} / {\lkbmenucommand Index}
+command must have been run.
+\item[MRS] Displays an MRS in the feature structure style representation.
+\item[Indexed MRS] Displays an MRS using the alternative linear notation. 
+\item[Scoped MRS] Displays all the scopes that can be constructed from the MRS:
+warning messages will be output if the MRS does not scope.
+\end{description}
 
-The parse output display is currently only available on the ACL/CLIM
-version of the interface, the MCL version produces a parse tree
-window for each parse.
 
 Besides the standard {\lkbmenucommand Close} and {\lkbmenucommand Close all} buttons,
 the window has a button for {\lkbmenucommand Show chart} for convenience.
@@ -8050,18 +8246,37 @@ give the following options:
 \begin{description}
 \item [Feature structure - Edge X]  (where X is the edge number in the
 parse chart) displays the feature structure associated
-with a node.
+with a node.  Note that if the parameter
+\lkbparam{*deleted-daughter-features*} is set, the tree will still
+display the full structure (it is reconstructed after parsing).
+See \S\ref{deldaughters}.
+\item [Show edge in chart] Highlights the node in the chart corresponding to
+the edge.  The chart will be redisplayed if necessary.
 \item [Rule X] (where X is the name of the
 rule used to form the node) 
 displays the feature structure associated with the rule.
+\item[Generate from edge]  Only available if the MRS system
+is loaded, this attempts to generate a string from the 
+MRS associated with this node.  Can give strange results
+if the node is not the uppermost one in the tree.
+Note that
+in order to run the generator, 
+the {\lkbmenucommand Generate} / {\lkbmenucommand Index}
+command must have been run.
+\item[Lex ids] This isn't a selectable option - it's just
+here as a way of listing
+the identifiers of the lexical entries under the node.
 \end{description}
 
 The input words are 
 indicated in bold below the terminal parse tree nodes --- if any morphological
 rules have been applied, these are indicated by nodes beneath the words
-if the parameter \lkbparam{*dont-show-morphology*} is nil, but not shown otherwise.
-Similarly the parameter \lkbparam{*dont-show-lex-rules*} controls whether or
-not the lexical rule applications are displayed.
+if the parameter \lkbparam{*show-morphology*} is t, but not shown otherwise.
+Similarly the parameter \lkbparam{*show-lex-rules*} controls whether or
+not the lexical rule applications are displayed.  Both these parameters
+may be set interactively, via the 
+\lkbmenucommand{Options} / \lkbmenucommand{Set options} 
+menu command.
 
 \section{Chart display}
 \label{chart}
@@ -8078,7 +8293,7 @@ are) in order to constrain the structures that it
 builds.  A structure built by the parser and put on the
 chart is called an \newterm{edge}: edges are identified by an
 integer (\newterm{edge number}).
-All edges that are displayed on the chart 
+By default, all edges that are displayed on the chart 
 represent complete rule applications.
 
 The chart window shows the words of the sentence to the left,
@@ -8092,7 +8307,7 @@ is notionally to the left of the first word and
 is numbered 0, just to show we're doing real computer science here).
 \item The edge number (in square brackets)
 \item The name of the rule used to construct the edge
-(or the orthography of the lexical item)
+(or the type of the lexical item)
 \end{enumerate}
 For instance, in the chart for the sentence {\it Kim does like Sandy},
 the nodes for the input are numbered
@@ -8110,23 +8325,46 @@ and was formed by applying the \lkbentryname{head-complement-rule}.
 
 Clicking on an edge node results in the following menu:
 \begin{description}
-\item[Feature structure] Shows the feature structure for the
-edge
-\item[Tree] Shows the tree headed by the phrase corresponding to
-this edge
-\item[Rule X]  Shows the feature structure for the rule that was used
-to create this edge
 \item[Highlight nodes] Highlights all the nodes
 in the chart for which the chosen node is an ancestor or a descendant.
+In ACL/CLIM, 
+this option also selects the node so that it can be compared with another
+node (see {\bf Compare}, below).
+\item[Feature structure] Shows the feature structure for the
+edge.  Unlike the parse tree display, this represents the feature structure
+which is actually used by the parser: that is it is not reconstructed
+if \lkbparam{*deleted-daughter-features*} is used.  See \S\ref{deldaughters}.
+\item[Rule X]  Shows the feature structure for the rule that was used
+to create this edge
 \item[New chart] Displays a new chart which only contains nodes
 for which the chosen node is an ancestor or a descendant (i.e. those that
 would be highlighted).  This is useful for isolating structures
 when the chart contains
 hundreds of edges.
+\item[Tree] Shows the tree headed by the phrase corresponding to
+this edge
+\item[Compare] ACL/CLIM only.  This option is only
+available if another node has been previously 
+selected (using \lkbmenucommand{Highlight 
+Nodes}).  The two nodes are compared using the parse tree comparison
+tool described in \S\ref{parsecommands}.
 \item[Unify] This is only shown if a feature structure
 is currently {\lkbmenucommand Select}ed for the unification test --- see 
 \S\ref{unifcheck}.
 \end{description}
+
+The chart display is sensitive to the parameters 
+\lkbparam{*show-morphology*} and \lkbparam{*show-lex-rules*}
+in the same way as the tree display.
+
+In ACL/CLIM only, 
+moving the cursor over an edge in the chart displays the yield of the edge
+at the bottom of the window.  Clicking on a word node (i.e.,
+one of the nodes at the leftmost side of the
+chart which just show orthography) will select it.  
+When at least one word is
+selected, all the edges that cover all the selected words are highlighted.
+Clicking on a word node again deselects it.
 
 \chapter{Advanced features}
 \label{advanced}
@@ -8169,7 +8407,12 @@ For research, there are some
 limitations imposed by the typed-feature structure 
 formalism.\footnote{The system can be used to 
 build grammars which are Turing equivalent, so 
-these comments aren't about formal power.}
+these comments aren't about formal power.  There is a useful contrast
+between whether a language {\it supports} a technique, which means it
+supplies the right primitives etc, or merely {\it enables} its use,
+which means that one can implement the technique if one is sufficiently
+devious.  What's of interest here is the techniques the LKB
+supports or doesn't support.}
 There's no way of describing any form of transformation
 or movement directly, though, as is well known, feature structure
 formalisms have alternative ways of achieving the same effect.
@@ -8183,8 +8426,9 @@ in favour of the use of types which express generalisations.
 Occasionally it may be better to have multiple lexical entries
 or grammar rules.  
 The LKB does not support negation,
-although we do intend to release a version which incorporates inequalities
-(Carpenter, 1992).  More fundamentally for HPSG, the system
+although we do
+intend to release a version which incorporates inequalities
+(Carpenter, 1992) at some point.  More fundamentally for HPSG, the system
 does not support set operations.  Alternative formalisations are
 possible for most of the standard uses of sets.  For example,
 operations which are described as set union in Pollard and Sag (1994)
@@ -8200,7 +8444,7 @@ you have some programming experience, or can persuade
 someone else to do some programming for you.  For instance,
 the current system for encoding orthographemics is very restricted.  
 However, the interface to the rest of the system is fairly well-defined,
-so it might be relatively easy to replace.  
+so it should be relatively easy to replace.  
 
 If you've decided you want to use the LKB system, then you should start by
 defining a very simple grammar.  
@@ -8264,7 +8508,7 @@ The LKB system code has been optimized with respect to the LinGO
 ERG, so it may well have considerable inefficiencies for other
 styles of grammar.  For instance, the ERG has about 40 rules (constructions)
 --- grammars with hundreds of rules
-might benefit for an improvement in the rule lookup mechanism.
+might benefit from an improvement in the rule lookup mechanism.
 We have put a lot of effort in making processing efficient
 with type hierarchies like the ERG's
 which contains thousands of types, with a reasonably
@@ -8347,8 +8591,10 @@ facility will eventually be removed.
 as discussed in \S\ref{checkpaths}.  The third argument to 
 \functionname{lkb-load-lisp} is {\tt t}, to indicate that the file is optional.
 \item The \filename{comlex.lsp} file contains code which provides an
-interface to a lexicon constructed automatically from COMLEX 
-(see \ref{comlex}). 
+interface to a lexicon constructed automatically from the COMLEX lexicon
+which is distributed by the Linguistic Data Consortium. 
+This acts as a secondary lexicon when the specially built lexicon
+is missing a word entry.
 \item There is a list of type files read in by 
 \functionname{read-tdl-type-files-aux}
 --- the second argument to this function is a file for
@@ -8373,6 +8619,12 @@ are specified as full pathnames.  Unless otherwise
 specified, details of file format etc are 
 specified in Chapter~\ref{formal} and error messages
 etc are in Chapter~\ref{srcfiles}.
+
+\lispcommand{load-lkb-preferences {\it directory} {\it file-name}}
+
+Loads a preferences file and sets \filename{*user-params-file*}
+to the name of that file, so that any preferences the user
+changes interactively will be reloaded next session.
 
 \lispcommand{read-tdl-type-files-aux {\it file-names} \&optional 
 {\it settings-file}}
@@ -8482,7 +8734,9 @@ Constructs a file name as with \functionname{lkb-pathname} and loads it
 as a lisp file.  If optional is {\tt t} (i.e., true),
 ignore the file if it is missing, otherwise signals a (continuable) error.
 
-\section{Check paths}
+\section{Parsing and generation efficiency techniques}
+
+\subsection{Check paths}
 \label{checkpaths}
 
 The check paths mechanism greatly increases the efficiency of
@@ -8518,7 +8772,7 @@ To maintain filtering efficiency, the checkpaths should be
 recomputed when there is a major change to the 
 architecture of the feature structures used in the grammar.
 
-%FIX - remove/change when we sort the following out
+%UPDATE - remove/change when we sort the following out
 Note that there is currently a function which converts the 
 output of the macro into a form suitable for the style of
 rules used in the textbook and LinGO grammars, i.e.
@@ -8526,6 +8780,48 @@ with the daughters given by an {\feature args} list.  This is
 at the end of \filename{main/check-unif.lsp}.  It would
 have to be rewritten for grammars that use a different
 mother/daughter encoding.
+
+The checkpaths will never affect the result of 
+parsing or generation.
+
+\subsection{Key-driven processing}
+\label{key-driven}
+
+When the parser or generator attempts to apply a grammar-rule to
+two or more daughters, it
+is often the case that it is more efficient to check the daughters in a 
+particular order, so that unification can fail as quickly as possible.
+This mechanism allows the grammar developer to specify
+a daughter as the \newterm{key}: the key daughter
+can be checked first.
+The value of the path \lkbparam{*key-daughter-path*} in the 
+daughter structure of the grammar rule
+should be set to the value of
+\lkbparam{*key-daughter-type*} when that daughter is the key.
+By default, the value of \lkbparam{*key-daughter-path*} is
+({\sc key-arg}) and the value of \lkbparam{*key-daughter-type*} is {\type +}.
+So, for instance, if the daughters in the rule are described as a list
+which is the value of the feature {\sc args} and the
+first daughter is the key, the value of ({\sc args} {\sc first} {\sc key-arg}) should be {\type +}.  A rule is not required to have a specified
+key and the \lkbparam{*key-daughter-path*} need not be present
+in this case.  Specifying a key will never affect the result of 
+parsing or generation.
+
+\subsection{Avoiding copying and tree reconstruction}
+\label{deldaughters}
+
+The HPSG framework is usually described in such a way that phrases are
+complete trees: that is, a phrase feature structure
+contains substructures which are also phrases.  This leads to 
+very large structures and computational inefficiency.  However, HPSG
+also has a locality principle, which means that it is not possible
+for a phrase to access substructures under its immediate daughters.
+Any such information has to be carried up explicitly.  
+
+The locality principle guarantees that it is possible to remove the daughters
+of a rule after constructing the mother.  The LKB system allows the grammar
+writer to supply a list of features which will not be passed 
+from daughter to mother when parsing: \lkbparam{*deleted-daughter-features*}.
 
 \section{Multiword lexemes}
 \label{multiword}
@@ -8547,7 +8843,22 @@ way, to allow for e.g., {\it attorneys general}.
 \section{Parse ordering}
 \label{first-only}
 
-FIX - left for Rob to instantiate 
+The parser supports a simple mechanism for ordering parses and for
+returning the first parse only.  The application of this mechanism
+is controlled by the variable \lkbparam{*first-only-p*}
+which may be set interactively, 
+\lkbmenucommand{Options} / \lkbmenucommand{Set options} menu command.
+The
+weighting is controlled by two functions \functionname{rule-priority} 
+and \functionname{lex-priority}
+which may be defined in 
+the grammar-specific
+\filename{user-fns.lsp} file, if desired.  
+Since the mechanism is likely to change, we don't
+propose to document it in detail here, but we suggest that anyone who
+wishes to experiment with this capability looks at the definitions of
+\functionname{rule-priority} 
+and \functionname{lex-priority} in the user-fns file for the LinGO ERG.
 
 \section{Character sets}
 \label{accents}
@@ -8609,7 +8920,8 @@ must meet the following criteria:
 template parents (see \ref{thierglob}).
 \end{enumerate}
 Under these conditions, much more efficient type checking is possible,
-and the type constraint can be expanded on demand rather than being expanded 
+and the type constraint description
+can be expanded on demand rather than being expanded 
 when the type file is read in.
 
 In the LinGO ERG, most of the terminal lexical types (i.e. those from 
@@ -8637,14 +8949,25 @@ the lexicon have not changed.
 
 \paragraph{Lexicon cache}
 
-%FIX - file names set by function
 Whenever a lexicon is read into the LKB, it is stored in an external file
-(specified by the parameter \lkbparam{*psorts-temp-file*}, see \S\ref{sysglob})
 rather than in memory.  Lexical entries are pulled in from this file as
 required.  The caching facility saves this file and an associated index file
-(specified by \lkbparam{*psorts-temp-index-file*}, see \S\ref{sysglob}) so that
+so that
 they do not need to be recreated when the grammar is read in again if the
-lexicon has not changed.  The script command
+lexicon has not changed.  
+The location of these files is set by the \filename{user-fns.lsp} 
+function
+\functionname{set-temporary-lexicon-filenames}.  The file names are
+stored in the parameters \lkbparam{*psorts-temp-file*}
+and \lkbparam{*psorts-temp-index-file*} (see \S\ref{sysglob}).
+The default function uses the function \functionname{lkb-tmp-dir}
+to find a directory and names the files \filename{templex} and 
+\filename{templex-index} respectively.  A more complex version of
+\functionname{set-temporary-lexicon-filenames} is given in
+the LinGO ERG \filename{user-fns.lsp} file: this uses a 
+parameter \lkbparam{*grammar-version*} to name the files.
+
+The script command
 \functionname{read-cached-lex-if-available} (see \S\ref{loadfns}), takes a file
 or list of files as arguments.  If a cached lexicon is available in the
 locations specified by \lkbparam{*psorts-temp-file*} and
@@ -8656,14 +8979,20 @@ can be fooled.  Thus you should definitely not use this unless you have a
 sufficiently large lexicon that the reload time is annoying.
 
 \paragraph{Leaf type cache}
-%FIX
 
-
+A similar caching mechanism is provided for leaf types (\S\ref{leaftypes}).
+The parameter storing the name of the file is \lkbparam{*leaf-temp-file*}
+but like the lexicon cache files this is set by 
+\functionname{set-temporary-lexicon-filenames}.
 
 \section{Emacs interface}
 \label{emacs}
 
-FIX (though I'm not sure whether we need this section) - maybe Rob?
+The menu command \lkbmenucommand{Show source} requires that emacs be 
+used as the editor, and that a command is run which
+allows the linkage --- see \S\ref{acl-emacs}.
+The emacs interface also puts some LKB menu commands on the top
+menu bar of the emacs window, for convenience.
 
 \section{YADU}
 \label{defaults}
@@ -8737,17 +9066,52 @@ representation will be implemented at some point.)
 
 Notice that the current implementation effectivly assumes that
 defaults are only relevant with respect to an inheritance hierarchy:
-defaults constraints which are specified on types other than the root
+default constraints which are specified on types other than the root
 node of a structure are ignored when expanding the feature structure.
 Warning messages are output if this happens.
 
 \section{MRS}
 \label{mrs}
 
-FIX
-% FIX - though this should maybe be just a pointer
-% to the paper plus a distinct document describing
-% munging, vitrification etc
+MRS (minimal recursion semantics) is a framework for
+computational semantics which is intended to
+simplify the design of algorithms for generation and semantic transfer, and
+to allow the representation of underspecified scope while
+being fully integrated with a typed
+feature structure representation.
+It is decribed in detail in 
+\href{http://www-csli.stanford.edu/~aac/papers/mrs.pdf}{Copestake 
+et al (1999)}.
+The LKB system supports MRS in providing various procedures for
+processing MRS structures (for printing, checking correctness,
+scoping, translation to other formalisms etc).  
+The LKB generation component (described in \S\ref{generator})
+assumes an MRS style of representation.  The LinGO grammar
+produces MRS structures, the textbook grammar produces a form of
+simplified MRS which is not adequate to support scope resolution, though
+it can be used for generation.
+
+The MRS system is included in the distributed images.  However,
+if working with
+source code,
+in order to load the MRS code, the system must be
+compiled with 
+\begin{verbatim}
+(compile-system "mrs" :force t)
+\end{verbatim}
+and loaded with
+\begin{verbatim}
+(load-system "mrs")
+\end{verbatim}
+See the relevant sections on compiling and loading the LKB for 
+more details
+(i.e., \S\ref{acl-src} or \S\ref{mcl-src} and 
+\S\ref{acl-emacs}, \S\ref{acl-comp} or \S\ref{mcl-comp}).
+
+The menu commands are described in \S\ref{mrsmenu} and
+\S\ref{parseout} (ACL/CLIM only).
+No further documentation is available at this time.
+% UPDATE - do this properly sometime
 
 \section{Generation}
 \label{generator}
@@ -8759,13 +9123,13 @@ on the LinGO grammar.  The generator is described in
 \href{http://www-csli.stanford.edu/~aac/papers/generation.ps.gz}{Carroll et al (1999)}.
 
 The following notes are VERY sketchy.
-% FIX - do this properly ...
+% UPDATE - do this properly sometime
 \begin{enumerate}
 \item Instead of loading the lkb source, the mrs source must be loaded.  This
 is done by replacing {\tt "lkb"} with {\tt "mrs"} as the argument to
 \functionname{load-system} and \functionname{compile-system}.  
 The distributed images
-already contain the appropriate code.  
+already contain the appropriate code.  See \S\ref{mrs}.
 \item The textbook grammar and the LinGO grammar each
 contain a file defining some necessary
 global parameters which is automatically loaded if the mrs code is available.
@@ -8774,7 +9138,7 @@ must be indexed.  The function which does this,
 \functionname{index-for-generator},
 can be run with the {\lkbmenucommand Index} command
 from the {\lkbmenucommand Generate} menu.
-\item To generate, first parse a sentence.  
+\item To generate, after indexing, first parse a sentence.  
 Then choose {\lkbmenucommand Generate} from the
 pop-up menu associated with the parse tree you are interested
 in (in the mini-parse-tree display), or the relevant node on 
@@ -8787,8 +9151,10 @@ which such lexical entries might be required for a given semantics.
 These are loaded via the \lkbmenucommand{Load Heuristics} command
 on the {\lkbmenucommand Generate} menu.  If no such heuristics are loaded,
 and the generator is run on the results of a parse,
+and the parameter \lkbparam{*null-semantics-hack-p*} is set to t,
 the system cheats and just licenses the null semantics items that were used
-in the parse. 
+in the parse.  Otherwise it attempts to use all
+null semantics items, which can be very slow.
 \end{enumerate}
 
 
@@ -9237,7 +9603,7 @@ before loading any of the other grammar files.
 Other parameters control aspects of the system which
 are not grammar specific, but which concern things such as 
 font size, which are more a matter of an individual user's preferences.
-This class of parameters can be set via the {\lkbmenucommand Options}
+This class of parameters can mostly be set via the {\lkbmenucommand Options}
 menu (described in \S\ref{display}).
 Changing parameters in the {\lkbmenucommand Options} menu results in
 a file being automatically generated with the preferences:
@@ -9276,7 +9642,8 @@ The description of the global variables is divided into sections
 based on the function of the variables: these 
 distinctions do not correspond to any difference in the implementation
 with the exception that the globals which can be set via the
-{\lkbmenucommand Options} menu are all ones that are specified as being
+{\lkbmenucommand Options}/ {\lkbmenucommand Set options}
+menu are nearly all ones that are specified as being
 grammar independent.  (Not all grammar independent variables
 are available under {\lkbmenucommand Options}, since some are complex to set
 interactively, or rarely used.)
@@ -9311,8 +9678,23 @@ See make-sense-unifications in \S\ref{userfns},
 below.
 \item[*maximum-number-of-edges*, 500] A limit on the number of edges that can
 be created in a chart, to avoid runaway grammars taking over multi-user
-machines.  This must be increased to at least 2000 for large scale grammars
-with a lot of ambiguity.
+machines.  If this limit is exceeded, the following error
+message is generated:
+\begin{error}    
+Error: Probable runaway rule: parse/generate aborted 
+(see documentation of *maximum-number-of-edges*)
+\end{error}
+When parsing a short sentence with a small grammar, this message 
+is likely to indicate a rule which is applying circularly
+(that is, applying to its own output in a way that will not terminate).
+But this value must be increased to at least 2000 for large scale grammars
+with a lot of ambiguity.  May be set interactively.
+% UPDATE point - maximum-number-of-active-edges, but not in released version
+\item[*maximum-number-of-tasks*, 50000]
+A limit on the number of tasks that can be put on the agenda.  This 
+limit is only
+likely to be exceeded because of an error such as a circularly
+applicable rule.
 \item[*chart-limit*, 100] The limit on the number of words in a sentence
 which can be parsed.  Whether the system can actually parse sentences of
 this length depends on the grammar \ldots
@@ -9325,7 +9707,7 @@ controls whether the type hierarchy is displayed on loading or not.
 This must be set to nil for grammars with large numbers
 of types, because the type hierarchy display becomes too slow (and if the
 type hierarchy involves much multiple inheritance, the results are not
-very readable anyway). 
+very readable anyway).  May be changed interactively.
 \end{description}
 
 
@@ -9337,12 +9719,18 @@ A list which is interpreted as
 a partial order of features for fixing or resolving the default 
 display ordering when feature structures are displayed or printed
 (see \S\ref{types}).
-\item[ *dont-show-morphology*, nil]
+\item[ *show-morphology*, t]
 A boolean variable.  If set, the morphological 
-derivations are not shown in parse trees (see \S\ref{parsetree}).
-\item[ *dont-show-lex-rules*, nil]
+derivations are shown in parse trees (see \S\ref{parsetree}).
+May be set interactively.
+\item[ *show-lex-rules*, t]
 A boolean variable. If set, 
-applications of lexical rules are not shown in parse trees (see \S\ref{parsetree}).
+applications of lexical rules are shown in parse trees (see \S\ref{parsetree}).
+May be set interactively.
+\item[ *simple-tree-display*, nil ]
+A boolean variable which can be set in order 
+to use the simple node labelling scheme
+in parse trees when in PAGE compatability mode.
 \item[ *substantive-roots-p*, nil]
 A boolean variable which can
 be set to allow the structures constructed when checking the
@@ -9350,11 +9738,20 @@ initial (root) conditions
 to be regarded as real edges
 for the purposes of chart display (see \S\ref{root}).
 \item[*display-type-hierarchy-on-load*, t] see \S\ref{sysbeh} above.
+May be set interactively.
 \item[ *parse-tree-font-size*, 12] The font size for parse tree nodes.
+May be set interactively.
 \item[ *fs-type-font-size*, 12] The font size for nodes in AVM windows.
+May be set interactively.
 \item[ *fs-title-font-size*, 12] The font size for titles in AVM windows.
+May be set interactively.
 \item[ *type-tree-font-size*, 12] The font size for the nodes in the type hierarchy.
+May be set interactively.
 \item[ *dialog-font-size*, 12] The font size used in dialogue windows.
+May be set interactively.
+\item[ *maximum-list-pane-items*, 50] ACL/CLIM only: the maximum number
+of rules, lexical entries etc that will be offered as choices in menus that
+allow selection of such entities.  
 \end{description}
 
 
@@ -9376,21 +9773,6 @@ The path inside the node to be unified with the recursive node.
 \item[ *label-fs-path*, (SYNSEM)]
 The path inside the node to be unified with the label node.
 \item[*label-template-type*, label]
-\end{description}
-
-\subsection{Languages}
-\label{langglob}
-Earlier versions of the LKB offered support for development of
-multilingual lexicons, but the core version currently
-has very limited capabilities.  The following
-parameters simply allow lexicons of different languages to be distinguished.
-\begin{description}
-\item[*current-language*, English]
-This parameter specifies the default language.
-\item[*possible-languages*, nil]
-This specifies the possible languages for interactions
-where a language has to be selected or specified.  If nil,
-it is assumed that the language is always the default.
 \end{description}
 
 \subsection{Defaults}
@@ -9431,6 +9813,9 @@ all Lisp strings are recognised as valid subtypes of it.
 \begin{description}
 \item [*orth-path*, (orth lst)]  The path into a sign, specified 
 as a list of features, which leads to the orthographic specification.
+See also the functions 
+\functionname{make-sense-unifications} and \functionname{make-orth-tdfs}
+in \S\ref{userfns}.
 \item[*list-head*, (hd)]  The path for the first element of a list.
 \item[*list-tail*, (tl)] The path for the rest of a list.
 \item[*list-type*, *list*] The type of a list.
@@ -9450,23 +9835,27 @@ of a difference list.
 the string associated with an irregular form in the irregs file in
 order to construct the appropriate inflectional rule name. 
 Required for PAGE compatibility in the LinGO ERG.
-\item[*mother-feature*, 0] The feature specifying the mother in a rule
-\item[*head-marking-path*, nil] A feature path --- 
-a head daughter in a rule may be identified by having the same 
-value for this path as the mother.  If this path is set, parsing may be
-(slightly) more efficient, since the parser will then check for the
-unifiability of a rule with its
-head daughter before checking the other daughters.
+\item[*mother-feature*, 0] The feature specifying the mother in a rule.
+May be NIL.
 \item[*start-symbol*, sign] A type which specifies the type of any valid parse.
 Can be used to allow relatively complex initial (root) conditions.
+See \S\ref{root}.
+Unlike most grammar specific parameters, this can be set interactively
+to allow a switch between parsing fragments and only allowing full sentences, 
+for instance.
 \item[*deleted-daughter-features*, nil]
 A list of features which will not be passed from daughter to mother
-when parsing.  This must be set if efficiency is a consideration in order
+when parsing.  This should be set if efficiency is a consideration in order
 to avoid copying parts of the feature structure that can never be
 (directly) referenced from rules pertaining to higher nodes in the
 parse tree.  This will include daughter features in HPSG, since it is
 never the case that a structure can be directly selected on the basis of
 its daughters.
+\item[*key-daughter-path*, (key-arg)] A path into a daughter 
+in a rule which should
+have its value set to \lkbparam{*key-daughter-type*} if that daughter
+is to be treated as the key.  See \S\ref{key-driven}.
+\item[*key-daughter-type*, +].  See above.
 \item[*check-paths*, nil]
 An alist in which the keys are feature paths that often fail ---
 these are checked first before attempting unification to improve efficiency.
@@ -9491,7 +9880,44 @@ Note that this flag does not affect generation, which
 always treats an irregular form as blocking a regular spelling.
 \item[*first-only-p*] If set, only one parse will be returned,
 where any preferences must be defined as specified
-in \S\ref{first-only}. 
+in \S\ref{first-only}.  May be set interactively.
+\end{description}
+
+\subsection{Generator parameters}
+\label{genglob}
+
+\begin{description}
+\item[*semantics-index-path*, (synsem local cont index)]
+The path used by the generator to index the chart.
+\item[*intersective-rule-names*, (adjh\_i nadj\_i hadj\_i\_uns)]
+The names of rules that introduce intersective modifiers.
+Used by the generator to improve efficiency.
+Default value is appropriate for the LinGO grammar.
+It should be set to NIL for grammars where the intersective modifier
+rules do not meet the necessary conditions for adjunction.
+See also the function
+\functionname{intersective-modifier-dag-p} in \S\ref{userfns}.
+\item[*duplicate-lex-ids*, (an)]
+Used in grammars which do not
+have any way of representing alternative spellings, this is a list
+of lexical identifiers that should be ignored by the generator.
+(The {\it a/an} alternatives are chosen by a post-generation spelling
+realization step.)
+\end{description}
+
+\subsection{MRS parameters}
+\label{mrsglob}
+
+We will not go through most of the MRS parameters here.  They are
+stored in a separate file from the other globals (called 
+\filename{mrsglobals-eng.lisp} for the LinGO grammar).
+\begin{description}
+\item[mrs::*scoping-call-limit*, 10000]  
+Controls the search space for scoping.  
+May be set interactively.
+\item[mrs::*null-semantics-hack-p*, t]
+Allows the generator to cheat by using only the null semantic lexical
+entries that were found from the last parse.
 \end{description}
 
 
@@ -9609,10 +10035,17 @@ are not shown when a hierarchy is displayed (useful for hierarchies
 where there are a very large number of similar leaf types, for instance
 representing semantic relations).
 
-\item[rule-priority] 
+\item[rule-priority] See \S\ref{first-only}.  The default function
+assigns a priority of 1 to all rules.
+\item[lex-priority] See \S\ref{first-only}.  The default function
+assigns a priority of 1 to all lexical items.
 
-FIX - Rob's
-
+\item[intersective-modifier-dag-p] Used by the generator to test whether a 
+structure is an intersective modifier.  Default value is applicable
+for the LinGO grammar.  It should be set to NIL in grammars where
+intersective modifiers do not meet the conditions the generator requires for
+adjunction.  See also the parameter \lkbparam{*intersective-rule-names*}
+in \S\ref{genglob}.
 \end{description}
 
 \subsection{System files}
@@ -9645,7 +10078,7 @@ unique name which avoids overriding another lexicon
 \end{description}
 
 \begin{description}
-\item[*psorts-temp-file*, \filename{$\sim$/tmp/templex}]
+\item[*psorts-temp-file*]
 This file is constructed by the system and used to store the unexpanded lexical
 entries, in order to save memory.  Once a lexical entry is used, it will
 be cached until either a new lexicon is read in, or until the {\lkbmenucommand Tidy up}
@@ -9669,6 +10102,8 @@ and \S\ref{loadfns}),
 then the lexicon index is reconstructed from this file.
 If this file has been deleted, or is apparently outdated, the lexicon
 will be reconstructed from the source file.
+\item[*leaf-temp-file*]
+This file is used to store cached leaf types.
 \end{description}
 
 
@@ -9807,7 +10242,7 @@ acquisition of large lexicons}
 University of Cambridge Computer Laboratory}
 {1993}
 
-%FIX MRS semantics (Copestake et al, 1997)
+%FIX MRS semantics (Copestake et al, 1999)
 
 \procart{Kasper, R.~T. and  W.~C. Rounds}
 {A logical semantics for feature structures}
