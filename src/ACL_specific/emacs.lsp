@@ -22,13 +22,16 @@
 				thing file))))
 
 (defun redefine-type (definition)
+  (setf *syntax-error* nil)
   (with-output-to-top ()
     (let ((*readtable* (make-tdl-break-table)))
       (with-input-from-string (istream definition)
 	(read-tdl-type-stream istream t)))
-    (unless (or *syntax-error* *amend-error*)
-      (when (patch-type-table) 
-        (canonicalise-feature-order)           
-        (set-up-type-interactions)
-        (format t "~%Done.")
-        t))))
+    (unless *syntax-error* 
+      (if *amend-error*
+          (setf *amend-error* nil)
+	(when (patch-type-table) 
+	  (canonicalise-feature-order)           
+	  (set-up-type-interactions)
+	  (format t "~%Done.")
+	  t)))))
