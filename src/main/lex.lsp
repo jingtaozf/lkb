@@ -606,6 +606,10 @@
       lexicon
     (some #'(lambda (x) (lexicon-for-id x id)) (extra-lexicons lexicon))))
 
+(defmethod forget-psort ((lexicon lex-database) id)
+  (remhash id (slot-value lexicon 'psorts))
+  (some #'(lambda (x) (forget-psort x id)) (extra-lexicons lexicon)))
+
 ;;--
 
 (defun get-keyword-val (keyword list)

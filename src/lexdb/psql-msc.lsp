@@ -294,10 +294,13 @@
 
 (defun display-tdl-duplicates (lexicon)
   (let* ((tdl-lex
-          (mapcar (lambda (x) 
-                    (let ((x (read-psort lexicon x)))
-                      (cons (tdl-val-str (lex-entry-id x))
-                            (to-tdl-body x))))
+          (mapcar #'(lambda (x) 
+		      (let* ((x (read-psort lexicon x :cache nil))
+			     (val-dot-body
+			      (cons (tdl-val-str (lex-entry-id x))
+				    (to-tdl-body x))))
+			(forget-psort lexicon x)
+			val-dot-body))
                   (collect-psort-ids lexicon)))
          (tdl-lex-sort 
           (sort tdl-lex #'string< :key #'cdr))

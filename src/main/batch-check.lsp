@@ -29,10 +29,10 @@
       (cache-all-lex-records *lexicon*))
     (format t "~%Checking lexicon")
     (format t "~%  - difference-list check starts at path ~a" start-path)
-    (dolist (id (collect-psort-ids *lexicon* :cache nil))
+    (dolist (id (collect-psort-ids *lexicon*))
       ;; alternatively - for lexicon only
       ;; (collect-psort-ids *lexicon*) 
-      (let* ((entry (read-psort *lexicon* id))
+      (let* ((entry (read-psort *lexicon* id :cache (not unexpandp)))
              (lex-id (lex-entry-id entry)))
         (expand-psort-entry entry)
         (let ((new-fs (lex-entry-full-fs entry)))
@@ -48,17 +48,18 @@
 		      (reverse start-path)))
 	  )
 	)
-      (when unexpandp (unexpand-psort *lexicon* id))
+;      (when unexpandp (unexpand-psort *lexicon* id))
+;      (when unexpandp (forget-psort *lexicon* id))
       ))
+  (print 'part-a)
+  (describe *lexicon*)
   #+:psql
   (when check-duplicates
     (format t "~%CHECKING FOR DUPLICATE ENTRIES:~%")
     (display-tdl-duplicates *lexicon*)
     (format t "~%END OF DUPLICATE ENTRIES~%"))
-  #+:psql
-  (when (typep *lexicon* 'psql-lex-database)
-    (format t "~%(emptying cache)")
-    (empty-cache *lexicon*))
+  (format t "~%(emptying cache)")
+  (empty-cache *lexicon*)
   (format t "~%Lexicon checked")
   )
 
