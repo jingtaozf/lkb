@@ -286,7 +286,7 @@ BEGIN
 	----           eg. COPY TO stdin from frontend
 
 	RAISE INFO \'Selecting new entries to merge...\';
- 	CREATE INDEX public.temp_name_userid_version on public.temp (name, userid, version);
+ 	CREATE INDEX temp_name_userid_version on public.temp (name, userid, version);
 
 	-- check for duplicates in public.temp
 	num_dups := (SELECT count(*) FROM (SELECT name,userid,version, count(*) FROM public.temp GROUP BY name,userid,version HAVING count(*)>1) AS foo);
@@ -299,7 +299,7 @@ BEGIN
  	DELETE FROM revision_new;
 	INSERT INTO revision_new
 		SELECT * FROM (SELECT DISTINCT name,userid,version FROM public.temp EXCEPT SELECT name,userid,version FROM public.revision) AS t1 NATURAL JOIN public.temp;
-	DROP INDEX public.temp_name_userid_version;
+	DROP INDEX temp_name_userid_version;
 	DELETE FROM public.temp;
 	count_new := (SELECT count(*) FROM revision_new);
 
