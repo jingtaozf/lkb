@@ -342,7 +342,7 @@ stv := non-auxv-lxm & NP-trans-arg.
 ;;;JTB 02/15/02 - Ditched form finite and SUBJ <>
 
 ctv := non-auxv-lxm & str-tr &
-[ ARG-ST < synsem, [ LOC [ CAT [ HEAD verbal,
+[ ARG-ST < synsem, [ LOC [ CAT [ HEAD verbal & [IC false],
                                  SPR < >,
                                  COMPS < > ] ] ] > ].
 

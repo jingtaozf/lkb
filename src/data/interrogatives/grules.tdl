@@ -44,7 +44,14 @@ hd-spr-rule := hd-spr-ph.
 
 pred-ph-rule := pred-ph.
 
-decl-hs-rule := decl-hs-cl.
+;;;decl-hs-rule := decl-hs-cl.
+
+decl-hs-rule-1 := decl-hs-cl &
+[ SS.LOC.CAT.HEAD.IC false ].
+
+decl-hs-rule-2 := decl-hs-cl &
+[ SS.LOC.CAT.HEAD.IC true,
+  DTRS < [ SS.LOC.P-STORE <! !> ], [] > ].
 
 ;;;JTB 07/26/01 - The second one is for predicative comp taking is,
 ;;;which only has one comp and no verbal one.

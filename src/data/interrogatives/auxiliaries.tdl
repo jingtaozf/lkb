@@ -300,20 +300,20 @@ focused-do_3 := do-lxm-foc &
 
 ;;;Ambiguous focused.
 
-focused-do_1 := do-lxm-foc &
-[ ORTH <! "do" !>,
-  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
+;focused-do_1 := do-lxm-foc &
+;[ ORTH <! "do" !>,
+;  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR non-3sg ] > ].
 
-focused-do_4 := do-lxm-foc &
-[ ORTH <! "do" !>,
-  SS.LOC.CONT i-soa ].
+;focused-do_4 := do-lxm-foc &
+;[ ORTH <! "do" !>,
+;  SS.LOC.CONT i-soa ].
 
-focused-did_1 := do-lxm-foc &
-[ ORTH <! "did" !> ].
+;focused-did_1 := do-lxm-foc &
+;[ ORTH <! "did" !> ].
 
-focused-does_1 := do-lxm-foc &
-[ ORTH <! "does" !>,
-  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR 3sg ] > ].
+;focused-does_1 := do-lxm-foc &
+;[ ORTH <! "does" !>,
+;  SS.LOC.CAT.SUBJ < [ LOC.CAT.HEAD.AGR 3sg ] > ].
 
 ;;;Ambiguous unfocused.
 
