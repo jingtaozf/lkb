@@ -563,6 +563,7 @@
   (with-slots (lexical-entries psorts cache-lex-list) lexicon
     (when (fboundp 'clear-generator-lexicon)
       (funcall 'clear-generator-lexicon))
+    #+:psql
     (if (typep lexicon 'external-lex-database)
 	(call-next-method))
     (clrhash lexical-entries)
