@@ -163,6 +163,116 @@ void tsdb_close_debug(FILE *stream) {
 } /* tsdb_close_debug() */
 
 /*--------------------------- print functions ------------------------------*/
+char* tsdb_sprint_value(Tsdb_value *value ) {
+  char* result;
+  
+  switch(value->type) {
+    case TSDB_INTEGER:
+      result = malloc(20);
+      sprintf(result, "%d", value->value.integer);
+      break;
+    case TSDB_IDENTIFIER:
+    case TSDB_STRING:
+      result = strdup(value->value.identifier);
+      break;
+    case TSDB_CONNECTIVE:
+      switch(value->value.connective) {
+        case TSDB_AND:
+          result = strdup("&&");
+          break;
+        case TSDB_OR:
+          result=strdup("||");
+          break;
+        case TSDB_NOT:
+          result=strdup("!");
+          break;
+        case TSDB_NOT_NOT:
+          result = strdup(" ");
+          break;
+        case TSDB_BRACE:
+          result = strdup("() ");
+          break;
+  } /* switch */
+      break;
+    case TSDB_OPERATOR:
+      switch(value->value.operator) {
+        case TSDB_EQUAL:
+          result = strdup("==");
+          break;
+        case TSDB_NOT_EQUAL:
+          result = strdup("!=");
+          break;
+        case TSDB_LESS_THAN:
+          result = strdup("<");
+          break;
+        case TSDB_LESS_OR_EQUAL_THAN:
+          result = strdup("<=");
+          break;
+        case TSDB_GREATER_THAN:
+          result = strdup(">");
+          break;
+        case TSDB_GREATER_OR_EQUAL_THAN:
+          result = strdup(">=");
+          break;
+        case TSDB_SUBSTRING:
+          result = strdup("~");
+          break;
+        case TSDB_NOT_SUBSTRING:
+          result = strdup("!~");
+          break;
+      } /* switch */
+      break;
+    default:
+      fprintf(tsdb_error_stream,
+              "tsdb: unknown tsdb_value type: %d\n", value->type);
+      fflush(tsdb_error_stream);
+    } /* switch */
+  
+  return result;
+} /* tsdb_sprint_value() */
+
+
+char* tsdb_sprint_key_list(Tsdb_key_list* list,int* r,int* f,
+                           int n_attributes) {
+  static char* buf=NULL;
+  static int blen=1024;
+  int k,len;
+  char *cat;
+  
+  if (!buf) {
+    buf = malloc(blen);
+    if (!buf) 
+      return NULL;
+  }/* if */
+  buf[0]='\0';
+  len = 0;
+
+  for (k=0; k<n_attributes ; k++ ) {
+    if (r[k]!=-1) {
+      cat = tsdb_sprint_value(list->tuples[r[k]]->fields[f[k]]);
+      if ((len+strlen(cat)+2)<blen) {
+        strcat(&buf[len],cat);
+      } /* if */
+      else {
+        blen+=blen;
+        buf = realloc(buf,blen);
+        strcat(&buf[len],cat);
+      } /* else */
+      len+=strlen(cat);
+      free(cat);
+    } /* if */
+    if (k+1 < n_attributes) {
+      buf[len++]=TSDB_FS;
+      buf[len]='\0';
+    } /* if */
+  } /* for  n_attributes */
+
+  return(strdup(buf));
+} /* tsdb_sprint_key_list() */
+
+
+
+/*--------------------------- print functions ------------------------------*/
 BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
   int r;
 
@@ -269,7 +379,7 @@ void tsdb_print_selection(Tsdb_selection *selection, FILE *stream) {
   Tsdb_relation *foo;
   int i, j, k;
 #endif
-
+  
   if(selection != NULL
      && selection->length && selection->key_lists[0] != NULL) {
     tsdb_print_key_list(selection->key_lists[0], stream);
@@ -306,18 +416,36 @@ void tsdb_print_selection(Tsdb_selection *selection, FILE *stream) {
 #endif
 
 #if defined(DEBUG) && defined(TOM)
-  for ( i=0;i<selection->n_relations;i++){
-    fprintf(stream,"selection relation %ld\n",i);
-    tsdb_print_relation(selection->relations[i],stream);
-  }
-  for (i=0;i<selection->n_key_lists;i++) {
-    fprintf(tsdb_debug_stream,"key list %ld\n",i);
-    tsdb_print_key_list(selection->key_lists[i],stream);
-  }
+  if (selection) {
+    for ( i=0;i<selection->n_relations;i++){
+      fprintf(stream,"selection relation %d\n",i);
+      tsdb_print_relation(selection->relations[i],stream);
+    }
+    for (i=0;i<selection->n_key_lists;i++) {
+      fprintf(tsdb_debug_stream,"key list %d\n",i);
+      tsdb_print_key_list(selection->key_lists[i],stream);
+    }
+  } /* if */
+  
 #endif
   fflush(stream);
 
 } /* tsdb_print_selection */
+
+
+void tsdb_print_projection(char** projection,int n,FILE *stream) {
+  int i,j;
+
+  for (i=0,j=0;i<n;j++) {
+    if (projection[j]) {
+      i++;
+      fputs(projection[j],stream);
+      fputc('\n',stream);
+    } /* if */
+  } /* for */
+  fflush(stream);
+} /* tsdb_print_projection() */
+
 
 void tsdb_print_relation(Tsdb_relation *relation, FILE *stream) {
 
@@ -469,8 +597,6 @@ FILE *tsdb_find_data_file(char *name, char *mode) {
 char *tsdb_data_backup_file(char* name) {
  char* path;
  char* tmpnam;
- char* buf;
- FILE* file;
  int r,l;
 
  l = strlen(tsdb.data_path)+strlen(name)+2;
@@ -580,12 +706,11 @@ Tsdb_tuple *tsdb_read_tuple(Tsdb_relation *relation, FILE *input) {
 } /* tsdb_read_tuple() */
 
 int tsdb_write_relations() {
-  char* tsdb_relfile_dir;
   char* last,*temp_name;
   Tsdb_relation* relation;
   static char buf[1024];
   FILE* file;
-  int i,r,j,k,l;
+  int i,r,j,k;
 
   last = strrchr(tsdb.relations_file, '/');
   strncpy(buf, tsdb.relations_file, (last - tsdb.relations_file));
@@ -647,8 +772,8 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
 \*****************************************************************************/
 
   Tsdb_relation *relation;
-  char buf[256 + 1], *foo, *bar, *baz;
-  int c, i;
+  char buf[256 + 1], *foo, *bar;
+  int c;
 
   relation = tsdb_create_relation();
 
@@ -760,7 +885,6 @@ Tsdb_relation *tsdb_read_relation(FILE *input) {
 
 BOOL tsdb_write_table(Tsdb_selection* selection) {
   FILE *output;
-  Tsdb_tuple** foo;
   char *temp;
   Tsdb_key_list *bar;
   int i;
@@ -949,7 +1073,7 @@ void tsdb_save_changes() {
     if (tsdb.relations[i]->status!=TSDB_UNCHANGED) {
       select = tsdb_find_table(tsdb.relations[i]);
       tsdb_write_table(select);
-      tsdb.relations[i]->status==TSDB_UNCHANGED;
+      tsdb.relations[i]->status=TSDB_UNCHANGED;
     }
   }
 }
