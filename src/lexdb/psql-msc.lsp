@@ -17,14 +17,6 @@
   (nth (position field cols) raw-record))
 ;(cdr (assoc field record :test #'equal)))
 
-(defun record-id (raw-record cols)
-  (str-2-symb (get-val :name raw-record cols)))  
-;(str-2-symb (cdr (assoc :name record))))
-
-(defun record-orth (raw-record cols)
-  (get-val :orthography raw-record cols))
-;  (cdr (assoc :orthography record)))
-
 (defun string-2-mxd-list-on-spc (&rest rest)
   (mapcar #'str-to-mixed
    (apply #'string-2-str-list-on-spc rest)))

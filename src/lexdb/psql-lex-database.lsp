@@ -29,13 +29,68 @@
 (defmethod lookup-word-no-cache ((lexicon psql-lex-database) orth)
   (declare (ignore cache))
   (if (connection lexicon)
-      (let* ((orthstr orth)
-	     (table (sql-fn-get-records lexicon 
+      (let* ((table (sql-fn-get-records lexicon 
 					:retrieve_entries_by_orthkey 
-					:args (list (sql-like-text orthstr)) 
+					:args (list (sql-like-text orth)) 
 					:fields (grammar-fields lexicon)))
 	     (ids (lookup-word-aux2 lexicon table)))
 	ids)))
+
+;(defmethod cache-words ((lexicon psql-lex-database) orths)
+;  (with-slots (lexical-entries) lexicon
+;    (let* ((downcase-orths (mapcar #'string-downcase orths))
+;	   (orths-to-cache (mapcan #'(lambda (x)
+;				       (if (null (gethash x lexical-entries))
+;					   (list x))))))
+;    
+;  (setf orth 
+;    (string-downcase orth))
+;  (let ((hashed (gethash orth lexical-entries)))
+;    (cond 
+;     (hashed
+;      (if (eq hashed :EMPTY)
+;	  (setf hashed nil)
+;	hashed))
+;     (t 
+;      (let ((value (lookup-word-no-cache lexicon orth)))
+;	;;if caching, add entry to cache...
+;	(when cache
+;	  (setf (gethash orth lexical-entries) 
+;	    (if value value :EMPTY)))
+;	value))))))
+
+(defmethod lookup-words ((lexicon psql-lex-database) list-orth)
+  (declare (ignore cache))
+  (if (connection lexicon)
+      (let* ((table (sql-fn-get-records-union lexicon 
+					:retrieve_entries_by_orthkey 
+					:list-args (mapcar
+						    #'(lambda (x) (list (sql-like-text (string-downcase x))))
+						    list-orth)
+					:fields (grammar-fields lexicon))))
+	(lookup-words-cache lexicon table))))
+
+(defmethod lookup-words-cache ((lexicon psql-lex-database) table)
+  (with-slots (psorts lexical-entries record-cache fields-map) lexicon
+    (let ((name-field (second (assoc :id fields-map))))
+      (loop
+	  with cols = (cols table)
+	  for rec in (recs table)
+	  for orthkey = (car rec)
+	  for record = (cdr rec)
+	  for id = (str-2-symb (get-val name-field rec cols))
+	  do
+	    ;; cache id record-cache
+	    (unless (gethash id record-cache)
+	      (setf (gethash id record-cache) 
+		rec))
+	    ;; is this necessary?
+	    (unless (gethash id psorts)
+	      (setf (gethash id psorts) 
+		(make-psort-struct lexicon rec cols)))
+	    ;; cache orthkey id
+	    (setf (gethash orthkey lexical-entries)
+	      (cons id (gethash orthkey lexical-entries)))))))
 
 (defmethod lookup-word-aux2 ((lexicon psql-lex-database) table)
   (with-slots (psorts record-cache fields-map) lexicon
@@ -306,7 +361,7 @@
       (clrhash record-cache)
       (mapc
        #'(lambda (rec)  
-	   (setf (gethash (record-id rec cols) record-cache) 
+	   (setf (gethash (record-id rec cols lexicon) record-cache) 
 	     rec))
        recs))))
 
@@ -320,8 +375,8 @@
 	;; for each record...
 	(mapc
 	 #'(lambda (rec)
-	     (let* ((id (record-id rec cols))
-		    (orth (record-orth rec cols)))
+	     (let* ((id (record-id rec cols lexicon))
+		    (orth (record-orth rec cols lexicon)))
 	       ;; update cache for each component word...
 	       (mapc
 		#'(lambda (y)
@@ -805,7 +860,7 @@
       ;; cache records
       (mapcar
        #'(lambda (rec)
-	   (let ((rec-id (record-id rec cols)))
+	   (let ((rec-id (record-id rec cols lexicon)))
 	     (setf (gethash rec-id record-cache) rec)
 	     rec-id))
 	   recs))))
@@ -830,16 +885,35 @@
       (error "~a not `LexDB external function'" fn))
     (unless fields
       (setf fields '(:*)))
-    (let ((fields-str (str-list-2-str
+    (let ((fields-str (concat-str
 		       (mapcar #'string fields)
 		       :sep-c #\,))
 	  (fn-str (string fn))
 	  (args-str 
-	   (str-list-2-str
+	   (concat-str
 	    (mapcar #'sql-fn-arg args)
 	    :sep-c #\,
-	    :esc nil)))
+	    ;:esc nil
+	    )))
       (format nil "SELECT ~a FROM ~a(~a)" fields-str fn-str args-str))))
+
+(defun concat-str (str-list &key (sep-c #\Space))
+  (unless (listp str-list)
+    (error "list expected"))
+  (let ((sep (string sep-c)))
+    (cond
+     ((null str-list) "")
+     (t (apply 'concatenate
+	       (cons
+		'string
+		(cons
+		 (pop str-list)
+		 (mapcan #'(lambda (x) (list sep
+					     (if x 
+						 x
+					       null-str)
+					     ))
+			 str-list))))))))
 
 (defun sql-fn-arg (x)
   (cond
@@ -847,7 +921,7 @@
     (sql-embedded-text x))
    ((listp x)
     (sql-embedded-text
-     (str-list-2-str
+     (concat-str
       (mapcar
        #'sql-fn-arg
        x)
@@ -858,6 +932,16 @@
 (defmethod sql-fn-get-records ((lexicon psql-lex-database) fn &key args fields)
   (get-records lexicon
 	       (sql-fn-string lexicon fn :args args :fields fields)))
+  
+(defmethod sql-fn-get-records-union ((lexicon psql-lex-database) fn &key list-args fields)
+  (loop
+      with first-arg = (pop list-args)
+      with sql-str = (sql-fn-string lexicon fn :args first-arg :fields (cons (sql-fn-arg first-arg) fields))
+      for args in list-args
+      do
+	(setf sql-str (format nil "~a UNION ~a" sql-str (sql-fn-string lexicon fn :args args :fields (cons (sql-fn-arg args) fields))))
+      finally
+	(return (get-records lexicon sql-str))))
   
 (defmethod sql-fn-get-raw-records ((lexicon psql-lex-database) fn &key args fields)
   (get-raw-records lexicon
@@ -996,3 +1080,10 @@
 	      lexdb))
    (collect-psort-ids lexicon :recurse nil))
   (build-lex-aux lexdb))
+
+(defmethod record-id (raw-record cols (lexicon psql-lex-database))
+  (str-2-symb (get-val :name raw-record cols)))  
+
+(defmethod record-orth (raw-record cols (lexicon psql-lex-database))
+  (get-val (second (assoc :orth (fields-map lexicon))) raw-record cols))
+

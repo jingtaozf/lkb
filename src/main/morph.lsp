@@ -495,7 +495,7 @@
                  hypotheses)
       hypotheses)))
 
-(defun remove-morphemes (word)
+(defun remove-morphemes (word &key (lexicon *lexicon*))
   (let ((definites-list (copy-list '(nil))))
     (do ((current-combinations
 	  (list (list word))
@@ -504,6 +504,9 @@
 	   (remove-infix current-combinations)
 	   (remove-suffix current-combinations))))
 	((null current-combinations) (cdr definites-list))
+      (when (typep lexicon 'psql-lex-database)
+	(let ((words (mapcar #'(lambda (x) (implode (car x))) current-combinations)))
+	  (when words (lookup-words lexicon words))))
       (nconc definites-list
 	     (loop for morphological-possibility in current-combinations
 		 when 
