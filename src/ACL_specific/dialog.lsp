@@ -137,7 +137,13 @@
 					 :query-identifier count
 					 :prompt nil
 					 :view 'clim:toggle-button-view)
-			  (if choices
+			  (if (and choices
+                                   (< (length choices) 
+                                      *maximum-list-pane-items*))
+                              ;; AAC - FIX eventually
+                              ;; - I think the code below is supposed to
+                              ;; do completions, but it doesn't seem
+                              ;; to work and does annoying errors
 			      (clim:accept 
 			       `((clim:member-sequence 
 				  ,choices
