@@ -170,7 +170,7 @@
   (with-slots (fv-pairs) le
     (let ((fv-pair (assoc f fv-pairs)))
       (if fv-pair
-	  (setf (second fv-pair) v)
+	  (setf (cdr fv-pair) v)
 	(push (cons f v) fv-pairs)))))
 
 ;;;
