@@ -254,20 +254,28 @@
                                            (car 
                                             history)))))
 
+;; RPM (18-Aug-1998) This originally just marked lexical entries as unsafe, so
+;; as soon as they successfully unified with something they'd get copied.  That
+;; doesn't work if you have the same lexical entry appearing twice as daughters
+;; of a single rule (as in "Kim gave Sandy Sandy") Our solution is to copy all
+;; lexical entries no matter what, but this runs the risk of copying lexical
+;; entries which never wind up being part of an edge in the chart.  
+
 (defun get-senses (stem-string)
-  (let* ((*safe-not-to-copy-p* nil)
+  (let* (;;(*safe-not-to-copy-p* nil)
          (entries (get-unexpanded-lex-entry 
                    (string-upcase stem-string))))
     (for entry in entries
          filter
          (if (not (cdr (lex-or-psort-orth entry)))
-           ; exclude multi-words
+             ;; exclude multi-words
              (let* ((id (lex-or-psort-id entry))
                     (expanded-entry
                      (get-psort-entry id)))
                (when expanded-entry
                  (cons id
-                       (lex-or-psort-full-fs expanded-entry))))))))
+                       (copy-tdfs-completely
+                        (lex-or-psort-full-fs expanded-entry)))))))))
 
 ;;; get-multi-senses has to return a structure
 
