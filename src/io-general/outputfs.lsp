@@ -185,6 +185,57 @@
          (incf indentation)))
    
 
+;;; ******  compact TDL format (inspired by Chris Manning :-) ******
+
+(defclass compact (fs-output-type)
+  ((initialp :accessor initialp :initform t)))
+
+(defmethod fs-output-start-fn ((fsout compact))
+  nil)
+   
+(defmethod fs-output-end-fn ((fsout compact))
+  nil)
+
+(defmethod fs-output-reentrant-value-fn ((fsout compact) value)
+  (with-slots (stream) fsout
+    (format stream "#~a & " value)))
+   
+(defmethod fs-output-reentrant-fn ((fsout compact) value)
+  (with-slots (stream) fsout
+    (format stream "#~a" value)))
+
+(defmethod fs-output-atomic-fn ((fsout compact) value)
+  (with-slots (stream) fsout
+    (if (stringp value) 
+      (format stream "~s" value)
+      (format stream "~(~a~)" value))))
+
+(defmethod fs-output-start-fs ((fsout compact) type foo bar)
+  (declare (ignore foo bar))
+  (with-slots (stream indentation initialp) fsout
+    (if (eq type *toptype*)
+      (format stream "[ " indentation)
+      (if (stringp type)
+        (format stream "~s & [~%" type)
+        (format stream "~(~a~) & [~%" type)))
+    (incf indentation 2)
+    (setf initialp t)))
+
+(defmethod fs-output-label-fn ((fsout compact) 
+                               label depth foo bar baz) 
+  (declare (ignore depth foo bar baz))
+  (with-slots (stream indentation initialp) fsout
+    (unless initialp (format stream ",~%"))
+    (setf initialp nil)
+    (format stream "~vt~a " indentation label)))
+
+(defmethod fs-output-end-fs ((fsout compact) terminal)
+  (declare (ignore terminal))
+  (with-slots (stream indentation) fsout
+    (format stream " ]")
+    (setf indentation (max (- indentation 2) 0))))
+   
+
 ;;; ******* LiLFeS printing operations ***********
 
 

@@ -27,26 +27,6 @@
 
 (defparameter *preprocessor* nil)
 
-#+:null
-(defparameter *punctuation-characters*
-  (append
-   '(#\! #\" #\& #\' #\(
-     #\) #\* #\+ #\, #\- #\. #\/ #\: #\;
-     #\< #\= #\> #\? #\@ #\[ #\\ #\] #\^
-     #\_ #\` #\{ #\| #\} #\~)
-   #+:ics
-   '(#\ideographic_full_stop #\fullwidth_question_mark 
-     #\horizontal_ellipsis #\fullwidth_full_stop
-     #\fullwidth_exclamation_mark
-     #\fullwidth_comma #\ideographic_space)))
-
-#+:null
-(defun punctuationp (thing)
-  (let ((string (string thing)))
-    (loop
-        for c across string
-        always (member c *punctuation-characters*))))
-
 (defstruct fspp
   version
   (tokenizer (ppcre:create-scanner "[ \\t]+"))

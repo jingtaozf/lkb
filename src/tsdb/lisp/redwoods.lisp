@@ -1157,6 +1157,7 @@
 
 (defun export-tree (item active &key complementp (stream *tsdb-io*))
 
+  (setf %item% item %active% active)
   (loop
       with *package* = (find-package lkb::*lkb-package*)
       with lkb::*deleted-daughter-features* = 
@@ -1195,7 +1196,7 @@
             (format stream "()~%~%")))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :avm *redwoods-export-values*))
-          (lkb::display-dag1 dag 'lkb::tdl stream)
+          (lkb::display-dag1 dag 'lkb::compact stream)
           (format stream "~%~%"))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :mrs *redwoods-export-values*))
