@@ -118,40 +118,6 @@
    (t
     "")))
 
-(defmethod export-to-tdl ((lexicon lex-database) stream)
-  #+:psql
-  (when (typep *lexicon* 'psql-lex-database)
-    (format t "~%(caching all lexical records)")
-    (cache-all-lex-records *lexicon*)
-    (format t "~%(caching complete)")
-    )
-  (mapc
-   #'(lambda (id)
-       (format stream "~a" (to-tdl (read-psort lexicon id
-					       :new-instance t)))
-       (unexpand-psort lexicon id))
-   (collect-psort-ids lexicon))
-  #+:psql
-  (when (typep *lexicon* 'psql-lex-database)
-    (format t "~%(emptying cache)")
-    (empty-cache *lexicon*))
-  )
-
-(defmethod export-to-tdl-to-file ((lexicon lex-database) filename)
-  (setf filename (namestring (pathname filename)))
-  (with-open-file 
-      (ostream filename :direction :output :if-exists :supersede)
-    (export-to-tdl lexicon ostream)))
-
-(defmethod to-tdl ((x lex-entry))
-  (format 
-   nil "~%~a := ~a.~%"
-   (tdl-val-str (lex-entry-id x))
-   (to-tdl-body x)))
-	  
-(defmethod to-tdl-body ((x lex-entry))
-  (p-2-tdl (pack-unifs (lex-entry-unifs x))))
-	  
 ;; copy of p-2-tdl-2 w/o root
 (defun p-2-tdl (branches)
   (unless branches

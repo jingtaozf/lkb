@@ -25,23 +25,7 @@
 
 (in-package :lkb)
 
-(defvar *postgres-export-output-lexicon* nil)
-(defvar *postgres-export-skip-stream* t)
-(defvar *postgres-export-separator* #\,)
-
-(defvar *postgres-export-version* 0)
-(defvar *postgres-export-timestamp* nil) ;;; see lexport.lsp
-(defvar *postgres-current-source* "?")
-(defvar *postgres-current-user* nil)
-(defvar *postgres-current-lang* nil)
-(defvar *postgres-current-country* nil)
-
-(defvar *postgres-export-multi-separately* nil)
-(defvar *postgres-export-multi-stream* t)
-
-(defvar *postgres-debug-stream*)
-
- ;;;
+;;;
 ;;; export to .csv file
 ;;;
 
@@ -122,96 +106,6 @@
 	    (extra-lexicons lexicon))))
 
 
-(defmethod export-to-csv ((lexicon lex-database) stream)
-  (let ((fields-map
-	 (and *psql-lexicon* (fields-map *psql-lexicon*))))
-    (unless fields-map
-      (error "no fields map: plase connect to a LexDB"))
-    (format t "~%Export fields map:~%~a~%" fields-map)
-    (mapc 
-     #'(lambda (x) 
-	 (format stream "~a" (to-csv (read-psort lexicon x 
-						 :recurse nil
-						 :cache nil
-						 :new-instance t
-						 ) fields-map)))
-     (collect-psort-ids lexicon :recurse nil))))
-
-(defmethod export-to-csv-to-file ((lexicon lex-database) filename)
-  (setf filename (namestring (pathname filename)))
-  (with-open-file 
-      (ostream filename :direction :output :if-exists :supersede)
-    (export-to-csv lexicon ostream)))
-
-(defmethod to-csv ((x lex-entry) fields-map)
-  "provide line entry for lexicon db import file"
-  (let* ((s (copy-slots x fields-map))
-
-	 (name (extract-field s :name fields-map))
-	 (keyrel (extract-field s :keyrel fields-map))      
-	 (keytag (extract-field s :keytag fields-map))
-	 (altkey (extract-field s :altkey fields-map))
-	 (altkeytag (extract-field s :altkeytag fields-map))
-	 (alt2key (extract-field s :alt2key fields-map))
-	 (compkey (extract-field s :compkey fields-map))
-	 (ocompkey (extract-field s :ocompkey fields-map))
-	 (type (extract-field s :type fields-map))
-	 (orthography (extract-field s :orthography fields-map))
-
-	 (orth-list (string-2-str-list-on-spc orthography))
-	 (multi-base-name (and 
-			   *postgres-export-multi-separately* 
-			   (multi-p :name name :type type)))
-	 (line 
-	  (format nil "~a~%"
-		  (csv-line
-		   name
-		   *postgres-current-user* ;;userid
-		   (num-2-str *postgres-export-version*) ;;version
-		   *postgres-export-timestamp* ;;modstamp
-		   type
-		   orthography 
-		   (get-orthkey orth-list)
-		   ""  ;;pronunciation
-		   keyrel
-		   altkey
-		   alt2key
-		   keytag
-		   altkeytag
-		   compkey
-		   ocompkey
-		   "" ;;complete
-		   "" ;;semclasses
-		   "" ;;preferences
-		   "" ;;classifier
-		   "" ;;selectrest
-		   "" ;;jlink
-		   "" ;;comments
-		   "" ;;exemplars
-		   "" ;;usages
-		   *postgres-current-lang* ;;lang
-		   *postgres-current-country* ;;country
-		   "" ;;dialect
-		   "" ;;domains
-		   "" ;;genres
-		   "" ;;register
-		   "1";;confidence
-		   *postgres-current-source* ;;source
-		   "1" ;;flags: 1 = not deleted
-		   ))))
-    (cond 
-     ((null (cdr (assoc :unifs s)))
-      (if multi-base-name
-	  (to-multi-csv-line :name name
-			     :base-name multi-base-name
-			     :particle compkey
-			     :type type
-			     :keyrel keyrel)
-      line))
-     (t
-      (format *postgres-export-skip-stream* "~a" (to-tdl x))
-      ""))))
-
 (defun csv-line (&rest str-list)
   (str-list-2-str str-list
 		  :sep-c *postgres-export-separator*
@@ -227,63 +121,6 @@
 	      separator type
 	      separator keyrel))
     ""))
-
-;;;
-;;; export to DB
-;;;
-
-(defmethod export-to-db ((lexicon lex-database) output-lexicon)
-  (mapc
-   #'(lambda (x) (to-db (read-psort lexicon x 
-				    :recurse nil
-				    :new-instance t) output-lexicon))
-   (collect-psort-ids lexicon :recurse nil))
-  (build-lex-aux *psql-lexicon*))
-
-(defmethod to-db ((x lex-entry) (lexicon psql-lex-database))
-  "insert lex-entry into lexicon db (user scratch space)"
-  (let* ((fields-map (fields-map lexicon))
-
-	 (s (copy-slots x fields-map))
-
-	 (name (extract-field s :name fields-map))
-	 (keyrel (extract-field s :keyrel fields-map))      
-	 (keytag (extract-field s :keytag fields-map))
-	 (altkey (extract-field s :altkey fields-map))
-	 (altkeytag (extract-field s :altkeytag fields-map))
-	 (alt2key (extract-field s :alt2key fields-map))
-	 (compkey (extract-field s :compkey fields-map))
-	 (ocompkey (extract-field s :ocompkey fields-map))	 
-	 (type (extract-field s :type fields-map))
-	 (orthography (extract-field s :orthography fields-map))
-	 
-	 (orth-list (string-2-str-list-on-spc orthography))
-	 (psql-le
-	  (make-instance-psql-lex-entry
-	   :name name
-	   :type type
-	   :orthography orth-list	;list
-	   :orthkey (get-orthkey orth-list)
-	   :keyrel keyrel
-	   :altkey altkey
-	   :alt2key alt2key
-	   :keytag keytag
-	   :altkeytag altkeytag
-	   :compkey compkey
-	   :ocompkey ocompkey
-	   :country *postgres-current-country*
-	   :lang *postgres-current-lang*
-	   :source (extract-pure-source-from-source *postgres-current-source*)
-	   :confidence 1
-	   :flags 1
-	   )))
-    (cond
-     ((null (cdr (assoc :unifs s)))
-      (set-lex-entry lexicon psql-le)
-       (empty-cache lexicon))
-     (t
-       (format t "~%skipping super-rich entry:~%~a" (to-tdl x))
-      nil))))
 
 ;;;
 ;;; export to .tdl file
@@ -391,39 +228,6 @@
 (defun commit-scratch-lex nil
   (fn-get-val *psql-lexicon* ''commit-scratch)
   (empty-cache *psql-lexicon*))
-
-;;;
-;;; low-level stuff
-;;;
-
-;;; insert lex entry into db
-(defmethod set-lex-entry ((lexicon psql-lex-database) (psql-le psql-lex-entry))
-  (set-val psql-le :modstamp "NOW")
-  (set-val psql-le :userid (user lexicon))
-  (set-lex-entry-aux lexicon psql-le)
-  )
-  
-(defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
-  (set-version psql-le lexicon) 
-  (if *postgres-export-timestamp* (set-val psql-le :modstamp *postgres-export-timestamp*))
-  (let* ((symb-list '(:type :orthography :orthkey :keyrel :altkey :alt2key :keytag :altkeytag :compkey :ocompkey :comments :exemplars :lang :country :dialect :domains :genres :register :confidence :version :source :flags :modstamp :userid))
-	 (symb-list (remove-if #'(lambda (x) (or (null x) 
-						 (and (stringp x)
-						      (string= x ""))))
-			       symb-list
-			       :key #'(lambda (x) (retr-val psql-le x))))) 
-    (run-query lexicon 
-	       (make-instance 'sql-query
-		 :sql-string (format nil
-				     (fn lexicon 
-					 'update-entry 
-					 (retr-val psql-le :name) 
-					 (sql-select-list-str symb-list) 
-					 (sql-val-list-str symb-list psql-le)))))
-    (unless
-	(check-lex-entry (str-2-symb (retr-val psql-le :name)))
-      (error "Invalid lexical entry ~a -- see Lisp buffer output" (retr-val psql-le :name)))
-    ))
 
 (defun load-tdl-from-scratch (filename)
   (let ((psql-lexicon *psql-lexicon*))

@@ -8,25 +8,6 @@
 
 (in-package :lkb)
 
-(defmethod copy-slots ((x lex-entry) fields-map)
-  "copy slots for use in destructive operations"
-  (let* ((slot-names
-	  (remove-duplicates
-	   (mapcar 
-	    #'first
-	    fields-map)))
-	 (slots
-	  (mapcar 
-	   #'(lambda (s)
-	       (cons
-		s
-		(copy-tree 
-		 (slot-value 
-		  x
-		  (un-keyword s)))))
-	   slot-names)))
-    slots))
-
 ;;;
 ;;; MWE stuff
 ;;;
