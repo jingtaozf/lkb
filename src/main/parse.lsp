@@ -474,7 +474,7 @@
 (defun check-multi-word (stem unexpanded-entry right-vertex id)
   (let ((entry-orth (lex-or-psort-orth unexpanded-entry))
         (ok t)
-        (new-morph-res nil)
+        (rules nil)
         (amalgamated-stems nil)
         (amalgamated-words nil)
         (inflection-position (lex-or-psort-infl-pos unexpanded-entry))) 
@@ -491,23 +491,29 @@
 		;; inflection allowed here
 		(let ((current-morph-res 
 		       (morph-edge-morph-results morph-entry)))
-		  (setf new-morph-res
-		    (for res in current-morph-res
-			 filter
-			 (if (string-equal word-stem (car res))
-			     res)))
-		  (unless new-morph-res
+		  (unless
+                      (let ((some-ok nil))
+                        (for res in current-morph-res
+                             do
+                             (if (string-equal word-stem (car res))
+                                 (progn (push (cdr res) rules)
+                                        (setf some-ok t))))
+                        some-ok)
 		    (setf ok nil)
 		    (return)))
 	      ;; else cannot be inflected        
 	      (if (string-equal word-stem existing-word)
                   (let ((current-morph-res 
-		       (morph-edge-morph-results morph-entry)))
-                    (setf new-morph-res
+                         (morph-edge-morph-results morph-entry)))
+                    (unless
                       (for res in current-morph-res
-                           filter
-                           (if (string-equal word-stem (car res))
-                               res))))
+                           some-satisfy
+                           (and (string-equal word-stem (car res))
+                                (null (cdr res))))
+                      ;; this assumes there are no null affixes 
+                      ;; found by the morphology program
+                      (setf ok nil)
+                      (return)))
                 (progn
                   (setf ok nil)
                   (return))))
@@ -526,19 +532,22 @@
 		     (full-word-string 
 		      (apply #'concatenate 'string 
 			     (nreverse (cdr amalgamated-words)))))
-                (for res in new-morph-res
+                (for rule-set in (or rules (list nil))
                      collect
-                     (let ((rule (caadr res))
-                           (left-vertex (- right-vertex (length entry-orth))))
-                       ;;; NEED to FIX - won't allow for multiple affixes
+                     (let ((left-vertex (- right-vertex (length entry-orth))))
                        (make-sense-record :word-string full-word-string
                                           :left-vertex left-vertex
                                           :morph-res 
-                                          (if rule
-                                              (list full-stem-string 
-                                                    (list rule 
-                                                          full-word-string))
-                                              (list full-stem-string))
+                                          (if rule-set
+                                              (cons full-stem-string 
+                                                    (for rule-rec in rule-set
+                                                         collect
+                                                         (cons (car rule-rec)
+                                                               (list full-word-string))))
+;;; this isn't quite right - if there are multiple affixes,
+;;; the effect will be to put the fully inflected form on all of
+;;; them.  FIX sometime.                                            
+                                            (list full-stem-string))
                                           :lex-ids (list (lex-or-psort-id
                                                           expanded-entry))
                                           :fs (protect 
