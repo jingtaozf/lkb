@@ -64,3 +64,67 @@
 
 (defun get-last-sentence nil
   main::*last-sentence*)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; What used to be in tdl-utilities.lisp
+
+(defun tdl-precedes (type1 type2 &optional (domain (tdl::show-current-domain)))
+  (DECLARE (TYPE SYMBOL  type1)
+           (TYPE SYMBOL  type2)
+           (TYPE SIMPLE-STRING  domain))
+  (if (and (tdl::type-exists-p type1 domain)
+           (tdl::type-exists-p type2 domain))
+      (tdl::precedes type1 type2)))
+
+;;; get disjunctions
+(defun get-first-alter (big-fs)
+  (let ((fs (deref big-fs)))
+    (if (unify::disjunction-node-p fs)
+	(first (unify::get-alternative-list fs))
+      fs)))
+
+(defun get-alter-list  (big-fs)
+  (let ((fs (deref big-fs)))
+    (if (unify::disjunction-node-p fs)
+	(unify::get-alternative-list fs)
+      fs)))
+
+(defun get-real-alter-list (big-fs)
+  (let* ((fs (if (listp big-fs)
+                 big-fs
+               (deref big-fs)))
+         (altlist (if (unify::disjunction-node-p fs)
+                      (unify::get-alternative-list fs)
+                    fs))
+         (newlist nil))
+    (if (listp altlist)
+        (dolist (ele altlist (reverse newlist))
+          (if (not (eq ele 'unify::*fail*))
+              (push ele newlist)))
+      fs)))
+
+;;; Probleme mit eingebetteten Disjunktionen
+(defun get-first-real-alter (big-fs)
+  (let* ((fs (if (listp big-fs)
+                 big-fs
+               (deref big-fs)))
+         (altlist (if (unify::disjunction-node-p fs)
+                      (unify::get-alternative-list fs)
+                    fs)))
+    (if (listp altlist)
+        (dolist (ele altlist (first altlist))
+          (if (not (eq ele 'unify::*fail*))
+              (return ele)))
+      fs)))
+
+#|
+Other useful functions from UDINE/TDL:
+
+;;; get path-value from fs (returns unify::*fail* if path does not exist):
+
+(unify::sub-fs fs path)
+
+;;; (unify::coref-find node) is equivalent with (unify::deref-fs node)
+
+|#
+
