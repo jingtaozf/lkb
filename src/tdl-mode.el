@@ -57,6 +57,7 @@
   (define-key tdl-mode-map "\C-c\C-a" 'goto-begin-of-tdl-expression)
   (define-key tdl-mode-map "\C-c\C-b" 'eval-tdl-file)
   (define-key tdl-mode-map "\177" 'backward-delete-char-untabify)
+  (define-key tdl-mode-map "\C-c;" 'comment-region)
   (define-key tdl-mode-map "\e\034" 'tdl-indent-region)
   (define-key tdl-mode-map "\t" 'tdl-indent-command))
 
@@ -106,6 +107,8 @@ TDL mode supports:
 - matching parentheses (,),[,],{,},<,>
 - indentation (TAB key)
 - connection to TDL/Common Lisp
+- syntactic coloring (font-lock)
+- comment/uncomment with comment-region
 
 Known bugs: TDL mode may be confused by strange comment lines and strings.
 
