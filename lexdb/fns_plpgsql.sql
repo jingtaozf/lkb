@@ -167,17 +167,37 @@ END;
 ' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION public.initialize_current_grammar(text) RETURNS boolean AS '
+DECLARE
+	current_filter TEXT;
+	new_filter TEXT;
+	m_time TEXT;
+	b_time TEXT;
 BEGIN
- EXECUTE ''
-  CREATE OR REPLACE VIEW filtered
-   AS SELECT * 
-    FROM revision_all
-    WHERE '' || $1 ;
- EXECUTE ''UPDATE meta SET val= '' || quote_literal($1) || '' WHERE var=''''filter'''''';
- IF mod_time() > build_time() THEN
-   EXECUTE ''SELECT build_current_grammar()'';
- END IF;
- RETURN true;
+	current_filter := (SELECT val FROM meta WHERE var=\'filter\');
+	new_filter := $1;
+	m_time := (SELECT mod_time());	
+	b_time := (SELECT build_time());	
+
+	RAISE INFO \'current filter: %\', current_filter;
+	RAISE INFO \'build time: %\', b_time;
+	RAISE INFO \'mod time: %\', m_time;
+
+	IF new_filter != current_filter THEN
+		-- set (new) filter
+	 	EXECUTE \'
+	  		CREATE OR REPLACE VIEW filtered
+   			AS SELECT * 
+    			FROM revision_all
+    			WHERE \' || $1 ;
+ 		EXECUTE \'UPDATE meta SET val= \' || quote_literal($1) || \' WHERE var=\'\'filter\'\'\';
+		RAISE INFO \'new filter: %\', new_filter;
+		RAISE INFO \'rebuilding db cache\';
+   		EXECUTE ''SELECT build_current_grammar()'';
+	ELSIF mod_time() > build_time() THEN
+		RAISE INFO \'rebuilding db cache\';
+   		EXECUTE ''SELECT build_current_grammar()'';
+ 	END IF;
+ 	RETURN true;
 END;
 ' LANGUAGE plpgsql;
 
