@@ -1062,19 +1062,26 @@ because of the likelyhood of changes in the grammar.
          (vitrified-feature (last-path-feature current-fvp-feature)))
     ;;; last-path-feature is a no-op for atomic features
     ;;; but returns the last feature for paths
-    (make-fvpair :feature (mrs-unstring-value (fvpair-feature fvp))
+    (make-fvpair :feature (mrs-unstring-value vitrified-feature)
                  :value (mrs-unstring-value (fvpair-value fvp)))))
 
 (defun mrs-unstring-value (val)
-  (if (listp val)
-      (for el in val
-           collect
-           (if (stringp el)
-               (read-from-string el)
-             el))
-    (if (stringp val)
-               (read-from-string val)
-             val)))
+  (if (var-p val)
+      (progn
+	(setf (var-extra val)
+          (for fvp in (var-extra val)
+               collect
+               (mrs-unstring-fvp fvp)))
+	val)
+    (if (listp val)
+	(for el in val
+	     collect
+	     (if (stringp el)
+		 (read-from-string el)
+	       el))
+      (if (stringp val)
+	  (read-from-string val)
+	val))))
 
 
     
