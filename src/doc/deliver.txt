@@ -26,3 +26,12 @@ To create a version of the LKB for delivery:
   d) gzip ~aac/lkbdeliver/vers5-0/data5-0.tar
   e) mv ~aac/lkbdeliver/vers5-0/data5-0.tar.gz ~aac/WWW
 
+4. LinGO grammar
+  a) mkdir lkbdeliver/grammar/jun99
+  b) cd lkbdeliver/grammar/jun99
+  c) cvs export -D 7/16/99 grammar
+  d) tar cf ../grammarjun99.tar .
+  e) gzip ../grammarjun99.tar
+  f) mv ../grammarjun99.tar.gz ~aac/WWW
+
+  
