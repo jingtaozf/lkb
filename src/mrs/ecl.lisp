@@ -38,10 +38,11 @@
     (or (loop
             for (code . type) in %pet-types%
             thereis (when (equal key code) type))
-        (let ((type (pet_code_to_type key)))
-          (when type
-            (push (cons key (vsym type)) %pet-types%)
-            type)))))
+        (let* ((type (pet_code_to_type key))
+               (symbol (when type (vsym type))))
+          (when symbol
+            (push (cons key symbol) %pet-types%)
+            symbol)))))
 
 (defun pet-feature-to-code (key)
   (or (loop
@@ -50,7 +51,7 @@
       (let* ((name (typecase key
                      (symbol (symbol-name key))
                      (string key)))
-             (code (and name (pet_feature_to_code (string-downcase name)))))
+             (code (and name (pet_feature_to_code (string-upcase name)))))
         (when code
           (push (cons code key) %pet-features%)
           code))))
@@ -60,8 +61,13 @@
     (or (loop
             for (code . feature) in %pet-features%
             thereis (when (equal key code) feature))
-        (let ((feature (pet_code_to_feature key)))
+        (let* ((feature (pet_code_to_feature key))
+               (symbol (when feature (vsym feature))))
           (when feature
-            (push (cons key (vsym feature)) %pet-features%)
-            feature)))))
-
+            (push (cons key symbol) %pet-features%)
+            symbol)))))
+
+(defun fixnump (n)
+  (and (integerp n)
+       (<= n most-positive-fixnum)
+       (>= n most-negative-fixnum)))

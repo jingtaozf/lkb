@@ -19,7 +19,18 @@
 (defun vsym (string) 
   #+:debug
   (format t "vsym(): `~a'.~%" string)
-  (intern (string-upcase string) :mrs))
+  ;;
+  ;; mediate between PET-internal conventions for atomic types (i.e.
+  ;; |'foo| and |"foo"|) and MRS conventions; a little clumsy ... :-{.
+  ;;
+  (let ((n (length string)))
+    (cond
+     ((char= (char string 0) #\')
+      (string-upcase (subseq string 1)))
+     ((and (char= (char string 0) #\") (char= (char string (- n 1)) #\"))
+      (subseq string 1 (- (length string) 1)))
+     (t
+      (intern (string-upcase string) :mrs)))))
       
 (defun deref (fs)
   #+:debug
@@ -125,11 +136,12 @@
                         (loop
                             for scope in scopes
                             do
-                              (let ((*canonical-bindings* 
-                                     (canonical-bindings scope)))
-                                (mrs::output-scoped-mrs 
-                                 psoa :stream stream)))))
-                     (eds
+                              (setf *canonical-bindings* 
+                                (canonical-bindings scope))
+                              (mrs::output-scoped-mrs 
+                               psoa :stream stream)
+                            finally (setf *canonical-bindings* nil))))
+                     ((eds dependencies)
                       (ed-output-psoa psoa :stream stream))
                      ((rmrs xml)
                       (let ((rmrs (mrs-to-rmrs psoa)))
@@ -139,4 +151,7 @@
                            (if (eq mode 'rmrs) 'compact 'xml) 
                            stream))))))))
            (when (and result (not (string= result ""))) result))
-         (format t "fs-to-mrs(): unable to extract MRS from fs # ~a.~%" fs))))))
+         (format 
+          t 
+          "fs-to-mrs(): unable to extract MRS from fs # ~a.~%" 
+          fs))))))
