@@ -22,8 +22,7 @@
 ;;;    - not checked for, and will in fact be OK, provided the
 ;;;    referring type is defined after the leaf type and the leaf
 ;;; type is not deleted - otherwise there will be an undefined type error
-;;; 4. The type only has one (genuine) parent - it may
-;;;    have a template-parent.  
+;;; 4. The type only has one parent
 
 (defclass leaf-database () 
   ((leaf-types :initform nil)))
@@ -185,9 +184,7 @@
 (defun add-leaf-type (name parents constraint default comment daughters)
   (if daughters
       (format t "~%Error: leaf type ~A declared with daughters")
-    (let ((existing-type (get-type-entry name))
-          (real-parents nil)
-          (template-parents nil))
+    (let ((existing-type (get-type-entry name)))
       (cond ((null parents)
 	     (format t "~%Error: type ~A has no parents specified"))
 	    ((and existing-type
@@ -197,24 +194,12 @@
 	     (when existing-type
 	       (remove-leaf-type *leaf-types* name)
 	       (format t "~%Type ~A redefined" name))
-	     ;; template parents are allowed, because templates are guaranteed
-	     ;; not to introduce features
-	     (when (and *templates* (cdr parents))
-	       (dolist (parent parents)
-		 (if (member parent *templates* :test #'eq)
-		     (push parent template-parents)
-		   (push parent real-parents)))
-	       (unless real-parents
-		 (setf real-parents (list (car template-parents)))
-		 (setf template-parents (cdr template-parents))))
-	     (unless real-parents
-	       (setf real-parents parents))
-	     (if (cdr real-parents)
+	     (if (cdr parents)
 		 (format t "~%Error: type ~A cannot be a leaf type - it has ~
-multiple parents ~A" name real-parents)
-	       (if (not (get-type-entry (car real-parents)))
+multiple parents ~A" name parents)
+	       (if (not (get-type-entry (car parents)))
 		   (format t "~%Error: type ~A has non-existent parent ~A" 
-			   name (car real-parents))
+			   name (car parents))
 		 (let ((new-features (append (new-features-in constraint)
 					     (new-features-in default))))
 		   (if new-features
@@ -223,9 +208,7 @@ introduces new features ~A" name new-features)
 		     (store-leaf-type *leaf-types*
 				      name
 				      (make-leaf-type :name name 
-						      :parents real-parents
-						      :real-parents real-parents
-						      :template-parents template-parents
+						      :parents parents
 						      :daughters nil
 						      :comment comment
 						      :constraint-spec constraint
@@ -291,8 +274,7 @@ introduces new features ~A" name new-features)
     ; no new features, so got to be the same as parent
     (setf (type-appfeats type-entry) (type-appfeats parent-entry))
   (if (and (null (type-constraint-spec type-entry))
-           (null (type-default-spec type-entry))
-           (null (type-template-parents type-entry)))
+           (null (type-default-spec type-entry)))
       ;; the easy case
       (copy-parent-fs-slots name type-entry parent-entry)
     ;; there is a local constraint
@@ -355,12 +337,13 @@ introduces new features ~A" name new-features)
                       node)
               nil))
         (let ((full-constraint 
-               (inherit-leaf-constraints node type-entry local-constraint)))
+               (inherit-leaf-constraints node local-constraint
+                                         parent-entry)))
           (if full-constraint
               (progn
-                (setf (type-constraint type-entry) full-constraint)
+                (setf (type-inherited-constraint type-entry) full-constraint)
                 (if (progn (setf *well-formed-trace* nil)
-                           (nth-value 1 (wf-constraint-of node)))
+                           (wf-constraint-of node))
                     (progn (clear-marks type-entry)
                            (expand-default-constraint node type-entry))
           ; wf-constraint-of and expand-default-constraint 
@@ -373,16 +356,14 @@ introduces new features ~A" name new-features)
                       node) 
               nil)))))))
 
-(defun inherit-leaf-constraints (node type-entry local-constraint)
-  (reduce
-   #'(lambda (x y) (if (and x y) (unify-dags x y)))
-   (mapcar #'(lambda (parent)
-               (let ((constraint
-                      (type-constraint (get-type-entry parent))))
-                 (if constraint
-                           ;; hack to allow for templates
-                     (retype-dag constraint *toptype*))))
-           (append (type-template-parents type-entry)
-                   (type-parents type-entry)))
-         :initial-value (or local-constraint (create-typed-dag node))))
+(defun inherit-leaf-constraints (node local-constraint
+                                 parent-entry)
+    (let ((parent-constraint
+           (type-constraint parent-entry)))
+      ;; unify-dags itself will put this inside a unification context
+      (unify-dags (or local-constraint (create-typed-dag node))
+                  ;; retype-dag also does a copy - I don't think
+                  ;; the retyping is actually needed, but probably
+                  ;; faster this way
+                  (retype-dag parent-constraint *toptype*))))
     

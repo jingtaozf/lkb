@@ -48,31 +48,26 @@
 ;;; default-spec - the user specified default unifications
 ;;; local constraint - the fs derived from the user specified 
 ;;;                    unifications
+;;; inherited constraint - the fs after inheritance but before
+;;;                     type inference - for debugging - zeroed 
+;;;                     after expanding all constraints
 ;;; atomic-p - t if the type has no appropriate features and none of
 ;;;            its subtypes have any appropriate features
 ;;; July 1996 
 ;;; glbp - t if type was automatically created
 ;;; May 1997
 ;;; descendants - for glb stuff
-;;; Feb 1998
-;;; template-parents - hack so that if multiple parents are
-;;;        specified, under certain conditions (user-controlled global) 
-;;;        all but one of them can be treated as a template
-;;;        thus simplifying the hierarchy
-;;; Oct 1998
-;;; real-parents - store original parents for display and also
-;;; in order to be able to check that only constraints have been altered 
-;;; when we reload the type hierarchy
 
 (defstruct type 
            name parents constraint (constraint-mark nil) tdfs
            comment
            daughters appfeats enumerated-p ancestors marks
-           constraint-spec default-spec local-constraint atomic-p glbp
+           constraint-spec default-spec local-constraint 
+           inherited-constraint
+           atomic-p glbp
            descendants
-           template-parents
            shrunk-p visible-p          ; for display in type hierarchy
-           real-parents)
+           )
            
 (defmethod common-lisp:print-object ((instance type) stream)
   (if *print-readably*
@@ -610,8 +605,7 @@
   (let* ((leaves (mapcar #'(lambda (x) (gethash x *types*)) 
 			 (slot-value *leaf-types* 'leaf-types)))
 	 (parents 
-	  (union (reduce #'union (mapcar #'type-real-parents leaves))
-		 (reduce #'union (mapcar #'type-template-parents leaves))))
+	  (reduce #'union (mapcar #'type-parents leaves)))
 	 (referred
 	  (reduce #'union (mapcar #'used-types leaves)))
 	 (save (union parents referred)))

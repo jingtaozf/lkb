@@ -146,4 +146,41 @@
      (if (functionp browser)
          (apply browser (list nil mrs title))
        (output-mrs mrs 'simple)))))
-  
+
+#|
+
+(defun time-scope nil
+  (setf *scoping-call-limit* 1000000)
+  (for sentence in 
+       #|'("Kim sleeps in Berlin in Berlin in Berlin in Berlin in Berlin in Berlin")
+       |#       
+       '("every daughter sees most daughters"
+                     "every daughter sees most daughters of a daughter"
+                     "every daughter sees most daughters of a daughter of a daughter"
+                     "every daughter sees most daughters of a daughter of a daughter of a daughter"
+                     "every daughter of a daughter sees most daughters of a daughter"                     
+                     "every daughter of a daughter sees most daughters of a daughter of a daughter"
+                     "every daughter of a daughter sees most daughters of a daughter of a daughter of a daughter"
+                     "every daughter of a daughter of a daughter sees most daughters of a daughter"                     
+                     "every daughter of a daughter of a daughter sees most daughters of a daughter of a daughter"
+                     "every daughter of a daughter of a daughter sees most daughters of a daughter of a daughter of a daughter"
+                     "every daughter of a daughter of a daughter of a daughter sees most daughters of a daughter"                     
+                     "every daughter of a daughter of a daughter of a daughter sees most daughters of a daughter of a daughter"
+                     "every daughter of a daughter of a daughter of a daughter sees most daughters of a daughter of a daughter of a daughter")
+                     
+       do
+       (let  ((user-input (cl-user::split-into-words sentence)))
+         (cl-user::parse user-input nil)
+  (when *parse-record*
+  (let* ((edges *parse-record*)
+         (mrs (extract-mrs (car edges))))
+    (setf *canonical-bindings* nil)
+    
+    (let* ((start-time (get-internal-run-time))
+           (binding-sets (make-scoped-mrs mrs)))
+      (format t "~%~A ~A ~A ~A" sentence
+              (length binding-sets) mrs::*scoping-calls* (- (get-internal-run-time) start-time))))))))
+                                                            
+|#
+
+

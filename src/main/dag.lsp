@@ -629,8 +629,10 @@
    ((not (eq dag1 dag2)) (unify2 dag1 dag2 path)))
   dag1)
 
-(defparameter *recording-constraints-p* nil
-  "needed for LilFes conversion")
+;;; (defparameter *recording-constraints-p* nil
+;;;  "needed for LilFes conversion")
+;;; stores cases where a new constraint is unified in -
+;;; uncomment this defparameter and stuff below if necessary
 
 (defvar *type-constraint-list* nil)
 
@@ -660,11 +662,11 @@
             ;; becoming reentrant
             (when (and constraintp *unify-wffs*)
               (let ((constraint (if *expanding-types*
-                                  (copy-dag-completely
-                                   (wf-constraint-of new-type))
+                                    (possibly-new-constraint-of 
+                                     new-type)
                                   (may-copy-constraint-of new-type))))
-                (when *recording-constraints-p*
-                  (pushnew new-type *type-constraint-list* :test #'eq))
+;                (when *recording-constraints-p*
+;                  (pushnew new-type *type-constraint-list* :test #'eq))
                 (if  *unify-debug*
                   (let ((res 
                          (catch '*fail* (unify1 dag1 constraint path))))
@@ -673,12 +675,15 @@
                         (setf %failure% 
                           (list :constraints 
                                 (reverse path) new-type nil nil))
+                        (progn (when *expanding-types*
+                                 (format 
+                                  t "Problem in ~A" *expanding-types*))
                         (format 
                          t 
                          "~%Unification with constraint 
                           of type ~A failed ~
                           at path < ~{~A ~^: ~}>" 
-                         new-type (reverse path)))
+                         new-type (reverse path))))
                       (throw '*fail* nil)))
                   (unify1 dag1 constraint path)))
               ;; dag1 might just have been forwarded so dereference it again
@@ -747,6 +752,25 @@
       (process-arcs (dag-arcs dag2))
       (process-arcs (dag-comp-arcs dag2)))
     (when new-arcs1 (setf (dag-comp-arcs dag1) new-arcs1))))
+
+
+
+(defun possibly-new-constraint-of (new-type)
+  ;;; only called when type hierarchy is being expanded
+  ;;; therefore need to check that new-type actually
+  ;;; has a well-formed constraint and fail informatively if not
+  (let ((new-constraint (wf-constraint-of new-type)))
+    (if new-constraint 
+        (copy-dag-completely new-constraint)
+      (progn
+        (when *unify-debug*
+          (if (eq *unify-debug* :return)
+              (setf %failure% 
+                (list :illformed-constraint 
+                      nil new-type nil nil))
+            (format t "Problem in ~A due to ~A" 
+                    *expanding-types* new-type)))
+        (throw '*fail* nil)))))
 
 
 ;;; similar to constraint-of return the type's constraint, a 'fresh'
@@ -1206,7 +1230,7 @@
 
 (defun make-well-formed (fs features-so-far &optional type-name)
    (let ((real-dag (deref-dag fs)))
-    (cond ((dag-visit real-dag) ; been here before
+     (cond ((dag-visit real-dag)        ; been here before
            t)
           (t
            (setf (dag-visit real-dag) t)
@@ -1237,7 +1261,7 @@
       (cond
          ((null possible-type) 
             (format t
-               "~%Error in ~A:~%   No possible type for features ~A at path ~:A" 
+               "~%Error in ~S:~%   No possible type for features ~S at path ~:S" 
                (or id "unknown") existing-features (reverse path))
             nil)
          ((greatest-common-subtype current-type possible-type))
@@ -1260,13 +1284,15 @@
                ;; no types contain structure in common in the end
                ;; - otherwise we only need a copy in cases where a particular type
                ;; constraint is being used more than once
-               (if type-name
-                  (copy-dag-completely (wf-constraint-of fs-type))
+              (if type-name
+                  (catch '*fail*
+                    (possibly-new-constraint-of fs-type))
                   (may-copy-constraint-of fs-type)))))
       (cond
        ((null constraint) 
-          (error ; real error in code
-                 "~%No constraint found for ~A" fs-type))
+          (format t
+                  "~%No well-formed constraint for ~A" fs-type)
+          nil)
        ((progn
           (setq real-dag (retype-dag real-dag fs-type))
           (unify-wffs real-dag constraint type-name)))
@@ -1274,13 +1300,6 @@
              "~%Error in ~A:~%  Unification with constraint of ~A failed at path ~:A"
              (or type-name "unknown") fs-type (reverse features-so-far))
           nil)))))
-
-;; (defun really-make-features-well-formed (real-dag features-so-far type-name)
-;;   (every #'(lambda (label)
-;;                   (make-well-formed (get-dag-value real-dag label)
-;;                                     (cons label features-so-far)
-;;                                     type-name))
-;;          (top-level-features-of real-dag)))
 
 (defun really-make-features-well-formed (real-dag features-so-far type-name)
   (loop for label in (top-level-features-of real-dag)

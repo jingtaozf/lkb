@@ -53,25 +53,13 @@
   ;;; YADU --- extra arg needed
   (if *leaf-type-addition*
       (add-leaf-type name parents constraint default comment daughters)
-  (let ((existing-type (get-type-entry name))
-        (real-parents nil)
-        (template-parents nil))
+  (let ((existing-type (get-type-entry name)))
       (when existing-type
         (format t "~%Type ~A redefined" name)
         (push name *type-redefinitions*))
-      (when (and *templates* (cdr parents))
-        (for parent in parents
-             do
-             (if (member parent *templates* :test #'eq)
-               (push parent template-parents)
-               (push parent real-parents)))
-        (unless real-parents
-          (setf real-parents (list (car template-parents)))
-          (setf template-parents (cdr template-parents))))
       (let ((new-type 
                (make-type :name name 
-                  :parents (or real-parents parents) 
-                  :template-parents template-parents
+                  :parents parents 
                   :daughters daughters
                   :comment comment
                   :constraint-spec constraint
@@ -90,8 +78,7 @@
   (let ((ok t)
         (existing-type (get-type-entry name)))    
     (if existing-type
-	(if (type-parents-equal parents (type-parents existing-type)
-                                (type-real-parents existing-type))
+	(if (type-parents-equal parents (type-parents existing-type))
 	    (progn 
 	      (setf (type-constraint-spec existing-type) constraint)
 	      (setf (type-default-spec existing-type) default)
@@ -107,14 +94,9 @@
                 name)))
     ok))
 
-(defun type-parents-equal (new-parents old-parents old-real-parents)
-  (let ((test-parents (or old-real-parents old-parents))
-        (actual-new-parents (for parent in new-parents
-                                 filter
-                                 (unless (member parent *templates*)
-                                   parent))))
-    (and (null (set-difference actual-new-parents test-parents))
-         (null (set-difference test-parents actual-new-parents)))))
+(defun type-parents-equal (new-parents old-parents)
+    (and (null (set-difference new-parents old-parents))
+         (null (set-difference old-parents new-parents))))
 
 (defvar *type-names* nil)
 
@@ -279,8 +261,6 @@
          do
          (let* ((type-entry (get-type-entry name))
                 (parents (type-parents type-entry)))
-           (setf (type-real-parents type-entry)
-             (type-parents type-entry))
            ;;; type-parents gets reset by glb code
            (for parent in parents
                 do
@@ -701,8 +681,7 @@
       ;;    can't do unification really without this info
       ;; 
       ;; b. expand constraints by first forming fstructure from
-      ;; any constraint spec and then unifying with the
-      ;; template-parents' constraints (if any) and then
+      ;; any constraint spec and then unifying with
       ;; the parents' constraints, expanding these if necessary
       ;; marking types when the constraint has been expanded
       ;;
@@ -737,7 +716,7 @@
 
 (defun expand-constraint (node type-entry)
    (cond
-      ((seen-node-p type-entry) (type-constraint type-entry))
+      ((seen-node-p type-entry) (type-inherited-constraint type-entry))
       (t
          (mark-node-seen type-entry)
          (let* ((*unify-debug-cycles* t) ; turn on cyclic dag warning messages
@@ -770,7 +749,7 @@
                               (inherit-constraints node type-entry local-constraint)))
                         (cond 
                            (full-constraint
-                              (setf (type-constraint type-entry) full-constraint)
+                              (setf (type-inherited-constraint type-entry) full-constraint)
                               (setf (type-appfeats type-entry)
                                  (top-level-features-of full-constraint))
                               full-constraint)
@@ -785,8 +764,7 @@
     (let ((supers 
 	   (mapcar #'(lambda (parent)
 		       (expand-constraint parent (get-type-entry parent)))
-		   (append (type-template-parents type-entry)
-			   (type-parents type-entry)))))
+                   (type-parents type-entry))))
       (with-unification-context (nil)
         (let ((result
 	 (reduce #'(lambda (x y) (when (and x y) 
@@ -838,15 +816,15 @@
 
 (defun strongly-type-constraints nil
   ;; c. check for well-formedness ...
-  (let ((ok t))
+  (let ((ok t)
+        (*unify-debug-cycles* t))       ; turn on cyclic dag warning messages
     (unmark-type-table)
     (for type-name in *type-names*
 	 do
 	 (unless (leaf-type-p (get-type-entry type-name))
 	   (unless 
                (progn (setf *well-formed-trace* nil)
-                      (nth-value 1 (wf-constraint-of type-name)))
-	     ;; i.e. just looks at boolean ok/not-ok
+                      (wf-constraint-of type-name))
 	     (setf ok nil))))
     (setf *well-formed-trace* nil)
     (unmark-type-table)
@@ -856,16 +834,15 @@
 (defun wf-constraint-of (type-name)
   ;; may need to be copied completely before use
   ;; (print (list '> 'wf-constraint-of type-name))
-  (let ((type-entry (get-type-entry type-name))
-	(ok t))
+  (let ((type-entry (get-type-entry type-name)))
     (unless (seen-node-p type-entry)
         (when (member type-name *well-formed-trace*)
           (error "~%~A is used in expanding its own constraint 
                     expansion sequence: ~A"  type-name
                  *well-formed-trace*))
         (push type-name *well-formed-trace*)
-        (when (type-appfeats type-entry)
-          (let ((new-dag (type-constraint type-entry)))
+        (if (type-appfeats type-entry)
+          (let ((new-dag (type-inherited-constraint type-entry)))
             ;; !!! outside here must stay within current generation
             (let ((*unify-generation* *unify-generation*)
                   (*within-unification-context-p* t))
@@ -877,15 +854,19 @@
                       (let ((res (copy-dag new-dag)))
                         (if res
                             (setf (type-constraint type-entry) res)
-                          (progn
-                            (format t "~%Warning: cycle in ~A" type-name)
-                            (setq ok nil))))
-                    (setq ok nil))
-                (invalidate-marks)))))
+                          (format t "~%Warning: cycle in well-formed constraint for ~A" type-name)))
+                    (format t "~%Warning: cannot make constraint for ~A well-formed" type-name))
+                (invalidate-marks)
+                )))
+          (setf (type-constraint type-entry)
+            (type-inherited-constraint type-entry)))
         (mark-node-seen type-entry))
     ;; (print (list '< 'wf-constraint-of type-name))
-    (values (type-constraint type-entry) ok)))                   
-                  
+    (when (type-constraint type-entry)
+      (setf (type-inherited-constraint type-entry) nil))
+    ;;; strong typing has worked, so save some space - otherwise leave 
+    ;;; the old structure around for debugging
+    (type-constraint type-entry)))                   
 
 ;;; Make appfeats order equivalent so that display is consistent. Mostly
 ;;; will have same features as parent and be ordered the same already. If not,

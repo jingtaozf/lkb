@@ -503,6 +503,12 @@ you must have access to eo or one of the linear machines.
 You will also need filespace
 on these machines.
 
+First make sure that the CVSROOT enviroment variable is set.  You probably want
+to put the following in your \filename{.login} file, or you can just type it
+into the shell.
+\begin{verbatim}
+setenv CVSROOT /eo/e1/CVSROOT
+\end{verbatim}
 In the directory which you wish to act as the root for the LKB source
 (your home directory is fine), execute the following:
 \begin{verbatim}

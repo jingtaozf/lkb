@@ -9,6 +9,12 @@
   left
   right)
 
+
+(defun qeq-equal (x y) 
+  (and (eql (qeq-left x) (qeq-left y))
+       (eql (qeq-right x) (qeq-right y))))
+
+
 ;;; 
 
 
@@ -64,10 +70,6 @@
                (format t
                        "~%WARNING:  in ~A qeq ~A, ~A is not a hole - ignored" 
                        left right left)))))))
-
-(defun qeq-equal (x y) 
-  (and (eql (qeq-left x) (qeq-left y))
-       (eql (qeq-right x) (qeq-right y))))
 
 (defun satisfy-qeq-p (x y) 
   (for qeq in *qeqs*
@@ -139,16 +141,15 @@ scopes of quantifiers.
 (defun find-qeq (top-handel bindings)
   (let* ((handels-to-check 
           (get-bindings-for-handel top-handel bindings))
-         (qeqs
-          (for h in handels-to-check
-               append
-               (for qeq in *qeqs*
-                    filter
-                    (if (eql h (qeq-left qeq))
-                        (qeq-right qeq))))))
-    (when (cdr qeqs)
-        (error "Multiple qeqs - condition should have been checked for"))
-    (car qeqs)))
+         (res nil))
+    (dolist (h handels-to-check)
+      (when res 
+        (return nil))
+      (dolist (qeq *qeqs*)
+        (when (eql h (qeq-left qeq))
+          (setf res (qeq-right qeq))
+          (return nil))))
+    res))
 
 (defun find-rel-qeq (rel)
   ;;; called in pre-processing, before bindings are relevant
@@ -173,7 +174,7 @@ scopes of quantifiers.
   ;;; since we couldn't have h2 before the quantifier  
   (declare (ignore bindings))
 ;;;  (format t "~%check prev ~A" previous-holes)
-  (let ((bound-rels (cdr (assoc quantifier *q-rel-store*)))
+  (let ((bound-rels (cdr (assoc quantifier *q-rel-store* :test #'eq)))
         (qeq-outscoped (for hole in previous-holes
                             append
                             (let ((outscpd-labels
@@ -216,8 +217,8 @@ scopes of quantifiers.
   ;;; find quantifiers which cannot be sisters because
   ;;; they both scope the same relation or both scope
   ;;; something with the same handel
-  (let ((q1rels (cdr (assoc rel1 *q-rel-store*)))
-        (q2rels (cdr (assoc rel2 *q-rel-store*))))
+  (let ((q1rels (cdr (assoc rel1 *q-rel-store* :test #'eq)))
+        (q2rels (cdr (assoc rel2 *q-rel-store* :test #'eq))))
     (for q1rel in q1rels
          some-satisfy
          (let* ((args (get-handel-args q1rel))
@@ -241,7 +242,7 @@ scopes of quantifiers.
 (defun incompatible-q-and-scope (qrel screl)
   ;;; a quantifier cannot be sister to a scopal relation 
   ;;; if it is qeq something which the quantifier scopes over
-  (let ((bound-rels (cdr (assoc qrel *q-rel-store*))))
+  (let ((bound-rels (cdr (assoc qrel *q-rel-store* :test #'eq))))
     (for h in (get-handel-args screl)
          some-satisfy
          (let ((outscpd (cdr (assoc h *qeq-outscopes*))))

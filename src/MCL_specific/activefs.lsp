@@ -558,10 +558,11 @@
          (fs (fs-display-record-fs fs-record)))
       (when fs
            (setf psort-name 
-               (car
+             (car
+              (with-package (:lkb)
                (ask-for-lisp-movable "Current Interaction" 
                   `(("Lex-id?" . ,psort-name))
-                  150)))
+                  150))))
             (if psort-name
               (or 
                (store-temporary-psort psort-name fs)

@@ -25,10 +25,6 @@
 
 (defparameter *chart-limit* 100)
 
-(defparameter *sign-type* 'synsem-struc
-   "a special type wrt parsing - rule indexing is checked for its
-   descendants")
-
 (defparameter *mother-feature* NIL
    "The feature giving the mother in a grammar rule")
 
@@ -37,24 +33,9 @@
 (defparameter *start-symbol* '(root)
    "specifing valid parses")
 
-;;; ?
-(defparameter *morph-rule-type* 'lrule-super
-    "morphology system checks for rules which are
-     of this type or a subtype of it")
-
 (defparameter *maximal-lex-rule-applications* 7
    "The number of lexical rule applications which may be made
    before it is assumed that some rules are applying circularly")
-
-#|
-
-(defparameter *deleted-daughter-features* '(ARGS HEAD-DTR NON-HEAD-DTR LCONJ-DTR RCONJ-DTR)
-   "features pointing to daughters deleted on building a constituent")
-
-(defparameter *head-marking-path* '(SYNSEM LOCAL CONT KEY)
-   "coreferenced between mother and head daughter")
-
-|#
 
 ;;; Generation
 

@@ -39,9 +39,10 @@
 
 #-tty
 (defun show-parse-edge nil
-   (let ((possible-edge-name
+  (let ((possible-edge-name
+         (with-package (:lkb)
             (ask-for-lisp-movable "Current Interaction" 
-               `(("Specify an edge number" . ,*edge-id*)) 60)))
+               `(("Specify an edge number" . ,*edge-id*)) 60))))
       (when possible-edge-name
          (let* ((edge-id (car possible-edge-name))
                (edge-record (find-edge-given-id edge-id)))

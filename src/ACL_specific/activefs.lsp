@@ -506,9 +506,11 @@
   (let ((psort-name 'no-name))
     (when fs
       (setf psort-name 
-	(car (ask-for-lisp-movable "Current Interaction" 
+	(car 
+         (with-package (:lkb)
+         (ask-for-lisp-movable "Current Interaction" 
 				   `(("Lex-id?" . ,psort-name))
-				   150)))
+				   150))))
       (when psort-name
 	(or (store-temporary-psort *lexicon* psort-name fs)
 	    (progn

@@ -242,9 +242,10 @@
 	     *rules*)
     (setf rule-names (sort rule-names #'string-lessp))
     (let ((possible-name
-	   (ask-for-lisp-movable "Current Interaction" 
-				 `(("Rule name" . ,*last-rule-id*)) 
-				 150 rule-names)))
+           (with-package (:lkb)
+             (ask-for-lisp-movable "Current Interaction" 
+                                   `(("Rule name" . ,*last-rule-id*)) 
+                                   150 rule-names))))
       (when possible-name
 	(let* ((name (car possible-name))
                (rule-entry (get-grammar-rule-entry name)))
@@ -265,9 +266,10 @@
 	     *lexical-rules*)
     (setf rule-names (sort rule-names #'string-lessp))
     (let ((possible-rule-name
-	   (ask-for-lisp-movable "Current Interaction" 
-				 `(("Lexical Rule?" . ,*last-lex-rule-id*))
-				 150 rule-names)))
+           (with-package (:lkb)
+             (ask-for-lisp-movable "Current Interaction" 
+                                   `(("Lexical Rule?" . ,*last-lex-rule-id*))
+                                   150 rule-names))))
       (when possible-rule-name
 	(let* ((name (car possible-rule-name))
                (rule-entry (get-lex-rule-entry name)))
@@ -389,42 +391,43 @@
   ;;; I've made this just work on FSs since the default
   ;;; stuff won't fail anyway
   (let* ((check-details
-          (ask-for-lisp-movable 
-           "Check unification" '(("fs1" . head-specifier-rule) 
-                                 ("path1 in ()s (optional)" . (args first))
-                                 ("fs2" . sleeps_1)
-                                 ("path2 in ()s (optional)" . nil)
-                                 ("name for result (optional)" . nil))))
+          (with-package (:lkb)
+            (ask-for-lisp-movable 
+             "Check unification" '(("fs1" . head-specifier-rule) 
+                                   ("path1 in ()s (optional)" . (args first))
+                                   ("fs2" . sleeps_1)
+                                   ("path2 in ()s (optional)" . nil)
+                                   ("name for result (optional)" . nil)))))
          (fs1-id (car check-details))
          (path1 (cadr check-details))
          (fs2-id (caddr check-details))
          (path2 (cadddr check-details))
          (resname (cadddr (cdr check-details))))
     (when check-details
-    (if (and fs1-id fs2-id) 
-      (let ((fs1 (get-fs-given-id fs1-id))
-            (fs2 (get-fs-given-id fs2-id)))
-        (if (and fs1 fs2 (listp path1) (listp path2))
-          (let ((resdag fs1))
-            (when 
-             (setq resdag
-                   (unify-paths-with-fail-messages 
-                    (create-path-from-feature-list path1) 
-                    resdag
+      (if (and fs1-id fs2-id) 
+          (let ((fs1 (get-fs-given-id fs1-id))
+                (fs2 (get-fs-given-id fs2-id)))
+            (if (and fs1 fs2 (listp path1) (listp path2))
+                (let ((resdag fs1))
+                  (when 
+                      (setq resdag
+                        (unify-paths-with-fail-messages 
+                         (create-path-from-feature-list path1) 
+                         resdag
                     (create-path-from-feature-list path2) 
                     fs2 fs1-id path1 fs2-id path2))
-             (format t "~%Unification successful")
-             (if resname (store-temporary-psort *lexicon* resname resdag))))
-          (cond ((null fs1) 
-                 (progn (cerror  "~%Try again" "~%~A is not a valid FS identifier" fs1-id)
-                         (interactive-unification-check)))
-                ((null fs2) 
-                 (progn (cerror  "~%Try again" "~%~A is not a valid FS identifier" fs2-id)
-                         (interactive-unification-check)))
-                (t (progn (cerror  "~%Try again" "~%Paths are not lists")
-                         (interactive-unification-check))))))
-      (progn (cerror  "~%Try again" "~%Need to specify both feature structures")
-             (interactive-unification-check))))))
+                    (format t "~%Unification successful")
+                    (if resname (store-temporary-psort *lexicon* resname resdag))))
+              (cond ((null fs1) 
+                     (progn (cerror  "~%Try again" "~%~A is not a valid FS identifier" fs1-id)
+                            (interactive-unification-check)))
+                    ((null fs2) 
+                     (progn (cerror  "~%Try again" "~%~A is not a valid FS identifier" fs2-id)
+                            (interactive-unification-check)))
+                    (t (progn (cerror  "~%Try again" "~%Paths are not lists")
+                              (interactive-unification-check))))))
+        (progn (cerror  "~%Try again" "~%Need to specify both feature structures")
+               (interactive-unification-check))))))
 
 
 #-allegro
@@ -494,9 +497,10 @@
 
 (defun find-type-from-features nil
   (let ((feature-list
-         (ask-for-lisp-movable "Current Interaction" 
-                               `(("Feature(s)" . (,*diff-list-list*)))
-                               150)))
+         (with-package (:lkb)
+           (ask-for-lisp-movable "Current Interaction" 
+                                 `(("Feature(s)" . (,*diff-list-list*)))
+                                 150))))
     (when feature-list 
       (when (listp (car feature-list)) 
         (setf feature-list (car feature-list)))

@@ -511,10 +511,11 @@
       (when fs
          (loop
             (setf psort-name 
-               (car
+              (car
+               (with-package (:lkb)
                (ask-for-lisp-movable "Current Interaction" 
                   `(("Lex-id?" . ,psort-name))
-                  150)))                         
+                  150))))                         
             (unless psort-name (return))
             (if
                (store-temporary-psort psort-name fs)

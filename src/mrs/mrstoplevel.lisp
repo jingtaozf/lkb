@@ -42,9 +42,10 @@
 
 #-tty
 (defun show-gen-edge nil
-   (let ((possible-edge-name
+  (let ((possible-edge-name
+         (with-package (:lkb)
             (ask-for-lisp-movable "Current Interaction" 
-               `(("Specify an edge number" . ,*edge-id*)) 60)))
+               `(("Specify an edge number" . ,*edge-id*)) 60))))
       (when possible-edge-name
          (let* ((edge-id (car possible-edge-name))
                 (edge-record (find-gen-edge-given-id edge-id)))
@@ -133,10 +134,11 @@
 #-tty
 (defun generate-from-edge nil
   (let ((possible-edge-name 
-	 (ask-for-lisp-movable 
-	  "Current Interaction" 
-	  `(("Parser edge number for input MRS?" 
-	     . ,(or *last-generate-from-edge* *edge-id*))) 60)))
+         (with-package (:lkb)
+           (ask-for-lisp-movable 
+            "Current Interaction" 
+            `(("Parser edge number for input MRS?" 
+               . ,(or *last-generate-from-edge* *edge-id*))) 60))))
     (when possible-edge-name
       (setf *last-generate-from-edge* (car possible-edge-name))
       (let ((parser-edge (find-edge-given-id (car possible-edge-name))))

@@ -3,6 +3,55 @@
 
 (in-package "MRS")
 
+;;; Macros
+
+(defmacro get-rel-handel-num (rel)
+  `(get-var-num (rel-handel ,rel)))
+
+
+(defmacro is-handel-var (var)
+    ;;; test is whether the string begins with #\h
+  `(and (var-p ,var)
+       (char-equal (elt (var-name ,var) 0) #\h)))
+
+
+(defmacro nonquantified-var-p (var)
+  ;;; true if the string identifier for the variable
+  ;;; begins with anything other than x
+  `(and (var-p ,var)
+       (not (eq (elt (var-name ,var) 0) '#\x))))
+
+
+;;; Following three are wrappers for get-full-handel-args-with-features
+
+(defmacro get-handel-args (rel)
+  ;;; returns a list of ids of any handels which are values
+  ;;; of roles in the rel 
+  `(mapcar #'(lambda (res)
+              (var-id (cdr res))) 
+          (get-full-handel-args-with-features ,rel)))
+
+(defmacro get-full-handel-args (rel)
+  ;;; returns a list of any handels which are values
+  ;;; of roles in the rel 
+  `(mapcar #'cdr 
+          (get-full-handel-args-with-features ,rel)))
+
+
+(defmacro get-handel-args-with-features (rel)
+  ;;; returns a list of ids of any handels which are values
+  ;;; of roles in the rel as a dotted pair, with the role
+  ;;; as car
+  `(for res in 
+       (get-full-handel-args-with-features ,rel)
+       collect
+       (cons (car res) (var-id (cdr res)))))
+
+
+(defmacro is-handel-arg-rel (rel)
+  ;;; true if the rel has an argument which is a handel
+  `(get-handel-args-with-features ,rel))
+
 ;;;
 ;;; ******** utility functions (some grammar specific) **********
 ;;;
@@ -28,33 +77,6 @@
   (member rel-sort *top-level-rel-types* :test #'eq))
 
 
-(defun get-rel-handel-num (rel)
-  (get-var-num (rel-handel rel)))
-
-
-(defun get-handel-args (rel)
-  ;;; returns a list of ids of any handels which are values
-  ;;; of roles in the rel 
-  (mapcar #'(lambda (res)
-              (var-id (cdr res))) 
-          (get-full-handel-args-with-features rel)))
-
-(defun get-full-handel-args (rel)
-  ;;; returns a list of any handels which are values
-  ;;; of roles in the rel 
-  (mapcar #'cdr 
-          (get-full-handel-args-with-features rel)))
-
-
-(defun get-handel-args-with-features (rel)
-  ;;; returns a list of ids of any handels which are values
-  ;;; of roles in the rel as a dotted pair, with the role
-  ;;; as car
-  (for res in 
-       (get-full-handel-args-with-features rel)
-       collect
-       (cons (car res) (var-id (cdr res)))))
-
 (defun get-full-handel-args-with-features (rel)
   (let ((existing (assoc rel *rel-handel-store* :test #'eq)))
     (if existing (cdr existing)
@@ -75,22 +97,6 @@
           res))))
 
   
-
-(defun is-handel-var (var)
-    ;;; test is whether the string begins with #\h
-  (and (var-p var)
-       (char-equal (elt (var-name var) 0) #\h)))
-
-(defun is-handel-arg-rel (rel)
-  ;;; true if the rel has an argument which is a handel
-  (get-handel-args-with-features rel))
-
-(defun nonquantified-var-p (var)
-  ;;; true if the string identifier for the variable
-  ;;; begins with anything other than x
-  (and (var-p var)
-       (not (eq (elt (var-name var) 0) '#\x))))
-
    
 (defun is-quant-rel (rel)
   ;;; test is presence of a feature called BV!
@@ -367,7 +373,7 @@ printing routines -  convenient to make this global to keep printing generic")
 
 
 (defun get-bindings-for-handel (handel bindings)
-  (let ((hb (assoc handel bindings)))
+  (let ((hb (assoc handel bindings :test #'eq)))
     (unless hb
       (struggle-on-error "Handel ~A not in bindings" handel))
     (if hb
@@ -668,7 +674,7 @@ or modulo some number of quantifiers
             (for rel in rels filter 
                  (if (eql (get-rel-handel-num rel) top-handel) rel))))
       (if (if pending-qeq 
-              (and  (or (not top-rels) *alex-mode*) 
+              (and  (or (not top-rels) *alex-mode*)
                    (or possible-quant-top-rels pending-top-rels))
             ;; if we've got a pending-qeq, there can be no
             ;; known top-rels (maybe iffy?) and there must
