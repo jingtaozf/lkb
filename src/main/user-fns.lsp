@@ -140,6 +140,13 @@
   (declare (ignore unifs sense-id))
   (length orths))
 
+(defun key-daughter-p (dag)
+  (let* ((key (existing-dag-at-end-of dag *key-daughter-path*))
+         (type (and (dag-p key) (dag-type key))))
+    (when type
+      (or (eq type *key-daughter-type*) 
+          (and (consp type) (eq (first type) *key-daughter-type*))))))
+
 ;;; Assign priorities to parser tasks
 
 (defun rule-priority (rule)

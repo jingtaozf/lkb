@@ -58,6 +58,10 @@
 
 (def-lkb-parameter *diff-list-last* 'last)
 
+(def-lkb-parameter *key-daughter-path* '(key-arg))
+
+(def-lkb-parameter *key-daughter-type* '+)
+
 (def-lkb-parameter *lex-rule-suffix* nil
   "creates the inflectional rule name from the information
    in irregs.tab - for PAGE compatability")

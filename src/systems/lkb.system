@@ -80,6 +80,7 @@
 	       (:file "clex")       ; constant lexical database 
                (:file "rules")      ; grammar and lexical rules
 	       (:file "parse")      ; chart parser
+	       (:file "active")     ; experimental key-driven (active) parser
                (:file "morph")    ; morphographemics
                (:file "check-unif"))) ; for efficiency 
      (:module "various io"
