@@ -541,7 +541,7 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
 {
   /* Try to join on of the relations to selection */
   /* Does it have to be joinable???? */
-  int i,smallest=-1,smallest_joinable=-1;
+  int i,smallest=-1,smallest_joinable=-1,found=0;
   int s=INT_MAX,sj=INT_MAX;
   Tsdb_selection *table;
 
@@ -549,33 +549,35 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
     table = tsdb_find_table(relations[i]);
     if (!table)
       return NULL;
-    if (tsdb_joins_to(relations[i],selection))
-      if (table->length < sj) 
+    if (tsdb_joins_to(relations[i],selection)) {
+      found = 1;
+      if (table->length < sj) {
         smallest_joinable=i;
+        sj = table->length;
+      }
+    } /* if */
     else
-      if (table->length < s)
+      if (!found&&(table->length < s)) {
         smallest = i;
-  }
+        s = table->length;
+      } /* if */
+  } /* for */
   
-  if (smallest_joinable!=-1) {
+  if (found) {
     table = tsdb_find_table(relations[smallest_joinable]);
     if (!table)
       return NULL;
     selection = tsdb_join(selection,table);
-  }
-  else
-    if (smallest != -1 ) {
-      table = tsdb_find_table(relations[smallest_joinable]);
-      if (!table)
-        return NULL;
-      selection = tsdb_join(selection,table);
-    }
-    else {
-      table = tsdb_find_table(relations[smallest_joinable]);
-      if (!table)
-        return NULL;   
-      selection = tsdb_join(selection,table);
-    } /* else */
+  } /* if */
+  else {
+    if (smallest==-1)
+      smallest = 0;
+    table = tsdb_find_table(relations[smallest]);
+    if (!table)
+      return NULL;
+    selection = tsdb_join(selection,table);
+  } /* else */
+
   return(selection);
 } /* tsdb_join_one_relation */
 
