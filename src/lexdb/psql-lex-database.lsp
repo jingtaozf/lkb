@@ -59,20 +59,21 @@
 	 ids)))
 
 ;;; (used to index for generator)
-;;; fix_me: inefficient implementation
 (defmethod lex-words ((lexicon psql-lex-database))
-  (let* ((sql-str (sql-orthography-set lexicon))
-         (query-res (run-query 
-                     lexicon 
-                     (make-instance 
-			 'sql-query 
-		       :sql-string sql-str))))
+  (let* ((orth-raw-mapping (assoc :orth (fields-map *lexicon*)))
+	 (orth-raw-value-mapping (fourth orth-raw-mapping))
+	 (raw-orth-field (second orth-raw-mapping))
+	 (values 
+	  (if (string> (lexdb-version lexicon) "3.11")
+	      (get-value-set lexicon (2-str raw-orth-field))
+	    (mapcar #'cdar (fn-get-records *lexicon* ''orthography-set)))))
     (mapcan 
      #'(lambda (x) 
-	 (split-into-words 
-	  (string-upcase 
-	   (car x))))
-     (records query-res))))
+	 (mapcar #'string-upcase
+		 (car (work-out-value
+		       orth-raw-value-mapping
+		       x))))
+     values)))
 
 (defmethod collect-psort-ids ((lexicon psql-lex-database) &key (cache t) (recurse t))
   (declare (ignore recurse))
