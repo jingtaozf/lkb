@@ -219,10 +219,10 @@ char* tsdb_sprint_value(Tsdb_value *value ) {
         case TSDB_GREATER_OR_EQUAL_THAN:
           result = strdup(">=");
           break;
-        case TSDB_SUBSTRING:
+        case TSDB_MATCH:
           result = strdup("~");
           break;
-        case TSDB_NOT_SUBSTRING:
+        case TSDB_NOT_MATCH:
           result = strdup("!~");
           break;
       } /* switch */
@@ -341,10 +341,10 @@ BOOL tsdb_print_value(Tsdb_value *value, FILE *stream) {
         case TSDB_GREATER_OR_EQUAL_THAN:
           r=fprintf(stream, ">=");
           break;
-        case TSDB_SUBSTRING:
+        case TSDB_MATCH:
           r=fprintf(stream, "~");
           break;
-        case TSDB_NOT_SUBSTRING:
+        case TSDB_NOT_MATCH:
           r=fprintf(stream, "!~");
           break;
       } /* switch */
@@ -464,7 +464,6 @@ int find_next_format(char* format,int *pos) {
   case '%':
     strcpy(tmp,tmp+1);
     typ = find_next_format(tmp+1,pos);
-    *pos +=1;
     break;
   case 's':; case'd':; case'i':
     typ = 1;
@@ -495,6 +494,8 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
      %% %
      */
 
+  if (n==0) 
+    return;
   if (format) {
     size = strlen(format)/2;
     typ = find_next_format(format,&where);
@@ -516,6 +517,7 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
         else
           if (typ==2) { /* * */
             tmp = format+strlen(format);
+            foo = format+where+2;
             where = -1;
           } /* if */
       } /* where > 0 */
@@ -543,12 +545,12 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
   
   l=0;
   tmp = projection[0];
-  while  ( strchr(tmp,TSDB_FS)) {
+  while  ( tmp= strchr(tmp,TSDB_FS)) {
     tmp++;l++;
   } /* while */
   
     
-  if ((l+1)<i) {
+  if (i>(l+1)) {
     fprintf(tsdb_error_stream," Wrong report string: %s \n",format);
     fprintf(tsdb_error_stream," too many format specifications\n");
     return;
@@ -558,34 +560,35 @@ void tsdb_print_projection(char** projection,int n,char* format,FILE *stream) {
   if (!praefix)
     praefix=strdup("");
   
-  if (i>(l+1)) {
-    fprintf(tsdb_error_stream," Wrong report string: %s \n",format);
-    fprintf(tsdb_error_stream," too many format specifications\n");
-  }
-  else
-    for (j=0,l=0;j<n;l++) {
-      if (projection[l]) {
-        foo = projection[l];
-        fputs(praefix,stream);
-        for (k=0;k<i;k++) {
-          tmp = strchr(foo,TSDB_FS);
-          if (!tmp) {
-            k=i;
-          }
-          else {
-            *tmp='\0';
+
+  /* main output loop: bar[i-1] contains string to be printed
+     between component [i] and [i+1]. praefix is the  string 
+     before the first and suffix the string after the last format 
+     string.
+     */
+  for (j=0,l=0;j<n;l++) {
+    if (projection[l]) {
+      foo = projection[l];
+      fputs(praefix,stream);
+      for (k=0;k<i;k++) {
+        tmp = strchr(foo,TSDB_FS);
+        if (!tmp) {
+          k=i;
+        }
+        else {
+          *tmp='\0';
           fputs(foo,stream);
-            *tmp=TSDB_FS;
-            foo = tmp+1;
-            fputs(bar[k],stream);
-          }
-        } /* for */
-        fputs(foo,stream);
-        fputs(suffix,stream);
-        fputc('\n',stream);
-        j++;
-      } /* if */
-    } /* for */
+          *tmp=TSDB_FS;
+          foo = tmp+1;
+          fputs(bar[k],stream);
+        }
+      } /* for */
+      fputs(foo,stream);
+      fputs(suffix,stream);
+      fputc('\n',stream);
+      j++;
+    } /* if */
+  } /* for */
   
   fflush(stream);
   free(suffix);
