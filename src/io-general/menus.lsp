@@ -10,7 +10,7 @@ cl-user::read-lex-rule-file
 cl-user::morph-file-compile 
 cl-user::read-templates-file
 ; view
-cl-user::create-type-hierarchy-tree
+cl-user::show-type-tree
 cl-user::show-type-spec 
 cl-user::show-type 
 cl-user::show-lex-def 
@@ -74,7 +74,7 @@ cl-user::*lkb-system-version*)))
                  :menu-items
                   (list 
                      (make-menu-item :name "Type hierarchy"
-                        :value 'create-type-hierarchy-tree)
+                        :value 'show-type-tree)
                      (make-menu-item :name "Type definition"
                         :value 'show-type-spec)
                      (make-menu-item :name "Expanded type"
