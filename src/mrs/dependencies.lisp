@@ -114,7 +114,7 @@
         with hcons = (psoa-h-cons psoa)
         with %eds-eds% = (make-eds :top name :hcons hcons)
         with %eds-symbol-table% = (make-hash-table)
-        with %eds-representatives-table% = (make-hash-table)
+        with %eds-representatives-table% = (make-hash-table :test #'equal)
         with %eds-equivalences% = (make-hash-table :test #'equal)
         with %eds-variable-counter% = 0
         for relation in (psoa-liszt psoa)
@@ -203,8 +203,8 @@
         (setf (gethash relation %eds-symbol-table%) name)))))
 
 (defun ed-find-representative (variable &optional (selectp t))
-  (or (and selectp (gethash variable %eds-representatives-table%))
-      (setf (gethash variable %eds-representatives-table%)
+  (or (gethash (cons variable selectp) %eds-representatives-table%)
+      (setf (gethash (cons variable selectp) %eds-representatives-table%)
         (cond
          ((handle-var-p variable)
           (loop
