@@ -18,7 +18,7 @@
 ;;; - add print button: include edge id in display and print out;
 ;;;
 
-(defparameter *redwoods-semantix-hook* "mrs::get-mrs-string")
+(defparameter *redwoods-semantix-hook* nil)
 
 (defparameter *redwoods-trees-hook* nil)
 
@@ -137,7 +137,8 @@
           (case action
             (:first (setf position 0))
             (:previous 
-             (decf position offset))
+             (decf position offset)
+             (close-connections :data data))
             ((:skip :null :flag)
              (if (eq last :previous) (decf position) (incf position))
              (setf action last))
