@@ -450,6 +450,18 @@
 ;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;;;
+;;; impose an upper limit on orthographemic rules feeding each other; for at
+;;; least one grammar (NorSource), a moderate rule set was eagerly segmenting
+;;; forms into thousands of morphological hypotheses, which caused the lexical
+;;; rule machinery (which we should redo at some point) noticeable strain.
+;;;
+;;; _fix_me_
+;;; to do this properly, it should be worked into remove-morphemes() et al.
+;;;                                                            (14-jul-03; oe)
+;;;
+(defparameter *maximal-morphological-rule-depth* nil)
+
 (defun explode (string)
   (let ((result nil)
 	(length (length string)))
@@ -469,7 +481,13 @@
 
 (defun morph-analyse (string)
   ;; everything is assumed to be already upcase
-  (remove-morphemes (explode string)))
+  (let ((hypotheses (remove-morphemes (explode string))))
+    (if (numberp *maximal-morphological-rule-depth*)
+      (remove-if #'(lambda (foo)
+                     (> (length foo) 
+                        (+ *maximal-morphological-rule-depth* 1)))
+                 hypotheses)
+      hypotheses)))
 
 (defun remove-morphemes (word)
   (let ((definites-list (copy-list '(nil))))

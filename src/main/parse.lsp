@@ -721,11 +721,14 @@
   (let ((transformed-entries 
 	 (loop for entry in entries
 	      append
-	      (let ((fs (mrecord-fs entry))
-		    (fs-restricted (mrecord-fs-restricted entry))
-		    (lex-ids (mrecord-lex-ids entry))
-		    (morph-rules (mrecord-rules entry))
-		    (history (mrecord-history entry)))
+	      (let* ((fs (mrecord-fs entry))
+                     (fs-restricted (mrecord-fs-restricted entry))
+                     (lex-ids (mrecord-lex-ids entry))
+                     (morph-rules (mrecord-rules entry))
+                     (history (mrecord-history entry))
+                     (daughter (if history
+                                 (mhistory-rule (first history))
+                                 (first lex-ids))))
 		(if (>=  (length history) *maximal-lex-rule-applications*)
 		    (progn (format t 
 				   "~%Warning - probable circular lexical rule") 
@@ -734,7 +737,7 @@
 		   (loop for rule in *parser-lexical-rules*
 			nconc
 			(let ((result (apply-morph-rule 
-				       rule fs fs-restricted nil)))
+				       rule fs fs-restricted nil daughter)))
 			  (if result 
 			      (list (make-mrecord :fs result
 					    :lex-ids lex-ids
@@ -753,7 +756,8 @@
 			    (result
 			     (if rule-entry
 				 (apply-morph-rule
-				  rule-entry fs fs-restricted new-orth))))
+				  rule-entry fs fs-restricted new-orth 
+                                  daughter))))
 		       (unless rule-entry
 			 (format t 
 				 "~%Warning: rule ~A specified by ~
@@ -774,11 +778,24 @@
 		 (remove-if-not #'mrecord-rules transformed-entries) f)))))
 
 
-(defun apply-morph-rule (rule fs fs-restricted new-orth)
-  (and
-   (restrictors-compatible-p (car (rule-daughters-restricted rule))
-			     fs-restricted)
-   (evaluate-unifications rule (list fs) new-orth)))
+(defun apply-morph-rule (rule fs fs-restricted new-orth daughter)
+  #-:debug 
+  (declare (ignore daughter))
+  ;;
+  ;; _fix_me_
+  ;; 
+  (let* ((qc (restrictors-compatible-p 
+              (car (rule-daughters-restricted rule)) fs-restricted))
+         (result (and qc (evaluate-unifications rule (list fs) new-orth))))
+    #+:debug
+    (when qc
+      (format
+       t
+       "apply-morph-rule(): ~a + ~a: ~:[nil~;t~] ~:[nil~;t~]~%"
+       (rule-id rule) 
+       (if (rule-p daughter) (rule-id daughter) daughter)
+       qc result))
+    result))
 
 
 (defun activate-context (left-vertex edge right-vertex f)
