@@ -53,8 +53,9 @@
 #define TSDB_QUIET 4096
 #define TSDB_READ_ONLY 8192
 #define TSDB_VERIFY 16384
+#define TSDB_COMMIT_ON_EXIT 32768
 #ifdef ALEP
-#  define TSDB_TX_OUTPUT 32768
+#  define TSDB_TX_OUTPUT 65536
 #endif
 
 #ifdef ALEP
