@@ -1160,6 +1160,9 @@ Setting *first-only-p* to nil")
    (clear-type-cache)
    (format t "~%;;; Parsing test file~%") (finish-output t)
    (let ((nsent 0)
+         ;; ask for recycling of safe dags
+         ;; NB lexical entries must not contain safe dags - so expand-psort-entry
+         ;; and friends must rebind *safe-not-to-copy-p* to nil
          (*dag-recycling-p* t)
          (*print-right-margin* 300)
          (start-time (get-internal-run-time)))
