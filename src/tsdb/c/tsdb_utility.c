@@ -35,6 +35,7 @@ extern int errno;
 #endif
 
 BYTE tsdb_value_compare(Tsdb_value *foo, Tsdb_value *bar) {
+/* what about matching?*/ 
 
   int teresa, *date_1, *date_2, i;
   BYTE result;
@@ -468,6 +469,86 @@ Tsdb_key_list* tsdb_first_other_key(Tsdb_key_list* key_list)
 
 
 
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_value_satisfies()
+|*     version: 
+|*  written by: tom fettig @ dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* evaluates (value1 operator value2) 
+|*
+\*****************************************************************************/
+
+BOOL tsdb_value_satisfies(Tsdb_value* value1,Tsdb_value* operator,
+                          Tsdb_value *value2) {
+  BOOL answer;
+  int integer ;
+  char* string=NULL,*date=NULL;
+  
+  if (value1->type!=value2->type) {
+    /* error! */
+    return FALSE;
+  } /* if */
+
+  if (operator->value.operator==TSDB_MATCH) {
+    return tsdb_value_match(value1,value2,NULL);
+  }
+  else
+    if (operator->value.operator==TSDB_NOT_MATCH) {
+      return !tsdb_value_match(value1,value2,NULL);
+    }
+  
+  answer = tsdb_value_compare(value1,value2);
+  if (answer == TSDB_VALUE_INCOMPATIBLE)
+    return FALSE;
+  
+  switch (answer) {
+  case TSDB_EQUAL:
+    switch (operator->value.operator) {
+    case TSDB_EQUAL:
+    case TSDB_GREATER_OR_EQUAL_THAN:
+    case TSDB_LESS_OR_EQUAL_THAN:
+      return TRUE;
+      break;
+    default:
+      return FALSE;
+      break;
+    }
+    break;
+  case TSDB_NOT_EQUAL:
+    switch (operator->value.operator) {
+    case TSDB_EQUAL:
+      return FALSE;
+      break;
+    default:
+      return TRUE;
+      break;
+    }
+    break;
+  case TSDB_LESS_THAN:
+    if ((operator->value.operator == TSDB_LESS_THAN)||
+        (operator->value.operator == TSDB_LESS_OR_EQUAL_THAN))
+      return TRUE;
+    else
+      return FALSE;
+    break;
+  case TSDB_GREATER_THAN :
+    if ((operator->value.operator == TSDB_GREATER_THAN)||
+        (operator->value.operator == TSDB_GREATER_OR_EQUAL_THAN))
+      return TRUE;
+    else
+      return FALSE;
+    break;
+  default:
+    return FALSE;
+    break;
+  } /* switch */
+  
+  return FALSE;
+} /* tsdb_value_satisfies() */
+
 /*---------------------------------------------------------------------------*/
 
 BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
@@ -549,7 +630,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
       answer = FALSE;
     } /* else */
     break;
-  case TSDB_SUBSTRING :
+  case TSDB_MATCH :
     if(number) {
       fprintf(tsdb_error_stream,
               "satisfies_condition(): undefined operator '~' on integers.\n");
@@ -559,7 +640,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
       answer = (strstr(string, tuple->fields[i]->value.string) != NULL);
     } /* else */
     break; 
-  case TSDB_NOT_SUBSTRING :
+  case TSDB_NOT_MATCH :
     if(number) {
       fprintf(tsdb_error_stream,
               "satisfies_condition(): undefined operator '!~' on integers.\n");
@@ -1173,6 +1254,21 @@ Tsdb_value *tsdb_operator(BYTE foo) {
 
 } /* tsdb_operator() */
 
+Tsdb_value *tsdb_descriptor(int r,int f) {
+  
+  Tsdb_value *bar;
+  int* d;
+  
+  bar = (Tsdb_value*)malloc(sizeof(Tsdb_value));
+  bar->type = TSDB_DESCRIPTOR;
+  d =  (int*)malloc(2*sizeof(int));
+  d[0]= r;
+  d[1]= f;
+  bar->value.descriptor = d;
+  return bar;
+  
+} /* tsdb_descriptor() */
+
 void tsdb_free_tsdb_value(Tsdb_value* foo) {
 
   switch (foo->type) {
@@ -1511,6 +1607,7 @@ BOOL tsdb_initialize() {
   } /* for */
   free(foo);
 
+  tsdb_init_history(&tsdb);
 #ifdef DEBUG
   if(tsdb.relations != NULL) {
     for(i = 0; tsdb.relations[i] != NULL; i++) {
@@ -1985,11 +2082,11 @@ void tsdb_negate_node(Tsdb_node* node)
   case TSDB_GREATER_OR_EQUAL_THAN: 
     node->node->value.operator = TSDB_LESS_THAN;
     break;
-  case TSDB_SUBSTRING:    
-    node->node->value.operator = TSDB_NOT_SUBSTRING; 
+  case TSDB_MATCH:    
+    node->node->value.operator = TSDB_NOT_MATCH; 
     break;
-  case TSDB_NOT_SUBSTRING: 
-    node->node->value.operator = TSDB_SUBSTRING ; 
+  case TSDB_NOT_MATCH: 
+    node->node->value.operator = TSDB_MATCH ; 
     break;
   default:
     fprintf(tsdb_error_stream," eh what??\n");
@@ -2048,16 +2145,22 @@ char** tsdb_condition_attributes(Tsdb_node *node,
   BOOL kaerb;
 
   if (!node) return attributes;
+  if (!attributes) return NULL;
   if (node->node->type == TSDB_CONNECTIVE) {
     attributes = tsdb_condition_attributes(node->left,attributes,
                                              s_attributes);
     attributes = tsdb_condition_attributes(node->right,attributes,
                                              s_attributes);
+    if (!attributes)
+      return NULL;
   } /* if connective */
   else { /* leaf */
-    if (node->node->type == TSDB_OPERATOR)
+    if (node->node->type == TSDB_OPERATOR) {
       attributes = tsdb_condition_attributes(node->left,attributes,
                                              s_attributes);
+      if (!attributes) 
+        return NULL;
+    }
     else {
       
       for(i=0, kaerb=FALSE; !kaerb && attributes[i];i++)
@@ -2070,6 +2173,8 @@ char** tsdb_condition_attributes(Tsdb_node *node,
           fprintf(tsdb_error_stream,
                   "condition_attributes: %s is not an attribute\n",
                   node->node->value.string);
+          tsdb_free_char_array(attributes,*s_attributes);
+          return NULL;
         }
         else {
           if (!(i<*s_attributes)) {
