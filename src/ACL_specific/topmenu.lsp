@@ -171,7 +171,9 @@
          (user::ask-user-for-new-pathname 
           "File for image (local file strongly advised)")))
     (when image-location
-      (setf excl:*restart-init-function* #'restart-lkb-function) 
+      (setf excl:*restart-init-function* (if fresh-p
+                                             #'restart-lkb-window
+                                             #'restart-lkb-function))
       (user::write-psort-index-file)
       (user::clear-expanded-lex)
       (user::clear-type-cache)
