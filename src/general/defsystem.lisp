@@ -2008,7 +2008,12 @@ D
                                (execute-finally-do *execute-finally-do*))
   (unwind-protect
       ;; Protect the undribble.
-      (with-compilation-unit nil
+      (#+(not (and :allegro (not :compiler)))
+       with-compilation-unit 
+       #+(not (and :allegro (not :compiler)))
+       nil
+       #-(not (and :allegro (not :compiler)))
+       progn
 	(when dribble (dribble dribble))
 	(when test (setq verbose t))
 	(when (null force);; defaults
