@@ -8,10 +8,9 @@ the lexicon must not be cached)
 check the feature names in this file are set correctly
 
 parse a test suite so that the leaf types are loaded
-and *lex-ids-used* is set.  Also set *recording-constraints-p* to t
-so that the list *type-constraint-list* is instantiated
+and *lex-ids-used* is set.  
 
-(output-types :lilfes "~aac/lilfes/lingo/types.lil" t)
+(output-types :lilfes "~aac/lilfes/lingo/types.lil")
 (output-lex-and-derived :lilfes "~aac/lilfes/lingo/lex.lil")
 or 
 (output-lex-and-derived :lilfes "~aac/lilfes/lingo/lex.lil" *lex-ids-used*)
@@ -48,8 +47,6 @@ Parse nodes need to be added so we can understand the display.
 (defun parse-test-suite-for-lilfes nil
   ;;; start off with a cleanly loaded grammar, then
   (setf *unify-debug-cycles* t)
-  (setf *recording-constraints-p* t)
-  (setf *type-constraint-list* nil)
   (setf *first-only-p* nil)
 ;  (parse-sentences "~aac/grammar/test-sentences" t))
   (parse-sentences "~/tmp/test-sentences" t))  ;; by yusuke  May. 20
@@ -60,7 +57,7 @@ Parse nodes need to be added so we can understand the display.
 #+:allegro        ((sys:getenv "LKB_OUTPUT_DIR")
 		   (get-directory-name (sys:getenv "LKB_OUTPUT_DIR")))
 		  (t "./")))
-  (output-types :lilfes (concatenate 'string dir "types.lil") t)
+  (output-types :lilfes (concatenate 'string dir "types.lil"))
   (output-lex-and-derived :lilfes (concatenate 'string dir "lex.lil")
                           *lex-ids-used*)
   (output-grules :lilfes (concatenate 'string dir "grules.lil"))
@@ -118,9 +115,7 @@ Parse nodes need to be added so we can understand the display.
 (defparameter *lilfes-builtins*
   '("list" "nil" "cons" "bot" "string"))
     
-(defun output-type-as-lilfes (name type-struct stream sig-only-p)
-  (if (member name *type-constraint-list*)
-      (output-full-constraint-as-lilfes name type-struct stream)
+(defun output-type-as-lilfes (name type-struct stream)
   (let* ((def (type-local-constraint type-struct))
          (parents (type-parents type-struct))
          (lilfes-name (convert-lilfes-type name)))
@@ -135,18 +130,14 @@ Parse nodes need to be added so we can understand the display.
            (format stream ", '~A'" (convert-lilfes-type parent)))
       (format stream "]")
       (when def
-        (if sig-only-p
-          (display-lilfes-signature name def stream)
-          ;;; non-sig-only-p version isn't correct yet
-          ;;; not sure what to do with constraints
-          (display-dag1 def 'lilfes stream nil t)))
+         (display-lilfes-signature-and-constraint name def stream))
       (format stream ".")
 ;; deleted by yusuke  May. 21
 ;      (when (equal lilfes-name "0-1-list")
 ;	(format stream "~%'0-1-list-nil' <- ['0-1-list', 'nil']."))))))
-))))  ;; by yusuke  May. 21
+)))  ;; by yusuke  May. 21
 
-(defun display-lilfes-signature (type def stream)
+(defun display-lilfes-signature-and-constraint (type def stream)
   (let ((feats (for feat in (top-level-features-of def)
                     filter
                     (if (eq (maximal-type-of feat) type)
@@ -162,33 +153,38 @@ Parse nodes need to be added so we can understand the display.
            (output-lilfes-fv-pair feat
                                   (type-of-fs (get-dag-value def feat))
                                   stream))
-      (format stream "]"))))
+      (format stream "]"))
+    (unless (signature-only-p def feats)
+      (output-constraint-as-lilfes def stream))))
+
+(defun signature-only-p (fs feats)
+  ;;; we do not want to output a complex constraint if
+  ;;; the information it contains is in the signature anyway
+  (let ((result t))
+    (invalidate-visit-marks)
+    (mark-dag-for-output fs)
+    ;; function from outputfs.lsp
+    ;; that allows us to detect reentrancy
+    (dolist (f (top-level-features-of fs))
+      (unless (member f feats)
+        (setf result nil)
+        (return nil))
+      (let ((value (get-dag-value fs f)))
+        (unless (and (not (top-level-features-of value))
+                     (not (eql (dag-visit value) 'double)))
+          (setf result nil)
+          (return nil))))
+    result))
 
 (defun output-lilfes-fv-pair (feat value stream)
     (format stream "~A\\'~A'" (convert-lilfes-feature feat)
             (convert-lilfes-type (if (listp value) (car value)
                                    value))))
 
-(defun output-full-constraint-as-lilfes (name type-struct stream)
-  (let* ((fs (tdfs-indef (type-tdfs type-struct)))
-         (def (type-local-constraint type-struct))  ;; by yusuke  May. 20
-	 (parents (type-parents type-struct))
-         (lilfes-name (convert-lilfes-type name)))
-    (unless 
-      (member lilfes-name *lilfes-builtins* :test #'equal)
-      ;; don't redefine LiLFeS built in types
-      (format stream "~%'~A' <- " lilfes-name)
-      (format stream "['~A'" (convert-lilfes-type (car parents)))
-      (for parent in (cdr parents)
-           do
-           (format stream ", '~A'" (convert-lilfes-type parent)))
-      (format stream "]")
-      (when def                                      ;; by yusuke  May. 20
-	(display-lilfes-signature name def stream))  ;; by yusuke  May. 20
-      (when fs
-          (format stream "~%/ constr\\")
-          (display-dag1 fs 'lilfes stream nil t))
-      (format stream "."))))
+(defun output-constraint-as-lilfes (fs stream)
+  (format stream "~%/ constr\\")
+  (display-dag1 fs 'lilfes stream nil t))
+
 
 (defun output-instance-as-lilfes (name entry stream &optional class)
   (when entry

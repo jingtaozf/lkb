@@ -6,10 +6,7 @@
 
 #|
 ;;; all take optional second argument for file name
-(output-types :lilfes "Macintosh HD:foo" t)
-;;; output-types does local constraints unless second optional
-;;; argumant is t when it does features defined for
-;;; that type only
+(output-types :lilfes "Macintosh HD:foo")
 ;;;
 ;;; both do all output types including glbtypes
 ;;; all the options sort the types so that no type
@@ -34,12 +31,10 @@
 
 
 
-(defun output-types (syntax &optional file-name sig-only-p)
+(defun output-types (syntax &optional file-name)
   (unless (member syntax '(:tdl :path :lilfes))
     (error "Unsupported syntax specifier ~A" 
            syntax))
-  (unless (or (eq syntax :lilfes) (not sig-only-p))
-    (error "Syntax specifier ~A not currently supported for signatures"))
   (unless file-name 
     (setf file-name
          (ask-user-for-new-pathname "Output file?")))
@@ -52,7 +47,7 @@
                           (remove-if-not 
                            #'(lambda (x) (get-type-entry x))
                            (append *ordered-type-list*
-                                   *ordered-glbtype-list*))) sig-only-p)
+                                   *ordered-glbtype-list*))))
            do
            (let ((entry (get-type-entry type-name)))                  
              (ecase syntax
@@ -61,25 +56,8 @@
                (:path (output-type-as-paths type-name entry
                                          ostream))
                (:lilfes (output-type-as-lilfes type-name entry
-                                               ostream sig-only-p))))))))
+                                               ostream))))))))
 
-(defun output-full-constraints (syntax type-list &optional file-name)
-  (unless (member syntax '(:lilfes))
-    (error "Unsupported syntax specifier ~A" 
-           syntax))
-  (unless file-name 
-    (setf file-name
-         (ask-user-for-new-pathname "Output file?")))
-  (when file-name 
-    (with-open-file 
-        (ostream file-name :direction :output :if-exists :supersede)
-      (for type-name in (sort-by-appearance-order
-                         (copy-list type-list) nil)
-           do
-           (let ((entry (get-type-entry type-name)))                  
-             (ecase syntax
-               (:lilfes (output-full-constraint-as-lilfes 
-                         type-name entry ostream))))))))
 
 ;;; Neither of these lexical output functions
 ;;; will work from a cached lexicon
@@ -291,7 +269,7 @@
 
 (defvar *complete-order-alist* nil)
 
-(defun sort-by-appearance-order (types sig-only-p)
+(defun sort-by-appearance-order (types)
   (let ((type-order-alist nil)
         (ok t))
     (setf *complete-order-alist* nil)
@@ -300,7 +278,7 @@
         (let ((type-entry (get-type-entry type)))
           (when type-entry
             ;; ignore unused leaf types
-            (let ((types-used (extract-used-types type sig-only-p)))
+            (let ((types-used (extract-used-types type)))
               (push (cons type types-used) type-order-alist)))))
     (for type in types
          do
@@ -328,10 +306,7 @@
         (push (cons type all-ref) *complete-order-alist*)
         all-ref))))
 
-(defun extract-used-types (type sig-only-p)
-  ;;; just need parents and signature if we're only outputting
-  ;;; the signature - otherwise, recurse through the local feature
-  ;;; structure
+(defun extract-used-types (type)
   (declare (special *res*))
   (setf *res* nil)
   (let ((type-entry (get-type-entry type)))
@@ -341,12 +316,7 @@
           (for feat in (top-level-features-of type-local-fs)
                do
                (let ((internal-fs (get-dag-value type-local-fs feat)))
-                 (if sig-only-p
-                     (pushnew
-                      (let ((val (type-of-fs internal-fs)))
-                        (if (listp val) (car val) val))
-                      *res* :test #'eq)
-                   (collect-types-from-fs internal-fs)))))
+                 (collect-types-from-fs internal-fs))))
         (for parent in (type-parents type-entry)
              do 
              (pushnew parent *res*))
