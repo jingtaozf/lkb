@@ -148,6 +148,8 @@
     (make-instance class 
       :indentation indentation :stream stream)))
 
+;;; Sept 04 - now using indentation more systematically,
+;;; allows for two column output for comparisons
 
 ;;; 
 ;;; Generic output-type class
