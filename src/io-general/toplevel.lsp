@@ -318,17 +318,22 @@
 ;;; "Parse Input" do-parse
 
 
-(defparameter *last-parse* "it annoys Kim that she loves the books")
+(defparameter *last-parses* '("it annoys Kim that she loves the books"))
 
 
 (defun do-parse nil
   (let* ((sentence 
             (ask-for-strings-movable "Current Interaction" 
-               `(("Sentence" . ,*last-parse*)) 400)))
+               `(("Sentence" . ,(cons :typein-menu *last-parses*))) 400)))
       (when sentence
-         (setf *last-parse* (car sentence))
-         (parse (split-into-words 
-                 (preprocess-sentence-string (car sentence)))))))     
+         (let ((str (string-trim '(#\space #\tab #\newline) (car sentence))))
+            (setq *last-parses* 
+               (butlast
+                  (cons str (remove str *last-parses* :test #'equal))
+                  (max 0 (- (length *last-parses*) 12)))) ; limit number of sentences retained
+            (parse
+               (split-into-words 
+                  (preprocess-sentence-string str)))))))   
 
 (defun split-into-words (sentence-string)
   ; split-into-words is used in various places 
@@ -349,16 +354,17 @@
 
 ;;; "Generate"
 ;;;
-;;; "Generate" do-parse
+;;; "Generate" generate-from-edge
 
 
-(defparameter *last-generate-from-edge* 1)
+(defparameter *last-generate-from-edge* nil)
 
 
 (defun generate-from-edge nil
    (let ((possible-edge-name 
             (ask-for-lisp-movable "Current Interaction" 
-               `(("Parser edge number for input MRS?" . ,*last-generate-from-edge*)) 60)))
+               `(("Parser edge number for input MRS?" .
+                    ,(or *last-generate-from-edge* *edge-id*))) 60)))
       (when possible-edge-name
          (setf *last-generate-from-edge* (car possible-edge-name))
          (let ((parser-edge (find-edge-given-id (car possible-edge-name))))
@@ -366,7 +372,7 @@
                (let ((input-sem
                         (car (mrs::extract-mrs (list parser-edge)))))
                   (if (mrs::psoa-liszt input-sem)
-                     (progn
+                     (when
                         (generate-from-mrs input-sem)
                         (show-gen-result))
                      (format t "~%Could not extract any MRS relations from edge ~A"
