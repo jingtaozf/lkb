@@ -539,7 +539,7 @@ int tsdb_delete(Tsdb_value *table, Tsdb_node *condition) {
 */
   if((relation = tsdb_find_relation(table->value.identifier)) != NULL) {
     wanted[0] = relation;
-    selection = tsdb_complex_select(condition,NULL);
+    selection = tsdb_complex_select(condition,NULL,NULL);
     if ((selection->n_relations!=1) ||
         (strcmp(relation->name,selection->relations[0]->name))){
       fprintf(tsdb_error_stream,"Wrong Specification of attributes!\n");
@@ -576,8 +576,53 @@ int tsdb_update(Tsdb_value *table, Tsdb_node *condition) {
   return(TSDB_OK);
 } /* tsdb_update */
 
+
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_tree_select()
+|*     version: 
+|*  written by: tom fettig, dfki saarbruecken
+|* last update: 
+|*  updated by: 
+|*****************************************************************************|
+|* reduces selection as specified by the syntax-tree rooted with node
+|* 
+\*****************************************************************************/
+
+Tsdb_selection* tsdb_tree_select(Tsdb_node* node,
+                                 Tsdb_selection* selection) {
+  /*
+     for every tuple:
+     tsdb_verify_tuple -
+      Algorithmus:
+      dekoriere Baum mit Wahrheitswerten
+      laufe bottom-up den Baum ab und kombiniere Werte
+     */
+  Tsdb_tuple** the_tuples;
+  Tsdb_key_list* list;
+  int i;
+
+
+  tsdb_prepare_tree(node);
+  
+  list = selection->key_lists[0];
+  
+  for (i=0;i<selection->length;i++) {
+    if (!tsdb_verify_tuple(node,list->tuples)) {
+      list->tuples[0]=NULL;
+    } /* if */
+    list=list->next;
+  } /* for */
+  
+  selection = tsdb_clean_selection(selection,NULL);
+  
+  return selection;
+} /* tsdb_tree_select() */
+
+
 Tsdb_selection* tsdb_complex_select(Tsdb_node *node,
-                                    Tsdb_value ** wanted_relations)
+                                    Tsdb_value ** wanted_relations,
+                                    Tsdb_selection *history)
 {
   Tsdb_selection *left,*right,*result;
   Tsdb_relation *node_relation,**all_relations;
@@ -587,8 +632,8 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,
   if (node->node->type==TSDB_CONNECTIVE) {
     switch (node->node->value.connective) {
     case TSDB_OR:
-      left = tsdb_complex_select(node->left,wanted_relations);
-      right = tsdb_complex_select(node->right,wanted_relations);
+      left = tsdb_complex_select(node->left,wanted_relations,history);
+      right = tsdb_complex_select(node->right,wanted_relations,history);
       if (!left || !right) 
         return NULL;
       result = tsdb_complex_merge(left,right);
@@ -599,8 +644,8 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,
       tsdb_free_selection(right);
       break;
     case TSDB_AND:
-      left = tsdb_complex_select(node->left,wanted_relations);
-      right = tsdb_complex_select(node->right,wanted_relations);
+      left = tsdb_complex_select(node->left,wanted_relations,history);
+      right = tsdb_complex_select(node->right,wanted_relations,history);
       if (!left || !right) 
         return NULL;
       result = tsdb_join(left,right);
@@ -612,10 +657,10 @@ Tsdb_selection* tsdb_complex_select(Tsdb_node *node,
       break;
     case TSDB_NOT:
     case TSDB_NOT_NOT:
-      result = tsdb_complex_select(node->right,wanted_relations);
+      result = tsdb_complex_select(node->right,wanted_relations,history);
       break;
     default:
-      result = tsdb_complex_select(node->left,wanted_relations);
+      result = tsdb_complex_select(node->left,wanted_relations,history);
       break;
     } /* switch */
   } /* if */
@@ -778,6 +823,32 @@ Tsdb_selection* tsdb_join_one_relation(Tsdb_selection* selection,
   return(selection);
 } /* tsdb_join_one_relation */
 
+/*****************************************************************************\
+|*        file: 
+|*      module: tsdb_retrieve()
+|*     version: 
+|*  written by: tom fettig, dfki saarbruecken
+|* last update: 04-09-95
+|*  updated by: tom, dfki saarbruecken
+|*****************************************************************************|
+|* retrieve function to be called by the parser.
+|*
+|*
+\*****************************************************************************/
+
+Tsdb_selection *tsdb_retrieve(Tsdb_value **relation_list,
+                                      Tsdb_value **attribute_list,
+                                      Tsdb_node* conditions,
+                                      char *report) {
+  Tsdb_selection* result ;
+  result = tsdb_complex_retrieve(relation_list,attribute_list,
+                                 conditions,report);
+  tsdb_add_to_history(result);
+  return result;
+
+} /* tsdb_retrieve() */
+
+
 Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
                                       Tsdb_value **attribute_list,
                                       Tsdb_node* conditions,
@@ -788,19 +859,20 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
 |*      module: tsdb_complex_retrieve()
 |*     version: 
 |*  written by: tom fettig, dfki saarbruecken
-|* last update: 17-jul-95
-|*  updated by: oe, dfki saarbruecken
+|* last update: 04-09-95
+|*  updated by: tom, dfki saarbruecken
 |*****************************************************************************|
 |* tom said: ``final retrieve() function'' --- i suppose he is mistaken |:-}.
 |* if the attributre_list should be empty, the user gave '*', which means
 |* show all attributes of the relations that are in the selection.
+|* updated to understand report strings, history and so on...
 \*****************************************************************************/
 
   FILE *output;
   char **attributes = NULL;
   Tsdb_relation **a_relations;
   int s_attributes = 10, i, j, r,kaerb=0;
-  Tsdb_selection *selection=NULL,*temp;
+  Tsdb_selection *selection=NULL,*temp,*history=NULL;
   BOOL from_find=FALSE;
 
   /* 
@@ -827,23 +899,43 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
     memset(attributes,'\0',s_attributes*sizeof(char*));
     attributes
       = tsdb_condition_attributes(conditions, attributes, &s_attributes);
+    if (!attributes) 
+      return(NULL);
   } /* if conditions */
   
   if (relation_list)  /* check relations */ {
-    kaerb = 0;
-    for(r=0;relation_list[r];r++) {
-      if (!tsdb_is_relation(relation_list[r])) {
-        fprintf(tsdb_error_stream,
-                "complex_retrieve(): unkown relation `%s'.\n",
-                relation_list[r]->value.string);
-        kaerb = 1;
+    if (relation_list[0]->type==TSDB_INTEGER) {
+      history = tsdb_get_history(relation_list[0]->value.integer);
+      if (history==NULL) {
+        fprintf(tsdb_error_stream,"history reference %d not available\n",
+                relation_list[0]->value.integer);
+        return NULL;
       } /* if */
-    } /* for */
-    if (kaerb) {
-      if (attributes)
-        free(attributes);
-      return((Tsdb_selection *)NULL);
-    } /* if */
+      history = tsdb_copy_selection(history);
+      history = tsdb_tree_select(conditions,history);
+      relation_list = NULL;
+      /* principle of history:
+         if any attribute specified in either conditions or attribute_list
+         is contained in a relation in history, use history instead.
+         Only attributes which are not represented in history lead to
+         joining with new relations. */
+    }
+    else {
+      kaerb = 0;
+      for(r=0;relation_list[r];r++) {
+        if (!tsdb_is_relation(relation_list[r])) {
+          fprintf(tsdb_error_stream,
+                  "complex_retrieve(): unkown relation `%s'.\n",
+                  relation_list[r]->value.string);
+          kaerb = 1;
+        } /* if */
+      } /* for */
+      if (kaerb) {
+        if (attributes)
+          free(attributes);
+        return((Tsdb_selection *)NULL);
+      } /* if */
+    } /* else */ 
   } /* if */
   else
     r = tsdb_n_relations();
@@ -866,14 +958,14 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
  } /* if */
 
   if (conditions) {
-    selection = tsdb_complex_select(conditions, relation_list);
+    selection = tsdb_complex_select(conditions, relation_list,history);
     if (!selection) {
       return((Tsdb_selection *)NULL);
     }
   }
   /* now join with relations that aren't in */
   
-#if defined(DEBUG) && defined(TOM)
+#if defined(DEBUG) && defined(TOM) && defined(CRAZY)
   fprintf(tsdb_debug_stream,"printing selection\n");
   tsdb_print_selection(selection,tsdb_debug_stream);
 #endif
@@ -905,11 +997,14 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
     for(;attribute_list && attribute_list[j]; j++) ;
     /* check from relations */
     for (i=0;attribute_list && attribute_list[i];i++) {
-      if (!tsdb_attribute_in_selection(selection,
-                                       attribute_list[i]->value.identifier)){
+      if ((!tsdb_attribute_in_selection(selection,
+                                       attribute_list[i]->value.identifier))
+          && 
+          (!tsdb_attribute_in_selection(history,
+                                       attribute_list[i]->value.identifier))) {
         a_relations = tsdb_attribute_relations(attribute_list[i]);
         for (j=0;a_relations[j];j++) {
-          if (tsdb_relation_in_selection(selection,a_relations[j]->name)
+          if (tsdb_relation_in_selection(selection,a_relations[j]->name) 
               ==-1) {
             if (selection==NULL) {
               from_find = TRUE;
@@ -940,6 +1035,12 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
   if (attributes)
     free(attributes);
 
+  if (history) {
+    if (selection)
+      selection = tsdb_join(selection,history);
+    else
+      selection = tsdb_copy_selection(history);
+  }
   /* now check the attributes for projections */
   tsdb_project(selection, attribute_list, report,(FILE *)NULL);
   return(selection);
@@ -1067,7 +1168,7 @@ void tsdb_project(Tsdb_selection *selection,
 #endif    
 
   if(tsdb.status & TSDB_UNIQUELY_PROJECT) {
-    (void)tsdb_uniq_projection(projection,n);
+    n = tsdb_uniq_projection(projection,n);
   } /* if */
   if((output = tsdb_open_pager()) != NULL) {
     tsdb_print_projection(projection,n,format,output);
@@ -1165,6 +1266,8 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
       results[i] = 
         tsdb_value_compare(list->tuples[relation[i]]->fields[field[i]],
                            conditions[i]->right->node);
+      if (results[i] == TSDB_VALUE_INCOMPATIBLE) 
+        return NULL;
       if (type==TSDB_OR) {
         switch(conditions[i]->node->value.operator) {
         case TSDB_EQUAL:
@@ -1187,7 +1290,7 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
           match = match || (results[i] == TSDB_GREATER_THAN ||
                             results[i] == TSDB_EQUAL);
           break;
-        case TSDB_SUBSTRING:
+        case TSDB_MATCH:
           vm_result = 
             tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
                              conditions[i]->right->node,NULL);
@@ -1196,7 +1299,7 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
           }
           match = match || vm_result;
           break;
-        case TSDB_NOT_SUBSTRING:
+        case TSDB_NOT_MATCH:
           vm_result = 
             tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
                                conditions[i]->right->node,NULL);
@@ -1229,7 +1332,7 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
           match = match && (results[i] == TSDB_GREATER_THAN ||
                             results[i] == TSDB_EQUAL);
           break;
-        case TSDB_SUBSTRING:
+        case TSDB_MATCH:
           vm_result = 
             tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
                              conditions[i]->right->node,NULL);
@@ -1237,7 +1340,7 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
             return NULL;
           match = match && vm_result;
           break;
-        case TSDB_NOT_SUBSTRING:
+        case TSDB_NOT_MATCH:
            vm_result = 
              tsdb_value_match(list->tuples[relation[i]]->fields[field[i]],
                               conditions[i]->right->node,NULL);
