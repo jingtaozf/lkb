@@ -443,31 +443,33 @@
 ;;; The actual type bit code representation is different since not all lisp
 ;;; systems have all of these operations running at a decent speed (especially
 ;;; the equal and position functions). Instead, each code is represented by a
-;;; simple array of unsigned 16 bit integers, with all operations on codes
-;;; being performed 16 bits at a time. (A related approach is described by Henry
+;;; simple vector of fixnums, with all operations on codes being performed
+;;; 30 or so bits at a time. (A related approach is described by Henry
 ;;; Baker "Efficient implementation of bit-vector operations in Common Lisp",
 ;;; ACM Lisp Pointers, 3(2-4).) The scheme as implemented here is completely
 ;;; portable and should run well in all reasonable Lisp systems
 
 (progn
+(defconstant +fixnum-len+
+   (min (1+ (integer-length most-positive-fixnum)) (1+ (integer-length most-negative-fixnum))))
+
 (defun make-bit-code (length)
-   (make-array (ceiling length 16)
-      :element-type '(unsigned-byte 16) :initial-element 0))
+   (make-array (ceiling length +fixnum-len+) :element-type t :initial-element 0))
 
 (defun bit-code-equal (c1 c2)
    ;; need the array decl up here since if it's in the locally then acl
    ;; seems to overlook it. The arrayp tests should still be OK and not
    ;; optimised away since we're not at the highest speed setting just yet
-   (declare (type (simple-array (unsigned-byte 16) 1) c1 c2))
+   (declare (type simple-vector c1 c2))
    (when (or (not (arrayp c1)) (not (arrayp c2))) (error "not an array"))
    (locally
       (declare (optimize (speed 3) (safety 0)))
       (dotimes (n (length c1) t)
          (declare (fixnum n))
-         (unless (= (aref c1 n) (aref c2 n)) (return nil)))))
+         (unless (= (the fixnum (svref c1 n)) (the fixnum (svref c2 n))) (return nil)))))
 
 (defun bit-code-and-zero-p (c1 c2 c3)
-   (declare (type (simple-array (unsigned-byte 16) 1) c1 c2 c3))
+   (declare (type simple-vector c1 c2 c3))
    (when (or (not (arrayp c1)) (not (arrayp c2)) (not (arrayp c3)))
       (error "not an array"))
    (locally
@@ -476,44 +478,52 @@
          (declare (fixnum acc))
          (dotimes (n (length c1) (zerop acc))
             (declare (fixnum n))
-            (let ((x (logand (aref c1 n) (aref c2 n))))
+            (let ((x (logand (the fixnum (svref c1 n)) (the fixnum (svref c2 n)))))
                (declare (fixnum x))
-               (setf (aref c3 n) x)
+               (setf (svref c3 n) x)
                (setq acc (logior x acc)))))))
 
 (defun bit-code-ior (c1 c2 c3)
-   (declare (type (simple-array (unsigned-byte 16) 1) c1 c2 c3))
+   (declare (type simple-vector c1 c2 c3))
    (when (or (not (arrayp c1)) (not (arrayp c2)) (not (arrayp c3)))
       (error "not an array"))
    (locally
       (declare (optimize (speed 3) (safety 0)))
       (dotimes (n (length c1) c3)
          (declare (fixnum n))
-         (setf (aref c3 n) (logior (aref c1 n) (aref c2 n))))))
+         (setf (svref c3 n)
+            (logior (the fixnum (svref c1 n)) (the fixnum (svref c2 n)))))))
 
 (defun bit-code-subsume-p (c1 c2)
-   (declare (type (simple-array (unsigned-byte 16) 1) c1 c2))
+   (declare (type simple-vector c1 c2))
    (when (or (not (arrayp c1)) (not (arrayp c2))) (error "not an array"))
    (locally
       (declare (optimize (speed 3) (safety 0)))
       (dotimes (n (length c1) t)
          (declare (fixnum n))
-         (unless (zerop (logand (lognot (aref c1 n)) (aref c2 n))) (return nil)))))
+         (unless (zerop (logand (lognot (the fixnum (svref c1 n))) (the fixnum (svref c2 n))))
+            (return nil)))))
 
 (defun set-bit-code (c n)
    (multiple-value-bind (e1 e2)
-      (truncate n 16)
-      (setf (aref c e1) (logior (aref c e1) (ash 1 (- 15 e2))))))
+      (truncate n +fixnum-len+)
+      (setf (svref c e1)
+      	 (logior (svref c e1)
+            (if (zerop e2) most-negative-fixnum (ash 1 (- (1- +fixnum-len+) e2)))))))
 
 (defun bit-code-position-1 (c)
-   (declare (type (simple-array (unsigned-byte 16) 1) c))
+   (declare (type simple-vector c))
    (unless (arrayp c) (error "not an array"))
    (locally
       (declare (optimize (speed 3) (safety 0)))
       (dotimes (n (length c) nil)
          (declare (fixnum n))
-         (unless (zerop (aref c n))
-            (return (+ (* n 16) (- 16 (integer-length (aref c n)))))))))
+         (let ((e (svref c n)))
+            (declare (fixnum e))
+            (unless (zerop e)
+               (return
+                  (+ (* n +fixnum-len+)
+                     (if (minusp e) 0 (- +fixnum-len+ (integer-length e))))))))))
 )
 
 
