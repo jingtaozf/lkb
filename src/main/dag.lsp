@@ -496,11 +496,9 @@
   (mapcar #'(lambda (arc) (dag-arc-attribute arc)) (dag-arcs dag)))
 
 (defun get-dag-value (dag attribute)
-  (if (null dag)
-      nil ;;; bmw
-    (dolist (arc (dag-arcs dag) nil)
+   (dolist (arc (dag-arcs dag) nil)
       (when (eq attribute (dag-arc-attribute arc))
-	(return-from get-dag-value (dag-arc-value arc))))))
+         (return-from get-dag-value (dag-arc-value arc)))))
 
 
 (defun get-value-at-end-of (dag labels-chain)
