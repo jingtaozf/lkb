@@ -555,7 +555,7 @@
         ;; this function also converts the path values in the
         ;; `extra' property lists into single feature values
            (mrs-psoa (if (mrs-language '(english))
-                         (time-convert-mrs-struct unstrung-psoa)
+                       (number-convert (time-convert-mrs-struct unstrung-psoa))
                        unstrung-psoa))
            (binding-sets (unless *fragment-p* 
                            (make-scoped-mrs mrs-psoa)))

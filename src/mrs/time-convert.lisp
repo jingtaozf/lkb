@@ -402,3 +402,127 @@
         (if (and (integerp base-hour)
 		 (< base-hour 13))
             'am))
+
+
+
+;;;
+;;; simple-minded number conversion; ad-hoc for VerbMobil  (26-oct-99  -  oe)
+;;;
+
+(defparameter *nc-times_rel* (vsym "TIMES_REL"))
+(defparameter *nc-plus_rel* (vsym "PLUS_REL"))
+(defparameter *nc-const_rel* (vsym "CONST_REL"))
+(defparameter *nc-integer_rel* (vsym "INTEGER_REL"))
+(defparameter *nc-term1* (vsym "TERM1"))
+(defparameter *nc-term2* (vsym "TERM2"))
+(defparameter *nc-factor1* (vsym "FACTOR1"))
+(defparameter *nc-factor2* (vsym "FACTOR2"))
+(defparameter *nc-const_value* (vsym "CONST_VALUE"))
+(defparameter *nc-arg* (vsym "ARG"))
+
+(defun times_rel-p (sort)
+  (eq sort *nc-times_rel*))
+
+(defun plus_rel-p (sort)
+  (eq sort *nc-plus_rel*))
+
+;;;
+;;; _fix_me_
+;;; if PAGE was slightly more appropriate, this would be unnecessary.
+;;;
+
+(defun const_rel-p (sort)
+  (or (eq sort *nc-const_rel*) (eq sort *nc-integer_rel*)))
+
+(defun number-convert (mrs)
+  (let ((liszt (psoa-liszt mrs))
+        constants operators additions deletions)
+    (loop
+        for relation in liszt
+        for sort = (rel-sort relation)
+        when (plus_rel-p sort) do (push relation operators)
+        when (times_rel-p sort) do (push relation operators)
+        when (const_rel-p sort) do (push relation constants))
+    (loop
+        for stable = t
+        for i from 0
+        do
+          (loop
+              for operator in operators
+              for handel = (rel-handel operator)
+              for label = (rel-label operator)
+              for arg = (get-rel-feature-value operator *nc-arg*)
+              unless (member operator deletions :test #'eq) do
+                (let* ((sort (rel-sort operator))
+                       (key1 (cond 
+                               ((plus_rel-p sort) *nc-term1*)
+                               ((times_rel-p sort) *nc-factor1*)))
+                       (key2 (cond
+                               ((plus_rel-p sort) *nc-term2*)
+                               ((times_rel-p sort) *nc-factor2*)))
+                       (term1 (get-rel-feature-value operator key1))
+                       (const1 (find-const-by-handle term1 additions constants))
+                       (term2 (get-rel-feature-value operator key2))
+                       (const2 (find-const-by-handle term2 additions constants))
+                       (value (and value1 value2
+                                   (compute-value operator value1 value2))))
+                  (when value
+                    (push (make-constant handel label arg value) additions)
+                    (push operator deletions)
+                    (push term1 deletions)
+                    (push term2 deletions)
+                    (setf stable nil))))
+        until (or stable (>= i 42)))
+    (if (or additions deletions)
+      (let ((copy (copy-psoa mrs))
+            (additions (loop
+                           for relation in additions
+                           for handel = (rel-handel relation)
+                           unless (loop
+                                      for deletion in deletions
+                                      thereis (or (eq relation deletion)
+                                                  (eq handel deletion)))
+                           collect relation))
+            (relations (loop
+                           for relation in liszt
+                           for handel = (rel-handel relation)
+                           unless (loop
+                                      for deletion in deletions
+                                      thereis (or (eq relation deletion)
+                                                  (eq handel deletion)))
+                           collect relation)))
+        (setf (psoa-liszt copy) (nconc additions relations))
+        copy)
+      mrs)))
+
+(defun find-const-by-handle (handel new old)
+  (or
+   (loop
+       for relation in new
+       thereis (when (and (const_rel-p (rel-sort relation))
+                          (eq (rel-handel relation) handel))
+                 relation))
+   (loop
+       for relation in old
+       thereis (when (and (const_rel-p (rel-sort relation))
+                          (eq (rel-handel relation) handel))
+                 relation))))
+
+(defun compute-value (operator term1 term2)
+  (let ((sort (rel-sort operator)))
+    (cond
+     ((plus_rel-p sort) (+ term1 term2))
+     ((times_rel-p sort) (* term1 term2)))))
+
+(defun make-constant (handel label arg value)
+  (make-rel
+   :sort *nc-const_rel* 
+   :handel handel :label label
+   :flist (list  
+           (make-fvpair :feature *nc-arg* :value arg)
+           (make-fvpair :feature *nc-const_value* :value value))))
+
+
+
+
+
