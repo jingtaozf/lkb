@@ -34,5 +34,11 @@
  ((:path . "aged") (:content . "Aged VerbMobil Data"))
  ((:path . "parc") (:content . "Wall Street Journal (PTB; PARC DB)"))
  ((:path . "wsj00") (:content . "Wall Street Journal (PTB; Section 0)"))
+ ((:path . "cell") (:content . "DT Cell Phone Groups (Development Section)"))
  ((:path . "ecos") (:content . "Ecommerce Email (Order Status)"))
  ((:path . "demo") (:content . "VerbMobil Sample Dialogue")))
+
+
+
+
+

@@ -2,7 +2,7 @@
 
 (defvar *ptb-use-pos-tags-p* t)
 
-(defun read-token (stream breaks)
+(defun read-token (stream &optional breaks)
   (loop
       with length = 2048
       with result = (make-array length

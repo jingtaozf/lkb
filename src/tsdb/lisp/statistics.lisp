@@ -519,6 +519,7 @@
                               for i from 1
                               collect (acons :rank i result))
                           nil)))))
+  #+:debug
   (setf %items% items))
 
 (defun analyze-aggregates (language
