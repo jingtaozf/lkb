@@ -170,4 +170,28 @@ daughter:
   d-position :integer                   # position of this daughter
   d-id :integer                         # identifier of this daughter
 
+tree:
+  parse-id :integer :key
+  t-version :integer
+  t-active :integer :key
+  t-confidence :integer
+  t-author :string
+  t-start :date
+  t-end :date
+  t-comment :string
 
+decision:
+  parse-id :integer :key
+  version :integer
+  d-state :integer
+  d-type :integer
+  d-key :string
+  d-value :string
+  d-start :integer
+  d-end :integer
+  d-date :date
+
+preference:
+  parse-id :integer :key
+  version :integer
+  result-id :integer
