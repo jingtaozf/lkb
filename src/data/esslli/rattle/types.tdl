@@ -270,7 +270,7 @@ ternary-hd-rule :=  headed-rule & sem-comp-pr3 &
  [ ORTH [ LIST #first,
 	  LAST #last ],
    ARGS < [ ORTH [ LIST #first,
-                   LAST #middle ] ],   
+                   LAST #middle1 ] ],   
           [ ORTH [ LIST #middle1,
                    LAST #middle2] ],
           [ ORTH [ LIST #middle2,
