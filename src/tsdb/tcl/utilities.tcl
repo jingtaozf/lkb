@@ -5,7 +5,7 @@ proc update_skeleton_list {} {
   set menu .menu.file.menu.create 
   $menu delete 0 end;
 
-  foreach i [lsort [array names skeletons]] {
+  foreach i [lsort -integer [array names skeletons]] {
     set item $skeletons($i);
     set label "[lindex $item 1] \[[lindex $item 2] items\]";
     $menu add command -label $label -command [list tsdb_file create $i]

@@ -357,30 +357,26 @@
   (let* ((prefix (length *tsdb-home*))
          (absolute (not (equal home *tsdb-home*)))
          (directories (subdirectories home))
-         (directories (map 'list
-                        #'(lambda (directory)
-                            (if (search *tsdb-home* directory)
-                                (subseq directory prefix)))
-                        directories))
-         (directories (if name
-                        (remove name directories :test-not #'equal)
-                        directories))
-         (directories (if pattern
-                        (remove pattern directories :test-not #'search)
-                        directories))
+         (directories
+          (loop
+              for directory in directories
+              for suffix = (when (string= *tsdb-home* directory :end2 prefix)
+                             (subseq directory prefix))
+              when (and (or (null name) (string= name suffix))
+                        (or (null pattern) (search pattern suffix)))
+              collect suffix))
          (dmeter (madjust * meter 0.2))
          (dbmeter (madjust + (madjust * meter 0.8) (mduration dmeter)))
          (increment (when (and directories dbmeter)
                       (/ (mduration dbmeter) (length directories))))
-         dbs)
-                    
-    (do* ((directories directories (rest directories))
-          (directory (first directories) (first directories)))
-        ((null directories))
-      (push (verify-tsdb-directory directory :absolute absolute) dbs)
-      (when increment (meter-advance increment)))
+         (databases
+          (loop
+              for directory in directories
+              for status = (verify-tsdb-directory directory :absolute absolute)
+              when status collect status
+              when increment do (meter-advance increment))))
     (when dbmeter (meter :value (get-field :end dbmeter)))
-    (remove nil dbs)))
+    databases))
 
 (defun tsdb-do-list (home &key (stream *tsdb-io*) 
                                (prefix "  ")
@@ -430,32 +426,43 @@
                                       index meter)
   
   (when meter (meter :value (get-field :start meter)))
-  (setf *tsdb-skeletons* nil)
-  (initialize-tsdb nil :action :skeletons)
-  (let ((directory *tsdb-skeleton-directory*)
-        (skeletons 
-         (sort (copy-seq *tsdb-skeletons*) #'string<
-               :key #'(lambda (foo) (get-field :content foo)))))
-    (if source
+  (let* ((directory (if (pathnamep *tsdb-skeleton-directory*)
+                      (pathname-directory *tsdb-skeleton-directory*)
+                      (pathname-directory 
+                       (make-pathname :directory *tsdb-skeleton-directory*))))
+         (skeletons 
+          (with-open-file (stream (make-pathname :directory directory 
+                                                 :name *tsdb-skeleton-index*)
+                           :direction :input
+                           :if-does-not-exist :create)
+            (read stream nil nil)))
+         (skeletons 
+          (sort skeletons #'string< 
+                :key #'(lambda (foo) (or (get-field :content foo) ""))))
+         (increment (when (and meter skeletons)
+                      (/ (mduration meter) (length skeletons)))))
+    
+    (cond
+     (source 
       (when (member (string source) skeletons 
-                    :key #'(lambda (foo) (get-field :path foo))
-                    :test #'equal)
-        (setf *tsdb-default-skeleton* (string source)))
-      (let ((n (+ (length skeletons) 1)))
-        (do* ((skeletons skeletons (rest skeletons))
-              (skeleton (first skeletons) (first skeletons))
-              (i 0 (+ i 1))
-              (imeter (madjust * meter (/ i n)) (madjust * meter (/ i n))))
-            ((null skeletons))
-          (when imeter (meter :value (get-field :end imeter)))
-          (let* ((path
-                  (namestring (dir-append 
-                               (namestring directory)
-                               (list :relative (get-field :path skeleton)))))
-                 (content (get-field :content skeleton))
-                 (items (length (select "i-id" :integer "item" nil path 
-                                        :absolute t :unique nil
-                                        :quiet t :ro t))))
+                    :key #'(lambda (foo) (get-field :path foo)) :test #'equal)
+        (setf *tsdb-default-skeleton* (string source))))
+     (t
+      (setf *tsdb-skeletons* nil)
+      (loop
+          for skeleton in skeletons
+          for i from 0
+          for suffix = (pathname-directory 
+                        (make-pathname :directory (get-field :path skeleton)))
+          for path = (make-pathname 
+                      :directory (append directory (rest suffix)))
+          for name = (namestring path)
+          for content = (get-field :content skeleton)
+          for status = (verify-tsdb-directory name :absolute t :skeletonp t)
+          for items = (get-field :items status)
+          when increment do (meter-advance increment)
+          when status do
+            (push (acons :items items skeleton) *tsdb-skeletons*)
             (case format
               (:ascii
                (format  
@@ -468,7 +475,8 @@
                 stream 
                 "set skeletons(~d) {~s ~s ~d};~%"
                 (if index (+ index i) i)
-                (get-field :path skeleton) content items)))))))
+                (get-field :path skeleton) content items))))))
+                     
     (when meter (meter :value (get-field :end meter)))
     (when skeletons (format stream "~%"))))
 

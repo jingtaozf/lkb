@@ -24,7 +24,18 @@
   ;; unfortunately, there is no (pre-5.0 and all-lisp) way to get gc() cursors
   ;; for scavenges too.
   ;;
-  (let ((default-gc-after-hook excl:*gc-after-hook*)
+  (let* ((default-gc-after-hook excl:*gc-after-hook*)
+         (user (current-user))
+         (pid (current-pid))
+         (stream (if (output-stream-p excl:*initial-terminal-io*)
+                   excl:*initial-terminal-io*
+                   (ignore-errors
+                    (let ((file (format nil "/tmp/acl.debug.~a.~a" user pid)))
+                      (when (probe-file file)
+                        (delete-file file))
+                      (open file :direction :output
+                            :if-exists :supersede
+                            :if-does-not-exist :create)))))
         global-gc-p)
     (setf excl:*gc-after-hook*
       #'(lambda (global new old efficiency pending)
@@ -36,8 +47,17 @@
               (push efficiency (gc-statistics :efficiency))))
           (when (null global-gc-p)
             (when (or (>= new *tsdb-scavenge-limit*) (< new 0))
-              (top-level::zoom-command
-               :from-read-eval-print-loop nil :all t :brief t)
+              (ignore-errors
+               (let ((*print-readably* nil)
+                     (*print-miser-width* 40)
+                     (*print-pretty* t)
+                     (tpl:*zoom-print-circle* t)
+                     (tpl:*zoom-print-level* nil)
+                     (tpl:*zoom-print-length* nil)
+                     (*terminal-io* stream)
+                     (*standard-output* stream))
+                 (top-level::zoom-command
+                  :from-read-eval-print-loop nil :all t :brief t)))
               (error
                #+:lkb
                "gc-after-hook(): scavenge limit exceeded [~d] (~d edges)."
@@ -51,14 +71,17 @@
                   (setf global-gc-p t)
                   #-(version>= 5 0)
                   (busy :gc :start)
-                  (when (and *tsdb-gc-message-p* 
-                             (output-stream-p excl:*initial-terminal-io*))
+                  (when (and *tsdb-gc-message-p* (output-stream-p stream))
                     (format 
-                     excl:*initial-terminal-io*
+                     stream
                      "~&gc-after-hook(): ~d bytes were tenured; ~
                       triggering global gc().~%"
                      *tsdb-tenured-bytes*))
-                  (excl:gc t)
+                  (let ((*terminal-io* stream)
+                        (*standard-output* stream))
+                    (room)
+                    (excl:gc t)
+                    (room))
                   (setf global-gc-p nil)
                   (setf *tsdb-tenured-bytes* 0)
                   #-(version>= 5 0)

@@ -804,7 +804,12 @@
 (defun post-process (&key burstp)
   (declare (ignore burstp))
   #+:allegro
-  (sys:gsgc-step-generation))
+  (sys:gsgc-step-generation)
+  #+:fallegro
+  (let ((*terminal-io* excl:*initial-terminal-io*)
+        (*standard-output* excl:*initial-terminal-io*))
+    (sys:gsgc-parameters)
+    (room) (excl:gc) (room)))
 
 (defun complete-runs (data runs &key cache interactive stream interrupt)
   (loop

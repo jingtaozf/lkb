@@ -26,13 +26,46 @@
 (defstruct cpu host spawn options architecture class threshold create complete)
 (defstruct client tid cpu task protocol form status load)
 
-(defun make-tmp-file (prefix)
-  (let ((file (format 
-               nil 
-               "/tmp/~a.~a.~a.~a" 
-               prefix (system:getenv "USER") (pvm_mytid) (gensym ""))))
+(defun current-user ()
+  (or #+(and :allegro-version>= (version>= 5 0)) 
+      (sys:user-name)
+      #+(and :allegro (not (and :allegro-version>= (version>= 5 0))))
+      (system:getenv "USER")
+      #+(and :mcl :powerpc) 
+      (ccl:process-name ccl:*current-process*)
+      #+:lucid 
+      (lcl:environment-variable "USER")
+      "nobody"))
+
+#+(and :allegro-version>= (version>= 5 0))
+(def-foreign-call 
+    (current-pid "getpid")
+    (:void)
+  :returning :int)
+#+(and :allegro-version>= (not (version>= 5 0)))
+(defforeign 
+    'current-pid
+    :entry-point "getpid"
+    :arguments nil
+    :return-type :integer)
+#-:allegro-version>=
+(defun getpid () (random (expt 2 15)))
+
+#+(version>= 5 0)
+(def-foreign-call pvm_mytid (:void) :returning :int)
+
+#-(version>= 5 0)
+(defforeign 'pvm_mytid :arguments nil :return-type :integer)
+
+(let ((user (current-user))
+      (tid (pvm_mytid)))
+  (defun make-tmp-file (prefix)
+    (let ((file (format 
+                 nil 
+                 "/tmp/~a.~a.~a.~a" 
+                 prefix user tid (gensym ""))))
     (when (probe-file file) (delete-file file))
-    file))
+    file)))
 
 #+(version>= 5 0)
 (def-foreign-call load_average (:void) :returning :double)
@@ -61,12 +94,6 @@
                (t "")))
         (debugp (if debugp 1 0)))
     (_pvm_register file debugp)))
-
-#+(version>= 5 0)
-(def-foreign-call pvm_mytid (:void) :returning :int)
-
-#-(version>= 5 0)
-(defforeign 'pvm_mytid :arguments nil :return-type :integer)
 
 #+(version>= 5 0)
 (def-foreign-call pvm_quit (:void) :returning :int)

@@ -63,7 +63,7 @@ item-set:
 run:
   run-id :integer :key                  # unique test run identifier
   comment :string                       # descriptive narrative
-  platform :string                      # common-lisp platform (version)
+  platform :string                      # implementation platform (version)
   tsdb :string                          # tsdb(1) (version) used
   application :string                   # application (version) used
   environment :string                   # application-specific information

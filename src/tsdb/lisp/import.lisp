@@ -176,7 +176,14 @@
           do
             (let* ((start (if (char= (char string 0) #\") 1 0))
                    (wf (if (char= (char string start) #\*) 0 1))
-                   (string (subseq string (if (zerop wf) (+ start 1) start)))
+                   (fragmentp (char= (char string start) #\+))
+                   (category (cond
+                              ((zerop wf) "")
+                              (fragmentp "XP")
+                              (t category)))
+                   (string (subseq 
+                            string 
+                            (+ start (if (or (zerop wf) fragmentp) 1 0))))
                    (break (if (zerop start)
                             (and separator 
                                  (search separator string 

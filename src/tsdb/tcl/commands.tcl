@@ -363,7 +363,7 @@ proc tsdb_browse {code {condition ""}} {
      }
   }; # switch
 
-  if {$globals(condition) != ""} {
+  if {$code != "run" && $code != "errors" && $globals(condition) != ""} {
     if {$condition != ""} {
       set condition "$globals(condition) and ($condition)";
     } else {

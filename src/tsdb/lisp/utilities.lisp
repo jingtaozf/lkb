@@ -40,12 +40,14 @@
                                     (sys:gsgc-parameter :auto-step))))
         (statsp (member :stats verbosity :test #'eq))
         (verbosep (member :verbose verbosity :test #'eq)))
+    (setf (system:gsgc-switch :dump-on-error) t)
     (setf (sys:gsgc-switch :print) (or verbosep statsp))
     (setf (sys:gsgc-switch :verbose) verbosep)
     (setf (sys:gsgc-switch :stats) statsp)
     (setf (sys:gsgc-parameter :auto-step) tenure)
     (setf (sys:gsgc-parameter :generation-spread) *tsdb-generation-spread*)
     (unless tenure
+      (setf (system:gsgc-switch :gc-old-before-expand) t)
       (when verbose
         (format
          *tsdb-io*
@@ -209,6 +211,7 @@
 (defun current-tsdb ()
   *tsdb-version*)
 
+#-:pvm
 (defun current-user ()
   (or #+(and :allegro-version>= (version>= 5 0)) 
       (sys:user-name)
@@ -232,18 +235,18 @@
 (defun current-host ()
   (short-site-name))
 
-#+(and :allegro-version>= (version>= 5 0))
+#+(and (not :pvm) :allegro-version>= (version>= 5 0))
 (def-foreign-call 
     (current-pid "getpid")
     (:void)
   :returning :int)
-#+(and :allegro-version>= (not (version>= 5 0)))
+#+(and (not :pvm) :allegro-version>= (not (version>= 5 0)))
 (defforeign 
     'current-pid
     :entry-point "getpid"
     :arguments nil
     :return-type :integer)
-#-:allegro-version>=
+#+(and (not :pvm) (not :allegro-version>=))
 (defun getpid () (random (expt 2 15)))
 
 (defun current-time (&key long)
@@ -303,28 +306,30 @@
    ((or file append) (or file append))
    (t *tsdb-io*)))
 
-(defun verify-tsdb-directory (language &key absolute)
+(defun verify-tsdb-directory (language &key absolute skeletonp)
   (let ((data 
          (if absolute (namestring language) (find-tsdb-directory language))))
     (when (and data 
-               (probe-file (namestring (make-pathname :directory data 
-                                                      :name "relations"))))
+               (probe-file (make-pathname :directory data :name "relations")))
       (let* ((command (format
                        nil 
                        "~a -home=~a -verify -quiet -pager=null"
                        *tsdb-application* data))
-             (status (run-process command :wait t)))
+             (status (if skeletonp 0 (run-process command :wait t))))
         (when (zerop status)
           (let* ((status 
-                  (if (probe-file (namestring (make-pathname :directory data
-                                                             :name "item.gz")))
-                    :ro
-                    :rw))
-                 (chart 
-                  (let ((n (tcount data "rule" :absolute t :quiet t)))
-                    (and n (not (zerop n)))))
-                 (items (tcount data "item" :absolute t))
-                 (parses (tcount data "parse" :absolute t)))
+                  (cond
+                   (skeletonp :skeleton)
+                   ((probe-file 
+                     (make-pathname :directory data :name "item.gz"))
+                    :ro)
+                   (t :rw)))
+                 (chart
+                  (unless skeletonp
+                    (let ((n (tcount data "rule" :absolute t :quiet t)))
+                      (and n (not (zerop n))))))
+                 (items (tcount data "item" :absolute t :quiet skeletonp))
+                 (parses (unless skeletonp (tcount data "parse" :absolute t))))
             (pairlis (list :database 
                            :path :status :items :parses :chart)
                      (list (namestring language) 
