@@ -943,7 +943,9 @@
             ;; rel in input semantics not covered by this edge - now check the
             ;; rel's handle and its other non-ignorable variables against the edge's
             ;; inaccessible set
-            (when (member (mrs::var-id (mrs::rel-handel rel)) (g-edge-inaccessible e))
+           (when (and mrs::*rel-handel-path*
+                      (member (mrs::var-id (mrs::rel-handel rel))
+                              (g-edge-inaccessible e)))
                (when *gen-filtering-debug*
                   (format t
 "~&Filtering edge ~A on non-covered rel ~A needing inaccessible variable ~A~%"
