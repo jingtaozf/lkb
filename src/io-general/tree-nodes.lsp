@@ -65,12 +65,18 @@
 ;;; called from display-parse-tree
 
 (defun make-edge-symbol (edge-id &optional morph-p)
-   ;; create it uninterned so data put on to its property list doesn't hang
-   ;; around after all other references to it have gone
-   (make-symbol
-      (if (stringp edge-id)
-         edge-id
-         (format nil "~A~A" (if morph-p 'medge 'edge) edge-id))))
+  ;; create it uninterned so data put on to its property list doesn't hang
+  ;; around after all other references to it have gone
+  ;;
+  ;; _fix_me_
+  ;; i was unable to find supporting evidence for this in CLTL2, nor did some
+  ;; experimentation with gc() and large objects support the claim; this seems
+  ;; to be a memory leak that we want to look into soon. (27-mar-02; oe & aac)
+  ;;
+  (make-symbol
+   (if (stringp edge-id)
+     edge-id
+     (format nil "~A~A" (if morph-p 'medge 'edge) edge-id))))
 
 
 (defun find-category-abb (fs)
