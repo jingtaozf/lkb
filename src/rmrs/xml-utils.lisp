@@ -27,7 +27,12 @@
   ;;; (tag "str")
   (unless (eql (car content) expected-tag)
     (error "~A expected and not found" expected-tag))
-  (cadr content))
+  (let ((str  (cadr content)))
+    (unless (stringp str)
+      (error "string expected but ~A found" str))
+    (string-trim  
+     '(#\space #\tab #\newline #\page #\return #\linefeed)
+     str)))
 
 (defun parse-xml-removing-junk (istream)
   ;;; parser insists on tree of `proper' elements
@@ -37,5 +42,13 @@
       (unless (member (car xml-el) '(:XML :DOCTYPE :COMMENT))
         (return xml-el)))))
 
-          
-    
+
+(defun remove-xml-whitespace-elements (content)
+  ;;; sl revised version of fn contributed by Fabre
+  (loop for x in content
+      unless (and (stringp x) (xml-whitespace-string-p x))
+      collect
+      (cond ((or (symbolp x) (stringp x)) x)
+	    ((listp x) (remove-xml-whitespace-elements x))
+	    (t (error 
+		"Unexpected element in remove-xml-whitespace-elements")))))

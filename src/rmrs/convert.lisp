@@ -348,7 +348,7 @@ Errors won't be devastating anyway ...
 ;;; (convert-rmrs-to-mrs *rmrs-debug*)
 
 (defun convert-rmrs-to-mrs (rmrs)
-  (setf *rmrs-debug* rmrs)
+;  (setf *rmrs-debug* rmrs)
   (make-psoa  :top-h (rmrs-top-h rmrs)
 	      :h-cons (rmrs-h-cons rmrs)
 	      :liszt (convert-rmrs-liszt-to-mrs (rmrs-liszt rmrs)

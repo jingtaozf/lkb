@@ -14,7 +14,9 @@
 (read-rmrs-file "test.xml")
 (read-rmrs-file "rmrs/annlt-test/test-select.rmrs" :rasp)
 |#
- 
+
+;;; FIX - there could usefully be a with-package wrapped round this ...
+
 (defun read-rmrs-file (file-name &optional origin)
   ;;; <!ELEMENT rmrs-list (rmrs)*>
   ;;; <!ATTLIST rmrs-list
@@ -98,6 +100,9 @@
              (eql (second tag) '|cfrom|)
              (eql (fourth tag) '|cto|))
       (error "Malformed ep ~A" content))
+    (setf body (loop for x in body
+		   unless (xml-whitespace-string-p x)
+		   collect x))
     (make-char-rel 
      :pred (read-rmrs-pred (first body))
               :handel (read-rmrs-label (second body))
