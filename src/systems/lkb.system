@@ -20,7 +20,11 @@
   (pushnew :lkb *features*)
   (pushnew :lkb-v5.4 *features*)         
   #+(or :cl-http (not (or :mcl :clim))) 
-  (pushnew :tty *features*))
+  (pushnew :tty *features*)
+  ;;
+  ;; as of may-04, we assume that the LKB _always_ includes the MRS code.
+  ;;
+  (pushnew :mrs *features*))
 
 ;;;
 ;;; ultimately, all compile-time configurations (by means of *features*) that
@@ -137,7 +141,7 @@
                #+:preprocessor       
                (:file "preprocess")))
 
-      #+:psql  
+     #+:psql  
      (:module "lexdb"
       :source-pathname "lexdb"
       :binary-pathname "lexdb"
