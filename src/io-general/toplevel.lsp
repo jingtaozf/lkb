@@ -323,6 +323,7 @@
             (ask-for-strings-movable "Current Interaction" 
                `(("Sentence" . ,(cons :typein-menu *last-parses*))) 400)))
     (when sentence
+      (setf *sentence* sentence)
       (close-existing-chart-windows)
       (let ((str (string-trim '(#\space #\tab #\newline) (car sentence))))
         (setq *last-parses* 
