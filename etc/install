@@ -28,7 +28,7 @@ fi
 #
 # set the following to also retrieve the (current) Redwoods treebank data
 #
-TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home
+#TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home
 
 #
 # for the script to be independent of where specific OS versions keep their
@@ -41,10 +41,11 @@ TSDBHOME=${DELPHINHOME}/lkb/src/tsdb/home
 #
 MKDIR=mkdir
 LS=ls
+RM=rm
 LN="ln -s"
 GREP=grep
 WGET="wget --quiet --timestamping"
-TAR="tar zpSxf"
+TAR="tar zpxf"
 SED=sed
 
 #
@@ -92,8 +93,9 @@ for i in lkb_data.tgz lkb_${os}.tgz lkb_source.tgz; do
   ( cd lkb; ${TAR} ${DELPHINHOME}/Archives/${i}; )
   echo " done.";
   if [ -f ${DELPHINHOME}/lkb/etc/lkb ]; then
-  [ -f ${DELPHINHOME}/bin/lkb ] && {RM} ${DELPHINHOME}/bin/lkb;
-  ${LN} ${DELPHINHOME}/lkb/etc/lkb ${DELPHINHOME}/bin/lkb;
+    [ -f ${DELPHINHOME}/bin/lkb ] && {RM} ${DELPHINHOME}/bin/lkb;
+    ${LN} ${DELPHINHOME}/lkb/etc/lkb ${DELPHINHOME}/bin/lkb;
+  fi
 done
 
 #
