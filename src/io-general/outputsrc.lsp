@@ -378,7 +378,6 @@
 
 
 (defun output-for-ebl (orth fs ostream rule-list base-id base-fs ostream2)
-  (declare (ignore fs))
   (let* ((type (type-of-fs (tdfs-indef base-fs)))
          (category (find-possibly-cached-cat type fs))
          (infl-rules nil)
@@ -389,7 +388,7 @@
       (loop for rule in rule-list 
            do
            (if (inflectional-rule-p rule)
-               (push rule infl-rules)
+             (push rule infl-rules)
              (push rule other-rules)))
       (format ostream 
               "~%(~S ~S ~S ~S ~A)" 

@@ -177,8 +177,8 @@
    (stream :initform nil
 	   :accessor compare-frame-stream)
    (current-chart :initform nil
-	    :accessor  compare-frame-current-chart)
-   )
+                  :accessor  compare-frame-current-chart)
+   (controller :initform nil :accessor compare-frame-controller))
   (:panes
    (trees  
     (clim:outlining (:thickness 1)
@@ -218,12 +218,40 @@
   (:layouts
    (:default (clim:horizontally () trees display))))
 
+
+(define-compare-frame-command (com-save-compare-frame :menu "Save")
+    ()
+  (clim:with-application-frame (frame)
+    (loop
+        for tree in (compare-frame-in-parses frame)
+        do
+          (write-record 
+           (edge-leaves 
+            (get (ptree-top (car (compare-frame-trees frame))) 'edge-record))
+           (type-tree tree)))
+    (when (compare-frame-controller frame)
+      (mp:process-revoke-arrest-reason 
+       (compare-frame-controller frame) :wait))))
+
+
+(define-compare-frame-command (com-next-compare-frame :menu "Next")
+    ()
+  (clim:with-application-frame (frame)
+    (when (compare-frame-controller frame)
+      (mp:process-revoke-arrest-reason 
+       (compare-frame-controller frame) :wait))))
+
+
 (define-compare-frame-command (com-exit-compare-frame :menu "Close")
     ()
  (clim:with-application-frame (frame)
    (when (compare-frame-stream frame)
      (close (compare-frame-stream frame)))
+   (when (compare-frame-controller frame)
+     (mp:process-revoke-arrest-reason 
+      (compare-frame-controller frame) :wait))
    (clim:frame-exit frame)))
+
 
 (define-compare-frame-command (com-clear-compare-frame :menu "Clear")
     ()
@@ -235,19 +263,6 @@
     (recompute-in-and-out frame)
     (update-trees frame))) 
 
-#|
-(define-compare-frame-command (com-done-compare-frame :menu "Done")
-    ()
-  (clim:with-application-frame (frame)
-    (write-record (edge-leaves 
-		   (get (ptree-top (car (compare-frame-trees frame)))
-			'edge-record))
-		  (type-tree (car (compare-frame-in-parses frame))))
-    (if (and (compare-frame-stream frame)
-	     (next-sentence frame))
-	(clim:redisplay-frame-panes frame :force-p t)
-      (clim:frame-exit frame))))
-|#
 
 #|
 (define-compare-frame-command (com-error-compare-frame :menu "Error")
