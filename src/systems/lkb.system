@@ -93,7 +93,8 @@
       :load-only t
       :components
                ((:file "lkb-package")
-                (:file "mrs-package")))
+                (:file "mrs-package")
+                (:file "mt-package" :load-only t)))
 
      (:module "version"
       :source-pathname ""
@@ -475,8 +476,7 @@
       :binary-pathname "mt"
       :source-extension "lisp"
       :components
-      ((:file "mt-package" :load-only t)
-       (:file "version" :load-only t)
+      ((:file "version" :load-only t)
        #+:logon
        (:file "mrsglobals" :load-only t)
        (:file "globals")
@@ -487,5 +487,6 @@
        #+:clim
        (:file "clim")
        (:file "semi")
+       (:file "fragments")
        #+:multiprocessing
        (:file "lm")))))
