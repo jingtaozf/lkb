@@ -132,7 +132,7 @@
 	  (function (lambda ()
 		      (install-lkb-menu fi:common-lisp-mode-map))))
 
-(add-hook 'fi:lisp-mode-hook 
+(add-hook 'fi:lisp-listener-mode-hook 
 	  (function (lambda ()
 		      (install-lkb-menu fi:lisp-listener-mode-map))))
 
