@@ -109,22 +109,27 @@
          *types*)
       type-names))
 
+;; Making this a macro cuts 20 seconds off loading time for the LinGO grammar
+
+#|
 (defun get-type-entry (name)
    (gethash name *types*))
+|#
+
+(defmacro get-type-entry (name)
+   `(gethash ,name *types*))
 
 (defun get-any-type-entry (name)
   ;;; allows for instance types
   (let ((type-parent-name (instance-type-parent name)))
     (gethash (or type-parent-name name) *types*)))
   
-
 (defun is-valid-type (name)
    (or (get-type-entry name)
       (stringp name)
       (instance-type-parent name)))
 
-; instance-types added for MT
-; removed for GLB stuff
+; instance-types added for MT removed for GLB stuff
 (defun instance-type-parent (name)
    (locally
       (declare (optimize (speed 3) (safety 0)) (inline symbolp symbol-name schar))

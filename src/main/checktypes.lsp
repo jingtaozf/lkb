@@ -332,6 +332,7 @@
                *types*)
             ok))
 
+#|
 (defun set-up-descendants (type)
   (let ((type-entry (get-type-entry type)))
     (setf (type-descendants type-entry)
@@ -339,6 +340,21 @@
     (for daughter in (type-daughters type-entry)
          do 
          (set-up-descendants daughter))))
+|#
+
+;;; The original version of this runs in quadratic time, but it ought
+;;; to be linear.
+
+(defun set-up-descendants (type)
+  (let* ((type-entry (get-type-entry type))
+	 (daughters (type-daughters type-entry)))
+    (when daughters
+      (setf (type-descendants type-entry)
+	(union daughters
+	       (reduce #'union
+		       (mapcar #'(lambda (daughter)
+				   (set-up-descendants daughter))
+			       daughters)))))))
 
 (defun add-ancestors-to-type-table (top-node)
   (for type in (retrieve-descendants top-node)
