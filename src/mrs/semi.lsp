@@ -1002,6 +1002,7 @@
     (make-extrapair :feature feature
 		    :value value)))
 
+#+:psql
 (defun get-raw-rows (db table key val)
   (let ((rows (lkb::records
 		  (lkb::fn-get-raw-records db 
@@ -1015,6 +1016,7 @@
     ;rows
     ))
   
+#+:psql
 (defun getrows (val table db)
   (let (
 	(raw-rows
