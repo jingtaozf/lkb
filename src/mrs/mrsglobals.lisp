@@ -139,7 +139,7 @@ order in an MRS")
 
 (defparameter *main-semantics-path* nil
   "the path into a lexical entry which gives the list of
-   relations - typically (append *initially-semantics-path* '(LISZT LIST))")
+   relations - typically (append *initial-semantics-path* '(LISZT LIST))")
 
 (defparameter *construction-semantics-path* nil
   "the path into a rule/construction which gives the

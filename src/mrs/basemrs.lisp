@@ -166,7 +166,7 @@
   (declare (ignore first-p))
   (with-slots (stream indentation) mrsout
     (format stream "~%")
-    (if (not (eq type sort))
+    (if (and type (not (eq type sort)))
       (format
        stream
        "~VT[ ~a ~s" 

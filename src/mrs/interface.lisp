@@ -139,7 +139,7 @@
 
 (defun read-mrs-from-file (file)
   (when (probe-file file)
-    (ignore-errors 
+    (#+:debug progn #-:debug ignore-errors 
      (with-open-file (stream file :direction :input)
        (let ((*package* (find-package :lkb)))
          (read-mrs stream))))))

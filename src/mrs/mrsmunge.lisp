@@ -494,7 +494,7 @@
     old-rels))
 
 (defun make-name-in-correct-package (sym)
-    (vsym (symbol-name sym)))
+    (vsym (string sym)))
 
 (defun make-value-in-package (value)
   (if (symbolp value)
@@ -649,8 +649,8 @@
               (real-path (cddr path))
               (liszt (psoa-liszt mrs)))
          (unless (and (> (length path) 2)
-                      (eql (car path)  (vsym "LISZT"))
-                      (eql (cadr path)  (vsym "LIST")))
+                      (eql (car path)  (first *psoa-liszt-path*))
+                      (eql (cadr path)  (second *psoa-liszt-path*)))
            (struggle-on-error "~A is not a valid path in add-funny-stuff" path))
          (multiple-value-bind (rel rel-feat)
              (find-relevant-rel liszt real-path)
@@ -662,12 +662,12 @@
 
 (defun find-relevant-rel (liszt path)
   (when (and liszt path)
-    (if (eql (car path) 'FIRST)
+    (if (eql (car path) (first lkb::*list-head*))
         (if (cddr path)
             (struggle-on-error "Too many components ~A in path" (cdr path))
           ; should be single feature or nil
           (values (car liszt) (cadr path)))
-      (if (eql (car path) 'REST)
+      (if (eql (car path) (first lkb::*list-tail*))
           (find-relevant-rel (cdr liszt) (cdr path))
         (struggle-on-error "Unexpected component ~A in path" (car path))))))
                
