@@ -60,6 +60,10 @@
 (load 
  (make-pathname :directory general-dir :name "cmucl-patches"))
 
+#+:sbcl
+(load 
+ (make-pathname :directory general-dir :name "sbcl-patches"))
+
 #+:lucid
 (load 
  (make-pathname :directory general-dir :name "lucid-patches"))

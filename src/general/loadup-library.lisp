@@ -433,7 +433,7 @@ warnings to print. 0: no warnings,
      general-dir tmp-dir bin-dir include-dir lib-dir *source-grammar*
      gen-compile-and-load-operation
      gen-load-file-operation
-     run-process
+     run-process getenv
      *warning-level*
      level-warn-p)
    "MAKE")
