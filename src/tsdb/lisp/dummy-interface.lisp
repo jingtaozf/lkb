@@ -5,6 +5,8 @@
 
 (in-package :dummy)
 
+(defparameter %dummy-mrs% "")
+    
 (defun current-grammar ()
   ;;
   ;; return a string identifying the grammar that is currently in use, ideally
@@ -101,8 +103,7 @@
                               with nresults = (if (<= nresults 0)
                                                 readings nresults)
                               for i from 1
-                              for result in %results%
-                              for mrs = (extract-mrs result)
+                              for mrs = %dummy-mrs%
                               while (>= (decf nresults) 0) collect
                                 (pairlis '(:result-id :mrs) (list i mrs))))))))
     (append
