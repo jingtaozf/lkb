@@ -56,7 +56,7 @@
     (setq beg (calc-begin-of-tdl-expression))
     (goto-char pos)
     (setq end (calc-end-of-tdl-expression))
-    (eval-in-lisp (format "(redefine-type \"%s\")" 
+    (eval-in-lisp (format "(lkb::redefine-type \"%s\")" 
 			  (buffer-substring beg (min (1+ end) (point-max)))))
     (goto-char pos)))
 
