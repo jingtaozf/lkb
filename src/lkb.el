@@ -1,7 +1,7 @@
 ;;; Add an LKB menu to the emacs menu bar
 
 (defconst lkb-menu
-    '("Lkb"
+    '("LKB"
       ("View"
        ["Type hierarchy..." show-type-tree t]
        ["Type definition..." show-type-spec t]
@@ -25,7 +25,10 @@
        ["Show result" show-gen-result t]
        ["Show edge..." show-gen-edge t]
        ["Show chart" show-gen-chart t]
-       ["Print chart" print-gen-chart t])))
+       ["Print chart" print-gen-chart t])
+      "---"
+      ["Redefine type" redefine-type t]))
+      
        
 (add-hook 'fi:lisp-mode-hook 
 	  (function (lambda ()
@@ -48,6 +51,18 @@
 			generate-from-edge show-gen-result show-gen-edge 
 			show-gen-chart print-gen-chart))  
  
+(defun redefine-type (arg)
+  (interactive "P")
+  (let ((beg 0)
+        (end 0)
+        (pos (point)))
+    (setq beg (calc-begin-of-tdl-expression))
+    (goto-char pos)
+    (setq end (calc-end-of-tdl-expression))
+    (eval-in-lisp (format "(redefine-type \"%s\")" 
+			  (buffer-substring beg (min (1+ end) (point-max)))))
+    (goto-char pos)))
+
 (defun eval-in-lisp (expr)
   (fi::make-request
       (lep::evaluation-request

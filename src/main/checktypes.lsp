@@ -84,15 +84,18 @@
             new-type)))))
 
 (defun amend-type-from-file (name parents constraint default comment)
-   (declare (ignore parents))
-   (let ((existing-type (get-type-entry name)))    
-      (if existing-type
-        (progn 
-          (setf (type-constraint-spec existing-type) constraint)
-          (setf (type-default-spec existing-type) default)
-          (setf (type-comment existing-type) comment))
-        (format t "~%Warning - ~A ignored - patch only works to redefine types"
-                name))))
+  (let ((existing-type (get-type-entry name)))    
+    (if existing-type
+	(if (and (null (set-difference parents (type-parents existing-type)))
+		 (null (set-difference (type-parents existing-type) parents)))
+	    (progn 
+	      (setf (type-constraint-spec existing-type) constraint)
+	      (setf (type-default-spec existing-type) default)
+	      (setf (type-comment existing-type) comment))
+	  (format t "~%Warning - ~A ignored - patch cannot change type hierarchy"
+                name))
+      (format t "~%Warning - ~A ignored - patch only works to redefine types"
+	      name))))
 
 (defvar *type-names* nil)
 
@@ -233,9 +236,26 @@
        ;;; earlier stages are unchanged
 ;      (format t "~%Expanding defaults") 
       (when (expand-type-hierarchy-defaults)
-        (format t "~%Type file checked successfully")
-        t))))
+	(format t "~%Re-expanding rules")
+	(expand-rules)
+	(format t "~%Type file checked successfully")
+	t))))
 
+(defun expand-rules nil
+  (maphash #'(lambda (id rule)
+	       (process-unif-list (rule-id rule)
+				  (car (rule-unifications rule))
+				  (cdr (rule-unifications rule))
+				  rule
+				  *rule-persistence*))
+	   *rules*)
+  (maphash #'(lambda (id rule)
+	       (process-unif-list (rule-id rule)
+				  (car (rule-unifications rule))
+				  (cdr (rule-unifications rule))
+				  rule
+				  *rule-persistence*))
+	   *lexical-rules*))
 
 ;;; First we need to check that the type hierarchy itself is OK
 ;;; viewed as a graph without considering the constraints
@@ -712,7 +732,8 @@
       do
       (let ((type-entry (get-type-entry node)))
          (let ((constraint-spec (type-constraint-spec type-entry)))
-            (setf (type-atomic-p type-entry)
+	   (unless (leaf-type-p type-entry)
+	   (setf (type-atomic-p type-entry)
                (not 
                   (or constraint-spec
                      (some #'constraint-spec-of 
@@ -721,7 +742,7 @@
                            (or (constraint-spec-of daughter)
                               (some #'constraint-spec-of 
                                  (type-ancestors (get-type-entry daughter)))))
-                        (type-descendants type-entry)))))))))
+                        (type-descendants type-entry))))))))))
 
 
 (defun expand-constraint (node type-entry)

@@ -3,10 +3,6 @@
 ;;; Record source locations for things, and provide an interface to
 ;;; display sources in emacs
 
-(defun record-source (type stream position)
-  (declare (ignore position))
-  (setf (excl:source-file type :lkb) (excl::filename stream)))
-
 (defun edit-source (thing)
   (let ((source (ignore-errors (excl:source-file thing :lkb))))
     (when source
@@ -20,3 +16,14 @@
   (when (lep:lep-is-running)
     (lep::eval-in-emacs (format nil "(find-tdl-definition \"~a\" \"~a\")"
 				thing file))))
+
+(defun redefine-type (definition)
+  (let ((*readtable* (make-tdl-break-table))
+	(*standard-output* clim-user::*lkb-top-stream*))
+    (with-input-from-string (istream definition)
+      (read-tdl-type-stream istream t)))
+  (when (patch-type-table) 
+    (canonicalise-feature-order)           
+    (set-up-type-interactions)
+    t))
+

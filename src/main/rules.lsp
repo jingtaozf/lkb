@@ -44,6 +44,7 @@
 
 
 (defstruct (rule (:include lex-or-psort))
+   unifications
    daughters-restricted
    daughters-apply-order
    order)

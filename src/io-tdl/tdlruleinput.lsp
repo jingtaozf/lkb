@@ -80,6 +80,7 @@
            (check-for #\. istream id)
            (process-unif-list id non-def def entry *rule-persistence*)
            (when (rule-full-fs entry)
+	     (setf (rule-unifications entry) (cons non-def def))
              (if lexical
                  (progn (pushnew id *ordered-lrule-list*)
                         (add-lexical-rule id entry))
