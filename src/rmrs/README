@@ -5,8 +5,7 @@ some relatively shallow parser.  This is done completely robustly from a parse
 represented as a tree, terminated by tags, without any lexical entries.  The
 eventual idea is to do this in a way which means that the RMRS structures are
 underspecified forms of full MRS structures: i.e., they can be monotonically
-enhanced to give a full MRS.  Right now, they are compatible with the
-handle-free MRS, such as produced by the textbook grammar.
+enhanced to give a full MRS.  
 
 Composition of semnatics is done according to a very simple algebra, in effect
 equivalent to the simplest form of the algebra defined in Copestake et al,

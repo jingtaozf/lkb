@@ -50,11 +50,15 @@
                       (|head| (setf head (car tag-content)))
                       (|semstruct| (setf semstruct (read-rmrs-semstruct tag-content)))
                       (|equalities| (push (read-rmrs-rule-eq tag-content dtrs) eqs)))
-                    (when head (setf head-pos (position head dtrs :test #'string-equal))
+                    (when head
+		      (if (string-equal head "RULE")
+			  (setf head-pos -1)
+			(progn
+			  (setf head-pos (position head dtrs :test #'string-equal))
                           (unless head-pos
                             (error 
                              "~%Head ~S is not a member of dtrs ~S in ~A"
-                             head dtrs name))))))
+                             head dtrs name))))))))
 	  (make-rmrs-rule :name name
 			  :dtrs dtrs
 			  :arity (length dtrs)
@@ -65,10 +69,11 @@
 (defun read-rmrs-rule-dtrs (content)
   (loop for dtr in content
       when (eql (car dtr) '|dtr|)
+      unless (string-equal (cadr dtr) "OPT")
       collect (cadr dtr)))
       
 (defun read-rmrs-semstruct (content)
-;;; <!ELEMENT semstruct (hook,(ep|rarg|ing)*)> 
+;;; <!ELEMENT semstruct (hook,(ep|rarg|ing|hcons)*)> 
   (let ((hook nil) (eps nil) (rargs nil) (ings nil)
         (h-cons nil))
     (loop for next-el in content
@@ -77,6 +82,11 @@
             (let*  
                 ((next-tag (car next-el))
                  (tag-content (cdr next-el)))
+	      (if (and (listp next-tag)
+		       (eql (car next-tag) '|hcons|)
+		       (string-equal (third next-tag) "qeq"))
+	      	  (push (read-rmrs-semstruct-qeq tag-content)
+                            h-cons)
 	      (ecase next-tag
 		(|hook| (setf hook (read-rmrs-semstruct-hook tag-content)))
 		(|ep| (push (read-rmrs-semstruct-ep tag-content)
@@ -84,7 +94,7 @@
                 (|rarg| (push (read-rmrs-semstruct-rarg tag-content)
                             rargs))
                 (|ing| (push (read-rmrs-semstruct-in-g tag-content)
-                            ings))))))
+			     ings)))))))
     (make-semstruct :hook (or hook (make-default-hook))
                     :liszt eps
 		    ;; binding-list is constructed when the
@@ -145,6 +155,15 @@
     (setf ing-b (read-rmrs-simple '|ing-b| (cadr content)))
     (make-in-group :labels (list (construct-grammar-var ing-a) 
                                  (construct-grammar-var ing-b)))))
+
+(defun read-rmrs-semstruct-qeq (content)
+;;; <!ELEMENT hcons (hi, lo)>
+  (let ((hi nil) (lo nil))
+    (setf hi (read-rmrs-simple '|hi| (car content)))
+    (setf lo (read-rmrs-simple '|lo| (cadr content)))
+    (make-hcons :relation "qeq"
+		:scarg (construct-grammar-var hi) 
+                :outscpd (construct-grammar-var lo))))
 
 (defun read-rmrs-rule-eq (content dtrs)
 ;;; <!ELEMENT equalities (rv|dh)* >

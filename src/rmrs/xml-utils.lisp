@@ -6,6 +6,9 @@
 (in-package :mrs)
 
 ;;; Utility functions for use with xml package
+;;; Only loaded when this has been loaded, please
+;;; don't add #+:xml compiler macros since I'm trying
+;;; to keep rmrs as free of compiler macros as possible
 
 (defun whitespacep (char)
   (member char '(#\space #\tab #\newline #\page #\return #\linefeed)))
@@ -26,7 +29,6 @@
     (error "~A expected and not found" expected-tag))
   (cadr content))
 
-#+:xml
 (defun parse-xml-removing-junk (istream)
   ;;; parser insists on tree of `proper' elements
   ;;; so we just need to find this

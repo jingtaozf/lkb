@@ -2,6 +2,7 @@
 ;;;   John Carroll, Ann Copestake, Robert Malouf, Stephan Oepen;
 ;;;   see `licence.txt' for conditions.
 
+;;; FIX - not dealing with optional elements in rules
 
 (in-package :mrs)
 
@@ -154,6 +155,7 @@
                 :label (construct-grammar-var "H") :default t))
 
 
+(defparameter *rmrs-output-type* 'xml)
 
 ;;; Main entry point
 
@@ -165,13 +167,14 @@
           (construct-sem-for-tree-aux tree))
          (canonical-bindings 
           (close-bindings (semstruct-bindings semstruct))))
-    (output-rmrs1 (make-rmrs 
+    (output-rmrs1 (make-rmrs
+		   :top-h (indices-label (semstruct-hook semstruct))
                    :liszt (semstruct-liszt semstruct)
                    :rmrs-args (semstruct-rmrs-args semstruct)
                    :in-groups (semstruct-in-groups semstruct) 
                    :h-cons (semstruct-h-cons semstruct) 
                   :bindings canonical-bindings)
-                 'xml ostream)))
+                 *rmrs-output-type* ostream)))
 
 (defstruct binding 
   var
@@ -247,7 +250,6 @@
 ;;; on the node - we just need some form of identification of
 ;;; a recipe for composition
 
-
 (defun construct-sem-for-tree-aux (tree-node)
   (if (daughter-nodes-p tree-node)
       (let ((rule-name (get-rule-name tree-node))
@@ -259,6 +261,7 @@
     (let ((base-tag (get-lexical-tag tree-node))
 	  (lexeme (get-lexeme tree-node)))
       (create-base-struct base-tag lexeme))))
+
 
 ;;; composition
 
@@ -309,11 +312,15 @@
 			    (rmrs-rule-eqs rule-instruction))))
     (let ((semstruct-out
            (make-semstruct :hook 
-                           (if semhead  ; a number indicating the dtr
+                           (if semhead	; a number indicating the dtr
+			       ; -1 means the rule itself is the head
+			       (if (eql semhead -1)
+				   (if semstruct
+				       (semstruct-hook semstruct)
+				     (make-default-running-hook))
                                (semstruct-hook 
-                                (elt dtrs semhead))
-                             (if (and (not rule-instruction)
-                                      (not (cdr dtrs)))
+                                (elt dtrs semhead)))
+                             (if (not (cdr dtrs))
                                  (semstruct-hook (car dtrs))
                                 ;;; assume semhead is single dtr 
                                 ;;; if unary rule
@@ -344,8 +351,8 @@
         (unless rule-instruction
           (format t " (not found)"))
         (dolist (dtr dtrs)  
-          (internal-output-rmrs dtr 'compact t))
-        (internal-output-rmrs semstruct-out 'compact t))
+          (internal-output-rmrs dtr 'vcompact t))
+        (internal-output-rmrs semstruct-out 'vcompact t))
       semstruct-out)))
 
 ;;; Tag lookup
@@ -456,7 +463,7 @@ goes to
      :liszt
      (loop for old-ep in (semstruct-liszt semstruct)
          collect
-           (make-rel :handel 
+           (make-char-rel :handel 
                      (if (rel-handel old-ep)
                          (generate-new-var (rel-handel old-ep))
                        (create-new-rmrs-var :handle *rmrs-variable-generator*))
@@ -470,7 +477,9 @@ goes to
                        :flist
                        (loop for old-arg in (rel-flist old-ep)
                            collect
-                             (generate-new-var old-arg))))
+                             (generate-new-var old-arg))
+		       :cfrom (if lex (word-info-from lex))
+		       :cto (if lex (word-info-to lex))))
      :rmrs-args
      (loop for old-rarg in (semstruct-rmrs-args semstruct)
          collect
@@ -490,7 +499,14 @@ goes to
             :labels
             (loop for old-arg in (in-group-labels old-ing)
                 collect
-                  (generate-new-var old-arg)))))))
+                  (generate-new-var old-arg))))
+     :h-cons
+     (loop for old-hcons in (semstruct-h-cons semstruct)
+         collect
+           (make-hcons
+	    :relation (hcons-relation old-hcons)
+            :scarg (generate-new-var (hcons-scarg old-hcons))
+	    :outscpd (generate-new-var (hcons-outscpd old-hcons)))))))
 
 (defun generate-new-hook (old-hook)
   (make-indices 

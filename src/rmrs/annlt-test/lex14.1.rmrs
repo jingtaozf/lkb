@@ -289,8 +289,12 @@
 <tag>NP1</tag>
 <semstruct>
 <hook><index>X</index><label>H</label></hook>
-<ep><gpred>NAMED_REL</gpred><label>H</label><var>X</var></ep>
+<ep><gpred>PROPER_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RESTR</rargname><label>H</label><var>H2</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H3</var></rarg>
+<ep><gpred>NAMED_REL</gpred><label>H1</label><var>X</var></ep>
 <rarg><rargname>CARG</rargname><label>H</label><lemma/></rarg>
+<hcons hreln='qeq'><hi>H2</hi><lo>H1</lo></hcons>
 </semstruct>
 </le>
 

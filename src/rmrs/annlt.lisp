@@ -18,12 +18,13 @@
   (rest node))
 
 (defun get-lexical-tag (node)
-  (let* ((str (string node))
+  (let* ((str (de-xml-str (string node)))
          (uscore-pos (position #\_ str)))
     (subseq str (+ 1 uscore-pos))))    
 
 (defun get-lexeme (node)
-  (let* ((str (string node))
+  (let* ((xml-str (string node))
+	 (str (de-xml-str xml-str))
          (uscore-pos (position #\_ str))
          (notag (subseq str 0 uscore-pos))
          (tag (subseq str uscore-pos))
@@ -37,7 +38,10 @@
             (subseq notag 0 colon-pos)
           notag))
       :pos
-      (tag-letters tag))))
+      (tag-letters tag)
+      :from (get-cfrom xml-str)
+      :to (get-cto xml-str))))
+
 
 (defun tag-letters (tag)
   ;;; e.g., _NP1
@@ -52,7 +56,6 @@
         (t NIL)))
 
 
-#|
 (defun de-xml-str (str)
   ;;; <w S='Y' C='W'>He:1_PPHS1</w>
   ;;; to He:1_PPHS1
@@ -61,7 +64,25 @@
          (second-first (position #\< after-tag)))
     (subseq after-tag 0 second-first)))
 
-|#
+(defun get-cfrom (str)
+  ;;; <w s="19" e="24">bark+ed_VVD</w>
+  ;;; extract 19
+  (let ((first-s (position #\s str)))
+    (if (and (char= (elt str (+ 1 first-s)) #\=)
+	     (char= (elt str (+ 2 first-s)) #\"))
+	(parse-integer (subseq str (+ 3 first-s)) :junk-allowed t)
+      nil)))
+
+(defun get-cto (str)
+  ;;; <w s="19" e="24">bark+ed_VVD</w>
+  ;;; extract 24
+  (let ((first-e (position #\e str)))
+    (if (and (char= (elt str (+ 1 first-e)) #\=)
+	     (char= (elt str (+ 2 first-e)) #\"))
+	(parse-integer (subseq str (+ 3 first-e)) :junk-allowed t)
+      nil)))
+
+
   
 ;;; top level call
 ;;; multiple files
@@ -163,19 +184,38 @@
        (excl::shell "rm /tmp/rfile")))))
 
 #|
-(simple-process-rasp-file "~aac10/lingo/newlkb/src/rmrs/annlt-test/test.parses" "~aac10/lingo/newlkb/src/rmrs/annlt-test/test.rmrs")
+(simple-process-rasp-file 
+ (make-pathname 
+   :device "d"
+   :directory "/lingo/lkb/src/rmrs/annlt-test/"
+   :name "rasp.out")
+ "xxx")
 |#
 
 (defun simple-process-rasp-file (ifile ofile)
- (clear-rule-record)
- (read-rmrs-grammar "~aac10/lingo/newlkb/src/rmrs/annlt-test/gram14.1.rmrs")
- (read-rmrs-tag-templates "~aac10/lingo/newlkb/src/rmrs/annlt-test/lex14.1.rmrs")
- (rmrs-from-xmlified-file ifile ofile t))
+  (clear-rule-record)
+ (read-rmrs-grammar 
+  (make-pathname 
+   :device "d"
+   :directory "/lingo/lkb/src/rmrs/annlt-test/"
+   :name "gram14.1.rmrs"))
+ (read-rmrs-tag-templates 
+  (make-pathname :device "d"
+		 :directory "/lingo/lkb/src/rmrs/annlt-test/"
+		 :name "lex14.1.rmrs"))
+  (rmrs-from-xmlified-file ifile ofile t))
 
 (defun simple-process-rasp-non-xml-file (ifile ofile)
  (clear-rule-record)
- (read-rmrs-grammar "~aac10/lingo/newlkb/src/rmrs/annlt-test/gram14.1.rmrs")
- (read-rmrs-tag-templates "~aac10/lingo/newlkb/src/rmrs/annlt-test/lex14.1.rmrs")
+ (read-rmrs-grammar 
+  (make-pathname 
+   :device "d"
+   :directory "/lingo/lkb/src/rmrs/annlt-test/"
+   :name "gram14.1.rmrs"))
+ (read-rmrs-tag-templates 
+  (make-pathname :device "d"
+		 :directory "/lingo/lkb/src/rmrs/annlt-test/"
+		 :name "lex14.1.rmrs"))
  (rmrs-from-file ifile ofile))
 
 (defun revalidate-rmrs-files nil

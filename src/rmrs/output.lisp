@@ -278,11 +278,11 @@ for gram.dtd and tag.dtd
 
 (defmethod rmrs-output-label ((rmrsout compact) label-id)
   (with-slots (stream) rmrsout
-    (format stream "l~A," label-id)))
+    (format stream "h~A," label-id)))
 
 (defmethod rmrs-output-top-label ((rmrsout compact) label-id)
   (with-slots (stream) rmrsout
-    (format stream "l~A~%" label-id)))
+    (format stream "h~A~%" label-id)))
 
 ;;; Parsonian arguments
 
@@ -331,7 +331,7 @@ for gram.dtd and tag.dtd
 
 (defmethod semstruct-output-hook-label ((rmrsout compact) label)
   (with-slots (stream) rmrsout
-    (format stream "~A"
+    (format stream "h~A,"
             label)))
 
 (defmethod semstruct-output-hook-index ((rmrsout compact) index)
@@ -340,8 +340,37 @@ for gram.dtd and tag.dtd
 
 (defmethod semstruct-output-end-hook ((rmrsout compact))
   (with-slots (stream) rmrsout
-    (format stream "] ")))
+    (format stream "]~%")))
 
+;;; more compact representation for tracing etc
+;;; oe helpfully put ~%s in compact, so define a version
+;;; without ...
+
+(defclass vcompact (compact) ())
+
+(defmethod rmrs-output-end-ep ((rmrsout vcompact))
+  (with-slots (stream) rmrsout
+    (format stream "), ")))
+
+(defmethod rmrs-output-top-label ((rmrsout vcompact) label-id)
+  (with-slots (stream) rmrsout
+    (format stream "[h~A] " label-id)))
+
+(defmethod rmrs-output-end-rmrs-arg ((rmrsout vcompact))
+  (with-slots (stream) rmrsout
+    (format stream "), ")))
+
+(defmethod rmrs-output-hcons-end ((rmrsout vcompact))
+  (with-slots (stream) rmrsout
+    (format stream "), ")))
+
+(defmethod rmrs-output-end-ingroup ((rmrsout vcompact))
+  (with-slots (stream) rmrsout
+    (format stream "), ")))
+
+(defmethod semstruct-output-end-hook ((rmrsout vcompact))
+  (with-slots (stream) rmrsout
+    (format stream "], ")))
 
 
 ;;; Actual printing function for robust mrs
@@ -385,11 +414,12 @@ for gram.dtd and tag.dtd
     (when (and hook (not (indices-default hook)))
       (print-semstruct-hook hook 
                             bindings *rmrs-display-structure*))
-    (rmrs-output-top-label *rmrs-display-structure*
-                       (if top-h
-                           (find-rmrs-var-id top-h bindings)
-                         (funcall
-                          *rmrs-variable-generator*)))
+    (unless hook
+      (rmrs-output-top-label *rmrs-display-structure*
+			     (if top-h
+				 (find-rmrs-var-id top-h bindings)
+			       (funcall
+				*rmrs-variable-generator*))))
     (loop for ep in eps
         do
           (rmrs-output-start-ep *rmrs-display-structure*
@@ -479,10 +509,10 @@ for gram.dtd and tag.dtd
 
 (defun print-semstruct-hook (hook bindings display)
   (semstruct-output-start-hook display)
-  (semstruct-output-hook-index display
-   (find-rmrs-var-id 
-    (indices-index hook) bindings))
   (semstruct-output-hook-label display
    (find-rmrs-var-id 
     (indices-label hook) bindings))
+  (print-rmrs-var 
+   (indices-index hook)
+   bindings display)
   (semstruct-output-end-hook display))

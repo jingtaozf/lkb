@@ -10,7 +10,7 @@
 
 <!ELEMENT head (#PCDATA) >
 
-<!ELEMENT semstruct (hook,(ep|rarg|ing)*)>
+<!ELEMENT semstruct (hook,(ep|rarg|ing|hcons)*)>
 
 <!ELEMENT hook (index,label)>
 
@@ -45,3 +45,11 @@
 <!ELEMENT ing-a (var) >
 
 <!ELEMENT ing-b (var) >
+
+<!ELEMENT hcons (hi, lo)>
+<!ATTLIST hcons 
+          hreln (qeq|lheq|outscopes) #REQUIRED >
+
+<!ELEMENT hi (var)>
+
+<!ELEMENT lo (label|var)>

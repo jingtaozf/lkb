@@ -625,13 +625,16 @@
 <rule>
 <name>S/np_vp</name>
 <dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
-<head>VP</head>
+<head>RULE</head>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
+<hook><index>E</index><label>H1</label></hook>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
 <rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<hcons hreln='qeq'><hi>H2</hi><lo>H</lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -649,13 +652,16 @@
 <rule>
 <name>S/np-poss_vp</name>
 <dtrs><dtr>NP</dtr><dtr>VP</dtr></dtrs>
-<head>VP</head>
+<head>RULE</head>
 <semstruct>
-<hook><index>E</index><label>H</label></hook>
+<hook><index>E</index><label>H1</label></hook>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
 <rarg><rargname>ARG1</rargname><label>H</label><var>X</var></rarg>
+<hcons hreln='qeq'><hi>H2</hi><lo>H</lo></hcons>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 
@@ -1166,10 +1172,11 @@
 <head>V</head>
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
-<rarg><rargname>ARGN</rargname><label>H</label><var>E1</var></rarg>
+<rarg><rargname>ARG2</rargname><label>H</label><var>H1</var></rarg>
 </semstruct>
-<equalities><rv>E1</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -1225,6 +1232,13 @@
 <name>V1/v_s</name>
 <dtrs><dtr>V</dtr><dtr>S</dtr></dtrs>
 <head>V</head>
+<semstruct>
+<hook><index>E</index><label>H</label></hook>
+<rarg><rargname>ARG2</rargname><label>H</label><var>H1</var></rarg>
+</semstruct>
+<equalities><rv>H1</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -2026,10 +2040,14 @@
 <semstruct>
 <hook><index>E</index><label>H</label></hook>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
+<rarg><rargname>ARG3</rargname><label>H</label><var>H1</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>V</dtr><he>INDEX</he></dh></equalities>
 </rule>
+
 
 <rule>
 <name>V1/v_np_prt_inf</name>
@@ -2319,10 +2337,12 @@
 <hook><index>E</index><label>H</label></hook>
 <rarg><rargname>ARG2</rargname><label>H</label><var>X</var></rarg>
 <rarg><rargname>ARG3</rargname><label>H</label><var>Y</var></rarg>
+<rarg><rargname>ARG4</rargname><label>H</label><var>H1</var></rarg>
 </semstruct>
 <equalities><rv>X</rv><dh><dtr>NP1</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>Y</rv><dh><dtr>NP2</dtr><he>INDEX</he></dh></equalities>
 <equalities><rv>H</rv><dh><dtr>V</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H1</rv><dh><dtr>S</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 
@@ -2634,7 +2654,14 @@
 <rule>
 <name>V1/to_bse</name>
 <dtrs><dtr>V</dtr><dtr>OPT</dtr><dtr>VP</dtr></dtrs>
-<head>VP</head>
+<head>RULE</head>
+<semstruct>
+<hook><index>E</index><label>H1</label></hook>
+<ep><gpred>PRPSTN_M_REL</gpred><label>H1</label><var>H2</var></ep>
+<hcons hreln='qeq'><hi>H2</hi><lo>H</lo></hcons>
+</semstruct>
+<equalities><rv>H</rv><dh><dtr>VP</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>E</rv><dh><dtr>VP</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
 <rule>
@@ -2842,7 +2869,16 @@
 <rule>
 <name>NP/det_n1</name>
 <dtrs><dtr>DET</dtr><dtr>N</dtr></dtrs>
-<head>N</head>
+<head>RULE</head>
+<semstruct>
+<hook><index>X</index><label>H2</label></hook>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi>H1</hi><lo>H3</lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H</rv><dh><dtr>DET</dtr><he>LABEL</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 <equalities><dh><dtr>N</dtr><he>INDEX</he></dh><dh><dtr>DET</dtr><he>INDEX</he></dh></equalities>
 </rule>
 
@@ -2867,9 +2903,18 @@
 </rule>
 
 <rule>
-<name>NP/n1-pl</name>
+<name>NP/n1-plu</name>
 <dtrs><dtr>N</dtr></dtrs>
-<head>N</head>
+<head>RULE</head>
+<semstruct>
+<hook><index>X</index><label>H</label></hook>
+<ep><gpred>BARE_DIV_Q_REL</gpred><label>H</label><var>X</var></ep>
+<rarg><rargname>RSTR</rargname><label>H</label><var>H1</var></rarg>
+<rarg><rargname>BODY</rargname><label>H</label><var>H2</var></rarg>
+<hcons hreln='qeq'><hi>H1</hi><lo>H3</lo></hcons>
+</semstruct>
+<equalities><rv>X</rv><dh><dtr>N</dtr><he>INDEX</he></dh></equalities>
+<equalities><rv>H3</rv><dh><dtr>N</dtr><he>LABEL</he></dh></equalities>
 </rule>
 
 <rule>

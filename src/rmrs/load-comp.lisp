@@ -41,7 +41,7 @@ produced by robust parsers of various types.
 (compile-file "comp.lisp")
 (load "comp.fasl")
 
-;;; The ANNLT specific code - navigates round the input trees
+
 (compile-file "annlt.lisp")
 (load "annlt.fasl")
 
@@ -52,7 +52,8 @@ produced by robust parsers of various types.
 (compile-file "output.lisp")
 (load "output.fasl")
 
-;;; file with some utilities for XML parser
+
+
 (compile-file "xml-utils.lisp")
 (load "xml-utils.fasl")
 
@@ -70,32 +71,3 @@ produced by robust parsers of various types.
 ;;; loads the underlying rmrs input code
 (compile-file "input.lisp")
 (load "input.fasl")
-;;; Examples of how to use the code
-
-#|
-;;; ANNLT tree output
-
- :pa :mrs
- (read-rmrs-grammar "annlt-test/gram14.1.rmrs")
- (read-rmrs-grammar "rmrs/annlt-test/gram14.1.rmrs")
- (read-rmrs-tag-templates "annlt-test/lex14.1.rmrs")
- (read-rmrs-tag-templates "rmrs/annlt-test/lex14.1.rmrs")
-  ;;; functions for ANNLT version are in annlt.lisp
-
-  :pa :mrs
-  (rmrs-from-file "annlt-test/test-select.rasp"
-  "annlt-test/test-select.rmrs")
-
-  (rmrs-from-file "rmrs/annlt-test/test-select.rasp"
-  "rmrs/annlt-test/test-select.rmrs")
-
-  (read-rmrs-file "annlt-test/test-select.rmrs")
-  (read-rmrs-file "rmrs/annlt-test/test-select.rmrs")
-
-  (construct-sem-for-tree
-  '(|T/txt-sc1/----|
-     (|S/np_vp| (|NP/n1_n1-name/-| (|N1/n| |Abrams_NP1|))
-      (|V1/v| |bark+ed_VVD|))))
-
-|#
-
