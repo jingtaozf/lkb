@@ -196,16 +196,19 @@
    (unless *check-paths*
       (setq *check-paths-optimised* nil)
       (return-from optimise-check-unif-paths nil))
-   (let ((freq-threshold (truncate (cdr (first *check-paths*)) 1000)))
+   (let ((freq-threshold (truncate (cdr (first *check-paths*)) 1000))
+         (nseen 0))
       ;; keep all paths whose freq is within a factor of 1000 of most frequent - but
+      ;; always keep at least 40
       ;; there's certainly scope here for experimenting with how many paths are kept
       (setq *check-paths-optimised*
          (mapcan
             #'(lambda (path-and-freq)
+                (incf nseen)
                 (cond
                    ((not (and (listp (car path-and-freq)) (integerp (cdr path-and-freq))))
                       (error "Incorrect format for check path list"))
-                   ((< (cdr path-and-freq) freq-threshold) nil)
+                   ((and (< (cdr path-and-freq) freq-threshold) (> nseen 40)) nil)
                    (t
                       (list
                          (optimise-check-unif-path
