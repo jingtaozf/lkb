@@ -84,12 +84,12 @@
 ;;; called from display-parse-tree
 
 (defun make-edge-symbol (edge-id &optional morph-p)
-   (let* ((edge-symbol 
-           (if (stringp edge-id) (make-symbol edge-id)
-            (intern 
-                  (format nil "~A~A" (if morph-p 'medge 'edge) edge-id)))))
-      (setf (get edge-symbol 'real-edge) edge-id)
-      edge-symbol))
+   ;; create it uninterned so data put on to its property list doesn't hang
+   ;; around after all other references to it have gone
+   (make-symbol
+      (if (stringp edge-id)
+         edge-id
+         (format nil "~A~A" (if morph-p 'medge 'edge) edge-id))))
 
 
 
