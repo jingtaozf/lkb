@@ -155,7 +155,7 @@
                    &key id exhaustive nanalyses trace
                         edges derivations semantix-hook trees-hook
                         burst (nresults 0))
-  (declare (ignore derivations))
+  (declare (ignore id derivations))
   
   (let* ((*package* *lkb-package*)
          (*chasen-debug-p* nil)
@@ -209,7 +209,7 @@
                               #'(lambda () 
                                   (loop
                                       for edge in *parse-record*
-                                      sum (length (unpack-edge! id edge))))
+                                      sum (length (unpack-edge! edge))))
                               #'(lambda (tgcu tgcs tu ts tr scons ssym sother
                                          &rest ignore)
                                   (declare (ignore tr ignore))

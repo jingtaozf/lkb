@@ -360,13 +360,19 @@
    (unpacking-decompositions object)))
 
 (defstruct decomposition
-  lhs rhs)
+  lhs rhs done)
 
 (defmethod print-object ((object decomposition) stream)
   (format 
    stream 
    "#[D ~(~a~) < ~(~{~a ~^~}~)>]"
    (decomposition-lhs object) (decomposition-rhs object)))
+
+(defmacro decomposition-record-indices (decomposition indices)
+  `(push ,indices (decomposition-done ,decomposition)))
+
+(defmacro decomposition-indices-done-p (decomposition indices)
+  `(member ,indices (decomposition-done ,decomposition) :test #'equal))
 
 (defstruct hypothesis
   score decomposition indices daughters edge)
@@ -377,12 +383,19 @@
    "#[H ~a~@[ ~a~]]"
    (hypothesis-indices object) (hypothesis-edge object)))
 
-(defun selectively-unpack-edges (edges &optional n)
+(defun selectively-unpack-edges (edges &optional n &key test)
 
+  (unless edges (return-from selectively-unpack-edges))
+  (setf %edges edges)
   (if (or (null n) (not (numberp n)) (<= n 0) (null *unpacking-scoring-hook*))
-    (unpack-edges edges)
+    (let ((edges (unpack-edges edges)))
+      (if test
+        (loop
+            for edge in edges
+            when (ignore-errors (funcall test edge)) collect edge)
+        edges))
     ;;
-    ;; ignore gnuinely frozen edges; now that we are into the unpacking
+    ;; ignore genuinely frozen edges; now that we are into the unpacking
     ;; phase, frosted edges represent valid alternatives again.  since we are
     ;; interested in the probability distribution over all results, use one of
     ;; the packed edges as the `representative' for all of them, i.e. make sure
@@ -395,11 +408,16 @@
                                    (minusp (edge-frozen edge)))
                        collect edge))
            (representative (first active)))
-      (hypothesize-edge representative 0 :top (rest active))
+      (hypothesize-edge representative 0 :top (or (rest active) t))
       (loop
           for i from 0
           for hypothesis = (hypothesize-edge representative i)
-          for new = (when hypothesis (instantiate-hypothesis hypothesis))
+          for new = (when hypothesis 
+                      (let ((edge (instantiate-hypothesis hypothesis)))
+                        (when (and edge 
+                                   (or (null test)
+                                       (ignore-errors (funcall test edge))))
+                          edge)))
           while (and hypothesis (>= n 1))
           when new do (decf n) and collect new))))
 
@@ -434,7 +452,11 @@
              :indices indices
              :daughters daughters)
           for score = (score-hypothesis hypothesis)
-          do (agenda-insert agenda score hypothesis))
+          do 
+            #+:hdebug
+            (format t "~%>> ~a~%~%" hypothesis)
+            (decomposition-record-indices decomposition indices)
+            (agenda-insert agenda score hypothesis))
       ;;
       ;; for the special case that we are working on `top' edges, i.e. those in
       ;; *parse-record* or *gen-record*, we need to ensure that decompositions
@@ -482,19 +504,20 @@
                     collect (append prefix
                                     (cons (+ (first foo) 1) (rest foo)))
                     collect (first foo) into prefix)))
-          #+:null
+          #+:hdebug
           (format t "~%<< ~a~%~%" hypothesis)
           
           (loop
               with decomposition = (hypothesis-decomposition hypothesis)
               for indices in indiceses
               for daughters 
-              = (loop
-                    for edge in (decomposition-rhs decomposition)
-                    for i in indices
-                    for daughter = (hypothesize-edge edge i)
-                    when (null daughter) return nil          
-                    collect daughter)
+              = (unless (decomposition-indices-done-p decomposition indices)
+                  (loop
+                      for edge in (decomposition-rhs decomposition)
+                      for i in indices
+                      for daughter = (hypothesize-edge edge i)
+                      when (null daughter) return nil          
+                      collect daughter))
               for new 
               = (when daughters
                   (make-hypothesis
@@ -503,8 +526,9 @@
                    :daughters daughters))
               when new
               do        
-                #+:null
+                #+:hdebug
                 (format t "~%>> ~a~%~%" new)
+                (decomposition-record-indices decomposition indices)
                 (agenda-insert 
                   agenda (score-hypothesis new) new))
           (setf (unpacking-hypotheses unpacking)
@@ -615,26 +639,26 @@
                     (setf rels (logior rels (g-edge-rels-covered child)))
                     (setf lexemes (append lexemes (g-edge-lexemes child)))
                   finally
+                    (when result (setf result (restrict-and-copy-tdfs result)))
                     (return
                       (if result
-                          (let ((result (restrict-and-copy-tdfs result)))
-                            (if (g-edge-p edge)
-                              (make-g-edge
-                               :id (next-edge :unpack) :score score
-                               :rule rule :dag result
-                               :category (indef-type-of-tdfs result)
-                               :children children 
-                               :leaves leaves :lex-ids lex-ids
-                               :index (g-edge-index edge)
-                               :mod-index (g-edge-mod-index edge)
-                               :rels-covered rels :lexemes lexemes)
-                              (make-edge
-                               :id (next-edge :unpack) :score score
-                               :rule rule :dag result
-                               :category (indef-type-of-tdfs result)
-                               :from (edge-from edge) :to (edge-to edge)
-                               :children children 
-                               :leaves leaves :lex-ids lex-ids)))
+                        (if (g-edge-p edge)
+                          (make-g-edge
+                           :id (next-edge :unpack) :score score
+                           :rule rule :dag result
+                           :category (indef-type-of-tdfs result)
+                           :children children 
+                           :leaves leaves :lex-ids lex-ids
+                           :index (g-edge-index edge)
+                           :mod-index (g-edge-mod-index edge)
+                           :rels-covered rels :lexemes lexemes :baz edge)
+                          (make-edge
+                           :id (next-edge :unpack) :score score
+                           :rule rule :dag result
+                           :category (indef-type-of-tdfs result)
+                           :from (edge-from edge) :to (edge-to edge)
+                           :children children 
+                           :leaves leaves :lex-ids lex-ids :baz edge))
                         :fail))))
             :fail)))
       (let ((result (hypothesis-edge hypothesis)))

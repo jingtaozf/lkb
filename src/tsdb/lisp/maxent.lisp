@@ -100,22 +100,27 @@
       (open (mem-file model) :direction :output 
             :if-does-not-exist :create :if-exists :supersede))))
 
-(defun read-mem (file)
+(defun read-mem (file &key (verbose t))
   (labels ((|[|-reader (stream char)
                (declare (ignore char))
                (read-delimited-list #\] stream nil)))
     (let* ((*readtable* (copy-readtable nil))
            (*package* (find-package :lkb))
            (model (make-mem))
-           (table (mem-table model)))
+           (table (mem-table model))
+           (name (format 
+                  nil "~a~@[.~a~]"
+                  (pathname-name file) (pathname-type file))))
       (set-syntax-from-char #\. #\space *readtable*)
       (if (probe-file file)
         (with-open-file (stream file :direction :input)
           (unless (and (eq (read stream nil nil) :begin)
                        (eq (read stream nil nil) :mem)
                        (integerp (read stream nil nil)))
-            (format t "read-mem(): invalid header in `~a'.~%" file)
+            (format t "read-mem(): invalid header in `~a'.~%" name)
             (return-from read-mem))
+          (when verbose
+            (format t "~&read-mem(): reading file `~a'.~%" name))
           (loop
               with bodyp = nil
               for form = (read stream nil :eof)
@@ -127,7 +132,7 @@
                     (format 
                      t 
                      "read-mem(): invalid `:begin :feature' block in `~a'.~%"
-                     file)
+                     name)
                     (return-from read-mem))
                   (setf (mem-size model) n)
                   (setf (mem-weights model) 
@@ -165,7 +170,7 @@
                     (return-from read-mem))
                   (setf (aref (mem-weights model) code) weight))
                 (incf (mem-count model))))
-        (format t "read-mem(): unable to open `~a'.~%" file)))))
+        (format t "read-mem(): unable to open `~a'.~%" name)))))
 
 (defun record-feature (feature event model)
   (let ((code (feature-code feature)))

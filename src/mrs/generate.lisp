@@ -463,12 +463,20 @@
                                          edge input-rels)
                                    collect edge)))
                         (*gen-packing-p*
+                         ;;
+                         ;; in packing mode, we need to include the final test
+                         ;; for semantic equality in unpacking, since otherwise
+                         ;; the n-best counting may end up wrong.
+                         ;;
                          (selectively-unpack-edges
                           (loop
                               for edge in candidates
                               when (gen-chart-check-covering edge input-rels)
                               collect edge)
-                          nanalyses))
+                          nanalyses
+                          :test #'(lambda (edge)
+                                    (gen-chart-check-compatible 
+                                     edge input-sem))))
                         (t
                          (loop
                              for edge in candidates
@@ -477,7 +485,9 @@
                       (consistent
                        (loop
                            for edge in complete
-                           when (gen-chart-check-compatible edge input-sem)
+                           when (or *gen-packing-p*
+                                    (gen-chart-check-compatible 
+                                     edge input-sem))
                            collect edge)))
                  (if (null *bypass-equality-check*)
                    consistent
@@ -492,7 +502,11 @@
         (nconc %generator-statistics%
                (pairlis '(:atgc :atcpu :aconses :asymbols :aothers)
                         (list tgc tcpu conses symbols others))))
-      
+      ;;
+      ;; _fix_me_
+      ;; the edge accounting fails to include packed edges and those created
+      ;; during unpacking.                                      (1-jan-05; oe)
+      ;;
       (values
        (extract-strings-from-gen-record) ; also spelling e.g. "a" -> "an"
        *filtered-tasks* *executed-tasks* *successful-tasks*

@@ -251,7 +251,8 @@
     (clear-idioms)
     (setf  *check-paths* nil)
     #+:preprocessor
-    (clear-preprocessor))
+    (clear-preprocessor)
+    (mt:initialize-transfer))
 
 (defun reload-script-file nil
   (if (and *current-grammar-load-file* 
