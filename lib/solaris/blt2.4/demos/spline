@@ -1,0 +1,60 @@
+#!/coli/apps/tcl8.0+tk8.0/bin/bltwish
+#!../bltwish
+
+source bltDemo.tcl
+
+option add *graph.elemScaleSymbols true
+
+# test to show spline over-shooting
+
+set tcl_precision 15
+
+# Make and fill small vectors
+vector a b
+a seq 10 0 -0.5 
+b expr sin(a^3)
+a expr a*a
+a sort b
+vector c d e
+
+# make and fill (x only) large vectors
+a populate c 10
+
+# natural spline interpolation
+spline natural a b c d
+
+# quadratic spline interpolation
+spline quadratic a b c e -error 0.0000005
+
+# make plot
+graph .graph -bg CIEXYZ:0.5/0.5/0.1
+.graph xaxis configure -title "x^2" 
+.graph yaxis configure -title "sin(y^3)"
+
+.graph pen configure activeLine -pixels 5
+.graph element create Original -x a -y b \
+    -color red4 \
+    -fill red \
+    -pixels 5 \
+    -symbol circle
+
+.graph element create Natural -x c -y d \
+    -color green4 \
+    -fill green \
+    -pixels 3 \
+    -symbol triangle
+
+.graph element create Quadratic -x c -y e \
+    -color blue4 \
+    -fill orange2 \
+    -pixels 3 \
+    -symbol diamond 
+
+table . .graph -fill both
+
+Blt_ZoomStack .graph
+Blt_Crosshairs .graph
+Blt_ActiveLegend .graph
+Blt_ClosestPoint .graph
+Blt_PrintKey .graph
+

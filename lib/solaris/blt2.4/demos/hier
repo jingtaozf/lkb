@@ -1,0 +1,52 @@
+#!/coli/apps/tcl8.0+tk8.0/bin/bltwish
+#!../bltwish
+
+proc eavesdrop {args} {
+    puts "eavesdrop: $args"
+    set fracs [.h yview]
+    puts y=[.h yview]
+    eval $args
+}
+
+image create photo activeIcon -file bitmaps/ofolder.gif
+image create photo normalIcon -file bitmaps/folder.gif
+image create photo openGadget -file bitmaps/mini-book2.gif
+image create photo closeGadget -file bitmaps/mini-book1.gif
+image create photo bgTexture -file ./bitmaps/rain.gif
+
+option add *Hierbox.ScrollTile  yes
+option add *icons	"normalIcon activeIcon"
+
+blt::hierbox .h  \
+    -yscrollcommand { .vs set } \
+    -xscrollcommand { .hs set } 
+
+scrollbar .vs -orient vertical -command { .h yview }
+scrollbar .hs -orient horizontal -command { .h xview }
+blt::table . \
+    0,0 .h  -fill both \
+    0,1 .vs -fill y \
+    1,0 .hs -fill x
+
+blt::table configure . c1 r1 -resize none
+
+.h configure -separator "/" -trim "."  
+
+set top $env(HOME)
+.h entry configure root -label [file tail $top] 
+
+cd $top
+
+catch { exec find . 2> /dev/null } files
+
+set files  [split $files \n]
+
+puts stderr \#files=[llength $files]
+puts stderr [time { eval .h insert end $files } ]
+
+.h sort root
+
+focus .h
+
+set nodes [.h find -glob -name *.c]
+eval .h entry configure $nodes -labelcolor red 
