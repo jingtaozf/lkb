@@ -792,8 +792,12 @@
 (defun www-version (stream)
   (format
    stream 
-   "<div id=version>[ERG: ~a &mdash; PET (stable): Aug 12 2003 (17:29:09) ~
-    &mdash; LKB: ~a &mdash; ~a: ~a]</div>~%"
+   "<div id=version>[~
+    <a href=\"http://www.delph-in.net/erg/\">ERG</a>: ~a &mdash; ~
+    <a href=\"http://www.delph-in.net/pet/\"PET</a> ~
+      (stable): Aug 12 2003 (17:29:09) &mdash; ~
+    <a href=\"http://www.delph-in.net/lkb/\">LKB</a>: ~a &mdash; ~
+    <a href=\"http://www.delph-in.net/itsdb/\">~a</a>: ~a]</div>~%"
    (tsdb::current-grammar) 
    (subseq lkb::*cvs-version* 6 (- (length lkb::*cvs-version*) 2))
    tsdb::*tsdb-name* tsdb::*tsdb-version*)
