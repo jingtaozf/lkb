@@ -177,7 +177,7 @@
                (let ((rawgc (- #+mcl (ccl:gctime) tgc)))
                  (setq symbols 0 conses 0
                        others
-                       (- #+mcl (ccl::total-bytes-allocated) #-mcl -1 others)
+                       (- #+mcl (- (ccl::total-bytes-allocated) 24) #-mcl -1 others)
                        tcpu
                        (round (* (- (get-internal-run-time) tcpu) 1000)
                               internal-time-units-per-second)
@@ -290,10 +290,9 @@
                                       (round (* (- (pop times) start) 1000)
                                              internal-time-units-per-second )
                                       total)
-                         for derivation = (format
-                                           nil
-                                           "~s"
-                                           (compute-derivation-tree parse))
+                         for derivation = (write-to-string
+                                           (compute-derivation-tree parse)
+                                           :escape t)
                          for r-redges = (length 
                                          (parse-tsdb-distinct-edges parse nil))
                          for size = (parse-tsdb-count-nodes parse)
@@ -314,10 +313,10 @@
                      (loop
                          for i from (length *parse-record*)
                          for derivation in (rest (assoc :derivations summary))
-                         for string = (format nil "~s" derivation)
+                         for string = (write-to-string derivation :escape t)
                          collect (pairlis '(:result-id :derivation)
                                           (list i string))))))))))))
-    (free)
+    (release-temporary-storage)
     (append
      (when condition
        (pairlis '(:readings 
@@ -326,7 +325,7 @@
                   :timeup)
                 (list -1 
                       (unless burst condition)
-                      (format nil "~a" condition)
+                      (write-to-string condition :escape nil)
                       (when (> *edge-id* *maximum-number-of-edges*)
                         (format nil "edge limit (~a)" *edge-id*)))))
      return)))
@@ -529,11 +528,11 @@
 
 ;;;
 ;;; make an attempt to release references to temporary objects; because the
-;;; Lisp gc() mechanism cannot interprete the generation counter mechanism, we
+;;; Lisp gc() mechanism cannot interpret the generation counter mechanism, we
 ;;; need to explicitly reset all scratch slots.
 ;;;
 
-(defun free ()
+(defun release-temporary-storage ()
   (loop
       for i from 0 to (- *chart-limit* 1)
       for entry = (aref *chart* i 0)
