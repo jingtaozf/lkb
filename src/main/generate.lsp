@@ -20,7 +20,27 @@
               (var-extra var2)))
          (bindings-equal (get-var-num var1)
                          (get-var-num var2)))))
+(defun compatible-types (type1 type2)
+  (if (and (null type1) (null type2)) t ; fudge
+      (user::find-gcsubtype type1 type2)))
+(defun sort-mrs-struct-liszt (liszt)
+   (sort (copy-list liszt)
+      #'(lambda (rel1 rel2)
+          (or (string-lessp (rel-sort rel1) (rel-sort rel2))
+              (and (string-equal (rel-sort rel1) (rel-sort rel2))
+                   (< (get-var-num (rel-handel rel1))
+                      (get-var-num (rel-handel rel2))))))))
 (in-package :cl-user)
+
+
+(defun more-robust-mrs-equalp (mrs1 mrs2 &optional syntactic-p)
+   ;; *** make sure any errors in mrs-equalp don't stop the show
+   (handler-case 
+         (mrs::mrs-equalp mrs1 mrs2 syntactic-p)
+      (error (condition)
+         (warn "Error '~A' occurred in ~A - returning true"
+            condition 'mrs::mrs-equalp)
+         t)))
 
 ;;;
 
@@ -117,7 +137,8 @@
 ;;; for checking resulting bags for equality and finding bag difference. I hope
 ;;; these can go once I have a list of instantiated versions of rules which add
 ;;; semantics - then I can just use the mrs relation structures and simply
-;;; append them to form sets, rather than having bags of relation names ***
+;;; append them to form sets, rather than computing bags of relation names
+;;; from semantics ***
 
 (defun gen-chart-relation-names (edge)
    (let ((sem-fs
@@ -176,6 +197,7 @@
       b1))
 
 
+
 ;;; Interface to generator - take an input MRS, ask for instantiated lexical items
 ;;; and other items that might be applicable, and call generator proper
 
@@ -222,7 +244,9 @@
    (setq *gen-chart* nil)
    (setq *gen-record* nil)
    (let ((*safe-not-to-copy-p* t)
-         (*gen-chart-unifs* 0) (*gen-chart-fails* 0))
+         (*gen-chart-unifs* 0) (*gen-chart-fails* 0)
+         (*input-rels* (mrs::psoa-liszt input-sem)))
+      (declare (special *input-rels*))
       #+(and mcl powerpc) (setq aa 0 bb 0 cc 0 dd 0 ee 0 ff 0 gg 0 hh 0 ii 0 jj 0)
       (dolist (found found-lex-items)
          (let* ((lex-entry-fs (mrs::found-lex-inst-fs found))
@@ -253,8 +277,10 @@
              (act-tot
                 (length (gen-chart-retrieve-with-index *toptype* t))))
          (values
-            ;; !!! assume that final orthography is purely the concatenation of
-            ;; the orthographies of the lexical entries passed in
+            ;; !!! if we look just at the leaves we are assuming that the final
+            ;; orthography is purely the concatenation of the orthographies of the
+            ;; lexical entries passed in - this is not actually correct in general:
+            ;; e.g. "a apple" -> "an apple"
             (mapcar #'g-edge-leaves *gen-record*)
             *gen-chart-unifs* *gen-chart-fails*
             act-tot inact-tot (+ act-tot inact-tot)))))
@@ -264,7 +290,7 @@
 ;;; of input semantics 
 
 (defun gen-chart-find-complete-edges (candidate-edges input-sem)
-   (let ((complete nil)
+   (let ((complete nil) (incompatible nil)
          (partial nil)
          (start-symbols
             (if (listp *start-symbol*) *start-symbol* (list *start-symbol*))))
@@ -279,48 +305,60 @@
                   (gen-chart-root-edges e start-symbols)
                   (gen-filter-root-edges e start-symbols)))
             (if (gen-chart-check-complete new input-sem)
-               (push new complete)
+               (if (gen-chart-check-compatible new input-sem)
+                  (push new complete)
+                  (push new incompatible))
                (push new partial))))
       (when *gen-adjunction-debug*
-         (format t "~&Complete edges: ~:A~%Partial edges: ~:A"
-            (mapcar #'g-edge-id complete)
+         (format t "~&Complete compatible edges: ~:A~%Complete incompatible edges: ~:A~
+                    ~%Partial edges: ~:A"
+            (mapcar #'g-edge-id complete) (mapcar #'g-edge-id incompatible)
             (mapcar #'g-edge-id partial)))
       (values complete partial)))
 
 
 (defun gen-chart-check-complete (edge input-sem)
-   ;; check that semantics of edge is equivalent to input-sem
-   ;; first do quick check verifying set equality of relation names, then if
-   ;; that succeeds construct the MRS and check equality of that
-   ;; *** we really want a test for 'compatibility' rather than equality - in
+   ;; check that semantics of edge is subsumed by input-sem
+   ;; *** rules may have introduced semantics, so we can't just look at lexical
+   ;; items' semantics and compare with input - we need to also take into
+   ;; account relations created by the rules used so far
+   ;; - in time this will be present in rels-covered field, but not yet
+   ;; (gen-chart-set-equal-p (g-edge-rels-covered edge) (mrs::psoa-liszt input-sem))
+   ;; For now we just compute the bag of relation names from the semantics
+   (gen-chart-bag-equal-p (gen-chart-relation-names edge)
+      (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem))))
+
+
+(defun gen-chart-check-compatible (edge input-sem)
+   ;; construct the MRS for edge
+   ;; We test for 'compatibility' rather than equality - in
    ;; particular, semantics of generated string might be more specific than
-   ;; input MRS wrt things like scope
-   ;; they are already guaranteed to be compatible wrt relation arguments since
+   ;; input MRS wrt things like scope - so we pass 3nd arg of nil to mrs-equalp
+   ;; Semantics are already guaranteed to be compatible wrt relation arguments since
    ;; these were skolemised in the input MRS
-   (and
-      ;; *** rules may have introduced semantics, so we can't just look at lexical
-      ;; items' semantics and compare with input
-      ;; (gen-chart-set-equal-p (g-edge-rels-covered edge) (mrs::psoa-liszt input-sem))
-      (gen-chart-bag-equal-p (gen-chart-relation-names edge)
-         (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem)))
-      (let ((sem-fs
-               (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
-                   mrs::*initial-semantics-path*)))
-         (if (mrs::is-valid-fs sem-fs)
-            (let ((mrs (mrs::construct-mrs sem-fs nil t)))
-               ;; won't allow "in the city kim interviewed" with input mrs from
-               ;; "kim interviewed in the city"
-               ;;(mrs::output-mrs input-sem 'mrs::simple)
-               ;;(mrs::output-mrs mrs 'mrs::simple)
-               ;;(print (mrs::mrs-equalp mrs input-sem nil))
-               (and ; *** how do you check mrs for equality properly? (handel values
-                    ; may be variously fully instantiated or not, or have different
-                    ; names but refer to same relation if instantiated)
-                    ; this is just a crude top-level check
-                   (equal (mrs::var-name (mrs::psoa-handel mrs))
-                      (mrs::var-name (mrs::psoa-handel input-sem)))
-                   (equal (mrs::var-name (mrs::psoa-index mrs))
-                      (mrs::var-name (mrs::psoa-index input-sem)))))))))
+   (let ((sem-fs
+            (existing-dag-at-end-of (tdfs-indef (g-edge-dag edge))
+                mrs::*initial-semantics-path*)))
+      (if (mrs::is-valid-fs sem-fs)
+         (let ((mrs (mrs::construct-mrs sem-fs nil t)))
+            ;; (mrs::output-mrs input-sem 'mrs::simple)
+            ;; (mrs::output-mrs mrs 'mrs::simple)
+            ;; *** trap errors
+            (more-robust-mrs-equalp mrs input-sem nil)
+#|
+            ;; old version
+            ;; allows "in the city kim interviewed" generating from input mrs from
+            ;; "kim interviewed in the city"
+            (and ; *** how do you check mrs for equality properly? (handel values
+                 ; may be variously fully instantiated or not, or have different
+                 ; names but refer to same relation if instantiated)
+                 ; this is just a crude top-level check
+                (equal (mrs::var-name (mrs::psoa-handel mrs))
+                   (mrs::var-name (mrs::psoa-handel input-sem)))
+                (equal (mrs::var-name (mrs::psoa-index mrs))
+                   (mrs::var-name (mrs::psoa-index input-sem))))
+|#
+            ))))
 
 
 (defun gen-chart-root-edges (edge start-symbols)
@@ -412,9 +450,9 @@
    ;; only once since some rules can introduce relations
    ;; *** a stronger - and more expensive - filter would also check indices for
    ;; compatibility
-   (when (not (gen-chart-subbag-p (gen-chart-relation-names edge)
-                 (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem))))
-; *** (not (gen-chart-subset-p (g-edge-rels-covered edge) (mrs::psoa-liszt input-sem)))
+   (unless (gen-chart-subbag-p (gen-chart-relation-names edge)
+               (mapcar #'mrs::rel-sort (mrs::psoa-liszt input-sem)))
+      ;; *** (gen-chart-subset-p (g-edge-rels-covered edge) (mrs::psoa-liszt input-sem))
       (when *gen-filter-debug*
          (format t "~&Filtered out candidate inactive edge covering ~A ~
                     with lexical relations ~(~A~) that are not a subset of ~
@@ -544,6 +582,10 @@
 (defun gen-chart-finish-active (act)
    ;; turn active into an inactive edge
    (setf (g-edge-res act) nil)
+   ;; *** there may be extra relations coming from the rule application, but I
+   ;; can't detect them as yet, unfortunately
+   ;; (setf (g-edge-rels-covered act)
+   ;;    (nconc (gen-chart-extra-rels-covered act) (g-edge-rels-covered act)))
    (setf (g-edge-leaves act)
       (apply #'append (g-edge-leaves act)))
    act)
@@ -608,13 +650,15 @@
 
 
 
-;;; Second phase, where modifiers are introduced
+;;; Second phase, where intersective modifiers are introduced
 ;;;
 ;;; if we could find just one preferred partial edge at this point then we would
 ;;; potentially save a lot of work of inserting modifiers into all the other
 ;;; analyses
 ;;;
-;;; find missing rels and look for sets of potential modifier edges that cover them
+;;; find missing rels and look for sets of potential modifier edges that cover them,
+;;; then try inserting modifier edges into partial edge and recompute nodes higher
+;;; up in tree
 
 (defun gen-chart-adjoin-modifiers (partial-edges input-sem)
    (let ((*active-modifier-edges* nil)
@@ -624,22 +668,35 @@
       (declare (special *active-modifier-edges*))
       (dolist (partial partial-edges)
          (when *gen-adjunction-debug*
-            (format t "~&Partial edge [~A] spanning ~A" (g-edge-id partial)
+            (format t "~&---~%Partial edge [~A] spanning ~:A" (g-edge-id partial)
                (g-edge-leaves partial)))
-         (let ((missing-rels
-                 (remove-if ; ***
-                    #'(lambda (r) (member r '(prpstn_rel hypo_rel MESSAGE ABSTR_E_REL SUPPORT_REL)))
-                    (gen-chart-set-difference
-                       (mrs::psoa-liszt input-sem) (g-edge-rels-covered partial))
-                    :key #'mrs::rel-sort)))
+         (let* ((*optional-rel-names* nil)
+                (missing-rels
+                  ;; *** don't go looking for rels that do not not always come from
+                  ;; lexical entries. But do allow an edge to have one or more of them
+                  ;; i.e. they're optional. When we have info about rels coming frm
+                  ;; rules this slop can be removed
+                  (remove-if
+                     #'(lambda (r)
+                         (when (some #'(lambda (type) (or (eq r type) (subtype-p r type)))
+                                     '(MESSAGE ABSTR_E_REL SUPPORT_REL))
+                            (pushnew r *optional-rel-names* :test #'eq)
+                            t))
+                     (gen-chart-set-difference
+                        (mrs::psoa-liszt input-sem) (g-edge-rels-covered partial))
+                     :key #'mrs::rel-sort)
+                  ))
+            (declare (special *optional-rel-names*))
             (when *gen-adjunction-debug*
-               (format t "~&Missing rel names ~A" (mapcar #'mrs::rel-sort missing-rels)))
+               (format t "~&Missing relations ~:A" (mapcar #'mrs::rel-sort missing-rels))
+               (when *optional-rel-names*
+                   (format t "~&'Optional' relations ~:A" *optional-rel-names*)))
             (dolist (mod-alt
                       (gen-chart-mod-edge-partitions
                          (list (car missing-rels)) (cdr missing-rels) (cdr missing-rels)
                          mod-candidate-edges cached-rels-edges))
                (when *gen-adjunction-debug*
-                  (print 
+                  (format t "~&Relation partitions ~:A"
                      (mapcar
                         #'(lambda (rels-and-edges)
                              (cons (mapcar #'mrs::rel-sort (car rels-and-edges))
@@ -682,8 +739,18 @@
       (when (eq rels-edges t)
          (setq rels-edges nil)
          (dolist (e mod-candidate-edges)
-            (when (gen-chart-set-equal-p (g-edge-rels-covered e) rels)
-               (push e rels-edges)))
+            (let ((rels-covered (g-edge-rels-covered e)))
+               (declare (special *optional-rel-names*))
+               ;; *** optionality only needed because no one tells us when rules
+               ;; introduce rels - see comment above
+               (when *optional-rel-names*
+                  (setq rels-covered
+                     (remove-if
+                        #'(lambda (r)
+                             (member (mrs::rel-sort r) *optional-rel-names* :test #'eq))
+                        rels-covered)))
+               (when (gen-chart-set-equal-p rels-covered rels)
+                  (push e rels-edges))))
          (setf (gethash rels cached-rels-edges) rels-edges))
       (if rest
          (nconc
@@ -716,6 +783,9 @@
                                         (remove path (cdr (rule-order rule))))
                                      (position path (cdr (rule-order rule))))))
                               (when act
+                                 (unless (eql (length (g-edge-needed act)) 1)
+                                    (error "Intersective modification rule ~A is not ~
+                                            binary branching" (rule-id rule)))
                                  (gen-chart-add-with-index act *toptype*)
                                  (when *gen-adjunction-debug*
                                     (format t "~&Inactive [~A] -> active [~A]"
@@ -793,10 +863,7 @@
                    (dolist (act act-set)
                       ;; (print (list (g-edge-id edge) (g-edge-id act)))
                       (let ((new-edge (gen-chart-test-active edge act nil t)))
-                         (when (and new-edge
-                                    (not (g-edge-needed new-edge)))
-                            ;; only works if mod rules are binary branching so we have an
-                            ;; inactive edge now
+                         (when new-edge
                             (gen-chart-finish-active new-edge) 
                             ;(when *gen-adjunction-debug*
                             ;   (print
@@ -838,15 +905,12 @@
                   (make-g-edge
                      :id (next-edge) :rule-number (rule-id rule)
                      :dag unified-dag
-                     :res nil
                      :needed nil
                      :rels-covered
-                     (mapcan #'(lambda (x) (copy-list (g-edge-rels-covered x)))
-                        daughters)
+                     (apply #'append (mapcar #'g-edge-rels-covered daughters))
                      :children daughters
-                     :leaves
-                     (mapcan #'(lambda (x) (copy-list (g-edge-leaves x)))
-                        daughters))))
+                     :leaves (mapcar #'g-edge-leaves daughters))))
+               (gen-chart-finish-active new-edge)
                (gen-chart-add-with-index new-edge *toptype*)
                (list (cons new-edge mods)))))))
 
