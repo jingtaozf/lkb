@@ -2149,7 +2149,7 @@
                             (read-from-string derivation) 
                             derivation)))
          (reconstruct-item i-id i-input derivation))))))
-
+
 (defun summarize-performance-parameters 
     (items 
      &key (fields *statistics-performance-summary*)
@@ -2576,8 +2576,8 @@
              (+ naggregates 4)  (divide ftasks bytes)
              (+ naggregates 4)  (divide etasks bytes)
              (+ naggregates 4)  (divide stasks bytes)
-             (+ naggregates 4)  (divide unifications tcpu)
-             (+ naggregates 4)  (divide copies tcpu)
+             (+ naggregates 4)  (divide unifications bytes)
+             (+ naggregates 4)  (divide copies bytes)
              (+ naggregates 4)  (divide aedges bytes)
              (+ naggregates 4)  (divide pedges bytes)
              (+ naggregates 4)  (divide rpedges bytes)))))))

@@ -615,7 +615,9 @@
                    '("Enlarged Tree" :value show)
                    (list "MRS" :value 'mrs :active *mrs-loaded*)
                    (list "Indexed MRS" :value 'indexed :active *mrs-loaded*)
-                   (list "Scoped MRS" :value 'scoped :active *mrs-loaded*))))
+                   (list "Scoped MRS" :value 'scoped :active *mrs-loaded*)
+                   (list "Dependencies" :value 'dependencies 
+                         :active *mrs-loaded*))))
         (edge (get (ptree-top tree) 'edge-record)))
     (when command
       (handler-case
@@ -645,7 +647,10 @@
                (ignore-errors (funcall 'show-mrs-indexed-window edge))))
             (scoped
              (when edge
-               (ignore-errors (funcall 'show-mrs-scoped-window edge)))))
+               (ignore-errors (funcall 'show-mrs-scoped-window edge))))
+            (dependencies
+             (when edge
+               (ignore-errors (funcall 'show-mrs-dependencies-window edge)))))
         (storage-condition (condition)
           (with-output-to-top ()
             (format t "~%Memory allocation problem: ~A~%" condition)))

@@ -10,7 +10,8 @@
 
 (defparameter %mrs-relevant-features% 
   '("ARG" "ARG1" "ARG2" "ARG3" "ARG4" "BV" "SOA" "NAMED" "CONST_VALUE"
-    "L-INDEX" "R-INDEX" "L-HANDEL" "R-HANDEL" "MAIN" "SUBORD" "ROLE"))
+    "L-INDEX" "R-INDEX" "L-HANDEL" "R-HANDEL" "MAIN" "SUBORD" "ROLE"
+    "HINST" "NHINST"))
 
 (defun mrs-output-psoa (psoa &key (stream t))
   (if (psoa-p psoa)

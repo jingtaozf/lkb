@@ -681,3 +681,15 @@
          t
          "total: ~d; correct: ~d: ~,2f~%"
          tsum msum (/ msum tsum))))
+
+(defun qtree (tree &key (stream t))
+  (let ((root (derivation-root tree))
+        (daughters (derivation-daughters tree)))
+    (if (null daughters)
+      (format stream "\\leaf{~a}~%" root)
+      (loop
+          for daughter in daughters
+          do
+            (qtree daughter :stream stream)
+          finally
+             (format stream "\\branch{~d}{~a}~%" (length daughters) root)))))

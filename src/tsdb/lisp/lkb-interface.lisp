@@ -354,7 +354,7 @@
                     (when configuration 
                       (chart-configuration-end configuration)))))
       (cond
-       ((and (edge-morph-history edge) (edge-spelling-change edge))
+       ((edge-morph-history edge)
         (list id (edge-label edge) score start end
               (compute-derivation-tree (edge-morph-history edge))))
        ((null (edge-children edge))

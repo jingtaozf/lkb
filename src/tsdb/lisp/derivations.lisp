@@ -39,17 +39,21 @@
 (defmacro derivation-start (derivation)
   `(if (integerp (first ,derivation)) 
      (fourth ,derivation)
-     (second ,derivation)))
+     (when (integerp (second ,derivation))
+       (second ,derivation))))
 
 (defmacro derivation-end (derivation)
   `(if (integerp (first ,derivation)) 
      (fifth ,derivation)
-     (third ,derivation)))
+     (when (integerp (second ,derivation))
+       (third ,derivation))))
 
 (defmacro derivation-daughters (derivation)
   `(if (integerp (first ,derivation))
      (rest (rest (rest (rest (rest ,derivation)))))
-     (rest (rest (rest ,derivation)))))
+     (if (integerp (second ,derivation))
+       (rest (rest (rest ,derivation)))
+       (rest ,derivation))))
 
 (defun derivation-depth (derivation)
   (if (null derivation)
