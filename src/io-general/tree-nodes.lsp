@@ -266,7 +266,9 @@
   (let ((feats (top-level-features-of tmpl-fs)))
     (set-difference feats (list (car *label-path*)
                                 (car *prefix-path*)
-                                (car *suffix-path*)))))
+                                (car *suffix-path*)
+                                (car *args-path*)))))
+
                               
 ;;; JAC added the following to parseout.lsp, but better here
 
