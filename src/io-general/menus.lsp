@@ -41,7 +41,7 @@
                       lkb::toggle-rmrs-xml
                       ;; lexical db
                       lkb::command-merge-into-psql-lexicon
-                      lkb::command-dump-psql-lexicon
+                      ;lkb::command-dump-psql-lexicon
                       lkb::command-export-lexicon-to-tdl
                       lkb::command-load-tdl-to-scratch
                       lkb::command-clear-scratch
