@@ -31,8 +31,12 @@
         (mrs::output-mrs1 output 'mrs::simple stream))
       (mrs::browse-mrs output "Transfer Result"))))
 
-(defun translate (&key (file "/tmp/.transfer"))
+(defun translate (&key serverp (file "/tmp/.transfer"))
   (declare (special %mrs%))
+  
+  (when serverp
+    (loop
+        until (probe-file file) do (sleep 1)))
   (when (probe-file file)
     (with-open-file (stream file :direction :input)
       (let* ((mrs (mrs::read-mrs-from-file file))
@@ -40,7 +44,10 @@
         ;(delete-file file)
         (setf %mrs% mrs)
         (generate-from-mrs mrs)
-        (show-gen-result)))))
+        (show-gen-result))))
+  (when serverp 
+    (delete-file file)
+    (translate :serverp serverp :file file)))
 
 
 ;;; functions that allow for translation (using interlingua)
