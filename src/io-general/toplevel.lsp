@@ -347,6 +347,31 @@
       (nreverse current-sentence)))
 
 
+;;; "Generate"
+;;;
+;;; "Generate" do-parse
+
+
+(defparameter *last-generate-from-edge* 1)
+
+
+(defun generate-from-edge nil
+   (let ((possible-edge-name 
+            (ask-for-lisp-movable "Current Interaction" 
+               `(("Parser edge number for input MRS?" . ,*last-generate-from-edge*)) 60)))
+      (when possible-edge-name
+         (setf *last-generate-from-edge* (car possible-edge-name))
+         (let ((parser-edge (find-edge-given-id (car possible-edge-name))))
+            (when parser-edge
+               (let ((input-sem
+                        (car (mrs::extract-mrs (list parser-edge)))))
+                  (if (mrs::psoa-liszt input-sem)
+                     (progn
+                        (generate-from-mrs input-sem)
+                        (show-gen-result))
+                     (format t "~%Could not extract any MRS relations from edge ~A"
+                        (car possible-edge-name)))))))))
+
 
 #|
 ;;; "Type file" output-type-file
