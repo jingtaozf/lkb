@@ -103,6 +103,8 @@
 
 (defvar *type-names* nil)
 
+(defvar *partitions* nil)
+
 (defparameter *hierarchy-only-p* nil)
 
 (defparameter *display-glb-messages* nil
@@ -112,17 +114,26 @@
 (defun check-type-table nil
    (scratch 'glbtype)
    (format t "~%Checking type hierarchy")
-   (setf *type-names* (collect-type-names))
+   (setq *type-names* (sort (collect-type-names) #'string-lessp))
    (when *toptype*
      (when 
-         (add-daughters-to-type-table)
+       (add-daughters-to-type-table)
        (when (check-for-cycles-etc *toptype*)
          (unmark-type-table)
+         (set-up-ancestors-and-descendants)
          (format t "~%Checking for unique greatest lower bounds") 
-         (compute-and-add-glbtypes)
-	 (setf *type-names* (sort *type-names* #'string-lessp))
-         (set-up-descendants *toptype*)
-         (add-ancestors-to-type-table *toptype*)
+         (let ((*partitions* nil) (glbp nil))
+            (find-good-partitions *toptype*)
+            (unmark-type-table)
+            ;; (format t "~%Constructing glb types") (force-output t)
+            (dolist
+               (partition
+                  ;; sort so behaviour reproducible if grammar has not changed
+                  (sort *partitions* #'> :key #'length))
+               (setq glbp (compute-and-add-glbtypes partition glbp)))
+            ;; (unless glbp (format t "~%No glb types needed"))
+            )
+         (set-up-ancestors-and-descendants)
          (if *hierarchy-only-p*
            (expand-local-only-constraints)
            (progn
@@ -136,8 +147,8 @@
                  (format t "~%Expanding defaults")
                  (when (expand-type-hierarchy-defaults)
                    (format t "~%Type file checked successfully")
-		   (gc-types)
-                   (clear-type-cache)	; not for consistency, but for efficiency
+                   (gc-types)
+                   (clear-type-cache) ; not for consistency, but for efficiency
                    t)))))))))
 
 
@@ -175,10 +186,10 @@
 
 (defun unmark-type-table nil
    (maphash 
-    #'(lambda (node type-entry)
-           (declare (ignore node))
-           (clear-marks type-entry))
-        *types*))
+      #'(lambda (node type-entry)
+          (declare (ignore node))
+          (clear-marks type-entry))
+      *types*))
 
 
 ;;; First we need to check that the type hierarchy itself is OK
@@ -317,69 +328,80 @@
    ok))
 
 
-;;; Set up descendants and ancestors after glb computation
+;;; Set up descendants and ancestors - done before glb computation
+;;; because needed for partition finding, and after as well since so much
+;;; changes during glb computation that it's not worth trying to keep
+;;; descendants and ancestors up-to-date during it
 
-(defun set-up-descendants (type)
-  (let ((type-entry (get-type-entry type)))
-    (or (type-descendants type-entry)
-        (let ((daughters (type-daughters type-entry))
-              (descendants nil))
-          (dolist (daughter daughters)
-	    (pushnew (get-type-entry daughter) descendants :test #'eq)
-	    (dolist (descendant (set-up-descendants daughter))
-	      (pushnew descendant descendants :test #'eq)))
-          (setf (type-descendants type-entry) descendants)
-          descendants))))
+(defun set-up-ancestors-and-descendants ()
+   (maphash 
+      #'(lambda (node type-entry)
+          (declare (ignore node))
+          (setf (type-ancestors type-entry) nil)
+          (setf (type-descendants type-entry) nil))
+      *types*)
+   (maphash 
+      #'(lambda (node type-entry)
+          (declare (ignore node))
+          (set-up-ancestors type-entry))
+      *types*)
+   (set-up-descendants (get-type-entry *toptype*)))
 
-
-(defun add-ancestors-to-type-table (top-node)
-  (declare (ignore top-node))
-  (for type in *type-names*
-       do
-       (let ((type-entry (get-type-entry type)))
-         (calculate-ancestors type-entry))))
-
-(defun calculate-ancestors (type-entry)
+(defun set-up-ancestors (type-entry)
   (or (type-ancestors type-entry)
-      (let* ((parents (type-parents type-entry))
-             (ancestors nil))
-        (dolist (parent parents)
-	  (pushnew (get-type-entry parent) ancestors :test #'eq)
-	  (dolist (ancestor (calculate-ancestors (get-type-entry parent)))
-	    (pushnew ancestor ancestors :test #'eq)))
+      (let ((parents (type-parents type-entry))
+            (ancestors nil))
+        (when parents
+           (setq ancestors
+              (cons (get-type-entry (car parents))
+                 (set-up-ancestors (get-type-entry (car parents)))))
+           (dolist (parent (cdr parents))
+	      (pushnew (get-type-entry parent) ancestors :test #'eq)
+	      (dolist (ancestor (set-up-ancestors (get-type-entry parent)))
+	         (pushnew ancestor ancestors :test #'eq))))
         (setf (type-ancestors type-entry) ancestors)
         ancestors)))
 
+(defun set-up-descendants (type-entry)
+  (or (type-descendants type-entry)
+      (let ((daughters (type-daughters type-entry))
+            (descendants nil))
+         (when daughters
+            (setq descendants
+               (cons (get-type-entry (car daughters))
+                  (set-up-descendants (get-type-entry (car daughters)))))
+            (dolist (daughter (cdr daughters))
+	       (pushnew (get-type-entry daughter) descendants :test #'eq)
+	       (dolist (descendant (set-up-descendants (get-type-entry daughter)))
+	          (pushnew descendant descendants :test #'eq))))
+         (setf (type-descendants type-entry) descendants)
+         descendants)))
 
-#|
-;;; Not currently used
-;;; but might be useful to partition the hierarchy to shorten the type bit
-;;; representations and reduce the number of comparisons performed from
+
+;;; Compute partitions of the hierarchy, returning a list of lists of nodes
+;;; which are mutually independent. Shortens the type bit
+;;; representations and reduces the number of comparisons performed from
 ;;; ntypes^2 to (a^2 + b^2 + ...) where a,b,... are sizes of partitions
 
 (defun find-good-partitions (type)
-  ;; doing the glb stuff over the entire hierarchy is very slow when we have
-  ;; lots of multiple inheritance.  This function attempts to find manageable
-  ;; subchunks, returning a list of lists of nodes which should be mutually
-  ;; independent 
   ;; AAC - Oct 12 1998 - faster version
   (let* ((type-entry (get-type-entry type))
          (daughters (type-daughters type-entry)))
-    (unless (or (active-node-p type-entry)
-                (seen-node-p type-entry))
+    (when (and (not (active-node-p type-entry))
+               (not (seen-node-p type-entry)))
       (mark-node-active type-entry)
       (when daughters
-        (let ((descendants (type-descendants type-entry)))
-          (dolist (daughter daughters)
-	    (find-good-partitions daughter))
+        (dolist (daughter daughters)
+	   (find-good-partitions daughter))
+        (let* ((descendants (type-descendants type-entry))
+               (desc-names (mapcar #'type-name descendants)))
           (when 
 	      (for descendant in descendants
                    all-satisfy
 		   (or (seen-node-p descendant)
-		       (and (or (null (cdr (type-parents descendant)))
-				(subsetp (type-parents descendant)
-					 (mapcar #'type-name descendants)
-					 :test #'eq)))))
+		       (null (cdr (type-parents descendant)))
+                       (subsetp
+                          (type-parents descendant) desc-names :test #'eq)))
             (let ((partition-nodes
                    (for descendant in descendants
                         filter
@@ -387,8 +409,7 @@
 			  (mark-node-seen descendant)
 			  descendant))))
 	      (when partition-nodes
-		(push partition-nodes *partition*)))))))))
-|#
+		(push (cons type-entry partition-nodes) *partitions*)))))))))
 
 
 ;;; Glb type computation. Assigns a (temporary) bit representation for
@@ -451,7 +472,8 @@
 
 (progn
 (defconstant +fixnum-len+
-   (min (1+ (integer-length most-positive-fixnum)) (1+ (integer-length most-negative-fixnum))))
+   (min (1+ (integer-length most-positive-fixnum))
+        (1+ (integer-length most-negative-fixnum))))
 
 (defun make-bit-code (length)
    (make-array (ceiling length +fixnum-len+) :element-type t :initial-element 0))
@@ -527,13 +549,13 @@
 )
 
 
-;;; Entry point for glb computation compute-and-add-glbtypes. Don't need to
+;;; Entry point for glb computation: compute-and-add-glbtypes. Don't need to
 ;;; consider any types that are at the fringe of the hierarchy and have only
 ;;; a single parent
 ;;;
 ;;; Type codes can be looked up efficiently by hashing them on the index of
 ;;; their first non-zero bit. Thanks to Ulrich Callmeier for the code
-;;; on which this is based
+;;; on which much of this is based
 
 (defvar *bit-coded-type-table*)
 
@@ -547,55 +569,53 @@
          (return type))))
 
 
-(defmacro external-single-parent-type-p (type-entry)
-   `(and (null (type-daughters ,type-entry))
-         (null (cdr (type-parents ,type-entry)))))
+(defun external-single-parent-type-p (type-entry)
+   (and (null (type-daughters type-entry))
+        (null (cdr (type-parents type-entry)))))
 
-(defun compute-and-add-glbtypes nil
+(defun compute-and-add-glbtypes (types glbp)
    (let*
       ((internal-types
-          (mapcan
-             #'(lambda (x)
-                 (unless (external-single-parent-type-p (get-type-entry x))
-                    (list (get-type-entry x))))
-             *type-names*))
-        (ntypes (length internal-types))
-        (*bit-coded-type-table* (make-array ntypes :initial-element nil)))
-      (assign-type-bit-codes *toptype* ntypes)
-      (format t "~%Constructing glb types") (force-output t)
-      (let ((glbtypes
-              (compute-glbtypes-from-bit-codes internal-types ntypes)))
-         (if glbtypes
-            (progn
-               (format t "~%Inserting glb types") 
-               (insert-glbtypes-into-hierarchy internal-types glbtypes))
-            (format t "~%No glb types needed"))
-         (dolist (type (append glbtypes internal-types))
-            (setf (type-bit-code type) nil)))))
+          (cons (car types)
+             (remove-if #'external-single-parent-type-p (cdr types))))
+       (ntypes (length internal-types)))
+      (if (> ntypes 3)
+         (let ((*bit-coded-type-table* (make-array ntypes :initial-element nil)))
+            (assign-type-bit-codes internal-types ntypes)
+            (let ((glbtypes
+                    (compute-glbtypes-from-bit-codes internal-types ntypes)))
+               (when glbtypes
+                  ;; (format t "~A~A" (if glbp "+" " ") (length glbtypes))
+                  ;; (force-output t)
+                  (insert-glbtypes-into-hierarchy internal-types glbtypes))
+               (dolist (type (append glbtypes internal-types))
+                  (setf (type-bit-code type) nil))
+               (or glbp glbtypes)))
+         glbp)))
 
 
-(defun assign-type-bit-codes (type ntypes)
-   ;; assign a bit code to every type of length the number of types in the
-   ;; hierarchy, being the OR of all its descendants with one additional bit
-   ;; set
+(defun assign-type-bit-codes (types ntypes)
+   ;; assign a bit code to types (of length the number of types), the first
+   ;; element being the common ancestor of all of them. Code for each type
+   ;; is the OR of all its descendants with one additional bit set
    (let ((n ntypes))
       (labels
          ((assign-type-bit-codes1 (type)
-            (let* ((type-entry (get-type-entry type))
-                   (code (type-bit-code type-entry)))
+            (let ((code (type-bit-code type)))
                (unless code
                   (setq code (make-bit-code ntypes))
-                  (setf (type-bit-code type-entry) code)
-                  (dolist (d (type-daughters type-entry))
-                     (unless (external-single-parent-type-p (get-type-entry d))
-                        (setq code
-                           (bit-code-ior code (assign-type-bit-codes1 d) code))))
+                  (setf (type-bit-code type) code)
+                  (dolist (d-name (type-daughters type))
+                     (let ((d (get-type-entry d-name)))
+                        (when (member d types :test #'eq)
+                           (setq code
+                              (bit-code-ior code (assign-type-bit-codes1 d) code)))))
                   (decf n)
                   (set-bit-code code n)
-                  (push type-entry
+                  (push type
                      (get-bit-coded-type *bit-coded-type-table* code)))
                code)))
-         (assign-type-bit-codes1 type))))
+         (assign-type-bit-codes1 (car types)))))
 
 
 (defun compute-glbtypes-from-bit-codes (types ntypes)
@@ -622,16 +642,13 @@
                          (new-type-entry (make-type :name name :glbp t)))
                      (when *display-glb-messages*
 	                (format t "~%Fixing ~A and ~A with ~A" 
-		           (car t1) (car t2) name))
+		           (car t1) (car t2) new-type-entry))
                      (setf (type-bit-code new-type-entry) temp)
                      (push new-type-entry
                         (get-bit-coded-type *bit-coded-type-table* temp))
                      (push new-type-entry glbtypes)
                      (push new-type-entry new)
                      (setq temp (make-bit-code ntypes))))))
-         (when new
-            (format t "~A~A" (if (= (length types) ntypes) " " "+") (length new))
-            (force-output t))
          (setq types new new nil))))
 
 
@@ -685,7 +702,7 @@
 
          
 (defun insert-new-type-into-hieriarchy (new-type new-type-entry parents daughters)
-   ;; ancestors and descendants are computed later
+   ;; ancestors and descendants are updated later in a single pass
    (create-mark-field new-type-entry)
    (set-type-entry new-type new-type-entry)   
    (setf (type-daughters new-type-entry) (mapcar #'type-name daughters))
