@@ -1062,7 +1062,7 @@
 
 ;;;
 ;;; functions to facilitate ambiguity packing: currently, hard-wire which parts
-;;; of the structure are deleted: everything below `CONT' (at all levels) except
+;;; of the structure have to go: everything below `CONT' (at all levels) except
 ;;; for `CONT|MESSAGE'.  this badly needs a generalization using both PAGE-type
 ;;; restrictors as well as a mechanism to extinct all occurences of a feature.
 ;;;                                                          (12-nov-99  -  oe)
@@ -1080,7 +1080,8 @@
     (let* ((type (if (eq (first path) 'cont) 'cont (dag-type old)))
            (arcs (if (eq (first path) 'cont)
                    (let ((message (unify-arcs-find-arc
-                                   'message (dag-arcs old) (dag-comp-arcs old)))
+                                   'message 
+                                   (dag-arcs old) (dag-comp-arcs old)))
                          (path (cons 'message path)))
                      (declare (dynamic-extent path))
                      (when message
@@ -1096,7 +1097,8 @@
                            (declare (dynamic-extent path))
                            (make-dag-arc :attribute label
                                          :value (copy-dag-partially1
-                                                 (dag-arc-value arc) path)))))))
+                                                 (dag-arc-value arc) 
+                                                 path)))))))
       (setf (dag-visit old) (make-dag :type type :arcs arcs)))))
 
 
