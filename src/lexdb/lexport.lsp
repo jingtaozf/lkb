@@ -94,11 +94,11 @@
   
   (setf *postgres-export-separator* separator)
 
-  ;;; extra data in db entries
-  (setf *postgres-current-source* (get-current-source))
-  (setf *postgres-export-timestamp* (extract-date-from-source *postgres-current-source*))
-  
   (unless use-defaults
+    ;; extra data in db entries
+    (setf *postgres-current-source* (get-current-source))
+    (setf *postgres-export-timestamp* (extract-date-from-source *postgres-current-source*))
+  
     (setf *postgres-current-source* 
       (ask-user-for-x 
        "Export Lexicon" 

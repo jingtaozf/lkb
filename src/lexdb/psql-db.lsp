@@ -136,11 +136,12 @@
 			  revision-filename 
 			  new-entries-filename)  
   (format t "~%")
-  (fn-get-val lexicon ''merge-into-db 
-	      revision-filename 
-	      new-entries-filename)
-  (format *postgres-debug-stream* "~%(vacuuming)")
-  (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM")))
+  (let ((num-new-entries (fn-get-val lexicon ''merge-into-db 
+				     revision-filename 
+				     new-entries-filename)))
+;    (format *postgres-debug-stream* "~%(vacuuming)")
+;    (run-query lexicon (make-instance 'sql-query :sql-string "VACUUM"))
+    num-new-entries))
 
 (defmethod merge-defn ((lexicon psql-lex-database) 
 			  defn-filename)  
