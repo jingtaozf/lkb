@@ -138,6 +138,10 @@
                         (:ebl
                          (output-for-ebl orth fs ostream (car result-pair)
                                          lex-name lex-entry-fs))
+                        (:chic
+                         (output-for-chic orth fs ostream (car result-pair) 
+                                          lex-name lex-entry-fs 
+                                          (lex-or-psort-infl-pos lex-entry)))
                         (t (error "Unsupported syntax specifier ~A"
                                   syntax))))
                     (incf idno))))))))
@@ -172,10 +176,18 @@
             other-rules
             category)))
 
+(defvar *dag-inflected-path* '(inflected))
+
+(defun dag-inflected-p (dag)
+  (let* ((key (existing-dag-at-end-of dag *dag-inflected-path*))
+         (type (and (dag-p key) (dag-type key))))
+    (when type
+      (or (eq type '+) (and (consp type) (eq (first type) '+))))))
+
 (defun output-for-chic (orth fs ostream rule-list base-id base-fs infl-pos)
-  (declare (ignore fs))
   (let* ((type (type-of-fs (tdfs-indef base-fs)))
          (infl-rules nil)
+         (infl (dag-inflected-p (tdfs-indef fs)))
          (other-rules nil))
     (declare (ignore type))
     (for rule in rule-list 
@@ -184,14 +196,16 @@
              (push rule infl-rules)
            (push rule other-rules)))
     (unless other-rules
-      (format ostream 
-              "  {\"~(~S~)\", ~S, NULL, ~:[NULL~*~;\"~(~S~)\"~], ~S, ~S},~%" 
-              base-id
-              (if infl-pos (nth (- infl-pos 1) (split-into-words orth)) orth)
-              infl-rules
-              (if infl-rules (first infl-rules))
-              (if infl-pos infl-pos 0)
-              (length (split-into-words orth))))))
+      (if infl
+          (format ostream 
+                  "  {\"~(~S~)\", ~(~S~), NULL, ~:[NULL~*~;\"~(~S~)\"~], ~S, ~S},~%" 
+                  base-id
+                  (if infl-pos (nth (- infl-pos 1) 
+                                    (split-into-words orth)) orth)
+                  infl-rules
+                  (if infl-rules (first infl-rules))
+                  (if infl-pos infl-pos 0)
+                  (length (split-into-words orth)))))))
 
 (defvar *cat-type-cache* (make-hash-table))
 
