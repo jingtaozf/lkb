@@ -297,7 +297,8 @@ for their detailed comments on design and extensive testing.
 
 This chapter gives details of downloading, installing and 
 starting up the LKB system.
-CSLI users can skip to \S\ref{down-csli}.
+CSLI users can skip to \S\ref{run-csli} (most users) or \S\ref{down-csli}
+(users who are editing Lisp code).
 Other users will need to look at the next section to decide in
 what form to download the system, then go through the steps in the
 other sections, depending on their 
@@ -315,8 +316,8 @@ and will be happy to make any improvements available from the Web site.
 
 The full LKB system is available in a variety of configurations:
 \begin{enumerate}
-\item Solaris image
-\item Linux image
+\item Solaris image (using Allegro Common Lisp)
+\item Linux image (using Allegro Common Lisp)
 %\item Mac image
 \item Source files for Allegro Common Lisp and CLIM
 \item Source files for Macintosh Common Lisp (MCL)
@@ -340,7 +341,7 @@ The Solaris image should run on recent versions of SunOS.
 %The Mac image will run on (FIX what?)
 If you have Allegro Common Lisp with CLIM or Macintosh Common Lisp, you 
 can download the source files
-and compile them and/or make an image yourself.  This will be necessary
+and compile them.  This will be necessary
 if you want to substantially
 modify the LKB source code, and is likely to be
 advantageous in any case, since we are likely to make minor bug fixes available
@@ -374,40 +375,10 @@ to fix bugs etc \ldots}
 \section{Downloading the LKB}
 \label{down}
 
-\subsection{Downloading source files}
-\label{down-src}
-
-The source files are distributed as a 
-gzipped Unix tar file which is available from the
-\href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}.
-A single file is used for all systems, since most of the code is shared.
-Download the file, making sure you are using binary mode.
-Then:
-%UPDATE
-\begin{verbatim}
-gunzip lkbsrc5-0.tar.gz
-\end{verbatim}
-this should give you a file called \filename{lkbsrc5-0.tar}.  
-Make sure this in a directory where you want the LKB system to reside
-and extract the LKB by:
-\begin{verbatim}
-tar xf lkbsrc5-0.tar
-\end{verbatim}
-This will create the new directory and various subdirectories.
-It may take a few minutes to do this.  At this point, you have 
-your own local copy of the LKB system source.  Note that
-you may need to change the directory locations in \filename{general/loadup}
-and \filename{main/userfns}
-to be appropriate for your system
-(especially if you wish to run the system using MCL).
-
-Now follow the instructions in \S\ref{acl-src} to compile the
-files and optionally
-make an image. 
-
-
 \subsection{Downloading an image}
 \label{down-images}
+
+%FIX - Linux version too
 
 The image files for Sun Solaris are available from the
 \href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}
@@ -439,6 +410,47 @@ or \S\ref{clim-image}
 %or \S\ref{mcl-image} 
 to start the LKB.
 
+
+\subsection{Downloading source files}
+\label{down-src}
+
+The source files are distributed as a 
+gzipped Unix tar file which is available from the
+\href{http://www-csli.stanford.edu/~aac/lkb.html}{LKB Web Site}.
+A single file is used for all systems, since most of the code is shared.
+Download the file, making sure you are using binary mode.
+Then:
+%UPDATE
+\begin{verbatim}
+gunzip lkbsrc5-0.tar.gz
+\end{verbatim}
+this should give you a file called \filename{lkbsrc5-0.tar}.  
+Make sure this in a directory where you want the LKB system to reside
+and extract the LKB by:
+\begin{verbatim}
+tar xf lkbsrc5-0.tar
+\end{verbatim}
+This will create the new directory and various subdirectories.
+It may take a few minutes to do this.  At this point, you have 
+your own local copy of the LKB system source.  Note that
+you may need to change the directory locations in \filename{general/loadup}
+and \filename{main/userfns}
+to be appropriate for your system
+(especially if you wish to run the system using MCL).
+
+Now follow the instructions in \S\ref{acl-src} to compile the
+files.
+
+\subsection{Running the LKB at CSLI}
+\label{run-csli}
+
+To run the LKB on eo or eoan
+follow the instructions in \S\ref{emacs-clim-image} 
+(\functionname{fi:common-lisp} is already installed)
+but give the file \filename{/eo/e4/malouf/acl/lkb} in response
+to the prompt for {\bf Executable image name:}.
+
+
 \subsection{Getting a local copy of the LKB source at CSLI}
 \label{down-csli}
 
@@ -463,14 +475,13 @@ files, and in \S\ref{acl-emacs} to start the LKB system from within
 emacs.
 
 
-\section{Compiling the source files and making an image}
+\section{Compiling the source files}
 \label{src}
 
 \subsection{Allegro Common Lisp and CLIM (ACL/CLIM)}
 \label{acl-src}
 
-To compile the LKB system files, and optionally make an image
-in ACL/CLIM, do the following:
+To compile the LKB system files in ACL/CLIM, do the following:
 \begin{enumerate}
 \item cd to \filename{newlkb/src}.  
 \item Start ACL/CLIM.  The command needed will vary with your local
@@ -497,31 +508,26 @@ your system.\footnote{There may be
 some warning messages --- these can usually be ignored, but if you subsequently
 have problems using the LKB, you should redo this process
 and examine the warning messages.}
-You
+If you intend to use any of the MRS code, including the generator,
+you should replace \verb+"lkb"+ with \verb+"mrs"+: i.e.,
+\begin{verbatim}
+(compile-system "mrs" :force t)
+\end{verbatim}
+In either case, you
 should now see the LKB interaction window, as shown in 
 Figure~\ref{lkbtop-unix}.
 \item At this point, you may simply exit Lisp:
 you can restart the system from the compiled files
 as described in \S\ref{acl-emacs}.
-Alternatively, if you want to make a Lisp image, execute \verb+(dump-lkb)+.
-This simplifies and speeds up starting the LKB slightly, at the cost of
-using a lot of file space.
-On the whole, you should only do this if you don't expect
-frequent changes in the code or if you are setting up the LKB for
-a group of users who won't be modifying the code.
-See the instructions in \S\ref{dumplkb} for details.
-The LKB system can be started from the saved image as described in 
-\S\ref{emacs-clim-image}.
 \end{enumerate}
 
 
 \subsection{Macintosh Common Lisp (MCL)}
-To compile the LKB system files, and optionally make an image
-in MCL, do the following:
+To compile the LKB system files do the following:
 \begin{enumerate}
 \item Double-click on the MCL icon to start MCL
 \item If the LKB files are somewhere other than \filename{Macintosh HD:newlkb}
-(e.g. because your hard disk is called something other than 
+(e.g., because your hard disk is not called
 \filename{Macintosh HD}),
 open the \filename{src:general:loadup.lisp} file (Open is in the File menu 
 in MCL) and edit the definition of \verb+%sys-home%+ to be appropriate
@@ -531,7 +537,8 @@ rather than \filename{newlkb},
 the definition would look like:
 \begin{verbatim}
 (defparameter %sys-home%
-  #-:mcl (rest (butlast (pathname-directory *load-truename*) 2))
+  #-:mcl (rest (butlast 
+                (pathname-directory *load-truename*) 2))
   #+:mcl '("carrot" "lkb5.0"))
 \end{verbatim}
 Save the file.
@@ -545,6 +552,11 @@ Listener window:
 \begin{verbatim}
 (compile-system "lkb" :force t)
 \end{verbatim}
+If you intend to use any of the MRS code, including the generator,
+you should replace \verb+"lkb"+ with \verb+"mrs"+: i.e.,
+\begin{verbatim}
+(compile-system "mrs" :force t)
+\end{verbatim}
 This compiles and loads all the LKB files that are appropriate for
 your system.\footnote{There may be
 some warning messages --- these can probably be ignored, but if you subsequently
@@ -556,15 +568,6 @@ should now see LKB on the menu-bar.
 At this point, you may simply exit Lisp:
 you can restart the system from the compiled files
 as described in \S\ref{mcl-comp}.
-Alternatively, if you want to make a Lisp image, execute \verb+(dump-lkb)+.
-This simplifies and speeds up starting the LKB slightly, at the cost of
-using a lot of file space.
-On the whole, you should only do this if you don't expect
-frequent changes in the code or if you are setting up the LKB for
-a group of users who won't be modifying the code.
-See the instructions in \S\ref{dumplkb} for details.
-The LKB system can be started from the saved image as described in 
-\S\ref{mcl-image}.
 \end{enumerate}
 
 
@@ -631,6 +634,11 @@ a running Lisp process.
 \begin{verbatim}
 (load-system "lkb")
 \end{verbatim}
+If you intend to use any of the MRS code, including the generator,
+you should replace \verb+"lkb"+ with \verb+"mrs"+: i.e.,
+\begin{verbatim}
+(load-system "mrs")
+\end{verbatim}
 (If you haven't been following the instruction exactly, you may be asked whether
 you want to compile some or all of these files.  Respond {\tt y} to this
 question.)
@@ -664,6 +672,11 @@ a directory called \filename{tmp} in your home directory.
 \begin{verbatim}
 (load-system "lkb")
 \end{verbatim}
+If you intend to use any of the MRS code, including the generator,
+you should replace \verb+"lkb"+ with \verb+"mrs"+: i.e.,
+\begin{verbatim}
+(load-system "mrs")
+\end{verbatim}
 \end{enumerate}
 You
 should now see the LKB interaction window, as shown in 
@@ -685,12 +698,17 @@ To start the LKB from MCL with compiled files, proceed as follows:
 \begin{verbatim}
 (load-system "lkb")
 \end{verbatim}
+if you intend to use any of the MRS code, including the generator,
+you should replace \verb+"lkb"+ with \verb+"mrs"+: i.e.,
+\begin{verbatim}
+(load-system "mrs")
+\end{verbatim}
 \end{enumerate}
 You
 should now see the LKB interaction menu on the menu-bar.
 To continue, see Chapter~\ref{firstsession}.
 
-\section{Running the LKB from a saved image}
+\section{Running the LKB from an image}
 \label{images}
 
 
@@ -729,7 +747,7 @@ a directory called \filename{tmp} in your home directory.
 \item Start the LKB from within emacs using the 
 command \verb+fi:common-lisp+ which takes a number
 of arguments.  If you have downloaded the image from our website
-and stored it in the directory \filename{lkb}, accept all the default
+and stored it in the directory \filename{lkb}, accept all emacs's default
 suggestions, with the exception of the {\bf Executable image name:}
 as follows:
 \begin{quote}
@@ -741,9 +759,6 @@ as follows:
 {\bf Lisp image:}  \verb+<RET>+\\
 {\bf Image arguments:}  \verb+<RET>+
 \end{quote}
-(if you are working with an image you have saved via {\lkbmenucommand Dump lkb}, 
-specify the standard executable at
-{\bf Executable image name:} and the image file at {\bf Lisp image:}).
 You should then get a new buffer called \verb+*common-lisp*+ with
 a running Lisp process (without a compiler, if you are using our
 image).\footnote{If you get an error message concerning a missing library,
@@ -775,7 +790,7 @@ To continue, see Chapter~\ref{firstsession}.
 \subsection{Macintosh}
 \label{mcl-image}
 
-If you are starting the LKB from a saved
+If you are starting the LKB from a
 Mac image, you simply double-click on the
 icon for the image. 
 You
@@ -845,7 +860,7 @@ enough information, so the Web site describes what information we need.
 When you start the LKB from a downloaded image, you may get an error message that
 says a library is missing (e.g., \filename{libXm.so.3}).  The CLIM interface uses
 Motif libraries and on some systems these are not made available by default.
-You should be able to fix this by adding \filename{/usr/dt/lib} to your {\tt
+You may be able to fix this by adding \filename{/usr/dt/lib} to your {\tt
 LD\_LIBRARY\_PATH}: if this doesn't work (or if this explanation is
 incomprehensible \ldots), please talk to your system administrator (it's a
 standard difficulty with software that uses Motif).
@@ -2761,6 +2776,7 @@ also makes use of this idea.
 
 
 \section{Unification}
+\label{easyunif}
 
 We have seen some examples of unification aleady, but
 now we will discuss it in more detail. 
@@ -4591,7 +4607,7 @@ a := d.
 
 This section will probably be expanded at some
 future date.
-%FIX
+%UPDATE
 
 The types {\type *top*}, {\type string}, {\type *list*}, {\type *null*}
 and {\type *ne-list*} are ones we will see over and over again
@@ -6965,7 +6981,7 @@ there are a lot of similar error messages from the types for which
 \item[Type inference --- type constraints]
 The final class of error is caused when type inference causes a
 type to be determined for a node which then clashes with an existing
-specification on that node.  
+specification on a path from that node.  
 \begin{error}
 Unification with constraint of GRAM-CAT failed at path (SYN)
 \end{error}
@@ -7638,14 +7654,17 @@ Displays a chart from the generation process (see \S\ref{chart}).  Note that
 the ordering of items on the chart is controlled by their semantic
 indices.  
 
-\paragraph{Load heuristics}
-% FIX
+\paragraph{Load heuristics \ldots}
+
+Prompts for a file which should contain a set of heuristics for
+determining null semantics lexical items (see \S\ref{generation}).
 
 \paragraph{Clear heuristics}
-% FIX
+
+Clears a set of heuristics, loaded as above.
 
 \paragraph{Index}
-Indexes the lexicon and the rules for the generator.  Has to
+Indexes the lexicon and the rules for the generator.  This has to
 be run before anything can be generated.
 
 
@@ -7657,7 +7676,8 @@ notifying the user of any entries which fail to expand.
 This will take a few minutes for a large lexicon.
 
 \paragraph{Find features' type}  Used to find the maximal type (if any)
-for a list of features (see \S\ref{FIX} for a discussion of maximal types).
+for a list of features (see \S\ref{tc} and/or \S\ref{formcons} 
+for a discussion of maximal types).
 Warns if feature is not known.
 
 Prompts for a list of features.
@@ -7687,37 +7707,21 @@ memory is becoming restricted this option can be
 used.  However often more memory will be reclaimed by closing any open
 feature structure windows, and especially the Type Hierarchy window.
 
-\paragraph{Dump system}
-\label{dumplkb}
+\paragraph{Create quick check file \ldots}
+\label{qccreate}
 
-%FIX
-This creates an image file, which will essentially save the state of
-the current system.  It can be used before a grammar is loaded, in which
-case the image may be used by multiple people, or to save state after a 
-grammar has been loaded, though because of the handling of the temporary 
-lexicon files (see \S\ref{sysglob}), it really only makes sense to do this 
-for a single user.  
-The dumped system 
-relies on the cached lexicon, so if the templex
-or templex-index files are deleted or modified, the saved image will
-not work correctly.
+The check path mechanism constructs a filter which improves efficiency
+by processing a set of example sentences.  It
+is discussed in more detail in \S\ref{checkpaths}.
 
-The behaviour is quite different in MCL and ACL:
-
-In MCL, choosing {\lkbmenucommand Dump system} will prompt for a file name for the saved
-image and then save the image, finishing the Lisp session.  
-The session can then be restarted by double-clicking on the new image file.
-
-In earlier versions of ACL, standalone images were possible.  In ACL 5.0, the
-file saved is not an executable, but relies on the standard executable.  Thus,
-when restarting Lisp, you specify the saved file when emacs prompts you for a
-saved image (see e.g., \S\ref{acl-emacs}).  If you are not using emacs, the
-saved file is specified as a command line argument (see the ACL documentation).
-Note that the file is required to be of type {\tt dxl}.
-
-\paragraph{Create quick check file}
-%FIX
-
+The command prompts for a file of test sentences and an output file
+to which the resulting paths should be written.  This file should
+subsequently be read in by the script.  Note that constructing the 
+check paths is fairly time-consuming, but it is not necessary
+to use a very large set of sentences.  The mechanism is mildly
+grammar-specific in that it assumes the style of
+enconding where the daughters of a rule are given by an 
+{\feature args} list --- see \S\ref{checkpaths} for details.
 
 \subsection{Options}
 \label{display}
@@ -7727,7 +7731,8 @@ asterisked commands are added/removed.
 
 \paragraph{Set options} Allows interactive setting of some system
 parameters.  
-FIX --- more details.
+%FIX
+
 See Appendix~\ref{glob} for full details of all parameters.
 
 Note that the values of the boolean parameters are specified 
@@ -8499,6 +8504,10 @@ is a call to a batch parsing function.  For example:
   (parse-sentences "~aac/grammar/lkb/test-sentences" 
     "~aac/grammar/lkb/results"))
 \end{verbatim}
+The menu command \lkbmenucommand{Create quick check file},
+described in \ref{qccreate}, allows this process to be
+run from the graphical interface on a set of test sentences.
+
 The file of checkpaths created in this way
 is then read in as part of the script.
 For instance:
@@ -8667,7 +8676,7 @@ just a special case of typed default unification.
 The full description of TDFSs and
 default unification is
 given in 
-\href{http://www-csli.stanford.edu/~aac/papers/yadu.pdf}{Lascarides and
+\href{http://www-csli.stanford.edu/~aac/papers/yadu5-0.ps.gz}{Lascarides and
 Copestake (1999)} (henceforth L+C).
 The following notes are intended to supplement that paper.
 
@@ -8726,6 +8735,12 @@ the second the `winning' defeasible structure, and the third
 the tail.  (Unfortunately this is very verbose: a more concise 
 representation will be implemented at some point.)
 
+Notice that the current implementation effectivly assumes that
+defaults are only relevant with respect to an inheritance hierarchy:
+defaults constraints which are specified on types other than the root
+node of a structure are ignored when expanding the feature structure.
+Warning messages are output if this happens.
+
 \section{MRS}
 \label{mrs}
 
@@ -8739,32 +8754,43 @@ FIX
 
 The generator requires a grammar which is using MRS or a relatively
 similar formalism.  It will work in a somewhat rudimentary way on the
-textbook grammar.  The following notes are VERY sketchy.
+textbook grammar and more consistently
+on the LinGO grammar.  The generator is described in 
+\href{http://www-csli.stanford.edu/~aac/papers/generation.ps.gz}{Carroll et al (1999)}.
+
+The following notes are VERY sketchy.
 % FIX - do this properly ...
 \begin{enumerate}
 \item Instead of loading the lkb source, the mrs source must be loaded.  This
 is done by replacing {\tt "lkb"} with {\tt "mrs"} as the argument to
 \functionname{load-system} and \functionname{compile-system}.  
-The distributed image 
-contains the appropriate code.  
-\item The textbook grammar contains a file defining some necessary
-global parameters which is loaded if the mrs code is available.
+The distributed images
+already contain the appropriate code.  
+\item The textbook grammar and the LinGO grammar each
+contain a file defining some necessary
+global parameters which is automatically loaded if the mrs code is available.
 \item Before generating, the lexicon and lexical and grammar rules
 must be indexed.  The function which does this, 
 \functionname{index-for-generator},
-can be also be run with the {\lkbmenucommand Index} command
+can be run with the {\lkbmenucommand Index} command
 from the {\lkbmenucommand Generate} menu.
 \item To generate, first parse a sentence.  
-Then use the parse tree display to find the number associated with the topmost
-edge in the tree for the analysis you are interested in
-(or a lower node if you like, though the results may be
-highly counterintuitive if you do this).  Then
-click {\lkbmenucommand Generate \ldots} in the {\lkbmenucommand Generate} menu and give this
-number as an argument.  (Warning: the default value supplied will NOT
-always be what you want.)
+Then choose {\lkbmenucommand Generate} from the
+pop-up menu associated with the parse tree you are interested
+in (in the mini-parse-tree display), or the relevant node on 
+a full-size parse tree (though in this case you may get 
+unintuitive results if you choose anything other than the uppermost node).
+\item If the grammar uses lexical entries which do not have
+any relations, warning messages will be issued by the indexing process.
+A set of grammar-specific heuristics can be defined which will determine
+which such lexical entries might be required for a given semantics.
+These are loaded via the \lkbmenucommand{Load Heuristics} command
+on the {\lkbmenucommand Generate} menu.  If no such heuristics are loaded,
+and the generator is run on the results of a parse,
+the system cheats and just licenses the null semantics items that were used
+in the parse. 
 \end{enumerate}
 
-% FIX - whatever ...
 
 \section{Testing and Diagnosis}
 \label{tsdb}
@@ -9609,7 +9635,7 @@ to give a valid path.  It is currently only called by
 \item[set-temporary-lexicon-filenames] This function is called in order to
 set the temporary files.  It uses lkb-tmp-dir, as defined above.
 It is useful to change the file names in this function if one is
-working with multiple grammars and using cacheing or dumping images to
+working with multiple grammars and using cacheing to
 ensure that the lexicon file associated with a grammar has a 
 unique name which avoids overriding another lexicon
 (see \S\ref{cache}).
