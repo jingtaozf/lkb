@@ -16,7 +16,6 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <string.h>
-#include <malloc.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <regex.h>

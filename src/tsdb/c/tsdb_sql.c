@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <string.h>
-#include <malloc.h>
 #include <limits.h>
 #include "globals.h"
 #include "tsdb.h"
@@ -333,7 +332,7 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
     if(value->type != TSDB_STRING) {
       if(value->type != TSDB_IDENTIFIER) {
         fprintf(tsdb_error_stream, 
-                "set(): invalid type for lock; "
+                "set(): invalid type for `lock'; "
                 "should be `on' or `off'.\n");
         foo = (char *)NULL;
         fflush(tsdb_error_stream);
@@ -357,7 +356,40 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
       } /* if */
       else {
         fprintf(tsdb_error_stream, 
-                "set(): invalid value for lock: "
+                "set(): invalid value for `lock': "
+                "should be `on' or `off'.\n");
+        fflush(tsdb_error_stream);
+      } /* else */
+    } /* if */
+  } /* if */
+  else if(!strncmp(variable->value.identifier, "tsdb_uniquely_project", 21)
+          || !strncmp(variable->value.identifier, "uniquely-project", 16)) {
+    if(value->type != TSDB_STRING) {
+      if(value->type != TSDB_IDENTIFIER) {
+        fprintf(tsdb_error_stream, 
+                "set(): invalid type for `uniquely-project'; "
+                "should be `on' or `off'.\n");
+        foo = (char *)NULL;
+        fflush(tsdb_error_stream);
+      } /* if */
+      else {
+        foo = value->value.identifier;
+      } /* else */
+    } /* if */
+    else {
+      foo = value->value.string;
+    } /* else */
+    
+    if(foo != NULL) {
+      if(!strcmp(foo, "on")) {
+        tsdb.status |=  TSDB_UNIQUELY_PROJECT;
+      } /* if */
+      else if(!strcmp(foo, "off")) {
+        tsdb.status &= ~TSDB_UNIQUELY_PROJECT;
+      } /* if */
+      else {
+        fprintf(tsdb_error_stream, 
+                "set(): invalid value for `uniquely-project': "
                 "should be `on' or `off'.\n");
         fflush(tsdb_error_stream);
       } /* else */
@@ -381,7 +413,7 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
     if(value->type != TSDB_STRING) {
       if(value->type != TSDB_IDENTIFIER) {
         fprintf(tsdb_error_stream, 
-                "set(): invalid type for tx-output; "
+                "set(): invalid type for `tx-output'; "
                 "should be `on' or `off'.\n");
         foo = (char *)NULL;
         fflush(tsdb_error_stream);
@@ -403,7 +435,7 @@ int tsdb_set(Tsdb_value *variable, Tsdb_value *value) {
       } /* if */
       else {
         fprintf(tsdb_error_stream, 
-                "set(): invalid value for tx-output: "
+                "set(): invalid value for `tx-output': "
                 "should be `on' or `off'.\n");
         fflush(tsdb_error_stream);
       } /* else */
@@ -1160,6 +1192,9 @@ int tsdb_do(char *file, char *redirection) {
     baz = tsdb.output;
     tsdb.output = strdup(&redirection[1]);
   } /* if */
+  else {
+    default_stream = (FILE *)NULL;
+  } /* else */
   
   buffer = (char *)malloc(4096);
   while(!(tsdb.status & TSDB_QUIT) 
@@ -1202,10 +1237,13 @@ int tsdb_do(char *file, char *redirection) {
   fflush(tsdb_debug_stream);
 #endif
 
-  fclose(tsdb_default_stream);
-  tsdb_default_stream = default_stream;
-  free(tsdb.output);
-  tsdb.output = baz;
+  if(default_stream != NULL) {
+    fclose(tsdb_default_stream);
+    tsdb_default_stream = default_stream;
+    free(tsdb.output);
+    tsdb.output = baz;
+  } /* if */
+
   tsdb_free(path);
   return(status);
 
@@ -1318,13 +1356,12 @@ Tsdb_selection *tsdb_complex_retrieve(Tsdb_value **relation_list,
      * free(3)ing .attribute_list. for Linux (at least) gives us a core(5)
      * that refuses debugging (gdb(1) complains about missing register
      * information.  what shall we do?  after all, it is only 1:30 h in the
-     * morning; but without a working debugger ... |:-{.
+     * morning; but without a working debugger ... |:-{).
      *                                             (6-aug-96  -  oe@coling)
      */
-#ifdef A_BETTER_WORLD
-    tsdb_free_tsdb_values(attribute_list);
-    tsdb_free(attribute_list);
-#endif
+    if(attribute_list != NULL) {
+      tsdb_free_tsdb_values(attribute_list);
+    } /* if */
     attribute_list = (Tsdb_value **)malloc(4 * sizeof(Tsdb_value *));
     attribute_list[0] = tsdb_identifier("i-id");
     attribute_list[1] = tsdb_identifier("i-input");
@@ -1707,13 +1744,13 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
                             Tsdb_node **conditions,
                             BYTE type) {
   Tsdb_selection *result;
-  Tsdb_relation  *relation_1;
-  Tsdb_key_list  *list;
+  Tsdb_relation *relation_1;
+  Tsdb_key_list *list;
   Tsdb_tuple **new_tuples;
   int *relation, *field;
-  int n_conditions,i,j,k,vm_result;
+  int n_conditions, i, j, k, vm_result;
   char *attribut;
-  BOOL kaerb,match;
+  BOOL kaerb, match;
   BYTE *results;
   
   if (!selection->length) return(NULL);
@@ -1725,8 +1762,8 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
   
   for (i=0; i<n_conditions ; i++) {
     attribut = conditions[i]->left->node->value.identifier;
-    relation[i]=-1;
-    field[i]=-1;
+    relation[i] = -1;
+    field[i] = -1;
     for (kaerb=FALSE, j=0; !kaerb && j<selection->n_relations ; j++) {
       relation_1 = selection->relations[j];
       for (k=0 ; !kaerb && k < relation_1->n_fields ; k++) {
@@ -1889,7 +1926,7 @@ Tsdb_selection *tsdb_select(Tsdb_selection *selection,
                               TSDB_INSENSITIVE_MATCH,NULL);
           if (vm_result==3)
             return NULL;
-          match = match && !(vm_result);
+          match = match && !vm_result;
           break;
         } /* switch */
       } /* if */

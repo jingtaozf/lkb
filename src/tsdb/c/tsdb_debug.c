@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <string.h>
-#include <malloc.h>
 #include <limits.h>
 #include "globals.h"
 #include "tsdb.h"

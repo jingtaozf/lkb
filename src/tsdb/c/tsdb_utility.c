@@ -15,7 +15,6 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <string.h>
-#include <malloc.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <regex.h>
@@ -1512,12 +1511,12 @@ Tsdb_selection* tsdb_copy_selection(Tsdb_selection* source) {
   return(target);
 } /* tsdb_copy_selection() */
 
-void tsdb_free_selection(Tsdb_selection* foo) {
+void tsdb_free_selection(Tsdb_selection *foo) {
   int i;
 /*  tsdb_free_relations(foo->relations);*/
   free(foo->relations);
-  for (i=0;i<foo->n_key_lists;i++)
-    tsdb_free_key_list_chain(foo->key_lists[i],FALSE);
+  for(i = 0; i < foo->n_key_lists; i++)
+    tsdb_free_key_list_chain(foo->key_lists[i], FALSE);
   free(foo->key_lists);
   free(foo);
 } /* tsdb_free_selection() */

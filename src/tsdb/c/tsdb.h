@@ -25,6 +25,12 @@
 #  endif
 #endif
 
+#if defined(DEBUG) && defined(MALLOC) && defined(LINUX)
+#  include <dbmalloc.h>
+#else
+#  include <malloc.h>
+#endif
+
 #define TSDB_VERSION "0.4"
 
 #define TSDB_DEFAULT_STREAM stdout

@@ -15,6 +15,9 @@
 #include <ctype.h>
 #include <getopt.h>
 #include <memory.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include "globals.h"
 #include "tsdb.h"
 #include <readline/readline.h>
@@ -111,9 +114,9 @@ char *tsdb_variables[] = {
 };
 
 #ifndef ALEP
-#  define TSDB_VAR_NUM 14
-#else
 #  define TSDB_VAR_NUM 16
+#else
+#  define TSDB_VAR_NUM 18
 #endif
 
 char *tsdb_rest_generate(char *, int) ;
@@ -139,6 +142,10 @@ int main(int argc, char **argv) {
   char *input = NULL;
   char host[512 + 1], prompt[80 + 1], *foo, *bar;
   int status;
+#ifdef _DEBUG_MALLOC_INC
+  int baz;
+  union dbmalloptarg db;
+#endif
 
   if((foo = strdup(argv[0])) != NULL) {
     if((bar = strrchr(foo, TSDB_DIRECTORY_DELIMITER[0])) != NULL) {
@@ -162,6 +169,17 @@ int main(int argc, char **argv) {
 #endif
     exit(status);
   } /* if */
+
+#ifdef _DEBUG_MALLOC_INC
+  if(tsdb.status & TSDB_SERVER_MODE) {
+    db.i = (M_HANDLE_CORE | M_HANDLE_DUMP);
+    dbmallopt(MALLOC_WARN, &db);
+    dbmallopt(MALLOC_CKCHAIN, &db);
+    db.str = "/tmp/tsdb.memory";
+    remove(db.str);
+    dbmallopt(MALLOC_ERRFILE, &db);
+  } /* if */
+#endif    
 
   if(tsdb.status & TSDB_SERVER_MODE) {
     if(tsdb_server_initialize()) {
@@ -266,6 +284,13 @@ int main(int argc, char **argv) {
 
 #ifdef DEBUG
   tsdb_close_debug(tsdb_debug_stream);
+#endif
+
+#ifdef _DEBUG_MALLOC_INC
+  if((baz = open("/tmp/tsdb.memory.dump", (O_WRONLY | O_CREAT), 0644)) != -1) {
+    malloc_dump(baz);
+    close(baz);
+  } /* if */
 #endif
 
   exit(status);
@@ -493,24 +518,19 @@ void tsdb_parse_options(int argc, char **argv) {
         exit(0);
         break;
       case TSDB_HISTORY_OPTION:
-        if (optarg != NULL) {
-          int l = (int)strtol(optarg,&bar,10);
-          if ( l == 0 
-              && optarg == bar ) {
+        if(optarg != NULL) {
+          if((tsdb.history_size = strtol(optarg, &bar, 10)) == 0
+             && optarg == bar) {
             fprintf(tsdb_error_stream,
                     "parse_options(): "
                     "non-integer (`%s') argument to `-history-size'.\n",
-                    optarg);            
-            tsdb.history_size = -1;
+                    optarg);
+            tsdb.history_size = 0;
           } /* if */
-          else
-            tsdb.history_size = l;
-          /* further things are done in tsdb_initialize!! */
-        } 
+        } /* if */
         else {
-          tsdb_usage();
-          exit(0);
-        }
+          tsdb.history_size = 0;
+        } /* else */
         break;
       case TSDB_FS_OPTION:
         if(optarg != NULL) {
