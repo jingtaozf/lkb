@@ -278,7 +278,7 @@ void tsdb_print_selection(Tsdb_selection *selection, FILE *stream) {
     } /* for */
     for(i = 1; i < selection->n_relations; i++) {
       foo = selection->relations[i];
-      for(j = 1; j < foo->n_keys; j++) {
+      for(j = 0; j < foo->n_keys; j++) {
         fprintf(tsdb_debug_stream, ", %s (%d)",
                 foo->fields[foo->keys[j]], i);
       } /* for */
