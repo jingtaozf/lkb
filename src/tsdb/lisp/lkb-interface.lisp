@@ -504,7 +504,7 @@
   (declare (ignore mrs 
                    id string exhaustive nanalyses trace
                    edges derivations semantix-hook trees-hook
-                   burst nresult)))
+                   burst nresults)))
   
 #+:mt
 (defun tsdb::transfer-item (mrs

@@ -392,6 +392,8 @@
         (t (format nil "~d" n))))
 
 (defun create-output-stream (file &optional append &key (encoding :utf-8))
+  #-(and :allegro-version>= (version>= 6 0))
+  (declare (ignore encoding))
   (let ((stream
          (cond
           ((or (stringp file) (pathnamep file))
