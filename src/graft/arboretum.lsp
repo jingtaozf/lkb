@@ -311,25 +311,37 @@
     result))
   
 
+(defparameter *graft-debug-p* nil)
+
 (defun ag-score-task (task)
-  (case (first task)
-    (:lexicon
-     (ag-gen-lex-priority (first (edge-lex-ids (second task)))))
-    (:rule
-     (let* ((rule (second task))
-            (passive (third task))
-            (index (position (first (rule-daughters-apply-order rule))
-                             (rest (rule-order rule))
-                             :test #'eq)))
-       (ag-gen-rule-priority passive rule index)))
-    (:active
-     (let* ((active (second task))
-            (passive (third task))
-            (index (position 
-                    (first (g-edge-needed active))
-                    (rest (rule-order (g-edge-res active)))
-                    :test #'eq)))
-       (ag-gen-rule-priority passive active index)))))
+  (let ((score
+         (case (first task)
+           (:lexicon
+            (ag-gen-lex-priority (first (edge-lex-ids (second task)))))
+           (:rule
+            (let* ((rule (second task))
+                   (passive (third task))
+                   (index (position (first (rule-daughters-apply-order rule))
+                                    (rest (rule-order rule))
+                                    :test #'eq)))
+              (ag-gen-rule-priority passive rule index)))
+           (:active
+            (let* ((active (second task))
+                   (passive (third task))
+                   (index (position 
+                           (first (g-edge-needed active))
+                           (rest (rule-order (g-edge-res active)))
+                           :test #'eq)))
+              (ag-gen-rule-priority passive active index))))))
+    (when *graft-debug-p*
+      (format
+       t
+       "~(~a~): ~a~@[ + ~a~] == ~a~%"
+       (first task)
+       (let ((second (second task)))
+         (if (rule-p second) (rule-id second) second))
+       (third task) score))
+    score))
    
 
 ;; (ERB 2003-10-16) Wrapper function for grammar checking.  Takes
@@ -338,6 +350,8 @@
 
 (defun grammar-check (string)
 
+  (declare (special *gen-scoring-hook* *bypass-equality-check*
+                    *gen-packing-p*))
   ;; Save values of *first-only-p* and *gen-first-only-p* so
   ;; we can reset them at the end.
   ;; Likewise for *(gen-)mal-active-p*
