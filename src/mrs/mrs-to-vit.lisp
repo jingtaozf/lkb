@@ -1193,8 +1193,10 @@
          (vitrified-feature (last-path-feature current-fvp-feature)))
     ;;; last-path-feature is a no-op for atomic features
     ;;; but returns the last feature for paths
-    (make-fvpair :feature (mrs-unstring-value vitrified-feature)
-                 :value (mrs-unstring-value (fvpair-value fvp)))))
+    (if (member current-fvp-feature (list (vsym "NAMED")))
+        fvp
+      (make-fvpair :feature (mrs-unstring-value vitrified-feature)
+                   :value (mrs-unstring-value (fvpair-value fvp))))))
 
 (defun mrs-unstring-value (val)
   (if (var-p val)

@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.24  1999/07/09 04:51:48  aac
+;; fragments
+;;
 ;; Revision 1.23  1999/06/19 18:15:17  danf
 ;; Revised 'determine-variable-type' again
 ;;
@@ -195,6 +198,41 @@
 (defvar *segment-id* nil)
 (defvar *short-test-vit* nil)
 (defvar *mrs-wg-liszt* nil)
+
+;;; called from VM-Parser
+
+#-:lkb
+(defun fs2vit (fs sid)
+  (setf *segment-id* sid)
+  (setf *synlabel* nil)
+  (setf *fragment-p* (is-fragment-fs fs))
+  (let* #-pagelite
+    ((cp (copy fs))
+     (sem-fs  (path-value cp *initial-semantics-path*))
+     (dnf (if (is-valid-fs sem-fs) 
+              (ndnf sem-fs)))
+     (fs1 (cond ((or (consp dnf)
+                     (unify::disjunction-node-p dnf))
+                 (get-first-real-alter dnf))
+                (t dnf)))
+     (mrs (if (is-valid-fs fs1)
+	      (progn 
+		(when (mrs-language '(english))
+		  (setf *key-fs* (path-value cp *key-handel-path*)
+			*synlabel* (get-category-label fs)))
+		(construct-mrs fs1)))))
+    #+pagelite
+    ((fs1 (path-value cfs *initial-semantics-path*))
+     (mrs (if (is-valid-fs fs1)
+              (construct-mrs fs1))))
+    (if mrs
+        (or (mrs-to-vit-convert mrs nil)
+            (make-vit :utterance-id
+                      (make-p-term :predicate "vitID"
+                                   :args (list *segment-id* nil))))
+      (make-vit :utterance-id
+                (make-p-term :predicate "vitID"
+                             :args (list *segment-id* nil) )))))
 
 ;;; it useful to store the variable-generator for VIT conversion
 
@@ -523,12 +561,15 @@
   ;;; by munging rules.  This would be cleaner if someone would
   ;;; define the PAGE interface consistently - as it is, we have to
   ;;; rely on the typographic convention
-  (let* ((str (string sort))
-         (start-pos (- (length str) 6)))
-    (if (and (> start-pos 0)
-             (string-equal (subseq str start-pos) "_rel_a"))
-        (intern (subseq str 0 (+ start-pos 4)))
-        sort)))
+  (if (and (symbolp sort)
+	   (not (numberp sort)))
+    (let* ((str (string sort))
+           (start-pos (- (length str) 6)))
+      (if (and (> start-pos 0)
+	       (string-equal (subseq str start-pos) "_rel_a"))
+	  (intern (subseq str 0 (+ start-pos 4)))
+        sort))
+    sort))
 
 (defun feat-sort-func (fvp1 fvp2)
   (let* ((feat1 (if (fvpair-p fvp1) 
@@ -634,7 +675,7 @@
                          (handels (assoc *handels-feature* first)))
                     (when (and word handels)
                       (cons (make-whg-id :word (if (stringp word)
-                                                   word
+						   word
                                                  (create-type 
                                                 (fs-type (rest word))))
                                          :id (create-word-identifier id

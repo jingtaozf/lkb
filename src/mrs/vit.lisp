@@ -7,6 +7,9 @@
 ;;   Language: Allegro Common Lisp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; $Log$
+;; Revision 1.5  1999/05/14 02:25:29  aac
+;; allowing generator index to be cleared, tidying up to avoid compiler warnings
+;;
 ;; Revision 1.4  1999/05/07 00:34:08  aac
 ;; minor fixes, mostly problems revealed by MCL
 ;;
@@ -109,6 +112,7 @@
 (defstruct (vit_accent (:include vit-special-form (predicate 'pros_accent))))
 
 (defstruct (vit_pmood (:include vit-special-form (predicate 'pros_mood))))
+
 
 (defstruct (vit-var)
   (id 0 :type integer))
@@ -244,6 +248,13 @@
              (next-char (peek-char t istream nil 'eof)))
             ((or (null vitstruct) (eql next-char 'eof)) (return results))))))
 
+;;; DPF 21-Jul-99 - Added from WK
+(defun read-vit-string (vitstring)
+  (let ((*readtable*
+            (define-break-characters 
+                '(#\[ #\] #\,))))
+    (read-vit (make-string-input-stream vitstring))))
+
 (defun read-vit (istream)
   (let ((utterance-id nil)
         (semantics nil)
@@ -260,7 +271,7 @@
     (check-for #\i istream)
     (check-for #\t istream)
     (check-for #\( istream)
-    (setf utterance-id (read-p-form istream))
+    (setf utterance-id (read-utterance-id istream))
     (check-for #\, istream)
     (read-p-comment istream)
     (setf main-condition (read-p-form istream))
@@ -272,20 +283,21 @@
     (setf scope (read-p-list istream))
     (check-for #\, istream)
     (read-p-comment istream)
-    (setf sorts (read-p-list istream))
+    (setf sorts (pterms2special-form (read-p-list istream)))
     (check-for #\, istream)
     (read-p-comment istream)
-    (setf discourse (read-p-list istream))
+    (setf discourse (pterms2special-form (read-p-list istream)))
     (check-for #\, istream)
     (read-p-comment istream)
-    (setf syntax (read-p-list istream))
+    (setf syntax (pterms2special-form (read-p-list istream)))
     (check-for #\, istream)
     (read-p-comment istream)
-    (setf tenseandaspect (read-p-list istream))
+    (setf tenseandaspect (pterms2special-form (read-p-list istream)))
     (check-for #\, istream)
     (read-p-comment istream)
-    (setf prosody (read-p-list istream))
-    (check-for #\, istream)
+    (setf prosody (pterms2special-form (read-p-list istream)))
+    (read-p-comment istream)
+    (check-for #\) istream)
     (read-p-comment istream)
 ;    (setf ambiguities (read-p-list istream))
 ;    (read-p-comment istream)
@@ -310,7 +322,15 @@
            ((eql next-char #\() (read-p-struct istream))
            ((eql next-char #\') (read-quoted-stuff istream))
            ((alphanumericp next-char) 
-            (let* ((first-element (read istream))
+            (let* ((first-element (read-p-constant istream))
+                   (next-char (peek-char t istream nil 'eof)))
+              (cond ((eql next-char #\() (read-p-term istream first-element))
+                    ((member next-char '(#\, #\) #\])) first-element)
+                    (t (error "Unexpected character after constant")))))
+	   ;;; DPF 21-Jul-99 - Added from WK
+	   ((member next-char *vit-operator-list* :test #'char=)
+            (let* ((first-element (make-string 1 :initial-element 
+					       (read-char istream nil 'eof)))
                    (next-char (peek-char t istream nil 'eof)))
               (cond ((eql next-char #\() (read-p-term istream first-element))
                     ((member next-char '(#\, #\) #\])) first-element)
@@ -318,8 +338,9 @@
            (t (error "Unexpected character in term")))))
   
 
+;;; DPF 21-Jul-99 - Added from WK
 (defun read-p-constant (istream)
-  (read istream))
+  (pterm2vit-var (read istream)))
 
 (defun read-p-comment (istream)
   (let ((next-char (peek-char t istream nil 'eof)))
@@ -378,7 +399,96 @@
     (check-for #\) istream)
     (make-p-struct :operator operator :args (nreverse reslist))))
   
+;------------------------------------------------------------------------------
+;;; DPF 21-Jul-99 - Added Following four functions from WK
+
+;;; add some type checking for robustness?
+(defun read-utterance-id (istream)
+  (let* ((term (read-p-form istream))
+         (id (p-term-args (first (p-term-args term))))
+         (whgs (second (p-term-args term))))
+    (setf (p-term-predicate term) "vitID"
+          (p-term-args term)
+           (list
+            (make-sid :turnnumber (first id)
+                      :channel (second id)
+                      :sourcelanguage (third id)
+                      :begintime (fourth id)
+                      :endtime (fifth id)
+                      :reading (sixth id)
+                      :currentlanguage (seventh id)
+                      :turnend (eighth id)
+                      :sender (ninth id))
+            (loop for whg in whgs
+                collect
+                  (make-whg-id :id (second (p-term-args whg))
+                               :word (first (p-term-args whg))
+                               :handel (loop for handel in 
+                                             (third (p-term-args whg))
+                                           collect
+                                             (pterm2vit-var handel))))))
+    term))
+
+
+(defun pterm2vit-var (varsym)
+        (if (and (symbolp varsym) 
+                 (member (elt (symbol-name varsym) 0) 
+                         '(#\L #\H #\I) :test #'char=))
+            (multiple-value-bind (type number)
+                (split-vit-var-symbol varsym)
+              (case type
+                (h (make-vit-hole-var :id number))
+                (i (make-vit-instance-var :id number))
+                (l (make-vit-label-var :id number))
+                (otherwise varsym)))
+          varsym))
+      
+;;; instead use regexp-library?
+(defun split-vit-var-symbol (varsym)
+  (let* ((varname (symbol-name varsym))
+         ;;; assume that all variables have the same prefix length
+         (prefixlength (length *vit-hole-prefix*))
+         (prefix (when (> (length varname) prefixlength)
+                   (subseq varname 0 prefixlength)))
+         (numval (when (> (length varname) prefixlength)
+                      (read-from-string (subseq varname prefixlength))))
+         (type nil))
+    (if prefix
+        (cond ((equal prefix *vit-instance-prefix*)
+               (setq type 'i))
+              ((equal prefix *vit-label-prefix*)
+               (setq type 'l))
+              ((equal prefix *vit-hole-prefix*)
+               (setq type 'h))
+              (t nil)))
+    (if (integerp numval)
+        (values type numval))))
     
+(defun pterms2special-form (pterms)
+  (cond ((consp pterms) (mapcar #'pterms2special-form pterms))
+        ((p-term-p pterms)
+         (let ((special (case (p-term-predicate pterms)
+                          (s_sort (make-vit_sort))
+                          (ta_tense (make-vit_tense))
+                          (ta_aspect (make-vit_aspect))
+                          (ta_mood (make-vit_mood))
+                          (ta_perf (make-vit_perf))
+                          (gend (make-vit_gender))
+                          (num (make-vit_number))
+                          (pers (make-vit_person))
+                          (dir (make-vit_dir))
+                          (prontype (make-vit_prontype))
+                          (case (make-vit_case))
+                          (pcase (make-vit_pcase))
+                          (pros_accent (make-vit_accent))
+                          (pros_mood (make-vit_pmood))
+                          (t nil))))
+           (if special
+               (setf (vit-special-form-instance special) (first (p-term-args pterms))
+                     (vit-special-form-args special) (rest (p-term-args pterms))))
+           (or special pterms)))
+        (t pterms)))
+
 
 ;;; ********* Writing VIT ************
 

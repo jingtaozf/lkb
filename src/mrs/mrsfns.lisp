@@ -65,7 +65,7 @@
 	     (format t "~%~A" sent)
 	     (format ostream "~%String: ~A~%" sent)
 	     (pprint tree ostream)
-	     (format ostream "~%")
+	     (format ostream "~%~%")
 	     ;(user::output-parse-tree tree ostream)
 	     (if vitp
 	    #|
@@ -109,6 +109,7 @@
 		(format nil "~S" (write-vit stream 
 					    (horrible-hack-2 vit))))))))))
 
+#|
 #+page
 (defun get-vit-strings-from-phrases (parse)
   (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
@@ -130,6 +131,65 @@
 		   (with-output-to-string (stream) 
 		     (format nil "~S" (write-vit stream 
 						 (horrible-hack-2 vit)))))))))
+
+|#
+#+page
+(defun get-vit-strings-from-phrases (parse)
+  (setf *mrs-wg-liszt* (loop for form in (main::output-stream main::*scanner*)
+                             collect
+                               (list (string-left-trim "'"
+					 (main::typed-item-form form)))))
+  (let* ((mrs-struct1 (sort-mrs-struct (extract-mrs parse)))
+	 (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
+			 (munge-mrs-struct mrs-struct1
+					   *ordered-mrs-rule-list*)
+		       mrs-struct1)))
+    (multiple-value-bind (vit binding-sets)
+	(mrs-to-vit mrs-struct)
+      (with-output-to-string (stream) 
+	(format nil "~S" (write-vit stream 
+				    (horrible-hack-2 vit)))))))
+
+
+#+lkb
+(defun compute-mrs-wg-liszt ()
+  (loop for elem in 
+	(user::split-into-words 
+	 (user::preprocess-sentence-string 
+	  (string-trim '(#\space #\tab #\newline) cl-user::*sentence*)))
+      collect (list (string-left-trim "'" elem))))
+
+#|
+#+lkb
+(defun get-vit-strings-from-phrases (parse)
+  (setf *mrs-wg-liszt* (compute-mrs-wg-liszt))
+  (let* ((fs (get-parse-fs parse))
+         (sem-fs (path-value fs *initial-semantics-path*)))
+          (if (is-valid-fs sem-fs)
+              (let* ((mrs-struct1 (sort-mrs-struct (construct-mrs sem-fs)))
+                     (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
+                                     (munge-mrs-struct mrs-struct1
+                                                       *ordered-mrs-rule-list*)
+                                   mrs-struct1)))
+                 (multiple-value-bind (vit binding-sets)
+                     (mrs-to-vit mrs-struct)
+                   (with-output-to-string (stream) 
+                     (format nil "~S" (write-vit stream 
+                                                 (horrible-hack-2 vit)))))))))
+|#
+#+lkb
+(defun get-vit-strings-from-phrases (parse)
+  (setf *mrs-wg-liszt* (compute-mrs-wg-liszt))
+  (let* ((mrs-struct1 (sort-mrs-struct (extract-mrs parse)))
+	 (mrs-struct (if (boundp '*ordered-mrs-rule-list*)
+			 (munge-mrs-struct mrs-struct1
+					   *ordered-mrs-rule-list*)
+		       mrs-struct1)))
+    (multiple-value-bind (vit binding-sets)
+	(mrs-to-vit mrs-struct)
+      (with-output-to-string (stream) 
+	(format nil "~S" (write-vit stream 
+				    (horrible-hack-2 vit)))))))
 
 #+page
 (defun extract-and-output (parse-list)

@@ -1165,7 +1165,6 @@ or modulo some number of quantifiers
         (output-scoped-rels true-top
                             (set-difference *starting-rels* rels-left) t nil 0)))))
 
-
     
   
 

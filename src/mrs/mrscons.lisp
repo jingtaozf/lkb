@@ -101,8 +101,10 @@
                   (for new-hole in
                        (cdr (assoc hole *label-hole-pairs*))
                        append
-                       (discover-outscoped-labels 
-                        new-hole qeqs equated-list)))
+                       ;; DPF 21-Jul-99 - Added from WK
+                       (unless (eql hole new-hole)
+                        (discover-outscoped-labels 
+                         new-hole qeqs equated-list))))
               (for qeq in qeqs
                    append
                    (if (eql (qeq-left qeq) hole)
@@ -113,8 +115,10 @@
                          (cons immediately-outscoped
                                (for hole-handel in hole-handels
                                     append
-                                    (discover-outscoped-labels 
-                                     hole-handel qeqs equated-list)))))))))
+				    ;; DPF 21-Jul-99 - Added from WK
+                                    (unless (eql hole hole-handel)
+				      (discover-outscoped-labels 
+				       hole-handel qeqs equated-list))))))))))
         (push (cons hole outscpd-list)
               *qeq-outscopes*)
         outscpd-list))))

@@ -49,6 +49,49 @@
 (defun tdl-show-current-domain nil
   (tdl::show-current-domain))
 
+; Required for munger for abstract types
+
+;(defun compatible-types (type1 type2)
+;  (let ((type1name (fetch-and-expand-type type1))
+;	(type2name (fetch-and-expand-type type2)))
+;    (when (and type1name type2name)
+;      (not (eq (csli-unify::unify-types type1name type2name)
+;	       'CSLI-UNIFY::*FAIL*)))))
+#||
+(defun compatible-types (type1 type2)
+  (let ((type1name (intern type1 lex::*lex-package*))
+        (type2name (intern type2 lex::*lex-package*)))
+  (when (and (tdl::type-exists-p 
+              type1name lex::*lex-package*)
+             (tdl::type-exists-p 
+              type2name lex::*lex-package*))
+    (not (eq (tdl::simplify-type (list :and type1name type2name))
+             'DISCO::*BOT*)))))
+||#
+
+(defun compatible-types (type1 type2)
+  (let ((type1name (intern type1 lex::*lex-package*))
+        (type2name (intern type2 lex::*lex-package*)))
+  (when (and (tdl::type-exists-p 
+              type1name lex::*lex-package*)
+             (tdl::type-exists-p 
+              type2name lex::*lex-package*))
+    (not (eq (csli-unify::unify-types type1name type2name)
+             'CSLI-UNIFY::*FAIL*)))))
+
+(defun is-valid-type (type)
+  (tdl::get-infon (intern type lex::*lex-package*) lex::*lex-package* :avms))
+
+(defun fetch-and-expand-type (name &optional (domain lex::*lex-package*))
+  (let* ((domain (string domain))
+         (name (intern name domain))
+         (infon (tdl::get-infon name domain :avms)))
+    (when infon
+      (tdl::expand-type name :domain domain)
+      (lex::convert 
+       (tdl::feature-structure-term (tdl::get-prototype name domain :avms))
+       user::*unifier*))))
+
 ;;; called from mrsfns.lisp
 
 (defun get-parse-fs (parse)
@@ -140,12 +183,24 @@ Other useful functions from UDINE/TDL:
 
 ;;; required by munger
 
+#+lkb
 (defun compatible-types (type1 type2)
   (let ((type1name (fetch-and-expand-type type1))
 	(type2name (fetch-and-expand-type type2)))
     (when (and type1name type2name)
       (not (eq (csli-unify::unify-types type1name type2name)
 	       'CSLI-UNIFY::*FAIL*)))))
+
+#+page
+(defun compatible-types (type1 type2)
+  (let ((type1name (intern type1 lex::*lex-package*))
+        (type2name (intern type2 lex::*lex-package*)))
+  (when (and (tdl::type-exists-p 
+              type1name lex::*lex-package*)
+             (tdl::type-exists-p 
+              type2name lex::*lex-package*))
+    (not (eq (csli-unify::unify-types type1name type2name)
+             'CSLI-UNIFY::*FAIL*)))))
 
 (defun is-valid-type (type)
   (tdl::get-infon (intern type lex::*lex-package*) lex::*lex-package* :avms))
@@ -159,3 +214,12 @@ Other useful functions from UDINE/TDL:
       (lex::convert 
        (tdl::feature-structure-term (tdl::get-prototype name domain :avms))
        user::*unifier*))))
+
+(defun get-category-label (parse)
+  ;;; takes the same input as get-parse-fs - returns a string
+  ;;; corresponding to the node label as used by the parse-tree
+  ;;; drawing system
+  (if (eq (type-of parse) 'csli-unify::fs)
+      (trees::compute-label parse)
+    (trees::compute-label (get-parse-fs parse))))
+
