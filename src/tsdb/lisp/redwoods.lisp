@@ -1212,6 +1212,8 @@
         (when (or (eq *redwoods-export-values* :all)
                   (smember :mrs *redwoods-export-values*))
           (mrs::output-mrs1 mrs 'mrs::simple stream))
+        (when (smember :indexed *redwoods-export-values*)
+          (mrs::output-mrs1 mrs 'mrs::indexed stream))
         (when (or (eq *redwoods-export-values* :all)
                   (smember :prolog *redwoods-export-values*))
           (mrs::output-mrs1 mrs 'mrs::prolog stream)
@@ -1876,7 +1878,7 @@
                            :thorough '(:derivation)
                            :condition condition :gold source :readerp nil)
       with nfold = (min (length data) nfold)
-      initially #+:debug (setf %data% data) #-:debug nil
+      #+:debug initially #+:debug (setf %data% data)
       for i from 1 to (if (>= nfold 1) nfold 1)
       when (interrupt-p interrupt) do
         (format 
