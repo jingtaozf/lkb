@@ -333,7 +333,7 @@ proc tsdb_option {name} {
               "number of cross-validation runs" \
               $globals(tree,nfold)]} {
         if {$globals(integer,lvalue) == ""} {
-          set globals(integer,lvalue) 1;
+          set globals(integer,lvalue) 0;
         }; # if
         set globals(tree,nfold) $globals(integer,lvalue);
       }; # if

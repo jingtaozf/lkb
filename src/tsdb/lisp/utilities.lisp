@@ -216,7 +216,9 @@
       when (or (zerop nth) (and (not (zerop n)) (= i ith)))
       collect foo into result
       else collect foo into complement
-      when (and (not (zerop n)) (zerop (mod j n))) do (incf i)
+      when (and (not (zerop n)) (zerop (mod j n))
+                (not (and (= ith nth) (= i ith))))
+      do (incf i)
       finally (return (values result complement))))
 
 (defun ith-n (list ith n)

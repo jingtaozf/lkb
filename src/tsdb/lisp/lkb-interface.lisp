@@ -154,7 +154,11 @@
                                            *maximum-number-of-edges*
                                            edges))
               (*first-only-p* (unless exhaustive
-                                (if (integerp readings) readings 1)))
+                                (if (integerp readings)
+                                  readings
+                                  (if (integerp *first-only-p*)
+                                    *first-only-p*
+                                    1))))
               (*do-something-with-parse* nil)
               (sent
                (split-into-words (preprocess-sentence-string string)))

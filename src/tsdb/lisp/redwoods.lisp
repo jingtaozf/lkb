@@ -20,6 +20,8 @@
 
 (defparameter *redwoods-export-values* :all)
 
+(defparameter *redwoods-export-bad-trees-p* t)
+
 (defun browse-trees (&optional (data *tsdb-data*)
                      &key (condition *statistics-select-condition*)
                           gold
@@ -837,55 +839,6 @@
                 for derivation in (lkb::compare-frame-derivations frame)
                 thereis (and (= (derivation-id derivation) id) derivation))))))
 
-(defun marty (data &key condition)
-  
-  (loop
-      with items = (analyze data :thorough '(:derivation) 
-                            :condition condition)
-      for item in items
-      for i-id = (get-field :i-id item)
-      for parse-id = (get-field :parse-id item)
-      for trees = (select '("t-version") '(:integer) "tree" 
-                          (format nil "parse-id == ~a" parse-id) 
-                          data
-                          :sort :parse-id)
-      for version = (loop
-                        for tree in trees
-                        maximize (get-field :t-version tree))
-      for active = (let ((foo (select '("result-id") '(:integer) "preference" 
-                                      (format 
-                                       nil 
-                                       "parse-id == ~a && t-version == ~d" 
-                                       parse-id version) 
-                                      data)))
-                     (loop for bar in foo collect (get-field :result-id bar)))
-      for results = (get-field :results item)
-      do
-        (format 
-         t 
-         "marty(): ~d tree~p for item # ~d.~%" 
-         (length active) (length active) i-id)
-        
-        (loop
-            for i from 1
-            for result in results
-            for id = (get-field :result-id result)
-            for derivation = (when (member id active :test #'eql)
-                               (get-field :derivation result))
-            for edge = (and derivation (reconstruct derivation))
-            for foo = (when edge
-                        (with-standard-io-syntax
-                          (let ((*package* lkb::*lkb-package*))
-                            (write-to-string
-                             (lkb::compute-derivation-tree edge) 
-                             :case :downcase))))
-            for mrs = (and edge (mrs::get-mrs-string edge))
-            when edge do
-              (format
-               t
-               "~d (~d); derivation:~%~a~%~d (~d); MRS string:~%~a~%~%"
-               id i foo id i mrs))))
-
 (defun export-trees (data &key (condition *statistics-select-condition*)
                                path prefix interrupt meter 
                                (compressor "gzip -f -9")
@@ -895,10 +848,10 @@
       with target = (format 
                      nil 
                      "~a/~a"
-                     (or path "/lingo/oe/tmp") (substitute #\. #\/ data))
+                     (or path "/lingo/oe/tmp") (directory2file data))
       with *reconstruct-cache* = (make-hash-table :test #'eql)
       with items = (analyze data :thorough '(:derivation) 
-                            :condition condition)
+                            :condition condition :readerp nil)
       with increment = (when (and meter items)
                          (/ (- (get-field :end meter) (get-field :start meter))
                             (length items) 1))
@@ -968,7 +921,8 @@
           
           (setf (get-field :results item) (nreverse results))
           (export-tree item active :stream stream)
-          (export-tree item active :complementp t :stream stream))
+          (when *redwoods-export-bad-trees-p*
+            (export-tree item active :complementp t :stream stream)))
         
         (when compressor
           (let ((command (format nil "~a '~a'" compressor file)))
@@ -1044,7 +998,8 @@
   (loop
       with stream = (open file :direction :output :if-exists :supersede)
       with *reconstruct-cache* = (make-hash-table :test #'eql)
-      with items = (analyze data :thorough '(:derivation) :condition condition)
+      with items = (analyze data :thorough '(:derivation) 
+                            :condition condition :readerp nil)
       for item in items
       for i-id = (get-field :i-id item)
       for input = (or (get-field :o-input item) (get-field :i-input item))
@@ -1305,13 +1260,15 @@
          (items (if (stringp data)
                   (analyze (if spartanp gold data)
                            :thorough (or thorough spartanp)
-                           :condition condition :score (if scorep data t))
+                           :condition condition :score (if scorep data t)
+                           :readerp (eq test :derivation))
                   data))
          (aggregates (aggregate items :format format))
          (gitems (if (stringp gold)
                    (analyze gold
                             :thorough thorough
-                            :condition condition :gold gold)
+                            :condition condition :gold gold 
+                            :readerp (eq test :derivation))
                    gold))
          (gaggregates (aggregate-by-analogy gitems aggregates))
          results)
@@ -1428,6 +1385,11 @@
                    for grank in granks
                    thereis (funcall test rank grank))
           do
+            ;;
+            ;; _fix_me_
+            ;; results with equal rank may precede the current result; if so,
+            ;; we fail to discount appropriately.              (29-nov-02; oe)
+            ;;
             (loop
                 for next = (first ranks)
                 while (and next (= (get-field :rank next) i)) 
@@ -1457,7 +1419,7 @@
   
   (format
    stream
-   "~&[~a] rank-profile:() `~a' -->~%                            `~a'~%"
+   "~&[~a] rank-profile:() `~a' -->~%                           `~a'~%"
    (current-time :long :short) source target)
 
   (purge-test-run target :action :score)
@@ -1473,7 +1435,7 @@
                            :condition condition :gold source :readerp nil)
       with nfold = (min (length data) nfold)
       initially #+:debug (setf %data% data) #-:debug nil
-      for i from 1 to (+ nfold 1)
+      for i from 1 to (if (>= nfold 1) nfold 1)
       when (interrupt-p interrupt) do
         (format 
          stream
@@ -1483,7 +1445,8 @@
         (restore-gc-strategy gc)
         (return)
       do
-        (multiple-value-bind (test train) (ith-nth data i nfold)
+        (multiple-value-bind (test train) 
+            (ith-nth data i (if (zerop nfold) 10 nfold))
           (when (null train) (setf train test))
           (when (and test train)
             (format
@@ -1537,7 +1500,7 @@
          stream
          "~&[~a] train-and-rank(): using ~a;~%"
          (current-time :long :short)  model)
-        #+:debug (setf %model% model)
+        #-:debug (setf %model% model)
       when (and (integerp readings) (> readings 1)) do
         (format 
          stream
