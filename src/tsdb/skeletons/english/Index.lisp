@@ -33,4 +33,4 @@
  ((:path . "aged") (:content . "Aged VerbMobil Data"))
  ((:path . "wsj00") (:content . "Wall Street Journal (PTB; Section 0)"))
  ((:path . "ec") (:content . "Ecommerce Email"))
- ((:path . "toy") (:content . "Development Test Suite")))
+ ((:path . "toy") (:content . "VerbMobil Sample Dialogue")))
