@@ -659,6 +659,7 @@
 
 #+:gen-index
 (defun gen-chart-dag-index (index-dag edge-id)
+  (declare (ignore edge-id))
    (if index-dag
       (unify-get-type index-dag) ; may be called inside unif context
       (progn

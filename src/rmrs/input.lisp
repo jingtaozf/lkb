@@ -90,13 +90,16 @@
 ;;; <!ELEMENT ep ((realpred|gpred), label, var)>
 ;;; <!ATTLIST ep
 ;;;          cfrom CDATA #REQUIRED
-;;;          cto   CDATA #REQUIRED > 
+;;;          cto   CDATA #REQUIRED 
+;;;          surface   CDATA #IMPLIED > 
   (let ((tag (car content))
         (body (cdr content)))
     (unless (and 
              (eql (first tag) '|ep|)
              (eql (second tag) '|cfrom|)
-             (eql (fourth tag) '|cto|))
+             (eql (fourth tag) '|cto|)
+             (or (not (sixth tag)) 
+                 (eql (sixth tag) '|surface|)))
       (error "Malformed ep ~A" content))
     (setf body (loop for x in body
 		   unless (xml-whitespace-string-p x)
@@ -106,7 +109,8 @@
               :handel (read-rmrs-label (second body))
               :flist (list (read-rmrs-var (third body)))
               :cfrom (parse-integer (third tag))
-              :cto (parse-integer (fifth tag)))))
+              :cto (parse-integer (fifth tag))
+              :str (seventh tag))))
 
 (defun read-rmrs-pred (content)
   (let ((tag (car content))

@@ -53,13 +53,21 @@
 <!ELEMENT ep ((realpred|gpred), label, var)>
 <!ATTLIST ep
           cfrom CDATA #REQUIRED
-          cto   CDATA #REQUIRED >
+          cto   CDATA #REQUIRED
+          surface CDATA #IMPLIED
+>
 |#
 
-(defmethod rmrs-output-start-ep ((rmrsout xml) cfrom cto)
+(defmethod rmrs-output-start-ep ((rmrsout xml) cfrom cto str)
   (with-slots (stream) rmrsout
-    (format stream "~%<ep cfrom='~A' cto='~A'>" (or cfrom -1)
-	    (or cto -1))))
+    (format stream "~%<ep cfrom='~A' cto='~A'" (or cfrom -1)
+	    (or cto -1))
+    (when str
+      (format stream " surface='~A'" (remove #\' str)))
+    ;;; FIX - XML doesn't like ' - simply strip them?
+    (format stream ">")))
+
+
 
 #|
 <!ELEMENT realpred EMPTY>
@@ -233,8 +241,8 @@
 
 ;;; <!ELEMENT ep (gpred,label,var)>
 
-(defmethod rmrs-output-start-ep ((rmrsout gramxml) cfrom cto)
-  (declare (ignore cfrom cto))
+(defmethod rmrs-output-start-ep ((rmrsout gramxml) cfrom cto str)
+  (declare (ignore cfrom cto str))
   (with-slots (stream) rmrsout
     (format stream "~%<ep>")))
 
@@ -277,8 +285,8 @@ for gram.dtd and tag.dtd
   (with-slots (stream) rmrsout
     (format stream "")))
 
-(defmethod rmrs-output-start-ep ((rmrsout compact) cfrom cto)
-  (declare (ignore cfrom cto))
+(defmethod rmrs-output-start-ep ((rmrsout compact) cfrom cto str)
+  (declare (ignore cfrom cto str))
   (with-slots (stream) rmrsout
     (format stream "")))
 
@@ -432,7 +440,8 @@ for gram.dtd and tag.dtd
 (defclass compact-chars (compact)
   ())
 
-(defmethod rmrs-output-start-ep ((rmrsout compact-chars) cfrom cto)
+(defmethod rmrs-output-start-ep ((rmrsout compact-chars) cfrom cto str)
+  (declare (ignore str))
   (with-slots (stream indentation) rmrsout
     (format stream "~VT~A->~A:" indentation cfrom cto)))
 
@@ -645,7 +654,8 @@ for gram.dtd and tag.dtd
 				    -1)
 				  (if (char-rel-p ep)
 				      (char-rel-cto ep)
-				    -1))
+				    -1)
+                                  (rel-str ep))
             (if (realpred-p pred)
                 (rmrs-output-realpred rmrs-display-structure
                                       (realpred-lemma pred)

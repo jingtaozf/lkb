@@ -1437,6 +1437,13 @@
         (when (or (eq *redwoods-export-values* :all)
                   (smember :dependencies *redwoods-export-values*))
           (mrs::ed-output-psoa mrs :stream stream))
+        #|
+        (when (smember :qa *redwoods-export-values*)
+          (mrs::output-rmrs-from-fine-system
+           (+ parse-id offset) 
+           (or (get-field :o-input item) (get-field :i-input item))
+           mrs))
+           |#
         (format stream "~c~%" #\page)))
 
 (defun semantic-equivalence (data &key condition (file "/tmp/equivalences"))

@@ -42,7 +42,7 @@
 ("Abrams wondered which dog barked" . 1)
 ("Abrams wondered whether Browne barked" . 1)
 ("The dog that Browne chased barked" . 2) ; 31
-("The dog to chase is barking" . 2)
+("The dog to chase is barking" . 1)
 ("The dog was chased by Browne" . 1)
 ("The dog chased by Browne barked" . 2)
 ("The dog is barking" . 1)
@@ -84,7 +84,7 @@
 ("Abrams put Browne in the garden" . 1) ; 71
 ("The dog will bark if Browne arrives" . 1)
 ("Abrams and Browne arrived" . 1)
-("Abrams Browne and the dog arrived" . 3)
+("Abrams, Browne and the dog arrived" . 1)
 ("The dog arrived and barked" . 1)
 ("The dog arrived and Browne barked" . 1) ; 76
 ("The dog barked didn't it" . 1)
@@ -113,7 +113,7 @@
 ("That dog chased Browne" . 1)
 ("Somebody chased Abrams" . 1) ; 101
 ("How happy was Abrams" . 1)
-("The number five bothers Browne" . 2)
+("The number five bothers Browne" . 1)
 ("Abrams could" . 1)
 ("Browne tried to" . 1)
 ("Don't bark" . 1) ; 106
@@ -139,7 +139,7 @@
           (format ostream
                   "~%<tree></tree>")
     ;;; for rasp output compatibility
-          (let ((rmrs (lkb::rmrs-for-sentence sentence parsenum)))
+          (let ((rmrs (rmrs-for-sentence sentence parsenum)))
             (if rmrs
                 (mrs::output-rmrs1 rmrs 'mrs::xml ostream)
               (format ostream
@@ -194,7 +194,7 @@
           (nth (- egnum 1)
                (mrs::read-rmrs-file "semtest-rasp.rmrs" :rasp)))
 	 (erg-rmrs
-	  (lkb::rmrs-for-sentence input parse-number)))
+	  (rmrs-for-sentence input parse-number)))
     (dolist (comparison-record (mrs::compare-rmrs erg-rmrs rasp-rmrs strpos-p))
       (lkb::show-mrs-rmrs-compare-window erg-rmrs rasp-rmrs 
 				    comparison-record input))))
@@ -246,21 +246,44 @@
 
 |#
 
+#|
 
-;;; qa testing
+;;; qa question preparation
 
-;;; *redwoods-semantix-hook*
-;;; cheap and cheerful ...
+0) null .tsdbrc
 
-;;; (setf tsdb::*redwoods-semantix-hook* #'output-rmrs-from-fine-system)
+1) Remove Ersatzing from preprocessing
 
+2) Parse the QA questions till satisfied and Annotate trees
+(make sure to set the Process | Variables Chart to a safe size)
+
+If need to update with existing parse selection - middle button on old (gold),
+select new and `Trees Update' (setting Trees | Switches | Automatic Update
+off, perhaps)
+
+3) Set the LKB to *recording-word* mode
+
+4) define output-rmrs-from-fine-system as below
+
+5) add the following to redwoods.lisp export-tree
+
+(when (smember :qa *redwoods-export-values*)
+          (mrs::output-rmrs-from-fine-system
+           (+ parse-id offset) 
+           (or (get-field :o-input item) (get-field :i-input item))
+           mrs))
+
+(setf tsdb::*redwoods-export-values* '(:qa))
+
+6) Trees Switches Thinning Export should be set
+
+7) Trees Export
+
+|#
 
 #|
-(defun output-rmrs-from-fine-system (edge)
-  (let* ((mrs (mrs::extract-mrs edge))
-         (rmrs (mrs::mrs-to-rmrs mrs))
-         (i-id tsdb::*aac-i-id*)
-         (sentence tsdb::*aac-sentence*)
+(defun output-rmrs-from-fine-system (i-id sentence mrs)
+  (let* ((rmrs (mrs::mrs-to-rmrs mrs))
          (filename (format nil "q~A.rmrs" i-id)))
   (with-open-file (ostream filename :direction :output
                        :if-exists :supersede)
@@ -280,26 +303,24 @@
                   "~%<rmrs></rmrs>"))
         (format ostream "</S>")
         (output-end-blah ostream)
-        (finish-output ostream)
-        rmrs)))
+        (finish-output ostream))
+  (excl::shell 
+   (concatenate 'string
+     "xmlnorm -Vs " filename " 2>| " (format nil "q~A.errors" i-id)))))
 
+(defun output-header-blah (ostream)
+  (format ostream
+"<?xml version='1.0'?> 
+<!DOCTYPE CORPUS SYSTEM \"/usr/groups/mphil/qa05/dtd/analysis.dtd\" > 
+<CORPUS> 
+<DOC> 
+<DOCNO/>
+<TEXT>
+<P>"))
 
-;;; assumes the following changes to browse-tree in tsdb/lisp/redwoods.lisp
-
-                  (when (or *redwoods-semantix-hook* *redwoods-trees-hook*)
-                    (setf *aac-i-id* i-id)
-                    (setf *aac-sentence* input) 
-                    (loop
-                        for result in results
-                        for derivation = (get-field :derivation result)
-                        for edge = (when derivation (reconstruct derivation))
-                        for mrs = (when (and edge *redwoods-semantix-hook*)
-                                    (call-hook *redwoods-semantix-hook* edge))
-                        for tree = (when (and edge *redwoods-trees-hook*)
-                                     (call-hook *redwoods-trees-hook* edge))
-                        when mrs do (setf (get-field :mrs result) mrs)
-                        when tree do (setf (get-field :tree result) tree)))
-                  (write-results parse-id results strip :cache cache))))
-
+(defun output-end-blah (ostream)
+  (format ostream
+"</P></TEXT></DOC></CORPUS>~%"))
 
 |#
+

@@ -78,6 +78,7 @@
 
 (defstruct word-info
   lemma ;; downcase this systematically
+  original ;; original string
   pos
   from
   to)
@@ -131,15 +132,16 @@
 
 (defparameter *rmrs-output-type* 'xml)
 
-(defun construct-sem-for-tree (tree origin ostream)
+(defun construct-sem-for-tree (tree origin ostream &optional original)
   ;;; takes a tree and returns a semstruct - guaranteed
   ;;; - unless there's a syntax error in input data
   ;;;
   ;;; origin is a record of where the rmrs comes from 
   ;;; - currently this will always be :rasp
+  ;;; original is the original string (in some form)
   (initialize-rmrs-variables)
   (let* ((semstruct
-          (construct-sem-for-tree-aux tree))
+          (construct-sem-for-tree-aux tree original))
          (canonical-bindings 
           (close-bindings (semstruct-bindings semstruct)))
          (rmrs (make-rmrs
@@ -310,16 +312,16 @@
 ;;; on the node - we just need some form of identification of
 ;;; a recipe for composition
 
-(defun construct-sem-for-tree-aux (tree-node)
+(defun construct-sem-for-tree-aux (tree-node original)
   (if (daughter-nodes-p tree-node)
       (let ((rule-name (get-rule-name tree-node))
 	    (dtr-nodes (get-dtr-nodes tree-node)))
 	(compose rule-name
 		 (loop for dtr in dtr-nodes
 		     collect
-		       (construct-sem-for-tree-aux dtr))))
+		       (construct-sem-for-tree-aux dtr original))))
     (let ((base-tag (get-lexical-tag tree-node))
-	  (lexeme (get-lexeme tree-node)))
+	  (lexeme (get-lexeme tree-node original)))
       (create-base-struct base-tag lexeme))))
 
 
@@ -594,6 +596,8 @@ goes to
                        (loop for old-arg in (rel-flist old-ep)
                            collect
                              (generate-new-var old-arg))
+                       :str (if (word-info-p lex)
+                                (word-info-original lex))
 		       :cfrom cfrom
 		       :cto cto))
      :rmrs-args

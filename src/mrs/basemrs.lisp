@@ -56,6 +56,7 @@
   flist)
 
 (defstruct (rel (:include rel-base))
+  str 
   handel                               
   parameter-strings			; the constant values
 					; a junk slot used by the

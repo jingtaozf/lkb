@@ -153,6 +153,7 @@ of rels in the lzt, converting them to simple eps plus rmrs-args
            :extra (rel-extra rel)
            :pred pred 
            :flist (list converted-main-arg)
+           :str (rel-str rel)
 	   :cfrom (if (char-rel-p rel)
 		      (char-rel-cfrom rel))
 	   :cto (if (char-rel-p rel)
@@ -527,6 +528,7 @@ Errors won't be devastating anyway ...
 			    (loop for rarg in rargs
 				collect
 				  (deparsonify rarg semi-entries)))
+               :str (char-rel-str ep)
 	       :cfrom (char-rel-cfrom ep)
 	       :cto (char-rel-cto ep))))
 	  (values new-ep problems))

@@ -279,7 +279,9 @@ duplicate variables")
            (pred (or (lookup-mtr-node 
                       (extract-pred-from-rel-fs fs :rawp t))
                      (create-type (extract-pred-from-rel-fs fs))))
-           (fvps (extract-fvps-from-rel-fs fs variable-generator indexing-p))
+           (original-string (extract-original-string-from-rel-fs fs))
+           (fvps (extract-fvps-from-rel-fs fs variable-generator 
+                                           indexing-p original-string))
            (parameter-strings (get-fvps-parameter-strings fvps))
            (cfrom (extract-cfrom-from-rel-fs fs))
            (cto (extract-cto-from-rel-fs fs)))
@@ -289,6 +291,7 @@ duplicate variables")
                    :handel handle-var
                    :flist fvps
                    :parameter-strings parameter-strings
+                   :str original-string
                    :cfrom cfrom
                    :cto cto)))
           (push (cons fs ep) *all-nodes*)
@@ -306,6 +309,19 @@ duplicate variables")
     (if *rel-handel-path*
         (assoc (car *rel-handel-path*)
                label-list))))
+
+#+:lkb
+(defun extract-original-string-from-rel-fs (fs)
+  (if lkb::*recording-word*
+      (let* ((label-list (fs-arcs fs))
+             (origstr-fs
+              (cdr (assoc lkb::*recording-word*
+                          label-list))))
+        (if origstr-fs
+            (let ((fs-type (fs-type origstr-fs)))
+              (if (stringp fs-type)
+                  fs-type))))))
+
 
 (defun extract-cfrom-from-rel-fs (fs)
   (let ((label-list (fs-arcs fs)))
@@ -350,7 +366,8 @@ duplicate variables")
 (defun extract-type-from-rel-fs (rel-fs)
   (fs-type rel-fs))
 
-(defun extract-fvps-from-rel-fs (rel-fs variable-generator indexing-p)
+(defun extract-fvps-from-rel-fs (rel-fs variable-generator indexing-p str)
+  (declare (ignore str))
   (let* ((label-list (fs-arcs rel-fs))
          (reduced-list
           (loop for fvp in label-list
@@ -358,19 +375,40 @@ duplicate variables")
               for value = (cdr fvp)
               unless (or (member feature *ignored-sem-features*)
                          (eql feature (car *rel-handel-path*))
-                         (eql feature (car *rel-name-path*)))
+                         (eql feature (car *rel-name-path*))
+                         #+:lkb(eql feature lkb::*recording-word*))
               collect 
                 (make-fvpair :feature feature
                              :value 
                              (or (lookup-mtr-node value)
                                  (if (member feature *value-feats*)
-                                   (create-type (fs-type value))
+                                     (create-type (fs-type value))
+                                   ;; (substitute-ersatz 
+                                   ;;  (create-type (fs-type value))
+                                   ;;   str)
                                    (if indexing-p
                                      (create-indexing-variable value)   
                                      (create-variable
                                       value
                                       variable-generator))))))))
     (sort reduced-list #'feat-sort-func)))
+
+(defun substitute-ersatz (const-str orig-str)
+  ;;; this is a bit of a hack
+  ;;; the preprocessor replaces e.g. 1992 with FourDigitErsatz
+  ;;; which is a pain for any practical work with (R)MRSs
+  ;;; So this code puts back the original string if available
+  ;;; if there's an ersatz there
+  ;;; This will only work if the parser can see the original 
+  ;;; string
+  (if (and orig-str (stringp const-str)  (stringp orig-str))
+      (let ((const-length (length const-str)))
+        (if (and (> const-length 6)
+                 (string-equal "ersatz" const-str 
+                               :start2 (- const-length 6)))
+            orig-str
+          const-str))
+    const-str))
 
 (defun create-type (sort)
   ;;; currently a no-op but kept

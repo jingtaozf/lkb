@@ -1015,10 +1015,10 @@ cases
 
 ;;; temporary - set these interactively soon
 
-(defparameter *tsdb-directory1* "jabberwocky/lingo/28-05-04/lkb")
+(defparameter *tsdb-directory1* "cue_phrases/cue_phrases/general/lingo")
 
 
-(defparameter *tsdb-directory2* "jabberwocky/rasp/25-05-04/lkb")
+(defparameter *tsdb-directory2* "cue_phrases/cue_phrases/general/rasp")
 
 
 ;;; Window showing sentences to compare

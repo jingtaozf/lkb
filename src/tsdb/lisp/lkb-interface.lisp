@@ -941,13 +941,16 @@
                        *lkb-package*))
          (instance (ignore-errors (get-unexpanded-psort-entry name))))
     (when instance 
-      (let ((tdfs (when (smember dagp '(:word t))
+      (let* ((tdfs (when (smember dagp '(:word t))
                     (copy-tdfs-completely 
                      (lex-entry-full-fs (get-lex-entry-from-id name)))))
+            (tdfs-with-word (if *recording-word*
+                                (unify-in-word tdfs form)
+                              tdfs))
             (ids (list (lex-entry-id instance))))
         (make-edge :id id :category (and tdfs (indef-type-of-tdfs tdfs))
                    :rule form :leaves (list form) :lex-ids ids
-                   :dag tdfs :from start :to end
+                   :dag tdfs-with-word :from start :to end
                    #-:logon :cfrom #-:logon (mrs::find-cfrom-hack start)
                    #-:logon :cto #-:logon (mrs::find-cto-hack start))))))
 

@@ -70,6 +70,8 @@
 
 (defparameter *initial-rasp-num* nil)
 
+(defparameter *predicted-pos* 1)
+
 (defun rmrs-from-file (filename output xml-type)
   ;;; xml-type control if/how input is xmlified.  
   ;;; The wrappers etc are determined
@@ -130,7 +132,8 @@
                             (setf *initial-rasp-num*
                               (scan-rasp-for-first-num 
                                tree most-positive-fixnum)))
-                          (construct-sem-for-tree tree :rasp ostream))
+                          (setf *predicted-pos* 1)
+                          (construct-sem-for-tree tree :rasp ostream original))
                         (finish-output ostream))
                     (storage-condition (condition)
                       (format ostream "~%Memory allocation problem: ~A~%" condition))
@@ -150,7 +153,7 @@
 	(format ostream "<?xml version='1.0'?> <!DOCTYPE rmrs-list SYSTEM \"/homes/aac10/lingo/lkb/src/rmrs/rmrs.dtd\" >")
 	(format ostream "~%<rmrs-list>"))
     (:standard
-     (format ostream "<?xml version='1.0'?> <!DOCTYPE CORPUS SYSTEM \"/usr/groups/mphil/qa04/dtd/analysis.dtd\" > 
+     (format ostream "<?xml version='1.0'?> <!DOCTYPE CORPUS SYSTEM \"/usr/groups/mphil/qa05/dtd/analysis.dtd\" > 
 <CORPUS> 
 <DOC> 
 <DOCNO/>
@@ -278,7 +281,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 ;;; Note that ' is removed from the lexeme to avoid XML errors
 ;;; - also will match better with ERG output
 
-(defun get-lexeme (node)
+(defun get-lexeme (node original)
   (let* ((xml-str (string node))
 	 (str (if *rasp-xml-word-p* 
 		  (de-xml-str xml-str)
@@ -287,7 +290,13 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
          (notag (subseq str 0 uscore-pos))
          (tag (subseq str uscore-pos))
          (colon-pos (position #\: notag :from-end t))
-         (suffix-pos (position #\+ notag)))
+         (suffix-pos (position #\+ notag))
+         (count (if original (get-word-count str colon-pos uscore-pos))))
+    (when (and count (not (= count *predicted-pos*)))
+      (setf count *predicted-pos*))
+    (setf *predicted-pos* (+ 1 *predicted-pos*))
+    ;;; the count isn't correct - try seeing whether keeping track 
+    ;;; of the leaf nodes works instead
     (make-word-info
      :lemma 
      (remove #\'
@@ -298,6 +307,8 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
           notag)))
       :pos
       (tag-letters tag)
+      :original (if (and count (<= count (length original)))
+                    (remove #\' (elt original (- count 1))))
       :from (get-cfrom xml-str)
       :to (get-cto xml-str))))
 
@@ -323,6 +334,20 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
          (after-tag (subseq str (+ 1 first-end)))
          (second-first (position #\< after-tag)))
     (subseq after-tag 0 second-first)))
+
+(defun get-word-count (str colon-pos uscore-pos)
+  ;;; "Margaret:17_NP1"
+  ;;; extract 17
+  (if (and (not *rasp-xml-word-p*)
+           colon-pos uscore-pos)    
+      (let ((count 
+             (parse-integer (subseq str (+ 1 colon-pos) uscore-pos) 
+                            :junk-allowed t)))
+        (if (and count
+                 (integerp count))
+            count
+          nil))
+    nil))
 
 (defun get-cfrom (str)
   ;;; <w s="19" e="24">bark+ed_VVD</w>
@@ -386,8 +411,10 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 (defun process-rasp-files nil
   ;;; clear and load the grammars
   (let ((*rasp-xml-word-p* nil))
-;        (wanted (mapcar #'(lambda (x) (format nil "~A" x))
-;                        '(3 4 5 6 7 20 21 22 23 24))))
+    #|
+        (wanted (mapcar #'(lambda (x) (format nil "~A" x))
+        '(24))))
+        |#
  (clear-rule-record)
  (read-rmrs-grammar (make-pathname 
     :directory "/homes/aac10/lingo/lkb/src/rmrs/annlt-test/"
@@ -397,7 +424,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
 		  :name "lex14.1.rmrs"))
  (let* ((ifiles
          (directory "/usr/groups/mphil/qa03/parses/*"))
-        (ofiles (directory "/local/scratch/aac10/qatest/rmrs/*"))
+        (ofiles (directory "/local/scratch/aac10/qatest05/rmrs/*"))
         (ofile-qnos (loop for ofile in ofiles
                         collect
                           (extract-qa-file-identifier 
@@ -414,17 +441,19 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
                      (equal (subseq namestring 
                                     (- (length namestring) 2))
                             "gz"))
+              ; (format t "~%File ~A wanted" namestring)
               (excl::shell 
                (concatenate 
                    'string "gunzip -c < " 
                     "/usr/groups/mphil/qa03/parses/"
-                   namestring "> /tmp/pfile"))
+                    namestring "> /tmp/pfile"))
+              ; (format t "~%File ~A unpacked" namestring)
               (let ((new-file (concatenate 'string 
-                                "/local/scratch/aac10/qatest/rmrs/"
+                                "/local/scratch/aac10/qatest05/rmrs/"
                                 "top_docs."
                                 qno "." "rmrs"))
                     (err-file (concatenate 'string 
-                                "/local/scratch/aac10/qatest/rmrs-errs/" 
+                                "/local/scratch/aac10/qatest05/rmrs-errs/" 
                                 "top_docs."
                                 qno "." "errors")))
                 (rmrs-from-file "/tmp/pfile" 
@@ -434,7 +463,7 @@ others have `XML' e.g. <w S='Y' C='W'>He:1_PPHS1</w>
                   ;; change the dtd to the right thing
                   (excl::shell 
                    (concatenate 'string  
-                     "/homes/sht25/Clconversion/chg_dtd.p \"/homes/sht25/QA/unified\" \"/usr/groups/mphil/qa04/dtd/analysis\" CORPUS CORPUS /tmp/rfile > " new-file))
+                     "/homes/sht25/Clconversion/chg_dtd.p \"/homes/sht25/QA/unified\" \"/usr/groups/mphil/qa05/dtd/analysis\" CORPUS CORPUS /tmp/rfile > " new-file))
 		  ;;; validate the XML
                   (excl::shell 
                    (concatenate 'string
@@ -706,9 +735,7 @@ Simple qa code.
 
 (defun make-a-file-name (num)
   (let ((filename (format nil "top_docs.~A.rmrs" num)))
-	 ;;; (format nil "test.~A.rmrs" num)))
-    (make-pathname :device "d"
-		   :directory "/lingo/lkb/src/rmrs/qa/"
+    (make-pathname :directory "/local/scratch/aac10/qatest05/rmrs/"
 		   :name filename)))
 
 (defun extract-qa-structs (a-file)
@@ -736,7 +763,7 @@ Simple qa code.
 				      unless (stringp p-el)
 				      do
 					(let ((subsubtag (car p-el)))
-					  (when (eql subsubtag 's)
+					  (when (eql (car subsubtag) 's)
 					    (push
 					     (extract-qa-struct p-el)
 					     qa-structs)))))))))))

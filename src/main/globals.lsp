@@ -306,3 +306,8 @@
 (def-lkb-parameter *psql-lexicon-parameters* nil
   "settings specific to lexical database"
   :user)
+
+(defparameter *recording-word* nil
+  "if used this is set to a feature which should occur in the MRS relation with value *toptype*")
+
+;;; 'ORIGSTR

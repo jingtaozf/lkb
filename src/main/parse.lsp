@@ -536,15 +536,18 @@
                 append
                   (loop for sense in (get-senses (car morph-res))
                       append
-                        (if (cdr morph-res)
-                            (apply-all-lexical-and-morph-rules 
-                             (list (make-mrecord :lex-ids (list (car sense))
-                                                 :fs (cdr sense) 
-                                                 :rules (cdr morph-res)))
-                             f)
-                          (list (make-mrecord :lex-ids (list (car sense))
-                                              :fs (cdr sense) 
-                                              :rules nil))))))))
+                        (let ((fs (if *recording-word*
+                                      (unify-in-word (cdr sense) local-word)
+                                    (cdr sense))))
+                          (if (cdr morph-res)
+                              (apply-all-lexical-and-morph-rules 
+                               (list (make-mrecord :lex-ids (list (car sense))
+                                                   :fs fs 
+                                                   :rules (cdr morph-res)))
+                               f)
+                            (list (make-mrecord :lex-ids (list (car sense))
+                                                :fs fs
+                                                :rules nil)))))))))
     (dolist (mrec word-senses)
       (let* ((lex-ids (mrecord-lex-ids mrec))
              (sense (mrecord-fs mrec))
@@ -563,6 +566,11 @@
     ;; found something, and produce correct error messages, so we return the
     ;; strings found
     (values word-senses multi-results)))
+
+(defun unify-in-word (tdfs word-string)
+  (declare (ignore word-string))
+  tdfs)
+    
 
 (defun construct-lex-edge (sense history word lex-ids from to cfrom cto)
   #+ignore (format t "~%Construct word ~A" word)
@@ -602,16 +610,19 @@
                               (or *mal-active-p* 
                                   (not (mal-lex-entry-p expanded-entry))))
                      (list
-                      (cons id
-                            (cond
-                             ((or *characterize-p*
-				  (smember tdfs *lexical-entries-used*))
-                              (copy-tdfs-completely tdfs))
-                             (t 
-                              (push tdfs *lexical-entries-used*)
-                              tdfs))))))))))
+                      (cons id (copy-lex-fs-as-needed tdfs)))))))))
     (or entries
         (generate-unknown-word-entries stem-string))))
+
+(defun copy-lex-fs-as-needed (tdfs)
+  (cond
+   ((or *characterize-p*
+        *recording-word*
+        (smember tdfs *lexical-entries-used*))
+    (copy-tdfs-completely tdfs))
+   (t 
+    (push tdfs *lexical-entries-used*)
+    tdfs)))
 
 ;;; get-multi-senses has to return a structure
 
@@ -637,19 +648,27 @@
                append
                (loop for sense-record in (get-multi-senses stem right-vertex)
                     nconc
-                    (let* ((sense (sense-record-fs sense-record))
+                     (let* ((sense 
+                             (copy-lex-fs-as-needed
+                              (sense-record-fs sense-record)))
+                            (new-fs (if *recording-word*
+                                        (unify-in-word 
+                                         sense 
+                                         (sense-record-word-string 
+                                          sense-record))
+                                      sense))
                            (lex-ids (sense-record-lex-ids sense-record))
                            (new-morph-res 
                             (sense-record-morph-res sense-record))
                            (mrecs 
                             (if (cdr new-morph-res)
 				(apply-all-lexical-and-morph-rules 
-				 (list (make-mrecord :fs sense 
+				 (list (make-mrecord :fs new-fs 
 						     :lex-ids lex-ids
 						     :rules 
 						     (cdr new-morph-res)))
 				 f)
-                              (list (make-mrecord :fs sense 
+                              (list (make-mrecord :fs new-fs 
                                                   :lex-ids lex-ids      
                                                   :rules nil)))))
                       (if mrecs
