@@ -73,8 +73,8 @@
     ((fs  :initform nil
 	  :accessor active-fs-window-fs))
   :display-function 'draw-active-fs
-  :width :compute 
-  :height :compute
+  :width 500 ;:compute 
+  :height 500; :compute
   :output-record (make-instance 'clim:standard-tree-output-history))
     
 
