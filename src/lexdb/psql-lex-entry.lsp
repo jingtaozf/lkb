@@ -28,6 +28,7 @@
 	  (setf (cdr fv-pair) v)
 	(push (cons f v) fv-pairs)))))
 
+;; obsolete
 ;;; set version to next val
 (defmethod set-version ((psql-le psql-lex-entry) (lexicon psql-lex-database))
   (set-val psql-le 

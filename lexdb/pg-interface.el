@@ -10,7 +10,7 @@
 
 ;;; Add a PG menu to the emacs menu bar
 
-(defvar *lexdb-pg-interface-version* "2.03")
+(defvar *lexdb-pg-interface-version* "2.04")
 
 (require 'widget)
 
@@ -513,9 +513,10 @@ Turning on lexdb-mode runs the hook `lexdb-mode-hook'."
     (setf lexdb-record (cons fields sizes))))
 
 (defun lexdb-store-record (record-in)
-  (if (equal (cdr (assoc :name record-in))
-	     "")
+  (if (equal (cdr (assoc :name record-in)) "")
       (error "cannot commit record with no NAME"))
+  (if (equal (cdr (assoc :flags record-in)) "")
+      (error "cannot commit record with no FLAGS"))
   (princ "please wait... ")
   ;;(terpri)
   (cle-store-record record-in)

@@ -47,8 +47,8 @@
     (format t "~%Dump aborted...")))
 
 (defmethod dump-dfn-fld ((lexicon psql-lex-database) filename)
-  (unless (string>= (lexdb-version lexicon) "3.32")
-    (error "operation requires LexDB version 3.32 or above"))
+;;  (unless (string>= (lexdb-version lexicon) "3.32")
+;;    (error "operation requires LexDB version 3.32 or above"))
   (when
       (catch :sql-error
 	(progn

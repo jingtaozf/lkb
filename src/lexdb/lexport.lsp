@@ -72,8 +72,9 @@
 		       :if-exists :supersede :if-does-not-exist :create)
 	(unless (typep *psql-lexicon* 'psql-lex-database)
 	  (error "please initialize *psql-lexicon*"))
-	(when (string>= (lexdb-version *psql-lexicon*) "3.32")
-	  (dump-dfn-fld *psql-lexicon* file))
+	;;(when (string>= (lexdb-version *psql-lexicon*) "3.32")
+	  (dump-dfn-fld *psql-lexicon* file)
+	  ;;)
 	(export-to-db-dump-to-file lexicon rev-file)))
   (format t "~%export complete")
   (when recurse
@@ -156,6 +157,7 @@
   (car (ask-for-strings-movable head 
 			   (list promptDcons))))
 
+;; obsolete
 (defun get-export-version nil
   (let ((old-val *lexdb-dump-version*)
 	(new-val))

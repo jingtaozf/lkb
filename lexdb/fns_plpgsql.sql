@@ -114,7 +114,7 @@ BEGIN
 	
 	-- scratch
  	CREATE TABLE revision AS SELECT * FROM public.revision WHERE NULL;
- 	EXECUTE \'CREATE UNIQUE INDEX user_\' || user || \'_name_revision_userid ON revision (name,version,userid)\'; 
+ 	EXECUTE \'CREATE UNIQUE INDEX user_\' || user || \'_name_revision_userid ON revision (name,userid,modstamp)\'; 
 
 	-- current_grammar
  	CREATE TABLE current_grammar AS SELECT * FROM public.revision WHERE NULL;
@@ -286,20 +286,22 @@ BEGIN
 	----           eg. COPY TO stdin from frontend
 
 	RAISE INFO \'Selecting new entries to merge...\';
- 	CREATE INDEX temp_name_userid_version on public.temp (name, userid, version);
+ 	CREATE INDEX temp_name_userid_modstamp on public.temp (name, userid, modstamp);
 
 	-- check for duplicates in public.temp
-	num_dups := (SELECT count(*) FROM (SELECT name,userid,version, count(*) FROM public.temp GROUP BY name,userid,version HAVING count(*)>1) AS foo);
+	num_dups := (SELECT count(*) FROM (SELECT name,userid,modstamp, count(*) FROM public.temp GROUP BY name,userid,modstamp HAVING count(*)>1) AS foo);
 	IF (num_dups=1) THEN
-		RAISE EXCEPTION \'Entries to merge contain % duplicated instance of <name,userid,version>\', num_dups;
+		RAISE EXCEPTION \'Entries to merge contain % duplicated instance of <name,userid,modstamp>\', num_dups;
 	ELSIF (num_dups>1) THEN
-		RAISE EXCEPTION \'Entries to merge contain % duplicated instances of <name,userid,version>\', num_dups;
+		RAISE EXCEPTION \'Entries to merge contain % duplicated instances of <name,userid,modstamp>\', num_dups;
 	END IF;
 
  	DELETE FROM revision_new;
+	-- hack: include version in select list to ensure fields come out right
+	-- unsafe assumption: if modstamp matches so does version
 	INSERT INTO revision_new
-		SELECT * FROM (SELECT DISTINCT name,userid,version FROM public.temp EXCEPT SELECT name,userid,version FROM public.revision) AS t1 NATURAL JOIN public.temp;
-	DROP INDEX temp_name_userid_version;
+		SELECT * FROM (SELECT DISTINCT name,userid,version,modstamp FROM public.temp EXCEPT SELECT name,userid,version,modstamp FROM public.revision) AS t1 NATURAL JOIN public.temp;
+	DROP INDEX temp_name_userid_modstamp;
 	DELETE FROM public.temp;
 	count_new := (SELECT count(*) FROM revision_new);
 
@@ -361,17 +363,19 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
+-- temporary hack
 CREATE OR REPLACE FUNCTION public.next_version(text) RETURNS integer AS '
 DECLARE
 	i integer;
-	x RECORD;
 BEGIN
-	FOR x IN EXECUTE \'SELECT COALESCE(1 + max(version),0) as v FROM revision_all WHERE name LIKE \' || quote_literal($1) || \' AND user=user\' LOOP 
-    		i := x.v;
-	END LOOP;
+	i := (SELECT max(version) FROM revision_all);
 	RETURN i;
 END;
 ' LANGUAGE plpgsql;
+	--x RECORD;
+	--FOR x IN EXECUTE \'SELECT COALESCE(1 + max(version),0) as v FROM revision_all WHERE name LIKE \' || quote_literal($1) || \' AND user=user\' LOOP 
+    	--	i := x.v;
+	--END LOOP;
 
 CREATE OR REPLACE FUNCTION public.size_current_grammar() RETURNS int AS '
 BEGIN
@@ -493,8 +497,6 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
-
-
 -- Total runtime: 4.259 ms
 CREATE OR REPLACE FUNCTION public.update_entry(text,text,text) RETURNS boolean AS '
 DECLARE
@@ -534,7 +536,7 @@ CREATE OR REPLACE FUNCTION semi_setup_post() RETURNS boolean AS '
 BEGIN
 	PERFORM semi_create_indices();
 
-	INSERT INTO semi_mod (SELECT DISTINCT name,userid,version,CURRENT_TIMESTAMP FROM current_grammar JOIN semi_pred ON name=lex_id);
+	INSERT INTO semi_mod (SELECT DISTINCT name,userid,modstamp,CURRENT_TIMESTAMP FROM current_grammar JOIN semi_pred ON name=lex_id);
 
 	-- coz merge join is faster
 	SET ENABLE_HASHJOIN TO false;
@@ -547,7 +549,7 @@ END;
 -- fix me?
 CREATE OR REPLACE FUNCTION public.semi_mod_time_private(text,text,int) RETURNS text AS '
 BEGIN
-	RETURN (SELECT modstamp FROM semi_mod WHERE (name,userid,version)=($1,$2,$3));
+	RETURN (SELECT modstamp FROM semi_mod WHERE (name,userid,modstamp0)=($1,$2,$3));
 END;
 ' LANGUAGE plpgsql;
 

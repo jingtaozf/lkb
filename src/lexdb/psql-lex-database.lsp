@@ -418,13 +418,15 @@
 	       (dbname lexicon) (fields-tb lexicon)))
 
 (defmethod get-internal-table-defn ((lexicon psql-lex-database))
-  (if (string>= (lexdb-version lexicon)
-		"3.31")
+  ;;(if (string>= (lexdb-version lexicon)
+;;		"3.31")
       (sql-fn-get-records lexicon 
 			  :return_field_info2 
 			  :args (list "public" "revision"))
-    (get-records lexicon 
-		 "SELECT attname, typname, atttypmod FROM pg_catalog.pg_attribute AS attribute JOIN (SELECT * FROM pg_catalog.pg_class WHERE relname='revision') AS class ON attribute.attrelid=class.relfilenode JOIN pg_catalog.pg_type AS type ON (type.typelem=attribute.atttypid);")))
+    ;;(get-records lexicon 
+;;		 "SELECT attname, typname, atttypmod FROM pg_catalog.pg_attribute AS attribute JOIN (SELECT * FROM pg_catalog.pg_class WHERE relname='revision') AS class ON attribute.attrelid=class.relfilenode JOIN pg_catalog.pg_type AS type ON (type.typelem=attribute.atttypid);")
+    ;;)
+  )
 
 (defmethod get-field-size-map ((lexicon psql-lex-database))
   (let* ((table (get-internal-table-defn lexicon))
@@ -455,11 +457,12 @@
 				  :args (list (symb-2-str field-kw)
 					      (sql-like-text val-str)))))
 
+;; called from pg-interface
 (defmethod new-entries ((lexicon psql-lex-database))
   (let ((records (sql-fn-get-raw-records lexicon 
 				  :revision_new
-				  :fields '(:userid :version :name))))
-    (cons (list "userid" "version" "name") records)))
+				  :fields '(:userid :name :modstamp))))
+    (cons (list "userid" "name" "modstamp") records)))
 
 (defmethod current-timestamp ((lexicon psql-lex-database))
   (sql-fn-get-val lexicon 
@@ -481,6 +484,7 @@
   (set-lex-entry-aux lexicon psql-le))
   
 (defmethod set-lex-entry-aux ((lexicon psql-lex-database) (psql-le psql-lex-entry))
+  ;;obsolete
   (set-version psql-le lexicon) 
   (if *lexdb-dump-timestamp* 
       (set-val psql-le :modstamp *lexdb-dump-timestamp*))
@@ -698,6 +702,7 @@
 (defmethod get-filter ((lexicon psql-lex-database))
   (sql-fn-get-val lexicon :filter))
 
+;; obsolete
 (defmethod next-version (id (lexicon psql-lex-database))
   (let* ((res (sql-fn-get-val lexicon 
 			      :next_version 
@@ -783,7 +788,7 @@
 (defmethod show-scratch ((lexicon psql-lex-database))
   (sql-fn-get-raw-records lexicon 
 			  :retrieve_private_revisions
-			  :fields (list :name :userid :version)))
+			  :fields (list :name :userid :modstamp)))
 
 (defmethod scratch-records ((lexicon psql-lex-database))
   (sql-fn-get-raw-records lexicon :retrieve_private_revisions))
@@ -863,9 +868,10 @@
 ;; appropriate fields
 (defmethod sql-fn-string ((lexicon psql-lex-database) fn &key args fields)
   (with-slots (lexdb-version ext-fns) lexicon
-    (when (and 
-	   (string>= lexdb-version "3.34")
-	   (not (member fn ext-fns)))
+    (when ;;(and 
+	  ;; (string>= lexdb-version "3.34")
+	   (not (member fn ext-fns))
+	   ;;)
       (error "~a not `LexDB external function'" fn))
     (unless fields
       (setf fields '(:*)))

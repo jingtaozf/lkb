@@ -12,7 +12,6 @@ CREATE OR REPLACE FUNCTION public.revision_new() RETURNS SETOF revision AS '
 ' LANGUAGE sql;
 drop table revision_all;
 
---		SELECT * FROM filtered WHERE name LIKE $1 AND modstamp=(SELECT max(modstamp) FROM filtered WHERE name LIKE $1) LIMIT 1
 CREATE OR REPLACE FUNCTION public.retrieve_head_entry(text) RETURNS SETOF revision AS '
 DECLARE
 	x RECORD;
@@ -33,7 +32,6 @@ CREATE OR REPLACE FUNCTION public.retrieve_all_entries() RETURNS SETOF revision 
 ' LANGUAGE sql;
 drop table current_grammar;
 
---		SELECT * FROM current_grammar WHERE orthkey LIKE $1
 CREATE OR REPLACE FUNCTION public.retrieve_entries_by_orthkey(text) RETURNS SETOF revision AS '
 DECLARE
 	x RECORD;
@@ -47,7 +45,6 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
---		SELECT * FROM current_grammar WHERE name LIKE $1
 CREATE OR REPLACE FUNCTION public.retrieve_entry(text) RETURNS SETOF revision AS '
 DECLARE
 	x RECORD;

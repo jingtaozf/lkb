@@ -92,7 +92,7 @@ BEGIN
 	sql_qry := \'CREATE TABLE public.revision (
 		name TEXT NOT NULL,
 		userid TEXT DEFAULT user NOT NULL,
-		version INTEGER DEFAULT 0 NOT NULL,
+		version INTEGER,
 		modstamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
 		orthkey TEXT NOT NULL,
 		flags INTEGER DEFAULT 0 NOT NULL
@@ -131,7 +131,7 @@ END;
 CREATE OR REPLACE FUNCTION public.index_public_revision() RETURNS boolean AS '
 BEGIN
  	RAISE INFO \'Creating indices...\';
-	ALTER TABLE public.revision ADD PRIMARY KEY (name,version,userid);
+	ALTER TABLE public.revision ADD PRIMARY KEY (name,userid,modstamp);
 	CREATE INDEX public_orthkey ON public.revision (orthkey); 
 	CREATE UNIQUE INDEX name_modstamp ON public.revision (name,modstamp); 
 	CREATE INDEX public_revision_name_modstamp ON public.revision (name, modstamp);
@@ -185,20 +185,20 @@ BEGIN
 END;
 ' LANGUAGE plpgsql;
 
---
--- clean up obsolete structures
---
-CREATE OR REPLACE FUNCTION public.clean_up() RETURNS boolean AS '
-BEGIN
-	IF (reln_exists(\'public\',\'qry\')) THEN
-		DROP TABLE public.qry CASCADE;
-	END IF;
-	IF (reln_exists(\'public\',\'qrya\')) THEN
-		DROP TABLE public.qrya CASCADE;
-	END IF;
-	RETURN true;
-END;
-' LANGUAGE plpgsql;
+----
+---- clean up obsolete structures
+----
+--CREATE OR REPLACE FUNCTION public.clean_up() RETURNS boolean AS '
+--BEGIN
+--	IF (reln_exists(\'public\',\'qry\')) THEN
+--		DROP TABLE public.qry CASCADE;
+--	END IF;
+--	IF (reln_exists(\'public\',\'qrya\')) THEN
+--		DROP TABLE public.qrya CASCADE;
+--	END IF;
+--	RETURN true;
+--END;
+--' LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION semi_create_indices() RETURNS boolean AS '
 BEGIN
@@ -209,7 +209,7 @@ BEGIN
 	CREATE INDEX semi_frame_var_id ON semi_frame (var_id);
 	CREATE INDEX semi_var_var_id ON semi_var (var_id);
 	CREATE INDEX semi_extra_extra_id ON semi_extra (extra_id);
-	CREATE INDEX semi_mod_name_userid_version ON semi_mod (name,userid,version);
+	CREATE INDEX semi_mod_name_userid_modstamp0 ON semi_mod (name,userid,modstamp0);
 RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -223,7 +223,7 @@ BEGIN
 	DROP INDEX semi_frame_var_id CASCADE;
 	DROP INDEX semi_var_var_id CASCADE;
 	DROP INDEX semi_extra_extra_id CASCADE;
-	DROP INDEX semi_mod_name_userid_version CASCADE;
+	DROP INDEX semi_mod_name_userid_modstamp0 CASCADE;
 RETURN true;
 END;
 ' LANGUAGE plpgsql;
@@ -263,7 +263,7 @@ BEGIN
 	CREATE TABLE semi_mod (
 		name text,
 		userid text,
-		version int,
+		modstamp0 int,
 		modstamp TIMESTAMP WITH TIME ZONE
 	);
 
@@ -315,6 +315,7 @@ BEGIN
 			t:= t || \',\n \' || x.defn;
 		END LOOP;
 	ELSE
+		-- obsolete
 		RAISE INFO \'Using field defns found in public.default_fields\';
 		FOR x IN SELECT defn FROM default_fields LOOP
 			t := COALESCE(t,\'\');

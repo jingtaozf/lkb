@@ -2,10 +2,6 @@
 --- Fabre Lambeau, Stephan Oepen, Benjamin Waldron;
 --- see `licence.txt' for conditions.
 
--- use instead: create_lang -U postgres plpgsql template1
---CREATE FUNCTION "plpgsql_call_handler" () RETURNS LANGUAGE_HANDLER AS '$libdir/plpgsql' LANGUAGE C;
---CREATE TRUSTED LANGUAGE "plpgsql" HANDLER "plpgsql_call_handler";
-
 --
 --
 
@@ -32,19 +28,20 @@ BEGIN
 END '
  LANGUAGE plpgsql SECURITY INVOKER;
 
--- work-around
+-- work around
 CREATE OR REPLACE FUNCTION public.hide_schemas () RETURNS boolean AS
 '
 	SELECT public.hide_schemas2();
 '
  LANGUAGE SQL SECURITY DEFINER;
 
-CREATE OR REPLACE FUNCTION public.drop_fn_dump_db() RETURNS boolean AS
-'
-	SELECT public.hide_schemas2();
-'
+--CREATE OR REPLACE FUNCTION public.drop_fn_dump_db() RETURNS boolean AS
+--'
+--	SELECT public.hide_schemas2();
+--'
  LANGUAGE SQL SECURITY DEFINER;
 
+-- fix works only for erg/default fields
 CREATE OR REPLACE FUNCTION public.dump_db_su(text) RETURNS text AS '
 DECLARE
 	dump_file_rev text;
@@ -144,29 +141,29 @@ BEGIN
 END;
 ' LANGUAGE plpgsql SECURITY DEFINER;
 
---fix me
-CREATE OR REPLACE FUNCTION public.dump_multi_db(text) RETURNS boolean AS '
-BEGIN
-DELETE FROM temp_multi;
-INSERT INTO temp_multi
- (SELECT * FROM multi ORDER BY name);
-EXECUTE \'COPY temp_multi TO \' || $1 ;
- RETURN true;
-END;
-' LANGUAGE plpgsql SECURITY DEFINER;
+----fix me
+--CREATE OR REPLACE FUNCTION public.dump_multi_db(text) RETURNS boolean AS '
+--BEGIN
+--DELETE FROM temp_multi;
+--INSERT INTO temp_multi
+-- (SELECT * FROM multi ORDER BY name);
+--EXECUTE \'COPY temp_multi TO \' || $1 ;
+-- RETURN true;
+--END;
+--' LANGUAGE plpgsql SECURITY DEFINER;
 
---fix me
-CREATE OR REPLACE FUNCTION public.merge_multi_into_db(text) RETURNS boolean AS '
-BEGIN
- DELETE FROM temp_multi;
- EXECUTE \' COPY temp_multi FROM \' || $1 ;
- DELETE FROM public.multi WHERE name IN (SELECT name FROM temp_multi);
- INSERT INTO public.multi
-  (SELECT * FROM temp_multi);
-
- DELETE FROM public.meta WHERE var=\'mod_time\';
- INSERT INTO public.meta VALUES (\'mod_time\',current_timestamp);
-
- RETURN true;
-END;
-' LANGUAGE plpgsql SECURITY DEFINER;
+----fix me
+--CREATE OR REPLACE FUNCTION public.merge_multi_into_db(text) RETURNS boolean AS '
+--BEGIN
+-- DELETE FROM temp_multi;
+-- EXECUTE \' COPY temp_multi FROM \' || $1 ;
+-- DELETE FROM public.multi WHERE name IN (SELECT name FROM temp_multi);
+-- INSERT INTO public.multi
+--  (SELECT * FROM temp_multi);
+--
+-- DELETE FROM public.meta WHERE var=\'mod_time\';
+-- INSERT INTO public.meta VALUES (\'mod_time\',current_timestamp);
+--
+-- RETURN true;
+--END;
+--' LANGUAGE plpgsql SECURITY DEFINER;

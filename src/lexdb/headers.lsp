@@ -10,7 +10,7 @@
 (defvar *psql-database-connect-timeout* 30)
 (defvar *psql-database-port* 5432)
 
-(defvar *lexdb-major-version* "3.3")
+(defvar *lexdb-major-version* "3.4")
 (defvar *lexdb-dump-skip-stream* t)
 (defvar *lexdb-dump-version* 0)
 (defvar *lexdb-dump-timestamp* nil)
