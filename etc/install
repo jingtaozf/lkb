@@ -45,7 +45,7 @@ RM=rm
 LN="ln -s"
 GREP=grep
 WGET="wget --quiet --timestamping"
-TAR="tar zpxf"
+TAR="tar zxf"
 SED=sed
 
 #
