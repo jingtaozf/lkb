@@ -226,7 +226,8 @@
     (with-successful-response (stream :gif
 				      :expires (expiration-universal-time url)
 				      :last-modification (get-universal-time))
-      (draw-parse-www tree stream))))
+      (mp:with-process-lock (*parser-lock*)
+	(draw-parse-www tree stream)))))
 
 (export-url #u"/lingo/tree?"
 	    :search
