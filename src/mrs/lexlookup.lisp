@@ -619,9 +619,17 @@ at this point).
    :full-fs new-fs
    :daughters-restricted
    (cl-user::rule-daughters-restricted rule)
+   :daughters-restricted-reversed
+   (cl-user::rule-daughters-restricted-reversed rule)
    :daughters-apply-order 
    (cl-user::rule-daughters-apply-order rule)
    :order (cl-user::rule-order rule)
+   :daughters-order-reversed
+   (cl-user::rule-daughters-order-reversed rule)
+   :apply-filter
+   (cl-user::rule-apply-filter rule)
+   :apply-index
+   (cl-user::rule-apply-index rule)
    :main-rels rels
    :message-rels message-rels))
 
