@@ -120,7 +120,8 @@ void tsdb_server() {
     setsockopt(_client, SOL_SOCKET, SO_KEEPALIVE, (char *)&n, sizeof(n));
     linger.l_onoff = TRUE;
     linger.l_linger = 5;
-    setsockopt(_client, SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
+    setsockopt(_client, SOL_SOCKET, SO_LINGER,
+               (char *)&linger, sizeof(linger));
 
     if((child = fork()) < 0) {
       exit(-1);

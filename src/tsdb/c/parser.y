@@ -61,6 +61,7 @@
        Y_KEY
        Y_STRING_TYPE
        Y_INTEGER_TYPE
+       Y_DATE_TYPE
        Y_QUIT
        Y_TEST
 
@@ -126,30 +127,19 @@ y_query :
 
 y_creation : 
   Y_CREATE Y_TABLE y_table_name y_create_attribute_list '.' { 
-    if(!tsdb_is_relation($3)) {
-      tsdb_create_table($3, $4); 
-    } /* if */
-    else {
-      fprintf(tsdb_error_stream, "\ttsdb: Table already exists.\n");
-    } /* else */
+    tsdb_create_table($3, $4); 
   }
 ;
 
 y_dropping : 
   Y_DROP Y_TABLE y_table_name '.' { 
-    if(tsdb_is_relation($3)) 
-      tsdb_drop_table($3); 
-    else
-      fprintf(tsdb_error_stream, "tsdb: Table does not exist.\n");
+    tsdb_drop_table($3); 
   }
 ;
 
 y_altering : 
   Y_ALTER Y_TABLE y_table_name Y_ADD y_create_attribute_list '.' { 
-    if(tsdb_is_relation($3)) 
-      tsdb_alter_table($3, $5);
-    else 
-      fprintf(tsdb_error_stream, "\ttsdb: Table does not exist.\n");
+    tsdb_alter_table($3, $5);
   }
 ;
 
@@ -403,6 +393,27 @@ y_create_attribute :
     $$->type = TSDB_STRING;
     $$->key = TRUE;
   }
+|
+  Y_IDENTIFIER Y_DATE_TYPE {
+    $$ = (Tsdb_field *)malloc(sizeof(Tsdb_field));
+    $$->name = $1;
+    $$->type = TSDB_DATE;
+    $$->key = FALSE;
+  }
+|
+  Y_IDENTIFIER Y_DATE_TYPE Y_KEY {
+    $$ = (Tsdb_field *)malloc(sizeof(Tsdb_field));
+    $$->name = $1;
+    $$->type = TSDB_DATE;
+    $$->key = TRUE;
+  }
+|
+  Y_IDENTIFIER Y_KEY Y_STRING_TYPE {
+    $$ = (Tsdb_field *)malloc(sizeof(Tsdb_field));
+    $$->name = $1;
+    $$->type = TSDB_DATE;
+    $$->key = TRUE;
+  }
 ;
 
 y_condition : 
@@ -585,7 +596,7 @@ int yywrap() {
 yyerror(char *s) {
  
   fprintf(tsdb_error_stream,
-          "parser(): parse error; check the tsdb(1) syntax.\n");
+          "yyparse(): parse error; check the tsdb(1) syntax.\n");
   fflush(tsdb_error_stream);
 
 } /* yyerror() */

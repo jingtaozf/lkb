@@ -305,11 +305,13 @@ void tsdb_debug_canonical_date(Tsdb_value **dates) {
 
   int i;
 
-  tsdb_print_value(dates[0], tsdb_default_stream);
-  for(i = 1; dates[i] != NULL; i++) {
-    fprintf(tsdb_default_stream, " --- ");
-    tsdb_print_value(dates[i], tsdb_default_stream);
-  } /* for */
-  fprintf(tsdb_default_stream, ".\n");
-  fflush(tsdb_default_stream);
+  if(dates != NULL && dates[0] != NULL) {
+    tsdb_print_value(dates[0], tsdb_default_stream);
+    for(i = 1; dates[i] != NULL; i++) {
+      fprintf(tsdb_default_stream, " --- ");
+      tsdb_print_value(dates[i], tsdb_default_stream);
+    } /* for */
+    fprintf(tsdb_default_stream, ".\n");
+    fflush(tsdb_default_stream);
+  } /* if */
 } /* tsdb_debug_canonical_date() */

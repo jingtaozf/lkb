@@ -33,10 +33,15 @@ void tsdb_info(Tsdb_value **value_list) {
 |*
 \*****************************************************************************/
 
+  Tsdb_relation *foo;
+  FILE *output;
   int i, j;
   BOOL match;
 
   if(value_list != NULL) {
+    if((output = tsdb_open_pager()) == NULL) {
+      return;
+    } /* if */
     for(i = 0, match = FALSE; value_list[i] != NULL; i++, match = FALSE) {
       switch(value_list[i]->type) {
         case TSDB_IDENTIFIER:
@@ -44,60 +49,67 @@ void tsdb_info(Tsdb_value **value_list) {
              || !strcmp(value_list[i]->value.identifier, "all")) {
             if(tsdb.relations != NULL) {
               for(j = 0; tsdb.relations[j] != NULL; j++) {
-                tsdb_print_relation(tsdb.relations[j], tsdb_default_stream);
+                tsdb_print_relation(tsdb.relations[j], output);
               } /* for */
-              fflush(tsdb_default_stream);
             } /* if */
             match = TRUE;
           } /* if */
+          if(tsdb_is_relation(value_list[i])) {
+            if((foo = tsdb_find_relation(value_list[i]->value.identifier))
+               == NULL) {
+              fprintf(tsdb_error_stream,
+                      "info(): no cached table for relation `%s'.\n",
+                      value_list[i]->value.identifier);
+              fflush(tsdb_error_stream);
+            } /* if */
+            else {
+              tsdb_print_relation(foo, output);
+            } /* else */
+            match = TRUE;
+          } /* if */
           if(!strncmp(value_list[i]->value.identifier, "tsdb_home", 9)
-             || !strncmp(value_list[i]->value.identifier, "home", 4)) {
-            fprintf(tsdb_default_stream,
+             || !strncmp(value_list[i]->value.identifier, "home", 4)
+             || !strcmp(value_list[i]->value.identifier, "all")) {
+            fprintf(output,
                     "tsdb home: `%s'.\n", tsdb.home);
-            fflush(tsdb_default_stream);
             match = TRUE;
           } /* if */
           if(!strncmp(value_list[i]->value.identifier, 
                       "tsdb_relations_file", 19)
              || !strncmp(value_list[i]->value.identifier, "relations-file", 14)
              || !strcmp(value_list[i]->value.identifier, "all")) {
-            fprintf(tsdb_default_stream,
+            fprintf(output,
                     "tsdb relations file: `%s'.\n", tsdb.relations_file);
-            fflush(tsdb_default_stream);
             match = TRUE;
           } /* if */
           if(!strncmp(value_list[i]->value.identifier, "tsdb_data_path", 14)
              || !strncmp(value_list[i]->value.identifier, "data-path", 9)
              || !strcmp(value_list[i]->value.identifier, "all")) {
-            fprintf(tsdb_default_stream,
+            fprintf(output,
                     "tsdb data path: `%s'.\n", tsdb.data_path);
-            fflush(tsdb_default_stream);
             match = TRUE;
           } /* if */
           if(!strncmp(value_list[i]->value.identifier, "tsdb_result_path", 16)
              || !strncmp(value_list[i]->value.identifier, "result-path", 11)
              || !strcmp(value_list[i]->value.identifier, "all")) {
-            fprintf(tsdb_default_stream,
+            fprintf(output,
                     "tsdb result path: `%s'.\n", tsdb.result_path);
-            fflush(tsdb_default_stream);
             match = TRUE;
           } /* if */
           if(!strncmp(value_list[i]->value.identifier, 
                       "tsdb_result_prefix", 18)
              || !strncmp(value_list[i]->value.identifier, "result-prefix", 13)
              || !strcmp(value_list[i]->value.identifier, "all")) {
-            fprintf(tsdb_default_stream,
+            fprintf(output,
                     "tsdb result prefix: `%s'.\n", tsdb.result_prefix);
-            fflush(tsdb_default_stream);
             match = TRUE;
           } /* if */
           if(!strncmp(value_list[i]->value.identifier, "tsdb_max_results", 16)
              || !strncmp(value_list[i]->value.identifier, "max-results", 11)
              || !strcmp(value_list[i]->value.identifier, "all")) {
-            fprintf(tsdb_default_stream,
+            fprintf(output,
                     "tsdb maximum number of results: %d.\n",
                     tsdb.max_results);
-            fflush(tsdb_default_stream);
             match = TRUE;
           } /* if */
           if(!match) {
@@ -112,6 +124,7 @@ void tsdb_info(Tsdb_value **value_list) {
           fflush(tsdb_error_stream);
       } /* switch */
     } /* for */
+    pclose(output);
   } /* if */
 } /* tsdb_info() */
 
@@ -323,86 +336,110 @@ int tsdb_insert(Tsdb_value *table,
   FILE *data;
   Tsdb_relation *relation;
   Tsdb_selection *selection;
-  Tsdb_tuple *tuple = (Tsdb_tuple *)malloc(sizeof(Tsdb_tuple)), **foo;
+  Tsdb_tuple *tuple, **foo;
   int m, n, n_values, n_attributes;
+  char *bar;
   BOOL success;
   
-  if((relation = tsdb_find_relation(table->value.identifier)) != NULL) {
+  if(!tsdb_is_relation(table)) {
+    fprintf(tsdb_error_stream,
+            "insert(): unknown relation `%s'.\n", table->value.identifier);
+    fflush(tsdb_error_stream);
+    return(TSDB_UNKNOWN_RELATION);
+  } /* if */
 
-    tuple->n_fields = relation->n_fields;
-    tuple->fields = (Tsdb_value **)malloc(sizeof(Tsdb_value *));
+  if((relation = tsdb_find_relation(table->value.identifier)) == NULL) {
+    fprintf(tsdb_error_stream,
+            "insert(): unable to identify relation `%s'.\n",
+            table->value.identifier);
+    fflush(tsdb_error_stream);
+    return(TSDB_UNKNOWN_RELATION);
+  } /* if */
 
-    for(n_values = 0; value_list[n_values] != NULL; n_values++);
-
-    if(attribute_list != NULL) {
-      if(!tsdb_are_attributes(attribute_list, relation))
-        return(TSDB_NO_SUCH_ATTRIBUTE);
-      for(n_attributes = 0; attribute_list[n_attributes] != NULL;
-          n_attributes++);
-      if(n_attributes != n_values) {
-        fprintf(tsdb_error_stream, "tsdb: incompatible list sizes.\n");
-        return(TSDB_INCOMPAT_SIZES);
-      } /* if */
-    } /* if */
-    
-    if((data = tsdb_find_data_file(table->value.identifier, "a+")) != NULL) {
-      (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
-                                       (Tsdb_tuple **)NULL);
-      for(n = 0; n < relation->n_fields; n++) {
-
-        if(attribute_list != NULL) { /* attribute list was specified */ 
-          success = FALSE;
-          for(m = 0; m < n_values; m++) {
-            if(!strcmp(relation->fields[n],
-                       attribute_list[m]->value.identifier)) {
-              tuple->fields[n] = value_list[m];
-              success = TRUE;
-              break;
-            } /* if */
-          } /* for */
-          if(!success) {
-            tuple->fields[n] = (Tsdb_value *)malloc(sizeof(Tsdb_value *));
-            tuple->fields[n]->value.string = strdup(TSDB_DEFAULT_VALUE);
-            tuple->fields[n]->type = TSDB_STRING;
-          } /* if */
-        } /* if */
-
-        else { /* attribute list wasn't specified */
-          if(n < n_values) {
-            tuple->fields[n] = value_list[n];
-          } /* if */
-          else {
-            tuple->fields[n] = (Tsdb_value *)malloc(sizeof(Tsdb_value *));
-            tuple->fields[n]->value.string = strdup(TSDB_DEFAULT_VALUE);
-            tuple->fields[n]->type = TSDB_STRING;
-          } /* else */
-        } /* else */
-        tuple->fields = (Tsdb_value **)realloc(tuple->fields,
-                                               (n + 2) * sizeof(Tsdb_value *));
-      } /* for */
-      tsdb_print_tuple(tuple, data);
-      fprintf(data, "\n");
-      fclose(data);
-      if((selection = tsdb_find_table(relation)) != NULL) {
-        foo = (Tsdb_tuple **)malloc(2 * sizeof(Tsdb_tuple *));
-        foo[0] = tuple;
-        foo[1] = (Tsdb_tuple *)NULL;
-        tsdb_insert_into_selection(selection, &foo[0]);
-      } /* if */
-      else {
+  tuple = (Tsdb_tuple *)malloc(sizeof(Tsdb_tuple));
+  tuple->n_fields = relation->n_fields;
+  
+  for(n_values = 0; value_list[n_values] != NULL; n_values++);
+  
+  if(attribute_list != NULL) {
+    for(n_attributes = 0; attribute_list[n_attributes] != NULL;
+        n_attributes++) {
+      bar = attribute_list[n_attributes]->value.identifier;
+      if(!tsdb_attribute_in_relation(relation, bar)) {
         fprintf(tsdb_error_stream,
-                "segementation fault: core well and truly dumped.\n");
-      } /* else */
+                "insert(): unknown attribute `%s' for `%s'.\n",
+                bar, relation->name);
+        fflush(tsdb_error_stream);
+        return(TSDB_UNKNOWN_ATTRIBUTE);
+      } /* if */
+    } /* for */
+    if(n_attributes != n_values) {
+      fprintf(tsdb_error_stream,
+              "insert(): "
+              "numbers of attributes (%d) and values (%d) mismatch.\n",
+              n_attributes, n_values);
+      fflush(tsdb_error_stream);
+      return(TSDB_INCOMPATIBLE_SIZE);
+    } /* if */
+  } /* if */
+  
+  if((data = tsdb_find_data_file(relation->name, "a+")) == NULL) {
+    fprintf(tsdb_error_stream,
+            "insert(): no data file for relation `%s'.\n",
+            relation->name);
+    fflush(tsdb_error_stream);
+    return(TSDB_NO_DATA_FILE);
+  } /* if */
+
+  (void)tsdb_insert_into_selection((Tsdb_selection *)NULL,
+                                   (Tsdb_tuple **)NULL);
+  
+  tuple->fields = (Tsdb_value **)malloc(relation->n_fields 
+                                        * sizeof(Tsdb_value *));
+  for(n = 0; n < relation->n_fields; n++) {
+    if(attribute_list != NULL) {
+      for(m = 0; m < n_attributes; m++) {
+        if(!strcmp(relation->fields[n],
+                   attribute_list[m]->value.identifier)) {
+          tuple->fields[n] = value_list[m];
+          break;
+        } /* if */
+      } /* for */
+      if(m == n_attributes) {
+        tuple->fields[n] = (Tsdb_value *)malloc(sizeof(Tsdb_value *));
+        tuple->fields[n]->value.string = strdup(TSDB_DEFAULT_VALUE);
+        tuple->fields[n]->type = TSDB_STRING;
+      } /* if */
     } /* if */
     else {
-      return(TSDB_NO_DATA);
+      if(n < n_values) {
+        tuple->fields[n] = value_list[n];
+      } /* if */
+      else {
+        tuple->fields[n] = (Tsdb_value *)malloc(sizeof(Tsdb_value *));
+        tuple->fields[n]->value.string = strdup(TSDB_DEFAULT_VALUE);
+        tuple->fields[n]->type = TSDB_STRING;
+      } /* else */
     } /* else */
+  } /* for */
+  
+  tsdb_print_tuple(tuple, data);
+  fprintf(data, "\n");
+  fclose(data);
+  
+  if((selection = tsdb_find_table(relation)) != NULL) {
+    foo = (Tsdb_tuple **)malloc(2 * sizeof(Tsdb_tuple *));
+    foo[0] = tuple;
+    foo[1] = (Tsdb_tuple *)NULL;
+    tsdb_insert_into_selection(selection, &foo[0]);
   } /* if */
   else {
     fprintf(tsdb_error_stream,
-            "insert(): unknown relation `%s'.\n", table->value.identifier);
-    return(TSDB_NO_SUCH_RELATION);
+            "insert(): no cached table for relation `%s'.\n",
+            relation->name);
+    fflush(tsdb_error_stream);
   } /* else */
+
   return(TSDB_OK);
 } /* tsdb_insert() */
 
@@ -464,7 +501,7 @@ int tsdb_delete(Tsdb_value *table, Tsdb_node *condition) {
     if ((selection->n_relations!=1) ||
         (strcmp(relation->name,selection->relations[0]->name))){
       fprintf(tsdb_error_stream,"Wrong Specification of attributes!\n");
-      return(TSDB_NO_SUCH_RELATION);
+      return(TSDB_UNKNOWN_RELATION);
     }
     /* now perform the hard deletion of tuples */
     /* mark them with fucked an delete in one pass */
@@ -486,7 +523,7 @@ int tsdb_delete(Tsdb_value *table, Tsdb_node *condition) {
     return(1);
   } /* if */
   else {
-    return(TSDB_NO_SUCH_RELATION);
+    return(TSDB_UNKNOWN_RELATION);
   } /* else */
 
 } /* tsdb_delete() */

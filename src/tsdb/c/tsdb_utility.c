@@ -474,7 +474,7 @@ BOOL tsdb_satisfies_condition(Tsdb_tuple *tuple, Tsdb_node *condition,
                               Tsdb_relation *relation) {
   
   int i, integer;
-  char *string=NULL, *attribute = NULL;
+  char *string = NULL, *attribute = NULL;
   BOOL number, answer;
 
   attribute = strdup(condition->left->node->value.identifier);
@@ -977,7 +977,7 @@ int tsdb_relation_in_selection(Tsdb_selection* selection,char* name)
 } /* tsdb_relation_in_selection */
 
 /*---------------------------------------------------------------------------*/
-BOOL tsdb_attribute_in_relation(Tsdb_relation *relation,char *name) {
+BOOL tsdb_attribute_in_relation(Tsdb_relation *relation, char *name) {
   int j;
 
   for (j=0;j<relation->n_fields;j++) {
@@ -1172,10 +1172,9 @@ Tsdb_value *tsdb_operator(BYTE foo) {
   return(bar);
 
 } /* tsdb_operator() */
+
+void tsdb_free_tsdb_value(Tsdb_value* foo) {
 
-/* ------------------------- free Tsdb_value  ---------------------*/
-void tsdb_free_tsdb_value(Tsdb_value* foo)
-{
   switch (foo->type) {
   case TSDB_STRING: 
     if (foo->value.string) free(foo->value.string);
@@ -1186,22 +1185,16 @@ void tsdb_free_tsdb_value(Tsdb_value* foo)
   };
   free(foo);
 }
-
-/*-------------- Tsdb_value ------------------*/
-
-void tsdb_free_tsdb_values(Tsdb_value** bar)
-{
+
+void tsdb_free_tsdb_values(Tsdb_value** bar) {
   int i;
 
-  for (i=0; (bar[i]!=NULL) ; i++)
+  for (i = 0; bar[i] != NULL; i++)
     tsdb_free_tsdb_value(bar[i]);
   free(bar);
 
 } /* tsdb_free_tsdb_values() */
-
-
-/* create value array with one entry */
-
+
 Tsdb_value **tsdb_singleton_value_array(Tsdb_value *value) {
 
   Tsdb_value **foo, **bar;
@@ -1260,26 +1253,28 @@ void tsdb_free_relation(Tsdb_relation *relation) {
 void tsdb_free_relations(Tsdb_relation **relations) {
   int i;
   
-  for (i=0;relations[i];i++)
+  for (i=0; relations[i]; i++)
     tsdb_free_relation(relations[i]);
   
 } /* tsdb_free_relations() */
-
 
-Tsdb_selection* tsdb_create_selection(int r, int k) {
+Tsdb_selection* tsdb_create_selection(int n_relations, int n_key_lists) {
+
   Tsdb_selection *foo;
 
   foo = (Tsdb_selection*)malloc(sizeof(Tsdb_selection));
-  foo->n_relations = r;
-  foo->n_key_lists = k;
-  foo->relations = (Tsdb_relation **)malloc(sizeof(Tsdb_relation *) * (r + 1));
-  foo->relations[r]=(Tsdb_relation *)NULL;
-  memset(foo->relations, '\0', sizeof(Tsdb_relation *) * (r + 1));
-  foo->key_lists = (Tsdb_key_list **)malloc(sizeof(Tsdb_key_list *) * (k + 1));
-  memset(foo->key_lists, '\0', sizeof(Tsdb_key_list *) * (k + 1));
-  foo->key_lists[k] = (Tsdb_key_list *)NULL;
+  foo->n_relations = n_relations;
+  foo->n_key_lists = n_key_lists;
+  foo->relations = (Tsdb_relation **)malloc(sizeof(Tsdb_relation *)
+                                            * (n_relations + 1));
+  foo->relations[n_relations] = (Tsdb_relation *)NULL;
+  memset(foo->relations, '\0', sizeof(Tsdb_relation *) * (n_relations + 1));
+  foo->key_lists = (Tsdb_key_list **)malloc(sizeof(Tsdb_key_list *)
+                                            * (n_key_lists + 1));
+  memset(foo->key_lists, '\0', sizeof(Tsdb_key_list *) * (n_key_lists + 1));
+  foo->key_lists[n_key_lists] = (Tsdb_key_list *)NULL;
   return(foo);
-} /*   tsdb_create_selection() */
+} /* tsdb_create_selection() */
 
 Tsdb_selection* tsdb_copy_selection(Tsdb_selection* source) {
   Tsdb_selection* target;
@@ -1291,11 +1286,11 @@ Tsdb_selection* tsdb_copy_selection(Tsdb_selection* source) {
     target->relations[i] = tsdb_copy_relation(source->relations[i]);
   } /* for*/
   
-  for (i=0;i<source->n_key_lists;i++) {
+  for(i = 0;i < source->n_key_lists; i++) {
     target->key_lists[i] = tsdb_copy_key_list(source->key_lists[i]);
     foo = target->key_lists[i];
     bar = source->key_lists[i]->next;
-    for (j=1;j<source->length;foo=foo->next,bar= bar->next,j++) {
+    for(j = 1; j < source->length; foo = foo->next, bar= bar->next, j++) {
       foo->next = tsdb_copy_key_list(bar);
     } /* for */
     foo->next = NULL;
@@ -1317,12 +1312,11 @@ void tsdb_free_selection(Tsdb_selection* foo) {
 
 void tsdb_free_selections(Tsdb_selection** bar) {
   int i;
-  for (i=0;bar[i];i++) {
+  for (i = 0; bar[i]; i++) {
     tsdb_free_selection(bar[i]);
-  }
+  } /* for */
   free(bar);
 } /* tsdb_free_selections() */
-
 
 Tsdb_node *tsdb_leaf(Tsdb_value *value) {
 
@@ -1336,37 +1330,30 @@ Tsdb_node *tsdb_leaf(Tsdb_value *value) {
   return(foo);
 
 } /* tsdb_leaf() */
-
 
-
 void tsdb_free_leaf(Tsdb_value *value) {
-  if (value)
+  if (value != NULL) {
     free(value);
-}
+  } /* if */
+} /* tsdb_free_leaf() */
 
 
-/*---------------------------------------------------------------------------*/
+void tsdb_free_key_list_chain(Tsdb_key_list *foo, BOOL tuples) {
 
-void tsdb_free_key_list_chain(Tsdb_key_list *foo,BOOL tuples) {
-  Tsdb_key_list* n;
+  Tsdb_key_list *next;
 
-  while(foo) {
-      n=foo->next;
-      if (tuples) if (foo->tuples) free(foo->tuples);
+  if(foo != NULL) {
+    for(next = foo->next; foo != NULL; foo = next, next = foo->next) {
+      if(tuples && foo->tuples != NULL) {
+        free(foo->tuples);
+      } /* if */
       free(foo);
-      foo=n;
-    } /* while */
-
+    } /* for */
+  } /* if */
 } /* tsdb_free_key_list_chain() */
-
-
-
-/*---------------------------------------------------------------------------*/
-
 
 void ignore() {
-  int a;
-  a=1;
+  ;
 }
 
 BOOL tsdb_initialize() {
@@ -1464,6 +1451,11 @@ BOOL tsdb_initialize() {
         else if((bar = popen("more", "w")) != NULL) {
           free(tsdb.pager);
           tsdb.pager = strdup("more");
+          pclose(bar);
+        } /* if */
+        else if((bar = popen("less", "w")) != NULL) {
+          free(tsdb.pager);
+          tsdb.pager = strdup("less");
           pclose(bar);
         } /* if */
         else if((bar = popen("page", "w")) != NULL) {
@@ -1792,7 +1784,7 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
 |* <known bugs>
 |* for several key lists and growing length the linear search turns out to be
 |* too inefficient; hence, the plan is to add a second level index or similar.
-|* --- which may be unnecessary thanx to the static memory (16-jul-96 oe).
+|* --- which may now be unnecessary thanx to the static memory (16-jul-96 oe).
 \*****************************************************************************/
 
 
@@ -1923,7 +1915,6 @@ BOOL tsdb_insert_into_selection(Tsdb_selection *selection,
 int comp(char **a,char**b) {
   return(strcmp(*a,*b));
 }
-
 
 int tsdb_uniq_projection(char** projection,int n) {
   int i,j,d=0;
@@ -1956,7 +1947,6 @@ int tsdb_uniq_projection(char** projection,int n) {
   return n-d ;
 } /* tsdb_uniq_projection() */
 
-
 void tsdb_free_char_array(char** array,int n) {
   int i;
 
@@ -2005,11 +1995,7 @@ void tsdb_negate_node(Tsdb_node* node)
   }/* switch */
 
 } /* tsdb_negate_node */
-/*---------------------------------------------------------------------------*/
 
-
-/*---------------------------------------------------------------------------*/
-
 void tsdb_tree_negate(Tsdb_node* node)
 {
   if (tsdb_children_leaf(node))
@@ -2033,8 +2019,6 @@ void tsdb_tree_negate(Tsdb_node* node)
       } /* else */
  
 } /* tsdb_tree_negate() */
-
-/*---------------------------------------------------------------------------*/
 
 /* call root of syntax-tree */
 void tsdb_check_not(Tsdb_node* node)
@@ -2053,10 +2037,7 @@ void tsdb_check_not(Tsdb_node* node)
     tsdb_check_not(node->right);
   }
 
-
 } /* tsdb_check_not() */
-
-/*---------------------------------------------------------------------------*/
 
 char** tsdb_condition_attributes(Tsdb_node *node,
                                  char **attributes,
@@ -2092,7 +2073,8 @@ char** tsdb_condition_attributes(Tsdb_node *node,
         else {
           if (!(i<*s_attributes)) {
             *s_attributes *= 2;
-            attributes = (char**)realloc(attributes,*s_attributes*sizeof(char*));
+            attributes
+              = (char**)realloc(attributes,*s_attributes*sizeof(char*));
             memset(((char*)attributes)+(*s_attributes)/2,'\0',
                    (*s_attributes)/2*sizeof(char*));
           }
@@ -2345,19 +2327,26 @@ char *tsdb_canonical_date(char *date) {
       (void)sprintf(&result[position], "dec-");
       break;
   } /* switch */
+  position += 4;
 
-  (void)sprintf(&result[position + 4], "%.4d", numeric[2]);
+  (void)sprintf(&result[position], "%.4d", numeric[2]);
+  position += 4;
 
   if(numeric[3] != -1) {
-    (void)sprintf(&result[position + 8]," %.2d:%.2d:%.2d",
-                numeric[3], numeric[4],
-                (numeric[5] != -1 ? numeric[5] : 0));
-    result[position + 17] = 0;
+    if(numeric[5] != -1) {
+      (void)sprintf(&result[position]," %.2d:%.2d:%.2d",
+                    numeric[3], numeric[4], numeric[5]);
+      position += 9;
+    } /* if */
+    else {
+      (void)sprintf(&result[position]," %.2d:%.2d",
+                    numeric[3], numeric[4]);
+      position += 6;
+    } /* else */
   } /* if */
-  else {
-    result[position + 8] = 0;
-  } /* else */
 
+  result[position] = 0;
+  
   free(numeric);
   return(result);
       

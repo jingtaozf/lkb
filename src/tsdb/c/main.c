@@ -31,8 +31,11 @@ char *tsdb_commands[] = {
   "alter table",
   "retrieve",
   "select",
+  "insert",
   "delete",
   "update",
+  "info",
+  "set",
   "quit",
   (char *)NULL 
 };
@@ -123,12 +126,7 @@ int main(int argc, char **argv) {
     tsdb_server();
   } /* if */
 
-#ifdef SYSV
-  struct sigaction tsdb_sig = { SIG_IGN, (sigset_t)0, 0 };
-  sigaction(SIGPIPE, &tsdb_sig);
-#else
   signal(SIGPIPE, SIG_IGN);
-#endif
 
   if(tsdb.query != NULL) {
     (void)tsdb_parse(tsdb.query);
@@ -215,6 +213,7 @@ void tsdb_parse_options(int argc, char **argv) {
   char *bar;
   struct option options[] = {
     {"server", optional_argument, 0, TSDB_SERVER_OPTION},
+    {"client", no_argument, 0, TSDB_CLIENT_OPTION},
     {"port", required_argument, 0, TSDB_PORT_OPTION},
     {"home", required_argument, 0, TSDB_HOME_OPTION},
     {"relations-file", required_argument, 0, TSDB_RELATIONS_FILE_OPTION},
@@ -247,6 +246,13 @@ void tsdb_parse_options(int argc, char **argv) {
         else {
           tsdb.status |= TSDB_SERVER_MODE;
         } /* else */
+        break;
+      case TSDB_CLIENT_OPTION:
+        tsdb.status |= TSDB_CLIENT_MODE;
+        fprintf(tsdb_error_stream,
+                "parse_options(): client mode not yet implemented; "
+                "use telnet(1) instead.\n");
+        fflush(tsdb_error_stream);
         break;
       case TSDB_PORT_OPTION:
         if(optarg != NULL) {
