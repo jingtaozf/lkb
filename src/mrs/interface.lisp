@@ -87,12 +87,6 @@
 ;;; to the MRS in some way
 ;;; Functions are from mrsfns.lisp
 
-(defun read-mrs-from-string (string)
-  (let ((*package* (find-package :cl-user)))
-    (ignore-errors 
-     (with-input-from-string (stream string)
-       (read-mrs stream)))))
-
 (defun get-mrs-string (parse)
   (return-mrs-info-string parse :simple))
   
@@ -120,3 +114,20 @@
         (:count-scopes (format stream "~A" 
                                (length (make-scoped-mrs mrs-struct))))))))
 
+(defun read-mrs-from-string (string)
+  (let ((*package* (find-package :mrs)))
+    (ignore-errors 
+     (with-input-from-string (stream string)
+       (read-mrs stream)))))
+
+(defun safe-mrs-unequalp (mrs1 mrs2 &rest options)
+  (not 
+   (if (and mrs1 mrs2)
+     (apply #'mrs-equalp mrs1 mrs2 '(t nil))
+     (equal mrs1 mrs2))))
+
+(defun browse-mrs (mrs)
+  (let ((browser (fboundp (find-symbol "SHOW-MRS-WINDOW" :cl-user))))
+    (if (functionp browser)
+      (apply browser (list nil mrs))
+      (output-mrs mrs 'simple))))

@@ -60,16 +60,16 @@
   :height *parse-window-height*)
 
 
-(defun show-mrs-window (edge)
+(defun show-mrs-window (edge  &optional mrs)
   (mp:process-run-function "Simple MRS"
-                           #'show-mrs-window-really edge))
+                           #'show-mrs-window-really edge mrs))
 
-(defun show-mrs-window-really (edge)
+(defun show-mrs-window-really (edge &optional mrs)
   (let ((mframe (clim:make-application-frame 'mrs-simple)))
     (setf *normal* (clim:parse-text-style (make-active-fs-type-font-spec)))
     (setf *bold* (clim:merge-text-styles '(nil :bold nil) *normal*))
     (setf (mrs-simple-mrsstruct mframe) 
-      (mrs::extract-mrs edge))
+      (or mrs (mrs::extract-mrs edge)))
     (setf (clim:frame-pretty-name mframe) "Simple MRS")
     (clim:run-frame-top-level mframe)))
 
